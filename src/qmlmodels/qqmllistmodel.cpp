@@ -589,7 +589,7 @@ void ListModel::set(int elementIndex, QV4::Object *object, QVector<int> *roles)
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Function);
             QV4::ScopedFunctionObject func(scope, f);
             QJSValue jsv;
-            QJSValuePrivate::setValue(&jsv, v4, func);
+            QJSValuePrivate::setValue(&jsv, func);
             roleIndex = e->setFunctionProperty(r, jsv);
         } else if (QV4::Object *o = propertyValue->as<QV4::Object>()) {
             if (QV4::QObjectWrapper *wrapper = o->as<QV4::QObjectWrapper>()) {
@@ -1434,7 +1434,7 @@ int ListElement::setJsProperty(const ListLayout::Role &role, const QV4::Value &d
     } else if (d.as<QV4::FunctionObject>()) {
         QV4::ScopedFunctionObject f(scope, d);
         QJSValue jsv;
-        QJSValuePrivate::setValue(&jsv, eng, f);
+        QJSValuePrivate::setValue(&jsv, f);
         roleIndex = setFunctionProperty(role, jsv);
     } else if (d.isObject()) {
         QV4::ScopedObject o(scope, d);
@@ -1638,7 +1638,8 @@ PropertyKey ModelObjectOwnPropertyKeyIterator::next(const Object *o, Property *p
                 auto size = recursiveListModel->count();
                 auto array = ScopedArrayObject{scope, v4->newArrayObject(size)};
                 for (auto i = 0; i < size; i++) {
-                    array->arrayPut(i, QJSValuePrivate::convertedToValue(v4, recursiveListModel->get(i)));
+                    array->arrayPut(i, QJSValuePrivate::convertToReturnedValue(
+                                        v4, recursiveListModel->get(i)));
                 }
                 pd->value = array;
             } else {
@@ -2570,7 +2571,7 @@ QJSValue QQmlListModel::get(int index) const
         }
     }
 
-    return QJSValue(engine(), result->asReturnedValue());
+    return QJSValuePrivate::fromReturnedValue(result->asReturnedValue());
 }
 
 /*!
@@ -2592,7 +2593,7 @@ QJSValue QQmlListModel::get(int index) const
 void QQmlListModel::set(int index, const QJSValue &value)
 {
     QV4::Scope scope(engine());
-    QV4::ScopedObject object(scope, QJSValuePrivate::getValue(&value));
+    QV4::ScopedObject object(scope, QJSValuePrivate::asReturnedValue(&value));
 
     if (!object) {
         qmlWarning(this) << tr("set: value is not an object");
@@ -2791,7 +2792,7 @@ bool QQmlListModelParser::applyProperty(
                 if (v4->hasException)
                     v4->catchException();
                 else
-                    QJSValuePrivate::setValue(&v, v4, result->asReturnedValue());
+                    QJSValuePrivate::setValue(&v, result->asReturnedValue());
                 value.setValue<QJSValue>(v);
             } else {
                 QByteArray script = scriptStr.toUtf8();

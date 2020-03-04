@@ -41,6 +41,7 @@
 #include "qquickworkerscript_p.h"
 #include <private/qqmlengine_p.h>
 #include <private/qqmlexpression_p.h>
+#include <private/qjsvalue_p.h>
 
 #include <QtCore/qcoreevent.h>
 #include <QtCore/qcoreapplication.h>
@@ -644,7 +645,8 @@ bool QQuickWorkerScript::event(QEvent *event)
         if (QQmlEngine *engine = qmlEngine(this)) {
             QV4::ExecutionEngine *v4 = engine->handle();
             WorkerDataEvent *workerEvent = static_cast<WorkerDataEvent *>(event);
-            emit message(QJSValue(v4, QV4::Serialize::deserialize(workerEvent->data(), v4)));
+            emit message(QJSValuePrivate::fromReturnedValue(
+                             QV4::Serialize::deserialize(workerEvent->data(), v4)));
         }
         return true;
     } else if (event->type() == (QEvent::Type)WorkerErrorEvent::WorkerError) {

@@ -133,7 +133,8 @@ private:
 
     static bool convertV2(const QJSValue &value, int type, void *ptr);
 
-    friend inline bool qjsvalue_cast_helper(const QJSValue &, int, void *);
+    template<typename T>
+    friend inline T qjsvalue_cast(const QJSValue &);
 
 protected:
     QJSEngine(QJSEnginePrivate &dd, QObject *parent = nullptr);
@@ -146,18 +147,13 @@ private:
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QJSEngine::Extensions)
 
-inline bool qjsvalue_cast_helper(const QJSValue &value, int type, void *ptr)
-{
-    return QJSEngine::convertV2(value, type, ptr);
-}
-
 template<typename T>
 T qjsvalue_cast(const QJSValue &value)
 {
     T t;
     const int id = qMetaTypeId<T>();
 
-    if (qjsvalue_cast_helper(value, id, &t))
+    if (QJSEngine::convertV2(value, id, &t))
         return t;
     else if (value.isVariant())
         return qvariant_cast<T>(value.toVariant());

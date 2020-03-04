@@ -59,6 +59,7 @@
 #include <private/qv4scopedvalue_p.h>
 #include <private/qv4jscall_p.h>
 #include <private/qv4qobjectwrapper_p.h>
+#include <private/qjsvalue_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -381,7 +382,7 @@ void QQuickCanvasItem::setContextType(const QString &contextType)
 QJSValue QQuickCanvasItem::context() const
 {
     Q_D(const QQuickCanvasItem);
-    return d->context ? QJSValue(d->context->v4Engine(), d->context->v4value()) : QJSValue();
+    return d->context ? QJSValuePrivate::fromReturnedValue(d->context->v4value()) : QJSValue();
 }
 
 /*!

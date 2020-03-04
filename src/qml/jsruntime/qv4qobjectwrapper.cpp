@@ -170,7 +170,7 @@ static QV4::ReturnedValue loadProperty(QV4::ExecutionEngine *v4, QObject *object
     } else if (property.propType() == qMetaTypeId<QJSValue>()) {
         QJSValue v;
         property.readProperty(object, &v);
-        return QJSValuePrivate::convertedToValue(v4, v);
+        return QJSValuePrivate::convertToReturnedValue(v4, v);
     } else if (property.isQVariant()) {
         QVariant v;
         property.readProperty(object, &v);
@@ -519,7 +519,7 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlP
     } else if (value.isUndefined() && property->propType() == QMetaType::QJsonValue) {
         PROPERTY_STORE(QJsonValue, QJsonValue(QJsonValue::Undefined));
     } else if (!newBinding && property->propType() == qMetaTypeId<QJSValue>()) {
-        PROPERTY_STORE(QJSValue, QJSValue(scope.engine, value.asReturnedValue()));
+        PROPERTY_STORE(QJSValue, QJSValuePrivate::fromReturnedValue(value.asReturnedValue()));
     } else if (value.isUndefined() && property->propType() != qMetaTypeId<QQmlScriptString>()) {
         QString error = QLatin1String("Cannot assign [undefined] to ");
         if (!QMetaType::typeName(property->propType()))
@@ -1775,7 +1775,8 @@ bool CallArgument::fromValue(int callType, QV4::ExecutionEngine *engine, const Q
 
     bool queryEngine = false;
     if (callType == qMetaTypeId<QJSValue>()) {
-        qjsValuePtr = new (&allocData) QJSValue(scope.engine, value.asReturnedValue());
+        qjsValuePtr = new (&allocData) QJSValue;
+        QJSValuePrivate::setValue(qjsValuePtr, value.asReturnedValue());
         type = qMetaTypeId<QJSValue>();
     } else if (callType == QMetaType::Int) {
         intValue = quint32(value.toInt32());
@@ -1932,7 +1933,9 @@ QV4::ReturnedValue CallArgument::toValue(QV4::ExecutionEngine *engine)
     QV4::Scope scope(engine);
 
     if (type == qMetaTypeId<QJSValue>()) {
-        return QJSValuePrivate::convertedToValue(scope.engine, *qjsValuePtr);
+        // The QJSValue can be passed around via dataPtr()
+        QJSValuePrivate::manageStringOnV4Heap(engine, qjsValuePtr);
+        return QJSValuePrivate::asReturnedValue(qjsValuePtr);
     } else if (type == QMetaType::Int) {
         return QV4::Encode(int(intValue));
     } else if (type == QMetaType::UInt) {

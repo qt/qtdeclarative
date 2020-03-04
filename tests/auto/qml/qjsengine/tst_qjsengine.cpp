@@ -4763,13 +4763,11 @@ void tst_QJSEngine::mathMinMax()
 
     QJSValue result = engine.evaluate("var a = .5; Math.min(1, 2, 3.5 + a, '5')");
     QCOMPARE(result.toNumber(), 1.0);
-    QVERIFY(QJSValuePrivate::getValue(&result) != nullptr);
-    QVERIFY(QJSValuePrivate::getValue(&result)->isInteger());
+    QVERIFY(QV4::Value(QJSValuePrivate::asReturnedValue(&result)).isInteger());
 
     result = engine.evaluate("var a = .5; Math.max('0', 1, 2, 3.5 + a)");
     QCOMPARE(result.toNumber(), 4.0);
-    QVERIFY(QJSValuePrivate::getValue(&result) != nullptr);
-    QVERIFY(QJSValuePrivate::getValue(&result)->isInteger());
+    QVERIFY(QV4::Value(QJSValuePrivate::asReturnedValue(&result)).isInteger());
 }
 
 void tst_QJSEngine::importModule()

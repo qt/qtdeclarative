@@ -191,41 +191,29 @@ using namespace QV4;
 /*!
   Constructs a new QJSValue with a boolean \a value.
 */
-QJSValue::QJSValue(bool value)
+QJSValue::QJSValue(bool value) : d(QV4::Encode(value))
 {
-    QJSValuePrivate::setVariant(this, QVariant(value));
-}
-
-/*!
-  \internal
-*/
-QJSValue::QJSValue(ExecutionEngine *e, quint64 val)
-{
-    QJSValuePrivate::setValue(this, e, val);
 }
 
 /*!
   Constructs a new QJSValue with a number \a value.
 */
-QJSValue::QJSValue(int value)
+QJSValue::QJSValue(int value) : d(QV4::Encode(value))
 {
-    QJSValuePrivate::setVariant(this, QVariant(value));
 }
 
 /*!
   Constructs a new QJSValue with a number \a value.
 */
-QJSValue::QJSValue(uint value)
+QJSValue::QJSValue(uint value) : d(QV4::Encode(value))
 {
-    QJSValuePrivate::setVariant(this, QVariant((double)value));
 }
 
 /*!
   Constructs a new QJSValue with a number \a value.
 */
-QJSValue::QJSValue(double value)
+QJSValue::QJSValue(double value) : d(QV4::Encode(value))
 {
-    QJSValuePrivate::setVariant(this, QVariant(value));
 }
 
 /*!
@@ -233,17 +221,14 @@ QJSValue::QJSValue(double value)
 */
 QJSValue::QJSValue(const QString& value)
 {
-    QJSValuePrivate::setVariant(this, QVariant(value));
+    QJSValuePrivate::setString(this, QString(value));
 }
 
 /*!
   Constructs a new QJSValue with a special \a value.
 */
-QJSValue::QJSValue(SpecialValue value)
-    : d(0)
+QJSValue::QJSValue(SpecialValue value) : d(value == NullValue ? QV4::Encode::null() : 0)
 {
-    if (value == NullValue)
-        QJSValuePrivate::setVariant(this, QVariant::fromValue(nullptr));
 }
 
 /*!
@@ -251,7 +236,7 @@ QJSValue::QJSValue(SpecialValue value)
 */
 QJSValue::QJSValue(const QLatin1String &value)
 {
-    QJSValuePrivate::setVariant(this, QVariant(value));
+    QJSValuePrivate::setString(this, QString(value));
 }
 
 /*!
@@ -260,7 +245,7 @@ QJSValue::QJSValue(const QLatin1String &value)
 #ifndef QT_NO_CAST_FROM_ASCII
 QJSValue::QJSValue(const char *value)
 {
-    QJSValuePrivate::setVariant(this, QVariant(QString::fromUtf8(value)));
+    QJSValuePrivate::setString(this, QString(QString::fromUtf8(value)));
 }
 #endif
 
@@ -271,15 +256,12 @@ QJSValue::QJSValue(const char *value)
   true), then only a reference to the underlying object is copied into
   the new script value (i.e., the object itself is not copied).
 */
-QJSValue::QJSValue(const QJSValue& other)
-    : d(0)
+QJSValue::QJSValue(const QJSValue &other) : d(0)
 {
-    QV4::Value *v = QJSValuePrivate::getValue(&other);
-    if (v) {
-        QJSValuePrivate::setValue(this, QJSValuePrivate::engine(&other), *v);
-    } else if (QVariant *v = QJSValuePrivate::getVariant(&other)) {
-        QJSValuePrivate::setVariant(this, *v);
-    }
+    if (const QString *string = QJSValuePrivate::asQString(&other))
+        QJSValuePrivate::setString(this, *string);
+    else
+        QJSValuePrivate::setValue(this, QJSValuePrivate::asReturnedValue(&other));
 }
 
 /*!
@@ -310,11 +292,7 @@ QJSValue::~QJSValue()
 */
 bool QJSValue::isBool() const
 {
-    QV4::Value *val = QJSValuePrivate::getValue(this);
-    if (val)
-        return val->isBoolean();
-    QVariant *variant = QJSValuePrivate::getVariant(this);
-    return variant && variant->userType() == QMetaType::Bool;
+    return QV4::Value::fromReturnedValue(d).isBoolean();
 }
 
 /*!
@@ -325,27 +303,7 @@ bool QJSValue::isBool() const
 */
 bool QJSValue::isNumber() const
 {
-    QV4::Value *val = QJSValuePrivate::getValue(this);
-    if (val)
-        return val->isNumber();
-    QVariant *variant = QJSValuePrivate::getVariant(this);
-    if (!variant)
-        return false;
-
-    switch (variant->userType()) {
-    case QMetaType::Double:
-    case QMetaType::Int:
-    case QMetaType::UInt:
-    case QMetaType::Long:
-    case QMetaType::ULong:
-    case QMetaType::Short:
-    case QMetaType::UShort:
-    case QMetaType::LongLong:
-    case QMetaType::ULongLong:
-        return true;
-    default:
-        return false;
-    }
+    return QV4::Value::fromReturnedValue(d).isNumber();
 }
 
 /*!
@@ -354,14 +312,7 @@ bool QJSValue::isNumber() const
 */
 bool QJSValue::isNull() const
 {
-    QV4::Value *val = QJSValuePrivate::getValue(this);
-    if (val)
-        return val->isNull();
-    QVariant *variant = QJSValuePrivate::getVariant(this);
-    if (!variant)
-        return false;
-    const int type = variant->userType();
-    return type == QMetaType::Nullptr || type == QMetaType::VoidStar;
+    return QV4::Value::fromReturnedValue(d).isNull();
 }
 
 /*!
@@ -372,24 +323,27 @@ bool QJSValue::isNull() const
 */
 bool QJSValue::isString() const
 {
-    QV4::Value *val = QJSValuePrivate::getValue(this);
-    if (val)
-        return val->isString();
-    QVariant *variant = QJSValuePrivate::getVariant(this);
-    return variant && variant->userType() == QMetaType::QString;
+    if (QJSValuePrivate::asQString(this))
+        return true;
+
+    // String is managed
+    return QV4::Value::fromReturnedValue(QJSValuePrivate::asReturnedValue(this)).isString();
 }
 
 /*!
-  Returns true if this QJSValue is of the primitive type Undefined;
-  otherwise returns false.
+  Returns true if this QJSValue is of the primitive type Undefined or if the managed value
+  has been cleared (by deleting the engine). Otherwise returns false.
 */
 bool QJSValue::isUndefined() const
 {
-    QV4::Value *val = QJSValuePrivate::getValue(this);
-    if (val)
-        return val->isUndefined();
-    QVariant *variant = QJSValuePrivate::getVariant(this);
-    return !variant || variant->userType() == QMetaType::UnknownType || variant->userType() == QMetaType::Void;
+    if (QJSValuePrivate::asQString(this))
+        return false;
+    QV4::Value v = QV4::Value::fromReturnedValue(QJSValuePrivate::asReturnedValue(this));
+    if (v.isUndefined())
+        return true;
+    if (!v.isManaged())
+        return false;
+    return v.managed() == nullptr;
 }
 
 /*!
@@ -400,10 +354,7 @@ bool QJSValue::isUndefined() const
 */
 bool QJSValue::isError() const
 {
-    QV4::Value *val = QJSValuePrivate::getValue(this);
-    if (!val)
-        return false;
-    return val->as<ErrorObject>();
+    return QJSValuePrivate::asManagedType<ErrorObject>(this);
 }
 
 /*!
@@ -415,10 +366,7 @@ bool QJSValue::isError() const
 */
 QJSValue::ErrorType QJSValue::errorType() const
 {
-    QV4::Value *val = QJSValuePrivate::getValue(this);
-    if (!val)
-        return NoError;
-    QV4::ErrorObject *error = val->as<ErrorObject>();
+    const QV4::ErrorObject *error = QJSValuePrivate::asManagedType<ErrorObject>(this);
     if (!error)
         return NoError;
     switch (error->d()->errorType) {
@@ -449,10 +397,7 @@ QJSValue::ErrorType QJSValue::errorType() const
 */
 bool QJSValue::isArray() const
 {
-    QV4::Value *val = QJSValuePrivate::getValue(this);
-    if (!val)
-        return false;
-    return val->as<ArrayObject>();
+    return QJSValuePrivate::asManagedType<ArrayObject>(this);
 }
 
 /*!
@@ -466,10 +411,7 @@ bool QJSValue::isArray() const
 */
 bool QJSValue::isObject() const
 {
-    QV4::Value *val = QJSValuePrivate::getValue(this);
-    if (!val)
-        return false;
-    return val->as<QV4::Object>();
+    return QJSValuePrivate::asManagedType<QV4::Object>(this);
 }
 
 /*!
@@ -480,10 +422,7 @@ bool QJSValue::isObject() const
 */
 bool QJSValue::isCallable() const
 {
-    QV4::Value *val = QJSValuePrivate::getValue(this);
-    if (!val)
-        return false;
-    return val->as<FunctionObject>();
+    return QJSValuePrivate::asManagedType<FunctionObject>(this);
 }
 
 /*!
@@ -494,10 +433,7 @@ bool QJSValue::isCallable() const
 */
 bool QJSValue::isVariant() const
 {
-    QV4::Value *val = QJSValuePrivate::getValue(this);
-    if (!val)
-        return false;
-    return val->as<QV4::VariantObject>();
+    return QJSValuePrivate::asManagedType<QV4::VariantObject>(this);
 }
 
 /*!
@@ -514,27 +450,22 @@ bool QJSValue::isVariant() const
 */
 QString QJSValue::toString() const
 {
-    QV4::Value scratch;
-    QV4::Value *val = QJSValuePrivate::valueForData(this, &scratch);
+    if (const QString *string = QJSValuePrivate::asQString(this))
+        return *string;
 
-    if (!val) {
-        QVariant *variant = QJSValuePrivate::getVariant(this);
-        Q_ASSERT(variant);
-        if (variant->userType() == QMetaType::QVariantMap)
-            return QStringLiteral("[object Object]");
-        else if (variant->userType() == QMetaType::QVariantList) {
-            const QVariantList list = variant->toList();
-            QString result;
-            for (int i = 0; i < list.count(); ++i) {
-                if (i > 0)
-                    result.append(QLatin1Char(','));
-                result.append(list.at(i).toString());
-            }
-            return result;
-        }
-        return variant->toString();
+    return QV4::Value::fromReturnedValue(QJSValuePrivate::asReturnedValue(this)).toQStringNoThrow();
+}
+
+template<typename T>
+T caughtResult(const QJSValue *v, T (QV4::Value::*convert)() const)
+{
+    const T result = (QV4::Value::fromReturnedValue(QJSValuePrivate::asReturnedValue(v)).*convert)();
+    QV4::ExecutionEngine *engine = QJSValuePrivate::engine(v);
+    if (engine && engine->hasException) {
+        engine->catchException();
+        return T();
     }
-    return val->toQStringNoThrow();
+    return result;
 }
 
 /*!
@@ -551,28 +482,10 @@ QString QJSValue::toString() const
 */
 double QJSValue::toNumber() const
 {
-    QV4::Value scratch;
-    QV4::Value *val = QJSValuePrivate::valueForData(this, &scratch);
+    if (const QString *string = QJSValuePrivate::asQString(this))
+        return RuntimeHelpers::stringToNumber(*string);
 
-    if (!val) {
-        QVariant *variant = QJSValuePrivate::getVariant(this);
-        Q_ASSERT(variant);
-
-        if (variant->userType() == QMetaType::QString)
-            return RuntimeHelpers::stringToNumber(variant->toString());
-        else if (variant->canConvert<double>())
-            return variant->value<double>();
-        else
-            return std::numeric_limits<double>::quiet_NaN();
-    }
-
-    double dbl = val->toNumber();
-    QV4::ExecutionEngine *engine = QJSValuePrivate::engine(this);
-    if (engine && engine->hasException) {
-        engine->catchException();
-        return 0;
-    }
-    return dbl;
+    return caughtResult<double>(this, &QV4::Value::toNumber);
 }
 
 /*!
@@ -589,24 +502,10 @@ double QJSValue::toNumber() const
 */
 bool QJSValue::toBool() const
 {
-    QV4::Value scratch;
-    QV4::Value *val = QJSValuePrivate::valueForData(this, &scratch);
+    if (const QString *string = QJSValuePrivate::asQString(this))
+        return string->length() > 0;
 
-    if (!val) {
-        QVariant *variant = QJSValuePrivate::getVariant(this);
-        if (variant->userType() == QMetaType::QString)
-            return variant->toString().length() > 0;
-        else
-            return variant->toBool();
-    }
-
-    bool b = val->toBoolean();
-    QV4::ExecutionEngine *engine = QJSValuePrivate::engine(this);
-    if (engine && engine->hasException) {
-        engine->catchException();
-        return false;
-    }
-    return b;
+    return caughtResult<bool>(this, &QV4::Value::toBoolean);
 }
 
 /*!
@@ -623,24 +522,10 @@ bool QJSValue::toBool() const
 */
 qint32 QJSValue::toInt() const
 {
-    QV4::Value scratch;
-    QV4::Value *val = QJSValuePrivate::valueForData(this, &scratch);
+    if (const QString *string = QJSValuePrivate::asQString(this))
+        return QV4::Value::toInt32(RuntimeHelpers::stringToNumber(*string));
 
-    if (!val) {
-        QVariant *variant = QJSValuePrivate::getVariant(this);
-        if (variant->userType() == QMetaType::QString)
-            return QV4::Value::toInt32(RuntimeHelpers::stringToNumber(variant->toString()));
-        else
-            return variant->toInt();
-    }
-
-    qint32 i = val->toInt32();
-    QV4::ExecutionEngine *engine = QJSValuePrivate::engine(this);
-    if (engine && engine->hasException) {
-        engine->catchException();
-        return 0;
-    }
-    return i;
+    return caughtResult<qint32>(this, &QV4::Value::toInt32);
 }
 
 /*!
@@ -657,24 +542,10 @@ qint32 QJSValue::toInt() const
 */
 quint32 QJSValue::toUInt() const
 {
-    QV4::Value scratch;
-    QV4::Value *val = QJSValuePrivate::valueForData(this, &scratch);
+    if (const QString *string = QJSValuePrivate::asQString(this))
+        return QV4::Value::toUInt32(RuntimeHelpers::stringToNumber(*string));
 
-    if (!val) {
-        QVariant *variant = QJSValuePrivate::getVariant(this);
-        if (variant->userType() == QMetaType::QString)
-            return QV4::Value::toUInt32(RuntimeHelpers::stringToNumber(variant->toString()));
-        else
-            return variant->toUInt();
-    }
-
-    quint32 u = val->toUInt32();
-    QV4::ExecutionEngine *engine = QJSValuePrivate::engine(this);
-    if (engine && engine->hasException) {
-        engine->catchException();
-        return 0;
-    }
-    return u;
+    return caughtResult<quint32>(this, &QV4::Value::toUInt32);
 }
 
 /*!
@@ -701,29 +572,29 @@ quint32 QJSValue::toUInt() const
 */
 QVariant QJSValue::toVariant() const
 {
-    QVariant *variant = QJSValuePrivate::getVariant(this);
-    if (variant)
-        return *variant;
+    if (const QString *string = QJSValuePrivate::asQString(this))
+        return QVariant(*string);
 
-    QV4::Value scratch;
-    QV4::Value *val = QJSValuePrivate::valueForData(this, &scratch);
-    Q_ASSERT(val);
-
-    if (QV4::Object *o = val->as<QV4::Object>())
-        return o->engine()->toVariant(*val, /*typeHint*/ -1, /*createJSValueForObjects*/ false);
-
-    if (String *s = val->stringValue())
-        return QVariant(s->toQString());
-    if (val->isBoolean())
-        return QVariant(val->booleanValue());
-    if (val->isNumber()) {
-        if (val->isInt32())
-            return QVariant(val->integerValue());
-        return QVariant(val->asDouble());
-    }
-    if (val->isNull())
+    QV4::Value val = QV4::Value::fromReturnedValue(QJSValuePrivate::asReturnedValue(this));
+    if (val.isUndefined())
+        return QVariant();
+    if (val.isNull())
         return QVariant(QMetaType::Nullptr, nullptr);
-    Q_ASSERT(val->isUndefined());
+    if (val.isBoolean())
+        return QVariant(val.booleanValue());
+    if (val.isInt32()) // Includes doubles that can be losslessly casted to int
+        return QVariant(val.integerValue());
+    if (val.isNumber())
+        return QVariant(val.doubleValue());
+
+    Q_ASSERT(val.isManaged());
+
+    if (val.isString())
+        return QVariant(val.toQString());
+    if (QV4::Managed *m = val.as<QV4::Managed>())
+        return m->engine()->toVariant(val, /*typeHint*/ -1, /*createJSValueForObjects*/ false);
+
+    Q_ASSERT(false);
     return QVariant();
 }
 
@@ -744,11 +615,7 @@ QVariant QJSValue::toVariant() const
 */
 QJSValue QJSValue::call(const QJSValueList &args) const
 {
-    QV4::Value *val = QJSValuePrivate::getValue(this);
-    if (!val)
-        return QJSValue();
-
-    FunctionObject *f = val->as<FunctionObject>();
+    const FunctionObject *f = QJSValuePrivate::asManagedType<FunctionObject>(this);
     if (!f)
         return QJSValue();
 
@@ -763,7 +630,7 @@ QJSValue QJSValue::call(const QJSValueList &args) const
             qWarning("QJSValue::call() failed: cannot call function with argument created in a different engine");
             return QJSValue();
         }
-        jsCallData->args[i] = QJSValuePrivate::convertedToValue(engine, args.at(i));
+        jsCallData->args[i] = QJSValuePrivate::convertToReturnedValue(engine, args.at(i));
     }
 
     ScopedValue result(scope, f->call(jsCallData));
@@ -772,7 +639,7 @@ QJSValue QJSValue::call(const QJSValueList &args) const
     if (engine->isInterrupted.loadAcquire())
         result = engine->newErrorObject(QStringLiteral("Interrupted"));
 
-    return QJSValue(engine, result->asReturnedValue());
+    return QJSValuePrivate::fromReturnedValue(result->asReturnedValue());
 }
 
 /*!
@@ -797,11 +664,7 @@ QJSValue QJSValue::call(const QJSValueList &args) const
 */
 QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList &args) const
 {
-    QV4::Value *val = QJSValuePrivate::getValue(this);
-    if (!val)
-        return QJSValue();
-
-    FunctionObject *f = val->as<FunctionObject>();
+    const FunctionObject *f = QJSValuePrivate::asManagedType<FunctionObject>(this);
     if (!f)
         return QJSValue();
 
@@ -815,13 +678,13 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
     }
 
     JSCallData jsCallData(scope, args.size());
-    *jsCallData->thisObject = QJSValuePrivate::convertedToValue(engine, instance);
+    *jsCallData->thisObject = QJSValuePrivate::convertToReturnedValue(engine, instance);
     for (int i = 0; i < args.size(); ++i) {
         if (!QJSValuePrivate::checkEngine(engine, args.at(i))) {
             qWarning("QJSValue::call() failed: cannot call function with argument created in a different engine");
             return QJSValue();
         }
-        jsCallData->args[i] = QJSValuePrivate::convertedToValue(engine, args.at(i));
+        jsCallData->args[i] = QJSValuePrivate::convertToReturnedValue(engine, args.at(i));
     }
 
     ScopedValue result(scope, f->call(jsCallData));
@@ -830,7 +693,7 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
     if (engine->isInterrupted.loadAcquire())
         result = engine->newErrorObject(QStringLiteral("Interrupted"));
 
-    return QJSValue(engine, result->asReturnedValue());
+    return QJSValuePrivate::fromReturnedValue(result->asReturnedValue());
 }
 
 /*!
@@ -853,11 +716,7 @@ QJSValue QJSValue::callWithInstance(const QJSValue &instance, const QJSValueList
 */
 QJSValue QJSValue::callAsConstructor(const QJSValueList &args) const
 {
-    QV4::Value *val = QJSValuePrivate::getValue(this);
-    if (!val)
-        return QJSValue();
-
-    FunctionObject *f = val->as<FunctionObject>();
+    const FunctionObject *f = QJSValuePrivate::asManagedType<FunctionObject>(this);
     if (!f)
         return QJSValue();
 
@@ -871,7 +730,7 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args) const
             qWarning("QJSValue::callAsConstructor() failed: cannot construct function with argument created in a different engine");
             return QJSValue();
         }
-        jsCallData->args[i] = QJSValuePrivate::convertedToValue(engine, args.at(i));
+        jsCallData->args[i] = QJSValuePrivate::convertToReturnedValue(engine, args.at(i));
     }
 
     ScopedValue result(scope, f->callAsConstructor(jsCallData));
@@ -880,7 +739,7 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args) const
     if (engine->isInterrupted.loadAcquire())
         result = engine->newErrorObject(QStringLiteral("Interrupted"));
 
-    return QJSValue(engine, result->asReturnedValue());
+    return QJSValuePrivate::fromReturnedValue(result->asReturnedValue());
 }
 
 #ifdef QT_DEPRECATED
@@ -915,13 +774,13 @@ QJSValue QJSValue::prototype() const
     if (!engine)
         return QJSValue();
     QV4::Scope scope(engine);
-    ScopedObject o(scope, QJSValuePrivate::getValue(this)->as<QV4::Object>());
+    ScopedObject o(scope, QJSValuePrivate::asManagedType<QV4::Object>(this));
     if (!o)
         return QJSValue();
     ScopedObject p(scope, o->getPrototypeOf());
     if (!p)
         return QJSValue(NullValue);
-    return QJSValue(o->internalClass()->engine, p.asReturnedValue());
+    return QJSValuePrivate::fromReturnedValue(p.asReturnedValue());
 }
 
 /*!
@@ -942,14 +801,11 @@ void QJSValue::setPrototype(const QJSValue& prototype)
     if (!engine)
         return;
     Scope scope(engine);
-    ScopedObject o(scope, QJSValuePrivate::getValue(this));
+    ScopedObject o(scope, QJSValuePrivate::asReturnedValue(this));
     if (!o)
         return;
-    QV4::Value scratch;
-    QV4::Value *val = QJSValuePrivate::valueForData(&prototype, &scratch);
-    if (!val)
-        return;
-    if (val->isNull()) {
+    QV4::Value val = QV4::Value::fromReturnedValue(QJSValuePrivate::asReturnedValue(&prototype));
+    if (val.isNull()) {
         o->setPrototypeOf(nullptr);
         return;
     }
@@ -980,12 +836,11 @@ QJSValue& QJSValue::operator=(const QJSValue& other)
     QJSValuePrivate::free(this);
     d = 0;
 
-    QV4::Value *v = QJSValuePrivate::getValue(&other);
-    if (v) {
-        QJSValuePrivate::setValue(this, QJSValuePrivate::engine(&other), *v);
-    } else if (QVariant *v = QJSValuePrivate::getVariant(&other)) {
-        QJSValuePrivate::setVariant(this, *v);
-    }
+    if (const QString *string = QJSValuePrivate::asQString(&other))
+        QJSValuePrivate::setString(this, *string);
+    else
+        QJSValuePrivate::setValue(this, QJSValuePrivate::asReturnedValue(&other));
+
     return *this;
 }
 
@@ -1031,23 +886,17 @@ static bool js_equal(const QString &string, const QV4::Value &value)
 */
 bool QJSValue::equals(const QJSValue& other) const
 {
-    QV4::Value s1, s2;
-    QV4::Value *v = QJSValuePrivate::valueForData(this, &s1);
-    QV4::Value *ov = QJSValuePrivate::valueForData(&other, &s2);
+    if (const QString *string = QJSValuePrivate::asQString(this)) {
+        if (const QString *otherString = QJSValuePrivate::asQString(&other))
+            return *string == *otherString;
+        return js_equal(*string, QJSValuePrivate::asReturnedValue(&other));
+    }
 
-    if (!v) {
-        QVariant *variant = QJSValuePrivate::getVariant(this);
-        Q_ASSERT(variant);
-        if (!ov)
-            return *variant == *QJSValuePrivate::getVariant(&other);
-        if (variant->userType() == QMetaType::QVariantMap || variant->userType() == QMetaType::QVariantList)
-            return false;
-        return js_equal(variant->toString(), *ov);
-        }
-    if (!ov)
-        return other.equals(*this);
+    if (const QString *otherString = QJSValuePrivate::asQString(&other))
+        return js_equal(*otherString, QJSValuePrivate::asReturnedValue(this));
 
-    return Runtime::CompareEqual::call(*v, *ov);
+    return Runtime::CompareEqual::call(QJSValuePrivate::asReturnedValue(this),
+                                       QJSValuePrivate::asReturnedValue(&other));
 }
 
 /*!
@@ -1074,25 +923,22 @@ bool QJSValue::equals(const QJSValue& other) const
 */
 bool QJSValue::strictlyEquals(const QJSValue& other) const
 {
-    QV4::Value s1, s2;
-    QV4::Value *v = QJSValuePrivate::valueForData(this, &s1);
-    QV4::Value *ov = QJSValuePrivate::valueForData(&other, &s2);
-
-    if (!v) {
-        QVariant *variant = QJSValuePrivate::getVariant(this);
-        Q_ASSERT(variant);
-        if (!ov)
-            return *variant == *QJSValuePrivate::getVariant(&other);
-        if (variant->userType() == QMetaType::QVariantMap || variant->userType() == QMetaType::QVariantList)
-            return false;
-        if (String *s = ov->stringValue())
-            return variant->toString() == s->toQString();
+    if (const QString *string = QJSValuePrivate::asQString(this)) {
+        if (const QString *otherString = QJSValuePrivate::asQString(&other))
+            return *string == *otherString;
+        if (const String *s = QJSValuePrivate::asManagedType<String>(&other))
+            return *string == s->toQString();
         return false;
     }
-    if (!ov)
-        return other.strictlyEquals(*this);
 
-    return RuntimeHelpers::strictEqual(*v, *ov);
+    if (const QString *otherString = QJSValuePrivate::asQString(&other)) {
+        if (const String *s = QJSValuePrivate::asManagedType<String>(this))
+            return *otherString == s->toQString();
+        return false;
+    }
+
+    return RuntimeHelpers::strictEqual(QJSValuePrivate::asReturnedValue(this),
+                                       QJSValuePrivate::asReturnedValue(&other));
 }
 
 /*!
@@ -1119,7 +965,7 @@ QJSValue QJSValue::property(const QString& name) const
         return QJSValue();
 
     QV4::Scope scope(engine);
-    ScopedObject o(scope, QJSValuePrivate::getValue(this));
+    ScopedObject o(scope, QJSValuePrivate::asReturnedValue(this));
     if (!o)
         return QJSValue();
 
@@ -1128,7 +974,7 @@ QJSValue QJSValue::property(const QString& name) const
     if (engine->hasException)
         result = engine->catchException();
 
-    return QJSValue(engine, result->asReturnedValue());
+    return QJSValuePrivate::fromReturnedValue(result->asReturnedValue());
 }
 
 /*!
@@ -1167,14 +1013,14 @@ QJSValue QJSValue::property(quint32 arrayIndex) const
         return QJSValue();
 
     QV4::Scope scope(engine);
-    ScopedObject o(scope, QJSValuePrivate::getValue(this));
+    ScopedObject o(scope, QJSValuePrivate::asReturnedValue(this));
     if (!o)
         return QJSValue();
 
     QV4::ScopedValue result(scope, arrayIndex == UINT_MAX ? o->get(engine->id_uintMax()) : o->get(arrayIndex));
     if (engine->hasException)
         engine->catchException();
-    return QJSValue(engine, result->asReturnedValue());
+    return QJSValuePrivate::fromReturnedValue(result->asReturnedValue());
 }
 
 /*!
@@ -1199,7 +1045,7 @@ void QJSValue::setProperty(const QString& name, const QJSValue& value)
         return;
     Scope scope(engine);
 
-    ScopedObject o(scope, QJSValuePrivate::getValue(this));
+    ScopedObject o(scope, QJSValuePrivate::asReturnedValue(this));
     if (!o)
         return;
 
@@ -1209,7 +1055,7 @@ void QJSValue::setProperty(const QString& name, const QJSValue& value)
     }
 
     ScopedString s(scope, engine->newString(name));
-    QV4::ScopedValue v(scope, QJSValuePrivate::convertedToValue(engine, value));
+    QV4::ScopedValue v(scope, QJSValuePrivate::convertToReturnedValue(engine, value));
     o->put(s->toPropertyKey(), v);
     if (engine->hasException)
         engine->catchException();
@@ -1253,7 +1099,7 @@ void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
         return;
     Scope scope(engine);
 
-    ScopedObject o(scope, QJSValuePrivate::getValue(this));
+    ScopedObject o(scope, QJSValuePrivate::asReturnedValue(this));
     if (!o)
         return;
 
@@ -1262,7 +1108,7 @@ void QJSValue::setProperty(quint32 arrayIndex, const QJSValue& value)
         return;
     }
 
-    QV4::ScopedValue v(scope, QJSValuePrivate::convertedToValue(engine, value));
+    QV4::ScopedValue v(scope, QJSValuePrivate::convertToReturnedValue(engine, value));
     PropertyKey id = arrayIndex != UINT_MAX ? PropertyKey::fromArrayIndex(arrayIndex) : engine->id_uintMax()->propertyKey();
     o->put(id, v);
     if (engine->hasException)
@@ -1296,7 +1142,7 @@ bool QJSValue::deleteProperty(const QString &name)
         return false;
 
     Scope scope(engine);
-    ScopedObject o(scope, QJSValuePrivate::getValue(this));
+    ScopedObject o(scope, QJSValuePrivate::asReturnedValue(this));
     if (!o)
         return false;
 
@@ -1317,7 +1163,7 @@ bool QJSValue::hasProperty(const QString &name) const
         return false;
 
     Scope scope(engine);
-    ScopedObject o(scope, QJSValuePrivate::getValue(this));
+    ScopedObject o(scope, QJSValuePrivate::asReturnedValue(this));
     if (!o)
         return false;
 
@@ -1338,7 +1184,7 @@ bool QJSValue::hasOwnProperty(const QString &name) const
         return false;
 
     Scope scope(engine);
-    ScopedObject o(scope, QJSValuePrivate::getValue(this));
+    ScopedObject o(scope, QJSValuePrivate::asReturnedValue(this));
     if (!o)
         return false;
 
@@ -1362,7 +1208,7 @@ QObject *QJSValue::toQObject() const
     if (!engine)
         return nullptr;
     QV4::Scope scope(engine);
-    QV4::Scoped<QV4::QObjectWrapper> wrapper(scope, QJSValuePrivate::getValue(this));
+    QV4::Scoped<QV4::QObjectWrapper> wrapper(scope, QJSValuePrivate::asReturnedValue(this));
     if (!wrapper)
         return nullptr;
 
@@ -1383,7 +1229,7 @@ const QMetaObject *QJSValue::toQMetaObject() const
     if (!engine)
         return nullptr;
     QV4::Scope scope(engine);
-    QV4::Scoped<QV4::QMetaObjectWrapper> wrapper(scope, QJSValuePrivate::getValue(this));
+    QV4::Scoped<QV4::QMetaObjectWrapper> wrapper(scope, QJSValuePrivate::asReturnedValue(this));
     if (!wrapper)
         return nullptr;
 
@@ -1400,12 +1246,8 @@ const QMetaObject *QJSValue::toQMetaObject() const
 */
 QDateTime QJSValue::toDateTime() const
 {
-    QV4::Value *val = QJSValuePrivate::getValue(this);
-    if (val) {
-        QV4::DateObject *date = val->as<DateObject>();
-        if (date)
-            return date->toQDateTime();
-    }
+    if (const QV4::DateObject *date = QJSValuePrivate::asManagedType<DateObject>(this))
+        return date->toQDateTime();
     return QDateTime();
 }
 
@@ -1415,8 +1257,7 @@ QDateTime QJSValue::toDateTime() const
 */
 bool QJSValue::isDate() const
 {
-    QV4::Value *val = QJSValuePrivate::getValue(this);
-    return val && val->as<DateObject>();
+    return QJSValuePrivate::asManagedType<DateObject>(this);
 }
 
 /*!
@@ -1425,8 +1266,7 @@ bool QJSValue::isDate() const
 */
 bool QJSValue::isRegExp() const
 {
-    QV4::Value *val = QJSValuePrivate::getValue(this);
-    return val && val->as<RegExpObject>();
+    return QJSValuePrivate::asManagedType<RegExpObject>(this);
 }
 
 /*!
@@ -1440,8 +1280,7 @@ bool QJSValue::isRegExp() const
 */
 bool QJSValue::isQObject() const
 {
-    QV4::Value *val = QJSValuePrivate::getValue(this);
-    return val && val->as<QV4::QObjectWrapper>() != nullptr;
+    return QJSValuePrivate::asManagedType<QV4::QObjectWrapper>(this);
 }
 
 /*!
@@ -1454,8 +1293,7 @@ bool QJSValue::isQObject() const
 */
 bool QJSValue::isQMetaObject() const
 {
-    QV4::Value *val = QJSValuePrivate::getValue(this);
-    return val && val->as<QV4::QMetaObjectWrapper>() != nullptr;
+    return QJSValuePrivate::asManagedType<QV4::QMetaObjectWrapper>(this);
 }
 
 QT_END_NAMESPACE

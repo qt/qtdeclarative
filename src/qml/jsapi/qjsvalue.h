@@ -153,13 +153,12 @@ public:
     QT_DEPRECATED QJSEngine *engine() const;
 #endif
 
-    QJSValue(QV4::ExecutionEngine *e, quint64 val);
 private:
     friend class QJSValuePrivate;
     // force compile error, prevent QJSValue(bool) to be called
     QJSValue(void *) Q_DECL_EQ_DELETE;
 
-    mutable quintptr d;
+    quint64 d;
 };
 
 QT_END_NAMESPACE

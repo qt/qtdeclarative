@@ -48,6 +48,7 @@
 #include <private/qqmlchangeset_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlcomponent_p.h>
+#include <private/qjsvalue_p.h>
 
 #include <private/qv4value_p.h>
 #include <private/qv4functionobject_p.h>
@@ -2656,8 +2657,10 @@ void QQmlDelegateModelGroupPrivate::emitChanges(QV4::ExecutionEngine *v4)
 {
     Q_Q(QQmlDelegateModelGroup);
     if (isChangedConnected() && !changeSet.isEmpty()) {
-        emit q->changed(QJSValue(v4, engineData(v4)->array(v4, changeSet.removes())),
-                        QJSValue(v4, engineData(v4)->array(v4, changeSet.inserts())));
+        emit q->changed(QJSValuePrivate::fromReturnedValue(
+                            engineData(v4)->array(v4, changeSet.removes())),
+                        QJSValuePrivate::fromReturnedValue(
+                            engineData(v4)->array(v4, changeSet.inserts())));
     }
     if (changeSet.difference() != 0)
         emit q->countChanged();
@@ -2874,7 +2877,7 @@ QJSValue QQmlDelegateModelGroup::get(int index)
     QV4::ScopedObject p(scope, model->m_cacheMetaType->modelItemProto.value());
     o->setPrototypeOf(p);
 
-    return QJSValue(v4, o->asReturnedValue());
+    return QJSValuePrivate::fromReturnedValue(o->asReturnedValue());
 }
 
 bool QQmlDelegateModelGroupPrivate::parseIndex(const QV4::Value &value, int *index, Compositor::Group *group) const

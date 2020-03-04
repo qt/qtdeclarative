@@ -67,6 +67,7 @@
 #include <private/qrecyclepool_p.h>
 #include <private/qfieldlist_p.h>
 #include <private/qv4engine_p.h>
+#include <private/qjsvalue_p.h>
 
 #include <QtCore/qlist.h>
 #include <QtCore/qpair.h>
@@ -285,7 +286,20 @@ public:
     }
 
 private:
-    QHash<QQmlType, QJSValue> singletonInstances;
+    class SingletonInstances : private QHash<QQmlType, QJSValue>
+    {
+    public:
+        void convertAndInsert(QV4::ExecutionEngine *engine, const QQmlType &type, QJSValue *value)
+        {
+            QJSValuePrivate::manageStringOnV4Heap(engine, value);
+            insert(type, *value);
+        }
+
+        using QHash<QQmlType, QJSValue>::value;
+        using QHash<QQmlType, QJSValue>::take;
+    };
+
+    SingletonInstances singletonInstances;
     QHash<int, QQmlGadgetPtrWrapper *> cachedValueTypeInstances;
 
     // These members must be protected by a QQmlEnginePrivate::Locker as they are required by

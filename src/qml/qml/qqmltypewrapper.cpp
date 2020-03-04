@@ -233,7 +233,7 @@ ReturnedValue QQmlTypeWrapper::virtualGet(const Managed *m, PropertyKey id, cons
                 QJSValue scriptSingleton = e->singletonInstance<QJSValue>(type);
                 if (!scriptSingleton.isUndefined()) {
                     // NOTE: if used in a binding, changes will not trigger re-evaluation since non-NOTIFYable.
-                    QV4::ScopedObject o(scope, QJSValuePrivate::convertedToValue(v4, scriptSingleton));
+                    QV4::ScopedObject o(scope, QJSValuePrivate::asReturnedValue(&scriptSingleton));
                     if (!!o)
                         return o->get(name);
                 }
@@ -349,7 +349,7 @@ bool QQmlTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &value,
         } else {
             QJSValue scriptSingleton = e->singletonInstance<QJSValue>(type);
             if (!scriptSingleton.isUndefined()) {
-                QV4::ScopedObject apiprivate(scope, QJSValuePrivate::convertedToValue(scope.engine, scriptSingleton));
+                QV4::ScopedObject apiprivate(scope, QJSValuePrivate::asReturnedValue(&scriptSingleton));
                 if (!apiprivate) {
                     QString error = QLatin1String("Cannot assign to read-only property \"") + name->toQString() + QLatin1Char('\"');
                     scope.engine->throwError(error);

@@ -64,7 +64,7 @@ struct Page {
     Value values[1]; // Really kEntriesPerPage, but keep the compiler happy
 };
 
-Page *getPage(Value *val) {
+Page *getPage(const Value *val) {
    return reinterpret_cast<Page *>(reinterpret_cast<quintptr>(val) & ~((quintptr)(WTF::pageSize() - 1)));
 }
 
@@ -245,7 +245,7 @@ void PersistentValueStorage::mark(MarkStack *markStack)
     }
 }
 
-ExecutionEngine *PersistentValueStorage::getEngine(Value *v)
+ExecutionEngine *PersistentValueStorage::getEngine(const Value *v)
 {
     return getPage(v)->header.engine;
 }

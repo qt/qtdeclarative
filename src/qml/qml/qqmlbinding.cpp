@@ -57,6 +57,7 @@
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qv4variantobject_p.h>
 #include <private/qv4jscall_p.h>
+#include <private/qjsvalue_p.h>
 
 #include <qtqml_tracepoints_p.h>
 
@@ -455,9 +456,10 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
             delayedError()->setErrorDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
             return false;
         }
-        QQmlPropertyPrivate::writeValueProperty(m_target.data(), core, valueTypeData, QVariant::fromValue(
-                               QJSValue(v4engine, result.asReturnedValue())),
-                           context(), flags);
+        QQmlPropertyPrivate::writeValueProperty(
+                    m_target.data(), core, valueTypeData,
+                    QVariant::fromValue(QJSValuePrivate::fromReturnedValue(result.asReturnedValue())),
+                    context(), flags);
     } else if (isUndefined) {
         const QLatin1String typeName(QMetaType::typeName(type)
                                      ? QMetaType::typeName(type)

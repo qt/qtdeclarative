@@ -157,7 +157,7 @@ void QQuickCustomAffector::affectSystem(qreal dt)
     const auto doAffect = [&](qreal dt) {
         affectProperties(toAffect, dt);
         QJSValue particles;
-        QJSValuePrivate::setValue(&particles, v4, array);
+        QJSValuePrivate::setValue(&particles, array);
         emit affectParticles(particles, dt);
     };
 

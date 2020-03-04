@@ -58,12 +58,12 @@ void QJSValueIteratorPrivate::init(const QJSValue &v)
     QV4::ExecutionEngine *e = QJSValuePrivate::engine(&v);
     if (!e)
         return;
-    QV4::Object *o = QJSValuePrivate::getValue(&v)->objectValue();
+    const QV4::Object *o = QJSValuePrivate::asManagedType<QV4::Object>(&v);
     if (!o)
         return;
 
     engine = e;
-    object = o;
+    object.set(e, o->asReturnedValue());
     iterator.reset(o->ownPropertyKeys(object.valueRef()));
     next();
 }
@@ -209,7 +209,7 @@ QJSValue QJSValueIterator::value() const
         scope.engine->catchException();
         return QJSValue();
     }
-    return QJSValue(scope.engine, val->asReturnedValue());
+    return QJSValuePrivate::fromReturnedValue(val->asReturnedValue());
 }
 
 

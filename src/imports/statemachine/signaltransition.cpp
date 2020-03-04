@@ -106,15 +106,16 @@ void SignalTransition::setSignal(const QJSValue &signal)
     if (m_signal.strictlyEquals(signal))
         return;
 
-    m_signal = signal;
-
     QV4::ExecutionEngine *jsEngine = QQmlEngine::contextForObject(this)->engine()->handle();
     QV4::Scope scope(jsEngine);
 
     QObject *sender;
     QMetaMethod signalMethod;
 
-    QV4::ScopedValue value(scope, QJSValuePrivate::convertedToValue(jsEngine, m_signal));
+    m_signal = signal;
+    QJSValuePrivate::manageStringOnV4Heap(jsEngine, &m_signal);
+
+    QV4::ScopedValue value(scope, QJSValuePrivate::asReturnedValue(&m_signal));
 
     // Did we get the "slot" that can be used to invoke the signal?
     if (QV4::QObjectMethod *signalSlot = value->as<QV4::QObjectMethod>()) {
@@ -170,7 +171,7 @@ void SignalTransition::connectTriggered()
 
     QV4::ExecutionEngine *jsEngine = QQmlEngine::contextForObject(this)->engine()->handle();
     QV4::Scope scope(jsEngine);
-    QV4::Scoped<QV4::QObjectMethod> qobjectSignal(scope, QJSValuePrivate::convertedToValue(jsEngine, m_signal));
+    QV4::Scoped<QV4::QObjectMethod> qobjectSignal(scope, QJSValuePrivate::asReturnedValue(&m_signal));
     Q_ASSERT(qobjectSignal);
     QMetaMethod metaMethod = target->metaObject()->method(qobjectSignal->methodIndex());
     int signalIndex = QMetaObjectPrivate::signalIndex(metaMethod);

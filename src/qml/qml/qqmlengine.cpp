@@ -2518,7 +2518,7 @@ QJSValue QQmlEnginePrivate::singletonInstance<QJSValue>(const QQmlType &type)
             // should behave identically to QML singleton types.
             q->setContextForObject(o, new QQmlContext(q->rootContext(), q));
         }
-        singletonInstances.insert(type, value);
+        singletonInstances.convertAndInsert(v4engine(), type, &value);
 
     } else if (siinfo->qobjectCallback) {
         QObject *o = siinfo->qobjectCallback(q, q);
@@ -2536,12 +2536,12 @@ QJSValue QQmlEnginePrivate::singletonInstance<QJSValue>(const QQmlType &type)
         // should behave identically to QML singleton types.
         q->setContextForObject(o, new QQmlContext(q->rootContext(), q));
         value = q->newQObject(o);
-        singletonInstances.insert(type, value);
+        singletonInstances.convertAndInsert(v4engine(), type, &value);
     } else if (!siinfo->url.isEmpty()) {
         QQmlComponent component(q, siinfo->url, QQmlComponent::PreferSynchronous);
         QObject *o = component.beginCreate(q->rootContext());
         value = q->newQObject(o);
-        singletonInstances.insert(type, value);
+        singletonInstances.convertAndInsert(v4engine(), type, &value);
         component.completeCreate();
     }
 

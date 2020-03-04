@@ -44,6 +44,7 @@
 #include <QtQml/private/qqmlmetatype_p.h>
 #include <QtQml/private/qv4engine_p.h>
 #include <QtQml/private/qv4scopedvalue_p.h>
+#include <QtQml/private/qjsvalue_p.h>
 
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qstylehints.h>
@@ -78,7 +79,7 @@ QJSValue QuickTestUtil::typeName(const QVariant &v) const
 
     QQmlEngine *engine = qmlEngine(this);
     QV4::ExecutionEngine *v4 = engine->handle();
-    return QJSValue(v4, v4->newString(name)->asReturnedValue());
+    return QJSValuePrivate::fromReturnedValue(v4->newString(name)->asReturnedValue());
 }
 
 bool QuickTestUtil::compare(const QVariant &act, const QVariant &exp) const {
@@ -93,7 +94,8 @@ QJSValue QuickTestUtil::callerFile(int frameIndex) const
 
     QVector<QV4::StackFrame> stack = v4->stackTrace(frameIndex + 2);
     return (stack.size() > frameIndex + 1)
-            ? QJSValue(v4, v4->newString(stack.at(frameIndex + 1).source)->asReturnedValue())
+            ? QJSValuePrivate::fromReturnedValue(
+                  v4->newString(stack.at(frameIndex + 1).source)->asReturnedValue())
             : QJSValue();
 }
 

@@ -451,10 +451,7 @@ void QJSEngine::installExtensions(QJSEngine::Extensions extensions, const QJSVal
     }
 
     QV4::Scope scope(m_v4Engine);
-    QV4::ScopedObject obj(scope);
-    QV4::Value *val = QJSValuePrivate::getValue(&object);
-    if (val)
-        obj = val;
+    QV4::ScopedObject obj(scope, QJSValuePrivate::asReturnedValue(&object));
     if (!obj)
         obj = scope.engine->globalObject;
 
@@ -548,9 +545,7 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
     if (v4->isInterrupted.loadAcquire())
         result = v4->newErrorObject(QStringLiteral("Interrupted"));
 
-    QJSValue retval(v4, result->asReturnedValue());
-
-    return retval;
+    return QJSValuePrivate::fromReturnedValue(result->asReturnedValue());
 }
 
 /*!
@@ -578,18 +573,17 @@ QJSValue QJSEngine::importModule(const QString &fileName)
     const QUrl url = urlForFileName(QFileInfo(fileName).canonicalFilePath());
     auto moduleUnit = m_v4Engine->loadModule(url);
     if (m_v4Engine->hasException)
-        return QJSValue(m_v4Engine, m_v4Engine->catchException());
+        return QJSValuePrivate::fromReturnedValue(m_v4Engine->catchException());
 
     QV4::Scope scope(m_v4Engine);
     QV4::Scoped<QV4::Module> moduleNamespace(scope, moduleUnit->instantiate(m_v4Engine));
     if (m_v4Engine->hasException)
-        return QJSValue(m_v4Engine, m_v4Engine->catchException());
+        return QJSValuePrivate::fromReturnedValue(m_v4Engine->catchException());
     moduleUnit->evaluate();
     if (!m_v4Engine->isInterrupted.loadAcquire())
-        return QJSValue(m_v4Engine, moduleNamespace->asReturnedValue());
+        return QJSValuePrivate::fromReturnedValue(moduleNamespace->asReturnedValue());
 
-    return QJSValue(
-            m_v4Engine,
+    return QJSValuePrivate::fromReturnedValue(
             m_v4Engine->newErrorObject(QStringLiteral("Interrupted"))->asReturnedValue());
 }
 
@@ -605,7 +599,7 @@ QJSValue QJSEngine::newObject()
 {
     QV4::Scope scope(m_v4Engine);
     QV4::ScopedValue v(scope, m_v4Engine->newObject());
-    return QJSValue(m_v4Engine, v->asReturnedValue());
+    return QJSValuePrivate::fromReturnedValue(v->asReturnedValue());
 }
 
 /*!
@@ -647,7 +641,7 @@ QJSValue QJSEngine::newErrorObject(QJSValue::ErrorType errorType, const QString 
     case QJSValue::NoError:
         return QJSValue::UndefinedValue;
     }
-    return QJSValue(m_v4Engine, error->asReturnedValue());
+    return QJSValuePrivate::fromReturnedValue(error->asReturnedValue());
 }
 
 /*!
@@ -662,7 +656,7 @@ QJSValue QJSEngine::newArray(uint length)
     if (length < 0x1000)
         array->arrayReserve(length);
     array->setArrayLengthUnchecked(length);
-    return QJSValue(m_v4Engine, array.asReturnedValue());
+    return QJSValuePrivate::fromReturnedValue(array.asReturnedValue());
 }
 
 /*!
@@ -695,7 +689,7 @@ QJSValue QJSEngine::newQObject(QObject *object)
             QQmlEngine::setObjectOwnership(object, QQmlEngine::JavaScriptOwnership);
     }
     QV4::ScopedValue v(scope, QV4::QObjectWrapper::wrap(v4, object));
-    return QJSValue(v4, v->asReturnedValue());
+    return QJSValuePrivate::fromReturnedValue(v->asReturnedValue());
 }
 
 /*!
@@ -716,7 +710,7 @@ QJSValue QJSEngine::newQMetaObject(const QMetaObject* metaObject) {
     QV4::ExecutionEngine *v4 = m_v4Engine;
     QV4::Scope scope(v4);
     QV4::ScopedValue v(scope, QV4::QMetaObjectWrapper::create(v4, metaObject));
-    return QJSValue(v4, v->asReturnedValue());
+    return QJSValuePrivate::fromReturnedValue(v->asReturnedValue());
 }
 
 /*! \fn template <typename T> QJSValue QJSEngine::newQMetaObject()
@@ -743,7 +737,7 @@ QJSValue QJSEngine::globalObject() const
 {
     QV4::Scope scope(m_v4Engine);
     QV4::ScopedValue v(scope, m_v4Engine->globalObject);
-    return QJSValue(m_v4Engine, v->asReturnedValue());
+    return QJSValuePrivate::fromReturnedValue(v->asReturnedValue());
 }
 
 /*!
@@ -754,7 +748,7 @@ QJSValue QJSEngine::create(int type, const void *ptr)
 {
     QV4::Scope scope(m_v4Engine);
     QV4::ScopedValue v(scope, scope.engine->metaTypeToJS(type, ptr));
-    return QJSValue(m_v4Engine, v->asReturnedValue());
+    return QJSValuePrivate::fromReturnedValue(v->asReturnedValue());
 }
 
 /*!
@@ -763,118 +757,57 @@ QJSValue QJSEngine::create(int type, const void *ptr)
 */
 bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
 {
-    QV4::ExecutionEngine *v4 = QJSValuePrivate::engine(&value);
-    QV4::Value scratch;
-    QV4::Value *val = QJSValuePrivate::valueForData(&value, &scratch);
-    if (v4) {
-        QV4::Scope scope(v4);
-        QV4::ScopedValue v(scope, *val);
-        return scope.engine->metaTypeFromJS(v, type, ptr);
-    }
-
-    if (!val) {
-        QVariant *variant = QJSValuePrivate::getVariant(&value);
-        Q_ASSERT(variant);
-
-        if (variant->userType() == QMetaType::QString) {
-            QString string = variant->toString();
-            // have a string based value without engine. Do conversion manually
-            if (type == QMetaType::Bool) {
-                *reinterpret_cast<bool*>(ptr) = string.length() != 0;
-                return true;
-            }
-            if (type == QMetaType::QString) {
-                *reinterpret_cast<QString*>(ptr) = string;
-                return true;
-            }
-            double d = QV4::RuntimeHelpers::stringToNumber(string);
-            switch (type) {
-            case QMetaType::Int:
-                *reinterpret_cast<int*>(ptr) = QV4::Value::toInt32(d);
-                return true;
-            case QMetaType::UInt:
-                *reinterpret_cast<uint*>(ptr) = QV4::Value::toUInt32(d);
-                return true;
-            case QMetaType::LongLong:
-                *reinterpret_cast<qlonglong*>(ptr) = QV4::Value::toInteger(d);
-                return true;
-            case QMetaType::ULongLong:
-                *reinterpret_cast<qulonglong*>(ptr) = QV4::Value::toInteger(d);
-                return true;
-            case QMetaType::Double:
-                *reinterpret_cast<double*>(ptr) = d;
-                return true;
-            case QMetaType::Float:
-                *reinterpret_cast<float*>(ptr) = d;
-                return true;
-            case QMetaType::Short:
-                *reinterpret_cast<short*>(ptr) = QV4::Value::toInt32(d);
-                return true;
-            case QMetaType::UShort:
-                *reinterpret_cast<unsigned short*>(ptr) = QV4::Value::toUInt32(d);
-                return true;
-            case QMetaType::Char:
-                *reinterpret_cast<char*>(ptr) = QV4::Value::toInt32(d);
-                return true;
-            case QMetaType::UChar:
-                *reinterpret_cast<unsigned char*>(ptr) = QV4::Value::toUInt32(d);
-                return true;
-            case QMetaType::QChar:
-                *reinterpret_cast<QChar*>(ptr) = QV4::Value::toUInt32(d);
-                return true;
-            default:
-                return false;
-            }
-        } else {
-            return QMetaType::convert(&variant->data_ptr(), variant->userType(), ptr, type);
-        }
-    }
-
-    Q_ASSERT(val);
-
-    switch (type) {
-        case QMetaType::Bool:
-            *reinterpret_cast<bool*>(ptr) = val->toBoolean();
+    if (const QString *string = QJSValuePrivate::asQString(&value)) {
+        // have a string based value without engine. Do conversion manually
+        if (type == QMetaType::Bool) {
+            *reinterpret_cast<bool*>(ptr) = string->length() != 0;
             return true;
+        }
+        if (type == QMetaType::QString) {
+            *reinterpret_cast<QString*>(ptr) = *string;
+            return true;
+        }
+        double d = QV4::RuntimeHelpers::stringToNumber(*string);
+        switch (type) {
         case QMetaType::Int:
-            *reinterpret_cast<int*>(ptr) = val->toInt32();
+            *reinterpret_cast<int*>(ptr) = QV4::Value::toInt32(d);
             return true;
         case QMetaType::UInt:
-            *reinterpret_cast<uint*>(ptr) = val->toUInt32();
+            *reinterpret_cast<uint*>(ptr) = QV4::Value::toUInt32(d);
             return true;
         case QMetaType::LongLong:
-            *reinterpret_cast<qlonglong*>(ptr) = val->toInteger();
+            *reinterpret_cast<qlonglong*>(ptr) = QV4::Value::toInteger(d);
             return true;
         case QMetaType::ULongLong:
-            *reinterpret_cast<qulonglong*>(ptr) = val->toInteger();
+            *reinterpret_cast<qulonglong*>(ptr) = QV4::Value::toInteger(d);
             return true;
         case QMetaType::Double:
-            *reinterpret_cast<double*>(ptr) = val->toNumber();
-            return true;
-        case QMetaType::QString:
-            *reinterpret_cast<QString*>(ptr) = val->toQStringNoThrow();
+            *reinterpret_cast<double*>(ptr) = d;
             return true;
         case QMetaType::Float:
-            *reinterpret_cast<float*>(ptr) = val->toNumber();
+            *reinterpret_cast<float*>(ptr) = d;
             return true;
         case QMetaType::Short:
-            *reinterpret_cast<short*>(ptr) = val->toInt32();
+            *reinterpret_cast<short*>(ptr) = QV4::Value::toInt32(d);
             return true;
         case QMetaType::UShort:
-            *reinterpret_cast<unsigned short*>(ptr) = val->toUInt16();
+            *reinterpret_cast<unsigned short*>(ptr) = QV4::Value::toUInt32(d);
             return true;
         case QMetaType::Char:
-            *reinterpret_cast<char*>(ptr) = val->toInt32();
+            *reinterpret_cast<char*>(ptr) = QV4::Value::toInt32(d);
             return true;
         case QMetaType::UChar:
-            *reinterpret_cast<unsigned char*>(ptr) = val->toUInt16();
+            *reinterpret_cast<unsigned char*>(ptr) = QV4::Value::toUInt32(d);
             return true;
         case QMetaType::QChar:
-            *reinterpret_cast<QChar*>(ptr) = val->toUInt16();
+            *reinterpret_cast<QChar*>(ptr) = QV4::Value::toUInt32(d);
             return true;
         default:
             return false;
+        }
     }
+
+    return QV4::ExecutionEngine::metaTypeFromJS(QJSValuePrivate::asReturnedValue(&value), type, ptr);
 }
 
 /*! \fn template <typename T> QJSValue QJSEngine::toScriptValue(const T &value)
@@ -991,7 +924,7 @@ void QJSEngine::throwError(QJSValue::ErrorType errorType, const QString &message
 {
     QV4::Scope scope(m_v4Engine);
     QJSValue error = newErrorObject(errorType, message);
-    QV4::ScopedObject e(scope, QJSValuePrivate::getValue(&error));
+    QV4::ScopedObject e(scope, QJSValuePrivate::asReturnedValue(&error));
     if (!e)
         return;
     m_v4Engine->throwError(e);

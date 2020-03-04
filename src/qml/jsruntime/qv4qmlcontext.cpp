@@ -241,7 +241,7 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
                                         ).heapObject());
                         } else {
                             QJSValue singleton = e->singletonInstance<QJSValue>(r.type);
-                            QV4::ScopedObject o(scope, QJSValuePrivate::convertedToValue(v4, singleton));
+                            QV4::ScopedObject o(scope, QJSValuePrivate::asReturnedValue(&singleton));
                             lookup->qmlContextSingletonLookup.singleton = o->d();
                         }
                         lookup->qmlContextPropertyGetter = QQmlContextWrapper::lookupSingleton;

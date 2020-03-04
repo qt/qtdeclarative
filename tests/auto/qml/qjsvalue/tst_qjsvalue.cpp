@@ -66,7 +66,7 @@ void tst_QJSValue::ctor_undefinedWithEngine()
         QVERIFY(v.isUndefined());
         QCOMPARE(v.isObject(), false);
 #ifdef QT_DEPRECATED
-        QCOMPARE(v.engine(), &eng);
+        QCOMPARE(v.engine(), nullptr); // undefined is not managed
 #endif
     }
 }
@@ -80,7 +80,7 @@ void tst_QJSValue::ctor_nullWithEngine()
         QCOMPARE(v.isNull(), true);
         QCOMPARE(v.isObject(), false);
 #ifdef QT_DEPRECATED
-        QCOMPARE(v.engine(), &eng);
+        QCOMPARE(v.engine(), nullptr); // null is not managed
 #endif
     }
 }
@@ -95,7 +95,7 @@ void tst_QJSValue::ctor_boolWithEngine()
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.toBool(), false);
 #ifdef QT_DEPRECATED
-        QCOMPARE(v.engine(), &eng);
+        QCOMPARE(v.engine(), nullptr); // bool is not managed
 #endif
     }
 }
@@ -110,7 +110,7 @@ void tst_QJSValue::ctor_intWithEngine()
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.toNumber(), 1.0);
 #ifdef QT_DEPRECATED
-        QCOMPARE(v.engine(), &eng);
+        QCOMPARE(v.engine(), nullptr); // int is not managed
 #endif
     }
 }
@@ -144,7 +144,7 @@ void tst_QJSValue::ctor_uintWithEngine()
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.toNumber(), 1.0);
 #ifdef QT_DEPRECATED
-        QCOMPARE(v.engine(), &eng);
+        QCOMPARE(v.engine(), nullptr); // uint is not managed
 #endif
     }
 }
@@ -178,7 +178,7 @@ void tst_QJSValue::ctor_floatWithEngine()
         QCOMPARE(v.isObject(), false);
         QCOMPARE(v.toNumber(), 1.0);
 #ifdef QT_DEPRECATED
-        QCOMPARE(v.engine(), &eng);
+        QCOMPARE(v.engine(), nullptr); // float is not managed
 #endif
     }
 }
@@ -250,14 +250,14 @@ void tst_QJSValue::ctor_copyAndAssignWithEngine()
         QJSValue v2(v);
         QCOMPARE(v2.strictlyEquals(v), true);
 #ifdef QT_DEPRECATED
-        QCOMPARE(v2.engine(), &eng);
+        QCOMPARE(v2.engine(), nullptr); // not managed
 #endif
 
         QJSValue v3(v);
         QCOMPARE(v3.strictlyEquals(v), true);
         QCOMPARE(v3.strictlyEquals(v2), true);
 #ifdef QT_DEPRECATED
-        QCOMPARE(v3.engine(), &eng);
+        QCOMPARE(v3.engine(), nullptr); // not managed
 #endif
 
         QJSValue v4 = eng.toScriptValue(2.0);
@@ -466,6 +466,7 @@ void tst_QJSValue::toString()
 #ifdef QT_DEPRECATED
         QVERIFY(!o.engine());
 #endif
+        QEXPECT_FAIL("", "We cannot save and restore objects to/from a data stream", Continue);
         QCOMPARE(o.toString(), QStringLiteral("[object Object]"));
     }
 
@@ -480,6 +481,7 @@ void tst_QJSValue::toString()
 #ifdef QT_DEPRECATED
         QVERIFY(!o.engine());
 #endif
+        QEXPECT_FAIL("", "We cannot save and restore arrays to/from a data stream", Continue);
         QCOMPARE(o.toString(), QStringLiteral("1,2,3"));
     }
 
@@ -1627,10 +1629,15 @@ void tst_QJSValue::getSetProperty_twoEngines()
 
     QJSEngine otherEngine;
     QJSValue otherNum = otherEngine.toScriptValue(123);
-    QTest::ignoreMessage(QtWarningMsg, "QJSValue::setProperty(oof) failed: cannot set value created in a different engine");
     object.setProperty("oof", otherNum);
-    QVERIFY(!object.hasOwnProperty("oof"));
-    QVERIFY(object.property("oof").isUndefined());
+    QVERIFY(object.hasOwnProperty("oof")); // primitive values don't have an engine
+    QVERIFY(object.property("oof").isNumber());
+
+    QJSValue otherString = otherEngine.toScriptValue(QString::fromLatin1("nope"));
+    QTest::ignoreMessage(QtWarningMsg, "QJSValue::setProperty(eek) failed: cannot set value created in a different engine");
+    object.setProperty("eek", otherString);
+    QVERIFY(!object.hasOwnProperty("eek")); // strings are managed
+    QVERIFY(object.property("eek").isUndefined());
 }
 
 void tst_QJSValue::getSetProperty_gettersAndSettersThrowErrorJS()
@@ -1696,7 +1703,7 @@ void tst_QJSValue::getSetProperty()
     object.setProperty("foo", strstr);
     QCOMPARE(object.property("foo").toString(), strstr.toString());
 #ifdef QT_DEPRECATED
-    QCOMPARE(strstr.engine(), &eng); // the value has been bound to the engine
+    QVERIFY(strstr.engine() != &eng); // the value has not been bound to the engine
 #endif
 
     QJSValue numnum = QJSValue(123.0);
@@ -1941,10 +1948,15 @@ void tst_QJSValue::call_twoEngines()
                          "cannot call function with thisObject created in "
                          "a different engine");
     QVERIFY(fun.callWithInstance(object).isUndefined());
+
+    // Primitive value doesn't need an engine
+    QVERIFY(!fun.call(QJSValueList() << eng.toScriptValue(123)).isUndefined());
+
     QTest::ignoreMessage(QtWarningMsg, "QJSValue::call() failed: "
                          "cannot call function with argument created in "
                          "a different engine");
-    QVERIFY(fun.call(QJSValueList() << eng.toScriptValue(123)).isUndefined());
+    QVERIFY(fun.call(QJSValueList() << eng.toScriptValue(QString::fromLatin1("string")))
+            .isUndefined());
     {
         QJSValue fun = eng.evaluate("Object");
         QVERIFY(fun.isCallable());
@@ -2079,10 +2091,15 @@ void tst_QJSValue::construct_twoEngines()
     QJSEngine engine;
     QJSEngine otherEngine;
     QJSValue ctor = engine.evaluate("(function (a, b) { this.foo = 123; })");
+
     QJSValue arg = otherEngine.toScriptValue(124567);
+    QVERIFY(!ctor.callAsConstructor(QJSValueList() << arg).isUndefined());
+
+    QJSValue arg2 = otherEngine.toScriptValue(QString::fromLatin1("string"));
     QTest::ignoreMessage(QtWarningMsg, "QJSValue::callAsConstructor() failed: cannot construct function with argument created in a different engine");
-    QVERIFY(ctor.callAsConstructor(QJSValueList() << arg).isUndefined());
+    QVERIFY(ctor.callAsConstructor(QJSValueList() << arg2).isUndefined());
     QTest::ignoreMessage(QtWarningMsg, "QJSValue::callAsConstructor() failed: cannot construct function with argument created in a different engine");
+
     QVERIFY(ctor.callAsConstructor(QJSValueList() << arg << otherEngine.newObject()).isUndefined());
 }
 
@@ -2588,7 +2605,7 @@ void tst_QJSValue::engineDeleted()
 
     delete eng;
 
-    QVERIFY(v1.isUndefined());
+    QVERIFY(!v1.isUndefined()); // Primitive value is stored inline
     QVERIFY(v2.isUndefined());
     QVERIFY(v3.isUndefined());
     QVERIFY(v4.isUndefined());
@@ -2777,6 +2794,7 @@ void tst_QJSValue::jsvalueArrayToSequenceType()
     QCOMPARE(instanceCount, 0);
 }
 
+struct QJSValuePrivateAccess : public QJSValuePrivate { using QJSValuePrivate::setRawValue; };
 void tst_QJSValue::deleteFromDifferentThread()
 {
 #if !QT_CONFIG(thread)
@@ -2785,7 +2803,7 @@ void tst_QJSValue::deleteFromDifferentThread()
     QV4::PersistentValueStorage storage(engine->handle());
     QCOMPARE(storage.firstPage, nullptr);
     QJSValue jsval;
-    QJSValuePrivate::setRawValue(&jsval, storage.allocate());
+    QJSValuePrivateAccess::setRawValue(&jsval, storage.allocate());
     QVERIFY(storage.firstPage != nullptr);
 
     QMutex mutex;
@@ -2794,7 +2812,7 @@ void tst_QJSValue::deleteFromDifferentThread()
     std::unique_ptr<QThread> thread(QThread::create([&]() {
         QMutexLocker locker(&mutex);
         QJSValuePrivate::free(&jsval);
-        QJSValuePrivate::setRawValue(&jsval, nullptr);
+        QJSValuePrivate::setValue(&jsval, QV4::Encode::undefined());
         QVERIFY(storage.firstPage != nullptr);
         condition.wakeOne();
     }));

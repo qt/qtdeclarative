@@ -1068,7 +1068,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
                 _vmeMetaObject->setVMEProperty(bindingProperty->coreIndex(), wrappedObject);
             } else {
                 QJSValue value;
-                QJSValuePrivate::setValue(&value, v4, wrappedObject);
+                QJSValuePrivate::setValue(&value, wrappedObject);
                 argv[0] = &value;
                 QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, bindingProperty->coreIndex(), argv);
             }

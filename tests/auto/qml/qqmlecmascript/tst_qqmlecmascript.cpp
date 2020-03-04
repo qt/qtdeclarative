@@ -4036,13 +4036,16 @@ void tst_qqmlecmascript::signalWithJSValueInVariant_twoEngines()
     object->setProperty("compare", compare);
     object->setProperty("pass", false);
 
-    QTest::ignoreMessage(QtWarningMsg, "JSValue can't be reassigned to another engine.");
+    const bool isManaged = QJSValuePrivate::asManagedType<QV4::Managed>(&value) != nullptr;
+
+    if (isManaged)
+        QTest::ignoreMessage(QtWarningMsg, "JSValue can't be reassigned to another engine.");
     emit object->signalWithVariant(QVariant::fromValue(value));
     if (expression == "undefined")
         // if the engine is wrong, we return undefined to the other engine,
         // making this one case pass
         return;
-    QVERIFY(!object->property("pass").toBool());
+    QCOMPARE(object->property("pass").toBool(), !isManaged);
 }
 
 void tst_qqmlecmascript::signalWithQJSValue_data()

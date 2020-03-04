@@ -278,11 +278,14 @@ void QQuickTrailEmitter::emitWindow(int timeStamp)
                 array->put(i, (v = toEmit[i]->v4Value(m_system)));
 
             QJSValue particles;
-            QJSValuePrivate::setValue(&particles, v4, array);
-            if (isEmitFollowConnected())
-                emit emitFollowParticles(particles, QJSValue(v4, d->v4Value(m_system)));//A chance for many arbitrary JS changes
-            else if (isEmitConnected())
+            QJSValuePrivate::setValue(&particles, array);
+            if (isEmitFollowConnected()) {
+                //A chance for many arbitrary JS changes
+                emit emitFollowParticles(
+                        particles, QJSValuePrivate::fromReturnedValue(d->v4Value(m_system)));
+            } else if (isEmitConnected()) {
                 emit emitParticles(particles);//A chance for arbitrary JS changes
+            }
         }
         m_lastEmission[d->index] = pt;
     }
