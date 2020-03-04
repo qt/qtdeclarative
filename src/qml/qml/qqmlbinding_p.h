@@ -153,22 +153,22 @@ private:
 
 bool QQmlBinding::updatingFlag() const
 {
-    return m_target.flag();
+    return m_target.tag().testFlag(UpdatingBinding);
 }
 
 void QQmlBinding::setUpdatingFlag(bool v)
 {
-    m_target.setFlagValue(v);
+    m_target.setTag(m_target.tag().setFlag(UpdatingBinding, v));
 }
 
 bool QQmlBinding::enabledFlag() const
 {
-    return m_target.flag2();
+    return m_target.tag().testFlag(BindingEnabled);
 }
 
 void QQmlBinding::setEnabledFlag(bool v)
 {
-    m_target.setFlag2Value(v);
+    m_target.setTag(m_target.tag().setFlag(BindingEnabled, v));
 }
 
 QT_END_NAMESPACE

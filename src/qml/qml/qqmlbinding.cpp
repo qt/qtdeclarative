@@ -232,7 +232,7 @@ protected:
         QQmlPropertyData *pd = nullptr;
         getPropertyData(&pd, nullptr);
         QQmlBinding *thisPtr = this;
-        pd->writeProperty(*m_target, &thisPtr, flags);
+        pd->writeProperty(m_target.data(), &thisPtr, flags);
     }
 };
 
@@ -546,10 +546,10 @@ void QQmlBinding::setEnabled(bool e, QQmlPropertyData::WriteFlags flags)
     setEnabledFlag(e);
     setNotifyOnValueChanged(e);
 
-    m_nextBinding.setFlag2(); // Always use accessors, only not when:
+    m_nextBinding.setTag(m_nextBinding.tag().setFlag(CanUseAccessor)); // Always use accessors, only not when:
     if (auto interceptorMetaObject = QQmlInterceptorMetaObject::get(targetObject())) {
         if (!m_targetIndex.isValid() || interceptorMetaObject->intercepts(m_targetIndex))
-            m_nextBinding.clearFlag2();
+            m_nextBinding.setTag(m_nextBinding.tag().setFlag(CanUseAccessor, false));
     }
 
     if (e && !wasEnabled)
@@ -606,7 +606,7 @@ bool QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core, const
     }
     m_targetIndex = QQmlPropertyIndex(coreIndex, valueTypeIndex);
 
-    QQmlData *data = QQmlData::get(*m_target, true);
+    QQmlData *data = QQmlData::get(m_target.data(), true);
     if (!data->propertyCache) {
         data->propertyCache = QQmlEnginePrivate::get(engine())->cache(m_target->metaObject());
         data->propertyCache->addref();
@@ -619,7 +619,7 @@ void QQmlBinding::getPropertyData(QQmlPropertyData **propertyData, QQmlPropertyD
 {
     Q_ASSERT(propertyData);
 
-    QQmlData *data = QQmlData::get(*m_target, false);
+    QQmlData *data = QQmlData::get(m_target.data(), false);
     Q_ASSERT(data);
 
     if (Q_UNLIKELY(!data->propertyCache)) {

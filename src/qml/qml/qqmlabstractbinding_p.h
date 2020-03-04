@@ -92,7 +92,7 @@ public:
     inline QQmlAbstractBinding *nextBinding() const;
 
     inline bool canUseAccessor() const
-    { return m_nextBinding.flag2(); }
+    { return m_nextBinding.tag().testFlag(CanUseAccessor); }
 
     struct RefCount {
         RefCount() {}
@@ -102,6 +102,20 @@ public:
         operator int() const { return refCount; }
     };
     RefCount ref;
+
+    enum TargetTag {
+        NoTargetTag     = 0x0,
+        UpdatingBinding = 0x1,
+        BindingEnabled  = 0x2
+    };
+    Q_DECLARE_FLAGS(TargetTags, TargetTag)
+
+    enum NextBindingTag {
+        NoBindingTag   = 0x0,
+        AddedToObject  = 0x1,
+        CanUseAccessor = 0x2
+    };
+    Q_DECLARE_FLAGS(NextBindingTags, NextBindingTag)
 
 protected:
     friend class QQmlData;
@@ -116,24 +130,23 @@ protected:
     QQmlPropertyIndex m_targetIndex;
 
     // Pointer is the target object to which the binding binds
-    // flag1 is the updating flag
-    // flag2 is the enabled flag
-    QFlagPointer<QObject> m_target;
+    QTaggedPointer<QObject, TargetTags> m_target;
 
     // Pointer to the next binding in the linked list of bindings.
-    // flag1 is used for addedToObject
-    // flag2 indicates if an accessor is can be used (i.e. there is no interceptor on the target)
-    QFlagPointer<QQmlAbstractBinding> m_nextBinding;
+    QTaggedPointer<QQmlAbstractBinding, NextBindingTags> m_nextBinding;
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlAbstractBinding::TargetTags)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlAbstractBinding::NextBindingTags)
 
 void QQmlAbstractBinding::setAddedToObject(bool v)
 {
-    m_nextBinding.setFlagValue(v);
+    m_nextBinding.setTag(m_nextBinding.tag().setFlag(AddedToObject, v));
 }
 
 bool QQmlAbstractBinding::isAddedToObject() const
 {
-    return m_nextBinding.flag();
+    return m_nextBinding.tag().testFlag(AddedToObject);
 }
 
 QQmlAbstractBinding *QQmlAbstractBinding::nextBinding() const

@@ -223,7 +223,7 @@ public:
     {
         if (auto *node = iter.node()) {
             QHashedString key(node->key());
-            while ((node = static_cast<typename QLinkedStringHash<T>::Node *>(*node->next))) {
+            while ((node = static_cast<typename QLinkedStringHash<T>::Node *>(node->next.data()))) {
                 if (node->equals(key))
                     return QLinkedStringHash<T>::iterator(node);
             }

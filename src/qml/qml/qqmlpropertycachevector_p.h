@@ -54,16 +54,23 @@
 #include <private/qflagpointer_p.h>
 #include <private/qqmlpropertycache_p.h>
 
+#include <QtCore/qtaggedpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQmlPropertyCacheVector
 {
 public:
+    enum Tag {
+        NoTag,
+        CacheNeedsVMEMetaObject
+    };
+
     QQmlPropertyCacheVector() {}
     QQmlPropertyCacheVector(QQmlPropertyCacheVector &&other)
         : data(std::move(other.data)) {}
     QQmlPropertyCacheVector &operator=(QQmlPropertyCacheVector &&other) {
-        QVector<QFlagPointer<QQmlPropertyCache>> moved(std::move(other.data));
+        QVector<QTaggedPointer<QQmlPropertyCache, Tag>> moved(std::move(other.data));
         data.swap(moved);
         return *this;
     }
@@ -80,7 +87,7 @@ public:
         data.clear();
     }
 
-    void append(QQmlPropertyCache *cache) { cache->addref(); data.append(cache); }
+    void append(QQmlPropertyCache *cache) { cache->addref(); data.append(QTaggedPointer<QQmlPropertyCache, Tag>(cache)); }
     QQmlPropertyCache *at(int index) const { return data.at(index).data(); }
     void set(int index, const QQmlRefPointer<QQmlPropertyCache> &replacement) {
         if (QQmlPropertyCache *oldCache = data.at(index).data()) {
@@ -92,11 +99,11 @@ public:
         replacement->addref();
     }
 
-    void setNeedsVMEMetaObject(int index) { data[index].setFlag(); }
-    bool needsVMEMetaObject(int index) const { return data.at(index).flag(); }
+    void setNeedsVMEMetaObject(int index) { data[index].setTag(CacheNeedsVMEMetaObject); }
+    bool needsVMEMetaObject(int index) const { return data.at(index).tag() == CacheNeedsVMEMetaObject; }
 private:
     Q_DISABLE_COPY(QQmlPropertyCacheVector)
-    QVector<QFlagPointer<QQmlPropertyCache>> data;
+    QVector<QTaggedPointer<QQmlPropertyCache, Tag>> data;
 };
 
 QT_END_NAMESPACE

@@ -7292,10 +7292,7 @@ Qt::MouseButtons QQuickItem::acceptedMouseButtons() const
 void QQuickItem::setAcceptedMouseButtons(Qt::MouseButtons buttons)
 {
     Q_D(QQuickItem);
-    if (buttons & Qt::LeftButton)
-        d->extra.setFlag();
-    else
-        d->extra.clearFlag();
+    d->extra.setTag(d->extra.tag().setFlag(QQuickItemPrivate::LeftMouseButtonAccepted, buttons & Qt::LeftButton));
 
     buttons &= ~Qt::LeftButton;
     if (buttons || d->extra.isAllocated())

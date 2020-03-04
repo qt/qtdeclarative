@@ -204,7 +204,12 @@ public:
     QQmlVMEMetaObjectEndpoint();
     void tryConnect();
 
-    QFlagPointer<QQmlVMEMetaObject> metaObject;
+    enum Tag {
+        NoTag,
+        EndPointIsConnected
+    };
+
+    QTaggedPointer<QQmlVMEMetaObject, Tag> metaObject;
 };
 
 QQmlVMEMetaObjectEndpoint::QQmlVMEMetaObjectEndpoint()
@@ -223,7 +228,7 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
     Q_ASSERT(metaObject->compiledObject);
     int aliasId = this - metaObject->aliasEndpoints;
 
-    if (metaObject.flag()) {
+    if (metaObject.tag() == EndPointIsConnected) {
         // This is actually notify
         int sigIdx = metaObject->methodOffset() + aliasId + metaObject->compiledObject->nProperties;
         metaObject->activate(metaObject->object, sigIdx, nullptr);
@@ -258,7 +263,7 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
                 connect(target, pd->notifyIndex(), ctxt->engine());
         }
 
-        metaObject.setFlag();
+        metaObject.setTag(EndPointIsConnected);
     }
 }
 

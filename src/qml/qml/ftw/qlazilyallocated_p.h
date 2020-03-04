@@ -52,12 +52,11 @@
 //
 
 #include <QtCore/qglobal.h>
-
-#include <private/qflagpointer_p.h>
+#include <QtCore/qtaggedpointer.h>
 
 QT_BEGIN_NAMESPACE
 
-template<typename T>
+template<typename T, typename Tag = typename QtPrivate::TagInfo<T>::TagType>
 class QLazilyAllocated {
 public:
     inline QLazilyAllocated();
@@ -70,73 +69,59 @@ public:
     inline T &value();
     inline const T &value() const;
 
-    inline bool flag() const;
-    inline void setFlag();
-    inline void clearFlag();
-    inline void setFlagValue(bool);
+    inline Tag tag() const;
+    inline void setTag(Tag t);
 private:
-    mutable QFlagPointer<T> d;
+    mutable QTaggedPointer<T, Tag> d;
 };
 
-template<typename T>
-QLazilyAllocated<T>::QLazilyAllocated()
+template<typename T, typename Tag>
+QLazilyAllocated<T, Tag>::QLazilyAllocated()
 {
 }
 
-template<typename T>
-QLazilyAllocated<T>::~QLazilyAllocated()
+template<typename T, typename Tag>
+QLazilyAllocated<T, Tag>::~QLazilyAllocated()
 {
-    delete *d;
+    delete d.data();
 }
 
-template<typename T>
-bool QLazilyAllocated<T>::isAllocated() const
+template<typename T, typename Tag>
+bool QLazilyAllocated<T, Tag>::isAllocated() const
 {
     return !d.isNull();
 }
 
-template<typename T>
-T &QLazilyAllocated<T>::value()
+template<typename T, typename Tag>
+T &QLazilyAllocated<T, Tag>::value()
 {
     if (d.isNull()) d = new T;
-    return *(*d);
-}
-
-template<typename T>
-const T &QLazilyAllocated<T>::value() const
-{
-    if (d.isNull()) d = new T;
-    return *(*d);
-}
-
-template<typename T>
-T *QLazilyAllocated<T>::operator->() const
-{
     return *d;
 }
 
-template<typename T>
-bool QLazilyAllocated<T>::flag() const
+template<typename T, typename Tag>
+const T &QLazilyAllocated<T, Tag>::value() const
 {
-    return d.flag();
+    if (d.isNull()) d = new T;
+    return *d;
 }
 
-template<typename T>
-void QLazilyAllocated<T>::setFlag()
+template<typename T, typename Tag>
+T *QLazilyAllocated<T, Tag>::operator->() const
 {
-    d.setFlag();
+    return d.data();
 }
 
-template<typename T>
-void QLazilyAllocated<T>::clearFlag()
+template<typename T, typename Tag>
+Tag QLazilyAllocated<T, Tag>::tag() const
 {
-    d.clearFlag();
+    return d.tag();
 }
 
-template<typename T>
-void QLazilyAllocated<T>::setFlagValue(bool v)
+template<typename T, typename Tag>
+void QLazilyAllocated<T, Tag>::setTag(Tag t)
 {
-    d.setFlagValue(v);
+    d.setTag(t);
 }
 
 QT_END_NAMESPACE

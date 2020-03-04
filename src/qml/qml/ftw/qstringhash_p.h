@@ -56,6 +56,7 @@
 
 #include <QtCore/qbytearray.h>
 #include <QtCore/qstring.h>
+#include <QtCore/qtaggedpointer.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -104,7 +105,12 @@ public:
             QTypedArrayData<ushort>::deallocate(arrayData);
     }
 
-    QFlagPointer<QStringHashNode> next;
+    enum Tag {
+        NodeIsCString,
+        NodeIsQString
+    };
+
+    QTaggedPointer<QStringHashNode, Tag> next;
 
     qint32 length = 0;
     quint32 hash = 0;
@@ -126,8 +132,8 @@ public:
         return QHashedString(QString::fromLatin1(ckey, length), hash);
     }
 
-    bool isQString() const { return next.flag(); }
-    void setQString(bool v) { if (v) next.setFlag(); else next.clearFlag(); }
+    bool isQString() const { return next.tag() == NodeIsQString; }
+    void setQString(bool v) { if (v) next.setTag(NodeIsQString); else next.setTag(NodeIsCString); }
 
     inline qsizetype size() const { return length; }
     inline const char *cStrData() const { return ckey; }
@@ -712,7 +718,7 @@ typename QStringHash<T>::Node *QStringHash<T>::findNode(const K &key) const
 
     typename HashedForm<K>::Type hashedKey(hashedString(key));
     while (node && !node->equals(hashedKey))
-        node = (*node->next);
+        node = node->next.data();
 
     return (Node *)node;
 }

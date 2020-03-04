@@ -52,6 +52,7 @@
 //
 
 #include <QtCore/qglobal.h>
+#include <QtCore/qtaggedpointer.h>
 #include <QtQml/qqmlerror.h>
 #include <private/qqmlengine_p.h>
 
@@ -175,10 +176,16 @@ protected:
     //    activeGuards:flag1  - notifyOnValueChanged
     //    activeGuards:flag2  - useSharedContext
     QBiPointer<QObject, DeleteWatcher> m_scopeObject;
-    QForwardFieldList<QQmlJavaScriptExpressionGuard, &QQmlJavaScriptExpressionGuard::next> activeGuards;
 
-    void setTranslationsCaptured(bool captured) { m_error.setFlagValue(captured); }
-    bool translationsCaptured() const { return m_error.flag(); }
+    enum GuardTag {
+        NoGuardTag,
+        NotifyOnValueChanged
+    };
+
+    QForwardFieldList<QQmlJavaScriptExpressionGuard, &QQmlJavaScriptExpressionGuard::next, GuardTag> activeGuards;
+
+    void setTranslationsCaptured(bool captured) { if (captured) m_error.setTag(TranslationsCaptured); else m_error.setTag(NoTag); }
+    bool translationsCaptured() const { return m_error.tag() == TranslationsCaptured; }
 
 private:
     friend class QQmlContextData;
@@ -186,8 +193,13 @@ private:
     friend void QQmlJavaScriptExpressionGuard_callback(QQmlNotifierEndpoint *, void **);
     friend class QQmlTranslationBinding;
 
+    enum Tag {
+        NoTag,
+        TranslationsCaptured
+    };
+
     // m_error:flag1 translationsCapturedDuringEvaluation
-    QFlagPointer<QQmlDelayedError> m_error;
+    QTaggedPointer<QQmlDelayedError> m_error;
 
     // Not refcounted as the context will clear the expressions when destructed.
     QQmlContextData *m_context;
@@ -250,7 +262,7 @@ bool QQmlJavaScriptExpression::DeleteWatcher::wasDeleted() const
 
 bool QQmlJavaScriptExpression::notifyOnValueChanged() const
 {
-    return activeGuards.flag();
+    return activeGuards.tag() == NotifyOnValueChanged;
 }
 
 QObject *QQmlJavaScriptExpression::scopeObject() const

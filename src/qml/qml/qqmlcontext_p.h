@@ -59,6 +59,7 @@
 #include <QtQml/qqmllist.h>
 
 #include <QtCore/private/qobject_p.h>
+#include <QtCore/qtaggedpointer.h>
 #include <QtQml/private/qqmlrefcount_p.h>
 
 QT_BEGIN_NAMESPACE

@@ -397,7 +397,7 @@ public:
         QObjectList resourcesList;
 
         // Although acceptedMouseButtons is inside ExtraData, we actually store
-        // the LeftButton flag in the extra.flag() bit.  This is because it is
+        // the LeftButton flag in the extra.tag() bit.  This is because it is
         // extremely common to set acceptedMouseButtons to LeftButton, but very
         // rare to use any of the other buttons.
         Qt::MouseButtons acceptedMouseButtons;
@@ -407,7 +407,14 @@ public:
 
         // 26 bits padding
     };
-    QLazilyAllocated<ExtraData> extra;
+
+    enum ExtraDataTag {
+        NoTag = 0x1,
+        LeftMouseButtonAccepted = 0x2
+    };
+    Q_DECLARE_FLAGS(ExtraDataTags, ExtraDataTag)
+
+    QLazilyAllocated<ExtraData, ExtraDataTags> extra;
     // Contains mask
     QPointer<QObject> mask;
     // If the mask is an Item, inform it that it's being used as a mask (true) or is no longer being used (false)
@@ -662,6 +669,8 @@ public:
 
     virtual void updatePolish() { }
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickItemPrivate::ExtraDataTags)
 
 /*
     Key filters can be installed on a QQuickItem, but not removed.  Currently they
@@ -947,7 +956,7 @@ private:
 
 Qt::MouseButtons QQuickItemPrivate::acceptedMouseButtons() const
 {
-    return ((extra.flag() ? Qt::LeftButton : Qt::MouseButton(0)) |
+    return ((extra.tag().testFlag(LeftMouseButtonAccepted) ? Qt::LeftButton : Qt::MouseButton(0)) |
             (extra.isAllocated() ? extra->acceptedMouseButtons : Qt::MouseButtons{}));
 }
 

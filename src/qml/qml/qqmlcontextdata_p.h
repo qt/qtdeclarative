@@ -278,6 +278,11 @@ private:
     // id guards
     struct ContextGuard : public QQmlGuard<QObject>
     {
+        enum Tag {
+            NoTag,
+            ObjectWasSet
+        };
+
         inline ContextGuard() : m_context(nullptr) {}
         inline ContextGuard &operator=(QObject *obj);
         inline void objectDestroyed(QObject *) override;
@@ -292,7 +297,7 @@ private:
 
     private:
         // Not refcounted, as it always belongs to the QQmlContextData.
-        QFlagPointer<QQmlContextData> m_context;
+        QTaggedPointer<QQmlContextData, Tag> m_context;
         QQmlNotifier m_bindings;
     };
 
@@ -404,7 +409,7 @@ private:
 QQmlContextData::ContextGuard &QQmlContextData::ContextGuard::operator=(QObject *obj)
 {
     QQmlGuard<QObject>::operator=(obj);
-    m_context.setFlag();
+    m_context.setTag(ObjectWasSet);
     m_bindings.notify(); // For alias connections
     return *this;
 }
@@ -419,7 +424,7 @@ void QQmlContextData::ContextGuard::objectDestroyed(QObject *)
 
 bool QQmlContextData::ContextGuard::wasSet() const
 {
-    return m_context.flag();
+    return m_context.tag() == ObjectWasSet;
 }
 
 QT_END_NAMESPACE

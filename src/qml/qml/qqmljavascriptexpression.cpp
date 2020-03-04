@@ -129,7 +129,7 @@ QString QQmlJavaScriptExpression::expressionIdentifier() const
 
 void QQmlJavaScriptExpression::setNotifyOnValueChanged(bool v)
 {
-    activeGuards.setFlagValue(v);
+    activeGuards.setTag(v ? NotifyOnValueChanged : NoGuardTag);
     if (!v)
         clearActiveGuards();
 }

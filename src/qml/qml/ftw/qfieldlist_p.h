@@ -52,11 +52,12 @@
 //
 
 #include <QtCore/qglobal.h>
+#include <QtCore/qtaggedpointer.h>
 
 #include <private/qflagpointer_p.h>
 
 // QForwardFieldList is a super simple linked list that can only prepend
-template<class N, N *N::*nextMember>
+template<class N, N *N::*nextMember, typename Tag = QtPrivate::TagInfo<N>>
 class QForwardFieldList
 {
 public:
@@ -72,17 +73,10 @@ public:
 
     static inline N *next(N *v);
 
-    inline bool flag() const;
-    inline void setFlag();
-    inline void clearFlag();
-    inline void setFlagValue(bool);
-
-    inline bool flag2() const;
-    inline void setFlag2();
-    inline void clearFlag2();
-    inline void setFlag2Value(bool);
+    inline Tag tag() const;
+    inline void setTag(Tag t);
 private:
-    QFlagPointer<N> _first;
+    QTaggedPointer<N, Tag> _first;
 };
 
 // QFieldList is a simple linked list, that can append and prepend and also
@@ -108,8 +102,10 @@ public:
     inline void insertAfter(N *, QFieldList<N, nextMember> &);
 
     inline void copyAndClear(QFieldList<N, nextMember> &);
-    inline void copyAndClearAppend(QForwardFieldList<N, nextMember> &);
-    inline void copyAndClearPrepend(QForwardFieldList<N, nextMember> &);
+    template <typename Tag>
+    inline void copyAndClearAppend(QForwardFieldList<N, nextMember, Tag> &);
+    template <typename Tag>
+    inline void copyAndClearPrepend(QForwardFieldList<N, nextMember, Tag> &);
 
     static inline N *next(N *v);
 
@@ -124,21 +120,21 @@ private:
     quint32 _count:31;
 };
 
-template<class N, N *N::*nextMember>
-QForwardFieldList<N, nextMember>::QForwardFieldList()
+template<class N, N *N::*nextMember, typename Tag>
+QForwardFieldList<N, nextMember, Tag>::QForwardFieldList()
 {
 }
 
-template<class N, N *N::*nextMember>
-N *QForwardFieldList<N, nextMember>::first() const
+template<class N, N *N::*nextMember, typename Tag>
+N *QForwardFieldList<N, nextMember, Tag>::first() const
 {
-    return *_first;
+    return _first.data();
 }
 
-template<class N, N *N::*nextMember>
-N *QForwardFieldList<N, nextMember>::takeFirst()
+template<class N, N *N::*nextMember, typename Tag>
+N *QForwardFieldList<N, nextMember, Tag>::takeFirst()
 {
-    N *value = *_first;
+    N *value = _first.data();
     if (value) {
         _first = next(value);
         value->*nextMember = nullptr;
@@ -146,85 +142,49 @@ N *QForwardFieldList<N, nextMember>::takeFirst()
     return value;
 }
 
-template<class N, N *N::*nextMember>
-void QForwardFieldList<N, nextMember>::prepend(N *v)
+template<class N, N *N::*nextMember, typename Tag>
+void QForwardFieldList<N, nextMember, Tag>::prepend(N *v)
 {
     Q_ASSERT(v->*nextMember == nullptr);
-    v->*nextMember = *_first;
+    v->*nextMember = _first.data();
     _first = v;
 }
 
-template<class N, N *N::*nextMember>
-bool QForwardFieldList<N, nextMember>::isEmpty() const
+template<class N, N *N::*nextMember, typename Tag>
+bool QForwardFieldList<N, nextMember, Tag>::isEmpty() const
 {
     return _first.isNull();
 }
 
-template<class N, N *N::*nextMember>
-bool QForwardFieldList<N, nextMember>::isOne() const
+template<class N, N *N::*nextMember, typename Tag>
+bool QForwardFieldList<N, nextMember, Tag>::isOne() const
 {
-    return *_first && _first->*nextMember == 0;
+    return _first.data() && _first->*nextMember == 0;
 }
 
-template<class N, N *N::*nextMember>
-bool QForwardFieldList<N, nextMember>::isMany() const
+template<class N, N *N::*nextMember, typename Tag>
+bool QForwardFieldList<N, nextMember, Tag>::isMany() const
 {
-    return *_first && _first->*nextMember != 0;
+    return _first.data() && _first->*nextMember != 0;
 }
 
-template<class N, N *N::*nextMember>
-N *QForwardFieldList<N, nextMember>::next(N *v)
+template<class N, N *N::*nextMember, typename Tag>
+N *QForwardFieldList<N, nextMember, Tag>::next(N *v)
 {
     Q_ASSERT(v);
     return v->*nextMember;
 }
 
-template<class N, N *N::*nextMember>
-bool QForwardFieldList<N, nextMember>::flag() const
+template<class N, N *N::*nextMember, typename Tag>
+Tag QForwardFieldList<N, nextMember, Tag>::tag() const
 {
-    return _first.flag();
+    return _first.tag();
 }
 
-template<class N, N *N::*nextMember>
-void QForwardFieldList<N, nextMember>::setFlag()
+template<class N, N *N::*nextMember, typename Tag>
+void QForwardFieldList<N, nextMember, Tag>::setTag(Tag t)
 {
-    _first.setFlag();
-}
-
-template<class N, N *N::*nextMember>
-void QForwardFieldList<N, nextMember>::clearFlag()
-{
-    _first.clearFlag();
-}
-
-template<class N, N *N::*nextMember>
-void QForwardFieldList<N, nextMember>::setFlagValue(bool v)
-{
-    _first.setFlagValue(v);
-}
-
-template<class N, N *N::*nextMember>
-bool QForwardFieldList<N, nextMember>::flag2() const
-{
-    return _first.flag2();
-}
-
-template<class N, N *N::*nextMember>
-void QForwardFieldList<N, nextMember>::setFlag2()
-{
-    _first.setFlag2();
-}
-
-template<class N, N *N::*nextMember>
-void QForwardFieldList<N, nextMember>::clearFlag2()
-{
-    _first.clearFlag2();
-}
-
-template<class N, N *N::*nextMember>
-void QForwardFieldList<N, nextMember>::setFlag2Value(bool v)
-{
-    _first.setFlag2Value(v);
+    _first.setTag(t);
 }
 
 template<class N, N *N::*nextMember>
@@ -380,7 +340,8 @@ void QFieldList<N, nextMember>::copyAndClear(QFieldList<N, nextMember> &o)
 }
 
 template<class N, N *N::*nextMember>
-void QFieldList<N, nextMember>::copyAndClearAppend(QForwardFieldList<N, nextMember> &o)
+template <typename Tag>
+void QFieldList<N, nextMember>::copyAndClearAppend(QForwardFieldList<N, nextMember, Tag> &o)
 {
     _first = 0;
     _last = 0;
@@ -389,7 +350,8 @@ void QFieldList<N, nextMember>::copyAndClearAppend(QForwardFieldList<N, nextMemb
 }
 
 template<class N, N *N::*nextMember>
-void QFieldList<N, nextMember>::copyAndClearPrepend(QForwardFieldList<N, nextMember> &o)
+template <typename Tag>
+void QFieldList<N, nextMember>::copyAndClearPrepend(QForwardFieldList<N, nextMember, Tag> &o)
 {
     _first = nullptr;
     _last = nullptr;

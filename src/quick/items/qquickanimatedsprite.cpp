@@ -497,7 +497,7 @@ void QQuickAnimatedSprite::advance(int frames)
 void QQuickAnimatedSprite::maybeUpdate()
 {
     QQuickItemPrivate *priv = QQuickItemPrivate::get(this);
-    const QLazilyAllocated<QQuickItemPrivate::ExtraData> &extraData = priv->extra;
+    const auto &extraData = priv->extra;
     if ((extraData.isAllocated() && extraData->effectRefCount > 0) || priv->effectiveVisible)
         update();
 }
