@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -47,26 +47,22 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
 
-import QtQuick 2.12
-import QtQuick.Window 2.12
+int main(int argc, char *argv[])
+{
+    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    QGuiApplication app(argc, argv);
+    QQmlApplicationEngine engine;
+    const QUrl url(QStringLiteral("qrc:/qml-i18n.qml"));
 
-Window {
-    visible: true
-    width: 640; height: 480
+    QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
+        &app, [url](QObject *obj, const QUrl &objUrl) {
+            if (!obj && url == objUrl)
+                QCoreApplication::exit(-1);
+        }, Qt::QueuedConnection);
+    engine.load(url);
 
-    Column {
-        anchors.fill: parent; spacing: 20
-
-        Text {
-            text: "If a translation is available for the system language (eg. French) then the " +
-            "string below will be translated (eg. 'Bonjour'). Otherwise it will show 'Hello'."
-            width: parent.width; wrapMode: Text.WordWrap
-        }
-
-        Text {
-            text: qsTr("Hello")
-            font.pointSize: 25; anchors.horizontalCenter: parent.horizontalCenter
-        }
-    }
+    return app.exec();
 }

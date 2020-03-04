@@ -52,4 +52,6 @@
    lrelease i18n/*.ts
 \endcode
 
+\note On Android, please make sure to include the generated *.qm files as resources.
+
 */

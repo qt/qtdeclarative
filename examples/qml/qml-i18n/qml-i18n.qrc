@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>qml-i18n.qml</file>
+    </qresource>
+</RCC>
