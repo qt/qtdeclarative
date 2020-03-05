@@ -33,6 +33,7 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
+#include <QtQuick/private/qquickitem_p.h>
 #include "../../shared/util.h"
 #include <QtGui/QWindow>
 #include <QtGui/QScreen>
@@ -142,6 +143,7 @@ private slots:
     void synthMouseFromTouch_data();
     void synthMouseFromTouch();
     void tabKey();
+    void resizeOverlay();
 
 private:
     QTouchDevice *device = QTest::createTouchDevice();
@@ -660,6 +662,74 @@ void tst_qquickwidget::tabKey()
     QTest::keyClick(qqw2, Qt::Key_Tab);
     QTRY_VERIFY(qqw->hasFocus());
     QVERIFY(middleItem->property("activeFocus").toBool());
+}
+
+class Overlay : public QQuickItem, public QQuickItemChangeListener
+{
+    Q_OBJECT
+
+public:
+    Overlay() = default;
+
+    ~Overlay()
+    {
+        QQuickItemPrivate::get(parentItem())->removeItemChangeListener(this, QQuickItemPrivate::Geometry);
+    }
+
+    // componentCompleted() is too early to add the listener, as parentItem()
+    // is still null by that stage, so we use this function instead.
+    void startListening()
+    {
+        QQuickItemPrivate::get(parentItem())->addItemChangeListener(this, QQuickItemPrivate::Geometry);
+    }
+
+private:
+    virtual void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &/*oldGeometry*/) override
+    {
+        auto window = QQuickItemPrivate::get(this)->window;
+        if (!window)
+            return;
+
+        setSize(window->size());
+    }
+};
+
+// Test that an item that resizes itself based on the window size can use a
+// Geometry item change listener to respond to changes in size. This is a
+// simplified test to mimic a use case involving Overlay from Qt Quick Controls 2.
+void tst_qquickwidget::resizeOverlay()
+{
+    QWidget widget;
+    auto contentVerticalLayout = new QVBoxLayout(&widget);
+    contentVerticalLayout->setMargin(0);
+
+    qmlRegisterType<Overlay>("Test", 1, 0, "Overlay");
+
+    auto quickWidget = new QQuickWidget(testFileUrl("resizeOverlay.qml"), &widget);
+    QCOMPARE(quickWidget->status(), QQuickWidget::Ready);
+    quickWidget->setResizeMode(QQuickWidget::SizeRootObjectToView);
+    contentVerticalLayout->addWidget(quickWidget);
+
+    auto rootItem = qobject_cast<QQuickItem*>(quickWidget->rootObject());
+    QVERIFY(rootItem);
+
+    auto overlay = rootItem->property("overlay").value<Overlay*>();
+    QVERIFY(overlay);
+    QVERIFY(overlay->parentItem());
+    overlay->startListening();
+
+    widget.resize(200, 200);
+    widget.show();
+    QCOMPARE(rootItem->width(), 200);
+    QCOMPARE(rootItem->height(), 200);
+    QCOMPARE(overlay->width(), rootItem->width());
+    QCOMPARE(overlay->height(), rootItem->height());
+
+    widget.resize(300, 300);
+    QCOMPARE(rootItem->width(), 300);
+    QCOMPARE(rootItem->height(), 300);
+    QCOMPARE(overlay->width(), rootItem->width());
+    QCOMPARE(overlay->height(), rootItem->height());
 }
 
 QTEST_MAIN(tst_qquickwidget)

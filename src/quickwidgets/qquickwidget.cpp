@@ -107,6 +107,7 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
     renderControl = new QQuickWidgetRenderControl(q);
     offscreenWindow = new QQuickWindow(*new QQuickOffcreenWindowPrivate(),renderControl);
     offscreenWindow->setTitle(QString::fromLatin1("Offscreen"));
+    offscreenWindow->setObjectName(QString::fromLatin1("QQuickOffScreenWindow"));
     // Do not call create() on offscreenWindow.
 
     // Check if the Software Adaptation is being used
@@ -802,15 +803,29 @@ void QQuickWidgetPrivate::updateSize()
             q->updateGeometry();
         }
     } else if (resizeMode == QQuickWidget::SizeRootObjectToView) {
-        bool needToUpdateWidth = !qFuzzyCompare(q->width(), root->width());
-        bool needToUpdateHeight = !qFuzzyCompare(q->height(), root->height());
+        const bool needToUpdateWidth = !qFuzzyCompare(q->width(), root->width());
+        const bool needToUpdateHeight = !qFuzzyCompare(q->height(), root->height());
 
-        if (needToUpdateWidth && needToUpdateHeight)
-            root->setSize(QSizeF(q->width(), q->height()));
-        else if (needToUpdateWidth)
-            root->setWidth(q->width());
-        else if (needToUpdateHeight)
-            root->setHeight(q->height());
+        if (needToUpdateWidth && needToUpdateHeight) {
+            // Make sure that we have realistic sizing behavior by following
+            // what on-screen windows would do and resize everything, not just
+            // the root item. We do this because other types may be relying on
+            // us to behave correctly.
+            const QSizeF newSize(q->width(), q->height());
+            offscreenWindow->resize(newSize.toSize());
+            offscreenWindow->contentItem()->setSize(newSize);
+            root->setSize(newSize);
+        } else if (needToUpdateWidth) {
+            const int newWidth = q->width();
+            offscreenWindow->setWidth(newWidth);
+            offscreenWindow->contentItem()->setWidth(newWidth);
+            root->setWidth(newWidth);
+        } else if (needToUpdateHeight) {
+            const int newHeight = q->height();
+            offscreenWindow->setHeight(newHeight);
+            offscreenWindow->contentItem()->setHeight(newHeight);
+            root->setHeight(newHeight);
+        }
     }
 }
 
