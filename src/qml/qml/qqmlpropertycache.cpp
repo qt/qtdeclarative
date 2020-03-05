@@ -661,7 +661,7 @@ void QQmlPropertyCache::resolve(QQmlPropertyData *data) const
         data->setPropType(QMetaType::type(retTy));
     } else {
         auto metaProperty = mo->property(data->coreIndex());
-        data->setPropType(QMetaType::type(metaProperty.typeName()));
+        data->setPropType(metaProperty.metaType().id());
     }
 
     if (!data->isFunction()) {

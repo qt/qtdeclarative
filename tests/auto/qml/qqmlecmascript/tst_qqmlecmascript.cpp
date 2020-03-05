@@ -1273,44 +1273,36 @@ void tst_qqmlecmascript::enums()
     // Non-existent enums
     {
     QUrl file = testFileUrl("enums.2.qml");
-    QString w1 = QLatin1String("QMetaProperty::read: Unable to handle unregistered datatype 'MyEnum' for property 'MyUnregisteredEnumTypeObject::enumProperty'");
     QString w2 = QLatin1String("QQmlExpression: Expression ") + testFileUrl("enums.2.qml").toString() + QLatin1String(":9:5 depends on non-NOTIFYable properties:");
     QString w3 = QLatin1String("    MyUnregisteredEnumTypeObject::enumProperty");
     QString w4 = file.toString() + ":7:5: Unable to assign [undefined] to int";
     QString w5 = file.toString() + ":8:5: Unable to assign [undefined] to int";
-    QString w6 = file.toString() + ":9:5: Unable to assign [undefined] to int";
-    QString w7 = file.toString() + ":13:9: Unable to assign [undefined] to [unknown property type]";
-    QString w8 = file.toString() + ":31:9: Unable to assign int to [unknown property type]";
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(w1));
+    QString w7 = file.toString() + ":13:9: Unable to assign [undefined] to MyUnregisteredEnumTypeObject::MyEnum";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(w2));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(w3));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(w4));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(w5));
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(w6));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(w7));
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(w8));
 
     QQmlComponent component(&engine, testFileUrl("enums.2.qml"));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
     QCOMPARE(object->property("a").toInt(), 0);
     QCOMPARE(object->property("b").toInt(), 0);
-    QCOMPARE(object->property("c").toInt(), 0);
+    QCOMPARE(object->property("c").toInt(), 1); // Change from Qt 5: type gets automatically registered
 
-    QString w9 = file.toString() + ":18: Error: Cannot assign JavaScript function to [unknown property type]";
+    QString w9 = file.toString() + ":18: Error: Cannot assign JavaScript function to MyUnregisteredEnumTypeObject::MyEnum";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(w9));
     QMetaObject::invokeMethod(object, "testAssignmentOne");
 
-    QString w10 = file.toString() + ":21: Error: Cannot assign [undefined] to [unknown property type]";
+    QString w10 = file.toString() + ":21: Error: Cannot assign [undefined] to MyUnregisteredEnumTypeObject::MyEnum";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(w10));
     QMetaObject::invokeMethod(object, "testAssignmentTwo");
 
-    QString w11 = file.toString() + ":24: Error: Cannot assign [undefined] to [unknown property type]";
+    QString w11 = file.toString() + ":24: Error: Cannot assign [undefined] to MyUnregisteredEnumTypeObject::MyEnum";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(w11));
     QMetaObject::invokeMethod(object, "testAssignmentThree");
 
-    QString w12 = file.toString() + ":34: Error: Cannot assign int to an unregistered type";
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(w12));
     QMetaObject::invokeMethod(object, "testAssignmentFour");
 
     delete object;
