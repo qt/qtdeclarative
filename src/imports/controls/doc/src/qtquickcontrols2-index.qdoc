@@ -46,9 +46,9 @@
     The \l{Qt Quick Controls QML Types}{QML types} can be imported into your
     application using the following import statement in your \c {.qml} file:
 
-    \code \QtMinorVersion
+    \qml \QtMinorVersion
     import QtQuick.Controls 2.\1
-    \endcode
+    \endqml
 
     The \l{Qt Quick Controls C++ Classes}{C++ classes} can be included into
     your application using the following include statement:
