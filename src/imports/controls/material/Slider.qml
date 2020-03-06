@@ -65,8 +65,8 @@ T.Slider {
         implicitHeight: control.horizontal ? 48 : 200
         width: control.horizontal ? control.availableWidth : 1
         height: control.horizontal ? 1 : control.availableHeight
-        color: control.Material.foreground
         scale: control.horizontal && control.mirrored ? -1 : 1
+        color: control.enabled ? control.Material.foreground : control.Material.sliderDisabledColor
 
         Rectangle {
             x: control.horizontal ? 0 : (parent.width - width) / 2
@@ -74,7 +74,7 @@ T.Slider {
             width: control.horizontal ? control.position * parent.width : 3
             height: control.horizontal ? 3 : control.position * parent.height
 
-            color: control.Material.accentColor
+            color: control.enabled ? control.Material.accentColor : control.Material.sliderDisabledColor
         }
     }
 }
