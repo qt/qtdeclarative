@@ -5771,9 +5771,7 @@ void tst_qqmlecmascript::sequenceConversionRead()
         QVERIFY(seq != nullptr);
 
         // we haven't registered QList<NonRegisteredType> as a sequence type.
-        QString warningOne = QLatin1String("QMetaProperty::read: Unable to handle unregistered datatype 'QVector<NonRegisteredType>' for property 'MySequenceConversionObject::typeListProperty'");
-        QString warningTwo = qmlFile.toString() + QLatin1String(":18: TypeError: Cannot read property 'length' of undefined");
-        QTest::ignoreMessage(QtWarningMsg, warningOne.toLatin1().constData());
+        QString warningTwo = qmlFile.toString() + QLatin1String(":18: Error: Cannot assign [undefined] to int");
         QTest::ignoreMessage(QtWarningMsg, warningTwo.toLatin1().constData());
 
         QMetaObject::invokeMethod(object, "performTest");
@@ -5781,10 +5779,6 @@ void tst_qqmlecmascript::sequenceConversionRead()
         // QList<NonRegisteredType> has not been registered as a sequence type.
         QCOMPARE(object->property("pointListLength").toInt(), 0);
         QVERIFY(!object->property("pointList").isValid());
-        QTest::ignoreMessage(QtWarningMsg, "QMetaProperty::read: Unable to handle unregistered datatype 'QVector<NonRegisteredType>' for property 'MySequenceConversionObject::typeListProperty'");
-        QQmlProperty seqProp(seq, "typeListProperty", &engine);
-        QVERIFY(!seqProp.read().isValid()); // not a valid/known sequence type
-
         delete object;
     }
 }
