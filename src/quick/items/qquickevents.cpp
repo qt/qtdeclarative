@@ -680,7 +680,7 @@ QQuickPointerDevice *QQuickPointerDevice::tabletDevice(const QTabletEvent *event
     // TODO Qt 6: we can't know for sure about XTilt or YTilt until we have a
     // QTabletDevice populated with capabilities provided by QPA plugins
 
-    switch (event->device()) {
+    switch (event->deviceType()) {
     case QTabletEvent::Stylus:
         type = QQuickPointerDevice::Stylus;
         buttonCount = 3;
