@@ -39,6 +39,7 @@
 
 #include <QtQml/qqmlextensionplugin.h>
 #include <QtQml/qqml.h>
+#include <QtQml/private/qqmlmetatype_p.h>
 
 #include "qquickfolderlistmodel.h"
 
@@ -64,8 +65,16 @@ public:
         Q_ASSERT(QLatin1String(uri) == QLatin1String("Qt.labs.folderlistmodel"));
 
         // Major version 1 only has a single revision, 0.
-        qmlRegisterType<QQuickFolderListModel>(uri, 1, 0, "FolderListModel");
+        folderListModelId = qmlRegisterType<QQuickFolderListModel>(uri, 1, 0, "FolderListModel");
     }
+
+    void unregisterTypes() override {
+        QQmlMetaType::unregisterType(folderListModelId);
+        folderListModelId = -1;
+    }
+
+private:
+    int folderListModelId = -1;
 };
 //![class decl]
 
