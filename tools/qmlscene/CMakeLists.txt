@@ -10,14 +10,13 @@ qt_add_tool(qmlscene
         main.cpp
     DEFINES
         QML_RUNTIME_TESTING
-    LIBRARIES
-        Qt::CorePrivate
-        Qt::GuiPrivate
-        Qt::QuickPrivate
     PUBLIC_LIBRARIES
+        Qt::CorePrivate
         Qt::Gui
+        Qt::GuiPrivate
         Qt::Qml
         Qt::Quick
+        Qt::QuickPrivate
 )
 
 #### Keys ignored in scope 1:.:.:qmlscene.pro:<TRUE>:

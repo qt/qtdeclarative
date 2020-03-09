@@ -9,11 +9,9 @@ qt_add_tool(qmlpreview
         main.cpp
         qmlpreviewapplication.cpp qmlpreviewapplication.h
         qmlpreviewfilesystemwatcher.cpp qmlpreviewfilesystemwatcher.h
-    LIBRARIES
-        Qt::QmlDebugPrivate
     PUBLIC_LIBRARIES
         Qt::Network
-        Qt::QmlDebug
+        Qt::QmlDebugPrivate
 )
 
 #### Keys ignored in scope 1:.:.:qmlpreview.pro:<TRUE>:

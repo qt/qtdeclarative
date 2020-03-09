@@ -6,7 +6,7 @@
 
 qt_add_qml_module(labsmodelsplugin
     URI "Qt.labs.qmlmodels"
-    VERSION "1.0"
+    VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QtQmlLabsModelsPlugin
     SKIP_TYPE_REGISTRATION
     GENERATE_QMLTYPES
@@ -19,7 +19,7 @@ qt_add_qml_module(labsmodelsplugin
 
 #### Keys ignored in scope 1:.:.:labsmodels.pro:<TRUE>:
 # CXX_MODULE = "qml"
-# IMPORT_VERSION = "1.0"
+# QML_IMPORT_VERSION = "$$QT_VERSION"
 # TARGETPATH = "Qt/labs/qmlmodels"
 
 ## Scopes:

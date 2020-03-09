@@ -6,7 +6,7 @@
 
 qt_add_qml_module(sharedimageplugin
     URI "Qt.labs.sharedimage"
-    VERSION "1.0"
+    VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QtQuickSharedImagePlugin
     SKIP_TYPE_REGISTRATION
     GENERATE_QMLTYPES
@@ -25,5 +25,5 @@ qt_add_qml_module(sharedimageplugin
 
 #### Keys ignored in scope 1:.:.:sharedimage.pro:<TRUE>:
 # CXX_MODULE = "qml"
-# IMPORT_VERSION = "1.0"
+# QML_IMPORT_VERSION = "$$QT_VERSION"
 # TARGETPATH = "Qt/labs/sharedimage"

@@ -94,11 +94,11 @@ qt_add_resource(QuickParticles "particles1"
 
 
 #### Keys ignored in scope 1:.:.:particles.pro:<TRUE>:
-# IMPORT_VERSION = "2.15"
 # MODULE = "quickparticles"
 # QMLTYPES_FILENAME = "plugins.qmltypes"
 # QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQuick/Particles"
 # QML_IMPORT_NAME = "QtQuick.Particles"
+# QML_IMPORT_VERSION = "$$QT_VERSION"
 
 ## Scopes:
 #####################################################################
@@ -127,7 +127,7 @@ qt_extend_target(QuickParticles CONDITION QT_FEATURE_quick_shadereffect
 
 set_target_properties(QuickParticles PROPERTIES
     QT_QML_MODULE_INSTALL_QMLTYPES TRUE
-    QT_QML_MODULE_VERSION 2.15
+    QT_QML_MODULE_VERSION ${CMAKE_PROJECT_VERSION}
     QT_QML_MODULE_URI QtQuick.Particles
     QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQuick/Particles"
 )

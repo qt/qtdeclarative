@@ -9,14 +9,18 @@ qt_add_tool(qml
     SOURCES
         conf.h
         main.cpp
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::QmlPrivate
-    PUBLIC_LIBRARIES
-        Qt::Qml
 )
 
 # special case begin
+# Don't set properties on a host tool when cross compiling, because it
+# is not being built.
+if(CMAKE_CROSSCOMPILING)
+    return()
+endif()
+
 set_source_files_properties(
     conf/default.qml
     conf/resizeToItem.qml
@@ -46,6 +50,8 @@ qt_add_resource(qml "qml"
 #### Keys ignored in scope 1:.:.:qml.pro:<TRUE>:
 # ICON = "resources/qml-64.png"
 # QMAKE_TARGET_DESCRIPTION = "QML" "Runtime"
+# QML_IMPORT_NAME = "QmlRuntime.Config"
+# QML_IMPORT_VERSION = "1.0"
 
 ## Scopes:
 #####################################################################
@@ -72,3 +78,11 @@ qt_extend_target(qml CONDITION QT_FEATURE_qml_debug
     DEFINES
         QT_QML_DEBUG_NO_WARNING
 )
+
+set_target_properties(qml PROPERTIES
+    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
+    QT_QML_MODULE_VERSION 1.0
+    QT_QML_MODULE_URI QmlRuntime.Config
+)
+qt6_qml_type_registration(qml)
+

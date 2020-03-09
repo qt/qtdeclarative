@@ -6,7 +6,7 @@
 
 qt_add_qml_module(qmlfolderlistmodelplugin
     URI "Qt.labs.folderlistmodel"
-    VERSION "2.15"
+    VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QmlFolderListModelPlugin
     SKIP_TYPE_REGISTRATION
     GENERATE_QMLTYPES
@@ -22,5 +22,5 @@ qt_add_qml_module(qmlfolderlistmodelplugin
 
 #### Keys ignored in scope 1:.:.:folderlistmodel.pro:<TRUE>:
 # CXX_MODULE = "qml"
-# IMPORT_VERSION = "2.15"
+# QML_IMPORT_VERSION = "$$QT_VERSION"
 # TARGETPATH = "Qt/labs/folderlistmodel"

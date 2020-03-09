@@ -343,20 +343,16 @@ qt_add_resource(Quick "items"
 
 
 if(ANDROID)
-    set_property(TARGET Quick APPEND PROPERTY QT_ANDROID_LIB_DEPENDENCIES
-        lib/libQt5QuickParticles.so
-    )
     set_property(TARGET Quick APPEND PROPERTY QT_ANDROID_BUNDLED_FILES
-        lib/libQt5QuickParticles.so
         qml
     )
 endif()
 
 #### Keys ignored in scope 1:.:.:quick.pro:<TRUE>:
-# IMPORT_VERSION = "2.15"
 # QMLTYPES_FILENAME = "plugins.qmltypes"
 # QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQuick"
 # QML_IMPORT_NAME = "QtQuick"
+# QML_IMPORT_VERSION = "$$QT_VERSION"
 
 ## Scopes:
 #####################################################################
@@ -369,6 +365,8 @@ qt_extend_target(Quick CONDITION QT_FEATURE_qml_network
 qt_extend_target(Quick CONDITION QT_FEATURE_opengl
     LIBRARIES
         Qt::OpenGLPrivate
+    PUBLIC_LIBRARIES
+        Qt::OpenGL
 )
 
 qt_extend_target(Quick CONDITION MSVC
@@ -610,7 +608,7 @@ qt_add_docs(Quick
 
 set_target_properties(Quick PROPERTIES
     QT_QML_MODULE_INSTALL_QMLTYPES TRUE
-    QT_QML_MODULE_VERSION 2.15
+    QT_QML_MODULE_VERSION ${CMAKE_PROJECT_VERSION}
     QT_QML_MODULE_URI QtQuick
     QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQuick"
 )

@@ -49,10 +49,10 @@ qt_add_module(QmlWorkerScript
 )
 
 #### Keys ignored in scope 1:.:.:qmlworkerscript.pro:<TRUE>:
-# IMPORT_VERSION = "2.15"
 # QMLTYPES_FILENAME = "plugins.qmltypes"
 # QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQml/WorkerScript"
 # QML_IMPORT_NAME = "QtQml.WorkerScript"
+# QML_IMPORT_VERSION = "$$QT_VERSION"
 
 ## Scopes:
 #####################################################################
@@ -106,7 +106,7 @@ qt_add_docs(QmlWorkerScript
 
 set_target_properties(QmlWorkerScript PROPERTIES
     QT_QML_MODULE_INSTALL_QMLTYPES TRUE
-    QT_QML_MODULE_VERSION 2.15
+    QT_QML_MODULE_VERSION ${CMAKE_PROJECT_VERSION}
     QT_QML_MODULE_URI QtQml.WorkerScript
     QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQml/WorkerScript"
 )

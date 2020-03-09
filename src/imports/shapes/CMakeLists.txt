@@ -6,7 +6,7 @@
 
 qt_add_qml_module(qmlshapesplugin
     URI "QtQuick.Shapes"
-    VERSION "1.15"
+    VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QmlShapesPlugin
     SKIP_TYPE_REGISTRATION
     SOURCES
@@ -21,5 +21,5 @@ qt_add_qml_module(qmlshapesplugin
 
 #### Keys ignored in scope 1:.:.:shapes.pro:<TRUE>:
 # CXX_MODULE = "qml"
-# IMPORT_VERSION = "1.15"
+# QML_IMPORT_VERSION = "$$QT_VERSION"
 # TARGETPATH = "QtQuick/Shapes"

@@ -6,7 +6,7 @@
 
 qt_add_qml_module(qmllocalstorageplugin
     URI "QtQuick.LocalStorage"
-    VERSION "2.15"
+    VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QQmlLocalStoragePlugin
     SKIP_TYPE_REGISTRATION
     GENERATE_QMLTYPES
@@ -21,6 +21,6 @@ qt_add_qml_module(qmllocalstorageplugin
 
 #### Keys ignored in scope 1:.:.:localstorage.pro:<TRUE>:
 # CXX_MODULE = "qml"
-# IMPORT_VERSION = "2.15"
 # OTHER_FILES = "localstorage.json"
+# QML_IMPORT_VERSION = "$$QT_VERSION"
 # TARGETPATH = "QtQuick/LocalStorage"

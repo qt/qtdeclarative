@@ -29,6 +29,8 @@ qt_add_test(tst_qqmllanguage
 
 #### Keys ignored in scope 1:.:.:qqmllanguage.pro:<TRUE>:
 # OTHER_FILES = "data/readonlyObjectProperty.qml"
+# QML_IMPORT_NAME = "StaticTest"
+# QML_IMPORT_VERSION = "1.0"
 
 ## Scopes:
 #####################################################################
@@ -59,3 +61,11 @@ qt_extend_target(tst_qqmllanguage CONDITION NOT ANDROID AND NOT APPLE_IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )
+
+set_target_properties(tst_qqmllanguage PROPERTIES
+    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
+    QT_QML_MODULE_VERSION 1.0
+    QT_QML_MODULE_URI StaticTest
+)
+
+qt6_qml_type_registration(tst_qqmllanguage)

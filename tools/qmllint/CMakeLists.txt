@@ -15,11 +15,9 @@ qt_add_tool(qmllint
         qcoloroutput.cpp qcoloroutput.h
         scopetree.cpp scopetree.h
         typedescriptionreader.cpp typedescriptionreader.h
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::QmlDevToolsPrivate
-    PUBLIC_LIBRARIES
-        Qt::QmlDevTools
 )
 
 #### Keys ignored in scope 1:.:.:qmllint.pro:<TRUE>:

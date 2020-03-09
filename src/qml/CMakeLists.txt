@@ -55,6 +55,7 @@ qt_add_module(Qml
         common/qqmljsdiagnosticmessage_p.h
         common/qqmljsfixedpoolarray_p.h
         common/qqmljsmemorypool_p.h
+        common/qqmljssourcelocation_p.h
         common/qv4alloca_p.h
         common/qv4calldata_p.h
         common/qv4compileddata_p.h
@@ -163,7 +164,6 @@ qt_add_module(Qml
         parser/qqmljsglobal_p.h
         parser/qqmljskeywords_p.h
         parser/qqmljslexer.cpp parser/qqmljslexer_p.h
-        parser/qqmljssourcelocation_p.h
         qml/ftw/qbitfield_p.h
         qml/ftw/qfieldlist_p.h
         qml/ftw/qfinitestack_p.h
@@ -332,10 +332,10 @@ qt_declarative_generate_reg_exp_jit_tables(Qml)
 # special case end
 
 #### Keys ignored in scope 1:.:.:qml.pro:<TRUE>:
-# IMPORT_VERSION = "2.15"
 # QMLTYPES_FILENAME = "plugins.qmltypes"
 # QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQml"
 # QML_IMPORT_NAME = "QtQml"
+# QML_IMPORT_VERSION = "$$QT_VERSION"
 
 ## Scopes:
 #####################################################################
@@ -504,7 +504,7 @@ qt_extend_target(Qml CONDITION QT_FEATURE_qml_locale
 
 qt_extend_target(Qml CONDITION ANDROID
     DEFINES
-        LIBS_SUFFIX='\\"_${CMAKE_SYSTEM_PROCESSOR}.so\\"'
+        LIBS_SUFFIX="_${CMAKE_SYSTEM_PROCESSOR}.so"
 )
 
 qt_extend_target(Qml CONDITION hpux-_x_ OR solaris-_x_ OR (QT_FEATURE_clock_gettime AND linux-_x_)
@@ -618,7 +618,7 @@ qt_add_docs(Qml
 
 set_target_properties(Qml PROPERTIES
     QT_QML_MODULE_INSTALL_QMLTYPES TRUE
-    QT_QML_MODULE_VERSION 2.15
+    QT_QML_MODULE_VERSION ${CMAKE_PROJECT_VERSION}
     QT_QML_MODULE_URI QtQml
     QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQml"
 )

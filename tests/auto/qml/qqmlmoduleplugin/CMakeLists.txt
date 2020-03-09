@@ -25,14 +25,11 @@ add_qt_test(tst_qqmlmoduleplugin
         tst_qqmlmoduleplugin.cpp
     INCLUDE_DIRECTORIES
         ../../shared
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::GuiPrivate
-        Qt::QmlPrivate
-    PUBLIC_LIBRARIES
-        Qt::Gui
         Qt::Network
-        Qt::Qml
+        Qt::QmlPrivate
     TESTDATA ${test_data}
 )
 

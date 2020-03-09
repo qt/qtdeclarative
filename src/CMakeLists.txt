@@ -40,7 +40,7 @@ if(QT_FEATURE_qml_devtools)
     add_subdirectory(qmldevtools)
 
     # Build qmlcachegen now, so that we can use it in src/imports.
-    if(QT_FEATURE_commandlineparser AND QT_FEATURE_qml_devtools AND QT_FEATURE_xmlstreamwriter)
+    if(QT_FEATURE_qml_devtools AND QT_FEATURE_xmlstreamwriter)
         add_subdirectory(../tools/qmlcachegen qmlcachegen)
     endif()
 endif()

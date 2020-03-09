@@ -12,14 +12,12 @@ qt_add_tool(qmlplugindump
         qmltypereader.cpp qmltypereader.h
     INCLUDE_DIRECTORIES
         ../shared
-    LIBRARIES
-        Qt::CorePrivate
-        Qt::QmlPrivate
-        Qt::QuickPrivate
     PUBLIC_LIBRARIES
+        Qt::CorePrivate
         Qt::Gui
         Qt::Qml
-        Qt::Quick
+        Qt::QmlPrivate
+        Qt::QuickPrivate
 )
 
 #### Keys ignored in scope 1:.:.:qmlplugindump.pro:<TRUE>:

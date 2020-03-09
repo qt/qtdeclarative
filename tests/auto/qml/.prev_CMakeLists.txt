@@ -51,13 +51,7 @@ if(QT_FEATURE_private_tests)
     add_subdirectory(qqmlproperty)
     add_subdirectory(qqmlpropertycache)
     add_subdirectory(qqmlpropertymap)
-# special case begin
-    if (TARGET Qt::Sql)
-# special case end
-        add_subdirectory(qqmlsqldatabase)
-# special case begin
-    endif()
-# special case end
+    add_subdirectory(qqmlsqldatabase)
     add_subdirectory(qqmlvaluetypes)
     add_subdirectory(qqmlvaluetypeproviders)
     add_subdirectory(qqmlbinding)

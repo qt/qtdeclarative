@@ -47,6 +47,10 @@ set(qml_resource_files
     "pointerDrag.qml"
     "resources/arrowhead.png"
     "resources/balloon.png"
+    "resources/cursor-airbrush.png"
+    "resources/cursor-eraser.png"
+    "resources/cursor-felt-marker.png"
+    "resources/cursor-pencil.png"
     "resources/fighter.png"
     "resources/fingersprite.png"
     "resources/grabbing-location.svg"
@@ -61,6 +65,7 @@ set(qml_resource_files
     "resources/redball.png"
     "sidebar.qml"
     "singlePointHandlerProperties.qml"
+    "tabletCanvasDrawing.qml"
     "tapHandler.qml"
 )
 

@@ -6,7 +6,7 @@
 
 qt_add_qml_module(labsanimationplugin
     URI "Qt.labs.animation"
-    VERSION "1.0"
+    VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QtLabsAnimationPlugin
     SKIP_TYPE_REGISTRATION
     GENERATE_QMLTYPES
@@ -20,5 +20,5 @@ qt_add_qml_module(labsanimationplugin
 
 #### Keys ignored in scope 1:.:.:labsanimation.pro:<TRUE>:
 # CXX_MODULE = "qml"
-# IMPORT_VERSION = "1.0"
+# QML_IMPORT_VERSION = "$$QT_VERSION"
 # TARGETPATH = "Qt/labs/animation"

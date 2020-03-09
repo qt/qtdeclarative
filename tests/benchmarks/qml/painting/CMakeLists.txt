@@ -10,6 +10,7 @@ qt_add_benchmark(painting
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::OpenGL
+        Qt::OpenGLWidgets
         Qt::Widgets
 )
 

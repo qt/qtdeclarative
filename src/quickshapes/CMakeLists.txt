@@ -55,10 +55,10 @@ qt_add_resource(QuickShapes "qtquickshapes"
 
 
 #### Keys ignored in scope 1:.:.:quickshapes.pro:<TRUE>:
-# IMPORT_VERSION = "1.15"
 # QMLTYPES_FILENAME = "plugins.qmltypes"
 # QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQuick/Shapes"
 # QML_IMPORT_NAME = "QtQuick.Shapes"
+# QML_IMPORT_VERSION = "$$QT_VERSION"
 
 ## Scopes:
 #####################################################################
@@ -72,7 +72,7 @@ qt_extend_target(QuickShapes CONDITION QT_FEATURE_opengl
 
 set_target_properties(QuickShapes PROPERTIES
     QT_QML_MODULE_INSTALL_QMLTYPES TRUE
-    QT_QML_MODULE_VERSION 1.15
+    QT_QML_MODULE_VERSION ${CMAKE_PROJECT_VERSION}
     QT_QML_MODULE_URI QtQuick.Shapes
     QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQuick/Shapes"
 )

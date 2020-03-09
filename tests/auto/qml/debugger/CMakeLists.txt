@@ -2,6 +2,7 @@
 
 add_subdirectory(qqmldebugjsserver)
 add_subdirectory(qdebugmessageservice)
+add_subdirectory(qqmldebugtranslationservice)
 add_subdirectory(qqmlenginedebugservice)
 add_subdirectory(qqmldebugjs)
 add_subdirectory(qqmlinspector)

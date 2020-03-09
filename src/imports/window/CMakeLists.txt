@@ -6,7 +6,7 @@
 
 qt_add_qml_module(windowplugin
     URI "QtQuick.Window"
-    VERSION "2.15"
+    VERSION "${CMAKE_PROJECT_VERSION}"
     DESIGNER_SUPPORTED
     CLASSNAME QtQuick2WindowPlugin
     SKIP_TYPE_REGISTRATION
@@ -22,5 +22,5 @@ qt_add_qml_module(windowplugin
 
 #### Keys ignored in scope 1:.:.:window.pro:<TRUE>:
 # CXX_MODULE = "qml"
-# IMPORT_VERSION = "2.15"
+# QML_IMPORT_VERSION = "$$QT_VERSION"
 # TARGETPATH = "QtQuick/Window"

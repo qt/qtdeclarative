@@ -12,12 +12,13 @@ list(APPEND test_data ${test_data_glob})
 
 qt_add_test(tst_qqmlparser
     SOURCES
+        ../../shared/qqmljsastdumper.cpp ../../shared/qqmljsastdumper.h
         ../../shared/util.cpp ../../shared/util.h
         tst_qqmlparser.cpp
     DEFINES
         SRCDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"
     INCLUDE_DIRECTORIES
-        ../../shared
+        ../../shared ../../shared
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::QmlPrivate

@@ -13,6 +13,7 @@ qt_add_module(QmlDevTools
         ../qml/common/qqmljsdiagnosticmessage_p.h
         ../qml/common/qqmljsfixedpoolarray_p.h
         ../qml/common/qqmljsmemorypool_p.h
+        ../qml/common/qqmljssourcelocation_p.h
         ../qml/common/qv4alloca_p.h
         ../qml/common/qv4calldata_p.h
         ../qml/common/qv4compileddata_p.h
@@ -36,7 +37,6 @@ qt_add_module(QmlDevTools
         ../qml/parser/qqmljsglobal_p.h
         ../qml/parser/qqmljskeywords_p.h
         ../qml/parser/qqmljslexer.cpp ../qml/parser/qqmljslexer_p.h
-        ../qml/parser/qqmljssourcelocation_p.h
         ../qml/qmldirparser/qqmldirparser.cpp ../qml/qmldirparser/qqmldirparser_p.h
     INCLUDE_DIRECTORIES
         ${CMAKE_CURRENT_BINARY_DIR}/../qml

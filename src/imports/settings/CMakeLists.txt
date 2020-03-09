@@ -6,7 +6,7 @@
 
 qt_add_qml_module(qmlsettingsplugin
     URI "Qt.labs.settings"
-    VERSION "1.1"
+    VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QmlSettingsPlugin
     SKIP_TYPE_REGISTRATION
     GENERATE_QMLTYPES
@@ -20,5 +20,5 @@ qt_add_qml_module(qmlsettingsplugin
 
 #### Keys ignored in scope 1:.:.:settings.pro:<TRUE>:
 # CXX_MODULE = "qml"
-# IMPORT_VERSION = "1.1"
+# QML_IMPORT_VERSION = "$$QT_VERSION"
 # TARGETPATH = "Qt/labs/settings"

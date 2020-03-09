@@ -8,6 +8,7 @@ qt_add_plugin(QQmlPreviewServiceFactory
     OUTPUT_NAME qmldbg_preview
     TYPE qmltooling
     SOURCES
+        qqmldebugtranslationservice.cpp qqmldebugtranslationservice.h
         qqmlpreviewblacklist.cpp qqmlpreviewblacklist.h
         qqmlpreviewfileengine.cpp qqmlpreviewfileengine.h
         qqmlpreviewfileloader.cpp qqmlpreviewfileloader.h

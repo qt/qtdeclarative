@@ -5,50 +5,44 @@
 #####################################################################
 
 # Collect test data
-
-file(GLOB test_data_glob
-    LIST_DIRECTORIES true
+file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    "data/*")
+    data/*)
 list(APPEND test_data ${test_data_glob})
 
 add_qt_test(tst_qqmlapplicationengine
-    GUI
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         tst_qqmlapplicationengine.cpp
     INCLUDE_DIRECTORIES
         ../../shared
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::GuiPrivate
-        Qt::QmlPrivate
-    PUBLIC_LIBRARIES
-        Qt::Gui
         Qt::Network
-        Qt::Qml
+        Qt::QmlPrivate
     TESTDATA ${test_data}
 )
 
 # Resources:
+set(tst_qqmlapplicationengine_resource_files
+    "data/i18n/qml.qm"
+    "data/loadTranslation.qml"
+)
+
 add_qt_resource(tst_qqmlapplicationengine "tst_qqmlapplicationengine"
     PREFIX
         "/"
     FILES
-        data/i18n/qml.qm
-        data/loadTranslation.qml
+        ${tst_qqmlapplicationengine_resource_files}
 )
 
 
 #### Keys ignored in scope 2:.:.:tst_qqmlapplicationengine.pro:<TRUE>:
-# CONFIG = "testcase"
 # TRANSLATIONS = "data/i18n/qml_ja.ts"
 
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 3:.:.:tst_qqmlapplicationengine.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
 
 extend_target(tst_qqmlapplicationengine CONDITION ANDROID OR APPLE_IOS
     DEFINES

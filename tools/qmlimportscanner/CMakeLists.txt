@@ -15,16 +15,14 @@ qt_add_tool(qmlimportscanner
         QT_NO_CAST_TO_ASCII
     INCLUDE_DIRECTORIES
         ../shared
-    LIBRARIES
-        Qt::QmlDevToolsPrivate
     PUBLIC_LIBRARIES
-        Qt::QmlDevTools
+        Qt::QmlDevToolsPrivate
 )
 
 #### Keys ignored in scope 1:.:.:qmlimportscanner.pro:<TRUE>:
 # CMAKE_BIN_DIR = "$$cmakeRelativePath($$[QT_HOST_BINS], $$[QT_INSTALL_PREFIX])"
 # CMAKE_DEBUG_TYPE = <EMPTY>
-# CMAKE_QML_DIR = "$$cmakeRelativePath($$[QT_INSTALL_QML/get], $$[QT_INSTALL_PREFIX])"
+# CMAKE_QML_DIR = "$$cmakeRelativePath($$[QT_INSTALL_QML], $$[QT_INSTALL_PREFIX])"
 # CMAKE_QML_PLUGIN_SUFFIX_RELEASE = <EMPTY>
 # CMAKE_RELEASE_TYPE = <EMPTY>
 # QMAKE_SUBSTITUTES = "cmake_config_file"
@@ -43,7 +41,7 @@ qt_add_tool(qmlimportscanner
 # CMAKE_BIN_DIR_IS_ABSOLUTE = "True"
 
 #### Keys ignored in scope 3:.:.:qmlimportscanner.pro:CMAKE_QML_DIR___contains___^\\.\\./._x_:
-# CMAKE_QML_DIR = "$$[QT_INSTALL_QML/get]/"
+# CMAKE_QML_DIR = "$$[QT_INSTALL_QML]/"
 # CMAKE_QML_DIR_IS_ABSOLUTE = "True"
 
 #### Keys ignored in scope 4:.:.:qmlimportscanner.pro:static OR staticlib:

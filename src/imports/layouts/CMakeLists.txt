@@ -6,7 +6,7 @@
 
 qt_add_qml_module(qquicklayoutsplugin
     URI "QtQuick.Layouts"
-    VERSION "1.15"
+    VERSION "${CMAKE_PROJECT_VERSION}"
     DESIGNER_SUPPORTED
     CLASSNAME QtQuickLayoutsPlugin
     SKIP_TYPE_REGISTRATION
@@ -29,5 +29,5 @@ qt_add_qml_module(qquicklayoutsplugin
 
 #### Keys ignored in scope 1:.:.:layouts.pro:<TRUE>:
 # CXX_MODULE = "qml"
-# IMPORT_VERSION = "1.15"
+# QML_IMPORT_VERSION = "$$QT_VERSION"
 # TARGETPATH = "QtQuick/Layouts"

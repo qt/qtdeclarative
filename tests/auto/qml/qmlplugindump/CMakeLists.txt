@@ -5,7 +5,6 @@
 #####################################################################
 
 add_qt_test(tst_qmlplugindump
-    GUI
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         tst_qmlplugindump.cpp
@@ -13,21 +12,13 @@ add_qt_test(tst_qmlplugindump
         QT_QMLTEST_DIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"
     INCLUDE_DIRECTORIES
         ../../shared
-    LIBRARIES
-        Qt::GuiPrivate
     PUBLIC_LIBRARIES
-        Qt::Gui
+        Qt::GuiPrivate
         Qt::Qml
 )
 
-#### Keys ignored in scope 2:.:.:tst_qmlplugindump.pro:<TRUE>:
-# CONFIG = "testcase"
-
 ## Scopes:
 #####################################################################
-
-#### Keys ignored in scope 3:.:.:tst_qmlplugindump.pro:APPLE_OSX:
-# CONFIG = "-app_bundle"
 
 extend_target(tst_qmlplugindump CONDITION ANDROID OR APPLE_IOS
     DEFINES

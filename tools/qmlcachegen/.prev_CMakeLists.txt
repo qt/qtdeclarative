@@ -16,10 +16,8 @@ qt_add_tool(qmlcachegen
         QT_NO_CAST_TO_ASCII
     INCLUDE_DIRECTORIES
         ../shared
-    LIBRARIES
-        Qt::QmlDevToolsPrivate
     PUBLIC_LIBRARIES
-        Qt::QmlDevTools
+        Qt::QmlDevToolsPrivate
 )
 
 #### Keys ignored in scope 1:.:.:qmlcachegen.pro:<TRUE>:

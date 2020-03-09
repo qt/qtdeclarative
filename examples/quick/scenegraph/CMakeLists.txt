@@ -1,7 +1,7 @@
 # Generated from scenegraph.pro.
 
 add_subdirectory(customgeometry)
-add_subdirectory(rendernode)
+# add_subdirectory(rendernode) # special case needs fixing
 add_subdirectory(threadedanimation)
 if(QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT_FEATURE_opengles3)
     add_subdirectory(graph)
@@ -13,7 +13,7 @@ if(QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT_FEATURE_opengles3)
     add_subdirectory(twotextureproviders)
 endif()
 if(APPLE_OSX)
-    add_subdirectory(metalunderqml)
+    # add_subdirectory(metalunderqml) # special case needs fixing
     # add_subdirectory(metaltextureimport) # special case TODO
 endif()
 if(WIN32)

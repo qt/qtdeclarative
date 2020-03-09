@@ -32,11 +32,9 @@ qt_add_tool(qmljs
         ../../src/3rdparty/masm/stubs/runtime
         ../../src/3rdparty/masm/stubs/wtf
         ../../src/3rdparty/masm/wtf
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::QmlPrivate
-    PUBLIC_LIBRARIES
-        Qt::Qml
 )
 
 #### Keys ignored in scope 1:.:.:qmljs.pro:<TRUE>:

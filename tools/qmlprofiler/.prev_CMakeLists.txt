@@ -12,11 +12,9 @@ qt_add_tool(qmlprofiler
         qmlprofilerapplication.cpp qmlprofilerapplication.h
         qmlprofilerclient.cpp qmlprofilerclient.h
         qmlprofilerdata.cpp qmlprofilerdata.h
-    LIBRARIES
-        Qt::QmlDebugPrivate
     PUBLIC_LIBRARIES
         Qt::Network
-        Qt::QmlDebug
+        Qt::QmlDebugPrivate
 )
 
 #### Keys ignored in scope 1:.:.:qmlprofiler.pro:<TRUE>:

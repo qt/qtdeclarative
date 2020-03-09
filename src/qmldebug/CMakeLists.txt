@@ -12,6 +12,7 @@ qt_add_module(QmlDebug
         qqmldebugclient_p_p.h
         qqmldebugconnection.cpp qqmldebugconnection_p.h
         qqmldebugmessageclient.cpp qqmldebugmessageclient_p.h
+        qqmldebugtranslationclient.cpp qqmldebugtranslationclient_p.h
         qqmlenginecontrolclient.cpp qqmlenginecontrolclient_p.h
         qqmlenginecontrolclient_p_p.h
         qqmlenginedebugclient.cpp qqmlenginedebugclient_p.h
@@ -34,4 +35,5 @@ qt_add_module(QmlDebug
         Qt::CorePrivate
         Qt::Network
         Qt::PacketProtocolPrivate
+        Qt::QmlPrivate
 )

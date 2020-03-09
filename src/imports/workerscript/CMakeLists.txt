@@ -6,7 +6,7 @@
 
 qt_add_qml_module(workerscriptplugin
     URI "QtQml.WorkerScript"
-    VERSION "2.15"
+    VERSION "${CMAKE_PROJECT_VERSION}"
     DESIGNER_SUPPORTED
     CLASSNAME QtQmlWorkerScriptPlugin
     SKIP_TYPE_REGISTRATION
@@ -19,5 +19,5 @@ qt_add_qml_module(workerscriptplugin
 
 #### Keys ignored in scope 1:.:.:workerscript.pro:<TRUE>:
 # CXX_MODULE = "qml"
-# IMPORT_VERSION = "2.15"
+# QML_IMPORT_VERSION = "$$QT_VERSION"
 # TARGETPATH = "QtQml/WorkerScript"

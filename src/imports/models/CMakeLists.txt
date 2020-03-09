@@ -6,7 +6,7 @@
 
 qt_add_qml_module(modelsplugin
     URI "QtQml.Models"
-    VERSION "2.15"
+    VERSION "${CMAKE_PROJECT_VERSION}"
     DESIGNER_SUPPORTED
     CLASSNAME QtQmlModelsPlugin
     SKIP_TYPE_REGISTRATION
@@ -19,5 +19,5 @@ qt_add_qml_module(modelsplugin
 
 #### Keys ignored in scope 1:.:.:models.pro:<TRUE>:
 # CXX_MODULE = "qml"
-# IMPORT_VERSION = "2.15"
+# QML_IMPORT_VERSION = "$$QT_VERSION"
 # TARGETPATH = "QtQml/Models"
