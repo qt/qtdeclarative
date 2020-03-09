@@ -36,6 +36,7 @@
 #include <QDebug>
 #include <QApplication>
 #include <QVector>
+#include <QPainterPath>
 
 const int canvasWidth = 640;
 const int canvasHeight = 320;

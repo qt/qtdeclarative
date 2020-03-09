@@ -60,6 +60,7 @@
 #include <QtGui/qpainterpath.h>
 #include <QtCore/qsharedpointer.h>
 #include <QtGui/qglyphrun.h>
+#include <QtGui/qpainterpath.h>
 #include <QtCore/qurl.h>
 #include <private/qfontengine_p.h>
 #include <QtGui/private/qdatabuffer_p.h>
