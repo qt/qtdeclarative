@@ -1,7 +1,7 @@
-# Generated from qquickmenubar.pro.
+# Generated from translation.pro.
 
 #####################################################################
-## tst_qquickmenubar Test:
+## tst_translation Test:
 #####################################################################
 
 # Collect test data
@@ -10,12 +10,12 @@ file(GLOB_RECURSE test_data_glob
     data/*)
 list(APPEND test_data ${test_data_glob})
 
-qt_add_test(tst_qquickmenubar
+qt_add_test(tst_translation
     SOURCES
         ../shared/qtest_quickcontrols.h
         ../shared/util.cpp ../shared/util.h
         ../shared/visualtestutil.cpp ../shared/visualtestutil.h
-        tst_qquickmenubar.cpp
+        tst_translation.cpp
     DEFINES
         QQC2_IMPORT_PATH=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../../src/imports\\\"
     PUBLIC_LIBRARIES
@@ -30,18 +30,32 @@ qt_add_test(tst_qquickmenubar
     TESTDATA ${test_data}
 )
 
-#### Keys ignored in scope 1:.:.:qquickmenubar.pro:<TRUE>:
+# Resources:
+set(qmake_immediate_resource_files
+    "qml_jp.qm"
+    "qtbase_fr.qm"
+)
+
+qt_add_resource(tst_translation "qmake_immediate"
+    PREFIX
+        "/"
+    FILES
+        ${qmake_immediate_resource_files}
+)
+
+
+#### Keys ignored in scope 1:.:.:translation.pro:<TRUE>:
 # OTHER_FILES = "data/*.qml"
 
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_qquickmenubar CONDITION ANDROID OR IOS
+qt_extend_target(tst_translation CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-qt_extend_target(tst_qquickmenubar CONDITION NOT ANDROID AND NOT IOS
+qt_extend_target(tst_translation CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

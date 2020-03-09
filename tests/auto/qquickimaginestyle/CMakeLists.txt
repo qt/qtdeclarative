@@ -24,6 +24,8 @@ qt_add_test(tst_qquickimaginestyle
 set(qmake_immediate_resource_files
     "control-assets/button-background.9.png"
     "qtquickcontrols2.conf"
+    "test-assets/button-background-1.png"
+    "test-assets/button-background-2.png"
 )
 
 qt_add_resource(tst_qquickimaginestyle "qmake_immediate"

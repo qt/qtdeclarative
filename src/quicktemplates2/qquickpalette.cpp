@@ -324,3 +324,5 @@ void QQuickPalette::resetWindowText()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickpalette_p.cpp"

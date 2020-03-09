@@ -1,7 +1,7 @@
-# Generated from qquickmenubar.pro.
+# Generated from qquickheaderview.pro.
 
 #####################################################################
-## tst_qquickmenubar Test:
+## tst_qquickheaderview Test:
 #####################################################################
 
 # Collect test data
@@ -10,12 +10,12 @@ file(GLOB_RECURSE test_data_glob
     data/*)
 list(APPEND test_data ${test_data_glob})
 
-qt_add_test(tst_qquickmenubar
+qt_add_test(tst_qquickheaderview
     SOURCES
         ../shared/qtest_quickcontrols.h
         ../shared/util.cpp ../shared/util.h
         ../shared/visualtestutil.cpp ../shared/visualtestutil.h
-        tst_qquickmenubar.cpp
+        tst_qquickheaderview.cpp
     DEFINES
         QQC2_IMPORT_PATH=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../../src/imports\\\"
     PUBLIC_LIBRARIES
@@ -24,24 +24,26 @@ qt_add_test(tst_qquickmenubar
         Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::QuickControls2
+        Qt::QuickControls2Private
         Qt::QuickPrivate
+        Qt::QuickTemplates2
         Qt::QuickTemplates2Private
         Qt::TestPrivate
     TESTDATA ${test_data}
 )
 
-#### Keys ignored in scope 1:.:.:qquickmenubar.pro:<TRUE>:
+#### Keys ignored in scope 1:.:.:qquickheaderview.pro:<TRUE>:
 # OTHER_FILES = "data/*.qml"
 
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_qquickmenubar CONDITION ANDROID OR IOS
+qt_extend_target(tst_qquickheaderview CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-qt_extend_target(tst_qquickmenubar CONDITION NOT ANDROID AND NOT IOS
+qt_extend_target(tst_qquickheaderview CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

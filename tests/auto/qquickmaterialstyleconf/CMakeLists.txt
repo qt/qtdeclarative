@@ -18,20 +18,16 @@ qt_add_test(tst_qquickmaterialstyleconf
         tst_qquickmaterialstyleconf.cpp
     DEFINES
         QQC2_IMPORT_PATH=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../../src/imports\\\"
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
+        Qt::Gui
         Qt::GuiPrivate
         Qt::QmlPrivate
+        Qt::QuickControls2
         Qt::QuickControls2Private
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
         Qt::TestPrivate
-    PUBLIC_LIBRARIES
-        Qt::Gui
-        Qt::Qml
-        Qt::Quick
-        Qt::QuickControls2
-        Qt::QuickTemplates2
     TESTDATA ${test_data}
 )
 
@@ -56,12 +52,12 @@ qt_add_resource(tst_qquickmaterialstyleconf "qquickmaterialstyleconf"
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_qquickmaterialstyleconf CONDITION ANDROID OR APPLE_IOS
+qt_extend_target(tst_qquickmaterialstyleconf CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-qt_extend_target(tst_qquickmaterialstyleconf CONDITION NOT ANDROID AND NOT APPLE_IOS
+qt_extend_target(tst_qquickmaterialstyleconf CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

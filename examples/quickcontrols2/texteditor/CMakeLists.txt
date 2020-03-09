@@ -52,7 +52,7 @@ if(TARGET Qt::Widgets)
     )
 endif()
 
-if(cross_compile)
+if(CMAKE_CROSSCOMPILING)
     target_compile_definitions(texteditor PUBLIC
         QT_EXTRA_FILE_SELECTOR=\\\"touch\\\"
     )
