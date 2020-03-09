@@ -64,10 +64,11 @@ public:
         QQmlQtQuick2Module::defineModule();
     }
 
-    ~QtQuick2Plugin() override
+    void unregisterTypes() override
     {
         if (moduleDefined)
             QQmlQtQuick2Module::undefineModule();
+        moduleDefined = false;
     }
 
     bool moduleDefined = false;

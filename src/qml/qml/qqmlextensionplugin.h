@@ -64,6 +64,7 @@ public:
     QUrl baseUrl() const;
 
     void registerTypes(const char *uri) override = 0;
+    virtual void unregisterTypes();
     void initializeEngine(QQmlEngine *engine, const char *uri) override;
 
 private:

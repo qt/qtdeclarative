@@ -161,9 +161,17 @@ void qmlClearEnginePlugins()
 #if QT_CONFIG(library)
     for (auto &plugin : qAsConst(*plugins)) {
         QPluginLoader* loader = plugin.loader;
-        if (loader && !loader->unload())
-            qWarning("Unloading %s failed: %s", qPrintable(plugin.uri), qPrintable(loader->errorString()));
-        delete loader;
+        if (loader) {
+            auto extensionPlugin = qobject_cast<QQmlExtensionPlugin *>(loader->instance());
+            if (extensionPlugin) {
+                extensionPlugin->unregisterTypes();
+            }
+#ifndef Q_OS_MACOS
+            if (!loader->unload())
+                qWarning("Unloading %s failed: %s", qPrintable(plugin.uri), qPrintable(loader->errorString()));
+            delete loader;
+#endif
+        }
     }
 #endif
     plugins->clear();
