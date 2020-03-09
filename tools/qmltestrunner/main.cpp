@@ -28,9 +28,6 @@
 
 #include <QtQuickTest/quicktest.h>
 #include <QtCore/qstring.h>
-#ifdef QT_OPENGL_LIB
-#include <QtOpenGL/qgl.h>
-#endif
 
 int main(int argc, char **argv)
 {
