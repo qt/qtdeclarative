@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>dynamicview.qml</file>
+        <file>PetsModel.qml</file>
+    </qresource>
+</RCC>

@@ -163,7 +163,7 @@ void QV4Include::finished()
     QV4::Scope scope(v4);
     QV4::ScopedObject resultObj(scope, m_resultObject.value());
     QV4::ScopedString status(scope, v4->newString(QStringLiteral("status")));
-    if (m_reply->networkError() == QNetworkReply::NoError) {
+    if (m_reply->error() == QNetworkReply::NoError) {
         QByteArray data = m_reply->readAll();
 
         QString code = QString::fromUtf8(data);

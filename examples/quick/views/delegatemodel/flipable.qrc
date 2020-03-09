@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>flipable.qml</file>
+        <file>content/5_heart.png</file>
+        <file>content/9_club.png</file>
+        <file>content/back.png</file>
+        <file>content/Card.qml</file>
+    </qresource>
+</RCC>

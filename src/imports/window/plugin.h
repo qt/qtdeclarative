@@ -119,6 +119,13 @@ struct QQuickWindowQmlImplForeign
     QML_ADDED_IN_VERSION(2, 1)
 };
 
+struct QQuickRootItemForeign
+{
+    Q_GADGET
+    QML_FOREIGN(QQuickRootItem)
+    QML_ANONYMOUS
+};
+
 QT_END_NAMESPACE
 
 #endif // PLUGIN_H

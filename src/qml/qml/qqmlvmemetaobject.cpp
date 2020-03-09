@@ -1238,7 +1238,7 @@ void QQmlVMEMetaObject::ensureQObjectWrapper()
 
 void QQmlVMEMetaObject::mark(QV4::MarkStack *markStack)
 {
-    if (engine != markStack->engine)
+    if (engine != markStack->engine())
         return;
 
     propertyAndMethodStorage.markOnce(markStack);

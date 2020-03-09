@@ -203,8 +203,8 @@ bool QQmlTypeData::tryLoadFromDiskCache()
             Q_ASSERT(errors.size());
             QQmlError error(errors.takeFirst());
             error.setUrl(m_importCache.baseUrl());
-            error.setLine(import->location.line);
-            error.setColumn(import->location.column);
+            error.setLine(qmlConvertSourceCoordinate<quint32, int>(import->location.line));
+            error.setColumn(qmlConvertSourceCoordinate<quint32, int>(import->location.column));
             errors.prepend(error); // put it back on the list after filling out information.
             setError(errors);
             return false;
@@ -244,7 +244,7 @@ void QQmlTypeData::createTypeAndPropertyCaches(
         QQmlPropertyCacheCreator<QV4::ExecutableCompilationUnit> propertyCacheCreator(
                 &m_compiledData->propertyCaches, &pendingGroupPropertyBindings, engine,
                 m_compiledData.data(), &m_importCache, typeClassName());
-        QQmlJS::DiagnosticMessage error = propertyCacheCreator.buildMetaObjects();
+        QQmlError error = propertyCacheCreator.buildMetaObjects();
         if (error.isValid()) {
             setError(error);
             return;
@@ -325,8 +325,8 @@ void QQmlTypeData::done()
             QList<QQmlError> errors = script.script->errors();
             QQmlError error;
             error.setUrl(url());
-            error.setLine(script.location.line);
-            error.setColumn(script.location.column);
+            error.setLine(qmlConvertSourceCoordinate<quint32, int>(script.location.line));
+            error.setColumn(qmlConvertSourceCoordinate<quint32, int>(script.location.column));
             error.setDescription(QQmlTypeLoader::tr("Script %1 unavailable").arg(script.script->urlString()));
             errors.prepend(error);
             setError(errors);
@@ -349,8 +349,8 @@ void QQmlTypeData::done()
                 QList<QQmlError> errors = type.typeData ? type.typeData->errors() : QList<QQmlError>{};
                 QQmlError error;
                 error.setUrl(url());
-                error.setLine(type.location.line);
-                error.setColumn(type.location.column);
+                error.setLine(qmlConvertSourceCoordinate<quint32, int>(type.location.line));
+                error.setColumn(qmlConvertSourceCoordinate<quint32, int>(type.location.column));
                 error.setDescription(QQmlTypeLoader::tr("Type %1 has no inline component type called %2").arg(typeName.leftRef(lastDot), type.type.pendingResolutionName()));
                 errors.prepend(error);
                 setError(errors);
@@ -365,8 +365,8 @@ void QQmlTypeData::done()
             QList<QQmlError> errors = type.typeData->errors();
             QQmlError error;
             error.setUrl(url());
-            error.setLine(type.location.line);
-            error.setColumn(type.location.column);
+            error.setLine(qmlConvertSourceCoordinate<quint32, int>(type.location.line));
+            error.setColumn(qmlConvertSourceCoordinate<quint32, int>(type.location.column));
             error.setDescription(QQmlTypeLoader::tr("Type %1 unavailable").arg(typeName));
             errors.prepend(error);
             setError(errors);
@@ -384,8 +384,8 @@ void QQmlTypeData::done()
             QList<QQmlError> errors = type.typeData->errors();
             QQmlError error;
             error.setUrl(url());
-            error.setLine(type.location.line);
-            error.setColumn(type.location.column);
+            error.setLine(qmlConvertSourceCoordinate<quint32, int>(type.location.line));
+            error.setColumn(qmlConvertSourceCoordinate<quint32, int>(type.location.column));
             error.setDescription(QQmlTypeLoader::tr("Type %1 unavailable").arg(typeName));
             errors.prepend(error);
             setError(errors);
@@ -414,7 +414,7 @@ void QQmlTypeData::done()
     QV4::ResolvedTypeReferenceMap resolvedTypeCache;
     QQmlRefPointer<QQmlTypeNameCache> typeNameCache;
     {
-        QQmlJS::DiagnosticMessage error = buildTypeResolutionCaches(&typeNameCache, &resolvedTypeCache);
+        QQmlError error = buildTypeResolutionCaches(&typeNameCache, &resolvedTypeCache);
         if (error.isValid()) {
             setError(error);
             qDeleteAll(resolvedTypeCache);
@@ -461,7 +461,7 @@ void QQmlTypeData::done()
         {
             // Sanity check property bindings
             QQmlPropertyValidator validator(enginePrivate, m_importCache, m_compiledData);
-            QVector<QQmlJS::DiagnosticMessage> errors = validator.validate();
+            QVector<QQmlError> errors = validator.validate();
             if (!errors.isEmpty()) {
                 setError(errors);
                 return;
@@ -625,8 +625,8 @@ bool QQmlTypeData::loadFromSource()
         for (const QQmlJS::DiagnosticMessage &msg : qAsConst(compiler.errors)) {
             QQmlError e;
             e.setUrl(url());
-            e.setLine(msg.line);
-            e.setColumn(msg.column);
+            e.setLine(qmlConvertSourceCoordinate<quint32, int>(msg.loc.startLine));
+            e.setColumn(qmlConvertSourceCoordinate<quint32, int>(msg.loc.startColumn));
             e.setDescription(msg.message);
             errors << e;
         }
@@ -696,8 +696,8 @@ void QQmlTypeData::continueLoadFromIR()
             Q_ASSERT(errors.size());
             QQmlError error(errors.takeFirst());
             error.setUrl(m_importCache.baseUrl());
-            error.setLine(import->location.line);
-            error.setColumn(import->location.column);
+            error.setLine(qmlConvertSourceCoordinate<quint32, int>(import->location.line));
+            error.setColumn(qmlConvertSourceCoordinate<quint32, int>(import->location.column));
             errors.prepend(error); // put it back on the list after filling out information.
             setError(errors);
             return;
@@ -723,8 +723,8 @@ void QQmlTypeData::allDependenciesDone()
                     QQmlError error;
                     error.setDescription(QQmlTypeLoader::tr("module \"%1\" is not installed").arg(import->uri));
                     error.setUrl(m_importCache.baseUrl());
-                    error.setLine(import->location.line);
-                    error.setColumn(import->location.column);
+                    error.setLine(qmlConvertSourceCoordinate<quint32, int>(import->location.line));
+                    error.setColumn(qmlConvertSourceCoordinate<quint32, int>(import->location.column));
                     errors.prepend(error);
                 }
             }
@@ -888,7 +888,7 @@ void QQmlTypeData::resolveTypes()
         loadImplicitImport();
 }
 
-QQmlJS::DiagnosticMessage QQmlTypeData::buildTypeResolutionCaches(
+QQmlError QQmlTypeData::buildTypeResolutionCaches(
         QQmlRefPointer<QQmlTypeNameCache> *typeNameCache,
         QV4::ResolvedTypeReferenceMap *resolvedTypeCache
         ) const
@@ -964,7 +964,7 @@ QQmlJS::DiagnosticMessage QQmlTypeData::buildTypeResolutionCaches(
         ref->doDynamicTypeCheck();
         resolvedTypeCache->insert(resolvedType.key(), ref.take());
     }
-    QQmlJS::DiagnosticMessage noError;
+    QQmlError noError;
     return noError;
 }
 

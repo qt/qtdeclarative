@@ -216,7 +216,7 @@ QString AstDumper::qs(const QStringRef &s) {
     return qs(s.toString());
 }
 
-QString AstDumper::loc(const AST::SourceLocation &s) {
+QString AstDumper::loc(const SourceLocation &s) {
     if (noLocations() || !s.isValid())
         return QLatin1String("\"\"");
     else {

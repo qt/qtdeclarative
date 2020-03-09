@@ -38,6 +38,7 @@
 #include <QVector>
 
 using namespace QQmlJS::AST;
+using namespace QQmlJS;
 
 struct Comment
 {

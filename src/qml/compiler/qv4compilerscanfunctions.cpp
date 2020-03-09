@@ -55,7 +55,7 @@ using namespace QV4::Compiler;
 using namespace QQmlJS;
 using namespace QQmlJS::AST;
 
-static CompiledData::Location location(const QQmlJS::AST::SourceLocation &astLocation)
+static CompiledData::Location location(const QQmlJS::SourceLocation &astLocation)
 {
     CompiledData::Location target;
     target.line = astLocation.startLine;
@@ -129,7 +129,7 @@ void ScanFunctions::checkDirectivePrologue(StatementList *ast)
     }
 }
 
-void ScanFunctions::checkName(const QStringRef &name, const SourceLocation &loc)
+void ScanFunctions::checkName(const QStringRef &name, const QQmlJS::SourceLocation &loc)
 {
     if (_context->isStrict) {
         if (name == QLatin1String("implements")
@@ -330,7 +330,7 @@ bool ScanFunctions::visit(PatternElement *ast)
     BoundNames names;
     ast->boundNames(&names);
 
-    QQmlJS::AST::SourceLocation lastInitializerLocation = ast->lastSourceLocation();
+    QQmlJS::SourceLocation lastInitializerLocation = ast->lastSourceLocation();
     if (_context->lastBlockInitializerLocation.isValid())
         lastInitializerLocation = _context->lastBlockInitializerLocation;
 

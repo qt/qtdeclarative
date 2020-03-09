@@ -58,7 +58,7 @@ QT_BEGIN_NAMESPACE
 class QQmlTypeNotAvailable : public QObject {
     Q_OBJECT
     QML_NAMED_ELEMENT(TypeNotAvailable)
-    QML_ADDED_IN_VERSION(2, 0)
+    QML_ADDED_IN_VERSION(2, 15)
     QML_UNCREATABLE("Type not available.")
 };
 

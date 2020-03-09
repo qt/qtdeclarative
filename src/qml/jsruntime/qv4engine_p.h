@@ -91,6 +91,7 @@ class PageAllocation;
 
 QT_BEGIN_NAMESPACE
 
+#if QT_CONFIG(qml_network)
 class QNetworkAccessManager;
 
 namespace QV4 {
@@ -99,6 +100,9 @@ namespace detail {
 QNetworkAccessManager *getNetworkAccessManager(ExecutionEngine *engine);
 }
 }
+#else
+namespace QV4 { struct QObjectMethod; }
+#endif // qml_network
 
 // Used to allow a QObject method take and return raw V4 handles without having to expose
 // 48 in the public API.
@@ -355,7 +359,9 @@ public:
     FunctionObject *getStackFunction() const { return reinterpret_cast<FunctionObject *>(jsObjects + GetStack_Function); }
     FunctionObject *thrower() const { return reinterpret_cast<FunctionObject *>(jsObjects + ThrowerObject); }
 
+#if QT_CONFIG(qml_network)
     QNetworkAccessManager* (*networkAccessManager)(ExecutionEngine*)  = detail::getNetworkAccessManager;
+#endif
 
     enum JSStrings {
         String_Empty,

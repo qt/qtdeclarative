@@ -123,7 +123,7 @@ QStringList completeImportPaths(const QString &uri, const QString &basePath, QTy
     static const QLatin1Char Slash('/');
     static const QLatin1Char Backslash('\\');
 
-    const QVector<QStringRef> parts = uri.splitRef(QLatin1Char('.'), QString::SkipEmptyParts);
+    const QVector<QStringRef> parts = uri.splitRef(QLatin1Char('.'), Qt::SkipEmptyParts);
 
     QStringList qmlDirPathsPaths;
     // fully & partially versioned parts + 1 unversioned for each base path

@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import QtQml.WorkerScript 2.15
 
 WorkerScript {
     id: worker

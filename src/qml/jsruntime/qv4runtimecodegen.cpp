@@ -67,7 +67,7 @@ void RuntimeCodegen::generateFromFunctionExpression(const QString &fileName,
     _module->rootContext = _module->functions.at(index);
 }
 
-void RuntimeCodegen::throwSyntaxError(const AST::SourceLocation &loc, const QString &detail)
+void RuntimeCodegen::throwSyntaxError(const SourceLocation &loc, const QString &detail)
 {
     if (hasError())
         return;
@@ -76,7 +76,7 @@ void RuntimeCodegen::throwSyntaxError(const AST::SourceLocation &loc, const QStr
     engine->throwSyntaxError(detail, _module->fileName, loc.startLine, loc.startColumn);
 }
 
-void RuntimeCodegen::throwReferenceError(const AST::SourceLocation &loc, const QString &detail)
+void RuntimeCodegen::throwReferenceError(const SourceLocation &loc, const QString &detail)
 {
     if (hasError())
         return;

@@ -7304,7 +7304,7 @@ void tst_qqmlecmascript::forInLoop()
 
     QMetaObject::invokeMethod(object, "listProperty");
 
-    QStringList r = object->property("listResult").toString().split("|", QString::SkipEmptyParts);
+    QStringList r = object->property("listResult").toString().split("|", Qt::SkipEmptyParts);
     QCOMPARE(r.size(), 3);
     QCOMPARE(r[0],QLatin1String("0=obj1"));
     QCOMPARE(r[1],QLatin1String("1=obj2"));

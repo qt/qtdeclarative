@@ -50,6 +50,7 @@
 #include <private/qqmlglobal_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qqmlbuiltinfunctions_p.h>
+#include <private/qqmlsourcecoordinate_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -72,8 +73,8 @@ bool QQmlDelayedError::addError(QQmlEnginePrivate *e)
 void QQmlDelayedError::setErrorLocation(const QQmlSourceLocation &sourceLocation)
 {
     m_error.setUrl(QUrl(sourceLocation.sourceFile));
-    m_error.setLine(sourceLocation.line);
-    m_error.setColumn(sourceLocation.column);
+    m_error.setLine(qmlConvertSourceCoordinate<quint16, int>(sourceLocation.line));
+    m_error.setColumn(qmlConvertSourceCoordinate<quint16, int>(sourceLocation.column));
 }
 
 void QQmlDelayedError::setErrorDescription(const QString &description)

@@ -97,7 +97,7 @@ protected:
 
     void checkDirectivePrologue(QQmlJS::AST::StatementList *ast);
 
-    void checkName(const QStringRef &name, const QQmlJS::AST::SourceLocation &loc);
+    void checkName(const QStringRef &name, const QQmlJS::SourceLocation &loc);
 
     bool visit(QQmlJS::AST::Program *ast) override;
     void endVisit(QQmlJS::AST::Program *) override;

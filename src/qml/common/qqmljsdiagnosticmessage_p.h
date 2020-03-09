@@ -58,6 +58,8 @@
 // QQmlSourceLocation -> line/column change.
 #include <private/qqmlapiversion_p.h>
 
+#include "qqmljssourcelocation_p.h"
+
 QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
@@ -65,8 +67,7 @@ struct DiagnosticMessage
 {
     QString message;
     QtMsgType type = QtCriticalMsg;
-    quint32 line = 0;
-    quint32 column = 0;
+    SourceLocation loc;
 
     bool isError() const
     {

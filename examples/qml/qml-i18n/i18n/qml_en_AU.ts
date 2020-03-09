@@ -4,7 +4,7 @@
 <context>
     <name>qml-i18n</name>
     <message>
-        <location filename="../qml-i18n.qml" line="66"/>
+        <location filename="../qml-i18n.qml" line="68"/>
         <source>Hello</source>
         <translation>G&apos;day</translation>
     </message>

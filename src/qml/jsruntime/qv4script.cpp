@@ -52,6 +52,7 @@
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljsast_p.h>
 #include <private/qqmlengine_p.h>
+#include <private/qqmlsourcecoordinate_p.h>
 #include <private/qv4profiling_p.h>
 #include <qv4runtimecodegen_p.h>
 
@@ -109,10 +110,10 @@ void Script::parse()
     const auto diagnosticMessages = parser.diagnosticMessages();
     for (const DiagnosticMessage &m : diagnosticMessages) {
         if (m.isError()) {
-            valueScope.engine->throwSyntaxError(m.message, sourceFile, m.line, m.column);
+            valueScope.engine->throwSyntaxError(m.message, sourceFile, m.loc.startLine, m.loc.startColumn);
             return;
         } else {
-            qWarning() << sourceFile << ':' << m.line << ':' << m.column
+            qWarning() << sourceFile << ':' << m.loc.startLine << ':' << m.loc.startColumn
                       << ": warning: " << m.message;
         }
     }
@@ -209,8 +210,8 @@ QV4::CompiledData::CompilationUnit Script::precompile(
             const auto v4Error = cg.error();
             QQmlError error;
             error.setUrl(cg.url());
-            error.setLine(v4Error.line);
-            error.setColumn(v4Error.column);
+            error.setLine(qmlConvertSourceCoordinate<quint32, int>(v4Error.loc.startLine));
+            error.setColumn(qmlConvertSourceCoordinate<quint32, int>(v4Error.loc.startColumn));
             error.setDescription(v4Error.message);
             reportedErrors->append(error);
         }

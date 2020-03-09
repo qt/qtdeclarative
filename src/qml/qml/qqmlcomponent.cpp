@@ -50,6 +50,7 @@
 #include "qqmlincubator.h"
 #include "qqmlincubator_p.h"
 #include <private/qqmljavascriptexpression_p.h>
+#include <private/qqmlsourcecoordinate_p.h>
 
 #include <private/qv4functionobject_p.h>
 #include <private/qv4script_p.h>
@@ -1424,8 +1425,8 @@ QQmlError QQmlComponentPrivate::unsetRequiredPropertyToQQmlError(const RequiredP
     }
     error.setDescription(description);
     error.setUrl(unsetRequiredProperty.fileUrl);
-    error.setLine(unsetRequiredProperty.location.line);
-    error.setColumn(unsetRequiredProperty.location.column);
+    error.setLine(qmlConvertSourceCoordinate<quint32, int>(unsetRequiredProperty.location.line));
+    error.setColumn(qmlConvertSourceCoordinate<quint32, int>(unsetRequiredProperty.location.column));
     return  error;
 }
 

@@ -50,8 +50,17 @@ struct QmlTypesClassDescription
     bool isRootClass = false;
     bool isBuiltin = false;
 
+    enum CollectMode {
+        TopLevel,
+        SuperClass,
+        AttachedType
+    };
+
     void collect(const QJsonObject *classDef, const QVector<QJsonObject> &types,
-                 const QVector<QJsonObject> &foreign, bool topLevel, QTypeRevision defaultRevision);
+                 const QVector<QJsonObject> &foreign, CollectMode mode,
+                 QTypeRevision defaultRevision);
+    void collectAttached(const QString &attached, const QVector<QJsonObject> &types,
+                         const QVector<QJsonObject> &foreign, QTypeRevision defaultRevision);
 
     static const QJsonObject *findType(const QVector<QJsonObject> &types, const QString &name);
 };

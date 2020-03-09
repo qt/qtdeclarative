@@ -124,7 +124,7 @@ private:
     void restoreIR(QV4::CompiledData::CompilationUnit &&unit);
     void continueLoadFromIR();
     void resolveTypes();
-    QQmlJS::DiagnosticMessage buildTypeResolutionCaches(
+    QQmlError buildTypeResolutionCaches(
             QQmlRefPointer<QQmlTypeNameCache> *typeNameCache,
             QV4::ResolvedTypeReferenceMap *resolvedTypeCache
             ) const;

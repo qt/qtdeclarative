@@ -47,14 +47,32 @@ struct ScopedPointerFileCloser
     static inline void cleanup(FILE *handle) { if (handle) fclose(handle); }
 };
 
-static bool acceptClassForQmlTypeRegistration(const QJsonObject &classDef)
+enum RegistrationMode {
+    NoRegistration,
+    ObjectRegistration,
+    GadgetRegistration,
+    NamespaceRegistration
+};
+
+static RegistrationMode qmlTypeRegistrationMode(const QJsonObject &classDef)
 {
     const QJsonArray classInfos = classDef[QLatin1String("classInfos")].toArray();
     for (const QJsonValue &info: classInfos) {
-        if (info[QLatin1String("name")].toString() == QLatin1String("QML.Element"))
-            return true;
+        const QString name = info[QLatin1String("name")].toString();
+        if (name == QLatin1String("QML.Element")) {
+            if (classDef[QLatin1String("object")].toBool())
+                return ObjectRegistration;
+            if (classDef[QLatin1String("gadget")].toBool())
+                return GadgetRegistration;
+            if (classDef[QLatin1String("namespace")].toBool())
+                return NamespaceRegistration;
+            qWarning() << "Not registering classInfo which is neither an object, "
+                          "nor a gadget, nor a namespace:"
+                       << name;
+            break;
+        }
     }
-    return false;
+    return NoRegistration;
 }
 
 static QVector<QJsonObject> foreignRelatedTypes(const QVector<QJsonObject> &types,
@@ -284,7 +302,10 @@ int main(int argc, char **argv)
             const QJsonArray classes = metaObject[QLatin1String("classes")].toArray();
             for (const auto &cls : classes) {
                 QJsonObject classDef = cls.toObject();
-                if (acceptClassForQmlTypeRegistration(classDef)) {
+                switch (qmlTypeRegistrationMode(classDef)) {
+                case NamespaceRegistration:
+                case GadgetRegistration:
+                case ObjectRegistration: {
                     const QString include = metaObject[QLatin1String("inputFile")].toString();
                     const bool declaredInHeader = include.endsWith(QLatin1String(".h"));
                     if (declaredInHeader) {
@@ -296,9 +317,13 @@ int main(int argc, char **argv)
                                 qPrintable(classDef.value(QLatin1String("qualifiedClassName"))
                                            .toString()));
                     }
+
                     types.append(classDef);
-                } else {
+                    break;
+                }
+                case NoRegistration:
                     foreignTypes.append(classDef);
+                    break;
                 }
             }
         };
@@ -360,8 +385,14 @@ int main(int argc, char **argv)
             continue;
 
         const QString className = classDef[QLatin1String("qualifiedClassName")].toString();
-        fprintf(output, "\n    qmlRegisterTypesAndRevisions<%s>(\"%s\", %s);", qPrintable(className),
-                qPrintable(module), qPrintable(majorVersion));
+
+        if (classDef.value(QLatin1String("namespace")).toBool()) {
+            fprintf(output, "\n    qmlRegisterNamespaceAndRevisions(&%s::staticMetaObject, \"%s\", %s);",
+                    qPrintable(className), qPrintable(module), qPrintable(majorVersion));
+        } else {
+            fprintf(output, "\n    qmlRegisterTypesAndRevisions<%s>(\"%s\", %s);",
+                    qPrintable(className), qPrintable(module), qPrintable(majorVersion));
+        }
     }
 
     fprintf(output, "\n    qmlRegisterModule(\"%s\", %s, %s);",

@@ -38,6 +38,7 @@
 #include "commentastvisitor.h"
 
 using namespace QQmlJS::AST;
+using namespace QQmlJS;
 
 class DumpAstVisitor : protected Visitor
 {

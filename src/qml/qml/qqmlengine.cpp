@@ -57,6 +57,7 @@
 #include "qqmlnotifier_p.h"
 #include "qqmlincubator.h"
 #include "qqmlabstracturlinterceptor.h"
+#include "qqmlsourcecoordinate_p.h"
 #include <private/qqmldirparser_p.h>
 #include <private/qqmlboundsignal_p.h>
 #include <private/qqmljsdiagnosticmessage_p.h>
@@ -1330,12 +1331,16 @@ void QQmlEngine::setOutputWarningsToStandardError(bool enabled)
   \code
   class MySingleton : public QObject {
     Q_OBJECT
+
+    // Register as default constructed singleton.
+    QML_ELEMENT
+    QML_SINGLETON
+
     static int typeId;
     // ...
   };
 
-  // Register with QObject* callback
-  MySingleton::typeId = qmlRegisterSingletonType<MySingleton>(...);
+  MySingleton::typeId = qmlTypeId(...);
 
   // Retrieve as QObject*
   QQmlEngine engine;
@@ -1352,11 +1357,10 @@ void QQmlEngine::setOutputWarningsToStandardError(bool enabled)
   QJSValue instance = engine.singletonInstance<QJSValue>(typeId);
   \endcode
 
-  It is recommended to store the QML type id during registration, e.g. as a static member
-  in the singleton class. Otherwise, a costly lookup via qmlTypeId() has to be performed
-  at run-time.
+  It is recommended to store the QML type id, e.g. as a static member in the
+  singleton class. The lookup via qmlTypeId() is costly.
 
-  \sa qmlRegisterSingletonType(), qmlTypeId()
+  \sa QML_SINGLETON, qmlRegisterSingletonType(), qmlTypeId()
   \since 5.12
 */
 template<>
@@ -2091,15 +2095,15 @@ QList<QQmlError> QQmlEnginePrivate::qmlErrorFromDiagnostics(
     QList<QQmlError> errors;
     for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
         if (m.isWarning()) {
-            qWarning("%s:%d : %s", qPrintable(fileName), m.line, qPrintable(m.message));
+            qWarning("%s:%d : %s", qPrintable(fileName), m.loc.startLine, qPrintable(m.message));
             continue;
         }
 
         QQmlError error;
         error.setUrl(QUrl(fileName));
         error.setDescription(m.message);
-        error.setLine(m.line);
-        error.setColumn(m.column);
+        error.setLine(qmlConvertSourceCoordinate<quint32, int>(m.loc.startLine));
+        error.setColumn(qmlConvertSourceCoordinate<quint32, int>(m.loc.startColumn));
         errors << error;
     }
     return errors;

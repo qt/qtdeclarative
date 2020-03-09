@@ -1859,21 +1859,30 @@ void tst_qqmllanguage::valueTypes()
 
 void tst_qqmllanguage::cppnamespace()
 {
-    {
-        QQmlComponent component(&engine, testFileUrl("cppnamespace.qml"));
-        VERIFY_ERRORS(0);
-        QScopedPointer<QObject> object(component.create());
-        QVERIFY(object != nullptr);
+    QScopedPointer<QObject> object;
 
-        QCOMPARE(object->property("intProperty").toInt(), (int)MyNamespace::MyOtherNSEnum::OtherKey2);
-    }
-
-    {
-        QQmlComponent component(&engine, testFileUrl("cppnamespace.2.qml"));
+    auto create = [&](const char *file) {
+        QQmlComponent component(&engine, testFileUrl(file));
         VERIFY_ERRORS(0);
-        QScopedPointer<QObject> object(component.create());
+        object.reset(component.create());
         QVERIFY(object != nullptr);
-    }
+    };
+
+    auto createAndCheck = [&](const char *file) {
+        create(file);
+        return !QTest::currentTestFailed();
+    };
+
+    QVERIFY(createAndCheck("cppnamespace.qml"));
+    QCOMPARE(object->property("intProperty").toInt(),
+             (int)MyNamespace::MyOtherNSEnum::OtherKey2);
+
+    QVERIFY(createAndCheck("cppstaticnamespace.qml"));
+    QCOMPARE(object->property("intProperty").toInt(),
+             (int)MyStaticNamespace::MyOtherNSEnum::OtherKey2);
+
+    QVERIFY(createAndCheck("cppnamespace.2.qml"));
+    QVERIFY(createAndCheck("cppstaticnamespace.2.qml"));
 }
 
 void tst_qqmllanguage::aliasProperties()
