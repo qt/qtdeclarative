@@ -57,6 +57,7 @@
 
 #include <QVulkanInstance>
 #include <QVulkanFunctions>
+#include <QFile>
 
 class CustomTextureNode : public QSGTextureProvider, public QSGSimpleTextureNode
 {

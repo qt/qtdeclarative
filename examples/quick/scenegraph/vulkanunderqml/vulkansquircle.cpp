@@ -54,6 +54,7 @@
 
 #include <QVulkanInstance>
 #include <QVulkanFunctions>
+#include <QFile>
 
 class SquircleRenderer : public QObject
 {
