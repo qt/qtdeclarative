@@ -56,6 +56,7 @@
 #include <private/qqmldebugconnector_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qqmlscriptdata_p.h>
+#include <private/qqmlsourcecoordinate_p.h>
 #include <private/qjsvalue_p.h>
 #include <private/qv4generatorobject_p.h>
 
@@ -1135,8 +1136,8 @@ void QQmlObjectCreator::recordError(const QV4::CompiledData::Location &location,
 {
     QQmlError error;
     error.setUrl(compilationUnit->url());
-    error.setLine(location.line);
-    error.setColumn(location.column);
+    error.setLine(qmlConvertSourceCoordinate<quint32, int>(location.line));
+    error.setColumn(qmlConvertSourceCoordinate<quint32, int>(location.column));
     error.setDescription(description);
     errors << error;
 }

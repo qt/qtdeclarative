@@ -371,12 +371,12 @@ public:
     // specified object. Used for declarations inside group properties.
     Object *declarationsOverride;
 
-    void init(QQmlJS::MemoryPool *pool, int typeNameIndex, int idIndex, const QQmlJS::AST::SourceLocation &location = QQmlJS::AST::SourceLocation());
+    void init(QQmlJS::MemoryPool *pool, int typeNameIndex, int idIndex, const QQmlJS::SourceLocation &location = QQmlJS::SourceLocation());
 
     QString appendEnum(Enum *enumeration);
     QString appendSignal(Signal *signal);
-    QString appendProperty(Property *prop, const QString &propertyName, bool isDefaultProperty, const QQmlJS::AST::SourceLocation &defaultToken, QQmlJS::AST::SourceLocation *errorLocation);
-    QString appendAlias(Alias *prop, const QString &aliasName, bool isDefaultProperty, const QQmlJS::AST::SourceLocation &defaultToken, QQmlJS::AST::SourceLocation *errorLocation);
+    QString appendProperty(Property *prop, const QString &propertyName, bool isDefaultProperty, const QQmlJS::SourceLocation &defaultToken, QQmlJS::SourceLocation *errorLocation);
+    QString appendAlias(Alias *prop, const QString &aliasName, bool isDefaultProperty, const QQmlJS::SourceLocation &defaultToken, QQmlJS::SourceLocation *errorLocation);
     void appendFunction(QmlIR::Function *f);
     void appendInlineComponent(InlineComponent *ic);
     void appendRequiredPropertyExtraData(RequiredPropertyExtraData *extraData);
@@ -485,24 +485,24 @@ public:
 
     void throwRecursionDepthError() override
     {
-        recordError(QQmlJS::AST::SourceLocation(),
+        recordError(QQmlJS::SourceLocation(),
                     QStringLiteral("Maximum statement or expression depth exceeded"));
     }
 
     void accept(QQmlJS::AST::Node *node);
 
     // returns index in _objects
-    bool defineQMLObject(int *objectIndex, QQmlJS::AST::UiQualifiedId *qualifiedTypeNameId, const QQmlJS::AST::SourceLocation &location, QQmlJS::AST::UiObjectInitializer *initializer, Object *declarationsOverride = nullptr);
+    bool defineQMLObject(int *objectIndex, QQmlJS::AST::UiQualifiedId *qualifiedTypeNameId, const QQmlJS::SourceLocation &location, QQmlJS::AST::UiObjectInitializer *initializer, Object *declarationsOverride = nullptr);
     bool defineQMLObject(int *objectIndex, QQmlJS::AST::UiObjectDefinition *node, Object *declarationsOverride = nullptr)
     { return defineQMLObject(objectIndex, node->qualifiedTypeNameId, node->qualifiedTypeNameId->firstSourceLocation(), node->initializer, declarationsOverride); }
 
     static QString asString(QQmlJS::AST::UiQualifiedId *node);
     QStringRef asStringRef(QQmlJS::AST::Node *node);
     static QTypeRevision extractVersion(const QStringRef &string);
-    QStringRef textRefAt(const QQmlJS::AST::SourceLocation &loc) const
+    QStringRef textRefAt(const QQmlJS::SourceLocation &loc) const
     { return QStringRef(&sourceCode, loc.offset, loc.length); }
-    QStringRef textRefAt(const QQmlJS::AST::SourceLocation &first,
-                         const QQmlJS::AST::SourceLocation &last) const;
+    QStringRef textRefAt(const QQmlJS::SourceLocation &first,
+                         const QQmlJS::SourceLocation &last) const;
 
     void setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST::Statement *statement,
                          QQmlJS::AST::Node *parentNode);
@@ -511,24 +511,24 @@ public:
     void appendBinding(QQmlJS::AST::UiQualifiedId *name, QQmlJS::AST::Statement *value,
                        QQmlJS::AST::Node *parentNode);
     void appendBinding(QQmlJS::AST::UiQualifiedId *name, int objectIndex, bool isOnAssignment = false);
-    void appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLocation,
-                       const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex,
+    void appendBinding(const QQmlJS::SourceLocation &qualifiedNameLocation,
+                       const QQmlJS::SourceLocation &nameLocation, quint32 propertyNameIndex,
                        QQmlJS::AST::Statement *value, QQmlJS::AST::Node *parentNode);
-    void appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLocation,
-                       const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex,
+    void appendBinding(const QQmlJS::SourceLocation &qualifiedNameLocation,
+                       const QQmlJS::SourceLocation &nameLocation, quint32 propertyNameIndex,
                        int objectIndex, bool isListItem = false, bool isOnAssignment = false);
 
     bool appendAlias(QQmlJS::AST::UiPublicMember *node);
 
     Object *bindingsTarget() const;
 
-    bool setId(const QQmlJS::AST::SourceLocation &idLocation, QQmlJS::AST::Statement *value);
+    bool setId(const QQmlJS::SourceLocation &idLocation, QQmlJS::AST::Statement *value);
 
     // resolves qualified name (font.pixelSize for example) and returns the last name along
     // with the object any right-hand-side of a binding should apply to.
     bool resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, Object **object, bool onAssignment = false);
 
-    void recordError(const QQmlJS::AST::SourceLocation &location, const QString &description);
+    void recordError(const QQmlJS::SourceLocation &location, const QString &description);
 
     quint32 registerString(const QString &str) const { return jsGenerator->registerString(str); }
     template <typename _Tp> _Tp *New() { return pool->New<_Tp>(); }
@@ -538,7 +538,7 @@ public:
     static bool isStatementNodeScript(QQmlJS::AST::Statement *statement);
     static bool isRedundantNullInitializerForPropertyDeclaration(Property *property, QQmlJS::AST::Statement *statement);
 
-    QString sanityCheckFunctionNames(Object *obj, const QSet<QString> &illegalNames, QQmlJS::AST::SourceLocation *errorLocation);
+    QString sanityCheckFunctionNames(Object *obj, const QSet<QString> &illegalNames, QQmlJS::SourceLocation *errorLocation);
 
     QList<QQmlJS::DiagnosticMessage> errors;
 

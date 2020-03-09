@@ -240,7 +240,6 @@ void PersistentValueStorage::mark(MarkStack *markStack)
             if (Managed *m = p->values[i].as<Managed>())
                 m->mark(markStack);
         }
-        markStack->drain();
 
         p = p->header.next;
     }

@@ -183,7 +183,7 @@ QPair<QString, QString> resolveImportPath(const QString &uri, const QString &ver
 {
     const QLatin1Char dot('.');
     const QLatin1Char slash('/');
-    const QStringList parts = uri.split(dot, QString::SkipEmptyParts);
+    const QStringList parts = uri.split(dot, Qt::SkipEmptyParts);
 
     QString ver = version;
     while (true) {
@@ -281,7 +281,7 @@ QVariantList findQmlImportsInQmlCode(const QString &filePath, const QString &cod
         const auto diagnosticMessages = parser.diagnosticMessages();
         for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
             std::cerr << QDir::toNativeSeparators(filePath).toStdString() << ':'
-                      << m.line << ':' << m.message.toStdString() << std::endl;
+                      << m.loc.startLine << ':' << m.message.toStdString() << std::endl;
         }
         return QVariantList();
     }

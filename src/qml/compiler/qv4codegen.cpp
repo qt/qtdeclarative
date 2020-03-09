@@ -3821,8 +3821,7 @@ void Codegen::throwError(ErrorType errorType, const SourceLocation &loc, const Q
 
     _errorType = errorType;
     _error.message = detail;
-    _error.line = loc.startLine;
-    _error.column = loc.startColumn;
+    _error.loc = loc;
 }
 
 void Codegen::throwSyntaxError(const SourceLocation &loc, const QString &detail)
@@ -4105,7 +4104,7 @@ Codegen::Reference Codegen::Reference::asLValue() const
     case Accumulator:
         Q_UNREACHABLE();
     case Super:
-        codegen->throwSyntaxError(AST::SourceLocation(), QStringLiteral("Super lvalues not implemented."));
+        codegen->throwSyntaxError(SourceLocation(), QStringLiteral("Super lvalues not implemented."));
         return *this;
     case Member:
         if (!propertyBase.isStackSlot()) {

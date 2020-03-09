@@ -1211,11 +1211,13 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, QQ
     }
 
     Compositor::iterator it = m_compositor.find(group, index);
+    const auto flags = it->flags;
+    const auto modelIndex = it.modelIndex();
 
     QQmlDelegateModelItem *cacheItem = it->inCache() ? m_cache.at(it.cacheIndex) : 0;
 
     if (!cacheItem || !cacheItem->delegate) {
-        QQmlComponent *delegate = resolveDelegate(it.modelIndex());
+        QQmlComponent *delegate = resolveDelegate(modelIndex);
         if (!delegate)
             return nullptr;
 
@@ -1226,17 +1228,17 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, QQ
                 // all related properties, and return the object (which
                 // has already been incubated, otherwise it wouldn't be in the pool).
                 addCacheItem(cacheItem, it);
-                reuseItem(cacheItem, index, it->flags);
+                reuseItem(cacheItem, index, flags);
                 cacheItem->referenceObject();
                 return cacheItem->object;
             }
 
             // Since we could't find an available item in the pool, we create a new one
-            cacheItem = m_adaptorModel.createItem(m_cacheMetaType, it.modelIndex());
+            cacheItem = m_adaptorModel.createItem(m_cacheMetaType, modelIndex);
             if (!cacheItem)
                 return nullptr;
 
-            cacheItem->groups = it->flags;
+            cacheItem->groups = flags;
             addCacheItem(cacheItem, it);
         }
 

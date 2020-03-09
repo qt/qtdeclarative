@@ -66,25 +66,24 @@ class QQmlPropertyValidator
 public:
     QQmlPropertyValidator(QQmlEnginePrivate *enginePrivate, const QQmlImports &imports, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit);
 
-    QVector<QQmlJS::DiagnosticMessage> validate();
+    QVector<QQmlError> validate();
 
 private:
-    QVector<QQmlJS::DiagnosticMessage> validateObject(
+    QVector<QQmlError> validateObject(
             int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding,
             bool populatingValueTypeGroupProperty = false) const;
-    QQmlJS::DiagnosticMessage validateLiteralBinding(
+    QQmlError validateLiteralBinding(
             QQmlPropertyCache *propertyCache, QQmlPropertyData *property,
             const QV4::CompiledData::Binding *binding) const;
-    QQmlJS::DiagnosticMessage validateObjectBinding(
+    QQmlError validateObjectBinding(
             QQmlPropertyData *property, const QString &propertyName,
             const QV4::CompiledData::Binding *binding) const;
 
     bool canCoerce(int to, QQmlPropertyCache *fromMo) const;
 
-    Q_REQUIRED_RESULT QVector<QQmlJS::DiagnosticMessage> recordError(
+    Q_REQUIRED_RESULT QVector<QQmlError> recordError(
             const QV4::CompiledData::Location &location, const QString &description) const;
-    Q_REQUIRED_RESULT QVector<QQmlJS::DiagnosticMessage> recordError(
-            const QQmlJS::DiagnosticMessage &error) const;
+    Q_REQUIRED_RESULT QVector<QQmlError> recordError(const QQmlError &error) const;
     QString stringAt(int index) const { return compilationUnit->stringAt(index); }
     QV4::ResolvedTypeReference *resolvedType(int id) const
     {

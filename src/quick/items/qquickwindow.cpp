@@ -1770,6 +1770,10 @@ bool QQuickWindow::event(QEvent *e)
         if (d->activeFocusItem)
             QCoreApplication::sendEvent(d->activeFocusItem, e);
         return true;
+    case QEvent::LanguageChange:
+        if (d->contentItem)
+            QCoreApplication::sendEvent(d->contentItem, e);
+        break;
     default:
         break;
     }
@@ -4437,7 +4441,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     OpenGL context is actually created.
 
     QQuickWindow::openglContext() will still return 0 for this window
-    until after the QQuickWindow::sceneGraphInitialize() has been
+    until after the QQuickWindow::sceneGraphInitialized() has been
     emitted.
 
     \note

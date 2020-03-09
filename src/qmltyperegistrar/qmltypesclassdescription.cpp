@@ -61,7 +61,7 @@ const QJsonObject *QmlTypesClassDescription::findType(const QVector<QJsonObject>
 void QmlTypesClassDescription::collect(const QJsonObject *classDef,
                                            const QVector<QJsonObject> &types,
                                            const QVector<QJsonObject> &foreign,
-                                           bool topLevel, QTypeRevision defaultRevision)
+                                           CollectMode mode, QTypeRevision defaultRevision)
 {
     const auto classInfos = classDef->value(QLatin1String("classInfos")).toArray();
     for (const QJsonValue &classInfo : classInfos) {
@@ -70,11 +70,11 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
         const QString value = obj[QLatin1String("value")].toString();
 
         if (name == QLatin1String("DefaultProperty")) {
-            if (defaultProp.isEmpty())
+            if (mode != AttachedType && defaultProp.isEmpty())
                 defaultProp = value;
         } else if (name == QLatin1String("QML.AddedInVersion")) {
             const QTypeRevision revision = QTypeRevision::fromEncodedVersion(value.toInt());
-            if (topLevel) {
+            if (mode == TopLevel) {
                 addedInRevision = revision;
                 revisions.append(revision);
             } else if (!elementName.isEmpty()) {
@@ -82,7 +82,7 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
             }
         }
 
-        if (!topLevel)
+        if (mode != TopLevel)
             continue;
 
         // These only apply to the original class
@@ -96,27 +96,23 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
         } else if (name == QLatin1String("QML.Creatable")) {
             isCreatable = (value != QLatin1String("false"));
         } else if (name == QLatin1String("QML.Attached")) {
-            attachedType = value;
-            if (const QJsonObject *other = findType(types, attachedType))
-                collect(other, types, foreign, false, defaultRevision);
-            else if (const QJsonObject *other = findType(foreign, attachedType))
-                collect(other, types, foreign, false, defaultRevision);
+            collectAttached(value, types, foreign, defaultRevision);
         } else if (name == QLatin1String("QML.Singleton")) {
             if (value == QLatin1String("true"))
                 isSingleton = true;
         } else if (name == QLatin1String("QML.Foreign")) {
             if (const QJsonObject *other = findType(foreign, value)) {
                 classDef = other;
-                if (defaultProp.isEmpty()) {
-                    // Foreign type can have a default property
-                    const auto classInfos = classDef->value(QLatin1String("classInfos")).toArray();
-                    for (const QJsonValue &classInfo : classInfos) {
-                        QJsonObject obj = classInfo.toObject();
-                        if (obj[QLatin1String("name")].toString() == QLatin1String("DefaultProperty")) {
-                            defaultProp = obj[QLatin1String("value")].toString();
-                            break;
-                        }
-                    }
+                // Foreign type can have a default property or an attached types
+                const auto classInfos = classDef->value(QLatin1String("classInfos")).toArray();
+                for (const QJsonValue &classInfo : classInfos) {
+                    const QJsonObject obj = classInfo.toObject();
+                    const QString foreignName = obj[QLatin1String("name")].toString();
+                    const QString foreignValue = obj[QLatin1String("value")].toString();
+                    if (defaultProp.isEmpty() && foreignName == QLatin1String("DefaultProperty"))
+                        defaultProp = foreignValue;
+                    else if (foreignName == QLatin1String("QML.Attached"))
+                        collectAttached(foreignValue, types, foreign, defaultRevision);
                 }
             }
         } else if (name == QLatin1String("QML.Root")) {
@@ -127,7 +123,7 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
         }
     }
 
-    if (!elementName.isEmpty()) {
+    if (mode == AttachedType || !elementName.isEmpty()) {
         collectExtraVersions(classDef, QString::fromLatin1("properties"), revisions);
         collectExtraVersions(classDef, QString::fromLatin1("slots"), revisions);
         collectExtraVersions(classDef, QString::fromLatin1("methods"), revisions);
@@ -139,13 +135,14 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
         const QJsonObject superObject = supers.first().toObject();
         if (superObject[QLatin1String("access")].toString() == QLatin1String("public")) {
             const QString superName = superObject[QLatin1String("name")].toString();
-            if (topLevel && superClass.isEmpty())
+            if (mode == TopLevel && superClass.isEmpty())
                 superClass = superName;
 
+            const CollectMode superMode = (mode == TopLevel) ? SuperClass : AttachedType;
             if (const QJsonObject *other = findType(types, superName))
-                collect(other, types, foreign, false, defaultRevision);
+                collect(other, types, foreign, superMode, defaultRevision);
             else if (const QJsonObject *other = findType(foreign, superName))
-                collect(other, types, foreign, false, defaultRevision);
+                collect(other, types, foreign, superMode, defaultRevision);
         }
     }
 
@@ -161,4 +158,19 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
     revisions.erase(end, revisions.end());
 
     resolvedClass = classDef;
+
+    // If it's not a QObject, it's not creatable
+    isCreatable = isCreatable && classDef->value(QLatin1String("object")).toBool();
+}
+
+void QmlTypesClassDescription::collectAttached(const QString &attached,
+                                               const QVector<QJsonObject> &types,
+                                               const QVector<QJsonObject> &foreign,
+                                               QTypeRevision defaultRevision)
+{
+    attachedType = attached;
+    if (const QJsonObject *other = findType(types, attachedType))
+        collect(other, types, foreign, AttachedType, defaultRevision);
+    else if (const QJsonObject *other = findType(foreign, attachedType))
+        collect(other, types, foreign, AttachedType, defaultRevision);
 }

@@ -52,7 +52,7 @@
 //
 
 #include "qqmljsglobal_p.h"
-#include "qqmljssourcelocation_p.h"
+#include <private/qqmljssourcelocation_p.h>
 
 #include <private/qqmljsmemorypool_p.h>
 
@@ -97,7 +97,7 @@ class QML_PARSER_EXPORT Engine
     Lexer *_lexer;
     Directives *_directives;
     MemoryPool _pool;
-    QList<AST::SourceLocation> _comments;
+    QList<SourceLocation> _comments;
     QString _extraCode;
     QString _code;
 
@@ -109,7 +109,7 @@ public:
     const QString &code() const { return _code; }
 
     void addComment(int pos, int len, int line, int col);
-    QList<AST::SourceLocation> comments() const;
+    QList<SourceLocation> comments() const;
 
     Lexer *lexer() const;
     void setLexer(Lexer *lexer);

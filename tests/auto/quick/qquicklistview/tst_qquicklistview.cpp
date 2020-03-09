@@ -9867,6 +9867,7 @@ void tst_QQuickListView::reuse_checkThatItemsAreReused()
     window->resize(640, 480);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+    QVERIFY(window->rootObject() != nullptr);
 
     QQuickListView *listView = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listView != nullptr);

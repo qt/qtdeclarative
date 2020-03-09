@@ -62,7 +62,7 @@ void ScopeTree::insertJSIdentifier(const QString &id, QQmlJS::AST::VariableScope
 }
 
 void ScopeTree::insertSignalIdentifier(const QString &id, const MetaMethod &method,
-                                       const QQmlJS::AST::SourceLocation &loc,
+                                       const QQmlJS::SourceLocation &loc,
                                        bool hasMultilineHandlerBody)
 {
     Q_ASSERT(m_scopeType == ScopeType::QMLScope);
@@ -77,7 +77,7 @@ void ScopeTree::insertPropertyIdentifier(const MetaProperty &property)
 }
 
 void ScopeTree::addUnmatchedSignalHandler(const QString &handler,
-                                          const QQmlJS::AST::SourceLocation &location)
+                                          const QQmlJS::SourceLocation &location)
 {
     m_unmatchedSignalHandlers.append(qMakePair(handler, location));
 }
@@ -87,13 +87,13 @@ bool ScopeTree::isIdInCurrentScope(const QString &id) const
     return isIdInCurrentQMlScopes(id) || isIdInCurrentJSScopes(id);
 }
 
-void ScopeTree::addIdToAccessed(const QString &id, const QQmlJS::AST::SourceLocation &location) {
+void ScopeTree::addIdToAccessed(const QString &id, const QQmlJS::SourceLocation &location) {
     m_currentFieldMember = new FieldMemberList {id, QString(), location, {}};
     m_accessedIdentifiers.push_back(std::unique_ptr<FieldMemberList>(m_currentFieldMember));
 }
 
 void ScopeTree::accessMember(const QString &name, const QString &parentType,
-                             const QQmlJS::AST::SourceLocation &location)
+                             const QQmlJS::SourceLocation &location)
 {
     Q_ASSERT(m_currentFieldMember);
     auto *fieldMember = new FieldMemberList {name, parentType, location, {}};
@@ -115,7 +115,7 @@ bool ScopeTree::isVisualRootScope() const
 class IssueLocationWithContext
 {
 public:
-    IssueLocationWithContext(const QString &code, const QQmlJS::AST::SourceLocation &location) {
+    IssueLocationWithContext(const QString &code, const QQmlJS::SourceLocation &location) {
         int before = std::max(0,code.lastIndexOf('\n', location.offset));
         m_beforeText = code.midRef(before + 1, int(location.offset - (before + 1)));
         m_issueText = code.midRef(location.offset, location.length);
@@ -440,7 +440,7 @@ const ScopeTree *ScopeTree::currentQMLScope() const
 }
 
 void ScopeTree::printContext(ColorOutput &colorOut, const QString &code,
-                             const QQmlJS::AST::SourceLocation &location) const
+                             const QQmlJS::SourceLocation &location) const
 {
     IssueLocationWithContext issueLocationWithContext {code, location};
     colorOut.write(issueLocationWithContext.beforeText().toString(), Normal);

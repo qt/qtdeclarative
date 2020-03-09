@@ -150,7 +150,7 @@ QQmlDelegateModelItem *QQmlTableInstanceModel::resolveModelItem(int index)
     }
 
     // Create a new item from scratch
-    modelItem = m_adaptorModel.createItem(m_metaType, index);
+    modelItem = m_adaptorModel.createItem(m_metaType.data(), index);
     if (modelItem) {
         modelItem->delegate = delegate;
         m_modelItems.insert(index, modelItem);
@@ -240,6 +240,25 @@ void QQmlTableInstanceModel::destroyModelItem(QQmlDelegateModelItem *modelItem)
 {
     emit destroyingItem(modelItem->object);
     modelItem->destroyObject();
+    delete modelItem;
+}
+
+void QQmlTableInstanceModel::dispose(QObject *object)
+{
+    Q_ASSERT(object);
+    auto modelItem = qvariant_cast<QQmlDelegateModelItem *>(object->property(kModelItemTag));
+    Q_ASSERT(modelItem);
+
+    modelItem->releaseObject();
+
+    // The item is not referenced by anyone
+    Q_ASSERT(!modelItem->isObjectReferenced());
+    Q_ASSERT(!modelItem->isReferenced());
+
+    m_modelItems.remove(modelItem->index);
+
+    emit destroyingItem(object);
+    delete object;
     delete modelItem;
 }
 

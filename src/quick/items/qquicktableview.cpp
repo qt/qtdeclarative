@@ -82,7 +82,7 @@
     The following example shows how to create a model from C++ with multiple
     columns:
 
-    \snippet qml/tableview/cpp-tablemodel.cpp 0
+    \snippet qml/tableview/cpp-tablemodel.h 0
 
     And then how to use it from QML:
 
@@ -441,7 +441,16 @@ QQuickTableViewPrivate::QQuickTableViewPrivate()
 
 QQuickTableViewPrivate::~QQuickTableViewPrivate()
 {
-    releaseLoadedItems(QQmlTableInstanceModel::NotReusable);
+    for (auto *fxTableItem : loadedItems) {
+        if (auto item = fxTableItem->item) {
+            if (fxTableItem->ownItem)
+                delete item;
+            else if (tableModel)
+                tableModel->dispose(item);
+        }
+        delete fxTableItem;
+    }
+
     if (tableModel)
         delete tableModel;
 }

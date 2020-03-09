@@ -73,7 +73,7 @@ QQmlPropertyValidator::QQmlPropertyValidator(QQmlEnginePrivate *enginePrivate, c
     bindingPropertyDataPerObject->resize(compilationUnit->objectCount());
 }
 
-QVector<QQmlJS::DiagnosticMessage> QQmlPropertyValidator::validate()
+QVector<QQmlError> QQmlPropertyValidator::validate()
 {
     return validateObject(/*root object*/0, /*instantiatingBinding*/nullptr);
 }
@@ -96,7 +96,7 @@ struct BindingFinder
     }
 };
 
-QVector<QQmlJS::DiagnosticMessage> QQmlPropertyValidator::validateObject(
+QVector<QQmlError> QQmlPropertyValidator::validateObject(
         int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding, bool populatingValueTypeGroupProperty) const
 {
     const QV4::CompiledData::Object *obj = compilationUnit->objectAt(objectIndex);
@@ -113,7 +113,7 @@ QVector<QQmlJS::DiagnosticMessage> QQmlPropertyValidator::validateObject(
 
     QQmlPropertyCache *propertyCache = propertyCaches.at(objectIndex);
     if (!propertyCache)
-        return QVector<QQmlJS::DiagnosticMessage>();
+        return QVector<QQmlError>();
 
     QQmlCustomParser *customParser = nullptr;
     if (auto typeRef = resolvedType(obj->inheritedTypeNameIndex)) {
@@ -226,7 +226,7 @@ QVector<QQmlJS::DiagnosticMessage> QQmlPropertyValidator::validateObject(
                     = pd
                       && QQmlValueTypeFactory::metaObjectForMetaType(pd->propType())
                       && !(binding->flags & QV4::CompiledData::Binding::IsOnAssignment);
-            const QVector<QQmlJS::DiagnosticMessage> subObjectValidatorErrors
+            const QVector<QQmlError> subObjectValidatorErrors
                     = validateObject(binding->value.objectIndex, binding,
                                      populatingValueTypeGroupProperty);
             if (!subObjectValidatorErrors.isEmpty())
@@ -283,11 +283,11 @@ QVector<QQmlJS::DiagnosticMessage> QQmlPropertyValidator::validateObject(
             }
 
             if (binding->type < QV4::CompiledData::Binding::Type_Script) {
-                QQmlJS::DiagnosticMessage bindingError = validateLiteralBinding(propertyCache, pd, binding);
+                QQmlError bindingError = validateLiteralBinding(propertyCache, pd, binding);
                 if (bindingError.isValid())
                     return recordError(bindingError);
             } else if (binding->type == QV4::CompiledData::Binding::Type_Object) {
-                QQmlJS::DiagnosticMessage bindingError = validateObjectBinding(pd, name, binding);
+                QQmlError bindingError = validateObjectBinding(pd, name, binding);
                 if (bindingError.isValid())
                     return recordError(bindingError);
             } else if (binding->isGroupProperty()) {
@@ -349,24 +349,24 @@ QVector<QQmlJS::DiagnosticMessage> QQmlPropertyValidator::validateObject(
         customParser->validator = nullptr;
         customParser->engine = nullptr;
         customParser->imports = (QQmlImports*)nullptr;
-        QVector<QQmlJS::DiagnosticMessage> parserErrors = customParser->errors();
+        QVector<QQmlError> parserErrors = customParser->errors();
         if (!parserErrors.isEmpty())
             return parserErrors;
     }
 
     (*bindingPropertyDataPerObject)[objectIndex] = collectedBindingPropertyData;
 
-    QVector<QQmlJS::DiagnosticMessage> noError;
+    QVector<QQmlError> noError;
     return noError;
 }
 
-QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCache, QQmlPropertyData *property, const QV4::CompiledData::Binding *binding) const
+QQmlError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCache, QQmlPropertyData *property, const QV4::CompiledData::Binding *binding) const
 {
     if (property->isQList()) {
         return qQmlCompileError(binding->valueLocation, tr("Cannot assign primitives to lists"));
     }
 
-    QQmlJS::DiagnosticMessage noError;
+    QQmlError noError;
 
     if (property->isEnum()) {
         if (binding->flags & QV4::CompiledData::Binding::IsResolvedEnum)
@@ -390,8 +390,8 @@ QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateLiteralBinding(QQmlProp
         if (binding->type == QV4::CompiledData::Binding::Type_Null) {
             QQmlError warning;
             warning.setUrl(compilationUnit->url());
-            warning.setLine(binding->valueLocation.line);
-            warning.setColumn(binding->valueLocation.column);
+            warning.setLine(qmlConvertSourceCoordinate<quint32, int>(binding->valueLocation.line));
+            warning.setColumn(qmlConvertSourceCoordinate<quint32, int>(binding->valueLocation.column));
             warning.setDescription(error + tr(" - Assigning null to incompatible properties in QML "
                                               "is deprecated. This will become a compile error in "
                                               "future versions of Qt."));
@@ -662,23 +662,23 @@ bool QQmlPropertyValidator::canCoerce(int to, QQmlPropertyCache *fromMo) const
     return false;
 }
 
-QVector<QQmlJS::DiagnosticMessage> QQmlPropertyValidator::recordError(const QV4::CompiledData::Location &location, const QString &description) const
+QVector<QQmlError> QQmlPropertyValidator::recordError(const QV4::CompiledData::Location &location, const QString &description) const
 {
-    QVector<QQmlJS::DiagnosticMessage> errors;
+    QVector<QQmlError> errors;
     errors.append(qQmlCompileError(location, description));
     return errors;
 }
 
-QVector<QQmlJS::DiagnosticMessage> QQmlPropertyValidator::recordError(const QQmlJS::DiagnosticMessage &error) const
+QVector<QQmlError> QQmlPropertyValidator::recordError(const QQmlError &error) const
 {
-    QVector<QQmlJS::DiagnosticMessage> errors;
+    QVector<QQmlError> errors;
     errors.append(error);
     return errors;
 }
 
-QQmlJS::DiagnosticMessage QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *property, const QString &propertyName, const QV4::CompiledData::Binding *binding) const
+QQmlError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *property, const QString &propertyName, const QV4::CompiledData::Binding *binding) const
 {
-    QQmlJS::DiagnosticMessage noError;
+    QQmlError noError;
 
     if (binding->flags & QV4::CompiledData::Binding::IsOnAssignment) {
         Q_ASSERT(binding->type == QV4::CompiledData::Binding::Type_Object);

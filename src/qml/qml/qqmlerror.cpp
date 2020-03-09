@@ -77,12 +77,15 @@ QT_BEGIN_NAMESPACE
 
     \sa QQuickView::errors(), QQmlComponent::errors()
 */
-class QQmlErrorPrivate : public QQmlJS::DiagnosticMessage
+class QQmlErrorPrivate
 {
 public:
-    QQmlErrorPrivate() { type = QtWarningMsg; }
     QUrl url;
     QPointer<QObject> object;
+    QString message;
+    QtMsgType type = QtWarningMsg;
+    int line = -1;
+    int column = -1;
 };
 
 /*!
@@ -185,7 +188,7 @@ void QQmlError::setDescription(const QString &description)
 int QQmlError::line() const
 {
     if (d)
-        return qmlConvertSourceCoordinate<quint32, int>(d->line);
+        return d->line;
     return -1;
 }
 
@@ -196,7 +199,7 @@ void QQmlError::setLine(int line)
 {
     if (!d)
         d = new QQmlErrorPrivate;
-    d->line = qmlConvertSourceCoordinate<int, quint32>(line);
+    d->line = line;
 }
 
 /*!
@@ -205,7 +208,7 @@ void QQmlError::setLine(int line)
 int QQmlError::column() const
 {
     if (d)
-        return qmlConvertSourceCoordinate<quint32, int>(d->column);
+        return d->column;
     return -1;
 }
 
@@ -216,7 +219,7 @@ void QQmlError::setColumn(int column)
 {
     if (!d)
         d = new QQmlErrorPrivate;
-    d->column = qmlConvertSourceCoordinate<int, quint32>(column);
+    d->column = column;
 }
 
 /*!

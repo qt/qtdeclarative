@@ -68,7 +68,7 @@ enum class ScopeType
 struct MethodUsage
 {
     MetaMethod method;
-    QQmlJS::AST::SourceLocation loc;
+    QQmlJS::SourceLocation loc;
     bool hasMultilineHandlerBody;
 };
 
@@ -112,16 +112,16 @@ public:
 
     void insertJSIdentifier(const QString &id, QQmlJS::AST::VariableScope scope);
     void insertSignalIdentifier(const QString &id, const MetaMethod &method,
-                                const QQmlJS::AST::SourceLocation &loc, bool hasMultilineHandlerBody);
+                                const QQmlJS::SourceLocation &loc, bool hasMultilineHandlerBody);
     // inserts property as qml identifier as well as the corresponding
     void insertPropertyIdentifier(const MetaProperty &prop);
     void addUnmatchedSignalHandler(const QString &handler,
-                                   const QQmlJS::AST::SourceLocation &location);
+                                   const QQmlJS::SourceLocation &location);
 
     bool isIdInCurrentScope(const QString &id) const;
-    void addIdToAccessed(const QString &id, const QQmlJS::AST::SourceLocation &location);
+    void addIdToAccessed(const QString &id, const QQmlJS::SourceLocation &location);
     void accessMember(const QString &name, const QString &parentType,
-                      const QQmlJS::AST::SourceLocation &location);
+                      const QQmlJS::SourceLocation &location);
     void resetMemberScope();
 
     bool isVisualRootScope() const;
@@ -174,7 +174,7 @@ private:
     {
         QString m_name;
         QString m_parentType;
-        QQmlJS::AST::SourceLocation m_location;
+        QQmlJS::SourceLocation m_location;
         std::unique_ptr<FieldMemberList> m_child;
     };
 
@@ -188,7 +188,7 @@ private:
     std::vector<std::unique_ptr<FieldMemberList>> m_accessedIdentifiers;
     FieldMemberList *m_currentFieldMember = nullptr;
 
-    QVector<QPair<QString, QQmlJS::AST::SourceLocation>> m_unmatchedSignalHandlers;
+    QVector<QPair<QString, QQmlJS::SourceLocation>> m_unmatchedSignalHandlers;
 
     QVector<ScopeTree::Ptr> m_childScopes;
     ScopeTree *m_parentScope;
@@ -211,7 +211,7 @@ private:
     bool isIdInjectedFromSignal(const QString &id) const;
     const ScopeTree *currentQMLScope() const;
     void printContext(ColorOutput &colorOut, const QString &code,
-                      const QQmlJS::AST::SourceLocation &location) const;
+                      const QQmlJS::SourceLocation &location) const;
     bool checkMemberAccess(
             const QString &code,
             FieldMemberList *members,

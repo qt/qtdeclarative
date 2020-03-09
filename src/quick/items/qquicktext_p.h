@@ -224,7 +224,12 @@ public:
 
     QRectF boundingRect() const override;
     QRectF clipRect() const override;
-    Q_INVOKABLE void doLayout(); // ### Qt 6: remove
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+#if QT_DEPRECATED_SINCE(5, 15)
+    QT_DEPRECATED_X("Use forceLayout() instead")
+    Q_INVOKABLE void doLayout();
+#endif
+#endif
     Q_REVISION(2, 9) Q_INVOKABLE void forceLayout();
 
     RenderType renderType() const;
@@ -331,8 +336,8 @@ class QQuickTextLine : public QObject
     Q_PROPERTY(qreal height READ height WRITE setHeight)
     Q_PROPERTY(qreal x READ x WRITE setX)
     Q_PROPERTY(qreal y READ y WRITE setY)
-    Q_PROPERTY(qreal implicitWidth READ implicitWidth)
-    Q_PROPERTY(bool isLast READ isLast)
+    Q_PROPERTY(qreal implicitWidth READ implicitWidth REVISION(2, 15))
+    Q_PROPERTY(bool isLast READ isLast REVISION(2, 15))
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(2, 0)
 

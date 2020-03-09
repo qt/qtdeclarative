@@ -578,7 +578,7 @@ void QQuickPixmapReader::networkRequestDone(QNetworkReply *reply)
         QQuickPixmapReply::ReadError error = QQuickPixmapReply::NoError;
         QString errorString;
         QSize readSize;
-        if (reply->networkError()) {
+        if (reply->error()) {
             error = QQuickPixmapReply::Loading;
             errorString = reply->errorString();
         } else {

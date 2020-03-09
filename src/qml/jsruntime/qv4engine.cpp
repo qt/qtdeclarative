@@ -1266,20 +1266,15 @@ QUrl ExecutionEngine::resolvedUrl(const QString &file)
 
 void ExecutionEngine::markObjects(MarkStack *markStack)
 {
-    for (int i = 0; i < NClasses; ++i)
-        if (classes[i]) {
-            classes[i]->mark(markStack);
-            if (markStack->top >= markStack->limit)
-                markStack->drain();
-        }
-    markStack->drain();
+    for (int i = 0; i < NClasses; ++i) {
+        if (Heap::InternalClass *c = classes[i])
+            c->mark(markStack);
+    }
 
     identifierTable->markObjects(markStack);
 
-    for (auto compilationUnit: compilationUnits) {
+    for (auto compilationUnit: compilationUnits)
         compilationUnit->markObjects(markStack);
-        markStack->drain();
-    }
 }
 
 ReturnedValue ExecutionEngine::throwError(const Value &value)
@@ -1915,10 +1910,10 @@ QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::compileModule(
                                                  sourceCode, sourceTimeStamp, &diagnostics);
     for (const QQmlJS::DiagnosticMessage &m : diagnostics) {
         if (m.isError()) {
-            throwSyntaxError(m.message, url.toString(), m.line, m.column);
+            throwSyntaxError(m.message, url.toString(), m.loc.startLine, m.loc.startColumn);
             return nullptr;
         } else {
-            qWarning() << url << ':' << m.line << ':' << m.column
+            qWarning() << url << ':' << m.loc.startLine << ':' << m.loc.startColumn
                       << ": warning: " << m.message;
         }
     }
@@ -2360,9 +2355,11 @@ int ExecutionEngine::registerExtension()
     return registrationData()->extensionCount++;
 }
 
+#if QT_CONFIG(qml_network)
 QNetworkAccessManager *QV4::detail::getNetworkAccessManager(ExecutionEngine *engine)
 {
     return engine->qmlEngine()->networkAccessManager();
 }
+#endif // qml_network
 
 QT_END_NAMESPACE

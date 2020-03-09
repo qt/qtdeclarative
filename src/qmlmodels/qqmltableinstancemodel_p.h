@@ -110,6 +110,7 @@ public:
 
     QObject *object(int index, QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested) override;
     ReleaseFlags release(QObject *object, ReusableFlag reusable = NotReusable) override;
+    void dispose(QObject *object);
     void cancel(int) override;
 
     void drainReusableItemsPool(int maxPoolTime) override;

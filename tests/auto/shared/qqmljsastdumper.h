@@ -91,7 +91,7 @@ public:
     QString qs(const char *s);
     QString qs(const QStringRef &s);
 
-    QString loc(const AST::SourceLocation &s);
+    QString loc(const SourceLocation &s);
 
     QString boolStr(bool v);
 
