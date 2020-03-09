@@ -57,6 +57,7 @@
 #include <QtCore/qrect.h>
 #include <QtGui/qbrush.h>
 #include <QtGui/qcolor.h>
+#include <QtGui/qpainterpath.h>
 #include <QtCore/qsharedpointer.h>
 #include <QtGui/qglyphrun.h>
 #include <QtCore/qurl.h>

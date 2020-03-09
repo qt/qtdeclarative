@@ -30,6 +30,7 @@
 #include "segmentproperties.h"
 
 #include <QPainter>
+#include <QPainterPath>
 #include <QMouseEvent>
 #include <QContextMenuEvent>
 #include <QDebug>
