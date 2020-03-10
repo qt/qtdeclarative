@@ -548,7 +548,7 @@ struct QQmlMetaTypeInterface : QtPrivate::QMetaTypeInterface
             /*.metaObject=*/ nullptr,
             /*.name=*/ name.constData(),
             /*.typeId=*/ 0,
-            /*.ref=*/ Q_REFCOUNT_INITIALIZE_STATIC,
+            /*.ref=*/ { Q_BASIC_ATOMIC_INITIALIZER(0) },
             /*.deleteSelf=*/ [](QMetaTypeInterface *self) {
                     delete static_cast<QQmlMetaTypeInterface *>(self);
                 },
