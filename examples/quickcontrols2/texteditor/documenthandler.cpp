@@ -385,3 +385,5 @@ void DocumentHandler::setModified(bool m)
     if (m_document)
         m_document->textDocument()->setModified(m);
 }
+
+#include "moc_documenthandler.cpp"

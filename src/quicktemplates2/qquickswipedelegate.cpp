@@ -1383,3 +1383,6 @@ void QQuickSwipeDelegateAttached::setPressed(bool pressed)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickswipe_p.cpp"
+#include "moc_qquickswipedelegate_p.cpp"

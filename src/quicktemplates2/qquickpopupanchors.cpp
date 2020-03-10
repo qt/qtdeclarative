@@ -70,3 +70,5 @@ void QQuickPopupAnchors::resetCenterIn()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickpopupanchors_p.cpp"

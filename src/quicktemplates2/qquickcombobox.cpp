@@ -1966,3 +1966,5 @@ void QQuickComboBox::accessibilityActiveChanged(bool active)
 #endif //
 
 QT_END_NAMESPACE
+
+#include "moc_qquickcombobox_p.cpp"

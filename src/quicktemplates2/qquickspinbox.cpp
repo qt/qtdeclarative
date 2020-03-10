@@ -1176,3 +1176,5 @@ qreal QQuickSpinButton::implicitIndicatorHeight() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickspinbox_p.cpp"

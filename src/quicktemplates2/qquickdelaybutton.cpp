@@ -265,3 +265,5 @@ QPalette QQuickDelayButton::defaultPalette() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickdelaybutton_p.cpp"

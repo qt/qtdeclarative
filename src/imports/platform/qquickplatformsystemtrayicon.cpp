@@ -482,3 +482,5 @@ void QQuickPlatformSystemTrayIcon::updateIcon()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickplatformsystemtrayicon_p.cpp"

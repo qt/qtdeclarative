@@ -388,3 +388,5 @@ void QQuickPlatformMenuItemGroup::items_clear(QQmlListProperty<QQuickPlatformMen
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickplatformmenuitemgroup_p.cpp"

@@ -316,3 +316,5 @@ QQuickItem *QQuickTumblerView::view()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicktumblerview_p.cpp"

@@ -407,3 +407,5 @@ QWindow *QQuickPlatformDialog::findParentWindow() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickplatformdialog_p.cpp"

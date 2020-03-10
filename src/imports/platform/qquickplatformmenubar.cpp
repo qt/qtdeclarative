@@ -328,3 +328,5 @@ void QQuickPlatformMenuBar::menus_clear(QQmlListProperty<QQuickPlatformMenu> *pr
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickplatformmenubar_p.cpp"

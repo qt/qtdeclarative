@@ -474,3 +474,5 @@ bool QQuickSwipeViewAttached::isPreviousItem() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickswipeview_p.cpp"

@@ -938,3 +938,5 @@ void QQuickPlatformMenu::updateIcon()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickplatformmenu_p.cpp"

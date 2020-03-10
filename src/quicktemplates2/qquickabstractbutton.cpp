@@ -1177,3 +1177,5 @@ QAccessible::Role QQuickAbstractButton::accessibleRole() const
 #endif
 
 QT_END_NAMESPACE
+
+#include "moc_qquickabstractbutton_p.cpp"

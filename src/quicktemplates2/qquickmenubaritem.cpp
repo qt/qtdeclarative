@@ -183,3 +183,5 @@ QAccessible::Role QQuickMenuBarItem::accessibleRole() const
 #endif
 
 QT_END_NAMESPACE
+
+#include "moc_qquickmenubaritem_p.cpp"
