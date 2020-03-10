@@ -178,7 +178,7 @@ void QQuickAbstractButtonPrivate::handleRelease(const QPointF &point)
 
     if (wasPressed) {
         emit q->released();
-        if (!wasHeld)
+        if (!wasHeld && !wasDoubleClick)
             trigger();
     } else {
         emit q->canceled();
@@ -188,6 +188,8 @@ void QQuickAbstractButtonPrivate::handleRelease(const QPointF &point)
         stopPressRepeat();
     else
         stopPressAndHold();
+
+    wasDoubleClick = false;
 }
 
 void QQuickAbstractButtonPrivate::handleUngrab()
@@ -201,6 +203,7 @@ void QQuickAbstractButtonPrivate::handleUngrab()
     q->setPressed(false);
     stopPressRepeat();
     stopPressAndHold();
+    wasDoubleClick = false;
     emit q->canceled();
 }
 
@@ -1080,8 +1083,10 @@ void QQuickAbstractButton::mousePressEvent(QMouseEvent *event)
 
 void QQuickAbstractButton::mouseDoubleClickEvent(QMouseEvent *event)
 {
+    Q_D(QQuickAbstractButton);
     QQuickControl::mouseDoubleClickEvent(event);
     emit doubleClicked();
+    d->wasDoubleClick = true;
 }
 
 void QQuickAbstractButton::timerEvent(QTimerEvent *event)

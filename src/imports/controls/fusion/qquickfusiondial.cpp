@@ -84,7 +84,7 @@ void QQuickFusionDial::paint(QPainter *painter)
 
     QColor buttonColor = m_palette.button().color();
     const bool enabled = isEnabled();
-    qreal r = qMin(width, height) / 2;
+    qreal r = qMin(width, height) / 2.0;
     r -= r/50;
     const qreal penSize = r/20.0;
 

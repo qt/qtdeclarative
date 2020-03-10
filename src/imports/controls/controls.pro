@@ -19,7 +19,7 @@ SOURCES += \
 RESOURCES += \
     $$PWD/qtquickcontrols2plugin.qrc
 
-!static: qtConfig(quick-designer): include(designer/designer.pri)
+qtConfig(quick-designer): include(designer/designer.pri)
 include(doc/doc.pri)
 
 CONFIG += no_cxx_module install_qml_files builtin_resources qtquickcompiler

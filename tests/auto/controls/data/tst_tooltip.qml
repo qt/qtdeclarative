@@ -227,13 +227,44 @@ TestCase {
         id: toolTipWithExitTransition
 
         ToolTip {
+            Component.onCompleted: contentItem.objectName = "contentItem"
+
             enter: Transition {
                 NumberAnimation { property: "opacity"; from: 0.0; to: 1.0; duration: 100 }
             }
             exit: Transition {
-                NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; duration: 1000 }
+                NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; duration: 500 }
             }
         }
+    }
+
+    function test_openDuringExitTransitionWithTimeout() {
+        let control = createTemporaryObject(toolTipWithExitTransition, testCase, { timeout: 250 })
+        verify(control)
+
+        let openedSpy = signalSpy.createObject(control, { target: control, signalName: "opened" })
+        verify(openedSpy.valid)
+
+        control.open()
+        verify(control.visible)
+        // Can't be fully open yet because the enter transition has only just started.
+        compare(control.opened, false)
+        compare(control.enter.running, true)
+        // Wait for it to have opened. We don't check that the opened property is still true
+        // because it can result in hard-to-reproduce flakiness. Instead we just check that
+        // it was opened at some point.
+        tryCompare(openedSpy, "count", 1)
+
+        // Let it timeout and begin the exit transition.
+        tryCompare(control, "opened", false)
+        verify(control.visible)
+        tryCompare(control.exit, "running", true)
+        verify(control.visible)
+
+        // Quickly open it again; it should still timeout eventually.
+        control.open()
+        tryCompare(openedSpy, "count", 2)
+        tryCompare(control.exit, "running", true)
     }
 
     function test_makeVisibleWhileExitTransitionRunning_data() {

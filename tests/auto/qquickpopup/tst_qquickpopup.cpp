@@ -94,6 +94,7 @@ private slots:
     void toolTipCrashOnClose();
     void setOverlayParentToNull();
     void tabFence();
+    void invisibleToolTipOpen();
 };
 
 void tst_QQuickPopup::initTestCase()
@@ -1356,6 +1357,33 @@ void tst_QQuickPopup::tabFence()
     QVERIFY(dialogButton2->hasActiveFocus());
     QTest::keyClick(window, Qt::Key_Tab);
     QVERIFY(outsideButton1->hasActiveFocus());
+}
+
+void tst_QQuickPopup::invisibleToolTipOpen()
+{
+    QQuickApplicationHelper helper(this, "invisibleToolTipOpen.qml");
+
+    QQuickWindow *window = helper.window;
+    centerOnScreen(window);
+    moveMouseAway(window);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickItem *mouseArea = qvariant_cast<QQuickItem *>(window->property("mouseArea"));
+    QVERIFY(mouseArea);
+    QObject *loader = qvariant_cast<QObject *>(window->property("loader"));
+    QVERIFY(loader);
+
+    QTest::mouseMove(window, QPoint(mouseArea->width() / 2, mouseArea->height() / 2));
+    QTRY_VERIFY(mouseArea->property("isToolTipVisible").toBool());
+
+    QSignalSpy componentLoadedSpy(loader, SIGNAL(loaded()));
+    QVERIFY(componentLoadedSpy.isValid());
+
+    loader->setProperty("active", true);
+    QTRY_COMPARE(componentLoadedSpy.count(), 1);
+
+    QTRY_VERIFY(mouseArea->property("isToolTipVisible").toBool());
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)

@@ -62,11 +62,13 @@ ApplicationWindow {
     visible: true
     title: "Qt Quick Controls 2"
 
-    function help()
-    {
-        var url = "https://doc.qt.io/qt-5/"
-            + (stackView.depth > 1
-               ? "qml-qtquick-controls2-" + stackView.currentItem.control + ".html"
+    function help() {
+        let displayingControl = listView.currentIndex !== -1
+        let currentControlName = displayingControl
+            ? listView.model.get(listView.currentIndex).title.toLowerCase() : ""
+        let url = "https://doc.qt.io/qt-5/"
+            + (displayingControl
+               ? "qml-qtquick-controls2-" + currentControlName + ".html"
                : "qtquick-controls2-qmlmodule.html");
         Qt.openUrlExternally(url)
     }

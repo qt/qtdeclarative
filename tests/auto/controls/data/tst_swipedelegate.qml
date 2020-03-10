@@ -654,8 +654,7 @@ TestCase {
             "pressed",
             "doubleClicked",
             ["pressedChanged", { "pressed": false }],
-            "released",
-            "clicked"
+            "released"
         ];
         mouseDoubleClickSequence(control, control.width / 2, control.height / 2, Qt.LeftButton);
         verify(mouseSignalSequenceSpy.success);

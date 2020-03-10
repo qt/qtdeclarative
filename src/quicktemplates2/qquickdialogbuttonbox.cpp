@@ -455,8 +455,11 @@ void QQuickDialogButtonBoxPrivate::updateLanguage()
                 qmlAttachedPropertiesObject<QQuickDialogButtonBox>(button, true));
             const auto boxAttachedPrivate = QQuickDialogButtonBoxAttachedPrivate::get(attached);
             const QPlatformDialogHelper::StandardButton standardButton = boxAttachedPrivate->standardButton;
-            const QString buttonText = QGuiApplicationPrivate::platformTheme()->standardButtonText(standardButton);
-            button->setText(QPlatformTheme::removeMnemonics(buttonText));
+            // The button might be a custom one with explicitly specified text, so we shouldn't change it in that case.
+            if (standardButton != QPlatformDialogHelper::NoButton) {
+                const QString buttonText = QGuiApplicationPrivate::platformTheme()->standardButtonText(standardButton);
+                button->setText(QPlatformTheme::removeMnemonics(buttonText));
+            }
         }
         --i;
     }

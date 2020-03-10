@@ -56,6 +56,7 @@
 #include <QtQuickTemplates2/private/qquickdrawer_p.h>
 #include <QtQuickTemplates2/private/qquickframe_p.h>
 #include <QtQuickTemplates2/private/qquickgroupbox_p.h>
+#include <QtQuickTemplates2/private/qquickheaderview_p.h>
 #include <QtQuickTemplates2/private/qquickicon_p.h>
 #include <QtQuickTemplates2/private/qquickitemdelegate_p.h>
 #include <QtQuickTemplates2/private/qquicklabel_p.h>
@@ -357,6 +358,10 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
 
     // QtQuick.Templates 2.15 (new types and revisions in Qt 5.15)
     qmlRegisterType<QQuickComboBox, 15>(uri, 2, 15, "ComboBox");
+    // Register QQuickTableView here to expose headerView's base, with a irregular type name to 'hide' it.
+    qmlRegisterType<QQuickTableView, 15>(uri, 2, 15, "__TableView__");
+    qmlRegisterType<QQuickHorizontalHeaderView>(uri, 2, 15, "HorizontalHeaderView");
+    qmlRegisterType<QQuickVerticalHeaderView>(uri, 2, 15, "VerticalHeaderView");
 }
 
 QT_END_NAMESPACE
