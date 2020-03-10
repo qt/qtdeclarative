@@ -36,7 +36,7 @@
 #include "../../shared/util.h"
 
 #if QT_CONFIG(opengl)
-#include <QtGui/qopenglcontext.h>
+#include <qopenglcontext.h>
 #include <QtGui/qsurfaceformat.h>
 #endif
 

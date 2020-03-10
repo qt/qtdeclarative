@@ -68,6 +68,7 @@ class Q_AUTOTEST_EXPORT QQuickLoader : public QQuickImplicitSizeItem
     Q_PROPERTY(qreal progress READ progress NOTIFY progressChanged)
     Q_PROPERTY(bool asynchronous READ asynchronous WRITE setAsynchronous NOTIFY asynchronousChanged)
     QML_NAMED_ELEMENT(Loader)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     QQuickLoader(QQuickItem *parent = nullptr);

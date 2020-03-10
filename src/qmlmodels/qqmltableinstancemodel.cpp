@@ -78,13 +78,14 @@ void QQmlTableInstanceModel::deleteModelItemLater(QQmlDelegateModelItem *modelIt
 QQmlTableInstanceModel::QQmlTableInstanceModel(QQmlContext *qmlContext, QObject *parent)
     : QQmlInstanceModel(*(new QObjectPrivate()), parent)
     , m_qmlContext(qmlContext)
-    , m_metaType(new QQmlDelegateModelItemMetaType(m_qmlContext->engine()->handle(), nullptr, QStringList()))
+    , m_metaType(new QQmlDelegateModelItemMetaType(m_qmlContext->engine()->handle(), nullptr, QStringList()),
+                 QQmlRefPointer<QQmlDelegateModelItemMetaType>::Adopt)
 {
 }
 
-void QQmlTableInstanceModel::useImportVersion(int minorVersion)
+void QQmlTableInstanceModel::useImportVersion(QTypeRevision version)
 {
-    m_adaptorModel.useImportVersion(minorVersion);
+    m_adaptorModel.useImportVersion(version);
 }
 
 QQmlTableInstanceModel::~QQmlTableInstanceModel()
@@ -149,7 +150,7 @@ QQmlDelegateModelItem *QQmlTableInstanceModel::resolveModelItem(int index)
     }
 
     // Create a new item from scratch
-    modelItem = m_adaptorModel.createItem(m_metaType, index);
+    modelItem = m_adaptorModel.createItem(m_metaType.data(), index);
     if (modelItem) {
         modelItem->delegate = delegate;
         m_modelItems.insert(index, modelItem);
@@ -239,6 +240,25 @@ void QQmlTableInstanceModel::destroyModelItem(QQmlDelegateModelItem *modelItem)
 {
     emit destroyingItem(modelItem->object);
     modelItem->destroyObject();
+    delete modelItem;
+}
+
+void QQmlTableInstanceModel::dispose(QObject *object)
+{
+    Q_ASSERT(object);
+    auto modelItem = qvariant_cast<QQmlDelegateModelItem *>(object->property(kModelItemTag));
+    Q_ASSERT(modelItem);
+
+    modelItem->releaseObject();
+
+    // The item is not referenced by anyone
+    Q_ASSERT(!modelItem->isObjectReferenced());
+    Q_ASSERT(!modelItem->isReferenced());
+
+    m_modelItems.remove(modelItem->index);
+
+    emit destroyingItem(object);
+    delete object;
     delete modelItem;
 }
 

@@ -66,9 +66,9 @@ class QQmlLoggingCategory : public QObject, public QQmlParserStatus
     Q_INTERFACES(QQmlParserStatus)
 
     Q_PROPERTY(QString name READ name WRITE setName)
-    Q_PROPERTY(DefaultLogLevel defaultLogLevel READ defaultLogLevel WRITE setDefaultLogLevel REVISION 12)
+    Q_PROPERTY(DefaultLogLevel defaultLogLevel READ defaultLogLevel WRITE setDefaultLogLevel REVISION(2, 12))
     QML_NAMED_ELEMENT(LoggingCategory)
-    QML_ADDED_IN_MINOR_VERSION(8)
+    QML_ADDED_IN_VERSION(2, 8)
 
 public:
     enum DefaultLogLevel {

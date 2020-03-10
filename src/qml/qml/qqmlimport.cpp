@@ -161,9 +161,17 @@ void qmlClearEnginePlugins()
 #if QT_CONFIG(library)
     for (auto &plugin : qAsConst(*plugins)) {
         QPluginLoader* loader = plugin.loader;
-        if (loader && !loader->unload())
-            qWarning("Unloading %s failed: %s", qPrintable(plugin.uri), qPrintable(loader->errorString()));
-        delete loader;
+        if (loader) {
+            auto extensionPlugin = qobject_cast<QQmlExtensionPlugin *>(loader->instance());
+            if (extensionPlugin) {
+                extensionPlugin->unregisterTypes();
+            }
+#ifndef Q_OS_MACOS
+            if (!loader->unload())
+                qWarning("Unloading %s failed: %s", qPrintable(plugin.uri), qPrintable(loader->errorString()));
+            delete loader;
+#endif
+        }
     }
 #endif
     plugins->clear();
@@ -213,12 +221,12 @@ public:
     QQmlImportNamespace *importNamespace(const QString &prefix) const;
 
     bool addLibraryImport(const QString& uri, const QString &prefix,
-                          int vmaj, int vmin, const QString &qmldirIdentifier, const QString &qmldirUrl, bool incomplete,
+                          QTypeRevision version, const QString &qmldirIdentifier,
+                          const QString &qmldirUrl, bool incomplete,
                           QQmlImportDatabase *database,
                           QList<QQmlError> *errors);
 
-    bool addFileImport(const QString &uri, const QString &prefix,
-                       int vmaj, int vmin,
+    bool addFileImport(const QString &uri, const QString &prefix, QTypeRevision version,
                        bool isImplicitImport, bool incomplete, QQmlImportDatabase *database,
                        QList<QQmlError> *errors);
 
@@ -227,7 +235,7 @@ public:
                              QQmlImportDatabase *database,
                              QList<QQmlError> *errors);
 
-    bool resolveType(const QHashedStringRef &type, int *vmajor, int *vminor,
+    bool resolveType(const QHashedStringRef &type, QTypeRevision *version_return,
                      QQmlType *type_return, QList<QQmlError> *errors,
                      QQmlType::RegistrationType registrationType,
                      bool *typeRecursionDetected = nullptr);
@@ -247,14 +255,13 @@ public:
     QQmlTypeLoader *typeLoader;
 
     static QQmlImports::LocalQmldirResult locateLocalQmldir(
-            const QString &uri, int vmaj, int vmin, QQmlImportDatabase *database,
+            const QString &uri, QTypeRevision version, QQmlImportDatabase *database,
             QString *outQmldirFilePath, QString *outUrl);
 
-    static bool validateQmldirVersion(const QQmlTypeLoaderQmldirContent &qmldir, const QString &uri, int vmaj, int vmin,
-                                      QList<QQmlError> *errors);
+    static bool validateQmldirVersion(const QQmlTypeLoaderQmldirContent &qmldir, const QString &uri,
+                                      QTypeRevision version, QList<QQmlError> *errors);
 
-    bool importExtension(const QString &absoluteFilePath, const QString &uri,
-                         int vmaj, int vmin,
+    bool importExtension(const QString &absoluteFilePath, const QString &uri, QTypeRevision version,
                          QQmlImportDatabase *database,
                          const QQmlTypeLoaderQmldirContent &qmldir,
                          QList<QQmlError> *errors);
@@ -264,10 +271,10 @@ public:
 
     QString resolvedUri(const QString &dir_arg, QQmlImportDatabase *database);
 
-    QQmlImportInstance *addImportToNamespace(QQmlImportNamespace *nameSpace,
-                                                      const QString &uri, const QString &url,
-                                                      int vmaj, int vmin, QV4::CompiledData::Import::ImportType type,
-                                                      QList<QQmlError> *errors, bool lowPrecedence = false);
+    QQmlImportInstance *addImportToNamespace(QQmlImportNamespace *nameSpace, const QString &uri,
+                                             const QString &url, QTypeRevision version,
+                                             QV4::CompiledData::Import::ImportType type,
+                                             QList<QQmlError> *errors, bool lowPrecedence = false);
 
     bool populatePluginPairVector(QVector<StaticPluginPair> &result, const QString &uri, const QStringList &versionUris,
                                      const QString &qmldirPath, QList<QQmlError> *errors);
@@ -344,9 +351,9 @@ void QQmlImports::populateCache(QQmlTypeNameCache *cache) const
 
     for (int ii = set.imports.count() - 1; ii >= 0; --ii) {
         const QQmlImportInstance *import = set.imports.at(ii);
-        QQmlTypeModule *module = QQmlMetaType::typeModule(import->uri, import->majversion);
+        QQmlTypeModule *module = QQmlMetaType::typeModule(import->uri, import->version);
         if (module) {
-            cache->m_anonymousImports.append(QQmlTypeModuleVersion(module, import->minversion));
+            cache->m_anonymousImports.append(QQmlTypeModuleVersion(module, import->version));
         }
     }
 
@@ -360,10 +367,10 @@ void QQmlImports::populateCache(QQmlTypeNameCache *cache) const
 
         for (int ii = set.imports.count() - 1; ii >= 0; --ii) {
             const QQmlImportInstance *import = set.imports.at(ii);
-            QQmlTypeModule *module = QQmlMetaType::typeModule(import->uri, import->majversion);
+            QQmlTypeModule *module = QQmlMetaType::typeModule(import->uri, import->version);
             if (module) {
                 QQmlImportRef &typeimport = cache->m_namedImports[set.prefix];
-                typeimport.modules.append(QQmlTypeModuleVersion(module, import->minversion));
+                typeimport.modules.append(QQmlTypeModuleVersion(module, import->version));
             }
         }
     }
@@ -395,36 +402,35 @@ void findCompositeSingletons(const QQmlImportNamespace &set, QList<QQmlImports::
 
         const QQmlDirComponents &components = import->qmlDirComponents;
 
-        const int importMajorVersion = import->majversion;
-        const int importMinorVersion = import->minversion;
-        auto shouldSkipSingleton = [importMajorVersion, importMinorVersion](int singletonMajorVersion, int singletonMinorVersion) -> bool {
-            return importMajorVersion != -1 &&
-                    (singletonMajorVersion > importMajorVersion || (singletonMajorVersion == importMajorVersion && singletonMinorVersion > importMinorVersion));
+        const QTypeRevision importVersion = import->version;
+        auto shouldSkipSingleton = [importVersion](QTypeRevision singletonVersion) -> bool {
+            return importVersion.hasMajorVersion() &&
+                    (singletonVersion.majorVersion() > importVersion.majorVersion()
+                     || (singletonVersion.majorVersion() == importVersion.majorVersion()
+                         && singletonVersion.minorVersion() > importVersion.minorVersion()));
         };
 
         ConstIterator cend = components.constEnd();
         for (ConstIterator cit = components.constBegin(); cit != cend; ++cit) {
             if (cit->singleton && excludeBaseUrl(import->url, cit->fileName, baseUrl.toString())) {
-                if (shouldSkipSingleton(cit->majorVersion, cit->minorVersion))
+                if (shouldSkipSingleton(cit->version))
                     continue;
                 QQmlImports::CompositeSingletonReference ref;
                 ref.typeName = cit->typeName;
                 ref.prefix = set.prefix;
-                ref.majorVersion = cit->majorVersion;
-                ref.minorVersion = cit->minorVersion;
+                ref.version = cit->version;
                 resultList.append(ref);
             }
         }
 
-        if (QQmlTypeModule *module = QQmlMetaType::typeModule(import->uri, import->majversion)) {
+        if (QQmlTypeModule *module = QQmlMetaType::typeModule(import->uri, import->version)) {
             module->walkCompositeSingletons([&resultList, &set, &shouldSkipSingleton](const QQmlType &singleton) {
-                if (shouldSkipSingleton(singleton.majorVersion(), singleton.minorVersion()))
+                if (shouldSkipSingleton(singleton.version()))
                     return;
                 QQmlImports::CompositeSingletonReference ref;
                 ref.typeName = singleton.elementName();
                 ref.prefix = set.prefix;
-                ref.majorVersion = singleton.majorVersion();
-                ref.minorVersion = singleton.minorVersion();
+                ref.version = singleton.version();
                 resultList.append(ref);
             });
         }
@@ -461,9 +467,9 @@ QList<QQmlImports::CompositeSingletonReference> QQmlImports::resolvedCompositeSi
         if (lhs.typeName != rhs.typeName)
             return lhs.typeName < rhs.typeName;
 
-        return lhs.majorVersion != rhs.majorVersion
-            ? lhs.majorVersion < rhs.majorVersion
-            : lhs.minorVersion < rhs.minorVersion;
+        return lhs.version.majorVersion() != rhs.version.majorVersion()
+            ? lhs.version.majorVersion() < rhs.version.majorVersion()
+            : lhs.version.minorVersion() < rhs.version.minorVersion();
     });
 
     return compositeSingletons;
@@ -532,16 +538,17 @@ static QString joinStringRefs(const QVector<QStringRef> &refs, const QChar &sep)
     - base/QtQml.2/Models/qmldir
     - base/QtQml/Models/qmldir
 */
-QStringList QQmlImports::completeQmldirPaths(const QString &uri, const QStringList &basePaths, int vmaj, int vmin)
+QStringList QQmlImports::completeQmldirPaths(const QString &uri, const QStringList &basePaths,
+                                             QTypeRevision version)
 {
-    const QVector<QStringRef> parts = uri.splitRef(Dot, QString::SkipEmptyParts);
+    const QVector<QStringRef> parts = uri.splitRef(Dot, Qt::SkipEmptyParts);
 
     QStringList qmlDirPathsPaths;
     // fully & partially versioned parts + 1 unversioned for each base path
     qmlDirPathsPaths.reserve(basePaths.count() * (2 * parts.count() + 1));
 
-    for (int version = FullyVersioned; version <= Unversioned; ++version) {
-        const QString ver = versionString(vmaj, vmin, static_cast<QQmlImports::ImportVersion>(version));
+    for (int versionMode = FullyVersioned; versionMode <= Unversioned; ++versionMode) {
+        const QString ver = versionString(version, QQmlImports::ImportVersion(versionMode));
 
         for (const QString &path : basePaths) {
             QString dir = path;
@@ -551,7 +558,7 @@ QStringList QQmlImports::completeQmldirPaths(const QString &uri, const QStringLi
             // append to the end
             qmlDirPathsPaths += dir + joinStringRefs(parts, Slash) + ver + Slash_qmldir;
 
-            if (version != Unversioned) {
+            if (versionMode != Unversioned) {
                 // insert in the middle
                 for (int index = parts.count() - 2; index >= 0; --index) {
                     qmlDirPathsPaths += dir + joinStringRefs(parts.mid(0, index + 1), Slash)
@@ -565,14 +572,14 @@ QStringList QQmlImports::completeQmldirPaths(const QString &uri, const QStringLi
     return qmlDirPathsPaths;
 }
 
-QString QQmlImports::versionString(int vmaj, int vmin, ImportVersion version)
+QString QQmlImports::versionString(QTypeRevision version, ImportVersion versionMode)
 {
-    if (version == QQmlImports::FullyVersioned) {
+    if (versionMode == QQmlImports::FullyVersioned) {
         // extension with fully encoded version number (eg. MyModule.3.2)
-        return QString::asprintf(".%d.%d", vmaj, vmin);
-    } else if (version == QQmlImports::PartiallyVersioned) {
+        return QString::asprintf(".%d.%d", version.majorVersion(), version.minorVersion());
+    } else if (versionMode == QQmlImports::PartiallyVersioned) {
         // extension with encoded version major (eg. MyModule.3)
-        return QString::asprintf(".%d", vmaj);
+        return QString::asprintf(".%d", version.majorVersion());
     } // else extension without version number (eg. MyModule)
     return QString();
 }
@@ -591,7 +598,7 @@ QString QQmlImports::versionString(int vmaj, int vmin, ImportVersion version)
   \sa addFileImport(), addLibraryImport
 */
 bool QQmlImports::resolveType(const QHashedStringRef &type,
-                              QQmlType *type_return, int *vmaj, int *vmin,
+                              QQmlType *type_return, QTypeRevision *version_return,
                               QQmlImportNamespace** ns_return, QList<QQmlError> *errors,
                               QQmlType::RegistrationType registrationType,
                               bool *typeRecursionDetected) const
@@ -603,7 +610,7 @@ bool QQmlImports::resolveType(const QHashedStringRef &type,
         return true;
     }
     if (type_return) {
-        if (d->resolveType(type, vmaj, vmin, type_return, errors, registrationType,
+        if (d->resolveType(type, version_return, type_return, errors, registrationType,
                            typeRecursionDetected)) {
             if (qmlImportTrace()) {
 #define RESOLVE_TYPE_DEBUG qDebug().nospace() << "QQmlImports(" << qPrintable(baseUrl().toString()) \
@@ -627,7 +634,9 @@ bool QQmlImports::resolveType(const QHashedStringRef &type,
     return false;
 }
 
-bool QQmlImportInstance::setQmldirContent(const QString &resolvedUrl, const QQmlTypeLoaderQmldirContent &qmldir, QQmlImportNamespace *nameSpace, QList<QQmlError> *errors)
+bool QQmlImportInstance::setQmldirContent(const QString &resolvedUrl,
+                                          const QQmlTypeLoaderQmldirContent &qmldir,
+                                          QQmlImportNamespace *nameSpace, QList<QQmlError> *errors)
 {
     Q_ASSERT(resolvedUrl.endsWith(Slash));
     url = resolvedUrl;
@@ -648,24 +657,27 @@ bool QQmlImportInstance::setQmldirContent(const QString &resolvedUrl, const QQml
             }
         }
 
-        qmlDirScripts = getVersionedScripts(scripts, majversion, minversion);
+        qmlDirScripts = getVersionedScripts(scripts, version);
     }
 
     return true;
 }
 
-QQmlDirScripts QQmlImportInstance::getVersionedScripts(const QQmlDirScripts &qmldirscripts, int vmaj, int vmin)
+QQmlDirScripts QQmlImportInstance::getVersionedScripts(const QQmlDirScripts &qmldirscripts,
+                                                       QTypeRevision version)
 {
     QMap<QString, QQmlDirParser::Script> versioned;
 
     for (QList<QQmlDirParser::Script>::const_iterator sit = qmldirscripts.constBegin();
          sit != qmldirscripts.constEnd(); ++sit) {
         // Only include scripts that match our requested version
-        if (((vmaj == -1) || (sit->majorVersion == vmaj)) &&
-            ((vmin == -1) || (sit->minorVersion <= vmin))) {
+        if ((!version.hasMajorVersion() || (sit->version.majorVersion() == version.majorVersion()))
+                && (!version.hasMinorVersion()
+                    || (sit->version.minorVersion() <= version.minorVersion()))) {
             // Load the highest version that matches
             QMap<QString, QQmlDirParser::Script>::iterator vit = versioned.find(sit->nameSpace);
-            if (vit == versioned.end() || (vit->minorVersion < sit->minorVersion)) {
+            if (vit == versioned.end()
+                    || (vit->version.minorVersion() < sit->version.minorVersion())) {
                 versioned.insert(sit->nameSpace, *sit);
             }
         }
@@ -685,26 +697,25 @@ QQmlDirScripts QQmlImportInstance::getVersionedScripts(const QQmlDirScripts &qml
   If the return pointer is 0, the corresponding search is not done.
 */
 bool QQmlImports::resolveType(QQmlImportNamespace *ns, const QHashedStringRef &type,
-                              QQmlType *type_return, int *vmaj, int *vmin,
+                              QQmlType *type_return, QTypeRevision *version_return,
                               QQmlType::RegistrationType registrationType) const
 {
-    return ns->resolveType(d->typeLoader, type, vmaj, vmin, type_return, nullptr, nullptr, registrationType);
+    return ns->resolveType(d->typeLoader, type, version_return, type_return, nullptr, nullptr,
+                           registrationType);
 }
 
 bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedStringRef& type,
-                                     int *vmajor, int *vminor, QQmlType *type_return, QString *base,
-                                     bool *typeRecursionDetected,
+                                     QTypeRevision *version_return, QQmlType *type_return,
+                                     QString *base, bool *typeRecursionDetected,
                                      QQmlType::RegistrationType registrationType,
                                      QQmlImport::RecursionRestriction recursionRestriction,
                                      QList<QQmlError> *errors) const
 {
-    if (majversion >= 0 && minversion >= 0) {
-        QQmlType t = QQmlMetaType::qmlType(type, uri, majversion, minversion);
+    if (version.hasMajorVersion() && version.hasMinorVersion()) {
+        QQmlType t = QQmlMetaType::qmlType(type, uri, version);
         if (t.isValid()) {
-            if (vmajor)
-                *vmajor = majversion;
-            if (vminor)
-                *vminor = minversion;
+            if (version_return)
+                *version_return = version;
             if (type_return)
                 *type_return = t;
             return true;
@@ -724,6 +735,7 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
                 Q_ASSERT(ok);
                 typePriv->extraData.id->url = QUrl(this->url);
                 auto icType = QQmlType(typePriv);
+                typePriv->release();
                 return icType;
             };
             if (containingType.isValid()) {
@@ -763,14 +775,16 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
                 break;
             }
 
-            // importing version -1 means import ALL versions
-            if ((majversion == -1) ||
-                (implicitlyImported && c.internal) || // allow the implicit import of internal types
-                (c.majorVersion == majversion && c.minorVersion <= minversion)) {
+            // importing invalid version means import ALL versions
+            if (!version.hasMajorVersion() || (implicitlyImported && c.internal)
+                    // allow the implicit import of internal types
+                    || (c.version.majorVersion() == version.majorVersion()
+                        && c.version.minorVersion() <= version.minorVersion())) {
                 // Is this better than the previous candidate?
-                if ((candidate == end) ||
-                    (c.majorVersion > candidate->majorVersion) ||
-                    ((c.majorVersion == candidate->majorVersion) && (c.minorVersion > candidate->minorVersion))) {
+                if ((candidate == end)
+                        || (c.version.majorVersion() > candidate->version.majorVersion())
+                        || ((c.version.majorVersion() == candidate->version.majorVersion())
+                            && (c.version.minorVersion() > candidate->version.minorVersion()))) {
                     if (base) {
                         componentUrl = resolveLocalUrl(QString(url + c.typeName + dotqml_string), c.fileName);
                         if (c.internal) {
@@ -798,12 +812,9 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
             if (!base) // ensure we have a componentUrl
                 componentUrl = resolveLocalUrl(QString(url + candidate->typeName + dotqml_string), candidate->fileName);
             QQmlType returnType = QQmlMetaType::typeForUrl(componentUrl, type, isCompositeSingleton,
-                                                           nullptr, candidate->majorVersion,
-                                                           candidate->minorVersion);
-            if (vmajor)
-                *vmajor = candidate->majorVersion;
-            if (vminor)
-                *vminor = candidate->minorVersion;
+                                                           nullptr, candidate->version);
+            if (version_return)
+                *version_return = candidate->version;
             if (type_return)
                 *type_return = returnType;
             return returnType.isValid();
@@ -855,14 +866,14 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
     return false;
 }
 
-bool QQmlImportsPrivate::resolveType(const QHashedStringRef& type, int *vmajor, int *vminor,
+bool QQmlImportsPrivate::resolveType(const QHashedStringRef& type, QTypeRevision *version_return,
                                      QQmlType *type_return, QList<QQmlError> *errors,
                                      QQmlType::RegistrationType registrationType,
                                      bool *typeRecursionDetected)
 {
     const QVector<QHashedStringRef> splitName = type.split(Dot);
     auto resolveTypeInNamespace = [&](QHashedStringRef unqualifiedtype, QQmlImportNamespace *nameSpace, QList<QQmlError> *errors) -> bool {
-        if (nameSpace->resolveType(typeLoader, unqualifiedtype, vmajor, vminor, type_return, &base, errors,
+        if (nameSpace->resolveType(typeLoader, unqualifiedtype,  version_return, type_return, &base, errors,
                            registrationType, typeRecursionDetected))
             return true;
         if (nameSpace->imports.count() == 1 && !nameSpace->imports.at(0)->isLibrary && type_return && nameSpace != &unqualifiedset) {
@@ -900,6 +911,7 @@ bool QQmlImportsPrivate::resolveType(const QHashedStringRef& type, int *vmajor, 
                     int placeholderId = type_return->generatePlaceHolderICId();
                     icTypePriv->extraData.id->url.setFragment(QString::number(placeholderId));
                     auto icType = QQmlType(icTypePriv);
+                    icTypePriv->release();
                     type_return->associateInlineComponent(icName, placeholderId, CompositeMetaTypeIds {}, icType);
                     *type_return = icType;
                 }
@@ -936,6 +948,7 @@ bool QQmlImportsPrivate::resolveType(const QHashedStringRef& type, int *vmajor, 
                     int placeholderId = type_return->generatePlaceHolderICId();
                     icTypePriv->extraData.id->url.setFragment(QString::number(placeholderId));
                     auto icType = QQmlType(icTypePriv);
+                    icTypePriv->release();
                     type_return->associateInlineComponent(icName, placeholderId, CompositeMetaTypeIds {}, icType);
                     *type_return = icType;
                 }
@@ -973,7 +986,7 @@ QQmlImportInstance *QQmlImportNamespace::findImport(const QString &uri) const
 }
 
 bool QQmlImportNamespace::resolveType(QQmlTypeLoader *typeLoader, const QHashedStringRef &type,
-                                      int *vmajor, int *vminor, QQmlType *type_return,
+                                      QTypeRevision *version_return, QQmlType *type_return,
                                       QString *base, QList<QQmlError> *errors,
                                       QQmlType::RegistrationType registrationType,
                                       bool *typeRecursionDetected)
@@ -987,13 +1000,13 @@ bool QQmlImportNamespace::resolveType(QQmlTypeLoader *typeLoader, const QHashedS
 
     for (int i=0; i<imports.count(); ++i) {
         const QQmlImportInstance *import = imports.at(i);
-        if (import->resolveType(typeLoader, type, vmajor, vminor, type_return, base,
+        if (import->resolveType(typeLoader, type, version_return, type_return, base,
                                 typeRecursionDetected, registrationType, recursionRestriction, errors)) {
             if (qmlCheckTypes()) {
                 // check for type clashes
                 for (int j = i+1; j<imports.count(); ++j) {
                     const QQmlImportInstance *import2 = imports.at(j);
-                    if (import2->resolveType(typeLoader, type, vmajor, vminor, nullptr, base,
+                    if (import2->resolveType(typeLoader, type, version_return, nullptr, base,
                                              nullptr, registrationType)) {
                         if (errors) {
                             QString u1 = import->url;
@@ -1020,9 +1033,11 @@ bool QQmlImportNamespace::resolveType(QQmlTypeLoader *typeLoader, const QHashedS
                                 error.setDescription(QQmlImportDatabase::tr("is ambiguous. Found in %1 and in %2").arg(u1).arg(u2));
                             } else {
                                 error.setDescription(QQmlImportDatabase::tr("is ambiguous. Found in %1 in version %2.%3 and %4.%5")
-                                                        .arg(u1)
-                                                        .arg(import->majversion).arg(import->minversion)
-                                                        .arg(import2->majversion).arg(import2->minversion));
+                                                     .arg(u1)
+                                                     .arg(import->version.majorVersion())
+                                                     .arg(import->version.minorVersion())
+                                                     .arg(import2->version.majorVersion())
+                                                     .arg(import2->version.minorVersion()));
                             }
                             errors->prepend(error);
                         }
@@ -1068,18 +1083,19 @@ QQmlImportNamespace *QQmlImportsPrivate::findQualifiedNamespace(const QHashedStr
     QtQml.Models, \a vmaj is 2, and \a vmin is 0, this method returns the following:
     [QtQml.Models.2.0, QtQml.2.0.Models, QtQml.Models.2, QtQml.2.Models, QtQml.Models]
  */
-static QStringList versionUriList(const QString &uri, int vmaj, int vmin)
+static QStringList versionUriList(const QString &uri, QTypeRevision version)
 {
     QStringList result;
-    for (int version = QQmlImports::FullyVersioned; version <= QQmlImports::Unversioned; ++version) {
+    for (int mode = QQmlImports::FullyVersioned; mode <= QQmlImports::Unversioned; ++mode) {
         int index = uri.length();
         do {
             QString versionUri = uri;
-            versionUri.insert(index, QQmlImports::versionString(vmaj, vmin, static_cast<QQmlImports::ImportVersion>(version)));
+            versionUri.insert(index, QQmlImports::versionString(
+                                  version, QQmlImports::ImportVersion(mode)));
             result += versionUri;
 
             index = uri.lastIndexOf(Dot, index - 1);
-        } while (index > 0 && version != QQmlImports::Unversioned);
+        } while (index > 0 && mode != QQmlImports::Unversioned);
     }
     return result;
 }
@@ -1144,8 +1160,7 @@ Import an extension defined by a qmldir file.
 \a qmldirFilePath is a raw file path.
 */
 bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
-                                         const QString &uri,
-                                         int vmaj, int vmin,
+                                         const QString &uri, QTypeRevision version,
                                          QQmlImportDatabase *database,
                                          const QQmlTypeLoaderQmldirContent &qmldir,
                                          QList<QQmlError> *errors)
@@ -1170,13 +1185,7 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
     if (qmldirPluginCount == 0)
         return true;
 
-    if (database->qmlDirFilesForWhichPluginsHaveBeenLoaded.contains(qmldirFilePath)) {
-        if ((vmaj >= 0 && vmin >= 0)
-                ? !QQmlMetaType::isModule(uri, vmaj, vmin)
-                : !QQmlMetaType::isAnyModule(uri)) {
-            QQmlMetaType::qmlRegisterModuleTypes(uri, vmaj);
-        }
-    } else {
+    if (!database->qmlDirFilesForWhichPluginsHaveBeenLoaded.contains(qmldirFilePath)) {
         // First search for listed qmldir plugins dynamically. If we cannot resolve them all, we continue
         // searching static plugins that has correct metadata uri. Note that since we only know the uri
         // for a static plugin, and not the filename, we cannot know which static plugin belongs to which
@@ -1198,7 +1207,7 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
             QString resolvedFilePath = database->resolvePlugin(typeLoader, qmldirPath, plugin.path, plugin.name);
             if (!resolvedFilePath.isEmpty()) {
                 dynamicPluginsFound++;
-                if (!database->importDynamicPlugin(resolvedFilePath, uri, typeNamespace, vmaj, errors)) {
+                if (!database->importDynamicPlugin(resolvedFilePath, uri, typeNamespace, version, errors)) {
                     if (errors) {
                         // XXX TODO: should we leave the import plugin error alone?
                         // Here, we pop it off the top and coalesce it into this error's message.
@@ -1223,7 +1232,7 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
             // versioned to unversioned, we need to compare with differnt version strings. If a module
             // has several plugins, they must all have the same version. Start by populating pluginPairs
             // with relevant plugins to cut the list short early on:
-            const QStringList versionUris = versionUriList(uri, vmaj, vmin);
+            const QStringList versionUris = versionUriList(uri, version);
             QVector<StaticPluginPair> pluginPairs;
             if (!populatePluginPairVector(pluginPairs, uri, versionUris, qmldirFilePath, errors))
                 return false;
@@ -1235,7 +1244,7 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
                         if (versionUri == metaTagUri.toString()) {
                             staticPluginsFound++;
                             QObject *instance = pair.first.instance();
-                            if (!database->importStaticPlugin(instance, basePath, uri, typeNamespace, vmaj, errors)) {
+                            if (!database->importStaticPlugin(instance, basePath, uri, typeNamespace, version, errors)) {
                                 if (errors) {
                                     QQmlError poppedError = errors->takeFirst();
                                     QQmlError error;
@@ -1338,10 +1347,11 @@ and fills in outQmldirFilePath and outQmldirUrl appropriately.  Otherwise return
 false.
 */
 QQmlImports::LocalQmldirResult QQmlImportsPrivate::locateLocalQmldir(
-        const QString &uri, int vmaj, int vmin, QQmlImportDatabase *database,
+        const QString &uri, QTypeRevision version, QQmlImportDatabase *database,
         QString *outQmldirFilePath, QString *outQmldirPathUrl)
 {
-    Q_ASSERT(vmaj >= 0 && vmin >= 0); // Versions are always specified for libraries
+    // Versions are always specified for libraries
+    Q_ASSERT(version.hasMajorVersion() && version.hasMinorVersion());
 
     // Check cache first
 
@@ -1352,7 +1362,7 @@ QQmlImports::LocalQmldirResult QQmlImportsPrivate::locateLocalQmldir(
             cacheHead = *cachePtr;
             QQmlImportDatabase::QmldirCache *cache = cacheHead;
             while (cache) {
-                if (cache->versionMajor == vmaj && cache->versionMinor == vmin) {
+                if (cache->version == version) {
                     *outQmldirFilePath = cache->qmldirFilePath;
                     *outQmldirPathUrl = cache->qmldirPathUrl;
                     return cache->qmldirFilePath.isEmpty() ? QQmlImports::QmldirNotFound
@@ -1372,7 +1382,7 @@ QQmlImports::LocalQmldirResult QQmlImportsPrivate::locateLocalQmldir(
 
     // Search local import paths for a matching version
     const QStringList qmlDirPaths = QQmlImports::completeQmldirPaths(
-                uri, localImportPaths, vmaj, vmin);
+                uri, localImportPaths, version);
     bool pathTurnedRemote = false;
     for (QString qmldirPath : qmlDirPaths) {
         if (interceptor) {
@@ -1394,8 +1404,7 @@ QQmlImports::LocalQmldirResult QQmlImportsPrivate::locateLocalQmldir(
                 url = QUrl::fromLocalFile(absolutePath.toString()).toString();
 
             QQmlImportDatabase::QmldirCache *cache = new QQmlImportDatabase::QmldirCache;
-            cache->versionMajor = vmaj;
-            cache->versionMinor = vmin;
+            cache->version = version;
             cache->qmldirFilePath = absoluteFilePath;
             cache->qmldirPathUrl = url;
             cache->next = cacheHead;
@@ -1409,19 +1418,19 @@ QQmlImports::LocalQmldirResult QQmlImportsPrivate::locateLocalQmldir(
     }
 
     QQmlImportDatabase::QmldirCache *cache = new QQmlImportDatabase::QmldirCache;
-    cache->versionMajor = vmaj;
-    cache->versionMinor = vmin;
+    cache->version = version;
     cache->next = cacheHead;
     database->qmldirCache.insert(uri, cache);
 
     return pathTurnedRemote ? QQmlImports::QmldirInterceptedToRemote : QQmlImports::QmldirNotFound;
 }
 
-bool QQmlImportsPrivate::validateQmldirVersion(const QQmlTypeLoaderQmldirContent &qmldir, const QString &uri, int vmaj, int vmin,
+bool QQmlImportsPrivate::validateQmldirVersion(const QQmlTypeLoaderQmldirContent &qmldir,
+                                               const QString &uri, QTypeRevision version,
                                                QList<QQmlError> *errors)
 {
-    int lowest_min = INT_MAX;
-    int highest_min = INT_MIN;
+    quint8 lowest_min = std::numeric_limits<quint8>::max();
+    quint8 highest_min = 0;
 
     typedef QQmlDirComponents::const_iterator ConstIterator;
     const QQmlDirComponents &components = qmldir.components();
@@ -1429,21 +1438,20 @@ bool QQmlImportsPrivate::validateQmldirVersion(const QQmlTypeLoaderQmldirContent
     ConstIterator cend = components.constEnd();
     for (ConstIterator cit = components.constBegin(); cit != cend; ++cit) {
         for (ConstIterator cit2 = components.constBegin(); cit2 != cit; ++cit2) {
-            if ((cit2->typeName == cit->typeName) &&
-                (cit2->majorVersion == cit->majorVersion) &&
-                (cit2->minorVersion == cit->minorVersion)) {
+            if (cit2->typeName == cit->typeName && cit2->version == cit->version) {
                 // This entry clashes with a predecessor
                 QQmlError error;
                 error.setDescription(QQmlImportDatabase::tr("\"%1\" version %2.%3 is defined more than once in module \"%4\"")
-                                     .arg(cit->typeName).arg(cit->majorVersion).arg(cit->minorVersion).arg(uri));
+                                     .arg(cit->typeName).arg(cit->version.majorVersion())
+                                     .arg(cit->version.minorVersion()).arg(uri));
                 errors->prepend(error);
                 return false;
             }
         }
 
-        if (cit->majorVersion == vmaj) {
-            lowest_min = qMin(lowest_min, cit->minorVersion);
-            highest_min = qMax(highest_min, cit->minorVersion);
+        if (cit->version.majorVersion() == version.majorVersion()) {
+            lowest_min = qMin(lowest_min, cit->version.minorVersion());
+            highest_min = qMax(highest_min, cit->version.minorVersion());
         }
     }
 
@@ -1453,27 +1461,27 @@ bool QQmlImportsPrivate::validateQmldirVersion(const QQmlTypeLoaderQmldirContent
     SConstIterator send = scripts.constEnd();
     for (SConstIterator sit = scripts.constBegin(); sit != send; ++sit) {
         for (SConstIterator sit2 = scripts.constBegin(); sit2 != sit; ++sit2) {
-            if ((sit2->nameSpace == sit->nameSpace) &&
-                (sit2->majorVersion == sit->majorVersion) &&
-                (sit2->minorVersion == sit->minorVersion)) {
+            if (sit2->nameSpace == sit->nameSpace && sit2->version == sit->version) {
                 // This entry clashes with a predecessor
                 QQmlError error;
                 error.setDescription(QQmlImportDatabase::tr("\"%1\" version %2.%3 is defined more than once in module \"%4\"")
-                                     .arg(sit->nameSpace).arg(sit->majorVersion).arg(sit->minorVersion).arg(uri));
+                                     .arg(sit->nameSpace).arg(sit->version.majorVersion())
+                                     .arg(sit->version.minorVersion()).arg(uri));
                 errors->prepend(error);
                 return false;
             }
         }
 
-        if (sit->majorVersion == vmaj) {
-            lowest_min = qMin(lowest_min, sit->minorVersion);
-            highest_min = qMax(highest_min, sit->minorVersion);
+        if (sit->version.majorVersion() == version.majorVersion()) {
+            lowest_min = qMin(lowest_min, sit->version.minorVersion());
+            highest_min = qMax(highest_min, sit->version.minorVersion());
         }
     }
 
-    if (lowest_min > vmin || highest_min < vmin) {
+    if (lowest_min > version.minorVersion() || highest_min < version.minorVersion()) {
         QQmlError error;
-        error.setDescription(QQmlImportDatabase::tr("module \"%1\" version %2.%3 is not installed").arg(uri).arg(vmaj).arg(vmin));
+        error.setDescription(QQmlImportDatabase::tr("module \"%1\" version %2.%3 is not installed")
+                             .arg(uri).arg(version.majorVersion()).arg(version.minorVersion()));
         errors->prepend(error);
         return false;
     }
@@ -1500,10 +1508,9 @@ QQmlImportNamespace *QQmlImportsPrivate::importNamespace(const QString &prefix) 
     return nameSpace;
 }
 
-QQmlImportInstance *QQmlImportsPrivate::addImportToNamespace(QQmlImportNamespace *nameSpace,
-                                                                      const QString &uri, const QString &url, int vmaj, int vmin,
-                                                                      QV4::CompiledData::Import::ImportType type,
-                                                                      QList<QQmlError> *errors, bool lowPrecedence)
+QQmlImportInstance *QQmlImportsPrivate::addImportToNamespace(
+        QQmlImportNamespace *nameSpace, const QString &uri, const QString &url, QTypeRevision version,
+        QV4::CompiledData::Import::ImportType type, QList<QQmlError> *errors, bool lowPrecedence)
 {
     Q_ASSERT(nameSpace);
     Q_ASSERT(errors);
@@ -1514,8 +1521,7 @@ QQmlImportInstance *QQmlImportsPrivate::addImportToNamespace(QQmlImportNamespace
     import->uri = uri;
     import->url = url;
     import->localDirectoryPath = QQmlFile::urlToLocalFileOrQrc(url);
-    import->majversion = vmaj;
-    import->minversion = vmin;
+    import->version = version;
     import->isLibrary = (type == QV4::CompiledData::Import::ImportLibrary);
 
     if (lowPrecedence)
@@ -1526,10 +1532,10 @@ QQmlImportInstance *QQmlImportsPrivate::addImportToNamespace(QQmlImportNamespace
     return import;
 }
 
-bool QQmlImportsPrivate::addLibraryImport(const QString& uri, const QString &prefix,
-                                          int vmaj, int vmin, const QString &qmldirIdentifier, const QString &qmldirUrl, bool incomplete,
-                                          QQmlImportDatabase *database,
-                                          QList<QQmlError> *errors)
+bool QQmlImportsPrivate::addLibraryImport(
+        const QString& uri, const QString &prefix, QTypeRevision version,
+        const QString &qmldirIdentifier, const QString &qmldirUrl, bool incomplete,
+        QQmlImportDatabase *database, QList<QQmlError> *errors)
 {
     Q_ASSERT(database);
     Q_ASSERT(errors);
@@ -1537,7 +1543,9 @@ bool QQmlImportsPrivate::addLibraryImport(const QString& uri, const QString &pre
     QQmlImportNamespace *nameSpace = importNamespace(prefix);
     Q_ASSERT(nameSpace);
 
-    QQmlImportInstance *inserted = addImportToNamespace(nameSpace, uri, qmldirUrl, vmaj, vmin, QV4::CompiledData::Import::ImportLibrary, errors);
+    QQmlImportInstance *inserted = addImportToNamespace(
+                nameSpace, uri, qmldirUrl, version,
+                QV4::CompiledData::Import::ImportLibrary, errors);
     Q_ASSERT(inserted);
 
     if (!incomplete) {
@@ -1548,7 +1556,7 @@ bool QQmlImportsPrivate::addLibraryImport(const QString& uri, const QString &pre
                 return false;
 
             if (qmldir.hasContent()) {
-                if (!importExtension(qmldir.pluginLocation(), uri, vmaj, vmin, database, qmldir, errors))
+                if (!importExtension(qmldir.pluginLocation(), uri, version, database, qmldir, errors))
                     return false;
 
                 if (!inserted->setQmldirContent(qmldirUrl, qmldir, nameSpace, errors))
@@ -1557,18 +1565,22 @@ bool QQmlImportsPrivate::addLibraryImport(const QString& uri, const QString &pre
         }
 
         // Ensure that we are actually providing something
-        if ((vmaj < 0) || (vmin < 0) || !QQmlMetaType::isModule(uri, vmaj, vmin)) {
+        if (!version.hasMajorVersion() || !version.hasMinorVersion()
+                || !QQmlMetaType::isModule(uri, version)) {
             if (inserted->qmlDirComponents.isEmpty() && inserted->qmlDirScripts.isEmpty()) {
                 QQmlError error;
-                if (QQmlMetaType::isAnyModule(uri))
-                    error.setDescription(QQmlImportDatabase::tr("module \"%1\" version %2.%3 is not installed").arg(uri).arg(vmaj).arg(vmin));
-                else
+                if (QQmlMetaType::isAnyModule(uri)) {
+                    error.setDescription(QQmlImportDatabase::tr("module \"%1\" version %2.%3 is not installed")
+                                         .arg(uri).arg(version.majorVersion()).arg(version.minorVersion()));
+                } else {
                     error.setDescription(QQmlImportDatabase::tr("module \"%1\" is not installed").arg(uri));
+                }
                 errors->prepend(error);
                 return false;
-            } else if ((vmaj >= 0) && (vmin >= 0) && qmldir.hasContent()) {
+            } else if (version.hasMajorVersion() && version.hasMinorVersion()
+                       && qmldir.hasContent()) {
                 // Verify that the qmldir content is valid for this version
-                if (!validateQmldirVersion(qmldir, uri, vmaj, vmin, errors))
+                if (!validateQmldirVersion(qmldir, uri, version, errors))
                     return false;
             }
         }
@@ -1577,10 +1589,9 @@ bool QQmlImportsPrivate::addLibraryImport(const QString& uri, const QString &pre
     return true;
 }
 
-bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix,
-                                       int vmaj, int vmin,
-                                       bool isImplicitImport, bool incomplete, QQmlImportDatabase *database,
-                                       QList<QQmlError> *errors)
+bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix, QTypeRevision version,
+                                       bool isImplicitImport, bool incomplete,
+                                       QQmlImportDatabase *database, QList<QQmlError> *errors)
 {
     Q_ASSERT(errors);
 
@@ -1656,7 +1667,9 @@ bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix
         }
     }
 
-    QQmlImportInstance *inserted = addImportToNamespace(nameSpace, importUri, url, vmaj, vmin, QV4::CompiledData::Import::ImportFile, errors, isImplicitImport);
+    QQmlImportInstance *inserted = addImportToNamespace(
+                nameSpace, importUri, url, version, QV4::CompiledData::Import::ImportFile,
+                errors, isImplicitImport);
     Q_ASSERT(inserted);
 
     if (!incomplete && !qmldirIdentifier.isEmpty()) {
@@ -1665,7 +1678,7 @@ bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix
             return false;
 
         if (qmldir.hasContent()) {
-            if (!importExtension(qmldir.pluginLocation(), importUri, vmaj, vmin, database, qmldir, errors))
+            if (!importExtension(qmldir.pluginLocation(), importUri, version, database, qmldir, errors))
                 return false;
 
             if (!inserted->setQmldirContent(url, qmldir, nameSpace, errors))
@@ -1689,26 +1702,27 @@ bool QQmlImportsPrivate::updateQmldirContent(const QString &uri, const QString &
             return false;
 
         if (qmldir.hasContent()) {
-            int vmaj = import->majversion;
-            int vmin = import->minversion;
-            if (!importExtension(qmldir.pluginLocation(), uri, vmaj, vmin, database, qmldir, errors))
+            QTypeRevision version = import->version;
+            if (!importExtension(qmldir.pluginLocation(), uri, version, database, qmldir, errors))
                 return false;
 
             if (import->setQmldirContent(qmldirUrl, qmldir, nameSpace, errors)) {
                 if (import->qmlDirComponents.isEmpty() && import->qmlDirScripts.isEmpty()) {
                     // The implicit import qmldir can be empty, and plugins have no extra versions
-                    if (uri != QLatin1String(".") && !QQmlMetaType::isModule(uri, vmaj, vmin)) {
+                    if (uri != QLatin1String(".") && !QQmlMetaType::isModule(uri, version)) {
                         QQmlError error;
-                        if (QQmlMetaType::isAnyModule(uri))
-                            error.setDescription(QQmlImportDatabase::tr("module \"%1\" version %2.%3 is not installed").arg(uri).arg(vmaj).arg(vmin));
-                        else
+                        if (QQmlMetaType::isAnyModule(uri)) {
+                            error.setDescription(QQmlImportDatabase::tr("module \"%1\" version %2.%3 is not installed")
+                                                 .arg(uri).arg(version.majorVersion()).arg(version.minorVersion()));
+                        } else {
                             error.setDescription(QQmlImportDatabase::tr("module \"%1\" is not installed").arg(uri));
+                        }
                         errors->prepend(error);
                         return false;
                     }
-                } else if ((vmaj >= 0) && (vmin >= 0)) {
+                } else if (version.hasMajorVersion() && version.hasMinorVersion()) {
                     // Verify that the qmldir content is valid for this version
-                    if (!validateQmldirVersion(qmldir, uri, vmaj, vmin, errors))
+                    if (!validateQmldirVersion(qmldir, uri, version, errors))
                         return false;
                 }
                 return true;
@@ -1742,7 +1756,8 @@ bool QQmlImports::addImplicitImport(QQmlImportDatabase *importDb, QList<QQmlErro
                            << ")::addImplicitImport";
 
     bool incomplete = !isLocal(baseUrl());
-    return d->addFileImport(QLatin1String("."), QString(), -1, -1, true, incomplete, importDb, errors);
+    return d->addFileImport(QLatin1String("."), QString(), QTypeRevision(), true, incomplete,
+                            importDb, errors);
 }
 
 /*!
@@ -1753,8 +1768,7 @@ bool QQmlImports::addInlineComponentImport(QQmlImportInstance *const importInsta
     importInstance->url = importUrl.toString();
     importInstance->uri = name;
     importInstance->isInlineComponent = true;
-    importInstance->majversion = 0;
-    importInstance->minversion = 0;
+    importInstance->version = QTypeRevision::zero();
     importInstance->containingType = containingType;
     d->unqualifiedset.imports.push_back(importInstance);
     return true;
@@ -1782,7 +1796,7 @@ bool QQmlImports::addInlineComponentImport(QQmlImportInstance *const importInsta
   filled appropriately.
 */
 bool QQmlImports::addFileImport(QQmlImportDatabase *importDb,
-                                const QString& uri, const QString& prefix, int vmaj, int vmin,
+                                const QString& uri, const QString& prefix, QTypeRevision version,
                                 bool incomplete, QList<QQmlError> *errors)
 {
     Q_ASSERT(importDb);
@@ -1790,13 +1804,13 @@ bool QQmlImports::addFileImport(QQmlImportDatabase *importDb,
 
     if (qmlImportTrace())
         qDebug().nospace() << "QQmlImports(" << qPrintable(baseUrl().toString()) << ')' << "::addFileImport: "
-                           << uri << ' ' << vmaj << '.' << vmin << " as " << prefix;
+                           << uri << ' ' << version << " as " << prefix;
 
-    return d->addFileImport(uri, prefix, vmaj, vmin, false, incomplete, importDb, errors);
+    return d->addFileImport(uri, prefix, version, false, incomplete, importDb, errors);
 }
 
 bool QQmlImports::addLibraryImport(QQmlImportDatabase *importDb,
-                                   const QString &uri, const QString &prefix, int vmaj, int vmin,
+                                   const QString &uri, const QString &prefix, QTypeRevision version,
                                    const QString &qmldirIdentifier, const QString& qmldirUrl, bool incomplete, QList<QQmlError> *errors)
 {
     Q_ASSERT(importDb);
@@ -1804,9 +1818,9 @@ bool QQmlImports::addLibraryImport(QQmlImportDatabase *importDb,
 
     if (qmlImportTrace())
         qDebug().nospace() << "QQmlImports(" << qPrintable(baseUrl().toString()) << ')' << "::addLibraryImport: "
-                           << uri << ' ' << vmaj << '.' << vmin << " as " << prefix;
+                           << uri << ' ' << version << " as " << prefix;
 
-    return d->addLibraryImport(uri, prefix, vmaj, vmin, qmldirIdentifier, qmldirUrl, incomplete, importDb, errors);
+    return d->addLibraryImport(uri, prefix, version, qmldirIdentifier, qmldirUrl, incomplete, importDb, errors);
 }
 
 bool QQmlImports::updateQmldirContent(QQmlImportDatabase *importDb,
@@ -1824,10 +1838,10 @@ bool QQmlImports::updateQmldirContent(QQmlImportDatabase *importDb,
 }
 
 QQmlImports::LocalQmldirResult QQmlImports::locateLocalQmldir(
-        QQmlImportDatabase *importDb, const QString &uri, int vmaj,  int vmin,
+        QQmlImportDatabase *importDb, const QString &uri, QTypeRevision version,
         QString *qmldirFilePath, QString *url)
 {
-    return d->locateLocalQmldir(uri, vmaj, vmin, importDb, qmldirFilePath, url);
+    return d->locateLocalQmldir(uri, version, importDb, qmldirFilePath, url);
 }
 
 bool QQmlImports::isLocal(const QString &url)
@@ -1878,7 +1892,7 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
 #else
         QLatin1Char pathSep(':');
 #endif
-        QStringList paths = envImportPath.split(pathSep, QString::SkipEmptyParts);
+        QStringList paths = envImportPath.split(pathSep, Qt::SkipEmptyParts);
         for (int ii = paths.count() - 1; ii >= 0; --ii)
             addImportPath(paths.at(ii));
     }
@@ -1890,7 +1904,7 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
     if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty("QT_BUNDLED_LIBS_PATH"))) {
         const QString envImportPath = qEnvironmentVariable("QT_BUNDLED_LIBS_PATH");
         QLatin1Char pathSep(':');
-        QStringList paths = envImportPath.split(pathSep, QString::SkipEmptyParts);
+        QStringList paths = envImportPath.split(pathSep, Qt::SkipEmptyParts);
         for (int ii = paths.count() - 1; ii >= 0; --ii)
             addPluginPath(paths.at(ii));
     }
@@ -1993,8 +2007,11 @@ QString QQmlImportDatabase::resolvePlugin(QQmlTypeLoader *typeLoader,
     static const QStringList suffixes = {
 # ifdef QT_DEBUG
         QLatin1String("d.dll"), // try a qmake-style debug build first
-# endif
         QLatin1String(".dll")
+#else
+        QLatin1String(".dll"),
+        QLatin1String("d.dll") // try a qmake-style debug build after
+# endif
     };
 #elif defined(Q_OS_DARWIN)
     static const QString prefix = QLatin1String("lib");
@@ -2133,19 +2150,21 @@ void QQmlImportDatabase::setImportPathList(const QStringList &paths)
     \internal
 */
 static bool registerPluginTypes(QObject *instance, const QString &basePath, const QString &uri,
-                                const QString &typeNamespace, int vmaj, QList<QQmlError> *errors)
+                                const QString &typeNamespace, QTypeRevision version,
+                                QList<QQmlError> *errors)
 {
     if (qmlImportTrace())
         qDebug().nospace() << "QQmlImportDatabase::registerPluginTypes: " << uri << " from " << basePath;
 
-    if (!QQmlMetaType::registerPluginTypes(instance, basePath, uri, typeNamespace, vmaj, errors))
+    if (!QQmlMetaType::registerPluginTypes(instance, basePath, uri, typeNamespace, version, errors))
         return false;
 
-    if (vmaj >= 0 && !typeNamespace.isEmpty() && !QQmlMetaType::protectModule(uri, vmaj)) {
+    if (version.hasMajorVersion() && !typeNamespace.isEmpty()
+            && !QQmlMetaType::protectModule(uri, version)) {
         QQmlError error;
         error.setDescription(
                     QString::fromLatin1("Cannot protect module %1 %2 as it was never registered")
-                    .arg(uri).arg(vmaj));
+                    .arg(uri).arg(version.majorVersion()));
         errors->append(error);
         return false;
     }
@@ -2156,8 +2175,9 @@ static bool registerPluginTypes(QObject *instance, const QString &basePath, cons
 /*!
     \internal
 */
-bool QQmlImportDatabase::importStaticPlugin(QObject *instance, const QString &basePath,
-                                      const QString &uri, const QString &typeNamespace, int vmaj, QList<QQmlError> *errors)
+bool QQmlImportDatabase::importStaticPlugin(
+        QObject *instance, const QString &basePath, const QString &uri,
+        const QString &typeNamespace, QTypeRevision version, QList<QQmlError> *errors)
 {
     // Dynamic plugins are differentiated by their filepath. For static plugins we
     // don't have that information so we use their address as key instead.
@@ -2180,7 +2200,7 @@ bool QQmlImportDatabase::importStaticPlugin(QObject *instance, const QString &ba
             plugin.loader = nullptr;
             plugins->insert(uniquePluginID, plugin);
 
-            if (!registerPluginTypes(instance, basePath, uri, typeNamespace, vmaj, errors))
+            if (!registerPluginTypes(instance, basePath, uri, typeNamespace, version, errors))
                 return false;
         }
 
@@ -2200,8 +2220,9 @@ bool QQmlImportDatabase::importStaticPlugin(QObject *instance, const QString &ba
 /*!
     \internal
 */
-bool QQmlImportDatabase::importDynamicPlugin(const QString &filePath, const QString &uri,
-                                             const QString &typeNamespace, int vmaj, QList<QQmlError> *errors)
+bool QQmlImportDatabase::importDynamicPlugin(
+        const QString &filePath, const QString &uri, const QString &typeNamespace,
+        QTypeRevision version, QList<QQmlError> *errors)
 {
     QFileInfo fileInfo(filePath);
     const QString absoluteFilePath = fileInfo.absoluteFilePath();
@@ -2255,7 +2276,7 @@ bool QQmlImportDatabase::importDynamicPlugin(const QString &filePath, const QStr
                 plugins->insert(absoluteFilePath, plugin);
 
                 // Continue with shared code path for dynamic and static plugins:
-                if (!registerPluginTypes(instance, fileInfo.absolutePath(), uri, typeNamespace, vmaj, errors))
+                if (!registerPluginTypes(instance, fileInfo.absolutePath(), uri, typeNamespace, version, errors))
                     return false;
             }
         }

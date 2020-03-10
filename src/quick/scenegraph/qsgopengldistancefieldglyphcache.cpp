@@ -54,7 +54,7 @@
 
 
 #if !defined(QT_OPENGL_ES_2)
-#include <QtGui/qopenglfunctions_3_2_core.h>
+#include <qopenglfunctions_3_2_core.h>
 #endif
 
 QT_BEGIN_NAMESPACE

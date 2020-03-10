@@ -43,6 +43,7 @@
 #include <QImage>
 #include <QVariant>
 #include <QLoggingCategory>
+#include <qqml.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -54,6 +55,10 @@ class QSharedImageLoader : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QSharedImageLoader)
+
+    // We need to provide some type, in order to mention the 1.0 version.
+    QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(1, 0)
 
 public:
     typedef QVector<QVariant> ImageParameters;

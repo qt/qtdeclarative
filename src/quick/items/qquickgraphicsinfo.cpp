@@ -40,7 +40,7 @@
 #include "qquickgraphicsinfo_p.h"
 #include "qquickwindow.h"
 #include "qquickitem.h"
-#include <QtGui/qopenglcontext.h>
+#include <qopenglcontext.h>
 
 QT_BEGIN_NAMESPACE
 

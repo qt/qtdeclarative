@@ -84,13 +84,14 @@ private:
 };
 
 class QQmlV4Function;
-class Q_QMLWORKERSCRIPT_PRIVATE_EXPORT QQuickWorkerScript : public QObject, public QQmlParserStatus
+class Q_AUTOTEST_EXPORT QQuickWorkerScript : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
-    Q_PROPERTY(bool ready READ ready NOTIFY readyChanged)
+    Q_PROPERTY(bool ready READ ready NOTIFY readyChanged REVISION(2, 15))
 
     QML_NAMED_ELEMENT(WorkerScript);
+    QML_ADDED_IN_VERSION(2, 0)
 
     Q_INTERFACES(QQmlParserStatus)
 public:
@@ -107,7 +108,7 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void sourceChanged();
-    void readyChanged();
+    Q_REVISION(2, 15) void readyChanged();
     void message(const QJSValue &messageObject);
 
 protected:

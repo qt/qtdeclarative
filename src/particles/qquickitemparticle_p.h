@@ -64,6 +64,7 @@ class QQuickItemParticle : public QQuickParticlePainter
     Q_PROPERTY(bool fade READ fade WRITE setFade NOTIFY fadeChanged)
     Q_PROPERTY(QQmlComponent* delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
     QML_NAMED_ELEMENT(ItemParticle)
+    QML_ADDED_IN_VERSION(2, 0)
     QML_ATTACHED(QQuickItemParticleAttached)
 public:
     explicit QQuickItemParticle(QQuickItem *parent = 0);

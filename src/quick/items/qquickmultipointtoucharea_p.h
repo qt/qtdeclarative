@@ -67,13 +67,13 @@ class Q_AUTOTEST_EXPORT QQuickTouchPoint : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int pointId READ pointId NOTIFY pointIdChanged)
-    Q_PROPERTY(QPointingDeviceUniqueId uniqueId READ uniqueId NOTIFY uniqueIdChanged REVISION 9)
+    Q_PROPERTY(QPointingDeviceUniqueId uniqueId READ uniqueId NOTIFY uniqueIdChanged REVISION(2, 9))
     Q_PROPERTY(bool pressed READ pressed NOTIFY pressedChanged)
     Q_PROPERTY(qreal x READ x NOTIFY xChanged)
     Q_PROPERTY(qreal y READ y NOTIFY yChanged)
-    Q_PROPERTY(QSizeF ellipseDiameters READ ellipseDiameters NOTIFY ellipseDiametersChanged REVISION 9)
+    Q_PROPERTY(QSizeF ellipseDiameters READ ellipseDiameters NOTIFY ellipseDiametersChanged REVISION(2, 9))
     Q_PROPERTY(qreal pressure READ pressure NOTIFY pressureChanged)
-    Q_PROPERTY(qreal rotation READ rotation NOTIFY rotationChanged REVISION 9)
+    Q_PROPERTY(qreal rotation READ rotation NOTIFY rotationChanged REVISION(2, 9))
     Q_PROPERTY(QVector2D velocity READ velocity NOTIFY velocityChanged)
     Q_PROPERTY(QRectF area READ area NOTIFY areaChanged)
 
@@ -84,6 +84,7 @@ class Q_AUTOTEST_EXPORT QQuickTouchPoint : public QObject
     Q_PROPERTY(qreal sceneX READ sceneX NOTIFY sceneXChanged)
     Q_PROPERTY(qreal sceneY READ sceneY NOTIFY sceneYChanged)
     QML_NAMED_ELEMENT(TouchPoint)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     QQuickTouchPoint(bool qmlDefined = true)
@@ -97,10 +98,8 @@ public:
     void setUniqueId(const QPointingDeviceUniqueId &id);
 
     qreal x() const { return _x; }
-    void setX(qreal x);
-
     qreal y() const { return _y; }
-    void setY(qreal y);
+    void setPosition(QPointF pos);
 
     QSizeF ellipseDiameters() const { return _ellipseDiameters; }
     void setEllipseDiameters(const QSizeF &d);
@@ -146,12 +145,12 @@ public:
 Q_SIGNALS:
     void pressedChanged();
     void pointIdChanged();
-    Q_REVISION(9) void uniqueIdChanged();
+    Q_REVISION(2, 9) void uniqueIdChanged();
     void xChanged();
     void yChanged();
-    Q_REVISION(9) void ellipseDiametersChanged();
+    Q_REVISION(2, 9) void ellipseDiametersChanged();
     void pressureChanged();
-    Q_REVISION(9) void rotationChanged();
+    Q_REVISION(2, 9) void rotationChanged();
     void velocityChanged();
     void areaChanged();
     void startXChanged();
@@ -189,6 +188,7 @@ class QQuickGrabGestureEvent : public QObject
     Q_PROPERTY(QQmlListProperty<QObject> touchPoints READ touchPoints CONSTANT)
     Q_PROPERTY(qreal dragThreshold READ dragThreshold CONSTANT)
     QML_NAMED_ELEMENT(GestureEvent)
+    QML_ADDED_IN_VERSION(2, 0)
     QML_UNCREATABLE("GestureEvent is only available in the context of handling the gestureStarted signal from MultiPointTouchArea.")
 
 public:
@@ -218,6 +218,7 @@ class Q_AUTOTEST_EXPORT QQuickMultiPointTouchArea : public QQuickItem
     Q_PROPERTY(int maximumTouchPoints READ maximumTouchPoints WRITE setMaximumTouchPoints NOTIFY maximumTouchPointsChanged)
     Q_PROPERTY(bool mouseEnabled READ mouseEnabled WRITE setMouseEnabled NOTIFY mouseEnabledChanged)
     QML_NAMED_ELEMENT(MultiPointTouchArea)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     QQuickMultiPointTouchArea(QQuickItem *parent=nullptr);

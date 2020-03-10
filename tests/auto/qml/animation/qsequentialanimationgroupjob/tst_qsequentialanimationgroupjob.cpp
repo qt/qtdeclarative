@@ -1332,6 +1332,8 @@ void tst_QSequentialAnimationGroupJob::stopUncontrolledAnimations()
 
 void tst_QSequentialAnimationGroupJob::finishWithUncontrolledAnimation()
 {
+    const int targetDuration = 300;
+
     //1st case:
     //first we test a group with one uncontrolled animation
     QSequentialAnimationGroupJob group;
@@ -1346,7 +1348,7 @@ void tst_QSequentialAnimationGroupJob::finishWithUncontrolledAnimation()
     QCOMPARE(group.currentLoopTime(), 0);
     QCOMPARE(notTimeDriven.currentLoopTime(), 0);
 
-    QTest::qWait(300); //wait for the end of notTimeDriven
+    QTest::qWait(targetDuration); //wait for the end of notTimeDriven
     QTRY_COMPARE(notTimeDriven.state(), QAnimationGroupJob::Stopped);
     const int actualDuration = notTimeDriven.currentLoopTime();
     QCOMPARE(group.state(), QAnimationGroupJob::Stopped);
@@ -1361,10 +1363,15 @@ void tst_QSequentialAnimationGroupJob::finishWithUncontrolledAnimation()
     StateChangeListener animStateChangedSpy;
     anim.addAnimationChangeListener(&animStateChangedSpy, QAbstractAnimationJob::StateChange);
 
-    group.setCurrentTime(300);
+    group.setCurrentTime(targetDuration);
     QCOMPARE(group.state(), QAnimationGroupJob::Stopped);
-    QCOMPARE(notTimeDriven.currentLoopTime(), actualDuration);
-    QCOMPARE(group.currentAnimation(), static_cast<QAbstractAnimationJob*>(&anim));
+    if (actualDuration > targetDuration) {
+        QCOMPARE(notTimeDriven.currentLoopTime(), targetDuration);
+        QCOMPARE(group.currentAnimation(), &notTimeDriven);
+    } else {
+        QCOMPARE(notTimeDriven.currentLoopTime(), actualDuration);
+        QCOMPARE(group.currentAnimation(), &anim);
+    }
 
     //3rd case:
     //now let's add a perfectly defined animation at the end
@@ -1377,13 +1384,13 @@ void tst_QSequentialAnimationGroupJob::finishWithUncontrolledAnimation()
 
     QCOMPARE(animStateChangedSpy.count(), 0);
 
-    QTest::qWait(300); //wait for the end of notTimeDriven
+    QTest::qWait(targetDuration); //wait for the end of notTimeDriven
     QTRY_COMPARE(notTimeDriven.state(), QAnimationGroupJob::Stopped);
     QCOMPARE(group.state(), QAnimationGroupJob::Running);
     QCOMPARE(anim.state(), QAnimationGroupJob::Running);
     QCOMPARE(group.currentAnimation(), static_cast<QAbstractAnimationJob*>(&anim));
     QCOMPARE(animStateChangedSpy.count(), 1);
-    QTest::qWait(300); //wait for the end of anim
+    QTest::qWait(targetDuration); //wait for the end of anim
 
     QTRY_COMPARE(anim.state(), QAnimationGroupJob::Stopped);
     QCOMPARE(anim.currentLoopTime(), anim.duration());

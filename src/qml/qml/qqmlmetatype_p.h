@@ -65,11 +65,9 @@ namespace QV4 { class ExecutableCompilationUnit; }
 
 struct CompositeMetaTypeIds
 {
-    int id = -1;
-    int listId = -1;
-    CompositeMetaTypeIds() = default;
-    CompositeMetaTypeIds(int id, int listId) : id(id), listId(listId) {}
-    bool isValid() const { return id != -1 && listId != -1; }
+    QMetaType id;
+    QMetaType listId;
+    bool isValid() const { return id.isValid() && listId.isValid(); }
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlMetaType
@@ -81,20 +79,20 @@ public:
     static QQmlType registerCompositeSingletonType(const QQmlPrivate::RegisterCompositeSingletonType &type);
     static QQmlType registerCompositeType(const QQmlPrivate::RegisterCompositeType &type);
     static bool registerPluginTypes(QObject *instance, const QString &basePath,
-                                    const QString &uri, const QString &typeNamespace, int vmaj,
-                                    QList<QQmlError> *errors);
+                                    const QString &uri, const QString &typeNamespace,
+                                    QTypeRevision version, QList<QQmlError> *errors);
     static QQmlType typeForUrl(const QString &urlString, const QHashedStringRef& typeName,
                                bool isCompositeSingleton, QList<QQmlError> *errors,
-                               int majorVersion = -1, int minorVersion = -1);
+                               QTypeRevision version = QTypeRevision());
 
     static void unregisterType(int type);
 
     static CompositeMetaTypeIds registerInternalCompositeType(const QByteArray &className);
     static void unregisterInternalCompositeType(const CompositeMetaTypeIds &typeIds);
-    static void registerModule(const char *uri, int versionMajor, int versionMinor);
-    static bool protectModule(const QString &uri, int majVersion);
+    static void registerModule(const char *uri, QTypeRevision version);
+    static bool protectModule(const QString &uri, QTypeRevision version);
 
-    static int typeId(const char *uri, int versionMajor, int versionMinor, const char *qmlName);
+    static int typeId(const char *uri, QTypeRevision version, const char *qmlName);
 
     static void registerUndeletableType(const QQmlType &dtype);
 
@@ -108,15 +106,16 @@ public:
         QmlType
     };
 
-    static QQmlType qmlType(const QString &qualifiedName, int, int);
-    static QQmlType qmlType(const QHashedStringRef &name, const QHashedStringRef &module, int, int);
+    static QQmlType qmlType(const QString &qualifiedName, QTypeRevision version);
+    static QQmlType qmlType(const QHashedStringRef &name, const QHashedStringRef &module, QTypeRevision version);
     static QQmlType qmlType(const QMetaObject *);
-    static QQmlType qmlType(const QMetaObject *metaObject, const QHashedStringRef &module, int version_major, int version_minor);
+    static QQmlType qmlType(const QMetaObject *metaObject, const QHashedStringRef &module, QTypeRevision version);
     static QQmlType qmlType(int typeId, TypeIdCategory category = TypeIdCategory::MetaType);
     static QQmlType qmlType(const QUrl &unNormalizedUrl, bool includeNonFileImports = false);
 
-    static QQmlPropertyCache *propertyCache(const QMetaObject *metaObject, int minorVersion = -1);
-    static QQmlPropertyCache *propertyCache(const QQmlType &type, int minorVersion);
+    static QQmlPropertyCache *propertyCache(const QMetaObject *metaObject,
+                                            QTypeRevision version = QTypeRevision());
+    static QQmlPropertyCache *propertyCache(const QQmlType &type, QTypeRevision version);
 
     static void freeUnusedTypesAndCaches();
 
@@ -150,9 +149,9 @@ public:
     static StringConverter customStringConverter(int);
 
     static bool isAnyModule(const QString &uri);
-    static bool isLockedModule(const QString &uri, int majorVersion);
-    static bool isModule(const QString &module, int versionMajor, int versionMinor);
-    static QQmlTypeModule *typeModule(const QString &uri, int majorVersion);
+    static bool isLockedModule(const QString &uri, QTypeRevision version);
+    static bool isModule(const QString &module, QTypeRevision version);
+    static QQmlTypeModule *typeModule(const QString &uri, QTypeRevision version);
 
     static QList<QQmlPrivate::AutoParentFunction> parentFunctions();
 
@@ -197,11 +196,12 @@ public:
     static void clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
                       const QMetaObject *ignoreStart, const QMetaObject *ignoreEnd);
 
-    static void qmlInsertModuleRegistration(const QString &uri, int majorVersion,
-                                            void (*registerFunction)());
-    static void qmlRemoveModuleRegistration(const QString &uri, int majorVersion);
+    static void qmlInsertModuleRegistration(const QString &uri, void (*registerFunction)());
+    static void qmlRemoveModuleRegistration(const QString &uri);
 
-    static bool qmlRegisterModuleTypes(const QString &uri, int majorVersion);
+    static bool qmlRegisterModuleTypes(const QString &uri);
+
+    static int qmlRegisteredListTypeCount();
 };
 
 Q_DECLARE_TYPEINFO(QQmlMetaType, Q_MOVABLE_TYPE);

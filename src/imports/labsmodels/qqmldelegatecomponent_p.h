@@ -69,6 +69,8 @@ class QQmlDelegateChoice : public QObject
     Q_PROPERTY(QQmlComponent* delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
     Q_CLASSINFO("DefaultProperty", "delegate")
     QML_NAMED_ELEMENT(DelegateChoice)
+    QML_ADDED_IN_VERSION(1, 0)
+
 public:
     QVariant roleValue() const;
     void setRoleValue(const QVariant &roleValue);
@@ -106,6 +108,7 @@ class QQmlDelegateChooser : public QQmlAbstractDelegateComponent
     Q_PROPERTY(QQmlListProperty<QQmlDelegateChoice> choices READ choices CONSTANT)
     Q_CLASSINFO("DefaultProperty", "choices")
     QML_NAMED_ELEMENT(DelegateChooser)
+    QML_ADDED_IN_VERSION(1, 0)
 
 public:
     QString role() const { return m_role; }
@@ -116,6 +119,8 @@ public:
     static int choices_count(QQmlListProperty<QQmlDelegateChoice> *);
     static QQmlDelegateChoice *choices_at(QQmlListProperty<QQmlDelegateChoice> *, int);
     static void choices_clear(QQmlListProperty<QQmlDelegateChoice> *);
+    static void choices_replace(QQmlListProperty<QQmlDelegateChoice> *, int, QQmlDelegateChoice *);
+    static void choices_removeLast(QQmlListProperty<QQmlDelegateChoice> *);
 
     QQmlComponent *delegate(QQmlAdaptorModel *adaptorModel, int row, int column = -1) const override;
 

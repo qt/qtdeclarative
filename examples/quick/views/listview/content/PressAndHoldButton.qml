@@ -72,12 +72,12 @@ Image {
 
         PropertyAction { target: container; property: "pressed"; value: true }
         ScriptAction { script: container.clicked() }
-        PauseAnimation { duration: repeatDelay }
+        PauseAnimation { duration: container.repeatDelay }
 
         SequentialAnimation {
             loops: Animation.Infinite
             ScriptAction { script: container.clicked() }
-            PauseAnimation { duration: repeatDuration }
+            PauseAnimation { duration: container.repeatDuration }
         }
     }
 

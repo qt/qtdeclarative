@@ -73,7 +73,7 @@ class QQuickFlickableVisibleArea;
 class QQuickTransition;
 class QQuickFlickableReboundTransition;
 
-class Q_AUTOTEST_EXPORT QQuickFlickablePrivate : public QQuickItemPrivate, public QQuickItemChangeListener
+class Q_QUICK_PRIVATE_EXPORT QQuickFlickablePrivate : public QQuickItemPrivate, public QQuickItemChangeListener
 {
     Q_DECLARE_PUBLIC(QQuickFlickable)
 
@@ -285,6 +285,7 @@ class QQuickFlickableVisibleArea : public QObject
     Q_PROPERTY(qreal widthRatio READ widthRatio NOTIFY widthRatioChanged)
     Q_PROPERTY(qreal heightRatio READ heightRatio NOTIFY heightRatioChanged)
     QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     QQuickFlickableVisibleArea(QQuickFlickable *parent=nullptr);

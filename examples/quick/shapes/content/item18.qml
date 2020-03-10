@@ -65,7 +65,7 @@ Rectangle {
             strokeWidth: 1
             fillColor: "black"
 
-            PathText { x: 0; y: 100; font.family: "Arial"; font.pixelSize: 150; text: "Qt!" }
+            PathText { x: 0; y: 0; font.family: "Arial"; font.pixelSize: 150; text: "Qt!" }
         }
     }
 }

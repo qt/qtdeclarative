@@ -55,5 +55,5 @@ Text {
     font.pointSize: 14
     wrapMode: Text.WordWrap
     textFormat: Text.StyledText
-    horizontalAlignment: main.hAlign
+    horizontalAlignment: parent.hAlign
 }

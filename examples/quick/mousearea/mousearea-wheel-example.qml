@@ -63,6 +63,8 @@ Rectangle {
             model: ["#9ACD32", "#EEEEEE", "#FFD700", "#87CEEB"]
 
             Rectangle {
+                required property color modelData
+
                 property real scaleFactor: 1
 
                 height: 40 * scaleFactor

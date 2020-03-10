@@ -81,6 +81,7 @@ class QQuickDropEvent : public QObject
     Q_PROPERTY(QList<QUrl> urls READ urls)
     Q_PROPERTY(QStringList formats READ formats)
     QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 public:
     QQuickDropEvent(QQuickDropAreaPrivate *d, QDropEvent *event) : d(d), event(event) {}
 
@@ -127,6 +128,7 @@ class QQuickDropAreaDrag : public QObject
     Q_PROPERTY(qreal y READ y NOTIFY positionChanged)
     Q_PROPERTY(QObject *source READ source NOTIFY sourceChanged)
     QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 public:
     QQuickDropAreaDrag(QQuickDropAreaPrivate *d, QObject *parent = 0);
     ~QQuickDropAreaDrag();
@@ -154,6 +156,7 @@ class Q_AUTOTEST_EXPORT QQuickDropArea : public QQuickItem
     Q_PROPERTY(QStringList keys READ keys WRITE setKeys NOTIFY keysChanged)
     Q_PROPERTY(QQuickDropAreaDrag *drag READ drag CONSTANT)
     QML_NAMED_ELEMENT(DropArea)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     QQuickDropArea(QQuickItem *parent=0);

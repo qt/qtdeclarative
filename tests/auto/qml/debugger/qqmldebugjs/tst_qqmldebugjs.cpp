@@ -180,7 +180,7 @@ QQmlDebugTest::ConnectResult tst_QQmlDebugJS::init(bool qmlscene, const QString 
     const QString executable = qmlscene
             ? QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene"
             : debugJsServerPath("qqmldebugjs");
-    return QQmlDebugTest::connect(
+    return QQmlDebugTest::connectTo(
                 executable, restrictServices ? QStringLiteral("V8Debugger") : QString(),
                 testFile(qmlFile), blockMode);
 }
@@ -896,6 +896,16 @@ void tst_QQmlDebugJS::evaluateInContext()
     QVERIFY(waitForClientSignal(SIGNAL(result())));
 
     QTRY_COMPARE(responseBody(m_client).value("value").toInt(), 20);
+
+    auto childObjects = object.children;
+    QVERIFY(childObjects.count() > 0); // QQmlComponentAttached is also in there
+    QCOMPARE(childObjects[0].className, QString::fromLatin1("Item"));
+
+    // "b" accessible in context of surrounding (child) object
+    m_client->evaluate(QLatin1String("b"), -1, childObjects[0].debugId);
+    QVERIFY(waitForClientSignal(SIGNAL(result())));
+
+    QTRY_COMPARE(responseBody(m_client).value("value").toInt(), 11);
 }
 
 void tst_QQmlDebugJS::getScripts()

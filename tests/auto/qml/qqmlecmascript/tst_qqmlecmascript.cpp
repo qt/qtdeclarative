@@ -74,6 +74,7 @@ public:
 
 private slots:
     void initTestCase();
+    void arrayIncludesValueType();
     void assignBasicTypes();
     void assignDate_data();
     void assignDate();
@@ -412,6 +413,36 @@ void tst_qqmlecmascript::initTestCase()
 {
     QQmlDataTest::initTestCase();
     registerTypes();
+}
+
+void tst_qqmlecmascript::arrayIncludesValueType()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    // It is vital that QtQuick is imported below else we get a warning about
+    // QQml_colorProvider and tst_qqmlecmascript::signalParameterTypes fails due
+    // to some static variable being initialized with the wrong value
+    component.setData(R"(
+    import QtQuick 2.15
+    import QtQml 2.15
+    QtObject {
+        id: root
+        property color r: Qt.rgba(1, 0, 0)
+        property color g: Qt.rgba(0, 1, 0)
+        property color b: Qt.rgba(0, 0, 1)
+        property var colors: [r, g, b]
+        property bool success: false
+
+        Component.onCompleted: {
+            root.success = root.colors.includes(root.g)
+        }
+    }
+    )", QUrl("testData"));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(o);
+    auto success = o->property("success");
+    QVERIFY(success.isValid());
+    QVERIFY(success.toBool());
 }
 
 void tst_qqmlecmascript::assignBasicTypes()
@@ -5740,9 +5771,7 @@ void tst_qqmlecmascript::sequenceConversionRead()
         QVERIFY(seq != nullptr);
 
         // we haven't registered QList<NonRegisteredType> as a sequence type.
-        QString warningOne = QLatin1String("QMetaProperty::read: Unable to handle unregistered datatype 'QVector<NonRegisteredType>' for property 'MySequenceConversionObject::typeListProperty'");
-        QString warningTwo = qmlFile.toString() + QLatin1String(":18: TypeError: Cannot read property 'length' of undefined");
-        QTest::ignoreMessage(QtWarningMsg, warningOne.toLatin1().constData());
+        QString warningTwo = qmlFile.toString() + QLatin1String(":18: Error: Cannot assign [undefined] to int");
         QTest::ignoreMessage(QtWarningMsg, warningTwo.toLatin1().constData());
 
         QMetaObject::invokeMethod(object, "performTest");
@@ -5750,10 +5779,6 @@ void tst_qqmlecmascript::sequenceConversionRead()
         // QList<NonRegisteredType> has not been registered as a sequence type.
         QCOMPARE(object->property("pointListLength").toInt(), 0);
         QVERIFY(!object->property("pointList").isValid());
-        QTest::ignoreMessage(QtWarningMsg, "QMetaProperty::read: Unable to handle unregistered datatype 'QVector<NonRegisteredType>' for property 'MySequenceConversionObject::typeListProperty'");
-        QQmlProperty seqProp(seq, "typeListProperty", &engine);
-        QVERIFY(!seqProp.read().isValid()); // not a valid/known sequence type
-
         delete object;
     }
 }
@@ -5792,13 +5817,12 @@ void tst_qqmlecmascript::sequenceConversionWrite()
         MySequenceConversionObject *seq = object->findChild<MySequenceConversionObject*>("msco");
         QVERIFY(seq != nullptr);
 
-        // we haven't registered QList<QPoint> as a sequence type, so writing shouldn't work.
-        QString warningOne = qmlFile.toString() + QLatin1String(":16: Error: Cannot assign QJSValue to QVector<QPoint>");
-        QTest::ignoreMessage(QtWarningMsg, warningOne.toLatin1().constData());
-
+        // Behavior change in 5.14: due to added auto-magical conversions, it is possible to assign to
+        // QList<QPoint>, even though it is not a registered sequence type
+        QTest::ignoreMessage(QtMsgType::QtWarningMsg, QRegularExpression("Could not convert array value at position 1 from QString to QPoint"));
         QMetaObject::invokeMethod(object, "performTest");
 
-        QList<QPoint> pointList; pointList << QPoint(1, 2) << QPoint(3, 4) << QPoint(5, 6); // original values, shouldn't have changed
+        QList<QPoint> pointList; pointList << QPoint(7, 7) << QPoint(0,0) << QPoint(8, 8) << QPoint(9, 9); // original values, shouldn't have changed
         QCOMPARE(seq->pointListProperty(), pointList);
 
         delete object;
@@ -7274,7 +7298,7 @@ void tst_qqmlecmascript::forInLoop()
 
     QMetaObject::invokeMethod(object, "listProperty");
 
-    QStringList r = object->property("listResult").toString().split("|", QString::SkipEmptyParts);
+    QStringList r = object->property("listResult").toString().split("|", Qt::SkipEmptyParts);
     QCOMPARE(r.size(), 3);
     QCOMPARE(r[0],QLatin1String("0=obj1"));
     QCOMPARE(r[1],QLatin1String("1=obj2"));

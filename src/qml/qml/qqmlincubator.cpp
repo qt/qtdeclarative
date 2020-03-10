@@ -722,8 +722,8 @@ bool QQmlIncubatorPrivate::hadRequiredProperties() const
 }
 
 /*!
-Stores a mapping from property names to initial values with which the incubated
-component will be initialized
+Stores a mapping from property names to initial values, contained in
+\a initialProperties, with which the incubated component will be initialized.
 
 \sa QQmlComponent::setInitialProperties
 \since 5.15

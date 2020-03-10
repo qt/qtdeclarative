@@ -43,6 +43,10 @@
 #include "qqmlcontext.h"
 #include "qqmlinfo.h"
 #include "qqmldata_p.h"
+
+#include <private/qqmldebugserviceinterfaces_p.h>
+#include <private/qqmldebugconnector_p.h>
+
 #include <private/qqmlprofiler_p.h>
 #include <private/qqmlexpression_p.h>
 #include <private/qqmlscriptstring_p.h>
@@ -391,6 +395,11 @@ QQmlBinding *QQmlBinding::createTranslationBinding(const QQmlRefPointer<QV4::Exe
     b->setNotifyOnValueChanged(true);
     b->QQmlJavaScriptExpression::setContext(ctxt);
     b->setScopeObject(obj);
+
+    if (QQmlDebugTranslationService *service
+                 = QQmlDebugConnector::service<QQmlDebugTranslationService>()) {
+        service->foundTranslationBinding(b, obj, ctxt);
+    }
 
     return b;
 }

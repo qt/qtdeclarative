@@ -70,16 +70,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPinchHandler : public QQuickMultiPointHandler
     Q_PROPERTY(qreal activeScale READ activeScale NOTIFY updated)
     Q_PROPERTY(qreal rotation READ rotation NOTIFY updated)
     Q_PROPERTY(QVector2D translation READ translation NOTIFY updated)
-#if QT_DEPRECATED_SINCE(5, 12)
-    Q_PROPERTY(qreal minimumX READ minimumX WRITE setMinimumX NOTIFY minimumXChanged)   // ### Qt 6: remove
-    Q_PROPERTY(qreal maximumX READ maximumX WRITE setMaximumX NOTIFY maximumXChanged)   // ### Qt 6: remove
-    Q_PROPERTY(qreal minimumY READ minimumY WRITE setMinimumY NOTIFY minimumYChanged)   // ### Qt 6: remove
-    Q_PROPERTY(qreal maximumY READ maximumY WRITE setMaximumY NOTIFY maximumYChanged)   // ### Qt 6: remove
-#endif
     Q_PROPERTY(QQuickDragAxis * xAxis READ xAxis CONSTANT)
     Q_PROPERTY(QQuickDragAxis * yAxis READ yAxis CONSTANT)
     QML_NAMED_ELEMENT(PinchHandler)
-    QML_ADDED_IN_MINOR_VERSION(12)
+    QML_ADDED_IN_VERSION(2, 12)
 
 public:
     explicit QQuickPinchHandler(QQuickItem *parent = nullptr);
@@ -101,18 +95,6 @@ public:
     qreal activeScale() const { return m_activeScale; }
     qreal rotation() const { return m_activeRotation; }
 
-#if QT_DEPRECATED_SINCE(5, 12)
-    void warnAboutMinMaxDeprecated() const;
-    qreal minimumX() const { warnAboutMinMaxDeprecated(); return m_minimumX; }
-    void setMinimumX(qreal minX);
-    qreal maximumX() const { warnAboutMinMaxDeprecated(); return m_maximumX; }
-    void setMaximumX(qreal maxX);
-    qreal minimumY() const { warnAboutMinMaxDeprecated(); return m_minimumY; }
-    void setMinimumY(qreal minY);
-    qreal maximumY() const { warnAboutMinMaxDeprecated(); return m_maximumY; }
-    void setMaximumY(qreal maxY);
-#endif
-
     QQuickDragAxis *xAxis() { return &m_xAxis; }
     QQuickDragAxis *yAxis() { return &m_yAxis; }
 
@@ -121,10 +103,6 @@ signals:
     void maximumScaleChanged();
     void minimumRotationChanged();
     void maximumRotationChanged();
-    void minimumXChanged();
-    void maximumXChanged();
-    void minimumYChanged();
-    void maximumYChanged();
     void updated();
 
 protected:
@@ -145,10 +123,6 @@ private:
     qreal m_minimumRotation = -qInf();
     qreal m_maximumRotation = qInf();
 
-    qreal m_minimumX = -qInf();
-    qreal m_maximumX = qInf();
-    qreal m_minimumY = -qInf();
-    qreal m_maximumY = qInf();
     QQuickDragAxis m_xAxis;
     QQuickDragAxis m_yAxis;
 

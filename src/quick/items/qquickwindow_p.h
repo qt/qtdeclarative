@@ -62,9 +62,6 @@
 #include <QtCore/qwaitcondition.h>
 #include <QtCore/qrunnable.h>
 #include <private/qwindow_p.h>
-#include <private/qopengl_p.h>
-#include <qopenglcontext.h>
-#include <QtGui/qopenglframebufferobject.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qstylehints.h>
 #include <QtGui/qguiapplication.h>
@@ -88,7 +85,7 @@ class QRhiRenderBuffer;
 class QRhiRenderPassDescriptor;
 
 //Make it easy to identify and customize the root item if needed
-class QQuickRootItem : public QQuickItem
+class Q_QUICK_PRIVATE_EXPORT QQuickRootItem : public QQuickItem
 {
     Q_OBJECT
 public:
@@ -134,6 +131,7 @@ public:
     // Keeps track of the item currently receiving mouse events
 #if QT_CONFIG(cursor)
     QQuickItem *cursorItem;
+    QQuickPointerHandler *cursorHandler;
 #endif
 #if QT_CONFIG(quick_draganddrop)
     QQuickDragGrabber *dragGrabber;
@@ -197,7 +195,7 @@ public:
 #endif
 #if QT_CONFIG(cursor)
     void updateCursor(const QPointF &scenePos);
-    QQuickItem *findCursorItem(QQuickItem *item, const QPointF &scenePos);
+    QPair<QQuickItem*, QQuickPointerHandler*> findCursorItemAndHandler(QQuickItem *item, const QPointF &scenePos) const;
 #endif
 
     QList<QQuickItem*> hoverItems;
@@ -298,6 +296,8 @@ public:
     static int data_count(QQmlListProperty<QObject> *);
     static QObject *data_at(QQmlListProperty<QObject> *, int);
     static void data_clear(QQmlListProperty<QObject> *);
+    static void data_replace(QQmlListProperty<QObject> *, int, QObject *);
+    static void data_removeLast(QQmlListProperty<QObject> *);
 
     static void contextCreationFailureMessage(const QSurfaceFormat &format,
                                               QString *translatedMessage,

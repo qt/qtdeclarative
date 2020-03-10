@@ -478,7 +478,7 @@ void QQuickBorderImage::sciRequestFinished()
     }
     d->redirectCount=0;
 
-    if (d->sciReply->networkError() != QNetworkReply::NoError) {
+    if (d->sciReply->error() != QNetworkReply::NoError) {
         d->status = Error;
         d->sciReply->deleteLater();
         d->sciReply = nullptr;

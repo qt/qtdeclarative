@@ -66,7 +66,7 @@ class tst_QQmlEngineControl : public QQmlDebugTest
     Q_OBJECT
 
 private:
-    ConnectResult connect(const QString &testFile, bool restrictServices);
+    ConnectResult connectTo(const QString &testFile, bool restrictServices);
     QList<QQmlDebugClient *> createClients() override;
 
     void engine_data();
@@ -79,10 +79,10 @@ private slots:
     void stopEngine();
 };
 
-QQmlDebugTest::ConnectResult tst_QQmlEngineControl::connect(const QString &file,
+QQmlDebugTest::ConnectResult tst_QQmlEngineControl::connectTo(const QString &file,
                                                             bool restrictServices)
 {
-    return QQmlDebugTest::connect(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene",
+    return QQmlDebugTest::connectTo(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene",
                                   restrictServices ? QStringLiteral("EngineControl") : QString(),
                                   testFile(file), true);
 }
@@ -109,7 +109,7 @@ void tst_QQmlEngineControl::startEngine_data()
 void tst_QQmlEngineControl::startEngine()
 {
     QFETCH(bool, restrictMode);
-    QCOMPARE(connect("test.qml", restrictMode), ConnectSuccess);
+    QCOMPARE(connectTo("test.qml", restrictMode), ConnectSuccess);
 
     QTRY_VERIFY(!m_client->blockedEngines().empty());
     m_client->releaseEngine(m_client->blockedEngines().last());
@@ -130,7 +130,7 @@ void tst_QQmlEngineControl::stopEngine()
 {
     QFETCH(bool, restrictMode);
 
-    QCOMPARE(connect("exit.qml", restrictMode), ConnectSuccess);
+    QCOMPARE(connectTo("exit.qml", restrictMode), ConnectSuccess);
 
     QTRY_VERIFY(!m_client->blockedEngines().empty());
     m_client->releaseEngine(m_client->blockedEngines().last());

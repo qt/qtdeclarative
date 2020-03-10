@@ -67,14 +67,14 @@ class QQuickShortcut : public QObject, public QQmlParserStatus
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
     Q_PROPERTY(QVariant sequence READ sequence WRITE setSequence NOTIFY sequenceChanged FINAL)
-    Q_PROPERTY(QVariantList sequences READ sequences WRITE setSequences NOTIFY sequencesChanged FINAL REVISION 9)
-    Q_PROPERTY(QString nativeText READ nativeText NOTIFY sequenceChanged FINAL REVISION 6)
-    Q_PROPERTY(QString portableText READ portableText NOTIFY sequenceChanged FINAL REVISION 6)
+    Q_PROPERTY(QVariantList sequences READ sequences WRITE setSequences NOTIFY sequencesChanged FINAL REVISION(2, 9))
+    Q_PROPERTY(QString nativeText READ nativeText NOTIFY sequenceChanged FINAL REVISION(2, 6))
+    Q_PROPERTY(QString portableText READ portableText NOTIFY sequenceChanged FINAL REVISION(2, 6))
     Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged FINAL)
     Q_PROPERTY(bool autoRepeat READ autoRepeat WRITE setAutoRepeat NOTIFY autoRepeatChanged FINAL)
     Q_PROPERTY(Qt::ShortcutContext context READ context WRITE setContext NOTIFY contextChanged FINAL)
     QML_NAMED_ELEMENT(Shortcut)
-    QML_ADDED_IN_MINOR_VERSION(5)
+    QML_ADDED_IN_VERSION(2, 5)
 
 public:
     explicit QQuickShortcut(QObject *parent = nullptr);
@@ -100,7 +100,7 @@ public:
 
 Q_SIGNALS:
     void sequenceChanged();
-    Q_REVISION(9) void sequencesChanged();
+    Q_REVISION(2, 9) void sequencesChanged();
     void enabledChanged();
     void autoRepeatChanged();
     void contextChanged();

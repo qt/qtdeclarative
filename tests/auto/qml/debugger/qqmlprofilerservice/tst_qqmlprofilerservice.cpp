@@ -201,7 +201,7 @@ private:
         CheckType = CheckMessageType | CheckDetailType | CheckLine | CheckColumn | CheckFileEndsWith
     };
 
-    ConnectResult connect(bool block, const QString &file, bool recordFromStart = true,
+    ConnectResult connectTo(bool block, const QString &file, bool recordFromStart = true,
                           uint flushInterval = 0, bool restrictServices = true,
                           const QString &executable
             = QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene");
@@ -246,7 +246,7 @@ private:
 #define VERIFY(type, position, expected, checks, numbers) \
     QVERIFY(verify(type, position, expected, checks, numbers))
 
-QQmlDebugTest::ConnectResult tst_QQmlProfilerService::connect(
+QQmlDebugTest::ConnectResult tst_QQmlProfilerService::connectTo(
         bool block, const QString &file, bool recordFromStart, uint flushInterval,
         bool restrictServices, const QString &executable)
 {
@@ -255,7 +255,7 @@ QQmlDebugTest::ConnectResult tst_QQmlProfilerService::connect(
     m_isComplete = false;
 
     // ### Still using qmlscene due to QTBUG-33377
-    return QQmlDebugTest::connect(
+    return QQmlDebugTest::connectTo(
                 executable,
                 restrictServices ? "CanvasFrameRate,EngineControl,DebugMessages" : QString(),
                 testFile(file), block);
@@ -542,7 +542,7 @@ void tst_QQmlProfilerService::connect()
     QFETCH(bool, restrictMode);
     QFETCH(bool, traceEnabled);
 
-    QCOMPARE(connect(blockMode, "test.qml", traceEnabled, 0, restrictMode), ConnectSuccess);
+    QCOMPARE(connectTo(blockMode, "test.qml", traceEnabled, 0, restrictMode), ConnectSuccess);
 
     if (!traceEnabled)
         m_client->client->setRecording(true);
@@ -556,7 +556,7 @@ void tst_QQmlProfilerService::connect()
 void tst_QQmlProfilerService::pixmapCacheData()
 {
 
-    QCOMPARE(connect(true, "pixmapCacheTest.qml"), ConnectSuccess);
+    QCOMPARE(connectTo(true, "pixmapCacheTest.qml"), ConnectSuccess);
 
     // Don't wait for readyReadStandardOutput before the loop. It may have already arrived.
     while (m_process->output().indexOf(QLatin1String("image loaded")) == -1 &&
@@ -594,7 +594,7 @@ void tst_QQmlProfilerService::pixmapCacheData()
 
 void tst_QQmlProfilerService::scenegraphData()
 {
-    QCOMPARE(connect(true, "scenegraphTest.qml"), ConnectSuccess);
+    QCOMPARE(connectTo(true, "scenegraphTest.qml"), ConnectSuccess);
 
     while (!m_process->output().contains(QLatin1String("tick")))
         QVERIFY(QQmlDebugTest::waitForSignal(m_process, SIGNAL(readyReadStandardOutput())));
@@ -654,7 +654,7 @@ void tst_QQmlProfilerService::scenegraphData()
 
 void tst_QQmlProfilerService::profileOnExit()
 {
-    QCOMPARE(connect(true, "exit.qml"), ConnectSuccess);
+    QCOMPARE(connectTo(true, "exit.qml"), ConnectSuccess);
     checkProcessTerminated();
 
     checkTraceReceived();
@@ -663,7 +663,7 @@ void tst_QQmlProfilerService::profileOnExit()
 
 void tst_QQmlProfilerService::controlFromJS()
 {
-    QCOMPARE(connect(true, "controlFromJS.qml", false), ConnectSuccess);
+    QCOMPARE(connectTo(true, "controlFromJS.qml", false), ConnectSuccess);
 
     QTRY_VERIFY(m_client->numLoadedEventTypes() > 0);
     m_client->client->setRecording(false);
@@ -673,7 +673,7 @@ void tst_QQmlProfilerService::controlFromJS()
 
 void tst_QQmlProfilerService::signalSourceLocation()
 {
-    QCOMPARE(connect(true, "signalSourceLocation.qml"), ConnectSuccess);
+    QCOMPARE(connectTo(true, "signalSourceLocation.qml"), ConnectSuccess);
 
     while (!(m_process->output().contains(QLatin1String("500"))))
         QVERIFY(QQmlDebugTest::waitForSignal(m_process, SIGNAL(readyReadStandardOutput())));
@@ -694,7 +694,7 @@ void tst_QQmlProfilerService::signalSourceLocation()
 
 void tst_QQmlProfilerService::javascript()
 {
-    QCOMPARE(connect(true, "javascript.qml"), ConnectSuccess);
+    QCOMPARE(connectTo(true, "javascript.qml"), ConnectSuccess);
 
     while (!(m_process->output().contains(QLatin1String("done"))))
         QVERIFY(QQmlDebugTest::waitForSignal(m_process, SIGNAL(readyReadStandardOutput())));
@@ -722,7 +722,7 @@ void tst_QQmlProfilerService::javascript()
 
 void tst_QQmlProfilerService::flushInterval()
 {
-    QCOMPARE(connect(true, "timer.qml", true, 1), ConnectSuccess);
+    QCOMPARE(connectTo(true, "timer.qml", true, 1), ConnectSuccess);
 
     // Make sure we get multiple messages
     QTRY_VERIFY(m_client->qmlMessages.length() > 0);
@@ -736,7 +736,7 @@ void tst_QQmlProfilerService::flushInterval()
 
 void tst_QQmlProfilerService::translationBinding()
 {
-    QCOMPARE(connect(true, "qstr.qml"), ConnectSuccess);
+    QCOMPARE(connectTo(true, "qstr.qml"), ConnectSuccess);
     checkProcessTerminated();
 
     checkTraceReceived();
@@ -752,7 +752,7 @@ void tst_QQmlProfilerService::translationBinding()
 
 void tst_QQmlProfilerService::memory()
 {
-    QCOMPARE(connect(true, "memory.qml"), ConnectSuccess);
+    QCOMPARE(connectTo(true, "memory.qml"), ConnectSuccess);
     checkProcessTerminated();
 
     checkTraceReceived();
@@ -781,7 +781,7 @@ static bool hasCompileEvents(const QVector<QQmlProfilerEventType> &types)
 void tst_QQmlProfilerService::compile()
 {
     // Flush interval so that we actually get the events before we stop recording.
-    connect(true, "test.qml", true, 100);
+    connectTo(true, "test.qml", true, 100);
 
     QVERIFY(m_client);
 
@@ -820,7 +820,7 @@ void tst_QQmlProfilerService::compile()
 
 void tst_QQmlProfilerService::multiEngine()
 {
-    QCOMPARE(connect(true, "quit.qml", true, 0, false, debugJsServerPath("qqmlprofilerservice")),
+    QCOMPARE(connectTo(true, "quit.qml", true, 0, false, debugJsServerPath("qqmlprofilerservice")),
              ConnectSuccess);
 
     QSignalSpy spy(m_client->client, SIGNAL(complete(qint64)));
@@ -837,7 +837,7 @@ void tst_QQmlProfilerService::multiEngine()
 void tst_QQmlProfilerService::batchOverflow()
 {
     // The trace client checks that the events are received in order.
-    QCOMPARE(connect(true, "batchOverflow.qml"), ConnectSuccess);
+    QCOMPARE(connectTo(true, "batchOverflow.qml"), ConnectSuccess);
     checkProcessTerminated();
     checkTraceReceived();
     checkJsHeap();

@@ -56,9 +56,10 @@ class QQuickGridLayoutBase : public QQuickLayout
 {
     Q_OBJECT
 
-    Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection NOTIFY layoutDirectionChanged REVISION 1)
+    Q_PROPERTY(Qt::LayoutDirection layoutDirection READ layoutDirection WRITE setLayoutDirection
+               NOTIFY layoutDirectionChanged REVISION(1, 1))
     QML_ANONYMOUS
-    QML_ADDED_IN_MINOR_VERSION(1)
+    QML_ADDED_IN_VERSION(1, 1)
 
 public:
 
@@ -92,7 +93,7 @@ protected:
     virtual void insertLayoutItems() {}
 
 signals:
-    Q_REVISION(1) void layoutDirectionChanged();
+    Q_REVISION(1, 1) void layoutDirectionChanged();
 
 private:
     void removeGridItem(QGridLayoutItem *gridItem);
@@ -106,7 +107,8 @@ class QQuickGridLayoutBasePrivate : public QQuickLayoutPrivate
     Q_DECLARE_PUBLIC(QQuickGridLayoutBase)
 
 public:
-    QQuickGridLayoutBasePrivate() : m_rearranging(false)
+    QQuickGridLayoutBasePrivate() : m_recurRearrangeCounter(0)
+                                    , m_rearranging(false)
                                     , m_updateAfterRearrange(false)
                                     , m_layoutDirection(Qt::LeftToRight)
                                     {}
@@ -119,6 +121,7 @@ public:
 
     QQuickGridLayoutEngine engine;
     Qt::Orientation orientation;
+    unsigned m_recurRearrangeCounter : 2;
     unsigned m_rearranging : 1;
     unsigned m_updateAfterRearrange : 1;
     QVector<QQuickItem *> m_invalidateAfterRearrange;
@@ -143,6 +146,7 @@ class QQuickGridLayout : public QQuickGridLayoutBase
     Q_PROPERTY(int rows READ rows WRITE setRows NOTIFY rowsChanged)
     Q_PROPERTY(Flow flow READ flow WRITE setFlow NOTIFY flowChanged)
     QML_NAMED_ELEMENT(GridLayout)
+    QML_ADDED_IN_VERSION(1, 0)
 public:
     explicit QQuickGridLayout(QQuickItem *parent = 0);
     qreal columnSpacing() const;
@@ -227,6 +231,7 @@ class QQuickRowLayout : public QQuickLinearLayout
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(RowLayout)
+    QML_ADDED_IN_VERSION(1, 0)
 
 public:
     explicit QQuickRowLayout(QQuickItem *parent = 0)
@@ -243,6 +248,7 @@ class QQuickColumnLayout : public QQuickLinearLayout
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(ColumnLayout)
+    QML_ADDED_IN_VERSION(1, 0)
 
 public:
     explicit QQuickColumnLayout(QQuickItem *parent = 0)

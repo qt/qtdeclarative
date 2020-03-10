@@ -60,6 +60,7 @@ class StateMachine : public QStateMachine, public QQmlParserStatus
 
     Q_CLASSINFO("DefaultProperty", "children")
     QML_ELEMENT
+    QML_ADDED_IN_VERSION(1, 0)
 
 public:
     explicit StateMachine(QObject *parent = 0);
@@ -82,7 +83,7 @@ Q_SIGNALS:
     void qmlRunningChanged();
 
 private:
-    ChildrenPrivate<StateMachine> m_children;
+    ChildrenPrivate<StateMachine, ChildrenMode::StateOrTransition> m_children;
     bool m_completed;
     bool m_running;
 };

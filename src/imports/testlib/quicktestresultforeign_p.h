@@ -61,6 +61,7 @@ struct QuickTestResultForeign
     Q_GADGET
     QML_FOREIGN(QuickTestResult)
     QML_NAMED_ELEMENT(TestResult)
+    QML_ADDED_IN_VERSION(1, 0)
 };
 
 QT_END_NAMESPACE

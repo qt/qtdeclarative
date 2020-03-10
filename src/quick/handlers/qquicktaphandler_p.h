@@ -68,7 +68,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTapHandler : public QQuickSinglePointHandler
     Q_PROPERTY(GesturePolicy gesturePolicy READ gesturePolicy WRITE setGesturePolicy NOTIFY gesturePolicyChanged)
 
     QML_NAMED_ELEMENT(TapHandler)
-    QML_ADDED_IN_MINOR_VERSION(12)
+    QML_ADDED_IN_VERSION(2, 12)
 
 public:
     enum GesturePolicy {

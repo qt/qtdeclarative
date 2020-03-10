@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 **
 ** Copyright (C) 2019 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
@@ -389,10 +389,10 @@ private:
 
 QSGMaterialType DeformableMaterial::m_type;
 
-class SpriteMaterialShader : public QSGMaterialShader
+class ParticleSpriteMaterialShader : public QSGMaterialShader
 {
 public:
-    SpriteMaterialShader()
+    ParticleSpriteMaterialShader()
     {
         QSGShaderSourceBuilder builder;
         const bool isES = QOpenGLContext::currentContext()->isOpenGLES();
@@ -478,10 +478,10 @@ public:
     QOpenGLFunctions* glFuncs;
 };
 
-class SpriteMaterialRhiShader : public QSGMaterialRhiShader
+class ParticleSpriteMaterialRhiShader : public QSGMaterialRhiShader
 {
 public:
-    SpriteMaterialRhiShader()
+    ParticleSpriteMaterialRhiShader()
     {
         setShaderFileName(VertexStage, QStringLiteral(":/particles/shaders_ng/imageparticle_sprite.vert.qsb"));
         setShaderFileName(FragmentStage, QStringLiteral(":/particles/shaders_ng/imageparticle_sprite.frag.qsb"));
@@ -544,9 +544,9 @@ public:
     SpriteMaterial() { setFlag(SupportsRhiShader, true); }
     QSGMaterialShader *createShader() const override {
         if (flags().testFlag(RhiShaderWanted))
-            return new SpriteMaterialRhiShader;
+            return new ParticleSpriteMaterialRhiShader;
         else
-            return new SpriteMaterialShader;
+            return new ParticleSpriteMaterialShader;
     }
     QSGMaterialType *type() const override { return &m_type; }
 
@@ -1143,7 +1143,9 @@ QQuickImageParticle::~QQuickImageParticle()
 
 QQmlListProperty<QQuickSprite> QQuickImageParticle::sprites()
 {
-    return QQmlListProperty<QQuickSprite>(this, &m_sprites, spriteAppend, spriteCount, spriteAt, spriteClear);
+    return QQmlListProperty<QQuickSprite>(this, &m_sprites,
+                                          spriteAppend, spriteCount, spriteAt,
+                                          spriteClear, spriteReplace, spriteRemoveLast);
 }
 
 void QQuickImageParticle::sceneGraphInvalidated()

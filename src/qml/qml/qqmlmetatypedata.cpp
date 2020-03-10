@@ -78,9 +78,9 @@ void QQmlMetaTypeData::registerType(QQmlTypePrivate *priv)
     priv->release();
 }
 
-bool QQmlMetaTypeData::registerModuleTypes(const QQmlMetaTypeData::VersionedUri &versionedUri)
+bool QQmlMetaTypeData::registerModuleTypes(const QString &uri)
 {
-    auto function = moduleTypeRegistrationFunctions.constFind(versionedUri);
+    auto function = moduleTypeRegistrationFunctions.constFind(uri);
     if (function != moduleTypeRegistrationFunctions.constEnd()) {
         (*function)();
         return true;
@@ -88,28 +88,28 @@ bool QQmlMetaTypeData::registerModuleTypes(const QQmlMetaTypeData::VersionedUri 
     return false;
 }
 
-QQmlPropertyCache *QQmlMetaTypeData::propertyCacheForMinorVersion(int index, int minorVersion) const
+QQmlPropertyCache *QQmlMetaTypeData::propertyCacheForVersion(int index, QTypeRevision version) const
 {
     return (index < typePropertyCaches.length())
-            ? typePropertyCaches.at(index).value(minorVersion).data()
+            ? typePropertyCaches.at(index).value(version).data()
             : nullptr;
 }
 
-void QQmlMetaTypeData::setPropertyCacheForMinorVersion(int index, int minorVersion,
-                                                       QQmlPropertyCache *cache)
+void QQmlMetaTypeData::setPropertyCacheForVersion(int index, QTypeRevision version,
+                                                  QQmlPropertyCache *cache)
 {
     if (index >= typePropertyCaches.length())
         typePropertyCaches.resize(index + 1);
-    typePropertyCaches[index][minorVersion] = cache;
+    typePropertyCaches[index][version] = cache;
 }
 
-void QQmlMetaTypeData::clearPropertyCachesForMinorVersion(int index)
+void QQmlMetaTypeData::clearPropertyCachesForVersion(int index)
 {
     if (index < typePropertyCaches.length())
         typePropertyCaches[index].clear();
 }
 
-QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QMetaObject *metaObject, int minorVersion)
+QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QMetaObject *metaObject, QTypeRevision version)
 {
     if (QQmlPropertyCache *rv = propertyCaches.value(metaObject))
         return rv;
@@ -119,29 +119,36 @@ QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QMetaObject *metaObject
         propertyCaches.insert(metaObject, rv);
         return rv;
     }
-    QQmlPropertyCache *super = propertyCache(metaObject->superClass(), minorVersion);
-    QQmlPropertyCache *rv = super->copyAndAppend(metaObject, minorVersion);
+    QQmlPropertyCache *super = propertyCache(metaObject->superClass(), version);
+    QQmlPropertyCache *rv = super->copyAndAppend(metaObject, version);
     propertyCaches.insert(metaObject, rv);
     return rv;
 }
 
-QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QQmlType &type, int minorVersion)
+QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QQmlType &type, QTypeRevision version)
 {
     Q_ASSERT(type.isValid());
 
-    if (QQmlPropertyCache *pc = propertyCacheForMinorVersion(type.index(), minorVersion))
+    if (QQmlPropertyCache *pc = propertyCacheForVersion(type.index(), version))
         return pc;
 
     QVector<QQmlType> types;
 
-    int maxMinorVersion = 0;
+    quint8 maxMinorVersion = 0;
 
     const QMetaObject *metaObject = type.metaObject();
 
+    const QTypeRevision combinedVersion = version.hasMajorVersion()
+            ? version
+            : (version.hasMinorVersion()
+               ? QTypeRevision::fromVersion(type.version().majorVersion(),
+                                            version.minorVersion())
+               : type.version());
+
     while (metaObject) {
-        QQmlType t = QQmlMetaType::qmlType(metaObject, type.module(), type.majorVersion(), minorVersion);
+        QQmlType t = QQmlMetaType::qmlType(metaObject, type.module(), combinedVersion);
         if (t.isValid()) {
-            maxMinorVersion = qMax(maxMinorVersion, t.minorVersion());
+            maxMinorVersion = qMax(maxMinorVersion, t.version().minorVersion());
             types << t;
         } else {
             types << QQmlType();
@@ -150,12 +157,14 @@ QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QQmlType &type, int min
         metaObject = metaObject->superClass();
     }
 
-    if (QQmlPropertyCache *pc = propertyCacheForMinorVersion(type.index(), maxMinorVersion)) {
-        setPropertyCacheForMinorVersion(type.index(), minorVersion, pc);
+    const QTypeRevision maxVersion = QTypeRevision::fromVersion(combinedVersion.majorVersion(),
+                                                                maxMinorVersion);
+    if (QQmlPropertyCache *pc = propertyCacheForVersion(type.index(), maxVersion)) {
+        setPropertyCacheForVersion(type.index(), maxVersion, pc);
         return pc;
     }
 
-    QQmlPropertyCache *raw = propertyCache(type.metaObject(), minorVersion);
+    QQmlPropertyCache *raw = propertyCache(type.metaObject(), combinedVersion);
 
     bool hasCopied = false;
 
@@ -164,7 +173,7 @@ QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QQmlType &type, int min
         if (!currentType.isValid())
             continue;
 
-        int rev = currentType.metaObjectRevision();
+        QTypeRevision rev = currentType.metaObjectRevision();
         int moIndex = types.count() - 1 - ii;
 
         if (raw->allowedRevision(moIndex) != rev) {
@@ -222,13 +231,13 @@ QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QQmlType &type, int min
     }
 #endif
 
-    setPropertyCacheForMinorVersion(type.index(), minorVersion, raw);
+    setPropertyCacheForVersion(type.index(), version, raw);
 
     if (hasCopied)
         raw->release();
 
-    if (minorVersion != maxMinorVersion)
-        setPropertyCacheForMinorVersion(type.index(), maxMinorVersion, raw);
+    if (version != maxVersion)
+        setPropertyCacheForVersion(type.index(), maxVersion, raw);
 
     return raw;
 }

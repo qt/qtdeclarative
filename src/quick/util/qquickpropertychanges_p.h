@@ -66,6 +66,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPropertyChanges : public QQuickStateOperation
     Q_PROPERTY(bool restoreEntryValues READ restoreEntryValues WRITE setRestoreEntryValues)
     Q_PROPERTY(bool explicit READ isExplicit WRITE setIsExplicit)
     QML_NAMED_ELEMENT(PropertyChanges)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     QQuickPropertyChanges();

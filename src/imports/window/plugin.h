@@ -65,7 +65,7 @@ struct QWindowForeign
     Q_GADGET
     QML_FOREIGN(QWindow)
     QML_ANONYMOUS
-    QML_ADDED_IN_MINOR_VERSION(1)
+    QML_ADDED_IN_VERSION(2, 1)
 };
 
 struct QQuickWindowForeign
@@ -73,8 +73,8 @@ struct QQuickWindowForeign
     Q_GADGET
     QML_FOREIGN(QQuickWindow)
     QML_NAMED_ELEMENT(Window)
-    QML_ADDED_IN_MINOR_VERSION(0)
-    QML_REMOVED_IN_MINOR_VERSION(1)
+    QML_ADDED_IN_VERSION(2, 0)
+    QML_REMOVED_IN_VERSION(2, 1)
 };
 
 struct QQuickWindowForeignAttached
@@ -82,6 +82,7 @@ struct QQuickWindowForeignAttached
     Q_GADGET
     QML_FOREIGN(QQuickWindowAttached)
     QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 };
 
 struct QQuickScreenInfoForeign
@@ -89,7 +90,7 @@ struct QQuickScreenInfoForeign
     Q_GADGET
     QML_FOREIGN(QQuickScreenInfo)
     QML_NAMED_ELEMENT(ScreenInfo)
-    QML_ADDED_IN_MINOR_VERSION(3)
+    QML_ADDED_IN_VERSION(2, 3)
     QML_UNCREATABLE("ScreenInfo can only be used via the attached property.")
 };
 
@@ -98,6 +99,7 @@ struct QQuickScreenForeignAttached
     Q_GADGET
     QML_FOREIGN(QQuickScreenAttached)
     QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 };
 
 struct QQuickScreenForeign
@@ -105,6 +107,7 @@ struct QQuickScreenForeign
     Q_GADGET
     QML_FOREIGN(QQuickScreen)
     QML_NAMED_ELEMENT(Screen)
+    QML_ADDED_IN_VERSION(2, 0)
     QML_UNCREATABLE("Screen can only be used via the attached property.")
 };
 
@@ -113,7 +116,14 @@ struct QQuickWindowQmlImplForeign
     Q_GADGET
     QML_FOREIGN(QQuickWindowQmlImpl)
     QML_NAMED_ELEMENT(Window)
-    QML_ADDED_IN_MINOR_VERSION(1)
+    QML_ADDED_IN_VERSION(2, 1)
+};
+
+struct QQuickRootItemForeign
+{
+    Q_GADGET
+    QML_FOREIGN(QQuickRootItem)
+    QML_ANONYMOUS
 };
 
 QT_END_NAMESPACE

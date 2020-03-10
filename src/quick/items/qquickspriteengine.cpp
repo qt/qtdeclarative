@@ -45,7 +45,7 @@
 #include <QPainter>
 #include <QRandomGenerator>
 #include <QSet>
-#include <QtGui/qopengl.h>
+#include <qopengl.h>
 #include <QOpenGLFunctions>
 
 QT_BEGIN_NAMESPACE

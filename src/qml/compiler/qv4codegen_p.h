@@ -661,12 +661,12 @@ protected:
     bool visit(QQmlJS::AST::UiSourceElement *ast) override;
 
     bool throwSyntaxErrorOnEvalOrArgumentsInStrictMode(const Reference &r,
-                                                       const QQmlJS::AST::SourceLocation &loc);
-    virtual void throwSyntaxError(const QQmlJS::AST::SourceLocation &loc, const QString &detail);
-    virtual void throwReferenceError(const QQmlJS::AST::SourceLocation &loc, const QString &detail);
+                                                       const QQmlJS::SourceLocation &loc);
+    virtual void throwSyntaxError(const QQmlJS::SourceLocation &loc, const QString &detail);
+    virtual void throwReferenceError(const QQmlJS::SourceLocation &loc, const QString &detail);
     void throwRecursionDepthError() override
     {
-        throwSyntaxError(QQmlJS::AST::SourceLocation(),
+        throwSyntaxError(QQmlJS::SourceLocation(),
                          QStringLiteral("Maximum statement or expression depth exceeded"));
     }
 
@@ -700,7 +700,7 @@ public:
 
     Reference referenceForName(
             const QString &name, bool lhs,
-            const QQmlJS::AST::SourceLocation &accessLocation = QQmlJS::AST::SourceLocation());
+            const QQmlJS::SourceLocation &accessLocation = QQmlJS::SourceLocation());
 
     QV4::CompiledData::CompilationUnit generateCompilationUnit(bool generateUnitData = true);
     static QV4::CompiledData::CompilationUnit compileModule(
@@ -810,7 +810,7 @@ protected:
 private:
     VolatileMemoryLocations scanVolatileMemoryLocations(QQmlJS::AST::Node *ast);
     void handleConstruct(const Reference &base, QQmlJS::AST::ArgumentList *args);
-    void throwError(ErrorType errorType, const QQmlJS::AST::SourceLocation &loc,
+    void throwError(ErrorType errorType, const QQmlJS::SourceLocation &loc,
                     const QString &detail);
 };
 

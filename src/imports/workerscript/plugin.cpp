@@ -37,16 +37,10 @@
 **
 ****************************************************************************/
 
-#include <QtQmlWorkerScript/private/qquickworkerscript_p.h>
-
+#include <QtQmlWorkerScript/private/qtqmlworkerscriptglobal_p.h>
 #include <QtQml/qqmlextensionplugin.h>
-#include <QtQml/qqml.h>
-
-#include <QtCore/qloggingcategory.h>
 
 QT_BEGIN_NAMESPACE
-
-Q_LOGGING_CATEGORY(workerScriptPlugin, "qt.workerScriptPlugin")
 
 /*!
     \qmlmodule QtQml.WorkerScript 2.\QtMinorVersion
@@ -71,13 +65,8 @@ class QtQmlWorkerScriptPlugin : public QQmlEngineExtensionPlugin
 public:
     QtQmlWorkerScriptPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent)
     {
-        if (workerScriptPlugin().isDebugEnabled()) {
-            // Superficial debug message that causes the dependency between QtQmlWorkerScript
-            // and the workerscript plugin to be retained.
-            // As qCDebug() can be a noop, retrieve the className in a separate step.
-            const QString className = QQuickWorkerScript::staticMetaObject.className();
-            qCDebug(workerScriptPlugin) << "Loading WorkerScript plugin:" << className;
-        }
+        volatile auto registration = &qml_register_types_QtQml_WorkerScript;
+        Q_UNUSED(registration);
     }
 };
 

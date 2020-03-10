@@ -33,6 +33,7 @@
 #include <QtCore/qjsonobject.h>
 #include <QtCore/qvector.h>
 #include <QtCore/qset.h>
+#include <QtCore/qversionnumber.h>
 
 struct QmlTypesClassDescription
 {
@@ -41,16 +42,25 @@ struct QmlTypesClassDescription
     QString defaultProp;
     QString superClass;
     QString attachedType;
-    QList<int> revisions;
-    int addedInRevision = -1;
-    int removedInRevision = -1;
+    QList<QTypeRevision> revisions;
+    QTypeRevision addedInRevision;
+    QTypeRevision removedInRevision;
     bool isCreatable = true;
     bool isSingleton = false;
     bool isRootClass = false;
     bool isBuiltin = false;
 
+    enum CollectMode {
+        TopLevel,
+        SuperClass,
+        AttachedType
+    };
+
     void collect(const QJsonObject *classDef, const QVector<QJsonObject> &types,
-                 const QVector<QJsonObject> &foreign, bool topLevel);
+                 const QVector<QJsonObject> &foreign, CollectMode mode,
+                 QTypeRevision defaultRevision);
+    void collectAttached(const QString &attached, const QVector<QJsonObject> &types,
+                         const QVector<QJsonObject> &foreign, QTypeRevision defaultRevision);
 
     static const QJsonObject *findType(const QVector<QJsonObject> &types, const QString &name);
 };

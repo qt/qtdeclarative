@@ -64,6 +64,33 @@ using namespace QQmlJS;
         return false; \
     }
 
+void Object::simplifyRequiredProperties() {
+    // if a property of the current object was marked as required
+    // do not store that information in the ExtraData
+    // but rather mark the property as required
+    QSet<int> required;
+    for (auto it = this->requiredPropertyExtraDataBegin(); it != this->requiredPropertyExtraDataEnd(); ++it)
+        required.insert(it->nameIndex);
+    if (required.isEmpty())
+        return;
+    for (auto it = this->propertiesBegin(); it != this->propertiesEnd(); ++it) {
+        auto requiredIt = required.find(it->nameIndex);
+        if (requiredIt != required.end()) {
+            it->isRequired = true;
+            required.erase(requiredIt);
+        }
+    }
+    QmlIR::RequiredPropertyExtraData *prev = nullptr;
+    auto current = this->requiredPropertyExtraDatas->first;
+    while (current) {
+        if (required.contains(current->nameIndex))
+            prev = current;
+        else
+            requiredPropertyExtraDatas->unlink(prev, current);
+        current = current->next;
+    }
+}
+
 bool Parameter::init(QV4::Compiler::JSUnitGenerator *stringGenerator, const QString &parameterName,
                      const QString &typeName)
 {
@@ -142,7 +169,7 @@ QV4::CompiledData::BuiltinType Parameter::stringToBuiltinType(const QString &typ
     return QV4::CompiledData::BuiltinType::InvalidBuiltin;
 }
 
-void Object::init(QQmlJS::MemoryPool *pool, int typeNameIndex, int idIndex, const QQmlJS::AST::SourceLocation &loc)
+void Object::init(QQmlJS::MemoryPool *pool, int typeNameIndex, int idIndex, const QQmlJS::SourceLocation &loc)
 {
     inheritedTypeNameIndex = typeNameIndex;
 
@@ -162,10 +189,11 @@ void Object::init(QQmlJS::MemoryPool *pool, int typeNameIndex, int idIndex, cons
     functions = pool->New<PoolList<Function> >();
     functionsAndExpressions = pool->New<PoolList<CompiledFunctionOrExpression> >();
     inlineComponents = pool->New<PoolList<InlineComponent>>();
+    requiredPropertyExtraDatas = pool->New<PoolList<RequiredPropertyExtraData>>();
     declarationsOverride = nullptr;
 }
 
-QString IRBuilder::sanityCheckFunctionNames(Object *obj, const QSet<QString> &illegalNames, QQmlJS::AST::SourceLocation *errorLocation)
+QString IRBuilder::sanityCheckFunctionNames(Object *obj, const QSet<QString> &illegalNames, QQmlJS::SourceLocation *errorLocation)
 {
     QSet<int> functionNames;
     for (auto functionit = obj->functionsBegin(); functionit != obj->functionsEnd(); ++functionit) {
@@ -221,7 +249,7 @@ QString Object::appendSignal(Signal *signal)
     return QString(); // no error
 }
 
-QString Object::appendProperty(Property *prop, const QString &propertyName, bool isDefaultProperty, const QQmlJS::AST::SourceLocation &defaultToken, QQmlJS::AST::SourceLocation *errorLocation)
+QString Object::appendProperty(Property *prop, const QString &propertyName, bool isDefaultProperty, const QQmlJS::SourceLocation &defaultToken, QQmlJS::SourceLocation *errorLocation)
 {
     Object *target = declarationsOverride;
     if (!target)
@@ -245,7 +273,7 @@ QString Object::appendProperty(Property *prop, const QString &propertyName, bool
     return QString(); // no error
 }
 
-QString Object::appendAlias(Alias *alias, const QString &aliasName, bool isDefaultProperty, const QQmlJS::AST::SourceLocation &defaultToken, QQmlJS::AST::SourceLocation *errorLocation)
+QString Object::appendAlias(Alias *alias, const QString &aliasName, bool isDefaultProperty, const QQmlJS::SourceLocation &defaultToken, QQmlJS::SourceLocation *errorLocation)
 {
     Object *target = declarationsOverride;
     if (!target)
@@ -287,6 +315,11 @@ void Object::appendInlineComponent(InlineComponent *ic)
     inlineComponents->append(ic);
 }
 
+void Object::appendRequiredPropertyExtraData(RequiredPropertyExtraData *extraData)
+{
+    requiredPropertyExtraDatas->append(extraData);
+}
+
 QString Object::appendBinding(Binding *b, bool isListBinding)
 {
     const bool bindingToDefaultProperty = (b->propertyNameIndex == quint32(0));
@@ -325,8 +358,8 @@ QString Object::bindingAsString(Document *doc, int scriptIndex) const
     QQmlJS::AST::Node *node = foe->node;
     if (QQmlJS::AST::ExpressionStatement *exprStmt = QQmlJS::AST::cast<QQmlJS::AST::ExpressionStatement *>(node))
         node = exprStmt->expression;
-    QQmlJS::AST::SourceLocation start = node->firstSourceLocation();
-    QQmlJS::AST::SourceLocation end = node->lastSourceLocation();
+    QQmlJS::SourceLocation start = node->firstSourceLocation();
+    QQmlJS::SourceLocation end = node->lastSourceLocation();
     return doc->code.mid(start.offset, end.offset + end.length - start.offset);
 }
 
@@ -374,11 +407,7 @@ void ScriptDirectivesCollector::importModule(const QString &uri, const QString &
     QV4::CompiledData::Import *import = engine->pool()->New<QV4::CompiledData::Import>();
     import->type = QV4::CompiledData::Import::ImportLibrary;
     import->uriIndex = jsGenerator->registerString(uri);
-    int vmaj;
-    int vmin;
-    IRBuilder::extractVersion(QStringRef(&version), &vmaj, &vmin);
-    import->majorVersion = vmaj;
-    import->minorVersion = vmin;
+    import->version = IRBuilder::extractVersion(QStringRef(&version));
     import->qualifierIndex = jsGenerator->registerString(module);
     import->location.line = lineNumber;
     import->location.column = column;
@@ -409,7 +438,7 @@ bool IRBuilder::generateFromQml(const QString &code, const QString &url, Documen
             // Extract errors from the parser
             for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
                 if (m.isWarning()) {
-                    qWarning("%s:%d : %s", qPrintable(url), m.line, qPrintable(m.message));
+                    qWarning("%s:%d : %s", qPrintable(url), m.loc.startLine, qPrintable(m.message));
                     continue;
                 }
 
@@ -437,7 +466,7 @@ bool IRBuilder::generateFromQml(const QString &code, const QString &url, Documen
     accept(program->headers);
 
     if (program->members->next) {
-        QQmlJS::AST::SourceLocation loc = program->members->next->firstSourceLocation();
+        QQmlJS::SourceLocation loc = program->members->next->firstSourceLocation();
         recordError(loc, QCoreApplication::translate("QQmlParser", "Unexpected object definition"));
         return false;
     }
@@ -452,6 +481,10 @@ bool IRBuilder::generateFromQml(const QString &code, const QString &url, Documen
     qSwap(_imports, output->imports);
     qSwap(_pragmas, output->pragmas);
     qSwap(_objects, output->objects);
+
+    for (auto object: output->objects)
+        object->simplifyRequiredProperties();
+
     return errors.isEmpty();
 }
 
@@ -498,7 +531,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiObjectDefinition *node)
         int idx = 0;
         if (!defineQMLObject(&idx, node))
             return false;
-        const QQmlJS::AST::SourceLocation nameLocation = node->qualifiedTypeNameId->identifierToken;
+        const QQmlJS::SourceLocation nameLocation = node->qualifiedTypeNameId->identifierToken;
         appendBinding(nameLocation, nameLocation, emptyStringIndex, idx);
     } else {
         int idx = 0;
@@ -553,7 +586,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiScriptBinding *node)
 
 bool IRBuilder::visit(QQmlJS::AST::UiArrayBinding *node)
 {
-    const QQmlJS::AST::SourceLocation qualifiedNameLocation = node->qualifiedId->identifierToken;
+    const QQmlJS::SourceLocation qualifiedNameLocation = node->qualifiedId->identifierToken;
     Object *object = nullptr;
     QQmlJS::AST::UiQualifiedId *name = node->qualifiedId;
     if (!resolveQualifiedId(&name, &object))
@@ -618,7 +651,7 @@ void IRBuilder::accept(QQmlJS::AST::Node *node)
     QQmlJS::AST::Node::accept(node, this);
 }
 
-bool IRBuilder::defineQMLObject(int *objectIndex, QQmlJS::AST::UiQualifiedId *qualifiedTypeNameId, const QQmlJS::AST::SourceLocation &location, QQmlJS::AST::UiObjectInitializer *initializer, Object *declarationsOverride)
+bool IRBuilder::defineQMLObject(int *objectIndex, QQmlJS::AST::UiQualifiedId *qualifiedTypeNameId, const QQmlJS::SourceLocation &location, QQmlJS::AST::UiObjectInitializer *initializer, Object *declarationsOverride)
 {
     if (QQmlJS::AST::UiQualifiedId *lastName = qualifiedTypeNameId) {
         while (lastName->next)
@@ -654,7 +687,7 @@ bool IRBuilder::defineQMLObject(int *objectIndex, QQmlJS::AST::UiQualifiedId *qu
     if (!errors.isEmpty())
         return false;
 
-    QQmlJS::AST::SourceLocation loc;
+    QQmlJS::SourceLocation loc;
     QString error = sanityCheckFunctionNames(obj, illegalNames, &loc);
     if (!error.isEmpty()) {
         recordError(loc, error);
@@ -715,16 +748,14 @@ bool IRBuilder::visit(QQmlJS::AST::UiImport *node)
     }
 
     if (node->version) {
-        import->majorVersion = node->version->majorVersion;
-        import->minorVersion = node->version->minorVersion;
+        import->version = node->version->version;
     } else if (import->type == QV4::CompiledData::Import::ImportLibrary) {
         recordError(node->importIdToken, QCoreApplication::translate("QQmlParser","Library import requires a version"));
         return false;
     } else {
         // For backward compatibility in how the imports are loaded we
-        // must otherwise initialize the major and minor version to -1.
-        import->majorVersion = -1;
-        import->minorVersion = -1;
+        // must otherwise initialize the major and minor version to invalid.
+        import->version = QTypeRevision();
     }
 
     import->location.line = node->importToken.startLine;
@@ -834,7 +865,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
         const QString signalName = node->name.toString();
         signal->nameIndex = registerString(signalName);
 
-        QQmlJS::AST::SourceLocation loc = node->typeToken;
+        QQmlJS::SourceLocation loc = node->typeToken;
         signal->location.line = loc.startLine;
         signal->location.column = loc.startColumn;
 
@@ -917,11 +948,11 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
             const QString propName = name.toString();
             property->nameIndex = registerString(propName);
 
-            QQmlJS::AST::SourceLocation loc = node->firstSourceLocation();
+            QQmlJS::SourceLocation loc = node->firstSourceLocation();
             property->location.line = loc.startLine;
             property->location.column = loc.startColumn;
 
-            QQmlJS::AST::SourceLocation errorLocation;
+            QQmlJS::SourceLocation errorLocation;
             QString error;
 
             if (illegalNames.contains(propName))
@@ -962,7 +993,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiSourceElement *node)
         const int index = _object->functionsAndExpressions->append(foe);
 
         Function *f = New<Function>();
-        QQmlJS::AST::SourceLocation loc = funDecl->identifierToken;
+        QQmlJS::SourceLocation loc = funDecl->identifierToken;
         f->location.line = loc.startLine;
         f->location.column = loc.startColumn;
         f->index = index;
@@ -988,6 +1019,14 @@ bool IRBuilder::visit(QQmlJS::AST::UiSourceElement *node)
     return false;
 }
 
+bool IRBuilder::visit(AST::UiRequired *ast)
+{
+    auto extraData = New<RequiredPropertyExtraData>();
+    extraData->nameIndex = registerString(ast->name.toString());
+    _object->appendRequiredPropertyExtraData(extraData);
+    return false;
+}
+
 QString IRBuilder::asString(QQmlJS::AST::UiQualifiedId *node)
 {
     QString s;
@@ -1010,32 +1049,25 @@ QStringRef IRBuilder::asStringRef(QQmlJS::AST::Node *node)
     return textRefAt(node->firstSourceLocation(), node->lastSourceLocation());
 }
 
-void IRBuilder::extractVersion(const QStringRef &string, int *maj, int *min)
+QTypeRevision IRBuilder::extractVersion(const QStringRef &string)
 {
-    *maj = -1; *min = -1;
+    if (string.isEmpty())
+        return QTypeRevision();
 
-    if (!string.isEmpty()) {
-
-        int dot = string.indexOf(QLatin1Char('.'));
-
-        if (dot < 0) {
-            *maj = string.toInt();
-            *min = 0;
-        } else {
-            *maj = string.left(dot).toInt();
-            *min = string.mid(dot + 1).toInt();
-        }
-    }
+    const int dot = string.indexOf(QLatin1Char('.'));
+    return (dot < 0)
+        ? QTypeRevision::fromVersion(string.toInt(), 0)
+        : QTypeRevision::fromVersion(string.left(dot).toInt(), string.mid(dot + 1).toInt());
 }
 
-QStringRef IRBuilder::textRefAt(const QQmlJS::AST::SourceLocation &first, const QQmlJS::AST::SourceLocation &last) const
+QStringRef IRBuilder::textRefAt(const QQmlJS::SourceLocation &first, const QQmlJS::SourceLocation &last) const
 {
     return QStringRef(&sourceCode, first.offset, last.offset + last.length - first.offset);
 }
 
 void IRBuilder::setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST::Statement *statement, QQmlJS::AST::Node *parentNode)
 {
-    QQmlJS::AST::SourceLocation loc = statement->firstSourceLocation();
+    QQmlJS::SourceLocation loc = statement->firstSourceLocation();
     binding->valueLocation.line = loc.startLine;
     binding->valueLocation.column = loc.startColumn;
     binding->type = QV4::CompiledData::Binding::Type_Invalid;
@@ -1212,7 +1244,7 @@ void IRBuilder::tryGeneratingTranslationBinding(const QStringRef &base, AST::Arg
 
 void IRBuilder::appendBinding(QQmlJS::AST::UiQualifiedId *name, QQmlJS::AST::Statement *value, QQmlJS::AST::Node *parentNode)
 {
-    const QQmlJS::AST::SourceLocation qualifiedNameLocation = name->identifierToken;
+    const QQmlJS::SourceLocation qualifiedNameLocation = name->identifierToken;
     Object *object = nullptr;
     if (!resolveQualifiedId(&name, &object))
         return;
@@ -1227,7 +1259,7 @@ void IRBuilder::appendBinding(QQmlJS::AST::UiQualifiedId *name, QQmlJS::AST::Sta
 
 void IRBuilder::appendBinding(QQmlJS::AST::UiQualifiedId *name, int objectIndex, bool isOnAssignment)
 {
-    const QQmlJS::AST::SourceLocation qualifiedNameLocation = name->identifierToken;
+    const QQmlJS::SourceLocation qualifiedNameLocation = name->identifierToken;
     Object *object = nullptr;
     if (!resolveQualifiedId(&name, &object, isOnAssignment))
         return;
@@ -1236,7 +1268,7 @@ void IRBuilder::appendBinding(QQmlJS::AST::UiQualifiedId *name, int objectIndex,
     qSwap(_object, object);
 }
 
-void IRBuilder::appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLocation, const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex,
+void IRBuilder::appendBinding(const QQmlJS::SourceLocation &qualifiedNameLocation, const QQmlJS::SourceLocation &nameLocation, quint32 propertyNameIndex,
                               QQmlJS::AST::Statement *value, QQmlJS::AST::Node *parentNode)
 {
     Binding *binding = New<Binding>();
@@ -1252,7 +1284,7 @@ void IRBuilder::appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLo
     }
 }
 
-void IRBuilder::appendBinding(const QQmlJS::AST::SourceLocation &qualifiedNameLocation, const QQmlJS::AST::SourceLocation &nameLocation, quint32 propertyNameIndex, int objectIndex, bool isListItem, bool isOnAssignment)
+void IRBuilder::appendBinding(const QQmlJS::SourceLocation &qualifiedNameLocation, const QQmlJS::SourceLocation &nameLocation, quint32 propertyNameIndex, int objectIndex, bool isListItem, bool isOnAssignment)
 {
     if (stringAt(propertyNameIndex) == QLatin1String("id")) {
         recordError(nameLocation, tr("Invalid component id specification"));
@@ -1301,7 +1333,7 @@ bool IRBuilder::appendAlias(QQmlJS::AST::UiPublicMember *node)
     const QString propName = node->name.toString();
     alias->nameIndex = registerString(propName);
 
-    QQmlJS::AST::SourceLocation loc = node->firstSourceLocation();
+    QQmlJS::SourceLocation loc = node->firstSourceLocation();
     alias->location.line = loc.startLine;
     alias->location.column = loc.startColumn;
 
@@ -1310,7 +1342,7 @@ bool IRBuilder::appendAlias(QQmlJS::AST::UiPublicMember *node)
     if (!node->statement && !node->binding)
         COMPILE_EXCEPTION(loc, tr("No property alias location"));
 
-    QQmlJS::AST::SourceLocation rhsLoc;
+    QQmlJS::SourceLocation rhsLoc;
     if (node->binding)
         rhsLoc = node->binding->firstSourceLocation();
     else if (node->statement)
@@ -1345,7 +1377,7 @@ bool IRBuilder::appendAlias(QQmlJS::AST::UiPublicMember *node)
          propertyValue += QLatin1Char('.') + aliasReference.at(2);
      alias->propertyNameIndex = registerString(propertyValue);
 
-     QQmlJS::AST::SourceLocation errorLocation;
+     QQmlJS::SourceLocation errorLocation;
      QString error;
 
      if (illegalNames.contains(propName))
@@ -1371,9 +1403,9 @@ Object *IRBuilder::bindingsTarget() const
     return _object;
 }
 
-bool IRBuilder::setId(const QQmlJS::AST::SourceLocation &idLocation, QQmlJS::AST::Statement *value)
+bool IRBuilder::setId(const QQmlJS::SourceLocation &idLocation, QQmlJS::AST::Statement *value)
 {
-    QQmlJS::AST::SourceLocation loc = value->firstSourceLocation();
+    QQmlJS::SourceLocation loc = value->firstSourceLocation();
     QStringRef str;
 
     QQmlJS::AST::Node *node = value;
@@ -1475,7 +1507,7 @@ bool IRBuilder::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, O
                 binding->type = QV4::CompiledData::Binding::Type_GroupProperty;
 
             int objIndex = 0;
-            if (!defineQMLObject(&objIndex, nullptr, QQmlJS::AST::SourceLocation(), nullptr, nullptr))
+            if (!defineQMLObject(&objIndex, nullptr, QQmlJS::SourceLocation(), nullptr, nullptr))
                 return false;
             binding->value.objectIndex = objIndex;
 
@@ -1498,11 +1530,10 @@ bool IRBuilder::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, O
     return true;
 }
 
-void IRBuilder::recordError(const QQmlJS::AST::SourceLocation &location, const QString &description)
+void IRBuilder::recordError(const QQmlJS::SourceLocation &location, const QString &description)
 {
     QQmlJS::DiagnosticMessage error;
-    error.line = location.startLine;
-    error.column = location.startColumn;
+    error.loc = location;
     error.message = description;
     errors << error;
 }
@@ -1590,7 +1621,7 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
     uint nextOffset = objectOffset + objectOffsetTableSize;
     for (Object *o : qAsConst(output.objects)) {
         objectOffsets.insert(o, nextOffset);
-        nextOffset += QV4::CompiledData::Object::calculateSizeExcludingSignalsAndEnums(o->functionCount(), o->propertyCount(), o->aliasCount(), o->enumCount(), o->signalCount(), o->bindingCount(), o->namedObjectsInComponent.size(), o->inlineComponentCount());
+        nextOffset += QV4::CompiledData::Object::calculateSizeExcludingSignalsAndEnums(o->functionCount(), o->propertyCount(), o->aliasCount(), o->enumCount(), o->signalCount(), o->bindingCount(), o->namedObjectsInComponent.size(), o->inlineComponentCount(), o->requiredPropertyExtraDataCount());
 
         int signalTableSize = 0;
         for (const Signal *s = o->firstSignal(); s; s = s->next)
@@ -1673,6 +1704,10 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
         objectToWrite->offsetToInlineComponents = nextOffset;
         nextOffset += objectToWrite->nInlineComponents * sizeof (QV4::CompiledData::InlineComponent);
 
+        objectToWrite->nRequiredPropertyExtraData = o->requiredPropertyExtraDataCount();
+        objectToWrite->offsetToRequiredPropertyExtraData = nextOffset;
+        nextOffset += objectToWrite->nRequiredPropertyExtraData * sizeof(QV4::CompiledData::RequiredPropertyExtraData);
+
         quint32_le *functionsTable = reinterpret_cast<quint32_le *>(objectPtr + objectToWrite->offsetToFunctions);
         for (const Function *f = o->firstFunction(); f; f = f->next)
             *functionsTable++ = o->runtimeFunctionIndices.at(f->index);
@@ -1751,6 +1786,14 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
             QV4::CompiledData::InlineComponent *icToWrite = reinterpret_cast<QV4::CompiledData::InlineComponent*>(inlineComponentPtr);
             *icToWrite = *ic;
             inlineComponentPtr += sizeof(QV4::CompiledData::InlineComponent);
+        }
+
+        char *requiredPropertyExtraDataPtr = objectPtr + objectToWrite->offsetToRequiredPropertyExtraData;
+        for (auto it = o->requiredPropertyExtraDataBegin(); it != o->requiredPropertyExtraDataEnd(); ++it) {
+            const RequiredPropertyExtraData *extraData = it.ptr;
+            QV4::CompiledData::RequiredPropertyExtraData *extraDataToWrite = reinterpret_cast<QV4::CompiledData::RequiredPropertyExtraData*>(requiredPropertyExtraDataPtr);
+            *extraDataToWrite = *extraData;
+            requiredPropertyExtraDataPtr += sizeof(QV4::CompiledData::RequiredPropertyExtraData);
         }
     }
 

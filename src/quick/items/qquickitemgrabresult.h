@@ -62,13 +62,17 @@ class Q_QUICK_EXPORT QQuickItemGrabResult : public QObject
     Q_PROPERTY(QImage image READ image CONSTANT)
     Q_PROPERTY(QUrl url READ url CONSTANT)
     QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     QImage image() const;
     QUrl url() const;
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    Q_INVOKABLE bool saveToFile(const QString &fileName); // ### Qt 6: remove
+#if QT_DEPRECATED_SINCE(5, 15)
+    QT_DEPRECATED_X("This overload is deprecated. Use the const member function instead")
+    Q_INVOKABLE bool saveToFile(const QString &fileName);
+#endif
 #endif
     Q_INVOKABLE bool saveToFile(const QString &fileName) const;
 

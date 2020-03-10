@@ -45,6 +45,7 @@ QT_USE_NAMESPACE
 using namespace QV4;
 using namespace QV4::Compiler;
 using namespace QQmlJS::AST;
+using namespace QQmlJS;
 
 QT_BEGIN_NAMESPACE
 
@@ -86,7 +87,7 @@ bool Context::Member::requiresTDZCheck(const SourceLocation &accessLocation, boo
 }
 
 bool Context::addLocalVar(const QString &name, Context::MemberType type, VariableScope scope, FunctionExpression *function,
-                          const QQmlJS::AST::SourceLocation &endOfInitializer)
+                          const QQmlJS::SourceLocation &endOfInitializer)
 {
     // ### can this happen?
     if (name.isEmpty())
@@ -122,7 +123,7 @@ bool Context::addLocalVar(const QString &name, Context::MemberType type, Variabl
     return true;
 }
 
-Context::ResolvedName Context::resolveName(const QString &name, const QQmlJS::AST::SourceLocation &accessLocation)
+Context::ResolvedName Context::resolveName(const QString &name, const QQmlJS::SourceLocation &accessLocation)
 {
     int scope = 0;
     Context *c = this;

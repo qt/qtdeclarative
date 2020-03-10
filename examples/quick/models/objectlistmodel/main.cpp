@@ -66,18 +66,19 @@
 //![0]
 int main(int argc, char ** argv)
 {
+    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QGuiApplication app(argc, argv);
 
-    QList<QObject*> dataList;
-    dataList.append(new DataObject("Item 1", "red"));
-    dataList.append(new DataObject("Item 2", "green"));
-    dataList.append(new DataObject("Item 3", "blue"));
-    dataList.append(new DataObject("Item 4", "yellow"));
+    QList<QObject *> dataList = {
+        new DataObject("Item 1", "red"),
+        new DataObject("Item 2", "green"),
+        new DataObject("Item 3", "blue"),
+        new DataObject("Item 4", "yellow")
+    };
 
     QQuickView view;
     view.setResizeMode(QQuickView::SizeRootObjectToView);
-    QQmlContext *ctxt = view.rootContext();
-    ctxt->setContextProperty("myModel", QVariant::fromValue(dataList));
+    view.setInitialProperties({{ "model", QVariant::fromValue(dataList) }});
 //![0]
 
     view.setSource(QUrl("qrc:view.qml"));

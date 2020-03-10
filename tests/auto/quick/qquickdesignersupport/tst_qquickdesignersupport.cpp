@@ -76,7 +76,10 @@ void tst_qquickdesignersupport::customData()
 
     QVERIFY(rootItem);
 
-    QScopedPointer<QObject> newItemScopedPointer(QQuickDesignerSupportItems::createPrimitive(QLatin1String("QtQuick/Item"), 2, 6, view->rootContext()));
+    QScopedPointer<QObject> newItemScopedPointer(QQuickDesignerSupportItems::createPrimitive(
+                                                     QLatin1String("QtQuick/Item"),
+                                                     QTypeRevision::fromVersion(2, 6),
+                                                     view->rootContext()));
     QObject *newItem = newItemScopedPointer.data();
 
     QVERIFY(newItem);

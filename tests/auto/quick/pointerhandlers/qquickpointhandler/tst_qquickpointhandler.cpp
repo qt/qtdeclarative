@@ -55,6 +55,7 @@ private slots:
     void initTestCase();
 
     void singleTouch();
+    void tabletStylus();
     void simultaneousMultiTouch();
     void pressedMultipleButtons_data();
     void pressedMultipleButtons();
@@ -129,6 +130,65 @@ void tst_PointHandler::singleTouch()
 
     QTest::touchEvent(window, touchDevice).release(1, point, window);
     QQuickTouchUtils::flush(window);
+    QTRY_COMPARE(handler->active(), false);
+    QCOMPARE(activeSpy.count(), 2);
+    QCOMPARE(pointSpy.count(), 3);
+    QCOMPARE(handler->translation(), QVector2D());
+    QCOMPARE(translationSpy.count(), 3);
+}
+
+void tst_PointHandler::tabletStylus()
+{
+    qApp->setAttribute(Qt::AA_SynthesizeMouseForUnhandledTabletEvents, false);
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "pointTracker.qml");
+    QQuickView * window = windowPtr.data();
+    QQuickPointHandler *handler = window->rootObject()->findChild<QQuickPointHandler *>("pointHandler");
+    QVERIFY(handler);
+    handler->setAcceptedDevices(QQuickPointerDevice::Stylus);
+
+    QSignalSpy activeSpy(handler, SIGNAL(activeChanged()));
+    QSignalSpy pointSpy(handler, SIGNAL(pointChanged()));
+    QSignalSpy translationSpy(handler, SIGNAL(translationChanged()));
+
+    QPoint point(100,100);
+    const qint64 stylusId = 1234567890;
+
+    QWindowSystemInterface::handleTabletEvent(window, point, window->mapToGlobal(point),
+        QTabletEvent::Stylus, QTabletEvent::Pen, Qt::LeftButton, 0.5, 25, 35, 0.6, 12.3, 3, stylusId, Qt::NoModifier);
+    QTRY_COMPARE(handler->active(), true);
+    QCOMPARE(activeSpy.count(), 1);
+    QCOMPARE(pointSpy.count(), 1);
+    QCOMPARE(handler->point().position().toPoint(), point);
+    QCOMPARE(handler->point().scenePosition().toPoint(), point);
+    QCOMPARE(handler->point().pressedButtons(), Qt::LeftButton);
+    QCOMPARE(handler->point().pressure(), 0.5);
+    QCOMPARE(handler->point().rotation(), 12.3);
+    QCOMPARE(handler->point().uniqueId().numericId(), stylusId);
+    QCOMPARE(handler->translation(), QVector2D());
+    QCOMPARE(translationSpy.count(), 1);
+
+    point += QPoint(10, 10);
+    QWindowSystemInterface::handleTabletEvent(window, point, window->mapToGlobal(point),
+        QTabletEvent::Stylus, QTabletEvent::Pen, Qt::LeftButton, 0.45, 23, 33, 0.57, 15.6, 3.4, stylusId, Qt::NoModifier);
+    QTRY_COMPARE(pointSpy.count(), 2);
+    QCOMPARE(handler->active(), true);
+    QCOMPARE(activeSpy.count(), 1);
+    QCOMPARE(handler->point().position().toPoint(), point);
+    QCOMPARE(handler->point().scenePosition().toPoint(), point);
+    QCOMPARE(handler->point().pressPosition().toPoint(), QPoint(100, 100));
+    QCOMPARE(handler->point().scenePressPosition().toPoint(), QPoint(100, 100));
+    QCOMPARE(handler->point().pressedButtons(), Qt::LeftButton);
+    QCOMPARE(handler->point().pressure(), 0.45);
+    QCOMPARE(handler->point().rotation(), 15.6);
+    QCOMPARE(handler->point().uniqueId().numericId(), stylusId);
+    QVERIFY(handler->point().velocity().x() > 0);
+    QVERIFY(handler->point().velocity().y() > 0);
+    QCOMPARE(handler->translation(), QVector2D(10, 10));
+    QCOMPARE(translationSpy.count(), 2);
+
+    QWindowSystemInterface::handleTabletEvent(window, point, window->mapToGlobal(point),
+        QTabletEvent::Stylus, QTabletEvent::Pen, Qt::NoButton, 0, 0, 0, 0, 0, 0, stylusId, Qt::NoModifier);
     QTRY_COMPARE(handler->active(), false);
     QCOMPARE(activeSpy.count(), 2);
     QCOMPARE(pointSpy.count(), 3);

@@ -93,7 +93,10 @@ Item {
     Repeater {
         model: [ "Scale", "Repeat", "Scale/Repeat", "Round" ]
         delegate: Text {
-            text: model.modelData
+            required property string modelData
+            required property int index
+
+            text: modelData
             anchors.verticalCenter: parent.verticalCenter
 
             x: (index - selector.curIdx) * 80 + 140

@@ -56,6 +56,7 @@
 #include <private/qqmldebugconnector_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qqmlscriptdata_p.h>
+#include <private/qqmlsourcecoordinate_p.h>
 #include <private/qjsvalue_p.h>
 #include <private/qv4generatorobject_p.h>
 
@@ -173,7 +174,7 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
     context = new QQmlContextData;
     context->isInternal = true;
     context->imports = compilationUnit->typeNameCache;
-    context->initFromTypeCompilationUnit(compilationUnit, flags & CreationFlags::NormalObject ? subComponentIndex : -1);
+    context->initFromTypeCompilationUnit(compilationUnit, subComponentIndex);
     context->setParent(parentContext);
 
     if (!sharedState->rootContext) {
@@ -856,12 +857,12 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
         if (stringAt(obj->inheritedTypeNameIndex).isEmpty()) {
 
             QObject *groupObject = nullptr;
-            QQmlValueType *valueType = nullptr;
+            QQmlGadgetPtrWrapper *valueType = nullptr;
             const QQmlPropertyData *valueTypeProperty = nullptr;
             QObject *bindingTarget = _bindingTarget;
 
             if (QQmlValueTypeFactory::isValueType(bindingProperty->propType())) {
-                valueType = QQmlValueTypeFactory::valueType(bindingProperty->propType());
+                valueType = QQmlGadgetPtrWrapper::instance(engine, bindingProperty->propType());
                 if (!valueType) {
                     recordError(binding->location, tr("Cannot set properties on %1 as it is null").arg(stringAt(binding->propertyNameIndex)));
                     return false;
@@ -1135,8 +1136,8 @@ void QQmlObjectCreator::recordError(const QV4::CompiledData::Location &location,
 {
     QQmlError error;
     error.setUrl(compilationUnit->url());
-    error.setLine(location.line);
-    error.setColumn(location.column);
+    error.setLine(qmlConvertSourceCoordinate<quint32, int>(location.line));
+    error.setColumn(qmlConvertSourceCoordinate<quint32, int>(location.column));
     error.setDescription(description);
     errors << error;
 }
@@ -1145,11 +1146,6 @@ void QQmlObjectCreator::registerObjectWithContextById(const QV4::CompiledData::O
 {
     if (object->id >= 0)
         context->setIdProperty(object->id, instance);
-}
-
-void QQmlObjectCreator::createQmlContext()
-{
-    _qmlContext->setM(QV4::QmlContext::create(v4->rootContext(), context, _scopeObject));
 }
 
 QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isContextObject)
@@ -1264,7 +1260,10 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     ddata->columnNumber = obj->location.column;
 
     ddata->setImplicitDestructible();
-    if (static_cast<quint32>(index) == /*root object*/0 || ddata->rootObjectInCreation) {
+    // inline components are root objects, but their index is != 0, so we need
+    // an additional check
+    const bool isInlineComponent = obj->flags & QV4::CompiledData::Object::IsInlineComponentRoot;
+    if (static_cast<quint32>(index) == /*root object*/0 || ddata->rootObjectInCreation || isInlineComponent) {
         if (ddata->context) {
             Q_ASSERT(ddata->context != context);
             Q_ASSERT(ddata->outerContext);
@@ -1505,15 +1504,45 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
     if (_compiledObject->flags & QV4::CompiledData::Object::HasDeferredBindings)
         _ddata->deferData(_compiledObjectIndex, compilationUnit, context);
 
+    QSet<QString> postHocRequired;
+    for (auto it = _compiledObject->requiredPropertyExtraDataBegin(); it != _compiledObject->requiredPropertyExtraDataEnd(); ++it)
+        postHocRequired.insert(stringAt(it->nameIndex));
+    bool hadInheritedRequiredProperties = !postHocRequired.empty();
+
     for (int propertyIndex = 0; propertyIndex != _compiledObject->propertyCount(); ++propertyIndex) {
         const QV4::CompiledData::Property* property = _compiledObject->propertiesBegin() + propertyIndex;
         QQmlPropertyData *propertyData = _propertyCache->property(_propertyCache->propertyOffset() + propertyIndex);
-        if (property->isRequired) {
-            sharedState->hadRequiredProperties = true;
-            sharedState->requiredProperties.insert(propertyData,
-                                                   RequiredPropertyInfo {compilationUnit->stringAt(property->nameIndex), compilationUnit->finalUrl(), property->location, {}});
-        }
+        // only compute stringAt if there's a chance for the lookup to succeed
+        auto postHocIt = postHocRequired.isEmpty() ? postHocRequired.end() : postHocRequired.find(stringAt(property->nameIndex));
+        if (!property->isRequired && postHocRequired.end() == postHocIt)
+            continue;
+        if (postHocIt != postHocRequired.end())
+            postHocRequired.erase(postHocIt);
+        sharedState->hadRequiredProperties = true;
+        sharedState->requiredProperties.insert(propertyData,
+                                               RequiredPropertyInfo {compilationUnit->stringAt(property->nameIndex), compilationUnit->finalUrl(), property->location, {}});
+
     }
+
+    for (int i = 0; i <= _propertyCache->propertyOffset(); ++i) {
+        QQmlPropertyData *propertyData = _propertyCache->maybeUnresolvedProperty(i);
+        if (!propertyData)
+            continue;
+        if (!propertyData->isRequired() && postHocRequired.isEmpty())
+            continue;
+        QString name = propertyData->name(_qobject);
+        auto postHocIt = postHocRequired.find(name);
+        if (!propertyData->isRequired() && postHocRequired.end() == postHocIt )
+            continue;
+
+        if (postHocIt != postHocRequired.end())
+            postHocRequired.erase(postHocIt);
+
+        sharedState->hadRequiredProperties = true;
+        sharedState->requiredProperties.insert(propertyData, RequiredPropertyInfo {name,  compilationUnit->finalUrl(), _compiledObject->location, {}});
+    }
+    if (!postHocRequired.isEmpty() && hadInheritedRequiredProperties)
+        recordError({}, QLatin1String("Property %1 was marked as required but does not exist").arg(*postHocRequired.begin()));
 
     if (_compiledObject->nFunctions > 0)
         setupFunctions();

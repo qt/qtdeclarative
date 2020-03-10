@@ -35,5 +35,5 @@ load(qt_module)
 QMLTYPES_FILENAME = plugins.qmltypes
 QMLTYPES_INSTALL_DIR = $$[QT_INSTALL_QML]/QtQuick/Shapes
 QML_IMPORT_NAME = QtQuick.Shapes
-IMPORT_VERSION = 1.15
+QML_IMPORT_VERSION = $$QT_VERSION
 CONFIG += qmltypes install_qmltypes install_metatypes

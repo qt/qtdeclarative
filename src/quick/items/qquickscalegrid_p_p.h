@@ -70,6 +70,7 @@ class Q_AUTOTEST_EXPORT QQuickScaleGrid : public QObject
     Q_PROPERTY(int right READ right WRITE setRight NOTIFY rightBorderChanged)
     Q_PROPERTY(int bottom READ bottom WRITE setBottom NOTIFY bottomBorderChanged)
     QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     QQuickScaleGrid(QObject *parent=nullptr);

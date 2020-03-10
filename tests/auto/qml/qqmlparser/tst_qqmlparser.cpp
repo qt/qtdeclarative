@@ -33,10 +33,12 @@
 #include <private/qqmljsast_p.h>
 
 #include "../../shared/util.h"
+#include "../../shared/qqmljsastdumper.h"
 
 #include <qtest.h>
 #include <QDir>
 #include <QDebug>
+#include <QRegularExpression>
 #include <cstdlib>
 
 class tst_qqmlparser : public QQmlDataTest
@@ -65,6 +67,10 @@ private slots:
     void semicolonPartOfExpressionStatement();
     void typeAssertion_data();
     void typeAssertion();
+    void annotations_data();
+    void annotations();
+    void invalidImportVersion_data();
+    void invalidImportVersion();
 
 private:
     QStringList excludedDirs;
@@ -519,6 +525,108 @@ void tst_qqmlparser::typeAssertion()
     lexer.setCode(expression, 1);
     QQmlJS::Parser parser(&engine);
     QVERIFY(parser.parse());
+}
+
+void tst_qqmlparser::annotations_data()
+{
+    QTest::addColumn<QString>("file");
+    QTest::addColumn<QString>("refFile");
+
+    QString tests = dataDirectory() + "/annotations/";
+    QString compare = dataDirectory() + "/noannotations/";
+
+    QStringList files;
+    files << findFiles(QDir(tests));
+
+    QStringList refFiles;
+    refFiles << findFiles(QDir(compare));
+
+    for (const QString &file: qAsConst(files)) {
+        auto fileNameStart = file.lastIndexOf(QDir::separator());
+        QStringRef fileName(&file, fileNameStart, file.length()-fileNameStart);
+        auto ref=std::find_if(refFiles.constBegin(),refFiles.constEnd(), [fileName](const QString &s){ return s.endsWith(fileName); });
+        if (ref != refFiles.constEnd())
+            QTest::newRow(qPrintable(file)) << file << *ref;
+        else
+            QTest::newRow(qPrintable(file)) << file << QString();
+    }
+}
+
+void tst_qqmlparser::annotations()
+{
+    using namespace QQmlJS;
+
+    QFETCH(QString, file);
+    QFETCH(QString, refFile);
+
+    QString code;
+    QString refCode;
+
+    QFile f(file);
+    if (f.open(QFile::ReadOnly))
+        code = QString::fromUtf8(f.readAll());
+    QFile refF(refFile);
+    if (!refFile.isEmpty() && refF.open(QFile::ReadOnly))
+        refCode = QString::fromUtf8(refF.readAll());
+
+    const bool qmlMode = true;
+
+    Engine engine;
+    Lexer lexer(&engine);
+    lexer.setCode(code, 1, qmlMode);
+    Parser parser(&engine);
+    QVERIFY(parser.parse());
+
+    if (!refCode.isEmpty()) {
+        Engine engine2;
+        Lexer lexer2(&engine2);
+        lexer2.setCode(refCode, 1, qmlMode);
+        Parser parser2(&engine2);
+        QVERIFY(parser2.parse());
+
+        QCOMPARE(AstDumper::diff(parser.ast(), parser2.rootNode(), 3, DumperOptions::NoAnnotations | DumperOptions::NoLocations), QString());
+    }
+}
+
+void tst_qqmlparser::invalidImportVersion_data()
+{
+    QTest::addColumn<QString>("expression");
+
+    const QStringList segments = {
+        "0", "255", "500", "3030303030303030303030303"
+    };
+
+    for (const QString &major : segments) {
+        if (major != "0") {
+            QTest::addRow("%s", qPrintable(major))
+                    << QString::fromLatin1("import Foo %1").arg(major);
+        }
+
+        for (const QString &minor : segments) {
+            if (major == "0" && minor == "0")
+                continue;
+
+            QTest::addRow("%s.%s", qPrintable(major), qPrintable(minor))
+                    << QString::fromLatin1("import Foo %1.%2").arg(major).arg(minor);
+        }
+    }
+
+
+}
+
+void tst_qqmlparser::invalidImportVersion()
+{
+    QFETCH(QString, expression);
+
+    QQmlJS::Engine engine;
+    QQmlJS::Lexer lexer(&engine);
+    lexer.setCode(expression, 1);
+    QQmlJS::Parser parser(&engine);
+    QVERIFY(!parser.parse());
+
+    QRegularExpression regexp(
+                "^Invalid (major )?version. Version numbers must be >= 0 and < 255\\.$");
+    QVERIFY(regexp.match(parser.errorMessage()).hasMatch());
 }
 
 QTEST_MAIN(tst_qqmlparser)

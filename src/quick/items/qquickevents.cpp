@@ -597,8 +597,10 @@ Q_GLOBAL_STATIC_WITH_ARGS(ConstructableQQuickPointerDevice, g_genericMouseDevice
                              QQuickPointerDevice::Position | QQuickPointerDevice::Scroll | QQuickPointerDevice::Hover,
                              1, 3, QLatin1String("core pointer"), 0))
 
+#if QT_CONFIG(tabletevent)
 typedef QHash<qint64, QQuickPointerDevice *> PointerDeviceForDeviceIdHash;
 Q_GLOBAL_STATIC(PointerDeviceForDeviceIdHash, g_tabletDevices)
+#endif
 
 // debugging helpers
 static const char *pointStateString(const QQuickEventPoint *point)
@@ -658,15 +660,76 @@ QQuickPointerDevice *QQuickPointerDevice::genericMouseDevice()
     return g_genericMouseDevice;
 }
 
-QQuickPointerDevice *QQuickPointerDevice::tabletDevice(qint64 id)
+#if QT_CONFIG(tabletevent)
+QQuickPointerDevice *QQuickPointerDevice::tabletDevice(const QTabletEvent *event)
 {
-    auto it = g_tabletDevices->find(id);
+    // QTabletEvent::uniqueId() is the same for the pointy end and the eraser end of the stylus.
+    // We need to make those unique. QTabletEvent::PointerType only needs 2 bits' worth of storage.
+    // The key into g_tabletDevices just needs to be unique; we don't need to extract uniqueId
+    // back out of it, because QQuickPointerDevice stores that separately anyway.
+    // So the shift-and-add can be thought of as a sort of hash function, even though
+    // most of the time the result will be recognizable because the uniqueId MSBs are often 0.
+    qint64 key = event->uniqueId() + (qint64(event->pointerType()) << 60);
+    auto it = g_tabletDevices->find(key);
     if (it != g_tabletDevices->end())
         return it.value();
 
-    // ### Figure out how to populate the tablet devices
-    return nullptr;
+    DeviceType type = UnknownDevice;
+    int buttonCount = 0;
+    Capabilities caps = Position | Pressure | Hover;
+    // TODO Qt 6: we can't know for sure about XTilt or YTilt until we have a
+    // QTabletDevice populated with capabilities provided by QPA plugins
+
+    switch (event->deviceType()) {
+    case QTabletEvent::Stylus:
+        type = QQuickPointerDevice::Stylus;
+        buttonCount = 3;
+        break;
+    case QTabletEvent::RotationStylus:
+        type = QQuickPointerDevice::Stylus;
+        caps |= QQuickPointerDevice::Rotation;
+        buttonCount = 1;
+        break;
+    case QTabletEvent::Airbrush:
+        type = QQuickPointerDevice::Airbrush;
+        buttonCount = 2;
+        break;
+    case QTabletEvent::Puck:
+        type = QQuickPointerDevice::Puck;
+        buttonCount = 3;
+        break;
+    case QTabletEvent::FourDMouse:
+        type = QQuickPointerDevice::Mouse;
+        caps |= QQuickPointerDevice::Rotation;
+        buttonCount = 3;
+        break;
+    default:
+        type = QQuickPointerDevice::UnknownDevice;
+        break;
+    }
+
+    PointerType ptype = GenericPointer;
+    switch (event->pointerType()) {
+    case QTabletEvent::Pen:
+        ptype = Pen;
+        break;
+    case QTabletEvent::Eraser:
+        ptype = Eraser;
+        break;
+    case QTabletEvent::Cursor:
+        ptype = Cursor;
+        break;
+    case QTabletEvent::UnknownPointer:
+        break;
+    }
+
+    QQuickPointerDevice *device = new QQuickPointerDevice(type, ptype, caps, 1, buttonCount,
+        QLatin1String("tablet tool ") + QString::number(event->uniqueId()), event->uniqueId());
+
+    g_tabletDevices->insert(key, device);
+    return device;
 }
+#endif
 
 /*!
     \qmltype EventPoint
@@ -1284,6 +1347,12 @@ QVector2D QQuickEventPoint::estimatedVelocity() const
 QQuickPointerEvent::~QQuickPointerEvent()
 {}
 
+QQuickPointerMouseEvent::QQuickPointerMouseEvent(QObject *parent, QQuickPointerDevice *device)
+    : QQuickSinglePointEvent(parent, device)
+{
+    m_point = new QQuickEventPoint(this);
+}
+
 QQuickPointerEvent *QQuickPointerMouseEvent::reset(QEvent *event)
 {
     auto ev = static_cast<QMouseEvent*>(event);
@@ -1398,6 +1467,12 @@ void QQuickPointerTouchEvent::localize(QQuickItem *target)
 }
 
 #if QT_CONFIG(gestures)
+QQuickPointerNativeGestureEvent::QQuickPointerNativeGestureEvent(QObject *parent, QQuickPointerDevice *device)
+    : QQuickSinglePointEvent(parent, device)
+{
+    m_point = new QQuickEventPoint(this);
+}
+
 QQuickPointerEvent *QQuickPointerNativeGestureEvent::reset(QEvent *event)
 {
     auto ev = static_cast<QNativeGestureEvent*>(event);
@@ -1560,6 +1635,12 @@ QQuickEventPoint *QQuickSinglePointEvent::point(int i) const
     \note Many platforms provide no such information. On such platforms,
     \c inverted always returns false.
 */
+QQuickPointerScrollEvent::QQuickPointerScrollEvent(QObject *parent, QQuickPointerDevice *device)
+    : QQuickSinglePointEvent(parent, device)
+{
+    m_point = new QQuickEventPoint(this);
+}
+
 QQuickPointerEvent *QQuickPointerScrollEvent::reset(QEvent *event)
 {
     m_event = static_cast<QInputEvent*>(event);
@@ -1626,6 +1707,8 @@ bool QQuickSinglePointEvent::allPointsGrabbed() const
 
 QMouseEvent *QQuickPointerMouseEvent::asMouseEvent(const QPointF &localPos) const
 {
+    if (!m_event)
+        return nullptr;
     auto event = static_cast<QMouseEvent *>(m_event);
     event->setLocalPos(localPos);
     return event;
@@ -1829,6 +1912,81 @@ QMouseEvent *QQuickPointerTouchEvent::syntheticMouseEvent(int pointID, QQuickIte
     QGuiApplicationPrivate::setMouseEventSource(&m_synthMouseEvent, Qt::MouseEventSynthesizedByQt);
     return &m_synthMouseEvent;
 }
+
+#if QT_CONFIG(tabletevent)
+QQuickPointerTabletEvent::QQuickPointerTabletEvent(QObject *parent, QQuickPointerDevice *device)
+    : QQuickSinglePointEvent(parent, device)
+{
+    m_point = new QQuickEventTabletPoint(this);
+}
+
+QQuickPointerEvent *QQuickPointerTabletEvent::reset(QEvent *event)
+{
+    auto ev = static_cast<QTabletEvent*>(event);
+    m_event = ev;
+    if (!event)
+        return this;
+
+    Q_ASSERT(m_device == QQuickPointerDevice::tabletDevice(ev));
+    m_device->eventDeliveryTargets().clear();
+    m_button = ev->button();
+    m_pressedButtons = ev->buttons();
+    static_cast<QQuickEventTabletPoint *>(m_point)->reset(ev);
+    return this;
+}
+
+QQuickEventTabletPoint::QQuickEventTabletPoint(QQuickPointerTabletEvent *parent)
+  : QQuickEventPoint(parent)
+{
+}
+
+void QQuickEventTabletPoint::reset(const QTabletEvent *ev)
+{
+    Qt::TouchPointState state = Qt::TouchPointStationary;
+    switch (ev->type()) {
+    case QEvent::TabletPress:
+        state = Qt::TouchPointPressed;
+        clearPassiveGrabbers();
+        break;
+    case QEvent::TabletRelease:
+        state = Qt::TouchPointReleased;
+        break;
+    case QEvent::TabletMove:
+        state = Qt::TouchPointMoved;
+        break;
+    default:
+        break;
+    }
+    QQuickEventPoint::reset(state, ev->posF(), 1, ev->timestamp());
+    m_rotation = ev->rotation();
+    m_pressure = ev->pressure();
+    m_tangentialPressure = ev->tangentialPressure();
+    m_tilt = QVector2D(ev->xTilt(), ev->yTilt());
+}
+
+bool QQuickPointerTabletEvent::isPressEvent() const
+{
+    auto me = static_cast<QTabletEvent *>(m_event);
+    return me->type() == QEvent::TabletPress;
+}
+
+bool QQuickPointerTabletEvent::isUpdateEvent() const
+{
+    auto me = static_cast<QTabletEvent *>(m_event);
+    return me->type() == QEvent::TabletMove;
+}
+
+bool QQuickPointerTabletEvent::isReleaseEvent() const
+{
+    auto me = static_cast<QTabletEvent *>(m_event);
+    return me->type() == QEvent::TabletRelease;
+}
+
+QTabletEvent *QQuickPointerTabletEvent::asTabletEvent() const
+{
+    return static_cast<QTabletEvent *>(m_event);
+}
+#endif // QT_CONFIG(tabletevent)
 
 #if QT_CONFIG(gestures)
 bool QQuickPointerNativeGestureEvent::isPressEvent() const

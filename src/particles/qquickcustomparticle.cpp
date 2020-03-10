@@ -39,7 +39,7 @@
 
 #include "qquickcustomparticle_p.h"
 #include <QtCore/qrandom.h>
-#include <QtGui/qopenglcontext.h>
+#include <qopenglcontext.h>
 #include <QtQuick/private/qquickshadereffectmesh_p.h>
 #include <QtQuick/private/qsgshadersourcebuilder_p.h>
 #include <QtQml/qqmlinfo.h>

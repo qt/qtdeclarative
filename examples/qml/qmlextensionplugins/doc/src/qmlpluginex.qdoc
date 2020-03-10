@@ -29,7 +29,7 @@
     \title QML Plugin Example
     \example qmlextensionplugins
 
-    \brief This example creates a C++ plugin extension by subclassing QQmlExtensionPlugin.
+    \brief This example creates a C++ plugin extension by subclassing QQmlEngineExtensionPlugin.
 
     \image qml-plugins-example.png
 

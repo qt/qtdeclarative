@@ -60,17 +60,17 @@ static int parseInt(const QStringRef &str, bool *ok)
     return number;
 }
 
-static bool parseVersion(const QString &str, int *major, int *minor)
+static QTypeRevision parseVersion(const QString &str)
 {
     const int dotIndex = str.indexOf(QLatin1Char('.'));
     if (dotIndex != -1 && str.indexOf(QLatin1Char('.'), dotIndex + 1) == -1) {
         bool ok = false;
-        *major = parseInt(QStringRef(&str, 0, dotIndex), &ok);
-        if (ok)
-            *minor = parseInt(QStringRef(&str, dotIndex + 1, str.length() - dotIndex - 1), &ok);
-        return ok;
+        const int major = parseInt(QStringRef(&str, 0, dotIndex), &ok);
+        if (!ok) return QTypeRevision();
+        const int minor = parseInt(QStringRef(&str, dotIndex + 1, str.length() - dotIndex - 1), &ok);
+        return ok ? QTypeRevision::fromVersion(major, minor) : QTypeRevision();
     }
-    return false;
+    return QTypeRevision();
 }
 
 void QQmlDirParser::clear()
@@ -203,7 +203,7 @@ bool QQmlDirParser::parse(const QString &source)
                             QStringLiteral("internal types require 2 arguments, but %1 were provided").arg(sectionCount - 1));
                 continue;
             }
-            Component entry(sections[1], sections[2], -1, -1);
+            Component entry(sections[1], sections[2], QTypeRevision());
             entry.internal = true;
             _components.insert(entry.typeName, entry);
         } else if (sections[0] == QLatin1String("singleton")) {
@@ -214,16 +214,16 @@ bool QQmlDirParser::parse(const QString &source)
             } else if (sectionCount == 3) {
                 // handle qmldir directory listing case where singleton is defined in the following pattern:
                 // singleton TestSingletonType TestSingletonType.qml
-                Component entry(sections[1], sections[2], -1, -1);
+                Component entry(sections[1], sections[2], QTypeRevision());
                 entry.singleton = true;
                 _components.insert(entry.typeName, entry);
             } else {
                 // handle qmldir module listing case where singleton is defined in the following pattern:
                 // singleton TestSingletonType 2.0 TestSingletonType20.qml
-                int major, minor;
-                if (parseVersion(sections[2], &major, &minor)) {
+                const QTypeRevision version = parseVersion(sections[2]);
+                if (version.isValid()) {
                     const QString &fileName = sections[3];
-                    Component entry(sections[1], fileName, major, minor);
+                    Component entry(sections[1], fileName, version);
                     entry.singleton = true;
                     _components.insert(entry.typeName, entry);
                 } else {
@@ -253,9 +253,9 @@ bool QQmlDirParser::parse(const QString &source)
                 continue;
             }
 
-            int major, minor;
-            if (parseVersion(sections[2], &major, &minor)) {
-                Component entry(sections[1], QString(), major, minor);
+            const QTypeRevision version = parseVersion(sections[2]);
+            if (version.isValid()) {
+                Component entry(sections[1], QString(), version);
                 entry.internal = true;
                 _dependencies.insert(entry.typeName, entry);
             } else {
@@ -270,19 +270,19 @@ bool QQmlDirParser::parse(const QString &source)
             _imports << sections[1];
         } else if (sectionCount == 2) {
             // No version specified (should only be used for relative qmldir files)
-            const Component entry(sections[0], sections[1], -1, -1);
+            const Component entry(sections[0], sections[1], QTypeRevision());
             _components.insert(entry.typeName, entry);
         } else if (sectionCount == 3) {
-            int major, minor;
-            if (parseVersion(sections[1], &major, &minor)) {
+            const QTypeRevision version = parseVersion(sections[1]);
+            if (version.isValid()) {
                 const QString &fileName = sections[2];
 
                 if (fileName.endsWith(QLatin1String(".js")) || fileName.endsWith(QLatin1String(".mjs"))) {
                     // A 'js' extension indicates a namespaced script import
-                    const Script entry(sections[0], fileName, major, minor);
+                    const Script entry(sections[0], fileName, version);
                     _scripts.append(entry);
                 } else {
-                    const Component entry(sections[0], fileName, major, minor);
+                    const Component entry(sections[0], fileName, version);
                     _components.insert(entry.typeName, entry);
                 }
             } else {
@@ -302,8 +302,8 @@ bool QQmlDirParser::parse(const QString &source)
 void QQmlDirParser::reportError(quint16 line, quint16 column, const QString &description)
 {
     QQmlJS::DiagnosticMessage error;
-    error.line = line;
-    error.column = column;
+    error.loc.startLine = line;
+    error.loc.startColumn = column;
     error.message = description;
     _errors.append(error);
 }
@@ -319,7 +319,7 @@ bool QQmlDirParser::hasError() const
 void QQmlDirParser::setError(const QQmlJS::DiagnosticMessage &e)
 {
     _errors.clear();
-    reportError(e.line, e.column, e.message);
+    reportError(e.loc.startLine, e.loc.startColumn, e.message);
 }
 
 QList<QQmlJS::DiagnosticMessage> QQmlDirParser::errors(const QString &uri) const
@@ -387,15 +387,17 @@ QString QQmlDirParser::className() const
 
 QDebug &operator<< (QDebug &debug, const QQmlDirParser::Component &component)
 {
-    const QString output = QStringLiteral("{%1 %2.%3}").
-        arg(component.typeName).arg(component.majorVersion).arg(component.minorVersion);
+    const QString output = QStringLiteral("{%1 %2.%3}")
+            .arg(component.typeName).arg(component.version.majorVersion())
+            .arg(component.version.minorVersion());
     return debug << qPrintable(output);
 }
 
 QDebug &operator<< (QDebug &debug, const QQmlDirParser::Script &script)
 {
-    const QString output = QStringLiteral("{%1 %2.%3}").
-        arg(script.nameSpace).arg(script.majorVersion).arg(script.minorVersion);
+    const QString output = QStringLiteral("{%1 %2.%3}")
+            .arg(script.nameSpace).arg(script.version.majorVersion())
+            .arg(script.version.minorVersion());
     return debug << qPrintable(output);
 }
 

@@ -51,6 +51,7 @@ struct QHistoryStateForeign
     Q_GADGET
     QML_FOREIGN(QHistoryState)
     QML_NAMED_ELEMENT(HistoryState)
+    QML_ADDED_IN_VERSION(1, 0)
 };
 
 struct QStateForeign
@@ -58,6 +59,7 @@ struct QStateForeign
     Q_GADGET
     QML_FOREIGN(QState)
     QML_NAMED_ELEMENT(QState)
+    QML_ADDED_IN_VERSION(1, 0)
     QML_UNCREATABLE("Don't use this, use State instead.")
 };
 
@@ -66,6 +68,7 @@ struct QAbstractStateForeign
     Q_GADGET
     QML_FOREIGN(QAbstractState)
     QML_NAMED_ELEMENT(QAbstractState)
+    QML_ADDED_IN_VERSION(1, 0)
     QML_UNCREATABLE("Don't use this, use State instead.")
 };
 
@@ -74,6 +77,7 @@ struct QSignalTransitionForeign
     Q_GADGET
     QML_FOREIGN(QSignalTransition)
     QML_NAMED_ELEMENT(QSignalTransition)
+    QML_ADDED_IN_VERSION(1, 0)
     QML_UNCREATABLE("Don't use this, use SignalTransition instead.")
 };
 

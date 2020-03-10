@@ -52,8 +52,9 @@
 #include "qquickshadereffectmesh_p.h"
 
 #include <QtQml/qqmlfile.h>
-#include <QtCore/qsignalmapper.h>
+#include <QtCore/qfile.h>
 #include <QtCore/qfileselector.h>
+#include <QtCore/qsignalmapper.h>
 
 QT_BEGIN_NAMESPACE
 

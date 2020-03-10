@@ -62,6 +62,7 @@ class QQuickGravityAffector : public QQuickParticleAffector
     Q_PROPERTY(qreal acceleration READ magnitude WRITE setAcceleration NOTIFY magnitudeChanged)
     Q_PROPERTY(qreal angle READ angle WRITE setAngle NOTIFY angleChanged)
     QML_NAMED_ELEMENT(Gravity)
+    QML_ADDED_IN_VERSION(2, 0)
 public:
     explicit QQuickGravityAffector(QQuickItem *parent = 0);
     qreal magnitude() const;

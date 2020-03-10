@@ -67,7 +67,7 @@ bool parseFile(const QString& filename, bool inplace, bool verbose, bool sortImp
         const auto diagnosticMessages = parser.diagnosticMessages();
         for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
             qWarning().noquote() << QString::fromLatin1("%1:%2 : %3")
-                                    .arg(filename).arg(m.line).arg(m.message);
+                                    .arg(filename).arg(m.loc.startLine).arg(m.message);
         }
 
         qWarning().noquote() << "Failed to parse" << filename;
@@ -101,11 +101,29 @@ bool parseFile(const QString& filename, bool inplace, bool verbose, bool sortImp
 
     DumpAstVisitor dump(parser.rootNode(), &comment);
 
-    if (dump.error()) {
+    QString dumpCode = dump.toString();
+
+    lexer.setCode(dumpCode, 1, true);
+
+    bool dumpSuccess = parser.parse();
+
+    if (!dumpSuccess) {
+        if (verbose) {
+            const auto diagnosticMessages = parser.diagnosticMessages();
+            for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
+              qWarning().noquote() << QString::fromLatin1("<formatted>:%2 : %3")
+                                      .arg(m.loc.startLine).arg(m.message);
+            }
+        }
+
+        qWarning().noquote() << "Failed to parse formatted code.";
+    }
+
+    if (dump.error() || !dumpSuccess) {
         if (force) {
             qWarning().noquote() << "An error has occurred. The output may not be reliable.";
         } else {
-            qWarning().noquote() << "Am error has occurred. Aborting.";
+            qWarning().noquote() << "An error has occurred. Aborting.";
             return false;
         }
    }
@@ -120,10 +138,10 @@ bool parseFile(const QString& filename, bool inplace, bool verbose, bool sortImp
             return false;
         }
 
-        file.write(dump.toString().toUtf8());
+        file.write(dumpCode.toUtf8());
         file.close();
     } else {
-        QTextStream(stdout) << dump.toString();
+        QTextStream(stdout) << dumpCode;
     }
 
     return true;

@@ -42,6 +42,8 @@
 
 #include "qwavefrontmesh.h"
 
+extern void qml_register_types_Qt_labs_wavefrontmesh();
+
 QT_BEGIN_NAMESPACE
 
 class QmlWavefrontMeshPlugin : public QQmlEngineExtensionPlugin
@@ -52,6 +54,8 @@ public:
     QmlWavefrontMeshPlugin(QObject *parent = nullptr)
         : QQmlEngineExtensionPlugin(parent)
     {
+        volatile auto registration = &qml_register_types_Qt_labs_wavefrontmesh;
+        Q_UNUSED(registration);
     }
 };
 

@@ -62,6 +62,7 @@ class QQuickLayout : public QQuickItem, public QQuickItemChangeListener
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(Layout)
+    QML_ADDED_IN_VERSION(1, 0)
     QML_UNCREATABLE("Do not create objects of type Layout.")
     QML_ATTACHED(QQuickLayoutAttached)
 
@@ -123,7 +124,9 @@ protected slots:
     void invalidateSenderItem();
 
 private:
-    bool m_dirty;
+    unsigned m_dirty : 1;
+    unsigned m_inUpdatePolish : 1;
+    unsigned m_polishInsideUpdatePolish : 2;
 
     Q_DECLARE_PRIVATE(QQuickLayout)
 

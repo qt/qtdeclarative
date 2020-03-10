@@ -50,13 +50,10 @@
 
 #include <QGuiApplication>
 #include <QtQuick/QQuickView>
-#include "vulkantextureimport.h"
 
 int main(int argc, char **argv)
 {
     QGuiApplication app(argc, argv);
-
-    qmlRegisterType<CustomTextureItem>("VulkanTextureImport", 1, 0, "CustomTextureItem");
 
     QQuickWindow::setSceneGraphBackend(QSGRendererInterface::VulkanRhi);
 

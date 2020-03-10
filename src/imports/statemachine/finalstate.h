@@ -56,6 +56,7 @@ class FinalState : public QFinalState
     Q_PROPERTY(QQmlListProperty<QObject> children READ children NOTIFY childrenChanged)
     Q_CLASSINFO("DefaultProperty", "children")
     QML_ELEMENT
+    QML_ADDED_IN_VERSION(1, 0)
 
 public:
     explicit FinalState(QState *parent = 0);
@@ -66,7 +67,7 @@ Q_SIGNALS:
     void childrenChanged();
 
 private:
-    ChildrenPrivate<FinalState> m_children;
+    ChildrenPrivate<FinalState, ChildrenMode::State> m_children;
 };
 
 QT_END_NAMESPACE

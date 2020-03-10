@@ -42,6 +42,8 @@
 #include "qquicklinearlayout_p.h"
 #include "qquickstacklayout_p.h"
 
+extern void qml_register_types_QtQuick_Layouts();
+
 QT_BEGIN_NAMESPACE
 
 //![class decl]
@@ -52,6 +54,8 @@ class QtQuickLayoutsPlugin : public QQmlEngineExtensionPlugin
 public:
     QtQuickLayoutsPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent)
     {
+        volatile auto registration = &qml_register_types_QtQuick_Layouts;
+        Q_UNUSED(registration);
     }
 };
 //![class decl]

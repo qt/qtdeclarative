@@ -82,7 +82,7 @@
     The following example shows how to create a model from C++ with multiple
     columns:
 
-    \snippet qml/tableview/cpp-tablemodel.cpp 0
+    \snippet qml/tableview/cpp-tablemodel.h 0
 
     And then how to use it from QML:
 
@@ -441,7 +441,16 @@ QQuickTableViewPrivate::QQuickTableViewPrivate()
 
 QQuickTableViewPrivate::~QQuickTableViewPrivate()
 {
-    releaseLoadedItems(QQmlTableInstanceModel::NotReusable);
+    for (auto *fxTableItem : loadedItems) {
+        if (auto item = fxTableItem->item) {
+            if (fxTableItem->ownItem)
+                delete item;
+            else if (tableModel)
+                tableModel->dispose(item);
+        }
+        delete fxTableItem;
+    }
+
     if (tableModel)
         delete tableModel;
 }
@@ -2121,15 +2130,17 @@ void QQuickTableViewPrivate::fixup(QQuickFlickablePrivate::AxisData &data, qreal
     QQuickFlickablePrivate::fixup(data, minExtent, maxExtent);
 }
 
-int QQuickTableViewPrivate::resolveImportVersion()
+QTypeRevision QQuickTableViewPrivate::resolveImportVersion()
 {
     const auto data = QQmlData::get(q_func());
     if (!data || !data->propertyCache)
-        return 0;
+        return QTypeRevision::zero();
 
     const auto cppMetaObject = data->propertyCache->firstCppMetaObject();
     const auto qmlTypeView = QQmlMetaType::qmlType(cppMetaObject);
-    return qmlTypeView.minorVersion();
+
+    // TODO: did we rather want qmlTypeView.revision() here?
+    return qmlTypeView.metaObjectRevision();
 }
 
 void QQuickTableViewPrivate::createWrapperModel()
@@ -2350,14 +2361,11 @@ void QQuickTableViewPrivate::connectToModel()
 
     QObjectPrivate::connect(model, &QQmlInstanceModel::createdItem, this, &QQuickTableViewPrivate::itemCreatedCallback);
     QObjectPrivate::connect(model, &QQmlInstanceModel::initItem, this, &QQuickTableViewPrivate::initItemCallback);
+    QObjectPrivate::connect(model, &QQmlTableInstanceModel::itemPooled, this, &QQuickTableViewPrivate::itemPooledCallback);
+    QObjectPrivate::connect(model, &QQmlTableInstanceModel::itemReused, this, &QQuickTableViewPrivate::itemReusedCallback);
 
-    if (tableModel) {
-        const auto tm = tableModel.data();
-        QObjectPrivate::connect(tm, &QQmlTableInstanceModel::itemPooled, this, &QQuickTableViewPrivate::itemPooledCallback);
-        QObjectPrivate::connect(tm, &QQmlTableInstanceModel::itemReused, this, &QQuickTableViewPrivate::itemReusedCallback);
-        // Connect atYEndChanged to a function that fetches data if more is available
-        QObjectPrivate::connect(q, &QQuickTableView::atYEndChanged, this, &QQuickTableViewPrivate::fetchMoreData);
-    }
+    // Connect atYEndChanged to a function that fetches data if more is available
+    QObjectPrivate::connect(q, &QQuickTableView::atYEndChanged, this, &QQuickTableViewPrivate::fetchMoreData);
 
     if (auto const aim = model->abstractItemModel()) {
         // When the model exposes a QAIM, we connect to it directly. This means that if the current model is
@@ -2385,13 +2393,10 @@ void QQuickTableViewPrivate::disconnectFromModel()
 
     QObjectPrivate::disconnect(model, &QQmlInstanceModel::createdItem, this, &QQuickTableViewPrivate::itemCreatedCallback);
     QObjectPrivate::disconnect(model, &QQmlInstanceModel::initItem, this, &QQuickTableViewPrivate::initItemCallback);
+    QObjectPrivate::disconnect(model, &QQmlTableInstanceModel::itemPooled, this, &QQuickTableViewPrivate::itemPooledCallback);
+    QObjectPrivate::disconnect(model, &QQmlTableInstanceModel::itemReused, this, &QQuickTableViewPrivate::itemReusedCallback);
 
-    if (tableModel) {
-        const auto tm = tableModel.data();
-        QObjectPrivate::disconnect(tm, &QQmlTableInstanceModel::itemPooled, this, &QQuickTableViewPrivate::itemPooledCallback);
-        QObjectPrivate::disconnect(tm, &QQmlTableInstanceModel::itemReused, this, &QQuickTableViewPrivate::itemReusedCallback);
-        QObjectPrivate::disconnect(q, &QQuickTableView::atYEndChanged, this, &QQuickTableViewPrivate::fetchMoreData);
-    }
+    QObjectPrivate::disconnect(q, &QQuickTableView::atYEndChanged, this, &QQuickTableViewPrivate::fetchMoreData);
 
     if (auto const aim = model->abstractItemModel()) {
         disconnect(aim, &QAbstractItemModel::rowsMoved, this, &QQuickTableViewPrivate::rowsMovedCallback);

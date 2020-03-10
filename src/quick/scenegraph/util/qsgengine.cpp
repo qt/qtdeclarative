@@ -45,7 +45,7 @@
 #include <private/qsgplaintexture_p.h>
 
 #if QT_CONFIG(opengl)
-# include <QtGui/QOpenGLContext>
+# include <QOpenGLContext>
 # include <private/qsgdefaultrendercontext_p.h>
 #endif
 

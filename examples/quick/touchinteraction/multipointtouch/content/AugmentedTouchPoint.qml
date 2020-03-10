@@ -66,7 +66,7 @@ TouchPoint {
         interval: 100
         running: false
         repeat: false
-        onTriggered: child.enabled = false
+        onTriggered: container.child.enabled = false
     }
     property Item child: SpriteGoal {
         enabled: false

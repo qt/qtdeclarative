@@ -37,10 +37,8 @@
 **
 ****************************************************************************/
 
+#include <QtQml/private/qtqmlglobal_p.h>
 #include <QtQml/qqmlextensionplugin.h>
-#include <QtQml/private/qqmlengine_p.h>
-#include <QtQml/private/qqmlcomponentattached_p.h>
-#include <QtQml/private/qqmlbind_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -66,7 +64,11 @@ class QtQmlPlugin : public QQmlEngineExtensionPlugin
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
 public:
-    QtQmlPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent) {}
+    QtQmlPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent)
+    {
+        volatile auto registration = &qml_register_types_QtQml;
+        Q_UNUSED(registration);
+    }
 };
 //![class decl]
 

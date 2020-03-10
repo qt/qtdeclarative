@@ -77,7 +77,9 @@ Rectangle {
     //![0]
     DelegateModel {
         id: visualModel
-        delegate: Delegate {}
+        delegate: Delegate {
+            upTo: root.upTo
+        }
         model: myModel
     }
 

@@ -65,6 +65,7 @@ class Q_QMLMODELS_PRIVATE_EXPORT QQmlAbstractDelegateComponent : public QQmlComp
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(AbstractDelegateComponent)
+    QML_ADDED_IN_VERSION(2, 0)
     QML_UNCREATABLE("Cannot create instance of abstract class AbstractDelegateComponent.")
 
 public:

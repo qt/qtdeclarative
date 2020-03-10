@@ -67,6 +67,7 @@ class QQuickParticleGroup : public QQuickStochasticState, public QQmlParserStatu
     Q_PROPERTY(QQmlListProperty<QObject> particleChildren READ particleChildren DESIGNABLE false)//### Hidden property for in-state system definitions - ought not to be used in actual "Sprite" states
     Q_CLASSINFO("DefaultProperty", "particleChildren")
     QML_NAMED_ELEMENT(ParticleGroup)
+    QML_ADDED_IN_VERSION(2, 0)
     Q_INTERFACES(QQmlParserStatus)
 
 public:

@@ -62,6 +62,7 @@ class QQuickPointDirection : public QQuickDirection
     Q_PROPERTY(qreal xVariation READ xVariation WRITE setXVariation NOTIFY xVariationChanged)
     Q_PROPERTY(qreal yVariation READ yVariation WRITE setYVariation NOTIFY yVariationChanged)
     QML_NAMED_ELEMENT(PointDirection)
+    QML_ADDED_IN_VERSION(2, 0)
 public:
     explicit QQuickPointDirection(QObject *parent = 0);
     QPointF sample(const QPointF &from) override;

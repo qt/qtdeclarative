@@ -50,6 +50,8 @@ QML_DECLARE_TYPE(QuickTestResult)
 QML_DECLARE_TYPE(QuickTestEvent)
 QML_DECLARE_TYPE(QuickTestUtil)
 
+extern void qml_register_types_QtTest();
+
 QT_BEGIN_NAMESPACE
 
 class QTestQmlModule : public QQmlEngineExtensionPlugin
@@ -58,7 +60,11 @@ class QTestQmlModule : public QQmlEngineExtensionPlugin
     Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
 
 public:
-    QTestQmlModule(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent) { }
+    QTestQmlModule(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent)
+    {
+        volatile auto registration = &qml_register_types_QtTest;
+        Q_UNUSED(registration);
+    }
 };
 
 QT_END_NAMESPACE

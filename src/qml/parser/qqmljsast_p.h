@@ -57,6 +57,7 @@
 #include <private/qqmljsmemorypool_p.h>
 
 #include <QtCore/qstring.h>
+#include <QtCore/qversionnumber.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -258,7 +259,10 @@ public:
         Kind_UiHeaderItemList,
         Kind_UiEnumDeclaration,
         Kind_UiEnumMemberList,
-        Kind_UiVersionSpecifier
+        Kind_UiVersionSpecifier,
+        Kind_UiRequired,
+        Kind_UiAnnotation,
+        Kind_UiAnnotationList
     };
 
     inline Node() {}
@@ -280,9 +284,9 @@ public:
 
     bool ignoreRecursionDepth() const;
 
-    inline void accept(Visitor *visitor)
+    inline void accept(BaseVisitor *visitor)
     {
-        Visitor::RecursionDepthCheck recursionCheck(visitor);
+        BaseVisitor::RecursionDepthCheck recursionCheck(visitor);
 
         // Stack overflow is uncommon, ignoreRecursionDepth() only returns true if
         // QV4_CRASH_ON_STACKOVERFLOW is set, and ignoreRecursionDepth() needs to be out of line.
@@ -296,19 +300,19 @@ public:
         }
     }
 
-    inline static void accept(Node *node, Visitor *visitor)
+    inline static void accept(Node *node, BaseVisitor *visitor)
     {
         if (node)
             node->accept(visitor);
     }
 
     // ### Remove when we can. This is part of the qmldevtools library, though.
-    inline static void acceptChild(Node *node, Visitor *visitor)
+    inline static void acceptChild(Node *node, BaseVisitor *visitor)
     {
         return accept(node, visitor);
     }
 
-    virtual void accept0(Visitor *visitor) = 0;
+    virtual void accept0(BaseVisitor *visitor) = 0;
     virtual SourceLocation firstSourceLocation() const = 0;
     virtual SourceLocation lastSourceLocation() const = 0;
 
@@ -349,7 +353,7 @@ public:
         return head;
     }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return identifierToken; }
@@ -373,7 +377,7 @@ public:
         , typeArguments(typeArguments)
     { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return typeId->firstSourceLocation(); }
@@ -408,7 +412,7 @@ public:
         previous->next = this;
     }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return typeId->firstSourceLocation(); }
@@ -437,7 +441,7 @@ public:
         : type(type)
     { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return colonToken; }
@@ -482,7 +486,7 @@ public:
         : expression(expression)
     { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return lparenToken; }
@@ -507,7 +511,7 @@ public:
 
     ThisExpression() { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return thisToken; }
@@ -527,7 +531,7 @@ public:
     IdentifierExpression(const QStringRef &n):
         name (n) { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return identifierToken; }
@@ -547,7 +551,7 @@ public:
 
     NullExpression() { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return nullToken; }
@@ -566,7 +570,7 @@ public:
 
     TrueLiteral() { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return trueToken; }
@@ -585,7 +589,7 @@ public:
 
     FalseLiteral() { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return falseToken; }
@@ -604,7 +608,7 @@ public:
 
     SuperLiteral() { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return superToken; }
@@ -625,7 +629,7 @@ public:
     NumericLiteral(double v):
         value(v) { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return literalToken; }
@@ -643,9 +647,12 @@ class QML_PARSER_EXPORT UiVersionSpecifier : public Node
 public:
     QQMLJS_DECLARE_AST_NODE(UiVersionSpecifier)
 
-    UiVersionSpecifier(int majorum, int minorum) : majorVersion(majorum), minorVersion(minorum) { kind = K; }
+    UiVersionSpecifier(int majorum, int minorum) : version(QTypeRevision::fromVersion(majorum, minorum))
+    {
+        kind = K;
+    }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override { return majorToken; }
 
@@ -655,8 +662,7 @@ public:
     }
 
     // attributes:
-    int majorVersion;
-    int minorVersion;
+    QTypeRevision version;
     SourceLocation majorToken;
     SourceLocation minorToken;
 };
@@ -669,7 +675,7 @@ public:
     StringLiteral(const QStringRef &v):
         value (v) { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return literalToken; }
@@ -700,7 +706,7 @@ public:
         return (last->expression ? last->expression->lastSourceLocation() : last->literalToken);
     }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     QStringRef value;
     QStringRef rawValue;
@@ -717,7 +723,7 @@ public:
     RegExpLiteral(const QStringRef &p, int f):
         pattern (p), flags (f) { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return literalToken; }
@@ -752,7 +758,7 @@ public:
         : elements(elts)
     { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return lbracketToken; }
@@ -783,7 +789,7 @@ public:
         : properties(plist)
     { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return lbraceToken; }
@@ -814,7 +820,7 @@ public:
         previous->next = this;
     }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return commaToken; }
@@ -920,7 +926,7 @@ public:
         kind = K;
     }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
     virtual bool convertLiteralToAssignmentPattern(MemoryPool *pool, SourceLocation *errorLocation, QString *errorMessage);
 
     SourceLocation firstSourceLocation() const override
@@ -973,7 +979,7 @@ public:
         return front;
     }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     void boundNames(BoundNames *names);
 
@@ -1008,7 +1014,7 @@ public:
         : PatternElement(pattern, i), name(name)
     { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return name->firstSourceLocation(); }
@@ -1044,7 +1050,7 @@ public:
         previous->next = this;
     }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     void boundNames(BoundNames *names);
 
@@ -1065,7 +1071,7 @@ public:
     PatternPropertyList *next;
 };
 
-class QML_PARSER_EXPORT IdentifierPropertyName : public PropertyName
+class QML_PARSER_EXPORT IdentifierPropertyName: public PropertyName
 {
 public:
     QQMLJS_DECLARE_AST_NODE(IdentifierPropertyName)
@@ -1073,7 +1079,7 @@ public:
     IdentifierPropertyName(const QStringRef &n):
         id (n) { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     QString asString() const override { return id.toString(); }
 
@@ -1089,7 +1095,7 @@ public:
     StringLiteralPropertyName(const QStringRef &n):
         id (n) { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     QString asString() const override { return id.toString(); }
 
@@ -1105,7 +1111,7 @@ public:
     NumericLiteralPropertyName(double n):
         id (n) { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     QString asString() const override;
 
@@ -1122,7 +1128,7 @@ public:
         : expression(expression)
     { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     QString asString() const override { return QString(); }
 
@@ -1146,7 +1152,7 @@ public:
         base (b), expression (e)
         { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return base->firstSourceLocation(); }
@@ -1170,7 +1176,7 @@ public:
         base (b), name (n)
         { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return base->firstSourceLocation(); }
@@ -1194,7 +1200,7 @@ public:
         : base (b), templateLiteral(t)
     { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return base->firstSourceLocation(); }
@@ -1216,7 +1222,7 @@ public:
         base (b), arguments (a)
         { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return newToken; }
@@ -1240,7 +1246,7 @@ public:
     NewExpression(ExpressionNode *e):
         expression (e) { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return newToken; }
@@ -1262,7 +1268,7 @@ public:
         base (b), arguments (a)
         { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return base->firstSourceLocation(); }
@@ -1294,7 +1300,7 @@ public:
         previous->next = this;
     }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return expression->firstSourceLocation(); }
@@ -1328,7 +1334,7 @@ public:
     PostIncrementExpression(ExpressionNode *b):
         base (b) { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return base->firstSourceLocation(); }
@@ -1349,7 +1355,7 @@ public:
     PostDecrementExpression(ExpressionNode *b):
         base (b) { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return base->firstSourceLocation(); }
@@ -1370,7 +1376,7 @@ public:
     DeleteExpression(ExpressionNode *e):
         expression (e) { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return deleteToken; }
@@ -1391,7 +1397,7 @@ public:
     VoidExpression(ExpressionNode *e):
         expression (e) { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return voidToken; }
@@ -1412,7 +1418,7 @@ public:
     TypeOfExpression(ExpressionNode *e):
         expression (e) { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return typeofToken; }
@@ -1433,7 +1439,7 @@ public:
     PreIncrementExpression(ExpressionNode *e):
         expression (e) { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return incrementToken; }
@@ -1454,7 +1460,7 @@ public:
     PreDecrementExpression(ExpressionNode *e):
         expression (e) { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return decrementToken; }
@@ -1475,7 +1481,7 @@ public:
     UnaryPlusExpression(ExpressionNode *e):
         expression (e) { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return plusToken; }
@@ -1496,7 +1502,7 @@ public:
     UnaryMinusExpression(ExpressionNode *e):
         expression (e) { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return minusToken; }
@@ -1517,7 +1523,7 @@ public:
     TildeExpression(ExpressionNode *e):
         expression (e) { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return tildeToken; }
@@ -1538,7 +1544,7 @@ public:
     NotExpression(ExpressionNode *e):
         expression (e) { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return notToken; }
@@ -1562,7 +1568,7 @@ public:
 
     BinaryExpression *binaryExpressionCast() override;
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return left->firstSourceLocation(); }
@@ -1586,7 +1592,7 @@ public:
         expression (e), ok (t), ko (f)
         { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return expression->firstSourceLocation(); }
@@ -1610,7 +1616,7 @@ public:
     Expression(ExpressionNode *l, ExpressionNode *r):
         left (l), right (r) { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return left->firstSourceLocation(); }
@@ -1632,7 +1638,7 @@ public:
     Block(StatementList *slist):
         statements (slist) { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return lbraceToken; }
@@ -1662,7 +1668,7 @@ public:
         return n;
     }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return statement->firstSourceLocation(); }
@@ -1701,7 +1707,7 @@ public:
         previous->next = this;
     }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return declaration->firstSourceLocation(); }
@@ -1739,7 +1745,7 @@ public:
         declarations (vlist)
         { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return declarationKindToken; }
@@ -1759,7 +1765,7 @@ public:
 
     EmptyStatement() { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return semicolonToken; }
@@ -1779,7 +1785,7 @@ public:
     ExpressionStatement(ExpressionNode *e):
         expression (e) { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return expression->firstSourceLocation(); }
@@ -1801,7 +1807,7 @@ public:
         expression (e), ok (t), ko (f)
         { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return ifToken; }
@@ -1833,7 +1839,7 @@ public:
         statement (stmt), expression (e)
         { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return doToken; }
@@ -1860,7 +1866,7 @@ public:
         expression (e), statement (stmt)
         { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return whileToken; }
@@ -1890,7 +1896,7 @@ public:
         { kind = K; }
 
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return forToken; }
@@ -1928,7 +1934,7 @@ public:
         : lhs(v), expression(e), statement(stmt)
     { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return forToken; }
@@ -1959,7 +1965,7 @@ public:
     ContinueStatement(const QStringRef &l = QStringRef()):
         label (l) { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return continueToken; }
@@ -1982,7 +1988,7 @@ public:
     BreakStatement(const QStringRef &l):
         label (l) { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return breakToken; }
@@ -2005,7 +2011,7 @@ public:
     ReturnStatement(ExpressionNode *e):
         expression (e) { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return returnToken; }
@@ -2027,7 +2033,7 @@ public:
     YieldExpression(ExpressionNode *e = nullptr):
         expression (e) { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return yieldToken; }
@@ -2050,7 +2056,7 @@ public:
         expression (e), statement (stmt)
         { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return withToken; }
@@ -2075,7 +2081,7 @@ public:
         clauses (c), defaultClause (d), moreClauses (r)
         { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return lbraceToken; }
@@ -2100,7 +2106,7 @@ public:
         expression (e), block (b)
         { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return switchToken; }
@@ -2125,7 +2131,7 @@ public:
         expression (e), statements (slist)
         { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return caseToken; }
@@ -2157,7 +2163,7 @@ public:
         previous->next = this;
     }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return clause->firstSourceLocation(); }
@@ -2188,7 +2194,7 @@ public:
         statements (slist)
         { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return defaultToken; }
@@ -2211,7 +2217,7 @@ public:
         label (l), statement (stmt)
         { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return identifierToken; }
@@ -2234,7 +2240,7 @@ public:
     ThrowStatement(ExpressionNode *e):
         expression (e) { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return throwToken; }
@@ -2257,7 +2263,7 @@ public:
         : patternElement(p), statement(stmt)
     { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return catchToken; }
@@ -2283,7 +2289,7 @@ public:
         statement (stmt)
         { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return finallyToken; }
@@ -2313,7 +2319,7 @@ public:
         statement (stmt), catchExpression (c), finallyExpression (nullptr)
         { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return tryToken; }
@@ -2345,7 +2351,7 @@ public:
         typeAnnotation(typeAnnotation)
         { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return functionToken; }
@@ -2379,7 +2385,7 @@ public:
         FunctionExpression(n, f, b, typeAnnotation)
         { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 };
 
 class QML_PARSER_EXPORT FormalParameterList: public Node
@@ -2450,7 +2456,7 @@ public:
 
     BoundNames boundNames() const;
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return element->firstSourceLocation(); }
@@ -2476,7 +2482,7 @@ public:
         : name(n), heritage(heritage), elements(elements)
         { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return classToken; }
@@ -2505,7 +2511,7 @@ public:
         : ClassExpression(n, heritage, elements)
         { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 };
 
 
@@ -2527,7 +2533,7 @@ public:
         return n;
     }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return property->firstSourceLocation(); }
@@ -2555,7 +2561,7 @@ public:
         : statements(statements)
     { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return statements ? statements->firstSourceLocation() : SourceLocation(); }
@@ -2584,7 +2590,7 @@ public:
         kind = K;
     }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return identifier.isNull() ? importedBindingToken : identifierToken; }
@@ -2629,7 +2635,7 @@ public:
         return head;
     }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return importSpecifierToken; }
@@ -2661,7 +2667,7 @@ public:
         kind = K;
     }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return leftBraceToken; }
@@ -2685,7 +2691,7 @@ public:
         kind = K;
     }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     virtual SourceLocation firstSourceLocation() const override
     { return starToken; }
@@ -2735,7 +2741,7 @@ public:
         kind = K;
     }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     virtual SourceLocation firstSourceLocation() const override
     { return importedDefaultBinding.isNull() ? (nameSpaceImport ? nameSpaceImport->firstSourceLocation() : namedImports->firstSourceLocation()) :  importedDefaultBindingToken; }
@@ -2760,7 +2766,7 @@ public:
         kind = K;
     }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return fromToken; }
@@ -2791,7 +2797,7 @@ public:
         kind = K;
     }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return importToken; }
@@ -2824,7 +2830,7 @@ public:
         kind = K;
     }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return identifierToken; }
@@ -2869,7 +2875,7 @@ public:
         return head;
     }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return exportSpecifier->firstSourceLocation(); }
@@ -2897,7 +2903,7 @@ public:
         kind = K;
     }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return leftBraceToken; }
@@ -2941,7 +2947,7 @@ public:
         kind = K;
     }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return exportToken; }
@@ -2968,7 +2974,7 @@ public:
         kind = K;
     }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return body ? body->firstSourceLocation() : SourceLocation(); }
@@ -2988,7 +2994,7 @@ public:
     DebuggerStatement()
         { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return debuggerToken; }
@@ -3014,7 +3020,7 @@ public:
         : importUri(uri)
     { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return importToken; }
@@ -3041,6 +3047,9 @@ public:
     SourceLocation lastSourceLocation() const override = 0;
 
     UiObjectMember *uiObjectMemberCast() override;
+
+// attributes
+    UiAnnotationList *annotations = nullptr;
 };
 
 class QML_PARSER_EXPORT UiObjectMemberList: public Node
@@ -3060,7 +3069,7 @@ public:
         previous->next = this;
     }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return member->firstSourceLocation(); }
@@ -3089,7 +3098,7 @@ public:
         : name(name)
     { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return pragmaToken; }
@@ -3100,6 +3109,28 @@ public:
 // attributes
     QStringRef name;
     SourceLocation pragmaToken;
+    SourceLocation semicolonToken;
+};
+
+class QML_PARSER_EXPORT UiRequired: public Node
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(UiRequired)
+
+    UiRequired(QStringRef name)
+        :name(name)
+    { kind = K; }
+
+    void accept0(BaseVisitor *visitor) override;
+
+    SourceLocation firstSourceLocation() const override
+    { return requiredToken; }
+
+    SourceLocation lastSourceLocation() const override
+    { return semicolonToken; }
+
+    QStringRef name;
+    SourceLocation requiredToken;
     SourceLocation semicolonToken;
 };
 
@@ -3139,7 +3170,7 @@ public:
         return head;
     }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return headerItem->firstSourceLocation(); }
@@ -3161,7 +3192,7 @@ public:
         : headers(headers), members(members)
     { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     {
@@ -3203,7 +3234,7 @@ public:
         previous->next = this;
     }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return member->firstSourceLocation(); }
@@ -3233,7 +3264,7 @@ public:
         : members(members)
     { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return lbraceToken; }
@@ -3264,7 +3295,7 @@ public:
         previous->next = this;
     }
 
-    void accept0(Visitor *) override;
+    void accept0(BaseVisitor *) override;
 
     SourceLocation firstSourceLocation() const override
     { return colonToken.isValid() ? identifierToken : propertyTypeToken; }
@@ -3308,7 +3339,7 @@ public:
         : type(Property), memberType(memberType), name(name), statement(statement), binding(nullptr), isDefaultMember(false), isReadonlyMember(false), parameters(nullptr)
     { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     {
@@ -3365,7 +3396,7 @@ public:
         : qualifiedTypeNameId(qualifiedTypeNameId), initializer(initializer)
     { kind = K; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     { return qualifiedTypeNameId->identifierToken; }
@@ -3387,17 +3418,18 @@ public:
         : name(inlineComponentName), component(inlineComponent)
     { kind = K; }
 
-    QStringRef name;
-    UiObjectDefinition* component;
-    SourceLocation componentToken;
-
     SourceLocation lastSourceLocation() const override
     {return component->lastSourceLocation();}
 
     SourceLocation firstSourceLocation() const override
     {return componentToken;}
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
+
+    // attributes
+    QStringRef name;
+    UiObjectDefinition* component;
+    SourceLocation componentToken;
 };
 
 class QML_PARSER_EXPORT UiSourceElement: public UiObjectMember
@@ -3429,7 +3461,7 @@ public:
       return SourceLocation();
     }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
 
 // attributes
@@ -3461,7 +3493,7 @@ public:
     SourceLocation lastSourceLocation() const override
     { return initializer->rbraceToken; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
 
 // attributes
@@ -3489,7 +3521,7 @@ public:
     SourceLocation lastSourceLocation() const override
     { return statement->lastSourceLocation(); }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
 // attributes
     UiQualifiedId *qualifiedId;
@@ -3514,7 +3546,7 @@ public:
     SourceLocation lastSourceLocation() const override
     { return rbracketToken; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
 // attributes
     UiQualifiedId *qualifiedId;
@@ -3558,7 +3590,7 @@ public:
         return last->valueToken.isValid() ? last->valueToken : last->memberToken;
     }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
     UiEnumMemberList *finish()
     {
@@ -3592,7 +3624,7 @@ public:
     SourceLocation lastSourceLocation() const override
     { return rbraceToken; }
 
-    void accept0(Visitor *visitor) override;
+    void accept0(BaseVisitor *visitor) override;
 
 // attributes
     SourceLocation enumToken;
@@ -3601,8 +3633,67 @@ public:
     UiEnumMemberList *members;
 };
 
-} } // namespace AST
+class QML_PARSER_EXPORT UiAnnotation: public Node
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(UiAnnotation)
 
+    UiAnnotation(UiQualifiedId *qualifiedTypeNameId,
+                       UiObjectInitializer *initializer)
+        : qualifiedTypeNameId(qualifiedTypeNameId), initializer(initializer)
+    { kind = K; }
+
+    void accept0(BaseVisitor *visitor) override;
+
+    SourceLocation firstSourceLocation() const override
+    { return qualifiedTypeNameId->identifierToken; }
+
+    SourceLocation lastSourceLocation() const override
+    { return initializer->rbraceToken; }
+
+// attributes
+    UiQualifiedId *qualifiedTypeNameId;
+    UiObjectInitializer *initializer;
+};
+
+class QML_PARSER_EXPORT UiAnnotationList: public Node
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(UiAnnotationList)
+
+    UiAnnotationList(UiAnnotation *annotation)
+        : next(this), annotation(annotation)
+    { kind = K; }
+
+    UiAnnotationList(UiAnnotationList *previous, UiAnnotation *annotation)
+        : annotation(annotation)
+    {
+        kind = K;
+        next = previous->next;
+        previous->next = this;
+    }
+
+    void accept0(BaseVisitor *visitor) override;
+
+    SourceLocation firstSourceLocation() const override
+    { return annotation->firstSourceLocation(); }
+
+    SourceLocation lastSourceLocation() const override
+    { return lastListElement(this)->annotation->lastSourceLocation(); }
+
+    UiAnnotationList *finish()
+    {
+        UiAnnotationList *head = next;
+        next = nullptr;
+        return head;
+    }
+
+// attributes
+    UiAnnotationList *next;
+    UiAnnotation *annotation;
+};
+
+} } // namespace AST
 
 
 QT_END_NAMESPACE

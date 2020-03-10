@@ -57,11 +57,11 @@
 #include "qqmlnotifier_p.h"
 #include "qqmlincubator.h"
 #include "qqmlabstracturlinterceptor.h"
+#include "qqmlsourcecoordinate_p.h"
 #include <private/qqmldirparser_p.h>
 #include <private/qqmlboundsignal_p.h>
 #include <private/qqmljsdiagnosticmessage_p.h>
 #include <QtCore/qstandardpaths.h>
-#include <QtCore/qsettings.h>
 #include <QtCore/qmetaobject.h>
 #include <QDebug>
 #include <QtCore/qcoreapplication.h>
@@ -112,13 +112,13 @@ int qmlRegisterUncreatableMetaObject(const QMetaObject &staticMetaObject,
     QQmlPrivate::RegisterType type = {
         0,
 
-        0,
-        0,
+        QMetaType(),
+        QMetaType(),
         0,
         nullptr,
         reason,
 
-        uri, versionMajor, versionMinor, qmlName, &staticMetaObject,
+        uri, QTypeRevision::fromVersion(versionMajor, versionMinor), qmlName, &staticMetaObject,
 
         QQmlAttachedPropertiesFunc(),
         nullptr,
@@ -130,7 +130,7 @@ int qmlRegisterUncreatableMetaObject(const QMetaObject &staticMetaObject,
         nullptr, nullptr,
 
         nullptr,
-        0
+        QTypeRevision::zero()
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
@@ -654,11 +654,7 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
 
     for (auto iter = m_compositeTypes.cbegin(), end = m_compositeTypes.cend(); iter != end; ++iter) {
         iter.value()->isRegisteredWithEngine = false;
-
-        // since unregisterInternalCompositeType() will not be called in this
-        // case, we have to clean up the type registration manually
-        QMetaType::unregisterType(iter.value()->metaTypeId);
-        QMetaType::unregisterType(iter.value()->listMetaTypeId);
+        QQmlMetaType::unregisterInternalCompositeType({iter.value()->metaTypeId, iter.value()->listMetaTypeId});
     }
 #if QT_CONFIG(qml_debug)
     delete profiler;
@@ -1335,12 +1331,16 @@ void QQmlEngine::setOutputWarningsToStandardError(bool enabled)
   \code
   class MySingleton : public QObject {
     \Q_OBJECT
+
+    // Register as default constructed singleton.
+    QML_ELEMENT
+    QML_SINGLETON
+
     static int typeId;
     // ...
   };
 
-  // Register with QObject* callback
-  MySingleton::typeId = qmlRegisterSingletonType<MySingleton>(...);
+  MySingleton::typeId = qmlTypeId(...);
 
   // Retrieve as QObject*
   QQmlEngine engine;
@@ -1357,11 +1357,10 @@ void QQmlEngine::setOutputWarningsToStandardError(bool enabled)
   QJSValue instance = engine.singletonInstance<QJSValue>(typeId);
   \endcode
 
-  It is recommended to store the QML type id during registration, e.g. as a static member
-  in the singleton class. Otherwise, a costly lookup via qmlTypeId() has to be performed
-  at run-time.
+  It is recommended to store the QML type id, e.g. as a static member in the
+  singleton class. The lookup via qmlTypeId() is costly.
 
-  \sa qmlRegisterSingletonType(), qmlTypeId()
+  \sa QML_SINGLETON, qmlRegisterSingletonType(), qmlTypeId()
   \since 5.12
 */
 template<>
@@ -2096,15 +2095,15 @@ QList<QQmlError> QQmlEnginePrivate::qmlErrorFromDiagnostics(
     QList<QQmlError> errors;
     for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
         if (m.isWarning()) {
-            qWarning("%s:%d : %s", qPrintable(fileName), m.line, qPrintable(m.message));
+            qWarning("%s:%d : %s", qPrintable(fileName), m.loc.startLine, qPrintable(m.message));
             continue;
         }
 
         QQmlError error;
         error.setUrl(QUrl(fileName));
         error.setDescription(m.message);
-        error.setLine(m.line);
-        error.setColumn(m.column);
+        error.setLine(qmlConvertSourceCoordinate<quint32, int>(m.loc.startLine));
+        error.setColumn(qmlConvertSourceCoordinate<quint32, int>(m.loc.startColumn));
         errors << error;
     }
     return errors;
@@ -2244,7 +2243,7 @@ void QQmlEngine::setPluginPathList(const QStringList &paths)
 bool QQmlEngine::importPlugin(const QString &filePath, const QString &uri, QList<QQmlError> *errors)
 {
     Q_D(QQmlEngine);
-    return d->importDatabase.importDynamicPlugin(filePath, uri, QString(), -1, errors);
+    return d->importDatabase.importDynamicPlugin(filePath, uri, QString(), QTypeRevision(), errors);
 }
 #endif
 
@@ -2301,17 +2300,6 @@ QString QQmlEngine::offlineStorageDatabaseFilePath(const QString &databaseName) 
     return d->offlineStorageDatabaseDirectory() + QLatin1String(md5.result().toHex());
 }
 
-// #### Qt 6: Remove this function, it exists only for binary compatibility.
-/*!
- * \internal
- */
-bool QQmlEngine::addNamedBundle(const QString &name, const QString &fileName)
-{
-    Q_UNUSED(name)
-    Q_UNUSED(fileName)
-    return false;
-}
-
 QString QQmlEnginePrivate::offlineStorageDatabaseDirectory() const
 {
     Q_Q(const QQmlEngine);
@@ -2356,67 +2344,100 @@ int QQmlEnginePrivate::listType(int t) const
 
 
 static QQmlPropertyCache *propertyCacheForPotentialInlineComponentType(int t, const QHash<int, QV4::ExecutableCompilationUnit *>::const_iterator &iter) {
-    if (t != (*iter)->metaTypeId) {
+    if (t != (*iter)->metaTypeId.id()) {
         // this is an inline component, and what we have in the iterator is currently the parent compilation unit
         for (auto &&icDatum: (*iter)->inlineComponentData)
-            if (icDatum.typeIds.id == t)
+            if (icDatum.typeIds.id.id() == t)
                 return (*iter)->propertyCaches.at(icDatum.objectIndex);
     }
     return (*iter)->rootPropertyCache().data();
 }
 
+/*!
+ * \internal
+ *
+ * Look up by type's baseMetaObject.
+ */
 QQmlMetaObject QQmlEnginePrivate::rawMetaObjectForType(int t) const
 {
-    Locker locker(this);
-    auto iter = m_compositeTypes.constFind(t);
-    if (iter != m_compositeTypes.cend()) {
-        return propertyCacheForPotentialInlineComponentType(t, iter);
-    } else {
-        QQmlType type = QQmlMetaType::qmlType(t);
-        return QQmlMetaObject(type.baseMetaObject());
-    }
+    if (QQmlPropertyCache *composite = findPropertyCacheInCompositeTypes(t))
+        return QQmlMetaObject(composite);
+
+    QQmlType type = QQmlMetaType::qmlType(t);
+    return QQmlMetaObject(type.baseMetaObject());
 }
 
+/*!
+ * \internal
+ *
+ * Look up by type's metaObject.
+ */
 QQmlMetaObject QQmlEnginePrivate::metaObjectForType(int t) const
 {
-    Locker locker(this);
-    auto iter = m_compositeTypes.constFind(t);
-    if (iter != m_compositeTypes.cend()) {
-        return propertyCacheForPotentialInlineComponentType(t, iter);
-    } else {
-        QQmlType type = QQmlMetaType::qmlType(t);
-        return QQmlMetaObject(type.metaObject());
-    }
+    if (QQmlPropertyCache *composite = findPropertyCacheInCompositeTypes(t))
+        return QQmlMetaObject(composite);
+
+    QQmlType type = QQmlMetaType::qmlType(t);
+    return QQmlMetaObject(type.metaObject());
 }
 
+/*!
+ * \internal
+ *
+ * Look up by type's metaObject and version.
+ */
 QQmlPropertyCache *QQmlEnginePrivate::propertyCacheForType(int t)
 {
-    Locker locker(this);
-    auto iter = m_compositeTypes.constFind(t);
-    if (iter != m_compositeTypes.cend()) {
-        return propertyCacheForPotentialInlineComponentType(t, iter);
-    } else {
-        QQmlType type = QQmlMetaType::qmlType(t);
-        locker.unlock();
-        return type.isValid() ? cache(type.metaObject()) : nullptr;
-    }
+    if (QQmlPropertyCache *composite = findPropertyCacheInCompositeTypes(t))
+        return composite;
+
+    QQmlType type = QQmlMetaType::qmlType(t);
+    return type.isValid() ? cache(type.metaObject(), type.version()) : nullptr;
 }
 
-QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(int t, int minorVersion)
+/*!
+ * \internal
+ *
+ * Look up by type's baseMetaObject and unspecified/any version.
+ * TODO: Is this correct? Passing a plain QTypeRevision() rather than QTypeRevision::zero() or
+ *       the actual type's version seems strange. The behavior has been in place for a while.
+ */
+QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(int t)
+{
+    if (QQmlPropertyCache *composite = findPropertyCacheInCompositeTypes(t))
+        return composite;
+
+    QQmlType type = QQmlMetaType::qmlType(t);
+    return type.isValid() ? cache(type.baseMetaObject(), QTypeRevision()) : nullptr;
+}
+
+/*!
+ * \internal
+ *
+ * Look up by QQmlType and version. We only fall back to lookup by metaobject if the type
+ * has no revisiononed attributes here. Unspecified versions are interpreted as "any".
+ */
+QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(int t, QTypeRevision version)
+{
+    if (QQmlPropertyCache *composite = findPropertyCacheInCompositeTypes(t))
+        return composite;
+
+    QQmlType type = QQmlMetaType::qmlType(t);
+    if (!type.isValid())
+        return nullptr;
+
+    return type.containsRevisionedAttributes()
+            ? QQmlMetaType::propertyCache(type, version)
+            : cache(type.metaObject(), version);
+}
+
+QQmlPropertyCache *QQmlEnginePrivate::findPropertyCacheInCompositeTypes(int t) const
 {
     Locker locker(this);
     auto iter = m_compositeTypes.constFind(t);
-    if (iter != m_compositeTypes.cend()) {
-        return propertyCacheForPotentialInlineComponentType(t, iter);
-    } else {
-        QQmlType type = QQmlMetaType::qmlType(t);
-        locker.unlock();
-
-        if (minorVersion >= 0)
-            return type.isValid() ? cache(type, minorVersion) : nullptr;
-        else
-            return type.isValid() ? cache(type.baseMetaObject()) : nullptr;
-    }
+    return (iter == m_compositeTypes.constEnd())
+            ? nullptr
+            : propertyCacheForPotentialInlineComponentType(t, iter);
 }
 
 void QQmlEnginePrivate::registerInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit)
@@ -2426,10 +2447,9 @@ void QQmlEnginePrivate::registerInternalCompositeType(QV4::ExecutableCompilation
     Locker locker(this);
     // The QQmlCompiledData is not referenced here, but it is removed from this
     // hash in the QQmlCompiledData destructor
-    m_compositeTypes.insert(compilationUnit->metaTypeId, compilationUnit);
-    for (auto &&data: compilationUnit->inlineComponentData) {
-        m_compositeTypes.insert(data.typeIds.id, compilationUnit);
-    }
+    m_compositeTypes.insert(compilationUnit->metaTypeId.id(), compilationUnit);
+    for (auto &&data: compilationUnit->inlineComponentData)
+        m_compositeTypes.insert(data.typeIds.id.id(), compilationUnit);
 }
 
 void QQmlEnginePrivate::unregisterInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit)
@@ -2437,9 +2457,9 @@ void QQmlEnginePrivate::unregisterInternalCompositeType(QV4::ExecutableCompilati
     compilationUnit->isRegisteredWithEngine = false;
 
     Locker locker(this);
-    m_compositeTypes.remove(compilationUnit->metaTypeId);
+    m_compositeTypes.remove(compilationUnit->metaTypeId.id());
     for (auto&& icDatum: compilationUnit->inlineComponentData)
-        m_compositeTypes.remove(icDatum.typeIds.id);
+        m_compositeTypes.remove(icDatum.typeIds.id.id());
 }
 
 QV4::ExecutableCompilationUnit *QQmlEnginePrivate::obtainExecutableCompilationUnit(int typeId)

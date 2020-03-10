@@ -48,6 +48,8 @@
 #include <private/qqmlproperty_p.h>
 #include <private/qqmlpropertyvalueinterceptor_p.h>
 
+Q_DECLARE_METATYPE(QQmlProperty)
+
 class MyTypeObject : public QObject
 {
     Q_OBJECT

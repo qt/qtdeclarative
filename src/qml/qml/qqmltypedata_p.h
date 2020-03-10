@@ -62,12 +62,11 @@ class Q_AUTOTEST_EXPORT QQmlTypeData : public QQmlTypeLoader::Blob
 public:
     struct TypeReference
     {
-        TypeReference() : majorVersion(0), minorVersion(0), needsCreation(true) {}
+        TypeReference() : version(QTypeRevision::zero()), needsCreation(true) {}
 
         QV4::CompiledData::Location location;
         QQmlType type;
-        int majorVersion;
-        int minorVersion;
+        QTypeRevision version;
         QQmlRefPointer<QQmlTypeData> typeData;
         bool selfReference = false;
         QString prefix; // used by CompositeSingleton types
@@ -125,7 +124,7 @@ private:
     void restoreIR(QV4::CompiledData::CompilationUnit &&unit);
     void continueLoadFromIR();
     void resolveTypes();
-    QQmlJS::DiagnosticMessage buildTypeResolutionCaches(
+    QQmlError buildTypeResolutionCaches(
             QQmlRefPointer<QQmlTypeNameCache> *typeNameCache,
             QV4::ResolvedTypeReferenceMap *resolvedTypeCache
             ) const;
@@ -134,7 +133,7 @@ private:
                  const QV4::CompiledData::DependentTypesHasher &dependencyHasher);
     void createTypeAndPropertyCaches(const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache,
                                      const QV4::ResolvedTypeReferenceMap &resolvedTypeCache);
-    bool resolveType(const QString &typeName, int &majorVersion, int &minorVersion,
+    bool resolveType(const QString &typeName, QTypeRevision &version,
                      TypeReference &ref, int lineNumber = -1, int columnNumber = -1,
                      bool reportErrors = true,
                      QQmlType::RegistrationType registrationType = QQmlType::AnyRegistrationType,

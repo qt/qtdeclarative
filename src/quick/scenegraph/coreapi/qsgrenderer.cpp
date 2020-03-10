@@ -40,9 +40,9 @@
 #include "qsgrenderer_p.h"
 #include "qsgnodeupdater_p.h"
 #if QT_CONFIG(opengl)
-# include <QtGui/QOpenGLFramebufferObject>
-# include <QtGui/QOpenGLContext>
-# include <QtGui/QOpenGLFunctions>
+# include <QOpenGLFramebufferObject>
+# include <QOpenGLContext>
+# include <QOpenGLFunctions>
 #endif
 #include <private/qquickprofiler_p.h>
 #include <qtquick_tracepoints_p.h>

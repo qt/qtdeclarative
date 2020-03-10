@@ -158,10 +158,10 @@ public Q_SLOTS:
 
     QObject *grabImage(QQuickItem *item);
 
-    Q_REVISION(1) QObject *findChild(QObject *parent, const QString &objectName);
+    Q_REVISION(1, 1) QObject *findChild(QObject *parent, const QString &objectName);
 
-    Q_REVISION(13) bool isPolishScheduled(QQuickItem *item) const;
-    Q_REVISION(13) bool waitForItemPolished(QQuickItem *item, int timeout);
+    Q_REVISION(1, 13) bool isPolishScheduled(QQuickItem *item) const;
+    Q_REVISION(1, 13) bool waitForItemPolished(QQuickItem *item, int timeout);
 
 public:
     // Helper functions for the C++ main() shell.

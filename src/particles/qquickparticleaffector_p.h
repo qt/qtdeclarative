@@ -69,6 +69,7 @@ class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleAffector : public QQuickItem
     Q_PROPERTY(QQuickParticleExtruder* shape READ shape WRITE setShape NOTIFY shapeChanged)
 
     QML_NAMED_ELEMENT(ParticleAffector)
+    QML_ADDED_IN_VERSION(2, 0)
     QML_UNCREATABLE("Abstract type. Use one of the inheriting types instead.")
 
 public:

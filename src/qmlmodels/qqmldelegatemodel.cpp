@@ -731,7 +731,7 @@ QQmlListProperty<QQmlDelegateModelGroup> QQmlDelegateModel::groups()
             QQmlDelegateModelPrivate::group_append,
             QQmlDelegateModelPrivate::group_count,
             QQmlDelegateModelPrivate::group_at,
-            nullptr);
+            nullptr, nullptr, nullptr);
 }
 
 /*!
@@ -1211,11 +1211,13 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, QQ
     }
 
     Compositor::iterator it = m_compositor.find(group, index);
+    const auto flags = it->flags;
+    const auto modelIndex = it.modelIndex();
 
     QQmlDelegateModelItem *cacheItem = it->inCache() ? m_cache.at(it.cacheIndex) : 0;
 
     if (!cacheItem || !cacheItem->delegate) {
-        QQmlComponent *delegate = resolveDelegate(it.modelIndex());
+        QQmlComponent *delegate = resolveDelegate(modelIndex);
         if (!delegate)
             return nullptr;
 
@@ -1226,17 +1228,17 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, QQ
                 // all related properties, and return the object (which
                 // has already been incubated, otherwise it wouldn't be in the pool).
                 addCacheItem(cacheItem, it);
-                reuseItem(cacheItem, index, it->flags);
+                reuseItem(cacheItem, index, flags);
                 cacheItem->referenceObject();
                 return cacheItem->object;
             }
 
             // Since we could't find an available item in the pool, we create a new one
-            cacheItem = m_adaptorModel.createItem(m_cacheMetaType, it.modelIndex());
+            cacheItem = m_adaptorModel.createItem(m_cacheMetaType, modelIndex);
             if (!cacheItem)
                 return nullptr;
 
-            cacheItem->groups = it->flags;
+            cacheItem->groups = flags;
             addCacheItem(cacheItem, it);
         }
 
@@ -2267,9 +2269,10 @@ void QV4::Heap::QQmlDelegateModelItemObject::destroy()
 }
 
 
-QQmlDelegateModelItem::QQmlDelegateModelItem(QQmlDelegateModelItemMetaType *metaType,
-                                             QQmlAdaptorModel::Accessors *accessor,
-                                             int modelIndex, int row, int column)
+QQmlDelegateModelItem::QQmlDelegateModelItem(
+        const QQmlRefPointer<QQmlDelegateModelItemMetaType> &metaType,
+        QQmlAdaptorModel::Accessors *accessor,
+        int modelIndex, int row, int column)
     : v4(metaType->v4Engine)
     , metaType(metaType)
     , contextData(nullptr)
@@ -2285,8 +2288,6 @@ QQmlDelegateModelItem::QQmlDelegateModelItem(QQmlDelegateModelItemMetaType *meta
     , row(row)
     , column(column)
 {
-    metaType->addref();
-
     if (accessor->propertyCache) {
         // The property cache in the accessor is common for all the model
         // items in the model it wraps. It describes available model roles,
@@ -2315,9 +2316,6 @@ QQmlDelegateModelItem::~QQmlDelegateModelItem()
         else
             delete incubationTask;
     }
-
-    metaType->release();
-
 }
 
 void QQmlDelegateModelItem::Dispose()

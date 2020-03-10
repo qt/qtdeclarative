@@ -48,6 +48,7 @@
 # include <private/qquickopenglshadereffectnode_p.h>
 # include <private/qquickopenglshadereffect_p.h>
 # include <private/qquickshadereffect_p.h>
+# include <QOpenGLContext>
 #endif
 #include <private/qanimationgroupjob_p.h>
 

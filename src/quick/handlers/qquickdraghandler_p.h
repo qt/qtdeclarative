@@ -62,9 +62,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickDragHandler : public QQuickMultiPointHandler
     Q_PROPERTY(QQuickDragAxis * xAxis READ xAxis CONSTANT)
     Q_PROPERTY(QQuickDragAxis * yAxis READ yAxis CONSTANT)
     Q_PROPERTY(QVector2D translation READ translation NOTIFY translationChanged)
-    Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged REVISION 14)
+    Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged REVISION(2, 14))
     QML_NAMED_ELEMENT(DragHandler)
-    QML_ADDED_IN_MINOR_VERSION(12)
+    QML_ADDED_IN_VERSION(2, 12)
 
 public:
     enum SnapMode {
@@ -91,7 +91,7 @@ public:
 
 Q_SIGNALS:
     void translationChanged();
-    Q_REVISION(14) void snapModeChanged();
+    Q_REVISION(2, 14) void snapModeChanged();
 
 protected:
     void onActiveChanged() override;

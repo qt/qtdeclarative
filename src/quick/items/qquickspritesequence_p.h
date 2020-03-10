@@ -75,6 +75,7 @@ class Q_AUTOTEST_EXPORT QQuickSpriteSequence : public QQuickItem
     Q_PROPERTY(QQmlListProperty<QQuickSprite> sprites READ sprites)
     Q_CLASSINFO("DefaultProperty", "sprites")
     QML_NAMED_ELEMENT(SpriteSequence)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickSpriteSequence(QQuickItem *parent = nullptr);

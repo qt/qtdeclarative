@@ -67,6 +67,11 @@ Rectangle {
         Item {
             id: recipe
 
+            required property string title
+            required property string picture
+            required property string ingredients
+            required property string method
+
             // Create a property to contain the visibility of the details.
             // We can bind multiple element's opacity to this one property,
             // rather than having a "PropertyChanges" line for each element we
@@ -106,7 +111,7 @@ Rectangle {
                 Image {
                     id: recipeImage
                     width: 50; height: 50
-                    source: picture
+                    source: recipe.picture
                 }
 //! [1]
                 Column {
@@ -114,7 +119,7 @@ Rectangle {
                     spacing: 5
 
                     Text {
-                        text: title
+                        text: recipe.title
                         font.bold: true; font.pointSize: 16
                     }
 
@@ -125,7 +130,7 @@ Rectangle {
                     }
 
                     SmallText {
-                        text: ingredients
+                        text: recipe.ingredients
                         wrapMode: Text.WordWrap
                         width: parent.width
                         opacity: recipe.detailsOpacity
@@ -155,7 +160,12 @@ Rectangle {
                     contentHeight: methodText.height
                     clip: true
 
-                    Text { id: methodText; text: method; wrapMode: Text.WordWrap; width: details.width }
+                    Text {
+                        id: methodText
+                        text: recipe.method
+                        wrapMode: Text.WordWrap
+                        width: details.width
+                    }
                 }
 
                 Image {

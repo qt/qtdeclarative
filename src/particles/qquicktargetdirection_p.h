@@ -71,6 +71,7 @@ class QQuickTargetDirection : public QQuickDirection
     Q_PROPERTY(qreal magnitude READ magnitude WRITE setMagnitude NOTIFY magnitudeChanged)
     Q_PROPERTY(qreal magnitudeVariation READ magnitudeVariation WRITE setMagnitudeVariation NOTIFY magnitudeVariationChanged)
     QML_NAMED_ELEMENT(TargetDirection)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickTargetDirection(QObject *parent = 0);

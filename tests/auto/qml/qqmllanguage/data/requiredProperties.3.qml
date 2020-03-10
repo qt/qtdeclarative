@@ -1,4 +1,6 @@
-import QtQuick 2.13
+import QtQuick 2.15
+
 Item {
-    default required property int test // cannot have required default property
+    property int i;
+    required i;
 }

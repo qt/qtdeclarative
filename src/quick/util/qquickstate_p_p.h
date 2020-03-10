@@ -244,6 +244,23 @@ public:
         QList<OperationGuard> *list = static_cast<QList<OperationGuard> *>(prop->data);
         return list->at(index);
     }
+    static void operations_replace(QQmlListProperty<QQuickStateOperation> *prop, int index,
+                                   QQuickStateOperation *op) {
+        QList<OperationGuard> *list = static_cast<QList<OperationGuard> *>(prop->data);
+        auto &guard = list->at(index);
+        if (guard.object() == op) {
+            op->setState(qobject_cast<QQuickState*>(prop->object));
+        } else {
+            list->at(index)->setState(nullptr);
+            op->setState(qobject_cast<QQuickState*>(prop->object));
+            list->replace(index, OperationGuard(op, list));
+        }
+    }
+    static void operations_removeLast(QQmlListProperty<QQuickStateOperation> *prop) {
+        QList<OperationGuard> *list = static_cast<QList<OperationGuard> *>(prop->data);
+        list->last()->setState(nullptr);
+        list->removeLast();
+    }
 
     QQuickTransitionManager transitionManager;
 

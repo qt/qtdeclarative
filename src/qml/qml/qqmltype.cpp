@@ -53,7 +53,7 @@
 QT_BEGIN_NAMESPACE
 
 QQmlTypePrivate::QQmlTypePrivate(QQmlType::RegistrationType type)
-    : regType(type), iid(nullptr), typeId(0), listId(0), revision(0),
+    : regType(type), iid(nullptr), revision(QTypeRevision::zero()),
     containsRevisionedAttributes(false), baseMetaObject(nullptr),
     index(-1), isSetup(false), isEnumFromCacheSetup(false), isEnumFromBaseSetup(false),
     haveSuperType(false)
@@ -132,34 +132,29 @@ QHashedString QQmlType::module() const
     return d->module;
 }
 
-int QQmlType::majorVersion() const
+QTypeRevision QQmlType::version() const
 {
     if (!d)
-        return -1;
-    return d->version_maj;
+        return QTypeRevision();
+    return d->version;
 }
 
-int QQmlType::minorVersion() const
+bool QQmlType::availableInVersion(QTypeRevision version) const
 {
-    if (!d)
-        return -1;
-    return d->version_min;
-}
-
-bool QQmlType::availableInVersion(int vmajor, int vminor) const
-{
-    Q_ASSERT(vmajor >= 0 && vminor >= 0);
+    Q_ASSERT(version.hasMajorVersion() && version.hasMinorVersion());
     if (!d)
         return false;
-    return vmajor == d->version_maj && vminor >= d->version_min;
+    return version.majorVersion() == d->version.majorVersion()
+            && version.minorVersion() >= d->version.minorVersion();
 }
 
-bool QQmlType::availableInVersion(const QHashedStringRef &module, int vmajor, int vminor) const
+bool QQmlType::availableInVersion(const QHashedStringRef &module, QTypeRevision version) const
 {
-    Q_ASSERT(vmajor >= 0 && vminor >= 0);
+    Q_ASSERT(version.hasMajorVersion() && version.hasMinorVersion());
     if (!d)
         return false;
-    return module == d->module && vmajor == d->version_maj && vminor >= d->version_min;
+    return module == d->module && version.majorVersion() == d->version.majorVersion()
+            && version.minorVersion() >= d->version.minorVersion();
 }
 
 QQmlType QQmlTypePrivate::resolveCompositeBaseType(QQmlEnginePrivate *engine) const
@@ -592,14 +587,14 @@ bool QQmlType::isQJSValueSingleton() const
     return d && d->regType == SingletonType && d->extraData.sd->singletonInstanceInfo->scriptCallback;
 }
 
-int QQmlType::typeId() const
+QMetaType QQmlType::typeId() const
 {
-    return d ? d->typeId : -1;
+    return d ? d->typeId : QMetaType{};
 }
 
-int QQmlType::qListTypeId() const
+QMetaType QQmlType::qListTypeId() const
 {
-    return d ? d->listId : -1;
+    return d ? d->listId : QMetaType{};
 }
 
 const QMetaObject *QQmlType::metaObject() const
@@ -629,21 +624,21 @@ bool QQmlType::containsRevisionedAttributes() const
     return d->containsRevisionedAttributes;
 }
 
-int QQmlType::metaObjectRevision() const
+QTypeRevision QQmlType::metaObjectRevision() const
 {
-    return d ? d->revision : -1;
+    return d ? d->revision : QTypeRevision();
 }
 
 QQmlAttachedPropertiesFunc QQmlType::attachedPropertiesFunction(QQmlEnginePrivate *engine) const
 {
-    if (const QQmlTypePrivate *base = d->attachedPropertiesBase(engine))
+    if (const QQmlTypePrivate *base = d ? d->attachedPropertiesBase(engine) : nullptr)
         return base->extraData.cd->attachedPropertiesFunc;
     return nullptr;
 }
 
 const QMetaObject *QQmlType::attachedPropertiesType(QQmlEnginePrivate *engine) const
 {
-    if (const QQmlTypePrivate *base = d->attachedPropertiesBase(engine))
+    if (const QQmlTypePrivate *base = d ? d->attachedPropertiesBase(engine) : nullptr)
         return base->extraData.cd->attachedPropertiesType;
     return nullptr;
 }
@@ -946,7 +941,8 @@ int QQmlType::generatePlaceHolderICId() const
 
 void QQmlType::associateInlineComponent(const QString &name, int objectID, const CompositeMetaTypeIds &metaTypeIds, QQmlType existingType)
 {
-    auto priv = existingType.isValid() ? const_cast<QQmlTypePrivate *>(existingType.d.data()) : new QQmlTypePrivate { RegistrationType::InlineComponentType } ;
+    bool const reuseExistingType = existingType.isValid();
+    auto priv = reuseExistingType ? const_cast<QQmlTypePrivate *>(existingType.d.data()) : new QQmlTypePrivate { RegistrationType::InlineComponentType } ;
     priv->setName( QString::fromUtf8(typeName()), name);
     auto icUrl = QUrl(sourceUrl());
     icUrl.setFragment(QString::number(objectID));
@@ -958,6 +954,8 @@ void QQmlType::associateInlineComponent(const QString &name, int objectID, const
     d->namesToInlineComponentObjectIndex.insert(name, objectID);
     QQmlType icType(priv);
     d->objectIdToICType.insert(objectID, icType);
+    if (!reuseExistingType)
+        priv->release();
 }
 
 void QQmlType::setPendingResolutionName(const QString &name)

@@ -210,14 +210,14 @@ static bool isCrashingType(const QQmlType &type)
     return false;
 }
 
-QObject *QQuickDesignerSupportItems::createPrimitive(const QString &typeName, int majorNumber, int minorNumber, QQmlContext *context)
+QObject *QQuickDesignerSupportItems::createPrimitive(const QString &typeName, QTypeRevision version, QQmlContext *context)
 {
     ComponentCompleteDisabler disableComponentComplete;
 
     Q_UNUSED(disableComponentComplete)
 
     QObject *object = nullptr;
-    QQmlType type = QQmlMetaType::qmlType(typeName, majorNumber, minorNumber);
+    QQmlType type = QQmlMetaType::qmlType(typeName, version);
 
     if (isCrashingType(type)) {
         object = new QObject;
@@ -242,7 +242,8 @@ QObject *QQuickDesignerSupportItems::createPrimitive(const QString &typeName, in
 
     if (!object) {
         qWarning() << "QuickDesigner: Cannot create an object of type"
-                   << QString::fromLatin1("%1 %2,%3").arg(typeName).arg(majorNumber).arg(minorNumber)
+                   << QString::fromLatin1("%1 %2,%3").arg(typeName)
+                      .arg(version.majorVersion()).arg(version.minorVersion())
                    << "- type isn't known to declarative meta type system";
     }
 

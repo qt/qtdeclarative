@@ -77,6 +77,8 @@ private slots:
     void noAcceleratedGlobalLookup_data() { prefixes(); }
     void noAcceleratedGlobalLookup();
 
+    void bindToPropertyWithUnderscoreChangeHandler();
+
 private:
     QQmlEngine engine;
     void prefixes();
@@ -472,6 +474,19 @@ void tst_qqmlconnections::noAcceleratedGlobalLookup()
     const QVariant val = object->property("testEnum");
     QCOMPARE(val.type(), QVariant::Int);
     QCOMPARE(val.toInt(), int(Proxy::EnumValue));
+}
+
+void tst_qqmlconnections::bindToPropertyWithUnderscoreChangeHandler()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("underscore.qml"));
+    QScopedPointer<QObject> root {component.create()};
+    QVERIFY(root);
+    QQmlProperty underscoreProperty(root.get(), "__underscore_property");
+    QVERIFY(underscoreProperty.isValid());
+    underscoreProperty.write(42);
+    QVERIFY(root->property("sanityCheck").toBool());
+    QVERIFY(root->property("success").toBool());
 }
 
 QTEST_MAIN(tst_qqmlconnections)

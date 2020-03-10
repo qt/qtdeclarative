@@ -64,6 +64,9 @@ Q_LOGGING_CATEGORY(lcHoverHandler, "qt.quick.handler.hover")
     properties can be used to narrow the behavior to detect hovering of
     specific kinds of devices or while holding a modifier key.
 
+    The \l cursorShape property allows changing the cursor whenever
+    \l hovered changes to \c true.
+
     \sa MouseArea, PointHandler
 */
 
@@ -90,11 +93,22 @@ bool QQuickHoverHandler::wantsPointerEvent(QQuickPointerEvent *event)
 {
     QQuickEventPoint *point = event->point(0);
     if (QQuickPointerDeviceHandler::wantsPointerEvent(event) && wantsEventPoint(point) && parentContains(point)) {
-        // assume this is a mouse event, so there's only one point
+        // assume this is a mouse or tablet event, so there's only one point
         setPointId(point->pointId());
         return true;
     }
-    setHovered(false);
+
+    // Some hover events come from QQuickWindow::tabletEvent(). In between,
+    // some hover events come from QQWindowPrivate::flushFrameSynchronousEvents(),
+    // but those look like mouse events. If a particular HoverHandler instance
+    // is filtering for tablet events only (e.g. by setting
+    // acceptedDevices:PointerDevice.Stylus), those events should not cause
+    // the hovered property to transition to false prematurely.
+    // If a QQuickPointerTabletEvent caused the hovered property to become true,
+    // then only another QQuickPointerTabletEvent can make it become false.
+    if (!(m_hoveredTablet && event->asPointerMouseEvent()))
+        setHovered(false);
+
     return false;
 }
 
@@ -104,6 +118,8 @@ void QQuickHoverHandler::handleEventPoint(QQuickEventPoint *point)
     if (point->state() == QQuickEventPoint::Released &&
             point->pointerEvent()->device()->pointerType() == QQuickPointerDevice::Finger)
         hovered = false;
+    else if (point->pointerEvent()->asPointerTabletEvent())
+        m_hoveredTablet = true;
     setHovered(hovered);
     setPassiveGrab(point);
 }
@@ -121,8 +137,58 @@ void QQuickHoverHandler::setHovered(bool hovered)
     if (m_hovered != hovered) {
         qCDebug(lcHoverHandler) << objectName() << "hovered" << m_hovered << "->" << hovered;
         m_hovered = hovered;
+        if (!hovered)
+            m_hoveredTablet = false;
         emit hoveredChanged();
     }
 }
+
+/*!
+    \since 5.15
+    \qmlproperty Qt::CursorShape QtQuick::HoverHandler::cursorShape
+    This property holds the cursor shape that will appear whenever
+    \l hovered is \c true and no other handler is overriding it.
+
+    The available cursor shapes are:
+    \list
+    \li Qt.ArrowCursor
+    \li Qt.UpArrowCursor
+    \li Qt.CrossCursor
+    \li Qt.WaitCursor
+    \li Qt.IBeamCursor
+    \li Qt.SizeVerCursor
+    \li Qt.SizeHorCursor
+    \li Qt.SizeBDiagCursor
+    \li Qt.SizeFDiagCursor
+    \li Qt.SizeAllCursor
+    \li Qt.BlankCursor
+    \li Qt.SplitVCursor
+    \li Qt.SplitHCursor
+    \li Qt.PointingHandCursor
+    \li Qt.ForbiddenCursor
+    \li Qt.WhatsThisCursor
+    \li Qt.BusyCursor
+    \li Qt.OpenHandCursor
+    \li Qt.ClosedHandCursor
+    \li Qt.DragCopyCursor
+    \li Qt.DragMoveCursor
+    \li Qt.DragLinkCursor
+    \endlist
+
+    The default value of this property is not set, which allows any active
+    handler on the same \l parentItem to determine the cursor shape.
+    This property can be reset to the initial condition by setting it to
+    \c undefined.
+
+    If any handler with defined \c cursorShape is
+    \l {PointerHandler::active}{active}, that cursor will appear.
+    Else if the HoverHandler has a defined \c cursorShape, that cursor will appear.
+    Otherwise, the \l {QQuickItem::cursor()}{cursor} of \l parentItem will appear.
+
+    \note When this property has not been set, or has been set to \c undefined,
+    if you read the value it will return \c Qt.ArrowCursor.
+
+    \sa Qt::CursorShape, QQuickItem::cursor()
+*/
 
 QT_END_NAMESPACE

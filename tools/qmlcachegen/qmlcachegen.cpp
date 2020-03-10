@@ -84,9 +84,9 @@ Error Error::augment(const QString &contextErrorMessage) const
 QString diagnosticErrorMessage(const QString &fileName, const QQmlJS::DiagnosticMessage &m)
 {
     QString message;
-    message = fileName + QLatin1Char(':') + QString::number(m.line) + QLatin1Char(':');
-    if (m.column > 0)
-        message += QString::number(m.column) + QLatin1Char(':');
+    message = fileName + QLatin1Char(':') + QString::number(m.loc.startLine) + QLatin1Char(':');
+    if (m.loc.startColumn > 0)
+        message += QString::number(m.loc.startColumn) + QLatin1Char(':');
 
     if (m.isError())
         message += QLatin1String(" error: ");

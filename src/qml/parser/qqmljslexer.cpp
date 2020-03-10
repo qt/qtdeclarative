@@ -719,6 +719,8 @@ again:
     case ')': return T_RPAREN;
     case '(': return T_LPAREN;
 
+    case '@': return T_AT;
+
     case '&':
         if (_char == QLatin1Char('=')) {
             scanChar();
@@ -1478,8 +1480,8 @@ bool Lexer::scanDirectives(Directives *directives, DiagnosticMessage *error)
 {
     auto setError = [error, this](QString message) {
         error->message = std::move(message);
-        error->line = tokenStartLine();
-        error->column = tokenStartColumn();
+        error->loc.startLine = tokenStartLine();
+        error->loc.startColumn = tokenStartColumn();
     };
 
     QScopedValueRollback<bool> directivesGuard(_handlingDirectives, true);
@@ -1594,8 +1596,8 @@ bool Lexer::scanDirectives(Directives *directives, DiagnosticMessage *error)
                 else
                     setError(QCoreApplication::translate("QQmlParser", "Module import requires a qualifier"));
                 if (tokenStartLine() != lineNumber) {
-                    error->line = lineNumber;
-                    error->line = column;
+                    error->loc.startLine = lineNumber;
+                    error->loc.startColumn = column;
                 }
                 return false; // expected `as'
             }

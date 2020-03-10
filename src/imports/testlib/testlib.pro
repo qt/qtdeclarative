@@ -1,7 +1,7 @@
 CXX_MODULE = qml
 TARGET  = qmltestplugin
 TARGETPATH = QtTest
-IMPORT_VERSION = 1.15
+QML_IMPORT_VERSION = $$QT_VERSION
 
 QT += quick qmltest-private qml-private core-private testlib gui-private
 

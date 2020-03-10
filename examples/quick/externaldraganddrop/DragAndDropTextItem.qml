@@ -71,14 +71,18 @@ Rectangle {
         id: dropArea
         anchors.fill: parent
         keys: ["text/plain"]
-        onEntered: if (!acceptDropCB.checked) {
-            drag.accepted = false
-            rejectAnimation.start()
+        onEntered: (drag) => {
+            if (!acceptDropCB.checked) {
+                drag.accepted = false
+                rejectAnimation.start()
+            }
         }
-        onDropped: if (drop.hasText && acceptDropCB.checked) {
-            if (drop.proposedAction == Qt.MoveAction || drop.proposedAction == Qt.CopyAction) {
-                item.display = drop.text
-                drop.acceptProposedAction()
+        onDropped: (drop) => {
+            if (drop.hasText && acceptDropCB.checked) {
+                if (drop.proposedAction == Qt.MoveAction || drop.proposedAction == Qt.CopyAction) {
+                    item.display = drop.text
+                    drop.acceptProposedAction()
+                }
             }
         }
     }
@@ -95,7 +99,10 @@ Rectangle {
         Drag.hotSpot.y: 0
         Drag.mimeData: { "text/plain": item.display }
         Drag.dragType: Drag.Automatic
-        Drag.onDragFinished: if (dropAction == Qt.MoveAction) item.display = ""
+        Drag.onDragFinished: (dropAction) => {
+            if (dropAction == Qt.MoveAction)
+                item.display = ""
+        }
     }
     Examples.CheckBox {
         id: acceptDropCB

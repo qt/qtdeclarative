@@ -848,16 +848,18 @@ Heap::Object *MemoryManager::allocObjectWithMemberData(const QV4::VTable *vtable
 static uint markStackSize = 0;
 
 MarkStack::MarkStack(ExecutionEngine *engine)
-    : engine(engine)
+    : m_engine(engine)
 {
-    base = (Heap::Base **)engine->gcStack->base();
-    top = base;
-    limit = base + engine->maxGCStackSize()/sizeof(Heap::Base)*3/4;
+    m_base = (Heap::Base **)engine->gcStack->base();
+    m_top = m_base;
+    const size_t size = engine->maxGCStackSize() / sizeof(Heap::Base);
+    m_hardLimit = m_base + size;
+    m_softLimit = m_base + size * 3 / 4;
 }
 
 void MarkStack::drain()
 {
-    while (top > base) {
+    while (m_top > m_base) {
         Heap::Base *h = pop();
         ++markStackSize;
         Q_ASSERT(h); // at this point we should only have Heap::Base objects in this area on the stack. If not, weird things might happen.
@@ -904,20 +906,15 @@ void MemoryManager::collectRoots(MarkStack *markStack)
 
         if (keepAlive)
             qobjectWrapper->mark(markStack);
-
-        if (markStack->top >= markStack->limit)
-            markStack->drain();
     }
 }
 
 void MemoryManager::mark()
 {
     markStackSize = 0;
-
     MarkStack markStack(engine);
     collectRoots(&markStack);
-
-    markStack.drain();
+    // dtor of MarkStack drains
 }
 
 void MemoryManager::sweep(bool lastSweep, ClassDestroyStatsCallback classCountPtr)
@@ -1220,8 +1217,6 @@ void MemoryManager::collectFromJSStack(MarkStack *markStack) const
             Q_ASSERT(m->inUse());
             // Skip pointers to already freed objects, they are bogus as well
             m->mark(markStack);
-            if (markStack->top >= markStack->limit)
-                markStack->drain();
         }
         ++v;
     }

@@ -72,7 +72,7 @@ Rectangle {
         x: 1
         y: 1
         height: parent.height - 2
-        width: ((parent.width - 2) / maximumValue) * value
+        width: ((parent.width - 2) / slider.maximumValue) * slider.value
         color: "lightgrey"
         Behavior on width {
             NumberAnimation { duration: 50 }
@@ -88,8 +88,9 @@ Rectangle {
 
     MouseArea {
         anchors.fill: parent
-        onClicked: {
-            var pos = mouse.x / slider.width * (maximumValue - minimumValue) + minimumValue
+        onClicked: (mouse) => {
+            var pos = mouse.x / slider.width * (slider.maximumValue - slider.minimumValue)
+                    + slider.minimumValue
             slider.value = pos
         }
     }

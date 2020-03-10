@@ -91,6 +91,7 @@ private slots:
     void dateTimeFormatting_data();
     void dateTimeFormattingVariants();
     void dateTimeFormattingVariants_data();
+    void dateTimeFormattingWithLocale();
     void isQtObject();
     void btoa();
     void atob();
@@ -738,12 +739,12 @@ void tst_qqmlqt::dateTimeFormatting()
     QQmlComponent component(&eng, testFileUrl("formatting.qml"));
 
     QStringList warnings;
-    warnings << component.url().toString() + ":37: Error: Qt.formatDate(): Invalid date format"
-        << component.url().toString() + ":36: Error: Qt.formatDate(): Invalid arguments"
-        << component.url().toString() + ":40: Error: Qt.formatTime(): Invalid time format"
-        << component.url().toString() + ":39: Error: Qt.formatTime(): Invalid arguments"
-        << component.url().toString() + ":43: Error: Qt.formatDateTime(): Invalid datetime format"
-        << component.url().toString() + ":42: Error: Qt.formatDateTime(): Invalid arguments";
+    warnings << component.url().toString() + ":37: Error: Qt.formatDate(): Bad second argument (must be either string, number or locale)"
+        << component.url().toString() + ":36: Error: Qt.formatDate(): Missing argument"
+        << component.url().toString() + ":40: Error: Qt.formatTime(): Bad second argument (must be either string, number or locale)"
+        << component.url().toString() + ":39: Error: Qt.formatTime(): Missing argument"
+        << component.url().toString() + ":43: Error: Qt.formatDateTime(): Bad second argument (must be either string, number or locale)"
+        << component.url().toString() + ":42: Error: Qt.formatDateTime(): Missing argument";
 
     foreach (const QString &warning, warnings)
         QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
@@ -784,23 +785,23 @@ void tst_qqmlqt::dateTimeFormatting_data()
     QTest::newRow("formatDate")
         << "formatDate"
         << (QStringList() << "dateFromString" << "jsdate" << "qdate" << "qdatetime")
-        << (QStringList() << date.toString(Qt::DefaultLocaleShortDate)
-                          << date.toString(Qt::DefaultLocaleLongDate)
+        << (QStringList() << QLocale().toString(date, QLocale::ShortFormat)
+                          << QLocale().toString(date, QLocale::LongFormat)
                           << date.toString("ddd MMMM d yy"));
 
     QTest::newRow("formatTime")
         << "formatTime"
         << (QStringList() << "jsdate" << "qtime" << "qdatetime")
-        << (QStringList() << time.toString(Qt::DefaultLocaleShortDate)
-                          << time.toString(Qt::DefaultLocaleLongDate)
+        << (QStringList() << QLocale().toString(time, QLocale::ShortFormat)
+                          << QLocale().toString(time, QLocale::LongFormat)
                           << time.toString("H:m:s a")
                           << time.toString("hh:mm:ss.zzz"));
 
     QTest::newRow("formatDateTime")
         << "formatDateTime"
         << (QStringList() << "jsdate" << "qdatetime")
-        << (QStringList() << dateTime.toString(Qt::DefaultLocaleShortDate)
-                          << dateTime.toString(Qt::DefaultLocaleLongDate)
+        << (QStringList() << QLocale().toString(dateTime, QLocale::ShortFormat)
+                          << QLocale().toString(dateTime, QLocale::LongFormat)
                           << dateTime.toString("M/d/yy H:m:s a"));
 }
 
@@ -814,12 +815,12 @@ void tst_qqmlqt::dateTimeFormattingVariants()
     QQmlComponent component(&eng, testFileUrl("formatting.qml"));
 
     QStringList warnings;
-    warnings << component.url().toString() + ":37: Error: Qt.formatDate(): Invalid date format"
-        << component.url().toString() + ":36: Error: Qt.formatDate(): Invalid arguments"
-        << component.url().toString() + ":40: Error: Qt.formatTime(): Invalid time format"
-        << component.url().toString() + ":39: Error: Qt.formatTime(): Invalid arguments"
-        << component.url().toString() + ":43: Error: Qt.formatDateTime(): Invalid datetime format"
-        << component.url().toString() + ":42: Error: Qt.formatDateTime(): Invalid arguments";
+    warnings << component.url().toString() + ":37: Error: Qt.formatDate(): Bad second argument (must be either string, number or locale)"
+             << component.url().toString() + ":36: Error: Qt.formatDate(): Missing argument"
+             << component.url().toString() + ":40: Error: Qt.formatTime(): Bad second argument (must be either string, number or locale)"
+             << component.url().toString() + ":39: Error: Qt.formatTime(): Missing argument"
+             << component.url().toString() + ":43: Error: Qt.formatDateTime(): Bad second argument (must be either string, number or locale)"
+             << component.url().toString() + ":42: Error: Qt.formatDateTime(): Missing argument";
 
     foreach (const QString &warning, warnings)
         QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
@@ -848,38 +849,145 @@ void tst_qqmlqt::dateTimeFormattingVariants_data()
 
     QTime time(11, 16, 39, 755);
     temporary = QDateTime(QDate(1970,1,1), time);
-    QTest::newRow("formatTime, qtime") << "formatTime" << QVariant::fromValue(time) << (QStringList() << temporary.time().toString(Qt::DefaultLocaleShortDate) << temporary.time().toString(Qt::DefaultLocaleLongDate) << temporary.time().toString("H:m:s a") << temporary.time().toString("hh:mm:ss.zzz"));
+    QTest::newRow("formatTime, qtime")
+        << "formatTime" << QVariant::fromValue(time)
+        << (QStringList()
+            << QLocale().toString(temporary.time(), QLocale::ShortFormat)
+            << QLocale().toString(temporary.time(), QLocale::LongFormat)
+            << temporary.time().toString("H:m:s a")
+            << temporary.time().toString("hh:mm:ss.zzz"));
 
     QDate date(2011,5,31);
     // V4 reads the date in UTC but DateObject::toQDateTime() gives it back in local time:
     temporary = QDateTime(date, QTime(0, 0, 0), Qt::UTC).toLocalTime();
-    QTest::newRow("formatDate, qdate") << "formatDate" << QVariant::fromValue(date) << (QStringList() << temporary.date().toString(Qt::DefaultLocaleShortDate) << temporary.date().toString(Qt::DefaultLocaleLongDate) << temporary.date().toString("ddd MMMM d yy"));
-    QTest::newRow("formatDateTime, qdate") << "formatDateTime" << QVariant::fromValue(date) << (QStringList() << temporary.toString(Qt::DefaultLocaleShortDate) << temporary.toString(Qt::DefaultLocaleLongDate) << temporary.toString("M/d/yy H:m:s a"));
-    QTest::newRow("formatTime, qdate") << "formatTime" << QVariant::fromValue(date) << (QStringList() << temporary.time().toString(Qt::DefaultLocaleShortDate) << temporary.time().toString(Qt::DefaultLocaleLongDate) << temporary.time().toString("H:m:s a") << temporary.time().toString("hh:mm:ss.zzz"));
+    QTest::newRow("formatDate, qdate")
+        << "formatDate" << QVariant::fromValue(date)
+        << (QStringList()
+            << QLocale().toString(temporary.date(), QLocale::ShortFormat)
+            << QLocale().toString(temporary.date(), QLocale::LongFormat)
+            << temporary.date().toString("ddd MMMM d yy"));
+    QTest::newRow("formatDateTime, qdate")
+        << "formatDateTime" << QVariant::fromValue(date)
+        << (QStringList()
+            << QLocale().toString(temporary, QLocale::ShortFormat)
+            << QLocale().toString(temporary, QLocale::LongFormat)
+            << temporary.toString("M/d/yy H:m:s a"));
+    QTest::newRow("formatTime, qdate")
+        << "formatTime" << QVariant::fromValue(date)
+        << (QStringList()
+            << QLocale().toString(temporary.time(), QLocale::ShortFormat)
+            << QLocale().toString(temporary.time(), QLocale::LongFormat)
+            << temporary
+            .time().toString("H:m:s a") << temporary.time().toString("hh:mm:ss.zzz"));
 
     QDateTime dateTime(date, time);
     temporary = dateTime;
-    QTest::newRow("formatDate, qdatetime") << "formatDate" << QVariant::fromValue(dateTime) << (QStringList() << temporary.date().toString(Qt::DefaultLocaleShortDate) << temporary.date().toString(Qt::DefaultLocaleLongDate) << temporary.date().toString("ddd MMMM d yy"));
-    QTest::newRow("formatDateTime, qdatetime") << "formatDateTime" << QVariant::fromValue(dateTime) << (QStringList() << temporary.toString(Qt::DefaultLocaleShortDate) << temporary.toString(Qt::DefaultLocaleLongDate) << temporary.toString("M/d/yy H:m:s a"));
-    QTest::newRow("formatTime, qdatetime") << "formatTime" << QVariant::fromValue(dateTime) << (QStringList() << temporary.time().toString(Qt::DefaultLocaleShortDate) << temporary.time().toString(Qt::DefaultLocaleLongDate) << temporary.time().toString("H:m:s a") << temporary.time().toString("hh:mm:ss.zzz"));
+    QTest::newRow("formatDate, qdatetime")
+        << "formatDate" << QVariant::fromValue(dateTime)
+        << (QStringList()
+            << QLocale().toString(temporary.date(), QLocale::ShortFormat)
+            << QLocale().toString(temporary.date(), QLocale::LongFormat)
+            << temporary.date().toString("ddd MMMM d yy"));
+    QTest::newRow("formatDateTime, qdatetime")
+        << "formatDateTime" << QVariant::fromValue(dateTime)
+        << (QStringList()
+            << QLocale().toString(temporary, QLocale::ShortFormat)
+            << QLocale().toString(temporary, QLocale::LongFormat)
+            << temporary.toString("M/d/yy H:m:s a"));
+    QTest::newRow("formatTime, qdatetime")
+        << "formatTime" << QVariant::fromValue(dateTime)
+        << (QStringList()
+            << QLocale().toString(temporary.time(), QLocale::ShortFormat)
+            << QLocale().toString(temporary.time(), QLocale::LongFormat)
+            << temporary.time().toString("H:m:s a")
+            << temporary.time().toString("hh:mm:ss.zzz"));
 
     QString string(QLatin1String("2011/05/31 11:16:39.755"));
     temporary = QDateTime::fromString(string, "yyyy/MM/dd HH:mm:ss.zzz");
-    QTest::newRow("formatDate, qstring") << "formatDate" << QVariant::fromValue(string) << (QStringList() << temporary.date().toString(Qt::DefaultLocaleShortDate) << temporary.date().toString(Qt::DefaultLocaleLongDate) << temporary.date().toString("ddd MMMM d yy"));
-    QTest::newRow("formatDateTime, qstring") << "formatDateTime" << QVariant::fromValue(string) << (QStringList() << temporary.toString(Qt::DefaultLocaleShortDate) << temporary.toString(Qt::DefaultLocaleLongDate) << temporary.toString("M/d/yy H:m:s a"));
-    QTest::newRow("formatTime, qstring") << "formatTime" << QVariant::fromValue(string) << (QStringList() << temporary.time().toString(Qt::DefaultLocaleShortDate) << temporary.time().toString(Qt::DefaultLocaleLongDate) << temporary.time().toString("H:m:s a") << temporary.time().toString("hh:mm:ss.zzz"));
+    QTest::newRow("formatDate, qstring")
+        << "formatDate" << QVariant::fromValue(string)
+        << (QStringList()
+            << QLocale().toString(temporary.date(), QLocale::ShortFormat)
+            << QLocale().toString(temporary.date(), QLocale::LongFormat)
+            << temporary.date().toString("ddd MMMM d yy"));
+    QTest::newRow("formatDateTime, qstring")
+        << "formatDateTime" << QVariant::fromValue(string)
+        << (QStringList()
+            << QLocale().toString(temporary, QLocale::ShortFormat)
+            << QLocale().toString(temporary, QLocale::LongFormat)
+            << temporary.toString("M/d/yy H:m:s a"));
+    QTest::newRow("formatTime, qstring")
+        << "formatTime" << QVariant::fromValue(string)
+        << (QStringList()
+            << QLocale().toString(temporary.time(), QLocale::ShortFormat)
+            << QLocale().toString(temporary.time(), QLocale::LongFormat)
+            << temporary.time().toString("H:m:s a")
+            << temporary.time().toString("hh:mm:ss.zzz"));
 
     QColor color(Qt::red);
     temporary = QVariant::fromValue(color).toDateTime();
-    QTest::newRow("formatDate, qcolor") << "formatDate" << QVariant::fromValue(color) << (QStringList() << temporary.date().toString(Qt::DefaultLocaleShortDate) << temporary.date().toString(Qt::DefaultLocaleLongDate) << temporary.date().toString("ddd MMMM d yy"));
-    QTest::newRow("formatDateTime, qcolor") << "formatDateTime" << QVariant::fromValue(color) << (QStringList() << temporary.toString(Qt::DefaultLocaleShortDate) << temporary.toString(Qt::DefaultLocaleLongDate) << temporary.toString("M/d/yy H:m:s a"));
-    QTest::newRow("formatTime, qcolor") << "formatTime" << QVariant::fromValue(color) << (QStringList() << temporary.time().toString(Qt::DefaultLocaleShortDate) << temporary.time().toString(Qt::DefaultLocaleLongDate) << temporary.time().toString("H:m:s a") << temporary.time().toString("hh:mm:ss.zzz"));
+    QTest::newRow("formatDate, qcolor")
+        << "formatDate" << QVariant::fromValue(color)
+        << (QStringList()
+            << QLocale().toString(temporary.date(), QLocale::ShortFormat)
+            << QLocale().toString(temporary.date(), QLocale::LongFormat)
+            << temporary.date().toString("ddd MMMM d yy"));
+    QTest::newRow("formatDateTime, qcolor")
+        << "formatDateTime" << QVariant::fromValue(color)
+        << (QStringList()
+            << QLocale().toString(temporary, QLocale::ShortFormat)
+            << QLocale().toString(temporary, QLocale::LongFormat)
+            << temporary.toString("M/d/yy H:m:s a"));
+    QTest::newRow("formatTime, qcolor")
+        << "formatTime" << QVariant::fromValue(color)
+        << (QStringList()
+            << QLocale().toString(temporary.time(), QLocale::ShortFormat)
+            << QLocale().toString(temporary.time(), QLocale::LongFormat)
+            << temporary.time().toString("H:m:s a")
+            << temporary.time().toString("hh:mm:ss.zzz"));
 
     int integer(4);
     temporary = QVariant::fromValue(integer).toDateTime();
-    QTest::newRow("formatDate, int") << "formatDate" << QVariant::fromValue(integer) << (QStringList() << temporary.date().toString(Qt::DefaultLocaleShortDate) << temporary.date().toString(Qt::DefaultLocaleLongDate) << temporary.date().toString("ddd MMMM d yy"));
-    QTest::newRow("formatDateTime, int") << "formatDateTime" << QVariant::fromValue(integer) << (QStringList() << temporary.toString(Qt::DefaultLocaleShortDate) << temporary.toString(Qt::DefaultLocaleLongDate) << temporary.toString("M/d/yy H:m:s a"));
-    QTest::newRow("formatTime, int") << "formatTime" << QVariant::fromValue(integer) << (QStringList() << temporary.time().toString(Qt::DefaultLocaleShortDate) << temporary.time().toString(Qt::DefaultLocaleLongDate) << temporary.time().toString("H:m:s a") << temporary.time().toString("hh:mm:ss.zzz"));
+    QTest::newRow("formatDate, int")
+        << "formatDate" << QVariant::fromValue(integer)
+        << (QStringList()
+            << QLocale().toString(temporary.date(), QLocale::ShortFormat)
+            << QLocale().toString(temporary.date(), QLocale::LongFormat)
+            << temporary.date().toString("ddd MMMM d yy"));
+    QTest::newRow("formatDateTime, int")
+        << "formatDateTime" << QVariant::fromValue(integer)
+        << (QStringList()
+            << QLocale().toString(temporary, QLocale::ShortFormat)
+            << QLocale().toString(temporary, QLocale::LongFormat)
+            << temporary.toString("M/d/yy H:m:s a"));
+    QTest::newRow("formatTime, int")
+        << "formatTime" << QVariant::fromValue(integer)
+        << (QStringList()
+            << QLocale().toString(temporary.time(), QLocale::ShortFormat)
+            << QLocale().toString(temporary.time(), QLocale::LongFormat)
+            << temporary.time().toString("H:m:s a")
+            << temporary.time().toString("hh:mm:ss.zzz"));
+}
+
+void tst_qqmlqt::dateTimeFormattingWithLocale()
+{
+    QQmlEngine engine;
+    auto url = testFileUrl("formattingLocale.qml");
+    QQmlComponent comp(&engine, url);
+    QDateTime dateTime = QDateTime::fromString("M1d1y9800:01:02",
+                                               "'M'M'd'd'y'yyhh:mm:ss");
+    QDate date(1995, 5, 17);
+    QScopedPointer<QObject> o(comp.createWithInitialProperties({ {"myDateTime", dateTime}, {"myDate", date} }));
+    QVERIFY(!o.isNull());
+
+    auto dateTimeString = o->property("dateTimeString").toString();
+    QCOMPARE(dateTimeString, QLocale("de_DE").toString(dateTime, QLocale::NarrowFormat));
+    auto dateString = o->property("dateString").toString();
+    QCOMPARE(dateString, QLocale("de_DE").toString(date, QLocale::ShortFormat));
+
+    QString warningMsg = url.toString() + QLatin1String(":11: Error: Qt.formatTime(): Third argument must be a Locale format option");
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg, warningMsg.toUtf8().constData());
+    QMetaObject::invokeMethod(o.get(), "invalidUsage");
 }
 
 void tst_qqmlqt::isQtObject()

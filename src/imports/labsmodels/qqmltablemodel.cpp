@@ -644,7 +644,9 @@ QQmlListProperty<QQmlTableModelColumn> QQmlTableModel::columns()
         &QQmlTableModel::columns_append,
         &QQmlTableModel::columns_count,
         &QQmlTableModel::columns_at,
-        &QQmlTableModel::columns_clear);
+        &QQmlTableModel::columns_clear,
+        &QQmlTableModel::columns_replace,
+        &QQmlTableModel::columns_removeLast);
 }
 
 void QQmlTableModel::columns_append(QQmlListProperty<QQmlTableModelColumn> *property,
@@ -672,6 +674,19 @@ void QQmlTableModel::columns_clear(QQmlListProperty<QQmlTableModelColumn> *prope
 {
     QQmlTableModel *model = static_cast<QQmlTableModel*>(property->object);
     return model->mColumns.clear();
+}
+
+void QQmlTableModel::columns_replace(QQmlListProperty<QQmlTableModelColumn> *property, int index, QQmlTableModelColumn *value)
+{
+    QQmlTableModel *model = static_cast<QQmlTableModel*>(property->object);
+    if (QQmlTableModelColumn *column = qobject_cast<QQmlTableModelColumn*>(value))
+        return model->mColumns.replace(index, column);
+}
+
+void QQmlTableModel::columns_removeLast(QQmlListProperty<QQmlTableModelColumn> *property)
+{
+    QQmlTableModel *model = static_cast<QQmlTableModel*>(property->object);
+    model->mColumns.removeLast();
 }
 
 /*!

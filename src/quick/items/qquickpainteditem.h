@@ -57,6 +57,7 @@ class Q_QUICK_EXPORT QQuickPaintedItem : public QQuickItem
     Q_PROPERTY(QSize textureSize READ textureSize WRITE setTextureSize NOTIFY textureSizeChanged)
 
     QML_NAMED_ELEMENT(PaintedItem)
+    QML_ADDED_IN_VERSION(2, 0)
     QML_UNCREATABLE("Cannot create instance of abstract class PaintedItem.")
 
 public:

@@ -81,7 +81,7 @@ Item {
             property real velocity: 1.5
             width: parent.width
             height: parent.height - 100
-            onAffectParticles: {
+            onAffectParticles: (particles, dt) => {
             /*  //Linear movement
                 if (particle.r == 0) {
                     particle.r = Math.random() > 0.5 ? -1 : 1;
@@ -117,7 +117,7 @@ Item {
             width: parent.width + 120
             height: 100
             anchors.bottom: parent.bottom
-            onAffectParticles: {
+            onAffectParticles: (particles, dt) => {
                 for (var i=0; i<particles.length; i++) {
                     var particle = particles[i];
                     var pseudoRand = (Math.floor(particle.t*1327) % 10) + 1;

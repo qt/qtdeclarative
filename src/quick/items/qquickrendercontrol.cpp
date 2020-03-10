@@ -45,7 +45,7 @@
 #include <QtQuick/private/qquickanimatorcontroller_p.h>
 
 #if QT_CONFIG(opengl)
-# include <QtGui/QOpenGLContext>
+# include <QOpenGLContext>
 # include <QtQuick/private/qsgdefaultrendercontext_p.h>
 #if QT_CONFIG(quick_shadereffect)
 # include <QtQuick/private/qquickopenglshadereffectnode_p.h>

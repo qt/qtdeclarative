@@ -311,7 +311,7 @@ void tst_qqmltimer::restart()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData(QByteArray("import QtQml 2.0\nTimer { interval: 500; repeat: true; running: true }"), QUrl::fromLocalFile(""));
+    component.setData(QByteArray("import QtQml 2.0\nTimer { interval: 1000; repeat: true; running: true }"), QUrl::fromLocalFile(""));
     QQmlTimer *timer = qobject_cast<QQmlTimer*>(component.create());
     QVERIFY(timer != nullptr);
 
@@ -319,14 +319,16 @@ void tst_qqmltimer::restart()
     connect(timer, SIGNAL(triggered()), &helper, SLOT(timeout()));
     QCOMPARE(helper.count, 0);
 
-    consistentWait(600);
+    consistentWait(1200);
     QCOMPARE(helper.count, 1);
 
-    consistentWait(300);
+    consistentWait(500);
 
+    QCOMPARE(helper.count, 1);
     timer->restart();
+    QCOMPARE(helper.count, 1);
 
-    consistentWait(700);
+    consistentWait(1400);
 
     QCOMPARE(helper.count, 2);
     QVERIFY(timer->isRunning());

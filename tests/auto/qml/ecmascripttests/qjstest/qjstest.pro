@@ -3,6 +3,8 @@ TARGET = qjstest
 QT += qml-private
 INCLUDEPATH += .
 
+CONFIG += c++14
+
 DEFINES += QT_DEPRECATED_WARNINGS
 
 HEADERS += test262runner.h

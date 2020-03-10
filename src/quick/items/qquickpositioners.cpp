@@ -1609,6 +1609,7 @@ Qt::LayoutDirection QQuickGrid::effectiveLayoutDirection() const
     \qmlproperty enumeration QtQuick::Grid::horizontalItemAlignment
     \qmlproperty enumeration QtQuick::Grid::verticalItemAlignment
     \qmlproperty enumeration QtQuick::Grid::effectiveHorizontalItemAlignment
+    \since 5.1
 
     Sets the horizontal and vertical alignment of items in the Grid. By default,
     the items are vertically aligned to the top. Horizontal

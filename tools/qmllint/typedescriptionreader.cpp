@@ -102,7 +102,7 @@ void TypeDescriptionReader::readDocument(UiProgram *ast)
         return;
     }
 
-    if (import->version->majorVersion != 1) {
+    if (import->version->version.majorVersion() != 1) {
         addError(import->version->firstSourceLocation(),
                  tr("Major version different from 1 not supported."));
         return;

@@ -1,7 +1,7 @@
 CXX_MODULE = qml
 TARGET  = labsmodelsplugin
 TARGETPATH = Qt/labs/qmlmodels
-IMPORT_VERSION = 1.0
+QML_IMPORT_VERSION = $$QT_VERSION
 
 QT = qml-private qmlmodels-private
 

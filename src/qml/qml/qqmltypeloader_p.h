@@ -97,8 +97,7 @@ public:
             QString uri;
             QString qualifier;
 
-            int majorVersion = -1;
-            int minorVersion = -1;
+            QTypeRevision version;
 
             QV4::CompiledData::Location location;
 

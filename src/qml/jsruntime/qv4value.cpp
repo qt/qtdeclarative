@@ -250,6 +250,8 @@ bool Value::sameValue(Value other) const {
     if (isDouble() && other.isInteger())
         return other.int_32() ? (doubleValue() == double(other.int_32()))
                               : (doubleValue() == 0 && !std::signbit(doubleValue()));
+    if (isManaged())
+        return other.isManaged() && cast<Managed>()->isEqualTo(other.cast<Managed>());
     return false;
 }
 
@@ -269,6 +271,8 @@ bool Value::sameValueZero(Value other) const {
             return true;
         }
     }
+    if (isManaged())
+        return other.isManaged() && cast<Managed>()->isEqualTo(other.cast<Managed>());
     return false;
 }
 

@@ -117,6 +117,16 @@ QUrl QQmlExtensionPlugin::baseUrl() const
 }
 
 /*!
+  \since 6.0
+
+  Override this method to unregister types manually registered in registerTypes.
+*/
+void QQmlExtensionPlugin::unregisterTypes()
+{
+
+}
+
+/*!
     \internal
 */
 

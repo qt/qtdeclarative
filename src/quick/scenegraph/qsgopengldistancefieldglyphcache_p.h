@@ -52,7 +52,7 @@
 //
 
 #include "qsgadaptationlayer_p.h"
-#include <QtGui/qopenglfunctions.h>
+#include <qopenglfunctions.h>
 #include <qopenglshaderprogram.h>
 #include <qopenglbuffer.h>
 #include <qopenglvertexarrayobject.h>

@@ -112,7 +112,7 @@ Alternatively, a custom property of an object type may be defined in
 an object declaration in a QML document with the following syntax:
 
 \code
-    [default] property <propertyType> <propertyName>
+    [default] [required] [readonly] property <propertyType> <propertyName>
 \endcode
 
 In this way an object declaration may \l {Defining Object Types from QML}
@@ -121,10 +121,13 @@ state more easily.
 
 Property names must begin with a lower case letter and can only contain
 letters, numbers and underscores. \l {JavaScript Reserved Words}
-{JavaScript reserved words} are not valid property names.  The \c default
-keyword is optional, and modifies the semantics of the property being declared.
-See the upcoming section on \l {Default Properties}{default properties} for
-more information about the \c default property modifier.
+{JavaScript reserved words} are not valid property names.  The \c default,
+\c required, and \c readonly keywords are optional, and modify the semantics
+of the property being declared.
+See the upcoming sections on \l {Default Properties}{default properties},
+\l {Required Properties}{required properties} and,
+\l {Read-Only Properties}{read-only properties} for more information
+about their respective meaning.
 
 Declaring a custom property implicitly creates a value-change
 \l{Signal attributes}{signal} for that property, as well as an associated
@@ -646,6 +649,45 @@ Default properties can be useful for reassigning the children of an item. See
 the \l{TabWidget Example}, which uses a default property to
 automatically reassign children of the TabWidget as children of an inner
 ListView.  See also \l {Extending QML}.
+
+\section3 Required Properties
+
+An object declaration may define a property as required, using the \c required
+keyword. The syntax is
+\code
+    required property <propertyType> <propertyName>
+\endcode
+
+As the name suggests, required properties must be set when an instance of the object
+is created. Violation of this rule will result in QML applications not starting if it can be
+detected statically. In case of dynamically instantiated QML components (for instance via
+\l {QtQml::Qt::createComponent()}{Qt.createComponent()}), violating this rule results in a
+warning and a null return value.
+
+It's possible to make an existing property required with
+\code
+    required <propertyName>
+\endcode
+The following example shows how to create a custom Rectangle component, in which the color
+property always needs to be specified.
+\qml
+// ColorRectangle.qml
+Rectangle {
+    required color
+}
+\endqml
+
+\note You can't assign an initial value to a required property from QML, as that would go
+directly against the intended usage of required properties.
+
+Required properties play a special role in model-view-delegate code:
+If the delegate of a view has required properties whose names match with
+the role names of the view's model, then those properties will be initialized
+with the model's corresponding values.
+For more information, visit the \l{Models and Views in Qt Quick} page.
+
+\sa {QQmlComponent::createWithInitialProperties}, {QQmlApplicationEngine::setInitialProperties}
+and {QQuickView::setInitialProperties} for ways to initialize required properties from C++.
 
 \section3 Read-Only Properties
 

@@ -117,6 +117,9 @@ public:
     bool preserveAspectRatioFit() const;
     void setPreserveAspectRatioFit(bool preserveAspectRatioFit);
 
+    QColorSpace targetColorSpace() const;
+    void setTargetColorSpace(const QColorSpace &colorSpace);
+
 private:
     QSharedDataPointer<QQuickImageProviderOptionsPrivate> d;
 };
@@ -127,7 +130,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPixmap
 public:
     QQuickPixmap();
     QQuickPixmap(QQmlEngine *, const QUrl &);
-    QQuickPixmap(QQmlEngine *, const QUrl &, const QSize &);
+    QQuickPixmap(QQmlEngine *, const QUrl &, const QRect &region, const QSize &);
     QQuickPixmap(const QUrl &, const QImage &image);
     ~QQuickPixmap();
 
@@ -148,12 +151,15 @@ public:
     QString error() const;
     const QUrl &url() const;
     const QSize &implicitSize() const;
+    const QRect &requestRegion() const;
     const QSize &requestSize() const;
     QQuickImageProviderOptions::AutoTransform autoTransform() const;
     int frameCount() const;
     QImage image() const;
     void setImage(const QImage &);
     void setPixmap(const QQuickPixmap &other);
+
+    QColorSpace colorSpace() const;
 
     QQuickTextureFactory *textureFactory() const;
 
@@ -163,9 +169,10 @@ public:
 
     void load(QQmlEngine *, const QUrl &);
     void load(QQmlEngine *, const QUrl &, QQuickPixmap::Options options);
-    void load(QQmlEngine *, const QUrl &, const QSize &);
-    void load(QQmlEngine *, const QUrl &, const QSize &, QQuickPixmap::Options options);
-    void load(QQmlEngine *, const QUrl &, const QSize &, QQuickPixmap::Options options, const QQuickImageProviderOptions &providerOptions, int frame = 0, int frameCount = 1);
+    void load(QQmlEngine *, const QUrl &, const QRect &requestRegion, const QSize &requestSize);
+    void load(QQmlEngine *, const QUrl &, const QRect &requestRegion, const QSize &requestSize, QQuickPixmap::Options options);
+    void load(QQmlEngine *, const QUrl &, const QRect &requestRegion, const QSize &requestSize,
+              QQuickPixmap::Options options, const QQuickImageProviderOptions &providerOptions, int frame = 0, int frameCount = 1);
 
     void clear();
     void clear(QObject *);
@@ -176,7 +183,8 @@ public:
     bool connectDownloadProgress(QObject *, int);
 
     static void purgeCache();
-    static bool isCached(const QUrl &url, const QSize &requestSize, const int frame, const QQuickImageProviderOptions &options);
+    static bool isCached(const QUrl &url, const QRect &requestRegion, const QSize &requestSize,
+                         const int frame, const QQuickImageProviderOptions &options);
 
     static const QLatin1String itemGrabberScheme;
 

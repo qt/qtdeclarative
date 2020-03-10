@@ -203,6 +203,7 @@ class QQuickImageParticle : public QQuickParticlePainter
 
     Q_PROPERTY(EntryEffect entryEffect READ entryEffect WRITE setEntryEffect NOTIFY entryEffectChanged)
     QML_NAMED_ELEMENT(ImageParticle)
+    QML_ADDED_IN_VERSION(2, 0)
 public:
     explicit QQuickImageParticle(QQuickItem *parent = 0);
     virtual ~QQuickImageParticle();

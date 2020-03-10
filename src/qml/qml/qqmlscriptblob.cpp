@@ -41,6 +41,7 @@
 #include <private/qqmlirbuilder_p.h>
 #include <private/qqmlscriptblob_p.h>
 #include <private/qqmlscriptdata_p.h>
+#include <private/qqmlsourcecoordinate_p.h>
 #include <private/qv4runtimecodegen_p.h>
 #include <private/qv4script_p.h>
 
@@ -167,8 +168,8 @@ void QQmlScriptBlob::done()
             QList<QQmlError> errors = script.script->errors();
             QQmlError error;
             error.setUrl(url());
-            error.setLine(script.location.line);
-            error.setColumn(script.location.column);
+            error.setLine(qmlConvertSourceCoordinate<quint32, int>(script.location.line));
+            error.setColumn(qmlConvertSourceCoordinate<quint32, int>(script.location.column));
             error.setDescription(QQmlTypeLoader::tr("Script %1 unavailable").arg(script.script->urlString()));
             errors.prepend(error);
             setError(errors);

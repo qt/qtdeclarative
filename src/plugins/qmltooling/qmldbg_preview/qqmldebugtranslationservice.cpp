@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2018 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,51 +37,32 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLJSSOURCELOCATION_P_H
-#define QQMLJSSOURCELOCATION_P_H
-
-#include "qqmljsglobal_p.h"
-
-#include <QtCore/qglobal.h>
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#include "qqmldebugtranslationservice.h"
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS { namespace AST {
-
-class SourceLocation
+QQmlDebugTranslationServiceImpl::QQmlDebugTranslationServiceImpl(QObject *parent) :
+    QQmlDebugTranslationService(1, parent)
 {
-public:
-    explicit SourceLocation(quint32 offset = 0, quint32 length = 0, quint32 line = 0, quint32 column = 0)
-        : offset(offset), length(length),
-          startLine(line), startColumn(column)
-    { }
+}
 
-    bool isValid() const { return length != 0; }
+void QQmlDebugTranslationServiceImpl::messageReceived(const QByteArray &message)
+{
+    Q_UNUSED(message)
+}
 
-    quint32 begin() const { return offset; }
-    quint32 end() const { return offset + length; }
+QString QQmlDebugTranslationServiceImpl::foundElidedText(QObject *textObject, const QString &layoutText, const QString &elideText)
+{
+    Q_UNUSED(textObject)
+    Q_UNUSED(layoutText)
+    return elideText;
+}
 
-// attributes
-    // ### encode
-    quint32 offset;
-    quint32 length;
-    quint32 startLine;
-    quint32 startColumn;
-};
-
-} } // namespace AST
+void QQmlDebugTranslationServiceImpl::foundTranslationBinding(QQmlTranslationBinding *binding, QObject *scopeObject, QQmlContextData *contextData)
+{
+    Q_UNUSED(binding)
+    Q_UNUSED(scopeObject)
+    Q_UNUSED(contextData)
+}
 
 QT_END_NAMESPACE
-
-#endif

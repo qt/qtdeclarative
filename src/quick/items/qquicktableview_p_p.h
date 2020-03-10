@@ -91,7 +91,7 @@ private:
     Q_DECLARE_PRIVATE(QQuickTableSectionSizeProvider)
 };
 
-class Q_QML_AUTOTEST_EXPORT QQuickTableViewPrivate : public QQuickFlickablePrivate
+class Q_QUICK_PRIVATE_EXPORT QQuickTableViewPrivate : public QQuickFlickablePrivate
 {
     Q_DECLARE_PUBLIC(QQuickTableView)
 
@@ -395,7 +395,7 @@ public:
 
     void scheduleRebuildTable(QQuickTableViewPrivate::RebuildOptions options);
 
-    int resolveImportVersion();
+    QTypeRevision resolveImportVersion();
     void createWrapperModel();
 
     void initItemCallback(int modelIndex, QObject *item);

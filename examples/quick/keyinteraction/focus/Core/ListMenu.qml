@@ -48,21 +48,22 @@
 **
 ****************************************************************************/
 
+import QtQml 2.1
 import QtQuick 2.1
 
 FocusScope {
+    id: menu
     clip: true
-
-    onActiveFocusChanged: {
-        if (activeFocus)
-            mainView.state = "showListViews"
-    }
+    required property Item keyUpTarget
+    required property Item keyLeftTarget
 
     ListView {
         id: list1
         y: activeFocus ? 10 : 40; width: parent.width / 3; height: parent.height - 20
         focus: true
-        KeyNavigation.up: gridMenu; KeyNavigation.left: contextMenu; KeyNavigation.right: list2
+        KeyNavigation.up: menu.keyUpTarget
+        KeyNavigation.left: menu.keyLeftTarget
+        KeyNavigation.right: list2
         model: 10; cacheBuffer: 200
         delegate: ListViewDelegate {}
 
@@ -74,7 +75,9 @@ FocusScope {
     ListView {
         id: list2
         y: activeFocus ? 10 : 40; x: parseInt(parent.width / 3); width: parent.width / 3; height: parent.height - 20
-        KeyNavigation.up: gridMenu; KeyNavigation.left: list1; KeyNavigation.right: list3
+        KeyNavigation.up: menu.keyUpTarget
+        KeyNavigation.left: list1
+        KeyNavigation.right: list3
         model: 10; cacheBuffer: 200
         delegate: ListViewDelegate {}
 
@@ -86,7 +89,8 @@ FocusScope {
     ListView {
         id: list3
         y: activeFocus ? 10 : 40; x: parseInt(2 * parent.width / 3); width: parent.width / 3; height: parent.height - 20
-        KeyNavigation.up: gridMenu; KeyNavigation.left: list2
+        KeyNavigation.up: menu.keyUpTarget
+        KeyNavigation.left: list2
         model: 10; cacheBuffer: 200
         delegate: ListViewDelegate {}
 

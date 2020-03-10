@@ -96,6 +96,8 @@ public:
     void disposeInitialPropertyValues();
     static QUrl resolveSourceUrl(QQmlV4Function *args);
     QV4::ReturnedValue extractInitialPropertyValues(QQmlV4Function *args, QObject *loader, bool *error);
+    QQuickLoader::Status computeStatus() const;
+    void updateStatus();
 
     qreal getImplicitWidth() const override;
     qreal getImplicitHeight() const override;
@@ -112,6 +114,11 @@ public:
     bool active : 1;
     bool loadingFromSource : 1;
     bool asynchronous : 1;
+    // We need to use char instead of QQuickLoader::Status
+    // as otherwise the size of the class would increase
+    // on 32-bit systems, as sizeof(Status) == sizeof(int)
+    // and sizeof(int) > remaining padding on 32 bit
+    char status;
 
     void _q_sourceLoaded();
     void _q_updateSize(bool loaderGeometryChanged = true);

@@ -49,22 +49,22 @@ file contents with:
 \snippet code/backend/backend.h backend_header
 
 The \c Q_PROPERTY macro declares a property that could be accessed from QML.
+The \c QML_ELEMENT macro makes the BackEnd class available in QML.
 
-\li Replace its C++ file contents with:
+\li Add the following lines to your project file:
+
+\snippet code/backend/backend.pro registration
+
+The BackEnd class is automatically registered as a type, which is accessible
+from QML by importing the URL, "\c{io.qt.examples.backend 1.0}".
+
+\li Replace the contents of \c{backend.cpp} with:
 
 \snippet code/backend/backend.cpp backend_cpp
 
 The \c setUserName function emits the \c userNameChanged signal every time
 \c m_userName value changes. The signal can be handled from QML using the
 \c onUserNameChanged handler.
-
-\li Include \c "backend.h" in \c main.cpp and register the class as a QML type
-under a import URL as shown below:
-
-\snippet code/backend/main.cpp main_cpp
-
-The BackEnd class is registered as a type, which is accessible from QML by
-importing the URL, "\c{io.qt.examples.backend 1.0}".
 
 \li Replace the contents of \c main.qml with the following code:
 

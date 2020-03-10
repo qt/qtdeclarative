@@ -14,9 +14,9 @@ contains(CMAKE_BIN_DIR, "^\\.\\./.*") {
     CMAKE_BIN_DIR_IS_ABSOLUTE = True
 }
 
-CMAKE_QML_DIR = $$cmakeRelativePath($$[QT_INSTALL_QML/get], $$[QT_INSTALL_PREFIX])
+CMAKE_QML_DIR = $$cmakeRelativePath($$[QT_INSTALL_QML], $$[QT_INSTALL_PREFIX])
 contains(CMAKE_QML_DIR, "^\\.\\./.*") {
-    CMAKE_QML_DIR = $$[QT_INSTALL_QML/get]/
+    CMAKE_QML_DIR = $$[QT_INSTALL_QML]/
     CMAKE_QML_DIR_IS_ABSOLUTE = True
 }
 load(qt_build_paths)

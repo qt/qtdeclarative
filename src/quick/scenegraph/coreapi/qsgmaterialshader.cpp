@@ -44,8 +44,8 @@
 # include <private/qsgshadersourcebuilder_p.h>
 # include <private/qsgdefaultcontext_p.h>
 # include <private/qsgdefaultrendercontext_p.h>
-# include <QtGui/QOpenGLFunctions>
-# include <QtGui/QOpenGLContext>
+# include <QOpenGLFunctions>
+# include <QOpenGLContext>
 #endif
 
 QT_BEGIN_NAMESPACE

@@ -1,0 +1,3 @@
+NonRequiredBase {
+    required i
+}

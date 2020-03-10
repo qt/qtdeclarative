@@ -183,10 +183,10 @@ struct Context {
         QQmlJS::AST::VariableScope scope = QQmlJS::AST::VariableScope::Var;
         mutable bool canEscape = false;
         QQmlJS::AST::FunctionExpression *function = nullptr;
-        QQmlJS::AST::SourceLocation endOfInitializerLocation;
+        QQmlJS::SourceLocation endOfInitializerLocation;
 
         bool isLexicallyScoped() const { return this->scope != QQmlJS::AST::VariableScope::Var; }
-        bool requiresTDZCheck(const QQmlJS::AST::SourceLocation &accessLocation, bool accessAcrossContextBoundaries) const;
+        bool requiresTDZCheck(const QQmlJS::SourceLocation &accessLocation, bool accessAcrossContextBoundaries) const;
     };
     typedef QMap<QString, Member> MemberMap;
 
@@ -227,7 +227,7 @@ struct Context {
     bool isWithBlock = false;
     bool isCatchBlock = false;
     QString caughtVariable;
-    QQmlJS::AST::SourceLocation lastBlockInitializerLocation;
+    QQmlJS::SourceLocation lastBlockInitializerLocation;
 
     enum UsesArgumentsObject {
         ArgumentsObjectUnknown,
@@ -331,7 +331,7 @@ struct Context {
     }
 
     bool addLocalVar(const QString &name, MemberType contextType, QQmlJS::AST::VariableScope scope, QQmlJS::AST::FunctionExpression *function = nullptr,
-                     const QQmlJS::AST::SourceLocation &endOfInitializer = QQmlJS::AST::SourceLocation());
+                     const QQmlJS::SourceLocation &endOfInitializer = QQmlJS::SourceLocation());
 
     struct ResolvedName {
         enum Type {
@@ -348,10 +348,10 @@ struct Context {
         bool requiresTDZCheck = false;
         int scope = -1;
         int index = -1;
-        QQmlJS::AST::SourceLocation endOfDeclarationLocation;
+        QQmlJS::SourceLocation endOfDeclarationLocation;
         bool isValid() const { return type != Unresolved; }
     };
-    ResolvedName resolveName(const QString &name, const QQmlJS::AST::SourceLocation &accessLocation);
+    ResolvedName resolveName(const QString &name, const QQmlJS::SourceLocation &accessLocation);
     void emitBlockHeader(Compiler::Codegen *codegen);
     void emitBlockFooter(Compiler::Codegen *codegen);
 

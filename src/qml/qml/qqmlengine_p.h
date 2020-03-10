@@ -105,6 +105,7 @@ struct QObjectForeign {
     Q_GADGET
     QML_FOREIGN(QObject)
     QML_NAMED_ELEMENT(QtObject)
+    QML_ADDED_IN_VERSION(2, 0)
     Q_CLASSINFO("QML.Root", "QML")
 };
 
@@ -216,7 +217,7 @@ public:
     QString offlineStorageDatabaseDirectory() const;
 
     // These methods may be called from the loader thread
-    inline QQmlPropertyCache *cache(const QQmlType &, int);
+    inline QQmlPropertyCache *cache(const QQmlType &, QTypeRevision version);
     using QJSEnginePrivate::cache;
 
     // These methods may be called from the loader thread
@@ -228,7 +229,8 @@ public:
     QQmlMetaObject rawMetaObjectForType(int) const;
     QQmlMetaObject metaObjectForType(int) const;
     QQmlPropertyCache *propertyCacheForType(int);
-    QQmlPropertyCache *rawPropertyCacheForType(int, int minorVersion = -1);
+    QQmlPropertyCache *rawPropertyCacheForType(int);
+    QQmlPropertyCache *rawPropertyCacheForType(int, QTypeRevision version);
     void registerInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit);
     void unregisterInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit);
     QV4::ExecutableCompilationUnit *obtainExecutableCompilationUnit(int typeId);
@@ -268,8 +270,24 @@ public:
 
     mutable QMutex networkAccessManagerMutex;
 
+    QQmlGadgetPtrWrapper *valueTypeInstance(int typeIndex)
+    {
+        auto it = cachedValueTypeInstances.find(typeIndex);
+        if (it != cachedValueTypeInstances.end())
+            return *it;
+
+        if (QQmlValueType *valueType = QQmlValueTypeFactory::valueType(typeIndex)) {
+            QQmlGadgetPtrWrapper *instance = new QQmlGadgetPtrWrapper(valueType, q_func());
+            cachedValueTypeInstances.insert(typeIndex, instance);
+            return instance;
+        }
+
+        return nullptr;
+    }
+
 private:
     QHash<QQmlType, QJSValue> singletonInstances;
+    QHash<int, QQmlGadgetPtrWrapper *> cachedValueTypeInstances;
 
     // These members must be protected by a QQmlEnginePrivate::Locker as they are required by
     // the threaded loader.  Only access them through their respective accessor methods.
@@ -282,6 +300,7 @@ private:
     void doDeleteInEngineThread();
 
     void cleanupScarceResources();
+    QQmlPropertyCache *findPropertyCacheInCompositeTypes(int t) const;
 };
 
 /*
@@ -380,15 +399,15 @@ Returns a QQmlPropertyCache for \a type with \a minorVersion.
 
 The returned cache is not referenced, so if it is to be stored, call addref().
 */
-QQmlPropertyCache *QQmlEnginePrivate::cache(const QQmlType &type, int minorVersion)
+QQmlPropertyCache *QQmlEnginePrivate::cache(const QQmlType &type, QTypeRevision version)
 {
     Q_ASSERT(type.isValid());
 
-    if (minorVersion == -1 || !type.containsRevisionedAttributes())
-        return cache(type.metaObject(), minorVersion);
+    if (!version.hasMinorVersion() || !type.containsRevisionedAttributes())
+        return cache(type.metaObject(), version);
 
     Locker locker(this);
-    return QQmlMetaType::propertyCache(type, minorVersion);
+    return QQmlMetaType::propertyCache(type, version);
 }
 
 QV4::ExecutionEngine *QQmlEnginePrivate::getV4Engine(QQmlEngine *e)

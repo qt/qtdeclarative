@@ -100,6 +100,7 @@ class QQuickCanvasItem : public QQuickItem
     Q_PROPERTY(RenderTarget renderTarget READ renderTarget WRITE setRenderTarget NOTIFY renderTargetChanged)
     Q_PROPERTY(RenderStrategy renderStrategy READ renderStrategy WRITE setRenderStrategy NOTIFY renderStrategyChanged)
     QML_NAMED_ELEMENT(Canvas)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     enum RenderTarget {

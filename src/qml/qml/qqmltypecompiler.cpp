@@ -82,7 +82,7 @@ QQmlRefPointer<QV4::ExecutableCompilationUnit> QQmlTypeCompiler::compile()
     {
         QQmlPropertyCacheCreator<QQmlTypeCompiler> propertyCacheBuilder(&m_propertyCaches, &pendingGroupPropertyBindings,
                                                                         engine, this, imports(), typeData->typeClassName());
-        QQmlJS::DiagnosticMessage error = propertyCacheBuilder.buildMetaObjects();
+        QQmlError error = propertyCacheBuilder.buildMetaObjects();
         if (error.isValid()) {
             recordError(error);
             return nullptr;
@@ -174,8 +174,8 @@ QQmlRefPointer<QV4::ExecutableCompilationUnit> QQmlTypeCompiler::compile()
 void QQmlTypeCompiler::recordError(const QV4::CompiledData::Location &location, const QString &description)
 {
     QQmlError error;
-    error.setLine(location.line);
-    error.setColumn(location.column);
+    error.setLine(qmlConvertSourceCoordinate<quint32, int>(location.line));
+    error.setColumn(qmlConvertSourceCoordinate<quint32, int>(location.column));
     error.setDescription(description);
     error.setUrl(url());
     errors << error;
@@ -185,8 +185,15 @@ void QQmlTypeCompiler::recordError(const QQmlJS::DiagnosticMessage &message)
 {
     QQmlError error;
     error.setDescription(message.message);
-    error.setLine(message.line);
-    error.setColumn(message.column);
+    error.setLine(qmlConvertSourceCoordinate<quint32, int>(message.loc.startLine));
+    error.setColumn(qmlConvertSourceCoordinate<quint32, int>(message.loc.startColumn));
+    error.setUrl(url());
+    errors << error;
+}
+
+void QQmlTypeCompiler::recordError(const QQmlError &e)
+{
+    QQmlError error = e;
     error.setUrl(url());
     errors << error;
 }
@@ -257,7 +264,7 @@ QString QQmlTypeCompiler::bindingAsString(const QmlIR::Object *object, int scrip
     return object->bindingAsString(document, scriptIndex);
 }
 
-void QQmlTypeCompiler::addImport(const QString &module, const QString &qualifier, int majorVersion, int minorVersion)
+void QQmlTypeCompiler::addImport(const QString &module, const QString &qualifier, QTypeRevision version)
 {
     const quint32 moduleIdx = registerString(module);
     const quint32 qualifierIdx = registerString(qualifier);
@@ -272,8 +279,7 @@ void QQmlTypeCompiler::addImport(const QString &module, const QString &qualifier
     auto pool = memoryPool();
     QV4::CompiledData::Import *import = pool->New<QV4::CompiledData::Import>();
     import->type = QV4::CompiledData::Import::ImportLibrary;
-    import->majorVersion = majorVersion;
-    import->minorVersion = minorVersion;
+    import->version = version;
     import->uriIndex = moduleIdx;
     import->qualifierIndex = qualifierIdx;
     document->imports.append(import);
@@ -394,7 +400,10 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
                 auto *typeRef = resolvedType(obj->inheritedTypeNameIndex);
                 const QQmlType type = typeRef ? typeRef->type : QQmlType();
                 if (type.isValid()) {
-                    COMPILE_EXCEPTION(binding, tr("\"%1.%2\" is not available in %3 %4.%5.").arg(typeName).arg(originalPropertyName).arg(type.module()).arg(type.majorVersion()).arg(type.minorVersion()));
+                    COMPILE_EXCEPTION(binding, tr("\"%1.%2\" is not available in %3 %4.%5.")
+                                      .arg(typeName).arg(originalPropertyName).arg(type.module())
+                                      .arg(type.version().majorVersion())
+                                      .arg(type.version().minorVersion()));
                 } else {
                     COMPILE_EXCEPTION(binding, tr("\"%1.%2\" is not available due to component versioning.").arg(typeName).arg(originalPropertyName));
                 }
@@ -816,7 +825,12 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
         if (!pd || !pd->isQObject())
             continue;
 
-        QQmlPropertyCache *pc = enginePrivate->rawPropertyCacheForType(pd->propType(), pd->typeMinorVersion());
+        // If the version is given, use it and look up by QQmlType.
+        // Otherwise, make sure we look up by metaobject.
+        // TODO: Is this correct?
+        QQmlPropertyCache *pc = pd->typeVersion().hasMinorVersion()
+                ? enginePrivate->rawPropertyCacheForType(pd->propType(), pd->typeVersion())
+                : enginePrivate->rawPropertyCacheForType(pd->propType());
         const QMetaObject *mo = pc ? pc->firstCppMetaObject() : nullptr;
         while (mo) {
             if (mo == &QQmlComponent::staticMetaObject)
@@ -832,7 +846,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
         Q_ASSERT(componentType.isValid());
         const QString qualifier = QStringLiteral("QmlInternals");
 
-        compiler->addImport(componentType.module(), qualifier, componentType.majorVersion(), componentType.minorVersion());
+        compiler->addImport(componentType.module(), qualifier, componentType.version());
 
         QmlIR::Object *syntheticComponent = pool->New<QmlIR::Object>();
         syntheticComponent->init(pool, compiler->registerString(qualifier + QLatin1Char('.') + componentType.elementName()), compiler->registerString(QString()));
@@ -842,8 +856,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
         if (!containsResolvedType(syntheticComponent->inheritedTypeNameIndex)) {
             auto typeRef = new QV4::ResolvedTypeReference;
             typeRef->type = componentType;
-            typeRef->majorVersion = componentType.majorVersion();
-            typeRef->minorVersion = componentType.minorVersion();
+            typeRef->version = componentType.version();
             insertResolvedType(syntheticComponent->inheritedTypeNameIndex, typeRef);
         }
 
@@ -875,6 +888,10 @@ bool QQmlComponentAndAliasResolver::resolve()
     const int objCountWithoutSynthesizedComponents = qmlObjects->count();
     for (int i = 0; i < objCountWithoutSynthesizedComponents; ++i) {
         QmlIR::Object *obj = qmlObjects->at(i);
+        if (obj->isInlineComponent) {
+            componentRoots.append(i);
+            continue;
+        }
         QQmlPropertyCache *cache = propertyCaches.at(i);
         if (obj->inheritedTypeNameIndex == 0 && !cache)
             continue;
@@ -930,7 +947,7 @@ bool QQmlComponentAndAliasResolver::resolve()
 
         _objectsWithAliases.clear();
 
-        if (!collectIdsAndAliases(rootBinding->value.objectIndex))
+        if (!collectIdsAndAliases(component->isInlineComponent ? componentRoots.at(i) : rootBinding->value.objectIndex))
             return false;
 
         component->namedObjectsInComponent.allocate(pool, _idToObjectIndex);
@@ -1006,7 +1023,7 @@ bool QQmlComponentAndAliasResolver::resolveAliases(int componentIndex)
 
         for (int objectIndex: qAsConst(_objectsWithAliases)) {
 
-            QQmlJS::DiagnosticMessage error;
+            QQmlError error;
             const auto result = resolveAliasesInObject(objectIndex, &error);
 
             if (error.isValid()) {
@@ -1015,7 +1032,7 @@ bool QQmlComponentAndAliasResolver::resolveAliases(int componentIndex)
             }
 
             if (result == AllAliasesResolved) {
-                QQmlJS::DiagnosticMessage error = aliasCacheCreator.appendAliasesToPropertyCache(*qmlObjects->at(componentIndex), objectIndex, enginePrivate);
+                QQmlError error = aliasCacheCreator.appendAliasesToPropertyCache(*qmlObjects->at(componentIndex), objectIndex, enginePrivate);
                 if (error.isValid()) {
                     recordError(error);
                     return false;
@@ -1046,7 +1063,7 @@ bool QQmlComponentAndAliasResolver::resolveAliases(int componentIndex)
 
 QQmlComponentAndAliasResolver::AliasResolutionResult
 QQmlComponentAndAliasResolver::resolveAliasesInObject(int objectIndex,
-                                                      QQmlJS::DiagnosticMessage *error)
+                                                      QQmlError *error)
 {
     const QmlIR::Object * const obj = qmlObjects->at(objectIndex);
     if (!obj->aliasCount())

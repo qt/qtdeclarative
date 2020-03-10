@@ -4,3 +4,7 @@ opensuse-leap
 # QTBUG-78846
 [mouseSelectionMode]
 opensuse-leap
+
+# QTBUG-82052
+[linkHover]
+macos ci

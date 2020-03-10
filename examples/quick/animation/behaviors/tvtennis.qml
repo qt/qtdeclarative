@@ -116,6 +116,13 @@ Rectangle {
     Rectangle { color: "#1e1b18"; x: page.width/2+50; y: 10; width: 20; height: 40 }
     Repeater {
         model: page.height / 20
-        Rectangle { color: "#328930"; x: page.width/2-5; y: index * 20; width: 10; height: 10 }
+        Rectangle {
+            required property int index
+            color: "#328930"
+            x: page.width / 2 - 5
+            y: index * 20
+            width: 10
+            height: 10
+        }
     }
 }

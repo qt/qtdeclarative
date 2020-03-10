@@ -390,7 +390,7 @@ QV4::ReturnedValue Runtime::Instanceof::call(ExecutionEngine *engine, const Valu
         return engine->throwTypeError();
 
     ScopedValue result(scope, fHasInstance->call(&rval, &lval, 1));
-    return Encode(result->toBoolean());
+    return scope.hasException() ? Encode::undefined() : Encode(result->toBoolean());
 }
 
 QV4::ReturnedValue Runtime::In::call(ExecutionEngine *engine, const Value &left, const Value &right)
@@ -515,6 +515,8 @@ ReturnedValue RuntimeHelpers::ordinaryToPrimitive(ExecutionEngine *engine, const
     ScopedValue conv(scope, object->get(meth1));
     if (FunctionObject *o = conv->as<FunctionObject>()) {
         result = o->call(object, nullptr, 0);
+        if (engine->hasException)
+            return Encode::undefined();
         if (result->isPrimitive())
             return result->asReturnedValue();
     }
@@ -525,6 +527,8 @@ ReturnedValue RuntimeHelpers::ordinaryToPrimitive(ExecutionEngine *engine, const
     conv = object->get(meth2);
     if (FunctionObject *o = conv->as<FunctionObject>()) {
         result = o->call(object, nullptr, 0);
+        if (engine->hasException)
+            return Encode::undefined();
         if (result->isPrimitive())
             return result->asReturnedValue();
     }
@@ -800,6 +804,8 @@ ReturnedValue Runtime::GetIterator::call(ExecutionEngine *engine, const Value &i
             return engine->throwTypeError();
         JSCallData cData(scope, 0, nullptr, o);
         ScopedObject it(scope, f->call(cData));
+        if (engine->hasException)
+            return Encode::undefined();
         if (!it)
             return engine->throwTypeError();
         return it->asReturnedValue();
@@ -1341,7 +1347,8 @@ ReturnedValue Runtime::CallGlobalLookup::call(ExecutionEngine *engine, uint inde
                                                     engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]->toQString());
     }
 
-    return static_cast<FunctionObject &>(function).call(&thisObject, argv, argc);
+    return checkedResult(engine, static_cast<FunctionObject &>(function).call(
+                             &thisObject, argv, argc));
 }
 
 ReturnedValue Runtime::CallQmlContextPropertyLookup::call(ExecutionEngine *engine, uint index,
@@ -1356,7 +1363,8 @@ ReturnedValue Runtime::CallQmlContextPropertyLookup::call(ExecutionEngine *engin
                                                     engine->currentStackFrame->v4Function->compilationUnit->runtimeStrings[l->nameIndex]->toQString());
     }
 
-    return static_cast<FunctionObject &>(function).call(thisObject, argv, argc);
+    return checkedResult(engine, static_cast<FunctionObject &>(function).call(
+                             thisObject, argv, argc));
 }
 
 ReturnedValue Runtime::CallPossiblyDirectEval::call(ExecutionEngine *engine, Value *argv, int argc)
@@ -1375,7 +1383,7 @@ ReturnedValue Runtime::CallPossiblyDirectEval::call(ExecutionEngine *engine, Val
     if (function->d() == engine->evalFunction()->d())
         return static_cast<EvalFunction *>(function.getPointer())->evalCall(thisObject, argv, argc, true);
 
-    return function->call(thisObject, argv, argc);
+    return checkedResult(engine, function->call(thisObject, argv, argc));
 }
 
 ReturnedValue Runtime::CallName::call(ExecutionEngine *engine, int nameIndex, Value *argv, int argc)
@@ -1395,7 +1403,7 @@ ReturnedValue Runtime::CallName::call(ExecutionEngine *engine, int nameIndex, Va
                                             ->runtimeStrings[nameIndex]->toQString());
     }
 
-    return f->call(thisObject, argv, argc);
+    return checkedResult(engine, f->call(thisObject, argv, argc));
 }
 
 ReturnedValue Runtime::CallProperty::call(ExecutionEngine *engine, const Value &baseRef, int nameIndex, Value *argv, int argc)
@@ -1437,7 +1445,7 @@ ReturnedValue Runtime::CallProperty::call(ExecutionEngine *engine, const Value &
         return engine->throwTypeError(error);
     }
 
-    return f->call(base, argv, argc);
+    return checkedResult(engine, f->call(base, argv, argc));
 }
 
 ReturnedValue Runtime::CallPropertyLookup::call(ExecutionEngine *engine, const Value &base, uint index, Value *argv, int argc)
@@ -1449,7 +1457,7 @@ ReturnedValue Runtime::CallPropertyLookup::call(ExecutionEngine *engine, const V
     if (!f.isFunctionObject())
         return engine->throwTypeError();
 
-    return static_cast<FunctionObject &>(f).call(&base, argv, argc);
+    return checkedResult(engine, static_cast<FunctionObject &>(f).call(&base, argv, argc));
 }
 
 ReturnedValue Runtime::CallElement::call(ExecutionEngine *engine, const Value &baseRef, const Value &index, Value *argv, int argc)
@@ -1467,7 +1475,7 @@ ReturnedValue Runtime::CallElement::call(ExecutionEngine *engine, const Value &b
     if (!f)
         return engine->throwTypeError();
 
-    return f->call(base, argv, argc);
+    return checkedResult(engine, f->call(base, argv, argc));
 }
 
 ReturnedValue Runtime::CallValue::call(ExecutionEngine *engine, const Value &func, Value *argv, int argc)
@@ -1475,7 +1483,8 @@ ReturnedValue Runtime::CallValue::call(ExecutionEngine *engine, const Value &fun
     if (!func.isFunctionObject())
         return engine->throwTypeError(QStringLiteral("%1 is not a function").arg(func.toQStringNoThrow()));
     Value undef = Value::undefinedValue();
-    return static_cast<const FunctionObject &>(func).call(&undef, argv, argc);
+    return checkedResult(engine, static_cast<const FunctionObject &>(func).call(
+                             &undef, argv, argc));
 }
 
 ReturnedValue Runtime::CallWithReceiver::call(ExecutionEngine *engine, const Value &func,
@@ -1483,7 +1492,8 @@ ReturnedValue Runtime::CallWithReceiver::call(ExecutionEngine *engine, const Val
 {
     if (!func.isFunctionObject())
         return engine->throwTypeError(QStringLiteral("%1 is not a function").arg(func.toQStringNoThrow()));
-    return static_cast<const FunctionObject &>(func).call(&thisObject, argv, argc);
+    return checkedResult(engine, static_cast<const FunctionObject &>(func).call(
+                             &thisObject, argv, argc));
 }
 
 struct CallArgs {
@@ -1537,7 +1547,8 @@ ReturnedValue Runtime::CallWithSpread::call(ExecutionEngine *engine, const Value
     if (engine->hasException)
         return Encode::undefined();
 
-    return static_cast<const FunctionObject &>(function).call(&thisObject, arguments.argv, arguments.argc);
+    return checkedResult(engine, static_cast<const FunctionObject &>(function).call(
+                             &thisObject, arguments.argv, arguments.argc));
 }
 
 ReturnedValue Runtime::Construct::call(ExecutionEngine *engine, const Value &function, const Value &newTarget, Value *argv, int argc)
@@ -1580,7 +1591,7 @@ ReturnedValue Runtime::TailCall::call(CppStackFrame *frame, ExecutionEngine *eng
     if (!frame->callerCanHandleTailCall || !fo.canBeTailCalled() || engine->debugger()
             || unsigned(argc) > fo.formalParameterCount()) {
         // Cannot tailcall, do a normal call:
-        return fo.call(&thisObject, argv, argc);
+        return checkedResult(engine, fo.call(&thisObject, argv, argc));
     }
 
     memcpy(frame->jsFrame->args, argv, argc * sizeof(Value));

@@ -34,7 +34,7 @@
 #include <QtQuick/qsggeometry.h>
 #include <QtQuick/qsgflatcolormaterial.h>
 #include <QtGui/qscreen.h>
-#include <QtGui/qopenglcontext.h>
+#include <qopenglcontext.h>
 
 #include "../../shared/util.h"
 

@@ -59,6 +59,7 @@ class Q_QUICK_EXPORT QQuickTransform : public QObject
 {
     Q_OBJECT
     QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 public:
     explicit QQuickTransform(QObject *parent = nullptr);
     ~QQuickTransform() override;
@@ -133,7 +134,7 @@ class Q_QUICK_EXPORT QQuickItem : public QObject, public QQmlParserStatus
 
     Q_PROPERTY(bool focus READ hasFocus WRITE setFocus NOTIFY focusChanged FINAL)
     Q_PROPERTY(bool activeFocus READ hasActiveFocus NOTIFY activeFocusChanged FINAL)
-    Q_PROPERTY(bool activeFocusOnTab READ activeFocusOnTab WRITE setActiveFocusOnTab NOTIFY activeFocusOnTabChanged FINAL REVISION 1)
+    Q_PROPERTY(bool activeFocusOnTab READ activeFocusOnTab WRITE setActiveFocusOnTab NOTIFY activeFocusOnTabChanged FINAL REVISION(2, 1))
 
     Q_PROPERTY(qreal rotation READ rotation WRITE setRotation NOTIFY rotationChanged)
     Q_PROPERTY(qreal scale READ scale WRITE setScale NOTIFY scaleChanged)
@@ -145,13 +146,14 @@ class Q_QUICK_EXPORT QQuickItem : public QObject, public QQmlParserStatus
     Q_PROPERTY(bool antialiasing READ antialiasing WRITE setAntialiasing NOTIFY antialiasingChanged RESET resetAntialiasing)
     Q_PROPERTY(qreal implicitWidth READ implicitWidth WRITE setImplicitWidth NOTIFY implicitWidthChanged)
     Q_PROPERTY(qreal implicitHeight READ implicitHeight WRITE setImplicitHeight NOTIFY implicitHeightChanged)
-    Q_PROPERTY(QObject *containmentMask READ containmentMask WRITE setContainmentMask NOTIFY containmentMaskChanged REVISION 11)
+    Q_PROPERTY(QObject *containmentMask READ containmentMask WRITE setContainmentMask NOTIFY containmentMaskChanged REVISION(2, 11))
 
     Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QQuickItemLayer *layer READ layer DESIGNABLE false CONSTANT FINAL)
 
     Q_CLASSINFO("DefaultProperty", "data")
     Q_CLASSINFO("qt_QmlJSWrapperFactoryMethod", "_q_createJSWrapper(QV4::ExecutionEngine*)")
     QML_NAMED_ELEMENT(Item)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     enum Flag {
@@ -320,7 +322,7 @@ public:
     void setKeepTouchGrab(bool);
 
     // implemented in qquickitemgrabresult.cpp
-    Q_REVISION(4) Q_INVOKABLE bool grabToImage(const QJSValue &callback, const QSize &targetSize = QSize());
+    Q_REVISION(2, 4) Q_INVOKABLE bool grabToImage(const QJSValue &callback, const QSize &targetSize = QSize());
     QSharedPointer<QQuickItemGrabResult> grabToImage(const QSize &targetSize = QSize());
 
     Q_INVOKABLE virtual bool contains(const QPointF &point) const;
@@ -343,11 +345,11 @@ public:
 
     Q_INVOKABLE void mapFromItem(QQmlV4Function*) const;
     Q_INVOKABLE void mapToItem(QQmlV4Function*) const;
-    Q_REVISION(7) Q_INVOKABLE void mapFromGlobal(QQmlV4Function*) const;
-    Q_REVISION(7) Q_INVOKABLE void mapToGlobal(QQmlV4Function*) const;
+    Q_REVISION(2, 7) Q_INVOKABLE void mapFromGlobal(QQmlV4Function*) const;
+    Q_REVISION(2, 7) Q_INVOKABLE void mapToGlobal(QQmlV4Function*) const;
     Q_INVOKABLE void forceActiveFocus();
     Q_INVOKABLE void forceActiveFocus(Qt::FocusReason reason);
-    Q_REVISION(1) Q_INVOKABLE QQuickItem *nextItemInFocusChain(bool forward = true);
+    Q_REVISION(2, 1) Q_INVOKABLE QQuickItem *nextItemInFocusChain(bool forward = true);
     Q_INVOKABLE QQuickItem *childAt(qreal x, qreal y) const;
 
 #if QT_CONFIG(im)
@@ -373,13 +375,13 @@ Q_SIGNALS:
     void stateChanged(const QString &);
     void focusChanged(bool);
     void activeFocusChanged(bool);
-    Q_REVISION(1) void activeFocusOnTabChanged(bool);
+    Q_REVISION(2, 1) void activeFocusOnTabChanged(bool);
     void parentChanged(QQuickItem *);
     void transformOriginChanged(TransformOrigin);
     void smoothChanged(bool);
     void antialiasingChanged(bool);
     void clipChanged(bool);
-    Q_REVISION(1) void windowChanged(QQuickWindow* window);
+    Q_REVISION(2, 1) void windowChanged(QQuickWindow* window);
 
     void childrenChanged();
     void opacityChanged();
@@ -396,7 +398,7 @@ Q_SIGNALS:
     void zChanged();
     void implicitWidthChanged();
     void implicitHeightChanged();
-    Q_REVISION(11) void containmentMaskChanged();
+    Q_REVISION(2, 11) void containmentMaskChanged();
 
 protected:
     bool event(QEvent *) override;

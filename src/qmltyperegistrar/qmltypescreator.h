@@ -45,7 +45,7 @@ public:
     void setOwnTypes(QVector<QJsonObject> ownTypes) { m_ownTypes = std::move(ownTypes); }
     void setForeignTypes(QVector<QJsonObject> foreignTypes) { m_foreignTypes = std::move(foreignTypes); }
     void setModule(QString module) { m_module = std::move(module); }
-    void setMajorVersion(int majorVersion) { m_majorVersion = majorVersion; }
+    void setVersion(QTypeRevision version) { m_version = version; }
 
 private:
     void writeClassProperties(const QmlTypesClassDescription &collector);
@@ -62,7 +62,7 @@ private:
     QVector<QJsonObject> m_ownTypes;
     QVector<QJsonObject> m_foreignTypes;
     QString m_module;
-    int m_majorVersion = 0;
+    QTypeRevision m_version = QTypeRevision::zero();
 };
 
 #endif // QMLTYPESCREATOR_H

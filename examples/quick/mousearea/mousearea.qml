@@ -76,7 +76,7 @@ Rectangle {
             onEntered: info.text = 'Entered'
             onExited: info.text = 'Exited (pressed=' + pressed + ')'
 
-            onPressed: {
+            onPressed: (mouse) => {
                 if (mouse.button == Qt.LeftButton)
                     buttonID = 'LeftButton'
                 else if (mouse.button == Qt.RightButton)
@@ -139,14 +139,14 @@ Rectangle {
                         + ' (' + posInBox.x + ',' + posInBox.y + ' in window)'
             }
 
-            onReleased: {
+            onReleased: (mouse) => {
                 btn.text = 'Released (isClick=' + mouse.isClick + ' wasHeld=' + mouse.wasHeld + ')'
                 posInfo.text = ''
             }
 
             //! [clicks]
             onPressAndHold: btn.text = 'Press and hold'
-            onClicked: btn.text = 'Clicked (wasHeld=' + mouse.wasHeld + ')'
+            onClicked: (mouse) => { btn.text = 'Clicked (wasHeld=' + mouse.wasHeld + ')' }
             onDoubleClicked: btn.text = 'Double clicked'
             //! [clicks]
         }

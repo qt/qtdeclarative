@@ -74,6 +74,7 @@ class QQmlTableModel : public QAbstractTableModel, public QQmlParserStatus
     Q_INTERFACES(QQmlParserStatus)
     Q_CLASSINFO("DefaultProperty", "columns")
     QML_NAMED_ELEMENT(TableModel)
+    QML_ADDED_IN_VERSION(1, 0)
 
 public:
     QQmlTableModel(QObject *parent = nullptr);
@@ -96,6 +97,8 @@ public:
     static int columns_count(QQmlListProperty<QQmlTableModelColumn> *property);
     static QQmlTableModelColumn *columns_at(QQmlListProperty<QQmlTableModelColumn> *property, int index);
     static void columns_clear(QQmlListProperty<QQmlTableModelColumn> *property);
+    static void columns_replace(QQmlListProperty<QQmlTableModelColumn> *property, int index, QQmlTableModelColumn *value);
+    static void columns_removeLast(QQmlListProperty<QQmlTableModelColumn> *property);
 
     QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;

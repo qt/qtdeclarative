@@ -65,6 +65,7 @@ QT_BEGIN_NAMESPACE
 
 class QWindow;
 class QQuickWindow;
+class QQmlTranslationBinding;
 
 #if !QT_CONFIG(qml_debug)
 
@@ -103,6 +104,11 @@ public:
 class QDebugMessageService {};
 class QQmlEngineControlService {};
 class QQmlNativeDebugService {};
+class QQmlDebugTranslationService {
+public:
+    virtual QString foundElidedText(QObject *, const QString &, const QString &) {return {};}
+    virtual void foundTranslationBinding(QQmlTranslationBinding *, QObject *, QQmlContextData *) {}
+};
 
 #else
 
@@ -160,6 +166,22 @@ protected:
         QQmlDebugService(s_key, version, parent) {}
 
     QQmlBoundSignal *nextSignal(QQmlBoundSignal *prev) { return prev->m_nextSignal; }
+};
+
+class Q_QML_PRIVATE_EXPORT QQmlDebugTranslationService : public QQmlDebugService
+{
+    Q_OBJECT
+public:
+    static const QString s_key;
+
+    virtual QString foundElidedText(QObject *qQuickTextObject, const QString &layoutText, const QString &elideText) = 0;
+    virtual void foundTranslationBinding(QQmlTranslationBinding *binding, QObject *scopeObject, QQmlContextData *contextData) = 0;
+protected:
+    friend class QQmlDebugConnector;
+
+    QQmlDebugTranslationService(float version, QObject *parent = nullptr) :
+        QQmlDebugService(s_key, version, parent) {}
+
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlInspectorService : public QQmlDebugService

@@ -1,0 +1,3 @@
+RequiredBase {
+    i: 42
+}

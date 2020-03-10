@@ -35,6 +35,7 @@
 #include <QtCore/qsavefile.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qjsondocument.h>
+#include <QtCore/qversionnumber.h>
 
 static QString enquote(const QString &string)
 {
@@ -62,24 +63,24 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
     QStringList exports;
     QStringList metaObjects;
 
+    if (collector.isBuiltin) {
+        exports.append(enquote(QString::fromLatin1("QML/%1 1.0").arg(collector.elementName)));
+        metaObjects.append(QString::number(QTypeRevision::fromVersion(1, 0).toEncodedVersion<quint16>()));
+    }
+
     for (auto it = collector.revisions.begin(), end = collector.revisions.end(); it != end; ++it) {
-        const int revision = *it;
+        const QTypeRevision revision = *it;
         if (revision < collector.addedInRevision)
             continue;
-        if (collector.removedInRevision > collector.addedInRevision
-                && revision >= collector.removedInRevision) {
+        if (collector.removedInRevision.isValid() && !(revision < collector.removedInRevision))
             break;
-        }
-
-        if (collector.isBuiltin) {
-            exports.append(enquote(QString::fromLatin1("QML/%1 1.0").arg(collector.elementName)));
-            metaObjects.append(QLatin1String("0"));
-        }
 
         exports.append(enquote(QString::fromLatin1("%1/%2 %3.%4")
-                                           .arg(m_module).arg(collector.elementName)
-                                           .arg(m_majorVersion).arg(revision)));
-        metaObjects.append(QString::number(revision));
+                               .arg(m_module).arg(collector.elementName)
+                               .arg(revision.hasMajorVersion() ? revision.majorVersion()
+                                                               : m_version.majorVersion())
+                               .arg(revision.minorVersion())));
+        metaObjects.append(QString::number(revision.toEncodedVersion<quint16>()));
     }
 
     m_qml.writeArrayBinding(QLatin1String("exports"), exports);
@@ -245,7 +246,8 @@ void QmlTypesCreator::writeComponents()
         m_qml.writeStartObject(componentElement);
 
         QmlTypesClassDescription collector;
-        collector.collect(&component, m_ownTypes, m_foreignTypes, true);
+        collector.collect(&component, m_ownTypes, m_foreignTypes,
+                          QmlTypesClassDescription::TopLevel, m_version);
 
         writeClassProperties(collector);
 

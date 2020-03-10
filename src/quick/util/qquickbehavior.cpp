@@ -185,6 +185,80 @@ QVariant QQuickBehavior::targetValue() const
     return d->targetValue;
 }
 
+/*!
+    \readonly
+    \qmlpropertygroup QtQuick::Behavior::targetProperty
+    \qmlproperty string QtQuick::Behavior::targetProperty.name
+    \qmlproperty Object QtQuick::Behavior::targetProperty.object
+
+    \table
+    \header
+        \li Property
+        \li Description
+    \row
+        \li name
+        \li This property holds the name of the property being controlled by this Behavior.
+    \row
+        \li object
+        \li This property holds the object of the property being controlled by this Behavior.
+    \endtable
+
+    This property can be used to define custom behaviors based on the name or the object of
+    the property being controlled.
+
+    The following example defines a Behavior fading out and fading in its target object
+    when the property it controls changes:
+    \qml
+    // FadeBehavior.qml
+    import QtQuick 2.15
+
+    Behavior {
+        id: root
+        property Item fadeTarget: targetProperty.object
+        SequentialAnimation {
+            NumberAnimation {
+                target: root.fadeTarget
+                property: "opacity"
+                to: 0
+                easing.type: Easing.InQuad
+            }
+            PropertyAction { } // actually change the controlled property between the 2 other animations
+            NumberAnimation {
+                target: root.fadeTarget
+                property: "opacity"
+                to: 1
+                easing.type: Easing.OutQuad
+            }
+        }
+    }
+    \endqml
+
+    This can be used to animate a text when it changes:
+    \qml
+    import QtQuick 2.15
+
+    Text {
+        id: root
+        property int counter
+        text: counter
+        FadeBehavior on text {}
+        Timer {
+            running: true
+            repeat: true
+            interval: 1000
+            onTriggered: ++root.counter
+        }
+    }
+    \endqml
+
+    \since QtQuick 2.15
+*/
+QQmlProperty QQuickBehavior::targetProperty() const
+{
+    Q_D(const QQuickBehavior);
+    return d->property;
+}
+
 void QQuickBehavior::write(const QVariant &value)
 {
     Q_D(QQuickBehavior);
@@ -265,6 +339,8 @@ void QQuickBehavior::setTarget(const QQmlProperty &property)
     if (finalizedIdx < 0)
         finalizedIdx = metaObject()->indexOfSlot("componentFinalized()");
     engPriv->registerFinalizeCallback(this, finalizedIdx);
+
+    Q_EMIT targetPropertyChanged();
 }
 
 void QQuickBehavior::componentFinalized()

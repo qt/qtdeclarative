@@ -130,7 +130,9 @@ struct WorkerScript : public QV4::ExecutionEngine {
     QQuickWorkerScriptEnginePrivate *p = nullptr;
     QUrl source;
     QQuickWorkerScript *owner = nullptr;
+#if QT_CONFIG(qml_network)
     QScopedPointer<QNetworkAccessManager> scriptLocalNAM;
+#endif
     int id = -1;
 };
 
@@ -390,6 +392,7 @@ WorkerScript::WorkerScript(int id, QQuickWorkerScriptEnginePrivate *parent)
     QV4::ScopedValue sendMessage(scope, QV4::FunctionObject::createBuiltinFunction(this, name, QQuickWorkerScriptEnginePrivate::method_sendMessage, 1));
     api->put(QV4::ScopedString(scope, scope.engine->newString(QStringLiteral("sendMessage"))), sendMessage);
     globalObject->put(QV4::ScopedString(scope, scope.engine->newString(QStringLiteral("WorkerScript"))), api);
+#if QT_CONFIG(qml_network)
     networkAccessManager = [](QV4::ExecutionEngine *engine){
         auto *workerScript = static_cast<WorkerScript *>(engine);
         if (workerScript->scriptLocalNAM)
@@ -400,6 +403,7 @@ WorkerScript::WorkerScript(int id, QQuickWorkerScriptEnginePrivate *parent)
             workerScript->scriptLocalNAM.reset(new QNetworkAccessManager(workerScript->p));
         return workerScript->scriptLocalNAM.get();
     };
+#endif // qml_network
 }
 
 int QQuickWorkerScriptEngine::registerWorkerScript(QQuickWorkerScript *owner)

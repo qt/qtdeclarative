@@ -91,6 +91,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickAccessibleAttached : public QObject
     Q_PROPERTY(bool ignored READ ignored WRITE setIgnored NOTIFY ignoredChanged FINAL)
 
     QML_NAMED_ELEMENT(Accessible)
+    QML_ADDED_IN_VERSION(2, 0)
     QML_UNCREATABLE("Accessible is only available via attached properties.")
     QML_ATTACHED(QQuickAccessibleAttached)
 

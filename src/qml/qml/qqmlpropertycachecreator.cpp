@@ -119,9 +119,12 @@ QQmlRefPointer<QQmlPropertyCache> QQmlBindingInstantiationContext::instantiating
 {
     if (instantiatingProperty) {
         if (instantiatingProperty->isQObject()) {
-            return enginePrivate->rawPropertyCacheForType(instantiatingProperty->propType(), instantiatingProperty->typeMinorVersion());
+            // rawPropertyCacheForType assumes a given unspecified version means "any version".
+            // There is another overload that takes no version, which we shall not use here.
+            return enginePrivate->rawPropertyCacheForType(instantiatingProperty->propType(),
+                                                          instantiatingProperty->typeVersion());
         } else if (const QMetaObject *vtmo = QQmlValueTypeFactory::metaObjectForMetaType(instantiatingProperty->propType())) {
-            return enginePrivate->cache(vtmo, instantiatingProperty->typeMinorVersion());
+            return enginePrivate->cache(vtmo, instantiatingProperty->typeVersion());
         }
     }
     return QQmlRefPointer<QQmlPropertyCache>();

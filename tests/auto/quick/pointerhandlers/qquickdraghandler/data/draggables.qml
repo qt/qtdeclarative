@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the manual tests of the Qt Toolkit.
@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
+import QtQuick 2.15
 
 Item {
     id: root
@@ -47,6 +47,7 @@ Item {
             DragHandler {
                 id: dragHandler
                 objectName: "DragHandler " + (index + 1)
+                cursorShape: Qt.ClosedHandCursor
             }
 
             Text {

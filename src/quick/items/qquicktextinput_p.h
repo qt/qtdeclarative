@@ -93,9 +93,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTextInput : public QQuickImplicitSizeItem
     Q_PROPERTY(EchoMode echoMode READ echoMode WRITE setEchoMode NOTIFY echoModeChanged)
     Q_PROPERTY(bool activeFocusOnPress READ focusOnPress WRITE setFocusOnPress NOTIFY activeFocusOnPressChanged)
     Q_PROPERTY(QString passwordCharacter READ passwordCharacter WRITE setPasswordCharacter NOTIFY passwordCharacterChanged)
-    Q_PROPERTY(int passwordMaskDelay READ passwordMaskDelay WRITE setPasswordMaskDelay RESET resetPasswordMaskDelay NOTIFY passwordMaskDelayChanged REVISION 4)
+    Q_PROPERTY(int passwordMaskDelay READ passwordMaskDelay WRITE setPasswordMaskDelay RESET resetPasswordMaskDelay NOTIFY passwordMaskDelayChanged REVISION(2, 4))
     Q_PROPERTY(QString displayText READ displayText NOTIFY displayTextChanged)
-    Q_PROPERTY(QString preeditText READ preeditText NOTIFY preeditTextChanged REVISION 7)
+    Q_PROPERTY(QString preeditText READ preeditText NOTIFY preeditTextChanged REVISION(2, 7))
     Q_PROPERTY(bool autoScroll READ autoScroll WRITE setAutoScroll NOTIFY autoScrollChanged)
     Q_PROPERTY(bool selectByMouse READ selectByMouse WRITE setSelectByMouse NOTIFY selectByMouseChanged)
     Q_PROPERTY(SelectionMode mouseSelectionMode READ mouseSelectionMode WRITE setMouseSelectionMode NOTIFY mouseSelectionModeChanged)
@@ -108,12 +108,13 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTextInput : public QQuickImplicitSizeItem
     Q_PROPERTY(qreal contentHeight READ contentHeight NOTIFY contentSizeChanged)
     Q_PROPERTY(RenderType renderType READ renderType WRITE setRenderType NOTIFY renderTypeChanged)
 
-    Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged REVISION 6)
-    Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding RESET resetTopPadding NOTIFY topPaddingChanged REVISION 6)
-    Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding NOTIFY leftPaddingChanged REVISION 6)
-    Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding NOTIFY rightPaddingChanged REVISION 6)
-    Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged REVISION 6)
+    Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged REVISION(2, 6))
+    Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding RESET resetTopPadding NOTIFY topPaddingChanged REVISION(2, 6))
+    Q_PROPERTY(qreal leftPadding READ leftPadding WRITE setLeftPadding RESET resetLeftPadding NOTIFY leftPaddingChanged REVISION(2, 6))
+    Q_PROPERTY(qreal rightPadding READ rightPadding WRITE setRightPadding RESET resetRightPadding NOTIFY rightPaddingChanged REVISION(2, 6))
+    Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged REVISION(2, 6))
     QML_NAMED_ELEMENT(TextInput)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     QQuickTextInput(QQuickItem * parent=nullptr);
@@ -242,7 +243,7 @@ public:
     void resetPasswordMaskDelay();
 
     QString displayText() const;
-    Q_REVISION(7) QString preeditText() const;
+    Q_REVISION(2, 7) QString preeditText() const;
 
     QQmlComponent* cursorDelegate() const;
     void setCursorDelegate(QQmlComponent*);
@@ -269,7 +270,7 @@ public:
 
 #if QT_CONFIG(im)
     QVariant inputMethodQuery(Qt::InputMethodQuery property) const override;
-    Q_REVISION(4) Q_INVOKABLE QVariant inputMethodQuery(Qt::InputMethodQuery query, const QVariant &argument) const;
+    Q_REVISION(2, 4) Q_INVOKABLE QVariant inputMethodQuery(Qt::InputMethodQuery query, const QVariant &argument) const;
 #endif
 
     QRectF boundingRect() const override;
@@ -319,8 +320,8 @@ Q_SIGNALS:
     void selectedTextChanged();
     void accepted();
     void acceptableInputChanged();
-    Q_REVISION(2) void editingFinished();
-    Q_REVISION(9) void textEdited();
+    Q_REVISION(2, 2) void editingFinished();
+    Q_REVISION(2, 9) void textEdited();
     void colorChanged();
     void selectionColorChanged();
     void selectedTextColorChanged();
@@ -337,9 +338,9 @@ Q_SIGNALS:
     void inputMaskChanged(const QString &inputMask);
     void echoModeChanged(QQuickTextInput::EchoMode echoMode);
     void passwordCharacterChanged();
-    Q_REVISION(4) void passwordMaskDelayChanged(int delay);
+    Q_REVISION(2, 4) void passwordMaskDelayChanged(int delay);
     void displayTextChanged();
-    Q_REVISION(7) void preeditTextChanged();
+    Q_REVISION(2, 7) void preeditTextChanged();
     void activeFocusOnPressChanged(bool activeFocusOnPress);
     void autoScrollChanged(bool autoScroll);
     void selectByMouseChanged(bool selectByMouse);
@@ -353,11 +354,11 @@ Q_SIGNALS:
     void contentSizeChanged();
     void inputMethodHintsChanged();
     void renderTypeChanged();
-    Q_REVISION(6) void paddingChanged();
-    Q_REVISION(6) void topPaddingChanged();
-    Q_REVISION(6) void leftPaddingChanged();
-    Q_REVISION(6) void rightPaddingChanged();
-    Q_REVISION(6) void bottomPaddingChanged();
+    Q_REVISION(2, 6) void paddingChanged();
+    Q_REVISION(2, 6) void topPaddingChanged();
+    Q_REVISION(2, 6) void leftPaddingChanged();
+    Q_REVISION(2, 6) void rightPaddingChanged();
+    Q_REVISION(2, 6) void bottomPaddingChanged();
 
 private:
     void invalidateFontCaches();
@@ -400,8 +401,8 @@ public Q_SLOTS:
     void redo();
     void insert(int position, const QString &text);
     void remove(int start, int end);
-    Q_REVISION(4) void ensureVisible(int position);
-    Q_REVISION(7) void clear();
+    Q_REVISION(2, 4) void ensureVisible(int position);
+    Q_REVISION(2, 7) void clear();
 
 private Q_SLOTS:
     void selectionChanged();

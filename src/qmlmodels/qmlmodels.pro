@@ -66,7 +66,7 @@ qtConfig(qml-delegate-model) {
 QMLTYPES_FILENAME = plugins.qmltypes
 QMLTYPES_INSTALL_DIR = $$[QT_INSTALL_QML]/QtQml/Models
 QML_IMPORT_NAME = QtQml.Models
-IMPORT_VERSION = 2.15
+QML_IMPORT_VERSION = $$QT_VERSION
 CONFIG += qmltypes install_qmltypes install_metatypes
 
 load(qt_module)

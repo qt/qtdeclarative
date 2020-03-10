@@ -52,7 +52,7 @@
 #include <QtQml/qqmlpropertymap.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/qquickitem.h>
-#include <QtGui/qopengl.h>
+#include <qopengl.h>
 #include <QtCore/qurl.h>
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qdir.h>

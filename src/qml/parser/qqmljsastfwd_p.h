@@ -41,7 +41,7 @@
 #define QQMLJSAST_FWD_P_H
 
 #include "qqmljsglobal_p.h"
-#include "qqmljssourcelocation_p.h"
+#include <private/qqmljssourcelocation_p.h>
 
 #include <QtCore/qglobal.h>
 
@@ -60,6 +60,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QQmlJS { namespace AST {
 
+class BaseVisitor;
 class Visitor;
 class Node;
 class ExpressionNode;
@@ -151,7 +152,6 @@ class NamedImport;
 class ImportClause;
 class FromClause;
 class ImportDeclaration;
-class ModuleItem;
 class ESModule;
 class DebuggerStatement;
 class NestedExpression;
@@ -183,6 +183,9 @@ class UiHeaderItemList;
 class UiEnumDeclaration;
 class UiEnumMemberList;
 class UiVersionSpecifier;
+class UiRequired;
+class UiAnnotation;
+class UiAnnotationList;
 
 } // namespace AST
 } // namespace QQmlJS

@@ -97,6 +97,7 @@ class QQmlTableModelColumn : public QObject
     Q_PROPERTY(QJSValue sizeHint READ sizeHint WRITE setSizeHint NOTIFY sizeHintChanged FINAL)
     Q_PROPERTY(QJSValue setSizeHint READ getSetSizeHint WRITE setSetSizeHint NOTIFY setSizeHintChanged FINAL)
     QML_NAMED_ELEMENT(TableModelColumn)
+    QML_ADDED_IN_VERSION(1, 0)
 
 public:
     QQmlTableModelColumn(QObject *parent = nullptr);

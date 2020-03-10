@@ -65,6 +65,7 @@ class QQuickParticlePainter : public QQuickItem
     Q_PROPERTY(QStringList groups READ groups WRITE setGroups NOTIFY groupsChanged)
 
     QML_NAMED_ELEMENT(ParticlePainter)
+    QML_ADDED_IN_VERSION(2, 0)
     QML_UNCREATABLE("Abstract type. Use one of the inheriting types instead.")
 
 public: // data

@@ -87,8 +87,10 @@ Rectangle {
             height: childrenRect.height
             color: "lightsteelblue"
 
+            required property string section
+
             Text {
-                text: section
+                text: parent.section
                 font.bold: true
                 font.pixelSize: 20
             }
@@ -101,7 +103,11 @@ Rectangle {
         anchors.bottom: buttonBar.top
         width: parent.width
         model: animalsModel
-        delegate: Text { text: name; font.pixelSize: 18 }
+        delegate: Text {
+            required property string name
+            text: name
+            font.pixelSize: 18
+        }
 
         section.property: "size"
         section.criteria: ViewSection.FullString

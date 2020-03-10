@@ -49,8 +49,13 @@ class Q_QML_EXPORT QQmlModuleRegistration
 {
     Q_DISABLE_COPY_MOVE(QQmlModuleRegistration)
 public:
-    QQmlModuleRegistration(const char *uri, int majorVersion, void (*registerFunction)());
+    QQmlModuleRegistration(const char *uri, void (*registerFunction)());
     ~QQmlModuleRegistration();
+
+#if QT_DEPRECATED_SINCE(6, 0)
+    QT_DEPRECATED_X("Use registration without major version")
+    QQmlModuleRegistration(const char *uri, int majorVersion, void (*registerFunction)());
+#endif
 
 private:
     QQmlModuleRegistrationPrivate *d = nullptr;

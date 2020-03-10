@@ -43,7 +43,7 @@
 #include <QtQuick/qtquickglobal.h>
 #include <QtQuick/qsgrendererinterface.h>
 #include <QtCore/qmetatype.h>
-#include <QtGui/qopengl.h>
+#include <qopengl.h>
 #include <QtGui/qwindow.h>
 #include <QtGui/qevent.h>
 #include <QtQml/qqml.h>
@@ -74,7 +74,7 @@ class Q_QUICK_EXPORT QQuickWindow : public QWindow
     Q_PRIVATE_PROPERTY(QQuickWindow::d_func(), QQmlListProperty<QObject> data READ data DESIGNABLE false)
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
     Q_PROPERTY(QQuickItem* contentItem READ contentItem CONSTANT)
-    Q_PROPERTY(QQuickItem* activeFocusItem READ activeFocusItem NOTIFY activeFocusItemChanged REVISION 1)
+    Q_PROPERTY(QQuickItem* activeFocusItem READ activeFocusItem NOTIFY activeFocusItemChanged REVISION(2, 1))
     Q_CLASSINFO("DefaultProperty", "data")
     Q_DECLARE_PRIVATE(QQuickWindow)
 public:
@@ -157,7 +157,12 @@ public:
     // Scene graph specific functions
     QSGTexture *createTextureFromImage(const QImage &image) const;
     QSGTexture *createTextureFromImage(const QImage &image, CreateTextureOptions options) const;
+
+#if QT_DEPRECATED_SINCE(5, 15)
+    QT_DEPRECATED_X("Use createTextureFromNativeObject() instead")
     QSGTexture *createTextureFromId(uint id, const QSize &size, CreateTextureOptions options = CreateTextureOption()) const;
+#endif
+
     QSGTexture *createTextureFromNativeObject(NativeObjectType type,
                                               const void *nativeObjectPtr,
                                               int nativeLayout,
@@ -201,23 +206,23 @@ public:
 
 Q_SIGNALS:
     void frameSwapped();
-    Q_REVISION(2) void openglContextCreated(QOpenGLContext *context);
+    Q_REVISION(2, 2) void openglContextCreated(QOpenGLContext *context);
     void sceneGraphInitialized();
     void sceneGraphInvalidated();
     void beforeSynchronizing();
-    Q_REVISION(2) void afterSynchronizing();
+    Q_REVISION(2, 2) void afterSynchronizing();
     void beforeRendering();
     void afterRendering();
-    Q_REVISION(2) void afterAnimating();
-    Q_REVISION(2) void sceneGraphAboutToStop();
+    Q_REVISION(2, 2) void afterAnimating();
+    Q_REVISION(2, 2) void sceneGraphAboutToStop();
 
-    Q_REVISION(1) void closing(QQuickCloseEvent *close);
+    Q_REVISION(2, 1) void closing(QQuickCloseEvent *close);
     void colorChanged(const QColor &);
-    Q_REVISION(1) void activeFocusItemChanged();
-    Q_REVISION(2) void sceneGraphError(QQuickWindow::SceneGraphError error, const QString &message);
+    Q_REVISION(2, 1) void activeFocusItemChanged();
+    Q_REVISION(2, 2) void sceneGraphError(QQuickWindow::SceneGraphError error, const QString &message);
 
-    Q_REVISION(14) void beforeRenderPassRecording();
-    Q_REVISION(14) void afterRenderPassRecording();
+    Q_REVISION(2, 14) void beforeRenderPassRecording();
+    Q_REVISION(2, 14) void afterRenderPassRecording();
 
 public Q_SLOTS:
     void update();
@@ -246,6 +251,9 @@ protected:
     void mouseMoveEvent(QMouseEvent *) override;
 #if QT_CONFIG(wheelevent)
     void wheelEvent(QWheelEvent *) override;
+#endif
+#if QT_CONFIG(tabletevent)
+    void tabletEvent(QTabletEvent *) override;
 #endif
 
 private Q_SLOTS:

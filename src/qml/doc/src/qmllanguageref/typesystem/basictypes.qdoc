@@ -582,34 +582,15 @@ property is only invoked when the property is reassigned to a different object v
     QML objects (and certainly not JavaScript object either) and the key-value
     pairs in \c attributes are \e not QML properties. Rather, the \c items
     property holds an array of values, and \c attributes holds a set of key-value
-    pairs. Since they are stored as a set of values, instead of as an object,
-    their contents \e cannot be modified individually:
-
-    \qml
-    Item {
-        property variant items: [1, 2, 3, "four", "five"]
-        property variant attributes: { 'color': 'red', 'width': 100 }
-
-        Component.onCompleted: {
-            items[0] = 10
-            console.log(items[0])     // This will still be '1'!
-            attributes.color = 'blue'
-            console.log(attributes.color)     // This will still be 'red'!
-        }
-    }
-    \endqml
-
-    Since it is not possible to individually add or remove items from a list or
-    object stored in a \c variant, the only way to modify its contents is to
-    reassign a new value. However, this is not efficient, as it causes the value
-    to be serialized and deserialized.
+    pairs.
 
     Additionally, since \c items and \c attributes are not QML objects, changing
-    their individual values do not trigger property change notifications. If
-    the above example had \c onNumberChanged or \c onAnimalChanged signal
-    handlers, they would not have been called.  If, however, the \c items or
-    \c attributes properties themselves were reassigned to different values, then
-    such handlers would be called.
+    the values they contain does not trigger property change notifications. If
+    the above example had \c onItemsChanged or \c onAttributesChanged signal
+    handlers, they would not be called when assigning individual entries in
+    either property.  If, however, the \c items or \c attributes properties
+    themselves were reassigned to different values, then such handlers would be
+    called.
 
     JavaScript programmers should also note that when a JavaScript object is
     copied to an array or map property, the \e contents of the object (that is,

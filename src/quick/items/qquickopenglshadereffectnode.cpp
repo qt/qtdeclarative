@@ -45,7 +45,7 @@
 #include <QtQuick/private/qsgshadersourcebuilder_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtCore/qmutex.h>
-#include <QtGui/qopenglfunctions.h>
+#include <qopenglfunctions.h>
 
 #ifndef GL_TEXTURE_EXTERNAL_OES
 #define GL_TEXTURE_EXTERNAL_OES 0x8D65

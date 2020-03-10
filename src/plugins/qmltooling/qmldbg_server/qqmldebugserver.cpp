@@ -345,7 +345,7 @@ void QQmlDebugServerImpl::parseArguments()
     QString fileName;
     QStringList services;
 
-    const auto lstjsDebugArguments = args.splitRef(QLatin1Char(','), QString::SkipEmptyParts);
+    const auto lstjsDebugArguments = args.splitRef(QLatin1Char(','), Qt::SkipEmptyParts);
     for (auto argsIt = lstjsDebugArguments.begin(), argsItEnd = lstjsDebugArguments.end(); argsIt != argsItEnd; ++argsIt) {
         const QStringRef &strArgument = *argsIt;
         if (strArgument.startsWith(QLatin1String("port:"))) {
@@ -422,6 +422,11 @@ void QQmlDebugServerImpl::parseArguments()
             << tr("Sends qDebug() and similar messages over the QML debug\n"
                "\t\t  connection. QtCreator uses this for showing debug\n"
                "\t\t  messages in the debugger console.") << '\n'
+            << '\n' << QQmlDebugTranslationService::s_key << "\t- "
+            //: Please preserve the line breaks and formatting
+            << tr("helps to see if a translated text\n"
+               "\t\t  will result in an elided text\n"
+               "\t\t  in QML elements.") << '\n'
            << tr("Other services offered by qmltooling plugins that implement "
                  "QQmlDebugServiceFactory and which can be found in the standard plugin "
                  "paths will also be available and can be specified. If no \"services\" "

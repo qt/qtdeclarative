@@ -7,11 +7,11 @@ qtConfig(qml-devtools) {
         qmlimportscanner \
         qmlformat
 
-    qtConfig(commandlineparser):qtConfig(xmlstreamwriter): SUBDIRS += qmlcachegen
+    qtConfig(xmlstreamwriter): SUBDIRS += qmlcachegen
 }
 
 qtConfig(thread):!android|android_app:!wasm:!rtems {
-    qtConfig(commandlineparser): SUBDIRS += qml
+    SUBDIRS += qml
 
     qtConfig(qml-profiler): SUBDIRS += qmlprofiler
     qtConfig(qml-preview): SUBDIRS += qmlpreview

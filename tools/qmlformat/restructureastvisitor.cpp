@@ -110,6 +110,11 @@ void RestructureAstVisitor::endVisit(UiObjectMemberList *node)
 {
     QList<UiObjectMember*> correctOrder;
 
+    QList<UiScriptBinding*> largeScriptBinding;
+
+    UiObjectMember *states = nullptr;
+    UiObjectMember *transitions = nullptr;
+
     auto enumDeclarations = findKind<UiEnumDeclaration>(node);
     auto scriptBindings = findKind<UiScriptBinding>(node);
     auto arrayBindings = findKind<UiArrayBinding>(node);
@@ -117,11 +122,47 @@ void RestructureAstVisitor::endVisit(UiObjectMemberList *node)
     auto sourceElements = findKind<UiSourceElement>(node);
     auto objectDefinitions = findKind<UiObjectDefinition>(node);
 
+    // Look for transitions and states
+    for (auto *binding : findKind<UiObjectBinding>(node)) {
+        const QString name = parseUiQualifiedId(binding->qualifiedId);
+
+        if (name == "transitions")
+            transitions = binding;
+        else if (name == "states")
+            states = binding;
+    }
+
+    for (auto it = arrayBindings.begin(); it != arrayBindings.end();) {
+        const QString name = parseUiQualifiedId((*it)->qualifiedId);
+
+        if (name == "transitions") {
+            transitions = *it;
+            it = arrayBindings.erase(it);
+        } else if (name == "states") {
+            states = *it;
+            it = arrayBindings.erase(it);
+        } else {
+            it++;
+        }
+    }
+
+    // Find large script bindings
+    for (auto it = scriptBindings.begin(); it != scriptBindings.end();) {
+        // A binding is considered large if it uses a block
+        if ((*it)->statement->kind != Node::Kind_Block) {
+            it++;
+            continue;
+        }
+
+        largeScriptBinding.push_back(*it);
+        it = scriptBindings.erase(it);
+    }
+
     // This structure is based on https://doc.qt.io/qt-5/qml-codingconventions.html
 
     // 1st id
     for (auto *binding : scriptBindings) {
-        if (binding->qualifiedId->name == "id") {
+        if (parseUiQualifiedId(binding->qualifiedId) == "id") {
             correctOrder.append(binding);
 
             scriptBindings.removeOne(binding);
@@ -154,7 +195,12 @@ void RestructureAstVisitor::endVisit(UiObjectMemberList *node)
         correctOrder.append(source);
 
     // 6th properties
+    // small script bindings...
     for (auto *binding : scriptBindings)
+        correctOrder.append(binding);
+
+    // ...then large ones
+    for (auto *binding : largeScriptBinding)
         correctOrder.append(binding);
 
     for (auto *binding : arrayBindings)
@@ -169,6 +215,13 @@ void RestructureAstVisitor::endVisit(UiObjectMemberList *node)
         if (!correctOrder.contains(item->member))
             correctOrder.append(item->member);
     }
+
+    // 9th states and transitions
+    if (states != nullptr)
+        correctOrder.append(states);
+
+    if (transitions != nullptr)
+        correctOrder.append(transitions);
 
     // Rebuild member list from correctOrder
     for (auto *item = node; item != nullptr; item = item->next) {

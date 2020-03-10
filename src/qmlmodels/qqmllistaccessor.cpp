@@ -80,6 +80,8 @@ void QQmlListAccessor::setList(const QVariant &v, QQmlEngine *engine)
         m_type = StringList;
     } else if (d.userType() == QMetaType::QVariantList) {
         m_type = VariantList;
+    } else if (d.userType() == qMetaTypeId<QList<QObject *>>()) {
+        m_type = ObjectList;
     } else if (d.canConvert(QMetaType::Int)) {
         // Here we have to check for an upper limit, because down the line code might (well, will)
         // allocate memory depending on the number of elements. The upper limit cannot be INT_MAX:
@@ -120,6 +122,8 @@ int QQmlListAccessor::count() const
         return qvariant_cast<QStringList>(d).count();
     case VariantList:
         return qvariant_cast<QVariantList>(d).count();
+    case ObjectList:
+        return qvariant_cast<QList<QObject *>>(d).count();
     case ListProperty:
         return ((const QQmlListReference *)d.constData())->count();
     case Instance:
@@ -140,6 +144,8 @@ QVariant QQmlListAccessor::at(int idx) const
         return QVariant::fromValue(qvariant_cast<QStringList>(d).at(idx));
     case VariantList:
         return qvariant_cast<QVariantList>(d).at(idx);
+    case ObjectList:
+        return QVariant::fromValue(qvariant_cast<QList<QObject *>>(d).at(idx));
     case ListProperty:
         return QVariant::fromValue(((const QQmlListReference *)d.constData())->at(idx));
     case Instance:

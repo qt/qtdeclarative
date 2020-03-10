@@ -100,7 +100,8 @@ public:
 
     QList<QQmlError> compilationErrors() const { return errors; }
     void recordError(const QV4::CompiledData::Location &location, const QString &description);
-    void recordError(const QQmlJS::DiagnosticMessage &error);
+    void recordError(const QQmlJS::DiagnosticMessage &message);
+    void recordError(const QQmlError &e);
 
     int registerString(const QString &str);
     int registerConstant(QV4::ReturnedValue v);
@@ -124,7 +125,7 @@ public:
 
     QString bindingAsString(const QmlIR::Object *object, int scriptIndex) const;
 
-    void addImport(const QString &module, const QString &qualifier, int majorVersion, int minorVersion);
+    void addImport(const QString &module, const QString &qualifier, QTypeRevision version);
 
     QV4::ResolvedTypeReference *resolvedType(int id) const
     {
@@ -157,7 +158,7 @@ struct QQmlCompilePass
 protected:
     void recordError(const QV4::CompiledData::Location &location, const QString &description) const
     { compiler->recordError(location, description); }
-    void recordError(const QQmlJS::DiagnosticMessage &error)
+    void recordError(const QQmlError &error)
     { compiler->recordError(error); }
 
     QV4::ResolvedTypeReference *resolvedType(int id) const
@@ -280,7 +281,7 @@ protected:
         AllAliasesResolved
     };
 
-    AliasResolutionResult resolveAliasesInObject(int objectIndex, QQmlJS::DiagnosticMessage *error);
+    AliasResolutionResult resolveAliasesInObject(int objectIndex, QQmlError *error);
 
     QQmlEnginePrivate *enginePrivate;
     QQmlJS::MemoryPool *pool;

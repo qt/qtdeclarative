@@ -80,9 +80,17 @@ class instance can be manipulated from QML; as
 Types to QML} explains, the properties, methods and signals of any
 QObject-derived class are accessible from QML code.
 
-To register a QObject-derived class as an instantiable QML object type, call
-qmlRegisterType() to register the class as QML type into a particular type
-namespace.  Clients can then import that namespace in order to use the type.
+To register a QObject-derived class as an instantiable QML object type, add
+\c QML_ELEMENT or \c QML_NAMED_ELEMENT(<name>) to the class declaration and
+\c {CONFIG += qmltypes}, a \c {QML_IMPORT_NAME}, and a
+\c QML_IMPORT_MAJOR_VERSION to your project file. This will register the class
+into the type namespace under the given major version, using either the class
+name or an explicitly given name as QML type name. The minor version(s) will
+be derived from any revisions attached to properties, methods, or signals. The
+default minor version is \c 0. You can explicitly restrict the type to be
+available only from specific minor versions by adding the
+\c QML_ADDED_IN_MINOR_VERSION() macro to the class declaration. Clients can
+import suitable versions of the namespace in order to use the type.
 
 For example, suppose there is a \c Message class with \c author and
 \c creationDate properties:
@@ -93,17 +101,20 @@ class Message : public QObject
     Q_OBJECT
     Q_PROPERTY(QString author READ author WRITE setAuthor NOTIFY authorChanged)
     Q_PROPERTY(QDateTime creationDate READ creationDate WRITE setCreationDate NOTIFY creationDateChanged)
+    QML_ELEMENT
 public:
     // ...
 };
 \endcode
 
-This type can be registered by calling qmlRegisterType() with an appropriate
-type namespace and version number. For example, to make the type available in
-the \c com.mycompany.messaging namespace with version 1.0:
+This type can be registered by adding an appropriate type namespace and version
+number to the project file. For example, to make the type available in the
+\c com.mycompany.messaging namespace with version 1.0:
 
 \code
-qmlRegisterType<Message>("com.mycompany.messaging", 1, 0, "Message");
+CONFIG += qmltypes
+QML_IMPORT_NAME = com.mycompany.messaging
+QML_IMPORT_MAJOR_VERSION = 1
 \endcode
 
 The type can be used in an \l{qtqml-syntax-basics.html#object-declarations}
@@ -135,23 +146,25 @@ not be instantiable
 should not be instantiable from QML
 \endlist
 
-The \l {Qt QML} module provides several methods for registering non-instantiable
+The \l {Qt QML} module provides several macros for registering non-instantiable
 types:
 
 \list
-\li qmlRegisterType() (with no parameters) registers a C++ type that is not
-instantiable and cannot be referred to from QML. This enables the engine to
-coerce any inherited types that are instantiable from QML.
-\li qmlRegisterInterface() registers an existing Qt interface type. The type is
+\li QML_ANONYMOUS registers a C++ type that is not instantiable and cannot be
+referred to from QML. This enables the engine to coerce any inherited types that
+are instantiable from QML.
+\li QML_INTERFACE registers an existing Qt interface type. The type is
 not instantiable from QML, and you cannot declare QML properties with it. Using
 C++ properties of this type from QML will do the expected interface casts,
 though.
-\li qmlRegisterUncreatableType() registers a named C++ type that is not
-instantiable but should be identifiable as a type to the QML type system. This
-is useful if a type's enums or attached properties should be accessible from QML
-but the type itself should not be instantiable.
-\li qmlRegisterSingletonType() registers a singleton type that can be imported
-from QML, as discussed below.
+\li QML_UNCREATABLE(reason) combined with with QML_ELEMENT or QML_NAMED_ELEMENT
+registers a named C++ type that is not instantiable but should be identifiable
+as a type to the QML type system. This is useful if a type's enums or attached
+properties should be accessible from QML but the type itself should not be
+instantiable. The parameter should be an error message to be emitted if an
+attempt at creating an instance of the type is detected.
+\li QML_SINGLETON combined with QML_ELEMENT or QML_NAMED_ELEMENT registers a
+singleton type that can be imported from QML, as discussed below.
 \endlist
 
 Note that all C++ types registered with the QML type system must be
@@ -195,7 +208,7 @@ Rectangle {
 A QJSValue may also be exposed as a singleton type, however clients should
 be aware that properties of such a singleton type cannot be bound to.
 
-See \l{qmlRegisterSingletonType()} for more information on how implement and
+See \l{QML_SINGLETON} for more information on how implement and
 register a new singleton type, and how to use an existing singleton type.
 
 \note Enum values for registered types in QML should start with a capital.
@@ -245,30 +258,20 @@ class CppType : public BaseType
 {
     Q_OBJECT
     Q_PROPERTY(int root READ root WRITE setRoot NOTIFY rootChanged REVISION 1)
+    QML_ELEMENT
 
 signals:
     Q_REVISION(1) void rootChanged();
 };
 \endcode
 
-To register the new class revision to a particular version the following
-function is used:
+The revisions given this way are automatically interpreted as minor versions to
+the major version given in the project file. In this case, \c root is only
+available when \c MyTypes version 1.1 or higher is imported. Imports of
+\c MyTypes version 1.0 remain unaffected.
 
-\code
-template<typename T, int metaObjectRevision>
-int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
-\endcode
-
-To register \c CppType version 1 for \c {MyTypes 1.1}:
-
-\code
-qmlRegisterType<CppType,1>("MyTypes", 1, 1, "CppType")
-\endcode
-
-\c root is only available when \c MyTypes version 1.1 is imported.
-
-For the same reason, new types introduced in later versions should use
-the minor version argument of qmlRegisterType.
+For the same reason, new types introduced in later versions should be tagged
+with the QML_ADDED_IN_MINOR_VERSION macro.
 
 This feature of the language allows for behavioural changes to be made
 without breaking existing applications. Consequently QML module authors
@@ -276,29 +279,10 @@ should always remember to document what changed between minor versions, and
 QML module users should check that their application still runs correctly
 before deploying an updated import statement.
 
-You may also register the revision of a base class that your type depends
-upon using the qmlRegisterRevision() function:
-
-\code
-template<typename T, int metaObjectRevision>
-int qmlRegisterRevision(const char *uri, int versionMajor, int versionMinor)
-
-template<typename T, int metaObjectRevision>
-int qmlRegisterUncreatableType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& reason)
-
-template<typename T, typename E, int metaObjectRevision>
-int qmlRegisterExtendedUncreatableType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& reason)
-\endcode
-
-For example, if \c BaseType is changed and now has a revision 1, you can
-specify that your type uses the new revision:
-
-\code
-qmlRegisterRevision<BaseType,1>("MyTypes", 1, 1);
-\endcode
-
-This is useful when deriving from base classes provided by other authors,
-e.g. when extending classes from the Qt Quick module.
+Revisions of a base class that your type depends upon are automatically
+registered when registering the type itself. This is useful when deriving
+from base classes provided by other authors, e.g. when extending classes from
+the Qt Quick module.
 
 \note The QML engine does not support revisions for properties or signals of
 grouped and attached property objects.
@@ -323,21 +307,8 @@ merged with the original target class when used from within QML. For example:
 The \c leftMargin property is a new property added to an existing C++ type, \l
 QLineEdit, without modifying its source code.
 
-The \l {QQmlEngine::}{qmlRegisterExtendedType()} function is for registering extended types.
-Note that it has two forms.
-
-\code
-template<typename T, typename ExtendedT>
-int qmlRegisterExtendedType(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
-
-template<typename T, typename ExtendedT>
-int qmlRegisterExtendedType()
-\endcode
-
-This functions should be used instead of the regular \c qmlRegisterType()
-variations. The arguments are identical to the corresponding non-extension
-registration functions, except for the ExtendedT parameter which is the type of
-the extension object.
+The QML_EXTENDED(extended) macro is for registering extended types. The
+argument is the name of another class to be used as extension.
 
 An extension class is a regular QObject, with a constructor that takes a QObject
 pointer. However, the extension class creation is delayed until the first
@@ -425,8 +396,9 @@ the attributes to be made accessible to \e attachee objects. For the
     attached property accesses. Consequently the attachment object may not be
     deleted until the attachee \c object is destroyed.
 
-\li is declared as an attaching type, by calling the QML_DECLARE_TYPEINFO()
-    macro with the QML_HAS_ATTACHED_PROPERTIES flag
+\li is declared as an attaching type, by adding the QML_ATTACHED(attached) macro
+    to the class declaration. The argument is the name of the
+    \e{attached object type}
 \endlist
 
 
@@ -441,6 +413,7 @@ class Message : public QObject
     Q_OBJECT
     Q_PROPERTY(QString author READ author WRITE setAuthor NOTIFY authorChanged)
     Q_PROPERTY(QDateTime creationDate READ creationDate WRITE setCreationDate NOTIFY creationDateChanged)
+    QML_ELEMENT
 public:
     // ...
 };
@@ -472,6 +445,7 @@ class MessageBoardAttachedType : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool expired READ expired WRITE setExpired NOTIFY expiredChanged)
+    QML_ANONYMOUS
 public:
     MessageBoardAttachedType(QObject *parent);
     bool expired() const;
@@ -485,20 +459,21 @@ signals:
 Then the \e {attaching type}, \c MessageBoard, must declare a \c
 qmlAttachedProperties() method that returns an instance of the
 \e {attached object type} as implemented by MessageBoardAttachedType.
-Additionally, \c Message board must be declared as an attached type
-through the QML_DECLARE_TYPEINFO() macro:
+Additionally, \c MessageBoard must be declared as an attaching type
+via the QML_ATTACHED() macro:
 
 \code
 class MessageBoard : public QObject
 {
     Q_OBJECT
+    QML_ATTACHED(MessageBoardAttachedType)
+    QML_ELEMENT
 public:
     static MessageBoardAttachedType *qmlAttachedProperties(QObject *object)
     {
         return new MessageBoardAttachedType(object);
     }
 };
-QML_DECLARE_TYPEINFO(MessageBoard, QML_HAS_ATTACHED_PROPERTIES)
 \endcode
 
 Now, a \c Message type can access the properties and signals of the attached
@@ -607,6 +582,7 @@ class RandomNumberGenerator : public QObject, public QQmlPropertyValueSource
     Q_OBJECT
     Q_INTERFACES(QQmlPropertyValueSource)
     Q_PROPERTY(int maxValue READ maxValue WRITE setMaxValue NOTIFY maxValueChanged);
+    QML_ELEMENT
 public:
     RandomNumberGenerator(QObject *parent)
         : QObject(parent), m_maxValue(100)
@@ -690,6 +666,7 @@ class MessageBoard : public QObject
     Q_OBJECT
     Q_PROPERTY(QQmlListProperty<Message> messages READ messages)
     Q_CLASSINFO("DefaultProperty", "messages")
+    QML_ELEMENT
 public:
     QQmlListProperty<Message> messages();
 
@@ -766,6 +743,7 @@ class MyQmlType : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
+    QML_ELEMENT
 public:
     virtual void componentComplete()
     {

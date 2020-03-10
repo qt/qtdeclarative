@@ -53,6 +53,7 @@
 
 #include "qquickimplicitsizeitem_p.h"
 #include <private/qtquickglobal_p.h>
+#include <QtGui/qcolorspace.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -68,11 +69,12 @@ class Q_QUICK_PRIVATE_EXPORT QQuickImageBase : public QQuickImplicitSizeItem
     Q_PROPERTY(bool cache READ cache WRITE setCache NOTIFY cacheChanged)
     Q_PROPERTY(QSize sourceSize READ sourceSize WRITE setSourceSize RESET resetSourceSize NOTIFY sourceSizeChanged)
     Q_PROPERTY(bool mirror READ mirror WRITE setMirror NOTIFY mirrorChanged)
-    Q_PROPERTY(int currentFrame READ currentFrame WRITE setCurrentFrame NOTIFY currentFrameChanged REVISION 14)
-    Q_PROPERTY(int frameCount READ frameCount NOTIFY frameCountChanged REVISION 14)
+    Q_PROPERTY(int currentFrame READ currentFrame WRITE setCurrentFrame NOTIFY currentFrameChanged REVISION(2, 14))
+    Q_PROPERTY(int frameCount READ frameCount NOTIFY frameCountChanged REVISION(2, 14))
+    Q_PROPERTY(QColorSpace colorSpace READ colorSpace WRITE setColorSpace NOTIFY colorSpaceChanged REVISION(2, 15))
 
     QML_NAMED_ELEMENT(ImageBase);
-    QML_ADDED_IN_MINOR_VERSION(14)
+    QML_ADDED_IN_VERSION(2, 14)
     QML_UNCREATABLE("ImageBase is an abstract base class.")
 
 public:
@@ -107,6 +109,10 @@ public:
     QSize sourceSize() const;
     void resetSourceSize();
 
+    QRectF sourceClipRect() const;
+    void setSourceClipRect(const QRectF &r);
+    void resetSourceClipRect();
+
     virtual void setMirror(bool mirror);
     bool mirror() const;
 
@@ -117,6 +123,9 @@ public:
 
     virtual void setAutoTransform(bool transform);
     bool autoTransform() const;
+
+    QColorSpace colorSpace() const;
+    virtual void setColorSpace(const QColorSpace &colorSpace);
 
     static void resolve2xLocalFile(const QUrl &url, qreal targetDevicePixelRatio, QUrl *sourceUrl, qreal *sourceDevicePixelRatio);
 
@@ -132,8 +141,10 @@ Q_SIGNALS:
     void asynchronousChanged();
     void cacheChanged();
     void mirrorChanged();
-    Q_REVISION(14) void currentFrameChanged();
-    Q_REVISION(14) void frameCountChanged();
+    Q_REVISION(2, 14) void currentFrameChanged();
+    Q_REVISION(2, 14) void frameCountChanged();
+    Q_REVISION(2, 15) void sourceClipRectChanged();
+    Q_REVISION(2, 15) void colorSpaceChanged();
 
 protected:
     void loadEmptyUrl();

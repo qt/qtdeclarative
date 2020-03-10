@@ -42,6 +42,8 @@
 
 #include "qquickboundaryrule_p.h"
 
+extern void qml_register_types_Qt_labs_animation();
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -66,7 +68,11 @@ class QtLabsAnimationPlugin : public QQmlEngineExtensionPlugin
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
 public:
-    QtLabsAnimationPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent) { }
+    QtLabsAnimationPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent)
+    {
+        volatile auto registration = &qml_register_types_Qt_labs_animation;
+        Q_UNUSED(registration);
+    }
 };
 //![class decl]
 

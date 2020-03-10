@@ -1,0 +1,19 @@
+<RCC>
+    <qresource prefix="/">
+        <file>dynamicscene.qml</file>
+        <file>content/images/face-smile.png</file>
+        <file>content/images/moon.png</file>
+        <file>content/images/NOTE</file>
+        <file>content/images/rabbit_brown.png</file>
+        <file>content/images/rabbit_bw.png</file>
+        <file>content/images/star.png</file>
+        <file>content/images/sun.png</file>
+        <file>content/images/tree_s.png</file>
+        <file>content/Button.qml</file>
+        <file>content/GenericSceneItem.qml</file>
+        <file>content/itemCreation.js</file>
+        <file>content/PaletteItem.qml</file>
+        <file>content/PerspectiveItem.qml</file>
+        <file>content/Sun.qml</file>
+    </qresource>
+</RCC>

@@ -65,12 +65,34 @@ Rectangle {
         rows: 3
         spacing: 30
 
-        ImageCell { mode: Image.Stretch; caption: "Stretch" }
-        ImageCell { mode: Image.PreserveAspectFit; caption: "PreserveAspectFit" }
-        ImageCell { mode: Image.PreserveAspectCrop; caption: "PreserveAspectCrop" }
+        component SizedImageCell: ImageCell {
+            width: parent.cellWidth
+            height: parent.cellHeight
+        }
 
-        ImageCell { mode: Image.Tile; caption: "Tile" }
-        ImageCell { mode: Image.TileHorizontally; caption: "TileHorizontally" }
-        ImageCell { mode: Image.TileVertically; caption: "TileVertically" }
+        SizedImageCell {
+            mode: Image.Stretch
+            caption: "Stretch"
+        }
+        SizedImageCell {
+            mode: Image.PreserveAspectFit
+            caption: "PreserveAspectFit"
+        }
+        SizedImageCell {
+            mode: Image.PreserveAspectCrop
+            caption: "PreserveAspectCrop"
+        }
+        SizedImageCell {
+            mode: Image.Tile
+            caption: "Tile"
+        }
+        SizedImageCell {
+            mode: Image.TileHorizontally
+            caption: "TileHorizontally"
+        }
+        SizedImageCell {
+            mode: Image.TileVertically
+            caption: "TileVertically"
+        }
     }
 }

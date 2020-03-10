@@ -97,10 +97,11 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPathView : public QQuickItem
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged)
     Q_PROPERTY(int pathItemCount READ pathItemCount WRITE setPathItemCount RESET resetPathItemCount NOTIFY pathItemCountChanged)
     Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged)
-    Q_PROPERTY(MovementDirection movementDirection READ movementDirection WRITE setMovementDirection NOTIFY movementDirectionChanged REVISION 7)
+    Q_PROPERTY(MovementDirection movementDirection READ movementDirection WRITE setMovementDirection NOTIFY movementDirectionChanged REVISION(2, 7))
 
     Q_PROPERTY(int cacheItemCount READ cacheItemCount WRITE setCacheItemCount NOTIFY cacheItemCountChanged)
     QML_NAMED_ELEMENT(PathView)
+    QML_ADDED_IN_VERSION(2, 0)
     QML_ATTACHED(QQuickPathViewAttached)
 
 public:
@@ -182,7 +183,7 @@ public:
     Q_INVOKABLE void positionViewAtIndex(int index, int mode);
     Q_INVOKABLE int indexAt(qreal x, qreal y) const;
     Q_INVOKABLE QQuickItem *itemAt(qreal x, qreal y) const;
-    Q_REVISION(13) Q_INVOKABLE QQuickItem *itemAtIndex(int index) const;
+    Q_REVISION(2, 13) Q_INVOKABLE QQuickItem *itemAtIndex(int index) const;
 
     static QQuickPathViewAttached *qmlAttachedProperties(QObject *);
 
@@ -215,7 +216,7 @@ Q_SIGNALS:
     void highlightMoveDurationChanged();
     void movementStarted();
     void movementEnded();
-    Q_REVISION(7) void movementDirectionChanged();
+    Q_REVISION(2, 7) void movementDirectionChanged();
     void flickStarted();
     void flickEnded();
     void dragStarted();

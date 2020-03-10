@@ -50,13 +50,10 @@
 
 #include <QGuiApplication>
 #include <QtQuick/QQuickView>
-#include "vulkansquircle.h"
 
 int main(int argc, char **argv)
 {
     QGuiApplication app(argc, argv);
-
-    qmlRegisterType<VulkanSquircle>("VulkanUnderQML", 1, 0, "VulkanSquircle");
 
     // This example needs Vulkan. It will not run otherwise.
     QQuickWindow::setSceneGraphBackend(QSGRendererInterface::VulkanRhi);

@@ -38,6 +38,7 @@
 #include <QVector>
 
 using namespace QQmlJS::AST;
+using namespace QQmlJS;
 
 struct Comment
 {
@@ -108,6 +109,7 @@ public:
     void endVisit(StatementList *node) override;
 
     bool visit(UiImport *node) override;
+    bool visit(UiPragma *node) override;
     bool visit(UiPublicMember *node) override;
     bool visit(FunctionDeclaration *node) override;
 private:

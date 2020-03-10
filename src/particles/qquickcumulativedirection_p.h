@@ -62,6 +62,7 @@ class QQuickCumulativeDirection : public QQuickDirection
     Q_PROPERTY(QQmlListProperty<QQuickDirection> directions READ directions)
     Q_CLASSINFO("DefaultProperty", "directions")
     QML_NAMED_ELEMENT(CumulativeDirection)
+    QML_ADDED_IN_VERSION(2, 0)
 public:
     explicit QQuickCumulativeDirection(QObject *parent = 0);
     QQmlListProperty<QQuickDirection> directions();

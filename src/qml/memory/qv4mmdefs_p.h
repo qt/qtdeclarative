@@ -53,6 +53,7 @@
 #include <private/qv4global_p.h>
 #include <private/qv4runtimeapi_p.h>
 #include <QtCore/qalgorithms.h>
+#include <QtCore/qmath.h>
 #include <qdebug.h>
 
 QT_BEGIN_NAMESPACE
@@ -270,22 +271,41 @@ Q_STATIC_ASSERT(sizeof(HeapItem) == Chunk::SlotSize);
 Q_STATIC_ASSERT(QT_POINTER_SIZE*8 == Chunk::Bits);
 Q_STATIC_ASSERT((1 << Chunk::BitShift) == Chunk::Bits);
 
-struct MarkStack {
+struct Q_QML_PRIVATE_EXPORT MarkStack {
     MarkStack(ExecutionEngine *engine);
-    Heap::Base **top = nullptr;
-    Heap::Base **base = nullptr;
-    Heap::Base **limit = nullptr;
-    ExecutionEngine *engine;
+    ~MarkStack() { drain(); }
+
     void push(Heap::Base *m) {
-        *top = m;
-        ++top;
+        *(m_top++) = m;
+
+        if (m_top < m_softLimit)
+            return;
+
+        // If at or above soft limit, partition the remaining space into at most 64 segments and
+        // allow one C++ recursion of drain() per segment, plus one for the fence post.
+        const quintptr segmentSize = qNextPowerOfTwo(quintptr(m_hardLimit - m_softLimit) / 64u);
+        if (m_drainRecursion * segmentSize <= quintptr(m_top - m_softLimit)) {
+            ++m_drainRecursion;
+            drain();
+            --m_drainRecursion;
+        } else if (m_top == m_hardLimit) {
+            qFatal("GC mark stack overrun. Either simplify your application or"
+                   "increase QV4_GC_MAX_STACK_SIZE");
+        }
     }
-    Heap::Base *pop() {
-        --top;
-        return *top;
-    }
+
+    ExecutionEngine *engine() const { return m_engine; }
+
+private:
+    Heap::Base *pop() { return *(--m_top); }
     void drain();
 
+    Heap::Base **m_top = nullptr;
+    Heap::Base **m_base = nullptr;
+    Heap::Base **m_softLimit = nullptr;
+    Heap::Base **m_hardLimit = nullptr;
+    ExecutionEngine *m_engine = nullptr;
+    quintptr m_drainRecursion = 0;
 };
 
 // Some helper to automate the generation of our

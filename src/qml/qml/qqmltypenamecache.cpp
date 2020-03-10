@@ -101,7 +101,7 @@ QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QHashedStringRef &name)
         QQmlImportNamespace *typeNamespace = nullptr;
         QList<QQmlError> errors;
         QQmlType t;
-        bool typeFound = m_imports.resolveType(name, &t, nullptr, nullptr, &typeNamespace, &errors);
+        bool typeFound = m_imports.resolveType(name, &t, nullptr, &typeNamespace, &errors);
         if (typeFound) {
             return Result(t);
         }
@@ -129,7 +129,7 @@ QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QHashedStringRef &name,
         QQmlImportNamespace *typeNamespace = nullptr;
         QList<QQmlError> errors;
         QQmlType t;
-        bool typeFound = m_imports.resolveType(qualifiedTypeName, &t, nullptr, nullptr, &typeNamespace, &errors);
+        bool typeFound = m_imports.resolveType(qualifiedTypeName, &t, nullptr, &typeNamespace, &errors);
         if (typeFound) {
             return Result(t);
         }
@@ -155,7 +155,7 @@ QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QV4::String *name, QQml
         QList<QQmlError> errors;
         QQmlType t;
         bool typeRecursionDetected = false;
-        bool typeFound = m_imports.resolveType(typeName, &t, nullptr, nullptr, &typeNamespace, &errors,
+        bool typeFound = m_imports.resolveType(typeName, &t, nullptr, &typeNamespace, &errors,
                                                QQmlType::AnyRegistrationType,
                                                recursionRestriction == QQmlImport::AllowRecursion ? &typeRecursionDetected : nullptr);
         if (typeFound) {
@@ -191,7 +191,7 @@ QQmlTypeNameCache::Result QQmlTypeNameCache::query(const QV4::String *name, cons
         QQmlImportNamespace *typeNamespace = nullptr;
         QList<QQmlError> errors;
         QQmlType t;
-        bool typeFound = m_imports.resolveType(qualifiedTypeName, &t, nullptr, nullptr, &typeNamespace, &errors);
+        bool typeFound = m_imports.resolveType(qualifiedTypeName, &t, nullptr, &typeNamespace, &errors);
         if (typeFound) {
             return Result(t);
         }

@@ -69,6 +69,7 @@ class Q_AUTOTEST_EXPORT QQuickSmoothedAnimation : public QQuickNumberAnimation
     Q_PROPERTY(ReversingMode reversingMode READ reversingMode WRITE setReversingMode NOTIFY reversingModeChanged)
     Q_PROPERTY(qreal maximumEasingTime READ maximumEasingTime WRITE setMaximumEasingTime NOTIFY maximumEasingTimeChanged)
     QML_NAMED_ELEMENT(SmoothedAnimation)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     enum ReversingMode { Eased, Immediate, Sync };

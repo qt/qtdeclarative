@@ -42,6 +42,7 @@
 #include <private/qqmlprofiler_p.h>
 #include <private/qqmltypeloader_p.h>
 #include <private/qqmltypeloaderthread_p.h>
+#include <private/qqmlsourcecoordinate_p.h>
 
 #include <QtQml/qqmlengine.h>
 
@@ -289,7 +290,18 @@ void QQmlDataBlob::setError(const QList<QQmlError> &errors)
     Q_ASSERT(status() != Error);
     Q_ASSERT(m_errors.isEmpty());
 
-    m_errors = errors; // Must be set before the m_data fence
+    // m_errors must be set before the m_data fence
+    m_errors.reserve(errors.count());
+    for (const QQmlError &error : errors) {
+        if (error.url().isEmpty()) {
+            QQmlError mutableError = error;
+            mutableError.setUrl(url());
+            m_errors.append(mutableError);
+        } else {
+            m_errors.append(error);
+        }
+    }
+
     m_data.setStatus(Error);
 
     if (dumpErrors()) {
@@ -306,26 +318,11 @@ void QQmlDataBlob::setError(const QList<QQmlError> &errors)
 void QQmlDataBlob::setError(const QQmlJS::DiagnosticMessage &error)
 {
     QQmlError e;
-    e.setColumn(error.column);
-    e.setLine(error.line);
+    e.setColumn(qmlConvertSourceCoordinate<quint32, int>(error.loc.startColumn));
+    e.setLine(qmlConvertSourceCoordinate<quint32, int>(error.loc.startLine));
     e.setDescription(error.message);
     e.setUrl(url());
     setError(e);
-}
-
-void QQmlDataBlob::setError(const QVector<QQmlJS::DiagnosticMessage> &errors)
-{
-    QList<QQmlError> finalErrors;
-    finalErrors.reserve(errors.count());
-    for (const auto &error : errors) {
-        QQmlError e;
-        e.setColumn(error.column);
-        e.setLine(error.line);
-        e.setDescription(error.message);
-        e.setUrl(url());
-        finalErrors << e;
-    }
-    setError(finalErrors);
 }
 
 void QQmlDataBlob::setError(const QString &description)

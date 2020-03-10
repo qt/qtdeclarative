@@ -93,18 +93,23 @@ Rectangle {
             width: 320
             height: 320
             id: editorTypeRow
-            model: editorType.length
+            model: root.editorType.length
             orientation: ListView.Horizontal
             cacheBuffer: 1000//Load the really expensive ones async if possible
             delegate: Item {
+                id: delegate
+
                 width: editorColumn.width
                 height: editorColumn.height
+
+                required property int index
+
                 Column {
                     id: editorColumn
                     spacing: 5
                     width: textColumn.width+10
                     Text {
-                        text: root.editorType[index]
+                        text: root.editorType[delegate.index]
                         font.pixelSize: 16
                         anchors.horizontalCenter: parent.horizontalCenter
                     }
@@ -113,8 +118,8 @@ Rectangle {
                         spacing: 5
                         anchors.horizontalCenter: parent.horizontalCenter
                         Repeater {
-                            model: textComponents.length
-                            delegate: textComponents[index]
+                            model: root.textComponents.length
+                            delegate: root.textComponents[delegate.index]
                         }
                     }
                 }
@@ -203,9 +208,11 @@ Rectangle {
     Component {
         id: plainTextComponent
         Text {
+            required property int index
+
             width: 180
             text: root.text[index]
-            font.pixelSize: pxSz
+            font.pixelSize: root.pxSz
             wrapMode: Text.WordWrap
             horizontalAlignment: root.horizontalAlignment
             LayoutMirroring.enabled: root.mirror
@@ -216,10 +223,10 @@ Rectangle {
                 anchors.fill: parent
             }
             Text {
-                text: root.description[index]
+                text: root.description[parent.index]
                 color: Qt.rgba(1,1,1,1.0)
                 anchors.centerIn: parent
-                font.pixelSize: pxSz - 2
+                font.pixelSize: root.pxSz - 2
                 Rectangle {
                     z: -1
                     color: Qt.rgba(0.3, 0, 0, 0.3)
@@ -228,7 +235,7 @@ Rectangle {
             }
             Text {
                 color: "white"
-                text: shortText(parent.horizontalAlignment)
+                text: root.shortText(parent.horizontalAlignment)
                 anchors { top: parent.top; right: parent.right; margins: 2 }
             }
         }
@@ -237,9 +244,11 @@ Rectangle {
     Component {
         id: styledTextComponent
         Text {
+            required property int index
+
             width: 180
             text: root.text[index]
-            font.pixelSize: pxSz
+            font.pixelSize: root.pxSz
             wrapMode: Text.WordWrap
             horizontalAlignment: root.horizontalAlignment
             LayoutMirroring.enabled: root.mirror
@@ -252,10 +261,10 @@ Rectangle {
                 anchors.fill: parent
             }
             Text {
-                text: root.description[index]
+                text: root.description[parent.index]
                 color: Qt.rgba(1,1,1,1.0)
                 anchors.centerIn: parent
-                font.pixelSize: pxSz - 2
+                font.pixelSize: root.pxSz - 2
                 Rectangle {
                     z: -1
                     color: Qt.rgba(0.3, 0, 0, 0.3)
@@ -264,7 +273,7 @@ Rectangle {
             }
             Text {
                 color: "white"
-                text: shortText(parent.horizontalAlignment)
+                text: root.shortText(parent.horizontalAlignment)
                 anchors { top: parent.top; right: parent.right; margins: 2 }
             }
         }
@@ -273,9 +282,11 @@ Rectangle {
     Component {
         id: richTextComponent
         Text {
+            required property int index
+
             width: 180
             text: root.text[index]
-            font.pixelSize: pxSz
+            font.pixelSize: root.pxSz
             wrapMode: Text.WordWrap
             horizontalAlignment: root.horizontalAlignment
             LayoutMirroring.enabled: root.mirror
@@ -286,10 +297,10 @@ Rectangle {
                 anchors.fill: parent
             }
             Text {
-                text: root.description[index]
+                text: root.description[parent.index]
                 color: Qt.rgba(1,1,1,1.0)
                 anchors.centerIn: parent
-                font.pixelSize: pxSz - 2
+                font.pixelSize: root.pxSz - 2
                 Rectangle {
                     z: -1
                     color: Qt.rgba(0.3, 0, 0, 0.3)
@@ -298,7 +309,7 @@ Rectangle {
             }
             Text {
                 color: "white"
-                text: shortText(parent.horizontalAlignment)
+                text: root.shortText(parent.horizontalAlignment)
                 anchors { top: parent.top; right: parent.right; margins: 2 }
             }
         }
@@ -307,9 +318,11 @@ Rectangle {
     Component {
         id: italicRichTextComponent
         Text {
+            required property int index
+
             width: 180
             text: "<i>" + root.text[index] + "</i>"
-            font.pixelSize: pxSz
+            font.pixelSize: root.pxSz
             wrapMode: Text.WordWrap
             horizontalAlignment: root.horizontalAlignment
             LayoutMirroring.enabled: root.mirror
@@ -321,10 +334,10 @@ Rectangle {
                 anchors.fill: parent
             }
             Text {
-                text: root.description[index]
+                text: root.description[parent.index]
                 color: Qt.rgba(1,1,1,1.0)
                 anchors.centerIn: parent
-                font.pixelSize: pxSz - 2
+                font.pixelSize: root.pxSz - 2
                 Rectangle {
                     z: -1
                     color: Qt.rgba(0.3, 0, 0, 0.3)
@@ -333,7 +346,7 @@ Rectangle {
             }
             Text {
                 color: "white"
-                text: shortText(parent.horizontalAlignment)
+                text: root.shortText(parent.horizontalAlignment)
                 anchors { top: parent.top; right: parent.right; margins: 2 }
             }
         }
@@ -342,9 +355,11 @@ Rectangle {
     Component {
         id: plainTextEdit
         TextEdit {
+            required property int index
+
             width: 180
             text: root.text[index]
-            font.pixelSize: pxSz
+            font.pixelSize: root.pxSz
             cursorVisible: true
             wrapMode: TextEdit.WordWrap
             horizontalAlignment: root.horizontalAlignment
@@ -355,10 +370,10 @@ Rectangle {
                 anchors.fill: parent
             }
             Text {
-                text: root.description[index]
+                text: root.description[parent.index]
                 color: Qt.rgba(1,1,1,1.0)
                 anchors.centerIn: parent
-                font.pixelSize: pxSz - 2
+                font.pixelSize: root.pxSz - 2
                 Rectangle {
                     z: -1
                     color: Qt.rgba(0.3, 0, 0, 0.3)
@@ -367,7 +382,7 @@ Rectangle {
             }
             Text {
                 color: "white"
-                text: shortText(parent.horizontalAlignment)
+                text: root.shortText(parent.horizontalAlignment)
                 anchors { top: parent.top; right: parent.right; margins: 2 }
             }
         }
@@ -376,9 +391,11 @@ Rectangle {
     Component {
         id: italicTextEdit
         TextEdit {
+            required property int index
+
             width: 180
             text: "<i>" + root.text[index] + "<i>"
-            font.pixelSize: pxSz
+            font.pixelSize: root.pxSz
             cursorVisible: true
             wrapMode: TextEdit.WordWrap
             textFormat: TextEdit.RichText
@@ -390,10 +407,10 @@ Rectangle {
                 anchors.fill: parent
             }
             Text {
-                text: root.description[index]
+                text: root.description[parent.index]
                 color: Qt.rgba(1,1,1,1.0)
                 anchors.centerIn: parent
-                font.pixelSize: pxSz - 2
+                font.pixelSize: root.pxSz - 2
                 Rectangle {
                     z: -1
                     color: Qt.rgba(0.3, 0, 0, 0.3)
@@ -402,7 +419,7 @@ Rectangle {
             }
             Text {
                 color: "white"
-                text: shortText(parent.horizontalAlignment)
+                text: root.shortText(parent.horizontalAlignment)
                 anchors { top: parent.top; right: parent.right; margins: 2 }
             }
         }
@@ -411,13 +428,15 @@ Rectangle {
     Component {
         id: textInput
         Item {
+            id: textDelegate
+            required property int index
             width: 180
             height: textInput.text.length > 20 ? 3*textInput.height : textInput.height
             TextInput {
                 id: textInput
                 width: 180
-                text: root.text[index]
-                font.pixelSize: pxSz
+                text: root.text[textDelegate.index]
+                font.pixelSize: root.pxSz
                 cursorVisible: true
                 horizontalAlignment: root.horizontalAlignment
                 LayoutMirroring.enabled: root.mirror
@@ -427,10 +446,10 @@ Rectangle {
                     anchors.fill: parent
                 }
                 Text {
-                    text: root.description[index]
+                    text: root.description[textDelegate.index]
                     color: Qt.rgba(1,1,1,1.0)
                     anchors.centerIn: parent
-                    font.pixelSize: pxSz - 2
+                    font.pixelSize: root.pxSz - 2
                     Rectangle {
                         z: -1
                         color: Qt.rgba(0.3, 0, 0, 0.3)
@@ -439,7 +458,7 @@ Rectangle {
                 }
                 Text {
                     color: "white"
-                    text: shortText(parent.horizontalAlignment)
+                    text: root.shortText(parent.horizontalAlignment)
                     anchors { top: parent.top; right: parent.right; margins: 2 }
                 }
             }

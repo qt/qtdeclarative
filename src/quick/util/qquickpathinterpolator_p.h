@@ -70,6 +70,7 @@ class Q_AUTOTEST_EXPORT QQuickPathInterpolator : public QObject
     Q_PROPERTY(qreal y READ y NOTIFY yChanged)
     Q_PROPERTY(qreal angle READ angle NOTIFY angleChanged)
     QML_NAMED_ELEMENT(PathInterpolator)
+    QML_ADDED_IN_VERSION(2, 0)
 public:
     explicit QQuickPathInterpolator(QObject *parent = nullptr);
 

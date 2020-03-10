@@ -65,7 +65,9 @@ Window {
         id: pixelDelegate
 
         Item {
-            readonly property real gray: model.display / 255.0
+            required property real display
+
+            readonly property real gray: display / 255.0
             readonly property real size: 16
 
             implicitWidth: size
@@ -77,7 +79,7 @@ Window {
                 id: rect
                 anchors.centerIn: parent
                 color: "#09102b"
-                radius: size - gray * size
+                radius: parent.size - parent.gray * parent.size
                 implicitWidth: radius
                 implicitHeight: radius
                 //! [rectshape]

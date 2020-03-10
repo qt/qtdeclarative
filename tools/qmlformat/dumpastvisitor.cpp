@@ -35,10 +35,29 @@ DumpAstVisitor::DumpAstVisitor(Node *rootNode, CommentAstVisitor *comment): m_co
     // Add all completely orphaned comments
     m_result += getOrphanedComments(nullptr);
 
+    m_scope_properties.push(ScopeProperties {});
+
     rootNode->accept(this);
 
     // We need to get rid of one new-line so our output doesn't append an empty line
     m_result.chop(1);
+
+    // Remove trailing whitespace
+    QStringList lines = m_result.split("\n");
+    for (QString& line : lines) {
+        while (line.endsWith(" "))
+            line.chop(1);
+    }
+
+    m_result = lines.join("\n");
+}
+
+bool DumpAstVisitor::preVisit(Node *el)
+{
+    UiObjectMember *m = el->uiObjectMemberCast();
+    if (m != 0)
+        Node::accept(m->annotations, this);
+    return true;
 }
 
 static QString parseUiQualifiedId(UiQualifiedId *id)
@@ -185,7 +204,7 @@ QString DumpAstVisitor::parseUiParameterList(UiParameterList *list) {
     QString result = "";
 
     for (auto *item = list; item != nullptr; item = item->next)
-        result += item->type->name + " " + item->name + (item->next != nullptr ? ", " : "");
+        result += parseUiQualifiedId(item->type) + " " + item->name + (item->next != nullptr ? ", " : "");
 
     return result;
 }
@@ -218,20 +237,28 @@ QString DumpAstVisitor::parsePatternElement(PatternElement *element, bool scope)
 
         result += element->bindingIdentifier.toString();
 
+        if (element->typeAnnotation != nullptr)
+            result += ": " + parseType(element->typeAnnotation->type);
+
         if (!expr.isEmpty())
             result += " = "+expr;
 
         return result;
     }
     default:
+        m_error = true;
         return "pe_unknown";
     }
 }
 
 QString escapeString(QString string)
 {
-    // Escape \r, \n and \t
-    string = string.replace("\r", "\\r").replace("\n", "\\n").replace("\t", "\\t");
+    // Handle escape sequences
+    string = string.replace("\r", "\\r").replace("\n", "\\n").replace("\t", "\\t")
+            .replace("\b","\\b").replace("\v", "\\v").replace("\f", "\\f");
+
+    // Escape backslash
+    string = string.replace("\\", "\\\\");
 
     // Escape "
     string = string.replace("\"", "\\\"");
@@ -261,7 +288,14 @@ QString DumpAstVisitor::parseFormalParameterList(FormalParameterList *list)
 
 QString DumpAstVisitor::parsePatternProperty(PatternProperty *property)
 {
-    return escapeString(property->name->asString())+": "+parsePatternElement(property, false);
+    switch (property->type) {
+    case PatternElement::Getter:
+        return "get "+parseFunctionExpression(cast<FunctionExpression *>(property->initializer), true);
+    case PatternElement::Setter:
+        return "set "+parseFunctionExpression(cast<FunctionExpression *>(property->initializer), true);
+    default:
+        return escapeString(property->name->asString())+": "+parsePatternElement(property, false);
+    }
 }
 
 QString DumpAstVisitor::parsePatternPropertyList(PatternPropertyList *list)
@@ -270,6 +304,61 @@ QString DumpAstVisitor::parsePatternPropertyList(PatternPropertyList *list)
 
     for (auto *item = list; item != nullptr; item = item->next) {
         result += formatLine(parsePatternProperty(item->property) + (item->next != nullptr ? "," : ""));
+    }
+
+    return result;
+}
+
+QString DumpAstVisitor::parseFunctionExpression(FunctionExpression *functExpr, bool omitFunction)
+{
+    m_indentLevel++;
+    QString result;
+
+    if (!functExpr->isArrowFunction) {
+        result += omitFunction ? "" : "function";
+
+        if (functExpr->isGenerator)
+            result += "*";
+
+        if (!functExpr->name.isEmpty())
+            result += (omitFunction ? "" : " ") + functExpr->name;
+
+        result += "("+parseFormalParameterList(functExpr->formals)+")";
+
+        if (functExpr->typeAnnotation != nullptr)
+            result += " : " + parseType(functExpr->typeAnnotation->type);
+
+        result += " {\n" + parseStatementList(functExpr->body);
+    } else {
+         result += "("+parseFormalParameterList(functExpr->formals)+")";
+
+         if (functExpr->typeAnnotation != nullptr)
+             result += " : " + parseType(functExpr->typeAnnotation->type);
+
+         result += " => {\n" + parseStatementList(functExpr->body);
+    }
+
+    m_indentLevel--;
+
+    result += formatLine("}", false);
+
+    return result;
+
+}
+
+QString DumpAstVisitor::parseType(Type *type) {
+    QString result = parseUiQualifiedId(type->typeId);
+
+    if (type->typeArguments != nullptr) {
+        TypeArgumentList *list = cast<TypeArgumentList *>(type->typeArguments);
+
+        result += "<";
+
+        for (auto *item = list; item != nullptr; item = item->next) {
+            result += parseType(item->typeId) + (item->next != nullptr ? ", " : "");
+        }
+
+        result += ">";
     }
 
     return result;
@@ -288,7 +377,15 @@ QString DumpAstVisitor::parseExpression(ExpressionNode *expression)
         return cast<IdentifierExpression*>(expression)->name.toString();
     case Node::Kind_FieldMemberExpression: {
         auto *fieldMemberExpr = cast<FieldMemberExpression *>(expression);
-        return parseExpression(fieldMemberExpr->base) + "." + fieldMemberExpr->name.toString();
+        QString result = parseExpression(fieldMemberExpr->base);
+
+        // If we're operating on a numeric literal, always put it in braces
+        if (fieldMemberExpr->base->kind == Node::Kind_NumericLiteral)
+            result = "(" + result + ")";
+
+        result += "." + fieldMemberExpr->name.toString();
+
+        return result;
     }
     case Node::Kind_ArrayMemberExpression: {
         auto *arrayMemberExpr = cast<ArrayMemberExpression *>(expression);
@@ -304,31 +401,7 @@ QString DumpAstVisitor::parseExpression(ExpressionNode *expression)
     case Node::Kind_FunctionExpression:
     {
         auto *functExpr = cast<FunctionExpression *>(expression);
-
-        m_indentLevel++;
-        QString result;
-
-        if (!functExpr->isArrowFunction) {
-            result += "function";
-
-            if (functExpr->isGenerator)
-                result += "*";
-
-            if (!functExpr->name.isEmpty())
-                result += " " + functExpr->name;
-
-            result += "("+parseFormalParameterList(functExpr->formals)+") {\n"
-                    + parseStatementList(functExpr->body);
-        } else {
-             result += "("+parseFormalParameterList(functExpr->formals)+") => {\n";
-             result += parseStatementList(functExpr->body);
-        }
-
-        m_indentLevel--;
-
-        result += formatLine("}", false);
-
-        return result;
+        return parseFunctionExpression(functExpr);
     }
     case Node::Kind_NullExpression:
         return "null";
@@ -419,8 +492,7 @@ QString DumpAstVisitor::parseExpression(ExpressionNode *expression)
     }
     case Node::Kind_Type: {
         auto* type = reinterpret_cast<Type*>(expression);
-
-        return parseUiQualifiedId(type->typeId);
+        return parseType(type);
     }
     case Node::Kind_RegExpLiteral: {
         auto* regexpLiteral = cast<RegExpLiteral*>(expression);
@@ -610,10 +682,14 @@ QString DumpAstVisitor::parseStatement(Statement *statement, bool blockHasNext,
         result += "; ";
 
         result += parseExpression(forStatement->condition) + "; ";
-        result += parseExpression(forStatement->expression)+") ";
+        result += parseExpression(forStatement->expression)+")";
 
-        result += parseStatement(forStatement->statement);
+        const QString statement = parseStatement(forStatement->statement);
 
+        if (!statement.isEmpty())
+            result += " "+statement;
+        else
+            result += ";";
 
         return result;
     }
@@ -639,9 +715,16 @@ QString DumpAstVisitor::parseStatement(Statement *statement, bool blockHasNext,
             break;
         }
 
-        result += parseExpression(forEachStatement->expression) + ") ";
+        result += parseExpression(forEachStatement->expression) + ")";
 
-        result += parseStatement(forEachStatement->statement);
+        const QString statement = parseStatement(forEachStatement->statement);
+
+        if (!statement.isEmpty())
+            result += " "+statement;
+        else
+            result += ";";
+
+
 
         return result;
     }
@@ -652,9 +735,14 @@ QString DumpAstVisitor::parseStatement(Statement *statement, bool blockHasNext,
 
         auto statement = parseStatement(whileStatement->statement, false, true);
 
-        return "while ("+parseExpression(whileStatement->expression) + ")"
-                + (m_blockNeededBraces ? " " : "")
-                + statement;
+        QString result = "while ("+parseExpression(whileStatement->expression) + ")";
+
+        if (!statement.isEmpty())
+            result += (m_blockNeededBraces ? " " : "") + statement;
+        else
+            result += ";";
+
+        return result;
     }
     case Node::Kind_DoWhileStatement: {
         auto *doWhileStatement = cast<DoWhileStatement *>(statement);
@@ -762,31 +850,32 @@ bool DumpAstVisitor::visit(UiPublicMember *node) {
     switch (node->type)
     {
     case UiPublicMember::Signal:
-        if (m_firstSignal) {
-            if (m_firstOfAll)
-                m_firstOfAll = false;
+        if (scope().m_firstSignal) {
+            if (scope().m_firstOfAll)
+                scope().m_firstOfAll = false;
             else
                 addNewLine();
 
-            m_firstSignal = false;
+            scope().m_firstSignal = false;
         }
 
         addLine("signal "+node->name.toString()+"("+parseUiParameterList(node->parameters) + ")"
                 + commentBackInline);
         break;
     case UiPublicMember::Property: {
-        if (m_firstProperty) {
-            if (m_firstOfAll)
-                m_firstOfAll = false;
+        if (scope().m_firstProperty) {
+            if (scope().m_firstOfAll)
+                scope().m_firstOfAll = false;
             else
                 addNewLine();
 
-            m_firstProperty = false;
+            scope().m_firstProperty = false;
         }
 
         const bool is_required = node->requiredToken.isValid();
         const bool is_default = node->defaultToken.isValid();
         const bool is_readonly = node->readonlyToken.isValid();
+        const bool has_type_modifier = node->typeModifierToken.isValid();
 
         QString prefix = "";
         QString statement = parseStatement(node->statement);
@@ -803,8 +892,20 @@ bool DumpAstVisitor::visit(UiPublicMember *node) {
         if (is_readonly)
             prefix += "readonly ";
 
-        addLine(prefix + "property " + node->memberType->name + " "
-                + node->name+statement + commentBackInline);
+        QString member_type = parseUiQualifiedId(node->memberType);
+
+        if (has_type_modifier)
+            member_type = node->typeModifier + "<" + member_type + ">";
+
+        if (is_readonly && statement.isEmpty()
+                && scope().m_bindings.contains(node->name.toString())) {
+            m_result += formatLine(prefix + "property " + member_type + " ", false);
+
+            scope().m_pendingBinding = true;
+        } else {
+            addLine(prefix + "property " + member_type + " "
+                    + node->name+statement + commentBackInline);
+        }
         break;
     }
     }
@@ -845,26 +946,70 @@ void DumpAstVisitor::addLine(QString line) {
     m_result += formatLine(line);
 }
 
+QHash<QString, UiObjectMember*> findBindings(UiObjectMemberList *list) {
+    QHash<QString, UiObjectMember*> bindings;
+
+    // This relies on RestructureASTVisitor having run beforehand
+
+    for (auto *item = list; item != nullptr; item = item->next) {
+        switch (item->member->kind) {
+        case Node::Kind_UiPublicMember: {
+            UiPublicMember *member = cast<UiPublicMember *>(item->member);
+
+            if (member->type != UiPublicMember::Property)
+                continue;
+
+            bindings[member->name.toString()] = nullptr;
+
+            break;
+        }
+        case Node::Kind_UiObjectBinding: {
+            UiObjectBinding *binding = cast<UiObjectBinding *>(item->member);
+
+            const QString name = parseUiQualifiedId(binding->qualifiedId);
+
+            if (bindings.contains(name))
+                bindings[name] = binding;
+
+            break;
+        }
+        case Node::Kind_UiArrayBinding: {
+            UiArrayBinding *binding = cast<UiArrayBinding *>(item->member);
+
+            const QString name = parseUiQualifiedId(binding->qualifiedId);
+
+            if (bindings.contains(name))
+                bindings[name] = binding;
+
+            break;
+        }
+        case Node::Kind_UiScriptBinding:
+            // We can ignore UiScriptBindings since those are actually properly attached to the property
+            break;
+        }
+    }
+
+    return bindings;
+}
+
 bool DumpAstVisitor::visit(UiObjectDefinition *node) {
-    if (m_firstObject) {
-        if (m_firstOfAll)
-            m_firstOfAll = false;
+    if (scope().m_firstObject) {
+        if (scope().m_firstOfAll)
+            scope().m_firstOfAll = false;
         else
             addNewLine();
 
-        m_firstObject = false;
+        scope().m_firstObject = false;
     }
 
     addLine(getComment(node, Comment::Location::Front));
-    addLine(node->qualifiedTypeNameId->name+" {");
+    addLine(parseUiQualifiedId(node->qualifiedTypeNameId) + " {");
 
     m_indentLevel++;
 
-    m_firstProperty = true;
-    m_firstSignal = true;
-    m_firstBinding = true;
-    m_firstObject = true;
-    m_firstOfAll = true;
+    ScopeProperties props;
+    props.m_bindings = findBindings(node->initializer->members);
+    m_scope_properties.push(props);
 
     m_result += getOrphanedComments(node);
 
@@ -873,9 +1018,14 @@ bool DumpAstVisitor::visit(UiObjectDefinition *node) {
 
 void DumpAstVisitor::endVisit(UiObjectDefinition *node) {
     m_indentLevel--;
-    addLine(m_inArrayBinding && m_lastInArrayBinding != node ? "}," : "}");
+
+    m_scope_properties.pop();
+
+    bool need_comma = scope().m_inArrayBinding && scope().m_lastInArrayBinding != node;
+
+    addLine(need_comma ? "}," : "}");
     addLine(getComment(node, Comment::Location::Back));
-    if (!m_inArrayBinding)
+    if (!scope().m_inArrayBinding)
         addNewLine();
 }
 
@@ -920,48 +1070,63 @@ bool DumpAstVisitor::visit(UiEnumMemberList *node) {
 }
 
 bool DumpAstVisitor::visit(UiScriptBinding *node) {
-    if (m_firstBinding) {
-        if (m_firstOfAll)
-            m_firstOfAll = false;
+    if (scope().m_firstBinding) {
+        if (scope().m_firstOfAll)
+            scope().m_firstOfAll = false;
         else
             addNewLine();
 
         if (parseUiQualifiedId(node->qualifiedId) != "id")
-            m_firstBinding = false;
+            scope().m_firstBinding = false;
     }
 
     addLine(getComment(node, Comment::Location::Front));
-    addLine(parseUiQualifiedId(node->qualifiedId)+ ": " + parseStatement(node->statement)
-            + getComment(node, Comment::Location::Back_Inline));
+
+    QString statement = parseStatement(node->statement);
+
+    QString result = parseUiQualifiedId(node->qualifiedId) + ":";
+
+    if (!statement.isEmpty())
+        result += " "+statement;
+    else
+        result += ";";
+
+    result += getComment(node, Comment::Location::Back_Inline);
+
+    addLine(result);
+
     return true;
 }
 
 bool DumpAstVisitor::visit(UiArrayBinding *node) {
-    if (m_firstBinding) {
-        if (m_firstOfAll)
-            m_firstOfAll = false;
+    if (!scope().m_pendingBinding && scope().m_firstBinding) {
+        if (scope().m_firstOfAll)
+            scope().m_firstOfAll = false;
         else
             addNewLine();
 
-        m_firstBinding = false;
+        scope().m_firstBinding = false;
     }
 
-    addLine(getComment(node, Comment::Location::Front));
-    addLine(parseUiQualifiedId(node->qualifiedId)+ ": [");
+    if (scope().m_pendingBinding) {
+        m_result += parseUiQualifiedId(node->qualifiedId)+ ": [\n";
+        scope().m_pendingBinding = false;
+    } else {
+        addLine(getComment(node, Comment::Location::Front));
+        addLine(parseUiQualifiedId(node->qualifiedId)+ ": [");
+    }
 
     m_indentLevel++;
-    m_inArrayBinding = true;
 
-    m_firstOfAll = true;
-    m_firstObject = true;
-    m_firstSignal = true;
-    m_firstBinding = true;
-    m_firstProperty = true;
+    ScopeProperties props;
+    props.m_inArrayBinding = true;
 
     for (auto *item = node->members; item != nullptr; item = item->next) {
         if (item->next == nullptr)
-            m_lastInArrayBinding = item->member;
+            props.m_lastInArrayBinding = item->member;
     }
+
+    m_scope_properties.push(props);
 
     m_result += getOrphanedComments(node);
 
@@ -970,8 +1135,7 @@ bool DumpAstVisitor::visit(UiArrayBinding *node) {
 
 void DumpAstVisitor::endVisit(UiArrayBinding *) {
     m_indentLevel--;
-    m_inArrayBinding = false;
-    m_lastInArrayBinding = nullptr;
+    m_scope_properties.pop();
     addLine("]");
 }
 
@@ -986,7 +1150,12 @@ bool DumpAstVisitor::visit(FunctionDeclaration *node) {
     if (node->isGenerator)
         head += "*";
 
-    head += " "+node->name+"("+parseFormalParameterList(node->formals)+") {";
+    head += " "+node->name+"("+parseFormalParameterList(node->formals)+")";
+
+    if (node->typeAnnotation != nullptr)
+        head += " : " + parseType(node->typeAnnotation->type);
+
+    head += " {";
 
     addLine(head);
     m_indentLevel++;
@@ -1000,27 +1169,37 @@ bool DumpAstVisitor::visit(FunctionDeclaration *node) {
 }
 
 bool DumpAstVisitor::visit(UiObjectBinding *node) {
-    if (m_firstObject) {
-        if (m_firstOfAll)
-            m_firstOfAll = false;
+    if (!scope().m_pendingBinding && scope().m_firstObject) {
+        if (scope().m_firstOfAll)
+            scope().m_firstOfAll = false;
         else
             addNewLine();
 
-        m_firstObject = false;
+        scope().m_firstObject = false;
     }
 
     QString name = parseUiQualifiedId(node->qualifiedTypeNameId);
 
     QString result = name;
 
+    ScopeProperties props;
+    props.m_bindings = findBindings(node->initializer->members);
+    m_scope_properties.push(props);
+
     if (node->hasOnToken)
         result += " on "+parseUiQualifiedId(node->qualifiedId);
     else
         result.prepend(parseUiQualifiedId(node->qualifiedId) + ": ");
 
-    addNewLine();
-    addLine(getComment(node, Comment::Location::Front));
-    addLine(result+" {");
+    if (scope().m_pendingBinding) {
+        m_result += result + " {\n";
+
+        scope().m_pendingBinding = false;
+    } else {
+        addNewLine();
+        addLine(getComment(node, Comment::Location::Front));
+        addLine(result + " {");
+    }
 
     m_indentLevel++;
 
@@ -1029,6 +1208,8 @@ bool DumpAstVisitor::visit(UiObjectBinding *node) {
 
 void DumpAstVisitor::endVisit(UiObjectBinding *node) {
     m_indentLevel--;
+    m_scope_properties.pop();
+
     addLine("}");
     addLine(getComment(node, Comment::Location::Back));
 
@@ -1036,6 +1217,8 @@ void DumpAstVisitor::endVisit(UiObjectBinding *node) {
 }
 
 bool DumpAstVisitor::visit(UiImport *node) {
+    scope().m_firstOfAll = false;
+
     addLine(getComment(node, Comment::Location::Front));
 
     QString result = "import ";
@@ -1046,8 +1229,8 @@ bool DumpAstVisitor::visit(UiImport *node) {
         result += parseUiQualifiedId(node->importUri);
 
     if (node->version) {
-        result += " " + QString::number(node->version->majorVersion) + "."
-                + QString::number(node->version->minorVersion);
+        result += " " + QString::number(node->version->version.majorVersion()) + "."
+                + QString::number(node->version->version.minorVersion());
     }
 
     if (node->asToken.isValid()) {
@@ -1059,4 +1242,50 @@ bool DumpAstVisitor::visit(UiImport *node) {
     addLine(result);
 
     return true;
+}
+
+bool DumpAstVisitor::visit(UiPragma *node) {
+    scope().m_firstOfAll = false;
+
+    addLine(getComment(node, Comment::Location::Front));
+    QString result = "pragma "+ node->name;
+    result += getComment(node, Comment::Location::Back_Inline);
+
+    addLine(result);
+
+    return true;
+}
+
+bool DumpAstVisitor::visit(UiAnnotation *node)
+{
+    if (scope().m_firstObject) {
+        if (scope().m_firstOfAll)
+            scope().m_firstOfAll = false;
+        else
+            addNewLine();
+
+        scope().m_firstObject = false;
+    }
+
+    addLine(getComment(node, Comment::Location::Front));
+    addLine(QLatin1String("@") + parseUiQualifiedId(node->qualifiedTypeNameId) + " {");
+
+    m_indentLevel++;
+
+    ScopeProperties props;
+    props.m_bindings = findBindings(node->initializer->members);
+    m_scope_properties.push(props);
+
+    m_result += getOrphanedComments(node);
+
+    return true;
+}
+
+void DumpAstVisitor::endVisit(UiAnnotation *node) {
+    m_indentLevel--;
+
+    m_scope_properties.pop();
+
+    addLine("}");
+    addLine(getComment(node, Comment::Location::Back));
 }

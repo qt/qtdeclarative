@@ -55,6 +55,7 @@ import QtQuick.LocalStorage 2.0
 import "Database.js" as JS
 
 Window {
+    id: window
     visible: true
     width: Screen.width / 2
     height: Screen.height / 1.8
@@ -72,19 +73,21 @@ Window {
             Header {
                 id: input
                 Layout.fillWidth: true
+                listView: listView
+                statusText: statustext
             }
             RowLayout {
                 MyButton {
                     text: "New"
                     onClicked: {
                         input.initrec_new()
-                        creatingNewEntry = true
+                        window.creatingNewEntry = true
                         listView.model.setProperty(listView.currentIndex, "id", 0)
                     }
                 }
                 MyButton {
                     id: saveButton
-                    enabled: (creatingNewEntry || editingEntry) && listView.currentIndex != -1
+                    enabled: (window.creatingNewEntry || window.editingEntry) && listView.currentIndex != -1
                     text: "Save"
                     onClicked: {
                         var insertedRow = false;
@@ -109,8 +112,8 @@ Window {
 
                         if (insertedRow) {
                             input.initrec()
-                            creatingNewEntry = false
-                            editingEntry = false
+                            window.creatingNewEntry = false
+                            window.editingEntry = false
                             listView.forceLayout()
                         }
                     }
@@ -118,20 +121,20 @@ Window {
                 MyButton {
                     id: editButton
                     text: "Edit"
-                    enabled: !creatingNewEntry && !editingEntry && listView.currentIndex != -1
+                    enabled: !window.creatingNewEntry && !window.editingEntry && listView.currentIndex != -1
                     onClicked: {
                         input.editrec(listView.model.get(listView.currentIndex).date,
                                       listView.model.get(listView.currentIndex).trip_desc,
                                       listView.model.get(listView.currentIndex).distance,
                                       listView.model.get(listView.currentIndex).id)
 
-                        editingEntry = true
+                        window.editingEntry = true
                     }
                 }
                 MyButton {
                     id: deleteButton
                     text: "Delete"
-                    enabled: !creatingNewEntry && listView.currentIndex != -1
+                    enabled: !window.creatingNewEntry && listView.currentIndex != -1
                     onClicked: {
                         JS.dbDeleteRow(listView.model.get(listView.currentIndex).id)
                         listView.model.remove(listView.currentIndex, 1)
@@ -145,7 +148,7 @@ Window {
                 MyButton {
                     id: cancelButton
                     text: "Cancel"
-                    enabled: (creatingNewEntry || editingEntry) && listView.currentIndex != -1
+                    enabled: (window.creatingNewEntry || window.editingEntry) && listView.currentIndex != -1
                     onClicked: {
                         if (listView.model.get(listView.currentIndex).id === 0) {
                             // This entry had an id of 0, which means it was being created and hadn't
@@ -153,8 +156,8 @@ Window {
                             listView.model.remove(listView.currentIndex, 1)
                         }
                         listView.forceLayout()
-                        creatingNewEntry = false
-                        editingEntry = false
+                        window.creatingNewEntry = false
+                        window.editingEntry = false
                         input.initrec()
                     }
                 }
@@ -176,9 +179,11 @@ Window {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 model: MyModel {}
-                delegate: MyDelegate {}
+                delegate: MyDelegate {
+                    onClicked: listView.currentIndex = index
+                }
                 // Don't allow changing the currentIndex while the user is creating/editing values.
-                enabled: !creatingNewEntry && !editingEntry
+                enabled: !window.creatingNewEntry && !window.editingEntry
 
                 highlight: highlightBar
                 highlightFollowsCurrentItem: true

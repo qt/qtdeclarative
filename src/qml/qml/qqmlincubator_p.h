@@ -61,9 +61,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlPropertyData;
-struct RequiredPropertyInfo;
-using RequiredProperties = QHash<QQmlPropertyData*, RequiredPropertyInfo>;
+class RequiredProperties;
 
 class QQmlIncubator;
 class Q_QML_PRIVATE_EXPORT QQmlIncubatorPrivate : public QQmlEnginePrivate::Incubator

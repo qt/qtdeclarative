@@ -53,7 +53,7 @@
 
 #include <QtCore/QSize>
 
-#include <QtGui/qopengl.h>
+#include <qopengl.h>
 
 #include <QtQuick/QSGTexture>
 #include <QtQuick/private/qsgplaintexture_p.h>

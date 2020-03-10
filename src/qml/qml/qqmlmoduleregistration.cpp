@@ -39,27 +39,33 @@
 
 #include <QtQml/private/qqmlmetatype_p.h>
 #include <QtQml/qqmlmoduleregistration.h>
+#include <QtCore/qversionnumber.h>
 
 QT_BEGIN_NAMESPACE
 
 struct QQmlModuleRegistrationPrivate
 {
     const QString uri;
-    const int majorVersion;
 };
 
-QQmlModuleRegistration::QQmlModuleRegistration(
-        const char *uri, int majorVersion,
-        void (*registerFunction)()) :
-    d(new QQmlModuleRegistrationPrivate { QString::fromUtf8(uri), majorVersion })
+QQmlModuleRegistration::QQmlModuleRegistration(const char *uri, void (*registerFunction)()) :
+    d(new QQmlModuleRegistrationPrivate { QString::fromUtf8(uri) })
 {
-    QQmlMetaType::qmlInsertModuleRegistration(d->uri, d->majorVersion,
-                                              registerFunction);
+    QQmlMetaType::qmlInsertModuleRegistration(d->uri, registerFunction);
 }
+
+#if QT_DEPRECATED_SINCE(6, 0)
+QQmlModuleRegistration::QQmlModuleRegistration(
+        const char *uri, int majorVersion, void (*registerFunction)()) :
+    QQmlModuleRegistration(uri, registerFunction)
+{
+    Q_UNUSED(majorVersion);
+}
+#endif
 
 QQmlModuleRegistration::~QQmlModuleRegistration()
 {
-    QQmlMetaType::qmlRemoveModuleRegistration(d->uri, d->majorVersion);
+    QQmlMetaType::qmlRemoveModuleRegistration(d->uri);
     delete d;
 }
 

@@ -15,9 +15,9 @@ Module {
             "dumper.Versions/Versions 1.0",
             "dumper.Versions/Versions 1.1"
         ]
-        exportMetaObjectRevisions: [0, 1]
+        exportMetaObjectRevisions: [0, 65281]
         Property { name: "foo"; type: "int" }
-        Property { name: "bar"; revision: 1; type: "int" }
-        Property { name: "baz"; revision: 2; type: "int" }
+        Property { name: "bar"; revision: 65281; type: "int" }
+        Property { name: "baz"; revision: 65282; type: "int" }
     }
 }

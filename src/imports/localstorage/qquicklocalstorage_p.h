@@ -61,6 +61,7 @@ class QQuickLocalStorage : public QObject
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(LocalStorage)
+    QML_ADDED_IN_VERSION(2, 0)
     QML_SINGLETON
 
 public:

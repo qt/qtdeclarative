@@ -84,8 +84,12 @@ QAccessibleInterface *QAccessibleQuickWindow::child(int index) const
 QAccessibleInterface *QAccessibleQuickWindow::focusChild() const
 {
     QObject *focusObject = window()->focusObject();
-    if (focusObject)
-        return QAccessible::queryAccessibleInterface(focusObject);
+    if (focusObject) {
+        QAccessibleInterface *iface = QAccessible::queryAccessibleInterface(focusObject);
+        if (!iface || iface == this || !iface->focusChild())
+            return iface;
+        return iface->focusChild();
+    }
     return nullptr;
 }
 

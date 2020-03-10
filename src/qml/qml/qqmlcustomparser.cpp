@@ -40,6 +40,7 @@
 #include "qqmlcustomparser_p.h"
 
 #include <private/qv4compileddata_p.h>
+#include <private/qqmlsourcecoordinate_p.h>
 
 #include <QtCore/qdebug.h>
 
@@ -100,10 +101,10 @@ void QQmlCustomParser::clearErrors()
 */
 void QQmlCustomParser::error(const QV4::CompiledData::Location &location, const QString &description)
 {
-    QQmlJS::DiagnosticMessage error;
-    error.line = location.line;
-    error.column = location.column;
-    error.message = description;
+    QQmlError error;
+    error.setLine(qmlConvertSourceCoordinate<quint32, int>(location.line));
+    error.setColumn(qmlConvertSourceCoordinate<quint32, int>(location.column));
+    error.setDescription(description);
 
     exceptions << error;
 }
@@ -125,8 +126,13 @@ int QQmlCustomParser::evaluateEnum(const QByteArray& script, bool *ok) const
     // * <TypeName>.<EnumValue>
     // * <TypeName>.<ScopedEnumName>.<EnumValue>
 
-    int dot = script.indexOf('.');
-    if (dot == -1 || dot == script.length()-1)
+    auto nextDot = [&](int dot) {
+        const int nextDot = script.indexOf('.', dot + 1);
+        return (nextDot == script.length() - 1) ? -1 : nextDot;
+    };
+
+    int dot = nextDot(-1);
+    if (dot == -1)
         return -1;
 
     QString scope = QString::fromUtf8(script.left(dot));
@@ -137,18 +143,32 @@ int QQmlCustomParser::evaluateEnum(const QByteArray& script, bool *ok) const
         QQmlType type;
 
         if (imports.isT1()) {
-            imports.asT1()->resolveType(scope, &type, nullptr, nullptr, nullptr);
+            QQmlImportNamespace *ns = nullptr;
+            if (!imports.asT1()->resolveType(scope, &type, nullptr, &ns))
+                return -1;
+            if (!type.isValid() && ns != nullptr) {
+                dot = nextDot(dot);
+                if (dot == -1 || !imports.asT1()->resolveType(QString::fromUtf8(script.left(dot)),
+                                                              &type, nullptr, nullptr)) {
+                    return -1;
+                }
+            }
         } else {
             QQmlTypeNameCache::Result result = imports.asT2()->query(scope);
-            if (result.isValid())
+            if (result.isValid()) {
                 type = result.type;
+            } else if (result.importNamespace) {
+                dot = nextDot(dot);
+                if (dot != -1)
+                    type = imports.asT2()->query(QString::fromUtf8(script.left(dot))).type;
+            }
         }
 
         if (!type.isValid())
             return -1;
 
-        int dot2 = script.indexOf('.', dot+1);
-        const bool dot2Valid = dot2 != -1 && dot2 != script.length()-1;
+        const int dot2 = nextDot(dot);
+        const bool dot2Valid = (dot2 != -1);
         QByteArray enumValue = script.mid(dot2Valid ? dot2 + 1 : dot + 1);
         QByteArray scopedEnumName = (dot2Valid ? script.mid(dot + 1, dot2 - dot - 1) : QByteArray());
         if (!scopedEnumName.isEmpty())

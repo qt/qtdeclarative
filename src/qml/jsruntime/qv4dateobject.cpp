@@ -682,17 +682,17 @@ static inline QString ToTimeString(double t)
 
 static inline QString ToLocaleString(double t)
 {
-    return ToDateTime(t, Qt::LocalTime).toString(Qt::DefaultLocaleShortDate);
+    return QLocale().toString(ToDateTime(t, Qt::LocalTime), QLocale::ShortFormat);
 }
 
 static inline QString ToLocaleDateString(double t)
 {
-    return ToDateTime(t, Qt::LocalTime).date().toString(Qt::DefaultLocaleShortDate);
+    return QLocale().toString(ToDateTime(t, Qt::LocalTime).date(), QLocale::ShortFormat);
 }
 
 static inline QString ToLocaleTimeString(double t)
 {
-    return ToDateTime(t, Qt::LocalTime).time().toString(Qt::DefaultLocaleShortDate);
+    return QLocale().toString(ToDateTime(t, Qt::LocalTime).time(), QLocale::ShortFormat);
 }
 
 static double getLocalTZA()
@@ -1561,7 +1561,7 @@ ReturnedValue DatePrototype::method_toJSON(const FunctionObject *b, const Value 
     if (!toIso)
         return v4->throwTypeError();
 
-    return toIso->call(O, nullptr, 0);
+    return checkedResult(v4, toIso->call(O, nullptr, 0));
 }
 
 ReturnedValue DatePrototype::method_symbolToPrimitive(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)

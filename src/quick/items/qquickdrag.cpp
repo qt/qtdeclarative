@@ -61,6 +61,7 @@ class QQuickDragAttachedPrivate : public QObjectPrivate, public QQuickItemChange
 {
     Q_DECLARE_PUBLIC(QQuickDragAttached)
     QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     static QQuickDragAttachedPrivate *get(QQuickDragAttached *attached) {

@@ -72,7 +72,7 @@ ListModel {
                 var jsonText = xhr.responseText;
                 var objArray = JSON.parse(jsonText.replace(/\'/g,"'"))
                 if (objArray.errors !== undefined)
-                    console.log(lCategory, "Error fetching tweets: " + imageItems.errors[0].message)
+                    console.log("Error fetching tweets: " + objArray.errors[0].message)
                 else {
                     for (var key in objArray.items) {
                         var rssItem = objArray.items[key];

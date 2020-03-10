@@ -40,6 +40,9 @@
 #include "qquicktext_p.h"
 #include "qquicktext_p_p.h"
 
+#include <private/qqmldebugserviceinterfaces_p.h>
+#include <private/qqmldebugconnector_p.h>
+
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qsgadaptationlayer_p.h>
@@ -1146,6 +1149,10 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
 
         elideLayout->setFont(layout.font());
         elideLayout->setTextOption(layout.textOption());
+        if (QQmlDebugTranslationService *service
+                     = QQmlDebugConnector::service<QQmlDebugTranslationService>()) {
+            elideText = service->foundElidedText(q, layoutText, elideText);
+        }
         elideLayout->setText(elideText);
         elideLayout->beginLayout();
 
@@ -1212,7 +1219,7 @@ void QQuickTextPrivate::setLineGeometry(QTextLine &line, qreal lineWidth, qreal 
 
                 if (!image->pix) {
                     QUrl url = q->baseUrl().resolved(image->url);
-                    image->pix = new QQuickPixmap(qmlEngine(q), url, image->size);
+                    image->pix = new QQuickPixmap(qmlEngine(q), url, QRect(), image->size);
                     if (image->pix->isLoading()) {
                         image->pix->connectFinished(q, SLOT(imageDownloadFinished()));
                         if (!extra.isAllocated() || !extra->nbActiveDownloads)
@@ -2642,6 +2649,12 @@ void QQuickText::setLineHeightMode(LineHeightMode mode)
 
     If the text does not fit within the item bounds with the minimum font size
     the text will be elided as per the \l elide property.
+
+    If the \l textFormat property is set to \l Text.RichText, this will have no effect at all as the
+    property will be ignored completely. If \l textFormat is set to \l Text.StyledText, then the
+    property will be respected provided there is no font size tags inside the text. If there are
+    font size tags, the property will still respect those. This can cause it to not fully comply with
+    the fontSizeMode setting.
 */
 
 QQuickText::FontSizeMode QQuickText::fontSizeMode() const
@@ -2961,6 +2974,8 @@ void QQuickText::setRenderType(QQuickText::RenderType renderType)
         d->updateLayout();
 }
 
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+#if QT_DEPRECATED_SINCE(5, 15)
 /*!
     \qmlmethod QtQuick::Text::doLayout()
     \deprecated
@@ -2972,6 +2987,8 @@ void QQuickText::doLayout()
     forceLayout();
 }
 
+#endif
+#endif
 /*!
     \qmlmethod QtQuick::Text::forceLayout()
     \since 5.9

@@ -89,7 +89,7 @@ public:
     QQmlTableInstanceModel(QQmlContext *qmlContext, QObject *parent = nullptr);
     ~QQmlTableInstanceModel() override;
 
-    void useImportVersion(int minorVersion);
+    void useImportVersion(QTypeRevision version);
 
     int count() const override { return m_adaptorModel.count(); }
     int rows() const { return m_adaptorModel.rowCount(); }
@@ -110,6 +110,7 @@ public:
 
     QObject *object(int index, QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested) override;
     ReleaseFlags release(QObject *object, ReusableFlag reusable = NotReusable) override;
+    void dispose(QObject *object);
     void cancel(int) override;
 
     void drainReusableItemsPool(int maxPoolTime) override;
@@ -122,10 +123,6 @@ public:
     void setWatchedRoles(const QList<QByteArray> &) override { Q_UNREACHABLE(); }
     int indexOf(QObject *, QObject *) const override { Q_UNREACHABLE(); return 0; }
 
-Q_SIGNALS:
-    void itemPooled(int index, QObject *object);
-    void itemReused(int index, QObject *object);
-
 private:
     QQmlComponent *resolveDelegate(int index);
 
@@ -133,7 +130,7 @@ private:
     QQmlAbstractDelegateComponent *m_delegateChooser = nullptr;
     QQmlComponent *m_delegate = nullptr;
     QPointer<QQmlContext> m_qmlContext;
-    QQmlDelegateModelItemMetaType *m_metaType;
+    QQmlRefPointer<QQmlDelegateModelItemMetaType> m_metaType;
 
     QHash<int, QQmlDelegateModelItem *> m_modelItems;
     QQmlReusableDelegateModelItemsPool m_reusableItemsPool;

@@ -121,7 +121,7 @@ void QQuickFontObject::replyFinished()
         }
         redirectCount = 0;
 
-        if (!reply->networkError()) {
+        if (!reply->error()) {
             id = QFontDatabase::addApplicationFontFromData(reply->readAll());
             if (id != -1)
                 emit fontDownloaded(QFontDatabase::applicationFontFamilies(id).at(0), QQuickFontLoader::Ready);

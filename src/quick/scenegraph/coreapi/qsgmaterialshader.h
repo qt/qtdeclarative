@@ -42,7 +42,7 @@
 
 #include <QtQuick/qtquickglobal.h>
 #if QT_CONFIG(opengl)
-# include <QtGui/qopenglshaderprogram.h>
+# include <qopenglshaderprogram.h>
 #endif
 #include <QtGui/QMatrix4x4>
 #include <QtCore/QRect>

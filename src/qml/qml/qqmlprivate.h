@@ -63,23 +63,10 @@
 #include <QtCore/qvariant.h>
 #include <QtCore/qurl.h>
 #include <QtCore/qpointer.h>
+#include <QtCore/qversionnumber.h>
 
 #include <QtCore/qmetaobject.h>
 #include <QtCore/qdebug.h>
-
-#define QML_GETTYPENAMES \
-    const char *className = T::staticMetaObject.className(); \
-    const int nameLen = int(strlen(className)); \
-    QVarLengthArray<char,48> pointerName(nameLen+2); \
-    memcpy(pointerName.data(), className, size_t(nameLen)); \
-    pointerName[nameLen] = '*'; \
-    pointerName[nameLen+1] = '\0'; \
-    const int listLen = int(strlen("QQmlListProperty<")); \
-    QVarLengthArray<char,64> listName(listLen + nameLen + 2); \
-    memcpy(listName.data(), "QQmlListProperty<", size_t(listLen)); \
-    memcpy(listName.data()+listLen, className, size_t(nameLen)); \
-    listName[listLen+nameLen] = '>'; \
-    listName[listLen+nameLen+1] = '\0';
 
 QT_BEGIN_NAMESPACE
 
@@ -124,6 +111,7 @@ class QJSValue;
 class QJSEngine;
 class QQmlEngine;
 class QQmlCustomParser;
+class QQmlTypeNotAvailable;
 
 template<class T>
 QQmlCustomParser *qmlCreateCustomParser()
@@ -342,17 +330,16 @@ namespace QQmlPrivate
     typedef AutoParentResult (*AutoParentFunction)(QObject *object, QObject *parent);
 
     struct RegisterType {
-        int version;
+        int structVersion;
 
-        int typeId;
-        int listId;
+        QMetaType typeId;
+        QMetaType listId;
         int objectSize;
         void (*create)(void *);
         QString noCreationReason;
 
         const char *uri;
-        int versionMajor;
-        int versionMinor;
+        QTypeRevision version;
         const char *elementName;
         const QMetaObject *metaObject;
 
@@ -368,20 +355,20 @@ namespace QQmlPrivate
 
         QQmlCustomParser *customParser;
 
-        int revision;
+        QTypeRevision revision;
         // If this is extended ensure "version" is bumped!!!
     };
 
     struct RegisterTypeAndRevisions {
-        int version;
+        int structVersion;
 
-        int typeId;
-        int listId;
+        QMetaType typeId;
+        QMetaType listId;
         int objectSize;
         void (*create)(void *);
 
         const char *uri;
-        int versionMajor;
+        QTypeRevision version;
 
         const QMetaObject *metaObject;
         const QMetaObject *classInfoMetaObject;
@@ -400,12 +387,15 @@ namespace QQmlPrivate
     };
 
     struct RegisterInterface {
-        int version;
+        int structVersion;
 
-        int typeId;
-        int listId;
+        QMetaType typeId;
+        QMetaType listId;
 
         const char *iid;
+
+        const char *uri;
+        QTypeRevision version;
     };
 
     struct RegisterAutoParent {
@@ -415,48 +405,45 @@ namespace QQmlPrivate
     };
 
     struct RegisterSingletonType {
-        int version;
+        int structVersion;
 
         const char *uri;
-        int versionMajor;
-        int versionMinor;
+        QTypeRevision version;
         const char *typeName;
 
         QJSValue (*scriptApi)(QQmlEngine *, QJSEngine *);
         QObject *(*qobjectApi)(QQmlEngine *, QJSEngine *);
         const QMetaObject *instanceMetaObject; // new in version 1
-        int typeId; // new in version 2
-        int revision; // new in version 2
+        QMetaType typeId; // new in version 2
+        QTypeRevision revision; // new in version 2
         std::function<QObject*(QQmlEngine *, QJSEngine *)> generalizedQobjectApi; // new in version 3
         // If this is extended ensure "version" is bumped!!!
     };
 
     struct RegisterSingletonTypeAndRevisions {
-        int version;
+        int structVersion;
         const char *uri;
-        int versionMajor;
+        QTypeRevision version;
 
         QJSValue (*scriptApi)(QQmlEngine *, QJSEngine *);
         const QMetaObject *instanceMetaObject;
         const QMetaObject *classInfoMetaObject;
 
-        int typeId;
+        QMetaType typeId;
         std::function<QObject*(QQmlEngine *, QJSEngine *)> generalizedQobjectApi; // new in version 3
     };
 
     struct RegisterCompositeType {
         QUrl url;
         const char *uri;
-        int versionMajor;
-        int versionMinor;
+        QTypeRevision version;
         const char *typeName;
     };
 
     struct RegisterCompositeSingletonType {
         QUrl url;
         const char *uri;
-        int versionMajor;
-        int versionMinor;
+        QTypeRevision version;
         const char *typeName;
     };
 
@@ -468,7 +455,7 @@ namespace QQmlPrivate
 
     typedef const CachedQmlUnit *(*QmlUnitCacheLookupFunction)(const QUrl &url);
     struct RegisterQmlUnitCacheHook {
-        int version;
+        int structVersion;
         QmlUnitCacheLookupFunction lookupCachedQmlUnit;
     };
 
@@ -512,11 +499,13 @@ namespace QQmlPrivate
         return metaObject->classInfo(indexOfOwnClassInfo(metaObject, key)).value();
     }
 
-    inline int intClassInfo(const QMetaObject *metaObject, const char *key, int defaultValue = 0)
+    inline QTypeRevision revisionClassInfo(const QMetaObject *metaObject, const char *key,
+                                       QTypeRevision defaultValue = QTypeRevision())
     {
         const int index = indexOfOwnClassInfo(metaObject, key);
         return (index == -1) ? defaultValue
-                             : QByteArray(metaObject->classInfo(index).value()).toInt();
+                             : QTypeRevision::fromEncodedVersion(
+                                   QByteArray(metaObject->classInfo(index).value()).toInt());
     }
 
     inline bool boolClassInfo(const QMetaObject *metaObject, const char *key,
@@ -579,24 +568,34 @@ namespace QQmlPrivate
         static constexpr bool Value = bool(T::QmlIsSingleton::yes);
     };
 
+    template<class T, class = QmlVoidT<>>
+    struct QmlInterface
+    {
+        static constexpr bool Value = false;
+    };
+
+    template<class T>
+    struct QmlInterface<T, QmlVoidT<typename T::QmlIsInterface>>
+    {
+        static constexpr bool Value = bool(T::QmlIsInterface::yes);
+    };
+
     template<typename T>
     void qmlRegisterSingletonAndRevisions(const char *uri, int versionMajor,
                                           const QMetaObject *classInfoMetaObject)
     {
-        QML_GETTYPENAMES
-
         RegisterSingletonTypeAndRevisions api = {
             0,
 
             uri,
-            versionMajor,
+            QTypeRevision::fromMajorVersion(versionMajor),
 
             nullptr,
 
             &T::staticMetaObject,
             classInfoMetaObject,
 
-            qRegisterNormalizedMetaType<T *>(pointerName.constData()),
+            QMetaType::fromType<T *>(),
             Constructors<T>::createSingletonInstance
         };
 
@@ -607,17 +606,15 @@ namespace QQmlPrivate
     void qmlRegisterTypeAndRevisions(const char *uri, int versionMajor,
                                      const QMetaObject *classInfoMetaObject)
     {
-        QML_GETTYPENAMES
-
         RegisterTypeAndRevisions type = {
             0,
-            qRegisterNormalizedMetaType<T *>(pointerName.constData()),
-            qRegisterNormalizedMetaType<QQmlListProperty<T> >(listName.constData()),
+            QMetaType::fromType<T*>(),
+            QMetaType::fromType<QQmlListProperty<T>>(),
             int(sizeof(T)),
             Constructors<T>::createInto,
 
             uri,
-            versionMajor,
+            QTypeRevision::fromMajorVersion(versionMajor),
 
             &T::staticMetaObject,
             classInfoMetaObject,
@@ -637,6 +634,11 @@ namespace QQmlPrivate
 
         qmlregister(TypeAndRevisionsRegistration, &type);
     }
+
+    template<>
+    void Q_QML_EXPORT qmlRegisterTypeAndRevisions<QQmlTypeNotAvailable, void>(
+            const char *uri, int versionMajor, const QMetaObject *classInfoMetaObject);
+
 } // namespace QQmlPrivate
 
 QT_END_NAMESPACE

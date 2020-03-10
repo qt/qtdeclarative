@@ -53,6 +53,7 @@
 
 #include <QtQml/qtqmlglobal.h>
 #include <QtCore/qstring.h>
+#include <QtCore/qversionnumber.h>
 
 #include <functional>
 
@@ -72,7 +73,7 @@ class QQmlTypeModulePrivate;
 class QQmlTypeModule
 {
 public:
-    QQmlTypeModule(const QString &uri = QString(), int majorVersion = 0);
+    QQmlTypeModule(const QString &uri = QString(), quint8 majorVersion = 0);
     ~QQmlTypeModule();
 
     void add(QQmlTypePrivate *);
@@ -82,14 +83,14 @@ public:
     void lock();
 
     QString module() const;
-    int majorVersion() const;
+    quint8 majorVersion() const;
 
-    void addMinorVersion(int minorVersion);
-    int minimumMinorVersion() const;
-    int maximumMinorVersion() const;
+    void addMinorVersion(quint8 minorVersion);
+    quint8 minimumMinorVersion() const;
+    quint8 maximumMinorVersion() const;
 
-    QQmlType type(const QHashedStringRef &, int) const;
-    QQmlType type(const QV4::String *, int) const;
+    QQmlType type(const QHashedStringRef &, QTypeRevision version) const;
+    QQmlType type(const QV4::String *, QTypeRevision version) const;
 
     void walkCompositeSingletons(const std::function<void(const QQmlType &)> &callback) const;
 

@@ -83,7 +83,7 @@ public:
     virtual void verifyBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &) = 0;
     virtual void applyBindings(QObject *, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &) = 0;
 
-    QVector<QQmlJS::DiagnosticMessage> errors() const { return exceptions; }
+    QVector<QQmlError> errors() const { return exceptions; }
 
 protected:
     void error(const QV4::CompiledData::Binding *binding, const QString& description)
@@ -97,7 +97,7 @@ protected:
     const QMetaObject *resolveType(const QString&) const;
 
 private:
-    QVector<QQmlJS::DiagnosticMessage> exceptions;
+    QVector<QQmlError> exceptions;
     QQmlEnginePrivate *engine;
     const QQmlPropertyValidator *validator;
     Flags m_flags;
@@ -106,11 +106,6 @@ private:
     friend class QQmlObjectCreator;
 };
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlCustomParser::Flags)
-
-#if 0
-#define QML_REGISTER_CUSTOM_TYPE(URI, VERSION_MAJ, VERSION_MIN, NAME, TYPE, CUSTOMTYPE) \
-            qmlRegisterCustomType<TYPE>(#URI, VERSION_MAJ, VERSION_MIN, #NAME, #TYPE, new CUSTOMTYPE)
-#endif
 
 QT_END_NAMESPACE
 

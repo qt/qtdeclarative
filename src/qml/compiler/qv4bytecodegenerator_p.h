@@ -56,9 +56,7 @@
 QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
-namespace AST {
 class SourceLocation;
-}
 }
 
 namespace QV4 {
@@ -244,7 +242,7 @@ QT_WARNING_POP
 
 
 
-    void setLocation(const QQmlJS::AST::SourceLocation &loc);
+    void setLocation(const QQmlJS::SourceLocation &loc);
 
     ExceptionHandler *exceptionHandler() const {
         return currentExceptionHandler;

@@ -67,19 +67,20 @@ class QQuickFolderListModel : public QAbstractListModel, public QQmlParserStatus
     Q_PROPERTY(QStringList nameFilters READ nameFilters WRITE setNameFilters)
     Q_PROPERTY(SortField sortField READ sortField WRITE setSortField)
     Q_PROPERTY(bool sortReversed READ sortReversed WRITE setSortReversed)
-    Q_PROPERTY(bool showFiles READ showFiles WRITE setShowFiles REVISION 1)
+    Q_PROPERTY(bool showFiles READ showFiles WRITE setShowFiles REVISION(2, 1))
     Q_PROPERTY(bool showDirs READ showDirs WRITE setShowDirs)
     Q_PROPERTY(bool showDirsFirst READ showDirsFirst WRITE setShowDirsFirst)
     Q_PROPERTY(bool showDotAndDotDot READ showDotAndDotDot WRITE setShowDotAndDotDot)
-    Q_PROPERTY(bool showHidden READ showHidden WRITE setShowHidden REVISION 1)
+    Q_PROPERTY(bool showHidden READ showHidden WRITE setShowHidden REVISION(2, 1))
     Q_PROPERTY(bool showOnlyReadable READ showOnlyReadable WRITE setShowOnlyReadable)
-    Q_PROPERTY(bool caseSensitive READ caseSensitive WRITE setCaseSensitive REVISION 2)
+    Q_PROPERTY(bool caseSensitive READ caseSensitive WRITE setCaseSensitive REVISION(2, 2))
     Q_PROPERTY(int count READ count NOTIFY countChanged)
-    Q_PROPERTY(Status status READ status NOTIFY statusChanged REVISION 11)
-    Q_PROPERTY(bool sortCaseSensitive READ sortCaseSensitive WRITE setSortCaseSensitive REVISION 12)
+    Q_PROPERTY(Status status READ status NOTIFY statusChanged REVISION(2, 11))
+    Q_PROPERTY(bool sortCaseSensitive READ sortCaseSensitive WRITE setSortCaseSensitive REVISION(2, 12))
 //![class props]
 
     QML_NAMED_ELEMENT(FolderListModel)
+    QML_ADDED_IN_VERSION(2, 0)
 //![abslistmodel]
 public:
     QQuickFolderListModel(QObject *parent = nullptr);
@@ -163,8 +164,8 @@ public:
 Q_SIGNALS:
     void folderChanged();
     void rowCountChanged() const;
-    Q_REVISION(1) void countChanged() const;
-    Q_REVISION(11) void statusChanged();
+    Q_REVISION(2, 1) void countChanged() const;
+    Q_REVISION(2, 11) void statusChanged();
 //![notifier]
 
 //![class end]

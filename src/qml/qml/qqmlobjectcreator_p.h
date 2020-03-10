@@ -86,7 +86,7 @@ struct RequiredPropertyInfo
     QVector<AliasToRequiredInfo> aliasesToRequired;
 };
 
-using RequiredProperties = QHash<QQmlPropertyData*, RequiredPropertyInfo>;
+class RequiredProperties : public QHash<QQmlPropertyData*, RequiredPropertyInfo> {};
 
 struct QQmlObjectCreatorSharedState : public QSharedData
 {
@@ -162,7 +162,6 @@ private:
     void registerObjectWithContextById(const QV4::CompiledData::Object *object, QObject *instance) const;
 
     inline QV4::QmlContext *currentQmlContext();
-    Q_NEVER_INLINE void createQmlContext();
     QV4::ResolvedTypeReference *resolvedType(int id) const
     {
         return compilationUnit->resolvedType(id);

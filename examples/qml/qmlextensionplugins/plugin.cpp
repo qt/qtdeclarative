@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-#include <QtQml/QQmlExtensionPlugin>
+#include <QtQml/QQmlEngineExtensionPlugin>
 #include <qdebug.h>
 
 //![plugin]

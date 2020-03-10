@@ -31,8 +31,8 @@
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qsgrendererinterface.h>
-#include <QtGui/qopenglcontext.h>
-#include <QtGui/qopenglfunctions.h>
+#include <qopenglcontext.h>
+#include <qopenglfunctions.h>
 
 #include "../../shared/util.h"
 

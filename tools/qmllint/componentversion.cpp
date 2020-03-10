@@ -41,21 +41,21 @@ ComponentVersion::ComponentVersion(const QString &versionString)
     const int maybeMinor = versionString.midRef(dotIdx + 1).toInt(&ok);
     if (!ok)
         return;
-    m_major = maybeMajor;
-    m_minor = maybeMinor;
+    m_version = QTypeRevision::fromVersion(maybeMajor, maybeMinor);
 }
 
 bool operator<(const ComponentVersion &lhs, const ComponentVersion &rhs)
 {
-    return lhs.majorVersion() < rhs.majorVersion()
-            || (lhs.majorVersion() == rhs.majorVersion() && lhs.minorVersion() < rhs.minorVersion());
+    return lhs.version().majorVersion() < rhs.version().majorVersion()
+            || (lhs.version().majorVersion() == rhs.version().majorVersion()
+                && lhs.version().minorVersion() < rhs.version().minorVersion());
 }
 
 bool operator<=(const ComponentVersion &lhs, const ComponentVersion &rhs)
 {
-    return lhs.majorVersion() < rhs.majorVersion()
-            || (lhs.majorVersion() == rhs.majorVersion()
-                && lhs.minorVersion() <= rhs.minorVersion());
+    return lhs.version().majorVersion() < rhs.version().majorVersion()
+            || (lhs.version().majorVersion() == rhs.version().majorVersion()
+                && lhs.version().minorVersion() <= rhs.version().minorVersion());
 }
 
 bool operator>(const ComponentVersion &lhs, const ComponentVersion &rhs)
@@ -70,8 +70,8 @@ bool operator>=(const ComponentVersion &lhs, const ComponentVersion &rhs)
 
 bool operator==(const ComponentVersion &lhs, const ComponentVersion &rhs)
 {
-    return lhs.majorVersion() == rhs.majorVersion()
-            && lhs.minorVersion() == rhs.minorVersion();
+    return lhs.version().majorVersion() == rhs.version().majorVersion()
+            && lhs.version().minorVersion() == rhs.version().minorVersion();
 }
 
 bool operator!=(const ComponentVersion &lhs, const ComponentVersion &rhs)

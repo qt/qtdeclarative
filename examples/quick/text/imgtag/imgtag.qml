@@ -56,7 +56,7 @@ Rectangle {
     focus: true
     color: "#dedede"
 
-    property var hAlign: Text.AlignLeft
+    property int hAlign: Text.AlignLeft
 
     Flickable {
         anchors.fill: parent
@@ -68,6 +68,7 @@ Rectangle {
             x: 10; y: 10
             spacing: 20
             width: parent.width - 20
+            property int hAlign: main.hAlign
 
             TextWithImage {
                 text: "This is a <b>happy</b> face<img src=\"images/face-smile.png\">"

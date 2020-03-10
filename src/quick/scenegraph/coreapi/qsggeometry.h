@@ -41,7 +41,7 @@
 #define QSGGEOMETRY_H
 
 #include <QtQuick/qtquickglobal.h>
-#include <QtGui/qopengl.h>
+#include <qopengl.h>
 #include <QtCore/QRectF>
 
 QT_BEGIN_NAMESPACE

@@ -136,12 +136,12 @@ Texture::Texture(Atlas *atlas, const QRect &textureRect, const QByteArray &data,
 {
     float w = atlas->size().width();
     float h = atlas->size().height();
-    QRect nopad = atlasSubRect();
+    const QRect &r = atlasSubRect();
     // offset by half-pixel to prevent bleeding when scaling
-    m_texture_coords_rect = QRectF((nopad.x() + .5) / w,
-                                   (nopad.y() + .5) / h,
-                                   (nopad.width() - 1.) / w,
-                                   (nopad.height() - 1.) / h);
+    m_texture_coords_rect = QRectF((r.x() + .5) / w,
+                                   (r.y() + .5) / h,
+                                   (size.width() - 1.) / w,
+                                   (size.height() - 1.) / h);
 }
 
 Texture::~Texture()
@@ -151,7 +151,7 @@ Texture::~Texture()
 
 bool Texture::hasAlphaChannel() const
 {
-    return QSGCompressedTexture::formatIsOpaque(static_cast<Atlas*>(m_atlas)->format());
+    return !QSGCompressedTexture::formatIsOpaque(static_cast<Atlas*>(m_atlas)->format());
 }
 
 QSGTexture *Texture::removedFromAtlas() const

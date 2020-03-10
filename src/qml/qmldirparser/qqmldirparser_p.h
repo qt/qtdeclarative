@@ -54,6 +54,7 @@
 #include <QtCore/QUrl>
 #include <QtCore/QHash>
 #include <QtCore/QDebug>
+#include <QtCore/QTypeRevision>
 #include <private/qtqmlcompilerglobal_p.h>
 #include <private/qqmljsengine_p.h>
 #include <private/qqmljsdiagnosticmessage_p.h>
@@ -101,8 +102,8 @@ public:
     {
         Component() = default;
 
-        Component(const QString &typeName, const QString &fileName, int majorVersion, int minorVersion)
-            : typeName(typeName), fileName(fileName), majorVersion(majorVersion), minorVersion(minorVersion),
+        Component(const QString &typeName, const QString &fileName, QTypeRevision version)
+            : typeName(typeName), fileName(fileName), version(version),
             internal(false), singleton(false)
         {
             checkNonRelative("Component", typeName, fileName);
@@ -110,8 +111,7 @@ public:
 
         QString typeName;
         QString fileName;
-        int majorVersion = 0;
-        int minorVersion = 0;
+        QTypeRevision version = QTypeRevision::zero();
         bool internal = false;
         bool singleton = false;
     };
@@ -120,16 +120,15 @@ public:
     {
         Script() = default;
 
-        Script(const QString &nameSpace, const QString &fileName, int majorVersion, int minorVersion)
-            : nameSpace(nameSpace), fileName(fileName), majorVersion(majorVersion), minorVersion(minorVersion)
+        Script(const QString &nameSpace, const QString &fileName, QTypeRevision version)
+            : nameSpace(nameSpace), fileName(fileName), version(version)
         {
             checkNonRelative("Script", nameSpace, fileName);
         }
 
         QString nameSpace;
         QString fileName;
-        int majorVersion = 0;
-        int minorVersion = 0;
+        QTypeRevision version = QTypeRevision::zero();
     };
 
     QMultiHash<QString,Component> components() const;

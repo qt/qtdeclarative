@@ -40,24 +40,20 @@
 // We mean it.
 
 #include <QtCore/qglobal.h>
+#include <QtCore/qversionnumber.h>
 
 class ComponentVersion
 {
 public:
-    static const int NoVersion = -1;
-
     ComponentVersion() = default;
-    ComponentVersion(int major, int minor) : m_major(major), m_minor(minor) {}
+    ComponentVersion(QTypeRevision version) : m_version(version) {}
     explicit ComponentVersion(const QString &versionString);
 
-    int majorVersion() const { return m_major; }
-    int minorVersion() const { return m_minor; }
-
-    bool isValid() const { return m_major >= 0 && m_minor >= 0; }
+    QTypeRevision version() const { return m_version; }
+    bool isValid() const { return m_version.hasMajorVersion() && m_version.hasMinorVersion(); }
 
 private:
-    int m_major = NoVersion;
-    int m_minor = NoVersion;
+    QTypeRevision m_version;
 };
 
 bool operator<(const ComponentVersion &lhs, const ComponentVersion &rhs);

@@ -167,6 +167,29 @@ void QQuickImageBase::resetSourceSize()
     setSourceSize(QSize());
 }
 
+QRectF QQuickImageBase::sourceClipRect() const
+{
+    Q_D(const QQuickImageBase);
+    return d->sourceClipRect;
+}
+
+void QQuickImageBase::setSourceClipRect(const QRectF &r)
+{
+    Q_D(QQuickImageBase);
+    if (d->sourceClipRect == r)
+        return;
+
+    d->sourceClipRect = r;
+    emit sourceClipRectChanged();
+    if (isComponentComplete())
+        load();
+}
+
+void QQuickImageBase::resetSourceClipRect()
+{
+    setSourceClipRect(QRect());
+}
+
 bool QQuickImageBase::cache() const
 {
     Q_D(const QQuickImageBase);
@@ -295,6 +318,7 @@ void QQuickImageBase::loadPixmap(const QUrl &url, LoadPixmapOptions loadOptions)
 
     d->pix.load(qmlEngine(this),
                 loadUrl,
+                d->sourceClipRect.toRect(),
                 (loadOptions & HandleDPR) ? d->sourcesize * d->devicePixelRatio : QSize(),
                 options,
                 (loadOptions & UseProviderOptions) ? d->providerOptions : QQuickImageProviderOptions(),
@@ -371,6 +395,10 @@ void QQuickImageBase::requestFinished()
     if (d->frameCount != d->pix.frameCount()) {
         d->frameCount = d->pix.frameCount();
         emit frameCountChanged();
+    }
+    if (d->colorSpace != d->pix.colorSpace()) {
+        d->colorSpace = d->pix.colorSpace();
+        emit colorSpaceChanged();
     }
 
     update();
@@ -462,6 +490,22 @@ void QQuickImageBase::setAutoTransform(bool transform)
         return;
     d->providerOptions.setAutoTransform(transform ? QQuickImageProviderOptions::ApplyTransform : QQuickImageProviderOptions::DoNotApplyTransform);
     emitAutoTransformBaseChanged();
+}
+
+QColorSpace QQuickImageBase::colorSpace() const
+{
+    Q_D(const QQuickImageBase);
+    return d->colorSpace;
+}
+
+void QQuickImageBase::setColorSpace(const QColorSpace &colorSpace)
+{
+    Q_D(QQuickImageBase);
+    if (d->colorSpace == colorSpace)
+        return;
+    d->colorSpace = colorSpace;
+    d->providerOptions.setTargetColorSpace(colorSpace);
+    emit colorSpaceChanged();
 }
 
 QT_END_NAMESPACE

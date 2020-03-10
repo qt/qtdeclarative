@@ -48,17 +48,19 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.12
+import QtQuick.Window 2.12
 
-Rectangle {
+Window {
+    visible: true
     width: 640; height: 480
 
     Column {
         anchors.fill: parent; spacing: 20
 
         Text {
-            text: "If a translation is available for the system language (eg. French) then the "+
-            "string below will translated (eg. 'Bonjour'). Otherwise it will show 'Hello'."
+            text: "If a translation is available for the system language (eg. French) then the " +
+            "string below will be translated (eg. 'Bonjour'). Otherwise it will show 'Hello'."
             width: parent.width; wrapMode: Text.WordWrap
         }
 

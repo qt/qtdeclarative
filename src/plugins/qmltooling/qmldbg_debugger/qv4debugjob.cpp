@@ -66,7 +66,6 @@ void JavaScriptJob::run()
 
     QV4::ScopedContext ctx(scope, engine->currentStackFrame ? engine->currentContext()
                                                             : engine->scriptContext());
-    QObject scopeObject;
 
     QV4::CppStackFrame *frame = engine->currentStackFrame;
 
@@ -76,9 +75,10 @@ void JavaScriptJob::run()
         ctx = static_cast<QV4::ExecutionContext *>(&frame->jsFrame->context);
 
     if (context >= 0) {
-        QQmlContext *extraContext = qmlContext(QQmlDebugService::objectForId(context));
+        QObject *forId = QQmlDebugService::objectForId(context);
+        QQmlContext *extraContext = qmlContext(forId);
         if (extraContext)
-            ctx = QV4::QmlContext::create(ctx, QQmlContextData::get(extraContext), &scopeObject);
+            ctx = QV4::QmlContext::create(ctx, QQmlContextData::get(extraContext), forId);
     } else if (frameNr < 0) { // Use QML context if available
         QQmlEngine *qmlEngine = engine->qmlEngine();
         if (qmlEngine) {
@@ -99,7 +99,7 @@ void JavaScriptJob::run()
                 }
             }
             if (!engine->qmlContext())
-                ctx = QV4::QmlContext::create(ctx, QQmlContextData::get(qmlRootContext), &scopeObject);
+                ctx = QV4::QmlContext::create(ctx, QQmlContextData::get(qmlRootContext), nullptr);
         }
     }
 

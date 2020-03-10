@@ -52,6 +52,8 @@ public:
     QmlShapesPlugin(QObject *parent = nullptr)
         : QQmlExtensionPlugin(parent)
     {
+        volatile auto registration = &qml_register_types_QtQuick_Shapes;
+        Q_UNUSED(registration);
     }
 
     void registerTypes(const char *uri) override

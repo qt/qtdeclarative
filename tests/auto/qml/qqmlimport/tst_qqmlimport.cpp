@@ -190,7 +190,9 @@ void tst_QQmlImport::completeQmldirPaths()
     QFETCH(int, minorVersion);
     QFETCH(QStringList, expectedPaths);
 
-    QCOMPARE(QQmlImports::completeQmldirPaths(uri, basePaths, majorVersion, minorVersion), expectedPaths);
+    QCOMPARE(QQmlImports::completeQmldirPaths(
+                 uri, basePaths, QTypeRevision::fromVersion(majorVersion, minorVersion)),
+             expectedPaths);
 }
 
 class QmldirUrlInterceptor : public QQmlAbstractUrlInterceptor {

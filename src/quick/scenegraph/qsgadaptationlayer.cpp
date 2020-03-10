@@ -329,7 +329,7 @@ void QSGDistanceFieldGlyphCache::updateRhiTexture(QRhiTexture *oldTex, QRhiTextu
 }
 
 #if defined(QSG_DISTANCEFIELD_CACHE_DEBUG)
-#include <QtGui/qopenglfunctions.h>
+#include <qopenglfunctions.h>
 
 void QSGDistanceFieldGlyphCache::saveTexture(GLuint textureId, int width, int height) const
 {

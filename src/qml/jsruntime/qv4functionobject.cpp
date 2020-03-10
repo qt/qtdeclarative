@@ -358,7 +358,7 @@ ReturnedValue FunctionPrototype::method_apply(const QV4::FunctionObject *b, cons
         return v4->throwTypeError();
     thisObject = argc ? argv : nullptr;
     if (argc < 2 || argv[1].isNullOrUndefined())
-        return f->call(thisObject, argv, 0);
+        return checkedResult(v4, f->call(thisObject, argv, 0));
 
     Object *arr = argv[1].objectValue();
     if (!arr)
@@ -398,13 +398,14 @@ ReturnedValue FunctionPrototype::method_apply(const QV4::FunctionObject *b, cons
         }
     }
 
-    return f->call(thisObject, arguments, len);
+    return checkedResult(v4, f->call(thisObject, arguments, len));
 }
 
 ReturnedValue FunctionPrototype::method_call(const QV4::FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
 {
+    QV4::ExecutionEngine *v4 = b->engine();
     if (!thisObject->isFunctionObject())
-        return b->engine()->throwTypeError();
+        return v4->throwTypeError();
 
     const FunctionObject *f = static_cast<const FunctionObject *>(thisObject);
 
@@ -413,7 +414,7 @@ ReturnedValue FunctionPrototype::method_call(const QV4::FunctionObject *b, const
         ++argv;
         --argc;
     }
-    return f->call(thisObject, argv, argc);
+    return checkedResult(v4, f->call(thisObject, argv, argc));
 }
 
 ReturnedValue FunctionPrototype::method_bind(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
@@ -713,12 +714,12 @@ void Heap::BoundFunction::init(QV4::ExecutionContext *scope, QV4::FunctionObject
 
 ReturnedValue BoundFunction::virtualCall(const FunctionObject *fo, const Value *, const Value *argv, int argc)
 {
-    const BoundFunction *f = static_cast<const BoundFunction *>(fo);
-    Scope scope(f->engine());
-
-    if (scope.hasException())
+    QV4::ExecutionEngine *v4 = fo->engine();
+    if (v4->hasException)
         return Encode::undefined();
 
+    const BoundFunction *f = static_cast<const BoundFunction *>(fo);
+    Scope scope(v4);
     Scoped<MemberData> boundArgs(scope, f->boundArgs());
     ScopedFunctionObject target(scope, f->target());
     JSCallData jsCallData(scope, (boundArgs ? boundArgs->size() : 0) + argc);
@@ -729,7 +730,7 @@ ReturnedValue BoundFunction::virtualCall(const FunctionObject *fo, const Value *
         argp += boundArgs->size();
     }
     memcpy(argp, argv, argc*sizeof(Value));
-    return target->call(jsCallData);
+    return checkedResult(v4, target->call(jsCallData));
 }
 
 ReturnedValue BoundFunction::virtualCallAsConstructor(const FunctionObject *fo, const Value *argv, int argc, const Value *)

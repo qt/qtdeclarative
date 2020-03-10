@@ -79,11 +79,11 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTableView : public QQuickFlickable
     Q_PROPERTY(bool reuseItems READ reuseItems WRITE setReuseItems NOTIFY reuseItemsChanged)
     Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth NOTIFY contentWidthChanged)
     Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged)
-    Q_PROPERTY(QQuickTableView *syncView READ syncView WRITE setSyncView NOTIFY syncViewChanged REVISION 14)
-    Q_PROPERTY(Qt::Orientations syncDirection READ syncDirection WRITE setSyncDirection NOTIFY syncDirectionChanged REVISION 14)
+    Q_PROPERTY(QQuickTableView *syncView READ syncView WRITE setSyncView NOTIFY syncViewChanged REVISION(2, 14))
+    Q_PROPERTY(Qt::Orientations syncDirection READ syncDirection WRITE setSyncDirection NOTIFY syncDirectionChanged REVISION(2, 14))
 
     QML_NAMED_ELEMENT(TableView)
-    QML_ADDED_IN_MINOR_VERSION(12)
+    QML_ADDED_IN_VERSION(2, 12)
     QML_ATTACHED(QQuickTableViewAttached)
 
 public:
@@ -136,8 +136,8 @@ Q_SIGNALS:
     void modelChanged();
     void delegateChanged();
     void reuseItemsChanged();
-    Q_REVISION(14) void syncViewChanged();
-    Q_REVISION(14) void syncDirectionChanged();
+    Q_REVISION(2, 14) void syncViewChanged();
+    Q_REVISION(2, 14) void syncDirectionChanged();
 
 protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;

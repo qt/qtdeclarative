@@ -750,6 +750,47 @@ private:
     bool m_ownRWObj;
 };
 
+namespace MyStaticNamespace {
+    Q_NAMESPACE
+    QML_ELEMENT
+
+    enum MyNSEnum {
+        Key1 = 1,
+        Key2,
+        Key5 = 5
+    };
+    Q_ENUM_NS(MyNSEnum);
+
+    enum class MyOtherNSEnum {
+        OtherKey1 = 1,
+        OtherKey2
+    };
+    Q_ENUM_NS(MyOtherNSEnum);
+
+
+    class MyNamespacedType : public QObject
+    {
+        Q_OBJECT
+        Q_PROPERTY(MyStaticNamespace::MyNSEnum myEnum MEMBER m_myEnum)
+        QML_NAMED_ELEMENT(MyStaticNamespacedType)
+        MyStaticNamespace::MyNSEnum m_myEnum = MyNSEnum::Key1;
+    };
+
+    class MySecondNamespacedType : public QObject
+    {
+        Q_OBJECT
+        Q_PROPERTY(QQmlListProperty<MyStaticNamespace::MyNamespacedType> list READ list)
+        QML_NAMED_ELEMENT(MyStaticSecondNamespacedType)
+    public:
+        QQmlListProperty<MyNamespacedType> list()
+        {
+            return QQmlListProperty<MyNamespacedType>(this, &m_list);
+        }
+
+    private:
+        QList<MyNamespacedType *> m_list;
+    };
+}
 
 namespace MyNamespace {
     Q_NAMESPACE
@@ -1440,17 +1481,22 @@ public:
     int base() const { return 43; }
 };
 
+class Local : public QObject
+{
+    Q_OBJECT
+};
+
 class Foreign
 {
     Q_GADGET
-    QML_FOREIGN(QObject)
+    QML_FOREIGN(Local)
     QML_NAMED_ELEMENT(Foreign)
 };
 
 class ForeignExtended
 {
     Q_GADGET
-    QML_FOREIGN(QObject)
+    QML_FOREIGN(Local)
     QML_NAMED_ELEMENT(ForeignExtended)
     QML_EXTENDED(Extension)
 };

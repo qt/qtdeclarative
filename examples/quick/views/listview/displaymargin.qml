@@ -68,10 +68,13 @@ Item {
             width: parent.width
             height: 25
             color: index % 2 ? "steelblue" : "lightsteelblue"
+
+            required property int index
+
             Text {
                 anchors.centerIn: parent
                 color: "white"
-                text: "Item " + (index + 1)
+                text: "Item " + (parent.index + 1)
             }
         }
     }

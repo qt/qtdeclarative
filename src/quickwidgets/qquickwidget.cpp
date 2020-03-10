@@ -59,9 +59,11 @@
 #include <QtGui/qpa/qplatformintegration.h>
 
 #if QT_CONFIG(opengl)
+#include <private/qopenglcontext_p.h>
+#include <private/qopenglextensions_p.h>
+#include <QOpenGLFramebufferObject>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
-#include <private/qopenglextensions_p.h>
 #endif
 #include <QtGui/QPainter>
 

@@ -30,9 +30,9 @@
 
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
-#include <QtGui/qopenglcontext.h>
-#include <QtGui/qopenglframebufferobject.h>
-#include <QtGui/qopenglfunctions.h>
+#include <qopenglcontext.h>
+#include <qopenglframebufferobject.h>
+#include <qopenglfunctions.h>
 
 #include <QtQuick/QQuickFramebufferObject>
 

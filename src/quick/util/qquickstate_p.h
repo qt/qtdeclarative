@@ -126,6 +126,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickStateOperation : public QObject
 {
     Q_OBJECT
     QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 public:
     QQuickStateOperation(QObject *parent = nullptr)
         : QObject(parent) {}
@@ -159,6 +160,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickState : public QObject
     Q_CLASSINFO("DefaultProperty", "changes")
     Q_CLASSINFO("DeferredPropertyNames", "changes")
     QML_NAMED_ELEMENT(State)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     QQuickState(QObject *parent=nullptr);

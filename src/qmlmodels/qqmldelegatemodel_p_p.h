@@ -100,11 +100,11 @@ class QQmlDelegateModelItem : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int index READ modelIndex NOTIFY modelIndexChanged)
-    Q_PROPERTY(int row READ modelRow NOTIFY rowChanged REVISION 12)
-    Q_PROPERTY(int column READ modelColumn NOTIFY columnChanged REVISION 12)
+    Q_PROPERTY(int row READ modelRow NOTIFY rowChanged REVISION(2, 12))
+    Q_PROPERTY(int column READ modelColumn NOTIFY columnChanged REVISION(2, 12))
     Q_PROPERTY(QObject *model READ modelObject CONSTANT)
 public:
-    QQmlDelegateModelItem(QQmlDelegateModelItemMetaType *metaType,
+    QQmlDelegateModelItem(const QQmlRefPointer<QQmlDelegateModelItemMetaType> &metaType,
                           QQmlAdaptorModel::Accessors *accessor, int modelIndex,
                           int row, int column);
     ~QQmlDelegateModelItem();
@@ -148,7 +148,7 @@ public:
     static QV4::ReturnedValue get_index(QQmlDelegateModelItem *thisItem, uint flag, const QV4::Value &arg);
 
     QV4::ExecutionEngine *v4;
-    QQmlDelegateModelItemMetaType * const metaType;
+    QQmlRefPointer<QQmlDelegateModelItemMetaType> const metaType;
     QQmlContextDataRef contextData;
     QPointer<QObject> object;
     QPointer<QQmlDelegateModelAttached> attached;
@@ -162,8 +162,8 @@ public:
 
 Q_SIGNALS:
     void modelIndexChanged();
-    Q_REVISION(12) void rowChanged();
-    Q_REVISION(12) void columnChanged();
+    Q_REVISION(2, 12) void rowChanged();
+    Q_REVISION(2, 12) void columnChanged();
 
 protected:
     void objectDestroyed(QObject *);

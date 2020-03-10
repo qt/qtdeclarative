@@ -182,8 +182,8 @@ public:
 
     CompositeMetaTypeIds typeIdsForComponent(int objectid = 0) const;
 
-    int metaTypeId = -1;
-    int listMetaTypeId = -1;
+    QMetaType metaTypeId;
+    QMetaType listMetaTypeId;
     bool isRegisteredWithEngine = false;
 
     QHash<int, InlineComponentData> inlineComponentData;
@@ -326,17 +326,15 @@ private:
 struct ResolvedTypeReference
 {
     ResolvedTypeReference()
-        : majorVersion(0)
-          , minorVersion(0)
-          , isFullyDynamicType(false)
+        : version(QTypeRevision::zero())
+        , isFullyDynamicType(false)
     {}
 
     QQmlType type;
     QQmlRefPointer<QQmlPropertyCache> typePropertyCache;
     QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit;
 
-    int majorVersion;
-    int minorVersion;
+    QTypeRevision version;
     // Types such as QQmlPropertyMap can add properties dynamically at run-time and
     // therefore cannot have a property cache installed when instantiated.
     bool isFullyDynamicType;

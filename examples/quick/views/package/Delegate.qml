@@ -52,6 +52,12 @@ import QtQuick 2.0
 
 //! [0]
 Package {
+    id: delegate
+
+    required property int upTo
+    required property int index
+    required property string display
+
     Text { id: listDelegate; width: parent.width; height: 25; text: 'Empty'; Package.name: 'list' }
     Text { id: gridDelegate; width: parent.width / 2; height: 50; text: 'Empty'; Package.name: 'grid' }
 
@@ -60,8 +66,8 @@ Package {
         width: parent.width; height: 25
         color: 'lightsteelblue'
 
-        Text { text: display; anchors.centerIn: parent }
-        state: root.upTo > index ? 'inGrid' : 'inList'
+        Text { text: delegate.display; anchors.centerIn: parent }
+        state: delegate.upTo > delegate.index ? 'inGrid' : 'inList'
         states: [
             State {
                 name: 'inList'

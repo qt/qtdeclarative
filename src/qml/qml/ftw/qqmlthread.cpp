@@ -188,13 +188,7 @@ void QQmlThreadPrivate::threadEvent()
     lock();
 
     for (;;) {
-        if (m_shutdown) {
-            quit();
-            wakeOne();
-            unlock();
-
-            return;
-        } else if (!threadList.isEmpty()) {
+        if (!threadList.isEmpty()) {
             m_threadProcessing = true;
 
             QQmlThread::Message *message = threadList.first();
@@ -206,6 +200,12 @@ void QQmlThreadPrivate::threadEvent()
             lock();
 
             delete threadList.takeFirst();
+        } else if (m_shutdown) {
+            quit();
+            wakeOne();
+            unlock();
+
+            return;
         } else {
             wakeOne();
 
@@ -242,6 +242,7 @@ void QQmlThread::shutdown()
     d->lock();
     Q_ASSERT(!d->m_shutdown);
 
+    d->m_shutdown = true;
     for (;;) {
         if (d->mainSync || !d->mainList.isEmpty()) {
             d->unlock();
@@ -254,13 +255,10 @@ void QQmlThread::shutdown()
         }
     }
 
-    d->m_shutdown = true;
-    if (QCoreApplication::closingDown()) {
+    if (QCoreApplication::closingDown())
         d->quit();
-    } else {
+    else
         d->triggerThreadEvent();
-        d->wait();
-    }
 
     d->unlock();
     d->QThread::wait();

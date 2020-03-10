@@ -138,6 +138,7 @@ struct QMatrix4x4_Accessor
     static bool isScale(const QMatrix4x4 &m) { return ((const QMatrix4x4_Accessor &) m).flagBits <= 0x2; }
     static bool is2DSafe(const QMatrix4x4 &m) { return ((const QMatrix4x4_Accessor &) m).flagBits < 0x8; }
 };
+Q_STATIC_ASSERT(sizeof(QMatrix4x4_Accessor) == sizeof(QMatrix4x4));
 
 const float OPAQUE_LIMIT                = 0.999f;
 
@@ -480,8 +481,6 @@ Updater::Updater(Renderer *r)
     m_roots.add(0);
     m_combined_matrix_stack.add(&m_identityMatrix);
     m_rootMatrices.add(m_identityMatrix);
-
-    Q_ASSERT(sizeof(QMatrix4x4_Accessor) == sizeof(QMatrix4x4));
 }
 
 void Updater::updateStates(QSGNode *n)

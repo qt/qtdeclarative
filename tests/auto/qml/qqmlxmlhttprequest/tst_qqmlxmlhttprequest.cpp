@@ -1133,15 +1133,16 @@ void tst_qqmlxmlhttprequest::sendFileRequest()
 #if QT_CONFIG(process)
 void tst_qqmlxmlhttprequest::sendFileRequestNotSet() {
     if (qEnvironmentVariableIsSet("TEST_CUSTOM_PERMISSIONS")) {
-        // Test with no settings
-        // Should just result in warnings in Qt 5
-        doFileRequest([](QObject* object, QTemporaryFile &writeFile) {
-            QTRY_COMPARE(object->property("readResult").toString(), testString);
+        // Test with no settings, neither reading nor writing should work
+        doFileRequest([](QObject *object, QTemporaryFile &writeFile) {
+            QTest::qWait(1000);
 
-            QTRY_VERIFY(object->property("writeDone").toBool());
+            // Verify that the read has not yielded any value
+            QVERIFY(object->property("readResult").isNull());
 
+            // Check that the file stays empty
             QVERIFY(writeFile.open());
-            QCOMPARE(QString::fromUtf8(writeFile.readAll()), testString);
+            QCOMPARE(QString::fromUtf8(writeFile.readAll()), "");
             writeFile.close();
         });
         return;
@@ -1161,22 +1162,25 @@ void tst_qqmlxmlhttprequest::sendFileRequestNotSet() {
     // Check exit code
     QCOMPARE(child.exitCode(), 0);
 
-    // Check if all warnings were printed
+    // Check if all errors were printed
     QString output = QString::fromUtf8(child.readAllStandardOutput());
 
+    // Due to differences in line endings on Windows, check for the error lines individually
+    const QStringList readingError = {
+        QLatin1String("XMLHttpRequest: Using GET on a local file is disabled by default."),
+        QLatin1String("Set QML_XHR_ALLOW_FILE_READ to 1 to enable this feature.")
+    };
 
-    const QString readingWarning = QLatin1String(
-                "XMLHttpRequest: Using GET on a local file is dangerous "
-                "and will be disabled by default in a future Qt version."
-                "Set QML_XHR_ALLOW_FILE_READ to 1 if you wish to continue using this feature.");
+    const QStringList writingError = {
+        QLatin1String("XMLHttpRequest: Using PUT on a local file is disabled by default."),
+        QLatin1String("Set QML_XHR_ALLOW_FILE_WRITE to 1 to enable this feature.")
+    };
 
-    const QString writingWarning = QLatin1String(
-                "XMLHttpRequest: Using PUT on a local file is dangerous "
-                "and will be disabled by default in a future Qt version."
-                "Set QML_XHR_ALLOW_FILE_WRITE to 1 if you wish to continue using this feature.");
+    for (const auto &readingErrorLine : readingError)
+        QVERIFY(output.contains(readingErrorLine));
 
-    QVERIFY(output.contains(readingWarning));
-    QVERIFY(output.contains(writingWarning));
+    for (const auto &writingErrorLine : writingError)
+        QVERIFY(output.contains(writingErrorLine));
 }
 #endif
 

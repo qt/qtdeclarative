@@ -60,6 +60,7 @@
 #include <private/qlinkedstringhash_p.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qvector.h>
+#include <QtCore/qversionnumber.h>
 
 #include <private/qv4value_p.h>
 #include <private/qqmlpropertydata_p.h>
@@ -80,7 +81,7 @@ class Q_QML_PRIVATE_EXPORT QQmlPropertyCache : public QQmlRefCount
 {
 public:
     QQmlPropertyCache();
-    QQmlPropertyCache(const QMetaObject *, int metaObjectRevision = 0);
+    QQmlPropertyCache(const QMetaObject *, QTypeRevision metaObjectRevision = QTypeRevision::zero());
     ~QQmlPropertyCache() override;
 
     void update(const QMetaObject *);
@@ -92,7 +93,8 @@ public:
                 QQmlPropertyData::Flags propertyFlags = QQmlPropertyData::Flags(),
                 QQmlPropertyData::Flags methodFlags = QQmlPropertyData::Flags(),
                 QQmlPropertyData::Flags signalFlags = QQmlPropertyData::Flags());
-    QQmlPropertyCache *copyAndAppend(const QMetaObject *, int typeMinorVersion,
+    QQmlPropertyCache *copyAndAppend(
+                const QMetaObject *, QTypeRevision typeVersion,
                 QQmlPropertyData::Flags propertyFlags = QQmlPropertyData::Flags(),
                 QQmlPropertyData::Flags methodFlags = QQmlPropertyData::Flags(),
                 QQmlPropertyData::Flags signalFlags = QQmlPropertyData::Flags());
@@ -100,7 +102,7 @@ public:
     QQmlPropertyCache *copyAndReserve(int propertyCount,
                                       int methodCount, int signalCount, int enumCount);
     void appendProperty(const QString &, QQmlPropertyData::Flags flags, int coreIndex,
-                        int propType, int revision, int notifyIndex);
+                        int propType, QTypeRevision revision, int notifyIndex);
     void appendSignal(const QString &, QQmlPropertyData::Flags, int coreIndex,
                       const int *types = nullptr, const QList<QByteArray> &names = QList<QByteArray>());
     void appendMethod(const QString &, QQmlPropertyData::Flags flags, int coreIndex, int returnType,
@@ -118,6 +120,7 @@ public:
     }
 
     QQmlPropertyData *property(int) const;
+    QQmlPropertyData *maybeUnresolvedProperty(int) const;
     QQmlPropertyData *method(int) const;
     QQmlPropertyData *signal(int index) const;
     QQmlEnumData *qmlEnum(int) const;
@@ -173,8 +176,8 @@ public:
 
     QByteArray checksum(bool *ok);
 
-    int allowedRevision(int index) const { return allowedRevisionCache[index]; }
-    void setAllowedRevision(int index, int allowed) { allowedRevisionCache[index] = allowed; }
+    QTypeRevision allowedRevision(int index) const { return allowedRevisionCache[index]; }
+    void setAllowedRevision(int index, QTypeRevision allowed) { allowedRevisionCache[index] = allowed; }
 
 private:
     friend class QQmlEnginePrivate;
@@ -186,7 +189,7 @@ private:
 
     inline QQmlPropertyCache *copy(int reserve);
 
-    void append(const QMetaObject *, int typeMinorVersion,
+    void append(const QMetaObject *, QTypeRevision typeVersion,
                 QQmlPropertyData::Flags propertyFlags = QQmlPropertyData::Flags(),
                 QQmlPropertyData::Flags methodFlags = QQmlPropertyData::Flags(),
                 QQmlPropertyData::Flags signalFlags = QQmlPropertyData::Flags());
@@ -195,7 +198,7 @@ private:
 
     typedef QVector<QQmlPropertyData> IndexCache;
     typedef QLinkedStringMultiHash<QPair<int, QQmlPropertyData *> > StringCache;
-    typedef QVector<int> AllowedRevisionCache;
+    typedef QVector<QTypeRevision> AllowedRevisionCache;
 
     QQmlPropertyData *findProperty(StringCache::ConstIterator it, QObject *, QQmlContextData *) const;
     QQmlPropertyData *findProperty(StringCache::ConstIterator it, const QQmlVMEMetaObject *, QQmlContextData *) const;
@@ -351,8 +354,9 @@ QQmlPropertyCache::overrideData(QQmlPropertyData *data) const
 
 bool QQmlPropertyCache::isAllowedInRevision(QQmlPropertyData *data) const
 {
-    return (data->metaObjectOffset() == -1 && data->revision() == 0) ||
-           (allowedRevisionCache[data->metaObjectOffset()] >= data->revision());
+    return (data->metaObjectOffset() == -1 && data->revision() == QTypeRevision::zero())
+            || (allowedRevisionCache[data->metaObjectOffset()].toEncodedVersion<quint16>()
+                >= data->revision().toEncodedVersion<quint16>());
 }
 
 int QQmlPropertyCache::propertyCount() const

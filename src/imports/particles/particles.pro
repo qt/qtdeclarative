@@ -1,7 +1,7 @@
 CXX_MODULE = qml
 TARGET  = particlesplugin
 TARGETPATH = QtQuick/Particles
-IMPORT_VERSION = 2.15
+QML_IMPORT_VERSION = $$QT_VERSION
 
 SOURCES += \
     plugin.cpp

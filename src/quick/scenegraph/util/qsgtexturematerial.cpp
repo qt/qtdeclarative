@@ -40,8 +40,8 @@
 #include "qsgtexturematerial_p.h"
 #include <private/qsgtexture_p.h>
 #if QT_CONFIG(opengl)
-# include <QtGui/qopenglshaderprogram.h>
-# include <QtGui/qopenglfunctions.h>
+# include <qopenglshaderprogram.h>
+# include <qopenglfunctions.h>
 #endif
 #include <QtGui/private/qrhi_p.h>
 
