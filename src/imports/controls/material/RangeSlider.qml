@@ -85,7 +85,7 @@ T.RangeSlider {
             width: control.horizontal ? control.second.position * parent.width - control.first.position * parent.width - 3 : 3
             height: control.horizontal ? 3 : control.second.position * parent.height - control.first.position * parent.height - 3
 
-            color: control.Material.accentColor
+            color: control.enabled ? control.Material.accentColor : control.Material.sliderDisabledColor
         }
     }
 }
