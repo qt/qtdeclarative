@@ -64,6 +64,7 @@ private slots:
     void activeFocusOnTab8();
     void activeFocusOnTab9();
     void activeFocusOnTab10();
+    void activeFocusOnTab_infiniteLoop_data();
     void activeFocusOnTab_infiniteLoop();
 
     void nextItemInFocusChain();
@@ -1025,12 +1026,20 @@ void tst_QQuickItem::activeFocusOnTab10()
     delete window;
 }
 
+void tst_QQuickItem::activeFocusOnTab_infiniteLoop_data()
+{
+    QTest::addColumn<QUrl>("source");
+    QTest::newRow("infiniteLoop") << testFileUrl("activeFocusOnTab_infiniteLoop.qml");  // QTBUG-68271
+    QTest::newRow("infiniteLoop2") << testFileUrl("activeFocusOnTab_infiniteLoop2.qml");// QTBUG-81510
+}
+
 void tst_QQuickItem::activeFocusOnTab_infiniteLoop()
 {
-    // see QTBUG-68271
+    QFETCH(QUrl, source);
+
     // create a window where the currently focused item is not visible
     QScopedPointer<QQuickView>window(new QQuickView());
-    window->setSource(testFileUrl("activeFocusOnTab_infiniteLoop.qml"));
+    window->setSource(source);
     window->show();
     auto *hiddenChild = findItem<QQuickItem>(window->rootObject(), "hiddenChild");
     QVERIFY(hiddenChild);
@@ -1038,6 +1047,8 @@ void tst_QQuickItem::activeFocusOnTab_infiniteLoop()
     // move the focus - this used to result in an infinite loop
     auto *item = hiddenChild->nextItemInFocusChain();
     // focus is moved to the root object since there is no other candidate
+    QCOMPARE(item, window->rootObject());
+    item = hiddenChild->nextItemInFocusChain(false);
     QCOMPARE(item, window->rootObject());
 }
 

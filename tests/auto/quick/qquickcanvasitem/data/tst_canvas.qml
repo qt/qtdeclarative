@@ -129,12 +129,12 @@ CanvasTestCase {
        tryCompare(c, "availableChangedCount", 1);
 
        c.requestPaint();
-       verify(c.save("c.png"));
-       c.loadImage("c.png");
-       wait(200);
-       verify(c.isImageLoaded("c.png"));
-       verify(!c.isImageLoading("c.png"));
-       verify(!c.isImageError("c.png"));
+       var imagePath = applicationDirPath + "/c.png";
+       verify(c.save(imagePath));
+       c.loadImage(imagePath);
+       tryVerify(function() { return c.isImageLoaded(imagePath) })
+       verify(!c.isImageLoading(imagePath));
+       verify(!c.isImageError(imagePath));
        c.destroy();
   }
 
@@ -187,28 +187,28 @@ CanvasTestCase {
        tryCompare(c, "availableChangedCount", 1);
        //scene graph could be available immediately
        //in this case, we force waiting a short while until the init paint finished
-       tryCompare(c, "paintedCount", 1);
+       tryCompare(c, "paintedCount", 0);
        ctx.fillRect(0, 0, c.width, c.height);
        c.toDataURL();
-       tryCompare(c, "paintedCount", 2);
+       tryCompare(c, "paintedCount", 1);
        tryCompare(c, "paintCount", 1);
        // implicit repaint when visible and resized
        testCase.visible = true;
        c.width += 1;
        c.height += 1;
        tryCompare(c, "paintCount", 2);
-       tryCompare(c, "paintedCount", 2);
+       tryCompare(c, "paintedCount", 1);
        // allow explicit repaint even when hidden
        testCase.visible = false;
        c.requestPaint();
        tryCompare(c, "paintCount", 3);
-       tryCompare(c, "paintedCount", 2);
+       tryCompare(c, "paintedCount", 1);
        // no implicit repaint when resized but hidden
        c.width += 1;
        c.height += 1;
        waitForRendering(c);
        compare(c.paintCount, 3);
-       tryCompare(c, "paintedCount", 2);
+       tryCompare(c, "paintedCount", 1);
        c.destroy();
   }
    function test_loadImage(row) {
@@ -221,8 +221,7 @@ CanvasTestCase {
 
        verify(!c.isImageLoaded("red.png"));
        c.loadImage("red.png");
-       wait(200);
-       verify(c.isImageLoaded("red.png"));
+       tryVerify(function() { return c.isImageLoaded("red.png") });
        verify(!c.isImageLoading("red.png"));
        verify(!c.isImageError("red.png"));
 
