@@ -53,6 +53,7 @@
 #include <QQuickWindow>
 #include <QSGRendererInterface>
 #include <QPainter>
+#include <QPainterPath>
 
 SoftwareRenderNode::~SoftwareRenderNode()
 {
