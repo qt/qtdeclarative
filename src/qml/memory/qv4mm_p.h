@@ -212,46 +212,46 @@ public:
     }
 
     template <typename ManagedType, typename Arg1>
-    typename ManagedType::Data *allocWithStringData(std::size_t unmanagedSize, Arg1 arg1)
+    typename ManagedType::Data *allocWithStringData(std::size_t unmanagedSize, Arg1 &&arg1)
     {
         typename ManagedType::Data *o = reinterpret_cast<typename ManagedType::Data *>(allocString(unmanagedSize));
         o->internalClass.set(engine, ManagedType::defaultInternalClass(engine));
         Q_ASSERT(o->internalClass && o->internalClass->vtable);
-        o->init(arg1);
+        o->init(std::forward<Arg1>(arg1));
         return o;
     }
 
     template <typename ObjectType, typename... Args>
-    typename ObjectType::Data *allocObject(Heap::InternalClass *ic, Args... args)
+    typename ObjectType::Data *allocObject(Heap::InternalClass *ic, Args&&... args)
     {
         typename ObjectType::Data *d = allocateObject<ObjectType>(ic);
-        d->init(args...);
+        d->init(std::forward<Args>(args)...);
         return d;
     }
 
     template <typename ObjectType, typename... Args>
-    typename ObjectType::Data *allocObject(InternalClass *ic, Args... args)
+    typename ObjectType::Data *allocObject(InternalClass *ic, Args&&... args)
     {
         typename ObjectType::Data *d = allocateObject<ObjectType>(ic);
-        d->init(args...);
+        d->init(std::forward<Args>(args)...);
         return d;
     }
 
     template <typename ObjectType, typename... Args>
-    typename ObjectType::Data *allocate(Args... args)
+    typename ObjectType::Data *allocate(Args&&... args)
     {
         Scope scope(engine);
         Scoped<ObjectType> t(scope, allocateObject<ObjectType>());
-        t->d_unchecked()->init(args...);
+        t->d_unchecked()->init(std::forward<Args>(args)...);
         return t->d();
     }
 
     template <typename ManagedType, typename... Args>
-    typename ManagedType::Data *alloc(Args... args)
+    typename ManagedType::Data *alloc(Args&&... args)
     {
         Scope scope(engine);
         Scoped<ManagedType> t(scope, allocManaged<ManagedType>(sizeof(typename ManagedType::Data)));
-        t->d_unchecked()->init(args...);
+        t->d_unchecked()->init(std::forward<Args>(args)...);
         return t->d();
     }
 
