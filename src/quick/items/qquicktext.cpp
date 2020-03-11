@@ -1423,8 +1423,6 @@ QQuickText::~QQuickText()
         }
     }
     \endcode
-
-    The corresponding handler is \c onLineLaidOut.
 */
 
 /*!
@@ -1441,8 +1439,6 @@ QQuickText::~QQuickText()
 
     Clicking on the highlighted link will output
     \tt{http://qt-project.org link activated} to the console.
-
-    The corresponding handler is \c onLinkActivated.
 */
 
 /*!
@@ -2868,8 +2864,6 @@ bool QQuickTextPrivate::isLinkHoveredConnected()
     This signal is emitted when the user hovers a link embedded in the
     text. The link must be in rich text or HTML format and the \a link
     string provides access to the particular link.
-
-    The corresponding handler is \c onLinkHovered.
 
     \sa hoveredLink, linkAt()
 */

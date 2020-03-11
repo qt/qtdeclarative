@@ -97,8 +97,6 @@ QQmlListProperty<QObject> State::children()
 
     This signal is emitted when the State becomes active.
 
-    The corresponding handler is \c onEntered.
-
     \sa active, exited
 */
 
@@ -106,8 +104,6 @@ QQmlListProperty<QObject> State::children()
     \qmlsignal QAbstractState::exited()
 
     This signal is emitted when the State becomes inactive.
-
-    The corresponding handler is \c onExited.
 
     \sa active, entered
 */
@@ -120,7 +116,6 @@ QQmlListProperty<QObject> State::children()
     \since 5.4
 
     \brief Provides a general-purpose state for StateMachine.
-
 
     State objects can have child states as well as transitions to other
     states. State is part of \l{The Declarative State Machine Framework}.
@@ -179,8 +174,6 @@ QQmlListProperty<QObject> State::children()
     \qmlsignal State::finished()
 
     This signal is emitted when a final child state of this state is entered.
-
-    The corresponding handler is \c onFinished.
 
     \sa QAbstractState::active, QAbstractState::entered, QAbstractState::exited
 */

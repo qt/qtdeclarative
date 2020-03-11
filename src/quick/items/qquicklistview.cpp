@@ -2178,8 +2178,6 @@ QQuickListView::~QQuickListView()
 
     If an \l add transition is specified, it is applied immediately after
     this signal is handled.
-
-    The corresponding handler is \c onAdd.
 */
 
 /*!
@@ -2188,8 +2186,6 @@ QQuickListView::~QQuickListView()
 
     If a \l remove transition has been specified, it is applied after
     this signal is handled, providing that \l delayRemove is false.
-
-    The corresponding handler is \c onRemove.
 */
 
 /*!

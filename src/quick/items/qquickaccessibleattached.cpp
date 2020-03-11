@@ -273,71 +273,51 @@ QT_BEGIN_NAMESPACE
     \qmlsignal QtQuick::Accessible::pressAction()
 
     This signal is emitted when a press action is received from an assistive tool such as a screen-reader.
-
-    The corresponding handler is \c onPressAction.
 */
 /*!
     \qmlsignal QtQuick::Accessible::toggleAction()
 
     This signal is emitted when a toggle action is received from an assistive tool such as a screen-reader.
-
-    The corresponding handler is \c onToggleAction.
 */
 /*!
     \qmlsignal QtQuick::Accessible::increaseAction()
 
     This signal is emitted when a increase action is received from an assistive tool such as a screen-reader.
-
-    The corresponding handler is \c onIncreaseAction.
 */
 /*!
     \qmlsignal QtQuick::Accessible::decreaseAction()
 
     This signal is emitted when a decrease action is received from an assistive tool such as a screen-reader.
-
-    The corresponding handler is \c onDecreaseAction.
 */
 /*!
     \qmlsignal QtQuick::Accessible::scrollUpAction()
 
     This signal is emitted when a scroll up action is received from an assistive tool such as a screen-reader.
-
-    The corresponding handler is \c onScrollUpAction.
 */
 /*!
     \qmlsignal QtQuick::Accessible::scrollDownAction()
 
     This signal is emitted when a scroll down action is received from an assistive tool such as a screen-reader.
-
-    The corresponding handler is \c onScrollDownAction.
 */
 /*!
     \qmlsignal QtQuick::Accessible::scrollLeftAction()
 
     This signal is emitted when a scroll left action is received from an assistive tool such as a screen-reader.
-
-    The corresponding handler is \c onScrollLeftAction.
 */
 /*!
     \qmlsignal QtQuick::Accessible::scrollRightAction()
 
     This signal is emitted when a scroll right action is received from an assistive tool such as a screen-reader.
-
-    The corresponding handler is \c onScrollRightAction.
 */
 /*!
     \qmlsignal QtQuick::Accessible::previousPageAction()
 
     This signal is emitted when a previous page action is received from an assistive tool such as a screen-reader.
-
-    The corresponding handler is \c onPreviousPageAction.
 */
 /*!
     \qmlsignal QtQuick::Accessible::nextPageAction()
 
     This signal is emitted when a next page action is received from an assistive tool such as a screen-reader.
-
-    The corresponding handler is \c onNextPageAction.
 */
 
 QMetaMethod QQuickAccessibleAttached::sigPress;

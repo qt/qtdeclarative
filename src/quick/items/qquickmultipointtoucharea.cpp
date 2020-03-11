@@ -363,24 +363,18 @@ void QQuickTouchPoint::setUniqueId(const QPointingDeviceUniqueId &id)
 
     If minimumTouchPoints is set to a value greater than one, this signal will not be emitted until the minimum number
     of required touch points has been reached.
-
-    The corresponding handler is \c onPressed.
 */
 
 /*!
     \qmlsignal QtQuick::MultiPointTouchArea::updated(list<TouchPoint> touchPoints)
 
     This signal is emitted when existing touch points are updated. \a touchPoints is a list of these updated points.
-
-    The corresponding handler is \c onUpdated.
 */
 
 /*!
     \qmlsignal QtQuick::MultiPointTouchArea::released(list<TouchPoint> touchPoints)
 
     This signal is emitted when existing touch points are removed. \a touchPoints is a list of these removed points.
-
-    The corresponding handler is \c onReleased.
 */
 
 /*!
@@ -396,8 +390,6 @@ void QQuickTouchPoint::setUniqueId(const QPointingDeviceUniqueId &id)
     \c canceled should be handled in addition to \l released.
 
     \a touchPoints is the list of canceled points.
-
-    The corresponding handler is \c onCanceled.
 */
 
 /*!
@@ -411,8 +403,6 @@ void QQuickTouchPoint::setUniqueId(const QPointingDeviceUniqueId &id)
     gesture is not grabbed, the nesting Flickable, for example, would also have an opportunity to grab.
 
     The \a gesture object also includes information on the current set of \c touchPoints and the \c dragThreshold.
-
-    The corresponding handler is \c onGestureStarted.
 */
 
 /*!
@@ -421,8 +411,6 @@ void QQuickTouchPoint::setUniqueId(const QPointingDeviceUniqueId &id)
     This signal is emitted when the touch points handled by the MultiPointTouchArea change. This includes adding new touch points,
     removing or canceling previous touch points, as well as updating current touch point data. \a touchPoints is the list of all current touch
     points.
-
-    The corresponding handler is \c onTouchUpdated.
 */
 
 /*!

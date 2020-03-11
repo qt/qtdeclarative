@@ -1019,8 +1019,6 @@ QQmlRefPointer<QQuickCanvasPixmap> QQuickCanvasItem::loadedPixmap(const QUrl& ur
 
     This signal is emitted when an image has been loaded.
 
-    The corresponding handler is \c onImageLoaded.
-
     \sa loadImage()
 */
 
@@ -1244,8 +1242,6 @@ QRect QQuickCanvasItem::tiledRect(const QRectF &window, const QSize &tileSize)
 
     This signal can be triggered by markdirty(), requestPaint() or by changing
     the current canvas window.
-
-    The corresponding handler is \c onPaint.
 */
 
 /*!
@@ -1253,8 +1249,6 @@ QRect QQuickCanvasItem::tiledRect(const QRectF &window, const QSize &tileSize)
 
     This signal is emitted after all context painting commands are executed and
     the Canvas has been rendered.
-
-    The corresponding handler is \c onPainted.
 */
 
 QT_END_NAMESPACE

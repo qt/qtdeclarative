@@ -3970,8 +3970,6 @@ bool QQuickWindow::isSceneGraphInitialized() const
     property is true by default so that the window is allowed to close; but you
     can implement an \c onClosing handler and set \c {close.accepted = false} if
     you need to do something else before the window can be closed.
-
-    The corresponding handler is \c onClosing.
  */
 
 #if QT_CONFIG(opengl)

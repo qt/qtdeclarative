@@ -3392,8 +3392,6 @@ void QQmlDelegateModelGroup::move(QQmlV4Function *args)
 
     Each index is adjusted for previous changes with all removed items preceding any inserted
     items.
-
-    The corresponding handler is \c onChanged.
 */
 
 //============================================================================

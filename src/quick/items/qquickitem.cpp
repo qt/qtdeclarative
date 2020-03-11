@@ -939,8 +939,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when a key has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onPressed.
 */
 
 /*!
@@ -948,8 +946,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when a key has been released. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onReleased.
 */
 
 /*!
@@ -987,8 +983,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
     As with the other signals, \c shortcutOverride will only be emitted for an
     item if that item has \l {Item::}{activeFocus}.
 
-    The corresponding handler is \c onShortcutOverride.
-
     \sa Shortcut
 */
 
@@ -997,8 +991,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the digit '0' has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onDigit0Pressed.
 */
 
 /*!
@@ -1006,8 +998,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the digit '1' has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onDigit1Pressed.
 */
 
 /*!
@@ -1015,8 +1005,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the digit '2' has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onDigit2Pressed.
 */
 
 /*!
@@ -1024,8 +1012,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the digit '3' has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onDigit3Pressed.
 */
 
 /*!
@@ -1033,8 +1019,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the digit '4' has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onDigit4Pressed.
 */
 
 /*!
@@ -1042,8 +1026,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the digit '5' has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onDigit5Pressed.
 */
 
 /*!
@@ -1051,8 +1033,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the digit '6' has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onDigit6Pressed.
 */
 
 /*!
@@ -1060,8 +1040,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the digit '7' has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onDigit7Pressed.
 */
 
 /*!
@@ -1069,8 +1047,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the digit '8' has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onDigit8Pressed.
 */
 
 /*!
@@ -1078,8 +1054,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the digit '9' has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onDigit9Pressed.
 */
 
 /*!
@@ -1087,8 +1061,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the Left arrow has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onLeftPressed.
 */
 
 /*!
@@ -1096,8 +1068,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the Right arrow has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onRightPressed.
 */
 
 /*!
@@ -1105,8 +1075,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the Up arrow has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onUpPressed.
 */
 
 /*!
@@ -1114,8 +1082,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the Down arrow has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onDownPressed.
 */
 
 /*!
@@ -1123,8 +1089,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the Tab key has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onTabPressed.
 */
 
 /*!
@@ -1132,8 +1096,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the Shift+Tab key combination (Backtab) has
     been pressed. The \a event parameter provides information about the event.
-
-    The corresponding handler is \c onBacktabPressed.
 */
 
 /*!
@@ -1141,8 +1103,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the Asterisk '*' has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onAsteriskPressed.
 */
 
 /*!
@@ -1150,8 +1110,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the Escape key has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onEscapePressed.
 */
 
 /*!
@@ -1159,8 +1117,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the Return key has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onReturnPressed.
 */
 
 /*!
@@ -1168,8 +1124,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the Enter key has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onEnterPressed.
 */
 
 /*!
@@ -1177,8 +1131,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the Delete key has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onDeletePressed.
 */
 
 /*!
@@ -1186,8 +1138,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the Space key has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onSpacePressed.
 */
 
 /*!
@@ -1195,8 +1145,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the Back key has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onBackPressed.
 */
 
 /*!
@@ -1204,8 +1152,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the Cancel key has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onCancelPressed.
 */
 
 /*!
@@ -1213,8 +1159,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the Select key has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onSelectPressed.
 */
 
 /*!
@@ -1222,8 +1166,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the Yes key has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onYesPressed.
 */
 
 /*!
@@ -1231,8 +1173,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the No key has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onNoPressed.
 */
 
 /*!
@@ -1240,8 +1180,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the Context1 key has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onContext1Pressed.
 */
 
 /*!
@@ -1249,8 +1187,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the Context2 key has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onContext2Pressed.
 */
 
 /*!
@@ -1258,8 +1194,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the Context3 key has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onContext3Pressed.
 */
 
 /*!
@@ -1267,8 +1201,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the Context4 key has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onContext4Pressed.
 */
 
 /*!
@@ -1276,8 +1208,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the Call key has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onCallPressed.
 */
 
 /*!
@@ -1285,8 +1215,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the Hangup key has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onHangupPressed.
 */
 
 /*!
@@ -1294,8 +1222,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the Flip key has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onFlipPressed.
 */
 
 /*!
@@ -1303,8 +1229,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the Menu key has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onMenuPressed.
 */
 
 /*!
@@ -1312,8 +1236,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the VolumeUp key has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onVolumeUpPressed.
 */
 
 /*!
@@ -1321,8 +1243,6 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 
     This signal is emitted when the VolumeDown key has been pressed. The \a event
     parameter provides information about the event.
-
-    The corresponding handler is \c onVolumeDownPressed.
 */
 
 QQuickKeysAttached::QQuickKeysAttached(QObject *parent)

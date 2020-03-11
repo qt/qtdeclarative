@@ -823,8 +823,6 @@ void QQuickLoader::itemChange(QQuickItem::ItemChange change, const QQuickItem::I
 
     This signal is emitted when the \l status becomes \c Loader.Ready, or on successful
     initial load.
-
-    The corresponding handler is \c onLoaded.
 */
 
 
