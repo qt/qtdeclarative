@@ -51,6 +51,7 @@
 #include "metalsquircle.h"
 #include <QtCore/QRunnable>
 #include <QtQuick/QQuickWindow>
+#include <QtCore/QFile>
 
 #include <Metal/Metal.h>
 

@@ -51,6 +51,7 @@
 #include "metalrenderer.h"
 #include <QQuickItem>
 #include <QQuickWindow>
+#include <QFile>
 
 #include <Metal/Metal.h>
 

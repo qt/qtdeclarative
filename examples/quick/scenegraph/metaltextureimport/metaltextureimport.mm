@@ -53,6 +53,7 @@
 #include <QtQuick/QQuickWindow>
 #include <QtQuick/QSGTextureProvider>
 #include <QtQuick/QSGSimpleTextureNode>
+#include <QtCore/QFile>
 
 #include <Metal/Metal.h>
 
