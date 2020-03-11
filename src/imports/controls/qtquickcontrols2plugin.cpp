@@ -79,6 +79,7 @@ public:
     ~QtQuickControls2Plugin();
 
     void registerTypes(const char *uri) override;
+    void unregisterTypes() override;
 
     QString name() const override;
     void initializeTheme(QQuickTheme *theme) override;
@@ -94,7 +95,8 @@ QtQuickControls2Plugin::QtQuickControls2Plugin(QObject *parent) : QQuickStylePlu
 
 QtQuickControls2Plugin::~QtQuickControls2Plugin()
 {
-    QQuickStylePrivate::reset();
+    // Intentionally empty: we use register/unregisterTypes() to do
+    // initialization and cleanup, as plugins are not unloaded on macOS.
 }
 
 static bool isDefaultStyle(const QString &style)
@@ -236,6 +238,12 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickCheckLabel>(import, 2, 3, "CheckLabel");
     qmlRegisterType<QQuickMnemonicLabel>(import, 2, 3, "MnemonicLabel");
     qmlRegisterRevision<QQuickText, 6>(import, 2, 3);
+}
+
+void QtQuickControls2Plugin::unregisterTypes()
+{
+    QQuickStylePlugin::unregisterTypes();
+    QQuickStylePrivate::reset();
 }
 
 QString QtQuickControls2Plugin::name() const

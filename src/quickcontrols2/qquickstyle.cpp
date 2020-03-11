@@ -43,6 +43,7 @@
 #include <QtCore/qsettings.h>
 #include <QtCore/qfileselector.h>
 #include <QtCore/qlibraryinfo.h>
+#include <QtCore/qloggingcategory.h>
 #include <QtCore/qmetaobject.h>
 #include <QtGui/qcolor.h>
 #include <QtGui/qfont.h>
@@ -56,6 +57,8 @@
 #include <functional>
 
 QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(lcQtQuickControlsStyle, "qt.quick.controls.style")
 
 /*!
     \class QQuickStyle
@@ -188,6 +191,8 @@ struct QQuickStyleSpec
 
     void resolve(const QUrl &baseUrl = QUrl())
     {
+        qCDebug(lcQtQuickControlsStyle) << "resolving style with baseUrl" << baseUrl;
+
         if (style.isEmpty())
             style = QGuiApplicationPrivate::styleOverride;
         if (style.isEmpty())
@@ -240,6 +245,15 @@ struct QQuickStyleSpec
             }
             resolved = true;
         }
+
+        qCDebug(lcQtQuickControlsStyle).nospace() << "done resolving:"
+            << "\n    custom=" << custom
+            << "\n    resolved=" << resolved
+            << "\n    style=" << style
+            << "\n    fallbackStyle=" << fallbackStyle
+            << "\n    fallbackMethod=" << fallbackMethod
+            << "\n    configFilePath=" << configFilePath
+            << "\n    customStylePaths=" << customStylePaths;
     }
 
     void reset()
@@ -266,12 +280,19 @@ struct QQuickStyleSpec
         return configFilePath;
     }
 
+    // Is this a custom style defined by the user and not "built-in" style?
     bool custom;
+    // Did we manage to find a valid style path?
     bool resolved;
+    // The full path to the style.
     QString style;
+    // The built-in style to use if the requested style cannot be found.
     QString fallbackStyle;
+    // A description of the way in which fallbackStyle was set, used in e.g. warning messages shown to the user.
     QByteArray fallbackMethod;
+    // The path to the qtquickcontrols2.conf file.
     QString configFilePath;
+    // An extra list of directories where we search for available styles before any other directories.
     QStringList customStylePaths;
 };
 
@@ -555,6 +576,8 @@ QString QQuickStyle::path()
 */
 void QQuickStyle::setStyle(const QString &style)
 {
+    qCDebug(lcQtQuickControlsStyle) << "setStyle called with" << style;
+
     if (QQmlMetaType::isModule(QStringLiteral("QtQuick.Controls"), QTypeRevision::fromVersion(2, 0))) {
         qWarning() << "ERROR: QQuickStyle::setStyle() must be called before loading QML that imports Qt Quick Controls 2.";
         return;

@@ -131,6 +131,7 @@ public:
     ~QtQuickTemplates2Plugin();
 
     void registerTypes(const char *uri) override;
+    void unregisterTypes() override;
 
 private:
     bool registered;
@@ -142,24 +143,21 @@ private:
 QtQuickTemplates2Plugin::QtQuickTemplates2Plugin(QObject *parent)
     : QQmlExtensionPlugin(parent), registered(false)
 {
-#if QT_CONFIG(shortcut)
-    originalContextMatcher = qt_quick_shortcut_context_matcher();
-    qt_quick_set_shortcut_context_matcher(QQuickShortcutContext::matcher);
-#endif
 }
 
 QtQuickTemplates2Plugin::~QtQuickTemplates2Plugin()
 {
-    if (registered)
-        cleanupProviders();
-
-#if QT_CONFIG(shortcut)
-    qt_quick_set_shortcut_context_matcher(originalContextMatcher);
-#endif
+    // Intentionally empty: we use register/unregisterTypes() to do
+    // initialization and cleanup, as plugins are not unloaded on macOS.
 }
 
 void QtQuickTemplates2Plugin::registerTypes(const char *uri)
 {
+#if QT_CONFIG(shortcut)
+    originalContextMatcher = qt_quick_shortcut_context_matcher();
+    qt_quick_set_shortcut_context_matcher(QQuickShortcutContext::matcher);
+#endif
+
     registered = true;
     initProviders();
 
@@ -362,6 +360,16 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickTableView, 15>(uri, 2, 15, "__TableView__");
     qmlRegisterType<QQuickHorizontalHeaderView>(uri, 2, 15, "HorizontalHeaderView");
     qmlRegisterType<QQuickVerticalHeaderView>(uri, 2, 15, "VerticalHeaderView");
+}
+
+void QtQuickTemplates2Plugin::unregisterTypes()
+{
+    if (registered)
+        cleanupProviders();
+
+#if QT_CONFIG(shortcut)
+    qt_quick_set_shortcut_context_matcher(originalContextMatcher);
+#endif
 }
 
 QT_END_NAMESPACE
