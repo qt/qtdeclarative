@@ -1,0 +1,35 @@
+# Generated from qmlplugindump.pro.
+
+#####################################################################
+## tst_qmlplugindump Test:
+#####################################################################
+
+add_qt_test(tst_qmlplugindump
+    SOURCES
+        ../../shared/util.cpp ../../shared/util.h
+        tst_qmlplugindump.cpp
+    DEFINES
+        QT_QMLTEST_DIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"
+    INCLUDE_DIRECTORIES
+        ../../shared
+    PUBLIC_LIBRARIES
+        Qt::GuiPrivate
+        Qt::Qml
+)
+
+## Scopes:
+#####################################################################
+
+extend_target(tst_qmlplugindump CONDITION ANDROID OR APPLE_IOS
+    DEFINES
+        QT_QMLTEST_DATADIR=\\\":/data\\\"
+)
+
+extend_target(tst_qmlplugindump CONDITION NOT ANDROID AND NOT APPLE_IOS
+    DEFINES
+        QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
+)
+add_subdirectory(data/dumper/Dummy)
+add_subdirectory(data/dumper/Imports)
+add_subdirectory(data/dumper/Versions)
+add_subdirectory(data/dumper/ExtendedType)

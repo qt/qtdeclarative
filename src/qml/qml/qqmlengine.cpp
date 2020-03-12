@@ -1330,7 +1330,7 @@ void QQmlEngine::setOutputWarningsToStandardError(bool enabled)
   QObject* example:
   \code
   class MySingleton : public QObject {
-    Q_OBJECT
+    \Q_OBJECT
 
     // Register as default constructed singleton.
     QML_ELEMENT

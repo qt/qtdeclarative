@@ -1,0 +1,23 @@
+# Generated from qqmldebuggingenablerserver.pro.
+
+#####################################################################
+## qqmldebuggingenablerserver Binary:
+#####################################################################
+
+qt_add_executable(qqmldebuggingenablerserver
+    INSTALL_DIRECTORY "${INSTALL_TESTSDIR}/tst_qqmldebuggingenabler"
+    OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../qqmldebuggingenabler"
+    SOURCES
+        qqmldebuggingenablerserver.cpp
+    DEFINES
+        QT_QML_DEBUG_NO_WARNING
+    INCLUDE_DIRECTORIES
+        ../../shared
+    PUBLIC_LIBRARIES
+        Qt::Gui
+        Qt::Qml
+        Qt::Test
+)
+
+## Scopes:
+#####################################################################

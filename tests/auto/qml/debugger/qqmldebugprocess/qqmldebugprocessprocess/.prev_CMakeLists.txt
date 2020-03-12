@@ -1,0 +1,15 @@
+# Generated from qqmldebugprocessprocess.pro.
+
+#####################################################################
+## qqmldebugprocessprocess Binary:
+#####################################################################
+
+qt_add_executable(qqmldebugprocessprocess
+    INSTALL_DIRECTORY "${INSTALL_TESTSDIR}/tst_qqmldebugprocess"
+    OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../qqmldebugprocess"
+    SOURCES
+        qqmldebugprocessprocess.cpp
+)
+
+## Scopes:
+#####################################################################

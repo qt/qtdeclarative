@@ -1,4 +1,3 @@
-
 cmake_minimum_required(VERSION 2.8)
 
 project(qmake_cmake_files)
@@ -26,6 +25,7 @@ add_test(qtquickcompiler ${CMAKE_CTEST_COMMAND}
     --build-project qqc_test
     --build-options "-DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}" ${BUILD_OPTIONS_LIST}
     --test-command qqc_test
+
 )
 
 add_test(qmlimportscanner ${CMAKE_CTEST_COMMAND}

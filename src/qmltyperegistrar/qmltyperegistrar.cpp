@@ -75,6 +75,35 @@ static RegistrationMode qmlTypeRegistrationMode(const QJsonObject &classDef)
     return NoRegistration;
 }
 
+static bool argumentsFromCommandLineAndFile(QStringList &allArguments, const QStringList &arguments)
+{
+    allArguments.reserve(arguments.size());
+    for (const QString &argument : arguments) {
+        // "@file" doesn't start with a '-' so we can't use QCommandLineParser for it
+        if (argument.startsWith(QLatin1Char('@'))) {
+            QString optionsFile = argument;
+            optionsFile.remove(0, 1);
+            if (optionsFile.isEmpty()) {
+                fprintf(stderr, "The @ option requires an input file");
+                return false;
+            }
+            QFile f(optionsFile);
+            if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                fprintf(stderr, "Cannot open options file specified with @");
+                return false;
+            }
+            while (!f.atEnd()) {
+                QString line = QString::fromLocal8Bit(f.readLine().trimmed());
+                if (!line.isEmpty())
+                    allArguments << line;
+            }
+        } else {
+            allArguments << argument;
+        }
+    }
+    return true;
+}
+
 static QVector<QJsonObject> foreignRelatedTypes(const QVector<QJsonObject> &types,
                                                 const QVector<QJsonObject> &foreignTypes)
 {
@@ -247,7 +276,11 @@ int main(int argc, char **argv)
     parser.addPositionalArgument(QStringLiteral("[MOC generated json file]"),
                                  QStringLiteral("MOC generated json output."));
 
-    parser.process(app);
+    QStringList arguments;
+    if (!argumentsFromCommandLineAndFile(arguments, app.arguments()))
+        return EXIT_FAILURE;
+
+    parser.process(arguments);
 
     FILE *output = stdout;
     QScopedPointer<FILE, ScopedPointerFileCloser> outputFile;

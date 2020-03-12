@@ -1,0 +1,17 @@
+# Generated from qml.pro.
+
+add_subdirectory(binding)
+add_subdirectory(compilation)
+add_subdirectory(javascript)
+add_subdirectory(holistic)
+add_subdirectory(qqmlchangeset)
+add_subdirectory(qqmlcomponent)
+add_subdirectory(qqmlmetaproperty)
+add_subdirectory(librarymetrics_performance)
+add_subdirectory(script)
+add_subdirectory(js)
+add_subdirectory(creation)
+if(TARGET Qt::OpenGL)
+    add_subdirectory(painting)
+    add_subdirectory(qquickwindow)
+endif()

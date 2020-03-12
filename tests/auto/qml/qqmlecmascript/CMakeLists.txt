@@ -1,0 +1,69 @@
+# Generated from qqmlecmascript.pro.
+
+#####################################################################
+## tst_qqmlecmascript Test:
+#####################################################################
+
+# Collect test data
+file(GLOB_RECURSE test_data_glob
+    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+    data/*)
+list(APPEND test_data ${test_data_glob})
+
+qt_add_test(tst_qqmlecmascript
+    SOURCES
+        ../../shared/testhttpserver.cpp ../../shared/testhttpserver.h
+        ../../shared/util.cpp ../../shared/util.h
+        testtypes.cpp testtypes.h
+        tst_qqmlecmascript.cpp
+    INCLUDE_DIRECTORIES
+        ../../shared
+    PUBLIC_LIBRARIES
+        Qt::CorePrivate
+        Qt::Gui
+        Qt::GuiPrivate
+        Qt::Network
+        Qt::QmlPrivate
+    TESTDATA ${test_data}
+)
+
+# Resources:
+set(qqmlecmascript_resource_files
+    "data/include.js"
+    "data/include.qml"
+    "data/js/include2.js"
+    "data/js/include3.js"
+)
+
+# special case begin
+set_source_files_properties(
+    ${qqmlecmascript_resource_files}
+    PROPERTIES
+        QT_SKIP_QUICKCOMPILER 1)
+# special case end
+
+qt_add_resource(tst_qqmlecmascript "qqmlecmascript"
+    PREFIX
+        "/"
+    FILES
+        ${qqmlecmascript_resource_files}
+)
+
+
+## Scopes:
+#####################################################################
+
+qt_extend_target(tst_qqmlecmascript CONDITION TARGET Qt::Widgets
+    PUBLIC_LIBRARIES
+        Qt::Widgets
+)
+
+qt_extend_target(tst_qqmlecmascript CONDITION ANDROID OR APPLE_IOS
+    DEFINES
+        QT_QMLTEST_DATADIR=\\\":/data\\\"
+)
+
+qt_extend_target(tst_qqmlecmascript CONDITION NOT ANDROID AND NOT APPLE_IOS
+    DEFINES
+        QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
+)

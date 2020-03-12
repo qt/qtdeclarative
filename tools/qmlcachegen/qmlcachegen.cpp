@@ -109,6 +109,36 @@ void Error::appendDiagnostics(const QString &inputFileName, const QList<Diagnost
         appendDiagnostic(inputFileName, diagnostic);
 }
 
+static bool argumentsFromCommandLineAndFile(QStringList& allArguments, const QStringList &arguments)
+{
+    allArguments.reserve(arguments.size());
+    for (const QString &argument : arguments) {
+        // "@file" doesn't start with a '-' so we can't use QCommandLineParser for it
+        if (argument.startsWith(QLatin1Char('@'))) {
+            QString optionsFile = argument;
+            optionsFile.remove(0, 1);
+            if (optionsFile.isEmpty()) {
+                fprintf(stderr, "The @ option requires an input file");
+                return false;
+            }
+            QFile f(optionsFile);
+            if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                fprintf(stderr, "Cannot open options file specified with @");
+                return false;
+            }
+            while (!f.atEnd()) {
+                QString line = QString::fromLocal8Bit(f.readLine().trimmed());
+                if (!line.isEmpty())
+                    allArguments << line;
+            }
+        } else {
+            allArguments << argument;
+        }
+    }
+    return true;
+}
+
+
 // Ensure that ListElement objects keep all property assignments in their string form
 static void annotateListElements(QmlIR::Document *document)
 {
@@ -426,6 +456,10 @@ int main(int argc, char **argv)
     parser.addOption(resourceOption);
     QCommandLineOption resourcePathOption(QStringLiteral("resource-path"), QCoreApplication::translate("main", "Qt resource file path corresponding to the file being compiled"), QCoreApplication::translate("main", "resource-path"));
     parser.addOption(resourcePathOption);
+    QCommandLineOption resourceNameOption(QStringLiteral("resource-name"),
+                                                QCoreApplication::translate("main", "Required to generate qmlcache_loader without qrc files. This is the name of the Qt resource the input files belong to."),
+                                                QCoreApplication::translate("main", "compiled-file-list"));
+    parser.addOption(resourceNameOption);
 
     QCommandLineOption outputFileOption(QStringLiteral("o"), QCoreApplication::translate("main", "Output file name"), QCoreApplication::translate("main", "file name"));
     parser.addOption(outputFileOption);
@@ -435,12 +469,18 @@ int main(int argc, char **argv)
 
     parser.setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
 
-    parser.process(app);
+
+    QStringList arguments;
+    if (!argumentsFromCommandLineAndFile(arguments, app.arguments()))
+        return EXIT_FAILURE;
+
+    parser.process(arguments);
 
     enum Output {
         GenerateCpp,
         GenerateCacheFile,
-        GenerateLoader
+        GenerateLoader,
+        GenerateLoaderStandAlone,
     } target = GenerateCacheFile;
 
     QString outputFileName;
@@ -453,15 +493,18 @@ int main(int argc, char **argv)
             target = GenerateLoader;
     }
 
+    if (target == GenerateLoader && parser.isSet(resourceNameOption))
+        target = GenerateLoaderStandAlone;
+
     const QStringList sources = parser.positionalArguments();
     if (sources.isEmpty()){
         parser.showHelp();
-    } else if (sources.count() > 1 && target != GenerateLoader) {
+    } else if (sources.count() > 1 && (target != GenerateLoader && target != GenerateLoaderStandAlone)) {
         fprintf(stderr, "%s\n", qPrintable(QStringLiteral("Too many input files specified: '") + sources.join(QStringLiteral("' '")) + QLatin1Char('\'')));
         return EXIT_FAILURE;
     }
 
-    const QString inputFile = sources.first();
+    const QString inputFile = !sources.isEmpty() ? sources.first() : QString();
     if (outputFileName.isEmpty())
         outputFileName = inputFile + QLatin1Char('c');
 
@@ -481,6 +524,15 @@ int main(int argc, char **argv)
         return EXIT_SUCCESS;
     }
 
+    if (target == GenerateLoaderStandAlone) {
+        Error error;
+        if (!generateLoader(sources, outputFileName,
+                            parser.values(resourceNameOption), &error.message)) {
+            error.augment(QLatin1String("Error generating loader stub: ")).print();
+            return EXIT_FAILURE;
+        }
+        return EXIT_SUCCESS;
+    }
     QString inputFileUrl = inputFile;
 
     SaveFunction saveFunction;

@@ -1,0 +1,23 @@
+# Generated from qqmldebugjsserver.pro.
+
+#####################################################################
+## qqmldebugjsserver Binary:
+#####################################################################
+
+qt_add_executable(qqmldebugjsserver
+    OUTPUT_DIRECTORY "${INSTALL_TESTSDIR}/qqmldebugjsserver"
+    INSTALL_DIRECTORY "${INSTALL_TESTSDIR}/qqmldebugjsserver"
+    SOURCES
+        qqmldebugjsserver.cpp
+    DEFINES
+        QT_QML_DEBUG_NO_WARNING
+    INCLUDE_DIRECTORIES
+        ../shared
+    PUBLIC_LIBRARIES
+        Qt::Gui
+        Qt::Qml
+        Qt::Test
+)
+
+## Scopes:
+#####################################################################

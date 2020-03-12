@@ -1,0 +1,23 @@
+# Generated from qtdeclarative.pro.
+
+cmake_minimum_required(VERSION 3.15.0)
+
+project(declarative_FIXME
+    VERSION 6.0.0
+    DESCRIPTION "Qt declarative_FIXME Libraries"
+    HOMEPAGE_URL "https://qt.io/"
+    LANGUAGES CXX C
+)
+
+find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core SET_ME_TO_SOMETHING_USEFUL)
+find_package(Qt6 ${PROJECT_VERSION} CONFIG OPTIONAL_COMPONENTS SET_ME_TO_SOMETHING_USEFUL)
+
+if(NOT QT_FEATURE_commandlineparser)
+    message(NOTICE "Skipping the build as the condition \"QT_FEATURE_commandlineparser\" is not met.")
+    return()
+endif()
+if(NOT QT_FEATURE_temporaryfile)
+    message(NOTICE "Skipping the build as the condition \"QT_FEATURE_temporaryfile\" is not met.")
+    return()
+endif()
+qt_build_repo()

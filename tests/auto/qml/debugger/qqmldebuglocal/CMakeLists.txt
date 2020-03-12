@@ -1,0 +1,38 @@
+# Generated from qqmldebuglocal.pro.
+
+#####################################################################
+## tst_qqmldebuglocal Test:
+#####################################################################
+
+qt_add_test(tst_qqmldebuglocal
+    SOURCES
+        ../../../shared/util.cpp ../../../shared/util.h
+        ../shared/debugutil.cpp ../shared/debugutil_p.h
+        ../shared/qqmldebugprocess.cpp ../shared/qqmldebugprocess_p.h
+        ../shared/qqmldebugtestservice.cpp ../shared/qqmldebugtestservice.h
+        tst_qqmldebuglocal.cpp
+    DEFINES
+        QT_QML_DEBUG_NO_WARNING
+    INCLUDE_DIRECTORIES
+        ../../../shared
+        ../shared
+    PUBLIC_LIBRARIES
+        Qt::CorePrivate
+        Qt::Gui
+        Qt::GuiPrivate
+        Qt::QmlDebugPrivate
+        Qt::QmlPrivate
+)
+
+## Scopes:
+#####################################################################
+
+qt_extend_target(tst_qqmldebuglocal CONDITION ANDROID OR APPLE_IOS
+    DEFINES
+        QT_QMLTEST_DATADIR=\\\":/data\\\"
+)
+
+qt_extend_target(tst_qqmldebuglocal CONDITION NOT ANDROID AND NOT APPLE_IOS
+    DEFINES
+        QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
+)

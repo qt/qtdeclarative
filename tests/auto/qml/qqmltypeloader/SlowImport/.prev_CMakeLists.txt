@@ -1,0 +1,23 @@
+# Generated from Slow.pro.
+
+#####################################################################
+## Slow Generic Library:
+#####################################################################
+
+qt_add_cmake_library(Slow
+    OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../Slow"
+    SOURCES
+        plugin.cpp plugin.h
+        slow.cpp slow.h
+    INCLUDE_DIRECTORIES
+        .
+    PUBLIC_LIBRARIES
+        Qt::Core
+        Qt::Gui
+        Qt::Qml
+        Qt::Quick
+)
+
+#### Keys ignored in scope 1:.:.:Slow.pro:<TRUE>:
+# IMPORT_FILES = "qmldir"
+# TEMPLATE = "lib"
