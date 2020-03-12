@@ -3,5 +3,7 @@ import qt.test 1.0
 
 TestItem {
     property var vector
+    property var myset
     positions: vector
+    barrays: myset
 }

@@ -1521,7 +1521,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
             retn = QVariant(typeHint, temp);
             QMetaType::destroy(typeHint, temp);
             auto retnAsIterable = retn.value<QtMetaTypePrivate::QSequentialIterableImpl>();
-            if (retnAsIterable._iteratorCapabilities & QtMetaTypePrivate::ContainerIsAppendable) {
+            if (retnAsIterable.containerCapabilities() & QtMetaTypePrivate::ContainerIsAppendable) {
                 auto const length = a->getLength();
                 QV4::ScopedValue arrayValue(scope);
                 for (qint64 i = 0; i < length; ++i) {
