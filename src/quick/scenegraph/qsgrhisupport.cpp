@@ -580,7 +580,7 @@ void QSGRhiProfileConnection::initialize(QRhi *rhi)
             profPort = 30667;
         qCDebug(QSG_LOG_INFO, "Sending RHI profiling output to %s:%d", qPrintable(profHost), profPort);
         m_profConn.reset(new QTcpSocket);
-        QObject::connect(m_profConn.data(), QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), m_profConn.data(),
+        QObject::connect(m_profConn.data(), &QAbstractSocket::errorOccurred, m_profConn.data(),
                          [this](QAbstractSocket::SocketError socketError) { qWarning("  RHI profiler error: %d (%s)",
                                                                                      socketError, qPrintable(m_profConn->errorString())); });
         m_profConn->connectToHost(profHost, profPort);

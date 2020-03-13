@@ -388,7 +388,7 @@ void QQmlDebugConnection::connectToHost(const QString &hostName, quint16 port)
     connect(socket, &QAbstractSocket::disconnected, this, &QQmlDebugConnection::socketDisconnected);
     connect(socket, &QAbstractSocket::connected, this, &QQmlDebugConnection::socketConnected);
     connect(socket, static_cast<void(QAbstractSocket::*)(QAbstractSocket::SocketError)>(
-                &QAbstractSocket::error), this, &QQmlDebugConnection::socketError);
+                &QAbstractSocket::errorOccurred), this, &QQmlDebugConnection::socketError);
     connect(socket, &QAbstractSocket::stateChanged, this, &QQmlDebugConnection::socketStateChanged);
     socket->connectToHost(hostName, port);
 }
@@ -416,7 +416,7 @@ public:
         connect(parent, &QLocalSocket::stateChanged,
                 this, &LocalSocketSignalTranslator::onStateChanged);
         connect(parent, static_cast<void(QLocalSocket::*)(QLocalSocket::LocalSocketError)>(
-                    &QLocalSocket::error), this, &LocalSocketSignalTranslator::onError);
+                    &QLocalSocket::errorOccurred), this, &LocalSocketSignalTranslator::onError);
     }
 
     void onError(QLocalSocket::LocalSocketError error)

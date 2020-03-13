@@ -133,7 +133,7 @@ bool QLocalClientConnection::connectToServer()
     connect(m_socket, &QLocalSocket::connected,
             this, &QLocalClientConnection::connectionEstablished);
     connect(m_socket, static_cast<void(QLocalSocket::*)(QLocalSocket::LocalSocketError)>(
-                &QLocalSocket::error), m_socket, [this](QLocalSocket::LocalSocketError) {
+                &QLocalSocket::errorOccurred), m_socket, [this](QLocalSocket::LocalSocketError) {
         m_socket->disconnectFromServer();
         m_socket->connectToServer(m_filename);
     }, Qt::QueuedConnection);
