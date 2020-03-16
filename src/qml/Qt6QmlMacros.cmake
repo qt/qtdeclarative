@@ -343,6 +343,9 @@ endfunction()
 #   type.
 # QT_QML_INTERNAL_TYPE: When set to true, the type specified by
 #   QT_QML_SOURCE_TYPENAME will not be available to users of this module.
+# QT_QML_SKIP_QMLDIR_ENTRY: When set to true, no qmldir entry will be created for
+#   the source file. Useful if a file needs to be installed (like a private JS
+#   file) but does not expose a public type.
 #
 #   e.g.:
 #       set_source_files_properties(my_qml_file.qml
@@ -403,6 +406,12 @@ function(qt6_target_qml_files target)
         if (skip_type_registration AND qml_file MATCHES "\\.qml$")
             continue()
         endif()
+
+        get_source_file_property(qml_file_skip_qmldir ${qml_file} QT_QML_SKIP_QMLDIR_ENTRY)
+        if (qml_file_skip_qmldir)
+            continue()
+        endif()
+
         get_source_file_property(qml_file_version ${qml_file} QT_QML_SOURCE_VERSION)
         get_source_file_property(qml_file_typename ${qml_file} QT_QML_SOURCE_TYPENAME)
         get_source_file_property(qml_file_singleton ${qml_file} QT_QML_SINGLETON_TYPE)
