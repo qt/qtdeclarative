@@ -192,6 +192,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("goodParent")                << QStringLiteral("goodParent.qml");
     QTest::newRow("goodTypeAssertion")         << QStringLiteral("goodTypeAssertion.qml");
     QTest::newRow("AttachedProps")             << QStringLiteral("AttachedProps.qml");
+    QTest::newRow("unknownBuiltinFont")        << QStringLiteral("ButtonLoader.qml");
 }
 
 void TestQmllint::cleanQmlCode()

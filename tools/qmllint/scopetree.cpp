@@ -134,6 +134,15 @@ private:
     QStringRef m_afterText;
 };
 
+static const QStringList unknownBuiltins = {
+    // TODO: "string" should be added to builtins.qmltypes, and the special handling below removed
+    QStringLiteral("alias"),    // TODO: we cannot properly resolve aliases, yet
+    QStringLiteral("QRectF"),   // TODO: should be added to builtins.qmltypes
+    QStringLiteral("QFont"),    // TODO: should be added to builtins.qmltypes
+    QStringLiteral("QJSValue"), // We cannot say anything intelligent about untyped JS values.
+    QStringLiteral("variant"),  // Same for generic variants
+};
+
 bool ScopeTree::checkMemberAccess(
         const QString &code,
         FieldMemberList *members,
@@ -169,10 +178,14 @@ bool ScopeTree::checkMemberAccess(
             }
             return true;
         }
-        const ScopeTree *type = (scopeIt->type() && access->m_parentType.isEmpty())
-                ? scopeIt->type()
-                : types.value(typeName).get();
-        return checkMemberAccess(code, access.get(), type, types, colorOut);
+
+        if (const ScopeTree *type = scopeIt->type()) {
+            if (access->m_parentType.isEmpty())
+                return checkMemberAccess(code, access.get(), type, types, colorOut);
+        }
+
+        return unknownBuiltins.contains(typeName) || checkMemberAccess(
+                    code, access.get(), types.value(typeName).get(), types, colorOut);
     }
 
     const auto scopeMethodIt = scope->m_methods.find(access->m_name);
@@ -250,13 +263,6 @@ bool ScopeTree::checkMemberAccess(
     printContext(colorOut, code, access->m_location);
     return false;
 }
-
-static const QStringList unknownBuiltins = {
-    QStringLiteral("alias"),    // TODO: we cannot properly resolve aliases, yet
-    QStringLiteral("QRectF"),   // TODO: should be added to builtins.qmltypes
-    QStringLiteral("QJSValue"), // We cannot say anything intelligent about untyped JS values.
-    QStringLiteral("variant"),  // Same for generic variants
-};
 
 bool ScopeTree::recheckIdentifiers(
         const QString &code,
