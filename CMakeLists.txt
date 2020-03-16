@@ -10,7 +10,7 @@ project(QtDeclarative # special case
 )
 
 find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core Gui Widgets Network # special case
-                                           OPTIONAL_COMPONENTS OpenGL Sql Concurrent Test) # special case
+                                           OPTIONAL_COMPONENTS OpenGL OpenGLWidgets Sql Concurrent Test) # special case
 
 # special case begin
 # export QT6_ADD_QML_MODULE to this project
