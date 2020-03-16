@@ -293,9 +293,24 @@ bool ScopeTree::recheckIdentifiers(
 
             auto it = qmlIDs.find(memberAccessTree->m_name);
             if (it != qmlIDs.end()) {
-                if (!checkMemberAccess(code, memberAccessTree.get(), *it, types, colorOut))
-                    noUnqualifiedIdentifier = false;
-                continue;
+                if (*it != nullptr) {
+                    if (!checkMemberAccess(code, memberAccessTree.get(), *it, types, colorOut))
+                        noUnqualifiedIdentifier = false;
+                    continue;
+                } else if (memberAccessTree->m_child
+                           && memberAccessTree->m_child->m_name.front().isUpper()) {
+                    // It could be a qualified type name
+                    const QString qualified = memberAccessTree->m_name + QLatin1Char('.')
+                            + memberAccessTree->m_child->m_name;
+                    const auto typeIt = types.find(qualified);
+                    if (typeIt != types.end()) {
+                        if (!checkMemberAccess(code, memberAccessTree->m_child.get(), typeIt->get(),
+                                               types, colorOut)) {
+                            noUnqualifiedIdentifier = false;
+                        }
+                        continue;
+                    }
+                }
             }
 
             auto qmlScope = currentScope->currentQMLScope();
