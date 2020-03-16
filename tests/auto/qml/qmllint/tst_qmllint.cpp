@@ -164,6 +164,10 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("incompleteQmltypes.qml")
             << QString("Warning: Type \"QPalette\" of member \"palette\" not found at 5:26")
             << QString();
+    QTest::newRow("inheritanceCylce")
+            << QStringLiteral("Cycle1.qml")
+            << QString("Warning: Cycle2 is part of an inheritance cycle: Cycle2 -> Cycle3 -> Cycle1 -> Cycle2")
+            << QString();
 }
 
 void TestQmllint::dirtyQmlCode()
