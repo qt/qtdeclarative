@@ -46,7 +46,7 @@ set_source_files_properties(SignalSpy.qml PROPERTIES
     QT_QML_SOURCE_VERSION "1.0"
 )
 set_source_files_properties(testlogger.js PROPERTIES
-    QT_QML_SOURCE_VERSION "1.0"
+    QT_QML_SKIP_QMLDIR_ENTRY TRUE
 )
 
 qt6_target_qml_files(qmltestplugin
