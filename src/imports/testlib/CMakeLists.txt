@@ -45,11 +45,9 @@ set_source_files_properties(TestCase.qml PROPERTIES
 set_source_files_properties(SignalSpy.qml PROPERTIES
     QT_QML_SOURCE_VERSION "1.0"
 )
-# special case begin
 set_source_files_properties(testlogger.js PROPERTIES
-    QT_QML_SOURCE_INSTALL TRUE
+    QT_QML_SOURCE_VERSION "1.0"
 )
-# special case end
 
 qt6_target_qml_files(qmltestplugin
     FILES

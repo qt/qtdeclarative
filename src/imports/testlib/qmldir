@@ -4,4 +4,5 @@ classname QTestQmlModule
 typeinfo plugins.qmltypes
 TestCase 1.0 TestCase.qml
 SignalSpy 1.0 SignalSpy.qml
+testlogger 1.0 testlogger.js
 depends QtQuick.Window 2.0
