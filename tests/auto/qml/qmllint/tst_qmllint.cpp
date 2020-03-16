@@ -160,6 +160,10 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("badTypeAssertion.qml")
             << QString("Warning: Property \"rrr\" not found on type \"Item\" at 5:39")
             << QString();
+    QTest::newRow("incompleteQmltypes")
+            << QStringLiteral("incompleteQmltypes.qml")
+            << QString("Warning: Type \"QPalette\" of member \"palette\" not found at 5:26")
+            << QString();
 }
 
 void TestQmllint::dirtyQmlCode()

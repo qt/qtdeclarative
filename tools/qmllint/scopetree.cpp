@@ -179,13 +179,30 @@ bool ScopeTree::checkMemberAccess(
             return true;
         }
 
+        if (!access->m_child)
+            return true;
+
         if (const ScopeTree *type = scopeIt->type()) {
             if (access->m_parentType.isEmpty())
                 return checkMemberAccess(code, access.get(), type, types, colorOut);
         }
 
-        return unknownBuiltins.contains(typeName) || checkMemberAccess(
-                    code, access.get(), types.value(typeName).get(), types, colorOut);
+        if (unknownBuiltins.contains(typeName))
+            return true;
+
+        const auto it = types.find(typeName);
+        if (it != types.end())
+            return checkMemberAccess(code, access.get(), it->get(), types, colorOut);
+
+        colorOut.write("Warning: ", Warning);
+        colorOut.write(
+                    QString::fromLatin1("Type \"%1\" of member \"%2\" not found at %3:%4.\n")
+                    .arg(typeName)
+                    .arg(access->m_name)
+                    .arg(access->m_location.startLine)
+                    .arg(access->m_location.startColumn), Normal);
+        printContext(colorOut, code, access->m_location);
+        return false;
     }
 
     const auto scopeMethodIt = scope->m_methods.find(access->m_name);
