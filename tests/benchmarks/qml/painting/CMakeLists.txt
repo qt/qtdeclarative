@@ -15,7 +15,7 @@ qt_add_benchmark(painting
 )
 
 #### Keys ignored in scope 1:.:.:painting.pro:<TRUE>:
-# _REQUIREMENTS = "qtHaveModule(opengl)" "qtHaveModule(widgets)"
+# _REQUIREMENTS = "qtHaveModule(opengl)" "qtHaveModule(openglwidgets)" "qtHaveModule(widgets)"
 
 ## Scopes:
 #####################################################################

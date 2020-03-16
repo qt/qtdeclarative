@@ -13,4 +13,7 @@ SUBDIRS += \
            js \
            creation
 
-qtHaveModule(opengl): SUBDIRS += painting qquickwindow
+qtHaveModule(opengl) {
+    SUBDIRS += qquickwindow
+    qtHaveModule(openglwidgets): SUBDIRS += painting
+}
