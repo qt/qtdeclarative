@@ -43,6 +43,7 @@
 
 static const QString prefixedName(const QString &prefix, const QString &name)
 {
+    Q_ASSERT(!prefix.endsWith('.'));
     return prefix.isEmpty() ? name : (prefix  + QLatin1Char('.') + name);
 }
 
@@ -88,11 +89,9 @@ void FindUnqualifiedIDVisitor::parseHeaders(QQmlJS::AST::UiHeaderItemList *heade
                     uri = uri->next;
                 }
                 path.chop(1);
-                QString prefix = QLatin1String("");
-                if (import->asToken.isValid()) {
-                    prefix += import->importId + QLatin1Char('.');
-                }
-                importHelper(path, prefix, import->version->majorVersion,
+                importHelper(path,
+                             import->asToken.isValid() ? import->importId.toString() : QString(),
+                             import->version->majorVersion,
                              import->version->minorVersion);
             }
         }
