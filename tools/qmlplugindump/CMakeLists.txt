@@ -32,7 +32,7 @@ qt_extend_target(qmlplugindump CONDITION TARGET Qt::Widgets
         Qt::Widgets
 )
 
-qt_extend_target(qmlplugindump CONDITION APPLE_OSX
+qt_extend_target(qmlplugindump CONDITION MACOS
     LINK_OPTIONS
         "-Wl,-sectcreate,__TEXT,__info_plist,${CMAKE_CURRENT_SOURCE_DIR}/Info.plist" # special case
 )

@@ -31,12 +31,12 @@ qt_add_test(tst_rendernode
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_rendernode CONDITION ANDROID OR APPLE_IOS
+qt_extend_target(tst_rendernode CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-qt_extend_target(tst_rendernode CONDITION NOT ANDROID AND NOT APPLE_IOS
+qt_extend_target(tst_rendernode CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

@@ -77,12 +77,12 @@ add_qt_resource(tst_qqmlmoduleplugin staticPlugin
 ## Scopes:
 #####################################################################
 
-extend_target(tst_qqmlmoduleplugin CONDITION ANDROID OR APPLE_IOS
+extend_target(tst_qqmlmoduleplugin CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-extend_target(tst_qqmlmoduleplugin CONDITION NOT ANDROID AND NOT APPLE_IOS
+extend_target(tst_qqmlmoduleplugin CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

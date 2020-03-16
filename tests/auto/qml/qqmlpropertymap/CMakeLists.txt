@@ -28,12 +28,12 @@ qt_add_test(tst_qqmlpropertymap
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_qqmlpropertymap CONDITION ANDROID OR APPLE_IOS
+qt_extend_target(tst_qqmlpropertymap CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-qt_extend_target(tst_qqmlpropertymap CONDITION NOT ANDROID AND NOT APPLE_IOS
+qt_extend_target(tst_qqmlpropertymap CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

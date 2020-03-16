@@ -9,7 +9,7 @@ add_subdirectory(qmldevtools)
 # add_subdirectory(installed_cmake)
 # special case end
 add_subdirectory(toolsupport)
-if(NOT APPLE_UIKIT)
+if(NOT UIKIT)
     add_subdirectory(qmltest)
 endif()
 if(TARGET Qt::Gui AND (QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT_FEATURE_opengles3))

@@ -39,12 +39,12 @@ qt_extend_target(tst_qquickvisualdatamodel CONDITION TARGET Qt::Widgets
         Qt::Widgets
 )
 
-qt_extend_target(tst_qquickvisualdatamodel CONDITION ANDROID OR APPLE_IOS
+qt_extend_target(tst_qquickvisualdatamodel CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-qt_extend_target(tst_qquickvisualdatamodel CONDITION NOT ANDROID AND NOT APPLE_IOS
+qt_extend_target(tst_qquickvisualdatamodel CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

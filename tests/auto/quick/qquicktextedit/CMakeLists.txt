@@ -35,17 +35,17 @@ qt_add_test(tst_qquicktextedit
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_qquicktextedit CONDITION APPLE_OSX
+qt_extend_target(tst_qquicktextedit CONDITION MACOS
     PUBLIC_LIBRARIES
         ${FWAppKit}
 )
 
-qt_extend_target(tst_qquicktextedit CONDITION ANDROID OR APPLE_IOS
+qt_extend_target(tst_qquicktextedit CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-qt_extend_target(tst_qquicktextedit CONDITION NOT ANDROID AND NOT APPLE_IOS
+qt_extend_target(tst_qquicktextedit CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

@@ -29,12 +29,12 @@ qt_add_test(tst_qqmlincubator
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_qqmlincubator CONDITION ANDROID OR APPLE_IOS
+qt_extend_target(tst_qqmlincubator CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-qt_extend_target(tst_qqmlincubator CONDITION NOT ANDROID AND NOT APPLE_IOS
+qt_extend_target(tst_qqmlincubator CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

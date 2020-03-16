@@ -43,7 +43,7 @@ qt6_add_resources(metaltextureimport "metaltextureimport"
         ${metaltextureimport_resource_files}
 )
 
-if(APPLE_OSX)
+if(MACOS)
     target_link_libraries(metaltextureimport PUBLIC
         "-framework AppKit"
     )

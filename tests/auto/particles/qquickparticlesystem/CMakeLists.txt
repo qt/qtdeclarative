@@ -29,12 +29,12 @@ qt_add_test(tst_qquickparticlesystem
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_qquickparticlesystem CONDITION ANDROID OR APPLE_IOS
+qt_extend_target(tst_qquickparticlesystem CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-qt_extend_target(tst_qquickparticlesystem CONDITION NOT ANDROID AND NOT APPLE_IOS
+qt_extend_target(tst_qquickparticlesystem CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

@@ -36,12 +36,12 @@ qt_add_test(tst_qquickdesignersupport
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_qquickdesignersupport CONDITION ANDROID OR APPLE_IOS
+qt_extend_target(tst_qquickdesignersupport CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-qt_extend_target(tst_qquickdesignersupport CONDITION NOT ANDROID AND NOT APPLE_IOS
+qt_extend_target(tst_qquickdesignersupport CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

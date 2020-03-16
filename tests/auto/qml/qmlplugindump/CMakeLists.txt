@@ -20,12 +20,12 @@ add_qt_test(tst_qmlplugindump
 ## Scopes:
 #####################################################################
 
-extend_target(tst_qmlplugindump CONDITION ANDROID OR APPLE_IOS
+extend_target(tst_qmlplugindump CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-extend_target(tst_qmlplugindump CONDITION NOT ANDROID AND NOT APPLE_IOS
+extend_target(tst_qmlplugindump CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

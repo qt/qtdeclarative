@@ -43,7 +43,7 @@ qt6_add_resources(metalunderqml "metalunderqml"
         ${metalunderqml_resource_files}
 )
 
-if(APPLE_OSX)
+if(MACOS)
     target_link_libraries(metalunderqml PUBLIC
         "-framework AppKit"
     )

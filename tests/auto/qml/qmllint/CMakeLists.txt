@@ -24,12 +24,12 @@ qt_add_test(tst_qmllint
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_qmllint CONDITION ANDROID OR APPLE_IOS
+qt_extend_target(tst_qmllint CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-qt_extend_target(tst_qmllint CONDITION NOT ANDROID AND NOT APPLE_IOS
+qt_extend_target(tst_qmllint CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

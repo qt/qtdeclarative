@@ -31,7 +31,7 @@ qt_extend_target(qmlplugindump CONDITION TARGET Qt::Widgets
         Qt::Widgets
 )
 
-qt_extend_target(qmlplugindump CONDITION APPLE_OSX
+qt_extend_target(qmlplugindump CONDITION MACOS
     LINK_OPTIONS
         "-Wl,-sectcreate,__TEXT,__info_plist,$$shell_quote$$PWD/Info.plist"
 )

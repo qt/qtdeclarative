@@ -44,7 +44,7 @@ qt6_add_resources(rendernode "rendernode"
         ${rendernode_resource_files}
 )
 
-if(APPLE_OSX)
+if(MACOS)
     target_sources(rendernode PUBLIC
         metalrenderer.h metalrenderer.mm
     )
