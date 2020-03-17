@@ -1,0 +1,122 @@
+# Generated from imagine.pro.
+
+#####################################################################
+## qtquickcontrols2imaginestyleplugin Plugin:
+#####################################################################
+
+add_qml_module(qtquickcontrols2imaginestyleplugin
+    TARGET_PATH "QtQuick/Controls.2/Imagine"
+    URI "QtQuick.Controls.Imagine"
+    VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
+    CLASSNAME QtQuickControls2ImagineStylePlugin
+    DEPENDENCIES
+        QtQuick.Controls/2.5
+        QtGraphicalEffects/1.0
+    SKIP_TYPE_REGISTRATION
+    SOURCES
+        qquickimageselector.cpp qquickimageselector_p.h
+        qquickimaginestyle.cpp qquickimaginestyle_p.h
+        qquickimaginetheme.cpp qquickimaginetheme_p.h
+        qquickninepatchimage.cpp qquickninepatchimage_p.h
+        qtquickcontrols2imaginestyleplugin.cpp
+    DEFINES
+        QT_NO_CAST_FROM_ASCII
+        QT_NO_CAST_TO_ASCII
+    LIBRARIES
+        Qt::CorePrivate
+        Qt::GuiPrivate
+        Qt::QmlPrivate
+        Qt::QuickControls2Private
+        Qt::QuickPrivate
+        Qt::QuickTemplates2Private
+    PUBLIC_LIBRARIES
+        Qt::Core
+        Qt::Gui
+        Qt::Qml
+        Qt::Quick
+)
+
+file(GLOB resource_glob_0 RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "images/*.png")
+foreach(file IN LISTS resource_glob_0)
+    set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/${file}" PROPERTIES QT_RESOURCE_ALIAS "${file}")
+endforeach()
+
+file(GLOB resource_glob_1 RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "images/*.webp")
+foreach(file IN LISTS resource_glob_1)
+    set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/${file}" PROPERTIES QT_RESOURCE_ALIAS "${file}")
+endforeach()
+
+# Resources:
+set(qmake_qtquickcontrols2imaginestyle_resource_files
+    ${resource_glob_0}
+    ${resource_glob_1}
+)
+
+add_qt_resource(qtquickcontrols2imaginestyleplugin "qmake_qtquickcontrols2imaginestyle"
+    PREFIX
+        "qt-project.org/imports/QtQuick/Controls.2/Imagine"
+    FILES
+        ${qmake_qtquickcontrols2imaginestyle_resource_files}
+)
+
+
+#### Keys ignored in scope 1:.:.:imagine.pro:<TRUE>:
+# IMPORT_NAME = "QtQuick.Controls.Imagine"
+# IMPORT_VERSION = "2.$$QT_MINOR_VERSION"
+# OTHER_FILES = "qmldir" "$$QML_FILES"
+# TARGETPATH = "QtQuick/Controls.2/Imagine"
+# _REQUIREMENTS = "qtConfig(quickcontrols2-imagine)"
+
+set(qml_files
+    "ApplicationWindow.qml"
+    "BusyIndicator.qml"
+    "Button.qml"
+    "CheckBox.qml"
+    "CheckDelegate.qml"
+    "ComboBox.qml"
+    "DelayButton.qml"
+    "Dial.qml"
+    "Dialog.qml"
+    "DialogButtonBox.qml"
+    "Drawer.qml"
+    "Frame.qml"
+    "GroupBox.qml"
+    "ItemDelegate.qml"
+    "Label.qml"
+    "Menu.qml"
+    "MenuItem.qml"
+    "MenuSeparator.qml"
+    "PageIndicator.qml"
+    "Page.qml"
+    "Pane.qml"
+    "Popup.qml"
+    "ProgressBar.qml"
+    "RadioButton.qml"
+    "RadioDelegate.qml"
+    "RangeSlider.qml"
+    "RoundButton.qml"
+    "ScrollBar.qml"
+    "ScrollIndicator.qml"
+    "Slider.qml"
+    "SpinBox.qml"
+    "SplitView.qml"
+    "StackView.qml"
+    "SwipeDelegate.qml"
+    "SwipeView.qml"
+    "Switch.qml"
+    "SwitchDelegate.qml"
+    "TextField.qml"
+    "TextArea.qml"
+    "TabBar.qml"
+    "TabButton.qml"
+    "ToolBar.qml"
+    "ToolButton.qml"
+    "ToolSeparator.qml"
+    "ToolTip.qml"
+    "Tumbler.qml"
+)
+
+qt6_target_qml_files(qtquickcontrols2imaginestyleplugin
+    FILES
+        ${qml_files}
+)
