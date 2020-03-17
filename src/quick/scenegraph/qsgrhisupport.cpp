@@ -157,8 +157,10 @@ void QSGRhiSupport::applySettings()
         } else if (rhiBackend == QByteArrayLiteral("null")) {
             m_rhiBackend = QRhi::Null;
         } else {
-            if (!rhiBackend.isEmpty())
-                qWarning("Unknown key \"%s\" for QSG_RHI_BACKEND, falling back to default backend.", qPrintable(rhiBackend));
+            if (!rhiBackend.isEmpty()) {
+                qWarning("Unknown key \"%s\" for QSG_RHI_BACKEND, falling back to default backend.",
+                         rhiBackend.constData());
+            }
 #if defined(Q_OS_WIN)
             m_rhiBackend = QRhi::D3D11;
 #elif defined(Q_OS_MACOS) || defined(Q_OS_IOS)
@@ -580,7 +582,7 @@ void QSGRhiProfileConnection::initialize(QRhi *rhi)
             profPort = 30667;
         qCDebug(QSG_LOG_INFO, "Sending RHI profiling output to %s:%d", qPrintable(profHost), profPort);
         m_profConn.reset(new QTcpSocket);
-        QObject::connect(m_profConn.data(), QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error), m_profConn.data(),
+        QObject::connect(m_profConn.data(), &QAbstractSocket::errorOccurred, m_profConn.data(),
                          [this](QAbstractSocket::SocketError socketError) { qWarning("  RHI profiler error: %d (%s)",
                                                                                      socketError, qPrintable(m_profConn->errorString())); });
         m_profConn->connectToHost(profHost, profPort);
