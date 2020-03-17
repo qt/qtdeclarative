@@ -1,4 +1,4 @@
-import QtQuick 2.0
+import QtQuick 2.14
 
 Item {
     property variant intInput: intInput
@@ -19,7 +19,7 @@ Item {
         }
         TextInput { id: strInput;
             property bool acceptable: acceptableInput
-            validator: RegExpValidator { regExp: /[a-zA-z]{2,4}/ }
+            validator: RegularExpressionValidator { regularExpression: /[a-zA-z]{2,4}/ }
         }
         TextInput { id: unvalidatedInput
             property bool acceptable: acceptableInput

@@ -98,7 +98,6 @@ QT_END_NAMESPACE
 QML_DECLARE_TYPE(QValidator)
 QML_DECLARE_TYPE(QQuickIntValidator)
 QML_DECLARE_TYPE(QQuickDoubleValidator)
-QML_DECLARE_TYPE(QRegExpValidator)
 #if QT_CONFIG(regularexpression)
 QML_DECLARE_TYPE(QRegularExpressionValidator)
 #endif

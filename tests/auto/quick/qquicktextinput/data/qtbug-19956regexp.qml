@@ -1,4 +1,4 @@
-import QtQuick 2.0
+import QtQuick 2.14
 
 TextInput {
     id: textinput
@@ -6,8 +6,8 @@ TextInput {
     height: 50
     width: 200
     text: "abc"
-    validator: RegExpValidator {
+    validator: RegularExpressionValidator {
         id: regexpvalidator
-        regExp: regexvalue
+        regularExpression: regexvalue
     }
 }

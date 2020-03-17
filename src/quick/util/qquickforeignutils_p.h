@@ -76,14 +76,6 @@ struct QValidatorForeign
     QML_ADDED_IN_VERSION(2, 0)
 };
 
-struct QRegExpValidatorForeign
-{
-    Q_GADGET
-    QML_FOREIGN(QRegExpValidator)
-    QML_NAMED_ELEMENT(RegExpValidator)
-    QML_ADDED_IN_VERSION(2, 0)
-};
-
 #if QT_CONFIG(regularexpression)
 struct QRegularExpressionValidatorForeign
 {

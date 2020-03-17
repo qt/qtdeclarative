@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.14
 import QtTest 1.1
 
 Item {
@@ -118,7 +118,7 @@ Item {
         text: ""
         height: 20
         width: 50
-        validator: RegExpValidator { id: rv; regExp: /[a-z]{3}/ }
+        validator: RegularExpressionValidator { id: rv; regularExpression: /[a-z]{3}/ }
     }
 
 
@@ -316,7 +316,7 @@ Item {
         }
 
         function test_regexpvalidators(row) {
-            compare(txtregexpvalidator.validator.regExp, /[a-z]{3}/)
+            compare(txtregexpvalidator.validator.regularExpression, /[a-z]{3}/)
             txtregexpvalidator.text = row.testtext;
             compare(txtregexpvalidator.acceptableInput, row.acceptable)
         }

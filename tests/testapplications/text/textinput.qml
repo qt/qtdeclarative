@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.14
 import QtQml.Models 2.12
 
 Rectangle {
@@ -81,8 +81,8 @@ Rectangle {
             }
             IntValidator { id: intval; top: 30; bottom: 12 }
             DoubleValidator { id: dubval; top: 30; bottom: 12 }
-            RegExpValidator { id: regval; regExp: /Qt/ }
-            RegExpValidator { id: noval; regExp: /.*/ }
+            RegularExpressionValidator { id: regval; regularExpression: /Qt/ }
+            RegularExpressionValidator { id: noval; regularExpression: /.*/ }
             Rectangle{ color: "transparent"; border.color: "green"; anchors.fill: parent }
         }
 

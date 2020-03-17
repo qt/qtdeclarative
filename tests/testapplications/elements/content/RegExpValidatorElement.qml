@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick 2.14
 
 Item {
     id: regexpvalidatorelementtest
@@ -34,7 +34,7 @@ Item {
     property string testtext: ""
     property variant regexp: /[a-z]{3}/
 
-    RegExpValidator { id: regexpvalidatorelement; regExp: regexp }
+    RegularExpressionValidator { id: regexpvalidatorelement; regularExpression: regexp }
 
     Rectangle {
         id: regexpvalidatorelementbackground
@@ -67,8 +67,8 @@ Item {
         State { name: "start"; when: statenum == 1
             PropertyChanges { target: regexpvalidatorelementinput; text: "abc" }
             PropertyChanges { target: regexpvalidatorelementtest
-                testtext: "This is a TextInput element using an RegExpValidator for input masking. At present it should be indicating abc.\n"+
-                "The regExp value will only match to a value that has three alpha characters\n"+
+                testtext: "This is a TextInput element using an RegularExpressionValidator for input masking. At present it should be indicating abc.\n"+
+                "The regularExpression value will only match to a value that has three alpha characters\n"+
                 "Next, let's attempt to enter text that does not match the regular expression: 123" }
         },
         State { name: "notmatch"; when: statenum == 2

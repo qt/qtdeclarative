@@ -44,7 +44,6 @@ testcase = {
         Flickable: ["Flickable"],
         IntValidator: ["IntValidator"],
         DoubleValidator: ["DoubleValidator"],
-        RegExpValidator: ["RegExpValidator"],
         Column: ["Column"],
         Row: ["Row"],
         Flow: ["Flow"],

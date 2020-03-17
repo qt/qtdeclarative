@@ -6008,7 +6008,7 @@ void tst_qquicktextinput::QTBUG_19956_regexp()
 {
     QUrl url = testFileUrl("qtbug-19956regexp.qml");
 
-    QString warning = url.toString() + ":11:9: Unable to assign [undefined] to QRegExp";
+    QString warning = url.toString() + ":11:9: Unable to assign [undefined] to QRegularExpression";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
 
     QQuickView window(url);
@@ -6187,9 +6187,9 @@ void tst_qquicktextinput::keypress_inputMask_withValidator()
     QFETCH(QString, expectedText);
     QFETCH(QString, expectedDisplayText);
 
-    QString componentStr = "import QtQuick 2.0\nTextInput { focus: true; inputMask: \"" + mask + "\"\n";
+    QString componentStr = "import QtQuick 2.14\nTextInput { focus: true; inputMask: \"" + mask + "\"\n";
     if (!validatorRegExp.isEmpty())
-        componentStr += "validator: RegExpValidator { regExp: " + validatorRegExp + " }\n}";
+        componentStr += "validator: RegularExpressionValidator { regularExpression: " + validatorRegExp + " }\n}";
     else if (decimals > 0)
         componentStr += QString("validator: DoubleValidator { bottom: %1; decimals: %2; top: %3 }\n}").
                             arg(validatorMinimum).arg(decimals).arg(validatorMaximum);
