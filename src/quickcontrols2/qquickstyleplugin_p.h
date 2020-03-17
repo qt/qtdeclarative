@@ -66,6 +66,7 @@ public:
 
     virtual QString name() const;
     virtual void initializeTheme(QQuickTheme *theme);
+    virtual void unregisterTypes() override;
 
     QUrl resolvedUrl(const QString &fileName) const;
 

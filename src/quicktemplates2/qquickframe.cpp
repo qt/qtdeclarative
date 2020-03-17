@@ -42,7 +42,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Frame
     \inherits Pane
-    \instantiates QQuickFrame
+//!     \instantiates QQuickFrame
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-containers

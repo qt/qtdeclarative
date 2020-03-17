@@ -267,7 +267,11 @@ void QQuickStackViewPrivate::viewItemTransitionFinished(QQuickItemViewTransition
         element->setStatus(QQuickStackView::Active);
     } else if (element->status == QQuickStackView::Deactivating) {
         element->setStatus(QQuickStackView::Inactive);
-        element->setVisible(false);
+        QQuickStackElement *existingElement = element->item ? findElement(element->item) : nullptr;
+        // If a different element with the same item is found,
+        // do not call setVisible(false) since it needs to be visible.
+        if (!existingElement || element == existingElement)
+            element->setVisible(false);
         if (element->removal || element->isPendingRemoval())
             removed += element;
     }
@@ -275,11 +279,21 @@ void QQuickStackViewPrivate::viewItemTransitionFinished(QQuickItemViewTransition
     if (transitioner && transitioner->runningJobs.isEmpty()) {
         // ~QQuickStackElement() emits QQuickStackViewAttached::removed(), which may be used
         // to modify the stack. Set the status first and make a copy of the destroyable stack
-        // elements to exclude any modifications that may happen during the loop. (QTBUG-62153)
+        // elements to exclude any modifications that may happen during qDeleteAll(). (QTBUG-62153)
         setBusy(false);
-        QList<QQuickStackElement*> elements = removed;
+        QList<QQuickStackElement*> removedElements = removed;
         removed.clear();
-        qDeleteAll(elements);
+
+        for (QQuickStackElement *removedElement : qAsConst(removedElements)) {
+            // If an element with the same item is found in the active stack list,
+            // forget about the item so that we don't hide it.
+            if (removedElement->item && findElement(removedElement->item)) {
+                QQuickItemPrivate::get(removedElement->item)->removeItemChangeListener(removedElement, QQuickItemPrivate::Destroyed);
+                removedElement->item = nullptr;
+            }
+        }
+
+        qDeleteAll(removedElements);
     }
 
     removing.remove(element);

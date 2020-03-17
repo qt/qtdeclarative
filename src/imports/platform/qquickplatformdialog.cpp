@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Dialog
     \inherits QtObject
-    \instantiates QQuickPlatformDialog
+//! \instantiates QQuickPlatformDialog
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief The base class of native dialogs.
@@ -119,7 +119,7 @@ QPlatformDialogHelper *QQuickPlatformDialog::handle() const
 */
 QQmlListProperty<QObject> QQuickPlatformDialog::data()
 {
-    return QQmlListProperty<QObject>(this, m_data);
+    return QQmlListProperty<QObject>(this, &m_data);
 }
 
 /*!
@@ -407,3 +407,5 @@ QWindow *QQuickPlatformDialog::findParentWindow() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickplatformdialog_p.cpp"

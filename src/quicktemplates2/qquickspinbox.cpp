@@ -55,7 +55,7 @@ static const int AUTO_REPEAT_INTERVAL = 100;
 /*!
     \qmltype SpinBox
     \inherits Control
-    \instantiates QQuickSpinBox
+//!     \instantiates QQuickSpinBox
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup input
@@ -1126,7 +1126,7 @@ void QQuickSpinButton::setIndicator(QQuickItem *indicator)
 
     QQuickSpinBox *spinBox = static_cast<QQuickSpinBox *>(parent());
     QQuickSpinBoxPrivate::get(spinBox)->removeImplicitSizeListener(d->indicator);
-    delete d->indicator;
+    QQuickControlPrivate::hideOldItem(d->indicator);
     d->indicator = indicator;
 
     if (indicator) {
@@ -1176,3 +1176,5 @@ qreal QQuickSpinButton::implicitIndicatorHeight() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickspinbox_p.cpp"

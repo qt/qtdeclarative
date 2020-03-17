@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Popup
     \inherits QtObject
-    \instantiates QQuickPopup
+//!     \instantiates QQuickPopup
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-popups
@@ -485,11 +485,18 @@ void QQuickPopupPrivate::finalizeExitTransition()
 
     if (hadActiveFocusBeforeExitTransition && window) {
         // restore focus to the next popup in chain, or to the window content if there are no other popups open
-        QQuickPopup *popup = nullptr;
-        if (QQuickOverlay *overlay = QQuickOverlay::overlay(window))
-            popup = QQuickOverlayPrivate::get(overlay)->stackingOrderPopups().value(0);
-        if (popup && popup->hasFocus()) {
-            popup->forceActiveFocus();
+        QQuickPopup *nextFocusPopup = nullptr;
+        if (QQuickOverlay *overlay = QQuickOverlay::overlay(window)) {
+            const auto stackingOrderPopups = QQuickOverlayPrivate::get(overlay)->stackingOrderPopups();
+            for (auto popup : stackingOrderPopups) {
+                if (QQuickPopupPrivate::get(popup)->transitionState != ExitTransition) {
+                    nextFocusPopup = popup;
+                    break;
+                }
+            }
+        }
+        if (nextFocusPopup && nextFocusPopup->hasFocus()) {
+            nextFocusPopup->forceActiveFocus();
         } else {
             QQuickApplicationWindow *applicationWindow = qobject_cast<QQuickApplicationWindow*>(window);
             if (applicationWindow)
@@ -573,7 +580,7 @@ void QQuickPopupPrivate::setBottomMargin(qreal value, bool reset)
     relationship with other items.
 
     A common use case is to center a popup within its parent. One way to do
-    this is with the \l {Item::}{x} and \l {Item::}{y} properties. Anchors offer
+    this is with the \l[QtQuick]{Item::}{x} and \l[QtQuick]{Item::}{y} properties. Anchors offer
     a more convenient approach:
 
     \qml
@@ -595,7 +602,7 @@ void QQuickPopupPrivate::setBottomMargin(qreal value, bool reset)
     \note Popups can only be centered within their immediate parent or
     the window overlay; trying to center in other items will produce a warning.
 
-    \sa {Popup Positioning}, {Item::anchors}
+    \sa {Popup Positioning}, {QtQuick::Item::anchors}{anchors}
 */
 QQuickPopupAnchors *QQuickPopupPrivate::getAnchors()
 {
@@ -2375,7 +2382,7 @@ void QQuickPopup::setFiltersChildMouseEvents(bool filter)
 }
 
 /*!
-    \qmlmethod QtQuick.Controls::Popup::forceActiveFocus(reason = Qt.OtherFocusReason)
+    \qmlmethod QtQuick.Controls::Popup::forceActiveFocus(enumeration reason = Qt.OtherFocusReason)
 
     Forces active focus on the popup with the given \a reason.
 
@@ -2692,10 +2699,10 @@ QString QQuickPopup::accessibleName() const
     return d->popupItem->accessibleName();
 }
 
-void QQuickPopup::setAccessibleName(const QString &name)
+void QQuickPopup::maybeSetAccessibleName(const QString &name)
 {
     Q_D(QQuickPopup);
-    d->popupItem->setAccessibleName(name);
+    d->popupItem->maybeSetAccessibleName(name);
 }
 
 QVariant QQuickPopup::accessibleProperty(const char *propertyName)

@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype StackView
     \inherits Control
-    \instantiates QQuickStackView
+//!     \instantiates QQuickStackView
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-navigation
@@ -365,8 +365,10 @@ QT_BEGIN_NAMESPACE
     situation:
 
     \list
-        \li Set \l implicitWidth and \l implicitHeight on the StackView itself.
-        \li Set \l implicitWidth and \l implicitHeight on the \l Rectangle.
+        \li Set \l[QtQuick]{Item::}{implicitWidth} and
+            \l[QtQuick]{Item::}{implicitHeight} on the StackView itself.
+        \li Set \l[QtQuick]{Item::}{implicitWidth} and
+            \l[QtQuick]{Item::}{implicitHeight} on the \l Rectangle.
         \li Set \l {Popup::}{contentWidth} and \l {Popup::}{contentHeight} on
             the Dialog.
         \li Give the Dialog a size.
@@ -438,7 +440,7 @@ QQuickItem *QQuickStackView::currentItem() const
     Returns the item at position \a index in the stack, or \c null if the index
     is out of bounds.
 
-    Supported behavior values:
+    Supported \a behavior values:
     \value StackView.DontLoad The item is not forced to load (and \c null is returned if not yet loaded).
     \value StackView.ForceLoad The item is forced to load.
 */
@@ -467,7 +469,7 @@ QQuickItem *QQuickStackView::get(int index, LoadBehavior behavior)
     })
     \endcode
 
-    Supported behavior values:
+    Supported \a behavior values:
     \value StackView.DontLoad Unloaded items are skipped (the callback function is not called for them).
     \value StackView.ForceLoad Unloaded items are forced to load.
 */
@@ -649,6 +651,13 @@ void QQuickStackView::push(QQmlV4Function *args)
 void QQuickStackView::pop(QQmlV4Function *args)
 {
     Q_D(QQuickStackView);
+    if (d->removingElements) {
+        d->warn(QStringLiteral("cannot pop while already in the process of removing elements"));
+        args->setReturnValue(QV4::Encode::null());
+        return;
+    }
+
+    QScopedValueRollback<bool> removingElements(d->removingElements, true);
     QScopedValueRollback<QString> rollback(d->operation, QStringLiteral("pop"));
     int argc = args->length();
     if (d->elements.count() <= 1 || argc > 2) {
@@ -804,6 +813,13 @@ void QQuickStackView::pop(QQmlV4Function *args)
 void QQuickStackView::replace(QQmlV4Function *args)
 {
     Q_D(QQuickStackView);
+    if (d->removingElements) {
+        d->warn(QStringLiteral("cannot replace while already in the process of removing elements"));
+        args->setReturnValue(QV4::Encode::null());
+        return;
+    }
+
+    QScopedValueRollback<bool> removingElements(d->removingElements, true);
     QScopedValueRollback<QString> rollback(d->operation, QStringLiteral("replace"));
     if (args->length() <= 0) {
         d->warn(QStringLiteral("missing arguments"));
@@ -900,6 +916,12 @@ void QQuickStackView::clear(Operation operation)
     if (d->elements.isEmpty())
         return;
 
+    if (d->removingElements) {
+        d->warn(QStringLiteral("cannot clear while already in the process of removing elements"));
+        return;
+    }
+
+    QScopedValueRollback<bool> removingElements(d->removingElements, true);
     if (operation != Immediate) {
         QQuickStackElement *exit = d->elements.pop();
         exit->removal = true;
@@ -1361,3 +1383,5 @@ void QQuickStackViewAttached::resetVisible()
 */
 
 QT_END_NAMESPACE
+
+#include "moc_qquickstackview_p.cpp"

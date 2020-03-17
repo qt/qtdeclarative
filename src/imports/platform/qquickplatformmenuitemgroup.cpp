@@ -42,7 +42,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype MenuItemGroup
     \inherits QtObject
-    \instantiates QQuickPlatformMenuItemGroup
+//!     \instantiates QQuickPlatformMenuItemGroup
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief A group for managing native menu items.
@@ -388,3 +388,5 @@ void QQuickPlatformMenuItemGroup::items_clear(QQmlListProperty<QQuickPlatformMen
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickplatformmenuitemgroup_p.cpp"

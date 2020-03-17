@@ -51,6 +51,7 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/private/qlazilyallocated_p.h>
 #include <private/qqmldelegatemodel_p.h>
+#include <QtQuick/private/qquickaccessibleattached_p.h>
 #include <QtQuick/private/qquickevents_p_p.h>
 #include <QtQuick/private/qquicktextinput_p.h>
 #include <QtQuick/private/qquickitemview_p.h>
@@ -60,7 +61,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ComboBox
     \inherits Control
-    \instantiates QQuickComboBox
+//!     \instantiates QQuickComboBox
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-input
@@ -264,6 +265,8 @@ public:
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
 
+    static void hideOldPopup(QQuickPopup *popup);
+
     bool flat = false;
     bool down = false;
     bool hasDown = false;
@@ -290,6 +293,7 @@ public:
         bool editable = false;
         bool accepting = false;
         bool allowComplete = false;
+        bool selectTextByMouse = false;
         Qt::InputMethodHints inputMethodHints = Qt::ImhNone;
         QString editText;
         QValidator *validator = nullptr;
@@ -444,7 +448,7 @@ void QQuickComboBoxPrivate::updateCurrentText()
     if (currentText != text) {
         currentText = text;
         if (!hasDisplayText)
-           q->setAccessibleName(text);
+           q->maybeSetAccessibleName(text);
         emit q->currentTextChanged();
     }
     if (!hasDisplayText && displayText != text) {
@@ -774,6 +778,21 @@ void QQuickComboBoxPrivate::itemImplicitHeightChanged(QQuickItem *item)
         emit q->implicitIndicatorHeightChanged();
 }
 
+void QQuickComboBoxPrivate::hideOldPopup(QQuickPopup *popup)
+{
+    if (!popup)
+        return;
+
+    qCDebug(lcItemManagement) << "hiding old popup" << popup;
+
+    popup->setVisible(false);
+    popup->setParentItem(nullptr);
+    // Remove the item from the accessibility tree.
+    QQuickAccessibleAttached *accessible = accessibleAttached(popup);
+    if (accessible)
+        accessible->setIgnored(true);
+}
+
 QQuickComboBox::QQuickComboBox(QQuickItem *parent)
     : QQuickControl(*(new QQuickComboBoxPrivate), parent)
 {
@@ -794,7 +813,7 @@ QQuickComboBox::~QQuickComboBox()
         // Disconnect visibleChanged() to avoid a spurious highlightedIndexChanged() signal
         // emission during the destruction of the (visible) popup. (QTBUG-57650)
         QObjectPrivate::disconnect(d->popup.data(), &QQuickPopup::visibleChanged, d, &QQuickComboBoxPrivate::popupVisibleChanged);
-        delete d->popup;
+        QQuickComboBoxPrivate::hideOldPopup(d->popup);
         d->popup = nullptr;
     }
 }
@@ -993,7 +1012,7 @@ void QQuickComboBox::setDisplayText(const QString &text)
         return;
 
     d->displayText = text;
-    setAccessibleName(text);
+    maybeSetAccessibleName(text);
     emit displayTextChanged();
 }
 
@@ -1136,7 +1155,7 @@ void QQuickComboBox::setIndicator(QQuickItem *indicator)
     const qreal oldImplicitIndicatorHeight = implicitIndicatorHeight();
 
     d->removeImplicitSizeListener(d->indicator);
-    delete d->indicator;
+    QQuickControlPrivate::hideOldItem(d->indicator);
     d->indicator = indicator;
     if (indicator) {
         if (!indicator->parentItem())
@@ -1184,7 +1203,7 @@ void QQuickComboBox::setPopup(QQuickPopup *popup)
 
     if (d->popup) {
         QObjectPrivate::disconnect(d->popup.data(), &QQuickPopup::visibleChanged, d, &QQuickComboBoxPrivate::popupVisibleChanged);
-        delete d->popup;
+        QQuickComboBoxPrivate::hideOldPopup(d->popup);
     }
     if (popup) {
         QQuickPopupPrivate::get(popup)->allowVerticalFlip = true;
@@ -1550,6 +1569,30 @@ int QQuickComboBox::indexOfValue(const QVariant &value) const
 }
 
 /*!
+    \since QtQuick.Controls 2.15 (Qt 5.15)
+    \qmlproperty bool QtQuick.Controls::ComboBox::selectTextByMouse
+
+    This property holds whether the text field for an editable ComboBox
+    can be selected with the mouse.
+
+    The default value is \c false.
+*/
+bool QQuickComboBox::selectTextByMouse() const
+{
+    Q_D(const QQuickComboBox);
+    return d->extra.isAllocated() ? d->extra->selectTextByMouse : false;
+}
+
+void QQuickComboBox::setSelectTextByMouse(bool canSelect)
+{
+    Q_D(QQuickComboBox);
+    if (canSelect == selectTextByMouse())
+        return;
+
+    d->extra.value().selectTextByMouse = canSelect;
+    emit selectTextByMouseChanged();
+}
+/*!
     \qmlmethod string QtQuick.Controls::ComboBox::textAt(int index)
 
     Returns the text for the specified \a index, or an empty string
@@ -1568,7 +1611,7 @@ QString QQuickComboBox::textAt(int index) const
 }
 
 /*!
-    \qmlmethod int QtQuick.Controls::ComboBox::find(string text, flags = Qt.MatchExactly)
+    \qmlmethod int QtQuick.Controls::ComboBox::find(string text, enumeration flags)
 
     Returns the index of the specified \a text, or \c -1 if no match is found.
 
@@ -1662,6 +1705,12 @@ bool QQuickComboBox::eventFilter(QObject *object, QEvent *event)
             // the user clicked on the popup button to open it, not close it).
             d->hidePopup(false);
             setPressed(false);
+
+            // The focus left the text field, so if the edit text matches an item in the model,
+            // change our currentIndex to that. This matches widgets' behavior.
+            const int indexForEditText = find(d->extra.value().editText, Qt::MatchFixedString);
+            if (indexForEditText > -1)
+                setCurrentIndex(indexForEditText);
         }
         break;
 #if QT_CONFIG(im)
@@ -1816,6 +1865,14 @@ void QQuickComboBox::wheelEvent(QWheelEvent *event)
 }
 #endif
 
+bool QQuickComboBox::event(QEvent *e)
+{
+    Q_D(QQuickComboBox);
+    if (e->type() == QEvent::LanguageChange)
+        d->updateCurrentText();
+    return QQuickControl::event(e);
+}
+
 void QQuickComboBox::componentComplete()
 {
     Q_D(QQuickComboBox);
@@ -1902,10 +1959,12 @@ void QQuickComboBox::accessibilityActiveChanged(bool active)
     QQuickControl::accessibilityActiveChanged(active);
 
     if (active) {
-        setAccessibleName(d->hasDisplayText ? d->displayText : d->currentText);
+        maybeSetAccessibleName(d->hasDisplayText ? d->displayText : d->currentText);
         setAccessibleProperty("editable", isEditable());
     }
 }
 #endif //
 
 QT_END_NAMESPACE
+
+#include "moc_qquickcombobox_p.cpp"

@@ -170,7 +170,6 @@ private:
     int m_selectionEnd;
 
     QFont m_font;
-    int m_fontSize;
     QUrl m_fileUrl;
 };
 

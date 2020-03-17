@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype FileDialog
     \inherits Dialog
-    \instantiates QQuickPlatformFileDialog
+//!     \instantiates QQuickPlatformFileDialog
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief A native file dialog.
@@ -303,7 +303,7 @@ void QQuickPlatformFileDialog::setOptions(QFileDialogOptions::FileDialogOptions 
 
 void QQuickPlatformFileDialog::resetOptions()
 {
-    setOptions(0);
+    setOptions({});
 }
 
 /*!
@@ -623,7 +623,7 @@ static QStringList extractExtensions(const QString &filter)
     const int to = filter.lastIndexOf(QLatin1Char(')')) - 1;
     if (from >= 0 && from < to) {
         const QStringRef ref = filter.midRef(from + 1, to - from);
-        const QVector<QStringRef> exts = ref.split(QLatin1Char(' '), QString::SkipEmptyParts);
+        const QVector<QStringRef> exts = ref.split(QLatin1Char(' '), Qt::SkipEmptyParts);
         for (const QStringRef &ref : exts)
             extensions += extractExtension(ref.toString());
     }

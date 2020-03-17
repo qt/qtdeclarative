@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Dialog
     \inherits Popup
-    \instantiates QQuickDialog
+//!     \instantiates QQuickDialog
     \inqmlmodule QtQuick.Controls
     \ingroup qtquickcontrols2-dialogs
     \ingroup qtquickcontrols2-popups
@@ -219,7 +219,6 @@ void QQuickDialog::setTitle(const QString &title)
 {
     Q_D(QQuickDialog);
     d->popupItem->setTitle(title);
-    setAccessibleName(title);
 }
 
 /*!
@@ -536,7 +535,7 @@ void QQuickDialog::accessibilityActiveChanged(bool active)
     QQuickPopup::accessibilityActiveChanged(active);
 
     if (active)
-        setAccessibleName(d->popupItem->title());
+        maybeSetAccessibleName(d->popupItem->title());
 }
 #endif
 

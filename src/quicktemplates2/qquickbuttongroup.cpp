@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ButtonGroup
     \inherits QtObject
-    \instantiates QQuickButtonGroup
+//!     \instantiates QQuickButtonGroup
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup utilities

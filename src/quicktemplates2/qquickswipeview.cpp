@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype SwipeView
     \inherits Container
-    \instantiates QQuickSwipeView
+//!     \instantiates QQuickSwipeView
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-navigation
@@ -474,3 +474,5 @@ bool QQuickSwipeViewAttached::isPreviousItem() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickswipeview_p.cpp"

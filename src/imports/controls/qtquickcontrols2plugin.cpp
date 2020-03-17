@@ -79,6 +79,7 @@ public:
     ~QtQuickControls2Plugin();
 
     void registerTypes(const char *uri) override;
+    void unregisterTypes() override;
 
     QString name() const override;
     void initializeTheme(QQuickTheme *theme) override;
@@ -94,7 +95,8 @@ QtQuickControls2Plugin::QtQuickControls2Plugin(QObject *parent) : QQuickStylePlu
 
 QtQuickControls2Plugin::~QtQuickControls2Plugin()
 {
-    QQuickStylePrivate::reset();
+    // Intentionally empty: we use register/unregisterTypes() to do
+    // initialization and cleanup, as plugins are not unloaded on macOS.
 }
 
 static bool isDefaultStyle(const QString &style)
@@ -194,6 +196,10 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterUncreatableType<QQuickSplitHandleAttached>(uri, 2, 13, "SplitHandle",
         QStringLiteral("SplitHandle is only available as an attached property."));
 
+    // QtQuick.Controls 2.15 (new types in Qt 5.15)
+    qmlRegisterType(resolvedUrl(QStringLiteral("HorizontalHeaderView.qml")), uri, 2, 15, "HorizontalHeaderView");
+    qmlRegisterType(resolvedUrl(QStringLiteral("VerticalHeaderView.qml")), uri, 2, 15, "VerticalHeaderView");
+
     // The minor version used to be the current Qt 5 minor. For compatibility it is the last
     // Qt 5 release.
     const QByteArray import = QByteArray(uri) + ".impl";
@@ -232,6 +238,12 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickCheckLabel>(import, 2, 3, "CheckLabel");
     qmlRegisterType<QQuickMnemonicLabel>(import, 2, 3, "MnemonicLabel");
     qmlRegisterRevision<QQuickText, 6>(import, 2, 3);
+}
+
+void QtQuickControls2Plugin::unregisterTypes()
+{
+    QQuickStylePlugin::unregisterTypes();
+    QQuickStylePrivate::reset();
 }
 
 QString QtQuickControls2Plugin::name() const

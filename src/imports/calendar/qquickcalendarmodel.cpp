@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype CalendarModel
     \inherits QAbstractListModel
-    \instantiates QQuickCalendarModel
+//! \instantiates QQuickCalendarModel
     \inqmlmodule Qt.labs.calendar
     \brief A calendar model.
 

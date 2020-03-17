@@ -46,7 +46,7 @@ class QQuickWeekNumberModelPrivate : public QAbstractItemModelPrivate
     Q_DECLARE_PUBLIC(QQuickWeekNumberModel)
 
 public:
-    QQuickWeekNumberModelPrivate() : month(-1), year(-1)
+    QQuickWeekNumberModelPrivate() : month(-1), year(-1), weekNumbers{}
     {
         QDate date = QDate::currentDate();
         init(date.month(), date.year(), locale);

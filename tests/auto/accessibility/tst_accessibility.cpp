@@ -57,13 +57,47 @@ private slots:
     void a11y_data();
     void a11y();
 
+    void override_data();
+    void override();
+
 private:
     QQmlEngine engine;
 };
 
+#if QT_CONFIG(accessibility)
+static QPlatformAccessibility *platformAccessibility()
+{
+    QPlatformIntegration *pfIntegration = QGuiApplicationPrivate::platformIntegration();
+    return pfIntegration ? pfIntegration->accessibility() : nullptr;
+}
+#endif
+
+QString adjustFileBaseName(const QString &fileBaseName)
+{
+#if !QT_CONFIG(accessibility)
+    if (fileBaseName == QLatin1Literal("dayofweekrow")
+            || fileBaseName == QLatin1Literal("monthgrid")
+            || fileBaseName == QLatin1Literal("weeknumbercolumn"))
+        return fileBaseName += QLatin1Literal("-2");
+#else
+    return fileBaseName;
+#endif
+}
+
+QQuickItem *findItem(QObject *object)
+{
+    QQuickItem *item = qobject_cast<QQuickItem *>(object);
+    if (!item) {
+        QQuickPopup *popup = qobject_cast<QQuickPopup *>(object);
+        if (popup)
+            item = popup->popupItem();
+    }
+    return item;
+}
+
 void tst_accessibility::a11y_data()
 {
-    QTest::addColumn<QString>("name");
+    QTest::addColumn<QString>("fileBaseName");
     QTest::addColumn<QAccessible::Role>("role");
     QTest::addColumn<QString>("text");
 
@@ -116,61 +150,135 @@ void tst_accessibility::a11y_data()
     QTest::newRow("WeekNumberColumn") << "weeknumbercolumn" << QAccessible::NoRole << "WeekNumberColumn";
 }
 
-#if QT_CONFIG(accessibility)
-static QPlatformAccessibility *platformAccessibility()
-{
-    QPlatformIntegration *pfIntegration = QGuiApplicationPrivate::platformIntegration();
-    return pfIntegration ? pfIntegration->accessibility() : nullptr;
-}
-#endif
-
 void tst_accessibility::a11y()
 {
-    QFETCH(QString, name);
+    QFETCH(QString, fileBaseName);
     QFETCH(QAccessible::Role, role);
     QFETCH(QString, text);
 
-    QString fn = name;
-#if !QT_CONFIG(accessibility)
-    if (name == QLatin1String("dayofweekrow")
-            || name == QLatin1String("monthgrid")
-            || name == QLatin1String("weeknumbercolumn"))
-        fn += QLatin1String("-2");
-#endif
-
     QQmlComponent component(&engine);
-    component.loadUrl(testFileUrl(fn + ".qml"));
+    component.loadUrl(testFileUrl("defaults/" + adjustFileBaseName(fileBaseName) + ".qml"));
 
     QScopedPointer<QObject> object(component.create());
     QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
 
-    QQuickItem *item = qobject_cast<QQuickItem *>(object.data());
-    if (!item) {
-        QQuickPopup *popup = qobject_cast<QQuickPopup *>(object.data());
-        if (popup)
-            item = popup->popupItem();
-    }
+    QQuickItem *item = findItem(object.data());
     QVERIFY(item);
 
 #if QT_CONFIG(accessibility)
-    QQuickAccessibleAttached *acc = QQuickAccessibleAttached::attachedProperties(item);
-    if (name != QLatin1String("dayofweekrow")
-            && name != QLatin1String("monthgrid")
-            && name != QLatin1String("weeknumbercolumn")) {
+    QQuickAccessibleAttached *attached = QQuickAccessibleAttached::attachedProperties(item);
+    if (fileBaseName != QLatin1String("dayofweekrow")
+            && fileBaseName != QLatin1String("monthgrid")
+            && fileBaseName != QLatin1String("weeknumbercolumn")) {
         if (QAccessible::isActive()) {
-            QVERIFY(acc);
+            QVERIFY(attached);
         } else {
-            QVERIFY(!acc);
+            QVERIFY(!attached);
             QPlatformAccessibility *accessibility = platformAccessibility();
             if (!accessibility)
                 QSKIP("No QPlatformAccessibility available.");
             accessibility->setActive(true);
-            acc = QQuickAccessibleAttached::attachedProperties(item);
+            attached = QQuickAccessibleAttached::attachedProperties(item);
         }
     }
-    QVERIFY(acc);
-    QCOMPARE(acc->role(), role);
-    QCOMPARE(acc->name(), text);
+    QVERIFY(attached);
+    QCOMPARE(attached->role(), role);
+    QCOMPARE(attached->name(), text);
+#else
+    Q_UNUSED(role)
+    Q_UNUSED(text)
+#endif
+}
+
+void tst_accessibility::override_data()
+{
+    QTest::addColumn<QAccessible::Role>("role");
+
+    QTest::newRow("AbstractButton") << QAccessible::Button;
+    QTest::newRow("BusyIndicator") << QAccessible::Indicator;
+    QTest::newRow("Button") << QAccessible::Button;
+    QTest::newRow("CheckBox") << QAccessible::CheckBox;
+    QTest::newRow("CheckDelegate") << QAccessible::CheckBox;
+    QTest::newRow("ComboBox") << QAccessible::ComboBox;
+    QTest::newRow("Container") << QAccessible::NoRole;
+    QTest::newRow("Control") << QAccessible::NoRole;
+    QTest::newRow("Dial") << QAccessible::Dial;
+    QTest::newRow("Dialog") << QAccessible::Dialog;
+    QTest::newRow("Drawer") << QAccessible::Dialog;
+    QTest::newRow("Frame") << QAccessible::Border;
+    QTest::newRow("GroupBox") << QAccessible::Grouping;
+    QTest::newRow("ItemDelegate") << QAccessible::ListItem;
+    QTest::newRow("Label") << QAccessible::StaticText;
+    QTest::newRow("Menu") << QAccessible::PopupMenu;
+    QTest::newRow("MenuItem") << QAccessible::MenuItem;
+    QTest::newRow("Page") << QAccessible::PageTab;
+    QTest::newRow("PageIndicator") << QAccessible::Indicator;
+    QTest::newRow("Pane") << QAccessible::Pane;
+    QTest::newRow("Popup") << QAccessible::Dialog;
+    QTest::newRow("ProgressBar") << QAccessible::ProgressBar;
+    QTest::newRow("RadioButton") << QAccessible::RadioButton;
+    QTest::newRow("RadioDelegate") << QAccessible::RadioButton;
+    QTest::newRow("RangeSlider") << QAccessible::Slider;
+    QTest::newRow("RoundButton") << QAccessible::Button;
+    QTest::newRow("ScrollBar") << QAccessible::ScrollBar;
+    QTest::newRow("ScrollIndicator") << QAccessible::Indicator;
+    QTest::newRow("Slider") << QAccessible::Slider;
+    QTest::newRow("SpinBox") << QAccessible::SpinBox;
+    QTest::newRow("StackView") << QAccessible::LayeredPane;
+    QTest::newRow("SwipeDelegate") << QAccessible::ListItem;
+    QTest::newRow("SwipeView") << QAccessible::PageTabList;
+    QTest::newRow("Switch") << QAccessible::CheckBox;
+    QTest::newRow("SwitchDelegate") << QAccessible::ListItem;
+    QTest::newRow("TabBar") << QAccessible::PageTabList;
+    QTest::newRow("TabButton") << QAccessible::PageTab;
+    QTest::newRow("TextArea") << QAccessible::EditableText;
+    QTest::newRow("TextField") << QAccessible::EditableText;
+    QTest::newRow("ToolBar") << QAccessible::ToolBar;
+    QTest::newRow("ToolButton") << QAccessible::Button;
+    QTest::newRow("ToolTip") << QAccessible::ToolTip;
+    QTest::newRow("Tumbler") << QAccessible::NoRole;
+
+    QTest::newRow("DayOfWeekRow") << QAccessible::NoRole;
+    QTest::newRow("MonthGrid") << QAccessible::NoRole;
+    QTest::newRow("WeekNumberColumn") << QAccessible::NoRole;
+}
+
+void tst_accessibility::override()
+{
+    QFETCH(QAccessible::Role, role);
+
+    const QString name = QTest::currentDataTag();
+    const QString fileBaseName = name.toLower();
+
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("override/" + adjustFileBaseName(fileBaseName) + ".qml"));
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
+
+    QQuickItem *item = findItem(object.data());
+    QVERIFY(item);
+
+#if QT_CONFIG(accessibility)
+    QQuickAccessibleAttached *attached = QQuickAccessibleAttached::attachedProperties(item);
+    if (fileBaseName != QLatin1String("dayofweekrow")
+            && fileBaseName != QLatin1String("monthgrid")
+            && fileBaseName != QLatin1String("weeknumbercolumn")) {
+        if (QAccessible::isActive()) {
+            QVERIFY(attached);
+        } else {
+            QPlatformAccessibility *accessibility = platformAccessibility();
+            if (!accessibility)
+                QSKIP("No QPlatformAccessibility available.");
+            accessibility->setActive(true);
+            if (!attached)
+                attached = QQuickAccessibleAttached::attachedProperties(item);
+        }
+    }
+
+    QVERIFY(attached);
+    QCOMPARE(attached->role(), role);
+    QCOMPARE(attached->name(), name + "Override");
 #else
     Q_UNUSED(role)
     Q_UNUSED(text)

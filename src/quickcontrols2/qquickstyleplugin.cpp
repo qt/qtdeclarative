@@ -63,7 +63,15 @@ QString QQuickStylePlugin::name() const
 
 void QQuickStylePlugin::initializeTheme(QQuickTheme *theme)
 {
-    Q_UNUSED(theme);
+    Q_UNUSED(theme)
+}
+
+void QQuickStylePlugin::unregisterTypes()
+{
+    Q_D(QQuickStylePlugin);
+    // Destroy the selector so that it is recreated in resolvedUrl() and
+    // any new style that has been set at runtime will be accounted for when selecting QML files.
+    d->selector.reset();
 }
 
 QUrl QQuickStylePlugin::resolvedUrl(const QString &fileName) const

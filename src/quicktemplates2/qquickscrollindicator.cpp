@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ScrollIndicator
     \inherits Control
-    \instantiates QQuickScrollIndicator
+//!     \instantiates QQuickScrollIndicator
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-indicators

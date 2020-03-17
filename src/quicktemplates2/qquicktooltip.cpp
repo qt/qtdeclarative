@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype ToolTip
     \inherits Popup
-    \instantiates QQuickToolTip
+//!     \instantiates QQuickToolTip
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-popups
@@ -188,7 +188,7 @@ void QQuickToolTip::setText(const QString &text)
         return;
 
     d->text = text;
-    setAccessibleName(text);
+    maybeSetAccessibleName(text);
     emit textChanged();
 }
 
@@ -252,9 +252,18 @@ void QQuickToolTip::setVisible(bool visible)
 {
     Q_D(QQuickToolTip);
     if (visible) {
-        if (!d->visible && d->delay > 0) {
-            d->startDelay();
-            return;
+        if (!d->visible) {
+            // We are being made visible, and we weren't before.
+            if (d->delay > 0) {
+                d->startDelay();
+                return;
+            }
+        } else {
+            // We are being made visible, even though we already were.
+            // We've probably been re-opened before our exit transition could finish.
+            // In that case, we need to manually start the timeout, as that is usually
+            // done in itemChange(), which won't be called in this situation.
+            d->startTimeout();
         }
     } else {
         d->stopDelay();
@@ -273,9 +282,10 @@ QQuickToolTipAttached *QQuickToolTip::qmlAttachedProperties(QObject *object)
 
 /*!
     \since QtQuick.Controls 2.5 (Qt 5.12)
-    \qmlmethod void QtQuick.Controls::ToolTip::show(string text, int timeout = -1)
+    \qmlmethod void QtQuick.Controls::ToolTip::show(string text, int timeout)
 
-    This method shows the tooltip with \a text and \a timeout (milliseconds).
+    This method shows the \a text as a tooltip, which times out in
+    \a timeout (milliseconds).
 */
 void QQuickToolTip::show(const QString &text, int ms)
 {
@@ -350,7 +360,7 @@ void QQuickToolTip::accessibilityActiveChanged(bool active)
     QQuickPopup::accessibilityActiveChanged(active);
 
     if (active)
-        setAccessibleName(d->text);
+        maybeSetAccessibleName(d->text);
 }
 #endif
 
@@ -556,8 +566,9 @@ void QQuickToolTipAttached::hide()
     QQuickToolTip *tip = d->instance(false);
     if (!tip)
         return;
-
-    tip->close();
+    // check the parent item to prevent unexpectedly closing tooltip by new created invisible tooltip
+    if (parent() == tip->parentItem())
+        tip->close();
 }
 
 QT_END_NAMESPACE

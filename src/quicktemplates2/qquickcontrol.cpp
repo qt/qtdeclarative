@@ -56,10 +56,12 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_LOGGING_CATEGORY(lcItemManagement, "qt.quick.controls.control.itemmanagement")
+
 /*!
     \qmltype Control
     \inherits Item
-    \instantiates QQuickControl
+//!     \instantiates QQuickControl
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \brief Abstract base type providing functionality common to all controls.
@@ -178,6 +180,12 @@ bool QQuickControlPrivate::acceptTouch(const QTouchEvent::TouchPoint &point)
         return true;
     }
 
+    // If the control is on a Flickable that has a pressDelay, then the press is never
+    // sent as a touch event, therefore we need to check for this case.
+    if (touchId == -1 && pressWasTouch && point.state() == Qt::TouchPointReleased &&
+        point.pos() == previousPressPos) {
+        return true;
+    }
     return false;
 }
 #endif
@@ -213,6 +221,8 @@ void QQuickControlPrivate::handleRelease(const QPointF &)
     if ((focusPolicy & Qt::ClickFocus) == Qt::ClickFocus && QGuiApplication::styleHints()->setFocusOnTouchRelease())
         setActiveFocus(q, Qt::MouseFocusReason);
     touchId = -1;
+    pressWasTouch = false;
+    previousPressPos = QPointF();
 }
 
 void QQuickControlPrivate::handleUngrab()
@@ -420,7 +430,7 @@ void QQuickControlPrivate::setContentItem_helper(QQuickItem *item, bool notify)
 
     contentItem = item;
     q->contentItemChange(item, oldContentItem);
-    delete oldContentItem;
+    QQuickControlPrivate::hideOldItem(oldContentItem);
 
     if (item) {
         connect(contentItem.data(), &QQuickItem::baselineOffsetChanged, this, &QQuickControlPrivate::updateBaselineOffset);
@@ -836,6 +846,22 @@ void QQuickControlPrivate::executeBackground(bool complete)
         quickBeginDeferred(q, backgroundName(), background);
     if (complete)
         quickCompleteDeferred(q, backgroundName(), background);
+}
+
+void QQuickControlPrivate::hideOldItem(QQuickItem *item)
+{
+    if (!item)
+        return;
+
+    qCDebug(lcItemManagement) << "hiding old item" << item;
+
+    item->setVisible(false);
+    item->setParentItem(nullptr);
+
+    // Remove the item from the accessibility tree.
+    QQuickAccessibleAttached *accessible = accessibleAttached(item);
+    if (accessible)
+        accessible->setIgnored(true);
 }
 
 void QQuickControlPrivate::updateBaselineOffset()
@@ -1590,7 +1616,7 @@ void QQuickControl::setBackground(QQuickItem *background)
     }
 
     d->removeImplicitSizeListener(d->background, QQuickControlPrivate::ImplicitSizeChanges | QQuickItemPrivate::Geometry);
-    delete d->background;
+    QQuickControlPrivate::hideOldItem(d->background);
     d->background = background;
 
     if (background) {
@@ -1633,8 +1659,10 @@ void QQuickControl::setBackground(QQuickItem *background)
     \endcode
 
     \note The content item is automatically positioned and resized to fit
-    within the \l padding of the control. Bindings to the \l x, \l y, \l width,
-    and \l height properties of the contentItem are not respected.
+    within the \l padding of the control. Bindings to the
+    \l[QtQuick]{Item::}{x}, \l[QtQuick]{Item::}{y},
+    \l[QtQuick]{Item::}{width}, and \l[QtQuick]{Item::}{height}
+    properties of the contentItem are not respected.
 
     \note Most controls use the implicit size of the content item to calculate
     the implicit size of the control itself. If you replace the content item
@@ -2101,6 +2129,10 @@ void QQuickControl::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickControl);
     d->handlePress(event->localPos());
+    if (event->source() == Qt::MouseEventSynthesizedByQt) {
+        d->pressWasTouch = true;
+        d->previousPressPos = event->localPos();
+    }
     event->accept();
 }
 
@@ -2280,11 +2312,13 @@ QString QQuickControl::accessibleName() const
     return QString();
 }
 
-void QQuickControl::setAccessibleName(const QString &name)
+void QQuickControl::maybeSetAccessibleName(const QString &name)
 {
 #if QT_CONFIG(accessibility)
-    if (QQuickAccessibleAttached *accessibleAttached = QQuickControlPrivate::accessibleAttached(this))
-        accessibleAttached->setName(name);
+    if (QQuickAccessibleAttached *accessibleAttached = QQuickControlPrivate::accessibleAttached(this)) {
+        if (!accessibleAttached->wasNameExplicitlySet())
+            accessibleAttached->setNameImplicitly(name);
+    }
 #else
     Q_UNUSED(name)
 #endif

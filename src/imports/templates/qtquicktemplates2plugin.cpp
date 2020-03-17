@@ -56,6 +56,7 @@
 #include <QtQuickTemplates2/private/qquickdrawer_p.h>
 #include <QtQuickTemplates2/private/qquickframe_p.h>
 #include <QtQuickTemplates2/private/qquickgroupbox_p.h>
+#include <QtQuickTemplates2/private/qquickheaderview_p.h>
 #include <QtQuickTemplates2/private/qquickicon_p.h>
 #include <QtQuickTemplates2/private/qquickitemdelegate_p.h>
 #include <QtQuickTemplates2/private/qquicklabel_p.h>
@@ -130,6 +131,7 @@ public:
     ~QtQuickTemplates2Plugin();
 
     void registerTypes(const char *uri) override;
+    void unregisterTypes() override;
 
 private:
     bool registered;
@@ -141,24 +143,21 @@ private:
 QtQuickTemplates2Plugin::QtQuickTemplates2Plugin(QObject *parent)
     : QQmlExtensionPlugin(parent), registered(false)
 {
-#if QT_CONFIG(shortcut)
-    originalContextMatcher = qt_quick_shortcut_context_matcher();
-    qt_quick_set_shortcut_context_matcher(QQuickShortcutContext::matcher);
-#endif
 }
 
 QtQuickTemplates2Plugin::~QtQuickTemplates2Plugin()
 {
-    if (registered)
-        cleanupProviders();
-
-#if QT_CONFIG(shortcut)
-    qt_quick_set_shortcut_context_matcher(originalContextMatcher);
-#endif
+    // Intentionally empty: we use register/unregisterTypes() to do
+    // initialization and cleanup, as plugins are not unloaded on macOS.
 }
 
 void QtQuickTemplates2Plugin::registerTypes(const char *uri)
 {
+#if QT_CONFIG(shortcut)
+    originalContextMatcher = qt_quick_shortcut_context_matcher();
+    qt_quick_set_shortcut_context_matcher(QQuickShortcutContext::matcher);
+#endif
+
     registered = true;
     initProviders();
 
@@ -354,6 +353,23 @@ void QtQuickTemplates2Plugin::registerTypes(const char *uri)
 
     // QtQuick.Templates 2.14 (new types and revisions in Qt 5.14)
     qmlRegisterType<QQuickComboBox, 14>(uri, 2, 14, "ComboBox");
+
+    // QtQuick.Templates 2.15 (new types and revisions in Qt 5.15)
+    qmlRegisterType<QQuickComboBox, 15>(uri, 2, 15, "ComboBox");
+    // Register QQuickTableView here to expose headerView's base, with a irregular type name to 'hide' it.
+    qmlRegisterType<QQuickTableView, 15>(uri, 2, 15, "__TableView__");
+    qmlRegisterType<QQuickHorizontalHeaderView>(uri, 2, 15, "HorizontalHeaderView");
+    qmlRegisterType<QQuickVerticalHeaderView>(uri, 2, 15, "VerticalHeaderView");
+}
+
+void QtQuickTemplates2Plugin::unregisterTypes()
+{
+    if (registered)
+        cleanupProviders();
+
+#if QT_CONFIG(shortcut)
+    qt_quick_set_shortcut_context_matcher(originalContextMatcher);
+#endif
 }
 
 QT_END_NAMESPACE

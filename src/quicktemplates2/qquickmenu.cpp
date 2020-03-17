@@ -68,7 +68,7 @@ static const int SUBMENU_DELAY = 225;
 /*!
     \qmltype Menu
     \inherits Popup
-    \instantiates QQuickMenu
+//!     \instantiates QQuickMenu
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-menus
@@ -178,8 +178,9 @@ static const int SUBMENU_DELAY = 225;
 
     This property holds whether the popup wants focus.
 
-    When the popup actually receives focus, \l activeFocus will be \c true.
-    For more information, see \l {Keyboard Focus in Qt Quick}.
+    When the popup actually receives focus, \l{Popup::}{activeFocus}
+    will be \c true. For more information, see
+    \l {Keyboard Focus in Qt Quick}.
 
     The default value is \c false.
 

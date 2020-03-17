@@ -48,7 +48,9 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcQtQuickControlsStyle, "qt.quick.controls.style")
+Q_LOGGING_CATEGORY(lcStyleSelectorSelect, "qt.quick.controls.styleSelector.select")
+Q_LOGGING_CATEGORY(lcStyleSelectorSetPaths, "qt.quick.controls.styleSelector.setPaths")
+Q_LOGGING_CATEGORY(lcStyleSelectorAddSelector, "qt.quick.controls.styleSelector.addSelector")
 
 static QString ensureSlash(const QString &path)
 {
@@ -112,6 +114,9 @@ void QQuickStyleSelector::addSelector(const QString &selector)
         return;
 
     d->selectors += selector;
+
+    qCDebug(lcStyleSelectorSetPaths).nospace() << "added selector " << selector
+        << "; full list is now: " << d->selectors;
 }
 
 QStringList QQuickStyleSelector::paths() const
@@ -123,6 +128,7 @@ QStringList QQuickStyleSelector::paths() const
 void QQuickStyleSelector::setPaths(const QStringList &paths)
 {
     Q_D(QQuickStyleSelector);
+    qCDebug(lcStyleSelectorSetPaths) << "setting paths to" << paths;
     d->paths = paths;
 }
 
@@ -133,7 +139,7 @@ QUrl QQuickStyleSelector::select(const QString &fileName) const
     // 1) requested style (e.g. "MyStyle", included in d->selectors)
     // 2) fallback style (e.g. "Material", included in d->selectors)
     // 3) default style (empty selector, not in d->selectors)
-    qCDebug(lcQtQuickControlsStyle) << "selecting" << fileName << "from" << d->paths << "with selectors" << d->selectors;
+    qCDebug(lcStyleSelectorSelect) << "selecting" << fileName << "from" << d->paths << "with selectors" << d->selectors;
 
     int to = d->selectors.count() - 1;
     if (d->selectors.isEmpty() || !d->selectors.first().isEmpty())
@@ -145,7 +151,7 @@ QUrl QQuickStyleSelector::select(const QString &fileName) const
         for (const QString &path : d->paths) {
             const QUrl selectedUrl = d->select(ensureSlash(path) + selector + QLatin1Char('/') + fileName);
             if (selectedUrl.isValid()) {
-                qCDebug(lcQtQuickControlsStyle) << "==>" << selectedUrl << "from" << path << "with selector" << selector;
+                qCDebug(lcStyleSelectorSelect) << "==>" << selectedUrl << "from" << path << "with selector" << selector;
                 return selectedUrl;
             }
         }

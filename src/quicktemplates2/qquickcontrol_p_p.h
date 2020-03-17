@@ -60,7 +60,11 @@
 #include <QtGui/qaccessible.h>
 #endif
 
+#include <QtCore/qloggingcategory.h>
+
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(lcItemManagement)
 
 class QQuickAccessibleAttached;
 
@@ -168,6 +172,8 @@ public:
     virtual void cancelBackground();
     virtual void executeBackground(bool complete = false);
 
+    static void hideOldItem(QQuickItem *item);
+
     void updateBaselineOffset();
 
     static const ChangeTypes ImplicitSizeChanges;
@@ -224,7 +230,9 @@ public:
     bool explicitHoverEnabled = false;
 #endif
     bool resizingBackground = false;
+    bool pressWasTouch = false;
     int touchId = -1;
+    QPointF previousPressPos;
     qreal padding = 0;
     qreal horizontalPadding = 0;
     qreal verticalPadding = 0;

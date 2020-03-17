@@ -54,22 +54,22 @@ RangeSlider {
     }
 
     first.handle: Rectangle {
-        x: control.leftPadding + first.visualPosition * (control.availableWidth - width)
+        x: control.leftPadding + control.first.visualPosition * (control.availableWidth - width)
         y: control.topPadding + control.availableHeight / 2 - height / 2
         implicitWidth: 26
         implicitHeight: 26
         radius: 13
-        color: first.pressed ? "#f0f0f0" : "#f6f6f6"
+        color: control.first.pressed ? "#f0f0f0" : "#f6f6f6"
         border.color: "#bdbebf"
     }
 
     second.handle: Rectangle {
-        x: control.leftPadding + second.visualPosition * (control.availableWidth - width)
+        x: control.leftPadding + control.second.visualPosition * (control.availableWidth - width)
         y: control.topPadding + control.availableHeight / 2 - height / 2
         implicitWidth: 26
         implicitHeight: 26
         radius: 13
-        color: second.pressed ? "#f0f0f0" : "#f6f6f6"
+        color: control.second.pressed ? "#f0f0f0" : "#f6f6f6"
         border.color: "#bdbebf"
     }
 }

@@ -59,7 +59,7 @@ static inline qreal blockStartX(int blockIndex)
 
 static inline qreal blockRestX(int blockIndex, qreal availableWidth)
 {
-    const qreal spanRightEdgePos = availableWidth / 2 + BlockSpan / 2;
+    const qreal spanRightEdgePos = availableWidth / 2 + BlockSpan / 2.0;
     return spanRightEdgePos - (blockIndex + 1) * BlockWidth - (blockIndex * BlockRestingSpacing);
 }
 

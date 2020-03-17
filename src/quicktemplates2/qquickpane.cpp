@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Pane
     \inherits Control
-    \instantiates QQuickPane
+//!     \instantiates QQuickPane
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-containers
@@ -56,8 +56,8 @@ QT_BEGIN_NAMESPACE
     \l ColumnLayout.
 
     Items declared as children of a Pane are automatically parented to the
-    Pane's \l {Control::}{contentItem}. Items created dynamically need to be
-    explicitly parented to the contentItem.
+    Pane's \l[QtQuickControls2]{Control::}{contentItem}. Items created
+    dynamically need to be explicitly parented to the contentItem.
 
     \section1 Content Sizing
 

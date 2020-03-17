@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype MenuItem
     \inherits QtObject
-    \instantiates QQuickPlatformMenuItem
+//!     \instantiates QQuickPlatformMenuItem
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief A native menu item.
@@ -623,3 +623,5 @@ void QQuickPlatformMenuItem::updateIcon()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickplatformmenuitem_p.cpp"

@@ -48,29 +48,7 @@
     can override the \l {Control::}{background} item and set the radius
     property of Rectangle:
 
-    \qml \QtMinorVersion
-    import QtQuick 2.\1
-    import QtQuick.Controls 2.\1
-
-    ApplicationWindow {
-        width: 400
-        height: 400
-        visible: true
-
-        Button {
-            id: button
-            text: "A Special Button"
-            background: Rectangle {
-                implicitWidth: 100
-                implicitHeight: 40
-                color: button.down ? "#d6d6d6" : "#f6f6f6"
-                border.color: "#26282a"
-                border.width: 1
-                radius: 4
-            }
-        }
-    }
-    \endqml
+    \include customize-button-background.qdocinc file
 
     The second way to create the button is good if you plan to use your rounded
     button in several places. It involves moving the code into its own QML file
@@ -166,7 +144,8 @@
 
     By default, the styling system uses the Default style as a fallback for
     controls that aren't implemented. To customize or extend any other built-in
-    style, it is possible to specify a different fallback style using \l QQuickStyle.
+    style, it is possible to specify a different fallback style using
+    \l[QtQuickControls2]{QQuickStyle}.
 
     What this means is that you can implement as many controls as you like for
     your custom style, and place them almost anywhere. It also allows users to
@@ -175,7 +154,7 @@
     \section3 Previewing Custom Styles in Qt Quick Designer
 
     Using the approach above, it is possible to preview a custom style
-    in \l {Using Qt Quick Designer}{Qt Quick Designer}. In order to do so,
+    in Qt Quick Designer. In order to do so,
     ensure that the project has a
     \l {Qt Quick Controls Configuration File}{qtquickcontrols2.conf} file,
     and that the following entry exists:
@@ -212,6 +191,102 @@
         its \c qmldir file must be present in the same directory as the QML
         files.
     \endlist
+
+    \section3 Considerations for custom styles
+
+    When implementing your own style and customizing controls, there are some
+    points to keep in mind to ensure that your application is as performant as
+    possible.
+
+    \section4 Avoid assigning an id to styles' implementations of item delegates
+
+    As explained in \l {Definition of a Style}, when you implement your
+    own style for a control, you start off with the relevant template for
+    that control. For example, a style's \c Button.qml will be structured
+    similarly to this:
+
+    \qml
+    T.Button {
+        // ...
+
+        background: Rectangle {
+            // ...
+        }
+
+        contentItem: Text {
+            // ...
+        }
+
+        // ...
+    }
+    \endqml
+
+    When you use a Button in your application, the \c background and
+    \c contentItem items will be created and parented to the root \c Button
+    item:
+
+    \qml
+    // Creates the Button root item, the Rectangle background,
+    // and the Text contentItem.
+    Button {
+        text: qsTr("Confirm")
+    }
+    \endqml
+
+    Suppose you then needed to do a one-off customization of the Button (as
+    explained in \l {Customizing a Control}):
+
+    \include customize-button-background.qdocinc file
+
+    In QML, this would normally result in both the default \c background
+    implementation and the one-off, custom \c background items being created.
+    Qt Quick Controls uses a technique that avoids creating both items, and
+    instead only creates the custom \c background, greatly improving the
+    creation performance of controls.
+
+    This technique relies on the absence of an \l {The id Attribute}{id} in the
+    style's implementation of that item. If an id is assigned, the technique
+    cannot work, and both items will be created. For example, it can be
+    tempting to assign an id to the \c background or \c contentItem so that
+    other objects within the file can refer to those items:
+
+    \qml
+    T.Button {
+        // ...
+
+        background: Rectangle {
+            id: backgroundRect
+            // ...
+        }
+
+        contentItem: Text {
+            // Use backgroundRect in some way...
+        }
+
+        // ...
+    }
+    \endqml
+
+    With this code, every time a Button instance with a customized background
+    is created, both backgrounds will be created, resulting in sub-optimal
+    creation performance.
+
+    Prior to Qt 5.15, the old, unused background would be deleted to release
+    the resources associated with it. However, as the control does not own the
+    items, it should not delete them. As of Qt 5.15, old items are no longer
+    deleted, and so the \c backgroundRect item will live longer than it needs
+    to—typically until the application exits. Although the old item will be
+    hidden, visually unparented from the control, and removed from the
+    accessibility tree, it is important to keep the creation time and memory
+    usage of these unused items in mind when assigning an id in this context.
+
+    \section4 Avoid imperative assignments of custom items
+
+    The technique mentioned in the section above only works when an item is
+    \l {Prefer Declarative Bindings Over Imperative Assignments}{declaratively}
+    assigned for the first time, and so imperative assignments will result in
+    orphaned items. Always use declarative bindings to assign custom items
+    when possible.
 
     \section3 Attached properties
 

@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype MenuBar
     \inherits QtObject
-    \instantiates QQuickPlatformMenuBar
+//!     \instantiates QQuickPlatformMenuBar
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief A native menubar.
@@ -328,3 +328,5 @@ void QQuickPlatformMenuBar::menus_clear(QQmlListProperty<QQuickPlatformMenu> *pr
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickplatformmenubar_p.cpp"

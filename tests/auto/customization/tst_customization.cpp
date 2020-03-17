@@ -42,6 +42,7 @@
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickwindow.h>
 #include <QtQuickControls2/qquickstyle.h>
+#include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
 #include "../shared/visualtestutil.h"
 
 using namespace QQuickVisualTestUtil;
@@ -310,7 +311,7 @@ void tst_customization::creation()
     QVERIFY2(qt_createdQObjects()->removeOne(controlName), qPrintable(controlName + " was not created as expected"));
 
     for (QString delegate : qAsConst(delegates)) {
-        QStringList properties = delegate.split(".", QString::SkipEmptyParts);
+        QStringList properties = delegate.split(".", Qt::SkipEmptyParts);
 
         // <control>-<delegate>-<style>(-<override>)
         delegate.append("-" + style);
@@ -411,7 +412,7 @@ void tst_customization::override()
     QVERIFY2(qt_createdQObjects()->removeOne(controlName), qPrintable(controlName + " was not created as expected"));
 
     for (QString delegate : qAsConst(delegates)) {
-        QStringList properties = delegate.split(".", QString::SkipEmptyParts);
+        QStringList properties = delegate.split(".", Qt::SkipEmptyParts);
 
         // <control>-<delegate>-<style>(-override)
         delegate.append("-" + style);
@@ -439,11 +440,36 @@ void tst_customization::override()
     QVERIFY2(qt_createdQObjects()->isEmpty(), qPrintable("unexpectedly created: " + qt_createdQObjects->join(", ")));
 
     if (!nonDeferred.isEmpty()) {
-        for (QString delegate : qAsConst(delegates)) {
-            if (!delegate.contains("-"))
-                delegate.append("-" + nonDeferred);
-            delegate.prepend(type.toLower() + "-");
-            QVERIFY2(qt_destroyedQObjects()->removeOne(delegate), qPrintable(delegate + " was not destroyed as expected"));
+        // There were items for which deferred execution was not possible.
+        for (QString delegateName : qAsConst(delegates)) {
+            if (!delegateName.contains("-"))
+                delegateName.append("-" + nonDeferred);
+            delegateName.prepend(type.toLower() + "-");
+
+            const int delegateIndex = qt_destroyedQObjects()->indexOf(delegateName);
+            QVERIFY2(delegateIndex == -1, qPrintable(delegateName + " was unexpectedly destroyed"));
+
+            const auto controlChildren = control->children();
+            const auto childIt = std::find_if(controlChildren.constBegin(), controlChildren.constEnd(), [delegateName](const QObject *child) {
+                return child->objectName() == delegateName;
+            });
+            // We test other delegates (like the background) here, so make sure we don't end up with XPASSes by using the wrong delegate.
+            if (delegateName.contains(QLatin1String("handle"))) {
+                QEXPECT_FAIL("identified:RangeSlider", "For some reason, items that are belong to grouped properties fail here", Abort);
+                QEXPECT_FAIL("overidentified:RangeSlider", "For some reason, items that are belong to grouped properties fail here", Abort);
+            }
+            if (delegateName.contains(QLatin1String("indicator"))) {
+                QEXPECT_FAIL("identified:SpinBox", "For some reason, items that are belong to grouped properties fail here", Abort);
+                QEXPECT_FAIL("overidentified:SpinBox", "For some reason, items that are belong to grouped properties fail here", Abort);
+            }
+            QVERIFY2(childIt != controlChildren.constEnd(), qPrintable(QString::fromLatin1(
+                "Expected delegate \"%1\" to still be a QObject child of \"%2\"").arg(delegateName).arg(controlName)));
+
+            const auto *delegate = qobject_cast<QQuickItem*>(*childIt);
+            // Ensure that the item is hidden, etc.
+            QVERIFY(delegate);
+            QCOMPARE(delegate->isVisible(), false);
+            QCOMPARE(delegate->parentItem(), nullptr);
         }
     }
 

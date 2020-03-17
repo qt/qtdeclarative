@@ -74,7 +74,7 @@ T.Dial {
 
         transform: [
             Translate {
-                y: -background.height * 0.4 + handle.height / 2
+                y: -Math.min(control.background.width, control.background.height) * 0.4 + control.handle.height / 2
             },
             Rotation {
                 angle: control.angle
@@ -89,6 +89,7 @@ T.Dial {
         y: control.height / 2 - height / 2
         width: Math.max(64, Math.min(control.width, control.height))
         height: width
+        fillMode: Image.PreserveAspectFit
 
         source: Imagine.url + "dial-background"
         NinePatchImageSelector on source {

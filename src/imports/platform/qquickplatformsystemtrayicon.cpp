@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype SystemTrayIcon
     \inherits QtObject
-    \instantiates QQuickPlatformSystemTrayIcon
+//!     \instantiates QQuickPlatformSystemTrayIcon
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief A system tray icon.
@@ -482,3 +482,5 @@ void QQuickPlatformSystemTrayIcon::updateIcon()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickplatformsystemtrayicon_p.cpp"

@@ -54,8 +54,6 @@ QT_BEGIN_NAMESPACE
 
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickThemePrivate
 {
-    Q_DECLARE_PUBLIC(QQuickTheme)
-
 public:
     static QQuickThemePrivate *get(QQuickTheme *theme)
     {
@@ -70,7 +68,6 @@ public:
     QScopedPointer<const QPalette> defaultPalette;
     QSharedPointer<QFont> fonts[NScopes];
     QSharedPointer<QPalette> palettes[NScopes];
-    QQuickTheme *q_ptr = nullptr;
 };
 
 QT_END_NAMESPACE

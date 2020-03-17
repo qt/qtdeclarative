@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Slider
     \inherits Control
-    \instantiates QQuickSlider
+//!     \instantiates QQuickSlider
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup qtquickcontrols2-input
@@ -579,7 +579,7 @@ void QQuickSlider::setHandle(QQuickItem *handle)
     const qreal oldImplicitHandleHeight = implicitHandleHeight();
 
     d->removeImplicitSizeListener(d->handle);
-    delete d->handle;
+    QQuickControlPrivate::hideOldItem(d->handle);
     d->handle = handle;
 
     if (handle) {

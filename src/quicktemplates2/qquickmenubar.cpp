@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype MenuBar
     \inherits Container
-    \instantiates QQuickMenuBar
+//!     \instantiates QQuickMenuBar
     \inqmlmodule QtQuick.Controls
     \since 5.10
     \ingroup qtquickcontrols2-menus

@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Label
     \inherits Text
-    \instantiates QQuickLabel
+//!     \instantiates QQuickLabel
     \inqmlmodule QtQuick.Controls
     \since 5.7
     \ingroup text
@@ -248,9 +248,7 @@ void QQuickLabelPrivate::updatePalette(const QPalette &palette)
 void QQuickLabelPrivate::textChanged(const QString &text)
 {
 #if QT_CONFIG(accessibility)
-    Q_Q(QQuickLabel);
-    if (QQuickAccessibleAttached *accessibleAttached = QQuickControlPrivate::accessibleAttached(q))
-        accessibleAttached->setName(text);
+    maybeSetAccessibleName(text);
 #else
     Q_UNUSED(text)
 #endif
@@ -266,12 +264,23 @@ void QQuickLabelPrivate::accessibilityActiveChanged(bool active)
     QQuickAccessibleAttached *accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(qmlAttachedPropertiesObject<QQuickAccessibleAttached>(q, true));
     Q_ASSERT(accessibleAttached);
     accessibleAttached->setRole(accessibleRole());
-    accessibleAttached->setName(text);
+    maybeSetAccessibleName(text);
 }
 
 QAccessible::Role QQuickLabelPrivate::accessibleRole() const
 {
     return QAccessible::StaticText;
+}
+
+void QQuickLabelPrivate::maybeSetAccessibleName(const QString &name)
+{
+    Q_Q(QQuickLabel);
+    auto accessibleAttached = qobject_cast<QQuickAccessibleAttached *>(
+        qmlAttachedPropertiesObject<QQuickAccessibleAttached>(q, true));
+    if (accessibleAttached) {
+        if (!accessibleAttached->wasNameExplicitlySet())
+            accessibleAttached->setNameImplicitly(name);
+    }
 }
 #endif
 
@@ -396,7 +405,7 @@ void QQuickLabel::setBackground(QQuickItem *background)
     }
 
     QQuickControlPrivate::removeImplicitSizeListener(d->background, d, QQuickControlPrivate::ImplicitSizeChanges | QQuickItemPrivate::Geometry);
-    delete d->background;
+    QQuickControlPrivate::hideOldItem(d->background);
     d->background = background;
 
     if (background) {

@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype MenuBarItem
     \inherits AbstractButton
-    \instantiates QQuickMenuBarItem
+//!     \instantiates QQuickMenuBarItem
     \inqmlmodule QtQuick.Controls
     \since 5.10
     \ingroup qtquickcontrols2-menus
@@ -183,3 +183,5 @@ QAccessible::Role QQuickMenuBarItem::accessibleRole() const
 #endif
 
 QT_END_NAMESPACE
+
+#include "moc_qquickmenubaritem_p.cpp"

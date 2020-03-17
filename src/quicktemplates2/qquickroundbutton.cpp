@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype RoundButton
     \inherits Button
-    \instantiates QQuickRoundButton
+//!     \instantiates QQuickRoundButton
     \inqmlmodule QtQuick.Controls
     \since 5.8
     \ingroup qtquickcontrols2-buttons

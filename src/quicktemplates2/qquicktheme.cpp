@@ -109,7 +109,6 @@ static QPlatformTheme::Palette platformPalette(QQuickTheme::Scope scope)
 QQuickTheme::QQuickTheme()
     : d_ptr(new QQuickThemePrivate)
 {
-    d_ptr->q_ptr = this;
 }
 
 QQuickTheme::~QQuickTheme()

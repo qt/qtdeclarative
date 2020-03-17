@@ -62,6 +62,17 @@ ApplicationWindow {
     visible: true
     title: "Qt Quick Controls 2"
 
+    function help() {
+        let displayingControl = listView.currentIndex !== -1
+        let currentControlName = displayingControl
+            ? listView.model.get(listView.currentIndex).title.toLowerCase() : ""
+        let url = "https://doc.qt.io/qt-5/"
+            + (displayingControl
+               ? "qml-qtquick-controls2-" + currentControlName + ".html"
+               : "qtquick-controls2-qmlmodule.html");
+        Qt.openUrlExternally(url)
+    }
+
     Settings {
         id: settings
         property string style: "Default"
@@ -71,6 +82,11 @@ ApplicationWindow {
         sequences: ["Esc", "Back"]
         enabled: stackView.depth > 1
         onActivated: navigateBackAction.trigger()
+    }
+
+    Shortcut {
+        sequence: StandardKey.HelpContents
+        onActivated: help()
     }
 
     Action {
@@ -129,6 +145,10 @@ ApplicationWindow {
                     Action {
                         text: "Settings"
                         onTriggered: settingsDialog.open()
+                    }
+                    Action {
+                        text: "Help"
+                        onTriggered: help()
                     }
                     Action {
                         text: "About"

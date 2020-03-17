@@ -41,7 +41,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype FolderDialog
     \inherits Dialog
-    \instantiates QQuickPlatformFolderDialog
+//!     \instantiates QQuickPlatformFolderDialog
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief A native folder dialog.
@@ -186,7 +186,7 @@ void QQuickPlatformFolderDialog::setOptions(QFileDialogOptions::FileDialogOption
 
 void QQuickPlatformFolderDialog::resetOptions()
 {
-    setOptions(0);
+    setOptions({});
 }
 
 /*!
