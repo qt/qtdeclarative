@@ -104,7 +104,7 @@ public:
     void initialize(const QSGRenderContext::InitParams *params) override;
     void invalidate() override;
 
-    void prepareSync(qreal devicePixelRatio) override;
+    void prepareSync(qreal devicePixelRatio, QRhiCommandBuffer *cb) override;
     void beginNextFrame(QSGRenderer *renderer,
                         RenderPassCallback mainPassRecordingStart,
                         RenderPassCallback mainPassRecordingEnd,

@@ -430,7 +430,7 @@ void QQuickWindowPrivate::syncSceneGraph()
     if (renderTargetId && !QQuickRenderControl::renderWindowFor(q))
         devicePixelRatio = 1;
 
-    context->prepareSync(devicePixelRatio);
+    context->prepareSync(devicePixelRatio, rhi ? swapchain->currentFrameCommandBuffer() : nullptr);
 
     animationController->beforeNodeSync();
 

@@ -200,9 +200,14 @@ void QSGDefaultRenderContext::invalidate()
     emit invalidated();
 }
 
-void QSGDefaultRenderContext::prepareSync(qreal devicePixelRatio)
+void QSGDefaultRenderContext::prepareSync(qreal devicePixelRatio, QRhiCommandBuffer *cb)
 {
     m_currentDevicePixelRatio = devicePixelRatio;
+
+    // we store the command buffer already here, in case there is something in
+    // an updatePaintNode() implementation that leads to needing it (for
+    // example, an updateTexture() call on a QSGRhiLayer)
+    m_currentFrameCommandBuffer = cb;
 }
 
 static QBasicMutex qsg_framerender_mutex;
@@ -244,7 +249,7 @@ void QSGDefaultRenderContext::beginNextRhiFrame(QSGRenderer *renderer, QRhiRende
     renderer->setCommandBuffer(cb);
     renderer->setRenderPassRecordingCallbacks(mainPassRecordingStart, mainPassRecordingEnd, callbackUserData);
 
-    m_currentFrameCommandBuffer = cb;
+    m_currentFrameCommandBuffer = cb; // usually the same as what was passed to prepareSync() but cannot count on that having been called
     m_currentFrameRenderPass = rp;
 }
 
