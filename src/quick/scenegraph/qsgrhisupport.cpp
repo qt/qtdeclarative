@@ -160,8 +160,10 @@ void QSGRhiSupport::applySettings()
         } else if (rhiBackend == QByteArrayLiteral("null")) {
             m_rhiBackend = QRhi::Null;
         } else {
-            if (!rhiBackend.isEmpty())
-                qWarning("Unknown key \"%s\" for QSG_RHI_BACKEND, falling back to default backend.", qPrintable(rhiBackend));
+            if (!rhiBackend.isEmpty()) {
+                qWarning("Unknown key \"%s\" for QSG_RHI_BACKEND, falling back to default backend.",
+                         rhiBackend.constData());
+            }
 #if defined(Q_OS_WIN)
             m_rhiBackend = QRhi::D3D11;
 #elif defined(Q_OS_MACOS) || defined(Q_OS_IOS)
