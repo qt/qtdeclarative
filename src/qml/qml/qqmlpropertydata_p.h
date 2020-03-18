@@ -423,6 +423,7 @@ private:
 
 bool QQmlPropertyData::operator==(const QQmlPropertyData &other) const
 {
+    Q_UNUSED(m_reserved)
     return flags() == other.flags() &&
             propType() == other.propType() &&
             coreIndex() == other.coreIndex() &&
