@@ -12,5 +12,6 @@ Module {
                 "CCC": 2
             }
         }
+        Property { name: "palette"; type: "QPalette" }
     }
 }

@@ -57,10 +57,13 @@ ScopeTree *ImportedMembersVisitor::result(const QString &scopeName) const
 bool ImportedMembersVisitor::visit(UiObjectDefinition *definition)
 {
     ScopeTree::Ptr scope(new ScopeTree(ScopeType::QMLScope));
-    auto qualifiedId = definition->qualifiedTypeNameId;
-    while (qualifiedId && qualifiedId->next)
-        qualifiedId = qualifiedId->next;
-    scope->setSuperclassName(qualifiedId->name.toString());
+    QString superType;
+    for (auto segment = definition->qualifiedTypeNameId; segment; segment = segment->next) {
+        if (!superType.isEmpty())
+            superType.append('.');
+        superType.append(segment->name.toString());
+    }
+    scope->setSuperclassName(superType);
     if (!m_rootObject)
         m_rootObject = scope;
     m_currentObjects.append(scope);

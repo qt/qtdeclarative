@@ -122,7 +122,12 @@ public:
     QHashedString prefix;
 
     // Used by QQmlImportsPrivate::qualifiedSets
+    // set to this in unqualifiedSet to indicate that the lists of imports needs
+    // to be sorted when an inline component import was added
+    // We can't use flag pointer, as that does not work with QFieldList
     QQmlImportNamespace *nextNamespace;
+    bool needsSorting() const;
+    void setNeedsSorting(bool needsSorting);
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlImports

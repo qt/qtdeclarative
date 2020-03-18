@@ -64,7 +64,6 @@ directory.
 
 /*!
 \title QML Advanced Tutorial 1 - Creating the Game Canvas and Blocks
-\contentspage QML Advanced Tutorial
 \previouspage QML Advanced Tutorial
 \nextpage QML Advanced Tutorial 2 - Populating the Game Canvas
 
@@ -132,7 +131,6 @@ types to get started. Next, we will populate the game canvas with some blocks.
 
 /*!
 \title QML Advanced Tutorial 2 - Populating the Game Canvas
-\contentspage QML Advanced Tutorial
 \previouspage QML Advanced Tutorial 1 - Creating the Game Canvas and Blocks
 \nextpage QML Advanced Tutorial 3 - Implementing the Game Logic
 
@@ -206,7 +204,6 @@ Now, we have a screen of blocks, and we can begin to add the game mechanics.
 
 /*!
 \title QML Advanced Tutorial 3 - Implementing the Game Logic
-\contentspage QML Advanced Tutorial
 \previouspage QML Advanced Tutorial 2 - Populating the Game Canvas
 \nextpage QML Advanced Tutorial 4 - Finishing Touches
 
@@ -293,7 +290,6 @@ until the next chapter - where your application becomes alive!
 
 /*!
 \title QML Advanced Tutorial 4 - Finishing Touches
-\contentspage QML Advanced Tutorial
 \previouspage QML Advanced Tutorial 3 - Implementing the Game Logic
 
 \example tutorials/samegame/samegame4

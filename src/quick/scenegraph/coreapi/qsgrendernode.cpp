@@ -77,6 +77,8 @@ QSGRenderNodePrivate::QSGRenderNodePrivate()
     : m_matrix(nullptr)
     , m_clip_list(nullptr)
     , m_opacity(1)
+    , m_needsExternalRendering(true)
+    , m_prepareCallback(nullptr)
 {
 }
 
