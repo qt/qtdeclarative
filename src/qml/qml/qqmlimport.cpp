@@ -1009,6 +1009,12 @@ bool QQmlImportNamespace::resolveType(QQmlTypeLoader *typeLoader, const QHashedS
     if (!typeRecursionDetected)
         typeRecursionDetected = &localTypeRecursionDetected;
 
+    if (needsSorting()) {
+        std::stable_sort(imports.begin(), imports.end(), [](QQmlImportInstance *left, QQmlImportInstance *) {
+            return left->isInlineComponent;
+        });
+        setNeedsSorting(false);
+    }
     for (int i=0; i<imports.count(); ++i) {
         const QQmlImportInstance *import = imports.at(i);
         if (import->resolveType(typeLoader, type, version_return, type_return, base,
@@ -1068,6 +1074,17 @@ bool QQmlImportNamespace::resolveType(QQmlTypeLoader *typeLoader, const QHashedS
         errors->prepend(error);
     }
     return false;
+}
+
+bool QQmlImportNamespace::needsSorting() const
+{
+    return nextNamespace == this;
+}
+
+void QQmlImportNamespace::setNeedsSorting(bool needsSorting)
+{
+    Q_ASSERT(nextNamespace == this || nextNamespace == nullptr);
+    nextNamespace = needsSorting ? this : nullptr;
 }
 
 QQmlImportsPrivate::QQmlImportsPrivate(QQmlTypeLoader *loader)
@@ -1782,6 +1799,7 @@ bool QQmlImports::addInlineComponentImport(QQmlImportInstance *const importInsta
     importInstance->version = QTypeRevision::zero();
     importInstance->containingType = containingType;
     d->unqualifiedset.imports.push_back(importInstance);
+    d->unqualifiedset.setNeedsSorting(true);
     return true;
 }
 

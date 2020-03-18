@@ -54,7 +54,6 @@ Tutorial chapters:
 /*!
 \page qml-tutorial1.html
 \title QML Tutorial 1 - Basic Types
-\contentspage QML Tutorial
 \previouspage QML Tutorial
 \nextpage QML Tutorial 2 - QML Components
 
@@ -112,7 +111,6 @@ qmlscene tutorials/helloworld/tutorial1.qml
 /*!
 \page qml-tutorial2.html
 \title QML Tutorial 2 - QML Components
-\contentspage QML Tutorial
 \previouspage QML Tutorial 1 - Basic Types
 \nextpage QML Tutorial 3 - States and Transitions
 
@@ -184,7 +182,6 @@ We can react to any signal of our component through a property of the name \e 'o
 /*!
 \page qml-tutorial3.html
 \title QML Tutorial 3 - States and Transitions
-\contentspage QML Tutorial
 \previouspage QML Tutorial 2 - QML Components
 
 In this chapter, we make this example a little bit more dynamic by introducing states and transitions.

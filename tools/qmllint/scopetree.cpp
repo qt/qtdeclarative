@@ -134,6 +134,15 @@ private:
     QStringRef m_afterText;
 };
 
+static const QStringList unknownBuiltins = {
+    // TODO: "string" should be added to builtins.qmltypes, and the special handling below removed
+    QStringLiteral("alias"),    // TODO: we cannot properly resolve aliases, yet
+    QStringLiteral("QRectF"),   // TODO: should be added to builtins.qmltypes
+    QStringLiteral("QFont"),    // TODO: should be added to builtins.qmltypes
+    QStringLiteral("QJSValue"), // We cannot say anything intelligent about untyped JS values.
+    QStringLiteral("variant"),  // Same for generic variants
+};
+
 bool ScopeTree::checkMemberAccess(
         const QString &code,
         FieldMemberList *members,
@@ -169,10 +178,31 @@ bool ScopeTree::checkMemberAccess(
             }
             return true;
         }
-        const ScopeTree *type = (scopeIt->type() && access->m_parentType.isEmpty())
-                ? scopeIt->type()
-                : types.value(typeName).get();
-        return checkMemberAccess(code, access.get(), type, types, colorOut);
+
+        if (!access->m_child)
+            return true;
+
+        if (const ScopeTree *type = scopeIt->type()) {
+            if (access->m_parentType.isEmpty())
+                return checkMemberAccess(code, access.get(), type, types, colorOut);
+        }
+
+        if (unknownBuiltins.contains(typeName))
+            return true;
+
+        const auto it = types.find(typeName);
+        if (it != types.end())
+            return checkMemberAccess(code, access.get(), it->get(), types, colorOut);
+
+        colorOut.write("Warning: ", Warning);
+        colorOut.write(
+                    QString::fromLatin1("Type \"%1\" of member \"%2\" not found at %3:%4.\n")
+                    .arg(typeName)
+                    .arg(access->m_name)
+                    .arg(access->m_location.startLine)
+                    .arg(access->m_location.startColumn), Normal);
+        printContext(colorOut, code, access->m_location);
+        return false;
     }
 
     const auto scopeMethodIt = scope->m_methods.find(access->m_name);
@@ -251,13 +281,6 @@ bool ScopeTree::checkMemberAccess(
     return false;
 }
 
-static const QStringList unknownBuiltins = {
-    QStringLiteral("alias"),    // TODO: we cannot properly resolve aliases, yet
-    QStringLiteral("QRectF"),   // TODO: should be added to builtins.qmltypes
-    QStringLiteral("QJSValue"), // We cannot say anything intelligent about untyped JS values.
-    QStringLiteral("variant"),  // Same for generic variants
-};
-
 bool ScopeTree::recheckIdentifiers(
         const QString &code,
         const QHash<QString, const ScopeTree *> &qmlIDs,
@@ -287,9 +310,24 @@ bool ScopeTree::recheckIdentifiers(
 
             auto it = qmlIDs.find(memberAccessTree->m_name);
             if (it != qmlIDs.end()) {
-                if (!checkMemberAccess(code, memberAccessTree.get(), *it, types, colorOut))
-                    noUnqualifiedIdentifier = false;
-                continue;
+                if (*it != nullptr) {
+                    if (!checkMemberAccess(code, memberAccessTree.get(), *it, types, colorOut))
+                        noUnqualifiedIdentifier = false;
+                    continue;
+                } else if (memberAccessTree->m_child
+                           && memberAccessTree->m_child->m_name.front().isUpper()) {
+                    // It could be a qualified type name
+                    const QString qualified = memberAccessTree->m_name + QLatin1Char('.')
+                            + memberAccessTree->m_child->m_name;
+                    const auto typeIt = types.find(qualified);
+                    if (typeIt != types.end()) {
+                        if (!checkMemberAccess(code, memberAccessTree->m_child.get(), typeIt->get(),
+                                               types, colorOut)) {
+                            noUnqualifiedIdentifier = false;
+                        }
+                        continue;
+                    }
+                }
             }
 
             auto qmlScope = currentScope->currentQMLScope();

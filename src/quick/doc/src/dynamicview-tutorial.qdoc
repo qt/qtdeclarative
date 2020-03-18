@@ -50,7 +50,6 @@ directory.
 
 /*!
 \title QML Dynamic View Ordering Tutorial 1 - A Simple ListView and Delegate
-\contentspage QML Dynamic View Ordering Tutorial
 \previouspage QML Dynamic View Ordering Tutorial
 \nextpage QML Dynamic View Ordering Tutorial 2 - Dragging View Items
 
@@ -85,7 +84,6 @@ The second part of the application is the ListView itself to which we bind the m
 
 /*!
 \title QML Dynamic View Ordering Tutorial 2 - Dragging View Items
-\contentspage QML Dynamic View Ordering Tutorial
 \previouspage QML Dynamic View Ordering Tutorial 1 - A Simple ListView and Delegate
 \nextpage QML Dynamic View Ordering Tutorial 3 - Moving Dragged Items
 
@@ -128,7 +126,6 @@ so that is above other items in the stacking order and isn't obscured as it is d
 
 /*!
 \title QML Dynamic View Ordering Tutorial 3 - Moving Dragged Items
-\contentspage QML Dynamic View Ordering Tutorial
 \previouspage QML Dynamic View Ordering Tutorial 2 - Dragging View Items
 \nextpage QML Dynamic View Ordering Tutorial 4 - Sorting Items
 
@@ -180,7 +177,6 @@ property of the view and bind the \l {DelegateModel::}{model} and
 
 /*!
 \title QML Dynamic View Ordering Tutorial 4 - Sorting Items
-\contentspage QML Dynamic View Ordering Tutorial
 \previouspage QML Dynamic View Ordering Tutorial 3 - Moving Dragged Items
 
 \example tutorials/dynamicview/dynamicview4

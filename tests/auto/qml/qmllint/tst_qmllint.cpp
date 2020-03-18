@@ -160,6 +160,10 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("badTypeAssertion.qml")
             << QString("Warning: Property \"rrr\" not found on type \"Item\" at 5:39")
             << QString();
+    QTest::newRow("incompleteQmltypes")
+            << QStringLiteral("incompleteQmltypes.qml")
+            << QString("Warning: Type \"QPalette\" of member \"palette\" not found at 5:26")
+            << QString();
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -192,6 +196,9 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("goodParent")                << QStringLiteral("goodParent.qml");
     QTest::newRow("goodTypeAssertion")         << QStringLiteral("goodTypeAssertion.qml");
     QTest::newRow("AttachedProps")             << QStringLiteral("AttachedProps.qml");
+    QTest::newRow("unknownBuiltinFont")        << QStringLiteral("ButtonLoader.qml");
+    QTest::newRow("confusingImport")           << QStringLiteral("Dialog.qml");
+    QTest::newRow("qualifiedAttached")         << QStringLiteral("Drawer.qml");
 }
 
 void TestQmllint::cleanQmlCode()

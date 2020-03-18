@@ -1030,6 +1030,7 @@ Renderer::Renderer(QSGDefaultRenderContext *ctx)
                 ? "static" : (m_bufferStrategy == GL_DYNAMIC_DRAW ? "dynamic" : "stream")));
     }
 
+    static const bool useDepth = qEnvironmentVariableIsEmpty("QSG_NO_DEPTH_BUFFER");
     if (!m_rhi) {
         // If rendering with an OpenGL Core profile context, we need to create a VAO
         // to hold our vertex specification state.
@@ -1037,9 +1038,9 @@ Renderer::Renderer(QSGDefaultRenderContext *ctx)
             m_vao = new QOpenGLVertexArrayObject(this);
             m_vao->create();
         }
-
-        bool useDepth = qEnvironmentVariableIsEmpty("QSG_NO_DEPTH_BUFFER");
         m_useDepthBuffer = useDepth && ctx->openglContext()->format().depthBufferSize() > 0;
+    } else {
+        m_useDepthBuffer = useDepth;
     }
 }
 
@@ -1400,12 +1401,11 @@ void Renderer::nodeWasRemoved(Node *node)
             m_elementsToDelete.add(e);
 
             if (m_renderNodeElements.isEmpty()) {
-                if (m_rhi) {
-                    m_useDepthBuffer = true;
-                } else {
-                    static bool useDepth = qEnvironmentVariableIsEmpty("QSG_NO_DEPTH_BUFFER");
+                static const bool useDepth = qEnvironmentVariableIsEmpty("QSG_NO_DEPTH_BUFFER");
+                if (m_rhi)
+                    m_useDepthBuffer = useDepth;
+                else
                     m_useDepthBuffer = useDepth && m_context->openglContext()->format().depthBufferSize() > 0;
-                }
             }
         }
     }
@@ -3716,7 +3716,7 @@ void Renderer::renderMergedBatch(PreparedRenderBatch *renderBatch) // split prep
             { batch->vbo.buf, quint32(draw.vertices) },
             { batch->vbo.buf, quint32(draw.zorders) }
         };
-        cb->setVertexInput(VERTEX_BUFFER_BINDING, 2, vbufBindings,
+        cb->setVertexInput(VERTEX_BUFFER_BINDING, m_useDepthBuffer ? 2 : 1, vbufBindings,
                            batch->ibo.buf, draw.indices,
                            m_uint32IndexForRhi ? QRhiCommandBuffer::IndexUInt32 : QRhiCommandBuffer::IndexUInt16);
         cb->drawIndexed(draw.indexCount);
@@ -4052,8 +4052,8 @@ void Renderer::renderBatches()
         m_pstate.viewportSet = false;
         m_pstate.scissorSet = false;
 
-        m_gstate.depthTest = true;
-        m_gstate.depthWrite = true;
+        m_gstate.depthTest = m_useDepthBuffer;
+        m_gstate.depthWrite = m_useDepthBuffer;
         m_gstate.depthFunc = QRhiGraphicsPipeline::Less;
         m_gstate.blending = false;
 
@@ -4085,8 +4085,8 @@ void Renderer::renderBatches()
         m_gstate.blending = true;
         // factors never change, always set for premultiplied alpha based blending
 
-        // depth test stays enabled but no need to write out depth from the
-        // transparent (back-to-front) pass
+        // depth test stays enabled (if m_useDepthBuffer, that is) but no need
+        // to write out depth from the transparent (back-to-front) pass
         m_gstate.depthWrite = false;
 
         QVarLengthArray<PreparedRenderBatch, 64> alphaRenderBatches;
@@ -4507,6 +4507,35 @@ bool Renderer::prepareRhiRenderNode(Batch *batch, PreparedRenderBatch *renderBat
 
     updateClipState(rd->m_clip_list, batch);
 
+    QSGNode *xform = e->renderNode->parent();
+    QMatrix4x4 matrix;
+    QSGNode *root = rootNode();
+    if (e->root) {
+        matrix = qsg_matrixForRoot(e->root);
+        root = e->root->sgNode;
+    }
+    while (xform != root) {
+        if (xform->type() == QSGNode::TransformNodeType) {
+            matrix = matrix * static_cast<QSGTransformNode *>(xform)->combinedMatrix();
+            break;
+        }
+        xform = xform->parent();
+    }
+    rd->m_matrix = &matrix;
+
+    QSGNode *opacity = e->renderNode->parent();
+    rd->m_opacity = 1.0;
+    while (opacity != rootNode()) {
+        if (opacity->type() == QSGNode::OpacityNodeType) {
+            rd->m_opacity = static_cast<QSGOpacityNode *>(opacity)->combinedOpacity();
+            break;
+        }
+        opacity = opacity->parent();
+    }
+
+    if (rd->m_prepareCallback)
+        rd->m_prepareCallback();
+
     renderBatch->batch = batch;
     renderBatch->sms = nullptr;
 
@@ -4535,38 +4564,15 @@ void Renderer::renderRhiRenderNode(const Batch *batch) // split prepare-render (
     state.m_scissorEnabled = batch->clipState.type & ClipState::ScissorClip;
     state.m_stencilEnabled = batch->clipState.type & ClipState::StencilClip;
 
-    QSGNode *xform = e->renderNode->parent();
-    QMatrix4x4 matrix;
-    QSGNode *root = rootNode();
-    if (e->root) {
-        matrix = qsg_matrixForRoot(e->root);
-        root = e->root->sgNode;
-    }
-    while (xform != root) {
-        if (xform->type() == QSGNode::TransformNodeType) {
-            matrix = matrix * static_cast<QSGTransformNode *>(xform)->combinedMatrix();
-            break;
-        }
-        xform = xform->parent();
-    }
-    rd->m_matrix = &matrix;
-
-    QSGNode *opacity = e->renderNode->parent();
-    rd->m_opacity = 1.0;
-    while (opacity != rootNode()) {
-        if (opacity->type() == QSGNode::OpacityNodeType) {
-            rd->m_opacity = static_cast<QSGOpacityNode *>(opacity)->combinedOpacity();
-            break;
-        }
-        opacity = opacity->parent();
-    }
-
     const QSGRenderNode::StateFlags changes = e->renderNode->changedStates();
 
     QRhiCommandBuffer *cb = commandBuffer();
-    cb->beginExternal();
+    const bool needsExternal = rd->m_needsExternalRendering;
+    if (needsExternal)
+        cb->beginExternal();
     e->renderNode->render(&state);
-    cb->endExternal();
+    if (needsExternal)
+        cb->endExternal();
 
     rd->m_matrix = nullptr;
     rd->m_clip_list = nullptr;
