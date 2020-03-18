@@ -36,6 +36,7 @@
 
 import QtQuick 2.12
 import QtQuick.Templates 2.12 as T
+import QtQuick.Controls.impl 2.12
 import QtQuick.Controls.Material 2.12
 import QtQuick.Controls.Material.impl 2.12
 
@@ -63,18 +64,18 @@ T.Slider {
         y: control.topPadding + (control.horizontal ? (control.availableHeight - height) / 2 : 0)
         implicitWidth: control.horizontal ? 200 : 48
         implicitHeight: control.horizontal ? 48 : 200
-        width: control.horizontal ? control.availableWidth : 1
-        height: control.horizontal ? 1 : control.availableHeight
-        color: control.Material.foreground
+        width: control.horizontal ? control.availableWidth : 4
+        height: control.horizontal ? 4 : control.availableHeight
         scale: control.horizontal && control.mirrored ? -1 : 1
+        color: control.enabled ? Color.transparent(control.Material.accentColor, 0.33) : control.Material.sliderDisabledColor
 
         Rectangle {
             x: control.horizontal ? 0 : (parent.width - width) / 2
             y: control.horizontal ? (parent.height - height) / 2 : control.visualPosition * parent.height
-            width: control.horizontal ? control.position * parent.width : 3
-            height: control.horizontal ? 3 : control.position * parent.height
+            width: control.horizontal ? control.position * parent.width : 4
+            height: control.horizontal ? 4 : control.position * parent.height
 
-            color: control.Material.accentColor
+            color: control.enabled ? control.Material.accentColor : control.Material.sliderDisabledColor
         }
     }
 }

@@ -55,8 +55,8 @@ Item {
         width: parent.width
         height: parent.height
         radius: width / 2
-        color: root.control.Material.accentColor
         scale: root.handlePressed ? 1.5 : 1
+        color: control.enabled ? root.control.Material.accentColor : root.control.Material.sliderDisabledColor
 
         Behavior on scale {
             NumberAnimation {
@@ -71,6 +71,6 @@ Item {
         width: 22; height: 22
         pressed: root.handlePressed
         active: root.handlePressed || root.handleHasFocus || root.handleHovered
-        color: root.control.Material.rippleColor
+        color: root.control.Material.highlightedRippleColor
     }
 }

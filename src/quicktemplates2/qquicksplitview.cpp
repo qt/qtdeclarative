@@ -327,7 +327,7 @@ void QQuickSplitViewPrivate::layoutResizeSplitItems(qreal &usedWidth, qreal &use
         const bool isAHandlePressed = m_pressedHandleIndex != -1;
         // True if this particular item is being resized as a result of a handle being dragged.
         const bool isBeingResized = isAHandlePressed && ((resizeLeftItem && index == m_pressedHandleIndex)
-            || (!resizeLeftItem && index == m_pressedHandleIndex + 1));
+            || (!resizeLeftItem && index == m_nextVisibleIndexAfterPressedHandle));
         if (isBeingResized) {
             indexBeingResizedDueToDrag = index;
             qCDebug(qlcQQuickSplitView).nospace() << "  - " << index << ": dragging handle for item";
@@ -343,7 +343,7 @@ void QQuickSplitViewPrivate::layoutResizeSplitItems(qreal &usedWidth, qreal &use
 
             // We also need to ensure that the item's edge doesn't go too far
             // out and hence give the item more space than is available.
-            const int firstIndex = resizeLeftItem ? m_pressedHandleIndex + 1 : 0;
+            const int firstIndex = resizeLeftItem ? m_nextVisibleIndexAfterPressedHandle : 0;
             const int lastIndex = resizeLeftItem ? contentModel->count() - 1 : m_pressedHandleIndex;
             const qreal accumulated = accumulatedSize(firstIndex, lastIndex);
 
@@ -421,8 +421,8 @@ void QQuickSplitViewPrivate::layoutResizeSplitItems(qreal &usedWidth, qreal &use
                 // The handle shouldn't cross other handles, so use the left edge of
                 // the first handle to the right as the right edge.
                 qreal rightEdge = size;
-                if (m_pressedHandleIndex + 1 < m_handleItems.size()) {
-                    const QQuickItem *rightHandle = m_handleItems.at(m_pressedHandleIndex + 1);
+                if (m_nextVisibleIndexAfterPressedHandle < m_handleItems.size()) {
+                    const QQuickItem *rightHandle = m_handleItems.at(m_nextVisibleIndexAfterPressedHandle);
                     rightEdge = horizontal ? rightHandle->x() : rightHandle->y();
                 }
 
@@ -740,23 +740,26 @@ void QQuickSplitViewPrivate::createHandleItem(int index)
         creationContext = qmlContext(q);
     QQmlContext *context = new QQmlContext(creationContext, q);
     context->setContextObject(q);
-    QQuickItem *item = qobject_cast<QQuickItem*>(m_handle->beginCreate(context));
-    if (item) {
+    QQuickItem *handleItem = qobject_cast<QQuickItem*>(m_handle->beginCreate(context));
+    if (handleItem) {
+        qCDebug(qlcQQuickSplitView) << "- successfully created handle item" << handleItem << "for split item at index" << index;
+
         // Insert the item to our list of items *before* its parent is set to us,
         // so that we can avoid it being added as a content item by checking
         // if it is in the list in isContent().
-        m_handleItems.insert(index, item);
+        m_handleItems.insert(index, handleItem);
 
-        item->setParentItem(q);
+        handleItem->setParentItem(q);
 
         m_handle->completeCreate();
-        resizeHandle(item);
+        resizeHandle(handleItem);
     }
 }
 
 void QQuickSplitViewPrivate::removeExcessHandles()
 {
     int excess = m_handleItems.size() - qMax(0, contentModel->count() - 1);
+    qCDebug(qlcQQuickSplitView) << "removing" << excess << "excess handles from the end of our list";
     for (; excess > 0; --excess) {
         QQuickItem *handleItem = m_handleItems.takeLast();
         delete handleItem;
@@ -861,6 +864,7 @@ int QQuickSplitViewPrivate::handleIndexForSplitIndex(int splitIndex) const
 
 void QQuickSplitViewPrivate::destroyHandles()
 {
+    qCDebug(qlcQQuickSplitView) << "destroying" << m_handleItems.size() << "handles";
     qDeleteAll(m_handleItems);
     m_handleItems.clear();
 }
@@ -907,7 +911,7 @@ void QQuickSplitViewPrivate::updateHandleVisibilities()
             handleItem->setVisible(item->isVisible());
         else
             handleItem->setVisible(false);
-        qCDebug(qlcQQuickSplitView) << "set visible property of handle at index"
+        qCDebug(qlcQQuickSplitView) << "set visible property of handle" << handleItem << "at index"
             << i << "to" << handleItem->isVisible();
     }
 }
@@ -915,6 +919,8 @@ void QQuickSplitViewPrivate::updateHandleVisibilities()
 void QQuickSplitViewPrivate::updateHoveredHandle(QQuickItem *hoveredItem)
 {
     Q_Q(QQuickSplitView);
+    qCDebug(qlcQQuickSplitViewMouse) << "updating hovered handle after" << hoveredItem << "was hovered";
+
     const int oldHoveredHandleIndex = m_hoveredHandleIndex;
     m_hoveredHandleIndex = m_handleItems.indexOf(hoveredItem);
     if (m_hoveredHandleIndex == oldHoveredHandleIndex)
@@ -983,7 +989,21 @@ void QQuickSplitViewPrivate::handlePress(const QPointF &point)
         m_mousePos = point;
 
         const QQuickItem *leftOrTopItem = qobject_cast<QQuickItem*>(contentModel->object(m_pressedHandleIndex));
-        const QQuickItem *rightOrBottomItem = qobject_cast<QQuickItem*>(contentModel->object(m_pressedHandleIndex + 1));
+        // Find the first item to the right/bottom of this one that is visible.
+        QQuickItem *rightOrBottomItem = nullptr;
+        m_nextVisibleIndexAfterPressedHandle = -1;
+        for (int i = m_pressedHandleIndex + 1; i < contentModel->count(); ++i) {
+            auto nextItem = qobject_cast<QQuickItem*>(contentModel->object(i));
+            if (nextItem->isVisible()) {
+                rightOrBottomItem = nextItem;
+                m_nextVisibleIndexAfterPressedHandle = i;
+                break;
+            }
+        }
+        Q_ASSERT_X(rightOrBottomItem, Q_FUNC_INFO, qPrintable(QString::fromLatin1(
+            "Failed to find a visible item to the right/bottom of the one that was pressed at index %1; this shouldn't happen")
+                .arg(m_pressedHandleIndex)));
+
         const bool isHorizontal = m_orientation == Qt::Horizontal;
         m_leftOrTopItemSizeBeforePress = isHorizontal ? leftOrTopItem->width() : leftOrTopItem->height();
         m_rightOrBottomItemSizeBeforePress = isHorizontal ? rightOrBottomItem->width() : rightOrBottomItem->height();
@@ -1002,8 +1022,10 @@ void QQuickSplitViewPrivate::handlePress(const QPointF &point)
         qCDebug(qlcQQuickSplitViewMouse).nospace() << "handled press -"
             << " left/top index=" << m_pressedHandleIndex << ","
             << " size before press=" << m_leftOrTopItemSizeBeforePress << ","
-            << " right/bottom index=" << m_pressedHandleIndex + 1 << ","
-            << " size before press=" << m_rightOrBottomItemSizeBeforePress;
+            << " item=" << leftOrTopItem
+            << " right/bottom index=" << m_nextVisibleIndexAfterPressedHandle << ","
+            << " size before press=" << m_rightOrBottomItemSizeBeforePress
+            << " item=" << rightOrBottomItem;
     }
 }
 
@@ -1205,8 +1227,10 @@ void QQuickSplitView::setHandle(QQmlComponent *handle)
 
     d->m_handle = handle;
 
-    if (d->m_handle)
+    if (d->m_handle) {
         d->createHandles();
+        d->updateHandleVisibilities();
+    }
 
     d->requestLayout();
 
