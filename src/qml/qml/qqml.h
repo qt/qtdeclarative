@@ -754,9 +754,14 @@ inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versi
     return QQmlPrivate::qmlregister(QQmlPrivate::SingletonRegistration, &api);
 }
 
+#ifdef Q_QDOC
+int qmlRegisterSingletonInstance(const char *uri, int versionMajor, int versionMinor,
+                                 const char *typeName, QObject *cppObject)
+#else
 template<typename T>
 inline auto qmlRegisterSingletonInstance(const char *uri, int versionMajor, int versionMinor,
                                          const char *typeName, T *cppObject) -> typename std::enable_if<std::is_base_of<QObject, T>::value, int>::type
+#endif
 {
     QQmlPrivate::RegisterSingletonFunctor registrationFunctor;
     registrationFunctor.m_object = cppObject;
