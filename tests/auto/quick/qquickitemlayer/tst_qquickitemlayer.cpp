@@ -149,7 +149,7 @@ void tst_QQuickItemLayer::layerSmooth()
 
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
 
     QImage fb = runTest("Smooth.qml");
     QVERIFY(!fb.size().isEmpty());
@@ -174,7 +174,7 @@ void tst_QQuickItemLayer::layerEnabled()
 
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
 
     QImage fb = runTest("Enabled.qml");
     QVERIFY(!fb.size().isEmpty());
@@ -210,7 +210,7 @@ void tst_QQuickItemLayer::layerEffect()
 
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
 
     QImage fb = runTest("Effect.qml");
     QVERIFY(!fb.size().isEmpty());
@@ -475,7 +475,7 @@ void tst_QQuickItemLayer::rectangleEffect()
 {
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
 
     QImage fb = runTest("RectangleEffect.qml");
     QVERIFY(!fb.size().isEmpty());

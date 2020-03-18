@@ -1039,7 +1039,7 @@ void tst_qquicktext::hAlignImplicitWidth()
     {
         if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
             || (QGuiApplication::platformName() == QLatin1String("minimal")))
-            QEXPECT_FAIL("", "Failure due to grabWindow not functional on offscreen/minimimal platforms", Abort);
+            QEXPECT_FAIL("", "Failure due to grabWindow not functional on offscreen/minimal platforms", Abort);
 
         // Left Align
         QImage image = view.grabWindow();
@@ -4493,7 +4493,7 @@ void tst_qquicktext::transparentBackground()
 {
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabToImage not functional on offscreen/minimimal platforms");
+        QSKIP("Skipping due to grabToImage not functional on offscreen/minimal platforms");
 
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("transparentBackground.qml"));
@@ -4514,7 +4514,7 @@ void tst_qquicktext::displaySuperscriptedTag()
 {
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabToImage not functional on offscreen/minimimal platforms");
+        QSKIP("Skipping due to grabToImage not functional on offscreen/minimal platforms");
 
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("displaySuperscriptedTag.qml"));

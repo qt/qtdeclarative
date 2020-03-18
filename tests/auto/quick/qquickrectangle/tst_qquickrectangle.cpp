@@ -73,7 +73,7 @@ void tst_qquickrectangle::color()
 
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QEXPECT_FAIL("", "Failure due to grabWindow not functional on offscreen/minimimal platforms", Abort);
+        QEXPECT_FAIL("", "Failure due to grabWindow not functional on offscreen/minimal platforms", Abort);
 
     QImage image = view.grabWindow();
     QVERIFY(image.pixel(0,0) == QColor("#020202").rgba());

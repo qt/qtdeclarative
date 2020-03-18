@@ -341,7 +341,7 @@ void tst_qquickimage::mirror()
 {
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
 
     QMap<QQuickImage::FillMode, QImage> screenshots;
     QList<QQuickImage::FillMode> fillModes;
@@ -556,7 +556,7 @@ void tst_qquickimage::tiling_QTBUG_6716()
 {
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
 
     QFETCH(QString, source);
 
@@ -930,7 +930,7 @@ void tst_qquickimage::sourceClipRect()
 
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
     QImage contents = window->grabWindow();
     if (contents.width() < sourceClipRect.width())
         QSKIP("Skipping due to grabWindow not functional");
@@ -1159,7 +1159,7 @@ void tst_qquickimage::hugeImages()
 {
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
 
     QQuickView view;
     view.setSource(testFileUrl("hugeImages.qml"));
@@ -1217,7 +1217,7 @@ void tst_qquickimage::multiFrame()
 {
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
 
     QFETCH(QString, qmlfile);
     QFETCH(bool, asynchronous);

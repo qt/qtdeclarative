@@ -218,7 +218,7 @@ void tst_rendernode::renderOrder()
 
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
 
     if (isRunningOnRhi())
         QSKIP("Render nodes not yet supported with QRhi");
@@ -251,7 +251,7 @@ void tst_rendernode::messUpState()
 
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
 
     if (isRunningOnRhi())
         QSKIP("Render nodes not yet supported with QRhi");
@@ -312,7 +312,7 @@ void tst_rendernode::matrix()
 {
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
 
     if (isRunningOnRhi())
         QSKIP("Render nodes not yet supported with QRhi");
