@@ -43,7 +43,7 @@
 #include "dumpastvisitor.h"
 #include "restructureastvisitor.h"
 
-bool parseFile(const QString& filename, bool inplace, bool verbose, bool sortImports, bool force)
+bool parseFile(const QString& filename, bool inplace, bool verbose, bool sortImports, bool force, const QString& newline)
 {
     QFile file(filename);
 
@@ -128,11 +128,27 @@ bool parseFile(const QString& filename, bool inplace, bool verbose, bool sortImp
         }
    }
 
+
+    const bool native = newline == "native";
+
+    if (!native) {
+        if (newline == "macos") {
+            dumpCode = dumpCode.replace("\n","\r");
+        } else if (newline == "windows") {
+            dumpCode = dumpCode.replace("\n", "\r\n");
+        } else if (newline == "unix") {
+            // Nothing needs to be done for unix line-endings
+        } else {
+            qWarning().noquote() << "Unknown line ending type" << newline;
+            return false;
+        }
+    }
+
     if (inplace) {
         if (verbose)
             qWarning().noquote() << "Writing to file" << filename;
 
-        if (!file.open(QIODevice::Text | QIODevice::WriteOnly))
+        if (!file.open(native ? QIODevice::WriteOnly | QIODevice::Text : QIODevice::WriteOnly))
         {
             qWarning().noquote() << "Failed to open" << filename << "for writing";
             return false;
@@ -141,7 +157,9 @@ bool parseFile(const QString& filename, bool inplace, bool verbose, bool sortImp
         file.write(dumpCode.toUtf8());
         file.close();
     } else {
-        QTextStream(stdout) << dumpCode;
+        QFile out;
+        out.open(stdout, QIODevice::WriteOnly);
+        out.write(dumpCode.toUtf8());
     }
 
     return true;
@@ -172,6 +190,10 @@ int main(int argc, char *argv[])
     parser.addOption(QCommandLineOption({"f", "force"},
                      QStringLiteral("Continue even if an error has occurred.")));
 
+    parser.addOption(QCommandLineOption({"l", "newline"},
+                     QStringLiteral("Override the new line format to use (native macos unix windows)."),
+                     "newline", "native"));
+
     parser.addPositionalArgument("filenames", "files to be processed by qmlformat");
 
     parser.process(app);
@@ -181,8 +203,13 @@ int main(int argc, char *argv[])
     if (positionalArguments.isEmpty())
         parser.showHelp(-1);
 
+    if (!parser.isSet("inplace") && parser.value("newline") != "native") {
+        qWarning() << "Error: The -l option can only be used with -i";
+        return -1;
+    }
+
     for (const QString& file: parser.positionalArguments()) {
-        if (!parseFile(file, parser.isSet("inplace"), parser.isSet("verbose"), !parser.isSet("no-sort"), parser.isSet("force")))
+        if (!parseFile(file, parser.isSet("inplace"), parser.isSet("verbose"), !parser.isSet("no-sort"), parser.isSet("force"), parser.value("newline")))
             success = false;
     }
 #endif

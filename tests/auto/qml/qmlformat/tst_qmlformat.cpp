@@ -27,8 +27,11 @@
 ****************************************************************************/
 
 #include <QtTest/QtTest>
+#include <QDir>
+#include <QFile>
 #include <QProcess>
 #include <QString>
+#include <QTemporaryDir>
 
 #include <util.h>
 
@@ -43,6 +46,7 @@ private Q_SLOTS:
     void testFormatNoSort();
     void testAnnotations();
     void testAnnotationsNoSort();
+    void testLineEndings();
 
     void testReadOnlyProps();
 
@@ -53,7 +57,7 @@ private Q_SLOTS:
 
 private:
     QString readTestFile(const QString &path);
-    QString runQmlformat(const QString &fileToFormat, bool sortImports, bool shouldSucceed);
+    QString runQmlformat(const QString &fileToFormat, bool sortImports, bool shouldSucceed, const QString &newlineFormat = "native");
 
     QString m_qmlformatPath;
     QStringList m_excludedDirs;
@@ -200,6 +204,23 @@ void TestQmlformat::testReadOnlyProps()
     QCOMPARE(runQmlformat(testFile("readOnlyProps.qml"), false, true), readTestFile("readOnlyProps.formatted.qml"));
 }
 
+void TestQmlformat::testLineEndings()
+{
+    // macos
+    const QString macosContents = runQmlformat(testFile("Example1.formatted.qml"), false, true, "macos");
+    QVERIFY(!macosContents.contains("\n"));
+    QVERIFY(macosContents.contains("\r"));
+
+    // windows
+    const QString windowsContents = runQmlformat(testFile("Example1.formatted.qml"), false, true, "windows");
+    QVERIFY(windowsContents.contains("\r\n"));
+
+    // unix
+    const QString unixContents = runQmlformat(testFile("Example1.formatted.qml"), false, true, "unix");
+    QVERIFY(unixContents.contains("\n"));
+    QVERIFY(!unixContents.contains("\r"));
+}
+
 #if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
 void TestQmlformat::testExample_data()
 {
@@ -228,15 +249,22 @@ void TestQmlformat::testExample()
 }
 #endif
 
-QString TestQmlformat::runQmlformat(const QString &fileToFormat, bool sortImports, bool shouldSucceed)
+QString TestQmlformat::runQmlformat(const QString &fileToFormat, bool sortImports, bool shouldSucceed, const QString &newlineFormat)
 {
+    // Copy test file to temporary location
+    QTemporaryDir tempDir;
+    const QString tempFile = tempDir.path() + QDir::separator() + "to_format.qml";
+    QFile::copy(fileToFormat, tempFile);
+
     QStringList args;
-    args << fileToFormat;
+    args << "-i";
+    args << tempFile;
 
     if (!sortImports)
         args << "-n";
 
-    QString output;
+    args << "-l" << newlineFormat;
+
     auto verify = [&]() {
         QProcess process;
         process.start(m_qmlformatPath, args);
@@ -246,11 +274,15 @@ QString TestQmlformat::runQmlformat(const QString &fileToFormat, bool sortImport
             QCOMPARE(process.exitCode(), 0);
         else
             QVERIFY(process.exitCode() != 0);
-        output = process.readAllStandardOutput();
     };
     verify();
 
-    return output;
+    QFile temp(tempFile);
+
+    temp.open(QIODevice::ReadOnly);
+    QString formatted = QString::fromUtf8(temp.readAll());
+
+    return formatted;
 }
 
 QTEST_MAIN(TestQmlformat)
