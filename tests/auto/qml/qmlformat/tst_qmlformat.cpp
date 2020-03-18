@@ -47,6 +47,7 @@ private Q_SLOTS:
     void testAnnotations();
     void testAnnotationsNoSort();
     void testLineEndings();
+    void testFrontInline();
 
     void testReadOnlyProps();
 
@@ -197,6 +198,11 @@ void TestQmlformat::testAnnotations()
 void TestQmlformat::testAnnotationsNoSort()
 {
     QCOMPARE(runQmlformat(testFile("Annotations.qml"), false, true), readTestFile("Annotations.formatted.nosort.qml"));
+}
+
+void TestQmlformat::testFrontInline()
+{
+    QCOMPARE(runQmlformat(testFile("FrontInline.qml"), false, true), readTestFile("FrontInline.formatted.qml"));
 }
 
 void TestQmlformat::testReadOnlyProps()

@@ -843,8 +843,8 @@ QString DumpAstVisitor::parseStatementList(StatementList *list)
 }
 
 bool DumpAstVisitor::visit(UiPublicMember *node) {
-    addLine(getComment(node, Comment::Location::Front));
 
+    QString commentFront = getComment(node, Comment::Location::Front);
     QString commentBackInline = getComment(node, Comment::Location::Back_Inline);
 
     switch (node->type)
@@ -859,6 +859,7 @@ bool DumpAstVisitor::visit(UiPublicMember *node) {
             scope().m_firstSignal = false;
         }
 
+        addLine(commentFront);
         addLine("signal "+node->name.toString()+"("+parseUiParameterList(node->parameters) + ")"
                 + commentBackInline);
         break;
@@ -897,6 +898,7 @@ bool DumpAstVisitor::visit(UiPublicMember *node) {
         if (has_type_modifier)
             member_type = node->typeModifier + "<" + member_type + ">";
 
+        addLine(commentFront);
         if (is_readonly && statement.isEmpty()
                 && scope().m_bindings.contains(node->name.toString())) {
             m_result += formatLine(prefix + "property " + member_type + " ", false);
@@ -1003,6 +1005,7 @@ bool DumpAstVisitor::visit(UiObjectDefinition *node) {
     }
 
     addLine(getComment(node, Comment::Location::Front));
+    addLine(getComment(node, Comment::Location::Front_Inline));
     addLine(parseUiQualifiedId(node->qualifiedTypeNameId) + " {");
 
     m_indentLevel++;
@@ -1198,6 +1201,7 @@ bool DumpAstVisitor::visit(UiObjectBinding *node) {
     } else {
         addNewLine();
         addLine(getComment(node, Comment::Location::Front));
+        addLine(getComment(node, Comment::Location::Front_Inline));
         addLine(result + " {");
     }
 

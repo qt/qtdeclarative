@@ -45,10 +45,11 @@ struct Comment
     enum Location : int
     {
         Front = 1,
-        Back = Front << 1,
+        Front_Inline = Front << 1,
+        Back = Front_Inline << 1,
         Back_Inline = Back << 1,
         DefaultLocations = Front | Back_Inline,
-        AllLocations = Front | Back | Back_Inline
+        AllLocations = Front | Back | Front_Inline | Back_Inline
     } m_location = Front;
 
     Comment() = default;
