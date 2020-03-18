@@ -25,7 +25,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
+import QtQuick 2.14
 import QtQuick.Controls 2.12
 
 //! [1]
@@ -36,8 +36,8 @@ SpinBox {
 
     property var items: ["Small", "Medium", "Large"]
 
-    validator: RegExpValidator {
-        regExp: new RegExp("(Small|Medium|Large)", "i")
+    validator: RegularExpressionValidator {
+        regularExpression: new RegExp("(Small|Medium|Large)", "i")
     }
 
     textFromValue: function(value) {

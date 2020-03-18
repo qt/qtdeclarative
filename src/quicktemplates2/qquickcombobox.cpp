@@ -617,7 +617,7 @@ int QQuickComboBoxPrivate::match(int start, const QString &text, Qt::MatchFlags 
                 if (t == text)
                     return idx;
                 break;
-            case Qt::MatchRegExp: {
+            case Qt::MatchRegularExpression: {
                 QRegularExpression rx(QRegularExpression::anchoredPattern(text), options);
                 if (rx.match(t).hasMatch())
                     return idx;
@@ -1380,7 +1380,7 @@ void QQuickComboBox::resetEditText()
     \uicontrol Return or \uicontrol Enter key is pressed.
 
     The currently supported validators are \l[QtQuick]{IntValidator},
-    \l[QtQuick]{DoubleValidator}, and \l[QtQuick]{RegExpValidator}. An
+    \l[QtQuick]{DoubleValidator}, and \l[QtQuick]{RegularExpressionValidator}. An
     example of using validators is shown below, which allows input of
     integers between \c 0 and \c 10 into the text field:
 
@@ -1621,14 +1621,14 @@ QString QQuickComboBox::textAt(int index) const
     combo box performs case sensitive exact matching (\c Qt.MatchExactly). All other match
     types are case-insensitive unless the \c Qt.MatchCaseSensitive flag is also specified.
 
-    \value Qt.MatchExactly          The search term matches exactly (default).
-    \value Qt.MatchRegExp           The search term matches as a regular expression.
-    \value Qt.MatchWildcard         The search term matches using wildcards.
-    \value Qt.MatchFixedString      The search term matches as a fixed string.
-    \value Qt.MatchStartsWith       The search term matches the start of the item.
-    \value Qt.MatchEndsWidth        The search term matches the end of the item.
-    \value Qt.MatchContains         The search term is contained in the item.
-    \value Qt.MatchCaseSensitive    The search is case sensitive.
+    \value Qt.MatchExactly           The search term matches exactly (default).
+    \value Qt.MatchRegularExpression The search term matches as a regular expression.
+    \value Qt.MatchWildcard          The search term matches using wildcards.
+    \value Qt.MatchFixedString       The search term matches as a fixed string.
+    \value Qt.MatchStartsWith        The search term matches the start of the item.
+    \value Qt.MatchEndsWidth         The search term matches the end of the item.
+    \value Qt.MatchContains          The search term is contained in the item.
+    \value Qt.MatchCaseSensitive     The search is case sensitive.
 
     \sa textRole
 */

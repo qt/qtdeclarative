@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
+import QtQuick 2.14
 import QtQuick.Window 2.2
 import QtTest 1.0
 import QtQuick.Controls 2.12
@@ -354,9 +354,9 @@ TestCase {
             { tag: "bananas (MatchExactly)", term: "bananas", flags: Qt.MatchExactly, index: -1 },
             { tag: "Cocomuffin (MatchExactly)", term: "Cocomuffin", flags: Qt.MatchExactly, index: 4 },
 
-            { tag: "b(an)+a (MatchRegExp)", term: "B(an)+a", flags: Qt.MatchRegExp, index: 0 },
-            { tag: "b(an)+a (MatchRegExp|MatchCaseSensitive)", term: "b(an)+a", flags: Qt.MatchRegExp | Qt.MatchCaseSensitive, index: 1 },
-            { tag: "[coc]+\\w+ (MatchRegExp)", term: "[coc]+\\w+", flags: Qt.MatchRegExp, index: 2 },
+            { tag: "b(an)+a (MatchRegularExpression)", term: "B(an)+a", flags: Qt.MatchRegularExpression, index: 0 },
+            { tag: "b(an)+a (MatchRegularExpression|MatchCaseSensitive)", term: "b(an)+a", flags: Qt.MatchRegularExpression | Qt.MatchCaseSensitive, index: 1 },
+            { tag: "[coc]+\\w+ (MatchRegularExpression)", term: "[coc]+\\w+", flags: Qt.MatchRegularExpression, index: 2 },
 
             { tag: "?pp* (MatchWildcard)", term: "?pp*", flags: Qt.MatchWildcard, index: 3 },
             { tag: "app* (MatchWildcard|MatchCaseSensitive)", term: "app*", flags: Qt.MatchWildcard | Qt.MatchCaseSensitive, index: -1 },
@@ -1408,9 +1408,9 @@ TestCase {
         }
     }
 
-    RegExpValidator {
+    RegularExpressionValidator {
         id: regExpValidator
-        regExp: /(red|blue|green)?/
+        regularExpression: /(red|blue|green)?/
     }
 
     function test_validator() {

@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
+import QtQuick 2.14
 import QtTest 1.0
 import QtQuick.Controls 2.12
 import QtQuick.Window 2.12
@@ -623,8 +623,8 @@ TestCase {
 
             property var items: ["Small", "Medium", "Large"]
 
-            validator: RegExpValidator {
-                regExp: new RegExp("(Small|Medium|Large)", "i")
+            validator: RegularExpressionValidator {
+                regularExpression: new RegExp("(Small|Medium|Large)", "i")
             }
 
             textFromValue: function(value) {

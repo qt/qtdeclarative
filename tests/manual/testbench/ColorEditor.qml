@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
+import QtQuick 2.14
 import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.12
 
@@ -71,8 +71,8 @@ RowLayout {
     TextField {
         id: textField
 
-        validator: RegExpValidator{
-            regExp: /#?[0-9a-fA-F]*/
+        validator: RegularExpressionValidator{
+            regularExpression: /#?[0-9a-fA-F]*/
         }
 
         Layout.preferredWidth: 200
