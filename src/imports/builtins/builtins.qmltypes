@@ -1543,6 +1543,7 @@ Module {
                 "MatchStartsWith": 2,
                 "MatchEndsWith": 3,
                 "MatchRegExp": 4,
+                "MatchRegularExpression": 4,
                 "MatchWildcard": 5,
                 "MatchFixedString": 8,
                 "MatchCaseSensitive": 16,
