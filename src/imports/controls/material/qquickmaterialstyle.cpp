@@ -422,6 +422,8 @@ static const QRgb rippleColorLight = 0x10000000;
 static const QRgb rippleColorDark = 0x20FFFFFF;
 static const QRgb spinBoxDisabledIconColorLight = 0xFFCCCCCC;
 static const QRgb spinBoxDisabledIconColorDark = 0xFF666666;
+static const QRgb sliderDisabledColorLight = 0xFF9E9E9E;
+static const QRgb sliderDisabledColorDark = 0xFF616161;
 
 static QQuickMaterialStyle::Theme effectiveTheme(QQuickMaterialStyle::Theme theme)
 {
@@ -1035,6 +1037,11 @@ QColor QQuickMaterialStyle::toolTextColor() const
 QColor QQuickMaterialStyle::spinBoxDisabledIconColor() const
 {
     return QColor::fromRgba(m_theme == Light ? spinBoxDisabledIconColorLight : spinBoxDisabledIconColorDark);
+}
+
+QColor QQuickMaterialStyle::sliderDisabledColor() const
+{
+    return QColor::fromRgba(m_theme == Light ? sliderDisabledColorLight : sliderDisabledColorDark);
 }
 
 QColor QQuickMaterialStyle::color(QQuickMaterialStyle::Color color, QQuickMaterialStyle::Shade shade) const

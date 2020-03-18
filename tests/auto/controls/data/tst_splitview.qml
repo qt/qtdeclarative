@@ -148,6 +148,7 @@ TestCase {
             color: "#444"
 
             Text {
+                objectName: "handleText_" + text
                 text: parent.x + "," + parent.y + " " + parent.width + "x" + parent.height
                 color: "white"
                 anchors.centerIn: parent
@@ -871,6 +872,42 @@ TestCase {
         }
     }
 
+    Component {
+        id: hiddenItemSplitViewComponent
+
+        SplitView {
+            anchors.fill: parent
+            handle: handleComponent
+
+            Rectangle {
+                objectName: "steelblue"
+                color: objectName
+
+                SplitView.minimumWidth: 50
+            }
+            Rectangle {
+                objectName: "tomato"
+                color: objectName
+
+                SplitView.fillWidth: true
+                SplitView.preferredWidth: 200
+            }
+            Rectangle {
+                objectName: "navajowhite"
+                color: objectName
+                visible: false
+
+                SplitView.minimumWidth: visible ? 100 : 0
+            }
+            Rectangle {
+                objectName: "mediumseagreen"
+                color: objectName
+
+                SplitView.minimumWidth: 50
+            }
+        }
+    }
+
     function test_dragHandle_data() {
         var splitViewWidth = testCase.width - splitViewMargins * 2
         var splitViewHeight = testCase.height - splitViewMargins * 2
@@ -1151,6 +1188,36 @@ TestCase {
                     { x: 140, y: 0, width: defaultHorizontalHandleWidth, height: splitViewHeight },
                     { x: 150, y: 0, width: 150, height: splitViewHeight }
                 ]
+            },
+            {
+                tag: "hiddenItemSplitViewComponent",
+                // [50] | [200 (fill)] | [hidden] | [50]
+                component: hiddenItemSplitViewComponent,
+                orientation: Qt.Horizontal,
+                fillIndex: 1,
+                handleIndex: 1,
+                // Drag to the horizontal centre of the SplitView.
+                newHandlePos: Qt.point(splitViewMargins + 150, testCase.height / 2),
+                expectedGeometriesBeforeDrag: [
+                    { x: 0, y: 0, width: 50, height: splitViewHeight },
+                    { x: 50, y: 0, width: defaultHorizontalHandleWidth, height: splitViewHeight },
+                    { x: 50 + defaultHorizontalHandleWidth, y: 0, width: 200 - defaultHorizontalHandleWidth * 2, height: splitViewHeight },
+                    { x: 250 - (defaultHorizontalHandleWidth * 2) + defaultHorizontalHandleWidth, y: 0, width: defaultHorizontalHandleWidth, height: splitViewHeight },
+                    { hidden: true }, // Third item should be hidden.
+                    { hidden: true }, // Handle for third item should be hidden.
+                    { x: 250 - (defaultHorizontalHandleWidth * 2) + defaultHorizontalHandleWidth * 2, y: 0, width: 50, height: splitViewHeight }
+                ],
+                expectedGeometriesAfterDrag: [
+                    { x: 0, y: 0, width: 50, height: splitViewHeight },
+                    { x: 50, y: 0, width: defaultHorizontalHandleWidth, height: splitViewHeight },
+                    // Width of the fill item should end up smaller.
+                    { x: 50 + defaultHorizontalHandleWidth, y: 0, width: 100 - defaultHorizontalHandleWidth * 2, height: splitViewHeight },
+                    { x: 150 - (defaultHorizontalHandleWidth * 2) + defaultHorizontalHandleWidth, y: 0, width: defaultHorizontalHandleWidth, height: splitViewHeight },
+                    { hidden: true }, // Third item should be hidden.
+                    { hidden: true }, // Handle for third item should be hidden.
+                    // Width of the last item should grow.
+                    { x: 150 - (defaultHorizontalHandleWidth * 2) + defaultHorizontalHandleWidth * 2, y: 0, width: 150, height: splitViewHeight }
+                ]
             }
         ]
         return data
@@ -1171,7 +1238,7 @@ TestCase {
         else
             fillItem.SplitView.fillHeight = true
 
-        // Check the sizes of the items before the drag.
+        // Check the sizes (and visibility) of the items before the drag.
         verify(isPolishScheduled(control))
         verify(waitForItemPolished(control))
         compareSizes(control, data.expectedGeometriesBeforeDrag, "before drag")
@@ -1179,6 +1246,7 @@ TestCase {
         // Drag the handle.
         var handles = findHandles(control)
         var targetHandle = handles[data.handleIndex]
+        verify(targetHandle.visible)
         mousePress(targetHandle)
         verify(control.resizing)
         // newHandlePos is in scene coordinates, so map it to coordinates local to the handle.
