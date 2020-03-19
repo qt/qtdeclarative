@@ -201,7 +201,7 @@ void QQuickSpinBoxPrivate::updateValue()
             QQmlEngine *engine = qmlEngine(q);
             if (engine && valueFromText.isCallable()) {
                 QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(engine);
-                QJSValue loc(v4, QQmlLocale::wrap(v4, locale));
+                QJSValue loc = QJSValuePrivate::fromReturnedValue(QQmlLocale::wrap(v4, locale));
                 val = valueFromText.call(QJSValueList() << text.toString() << loc).toInt();
             } else {
                 val = locale.toInt(text.toString());
@@ -259,7 +259,7 @@ void QQuickSpinBoxPrivate::updateDisplayText()
     QQmlEngine *engine = qmlEngine(q);
     if (engine && textFromValue.isCallable()) {
         QV4::ExecutionEngine *v4 = QQmlEnginePrivate::getV4Engine(engine);
-        QJSValue loc(v4, QQmlLocale::wrap(v4, locale));
+        QJSValue loc = QJSValuePrivate::fromReturnedValue(QQmlLocale::wrap(v4, locale));
         text = textFromValue.call(QJSValueList() << value << loc).toString();
     } else {
         text = locale.toString(value);
