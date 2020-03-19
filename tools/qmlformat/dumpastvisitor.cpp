@@ -626,7 +626,7 @@ QString DumpAstVisitor::parseStatement(Statement *statement, bool blockHasNext,
     case Node::Kind_IfStatement: {
         auto *ifStatement = cast<IfStatement *>(statement);
 
-        m_blockNeededBraces = false;
+        m_blockNeededBraces = !blockAllowBraceless;
 
         QString ifFalse = parseStatement(ifStatement->ko, false, true);
         QString ifTrue = parseStatement(ifStatement->ok, !ifFalse.isEmpty(), true);
@@ -641,7 +641,35 @@ QString DumpAstVisitor::parseStatement(Statement *statement, bool blockHasNext,
             ifTrue = parseStatement(ifStatement->ok, !ifFalse.isEmpty(), false);
         }
 
+        if (ifStatement->ok->kind != Node::Kind_Block)
+            ifTrue += ";";
+
+        if (ifStatement->ko && ifStatement->ko->kind != Node::Kind_Block && ifStatement->ko->kind != Node::Kind_IfStatement)
+            ifFalse += ";";
+
         QString result = "if (" + parseExpression(ifStatement->expression) + ")";
+
+        if (m_blockNeededBraces) {
+            if (ifStatement->ok->kind != Node::Kind_Block) {
+                QString result = "{\n";
+                m_indentLevel++;
+                result += formatLine(ifTrue);
+                m_indentLevel--;
+                result += formatLine("} ", false);
+                ifTrue = result;
+                ifTrueBlock = true;
+            }
+
+            if (ifStatement->ko && ifStatement->ko->kind != Node::Kind_Block && ifStatement->ko->kind != Node::Kind_IfStatement) {
+                QString result = "{\n";
+                m_indentLevel++;
+                result += formatLine(ifFalse);
+                m_indentLevel--;
+                result += formatLine("} ", false);
+                ifFalse = result;
+                ifFalseBlock = true;
+            }
+        }
 
         if (ifTrueBlock) {
             result += " " + ifTrue;
@@ -723,8 +751,6 @@ QString DumpAstVisitor::parseStatement(Statement *statement, bool blockHasNext,
             result += " "+statement;
         else
             result += ";";
-
-
 
         return result;
     }
@@ -825,7 +851,7 @@ QString DumpAstVisitor::parseStatementList(StatementList *list)
     result += getOrphanedComments(list);
 
     for (auto *item = list; item != nullptr; item = item->next) {
-        QString statement = parseStatement(item->statement->statementCast());
+        QString statement = parseStatement(item->statement->statementCast(), false, true);
         if (statement.isEmpty())
             continue;
 

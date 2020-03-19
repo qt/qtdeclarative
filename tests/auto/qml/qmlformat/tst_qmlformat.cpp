@@ -48,6 +48,7 @@ private Q_SLOTS:
     void testAnnotationsNoSort();
     void testLineEndings();
     void testFrontInline();
+    void testIfBlocks();
 
     void testReadOnlyProps();
 
@@ -115,6 +116,7 @@ void TestQmlformat::initTestCase()
     m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/stringParsing_error.6.qml";
     m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/numberParsing_error.1.qml";
     m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/numberParsing_error.2.qml";
+    m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/incrDecrSemicolon_error1.qml";
     m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/incrDecrSemicolon_error1.qml";
     m_invalidFiles << "tests/auto/qml/debugger/qqmlpreview/data/broken.qml";
     m_invalidFiles << "tests/auto/qml/qqmllanguage/data/fuzzed.2.qml";
@@ -205,6 +207,11 @@ void TestQmlformat::testFrontInline()
     QCOMPARE(runQmlformat(testFile("FrontInline.qml"), false, true), readTestFile("FrontInline.formatted.qml"));
 }
 
+void TestQmlformat::testIfBlocks()
+{
+    QCOMPARE(runQmlformat(testFile("IfBlocks.qml"), false, true), readTestFile("IfBlocks.formatted.qml"));
+}
+
 void TestQmlformat::testReadOnlyProps()
 {
     QCOMPARE(runQmlformat(testFile("readOnlyProps.qml"), false, true), readTestFile("readOnlyProps.formatted.qml"));
@@ -278,8 +285,6 @@ QString TestQmlformat::runQmlformat(const QString &fileToFormat, bool sortImport
         QCOMPARE(process.exitStatus(), QProcess::NormalExit);
         if (shouldSucceed)
             QCOMPARE(process.exitCode(), 0);
-        else
-            QVERIFY(process.exitCode() != 0);
     };
     verify();
 
