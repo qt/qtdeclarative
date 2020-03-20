@@ -906,7 +906,7 @@
 */
 
 /*!
-   \fn template<typename T> auto qmlRegisterSingletonInstance(const char *uri, int versionMajor, int versionMinor, const char *typeName, T *cppObject)
+   \fn int qmlRegisterSingletonInstance(const char *uri, int versionMajor, int versionMinor, const char *typeName, QObject *cppObject)
    \relates QQmlEngine
    \since 5.14
 

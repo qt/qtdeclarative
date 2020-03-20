@@ -842,11 +842,15 @@ void QSGTexturePrivate::updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *res
 /*!
     \fn bool QSGDynamicTexture::updateTexture()
 
-    Call this function to explicitly update the dynamic texture. Calling bind() will bind
-    the content that was previously updated.
+    Call this function to explicitly update the dynamic texture.
 
     The function returns true if the texture was changed as a resul of the update; otherwise
     returns false.
+
+    \note This function is typically called from QQuickItem::updatePaintNode()
+    or QSGNode::preprocess(), meaning during the \c{synchronization} or the
+    \c{node preprocessing} phases of the scenegraph. Calling it at other times
+    is discouraged and can lead to unexpected behavior.
  */
 
 /*!

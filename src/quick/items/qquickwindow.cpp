@@ -433,7 +433,7 @@ void QQuickWindowPrivate::syncSceneGraph()
     if (renderTargetId && !QQuickRenderControl::renderWindowFor(q))
         devicePixelRatio = 1;
 
-    context->prepareSync(devicePixelRatio);
+    context->prepareSync(devicePixelRatio, rhi ? swapchain->currentFrameCommandBuffer() : nullptr);
 
     animationController->beforeNodeSync();
 
@@ -3872,6 +3872,13 @@ bool QQuickWindow::isSceneGraphInitialized() const
     This signal will be emitted from the scene graph rendering thread.
 */
 
+/*!
+    \qmlsignal QtQuick.Window::Window::frameSwapped()
+
+    This signal is emitted when a frame has been queued for presenting. With
+    vertical synchronization enabled the signal is emitted at most once per
+    vsync interval in a continuously animating scene.
+ */
 
 /*!
     \fn void QQuickWindow::sceneGraphInitialized()
@@ -3879,9 +3886,12 @@ bool QQuickWindow::isSceneGraphInitialized() const
     This signal is emitted when the scene graph has been initialized.
 
     This signal will be emitted from the scene graph rendering thread.
-
  */
 
+/*!
+    \qmlsignal QtQuick.Window::Window::sceneGraphInitialized()
+    \internal
+ */
 
 /*!
     \fn void QQuickWindow::sceneGraphInvalidated()
@@ -3901,6 +3911,11 @@ bool QQuickWindow::isSceneGraphInitialized() const
  */
 
 /*!
+    \qmlsignal QtQuick.Window::Window::sceneGraphInvalidated()
+    \internal
+ */
+
+/*!
     \fn void QQuickWindow::sceneGraphError(SceneGraphError error, const QString &message)
 
     This signal is emitted when an \a error occurred during scene graph initialization.
@@ -3911,6 +3926,19 @@ bool QQuickWindow::isSceneGraphInitialized() const
     the \a message, or show a message box, and terminate the application.
 
     This signal will be emitted from the gui thread.
+
+    \since 5.3
+ */
+
+/*!
+    \qmlsignal QtQuick.Window::Window::sceneGraphError(SceneGraphError error, QString message)
+
+    This signal is emitted when an \a error occurred during scene graph initialization.
+
+    You can implement onSceneGraphError(error, message) to handle errors,
+    such as graphics context creation failures, in a custom way.
+    If no handler is connected to this signal, Quick will print the \a message,
+    or show a message box, and terminate the application.
 
     \since 5.3
  */
@@ -4260,6 +4288,11 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 */
 
 /*!
+    \qmlsignal QtQuick.Window::Window::beforeSynchronizing()
+    \internal
+*/
+
+/*!
     \fn void QQuickWindow::afterSynchronizing()
 
     This signal is emitted after the scene graph is synchronized with the QML state.
@@ -4280,6 +4313,12 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 
     \since 5.3
     \sa resetOpenGLState()
+ */
+
+/*!
+    \qmlsignal QtQuick.Window::Window::afterSynchronizing()
+    \internal
+    \since 5.3
  */
 
 /*!
@@ -4318,6 +4357,11 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 */
 
 /*!
+    \qmlsignal QtQuick.Window::Window::beforeRendering()
+    \internal
+*/
+
+/*!
     \fn void QQuickWindow::afterRendering()
 
     This signal is emitted after the scene has completed rendering, before swapbuffers is called.
@@ -4348,6 +4392,11 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     do so can result in the scene not rendering properly.
 
     \sa resetOpenGLState()
+ */
+
+/*!
+    \qmlsignal QtQuick.Window::Window::afterRendering()
+    \internal
  */
 
 /*!
@@ -4383,6 +4432,12 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 */
 
 /*!
+    \qmlsignal QtQuick.Window::Window::beforeRenderPassRecording()
+    \internal
+    \since 5.14
+*/
+
+/*!
     \fn void QQuickWindow::afterRenderPassRecording()
 
     This signal is emitted after the scenegraph has recorded the commands for
@@ -4414,6 +4469,12 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 */
 
 /*!
+    \qmlsignal QtQuick.Window::Window::afterRenderPassRecording()
+    \internal
+    \since 5.14
+*/
+
+/*!
     \fn void QQuickWindow::afterAnimating()
 
     This signal is emitted on the gui thread before requesting the render thread to
@@ -4423,6 +4484,17 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     instead of the render thread. It can be used to synchronize external
     animation systems with the QML content. At the same time this means that
     this signal is not suitable for triggering graphics operations.
+
+    \since 5.3
+ */
+
+/*!
+    \qmlsignal QtQuick.Window::Window::afterAnimating()
+
+    This signal is emitted on the gui thread before requesting the render thread to
+    perform the synchronization of the scene graph.
+
+    You can implement onAfterAnimating to do additional processing after each animation step.
 
     \since 5.3
  */
@@ -4450,6 +4522,12 @@ QQmlIncubationController *QQuickWindow::incubationController() const
  */
 
 /*!
+    \qmlsignal QtQuick.Window::Window::openglContextCreated()
+    \internal
+    \since 5.3
+ */
+
+/*!
     \fn void QQuickWindow::sceneGraphAboutToStop()
 
     This signal is emitted on the render thread when the scene graph is
@@ -4472,6 +4550,11 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     \since 5.3
  */
 
+/*!
+    \qmlsignal QtQuick.Window::Window::sceneGraphAboutToStop()
+    \internal
+    \since 5.3
+ */
 
 /*!
     Sets whether the scene graph rendering of QML should clear the color buffer

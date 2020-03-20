@@ -367,11 +367,28 @@ void FindUnqualifiedIDVisitor::importFileOrDirectory(const QString &fileOrDirect
 
 void FindUnqualifiedIDVisitor::importExportedNames(const QStringRef &prefix, QString name)
 {
+    QList<ScopeTree::ConstPtr> scopes;
     for (;;) {
         ScopeTree::ConstPtr scope = m_exportedName2Scope.value(m_exportedName2Scope.contains(name)
                                                                ? name
                                                                : prefix + QLatin1Char('.') + name);
         if (scope) {
+            if (scopes.contains(scope)) {
+                QString inheritenceCycle = name;
+                for (const auto seen: qAsConst(scopes)) {
+                    inheritenceCycle.append(QLatin1String(" -> "));
+                    inheritenceCycle.append(seen->superclassName());
+                }
+
+                m_colorOut.write(QLatin1String("Warning: "), Warning);
+                m_colorOut.write(QString::fromLatin1("%1 is part of an inheritance cycle: %2\n")
+                                 .arg(name)
+                                 .arg(inheritenceCycle));
+                m_unknownImports.insert(name);
+                m_visitFailed = true;
+                break;
+            }
+            scopes.append(scope);
             const auto properties = scope->properties();
             for (auto property : properties) {
                 property.setType(m_exportedName2Scope.value(property.typeName()).get());
