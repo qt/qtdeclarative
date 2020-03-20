@@ -715,7 +715,7 @@ void tst_QQuickListView::inserted_more(QQuickItemView::VerticalLayoutDirection v
             break;
         }
     }
-    QVERIFY2(firstVisibleIndex >= 0, QTest::toString(firstVisibleIndex));
+    QVERIFY2(firstVisibleIndex >= 0, QByteArray::number(firstVisibleIndex));
 
     // Confirm items positioned correctly and indexes correct
     QQuickText *name;
@@ -724,14 +724,14 @@ void tst_QQuickListView::inserted_more(QQuickItemView::VerticalLayoutDirection v
     const qreal visibleToPos = listview->contentY() + listview->height() + listview->displayMarginEnd() + listview->cacheBuffer();
     for (int i = firstVisibleIndex; i < model.count() && i < items.count(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QVERIFY2(item, qPrintable(QString("Item %1 not found").arg(i)));
         qreal pos = i*20.0 + itemsOffsetAfterMove;
         if (verticalLayoutDirection == QQuickItemView::BottomToTop)
             pos = -item->height() - pos;
         // Items outside the visible area (including cache buffer) should be skipped
         if (pos > visibleToPos || pos < visibleFromPos) {
             QTRY_VERIFY2(QQuickItemPrivate::get(item)->culled || item->y() < visibleFromPos || item->y() > visibleToPos,
-                     QTest::toString(QString("index %5, y %1, from %2, to %3, expected pos %4, culled %6").
+                     qPrintable(QString("index %5, y %1, from %2, to %3, expected pos %4, culled %6").
                                      arg(item->y()).arg(visibleFromPos).arg(visibleToPos).arg(pos).arg(i).arg(bool(QQuickItemPrivate::get(item)->culled))));
             continue;
         }
@@ -900,7 +900,7 @@ void tst_QQuickListView::insertBeforeVisible()
     int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
     for (int i = 0; i < model.count() && i < itemCount; ++i) {
         item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QVERIFY2(item, qPrintable(QString("Item %1 not found").arg(i)));
         QTRY_COMPARE(item->y(), i*20.0 + itemsOffsetAfterMove);
         name = findItem<QQuickText>(contentItem, "textName", i);
         QVERIFY(name != nullptr);
@@ -1191,14 +1191,14 @@ void tst_QQuickListView::removed_more(const QUrl &source, QQuickItemView::Vertic
             break;
         }
     }
-    QVERIFY2(firstVisibleIndex >= 0, QTest::toString(firstVisibleIndex));
+    QVERIFY2(firstVisibleIndex >= 0, QByteArray::number(firstVisibleIndex));
 
     // Confirm items positioned correctly and indexes correct
     QQuickText *name;
     QQuickText *number;
     for (int i = firstVisibleIndex; i < model.count() && i < items.count(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QVERIFY2(item, qPrintable(QString("Item %1 not found").arg(i)));
         qreal pos = i*20.0 + itemsOffsetAfterMove;
         if (verticalLayoutDirection == QQuickItemView::BottomToTop)
             pos = -item0->height() - pos;
@@ -1425,12 +1425,12 @@ void tst_QQuickListView::moved(const QUrl &source, QQuickItemView::VerticalLayou
             break;
         }
     }
-    QVERIFY2(firstVisibleIndex >= 0, QTest::toString(firstVisibleIndex));
+    QVERIFY2(firstVisibleIndex >= 0, QByteArray::number(firstVisibleIndex));
 
     // Confirm items positioned correctly and indexes correct
     for (int i = firstVisibleIndex; i < model.count() && i < items.count(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QVERIFY2(item, qPrintable(QString("Item %1 not found").arg(i)));
         qreal pos = i*20.0 + itemsOffsetAfterMove;
         if (verticalLayoutDirection == QQuickItemView::BottomToTop)
             pos = -item->height() - pos;
@@ -1671,7 +1671,7 @@ void tst_QQuickListView::multipleChanges(bool condensed)
     int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
     for (int i=0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QVERIFY2(item, qPrintable(QString("Item %1 not found").arg(i)));
         name = findItem<QQuickText>(contentItem, "textName", i);
         QVERIFY(name != nullptr);
         QTRY_COMPARE(name->text(), model.name(i));
@@ -6736,7 +6736,7 @@ void tst_QQuickListView::populateTransitions()
     int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
     for (int i=0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QVERIFY2(item, qPrintable(QString("Item %1 not found").arg(i)));
         QTRY_COMPARE(item->x(), 0.0);
         QTRY_COMPARE(item->y(), i*20.0);
         QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
@@ -6771,7 +6771,7 @@ void tst_QQuickListView::populateTransitions()
     itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
     for (int i=0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QVERIFY2(item, qPrintable(QString("Item %1 not found").arg(i)));
         QTRY_COMPARE(item->x(), 0.0);
         QTRY_COMPARE(item->y(), i*20.0);
         QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
@@ -6789,7 +6789,7 @@ void tst_QQuickListView::populateTransitions()
     itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
     for (int i=0; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QVERIFY2(item, qPrintable(QString("Item %1 not found").arg(i)));
         QTRY_COMPARE(item->x(), 0.0);
         QTRY_COMPARE(item->y(), i*20.0);
         QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
@@ -6974,12 +6974,12 @@ void tst_QQuickListView::addTransitions()
             break;
         }
     }
-    QVERIFY2(firstVisibleIndex >= 0, QTest::toString(firstVisibleIndex));
+    QVERIFY2(firstVisibleIndex >= 0, QByteArray::number(firstVisibleIndex));
 
     // verify all items moved to the correct final positions
     for (int i=firstVisibleIndex; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QVERIFY2(item, qPrintable(QString("Item %1 not found").arg(i)));
         QTRY_COMPARE(item->y(), i*20.0);
         QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
         QVERIFY(name != nullptr);
@@ -7158,13 +7158,13 @@ void tst_QQuickListView::moveTransitions()
             break;
         }
     }
-    QVERIFY2(firstVisibleIndex >= 0, QTest::toString(firstVisibleIndex));
+    QVERIFY2(firstVisibleIndex >= 0, QByteArray::number(firstVisibleIndex));
 
     // verify all items moved to the correct final positions
     int itemCount = findItems<QQuickItem>(contentItem, "wrapper").count();
     for (int i=firstVisibleIndex; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QVERIFY2(item, qPrintable(QString("Item %1 not found").arg(i)));
         QTRY_COMPARE(item->y(), i*20.0 + itemsOffsetAfterMove);
         name = findItem<QQuickText>(contentItem, "textName", i);
         QVERIFY(name != nullptr);
@@ -7372,12 +7372,12 @@ void tst_QQuickListView::removeTransitions()
         if (index < 0)
             itemCount--;    // exclude deleted items
     }
-    QVERIFY2(firstVisibleIndex >= 0, QTest::toString(firstVisibleIndex));
+    QVERIFY2(firstVisibleIndex >= 0, QByteArray::number(firstVisibleIndex));
 
     // verify all items moved to the correct final positions
     for (int i=firstVisibleIndex; i < model.count() && i < itemCount; ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QVERIFY2(item, qPrintable(QString("Item %1 not found").arg(i)));
         QCOMPARE(item->x(), 0.0);
         QCOMPARE(item->y(), contentY + (i-firstVisibleIndex) * 20.0);
         QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
@@ -7592,7 +7592,7 @@ void tst_QQuickListView::displacedTransitions()
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
     for (int i=0; i < model.count() && i < items.count(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QVERIFY2(item, qPrintable(QString("Item %1 not found").arg(i)));
         QCOMPARE(item->x(), 0.0);
         QCOMPARE(item->y(), i * 20.0);
         QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
@@ -7800,7 +7800,7 @@ void tst_QQuickListView::multipleTransitions()
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
     for (int i=0; i < model.count() && i < items.count(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QVERIFY2(item, qPrintable(QString("Item %1 not found").arg(i)));
         QTRY_COMPARE(item->x(), 0.0);
         QTRY_COMPARE(item->y(), i*20.0);
         QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
@@ -7902,14 +7902,14 @@ void tst_QQuickListView::multipleDisplaced()
     QVariantMap transitionsStarted = listview->property("displaceTransitionsStarted").toMap();
     foreach (const QString &name, transitionsStarted.keys()) {
         QVERIFY2(transitionsStarted[name] == 1,
-                 QTest::toString(QString("%1 was displaced %2 times").arg(name).arg(transitionsStarted[name].toInt())));
+                 qPrintable(QString("%1 was displaced %2 times").arg(name).arg(transitionsStarted[name].toInt())));
     }
 
     // verify all items moved to the correct final positions
     QList<QQuickItem*> items = findItems<QQuickItem>(contentItem, "wrapper");
     for (int i=0; i < model.count() && i < items.count(); ++i) {
         QQuickItem *item = findItem<QQuickItem>(contentItem, "wrapper", i);
-        QVERIFY2(item, QTest::toString(QString("Item %1 not found").arg(i)));
+        QVERIFY2(item, qPrintable(QString("Item %1 not found").arg(i)));
         QTRY_COMPARE(item->x(), 0.0);
         QTRY_COMPARE(item->y(), i*20.0);
         QQuickText *name = findItem<QQuickText>(contentItem, "textName", i);
@@ -7951,7 +7951,7 @@ void tst_QQuickListView::matchItemsAndIndexes(const QVariantMap &items, const Qa
         QCOMPARE(it.value().type(), QVariant::Int);
         QString name = it.key();
         int itemIndex = it.value().toInt();
-        QVERIFY2(expectedIndexes.contains(itemIndex), QTest::toString(QString("Index %1 not found in expectedIndexes").arg(itemIndex)));
+        QVERIFY2(expectedIndexes.contains(itemIndex), qPrintable(QString("Index %1 not found in expectedIndexes").arg(itemIndex)));
         if (model.name(itemIndex) != name)
             qDebug() << itemIndex;
         QCOMPARE(model.name(itemIndex), name);
@@ -7966,8 +7966,8 @@ void tst_QQuickListView::matchItemLists(const QVariantList &itemLists, const QLi
         QVariantList current = itemLists[i].toList();
         for (int j=0; j<current.count(); j++) {
             QQuickItem *o = qobject_cast<QQuickItem*>(current[j].value<QObject*>());
-            QVERIFY2(o, QTest::toString(QString("Invalid actual item at %1").arg(j)));
-            QVERIFY2(expectedItems.contains(o), QTest::toString(QString("Cannot match item %1").arg(j)));
+            QVERIFY2(o, qPrintable(QString("Invalid actual item at %1").arg(j)));
+            QVERIFY2(expectedItems.contains(o), qPrintable(QString("Cannot match item %1").arg(j)));
         }
         QCOMPARE(current.count(), expectedItems.count());
     }
