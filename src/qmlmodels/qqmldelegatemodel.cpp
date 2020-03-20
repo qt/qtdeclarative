@@ -651,7 +651,7 @@ QQmlDelegateModel::ReleaseFlags QQmlDelegateModel::release(QObject *item, QQmlIn
 void QQmlDelegateModel::cancel(int index)
 {
     Q_D(QQmlDelegateModel);
-    if (!d->m_delegate || index < 0 || index >= d->m_compositor.count(d->m_compositorGroup)) {
+    if (index < 0 || index >= d->m_compositor.count(d->m_compositorGroup)) {
         qWarning() << "DelegateModel::cancel: index out range" << index << d->m_compositor.count(d->m_compositorGroup);
         return;
     }
