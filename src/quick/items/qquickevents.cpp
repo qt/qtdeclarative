@@ -580,8 +580,6 @@ Item {
     \sa QTouchDevice::capabilities
 */
 
-typedef QHash<const QTouchDevice *, QQuickPointerDevice *> PointerDeviceForTouchDeviceHash;
-Q_GLOBAL_STATIC(PointerDeviceForTouchDeviceHash, g_touchDevices)
 
 struct ConstructableQQuickPointerDevice : public QQuickPointerDevice
 {
@@ -591,14 +589,21 @@ struct ConstructableQQuickPointerDevice : public QQuickPointerDevice
         : QQuickPointerDevice(devType, pType, caps, maxPoints, buttonCount, name, uniqueId) {}
 
 };
+
+template<typename Key>
+struct PointerDeviceHash : public QHash<Key, ConstructableQQuickPointerDevice *>
+{
+    ~PointerDeviceHash() { qDeleteAll(*this); }
+};
+using PointerDeviceForTouchDeviceHash = PointerDeviceHash<const QTouchDevice *>;
+Q_GLOBAL_STATIC(PointerDeviceForTouchDeviceHash, g_touchDevices)
 Q_GLOBAL_STATIC_WITH_ARGS(ConstructableQQuickPointerDevice, g_genericMouseDevice,
                             (QQuickPointerDevice::Mouse,
                              QQuickPointerDevice::GenericPointer,
                              QQuickPointerDevice::Position | QQuickPointerDevice::Scroll | QQuickPointerDevice::Hover,
                              1, 3, QLatin1String("core pointer"), 0))
-
 #if QT_CONFIG(tabletevent)
-typedef QHash<qint64, QQuickPointerDevice *> PointerDeviceForDeviceIdHash;
+using PointerDeviceForDeviceIdHash = PointerDeviceHash<qint64>;
 Q_GLOBAL_STATIC(PointerDeviceForDeviceIdHash, g_tabletDevices)
 #endif
 
@@ -639,20 +644,28 @@ QQuickPointerDevice *QQuickPointerDevice::touchDevice(const QTouchDevice *d)
         qWarning() << "QQuickWindowPrivate::touchDevice: creating touch device from nullptr device in QTouchEvent";
     }
 
-    QQuickPointerDevice *dev = new QQuickPointerDevice(type, QQuickPointerDevice::Finger,
-        caps, maximumTouchPoints, 0, name, 0);
+    ConstructableQQuickPointerDevice *dev = new ConstructableQQuickPointerDevice(
+                type, QQuickPointerDevice::Finger, caps, maximumTouchPoints, 0, name, 0);
     g_touchDevices->insert(d, dev);
     return dev;
 }
 
 const QTouchDevice *QQuickPointerDevice::qTouchDevice() const
 {
-    return g_touchDevices->key(const_cast<QQuickPointerDevice *>(this));
+    for (auto it = g_touchDevices->constBegin(), end = g_touchDevices->constEnd(); it != end; ++it) {
+        if (it.value() == this)
+            return it.key();
+    }
+    return nullptr;
 }
 
 QList<QQuickPointerDevice*> QQuickPointerDevice::touchDevices()
 {
-    return g_touchDevices->values();
+    QList<QQuickPointerDevice *> result;
+    result.reserve(g_touchDevices->size());
+    for (auto device : *g_touchDevices)
+        result.append(device);
+    return result;
 }
 
 QQuickPointerDevice *QQuickPointerDevice::genericMouseDevice()
@@ -723,8 +736,10 @@ QQuickPointerDevice *QQuickPointerDevice::tabletDevice(const QTabletEvent *event
         break;
     }
 
-    QQuickPointerDevice *device = new QQuickPointerDevice(type, ptype, caps, 1, buttonCount,
-        QLatin1String("tablet tool ") + QString::number(event->uniqueId()), event->uniqueId());
+    ConstructableQQuickPointerDevice *device = new ConstructableQQuickPointerDevice(
+                type, ptype, caps, 1, buttonCount,
+                QLatin1String("tablet tool ") + QString::number(event->uniqueId()),
+                event->uniqueId());
 
     g_tabletDevices->insert(key, device);
     return device;
