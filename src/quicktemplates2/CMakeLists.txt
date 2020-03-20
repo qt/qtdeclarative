@@ -58,8 +58,6 @@ qt_add_module(QuickTemplates2
         qquickpage.cpp qquickpage_p.h
         qquickpage_p_p.h
         qquickpageindicator.cpp qquickpageindicator_p.h
-        qquickpalette.cpp qquickpalette_p.h
-        qquickpaletteprovider.cpp qquickpaletteprovider_p.h
         qquickpane.cpp qquickpane_p.h
         qquickpane_p_p.h
         qquickpopup.cpp qquickpopup_p.h
