@@ -269,13 +269,23 @@ QQmlDelegateModel::~QQmlDelegateModel()
             Q_ASSERT(cacheItem->contextData->refCount == 1);
             cacheItem->contextData = nullptr;
             cacheItem->scriptRef -= 1;
+        } else if (cacheItem->incubationTask) {
+            // Both the incubationTask and the object may hold a scriptRef,
+            // but if both are present, only one scriptRef is held in total.
+            cacheItem->scriptRef -= 1;
         }
+
         cacheItem->groups &= ~Compositor::UnresolvedFlag;
         cacheItem->objectRef = 0;
+
+        if (cacheItem->incubationTask) {
+            d->releaseIncubator(cacheItem->incubationTask);
+            cacheItem->incubationTask->vdm = nullptr;
+            cacheItem->incubationTask = nullptr;
+        }
+
         if (!cacheItem->isReferenced())
             delete cacheItem;
-        else if (cacheItem->incubationTask)
-            cacheItem->incubationTask->vdm = nullptr;
     }
 }
 
