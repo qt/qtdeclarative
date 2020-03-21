@@ -326,6 +326,7 @@ TestCase {
         var control = createTemporaryObject(popupControl, testCase, {visible: true, margins: 0})
         verify(control)
 
+        control.scale = 1.0
         control.width = control.implicitWidth = testCase.width + 10
         control.height = control.implicitHeight = testCase.height + 10
 
@@ -1293,8 +1294,8 @@ TestCase {
         // Center the popup in the window via the overlay.
         control.anchors.centerIn = Qt.binding(function() { return control.parent; })
         compare(centerInSpy.count, 1)
-        compare(control.x, (overlay.width - control.width) / 2)
-        compare(control.y, (overlay.height - control.height) / 2)
+        compare(control.x, (overlay.width - (control.width * control.scale)) / 2)
+        compare(control.y, (overlay.height - (control.width * control.scale)) / 2)
 
         // Ensure that it warns when trying to set it to an item that's not its parent.
         var anotherItem = createTemporaryObject(rect, applicationWindow.contentItem, { x: 100, y: 100, width: 50, height: 50 })
@@ -1317,14 +1318,14 @@ TestCase {
         compare(control.parent, anotherItem)
         compare(control.anchors.centerIn, anotherItem)
         compare(centerInSpy.count, 4)
-        compare(control.x, (anotherItem.width - control.width) / 2)
-        compare(control.y, (anotherItem.height - control.height) / 2)
+        compare(control.x, (anotherItem.width - (control.width * control.scale)) / 2)
+        compare(control.y, (anotherItem.height - (control.height * control.scale)) / 2)
 
         // Check that anchors.centerIn beats x and y coordinates as it does in QQuickItem.
         control.x = 33;
         control.y = 44;
-        compare(control.x, (anotherItem.width - control.width) / 2)
-        compare(control.y, (anotherItem.height - control.height) / 2)
+        compare(control.x, (anotherItem.width - (control.width * control.scale)) / 2)
+        compare(control.y, (anotherItem.height - (control.height * control.scale)) / 2)
 
         // Check that the popup's x and y coordinates are restored when it's no longer centered.
         control.anchors.centerIn = undefined
@@ -1335,8 +1336,8 @@ TestCase {
         // Test centering in the overlay while having a different parent (anotherItem).
         control.anchors.centerIn = overlay
         compare(centerInSpy.count, 6)
-        compare(control.x, (overlay.width - control.width) / 2)
-        compare(control.y, (overlay.height - control.height) / 2)
+        compare(control.x, (overlay.width - (control.width * control.scale)) / 2)
+        compare(control.y, (overlay.height - (control.height * control.scale)) / 2)
 
         // TODO: do this properly by creating a component or something
         applicationWindow.visible = false
