@@ -548,6 +548,8 @@ void registerTypes()
     qmlRegisterType<FloatingQObject>("Qt.test", 1, 0, "FloatingQObject");
 
     qmlRegisterType<ClashingNames>("Qt.test", 1, 0, "ClashingNames");
+
+    qmlRegisterType<ClassWithQProperty>("Qt.test", 1, 0, "ClassWithQProperty");
 }
 
 #include "testtypes.moc"

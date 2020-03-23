@@ -44,6 +44,7 @@
 #include <QtCore/qjsonarray.h>
 #include <QtCore/qjsonobject.h>
 #include <QtCore/qjsonvalue.h>
+#include <QtCore/qproperty.h>
 #include <QtQml/qjsvalue.h>
 #include <QtQml/qqmlscriptstring.h>
 #include <QtQml/qqmlcomponent.h>
@@ -1724,6 +1725,14 @@ class ClashingNames : public QObject
     Q_PROPERTY(bool clashes READ clashes CONSTANT)
 public:
     Q_INVOKABLE bool clashes() const { return true; }
+};
+
+struct ClassWithQProperty : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int value)
+public:
+    QProperty<int> value;
 };
 
 void registerTypes();

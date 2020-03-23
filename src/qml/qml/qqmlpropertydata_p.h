@@ -97,7 +97,7 @@ public:
         // b when type equals FunctionType. For that reason, the semantic meaning of the bit is
         // overloaded, and the accessor functions are used to get the correct value
         //
-        // Moreover, isSignalHandler, isOverload and isCloned and isConstructor make only sense
+        // Moreover, isSignalHandler, isOverload and isCloned make only sense
         // for functions, too (and could at a later point be reused for flags that only make sense
         // for non-functions)
         //
@@ -111,7 +111,7 @@ public:
         unsigned isSignalHandler               : 1; // Function is a signal handler
         unsigned isOverload                    : 1; // Function is an overload of another function
         unsigned isRequiredORisCloned          : 1; // Has REQUIRED flag OR The function was marked as cloned
-        unsigned isConstructor                 : 1; // The function was marked is a constructor
+        unsigned isConstructorORisQProperty    : 1; // The function was marked is a constructor OR property is backed by QProperty<T>
         unsigned isDirect                      : 1; // Exists on a C++ QMetaObject
         unsigned isOverridden                  : 1; // Is overridden by a extension property
     public:
@@ -154,6 +154,10 @@ public:
 
         void setIsOverridden(bool b) {
             isOverridden = b;
+        }
+
+        void setIsQProperty(bool b) {
+            isConstructorORisQProperty = b;
         }
 
         void setIsDirect(bool b) {
@@ -204,7 +208,7 @@ public:
 
         void setIsConstructor(bool b) {
             Q_ASSERT(type == FunctionType);
-            isConstructor = b;
+            isConstructorORisQProperty = b;
         }
 
     };
@@ -249,7 +253,8 @@ public:
     bool isOverload() const { return m_flags.isOverload; }
     void setOverload(bool onoff) { m_flags.isOverload = onoff; }
     bool isCloned() const { return isFunction() && m_flags.isRequiredORisCloned; }
-    bool isConstructor() const { return m_flags.isConstructor; }
+    bool isConstructor() const { return m_flags.isConstructorORisQProperty; }
+    bool isQProperty() const { return m_flags.isConstructorORisQProperty; }
 
     bool hasOverride() const { return overrideIndex() >= 0; }
     bool hasRevision() const { return revision() != QTypeRevision::zero(); }
@@ -441,7 +446,7 @@ QQmlPropertyData::Flags::Flags()
     , isSignalHandler(false)
     , isOverload(false)
     , isRequiredORisCloned(false)
-    , isConstructor(false)
+    , isConstructorORisQProperty(false)
     , isOverridden(false)
     , type(OtherType)
     , notFullyResolved(false)
@@ -459,7 +464,7 @@ bool QQmlPropertyData::Flags::operator==(const QQmlPropertyData::Flags &other) c
             isSignalHandler == other.isSignalHandler &&
             isRequiredORisCloned == other.isRequiredORisCloned &&
             type == other.type &&
-            isConstructor == other.isConstructor &&
+            isConstructorORisQProperty == other.isConstructorORisQProperty &&
             notFullyResolved == other.notFullyResolved &&
             overrideIndexIsProperty == other.overrideIndexIsProperty;
 }

@@ -60,6 +60,7 @@
 #include <private/qjsvalue_p.h>
 #include <private/qv4generatorobject_p.h>
 #include <private/qv4resolvedtypereference_p.h>
+#include <private/qqmlpropertybinding_p.h>
 
 #include <QScopedValueRollback>
 
@@ -917,6 +918,12 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
                         _scopeObject, runtimeFunction, currentQmlContext());
 
             bs->takeExpression(expr);
+        } else if (bindingProperty->isQProperty()) {
+            // ### TODO: support binding->isTranslationBinding()
+            QV4::Function *runtimeFunction = compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex];
+            auto qmlBinding = QQmlPropertyBinding::create(bindingProperty, runtimeFunction, _scopeObject, context, currentQmlContext());
+            void *argv[] = { &qmlBinding };
+            _bindingTarget->qt_metacall(QMetaObject::SetQPropertyBinding, bindingProperty->coreIndex(), argv);
         } else {
             // When writing bindings to grouped properties implemented as value types,
             // such as point.x: { someExpression; }, then the binding is installed on

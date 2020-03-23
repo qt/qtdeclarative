@@ -381,6 +381,7 @@ private slots:
     void getThisObject();
     void semicolonAfterProperty();
     void hugeStack();
+    void bindingOnQProperty();
 
     void gcCrashRegressionTest();
 
@@ -9279,6 +9280,22 @@ void tst_qqmlecmascript::gcCrashRegressionTest()
     QVERIFY(pid != 0);
     QVERIFY(process.waitForFinished());
     QCOMPARE(process.exitCode(), 0);
+}
+
+void tst_qqmlecmascript::bindingOnQProperty()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("bindingOnQProperty.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> test(component.create());
+    test->setProperty("externalValue", 42);
+    QCOMPARE(test->property("value").toInt(), 42);
+    test->setProperty("externalValue", 100);
+    QCOMPARE(test->property("value").toInt(), 100);
+
+    QVERIFY(qobject_cast<ClassWithQProperty*>(test.data()));
+    QProperty<int> &qprop = static_cast<ClassWithQProperty*>(test.data())->value;
+    QVERIFY(qprop.hasBinding());
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

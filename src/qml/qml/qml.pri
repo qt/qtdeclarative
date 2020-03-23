@@ -54,6 +54,7 @@ SOURCES += \
     $$PWD/qqmlfile.cpp \
     $$PWD/qqmlplatform.cpp \
     $$PWD/qqmlbinding.cpp \
+    $$PWD/qqmlpropertybinding.cpp \
     $$PWD/qqmlabstracturlinterceptor.cpp \
     $$PWD/qqmlapplicationengine.cpp \
     $$PWD/qqmllistwrapper.cpp \
@@ -148,6 +149,7 @@ HEADERS += \
     $$PWD/qqmlfile.h \
     $$PWD/qqmlplatform_p.h \
     $$PWD/qqmlbinding_p.h \
+    $$PWD/qqmlpropertybinding_p.h \
     $$PWD/qqmlextensionplugin_p.h \
     $$PWD/qqmlabstracturlinterceptor.h \
     $$PWD/qqmlapplicationengine_p.h \
