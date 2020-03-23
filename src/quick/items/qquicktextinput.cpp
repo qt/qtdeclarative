@@ -1724,8 +1724,8 @@ bool QQuickTextInput::event(QEvent* ev)
     return QQuickImplicitSizeItem::event(ev);
 }
 
-void QQuickTextInput::geometryChanged(const QRectF &newGeometry,
-                                  const QRectF &oldGeometry)
+void QQuickTextInput::geometryChange(const QRectF &newGeometry,
+                                     const QRectF &oldGeometry)
 {
     Q_D(QQuickTextInput);
     if (!d->inLayout) {
@@ -1735,7 +1735,7 @@ void QQuickTextInput::geometryChanged(const QRectF &newGeometry,
             d->updateBaselineOffset();
         updateCursorRectangle();
     }
-    QQuickImplicitSizeItem::geometryChanged(newGeometry, oldGeometry);
+    QQuickImplicitSizeItem::geometryChange(newGeometry, oldGeometry);
 }
 
 void QQuickTextInputPrivate::ensureVisible(int position, int preeditCursor, int preeditLength)

@@ -615,17 +615,17 @@ bool QQuickShaderEffect::event(QEvent *e)
     return QQuickItem::event(e);
 }
 
-void QQuickShaderEffect::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickShaderEffect::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
 #if QT_CONFIG(opengl)
     if (m_glImpl) {
         m_glImpl->handleGeometryChanged(newGeometry, oldGeometry);
-        QQuickItem::geometryChanged(newGeometry, oldGeometry);
+        QQuickItem::geometryChange(newGeometry, oldGeometry);
         return;
     }
 #endif
     m_impl->handleGeometryChanged(newGeometry, oldGeometry);
-    QQuickItem::geometryChanged(newGeometry, oldGeometry);
+    QQuickItem::geometryChange(newGeometry, oldGeometry);
 }
 
 QSGNode *QQuickShaderEffect::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *updatePaintNodeData)

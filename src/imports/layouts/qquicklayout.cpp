@@ -743,7 +743,7 @@ void QQuickLayout::componentComplete()
 {
     Q_D(QQuickLayout);
     d->m_disableRearrange = true;
-    QQuickItem::componentComplete();    // will call our geometryChanged(), (where isComponentComplete() == true)
+    QQuickItem::componentComplete();    // will call our geometryChange(), (where isComponentComplete() == true)
     d->m_disableRearrange = false;
     d->m_isReady = true;
 }
@@ -828,14 +828,14 @@ void QQuickLayout::itemChange(ItemChange change, const ItemChangeData &value)
     QQuickItem::itemChange(change, value);
 }
 
-void QQuickLayout::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickLayout::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickLayout);
-    QQuickItem::geometryChanged(newGeometry, oldGeometry);
+    QQuickItem::geometryChange(newGeometry, oldGeometry);
     if (d->m_disableRearrange || !isReady() || !newGeometry.isValid())
         return;
 
-    qCDebug(lcQuickLayouts) << "QQuickLayout::geometryChanged" << newGeometry << oldGeometry;
+    qCDebug(lcQuickLayouts) << "QQuickLayout::geometryChange" << newGeometry << oldGeometry;
     rearrange(newGeometry.size());
 }
 

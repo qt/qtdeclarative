@@ -77,11 +77,11 @@ void Graph::removeFirstSample()
     update();
 }
 
-void Graph::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void Graph::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     m_geometryChanged = true;
     update();
-    QQuickItem::geometryChanged(newGeometry, oldGeometry);
+    QQuickItem::geometryChange(newGeometry, oldGeometry);
 }
 
 

@@ -136,7 +136,7 @@ Q_SIGNALS:
 
 protected:
     bool event(QEvent *e) override;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *updatePaintNodeData) override;
     void componentComplete() override;
     void itemChange(ItemChange change, const ItemChangeData &value) override;

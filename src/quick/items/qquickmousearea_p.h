@@ -182,8 +182,7 @@ protected:
     void timerEvent(QTimerEvent *event) override;
     void windowDeactivateEvent() override;
 
-    void geometryChanged(const QRectF &newGeometry,
-                                 const QRectF &oldGeometry) override;
+    void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void itemChange(ItemChange change, const ItemChangeData& value) override;
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
 

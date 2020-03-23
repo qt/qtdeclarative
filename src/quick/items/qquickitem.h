@@ -409,6 +409,7 @@ protected:
 
     bool isComponentComplete() const;
     virtual void itemChange(ItemChange, const ItemChangeData &);
+    virtual void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry);
 
 #if QT_CONFIG(im)
     void updateInputMethod(Qt::InputMethodQueries queries = Qt::ImQueryInput);
@@ -449,9 +450,6 @@ protected:
 #endif
     virtual bool childMouseEventFilter(QQuickItem *, QEvent *);
     virtual void windowDeactivateEvent();
-
-    virtual void geometryChanged(const QRectF &newGeometry,
-                                 const QRectF &oldGeometry);
 
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
     virtual void releaseResources();

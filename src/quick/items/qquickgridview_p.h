@@ -122,7 +122,7 @@ Q_SIGNALS:
 protected:
     void viewportMoved(Qt::Orientations) override;
     void keyPressEvent(QKeyEvent *) override;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void initItem(int index, QObject *item) override;
 };
 

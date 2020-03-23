@@ -2363,11 +2363,11 @@ QRectF QQuickText::clipRect() const
 }
 
 /*! \internal */
-void QQuickText::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickText::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickText);
     if (d->text.isEmpty()) {
-        QQuickItem::geometryChanged(newGeometry, oldGeometry);
+        QQuickItem::geometryChange(newGeometry, oldGeometry);
         return;
     }
 
@@ -2436,7 +2436,7 @@ void QQuickText::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeo
     }
 
 geomChangeDone:
-    QQuickItem::geometryChanged(newGeometry, oldGeometry);
+    QQuickItem::geometryChange(newGeometry, oldGeometry);
 }
 
 void QQuickText::triggerPreprocess()

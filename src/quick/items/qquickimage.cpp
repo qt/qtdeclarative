@@ -628,9 +628,9 @@ void QQuickImage::updatePaintedGeometry()
     emit paintedGeometryChanged();
 }
 
-void QQuickImage::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickImage::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
-    QQuickImageBase::geometryChanged(newGeometry, oldGeometry);
+    QQuickImageBase::geometryChange(newGeometry, oldGeometry);
     if (newGeometry.size() != oldGeometry.size())
         updatePaintedGeometry();
 }

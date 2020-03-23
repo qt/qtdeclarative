@@ -1044,11 +1044,10 @@ void QQuickMouseArea::windowDeactivateEvent()
     QQuickItem::windowDeactivateEvent();
 }
 
-void QQuickMouseArea::geometryChanged(const QRectF &newGeometry,
-                                            const QRectF &oldGeometry)
+void QQuickMouseArea::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickMouseArea);
-    QQuickItem::geometryChanged(newGeometry, oldGeometry);
+    QQuickItem::geometryChange(newGeometry, oldGeometry);
 
     if (d->lastScenePos.isNull)
         d->lastScenePos = mapToScene(d->lastPos);

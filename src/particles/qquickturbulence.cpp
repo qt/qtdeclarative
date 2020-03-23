@@ -85,7 +85,7 @@ QQuickTurbulenceAffector::QQuickTurbulenceAffector(QQuickItem *parent) :
 {
 }
 
-void QQuickTurbulenceAffector::geometryChanged(const QRectF &, const QRectF &)
+void QQuickTurbulenceAffector::geometryChange(const QRectF &, const QRectF &)
 {
     initializeGrid();
 }

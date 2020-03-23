@@ -948,13 +948,13 @@ QObject *QQuickLoader::item() const
     return d->object;
 }
 
-void QQuickLoader::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickLoader::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickLoader);
     if (newGeometry != oldGeometry) {
         d->_q_updateSize();
     }
-    QQuickItem::geometryChanged(newGeometry, oldGeometry);
+    QQuickItem::geometryChange(newGeometry, oldGeometry);
 }
 
 QUrl QQuickLoaderPrivate::resolveSourceUrl(QQmlV4Function *args)

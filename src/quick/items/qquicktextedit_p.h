@@ -391,8 +391,7 @@ private:
 protected:
     QQuickTextEdit(QQuickTextEditPrivate &dd, QQuickItem *parent = nullptr);
 
-    void geometryChanged(const QRectF &newGeometry,
-                         const QRectF &oldGeometry) override;
+    void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
     bool event(QEvent *) override;
     void keyPressEvent(QKeyEvent *) override;

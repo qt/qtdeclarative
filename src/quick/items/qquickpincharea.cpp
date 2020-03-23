@@ -658,10 +658,9 @@ bool QQuickPinchArea::childMouseEventFilter(QQuickItem *i, QEvent *e)
     return QQuickItem::childMouseEventFilter(i, e);
 }
 
-void QQuickPinchArea::geometryChanged(const QRectF &newGeometry,
-                                            const QRectF &oldGeometry)
+void QQuickPinchArea::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
-    QQuickItem::geometryChanged(newGeometry, oldGeometry);
+    QQuickItem::geometryChange(newGeometry, oldGeometry);
 }
 
 void QQuickPinchArea::itemChange(ItemChange change, const ItemChangeData &value)

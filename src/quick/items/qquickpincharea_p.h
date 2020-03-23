@@ -295,8 +295,7 @@ protected:
     bool childMouseEventFilter(QQuickItem *i, QEvent *e) override;
     void touchEvent(QTouchEvent *event) override;
 
-    void geometryChanged(const QRectF &newGeometry,
-                         const QRectF &oldGeometry) override;
+    void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void itemChange(ItemChange change, const ItemChangeData& value) override;
     bool event(QEvent *) override;
 

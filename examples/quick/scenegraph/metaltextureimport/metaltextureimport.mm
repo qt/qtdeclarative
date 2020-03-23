@@ -147,9 +147,9 @@ QSGNode *CustomTextureItem::updatePaintNode(QSGNode *node, UpdatePaintNodeData *
 }
 //! [2]
 
-void CustomTextureItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void CustomTextureItem::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
-    QQuickItem::geometryChanged(newGeometry, oldGeometry);
+    QQuickItem::geometryChange(newGeometry, oldGeometry);
 
     if (newGeometry.size() != oldGeometry.size())
         update();

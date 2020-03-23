@@ -291,7 +291,7 @@ Q_SIGNALS:
 protected:
     void updatePolish() override;
     void componentComplete() override;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     qreal minYExtent() const override;
     qreal maxYExtent() const override;
     qreal minXExtent() const override;

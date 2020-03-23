@@ -3322,10 +3322,10 @@ QQuickTableViewAttached *QQuickTableView::qmlAttachedProperties(QObject *obj)
     return new QQuickTableViewAttached(obj);
 }
 
-void QQuickTableView::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickTableView::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickTableView);
-    QQuickFlickable::geometryChanged(newGeometry, oldGeometry);
+    QQuickFlickable::geometryChange(newGeometry, oldGeometry);
 
     if (d->tableModel) {
         // When the view changes size, we force the pool to

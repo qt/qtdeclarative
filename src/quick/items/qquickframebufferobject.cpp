@@ -185,9 +185,9 @@ bool QQuickFramebufferObject::mirrorVertically() const
 /*!
  * \internal
  */
-void QQuickFramebufferObject::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickFramebufferObject::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
-    QQuickItem::geometryChanged(newGeometry, oldGeometry);
+    QQuickItem::geometryChange(newGeometry, oldGeometry);
 
     Q_D(QQuickFramebufferObject);
     if (newGeometry.size() != oldGeometry.size() && d->followsItemSize)

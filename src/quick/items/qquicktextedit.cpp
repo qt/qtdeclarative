@@ -1443,8 +1443,7 @@ void QQuickTextEdit::setInputMethodHints(Qt::InputMethodHints hints)
 #endif // im
 }
 
-void QQuickTextEdit::geometryChanged(const QRectF &newGeometry,
-                                  const QRectF &oldGeometry)
+void QQuickTextEdit::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickTextEdit);
     if (!d->inLayout && ((newGeometry.width() != oldGeometry.width() && widthValid())
@@ -1453,7 +1452,7 @@ void QQuickTextEdit::geometryChanged(const QRectF &newGeometry,
         updateWholeDocument();
         moveCursorDelegate();
     }
-    QQuickImplicitSizeItem::geometryChanged(newGeometry, oldGeometry);
+    QQuickImplicitSizeItem::geometryChange(newGeometry, oldGeometry);
 
 }
 

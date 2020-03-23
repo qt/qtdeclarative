@@ -105,8 +105,7 @@ public Q_SLOTS:
     }
 
 protected:
-    void geometryChanged(const QRectF &newGeometry,
-                         const QRectF &oldGeometry) override;
+    void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 private:
     void ensureInit();
     void mapUpdate();

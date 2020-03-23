@@ -303,8 +303,7 @@ protected:
     qreal vHeight() const;
     void componentComplete() override;
     virtual void viewportMoved(Qt::Orientations orient);
-    void geometryChanged(const QRectF &newGeometry,
-                         const QRectF &oldGeometry) override;
+    void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void mouseUngrabEvent() override;
     bool filterMouseEvent(QQuickItem *receiver, QMouseEvent *event);
 

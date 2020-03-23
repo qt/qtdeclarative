@@ -594,11 +594,11 @@ void QQuickCanvasItem::sceneGraphInitialized()
         QMetaObject::invokeMethod(this, "requestPaint", Qt::QueuedConnection);
 }
 
-void QQuickCanvasItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickCanvasItem::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickCanvasItem);
 
-    QQuickItem::geometryChanged(newGeometry, oldGeometry);
+    QQuickItem::geometryChange(newGeometry, oldGeometry);
 
     // Due to indirect recursion, newGeometry may be outdated
     // after this call, so we use width and height instead.

@@ -62,7 +62,7 @@ public:
 
 protected:
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
+    void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry);
 
 public slots:
     void appendSample(qreal value);

@@ -94,7 +94,7 @@ public:
     void checkAnchors(QQuickItem *item) const;
 
     void itemChange(ItemChange change, const ItemChangeData &value) override;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)  override;
+    void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)  override;
     bool isReady() const;
     void deactivateRecur();
 

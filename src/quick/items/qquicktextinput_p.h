@@ -367,8 +367,7 @@ private:
 protected:
     QQuickTextInput(QQuickTextInputPrivate &dd, QQuickItem *parent = nullptr);
 
-    void geometryChanged(const QRectF &newGeometry,
-                                 const QRectF &oldGeometry) override;
+    void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;

@@ -1799,11 +1799,10 @@ void QQuickFlickablePrivate::viewportAxisMoved(AxisData &data, qreal minExtent, 
     data.vTime = timeline.time();
 }
 
-void QQuickFlickable::geometryChanged(const QRectF &newGeometry,
-                             const QRectF &oldGeometry)
+void QQuickFlickable::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickFlickable);
-    QQuickItem::geometryChanged(newGeometry, oldGeometry);
+    QQuickItem::geometryChange(newGeometry, oldGeometry);
 
     bool changed = false;
     if (newGeometry.width() != oldGeometry.width()) {

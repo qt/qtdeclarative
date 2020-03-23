@@ -2153,7 +2153,7 @@ void QQuickGridView::keyPressEvent(QKeyEvent *event)
     QQuickItemView::keyPressEvent(event);
 }
 
-void QQuickGridView::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickGridView::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickGridView);
     d->resetColumns();
@@ -2167,7 +2167,7 @@ void QQuickGridView::geometryChanged(const QRectF &newGeometry, const QRectF &ol
         QQuickFlickable::setContentY(d->contentYForPosition(d->position()));
     }
 
-    QQuickItemView::geometryChanged(newGeometry, oldGeometry);
+    QQuickItemView::geometryChange(newGeometry, oldGeometry);
 }
 
 void QQuickGridView::initItem(int index, QObject *obj)

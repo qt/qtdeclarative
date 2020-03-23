@@ -3380,7 +3380,7 @@ void QQuickListView::keyPressEvent(QKeyEvent *event)
     QQuickItemView::keyPressEvent(event);
 }
 
-void QQuickListView::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickListView::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickListView);
 
@@ -3399,7 +3399,7 @@ void QQuickListView::geometryChanged(const QRectF &newGeometry, const QRectF &ol
         qreal dy = newGeometry.height() - oldGeometry.height();
         setContentY(contentY() - dy);
     }
-    QQuickItemView::geometryChanged(newGeometry, oldGeometry);
+    QQuickItemView::geometryChange(newGeometry, oldGeometry);
 }
 
 void QQuickListView::initItem(int index, QObject *object)

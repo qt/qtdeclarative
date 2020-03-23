@@ -161,7 +161,7 @@ Q_SIGNALS:
     Q_REVISION(6, 0) void bottomRowChanged();
 
 protected:
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void viewportMoved(Qt::Orientations orientation) override;
     void componentComplete() override;
 
