@@ -337,7 +337,7 @@ void tst_QQmlPreview::fps()
     QVERIFY(m_client);
     m_client->triggerLoad(testFileUrl(file));
     if (QGuiApplication::platformName() != "offscreen") {
-        QTRY_VERIFY_WITH_TIMEOUT(m_frameStats.numSyncs > 10, 10000);
+        QTRY_VERIFY_WITH_TIMEOUT(m_frameStats.numSyncs > 10, 30000);
         QVERIFY(m_frameStats.minSync <= m_frameStats.maxSync);
         QVERIFY(m_frameStats.totalSync / m_frameStats.numSyncs >= m_frameStats.minSync - 1);
         QVERIFY(m_frameStats.totalSync / m_frameStats.numSyncs <= m_frameStats.maxSync);
