@@ -115,6 +115,18 @@ QQmlJavaScriptExpression::~QQmlJavaScriptExpression()
         m_scopeObject.asT2()->_s = nullptr;
 }
 
+QString QQmlJavaScriptExpression::expressionIdentifier() const
+{
+    if (auto f = function()) {
+        QString url = f->sourceFile();
+        uint lineNumber = f->compiledFunction->location.line;
+        uint columnNumber = f->compiledFunction->location.column;
+        return url + QString::asprintf(":%u:%u", lineNumber, columnNumber);
+    }
+
+    return QStringLiteral("[native code]");
+}
+
 void QQmlJavaScriptExpression::setNotifyOnValueChanged(bool v)
 {
     activeGuards.setFlagValue(v);

@@ -102,7 +102,7 @@ public:
     QQmlJavaScriptExpression();
     virtual ~QQmlJavaScriptExpression();
 
-    virtual QString expressionIdentifier() const = 0;
+    virtual QString expressionIdentifier() const;
     virtual void expressionChanged() = 0;
 
     QV4::ReturnedValue evaluate(bool *isUndefined);

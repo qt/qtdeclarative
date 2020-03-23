@@ -111,7 +111,6 @@ public:
 
     QVariant evaluate();
 
-    QString expressionIdentifier() const override;
     void expressionChanged() override;
 
     QQmlSourceLocation sourceLocation() const override;

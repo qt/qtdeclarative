@@ -535,18 +535,6 @@ QVariant QQmlBinding::evaluate()
     return scope.engine->toVariant(result, qMetaTypeId<QList<QObject*> >());
 }
 
-QString QQmlBinding::expressionIdentifier() const
-{
-    if (auto f = function()) {
-        QString url = f->sourceFile();
-        uint lineNumber = f->compiledFunction->location.line;
-        uint columnNumber = f->compiledFunction->location.column;
-        return url + QString::asprintf(":%u:%u", lineNumber, columnNumber);
-    }
-
-    return QStringLiteral("[native code]");
-}
-
 void QQmlBinding::expressionChanged()
 {
     update();
