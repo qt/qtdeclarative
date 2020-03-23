@@ -157,11 +157,6 @@ QQmlBinding::~QQmlBinding()
     delete m_sourceLocation;
 }
 
-void QQmlBinding::setNotifyOnValueChanged(bool v)
-{
-    QQmlJavaScriptExpression::setNotifyOnValueChanged(v);
-}
-
 void QQmlBinding::update(QQmlPropertyData::WriteFlags flags)
 {
     if (!enabledFlag() || !hasValidContext())

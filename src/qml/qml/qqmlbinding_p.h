@@ -96,8 +96,6 @@ public:
     void setTarget(const QQmlProperty &);
     bool setTarget(QObject *, const QQmlPropertyData &, const QQmlPropertyData *valueType);
 
-    void setNotifyOnValueChanged(bool);
-
     void refresh() override;
 
     void setEnabled(bool, QQmlPropertyData::WriteFlags flags = QQmlPropertyData::DontRemoveBinding) override;
