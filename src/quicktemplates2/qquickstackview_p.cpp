@@ -88,7 +88,7 @@ static bool initProperties(QQuickStackElement *element, const QV4::Value &props,
 QList<QQuickStackElement *> QQuickStackViewPrivate::parseElements(int from, QQmlV4Function *args, QStringList *errors)
 {
     QV4::ExecutionEngine *v4 = args->v4engine();
-    QQmlContextData *context = v4->callingQmlContext();
+    auto context = v4->callingQmlContext();
     QV4::Scope scope(v4);
 
     QList<QQuickStackElement *> elements;
@@ -149,7 +149,7 @@ QQuickStackElement *QQuickStackViewPrivate::findElement(const QV4::Value &value)
     return nullptr;
 }
 
-static QString resolvedUrl(const QString &str, QQmlContextData *context)
+static QString resolvedUrl(const QString &str, const QQmlRefPointer<QQmlContextData> &context)
 {
     QUrl url(str);
     if (url.isRelative())
@@ -157,7 +157,7 @@ static QString resolvedUrl(const QString &str, QQmlContextData *context)
     return str;
 }
 
-QQuickStackElement *QQuickStackViewPrivate::createElement(const QV4::Value &value, QQmlContextData *context, QString *error)
+QQuickStackElement *QQuickStackViewPrivate::createElement(const QV4::Value &value, const QQmlRefPointer<QQmlContextData> &context, QString *error)
 {
     Q_Q(QQuickStackView);
     if (const QV4::String *s = value.as<QV4::String>())

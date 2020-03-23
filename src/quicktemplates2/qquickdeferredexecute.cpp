@@ -85,7 +85,7 @@ static bool beginDeferred(QQmlEnginePrivate *enginePriv, const QQmlProperty &pro
         state->completePending = true;
 
         QQmlContextData *creationContext = nullptr;
-        state->creator.reset(new QQmlObjectCreator(deferData->context->parent, deferData->compilationUnit, creationContext));
+        state->creator.reset(new QQmlObjectCreator(deferData->context->parent(), deferData->compilationUnit, creationContext));
 
         enginePriv->inProgressCreations++;
 
@@ -123,7 +123,7 @@ void beginDeferred(QObject *object, const QString &property)
 {
     QQmlData *data = QQmlData::get(object);
     if (data && !data->deferredData.isEmpty() && !data->wasDeleted(object)) {
-        QQmlEnginePrivate *ep = QQmlEnginePrivate::get(data->context->engine);
+        QQmlEnginePrivate *ep = QQmlEnginePrivate::get(data->context->engine());
 
         QQmlComponentPrivate::DeferredState *state = new QQmlComponentPrivate::DeferredState;
         if (beginDeferred(ep, QQmlProperty(object, property), state))
@@ -148,7 +148,7 @@ void completeDeferred(QObject *object, const QString &property)
     QQmlData *data = QQmlData::get(object);
     QQmlComponentPrivate::DeferredState *state = deferredStates()->take(qHash(object, property));
     if (data && state && !data->wasDeleted(object)) {
-        QQmlEnginePrivate *ep = QQmlEnginePrivate::get(data->context->engine);
+        QQmlEnginePrivate *ep = QQmlEnginePrivate::get(data->context->engine());
         QQmlComponentPrivate::completeDeferred(ep, state);
     }
     delete state;

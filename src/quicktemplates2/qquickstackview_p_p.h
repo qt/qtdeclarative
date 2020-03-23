@@ -53,12 +53,12 @@
 #include <QtQuick/private/qquickitemviewtransition_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQml/private/qv4value_p.h>
+#include <QtQml/private/qqmlcontextdata_p.h>
 #include <QtCore/qset.h>
 #include <QtCore/qstack.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQmlContextData;
 class QQuickStackElement;
 struct QQuickStackTransition;
 
@@ -79,7 +79,7 @@ public:
     QList<QQuickStackElement *> parseElements(int from, QQmlV4Function *args, QStringList *errors);
     QQuickStackElement *findElement(QQuickItem *item) const;
     QQuickStackElement *findElement(const QV4::Value &value) const;
-    QQuickStackElement *createElement(const QV4::Value &value, QQmlContextData *context, QString *error);
+    QQuickStackElement *createElement(const QV4::Value &value, const QQmlRefPointer<QQmlContextData> &context, QString *error);
     bool pushElements(const QList<QQuickStackElement *> &elements);
     bool pushElement(QQuickStackElement *element);
     bool popElements(QQuickStackElement *element);
