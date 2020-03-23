@@ -946,15 +946,18 @@ void PropertyUpdater::breakBinding()
         return;
     if (updateCount == 0) {
         QObject::disconnect(*it);
+        senderToConnection.erase(it);
         QQmlError warning;
-        warning.setUrl(qmlContext(QObject::sender())->baseUrl());
+        if (auto context = qmlContext(QObject::sender()))
+            warning.setUrl(context->baseUrl());
+        else
+            return;
         auto signalName = QString::fromLatin1(QObject::sender()->metaObject()->method(QObject::senderSignalIndex()).name());
         signalName.chop(sizeof("changed")-1);
         QString propName = signalName;
         propName[0] = propName[0].toLower();
         warning.setDescription(QString::fromUtf8("Writing to \"%1\" broke the binding to the underlying model").arg(propName));
         qmlWarning(this, warning);
-        senderToConnection.erase(it);
     } else {
         --updateCount;
     }
