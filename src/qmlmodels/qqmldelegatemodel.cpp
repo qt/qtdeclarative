@@ -926,17 +926,11 @@ void PropertyUpdater::doUpdate()
     auto mo = sender->metaObject();
     auto signalIndex = QObject::senderSignalIndex();
     ++updateCount;
-    // start at 0 instead of propertyOffset to handle properties from parent hierarchy
-    for (auto i = 0; i < mo->propertyCount() + mo->propertyOffset(); ++i) {
-        auto property = mo->property(i);
-        if (property.notifySignal().methodIndex() == signalIndex) {
-            // we synchronize between required properties and model rolenames by name
-            // that's why the QQmlProperty and the metaobject property must have the same name
-            QQmlProperty qmlProp(parent(), QString::fromLatin1(property.name()));
-            qmlProp.write(property.read(QObject::sender()));
-            return;
-        }
-    }
+    auto property = mo->property(changeSignalIndexToPropertyIndex[signalIndex]);
+    // we synchronize between required properties and model rolenames by name
+    // that's why the QQmlProperty and the metaobject property must have the same name
+    QQmlProperty qmlProp(parent(), QString::fromLatin1(property.name()));
+    qmlProp.write(property.read(QObject::sender()));
 }
 
 void PropertyUpdater::breakBinding()
@@ -1016,8 +1010,10 @@ void QQDMIncubationTask::initializeRequiredProperties(QQmlDelegateModelItem *mod
                     QMetaMethod changeSignal = prop.notifySignal();
                     static QMetaMethod updateSlot = PropertyUpdater::staticMetaObject.method(
                                 PropertyUpdater::staticMetaObject.indexOfSlot("doUpdate()"));
+
                     QMetaObject::Connection conn = QObject::connect(itemOrProxy, changeSignal,
                                                                     updater, updateSlot);
+                    updater->changeSignalIndexToPropertyIndex[changeSignal.methodIndex()] = i;
                     auto propIdx = object->metaObject()->indexOfProperty(propName.toUtf8());
                     QMetaMethod writeToPropSignal
                             = object->metaObject()->property(propIdx).notifySignal();
