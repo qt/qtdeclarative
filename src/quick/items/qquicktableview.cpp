@@ -1,4 +1,4 @@
-﻿/****************************************************************************
+/****************************************************************************
 **
 ** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
@@ -193,8 +193,10 @@
     \qmlproperty int QtQuick::TableView::rows
     \readonly
 
-    This property holds the number of rows in the table. This is
-    equal to the number of rows in the model.
+    This property holds the number of rows in the table.
+
+    \note \a rows is usually equal to the number of rows in the model, but can
+    temporarily differ until all pending model changes have been processed.
 
     This property is read only.
 */
@@ -203,9 +205,12 @@
     \qmlproperty int QtQuick::TableView::columns
     \readonly
 
-    This property holds the number of columns in the table. This is
-    equal to the number of columns in the model. If the model is
-    a list, columns will be \c 1.
+    This property holds the number of rows in the table.
+
+    \note \a columns is usually equal to the number of columns in the model, but
+    can temporarily differ until all pending model changes have been processed.
+
+    If the model is a list, columns will be \c 1.
 
     This property is read only.
 */
