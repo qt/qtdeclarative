@@ -2471,12 +2471,16 @@ void tst_qqmllanguage::scriptStringWithoutSourceCode()
         QQmlRefPointer<QQmlTypeData> td = eng->typeLoader.getType(url);
         Q_ASSERT(td);
 
-        const QV4::CompiledData::Unit *readOnlyQmlUnit = td->compilationUnit()->unitData();
+        QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit = td->compilationUnit();
+        const QV4::CompiledData::Unit *readOnlyQmlUnit = compilationUnit->unitData();
         Q_ASSERT(readOnlyQmlUnit);
         QV4::CompiledData::Unit *qmlUnit = reinterpret_cast<QV4::CompiledData::Unit *>(malloc(readOnlyQmlUnit->unitSize));
         memcpy(qmlUnit, readOnlyQmlUnit, readOnlyQmlUnit->unitSize);
+
+        if (!(readOnlyQmlUnit->flags & QV4::CompiledData::Unit::StaticData))
+            free(const_cast<QV4::CompiledData::Unit *>(readOnlyQmlUnit));
+
         qmlUnit->flags &= ~QV4::CompiledData::Unit::StaticData;
-        QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit = td->compilationUnit();
         compilationUnit->setUnitData(qmlUnit);
 
         const QV4::CompiledData::Object *rootObject = compilationUnit->objectAt(/*root object*/0);
