@@ -90,7 +90,7 @@ namespace QV4 {
 typedef QVector<QQmlPropertyData*> BindingPropertyData;
 
 class CompilationUnitMapper;
-struct ResolvedTypeReference;
+class ResolvedTypeReference;
 // map from name index
 // While this could be a hash, a map is chosen here to provide a stable
 // order, which is used to calculating a check-sum on dependent meta-objects.
@@ -321,29 +321,6 @@ private:
     void getExportedNamesRecursively(
             QStringList *names, QVector<const ExecutableCompilationUnit *> *exportNameSet,
             bool includeDefaultExport = true) const;
-};
-
-struct ResolvedTypeReference
-{
-    ResolvedTypeReference()
-        : version(QTypeRevision::zero())
-        , isFullyDynamicType(false)
-    {}
-
-    QQmlType type;
-    QQmlRefPointer<QQmlPropertyCache> typePropertyCache;
-    QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit;
-
-    QTypeRevision version;
-    // Types such as QQmlPropertyMap can add properties dynamically at run-time and
-    // therefore cannot have a property cache installed when instantiated.
-    bool isFullyDynamicType;
-
-    QQmlRefPointer<QQmlPropertyCache> propertyCache() const;
-    QQmlRefPointer<QQmlPropertyCache> createPropertyCache(QQmlEngine *);
-    bool addToHash(QCryptographicHash *hash, QQmlEngine *engine);
-
-    void doDynamicTypeCheck();
 };
 
 IdentifierHash ExecutableCompilationUnit::namedObjectsPerComponent(int componentObjectIndex)

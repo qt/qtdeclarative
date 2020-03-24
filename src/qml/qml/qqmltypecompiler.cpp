@@ -71,7 +71,7 @@ QQmlRefPointer<QV4::ExecutableCompilationUnit> QQmlTypeCompiler::compile()
 
     for (auto it = resolvedTypes->constBegin(), end = resolvedTypes->constEnd();
          it != end; ++it) {
-        QQmlCustomParser *customParser = (*it)->type.customParser();
+        QQmlCustomParser *customParser = (*it)->type().customParser();
         if (customParser)
             customParsers.insert(it.key(), customParser);
     }
@@ -337,7 +337,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
         if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
             const QmlIR::Object *attachedObj = qmlObjects.at(binding->value.objectIndex);
             auto *typeRef = resolvedType(binding->propertyNameIndex);
-            QQmlType type = typeRef ? typeRef->type : QQmlType();
+            QQmlType type = typeRef ? typeRef->type() : QQmlType();
             if (!type.isValid())
                 imports->resolveType(propertyName, &type, nullptr, nullptr, nullptr);
 
@@ -398,7 +398,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
                 const QString &originalPropertyName = stringAt(binding->propertyNameIndex);
 
                 auto *typeRef = resolvedType(obj->inheritedTypeNameIndex);
-                const QQmlType type = typeRef ? typeRef->type : QQmlType();
+                const QQmlType type = typeRef ? typeRef->type() : QQmlType();
                 if (type.isValid()) {
                     COMPILE_EXCEPTION(binding, tr("\"%1.%2\" is not available in %3 %4.%5.")
                                       .arg(typeName).arg(originalPropertyName).arg(type.module())
@@ -607,7 +607,7 @@ bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(const QmlIR::Object *obj, 
     bool ok = false;
 
     auto *tr = resolvedType(obj->inheritedTypeNameIndex);
-    if (type.isValid() && tr && tr->type == type) {
+    if (type.isValid() && tr && tr->type() == type) {
         // When these two match, we can short cut the search
         QMetaProperty mprop = propertyCache->firstCppMetaObject()->property(prop->coreIndex());
         QMetaEnum menum = mprop.enumerator();
@@ -807,10 +807,11 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
         Q_ASSERT(tr);
 
         const QMetaObject *firstMetaObject = nullptr;
-        if (tr->type.isValid())
-            firstMetaObject = tr->type.metaObject();
-        else if (tr->compilationUnit)
-            firstMetaObject = tr->compilationUnit->rootPropertyCache()->firstCppMetaObject();
+        const auto type = tr->type();
+        if (type.isValid())
+            firstMetaObject = type.metaObject();
+        else if (const auto compilationUnit = tr->compilationUnit())
+            firstMetaObject = compilationUnit->rootPropertyCache()->firstCppMetaObject();
         if (isUsableComponent(firstMetaObject))
             continue;
         // if here, not a QQmlComponent, so needs wrapping
@@ -855,8 +856,8 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
 
         if (!containsResolvedType(syntheticComponent->inheritedTypeNameIndex)) {
             auto typeRef = new QV4::ResolvedTypeReference;
-            typeRef->type = componentType;
-            typeRef->version = componentType.version();
+            typeRef->setType(componentType);
+            typeRef->setVersion(componentType.version());
             insertResolvedType(syntheticComponent->inheritedTypeNameIndex, typeRef);
         }
 
@@ -901,7 +902,7 @@ bool QQmlComponentAndAliasResolver::resolve()
         if (obj->inheritedTypeNameIndex) {
             auto *tref = resolvedType(obj->inheritedTypeNameIndex);
             Q_ASSERT(tref);
-            if (tref->type.metaObject() == &QQmlComponent::staticMetaObject)
+            if (tref->type().metaObject() == &QQmlComponent::staticMetaObject)
                 isExplicitComponent = true;
         }
         if (!isExplicitComponent) {

@@ -117,8 +117,9 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
 
     QQmlCustomParser *customParser = nullptr;
     if (auto typeRef = resolvedType(obj->inheritedTypeNameIndex)) {
-        if (typeRef->type.isValid())
-            customParser = typeRef->type.customParser();
+        const auto type = typeRef->type();
+        if (type.isValid())
+            customParser = type.customParser();
     }
 
     QList<const QV4::CompiledData::Binding*> customBindings;
@@ -190,12 +191,16 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
 
             if (notInRevision) {
                 QString typeName = stringAt(obj->inheritedTypeNameIndex);
-                auto *objectType = resolvedType(obj->inheritedTypeNameIndex);
-                if (objectType && objectType->type.isValid()) {
-                    return recordError(binding->location, tr("\"%1.%2\" is not available in %3 %4.%5.")
-                                       .arg(typeName).arg(name).arg(objectType->type.module())
-                                       .arg(objectType->version.majorVersion())
-                                       .arg(objectType->version.minorVersion()));
+                if (auto *objectType = resolvedType(obj->inheritedTypeNameIndex)) {
+                    const auto type = objectType->type();
+                    if (type.isValid()) {
+                        const auto version = objectType->version();
+                        return recordError(binding->location,
+                                           tr("\"%1.%2\" is not available in %3 %4.%5.")
+                                           .arg(typeName).arg(name).arg(type.module())
+                                           .arg(version.majorVersion())
+                                           .arg(version.minorVersion()));
+                    }
                 } else {
                     return recordError(binding->location, tr("\"%1.%2\" is not available due to component versioning.").arg(typeName).arg(name));
                 }

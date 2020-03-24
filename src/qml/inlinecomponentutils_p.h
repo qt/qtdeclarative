@@ -51,7 +51,7 @@
 //
 
 #include <private/qv4compileddata_p.h>
-#include <private/qv4executablecompilationunit_p.h>
+#include <private/qv4resolvedtypereference_p.h>
 
 namespace icutils {
 struct Node {
@@ -88,10 +88,12 @@ void fillAdjacencyListForInlineComponents(ObjectContainer *objectContainer, Adja
         const CompiledObject *obj = objectContainer->objectAt(ic.objectIndex);
         QV4::ResolvedTypeReference *currentICTypeRef = objectContainer->resolvedType(ic.nameIndex);
         auto createEdgeFromTypeRef = [&](QV4::ResolvedTypeReference *targetTypeRef) {
-            if (targetTypeRef && targetTypeRef->type.isInlineComponentType()) {
-                if (targetTypeRef->type.containingType() == currentICTypeRef->type.containingType()) {
+            if (targetTypeRef) {
+                const auto targetType = targetTypeRef->type();
+                if (targetType.isInlineComponentType()
+                        && targetType.containingType() == currentICTypeRef->type().containingType()) {
                     auto icIt = std::find_if(allICs.cbegin(), allICs.cend(), [&](const QV4::CompiledData::InlineComponent &icSearched){
-                        return int(icSearched.objectIndex) == targetTypeRef->type.inlineComponentObjectId();
+                        return int(icSearched.objectIndex) == targetType.inlineComponentObjectId();
                     });
                     Q_ASSERT(icIt != allICs.cend());
                     Node& target = nodes[i];

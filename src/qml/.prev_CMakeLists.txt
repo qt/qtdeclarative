@@ -135,6 +135,7 @@ qt_add_module(Qml
         jsruntime/qv4reflect.cpp jsruntime/qv4reflect_p.h
         jsruntime/qv4regexp.cpp jsruntime/qv4regexp_p.h
         jsruntime/qv4regexpobject.cpp jsruntime/qv4regexpobject_p.h
+        jsruntime/qv4resolvedtypereference.cpp jsruntime/qv4resolvedtypereference_p.h
         jsruntime/qv4runtime.cpp jsruntime/qv4runtime_p.h
         jsruntime/qv4runtimeapi_p.h
         jsruntime/qv4runtimecodegen.cpp jsruntime/qv4runtimecodegen_p.h

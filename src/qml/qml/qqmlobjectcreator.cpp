@@ -59,6 +59,7 @@
 #include <private/qqmlsourcecoordinate_p.h>
 #include <private/qjsvalue_p.h>
 #include <private/qv4generatorobject_p.h>
+#include <private/qv4resolvedtypereference_p.h>
 
 #include <QScopedValueRollback>
 
@@ -815,7 +816,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
         Q_ASSERT(stringAt(compilationUnit->objectAt(binding->value.objectIndex)->inheritedTypeNameIndex).isEmpty());
         QV4::ResolvedTypeReference *tr = resolvedType(binding->propertyNameIndex);
         Q_ASSERT(tr);
-        QQmlType attachedType = tr->type;
+        QQmlType attachedType = tr->type();
         if (!attachedType.isValid()) {
             QQmlTypeNameCache::Result res = context->imports()->query(
                         stringAt(binding->propertyNameIndex));
@@ -1192,8 +1193,8 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     } else {
         QV4::ResolvedTypeReference *typeRef = resolvedType(obj->inheritedTypeNameIndex);
         Q_ASSERT(typeRef);
-        installPropertyCache = !typeRef->isFullyDynamicType;
-        QQmlType type = typeRef->type;
+        installPropertyCache = !typeRef->isFullyDynamicType();
+        const QQmlType type = typeRef->type();
         if (type.isValid() && !type.isInlineComponentType()) {
             typeName = type.qmlTypeName();
 
@@ -1226,19 +1227,18 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
 
             sharedState->allCreatedObjects.push(instance);
         } else {
-            Q_ASSERT(typeRef->compilationUnit);
-            typeName = typeRef->compilationUnit->fileName();
+            const auto compilationUnit = typeRef->compilationUnit();
+            Q_ASSERT(compilationUnit);
+            typeName = compilationUnit->fileName();
             // compilation unit is shared between root type and its inline component types
             // so isSingleton errorneously returns true for inline components
-            if (typeRef->compilationUnit->unitData()->isSingleton() && !type.isInlineComponentType())
-            {
+            if (compilationUnit->unitData()->isSingleton() && !type.isInlineComponentType()) {
                 recordError(obj->location, tr("Composite Singleton Type %1 is not creatable").arg(stringAt(obj->inheritedTypeNameIndex)));
                 return nullptr;
             }
 
-
             if (!type.isInlineComponentType()) {
-                QQmlObjectCreator subCreator(context, typeRef->compilationUnit, sharedState.data());
+                QQmlObjectCreator subCreator(context, compilationUnit, sharedState.data());
                 instance = subCreator.create();
                 if (!instance) {
                     errors += subCreator.errors;
@@ -1246,8 +1246,8 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
                 }
             } else {
                 int subObjectId = type.inlineComponentId();
-                QScopedValueRollback<int> rollback {typeRef->compilationUnit->icRoot, subObjectId};
-                QQmlObjectCreator subCreator(context, typeRef->compilationUnit, sharedState.data());
+                QScopedValueRollback<int> rollback {compilationUnit->icRoot, subObjectId};
+                QQmlObjectCreator subCreator(context, compilationUnit, sharedState.data());
                 instance = subCreator.create(subObjectId, nullptr, nullptr, CreationFlags::InlineComponent);
                 if (!instance) {
                     errors += subCreator.errors;

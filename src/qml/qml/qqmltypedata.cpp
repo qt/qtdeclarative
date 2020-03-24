@@ -300,7 +300,7 @@ void QQmlTypeData::setCompileUnit(const Container &container)
         auto const root = container->objectAt(i);
         for (auto it = root->inlineComponentsBegin(); it != root->inlineComponentsEnd(); ++it) {
             auto *typeRef = m_compiledData->resolvedType(it->nameIndex);
-            typeRef->compilationUnit = m_compiledData; // share compilation unit
+            typeRef->setCompilationUnit(m_compiledData);  // share compilation unit
         }
     }
 }
@@ -913,7 +913,7 @@ QQmlError QQmlTypeData::buildTypeResolutionCaches(
             if (resolvedType->needsCreation && qmlType.isCompositeSingleton()) {
                 return qQmlCompileError(resolvedType->location, tr("Composite Singleton Type %1 is not creatable.").arg(qmlType.qmlTypeName()));
             }
-            ref->compilationUnit = resolvedType->typeData->compilationUnit();
+            ref->setCompilationUnit(resolvedType->typeData->compilationUnit());
             if (resolvedType->type.isInlineComponentType()) {
                 // Inline component which is part of an already resolved type
                 int objectId = -1;
@@ -924,44 +924,44 @@ QQmlError QQmlTypeData::buildTypeResolutionCaches(
                     objectId = resolvedType->type.inlineComponentId();
                 }
                 Q_ASSERT(objectId != -1);
-                ref->typePropertyCache = resolvedType->typeData->compilationUnit()->propertyCaches.at(objectId);
-                ref->type = qmlType;
-                Q_ASSERT(ref->type.isInlineComponentType());
+                ref->setTypePropertyCache(resolvedType->typeData->compilationUnit()->propertyCaches.at(objectId));
+                ref->setType(qmlType);
+                Q_ASSERT(ref->type().isInlineComponentType());
             }
         } else if (resolvedType->type.isInlineComponentType()) {
             // Inline component, defined in the file we are currently compiling
             if (!m_inlineComponentToCompiledData.contains(resolvedType.key())) {
-                ref->type = qmlType;
+                ref->setType(qmlType);
                 if (qmlType.isValid()) {
                     // this is required for inline components in singletons
                     auto type = qmlType.lookupInlineComponentById(qmlType.inlineComponentId()).typeId();
                     auto typeID = type.isValid() ? type.id() : -1;
                     auto exUnit = engine->obtainExecutableCompilationUnit(typeID);
                     if (exUnit) {
-                        ref->compilationUnit = exUnit;
-                        ref->typePropertyCache = engine->propertyCacheForType(typeID);
+                        ref->setCompilationUnit(exUnit);
+                        ref->setTypePropertyCache(engine->propertyCacheForType(typeID));
                     }
                 }
             } else {
-                ref->compilationUnit = m_inlineComponentToCompiledData[resolvedType.key()];
-                ref->typePropertyCache = m_inlineComponentToCompiledData[resolvedType.key()]->rootPropertyCache();
+                ref->setCompilationUnit(m_inlineComponentToCompiledData[resolvedType.key()]);
+                ref->setTypePropertyCache(m_inlineComponentToCompiledData[resolvedType.key()]->rootPropertyCache());
             }
 
         } else if (qmlType.isValid() && !resolvedType->selfReference) {
-            ref->type = qmlType;
-            Q_ASSERT(ref->type.isValid());
+            ref->setType(qmlType);
+            Q_ASSERT(ref->type().isValid());
 
-            if (resolvedType->needsCreation && !ref->type.isCreatable()) {
-                QString reason = ref->type.noCreationReason();
+            if (resolvedType->needsCreation && !qmlType.isCreatable()) {
+                QString reason = qmlType.noCreationReason();
                 if (reason.isEmpty())
                     reason = tr("Element is not creatable.");
                 return qQmlCompileError(resolvedType->location, reason);
             }
 
-            if (ref->type.containsRevisionedAttributes())
-                ref->typePropertyCache = engine->cache(ref->type, resolvedType->version);
+            if (qmlType.containsRevisionedAttributes())
+                ref->setTypePropertyCache(engine->cache(qmlType, resolvedType->version));
         }
-        ref->version = resolvedType->version;
+        ref->setVersion(resolvedType->version);
         ref->doDynamicTypeCheck();
         resolvedTypeCache->insert(resolvedType.key(), ref.take());
     }

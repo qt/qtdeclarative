@@ -62,7 +62,8 @@ SOURCES += \
     $$PWD/qv4value.cpp \
     $$PWD/qv4compilationunitmapper.cpp \
     $$PWD/qv4executablecompilationunit.cpp \
-    $$PWD/qv4executableallocator.cpp
+    $$PWD/qv4executableallocator.cpp \
+    $$PWD/qv4resolvedtypereference.cpp
 
 qtConfig(qml-debug): SOURCES += $$PWD/qv4profiling.cpp
 
@@ -138,7 +139,8 @@ HEADERS += \
     $$PWD/qv4compilationunitmapper_p.h \
     $$PWD/qv4executablecompilationunit_p.h \
     $$PWD/qv4functiontable_p.h \
-    $$PWD/qv4runtimeapi_p.h
+    $$PWD/qv4runtimeapi_p.h \
+    $$PWD/qv4resolvedtypereference_p.h
 
 qtConfig(qml-sequence-object) {
     HEADERS += \

@@ -197,7 +197,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjects()
         const auto &ic = allICs[nodeIt->index];
         QV4::ResolvedTypeReference *typeRef = objectContainer->resolvedType(ic.nameIndex);
         Q_ASSERT(propertyCaches->at(ic.objectIndex) == nullptr);
-        Q_ASSERT(typeRef->typePropertyCache.isNull()); // not set yet
+        Q_ASSERT(typeRef->typePropertyCache().isNull()); // not set yet
 
         QByteArray icTypeName { objectContainer->stringAt(ic.nameIndex).toUtf8() };
         QScopedValueRollback<QByteArray> nameChange {typeClassName, icTypeName};
@@ -206,8 +206,8 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjects()
         if (diag.isValid()) {
             return diag;
         }
-        typeRef->typePropertyCache = propertyCaches->at(ic.objectIndex);
-        Q_ASSERT(!typeRef->typePropertyCache.isNull());
+        typeRef->setTypePropertyCache(propertyCaches->at(ic.objectIndex));
+        Q_ASSERT(!typeRef->typePropertyCache().isNull());
     }
 
     return buildMetaObjectRecursively(/*root object*/0, context, VMEMetaObjectIsRequired::Maybe);
@@ -226,7 +226,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectRecur
             || obj->signalCount() != 0 || obj->functionCount() != 0 || obj->enumCount() != 0
             || (((obj->flags & QV4::CompiledData::Object::IsComponent)
                  || (objectIndex == 0 && isAddressable(objectContainer->url())))
-                && !objectContainer->resolvedType(obj->inheritedTypeNameIndex)->isFullyDynamicType);
+                && !objectContainer->resolvedType(obj->inheritedTypeNameIndex)->isFullyDynamicType());
 
     if (!needVMEMetaObject) {
         auto binding = obj->bindingsBegin();
@@ -305,10 +305,9 @@ inline QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCacheCreator<ObjectContaine
         return context.instantiatingPropertyCache(enginePrivate);
     } else if (obj->inheritedTypeNameIndex != 0) {
         auto *typeRef = objectContainer->resolvedType(obj->inheritedTypeNameIndex);
-        QQmlType qmltype = typeRef->type;
         Q_ASSERT(typeRef);
 
-        if (typeRef->isFullyDynamicType) {
+        if (typeRef->isFullyDynamicType()) {
             if (obj->propertyCount() > 0 || obj->aliasCount() > 0) {
                 *error = qQmlCompileError(obj->location, QQmlPropertyCacheCreatorBase::tr("Fully dynamic types cannot declare new properties."));
                 return nullptr;
@@ -328,7 +327,7 @@ inline QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCacheCreator<ObjectContaine
         auto *typeRef = objectContainer->resolvedType(
                 context.instantiatingBinding->propertyNameIndex);
         Q_ASSERT(typeRef);
-        QQmlType qmltype = typeRef->type;
+        QQmlType qmltype = typeRef->type();
         if (!qmltype.isValid()) {
             imports->resolveType(stringAt(context.instantiatingBinding->propertyNameIndex),
                                  &qmltype, nullptr, nullptr, nullptr);
@@ -839,12 +838,13 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
                                     QQmlPropertyCacheCreatorBase::tr("Invalid alias target"));
         }
 
-        if (typeRef->type.isValid())
-            *type = typeRef->type.typeId().id();
+        const auto referencedType = typeRef->type();
+        if (referencedType.isValid())
+            *type = referencedType.typeId().id();
         else
-            *type = typeRef->compilationUnit->metaTypeId.id();
+            *type = typeRef->compilationUnit()->metaTypeId.id();
 
-        *version = typeRef->version;
+        *version = typeRef->version();
 
         propertyFlags->type = QQmlPropertyData::Flags::QObjectDerivedType;
     } else {
