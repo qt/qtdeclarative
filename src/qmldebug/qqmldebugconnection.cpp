@@ -415,8 +415,7 @@ public:
     {
         connect(parent, &QLocalSocket::stateChanged,
                 this, &LocalSocketSignalTranslator::onStateChanged);
-        connect(parent, static_cast<void(QLocalSocket::*)(QLocalSocket::LocalSocketError)>(
-                    &QLocalSocket::errorOccurred), this, &LocalSocketSignalTranslator::onError);
+        connect(parent, &QLocalSocket::errorOccurred, this, &LocalSocketSignalTranslator::onError);
     }
 
     void onError(QLocalSocket::LocalSocketError error)
