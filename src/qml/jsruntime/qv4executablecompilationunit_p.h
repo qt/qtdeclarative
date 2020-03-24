@@ -325,27 +325,73 @@ private:
 
 struct ResolvedTypeReference
 {
+public:
     ResolvedTypeReference()
-        : majorVersion(0)
-          , minorVersion(0)
-          , isFullyDynamicType(false)
+        : m_compilationUnit(nullptr)
+        , m_stronglyReferencesCompilationUnit(true)
+        , majorVersion(0)
+        , minorVersion(0)
+        , isFullyDynamicType(false)
     {}
 
-    QQmlType type;
-    QQmlRefPointer<QQmlPropertyCache> typePropertyCache;
-    QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit;
+    ~ResolvedTypeReference()
+    {
+        if (m_stronglyReferencesCompilationUnit && m_compilationUnit)
+            m_compilationUnit->release();
+    }
 
-    int majorVersion;
-    int minorVersion;
-    // Types such as QQmlPropertyMap can add properties dynamically at run-time and
-    // therefore cannot have a property cache installed when instantiated.
-    bool isFullyDynamicType;
+    QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit() { return m_compilationUnit; }
+    void setCompilationUnit(QQmlRefPointer<QV4::ExecutableCompilationUnit> unit)
+    {
+        if (m_compilationUnit == unit.data())
+            return;
+        if (m_stronglyReferencesCompilationUnit) {
+            if (m_compilationUnit)
+                m_compilationUnit->release();
+            m_compilationUnit = unit.take();
+        } else {
+            m_compilationUnit = unit.data();
+        }
+    }
+
+    bool referencesCompilationUnit() const { return m_stronglyReferencesCompilationUnit; }
+    void setReferencesCompilationUnit(bool doReference)
+    {
+        if (doReference == m_stronglyReferencesCompilationUnit)
+            return;
+        m_stronglyReferencesCompilationUnit = doReference;
+        if (!m_compilationUnit)
+            return;
+        if (doReference) {
+            m_compilationUnit->addref();
+        } else if (m_compilationUnit->count() == 1) {
+            m_compilationUnit->release();
+            m_compilationUnit = nullptr;
+        } else {
+            m_compilationUnit->release();
+        }
+    }
 
     QQmlRefPointer<QQmlPropertyCache> propertyCache() const;
     QQmlRefPointer<QQmlPropertyCache> createPropertyCache(QQmlEngine *);
     bool addToHash(QCryptographicHash *hash, QQmlEngine *engine);
 
     void doDynamicTypeCheck();
+
+    QQmlType type;
+    QQmlRefPointer<QQmlPropertyCache> typePropertyCache;
+private:
+    Q_DISABLE_COPY_MOVE(ResolvedTypeReference)
+
+    QV4::ExecutableCompilationUnit *m_compilationUnit;
+    bool m_stronglyReferencesCompilationUnit;
+
+public:
+    int majorVersion;
+    int minorVersion;
+    // Types such as QQmlPropertyMap can add properties dynamically at run-time and
+    // therefore cannot have a property cache installed when instantiated.
+    bool isFullyDynamicType;
 };
 
 IdentifierHash ExecutableCompilationUnit::namedObjectsPerComponent(int componentObjectIndex)

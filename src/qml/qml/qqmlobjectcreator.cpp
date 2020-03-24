@@ -1214,11 +1214,12 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
 
             sharedState->allCreatedObjects.push(instance);
         } else {
-            Q_ASSERT(typeRef->compilationUnit);
-            typeName = typeRef->compilationUnit->fileName();
+            const auto compilationUnit = typeRef->compilationUnit();
+            Q_ASSERT(compilationUnit);
+            typeName = compilationUnit->fileName();
             // compilation unit is shared between root type and its inline component types
             // so isSingleton errorneously returns true for inline components
-            if (typeRef->compilationUnit->unitData()->isSingleton() && !type.isInlineComponentType())
+            if (compilationUnit->unitData()->isSingleton() && !type.isInlineComponentType())
             {
                 recordError(obj->location, tr("Composite Singleton Type %1 is not creatable").arg(stringAt(obj->inheritedTypeNameIndex)));
                 return nullptr;
@@ -1226,7 +1227,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
 
 
             if (!type.isInlineComponentType()) {
-                QQmlObjectCreator subCreator(context, typeRef->compilationUnit, sharedState.data());
+                QQmlObjectCreator subCreator(context, compilationUnit, sharedState.data());
                 instance = subCreator.create();
                 if (!instance) {
                     errors += subCreator.errors;
@@ -1234,8 +1235,8 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
                 }
             } else {
                 int subObjectId = type.inlineComponendId();
-                QScopedValueRollback<int> rollback {typeRef->compilationUnit->icRoot, subObjectId};
-                QQmlObjectCreator subCreator(context, typeRef->compilationUnit, sharedState.data());
+                QScopedValueRollback<int> rollback {compilationUnit->icRoot, subObjectId};
+                QQmlObjectCreator subCreator(context, compilationUnit, sharedState.data());
                 instance = subCreator.create(subObjectId, nullptr, nullptr, CreationFlags::InlineComponent);
                 if (!instance) {
                     errors += subCreator.errors;

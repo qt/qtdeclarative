@@ -813,8 +813,8 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
         const QMetaObject *firstMetaObject = nullptr;
         if (tr->type.isValid())
             firstMetaObject = tr->type.metaObject();
-        else if (tr->compilationUnit)
-            firstMetaObject = tr->compilationUnit->rootPropertyCache()->firstCppMetaObject();
+        else if (const auto compilationUnit = tr->compilationUnit())
+            firstMetaObject = compilationUnit->rootPropertyCache()->firstCppMetaObject();
         if (isUsableComponent(firstMetaObject))
             continue;
         // if here, not a QQmlComponent, so needs wrapping

@@ -840,7 +840,7 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
         if (typeRef->type.isValid())
             *type = typeRef->type.typeId();
         else
-            *type = typeRef->compilationUnit->metaTypeId;
+            *type = typeRef->compilationUnit()->metaTypeId;
 
         *minorVersion = typeRef->minorVersion;
 

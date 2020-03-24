@@ -406,9 +406,9 @@ void ExecutableCompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngi
         const QV4::CompiledData::Object *obj = objectAt(/*root object*/0);
         auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex);
         Q_ASSERT(typeRef);
-        if (typeRef->compilationUnit) {
-            metaTypeId = typeRef->compilationUnit->metaTypeId;
-            listMetaTypeId = typeRef->compilationUnit->listMetaTypeId;
+        if (const auto compilationUnit = typeRef->compilationUnit()) {
+            metaTypeId = compilationUnit->metaTypeId;
+            listMetaTypeId = compilationUnit->listMetaTypeId;
         } else {
             metaTypeId = typeRef->type.typeId();
             listMetaTypeId = typeRef->type.qListTypeId();
@@ -453,17 +453,17 @@ void ExecutableCompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngi
                     ++inlineComponentData[lastICRoot].totalParserStatusCount;
 
                 ++inlineComponentData[lastICRoot].totalObjectCount;
-                if (typeRef->compilationUnit) {
+                if (const auto compilationUnit = typeRef->compilationUnit()) {
                     // if the type is an inline component type, we have to extract the information from it
                     // This requires that inline components are visited in the correct order
-                    auto icRoot = typeRef->compilationUnit->icRoot;
+                    auto icRoot = compilationUnit->icRoot;
                     if (typeRef->type.isInlineComponentType()) {
                         icRoot = typeRef->type.inlineComponendId();
                     }
-                    QScopedValueRollback<int> rollback {typeRef->compilationUnit->icRoot, icRoot};
-                    inlineComponentData[lastICRoot].totalBindingCount += typeRef->compilationUnit->totalBindingsCount();
-                    inlineComponentData[lastICRoot].totalParserStatusCount += typeRef->compilationUnit->totalParserStatusCount();
-                    inlineComponentData[lastICRoot].totalObjectCount += typeRef->compilationUnit->totalObjectCount();
+                    QScopedValueRollback<int> rollback {compilationUnit->icRoot, icRoot};
+                    inlineComponentData[lastICRoot].totalBindingCount += compilationUnit->totalBindingsCount();
+                    inlineComponentData[lastICRoot].totalParserStatusCount += compilationUnit->totalParserStatusCount();
+                    inlineComponentData[lastICRoot].totalObjectCount += compilationUnit->totalObjectCount();
                 }
             }
         }
@@ -481,15 +481,15 @@ void ExecutableCompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngi
             if (typeRef->type.isValid() && typeRef->type.parserStatusCast() != -1)
                 ++parserStatusCount;
             ++objectCount;
-            if (typeRef->compilationUnit) {
-                auto icRoot = typeRef->compilationUnit->icRoot;
+            if (const auto compilationUnit = typeRef->compilationUnit()) {
+                auto icRoot = compilationUnit->icRoot;
                 if (typeRef->type.isInlineComponentType()) {
                     icRoot = typeRef->type.inlineComponendId();
                 }
-                QScopedValueRollback<int> rollback {typeRef->compilationUnit->icRoot, icRoot};
-                bindingCount += typeRef->compilationUnit->totalBindingsCount();
-                parserStatusCount += typeRef->compilationUnit->totalParserStatusCount();
-                objectCount += typeRef->compilationUnit->totalObjectCount();
+                QScopedValueRollback<int> rollback {compilationUnit->icRoot, icRoot};
+                bindingCount += compilationUnit->totalBindingsCount();
+                parserStatusCount += compilationUnit->totalParserStatusCount();
+                objectCount += compilationUnit->totalObjectCount();
             }
         }
     }
@@ -806,7 +806,7 @@ QQmlRefPointer<QQmlPropertyCache> ResolvedTypeReference::propertyCache() const
     if (type.isValid())
         return typePropertyCache;
     else
-        return compilationUnit->rootPropertyCache();
+        return m_compilationUnit->rootPropertyCache();
 }
 
 /*!
@@ -820,8 +820,8 @@ QQmlRefPointer<QQmlPropertyCache> ResolvedTypeReference::createPropertyCache(QQm
         typePropertyCache = QQmlEnginePrivate::get(engine)->cache(type.metaObject(), minorVersion);
         return typePropertyCache;
     } else {
-        Q_ASSERT(compilationUnit);
-        return compilationUnit->rootPropertyCache();
+        Q_ASSERT(m_compilationUnit);
+        return m_compilationUnit->rootPropertyCache();
     }
 }
 
@@ -832,10 +832,10 @@ bool ResolvedTypeReference::addToHash(QCryptographicHash *hash, QQmlEngine *engi
         hash->addData(createPropertyCache(engine)->checksum(&ok));
         return ok;
     }
-    if (!compilationUnit)
+    if (!m_compilationUnit)
         return false;
-    hash->addData(compilationUnit->data->md5Checksum,
-                  sizeof(compilationUnit->data->md5Checksum));
+    hash->addData(m_compilationUnit->data->md5Checksum,
+                  sizeof(m_compilationUnit->data->md5Checksum));
     return true;
 }
 
@@ -856,8 +856,8 @@ void ResolvedTypeReference::doDynamicTypeCheck()
         mo = typePropertyCache->firstCppMetaObject();
     else if (type.isValid())
         mo = type.metaObject();
-    else if (compilationUnit)
-        mo = compilationUnit->rootPropertyCache()->firstCppMetaObject();
+    else if (m_compilationUnit)
+        mo = m_compilationUnit->rootPropertyCache()->firstCppMetaObject();
     isFullyDynamicType = qtTypeInherits<QQmlPropertyMap>(mo);
 }
 
