@@ -386,7 +386,7 @@ bool ScopeTree::recheckIdentifiers(
                     || firstElement->m_methods.contains(memberAccessTree->m_name)
                     || firstElement->m_enums.contains(memberAccessTree->m_name)) {
                 colorOut.write("Note: ", Info);
-                colorOut.write(memberAccessTree->m_name + QLatin1String(" is a meber of the root element\n"), Normal );
+                colorOut.write(memberAccessTree->m_name + QLatin1String(" is a member of the root element\n"), Normal );
                 colorOut.write(QLatin1String("      You can qualify the access with its id to avoid this warning:\n"), Normal);
                 if (rootId == QLatin1String("<id>")) {
                     colorOut.write("Note: ", Warning);
