@@ -486,7 +486,9 @@ void QQuickView::continueExecute()
         return;
     }
 
-    QObject *obj = d->initialProperties.empty() ? d->component->create() : d->component->createWithInitialProperties(d->initialProperties);
+    QScopedPointer<QObject> obj(d->initialProperties.empty()
+                                ? d->component->create()
+                                : d->component->createWithInitialProperties(d->initialProperties));
 
     if (d->component->isError()) {
         const QList<QQmlError> errorList = d->component->errors();
@@ -498,7 +500,7 @@ void QQuickView::continueExecute()
         return;
     }
 
-    d->setRootObject(obj);
+    d->setRootObject(obj.take());
     emit statusChanged(status());
 }
 

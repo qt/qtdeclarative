@@ -278,6 +278,10 @@ public:
     bool inSyncViewportPosRecursive = false;
     bool inUpdateContentSize = false;
 
+    // isTransposed is currently only used by HeaderView.
+    // Consider making it public.
+    bool isTransposed = false;
+
     QJSValue rowHeightProvider;
     QJSValue columnWidthProvider;
     QQuickTableSectionSizeProvider rowHeights;

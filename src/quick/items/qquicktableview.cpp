@@ -493,20 +493,34 @@ QQuickTableViewAttached *QQuickTableViewPrivate::getAttachedObject(const QObject
 
 int QQuickTableViewPrivate::modelIndexAtCell(const QPoint &cell) const
 {
-    int availableRows = tableSize.height();
-    int modelIndex = cell.y() + (cell.x() * availableRows);
-    Q_TABLEVIEW_ASSERT(modelIndex < model->count(),
-        "modelIndex:" << modelIndex << "cell:" << cell << "count:" << model->count());
-    return modelIndex;
+    // QQmlTableInstanceModel expects index to be in column-major
+    // order. This means that if the view is transposed (with a flipped
+    // width and height), we need to calculate it in row-major instead.
+    if (isTransposed) {
+        int availableColumns = tableSize.width();
+        return (cell.y() * availableColumns) + cell.x();
+    } else {
+        int availableRows = tableSize.height();
+        return (cell.x() * availableRows) + cell.y();
+    }
 }
 
 QPoint QQuickTableViewPrivate::cellAtModelIndex(int modelIndex) const
 {
-    int availableRows = tableSize.height();
-    Q_TABLEVIEW_ASSERT(availableRows > 0, availableRows);
-    int column = int(modelIndex / availableRows);
-    int row = modelIndex % availableRows;
-    return QPoint(column, row);
+    // QQmlTableInstanceModel expects index to be in column-major
+    // order. This means that if the view is transposed (with a flipped
+    // width and height), we need to calculate it in row-major instead.
+    if (isTransposed) {
+        int availableColumns = tableSize.width();
+        int row = int(modelIndex / availableColumns);
+        int column = modelIndex % availableColumns;
+        return QPoint(column, row);
+    } else {
+        int availableRows = tableSize.height();
+        int column = int(modelIndex / availableRows);
+        int row = modelIndex % availableRows;
+        return QPoint(column, row);
+    }
 }
 
 int QQuickTableViewPrivate::edgeToArrayIndex(Qt::Edge edge)
@@ -1234,12 +1248,13 @@ void QQuickTableViewPrivate::updateTableSize()
 
 QSize QQuickTableViewPrivate::calculateTableSize()
 {
+    QSize size(0, 0);
     if (tableModel)
-        return QSize(tableModel->columns(), tableModel->rows());
+        size = QSize(tableModel->columns(), tableModel->rows());
     else if (model)
-        return QSize(1, model->count());
+        size = QSize(1, model->count());
 
-    return QSize(0, 0);
+    return isTransposed ? size.transposed() : size;
 }
 
 qreal QQuickTableViewPrivate::getColumnLayoutWidth(int column)

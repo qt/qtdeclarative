@@ -269,13 +269,23 @@ QQmlDelegateModel::~QQmlDelegateModel()
             cacheItem->contextData->invalidate();
             cacheItem->contextData = nullptr;
             cacheItem->scriptRef -= 1;
+        } else if (cacheItem->incubationTask) {
+            // Both the incubationTask and the object may hold a scriptRef,
+            // but if both are present, only one scriptRef is held in total.
+            cacheItem->scriptRef -= 1;
         }
+
         cacheItem->groups &= ~Compositor::UnresolvedFlag;
         cacheItem->objectRef = 0;
+
+        if (cacheItem->incubationTask) {
+            d->releaseIncubator(cacheItem->incubationTask);
+            cacheItem->incubationTask->vdm = nullptr;
+            cacheItem->incubationTask = nullptr;
+        }
+
         if (!cacheItem->isReferenced())
             delete cacheItem;
-        else if (cacheItem->incubationTask)
-            cacheItem->incubationTask->vdm = nullptr;
     }
 }
 
@@ -641,7 +651,7 @@ QQmlDelegateModel::ReleaseFlags QQmlDelegateModel::release(QObject *item, QQmlIn
 void QQmlDelegateModel::cancel(int index)
 {
     Q_D(QQmlDelegateModel);
-    if (!d->m_delegate || index < 0 || index >= d->m_compositor.count(d->m_compositorGroup)) {
+    if (index < 0 || index >= d->m_compositor.count(d->m_compositorGroup)) {
         qWarning() << "DelegateModel::cancel: index out range" << index << d->m_compositor.count(d->m_compositorGroup);
         return;
     }
@@ -936,15 +946,18 @@ void PropertyUpdater::breakBinding()
         return;
     if (updateCount == 0) {
         QObject::disconnect(*it);
+        senderToConnection.erase(it);
         QQmlError warning;
-        warning.setUrl(qmlContext(QObject::sender())->baseUrl());
+        if (auto context = qmlContext(QObject::sender()))
+            warning.setUrl(context->baseUrl());
+        else
+            return;
         auto signalName = QString::fromLatin1(QObject::sender()->metaObject()->method(QObject::senderSignalIndex()).name());
         signalName.chop(sizeof("changed")-1);
         QString propName = signalName;
         propName[0] = propName[0].toLower();
         warning.setDescription(QString::fromUtf8("Writing to \"%1\" broke the binding to the underlying model").arg(propName));
         qmlWarning(this, warning);
-        senderToConnection.erase(it);
     } else {
         --updateCount;
     }

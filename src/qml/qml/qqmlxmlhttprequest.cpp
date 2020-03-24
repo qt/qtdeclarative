@@ -1291,7 +1291,7 @@ void QQmlXMLHttpRequest::requestFromUrl(const QUrl &url)
     } else {
         QObject::connect(m_network, SIGNAL(readyRead()),
                          this, SLOT(readyRead()));
-        QObject::connect(m_network, SIGNAL(error(QNetworkReply::NetworkError)),
+        QObject::connect(m_network, SIGNAL(errorOccurred(QNetworkReply::NetworkError)),
                          this, SLOT(error(QNetworkReply::NetworkError)));
         QObject::connect(m_network, SIGNAL(finished()),
                          this, SLOT(finished()));

@@ -194,8 +194,8 @@ ReturnedValue QQmlValueTypeWrapper::create(ExecutionEngine *engine, QObject *obj
     r->d()->setPropertyCache(QJSEnginePrivate::get(engine)->cache(metaObject));
     auto valueType = QQmlValueTypeFactory::valueType(typeId);
     if (!valueType) {
-        QMetaType metaType(typeId);
-        return engine->throwTypeError(QLatin1String("Type %1 is not a value type").arg(metaType.name()));
+        return engine->throwTypeError(QLatin1String("Type %1 is not a value type")
+                                      .arg(QString::fromUtf8(QMetaType(typeId).name())));
     }
     r->d()->setValueType(valueType);
     r->d()->setGadgetPtr(nullptr);
@@ -211,8 +211,8 @@ ReturnedValue QQmlValueTypeWrapper::create(ExecutionEngine *engine, const QVaria
     r->d()->setPropertyCache(QJSEnginePrivate::get(engine)->cache(metaObject));
     auto valueType = QQmlValueTypeFactory::valueType(typeId);
     if (!valueType) {
-        QMetaType metaType(typeId);
-        return engine->throwTypeError(QLatin1String("Type %1 is not a value type").arg(metaType.name()));
+        return engine->throwTypeError(QLatin1String("Type %1 is not a value type")
+                                      .arg(QString::fromUtf8(QMetaType(typeId).name())));
     }
     r->d()->setValueType(valueType);
     r->d()->setGadgetPtr(nullptr);
