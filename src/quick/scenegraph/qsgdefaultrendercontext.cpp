@@ -242,8 +242,6 @@ void QSGDefaultRenderContext::beginNextRhiFrame(QSGRenderer *renderer, QRhiRende
                                                 RenderPassCallback mainPassRecordingEnd,
                                                 void *callbackUserData)
 {
-    Q_ASSERT(!m_currentFrameCommandBuffer);
-
     renderer->setRenderTarget(rt);
     renderer->setRenderPassDescriptor(rp);
     renderer->setCommandBuffer(cb);
