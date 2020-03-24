@@ -167,10 +167,10 @@ void QQuickDayOfWeekRow::componentComplete()
     d->resizeItems();
 }
 
-void QQuickDayOfWeekRow::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickDayOfWeekRow::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickDayOfWeekRow);
-    QQuickControl::geometryChanged(newGeometry, oldGeometry);
+    QQuickControl::geometryChange(newGeometry, oldGeometry);
     if (isComponentComplete())
         d->resizeItems();
 }

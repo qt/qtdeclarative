@@ -736,10 +736,10 @@ void QQuickDialogButtonBox::componentComplete()
     qApp->installEventFilter(new LanguageEventFilter(d));
 }
 
-void QQuickDialogButtonBox::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickDialogButtonBox::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickDialogButtonBox);
-    QQuickContainer::geometryChanged(newGeometry, oldGeometry);
+    QQuickContainer::geometryChange(newGeometry, oldGeometry);
     d->updateLayout();
 }
 

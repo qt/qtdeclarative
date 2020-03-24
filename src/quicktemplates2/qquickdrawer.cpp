@@ -799,10 +799,10 @@ void QQuickDrawer::touchEvent(QTouchEvent *event)
 }
 #endif
 
-void QQuickDrawer::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickDrawer::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickDrawer);
-    QQuickPopup::geometryChanged(newGeometry, oldGeometry);
+    QQuickPopup::geometryChange(newGeometry, oldGeometry);
     d->resizeOverlay();
 }
 

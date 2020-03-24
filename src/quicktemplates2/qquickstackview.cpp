@@ -1146,9 +1146,9 @@ void QQuickStackView::componentComplete()
     }
 }
 
-void QQuickStackView::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickStackView::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
-    QQuickControl::geometryChanged(newGeometry, oldGeometry);
+    QQuickControl::geometryChange(newGeometry, oldGeometry);
 
     Q_D(QQuickStackView);
     for (QQuickStackElement *element : qAsConst(d->elements)) {

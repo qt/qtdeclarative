@@ -95,7 +95,7 @@ protected:
     void touchEvent(QTouchEvent *event) override;
 #endif
 
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
 private:
     Q_DISABLE_COPY(QQuickDrawer)

@@ -1213,10 +1213,10 @@ void QQuickSwipeDelegate::componentComplete()
     QQuickSwipePrivate::get(&d->swipe)->reposition(DontAnimatePosition);
 }
 
-void QQuickSwipeDelegate::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickSwipeDelegate::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickSwipeDelegate);
-    QQuickControl::geometryChanged(newGeometry, oldGeometry);
+    QQuickControl::geometryChange(newGeometry, oldGeometry);
 
     if (isComponentComplete() && !qFuzzyCompare(newGeometry.width(), oldGeometry.width())) {
         QQuickSwipePrivate *swipePrivate = QQuickSwipePrivate::get(&d->swipe);

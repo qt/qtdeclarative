@@ -406,10 +406,10 @@ void QQuickMonthGrid::componentComplete()
     d->resizeItems();
 }
 
-void QQuickMonthGrid::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickMonthGrid::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickMonthGrid);
-    QQuickControl::geometryChanged(newGeometry, oldGeometry);
+    QQuickControl::geometryChange(newGeometry, oldGeometry);
     if (isComponentComplete())
         d->resizeItems();
 }

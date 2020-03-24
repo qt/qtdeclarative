@@ -84,7 +84,7 @@ Q_SIGNALS:
 protected:
     void updatePolish() override;
     void componentComplete() override;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     bool isContent(QQuickItem *item) const override;
     void itemAdded(int index, QQuickItem *item) override;
     void itemMoved(int index, QQuickItem *item) override;

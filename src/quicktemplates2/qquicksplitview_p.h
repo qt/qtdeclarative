@@ -100,7 +100,7 @@ protected:
     void componentComplete() override;
     void hoverMoveEvent(QHoverEvent *event) override;
     bool childMouseEventFilter(QQuickItem *item, QEvent *event) override;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
     void itemAdded(int index, QQuickItem *item) override;
     void itemMoved(int index, QQuickItem *item) override;

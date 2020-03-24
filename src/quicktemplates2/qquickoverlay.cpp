@@ -400,10 +400,10 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
         setVisible(!d->allDrawers.isEmpty() || !childItems().isEmpty());
 }
 
-void QQuickOverlay::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickOverlay::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickOverlay);
-    QQuickItem::geometryChanged(newGeometry, oldGeometry);
+    QQuickItem::geometryChange(newGeometry, oldGeometry);
     for (QQuickPopup *popup : qAsConst(d->allPopups))
         QQuickPopupPrivate::get(popup)->resizeOverlay();
 }

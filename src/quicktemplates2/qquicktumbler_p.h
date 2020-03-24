@@ -126,7 +126,7 @@ Q_SIGNALS:
     Q_REVISION(2) void movingChanged();
 
 protected:
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void componentComplete() override;
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
     void keyPressEvent(QKeyEvent *event) override;

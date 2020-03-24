@@ -577,10 +577,10 @@ void QQuickLabel::itemChange(QQuickItem::ItemChange change, const QQuickItem::It
     }
 }
 
-void QQuickLabel::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickLabel::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickLabel);
-    QQuickText::geometryChanged(newGeometry, oldGeometry);
+    QQuickText::geometryChange(newGeometry, oldGeometry);
     d->resizeBackground();
 }
 

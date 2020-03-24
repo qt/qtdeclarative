@@ -438,7 +438,7 @@ protected:
     virtual void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem);
     virtual void contentSizeChange(const QSizeF &newSize, const QSizeF &oldSize);
     virtual void fontChange(const QFont &newFont, const QFont &oldFont);
-    virtual void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry);
+    virtual void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry);
     virtual void localeChange(const QLocale &newLocale, const QLocale &oldLocale);
     virtual void itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data);
     virtual void marginsChange(const QMarginsF &newMargins, const QMarginsF &oldMargins);

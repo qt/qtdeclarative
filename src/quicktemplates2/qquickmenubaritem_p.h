@@ -81,7 +81,7 @@ Q_SIGNALS:
     void highlightedChanged();
 
 protected:
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
     QFont defaultFont() const override;
 

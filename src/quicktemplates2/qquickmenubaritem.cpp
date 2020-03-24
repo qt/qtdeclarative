@@ -162,10 +162,10 @@ void QQuickMenuBarItem::setHighlighted(bool highlighted)
     emit highlightedChanged();
 }
 
-void QQuickMenuBarItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickMenuBarItem::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickMenuBarItem);
-    QQuickAbstractButton::geometryChanged(newGeometry, oldGeometry);
+    QQuickAbstractButton::geometryChange(newGeometry, oldGeometry);
     if (d->menu)
         d->menu->setY(newGeometry.height());
 }

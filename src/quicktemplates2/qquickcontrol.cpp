@@ -2050,10 +2050,10 @@ void QQuickControl::wheelEvent(QWheelEvent *event)
 }
 #endif
 
-void QQuickControl::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickControl::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickControl);
-    QQuickItem::geometryChanged(newGeometry, oldGeometry);
+    QQuickItem::geometryChange(newGeometry, oldGeometry);
     d->resizeBackground();
     d->resizeContent();
     if (!qFuzzyCompare(newGeometry.width(), oldGeometry.width()))

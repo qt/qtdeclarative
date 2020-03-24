@@ -518,11 +518,11 @@ void QQuickTumbler::positionViewAtIndex(int index, QQuickTumbler::PositionMode m
     QMetaObject::invokeMethod(d->view, "positionViewAtIndex", Q_ARG(int, index), Q_ARG(int, mode));
 }
 
-void QQuickTumbler::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickTumbler::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickTumbler);
 
-    QQuickControl::geometryChanged(newGeometry, oldGeometry);
+    QQuickControl::geometryChange(newGeometry, oldGeometry);
 
     d->_q_updateItemHeights();
 

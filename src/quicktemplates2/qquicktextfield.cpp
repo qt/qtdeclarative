@@ -830,10 +830,10 @@ void QQuickTextField::itemChange(QQuickItem::ItemChange change, const QQuickItem
     }
 }
 
-void QQuickTextField::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickTextField::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickTextField);
-    QQuickTextInput::geometryChanged(newGeometry, oldGeometry);
+    QQuickTextInput::geometryChange(newGeometry, oldGeometry);
     d->resizeBackground();
 }
 

@@ -55,7 +55,7 @@ bool QQuickIconImagePrivate::updateDevicePixelRatio(qreal targetDevicePixelRatio
 void QQuickIconImagePrivate::updateIcon()
 {
     Q_Q(QQuickIconImage);
-    // Both geometryChanged() and QQuickImageBase::sourceSizeChanged()
+    // Both geometryChange() and QQuickImageBase::sourceSizeChanged()
     // (which we connect to updateIcon() in the constructor) can be called as a result
     // of updateIcon() changing the various sizes, so we must check that we're not recursing.
     if (updatingIcon)
@@ -176,10 +176,10 @@ void QQuickIconImage::componentComplete()
     QObjectPrivate::connect(this, &QQuickImageBase::sourceSizeChanged, d, &QQuickIconImagePrivate::updateIcon);
 }
 
-void QQuickIconImage::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickIconImage::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickIconImage);
-    QQuickImage::geometryChanged(newGeometry, oldGeometry);
+    QQuickImage::geometryChange(newGeometry, oldGeometry);
     if (isComponentComplete() && newGeometry.size() != oldGeometry.size())
         d->updateIcon();
 }

@@ -124,10 +124,10 @@ void QQuickRoundButton::resetRadius()
     d->setRadius();
 }
 
-void QQuickRoundButton::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickRoundButton::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickRoundButton);
-    QQuickControl::geometryChanged(newGeometry, oldGeometry);
+    QQuickControl::geometryChange(newGeometry, oldGeometry);
     if (!d->explicitRadius)
         d->setRadius();
 }

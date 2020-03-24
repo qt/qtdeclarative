@@ -91,7 +91,7 @@ protected:
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
     void contentSizeChange(const QSizeF &newSize, const QSizeF &oldSize) override;
     void fontChange(const QFont &newFont, const QFont &oldFont) override;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void localeChange(const QLocale &newLocale, const QLocale &oldLocale) override;
     void mirrorChange() override;
     void itemChange(ItemChange change, const ItemChangeData &data) override;

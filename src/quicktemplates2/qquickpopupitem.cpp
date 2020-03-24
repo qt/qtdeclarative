@@ -330,11 +330,11 @@ void QQuickPopupItem::fontChange(const QFont &newFont, const QFont &oldFont)
     d->popup->fontChange(newFont, oldFont);
 }
 
-void QQuickPopupItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickPopupItem::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickPopupItem);
-    QQuickPage::geometryChanged(newGeometry, oldGeometry);
-    d->popup->geometryChanged(newGeometry, oldGeometry);
+    QQuickPage::geometryChange(newGeometry, oldGeometry);
+    d->popup->geometryChange(newGeometry, oldGeometry);
 }
 
 void QQuickPopupItem::localeChange(const QLocale &newLocale, const QLocale &oldLocale)

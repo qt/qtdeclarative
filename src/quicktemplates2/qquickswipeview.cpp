@@ -300,10 +300,10 @@ QQuickSwipeViewAttached *QQuickSwipeView::qmlAttachedProperties(QObject *object)
     return new QQuickSwipeViewAttached(object);
 }
 
-void QQuickSwipeView::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickSwipeView::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickSwipeView);
-    QQuickContainer::geometryChanged(newGeometry, oldGeometry);
+    QQuickContainer::geometryChange(newGeometry, oldGeometry);
     d->resizeItems();
 }
 

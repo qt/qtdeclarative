@@ -116,7 +116,7 @@ protected:
     void componentComplete() override;
 
     void itemChange(ItemChange change, const ItemChangeData &value) override;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     virtual void insetChange(const QMarginsF &newInset, const QMarginsF &oldInset);
 
 private:

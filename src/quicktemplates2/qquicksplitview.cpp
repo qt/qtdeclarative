@@ -1407,10 +1407,10 @@ bool QQuickSplitView::childMouseEventFilter(QQuickItem *item, QEvent *event)
     return false;
 }
 
-void QQuickSplitView::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickSplitView::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickSplitView);
-    QQuickControl::geometryChanged(newGeometry, oldGeometry);
+    QQuickControl::geometryChange(newGeometry, oldGeometry);
     d->resizeHandles();
     d->requestLayout();
 }

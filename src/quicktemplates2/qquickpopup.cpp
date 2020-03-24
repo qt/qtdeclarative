@@ -2553,7 +2553,7 @@ void QQuickPopup::fontChange(const QFont &newFont, const QFont &oldFont)
     emit fontChanged();
 }
 
-void QQuickPopup::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickPopup::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickPopup);
     d->reposition();

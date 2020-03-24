@@ -157,7 +157,7 @@ Q_SIGNALS:
 
 protected:
     void componentComplete() override;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     bool childMouseEventFilter(QQuickItem *, QEvent *) override;
 
 #if QT_CONFIG(quicktemplates2_multitouch)

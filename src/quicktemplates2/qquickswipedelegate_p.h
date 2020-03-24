@@ -80,7 +80,7 @@ protected:
     void touchEvent(QTouchEvent *event) override;
 
     void componentComplete() override;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
     QFont defaultFont() const override;
 

@@ -98,9 +98,9 @@ void QQuickItemGroup::itemChange(ItemChange change, const ItemChangeData &data)
     }
 }
 
-void QQuickItemGroup::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickItemGroup::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
-    QQuickImplicitSizeItem::geometryChanged(newGeometry, oldGeometry);
+    QQuickImplicitSizeItem::geometryChange(newGeometry, oldGeometry);
 
     if (newGeometry.size() != oldGeometry.size()) {
         const auto children = childItems();

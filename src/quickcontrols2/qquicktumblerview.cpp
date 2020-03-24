@@ -210,7 +210,7 @@ void QQuickTumblerView::updateView()
 
     theView->setSize(QSizeF(width(), height()));
 
-    // Can be called in geometryChanged when it might not have a parent item yet.
+    // Can be called in geometryChange when it might not have a parent item yet.
     if (!m_tumbler)
         return;
 
@@ -274,9 +274,9 @@ void QQuickTumblerView::updateModel()
     }
 }
 
-void QQuickTumblerView::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickTumblerView::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
-    QQuickItem::geometryChanged(newGeometry, oldGeometry);
+    QQuickItem::geometryChange(newGeometry, oldGeometry);
     updateView();
 }
 

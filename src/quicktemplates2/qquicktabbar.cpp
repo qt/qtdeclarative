@@ -335,10 +335,10 @@ void QQuickTabBar::componentComplete()
     d->updateLayout();
 }
 
-void QQuickTabBar::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry)
+void QQuickTabBar::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickTabBar);
-    QQuickContainer::geometryChanged(newGeometry, oldGeometry);
+    QQuickContainer::geometryChange(newGeometry, oldGeometry);
     d->updateLayout();
 }
 

@@ -86,7 +86,7 @@ Q_SIGNALS:
 
 protected:
     void componentComplete() override;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void localeChange(const QLocale &newLocale, const QLocale &oldLocale) override;
     void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) override;
 

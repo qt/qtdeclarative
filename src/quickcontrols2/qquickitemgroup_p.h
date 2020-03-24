@@ -70,7 +70,7 @@ protected:
     void updateImplicitSize();
 
     void itemChange(ItemChange change, const ItemChangeData &data) override;
-    void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
