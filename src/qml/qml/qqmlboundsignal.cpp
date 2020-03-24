@@ -408,4 +408,13 @@ QQmlBoundSignalExpressionPointer &QQmlBoundSignalExpressionPointer::take(QQmlBou
     return *this;
 }
 
+QQmlPropertyObserver::QQmlPropertyObserver(QQmlBoundSignalExpression *expr)
+    : QPropertyObserver([](QPropertyObserver *self) {
+                           auto This = static_cast<QQmlPropertyObserver*>(self);
+                           This->expression->evaluate(QList<QVariant>());
+                       })
+{
+    expression.take(expr);
+}
+
 QT_END_NAMESPACE

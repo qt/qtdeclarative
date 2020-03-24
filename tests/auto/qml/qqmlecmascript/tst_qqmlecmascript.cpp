@@ -9288,8 +9288,11 @@ void tst_qqmlecmascript::bindingOnQProperty()
     QScopedPointer<QObject> test(component.create());
     test->setProperty("externalValue", 42);
     QCOMPARE(test->property("value").toInt(), 42);
+    // Value hasn't changed yet...
+    QCOMPARE(test->property("changeHandlerCount").toInt(), 0);
     test->setProperty("externalValue", 100);
     QCOMPARE(test->property("value").toInt(), 100);
+    QCOMPARE(test->property("changeHandlerCount").toInt(), 1);
 
     QVERIFY(qobject_cast<ClassWithQProperty*>(test.data()));
     QProperty<int> &qprop = static_cast<ClassWithQProperty*>(test.data())->value;

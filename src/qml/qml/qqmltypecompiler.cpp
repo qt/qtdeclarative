@@ -332,45 +332,55 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
     QHash<QString, QStringList> customSignals;
 
     for (QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
-        QString propertyName = stringAt(binding->propertyNameIndex);
+        const QString bindingPropertyName = stringAt(binding->propertyNameIndex);
         // Attached property?
         if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
             const QmlIR::Object *attachedObj = qmlObjects.at(binding->value.objectIndex);
             auto *typeRef = resolvedType(binding->propertyNameIndex);
             QQmlType type = typeRef ? typeRef->type() : QQmlType();
             if (!type.isValid())
-                imports->resolveType(propertyName, &type, nullptr, nullptr, nullptr);
+                imports->resolveType(bindingPropertyName, &type, nullptr, nullptr, nullptr);
 
             const QMetaObject *attachedType = type.attachedPropertiesType(enginePrivate);
             if (!attachedType)
                 COMPILE_EXCEPTION(binding, tr("Non-existent attached object"));
             QQmlPropertyCache *cache = compiler->enginePrivate()->cache(attachedType);
-            if (!convertSignalHandlerExpressionsToFunctionDeclarations(attachedObj, propertyName, cache))
+            if (!convertSignalHandlerExpressionsToFunctionDeclarations(attachedObj, bindingPropertyName, cache))
                 return false;
             continue;
         }
 
-        if (!QmlIR::IRBuilder::isSignalPropertyName(propertyName))
+        if (!QmlIR::IRBuilder::isSignalPropertyName(bindingPropertyName))
             continue;
 
         QQmlPropertyResolver resolver(propertyCache);
 
-        Q_ASSERT(propertyName.startsWith(QLatin1String("on")));
-        propertyName.remove(0, 2);
+        Q_ASSERT(bindingPropertyName.startsWith(QLatin1String("on")));
+        QString signalNameCandidate = bindingPropertyName;
+        signalNameCandidate.remove(0, 2);
 
         // Note that the property name could start with any alpha or '_' or '$' character,
         // so we need to do the lower-casing of the first alpha character.
-        for (int firstAlphaIndex = 0; firstAlphaIndex < propertyName.size(); ++firstAlphaIndex) {
-            if (propertyName.at(firstAlphaIndex).isUpper()) {
-                propertyName[firstAlphaIndex] = propertyName.at(firstAlphaIndex).toLower();
+        for (int firstAlphaIndex = 0; firstAlphaIndex < signalNameCandidate.size(); ++firstAlphaIndex) {
+            if (signalNameCandidate.at(firstAlphaIndex).isUpper()) {
+                signalNameCandidate[firstAlphaIndex] = signalNameCandidate.at(firstAlphaIndex).toLower();
                 break;
             }
         }
 
+        QString qPropertyName;
+        if (signalNameCandidate.endsWith(QLatin1String("Changed")))
+            qPropertyName = signalNameCandidate.mid(0, signalNameCandidate.length() - static_cast<int>(strlen("Changed")));
+
         QList<QString> parameters;
 
         bool notInRevision = false;
-        QQmlPropertyData *signal = resolver.signal(propertyName, &notInRevision);
+        QQmlPropertyData * const signal = resolver.signal(signalNameCandidate, &notInRevision);
+        QQmlPropertyData * const signalPropertyData = resolver.property(signalNameCandidate, /*notInRevision ptr*/nullptr);
+        QQmlPropertyData * const qPropertyData = !qPropertyName.isEmpty() ? resolver.property(qPropertyName) : nullptr;
+        QString finalSignalHandlerPropertyName = signalNameCandidate;
+        uint flags = QV4::CompiledData::Binding::IsSignalHandlerExpression;
+
         if (signal) {
             int sigIndex = propertyCache->methodIndexToSignalIndex(signal->coreIndex());
             sigIndex = propertyCache->originalClone(sigIndex);
@@ -389,10 +399,13 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
                 }
                 parameters += param;
             }
+        } else if (!signalPropertyData && qPropertyData && qPropertyData->isQProperty()) {
+            finalSignalHandlerPropertyName = qPropertyName;
+            flags = QV4::CompiledData::Binding::IsPropertyObserver;
         } else {
             if (notInRevision) {
                 // Try assinging it as a property later
-                if (resolver.property(propertyName, /*notInRevision ptr*/nullptr))
+                if (signalPropertyData)
                     continue;
 
                 const QString &originalPropertyName = stringAt(binding->propertyNameIndex);
@@ -424,11 +437,9 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
                 }
             }
 
-            QHash<QString, QStringList>::ConstIterator entry = customSignals.constFind(propertyName);
-            if (entry == customSignals.constEnd() && propertyName.endsWith(QLatin1String("Changed"))) {
-                QString alternateName = propertyName.mid(0, propertyName.length() - static_cast<int>(strlen("Changed")));
-                entry = customSignals.constFind(alternateName);
-            }
+            QHash<QString, QStringList>::ConstIterator entry = customSignals.constFind(signalNameCandidate);
+            if (entry == customSignals.constEnd() && !qPropertyName.isEmpty())
+                entry = customSignals.constFind(qPropertyName);
 
             if (entry == customSignals.constEnd()) {
                 // Can't find even a custom signal, then just don't do anything and try
@@ -490,8 +501,8 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
             functionDeclaration->rbraceToken = foe->node->lastSourceLocation();
         }
         foe->node = functionDeclaration;
-        binding->propertyNameIndex = compiler->registerString(propertyName);
-        binding->flags |= QV4::CompiledData::Binding::IsSignalHandlerExpression;
+        binding->propertyNameIndex = compiler->registerString(finalSignalHandlerPropertyName);
+        binding->flags |= flags;
     }
     return true;
 }
@@ -516,7 +527,8 @@ bool QQmlEnumTypeResolver::resolveEnumBindings()
 
         for (QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
             if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression
-                || binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject)
+                || binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject
+                || binding->flags & QV4::CompiledData::Binding::IsPropertyObserver)
                 continue;
 
             if (binding->type != QV4::CompiledData::Binding::Type_Script)
@@ -1319,7 +1331,8 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(int objectIndex)
         }
 
         if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression
-            || binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject)
+            || binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject
+            || binding->flags & QV4::CompiledData::Binding::IsPropertyObserver)
             continue;
 
         if (!pd) {

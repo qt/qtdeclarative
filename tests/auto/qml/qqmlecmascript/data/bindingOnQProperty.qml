@@ -4,4 +4,8 @@ ClassWithQProperty {
     value: {
         return externalValue
     }
+    property int changeHandlerCount: 0
+    onValueChanged: {
+        changeHandlerCount++;
+    }
 }

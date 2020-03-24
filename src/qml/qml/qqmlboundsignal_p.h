@@ -126,6 +126,15 @@ private:
     QQmlBoundSignalExpressionPointer m_expression;
 };
 
+class QQmlPropertyObserver : public QPropertyObserver
+{
+public:
+    QQmlPropertyObserver(QQmlBoundSignalExpression *expr);
+
+private:
+    QQmlBoundSignalExpressionPointer expression;
+};
+
 QT_END_NAMESPACE
 
 #endif // QQMLBOUNDSIGNAL_P_H

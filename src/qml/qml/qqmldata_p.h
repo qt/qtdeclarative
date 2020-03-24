@@ -74,6 +74,7 @@ class QQmlContextData;
 class QQmlNotifier;
 class QQmlDataExtended;
 class QQmlNotifierEndpoint;
+class QQmlPropertyObserver;
 
 namespace QV4 {
 class ExecutableCompilationUnit;
@@ -175,6 +176,7 @@ public:
 
     QQmlAbstractBinding *bindings;
     QQmlBoundSignal *signalHandlers;
+    std::vector<QQmlPropertyObserver> propertyObservers;
 
     // Linked list for QQmlContext::contextObjects
     QQmlData *nextContextObject;

@@ -449,7 +449,8 @@ struct Binding
         IsBindingToAlias = 0x40,
         IsDeferredBinding = 0x80,
         IsCustomParserBinding = 0x100,
-        IsFunctionExpression = 0x200
+        IsFunctionExpression = 0x200,
+        IsPropertyObserver = 0x400
     };
 
     union {
@@ -475,7 +476,8 @@ struct Binding
             || type == Type_GroupProperty)
             return false;
         if (flags & IsSignalHandlerExpression
-            || flags & IsSignalHandlerObject)
+            || flags & IsSignalHandlerObject
+            || flags & IsPropertyObserver)
             return false;
         return true;
     }
@@ -485,7 +487,7 @@ struct Binding
 
     bool isSignalHandler() const
     {
-        if (flags & IsSignalHandlerExpression || flags & IsSignalHandlerObject) {
+        if (flags & IsSignalHandlerExpression || flags & IsSignalHandlerObject || flags & IsPropertyObserver) {
             Q_ASSERT(!isValueBinding());
             Q_ASSERT(!isAttachedProperty());
             Q_ASSERT(!isGroupProperty());

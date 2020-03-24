@@ -909,15 +909,22 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
         QQmlPropertyPrivate::removeBinding(_bindingTarget, QQmlPropertyIndex(bindingProperty->coreIndex()));
 
     if (binding->type == QV4::CompiledData::Binding::Type_Script || binding->isTranslationBinding()) {
-        if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression) {
+        if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression
+            || binding->flags & QV4::CompiledData::Binding::IsPropertyObserver) {
             QV4::Function *runtimeFunction = compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex];
             int signalIndex = _propertyCache->methodIndexToSignalIndex(bindingProperty->coreIndex());
-            QQmlBoundSignal *bs = new QQmlBoundSignal(_bindingTarget, signalIndex, _scopeObject, engine);
             QQmlBoundSignalExpression *expr = new QQmlBoundSignalExpression(
                         _bindingTarget, signalIndex, context,
                         _scopeObject, runtimeFunction, currentQmlContext());
 
-            bs->takeExpression(expr);
+            if (bindingProperty->isQProperty()) {
+                auto &observer = QQmlData::get(_scopeObject)->propertyObservers.emplace_back(expr);
+                void *argv[] = { &observer };
+                _bindingTarget->qt_metacall(QMetaObject::RegisterQPropertyObserver, bindingProperty->coreIndex(), argv);
+            } else {
+                QQmlBoundSignal *bs = new QQmlBoundSignal(_bindingTarget, signalIndex, _scopeObject, engine);
+                bs->takeExpression(expr);
+            }
         } else if (bindingProperty->isQProperty()) {
             QUntypedPropertyBinding qmlBinding;
             if (binding->isTranslationBinding()) {
