@@ -919,9 +919,13 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
 
             bs->takeExpression(expr);
         } else if (bindingProperty->isQProperty()) {
-            // ### TODO: support binding->isTranslationBinding()
-            QV4::Function *runtimeFunction = compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex];
-            auto qmlBinding = QQmlPropertyBinding::create(bindingProperty, runtimeFunction, _scopeObject, context, currentQmlContext());
+            QUntypedPropertyBinding qmlBinding;
+            if (binding->isTranslationBinding()) {
+                qmlBinding = QQmlTranslationPropertyBinding::create(bindingProperty, compilationUnit, binding);
+            } else {
+                QV4::Function *runtimeFunction = compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex];
+                qmlBinding = QQmlPropertyBinding::create(bindingProperty, runtimeFunction, _scopeObject, context, currentQmlContext());
+            }
             void *argv[] = { &qmlBinding };
             _bindingTarget->qt_metacall(QMetaObject::SetQPropertyBinding, bindingProperty->coreIndex(), argv);
         } else {

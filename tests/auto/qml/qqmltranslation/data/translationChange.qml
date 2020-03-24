@@ -18,6 +18,7 @@ TranslationChangeBase {
     property string text2: weDoTranslations()
     property string text3
     property string fromListModel: listModel.get(0).text
+    qProperty: qsTr("translate me")
 
     states: [
         State {

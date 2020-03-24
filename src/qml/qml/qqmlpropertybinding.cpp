@@ -57,7 +57,7 @@ QUntypedPropertyBinding QQmlPropertyBinding::create(const QQmlPropertyData *pd, 
 
 void QQmlPropertyBinding::expressionChanged()
 {
-    setDirty(true);
+    markDirtyAndNotifyObservers();
 }
 
 QQmlPropertyBinding::QQmlPropertyBinding(const QMetaType &mt)
@@ -96,6 +96,28 @@ QUntypedPropertyBinding::BindingEvaluationResult QQmlPropertyBinding::evaluateAn
     QMetaType::destruct(metaType.id(), dataPtr);
     QMetaType::construct(metaType.id(), dataPtr, resultVariant.constData());
     return true;
+}
+
+QUntypedPropertyBinding QQmlTranslationPropertyBinding::create(const QQmlPropertyData *pd, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding)
+{
+    auto translationBinding = [compilationUnit, binding](const QMetaType &metaType, void *dataPtr) {
+        // Create a dependency to the uiLanguage
+        QJSEnginePrivate::get(compilationUnit->engine)->uiLanguage.value();
+
+        QVariant resultVariant(compilationUnit->bindingValueAsString(binding));
+        if (metaType.id() != QMetaType::QString)
+            resultVariant.convert(metaType.id());
+
+        int compareResult = 0;
+        if (QMetaType::compare(dataPtr, resultVariant.constData(), metaType.id(), &compareResult)
+            && compareResult == 0)
+            return false;
+        QMetaType::destruct(metaType.id(), dataPtr);
+        QMetaType::construct(metaType.id(), dataPtr, resultVariant.constData());
+        return true;
+    };
+
+    return QUntypedPropertyBinding(QMetaType(pd->propType()), translationBinding, QPropertyBindingSourceLocation());
 }
 
 QT_END_NAMESPACE

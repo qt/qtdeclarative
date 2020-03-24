@@ -95,7 +95,7 @@ void QQmlApplicationEnginePrivate::_q_loadTranslations()
     Q_Q(QQmlApplicationEngine);
 
     QScopedPointer<QTranslator> translator(new QTranslator);
-    if (!uiLanguage.isEmpty()) {
+    if (!uiLanguage.value().isEmpty()) {
         QLocale locale(uiLanguage);
         if (translator->load(locale, QLatin1String("qml"), QLatin1String("_"), translationsDirectory, QLatin1String(".qm"))) {
             if (activeTranslator)

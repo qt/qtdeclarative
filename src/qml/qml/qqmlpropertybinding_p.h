@@ -61,8 +61,8 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlPropertyBinding final : public QQmlJavaScriptExpression,
-                                  public QPropertyBindingPrivate
+class QQmlPropertyBinding : public QQmlJavaScriptExpression,
+                            public QPropertyBindingPrivate
 {
 public:
     static QUntypedPropertyBinding create(const QQmlPropertyData *pd, QV4::Function *function,
@@ -76,6 +76,14 @@ private:
 
     QUntypedPropertyBinding::BindingEvaluationResult evaluateAndReturnTrueIfChanged(const QMetaType &metaType,
                                                                                     void *dataPtr);
+};
+
+class QQmlTranslationPropertyBinding
+{
+public:
+    static QUntypedPropertyBinding create(const QQmlPropertyData *pd,
+                                          const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
+                                          const QV4::CompiledData::Binding *binding);
 };
 
 QT_END_NAMESPACE

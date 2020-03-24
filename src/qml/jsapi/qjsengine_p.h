@@ -53,6 +53,7 @@
 
 #include <QtCore/private/qobject_p.h>
 #include <QtCore/qmutex.h>
+#include <QtCore/qproperty.h>
 #include "qjsengine.h"
 #include "private/qtqmlglobal_p.h"
 #include <private/qqmlmetatype_p.h>
@@ -107,7 +108,7 @@ public:
     // Shared by QQmlEngine
     mutable QRecursiveMutex mutex;
 
-    QString uiLanguage;
+    QProperty<QString> uiLanguage;
 
     // These methods may be called from the QML loader thread
     inline QQmlPropertyCache *cache(QObject *obj, QTypeRevision version = QTypeRevision());
