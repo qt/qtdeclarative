@@ -170,7 +170,7 @@ public:
     int scopedEnumValue(QQmlEnginePrivate *engine, int index, const QString &, bool *ok) const;
     int scopedEnumValue(QQmlEnginePrivate *engine, const QByteArray &, const QByteArray &, bool *ok) const;
     int scopedEnumValue(QQmlEnginePrivate *engine, const QStringRef &, const QStringRef &, bool *ok) const;
-    int inlineComponentObjectId();
+    int inlineComponentObjectId() const;
     void setInlineComponentObjectId(int id) const; // TODO: const setters are BAD
 
     const QQmlTypePrivate *priv() const { return d.data(); }

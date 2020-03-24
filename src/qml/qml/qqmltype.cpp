@@ -881,7 +881,7 @@ int QQmlType::scopedEnumValue(QQmlEnginePrivate *engine, const QStringRef &scope
     return -1;
 }
 
-int QQmlType::inlineComponentObjectId()
+int QQmlType::inlineComponentObjectId() const
 {
     if (!isInlineComponentType())
         return -1;
