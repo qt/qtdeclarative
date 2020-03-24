@@ -72,11 +72,10 @@ Column {
                 required property string name
                 required property int virtualX
                 required property int virtualY
-                required property int width
-                required property int height
+                required property var modelData // avoid shadowing Label.width and height
 
                 lineHeight: 1.5
-                text: name + "\n" + virtualX + ", " + virtualY + " " + width + "x" + height
+                text: name + "\n" + virtualX + ", " + virtualY + " " + modelData.width + "x" + modelData.height
             }
         }
     }
