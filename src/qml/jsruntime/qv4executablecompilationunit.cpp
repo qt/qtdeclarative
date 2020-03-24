@@ -458,7 +458,7 @@ void ExecutableCompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngi
                     // This requires that inline components are visited in the correct order
                     auto icRoot = typeRef->compilationUnit->icRoot;
                     if (typeRef->type.isInlineComponentType()) {
-                        icRoot = typeRef->type.inlineComponendId();
+                        icRoot = typeRef->type.inlineComponentId();
                     }
                     QScopedValueRollback<int> rollback {typeRef->compilationUnit->icRoot, icRoot};
                     inlineComponentData[lastICRoot].totalBindingCount += typeRef->compilationUnit->totalBindingsCount();
@@ -484,7 +484,7 @@ void ExecutableCompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngi
             if (typeRef->compilationUnit) {
                 auto icRoot = typeRef->compilationUnit->icRoot;
                 if (typeRef->type.isInlineComponentType()) {
-                    icRoot = typeRef->type.inlineComponendId();
+                    icRoot = typeRef->type.inlineComponentId();
                 }
                 QScopedValueRollback<int> rollback {typeRef->compilationUnit->icRoot, icRoot};
                 bindingCount += typeRef->compilationUnit->totalBindingsCount();

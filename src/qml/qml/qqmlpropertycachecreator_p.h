@@ -568,7 +568,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int
             if (qmltype.isComposite() || qmltype.isInlineComponentType()) {
                 CompositeMetaTypeIds typeIds;
                 if (qmltype.isInlineComponentType()) {
-                    auto objectId = qmltype.inlineComponendId();
+                    auto objectId = qmltype.inlineComponentId();
                     auto containingType = qmltype.containingType();
                     if (containingType.isValid()) {
                         auto icType = containingType.lookupInlineComponentById(objectId);

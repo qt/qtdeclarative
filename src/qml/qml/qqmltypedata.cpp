@@ -921,7 +921,7 @@ QQmlError QQmlTypeData::buildTypeResolutionCaches(
                     objectId = qmlType.containingType().lookupInlineComponentIdByName(QString::fromUtf8(qmlType.typeName()));
                     qmlType.setInlineComponentObjectId(objectId);
                 } else  {
-                    objectId = resolvedType->type.inlineComponendId();
+                    objectId = resolvedType->type.inlineComponentId();
                 }
                 Q_ASSERT(objectId != -1);
                 ref->typePropertyCache = resolvedType->typeData->compilationUnit()->propertyCaches.at(objectId);
@@ -934,7 +934,7 @@ QQmlError QQmlTypeData::buildTypeResolutionCaches(
                 ref->type = qmlType;
                 if (qmlType.isValid()) {
                     // this is required for inline components in singletons
-                    auto type = qmlType.lookupInlineComponentById(qmlType.inlineComponendId()).typeId();
+                    auto type = qmlType.lookupInlineComponentById(qmlType.inlineComponentId()).typeId();
                     auto typeID = type.isValid() ? type.id() : -1;
                     auto exUnit = engine->obtainExecutableCompilationUnit(typeID);
                     if (exUnit) {

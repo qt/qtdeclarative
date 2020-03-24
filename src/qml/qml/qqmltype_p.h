@@ -146,7 +146,7 @@ public:
     int index() const;
 
     bool isInlineComponentType() const;
-    int inlineComponendId() const;
+    int inlineComponentId() const;
 
     struct Q_QML_PRIVATE_EXPORT SingletonInstanceInfo
     {

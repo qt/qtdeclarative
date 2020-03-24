@@ -1245,7 +1245,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
                     return nullptr;
                 }
             } else {
-                int subObjectId = type.inlineComponendId();
+                int subObjectId = type.inlineComponentId();
                 QScopedValueRollback<int> rollback {typeRef->compilationUnit->icRoot, subObjectId};
                 QQmlObjectCreator subCreator(context, typeRef->compilationUnit, sharedState.data());
                 instance = subCreator.create(subObjectId, nullptr, nullptr, CreationFlags::InlineComponent);

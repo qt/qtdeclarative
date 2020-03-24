@@ -698,7 +698,7 @@ bool QQmlType::isInlineComponentType() const {
     return d ? d->regType == QQmlType::InlineComponentType : false;
 }
 
-int QQmlType::inlineComponendId() const {
+int QQmlType::inlineComponentId() const {
     bool ok = false;
     if (d->regType == QQmlType::RegistrationType::InlineComponentType) {
         Q_ASSERT(d->extraData.id->objectId != -1);
@@ -713,7 +713,7 @@ QUrl QQmlType::sourceUrl() const
     auto url = d ? d->sourceUrl() : QUrl();
     if (url.isValid() && d->regType == QQmlType::RegistrationType::InlineComponentType && d->extraData.id->objectId) {
         Q_ASSERT(url.hasFragment());
-        url.setFragment(QString::number(inlineComponendId()));
+        url.setFragment(QString::number(inlineComponentId()));
     }
     return url;
 }
