@@ -131,8 +131,6 @@ protected:
 class Q_QUICK_PRIVATE_EXPORT QQuickScreenAttached : public QQuickScreenInfo
 {
     Q_OBJECT
-    Q_PROPERTY(Qt::ScreenOrientations orientationUpdateMask READ orientationUpdateMask
-               WRITE setOrientationUpdateMask NOTIFY orientationUpdateMaskChanged)
 
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(2, 0);
@@ -140,16 +138,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickScreenAttached : public QQuickScreenInfo
 public:
     QQuickScreenAttached(QObject* attachee);
 
-    Qt::ScreenOrientations orientationUpdateMask() const;
-    void setOrientationUpdateMask(Qt::ScreenOrientations mask);
-
     //Treats int as Qt::ScreenOrientation, due to QTBUG-20639
     Q_INVOKABLE int angleBetween(int a, int b);
 
     void windowChanged(QQuickWindow*);
-
-Q_SIGNALS:
-    void orientationUpdateMaskChanged();
 
 protected Q_SLOTS:
     void screenChanged(QScreen*);
@@ -157,8 +149,6 @@ protected Q_SLOTS:
 private:
     QQuickWindow* m_window = nullptr;
     QQuickItem* m_attachee;
-    Qt::ScreenOrientations m_updateMask;
-    bool m_updateMaskSet = false;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickScreen : public QObject

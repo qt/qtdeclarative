@@ -213,34 +213,22 @@ QT_BEGIN_NAMESPACE
     \qmlattachedproperty Qt::ScreenOrientation Screen::orientation
     \readonly
 
-    This contains the current orientation of the screen, from the accelerometer
-    (if any). On a desktop computer, this value typically does not change.
+    This contains the current orientation of the screen from the
+    window system perspective.
 
-    If primaryOrientation == orientation, it means that the screen
-    automatically rotates all content which is displayed, depending on how you
-    hold it. But if orientation changes while primaryOrientation does NOT
-    change, then probably you are using a device which does not rotate its own
-    display. In that case you may need to use \l {Item::rotation}{Item.rotation} or
-    \l {Item::transform}{Item.transform} to rotate your content.
+    Most mobile devices and tablet computers contain accelerometer sensors.
+    The Qt Sensors module provides the ability to read this sensor directly.
+    However, the windowing system may rotate the entire screen automatically
+    based on how it is being held, or manually via settings to rotate a desktop
+    monitor; in that case, this \c orientation property will change.
 
-    \note This property does not update unless a Screen::orientationUpdateMask
-    is set to a value other than \c 0.
+    \sa primaryOrientation(), QWindow::contentOrientation(), QOrientationSensor
 */
 /*!
     \qmlattachedmethod int Screen::angleBetween(Qt::ScreenOrientation a, Qt::ScreenOrientation b)
 
     Returns the rotation angle, in degrees, between the specified screen
     orientations \a a and \a b.
-*/
-
-/*!
-    \qmlattachedproperty Qt::ScreenOrientations Screen::orientationUpdateMask
-    \since 5.4
-
-    This contains the update mask for the orientation. Screen::orientation
-    only emits changes for the screen orientations matching this mask.
-
-    By default it is set to the value of the QScreen that the window uses.
 */
 
 QQuickScreenInfo::QQuickScreenInfo(QObject *parent, QScreen *wrappedScreen)
@@ -442,25 +430,6 @@ QQuickScreenAttached::QQuickScreenAttached(QObject* attachee)
         screenChanged(QGuiApplication::primaryScreen());
 }
 
-Qt::ScreenOrientations QQuickScreenAttached::orientationUpdateMask() const
-{
-    return m_updateMask;
-}
-
-void QQuickScreenAttached::setOrientationUpdateMask(Qt::ScreenOrientations mask)
-{
-    m_updateMaskSet = true;
-    if (m_updateMask == mask)
-        return;
-
-    m_updateMask = mask;
-
-    if (m_screen)
-        m_screen->setOrientationUpdateMask(m_updateMask);
-
-    emit orientationUpdateMaskChanged();
-}
-
 int QQuickScreenAttached::angleBetween(int a, int b)
 {
     if (!m_screen)
@@ -481,17 +450,8 @@ void QQuickScreenAttached::windowChanged(QQuickWindow* c)
 void QQuickScreenAttached::screenChanged(QScreen *screen)
 {
     //qDebug() << "QQuickScreenAttached::screenChanged" << (screen ? screen->name() : QString::fromLatin1("null"));
-    if (screen != m_screen) {
+    if (screen != m_screen)
         setWrappedScreen(screen);
-        if (!m_screen)
-            return;
-        if (m_updateMaskSet) {
-            m_screen->setOrientationUpdateMask(m_updateMask);
-        } else if (m_updateMask != m_screen->orientationUpdateMask()) {
-            m_updateMask = m_screen->orientationUpdateMask();
-            emit orientationUpdateMaskChanged();
-        }
-    }
 }
 
 QT_END_NAMESPACE

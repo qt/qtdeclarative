@@ -8,12 +8,9 @@ Item {
     property int h: Window.Screen.height
     property int curOrientation: Window.Screen.orientation
     property int priOrientation: Window.Screen.primaryOrientation
-    property int updateMask: Window.Screen.orientationUpdateMask
     property real devicePixelRatio: Window.Screen.devicePixelRatio
     property int vx: Window.Screen.virtualX
     property int vy: Window.Screen.virtualY
-
-    Window.Screen.orientationUpdateMask: Qt.LandscapeOrientation | Qt.InvertedLandscapeOrientation
 
     property int screenCount: Qt.application.screens.length
 

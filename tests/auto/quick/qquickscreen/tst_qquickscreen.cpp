@@ -61,7 +61,6 @@ void tst_qquickscreen::basicProperties()
     QCOMPARE(screen->size().height(), root->property("h").toInt());
     QCOMPARE(int(screen->orientation()), root->property("curOrientation").toInt());
     QCOMPARE(int(screen->primaryOrientation()), root->property("priOrientation").toInt());
-    QCOMPARE(int(screen->orientationUpdateMask()), root->property("updateMask").toInt());
     QCOMPARE(screen->devicePixelRatio(), root->property("devicePixelRatio").toReal());
     QVERIFY(screen->devicePixelRatio() >= 1.0);
     QCOMPARE(screen->geometry().x(), root->property("vx").toInt());
@@ -86,7 +85,6 @@ void tst_qquickscreen::screenOnStartup()
     QCOMPARE(screen->size().height(), root->property("h").toInt());
     QCOMPARE(int(screen->orientation()), root->property("curOrientation").toInt());
     QCOMPARE(int(screen->primaryOrientation()), root->property("priOrientation").toInt());
-    QCOMPARE(int(screen->orientationUpdateMask()), root->property("updateMask").toInt());
     QCOMPARE(screen->devicePixelRatio(), root->property("devicePixelRatio").toReal());
     QVERIFY(screen->devicePixelRatio() >= 1.0);
     QCOMPARE(screen->geometry().x(), root->property("vx").toInt());
