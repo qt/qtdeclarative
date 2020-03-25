@@ -232,14 +232,17 @@ QQmlInstanceModel::ReleaseFlags QQmlTableInstanceModel::release(QObject *object,
     }
 
     // The item is not reused or referenced by anyone, so just delete it
-    destroyModelItem(modelItem);
+    destroyModelItem(modelItem, Deferred);
     return QQmlInstanceModel::Destroyed;
 }
 
-void QQmlTableInstanceModel::destroyModelItem(QQmlDelegateModelItem *modelItem)
+void QQmlTableInstanceModel::destroyModelItem(QQmlDelegateModelItem *modelItem, DestructionMode mode)
 {
     emit destroyingItem(modelItem->object);
-    modelItem->destroyObject();
+    if (mode == Deferred)
+        modelItem->destroyObject();
+    else
+        delete modelItem->object;
     delete modelItem;
 }
 
@@ -284,7 +287,9 @@ void QQmlTableInstanceModel::cancel(int index)
 
 void QQmlTableInstanceModel::drainReusableItemsPool(int maxPoolTime)
 {
-    m_reusableItemsPool.drain(maxPoolTime, [=](QQmlDelegateModelItem *modelItem){ destroyModelItem(modelItem); });
+    m_reusableItemsPool.drain(maxPoolTime, [this](QQmlDelegateModelItem *modelItem) {
+        destroyModelItem(modelItem, Immediate);
+    });
 }
 
 void QQmlTableInstanceModel::reuseItem(QQmlDelegateModelItem *item, int newModelIndex)
