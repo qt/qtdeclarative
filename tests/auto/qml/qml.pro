@@ -105,3 +105,6 @@ qtConfig(private_tests): \
 qtNomakeTools( \
     qmlplugindump \
 )
+
+!cross_compile: \
+    SUBDIRS += qmltyperegistrar
