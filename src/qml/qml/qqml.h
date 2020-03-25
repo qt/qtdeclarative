@@ -879,7 +879,4 @@ int Q_QML_EXPORT qmlTypeId(const char *uri, int versionMajor, int versionMinor, 
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QObject)
-Q_DECLARE_METATYPE(QVariant)
-
 #endif // QQML_H
