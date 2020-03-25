@@ -64,6 +64,7 @@ OTHER_FILES += \
     data/scriptActionCrash.qml \
     data/sequentialAnimationNullChildBug.qml \
     data/signals.qml \
+    data/signalorder.qml \
     data/transitionAssignmentBug.qml \
     data/valuesource.qml \
     data/valuesource2.qml

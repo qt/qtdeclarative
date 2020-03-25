@@ -176,11 +176,8 @@ void QQuickAbstractAnimationPrivate::commence()
                 animationInstance = new QQuickAnimatorProxyJob(animationInstance, q);
             animationInstance->addAnimationChangeListener(this, QAbstractAnimationJob::Completion);
         }
+        emit q->started();
         animationInstance->start();
-        if (animationInstance->isStopped()) {
-            running = false;
-            emit q->stopped();
-        }
     }
 }
 
@@ -293,10 +290,8 @@ void QQuickAbstractAnimation::setRunning(bool r)
                 d->animationInstance->setLoopCount(d->animationInstance->currentLoop() + d->loopCount);
             supressStart = true;    //we want the animation to continue, rather than restart
         }
-        if (!supressStart) {
+        if (!supressStart)
             d->commence();
-            emit started();
-        }
     } else {
         if (d->paused) {
             d->paused = false; //reset paused state to false when stopped
@@ -314,7 +309,16 @@ void QQuickAbstractAnimation::setRunning(bool r)
         }
     }
 
-    emit runningChanged(d->running);
+
+    if (r == d->running) {
+        // This might happen if we start an animation with 0 duration: This will result in that
+        // commence() will emit started(), and then when it starts it will call setCurrentTime(0),
+        // (which is both start and end time of the animation), so it will also end up calling
+        // setRunning(false) (recursively) and stop the animation.
+        // Therefore, the state of d->running will in that case be different than r if we are back in
+        // the root stack frame of the recursive calls to setRunning()
+        emit runningChanged(d->running);
+    }
 }
 
 /*!
