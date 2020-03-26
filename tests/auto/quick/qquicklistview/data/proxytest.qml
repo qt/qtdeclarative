@@ -38,7 +38,7 @@ Item {
     QSortFilterProxyModel {
         id: outerModel
         sourceModel: innerModel
-        filterRegExp: RegExp("^H.*$")
+        filterRegularExpression: RegExp("^H.*$")
     }
 
     width: 400
