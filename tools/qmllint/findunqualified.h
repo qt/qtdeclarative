@@ -52,7 +52,7 @@ class FindUnqualifiedIDVisitor : public QQmlJS::AST::Visitor
 {
     Q_DISABLE_COPY_MOVE(FindUnqualifiedIDVisitor)
 public:
-    explicit FindUnqualifiedIDVisitor(QStringList qmltypeDirs, QString code,
+    explicit FindUnqualifiedIDVisitor(QStringList qmltypeDirs, QStringList qmltypeFiles, QString code,
                                       QString fileName, bool silent);
     ~FindUnqualifiedIDVisitor() override = default;
     bool check();
@@ -69,6 +69,7 @@ private:
     QHash<QString, ScopeTree::ConstPtr> m_types;
     QHash<QString, ScopeTree::ConstPtr> m_exportedName2Scope;
     QStringList m_qmltypeDirs;
+    QStringList m_qmltypeFiles;
     QString m_code;
     QHash<QString, ScopeTree::ConstPtr> m_qmlid2scope;
     QString m_rootId;

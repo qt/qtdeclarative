@@ -95,7 +95,8 @@ public:
         FileLastModifiedRole = Qt::UserRole + 6,
         FileLastReadRole = Qt::UserRole +7,
         FileIsDirRole = Qt::UserRole + 8,
-        FileUrlRole = Qt::UserRole + 9
+        FileUrlRole = Qt::UserRole + 9,
+        FileURLRole = Qt::UserRole + 10
     };
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;

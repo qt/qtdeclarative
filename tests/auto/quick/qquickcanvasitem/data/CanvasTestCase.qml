@@ -7,6 +7,7 @@ TestCase {
   when:windowShown
   width:100
   height:100
+  visible: true
   property Component component:CanvasComponent{}
   function cleanupTestCase() {
     wait(100) //wait for a short while to make sure no leaked textures
@@ -19,8 +20,8 @@ TestCase {
 //             { tag:"image cooperative", properties:{width:100, height:100, renderTarget:Canvas.Image, renderStrategy:Canvas.Cooperative}},
              { tag:"image immediate", properties:{width:100, height:100, renderTarget:Canvas.Image, renderStrategy:Canvas.Immediate}},
 //             { tag:"fbo cooperative", properties:{width:100, height:100, renderTarget:Canvas.FramebufferObject, renderStrategy:Canvas.Cooperative}},
-             { tag:"fbo immediate", properties:{width:100, height:100, renderTarget:Canvas.FramebufferObject, renderStrategy:Canvas.Immediate}},
-             { tag:"fbo threaded", properties:{width:100, height:100, renderTarget:Canvas.FramebufferObject, renderStrategy:Canvas.Threaded}}
+             { tag:"fbo immediate", properties:{width:100, height:100, renderTarget:Canvas.FramebufferObject, renderStrategy:Canvas.Immediate}}
+//             { tag:"fbo threaded", properties:{width:100, height:100, renderTarget:Canvas.FramebufferObject, renderStrategy:Canvas.Threaded}} // QTBUG-82675
            ];
      return [];
   }

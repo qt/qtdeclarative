@@ -976,8 +976,7 @@ void QQuickWindowPrivate::translateTouchEvent(QTouchEvent *touchEvent)
     QList<QTouchEvent::TouchPoint> touchPoints = touchEvent->touchPoints();
     for (int i = 0; i < touchPoints.count(); ++i) {
         QTouchEvent::TouchPoint &touchPoint = touchPoints[i];
-
-        touchPoint.setSceneRect(touchPoint.rect());
+        touchPoint.setScenePos(touchPoint.pos());
         touchPoint.setStartScenePos(touchPoint.startPos());
         touchPoint.setLastScenePos(touchPoint.lastPos());
     }

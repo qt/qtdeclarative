@@ -2171,7 +2171,7 @@ QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(QQuickItem *item, bool i
             tpCopy.setPos(item->mapFromScene(tpCopy.scenePos()));
             tpCopy.setLastPos(item->mapFromScene(tpCopy.lastScenePos()));
             tpCopy.setStartPos(item->mapFromScene(tpCopy.startScenePos()));
-            tpCopy.setRect(item->mapRectFromScene(tpCopy.sceneRect()));
+            tpCopy.setEllipseDiameters(tpCopy.ellipseDiameters());
             tpCopy.setVelocity(transformMatrix.mapVector(tpCopy.velocity()).toVector2D());
             touchPoints << tpCopy;
         }

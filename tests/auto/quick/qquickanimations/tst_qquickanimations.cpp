@@ -89,6 +89,8 @@ private slots:
     void easingProperties();
     void rotation();
     void startStopSignals();
+    void signalOrder_data();
+    void signalOrder();
     void runningTrueBug();
     void nonTransitionBug();
     void registrationBug();
@@ -1321,6 +1323,56 @@ void tst_qquickanimations::startStopSignals()
     QTRY_COMPARE(root->property("stoppedCount").toInt(), 3);
     QCOMPARE(root->property("startedCount").toInt(), 3);
     QVERIFY(timer.elapsed() >= 200);
+}
+
+void tst_qquickanimations::signalOrder_data()
+{
+    QTest::addColumn<QByteArray>("animationType");
+    QTest::addColumn<int>("duration");
+
+    QTest::addRow("ColorAnimation, duration = 10") << QByteArray("ColorAnimation") << 10;
+    QTest::addRow("ColorAnimation, duration = 0") << QByteArray("ColorAnimation") << 0;
+    QTest::addRow("ParallelAnimation, duration = 0") << QByteArray("ParallelAnimation") << 0;
+}
+
+void tst_qquickanimations::signalOrder()
+{
+    QFETCH(QByteArray, animationType);
+    QFETCH(int, duration);
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("signalorder.qml"));
+    QScopedPointer<QObject> obj(c.create());
+    auto *root = qobject_cast<QQuickItem *>(obj.data());
+    QVERIFY(root);
+    QQuickAbstractAnimation *animation = root->findChild<QQuickAbstractAnimation*>(animationType);
+
+    const QVector<void (QQuickAbstractAnimation::*)()> signalsToConnect = {
+        &QQuickAbstractAnimation::started,
+        &QQuickAbstractAnimation::stopped,
+        &QQuickAbstractAnimation::finished
+    };
+    const QVector<const char*> expectedSignalOrder = {
+        "started",
+        "stopped",
+        "finished"
+    };
+
+    QVector<const char*> actualSignalOrder;
+
+    for (int i = 0; i < signalsToConnect.size(); ++i) {
+        const char *str = expectedSignalOrder.at(i);
+        connect(animation, signalsToConnect.at(i) , [str, &actualSignalOrder] () {
+            actualSignalOrder.append(str);
+        });
+    }
+    QSignalSpy finishedSpy(animation, SIGNAL(finished()));
+    if (QQuickColorAnimation *colorAnimation = qobject_cast<QQuickColorAnimation*>(animation))
+        colorAnimation->setDuration(duration);
+
+    animation->start();
+    QTRY_VERIFY(finishedSpy.count());
+    QCOMPARE(actualSignalOrder, expectedSignalOrder);
 }
 
 void tst_qquickanimations::runningTrueBug()

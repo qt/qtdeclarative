@@ -76,8 +76,10 @@ public:
     QVariantMap initialProperties;
     QStringList extraFileSelectors;
     QString translationsDirectory;
+#if QT_CONFIG(translation)
     QScopedPointer<QTranslator> activeTranslator;
     bool isInitialized = false;
+#endif
 };
 
 QT_END_NAMESPACE

@@ -2464,20 +2464,31 @@ void tst_qqmllanguage::scriptStringJs()
     QVERIFY(!object->scriptProperty().booleanLiteral(&ok) && !ok);
 }
 
+struct FreeUnitData
+{
+    static void cleanup(const QV4::CompiledData::Unit *readOnlyQmlUnit)
+    {
+        if (readOnlyQmlUnit && !(readOnlyQmlUnit->flags & QV4::CompiledData::Unit::StaticData))
+            free(const_cast<QV4::CompiledData::Unit *>(readOnlyQmlUnit));
+    }
+};
+
 void tst_qqmllanguage::scriptStringWithoutSourceCode()
 {
     QUrl url = testFileUrl("scriptString7.qml");
+    QScopedPointer<const QV4::CompiledData::Unit, FreeUnitData> readOnlyQmlUnit;
     {
         QQmlEnginePrivate *eng = QQmlEnginePrivate::get(&engine);
         QQmlRefPointer<QQmlTypeData> td = eng->typeLoader.getType(url);
         Q_ASSERT(td);
 
-        const QV4::CompiledData::Unit *readOnlyQmlUnit = td->compilationUnit()->unitData();
+        QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit = td->compilationUnit();
+        readOnlyQmlUnit.reset(compilationUnit->unitData());
         Q_ASSERT(readOnlyQmlUnit);
         QV4::CompiledData::Unit *qmlUnit = reinterpret_cast<QV4::CompiledData::Unit *>(malloc(readOnlyQmlUnit->unitSize));
-        memcpy(qmlUnit, readOnlyQmlUnit, readOnlyQmlUnit->unitSize);
+        memcpy(qmlUnit, readOnlyQmlUnit.data(), readOnlyQmlUnit->unitSize);
+
         qmlUnit->flags &= ~QV4::CompiledData::Unit::StaticData;
-        QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit = td->compilationUnit();
         compilationUnit->setUnitData(qmlUnit);
 
         const QV4::CompiledData::Object *rootObject = compilationUnit->objectAt(/*root object*/0);
@@ -5773,25 +5784,31 @@ class TestItem : public QObject
 {
     Q_OBJECT
     Q_PROPERTY( QVector<QPointF> positions MEMBER m_points  )
+    Q_PROPERTY( QSet<QByteArray> barrays MEMBER m_barrays  )
 
 public:
     TestItem() = default;
     QVector< QPointF > m_points;
+    QSet<QByteArray> m_barrays;
 };
 
 
 Q_DECLARE_METATYPE(QVector<QPointF>);
+Q_DECLARE_METATYPE(QSet<QByteArray>);
 void tst_qqmllanguage::arrayToContainer()
 {
     QQmlEngine engine;
     qmlRegisterType<TestItem>("qt.test", 1, 0, "TestItem");
     QVector<QPointF> points { QPointF (2.0, 3.0) };
+    QSet<QByteArray> barrays { QByteArray("hello"), QByteArray("world") };
     engine.rootContext()->setContextProperty("test", QVariant::fromValue(points));
     QQmlComponent component(&engine, testFileUrl("arrayToContainer.qml"));
     VERIFY_ERRORS(0);
-    QScopedPointer<TestItem> root(qobject_cast<TestItem *>(component.createWithInitialProperties( {{"vector", QVariant::fromValue(points)}} )));
+    QScopedPointer<TestItem> root(qobject_cast<TestItem *>(component.createWithInitialProperties( {{"vector", QVariant::fromValue(points)}, {"myset", QVariant::fromValue(barrays)} } )));
     QVERIFY(root);
     QCOMPARE(root->m_points.at(0), QPointF (2.0, 3.0) );
+    QVERIFY(root->m_barrays.contains("hello"));
+    QVERIFY(root->m_barrays.contains("world"));
 }
 
 class EnumTester : public QObject

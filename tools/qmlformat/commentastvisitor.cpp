@@ -126,6 +126,14 @@ Comment CommentAstVisitor::findComment(SourceLocation first, SourceLocation last
             return Comment(m_engine, Comment::Location::Front, comments);
     }
 
+    if (locations & Comment::Location::Front_Inline) {
+        quint32 searchAt = first.startLine;
+
+        const auto comments = findCommentsInLine(searchAt);
+        if (!comments.isEmpty())
+            return Comment(m_engine, Comment::Location::Front_Inline, comments);
+    }
+
     if (locations & Comment::Location::Back_Inline) {
         quint32 searchAt = last.startLine;
 
@@ -198,13 +206,13 @@ void CommentAstVisitor::endVisit(StatementList *node)
 
 bool CommentAstVisitor::visit(UiObjectBinding *node)
 {
-    attachComment(node, Comment::Front | Comment::Back);
+    attachComment(node, Comment::Front | Comment::Front_Inline | Comment::Back);
     return true;
 }
 
 bool CommentAstVisitor::visit(UiObjectDefinition *node)
 {
-    attachComment(node, Comment::Front | Comment::Back);
+    attachComment(node, Comment::Front | Comment::Front_Inline | Comment::Back);
     return true;
 }
 

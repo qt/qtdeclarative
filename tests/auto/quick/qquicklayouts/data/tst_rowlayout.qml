@@ -118,10 +118,10 @@ Item {
 
         function test_warnAboutLayoutItemsWithAnchors()
         {
-            var fullPath = Qt.resolvedUrl("tst_rowlayout.qml")
+            var regex = new RegExp("QML Item: Detected anchors on an item that is managed by a layout. "
+                                 + "This is undefined behavior; use Layout.alignment instead.")
             for (var i = 0; i < 7; ++i) {
-                ignoreWarning(fullPath + ":" + (75 + 5*i) +":17: QML Item: Detected anchors on an item that is managed by a layout. "
-                    + "This is undefined behavior; use Layout.alignment instead.")
+                ignoreWarning(regex)
             }
             var layout = itemsWithAnchorsLayout_Component.createObject(container)
             waitForRendering(layout)

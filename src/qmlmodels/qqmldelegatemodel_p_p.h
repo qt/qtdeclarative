@@ -475,6 +475,7 @@ class PropertyUpdater : public QObject
 public:
     PropertyUpdater(QObject *parent);
     QHash<int, QMetaObject::Connection> senderToConnection;
+    QHash<int, int> changeSignalIndexToPropertyIndex;
     int updateCount = 0;
 public Q_SLOTS:
     void doUpdate();

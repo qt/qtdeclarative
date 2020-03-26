@@ -331,25 +331,37 @@ int main(int argc, char **argv)
             }
         }
 
+        const bool privateIncludes = parser.isSet(privateIncludesOption);
+        auto resolvedInclude = [&](const QString &include) {
+            return (privateIncludes && include.endsWith(QLatin1String("_p.h")))
+                    ? QLatin1String("private/") + include
+                    : include;
+        };
+
         auto processMetaObject = [&](const QJsonObject &metaObject) {
+            const QString include = resolvedInclude(metaObject[QLatin1String("inputFile")].toString());
             const QJsonArray classes = metaObject[QLatin1String("classes")].toArray();
             for (const auto &cls : classes) {
                 QJsonObject classDef = cls.toObject();
+                classDef.insert(QLatin1String("inputFile"), include);
+
                 switch (qmlTypeRegistrationMode(classDef)) {
                 case NamespaceRegistration:
                 case GadgetRegistration:
                 case ObjectRegistration: {
-                    const QString include = metaObject[QLatin1String("inputFile")].toString();
-                    const bool declaredInHeader = include.endsWith(QLatin1String(".h"));
-                    if (declaredInHeader) {
-                        includes.append(include);
-                        classDef.insert(QLatin1String("registerable"), true);
-                    } else {
-                        fprintf(stderr, "Cannot generate QML type registration for class %s "
-                                        "because it is not declared in a header.",
+                    if (!include.endsWith(QLatin1String(".h"))
+                            && !include.endsWith(QLatin1String(".hpp"))
+                            && !include.endsWith(QLatin1String(".hxx"))
+                            && include.contains(QLatin1Char('.'))) {
+                        fprintf(stderr,
+                                "Class %s is declared in %s, which appears not to be a header.\n"
+                                "The compilation of its registration to QML may fail.\n",
                                 qPrintable(classDef.value(QLatin1String("qualifiedClassName"))
-                                           .toString()));
+                                           .toString()),
+                                qPrintable(include));
                     }
+                    includes.append(include);
+                    classDef.insert(QLatin1String("registerable"), true);
 
                     types.append(classDef);
                     break;
@@ -395,13 +407,8 @@ int main(int argc, char **argv)
     const auto newEnd = std::unique(includes.begin(), includes.end());
     includes.erase(newEnd, includes.end());
 
-    const bool privateIncludes = parser.isSet(privateIncludesOption);
-    for (const QString &include : qAsConst(includes)) {
-        if (privateIncludes && include.endsWith(QLatin1String("_p.h")))
-            fprintf(output, "\n#include <private/%s>", qPrintable(include));
-        else
-            fprintf(output, "\n#include <%s>", qPrintable(include));
-    }
+    for (const QString &include : qAsConst(includes))
+        fprintf(output, "\n#include <%s>", qPrintable(include));
 
     fprintf(output, "\n\n");
 
@@ -463,9 +470,13 @@ int main(int argc, char **argv)
                     continue;
                 }
 
+                const QString include = metaObject[QLatin1String("inputFile")].toString();
                 const QJsonArray classes = metaObject[QLatin1String("classes")].toArray();
-                for (const auto &cls : classes)
-                    foreignTypes.append(cls.toObject());
+                for (const auto &cls : classes) {
+                    QJsonObject classDef = cls.toObject();
+                    classDef.insert(QLatin1String("inputFile"), include);
+                    foreignTypes.append(classDef);
+                }
             }
         }
     }

@@ -789,7 +789,9 @@ void QQuickMultiPointTouchArea::updateTouchPoint(QQuickTouchPoint *dtp, const QT
     dtp->setPressure(p->pressure());
     dtp->setRotation(p->rotation());
     dtp->setVelocity(p->velocity());
-    dtp->setArea(p->rect());
+    QRectF area(QPointF(), p->ellipseDiameters());
+    area.moveCenter(p->pos());
+    dtp->setArea(area);
     dtp->setStartX(p->startPos().x());
     dtp->setStartY(p->startPos().y());
     dtp->setPreviousX(p->lastPos().x());
