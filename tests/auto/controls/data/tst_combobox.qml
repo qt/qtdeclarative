@@ -48,10 +48,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.15
-import QtQuick.Window 2.15
-import QtTest 1.15
-import QtQuick.Controls 2.15
+import QtQuick
+import QtQuick.Window
+import QtTest
+import QtQuick.Controls
 
 TestCase {
     id: testCase
@@ -215,9 +215,9 @@ TestCase {
         var control = createTemporaryObject(emptyBox, testCase, {textRole: "text"})
         verify(control)
 
-        var obj1 = Qt.createQmlObject("import QtQml 2.0; QtObject { property string text: 'one' }", control)
-        var obj2 = Qt.createQmlObject("import QtQml 2.0; QtObject { property string text: 'two' }", control)
-        var obj3 = Qt.createQmlObject("import QtQml 2.0; QtObject { property string text: 'three' }", control)
+        var obj1 = Qt.createQmlObject("import QtQml; QtObject { property string text: 'one' }", control)
+        var obj2 = Qt.createQmlObject("import QtQml; QtObject { property string text: 'two' }", control)
+        var obj3 = Qt.createQmlObject("import QtQml; QtObject { property string text: 'three' }", control)
 
         control.model = [obj1, obj2, obj3]
 

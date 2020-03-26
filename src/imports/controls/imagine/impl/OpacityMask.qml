@@ -34,7 +34,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
+import QtQuick
 
 /*
    A cross-graphics API implementation of QtGraphicalEffects' OpacityMask.

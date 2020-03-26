@@ -34,11 +34,11 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Controls 2.12
-import QtQuick.Controls.impl 2.12
-import QtQuick.Controls.Fusion 2.12
-import QtQuick.Controls.Fusion.impl 2.12
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Controls.impl
+import QtQuick.Controls.Fusion
+import QtQuick.Controls.Fusion.impl
 
 Rectangle {
     id: panel

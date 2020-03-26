@@ -34,10 +34,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Controls 2.12
-import QtQuick.Controls.Default.impl 2.12
-import QtQuick.Templates 2.12 as T
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Controls.Default.impl
+import QtQuick.Templates as T
 
 T.BusyIndicator {
     id: control

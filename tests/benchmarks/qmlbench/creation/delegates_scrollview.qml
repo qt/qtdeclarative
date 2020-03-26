@@ -1,6 +1,6 @@
-import QtQuick 2.12
-import QmlBench 1.0
-import QtQuick.Controls 2.12
+import QtQuick
+import QmlBench
+import QtQuick.Controls
 
 CreationBenchmark {
     id: root

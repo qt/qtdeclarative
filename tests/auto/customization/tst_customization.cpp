@@ -256,7 +256,7 @@ void tst_customization::reset()
 QObject* tst_customization::createControl(const QString &name, const QString &qml, QString *error)
 {
     QQmlComponent component(engine);
-    component.setData("import QtQuick 2.10; import QtQuick.Window 2.2; import QtQuick.Controls 2.3; " + name.toUtf8() + " { " + qml.toUtf8() + " }", QUrl());
+    component.setData("import QtQuick; import QtQuick.Window; import QtQuick.Controls; " + name.toUtf8() + " { " + qml.toUtf8() + " }", QUrl());
     QObject *obj = component.create();
     if (!obj)
         *error = component.errorString();
@@ -483,7 +483,7 @@ void tst_customization::comboPopup()
     {
         // test that ComboBox::popup is created when accessed
         QQmlComponent component(engine);
-        component.setData("import QtQuick.Controls 2.2; ComboBox { }", QUrl());
+        component.setData("import QtQuick.Controls; ComboBox { }", QUrl());
         QScopedPointer<QQuickItem> comboBox(qobject_cast<QQuickItem *>(component.create()));
         QVERIFY(comboBox);
 
@@ -505,7 +505,7 @@ void tst_customization::comboPopup()
         QVERIFY(QTest::qWaitForWindowActive(&window));
 
         QQmlComponent component(engine);
-        component.setData("import QtQuick.Controls 2.2; ComboBox { }", QUrl());
+        component.setData("import QtQuick.Controls; ComboBox { }", QUrl());
         QScopedPointer<QQuickItem> comboBox(qobject_cast<QQuickItem *>(component.create()));
         QVERIFY(comboBox);
 
@@ -521,7 +521,7 @@ void tst_customization::comboPopup()
     {
         // test that ComboBox::popup is completed upon component completion (if appropriate)
         QQmlComponent component(engine);
-        component.setData("import QtQuick 2.9; import QtQuick.Controls 2.2; ComboBox { id: control; contentItem: Item { visible: !control.popup.visible } popup: Popup { property bool wasCompleted: false; Component.onCompleted: wasCompleted = true } }", QUrl());
+        component.setData("import QtQuick; import QtQuick.Controls; ComboBox { id: control; contentItem: Item { visible: !control.popup.visible } popup: Popup { property bool wasCompleted: false; Component.onCompleted: wasCompleted = true } }", QUrl());
         QScopedPointer<QQuickItem> comboBox(qobject_cast<QQuickItem *>(component.create()));
         QVERIFY(comboBox);
 

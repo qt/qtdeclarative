@@ -48,12 +48,12 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Layouts 1.12
-import QtQuick.Controls 2.12
-import QtQuick.Controls.Material 2.12
-import QtQuick.Controls.Universal 2.12
-import Qt.labs.settings 1.0
+import QtQuick
+import QtQuick.Layouts
+import QtQuick.Controls
+import QtQuick.Controls.Material
+import QtQuick.Controls.Universal
+import Qt.labs.settings
 
 ApplicationWindow {
     id: window

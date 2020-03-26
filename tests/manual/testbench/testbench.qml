@@ -48,15 +48,15 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Window 2.12
-import QtQuick.Layouts 1.12
-import QtQuick.Controls 2.12
-import QtQuick.Controls.Imagine 2.12
-import Qt.labs.folderlistmodel 2.2
-import Qt.labs.settings 1.0
+import QtQuick
+import QtQuick.Window
+import QtQuick.Layouts
+import QtQuick.Controls
+import QtQuick.Controls.Imagine
+import Qt.labs.folderlistmodel
+import Qt.labs.settings
 
-import App 1.0
+import App
 
 ApplicationWindow {
     id: window

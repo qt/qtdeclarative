@@ -1,6 +1,6 @@
-import QtQuick 2.12
-import QtQuick.Controls 2.12
-import QtQuick.Controls.impl 2.12
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Controls.impl
 
 Row {
     width: 200

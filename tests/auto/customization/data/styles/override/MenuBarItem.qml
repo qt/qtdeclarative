@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
+import QtQuick
 import "../simple" as Simple
 
 Simple.MenuBarItem {

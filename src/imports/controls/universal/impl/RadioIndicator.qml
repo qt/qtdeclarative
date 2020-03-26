@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Controls.Universal 2.12
+import QtQuick
+import QtQuick.Controls.Universal
 
 Rectangle {
     id: indicator

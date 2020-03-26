@@ -48,10 +48,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
-import QtTest 1.0
-import QtQuick.Controls 2.12
-import QtQuick.Window 2.12
+import QtQuick
+import QtTest
+import QtQuick.Controls
+import QtQuick.Window
 
 TestCase {
     id: testCase
