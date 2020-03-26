@@ -2463,22 +2463,29 @@ void tst_qqmllanguage::scriptStringJs()
     QVERIFY(!object->scriptProperty().booleanLiteral(&ok) && !ok);
 }
 
+struct FreeUnitData
+{
+    static void cleanup(const QV4::CompiledData::Unit *readOnlyQmlUnit)
+    {
+        if (readOnlyQmlUnit && !(readOnlyQmlUnit->flags & QV4::CompiledData::Unit::StaticData))
+            free(const_cast<QV4::CompiledData::Unit *>(readOnlyQmlUnit));
+    }
+};
+
 void tst_qqmllanguage::scriptStringWithoutSourceCode()
 {
     QUrl url = testFileUrl("scriptString7.qml");
+    QScopedPointer<const QV4::CompiledData::Unit, FreeUnitData> readOnlyQmlUnit;
     {
         QQmlEnginePrivate *eng = QQmlEnginePrivate::get(&engine);
         QQmlRefPointer<QQmlTypeData> td = eng->typeLoader.getType(url);
         Q_ASSERT(td);
 
         QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit = td->compilationUnit();
-        const QV4::CompiledData::Unit *readOnlyQmlUnit = compilationUnit->unitData();
+        readOnlyQmlUnit.reset(compilationUnit->unitData());
         Q_ASSERT(readOnlyQmlUnit);
         QV4::CompiledData::Unit *qmlUnit = reinterpret_cast<QV4::CompiledData::Unit *>(malloc(readOnlyQmlUnit->unitSize));
-        memcpy(qmlUnit, readOnlyQmlUnit, readOnlyQmlUnit->unitSize);
-
-        if (!(readOnlyQmlUnit->flags & QV4::CompiledData::Unit::StaticData))
-            free(const_cast<QV4::CompiledData::Unit *>(readOnlyQmlUnit));
+        memcpy(qmlUnit, readOnlyQmlUnit.data(), readOnlyQmlUnit->unitSize);
 
         qmlUnit->flags &= ~QV4::CompiledData::Unit::StaticData;
         compilationUnit->setUnitData(qmlUnit);
