@@ -59,22 +59,22 @@ class QQuickPointerDeviceHandlerPrivate;
 class Q_QUICK_PRIVATE_EXPORT QQuickPointerDeviceHandler : public QQuickPointerHandler
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickPointerDevice::DeviceTypes acceptedDevices READ acceptedDevices WRITE setAcceptedDevices NOTIFY acceptedDevicesChanged)
-    Q_PROPERTY(QQuickPointerDevice::PointerTypes acceptedPointerTypes READ acceptedPointerTypes WRITE setAcceptedPointerTypes NOTIFY acceptedPointerTypesChanged)
+    Q_PROPERTY(QPointingDevice::DeviceTypes acceptedDevices READ acceptedDevices WRITE setAcceptedDevices NOTIFY acceptedDevicesChanged)
+    Q_PROPERTY(QPointingDevice::PointerTypes acceptedPointerTypes READ acceptedPointerTypes WRITE setAcceptedPointerTypes NOTIFY acceptedPointerTypesChanged)
     Q_PROPERTY(Qt::MouseButtons acceptedButtons READ acceptedButtons WRITE setAcceptedButtons NOTIFY acceptedButtonsChanged)
     Q_PROPERTY(Qt::KeyboardModifiers acceptedModifiers READ acceptedModifiers WRITE setAcceptedModifiers NOTIFY acceptedModifiersChanged)
 
 public:
     explicit QQuickPointerDeviceHandler(QQuickItem *parent = nullptr);
 
-    QQuickPointerDevice::DeviceTypes acceptedDevices() const;
-    QQuickPointerDevice::PointerTypes acceptedPointerTypes() const;
+    QPointingDevice::DeviceTypes acceptedDevices() const;
+    QPointingDevice::PointerTypes acceptedPointerTypes() const;
     Qt::MouseButtons acceptedButtons() const;
     Qt::KeyboardModifiers acceptedModifiers() const;
 
 public Q_SLOTS:
-    void setAcceptedDevices(QQuickPointerDevice::DeviceTypes acceptedDevices);
-    void setAcceptedPointerTypes(QQuickPointerDevice::PointerTypes acceptedPointerTypes);
+    void setAcceptedDevices(QPointingDevice::DeviceTypes acceptedDevices);
+    void setAcceptedPointerTypes(QPointingDevice::PointerTypes acceptedPointerTypes);
     void setAcceptedButtons(Qt::MouseButtons buttons);
     void setAcceptedModifiers(Qt::KeyboardModifiers acceptedModifiers);
 

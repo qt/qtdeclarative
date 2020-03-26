@@ -122,11 +122,17 @@ void InputInspector::timerEvent(QTimerEvent *event)
         update();
 }
 
-QQuickPointerDevice *InputInspector::pointerDevice() const
+const QPointingDevice *InputInspector::pointerDevice() const
 {
-    QQuickPointerDevice *device = QQuickPointerDevice::touchDevices().value(0);
+    const QPointingDevice *device = nullptr;
+    for (const auto dev : QInputDevice::devices()) {
+        if (dev->type() == QInputDevice::DeviceType::TouchScreen) {
+            device = static_cast<const QPointingDevice *>(dev);
+            break;
+        }
+    }
     if (!device)
-        device = QQuickPointerDevice::genericMouseDevice();
+        device = QPointingDevice::primaryPointingDevice();
     return device;
 }
 
@@ -134,7 +140,7 @@ QVector<QObject*> InputInspector::passiveGrabbers_helper(int pointId /*= 0*/) co
 {
     QVector<QObject*> result;
     QSet<QObject*> visited;
-    QQuickPointerDevice *device = pointerDevice();
+    const QPointingDevice *device = pointerDevice();
     if (device && source()) {
         QQuickWindowPrivate *winPriv = QQuickWindowPrivate::get(source());
         QQuickPointerEvent *pointerEvent = winPriv->pointerEventInstance(device);
@@ -161,7 +167,7 @@ QVector<QObject*> InputInspector::exclusiveGrabbers_helper(int pointId /*= 0*/) 
 {
     QVector<QObject*> result;
     QSet<QObject*> visited;
-    QQuickPointerDevice *device = pointerDevice();
+    const QPointingDevice *device = pointerDevice();
     if (device && source()) {
         QQuickWindowPrivate *winPriv = QQuickWindowPrivate::get(source());
         QQuickPointerEvent *pointerEvent = winPriv->pointerEventInstance(device);

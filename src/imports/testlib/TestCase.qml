@@ -1614,7 +1614,7 @@ Item {
 
         \since 5.9
 
-        Begins a sequence of touch events through a simulated QTouchDevice::TouchScreen.
+        Begins a sequence of touch events through a simulated touchscreen (QPointingDevice).
         Events are delivered to the window containing \a item.
 
         The returned object is used to enumerate events to be delivered through a single
@@ -1649,7 +1649,7 @@ Item {
         }
         \endcode
 
-        \sa TouchEventSequence::press(), TouchEventSequence::move(), TouchEventSequence::release(), TouchEventSequence::stationary(), TouchEventSequence::commit(), QTouchDevice::TouchScreen
+        \sa TouchEventSequence::press(), TouchEventSequence::move(), TouchEventSequence::release(), TouchEventSequence::stationary(), TouchEventSequence::commit(), QInputDevice::DeviceType::TouchScreen
     */
 
     function touchEvent(item) {

@@ -46,8 +46,6 @@ class tst_MptaInterop : public QQmlDataTest
     Q_OBJECT
 public:
     tst_MptaInterop()
-      : touchDevice(QTest::createTouchDevice())
-      , touchPointerDevice(QQuickPointerDevice::touchDevice(touchDevice))
     {}
 
 private slots:
@@ -60,8 +58,7 @@ private slots:
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
-    QTouchDevice *touchDevice;
-    QQuickPointerDevice *touchPointerDevice;
+    QPointingDevice *touchDevice = QTest::createTouchDevice();
 };
 
 void tst_MptaInterop::createView(QScopedPointer<QQuickView> &window, const char *fileName)
@@ -111,7 +108,7 @@ void tst_MptaInterop::touchDrag()
     QPoint p1 = mpta->mapToScene(QPointF(20, 20)).toPoint();
     touch.press(1, p1).commit();
     QQuickTouchUtils::flush(window);
-    auto pointerEvent = QQuickWindowPrivate::get(window)->pointerEventInstance(touchPointerDevice);
+    auto pointerEvent = QQuickWindowPrivate::get(window)->pointerEventInstance(touchDevice);
     QCOMPARE(tp.at(0)->property("pressed").toBool(), true);
     QTRY_VERIFY(pointerEvent->point(0)->passiveGrabbers().contains(drag));
 
@@ -153,7 +150,7 @@ void tst_MptaInterop::touchesThenPinch()
     QSignalSpy mptaReleasedSpy(mpta, SIGNAL(released(QList<QObject*>)));
     QSignalSpy mptaCanceledSpy(mpta, SIGNAL(canceled(QList<QObject*>)));
     QTest::QTouchEventSequence touch = QTest::touchEvent(window, touchDevice);
-    auto pointerEvent = QQuickWindowPrivate::get(window)->pointerEventInstance(touchPointerDevice);
+    auto pointerEvent = QQuickWindowPrivate::get(window)->pointerEventInstance(touchDevice);
 
     // Press one touchpoint:
     // DragHandler gets a passive grab
@@ -307,7 +304,7 @@ void tst_MptaInterop::dragHandlerInParentStealingGrabFromItem() // QTBUG-75025
     QScopedPointer<QQuickView> windowPtr;
     createView(windowPtr, "dragParentOfMPTA.qml");
     QQuickView * window = windowPtr.data();
-    auto pointerEvent = QQuickWindowPrivate::get(window)->pointerEventInstance(QQuickPointerDevice::genericMouseDevice());
+    auto pointerEvent = QQuickWindowPrivate::get(window)->pointerEventInstance(QPointingDevice::primaryPointingDevice());
 
     QPointer<QQuickPointerHandler> handler = window->rootObject()->findChild<QQuickPointerHandler*>();
     QVERIFY(handler);

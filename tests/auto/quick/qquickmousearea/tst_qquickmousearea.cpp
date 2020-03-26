@@ -94,14 +94,12 @@ class tst_QQuickMouseArea: public QQmlDataTest
     Q_OBJECT
 public:
     tst_QQuickMouseArea()
-        : device(nullptr)
     {
         qmlRegisterType<CircleMask>("Test", 1, 0, "CircleMask");
         qmlRegisterType<EventSender>("Test", 1, 0, "EventSender");
     }
 
 private slots:
-    void initTestCase() override;
     void dragProperties();
     void resetDrag();
     void dragging_data() { acceptedButton_data(); }
@@ -166,21 +164,11 @@ private:
     }
     void acceptedButton_data();
     void rejectedButton_data();
-    QTouchDevice *device;
+    QPointingDevice *device = QTest::createTouchDevice();
 };
 
 Q_DECLARE_METATYPE(Qt::MouseButton)
 Q_DECLARE_METATYPE(Qt::MouseButtons)
-
-void tst_QQuickMouseArea::initTestCase()
-{
-    QQmlDataTest::initTestCase();
-    if (!device) {
-        device = new QTouchDevice;
-        device->setType(QTouchDevice::TouchScreen);
-        QWindowSystemInterface::registerTouchDevice(device);
-    }
-}
 
 void tst_QQuickMouseArea::acceptedButton_data()
 {

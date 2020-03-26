@@ -47,14 +47,6 @@ public:
     tst_QQuickMultiPointTouchArea() { }
 
 private slots:
-    void initTestCase() {
-        QQmlDataTest::initTestCase();
-        if (!device) {
-            device = new QTouchDevice;
-            device->setType(QTouchDevice::TouchScreen);
-            QWindowSystemInterface::registerTouchDevice(device);
-        }
-    }
     void cleanupTestCase() {}
 
     void properties();
@@ -80,7 +72,7 @@ private slots:
 
 private:
     QQuickView *createAndShowView(const QString &file);
-    QTouchDevice *device = nullptr;
+    QPointingDevice *device = QTest::createTouchDevice();
 };
 
 void tst_QQuickMultiPointTouchArea::properties()
@@ -838,7 +830,7 @@ void tst_QQuickMultiPointTouchArea::inFlickableWithPressDelay() // QTBUG-78818
     QTest::touchEvent(window.data(), device).press(0, p1);
     QQuickTouchUtils::flush(window.data());
     QTRY_COMPARE(point11->pressed(), true);
-    auto pointerEvent = windowPriv->pointerEventInstance(QQuickPointerDevice::touchDevices().at(0));
+    auto pointerEvent = windowPriv->pointerEventInstance(device);
     QCOMPARE(pointerEvent->point(0)->exclusiveGrabber(), mpta);
 
     // release: MPTA receives TouchEnd (which is asymmetric with mouse press); does NOT emit canceled.

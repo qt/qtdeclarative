@@ -95,7 +95,7 @@ Q_LOGGING_CATEGORY(lcWheelHandler, "qt.quick.handler.wheel")
 QQuickWheelHandler::QQuickWheelHandler(QQuickItem *parent)
     : QQuickSinglePointHandler(*(new QQuickWheelHandlerPrivate), parent)
 {
-    setAcceptedDevices(QQuickPointerDevice::Mouse);
+    setAcceptedDevices(QInputDevice::DeviceType::Mouse);
 }
 
 /*!
@@ -367,7 +367,7 @@ bool QQuickWheelHandler::wantsPointerEvent(QQuickPointerEvent *event)
     QQuickPointerScrollEvent *scroll = event->asPointerScrollEvent();
     if (!scroll)
         return false;
-    if (!acceptedDevices().testFlag(QQuickPointerDevice::DeviceType::TouchPad)
+    if (!acceptedDevices().testFlag(QPointingDevice::DeviceType::TouchPad)
             && scroll->synthSource() != Qt::MouseEventNotSynthesized)
         return false;
     if (!active()) {

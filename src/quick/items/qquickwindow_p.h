@@ -76,7 +76,7 @@ class QOpenGLContext;
 class QQuickAnimatorController;
 class QQuickDragGrabber;
 class QQuickItemPrivate;
-class QQuickPointerDevice;
+class QPointingDevice;
 class QQuickRenderControl;
 class QQuickWindowIncubationController;
 class QQuickWindowPrivate;
@@ -150,7 +150,7 @@ public:
     QQuickDragGrabber *dragGrabber;
 #endif
     int touchMouseId;
-    QQuickPointerDevice *touchMouseDevice;
+    const QPointingDevice *touchMouseDevice;
     bool checkIfDoubleTapped(ulong newPressEventTimestamp, QPoint newPressPos);
     ulong touchMousePressTimestamp;
     QPoint touchMousePressPos;      // in screen coordiantes
@@ -181,8 +181,8 @@ public:
 
     // the device-specific event instances which are reused during event delivery
     mutable QVector<QQuickPointerEvent *> pointerEventInstances;
-    QQuickPointerEvent *queryPointerEventInstance(QQuickPointerDevice *device, QEvent::Type eventType = QEvent::None) const;
-    QQuickPointerEvent *pointerEventInstance(QQuickPointerDevice *device, QEvent::Type eventType = QEvent::None) const;
+    QQuickPointerEvent *queryPointerEventInstance(const QPointingDevice *device, QEvent::Type eventType = QEvent::None) const;
+    QQuickPointerEvent *pointerEventInstance(const QPointingDevice *device, QEvent::Type eventType = QEvent::None) const;
 
     // delivery of pointer events:
     QQuickPointerEvent *pointerEventInstance(QEvent *ev) const;

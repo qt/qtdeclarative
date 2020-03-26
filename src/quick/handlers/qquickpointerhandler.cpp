@@ -40,6 +40,7 @@
 #include "qquickpointerhandler_p.h"
 #include "qquickpointerhandler_p_p.h"
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtGui/private/qinputdevice_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -598,7 +599,7 @@ void QQuickPointerHandler::handlePointerEvent(QQuickPointerEvent *event)
                 pt->cancelExclusiveGrab();
         }
     }
-    event->device()->eventDeliveryTargets().append(this);
+    QQuickPointerHandlerPrivate::deviceDeliveryTargets(event->device()).append(this);
 }
 
 bool QQuickPointerHandler::wantsPointerEvent(QQuickPointerEvent *event)
@@ -713,6 +714,16 @@ bool QQuickPointerHandlerPrivate::dragOverThreshold(const QQuickEventPoint *poin
     QPointF delta = point->scenePosition() - point->scenePressPosition();
     return (dragOverThreshold(delta.x(), Qt::XAxis, point) ||
             dragOverThreshold(delta.y(), Qt::YAxis, point));
+}
+
+QVector<QObject *> &QQuickPointerHandlerPrivate::deviceDeliveryTargets(const QInputDevice *device)
+{
+    QInputDevicePrivate *devPriv = QInputDevicePrivate::get(const_cast<QInputDevice *>(device));
+    if (devPriv->qqExtra)
+        return *static_cast<QVector<QObject *>*>(devPriv->qqExtra);
+    auto targets = new QVector<QObject *>;
+    devPriv->qqExtra = targets;
+    return *targets;
 }
 
 QT_END_NAMESPACE

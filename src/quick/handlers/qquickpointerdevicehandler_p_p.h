@@ -64,8 +64,8 @@ public:
     static QQuickPointerDeviceHandlerPrivate* get(QQuickPointerDeviceHandler *q) { return q->d_func(); }
     static const QQuickPointerDeviceHandlerPrivate* get(const QQuickPointerDeviceHandler *q) { return q->d_func(); }
 
-    QQuickPointerDevice::DeviceTypes acceptedDevices = QQuickPointerDevice::AllDevices;
-    QQuickPointerDevice::PointerTypes acceptedPointerTypes = QQuickPointerDevice::AllPointerTypes;
+    QPointingDevice::DeviceTypes acceptedDevices = QPointingDevice::DeviceType::AllDevices;
+    QPointingDevice::PointerTypes acceptedPointerTypes = QPointingDevice::PointerType::AllPointerTypes;
     Qt::MouseButtons acceptedButtons = Qt::LeftButton;
     Qt::KeyboardModifiers acceptedModifiers = Qt::KeyboardModifierMask;
 };

@@ -587,7 +587,7 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
         break;
     case QEvent::MouseButtonPress:
         _mouseQpaTouchPoint = QTouchEvent::TouchPoint(windowPriv->touchMouseId);
-        _touchMouseDevice = windowPriv->touchMouseDevice->qTouchDevice();
+        _touchMouseDevice = windowPriv->touchMouseDevice;
         Q_FALLTHROUGH();
     case QEvent::MouseMove:
     case QEvent::MouseButtonRelease: {

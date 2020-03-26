@@ -443,14 +443,15 @@ QObject *QQuickTouchEventSequence::commit()
     \internal
 */
 
-QTouchDevice *QuickTestEvent::touchDevice()
+QPointingDevice *QuickTestEvent::touchDevice()
 {
-    static QTouchDevice *device(nullptr);
+    static QPointingDevice *device(nullptr);
 
     if (!device) {
-        device = new QTouchDevice;
-        device->setType(QTouchDevice::TouchScreen);
-        QWindowSystemInterface::registerTouchDevice(device);
+        device = new QPointingDevice(QLatin1String("test touchscreen"), 42,
+                                     QInputDevice::DeviceType::TouchScreen, QPointingDevice::PointerType::Finger,
+                                     QInputDevice::Capability::Position, 10, 0);
+        QWindowSystemInterface::registerInputDevice(device);
     }
     return device;
 }

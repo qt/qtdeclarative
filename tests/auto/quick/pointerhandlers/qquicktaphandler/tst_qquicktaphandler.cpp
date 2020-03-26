@@ -51,7 +51,6 @@ class tst_TapHandler : public QQmlDataTest
     Q_OBJECT
 public:
     tst_TapHandler()
-        :touchDevice(QTest::createTouchDevice())
     {}
 
 private slots:
@@ -74,7 +73,7 @@ private slots:
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
-    QTouchDevice *touchDevice;
+    QPointingDevice *touchDevice = QTest::createTouchDevice();
 };
 
 void tst_TapHandler::createView(QScopedPointer<QQuickView> &window, const char *fileName)

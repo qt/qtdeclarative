@@ -116,7 +116,7 @@ void QQuickHoverHandler::handleEventPoint(QQuickEventPoint *point)
 {
     bool hovered = true;
     if (point->state() == QQuickEventPoint::Released &&
-            point->pointerEvent()->device()->pointerType() == QQuickPointerDevice::Finger)
+            point->pointerEvent()->device()->pointerType() == QPointingDevice::PointerType::Finger)
         hovered = false;
     else if (point->pointerEvent()->asPointerTabletEvent())
         m_hoveredTablet = true;

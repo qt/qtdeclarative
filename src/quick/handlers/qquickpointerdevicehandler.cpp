@@ -67,13 +67,13 @@ QQuickPointerDeviceHandler::QQuickPointerDeviceHandler(QQuickPointerDeviceHandle
 {
 }
 
-QQuickPointerDevice::DeviceTypes QQuickPointerDeviceHandler::acceptedDevices() const
+QPointingDevice::DeviceTypes QQuickPointerDeviceHandler::acceptedDevices() const
 {
     Q_D(const QQuickPointerDeviceHandler);
     return d->acceptedDevices;
 }
 
-QQuickPointerDevice::PointerTypes QQuickPointerDeviceHandler::acceptedPointerTypes() const
+QPointingDevice::PointerTypes QQuickPointerDeviceHandler::acceptedPointerTypes() const
 {
     Q_D(const QQuickPointerDeviceHandler);
     return d->acceptedPointerTypes;
@@ -156,7 +156,7 @@ Qt::KeyboardModifiers QQuickPointerDeviceHandler::acceptedModifiers() const
     }
     \endqml
 */
-void QQuickPointerDeviceHandler::setAcceptedDevices(QQuickPointerDevice::DeviceTypes acceptedDevices)
+void QQuickPointerDeviceHandler::setAcceptedDevices(QPointingDevice::DeviceTypes acceptedDevices)
 {
     Q_D(QQuickPointerDeviceHandler);
     if (d->acceptedDevices == acceptedDevices)
@@ -195,7 +195,7 @@ void QQuickPointerDeviceHandler::setAcceptedDevices(QQuickPointerDevice::DeviceT
     }
     \endqml
 */
-void QQuickPointerDeviceHandler::setAcceptedPointerTypes(QQuickPointerDevice::PointerTypes acceptedPointerTypes)
+void QQuickPointerDeviceHandler::setAcceptedPointerTypes(QPointingDevice::PointerTypes acceptedPointerTypes)
 {
     Q_D(QQuickPointerDeviceHandler);
     if (d->acceptedPointerTypes == acceptedPointerTypes)
@@ -299,14 +299,14 @@ bool QQuickPointerDeviceHandler::wantsPointerEvent(QQuickPointerEvent *event)
         << "checking device type" << d->acceptedDevices
         << "pointer type" << d->acceptedPointerTypes
         << "modifiers" << d->acceptedModifiers;
-    if ((event->device()->type() & d->acceptedDevices) == 0)
+    if (!d->acceptedDevices.testFlag(event->device()->type()))
         return false;
-    if ((event->device()->pointerType() & d->acceptedPointerTypes) == 0)
+    if (!d->acceptedPointerTypes.testFlag(event->device()->pointerType()))
         return false;
     if (d->acceptedModifiers != Qt::KeyboardModifierMask && event->modifiers() != d->acceptedModifiers)
         return false;
     // HoverHandler sets acceptedButtons to Qt::NoButton to indicate that button state is irrelevant.
-    if (event->device()->pointerType() != QQuickPointerDevice::Finger && acceptedButtons() != Qt::NoButton &&
+    if (event->device()->pointerType() != QPointingDevice::PointerType::Finger && acceptedButtons() != Qt::NoButton &&
             (event->buttons() & acceptedButtons()) == 0 && (event->button() & acceptedButtons()) == 0
             && !event->asPointerScrollEvent())
         return false;

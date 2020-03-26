@@ -53,6 +53,7 @@
 
 #include <private/qtquickglobal_p.h>
 #include <QtGui/qevent.h>
+#include <QtGui/qpointingdevice.h>
 #include <qqml.h>
 
 QT_BEGIN_NAMESPACE
@@ -61,6 +62,24 @@ class QQuickItemsModule
 {
 public:
     static void defineModule();
+};
+
+struct QInputDeviceForeign
+{
+    Q_GADGET
+    QML_FOREIGN(QInputDevice)
+    QML_NAMED_ELEMENT(InputDevice)
+    QML_ADDED_IN_VERSION(6, 0)
+    QML_UNCREATABLE("InputDevice is only available via read-only properties.")
+};
+
+struct QPointingDeviceForeign
+{
+    Q_GADGET
+    QML_FOREIGN(QPointingDevice)
+    QML_NAMED_ELEMENT(PointerDevice)
+    QML_ADDED_IN_VERSION(6, 0)
+    QML_UNCREATABLE("PointerDevice is only available via read-only properties.")
 };
 
 struct QPointingDeviceUniqueIdForeign

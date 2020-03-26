@@ -74,6 +74,8 @@ public:
     bool dragOverThreshold(QVector2D delta) const;
     bool dragOverThreshold(const QQuickEventPoint *point) const;
 
+    static QVector<QObject *> &deviceDeliveryTargets(const QInputDevice *device);
+
     QQuickPointerEvent *currentEvent = nullptr;
     QQuickItem *target = nullptr;
     qreal m_margin = 0;

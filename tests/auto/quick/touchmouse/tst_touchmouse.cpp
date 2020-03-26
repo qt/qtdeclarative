@@ -173,7 +173,6 @@ class tst_TouchMouse : public QQmlDataTest
     Q_OBJECT
 public:
     tst_TouchMouse()
-        :device(QTest::createTouchDevice())
     {}
 
 private slots:
@@ -218,7 +217,7 @@ protected:
 
 private:
     QQuickView *createView();
-    QTouchDevice *device;
+    QPointingDevice *device = QTest::createTouchDevice();
     QList<Event> filteredEventList;
 };
 
@@ -613,7 +612,7 @@ void tst_TouchMouse::buttonOnFlickable()
 
     QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window.data());
     QVERIFY(windowPriv->touchMouseId != -1);
-    auto pointerEvent = windowPriv->pointerEventInstance(QQuickPointerDevice::touchDevices().at(0));
+    auto pointerEvent = windowPriv->pointerEventInstance(device);
     QCOMPARE(pointerEvent->point(0)->exclusiveGrabber(), eventItem1);
     QCOMPARE(window->mouseGrabberItem(), eventItem1);
 
@@ -674,7 +673,7 @@ void tst_TouchMouse::touchButtonOnFlickable()
 
     QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window.data());
     QVERIFY(windowPriv->touchMouseId == -1);
-    auto pointerEvent = windowPriv->pointerEventInstance(QQuickPointerDevice::touchDevices().at(0));
+    auto pointerEvent = windowPriv->pointerEventInstance(device);
     QCOMPARE(pointerEvent->point(0)->grabberItem(), eventItem2);
     QCOMPARE(window->mouseGrabberItem(), nullptr);
 
@@ -808,7 +807,7 @@ void tst_TouchMouse::buttonOnDelayedPressFlickable()
         // for the touchMouseId to the new grabber.
         QCOMPARE(window->mouseGrabberItem(), flickable);
         QVERIFY(windowPriv->touchMouseId != -1);
-        auto pointerEvent = windowPriv->pointerEventInstance(QQuickPointerDevice::touchDevices().at(0));
+        auto pointerEvent = windowPriv->pointerEventInstance(device);
         QCOMPARE(pointerEvent->point(0)->grabberItem(), flickable);
     }
 
@@ -1464,10 +1463,6 @@ void tst_TouchMouse::touchPointDeliveryOrder()
 
 void tst_TouchMouse::hoverEnabled()
 {
-    // QTouchDevice *device = new QTouchDevice;
-    // device->setType(QTouchDevice::TouchScreen);
-    // QWindowSystemInterface::registerTouchDevice(device);
-
     QScopedPointer<QQuickView> window(createView());
     window->setSource(testFileUrl("hoverMouseAreas.qml"));
     QQuickViewTestUtil::centerOnScreen(window.data());

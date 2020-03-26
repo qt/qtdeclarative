@@ -1322,7 +1322,8 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
     bool overThreshold = false;
     QVector2D velocity = QGuiApplicationPrivate::mouseEventVelocity(event);
     // TODO guarantee that events always have velocity so that it never needs to be computed here
-    if (!(QGuiApplicationPrivate::mouseEventCaps(event) & QTouchDevice::Velocity)) {
+    // TODO use event->device->caps()
+    if (!(QGuiApplicationPrivate::mouseEventCaps(event) & int(QInputDevice::Capability::Velocity))) {
         qint64 lastTimestamp = (lastPos.isNull() ? lastPressTime : lastPosTime);
         if (currentTimestamp == lastTimestamp)
             return; // events are too close together: velocity would be infinite
@@ -1362,7 +1363,7 @@ void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
 
     qreal vVelocity = 0;
     if (elapsed < 100 && vData.velocity != 0.) {
-        vVelocity = (QGuiApplicationPrivate::mouseEventCaps(event) & QTouchDevice::Velocity)
+        vVelocity = (QGuiApplicationPrivate::mouseEventCaps(event) & int(QInputDevice::Capability::Velocity))
                 ? QGuiApplicationPrivate::mouseEventVelocity(event).y() : vData.velocity;
     }
     if ((vData.atBeginning && vVelocity > 0.) || (vData.atEnd && vVelocity < 0.)) {
@@ -1377,7 +1378,7 @@ void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
 
     qreal hVelocity = 0;
     if (elapsed < 100 && hData.velocity != 0.) {
-        hVelocity = (QGuiApplicationPrivate::mouseEventCaps(event) & QTouchDevice::Velocity)
+        hVelocity = (QGuiApplicationPrivate::mouseEventCaps(event) & int(QInputDevice::Capability::Velocity))
                 ? QGuiApplicationPrivate::mouseEventVelocity(event).x() : hData.velocity;
     }
     if ((hData.atBeginning && hVelocity > 0.) || (hData.atEnd && hVelocity < 0.)) {

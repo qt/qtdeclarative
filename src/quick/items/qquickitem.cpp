@@ -54,6 +54,7 @@
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qstylehints.h>
 #include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/private/qpointingdevice_p.h>
 #include <QtGui/qinputmethod.h>
 #include <QtCore/qcoreevent.h>
 #include <QtCore/private/qnumeric_p.h>
@@ -69,6 +70,7 @@
 #include <QtQuick/private/qquickaccessibleattached_p.h>
 #include <QtQuick/private/qquickhoverhandler_p.h>
 #include <QtQuick/private/qquickpointerhandler_p.h>
+#include <QtQuick/private/qquickpointerhandler_p_p.h>
 
 #include <private/qv4engine_p.h>
 #include <private/qv4object_p.h>
@@ -5260,7 +5262,7 @@ bool QQuickItemPrivate::anyPointerHandlerWants(QQuickEventPoint *point) const
 bool QQuickItemPrivate::handlePointerEvent(QQuickPointerEvent *event, bool avoidExclusiveGrabber)
 {
     bool delivered = false;
-    QVector<QQuickPointerHandler *> &eventDeliveryTargets = event->device()->eventDeliveryTargets();
+    QVector<QObject *> &eventDeliveryTargets = QQuickPointerHandlerPrivate::deviceDeliveryTargets(event->device());
     if (extra.isAllocated()) {
         for (QQuickPointerHandler *handler : extra->pointerHandlers) {
             if ((!avoidExclusiveGrabber || !event->hasExclusiveGrabber(handler)) && !eventDeliveryTargets.contains(handler)) {
@@ -7633,7 +7635,7 @@ void QQuickItem::grabMouse()
     bool fromTouch = windowPriv->isDeliveringTouchAsMouse();
     auto point = fromTouch ?
         windowPriv->pointerEventInstance(windowPriv->touchMouseDevice)->pointById(windowPriv->touchMouseId) :
-        windowPriv->pointerEventInstance(QQuickPointerDevice::genericMouseDevice())->point(0);
+        windowPriv->pointerEventInstance(QPointingDevice::primaryPointingDevice())->point(0);
     if (point)
         point->setGrabberItem(this);
 }

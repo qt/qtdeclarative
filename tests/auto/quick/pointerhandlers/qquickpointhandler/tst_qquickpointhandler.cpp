@@ -62,7 +62,7 @@ private slots:
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
-    QTouchDevice *touchDevice;
+    QPointingDevice *touchDevice;
 };
 
 void tst_PointHandler::createView(QScopedPointer<QQuickView> &window, const char *fileName)
@@ -145,7 +145,7 @@ void tst_PointHandler::tabletStylus()
     QQuickView * window = windowPtr.data();
     QQuickPointHandler *handler = window->rootObject()->findChild<QQuickPointHandler *>("pointHandler");
     QVERIFY(handler);
-    handler->setAcceptedDevices(QQuickPointerDevice::Stylus);
+    handler->setAcceptedDevices(QInputDevice::DeviceType::Stylus);
 
     QSignalSpy activeSpy(handler, SIGNAL(activeChanged()));
     QSignalSpy pointSpy(handler, SIGNAL(pointChanged()));
@@ -155,7 +155,7 @@ void tst_PointHandler::tabletStylus()
     const qint64 stylusId = 1234567890;
 
     QWindowSystemInterface::handleTabletEvent(window, point, window->mapToGlobal(point),
-        QTabletEvent::Stylus, QTabletEvent::Pen, Qt::LeftButton, 0.5, 25, 35, 0.6, 12.3, 3, stylusId, Qt::NoModifier);
+        int(QInputDevice::DeviceType::Stylus), int(QPointingDevice::PointerType::Pen), Qt::LeftButton, 0.5, 25, 35, 0.6, 12.3, 3, stylusId, Qt::NoModifier);
     QTRY_COMPARE(handler->active(), true);
     QCOMPARE(activeSpy.count(), 1);
     QCOMPARE(pointSpy.count(), 1);
@@ -170,7 +170,7 @@ void tst_PointHandler::tabletStylus()
 
     point += QPoint(10, 10);
     QWindowSystemInterface::handleTabletEvent(window, point, window->mapToGlobal(point),
-        QTabletEvent::Stylus, QTabletEvent::Pen, Qt::LeftButton, 0.45, 23, 33, 0.57, 15.6, 3.4, stylusId, Qt::NoModifier);
+        int(QInputDevice::DeviceType::Stylus), int(QPointingDevice::PointerType::Pen), Qt::LeftButton, 0.45, 23, 33, 0.57, 15.6, 3, stylusId, Qt::NoModifier);
     QTRY_COMPARE(pointSpy.count(), 2);
     QCOMPARE(handler->active(), true);
     QCOMPARE(activeSpy.count(), 1);
@@ -188,7 +188,7 @@ void tst_PointHandler::tabletStylus()
     QCOMPARE(translationSpy.count(), 2);
 
     QWindowSystemInterface::handleTabletEvent(window, point, window->mapToGlobal(point),
-        QTabletEvent::Stylus, QTabletEvent::Pen, Qt::NoButton, 0, 0, 0, 0, 0, 0, stylusId, Qt::NoModifier);
+        int(QInputDevice::DeviceType::Stylus), int(QPointingDevice::PointerType::Pen), Qt::NoButton, 0, 0, 0, 0, 0, 0, stylusId, Qt::NoModifier);
     QTRY_COMPARE(handler->active(), false);
     QCOMPARE(activeSpy.count(), 2);
     QCOMPARE(pointSpy.count(), 3);

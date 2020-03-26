@@ -82,7 +82,7 @@ private slots:
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
-    QTouchDevice *touchDevice;
+    QPointingDevice *touchDevice;
 };
 
 void tst_FlickableInterop::createView(QScopedPointer<QQuickView> &window, const char *fileName)

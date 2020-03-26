@@ -72,7 +72,7 @@ private slots:
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
     QSet<QQuickPointerHandler *> passiveGrabbers(QQuickWindow *window, int pointId = 0);
-    QTouchDevice *touchDevice;
+    QPointingDevice *touchDevice;
 };
 
 void tst_DragHandler::createView(QScopedPointer<QQuickView> &window, const char *fileName)
@@ -92,15 +92,13 @@ QSet<QQuickPointerHandler*> tst_DragHandler::passiveGrabbers(QQuickWindow *windo
 {
     QSet<QQuickPointerHandler*> result;
     QQuickWindowPrivate *winp = QQuickWindowPrivate::get(window);
-    if (QQuickPointerDevice* device = QQuickPointerDevice::touchDevice(touchDevice)) {
-        QQuickPointerEvent *pointerEvent = winp->pointerEventInstance(device);
-        for (int i = 0; i < pointerEvent->pointCount(); ++i) {
-            QQuickEventPoint *eventPoint = pointerEvent->point(i);
-            QVector<QPointer <QQuickPointerHandler> > passives = eventPoint->passiveGrabbers();
-            if (!pointId || eventPoint->pointId() == pointId) {
-                for (auto it = passives.constBegin(); it != passives.constEnd(); ++it)
-                    result << it->data();
-            }
+    QQuickPointerEvent *pointerEvent = winp->pointerEventInstance(touchDevice);
+    for (int i = 0; i < pointerEvent->pointCount(); ++i) {
+        QQuickEventPoint *eventPoint = pointerEvent->point(i);
+        QVector<QPointer <QQuickPointerHandler> > passives = eventPoint->passiveGrabbers();
+        if (!pointId || eventPoint->pointId() == pointId) {
+            for (auto it = passives.constBegin(); it != passives.constEnd(); ++it)
+                result << it->data();
         }
     }
     return result;

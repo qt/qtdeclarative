@@ -45,8 +45,6 @@ class tst_MouseAreaInterop : public QQmlDataTest
     Q_OBJECT
 public:
     tst_MouseAreaInterop()
-      : touchDevice(QTest::createTouchDevice())
-      , touchPointerDevice(QQuickPointerDevice::touchDevice(touchDevice))
     {}
 
 private slots:
@@ -56,8 +54,7 @@ private slots:
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
-    QTouchDevice *touchDevice;
-    QQuickPointerDevice *touchPointerDevice;
+    QPointingDevice *touchDevice = QTest::createTouchDevice();
 };
 
 void tst_MouseAreaInterop::createView(QScopedPointer<QQuickView> &window, const char *fileName)
@@ -79,7 +76,7 @@ void tst_MouseAreaInterop::dragHandlerInSiblingStealingGrabFromMouseAreaViaMouse
     QScopedPointer<QQuickView> windowPtr;
     createView(windowPtr, "dragTakeOverFromSibling.qml");
     QQuickView * window = windowPtr.data();
-    auto pointerEvent = QQuickWindowPrivate::get(window)->pointerEventInstance(QQuickPointerDevice::genericMouseDevice());
+    auto pointerEvent = QQuickWindowPrivate::get(window)->pointerEventInstance(QPointingDevice::primaryPointingDevice());
 
     QPointer<QQuickPointerHandler> handler = window->rootObject()->findChild<QQuickPointerHandler*>();
     QVERIFY(handler);
@@ -127,7 +124,7 @@ void tst_MouseAreaInterop::dragHandlerInSiblingStealingGrabFromMouseAreaViaTouch
     QScopedPointer<QQuickView> windowPtr;
     createView(windowPtr, "dragTakeOverFromSibling.qml");
     QQuickView * window = windowPtr.data();
-    auto pointerEvent = QQuickWindowPrivate::get(window)->pointerEventInstance(touchPointerDevice);
+    auto pointerEvent = QQuickWindowPrivate::get(window)->pointerEventInstance(touchDevice);
 
     QPointer<QQuickPointerHandler> handler = window->rootObject()->findChild<QQuickPointerHandler*>();
     QVERIFY(handler);

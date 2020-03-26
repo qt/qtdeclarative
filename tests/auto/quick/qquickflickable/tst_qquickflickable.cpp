@@ -149,7 +149,6 @@ class tst_qquickflickable : public QQmlDataTest
     Q_OBJECT
 public:
     tst_qquickflickable()
-      : touchDevice(QTest::createTouchDevice())
     {}
 
 private slots:
@@ -209,7 +208,7 @@ private slots:
 
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
-    QTouchDevice *touchDevice;
+    QPointingDevice *touchDevice = QTest::createTouchDevice();
 };
 
 void tst_qquickflickable::initTestCase()

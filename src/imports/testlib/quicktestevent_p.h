@@ -122,7 +122,7 @@ public Q_SLOTS:
 private:
     QWindow *eventWindow(QObject *item = nullptr);
     QWindow *activeWindow();
-    QTouchDevice *touchDevice();
+    QPointingDevice *touchDevice();
 
     Qt::MouseButtons m_pressedButtons;
 

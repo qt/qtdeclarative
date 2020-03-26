@@ -146,7 +146,7 @@ private slots:
     void resizeOverlay();
 
 private:
-    QTouchDevice *device = QTest::createTouchDevice();
+    QPointingDevice *device = QTest::createTouchDevice();
     const QRect m_availableGeometry = QGuiApplication::primaryScreen()->availableGeometry();
 };
 

@@ -40,10 +40,11 @@
 #include "qquickevents_p_p.h"
 #include <QtCore/qmap.h>
 #include <QtGui/private/qguiapplication_p.h>
-#include <QtGui/private/qtouchdevice_p.h>
+#include <QtGui/private/qinputdevice_p.h>
 #include <QtGui/private/qevent_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickpointerhandler_p.h>
+#include <QtQuick/private/qquickpointerhandler_p_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
 #include <private/qdebug_p.h>
 
@@ -471,7 +472,7 @@ Item {
 
 /*!
     \qmltype PointerDevice
-    \instantiates QQuickPointerDevice
+    \instantiates QPointingDevice
     \inqmlmodule QtQuick
     \ingroup qtquick-input-events
 
@@ -491,7 +492,7 @@ Item {
 
     Valid values are:
 
-    \value DeviceType.UnknownDevice
+    \value DeviceType.Unknown
         the device cannot be identified
     \value DeviceType.Mouse
         a mouse
@@ -511,7 +512,7 @@ Item {
     \value DeviceType.AllDevices
         any of the above; used as a default value for construction
 
-    \sa QTouchDevice::DeviceType
+    \sa QPointingDevice::DeviceType
 */
 
 /*!
@@ -529,7 +530,7 @@ Item {
 
     Valid values are:
 
-    \value PointerDevice.GenericPointer
+    \value PointerDevice.Generic
         a mouse or something acting like a mouse (the core pointer on X11)
     \value PointerDevice.Finger
         the user's finger
@@ -543,7 +544,6 @@ Item {
         any of the above (used as a default value in constructors)
 */
 
-
 /*!
     \readonly
     \qmlproperty enumeration QtQuick::PointerDevice::capabilities
@@ -554,58 +554,32 @@ Item {
 
     Valid values are:
 
-    \value CapabilityFlag.Position
+    \value Capability.Position
         the \l {QtQuick::EventPoint::position}{position} and
         \l {QtQuick::EventPoint::scenePosition}{scenePosition} properties
-    \value CapabilityFlag.Area
+    \value Capability.Area
         the \l {QtQuick::EventTouchPoint::ellipseDiameters}{ellipseDiameters} property
-    \value CapabilityFlag.Pressure
+    \value Capability.Pressure
         the \l {QtQuick::EventTouchPoint::pressure}{pressure} property
-    \value CapabilityFlag.Velocity
+    \value Capability.Velocity
         the \l {QtQuick::EventPoint::velocity}{velocity} property
-    \value CapabilityFlag.Scroll
+    \value Capability.Scroll
         a \l {QtQuick::PointerDevice::type}{Mouse} has a wheel, or the
         operating system recognizes scroll gestures on a
         \l {QtQuick::PointerDevice::type}{TouchPad}
-    \value CapabilityFlag.Hover
+    \value Capability.Hover
         events are sent even when no button is pressed, or the finger or stylus
         is not in contact with the surface
-    \value CapabilityFlag.Rotation
+    \value Capability.Rotation
         the \l {QtQuick::EventTouchPoint::rotation}{rotation} property
-    \value CapabilityFlag.XTilt
+    \value Capability.XTilt
         horizontal angle between a stylus and the axis perpendicular to the surface
-    \value CapabilityFlag.YTilt
+    \value Capability.YTilt
         vertical angle between a stylus and the axis perpendicular to the surface
 
-    \sa QTouchDevice::capabilities
+    \sa QPointingDevice::capabilities
 */
 
-
-struct ConstructableQQuickPointerDevice : public QQuickPointerDevice
-{
-    ConstructableQQuickPointerDevice(DeviceType devType, PointerType pType, Capabilities caps,
-                              int maxPoints, int buttonCount, const QString &name,
-                              qint64 uniqueId = 0)
-        : QQuickPointerDevice(devType, pType, caps, maxPoints, buttonCount, name, uniqueId) {}
-
-};
-
-template<typename Key>
-struct PointerDeviceHash : public QHash<Key, ConstructableQQuickPointerDevice *>
-{
-    ~PointerDeviceHash() { qDeleteAll(*this); }
-};
-using PointerDeviceForTouchDeviceHash = PointerDeviceHash<const QTouchDevice *>;
-Q_GLOBAL_STATIC(PointerDeviceForTouchDeviceHash, g_touchDevices)
-Q_GLOBAL_STATIC_WITH_ARGS(ConstructableQQuickPointerDevice, g_genericMouseDevice,
-                            (QQuickPointerDevice::Mouse,
-                             QQuickPointerDevice::GenericPointer,
-                             QQuickPointerDevice::Position | QQuickPointerDevice::Scroll | QQuickPointerDevice::Hover,
-                             1, 3, QLatin1String("core pointer"), 0))
-#if QT_CONFIG(tabletevent)
-using PointerDeviceForDeviceIdHash = PointerDeviceHash<qint64>;
-Q_GLOBAL_STATIC(PointerDeviceForDeviceIdHash, g_tabletDevices)
-#endif
 
 // debugging helpers
 static const char *pointStateString(const QQuickEventPoint *point)
@@ -621,130 +595,6 @@ static const QString pointDeviceName(const QQuickEventPoint *point)
     deviceName.resize(16, u' '); // shorten, and align in case of sequential output
     return deviceName;
 }
-
-
-QQuickPointerDevice *QQuickPointerDevice::touchDevice(const QTouchDevice *d)
-{
-    if (g_touchDevices->contains(d))
-        return g_touchDevices->value(d);
-
-    QQuickPointerDevice::DeviceType type = QQuickPointerDevice::TouchScreen;
-    QString name;
-    int maximumTouchPoints = 10;
-    QQuickPointerDevice::Capabilities caps = QQuickPointerDevice::Capabilities(QTouchDevice::Position);
-    if (d) {
-        caps = static_cast<QQuickPointerDevice::Capabilities>(static_cast<int>(d->capabilities()) & 0xFF);
-        if (d->type() == QTouchDevice::TouchPad) {
-            type = QQuickPointerDevice::TouchPad;
-            caps |= QQuickPointerDevice::Scroll;
-        }
-        name = d->name();
-        maximumTouchPoints = d->maximumTouchPoints();
-    } else {
-        qWarning() << "QQuickWindowPrivate::touchDevice: creating touch device from nullptr device in QTouchEvent";
-    }
-
-    ConstructableQQuickPointerDevice *dev = new ConstructableQQuickPointerDevice(
-                type, QQuickPointerDevice::Finger, caps, maximumTouchPoints, 0, name, 0);
-    g_touchDevices->insert(d, dev);
-    return dev;
-}
-
-const QTouchDevice *QQuickPointerDevice::qTouchDevice() const
-{
-    for (auto it = g_touchDevices->constBegin(), end = g_touchDevices->constEnd(); it != end; ++it) {
-        if (it.value() == this)
-            return it.key();
-    }
-    return nullptr;
-}
-
-QList<QQuickPointerDevice*> QQuickPointerDevice::touchDevices()
-{
-    QList<QQuickPointerDevice *> result;
-    result.reserve(g_touchDevices->size());
-    for (auto device : *g_touchDevices)
-        result.append(device);
-    return result;
-}
-
-QQuickPointerDevice *QQuickPointerDevice::genericMouseDevice()
-{
-    return g_genericMouseDevice;
-}
-
-#if QT_CONFIG(tabletevent)
-QQuickPointerDevice *QQuickPointerDevice::tabletDevice(const QTabletEvent *event)
-{
-    // QTabletEvent::uniqueId() is the same for the pointy end and the eraser end of the stylus.
-    // We need to make those unique. QTabletEvent::PointerType only needs 2 bits' worth of storage.
-    // The key into g_tabletDevices just needs to be unique; we don't need to extract uniqueId
-    // back out of it, because QQuickPointerDevice stores that separately anyway.
-    // So the shift-and-add can be thought of as a sort of hash function, even though
-    // most of the time the result will be recognizable because the uniqueId MSBs are often 0.
-    qint64 key = event->uniqueId() + (qint64(event->pointerType()) << 60);
-    auto it = g_tabletDevices->find(key);
-    if (it != g_tabletDevices->end())
-        return it.value();
-
-    DeviceType type = UnknownDevice;
-    int buttonCount = 0;
-    Capabilities caps = Position | Pressure | Hover;
-    // TODO Qt 6: we can't know for sure about XTilt or YTilt until we have a
-    // QTabletDevice populated with capabilities provided by QPA plugins
-
-    switch (event->deviceType()) {
-    case QTabletEvent::Stylus:
-        type = QQuickPointerDevice::Stylus;
-        buttonCount = 3;
-        break;
-    case QTabletEvent::RotationStylus:
-        type = QQuickPointerDevice::Stylus;
-        caps |= QQuickPointerDevice::Rotation;
-        buttonCount = 1;
-        break;
-    case QTabletEvent::Airbrush:
-        type = QQuickPointerDevice::Airbrush;
-        buttonCount = 2;
-        break;
-    case QTabletEvent::Puck:
-        type = QQuickPointerDevice::Puck;
-        buttonCount = 3;
-        break;
-    case QTabletEvent::FourDMouse:
-        type = QQuickPointerDevice::Mouse;
-        caps |= QQuickPointerDevice::Rotation;
-        buttonCount = 3;
-        break;
-    default:
-        type = QQuickPointerDevice::UnknownDevice;
-        break;
-    }
-
-    PointerType ptype = GenericPointer;
-    switch (event->pointerType()) {
-    case QTabletEvent::Pen:
-        ptype = Pen;
-        break;
-    case QTabletEvent::Eraser:
-        ptype = Eraser;
-        break;
-    case QTabletEvent::Cursor:
-        ptype = Cursor;
-        break;
-    case QTabletEvent::UnknownPointer:
-        break;
-    }
-
-    ConstructableQQuickPointerDevice *device = new ConstructableQQuickPointerDevice(
-                type, ptype, caps, 1, buttonCount,
-                QLatin1String("tablet tool ") + QString::number(event->uniqueId()),
-                event->uniqueId());
-
-    g_tabletDevices->insert(key, device);
-    return device;
-}
-#endif
 
 /*!
     \qmltype EventPoint
@@ -1362,7 +1212,7 @@ QVector2D QQuickEventPoint::estimatedVelocity() const
 QQuickPointerEvent::~QQuickPointerEvent()
 {}
 
-QQuickPointerMouseEvent::QQuickPointerMouseEvent(QObject *parent, QQuickPointerDevice *device)
+QQuickPointerMouseEvent::QQuickPointerMouseEvent(QObject *parent, const QPointingDevice *device)
     : QQuickSinglePointEvent(parent, device)
 {
     m_point = new QQuickEventPoint(this);
@@ -1375,8 +1225,7 @@ QQuickPointerEvent *QQuickPointerMouseEvent::reset(QEvent *event)
     if (!event)
         return this;
 
-    m_device = QQuickPointerDevice::genericMouseDevice();
-    m_device->eventDeliveryTargets().clear();
+    QQuickPointerHandlerPrivate::deviceDeliveryTargets(ev->device()).clear();
     m_button = ev->button();
     m_pressedButtons = ev->buttons();
     Qt::TouchPointState state = Qt::TouchPointStationary;
@@ -1396,7 +1245,8 @@ QQuickPointerEvent *QQuickPointerMouseEvent::reset(QEvent *event)
     default:
         break;
     }
-    m_point->reset(state, ev->scenePosition(), quint64(1) << 24, ev->timestamp());  // mouse has device ID 1
+    // for now, reuse the device ID as the point ID; TODO use ev->point(0).id when it becomes possible
+    m_point->reset(state, ev->scenePosition(), int(ev->device()->id()), ev->timestamp());
     return this;
 }
 
@@ -1412,8 +1262,7 @@ QQuickPointerEvent *QQuickPointerTouchEvent::reset(QEvent *event)
     if (!event)
         return this;
 
-    m_device = QQuickPointerDevice::touchDevice(ev->device());
-    m_device->eventDeliveryTargets().clear();
+    QQuickPointerHandlerPrivate::deviceDeliveryTargets(ev->device()).clear();
     m_button = Qt::NoButton;
     m_pressedButtons = Qt::NoButton;
 
@@ -1482,7 +1331,7 @@ void QQuickPointerTouchEvent::localize(QQuickItem *target)
 }
 
 #if QT_CONFIG(gestures)
-QQuickPointerNativeGestureEvent::QQuickPointerNativeGestureEvent(QObject *parent, QQuickPointerDevice *device)
+QQuickPointerNativeGestureEvent::QQuickPointerNativeGestureEvent(QObject *parent, const QPointingDevice *device)
     : QQuickSinglePointEvent(parent, device)
 {
     m_point = new QQuickEventPoint(this);
@@ -1495,8 +1344,7 @@ QQuickPointerEvent *QQuickPointerNativeGestureEvent::reset(QEvent *event)
     if (!event)
         return this;
 
-    m_device = QQuickPointerDevice::touchDevice(ev->device());
-    m_device->eventDeliveryTargets().clear();
+    QQuickPointerHandlerPrivate::deviceDeliveryTargets(ev->device()).clear();
     Qt::TouchPointState state = Qt::TouchPointMoved;
     switch (type()) {
     case Qt::BeginNativeGesture:
@@ -1508,7 +1356,7 @@ QQuickPointerEvent *QQuickPointerNativeGestureEvent::reset(QEvent *event)
     default:
         break;
     }
-    quint64 deviceId = QTouchDevicePrivate::get(const_cast<QTouchDevice *>(ev->device()))->id; // a bit roundabout since QTouchDevice::mTouchDeviceId is protected
+    quint64 deviceId = QInputDevicePrivate::get(ev->device())->id;
     m_point->reset(state, ev->scenePosition(), deviceId << 24, ev->timestamp());
     return this;
 }
@@ -1650,7 +1498,7 @@ QQuickEventPoint *QQuickSinglePointEvent::point(int i) const
     \note Many platforms provide no such information. On such platforms,
     \c inverted always returns false.
 */
-QQuickPointerScrollEvent::QQuickPointerScrollEvent(QObject *parent, QQuickPointerDevice *device)
+QQuickPointerScrollEvent::QQuickPointerScrollEvent(QObject *parent, const QPointingDevice *device)
     : QQuickSinglePointEvent(parent, device)
 {
     m_point = new QQuickEventPoint(this);
@@ -1658,14 +1506,13 @@ QQuickPointerScrollEvent::QQuickPointerScrollEvent(QObject *parent, QQuickPointe
 
 QQuickPointerEvent *QQuickPointerScrollEvent::reset(QEvent *event)
 {
-    m_event = static_cast<QInputEvent*>(event);
+    m_event = static_cast<QPointerEvent*>(event);
     if (!event)
         return this;
 #if QT_CONFIG(wheelevent)
     if (event->type() == QEvent::Wheel) {
         auto ev = static_cast<QWheelEvent*>(event);
-        m_device = QQuickPointerDevice::genericMouseDevice();
-        m_device->eventDeliveryTargets().clear();
+        QQuickPointerHandlerPrivate::deviceDeliveryTargets(ev->device()).clear();
         // m_button = Qt::NoButton;
         m_pressedButtons = ev->buttons();
         m_angleDelta = QVector2D(ev->angleDelta());
@@ -1923,21 +1770,17 @@ QMouseEvent *QQuickPointerTouchEvent::syntheticMouseEvent(int pointID, QQuickIte
         p->scenePosition(), p->globalPosition(), Qt::LeftButton, buttons, m_event->modifiers());
     m_synthMouseEvent.setAccepted(true);
     m_synthMouseEvent.setTimestamp(m_event->timestamp());
-    // In the future we will try to always have valid velocity in every QQuickEventPoint.
-    // QQuickFlickablePrivate::handleMouseMoveEvent() checks for QTouchDevice::Velocity
-    // and if it is set, then it does not need to do its own velocity calculations.
-    // That's probably the only usecase for this, so far.  Some day Flickable should handle
-    // pointer events, and then passing touchpoint velocity via QMouseEvent will be obsolete.
-    // Conveniently (by design), QTouchDevice::Velocity == QQuickPointerDevice.Velocity
-    // so that we don't need to convert m_device->capabilities().
-    if (m_device)
-        QGuiApplicationPrivate::setMouseEventCapsAndVelocity(&m_synthMouseEvent, m_device->capabilities(), p->velocity());
+    // ### Qt 6: try to always have valid velocity in every QEventPoint (either from the platform, or synthesized in QtGui).
+    // QQuickFlickablePrivate::handleMouseMoveEvent() checks for QInputDevice::Capability::Velocity
+    // and if it is set, then it does not need to do its own velocity calculations. So we keep faking it this way for now.
+    if (device())
+        QGuiApplicationPrivate::setMouseEventCapsAndVelocity(&m_synthMouseEvent, device()->capabilities(), p->velocity());
     QGuiApplicationPrivate::setMouseEventSource(&m_synthMouseEvent, Qt::MouseEventSynthesizedByQt);
     return &m_synthMouseEvent;
 }
 
 #if QT_CONFIG(tabletevent)
-QQuickPointerTabletEvent::QQuickPointerTabletEvent(QObject *parent, QQuickPointerDevice *device)
+QQuickPointerTabletEvent::QQuickPointerTabletEvent(QObject *parent, const QPointingDevice *device)
     : QQuickSinglePointEvent(parent, device)
 {
     m_point = new QQuickEventTabletPoint(this);
@@ -1950,8 +1793,7 @@ QQuickPointerEvent *QQuickPointerTabletEvent::reset(QEvent *event)
     if (!event)
         return this;
 
-    Q_ASSERT(m_device == QQuickPointerDevice::tabletDevice(ev));
-    m_device->eventDeliveryTargets().clear();
+    QQuickPointerHandlerPrivate::deviceDeliveryTargets(ev->device()).clear();
     m_button = ev->button();
     m_pressedButtons = ev->buttons();
     static_cast<QQuickEventTabletPoint *>(m_point)->reset(ev);
@@ -2206,13 +2048,10 @@ QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(QQuickItem *item, bool i
         break;
     }
 
-    QTouchEvent *touchEvent = new QTouchEvent(eventType);
+    QTouchEvent *touchEvent = new QTouchEvent(eventType, event.pointingDevice(),
+                                              event.modifiers(), eventStates, touchPoints);
     touchEvent->setWindow(event.window());
     touchEvent->setTarget(item);
-    touchEvent->setDevice(event.device());
-    touchEvent->setModifiers(event.modifiers());
-    touchEvent->setTouchPoints(touchPoints);
-    touchEvent->setTouchPointStates(eventStates);
     touchEvent->setTimestamp(event.timestamp());
     touchEvent->accept();
     return touchEvent;
@@ -2225,29 +2064,6 @@ QTouchEvent *QQuickPointerTouchEvent::asTouchEvent() const
 
 #ifndef QT_NO_DEBUG_STREAM
 
-Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug dbg, const QQuickPointerDevice *dev)
-{
-    QDebugStateSaver saver(dbg);
-    dbg.nospace();
-    if (!dev) {
-        dbg << "QQuickPointerDevice(0)";
-        return dbg;
-    }
-    dbg << "QQuickPointerDevice("<< dev->name() << ' ';
-    QtDebugUtils::formatQEnum(dbg, dev->type());
-    dbg << ' ';
-    QtDebugUtils::formatQEnum(dbg, dev->pointerType());
-    dbg << " caps:";
-    QtDebugUtils::formatQFlags(dbg, dev->capabilities());
-    if (dev->type() == QQuickPointerDevice::TouchScreen ||
-            dev->type() == QQuickPointerDevice::TouchPad)
-        dbg << " maxTouchPoints:" << dev->maximumTouchPoints();
-    else
-        dbg << " buttonCount:" << dev->buttonCount();
-    dbg << ')';
-    return dbg;
-}
-
 Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug dbg, const QQuickPointerEvent *event)
 {
     QDebugStateSaver saver(dbg);
@@ -2258,8 +2074,13 @@ Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug dbg, const QQuickPointerEvent *e
     }
     dbg << "QQuickPointerEvent(";
     dbg << event->timestamp();
-    dbg << " dev:";
-    QtDebugUtils::formatQEnum(dbg, event->device()->type());
+    if (event->device()) {
+        dbg << " dev:";
+        QtDebugUtils::formatQEnum(dbg, event->device()->type());
+        dbg << " " << event->device()->name();
+    } else {
+        dbg << " dev: null";
+    }
     if (event->buttons() != Qt::NoButton) {
         dbg << " buttons:";
         QtDebugUtils::formatQEnum(dbg, event->buttons());

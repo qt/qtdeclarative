@@ -43,7 +43,6 @@ class tst_QQuickPinchArea: public QQmlDataTest
 public:
     tst_QQuickPinchArea() { }
 private slots:
-    void initTestCase();
     void cleanupTestCase();
     void pinchProperties();
     void scale();
@@ -55,17 +54,8 @@ private slots:
 
 private:
     QQuickView *createView();
-    QTouchDevice *device = nullptr;
+    QPointingDevice *device = QTest::createTouchDevice();
 };
-void tst_QQuickPinchArea::initTestCase()
-{
-    QQmlDataTest::initTestCase();
-    if (!device) {
-        device = new QTouchDevice;
-        device->setType(QTouchDevice::TouchScreen);
-        QWindowSystemInterface::registerTouchDevice(device);
-    }
-}
 
 void tst_QQuickPinchArea::cleanupTestCase()
 {
@@ -510,8 +500,7 @@ void tst_QQuickPinchArea::cancel()
         QCOMPARE(root->property("center").toPointF(), QPointF(40, 40)); // blackrect is at 50,50
         QCOMPARE(blackRect->scale(), 1.5);
 
-        QTouchEvent cancelEvent(QEvent::TouchCancel);
-        cancelEvent.setDevice(device);
+        QTouchEvent cancelEvent(QEvent::TouchCancel, device);
         QCoreApplication::sendEvent(window, &cancelEvent);
         QQuickTouchUtils::flush(window);
 

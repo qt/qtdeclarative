@@ -301,7 +301,7 @@ private:
     QVector<int> _lastFilterableTouchPointIds;
     QPointer<QQuickTouchPoint> _mouseTouchPoint; // exists when mouse button is down and _mouseEnabled is true; null otherwise
     QTouchEvent::TouchPoint _mouseQpaTouchPoint; // synthetic QPA touch point to hold state and position of the mouse
-    const QTouchDevice *_touchMouseDevice;
+    const QPointingDevice *_touchMouseDevice;
     QPointF _mousePos;
     bool _stealMouse;
     bool _mouseEnabled;

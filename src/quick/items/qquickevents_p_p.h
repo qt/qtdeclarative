@@ -57,7 +57,7 @@
 #include <QtCore/qobject.h>
 #include <QtCore/qpointer.h>
 #include <QtGui/qevent.h>
-#include <QtGui/qtouchdevice.h>
+#include <QtGui/qpointingdevice.h>
 #include <QtGui/qvector2d.h>
 #include <QtQuick/qquickitem.h>
 
@@ -67,7 +67,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPointerDevice;
+class QPointingDevice;
 class QQuickPointerEvent;
 class QQuickPointerMouseEvent;
 #if QT_CONFIG(gestures)
@@ -405,7 +405,7 @@ private:
 class Q_QUICK_PRIVATE_EXPORT QQuickPointerEvent : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickPointerDevice *device READ device CONSTANT)
+    Q_PROPERTY(QPointingDevice *device READ device CONSTANT)
     Q_PROPERTY(Qt::KeyboardModifiers modifiers READ modifiers CONSTANT)
     Q_PROPERTY(Qt::MouseButtons button READ button CONSTANT)
     Q_PROPERTY(Qt::MouseButtons buttons READ buttons CONSTANT)
@@ -415,7 +415,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerEvent : public QObject
     QML_ADDED_IN_VERSION(2, 12)
 
 public:
-    QQuickPointerEvent(QObject *parent = nullptr, QQuickPointerDevice *device = nullptr)
+    QQuickPointerEvent(QObject *parent = nullptr, const QPointingDevice *device = nullptr)
       : QObject(parent)
       , m_device(device)
       , m_pressedButtons(Qt::NoButton)
@@ -424,7 +424,8 @@ public:
     ~QQuickPointerEvent() override;
 
 public: // property accessors
-    QQuickPointerDevice *device() const { return m_device; }
+    // non-const only because of QML engine limitations (similar to QTBUG-61749)
+    QPointingDevice *device() const { return const_cast<QPointingDevice *>(m_device); }
     Qt::KeyboardModifiers modifiers() const { return m_event ? m_event->modifiers() : Qt::NoModifier; }
     Qt::MouseButton button() const { return m_button; }
     Qt::MouseButtons buttons() const { return m_pressedButtons; }
@@ -468,8 +469,8 @@ public: // helpers for C++ only (during event delivery)
     ulong timestamp() const { return m_event ? m_event->timestamp() : 0; }
 
 protected:
-    QQuickPointerDevice *m_device;
-    QInputEvent *m_event = nullptr; // original event as received by QQuickWindow
+    const QPointingDevice *m_device = nullptr;
+    QPointerEvent *m_event = nullptr; // original event as received by QQuickWindow
     Qt::MouseButton m_button = Qt::NoButton;
     Qt::MouseButtons m_pressedButtons;
 
@@ -482,7 +483,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickSinglePointEvent : public QQuickPointerEvent
 {
     Q_OBJECT
 public:
-    QQuickSinglePointEvent(QObject *parent, QQuickPointerDevice *device)
+    QQuickSinglePointEvent(QObject *parent, const QPointingDevice *device)
         : QQuickPointerEvent(parent, device) { }
 
     void localize(QQuickItem *target) override;
@@ -511,7 +512,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerMouseEvent : public QQuickSinglePointE
     QML_ADDED_IN_VERSION(2, 12)
 
 public:
-    QQuickPointerMouseEvent(QObject *parent, QQuickPointerDevice *device);
+    QQuickPointerMouseEvent(QObject *parent, const QPointingDevice *device);
 
     QQuickPointerEvent *reset(QEvent *) override;
     bool isPressEvent() const override;
@@ -535,7 +536,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerTouchEvent : public QQuickPointerEvent
     QML_ADDED_IN_VERSION(2, 12)
 
 public:
-    QQuickPointerTouchEvent(QObject *parent = nullptr, QQuickPointerDevice *device = nullptr)
+    QQuickPointerTouchEvent(QObject *parent = nullptr, const QPointingDevice *device = nullptr)
         : QQuickPointerEvent(parent, device)
         , m_synthMouseEvent(QEvent::MouseMove, QPointF(), Qt::NoButton, Qt::NoButton, Qt::NoModifier)
     {}
@@ -611,7 +612,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerTabletEvent : public QQuickSinglePoint
 {
     Q_OBJECT
 public:
-    QQuickPointerTabletEvent(QObject *parent, QQuickPointerDevice *device);
+    QQuickPointerTabletEvent(QObject *parent, const QPointingDevice *device);
 
     QQuickPointerEvent *reset(QEvent *) override;
     bool isPressEvent() const override;
@@ -635,7 +636,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerNativeGestureEvent : public QQuickSing
     Q_PROPERTY(qreal value READ value CONSTANT)
 
 public:
-    QQuickPointerNativeGestureEvent(QObject *parent, QQuickPointerDevice *device);
+    QQuickPointerNativeGestureEvent(QObject *parent, const QPointingDevice *device);
 
     QQuickPointerEvent *reset(QEvent *) override;
     bool isPressEvent() const override;
@@ -664,7 +665,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerScrollEvent : public QQuickSinglePoint
     QML_ADDED_IN_VERSION(2, 14)
 
 public:
-    QQuickPointerScrollEvent(QObject *parent, QQuickPointerDevice *device);
+    QQuickPointerScrollEvent(QObject *parent, const QPointingDevice *device);
 
     QQuickPointerEvent *reset(QEvent *) override;
     void localize(QQuickItem *target) override;
@@ -681,8 +682,7 @@ public:
     Qt::ScrollPhase phase() const { return m_phase; }
 
 private:
-    // TODO add QQuickPointerDevice source() whenever QInputEvent is extended to have a source device
-    // then maybe Qt::MouseEventSource synthSource() will be obsolete... that's why it's not public now
+    // TODO remove this if it's obsolete
     Qt::MouseEventSource synthSource() const { return m_synthSource; }
 
 private:
@@ -698,113 +698,6 @@ private:
     Q_DISABLE_COPY(QQuickPointerScrollEvent)
 };
 
-
-// ### Qt 6: move this to qtbase, replace QTouchDevice and the enums in QTabletEvent
-class Q_QUICK_PRIVATE_EXPORT QQuickPointerDevice : public QObject
-{
-    Q_OBJECT
-    Q_PROPERTY(DeviceType type READ type CONSTANT)
-    Q_PROPERTY(PointerType pointerType READ pointerType CONSTANT)
-    Q_PROPERTY(Capabilities capabilities READ capabilities CONSTANT)
-    Q_PROPERTY(int maximumTouchPoints READ maximumTouchPoints CONSTANT)
-    Q_PROPERTY(int buttonCount READ buttonCount CONSTANT)
-    Q_PROPERTY(QString name READ name CONSTANT)
-    Q_PROPERTY(QPointingDeviceUniqueId uniqueId READ uniqueId CONSTANT)
-
-    QML_NAMED_ELEMENT(PointerDevice)
-    QML_UNCREATABLE("PointerDevice is only available as a property of PointerEvent.")
-    QML_ADDED_IN_VERSION(2, 12)
-
-public:
-    enum DeviceType : qint16 {
-        UnknownDevice = 0x0000,
-        Mouse = 0x0001,
-        TouchScreen = 0x0002,
-        TouchPad = 0x0004,
-        Puck = 0x0008,
-        Stylus = 0x0010,
-        Airbrush = 0x0020,
-        AllDevices = 0x7FFF
-    };
-    Q_DECLARE_FLAGS(DeviceTypes, DeviceType)
-    Q_FLAG(DeviceTypes)
-
-    enum PointerType : qint16 {
-        GenericPointer = 0x0001,
-        Finger = 0x0002,
-        Pen = 0x0004,
-        Eraser = 0x0008,
-        Cursor = 0x0010,
-        AllPointerTypes = 0x7FFF
-    };
-    Q_DECLARE_FLAGS(PointerTypes, PointerType)
-    Q_FLAG(PointerTypes)
-
-    enum CapabilityFlag : qint16 {
-        Position    = QTouchDevice::Position,
-        Area        = QTouchDevice::Area,
-        Pressure    = QTouchDevice::Pressure,
-        Velocity    = QTouchDevice::Velocity,
-        MouseEmulation = QTouchDevice::MouseEmulation,
-        // some bits reserved in case we need more of QTouchDevice::Capabilities
-        Scroll      = 0x0100, // mouse has a wheel, or there is OS-level scroll gesture recognition (dubious?)
-        Hover       = 0x0200,
-        Rotation    = 0x0400,
-        XTilt       = 0x0800,
-        YTilt       = 0x1000
-    };
-    Q_DECLARE_FLAGS(Capabilities, CapabilityFlag)
-    Q_FLAG(Capabilities)
-
-    DeviceType type() const { return m_deviceType; }
-    PointerType pointerType() const { return m_pointerType; }
-    Capabilities capabilities() const { return static_cast<Capabilities>(m_capabilities); }
-    bool hasCapability(CapabilityFlag cap) { return m_capabilities & cap; }
-    int maximumTouchPoints() const { return m_maximumTouchPoints; }
-    int buttonCount() const { return m_buttonCount; }
-    QString name() const { return m_name; }
-    QPointingDeviceUniqueId uniqueId() const { return m_uniqueId; }
-    const QTouchDevice *qTouchDevice() const;
-
-    static QQuickPointerDevice *touchDevice(const QTouchDevice *d);
-    static QList<QQuickPointerDevice *> touchDevices();
-    static QQuickPointerDevice *genericMouseDevice();
-#if QT_CONFIG(tabletevent)
-    static QQuickPointerDevice *tabletDevice(const QTabletEvent *event);
-#endif
-
-    QVector<QQuickPointerHandler *> &eventDeliveryTargets() { return m_eventDeliveryTargets; }
-
-private:
-    QQuickPointerDevice(DeviceType devType, PointerType pType, Capabilities caps, int maxPoints, int buttonCount, const QString &name, qint64 uniqueId = 0)
-      : m_deviceType(devType), m_pointerType(pType), m_capabilities(static_cast<qint16>(caps))
-      , m_maximumTouchPoints(static_cast<qint8>(maxPoints)), m_buttonCount(static_cast<qint8>(buttonCount)), m_name(name)
-      , m_uniqueId(QPointingDeviceUniqueId::fromNumericId(uniqueId))
-    {
-    }
-    ~QQuickPointerDevice() override { }
-
-private:
-    // begin 64-bit field
-    DeviceType m_deviceType;
-    PointerType m_pointerType;
-    qint16 m_capabilities;
-    qint8 m_maximumTouchPoints;
-    qint8 m_buttonCount;
-    // end 64-bit field
-    QString m_name;
-    QPointingDeviceUniqueId m_uniqueId;
-    QVector<QQuickPointerHandler *> m_eventDeliveryTargets; // during delivery, handlers which have already seen the event
-
-    Q_DISABLE_COPY(QQuickPointerDevice)
-    friend struct ConstructableQQuickPointerDevice;
-};
-
-Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickPointerDevice::DeviceTypes)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickPointerDevice::PointerTypes)
-Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickPointerDevice::Capabilities)
-
-Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug, const QQuickPointerDevice *);
 Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug, const QQuickPointerEvent *);
 Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug, const QQuickEventPoint *);
 //Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug, const QQuickEventTouchPoint *); TODO maybe
@@ -815,7 +708,7 @@ QML_DECLARE_TYPE(QQuickKeyEvent)
 QML_DECLARE_TYPE(QQuickMouseEvent)
 QML_DECLARE_TYPE(QQuickWheelEvent)
 QML_DECLARE_TYPE(QQuickCloseEvent)
-QML_DECLARE_TYPE(QQuickPointerDevice)
+QML_DECLARE_TYPE(QPointingDevice)
 QML_DECLARE_TYPE(QPointingDeviceUniqueId)
 QML_DECLARE_TYPE(QQuickPointerEvent)
 Q_DECLARE_METATYPE(QQuickEventPoint::GrabTransition)

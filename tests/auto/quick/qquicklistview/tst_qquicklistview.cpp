@@ -352,7 +352,7 @@ private:
 
     QQuickView *m_view;
     QString testForView;
-    QTouchDevice *touchDevice = QTest::createTouchDevice();
+    QPointingDevice *touchDevice = QTest::createTouchDevice();
 };
 
 class TestObject : public QObject
@@ -9673,8 +9673,7 @@ void tst_QQuickListView::touchCancel() // QTBUG-74679
     // and because Flickable filtered it, QQuickFlickablePrivate::pressed
     // should be true, but it's not easily tested here
 
-    QTouchEvent cancelEvent(QEvent::TouchCancel);
-    cancelEvent.setDevice(touchDevice);
+    QTouchEvent cancelEvent(QEvent::TouchCancel, touchDevice);
     QCoreApplication::sendEvent(window.data(), &cancelEvent);
     // now QQuickWindowPrivate::sendUngrabEvent() will be called, Flickable will filter it,
     // QQuickFlickablePrivate::pressed will be set to false, and that will allow setCurrentIndex() to make it move

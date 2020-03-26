@@ -280,7 +280,7 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QQuickEventPoint *poi
                 qreal ts = point->pointerEvent()->timestamp() / 1000.0;
                 if (ts - m_lastTapTimestamp < m_multiTapInterval &&
                         QVector2D(point->scenePosition() - m_lastTapPos).lengthSquared() <
-                        (point->pointerEvent()->device()->type() == QQuickPointerDevice::Mouse ?
+                        (point->pointerEvent()->device()->type() == QInputDevice::DeviceType::Mouse ?
                          m_mouseMultiClickDistanceSquared : m_touchMultiTapDistanceSquared))
                     ++m_tapCount;
                 else

@@ -32,7 +32,7 @@
 #include <QObject>
 class QQuickWindow;
 class QQuickPointerHandler;
-class QQuickPointerDevice;
+class QPointingDevice;
 
 class InputInspector : public QObject
 {
@@ -62,7 +62,7 @@ private:
     QVector<QObject*> passiveGrabbers_helper(int pointId = 0) const;
     QVector<QObject*> exclusiveGrabbers_helper(int pointId = 0) const;
     static QString objectIdentifier(QObject *o);
-    QQuickPointerDevice *pointerDevice() const;
+    const QPointingDevice *pointerDevice() const;
     QString vectorStringJoin(const QVector<QObject*> &arr) const;
 
 private:

@@ -43,9 +43,8 @@ class tst_QQuickPinchHandler: public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_QQuickPinchHandler() : device(0) { }
+    tst_QQuickPinchHandler() { }
 private slots:
-    void initTestCase();
     void cleanupTestCase();
     void pinchProperties();
     void scale();
@@ -60,17 +59,8 @@ private slots:
 
 private:
     QQuickView *createView();
-    QTouchDevice *device;
+    QPointingDevice *device = QTest::createTouchDevice();
 };
-void tst_QQuickPinchHandler::initTestCase()
-{
-    QQmlDataTest::initTestCase();
-    if (!device) {
-        device = new QTouchDevice;
-        device->setType(QTouchDevice::TouchScreen);
-        QWindowSystemInterface::registerTouchDevice(device);
-    }
-}
 
 void tst_QQuickPinchHandler::cleanupTestCase()
 {
@@ -677,8 +667,7 @@ void tst_QQuickPinchHandler::cancel()
 
         QSKIP("cancel is not supported atm");
 
-        QTouchEvent cancelEvent(QEvent::TouchCancel);
-        cancelEvent.setDevice(device);
+        QTouchEvent cancelEvent(QEvent::TouchCancel, device);
         QCoreApplication::sendEvent(window, &cancelEvent);
         QQuickTouchUtils::flush(window);
 

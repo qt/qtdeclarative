@@ -1337,12 +1337,7 @@ void tst_qquickitem::touchEventAcceptIgnore()
     item->setParentItem(window.contentItem());
     item->acceptIncomingTouchEvents = itemSupportsTouch;
 
-    static QTouchDevice* device = nullptr;
-    if (!device) {
-        device =new QTouchDevice;
-        device->setType(QTouchDevice::TouchScreen);
-        QWindowSystemInterface::registerTouchDevice(device);
-    }
+    static QPointingDevice* device = QTest::createTouchDevice();
 
     // Send Begin, Update & End touch sequence
     {
