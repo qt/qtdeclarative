@@ -182,8 +182,6 @@ QStringList completeImportPaths(const QString &uri, const QString &basePath, int
 }
 
 static const QLatin1String SlashQmldir             = QLatin1String("/qmldir");
-static const QLatin1String SlashAppDotQmltypes     = QLatin1String("/app.qmltypes");
-static const QLatin1String SlashLibDotQmltypes     = QLatin1String("/lib.qmltypes");
 static const QLatin1String SlashPluginsDotQmltypes = QLatin1String("/plugins.qmltypes");
 
 void FindUnqualifiedIDVisitor::readQmltypes(const QString &filename,
@@ -286,15 +284,28 @@ void FindUnqualifiedIDVisitor::importHelper(const QString &module, const QString
                 break;
             }
 
-            Import result;
-            if (QFile::exists(qmltypesPath + SlashAppDotQmltypes))
-                readQmltypes(qmltypesPath + SlashAppDotQmltypes, result);
-            else if (QFile::exists(qmltypesPath + SlashLibDotQmltypes))
-                readQmltypes(qmltypesPath + SlashLibDotQmltypes, result);
-            else
+            if (!m_qmltypeFiles.isEmpty())
                 continue;
+
+            Import result;
+
+            QDirIterator it { qmltypesPath, QStringList() << QLatin1String("*.qmltypes"), QDir::Files };
+
+            while (it.hasNext())
+                readQmltypes(it.next(), result);
+
             processImport(prefix, result);
         }
+    }
+
+    if (!m_qmltypeFiles.isEmpty())
+    {
+        Import result;
+
+        for (const auto &qmltypeFile : m_qmltypeFiles)
+            readQmltypes(qmltypeFile, result);
+
+        processImport("", result);
     }
 }
 
@@ -433,6 +444,17 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiProgram *)
                 m_colorOut.writeUncolored(reader.errorMessage());
         }
     }
+
+    if (!m_qmltypeFiles.isEmpty())
+    {
+        for (const auto &qmltypeFile : m_qmltypeFiles) {
+            auto reader = createQmltypesReaderForFile(qmltypeFile);
+            auto succ = reader(&objects, &moduleApis, &dependencies);
+            if (!succ)
+                m_colorOut.writeUncolored(reader.errorMessage());
+        }
+    }
+
     // add builtins
     for (auto objectIt = objects.begin(); objectIt != objects.end(); ++objectIt) {
         auto val = objectIt.value();
@@ -644,11 +666,12 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::IdentifierExpression *idexp)
     return true;
 }
 
-FindUnqualifiedIDVisitor::FindUnqualifiedIDVisitor(QStringList qmltypeDirs, QString code,
+FindUnqualifiedIDVisitor::FindUnqualifiedIDVisitor(QStringList qmltypeDirs, QStringList qmltypeFiles, QString code,
                                                    QString fileName, bool silent)
     : m_rootScope(new ScopeTree { ScopeType::JSFunctionScope, "global" }),
       m_currentScope(m_rootScope.get()),
       m_qmltypeDirs(std::move(qmltypeDirs)),
+      m_qmltypeFiles(std::move(qmltypeFiles)),
       m_code(std::move(code)),
       m_rootId(QLatin1String("<id>")),
       m_filePath(std::move(fileName)),

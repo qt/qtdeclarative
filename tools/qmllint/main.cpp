@@ -48,7 +48,7 @@
 #endif
 
 static bool lint_file(const QString &filename, const bool silent, const bool warnUnqualied,
-                      const QStringList &qmltypeDirs)
+                      const QStringList &qmltypeDirs, const QStringList &qmltypeFiles)
 {
     QFile file(filename);
     if (!file.open(QFile::ReadOnly)) {
@@ -84,7 +84,7 @@ static bool lint_file(const QString &filename, const bool silent, const bool war
 
     if (success && !isJavaScript && warnUnqualied) {
         auto root = parser.rootNode();
-        FindUnqualifiedIDVisitor v { qmltypeDirs, code, filename, silent };
+        FindUnqualifiedIDVisitor v { qmltypeDirs, qmltypeFiles, code, filename, silent };
         root->accept(&v);
         success = v.check();
     }
@@ -118,6 +118,13 @@ int main(int argv, char *argc[])
             QLatin1String("directory"));
     parser.addOption(qmltypesDirsOption);
 
+    QCommandLineOption qmltypesFilesOption(
+            QStringList() << "i"
+                          << "qmltypes",
+            QLatin1String("Include the specified qmltypes files"),
+            QLatin1String("qmltypes"));
+    parser.addOption(qmltypesFilesOption);
+
     parser.addPositionalArgument(QLatin1String("files"),
                                  QLatin1String("list of qml or js files to verify"));
 
@@ -134,15 +141,20 @@ int main(int argv, char *argc[])
     QStringList qmltypeDirs = parser.isSet(qmltypesDirsOption)
             ? parser.values(qmltypesDirsOption)
 #   ifndef QT_BOOTSTRAPPED
-            : QStringList { QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath),
-                            QLatin1String(".") };
+            : QStringList { QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath) };
 #   else
-            : QStringList { QLatin1String(".") };
+            : QStringList {};
 #   endif
+
+    if (!parser.isSet(qmltypesFilesOption))
+        qmltypeDirs << ".";
+
+    QStringList qmltypeFiles = parser.isSet(qmltypesFilesOption) ? parser.values(qmltypesFilesOption) : QStringList {};
 #else
     bool silent = false;
     bool warnUnqualified = false;
     QStringList qmltypeDirs {};
+    QStringList qmltypeFiles {};
 #endif
     bool success = true;
 #if QT_CONFIG(commandlineparser)
@@ -151,7 +163,7 @@ int main(int argv, char *argc[])
     const auto arguments = app.arguments();
     for (const QString &filename : arguments)
 #endif
-        success &= lint_file(filename, silent, warnUnqualified, qmltypeDirs);
+        success &= lint_file(filename, silent, warnUnqualified, qmltypeDirs, qmltypeFiles);
 
     return success ? 0 : -1;
 }

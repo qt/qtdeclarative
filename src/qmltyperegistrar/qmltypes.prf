@@ -31,7 +31,7 @@ isEmpty(QML_IMPORT_MINOR_VERSION) {
 
 isEmpty(QMLTYPES_FILENAME) {
     plugin: QMLTYPES_FILENAME = plugins.qmltypes
-    else: QMLTYPES_FILENAME = $${TEMPLATE}.qmltypes
+    else: QMLTYPES_FILENAME = $${TARGET}.qmltypes
 }
 
 qt_module_deps = $$replace(QT, -private$, '')
