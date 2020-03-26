@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/qt-project.org/imports/QtQuick/Controls.2/Default">
+    <qresource prefix="/qt-project.org/imports/QtQuick/Controls/Default">
         <file>images/arrow-indicator.png</file>
         <file>images/arrow-indicator@2x.png</file>
         <file>images/arrow-indicator@3x.png</file>

@@ -57,7 +57,7 @@ AbstractButton {
     width: 200
     height: 200
     text: "Some text"
-    icon.source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Default/images/check.png"
+    icon.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Default/images/check.png"
 
     IconLabel {
         icon: button.icon

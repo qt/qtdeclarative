@@ -63,7 +63,7 @@ T.Dial {
         height: 10
         defaultColor: "#353637"
         color: control.visualFocus ? control.palette.highlight : control.palette.dark
-        source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Default/images/dial-indicator.png"
+        source: "qrc:/qt-project.org/imports/QtQuick/Controls/Default/images/dial-indicator.png"
         antialiasing: true
         opacity: control.enabled ? 1 : 0.3
         transform: [

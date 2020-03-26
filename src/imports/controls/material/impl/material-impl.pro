@@ -1,5 +1,5 @@
 TARGET = qtquickcontrols2materialstyleimplplugin
-TARGETPATH = QtQuick/Controls.2/Material/impl
+TARGETPATH = QtQuick/Controls/Material/impl
 
 QML_IMPORT_NAME = QtQuick.Controls.Material.impl
 QML_IMPORT_VERSION = 2.$$QT_MINOR_VERSION

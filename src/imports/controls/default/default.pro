@@ -1,5 +1,5 @@
 TARGET = qtquickcontrols2defaultstyleplugin
-TARGETPATH = QtQuick/Controls.2/Default
+TARGETPATH = QtQuick/Controls/Default
 
 IMPORT_NAME = QtQuick.Controls.Default
 IMPORT_VERSION = 2.$$QT_MINOR_VERSION

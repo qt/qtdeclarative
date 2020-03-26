@@ -68,7 +68,7 @@ T.CheckBox {
             y: (parent.height - height) / 2
             defaultColor: "#353637"
             color: control.palette.text
-            source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Default/images/check.png"
+            source: "qrc:/qt-project.org/imports/QtQuick/Controls/Default/images/check.png"
             visible: control.checkState === Qt.Checked
         }
 

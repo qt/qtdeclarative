@@ -1,5 +1,5 @@
 TARGET = qtquickcontrols2imaginestyleimplplugin
-TARGETPATH = QtQuick/Controls.2/Imagine/impl
+TARGETPATH = QtQuick/Controls/Imagine/impl
 
 QML_IMPORT_NAME = QtQuick.Controls.Imagine.impl
 QML_IMPORT_VERSION = 2.$$QT_MINOR_VERSION
