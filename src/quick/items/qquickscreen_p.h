@@ -78,9 +78,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickScreenInfo : public QObject
     Q_PROPERTY(qreal logicalPixelDensity READ logicalPixelDensity NOTIFY logicalPixelDensityChanged)
     Q_PROPERTY(qreal pixelDensity READ pixelDensity NOTIFY pixelDensityChanged)
     Q_PROPERTY(qreal devicePixelRatio READ devicePixelRatio NOTIFY devicePixelRatioChanged)
-    // TODO Qt 6 Rename primaryOrientation to orientation
     Q_PROPERTY(Qt::ScreenOrientation primaryOrientation READ primaryOrientation NOTIFY primaryOrientationChanged)
-    // TODO Qt 6 Remove this orientation -> incomplete device orientation -> better use OrientationSensor
     Q_PROPERTY(Qt::ScreenOrientation orientation READ orientation NOTIFY orientationChanged)
 
     Q_PROPERTY(int virtualX READ virtualX NOTIFY virtualXChanged REVISION(2, 3))

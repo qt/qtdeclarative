@@ -22,6 +22,7 @@ SOURCES += \
 HEADERS += \
     $$PWD/quicktestglobal.h \
     $$PWD/quicktest.h \
+    $$PWD/quicktest_p.h \
     $$PWD/quicktestresult_p.h \
     $$PWD/qtestoptions_p.h
 
@@ -29,4 +30,15 @@ qtConfig(qml-debug): DEFINES += QT_QML_DEBUG_NO_WARNING
 
 load(qt_module)
 
-CONFIG += metatypes install_metatypes
+QMLTYPES_FILENAME = plugins.qmltypes
+QMLTYPES_INSTALL_DIR = $$[QT_INSTALL_QML]/Qt/test/qtestroot
+QML_IMPORT_NAME = Qt.test.qtestroot
+QML_IMPORT_VERSION = 1.0
+CONFIG += qmltypes install_qmltypes install_metatypes
+
+# Install qmldir
+qmldir.files = $$PWD/qmldir
+qmldir.path = $$QMLTYPES_INSTALL_DIR
+
+prefix_build: INSTALLS += qmldir
+else: COPIES += qmldir

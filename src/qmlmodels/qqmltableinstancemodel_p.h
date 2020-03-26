@@ -124,6 +124,11 @@ public:
     int indexOf(QObject *, QObject *) const override { Q_UNREACHABLE(); return 0; }
 
 private:
+    enum DestructionMode {
+        Deferred,
+        Immediate
+    };
+
     QQmlComponent *resolveDelegate(int index);
 
     QQmlAdaptorModel m_adaptorModel;
@@ -141,7 +146,7 @@ private:
     void deleteIncubationTaskLater(QQmlIncubator *incubationTask);
     void deleteAllFinishedIncubationTasks();
     QQmlDelegateModelItem *resolveModelItem(int index);
-    void destroyModelItem(QQmlDelegateModelItem *modelItem);
+    void destroyModelItem(QQmlDelegateModelItem *modelItem, DestructionMode mode);
 
     void dataChangedCallback(const QModelIndex &begin, const QModelIndex &end, const QVector<int> &roles);
 

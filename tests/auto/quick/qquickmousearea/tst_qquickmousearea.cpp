@@ -158,6 +158,7 @@ private slots:
     void pressOneAndTapAnother();
     void mask();
     void nestedEventDelivery();
+    void settingHiddenInPressUngrabs();
 
 private:
     int startDragDistance() const {
@@ -2344,6 +2345,43 @@ void tst_QQuickMouseArea::nestedEventDelivery() // QTBUG-70898
     QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(50,50));
     QTest::ignoreMessage(QtWarningMsg, message); // twice though, actually
     QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(50,150));
+}
+
+void tst_QQuickMouseArea::settingHiddenInPressUngrabs()
+{
+    // When an item sets itself hidden, while handling pressed, it doesn't receive the grab.
+    // But that in turn means it doesn't see any release events, so we need to make sure it
+    // receives an ungrab event.
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("settingHiddenInPressUngrabs.qml"));
+    QScopedPointer<QQuickWindow> window(qmlobject_cast<QQuickWindow *>(c.create()));
+    QVERIFY(window.data());
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickMouseArea *catArea = window->findChild<QQuickMouseArea*>("cat");
+    QVERIFY(catArea != nullptr);
+    auto pointOnCatArea = catArea->mapToScene(QPointF(5.0, 5.0)).toPoint();
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, pointOnCatArea);
+
+    QCoreApplication::processEvents();
+    // The click hides the cat area
+    QTRY_VERIFY(!catArea->isVisible());
+    // The cat area is not stuck in pressed state.
+    QVERIFY(!catArea->pressed());
+
+    QQuickMouseArea *mouseArea = window->findChild<QQuickMouseArea*>("mouse");
+    QVERIFY(mouseArea != nullptr);
+    auto pointOnMouseArea = mouseArea->mapToScene(QPointF(5.0, 5.0)).toPoint();
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, pointOnMouseArea);
+
+    QCoreApplication::processEvents();
+    // The click disables the mouse area
+    QTRY_VERIFY(!mouseArea->isEnabled());
+    // The mouse area is not stuck in pressed state.
+    QVERIFY(!mouseArea->pressed());
 }
 
 QTEST_MAIN(tst_QQuickMouseArea)

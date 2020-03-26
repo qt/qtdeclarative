@@ -300,7 +300,14 @@ void QQmlTypeData::setCompileUnit(const Container &container)
         auto const root = container->objectAt(i);
         for (auto it = root->inlineComponentsBegin(); it != root->inlineComponentsEnd(); ++it) {
             auto *typeRef = m_compiledData->resolvedType(it->nameIndex);
-            typeRef->setCompilationUnit(m_compiledData);  // share compilation unit
+
+            // We don't want the type reference to keep a strong reference to the compilation unit
+            // here. The compilation unit owns the type reference, and having a strong reference
+            // would prevent the compilation unit from ever getting deleted. We can still be sure
+            // that the compilation unit outlives the type reference, due to ownership.
+            typeRef->setReferencesCompilationUnit(false);
+
+            typeRef->setCompilationUnit(m_compiledData); // share compilation unit
         }
     }
 }

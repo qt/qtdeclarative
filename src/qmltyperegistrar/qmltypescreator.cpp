@@ -46,6 +46,8 @@ static QString enquote(const QString &string)
 
 void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &collector)
 {
+    if (!collector.file.isEmpty())
+        m_qml.writeScriptBinding(QLatin1String("file"), enquote(collector.file));
     m_qml.writeScriptBinding(
                 QLatin1String("name"),
                 enquote(collector.resolvedClass->value(

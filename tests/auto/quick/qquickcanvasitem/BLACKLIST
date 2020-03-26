@@ -3,12 +3,18 @@ macos
 [canvas::test_paint]
 macos
 [canvas::test_save]
+windows
 macos
 [canvas::test_implicitlySizedParent]
-macos ci
+*
+# QTBUG-41043
 [canvas::test_toDataURL]
-macos
+*
 [fillRect::test_fillRect]
 macos
 [imagedata::test_rounding]
 macos ci
+[ContextFontValidation::test_pixelSize]
+opensuse-leap
+[ContextFontValidation::test_valid]
+opensuse-leap

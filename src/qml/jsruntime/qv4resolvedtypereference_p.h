@@ -67,6 +67,11 @@ class ResolvedTypeReference
     Q_DISABLE_COPY_MOVE(ResolvedTypeReference)
 public:
     ResolvedTypeReference() = default;
+    ~ResolvedTypeReference()
+    {
+        if (m_stronglyReferencesCompilationUnit && m_compilationUnit)
+            m_compilationUnit->release();
+    }
 
     QQmlRefPointer<QQmlPropertyCache> propertyCache() const;
     QQmlRefPointer<QQmlPropertyCache> createPropertyCache(QQmlEngine *);
@@ -80,7 +85,33 @@ public:
     QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit() { return m_compilationUnit; }
     void setCompilationUnit(QQmlRefPointer<QV4::ExecutableCompilationUnit> unit)
     {
-        m_compilationUnit = std::move(unit);
+        if (m_compilationUnit == unit.data())
+            return;
+        if (m_stronglyReferencesCompilationUnit) {
+            if (m_compilationUnit)
+                m_compilationUnit->release();
+            m_compilationUnit = unit.take();
+        } else {
+            m_compilationUnit = unit.data();
+        }
+    }
+
+    bool referencesCompilationUnit() const { return m_stronglyReferencesCompilationUnit; }
+    void setReferencesCompilationUnit(bool doReference)
+    {
+        if (doReference == m_stronglyReferencesCompilationUnit)
+            return;
+        m_stronglyReferencesCompilationUnit = doReference;
+        if (!m_compilationUnit)
+            return;
+        if (doReference) {
+            m_compilationUnit->addref();
+        } else if (m_compilationUnit->count() == 1) {
+            m_compilationUnit->release();
+            m_compilationUnit = nullptr;
+        } else {
+            m_compilationUnit->release();
+        }
     }
 
     QQmlRefPointer<QQmlPropertyCache> typePropertyCache() const { return m_typePropertyCache; }
@@ -98,12 +129,13 @@ public:
 private:
     QQmlType m_type;
     QQmlRefPointer<QQmlPropertyCache> m_typePropertyCache;
-    QQmlRefPointer<QV4::ExecutableCompilationUnit> m_compilationUnit;
+    QV4::ExecutableCompilationUnit *m_compilationUnit = nullptr;
 
     QTypeRevision m_version = QTypeRevision::zero();
     // Types such as QQmlPropertyMap can add properties dynamically at run-time and
     // therefore cannot have a property cache installed when instantiated.
     bool m_isFullyDynamicType = false;
+    bool m_stronglyReferencesCompilationUnit = true;
 };
 
 } // namespace QV4

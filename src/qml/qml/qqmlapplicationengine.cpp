@@ -107,8 +107,6 @@ void QQmlApplicationEnginePrivate::_q_loadTranslations()
         activeTranslator.reset();
     }
     q->retranslate();
-#else
-    Q_UNUSED(rootFile)
 #endif
 }
 
