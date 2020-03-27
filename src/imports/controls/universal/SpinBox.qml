@@ -105,7 +105,7 @@ T.SpinBox {
             y: (parent.height - height) / 2
             color: !enabled ? control.Universal.chromeDisabledLowColor :
                               control.activeFocus ? control.Universal.chromeBlackHighColor : control.Universal.baseHighColor
-            source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Universal/images/" + (control.mirrored ? "left" : "right") + "arrow.png"
+            source: "qrc:/qt-project.org/imports/QtQuick/Controls/Universal/images/" + (control.mirrored ? "left" : "right") + "arrow.png"
         }
     }
 
@@ -131,7 +131,7 @@ T.SpinBox {
             y: (parent.height - height) / 2
             color: !enabled ? control.Universal.chromeDisabledLowColor :
                               control.activeFocus ? control.Universal.chromeBlackHighColor : control.Universal.baseHighColor
-            source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Universal/images/" + (control.mirrored ? "right" : "left") + "arrow.png"
+            source: "qrc:/qt-project.org/imports/QtQuick/Controls/Universal/images/" + (control.mirrored ? "right" : "left") + "arrow.png"
         }
     }
 

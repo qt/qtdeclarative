@@ -38,11 +38,8 @@
 
 #include "qquickmaterialstyle_p.h"
 #include "qquickmaterialtheme_p.h"
-#include "qquickmaterialbusyindicator_p.h"
-#include "qquickmaterialprogressbar_p.h"
-#include "qquickmaterialripple_p.h"
 
-#include <QtQuickControls2/private/qquickpaddedrectangle_p.h>
+#include <QtQuickControls2Impl/private/qquickpaddedrectangle_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -67,15 +64,9 @@ QtQuickControls2MaterialStylePlugin::QtQuickControls2MaterialStylePlugin(QObject
 
 void QtQuickControls2MaterialStylePlugin::registerTypes(const char *uri)
 {
-    qmlRegisterModule(uri, 2, 15); // Qt 5.12->2.12, 5.13->2.13...
-    qmlRegisterUncreatableType<QQuickMaterialStyle>(uri, 2, 0, "Material", tr("Material is an attached property"));
-
     QByteArray import = QByteArray(uri) + ".impl";
     qmlRegisterModule(import, 2, 15); // Qt 5.12->2.12, 5.13->2.13...
 
-    qmlRegisterType<QQuickMaterialBusyIndicator>(import, 2, 0, "BusyIndicatorImpl");
-    qmlRegisterType<QQuickMaterialProgressBar>(import, 2, 0, "ProgressBarImpl");
-    qmlRegisterType<QQuickMaterialRipple>(import, 2, 0, "Ripple");
     qmlRegisterType(resolvedUrl(QStringLiteral("BoxShadow.qml")), import, 2, 0, "BoxShadow");
     qmlRegisterType(resolvedUrl(QStringLiteral("CheckIndicator.qml")), import, 2, 0, "CheckIndicator");
     qmlRegisterType(resolvedUrl(QStringLiteral("CursorDelegate.qml")), import, 2, 0, "CursorDelegate");

@@ -5,7 +5,7 @@
 #####################################################################
 
 qt_add_qml_module(qtquickcontrols2fusionstyleplugin
-    TARGET_PATH "QtQuick/Controls.2/Fusion"
+    TARGET_PATH "QtQuick/Controls/Fusion"
     URI "QtQuick.Controls.Fusion"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
     CLASSNAME QtQuickControls2FusionStylePlugin
@@ -54,7 +54,7 @@ set(qtquickcontrols2fusionstyle_resource_files
 
 qt_add_resource(qtquickcontrols2fusionstyleplugin "qtquickcontrols2fusionstyle"
     PREFIX
-        "/qt-project.org/imports/QtQuick/Controls.2/Fusion"
+        "/qt-project.org/imports/QtQuick/Controls/Fusion"
     FILES
         ${qtquickcontrols2fusionstyle_resource_files}
 )
@@ -64,7 +64,7 @@ qt_add_resource(qtquickcontrols2fusionstyleplugin "qtquickcontrols2fusionstyle"
 # IMPORT_NAME = "QtQuick.Controls.Fusion"
 # IMPORT_VERSION = "2.$$QT_MINOR_VERSION"
 # OTHER_FILES = "qmldir" "$$QML_FILES"
-# TARGETPATH = "QtQuick/Controls.2/Fusion"
+# TARGETPATH = "QtQuick/Controls/Fusion"
 # _REQUIREMENTS = "qtConfig(quickcontrols2-fusion)"
 
 set(qml_files

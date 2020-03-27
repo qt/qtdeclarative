@@ -5,7 +5,7 @@
 #####################################################################
 
 qt_add_qml_module(qtquickcontrols2materialstyleplugin
-    TARGET_PATH "QtQuick/Controls.2/Material"
+    TARGET_PATH "QtQuick/Controls/Material"
     URI "QtQuick.Controls.Material"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
     CLASSNAME QtQuickControls2MaterialStylePlugin
@@ -58,7 +58,7 @@ set(qtquickcontrols2materialstyleplugin_resource_files
 
 qt_add_resource(qtquickcontrols2materialstyleplugin "qtquickcontrols2materialstyleplugin"
     PREFIX
-        "/qt-project.org/imports/QtQuick/Controls.2/Material"
+        "/qt-project.org/imports/QtQuick/Controls/Material"
     FILES
         ${qtquickcontrols2materialstyleplugin_resource_files}
 )
@@ -68,7 +68,7 @@ qt_add_resource(qtquickcontrols2materialstyleplugin "qtquickcontrols2materialsty
 # IMPORT_NAME = "QtQuick.Controls.Material"
 # IMPORT_VERSION = "2.$$QT_MINOR_VERSION"
 # OTHER_FILES = "qmldir" "$$QML_FILES"
-# TARGETPATH = "QtQuick/Controls.2/Material"
+# TARGETPATH = "QtQuick/Controls/Material"
 # _REQUIREMENTS = "qtConfig(quickcontrols2-material)"
 
 set(qml_files

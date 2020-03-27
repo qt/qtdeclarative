@@ -51,7 +51,7 @@
             \li Specifies a list of additional paths that are used to lookup \l {Styling Qt Quick Controls}
                 {Qt Quick Controls styles}. Multiple path entries must be \l {QDir::listSeparator}{separated}
                 by \c ':' under Unix and \c ';' under Windows. By default, styles are looked up from
-                \c $QML2_IMPORT_PATH/QtQuick/Controls.2.
+                \c $QML2_IMPORT_PATH/QtQuick/Controls.
         \row
             \li \c QT_QUICK_CONTROLS_CONF
             \li Specifies the location of the \l {Qt Quick Controls configuration file}.

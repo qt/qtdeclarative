@@ -86,7 +86,7 @@ class QQuickPlatformMenu : public QObject, public QQmlParserStatus
     Q_PROPERTY(QPlatformMenu::MenuType type READ type WRITE setType NOTIFY typeChanged FINAL)
     Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged FINAL)
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged FINAL)
-    Q_PROPERTY(QQuickPlatformIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION 1)
+    Q_PROPERTY(QQuickPlatformIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION(1, 1))
     Q_ENUMS(QPlatformMenu::MenuType)
     Q_CLASSINFO("DefaultProperty", "data")
 
@@ -162,7 +162,7 @@ Q_SIGNALS:
     void minimumWidthChanged();
     void fontChanged();
     void typeChanged();
-    Q_REVISION(1) void iconChanged();
+    Q_REVISION(2, 1) void iconChanged();
 
 protected:
     void classBegin() override;

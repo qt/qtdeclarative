@@ -57,6 +57,8 @@ class QQuickTabButtonPrivate;
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTabButton : public QQuickAbstractButton
 {
     Q_OBJECT
+    QML_NAMED_ELEMENT(TabButton)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickTabButton(QQuickItem *parent = nullptr);

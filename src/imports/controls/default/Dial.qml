@@ -37,6 +37,7 @@
 import QtQuick 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Controls.impl 2.12
+import QtQuick.Controls.Default.impl 2.12
 import QtQuick.Templates 2.12 as T
 
 T.Dial {

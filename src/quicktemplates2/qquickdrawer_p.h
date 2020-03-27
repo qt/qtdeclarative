@@ -61,7 +61,9 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDrawer : public QQuickPopup
     Q_PROPERTY(qreal position READ position WRITE setPosition NOTIFY positionChanged FINAL)
     Q_PROPERTY(qreal dragMargin READ dragMargin WRITE setDragMargin RESET resetDragMargin NOTIFY dragMarginChanged FINAL)
     // 2.2 (Qt 5.9)
-    Q_PROPERTY(bool interactive READ isInteractive WRITE setInteractive NOTIFY interactiveChanged FINAL REVISION 2)
+    Q_PROPERTY(bool interactive READ isInteractive WRITE setInteractive NOTIFY interactiveChanged FINAL REVISION(2, 2))
+    QML_NAMED_ELEMENT(Drawer)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickDrawer(QObject *parent = nullptr);
@@ -85,7 +87,7 @@ Q_SIGNALS:
     void positionChanged();
     void dragMarginChanged();
     // 2.2 (Qt 5.9)
-    Q_REVISION(2) void interactiveChanged();
+    Q_REVISION(2, 2) void interactiveChanged();
 
 protected:
     bool childMouseEventFilter(QQuickItem *child, QEvent *event) override;

@@ -1,0 +1,4 @@
+module QtQuick.Controls.impl
+plugin qtquickcontrols2implplugin
+classname QtQuickControls2ImplPlugin
+depends QtQuick.Templates 2.5

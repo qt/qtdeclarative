@@ -34,13 +34,10 @@
 **
 ****************************************************************************/
 
-#include <QtQuickControls2/private/qquickstyleplugin_p.h>
-
-#include "qquickdefaultbusyindicator_p.h"
-#include "qquickdefaultdial_p.h"
-#include "qquickdefaultprogressbar_p.h"
 #include "qquickdefaultstyle_p.h"
 #include "qquickdefaulttheme_p.h"
+
+#include <QtQuickControls2/private/qquickstyleplugin_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -52,38 +49,12 @@ class QtQuickControls2DefaultStylePlugin: public QQuickStylePlugin
 public:
     QtQuickControls2DefaultStylePlugin(QObject *parent = nullptr);
 
-    void registerTypes(const char *uri) override;
-
     QString name() const override;
     void initializeTheme(QQuickTheme *theme) override;
 };
 
 QtQuickControls2DefaultStylePlugin::QtQuickControls2DefaultStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
 {
-}
-
-void QtQuickControls2DefaultStylePlugin::registerTypes(const char *uri)
-{
-    // The minor version used to be the current Qt 5 minor. For compatibility it is the last
-    // Qt 5 release.
-    qmlRegisterModule(uri, 2, 15);
-
-    // The minor version used to be the current Qt 5 minor. For compatibility it is the last
-    // Qt 5 release.
-    const QByteArray import = QByteArray(uri) + ".impl";
-    qmlRegisterModule(import, 2, 15);
-
-    // QtQuick.Controls.impl 2.0 (Qt 5.7)
-    qmlRegisterType<QQuickDefaultBusyIndicator>(import, 2, 0, "BusyIndicatorImpl");
-    qmlRegisterType<QQuickDefaultDial>(import, 2, 0, "DialImpl");
-    qmlRegisterType<QQuickDefaultProgressBar>(import, 2, 0, "ProgressBarImpl");
-
-    // QtQuick.Controls.impl 2.1 (Qt 5.8)
-    qmlRegisterSingletonType<QQuickDefaultStyle>(import, 2, 1, "Default", [](QQmlEngine *engine, QJSEngine *scriptEngine) -> QObject* {
-            Q_UNUSED(engine);
-            Q_UNUSED(scriptEngine);
-            return new QQuickDefaultStyle;
-    });
 }
 
 QString QtQuickControls2DefaultStylePlugin::name() const

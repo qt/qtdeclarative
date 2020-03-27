@@ -5,7 +5,7 @@
 #####################################################################
 
 qt_add_qml_module(qtquicktemplates2plugin
-    TARGET_PATH "QtQuick/Templates.2"
+    TARGET_PATH "QtQuick/Templates"
     URI "QtQuick.Templates"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
     CLASSNAME QtQuickTemplates2Plugin
@@ -33,4 +33,4 @@ qt_add_qml_module(qtquicktemplates2plugin
 #### Keys ignored in scope 1:.:.:templates.pro:<TRUE>:
 # IMPORT_VERSION = "2.$$QT_MINOR_VERSION"
 # OTHER_FILES = "qmldir"
-# TARGETPATH = "QtQuick/Templates.2"
+# TARGETPATH = "QtQuick/Templates"

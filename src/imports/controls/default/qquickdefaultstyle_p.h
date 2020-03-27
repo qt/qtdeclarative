@@ -50,6 +50,7 @@
 
 #include <QtCore/qobject.h>
 #include <QtGui/qcolor.h>
+#include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -96,6 +97,9 @@ class QQuickDefaultStyle : public QObject
     Q_PROPERTY(QColor separatorColor READ separatorColor CONSTANT FINAL)
     Q_PROPERTY(QColor disabledDarkColor READ disabledDarkColor CONSTANT FINAL)
     Q_PROPERTY(QColor disabledLightColor READ disabledLightColor CONSTANT FINAL)
+    QML_NAMED_ELEMENT(Default)
+    QML_SINGLETON
+    QML_ADDED_IN_VERSION(2, 1)
 
 public:
     explicit QQuickDefaultStyle(QObject *parent = nullptr);

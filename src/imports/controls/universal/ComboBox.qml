@@ -67,7 +67,7 @@ T.ComboBox {
         x: control.mirrored ? control.padding : control.width - width - control.padding
         y: control.topPadding + (control.availableHeight - height) / 2
         color: !control.enabled ? control.Universal.baseLowColor : control.Universal.baseMediumHighColor
-        source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Universal/images/downarrow.png"
+        source: "qrc:/qt-project.org/imports/QtQuick/Controls/Universal/images/downarrow.png"
 
         Rectangle {
             z: -1

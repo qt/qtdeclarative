@@ -70,7 +70,7 @@ ApplicationWindow {
     readonly property bool usingImagineStyle: settings.style.toLowerCase() === "imagine"
     // Some controls should be visible regardless of whether or not custom assets are lacking for it,
     // so we use the default assets in some cases.
-    readonly property string defaultImaginePath: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Imagine/images/"
+    readonly property string defaultImaginePath: "qrc:/qt-project.org/imports/QtQuick/Controls/Imagine/images/"
     property bool settingsLoaded: false
     readonly property string imagineTitleText: " - " + (settings.useCustomImaginePath ? settings.imaginePath : "Default Assets")
 

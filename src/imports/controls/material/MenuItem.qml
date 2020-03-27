@@ -73,7 +73,7 @@ T.MenuItem {
         visible: control.subMenu
         mirror: control.mirrored
         color: control.enabled ? control.Material.foreground : control.Material.hintTextColor
-        source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Material/images/arrow-indicator.png"
+        source: "qrc:/qt-project.org/imports/QtQuick/Controls/Material/images/arrow-indicator.png"
     }
 
     contentItem: IconLabel {

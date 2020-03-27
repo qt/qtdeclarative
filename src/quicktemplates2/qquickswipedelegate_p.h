@@ -61,6 +61,9 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipeDelegate : public QQuickItemDe
 {
     Q_OBJECT
     Q_PROPERTY(QQuickSwipe *swipe READ swipe CONSTANT FINAL)
+    QML_NAMED_ELEMENT(SwipeDelegate)
+    QML_ATTACHED(QQuickSwipeDelegateAttached)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickSwipeDelegate(QQuickItem *parent = nullptr);

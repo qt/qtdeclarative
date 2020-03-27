@@ -49,7 +49,7 @@
 //
 
 #include <QtGui/qcolor.h>
-#include <QtQuickControls2/private/qquickattachedobject_p.h>
+#include <QtQuickControls2Impl/private/qquickattachedobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -108,6 +108,11 @@ class QQuickMaterialStyle : public QQuickAttachedObject
     Q_PROPERTY(int menuItemVerticalPadding READ menuItemVerticalPadding CONSTANT FINAL)
     Q_PROPERTY(int switchDelegateVerticalPadding READ switchDelegateVerticalPadding CONSTANT FINAL)
     Q_PROPERTY(int tooltipHeight READ tooltipHeight CONSTANT FINAL)
+
+    QML_NAMED_ELEMENT(Material)
+    QML_ATTACHED(QQuickMaterialStyle)
+    QML_UNCREATABLE("")
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     enum Theme {

@@ -78,6 +78,7 @@ private slots:
     void clearFocusOnDestruction();
     void layout();
     void componentComplete();
+    void opacity();
 };
 
 void tst_QQuickApplicationWindow::qmlCreation()
@@ -869,6 +870,19 @@ void tst_QQuickApplicationWindow::componentComplete()
 
     component.completeCreate();
     QVERIFY(qmlWindow->isComponentComplete());
+}
+
+void tst_QQuickApplicationWindow::opacity()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("opacity.qml"));
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
+
+    QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(object.data());
+    QVERIFY(window);
 }
 
 QTEST_MAIN(tst_QQuickApplicationWindow)

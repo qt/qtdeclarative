@@ -61,8 +61,11 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTabBar : public QQuickContainer
     Q_OBJECT
     Q_PROPERTY(Position position READ position WRITE setPosition NOTIFY positionChanged FINAL)
     // 2.2 (Qt 5.9)
-    Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth RESET resetContentWidth NOTIFY contentWidthChanged FINAL REVISION 2) // re-declare QQuickContainer::contentWidth (REV 5)
-    Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight RESET resetContentHeight NOTIFY contentHeightChanged FINAL REVISION 2) // re-declare QQuickContainer::contentHeight (REV 5)
+    Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth RESET resetContentWidth NOTIFY contentWidthChanged FINAL REVISION(2, 2)) // re-declare QQuickContainer::contentWidth (REV 5)
+    Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight RESET resetContentHeight NOTIFY contentHeightChanged FINAL REVISION(2, 2)) // re-declare QQuickContainer::contentHeight (REV 5)
+    QML_NAMED_ELEMENT(TabBar)
+    QML_ATTACHED(QQuickTabBarAttached)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickTabBar(QQuickItem *parent = nullptr);

@@ -93,11 +93,11 @@ void tst_ObjectCount::cleanup()
 
 static void initTestRows(QQmlEngine *engine)
 {
-    addTestRowForEachControl(engine, "controls", "QtQuick/Controls.2");
-    addTestRowForEachControl(engine, "controls/fusion", "QtQuick/Controls.2/Fusion", QStringList() << "ButtonPanel" << "CheckIndicator" << "RadioIndicator" << "SliderGroove" << "SliderHandle" << "SwitchIndicator");
-    addTestRowForEachControl(engine, "controls/imagine", "QtQuick/Controls.2/Imagine");
-    addTestRowForEachControl(engine, "controls/material", "QtQuick/Controls.2/Material", QStringList() << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator" << "BoxShadow" << "ElevationEffect" << "CursorDelegate");
-    addTestRowForEachControl(engine, "controls/universal", "QtQuick/Controls.2/Universal", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+    addTestRowForEachControl(engine, "controls", "QtQuick/Controls");
+    addTestRowForEachControl(engine, "controls/fusion", "QtQuick/Controls/Fusion", QStringList() << "ButtonPanel" << "CheckIndicator" << "RadioIndicator" << "SliderGroove" << "SliderHandle" << "SwitchIndicator");
+    addTestRowForEachControl(engine, "controls/imagine", "QtQuick/Controls/Imagine");
+    addTestRowForEachControl(engine, "controls/material", "QtQuick/Controls/Material", QStringList() << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator" << "BoxShadow" << "ElevationEffect" << "CursorDelegate");
+    addTestRowForEachControl(engine, "controls/universal", "QtQuick/Controls/Universal", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
 }
 
 template <typename T>

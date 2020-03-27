@@ -67,15 +67,17 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSlider : public QQuickControl
     Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
     Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)
     Q_PROPERTY(QQuickItem *handle READ handle WRITE setHandle NOTIFY handleChanged FINAL)
-    Q_PROPERTY(bool live READ live WRITE setLive NOTIFY liveChanged FINAL REVISION 2)
+    Q_PROPERTY(bool live READ live WRITE setLive NOTIFY liveChanged FINAL REVISION(2, 2))
     // 2.3 (Qt 5.10)
-    Q_PROPERTY(bool horizontal READ isHorizontal NOTIFY orientationChanged FINAL REVISION 3)
-    Q_PROPERTY(bool vertical READ isVertical NOTIFY orientationChanged FINAL REVISION 3)
+    Q_PROPERTY(bool horizontal READ isHorizontal NOTIFY orientationChanged FINAL REVISION(2, 3))
+    Q_PROPERTY(bool vertical READ isVertical NOTIFY orientationChanged FINAL REVISION(2, 3))
     // 2.5 (Qt 5.12)
-    Q_PROPERTY(qreal touchDragThreshold READ touchDragThreshold WRITE setTouchDragThreshold RESET resetTouchDragThreshold NOTIFY touchDragThresholdChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal implicitHandleWidth READ implicitHandleWidth NOTIFY implicitHandleWidthChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal implicitHandleHeight READ implicitHandleHeight NOTIFY implicitHandleHeightChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal touchDragThreshold READ touchDragThreshold WRITE setTouchDragThreshold RESET resetTouchDragThreshold NOTIFY touchDragThresholdChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal implicitHandleWidth READ implicitHandleWidth NOTIFY implicitHandleWidthChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal implicitHandleHeight READ implicitHandleHeight NOTIFY implicitHandleHeightChanged FINAL REVISION(2, 5))
     Q_CLASSINFO("DeferredPropertyNames", "background,handle")
+    QML_NAMED_ELEMENT(Slider)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickSlider(QQuickItem *parent = nullptr);
@@ -116,7 +118,7 @@ public:
     void setHandle(QQuickItem *handle);
 
     // 2.1 (Qt 5.8)
-    Q_REVISION(1) Q_INVOKABLE qreal valueAt(qreal position) const;
+    Q_REVISION(2, 1) Q_INVOKABLE qreal valueAt(qreal position) const;
 
     // 2.2 (Qt 5.9)
     bool live() const;
@@ -150,12 +152,12 @@ Q_SIGNALS:
     void orientationChanged();
     void handleChanged();
     // 2.2 (Qt 5.9)
-    Q_REVISION(2) void moved();
-    Q_REVISION(2) void liveChanged();
+    Q_REVISION(2, 2) void moved();
+    Q_REVISION(2, 2) void liveChanged();
     // 2.5 (Qt 5.12)
-    Q_REVISION(5) void touchDragThresholdChanged();
-    Q_REVISION(5) void implicitHandleWidthChanged();
-    Q_REVISION(5) void implicitHandleHeightChanged();
+    Q_REVISION(2, 5) void touchDragThresholdChanged();
+    Q_REVISION(2, 5) void implicitHandleWidthChanged();
+    Q_REVISION(2, 5) void implicitHandleHeightChanged();
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;

@@ -49,13 +49,13 @@
 //
 
 #include <QtQml/qqmlextensionplugin.h>
-#include <QtQuickControls2/private/qtquickcontrols2global_p.h>
+#include <QtQuickControls2/qtquickcontrols2global.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickTheme;
 
-class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickStylePlugin : public QQmlExtensionPlugin
+class Q_QUICKCONTROLS2_EXPORT QQuickStylePlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
 

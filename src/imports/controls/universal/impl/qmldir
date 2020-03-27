@@ -1,0 +1,3 @@
+module QtQuick.Controls.Universal.impl
+plugin qtquickcontrols2universalstyleimplplugin
+classname QtQuickControls2UniversalStyleImplPlugin

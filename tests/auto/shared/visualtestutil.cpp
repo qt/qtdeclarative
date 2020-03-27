@@ -100,7 +100,7 @@ void QQuickVisualTestUtil::addTestRowForEachControl(QQmlEngine *engine, const QS
     // We cannot use QQmlComponent to load QML files directly from the source tree.
     // For styles that use internal QML types (eg. material/Ripple.qml), the source
     // dir would be added as an "implicit" import path overriding the actual import
-    // path (qtbase/qml/QtQuick/Controls.2/Material). => The QML engine fails to load
+    // path (qtbase/qml/QtQuick/Controls/Material). => The QML engine fails to load
     // the style C++ plugin from the implicit import path (the source dir).
     //
     // Therefore we only use the source tree for finding out the set of QML files that

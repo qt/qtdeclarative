@@ -36,15 +36,12 @@
 
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
 
-#include "qquickuniversalbusyindicator_p.h"
-#include "qquickuniversalfocusrectangle_p.h"
-#include "qquickuniversalprogressbar_p.h"
 #include "qquickuniversalstyle_p.h"
 #include "qquickuniversaltheme_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QtQuickControls2UniversalStylePlugin: public QQuickStylePlugin
+class QtQuickControls2UniversalStylePlugin : public QQuickStylePlugin
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
@@ -65,15 +62,8 @@ QtQuickControls2UniversalStylePlugin::QtQuickControls2UniversalStylePlugin(QObje
 
 void QtQuickControls2UniversalStylePlugin::registerTypes(const char *uri)
 {
-    qmlRegisterModule(uri, 2, 15); // Qt 5.12->2.12, 5.13->2.13...
-    qmlRegisterUncreatableType<QQuickUniversalStyle>(uri, 2, 0, "Universal", tr("Universal is an attached property"));
-
     QByteArray import = QByteArray(uri) + ".impl";
     qmlRegisterModule(import, 2, 15); // Qt 5.12->2.12, 5.13->2.13...
-
-    qmlRegisterType<QQuickUniversalFocusRectangle>(import, 2, 0, "FocusRectangle");
-    qmlRegisterType<QQuickUniversalBusyIndicator>(import, 2, 0, "BusyIndicatorImpl");
-    qmlRegisterType<QQuickUniversalProgressBar>(import, 2, 0, "ProgressBarImpl");
 
     qmlRegisterType(resolvedUrl(QStringLiteral("CheckIndicator.qml")), import, 2, 0, "CheckIndicator");
     qmlRegisterType(resolvedUrl(QStringLiteral("RadioIndicator.qml")), import, 2, 0, "RadioIndicator");

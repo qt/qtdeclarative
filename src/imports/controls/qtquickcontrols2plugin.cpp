@@ -44,22 +44,22 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/private/qqmldirparser_p.h>
 #include <QtQuickControls2/qquickstyle.h>
-#include <QtQuickControls2/private/qquickchecklabel_p.h>
-#include <QtQuickControls2/private/qquickcolor_p.h>
-#include <QtQuickControls2/private/qquickcolorimage_p.h>
-#include <QtQuickControls2/private/qquickiconimage_p.h>
-#include <QtQuickControls2/private/qquickmnemoniclabel_p.h>
-#include <QtQuickControls2/private/qquickpaddedrectangle_p.h>
-#include <QtQuickControls2/private/qquickplaceholdertext_p.h>
-#include <QtQuickControls2/private/qquickiconlabel_p.h>
 #include <QtQuickControls2/private/qquickstyle_p.h>
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
+#include <QtQuickControls2Impl/private/qquickchecklabel_p.h>
+#include <QtQuickControls2Impl/private/qquickcolor_p.h>
+#include <QtQuickControls2Impl/private/qquickcolorimage_p.h>
+#include <QtQuickControls2Impl/private/qquickiconimage_p.h>
+#include <QtQuickControls2Impl/private/qquickmnemoniclabel_p.h>
+#include <QtQuickControls2Impl/private/qquickpaddedrectangle_p.h>
+#include <QtQuickControls2Impl/private/qquickplaceholdertext_p.h>
+#include <QtQuickControls2Impl/private/qquickiconlabel_p.h>
 #if QT_CONFIG(quick_listview) && QT_CONFIG(quick_pathview)
-#include <QtQuickControls2/private/qquicktumblerview_p.h>
+#include <QtQuickControls2Impl/private/qquicktumblerview_p.h>
 #endif
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
-#include <QtQuickControls2/private/qquickclippedtext_p.h>
-#include <QtQuickControls2/private/qquickitemgroup_p.h>
+#include <QtQuickControls2Impl/private/qquickclippedtext_p.h>
+#include <QtQuickControls2Impl/private/qquickitemgroup_p.h>
 #include <QtQuickTemplates2/private/qquicktheme_p_p.h>
 
 QT_BEGIN_NAMESPACE

@@ -365,10 +365,10 @@ void tst_Sanity::attachedObjects()
 void tst_Sanity::attachedObjects_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRowForEachControl(&engine, "controls/default", "QtQuick/Controls.2/Default");
-    addTestRowForEachControl(&engine, "controls/fusion", "QtQuick/Controls.2/Fusion", QStringList() << "CheckIndicator" << "RadioIndicator" << "SliderGroove" << "SliderHandle" << "SwitchIndicator");
-    addTestRowForEachControl(&engine, "controls/material", "QtQuick/Controls.2/Material", QStringList() << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator" << "BoxShadow" << "ElevationEffect" << "CursorDelegate");
-    addTestRowForEachControl(&engine, "controls/universal", "QtQuick/Controls.2/Universal", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+    addTestRowForEachControl(&engine, "controls/default", "QtQuick/Controls/Default");
+    addTestRowForEachControl(&engine, "controls/fusion", "QtQuick/Controls/Fusion", QStringList() << "CheckIndicator" << "RadioIndicator" << "SliderGroove" << "SliderHandle" << "SwitchIndicator");
+    addTestRowForEachControl(&engine, "controls/material", "QtQuick/Controls/Material", QStringList() << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator" << "BoxShadow" << "ElevationEffect" << "CursorDelegate");
+    addTestRowForEachControl(&engine, "controls/universal", "QtQuick/Controls/Universal", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
 }
 
 QTEST_MAIN(tst_Sanity)

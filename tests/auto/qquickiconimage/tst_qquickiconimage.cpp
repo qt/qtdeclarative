@@ -39,7 +39,7 @@
 #include <QtQuick/qquickimageprovider.h>
 #include <QtQuick/qquickitemgrabresult.h>
 #include <QtQuick/private/qquickimage_p.h>
-#include <QtQuickControls2/private/qquickiconimage_p.h>
+#include <QtQuickControls2Impl/private/qquickiconimage_p.h>
 
 #include "../shared/util.h"
 #include "../shared/visualtestutil.h"

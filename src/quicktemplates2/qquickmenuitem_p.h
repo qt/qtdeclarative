@@ -60,10 +60,12 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuItem : public QQuickAbstractBut
     Q_OBJECT
     Q_PROPERTY(bool highlighted READ isHighlighted WRITE setHighlighted NOTIFY highlightedChanged FINAL)
     // 2.3 (Qt 5.10)
-    Q_PROPERTY(QQuickItem *arrow READ arrow WRITE setArrow NOTIFY arrowChanged FINAL REVISION 3)
-    Q_PROPERTY(QQuickMenu *menu READ menu NOTIFY menuChanged FINAL REVISION 3)
-    Q_PROPERTY(QQuickMenu *subMenu READ subMenu NOTIFY subMenuChanged FINAL REVISION 3)
+    Q_PROPERTY(QQuickItem *arrow READ arrow WRITE setArrow NOTIFY arrowChanged FINAL REVISION(2, 3))
+    Q_PROPERTY(QQuickMenu *menu READ menu NOTIFY menuChanged FINAL REVISION(2, 3))
+    Q_PROPERTY(QQuickMenu *subMenu READ subMenu NOTIFY subMenuChanged FINAL REVISION(2, 3))
     Q_CLASSINFO("DeferredPropertyNames", "arrow,background,contentItem,indicator")
+    QML_NAMED_ELEMENT(MenuItem)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickMenuItem(QQuickItem *parent = nullptr);
@@ -82,9 +84,9 @@ Q_SIGNALS:
     void triggered();
     void highlightedChanged();
     // 2.3 (Qt 5.10)
-    Q_REVISION(3) void arrowChanged();
-    Q_REVISION(3) void menuChanged();
-    Q_REVISION(3) void subMenuChanged();
+    Q_REVISION(2, 3) void arrowChanged();
+    Q_REVISION(2, 3) void menuChanged();
+    Q_REVISION(2, 3) void subMenuChanged();
 
 protected:
     void componentComplete() override;

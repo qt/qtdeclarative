@@ -98,7 +98,7 @@ T.SpinBox {
             height: parent.height
             opacity: enabled ? 1.0 : 0.5
             color: control.palette.buttonText
-            source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Fusion/images/arrow.png"
+            source: "qrc:/qt-project.org/imports/QtQuick/Controls/Fusion/images/arrow.png"
             fillMode: Image.Pad
         }
     }
@@ -121,7 +121,7 @@ T.SpinBox {
             height: parent.height
             opacity: enabled ? 1.0 : 0.5
             color: control.palette.buttonText
-            source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Fusion/images/arrow.png"
+            source: "qrc:/qt-project.org/imports/QtQuick/Controls/Fusion/images/arrow.png"
             fillMode: Image.Pad
         }
     }

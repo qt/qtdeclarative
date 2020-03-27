@@ -37,22 +37,12 @@
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
 #include <QtQml/qqml.h>
 
-#include "qquickfusionbusyindicator_p.h"
-#include "qquickfusiondial_p.h"
-#include "qquickfusionknob_p.h"
 #include "qquickfusionstyle_p.h"
 #include "qquickfusiontheme_p.h"
 
 QT_BEGIN_NAMESPACE
 
-static QObject *styleSingleton(QQmlEngine *engine, QJSEngine *scriptEngine)
-{
-    Q_UNUSED(engine);
-    Q_UNUSED(scriptEngine);
-    return new QQuickFusionStyle;
-}
-
-class QtQuickControls2FusionStylePlugin: public QQuickStylePlugin
+class QtQuickControls2FusionStylePlugin : public QQuickStylePlugin
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
@@ -72,17 +62,8 @@ QtQuickControls2FusionStylePlugin::QtQuickControls2FusionStylePlugin(QObject *pa
 
 void QtQuickControls2FusionStylePlugin::registerTypes(const char *uri)
 {
-    qmlRegisterModule(uri, 2, 3); // Qt 5.10->2.3
-    qmlRegisterModule(uri, 2, 15); // Qt 5.12->2.12, 5.13->2.13...
-
     QByteArray import = QByteArray(uri) + ".impl";
     qmlRegisterModule(import, 2, 15); // Qt 5.12->2.12, 5.13->2.13...
-
-    qmlRegisterSingletonType<QQuickFusionStyle>(import, 2, 3, "Fusion", styleSingleton);
-
-    qmlRegisterType<QQuickFusionBusyIndicator>(import, 2, 3, "BusyIndicatorImpl");
-    qmlRegisterType<QQuickFusionDial>(import, 2, 3, "DialImpl");
-    qmlRegisterType<QQuickFusionKnob>(import, 2, 3, "KnobImpl");
 
     qmlRegisterType(resolvedUrl(QStringLiteral("ButtonPanel.qml")), import, 2, 3, "ButtonPanel");
     qmlRegisterType(resolvedUrl(QStringLiteral("CheckIndicator.qml")), import, 2, 3, "CheckIndicator");

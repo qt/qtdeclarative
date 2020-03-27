@@ -58,6 +58,8 @@ class QQuickMenuSeparator;
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuSeparator : public QQuickControl
 {
     Q_OBJECT
+    QML_NAMED_ELEMENT(MenuSeparator)
+    QML_ADDED_IN_VERSION(2, 1)
 
 public:
     explicit QQuickMenuSeparator(QQuickItem *parent = nullptr);

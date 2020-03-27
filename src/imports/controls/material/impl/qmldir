@@ -1,0 +1,3 @@
+module QtQuick.Controls.Material.impl
+plugin qtquickcontrols2materialstyleimplplugin
+classname QtQuickControls2MaterialStyleImplPlugin

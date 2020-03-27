@@ -5,7 +5,7 @@
 #####################################################################
 
 qt_add_qml_module(qtquickcontrols2imaginestyleplugin
-    TARGET_PATH "QtQuick/Controls.2/Imagine"
+    TARGET_PATH "QtQuick/Controls/Imagine"
     URI "QtQuick.Controls.Imagine"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
     CLASSNAME QtQuickControls2ImagineStylePlugin
@@ -56,7 +56,7 @@ set(qmake_qtquickcontrols2imaginestyle_resource_files
 
 qt_add_resource(qtquickcontrols2imaginestyleplugin "qmake_qtquickcontrols2imaginestyle"
     PREFIX
-        "qt-project.org/imports/QtQuick/Controls.2/Imagine"
+        "qt-project.org/imports/QtQuick/Controls/Imagine"
     FILES
         ${qmake_qtquickcontrols2imaginestyle_resource_files}
 )
@@ -66,7 +66,7 @@ qt_add_resource(qtquickcontrols2imaginestyleplugin "qmake_qtquickcontrols2imagin
 # IMPORT_NAME = "QtQuick.Controls.Imagine"
 # IMPORT_VERSION = "2.$$QT_MINOR_VERSION"
 # OTHER_FILES = "qmldir" "$$QML_FILES"
-# TARGETPATH = "QtQuick/Controls.2/Imagine"
+# TARGETPATH = "QtQuick/Controls/Imagine"
 # _REQUIREMENTS = "qtConfig(quickcontrols2-imagine)"
 
 set(qml_files

@@ -81,7 +81,7 @@ T.MenuItem {
         visible: control.subMenu
         rotation: control.mirrored ? 90 : -90
         color: control.down || control.hovered || control.highlighted ? Fusion.highlightedText(control.palette) : control.palette.text
-        source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Fusion/images/arrow.png"
+        source: "qrc:/qt-project.org/imports/QtQuick/Controls/Fusion/images/arrow.png"
         fillMode: Image.Pad
     }
 

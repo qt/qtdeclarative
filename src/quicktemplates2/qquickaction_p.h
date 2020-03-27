@@ -69,6 +69,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickAction : public QObject
 #if QT_CONFIG(shortcut)
     Q_PRIVATE_PROPERTY(QQuickAction::d_func(), QVariant shortcut READ shortcut WRITE setShortcut NOTIFY shortcutChanged FINAL)
 #endif
+    QML_NAMED_ELEMENT(Action)
+    QML_ADDED_IN_VERSION(2, 3)
 
 public:
     explicit QQuickAction(QObject *parent = nullptr);

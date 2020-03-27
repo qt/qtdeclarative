@@ -1,10 +1,17 @@
+HEADERS += \
+    $$PWD/qquickuniversalstyle_p.h \
+    $$PWD/qquickuniversaltheme_p.h
+
+SOURCES += \
+    $$PWD/qquickuniversalstyle.cpp \
+    $$PWD/qquickuniversaltheme.cpp
+
 QML_FILES += \
     $$PWD/ApplicationWindow.qml \
     $$PWD/BusyIndicator.qml \
     $$PWD/Button.qml \
     $$PWD/CheckBox.qml \
     $$PWD/CheckDelegate.qml \
-    $$PWD/CheckIndicator.qml \
     $$PWD/ComboBox.qml \
     $$PWD/DelayButton.qml \
     $$PWD/Dial.qml \
@@ -28,7 +35,6 @@ QML_FILES += \
     $$PWD/ProgressBar.qml \
     $$PWD/RadioButton.qml \
     $$PWD/RadioDelegate.qml \
-    $$PWD/RadioIndicator.qml \
     $$PWD/RangeSlider.qml \
     $$PWD/RoundButton.qml \
     $$PWD/ScrollBar.qml \
@@ -39,7 +45,6 @@ QML_FILES += \
     $$PWD/StackView.qml \
     $$PWD/SwipeDelegate.qml \
     $$PWD/SwitchDelegate.qml \
-    $$PWD/SwitchIndicator.qml \
     $$PWD/Switch.qml \
     $$PWD/TabBar.qml \
     $$PWD/TabButton.qml \
@@ -51,17 +56,3 @@ QML_FILES += \
     $$PWD/ToolTip.qml \
     $$PWD/Tumbler.qml \
     $$PWD/VerticalHeaderView.qml
-
-HEADERS += \
-    $$PWD/qquickuniversalbusyindicator_p.h \
-    $$PWD/qquickuniversalfocusrectangle_p.h \
-    $$PWD/qquickuniversalprogressbar_p.h \
-    $$PWD/qquickuniversalstyle_p.h \
-    $$PWD/qquickuniversaltheme_p.h
-
-SOURCES += \
-    $$PWD/qquickuniversalbusyindicator.cpp \
-    $$PWD/qquickuniversalfocusrectangle.cpp \
-    $$PWD/qquickuniversalprogressbar.cpp \
-    $$PWD/qquickuniversalstyle.cpp \
-    $$PWD/qquickuniversaltheme.cpp

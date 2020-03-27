@@ -62,13 +62,15 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickLabel : public QQuickText
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged) // override
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
     // 2.5 (Qt 5.12)
-    Q_PROPERTY(qreal implicitBackgroundWidth READ implicitBackgroundWidth NOTIFY implicitBackgroundWidthChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal implicitBackgroundHeight READ implicitBackgroundHeight NOTIFY implicitBackgroundHeightChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal topInset READ topInset WRITE setTopInset RESET resetTopInset NOTIFY topInsetChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal leftInset READ leftInset WRITE setLeftInset RESET resetLeftInset NOTIFY leftInsetChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal rightInset READ rightInset WRITE setRightInset RESET resetRightInset NOTIFY rightInsetChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal bottomInset READ bottomInset WRITE setBottomInset RESET resetBottomInset NOTIFY bottomInsetChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal implicitBackgroundWidth READ implicitBackgroundWidth NOTIFY implicitBackgroundWidthChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal implicitBackgroundHeight READ implicitBackgroundHeight NOTIFY implicitBackgroundHeightChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal topInset READ topInset WRITE setTopInset RESET resetTopInset NOTIFY topInsetChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal leftInset READ leftInset WRITE setLeftInset RESET resetLeftInset NOTIFY leftInsetChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal rightInset READ rightInset WRITE setRightInset RESET resetRightInset NOTIFY rightInsetChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal bottomInset READ bottomInset WRITE setBottomInset RESET resetBottomInset NOTIFY bottomInsetChanged FINAL REVISION(2, 5))
     Q_CLASSINFO("DeferredPropertyNames", "background")
+    QML_NAMED_ELEMENT(Label)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickLabel(QQuickItem *parent = nullptr);
@@ -104,12 +106,12 @@ Q_SIGNALS:
     void fontChanged();
     void backgroundChanged();
     // 2.5 (Qt 5.12)
-    Q_REVISION(5) void implicitBackgroundWidthChanged();
-    Q_REVISION(5) void implicitBackgroundHeightChanged();
-    Q_REVISION(5) void topInsetChanged();
-    Q_REVISION(5) void leftInsetChanged();
-    Q_REVISION(5) void rightInsetChanged();
-    Q_REVISION(5) void bottomInsetChanged();
+    Q_REVISION(2, 5) void implicitBackgroundWidthChanged();
+    Q_REVISION(2, 5) void implicitBackgroundHeightChanged();
+    Q_REVISION(2, 5) void topInsetChanged();
+    Q_REVISION(2, 5) void leftInsetChanged();
+    Q_REVISION(2, 5) void rightInsetChanged();
+    Q_REVISION(2, 5) void bottomInsetChanged();
 
 protected:
     void classBegin() override;
@@ -122,6 +124,14 @@ protected:
 private:
     Q_DISABLE_COPY(QQuickLabel)
     Q_DECLARE_PRIVATE(QQuickLabel)
+};
+
+struct QQuickTextForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN(QQuickText)
+    QML_ADDED_IN_VERSION(2, 3)
 };
 
 QT_END_NAMESPACE

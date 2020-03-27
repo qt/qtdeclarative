@@ -50,6 +50,7 @@
 
 #include <QtCore/qobject.h>
 #include <QtGui/qcolor.h>
+#include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -62,6 +63,9 @@ class QQuickFusionStyle : public QObject
     Q_PROPERTY(QColor darkShade READ darkShade CONSTANT)
     Q_PROPERTY(QColor topShadow READ topShadow CONSTANT)
     Q_PROPERTY(QColor innerContrastLine READ innerContrastLine CONSTANT)
+    QML_NAMED_ELEMENT(Fusion)
+    QML_SINGLETON
+    QML_ADDED_IN_VERSION(2, 3)
 
 public:
     explicit QQuickFusionStyle(QObject *parent = nullptr);

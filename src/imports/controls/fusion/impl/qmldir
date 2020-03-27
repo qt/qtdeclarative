@@ -1,0 +1,3 @@
+module QtQuick.Controls.Fusion.impl
+plugin qtquickcontrols2fusionstyleimplplugin
+classname QtQuickControls2FusionStyleImpPlugin

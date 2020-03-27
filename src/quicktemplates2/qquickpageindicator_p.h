@@ -62,6 +62,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPageIndicator : public QQuickContro
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged FINAL)
     Q_PROPERTY(bool interactive READ isInteractive WRITE setInteractive NOTIFY interactiveChanged FINAL)
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
+    QML_NAMED_ELEMENT(PageIndicator)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickPageIndicator(QQuickItem *parent = nullptr);

@@ -96,7 +96,7 @@ void tst_CreationTime::controls()
 void tst_CreationTime::controls_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRowForEachControl(&engine, "controls", "QtQuick/Controls.2", QStringList() << "ApplicationWindow");
+    addTestRowForEachControl(&engine, "controls", "QtQuick/Controls", QStringList() << "ApplicationWindow");
 }
 
 void tst_CreationTime::fusion()
@@ -108,7 +108,7 @@ void tst_CreationTime::fusion()
 void tst_CreationTime::fusion_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRowForEachControl(&engine, "controls/fusion", "QtQuick/Controls.2/Fusion", QStringList() << "ApplicationWindow" << "ButtonPanel" << "CheckIndicator" << "RadioIndicator" << "SliderGroove" << "SliderHandle" << "SwitchIndicator");
+    addTestRowForEachControl(&engine, "controls/fusion", "QtQuick/Controls/Fusion", QStringList() << "ApplicationWindow" << "ButtonPanel" << "CheckIndicator" << "RadioIndicator" << "SliderGroove" << "SliderHandle" << "SwitchIndicator");
 }
 
 void tst_CreationTime::imagine()
@@ -120,7 +120,7 @@ void tst_CreationTime::imagine()
 void tst_CreationTime::imagine_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRowForEachControl(&engine, "controls/imagine", "QtQuick/Controls.2/Imagine", QStringList() << "ApplicationWindow");
+    addTestRowForEachControl(&engine, "controls/imagine", "QtQuick/Controls/Imagine", QStringList() << "ApplicationWindow");
 }
 
 void tst_CreationTime::material()
@@ -132,7 +132,7 @@ void tst_CreationTime::material()
 void tst_CreationTime::material_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRowForEachControl(&engine, "controls/material", "QtQuick/Controls.2/Material", QStringList() << "ApplicationWindow" << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator" << "BoxShadow" << "ElevationEffect" << "CursorDelegate");
+    addTestRowForEachControl(&engine, "controls/material", "QtQuick/Controls/Material", QStringList() << "ApplicationWindow" << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator" << "BoxShadow" << "ElevationEffect" << "CursorDelegate");
 }
 
 void tst_CreationTime::universal()
@@ -144,7 +144,7 @@ void tst_CreationTime::universal()
 void tst_CreationTime::universal_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRowForEachControl(&engine, "controls/universal", "QtQuick/Controls.2/Universal", QStringList() << "ApplicationWindow" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+    addTestRowForEachControl(&engine, "controls/universal", "QtQuick/Controls/Universal", QStringList() << "ApplicationWindow" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
 }
 
 QTEST_MAIN(tst_CreationTime)

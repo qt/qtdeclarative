@@ -62,6 +62,9 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickToolTip : public QQuickPopup
     Q_PROPERTY(int delay READ delay WRITE setDelay NOTIFY delayChanged FINAL)
     Q_PROPERTY(int timeout READ timeout WRITE setTimeout NOTIFY timeoutChanged FINAL)
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged FINAL)
+    QML_NAMED_ELEMENT(ToolTip)
+    QML_ATTACHED(QQuickToolTipAttached)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickToolTip(QQuickItem *parent = nullptr);
@@ -85,8 +88,8 @@ Q_SIGNALS:
     void timeoutChanged();
 
 public Q_SLOTS:
-    Q_REVISION(5) void show(const QString &text, int ms = -1);
-    Q_REVISION(5) void hide();
+    Q_REVISION(2, 5) void show(const QString &text, int ms = -1);
+    Q_REVISION(2, 5) void hide();
 
 protected:
     QFont defaultFont() const override;

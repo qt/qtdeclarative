@@ -58,6 +58,8 @@ class QQuickRadioButtonPrivate;
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickRadioButton : public QQuickAbstractButton
 {
     Q_OBJECT
+    QML_NAMED_ELEMENT(RadioButton)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickRadioButton(QQuickItem *parent = nullptr);

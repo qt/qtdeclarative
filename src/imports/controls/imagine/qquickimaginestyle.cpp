@@ -41,7 +41,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_GLOBAL_STATIC_WITH_ARGS(QString, GlobalPath, (QLatin1String("qrc:/qt-project.org/imports/QtQuick/Controls.2/Imagine/images/")))
+Q_GLOBAL_STATIC_WITH_ARGS(QString, GlobalPath, (QLatin1String("qrc:/qt-project.org/imports/QtQuick/Controls/Imagine/images/")))
 
 static QString ensureSlash(const QString &path)
 {
@@ -117,7 +117,7 @@ QUrl QQuickImagineStyle::url() const
     //
     // If Imagine.path is set to ":/images" by the user, then the final URL would be:
     //
-    // QUrl("file:///home/user/qt/qtbase/qml/QtQuick/Controls.2/Imagine/:/images/applicationwindow-background")
+    // QUrl("file:///home/user/qt/qtbase/qml/QtQuick/Controls/Imagine/:/images/applicationwindow-background")
     //
     // To ensure that the correct URL is constructed, we do it ourselves here,
     // and then the control QML files use the "url" property instead.

@@ -66,7 +66,7 @@ T.ComboBox {
         x: control.mirrored ? control.padding : control.width - width - control.padding
         y: control.topPadding + (control.availableHeight - height) / 2
         color: control.editable ? control.palette.text : control.palette.buttonText
-        source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Fusion/images/arrow.png"
+        source: "qrc:/qt-project.org/imports/QtQuick/Controls/Fusion/images/arrow.png"
         width: 20
         fillMode: Image.Pad
     }

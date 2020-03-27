@@ -378,7 +378,7 @@ QStringList QQuickStylePrivate::stylePaths(bool resolve)
     paths += envPathList("QT_QUICK_CONTROLS_STYLE_PATH");
 
     // built-in import paths
-    const QString targetPath = QStringLiteral("QtQuick/Controls.2");
+    const QString targetPath = QStringLiteral("QtQuick/Controls");
     const QStringList importPaths = defaultImportPathList();
     for (const QString &importPath : importPaths) {
         QDir dir(importPath);
@@ -648,7 +648,7 @@ QStringList QQuickStyle::availableStyles()
     Returns the list of directories where Qt Quick Controls 2 searches for available styles.
 
     By default, the list contains paths specified in the \c QT_QUICK_CONTROLS_STYLE_PATH
-    environment variable, and any existing \c QtQuick/Controls.2 sub-directories in
+    environment variable, and any existing \c QtQuick/Controls sub-directories in
     \l QQmlEngine::importPathList().
 
     \sa addStylePath(), availableStyles()

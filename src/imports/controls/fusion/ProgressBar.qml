@@ -85,7 +85,7 @@ T.ProgressBar {
 
                 mirror: control.mirrored
                 fillMode: Image.TileHorizontally
-                source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Fusion/images/progressmask.png"
+                source: "qrc:/qt-project.org/imports/QtQuick/Controls/Fusion/images/progressmask.png"
                 color: Color.transparent(Qt.lighter(Fusion.highlight(control.palette), 1.2), 160 / 255)
 
                 visible: control.indeterminate

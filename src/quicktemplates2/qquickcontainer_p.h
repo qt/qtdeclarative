@@ -65,9 +65,11 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickContainer : public QQuickControl
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged FINAL)
     Q_PROPERTY(QQuickItem *currentItem READ currentItem NOTIFY currentItemChanged FINAL)
     // 2.5 (Qt 5.12)
-    Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth RESET resetContentWidth NOTIFY contentWidthChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight RESET resetContentHeight NOTIFY contentHeightChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth RESET resetContentWidth NOTIFY contentWidthChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight RESET resetContentHeight NOTIFY contentHeightChanged FINAL REVISION(2, 5))
     Q_CLASSINFO("DefaultProperty", "contentData")
+    QML_NAMED_ELEMENT(Container)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickContainer(QQuickItem *parent = nullptr);
@@ -80,7 +82,7 @@ public:
     Q_INVOKABLE void moveItem(int from, int to);
     Q_INVOKABLE void removeItem(QQuickItem *item);
     // 2.3 (Qt 5.10)
-    Q_REVISION(3) Q_INVOKABLE QQuickItem *takeItem(int index);
+    Q_REVISION(2, 3) Q_INVOKABLE QQuickItem *takeItem(int index);
 
     QVariant contentModel() const;
     QQmlListProperty<QObject> contentData();
@@ -101,8 +103,8 @@ public:
 public Q_SLOTS:
     void setCurrentIndex(int index);
     // 2.1 (Qt 5.8)
-    Q_REVISION(1) void incrementCurrentIndex();
-    Q_REVISION(1) void decrementCurrentIndex();
+    Q_REVISION(2, 1) void incrementCurrentIndex();
+    Q_REVISION(2, 1) void decrementCurrentIndex();
 
 Q_SIGNALS:
     void countChanged();
@@ -110,8 +112,8 @@ Q_SIGNALS:
     void currentIndexChanged();
     void currentItemChanged();
     // 2.5 (Qt 5.12)
-    Q_REVISION(5) void contentWidthChanged();
-    Q_REVISION(5) void contentHeightChanged();
+    Q_REVISION(2, 5) void contentWidthChanged();
+    Q_REVISION(2, 5) void contentHeightChanged();
 
 protected:
     QQuickContainer(QQuickContainerPrivate &dd, QQuickItem *parent);

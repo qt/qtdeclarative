@@ -5,7 +5,7 @@
 #####################################################################
 
 add_qml_module(qtquickcontrols2universalstyleplugin
-    TARGET_PATH "QtQuick/Controls.2/Universal"
+    TARGET_PATH "QtQuick/Controls/Universal"
     URI "QtQuick.Controls.Universal"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
     CLASSNAME QtQuickControls2UniversalStylePlugin
@@ -58,7 +58,7 @@ set(qtquickcontrols2universalstyleplugin_resource_files
 
 add_qt_resource(qtquickcontrols2universalstyleplugin "qtquickcontrols2universalstyleplugin"
     PREFIX
-        "/qt-project.org/imports/QtQuick/Controls.2/Universal"
+        "/qt-project.org/imports/QtQuick/Controls/Universal"
     FILES
         ${qtquickcontrols2universalstyleplugin_resource_files}
 )
@@ -68,7 +68,7 @@ add_qt_resource(qtquickcontrols2universalstyleplugin "qtquickcontrols2universals
 # IMPORT_NAME = "QtQuick.Controls.Universal"
 # IMPORT_VERSION = "2.$$QT_MINOR_VERSION"
 # OTHER_FILES = "qmldir" "$$QML_FILES"
-# TARGETPATH = "QtQuick/Controls.2/Universal"
+# TARGETPATH = "QtQuick/Controls/Universal"
 # _REQUIREMENTS = "qtConfig(quickcontrols2-universal)"
 
 set(qml_files

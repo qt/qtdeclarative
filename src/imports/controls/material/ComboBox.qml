@@ -74,7 +74,7 @@ T.ComboBox {
         x: control.mirrored ? control.padding : control.width - width - control.padding
         y: control.topPadding + (control.availableHeight - height) / 2
         color: control.enabled ? control.Material.foreground : control.Material.hintTextColor
-        source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Material/images/drop-indicator.png"
+        source: "qrc:/qt-project.org/imports/QtQuick/Controls/Material/images/drop-indicator.png"
     }
 
     contentItem: T.TextField {

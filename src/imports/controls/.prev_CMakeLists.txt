@@ -5,7 +5,7 @@
 #####################################################################
 
 add_qml_module(qtquickcontrols2plugin
-    TARGET_PATH "QtQuick/Controls.2"
+    TARGET_PATH "QtQuick/Controls"
     URI "QtQuick.Controls"
     VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
     DESIGNER_SUPPORTED
@@ -63,7 +63,7 @@ set(qtquickcontrols2plugin_resource_files
 
 add_qt_resource(qtquickcontrols2plugin "qtquickcontrols2plugin"
     PREFIX
-        "/qt-project.org/imports/QtQuick/Controls.2"
+        "/qt-project.org/imports/QtQuick/Controls"
     FILES
         ${qtquickcontrols2plugin_resource_files}
 )
@@ -72,7 +72,7 @@ add_qt_resource(qtquickcontrols2plugin "qtquickcontrols2plugin"
 #### Keys ignored in scope 1:.:.:controls.pro:<TRUE>:
 # IMPORT_VERSION = "2.$$QT_MINOR_VERSION"
 # OTHER_FILES = "qmldir" "$$QML_FILES" "$$PWD/snippets/*.qml" "$$PWD/src/*.qdoc" "$$PWD/src/calendar/*.qdoc" "$$PWD/src/templates/*.qdoc"
-# TARGETPATH = "QtQuick/Controls.2"
+# TARGETPATH = "QtQuick/Controls"
 # _REQUIREMENTS = "qtConfig(quickcontrols2-default)"
 
 ## Scopes:

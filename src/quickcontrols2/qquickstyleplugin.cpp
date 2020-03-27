@@ -34,9 +34,8 @@
 **
 ****************************************************************************/
 
-#include "qquickstyleplugin_p.h"
-#include "qquickstyle.h"
 #include "qquickstyle_p.h"
+#include "qquickstyleplugin_p.h"
 
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlfile.h>

@@ -86,12 +86,14 @@ void tst_revisions::window_data()
     QTest::addColumn<QString>("qml");
     QTest::addColumn<QString>("error");
 
-    // Qt 5.7: 2.0, Qt 5.8: 2.1
-    for (int i = 0; i <= 1; ++i)
+    // Qt 5.7: 2.0, Qt 5.8: 2.1, Qt 5.9: 2.2
+    // Note that we can no longer map the same Screen type to different versions
+    // in QtQuick and QtQuick.Controls anymore.
+    for (int i = 0; i <= 2; ++i)
         QTest::newRow(qPrintable(QString("screen:2.%1").arg(i))) << i << "screen: null" << QString(":1 \"ApplicationWindow.screen\" is not available in QtQuick.Templates 2.%1").arg(i);
 
-    // Qt 5.9: 2.2, Qt 5.10: 2.3...
-    for (int i = 2; i <= 15; ++i)
+    // Qt 5.10: 2.3...
+    for (int i = 3; i <= 15; ++i)
         QTest::newRow(qPrintable(QString("screen:2.%1").arg(i))) << i << "screen: null" << "";
 }
 

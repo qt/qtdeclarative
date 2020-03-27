@@ -62,6 +62,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuBarItem : public QQuickAbstract
     Q_PROPERTY(QQuickMenuBar *menuBar READ menuBar NOTIFY menuBarChanged FINAL)
     Q_PROPERTY(QQuickMenu *menu READ menu WRITE setMenu NOTIFY menuChanged FINAL)
     Q_PROPERTY(bool highlighted READ isHighlighted WRITE setHighlighted NOTIFY highlightedChanged FINAL)
+    QML_NAMED_ELEMENT(MenuBarItem)
+    QML_ADDED_IN_VERSION(2, 3)
 
 public:
     explicit QQuickMenuBarItem(QQuickItem *parent = nullptr);
