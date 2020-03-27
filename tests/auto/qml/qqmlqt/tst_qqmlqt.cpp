@@ -80,6 +80,7 @@ private slots:
     void lighter();
     void darker();
     void tint();
+    void color();
     void openUrlExternally();
     void openUrlExternally_pragmaLibrary();
     void md5();
@@ -505,9 +506,14 @@ void tst_qqmlqt::lighter()
     QVERIFY(object != nullptr);
 
     QCOMPARE(qvariant_cast<QColor>(object->property("test1")), QColor::fromRgbF(1, 0.8, 0.3).lighter());
+    QCOMPARE(qvariant_cast<QColor>(object->property("testColor1")),
+             QColor::fromRgbF(1, 0.8, 0.3).lighter());
     QCOMPARE(qvariant_cast<QColor>(object->property("test2")), QColor());
     QCOMPARE(qvariant_cast<QColor>(object->property("test3")), QColor::fromRgbF(1, 0.8, 0.3).lighter(180));
+    QCOMPARE(qvariant_cast<QColor>(object->property("testColor3")),
+             QColor::fromRgbF(1, 0.8, 0.3).lighter(180));
     QCOMPARE(qvariant_cast<QColor>(object->property("test4")), QColor("red").lighter());
+    QCOMPARE(qvariant_cast<QColor>(object->property("testColor4")), QColor("red").lighter());
     QCOMPARE(qvariant_cast<QColor>(object->property("test5")), QColor());
     QCOMPARE(qvariant_cast<QColor>(object->property("test6")), QColor());
 }
@@ -525,9 +531,14 @@ void tst_qqmlqt::darker()
     QVERIFY(object != nullptr);
 
     QCOMPARE(qvariant_cast<QColor>(object->property("test1")), QColor::fromRgbF(1, 0.8, 0.3).darker());
+    QCOMPARE(qvariant_cast<QColor>(object->property("testColor1")),
+             QColor::fromRgbF(1, 0.8, 0.3).darker());
     QCOMPARE(qvariant_cast<QColor>(object->property("test2")), QColor());
     QCOMPARE(qvariant_cast<QColor>(object->property("test3")), QColor::fromRgbF(1, 0.8, 0.3).darker(280));
+    QCOMPARE(qvariant_cast<QColor>(object->property("testColor3")),
+             QColor::fromRgbF(1, 0.8, 0.3).darker(280));
     QCOMPARE(qvariant_cast<QColor>(object->property("test4")), QColor("red").darker());
+    QCOMPARE(qvariant_cast<QColor>(object->property("testColor4")), QColor("red").darker());
     QCOMPARE(qvariant_cast<QColor>(object->property("test5")), QColor());
     QCOMPARE(qvariant_cast<QColor>(object->property("test6")), QColor());
 }
@@ -538,19 +549,48 @@ void tst_qqmlqt::tint()
 
     QString warning1 = component.url().toString() + ":7: Error: Qt.tint(): Invalid arguments";
     QString warning2 = component.url().toString() + ":8: Error: Qt.tint(): Invalid arguments";
+    QString warning3 = component.url().toString() + ":13: Error: Insufficient arguments";
 
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning3));
 
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
 
     QCOMPARE(qvariant_cast<QColor>(object->property("test1")), QColor::fromRgbF(0, 0, 1));
+    QCOMPARE(qvariant_cast<QColor>(object->property("testColor1")), QColor::fromRgbF(0, 0, 1));
     QCOMPARE(qvariant_cast<QColor>(object->property("test2")), QColor::fromRgbF(1, 0, 0));
+    QCOMPARE(qvariant_cast<QColor>(object->property("testColor2")), QColor::fromRgbF(1, 0, 0));
     QColor test3 = qvariant_cast<QColor>(object->property("test3"));
+    QColor testColor3 = qvariant_cast<QColor>(object->property("testColor3"));
     QCOMPARE(test3.rgba(), 0xFF7F0080);
+    QCOMPARE(testColor3.rgba(), 0xFF7F0080);
     QCOMPARE(qvariant_cast<QColor>(object->property("test4")), QColor());
     QCOMPARE(qvariant_cast<QColor>(object->property("test5")), QColor());
+    QCOMPARE(qvariant_cast<QColor>(object->property("testColor5")), QColor());
+}
+
+void tst_qqmlqt::color()
+{
+    QQmlComponent component(&engine, testFileUrl("color.qml"));
+
+    QStringList warnings = { ":7: Error: Qt.color(): Argument must be a string",
+                             ":8: Error: Qt.color(): Qt.color takes exactly one argument",
+                             ":9: Error: Qt.color(): Qt.color takes exactly one argument" };
+
+    for (const QString &warning : warnings)
+        QTest::ignoreMessage(QtWarningMsg, qPrintable(component.url().toString() + warning));
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object != nullptr);
+
+    QCOMPARE(qvariant_cast<QColor>(object->property("test1")), QColor("red"));
+    QCOMPARE(qvariant_cast<QColor>(object->property("test2")), QColor("#ff00ff00"));
+    QCOMPARE(qvariant_cast<QColor>(object->property("test3")), QColor());
+    QCOMPARE(qvariant_cast<QColor>(object->property("test4")), QColor());
+    QCOMPARE(qvariant_cast<QColor>(object->property("test5")), QColor());
+    QCOMPARE(qvariant_cast<QColor>(object->property("test6")), QColor());
 }
 
 class MyUrlHandler : public QObject

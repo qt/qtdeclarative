@@ -97,6 +97,8 @@ struct QtObject : Object
     static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
 
     static ReturnedValue method_isQtObject(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_color(const FunctionObject *b, const Value *thisObject,
+                                      const Value *argv, int argc);
     static ReturnedValue method_rgba(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_hsla(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_hsva(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);

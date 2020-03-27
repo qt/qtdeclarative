@@ -110,6 +110,7 @@ void Heap::QtObject::init(QQmlEngine *qmlEngine)
 
     o->defineDefaultProperty(QStringLiteral("include"), QV4Include::method_include);
     o->defineDefaultProperty(QStringLiteral("isQtObject"), QV4::QtObject::method_isQtObject);
+    o->defineDefaultProperty(QStringLiteral("color"), QV4::QtObject::method_color);
     o->defineDefaultProperty(QStringLiteral("rgba"), QV4::QtObject::method_rgba);
     o->defineDefaultProperty(QStringLiteral("hsla"), QV4::QtObject::method_hsla);
     o->defineDefaultProperty(QStringLiteral("hsva"), QV4::QtObject::method_hsva);
@@ -234,6 +235,33 @@ ReturnedValue QtObject::method_isQtObject(const FunctionObject *, const Value *,
         RETURN_RESULT(QV4::Encode(false));
 
     return QV4::Encode(argv[0].as<QV4::QObjectWrapper>() != nullptr);
+}
+
+/*!
+    \qmlmethod color Qt::color(string name)
+
+    Returns the color corresponding to the given \a name (i.e. red or #ff0000).
+    If there is no such color, \c null is returned.
+*/
+ReturnedValue QtObject::method_color(const FunctionObject *f, const Value *, const Value *argv,
+                                     int argc)
+{
+    QV4::Scope scope(f);
+    if (argc != 1)
+        THROW_GENERIC_ERROR("Qt.color(): Qt.color takes exactly one argument");
+
+    QVariant v = scope.engine->toVariant(argv[0], -1);
+    if (v.userType() == QMetaType::QString) {
+        bool ok = false;
+        v = QQmlStringConverters::colorFromString(v.toString(), &ok);
+        if (!ok) {
+            return QV4::Encode::null();
+        }
+    } else {
+        THROW_GENERIC_ERROR("Qt.color(): Argument must be a string");
+    }
+
+    return scope.engine->fromVariant(v);
 }
 
 /*!

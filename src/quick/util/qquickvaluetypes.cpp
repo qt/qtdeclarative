@@ -44,7 +44,6 @@
 #include <private/qcolorspace_p.h>
 #include <private/qfont_p.h>
 
-
 QT_BEGIN_NAMESPACE
 
 namespace QQuickValueTypes {
@@ -57,6 +56,21 @@ namespace QQuickValueTypes {
 QString QQuickColorValueType::toString() const
 {
     return v.name(v.alpha() != 255 ? QColor::HexArgb : QColor::HexRgb);
+}
+
+QVariant QQuickColorValueType::lighter(qreal factor) const
+{
+    return QQml_colorProvider()->lighter(this->v, factor);
+}
+
+QVariant QQuickColorValueType::darker(qreal factor) const
+{
+    return QQml_colorProvider()->darker(this->v, factor);
+}
+
+QVariant QQuickColorValueType::tint(QVariant tintColor) const
+{
+    return QQml_colorProvider()->tint(this->v, tintColor);
 }
 
 qreal QQuickColorValueType::r() const
