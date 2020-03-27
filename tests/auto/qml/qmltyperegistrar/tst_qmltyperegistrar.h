@@ -44,7 +44,12 @@ class tst_qmltyperegistrar : public QObject
     Q_OBJECT
 
 private slots:
+    void initTestCase();
     void qmltypesHasForeign();
+    void qmltypesHasHppClassAndNoext();
+
+private:
+    QByteArray qmltypesData;
 };
 
 #endif // TST_QMLTYPEREGISTRAR_H

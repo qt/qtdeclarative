@@ -6,7 +6,10 @@ CONFIG -= debug_and_release_target
 macos:CONFIG -= app_bundle
 
 SOURCES += tst_qmltyperegistrar.cpp
-HEADERS += tst_qmltyperegistrar.h
+HEADERS += \
+    hppheader.hpp \
+    noextheader \
+    tst_qmltyperegistrar.h
 
 QMLTYPES_FILENAME = tst_qmltyperegistrar.qmltypes
 QML_FOREIGN_METATYPES += foreign/foreign_metatypes.json

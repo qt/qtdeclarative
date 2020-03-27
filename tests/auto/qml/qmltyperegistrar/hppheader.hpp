@@ -26,29 +26,39 @@
 **
 ****************************************************************************/
 
-#include "tst_qmltyperegistrar.h"
-#include <QtTest/qtest.h>
-#include <QtCore/qcoreapplication.h>
-#include <QtCore/qfile.h>
+#ifndef HPPHEADER_HPP
+#define HPPHEADER_HPP
 
-void tst_qmltyperegistrar::initTestCase()
+#include <QtCore/qobject.h>
+#include <QtQml/qqml.h>
+
+class HppClass : public QObject
 {
-    QFile file(QCoreApplication::applicationDirPath() + "/tst_qmltyperegistrar.qmltypes");
-    QVERIFY(file.open(QIODevice::ReadOnly));
-    qmltypesData = file.readAll();
-    QVERIFY(file.atEnd());
-    QCOMPARE(file.error(), QFile::NoError);
-}
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(int eieiei READ eieiei WRITE setEieiei NOTIFY eieieiChanged)
 
-void tst_qmltyperegistrar::qmltypesHasForeign()
-{
-    QVERIFY(qmltypesData.contains("things"));
-}
+public:
+    int eieiei() const
+    {
+        return m_eieiei;
+    }
 
-void tst_qmltyperegistrar::qmltypesHasHppClassAndNoext()
-{
-    QVERIFY(qmltypesData.contains("HppClass"));
-    QVERIFY(qmltypesData.contains("Noext"));
-}
+public slots:
+    void setEieiei(int eieiei)
+    {
+        if (m_eieiei == eieiei)
+            return;
 
-QTEST_MAIN(tst_qmltyperegistrar)
+        m_eieiei = eieiei;
+        emit eieieiChanged(m_eieiei);
+    }
+
+signals:
+    void eieieiChanged(int eieiei);
+
+private:
+    int m_eieiei;
+};
+
+#endif // HPPHEADER_HPP

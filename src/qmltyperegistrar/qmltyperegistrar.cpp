@@ -307,16 +307,19 @@ int main(int argc, char **argv)
                 case GadgetRegistration:
                 case ObjectRegistration: {
                     const QString include = metaObject[QLatin1String("inputFile")].toString();
-                    const bool declaredInHeader = include.endsWith(QLatin1String(".h"));
-                    if (declaredInHeader) {
-                        includes.append(include);
-                        classDef.insert(QLatin1String("registerable"), true);
-                    } else {
-                        fprintf(stderr, "Cannot generate QML type registration for class %s "
-                                        "because it is not declared in a header.",
+                    if (!include.endsWith(QLatin1String(".h"))
+                            && !include.endsWith(QLatin1String(".hpp"))
+                            && !include.endsWith(QLatin1String(".hxx"))
+                            && include.contains(QLatin1Char('.'))) {
+                        fprintf(stderr,
+                                "Class %s is declared in %s, which appears not to be a header.\n"
+                                "The compilation of its registration to QML may fail.\n",
                                 qPrintable(classDef.value(QLatin1String("qualifiedClassName"))
-                                           .toString()));
+                                           .toString()),
+                                qPrintable(include));
                     }
+                    includes.append(include);
+                    classDef.insert(QLatin1String("registerable"), true);
 
                     types.append(classDef);
                     break;
