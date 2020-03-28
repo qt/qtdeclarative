@@ -46,6 +46,8 @@ public slots:
             false
 #endif
             ));
+        engine->rootContext()->setContextProperty("applicationDirPath",
+                                                  QCoreApplication::applicationDirPath());
     }
 };
 

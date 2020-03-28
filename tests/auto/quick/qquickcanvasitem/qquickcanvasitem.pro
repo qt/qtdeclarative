@@ -55,5 +55,3 @@ OTHER_FILES += \
     data/yellow75.png \
     data/tst_invalidContext.qml
 
-
-CONFIG += insignificant_test # QTBUG-41043

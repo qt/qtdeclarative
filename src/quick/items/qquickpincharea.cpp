@@ -194,7 +194,7 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
 */
 
 /*!
-    \qmlsignal QtQuick::PinchArea::pinchStarted()
+    \qmlsignal QtQuick::PinchArea::pinchStarted(PinchEvent pinch)
 
     This signal is emitted when the pinch area detects that a pinch gesture has
     started: two touch points (fingers) have been detected, and they have moved
@@ -213,7 +213,7 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
 */
 
 /*!
-    \qmlsignal QtQuick::PinchArea::pinchUpdated()
+    \qmlsignal QtQuick::PinchArea::pinchUpdated(PinchEvent pinch)
 
     This signal is emitted when the pinch area detects that a pinch gesture has changed.
 
@@ -225,7 +225,7 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
 */
 
 /*!
-    \qmlsignal QtQuick::PinchArea::pinchFinished()
+    \qmlsignal QtQuick::PinchArea::pinchFinished(PinchEvent pinch)
 
     This signal is emitted when the pinch area detects that a pinch gesture has finished.
 
@@ -235,7 +235,7 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
 */
 
 /*!
-    \qmlsignal QtQuick::PinchArea::smartZoom()
+    \qmlsignal QtQuick::PinchArea::smartZoom(PinchEvent pinch)
     \since 5.5
 
     This signal is emitted when the pinch area detects the smart zoom gesture.

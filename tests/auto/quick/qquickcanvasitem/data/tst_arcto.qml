@@ -357,7 +357,7 @@ CanvasTestCase {
        ctx.fillStyle = '#0f0';
        ctx.beginPath();
        ctx.moveTo(0, 50);
-       ctx.translate(100, 0);
+       ctx.translate(50, 0);
        ctx.arcTo(50, 50, 50, 0, 50);
        ctx.lineTo(-100, 0);
        ctx.fill();
@@ -367,11 +367,11 @@ CanvasTestCase {
        comparePixel(ctx,  99,0, 0,255,0,255);
        comparePixel(ctx,  0,25, 0,255,0,255);
        comparePixel(ctx,  50,25, 0,255,0,255);
-       comparePixel(ctx,  99,25, 0,255,0,255);
+       comparePixel(ctx,  99,25, 255,0,0,255);
        comparePixel(ctx,  0,49, 0,255,0,255);
        comparePixel(ctx,  50,49, 0,255,0,255);
-       comparePixel(ctx,  99,49, 0,255,0,255);
-    }
+       comparePixel(ctx,  99,49, 255,0,0,255);
+   }
    function test_zero(row) {
        var canvas = createCanvasObject(row);
        var ctx = canvas.getContext('2d');

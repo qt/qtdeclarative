@@ -986,10 +986,11 @@ static QV4::ReturnedValue qt_create_image_data(qreal w, qreal h, QV4::ExecutionE
     pixelData->setPrototypeOf(p);
 
     if (image.isNull()) {
-        *pixelData->d()->image = QImage(w, h, QImage::Format_ARGB32);
+        *pixelData->d()->image = QImage(qRound(w), qRound(h), QImage::Format_ARGB32);
         pixelData->d()->image->fill(0x00000000);
     } else {
-        Q_ASSERT(image.width()== qRound(w * image.devicePixelRatioF()) && image.height() == qRound(h * image.devicePixelRatioF()));
+        // After qtbase 88e56d0932a3615231adf40d5ae033e742d72c33, the image size can be off by one.
+        Q_ASSERT(qAbs(image.width() - qRound(w * image.devicePixelRatioF())) <= 1 && qAbs(image.height() - qRound(h * image.devicePixelRatioF())) <= 1);
         *pixelData->d()->image = image.format() == QImage::Format_ARGB32 ? image : image.convertToFormat(QImage::Format_ARGB32);
     }
 
