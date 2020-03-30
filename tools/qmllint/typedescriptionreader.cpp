@@ -53,7 +53,6 @@ QString toString(const UiQualifiedId *qualifiedId, QChar delimiter = QLatin1Char
 
 bool TypeDescriptionReader::operator()(
         QHash<QString, ScopeTree::ConstPtr> *objects,
-        QList<ModuleApiInfo> *moduleApis,
         QStringList *dependencies)
 {
     Engine engine;
@@ -72,7 +71,6 @@ bool TypeDescriptionReader::operator()(
     }
 
     m_objects = objects;
-    m_moduleApis = moduleApis;
     m_dependencies = dependencies;
     readDocument(parser.ast());
 
@@ -143,15 +141,12 @@ void TypeDescriptionReader::readModule(UiObjectDefinition *ast)
         if (component)
             typeName = toString(component->qualifiedTypeNameId);
 
-        if (!component || (typeName != QLatin1String("Component")
-                           && typeName != QLatin1String("ModuleApi"))) {
+        if (!component || typeName != QLatin1String("Component")) {
             continue;
         }
 
         if (typeName == QLatin1String("Component"))
             readComponent(component);
-        else if (typeName == QLatin1String("ModuleApi"))
-            readModuleApi(component);
     }
 }
 
@@ -251,41 +246,6 @@ void TypeDescriptionReader::readComponent(UiObjectDefinition *ast)
     // ### add implicit export into the package of c++ types
     scope->addExport(scope->className(), QStringLiteral("<cpp>"), ComponentVersion());
     m_objects->insert(scope->className(), scope);
-}
-
-void TypeDescriptionReader::readModuleApi(UiObjectDefinition *ast)
-{
-    ModuleApiInfo apiInfo;
-
-    for (UiObjectMemberList *it = ast->initializer->members; it; it = it->next) {
-        UiObjectMember *member = it->member;
-        auto *script = cast<UiScriptBinding *>(member);
-
-        if (script) {
-            const QString name = toString(script->qualifiedId);
-            if (name == QLatin1String("uri")) {
-                apiInfo.uri = readStringBinding(script);
-            } else if (name == QLatin1String("version")) {
-                apiInfo.version = readNumericVersionBinding(script);
-            } else if (name == QLatin1String("name")) {
-                apiInfo.cppName = readStringBinding(script);
-            } else {
-                addWarning(script->firstSourceLocation(),
-                           tr("Expected only uri, version and name script bindings."));
-            }
-        } else {
-            addWarning(member->firstSourceLocation(), tr("Expected only script bindings."));
-        }
-    }
-
-    if (!apiInfo.version.isValid()) {
-        addError(ast->firstSourceLocation(),
-                 tr("ModuleApi definition has no or invalid version binding."));
-        return;
-    }
-
-    if (m_moduleApis)
-        m_moduleApis->append(apiInfo);
 }
 
 void TypeDescriptionReader::readSignalOrMethod(UiObjectDefinition *ast, bool isMethod,

@@ -190,7 +190,7 @@ void FindUnqualifiedIDVisitor::readQmltypes(const QString &filename,
                                             FindUnqualifiedIDVisitor::Import &result)
 {
     auto reader = createQmltypesReaderForFile(filename);
-    auto succ = reader(&result.objects, &result.moduleApis, &result.dependencies);
+    auto succ = reader(&result.objects, &result.dependencies);
     if (!succ)
         m_colorOut.writeUncolored(reader.errorMessage());
 }
@@ -421,14 +421,13 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiProgram *)
 {
     enterEnvironment(ScopeType::QMLScope, "program");
     QHash<QString, ScopeTree::ConstPtr> objects;
-    QList<ModuleApiInfo> moduleApis;
     QStringList dependencies;
     for (auto const &dir : m_qmltypeDirs) {
         QDirIterator it { dir, QStringList() << QLatin1String("builtins.qmltypes"), QDir::NoFilter,
                           QDirIterator::Subdirectories };
         while (it.hasNext()) {
             auto reader = createQmltypesReaderForFile(it.next());
-            auto succ = reader(&objects, &moduleApis, &dependencies);
+            auto succ = reader(&objects, &dependencies);
             if (!succ)
                 m_colorOut.writeUncolored(reader.errorMessage());
         }

@@ -60,7 +60,6 @@ public:
 private:
     struct Import {
         QHash<QString, ScopeTree::ConstPtr> objects;
-        QList<ModuleApiInfo> moduleApis;
         QStringList dependencies;
     };
 

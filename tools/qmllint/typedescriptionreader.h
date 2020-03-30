@@ -46,13 +46,6 @@
 // for Q_DECLARE_TR_FUNCTIONS
 #include <QtCore/qcoreapplication.h>
 
-struct ModuleApiInfo
-{
-    QString uri;
-    ComponentVersion version;
-    QString cppName;
-};
-
 class TypeDescriptionReader
 {
     Q_DECLARE_TR_FUNCTIONS(TypeDescriptionReader)
@@ -63,7 +56,6 @@ public:
 
     bool operator()(
             QHash<QString, ScopeTree::ConstPtr> *objects,
-            QList<ModuleApiInfo> *moduleApis,
             QStringList *dependencies);
 
     QString errorMessage() const { return m_errorMessage; }
@@ -74,7 +66,6 @@ private:
     void readModule(QQmlJS::AST::UiObjectDefinition *ast);
     void readDependencies(QQmlJS::AST::UiScriptBinding *ast);
     void readComponent(QQmlJS::AST::UiObjectDefinition *ast);
-    void readModuleApi(QQmlJS::AST::UiObjectDefinition *ast);
     void readSignalOrMethod(QQmlJS::AST::UiObjectDefinition *ast, bool isMethod,
                             const ScopeTree::Ptr &scope);
     void readProperty(QQmlJS::AST::UiObjectDefinition *ast, const ScopeTree::Ptr &scope);
@@ -98,7 +89,6 @@ private:
     QString m_errorMessage;
     QString m_warningMessage;
     QHash<QString, ScopeTree::ConstPtr> *m_objects = nullptr;
-    QList<ModuleApiInfo> *m_moduleApis = nullptr;
     QStringList *m_dependencies = nullptr;
 };
 
