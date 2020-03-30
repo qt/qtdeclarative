@@ -8,11 +8,13 @@ QMAKE_TARGET_DESCRIPTION = QML Types Registrar
 include(../../tools/shared/shared.pri)
 
 SOURCES += \
+    $$QMLSTREAMWRITER_SOURCES \
     qmltyperegistrar.cpp \
     qmltypesclassdescription.cpp \
     qmltypescreator.cpp
 
 HEADERS += \
+    $$QMLSTREAMWRITER_HEADERS \
     qmltypesclassdescription.h \
     qmltypescreator.h
 

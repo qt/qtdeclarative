@@ -42,21 +42,11 @@
 #include "metatypes.h"
 #include "componentversion.h"
 
-#include <QtQml/private/qqmljsast_p.h>
 #include <QtQml/private/qqmljssourcelocation_p.h>
 
 #include <QtCore/qset.h>
 #include <QtCore/qhash.h>
 #include <QtCore/qstring.h>
-
-enum MessageColors
-{
-    Error,
-    Warning,
-    Info,
-    Normal,
-    Hint
-};
 
 enum class ScopeType
 {
@@ -72,7 +62,6 @@ struct MethodUsage
     bool hasMultilineHandlerBody;
 };
 
-class ColorOutput;
 class ScopeTree
 {
     Q_DISABLE_COPY_MOVE(ScopeTree)
@@ -110,7 +99,7 @@ public:
     ScopeTree::Ptr createNewChildScope(ScopeType type, const QString &name);
     ScopeTree *parentScope() const { return m_parentScope; }
 
-    void insertJSIdentifier(const QString &id, QQmlJS::AST::VariableScope scope);
+    void insertJSIdentifier(const QString &id, ScopeType scope);
     void insertSignalIdentifier(const QString &id, const MetaMethod &method,
                                 const QQmlJS::SourceLocation &loc, bool hasMultilineHandlerBody);
     // inserts property as qml identifier as well as the corresponding
@@ -122,16 +111,9 @@ public:
     void addIdToAccessed(const QString &id, const QQmlJS::SourceLocation &location);
     void accessMember(const QString &name, const QString &parentType,
                       const QQmlJS::SourceLocation &location);
-    void resetMemberScope();
 
     bool isVisualRootScope() const;
     QString name() const { return m_name; }
-
-    bool recheckIdentifiers(
-            const QString &code,
-            const QHash<QString, const ScopeTree *> &qmlIDs,
-            const QHash<QString, ScopeTree::ConstPtr> &types,
-            const ScopeTree *root, const QString& rootId, ColorOutput &colorOut) const;
 
     ScopeType scopeType() const { return m_scopeType; }
 
@@ -169,14 +151,39 @@ public:
     void setIsCreatable(bool value) { m_isCreatable = value; }
     void setIsComposite(bool value) { m_isSingleton = value; }
 
-private:
-    struct FieldMemberList
+    struct FieldMember
     {
         QString m_name;
         QString m_parentType;
         QQmlJS::SourceLocation m_location;
-        std::unique_ptr<FieldMemberList> m_child;
     };
+
+    QVector<QPair<QString, QQmlJS::SourceLocation>> unmatchedSignalHandlers() const
+    {
+        return m_unmatchedSignalHandlers;
+    }
+
+    QVector<QVector<FieldMember>> memberAccessChains() const
+    {
+        return m_memberAccessChains;
+    }
+
+    bool isIdInCurrentQMlScopes(const QString &id) const;
+    bool isIdInCurrentJSScopes(const QString &id) const;
+    bool isIdInjectedFromSignal(const QString &id) const;
+    const ScopeTree *currentQMLScope() const;
+
+    QVector<ScopeTree::Ptr> childScopes() const
+    {
+        return m_childScopes;
+    }
+
+    QMultiHash<QString, MethodUsage> injectedSignalIdentifiers() const
+    {
+        return m_injectedSignalIdentifiers;
+    }
+
+private:
 
     QSet<QString> m_jsIdentifiers;
     QMultiHash<QString, MethodUsage> m_injectedSignalIdentifiers;
@@ -185,9 +192,7 @@ private:
     QHash<QString, MetaProperty> m_properties;
     QHash<QString, MetaEnum> m_enums;
 
-    std::vector<std::unique_ptr<FieldMemberList>> m_accessedIdentifiers;
-    FieldMemberList *m_currentFieldMember = nullptr;
-
+    QVector<QVector<FieldMember>> m_memberAccessChains;
     QVector<QPair<QString, QQmlJS::SourceLocation>> m_unmatchedSignalHandlers;
 
     QVector<ScopeTree::Ptr> m_childScopes;
@@ -205,19 +210,6 @@ private:
     bool m_isSingleton = false;
     bool m_isCreatable = true;
     bool m_isComposite = false;
-
-    bool isIdInCurrentQMlScopes(const QString &id) const;
-    bool isIdInCurrentJSScopes(const QString &id) const;
-    bool isIdInjectedFromSignal(const QString &id) const;
-    const ScopeTree *currentQMLScope() const;
-    void printContext(ColorOutput &colorOut, const QString &code,
-                      const QQmlJS::SourceLocation &location) const;
-    bool checkMemberAccess(
-            const QString &code,
-            FieldMemberList *members,
-            const ScopeTree *scope,
-            const QHash<QString, ScopeTree::ConstPtr> &types,
-            ColorOutput& colorOut) const;
 };
 
 #endif // SCOPETREE_H

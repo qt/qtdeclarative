@@ -30,6 +30,7 @@
 #include "importedmembersvisitor.h"
 #include "scopetree.h"
 #include "typedescriptionreader.h"
+#include "checkidentifiers.h"
 
 #include <QtQml/private/qqmljsast_p.h>
 #include <QtQml/private/qqmljslexer_p.h>
@@ -528,7 +529,7 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::Catch *catchStatement)
 {
     enterEnvironment(ScopeType::JSLexicalScope, "catch");
     m_currentScope->insertJSIdentifier(catchStatement->patternElement->bindingIdentifier.toString(),
-                                       QQmlJS::AST::VariableScope::Let);
+                                       ScopeType::JSLexicalScope);
     return true;
 }
 
@@ -675,10 +676,10 @@ FindUnqualifiedIDVisitor::FindUnqualifiedIDVisitor(QStringList qmltypeDirs, QStr
          *globalName != nullptr;
          ++globalName) {
         m_currentScope->insertJSIdentifier(QString::fromLatin1(*globalName),
-                                           QQmlJS::AST::VariableScope::Const);
+                                           ScopeType::JSLexicalScope);
     }
     for (const auto& jsGlobVar: jsGlobVars)
-        m_currentScope->insertJSIdentifier(jsGlobVar, QQmlJS::AST::VariableScope::Const);
+        m_currentScope->insertJSIdentifier(jsGlobVar, ScopeType::JSLexicalScope);
 }
 
 bool FindUnqualifiedIDVisitor::check()
@@ -694,15 +695,19 @@ bool FindUnqualifiedIDVisitor::check()
         QScopedValueRollback<ScopeTree*> rollback(m_currentScope, outstandingConnection.scope);
         outstandingConnection.uiod->initializer->accept(this);
     }
-    return m_rootScope->recheckIdentifiers(m_code, m_qmlid2scope, m_exportedName2Scope,
-                                           m_rootScope.get(), m_rootId, m_colorOut);
+
+    CheckIdentifiers check(&m_colorOut, m_code, m_exportedName2Scope);
+    return check(m_qmlid2scope, m_rootScope.get(), m_rootId);
 }
 
 bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::VariableDeclarationList *vdl)
 {
     while (vdl) {
-        m_currentScope->insertJSIdentifier(vdl->declaration->bindingIdentifier.toString(),
-                                           vdl->declaration->scope);
+        m_currentScope->insertJSIdentifier(
+                    vdl->declaration->bindingIdentifier.toString(),
+                    (vdl->declaration->scope == QQmlJS::AST::VariableScope::Var)
+                        ? ScopeType::JSFunctionScope
+                        : ScopeType::JSLexicalScope);
         vdl = vdl->next;
     }
     return true;
@@ -716,7 +721,7 @@ void FindUnqualifiedIDVisitor::visitFunctionExpressionHelper(QQmlJS::AST::Functi
         if (m_currentScope->scopeType() == ScopeType::QMLScope)
             m_currentScope->addMethod(MetaMethod(name, QLatin1String("void")));
         else
-            m_currentScope->insertJSIdentifier(name, VariableScope::Const);
+            m_currentScope->insertJSIdentifier(name, ScopeType::JSLexicalScope);
         enterEnvironment(ScopeType::JSFunctionScope, name);
     } else {
         enterEnvironment(ScopeType::JSFunctionScope, QLatin1String("<anon>"));
@@ -747,9 +752,8 @@ void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::FunctionDeclaration *)
 
 bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::FormalParameterList *fpl)
 {
-    for (auto const &boundName : fpl->boundNames()) {
-        m_currentScope->insertJSIdentifier(boundName.id, QQmlJS::AST::VariableScope::Const);
-    }
+    for (auto const &boundName : fpl->boundNames())
+        m_currentScope->insertJSIdentifier(boundName.id, ScopeType::JSLexicalScope);
     return true;
 }
 
@@ -895,8 +899,12 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::PatternElement *element)
     if (element->isVariableDeclaration()) {
         QQmlJS::AST::BoundNames names;
         element->boundNames(&names);
-        for (const auto &name : names)
-            m_currentScope->insertJSIdentifier(name.id, element->scope);
+        for (const auto &name : names) {
+            m_currentScope->insertJSIdentifier(
+                        name.id, (element->scope == QQmlJS::AST::VariableScope::Var)
+                            ? ScopeType::JSFunctionScope
+                            : ScopeType::JSLexicalScope);
+        }
     }
 
     return true;

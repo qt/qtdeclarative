@@ -7,7 +7,6 @@
 qt_add_tool(qmlcachegen
     TOOLS_TARGET Qml # special case
     SOURCES
-        ../shared/qmlstreamwriter.cpp ../shared/qmlstreamwriter.h
         ../shared/resourcefilemapper.cpp ../shared/resourcefilemapper.h
         generateloader.cpp
         qmlcachegen.cpp

@@ -6,14 +6,17 @@
 
 qt_add_tool(qmllint
     SOURCES
-        componentversion.cpp componentversion.h
+        checkidentifiers.cpp checkidentifiers.h
+        ../shared/componentversion.cpp ../shared/componentversion.h
         findunqualified.cpp findunqualified.h
         importedmembersvisitor.cpp importedmembersvisitor.h
         main.cpp
-        metatypes.h
+        ../shared/metatypes.h
         qcoloroutput.cpp qcoloroutput.h
-        scopetree.cpp scopetree.h
-        typedescriptionreader.cpp typedescriptionreader.h
+        ../shared/scopetree.cpp ../shared/scopetree.h
+        ../shared/typedescriptionreader.cpp ../shared/typedescriptionreader.h
+    INCLUDE_DIRECTORIES
+        ../shared
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::QmlDevToolsPrivate

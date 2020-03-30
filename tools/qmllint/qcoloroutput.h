@@ -44,6 +44,15 @@
 
 class ColorOutputPrivate;
 
+enum MessageColors
+{
+    Error,
+    Warning,
+    Info,
+    Normal,
+    Hint
+};
+
 class ColorOutput
 {
     enum

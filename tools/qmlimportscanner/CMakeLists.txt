@@ -7,7 +7,6 @@
 qt_add_tool(qmlimportscanner
     TOOLS_TARGET Qml # special case
     SOURCES
-        ../shared/qmlstreamwriter.cpp ../shared/qmlstreamwriter.h
         ../shared/resourcefilemapper.cpp ../shared/resourcefilemapper.h
         main.cpp
     DEFINES

@@ -6,7 +6,6 @@
 
 qt_add_tool(qmlimportscanner
     SOURCES
-        ../shared/qmlstreamwriter.cpp ../shared/qmlstreamwriter.h
         ../shared/resourcefilemapper.cpp ../shared/resourcefilemapper.h
         main.cpp
     DEFINES
