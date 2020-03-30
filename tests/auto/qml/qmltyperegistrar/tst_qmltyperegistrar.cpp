@@ -51,4 +51,11 @@ void tst_qmltyperegistrar::qmltypesHasHppClassAndNoext()
     QVERIFY(qmltypesData.contains("Noext"));
 }
 
+void tst_qmltyperegistrar::qmltypesHasFileNames()
+{
+    QVERIFY(qmltypesData.contains("file: \"hppheader.hpp\""));
+    QVERIFY(qmltypesData.contains("file: \"noextheader\""));
+    QVERIFY(qmltypesData.contains("file: \"tst_qmltyperegistrar.h\""));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

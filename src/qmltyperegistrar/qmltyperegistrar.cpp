@@ -299,14 +299,16 @@ int main(int argc, char **argv)
         }
 
         auto processMetaObject = [&](const QJsonObject &metaObject) {
+            const QString include = metaObject[QLatin1String("inputFile")].toString();
             const QJsonArray classes = metaObject[QLatin1String("classes")].toArray();
             for (const auto &cls : classes) {
                 QJsonObject classDef = cls.toObject();
+                classDef.insert(QLatin1String("inputFile"), include);
+
                 switch (qmlTypeRegistrationMode(classDef)) {
                 case NamespaceRegistration:
                 case GadgetRegistration:
                 case ObjectRegistration: {
-                    const QString include = metaObject[QLatin1String("inputFile")].toString();
                     if (!include.endsWith(QLatin1String(".h"))
                             && !include.endsWith(QLatin1String(".hpp"))
                             && !include.endsWith(QLatin1String(".hxx"))
@@ -433,9 +435,13 @@ int main(int argc, char **argv)
                     continue;
                 }
 
+                const QString include = metaObject[QLatin1String("inputFile")].toString();
                 const QJsonArray classes = metaObject[QLatin1String("classes")].toArray();
-                for (const auto &cls : classes)
-                    foreignTypes.append(cls.toObject());
+                for (const auto &cls : classes) {
+                    QJsonObject classDef = cls.toObject();
+                    classDef.insert(QLatin1String("inputFile"), include);
+                    foreignTypes.append(classDef);
+                }
             }
         }
     }

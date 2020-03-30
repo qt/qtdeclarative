@@ -47,6 +47,7 @@ private slots:
     void initTestCase();
     void qmltypesHasForeign();
     void qmltypesHasHppClassAndNoext();
+    void qmltypesHasFileNames();
 
 private:
     QByteArray qmltypesData;
