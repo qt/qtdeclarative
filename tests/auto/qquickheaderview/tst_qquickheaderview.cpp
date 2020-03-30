@@ -359,6 +359,9 @@ void tst_QQuickHeaderView::listModel()
     QScopedPointer<QObject> root(component.create());
     QVERIFY2(root, qPrintable(component.errorString()));
 
+    if (!QTest::qWaitForWindowActive(qobject_cast<QWindow *>(root.data())))
+        QSKIP("Window failed to become active!");
+
     auto hhv = root->findChild<QQuickHorizontalHeaderView *>("horizontalHeader");
     QVERIFY(hhv);
     auto vhv = root->findChild<QQuickVerticalHeaderView *>("verticalHeader");
