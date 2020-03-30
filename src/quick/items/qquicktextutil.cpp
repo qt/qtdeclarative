@@ -87,7 +87,7 @@ qreal QQuickTextUtil::alignedX(const qreal textWidth, const qreal itemWidth, int
         x = itemWidth - textWidth;
         break;
     case Qt::AlignHCenter:
-        x = (itemWidth - textWidth) / 2;
+        x = qRound(itemWidth / 2.0) - textWidth / 2.0;
         break;
     }
     return x;
