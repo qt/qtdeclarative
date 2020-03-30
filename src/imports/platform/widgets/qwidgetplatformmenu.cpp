@@ -37,9 +37,9 @@
 #include "qwidgetplatformmenu_p.h"
 #include "qwidgetplatformmenuitem_p.h"
 
+#include <QtGui/qaction.h>
 #include <QtGui/qwindow.h>
 #include <QtWidgets/qmenu.h>
-#include <QtWidgets/qaction.h>
 
 QT_BEGIN_NAMESPACE
 
