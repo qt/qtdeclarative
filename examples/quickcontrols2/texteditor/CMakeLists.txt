@@ -54,7 +54,7 @@ endif()
 
 if(CMAKE_CROSSCOMPILING)
     target_compile_definitions(texteditor PUBLIC
-        QT_EXTRA_FILE_SELECTOR=\\\"touch\\\"
+        QT_EXTRA_FILE_SELECTOR="touch" # special case
     )
 endif()
 
