@@ -208,7 +208,9 @@ void TypeDescriptionReader::readComponent(UiObjectDefinition *ast)
                               "not \"%1\".").arg(name));
         } else if (script) {
             QString name = toString(script->qualifiedId);
-            if (name == QLatin1String("name")) {
+            if (name == QLatin1String("file")) {
+                scope->setFileName(readStringBinding(script));
+            } else if (name == QLatin1String("name")) {
                 scope->setClassName(readStringBinding(script));
             } else if (name == QLatin1String("prototype")) {
                 scope->setSuperclassName(readStringBinding(script));

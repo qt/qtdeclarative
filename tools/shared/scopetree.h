@@ -124,6 +124,9 @@ public:
     void addEnum(const MetaEnum &fakeEnum) { m_enums.insert(fakeEnum.name(), fakeEnum); }
     QHash<QString, MetaEnum> enums() const { return m_enums; }
 
+    QString fileName() const { return m_fileName; }
+    void setFileName(const QString &file) { m_fileName = file; }
+
     QString className() const { return m_className; }
     void setClassName(const QString &name) { m_className = name; }
 
@@ -198,6 +201,7 @@ private:
     QVector<ScopeTree::Ptr> m_childScopes;
     ScopeTree *m_parentScope;
 
+    QString m_fileName;
     QString m_name;
     QString m_className;
     QString m_superName;
