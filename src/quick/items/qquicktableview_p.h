@@ -123,6 +123,10 @@ public:
     void setSyncDirection(Qt::Orientations direction);
 
     Q_INVOKABLE void forceLayout();
+    Q_INVOKABLE void positionViewAtCell(const QPoint &cell, Qt::Alignment alignment, const QPointF &offset = QPointF());
+    Q_INVOKABLE void positionViewAtCell(int column, int row, Qt::Alignment alignment, const QPointF &offset = QPointF());
+    Q_INVOKABLE void positionViewAtRow(int row, Qt::Alignment alignment, qreal offset = 0);
+    Q_INVOKABLE void positionViewAtColumn(int column, Qt::Alignment alignment, qreal offset = 0);
 
     static QQuickTableViewAttached *qmlAttachedProperties(QObject *);
 

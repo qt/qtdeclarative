@@ -350,6 +350,81 @@
 */
 
 /*!
+    \qmlmethod QtQuick::TableView::positionViewAtCell(point cell, Qt.Alignment alignment, point offset)
+
+    Positions \l contentX and \l contentY such that \a cell is at the position specified by
+    \a alignment. \a alignment can be an or-ed combination of the following:
+
+    \list
+    \li Qt.AlignLeft - position the cell at the left of the view.
+    \li Qt.AlignHCenter - position the cell at the horizontal center of the view.
+    \li Qt.AlignRight - position the cell at the right of the view.
+    \li Qt.AlignTop - position the cell at the top of the view.
+    \li Qt.AlignVCenter - position the cell at the vertical center of the view.
+    \li Qt.AlignBottom - position the cell at the bottom of the view.
+    \li Qt.AlignCenter - the same as (Qt.AlignHCenter | Qt.AlignVCenter)
+    \endlist
+
+    Optionally, you can specify \a offset to move \l contentX and \l contentY an extra number of
+    pixels beyond the target alignment. E.g if you want to position the view so
+    that cell [10, 10] ends up at the top-left corner with a 5px margin, you could do:
+
+    \code
+    positionViewAtCell(Qt.point(10, 10), Qt.AlignLeft | Qt.AlignTop, Qt.point(-5, -5))
+    \endcode
+*/
+
+/*!
+    \qmlmethod QtQuick::TableView::positionViewAtCell(int column, int row, Qt.Alignment alignment, point offset)
+
+    Convenience for calling \code positionViewAtCell(Qt.point(column, row), alignment, offset)
+*/
+
+/*!
+    \qmlmethod QtQuick::TableView::positionViewAtRow(int row, Qt.Alignment alignment, real offset)
+
+    Positions \l contentY such that \a row is at the position specified by
+    \a alignment. \a alignment can be one of the following:
+
+    \list
+    \li Qt.AlignTop - position the row at the top of the view.
+    \li Qt.AlignVCenter - position the cell at the vertical center of the view.
+    \li Qt.AlignCenter - the same as Qt.AlignVCenter.
+    \li Qt.AlignBottom - position the cell at the bottom of the view.
+    \endlist
+
+    Optionally, you can specify \a offset to move \l contentY an extra number of
+    pixels beyond the target alignment. E.g if you want to position the view so
+    that row 10 ends up at the bottom with a 5px margin, you could do:
+
+    \code
+    positionViewAtRow(10, Qt.AlignBottom, 5)
+    \endcode
+*/
+
+/*!
+    \qmlmethod QtQuick::TableView::positionViewAtColumn(int column, Qt.Alignment alignment, real offset)
+
+    Positions \l contentX such that \a column is at the position specified by
+    \a alignment. \a alignment can be one of the following:
+
+    \list
+    \li Qt.AlignLeft - position the column at the left of the view.
+    \li Qt.AlignHCenter - position the column at the horizontal center of the view.
+    \li Qt.AlignCenter - the same as Qt.AlignVCenter.
+    \li Qt.AlignRight - position the column at the right of the view.
+    \endlist
+
+    Optionally, you can specify \a offset to move \l contentX an extra number of
+    pixels to the side of the target alignment. E.g if you want to position the view so
+    that column 10 ends up at the left side with a 5px margin, you could do:
+
+    \code
+    positionViewAtColumn(10, Qt.AlignLeft, -5)
+    \endcode
+*/
+
+/*!
     \qmlattachedproperty TableView QtQuick::TableView::view
 
     This attached property holds the view that manages the delegate instance.
@@ -906,6 +981,18 @@ void QQuickTableViewPrivate::syncLoadedTableRectFromLoadedTable()
     loadedTableInnerRect = QRectF(topLeftRect.bottomRight(), bottomRightRect.topLeft());
 }
 
+void QQuickTableViewPrivate::shiftLoadedTableRect(const QPointF newPosition)
+{
+    // Move the tracked table rects to the new position. For this to
+    // take visual effect (move the delegate items to be inside the table
+    // rect), it needs to be followed by a relayoutTableItems().
+    // Also note that the position of the viewport needs to be adjusted
+    // separately for it to overlap the loaded table.
+    const QPointF innerDiff = loadedTableOuterRect.topLeft() - loadedTableInnerRect.topLeft();
+    loadedTableOuterRect.moveTopLeft(newPosition);
+    loadedTableInnerRect.moveTopLeft(newPosition + innerDiff);
+}
+
 QQuickTableViewPrivate::RebuildOptions QQuickTableViewPrivate::checkForVisibilityChanges()
 {
     // Go through all columns from first to last, find the columns that used
@@ -1291,6 +1378,20 @@ qreal QQuickTableViewPrivate::getColumnLayoutWidth(int column)
     return columnWidth;
 }
 
+qreal QQuickTableViewPrivate::getEffectiveRowHeight(int row) const
+{
+    // Return row height after layout
+    Q_TABLEVIEW_ASSERT(loadedRows.contains(row), row);
+    return loadedTableItem(QPoint(leftColumn(), row))->geometry().height();
+}
+
+qreal QQuickTableViewPrivate::getEffectiveColumnWidth(int column) const
+{
+    // Return column width after layout
+    Q_TABLEVIEW_ASSERT(loadedColumns.contains(column), column);
+    return loadedTableItem(QPoint(column, topRow()))->geometry().width();
+}
+
 qreal QQuickTableViewPrivate::getRowLayoutHeight(int row)
 {
     // Return the row height specified by the application, or go
@@ -1611,7 +1712,9 @@ void QQuickTableViewPrivate::processLoadRequest()
 
     loadRequest.markAsDone();
 
-    qCDebug(lcTableViewDelegateLifecycle()) << "request completed! Table:" << tableLayoutToString();
+    qCDebug(lcTableViewDelegateLifecycle()) << "current table:" << tableLayoutToString();
+    qCDebug(lcTableViewDelegateLifecycle()) << "Load request completed!";
+    qCDebug(lcTableViewDelegateLifecycle()) << "****************************************";
 }
 
 void QQuickTableViewPrivate::processRebuildTable()
@@ -1635,7 +1738,7 @@ void QQuickTableViewPrivate::processRebuildTable()
     moveToNextRebuildState();
 
     if (rebuildState == RebuildState::LoadInitalTable) {
-        beginRebuildTable();
+        loadInitialTable();
         if (!moveToNextRebuildState())
             return;
     }
@@ -1688,7 +1791,10 @@ void QQuickTableViewPrivate::processRebuildTable()
     }
 
     Q_TABLEVIEW_ASSERT(rebuildState == RebuildState::Done, int(rebuildState));
-    qCDebug(lcTableViewDelegateLifecycle()) << "rebuild complete:" << q;
+    qCDebug(lcTableViewDelegateLifecycle()) << "current table:" << tableLayoutToString();
+    qCDebug(lcTableViewDelegateLifecycle()) << "rebuild completed!";
+    qCDebug(lcTableViewDelegateLifecycle()) << "################################################";
+    qCDebug(lcTableViewDelegateLifecycle());
 }
 
 bool QQuickTableViewPrivate::moveToNextRebuildState()
@@ -1781,10 +1887,16 @@ void QQuickTableViewPrivate::calculateTopLeft(QPoint &topLeftCell, QPointF &topL
             const int newColumn = int(viewportRect.x() / (averageEdgeSize.width() + cellSpacing.width()));
             topLeftCell.rx() = qBound(0, newColumn, tableSize.width() - 1);
             topLeftPos.rx() = topLeftCell.x() * (averageEdgeSize.width() + cellSpacing.width());
+        } else if (rebuildOptions & RebuildOption::PositionViewAtColumn) {
+            topLeftCell.rx() = qBound(0, positionViewAtColumn, tableSize.width() - 1);
+            topLeftPos.rx() = qFloor(topLeftCell.x()) * (averageEdgeSize.width() + cellSpacing.width());
         } else {
             // Keep the current top left, unless it's outside model
             topLeftCell.rx() = qBound(0, leftColumn(), tableSize.width() - 1);
-            topLeftPos.rx() = loadedTableOuterRect.topLeft().x();
+            // We begin by loading the columns where the viewport is at
+            // now. But will move the whole table and the viewport
+            // later, when we do a layoutAfterLoadingInitialTable().
+            topLeftPos.rx() = loadedTableOuterRect.x();
         }
     }
 
@@ -1801,21 +1913,25 @@ void QQuickTableViewPrivate::calculateTopLeft(QPoint &topLeftCell, QPointF &topL
             const int newRow = int(viewportRect.y() / (averageEdgeSize.height() + cellSpacing.height()));
             topLeftCell.ry() = qBound(0, newRow, tableSize.height() - 1);
             topLeftPos.ry() = topLeftCell.y() * (averageEdgeSize.height() + cellSpacing.height());
+        } else if (rebuildOptions & RebuildOption::PositionViewAtRow) {
+            topLeftCell.ry() = qBound(0, positionViewAtRow, tableSize.height() - 1);
+            topLeftPos.ry() = qFloor(topLeftCell.y()) * (averageEdgeSize.height() + cellSpacing.height());
         } else {
-            // Keep the current top left, unless it's outside model
             topLeftCell.ry() = qBound(0, topRow(), tableSize.height() - 1);
-            topLeftPos.ry() = loadedTableOuterRect.topLeft().y();
+            topLeftPos.ry() = loadedTableOuterRect.y();
         }
     }
 }
 
-void QQuickTableViewPrivate::beginRebuildTable()
+void QQuickTableViewPrivate::loadInitialTable()
 {
     updateTableSize();
 
     QPoint topLeft;
     QPointF topLeftPos;
     calculateTopLeft(topLeft, topLeftPos);
+    qCDebug(lcTableViewDelegateLifecycle()) << "initial viewport rect:" << viewportRect;
+    qCDebug(lcTableViewDelegateLifecycle()) << "initial top left cell:" << topLeft << ", pos:" << topLeftPos;
 
     if (!loadedItems.isEmpty()) {
         if (rebuildOptions & RebuildOption::All)
@@ -1838,15 +1954,17 @@ void QQuickTableViewPrivate::beginRebuildTable()
     loadedTableInnerRect = QRect();
     clearEdgeSizeCache();
 
-    if (syncHorizontally) {
+    if (syncHorizontally)
         setLocalViewportX(syncView->contentX());
-        viewportRect.moveLeft(syncView->d_func()->viewportRect.left());
-    }
 
-    if (syncVertically) {
+    if (syncVertically)
         setLocalViewportY(syncView->contentY());
-        viewportRect.moveTop(syncView->d_func()->viewportRect.top());
-    }
+
+    if (!syncHorizontally && rebuildOptions & RebuildOption::PositionViewAtColumn)
+        setLocalViewportX(topLeftPos.x());
+
+    if (!syncVertically && rebuildOptions & RebuildOption::PositionViewAtRow)
+        setLocalViewportY(topLeftPos.y());
 
     if (!model) {
         qCDebug(lcTableViewDelegateLifecycle()) << "no model found, leaving table empty";
@@ -1904,6 +2022,74 @@ void QQuickTableViewPrivate::layoutAfterLoadingInitialTable()
     }
 
     updateExtents();
+    adjustViewportXAccordingToAlignment();
+    adjustViewportYAccordingToAlignment();
+}
+
+void QQuickTableViewPrivate::adjustViewportXAccordingToAlignment()
+{
+    // Check if we are supposed to position the viewport at a certain column
+    if (!rebuildOptions.testFlag(RebuildOption::PositionViewAtColumn))
+        return;
+    // The requested column might have been hidden or is outside model bounds
+    if (positionViewAtColumn != leftColumn())
+        return;
+
+    const float columnWidth = getEffectiveColumnWidth(positionViewAtColumn);
+
+    switch (positionViewAtColumnAlignment) {
+    case Qt::AlignLeft:
+        setLocalViewportX(loadedTableOuterRect.left() + positionViewAtColumnOffset);
+        break;
+    case Qt::AlignHCenter:
+        setLocalViewportX(loadedTableOuterRect.left()
+                          - (viewportRect.width() / 2)
+                          + (columnWidth / 2)
+                          + positionViewAtColumnOffset);
+        break;
+    case Qt::AlignRight:
+        setLocalViewportX(loadedTableOuterRect.left()
+                          - viewportRect.width()
+                          + columnWidth
+                          + positionViewAtColumnOffset);
+        break;
+    default:
+        Q_TABLEVIEW_UNREACHABLE("options are checked in setter");
+        break;
+    }
+}
+
+void QQuickTableViewPrivate::adjustViewportYAccordingToAlignment()
+{
+    // Check if we are supposed to position the viewport at a certain row
+    if (!rebuildOptions.testFlag(RebuildOption::PositionViewAtRow))
+        return;
+    // The requested row might have been hidden or is outside model bounds
+    if (positionViewAtRow != topRow())
+        return;
+
+    const float rowHeight = getEffectiveRowHeight(positionViewAtRow);
+
+    switch (positionViewAtRowAlignment) {
+    case Qt::AlignTop:
+        setLocalViewportY(loadedTableOuterRect.top() + positionViewAtRowOffset);
+        break;
+    case Qt::AlignVCenter:
+        setLocalViewportY(loadedTableOuterRect.top()
+                          - (viewportRect.height() / 2)
+                          + (rowHeight / 2)
+                          + positionViewAtRowOffset);
+        break;
+    case Qt::AlignBottom:
+        setLocalViewportY(loadedTableOuterRect.top()
+                          - viewportRect.height()
+                          + rowHeight
+                          + positionViewAtRowOffset);
+        break;
+    default:
+        Q_TABLEVIEW_UNREACHABLE("options are checked in setter");
+        break;
+    }
 }
 
 void QQuickTableViewPrivate::unloadEdge(Qt::Edge edge)
@@ -2077,7 +2263,12 @@ bool QQuickTableViewPrivate::updateTableRecursive()
     const auto children = syncChildren;
     for (auto syncChild : children) {
         auto syncChild_d = syncChild->d_func();
-        syncChild_d->scheduledRebuildOptions |= rebuildOptions;
+        const int mask =
+                RebuildOption::PositionViewAtRow |
+                RebuildOption::PositionViewAtColumn |
+                RebuildOption::CalculateNewTopLeftRow |
+                RebuildOption::CalculateNewTopLeftColumn;
+        syncChild_d->scheduledRebuildOptions |= rebuildOptions & ~mask;
 
         const bool descendantUpdateComplete = syncChild_d->updateTableRecursive();
         if (!descendantUpdateComplete)
@@ -2230,6 +2421,7 @@ void QQuickTableViewPrivate::syncWithPendingChanges()
     syncModel();
     syncDelegate();
     syncSyncView();
+    syncPositionView();
 
     syncRebuildOptions();
 }
@@ -2253,6 +2445,12 @@ void QQuickTableViewPrivate::syncRebuildOptions()
     } else if (rebuildOptions.testFlag(RebuildOption::ViewportOnly)) {
         rebuildOptions.setFlag(RebuildOption::LayoutOnly, false);
     }
+
+    if (rebuildOptions.testFlag(RebuildOption::PositionViewAtRow))
+        rebuildOptions.setFlag(RebuildOption::CalculateNewTopLeftRow, false);
+
+    if (rebuildOptions.testFlag(RebuildOption::PositionViewAtColumn))
+        rebuildOptions.setFlag(RebuildOption::CalculateNewTopLeftColumn, false);
 }
 
 void QQuickTableViewPrivate::syncDelegate()
@@ -2367,6 +2565,16 @@ void QQuickTableViewPrivate::syncSyncView()
                 scheduledRebuildOptions |= QQuickTableViewPrivate::RebuildOption::ViewportOnly;
         }
     }
+}
+
+void QQuickTableViewPrivate::syncPositionView()
+{
+    // Only positionViewAtRow/positionViewAtColumn are critical
+    // to sync before a rebuild to avoid them being overwritten
+    // by the setters while building. The other position properties
+    // can change without it causing trouble.
+    positionViewAtRow = assignedPositionViewAtRow;
+    positionViewAtColumn = assignedPositionViewAtColumn;
 }
 
 void QQuickTableViewPrivate::connectToModel()
@@ -2538,6 +2746,10 @@ void QQuickTableViewPrivate::setLocalViewportX(qreal contentX)
         return;
 
     q->setContentX(contentX);
+
+    // Keep our own viewportRect in sync
+    viewportRect.moveLeft(contentX);
+    qCDebug(lcTableViewDelegateLifecycle) << "viewportRect adjusted to:" << viewportRect;
 }
 
 void QQuickTableViewPrivate::setLocalViewportY(qreal contentY)
@@ -2552,6 +2764,10 @@ void QQuickTableViewPrivate::setLocalViewportY(qreal contentY)
         return;
 
     q->setContentY(contentY);
+
+    // Keep our own viewportRect in sync
+    viewportRect.moveTop(contentY);
+    qCDebug(lcTableViewDelegateLifecycle) << "viewportRect adjusted to:" << viewportRect;
 }
 
 void QQuickTableViewPrivate::syncViewportPosRecursive()
@@ -2827,6 +3043,83 @@ void QQuickTableView::setSyncDirection(Qt::Orientations direction)
         d->scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::ViewportOnly);
 
     emit syncDirectionChanged();
+}
+
+void QQuickTableView::positionViewAtCell(const QPoint &cell, Qt::Alignment alignment, const QPointF &offset)
+{
+    positionViewAtRow(cell.y(), alignment & Qt::AlignVertical_Mask, offset.y());
+    positionViewAtColumn(cell.x(), alignment & Qt::AlignHorizontal_Mask, offset.x());
+}
+
+void QQuickTableView::positionViewAtCell(int column, int row, Qt::Alignment alignment, const QPointF &offset)
+{
+    positionViewAtCell(QPoint(column, row), alignment, offset);
+}
+
+void QQuickTableView::positionViewAtRow(int row, Qt::Alignment alignment, qreal offset)
+{
+    Q_D(QQuickTableView);
+
+    if (d->syncVertically) {
+        d->syncView->positionViewAtRow(row, alignment, offset);
+        return;
+    }
+
+    // Clean up flags, in case it has
+    // Qt::AlignCenter set (which we allow)
+    Qt::Alignment adjustedAlignment = alignment;
+    adjustedAlignment.setFlag(Qt::AlignHCenter, false);
+    if (!int(adjustedAlignment))
+        adjustedAlignment.setFlag(Qt::AlignTop);
+
+    switch (adjustedAlignment) {
+    case Qt::AlignTop:
+    case Qt::AlignVCenter:
+    case Qt::AlignBottom:
+        break;
+    default:
+        qmlWarning(this) << "Unsupported alignment. Use AlignTop, AlignVCenter, or AlignBottom";
+        return;
+    }
+
+    d->assignedPositionViewAtRow = row;
+    d->positionViewAtRowAlignment = adjustedAlignment;
+    d->positionViewAtRowOffset = offset;
+    d->scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::ViewportOnly |
+                            QQuickTableViewPrivate::RebuildOption::PositionViewAtRow);
+}
+
+void QQuickTableView::positionViewAtColumn(int column, Qt::Alignment alignment, qreal offset)
+{
+    Q_D(QQuickTableView);
+
+    if (d->syncHorizontally) {
+        d->syncView->positionViewAtColumn(column, alignment, offset);
+        return;
+    }
+
+    // Clean up flags, in case it has
+    // Qt::AlignCenter set (which we allow)
+    Qt::Alignment adjustedAlignment = alignment;
+    adjustedAlignment.setFlag(Qt::AlignVCenter, false);
+    if (!int(adjustedAlignment))
+        adjustedAlignment.setFlag(Qt::AlignLeft);
+
+    switch (adjustedAlignment) {
+    case Qt::AlignLeft:
+    case Qt::AlignHCenter:
+    case Qt::AlignRight:
+        break;
+    default:
+        qmlWarning(this) << "Unsupported alignment. Use AlignLeft, AlignHCenter, or AlignRight";
+        return;
+    }
+
+    d->assignedPositionViewAtColumn = column;
+    d->positionViewAtColumnAlignment = adjustedAlignment;
+    d->positionViewAtColumnOffset = offset;
+    d->scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::ViewportOnly |
+                            QQuickTableViewPrivate::RebuildOption::PositionViewAtColumn);
 }
 
 void QQuickTableView::forceLayout()

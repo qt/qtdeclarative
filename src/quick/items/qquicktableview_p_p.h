@@ -208,11 +208,13 @@ public:
 
     enum class RebuildOption {
         None = 0,
-        LayoutOnly = 0x1,
-        ViewportOnly = 0x2,
-        CalculateNewTopLeftRow = 0x4,
-        CalculateNewTopLeftColumn = 0x8,
-        All = 0x10,
+        All = 0x1,
+        LayoutOnly = 0x2,
+        ViewportOnly = 0x4,
+        CalculateNewTopLeftRow = 0x8,
+        CalculateNewTopLeftColumn = 0x10,
+        PositionViewAtRow = 0x20,
+        PositionViewAtColumn = 0x40,
     };
     Q_DECLARE_FLAGS(RebuildOptions, RebuildOption)
 
@@ -310,6 +312,15 @@ public:
     QList<QPointer<QQuickTableView> > syncChildren;
     Qt::Orientations assignedSyncDirection = Qt::Horizontal | Qt::Vertical;
 
+    int assignedPositionViewAtRow = 0;
+    int assignedPositionViewAtColumn = 0;
+    int positionViewAtRow = 0;
+    int positionViewAtColumn = 0;
+    qreal positionViewAtRowOffset = 0;
+    qreal positionViewAtColumnOffset = 0;
+    Qt::Alignment positionViewAtRowAlignment = Qt::AlignTop;
+    Qt::Alignment positionViewAtColumnAlignment = Qt::AlignLeft;
+
     const static QPoint kLeft;
     const static QPoint kRight;
     const static QPoint kUp;
@@ -337,6 +348,8 @@ public:
     qreal getRowLayoutHeight(int row);
     qreal getColumnWidth(int column);
     qreal getRowHeight(int row);
+    qreal getEffectiveRowHeight(int row) const;
+    qreal getEffectiveColumnWidth(int column) const;
 
     inline int topRow() const { return loadedRows.cbegin().key(); }
     inline int bottomRow() const { return (--loadedRows.cend()).key(); }
@@ -363,6 +376,7 @@ public:
     void updateExtents();
     void syncLoadedTableRectFromLoadedTable();
     void syncLoadedTableFromLoadRequest();
+    void shiftLoadedTableRect(const QPointF newPosition);
 
     int nextVisibleEdgeIndex(Qt::Edge edge, int startIndex);
     int nextVisibleEdgeIndexAroundLoadedTable(Qt::Edge edge);
@@ -394,8 +408,11 @@ public:
     void processRebuildTable();
     bool moveToNextRebuildState();
     void calculateTopLeft(QPoint &topLeft, QPointF &topLeftPos);
-    void beginRebuildTable();
+    void loadInitialTable();
+
     void layoutAfterLoadingInitialTable();
+    void adjustViewportXAccordingToAlignment();
+    void adjustViewportYAccordingToAlignment();
 
     void scheduleRebuildTable(QQuickTableViewPrivate::RebuildOptions options);
 
@@ -413,8 +430,9 @@ public:
     virtual QVariant modelImpl() const;
     virtual void setModelImpl(const QVariant &newModel);
     virtual void syncModel();
-    inline void syncRebuildOptions();
     virtual void syncSyncView();
+    virtual void syncPositionView();
+    inline void syncRebuildOptions();
 
     void connectToModel();
     void disconnectFromModel();
@@ -458,6 +476,8 @@ public:
 
     QPoint cell;
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickTableViewPrivate::RebuildOptions)
 
 QT_END_NAMESPACE
 
