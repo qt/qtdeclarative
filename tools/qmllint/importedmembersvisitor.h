@@ -51,7 +51,7 @@ public:
         m_colorOut(colorOut)
     {}
 
-    ScopeTree *result(const QString &scopeName) const;
+    ScopeTree::Ptr result(const QString &scopeName) const;
 
 private:
     bool visit(QQmlJS::AST::UiObjectDefinition *) override;

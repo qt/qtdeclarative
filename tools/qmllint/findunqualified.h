@@ -63,14 +63,14 @@ private:
         QStringList dependencies;
     };
 
-    QScopedPointer<ScopeTree> m_rootScope;
-    ScopeTree *m_currentScope;
+    ScopeTree::Ptr m_rootScope;
+    ScopeTree::Ptr m_currentScope;
     QQmlJS::AST::ExpressionNode *m_fieldMemberBase = nullptr;
     QHash<QString, ScopeTree::ConstPtr> m_types;
     QHash<QString, ScopeTree::ConstPtr> m_exportedName2Scope;
     QStringList m_qmltypeDirs;
     QString m_code;
-    QHash<QString, const ScopeTree *> m_qmlid2scope;
+    QHash<QString, ScopeTree::ConstPtr> m_qmlid2scope;
     QString m_rootId;
     QString m_filePath;
     QSet<QPair<QString, QString>> m_alreadySeenImports;
@@ -81,7 +81,7 @@ private:
     struct OutstandingConnection
     {
         QString targetName;
-        ScopeTree *scope;
+        ScopeTree::Ptr scope;
         QQmlJS::AST::UiObjectDefinition *uiod;
     };
 
@@ -96,13 +96,13 @@ private:
     Import readQmldir(const QString &dirname);
     void processImport(const QString &prefix, const Import &import);
 
-    ScopeTree *localFile2ScopeTree(const QString &filePath);
+    ScopeTree::Ptr localFile2ScopeTree(const QString &filePath);
 
     void importFileOrDirectory(const QString &directory, const QString &prefix);
     void importExportedNames(const QStringRef &prefix, QString name);
 
     void parseHeaders(QQmlJS::AST::UiHeaderItemList *headers);
-    ScopeTree *parseProgram(QQmlJS::AST::Program *program, const QString &name);
+    ScopeTree::Ptr parseProgram(QQmlJS::AST::Program *program, const QString &name);
 
     void throwRecursionDepthError() override;
 

@@ -33,17 +33,20 @@
 
 #include <algorithm>
 
-ScopeTree::ScopeTree(ScopeType type, QString name, ScopeTree *parentScope)
-    : m_parentScope(parentScope), m_name(std::move(name)), m_scopeType(type) {}
+ScopeTree::ScopeTree(ScopeType type, const QString &name, const ScopeTree::Ptr &parentScope)
+    : m_parentScope(parentScope), m_name(name), m_scopeType(type) {}
 
-ScopeTree::Ptr ScopeTree::createNewChildScope(ScopeType type, const QString &name)
+ScopeTree::Ptr ScopeTree::create(ScopeType type, const QString &name,
+                                 const ScopeTree::Ptr &parentScope)
 {
-    Q_ASSERT(type != ScopeType::QMLScope
-            || !m_parentScope
-            || m_parentScope->m_scopeType == ScopeType::QMLScope
-            || m_parentScope->m_name == QLatin1String("global"));
-    auto childScope = ScopeTree::Ptr(new ScopeTree{type, name, this});
-    m_childScopes.push_back(childScope);
+    ScopeTree::Ptr childScope(new ScopeTree{type, name, parentScope});
+    if (parentScope) {
+        Q_ASSERT(type != ScopeType::QMLScope
+                || !parentScope->m_parentScope
+                || parentScope->parentScope()->m_scopeType == ScopeType::QMLScope
+                || parentScope->parentScope()->m_name == QLatin1String("global"));
+        parentScope->m_childScopes.push_back(childScope);
+    }
     return childScope;
 }
 
@@ -51,13 +54,13 @@ void ScopeTree::insertJSIdentifier(const QString &id, ScopeType scope)
 {
     Q_ASSERT(m_scopeType != ScopeType::QMLScope);
     Q_ASSERT(scope != ScopeType::QMLScope);
-    if (scope == ScopeType::JSFunctionScope) {
-        auto targetScope = this;
-        while (targetScope->scopeType() != ScopeType::JSFunctionScope)
-            targetScope = targetScope->m_parentScope;
-        targetScope->m_jsIdentifiers.insert(id);
-    } else {
+    if (scope != ScopeType::JSFunctionScope || m_scopeType == ScopeType::JSFunctionScope) {
         m_jsIdentifiers.insert(id);
+    } else {
+        auto targetScope = parentScope();
+        while (targetScope->m_scopeType != ScopeType::JSFunctionScope)
+            targetScope = targetScope->parentScope();
+        targetScope->m_jsIdentifiers.insert(id);
     }
 }
 
@@ -101,13 +104,22 @@ void ScopeTree::accessMember(const QString &name, const QString &parentType,
 
 bool ScopeTree::isVisualRootScope() const
 {
-    return m_parentScope && m_parentScope->m_parentScope
-            && m_parentScope->m_parentScope->m_parentScope == nullptr;
+    if (!m_parentScope)
+        return false;
+
+    const auto grandParent = parentScope()->m_parentScope.toStrongRef();
+    if (!grandParent)
+        return false;
+
+    return grandParent->m_parentScope == nullptr;
 }
 
 bool ScopeTree::isIdInCurrentQMlScopes(const QString &id) const
 {
-    const auto *qmlScope = currentQMLScope();
+    if (m_scopeType == ScopeType::QMLScope)
+        return m_properties.contains(id) || m_methods.contains(id) || m_enums.contains(id);
+
+    const auto qmlScope = findCurrentQMLScope(parentScope());
     return qmlScope->m_properties.contains(id)
             || qmlScope->m_methods.contains(id)
             || qmlScope->m_enums.contains(id);
@@ -115,25 +127,29 @@ bool ScopeTree::isIdInCurrentQMlScopes(const QString &id) const
 
 bool ScopeTree::isIdInCurrentJSScopes(const QString &id) const
 {
-    auto jsScope = this;
-    while (jsScope) {
+    if (m_scopeType != ScopeType::QMLScope && m_jsIdentifiers.contains(id))
+        return true;
+
+    for (auto jsScope = parentScope(); jsScope; jsScope = jsScope->parentScope()) {
         if (jsScope->m_scopeType != ScopeType::QMLScope && jsScope->m_jsIdentifiers.contains(id))
             return true;
-        jsScope = jsScope->m_parentScope;
     }
+
     return false;
 }
 
 bool ScopeTree::isIdInjectedFromSignal(const QString &id) const
 {
-    return currentQMLScope()->m_injectedSignalIdentifiers.contains(id);
+    if (m_scopeType == ScopeType::QMLScope)
+        return m_injectedSignalIdentifiers.contains(id);
+    return findCurrentQMLScope(parentScope())->m_injectedSignalIdentifiers.contains(id);
 }
 
-const ScopeTree *ScopeTree::currentQMLScope() const
+ScopeTree::ConstPtr ScopeTree::findCurrentQMLScope(const ScopeTree::ConstPtr &scope)
 {
-    auto qmlScope = this;
+    auto qmlScope = scope;
     while (qmlScope && qmlScope->m_scopeType != ScopeType::QMLScope)
-        qmlScope = qmlScope->m_parentScope;
+        qmlScope = qmlScope->parentScope();
     return qmlScope;
 }
 
@@ -148,7 +164,7 @@ void ScopeTree::setExportMetaObjectRevision(int exportIndex, int metaObjectRevis
     m_exports[exportIndex].setMetaObjectRevision(metaObjectRevision);
 }
 
-void ScopeTree::updateParentProperty(const ScopeTree *scope)
+void ScopeTree::updateParentProperty(const ScopeTree::ConstPtr &scope)
 {
     auto it = m_properties.find(QLatin1String("parent"));
     if (it != m_properties.end()

@@ -31,9 +31,9 @@
 
 using namespace QQmlJS::AST;
 
-ScopeTree *ImportedMembersVisitor::result(const QString &scopeName) const
+ScopeTree::Ptr ImportedMembersVisitor::result(const QString &scopeName) const
 {
-    ScopeTree *result = new ScopeTree(ScopeType::QMLScope);
+    ScopeTree::Ptr result = ScopeTree::create();
     result->setClassName(scopeName);
     result->setSuperclassName(m_rootObject->superclassName());
     const auto properties = m_rootObject->properties();
@@ -41,7 +41,7 @@ ScopeTree *ImportedMembersVisitor::result(const QString &scopeName) const
         if (property.isAlias()) {
             const auto it = m_objects.find(property.typeName());
             if (it != m_objects.end())
-                property.setType(it->get());
+                property.setType(*it);
             result->addProperty(property);
         } else {
             result->addProperty(property);
@@ -56,7 +56,7 @@ ScopeTree *ImportedMembersVisitor::result(const QString &scopeName) const
 
 bool ImportedMembersVisitor::visit(UiObjectDefinition *definition)
 {
-    ScopeTree::Ptr scope(new ScopeTree(ScopeType::QMLScope));
+    ScopeTree::Ptr scope = ScopeTree::create();
     QString superType;
     for (auto segment = definition->qualifiedTypeNameId; segment; segment = segment->next) {
         if (!superType.isEmpty())

@@ -41,6 +41,7 @@
 
 #include <QtCore/qstring.h>
 #include <QtCore/qstringlist.h>
+#include <QtCore/qsharedpointer.h>
 
 class MetaEnum
 {
@@ -119,7 +120,7 @@ class MetaProperty
 {
     QString m_propertyName;
     QString m_typeName;
-    const ScopeTree *m_type = nullptr;
+    QWeakPointer<const ScopeTree> m_type;
     bool m_isList;
     bool m_isWritable;
     bool m_isPointer;
@@ -142,8 +143,8 @@ public:
     QString propertyName() const { return m_propertyName; }
     QString typeName() const { return m_typeName; }
 
-    void setType(const ScopeTree *type) { m_type = type; }
-    const ScopeTree *type() const { return m_type; }
+    void setType(const QSharedPointer<const ScopeTree> &type) { m_type = type; }
+    QSharedPointer<const ScopeTree> type() const { return m_type.toStrongRef(); }
 
     bool isList() const { return m_isList; }
     bool isWritable() const { return m_isWritable; }

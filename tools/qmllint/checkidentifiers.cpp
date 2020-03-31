@@ -83,14 +83,15 @@ void CheckIdentifiers::printContext(const QQmlJS::SourceLocation &location) cons
 }
 
 bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &members,
-                                         const ScopeTree *scope) const
+                                         const ScopeTree::ConstPtr &outerScope) const
 {
     QStringList expectedNext;
     QString detectedRestrictiveName;
     QString detectedRestrictiveKind;
 
+    ScopeTree::ConstPtr scope = outerScope;
     for (const ScopeTree::FieldMember &access : members) {
-        if (scope == nullptr) {
+        if (scope.isNull()) {
             writeWarning(m_colorOut);
             m_colorOut->write(
                         QString::fromLatin1("Type \"%1\" of base \"%2\" not found when accessing member \"%3\" at %4:%5.\n")
@@ -142,7 +143,7 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
                 continue;
             }
 
-            if (const ScopeTree *type = scopeIt->type()) {
+            if (const ScopeTree::ConstPtr type = scopeIt->type()) {
                 if (access.m_parentType.isEmpty()) {
                     scope = type;
                     continue;
@@ -158,7 +159,7 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
                 detectedRestrictiveName = access.m_name;
                 scope = nullptr;
             } else {
-                scope = it->get();
+                scope = *it;
             }
             continue;
         }
@@ -189,10 +190,10 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
             const auto typeProperties = type->properties();
             const auto typeIt = typeProperties.find(access.m_name);
             if (typeIt != typeProperties.end()) {
-                const ScopeTree *propType = access.m_parentType.isEmpty()
+                const ScopeTree::ConstPtr propType = access.m_parentType.isEmpty()
                         ? typeIt->type()
-                        : m_types.value(access.m_parentType).get();
-                scope = propType ? propType : m_types.value(typeIt->typeName()).get();
+                        : m_types.value(access.m_parentType);
+                scope = propType ? propType : m_types.value(typeIt->typeName());
                 typeFound = true;
                 break;
             }
@@ -217,7 +218,7 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
             if (it != m_types.end() && !(*it)->attachedTypeName().isEmpty()) {
                 const auto attached = m_types.find((*it)->attachedTypeName());
                 if (attached != m_types.end()) {
-                    scope = attached->get();
+                    scope = *attached;
                     continue;
                 }
             }
@@ -237,16 +238,16 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
     return true;
 }
 
-bool CheckIdentifiers::operator()(const QHash<QString, const ScopeTree *> &qmlIDs,
-                                  const ScopeTree *root, const QString &rootId) const
+bool CheckIdentifiers::operator()(const QHash<QString, ScopeTree::ConstPtr> &qmlIDs,
+                                  const ScopeTree::ConstPtr &root, const QString &rootId) const
 {
     bool noUnqualifiedIdentifier = true;
 
     // revisit all scopes
-    QQueue<const ScopeTree *> workQueue;
+    QQueue<ScopeTree::ConstPtr> workQueue;
     workQueue.enqueue(root);
     while (!workQueue.empty()) {
-        const ScopeTree *currentScope = workQueue.dequeue();
+        const ScopeTree::ConstPtr currentScope = workQueue.dequeue();
         const auto unmatchedSignalHandlers = currentScope->unmatchedSignalHandlers();
         for (const auto &handler : unmatchedSignalHandlers) {
             writeWarning(m_colorOut);
@@ -281,7 +282,7 @@ bool CheckIdentifiers::operator()(const QHash<QString, const ScopeTree *> &qmlID
                         const auto typeIt = m_types.find(qualified);
                         if (typeIt != m_types.end()) {
                             memberAccessChain.takeFirst();
-                            if (!checkMemberAccess(memberAccessChain, typeIt->get()))
+                            if (!checkMemberAccess(memberAccessChain, *typeIt))
                                 noUnqualifiedIdentifier = false;
                             continue;
                         }
@@ -289,7 +290,7 @@ bool CheckIdentifiers::operator()(const QHash<QString, const ScopeTree *> &qmlID
                 }
             }
 
-            auto qmlScope = currentScope->currentQMLScope();
+            auto qmlScope = ScopeTree::findCurrentQMLScope(currentScope);
             if (qmlScope->methods().contains(memberAccessBase.m_name)) {
                 // a property of a JavaScript function
                 continue;
@@ -323,7 +324,7 @@ bool CheckIdentifiers::operator()(const QHash<QString, const ScopeTree *> &qmlID
 
             const auto typeIt = m_types.find(memberAccessBase.m_name);
             if (typeIt != m_types.end()) {
-                if (!checkMemberAccess(memberAccessChain, typeIt->get()))
+                if (!checkMemberAccess(memberAccessChain, *typeIt))
                     noUnqualifiedIdentifier = false;
                 continue;
             }
@@ -355,8 +356,8 @@ bool CheckIdentifiers::operator()(const QHash<QString, const ScopeTree *> &qmlID
                 m_colorOut->write(issueLocationWithContext.issueText().toString(), Normal);
                 m_colorOut->write(issueLocationWithContext.afterText() + QLatin1Char('\n'), Normal);
             } else if (currentScope->isIdInjectedFromSignal(memberAccessBase.m_name)) {
-                auto methodUsages = currentScope->currentQMLScope()->injectedSignalIdentifiers()
-                        .values(memberAccessBase.m_name);
+                auto methodUsages = ScopeTree::findCurrentQMLScope(currentScope)
+                        ->injectedSignalIdentifiers().values(memberAccessBase.m_name);
                 auto location = memberAccessBase.m_location;
                 // sort the list of signal handlers by their occurrence in the source code
                 // then, we select the first one whose location is after the unqualified id
@@ -402,7 +403,7 @@ bool CheckIdentifiers::operator()(const QHash<QString, const ScopeTree *> &qmlID
         }
         const auto childScopes = currentScope->childScopes();
         for (auto const &childScope : childScopes)
-            workQueue.enqueue(childScope.get());
+            workQueue.enqueue(childScope);
     }
     return noUnqualifiedIdentifier;
 }

@@ -188,7 +188,7 @@ void TypeDescriptionReader::readDependencies(UiScriptBinding *ast)
 
 void TypeDescriptionReader::readComponent(UiObjectDefinition *ast)
 {
-    ScopeTree::Ptr scope(new ScopeTree(ScopeType::QMLScope));
+    ScopeTree::Ptr scope = ScopeTree::create();
 
     for (UiObjectMemberList *it = ast->initializer->members; it; it = it->next) {
         UiObjectMember *member = it->member;

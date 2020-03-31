@@ -41,12 +41,12 @@ public:
         m_colorOut(colorOut), m_code(code), m_types(types)
     {}
 
-    bool operator ()(const QHash<QString, const ScopeTree *> &qmlIDs,
-                     const ScopeTree *root, const QString &rootId) const;
+    bool operator ()(const QHash<QString, ScopeTree::ConstPtr> &qmlIDs,
+                     const ScopeTree::ConstPtr &root, const QString &rootId) const;
 
 private:
     bool checkMemberAccess(const QVector<ScopeTree::FieldMember> &members,
-                           const ScopeTree *scope) const;
+                           const ScopeTree::ConstPtr &outerScope) const;
     void printContext(const QQmlJS::SourceLocation &location) const;
 
     ColorOutput *m_colorOut = nullptr;

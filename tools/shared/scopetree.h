@@ -67,7 +67,9 @@ class ScopeTree
     Q_DISABLE_COPY_MOVE(ScopeTree)
 public:
     using Ptr = QSharedPointer<ScopeTree>;
+    using WeakPtr = QWeakPointer<ScopeTree>;
     using ConstPtr = QSharedPointer<const ScopeTree>;
+    using WeakConstPtr = QWeakPointer<const ScopeTree>;
 
     class Export {
     public:
@@ -93,11 +95,11 @@ public:
         int m_metaObjectRevision = 0;
     };
 
-    ScopeTree(ScopeType type, QString name = QString(),
-              ScopeTree *parentScope = nullptr);
+    static ScopeTree::Ptr create(ScopeType type = ScopeType::QMLScope, const QString &name = QString(),
+                                 const ScopeTree::Ptr &parentScope = ScopeTree::Ptr());
+    static ScopeTree::ConstPtr findCurrentQMLScope(const ScopeTree::ConstPtr &scope);
 
-    ScopeTree::Ptr createNewChildScope(ScopeType type, const QString &name);
-    ScopeTree *parentScope() const { return m_parentScope; }
+    ScopeTree::Ptr parentScope() const { return m_parentScope.toStrongRef(); }
 
     void insertJSIdentifier(const QString &id, ScopeType scope);
     void insertSignalIdentifier(const QString &id, const MetaMethod &method,
@@ -139,7 +141,7 @@ public:
 
     void addProperty(const MetaProperty &prop) { m_properties.insert(prop.propertyName(), prop); }
     QHash<QString, MetaProperty> properties() const { return m_properties; }
-    void updateParentProperty(const ScopeTree *scope);
+    void updateParentProperty(const ScopeTree::ConstPtr &scope);
 
     QString defaultPropertyName() const { return m_defaultPropertyName; }
     void setDefaultPropertyName(const QString &name) { m_defaultPropertyName = name; }
@@ -174,7 +176,6 @@ public:
     bool isIdInCurrentQMlScopes(const QString &id) const;
     bool isIdInCurrentJSScopes(const QString &id) const;
     bool isIdInjectedFromSignal(const QString &id) const;
-    const ScopeTree *currentQMLScope() const;
 
     QVector<ScopeTree::Ptr> childScopes() const
     {
@@ -187,6 +188,8 @@ public:
     }
 
 private:
+    ScopeTree(ScopeType type, const QString &name = QString(),
+              const ScopeTree::Ptr &parentScope = ScopeTree::Ptr());
 
     QSet<QString> m_jsIdentifiers;
     QMultiHash<QString, MethodUsage> m_injectedSignalIdentifiers;
@@ -199,7 +202,7 @@ private:
     QVector<QPair<QString, QQmlJS::SourceLocation>> m_unmatchedSignalHandlers;
 
     QVector<ScopeTree::Ptr> m_childScopes;
-    ScopeTree *m_parentScope;
+    ScopeTree::WeakPtr m_parentScope;
 
     QString m_fileName;
     QString m_name;

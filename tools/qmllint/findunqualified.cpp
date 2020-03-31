@@ -67,7 +67,7 @@ static TypeDescriptionReader createQmltypesReaderForFile(const QString &filename
 
 void FindUnqualifiedIDVisitor::enterEnvironment(ScopeType type, const QString &name)
 {
-    m_currentScope = m_currentScope->createNewChildScope(type, name).get();
+    m_currentScope = ScopeTree::create(type, name, m_currentScope);
 }
 
 void FindUnqualifiedIDVisitor::leaveEnvironment()
@@ -99,11 +99,11 @@ void FindUnqualifiedIDVisitor::parseHeaders(QQmlJS::AST::UiHeaderItemList *heade
     }
 }
 
-ScopeTree *FindUnqualifiedIDVisitor::parseProgram(QQmlJS::AST::Program *program,
-                                                  const QString &name)
+ScopeTree::Ptr FindUnqualifiedIDVisitor::parseProgram(QQmlJS::AST::Program *program,
+                                                      const QString &name)
 {
     using namespace QQmlJS::AST;
-    ScopeTree *result = new ScopeTree(ScopeType::JSLexicalScope, name);
+    ScopeTree::Ptr result = ScopeTree::create(ScopeType::JSLexicalScope, name);
     for (auto *statement = program->statements; statement; statement = statement->next) {
         if (auto *function = cast<FunctionDeclaration *>(statement->statement)) {
             MetaMethod method(function->name.toString());
@@ -204,7 +204,7 @@ FindUnqualifiedIDVisitor::Import FindUnqualifiedIDVisitor::readQmldir(const QStr
     for (const QString &import : imports)
         result.dependencies.append(import);
 
-    QHash<QString, ScopeTree *> qmlComponents;
+    QHash<QString, ScopeTree::Ptr> qmlComponents;
     const auto components = reader.components();
     for (auto it = components.begin(), end = components.end(); it != end; ++it) {
         const QString filePath = path + QLatin1Char('/') + it->fileName;
@@ -299,7 +299,7 @@ void FindUnqualifiedIDVisitor::importHelper(const QString &module, const QString
     }
 }
 
-ScopeTree *FindUnqualifiedIDVisitor::localFile2ScopeTree(const QString &filePath)
+ScopeTree::Ptr FindUnqualifiedIDVisitor::localFile2ScopeTree(const QString &filePath)
 {
     using namespace QQmlJS::AST;
     const QFileInfo info { filePath };
@@ -315,8 +315,8 @@ ScopeTree *FindUnqualifiedIDVisitor::localFile2ScopeTree(const QString &filePath
 
     QFile file(filePath);
     if (!file.open(QFile::ReadOnly)) {
-        return new ScopeTree(isJavaScript ? ScopeType::JSLexicalScope : ScopeType::QMLScope,
-                             scopeName);
+        return ScopeTree::create(isJavaScript ? ScopeType::JSLexicalScope : ScopeType::QMLScope,
+                                 scopeName);
     }
 
     QString code = file.readAll();
@@ -329,8 +329,8 @@ ScopeTree *FindUnqualifiedIDVisitor::localFile2ScopeTree(const QString &filePath
                                                     : parser.parseProgram())
                                       : parser.parse();
     if (!success) {
-        return new ScopeTree(isJavaScript ? ScopeType::JSLexicalScope : ScopeType::QMLScope,
-                             scopeName);
+        return ScopeTree::create(isJavaScript ? ScopeType::JSLexicalScope : ScopeType::QMLScope,
+                                 scopeName);
     }
 
     if (!isJavaScript) {
@@ -392,7 +392,7 @@ void FindUnqualifiedIDVisitor::importExportedNames(const QStringRef &prefix, QSt
             scopes.append(scope);
             const auto properties = scope->properties();
             for (auto property : properties) {
-                property.setType(m_exportedName2Scope.value(property.typeName()).get());
+                property.setType(m_exportedName2Scope.value(property.typeName()));
                 m_currentScope->insertPropertyIdentifier(property);
             }
 
@@ -631,7 +631,7 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiPublicMember *uipm)
                 false,
                 uipm->memberType ? (uipm->memberType->name == QLatin1String("alias")) : false,
                 0);
-    property.setType(m_exportedName2Scope.value(property.typeName()).get());
+    property.setType(m_exportedName2Scope.value(property.typeName()));
     m_currentScope->insertPropertyIdentifier(property);
     return true;
 }
@@ -646,14 +646,15 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::IdentifierExpression *idexp)
 
 FindUnqualifiedIDVisitor::FindUnqualifiedIDVisitor(QStringList qmltypeDirs, QString code,
                                                    QString fileName, bool silent)
-    : m_rootScope(new ScopeTree { ScopeType::JSFunctionScope, "global" }),
-      m_currentScope(m_rootScope.get()),
+    : m_rootScope(ScopeTree::create(ScopeType::JSFunctionScope, "global")),
       m_qmltypeDirs(std::move(qmltypeDirs)),
       m_code(std::move(code)),
       m_rootId(QLatin1String("<id>")),
       m_filePath(std::move(fileName)),
       m_colorOut(silent)
 {
+    m_currentScope = m_rootScope;
+
     // setup color output
     m_colorOut.insertMapping(Error, ColorOutput::RedForeground);
     m_colorOut.insertMapping(Warning, ColorOutput::PurpleForeground);
@@ -692,12 +693,12 @@ bool FindUnqualifiedIDVisitor::check()
         auto targetScope = m_qmlid2scope[outstandingConnection.targetName];
         if (outstandingConnection.scope)
             outstandingConnection.scope->addMethods(targetScope->methods());
-        QScopedValueRollback<ScopeTree*> rollback(m_currentScope, outstandingConnection.scope);
+        QScopedValueRollback<ScopeTree::Ptr> rollback(m_currentScope, outstandingConnection.scope);
         outstandingConnection.uiod->initializer->accept(this);
     }
 
     CheckIdentifiers check(&m_colorOut, m_code, m_exportedName2Scope);
-    return check(m_qmlid2scope, m_rootScope.get(), m_rootId);
+    return check(m_qmlid2scope, m_rootScope, m_rootId);
 }
 
 bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::VariableDeclarationList *vdl)
@@ -772,7 +773,7 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiImport *import)
     if (!import->importId.isEmpty()) {
         // TODO: do not put imported ids into the same space as qml IDs
         const QString importId = import->importId.toString();
-        m_qmlid2scope.insert(importId, m_exportedName2Scope.value(importId).get());
+        m_qmlid2scope.insert(importId, m_exportedName2Scope.value(importId));
     }
     if (import->version) {
         auto uri = import->importUri;
@@ -812,7 +813,7 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
 
     MetaProperty prop(uiob->qualifiedId->name.toString(), name, false, true, true,
                       name == QLatin1String("alias"), 0);
-    prop.setType(m_exportedName2Scope.value(uiob->qualifiedTypeNameId->name.toString()).get());
+    prop.setType(m_exportedName2Scope.value(uiob->qualifiedTypeNameId->name.toString()));
     m_currentScope->addProperty(prop);
 
     enterEnvironment(ScopeType::QMLScope, name);
@@ -870,14 +871,14 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
             }
             member = member->next;
         }
-        const ScopeTree *targetScope;
+        ScopeTree::ConstPtr targetScope;
         if (target.isEmpty()) {
             // no target set, connection comes from parentF
-            ScopeTree* scope = m_currentScope;
+            ScopeTree::Ptr scope = m_currentScope;
             do {
                 scope = scope->parentScope(); // TODO: rename method
             } while (scope->scopeType() != ScopeType::QMLScope);
-            targetScope = m_exportedName2Scope.value(scope->name()).get();
+            targetScope = m_exportedName2Scope.value(scope->name());
         } else {
             // there was a target, check if we already can find it
             auto scopeIt =  m_qmlid2scope.find(target);
