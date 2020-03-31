@@ -3977,6 +3977,9 @@ void QQuickItem::focusOutEvent(QFocusEvent * /*event*/)
     press events for an item. The event information is provided by the
     \a event parameter.
 
+    In order to receive mouse press events, \l acceptedMouseButtons() must
+    return the relevant mouse button.
+
     \input item.qdocinc accepting-events
   */
 void QQuickItem::mousePressEvent(QMouseEvent *event)
@@ -3989,6 +3992,10 @@ void QQuickItem::mousePressEvent(QMouseEvent *event)
     move events for an item. The event information is provided by the
     \a event parameter.
 
+    In order to receive mouse movement events, the preceding mouse press event
+    must be accepted (by overriding \l mousePressEvent(), for example) and
+    \l acceptedMouseButtons() must return the relevant mouse button.
+
     \input item.qdocinc accepting-events
   */
 void QQuickItem::mouseMoveEvent(QMouseEvent *event)
@@ -4000,6 +4007,10 @@ void QQuickItem::mouseMoveEvent(QMouseEvent *event)
     This event handler can be reimplemented in a subclass to receive mouse
     release events for an item. The event information is provided by the
     \a event parameter.
+
+    In order to receive mouse release events, the preceding mouse press event
+    must be accepted (by overriding \l mousePressEvent(), for example) and
+    \l acceptedMouseButtons() must return the relevant mouse button.
 
     \input item.qdocinc accepting-events
   */
