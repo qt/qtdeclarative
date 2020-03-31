@@ -471,6 +471,7 @@ void QQuickPopupPrivate::finalizeEnterTransition()
     if (focus)
         popupItem->setFocus(true);
     transitionState = NoTransition;
+    getPositioner()->reposition();
     emit q->openedChanged();
     emit q->opened();
 }

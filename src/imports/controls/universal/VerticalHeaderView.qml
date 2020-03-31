@@ -57,7 +57,9 @@ T.VerticalHeaderView {
 
         Text {
             id: text
-            text: model[control.textRole]
+            text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole]
+                                        : model[control.textRole])
+                                   : modelData
             width: parent.width
             height: parent.height
             horizontalAlignment: Text.AlignHCenter

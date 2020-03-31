@@ -112,7 +112,7 @@ protected:
     };
     QStack<SectionSize> m_hiddenSectionSizes;
     bool m_modelExplicitlySetByUser = false;
-    QString m_textRole = QStringLiteral("display");
+    QString m_textRole;
 };
 
 class QQuickHorizontalHeaderViewPrivate : public QQuickHeaderViewBasePrivate
