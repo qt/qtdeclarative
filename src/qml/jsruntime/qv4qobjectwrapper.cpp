@@ -1298,11 +1298,16 @@ static QV4::ReturnedValue CallMethod(const QQmlObjectOrGadget &object, int index
                                                : QString());
 
                 }
-                qWarning() << QLatin1String("Passing incompatible arguments to C++ functions from "
-                                            "JavaScript is dangerous and deprecated.");
-                qWarning() << QLatin1String("This will throw a JavaScript TypeError in future "
-                                            "releases of Qt!");
 
+                const bool is_signal =
+                        object.metaObject()->method(index).methodType() == QMetaMethod::Signal;
+                if (is_signal) {
+                    qWarning() << "Passing incomatible arguments to signals is not supported.";
+                } else {
+                    return engine->throwTypeError(
+                            "Passing incompatible arguments to C++ functions from "
+                            "JavaScript is not allowed.");
+                }
             }
         }
         QVarLengthArray<void *, 9> argData(args.count());

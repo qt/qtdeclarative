@@ -2906,32 +2906,28 @@ void tst_qqmlecmascript::callQtInvokables()
     QCOMPARE(o->actuals().at(0), QVariant(QString()));
 
     o->reset();
-    QVERIFY(EVALUATE_VALUE("object.method_QPointF(0)", QV4::Primitive::undefinedValue()));
+    QVERIFY(EVALUATE_ERROR("object.method_QPointF(0)"));
     QCOMPARE(o->error(), false);
-    QCOMPARE(o->invoked(), 12);
-    QCOMPARE(o->actuals().count(), 1);
-    QCOMPARE(o->actuals().at(0), QVariant(QPointF()));
+    QCOMPARE(o->invoked(), -1);
+    QCOMPARE(o->actuals().count(), 0);
 
     o->reset();
-    QVERIFY(EVALUATE_VALUE("object.method_QPointF(null)", QV4::Primitive::undefinedValue()));
+    QVERIFY(EVALUATE_ERROR("object.method_QPointF(null)"));
     QCOMPARE(o->error(), false);
-    QCOMPARE(o->invoked(), 12);
-    QCOMPARE(o->actuals().count(), 1);
-    QCOMPARE(o->actuals().at(0), QVariant(QPointF()));
+    QCOMPARE(o->invoked(), -1);
+    QCOMPARE(o->actuals().count(), 0);
 
     o->reset();
-    QVERIFY(EVALUATE_VALUE("object.method_QPointF(undefined)", QV4::Primitive::undefinedValue()));
+    QVERIFY(EVALUATE_ERROR("object.method_QPointF(undefined)"));
     QCOMPARE(o->error(), false);
-    QCOMPARE(o->invoked(), 12);
-    QCOMPARE(o->actuals().count(), 1);
-    QCOMPARE(o->actuals().at(0), QVariant(QPointF()));
+    QCOMPARE(o->invoked(), -1);
+    QCOMPARE(o->actuals().count(), 0);
 
     o->reset();
-    QVERIFY(EVALUATE_VALUE("object.method_QPointF(object)", QV4::Primitive::undefinedValue()));
+    QVERIFY(EVALUATE_ERROR("object.method_QPointF(object)"));
     QCOMPARE(o->error(), false);
-    QCOMPARE(o->invoked(), 12);
-    QCOMPARE(o->actuals().count(), 1);
-    QCOMPARE(o->actuals().at(0), QVariant(QPointF()));
+    QCOMPARE(o->invoked(), -1);
+    QCOMPARE(o->actuals().count(), 0);
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QPointF(object.method_get_QPointF())", QV4::Primitive::undefinedValue()));
@@ -2948,18 +2944,16 @@ void tst_qqmlecmascript::callQtInvokables()
     QCOMPARE(o->actuals().at(0), QVariant(QPointF(9, 12)));
 
     o->reset();
-    QVERIFY(EVALUATE_VALUE("object.method_QObject(0)", QV4::Primitive::undefinedValue()));
+    QVERIFY(EVALUATE_ERROR("object.method_QObject(0)"));
     QCOMPARE(o->error(), false);
-    QCOMPARE(o->invoked(), 13);
-    QCOMPARE(o->actuals().count(), 1);
-    QCOMPARE(o->actuals().at(0), QVariant::fromValue((QObject *)nullptr));
+    QCOMPARE(o->invoked(), -1);
+    QCOMPARE(o->actuals().count(), 0);
 
     o->reset();
-    QVERIFY(EVALUATE_VALUE("object.method_QObject(\"Hello world\")", QV4::Primitive::undefinedValue()));
+    QVERIFY(EVALUATE_ERROR("object.method_QObject(\"Hello world\")"));
     QCOMPARE(o->error(), false);
-    QCOMPARE(o->invoked(), 13);
-    QCOMPARE(o->actuals().count(), 1);
-    QCOMPARE(o->actuals().at(0), QVariant::fromValue((QObject *)nullptr));
+    QCOMPARE(o->invoked(), -1);
+    QCOMPARE(o->actuals().count(), 0);
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_QObject(null)", QV4::Primitive::undefinedValue()));
