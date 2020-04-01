@@ -1063,6 +1063,12 @@ void QQuickMouseArea::itemChange(ItemChange change, const ItemChangeData &value)
             }
             setHovered(!d->hovered);
         }
+        if (d->pressed && (!isVisible())) {
+            // This happens when the mouse area sets itself disabled or hidden
+            // inside the press handler. In that case we should not keep the internal
+            // state as pressed, since we never became the mouse grabber.
+            ungrabMouse();
+        }
         break;
     default:
         break;
