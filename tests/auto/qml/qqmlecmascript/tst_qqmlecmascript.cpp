@@ -2694,12 +2694,16 @@ void tst_qqmlecmascript::callQtInvokables()
     QCOMPARE(o->actuals().count(), 0);
 
     // Excessive arguments
+    QTest::ignoreMessage(QtWarningMsg, qPrintable("Too many arguments, ignoring 1"));
+
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_int(10, 11)", QV4::Primitive::undefinedValue()));
     QCOMPARE(o->error(), false);
     QCOMPARE(o->invoked(), 8);
     QCOMPARE(o->actuals().count(), 1);
     QCOMPARE(o->actuals().at(0), QVariant(10));
+
+    QTest::ignoreMessage(QtWarningMsg, qPrintable("Too many arguments, ignoring 1"));
 
     o->reset();
     QVERIFY(EVALUATE_VALUE("object.method_intint(10, 11, 12)", QV4::Primitive::undefinedValue()));

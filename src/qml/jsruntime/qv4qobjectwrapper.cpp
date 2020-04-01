@@ -1574,6 +1574,18 @@ static QV4::ReturnedValue CallPrecise(const QQmlObjectOrGadget &object, const QQ
             return engine->throwError(error);
         }
 
+        if (args[0] < callArgs->argc()) {
+            Q_ASSERT(!engine->stackTrace().isEmpty());
+
+            const StackFrame frame = engine->stackTrace().first();
+            qWarning().noquote() << frame.function + QLatin1Char('@') + frame.source
+                            + (frame.line > 0 ? (QLatin1Char(':') + QString::number(frame.line))
+                                              : QString());
+
+            qWarning().noquote() << QStringLiteral("Too many arguments, ignoring %1")
+                                            .arg(callArgs->argc() - args[0]);
+        }
+
         return CallMethod(object, data.coreIndex(), returnType, args[0], args + 1, engine, callArgs, callType);
 
     } else {
