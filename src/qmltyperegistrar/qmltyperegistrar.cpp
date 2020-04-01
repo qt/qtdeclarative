@@ -298,8 +298,15 @@ int main(int argc, char **argv)
             }
         }
 
+        const bool privateIncludes = parser.isSet(privateIncludesOption);
+        auto resolvedInclude = [&](const QString &include) {
+            return (privateIncludes && include.endsWith(QLatin1String("_p.h")))
+                    ? QLatin1String("private/") + include
+                    : include;
+        };
+
         auto processMetaObject = [&](const QJsonObject &metaObject) {
-            const QString include = metaObject[QLatin1String("inputFile")].toString();
+            const QString include = resolvedInclude(metaObject[QLatin1String("inputFile")].toString());
             const QJsonArray classes = metaObject[QLatin1String("classes")].toArray();
             for (const auto &cls : classes) {
                 QJsonObject classDef = cls.toObject();
@@ -367,13 +374,8 @@ int main(int argc, char **argv)
     const auto newEnd = std::unique(includes.begin(), includes.end());
     includes.erase(newEnd, includes.end());
 
-    const bool privateIncludes = parser.isSet(privateIncludesOption);
-    for (const QString &include : qAsConst(includes)) {
-        if (privateIncludes && include.endsWith(QLatin1String("_p.h")))
-            fprintf(output, "\n#include <private/%s>", qPrintable(include));
-        else
-            fprintf(output, "\n#include <%s>", qPrintable(include));
-    }
+    for (const QString &include : qAsConst(includes))
+        fprintf(output, "\n#include <%s>", qPrintable(include));
 
     fprintf(output, "\n\n");
 
