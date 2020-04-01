@@ -39,7 +39,7 @@ import QtQuick.Templates 2.12 as T
 import QtQuick.Controls 2.12
 import QtQuick.Controls.impl 2.12
 
-T.CheckDelegate {
+T.CheckBox {
     id: control
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
@@ -48,34 +48,15 @@ T.CheckDelegate {
                              implicitContentHeight + topPadding + bottomPadding,
                              implicitIndicatorHeight + topPadding + bottomPadding)
 
-    padding: 12
-    spacing: 12
+    padding: 6
+    spacing: 6
 
-    icon.width: 24
-    icon.height: 24
-    icon.color: control.palette.text
-
-    contentItem: IconLabel {
-        leftPadding: control.mirrored ? control.indicator.width + control.spacing : 0
-        rightPadding: !control.mirrored ? control.indicator.width + control.spacing : 0
-
-        spacing: control.spacing
-        mirrored: control.mirrored
-        display: control.display
-        alignment: control.display === IconLabel.IconOnly || control.display === IconLabel.TextUnderIcon ? Qt.AlignCenter : Qt.AlignLeft
-
-        icon: control.icon
-        text: control.text
-        font: control.font
-        color: control.palette.text
-    }
-
-    // keep in sync with CheckBox.qml (shared CheckIndicator.qml was removed for performance reasons)
+    // keep in sync with CheckDelegate.qml (shared CheckIndicator.qml was removed for performance reasons)
     indicator: Rectangle {
         implicitWidth: 28
         implicitHeight: 28
 
-        x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
+        x: control.text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
 
         color: control.down ? control.palette.light : control.palette.base
@@ -87,7 +68,7 @@ T.CheckDelegate {
             y: (parent.height - height) / 2
             defaultColor: "#353637"
             color: control.palette.text
-            source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png"
+            source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Default/images/check.png"
             visible: control.checkState === Qt.Checked
         }
 
@@ -101,10 +82,12 @@ T.CheckDelegate {
         }
     }
 
-    background: Rectangle {
-        implicitWidth: 100
-        implicitHeight: 40
-        visible: control.down || control.highlighted
-        color: control.down ? control.palette.midlight : control.palette.light
+    contentItem: CheckLabel {
+        leftPadding: control.indicator && !control.mirrored ? control.indicator.width + control.spacing : 0
+        rightPadding: control.indicator && control.mirrored ? control.indicator.width + control.spacing : 0
+
+        text: control.text
+        font: control.font
+        color: control.palette.windowText
     }
 }

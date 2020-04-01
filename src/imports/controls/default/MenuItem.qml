@@ -77,7 +77,7 @@ T.MenuItem {
         y: control.topPadding + (control.availableHeight - height) / 2
 
         visible: control.checked
-        source: control.checkable ? "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png" : ""
+        source: control.checkable ? "qrc:/qt-project.org/imports/QtQuick/Controls.2/Default/images/check.png" : ""
         color: control.palette.windowText
         defaultColor: "#353637"
     }
@@ -88,7 +88,7 @@ T.MenuItem {
 
         visible: control.subMenu
         mirror: control.mirrored
-        source: control.subMenu ? "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/arrow-indicator.png" : ""
+        source: control.subMenu ? "qrc:/qt-project.org/imports/QtQuick/Controls.2/Default/images/arrow-indicator.png" : ""
         color: control.palette.windowText
         defaultColor: "#353637"
     }

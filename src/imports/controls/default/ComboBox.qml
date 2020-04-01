@@ -67,7 +67,7 @@ T.ComboBox {
         y: control.topPadding + (control.availableHeight - height) / 2
         color: control.palette.dark
         defaultColor: "#353637"
-        source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/double-arrow.png"
+        source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Default/images/double-arrow.png"
         opacity: enabled ? 1 : 0.3
     }
 

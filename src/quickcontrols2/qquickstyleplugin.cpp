@@ -57,13 +57,4 @@ QString QQuickStylePlugin::name() const
     return QString();
 }
 
-void QQuickStylePlugin::initializeTheme(QQuickTheme *theme)
-{
-    Q_UNUSED(theme);
-}
-
-void QQuickStylePlugin::registerTypes(const char */*uri*/)
-{
-}
-
 QT_END_NAMESPACE

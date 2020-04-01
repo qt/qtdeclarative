@@ -40,6 +40,8 @@
 #include <QtCore/qpluginloader.h>
 #include <QtCore/private/qfileselector_p.h>
 #include <QtQml/qqmlfile.h>
+#include <QtQml/qqmlextensionplugin.h>
+#include <QtQml/qqmlengine.h>
 #include <QtQml/private/qqmldirparser_p.h>
 #include <QtQuickControls2/qquickstyle.h>
 #include <QtQuickControls2/private/qquickchecklabel_p.h>
@@ -56,20 +58,13 @@
 #include <QtQuickControls2/private/qquicktumblerview_p.h>
 #endif
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
-#include <QtQuickTemplates2/private/qquicksplitview_p.h>
 #include <QtQuickControls2/private/qquickclippedtext_p.h>
 #include <QtQuickControls2/private/qquickitemgroup_p.h>
 #include <QtQuickTemplates2/private/qquicktheme_p_p.h>
 
-#include "qquickdefaultbusyindicator_p.h"
-#include "qquickdefaultdial_p.h"
-#include "qquickdefaultprogressbar_p.h"
-#include "qquickdefaultstyle_p.h"
-#include "qquickdefaulttheme_p.h"
-
 QT_BEGIN_NAMESPACE
 
-class QtQuickControls2Plugin: public QQuickStylePlugin
+class QtQuickControls2Plugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
@@ -82,9 +77,6 @@ public:
     void registerTypes(const char *uri) override;
     void unregisterTypes() override;
 
-    QString name() const override;
-    void initializeTheme(QQuickTheme *theme) override;
-
 private:
     void init();
 
@@ -92,7 +84,7 @@ private:
     QQuickTheme *createTheme(const QString &name);
 };
 
-QtQuickControls2Plugin::QtQuickControls2Plugin(QObject *parent) : QQuickStylePlugin(parent)
+QtQuickControls2Plugin::QtQuickControls2Plugin(QObject *parent) : QQmlExtensionPlugin(parent)
 {
 }
 
@@ -102,22 +94,15 @@ QtQuickControls2Plugin::~QtQuickControls2Plugin()
     // initialization and cleanup, as plugins are not unloaded on macOS.
 }
 
-void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char *uri)
+void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char */*uri*/)
 {
-    QQuickStylePlugin::initializeEngine(engine, uri);
+    engine->addUrlInterceptor(&QQuickStylePrivate::urlInterceptor);
     init();
-}
-
-static bool isDefaultStyle(const QString &style)
-{
-    return style.isEmpty() || style.compare(QStringLiteral("Default"), Qt::CaseInsensitive) == 0;
 }
 
 void QtQuickControls2Plugin::registerTypes(const char *uri)
 {
     QQuickStylePrivate::init(baseUrl());
-
-    QQuickStylePlugin::registerTypes(uri);
 
     const QString style = QQuickStyle::name();
     if (!style.isEmpty())
@@ -135,20 +120,12 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     qmlRegisterModule(import, 2, 15);
 
     // QtQuick.Controls.impl 2.0 (Qt 5.7)
-    qmlRegisterType<QQuickDefaultBusyIndicator>(import, 2, 0, "BusyIndicatorImpl");
-    qmlRegisterType<QQuickDefaultDial>(import, 2, 0, "DialImpl");
     qmlRegisterType<QQuickPaddedRectangle>(import, 2, 0, "PaddedRectangle");
-    qmlRegisterType<QQuickDefaultProgressBar>(import, 2, 0, "ProgressBarImpl");
 
     // QtQuick.Controls.impl 2.1 (Qt 5.8)
 #if QT_CONFIG(quick_listview) && QT_CONFIG(quick_pathview)
     qmlRegisterType<QQuickTumblerView>(import, 2, 1, "TumblerView");
 #endif
-    qmlRegisterSingletonType<QQuickDefaultStyle>(import, 2, 1, "Default", [](QQmlEngine *engine, QJSEngine *scriptEngine) -> QObject* {
-            Q_UNUSED(engine);
-            Q_UNUSED(scriptEngine);
-            return new QQuickDefaultStyle;
-    });
 
     // QtQuick.Controls.impl 2.2 (Qt 5.9)
     qmlRegisterType<QQuickClippedText>(import, 2, 2, "ClippedText");
@@ -171,26 +148,13 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
 
 void QtQuickControls2Plugin::unregisterTypes()
 {
-    QQuickStylePlugin::unregisterTypes();
     QQuickStylePrivate::reset();
-}
-
-QString QtQuickControls2Plugin::name() const
-{
-    return QStringLiteral("Default");
-}
-
-void QtQuickControls2Plugin::initializeTheme(QQuickTheme *theme)
-{
-    QQuickDefaultTheme::initialize(theme);
 }
 
 void QtQuickControls2Plugin::init()
 {
     const QString style = QQuickStyle::name();
-    QQuickTheme *theme = createTheme(style.isEmpty() ? name() : style);
-    if (isDefaultStyle(style))
-        initializeTheme(theme);
+    QQuickTheme *theme = createTheme(style.isEmpty() ? QLatin1String("Default") : style);
 
     // load the style's plugins to get access to its resources and initialize the theme
     QList<QQuickStylePlugin *> stylePlugins = loadStylePlugins();

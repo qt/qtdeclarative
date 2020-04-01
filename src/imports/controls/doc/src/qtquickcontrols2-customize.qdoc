@@ -58,7 +58,7 @@
     \c Button.qml. This file can be found in the following path in your Qt
     installation:
 
-    \c {$QTDIR/qml/QtQuick/Controls.2/Button.qml}
+    \c {$QTDIR/qml/QtQuick/Controls.2/Default/Button.qml}
 
     After doing that, we'll simply add the following line:
 
@@ -397,7 +397,7 @@
     \endcode
 
     We then copy \c Button.qml from the Default style in
-    \c {$QTDIR/qml/QtQuick/Controls.2/} into a new \c myproject folder in our
+    \c {$QTDIR/qml/QtQuick/Controls.2/Default/} into a new \c myproject folder in our
     project directory. Add the newly copied \c Button.qml to \c qml.qrc, which is
     the resource file that contains our QML files.
 

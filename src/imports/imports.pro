@@ -5,6 +5,7 @@ SUBDIRS += \
     templates
 
 SUBDIRS += \
+    controls/default/default.pro \
     controls/fusion/fusion.pro \
     controls/imagine/imagine.pro \
     controls/material/material.pro \

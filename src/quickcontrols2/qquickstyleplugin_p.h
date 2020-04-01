@@ -64,7 +64,7 @@ public:
     ~QQuickStylePlugin();
 
     virtual QString name() const;
-    virtual void initializeTheme(QQuickTheme *theme);
+    virtual void initializeTheme(QQuickTheme *theme) = 0;
 
     void registerTypes(const char *uri) override;
 

@@ -35,59 +35,45 @@
 ****************************************************************************/
 
 import QtQuick 2.12
-import QtQuick.Templates 2.12 as T
 import QtQuick.Controls 2.12
 import QtQuick.Controls.impl 2.12
+import QtQuick.Templates 2.12 as T
 
-T.CheckBox {
+T.Dial {
     id: control
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             implicitContentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
-                             implicitContentHeight + topPadding + bottomPadding,
-                             implicitIndicatorHeight + topPadding + bottomPadding)
+                             implicitContentHeight + topPadding + bottomPadding)
 
-    padding: 6
-    spacing: 6
-
-    // keep in sync with CheckDelegate.qml (shared CheckIndicator.qml was removed for performance reasons)
-    indicator: Rectangle {
-        implicitWidth: 28
-        implicitHeight: 28
-
-        x: control.text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
-        y: control.topPadding + (control.availableHeight - height) / 2
-
-        color: control.down ? control.palette.light : control.palette.base
-        border.width: control.visualFocus ? 2 : 1
-        border.color: control.visualFocus ? control.palette.highlight : control.palette.mid
-
-        ColorImage {
-            x: (parent.width - width) / 2
-            y: (parent.height - height) / 2
-            defaultColor: "#353637"
-            color: control.palette.text
-            source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png"
-            visible: control.checkState === Qt.Checked
-        }
-
-        Rectangle {
-            x: (parent.width - width) / 2
-            y: (parent.height - height) / 2
-            width: 16
-            height: 3
-            color: control.palette.text
-            visible: control.checkState === Qt.PartiallyChecked
-        }
+    background: DialImpl {
+        implicitWidth: 184
+        implicitHeight: 184
+        color: control.visualFocus ? control.palette.highlight : control.palette.dark
+        progress: control.position
+        opacity: control.enabled ? 1 : 0.3
     }
 
-    contentItem: CheckLabel {
-        leftPadding: control.indicator && !control.mirrored ? control.indicator.width + control.spacing : 0
-        rightPadding: control.indicator && control.mirrored ? control.indicator.width + control.spacing : 0
-
-        text: control.text
-        font: control.font
-        color: control.palette.windowText
+    handle: ColorImage {
+        x: control.background.x + control.background.width / 2 - width / 2
+        y: control.background.y + control.background.height / 2 - height / 2
+        width: 14
+        height: 10
+        defaultColor: "#353637"
+        color: control.visualFocus ? control.palette.highlight : control.palette.dark
+        source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Default/images/dial-indicator.png"
+        antialiasing: true
+        opacity: control.enabled ? 1 : 0.3
+        transform: [
+            Translate {
+                y: -Math.min(control.background.width, control.background.height) * 0.4 + control.handle.height / 2
+            },
+            Rotation {
+                angle: control.angle
+                origin.x: control.handle.width / 2
+                origin.y: control.handle.height / 2
+            }
+        ]
     }
 }
