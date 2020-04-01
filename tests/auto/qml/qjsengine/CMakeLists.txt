@@ -10,15 +10,20 @@ file(GLOB_RECURSE test_data_glob
     script/*)
 list(APPEND test_data ${test_data_glob})
 
+qt_find_package(Threads PROVIDED_TARGETS Threads::Threads) # special case
+
 qt_add_test(tst_qjsengine
     SOURCES
         tst_qjsengine.cpp
     PUBLIC_LIBRARIES
+        Qt::Core
         Qt::Gui
         Qt::GuiPrivate
         Qt::Qml
         Qt::QmlPrivate
         Qt::Widgets
+    LIBRARIES # special case
+        Threads::Threads # special case
     TESTDATA ${test_data}
 )
 

@@ -79,7 +79,7 @@ PRIVATETESTS += \
     v4misc
 
 qtHaveModule(widgets) {
-    PUBLICTESTS += \
+    SUBDIRS += \
         qjsengine \
         qjsvalue \
 #        qwidgetsinqml
