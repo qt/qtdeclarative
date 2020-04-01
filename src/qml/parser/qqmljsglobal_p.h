@@ -52,29 +52,17 @@
 
 #include <QtCore/qglobal.h>
 
-#ifdef QT_CREATOR
-
-#  ifdef QDECLARATIVEJS_BUILD_DIR
-#    define QML_PARSER_EXPORT Q_DECL_EXPORT
-#  elif QML_BUILD_STATIC_LIB
+#ifndef QT_STATIC
+#  if defined(QT_BUILD_QMLDEVTOOLS_LIB) || defined(QT_QMLDEVTOOLS_LIB)
+     // QmlDevTools is a static library
 #    define QML_PARSER_EXPORT
+#  elif defined(QT_BUILD_QML_LIB)
+#    define QML_PARSER_EXPORT Q_DECL_EXPORT
 #  else
 #    define QML_PARSER_EXPORT Q_DECL_IMPORT
-#  endif // QQMLJS_BUILD_DIR
-
-#else // !QT_CREATOR
-#  ifndef QT_STATIC
-#    if defined(QT_BUILD_QMLDEVTOOLS_LIB) || defined(QT_QMLDEVTOOLS_LIB)
-       // QmlDevTools is a static library
-#      define QML_PARSER_EXPORT
-#    elif defined(QT_BUILD_QML_LIB)
-#      define QML_PARSER_EXPORT Q_DECL_EXPORT
-#    else
-#      define QML_PARSER_EXPORT Q_DECL_IMPORT
-#    endif
-#  else
-#      define QML_PARSER_EXPORT
 #  endif
-#endif // QT_CREATOR
+#else
+#    define QML_PARSER_EXPORT
+#endif
 
 #endif // QQMLJSGLOBAL_P_H
