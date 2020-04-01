@@ -75,7 +75,9 @@ public:
     QList<QObject *> objects;
     QVariantMap initialProperties;
     QString translationsDirectory;
+#if QT_CONFIG(translation)
     QScopedPointer<QTranslator> activeTranslator;
+#endif
 };
 
 QT_END_NAMESPACE
