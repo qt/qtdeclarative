@@ -84,6 +84,42 @@ void Heap::RegExpObject::init(QV4::RegExp *value)
     o->initProperties();
 }
 
+static QString minimalPattern(const QString &pattern)
+{
+    QString ecmaPattern;
+    int len = pattern.length();
+    ecmaPattern.reserve(len);
+    int i = 0;
+    const QChar *wc = pattern.unicode();
+    bool inBracket = false;
+    while (i < len) {
+        QChar c = wc[i++];
+        ecmaPattern += c;
+        switch (c.unicode()) {
+        case '?':
+        case '+':
+        case '*':
+        case '}':
+            if (!inBracket)
+                ecmaPattern += QLatin1Char('?');
+            break;
+        case '\\':
+            if (i < len)
+                ecmaPattern += wc[i++];
+            break;
+        case '[':
+            inBracket = true;
+            break;
+        case ']':
+            inBracket = false;
+            break;
+        default:
+            break;
+        }
+    }
+    return ecmaPattern;
+}
+
 // Converts a QRegExp to a JS RegExp.
 // The conversion is not 100% exact since ECMA regexp and QRegExp
 // have different semantics/flags, but we try to do our best.
@@ -93,40 +129,8 @@ void Heap::RegExpObject::init(const QRegExp &re)
 
     // Convert the pattern to a ECMAScript pattern.
     QString pattern = QT_PREPEND_NAMESPACE(qt_regexp_toCanonical)(re.pattern(), re.patternSyntax());
-    if (re.isMinimal()) {
-        QString ecmaPattern;
-        int len = pattern.length();
-        ecmaPattern.reserve(len);
-        int i = 0;
-        const QChar *wc = pattern.unicode();
-        bool inBracket = false;
-        while (i < len) {
-            QChar c = wc[i++];
-            ecmaPattern += c;
-            switch (c.unicode()) {
-            case '?':
-            case '+':
-            case '*':
-            case '}':
-                if (!inBracket)
-                    ecmaPattern += QLatin1Char('?');
-                break;
-            case '\\':
-                if (i < len)
-                    ecmaPattern += wc[i++];
-                break;
-            case '[':
-                inBracket = true;
-                break;
-            case ']':
-                inBracket = false;
-                break;
-            default:
-                break;
-            }
-        }
-        pattern = ecmaPattern;
-    }
+    if (re.isMinimal())
+        pattern = minimalPattern(pattern);
 
     Scope scope(internalClass->engine);
     Scoped<QV4::RegExpObject> o(scope, this);
@@ -148,10 +152,16 @@ void Heap::RegExpObject::init(const QRegularExpression &re)
     Scope scope(internalClass->engine);
     Scoped<QV4::RegExpObject> o(scope, this);
 
-    const uint flags = (re.patternOptions() & QRegularExpression::CaseInsensitiveOption)
-            ? CompiledData::RegExp::RegExp_IgnoreCase
-            : CompiledData::RegExp::RegExp_NoFlags;
-    o->d()->value.set(scope.engine, QV4::RegExp::create(scope.engine, re.pattern(), flags));
+    QRegularExpression::PatternOptions options = re.patternOptions();
+    uint flags = (options & QRegularExpression::CaseInsensitiveOption)
+                ? CompiledData::RegExp::RegExp_IgnoreCase
+                : CompiledData::RegExp::RegExp_NoFlags;
+    if (options & QRegularExpression::MultilineOption)
+        flags |= CompiledData::RegExp::RegExp_Multiline;
+    QString pattern = re.pattern();
+    if (options & QRegularExpression::InvertedGreedinessOption)
+        pattern = minimalPattern(pattern);
+    o->d()->value.set(scope.engine, QV4::RegExp::create(scope.engine, pattern, flags));
     o->initProperties();
 }
 #endif
@@ -178,11 +188,12 @@ QRegExp RegExpObject::toQRegExp() const
 // have different semantics/flags, but we try to do our best.
 QRegularExpression RegExpObject::toQRegularExpression() const
 {
-    QRegularExpression::PatternOptions caseSensitivity
-            = (value()->flags & CompiledData::RegExp::RegExp_IgnoreCase)
-            ? QRegularExpression::CaseInsensitiveOption
-            : QRegularExpression::NoPatternOption;
-    return QRegularExpression(*value()->pattern, caseSensitivity);
+    QRegularExpression::PatternOptions options = QRegularExpression::NoPatternOption;
+    if (value()->flags & CompiledData::RegExp::RegExp_IgnoreCase)
+        options |= QRegularExpression::CaseInsensitiveOption;
+    if (value()->flags & CompiledData::RegExp::RegExp_Multiline)
+        options |= QRegularExpression::MultilineOption;
+    return QRegularExpression(*value()->pattern, options);
 }
 #endif
 

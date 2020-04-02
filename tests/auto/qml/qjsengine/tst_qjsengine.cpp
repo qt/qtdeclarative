@@ -142,6 +142,8 @@ private slots:
     void qRegExpInport();
     void qRegularExpressionImport_data();
     void qRegularExpressionImport();
+    void qRegularExpressionExport_data();
+    void qRegularExpressionExport();
     void dateRoundtripJSQtJS();
     void dateRoundtripQtJSQt();
     void dateConversionJSQt();
@@ -3287,7 +3289,6 @@ void tst_QJSEngine::qRegularExpressionImport_data()
 {
     QTest::addColumn<QRegularExpression>("rx");
     QTest::addColumn<QString>("string");
-    QTest::addColumn<QString>("matched");
 
     QTest::newRow("normal")            << QRegularExpression("(test|foo)") << "test _ foo _ test _ Foo";
     QTest::newRow("normal2")           << QRegularExpression("(Test|Foo)") << "test _ foo _ test _ Foo";
@@ -3311,6 +3312,14 @@ void tst_QJSEngine::qRegularExpressionImport_data()
     QTest::newRow(".+ minimal")        << QRegularExpression("^.+$") << ".+";
     QTest::newRow("[.?] minimal")      << QRegularExpression("^[.?]$") << ".?";
     QTest::newRow("[.+] minimal")      << QRegularExpression("^[.+]$") << ".+";
+    QTest::newRow("aaa inverted greedyness")  << QRegularExpression("a{2,5}", QRegularExpression::InvertedGreedinessOption) << "aAaAaaaaaAa";
+    QTest::newRow("inverted greedyness")  << QRegularExpression(".*\\} [*8]", QRegularExpression::InvertedGreedinessOption) << "}?} ?} *";
+    QTest::newRow(".? inverted greedyness")  << QRegularExpression(".?", QRegularExpression::InvertedGreedinessOption) << ".?";
+    QTest::newRow(".+ inverted greedyness")  << QRegularExpression(".+", QRegularExpression::InvertedGreedinessOption) << ".+";
+    QTest::newRow("[.?] inverted greedyness")  << QRegularExpression("[.?]", QRegularExpression::InvertedGreedinessOption) << ".?";
+    QTest::newRow("[.+] inverted greedyness")  << QRegularExpression("[.+]", QRegularExpression::InvertedGreedinessOption) << ".+";
+    QTest::newRow("two lines")  << QRegularExpression("^.*$") << "abc\ndef";
+    QTest::newRow("multiline")  << QRegularExpression("^.*$", QRegularExpression::MultilineOption) << "abc\ndef";
 }
 
 void tst_QJSEngine::qRegularExpressionImport()
@@ -3331,6 +3340,52 @@ void tst_QJSEngine::qRegularExpressionImport()
     const QRegularExpressionMatch match = rx.match(string);
     for (int i = 0; i <= match.lastCapturedIndex(); i++)
         QCOMPARE(result.property(i).toString(), match.captured(i));
+}
+
+void tst_QJSEngine::qRegularExpressionExport_data()
+{
+    QTest::addColumn<QString>("js");
+    QTest::addColumn<QRegularExpression>("regularexpression");
+
+    QTest::newRow("normal")            << "/(test|foo)/" << QRegularExpression("(test|foo)");
+    QTest::newRow("normal2")           << "/(Test|Foo)/" << QRegularExpression("(Test|Foo)");
+    QTest::newRow("case insensitive")  << "/(test|foo)/i" << QRegularExpression("(test|foo)", QRegularExpression::CaseInsensitiveOption);
+    QTest::newRow("case insensitive2") << "/(Test|Foo)/i" << QRegularExpression("(Test|Foo)", QRegularExpression::CaseInsensitiveOption);
+    QTest::newRow("b(a*)(b*)")         << "/b(a*)(b*)/i" << QRegularExpression("b(a*)(b*)", QRegularExpression::CaseInsensitiveOption);
+    QTest::newRow("greedy")            << "/a*(a*)/i" << QRegularExpression("a*(a*)", QRegularExpression::CaseInsensitiveOption);
+    QTest::newRow("wildcard")          << "/.*\\.txt/" << QRegularExpression(".*\\.txt");
+    QTest::newRow("wildcard 2")        << "/a.b\\.txt/" << QRegularExpression("a.b\\.txt");
+    QTest::newRow("slash")             << "/g\\/.*\\/s/i" << QRegularExpression("g\\/.*\\/s", QRegularExpression::CaseInsensitiveOption);
+    QTest::newRow("slash2")            << "/g \\/ .* \\/ s/i" << QRegularExpression("g \\/ .* \\/ s", QRegularExpression::CaseInsensitiveOption);
+    QTest::newRow("fixed")             << "/a\\*aa\\.a\\(ba\\)\\*a\\\\ba/i" << QRegularExpression("a\\*aa\\.a\\(ba\\)\\*a\\\\ba", QRegularExpression::CaseInsensitiveOption);
+    QTest::newRow("fixed insensitive") << "/A\\*A/i" << QRegularExpression("A\\*A", QRegularExpression::CaseInsensitiveOption);
+    QTest::newRow("fixed sensitive")   << "/A\\*A/" << QRegularExpression("A\\*A");
+    QTest::newRow("html")              << "/<b>(.*)<\\/b>/" << QRegularExpression("<b>(.*)<\\/b>");
+    QTest::newRow("html minimal")      << "/^<b>(.*)<\\/b>$/" << QRegularExpression("^<b>(.*)<\\/b>$");
+    QTest::newRow("aaa")               << "/a{2,5}/" << QRegularExpression("a{2,5}");
+    QTest::newRow("aaa minimal")       << "/^a{2,5}$/" << QRegularExpression("^a{2,5}$");
+    QTest::newRow("minimal")           << "/^.*\\} [*8]$/" << QRegularExpression("^.*\\} [*8]$");
+    QTest::newRow(".? minimal")        << "/^.?$/" << QRegularExpression("^.?$");
+    QTest::newRow(".+ minimal")        << "/^.+$/" << QRegularExpression("^.+$");
+    QTest::newRow("[.?] minimal")      << "/^[.?]$/" << QRegularExpression("^[.?]$");
+    QTest::newRow("[.+] minimal")      << "/^[.+]$/" << QRegularExpression("^[.+]$");
+    QTest::newRow("multiline")  << "/^.*$/m" << QRegularExpression("^.*$", QRegularExpression::MultilineOption);
+}
+
+void tst_QJSEngine::qRegularExpressionExport()
+{
+    QFETCH(QString, js);
+    QFETCH(QRegularExpression, regularexpression);
+
+    QJSEngine eng;
+    QJSValue rexp;
+    rexp = eng.evaluate(js);
+
+    QCOMPARE(rexp.isRegExp(), true);
+    QCOMPARE(rexp.isCallable(), false);
+
+    QRegularExpression rx = qjsvalue_cast<QRegularExpression>(rexp);
+    QCOMPARE(rx, regularexpression);
 }
 
 // QScriptValue::toDateTime() returns a local time, whereas JS dates
