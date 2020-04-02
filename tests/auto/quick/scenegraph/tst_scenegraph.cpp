@@ -342,13 +342,13 @@ struct Sample {
     qreal tolerance;
 };
 
-static Sample sample_from_regexp(QRegExp *re) {
-    return Sample(re->cap(1).toInt(),
-                  re->cap(2).toInt(),
-                  re->cap(3).toFloat(),
-                  re->cap(4).toFloat(),
-                  re->cap(5).toFloat(),
-                  re->cap(6).toFloat()
+static Sample sample_from_regexp(QRegularExpressionMatch *match) {
+    return Sample(match->captured(1).toInt(),
+                  match->captured(2).toInt(),
+                  match->captured(3).toFloat(),
+                  match->captured(4).toFloat(),
+                  match->captured(5).toFloat(),
+                  match->captured(6).toFloat()
                   );
 }
 
@@ -406,10 +406,10 @@ void tst_SceneGraph::render_data()
     if (!m_brokenMipmapSupport)
         files << "render_Mipmap.qml";
 
-    QRegExp sampleCount("#samples: *(\\d+)");
+    QRegularExpression sampleCount("#samples: *(\\d+)");
     //                          X:int   Y:int   R:float       G:float       B:float       Error:float
-    QRegExp baseSamples("#base: *(\\d+) *(\\d+) *(\\d\\.\\d+) *(\\d\\.\\d+) *(\\d\\.\\d+) *(\\d\\.\\d+)");
-    QRegExp finalSamples("#final: *(\\d+) *(\\d+) *(\\d\\.\\d+) *(\\d\\.\\d+) *(\\d\\.\\d+) *(\\d\\.\\d+)");
+    QRegularExpression baseSamples("#base: *(\\d+) *(\\d+) *(\\d\\.\\d+) *(\\d\\.\\d+) *(\\d\\.\\d+) *(\\d\\.\\d+)");
+    QRegularExpression finalSamples("#final: *(\\d+) *(\\d+) *(\\d\\.\\d+) *(\\d\\.\\d+) *(\\d\\.\\d+) *(\\d\\.\\d+)");
 
     foreach (QString fileName, files) {
         QFile file(testFile(fileName));
@@ -421,8 +421,9 @@ void tst_SceneGraph::render_data()
 
         int samples = -1;
         foreach (QString line, contents) {
-            if (sampleCount.indexIn(line) >= 0) {
-                samples = sampleCount.cap(1).toInt();
+            auto match = sampleCount.match(line);
+            if (match.hasMatch()) {
+                samples = match.captured(1).toInt();
                 break;
             }
         }
@@ -431,10 +432,11 @@ void tst_SceneGraph::render_data()
 
         QList<Sample> baseStage, finalStage;
         foreach (QString line, contents) {
-            if (baseSamples.indexIn(line) >= 0)
-                baseStage << sample_from_regexp(&baseSamples);
-            else if (finalSamples.indexIn(line) >= 0)
-                finalStage << sample_from_regexp(&finalSamples);
+            auto match = baseSamples.match(line);
+            if (match.hasMatch())
+                baseStage << sample_from_regexp(&match);
+            else if ((match = finalSamples.match(line)).hasMatch())
+                finalStage << sample_from_regexp(&match);
         }
 
         if (baseStage.size() + finalStage.size() != samples)

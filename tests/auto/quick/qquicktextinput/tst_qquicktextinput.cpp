@@ -6021,17 +6021,17 @@ void tst_qquicktextinput::QTBUG_19956_regexp()
     input->setFocus(true);
     QVERIFY(input->hasActiveFocus());
 
-    window.rootObject()->setProperty("regexvalue", QRegExp("abc"));
-    QCOMPARE(window.rootObject()->property("regexvalue").toRegExp(), QRegExp("abc"));
+    window.rootObject()->setProperty("regexvalue", QRegularExpression("abc"));
+    QCOMPARE(window.rootObject()->property("regexvalue").toRegularExpression(), QRegularExpression("abc"));
     QCOMPARE(window.rootObject()->property("text").toString(), QString("abc"));
     QVERIFY(window.rootObject()->property("acceptableInput").toBool());
 
-    window.rootObject()->setProperty("regexvalue", QRegExp("abcd"));
-    QCOMPARE(window.rootObject()->property("regexvalue").toRegExp(), QRegExp("abcd"));
+    window.rootObject()->setProperty("regexvalue", QRegularExpression("abcd"));
+    QCOMPARE(window.rootObject()->property("regexvalue").toRegularExpression(), QRegularExpression("abcd"));
     QVERIFY(!window.rootObject()->property("acceptableInput").toBool());
 
-    window.rootObject()->setProperty("regexvalue", QRegExp("abc"));
-    QCOMPARE(window.rootObject()->property("regexvalue").toRegExp(), QRegExp("abc"));
+    window.rootObject()->setProperty("regexvalue", QRegularExpression("abc"));
+    QCOMPARE(window.rootObject()->property("regexvalue").toRegularExpression(), QRegularExpression("abc"));
     QVERIFY(window.rootObject()->property("acceptableInput").toBool());
 }
 

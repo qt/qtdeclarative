@@ -44,6 +44,7 @@
 #include <QFontMetrics>
 #include <QtQuick/QQuickView>
 #include <QDir>
+#include <QRegularExpression>
 #include <QInputMethod>
 #include <QClipboard>
 #include <QMimeData>
@@ -394,7 +395,7 @@ void tst_qquicktextedit::text()
         QVERIFY(textEditObject != nullptr);
 
         QString expected = richText.at(i);
-        expected.replace(QRegExp("\\\\(.)"),"\\1");
+        expected.replace(QRegularExpression("\\\\(.)"),"\\1");
         QCOMPARE(textEditObject->text(), expected);
         QCOMPARE(textEditObject->length(), expected.length());
     }
@@ -410,8 +411,9 @@ void tst_qquicktextedit::text()
 
         QString actual = textEditObject->text();
         QString expected = standard.at(i);
-        actual.remove(QRegExp(".*<body[^>]*>"));
-        actual.remove(QRegExp("(<[^>]*>)+"));
+        actual.remove("\n");
+        actual.remove(QRegularExpression(".*<body[^>]*>"));
+        actual.remove(QRegularExpression("(<[^>]*>)+"));
         expected.remove("\n");
         QCOMPARE(actual.simplified(), expected);
         QCOMPARE(textEditObject->length(), expected.length());
@@ -427,9 +429,10 @@ void tst_qquicktextedit::text()
         QVERIFY(textEditObject != nullptr);
         QString actual = textEditObject->text();
         QString expected = richText.at(i);
-        actual.replace(QRegExp(".*<body[^>]*>"),"");
-        actual.replace(QRegExp("(<[^>]*>)+"),"<>");
-        expected.replace(QRegExp("(<[^>]*>)+"),"<>");
+        actual.remove("\n");
+        actual.replace(QRegularExpression(".*<body[^>]*>"),"");
+        actual.replace(QRegularExpression("(<[^>]*>)+"),"<>");
+        expected.replace(QRegularExpression("(<[^>]*>)+"),"<>");
         QCOMPARE(actual.simplified(),expected.simplified());
 
         expected.replace("<>", " ");
@@ -458,9 +461,10 @@ void tst_qquicktextedit::text()
         QVERIFY(textEditObject != nullptr);
         QString actual = textEditObject->text();
         QString expected = richText.at(i);
-        actual.replace(QRegExp(".*<body[^>]*>"),"");
-        actual.replace(QRegExp("(<[^>]*>)+"),"<>");
-        expected.replace(QRegExp("(<[^>]*>)+"),"<>");
+        actual.remove("\n");
+        actual.replace(QRegularExpression(".*<body[^>]*>"),"");
+        actual.replace(QRegularExpression("(<[^>]*>)+"),"<>");
+        expected.replace(QRegularExpression("(<[^>]*>)+"),"<>");
         QCOMPARE(actual.simplified(),expected.simplified());
 
         expected.replace("<>", " ");
@@ -4221,7 +4225,7 @@ void tst_qquicktextedit::getFormattedText()
 
     if (textFormat == QQuickTextEdit::RichText
             || (textFormat == QQuickTextEdit::AutoText && Qt::mightBeRichText(text))) {
-        QVERIFY(textEdit->getFormattedText(start, end).contains(QRegExp(expectedText)));
+        QVERIFY(textEdit->getFormattedText(start, end).contains(QRegularExpression(expectedText)));
     } else {
         QCOMPARE(textEdit->getFormattedText(start, end), expectedText);
     }

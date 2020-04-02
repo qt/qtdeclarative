@@ -29,6 +29,7 @@
 #include <qtest.h>
 #include <QtQml/qjsvalue.h>
 #include <QtQml/qjsengine.h>
+#include <QtCore/qregularexpression.h>
 
 class tst_QJSValue : public QObject
 {
@@ -645,7 +646,7 @@ void tst_QJSValue::toRegExp()
 {
     QFETCH(QJSValue, val);
     QBENCHMARK {
-        qjsvalue_cast<QRegExp>(val);
+        qjsvalue_cast<QRegularExpression>(val);
     }
 }
 

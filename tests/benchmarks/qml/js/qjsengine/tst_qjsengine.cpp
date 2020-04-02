@@ -29,6 +29,7 @@
 #include <qtest.h>
 #include <QtQml/qjsvalue.h>
 #include <QtQml/qjsengine.h>
+#include <QtCore/qregularexpression.h>
 
 class tst_QJSEngine : public QObject
 {
@@ -346,7 +347,7 @@ void tst_QJSEngine::newFunction()
 void tst_QJSEngine::newRegExp()
 {
     newEngine();
-    QRegExp re = QRegExp("foo");
+    QRegularExpression re("foo");
     QBENCHMARK {
         m_engine->toScriptValue(re);
     }

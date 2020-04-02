@@ -43,7 +43,7 @@
 #include <QtQml/qjsvalue.h>
 #include <QtQml/qqmlscriptstring.h>
 #include <QtQml/qqmlcomponent.h>
-#include <QtCore/qregexp.h>
+#include <QtCore/qregularexpression.h>
 
 class MyQmlAttachedObject : public QObject
 {
@@ -80,7 +80,7 @@ class MyQmlObject : public QObject
     Q_PROPERTY(QObject *objectProperty READ objectProperty WRITE setObjectProperty NOTIFY objectChanged)
     Q_PROPERTY(QQmlListProperty<QObject> objectListProperty READ objectListProperty CONSTANT)
     Q_PROPERTY(int resettableProperty READ resettableProperty WRITE setResettableProperty RESET resetProperty)
-    Q_PROPERTY(QRegExp regExp READ regExp WRITE setRegExp)
+    Q_PROPERTY(QRegularExpression regExp READ regExp WRITE setRegExp)
     Q_PROPERTY(int nonscriptable READ nonscriptable WRITE setNonscriptable SCRIPTABLE false)
 
 public:
@@ -130,8 +130,8 @@ public:
     void setResettableProperty(int v) { m_resetProperty = v; }
     void resetProperty() { m_resetProperty = 13; }
 
-    QRegExp regExp() { return m_regExp; }
-    void setRegExp(const QRegExp &regExp) { m_regExp = regExp; }
+    QRegularExpression regExp() { return m_regExp; }
+    void setRegExp(const QRegularExpression &regExp) { m_regExp = regExp; }
 
     int console() const { return 11; }
 
@@ -173,7 +173,7 @@ private:
     QList<QObject *> m_objectQList;
     int m_value;
     int m_resetProperty;
-    QRegExp m_regExp;
+    QRegularExpression m_regExp;
     QVariant m_variant;
 };
 
