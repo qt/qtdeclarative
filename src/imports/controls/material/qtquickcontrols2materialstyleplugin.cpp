@@ -42,7 +42,6 @@
 #include "qquickmaterialprogressbar_p.h"
 #include "qquickmaterialripple_p.h"
 
-#include <QtQuickControls2/private/qquickstyleselector_p.h>
 #include <QtQuickControls2/private/qquickpaddedrectangle_p.h>
 
 QT_BEGIN_NAMESPACE

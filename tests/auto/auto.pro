@@ -24,7 +24,6 @@ SUBDIRS += \
     qquickninepatchimage \
     qquickpopup \
     qquickstyle \
-    qquickstyleselector \
     qquickuniversalstyle \
     qquickuniversalstyleconf \
     revisions \
