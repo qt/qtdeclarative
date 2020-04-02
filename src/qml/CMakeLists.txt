@@ -150,6 +150,7 @@ qt_add_module(Qml
         jsruntime/qv4stringobject.cpp jsruntime/qv4stringobject_p.h
         jsruntime/qv4symbol.cpp jsruntime/qv4symbol_p.h
         jsruntime/qv4typedarray.cpp jsruntime/qv4typedarray_p.h
+        jsruntime/qv4urlobject.cpp jsruntime/qv4urlobject_p.h
         jsruntime/qv4value.cpp jsruntime/qv4value_p.h
         jsruntime/qv4variantobject.cpp jsruntime/qv4variantobject_p.h
         jsruntime/qv4vme_moth.cpp jsruntime/qv4vme_moth_p.h

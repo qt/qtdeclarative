@@ -1105,6 +1105,7 @@ void tst_QJSEngine::globalObjectProperties_enumerate()
         << "Proxy"
         << "Atomics"
         << "Promise"
+        << "URL"
         ;
     QSet<QString> actualNames;
     {

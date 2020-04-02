@@ -105,6 +105,9 @@ QString Managed::className() const
     case Type_MathObject:
         s = "Math";
         break;
+    case Type_UrlObject:
+        s = "URL";
+        break;
 
     case Type_ExecutionContext:
         s = "__ExecutionContext";

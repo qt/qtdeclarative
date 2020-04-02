@@ -144,6 +144,7 @@ public:
         Type_JsonObject,
         Type_MathObject,
         Type_ProxyObject,
+        Type_UrlObject,
 
         Type_ExecutionContext,
         Type_InternalClass,

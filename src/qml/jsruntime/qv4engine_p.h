@@ -240,6 +240,7 @@ public:
         MapIteratorProto,
         ArrayIteratorProto,
         StringIteratorProto,
+        UrlProto,
 
         Object_Ctor,
         String_Ctor,
@@ -267,6 +268,7 @@ public:
         WeakMap_Ctor,
         Map_Ctor,
         IntrinsicTypedArray_Ctor,
+        Url_Ctor,
 
         GetSymbolSpecies,
 
@@ -307,6 +309,10 @@ public:
     FunctionObject *weakMapCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + WeakMap_Ctor); }
     FunctionObject *mapCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + Map_Ctor); }
     FunctionObject *intrinsicTypedArrayCtor() const { return reinterpret_cast<FunctionObject *>(jsObjects + IntrinsicTypedArray_Ctor); }
+    FunctionObject *urlCtor() const
+    {
+        return reinterpret_cast<FunctionObject *>(jsObjects + Url_Ctor);
+    }
     FunctionObject *typedArrayCtors;
 
     FunctionObject *getSymbolSpecies() const { return reinterpret_cast<FunctionObject *>(jsObjects + GetSymbolSpecies); }
@@ -354,6 +360,7 @@ public:
     Object *mapIteratorPrototype() const { return reinterpret_cast<Object *>(jsObjects + MapIteratorProto); }
     Object *arrayIteratorPrototype() const { return reinterpret_cast<Object *>(jsObjects + ArrayIteratorProto); }
     Object *stringIteratorPrototype() const { return reinterpret_cast<Object *>(jsObjects + StringIteratorProto); }
+    Object *urlPrototype() const { return reinterpret_cast<Object *>(jsObjects + UrlProto); }
 
     EvalFunction *evalFunction() const { return reinterpret_cast<EvalFunction *>(jsObjects + Eval_Function); }
     FunctionObject *getStackFunction() const { return reinterpret_cast<FunctionObject *>(jsObjects + GetStack_Function); }
@@ -582,6 +589,8 @@ public:
 #if QT_CONFIG(regularexpression)
     Heap::RegExpObject *newRegExpObject(const QRegularExpression &re);
 #endif
+
+    Heap::UrlObject *newUrlObject();
 
     Heap::Object *newErrorObject(const Value &value);
     Heap::Object *newErrorObject(const QString &message);

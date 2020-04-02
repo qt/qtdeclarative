@@ -59,6 +59,7 @@ SOURCES += \
     $$PWD/qv4module.cpp \
     $$PWD/qv4promiseobject.cpp \
     $$PWD/qv4runtime.cpp \
+    $$PWD/qv4urlobject.cpp \
     $$PWD/qv4value.cpp \
     $$PWD/qv4compilationunitmapper.cpp \
     $$PWD/qv4executablecompilationunit.cpp \
@@ -135,6 +136,7 @@ HEADERS += \
     $$PWD/qv4module_p.h \
     $$PWD/qv4promiseobject_p.h \
     $$PWD/qv4runtime_p.h \
+    $$PWD/qv4urlobject_p.h \
     $$PWD/qv4value_p.h \
     $$PWD/qv4compilationunitmapper_p.h \
     $$PWD/qv4executablecompilationunit_p.h \

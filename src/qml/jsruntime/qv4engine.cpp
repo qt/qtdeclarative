@@ -91,6 +91,7 @@
 #include "qv4proxy_p.h"
 #include "qv4stackframe_p.h"
 #include "qv4atomics_p.h"
+#include "qv4urlobject_p.h"
 
 #if QT_CONFIG(qml_sequence_object)
 #include "qv4sequenceobject_p.h"
@@ -650,6 +651,13 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     ic = newInternalClass(StringIteratorPrototype::staticVTable(), iteratorPrototype());
     jsObjects[StringIteratorProto] = memoryManager->allocObject<StringIteratorPrototype>(ic);
 
+    //
+    // url
+    //
+
+    jsObjects[Url_Ctor] = memoryManager->allocate<UrlCtor>(global);
+    jsObjects[UrlProto] = memoryManager->allocate<UrlPrototype>();
+
     str = newString(QStringLiteral("get [Symbol.species]"));
     jsObjects[GetSymbolSpecies] = FunctionObject::createBuiltinFunction(this, str, ArrayPrototype::method_get_species, 0);
 
@@ -671,6 +679,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     static_cast<SyntaxErrorPrototype *>(syntaxErrorPrototype())->init(this, syntaxErrorCtor());
     static_cast<TypeErrorPrototype *>(typeErrorPrototype())->init(this, typeErrorCtor());
     static_cast<URIErrorPrototype *>(uRIErrorPrototype())->init(this, uRIErrorCtor());
+    static_cast<UrlPrototype *>(urlPrototype())->init(this, urlCtor());
 
     static_cast<IteratorPrototype *>(iteratorPrototype())->init(this);
     static_cast<ForInIteratorPrototype *>(forInIteratorPrototype())->init(this);
@@ -760,6 +769,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     globalObject->defineDefaultProperty(QStringLiteral("TypeError"), *typeErrorCtor());
     globalObject->defineDefaultProperty(QStringLiteral("URIError"), *uRIErrorCtor());
     globalObject->defineDefaultProperty(QStringLiteral("Promise"), *promiseCtor());
+    globalObject->defineDefaultProperty(QStringLiteral("URL"), *urlCtor());
 
     globalObject->defineDefaultProperty(QStringLiteral("SharedArrayBuffer"), *sharedArrayBufferCtor());
     globalObject->defineDefaultProperty(QStringLiteral("ArrayBuffer"), *arrayBufferCtor());
@@ -1048,6 +1058,11 @@ Heap::RegExpObject *ExecutionEngine::newRegExpObject(const QRegularExpression &r
     return memoryManager->allocate<RegExpObject>(re);
 }
 #endif
+
+Heap::UrlObject *ExecutionEngine::newUrlObject()
+{
+    return memoryManager->allocate<UrlObject>();
+}
 
 Heap::Object *ExecutionEngine::newErrorObject(const Value &value)
 {

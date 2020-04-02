@@ -47,6 +47,7 @@
 #include <private/qv4alloca_p.h>
 #include <private/qv4runtime_p.h>
 #include <private/qv4object_p.h>
+#include <private/qv4urlobject_p.h>
 #include <private/qv4script_p.h>
 #include <private/qqmlcomponentattached_p.h>
 #include <private/qv4objectiterator_p.h>
@@ -382,6 +383,9 @@ private slots:
     void semicolonAfterProperty();
     void hugeStack();
     void bindingOnQProperty();
+    void urlConstruction();
+    void urlPropertyInvalid();
+    void urlPropertySet();
 
     void gcCrashRegressionTest();
 
@@ -9280,6 +9284,193 @@ void tst_qqmlecmascript::bindingOnQProperty()
     QVERIFY(qobject_cast<ClassWithQProperty*>(test.data()));
     QProperty<int> &qprop = static_cast<ClassWithQProperty*>(test.data())->value;
     QVERIFY(qprop.hasBinding());
+}
+
+void tst_qqmlecmascript::urlConstruction()
+{
+    QQmlEngine qmlengine;
+
+    QObject *o = new QObject(&qmlengine);
+
+    QV4::ExecutionEngine *engine = qmlengine.handle();
+    QV4::Scope scope(engine);
+
+    QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(engine, o));
+
+    // Invalid number of arguments
+    QVERIFY(EVALUATE_ERROR("new URL()"));
+    QVERIFY(EVALUATE_ERROR("new URL('a', 'b', 'c')"));
+
+    // Invalid arguments
+    QVERIFY(EVALUATE_ERROR("new URL(null)"));
+    QVERIFY(EVALUATE_ERROR("new URL('a', null)"));
+
+    // Invalid URL
+    QVERIFY(EVALUATE_ERROR("new URL('thisisnotaurl')"));
+
+    // Valid URL
+    QV4::ScopedValue ret(scope,
+                         EVALUATE("new "
+                                  "URL('https://username:password@example.com:1234/path/to/"
+                                  "something?search=value#hash')"));
+    QV4::UrlObject *validUrl = ret->as<QV4::UrlObject>();
+    QVERIFY(validUrl != nullptr);
+
+    QCOMPARE(validUrl->protocol(), "https");
+    QCOMPARE(validUrl->hostname(), "example.com");
+    QCOMPARE(validUrl->username(), "username");
+    QCOMPARE(validUrl->password(), "password");
+    QCOMPARE(validUrl->port(), "1234");
+    QCOMPARE(validUrl->host(), "example.com:1234");
+    QCOMPARE(validUrl->origin(), "https://example.com:1234");
+    QCOMPARE(validUrl->href(),
+             "https://username:password@example.com:1234/path/to/something?search=value#hash");
+    QCOMPARE(validUrl->pathname(), "/path/to/something");
+    QCOMPARE(validUrl->search(), "?search=value");
+    QCOMPARE(validUrl->hash(), "#hash");
+
+    // Valid relative URL
+    QV4::ScopedValue retRel(scope,
+                            EVALUATE("new URL('/path/to/something?search=value#hash', "
+                                     "'https://username:password@example.com:1234')"));
+    QV4::UrlObject *validRelativeUrl = retRel->as<QV4::UrlObject>();
+    QVERIFY(validRelativeUrl != nullptr);
+
+    QCOMPARE(validRelativeUrl->protocol(), "https");
+    QCOMPARE(validRelativeUrl->hostname(), "example.com");
+    QCOMPARE(validRelativeUrl->username(), "username");
+    QCOMPARE(validRelativeUrl->password(), "password");
+    QCOMPARE(validRelativeUrl->port(), "1234");
+    QCOMPARE(validRelativeUrl->host(), "example.com:1234");
+    QCOMPARE(validRelativeUrl->origin(), "https://example.com:1234");
+    QCOMPARE(validRelativeUrl->href(),
+             "https://username:password@example.com:1234/path/to/something?search=value#hash");
+    QCOMPARE(validRelativeUrl->pathname(), "/path/to/something");
+    QCOMPARE(validRelativeUrl->search(), "?search=value");
+    QCOMPARE(validRelativeUrl->hash(), "#hash");
+}
+
+void tst_qqmlecmascript::urlPropertyInvalid()
+{
+    QQmlEngine qmlengine;
+
+    QObject *o = new QObject(&qmlengine);
+
+    QV4::ExecutionEngine *engine = qmlengine.handle();
+    QV4::Scope scope(engine);
+
+    QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(engine, o));
+
+    // Try invalid values on all settable properties
+    QVERIFY(EVALUATE_ERROR("new URL('https://localhost').hash = null;"));
+    QVERIFY(EVALUATE_ERROR("new URL('https://localhost').hostname = null;"));
+    QVERIFY(EVALUATE_ERROR("new URL('https://localhost').href = null;"));
+    QVERIFY(EVALUATE_ERROR("new URL('https://localhost').password = null;"));
+    QVERIFY(EVALUATE_ERROR("new URL('https://localhost').pathname = null;"));
+    QVERIFY(EVALUATE_ERROR("new URL('https://localhost').port = null;"));
+    QVERIFY(EVALUATE_ERROR("new URL('https://localhost').protocol = null;"));
+    QVERIFY(EVALUATE_ERROR("new URL('https://localhost').search = null;"));
+    QVERIFY(EVALUATE_ERROR("new URL('https://localhost').hash = null;"));
+
+    // Make sure that origin does not change after trying to set it
+    QVERIFY(EVALUATE_VALUE("(function() { var url = new URL('https://localhost'); url.origin = "
+                           "'http://example.com'; return url.origin;})()",
+                           QV4::ScopedValue(scope, scope.engine->newString("https://localhost"))));
+}
+
+void tst_qqmlecmascript::urlPropertySet()
+{
+    QQmlEngine qmlengine;
+
+    QObject *o = new QObject(&qmlengine);
+
+    QV4::ExecutionEngine *engine = qmlengine.handle();
+    QV4::Scope scope(engine);
+
+    QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(engine, o));
+
+    QV4::ScopedValue ret(scope, EVALUATE("this.url = new URL('http://localhost/a/b/c');"));
+    QV4::UrlObject *url = ret->as<QV4::UrlObject>();
+    QVERIFY(url != nullptr);
+
+    // protocol
+    QVERIFY(EVALUATE("this.url.protocol = 'https';"));
+
+    QCOMPARE(url->protocol(), "https");
+    QCOMPARE(url->href(), "https://localhost/a/b/c");
+    QCOMPARE(url->origin(), "https://localhost");
+
+    // port
+    QVERIFY(EVALUATE("this.url.port = 4567;"));
+
+    QCOMPARE(url->port(), "4567");
+    QCOMPARE(url->href(), "https://localhost:4567/a/b/c");
+    QCOMPARE(url->host(), "localhost:4567");
+    QCOMPARE(url->origin(), "https://localhost:4567");
+
+    // hostname
+    QVERIFY(EVALUATE("this.url.hostname = 'foobar.com';"));
+
+    QCOMPARE(url->hostname(), "foobar.com");
+    QCOMPARE(url->href(), "https://foobar.com:4567/a/b/c");
+    QCOMPARE(url->origin(), "https://foobar.com:4567");
+    QCOMPARE(url->host(), "foobar.com:4567");
+
+    // host
+    QVERIFY(EVALUATE("this.url.host = 'test.com:1111';"));
+
+    QCOMPARE(url->host(), "test.com:1111");
+    QCOMPARE(url->hostname(), "test.com");
+    QCOMPARE(url->href(), "https://test.com:1111/a/b/c");
+    QCOMPARE(url->origin(), "https://test.com:1111");
+
+    // username
+    QVERIFY(EVALUATE("this.url.username = 'uname';"));
+
+    QCOMPARE(url->username(), "uname");
+    QCOMPARE(url->href(), "https://uname@test.com:1111/a/b/c");
+
+    // password
+    QVERIFY(EVALUATE("this.url.password = 'pword';"));
+
+    QCOMPARE(url->password(), "pword");
+    QCOMPARE(url->href(), "https://uname:pword@test.com:1111/a/b/c");
+
+    // pathname
+    QVERIFY(EVALUATE("this.url.pathname = '/c/b/a';"));
+
+    QCOMPARE(url->pathname(), "/c/b/a");
+    QCOMPARE(url->href(), "https://uname:pword@test.com:1111/c/b/a");
+
+    // search
+    QVERIFY(EVALUATE("this.url.search = '?key=test';"));
+
+    QCOMPARE(url->search(), "?key=test");
+    QCOMPARE(url->href(), "https://uname:pword@test.com:1111/c/b/a?key=test");
+
+    // hash
+    QVERIFY(EVALUATE("this.url.hash = '#foo';"));
+
+    QCOMPARE(url->hash(), "#foo");
+    QCOMPARE(url->href(), "https://uname:pword@test.com:1111/c/b/a?key=test#foo");
+
+    // href
+    QVERIFY(EVALUATE(
+            "this.url.href = "
+            "'https://username:password@example.com:1234/path/to/something?search=value#hash';"));
+
+    QCOMPARE(url->protocol(), "https");
+    QCOMPARE(url->hostname(), "example.com");
+    QCOMPARE(url->username(), "username");
+    QCOMPARE(url->password(), "password");
+    QCOMPARE(url->port(), "1234");
+    QCOMPARE(url->host(), "example.com:1234");
+    QCOMPARE(url->origin(), "https://example.com:1234");
+    QCOMPARE(url->href(),
+             "https://username:password@example.com:1234/path/to/something?search=value#hash");
+    QCOMPARE(url->pathname(), "/path/to/something");
+    QCOMPARE(url->search(), "?search=value");
+    QCOMPARE(url->hash(), "#hash");
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
