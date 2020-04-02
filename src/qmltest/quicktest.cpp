@@ -482,11 +482,35 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
 
     const QFileInfo testPathInfo(testPath);
     if (testPathInfo.isFile()) {
-        if (!testPath.endsWith(QLatin1String(".qml"))) {
-            qWarning("'%s' does not have the suffix '.qml'.", qPrintable(testPath));
+        if (testPath.endsWith(QLatin1String(".qml"))) {
+            files << testPath;
+        } else if (testPath.endsWith(QLatin1String(".qmltests"))) {
+            QFile file(testPath);
+            if (file.open(QIODevice::ReadOnly)) {
+                while (!file.atEnd()) {
+                    const QString filePath = testPathInfo.dir()
+                                                     .filePath(QString::fromUtf8(file.readLine()))
+                                                     .trimmed();
+                    const QFileInfo f(filePath);
+                    if (f.exists())
+                        files.append(filePath);
+                    else
+                        qWarning("The test file '%s' does not exists", qPrintable(filePath));
+                }
+                file.close();
+                files.sort();
+                if (files.isEmpty()) {
+                    qWarning("The file '%s' does not contain any tests files",
+                             qPrintable(testPath));
+                    return 1;
+                }
+            } else {
+                qWarning("Could not read '%s'", qPrintable(testPath));
+            }
+        } else {
+            qWarning("'%s' does not have the suffix '.qml' or '.qmltests'.", qPrintable(testPath));
             return 1;
         }
-        files << testPath;
     } else if (testPathInfo.isDir()) {
         // Scan the test data directory recursively, looking for "tst_*.qml" files.
         const QStringList filters(QStringLiteral("tst_*.qml"));
