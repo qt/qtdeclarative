@@ -462,6 +462,8 @@ QQuickTableViewPrivate::~QQuickTableViewPrivate()
 
 QString QQuickTableViewPrivate::tableLayoutToString() const
 {
+    if (loadedItems.isEmpty())
+        return QLatin1String("table is empty!");
     return QString(QLatin1String("table cells: (%1,%2) -> (%3,%4), item count: %5, table rect: %6,%7 x %8,%9"))
             .arg(leftColumn()).arg(topRow())
             .arg(rightColumn()).arg(bottomRow())
