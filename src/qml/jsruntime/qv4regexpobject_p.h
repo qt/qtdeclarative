@@ -80,7 +80,6 @@ DECLARE_HEAP_OBJECT(RegExpObject, Object) {
 
     void init();
     void init(QV4::RegExp *value);
-    void init(const QRegExp &re);
 #if QT_CONFIG(regularexpression)
     void init(const QRegularExpression &re);
 #endif
@@ -140,7 +139,6 @@ struct Q_QML_PRIVATE_EXPORT RegExpObject: Object {
         return setProperty(Index_LastIndex, Value::fromInt32(index));
     }
 
-    QRegExp toQRegExp() const;
 #if QT_CONFIG(regularexpression)
     QRegularExpression toQRegularExpression() const;
 #endif

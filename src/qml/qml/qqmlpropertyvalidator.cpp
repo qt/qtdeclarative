@@ -596,7 +596,6 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *prope
         }
     }
     break;
-    case QMetaType::QRegExp:
     case QMetaType::QRegularExpression:
         return warnOrError(tr("Invalid property assignment: regular expression expected; use /pattern/ syntax"));
     default: {

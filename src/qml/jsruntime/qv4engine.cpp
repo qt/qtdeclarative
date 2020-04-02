@@ -1042,11 +1042,6 @@ Heap::RegExpObject *ExecutionEngine::newRegExpObject(RegExp *re)
     return memoryManager->allocate<RegExpObject>(re);
 }
 
-Heap::RegExpObject *ExecutionEngine::newRegExpObject(const QRegExp &re)
-{
-    return memoryManager->allocate<RegExpObject>(re);
-}
-
 #if QT_CONFIG(regularexpression)
 Heap::RegExpObject *ExecutionEngine::newRegExpObject(const QRegularExpression &re)
 {
@@ -1605,13 +1600,10 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
     QV4::ScopedObject o(scope, value);
     Q_ASSERT(o);
 
-    if (QV4::RegExpObject *re = o->as<QV4::RegExpObject>()) {
 #if QT_CONFIG(regularexpression)
-        if (typeHint != QMetaType::QRegExp)
-            return re->toQRegularExpression();
+    if (QV4::RegExpObject *re = o->as<QV4::RegExpObject>())
+        return re->toQRegularExpression();
 #endif
-        return re->toQRegExp();
-    }
 
     if (createJSValueForObjects)
         return QVariant::fromValue(QJSValuePrivate::fromReturnedValue(o->asReturnedValue()));
@@ -1720,8 +1712,6 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
                 return QV4::Encode(newDateObject(QDateTime(*reinterpret_cast<const QDate *>(ptr), QTime(0, 0, 0), Qt::UTC)));
             case QMetaType::QTime:
                 return QV4::Encode(newDateObjectFromTime(*reinterpret_cast<const QTime *>(ptr)));
-            case QMetaType::QRegExp:
-                return QV4::Encode(newRegExpObject(*reinterpret_cast<const QRegExp *>(ptr)));
 #if QT_CONFIG(regularexpression)
             case QMetaType::QRegularExpression:
                 return QV4::Encode(newRegExpObject(*reinterpret_cast<const QRegularExpression *>(ptr)));
@@ -2189,11 +2179,6 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, int type, void *data)
     case QMetaType::QDate:
         if (const QV4::DateObject *d = value.as<DateObject>()) {
             *reinterpret_cast<QDate *>(data) = d->toQDateTime().date();
-            return true;
-        } break;
-    case QMetaType::QRegExp:
-        if (const QV4::RegExpObject *r = value.as<QV4::RegExpObject>()) {
-            *reinterpret_cast<QRegExp *>(data) = r->toQRegExp();
             return true;
         } break;
 #if QT_CONFIG(regularexpression)

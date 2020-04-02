@@ -579,7 +579,6 @@ public:
 
     Heap::RegExpObject *newRegExpObject(const QString &pattern, int flags);
     Heap::RegExpObject *newRegExpObject(RegExp *re);
-    Heap::RegExpObject *newRegExpObject(const QRegExp &re);
 #if QT_CONFIG(regularexpression)
     Heap::RegExpObject *newRegExpObject(const QRegularExpression &re);
 #endif

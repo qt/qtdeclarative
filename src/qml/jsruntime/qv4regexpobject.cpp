@@ -49,7 +49,6 @@
 #include "private/qlocale_tools_p.h"
 
 #include <QtCore/QDebug>
-#include <QtCore/qregexp.h>
 #if QT_CONFIG(regularexpression)
 #include <QtCore/qregularexpression.h>
 #endif
@@ -59,8 +58,6 @@
 #include <private/qv4alloca_p.h>
 
 QT_BEGIN_NAMESPACE
-
-Q_CORE_EXPORT QString qt_regexp_toCanonical(const QString &, QRegExp::PatternSyntax);
 
 using namespace QV4;
 
@@ -120,27 +117,6 @@ static QString minimalPattern(const QString &pattern)
     return ecmaPattern;
 }
 
-// Converts a QRegExp to a JS RegExp.
-// The conversion is not 100% exact since ECMA regexp and QRegExp
-// have different semantics/flags, but we try to do our best.
-void Heap::RegExpObject::init(const QRegExp &re)
-{
-    Object::init();
-
-    // Convert the pattern to a ECMAScript pattern.
-    QString pattern = QT_PREPEND_NAMESPACE(qt_regexp_toCanonical)(re.pattern(), re.patternSyntax());
-    if (re.isMinimal())
-        pattern = minimalPattern(pattern);
-
-    Scope scope(internalClass->engine);
-    Scoped<QV4::RegExpObject> o(scope, this);
-
-    uint flags = (re.caseSensitivity() == Qt::CaseInsensitive ? CompiledData::RegExp::RegExp_IgnoreCase : CompiledData::RegExp::RegExp_NoFlags);
-    o->d()->value.set(scope.engine, QV4::RegExp::create(scope.engine, pattern, flags));
-
-    o->initProperties();
-}
-
 #if QT_CONFIG(regularexpression)
 // Converts a QRegularExpression to a JS RegExp.
 // The conversion is not 100% exact since ECMA regexp and QRegularExpression
@@ -171,15 +147,6 @@ void RegExpObject::initProperties()
     setProperty(Index_LastIndex, Value::fromInt32(0));
 
     Q_ASSERT(value());
-}
-
-// Converts a JS RegExp to a QRegExp.
-// The conversion is not 100% exact since ECMA regexp and QRegExp
-// have different semantics/flags, but we try to do our best.
-QRegExp RegExpObject::toQRegExp() const
-{
-    Qt::CaseSensitivity caseSensitivity = (value()->flags & CompiledData::RegExp::RegExp_IgnoreCase) ? Qt::CaseInsensitive : Qt::CaseSensitive;
-    return QRegExp(*value()->pattern, caseSensitivity, QRegExp::RegExp2);
 }
 
 #if QT_CONFIG(regularexpression)

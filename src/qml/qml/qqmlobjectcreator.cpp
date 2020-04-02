@@ -624,9 +624,6 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         property->writeProperty(_qobject, &vec, propertyWriteFlags);
     }
     break;
-    case QMetaType::QRegExp:
-        assertOrNull(!"not possible");
-        break;
     default: {
         // generate single literal value assignment to a list property if required
         if (property->propType() == qMetaTypeId<QList<qreal> >()) {
