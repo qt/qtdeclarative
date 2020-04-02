@@ -31,6 +31,7 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qdir.h>
+#include <QtCore/qregularexpression.h>
 
 QQmlDebugProcess::QQmlDebugProcess(const QString &executable, QObject *parent)
     : QObject(parent)
@@ -194,9 +195,9 @@ void QQmlDebugProcess::processAppOutput()
         m_outputBuffer = m_outputBuffer.right(m_outputBuffer.size() - nlIndex - 1);
 
         if (line.contains("QML Debugger:")) {
-            const QRegExp portRx("Waiting for connection on port (\\d+)");
-            if (portRx.indexIn(line) != -1) {
-                m_port = portRx.cap(1).toInt();
+            auto portRx = QRegularExpression("Waiting for connection on port (\\d+)").match(line);
+            if (portRx.hasMatch()) {
+                m_port = portRx.captured(1).toInt();
                 m_timer.stop();
                 m_state = SessionStarted;
                 m_eventLoop.quit();

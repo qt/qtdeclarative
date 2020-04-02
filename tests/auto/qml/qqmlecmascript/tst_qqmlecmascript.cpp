@@ -2529,14 +2529,6 @@ void tst_qqmlecmascript::regExpBug()
 
     //QTBUG-9367
     {
-        QQmlComponent component(&engine, testFileUrl("regExp.qml"));
-        MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create());
-        QVERIFY(object != nullptr);
-        QCOMPARE(object->regExp().pattern(), QLatin1String("[a-zA-z]"));
-        delete object;
-    }
-
-    {
         QQmlComponent component(&engine, testFileUrl("regularExpression.qml"));
         QScopedPointer<MyQmlObject> object(qobject_cast<MyQmlObject*>(component.create()));
         QVERIFY(!object.isNull());
@@ -2544,15 +2536,6 @@ void tst_qqmlecmascript::regExpBug()
     }
 
     //QTBUG-23068
-    {
-        QString err = QString(QLatin1String("%1:6 Invalid property assignment: regular expression expected; use /pattern/ syntax\n")).arg(testFileUrl("regExp.2.qml").toString());
-        QQmlComponent component(&engine, testFileUrl("regExp.2.qml"));
-        QTest::ignoreMessage(QtWarningMsg, "QQmlComponent: Component is not ready");
-        MyQmlObject *object = qobject_cast<MyQmlObject*>(component.create());
-        QVERIFY(!object);
-        QCOMPARE(component.errorString(), err);
-    }
-
     {
         const QString err = QString::fromLatin1("%1:6 Invalid property assignment: "
                                                 "regular expression expected; "

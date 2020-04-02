@@ -138,17 +138,7 @@ void tst_QQuickWorkerScript::messaging()
     if (response.userType() == qMetaTypeId<QJSValue>())
         response = response.value<QJSValue>().toVariant();
 
-    if (value.type() == QMetaType::QRegExp && response.type() == QMetaType::QRegularExpression) {
-        // toVariant() doesn't know if we want QRegExp or QRegularExpression. It always creates
-        // a QRegularExpression from a JavaScript regular expression.
-        const QRegularExpression responseRegExp = response.toRegularExpression();
-        const QRegExp valueRegExp = value.toRegExp();
-        QCOMPARE(responseRegExp.pattern(), valueRegExp.pattern());
-        QCOMPARE(bool(responseRegExp.patternOptions() & QRegularExpression::CaseInsensitiveOption),
-                 bool(valueRegExp.caseSensitivity() == Qt::CaseInsensitive));
-    } else {
-        QCOMPARE(response, value);
-    }
+    QCOMPARE(response, value);
 
     qApp->processEvents();
     delete worker;
@@ -165,8 +155,6 @@ void tst_QQuickWorkerScript::messaging_data()
     QTest::newRow("string") << QVariant::fromValue(QString("More cheeeese, Gromit!"));
     QTest::newRow("variant list") << QVariant::fromValue((QVariantList() << "a" << "b" << "c"));
     QTest::newRow("date time") << QVariant::fromValue(QDateTime::currentDateTime());
-    QTest::newRow("regexp") << QVariant::fromValue(QRegExp("^\\d\\d?$", Qt::CaseInsensitive,
-                                                         QRegExp::RegExp2));
     QTest::newRow("regularexpression") << QVariant::fromValue(QRegularExpression(
             "^\\d\\d?$", QRegularExpression::CaseInsensitiveOption));
     QTest::newRow("url") << QVariant::fromValue(QUrl("http://example.com/foo/bar"));

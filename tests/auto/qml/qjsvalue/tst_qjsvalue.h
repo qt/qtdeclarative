@@ -73,7 +73,6 @@ private slots:
     void toQObject_nonQObject();
     void toQObject();
     void toDateTime();
-    void toRegExp();
     void toRegularExpression();
     void isArray_data();
     void isArray();
