@@ -813,24 +813,8 @@ bool ResolvedTypeReferenceMap::addToHash(QCryptographicHash *hash, QQmlEngine *e
 QString ExecutableCompilationUnit::bindingValueAsString(const CompiledData::Binding *binding) const
 {
     using namespace CompiledData;
+#if QT_CONFIG(translation)
     switch (binding->type) {
-    case Binding::Type_Script:
-    case Binding::Type_String:
-        return stringAt(binding->stringIndex);
-    case Binding::Type_Null:
-        return QStringLiteral("null");
-    case Binding::Type_Boolean:
-        return binding->value.b ? QStringLiteral("true") : QStringLiteral("false");
-    case Binding::Type_Number:
-        return QString::number(bindingValueAsNumber(binding), 'g', QLocale::FloatingPointShortest);
-    case Binding::Type_Invalid:
-        return QString();
-#if !QT_CONFIG(translation)
-    case Binding::Type_TranslationById:
-    case Binding::Type_Translation:
-        return stringAt(
-                data->translations()[binding->value.translationDataIndex].stringIndex);
-#else
     case Binding::Type_TranslationById: {
         const TranslationData &translation
                 = data->translations()[binding->value.translationDataIndex];
@@ -851,19 +835,11 @@ QString ExecutableCompilationUnit::bindingValueAsString(const CompiledData::Bind
         return QCoreApplication::translate(contextUtf8.constData(), text.constData(),
                                            comment.constData(), translation.number);
     }
-#endif
     default:
         break;
     }
-    return QString();
-}
-
-QString ExecutableCompilationUnit::bindingValueAsScriptString(
-        const CompiledData::Binding *binding) const
-{
-    return (binding->type == CompiledData::Binding::Type_String)
-            ? CompiledData::Binding::escapedString(stringAt(binding->stringIndex))
-            : bindingValueAsString(binding);
+#endif
+    return CompilationUnit::bindingValueAsString(binding);
 }
 
 bool ExecutableCompilationUnit::verifyHeader(

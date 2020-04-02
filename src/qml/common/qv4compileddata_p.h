@@ -58,6 +58,7 @@
 #include <QtCore/qstringlist.h>
 #include <QtCore/qhash.h>
 #include <QtCore/qversionnumber.h>
+#include <QtCore/qlocale.h>
 
 #if QT_CONFIG(temporaryfile)
 #include <QtCore/qsavefile.h>
@@ -1292,6 +1293,44 @@ public:
 
     Heap::Module *module() const { return m_module; }
     void setModule(Heap::Module *module) { m_module = module; }
+
+    QString bindingValueAsString(const CompiledData::Binding *binding) const
+    {
+        using namespace CompiledData;
+        switch (binding->type) {
+        case Binding::Type_Script:
+        case Binding::Type_String:
+            return stringAt(binding->stringIndex);
+        case Binding::Type_Null:
+            return QStringLiteral("null");
+        case Binding::Type_Boolean:
+            return binding->value.b ? QStringLiteral("true") : QStringLiteral("false");
+        case Binding::Type_Number:
+            return QString::number(bindingValueAsNumber(binding), 'g', QLocale::FloatingPointShortest);
+        case Binding::Type_Invalid:
+            return QString();
+        case Binding::Type_TranslationById:
+        case Binding::Type_Translation:
+            return stringAt(data->translations()[binding->value.translationDataIndex].stringIndex);
+        default:
+            break;
+        }
+        return QString();
+    }
+
+    QString bindingValueAsScriptString(const CompiledData::Binding *binding) const
+    {
+        return (binding->type == CompiledData::Binding::Type_String)
+                ? CompiledData::Binding::escapedString(stringAt(binding->stringIndex))
+                : bindingValueAsString(binding);
+    }
+
+    double bindingValueAsNumber(const CompiledData::Binding *binding) const
+    {
+        if (binding->type != CompiledData::Binding::Type_Number)
+            return 0.0;
+        return constants[binding->value.constantValueIndex].doubleValue();
+    }
 
 private:
     QString m_fileName; // initialized from data->sourceFileIndex

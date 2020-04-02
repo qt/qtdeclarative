@@ -279,17 +279,9 @@ public:
     bool saveToDisk(const QUrl &unitUrl, QString *errorString);
 
     QString bindingValueAsString(const CompiledData::Binding *binding) const;
-    QString bindingValueAsScriptString(const CompiledData::Binding *binding) const;
-    double bindingValueAsNumber(const CompiledData::Binding *binding) const
-    {
-        if (binding->type != CompiledData::Binding::Type_Number)
-            return 0.0;
-        return constants[binding->value.constantValueIndex].doubleValue();
-    }
 
     static bool verifyHeader(const CompiledData::Unit *unit, QDateTime expectedSourceTimeStamp,
                              QString *errorString);
-
 protected:
     quint32 totalStringCount() const
     { return data->stringTableSize; }
