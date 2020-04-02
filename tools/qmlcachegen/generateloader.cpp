@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 #include <QByteArray>
-#include <QRegExp>
+#include <QRegularExpression>
 #include <QString>
 #include <QStringList>
 #include <QTextStream>
@@ -106,7 +106,7 @@ static QString qtResourceNameForFile(const QString &fileName)
     QString name = fi.completeBaseName();
     if (name.isEmpty())
         name = fi.fileName();
-    name.replace(QRegExp(QLatin1String("[^a-zA-Z0-9_]")), QLatin1String("_"));
+    name.replace(QRegularExpression(QLatin1String("[^a-zA-Z0-9_]")), QLatin1String("_"));
     return name;
 }
 
