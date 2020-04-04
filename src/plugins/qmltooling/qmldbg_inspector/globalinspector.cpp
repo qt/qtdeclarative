@@ -48,8 +48,9 @@
 #include <private/qversionedpacket_p.h>
 
 #include <QtGui/qwindow.h>
-#include <QtCore/qregularexpression.h>
-
+#if QT_CONFIG(regularexpression)
+#  include <QtCore/qregularexpression.h>
+#endif
 //INSPECTOR SERVICE PROTOCOL
 // <HEADER><COMMAND><DATA>
 // <HEADER> : <type{request, response, event}><requestId/eventId>[<response_success_bool>]
