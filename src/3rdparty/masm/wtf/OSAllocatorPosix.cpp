@@ -31,7 +31,6 @@
 #include <cstdlib>
 
 #include "PageAllocation.h"
-#include <dlfcn.h>
 #include <errno.h>
 #include <sys/mman.h>
 #include <wtf/Assertions.h>
