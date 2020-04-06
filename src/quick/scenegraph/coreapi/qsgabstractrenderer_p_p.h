@@ -37,54 +37,51 @@
 **
 ****************************************************************************/
 
-#ifndef QSGENGINE_H
-#define QSGENGINE_H
+#ifndef QSGABSTRACTRENDERER_P_P_H
+#define QSGABSTRACTRENDERER_P_P_H
 
-#include <QtCore/QObject>
-#include <QtQuick/qtquickglobal.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include "qsgabstractrenderer_p.h"
+
+#include "qsgnode.h"
+#include <qcolor.h>
+
+#include <QtCore/private/qobject_p.h>
+#include <QtQuick/private/qtquickglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QOpenGLContext;
-class QSGAbstractRenderer;
-class QSGEnginePrivate;
-class QSGTexture;
-class QSGRendererInterface;
-class QSGRectangleNode;
-class QSGImageNode;
-class QSGNinePatchNode;
-
-// ### Qt 6: Remove or redesign.
-
-class Q_QUICK_EXPORT QSGEngine : public QObject
+class Q_QUICK_PRIVATE_EXPORT QSGAbstractRendererPrivate : public QObjectPrivate
 {
-    Q_OBJECT
-    Q_DECLARE_PRIVATE(QSGEngine)
+    Q_DECLARE_PUBLIC(QSGAbstractRenderer)
 public:
-    enum CreateTextureOption {
-        TextureHasAlphaChannel  = 0x0001,
-        TextureOwnsGLTexture    = 0x0004,
-        TextureCanUseAtlas      = 0x0008,
-        TextureIsOpaque         = 0x0010
-    };
-    Q_DECLARE_FLAGS(CreateTextureOptions, CreateTextureOption)
-    Q_FLAG(CreateTextureOptions)
+    static const QSGAbstractRendererPrivate *get(const QSGAbstractRenderer *q) { return q->d_func(); }
 
-    explicit QSGEngine(QObject *parent = nullptr);
-    ~QSGEngine() override;
+    QSGAbstractRendererPrivate();
+    void updateProjectionMatrix();
 
-    void initialize(QOpenGLContext *context);
-    void invalidate();
+    QSGRootNode *m_root_node;
+    QColor m_clear_color;
+    QSGAbstractRenderer::ClearMode m_clear_mode;
 
-    QSGAbstractRenderer *createRenderer() const;
-    QSGTexture *createTextureFromImage(const QImage &image, CreateTextureOptions options = CreateTextureOption()) const;
-    QSGTexture *createTextureFromId(uint id, const QSize &size, CreateTextureOptions options = CreateTextureOption()) const;
-    QSGRendererInterface *rendererInterface() const;
-    QSGRectangleNode *createRectangleNode() const;
-    QSGImageNode *createImageNode() const;
-    QSGNinePatchNode *createNinePatchNode() const;
+    QRect m_device_rect;
+    QRect m_viewport_rect;
+
+    QMatrix4x4 m_projection_matrix;
+    QMatrix4x4 m_projection_matrix_native_ndc;
+    uint m_mirrored : 1;
 };
 
 QT_END_NAMESPACE
 
-#endif // QSGENGINE_H
+#endif

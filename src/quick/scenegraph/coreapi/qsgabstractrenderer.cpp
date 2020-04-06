@@ -37,26 +37,16 @@
 **
 ****************************************************************************/
 
-#include "qsgabstractrenderer_p.h"
+#include "qsgabstractrenderer_p_p.h"
 
 QT_BEGIN_NAMESPACE
 
 /*!
     \class QSGAbstractRenderer
-    \brief QSGAbstractRenderer gives access to the scene graph nodes and rendering of a QSGEngine.
+    \brief QSGAbstractRenderer gives access to the scene graph nodes and rendering.
     \inmodule QtQuick
     \since 5.4
-
-    A QSGAbstractRenderer created by a QSGEngine allows you to set your QSGNode
-    tree through setRootNode() and control the rendering viewport through
-    setDeviceRect(), setViewportRect() and setProjectionMatrixToRect().
-    You can finally trigger the rendering to the desired framebuffer through
-    renderScene().
-
-    The QSGAbstractRenderer is only available when used with a QSGEngine
-    and isn't exposed when used internally by QQuickWindow.
-
-    \sa QSGEngine, QSGNode
+    \internal
  */
 
 /*!
@@ -387,5 +377,3 @@ QSGAbstractRenderer::ClearMode QSGAbstractRenderer::clearMode() const
  */
 
 QT_END_NAMESPACE
-
-#include "moc_qsgabstractrenderer.cpp"

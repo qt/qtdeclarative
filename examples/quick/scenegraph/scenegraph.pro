@@ -4,7 +4,6 @@ qtConfig(opengl(es1|es2)?) {
     SUBDIRS += \
             graph \
             simplematerial \
-            sgengine \
             fboitem \
             openglunderqml \
             textureinthread \

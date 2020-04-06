@@ -12,8 +12,8 @@ HEADERS += \
     $$PWD/coreapi/qsgnode.h \
     $$PWD/coreapi/qsgnode_p.h \
     $$PWD/coreapi/qsgnodeupdater_p.h \
-    $$PWD/coreapi/qsgabstractrenderer.h \
     $$PWD/coreapi/qsgabstractrenderer_p.h \
+    $$PWD/coreapi/qsgabstractrenderer_p_p.h \
     $$PWD/coreapi/qsgrenderer_p.h \
     $$PWD/coreapi/qsgrendernode.h \
     $$PWD/coreapi/qsgrendernode_p.h \
@@ -50,8 +50,6 @@ qtConfig(opengl(es1|es2)?) {
 # Util API
 HEADERS += \
     $$PWD/util/qsgareaallocator_p.h \
-    $$PWD/util/qsgengine.h \
-    $$PWD/util/qsgengine_p.h \
     $$PWD/util/qsgplaintexture_p.h \
     $$PWD/util/qsgsimplerectnode.h \
     $$PWD/util/qsgsimpletexturenode.h \
@@ -67,7 +65,6 @@ HEADERS += \
 
 SOURCES += \
     $$PWD/util/qsgareaallocator.cpp \
-    $$PWD/util/qsgengine.cpp \
     $$PWD/util/qsgplaintexture.cpp \
     $$PWD/util/qsgsimplerectnode.cpp \
     $$PWD/util/qsgsimpletexturenode.cpp \

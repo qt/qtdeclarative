@@ -51,8 +51,7 @@
 // We mean it.
 //
 
-#include "qsgabstractrenderer.h"
-#include "qsgabstractrenderer_p.h"
+#include "qsgabstractrenderer_p_p.h"
 #include "qsgnode.h"
 #include "qsgmaterial.h"
 
