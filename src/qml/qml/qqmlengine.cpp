@@ -74,7 +74,6 @@
 #if QT_CONFIG(qml_network)
 #include "qqmlnetworkaccessmanagerfactory.h"
 #include <QNetworkAccessManager>
-#include <QtNetwork/qnetworkconfigmanager.h>
 #endif
 
 #include <private/qobject_p.h>
