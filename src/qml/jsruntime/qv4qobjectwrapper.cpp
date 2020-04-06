@@ -1305,8 +1305,8 @@ static QV4::ReturnedValue CallMethod(const QQmlObjectOrGadget &object, int index
                     qWarning() << "Passing incomatible arguments to signals is not supported.";
                 } else {
                     return engine->throwTypeError(
-                            "Passing incompatible arguments to C++ functions from "
-                            "JavaScript is not allowed.");
+                            QLatin1String("Passing incompatible arguments to C++ functions from "
+                            "JavaScript is not allowed."));
                 }
             }
         }
