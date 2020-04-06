@@ -34,7 +34,6 @@
 #include <QNetworkReply>
 #include "../../shared/util.h"
 #include "testhttpserver.h"
-#include <QtNetwork/QNetworkConfigurationManager>
 
 #if QT_CONFIG(concurrent)
 #include <qtconcurrentrun.h>
@@ -106,15 +105,6 @@ void tst_qquickpixmapcache::initTestCase()
     QQmlDataTest::initTestCase();
 
     QVERIFY2(server.listen(), qPrintable(server.errorString()));
-
-#if QT_CONFIG(bearermanagement)
-    // This avoids a race condition/deadlock bug in network config
-    // manager when it is accessed by the HTTP server thread before
-    // anything else. Bug report can be found at:
-    // QTBUG-26355
-    QNetworkConfigurationManager cm;
-    cm.updateConfigurations();
-#endif
 
     server.serveDirectory(testFile("http"));
 }
