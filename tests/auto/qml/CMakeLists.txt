@@ -90,3 +90,8 @@ if(QT_FEATURE_private_tests)
     add_subdirectory(bindingdependencyapi)
     add_subdirectory(v4misc)
 endif()
+
+qt_exclude_tool_directories_from_default_target(
+    qmlplugindump
+)
+
