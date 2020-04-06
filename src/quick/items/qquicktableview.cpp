@@ -425,6 +425,23 @@
 */
 
 /*!
+    \qmlmethod Item QtQuick::TableView::itemAtCell(point cell)
+
+    Returns the delegate item at \a cell if loaded, otherwise \c null.
+
+    \note only the items that are visible in the view are normally loaded.
+    As soon as a cell is flicked out of the view, the item inside will
+    either be unloaded or placed in the recycle pool. As such, the return
+    value should never be stored.
+*/
+
+/*!
+    \qmlmethod Item QtQuick::TableView::itemAtCell(int column, int row)
+
+    Convenience for calling \code itemAtCell(Qt.point(column, row)) \endcode
+*/
+
+/*!
     \qmlattachedproperty TableView QtQuick::TableView::view
 
     This attached property holds the view that manages the delegate instance.
@@ -3120,6 +3137,20 @@ void QQuickTableView::positionViewAtColumn(int column, Qt::Alignment alignment, 
     d->positionViewAtColumnOffset = offset;
     d->scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::ViewportOnly |
                             QQuickTableViewPrivate::RebuildOption::PositionViewAtColumn);
+}
+
+QQuickItem *QQuickTableView::itemAtCell(const QPoint &cell) const
+{
+    Q_D(const QQuickTableView);
+    const int modelIndex = d->modelIndexAtCell(cell);
+    if (!d->loadedItems.contains(modelIndex))
+        return nullptr;
+    return d->loadedItems.value(modelIndex)->item;
+}
+
+QQuickItem *QQuickTableView::itemAtCell(int column, int row) const
+{
+    return itemAtCell(QPoint(column, row));
 }
 
 void QQuickTableView::forceLayout()

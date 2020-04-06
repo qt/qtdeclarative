@@ -182,6 +182,8 @@ private slots:
     void positionViewAtRow();
     void positionViewAtColumn_data();
     void positionViewAtColumn();
+    void itemAtCell_data();
+    void itemAtCell();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -2951,6 +2953,42 @@ void tst_QQuickTableView::positionViewAtColumn()
         break;
     default:
         Q_UNREACHABLE();
+    }
+}
+
+void tst_QQuickTableView::itemAtCell_data()
+{
+    QTest::addColumn<QPoint>("cell");
+    QTest::addColumn<bool>("shouldExist");
+
+    QTest::newRow("0, 0") << QPoint(0, 0) << true;
+    QTest::newRow("0, 4") << QPoint(0, 4) << true;
+    QTest::newRow("4, 0") << QPoint(4, 0) << true;
+    QTest::newRow("4, 4") << QPoint(4, 4) << true;
+    QTest::newRow("30, 30") << QPoint(30, 30) << false;
+    QTest::newRow("-1, -1") << QPoint(-1, -1) << false;
+}
+
+void tst_QQuickTableView::itemAtCell()
+{
+    QFETCH(QPoint, cell);
+    QFETCH(bool, shouldExist);
+
+    LOAD_TABLEVIEW("plaintableview.qml");
+    auto model = TestModelAsVariant(100, 100);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    const auto item = tableView->itemAtCell(cell);
+    if (shouldExist) {
+        const auto context = qmlContext(item);
+        const int contextRow = context->contextProperty("row").toInt();
+        const int contextColumn = context->contextProperty("column").toInt();
+        QCOMPARE(contextColumn, cell.x());
+        QCOMPARE(contextRow, cell.y());
+    } else {
+        QVERIFY(!item);
     }
 }
 
