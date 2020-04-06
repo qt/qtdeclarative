@@ -10,6 +10,7 @@
     "QtQmlModels" => "$basedir/src/qmlmodels",
     "QtQmlWorkerScript" => "$basedir/src/qmlworkerscript",
     "QtQmlCompiler" => "$basedir/src/qmlcompiler",
+    "QtQmlDom" => "$basedir/src/qmldom",
 );
 %inject_headers = (
     "$basedir/src/qml" => [ "^qqmljsgrammar_p.h", "^qqmljsparser_p.h", "^qml_compile_hash_p.h" ],

@@ -11,6 +11,7 @@ SUBDIRS=\
 
 qtHaveModule(gui):     SUBDIRS += particles
 qtHaveModule(widgets): SUBDIRS += quickwidgets
+qtHaveModule(qmldom):   SUBDIRS += qmldom
 
 # console applications not supported
 uikit: SUBDIRS -= qmltest

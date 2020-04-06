@@ -1,6 +1,7 @@
 # Generated from auto.pro.
 
 add_subdirectory(qml)
+add_subdirectory(qmldom)
 add_subdirectory(quick)
 add_subdirectory(quicktest)
 add_subdirectory(qmldevtools)

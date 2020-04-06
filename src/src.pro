@@ -41,10 +41,12 @@ SUBDIRS += \
 qtConfig(qml-devtools) {
     SUBDIRS += \
         qmldevtools \
+        qmldom \
         qmlcompiler
 
     qmldevtools.depends = qml
     qmlcompiler.depends = qmldevtools
+    qmldom.depends = qmldevtools
 }
 
 
