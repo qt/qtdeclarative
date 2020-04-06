@@ -51,12 +51,15 @@
 
 QT_BEGIN_NAMESPACE
 
+#if QT_DEPRECATED_SINCE(5, 15)
 
 /*!
     \class QSGEngine
     \brief The QSGEngine class allows low level rendering of a scene graph.
     \inmodule QtQuick
     \since 5.4
+
+    \deprecated
 
     A QSGEngine can be used to render a tree of QSGNode directly on a QWindow
     or QOpenGLFramebufferObject without any integration with QML, QQuickWindow
@@ -284,6 +287,8 @@ QSGNinePatchNode *QSGEngine::createNinePatchNode() const
     Q_D(const QSGEngine);
     return d->sgRenderContext->isValid() ? d->sgRenderContext->sceneGraphContext()->createNinePatchNode() : nullptr;
 }
+
+#endif
 
 QT_END_NAMESPACE
 

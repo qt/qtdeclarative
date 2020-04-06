@@ -72,6 +72,10 @@ public:
 
     ~QSGAbstractRenderer() override;
 
+    // just have a warning about becoming private, ifdefing the whole class is not feasible
+#if QT_DEPRECATED_SINCE(5, 15)
+    QT_DEPRECATED_X("QSGAbstractRenderer is no longer going to be public in Qt 6.0. QSGEngine-based workflows are expected to migrate to QQuickRenderControl instead.")
+#endif
     void setRootNode(QSGRootNode *node);
     QSGRootNode *rootNode() const;
     void setDeviceRect(const QRect &rect);

@@ -59,6 +59,7 @@ QT_BEGIN_NAMESPACE
 class QSGContext;
 class QSGRenderContext;
 
+#if QT_DEPRECATED_SINCE(5, 15)
 class QSGEnginePrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QSGEngine)
@@ -69,6 +70,7 @@ public:
     QScopedPointer<QSGContext> sgContext;
     QScopedPointer<QSGRenderContext> sgRenderContext;
 };
+#endif
 
 QT_END_NAMESPACE
 
