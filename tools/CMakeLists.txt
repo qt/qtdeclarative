@@ -51,10 +51,3 @@ endif()
 if(QT_FEATURE_qml_devtools)
 endif()
 
-# special case begin
-qt_exclude_tool_directories_from_default_target(
-    qmlprofiler
-    qmlplugindump
-    qmleasing
-)
-# special case end
