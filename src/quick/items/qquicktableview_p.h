@@ -81,6 +81,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTableView : public QQuickFlickable
     Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight NOTIFY contentHeightChanged)
     Q_PROPERTY(QQuickTableView *syncView READ syncView WRITE setSyncView NOTIFY syncViewChanged REVISION(2, 14))
     Q_PROPERTY(Qt::Orientations syncDirection READ syncDirection WRITE setSyncDirection NOTIFY syncDirectionChanged REVISION(2, 14))
+    Q_PROPERTY(int leftColumn READ leftColumn NOTIFY leftColumnChanged REVISION(6, 0))
+    Q_PROPERTY(int rightColumn READ rightColumn NOTIFY rightColumnChanged REVISION(6, 0))
+    Q_PROPERTY(int topRow READ topRow NOTIFY topRowChanged REVISION(6, 0))
+    Q_PROPERTY(int bottomRow READ bottomRow NOTIFY bottomRowChanged REVISION(6, 0))
 
     QML_NAMED_ELEMENT(TableView)
     QML_ADDED_IN_VERSION(2, 12)
@@ -122,6 +126,11 @@ public:
     Qt::Orientations syncDirection() const;
     void setSyncDirection(Qt::Orientations direction);
 
+    int leftColumn() const;
+    int rightColumn() const;
+    int topRow() const;
+    int bottomRow() const;
+
     Q_INVOKABLE void forceLayout();
     Q_INVOKABLE void positionViewAtCell(const QPoint &cell, Qt::Alignment alignment, const QPointF &offset = QPointF());
     Q_INVOKABLE void positionViewAtCell(int column, int row, Qt::Alignment alignment, const QPointF &offset = QPointF());
@@ -146,6 +155,10 @@ Q_SIGNALS:
     void reuseItemsChanged();
     Q_REVISION(2, 14) void syncViewChanged();
     Q_REVISION(2, 14) void syncDirectionChanged();
+    Q_REVISION(6, 0) void leftColumnChanged();
+    Q_REVISION(6, 0) void rightColumnChanged();
+    Q_REVISION(6, 0) void topRowChanged();
+    Q_REVISION(6, 0) void bottomRowChanged();
 
 protected:
     void geometryChanged(const QRectF &newGeometry, const QRectF &oldGeometry) override;

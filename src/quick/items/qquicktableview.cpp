@@ -355,6 +355,38 @@
 */
 
 /*!
+    \qmlproperty int QtQuick::TableView::leftColumn
+
+    This property holds the leftmost column that is currently visible inside the view.
+
+    \sa rightColumn, topRow, bottomRow
+*/
+
+/*!
+    \qmlproperty int QtQuick::TableView::rightColumn
+
+    This property holds the rightmost column that is currently visible inside the view.
+
+    \sa leftColumn, topRow, bottomRow
+*/
+
+/*!
+    \qmlproperty int QtQuick::TableView::topRow
+
+    This property holds the topmost row that is currently visible inside the view.
+
+    \sa leftColumn, rightColumn, bottomRow
+*/
+
+/*!
+    \qmlproperty int QtQuick::TableView::bottomRow
+
+    This property holds the bottom-most row that is currently visible inside the view.
+
+    \sa leftColumn, rightColumn, topRow
+*/
+
+/*!
     \qmlmethod QtQuick::TableView::positionViewAtCell(point cell, Qt.Alignment alignment, point offset)
 
     Positions \l contentX and \l contentY such that \a cell is at the position specified by
@@ -1111,6 +1143,8 @@ void QQuickTableViewPrivate::forceLayout()
 
 void QQuickTableViewPrivate::syncLoadedTableFromLoadRequest()
 {
+    Q_Q(QQuickTableView);
+
     if (loadRequest.edge() == Qt::Edge(0)) {
         // No edge means we're loading the top-left item
         loadedColumns.insert(loadRequest.column(), 0);
@@ -1120,12 +1154,24 @@ void QQuickTableViewPrivate::syncLoadedTableFromLoadRequest()
 
     switch (loadRequest.edge()) {
     case Qt::LeftEdge:
+        loadedColumns.insert(loadRequest.column(), 0);
+        if (rebuildState == RebuildState::Done)
+            emit q->leftColumnChanged();
+        break;
     case Qt::RightEdge:
         loadedColumns.insert(loadRequest.column(), 0);
+        if (rebuildState == RebuildState::Done)
+            emit q->rightColumnChanged();
         break;
     case Qt::TopEdge:
+        loadedRows.insert(loadRequest.row(), 0);
+        if (rebuildState == RebuildState::Done)
+            emit q->topRowChanged();
+        break;
     case Qt::BottomEdge:
         loadedRows.insert(loadRequest.row(), 0);
+        if (rebuildState == RebuildState::Done)
+            emit q->bottomRowChanged();
         break;
     }
 }
@@ -1776,6 +1822,9 @@ void QQuickTableViewPrivate::processRebuildTable()
             else
                 Q_TABLEVIEW_UNREACHABLE(rebuildOptions);
         }
+
+        edgesBeforeRebuild = loadedItems.isEmpty() ? QMargins()
+            : QMargins(q->leftColumn(), q->topRow(), q->rightColumn(), q->bottomRow());
     }
 
     moveToNextRebuildState();
@@ -1833,11 +1882,23 @@ void QQuickTableViewPrivate::processRebuildTable()
             return;
     }
 
+    if (rebuildState == RebuildState::Done) {
+        if (edgesBeforeRebuild.left() != q->leftColumn())
+            emit q->leftColumnChanged();
+        if (edgesBeforeRebuild.right() != q->rightColumn())
+            emit q->rightColumnChanged();
+        if (edgesBeforeRebuild.top() != q->topRow())
+            emit q->topRowChanged();
+        if (edgesBeforeRebuild.bottom() != q->bottomRow())
+            emit q->bottomRowChanged();
+
+        qCDebug(lcTableViewDelegateLifecycle()) << "current table:" << tableLayoutToString();
+        qCDebug(lcTableViewDelegateLifecycle()) << "rebuild completed!";
+        qCDebug(lcTableViewDelegateLifecycle()) << "################################################";
+        qCDebug(lcTableViewDelegateLifecycle());
+    }
+
     Q_TABLEVIEW_ASSERT(rebuildState == RebuildState::Done, int(rebuildState));
-    qCDebug(lcTableViewDelegateLifecycle()) << "current table:" << tableLayoutToString();
-    qCDebug(lcTableViewDelegateLifecycle()) << "rebuild completed!";
-    qCDebug(lcTableViewDelegateLifecycle()) << "################################################";
-    qCDebug(lcTableViewDelegateLifecycle());
 }
 
 bool QQuickTableViewPrivate::moveToNextRebuildState()
@@ -2137,24 +2198,45 @@ void QQuickTableViewPrivate::adjustViewportYAccordingToAlignment()
 
 void QQuickTableViewPrivate::unloadEdge(Qt::Edge edge)
 {
+    Q_Q(QQuickTableView);
     qCDebug(lcTableViewDelegateLifecycle) << edge;
 
     switch (edge) {
-    case Qt::LeftEdge:
-    case Qt::RightEdge: {
-        const int column = edge == Qt::LeftEdge ? leftColumn() : rightColumn();
+    case Qt::LeftEdge: {
+        const int column = leftColumn();
         for (auto r = loadedRows.cbegin(); r != loadedRows.cend(); ++r)
             unloadItem(QPoint(column, r.key()));
         loadedColumns.remove(column);
         syncLoadedTableRectFromLoadedTable();
+        if (rebuildState == RebuildState::Done)
+            emit q->leftColumnChanged();
         break; }
-    case Qt::TopEdge:
-    case Qt::BottomEdge: {
-        const int row = edge == Qt::TopEdge ? topRow() : bottomRow();
+    case Qt::RightEdge: {
+        const int column = rightColumn();
+        for (auto r = loadedRows.cbegin(); r != loadedRows.cend(); ++r)
+            unloadItem(QPoint(column, r.key()));
+        loadedColumns.remove(column);
+        syncLoadedTableRectFromLoadedTable();
+        if (rebuildState == RebuildState::Done)
+            emit q->rightColumnChanged();
+        break; }
+    case Qt::TopEdge: {
+        const int row = topRow();
         for (auto c = loadedColumns.cbegin(); c != loadedColumns.cend(); ++c)
             unloadItem(QPoint(c.key(), row));
         loadedRows.remove(row);
         syncLoadedTableRectFromLoadedTable();
+        if (rebuildState == RebuildState::Done)
+            emit q->topRowChanged();
+        break; }
+    case Qt::BottomEdge: {
+        const int row = bottomRow();
+        for (auto c = loadedColumns.cbegin(); c != loadedColumns.cend(); ++c)
+            unloadItem(QPoint(c.key(), row));
+        loadedRows.remove(row);
+        syncLoadedTableRectFromLoadedTable();
+        if (rebuildState == RebuildState::Done)
+            emit q->bottomRowChanged();
         break; }
     }
 
@@ -3086,6 +3168,30 @@ void QQuickTableView::setSyncDirection(Qt::Orientations direction)
         d->scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::ViewportOnly);
 
     emit syncDirectionChanged();
+}
+
+int QQuickTableView::leftColumn() const
+{
+    Q_D(const QQuickTableView);
+    return d->loadedItems.isEmpty() ? -1 : d_func()->leftColumn();
+}
+
+int QQuickTableView::rightColumn() const
+{
+    Q_D(const QQuickTableView);
+    return d->loadedItems.isEmpty() ? -1 : d_func()->rightColumn();
+}
+
+int QQuickTableView::topRow() const
+{
+    Q_D(const QQuickTableView);
+    return d->loadedItems.isEmpty() ? -1 : d_func()->topRow();
+}
+
+int QQuickTableView::bottomRow() const
+{
+    Q_D(const QQuickTableView);
+    return d->loadedItems.isEmpty() ? -1 : d_func()->bottomRow();
 }
 
 void QQuickTableView::positionViewAtCell(const QPoint &cell, Qt::Alignment alignment, const QPointF &offset)

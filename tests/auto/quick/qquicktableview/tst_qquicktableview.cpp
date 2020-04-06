@@ -186,6 +186,8 @@ private slots:
     void positionViewAtColumn();
     void itemAtCell_data();
     void itemAtCell();
+    void leftRightTopBottomProperties_data();
+    void leftRightTopBottomProperties();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -3056,6 +3058,52 @@ void tst_QQuickTableView::itemAtCell()
     } else {
         QVERIFY(!item);
     }
+}
+
+void tst_QQuickTableView::leftRightTopBottomProperties_data()
+{
+    QTest::addColumn<QPointF>("contentStartPos");
+    QTest::addColumn<QMargins>("expectedTable");
+    QTest::addColumn<QMargins>("expectedSignalCount");
+
+    QTest::newRow("1") << QPointF(0, 0) << QMargins(0, 0, 5, 7) << QMargins(0, 0, 1, 1);
+    QTest::newRow("2") << QPointF(100, 50) << QMargins(1, 1, 6, 8) << QMargins(1, 1, 2, 2);
+    QTest::newRow("3") << QPointF(220, 120) << QMargins(2, 2, 8, 10) << QMargins(2, 2, 4, 4);
+    QTest::newRow("4") << QPointF(1000, 1000) << QMargins(9, 19, 15, 27) << QMargins(1, 1, 2, 2);
+}
+
+void tst_QQuickTableView::leftRightTopBottomProperties()
+{
+    QFETCH(QPointF, contentStartPos);
+    QFETCH(QMargins, expectedTable);
+    QFETCH(QMargins, expectedSignalCount);
+
+    LOAD_TABLEVIEW("plaintableview.qml");
+    auto model = TestModelAsVariant(100, 100);
+    tableView->setModel(model);
+
+    QSignalSpy leftSpy(tableView, &QQuickTableView::leftColumnChanged);
+    QSignalSpy rightSpy(tableView, &QQuickTableView::rightColumnChanged);
+    QSignalSpy topSpy(tableView, &QQuickTableView::topRowChanged);
+    QSignalSpy bottomSpy(tableView, &QQuickTableView::bottomRowChanged);
+
+    WAIT_UNTIL_POLISHED;
+
+    tableView->setContentX(contentStartPos.x());
+    tableView->setContentY(contentStartPos.y());
+
+    tableView->polish();
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->leftColumn(), expectedTable.left());
+    QCOMPARE(tableView->topRow(), expectedTable.top());
+    QCOMPARE(tableView->rightColumn(), expectedTable.right());
+    QCOMPARE(tableView->bottomRow(), expectedTable.bottom());
+
+    QCOMPARE(leftSpy.count(), expectedSignalCount.left());
+    QCOMPARE(rightSpy.count(), expectedSignalCount.right());
+    QCOMPARE(topSpy.count(), expectedSignalCount.top());
+    QCOMPARE(bottomSpy.count(), expectedSignalCount.bottom());
 }
 
 QTEST_MAIN(tst_QQuickTableView)

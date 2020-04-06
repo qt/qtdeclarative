@@ -321,6 +321,8 @@ public:
     Qt::Alignment positionViewAtRowAlignment = Qt::AlignTop;
     Qt::Alignment positionViewAtColumnAlignment = Qt::AlignLeft;
 
+    QMargins edgesBeforeRebuild;
+
     const static QPoint kLeft;
     const static QPoint kRight;
     const static QPoint kUp;
