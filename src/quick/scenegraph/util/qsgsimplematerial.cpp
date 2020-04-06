@@ -46,6 +46,8 @@
     \inmodule QtQuick
     \ingroup qtquick-scenegraph-materials
 
+    \deprecated
+
     \warning This utility class is only functional when running with the legacy
     OpenGL renderer of the Qt Quick scenegraph. Its usage is not recommended in
     new application code.
@@ -233,6 +235,8 @@
 
 /*!
     \class QSGSimpleMaterial
+
+    \deprecated
 
     \inmodule QtQuick
     \ingroup qtquick-scenegraph-materials
