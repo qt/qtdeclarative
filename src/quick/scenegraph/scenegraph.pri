@@ -55,7 +55,6 @@ HEADERS += \
     $$PWD/util/qsgsimpletexturenode.h \
     $$PWD/util/qsgtextureprovider.h \
     $$PWD/util/qsgflatcolormaterial.h \
-    $$PWD/util/qsgsimplematerial.h \
     $$PWD/util/qsgtexturematerial.h \
     $$PWD/util/qsgtexturematerial_p.h \
     $$PWD/util/qsgvertexcolormaterial.h \
@@ -70,7 +69,6 @@ SOURCES += \
     $$PWD/util/qsgsimpletexturenode.cpp \
     $$PWD/util/qsgtextureprovider.cpp \
     $$PWD/util/qsgflatcolormaterial.cpp \
-    $$PWD/util/qsgsimplematerial.cpp \
     $$PWD/util/qsgtexturematerial.cpp \
     $$PWD/util/qsgvertexcolormaterial.cpp \
     $$PWD/util/qsgrectanglenode.cpp \

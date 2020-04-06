@@ -131,7 +131,6 @@ qt_add_module(Quick
         scenegraph/util/qsgninepatchnode.cpp scenegraph/util/qsgninepatchnode.h
         scenegraph/util/qsgplaintexture.cpp scenegraph/util/qsgplaintexture_p.h
         scenegraph/util/qsgrectanglenode.cpp scenegraph/util/qsgrectanglenode.h
-        scenegraph/util/qsgsimplematerial.cpp scenegraph/util/qsgsimplematerial.h
         scenegraph/util/qsgsimplerectnode.cpp scenegraph/util/qsgsimplerectnode.h
         scenegraph/util/qsgsimpletexturenode.cpp scenegraph/util/qsgsimpletexturenode.h
         scenegraph/util/qsgtexturematerial.cpp scenegraph/util/qsgtexturematerial.h scenegraph/util/qsgtexturematerial_p.h

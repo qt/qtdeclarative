@@ -3,7 +3,6 @@ TEMPLATE = subdirs
 qtConfig(opengl(es1|es2)?) {
     SUBDIRS += \
             graph \
-            simplematerial \
             fboitem \
             openglunderqml \
             textureinthread \

@@ -3802,7 +3802,7 @@ void QQuickItem::geometryChanged(const QRectF &newGeometry, const QRectF &oldGeo
     \note All classes with QSG prefix should be used solely on the scene graph's
     rendering thread. See \l {Scene Graph and Rendering} for more information.
 
-    \sa QSGMaterial, QSGSimpleMaterial, QSGGeometryNode, QSGGeometry,
+    \sa QSGMaterial, QSGGeometryNode, QSGGeometry,
     QSGFlatColorMaterial, QSGTextureMaterial, QSGNode::markDirty(), {Graphics Resource Handling}
  */
 

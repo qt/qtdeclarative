@@ -52,44 +52,89 @@
 
 #include <QtGui/QColor>
 
-#include <QtQuick/QSGSimpleMaterial>
+#include <QtQuick/QSGMaterial>
 
-struct LineMaterial
+class LineShader : public QSGMaterialRhiShader
 {
-    QColor color;
-    float spread;
-    float size;
-};
-
-class LineShader : public QSGSimpleMaterialShader<LineMaterial>
-{
-    QSG_DECLARE_SIMPLE_SHADER(LineShader, LineMaterial)
-
 public:
     LineShader() {
-        setShaderSourceFile(QOpenGLShader::Vertex, ":/scenegraph/graph/shaders/line.vsh");
-        setShaderSourceFile(QOpenGLShader::Fragment, ":/scenegraph/graph/shaders/line.fsh");
+        setShaderFileName(VertexStage, QLatin1String(":/scenegraph/graph/shaders/line.vert.qsb"));
+        setShaderFileName(FragmentStage, QLatin1String(":/scenegraph/graph/shaders/line.frag.qsb"));
     }
 
-    QList<QByteArray> attributes() const override {  return QList<QByteArray>() << "pos" << "t"; }
-
-    void updateState(const LineMaterial *m, const LineMaterial *) override {
-        program()->setUniformValue(id_color, m->color);
-        program()->setUniformValue(id_spread, m->spread);
-        program()->setUniformValue(id_size, m->size);
-    }
-
-    void resolveUniforms() override {
-        id_spread = program()->uniformLocation("spread");
-        id_size = program()->uniformLocation("size");
-        id_color = program()->uniformLocation("color");
-    }
-
-private:
-    int id_color = -1;
-    int id_spread = -1;
-    int id_size = -1;
+    bool updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
 };
+
+class LineMaterial : public QSGMaterial
+{
+public:
+    LineMaterial()
+    {
+        setFlag(SupportsRhiShader);
+        setFlag(Blending);
+    }
+
+    QSGMaterialType *type() const override
+    {
+        static QSGMaterialType type;
+        return &type;
+    }
+
+    QSGMaterialShader *createShader() const override
+    {
+        Q_ASSERT(flags().testFlag(RhiShaderWanted));
+        return new LineShader;
+    }
+
+    int compare(const QSGMaterial *m) const override
+    {
+        const LineMaterial *other = static_cast<const LineMaterial *>(m);
+
+        if (int diff = int(state.color.rgb()) - int(other->state.color.rgb()))
+            return diff;
+
+        if (int diff = state.size - other->state.size)
+            return diff;
+
+        if (int diff = state.spread - other->state.spread)
+            return diff;
+
+        return 0;
+    }
+
+    struct {
+        QColor color;
+        float size;
+        float spread;
+    } state;
+};
+
+bool LineShader::updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *)
+{
+    QByteArray *buf = state.uniformData();
+    Q_ASSERT(buf->size() >= 92);
+
+    if (state.isMatrixDirty()) {
+        const QMatrix4x4 m = state.combinedMatrix();
+        memcpy(buf->data(), m.constData(), 64);
+    }
+
+    if (state.isOpacityDirty()) {
+        const float opacity = state.opacity();
+        memcpy(buf->data() + 80, &opacity, 4);
+    }
+
+    LineMaterial *mat = static_cast<LineMaterial *>(newMaterial);
+    float c[4] = { float(mat->state.color.redF()),
+                   float(mat->state.color.greenF()),
+                   float(mat->state.color.blueF()),
+                   float(mat->state.color.alphaF()) };
+    memcpy(buf->data() + 64, c, 16);
+    memcpy(buf->data() + 84, &mat->state.size, 4);
+    memcpy(buf->data() + 88, &mat->state.spread, 4);
+
+    return true;
+}
 
 struct LineVertex {
     float x;
@@ -114,11 +159,11 @@ LineNode::LineNode(float size, float spread, const QColor &color)
     setGeometry(&m_geometry);
     m_geometry.setDrawingMode(GL_TRIANGLE_STRIP);
 
-    QSGSimpleMaterial<LineMaterial> *m = LineShader::createMaterial();
-    m->state()->color = color;
-    m->state()->size = size;
-    m->state()->spread = spread;
-    m->setFlag(QSGMaterial::Blending);
+    LineMaterial *m = new LineMaterial;
+    m->state.color = color;
+    m->state.size = size;
+    m->state.spread = spread;
+
     setMaterial(m);
     setFlag(OwnsMaterial);
 }

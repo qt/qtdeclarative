@@ -850,7 +850,7 @@ void QSGBasicGeometryNode::setGeometry(QSGGeometry *geometry)
     \note All classes with QSG prefix should be used solely on the scene graph's
     rendering thread. See \l {Scene Graph and Rendering} for more information.
 
-    \sa QSGGeometry, QSGMaterial, QSGSimpleMaterial
+    \sa QSGGeometry, QSGMaterial
  */
 
 

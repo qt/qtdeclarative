@@ -69,10 +69,6 @@ const char *QSGMaterialShaderPrivate::loadShaderSource(QOpenGLShader::ShaderType
     \inmodule QtQuick
     \ingroup qtquick-scenegraph-materials
 
-    The QSGMaterialShader API is relatively low-level. A more convenient API,
-    which provides almost all the same features, is available through
-    QSGSimpleMaterialShader.
-
     \warning This class is only functional when running with the legacy OpenGL
     renderer of the Qt Quick scenegraph.
 
