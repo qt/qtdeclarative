@@ -49,6 +49,7 @@
 ****************************************************************************/
 
 #include "d3d11squircle.h"
+#include <QtCore/QFile>
 #include <QtCore/QRunnable>
 #include <QtQuick/QQuickWindow>
 
