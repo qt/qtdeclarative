@@ -87,6 +87,7 @@ public:
     QString methodName() const { return m_name; }
     void setMethodName(const QString &name) { m_name = name; }
 
+    QString returnType() const { return m_returnType; }
     void setReturnType(const QString &type) { m_returnType = type; }
 
     QStringList parameterNames() const { return m_paramNames; }
