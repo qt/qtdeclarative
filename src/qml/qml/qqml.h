@@ -77,6 +77,10 @@
 #define QML_NAMED_ELEMENT(NAME) \
     Q_CLASSINFO("QML.Element", #NAME)
 
+#define QML_VALUE_TYPE(NAME) \
+    Q_CLASSINFO("QML.Element", #NAME) \
+    QML_UNCREATABLE("Value types cannot be created.")
+
 #define QML_UNCREATABLE(REASON) \
     Q_CLASSINFO("QML.Creatable", "false") \
     Q_CLASSINFO("QML.UncreatableReason", REASON)

@@ -133,6 +133,10 @@ struct QQmlPointFValueType
     Q_PROPERTY(qreal x READ x WRITE setX FINAL)
     Q_PROPERTY(qreal y READ y WRITE setY FINAL)
     Q_GADGET
+    QML_VALUE_TYPE(point)
+    QML_FOREIGN(QPointF)
+    QML_ADDED_IN_VERSION(2, 0)
+
 public:
     Q_INVOKABLE QString toString() const;
     qreal x() const;
@@ -147,6 +151,10 @@ struct QQmlPointValueType
     Q_PROPERTY(int x READ x WRITE setX FINAL)
     Q_PROPERTY(int y READ y WRITE setY FINAL)
     Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN(QPoint)
+    QML_ADDED_IN_VERSION(2, 0)
+
 public:
     int x() const;
     int y() const;
@@ -160,6 +168,10 @@ struct QQmlSizeFValueType
     Q_PROPERTY(qreal width READ width WRITE setWidth FINAL)
     Q_PROPERTY(qreal height READ height WRITE setHeight FINAL)
     Q_GADGET
+    QML_VALUE_TYPE(size)
+    QML_FOREIGN(QSizeF)
+    QML_ADDED_IN_VERSION(2, 0)
+
 public:
     Q_INVOKABLE QString toString() const;
     qreal width() const;
@@ -174,6 +186,10 @@ struct QQmlSizeValueType
     Q_PROPERTY(int width READ width WRITE setWidth FINAL)
     Q_PROPERTY(int height READ height WRITE setHeight FINAL)
     Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN(QSize)
+    QML_ADDED_IN_VERSION(2, 0)
+
 public:
     int width() const;
     int height() const;
@@ -193,6 +209,10 @@ struct QQmlRectFValueType
     Q_PROPERTY(qreal top READ top DESIGNABLE false FINAL)
     Q_PROPERTY(qreal bottom READ bottom DESIGNABLE false FINAL)
     Q_GADGET
+    QML_VALUE_TYPE(rect)
+    QML_FOREIGN(QRectF)
+    QML_ADDED_IN_VERSION(2, 0)
+
 public:
     Q_INVOKABLE QString toString() const;
     qreal x() const;
@@ -223,6 +243,10 @@ struct QQmlRectValueType
     Q_PROPERTY(int top READ top DESIGNABLE false FINAL)
     Q_PROPERTY(int bottom READ bottom DESIGNABLE false FINAL)
     Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN(QRect)
+    QML_ADDED_IN_VERSION(2, 0)
+
 public:
     int x() const;
     int y() const;
@@ -302,6 +326,10 @@ struct QQmlPropertyValueType
     Q_PROPERTY(QObject *object READ object CONSTANT FINAL)
     Q_PROPERTY(QString name READ name CONSTANT FINAL)
     Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN(QQmlProperty)
+    QML_ADDED_IN_VERSION(2, 15)
+
 public:
     QObject *object() const;
     QString name() const;

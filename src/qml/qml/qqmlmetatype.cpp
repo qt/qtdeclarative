@@ -366,10 +366,12 @@ QString registrationTypeString(QQmlType::RegistrationType typeType)
 
 // NOTE: caller must hold a QMutexLocker on "data"
 bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *data,
-                       const char *uri, const QString &typeName, QTypeRevision version)
+                       const char *uri, const QString &typeName, QTypeRevision version,
+                       QMetaType::TypeFlags flags)
 {
     if (!typeName.isEmpty()) {
-        if (typeName.at(0).isLower()) {
+        if (typeName.at(0).isLower()
+                && !(flags & (QMetaType::PointerToGadget | QMetaType::IsGadget))) {
             QString failure(QCoreApplication::translate("qmlRegisterType", "Invalid QML %1 name \"%2\"; type names must begin with an uppercase letter"));
             data->recordTypeRegFailure(failure.arg(registrationTypeString(typeType)).arg(typeName));
             return false;
@@ -453,8 +455,10 @@ QQmlType QQmlMetaType::registerType(const QQmlPrivate::RegisterType &type)
     QQmlMetaTypeDataPtr data;
 
     QString elementName = QString::fromUtf8(type.elementName);
-    if (!checkRegistration(QQmlType::CppType, data, type.uri, elementName, type.version))
+    if (!checkRegistration(QQmlType::CppType, data, type.uri, elementName, type.version,
+                           QMetaType(type.typeId).flags())) {
         return QQmlType();
+    }
 
     QQmlTypePrivate *priv = createQQmlType(data, elementName, type);
 
@@ -473,8 +477,10 @@ QQmlType QQmlMetaType::registerSingletonType(const QQmlPrivate::RegisterSingleto
     QQmlMetaTypeDataPtr data;
 
     QString typeName = QString::fromUtf8(type.typeName);
-    if (!checkRegistration(QQmlType::SingletonType, data, type.uri, typeName, type.version))
+    if (!checkRegistration(QQmlType::SingletonType, data, type.uri, typeName, type.version,
+                           QMetaType(type.typeId).flags())) {
         return QQmlType();
+    }
 
     QQmlTypePrivate *priv = createQQmlType(data, typeName, type);
 
@@ -496,7 +502,7 @@ QQmlType QQmlMetaType::registerCompositeSingletonType(const QQmlPrivate::Registe
     if (*(type.uri) == '\0')
         fileImport = true;
     if (!checkRegistration(QQmlType::CompositeSingletonType, data, fileImport ? nullptr : type.uri,
-                           typeName, type.version)) {
+                           typeName, type.version, {})) {
         return QQmlType();
     }
 
@@ -521,8 +527,10 @@ QQmlType QQmlMetaType::registerCompositeType(const QQmlPrivate::RegisterComposit
     bool fileImport = false;
     if (*(type.uri) == '\0')
         fileImport = true;
-    if (!checkRegistration(QQmlType::CompositeType, data, fileImport?nullptr:type.uri, typeName, type.version))
+    if (!checkRegistration(QQmlType::CompositeType, data, fileImport?nullptr:type.uri, typeName,
+                           type.version, {})) {
         return QQmlType();
+    }
 
     QQmlTypePrivate *priv = createQQmlType(data, typeName, type);
     addTypeToData(priv, data);
@@ -814,7 +822,7 @@ QQmlType QQmlMetaType::typeForUrl(const QString &urlString,
     const QQmlType::RegistrationType registrationType = isCompositeSingleton
             ? QQmlType::CompositeSingletonType
             : QQmlType::CompositeType;
-    if (checkRegistration(registrationType, data, nullptr, typeName, version)) {
+    if (checkRegistration(registrationType, data, nullptr, typeName, version, {})) {
         auto *priv = new QQmlTypePrivate(registrationType);
         priv->setName(QString(), typeName);
         priv->version = version;

@@ -53,6 +53,7 @@
 
 #include <QtCore/qabstractitemmodel.h>
 #include <QtCore/qitemselectionmodel.h>
+#include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -67,6 +68,9 @@ struct QQmlModelIndexValueType
     Q_PROPERTY(QAbstractItemModel *model READ model CONSTANT FINAL)
     Q_PROPERTY(quint64 internalId READ internalId CONSTANT FINAL)
     Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN(QModelIndex)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     Q_INVOKABLE QString toString() const
@@ -97,6 +101,9 @@ struct QQmlPersistentModelIndexValueType
     Q_PROPERTY(QAbstractItemModel *model READ model FINAL)
     Q_PROPERTY(quint64 internalId READ internalId FINAL)
     Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN(QPersistentModelIndex)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     Q_INVOKABLE QString toString() const
@@ -130,6 +137,9 @@ struct QQmlItemSelectionRangeValueType
     Q_PROPERTY(bool empty READ isEmpty FINAL)
     Q_PROPERTY(QAbstractItemModel *model READ model FINAL)
     Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN(QItemSelectionRange)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     Q_INVOKABLE QString toString() const;

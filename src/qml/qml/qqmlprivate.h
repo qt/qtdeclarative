@@ -534,9 +534,9 @@ namespace QQmlPrivate
         if (qstrcmp(elementName, "anonymous") == 0)
             return nullptr;
 
-        if (!elementName || elementName[0] < 'A' || elementName[0] > 'Z') {
-            qWarning() << "Missing or unusable QML.Element class info \"" << elementName << "\""
-                       << "for" << metaObject->className();
+        if (!elementName) {
+            qWarning().nospace() << "Missing QML.Element class info \"" << elementName << "\""
+                                 << " for " << metaObject->className();
         }
 
         return elementName;
@@ -561,7 +561,7 @@ namespace QQmlPrivate
     };
 
     template<class T>
-    struct QmlResolved<T, QmlVoidT<typename T::QmlForeignType>>
+    struct QmlResolved<T, QmlVoidT<decltype(T::QmlForeignType::staticMetaObject)>>
     {
         using Type = typename T::QmlForeignType;
     };

@@ -39,6 +39,7 @@ struct QmlTypesClassDescription
 {
     const QJsonObject *resolvedClass = nullptr;
     QString file;
+    QString className;
     QString elementName;
     QString defaultProp;
     QString superClass;

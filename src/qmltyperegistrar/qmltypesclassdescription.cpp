@@ -117,6 +117,9 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
                     else if (foreignName == QLatin1String("QML.Attached"))
                         collectAttached(foreignValue, types, foreign, defaultRevision);
                 }
+            } else {
+                // The foreign type does not have a meta object: We only override the name.
+                className = value;
             }
         } else if (name == QLatin1String("QML.Root")) {
             isRootClass = true;
@@ -173,6 +176,8 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
     revisions.erase(end, revisions.end());
 
     resolvedClass = classDef;
+    if (className.isEmpty() && mode == TopLevel)
+        className = classDef->value(QLatin1String("qualifiedClassName")).toString();
 
     // If it's not a QObject, it's not creatable
     isCreatable = isCreatable && classDef->value(QLatin1String("object")).toBool();

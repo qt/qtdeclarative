@@ -87,6 +87,10 @@ class QQuickColorValueType
     Q_PROPERTY(qreal hslLightness READ hslLightness WRITE setHslLightness FINAL)
     Q_PROPERTY(bool valid READ isValid)
     Q_GADGET
+    QML_ADDED_IN_VERSION(2, 0)
+    QML_FOREIGN(QColor)
+    QML_VALUE_TYPE(color)
+
 public:
     Q_INVOKABLE QString toString() const;
 
@@ -124,6 +128,10 @@ class QQuickVector2DValueType
     Q_PROPERTY(qreal x READ x WRITE setX FINAL)
     Q_PROPERTY(qreal y READ y WRITE setY FINAL)
     Q_GADGET
+    QML_ADDED_IN_VERSION(2, 0)
+    QML_FOREIGN(QVector2D)
+    QML_VALUE_TYPE(vector2d)
+
 public:
     Q_INVOKABLE QString toString() const;
 
@@ -152,6 +160,10 @@ class QQuickVector3DValueType
     Q_PROPERTY(qreal y READ y WRITE setY FINAL)
     Q_PROPERTY(qreal z READ z WRITE setZ FINAL)
     Q_GADGET
+    QML_ADDED_IN_VERSION(2, 0)
+    QML_FOREIGN(QVector3D)
+    QML_VALUE_TYPE(vector3d)
+
 public:
     Q_INVOKABLE QString toString() const;
 
@@ -185,6 +197,10 @@ class QQuickVector4DValueType
     Q_PROPERTY(qreal z READ z WRITE setZ FINAL)
     Q_PROPERTY(qreal w READ w WRITE setW FINAL)
     Q_GADGET
+    QML_ADDED_IN_VERSION(2, 0)
+    QML_FOREIGN(QVector4D)
+    QML_VALUE_TYPE(vector4d)
+
 public:
     Q_INVOKABLE QString toString() const;
 
@@ -219,6 +235,10 @@ class QQuickQuaternionValueType
     Q_PROPERTY(qreal y READ y WRITE setY)
     Q_PROPERTY(qreal z READ z WRITE setZ)
     Q_GADGET
+    QML_ADDED_IN_VERSION(2, 0)
+    QML_FOREIGN(QQuaternion)
+    QML_VALUE_TYPE(quaternion)
+
 public:
     Q_INVOKABLE QString toString() const;
 
@@ -252,6 +272,10 @@ class QQuickMatrix4x4ValueType
     Q_PROPERTY(qreal m43 READ m43 WRITE setM43 FINAL)
     Q_PROPERTY(qreal m44 READ m44 WRITE setM44 FINAL)
     Q_GADGET
+    QML_ADDED_IN_VERSION(2, 0)
+    QML_FOREIGN(QMatrix4x4)
+    QML_VALUE_TYPE(matrix4x4)
+
 public:
     qreal m11() const { return v(0, 0); }
     qreal m12() const { return v(0, 1); }
@@ -312,27 +336,9 @@ public:
     Q_INVOKABLE bool fuzzyEquals(const QMatrix4x4 &m) const;
 };
 
-class QQuickFontValueType
+class QQuickFontEnums
 {
-    QFont v;
     Q_GADGET
-
-    Q_PROPERTY(QString family READ family WRITE setFamily FINAL)
-    Q_PROPERTY(QString styleName READ styleName WRITE setStyleName FINAL)
-    Q_PROPERTY(bool bold READ bold WRITE setBold FINAL)
-    Q_PROPERTY(int weight READ weight WRITE setWeight FINAL)
-    Q_PROPERTY(bool italic READ italic WRITE setItalic FINAL)
-    Q_PROPERTY(bool underline READ underline WRITE setUnderline FINAL)
-    Q_PROPERTY(bool overline READ overline WRITE setOverline FINAL)
-    Q_PROPERTY(bool strikeout READ strikeout WRITE setStrikeout FINAL)
-    Q_PROPERTY(qreal pointSize READ pointSize WRITE setPointSize FINAL)
-    Q_PROPERTY(int pixelSize READ pixelSize WRITE setPixelSize FINAL)
-    Q_PROPERTY(Capitalization capitalization READ capitalization WRITE setCapitalization FINAL)
-    Q_PROPERTY(qreal letterSpacing READ letterSpacing WRITE setLetterSpacing FINAL)
-    Q_PROPERTY(qreal wordSpacing READ wordSpacing WRITE setWordSpacing FINAL)
-    Q_PROPERTY(HintingPreference hintingPreference READ hintingPreference WRITE setHintingPreference FINAL)
-    Q_PROPERTY(bool kerning READ kerning WRITE setKerning FINAL)
-    Q_PROPERTY(bool preferShaping READ preferShaping WRITE setPreferShaping FINAL)
 
     QML_NAMED_ELEMENT(Font)
     QML_ADDED_IN_VERSION(2, 0)
@@ -363,7 +369,35 @@ public:
         PreferFullHinting = QFont::PreferFullHinting
     };
     Q_ENUM(HintingPreference)
+};
 
+class QQuickFontValueType : public QQuickFontEnums
+{
+    QFont v;
+    Q_GADGET
+
+    Q_PROPERTY(QString family READ family WRITE setFamily FINAL)
+    Q_PROPERTY(QString styleName READ styleName WRITE setStyleName FINAL)
+    Q_PROPERTY(bool bold READ bold WRITE setBold FINAL)
+    Q_PROPERTY(int weight READ weight WRITE setWeight FINAL)
+    Q_PROPERTY(bool italic READ italic WRITE setItalic FINAL)
+    Q_PROPERTY(bool underline READ underline WRITE setUnderline FINAL)
+    Q_PROPERTY(bool overline READ overline WRITE setOverline FINAL)
+    Q_PROPERTY(bool strikeout READ strikeout WRITE setStrikeout FINAL)
+    Q_PROPERTY(qreal pointSize READ pointSize WRITE setPointSize FINAL)
+    Q_PROPERTY(int pixelSize READ pixelSize WRITE setPixelSize FINAL)
+    Q_PROPERTY(Capitalization capitalization READ capitalization WRITE setCapitalization FINAL)
+    Q_PROPERTY(qreal letterSpacing READ letterSpacing WRITE setLetterSpacing FINAL)
+    Q_PROPERTY(qreal wordSpacing READ wordSpacing WRITE setWordSpacing FINAL)
+    Q_PROPERTY(HintingPreference hintingPreference READ hintingPreference WRITE setHintingPreference FINAL)
+    Q_PROPERTY(bool kerning READ kerning WRITE setKerning FINAL)
+    Q_PROPERTY(bool preferShaping READ preferShaping WRITE setPreferShaping FINAL)
+
+    QML_VALUE_TYPE(font)
+    QML_FOREIGN(QFont)
+    QML_ADDED_IN_VERSION(2, 0)
+
+public:
     Q_INVOKABLE QString toString() const;
 
     QString family() const;
