@@ -75,6 +75,12 @@ public:
  * for integrating OpenGL rendering using a framebuffer object (FBO)
  * with Qt Quick.
  *
+ * \warning This class is only functional when Qt Quick is rendering via
+ * OpenGL. It is not compatible with other graphics APIs, such as Vulkan or
+ * Metal. It should be treated as a legacy class that is only present in order
+ * to enable Qt 5 applications to function without source compatibility breaks
+ * as long as they tie themselves to openGL.
+ *
  * On most platforms, the rendering will occur on a \l {Scene Graph and Rendering}{dedicated thread}.
  * For this reason, the QQuickFramebufferObject class enforces a strict
  * separation between the item implementation and the FBO rendering. All
@@ -82,11 +88,6 @@ public:
  * QML should be located in a QQuickFramebufferObject class subclass.
  * Everything that relates to rendering must be located in the
  * QQuickFramebufferObject::Renderer class.
- *
- * \warning This class is only functional when Qt Quick is rendering
- * via OpenGL, either directly or through the \l{Scene Graph
- * Adaptations}{RHI-based rendering path}.  It is not compatible with
- * other RHI backends, such as, Vulkan or Metal.
  *
  * To avoid race conditions and read/write issues from two threads
  * it is important that the renderer and the item never read or
