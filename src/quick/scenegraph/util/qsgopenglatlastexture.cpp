@@ -555,7 +555,7 @@ Texture::~Texture()
         delete m_nonatlas_texture;
 }
 
-QSGTexture *Texture::removedFromAtlas() const
+QSGTexture *Texture::removedFromAtlas(QRhiResourceUpdateBatch *) const
 {
     if (m_nonatlas_texture) {
         m_nonatlas_texture->setMipmapFiltering(mipmapFiltering());

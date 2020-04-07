@@ -402,9 +402,7 @@ void QSGRhiShaderEffectMaterialShader::updateSampledImage(RenderState &state, in
                 // committed operations to state.resourceUpdateBatch()... The
                 // only safe way then is to use the same batch the atlas'
                 // updateRhiTexture() used.
-                t->setWorkResourceUpdateBatch(state.resourceUpdateBatch());
-                QSGTexture *newTexture = t->removedFromAtlas();
-                t->setWorkResourceUpdateBatch(nullptr);
+                QSGTexture *newTexture = t->removedFromAtlas(state.resourceUpdateBatch());
                 if (newTexture)
                     t = newTexture;
             }

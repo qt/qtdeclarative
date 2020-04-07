@@ -392,12 +392,6 @@ TextureBase::~TextureBase()
     m_atlas->remove(this);
 }
 
-QRhiResourceUpdateBatch *TextureBase::workResourceUpdateBatch() const
-{
-    Q_D(const TextureBase);
-    return d->workResourceUpdateBatch;
-}
-
 int TextureBase::comparisonKey() const
 {
     // We need special care here: a typical comparisonKey() implementation
@@ -447,7 +441,7 @@ Texture::~Texture()
         delete m_nonatlas_texture;
 }
 
-QSGTexture *Texture::removedFromAtlas() const
+QSGTexture *Texture::removedFromAtlas(QRhiResourceUpdateBatch *resourceUpdates) const
 {
     if (!m_nonatlas_texture) {
         m_nonatlas_texture = new QSGPlainTexture;
@@ -463,7 +457,7 @@ QSGTexture *Texture::removedFromAtlas() const
             QRhiTexture *extractTex = rhi->newTexture(m_atlas->texture()->format(), r.size());
             if (extractTex->build()) {
                 bool ownResUpd = false;
-                QRhiResourceUpdateBatch *resUpd = workResourceUpdateBatch(); // ### Qt 6: should be an arg to this function
+                QRhiResourceUpdateBatch *resUpd = resourceUpdates;
                 if (!resUpd) {
                     ownResUpd = true;
                     resUpd = rhi->nextResourceUpdateBatch();

@@ -453,11 +453,19 @@ QSGTexture::~QSGTexture()
     Implementations of this function are recommended to return the same instance
     for multiple calls to limit memory usage.
 
+    \a resourceUpdates is an optional resource update batch, on which texture
+    operations, if any, are enqueued. Materials can retrieve an instance from
+    QSGMaterialRhiShader::RenderState. When null, the removedFromAtlas()
+    implementation creates its own batch and submit it right away. However,
+    when a valid instance is specified, this function will not submit the
+    update batch.
+
     \warning This function can only be called from the rendering thread.
  */
 
-QSGTexture *QSGTexture::removedFromAtlas() const
+QSGTexture *QSGTexture::removedFromAtlas(QRhiResourceUpdateBatch *resourceUpdates) const
 {
+    Q_UNUSED(resourceUpdates);
     Q_ASSERT_X(!isAtlasTexture(), "QSGTexture::removedFromAtlas()", "Called on a non-atlas texture");
     return nullptr;
 }
@@ -765,15 +773,6 @@ QSGTexture::NativeTexture QSGTexture::nativeTexture() const
         return {nativeTexture.object, nativeTexture.layout};
     }
     return {};
-}
-
-/*!
-    \internal
- */
-void QSGTexture::setWorkResourceUpdateBatch(QRhiResourceUpdateBatch *resourceUpdates)
-{
-    Q_D(QSGTexture);
-    d->workResourceUpdateBatch = resourceUpdates;
 }
 
 bool QSGTexturePrivate::hasDirtySamplerOptions() const

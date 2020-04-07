@@ -154,7 +154,7 @@ bool Texture::hasAlphaChannel() const
     return !QSGCompressedTexture::formatIsOpaque(static_cast<Atlas*>(m_atlas)->format());
 }
 
-QSGTexture *Texture::removedFromAtlas() const
+QSGTexture *Texture::removedFromAtlas(QRhiResourceUpdateBatch *) const
 {
     if (m_nonatlas_texture) {
         m_nonatlas_texture->setMipmapFiltering(mipmapFiltering());

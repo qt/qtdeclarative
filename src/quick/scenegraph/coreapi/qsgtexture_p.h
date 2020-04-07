@@ -88,8 +88,6 @@ public:
     // ### Qt 6: should be virtual in the public class instead
     virtual void updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates);
 
-    QRhiResourceUpdateBatch *workResourceUpdateBatch = nullptr; // ### Qt 6: remove
-
     uint wrapChanged : 1;
     uint filteringChanged : 1;
     uint anisotropyChanged : 1;

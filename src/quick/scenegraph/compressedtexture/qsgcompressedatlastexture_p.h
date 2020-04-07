@@ -97,7 +97,7 @@ public:
 
     QRectF normalizedTextureSubRect() const override { return m_texture_coords_rect; }
 
-    QSGTexture *removedFromAtlas() const override;
+    QSGTexture *removedFromAtlas(QRhiResourceUpdateBatch *) const override;
 
     const QByteArray &data() const { return m_data; }
     int sizeInBytes() const { return m_dataLength; }

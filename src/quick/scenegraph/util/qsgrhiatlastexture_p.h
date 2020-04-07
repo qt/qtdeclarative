@@ -166,8 +166,6 @@ public:
     bool isAtlasTexture() const override { return true; }
     QRect atlasSubRect() const { return m_allocated_rect; }
 
-    QRhiResourceUpdateBatch *workResourceUpdateBatch() const;
-
 protected:
     QRect m_allocated_rect;
     AtlasBase *m_atlas;
@@ -198,7 +196,7 @@ public:
     QRect atlasSubRect() const { return m_allocated_rect; }
     QRect atlasSubRectWithoutPadding() const { return m_allocated_rect.adjusted(1, 1, -1, -1); }
 
-    QSGTexture *removedFromAtlas() const override;
+    QSGTexture *removedFromAtlas(QRhiResourceUpdateBatch *resourceUpdates) const override;
 
     void releaseImage() { m_image = QImage(); }
     const QImage &image() const { return m_image; }

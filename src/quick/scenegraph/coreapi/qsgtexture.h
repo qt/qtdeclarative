@@ -96,7 +96,7 @@ public:
 
     virtual bool isAtlasTexture() const;
 
-    virtual QSGTexture *removedFromAtlas() const;
+    virtual QSGTexture *removedFromAtlas(QRhiResourceUpdateBatch *resourceUpdates = nullptr) const;
 
     virtual void bind() = 0; // ### Qt 6: remove
     void updateBindOptions(bool force = false); // ### Qt 6: remove
@@ -119,9 +119,6 @@ public:
     inline QRectF convertToNormalizedSourceRect(const QRectF &rect) const;
 
     void updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates);
-
-    // ### Qt 6: make this an argument for removedFromAtlas()
-    void setWorkResourceUpdateBatch(QRhiResourceUpdateBatch *resourceUpdates);
 
 protected:
     QSGTexture(QSGTexturePrivate &dd);
