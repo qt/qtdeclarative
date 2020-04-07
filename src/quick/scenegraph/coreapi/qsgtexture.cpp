@@ -485,6 +485,8 @@ bool QSGTexture::isAtlasTexture() const
  */
 
 /*!
+    \fn int QSGTexture::comparisonKey() const
+
     Returns a key suitable for comparing textures. Typically used in
     QSGMaterial::compare() implementations.
 
@@ -506,11 +508,6 @@ bool QSGTexture::isAtlasTexture() const
 
     \since 5.14
  */
-int QSGTexture::comparisonKey() const
-{
-    Q_D(const QSGTexture);
-    return d->comparisonKey();
-}
 
 /*!
     \fn QSize QSGTexture::textureSize() const
@@ -787,14 +784,6 @@ bool QSGTexturePrivate::hasDirtySamplerOptions() const
 void QSGTexturePrivate::resetDirtySamplerOptions()
 {
     wrapChanged = filteringChanged = anisotropyChanged = false;
-}
-
-int QSGTexturePrivate::comparisonKey() const
-{
-    // Must be overridden in subclasses but we cannot make this pure virtual
-    // before Qt 6 because the simple QSGTexture ctor must be kept working.
-    Q_Q(const QSGTexture);
-    return q->textureId(); // this is semantically wrong but at least compatible with existing, non-RHI-aware subclasses
 }
 
 /*!

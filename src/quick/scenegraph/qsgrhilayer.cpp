@@ -72,10 +72,9 @@ void QSGRhiLayer::invalidated()
     m_renderer = nullptr;
 }
 
-int QSGRhiLayerPrivate::comparisonKey() const
+int QSGRhiLayer::comparisonKey() const
 {
-    Q_Q(const QSGRhiLayer);
-    return int(qintptr(q->m_texture));
+    return int(qintptr(m_texture));
 }
 
 bool QSGRhiLayer::hasAlphaChannel() const

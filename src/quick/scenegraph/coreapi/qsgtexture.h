@@ -85,6 +85,7 @@ public:
         int layout;
     };
 
+    virtual int comparisonKey() const = 0;
     virtual int textureId() const = 0; // ### Qt 6: remove
     NativeTexture nativeTexture() const;
     virtual QSize textureSize() const = 0;
@@ -97,8 +98,8 @@ public:
 
     virtual QSGTexture *removedFromAtlas() const;
 
-    virtual void bind() = 0;
-    void updateBindOptions(bool force = false);
+    virtual void bind() = 0; // ### Qt 6: remove
+    void updateBindOptions(bool force = false); // ### Qt 6: remove
 
     void setMipmapFiltering(Filtering filter);
     QSGTexture::Filtering mipmapFiltering() const;
@@ -117,8 +118,6 @@ public:
 
     inline QRectF convertToNormalizedSourceRect(const QRectF &rect) const;
 
-    // ### Qt 6: make these virtual
-    int comparisonKey() const;
     void updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates);
 
     // ### Qt 6: make this an argument for removedFromAtlas()

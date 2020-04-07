@@ -85,8 +85,7 @@ public:
 
     virtual QRhiTexture *rhiTexture() const;
 
-    // ### Qt 6: these should be virtuals in the public class instead
-    virtual int comparisonKey() const; // ### Qt 6: pure virtual
+    // ### Qt 6: should be virtual in the public class instead
     virtual void updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates);
 
     QRhiResourceUpdateBatch *workResourceUpdateBatch = nullptr; // ### Qt 6: remove

@@ -73,6 +73,7 @@ public:
     bool hasAlphaChannel() const override;
     bool hasMipmaps() const override;
 
+    int comparisonKey() const override;
     int textureId() const override;
     void bind() override;
 
@@ -97,7 +98,6 @@ class QSGCompressedTexturePrivate : public QSGTexturePrivate
 {
     Q_DECLARE_PUBLIC(QSGCompressedTexture)
 public:
-    int comparisonKey() const override;
     QRhiTexture *rhiTexture() const override;
     void updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates) override;
 };

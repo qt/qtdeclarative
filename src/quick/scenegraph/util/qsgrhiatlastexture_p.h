@@ -159,6 +159,7 @@ public:
     TextureBase(AtlasBase *atlas, const QRect &textureRect);
     ~TextureBase();
 
+    int comparisonKey() const override;
     int textureId() const override { return 0; } // not used
     void bind() override { } // not used
 
@@ -176,7 +177,6 @@ class TextureBasePrivate : public QSGTexturePrivate
 {
     Q_DECLARE_PUBLIC(TextureBase)
 public:
-    int comparisonKey() const override;
     QRhiTexture *rhiTexture() const override;
     void updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates) override;
 };

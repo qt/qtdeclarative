@@ -45,7 +45,7 @@
 QT_BEGIN_NAMESPACE
 
 QSGSoftwareLayer::QSGSoftwareLayer(QSGRenderContext *renderContext)
-    : QSGLayer(*(new QSGSoftwareLayerPrivate))
+    : QSGLayer(*(new QSGTexturePrivate))
     , m_item(nullptr)
     , m_context(renderContext)
     , m_renderer(nullptr)
@@ -70,7 +70,7 @@ int QSGSoftwareLayer::textureId() const
     return 0;
 }
 
-int QSGSoftwareLayerPrivate::comparisonKey() const
+int QSGSoftwareLayer::comparisonKey() const
 {
     return 0;
 }

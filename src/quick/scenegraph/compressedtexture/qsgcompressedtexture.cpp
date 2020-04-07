@@ -90,18 +90,17 @@ int QSGCompressedTexture::textureId() const
     return m_textureId;
 }
 
-int QSGCompressedTexturePrivate::comparisonKey() const
+int QSGCompressedTexture::comparisonKey() const
 {
-    Q_Q(const QSGCompressedTexture);
     // not textureId() as that would create an id when not yet done - that's not wanted here
-    if (q->m_textureId)
-        return q->m_textureId;
+    if (m_textureId)
+        return m_textureId;
 
-    if (q->m_texture)
-        return int(qintptr(q->m_texture));
+    if (m_texture)
+        return int(qintptr(m_texture));
 
     // two textures (and so materials) with not-yet-created texture underneath are never equal
-    return int(qintptr(q));
+    return int(qintptr(this));
 }
 
 QSize QSGCompressedTexture::textureSize() const

@@ -83,6 +83,8 @@ public:
     void setImage(const QImage &image);
     const QImage &image() { return m_image; }
 
+    int comparisonKey() const override;
+
     void bind() override;
 
     void setTexture(QRhiTexture *texture);
@@ -119,7 +121,6 @@ class QSGPlainTexturePrivate : public QSGTexturePrivate
 {
     Q_DECLARE_PUBLIC(QSGPlainTexture)
 public:
-    int comparisonKey() const override;
     QRhiTexture *rhiTexture() const override;
     void updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates) override;
 

@@ -76,6 +76,7 @@ public:
 
     void bind() override;
     int textureId() const override;
+    int comparisonKey() const override;
 
     void setItem(QSGNode *item) override;
     void setRect(const QRectF &rect) override;
@@ -133,7 +134,6 @@ class QSGRhiLayerPrivate : public QSGTexturePrivate
 {
     Q_DECLARE_PUBLIC(QSGRhiLayer)
 public:
-    int comparisonKey() const override;
     QRhiTexture *rhiTexture() const override;
     void updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates) override;
 };

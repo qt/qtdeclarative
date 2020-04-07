@@ -56,16 +56,15 @@
 
 QT_BEGIN_NAMESPACE
 
-class QSGSoftwarePixmapTexturePrivate;
-
 class QSGSoftwarePixmapTexture : public QSGTexture
 {
     Q_OBJECT
-    Q_DECLARE_PRIVATE(QSGSoftwarePixmapTexture)
+
 public:
     QSGSoftwarePixmapTexture(const QImage &image, uint flags);
     QSGSoftwarePixmapTexture(const QPixmap &pixmap);
 
+    int comparisonKey() const override;
     int textureId() const override;
     QSize textureSize() const override;
     bool hasAlphaChannel() const override;
@@ -76,13 +75,6 @@ public:
 
 private:
     QPixmap m_pixmap;
-};
-
-class QSGSoftwarePixmapTexturePrivate : public QSGTexturePrivate
-{
-    Q_DECLARE_PUBLIC(QSGSoftwarePixmapTexture)
-public:
-    int comparisonKey() const override;
 };
 
 QT_END_NAMESPACE

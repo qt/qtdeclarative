@@ -89,7 +89,7 @@ namespace
 }
 
 QSGOpenGLLayer::QSGOpenGLLayer(QSGRenderContext *context)
-    : QSGLayer(*(new QSGOpenGLLayerPrivate))
+    : QSGLayer(*(new QSGTexturePrivate))
     , m_item(nullptr)
     , m_device_pixel_ratio(1)
     , m_format(GL_RGBA)
@@ -141,10 +141,9 @@ int QSGOpenGLLayer::textureId() const
     return m_fbo ? m_fbo->texture() : 0;
 }
 
-int QSGOpenGLLayerPrivate::comparisonKey() const
+int QSGOpenGLLayer::comparisonKey() const
 {
-    Q_Q(const QSGOpenGLLayer);
-    return q->m_fbo ? q->m_fbo->texture() : 0;
+    return m_fbo ? m_fbo->texture() : 0;
 }
 
 bool QSGOpenGLLayer::hasAlphaChannel() const

@@ -516,6 +516,19 @@ TextureBase::~TextureBase()
     m_atlas->remove(this);
 }
 
+int TextureBase::comparisonKey() const
+{
+    // We need special care here: a typical comparisonKey() implementation
+    // returns a unique result when there is no underlying texture yet. This is
+    // not quite ideal for atlasing however since textures with the same atlas
+    // should be considered equal regardless of the state of the underlying
+    // graphics resources.
+
+    // base the comparison on the atlas ptr; this way textures for the same
+    // atlas are considered equal
+    return int(qintptr(m_atlas));
+}
+
 void TextureBase::bind()
 {
     m_atlas->bind(filtering());

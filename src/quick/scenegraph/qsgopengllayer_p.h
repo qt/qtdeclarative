@@ -62,11 +62,9 @@ QT_BEGIN_NAMESPACE
 class QOpenGLFramebufferObject;
 class QSGDepthStencilBuffer;
 class QSGDefaultRenderContext;
-class QSGOpenGLLayerPrivate;
 
 class Q_QUICK_PRIVATE_EXPORT QSGOpenGLLayer : public QSGLayer
 {
-    Q_DECLARE_PRIVATE(QSGOpenGLLayer)
     Q_OBJECT
 public:
     QSGOpenGLLayer(QSGRenderContext *context);
@@ -92,6 +90,7 @@ public:
     bool hasMipmaps() const override;
     int textureId() const override;
     QSize textureSize() const override { return m_size; }
+    int comparisonKey() const override;
 
     GLenum format() const { return m_format; }
     void setFormat(GLenum format) override;
@@ -155,13 +154,6 @@ private:
     uint m_grab : 1;
     uint m_mirrorHorizontal : 1;
     uint m_mirrorVertical : 1;
-};
-
-class QSGOpenGLLayerPrivate : public QSGTexturePrivate
-{
-    Q_DECLARE_PUBLIC(QSGOpenGLLayer)
-public:
-    int comparisonKey() const override;
 };
 
 QT_END_NAMESPACE

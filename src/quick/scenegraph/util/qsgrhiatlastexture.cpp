@@ -398,10 +398,8 @@ QRhiResourceUpdateBatch *TextureBase::workResourceUpdateBatch() const
     return d->workResourceUpdateBatch;
 }
 
-int TextureBasePrivate::comparisonKey() const
+int TextureBase::comparisonKey() const
 {
-    Q_Q(const TextureBase);
-
     // We need special care here: a typical comparisonKey() implementation
     // returns a unique result when there is no underlying texture yet. This is
     // not quite ideal for atlasing however since textures with the same atlas
@@ -410,7 +408,7 @@ int TextureBasePrivate::comparisonKey() const
 
     // base the comparison on the atlas ptr; this way textures for the same
     // atlas are considered equal
-    return int(qintptr(q->m_atlas));
+    return int(qintptr(m_atlas));
 }
 
 QRhiTexture *TextureBasePrivate::rhiTexture() const

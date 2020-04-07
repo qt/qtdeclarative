@@ -103,6 +103,7 @@ public:
 
     void invalidate();
 
+    int comparisonKey() const { return m_texture_id; }
     int textureId() const;
     void bind(QSGTexture::Filtering filtering);
 
@@ -158,6 +159,7 @@ public:
     TextureBase(AtlasBase *atlas, const QRect &textureRect);
     ~TextureBase();
 
+    int comparisonKey() const override;
     int textureId() const override { return m_atlas->textureId(); }
     bool isAtlasTexture() const override { return true; }
 
