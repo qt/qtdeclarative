@@ -177,7 +177,6 @@ private:
     int m_subtreeRenderableCount = 0;
 
     Flags m_nodeFlags;
-    DirtyState m_dirtyState; // Obsolete, remove in Qt 6
 
 protected:
     friend class QSGNodePrivate;
