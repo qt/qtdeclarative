@@ -367,16 +367,11 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int
 
     cache->_dynamicClassName = newClassName;
 
-    int varPropCount = 0;
-
     QQmlPropertyResolver resolver(baseTypeCache);
 
     auto p = obj->propertiesBegin();
     auto pend = obj->propertiesEnd();
     for ( ; p != pend; ++p) {
-        if (p->builtinType() == QV4::CompiledData::BuiltinType::Var)
-            varPropCount++;
-
         bool notInRevision = false;
         QQmlPropertyData *d = resolver.property(stringAt(p->nameIndex), &notInRevision);
         if (d && d->isFinal())
