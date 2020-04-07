@@ -24,11 +24,7 @@ RESOURCES += \
     graph.qrc
 
 OTHER_FILES += \
-    main.qml \
-    shaders/noisy.vsh \
-    shaders/noisy.fsh \
-    shaders/line.fsh \
-    shaders/line.vsh
+    main.qml
 
 target.path = $$[QT_INSTALL_EXAMPLES]/quick/scenegraph/graph
 INSTALLS += target

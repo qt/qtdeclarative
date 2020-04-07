@@ -32,10 +32,10 @@ target_link_libraries(graph PUBLIC
 # Resources:
 set(graph_resource_files
     "main.qml"
-    "shaders/line.fsh"
-    "shaders/line.vsh"
-    "shaders/noisy.fsh"
-    "shaders/noisy.vsh"
+    "shaders/line.frag.qsb"
+    "shaders/line.vert.qsb"
+    "shaders/noisy.frag.qsb"
+    "shaders/noisy.vert.qsb"
 )
 
 qt6_add_resources(graph "graph"
