@@ -64,9 +64,7 @@ Item {
 
         property size pixelSize: Qt.size(width / tileSize, height / tileSize);
 
-        // Will automatically pick either checker.frag or +qsb/checker.frag
-        // thanks to file selectors.
-        fragmentShader: "qrc:/scenegraph/twotextureproviders/shaders/checker.frag"
+        fragmentShader: "qrc:/scenegraph/twotextureproviders/shaders/checker.frag.qsb"
     }
 
     width: 320

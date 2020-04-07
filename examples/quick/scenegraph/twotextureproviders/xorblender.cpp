@@ -128,8 +128,8 @@ int XorBlendMaterial::compare(const QSGMaterial *o) const
 
 XorBlendRhiShader::XorBlendRhiShader()
 {
-    setShaderFileName(VertexStage, QLatin1String(":/scenegraph/twotextureproviders/shaders/+qsb/xorblender.vert"));
-    setShaderFileName(FragmentStage, QLatin1String(":/scenegraph/twotextureproviders/shaders/+qsb/xorblender.frag"));
+    setShaderFileName(VertexStage, QLatin1String(":/scenegraph/twotextureproviders/shaders/xorblender.vert.qsb"));
+    setShaderFileName(FragmentStage, QLatin1String(":/scenegraph/twotextureproviders/shaders/xorblender.frag.qsb"));
 }
 
 bool XorBlendRhiShader::updateUniformData(RenderState &state, QSGMaterial *, QSGMaterial *)
