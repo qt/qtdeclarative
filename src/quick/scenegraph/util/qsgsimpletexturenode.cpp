@@ -99,9 +99,9 @@ static void qsgsimpletexturenode_update(QSGGeometry *g,
 
   \warning This utility class is only functional when running with the default
   or software backends of the Qt Quick scenegraph. As an alternative, prefer
-  using QSGImageNode via QQuickWindow::createImageNode().
-
-  \deprecated
+  using QSGImageNode via QQuickWindow::createImageNode(). However, this
+  standalone class is still useful when used via subclassing and the
+  application knows that no special scenegraph backends will be involved.
 */
 
 /*!

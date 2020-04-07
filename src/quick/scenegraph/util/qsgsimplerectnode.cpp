@@ -51,9 +51,9 @@ QT_BEGIN_NAMESPACE
 
   \warning This utility class is only functional when running with the default
   or software backends of the Qt Quick scenegraph. As an alternative, prefer
-  using QSGRectangleNode via QQuickWindow::createRectangleNode().
-
-  \deprecated
+  using QSGRectangleNode via QQuickWindow::createRectangleNode(). However, this
+  standalone class is still useful when used via subclassing and the
+  application knows that no special scenegraph backends will be involved.
  */
 
 
