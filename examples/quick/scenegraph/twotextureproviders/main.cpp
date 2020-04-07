@@ -56,6 +56,8 @@
 
 int main(int argc, char **argv)
 {
+    qputenv("QSG_RHI", "1"); // ### Qt 6 remove, this will be the default anyway
+
     QGuiApplication app(argc, argv);
 
     QQuickView view;

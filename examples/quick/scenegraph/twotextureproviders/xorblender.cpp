@@ -52,9 +52,6 @@
 
 #include <QtCore/QPointer>
 
-#include <QOpenGLContext>
-#include <QOpenGLFunctions>
-
 #include <QtQuick/QSGMaterial>
 #include <QtQuick/QSGTexture>
 #include <QtQuick/QSGGeometryNode>
@@ -81,20 +78,7 @@ public:
     } state;
 };
 
-class XorBlendShader : public QSGMaterialShader // for when the scenegraph is using OpenGL directly
-{
-public:
-    XorBlendShader();
-    void initialize() override;
-    char const *const *attributeNames() const override;
-    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
-
-private:
-    int m_matrix_id;
-    int m_opacity_id;
-};
-
-class XorBlendRhiShader : public QSGMaterialRhiShader // for when the scenegraph is using QRhi
+class XorBlendRhiShader : public QSGMaterialRhiShader
 {
 public:
     XorBlendRhiShader();
@@ -112,10 +96,8 @@ XorBlendMaterial::XorBlendMaterial()
 
 QSGMaterialShader *XorBlendMaterial::createShader() const
 {
-    if (flags().testFlag(RhiShaderWanted))
-        return new XorBlendRhiShader;
-    else
-        return new XorBlendShader;
+    Q_ASSERT(flags().testFlag(RhiShaderWanted));
+    return new XorBlendRhiShader;
 }
 
 QSGMaterialType *XorBlendMaterial::type() const
@@ -142,49 +124,6 @@ int XorBlendMaterial::compare(const QSGMaterial *o) const
         return diff;
 
     return 0;
-}
-
-XorBlendShader::XorBlendShader()
-{
-    setShaderSourceFile(QOpenGLShader::Vertex, QLatin1String(":/scenegraph/twotextureproviders/shaders/xorblender.vert"));
-    setShaderSourceFile(QOpenGLShader::Fragment, QLatin1String(":/scenegraph/twotextureproviders/shaders/xorblender.frag"));
-}
-
-void XorBlendShader::initialize()
-{
-    m_matrix_id = program()->uniformLocation("qt_Matrix");
-    m_opacity_id  = program()->uniformLocation("qt_Opacity");
-    // The texture units never change, only the textures we bind to them so
-    // we set these once and for all here.
-    program()->setUniformValue("uSource1", 0); // GL_TEXTURE0
-    program()->setUniformValue("uSource2", 1); // GL_TEXTURE1
-}
-
-char const *const *XorBlendShader::attributeNames() const
-{
-    static char const *const attr[] = { "aVertex", "aTexCoord", nullptr };
-    return attr;
-}
-
-void XorBlendShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *)
-{
-    XorBlendMaterial *material = static_cast<XorBlendMaterial *>(newEffect);
-
-    if (state.isMatrixDirty())
-        program()->setUniformValue(m_matrix_id, state.combinedMatrix());
-
-    if (state.isOpacityDirty())
-        program()->setUniformValue(m_opacity_id, state.opacity());
-
-    QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
-    // We bind the textures in inverse order so that we leave the updateState
-    // function with GL_TEXTURE0 as the active texture unit. This is maintain
-    // the "contract" that updateState should not mess up the GL state beyond
-    // what is needed for this material.
-    f->glActiveTexture(GL_TEXTURE1);
-    material->state.texture2->bind();
-    f->glActiveTexture(GL_TEXTURE0);
-    material->state.texture1->bind();
 }
 
 XorBlendRhiShader::XorBlendRhiShader()
