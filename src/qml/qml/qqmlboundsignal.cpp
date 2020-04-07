@@ -409,7 +409,7 @@ QQmlBoundSignalExpressionPointer &QQmlBoundSignalExpressionPointer::take(QQmlBou
 }
 
 QQmlPropertyObserver::QQmlPropertyObserver(QQmlBoundSignalExpression *expr)
-    : QPropertyObserver([](QPropertyObserver *self) {
+    : QPropertyObserver([](QPropertyObserver *self, void *) {
                            auto This = static_cast<QQmlPropertyObserver*>(self);
                            This->expression->evaluate(QList<QVariant>());
                        })
