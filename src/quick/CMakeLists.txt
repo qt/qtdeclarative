@@ -23,12 +23,14 @@ qt_add_module(Quick
         handlers/qquicksinglepointhandler.cpp handlers/qquicksinglepointhandler_p.h
         handlers/qquicksinglepointhandler_p_p.h
         handlers/qquicktaphandler.cpp handlers/qquicktaphandler_p.h
+        items/qquickabstractpaletteprovider_p.h
         items/qquickaccessibleattached.cpp items/qquickaccessibleattached_p.h
         items/qquickanchors.cpp items/qquickanchors_p.h
         items/qquickanchors_p_p.h
         items/qquickborderimage.cpp items/qquickborderimage_p.h
         items/qquickborderimage_p_p.h
         items/qquickclipnode.cpp items/qquickclipnode_p.h
+        items/qquickcolorgroup.cpp items/qquickcolorgroup_p.h
         items/qquickevents.cpp
         items/qquickevents_p_p.h
         items/qquickflickable.cpp items/qquickflickable_p.h
@@ -54,6 +56,9 @@ qt_add_module(Quick
         items/qquickmousearea_p_p.h
         items/qquickmultipointtoucharea.cpp items/qquickmultipointtoucharea_p.h
         items/qquickpainteditem.cpp items/qquickpainteditem.h items/qquickpainteditem_p.h
+        items/qquickpalette.cpp items/qquickpalette_p.h
+        items/qquickpalettecolorprovider.cpp items/qquickpalettecolorprovider_p.h
+        items/qquickpaletteproviderprivatebase_p.h
         items/qquickpincharea.cpp items/qquickpincharea_p.h
         items/qquickpincharea_p_p.h
         items/qquickrectangle.cpp items/qquickrectangle_p.h
@@ -81,10 +86,6 @@ qt_add_module(Quick
         items/qquickwindowattached.cpp items/qquickwindowattached_p.h
         items/qquickwindowmodule.cpp items/qquickwindowmodule_p.h
         items/qquickwindowmodule_p_p.h
-        items/qquickpalette.cpp items/qquickpalette_p.h
-        items/qquickcolorgroup.cpp items/qquickcolorgroup_p.h
-        items/qquickpalettecolorprovider.cpp items/qquickpalettecolorprovider_p.h
-        items/qquickpaletteproviderprivatebase_p.h
         qtquick2.cpp qtquick2_p.h
         qtquickglobal.h qtquickglobal_p.h
         scenegraph/adaptations/software/qsgabstractsoftwarerenderer.cpp scenegraph/adaptations/software/qsgabstractsoftwarerenderer_p.h
@@ -103,7 +104,8 @@ qt_add_module(Quick
         scenegraph/adaptations/software/qsgsoftwarerenderer.cpp scenegraph/adaptations/software/qsgsoftwarerenderer_p.h
         scenegraph/adaptations/software/qsgsoftwarerenderlistbuilder.cpp scenegraph/adaptations/software/qsgsoftwarerenderlistbuilder_p.h
         scenegraph/adaptations/software/qsgsoftwarerenderloop.cpp scenegraph/adaptations/software/qsgsoftwarerenderloop_p.h
-        scenegraph/coreapi/qsgabstractrenderer.cpp scenegraph/coreapi/qsgabstractrenderer.h scenegraph/coreapi/qsgabstractrenderer_p.h
+        scenegraph/coreapi/qsgabstractrenderer.cpp scenegraph/coreapi/qsgabstractrenderer_p.h
+        scenegraph/coreapi/qsgabstractrenderer_p_p.h
         scenegraph/coreapi/qsggeometry.cpp scenegraph/coreapi/qsggeometry.h scenegraph/coreapi/qsggeometry_p.h
         scenegraph/coreapi/qsgmaterial.cpp scenegraph/coreapi/qsgmaterial.h
         scenegraph/coreapi/qsgmaterialrhishader.cpp scenegraph/coreapi/qsgmaterialrhishader.h scenegraph/coreapi/qsgmaterialrhishader_p.h
@@ -124,7 +126,6 @@ qt_add_module(Quick
         scenegraph/qsgrenderloop.cpp scenegraph/qsgrenderloop_p.h
         scenegraph/qsgrhisupport.cpp scenegraph/qsgrhisupport_p.h
         scenegraph/util/qsgareaallocator.cpp scenegraph/util/qsgareaallocator_p.h
-        scenegraph/util/qsgengine.cpp scenegraph/util/qsgengine.h scenegraph/util/qsgengine_p.h
         scenegraph/util/qsgflatcolormaterial.cpp scenegraph/util/qsgflatcolormaterial.h
         scenegraph/util/qsgimagenode.cpp scenegraph/util/qsgimagenode.h
         scenegraph/util/qsgninepatchnode.cpp scenegraph/util/qsgninepatchnode.h
