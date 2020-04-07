@@ -143,6 +143,18 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
+  \fn void QSGImageNode::setAnisotropyLevel(QSGTexture::AnisotropyLevel level)
+
+  Sets this image node's anistropy level to \a level.
+*/
+
+/*!
+  \fn QSGTexture::AnisotropyLevel QSGImageNode::anisotropyLevel() const
+
+  Returns this image node's anistropy level.
+*/
+
+/*!
     \enum QSGImageNode::TextureCoordinatesTransformFlag
 
     The TextureCoordinatesTransformFlag enum is used to specify the mode used

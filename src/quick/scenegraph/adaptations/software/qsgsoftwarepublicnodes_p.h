@@ -97,6 +97,9 @@ public:
     void setMipmapFiltering(QSGTexture::Filtering) override { }
     QSGTexture::Filtering mipmapFiltering() const override { return QSGTexture::None; }
 
+    void setAnisotropyLevel(QSGTexture::AnisotropyLevel) override { }
+    QSGTexture::AnisotropyLevel anisotropyLevel() const override { return QSGTexture::AnisotropyNone; }
+
     void setTextureCoordinatesTransform(TextureCoordinatesTransformMode transformNode) override;
     TextureCoordinatesTransformMode textureCoordinatesTransform() const override { return m_transformMode; }
 

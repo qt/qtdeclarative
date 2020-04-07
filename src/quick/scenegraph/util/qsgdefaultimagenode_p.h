@@ -79,15 +79,14 @@ public:
     void setMipmapFiltering(QSGTexture::Filtering filtering) override;
     QSGTexture::Filtering mipmapFiltering() const override;
 
+    void setAnisotropyLevel(QSGTexture::AnisotropyLevel level) override;
+    QSGTexture::AnisotropyLevel anisotropyLevel() const override;
+
     void setTextureCoordinatesTransform(TextureCoordinatesTransformMode mode) override;
     TextureCoordinatesTransformMode textureCoordinatesTransform() const override;
 
     void setOwnsTexture(bool owns) override;
     bool ownsTexture() const override;
-
-    // QSGImageNode now being a public class does not allow any additional virtual methods. Placing these here, non-virtual.
-    void setAnisotropyLevel(QSGTexture::AnisotropyLevel level);
-    QSGTexture::AnisotropyLevel anisotropyLevel() const;
 
 private:
     QSGGeometry m_geometry;
