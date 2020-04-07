@@ -168,7 +168,7 @@ void QSGOpaqueTextureMaterialRhiShader::updateSampledImage(RenderState &state, i
         }
     }
 
-    t->updateRhiTexture(state.rhi(), state.resourceUpdateBatch());
+    t->commitTextureOperations(state.rhi(), state.resourceUpdateBatch());
     *texture = t;
 }
 

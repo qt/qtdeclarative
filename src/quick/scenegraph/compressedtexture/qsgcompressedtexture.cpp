@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
 Q_LOGGING_CATEGORY(QSG_LOG_TEXTUREIO, "qt.scenegraph.textureio");
 
 QSGCompressedTexture::QSGCompressedTexture(const QTextureFileData &texData)
-    : QSGTexture(*(new QSGCompressedTexturePrivate)),
+    : QSGTexture(*(new QSGTexturePrivate)),
       m_textureData(texData)
 {
     m_size = m_textureData.size();
@@ -271,28 +271,26 @@ static QPair<QRhiTexture::Format, bool> toRhiCompressedFormat(uint glinternalfor
     }
 }
 
-QRhiTexture *QSGCompressedTexturePrivate::rhiTexture() const
+QRhiTexture *QSGCompressedTexture::rhiTexture() const
 {
-    Q_Q(const QSGCompressedTexture);
-    return q->m_texture;
+    return m_texture;
 }
 
-void QSGCompressedTexturePrivate::updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates)
+void QSGCompressedTexture::commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates)
 {
-    Q_Q(QSGCompressedTexture);
-    if (q->m_uploaded)
+    if (m_uploaded)
         return;
 
-    q->m_uploaded = true; // even if fails, no point in trying again
+    m_uploaded = true; // even if fails, no point in trying again
 
-    if (!q->m_textureData.isValid()) {
-        qCDebug(QSG_LOG_TEXTUREIO, "Invalid texture data for %s", q->m_textureData.logName().constData());
+    if (!m_textureData.isValid()) {
+        qCDebug(QSG_LOG_TEXTUREIO, "Invalid texture data for %s", m_textureData.logName().constData());
         return;
     }
 
-    const QPair<QRhiTexture::Format, bool> fmt = toRhiCompressedFormat(q->m_textureData.glInternalFormat());
+    const QPair<QRhiTexture::Format, bool> fmt = toRhiCompressedFormat(m_textureData.glInternalFormat());
     if (fmt.first == QRhiTexture::UnknownFormat) {
-        qWarning("Unknown compressed format 0x%x", q->m_textureData.glInternalFormat());
+        qWarning("Unknown compressed format 0x%x", m_textureData.glInternalFormat());
         return;
     }
 
@@ -301,25 +299,25 @@ void QSGCompressedTexturePrivate::updateRhiTexture(QRhi *rhi, QRhiResourceUpdate
         texFlags |= QRhiTexture::sRGB;
 
     if (!rhi->isTextureFormatSupported(fmt.first, texFlags)) {
-        qWarning("Unsupported compressed format 0x%x", q->m_textureData.glInternalFormat());
+        qWarning("Unsupported compressed format 0x%x", m_textureData.glInternalFormat());
         return;
     }
 
-    if (!q->m_texture) {
-        q->m_texture = rhi->newTexture(fmt.first, q->m_size, 1, texFlags);
-        if (!q->m_texture->build()) {
+    if (!m_texture) {
+        m_texture = rhi->newTexture(fmt.first, m_size, 1, texFlags);
+        if (!m_texture->build()) {
             qWarning("Failed to create QRhiTexture for compressed data");
-            delete q->m_texture;
-            q->m_texture = nullptr;
+            delete m_texture;
+            m_texture = nullptr;
             return;
         }
     }
 
     // only upload mip level 0 since we never do mipmapping for compressed textures (for now?)
-    resourceUpdates->uploadTexture(q->m_texture, QRhiTextureUploadEntry(0, 0,
-        { q->m_textureData.data().constData() + q->m_textureData.dataOffset(), q->m_textureData.dataLength() }));
+    resourceUpdates->uploadTexture(m_texture, QRhiTextureUploadEntry(0, 0,
+        { m_textureData.data().constData() + m_textureData.dataOffset(), m_textureData.dataLength() }));
 
-    q->m_textureData = QTextureFileData(); // Release this memory, not needed anymore
+    m_textureData = QTextureFileData(); // Release this memory, not needed anymore
 }
 
 QTextureFileData QSGCompressedTexture::textureData() const

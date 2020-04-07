@@ -451,8 +451,8 @@ bool QSGTextMaskRhiShader::updateUniformData(RenderState &state,
         changed = true;
     }
 
-    QRhiTexture *oldRtex = oldMat ? QSGTexturePrivate::get(oldMat->texture())->rhiTexture() : nullptr;
-    QRhiTexture *newRtex = QSGTexturePrivate::get(mat->texture())->rhiTexture();
+    QRhiTexture *oldRtex = oldMat ? oldMat->texture()->rhiTexture() : nullptr;
+    QRhiTexture *newRtex = mat->texture()->rhiTexture();
     if (updated || !oldMat || oldRtex != newRtex) {
         const QVector2D textureScale = QVector2D(1.0f / mat->rhiGlyphCache()->width(),
                                                  1.0f / mat->rhiGlyphCache()->height());

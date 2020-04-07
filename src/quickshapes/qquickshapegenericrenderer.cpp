@@ -852,7 +852,7 @@ void QQuickShapeLinearGradientRhiShader::updateSampledImage(RenderState &state, 
     QQuickShapeGenericStrokeFillNode *node = m->node();
     const QQuickShapeGradientCacheKey cacheKey(node->m_fillGradient.stops, node->m_fillGradient.spread);
     QSGTexture *t = QQuickShapeGradientCache::cacheForRhi(state.rhi())->get(cacheKey);
-    t->updateRhiTexture(state.rhi(), state.resourceUpdateBatch());
+    t->commitTextureOperations(state.rhi(), state.resourceUpdateBatch());
     *texture = t;
 }
 
@@ -1044,7 +1044,7 @@ void QQuickShapeRadialGradientRhiShader::updateSampledImage(RenderState &state, 
     QQuickShapeGenericStrokeFillNode *node = m->node();
     const QQuickShapeGradientCacheKey cacheKey(node->m_fillGradient.stops, node->m_fillGradient.spread);
     QSGTexture *t = QQuickShapeGradientCache::cacheForRhi(state.rhi())->get(cacheKey);
-    t->updateRhiTexture(state.rhi(), state.resourceUpdateBatch());
+    t->commitTextureOperations(state.rhi(), state.resourceUpdateBatch());
     *texture = t;
 }
 
@@ -1218,7 +1218,7 @@ void QQuickShapeConicalGradientRhiShader::updateSampledImage(RenderState &state,
     QQuickShapeGenericStrokeFillNode *node = m->node();
     const QQuickShapeGradientCacheKey cacheKey(node->m_fillGradient.stops, node->m_fillGradient.spread);
     QSGTexture *t = QQuickShapeGradientCache::cacheForRhi(state.rhi())->get(cacheKey);
-    t->updateRhiTexture(state.rhi(), state.resourceUpdateBatch());
+    t->commitTextureOperations(state.rhi(), state.resourceUpdateBatch());
     *texture = t;
 }
 

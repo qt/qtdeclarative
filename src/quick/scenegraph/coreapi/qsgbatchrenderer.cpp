@@ -3499,7 +3499,7 @@ void Renderer::updateMaterialDynamicData(ShaderManager::Shader *sms,
         }
 
         if (pd->textureBindingTable[binding] && pd->samplerBindingTable[binding]) {
-            QRhiTexture *texture = QSGTexturePrivate::get(pd->textureBindingTable[binding])->rhiTexture();
+            QRhiTexture *texture = pd->textureBindingTable[binding]->rhiTexture();
             // texture may be null if the update above failed for any reason,
             // or if the QSGTexture chose to return null intentionally. This is
             // valid and we still need to provide something to the shader.

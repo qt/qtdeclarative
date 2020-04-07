@@ -184,7 +184,7 @@ void AtlasBase::invalidate()
     m_texture = nullptr;
 }
 
-void AtlasBase::updateRhiTexture(QRhiResourceUpdateBatch *resourceUpdates)
+void AtlasBase::commitTextureOperations(QRhiResourceUpdateBatch *resourceUpdates)
 {
     if (!m_allocated) {
         m_allocated = true;
@@ -381,7 +381,7 @@ void Atlas::enqueueTextureUpload(TextureBase *t, QRhiResourceUpdateBatch *resour
 }
 
 TextureBase::TextureBase(AtlasBase *atlas, const QRect &textureRect)
-    : QSGTexture(*(new TextureBasePrivate))
+    : QSGTexture(*(new QSGTexturePrivate))
     , m_allocated_rect(textureRect)
     , m_atlas(atlas)
 {
@@ -405,20 +405,18 @@ int TextureBase::comparisonKey() const
     return int(qintptr(m_atlas));
 }
 
-QRhiTexture *TextureBasePrivate::rhiTexture() const
+QRhiTexture *TextureBase::rhiTexture() const
 {
-    Q_Q(const TextureBase);
-    return q->m_atlas->m_texture;
+    return m_atlas->m_texture;
 }
 
-void TextureBasePrivate::updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates)
+void TextureBase::commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates)
 {
-    Q_Q(TextureBase);
 #ifdef QT_NO_DEBUG
     Q_UNUSED(rhi);
 #endif
-    Q_ASSERT(rhi == q->m_atlas->m_rhi);
-    q->m_atlas->updateRhiTexture(resourceUpdates);
+    Q_ASSERT(rhi == m_atlas->m_rhi);
+    m_atlas->commitTextureOperations(resourceUpdates);
 }
 
 Texture::Texture(Atlas *atlas, const QRect &textureRect, const QImage &image)

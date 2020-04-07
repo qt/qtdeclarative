@@ -221,10 +221,10 @@ public:
     {
         ImageMaterialData *state = static_cast<ImageMaterial *>(newMaterial)->state();
         if (binding == 2) {
-            state->colorTable->updateRhiTexture(renderState.rhi(), renderState.resourceUpdateBatch());
+            state->colorTable->commitTextureOperations(renderState.rhi(), renderState.resourceUpdateBatch());
             *texture = state->colorTable;
         } else if (binding == 1) {
-            state->texture->updateRhiTexture(renderState.rhi(), renderState.resourceUpdateBatch());
+            state->texture->commitTextureOperations(renderState.rhi(), renderState.resourceUpdateBatch());
             *texture = state->texture;
         }
     }
@@ -362,7 +362,7 @@ public:
     {
         ImageMaterialData *state = static_cast<ImageMaterial *>(newMaterial)->state();
         if (binding == 1) {
-            state->texture->updateRhiTexture(renderState.rhi(), renderState.resourceUpdateBatch());
+            state->texture->commitTextureOperations(renderState.rhi(), renderState.resourceUpdateBatch());
             *texture = state->texture;
         }
     }
@@ -529,10 +529,10 @@ public:
     {
         ImageMaterialData *state = static_cast<ImageMaterial *>(newMaterial)->state();
         if (binding == 2) {
-            state->colorTable->updateRhiTexture(renderState.rhi(), renderState.resourceUpdateBatch());
+            state->colorTable->commitTextureOperations(renderState.rhi(), renderState.resourceUpdateBatch());
             *texture = state->colorTable;
         } else if (binding == 1) {
-            state->texture->updateRhiTexture(renderState.rhi(), renderState.resourceUpdateBatch());
+            state->texture->commitTextureOperations(renderState.rhi(), renderState.resourceUpdateBatch());
             *texture = state->texture;
         }
     }
@@ -682,7 +682,7 @@ public:
     {
         ImageMaterialData *state = static_cast<ImageMaterial *>(newMaterial)->state();
         if (binding == 1) {
-            state->texture->updateRhiTexture(renderState.rhi(), renderState.resourceUpdateBatch());
+            state->texture->commitTextureOperations(renderState.rhi(), renderState.resourceUpdateBatch());
             *texture = state->texture;
         }
     }
@@ -830,7 +830,7 @@ public:
     {
         ImageMaterialData *state = static_cast<ImageMaterial *>(newMaterial)->state();
         if (binding == 1) {
-            state->texture->updateRhiTexture(renderState.rhi(), renderState.resourceUpdateBatch());
+            state->texture->commitTextureOperations(renderState.rhi(), renderState.resourceUpdateBatch());
             *texture = state->texture;
         }
     }

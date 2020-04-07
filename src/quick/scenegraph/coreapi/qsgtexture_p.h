@@ -83,11 +83,6 @@ public:
     void resetDirtySamplerOptions();
     bool hasDirtySamplerOptions() const;
 
-    virtual QRhiTexture *rhiTexture() const;
-
-    // ### Qt 6: should be virtual in the public class instead
-    virtual void updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates);
-
     uint wrapChanged : 1;
     uint filteringChanged : 1;
     uint anisotropyChanged : 1;

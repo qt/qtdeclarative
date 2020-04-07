@@ -71,7 +71,6 @@ namespace QSGRhiAtlasTexture
 
 class Texture;
 class TextureBase;
-class TextureBasePrivate;
 class Atlas;
 
 class Manager : public QObject
@@ -105,7 +104,7 @@ public:
     ~AtlasBase();
 
     void invalidate();
-    void updateRhiTexture(QRhiResourceUpdateBatch *resourceUpdates);
+    void commitTextureOperations(QRhiResourceUpdateBatch *resourceUpdates);
     void remove(TextureBase *t);
 
     QSGDefaultRenderContext *renderContext() const { return m_rc; }
@@ -153,7 +152,6 @@ private:
 
 class TextureBase : public QSGTexture
 {
-    Q_DECLARE_PRIVATE(TextureBase)
     Q_OBJECT
 public:
     TextureBase(AtlasBase *atlas, const QRect &textureRect);
@@ -162,6 +160,8 @@ public:
     int comparisonKey() const override;
     int textureId() const override { return 0; } // not used
     void bind() override { } // not used
+    QRhiTexture *rhiTexture() const override;
+    void commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates) override;
 
     bool isAtlasTexture() const override { return true; }
     QRect atlasSubRect() const { return m_allocated_rect; }
@@ -169,14 +169,6 @@ public:
 protected:
     QRect m_allocated_rect;
     AtlasBase *m_atlas;
-};
-
-class TextureBasePrivate : public QSGTexturePrivate
-{
-    Q_DECLARE_PUBLIC(TextureBase)
-public:
-    QRhiTexture *rhiTexture() const override;
-    void updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates) override;
 };
 
 class Texture : public TextureBase

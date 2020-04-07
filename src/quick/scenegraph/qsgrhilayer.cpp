@@ -44,7 +44,7 @@
 #include <private/qsgdefaultrendercontext_p.h>
 
 QSGRhiLayer::QSGRhiLayer(QSGRenderContext *context)
-    : QSGLayer(*(new QSGRhiLayerPrivate))
+    : QSGLayer(*(new QSGTexturePrivate))
     , m_mipmap(false)
     , m_live(true)
     , m_recursive(false)
@@ -98,13 +98,12 @@ void QSGRhiLayer::bind()
     Q_ASSERT_X(false, "QSGRhiLayer::bind()", "Not implemented for RHI");
 }
 
-QRhiTexture *QSGRhiLayerPrivate::rhiTexture() const
+QRhiTexture *QSGRhiLayer::rhiTexture() const
 {
-    Q_Q(const QSGRhiLayer);
-    return q->m_texture;
+    return m_texture;
 }
 
-void QSGRhiLayerPrivate::updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates)
+void QSGRhiLayer::commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates)
 {
     Q_UNUSED(rhi);
     Q_UNUSED(resourceUpdates);

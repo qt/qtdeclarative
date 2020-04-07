@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
 #define QT_MINIMUM_DYNAMIC_FBO_SIZE 64U
 
 QSGPainterTexture::QSGPainterTexture()
-    : QSGPlainTexture(*(new QSGPainterTexturePrivate))
+    : QSGPlainTexture(*(new QSGPlainTexturePrivate))
 {
     m_retain_image = true;
 }
@@ -73,14 +73,13 @@ void QSGPainterTexture::bind()
     m_dirty_rect = QRect();
 }
 
-void QSGPainterTexturePrivate::updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates)
+void QSGPainterTexture::commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates)
 {
-    Q_Q(QSGPainterTexture);
-    if (!q->m_dirty_rect.isNull()) {
-        q->setImage(q->m_image);
-        q->m_dirty_rect = QRect();
+    if (!m_dirty_rect.isNull()) {
+        setImage(m_image);
+        m_dirty_rect = QRect();
     }
-    QSGPlainTexturePrivate::updateRhiTexture(rhi, resourceUpdates);
+    QSGPlainTexture::commitTextureOperations(rhi, resourceUpdates);
 }
 
 QSGDefaultPainterNode::QSGDefaultPainterNode(QQuickPaintedItem *item)

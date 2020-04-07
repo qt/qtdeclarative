@@ -64,27 +64,19 @@ QT_BEGIN_NAMESPACE
 class QOpenGLFramebufferObject;
 class QOpenGLPaintDevice;
 class QSGDefaultRenderContext;
-class QSGPainterTexturePrivate;
 
 class Q_QUICK_PRIVATE_EXPORT QSGPainterTexture : public QSGPlainTexture
 {
-    Q_DECLARE_PRIVATE(QSGPainterTexture)
 public:
     QSGPainterTexture();
 
     void setDirtyRect(const QRect &rect) { m_dirty_rect = rect; }
 
     void bind() override;
+    void commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates) override;
 
 private:
     QRect m_dirty_rect;
-};
-
-class QSGPainterTexturePrivate : public QSGPlainTexturePrivate
-{
-    Q_DECLARE_PUBLIC(QSGPainterTexture)
-public:
-    void updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates) override;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QSGDefaultPainterNode : public QSGPainterNode

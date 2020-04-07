@@ -199,7 +199,7 @@ void SpriteMaterialRhiShader::updateSampledImage(RenderState &state, int binding
     QQuickSpriteMaterial *mat = static_cast<QQuickSpriteMaterial *>(newMaterial);
 
     QSGTexture *t = mat->texture;
-    t->updateRhiTexture(state.rhi(), state.resourceUpdateBatch());
+    t->commitTextureOperations(state.rhi(), state.resourceUpdateBatch());
     *texture = t;
 }
 

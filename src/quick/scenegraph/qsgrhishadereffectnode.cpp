@@ -393,7 +393,7 @@ void QSGRhiShaderEffectMaterialShader::updateSampledImage(RenderState &state, in
     QSGTextureProvider *tp = mat->m_textureProviders.at(binding);
     if (tp) {
         if (QSGTexture *t = tp->texture()) {
-            t->updateRhiTexture(state.rhi(), state.resourceUpdateBatch());
+            t->commitTextureOperations(state.rhi(), state.resourceUpdateBatch());
             if (t->isAtlasTexture() && !mat->m_geometryUsesTextureSubRect) {
                 // Why the hassle with the batch: while removedFromAtlas() is
                 // able to operate with its own resource update batch (which is
@@ -419,7 +419,7 @@ void QSGRhiShaderEffectMaterialShader::updateSampledImage(RenderState &state, in
         QImage img(128, 128, QImage::Format_ARGB32_Premultiplied);
         img.fill(0);
         mat->m_dummyTexture->setImage(img);
-        mat->m_dummyTexture->updateRhiTexture(state.rhi(), state.resourceUpdateBatch());
+        mat->m_dummyTexture->commitTextureOperations(state.rhi(), state.resourceUpdateBatch());
     }
     *texture = mat->m_dummyTexture;
 }

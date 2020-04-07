@@ -87,6 +87,7 @@ public:
 
     virtual int comparisonKey() const = 0;
     virtual int textureId() const = 0; // ### Qt 6: remove
+    virtual QRhiTexture *rhiTexture() const;
     NativeTexture nativeTexture() const;
     virtual QSize textureSize() const = 0;
     virtual bool hasAlphaChannel() const = 0;
@@ -100,6 +101,8 @@ public:
 
     virtual void bind() = 0; // ### Qt 6: remove
     void updateBindOptions(bool force = false); // ### Qt 6: remove
+
+    virtual void commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates);
 
     void setMipmapFiltering(Filtering filter);
     QSGTexture::Filtering mipmapFiltering() const;
@@ -117,8 +120,6 @@ public:
     QSGTexture::WrapMode verticalWrapMode() const;
 
     inline QRectF convertToNormalizedSourceRect(const QRectF &rect) const;
-
-    void updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates);
 
 protected:
     QSGTexture(QSGTexturePrivate &dd);

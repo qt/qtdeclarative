@@ -317,66 +317,65 @@ int QSGPlainTexture::comparisonKey() const
     return int(qintptr(this));
 }
 
-QRhiTexture *QSGPlainTexturePrivate::rhiTexture() const
+QRhiTexture *QSGPlainTexture::rhiTexture() const
 {
-    Q_Q(const QSGPlainTexture);
-    return q->m_texture;
+    return m_texture;
 }
 
-void QSGPlainTexturePrivate::updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates)
+void QSGPlainTexture::commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates)
 {
-    Q_Q(QSGPlainTexture);
+    Q_D(QSGPlainTexture);
 
-    const bool hasMipMaps = q->mipmapFiltering() != QSGTexture::None;
-    const bool mipmappingChanged = q->m_texture && ((hasMipMaps && !q->m_texture->flags().testFlag(QRhiTexture::MipMapped)) // did not have it before
-            || (!hasMipMaps && q->m_texture->flags().testFlag(QRhiTexture::MipMapped))); // does not have it anymore
+    const bool hasMipMaps = mipmapFiltering() != QSGTexture::None;
+    const bool mipmappingChanged = m_texture && ((hasMipMaps && !m_texture->flags().testFlag(QRhiTexture::MipMapped)) // did not have it before
+            || (!hasMipMaps && m_texture->flags().testFlag(QRhiTexture::MipMapped))); // does not have it anymore
 
-    if (!q->m_dirty_texture) {
-        if (!q->m_texture)
+    if (!m_dirty_texture) {
+        if (!m_texture)
             return;
-        if (q->m_texture && !mipmappingChanged) {
-            if (hasMipMaps && !q->m_mipmaps_generated) {
-                resourceUpdates->generateMips(q->m_texture);
-                q->m_mipmaps_generated = true;
+        if (m_texture && !mipmappingChanged) {
+            if (hasMipMaps && !m_mipmaps_generated) {
+                resourceUpdates->generateMips(m_texture);
+                m_mipmaps_generated = true;
             }
             return;
         }
     }
 
-    if (q->m_image.isNull()) {
-        if (!q->m_dirty_texture && mipmappingChanged) {
+    if (m_image.isNull()) {
+        if (!m_dirty_texture && mipmappingChanged) {
             // Full Mipmap Panic!
-            if (!q->m_mipmap_warned) {
+            if (!m_mipmap_warned) {
                 qWarning("QSGPlainTexture: Mipmap settings changed without having image data available. "
                          "Call setImage() again or enable m_retain_image. "
                          "Falling back to previous mipmap filtering mode.");
-                q->m_mipmap_warned = true;
+                m_mipmap_warned = true;
             }
             // leave the texture valid and rather ignore the mipmap mode change attempt
-            q->setMipmapFiltering(m_last_mipmap_filter);
+            setMipmapFiltering(d->m_last_mipmap_filter);
             return;
         }
 
-        if (q->m_texture && q->m_owns_texture)
-            delete q->m_texture;
+        if (m_texture && m_owns_texture)
+            delete m_texture;
 
-        q->m_texture = nullptr;
-        q->m_texture_size = QSize();
-        q->m_has_alpha = false;
+        m_texture = nullptr;
+        m_texture_size = QSize();
+        m_has_alpha = false;
 
-        q->m_dirty_texture = false;
+        m_dirty_texture = false;
         return;
     }
 
-    q->m_dirty_texture = false;
+    m_dirty_texture = false;
 
     QImage tmp;
     bool bgra = false;
     bool needsConvert = false;
-    if (q->m_image.format() == QImage::Format_RGB32 || q->m_image.format() == QImage::Format_ARGB32_Premultiplied) {
+    if (m_image.format() == QImage::Format_RGB32 || m_image.format() == QImage::Format_ARGB32_Premultiplied) {
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
         if (rhi->isTextureFormatSupported(QRhiTexture::BGRA8)) {
-            tmp = q->m_image;
+            tmp = m_image;
             bgra = true;
         } else {
             needsConvert = true;
@@ -384,14 +383,14 @@ void QSGPlainTexturePrivate::updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch
 #else
         needsConvert = true;
 #endif
-    } else if (q->m_image.format() == QImage::Format_RGBX8888 || q->m_image.format() == QImage::Format_RGBA8888_Premultiplied) {
-        tmp = q->m_image;
+    } else if (m_image.format() == QImage::Format_RGBX8888 || m_image.format() == QImage::Format_RGBA8888_Premultiplied) {
+        tmp = m_image;
     } else {
         needsConvert = true;
     }
 
     if (needsConvert)
-        tmp = q->m_image.convertToFormat(QImage::Format_RGBA8888_Premultiplied);
+        tmp = m_image.convertToFormat(QImage::Format_RGBA8888_Premultiplied);
 
     // Downscale the texture to fit inside the max texture limit if it is too big.
     // It would be better if the image was already downscaled to the right size,
@@ -403,45 +402,45 @@ void QSGPlainTexturePrivate::updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch
     const int max = rhi->resourceLimit(QRhi::TextureSizeMax);
     if (tmp.width() > max || tmp.height() > max) {
         tmp = tmp.scaled(qMin(max, tmp.width()), qMin(max, tmp.height()), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-        q->m_texture_size = tmp.size();
+        m_texture_size = tmp.size();
     }
 
-    if ((q->mipmapFiltering() != QSGTexture::None
-            || q->horizontalWrapMode() != QSGTexture::ClampToEdge
-            || q->verticalWrapMode() != QSGTexture::ClampToEdge)
+    if ((mipmapFiltering() != QSGTexture::None
+            || horizontalWrapMode() != QSGTexture::ClampToEdge
+            || verticalWrapMode() != QSGTexture::ClampToEdge)
             && !rhi->isFeatureSupported(QRhi::NPOTTextureRepeat))
     {
         const int w = qNextPowerOfTwo(tmp.width() - 1);
         const int h = qNextPowerOfTwo(tmp.height() - 1);
         if (tmp.width() != w || tmp.height() != h) {
             tmp = tmp.scaled(w, h, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-            q->m_texture_size = tmp.size();
+            m_texture_size = tmp.size();
         }
     }
 
-    bool needsRebuild = q->m_texture && q->m_texture->pixelSize() != q->m_texture_size;
+    bool needsRebuild = m_texture && m_texture->pixelSize() != m_texture_size;
 
     if (mipmappingChanged) {
-        QRhiTexture::Flags f = q->m_texture->flags();
+        QRhiTexture::Flags f = m_texture->flags();
         f.setFlag(QRhiTexture::MipMapped, hasMipMaps);
         f.setFlag(QRhiTexture::UsedWithGenerateMips, hasMipMaps);
-        q->m_texture->setFlags(f);
+        m_texture->setFlags(f);
         needsRebuild = true;
     }
 
-    if (!q->m_texture) {
+    if (!m_texture) {
         QRhiTexture::Flags f;
         if (hasMipMaps)
             f |= QRhiTexture::MipMapped | QRhiTexture::UsedWithGenerateMips;
 
-        q->m_texture = rhi->newTexture(bgra ? QRhiTexture::BGRA8 : QRhiTexture::RGBA8, q->m_texture_size, 1, f);
+        m_texture = rhi->newTexture(bgra ? QRhiTexture::BGRA8 : QRhiTexture::RGBA8, m_texture_size, 1, f);
         needsRebuild = true;
     }
 
     if (needsRebuild) {
-        if (!q->m_texture->build()) {
+        if (!m_texture->build()) {
             qWarning("Failed to build texture for QSGPlainTexture (size %dx%d)",
-                     q->m_texture_size.width(), q->m_texture_size.height());
+                     m_texture_size.width(), m_texture_size.height());
             return;
         }
     }
@@ -449,18 +448,18 @@ void QSGPlainTexturePrivate::updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch
     if (tmp.width() * 4 != tmp.bytesPerLine())
         tmp = tmp.copy();
 
-    resourceUpdates->uploadTexture(q->m_texture, tmp);
+    resourceUpdates->uploadTexture(m_texture, tmp);
 
     if (hasMipMaps) {
-        resourceUpdates->generateMips(q->m_texture);
-        q->m_mipmaps_generated = true;
+        resourceUpdates->generateMips(m_texture);
+        m_mipmaps_generated = true;
     }
 
-    m_last_mipmap_filter = q->mipmapFiltering();
-    q->m_texture_rect = QRectF(0, 0, 1, 1);
+    d->m_last_mipmap_filter = mipmapFiltering();
+    m_texture_rect = QRectF(0, 0, 1, 1);
 
-    if (!q->m_retain_image)
-        q->m_image = QImage();
+    if (!m_retain_image)
+        m_image = QImage();
 }
 
 QT_END_NAMESPACE

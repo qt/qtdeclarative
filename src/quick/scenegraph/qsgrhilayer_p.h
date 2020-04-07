@@ -58,12 +58,11 @@
 QT_BEGIN_NAMESPACE
 
 class QSGDefaultRenderContext;
-class QSGRhiLayerPrivate;
 
 class Q_QUICK_PRIVATE_EXPORT QSGRhiLayer : public QSGLayer
 {
     Q_OBJECT
-    Q_DECLARE_PRIVATE(QSGRhiLayer)
+
 public:
     QSGRhiLayer(QSGRenderContext *context);
     ~QSGRhiLayer();
@@ -77,6 +76,8 @@ public:
     void bind() override;
     int textureId() const override;
     int comparisonKey() const override;
+    QRhiTexture *rhiTexture() const override;
+    void commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates) override;
 
     void setItem(QSGNode *item) override;
     void setRect(const QRectF &rect) override;
@@ -128,14 +129,6 @@ private:
     uint m_grab : 1;
     uint m_mirrorHorizontal : 1;
     uint m_mirrorVertical : 1;
-};
-
-class QSGRhiLayerPrivate : public QSGTexturePrivate
-{
-    Q_DECLARE_PUBLIC(QSGRhiLayer)
-public:
-    QRhiTexture *rhiTexture() const override;
-    void updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates) override;
 };
 
 QT_END_NAMESPACE

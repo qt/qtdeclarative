@@ -87,6 +87,9 @@ public:
 
     void bind() override;
 
+    QRhiTexture *rhiTexture() const override;
+    void commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates) override;
+
     void setTexture(QRhiTexture *texture);
     void setTextureFromNativeObject(QRhi *rhi, QQuickWindow::NativeObjectType type,
                                     const void *nativeObjectPtr, int nativeLayout,
@@ -121,9 +124,6 @@ class QSGPlainTexturePrivate : public QSGTexturePrivate
 {
     Q_DECLARE_PUBLIC(QSGPlainTexture)
 public:
-    QRhiTexture *rhiTexture() const override;
-    void updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates) override;
-
     QSGTexture::Filtering m_last_mipmap_filter = QSGTexture::None;
 };
 

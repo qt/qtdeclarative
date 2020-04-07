@@ -732,6 +732,24 @@ void QSGTexture::updateBindOptions(bool force) // legacy (GL-only)
 }
 
 /*!
+    \return the QRhiTexture for this QSGTexture or null if there is none (either
+    because a valid texture has not been created internally yet, or because the
+    concept is not applicable to the scenegraph backend in use).
+
+    This function is not expected to create a new QRhiTexture in case there is
+    none. Just return null in that case. The expectation towards the renderer
+    is that a null texture leads to using a transparent, dummy texture instead.
+
+    \warning This function can only be called from the rendering thread.
+
+    \since 6.0
+ */
+QRhiTexture *QSGTexture::rhiTexture() const
+{
+    return nullptr;
+}
+
+/*!
     Call this function to enqueue image upload operations to \a
     resourceUpdates, in case there are any pending ones. When there is no new
     data (for example, because there was no setImage() since the last call to
@@ -740,17 +758,14 @@ void QSGTexture::updateBindOptions(bool force) // legacy (GL-only)
     Materials involving \a rhi textures are expected to call this function from
     their updateSampledImage() implementation, typically without any conditions.
 
-    \note This function is only used when running the graphics API independent
-    rendering path of the scene graph.
-
     \warning This function can only be called from the rendering thread.
 
-    \since 5.14
+    \since 6.0
  */
-void QSGTexture::updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates)
+void QSGTexture::commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates)
 {
-    Q_D(QSGTexture);
-    d->updateRhiTexture(rhi, resourceUpdates);
+    Q_UNUSED(rhi);
+    Q_UNUSED(resourceUpdates);
 }
 
 /*!
@@ -767,8 +782,7 @@ void QSGTexture::updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUp
  */
 QSGTexture::NativeTexture QSGTexture::nativeTexture() const
 {
-    Q_D(const QSGTexture);
-    if (auto *tex = d->rhiTexture()) {
+    if (auto *tex = rhiTexture()) {
         auto nativeTexture = tex->nativeTexture();
         return {nativeTexture.object, nativeTexture.layout};
     }
@@ -783,34 +797,6 @@ bool QSGTexturePrivate::hasDirtySamplerOptions() const
 void QSGTexturePrivate::resetDirtySamplerOptions()
 {
     wrapChanged = filteringChanged = anisotropyChanged = false;
-}
-
-/*!
-    \internal
-
-    \return the QRhiTexture for this QSGTexture or null if there is none.
-
-    Unlike textureId(), this function is not expected to create a new
-    QRhiTexture in case there is none. Just return null in that case. The
-    expectation towards the renderer is that a null texture leads to using a
-    transparent, dummy texture instead.
-
-    \note This function is only used when running the graphics API independent
-    rendering path of the scene graph.
-
-    \warning This function can only be called from the rendering thread.
-
-    \since 5.14
- */
-QRhiTexture *QSGTexturePrivate::rhiTexture() const
-{
-    return nullptr;
-}
-
-void QSGTexturePrivate::updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates)
-{
-    Q_UNUSED(rhi);
-    Q_UNUSED(resourceUpdates);
 }
 
 /*!

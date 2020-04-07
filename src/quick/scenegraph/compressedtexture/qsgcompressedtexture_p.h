@@ -59,11 +59,8 @@
 
 QT_BEGIN_NAMESPACE
 
-class QSGCompressedTexturePrivate;
-
 class Q_QUICK_PRIVATE_EXPORT QSGCompressedTexture : public QSGTexture
 {
-    Q_DECLARE_PRIVATE(QSGCompressedTexture)
     Q_OBJECT
 public:
     QSGCompressedTexture(const QTextureFileData& texData);
@@ -76,6 +73,8 @@ public:
     int comparisonKey() const override;
     int textureId() const override;
     void bind() override;
+    QRhiTexture *rhiTexture() const override;
+    void commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates) override;
 
     QTextureFileData textureData() const;
 
@@ -93,14 +92,6 @@ protected:
 namespace QSGOpenGLAtlasTexture {
     class Manager;
 }
-
-class QSGCompressedTexturePrivate : public QSGTexturePrivate
-{
-    Q_DECLARE_PUBLIC(QSGCompressedTexture)
-public:
-    QRhiTexture *rhiTexture() const override;
-    void updateRhiTexture(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates) override;
-};
 
 class Q_QUICK_PRIVATE_EXPORT QSGCompressedTextureFactory : public QQuickTextureFactory
 {
