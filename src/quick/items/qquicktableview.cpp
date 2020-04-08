@@ -447,6 +447,25 @@
 */
 
 /*!
+    \qmlmethod Point QtQuick::TableView::cellAtPos(point position, bool includeSpacing)
+
+    Returns the cell at the given \a position in the view. If no cell intersects with
+    \a position, the return value will be \c point(-1, -1).
+
+    If \a includeSpacing is set to \c true, a cell's bounding box will be considered
+    to include half the adjacent \l rowSpacing and \l columnSpacing on each side. The
+    default value is \c false.
+
+    \sa columnSpacing, rowSpacing
+*/
+
+/*!
+    \qmlmethod Point QtQuick::TableView::cellAtPos(real x, real y, bool includeSpacing)
+
+    Convenience for calling \code cellAtPos(Qt.point(x, y), includeSpacing) \endcode
+*/
+
+/*!
     \qmlattachedproperty TableView QtQuick::TableView::view
 
     This attached property holds the view that manages the delegate instance.
@@ -3158,6 +3177,63 @@ QQuickItem *QQuickTableView::itemAtCell(const QPoint &cell) const
 QQuickItem *QQuickTableView::itemAtCell(int column, int row) const
 {
     return itemAtCell(QPoint(column, row));
+}
+
+QPoint QQuickTableView::cellAtPos(qreal x, qreal y, bool includeSpacing) const
+{
+    return cellAtPos(QPoint(x, y), includeSpacing);
+}
+
+QPoint QQuickTableView::cellAtPos(const QPointF &position, bool includeSpacing) const
+{
+    Q_D(const QQuickTableView);
+
+    if (!boundingRect().contains(position))
+        return QPoint(-1, -1);
+
+    const qreal hSpace = d->cellSpacing.width();
+    const qreal vSpace = d->cellSpacing.height();
+    qreal currentColumnEnd = d->loadedTableOuterRect.x() - contentX();
+    qreal currentRowEnd = d->loadedTableOuterRect.y() - contentY();
+    int foundColumn = -1;
+    int foundRow = -1;
+
+    for (auto columnPair : qAsConst(d->loadedColumns)) {
+        const int column = columnPair.first;
+        currentColumnEnd += d->getEffectiveColumnWidth(column);
+        if (position.x() < currentColumnEnd) {
+            foundColumn = column;
+            break;
+        }
+        currentColumnEnd += hSpace;
+        if (!includeSpacing && position.x() < currentColumnEnd) {
+            // Hit spacing
+            return QPoint(-1, -1);
+        } else if (includeSpacing && position.x() < currentColumnEnd - (hSpace / 2)) {
+            foundColumn = column;
+            break;
+        }
+    }
+
+    for (auto rowPair : qAsConst(d->loadedRows)) {
+        const int row = rowPair.first;
+        currentRowEnd += d->getEffectiveRowHeight(row);
+        if (position.y() < currentRowEnd) {
+            foundRow = row;
+            break;
+        }
+        currentRowEnd += vSpace;
+        if (!includeSpacing && position.y() < currentRowEnd) {
+            // Hit spacing
+            return QPoint(-1, -1);
+        }
+        if (includeSpacing && position.y() < currentRowEnd - (vSpace / 2)) {
+            foundRow = row;
+            break;
+        }
+    }
+
+    return QPoint(foundColumn, foundRow);
 }
 
 void QQuickTableView::forceLayout()

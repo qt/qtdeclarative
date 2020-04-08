@@ -178,6 +178,8 @@ private slots:
     void delegateWithRequiredProperties();
     void checkThatFetchMoreIsCalledWhenScrolledToTheEndOfTable();
     void replaceModel();
+    void cellAtPos_data();
+    void cellAtPos();
     void positionViewAtRow_data();
     void positionViewAtRow();
     void positionViewAtColumn_data();
@@ -2772,6 +2774,70 @@ void tst_QQuickTableView::replaceModel()
     QTRY_COMPARE(tableView->rows(), 0);
     QCOMPARE(tableView->contentWidth(), 0);
     QCOMPARE(tableView->contentHeight(), 0);
+}
+
+void tst_QQuickTableView::cellAtPos_data()
+{
+    QTest::addColumn<QPointF>("contentStartPos");
+    QTest::addColumn<QPointF>("position");
+    QTest::addColumn<bool>("includeSpacing");
+    QTest::addColumn<QPoint>("expectedCell");
+
+    const int spacing = 10;
+    const QPointF cellSize(100, 50);
+    const QPointF halfCell = cellSize / 2;
+    const QPointF quadSpace(spacing / 4, spacing / 4);
+
+    auto cellStart = [&](int column, int row){
+        const qreal x = (column * (cellSize.x() + spacing));
+        const qreal y = (row * (cellSize.y() + spacing));
+        return QPointF(x, y);
+    };
+
+    QTest::newRow("1") << QPointF(0, 0) << cellStart(0, 0) << false << QPoint(0, 0);
+    QTest::newRow("2") << QPointF(0, 0) << cellStart(1, 0) << false << QPoint(1, 0);
+    QTest::newRow("3") << QPointF(0, 0) << cellStart(0, 1) << false << QPoint(0, 1);
+    QTest::newRow("4") << QPointF(0, 0) << cellStart(1, 1) << false << QPoint(1, 1);
+
+    QTest::newRow("5") << QPointF(0, 0) << cellStart(1, 1) - quadSpace << false << QPoint(-1, -1);
+    QTest::newRow("6") << QPointF(0, 0) << cellStart(0, 0) + cellSize + quadSpace << false << QPoint(-1, -1);
+    QTest::newRow("7") << QPointF(0, 0) << cellStart(0, 1) + cellSize + quadSpace << false << QPoint(-1, -1);
+
+    QTest::newRow("8") << QPointF(0, 0) << cellStart(1, 1) - quadSpace << true << QPoint(1, 1);
+    QTest::newRow("9") << QPointF(0, 0) << cellStart(0, 0) + cellSize + quadSpace << true << QPoint(0, 0);
+    QTest::newRow("10") << QPointF(0, 0) << cellStart(0, 1) + cellSize + quadSpace << true << QPoint(0, 1);
+
+    QTest::newRow("11") << cellStart(50, 50) << cellStart(0, 0) << false << QPoint(50, 50);
+    QTest::newRow("12") << cellStart(50, 50) << cellStart(4, 4) << false << QPoint(54, 54);
+    QTest::newRow("13") << cellStart(50, 50) << cellStart(4, 4) - quadSpace << false << QPoint(-1, -1);
+    QTest::newRow("14") << cellStart(50, 50) << cellStart(4, 4) + cellSize + quadSpace << false << QPoint(-1, -1);
+    QTest::newRow("15") << cellStart(50, 50) << cellStart(4, 4) - quadSpace << true << QPoint(54, 54);
+    QTest::newRow("16") << cellStart(50, 50) << cellStart(4, 4) + cellSize + quadSpace << true << QPoint(54, 54);
+
+    QTest::newRow("17") << cellStart(50, 50) + halfCell << cellStart(0, 0) << false << QPoint(50, 50);
+    QTest::newRow("18") << cellStart(50, 50) + halfCell << cellStart(1, 1) << false << QPoint(51, 51);
+    QTest::newRow("19") << cellStart(50, 50) + halfCell << cellStart(4, 4) << false << QPoint(54, 54);
+}
+
+void tst_QQuickTableView::cellAtPos()
+{
+    QFETCH(QPointF, contentStartPos);
+    QFETCH(QPointF, position);
+    QFETCH(bool, includeSpacing);
+    QFETCH(QPoint, expectedCell);
+
+    LOAD_TABLEVIEW("plaintableview.qml");
+    auto model = TestModelAsVariant(100, 100);
+    tableView->setModel(model);
+    tableView->setRowSpacing(10);
+    tableView->setColumnSpacing(10);
+    tableView->setContentX(contentStartPos.x());
+    tableView->setContentY(contentStartPos.y());
+
+    WAIT_UNTIL_POLISHED;
+
+    QPoint cell = tableView->cellAtPos(position, includeSpacing);
+    QCOMPARE(cell, expectedCell);
 }
 
 void tst_QQuickTableView::positionViewAtRow_data()

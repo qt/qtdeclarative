@@ -129,6 +129,8 @@ public:
     Q_INVOKABLE void positionViewAtColumn(int column, Qt::Alignment alignment, qreal offset = 0);
     Q_INVOKABLE QQuickItem *itemAtCell(const QPoint &cell) const;
     Q_INVOKABLE QQuickItem *itemAtCell(int column, int row) const;
+    Q_INVOKABLE QPoint cellAtPos(const QPointF &position, bool includeSpacing = false) const;
+    Q_INVOKABLE QPoint cellAtPos(qreal x, qreal y, bool includeSpacing = false) const;
 
     static QQuickTableViewAttached *qmlAttachedProperties(QObject *);
 
