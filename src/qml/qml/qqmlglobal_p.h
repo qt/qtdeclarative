@@ -278,6 +278,7 @@ public:
     virtual QVariant fromHsvF(double, double, double, double);
     virtual QVariant lighter(const QVariant &, qreal);
     virtual QVariant darker(const QVariant &, qreal);
+    virtual QVariant alpha(const QVariant &, qreal);
     virtual QVariant tint(const QVariant &, const QVariant &);
 };
 

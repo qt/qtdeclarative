@@ -123,6 +123,13 @@ public:
         return QVariant::fromValue(color);
     }
 
+    QVariant alpha(const QVariant &var, qreal value) override
+    {
+        QColor color = var.value<QColor>();
+        color.setAlphaF(value);
+        return QVariant::fromValue(color);
+    }
+
     QVariant tint(const QVariant &baseVar, const QVariant &tintVar) override
     {
         QColor tintColor = tintVar.value<QColor>();

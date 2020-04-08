@@ -90,6 +90,7 @@ class QQuickColorValueType
 public:
     Q_INVOKABLE QString toString() const;
 
+    Q_INVOKABLE QVariant alpha(qreal value) const;
     Q_INVOKABLE QVariant lighter(qreal factor = 1.5) const;
     Q_INVOKABLE QVariant darker(qreal factor = 2.0) const;
     Q_INVOKABLE QVariant tint(QVariant factor) const;

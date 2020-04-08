@@ -68,6 +68,11 @@ QVariant QQuickColorValueType::darker(qreal factor) const
     return QQml_colorProvider()->darker(this->v, factor);
 }
 
+QVariant QQuickColorValueType::alpha(qreal value) const
+{
+    return QQml_colorProvider()->alpha(this->v, value);
+}
+
 QVariant QQuickColorValueType::tint(QVariant tintColor) const
 {
     return QQml_colorProvider()->tint(this->v, tintColor);

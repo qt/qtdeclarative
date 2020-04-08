@@ -114,6 +114,8 @@ struct QtObject : Object
     static ReturnedValue method_matrix4x4(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_lighter(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_darker(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    static ReturnedValue method_alpha(const FunctionObject *b, const Value *thisObject,
+                                      const Value *argv, int argc);
     static ReturnedValue method_tint(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_formatDate(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
     static ReturnedValue method_formatTime(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);

@@ -142,6 +142,7 @@ void Heap::QtObject::init(QQmlEngine *qmlEngine)
     o->defineDefaultProperty(QStringLiteral("binding"), QV4::QtObject::method_binding);
 
     if (qmlEngine) {
+        o->defineDefaultProperty(QStringLiteral("alpha"), QV4::QtObject::method_alpha);
         o->defineDefaultProperty(QStringLiteral("lighter"), QV4::QtObject::method_lighter);
         o->defineDefaultProperty(QStringLiteral("darker"), QV4::QtObject::method_darker);
         o->defineDefaultProperty(QStringLiteral("tint"), QV4::QtObject::method_tint);
@@ -689,6 +690,35 @@ ReturnedValue QtObject::method_darker(const FunctionObject *b, const Value *, co
         factor = argv[1].toNumber();
 
     return scope.engine->fromVariant(QQml_colorProvider()->darker(v, factor));
+}
+
+/*!
+    \qmlmethod color Qt::alpha(color baseColor, real value)
+
+    Returns \a baseColor with an alpha value of \a value.
+
+    \a value is a real ranging from 0 (completely transparent) to 1 (completely opaque).
+*/
+ReturnedValue QtObject::method_alpha(const FunctionObject *b, const Value *, const Value *argv,
+                                     int argc)
+{
+    QV4::Scope scope(b);
+    if (argc != 2)
+        THROW_GENERIC_ERROR("Qt.alpha(): Wrong number of arguments provided");
+
+    QVariant v = scope.engine->toVariant(argv[0], -1);
+    if (v.userType() == QMetaType::QString) {
+        bool ok = false;
+        v = QQmlStringConverters::colorFromString(v.toString(), &ok);
+        if (!ok)
+            return QV4::Encode::null();
+    } else if (v.userType() != QMetaType::QColor) {
+        return QV4::Encode::null();
+    }
+
+    qreal value = argv[1].toNumber();
+
+    return scope.engine->fromVariant(QQml_colorProvider()->alpha(v, value));
 }
 
 /*!
@@ -2258,4 +2288,3 @@ ReturnedValue QtObject::method_callLater(const FunctionObject *b, const Value *t
 }
 
 QT_END_NAMESPACE
-

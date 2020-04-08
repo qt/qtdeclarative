@@ -79,6 +79,7 @@ private slots:
     void font();
     void lighter();
     void darker();
+    void alpha();
     void tint();
     void color();
     void openUrlExternally();
@@ -539,6 +540,37 @@ void tst_qqmlqt::darker()
              QColor::fromRgbF(1, 0.8, 0.3).darker(280));
     QCOMPARE(qvariant_cast<QColor>(object->property("test4")), QColor("red").darker());
     QCOMPARE(qvariant_cast<QColor>(object->property("testColor4")), QColor("red").darker());
+    QCOMPARE(qvariant_cast<QColor>(object->property("test5")), QColor());
+    QCOMPARE(qvariant_cast<QColor>(object->property("test6")), QColor());
+}
+
+void tst_qqmlqt::alpha()
+{
+    QQmlComponent component(&engine, testFileUrl("alpha.qml"));
+
+    QString warning1 = component.url().toString() + ":5: Error: Qt.alpha(): Wrong number of arguments provided";
+    QString warning2 = component.url().toString() + ":10: Error: Qt.alpha(): Wrong number of arguments provided";
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object != nullptr);
+
+    QCOMPARE(qvariant_cast<QColor>(object->property("test1")),
+             QColor::fromRgbF(1.0, 0.8, 0.3, 0.5));
+    QCOMPARE(qvariant_cast<QColor>(object->property("testColor1")),
+             QColor::fromRgbF(1, 0.8, 0.3, 0.5));
+    QCOMPARE(qvariant_cast<QColor>(object->property("test2")), QColor());
+    QCOMPARE(qvariant_cast<QColor>(object->property("test3")),
+             QColor::fromRgbF(1.0, 0.8, 0.3, 0.7));
+    QCOMPARE(qvariant_cast<QColor>(object->property("testColor3")),
+             QColor::fromRgbF(1, 0.8, 0.3, 0.7));
+
+    QColor alphaRed = QColor("red");
+    alphaRed.setAlphaF(0.5);
+
+    QCOMPARE(qvariant_cast<QColor>(object->property("test4")), alphaRed);
+    QCOMPARE(qvariant_cast<QColor>(object->property("testColor4")), alphaRed);
     QCOMPARE(qvariant_cast<QColor>(object->property("test5")), QColor());
     QCOMPARE(qvariant_cast<QColor>(object->property("test6")), QColor());
 }
