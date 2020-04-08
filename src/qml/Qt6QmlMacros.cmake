@@ -159,6 +159,10 @@ function(qt6_add_qml_module target)
     if (NOT arg_INSTALL_LOCATION)
         set(arg_INSTALL_LOCATION "${INSTALL_QMLDIR}/${arg_TARGET_PATH}")
     endif()
+    if (DEFINED QT_WILL_INSTALL AND NOT QT_WILL_INSTALL
+            AND NOT IS_ABSOLUTE "${arg_INSTALL_LOCATION}")
+        set(arg_INSTALL_LOCATION "${QT_BUILD_DIR}/${arg_INSTALL_LOCATION}")
+    endif()
 
     set_target_properties(${target}
         PROPERTIES
@@ -585,6 +589,12 @@ function(qt6_qml_type_registration target)
         if(NOT arg_COPY_OVER_INSTALL)
             install(FILES ${plugin_types_file} DESTINATION ${qml_install_dir})
         else()
+            # For regular modules that have not been declared using
+            # qt_add_qml_module (e.g: src/quick)
+            if (DEFINED QT_WILL_INSTALL AND NOT QT_WILL_INSTALL
+                    AND NOT IS_ABSOLUTE "${qml_install_dir}")
+                set(qml_install_dir "${QT_BUILD_DIR}/${qml_install_dir}")
+            endif()
             add_custom_command(TARGET ${target} POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E copy_if_different
                     "${plugin_types_file}"
