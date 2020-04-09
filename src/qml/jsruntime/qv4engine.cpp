@@ -1920,7 +1920,7 @@ QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::compileModule(const Q
     QQmlMetaType::CachedUnitLookupError cacheError = QQmlMetaType::CachedUnitLookupError::NoError;
     if (const QQmlPrivate::CachedQmlUnit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(url, &cacheError)) {
         return ExecutableCompilationUnit::create(
-                    QV4::CompiledData::CompilationUnit(cachedUnit->qmlData, url.fileName(), url.toString()));
+                    QV4::CompiledData::CompilationUnit(cachedUnit->qmlData, cachedUnit->aotCompiledFunctions, url.fileName(), url.toString()));
     }
 
     QFile f(QQmlFile::urlToLocalFileOrQrc(url));

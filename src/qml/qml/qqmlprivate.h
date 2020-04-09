@@ -84,6 +84,7 @@ namespace CompiledData {
 struct Unit;
 struct CompilationUnit;
 }
+struct CppStackFrame;
 }
 namespace QmlIR {
 struct Document;
@@ -450,9 +451,14 @@ namespace QQmlPrivate
         const char *typeName;
     };
 
+    struct AOTCompiledFunction {
+        int index;
+        quint64 (*functionPtr)(QV4::CppStackFrame *, QV4::ExecutionEngine *);
+    };
+
     struct CachedQmlUnit {
         const QV4::CompiledData::Unit *qmlData;
-        void *unused1;
+        const AOTCompiledFunction *aotCompiledFunctions;
         void *unused2;
     };
 

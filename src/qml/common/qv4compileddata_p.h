@@ -85,6 +85,10 @@ class QQmlTypeNameCache;
 class QQmlType;
 class QQmlEngine;
 
+namespace QQmlPrivate {
+struct AOTCompiledFunction;
+}
+
 namespace QmlIR {
 struct Document;
 }
@@ -1202,6 +1206,7 @@ struct CompilationUnit : public CompilationUnitBase
     const Unit *data = nullptr;
     const QmlUnit *qmlData = nullptr;
     QStringList dynamicStrings;
+    const QQmlPrivate::AOTCompiledFunction *aotCompiledFunctions = nullptr;
 public:
     using CompiledObject = CompiledData::Object;
 
@@ -1209,6 +1214,13 @@ public:
                     const QString &finalUrlString = QString())
     {
         setUnitData(unitData, nullptr, fileName, finalUrlString);
+    }
+
+    explicit CompilationUnit(const Unit *unitData, const QQmlPrivate::AOTCompiledFunction *aotCompiledFunctions,
+                             const QString &fileName = QString(), const QString &finalUrlString = QString())
+        : CompilationUnit(unitData, fileName, finalUrlString)
+    {
+        this->aotCompiledFunctions = aotCompiledFunctions;
     }
 
     ~CompilationUnit()
@@ -1244,6 +1256,7 @@ public:
             qmlData = other.qmlData;
             other.qmlData = nullptr;
             dynamicStrings = std::move(other.dynamicStrings);
+            aotCompiledFunctions = other.aotCompiledFunctions;
             other.dynamicStrings.clear();
             m_fileName = std::move(other.m_fileName);
             other.m_fileName.clear();

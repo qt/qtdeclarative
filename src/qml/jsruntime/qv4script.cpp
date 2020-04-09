@@ -230,7 +230,7 @@ Script *Script::createFromFileOrCache(ExecutionEngine *engine, QmlContext *qmlCo
     if (const QQmlPrivate::CachedQmlUnit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(originalUrl, &cacheError)) {
         QQmlRefPointer<QV4::ExecutableCompilationUnit> jsUnit
                 = QV4::ExecutableCompilationUnit::create(
-                        QV4::CompiledData::CompilationUnit(cachedUnit->qmlData));
+                        QV4::CompiledData::CompilationUnit(cachedUnit->qmlData, cachedUnit->aotCompiledFunctions));
         return new QV4::Script(engine, qmlContext, jsUnit);
     }
 

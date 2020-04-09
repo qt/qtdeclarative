@@ -37,6 +37,7 @@
 **
 ****************************************************************************/
 
+#include "qml/qqmlprivate.h"
 #include "qv4executablecompilationunit_p.h"
 
 #include <private/qv4engine_p.h>
@@ -208,9 +209,20 @@ QV4::Function *ExecutableCompilationUnit::linkToEngine(ExecutionEngine *engine)
     }
 
     runtimeFunctions.resize(data->functionTableSize);
+    const QQmlPrivate::AOTCompiledFunction *aotFunction = aotCompiledFunctions;
     for (int i = 0 ;i < runtimeFunctions.size(); ++i) {
         const QV4::CompiledData::Function *compiledFunction = data->functionAt(i);
         runtimeFunctions[i] = QV4::Function::create(engine, this, compiledFunction);
+        if (aotFunction) {
+            if (aotFunction->functionPtr) {
+                if (aotFunction->index == i) {
+                    runtimeFunctions[i]->jittedCode = aotFunction->functionPtr;
+                    ++aotFunction;
+                }
+            } else {
+                aotFunction = nullptr;
+            }
+        }
     }
 
     Scope scope(engine);

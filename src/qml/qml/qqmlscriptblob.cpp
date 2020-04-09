@@ -153,7 +153,7 @@ void QQmlScriptBlob::dataReceived(const SourceCodeData &data)
 void QQmlScriptBlob::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit)
 {
     initializeFromCompilationUnit(QV4::ExecutableCompilationUnit::create(
-            QV4::CompiledData::CompilationUnit(unit->qmlData, urlString(), finalUrlString())));
+            QV4::CompiledData::CompilationUnit(unit->qmlData, unit->aotCompiledFunctions, urlString(), finalUrlString())));
 }
 
 void QQmlScriptBlob::done()

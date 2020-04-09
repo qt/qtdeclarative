@@ -608,7 +608,7 @@ void QQmlTypeData::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *un
     loader.load();
     m_document->jsModule.fileName = urlString();
     m_document->jsModule.finalUrl = finalUrlString();
-    m_document->javaScriptCompilationUnit = QV4::CompiledData::CompilationUnit(unit->qmlData);
+    m_document->javaScriptCompilationUnit = QV4::CompiledData::CompilationUnit(unit->qmlData, unit->aotCompiledFunctions);
     continueLoadFromIR();
 }
 

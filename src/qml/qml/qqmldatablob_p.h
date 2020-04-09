@@ -59,6 +59,7 @@
 #include <QtNetwork/qnetworkreply.h>
 #endif
 
+#include <QtQml/qqmlprivate.h>
 #include <QtQml/qqmlerror.h>
 #include <QtQml/qqmlabstracturlinterceptor.h>
 #include <QtQml/qqmlprivate.h>
