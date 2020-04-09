@@ -213,6 +213,12 @@ void QmlTypesCreator::writeEnums(const QJsonArray &enums)
         m_qml.writeStartObject(QLatin1String("Enum"));
         m_qml.writeScriptBinding(QLatin1String("name"),
                                enquote(obj.value(QLatin1String("name")).toString()));
+        auto alias = obj.find(QLatin1String("alias"));
+        if (alias != obj.end())
+            m_qml.writeScriptBinding(alias.key(), enquote(alias->toString()));
+        auto isFlag = obj.find(QLatin1String("isFlag"));
+        if (isFlag != obj.end() && isFlag->toBool())
+            m_qml.writeBooleanBinding(isFlag.key(), true);
         m_qml.writeArrayBinding(QLatin1String("values"), valueList);
         m_qml.writeEndObject();
     }

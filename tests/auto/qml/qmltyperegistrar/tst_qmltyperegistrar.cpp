@@ -58,4 +58,11 @@ void tst_qmltyperegistrar::qmltypesHasFileNames()
     QVERIFY(qmltypesData.contains("file: \"tst_qmltyperegistrar.h\""));
 }
 
+void tst_qmltyperegistrar::qmltypesHasFlags()
+{
+    QVERIFY(qmltypesData.contains("name: \"Flags\""));
+    QVERIFY(qmltypesData.contains("alias: \"Flag\""));
+    QVERIFY(qmltypesData.contains("isFlag: true"));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

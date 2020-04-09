@@ -37,6 +37,15 @@ class Local : public Foreign
 {
     Q_OBJECT
     QML_ELEMENT
+public:
+    enum Flag {
+        Flag1 = 0x1,
+        Flag2 = 0x2,
+        Flag3 = 0x4,
+        Flag4 = 0x8
+    };
+    Q_DECLARE_FLAGS(Flags, Flag)
+    Q_FLAG(Flags)
 };
 
 class tst_qmltyperegistrar : public QObject
@@ -48,6 +57,7 @@ private slots:
     void qmltypesHasForeign();
     void qmltypesHasHppClassAndNoext();
     void qmltypesHasFileNames();
+    void qmltypesHasFlags();
 
 private:
     QByteArray qmltypesData;
