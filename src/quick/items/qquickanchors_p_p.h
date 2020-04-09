@@ -57,8 +57,11 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickAnchorLine
+class Q_QUICK_PRIVATE_EXPORT QQuickAnchorLine
 {
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 public:
     QQuickAnchorLine() {}
     QQuickAnchorLine(QQuickItem *i, QQuickAnchors::Anchor l) : item(i), anchorLine(l) {}
