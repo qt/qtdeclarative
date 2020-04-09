@@ -627,13 +627,18 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
             }
         }
 
-        auto method = m_currentScope->methods()[signal];
-        for (auto const &param : method.parameterNames()) {
-            const auto firstSourceLocation = statement->firstSourceLocation();
-            bool hasMultilineStatementBody
-                    = statement->lastSourceLocation().startLine > firstSourceLocation.startLine;
-            m_currentScope->insertSignalIdentifier(param, method, firstSourceLocation,
-                                                   hasMultilineStatementBody);
+        const auto methods = m_currentScope->methods();
+        const auto methodsRange = methods.equal_range(signal);
+        for (auto method = methodsRange.first; method != methodsRange.second; ++method) {
+            if (method->methodType() != MetaMethod::Signal)
+                continue;
+            for (auto const &param : method->parameterNames()) {
+                const auto firstSourceLocation = statement->firstSourceLocation();
+                bool hasMultilineStatementBody
+                        = statement->lastSourceLocation().startLine > firstSourceLocation.startLine;
+                m_currentScope->insertSignalIdentifier(param, *method, firstSourceLocation,
+                                                       hasMultilineStatementBody);
+            }
         }
         return true;
     }

@@ -119,9 +119,9 @@ public:
 
     ScopeType scopeType() const { return m_scopeType; }
 
-    void addMethods(const QHash<QString, MetaMethod> &methods) { m_methods.insert(methods); }
+    void addMethods(const QMultiHash<QString, MetaMethod> &methods) { m_methods.unite(methods); }
     void addMethod(const MetaMethod &method) { m_methods.insert(method.methodName(), method); }
-    QHash<QString, MetaMethod> methods() const { return m_methods; }
+    QMultiHash<QString, MetaMethod> methods() const { return m_methods; }
 
     void addEnum(const MetaEnum &fakeEnum) { m_enums.insert(fakeEnum.name(), fakeEnum); }
     QHash<QString, MetaEnum> enums() const { return m_enums; }
@@ -194,7 +194,7 @@ private:
     QSet<QString> m_jsIdentifiers;
     QMultiHash<QString, MethodUsage> m_injectedSignalIdentifiers;
 
-    QHash<QString, MetaMethod> m_methods;
+    QMultiHash<QString, MetaMethod> m_methods;
     QHash<QString, MetaProperty> m_properties;
     QHash<QString, MetaEnum> m_enums;
 
