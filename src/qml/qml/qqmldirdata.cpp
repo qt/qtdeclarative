@@ -87,7 +87,7 @@ void QQmlQmldirData::dataReceived(const SourceCodeData &data)
     }
 }
 
-void QQmlQmldirData::initializeFromCachedUnit(const QV4::CompiledData::Unit *)
+void QQmlQmldirData::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *)
 {
     Q_UNIMPLEMENTED();
 }

@@ -1372,7 +1372,7 @@ QList<QQmlType> QQmlMetaType::qmlSingletonTypes()
     return retn;
 }
 
-const QV4::CompiledData::Unit *QQmlMetaType::findCachedCompilationUnit(const QUrl &uri, CachedUnitLookupError *status)
+const QQmlPrivate::CachedQmlUnit *QQmlMetaType::findCachedCompilationUnit(const QUrl &uri, CachedUnitLookupError *status)
 {
     const QQmlMetaTypeDataPtr data;
 
@@ -1387,7 +1387,7 @@ const QV4::CompiledData::Unit *QQmlMetaType::findCachedCompilationUnit(const QUr
             }
             if (status)
                 *status = CachedUnitLookupError::NoError;
-            return unit->qmlData;
+            return unit;
         }
     }
 

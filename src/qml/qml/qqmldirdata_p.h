@@ -73,7 +73,7 @@ public:
 
 protected:
     void dataReceived(const SourceCodeData &) override;
-    void initializeFromCachedUnit(const QV4::CompiledData::Unit *) override;
+    void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *) override;
 
 private:
     QString m_content;

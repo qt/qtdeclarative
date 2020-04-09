@@ -227,10 +227,10 @@ Script *Script::createFromFileOrCache(ExecutionEngine *engine, QmlContext *qmlCo
         error->clear();
 
     QQmlMetaType::CachedUnitLookupError cacheError = QQmlMetaType::CachedUnitLookupError::NoError;
-    if (const QV4::CompiledData::Unit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(originalUrl, &cacheError)) {
+    if (const QQmlPrivate::CachedQmlUnit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(originalUrl, &cacheError)) {
         QQmlRefPointer<QV4::ExecutableCompilationUnit> jsUnit
                 = QV4::ExecutableCompilationUnit::create(
-                        QV4::CompiledData::CompilationUnit(cachedUnit));
+                        QV4::CompiledData::CompilationUnit(cachedUnit->qmlData));
         return new QV4::Script(engine, qmlContext, jsUnit);
     }
 

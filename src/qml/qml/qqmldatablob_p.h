@@ -61,6 +61,7 @@
 
 #include <QtQml/qqmlerror.h>
 #include <QtQml/qqmlabstracturlinterceptor.h>
+#include <QtQml/qqmlprivate.h>
 
 #include <QtCore/qdatetime.h>
 #include <QtCore/qfileinfo.h>
@@ -137,7 +138,7 @@ protected:
 
     // Callbacks made in load thread
     virtual void dataReceived(const SourceCodeData &) = 0;
-    virtual void initializeFromCachedUnit(const QV4::CompiledData::Unit*) = 0;
+    virtual void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *) = 0;
     virtual void done();
 #if QT_CONFIG(qml_network)
     virtual void networkError(QNetworkReply::NetworkError);

@@ -601,14 +601,14 @@ void QQmlTypeData::dataReceived(const SourceCodeData &data)
     continueLoadFromIR();
 }
 
-void QQmlTypeData::initializeFromCachedUnit(const QV4::CompiledData::Unit *unit)
+void QQmlTypeData::initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit)
 {
     m_document.reset(new QmlIR::Document(isDebugging()));
-    QQmlIRLoader loader(unit, m_document.data());
+    QQmlIRLoader loader(unit->qmlData, m_document.data());
     loader.load();
     m_document->jsModule.fileName = urlString();
     m_document->jsModule.finalUrl = finalUrlString();
-    m_document->javaScriptCompilationUnit = QV4::CompiledData::CompilationUnit(unit);
+    m_document->javaScriptCompilationUnit = QV4::CompiledData::CompilationUnit(unit->qmlData);
     continueLoadFromIR();
 }
 

@@ -112,7 +112,7 @@ protected:
     void done() override;
     void completed() override;
     void dataReceived(const SourceCodeData &) override;
-    void initializeFromCachedUnit(const QV4::CompiledData::Unit *unit) override;
+    void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit) override;
     void allDependenciesDone() override;
     void downloadProgressChanged(qreal) override;
 

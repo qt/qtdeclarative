@@ -367,11 +367,11 @@ void tst_qmlcachegen::versionChecksForAheadOfTimeUnits()
 
     Q_ASSERT(!temporaryModifiedCachedUnit);
     QQmlMetaType::CachedUnitLookupError error = QQmlMetaType::CachedUnitLookupError::NoError;
-    const QV4::CompiledData::Unit *originalUnit = QQmlMetaType::findCachedCompilationUnit(
+    const QQmlPrivate::CachedQmlUnit *originalUnit = QQmlMetaType::findCachedCompilationUnit(
             QUrl("qrc:/data/versionchecks.qml"), &error);
     QVERIFY(originalUnit);
-    QV4::CompiledData::Unit *tweakedUnit = (QV4::CompiledData::Unit *)malloc(originalUnit->unitSize);
-    memcpy(reinterpret_cast<void *>(tweakedUnit), reinterpret_cast<const void *>(originalUnit), originalUnit->unitSize);
+    QV4::CompiledData::Unit *tweakedUnit = (QV4::CompiledData::Unit *)malloc(originalUnit->qmlData->unitSize);
+    memcpy(reinterpret_cast<void *>(tweakedUnit), reinterpret_cast<const void *>(originalUnit), originalUnit->qmlData->unitSize);
     tweakedUnit->version = QV4_DATA_STRUCTURE_VERSION - 1;
     temporaryModifiedCachedUnit = new QQmlPrivate::CachedQmlUnit{tweakedUnit, nullptr, nullptr};
 
@@ -596,11 +596,11 @@ void tst_qmlcachegen::moduleScriptImport()
         QVERIFY(unitData->flags & QV4::CompiledData::Unit::IsESModule);
 
         QQmlMetaType::CachedUnitLookupError error = QQmlMetaType::CachedUnitLookupError::NoError;
-        const QV4::CompiledData::Unit *unitFromResources = QQmlMetaType::findCachedCompilationUnit(
+        const QQmlPrivate::CachedQmlUnit *unitFromResources = QQmlMetaType::findCachedCompilationUnit(
                 QUrl("qrc:/data/script.mjs"), &error);
         QVERIFY(unitFromResources);
 
-        QCOMPARE(unitFromResources, compilationUnit->unitData());
+        QCOMPARE(unitFromResources->qmlData, compilationUnit->unitData());
     }
 }
 
@@ -627,11 +627,11 @@ void tst_qmlcachegen::sourceFileIndices()
     QVERIFY(QFileInfo(":/data/versionchecks.qml").size() > 0);
 
     QQmlMetaType::CachedUnitLookupError error = QQmlMetaType::CachedUnitLookupError::NoError;
-    const QV4::CompiledData::Unit *unitFromResources = QQmlMetaType::findCachedCompilationUnit(
+    const QQmlPrivate::CachedQmlUnit *unitFromResources = QQmlMetaType::findCachedCompilationUnit(
             QUrl("qrc:/data/versionchecks.qml"), &error);
     QVERIFY(unitFromResources);
-    QVERIFY(unitFromResources->flags & QV4::CompiledData::Unit::PendingTypeCompilation);
-    QCOMPARE(uint(unitFromResources->sourceFileIndex), uint(0));
+    QVERIFY(unitFromResources->qmlData->flags & QV4::CompiledData::Unit::PendingTypeCompilation);
+    QCOMPARE(uint(unitFromResources->qmlData->sourceFileIndex), uint(0));
 }
 
 void tst_qmlcachegen::reproducibleCache_data()

@@ -78,7 +78,7 @@ public:
 
 protected:
     void dataReceived(const SourceCodeData &) override;
-    void initializeFromCachedUnit(const QV4::CompiledData::Unit *unit) override;
+    void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *unit) override;
     void done() override;
 
     QString stringAt(int index) const override;
