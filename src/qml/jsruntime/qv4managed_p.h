@@ -145,6 +145,7 @@ public:
         Type_MathObject,
         Type_ProxyObject,
         Type_UrlObject,
+        Type_UrlSearchParamsObject,
 
         Type_ExecutionContext,
         Type_InternalClass,

@@ -657,6 +657,8 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 
     jsObjects[Url_Ctor] = memoryManager->allocate<UrlCtor>(global);
     jsObjects[UrlProto] = memoryManager->allocate<UrlPrototype>();
+    jsObjects[UrlSearchParams_Ctor] = memoryManager->allocate<UrlSearchParamsCtor>(global);
+    jsObjects[UrlSearchParamsProto] = memoryManager->allocate<UrlSearchParamsPrototype>();
 
     str = newString(QStringLiteral("get [Symbol.species]"));
     jsObjects[GetSymbolSpecies] = FunctionObject::createBuiltinFunction(this, str, ArrayPrototype::method_get_species, 0);
@@ -680,6 +682,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     static_cast<TypeErrorPrototype *>(typeErrorPrototype())->init(this, typeErrorCtor());
     static_cast<URIErrorPrototype *>(uRIErrorPrototype())->init(this, uRIErrorCtor());
     static_cast<UrlPrototype *>(urlPrototype())->init(this, urlCtor());
+    static_cast<UrlSearchParamsPrototype *>(urlSearchParamsPrototype())->init(this, urlSearchParamsCtor());
 
     static_cast<IteratorPrototype *>(iteratorPrototype())->init(this);
     static_cast<ForInIteratorPrototype *>(forInIteratorPrototype())->init(this);
@@ -770,6 +773,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     globalObject->defineDefaultProperty(QStringLiteral("URIError"), *uRIErrorCtor());
     globalObject->defineDefaultProperty(QStringLiteral("Promise"), *promiseCtor());
     globalObject->defineDefaultProperty(QStringLiteral("URL"), *urlCtor());
+    globalObject->defineDefaultProperty(QStringLiteral("URLSearchParams"), *urlSearchParamsCtor());
 
     globalObject->defineDefaultProperty(QStringLiteral("SharedArrayBuffer"), *sharedArrayBufferCtor());
     globalObject->defineDefaultProperty(QStringLiteral("ArrayBuffer"), *arrayBufferCtor());
@@ -1062,6 +1066,11 @@ Heap::RegExpObject *ExecutionEngine::newRegExpObject(const QRegularExpression &r
 Heap::UrlObject *ExecutionEngine::newUrlObject()
 {
     return memoryManager->allocate<UrlObject>();
+}
+
+Heap::UrlSearchParamsObject *ExecutionEngine::newUrlSearchParamsObject()
+{
+    return memoryManager->allocate<UrlSearchParamsObject>();
 }
 
 Heap::Object *ExecutionEngine::newErrorObject(const Value &value)

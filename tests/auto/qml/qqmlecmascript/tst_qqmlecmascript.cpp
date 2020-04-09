@@ -386,6 +386,8 @@ private slots:
     void urlConstruction();
     void urlPropertyInvalid();
     void urlPropertySet();
+    void urlSearchParamsConstruction();
+    void urlSearchParamsMethods();
 
     void gcCrashRegressionTest();
 
@@ -9471,6 +9473,63 @@ void tst_qqmlecmascript::urlPropertySet()
     QCOMPARE(url->pathname(), "/path/to/something");
     QCOMPARE(url->search(), "?search=value");
     QCOMPARE(url->hash(), "#hash");
+}
+
+
+void tst_qqmlecmascript::urlSearchParamsConstruction()
+{
+    QQmlEngine qmlengine;
+
+    QObject *o = new QObject(&qmlengine);
+
+    QV4::ExecutionEngine *engine = qmlengine.handle();
+    QV4::Scope scope(engine);
+
+    QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(engine, o));
+
+    // Invalid number of arguments
+    QVERIFY(EVALUATE_ERROR("new URLSearchParams('a', 'b')"));
+
+    // Invalid arguments
+    QVERIFY(EVALUATE_ERROR("new URLSearchParams([['a', 'b', 'c']])"));
+    QVERIFY(EVALUATE_ERROR("new URLSearchParams([[]])"));
+
+    // Valid URLSearchParams
+    QVERIFY(EVALUATE_VALUE("new URLSearchParams('a=1&b=2&c=3').toString()", QV4::ScopedValue(scope, scope.engine->newString("a=1&b=2&c=3"))));
+    QVERIFY(EVALUATE_VALUE("new URLSearchParams([['a', '1'], ['b', '2'], ['c', '3']]).toString()", QV4::ScopedValue(scope, scope.engine->newString("a=1&b=2&c=3"))));
+    QVERIFY(EVALUATE_VALUE("new URLSearchParams({a: 1, b: 2, c: 3}).toString()", QV4::ScopedValue(scope, scope.engine->newString("a=1&b=2&c=3"))));
+}
+
+void tst_qqmlecmascript::urlSearchParamsMethods()
+{
+    QQmlEngine qmlengine;
+
+    QObject *o = new QObject(&qmlengine);
+
+    QV4::ExecutionEngine *engine = qmlengine.handle();
+    QV4::Scope scope(engine);
+
+    QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(engine, o));
+
+    QV4::ScopedValue ret(scope, EVALUATE("this.usp = new URLSearchParams('a=1&a=2&a=3&b=4');"));
+    QV4::UrlSearchParamsObject *url = ret->as<QV4::UrlSearchParamsObject>();
+    QVERIFY(url != nullptr);
+
+    // has
+    QVERIFY(EVALUATE_VALUE("this.usp.has('a');", QV4::Primitive::fromBoolean(true)));
+    // get
+    QVERIFY(EVALUATE_VALUE("this.usp.get('a');", QV4::ScopedValue(scope, scope.engine->newString("1"))));
+    // getAll
+    QVERIFY(EVALUATE_VALUE("this.usp.getAll('a').join(',');", QV4::ScopedValue(scope, scope.engine->newString("1,2,3"))));
+    // delete
+    QVERIFY(EVALUATE_VALUE("this.usp.delete('b');", QV4::Primitive::undefinedValue()));
+    // set
+    QVERIFY(EVALUATE_VALUE("this.usp.set('a', 10);", QV4::Primitive::undefinedValue()));
+    // append
+    QVERIFY(EVALUATE_VALUE("this.usp.set('c', 'foo');", QV4::Primitive::undefinedValue()));
+
+    // Verify the end result
+    QVERIFY(EVALUATE_VALUE("this.usp.toString()", QV4::ScopedValue(scope, scope.engine->newString("a=10&c=foo"))));
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

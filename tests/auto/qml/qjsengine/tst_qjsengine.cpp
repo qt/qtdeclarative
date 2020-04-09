@@ -1106,6 +1106,7 @@ void tst_QJSEngine::globalObjectProperties_enumerate()
         << "Atomics"
         << "Promise"
         << "URL"
+        << "URLSearchParams"
         ;
     QSet<QString> actualNames;
     {

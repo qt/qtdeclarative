@@ -241,6 +241,7 @@ public:
         ArrayIteratorProto,
         StringIteratorProto,
         UrlProto,
+        UrlSearchParamsProto,
 
         Object_Ctor,
         String_Ctor,
@@ -269,6 +270,7 @@ public:
         Map_Ctor,
         IntrinsicTypedArray_Ctor,
         Url_Ctor,
+        UrlSearchParams_Ctor,
 
         GetSymbolSpecies,
 
@@ -312,6 +314,10 @@ public:
     FunctionObject *urlCtor() const
     {
         return reinterpret_cast<FunctionObject *>(jsObjects + Url_Ctor);
+    }
+    FunctionObject *urlSearchParamsCtor() const
+    {
+        return reinterpret_cast<FunctionObject *>(jsObjects + UrlSearchParams_Ctor);
     }
     FunctionObject *typedArrayCtors;
 
@@ -361,6 +367,7 @@ public:
     Object *arrayIteratorPrototype() const { return reinterpret_cast<Object *>(jsObjects + ArrayIteratorProto); }
     Object *stringIteratorPrototype() const { return reinterpret_cast<Object *>(jsObjects + StringIteratorProto); }
     Object *urlPrototype() const { return reinterpret_cast<Object *>(jsObjects + UrlProto); }
+    Object *urlSearchParamsPrototype() const { return reinterpret_cast<Object *>(jsObjects + UrlSearchParamsProto); }
 
     EvalFunction *evalFunction() const { return reinterpret_cast<EvalFunction *>(jsObjects + Eval_Function); }
     FunctionObject *getStackFunction() const { return reinterpret_cast<FunctionObject *>(jsObjects + GetStack_Function); }
@@ -591,6 +598,7 @@ public:
 #endif
 
     Heap::UrlObject *newUrlObject();
+    Heap::UrlSearchParamsObject *newUrlSearchParamsObject();
 
     Heap::Object *newErrorObject(const Value &value);
     Heap::Object *newErrorObject(const QString &message);

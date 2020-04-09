@@ -108,6 +108,9 @@ QString Managed::className() const
     case Type_UrlObject:
         s = "URL";
         break;
+    case Type_UrlSearchParamsObject:
+        s = "URLSearchParams";
+        break;
 
     case Type_ExecutionContext:
         s = "__ExecutionContext";

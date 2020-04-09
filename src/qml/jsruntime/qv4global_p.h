@@ -142,6 +142,7 @@ namespace Heap {
     struct QObjectWrapper;
     struct RegExpObject;
     struct UrlObject;
+    struct UrlSearchParamsObject;
     struct RegExp;
     struct EvalFunction;
 
