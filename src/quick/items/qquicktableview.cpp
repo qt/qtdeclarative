@@ -402,6 +402,9 @@
     \li Qt.AlignCenter - the same as (Qt.AlignHCenter | Qt.AlignVCenter)
     \endlist
 
+    If no vertical alignment is specified, vertical positioning will be ignored.
+    The same is true for horizontal alignment.
+
     Optionally, you can specify \a offset to move \l contentX and \l contentY an extra number of
     pixels beyond the target alignment. E.g if you want to position the view so
     that cell [10, 10] ends up at the top-left corner with a 5px margin, you could do:
@@ -409,55 +412,47 @@
     \code
     positionViewAtCell(Qt.point(10, 10), Qt.AlignLeft | Qt.AlignTop, Qt.point(-5, -5))
     \endcode
+
+    \note it is not recommended to use \l {Flickable::}{contentX} or \l {Flickable::}{contentY}
+    to position the view at a particular cell. This is unreliable since removing items from
+    the start of the table does not cause all other items to be repositioned.
+    TableView can also sometimes place rows and columns at approximate positions to
+    optimize for speed. The only exception is if the cell is already visible in
+    the view, which can be checked upfront by calling \l itemAtCell().
+
+    Methods should only be called after the Component has completed. To position
+    the view at startup, this method should be called by Component.onCompleted. For
+    example, to position the view at the end:
+
+    \code
+    Component.onCompleted: positionViewAtCell(Qt.point(columns - 1, rows - 1), Qt.AlignRight | Qt.AlignBottom)
+    \endcode
 */
 
 /*!
     \qmlmethod QtQuick::TableView::positionViewAtCell(int column, int row, Qt.Alignment alignment, point offset)
 
-    Convenience for calling \code positionViewAtCell(Qt.point(column, row), alignment, offset)
+    Convenience for calling
+    \code
+    positionViewAtCell(Qt.point(column, row), alignment, offset)
+    \endcode
 */
 
 /*!
     \qmlmethod QtQuick::TableView::positionViewAtRow(int row, Qt.Alignment alignment, real offset)
 
-    Positions \l contentY such that \a row is at the position specified by
-    \a alignment. \a alignment can be one of the following:
-
-    \list
-    \li Qt.AlignTop - position the row at the top of the view.
-    \li Qt.AlignVCenter - position the cell at the vertical center of the view.
-    \li Qt.AlignCenter - the same as Qt.AlignVCenter.
-    \li Qt.AlignBottom - position the cell at the bottom of the view.
-    \endlist
-
-    Optionally, you can specify \a offset to move \l contentY an extra number of
-    pixels beyond the target alignment. E.g if you want to position the view so
-    that row 10 ends up at the bottom with a 5px margin, you could do:
-
+    Convenience for calling
     \code
-    positionViewAtRow(10, Qt.AlignBottom, 5)
+    positionViewAtCell(Qt.point(0, row), alignment & Qt.AlignVertical_Mask, Qt.point(0, offset))
     \endcode
 */
 
 /*!
     \qmlmethod QtQuick::TableView::positionViewAtColumn(int column, Qt.Alignment alignment, real offset)
 
-    Positions \l contentX such that \a column is at the position specified by
-    \a alignment. \a alignment can be one of the following:
-
-    \list
-    \li Qt.AlignLeft - position the column at the left of the view.
-    \li Qt.AlignHCenter - position the column at the horizontal center of the view.
-    \li Qt.AlignCenter - the same as Qt.AlignVCenter.
-    \li Qt.AlignRight - position the column at the right of the view.
-    \endlist
-
-    Optionally, you can specify \a offset to move \l contentX an extra number of
-    pixels to the side of the target alignment. E.g if you want to position the view so
-    that column 10 ends up at the left side with a 5px margin, you could do:
-
+    Convenience for calling
     \code
-    positionViewAtColumn(10, Qt.AlignLeft, -5)
+    positionViewAtCell(Qt.point(column, 0), alignment & Qt.AlignHorizontal_Mask, Qt.point(offset, 0))
     \endcode
 */
 
@@ -3196,8 +3191,39 @@ int QQuickTableView::bottomRow() const
 
 void QQuickTableView::positionViewAtCell(const QPoint &cell, Qt::Alignment alignment, const QPointF &offset)
 {
-    positionViewAtRow(cell.y(), alignment & Qt::AlignVertical_Mask, offset.y());
-    positionViewAtColumn(cell.x(), alignment & Qt::AlignHorizontal_Mask, offset.x());
+    Q_D(QQuickTableView);
+
+    Qt::Alignment verticalAlignment = alignment & (Qt::AlignTop | Qt::AlignVCenter | Qt::AlignBottom);
+    Qt::Alignment horizontalAlignment = alignment & (Qt::AlignLeft | Qt::AlignHCenter | Qt::AlignRight);
+
+    if (!verticalAlignment && !horizontalAlignment) {
+        qmlWarning(this) << "No valid alignment specified";
+        return;
+    }
+
+    if (horizontalAlignment) {
+        if (d->syncVertically) {
+            d->syncView->positionViewAtCell(QPoint(cell.x(), topRow()), horizontalAlignment, offset);
+        } else {
+            d->assignedPositionViewAtColumn = cell.x();
+            d->positionViewAtColumnAlignment = horizontalAlignment;
+            d->positionViewAtColumnOffset = offset.x();
+            d->scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::ViewportOnly |
+                                    QQuickTableViewPrivate::RebuildOption::PositionViewAtColumn);
+        }
+    }
+
+    if (verticalAlignment) {
+        if (d->syncHorizontally) {
+            d->syncView->positionViewAtCell(QPoint(leftColumn(), cell.y()), verticalAlignment, offset);
+        } else {
+            d->assignedPositionViewAtRow = cell.y();
+            d->positionViewAtRowAlignment = verticalAlignment;
+            d->positionViewAtRowOffset = offset.y();
+            d->scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::ViewportOnly |
+                                    QQuickTableViewPrivate::RebuildOption::PositionViewAtRow);
+        }
+    }
 }
 
 void QQuickTableView::positionViewAtCell(int column, int row, Qt::Alignment alignment, const QPointF &offset)
@@ -3207,68 +3233,12 @@ void QQuickTableView::positionViewAtCell(int column, int row, Qt::Alignment alig
 
 void QQuickTableView::positionViewAtRow(int row, Qt::Alignment alignment, qreal offset)
 {
-    Q_D(QQuickTableView);
-
-    if (d->syncVertically) {
-        d->syncView->positionViewAtRow(row, alignment, offset);
-        return;
-    }
-
-    // Clean up flags, in case it has
-    // Qt::AlignCenter set (which we allow)
-    Qt::Alignment adjustedAlignment = alignment;
-    adjustedAlignment.setFlag(Qt::AlignHCenter, false);
-    if (!int(adjustedAlignment))
-        adjustedAlignment.setFlag(Qt::AlignTop);
-
-    switch (adjustedAlignment) {
-    case Qt::AlignTop:
-    case Qt::AlignVCenter:
-    case Qt::AlignBottom:
-        break;
-    default:
-        qmlWarning(this) << "Unsupported alignment. Use AlignTop, AlignVCenter, or AlignBottom";
-        return;
-    }
-
-    d->assignedPositionViewAtRow = row;
-    d->positionViewAtRowAlignment = adjustedAlignment;
-    d->positionViewAtRowOffset = offset;
-    d->scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::ViewportOnly |
-                            QQuickTableViewPrivate::RebuildOption::PositionViewAtRow);
+    positionViewAtCell(QPoint(0, row), alignment & Qt::AlignVertical_Mask, QPointF(0, offset));
 }
 
 void QQuickTableView::positionViewAtColumn(int column, Qt::Alignment alignment, qreal offset)
 {
-    Q_D(QQuickTableView);
-
-    if (d->syncHorizontally) {
-        d->syncView->positionViewAtColumn(column, alignment, offset);
-        return;
-    }
-
-    // Clean up flags, in case it has
-    // Qt::AlignCenter set (which we allow)
-    Qt::Alignment adjustedAlignment = alignment;
-    adjustedAlignment.setFlag(Qt::AlignVCenter, false);
-    if (!int(adjustedAlignment))
-        adjustedAlignment.setFlag(Qt::AlignLeft);
-
-    switch (adjustedAlignment) {
-    case Qt::AlignLeft:
-    case Qt::AlignHCenter:
-    case Qt::AlignRight:
-        break;
-    default:
-        qmlWarning(this) << "Unsupported alignment. Use AlignLeft, AlignHCenter, or AlignRight";
-        return;
-    }
-
-    d->assignedPositionViewAtColumn = column;
-    d->positionViewAtColumnAlignment = adjustedAlignment;
-    d->positionViewAtColumnOffset = offset;
-    d->scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::ViewportOnly |
-                            QQuickTableViewPrivate::RebuildOption::PositionViewAtColumn);
+    positionViewAtCell(QPoint(column, 0), alignment & Qt::AlignHorizontal_Mask, QPointF(offset, 0));
 }
 
 QQuickItem *QQuickTableView::itemAtCell(const QPoint &cell) const
