@@ -49,8 +49,6 @@ class QtQuickControls2UniversalStylePlugin : public QQuickStylePlugin
 public:
     QtQuickControls2UniversalStylePlugin(QObject *parent = nullptr);
 
-    void registerTypes(const char *uri) override;
-
     QString name() const override;
     void initializeTheme(QQuickTheme *theme) override;
 };
@@ -58,16 +56,6 @@ public:
 QtQuickControls2UniversalStylePlugin::QtQuickControls2UniversalStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
 {
     QQuickUniversalStyle::initGlobals();
-}
-
-void QtQuickControls2UniversalStylePlugin::registerTypes(const char *uri)
-{
-    QByteArray import = QByteArray(uri) + ".impl";
-    qmlRegisterModule(import, 2, 15); // Qt 5.12->2.12, 5.13->2.13...
-
-    qmlRegisterType(resolvedUrl(QStringLiteral("CheckIndicator.qml")), import, 2, 0, "CheckIndicator");
-    qmlRegisterType(resolvedUrl(QStringLiteral("RadioIndicator.qml")), import, 2, 0, "RadioIndicator");
-    qmlRegisterType(resolvedUrl(QStringLiteral("SwitchIndicator.qml")), import, 2, 0, "SwitchIndicator");
 }
 
 QString QtQuickControls2UniversalStylePlugin::name() const

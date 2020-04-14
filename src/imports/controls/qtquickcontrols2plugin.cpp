@@ -46,20 +46,6 @@
 #include <QtQuickControls2/qquickstyle.h>
 #include <QtQuickControls2/private/qquickstyle_p.h>
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
-#include <QtQuickControls2Impl/private/qquickchecklabel_p.h>
-#include <QtQuickControls2Impl/private/qquickcolor_p.h>
-#include <QtQuickControls2Impl/private/qquickcolorimage_p.h>
-#include <QtQuickControls2Impl/private/qquickiconimage_p.h>
-#include <QtQuickControls2Impl/private/qquickmnemoniclabel_p.h>
-#include <QtQuickControls2Impl/private/qquickpaddedrectangle_p.h>
-#include <QtQuickControls2Impl/private/qquickplaceholdertext_p.h>
-#include <QtQuickControls2Impl/private/qquickiconlabel_p.h>
-#if QT_CONFIG(quick_listview) && QT_CONFIG(quick_pathview)
-#include <QtQuickControls2Impl/private/qquicktumblerview_p.h>
-#endif
-#include <QtQuickTemplates2/private/qquickoverlay_p.h>
-#include <QtQuickControls2Impl/private/qquickclippedtext_p.h>
-#include <QtQuickControls2Impl/private/qquickitemgroup_p.h>
 #include <QtQuickTemplates2/private/qquicktheme_p_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -100,50 +86,13 @@ void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char */*
     init();
 }
 
-void QtQuickControls2Plugin::registerTypes(const char *uri)
+void QtQuickControls2Plugin::registerTypes(const char */*uri*/)
 {
     QQuickStylePrivate::init(baseUrl());
 
     const QString style = QQuickStyle::name();
     if (!style.isEmpty())
         QFileSelectorPrivate::addStatics(QStringList() << style.toLower());
-
-    // The minor version used to be the current Qt 5 minor. For compatibility it is the last
-    // Qt 5 release.
-    qmlRegisterModule(uri, 2, 15);
-
-    qmlRegisterTypesAndRevisions<QtQuickControls2Plugin>(uri, 2);
-
-    // The minor version used to be the current Qt 5 minor. For compatibility it is the last
-    // Qt 5 release.
-    const QByteArray import = QByteArray(uri) + ".impl";
-    qmlRegisterModule(import, 2, 15);
-
-    // QtQuick.Controls.impl 2.0 (Qt 5.7)
-    qmlRegisterType<QQuickPaddedRectangle>(import, 2, 0, "PaddedRectangle");
-
-    // QtQuick.Controls.impl 2.1 (Qt 5.8)
-#if QT_CONFIG(quick_listview) && QT_CONFIG(quick_pathview)
-    qmlRegisterType<QQuickTumblerView>(import, 2, 1, "TumblerView");
-#endif
-
-    // QtQuick.Controls.impl 2.2 (Qt 5.9)
-    qmlRegisterType<QQuickClippedText>(import, 2, 2, "ClippedText");
-    qmlRegisterType<QQuickItemGroup>(import, 2, 2, "ItemGroup");
-    qmlRegisterType<QQuickPlaceholderText>(import, 2, 2, "PlaceholderText");
-
-    // QtQuick.Controls.impl 2.3 (Qt 5.10)
-    qmlRegisterType<QQuickColorImage>(import, 2, 3, "ColorImage");
-    qmlRegisterType<QQuickIconImage>(import, 2, 3, "IconImage");
-    qmlRegisterSingletonType<QQuickColor>(import, 2, 3, "Color", [](QQmlEngine *engine, QJSEngine *scriptEngine) -> QObject* {
-            Q_UNUSED(engine);
-            Q_UNUSED(scriptEngine);
-            return new QQuickColor;
-    });
-    qmlRegisterType<QQuickIconLabel>(import, 2, 3, "IconLabel");
-    qmlRegisterType<QQuickCheckLabel>(import, 2, 3, "CheckLabel");
-    qmlRegisterType<QQuickMnemonicLabel>(import, 2, 3, "MnemonicLabel");
-    qmlRegisterRevision<QQuickText, 6>(import, 2, 3);
 }
 
 void QtQuickControls2Plugin::unregisterTypes()

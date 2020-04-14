@@ -1,8 +1,8 @@
 TARGET = qtquickcontrols2imaginestyleplugin
 TARGETPATH = QtQuick/Controls/Imagine
 
-IMPORT_NAME = QtQuick.Controls.Imagine
-IMPORT_VERSION = 2.$$QT_MINOR_VERSION
+QML_IMPORT_NAME = QtQuick.Controls.Imagine
+QML_IMPORT_VERSION = 2.$$QT_MINOR_VERSION
 
 QT += qml quick
 QT_PRIVATE += core-private gui-private qml-private quick-private quicktemplates2-private quickcontrols2-private quickcontrols2impl-private
@@ -24,7 +24,7 @@ qtquickcontrols2imaginestyle.files += \
     $$files($$PWD/images/*.webp)
 RESOURCES += qtquickcontrols2imaginestyle
 
-CONFIG += no_cxx_module install_qml_files builtin_resources qtquickcompiler
+CONFIG += qmltypes no_cxx_module install_qml_files builtin_resources qtquickcompiler
 load(qml_plugin)
 
 requires(qtConfig(quickcontrols2-imagine))

@@ -50,27 +50,12 @@ class QtQuickControls2FusionStylePlugin : public QQuickStylePlugin
 public:
     QtQuickControls2FusionStylePlugin(QObject *parent = nullptr);
 
-    void registerTypes(const char *uri) override;
-
     QString name() const override;
     void initializeTheme(QQuickTheme *theme) override;
 };
 
 QtQuickControls2FusionStylePlugin::QtQuickControls2FusionStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
 {
-}
-
-void QtQuickControls2FusionStylePlugin::registerTypes(const char *uri)
-{
-    QByteArray import = QByteArray(uri) + ".impl";
-    qmlRegisterModule(import, 2, 15); // Qt 5.12->2.12, 5.13->2.13...
-
-    qmlRegisterType(resolvedUrl(QStringLiteral("ButtonPanel.qml")), import, 2, 3, "ButtonPanel");
-    qmlRegisterType(resolvedUrl(QStringLiteral("CheckIndicator.qml")), import, 2, 3, "CheckIndicator");
-    qmlRegisterType(resolvedUrl(QStringLiteral("RadioIndicator.qml")), import, 2, 3, "RadioIndicator");
-    qmlRegisterType(resolvedUrl(QStringLiteral("SliderGroove.qml")), import, 2, 3, "SliderGroove");
-    qmlRegisterType(resolvedUrl(QStringLiteral("SliderHandle.qml")), import, 2, 3, "SliderHandle");
-    qmlRegisterType(resolvedUrl(QStringLiteral("SwitchIndicator.qml")), import, 2, 3, "SwitchIndicator");
 }
 
 QString QtQuickControls2FusionStylePlugin::name() const
