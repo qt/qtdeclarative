@@ -33,6 +33,35 @@
 
 #include <QtQml/qqml.h>
 
+class SizeEnums
+{
+    Q_GADGET
+    QML_NAMED_ELEMENT(SizeEnums)
+    QML_UNCREATABLE("Element is not creatable.")
+
+public:
+    enum Unit { Pixel, Centimeter, Inch, Point };
+    Q_ENUM(Unit)
+};
+
+class SizeValueType : public SizeEnums
+{
+    QSize v;
+    Q_GADGET
+    Q_PROPERTY(int width READ width WRITE setWidth FINAL)
+    QML_NAMED_ELEMENT(MySize)
+    QML_FOREIGN(SizeGadget)
+
+public:
+    Q_INVOKABLE QString sizeToString() const
+    {
+        return QString::fromLatin1("%1x%2").arg(v.width()).arg(v.height());
+    }
+
+    int width() const { return v.width(); }
+    void setWidth(int width) { v.setWidth(width); }
+};
+
 class Local : public Foreign
 {
     Q_OBJECT
@@ -58,6 +87,7 @@ private slots:
     void qmltypesHasHppClassAndNoext();
     void qmltypesHasFileNames();
     void qmltypesHasFlags();
+    void superAndForeignTypes();
 
 private:
     QByteArray qmltypesData;

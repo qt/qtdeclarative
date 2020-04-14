@@ -224,6 +224,19 @@ void QmlTypesCreator::writeEnums(const QJsonArray &enums)
     }
 }
 
+static QJsonArray members(const QJsonObject *classDef, const QJsonObject *origClassDef, const QString &key)
+{
+    QJsonArray classDefMembers = classDef->value(key).toArray();
+
+    if (classDef != origClassDef) {
+        const QJsonArray origClassDefMembers = origClassDef->value(key).toArray();
+        for (const auto &member : origClassDefMembers)
+            classDefMembers.append(member);
+    }
+
+    return classDefMembers;
+}
+
 void QmlTypesCreator::writeComponents()
 {
     const QLatin1String nameKey("name");
@@ -259,15 +272,15 @@ void QmlTypesCreator::writeComponents()
         writeClassProperties(collector);
 
         const QJsonObject *classDef = collector.resolvedClass;
-        writeEnums(classDef->value(enumsKey).toArray());
+        writeEnums(members(classDef, &component, enumsKey));
 
         QSet<QString> notifySignals;
-        writeProperties(classDef->value(propertiesKey).toArray(), notifySignals);
+        writeProperties(members(classDef, &component, propertiesKey), notifySignals);
 
         if (collector.isRootClass) {
 
             // Hide destroyed() signals
-            QJsonArray componentSignals = classDef->value(signalsKey).toArray();
+            QJsonArray componentSignals = members(classDef, &component, signalsKey);
             for (auto it = componentSignals.begin(); it != componentSignals.end();) {
                 if (it->toObject().value(nameKey).toString() == destroyedName)
                     it = componentSignals.erase(it);
@@ -277,8 +290,10 @@ void QmlTypesCreator::writeComponents()
             writeMethods(componentSignals, signalElement, notifySignals);
 
             // Hide deleteLater() methods
-            QJsonArray componentMethods = classDef->value(methodsKey).toArray()
-                    + classDef->value(slotsKey).toArray();
+            QJsonArray componentMethods = members(classDef, &component, methodsKey);
+            const QJsonArray componentSlots = members(classDef, &component, slotsKey);
+            for (const QJsonValue &componentSlot : componentSlots)
+                componentMethods.append(componentSlot);
             for (auto it = componentMethods.begin(); it != componentMethods.end();) {
                 if (it->toObject().value(nameKey).toString() == deleteLaterName)
                     it = componentMethods.erase(it);
@@ -312,9 +327,9 @@ void QmlTypesCreator::writeComponents()
 
             writeMethods(componentMethods, methodElement);
         } else {
-            writeMethods(classDef->value(signalsKey).toArray(), signalElement, notifySignals);
-            writeMethods(classDef->value(slotsKey).toArray(), methodElement);
-            writeMethods(classDef->value(methodsKey).toArray(), methodElement);
+            writeMethods(members(classDef, &component, signalsKey), signalElement, notifySignals);
+            writeMethods(members(classDef, &component, slotsKey), methodElement);
+            writeMethods(members(classDef, &component, methodsKey), methodElement);
         }
         m_qml.writeEndObject();
     }
