@@ -54,6 +54,7 @@
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLFunctions_1_0>
 #include <QOpenGLFunctions_3_2_Core>
+#include <QOpenGLVersionFunctionsFactory>
 
 #include <private/qnumeric_p.h>
 #include <private/qquickprofiler_p.h>
@@ -2970,9 +2971,9 @@ void Renderer::updateLineWidth(QSGGeometry *g) // legacy (GL-only)
             QOpenGLFunctions_1_0 *gl1funcs = nullptr;
             QOpenGLFunctions_3_2_Core *gl3funcs = nullptr;
             if (ctx->format().profile() == QSurfaceFormat::CoreProfile)
-                gl3funcs = ctx->versionFunctions<QOpenGLFunctions_3_2_Core>();
+                gl3funcs = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_3_2_Core>(ctx);
             else
-                gl1funcs = ctx->versionFunctions<QOpenGLFunctions_1_0>();
+                gl1funcs = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_1_0>(ctx);
             Q_ASSERT(gl1funcs || gl3funcs);
             if (gl1funcs)
                 gl1funcs->glPointSize(g->lineWidth());

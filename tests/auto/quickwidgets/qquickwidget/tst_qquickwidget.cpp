@@ -701,7 +701,7 @@ void tst_qquickwidget::resizeOverlay()
 {
     QWidget widget;
     auto contentVerticalLayout = new QVBoxLayout(&widget);
-    contentVerticalLayout->setMargin(0);
+    contentVerticalLayout->setContentsMargins(0, 0, 0, 0);
 
     qmlRegisterType<Overlay>("Test", 1, 0, "Overlay");
 

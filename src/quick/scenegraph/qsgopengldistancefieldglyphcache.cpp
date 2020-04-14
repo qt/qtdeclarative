@@ -48,6 +48,7 @@
 #include <private/qopenglcontext_p.h>
 #include <QtQml/private/qqmlglobal_p.h>
 #include <qopenglfunctions.h>
+#include <qopenglversionfunctionsfactory.h>
 #include <qopenglframebufferobject.h>
 #include <qmath.h>
 #include "qsgcontext_p.h"
@@ -343,7 +344,7 @@ void QSGOpenGLDistanceFieldGlyphCache::resizeTexture(TextureInfo *texInfo, int w
         // to efficiently copy the contents of the old texture to the new texture
         // TODO: Use ARB_copy_image if available of if we have >=4.3 context
         if (!m_coreFuncs) {
-            m_coreFuncs = ctx->versionFunctions<QOpenGLFunctions_3_2_Core>();
+            m_coreFuncs = QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_3_2_Core>(ctx);
             Q_ASSERT(m_coreFuncs);
             m_coreFuncs->initializeOpenGLFunctions();
         }

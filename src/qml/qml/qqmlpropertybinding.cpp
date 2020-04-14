@@ -67,7 +67,7 @@ QUntypedPropertyBinding QQmlPropertyBinding::create(const QQmlPropertyData *pd, 
     binding->setContext(ctxt);
     binding->setScopeObject(obj);
     binding->setupFunction(scope, function);
-    return QUntypedPropertyBinding(QPropertyBindingPrivatePtr(binding));
+    return QUntypedPropertyBinding(QPropertyBindingPrivatePtr(binding).data());
 }
 
 void QQmlPropertyBinding::expressionChanged()
@@ -78,12 +78,12 @@ void QQmlPropertyBinding::expressionChanged()
 QQmlPropertyBinding::QQmlPropertyBinding(const QMetaType &mt)
     : QPropertyBindingPrivate(mt,
                               [this](const QMetaType &metaType, void *dataPtr) -> QUntypedPropertyBinding::BindingEvaluationResult {
-                                  return evaluateAndReturnTrueIfChanged(metaType, dataPtr);
+                                  return evaluate(metaType, dataPtr);
                               }, QPropertyBindingSourceLocation())
 {
 }
 
-QUntypedPropertyBinding::BindingEvaluationResult QQmlPropertyBinding::evaluateAndReturnTrueIfChanged(const QMetaType &metaType, void *dataPtr)
+QUntypedPropertyBinding::BindingEvaluationResult QQmlPropertyBinding::evaluate(const QMetaType &metaType, void *dataPtr)
 {
     QQmlEngine *engine = context()->engine();
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
@@ -103,19 +103,14 @@ QUntypedPropertyBinding::BindingEvaluationResult QQmlPropertyBinding::evaluateAn
     }
 
     QVariant resultVariant(scope.engine->toVariant(result, metaType.id()));
-
-    int compareResult = 0;
-    if (QMetaType::compare(dataPtr, resultVariant.constData(), metaType.id(), &compareResult)
-        && compareResult == 0)
-        return false;
     QMetaType::destruct(metaType.id(), dataPtr);
     QMetaType::construct(metaType.id(), dataPtr, resultVariant.constData());
-    return true;
+    return QPropertyBindingError::NoError;
 }
 
 QUntypedPropertyBinding QQmlTranslationPropertyBinding::create(const QQmlPropertyData *pd, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding)
 {
-    auto translationBinding = [compilationUnit, binding](const QMetaType &metaType, void *dataPtr) {
+    auto translationBinding = [compilationUnit, binding](const QMetaType &metaType, void *dataPtr) -> QUntypedPropertyBinding::BindingEvaluationResult {
         // Create a dependency to the uiLanguage
         QJSEnginePrivate::get(compilationUnit->engine)->uiLanguage.value();
 
@@ -123,13 +118,9 @@ QUntypedPropertyBinding QQmlTranslationPropertyBinding::create(const QQmlPropert
         if (metaType.id() != QMetaType::QString)
             resultVariant.convert(metaType.id());
 
-        int compareResult = 0;
-        if (QMetaType::compare(dataPtr, resultVariant.constData(), metaType.id(), &compareResult)
-            && compareResult == 0)
-            return false;
         QMetaType::destruct(metaType.id(), dataPtr);
         QMetaType::construct(metaType.id(), dataPtr, resultVariant.constData());
-        return true;
+        return QPropertyBindingError::NoError;
     };
 
     return QUntypedPropertyBinding(QMetaType(pd->propType()), translationBinding, QPropertyBindingSourceLocation());

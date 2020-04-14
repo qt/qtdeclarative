@@ -74,8 +74,7 @@ public:
 private:
     QQmlPropertyBinding(const QMetaType &metaType);
 
-    QUntypedPropertyBinding::BindingEvaluationResult evaluateAndReturnTrueIfChanged(const QMetaType &metaType,
-                                                                                    void *dataPtr);
+    QUntypedPropertyBinding::BindingEvaluationResult evaluate(const QMetaType &metaType, void *dataPtr);
 };
 
 class QQmlTranslationPropertyBinding

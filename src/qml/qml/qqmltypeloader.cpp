@@ -1189,8 +1189,8 @@ void QQmlTypeLoader::updateTypeCacheTrimThreshold()
 void QQmlTypeLoader::trimCache()
 {
     while (true) {
-        QList<TypeCache::Iterator> unneededTypes;
-        for (TypeCache::Iterator iter = m_typeCache.begin(), end = m_typeCache.end(); iter != end; ++iter)  {
+        bool deletedOneType = false;
+        for (TypeCache::Iterator iter = m_typeCache.begin(), end = m_typeCache.end(); iter != end;)  {
             QQmlTypeData *typeData = iter.value();
 
             // typeData->m_compiledData may be set early on in the proccess of loading a file, so
@@ -1199,19 +1199,16 @@ void QQmlTypeLoader::trimCache()
             if (typeData->count() == 1 && (typeData->isError() || typeData->isComplete())
                     && (!typeData->m_compiledData || typeData->m_compiledData->count() == 1)) {
                 // There are no live objects of this type
-                unneededTypes.append(iter);
+                iter.value()->release();
+                iter = m_typeCache.erase(iter);
+                deletedOneType = true;
+            } else {
+                ++iter;
             }
         }
 
-        if (unneededTypes.isEmpty())
+        if (!deletedOneType)
             break;
-
-        while (!unneededTypes.isEmpty()) {
-            TypeCache::Iterator iter = unneededTypes.takeLast();
-
-            iter.value()->release();
-            m_typeCache.erase(iter);
-        }
     }
 
     updateTypeCacheTrimThreshold();

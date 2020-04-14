@@ -9493,7 +9493,7 @@ void tst_QQuickListView::itemFiltered()
     QSortFilterProxyModel proxy2;
     proxy2.setSourceModel(&proxy1);
     proxy2.setFilterRole(Qt::DisplayRole);
-    proxy2.setFilterRegExp("^[^ ]*$");
+    proxy2.setFilterRegularExpression("^[^ ]*$");
     proxy2.setDynamicSortFilter(true);
 
     QScopedPointer<QQuickView> window(createView());
