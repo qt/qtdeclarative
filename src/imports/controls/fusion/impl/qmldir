@@ -1,3 +1,10 @@
 module QtQuick.Controls.Fusion.impl
 plugin qtquickcontrols2fusionstyleimplplugin
 classname QtQuickControls2FusionStyleImpPlugin
+
+ButtonPanel 2.3 ButtonPanel.qml
+CheckIndicator 2.3 CheckIndicator.qml
+RadioIndicator 2.3 RadioIndicator.qml
+SliderGroove 2.3 SliderGroove.qml
+SliderHandle 2.3 SliderHandle.qml
+SwitchIndicator 2.3 SwitchIndicator.qml
