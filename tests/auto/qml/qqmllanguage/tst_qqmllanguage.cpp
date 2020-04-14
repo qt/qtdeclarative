@@ -54,6 +54,8 @@
 
 #include "../../shared/util.h"
 
+#include <deque>
+
 #if defined(Q_OS_MAC)
 #include <unistd.h>
 #endif
@@ -4888,14 +4890,11 @@ static void beginDeferredOnce(QQmlEnginePrivate *enginePriv,
 
         enginePriv->inProgressCreations++;
 
-        typedef QMultiHash<int, const QV4::CompiledData::Binding *> QV4PropertyBindingHash;
-        auto it = std::reverse_iterator<QV4PropertyBindingHash::iterator>(range.second);
-        auto last = std::reverse_iterator<QV4PropertyBindingHash::iterator>(range.first);
+        std::deque<const QV4::CompiledData::Binding *> reversedBindings;
+        std::copy(range.first, range.second, std::front_inserter(reversedBindings));
         state->creator->beginPopulateDeferred(deferData->context);
-        while (it != last) {
-            state->creator->populateDeferredBinding(property, deferData->deferredIdx, *it);
-            ++it;
-        }
+        for (const QV4::CompiledData::Binding *binding: reversedBindings)
+            state->creator->populateDeferredBinding(property, deferData->deferredIdx, binding);
         state->creator->finalizePopulateDeferred();
         state->errors << state->creator->errors;
 
