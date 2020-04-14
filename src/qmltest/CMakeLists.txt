@@ -9,7 +9,7 @@ qt_add_module(QuickTest
     QMAKE_MODULE_CONFIG $${QT.testlib.CONFIG}
     SOURCES
         qtestoptions_p.h
-        quicktest.cpp quicktest.h
+        quicktest.cpp quicktest.h quicktest_p.h
         quicktestglobal.h
         quicktestresult.cpp quicktestresult_p.h
     DEFINES
@@ -32,6 +32,12 @@ qt_add_module(QuickTest
 
 #### Keys ignored in scope 1:.:.:qmltest.pro:<TRUE>:
 # MODULE_CONFIG = "$${QT.testlib.CONFIG}"
+# QMLTYPES_FILENAME = "plugins.qmltypes"
+# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/Qt/test/qtestroot"
+# QML_IMPORT_NAME = "Qt.test.qtestroot"
+# QML_IMPORT_VERSION = "1.0"
+# qmldir.files = "$$PWD/qmldir"
+# qmldir.path = "$$QMLTYPES_INSTALL_DIR"
 
 ## Scopes:
 #####################################################################
@@ -47,7 +53,30 @@ qt_extend_target(QuickTest CONDITION QT_FEATURE_qml_debug
     DEFINES
         QT_QML_DEBUG_NO_WARNING
 )
+
+#### Keys ignored in scope 4:.:.:qmltest.pro:prefix_build:
+# INSTALLS = "qmldir"
+
+#### Keys ignored in scope 5:.:.:qmltest.pro:else:
+# COPIES = "qmldir"
 qt_add_docs(QuickTest
     doc/qtqmltest.qdocconf
 )
 
+
+set_target_properties(QuickTest PROPERTIES
+    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
+    QT_QML_MODULE_VERSION 1.0
+    QT_QML_MODULE_URI Qt.test.qtestroot
+    QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/Qt/test/qtestroot"
+)
+
+qt6_qml_type_registration(QuickTest)
+
+#special case begin
+if (QT_WILL_INSTALL)
+    install(FILES qmldir DESTINATION "${INSTALL_QMLDIR}/Qt/test/qtestroot")
+else()
+    file(COPY qmldir DESTINATION "${QT_BUILD_DIR}/${INSTALL_QMLDIR}/Qt/test/qtestroot")
+endif()
+#special case end
