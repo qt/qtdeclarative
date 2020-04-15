@@ -37,6 +37,7 @@
 **
 ****************************************************************************/
 
+#include "qml/qqmlprivate.h"
 #include "qv4function_p.h"
 #include "qv4functionobject_p.h"
 #include "qv4managed_p.h"
@@ -74,9 +75,10 @@ ReturnedValue Function::call(const Value *thisObject, const Value *argv, int arg
 }
 
 Function *Function::create(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
-                           const CompiledData::Function *function)
+                           const CompiledData::Function *function,
+                           const QQmlPrivate::AOTCompiledFunction *aotFunction)
 {
-    return new Function(engine, unit, function);
+    return new Function(engine, unit, function, aotFunction);
 }
 
 void Function::destroy()
@@ -85,12 +87,14 @@ void Function::destroy()
 }
 
 Function::Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
-                   const CompiledData::Function *function)
+                   const CompiledData::Function *function,
+                   const QQmlPrivate::AOTCompiledFunction *aotFunction)
     : FunctionData(unit)
     , compiledFunction(function)
     , codeData(function->code())
     , jittedCode(nullptr)
     , codeRef(nullptr)
+    , aotFunction(aotFunction)
 {
     Scope scope(engine);
     Scoped<InternalClass> ic(scope, engine->internalClasses(EngineBase::Class_CallContext));

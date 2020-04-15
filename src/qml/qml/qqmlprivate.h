@@ -71,6 +71,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlPropertyValueInterceptor;
+class QQmlContext;
 
 namespace QQmlPrivate {
 struct CachedQmlUnit;
@@ -84,7 +85,6 @@ namespace CompiledData {
 struct Unit;
 struct CompilationUnit;
 }
-struct CppStackFrame;
 }
 namespace QmlIR {
 struct Document;
@@ -453,7 +453,8 @@ namespace QQmlPrivate
 
     struct AOTCompiledFunction {
         int index;
-        quint64 (*functionPtr)(QV4::CppStackFrame *, QV4::ExecutionEngine *);
+        QMetaType returnType;
+        void (*functionPtr)(QQmlContext *context, QObject *scopeObject, void *resultPtr);
     };
 
     struct CachedQmlUnit {

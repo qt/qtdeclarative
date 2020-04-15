@@ -47,6 +47,21 @@ QUntypedPropertyBinding QQmlPropertyBinding::create(const QQmlPropertyData *pd, 
                                                     QObject *obj, const QQmlRefPointer<QQmlContextData> &ctxt,
                                                     QV4::ExecutionContext *scope)
 {
+    if (auto aotFunction = function->aotFunction; aotFunction && aotFunction->returnType.id() == pd->propType()) {
+        return QUntypedPropertyBinding(aotFunction->returnType,
+            [
+                aotFunction,
+                unit = QQmlRefPointer<QV4::ExecutableCompilationUnit>(function->executableCompilationUnit()),
+                scopeObject = QPointer<QObject>(obj),
+                context = ctxt
+            ](const QMetaType &, void *dataPtr) -> QUntypedPropertyBinding::BindingEvaluationResult {
+                Q_UNUSED(unit); // to keep refcount
+                aotFunction->functionPtr(context->asQQmlContext(), scopeObject.data(), dataPtr);
+                return QPropertyBindingError::NoError;
+            },
+            QPropertyBindingSourceLocation());
+    }
+
     auto binding = new QQmlPropertyBinding(QMetaType(pd->propType()));
     binding->setNotifyOnValueChanged(true);
     binding->setContext(ctxt);

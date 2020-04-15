@@ -58,6 +58,7 @@
 #include <private/qv4generatorobject_p.h>
 #include <private/qv4alloca_p.h>
 #include <private/qqmljavascriptexpression_p.h>
+#include <private/qv4qmlcontext_p.h>
 #include <iostream>
 
 #if QT_CONFIG(qml_jit)
@@ -458,6 +459,13 @@ ReturnedValue VME::exec(CppStackFrame *frame, ExecutionEngine *engine)
     ReturnedValue result;
     if (function->jittedCode != nullptr && debugger == nullptr) {
         result = function->jittedCode(frame, engine);
+    } else if (function->aotFunction) {
+        Scope scope(engine);
+        Scoped<QmlContext> qmlContext(scope, engine->qmlContext());
+
+        QVariant resultVariant(function->aotFunction->returnType.id(), nullptr);
+        function->aotFunction->functionPtr(qmlContext->qmlContext()->asQQmlContext(), qmlContext->qmlScope(), resultVariant.data());
+        result = engine->fromVariant(resultVariant);
     } else {
         // interpreter
         result = interpret(frame, engine, function->codeData);

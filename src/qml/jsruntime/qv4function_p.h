@@ -50,6 +50,7 @@
 // We mean it.
 //
 
+#include <qqmlprivate.h>
 #include "qv4global_p.h"
 #include <private/qv4executablecompilationunit_p.h>
 #include <private/qv4context_p.h>
@@ -82,7 +83,7 @@ Q_STATIC_ASSERT(std::is_standard_layout< FunctionData >::value);
 struct Q_QML_EXPORT Function : public FunctionData {
 private:
     Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
-             const CompiledData::Function *function);
+             const CompiledData::Function *function, const QQmlPrivate::AOTCompiledFunction *aotFunction);
     ~Function();
 
 public:
@@ -106,6 +107,7 @@ public:
     typedef ReturnedValue (*JittedCode)(CppStackFrame *, ExecutionEngine *);
     JittedCode jittedCode;
     JSC::MacroAssemblerCodeRef *codeRef;
+    const QQmlPrivate::AOTCompiledFunction *aotFunction = nullptr;
 
     // first nArguments names in internalClass are the actual arguments
     Heap::InternalClass *internalClass;
@@ -114,7 +116,8 @@ public:
     bool isEval = false;
 
     static Function *create(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
-                            const CompiledData::Function *function);
+                            const CompiledData::Function *function,
+                            const QQmlPrivate::AOTCompiledFunction *aotFunction);
     void destroy();
 
     // used when dynamically assigning signal handlers (QQmlConnection)
