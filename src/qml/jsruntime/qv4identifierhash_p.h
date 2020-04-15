@@ -60,7 +60,7 @@ namespace QV4 {
 
 struct IdentifierHashEntry;
 struct IdentifierHashData;
-struct IdentifierHash
+struct Q_QML_PRIVATE_EXPORT IdentifierHash
 {
     IdentifierHash() = default;
     IdentifierHash(ExecutionEngine *engine);
