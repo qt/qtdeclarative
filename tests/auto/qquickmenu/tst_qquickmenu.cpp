@@ -1477,19 +1477,20 @@ void tst_QQuickMenu::subMenuPosition()
     if (cascade) {
         QCOMPARE(subMenu1->parentItem(), subMenu1Item);
         // vertically aligned to the parent menu item
-        QCOMPARE(subMenu1->popupItem()->y(), mainMenu->popupItem()->y() + subMenu1Item->y());
+        // Add 1 in order to avoid flaky failures resulting from fuzzy comparison when both values are ~0.
+        QCOMPARE(1 + subMenu1->popupItem()->y(), 1 + mainMenu->popupItem()->y() + subMenu1Item->y());
         if (mirrored) {
             // on the left of the parent menu
-            QCOMPARE(subMenu1->popupItem()->x(), mainMenu->popupItem()->x() - subMenu1->width() + overlap);
+            QCOMPARE(1 + subMenu1->popupItem()->x(), 1 + mainMenu->popupItem()->x() - subMenu1->width() + overlap);
         } else {
             // on the right of the parent menu
-            QCOMPARE(subMenu1->popupItem()->x(), mainMenu->popupItem()->x() + mainMenu->width() - overlap);
+            QCOMPARE(1 + subMenu1->popupItem()->x(), 1 + mainMenu->popupItem()->x() + mainMenu->width() - overlap);
         }
     } else {
         QCOMPARE(subMenu1->parentItem(), mainMenu->parentItem());
         // centered over the parent menu
-        QCOMPARE(subMenu1->popupItem()->x(), mainMenu->popupItem()->x() + (mainMenu->width() - subMenu1->width()) / 2);
-        QCOMPARE(subMenu1->popupItem()->y(), mainMenu->popupItem()->y() + (mainMenu->height() - subMenu1->height()) / 2);
+        QCOMPARE(1 + subMenu1->popupItem()->x(), 1 + mainMenu->popupItem()->x() + (mainMenu->width() - subMenu1->width()) / 2);
+        QCOMPARE(1 + subMenu1->popupItem()->y(), 1 + mainMenu->popupItem()->y() + (mainMenu->height() - subMenu1->height()) / 2);
     }
 
     // open the sub-sub-menu (can flip)
@@ -1506,19 +1507,19 @@ void tst_QQuickMenu::subMenuPosition()
     if (cascade) {
         QCOMPARE(subSubMenu1->parentItem(), subSubMenu1Item);
         // vertically aligned to the parent menu item
-        QCOMPARE(subSubMenu1->popupItem()->y(), subMenu1->popupItem()->y() + subSubMenu1Item->y());
+        QCOMPARE(1 + subSubMenu1->popupItem()->y(), 1 + subMenu1->popupItem()->y() + subSubMenu1Item->y());
         if (mirrored != flip) {
             // on the left of the parent menu
-            QCOMPARE(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() - subSubMenu1->width() + overlap);
+            QCOMPARE(1 + subSubMenu1->popupItem()->x(), 1 + subMenu1->popupItem()->x() - subSubMenu1->width() + overlap);
         } else {
             // on the right of the parent menu
-            QCOMPARE(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() + subMenu1->width() - overlap);
+            QCOMPARE(1 + subSubMenu1->popupItem()->x(), 1 + subMenu1->popupItem()->x() + subMenu1->width() - overlap);
         }
     } else {
         QCOMPARE(subSubMenu1->parentItem(), subMenu1->parentItem());
         // centered over the parent menu
-        QCOMPARE(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() + (subMenu1->width() - subSubMenu1->width()) / 2);
-        QCOMPARE(subSubMenu1->popupItem()->y(), subMenu1->popupItem()->y() + (subMenu1->height() - subSubMenu1->height()) / 2);
+        QCOMPARE(1 + subSubMenu1->popupItem()->x(), 1 + subMenu1->popupItem()->x() + (subMenu1->width() - subSubMenu1->width()) / 2);
+        QCOMPARE(1 + subSubMenu1->popupItem()->y(), 1 + subMenu1->popupItem()->y() + (subMenu1->height() - subSubMenu1->height()) / 2);
     }
 }
 
