@@ -40,7 +40,7 @@
 #include <qv4internalclass_p.h>
 #include <qv4string_p.h>
 #include <qv4engine_p.h>
-#include <qv4identifier_p.h>
+#include <qv4identifierhash_p.h>
 #include "qv4object_p.h"
 #include "qv4identifiertable_p.h"
 #include "qv4value_p.h"

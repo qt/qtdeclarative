@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -36,8 +36,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef QV4IDENTIFIERTABLE_H
-#define QV4IDENTIFIERTABLE_H
+#ifndef QV4IDENTIFIERHASHDATA_H
+#define QV4IDENTIFIERHASHDATA_H
 
 //
 //  W A R N I N G
@@ -50,69 +50,73 @@
 // We mean it.
 //
 
-#include "qv4identifierhash_p.h"
-#include "qv4string_p.h"
-#include "qv4engine_p.h"
-#include <qset.h>
-#include <limits.h>
+#include <private/qv4global_p.h>
+#include <private/qv4propertykey_p.h>
+#include <private/qv4identifiertable_p.h>
+#include <QtCore/qatomic.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct Q_QML_PRIVATE_EXPORT IdentifierTable
-{
-    ExecutionEngine *engine;
-
-    uint alloc;
-    uint size;
-    int numBits;
-    Heap::StringOrSymbol **entriesByHash;
-    Heap::StringOrSymbol **entriesById;
-
-    QSet<IdentifierHashData *> idHashes;
-
-    void addEntry(Heap::StringOrSymbol *str);
-
-public:
-
-    IdentifierTable(ExecutionEngine *engine, int numBits = 8);
-    ~IdentifierTable();
-
-    Heap::String *insertString(const QString &s);
-    Heap::Symbol *insertSymbol(const QString &s);
-
-    PropertyKey asPropertyKey(const Heap::String *str) {
-        if (str->identifier.isValid())
-            return str->identifier;
-        return asPropertyKeyImpl(str);
-    }
-    PropertyKey asPropertyKey(const QV4::String *str) {
-        return asPropertyKey(str->d());
-    }
-
-    PropertyKey asPropertyKey(const QString &s);
-    PropertyKey asPropertyKey(const char *s, int len);
-
-    PropertyKey asPropertyKeyImpl(const Heap::String *str);
-
-    Heap::StringOrSymbol *resolveId(PropertyKey i) const;
-    Heap::String *stringForId(PropertyKey i) const;
-    Heap::Symbol *symbolForId(PropertyKey i) const;
-
-    void markObjects(MarkStack *markStack);
-    void sweep();
-
-    void addIdentifierHash(IdentifierHashData *h) {
-        idHashes.insert(h);
-    }
-    void removeIdentifierHash(IdentifierHashData *h) {
-        idHashes.remove(h);
-    }
+struct IdentifierHashEntry {
+    PropertyKey identifier;
+    int value;
 };
 
-}
+struct IdentifierHashData
+{
+    IdentifierHashData(IdentifierTable *table, int numBits)
+        : size(0)
+        , numBits(numBits)
+        , identifierTable(table)
+    {
+        refCount.storeRelaxed(1);
+        alloc = qPrimeForNumBits(numBits);
+        entries = (IdentifierHashEntry *)malloc(alloc*sizeof(IdentifierHashEntry));
+        memset(entries, 0, alloc*sizeof(IdentifierHashEntry));
+        identifierTable->addIdentifierHash(this);
+    }
+
+    explicit IdentifierHashData(IdentifierHashData *other)
+        : size(other->size)
+        , numBits(other->numBits)
+        , identifierTable(other->identifierTable)
+    {
+        refCount.storeRelaxed(1);
+        alloc = other->alloc;
+        entries = (IdentifierHashEntry *)malloc(alloc*sizeof(IdentifierHashEntry));
+        memcpy(entries, other->entries, alloc*sizeof(IdentifierHashEntry));
+        identifierTable->addIdentifierHash(this);
+    }
+
+    ~IdentifierHashData() {
+        free(entries);
+        if (identifierTable)
+            identifierTable->removeIdentifierHash(this);
+    }
+
+    void markObjects(MarkStack *markStack) const
+    {
+        IdentifierHashEntry *e = entries;
+        IdentifierHashEntry *end = e + alloc;
+        while (e < end) {
+            if (Heap::Base *o = e->identifier.asStringOrSymbol())
+                o->mark(markStack);
+            ++e;
+        }
+    }
+
+    QBasicAtomicInt refCount;
+    int alloc;
+    int size;
+    int numBits;
+    IdentifierTable *identifierTable;
+    IdentifierHashEntry *entries;
+};
+
+} // namespace QV4
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QV4IDENTIFIERHASHDATA_P_H

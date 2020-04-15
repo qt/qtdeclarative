@@ -105,7 +105,8 @@ qt_add_module(Qml
         jsruntime/qv4generatorobject.cpp jsruntime/qv4generatorobject_p.h
         jsruntime/qv4global_p.h
         jsruntime/qv4globalobject.cpp jsruntime/qv4globalobject_p.h
-        jsruntime/qv4identifier.cpp jsruntime/qv4identifier_p.h
+        jsruntime/qv4identifierhash.cpp jsruntime/qv4identifierhash_p.h
+        jsruntime/qv4identifierhashdata_p.h
         jsruntime/qv4identifiertable.cpp jsruntime/qv4identifiertable_p.h
         jsruntime/qv4include.cpp jsruntime/qv4include_p.h
         jsruntime/qv4internalclass.cpp jsruntime/qv4internalclass_p.h

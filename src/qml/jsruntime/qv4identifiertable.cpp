@@ -38,6 +38,7 @@
 ****************************************************************************/
 #include "qv4identifiertable_p.h"
 #include "qv4symbol_p.h"
+#include <private/qv4identifierhashdata_p.h>
 #include <private/qprimefornumbits_p.h>
 
 QT_BEGIN_NAMESPACE

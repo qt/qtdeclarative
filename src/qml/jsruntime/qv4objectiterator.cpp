@@ -39,7 +39,7 @@
 #include "qv4objectiterator_p.h"
 #include "qv4object_p.h"
 #include "qv4stringobject_p.h"
-#include "qv4identifier_p.h"
+#include "qv4identifierhash_p.h"
 #include "qv4argumentsobject_p.h"
 #include "qv4string_p.h"
 #include "qv4iterator_p.h"

@@ -47,7 +47,7 @@
 #include <private/qv4script_p.h>
 #include <private/qv4string_p.h>
 #include <private/qv4objectiterator_p.h>
-#include <private/qv4identifier_p.h>
+#include <private/qv4identifierhash_p.h>
 #include <private/qv4runtime_p.h>
 #include <private/qqmldebugserviceinterfaces_p.h>
 

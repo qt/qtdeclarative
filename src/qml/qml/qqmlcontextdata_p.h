@@ -55,7 +55,7 @@
 #include <QtQml/private/qqmlcontext_p.h>
 #include <QtQml/private/qqmlguard_p.h>
 #include <QtQml/private/qqmltypenamecache_p.h>
-#include <QtQml/private/qv4identifier_p.h>
+#include <QtQml/private/qv4identifierhash_p.h>
 #include <QtQml/private/qv4executablecompilationunit_p.h>
 
 QT_BEGIN_NAMESPACE

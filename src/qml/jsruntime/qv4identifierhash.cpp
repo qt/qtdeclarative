@@ -36,44 +36,16 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include "qv4identifier_p.h"
-#include "qv4identifiertable_p.h"
-#include "qv4string_p.h"
+
+#include <private/qv4identifierhash_p.h>
+#include <private/qv4identifiertable_p.h>
+#include <private/qv4string_p.h>
+#include <private/qv4identifierhashdata_p.h>
 #include <private/qprimefornumbits_p.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
-
-IdentifierHashData::IdentifierHashData(IdentifierTable *table, int numBits)
-    : size(0)
-    , numBits(numBits)
-    , identifierTable(table)
-{
-    refCount.storeRelaxed(1);
-    alloc = qPrimeForNumBits(numBits);
-    entries = (IdentifierHashEntry *)malloc(alloc*sizeof(IdentifierHashEntry));
-    memset(entries, 0, alloc*sizeof(IdentifierHashEntry));
-    identifierTable->addIdentifierHash(this);
-}
-
-IdentifierHashData::IdentifierHashData(IdentifierHashData *other)
-    : size(other->size)
-    , numBits(other->numBits)
-    , identifierTable(other->identifierTable)
-{
-    refCount.storeRelaxed(1);
-    alloc = other->alloc;
-    entries = (IdentifierHashEntry *)malloc(alloc*sizeof(IdentifierHashEntry));
-    memcpy(entries, other->entries, alloc*sizeof(IdentifierHashEntry));
-    identifierTable->addIdentifierHash(this);
-}
-
-IdentifierHashData::~IdentifierHashData() {
-    free(entries);
-    if (identifierTable)
-        identifierTable->removeIdentifierHash(this);
-}
 
 IdentifierHash::IdentifierHash(ExecutionEngine *engine)
 {
@@ -90,7 +62,7 @@ void IdentifierHash::detach()
     d = newData;
 }
 
-
+inline
 IdentifierHashEntry *IdentifierHash::addEntry(PropertyKey identifier)
 {
     Q_ASSERT(identifier.isStringOrSymbol());
@@ -130,6 +102,7 @@ IdentifierHashEntry *IdentifierHash::addEntry(PropertyKey identifier)
     return d->entries + idx;
 }
 
+inline
 const IdentifierHashEntry *IdentifierHash::lookup(PropertyKey identifier) const
 {
     if (!d || !identifier.isStringOrSymbol())
@@ -147,6 +120,7 @@ const IdentifierHashEntry *IdentifierHash::lookup(PropertyKey identifier) const
     }
 }
 
+inline
 const IdentifierHashEntry *IdentifierHash::lookup(const QString &str) const
 {
     if (!d)
@@ -156,6 +130,7 @@ const IdentifierHashEntry *IdentifierHash::lookup(const QString &str) const
     return lookup(id);
 }
 
+inline
 const IdentifierHashEntry *IdentifierHash::lookup(String *str) const
 {
     if (!d)
@@ -166,12 +141,14 @@ const IdentifierHashEntry *IdentifierHash::lookup(String *str) const
     return lookup(str->toQString());
 }
 
+inline
 const PropertyKey IdentifierHash::toIdentifier(const QString &str) const
 {
     Q_ASSERT(d);
     return d->identifierTable->asPropertyKey(str);
 }
 
+inline
 const PropertyKey IdentifierHash::toIdentifier(Heap::String *str) const
 {
     Q_ASSERT(d);
@@ -190,15 +167,56 @@ QString QV4::IdentifierHash::findId(int value) const
     return QString();
 }
 
-void IdentifierHashData::markObjects(MarkStack *markStack) const
+QV4::IdentifierHash::IdentifierHash(const IdentifierHash &other)
 {
-    IdentifierHashEntry *e = entries;
-    IdentifierHashEntry *end = e + alloc;
-    while (e < end) {
-        if (Heap::Base *o = e->identifier.asStringOrSymbol())
-            o->mark(markStack);
-        ++e;
-    }
+    d = other.d;
+    if (d)
+        d->refCount.ref();
+}
+
+QV4::IdentifierHash::~IdentifierHash()
+{
+    if (d && !d->refCount.deref())
+        delete d;
+}
+
+IdentifierHash &QV4::IdentifierHash::operator=(const IdentifierHash &other)
+{
+    if (other.d)
+        other.d->refCount.ref();
+    if (d && !d->refCount.deref())
+        delete d;
+    d = other.d;
+    return *this;
+}
+
+int QV4::IdentifierHash::count() const
+{
+    return d ? d->size : 0;
+}
+
+void QV4::IdentifierHash::add(const QString &str, int value)
+{
+    IdentifierHashEntry *e = addEntry(toIdentifier(str));
+    e->value = value;
+}
+
+void QV4::IdentifierHash::add(Heap::String *str, int value)
+{
+    IdentifierHashEntry *e = addEntry(toIdentifier(str));
+    e->value = value;
+}
+
+int QV4::IdentifierHash::value(const QString &str) const
+{
+    const IdentifierHashEntry *e = lookup(str);
+    return e ? e->value : -1;
+}
+
+int QV4::IdentifierHash::value(String *str) const
+{
+    const IdentifierHashEntry *e = lookup(str);
+    return e ? e->value : -1;
 }
 
 

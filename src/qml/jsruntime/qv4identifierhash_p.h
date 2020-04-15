@@ -36,8 +36,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef QV4IDENTIFIER_H
-#define QV4IDENTIFIER_H
+#ifndef QV4IDENTIFIERHASH_P_H
+#define QV4IDENTIFIERHASH_P_H
 
 //
 //  W A R N I N G
@@ -58,116 +58,42 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct IdentifierHashEntry {
-    PropertyKey identifier;
-    int value;
-};
-
-struct IdentifierHashData
-{
-    IdentifierHashData(IdentifierTable *table, int numBits);
-    explicit IdentifierHashData(IdentifierHashData *other);
-    ~IdentifierHashData();
-    void markObjects(MarkStack *markStack) const;
-
-    QBasicAtomicInt refCount;
-    int alloc;
-    int size;
-    int numBits;
-    IdentifierTable *identifierTable;
-    IdentifierHashEntry *entries;
-};
-
+struct IdentifierHashEntry;
+struct IdentifierHashData;
 struct IdentifierHash
 {
-
-    IdentifierHashData *d = nullptr;
-
-    IdentifierHash() {}
+    IdentifierHash() = default;
     IdentifierHash(ExecutionEngine *engine);
-    inline IdentifierHash(const IdentifierHash &other);
-    inline ~IdentifierHash();
-    inline IdentifierHash &operator=(const IdentifierHash &other);
+    IdentifierHash(const IdentifierHash &other);
+    ~IdentifierHash();
+    IdentifierHash &operator=(const IdentifierHash &other);
 
     bool isEmpty() const { return !d; }
 
-    inline int count() const;
+    int count() const;
 
     void detach();
 
     void add(const QString &str, int value);
     void add(Heap::String *str, int value);
 
-    inline int value(const QString &str) const;
-    inline int value(String *str) const;
+    int value(const QString &str) const;
+    int value(String *str) const;
     QString findId(int value) const;
 
-protected:
-    IdentifierHashEntry *addEntry(PropertyKey i);
-    const IdentifierHashEntry *lookup(PropertyKey identifier) const;
-    const IdentifierHashEntry *lookup(const QString &str) const;
-    const IdentifierHashEntry *lookup(String *str) const;
-    const PropertyKey toIdentifier(const QString &str) const;
-    const PropertyKey toIdentifier(Heap::String *str) const;
+private:
+    inline IdentifierHashEntry *addEntry(PropertyKey i);
+    inline const IdentifierHashEntry *lookup(PropertyKey identifier) const;
+    inline const IdentifierHashEntry *lookup(const QString &str) const;
+    inline const IdentifierHashEntry *lookup(String *str) const;
+    inline const PropertyKey toIdentifier(const QString &str) const;
+    inline const PropertyKey toIdentifier(Heap::String *str) const;
+
+    IdentifierHashData *d = nullptr;
 };
 
-
-inline IdentifierHash::IdentifierHash(const IdentifierHash &other)
-{
-    d = other.d;
-    if (d)
-        d->refCount.ref();
-}
-
-inline IdentifierHash::~IdentifierHash()
-{
-    if (d && !d->refCount.deref())
-        delete d;
-}
-
-IdentifierHash &IdentifierHash::operator=(const IdentifierHash &other)
-{
-    if (other.d)
-        other.d->refCount.ref();
-    if (d && !d->refCount.deref())
-        delete d;
-    d = other.d;
-    return *this;
-}
-
-inline int IdentifierHash::count() const
-{
-    return d ? d->size : 0;
-}
-
-inline
-void IdentifierHash::add(const QString &str, int value)
-{
-    IdentifierHashEntry *e = addEntry(toIdentifier(str));
-    e->value = value;
-}
-
-inline
-void IdentifierHash::add(Heap::String *str, int value)
-{
-    IdentifierHashEntry *e = addEntry(toIdentifier(str));
-    e->value = value;
-}
-
-inline int IdentifierHash::value(const QString &str) const
-{
-    const IdentifierHashEntry *e = lookup(str);
-    return e ? e->value : -1;
-}
-
-inline int IdentifierHash::value(String *str) const
-{
-    const IdentifierHashEntry *e = lookup(str);
-    return e ? e->value : -1;
-}
-
-}
+} // namespace QV4
 
 QT_END_NAMESPACE
 
-#endif
+#endif // QV4_IDENTIFIERHASH_P_H

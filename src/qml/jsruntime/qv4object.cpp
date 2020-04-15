@@ -46,7 +46,7 @@
 #include "qv4scopedvalue_p.h"
 #include "qv4memberdata_p.h"
 #include "qv4objectiterator_p.h"
-#include "qv4identifier_p.h"
+#include "qv4identifierhash_p.h"
 #include "qv4string_p.h"
 #include "qv4identifiertable_p.h"
 #include "qv4jscall_p.h"

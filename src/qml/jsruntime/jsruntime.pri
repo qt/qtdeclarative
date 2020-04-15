@@ -6,7 +6,7 @@ SOURCES += \
     $$PWD/qv4context.cpp \
     $$PWD/qv4persistent.cpp \
     $$PWD/qv4lookup.cpp \
-    $$PWD/qv4identifier.cpp \
+    $$PWD/qv4identifierhash.cpp \
     $$PWD/qv4identifiertable.cpp \
     $$PWD/qv4managed.cpp \
     $$PWD/qv4internalclass.cpp \
@@ -77,7 +77,8 @@ HEADERS += \
     $$PWD/qv4persistent_p.h \
     $$PWD/qv4debugging_p.h \
     $$PWD/qv4lookup_p.h \
-    $$PWD/qv4identifier_p.h \
+    $$PWD/qv4identifierhashdata_p.h \
+    $$PWD/qv4identifierhash_p.h \
     $$PWD/qv4identifiertable_p.h \
     $$PWD/qv4managed_p.h \
     $$PWD/qv4internalclass_p.h \

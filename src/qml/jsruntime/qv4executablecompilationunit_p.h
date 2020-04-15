@@ -52,7 +52,7 @@
 //
 
 #include <private/qv4compileddata_p.h>
-#include <private/qv4identifier_p.h>
+#include <private/qv4identifierhash_p.h>
 #include <private/qqmlrefcount_p.h>
 #include <private/qintrusivelist_p.h>
 #include <private/qqmlpropertycachevector_p.h>
