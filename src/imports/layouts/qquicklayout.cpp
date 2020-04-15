@@ -41,6 +41,7 @@
 #include <QEvent>
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/private/qnumeric_p.h>
+#include <QtCore/qstack.h>
 #include <QtCore/qmath.h>
 #include <QtQml/qqmlinfo.h>
 #include <limits>
@@ -380,7 +381,7 @@ void QQuickLayoutAttached::setRow(int row)
 {
     if (row >= 0 && row != m_row) {
         m_row = row;
-        repopulateLayout();
+        invalidateItem();
         emit rowChanged();
     }
 }
@@ -401,7 +402,7 @@ void QQuickLayoutAttached::setColumn(int column)
 {
     if (column >= 0 && column != m_column) {
         m_column = column;
-        repopulateLayout();
+        invalidateItem();
         emit columnChanged();
     }
 }
@@ -628,7 +629,7 @@ void QQuickLayoutAttached::setRowSpan(int span)
 {
     if (span != m_rowSpan) {
         m_rowSpan = span;
-        repopulateLayout();
+        invalidateItem();
         emit rowSpanChanged();
     }
 }
@@ -648,7 +649,7 @@ void QQuickLayoutAttached::setColumnSpan(int span)
 {
     if (span != m_columnSpan) {
         m_columnSpan = span;
-        repopulateLayout();
+        invalidateItem();
         emit columnSpanChanged();
     }
 }
@@ -669,18 +670,10 @@ qreal QQuickLayoutAttached::sizeHint(Qt::SizeHint which, Qt::Orientation orienta
 
 void QQuickLayoutAttached::invalidateItem()
 {
-    if (!m_changesNotificationEnabled)
-        return;
     qCDebug(lcQuickLayouts) << "QQuickLayoutAttached::invalidateItem";
     if (QQuickLayout *layout = parentLayout()) {
         layout->invalidate(item());
     }
-}
-
-void QQuickLayoutAttached::repopulateLayout()
-{
-    if (QQuickLayout *layout = parentLayout())
-        layout->updateLayoutItems();
 }
 
 QQuickLayout *QQuickLayoutAttached::parentLayout() const
@@ -700,10 +693,41 @@ QQuickItem *QQuickLayoutAttached::item() const
     return qobject_cast<QQuickItem *>(parent());
 }
 
+qreal QQuickLayoutPrivate::getImplicitWidth() const
+{
+    Q_Q(const QQuickLayout);
+    if (q->invalidated()) {
+        QQuickLayoutPrivate *that = const_cast<QQuickLayoutPrivate*>(this);
+        that->implicitWidth = q->sizeHint(Qt::PreferredSize).width();
+    }
+    return implicitWidth;
+}
+
+qreal QQuickLayoutPrivate::getImplicitHeight() const
+{
+    Q_Q(const QQuickLayout);
+    if (q->invalidated()) {
+        QQuickLayoutPrivate *that = const_cast<QQuickLayoutPrivate*>(this);
+        that->implicitHeight = q->sizeHint(Qt::PreferredSize).height();
+    }
+    return implicitHeight;
+}
+
+void QQuickLayoutPrivate::applySizeHints() const {
+    Q_Q(const QQuickLayout);
+    QQuickLayout *that = const_cast<QQuickLayout*>(q);
+    QQuickLayoutAttached *info = attachedLayoutObject(that, true);
+
+    const QSizeF min = q->sizeHint(Qt::MinimumSize);
+    const QSizeF max = q->sizeHint(Qt::MaximumSize);
+    const QSizeF pref = q->sizeHint(Qt::PreferredSize);
+    info->setMinimumImplicitSize(min);
+    info->setMaximumImplicitSize(max);
+    that->setImplicitSize(pref.width(), pref.height());
+}
 
 QQuickLayout::QQuickLayout(QQuickLayoutPrivate &dd, QQuickItem *parent)
     : QQuickItem(dd, parent)
-    , m_dirty(false)
     , m_inUpdatePolish(false)
     , m_polishInsideUpdatePolish(0)
 {
@@ -734,6 +758,20 @@ void QQuickLayout::updatePolish()
 {
     qCDebug(lcQuickLayouts) << "updatePolish() ENTERING" << this;
     m_inUpdatePolish = true;
+
+    // Might have become "undirty" before we reach this updatePolish()
+    // (e.g. if somebody queried for implicitWidth it will immediately
+    // calculate size hints)
+    if (invalidated()) {
+        // Ensure that all invalidated layouts are synced and valid again. Since
+        // ensureLayoutItemsUpdated() will also call applySizeHints(), and sizeHint() will call its
+        // childrens sizeHint(), and sizeHint() will call ensureLayoutItemsUpdated(), this will be done
+        // recursive as we want.
+        // Note that we need to call ensureLayoutItemsUpdated() *before* we query width() and height(),
+        // because width()/height() might return their implicitWidth/implicitHeight (e.g. for a layout
+        // with no explicitly specified size, (nor anchors.fill: parent))
+        ensureLayoutItemsUpdated();
+    }
     rearrange(QSizeF(width(), height()));
     m_inUpdatePolish = false;
     qCDebug(lcQuickLayouts) << "updatePolish() LEAVING" << this;
@@ -750,10 +788,13 @@ void QQuickLayout::componentComplete()
 
 void QQuickLayout::invalidate(QQuickItem * /*childItem*/)
 {
-    if (m_dirty)
+    Q_D(QQuickLayout);
+    if (invalidated())
         return;
 
-    m_dirty = true;
+    qCDebug(lcQuickLayouts) << "QQuickLayout::invalidate()" << this;
+    d->m_dirty = true;
+    d->m_dirtyArrangement = true;
 
     if (!qobject_cast<QQuickLayout *>(parentItem())) {
 
@@ -775,7 +816,6 @@ void QQuickLayout::invalidate(QQuickItem * /*childItem*/)
 
 bool QQuickLayout::shouldIgnoreItem(QQuickItem *child, QQuickLayoutAttached *&info, QSizeF *sizeHints) const
 {
-    Q_D(const QQuickLayout);
     bool ignoreItem = true;
     QQuickItemPrivate *childPrivate = QQuickItemPrivate::get(child);
     if (childPrivate->explicitVisible) {
@@ -794,8 +834,6 @@ bool QQuickLayout::shouldIgnoreItem(QQuickItem *child, QQuickLayoutAttached *&in
     if (!ignoreItem && childPrivate->isTransparentForPositioner())
         ignoreItem = true;
 
-    if (ignoreItem)
-        d->m_ignoredItems << child;
     return ignoreItem;
 }
 
@@ -805,6 +843,17 @@ void QQuickLayout::checkAnchors(QQuickItem *item) const
     if (anchors && anchors->activeDirections())
         qmlWarning(item) << "Detected anchors on an item that is managed by a layout. This is undefined behavior; use Layout.alignment instead.";
 }
+
+void QQuickLayout::ensureLayoutItemsUpdated() const
+{
+    Q_D(const QQuickLayout);
+    if (!invalidated())
+        return;
+    const_cast<QQuickLayout*>(this)->updateLayoutItems();
+    d->m_dirty = false;
+    d->applySizeHints();
+}
+
 
 void QQuickLayout::itemChange(ItemChange change, const ItemChangeData &value)
 {
@@ -816,14 +865,14 @@ void QQuickLayout::itemChange(ItemChange change, const ItemChangeData &value)
         d->m_hasItemChangeListeners = true;
         qCDebug(lcQuickLayouts) << "ChildAdded" << item;
         if (isReady())
-            updateLayoutItems();
+            invalidate();
     } else if (change == ItemChildRemovedChange) {
         QQuickItem *item = value.item;
         qmlobject_disconnect(item, QQuickItem, SIGNAL(baselineOffsetChanged(qreal)), this, QQuickLayout, SLOT(invalidateSenderItem()));
         QQuickItemPrivate::get(item)->removeItemChangeListener(this, changeTypes);
         qCDebug(lcQuickLayouts) << "ChildRemoved" << item;
         if (isReady())
-            updateLayoutItems();
+            invalidate();
     }
     QQuickItem::itemChange(change, value);
 }
@@ -877,10 +926,20 @@ void QQuickLayout::deactivateRecur()
     }
 }
 
+bool QQuickLayout::invalidated() const
+{
+    return d_func()->m_dirty;
+}
+
+bool QQuickLayout::invalidatedArrangement() const
+{
+    return d_func()->m_dirtyArrangement;
+}
+
 void QQuickLayout::itemSiblingOrderChanged(QQuickItem *item)
 {
     Q_UNUSED(item);
-    updateLayoutItems();
+    invalidate();
 }
 
 void QQuickLayout::itemImplicitWidthChanged(QQuickItem *item)
@@ -909,7 +968,7 @@ void QQuickLayout::itemVisibilityChanged(QQuickItem *item)
 
 void QQuickLayout::rearrange(const QSizeF &/*size*/)
 {
-    m_dirty = false;
+    d_func()->m_dirtyArrangement = false;
 }
 
 
@@ -1188,7 +1247,7 @@ void QQuickLayout::dumpLayoutTreeRecursive(int level, QString &buf) const
     buf += formatLine("%1 {").arg(QQmlMetaType::prettyTypeName(this));
     ++level;
     buf += formatLine("// Effective calculated values:");
-    buf += formatLine("sizeHintDirty: %2").arg(m_dirty);
+    buf += formatLine("sizeHintDirty: %2").arg(invalidated());
     QSizeF min = sizeHint(Qt::MinimumSize);
     buf += formatLine("sizeHint.min : [%1, %2]").arg(f2s(min.width()), 5).arg(min.height(), 5);
     QSizeF pref = sizeHint(Qt::PreferredSize);

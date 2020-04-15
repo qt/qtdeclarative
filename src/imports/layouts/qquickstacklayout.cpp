@@ -114,6 +114,7 @@ QQuickStackLayout::QQuickStackLayout(QQuickItem *parent) :
 int QQuickStackLayout::count() const
 {
     Q_D(const QQuickStackLayout);
+    ensureLayoutItemsUpdated();
     return d->count;
 }
 
@@ -126,6 +127,7 @@ int QQuickStackLayout::count() const
 int QQuickStackLayout::currentIndex() const
 {
     Q_D(const QQuickStackLayout);
+    ensureLayoutItemsUpdated();
     return d->currentIndex;
 }
 
@@ -133,6 +135,7 @@ void QQuickStackLayout::setCurrentIndex(int index)
 {
     Q_D(QQuickStackLayout);
     if (index != d->currentIndex) {
+        ensureLayoutItemsUpdated();
         QQuickItem *prev = itemAt(d->currentIndex);
         QQuickItem *next = itemAt(index);
         d->currentIndex = index;
@@ -149,11 +152,12 @@ void QQuickStackLayout::setCurrentIndex(int index)
     }
 }
 
+
 void QQuickStackLayout::componentComplete()
 {
     QQuickLayout::componentComplete();    // will call our geometryChange(), (where isComponentComplete() == true)
 
-    updateLayoutItems();
+    ensureLayoutItemsUpdated();
 
     QQuickItem *par = parentItem();
     if (qobject_cast<QQuickLayout*>(par))
@@ -162,8 +166,21 @@ void QQuickStackLayout::componentComplete()
     rearrange(QSizeF(width(), height()));
 }
 
+void QQuickStackLayout::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
+{
+    QQuickLayout::itemChange(change, value);
+
+    if (change == ItemChildRemovedChange) {
+        invalidate();
+    } else if (change == ItemChildAddedChange) {
+        invalidate();
+    }
+}
+
 QSizeF QQuickStackLayout::sizeHint(Qt::SizeHint whichSizeHint) const
 {
+    Q_D(const QQuickStackLayout);
+    ensureLayoutItemsUpdated();
     QSizeF &askingFor = m_cachedSizeHints[whichSizeHint];
     if (!askingFor.isValid()) {
         QSizeF &minS = m_cachedSizeHints[Qt::MinimumSize];
@@ -186,11 +203,13 @@ QSizeF QQuickStackLayout::sizeHint(Qt::SizeHint whichSizeHint) const
             // Not sure how descent makes sense here...
         }
     }
+    d->m_dirty = false;
     return askingFor;
 }
 
 int QQuickStackLayout::indexOf(QQuickItem *childItem) const
 {
+    ensureLayoutItemsUpdated();
     if (childItem) {
         int indexOfItem = 0;
         const auto items = childItems();
@@ -237,13 +256,6 @@ void QQuickStackLayout::setAlignment(QQuickItem * /*item*/, Qt::Alignment /*alig
 
 void QQuickStackLayout::invalidate(QQuickItem *childItem)
 {
-    Q_D(QQuickStackLayout);
-    if (d->m_ignoredItems.contains(childItem)) {
-        // If an invalid item gets a valid size, it should be included, as it was added to the layout
-        updateLayoutItems();
-        return;
-    }
-
     const int indexOfChild = indexOf(childItem);
     if (indexOfChild >= 0 && indexOfChild < m_cachedItemSizeHints.count()) {
         m_cachedItemSizeHints[indexOfChild].min() = QSizeF();
@@ -255,23 +267,8 @@ void QQuickStackLayout::invalidate(QQuickItem *childItem)
         m_cachedSizeHints[i] = QSizeF();
     QQuickLayout::invalidate(this);
 
-    QQuickLayoutAttached *info = attachedLayoutObject(this);
-
-    const QSizeF min = sizeHint(Qt::MinimumSize);
-    const QSizeF pref = sizeHint(Qt::PreferredSize);
-    const QSizeF max = sizeHint(Qt::MaximumSize);
-
-    const bool old = info->setChangesNotificationEnabled(false);
-    info->setMinimumImplicitSize(min);
-    info->setMaximumImplicitSize(max);
-    info->setChangesNotificationEnabled(old);
-    if (pref.width() == implicitWidth() && pref.height() == implicitHeight()) {
-        // In case setImplicitSize does not emit implicit{Width|Height}Changed
-        if (QQuickLayout *parentLayout = qobject_cast<QQuickLayout *>(parentItem()))
-            parentLayout->invalidate(this);
-    } else {
-        setImplicitSize(pref.width(), pref.height());
-    }
+    if (QQuickLayout *parentLayout = qobject_cast<QQuickLayout *>(parentItem()))
+        parentLayout->invalidate(this);
 }
 
 void QQuickStackLayout::updateLayoutItems()
@@ -295,8 +292,6 @@ void QQuickStackLayout::updateLayoutItems()
         checkAnchors(child);
         child->setVisible(d->currentIndex == i);
     }
-
-    invalidate();
 }
 
 void QQuickStackLayout::rearrange(const QSizeF &newSize)
@@ -304,7 +299,9 @@ void QQuickStackLayout::rearrange(const QSizeF &newSize)
     Q_D(QQuickStackLayout);
     if (newSize.isNull() || !newSize.isValid())
         return;
-    (void)sizeHint(Qt::PreferredSize);  // Make sure m_cachedItemSizeHints are valid
+
+    qCDebug(lcQuickLayouts) << "QQuickStackLayout::rearrange";
+    ensureLayoutItemsUpdated();
 
     if (d->currentIndex == -1 || d->currentIndex >= m_cachedItemSizeHints.count())
         return;

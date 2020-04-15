@@ -61,6 +61,7 @@ public:
     void setCurrentIndex(int index);
 
     void componentComplete() override;
+    void itemChange(ItemChange change, const ItemChangeData &value) override;
     QSizeF sizeHint(Qt::SizeHint whichSizeHint) const override;
     void setAlignment(QQuickItem *item, Qt::Alignment align)  override;
     void invalidate(QQuickItem *childItem = 0)  override;
