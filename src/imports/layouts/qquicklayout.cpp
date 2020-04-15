@@ -90,6 +90,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_LOGGING_CATEGORY(lcQuickLayouts, "qt.quick.layouts")
+
 QQuickLayoutAttached::QQuickLayoutAttached(QObject *parent)
     : QObject(parent),
       m_minimumWidth(0),
@@ -669,7 +671,7 @@ void QQuickLayoutAttached::invalidateItem()
 {
     if (!m_changesNotificationEnabled)
         return;
-    quickLayoutDebug() << "QQuickLayoutAttached::invalidateItem";
+    qCDebug(lcQuickLayouts) << "QQuickLayoutAttached::invalidateItem";
     if (QQuickLayout *layout = parentLayout()) {
         layout->invalidate(item());
     }
@@ -730,9 +732,11 @@ QQuickLayoutAttached *QQuickLayout::qmlAttachedProperties(QObject *object)
 
 void QQuickLayout::updatePolish()
 {
+    qCDebug(lcQuickLayouts) << "updatePolish() ENTERING" << this;
     m_inUpdatePolish = true;
     rearrange(QSizeF(width(), height()));
     m_inUpdatePolish = false;
+    qCDebug(lcQuickLayouts) << "updatePolish() LEAVING" << this;
 }
 
 void QQuickLayout::componentComplete()
@@ -752,19 +756,20 @@ void QQuickLayout::invalidate(QQuickItem * /*childItem*/)
     m_dirty = true;
 
     if (!qobject_cast<QQuickLayout *>(parentItem())) {
-        quickLayoutDebug() << "QQuickLayout::invalidate(), polish()";
 
         if (m_inUpdatePolish)
             ++m_polishInsideUpdatePolish;
         else
             m_polishInsideUpdatePolish = 0;
 
-        if (m_polishInsideUpdatePolish <= 2)
+        if (m_polishInsideUpdatePolish <= 2) {
             // allow at most two consecutive loops in order to respond to height-for-width
             // (e.g QQuickText changes implicitHeight when its width gets changed)
+            qCDebug(lcQuickLayouts) << "QQuickLayout::invalidate(), polish()";
             polish();
-        else
+        } else {
             qWarning() << "Qt Quick Layouts: Polish loop detected. Aborting after two iterations.";
+        }
     }
 }
 
@@ -809,12 +814,14 @@ void QQuickLayout::itemChange(ItemChange change, const ItemChangeData &value)
         qmlobject_connect(item, QQuickItem, SIGNAL(baselineOffsetChanged(qreal)), this, QQuickLayout, SLOT(invalidateSenderItem()));
         QQuickItemPrivate::get(item)->addItemChangeListener(this, changeTypes);
         d->m_hasItemChangeListeners = true;
+        qCDebug(lcQuickLayouts) << "ChildAdded" << item;
         if (isReady())
             updateLayoutItems();
     } else if (change == ItemChildRemovedChange) {
         QQuickItem *item = value.item;
         qmlobject_disconnect(item, QQuickItem, SIGNAL(baselineOffsetChanged(qreal)), this, QQuickLayout, SLOT(invalidateSenderItem()));
         QQuickItemPrivate::get(item)->removeItemChangeListener(this, changeTypes);
+        qCDebug(lcQuickLayouts) << "ChildRemoved" << item;
         if (isReady())
             updateLayoutItems();
     }
@@ -828,7 +835,7 @@ void QQuickLayout::geometryChanged(const QRectF &newGeometry, const QRectF &oldG
     if (d->m_disableRearrange || !isReady() || !newGeometry.isValid())
         return;
 
-    quickLayoutDebug() << "QQuickStackLayout::geometryChanged" << newGeometry << oldGeometry;
+    qCDebug(lcQuickLayouts) << "QQuickLayout::geometryChanged" << newGeometry << oldGeometry;
     rearrange(newGeometry.size());
 }
 

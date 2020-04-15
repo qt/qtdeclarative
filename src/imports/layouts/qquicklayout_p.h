@@ -49,12 +49,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickLayoutAttached;
-
-#if 0 && !defined(QT_NO_DEBUG) && !defined(QT_NO_DEBUG_OUTPUT)
-# define quickLayoutDebug QMessageLogger(__FILE__, __LINE__, Q_FUNC_INFO).debug
-#else
-# define quickLayoutDebug QT_NO_QDEBUG_MACRO
-#endif
+Q_DECLARE_LOGGING_CATEGORY(lcQuickLayouts)
 
 class QQuickLayoutPrivate;
 class QQuickLayout : public QQuickItem, public QQuickItemChangeListener
