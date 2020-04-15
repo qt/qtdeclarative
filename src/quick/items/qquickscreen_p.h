@@ -83,6 +83,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickScreenInfo : public QObject
 
     Q_PROPERTY(int virtualX READ virtualX NOTIFY virtualXChanged REVISION(2, 3))
     Q_PROPERTY(int virtualY READ virtualY NOTIFY virtualYChanged REVISION(2, 3))
+    QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0);
 
 public:
     QQuickScreenInfo(QObject *parent = nullptr, QScreen *wrappedScreen = nullptr);
@@ -131,6 +133,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickScreenAttached : public QQuickScreenInfo
     Q_OBJECT
     Q_PROPERTY(Qt::ScreenOrientations orientationUpdateMask READ orientationUpdateMask
                WRITE setOrientationUpdateMask NOTIFY orientationUpdateMaskChanged)
+
+    QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0);
 
 public:
     QQuickScreenAttached(QObject* attachee);
