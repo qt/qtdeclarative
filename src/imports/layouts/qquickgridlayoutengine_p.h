@@ -95,7 +95,7 @@ public:
 
     void invalidate()
     {
-        quickLayoutDebug() << "engine::invalidate()";
+        qCDebug(lcQuickLayouts) << "QQuickGridLayoutItem::invalidate()";
         sizeHintCacheDirty = true;
     }
 

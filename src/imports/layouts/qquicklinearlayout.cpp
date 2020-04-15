@@ -315,7 +315,7 @@ QQuickGridLayoutBase::~QQuickGridLayoutBase()
 
 void QQuickGridLayoutBase::componentComplete()
 {
-    quickLayoutDebug() << objectName() << "QQuickGridLayoutBase::componentComplete()" << parent();
+    qCDebug(lcQuickLayouts) << objectName() << "QQuickGridLayoutBase::componentComplete()" << parent();
     QQuickLayout::componentComplete();
     updateLayoutItems();
 
@@ -368,7 +368,7 @@ void QQuickGridLayoutBase::invalidate(QQuickItem *childItem)
         return;
     }
 
-    quickLayoutDebug() << "QQuickGridLayoutBase::invalidate()";
+    qCDebug(lcQuickLayouts) << "QQuickGridLayoutBase::invalidate()";
 
     if (childItem) {
         if (QQuickGridLayoutItem *layoutItem = d->engine.findLayoutItem(childItem))
@@ -412,12 +412,12 @@ void QQuickGridLayoutBase::updateLayoutItems()
         return;
     }
 
-    quickLayoutDebug() << "QQuickGridLayoutBase::updateLayoutItems";
+    qCDebug(lcQuickLayouts) << "QQuickGridLayoutBase::updateLayoutItems()";
     d->engine.deleteItems();
     insertLayoutItems();
 
     invalidate();
-    quickLayoutDebug() << "QQuickGridLayoutBase::updateLayoutItems LEAVING";
+    qCDebug(lcQuickLayouts) << "QQuickGridLayoutBase::updateLayoutItems() LEAVING";
 }
 
 QQuickItem *QQuickGridLayoutBase::itemAt(int index) const
@@ -445,7 +445,7 @@ void QQuickGridLayoutBase::itemDestroyed(QQuickItem *item)
     if (!isReady())
         return;
     Q_D(QQuickGridLayoutBase);
-    quickLayoutDebug() << "QQuickGridLayoutBase::itemDestroyed";
+    qCDebug(lcQuickLayouts) << "QQuickGridLayoutBase::itemDestroyed";
     if (QQuickGridLayoutItem *gridItem = d->engine.findLayoutItem(item)) {
         removeGridItem(gridItem);
         delete gridItem;
@@ -459,7 +459,7 @@ void QQuickGridLayoutBase::itemVisibilityChanged(QQuickItem *item)
 
     if (!isReady())
         return;
-    quickLayoutDebug() << "QQuickGridLayoutBase::itemVisibilityChanged";
+    qCDebug(lcQuickLayouts) << "QQuickGridLayoutBase::itemVisibilityChanged()";
     updateLayoutItems();
 }
 
@@ -480,7 +480,7 @@ void QQuickGridLayoutBase::rearrange(const QSizeF &size)
     }
 
     d->m_rearranging = true;
-    quickLayoutDebug() << objectName() << "QQuickGridLayoutBase::rearrange()" << size;
+    qCDebug(lcQuickLayouts) << objectName() << "QQuickGridLayoutBase::rearrange()" << size;
     Qt::LayoutDirection visualDir = effectiveLayoutDirection();
     d->engine.setVisualDirection(visualDir);
 
