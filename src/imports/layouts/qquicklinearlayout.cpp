@@ -254,6 +254,7 @@ void QQuickGridLayoutBase::setOrientation(Qt::Orientation orientation)
 QSizeF QQuickGridLayoutBase::sizeHint(Qt::SizeHint whichSizeHint) const
 {
     Q_D(const QQuickGridLayoutBase);
+    ensureLayoutItemsUpdated();
     return d->engine.sizeHint(whichSizeHint, QSizeF(), d->styleInfo);
 }
 
@@ -315,14 +316,27 @@ QQuickGridLayoutBase::~QQuickGridLayoutBase()
 
 void QQuickGridLayoutBase::componentComplete()
 {
-    qCDebug(lcQuickLayouts) << objectName() << "QQuickGridLayoutBase::componentComplete()" << parent();
+    qCDebug(lcQuickLayouts) << "QQuickGridLayoutBase::componentComplete()" << this << parent();
     QQuickLayout::componentComplete();
-    updateLayoutItems();
+
+    /* The layout is invalid when it is constructed, but during construction of the layout and
+       its children (in the "static/from QML" case which this is trying to cover) things
+       change and as a consequence invalidate() and ensureLayoutItemsUpdated() might be called.
+       As soon as ensureLayoutItemsUpdated() is called it will set d->dirty = false.
+       However, a subsequent invalidate() will return early if the component is not completed
+       because it knows that componentComplete() will take care of doing the proper layouting
+       (so it won't set d->dirty = true). When we then call ensureLayoutItemsUpdated() again here
+       it sees that its not dirty and assumes everything up-to-date. For those cases we therefore
+       need to call invalidate() in advance
+    */
+    invalidate();
+    ensureLayoutItemsUpdated();
 
     QQuickItem *par = parentItem();
     if (qobject_cast<QQuickLayout*>(par))
         return;
     rearrange(QSizeF(width(), height()));
+    qCDebug(lcQuickLayouts) << "QQuickGridLayoutBase::componentComplete(). COMPLETED" << this << parent();
 }
 
 /*
@@ -342,13 +356,12 @@ void QQuickGridLayoutBase::componentComplete()
         }
     }
 
-  1.    l2->invalidateChildItem(a) is called on l2, where item refers to "a".
+  1.    l2->invalidate(a) is called on l2, where item refers to "a".
         (this will dirty the cached size hints of item "a")
-  2.    l2->invalidate() is called
-        this will :
+  2.    The layout engine will invalidate:
             i)  invalidate the layout engine
-            ii) dirty the cached size hints of item "l2" (by calling parentLayout()->invalidateChildItem
-
+            ii) dirty the cached size hints of item "l2" (by calling parentLayout()->invalidate(l2)
+        The recursion continues to the topmost layout
  */
 /*!
    \internal
@@ -363,43 +376,29 @@ void QQuickGridLayoutBase::invalidate(QQuickItem *childItem)
     Q_D(QQuickGridLayoutBase);
     if (!isReady())
         return;
+    qCDebug(lcQuickLayouts) << "QQuickGridLayoutBase::invalidate()" << this << ", invalidated:" << invalidated();
+    if (invalidated()) {
+        return;
+    }
+    qCDebug(lcQuickLayouts) << "d->m_rearranging:" << d->m_rearranging;
     if (d->m_rearranging) {
         d->m_invalidateAfterRearrange << childItem;
         return;
     }
 
-    qCDebug(lcQuickLayouts) << "QQuickGridLayoutBase::invalidate()";
-
     if (childItem) {
         if (QQuickGridLayoutItem *layoutItem = d->engine.findLayoutItem(childItem))
             layoutItem->invalidate();
-        if (d->m_ignoredItems.contains(childItem)) {
-            updateLayoutItems();
-            return;
-        }
     }
     // invalidate engine
     d->engine.invalidate();
 
-    QQuickLayout::invalidate(this);
+    qCDebug(lcQuickLayouts) << "calling QQuickLayout::invalidate();";
+    QQuickLayout::invalidate();
 
-    QQuickLayoutAttached *info = attachedLayoutObject(this);
-
-    const QSizeF min = sizeHint(Qt::MinimumSize);
-    const QSizeF pref = sizeHint(Qt::PreferredSize);
-    const QSizeF max = sizeHint(Qt::MaximumSize);
-
-    const bool old = info->setChangesNotificationEnabled(false);
-    info->setMinimumImplicitSize(min);
-    info->setMaximumImplicitSize(max);
-    info->setChangesNotificationEnabled(old);
-    if (pref.width() == implicitWidth() && pref.height() == implicitHeight()) {
-        // In case setImplicitSize does not emit implicit{Width|Height}Changed
-        if (QQuickLayout *parentLayout = qobject_cast<QQuickLayout *>(parentItem()))
-            parentLayout->invalidate(this);
-    } else {
-        setImplicitSize(pref.width(), pref.height());
-    }
+    if (QQuickLayout *parentLayout = qobject_cast<QQuickLayout *>(parentItem()))
+        parentLayout->invalidate(this);
+    qCDebug(lcQuickLayouts) << "QQuickGridLayoutBase::invalidate() LEAVING" << this;
 }
 
 void QQuickGridLayoutBase::updateLayoutItems()
@@ -412,23 +411,25 @@ void QQuickGridLayoutBase::updateLayoutItems()
         return;
     }
 
-    qCDebug(lcQuickLayouts) << "QQuickGridLayoutBase::updateLayoutItems()";
+    qCDebug(lcQuickLayouts) << "QQuickGridLayoutBase::updateLayoutItems ENTERING" << this;
     d->engine.deleteItems();
     insertLayoutItems();
-
-    invalidate();
-    qCDebug(lcQuickLayouts) << "QQuickGridLayoutBase::updateLayoutItems() LEAVING";
+    qCDebug(lcQuickLayouts) << "QQuickGridLayoutBase::updateLayoutItems() LEAVING" << this;
 }
 
 QQuickItem *QQuickGridLayoutBase::itemAt(int index) const
 {
     Q_D(const QQuickGridLayoutBase);
+    qCDebug(lcQuickLayouts).nospace() << "QQuickGridLayoutBase::itemAt(" << index << ")";
+    ensureLayoutItemsUpdated();
+    qCDebug(lcQuickLayouts).nospace() << "QQuickGridLayoutBase::itemAt(" << index << ") LEAVING";
     return static_cast<QQuickGridLayoutItem*>(d->engine.itemAt(index))->layoutItem();
 }
 
 int QQuickGridLayoutBase::itemCount() const
 {
     Q_D(const QQuickGridLayoutBase);
+    ensureLayoutItemsUpdated();
     return d->engine.itemCount();
 }
 
@@ -460,7 +461,7 @@ void QQuickGridLayoutBase::itemVisibilityChanged(QQuickItem *item)
     if (!isReady())
         return;
     qCDebug(lcQuickLayouts) << "QQuickGridLayoutBase::itemVisibilityChanged()";
-    updateLayoutItems();
+    invalidate(item);
 }
 
 void QQuickGridLayoutBase::rearrange(const QSizeF &size)
@@ -469,6 +470,9 @@ void QQuickGridLayoutBase::rearrange(const QSizeF &size)
     if (!isReady())
         return;
 
+    ensureLayoutItemsUpdated();
+
+    qCDebug(lcQuickLayouts) << "QQuickGridLayoutBase::rearrange" << d->m_recurRearrangeCounter << this;
     const auto refCounter = qScopeGuard([&d] {
         --(d->m_recurRearrangeCounter);
     });
@@ -502,7 +506,7 @@ void QQuickGridLayoutBase::rearrange(const QSizeF &size)
     d->m_invalidateAfterRearrange.clear();
 
     if (d->m_updateAfterRearrange) {
-        updateLayoutItems();
+        ensureLayoutItemsUpdated();
         d->m_updateAfterRearrange = false;
     }
 }
@@ -582,7 +586,7 @@ void QQuickGridLayout::setColumns(int columns)
     if (d->columns == columns)
         return;
     d->columns = columns;
-    updateLayoutItems();
+    invalidate();
     emit columnsChanged();
 }
 
@@ -605,7 +609,7 @@ void QQuickGridLayout::setRows(int rows)
     if (d->rows == rows)
         return;
     d->rows = rows;
-    updateLayoutItems();
+    invalidate();
     emit rowsChanged();
 }
 
@@ -643,7 +647,7 @@ void QQuickGridLayout::setFlow(QQuickGridLayout::Flow flow)
         return;
     d->flow = flow;
     // If flow is changed, the layout needs to be repopulated
-    updateLayoutItems();
+    invalidate();
     emit flowChanged();
 }
 
@@ -664,7 +668,6 @@ void QQuickGridLayout::insertLayoutItems()
     if (flowBound < 0)
         flowBound = std::numeric_limits<int>::max();
 
-    d->m_ignoredItems.clear();
     QSizeF sizeHints[Qt::NSizeHints];
     const auto items = childItems();
     for (QQuickItem *child : items) {
@@ -852,7 +855,6 @@ void QQuickLinearLayout::setSpacing(qreal space)
 void QQuickLinearLayout::insertLayoutItems()
 {
     Q_D(QQuickLinearLayout);
-    d->m_ignoredItems.clear();
     QSizeF sizeHints[Qt::NSizeHints];
     const auto items = childItems();
     for (QQuickItem *child : items) {

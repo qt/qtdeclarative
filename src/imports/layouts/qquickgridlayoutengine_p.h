@@ -112,8 +112,9 @@ public:
         const QSizeF newSize = r.size();
         m_item->setPosition(r.topLeft());
         if (newSize == oldSize) {
+            // We need to enforce a rearrange when the geometry is the same
             if (QQuickLayout *lay = qobject_cast<QQuickLayout *>(m_item)) {
-                if (lay->arrangementIsDirty())
+                if (lay->invalidatedArrangement())
                     lay->rearrange(newSize);
             }
         } else {
