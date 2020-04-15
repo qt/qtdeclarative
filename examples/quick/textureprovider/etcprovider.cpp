@@ -116,6 +116,15 @@ int EtcTexture::textureId() const
     return m_texture_id;
 }
 
+int EtcTexture::comparisonKey() const
+{
+    if (m_texture_id)
+        return m_texture_id;
+
+    // two textures (and so materials) with not-yet-created texture underneath are never equal
+    return int(qintptr(this));
+}
+
 void EtcTexture::bind()
 {
     if (m_uploaded && m_texture_id) {

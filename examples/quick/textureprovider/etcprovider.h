@@ -78,13 +78,14 @@ public:
     EtcTexture();
     ~EtcTexture();
 
-    void bind();
+    void bind() override;
 
-    QSize textureSize() const { return m_size; }
-    int textureId() const;
+    QSize textureSize() const override { return m_size; }
+    int textureId() const override;
+    int comparisonKey() const override;
 
-    bool hasAlphaChannel() const { return false; }
-    bool hasMipmaps() const { return false; }
+    bool hasAlphaChannel() const override { return false; }
+    bool hasMipmaps() const override { return false; }
 
     QByteArray m_data;
     QSize m_size;
