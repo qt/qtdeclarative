@@ -2963,7 +2963,7 @@ void Renderer::updateLineWidth(QSGGeometry *g) // legacy (GL-only)
 {
     if (g->drawingMode() == GL_LINE_STRIP || g->drawingMode() == GL_LINE_LOOP || g->drawingMode() == GL_LINES)
         glLineWidth(g->lineWidth());
-#if !defined(QT_OPENGL_ES_2)
+#if !QT_CONFIG(opengles2)
     else {
         QOpenGLContext *ctx = m_context->openglContext();
         if (!ctx->isOpenGLES() && g->drawingMode() == GL_POINTS) {

@@ -112,7 +112,7 @@ QSGDefaultDepthStencilBuffer::QSGDefaultDepthStencilBuffer(QOpenGLContext *conte
         m_functions.glGenRenderbuffers(1, &m_depthBuffer);
         m_functions.glBindRenderbuffer(GL_RENDERBUFFER, m_depthBuffer);
         if (format.samples && m_functions.hasOpenGLExtension(QOpenGLExtensions::FramebufferMultisample)) {
-#if defined(QT_OPENGL_ES_2)
+#if QT_CONFIG(opengles2)
             m_functions.glRenderbufferStorageMultisample(GL_RENDERBUFFER, format.samples,
                 GL_DEPTH24_STENCIL8_OES, width, height);
 #else
@@ -120,7 +120,7 @@ QSGDefaultDepthStencilBuffer::QSGDefaultDepthStencilBuffer(QOpenGLContext *conte
                 GL_DEPTH24_STENCIL8, width, height);
 #endif
         } else {
-#if defined(QT_OPENGL_ES_2)
+#if QT_CONFIG(opengles2)
             m_functions.glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8_OES, width, height);
 #else
             m_functions.glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
@@ -145,7 +145,7 @@ QSGDefaultDepthStencilBuffer::QSGDefaultDepthStencilBuffer(QOpenGLContext *conte
     if (!m_stencilBuffer && (format.attachments & StencilAttachment)) {
         m_functions.glGenRenderbuffers(1, &m_stencilBuffer);
         m_functions.glBindRenderbuffer(GL_RENDERBUFFER, m_stencilBuffer);
-#ifdef QT_OPENGL_ES
+#if QT_CONFIG(opengles2)
         const GLenum internalFormat = GL_STENCIL_INDEX8;
 #else
         const GLenum internalFormat = context->isOpenGLES() ? GL_STENCIL_INDEX8 : GL_STENCIL_INDEX;

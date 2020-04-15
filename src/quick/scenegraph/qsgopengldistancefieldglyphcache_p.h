@@ -62,7 +62,7 @@
 QT_BEGIN_NAMESPACE
 
 class QOpenGLSharedResourceGuard;
-#if !defined(QT_OPENGL_ES_2)
+#if !QT_CONFIG(opengles2)
 class QOpenGLFunctions_3_2_Core;
 #endif
 
@@ -154,7 +154,7 @@ private:
 
     QOpenGLSharedResourceGuard *m_fboGuard;
     QOpenGLFunctions *m_funcs;
-#if !defined(QT_OPENGL_ES_2)
+#if !QT_CONFIG(opengles2)
     QOpenGLFunctions_3_2_Core *m_coreFuncs;
 #endif
 };

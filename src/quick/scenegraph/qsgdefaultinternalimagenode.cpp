@@ -254,7 +254,7 @@ bool QSGDefaultInternalImageNode::supportsWrap(const QSize &size) const
                 || (isPowerOfTwo(size.width()) && isPowerOfTwo(size.height()));
     } else {
         QOpenGLContext *ctx = QOpenGLContext::currentContext();
-#ifndef QT_OPENGL_ES_2
+#if !QT_CONFIG(opengles2)
         if (ctx->isOpenGLES())
 #endif
         {

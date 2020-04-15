@@ -53,7 +53,7 @@
 #include "qsgcontext_p.h"
 
 
-#if !defined(QT_OPENGL_ES_2)
+#if !QT_CONFIG(opengles2)
 #include <qopenglfunctions_3_2_core.h>
 #endif
 
@@ -77,7 +77,7 @@ QSGOpenGLDistanceFieldGlyphCache::QSGOpenGLDistanceFieldGlyphCache(QOpenGLContex
     , m_blitBuffer(QOpenGLBuffer::VertexBuffer)
     , m_fboGuard(nullptr)
     , m_funcs(c->functions())
-#if !defined(QT_OPENGL_ES_2)
+#if !QT_CONFIG(opengles2)
     , m_coreFuncs(nullptr)
 #endif
 {
@@ -222,7 +222,7 @@ void QSGOpenGLDistanceFieldGlyphCache::storeGlyphs(const QList<QDistanceField> &
             }
         }
 
-#if !defined(QT_OPENGL_ES_2)
+#if !QT_CONFIG(opengles2)
         const GLenum format = isCoreProfile() ? GL_RED : GL_ALPHA;
 #else
         const GLenum format = GL_ALPHA;
@@ -291,7 +291,7 @@ void QSGOpenGLDistanceFieldGlyphCache::createTexture(TextureInfo *texInfo,
     m_funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     m_funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     m_funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-#if !defined(QT_OPENGL_ES_2)
+#if !QT_CONFIG(opengles2)
     if (!QOpenGLContext::currentContext()->isOpenGLES())
         m_funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
     const GLint internalFormat = isCoreProfile() ? GL_R8 : GL_ALPHA;
@@ -337,7 +337,7 @@ void QSGOpenGLDistanceFieldGlyphCache::resizeTexture(TextureInfo *texInfo, int w
 
     updateTexture(oldTexture, texInfo->texture, texInfo->size);
 
-#if !defined(QT_OPENGL_ES_2)
+#if !QT_CONFIG(opengles2)
     if (isCoreProfile() && !useTextureResizeWorkaround()) {
         // For an OpenGL Core Profile we can use http://www.opengl.org/wiki/Framebuffer#Blitting
         // to efficiently copy the contents of the old texture to the new texture
@@ -388,7 +388,7 @@ void QSGOpenGLDistanceFieldGlyphCache::resizeTexture(TextureInfo *texInfo, int w
         m_funcs->glGetIntegerv(GL_UNPACK_ALIGNMENT, &alignment);
         m_funcs->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-#if !defined(QT_OPENGL_ES_2)
+#if !QT_CONFIG(opengles2)
         const GLenum format = isCoreProfile() ? GL_RED : GL_ALPHA;
 #else
         const GLenum format = GL_ALPHA;
@@ -434,7 +434,7 @@ void QSGOpenGLDistanceFieldGlyphCache::resizeTexture(TextureInfo *texInfo, int w
     m_funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     m_funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     m_funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-#if !defined(QT_OPENGL_ES_2)
+#if !QT_CONFIG(opengles2)
     if (!ctx->isOpenGLES())
         m_funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 #endif

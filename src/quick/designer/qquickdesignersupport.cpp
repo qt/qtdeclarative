@@ -97,7 +97,7 @@ void QQuickDesignerSupport::refFromEffectItem(QQuickItem *referencedItem, bool h
         texture->setSize(itemSize.toSize());
         texture->setRecursive(true);
 #if QT_CONFIG(opengl)
-#ifndef QT_OPENGL_ES
+#if !QT_CONFIG(opengles2)
         if (QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGL)
             texture->setFormat(GL_RGBA8);
         else

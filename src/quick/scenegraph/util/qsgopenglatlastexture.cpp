@@ -222,7 +222,7 @@ void AtlasBase::bind(QSGTexture::Filtering filtering)
         funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-#if !defined(QT_OPENGL_ES_2)
+#if !QT_CONFIG(opengles2)
         if (!QOpenGLContext::currentContext()->isOpenGLES())
             funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 #endif
@@ -295,7 +295,7 @@ Atlas::Atlas(const QSize &size)
     m_internalFormat = GL_RGBA;
     m_externalFormat = GL_BGRA;
 
-#ifndef QT_OPENGL_ES
+#if !QT_CONFIG(opengles2)
     if (QOpenGLContext::currentContext()->isOpenGLES()) {
 #endif
 
@@ -332,7 +332,7 @@ Atlas::Atlas(const QSize &size)
         m_internalFormat = m_externalFormat = GL_RGBA;
     }
 
-#ifndef QT_OPENGL_ES
+#if !QT_CONFIG(opengles2)
     }
 #endif
 

@@ -606,14 +606,14 @@ public:
     }
 
     void activate() override {
-#if !defined(QT_OPENGL_ES_2) && !defined(Q_OS_WIN)
+#if !QT_CONFIG(opengles2) && !defined(Q_OS_WIN)
         glEnable(GL_POINT_SPRITE);
         glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 #endif
     }
 
     void deactivate() override {
-#if !defined(QT_OPENGL_ES_2) && !defined(Q_OS_WIN)
+#if !QT_CONFIG(opengles2) && !defined(Q_OS_WIN)
         glDisable(GL_POINT_SPRITE);
         glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
 #endif
@@ -754,14 +754,14 @@ public:
     }
 
     void activate() override {
-#if !defined(QT_OPENGL_ES_2) && !defined(Q_OS_WIN)
+#if !QT_CONFIG(opengles2) && !defined(Q_OS_WIN)
         glEnable(GL_POINT_SPRITE);
         glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 #endif
     }
 
     void deactivate() override {
-#if !defined(QT_OPENGL_ES_2) && !defined(Q_OS_WIN)
+#if !QT_CONFIG(opengles2) && !defined(Q_OS_WIN)
         glDisable(GL_POINT_SPRITE);
         glDisable(GL_VERTEX_PROGRAM_POINT_SIZE);
 #endif
