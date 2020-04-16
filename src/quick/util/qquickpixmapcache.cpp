@@ -1033,7 +1033,7 @@ inline bool operator==(const QQuickPixmapKey &lhs, const QQuickPixmapKey &rhs)
             lhs.options == rhs.options;
 }
 
-inline uint qHash(const QQuickPixmapKey &key)
+inline size_t qHash(const QQuickPixmapKey &key)
 {
     return qHash(*key.url) ^ (key.size->width()*7) ^ (key.size->height()*17) ^ (key.frame*23) ^
             (key.region->x()*29) ^ (key.region->y()*31) ^ (key.options.autoTransform() * 0x5c5c5c5c);

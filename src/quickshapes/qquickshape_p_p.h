@@ -200,7 +200,7 @@ struct QQuickShapeGradientCacheKey
     }
 };
 
-inline uint qHash(const QQuickShapeGradientCacheKey &v, uint seed = 0)
+inline size_t qHash(const QQuickShapeGradientCacheKey &v, uint seed = 0)
 {
     uint h = seed + v.spread;
     for (int i = 0; i < 3 && i < v.stops.count(); ++i)

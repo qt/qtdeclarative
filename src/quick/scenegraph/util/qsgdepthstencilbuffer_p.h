@@ -140,7 +140,7 @@ private:
     friend class QSGDepthStencilBuffer;
 };
 
-extern uint qHash(const QSGDepthStencilBuffer::Format &format);
+extern size_t qHash(const QSGDepthStencilBuffer::Format &format);
 
 QT_END_NAMESPACE
 

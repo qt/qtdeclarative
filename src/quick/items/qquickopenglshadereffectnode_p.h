@@ -81,7 +81,7 @@ struct QQuickOpenGLShaderEffectMaterialKey {
     bool operator != (const QQuickOpenGLShaderEffectMaterialKey &other) const;
 };
 
-uint qHash(const QQuickOpenGLShaderEffectMaterialKey &key);
+size_t qHash(const QQuickOpenGLShaderEffectMaterialKey &key);
 
 class QQuickCustomMaterialShader;
 class QQuickOpenGLShaderEffectNode;

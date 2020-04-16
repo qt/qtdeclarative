@@ -77,7 +77,7 @@ struct ObjectItem {
 inline bool operator ==(const ObjectItem &a, const ObjectItem &b)
 { return a.o->d() == b.o->d(); }
 
-inline int qHash(const ObjectItem &i, uint seed = 0)
+inline size_t qHash(const ObjectItem &i, uint seed = 0)
 { return ::qHash((void *)i.o->d(), seed); }
 
 struct JsonObject : Object {

@@ -136,7 +136,7 @@ private:
     QStringList *m_typeRegistrationFailures = nullptr;
 };
 
-inline uint qHash(const QQmlMetaTypeData::VersionedUri &v)
+inline size_t qHash(const QQmlMetaTypeData::VersionedUri &v)
 {
     return v.uri.hash() ^ qHash(v.majorVersion);
 }

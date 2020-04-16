@@ -351,7 +351,7 @@ bool QQuickOpenGLShaderEffectMaterialKey::operator != (const QQuickOpenGLShaderE
     return !(*this == other);
 }
 
-uint qHash(const QQuickOpenGLShaderEffectMaterialKey &key)
+size_t qHash(const QQuickOpenGLShaderEffectMaterialKey &key)
 {
     uint hash = 1;
     typedef QQuickOpenGLShaderEffectMaterialKey Key;

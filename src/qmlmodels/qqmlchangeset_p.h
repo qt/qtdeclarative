@@ -149,7 +149,7 @@ private:
 Q_DECLARE_TYPEINFO(QQmlChangeSet::Change, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(QQmlChangeSet::MoveKey, Q_PRIMITIVE_TYPE);
 
-inline uint qHash(const QQmlChangeSet::MoveKey &key) { return qHash(qMakePair(key.moveId, key.offset)); }
+inline size_t qHash(const QQmlChangeSet::MoveKey &key) { return qHash(qMakePair(key.moveId, key.offset)); }
 inline bool operator ==(const QQmlChangeSet::MoveKey &l, const QQmlChangeSet::MoveKey &r) {
     return l.moveId == r.moveId && l.offset == r.offset; }
 

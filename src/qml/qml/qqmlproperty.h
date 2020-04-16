@@ -127,7 +127,7 @@ private:
 };
 typedef QList<QQmlProperty> QQmlProperties;
 
-inline uint qHash (const QQmlProperty &key)
+inline size_t qHash (const QQmlProperty &key)
 {
     return qHash(key.object()) + qHash(key.name());
 }

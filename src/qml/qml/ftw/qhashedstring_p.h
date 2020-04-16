@@ -172,12 +172,12 @@ private:
     mutable quint32 m_hash = 0;
 };
 
-inline uint qHash(const QHashedString &string)
+inline size_t qHash(const QHashedString &string)
 {
     return uint(string.hash());
 }
 
-inline uint qHash(const QHashedStringRef &string)
+inline size_t qHash(const QHashedStringRef &string)
 {
     return uint(string.hash());
 }

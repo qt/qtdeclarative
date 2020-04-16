@@ -698,7 +698,7 @@ void QQuickTextNodeEngine::addFrameDecorations(QTextDocument *document, QTextFra
     }
 }
 
-uint qHash(const QQuickTextNodeEngine::BinaryTreeNodeKey &key)
+size_t qHash(const QQuickTextNodeEngine::BinaryTreeNodeKey &key)
 {
     // Just use the default hash for pairs
     return qHash(qMakePair(key.fontEngine, qMakePair(key.clipNode,

@@ -83,7 +83,7 @@ public:
     int hitCount;
 };
 
-inline uint qHash(const BreakPoint &b, uint seed = 0) Q_DECL_NOTHROW
+inline size_t qHash(const BreakPoint &b, uint seed = 0) Q_DECL_NOTHROW
 {
     return qHash(b.fileName, seed) ^ b.lineNumber;
 }

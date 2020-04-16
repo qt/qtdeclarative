@@ -207,7 +207,7 @@ void QSGDepthStencilBufferManager::insertBuffer(const QSharedPointer<QSGDepthSte
     m_buffers.insert(buffer->m_format, buffer.toWeakRef());
 }
 
-uint qHash(const QSGDepthStencilBuffer::Format &format)
+size_t qHash(const QSGDepthStencilBuffer::Format &format)
 {
     return qHash(qMakePair(format.size.width(), format.size.height()))
             ^ (uint(format.samples) << 12) ^ (uint(format.attachments) << 28);

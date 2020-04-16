@@ -97,7 +97,7 @@ private:
 QDataStream &operator>>(QDataStream &stream, QQmlProfilerEventType &type);
 QDataStream &operator<<(QDataStream &stream, const QQmlProfilerEventType &type);
 
-inline uint qHash(const QQmlProfilerEventType &type)
+inline size_t qHash(const QQmlProfilerEventType &type)
 {
     return qHash(type.location())
             ^ (((type.message() << 12) & 0xf000)                               // 4 bits message
