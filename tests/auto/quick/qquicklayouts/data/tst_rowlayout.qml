@@ -1035,6 +1035,63 @@ Item {
         }
 
         Component {
+            id: rearrangeFixedSizeLayout_Component
+            RowLayout {
+                id: layout
+                width: 200
+                height: 20
+                spacing: 0
+                RowLayout {
+                    id: row
+                    spacing: 0
+                    Rectangle {
+                        id: r0
+                        color: 'red'
+                        implicitWidth: 20
+                        implicitHeight: 20
+                    }
+                    Rectangle {
+                        id: r1
+                        color: 'grey'
+                        implicitWidth: 80
+                        implicitHeight: 20
+                    }
+                }
+                ColumnLayout {
+                    id: row2
+                    spacing: 0
+                    Rectangle {
+                        id: r2_0
+                        color: 'blue'
+                        Layout.fillWidth: true
+                        implicitWidth: 100
+                        implicitHeight: 20
+                    }
+                }
+            }
+        }
+        function test_rearrangeFixedSizeLayout()
+        {
+            var layout = createTemporaryObject(rearrangeFixedSizeLayout_Component, testCase)
+            var row = layout.children[0]
+            var r0 = row.children[0]
+            var r1 = row.children[1]
+
+            waitForRendering(layout)
+            compare(itemRect(r0),  [0,0,20,20])
+            compare(itemRect(r1), [20,0,80,20])
+
+            // just swap their widths. The layout should keep the same size
+            r0.implicitWidth = 80
+            r1.implicitWidth = 20
+            waitForRendering(layout)
+            // even if the layout did not change size, it should rearrange its children
+            compare(itemRect(row), [0,0, 100, 20])
+            compare(itemRect(r0),  [0,0,80,20])
+            compare(itemRect(r1), [80,0,20,20])
+        }
+
+        Component {
             id: changeChildrenOfHiddenLayout_Component
             RowLayout {
                 property int childCount: 1
