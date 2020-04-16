@@ -23,7 +23,7 @@ qhp.QtQmlModels.sortPages  = true
 
 tagfile      = qtqmlmodels.tags
 
-depends += qtcore qtqml qtquick qtdoc qtqmlworkerscript qtquickcontrols qtxmlpatterns
+depends += qtcore qtqml qtquick qtdoc qtqmlworkerscript qtquickcontrols
 
 headerdirs  += .. \
                ../../imports/labsmodels
