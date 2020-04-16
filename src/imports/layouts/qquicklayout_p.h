@@ -105,6 +105,9 @@ public:
     void itemDestroyed(QQuickItem *item) override;
     void itemVisibilityChanged(QQuickItem *item) override;
 
+    Q_INVOKABLE void _q_dumpLayoutTree() const;
+    void dumpLayoutTreeRecursive(int level, QString &buf) const;
+
 protected:
     void updatePolish() override;
 
