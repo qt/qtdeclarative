@@ -1163,6 +1163,82 @@ QLayoutPolicy::Policy QQuickLayout::effectiveSizePolicy_helper(QQuickItem *item,
 
 }
 
+void QQuickLayout::_q_dumpLayoutTree() const
+{
+    QString buf;
+    dumpLayoutTreeRecursive(0, buf);
+    qDebug("\n%s", qPrintable(buf));
+}
 
+void QQuickLayout::dumpLayoutTreeRecursive(int level, QString &buf) const
+{
+    auto formatLine = [&level](const char *fmt) {
+        QString ss(level *4, QLatin1Char(' '));
+        return QString::fromLatin1("%1%2\n").arg(ss).arg(fmt);
+    };
+
+    auto f2s = [](qreal f) {
+        return QString::number(f);
+    };
+    auto b2s = [](bool b) {
+        static const char *strBool[] = {"false", "true"};
+        return QLatin1String(strBool[int(b)]);
+    };
+
+    buf += formatLine("%1 {").arg(QQmlMetaType::prettyTypeName(this));
+    ++level;
+    buf += formatLine("// Effective calculated values:");
+    buf += formatLine("sizeHintDirty: %2").arg(m_dirty);
+    QSizeF min = sizeHint(Qt::MinimumSize);
+    buf += formatLine("sizeHint.min : [%1, %2]").arg(f2s(min.width()), 5).arg(min.height(), 5);
+    QSizeF pref = sizeHint(Qt::PreferredSize);
+    buf += formatLine("sizeHint.pref: [%1, %2]").arg(pref.width(), 5).arg(pref.height(), 5);
+    QSizeF max = sizeHint(Qt::MaximumSize);
+    buf += formatLine("sizeHint.max : [%1, %2]").arg(f2s(max.width()), 5).arg(f2s(max.height()), 5);
+
+    for (QQuickItem *item : childItems()) {
+        buf += QLatin1Char('\n');
+        if (QQuickLayout *childLayout = qobject_cast<QQuickLayout*>(item)) {
+            childLayout->dumpLayoutTreeRecursive(level, buf);
+        } else {
+            buf += formatLine("%1 {").arg(QQmlMetaType::prettyTypeName(item));
+            ++level;
+            if (item->implicitWidth() > 0)
+                buf += formatLine("implicitWidth: %1").arg(f2s(item->implicitWidth()));
+            if (item->implicitHeight() > 0)
+                buf += formatLine("implicitHeight: %1").arg(f2s(item->implicitHeight()));
+            QSizeF min;
+            QSizeF pref;
+            QSizeF max;
+            QQuickLayoutAttached *info = attachedLayoutObject(item, false);
+            if (info) {
+                min = QSizeF(info->minimumWidth(), info->minimumHeight());
+                pref = QSizeF(info->preferredWidth(), info->preferredHeight());
+                max = QSizeF(info->maximumWidth(), info->maximumHeight());
+                if (info->isExtentExplicitlySet(Qt::Horizontal, Qt::MinimumSize))
+                    buf += formatLine("Layout.minimumWidth: %1").arg(f2s(min.width()));
+                if (info->isExtentExplicitlySet(Qt::Vertical, Qt::MinimumSize))
+                    buf += formatLine("Layout.minimumHeight: %1").arg(f2s(min.height()));
+                if (pref.width() >= 0)
+                    buf += formatLine("Layout.preferredWidth: %1").arg(f2s(pref.width()));
+                if (pref.height() >= 0)
+                    buf += formatLine("Layout.preferredHeight: %1").arg(f2s(pref.height()));
+                if (info->isExtentExplicitlySet(Qt::Horizontal, Qt::MaximumSize))
+                    buf += formatLine("Layout.maximumWidth: %1").arg(f2s(max.width()));
+                if (info->isExtentExplicitlySet(Qt::Vertical, Qt::MaximumSize))
+                    buf += formatLine("Layout.maximumHeight: %1").arg(f2s(max.height()));
+
+                if (info->isFillWidthSet())
+                    buf += formatLine("Layout.fillWidth: %1").arg(b2s(info->fillWidth()));
+                if (info->isFillHeightSet())
+                    buf += formatLine("Layout.fillHeight: %1").arg(b2s(info->fillHeight()));
+            }
+            --level;
+            buf += formatLine("}");
+        }
+    }
+    --level;
+    buf += formatLine("}");
+}
 
 QT_END_NAMESPACE
