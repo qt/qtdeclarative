@@ -30,6 +30,7 @@
 #define FOREIGN_H
 
 #include <QtCore/qobject.h>
+#include <QtCore/qsize.h>
 
 class Foreign : public QObject
 {
@@ -47,6 +48,12 @@ signals:
 
 private:
     int m_things = 0;
+};
+
+class SizeGadget : public QSize
+{
+    Q_GADGET
+    Q_PROPERTY(int height READ height WRITE setHeight FINAL)
 };
 
 #endif // FOREIGN_H
