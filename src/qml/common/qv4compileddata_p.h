@@ -130,6 +130,13 @@ struct Location
     };
 
     Location() : _dummy(0) { }
+    Location(quint32 l, quint32 c)
+    {
+        line = l;
+        column = c;
+        Q_ASSERT(line == l);
+        Q_ASSERT(column == c);
+    }
 
     inline bool operator<(const Location &other) const {
         return line < other.line ||
