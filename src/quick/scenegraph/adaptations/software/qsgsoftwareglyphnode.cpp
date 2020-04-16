@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qsgsoftwareglyphnode_p.h"
+#include <QtGui/private/qrawfont_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -52,28 +53,38 @@ QSGSoftwareGlyphNode::QSGSoftwareGlyphNode()
 namespace {
 QRectF calculateBoundingRect(const QPointF &position, const QGlyphRun &glyphs)
 {
-    qreal minX = 0;
-    qreal minY = 0;
-    qreal maxX = 0;
-    qreal maxY = 0;
+    QFixed minX;
+    QFixed minY;
+    QFixed maxX;
+    QFixed maxY;
 
-    for (int i = 0, n = qMin(glyphs.glyphIndexes().size(), glyphs.positions().size()); i < n; ++i) {
-        QRectF glyphRect = glyphs.rawFont().boundingRect(glyphs.glyphIndexes()[i]);
-        glyphRect.translate(glyphs.positions()[i]);
+    QRawFontPrivate *rawFontD = QRawFontPrivate::get(glyphs.rawFont());
+    QFontEngine *fontEngine = rawFontD->fontEngine;
+
+    QFontEngine::GlyphFormat glyphFormat = fontEngine->glyphFormat != QFontEngine::Format_None ? fontEngine->glyphFormat : QFontEngine::Format_A32;
+
+    const QVector<uint> glyphIndexes = glyphs.glyphIndexes();
+    const QVector<QPointF> glyphPositions = glyphs.positions();
+    for (int i = 0, n = qMin(glyphIndexes.size(), glyphPositions.size()); i < n; ++i) {
+        glyph_metrics_t gm = fontEngine->alphaMapBoundingBox(glyphIndexes.at(i), QFixed(), QTransform(), glyphFormat);
+
+        gm.x += QFixed::fromReal(glyphPositions.at(i).x());
+        gm.y += QFixed::fromReal(glyphPositions.at(i).y());
 
         if (i == 0) {
-            minX = glyphRect.left();
-            minY = glyphRect.top();
-            maxX = glyphRect.right();
-            maxY = glyphRect.bottom();
+            minX = gm.x;
+            minY = gm.y;
+            maxX = gm.x + gm.width;
+            maxY = gm.y + gm.height;
         } else {
-            minX = qMin(glyphRect.left(), minX);
-            minY = qMin(glyphRect.top(), minY);
-            maxX = qMax(glyphRect.right(),maxX);
-            maxY = qMax(glyphRect.bottom(), maxY);
+            minX = qMin(gm.x, minX);
+            minY = qMin(gm.y, minY);
+            maxX = qMax(gm.x + gm.width, maxX);
+            maxY = qMax(gm.y + gm.height, maxY);
         }
     }
-    QRectF boundingRect(QPointF(minX, minY), QPointF(maxX, maxY));
+
+    QRectF boundingRect(QPointF(minX.toReal(), minY.toReal()), QPointF(maxX.toReal(), maxY.toReal()));
     return boundingRect.translated(position - QPointF(0.0, glyphs.rawFont().ascent()));
 }
 }
