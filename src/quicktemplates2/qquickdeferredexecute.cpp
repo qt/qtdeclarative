@@ -42,6 +42,8 @@
 #include <QtQml/private/qqmlcomponent_p.h>
 #include <QtQml/private/qqmlobjectcreator_p.h>
 
+#include <deque>
+
 QT_BEGIN_NAMESPACE
 
 namespace QtQuickPrivate {
@@ -89,21 +91,17 @@ static bool beginDeferred(QQmlEnginePrivate *enginePriv, const QQmlProperty &pro
 
         enginePriv->inProgressCreations++;
 
-        typedef QMultiHash<int, const QV4::CompiledData::Binding *> QV4PropertyBindingHash;
-        auto it = std::reverse_iterator<QV4PropertyBindingHash::iterator>(range.second);
-        auto last = std::reverse_iterator<QV4PropertyBindingHash::iterator>(range.first);
+        std::deque<const QV4::CompiledData::Binding *> reversedBindings;
+        std::copy(range.first, range.second, std::front_inserter(reversedBindings));
 #if Q_QML_PRIVATE_API_VERSION < 7
-        while (it != last) {
-            if (!state->creator->populateDeferredBinding(property, deferData, *it))
+        for (const QV4::CompiledData::Binding *binding : reversedBindings) {
+            if (!state->creator->populateDeferredBinding(property, deferData, binding))
                 state->errors << state->creator->errors;
-            ++it;
         }
 #else
         state->creator->beginPopulateDeferred(deferData->context);
-        while (it != last) {
-            state->creator->populateDeferredBinding(property, deferData->deferredIdx, *it);
-            ++it;
-        }
+        for (const QV4::CompiledData::Binding *binding : reversedBindings)
+            state->creator->populateDeferredBinding(property, deferData->deferredIdx, binding);
         state->creator->finalizePopulateDeferred();
         state->errors << state->creator->errors;
 #endif
