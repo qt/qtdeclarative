@@ -58,4 +58,21 @@ void tst_qmltyperegistrar::qmltypesHasFileNames()
     QVERIFY(qmltypesData.contains("file: \"tst_qmltyperegistrar.h\""));
 }
 
+void tst_qmltyperegistrar::qmltypesHasFlags()
+{
+    QVERIFY(qmltypesData.contains("name: \"Flags\""));
+    QVERIFY(qmltypesData.contains("alias: \"Flag\""));
+    QVERIFY(qmltypesData.contains("isFlag: true"));
+}
+
+void tst_qmltyperegistrar::superAndForeignTypes()
+{
+    QVERIFY(qmltypesData.contains("values: [\"Pixel\", \"Centimeter\", \"Inch\", \"Point\"]"));
+    QVERIFY(qmltypesData.contains("name: \"SizeGadget\""));
+    QVERIFY(qmltypesData.contains("prototype: \"SizeEnums\""));
+    QVERIFY(qmltypesData.contains("Property { name: \"height\"; type: \"int\" }"));
+    QVERIFY(qmltypesData.contains("Property { name: \"width\"; type: \"int\" }"));
+    QVERIFY(qmltypesData.contains("Method { name: \"sizeToString\"; type: \"string\" }"));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

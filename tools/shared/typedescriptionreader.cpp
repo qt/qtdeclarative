@@ -360,6 +360,10 @@ void TypeDescriptionReader::readEnum(UiObjectDefinition *ast, const ScopeTree::P
         QString name = toString(script->qualifiedId);
         if (name == QLatin1String("name")) {
             metaEnum.setName(readStringBinding(script));
+        } else if (name == QLatin1String("alias")) {
+            metaEnum.setAlias(readStringBinding(script));
+        } else if (name == QLatin1String("isFlag")) {
+            metaEnum.setIsFlag(readBoolBinding(script));
         } else if (name == QLatin1String("values")) {
             readEnumValues(script, &metaEnum);
         } else {

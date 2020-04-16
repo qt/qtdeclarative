@@ -63,6 +63,7 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
                                            const QVector<QJsonObject> &foreign,
                                            CollectMode mode, QTypeRevision defaultRevision)
 {
+    const QJsonObject *origClassDef = classDef; // if we find QML.Foreign, classDef changes.
     if (file.isEmpty() && classDef->value(QLatin1String("registerable")).toBool())
         file = classDef->value(QLatin1String("inputFile")).toString();
     const auto classInfos = classDef->value(QLatin1String("classInfos")).toArray();
@@ -132,21 +133,33 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
         collectExtraVersions(classDef, QString::fromLatin1("signals"), revisions);
     }
 
-    const auto supers = classDef->value(QLatin1String("superClasses")).toArray();
-    if (!supers.isEmpty()) {
-        const QJsonObject superObject = supers.first().toObject();
+    auto supers = classDef->value(QLatin1String("superClasses")).toArray();
+    if (classDef != origClassDef) {
+        const QJsonArray origSupers = origClassDef->value(QLatin1String("superClasses")).toArray();
+        for (const QJsonValue &origSuper : origSupers)
+            supers.append(origSuper);
+    }
+
+    for (const QJsonValue &superValue : qAsConst(supers)) {
+        const QJsonObject superObject = superValue.toObject();
         if (superObject[QLatin1String("access")].toString() == QLatin1String("public")) {
             const QString superName = superObject[QLatin1String("name")].toString();
-            if (mode == TopLevel && superClass.isEmpty())
-                superClass = superName;
 
             const CollectMode superMode = (mode == TopLevel) ? SuperClass : AttachedType;
             if (const QJsonObject *other = findType(types, superName))
                 collect(other, types, foreign, superMode, defaultRevision);
             else if (const QJsonObject *other = findType(foreign, superName))
                 collect(other, types, foreign, superMode, defaultRevision);
+            else // If we cannot locate a type for it, there is no point in recording the superClass
+                continue;
+
+            if (mode == TopLevel && superClass.isEmpty())
+                superClass = superName;
         }
     }
+
+    if (mode != TopLevel)
+        return;
 
     if (!addedInRevision.isValid()) {
         revisions.append(defaultRevision);

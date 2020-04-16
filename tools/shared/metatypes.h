@@ -45,8 +45,10 @@
 
 class MetaEnum
 {
-    QString m_name;
     QStringList m_keys;
+    QString m_name;
+    QString m_alias;
+    bool m_isFlag = false;
 
 public:
     MetaEnum() = default;
@@ -56,6 +58,12 @@ public:
 
     QString name() const { return m_name; }
     void setName(const QString &name) { m_name = name; }
+
+    QString alias() const { return m_alias; }
+    void setAlias(const QString &alias) { m_alias = alias; }
+
+    bool isFlag() const { return m_isFlag; }
+    void setIsFlag(bool isFlag) { m_isFlag = isFlag; }
 
     void addKey(const QString &key) { m_keys.append(key); }
     QStringList keys() const { return m_keys; }
