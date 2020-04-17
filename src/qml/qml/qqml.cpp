@@ -72,6 +72,37 @@ void qmlRegisterModule(const char *uri, int versionMajor, int versionMinor)
     QQmlMetaType::registerModule(uri, QTypeRevision::fromVersion(versionMajor, versionMinor));
 }
 
+/*!
+ * Registers an implicit import for module \a uri of major version \a majorVersion
+ *
+ * This has the same effect as an \c import statement in a qmldir file: Whenever
+ * \a uri version \a majorVersion is imported, \a import is automatically
+ * imported, too, with the same version.
+ *
+ * \sa qmlUnregisterModuleImport()
+ */
+void qmlRegisterModuleImport(const char *uri, int majorVersion, const char *import)
+{
+    QQmlMetaType::registerModuleImport(
+                QString::fromUtf8(uri), QTypeRevision::fromMajorVersion(majorVersion),
+                QString::fromUtf8(import));
+}
+
+/*!
+ * Removes a module import previously registered with qmlRegisterModuleImport()
+ *
+ * Calling this function makes sure that \a import is not automatically imported
+ * anymore when \a uri of version \a majorVersion is.
+ *
+ * \sa qmlRegisterModuleImport()
+ */
+void qmlUnregisterModuleImport(const char *uri, int majorVersion, const char *import)
+{
+    QQmlMetaType::unregisterModuleImport(
+                QString::fromUtf8(uri), QTypeRevision::fromMajorVersion(majorVersion),
+                QString::fromUtf8(import));
+}
+
 //From qqml.h
 int qmlTypeId(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
 {

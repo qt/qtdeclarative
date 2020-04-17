@@ -618,6 +618,24 @@ bool QQmlMetaType::protectModule(const QString &uri, QTypeRevision version)
     return false;
 }
 
+void QQmlMetaType::registerModuleImport(const QString &uri, QTypeRevision version, const QString &import)
+{
+    QQmlMetaTypeDataPtr data;
+
+    QQmlTypeModule *module = getTypeModule(uri, version, data);
+    Q_ASSERT(module);
+    module->addImport(import);
+}
+
+void QQmlMetaType::unregisterModuleImport(const QString &uri, QTypeRevision version, const QString &import)
+{
+    QQmlMetaTypeDataPtr data;
+
+    QQmlTypeModule *module = getTypeModule(uri, version, data);
+    Q_ASSERT(module);
+    module->removeImport(import);
+}
+
 void QQmlMetaType::registerModule(const char *uri, QTypeRevision version)
 {
     QQmlMetaTypeDataPtr data;
@@ -917,7 +935,22 @@ bool QQmlMetaType::isModule(const QString &module, QTypeRevision version)
 QQmlTypeModule *QQmlMetaType::typeModule(const QString &uri, QTypeRevision version)
 {
     QQmlMetaTypeDataPtr data;
-    return data->uriToModule.value(QQmlMetaTypeData::VersionedUri(uri, version));
+
+    if (version.hasMajorVersion())
+        return data->uriToModule.value(QQmlMetaTypeData::VersionedUri(uri, version));
+
+    QQmlTypeModule *latestModule = nullptr;
+    for (QQmlMetaTypeData::TypeModules::ConstIterator iter = data->uriToModule.cbegin();
+         iter != data->uriToModule.cend(); ++iter) {
+        QQmlTypeModule *module = *iter;
+        if (module->module() != uri)
+            continue;
+
+        if (!latestModule || module->majorVersion() > latestModule->majorVersion())
+            latestModule = module;
+    }
+
+    return latestModule;
 }
 
 QList<QQmlPrivate::AutoParentFunction> QQmlMetaType::parentFunctions()

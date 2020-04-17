@@ -69,6 +69,8 @@ public:
     const QString module;
     const quint8 majorVersion = 0;
 
+    QStringList imports;
+
     // Can only ever decrease
     QAtomicInt minMinorVersion = std::numeric_limits<quint8>::max();
 

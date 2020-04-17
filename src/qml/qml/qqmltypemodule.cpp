@@ -175,4 +175,19 @@ void QQmlTypeModule::walkCompositeSingletons(const std::function<void(const QQml
     }
 }
 
+QStringList QQmlTypeModule::imports() const
+{
+    return d->imports;
+}
+
+void QQmlTypeModule::addImport(const QString &import)
+{
+    d->imports.append(import);
+}
+
+void QQmlTypeModule::removeImport(const QString &import)
+{
+    d->imports.removeAll(import);
+}
+
 QT_END_NAMESPACE

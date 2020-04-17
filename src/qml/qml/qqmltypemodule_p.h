@@ -94,6 +94,10 @@ public:
 
     void walkCompositeSingletons(const std::function<void(const QQmlType &)> &callback) const;
 
+    void addImport(const QString &import);
+    void removeImport(const QString &import);
+    QStringList imports() const;
+
 private:
     QQmlTypeModulePrivate *d;
 };

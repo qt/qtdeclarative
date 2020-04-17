@@ -712,14 +712,20 @@ void QQmlTypeLoader::Blob::dependencyComplete(QQmlDataBlob *blob)
 bool QQmlTypeLoader::Blob::loadImportDependencies(PendingImportPtr currentImport, const QString &qmldirUri, QList<QQmlError> *errors)
 {
     const QQmlTypeLoaderQmldirContent qmldir = typeLoader()->qmldirContent(qmldirUri);
-    for (const QString &implicitImports: qmldir.imports()) {
+    const QQmlTypeModule *module = QQmlMetaType::typeModule(currentImport->uri,
+                                                            currentImport->version);
+    const QStringList implicitImports = module ? (module->imports() + qmldir.imports())
+                                               : qmldir.imports();
+    for (const QString &implicitImport : implicitImports) {
         auto dependencyImport = std::make_shared<PendingImport>();
-        dependencyImport->uri = implicitImports;
+        dependencyImport->uri = implicitImport;
         dependencyImport->qualifier = currentImport->qualifier;
         dependencyImport->version = currentImport->version;
         if (!addImport(dependencyImport, errors))
             return false;
     }
+
+
     return true;
 }
 

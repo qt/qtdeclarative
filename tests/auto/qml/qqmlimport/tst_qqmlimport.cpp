@@ -50,6 +50,7 @@ private slots:
     void removeDynamicPlugin();
     void partialImportVersions_data();
     void partialImportVersions();
+    void registerModuleImport();
     void cleanup();
 };
 
@@ -334,6 +335,27 @@ void tst_QQmlImport::partialImportVersions()
     if (valid) {
         QScopedPointer<QObject> obj(component.create());
         QVERIFY(!obj.isNull());
+    }
+}
+
+void tst_QQmlImport::registerModuleImport()
+{
+    qmlRegisterModuleImport("MyPluginSupported", 2, "QtQuick");
+    {
+        QQmlEngine engine;
+        engine.addImportPath(directory());
+        QQmlComponent component(&engine);
+        component.setData("import MyPluginSupported; Item {}", QUrl());
+        QVERIFY(component.isReady());
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+    }
+    qmlUnregisterModuleImport("MyPluginSupported", 2, "QtQuick");
+    {
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.setData("import MyPluginSupported; Item {}", QUrl());
+        QVERIFY(component.isError());
     }
 }
 
