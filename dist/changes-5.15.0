@@ -1,0 +1,80 @@
+Qt 5.15 introduces many new features and improvements as well as bugfixes
+over the 5.14.x series. For more details, refer to the online documentation
+included in this distribution. The documentation is also available online:
+
+https://doc.qt.io/qt-5/index.html
+
+The Qt version 5.15 series is binary compatible with the 5.14.x series.
+Applications compiled for 5.14 will continue to run with 5.15.
+
+Some of the changes listed in this file include issue tracking numbers
+corresponding to tasks in the Qt Bug Tracker:
+
+https://bugreports.qt.io/
+
+Each of these identifiers can be entered in the bug tracker to obtain more
+information about a particular change.
+
+Qt 5.15 introduces many new features and improvements as well as bugfixes
+over the 5.14.x series. For more details, refer to the online documentation
+included in this distribution. The documentation is also available online:
+
+  https://doc.qt.io/qt-5.15/index.html
+
+The Qt version 5.15 series is binary compatible with the 5.14.x series.
+Applications compiled for 5.14 will continue to run with 5.15.
+
+Some of the changes listed in this file include issue tracking numbers
+corresponding to tasks in the Qt Bug Tracker:
+
+  https://bugreports.qt.io/
+
+Each of these identifiers can be entered in the bug tracker to obtain more
+information about a particular change.
+
+****************************************************************************
+*                        Important Behavior Changes                        *
+****************************************************************************
+
+ - [QTBUG-72085] Old delegate items (background, contentItem, etc.) are no
+   longer destroyed, as they are technically owned by user code. Instead,
+   they are hidden, unparented from the control (QQuickItem parent, not
+   QObject), and Accessible.ignored is set to true. This prevents them from
+   being unintentionally visible and interfering with the accessibility
+   tree when a new delegate item is set.
+
+   See the following page for more information:
+
+   https://doc.qt.io/qt-5/qtquickcontrols2-customize.html#considerations-for-custom-styles
+
+****************************************************************************
+*                                 Controls                                 *
+****************************************************************************
+
+- Added HorizontalHeaderView and VerticalHeaderView for use with TableView.
+- Added selectTextByMouse property to ComboBox.
+- [QTBUG-82473] Fixed Menu not taking padding into account when checking
+  if it is interactive.
+- [QTBUG-73687] Fixed Menu positioning when a scale is set.
+- [QTBUG-81867] Fixed hidden SplitView items causing visible items to not
+  be resizable.
+- [QTBUG-82020] Fixed ComboBox text not being retranslated after a
+  translator is installed.
+- [QTBUG-79501] Fixed keyboard navigation via tab in non-modal popups
+  (i.e. Drawer).
+- [QTBUG-78858] Fixed Editable ComboBox's auto-completion performance.
+
+****************************************************************************
+*                                  Styles                                  *
+****************************************************************************
+
+Material
+--------
+- [QTBUG-70768] Added missing visual distinction between enabled and
+  disabled sliders.
+- [QTBUG-70768] Aligned Slider's visuals closer to the Material Design
+  guidelines.
+
+Imagine
+-------
+- [QTBUG-82463] Fixed squished Dial.
