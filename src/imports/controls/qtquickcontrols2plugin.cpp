@@ -37,6 +37,7 @@
 #include <QtCore/qdir.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qfileinfo.h>
+#include <QtCore/qloggingcategory.h>
 #include <QtCore/qpluginloader.h>
 #include <QtCore/private/qfileselector_p.h>
 #include <QtQml/qqmlfile.h>
@@ -50,6 +51,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_LOGGING_CATEGORY(lcQtQuickControlsStylePlugin, "qt.quick.controls.qtquickcontrols2plugin")
+
 class QtQuickControls2Plugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
@@ -59,16 +62,40 @@ public:
     QtQuickControls2Plugin(QObject *parent = nullptr);
     ~QtQuickControls2Plugin();
 
-    void initializeEngine(QQmlEngine *engine, const char *uri) override;
     void registerTypes(const char *uri) override;
     void unregisterTypes() override;
 
 private:
-    void init();
-
-    QList<QQuickStylePlugin *> loadStylePlugins();
     QQuickTheme *createTheme(const QString &name);
+
+    bool registeredFallbackImport = false;
 };
+
+static const char *qtQuickControlsUri = "QtQuick.Controls";
+
+QString styleUri()
+{
+    const QString style = QQuickStyle::name();
+    if (!QQuickStylePrivate::isCustomStyle()) {
+        // The style set is a built-in style.
+        const QString styleName = QQuickStylePrivate::effectiveStyleName(style);
+        return QString::fromLatin1("QtQuick.Controls.%1").arg(styleName);
+    }
+
+    // This is a custom style, so just use the name as the import uri.
+    QString styleName = style;
+    if (styleName.startsWith(QLatin1String(":/")))
+        styleName.remove(0, 2);
+    return styleName;
+}
+
+QString fallbackStyleUri()
+{
+    // The fallback style must be a built-in style, so we don't need to check for custom styles here.
+    const QString fallbackStyle = QQuickStylePrivate::fallbackStyle();
+    const QString fallbackStyleName = QQuickStylePrivate::effectiveStyleName(fallbackStyle);
+    return QString::fromLatin1("QtQuick.Controls.%1").arg(fallbackStyleName);
+}
 
 QtQuickControls2Plugin::QtQuickControls2Plugin(QObject *parent) : QQmlExtensionPlugin(parent)
 {
@@ -80,88 +107,83 @@ QtQuickControls2Plugin::~QtQuickControls2Plugin()
     // initialization and cleanup, as plugins are not unloaded on macOS.
 }
 
-void QtQuickControls2Plugin::initializeEngine(QQmlEngine *engine, const char */*uri*/)
+void QtQuickControls2Plugin::registerTypes(const char *uri)
 {
-    engine->addUrlInterceptor(&QQuickStylePrivate::urlInterceptor);
-    init();
-}
+    qCDebug(lcQtQuickControlsStylePlugin) << "registerTypes() called with uri" << uri;
 
-void QtQuickControls2Plugin::registerTypes(const char */*uri*/)
-{
-    QQuickStylePrivate::init(baseUrl());
+    // It's OK that the style is resolved more than once; some accessors like name() cause it to be called, for example.
+    QQuickStylePrivate::init();
+
+    const QString styleName = QQuickStylePrivate::effectiveStyleName(QQuickStyle::name());
+    const QString fallbackStyleName = QQuickStylePrivate::effectiveStyleName(QQuickStylePrivate::fallbackStyle());
+    qCDebug(lcQtQuickControlsStylePlugin) << "style:" << QQuickStyle::name() << "effective style:" << styleName
+        << "fallback style:" << QQuickStylePrivate::fallbackStyle() << "effective fallback style:" << fallbackStyleName;
+
+    createTheme(styleName);
+
+    // If the style is Default, we don't need to register the fallback because the Default style
+    // provides all controls. Also, if we didn't return early here, we can get an infinite import loop
+    // when the style is set to Default.
+    if (styleName != fallbackStyleName && styleName != QLatin1String("Default")) {
+        const QString fallbackstyleUri = ::fallbackStyleUri();
+        qCDebug(lcQtQuickControlsStylePlugin) << "calling qmlRegisterModuleImport() to register fallback style with"
+            << "uri \"" << qtQuickControlsUri << "\" moduleMajor" << QQmlModuleImportModuleAny << "import" << fallbackstyleUri
+            << "importMajor" << QQmlModuleImportAuto;
+        // The fallback style must be a built-in style, so we match the version number.
+        qmlRegisterModuleImport(qtQuickControlsUri, QQmlModuleImportModuleAny, fallbackstyleUri.toUtf8().constData(),
+            QQmlModuleImportAuto, QQmlModuleImportAuto);
+        registeredFallbackImport = true;
+    }
+
+    const QString styleUri = ::styleUri();
+    // If the user imports QtQuick.Controls 2.15, and they're using the Material style, we should import version 2.15.
+    // However, if they import QtQuick.Controls 2.15, but are using a custom style, we want to use the latest version
+    // number of their style.
+    const int importMajor = !QQuickStylePrivate::isCustomStyle() ? QQmlModuleImportAuto : QQmlModuleImportLatest;
+    qCDebug(lcQtQuickControlsStylePlugin).nospace() << "calling qmlRegisterModuleImport() to register primary style with"
+        << " uri \"" << qtQuickControlsUri << "\" moduleMajor " << importMajor << " import " << styleUri
+        << " importMajor " << importMajor;
+    qmlRegisterModuleImport(qtQuickControlsUri, QQmlModuleImportModuleAny, styleUri.toUtf8().constData(), importMajor);
 
     const QString style = QQuickStyle::name();
     if (!style.isEmpty())
-        QFileSelectorPrivate::addStatics(QStringList() << style.toLower());
+        QFileSelectorPrivate::addStatics(QStringList() << style);
 }
 
 void QtQuickControls2Plugin::unregisterTypes()
 {
+    qCDebug(lcQtQuickControlsStylePlugin) << "unregisterTypes() called";
+
+    if (registeredFallbackImport) {
+        const QString fallbackStyleUri = ::fallbackStyleUri();
+        qmlUnregisterModuleImport(qtQuickControlsUri, QQmlModuleImportModuleAny, fallbackStyleUri.toUtf8().constData(),
+            QQmlModuleImportAuto, QQmlModuleImportAuto);
+    }
+
+    const QString primary = QQuickStylePrivate::effectiveStyleName(QQuickStyle::name());
+    const QString styleUri = ::styleUri();
+    const int importMajor = !QQuickStylePrivate::isCustomStyle() ? QQmlModuleImportAuto : QQmlModuleImportLatest;
+    qmlUnregisterModuleImport(qtQuickControlsUri, QQmlModuleImportModuleAny, styleUri.toUtf8().constData(), importMajor);
+
     QQuickStylePrivate::reset();
 }
 
-void QtQuickControls2Plugin::init()
-{
-    const QString style = QQuickStyle::name();
-    QQuickTheme *theme = createTheme(style.isEmpty() ? QLatin1String("Default") : style);
+/*!
+    \internal
 
-    // load the style's plugins to get access to its resources and initialize the theme
-    QList<QQuickStylePlugin *> stylePlugins = loadStylePlugins();
-    for (QQuickStylePlugin *stylePlugin : stylePlugins)
-        stylePlugin->initializeTheme(theme);
-    qDeleteAll(stylePlugins);
-}
+    Responsible for setting the font and palette settings that were specified in the
+    qtquickcontrols2.conf file.
 
-QList<QQuickStylePlugin *> QtQuickControls2Plugin::loadStylePlugins()
-{
-    QList<QQuickStylePlugin *> stylePlugins;
+    Style-specific settings (e.g. Variant=Dense) are read in the constructor of the
+    appropriate style plugin (e.g. QtQuickControls2MaterialStylePlugin).
 
-    QFileInfo fileInfo = QQmlFile::urlToLocalFileOrQrc(resolvedUrl(QStringLiteral("qmldir")));
-    if (fileInfo.exists() && fileInfo.path() != QQmlFile::urlToLocalFileOrQrc(baseUrl())) {
-        QFile file(fileInfo.filePath());
-        if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            QQmlDirParser parser;
-            parser.parse(QString::fromUtf8(file.readAll()));
-            if (!parser.hasError()) {
-#ifdef QT_STATIC
-                const auto plugins = QPluginLoader::staticInstances();
-                for (QObject *instance : plugins) {
-                    QQuickStylePlugin *stylePlugin = qobject_cast<QQuickStylePlugin *>(instance);
-                    if (!stylePlugin || !parser.classNames().contains(QLatin1String(instance->metaObject()->className())))
-                        continue;
-                    stylePlugins += stylePlugin;
-                }
-#elif QT_CONFIG(library)
-                QPluginLoader loader;
-                const auto plugins = parser.plugins();
-                for (const QQmlDirParser::Plugin &plugin : plugins) {
-                    QDir dir = fileInfo.dir();
-                    if (!plugin.path.isEmpty() && !dir.cd(plugin.path))
-                        continue;
-                    QString filePath = dir.filePath(plugin.name);
-#if defined(Q_OS_MACOS) && defined(QT_DEBUG)
-                    // Avoid mismatching plugins on macOS so that we don't end up loading both debug and
-                    // release versions of the same Qt libraries (due to the plugin's dependencies).
-                    filePath += QStringLiteral("_debug");
-#endif // Q_OS_MACOS && QT_DEBUG
-#if defined(Q_OS_WIN) && defined(QT_DEBUG)
-                    // Debug versions of plugins have a "d" prefix on Windows.
-                    filePath += QLatin1Char('d');
-#endif // Q_OS_WIN && QT_DEBUG
-                    loader.setFileName(filePath);
-                    QQuickStylePlugin *stylePlugin = qobject_cast<QQuickStylePlugin *>(loader.instance());
-                    if (stylePlugin)
-                        stylePlugins += stylePlugin;
-                }
-#endif
-            }
-        }
-    }
-    return stylePlugins;
-}
-
+    Implicit style-specific font and palette values are assigned in the relevant theme
+    (e.g. QQuickMaterialTheme).
+*/
 QQuickTheme *QtQuickControls2Plugin::createTheme(const QString &name)
 {
+    qCDebug(lcQtQuickControlsStylePlugin) << "creating QQuickTheme instance to be initialized by style-specific theme of" << name;
+
     QQuickTheme *theme = new QQuickTheme;
 #if QT_CONFIG(settings)
     QQuickThemePrivate *p = QQuickThemePrivate::get(theme);

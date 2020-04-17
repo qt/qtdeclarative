@@ -34,12 +34,12 @@
 **
 ****************************************************************************/
 
-#include <QtQuickControls2/private/qquickstyleplugin_p.h>
-
 #include "qquickmaterialstyle_p.h"
 #include "qquickmaterialtheme_p.h"
 
+#include <QtQuickControls2/private/qquickstyleplugin_p.h>
 #include <QtQuickControls2Impl/private/qquickpaddedrectangle_p.h>
+#include <QtQuickTemplates2/private/qquicktheme_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -52,12 +52,14 @@ public:
     QtQuickControls2MaterialStylePlugin(QObject *parent = nullptr);
 
     QString name() const override;
-    void initializeTheme(QQuickTheme *theme) override;
+
+    void registerTypes(const char *uri) override;
+
+    QQuickMaterialTheme theme;
 };
 
 QtQuickControls2MaterialStylePlugin::QtQuickControls2MaterialStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
 {
-    QQuickMaterialStyle::initGlobals();
 }
 
 QString QtQuickControls2MaterialStylePlugin::name() const
@@ -65,9 +67,12 @@ QString QtQuickControls2MaterialStylePlugin::name() const
     return QStringLiteral("Material");
 }
 
-void QtQuickControls2MaterialStylePlugin::initializeTheme(QQuickTheme *theme)
+void QtQuickControls2MaterialStylePlugin::registerTypes(const char *uri)
 {
-    QQuickMaterialTheme::initialize(theme);
+    QQuickStylePlugin::registerTypes(uri);
+
+    QQuickMaterialStyle::initGlobals();
+    theme.initialize(QQuickTheme::instance());
 }
 
 QT_END_NAMESPACE

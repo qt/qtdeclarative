@@ -64,9 +64,9 @@ public:
     ~QQuickStylePlugin();
 
     virtual QString name() const;
-    virtual void initializeTheme(QQuickTheme *theme) = 0;
 
     void registerTypes(const char *uri) override;
+    void unregisterTypes() override;
 
 private:
     Q_DISABLE_COPY(QQuickStylePlugin)

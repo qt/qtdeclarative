@@ -1,2 +1,2 @@
 import QtQuick.Templates as T
-T.Button { }
+T.Label {}

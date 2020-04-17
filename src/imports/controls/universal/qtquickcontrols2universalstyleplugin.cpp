@@ -34,10 +34,11 @@
 **
 ****************************************************************************/
 
-#include <QtQuickControls2/private/qquickstyleplugin_p.h>
-
 #include "qquickuniversalstyle_p.h"
 #include "qquickuniversaltheme_p.h"
+
+#include <QtQuickControls2/private/qquickstyleplugin_p.h>
+#include <QtQuickTemplates2/private/qquicktheme_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -50,12 +51,14 @@ public:
     QtQuickControls2UniversalStylePlugin(QObject *parent = nullptr);
 
     QString name() const override;
-    void initializeTheme(QQuickTheme *theme) override;
+
+    void registerTypes(const char *uri) override;
+
+    QQuickUniversalTheme theme;
 };
 
 QtQuickControls2UniversalStylePlugin::QtQuickControls2UniversalStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
 {
-    QQuickUniversalStyle::initGlobals();
 }
 
 QString QtQuickControls2UniversalStylePlugin::name() const
@@ -63,9 +66,12 @@ QString QtQuickControls2UniversalStylePlugin::name() const
     return QStringLiteral("Universal");
 }
 
-void QtQuickControls2UniversalStylePlugin::initializeTheme(QQuickTheme *theme)
+void QtQuickControls2UniversalStylePlugin::registerTypes(const char *uri)
 {
-    QQuickUniversalTheme::initialize(theme);
+    QQuickStylePlugin::registerTypes(uri);
+
+    QQuickUniversalStyle::initGlobals();
+    theme.initialize(QQuickTheme::instance());
 }
 
 QT_END_NAMESPACE

@@ -34,11 +34,12 @@
 **
 ****************************************************************************/
 
-#include <QtQuickControls2/private/qquickstyleplugin_p.h>
-#include <QtQml/qqml.h>
-
 #include "qquickfusionstyle_p.h"
 #include "qquickfusiontheme_p.h"
+
+#include <QtQml/qqml.h>
+#include <QtQuickControls2/private/qquickstyleplugin_p.h>
+#include <QtQuickTemplates2/private/qquicktheme_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -51,7 +52,10 @@ public:
     QtQuickControls2FusionStylePlugin(QObject *parent = nullptr);
 
     QString name() const override;
-    void initializeTheme(QQuickTheme *theme) override;
+
+    void registerTypes(const char *uri) override;
+
+    QQuickFusionTheme theme;
 };
 
 QtQuickControls2FusionStylePlugin::QtQuickControls2FusionStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
@@ -63,9 +67,11 @@ QString QtQuickControls2FusionStylePlugin::name() const
     return QStringLiteral("Fusion");
 }
 
-void QtQuickControls2FusionStylePlugin::initializeTheme(QQuickTheme *theme)
+void QtQuickControls2FusionStylePlugin::registerTypes(const char *uri)
 {
-    QQuickFusionTheme::initialize(theme);
+    QQuickStylePlugin::registerTypes(uri);
+
+    theme.initialize(QQuickTheme::instance());
 }
 
 QT_END_NAMESPACE

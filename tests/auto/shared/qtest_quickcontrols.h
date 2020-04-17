@@ -42,11 +42,12 @@
 #include <QtGui/qguiapplication.h>
 #include <QtQml/qqml.h>
 #include <QtQuickControls2/qquickstyle.h>
+#include <QtQuickControls2/private/qquickstyle_p.h>
 
 static QStringList testStyles()
 {
     if (QQuickStyle::name().isEmpty())
-        return QQuickStyle::availableStyles();
+        return QQuickStylePrivate::builtInStyles();
     return QStringList(QQuickStyle::name());
 }
 

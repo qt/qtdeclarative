@@ -1,7 +1,7 @@
 module QtQuick.Controls.Imagine
 plugin qtquickcontrols2imaginestyleplugin
 classname QtQuickControls2ImagineStylePlugin
-depends QtQuick.Controls 2.5
+import QtQuick.Controls.Default auto
 
 # QtQuick.Controls 2.0 (originally introduced in Qt 5.7)
 ApplicationWindow 2.0 ApplicationWindow.qml

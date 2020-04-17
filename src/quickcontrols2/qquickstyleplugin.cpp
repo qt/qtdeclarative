@@ -34,13 +34,19 @@
 **
 ****************************************************************************/
 
+#include "qquickstyle.h"
 #include "qquickstyle_p.h"
 #include "qquickstyleplugin_p.h"
 
+#include <QtCore/qloggingcategory.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlfile.h>
 
+#include <QtQuickTemplates2/private/qquicktheme_p_p.h>
+
 QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(lcStylePlugin, "qt.quick.controls.styleplugin")
 
 QQuickStylePlugin::QQuickStylePlugin(QObject *parent)
     : QQmlExtensionPlugin(parent)
@@ -54,6 +60,16 @@ QQuickStylePlugin::~QQuickStylePlugin()
 QString QQuickStylePlugin::name() const
 {
     return QString();
+}
+
+void QQuickStylePlugin::registerTypes(const char *uri)
+{
+    qCDebug(lcStylePlugin).nospace() << "registerTypes called with uri " << uri << "; plugin name is " << name();
+}
+
+void QQuickStylePlugin::unregisterTypes()
+{
+    qCDebug(lcStylePlugin) << "unregisterTypes called; plugin name is" << name();
 }
 
 QT_END_NAMESPACE

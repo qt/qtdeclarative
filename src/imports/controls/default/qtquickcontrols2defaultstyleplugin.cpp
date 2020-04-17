@@ -38,6 +38,7 @@
 #include "qquickdefaulttheme_p.h"
 
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
+#include <QtQuickTemplates2/private/qquicktheme_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -50,7 +51,10 @@ public:
     QtQuickControls2DefaultStylePlugin(QObject *parent = nullptr);
 
     QString name() const override;
-    void initializeTheme(QQuickTheme *theme) override;
+
+    void registerTypes(const char *uri) override;
+
+    QQuickDefaultTheme theme;
 };
 
 QtQuickControls2DefaultStylePlugin::QtQuickControls2DefaultStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
@@ -62,9 +66,11 @@ QString QtQuickControls2DefaultStylePlugin::name() const
     return QStringLiteral("Default");
 }
 
-void QtQuickControls2DefaultStylePlugin::initializeTheme(QQuickTheme *theme)
+void QtQuickControls2DefaultStylePlugin::registerTypes(const char *uri)
 {
-    QQuickDefaultTheme::initialize(theme);
+    QQuickStylePlugin::registerTypes(uri);
+
+    theme.initialize(QQuickTheme::instance());
 }
 
 QT_END_NAMESPACE

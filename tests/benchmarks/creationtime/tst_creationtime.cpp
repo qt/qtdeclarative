@@ -34,8 +34,10 @@
 **
 ****************************************************************************/
 
-#include <QtQml>
+#include <QtCore/qscopedpointer.h>
 #include <QtTest>
+#include <QtQml>
+#include <QtQuickControls2/qquickstyle.h>
 
 #include "../../auto/shared/visualtestutil.h"
 
@@ -46,10 +48,11 @@ class tst_CreationTime : public QObject
     Q_OBJECT
 
 private slots:
+    void initTestCase();
     void init();
 
-    void controls();
-    void controls_data();
+    void defaultStyle();
+    void defaultStyle_data();
 
     void fusion();
     void fusion_data();
@@ -64,17 +67,29 @@ private slots:
     void universal_data();
 
 private:
-    QQmlEngine engine;
+    QQuickStyleHelper styleHelper;
 };
+
+void tst_CreationTime::initTestCase()
+{
+    styleHelper.engine.reset(new QQmlEngine);
+}
 
 void tst_CreationTime::init()
 {
-    engine.clearComponentCache();
+    styleHelper.engine->clearComponentCache();
 }
 
-static void doBenchmark(QQmlEngine *engine, const QUrl &url)
+static void doBenchmark(QQuickStyleHelper &styleHelper, const QUrl &url)
 {
-    QQmlComponent component(engine);
+    const QString tagStr = QString::fromLatin1(QTest::currentDataTag());
+    QStringList styleAndFileName = tagStr.split('/');
+    QCOMPARE(styleAndFileName.size(), 2);
+    QString style = styleAndFileName.first();
+    style[0] = style.at(0).toUpper();
+    styleHelper.updateStyle(style);
+
+    QQmlComponent component(styleHelper.engine.data());
     component.loadUrl(url);
 
     QObjectList objects;
@@ -87,64 +102,64 @@ static void doBenchmark(QQmlEngine *engine, const QUrl &url)
     qDeleteAll(objects);
 }
 
-void tst_CreationTime::controls()
+void tst_CreationTime::defaultStyle()
 {
     QFETCH(QUrl, url);
-    doBenchmark(&engine, url);
+    doBenchmark(styleHelper, url);
 }
 
-void tst_CreationTime::controls_data()
+void tst_CreationTime::defaultStyle_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRowForEachControl(&engine, "controls", "QtQuick/Controls", QStringList() << "ApplicationWindow");
+    addTestRowForEachControl(styleHelper.engine.data(), "controls/default", "QtQuick/Controls/Default", QStringList() << "ApplicationWindow");
 }
 
 void tst_CreationTime::fusion()
 {
     QFETCH(QUrl, url);
-    doBenchmark(&engine, url);
+    doBenchmark(styleHelper, url);
 }
 
 void tst_CreationTime::fusion_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRowForEachControl(&engine, "controls/fusion", "QtQuick/Controls/Fusion", QStringList() << "ApplicationWindow" << "ButtonPanel" << "CheckIndicator" << "RadioIndicator" << "SliderGroove" << "SliderHandle" << "SwitchIndicator");
+    addTestRowForEachControl(styleHelper.engine.data(), "controls/fusion", "QtQuick/Controls/Fusion", QStringList() << "ApplicationWindow" << "ButtonPanel" << "CheckIndicator" << "RadioIndicator" << "SliderGroove" << "SliderHandle" << "SwitchIndicator");
 }
 
 void tst_CreationTime::imagine()
 {
     QFETCH(QUrl, url);
-    doBenchmark(&engine, url);
+    doBenchmark(styleHelper, url);
 }
 
 void tst_CreationTime::imagine_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRowForEachControl(&engine, "controls/imagine", "QtQuick/Controls/Imagine", QStringList() << "ApplicationWindow");
+    addTestRowForEachControl(styleHelper.engine.data(), "controls/imagine", "QtQuick/Controls/Imagine", QStringList() << "ApplicationWindow");
 }
 
 void tst_CreationTime::material()
 {
     QFETCH(QUrl, url);
-    doBenchmark(&engine, url);
+    doBenchmark(styleHelper, url);
 }
 
 void tst_CreationTime::material_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRowForEachControl(&engine, "controls/material", "QtQuick/Controls/Material", QStringList() << "ApplicationWindow" << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator" << "BoxShadow" << "ElevationEffect" << "CursorDelegate");
+    addTestRowForEachControl(styleHelper.engine.data(), "controls/material", "QtQuick/Controls/Material", QStringList() << "ApplicationWindow" << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator" << "BoxShadow" << "ElevationEffect" << "CursorDelegate");
 }
 
 void tst_CreationTime::universal()
 {
     QFETCH(QUrl, url);
-    doBenchmark(&engine, url);
+    doBenchmark(styleHelper, url);
 }
 
 void tst_CreationTime::universal_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRowForEachControl(&engine, "controls/universal", "QtQuick/Controls/Universal", QStringList() << "ApplicationWindow" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+    addTestRowForEachControl(styleHelper.engine.data(), "controls/universal", "QtQuick/Controls/Universal", QStringList() << "ApplicationWindow" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
 }
 
 QTEST_MAIN(tst_CreationTime)

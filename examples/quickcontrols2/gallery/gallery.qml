@@ -287,7 +287,7 @@ ApplicationWindow {
                 ComboBox {
                     id: styleBox
                     property int styleIndex: -1
-                    model: availableStyles
+                    model: builtInStyles
                     Component.onCompleted: {
                         styleIndex = find(settings.style, Qt.MatchFixedString)
                         if (styleIndex !== -1)

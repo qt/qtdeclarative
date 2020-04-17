@@ -29,4 +29,5 @@ SUBDIRS += \
     revisions \
     sanity \
     snippets \
+    styleimports \
     translation

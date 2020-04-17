@@ -34,12 +34,13 @@
 **
 ****************************************************************************/
 
-#include <QtQuickControls2/private/qquickstyleplugin_p.h>
-#include <QtCore/qloggingcategory.h>
-#include <QtQml/qqml.h>
-
 #include "qquickimaginestyle_p.h"
 #include "qquickimaginetheme_p.h"
+
+#include <QtCore/qloggingcategory.h>
+#include <QtQml/qqml.h>
+#include <QtQuickControls2/private/qquickstyleplugin_p.h>
+#include <QtQuickTemplates2/private/qquicktheme_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -52,7 +53,10 @@ public:
     QtQuickControls2ImagineStylePlugin(QObject *parent = nullptr);
 
     QString name() const override;
-    void initializeTheme(QQuickTheme *theme) override;
+
+    void registerTypes(const char *uri) override;
+
+    QQuickImagineTheme theme;
 };
 
 QtQuickControls2ImagineStylePlugin::QtQuickControls2ImagineStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
@@ -64,9 +68,11 @@ QString QtQuickControls2ImagineStylePlugin::name() const
     return QStringLiteral("Imagine");
 }
 
-void QtQuickControls2ImagineStylePlugin::initializeTheme(QQuickTheme *theme)
+void QtQuickControls2ImagineStylePlugin::registerTypes(const char *uri)
 {
-    QQuickImagineTheme::initialize(theme);
+    QQuickStylePlugin::registerTypes(uri);
+
+    theme.initialize(QQuickTheme::instance());
 }
 
 QT_END_NAMESPACE
