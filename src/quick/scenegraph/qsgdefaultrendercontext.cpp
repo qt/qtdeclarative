@@ -69,6 +69,7 @@ QSGDefaultRenderContext::QSGDefaultRenderContext(QSGContext *context)
     , m_rhiAtlasManager(nullptr)
     , m_currentFrameCommandBuffer(nullptr)
     , m_currentFrameRenderPass(nullptr)
+    , m_separateIndexBuffer(false)
 {
 }
 
@@ -92,6 +93,8 @@ void QSGDefaultRenderContext::initialize(const QSGRenderContext::InitParams *par
         m_maxTextureSize = m_rhi->resourceLimit(QRhi::TextureSizeMax);
         if (!m_rhiAtlasManager)
             m_rhiAtlasManager = new QSGRhiAtlasTexture::Manager(this, m_initParams.initialSurfacePixelSize, m_initParams.maybeSurface);
+        // unlike OpenGL (and like WebGL), QRhi does not guarantee buffer usage types can be mixed
+        m_separateIndexBuffer = true;
     } else {
         QOpenGLFunctions *funcs = m_rhi ? nullptr : QOpenGLContext::currentContext()->functions();
         funcs->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &m_maxTextureSize);
@@ -124,6 +127,15 @@ void QSGDefaultRenderContext::initialize(const QSGRenderContext::InitParams *par
 
         if (!m_glAtlasManager)
             m_glAtlasManager = new QSGOpenGLAtlasTexture::Manager(m_initParams.initialSurfacePixelSize);
+
+        // WebGL: A given WebGLBuffer object may only be bound to one of
+        // the ARRAY_BUFFER or ELEMENT_ARRAY_BUFFER target in its
+        // lifetime. An attempt to bind a buffer object to the other
+        // target will generate an INVALID_OPERATION error, and the
+        // current binding will remain untouched.
+        const bool isWebGL = (qGuiApp->platformName().compare(QLatin1String("webgl")) == 0
+                              || qGuiApp->platformName().compare(QLatin1String("wasm")) == 0);
+        m_separateIndexBuffer = isWebGL;
     }
 
     m_sg->renderContextInitialized(this);
@@ -417,17 +429,7 @@ QSGDefaultRenderContext *QSGDefaultRenderContext::from(QOpenGLContext *context)
 
 bool QSGDefaultRenderContext::separateIndexBuffer() const
 {
-    if (m_rhi)
-        return true;
-
-    // WebGL: A given WebGLBuffer object may only be bound to one of
-    // the ARRAY_BUFFER or ELEMENT_ARRAY_BUFFER target in its
-    // lifetime. An attempt to bind a buffer object to the other
-    // target will generate an INVALID_OPERATION error, and the
-    // current binding will remain untouched.
-    static const bool isWebGL = (qGuiApp->platformName().compare(QLatin1String("webgl")) == 0
-                                  || qGuiApp->platformName().compare(QLatin1String("wasm")) == 0);
-    return isWebGL;
+    return m_separateIndexBuffer;
 }
 
 QSGDistanceFieldGlyphCache *QSGDefaultRenderContext::distanceFieldGlyphCache(const QRawFont &font)

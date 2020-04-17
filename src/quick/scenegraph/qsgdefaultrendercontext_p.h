@@ -179,6 +179,7 @@ protected:
     QRhiCommandBuffer *m_currentFrameCommandBuffer;
     QRhiRenderPassDescriptor *m_currentFrameRenderPass;
     qreal m_currentDevicePixelRatio;
+    bool m_separateIndexBuffer;
 };
 
 QT_END_NAMESPACE
