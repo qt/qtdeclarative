@@ -107,7 +107,7 @@ public:
     void setGeometry(const QRectF &rect) override
     {
         QQuickLayoutAttached *info = attachedLayoutObject(m_item, false);
-        const QRectF r = info ? rect.marginsRemoved(info->qMargins()) : rect;
+        const QRectF r = info ? rect.marginsRemoved(info->effectiveQMargins()) : rect;
         const QSizeF oldSize(m_item->width(), m_item->height());
         const QSizeF newSize = r.size();
         m_item->setPosition(r.topLeft());

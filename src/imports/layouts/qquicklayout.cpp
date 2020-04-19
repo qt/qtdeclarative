@@ -936,6 +936,11 @@ bool QQuickLayout::invalidatedArrangement() const
     return d_func()->m_dirtyArrangement;
 }
 
+bool QQuickLayout::isMirrored() const
+{
+    return d_func()->isMirrored();
+}
+
 void QQuickLayout::itemSiblingOrderChanged(QQuickItem *item)
 {
     Q_UNUSED(item);

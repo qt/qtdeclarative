@@ -99,6 +99,7 @@ public:
 
     bool invalidated() const;
     bool invalidatedArrangement() const;
+    bool isMirrored() const;
 
     /* QQuickItemChangeListener */
     void itemSiblingOrderChanged(QQuickItem *item) override;
@@ -254,6 +255,14 @@ public:
 
     QMarginsF qMargins() const {
         return QMarginsF(leftMargin(), topMargin(), rightMargin(), bottomMargin());
+    }
+
+    QMarginsF effectiveQMargins() const {
+        bool mirrored = parentLayout() && parentLayout()->isMirrored();
+        if (mirrored)
+            return QMarginsF(rightMargin(), topMargin(), leftMargin(), bottomMargin());
+        else
+            return qMargins();
     }
 
     bool setChangesNotificationEnabled(bool enabled)
