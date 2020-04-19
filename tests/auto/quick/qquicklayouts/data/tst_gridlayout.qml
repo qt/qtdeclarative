@@ -991,6 +991,47 @@ Item {
         }
 
         Component {
+
+            id: layout_RTL_Component
+            GridLayout {
+                LayoutMirroring.enabled: true
+                columns: 2
+                rowSpacing: 0
+                columnSpacing: 0
+                Rectangle {
+                    color: "red"
+                    Layout.preferredWidth: 20
+                    Layout.preferredHeight: 20
+                    Layout.leftMargin: 2
+                    Layout.rightMargin: 1
+                }
+                Rectangle {
+                    color: "blue"
+                    Layout.preferredWidth: 20
+                    Layout.preferredHeight: 20
+                    Layout.leftMargin: 3
+                    Layout.rightMargin: 4
+                }
+            }
+        }
+
+        function test_Rtl()
+        {
+            var layout = layout_RTL_Component.createObject(container)
+
+            compare(layout.implicitWidth, 3 + 20 + 4 + 2 + 20 + 1 )
+            layout.width = layout.implicitWidth
+
+            waitForRendering(layout)
+
+            var c0 = layout.children[0]
+            var c1 = layout.children[1]
+
+            compare(c1.x, 4) // c1 is first, with the right margin on the left
+            compare(c0.x, 20 + 3 + 4 + 1)
+        }
+
+        Component {
             id: layout_invalidateWhileRearranging_Component
 
             GridLayout {
