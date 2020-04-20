@@ -473,6 +473,8 @@ public:
             argv[0] = convertElementToValue(m_v4, lhs);
             argv[1] = convertElementToValue(m_v4, rhs);
             QV4::ScopedValue result(scope, compare->call(m_v4->globalObject, argv, 2));
+            if (scope.engine->hasException)
+                return false;
             return result->toNumber() < 0;
         }
 

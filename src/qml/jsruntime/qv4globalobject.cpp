@@ -372,12 +372,12 @@ ReturnedValue EvalFunction::evalCall(const Value *, const Value *argv, int argc,
     if (function->isStrict() || isStrict) {
         ScopedFunctionObject e(scope, FunctionObject::createScriptFunction(ctx, function));
         ScopedValue thisObject(scope, directCall ? scope.engine->currentStackFrame->thisObject() : scope.engine->globalObject->asReturnedValue());
-        return e->call(thisObject, nullptr, 0);
+        return checkedResult(v4, e->call(thisObject, nullptr, 0));
     }
 
     ScopedValue thisObject(scope, scope.engine->currentStackFrame->thisObject());
 
-    return function->call(thisObject, nullptr, 0, ctx);
+    return checkedResult(v4, function->call(thisObject, nullptr, 0, ctx));
 }
 
 

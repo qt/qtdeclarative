@@ -571,7 +571,7 @@ ReturnedValue StringPrototype::method_match(const FunctionObject *b, const Value
             ScopedFunctionObject fo(scope, f);
             if (!fo)
                 return scope.engine->throwTypeError();
-            return fo->call(r, thisObject, 1);
+            return checkedResult(scope.engine, fo->call(r, thisObject, 1));
         }
     }
 
@@ -862,6 +862,7 @@ ReturnedValue StringPrototype::method_replace(const FunctionObject *b, const Val
 
             Value that = Value::undefinedValue();
             replacement = searchCallback->call(&that, arguments, numCaptures + 2);
+            CHECK_EXCEPTION();
             result += string.midRef(lastEnd, matchStart - lastEnd);
             result += replacement->toQString();
             lastEnd = matchEnd;
