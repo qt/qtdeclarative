@@ -688,11 +688,17 @@ void QQuickMouseArea::mouseMoveEvent(QMouseEvent *event)
         return;
     }
 
-    d->saveEvent(event);
-
     // ### we should skip this if these signals aren't used
     // ### can GV handle this for us?
-    setHovered(contains(d->lastPos));
+    setHovered(contains(event->localPos()));
+
+    if ((event->buttons() & acceptedMouseButtons()) == 0) {
+        QQuickItem::mouseMoveEvent(event);
+        return;
+    }
+
+    d->saveEvent(event);
+
 
 #if QT_CONFIG(quick_draganddrop)
     if (d->drag && d->drag->target()) {
