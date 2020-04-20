@@ -288,7 +288,7 @@ void tst_qqmlparser::stringLiteral()
 
     Engine engine;
     Lexer lexer(&engine);
-    QLatin1String code("'hello string'");
+    QString code("'hello string'");
     lexer.setCode(code , 1);
     Parser parser(&engine);
     QVERIFY(parser.parseExpression());
@@ -298,6 +298,35 @@ void tst_qqmlparser::stringLiteral()
     QVERIFY(literal);
     QCOMPARE(literal->value, "hello string");
     QCOMPARE(literal->firstSourceLocation().begin(), 0u);
+    QCOMPARE(literal->lastSourceLocation().end(), quint32(code.size()));
+
+    // test for correct handling escape sequences inside strings
+    QLatin1String leftCode("'hello\\n\\tstring'");
+    QLatin1String plusCode(" + ");
+    QLatin1String rightCode("'\\nbye'");
+    code = leftCode + plusCode + rightCode;
+    lexer.setCode(code , 1);
+    QVERIFY(parser.parseExpression());
+
+    expression = parser.expression();
+    QVERIFY(expression);
+    auto *binaryExpression = QQmlJS::AST::cast<QQmlJS::AST::BinaryExpression *>(expression);
+    QVERIFY(binaryExpression);
+
+    literal = QQmlJS::AST::cast<QQmlJS::AST::StringLiteral *>(binaryExpression->left);
+    QVERIFY(literal);
+    QCOMPARE(literal->value, "hello\n\tstring");
+    QCOMPARE(literal->firstSourceLocation().begin(), 0u);
+    QCOMPARE(literal->firstSourceLocation().startLine, 1u);
+    QCOMPARE(literal->lastSourceLocation().end(), quint32(leftCode.size()));
+
+    QVERIFY(binaryExpression->right);
+    literal = QQmlJS::AST::cast<QQmlJS::AST::StringLiteral *>(binaryExpression->right);
+    QVERIFY(literal);
+    QCOMPARE(literal->value, "\nbye");
+    quint32 offset = quint32(leftCode.size() + plusCode.size());
+    QCOMPARE(literal->firstSourceLocation().begin(), offset);
+    QCOMPARE(literal->firstSourceLocation().startLine, 1u);
     QCOMPARE(literal->lastSourceLocation().end(), quint32(code.size()));
 }
 

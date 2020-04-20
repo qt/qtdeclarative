@@ -925,6 +925,7 @@ int Lexer::scanString(ScanStringMode mode)
 
     // rewind by one char, so things gets scanned correctly
     --_codePtr;
+    --_currentColumnNumber;
 
     _validTokenText = true;
     _tokenText = QString(startCode, _codePtr - startCode);
