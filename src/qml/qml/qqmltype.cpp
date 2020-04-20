@@ -276,7 +276,7 @@ void QQmlTypePrivate::initEnums(QQmlEnginePrivate *engine) const
             ? compositePropertyCache(engine)
             : nullptr;
 
-    const QMetaObject *metaObject = !isEnumFromCacheSetup
+    const QMetaObject *metaObject = !isEnumFromBaseSetup
             ? baseMetaObject // beware: It could be a singleton type without metaobject
             : nullptr;
 

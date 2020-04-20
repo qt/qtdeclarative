@@ -114,6 +114,7 @@ private slots:
     void replacingTransitions();
     void animationJobSelfDestruction();
     void fastFlickingBug();
+    void opacityAnimationFromZero();
 };
 
 #define QTIMED_COMPARE(lhs, rhs) do { \
@@ -1856,6 +1857,42 @@ void tst_qquickanimations::fastFlickingBug()
         QTest::qWait(53);
         qApp->processEvents();
     }
+}
+
+void tst_qquickanimations::opacityAnimationFromZero()
+{
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimimal platforms");
+
+    // not easy to verify this in threaded render loop
+    // since it's difficult to capture the first frame when scene graph
+    // is renderred in another thread
+    qputenv("QSG_RENDER_LOOP", "basic");
+    auto cleanup = qScopeGuard([]() { qputenv("QSG_RENDER_LOOP", ""); });
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("opacityAnimationFromZero.qml"));
+    QScopedPointer<QQuickWindow> win(qobject_cast<QQuickWindow*>(c.create()));
+    if (!c.errors().isEmpty())
+        qDebug() << c.errorString();
+    QVERIFY(win);
+    win->setTitle(QTest::currentTestFunction());
+    win->show();
+    QVERIFY(QTest::qWaitForWindowExposed(win.data()));
+
+    QImage img;
+    bool firstFrameSwapped = false;
+    QObject::connect(win.get(), &QQuickWindow::frameSwapped, win.get(), [&win, &img, &firstFrameSwapped]() {
+        if (firstFrameSwapped)
+            return;
+        else
+            firstFrameSwapped = true;
+        img = win->grabWindow();
+        if (img.width() < win->width())
+            QSKIP("Skipping due to grabWindow not functional");
+    });
+    QTRY_VERIFY(!img.isNull() && img.pixel(100, 100) > qRgb(10, 10, 10));
 }
 
 QTEST_MAIN(tst_qquickanimations)

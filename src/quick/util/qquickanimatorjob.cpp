@@ -582,6 +582,7 @@ void QQuickOpacityAnimatorJob::postSync()
         }
 
         d->extra.value().opacityNode = m_opacityNode;
+        updateCurrentTime(0);
     }
     Q_ASSERT(m_opacityNode);
 }
