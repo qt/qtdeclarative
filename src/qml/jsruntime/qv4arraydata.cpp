@@ -654,6 +654,8 @@ bool ArrayElementLessThan::operator()(Value v1, Value v2) const
         jsCallData->args[0] = v1;
         jsCallData->args[1] = v2;
         result = o->call(jsCallData);
+        if (scope.hasException())
+            return false;
 
         return result->toNumber() < 0;
     }
