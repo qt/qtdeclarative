@@ -123,10 +123,11 @@ static bool q_supportsElementIndexUint(QSGRendererInterface::GraphicsApi api)
         if (!elementIndexUintChecked) {
             elementIndexUintChecked = true;
             QOpenGLContext *context = QOpenGLContext::currentContext();
+            const bool needsTempContext = !context;
             QScopedPointer<QOpenGLContext> dummyContext;
             QScopedPointer<QOffscreenSurface> dummySurface;
             bool ok = true;
-            if (!context) {
+            if (needsTempContext) {
                 dummyContext.reset(new QOpenGLContext);
                 dummyContext->create();
                 context = dummyContext.data();
@@ -138,6 +139,13 @@ static bool q_supportsElementIndexUint(QSGRendererInterface::GraphicsApi api)
             if (ok) {
                 elementIndexUint = static_cast<QOpenGLExtensions *>(context->functions())->hasOpenGLExtension(
                             QOpenGLExtensions::ElementIndexUint);
+
+                if (needsTempContext) {
+                    // Must not let the temprary context be destroyed while current and
+                    // the associated surface already gone, because some implementations
+                    // (Mesa on drm) do not like that.
+                    context->doneCurrent();
+                }
             }
         }
     }
