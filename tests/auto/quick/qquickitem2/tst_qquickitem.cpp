@@ -89,6 +89,7 @@ private slots:
     void keyNavigation_implicitDestroy();
     void keyNavigation_focusReason();
     void keyNavigation_loop();
+    void keyNavigation_repeater();
     void layoutMirroring();
     void layoutMirroringWindow();
     void layoutMirroringIllegalParent();
@@ -2269,6 +2270,24 @@ void tst_QQuickItem::keyNavigation_loop()
     QGuiApplication::sendEvent(window, &key);
     QVERIFY(key.isAccepted());
     QVERIFY(item->hasActiveFocus());
+
+    delete window;
+}
+
+void tst_QQuickItem::keyNavigation_repeater()
+{
+    // QTBUG-83356
+    QQuickView *window = new QQuickView(nullptr);
+    window->setBaseSize(QSize(240,320));
+
+    window->setSource(testFileUrl("keynavigationtest_repeater.qml"));
+    window->show();
+    window->requestActivate();
+
+    QVariant result;
+    QVERIFY(QMetaObject::invokeMethod(window->rootObject(), "verify",
+            Q_RETURN_ARG(QVariant, result)));
+    QVERIFY(result.toBool());
 
     delete window;
 }
