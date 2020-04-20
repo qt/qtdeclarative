@@ -465,8 +465,8 @@ void QQuickKeyNavigationAttached::setLeft(QQuickItem *i)
     Q_D(QQuickKeyNavigationAttached);
     if (d->leftSet && d->left == i)
         return;
+    d->leftSet = d->left != i;
     d->left = i;
-    d->leftSet = true;
     QQuickKeyNavigationAttached* other =
             qobject_cast<QQuickKeyNavigationAttached*>(qmlAttachedPropertiesObject<QQuickKeyNavigationAttached>(i));
     if (other && !other->d_func()->rightSet){
@@ -487,8 +487,8 @@ void QQuickKeyNavigationAttached::setRight(QQuickItem *i)
     Q_D(QQuickKeyNavigationAttached);
     if (d->rightSet && d->right == i)
         return;
+    d->rightSet = d->right != i;
     d->right = i;
-    d->rightSet = true;
     QQuickKeyNavigationAttached* other =
             qobject_cast<QQuickKeyNavigationAttached*>(qmlAttachedPropertiesObject<QQuickKeyNavigationAttached>(i));
     if (other && !other->d_func()->leftSet){
@@ -509,8 +509,8 @@ void QQuickKeyNavigationAttached::setUp(QQuickItem *i)
     Q_D(QQuickKeyNavigationAttached);
     if (d->upSet && d->up == i)
         return;
+    d->upSet = d->up != i;
     d->up = i;
-    d->upSet = true;
     QQuickKeyNavigationAttached* other =
             qobject_cast<QQuickKeyNavigationAttached*>(qmlAttachedPropertiesObject<QQuickKeyNavigationAttached>(i));
     if (other && !other->d_func()->downSet){
@@ -531,8 +531,8 @@ void QQuickKeyNavigationAttached::setDown(QQuickItem *i)
     Q_D(QQuickKeyNavigationAttached);
     if (d->downSet && d->down == i)
         return;
+    d->downSet = d->down != i;
     d->down = i;
-    d->downSet = true;
     QQuickKeyNavigationAttached* other =
             qobject_cast<QQuickKeyNavigationAttached*>(qmlAttachedPropertiesObject<QQuickKeyNavigationAttached>(i));
     if (other && !other->d_func()->upSet) {
@@ -553,8 +553,8 @@ void QQuickKeyNavigationAttached::setTab(QQuickItem *i)
     Q_D(QQuickKeyNavigationAttached);
     if (d->tabSet && d->tab == i)
         return;
+    d->tabSet = d->tab != i;
     d->tab = i;
-    d->tabSet = true;
     QQuickKeyNavigationAttached* other =
             qobject_cast<QQuickKeyNavigationAttached*>(qmlAttachedPropertiesObject<QQuickKeyNavigationAttached>(i));
     if (other && !other->d_func()->backtabSet) {
@@ -575,8 +575,8 @@ void QQuickKeyNavigationAttached::setBacktab(QQuickItem *i)
     Q_D(QQuickKeyNavigationAttached);
     if (d->backtabSet && d->backtab == i)
         return;
+    d->backtabSet = d->backtab != i;
     d->backtab = i;
-    d->backtabSet = true;
     QQuickKeyNavigationAttached* other =
             qobject_cast<QQuickKeyNavigationAttached*>(qmlAttachedPropertiesObject<QQuickKeyNavigationAttached>(i));
     if (other && !other->d_func()->tabSet) {
