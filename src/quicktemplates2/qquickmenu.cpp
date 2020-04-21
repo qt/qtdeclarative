@@ -170,6 +170,14 @@ static const int SUBMENU_DELAY = 225;
     Although \l {MenuItem}{MenuItems} are most commonly used with Menu, it can
     contain any type of item.
 
+    \section1 Margins
+
+    As it is inherited from Popup, Menu supports \l {Popup::}{margins}. By
+    default, all of the built-in styles specify \c 0 for Menu's margins to
+    ensure that the menu is kept within the bounds of the window. To allow a
+    menu to go outside of the window (to animate it moving into view, for
+    example), set the margins property to \c -1.
+
     \sa {Customizing Menu}, MenuItem, {Menu Controls}, {Popup Controls}
 */
 
