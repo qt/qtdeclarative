@@ -353,7 +353,7 @@ bool QQuickOpenGLShaderEffectMaterialKey::operator != (const QQuickOpenGLShaderE
 
 size_t qHash(const QQuickOpenGLShaderEffectMaterialKey &key)
 {
-    uint hash = 1;
+    size_t hash = 1;
     typedef QQuickOpenGLShaderEffectMaterialKey Key;
     for (int shaderType = 0; shaderType < Key::ShaderTypeCount; ++shaderType)
         hash = hash * 31337 + qHash(key.sourceCode[shaderType]);

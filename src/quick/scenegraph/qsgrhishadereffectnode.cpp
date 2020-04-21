@@ -187,7 +187,7 @@ struct QSGRhiShaderMaterialTypeCache
 
 size_t qHash(const QSGRhiShaderMaterialTypeCache::Key &key, uint seed = 0)
 {
-    uint hash = seed;
+    size_t hash = seed;
     for (int i = 0; i < 2; ++i)
         hash = hash * 31337 + qHash(key.blob[i]);
     return hash;
