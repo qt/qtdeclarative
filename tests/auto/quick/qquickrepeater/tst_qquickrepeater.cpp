@@ -1056,6 +1056,16 @@ void tst_QQuickRepeater::package()
         QCOMPARE(repeater2->count(), 1);
         QCOMPARE(repeater2->itemAt(0)->objectName(), "secondItem");
     }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("package2.qml"));
+        QScopedPointer<QObject> root(component.create());
+        QVERIFY(root != nullptr);
+        bool returnedValue = false;
+        // calling setup should not crash
+        QMetaObject::invokeMethod(root.get(), "setup", Q_RETURN_ARG(bool, returnedValue));
+        QVERIFY(returnedValue);
+    }
 }
 
 void tst_QQuickRepeater::ownership()

@@ -417,6 +417,12 @@ void QQuickRepeater::createdItem(int index, QObject *)
 void QQuickRepeater::initItem(int index, QObject *object)
 {
     Q_D(QQuickRepeater);
+    if (index >= d->deletables.size()) {
+        // this can happen when Package is used
+        // calling regenerate does too much work, all we need is to call resize
+        // so that d->deletables[index] = item below works
+        d->deletables.resize(d->model->count() + 1);
+    }
     QQuickItem *item = qmlobject_cast<QQuickItem*>(object);
 
     if (!d->deletables.at(index)) {
