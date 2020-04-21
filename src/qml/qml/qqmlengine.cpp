@@ -422,6 +422,7 @@ The following functions are also on the Qt object.
         \li \c "unix" - Other Unix-based OS
         \li \c "windows" - Windows
         \li \c "winrt" - WinRT / UWP
+        \li \c "wasm" - WebAssembly
     \endlist
 
     \row

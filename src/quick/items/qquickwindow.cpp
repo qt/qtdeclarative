@@ -4889,6 +4889,11 @@ void QQuickWindow::setDefaultAlphaBuffer(bool useAlpha)
     \note This function only has an effect when using the default OpenGL scene graph
     adaptation.
 
+    \note This function will only reset the OpenGL context in relation to what has been changed
+    internally as part of the OpenGL scene graph. It does not reset anything that has been changed
+    externally such as direct OpenGL calls done inside the application code if those same calls are
+    not used internally.
+
     \note This function has no effect when running on the RHI graphics
     abstraction and the underlying RHI backend is not OpenGL.
 

@@ -76,6 +76,8 @@ QString QQmlPlatform::os()
     return QStringLiteral("qnx");
 #elif defined(Q_OS_UNIX)
     return QStringLiteral("unix");
+#elif defined(Q_OS_WASM)
+    return QStringLiteral("wasm");
 #else
     return QStringLiteral("unknown");
 #endif
