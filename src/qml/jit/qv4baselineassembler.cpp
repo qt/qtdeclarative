@@ -91,6 +91,8 @@ public:
         PlatformAssemblerCommon::callRuntime(functionName, funcPtr);
         if (dest == CallResultDestination::InAccumulator)
             saveReturnValueInAccumulator();
+        else if (AccumulatorRegister == ReturnValueRegister)
+            loadUndefined();
     }
 
     void saveReturnValueInAccumulator()
@@ -391,6 +393,8 @@ public:
         PlatformAssemblerCommon::callRuntime(functionName, funcPtr);
         if (dest == CallResultDestination::InAccumulator)
             saveReturnValueInAccumulator();
+        else if (AccumulatorRegisterValue == ReturnValueRegisterValue)
+            loadUndefined();
     }
 
     void saveReturnValueInAccumulator()
