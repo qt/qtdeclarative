@@ -2895,8 +2895,7 @@ void QQuickTextInputPrivate::updateDisplayText(bool forceUpdate)
     // characters)
     QChar* uc = str.data();
     for (int i = 0; i < str.length(); ++i) {
-        if ((uc[i].unicode() < 0x20 && uc[i] != QChar::Tabulation)
-            || uc[i] == QChar::LineSeparator
+        if (uc[i] == QChar::LineSeparator
             || uc[i] == QChar::ParagraphSeparator
             || uc[i] == QChar::ObjectReplacementCharacter)
             uc[i] = QChar(0x0020);
