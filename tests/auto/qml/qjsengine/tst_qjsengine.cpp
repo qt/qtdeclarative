@@ -263,6 +263,7 @@ private slots:
     void arrayIncludesWithLargeArray();
     void printCircularArray();
     void typedArraySet();
+    void dataViewCtor();
 
     void uiLanguage();
 
@@ -5143,6 +5144,21 @@ void tst_QJSEngine::typedArraySet()
         QVERIFY(error.isError());
         QCOMPARE(error.toString(), "RangeError: TypedArray.set: out of range");
     }
+}
+
+void tst_QJSEngine::dataViewCtor()
+{
+    QJSEngine engine;
+    const auto error = engine.evaluate(R"(
+    (function() { try {
+        var buf = new ArrayBuffer(0x200);
+        var vuln = new DataView(buf, 8, 0xfffffff8);
+    } catch (e) {
+        return e;
+    }})()
+    )");
+    QVERIFY(error.isError());
+    QCOMPARE(error.toString(), "RangeError: DataView: constructor arguments out of range");
 }
 
 void tst_QJSEngine::uiLanguage()
