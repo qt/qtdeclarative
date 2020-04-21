@@ -129,10 +129,9 @@ QQuickPixmap* QQuickAnimatedImagePrivate::infoForCurrentFrame(QQmlEngine *engine
 
     This property holds the URL that refers to the source image.
 
-    AnimatedImage can handle any image format supported by Qt, loaded from any
-    URL scheme supported by Qt.
-
-    \sa QQuickImageProvider
+    AnimatedImage can handle any image format supported by Qt, loaded
+    from any URL scheme supported by Qt. It is however not compatible
+    with QQuickImageProvider.
 */
 
 QQuickAnimatedImage::QQuickAnimatedImage(QQuickItem *parent)
