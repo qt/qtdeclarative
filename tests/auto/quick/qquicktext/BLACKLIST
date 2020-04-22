@@ -6,3 +6,5 @@ macos
 opensuse-42.1
 [contentSize]
 windows gcc
+[hAlignVisual]
+sles

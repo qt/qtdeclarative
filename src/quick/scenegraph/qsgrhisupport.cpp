@@ -38,10 +38,15 @@
 ****************************************************************************/
 
 #include "qsgrhisupport_p.h"
-#include "qsgdefaultrendercontext_p.h"
+#include "qsgcontext_p.h"
+#if QT_CONFIG(opengl)
+#  include "qsgdefaultrendercontext_p.h"
+#endif
+
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
 
+#include <QtGui/qwindow.h>
 #if QT_CONFIG(vulkan)
 #include <QtGui/qvulkaninstance.h>
 #endif
@@ -382,9 +387,15 @@ static const void *qsgrhi_mtl_rifResource(QSGRendererInterface::Resource res, co
 }
 #endif
 
-const void *QSGRhiSupport::rifResource(QSGRendererInterface::Resource res, const QSGDefaultRenderContext *rc)
+const void *QSGRhiSupport::rifResource(QSGRendererInterface::Resource res,
+                                       const QSGDefaultRenderContext *rc)
 {
+#if QT_CONFIG(opengl)
     QRhi *rhi = rc->rhi();
+#else
+    Q_UNUSED(rc)
+    QRhi *rhi = nullptr;
+#endif
     if (res == QSGRendererInterface::RhiResource || !rhi)
         return rhi;
 
