@@ -62,8 +62,8 @@ T.Dial {
     }
 
     handle: SliderHandle {
-        x: control.background.x + control.background.width / 2 - control.handle.width / 2
-        y: control.background.y + control.background.height / 2 - control.handle.height / 2
+        x: control.background.x + control.background.width / 2 - width / 2
+        y: control.background.y + control.background.height / 2 - height / 2
         transform: [
             Translate {
                 y: -control.background.height * 0.4 + control.handle.height / 2

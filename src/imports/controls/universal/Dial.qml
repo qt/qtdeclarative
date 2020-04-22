@@ -64,8 +64,8 @@ T.Dial {
         implicitWidth: 14
         implicitHeight: 14
 
-        x: control.background.x + control.background.width / 2 - control.handle.width / 2
-        y: control.background.y + control.background.height / 2 - control.handle.height / 2
+        x: control.background.x + control.background.width / 2 - width / 2
+        y: control.background.y + control.background.height / 2 - height / 2
 
         radius: width / 2
         color: !control.enabled ? control.Universal.baseLowColor :
