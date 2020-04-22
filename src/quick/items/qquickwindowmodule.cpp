@@ -39,6 +39,7 @@
 
 #include "qquickwindowmodule_p.h"
 #include "qquickwindowattached_p.h"
+#include "qquickrendercontrol.h"
 #include "qquickscreen_p.h"
 #include "qquickview_p.h"
 #include <QtQuick/QQuickWindow>
@@ -83,7 +84,7 @@ void QQuickWindowQmlImpl::setVisible(bool visible)
 {
     Q_D(QQuickWindowQmlImpl);
     d->visible = visible;
-    if (d->complete && (!transientParent() || transientParent()->isVisible()))
+    if (d->complete && (!transientParent() || transientParentVisible()))
         QQuickWindow::setVisible(visible);
 }
 
@@ -142,7 +143,7 @@ void QQuickWindowQmlImpl::componentComplete()
 void QQuickWindowQmlImpl::setWindowVisibility()
 {
     Q_D(QQuickWindowQmlImpl);
-    if (transientParent() && !transientParent()->isVisible())
+    if (transientParent() && !transientParentVisible())
         return;
 
     if (QQuickItem *senderItem = qmlobject_cast<QQuickItem *>(sender())) {
@@ -194,6 +195,17 @@ void QQuickWindowQmlImpl::setScreen(QObject *screen)
 {
     QQuickScreenInfo *screenWrapper = qobject_cast<QQuickScreenInfo *>(screen);
     QWindow::setScreen(screenWrapper ? screenWrapper->wrappedScreen() : nullptr);
+}
+
+bool QQuickWindowQmlImpl::transientParentVisible()
+{
+   Q_ASSERT(transientParent());
+   if (!transientParent()->isVisible()) {
+       // handle case where transient parent is offscreen window
+       QWindow *rw = QQuickRenderControl::renderWindowFor(qobject_cast<QQuickWindow*>(transientParent()));
+       return rw && rw->isVisible();
+   }
+   return true;
 }
 
 QT_END_NAMESPACE
