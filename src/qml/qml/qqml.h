@@ -716,10 +716,15 @@ inline int qmlRegisterSingletonType(
     return QQmlPrivate::qmlregister(QQmlPrivate::SingletonRegistration, &api);
 }
 
+#ifdef Q_QDOC
+template <typename T>
+int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName, std::function<QObject*(QQmlEngine *, QJSEngine *)> callback)
+#else
 template <typename T, typename F, typename std::enable_if<std::is_convertible<F, std::function<QObject *(QQmlEngine *, QJSEngine *)>>::value
                                                  && !std::is_convertible<F, QObject *(*)(QQmlEngine *, QJSEngine *)>::value, void>::type* = nullptr>
 inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName,
                                     F&& callback)
+#endif
 {
     QQmlPrivate::RegisterSingletonType api = {
         0,
