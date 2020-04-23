@@ -40,6 +40,7 @@
 #include <private/qtquickglobal_p.h>
 #include "qquickitemgrabresult.h"
 
+#include "qquickrendercontrol.h"
 #include "qquickwindow.h"
 #include "qquickitem.h"
 #if QT_CONFIG(quick_shadereffect)
@@ -293,7 +294,11 @@ QQuickItemGrabResult *QQuickItemGrabResultPrivate::create(QQuickItem *item, cons
         return nullptr;
     }
 
-    if (!item->window()->isVisible()) {
+    QWindow *effectiveWindow = item->window();
+    if (QWindow *renderWindow = QQuickRenderControl::renderWindowFor(item->window()))
+        effectiveWindow = renderWindow;
+
+    if (!effectiveWindow->isVisible()) {
         qmlWarning(item) << "grabToImage: item's window is not visible";
         return nullptr;
     }

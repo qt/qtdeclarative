@@ -301,7 +301,7 @@ void QQuickImageResponse::cancel()
     Image providers that support QImage or Texture loading automatically include support
     for asychronous loading of images. To enable asynchronous loading for an
     image source, set the \c asynchronous property to \c true for the relevant
-    \l Image, \l BorderImage or \l AnimatedImage object. When this is enabled,
+    \l Image or \l BorderImage object. When this is enabled,
     the image request to the provider is run in a low priority thread,
     allowing image loading to be executed in the background, and reducing the
     performance impact on the user interface.
@@ -330,10 +330,10 @@ void QQuickImageResponse::cancel()
     Images returned by a QQuickImageProvider are automatically cached,
     similar to any image loaded by the QML engine. When an image with a
     "image://" prefix is loaded from cache, requestImage() and requestPixmap()
-    will not be called for the relevant image provider. If an image should always
-    be fetched from the image provider, and should not be cached at all, set the
-    \c cache property to \c false for the relevant \l Image, \l BorderImage or
-    \l AnimatedImage object.
+    will not be called for the relevant image provider. If an image should
+    always be fetched from the image provider, and should not be cached at
+    all, set the \c cache property to \c false for the relevant \l Image
+    or \l BorderImage object.
 
     \sa QQmlEngine::addImageProvider()
 */
