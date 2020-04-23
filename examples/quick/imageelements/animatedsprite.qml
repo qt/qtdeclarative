@@ -70,19 +70,31 @@ Item {
     }
 //! [sprite]
 
+    Text {
+        text: "Left click to resume\nMiddle click to advance backward\nRight click to advance forward"
+        visible: sprite.paused
+    }
+
     MouseArea {
         anchors.fill: parent
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
         onClicked: (mouse) => {
-            if (!sprite.running)
+            if (!sprite.running) {
                 sprite.start();
-            if (!sprite.paused)
+            } else if (!sprite.paused) {
                 sprite.pause();
-            if ( mouse.button == Qt.LeftButton ) {
-                sprite.advance(1);
             } else {
-                sprite.advance(-1);
+                if (mouse.button === Qt.LeftButton)
+                    sprite.resume();
+                else if (mouse.button === Qt.MiddleButton)
+                    sprite.advance(-1);
+                else if (mouse.button === Qt.RightButton)
+                    sprite.advance(1);
             }
         }
     }
+
+    Component.onCompleted: console.log("Press Space to toggle visibility. Click with mouse to pause/resume.")
+    focus: true
+    Keys.onSpacePressed: sprite.visible = !sprite.visible
 }

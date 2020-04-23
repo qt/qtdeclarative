@@ -502,6 +502,14 @@ void QQuickAnimatedSprite::maybeUpdate()
         update();
 }
 
+void QQuickAnimatedSprite::itemChange(ItemChange change, const ItemChangeData &value)
+{
+    Q_D(QQuickAnimatedSprite);
+    if (change == ItemVisibleHasChanged && d->m_running && !d->m_paused)
+        maybeUpdate();
+    QQuickItem::itemChange(change, value);
+}
+
 /*!
     \qmlmethod int QtQuick::AnimatedSprite::pause()
 
