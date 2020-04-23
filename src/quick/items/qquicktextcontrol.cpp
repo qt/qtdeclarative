@@ -1883,7 +1883,7 @@ void QQuickTextEditMimeData::setup() const
 {
     QQuickTextEditMimeData *that = const_cast<QQuickTextEditMimeData *>(this);
 #if QT_CONFIG(texthtmlparser)
-    that->setData(QLatin1String("text/html"), fragment.toHtml("utf-8").toUtf8());
+    that->setData(QLatin1String("text/html"), fragment.toHtml().toUtf8());
 #endif
 #if QT_CONFIG(textodfwriter)
     {
