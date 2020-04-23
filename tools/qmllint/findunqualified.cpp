@@ -725,7 +725,7 @@ bool FindUnqualifiedIDVisitor::check()
         outstandingConnection.uiod->initializer->accept(this);
     }
 
-    CheckIdentifiers check(&m_colorOut, m_code, m_exportedName2Scope);
+    CheckIdentifiers check(&m_colorOut, m_code, m_exportedName2Scope, m_filePath);
     return check(m_qmlid2scope, m_rootScope, m_rootId);
 }
 

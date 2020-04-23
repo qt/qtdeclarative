@@ -77,7 +77,7 @@ void TestQmllint::testUnqualified()
     QFETCH(int, warningColumn);
 
     const QString output = runQmllint(filename, false);
-    QVERIFY(output.contains(QString::asprintf("Warning: unqualified access at %d:%d", warningLine, warningColumn)));
+    QVERIFY(output.contains(QString::asprintf("Warning: unqualified access at %s:%d:%d", testFile(filename).toUtf8().constData(), warningLine, warningColumn)));
     QVERIFY(output.contains(warningMessage));
 }
 
@@ -122,47 +122,47 @@ void TestQmllint::dirtyQmlCode_data()
 
     QTest::newRow("Invalid_syntax_QML")
             << QStringLiteral("failure1.qml")
-            << QStringLiteral("failure1.qml:4 : Expected token `:'")
+            << QStringLiteral("%1:4 : Expected token `:'")
             << QString();
     QTest::newRow("Invalid_syntax_JS")
             << QStringLiteral("failure1.js")
-            << QStringLiteral("failure1.js:4 : Expected token `;'")
+            << QStringLiteral("%1:4 : Expected token `;'")
             << QString();
     QTest::newRow("AutomatchedSignalHandler")
             << QStringLiteral("AutomatchedSignalHandler.qml")
-            << QString("Warning: unqualified access at 12:36")
+            << QString("Warning: unqualified access at %1:12:36")
             << QStringLiteral("no matching signal found");
     QTest::newRow("MemberNotFound")
             << QStringLiteral("memberNotFound.qml")
-            << QString("Warning: Property \"foo\" not found on type \"QtObject\" at 6:31")
+            << QString("Warning: Property \"foo\" not found on type \"QtObject\" at %1:6:31")
             << QString();
     QTest::newRow("UnknownJavascriptMethd")
             << QStringLiteral("unknownJavascriptMethod.qml")
-            << QString("Warning: Property \"foo2\" not found on type \"Methods\" at 5:25")
+            << QString("Warning: Property \"foo2\" not found on type \"Methods\" at %1:5:25")
             << QString();
     QTest::newRow("badAlias")
             << QStringLiteral("badAlias.qml")
-            << QString("Warning: unqualified access at 4:27")
+            << QString("Warning: unqualified access at %1:4:27")
             << QString();
     QTest::newRow("badAliasProperty")
             << QStringLiteral("badAliasProperty.qml")
-            << QString("Warning: Property \"nowhere\" not found on type \"QtObject\" at 5:32")
+            << QString("Warning: Property \"nowhere\" not found on type \"QtObject\" at %1:5:32")
             << QString();
     QTest::newRow("badParent")
             << QStringLiteral("badParent.qml")
-            << QString("Warning: Property \"rrr\" not found on type \"Item\" at 5:34")
+            << QString("Warning: Property \"rrr\" not found on type \"Item\" at %1:5:34")
             << QString();
     QTest::newRow("parentIsComponent")
             << QStringLiteral("parentIsComponent.qml")
-            << QString("Warning: Property \"progress\" not found on type \"QQuickItem\" at 7:39")
+            << QString("Warning: Property \"progress\" not found on type \"QQuickItem\" at %1:7:39")
             << QString();
     QTest::newRow("badTypeAssertion")
             << QStringLiteral("badTypeAssertion.qml")
-            << QString("Warning: Property \"rrr\" not found on type \"Item\" at 5:39")
+            << QString("Warning: Property \"rrr\" not found on type \"Item\" at %1:5:39")
             << QString();
     QTest::newRow("incompleteQmltypes")
             << QStringLiteral("incompleteQmltypes.qml")
-            << QString("Warning: Type \"QPalette\" of base \"palette\" not found when accessing member \"weDontKnowIt\" at 5:34")
+            << QString("Warning: Type \"QPalette\" of base \"palette\" not found when accessing member \"weDontKnowIt\" at %1:5:34")
             << QString();
     QTest::newRow("inheritanceCylce")
             << QStringLiteral("Cycle1.qml")
@@ -175,6 +175,8 @@ void TestQmllint::dirtyQmlCode()
     QFETCH(QString, filename);
     QFETCH(QString, warningMessage);
     QFETCH(QString, notContained);
+    if (warningMessage.contains(QLatin1String("%1")))
+        warningMessage = warningMessage.arg(testFile(filename));
 
     const QString output = runQmllint(filename, false);
     QVERIFY(output.contains(warningMessage));

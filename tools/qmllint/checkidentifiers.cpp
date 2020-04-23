@@ -94,10 +94,11 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
         if (scope.isNull()) {
             writeWarning(m_colorOut);
             m_colorOut->write(
-                        QString::fromLatin1("Type \"%1\" of base \"%2\" not found when accessing member \"%3\" at %4:%5.\n")
+                        QString::fromLatin1("Type \"%1\" of base \"%2\" not found when accessing member \"%3\" at %4:%5:%6.\n")
                         .arg(detectedRestrictiveKind)
                         .arg(detectedRestrictiveName)
                         .arg(access.m_name)
+                        .arg(m_fileName)
                         .arg(access.m_location.startLine)
                         .arg(access.m_location.startColumn), Normal);
             printContext(access.m_location);
@@ -114,10 +115,11 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
 
             writeWarning(m_colorOut);
             m_colorOut->write(QString::fromLatin1(
-                                   "\"%1\" is a %2. You cannot access \"%3\" on it at %4:%5\n")
+                                   "\"%1\" is a %2. You cannot access \"%3\" on it at %4:%5:%6\n")
                                    .arg(detectedRestrictiveName)
                                    .arg(detectedRestrictiveKind)
                                    .arg(access.m_name)
+                                   .arg(m_fileName)
                                    .arg(access.m_location.startLine)
                                    .arg(access.m_location.startColumn), Normal);
             printContext(access.m_location);
@@ -226,9 +228,10 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
 
         writeWarning(m_colorOut);
         m_colorOut->write(QString::fromLatin1(
-                               "Property \"%1\" not found on type \"%2\" at %3:%4\n")
+                               "Property \"%1\" not found on type \"%2\" at %3:%4:%5\n")
                                .arg(access.m_name)
                                .arg(scopeName)
+                               .arg(m_fileName)
                                .arg(access.m_location.startLine)
                                .arg(access.m_location.startColumn), Normal);
         printContext(access.m_location);
@@ -252,8 +255,8 @@ bool CheckIdentifiers::operator()(const QHash<QString, ScopeTree::ConstPtr> &qml
         for (const auto &handler : unmatchedSignalHandlers) {
             writeWarning(m_colorOut);
             m_colorOut->write(QString::fromLatin1(
-                                   "no matching signal found for handler \"%1\" at %2:%3\n")
-                                   .arg(handler.first).arg(handler.second.startLine)
+                                   "no matching signal found for handler \"%1\" at %2:%3:%4\n")
+                                   .arg(handler.first).arg(m_fileName).arg(handler.second.startLine)
                                    .arg(handler.second.startColumn), Normal);
             printContext(handler.second);
         }
@@ -305,8 +308,9 @@ bool CheckIdentifiers::operator()(const QHash<QString, ScopeTree::ConstPtr> &qml
                 if (!qmlIt->type()) {
                     writeWarning(m_colorOut);
                     m_colorOut->write(QString::fromLatin1(
-                                           "Type of property \"%2\" not found at %3:%4\n")
+                                           "Type of property \"%2\" not found at %3:%4:%5\n")
                                            .arg(memberAccessBase.m_name)
+                                           .arg(m_fileName)
                                            .arg(memberAccessBase.m_location.startLine)
                                            .arg(memberAccessBase.m_location.startColumn), Normal);
                     printContext(memberAccessBase.m_location);
@@ -332,7 +336,8 @@ bool CheckIdentifiers::operator()(const QHash<QString, ScopeTree::ConstPtr> &qml
             noUnqualifiedIdentifier = false;
             writeWarning(m_colorOut);
             const auto location = memberAccessBase.m_location;
-            m_colorOut->write(QString::fromLatin1("unqualified access at %1:%2\n")
+            m_colorOut->write(QString::fromLatin1("unqualified access at %1:%2:%3\n")
+                           .arg(m_fileName)
                            .arg(location.startLine).arg(location.startColumn),
                            Normal);
 
@@ -379,7 +384,8 @@ bool CheckIdentifiers::operator()(const QHash<QString, ScopeTree::ConstPtr> &qml
                 m_colorOut->write(
                             memberAccessBase.m_name + QString::fromLatin1(
                                 " is accessible in this scope because "
-                                "you are handling a signal at %1:%2\n")
+                                "you are handling a signal at %1:%2:%3\n")
+                            .arg(m_fileName)
                             .arg(methodUsage.loc.startLine).arg(methodUsage.loc.startColumn),
                             Normal);
                 m_colorOut->write(QLatin1String("Consider using a function instead\n"), Normal);
