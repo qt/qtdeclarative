@@ -389,7 +389,7 @@ QString QSGDefaultRenderContext::fontKey(const QRawFont &font)
 {
     QFontEngine *fe = QRawFontPrivate::get(font)->fontEngine;
     if (!fe->faceId().filename.isEmpty()) {
-        QByteArray keyName = fe->faceId().filename;
+        QByteArray keyName = fe->faceId().filename + ' ' + QByteArray::number(fe->faceId().index);
         if (font.style() != QFont::StyleNormal)
             keyName += QByteArray(" I");
         if (font.weight() != QFont::Normal)
