@@ -35,6 +35,7 @@
 ****************************************************************************/
 
 import QtQuick
+import QtQuick.Templates as T
 import QtQuick.Controls.Material
 import QtQuick.Controls.Material.impl
 
@@ -48,7 +49,7 @@ Rectangle {
         : control.checked || control.down ? control.Material.accentColor : control.Material.secondaryTextColor
     color: "transparent"
 
-    property Item control
+    property T.AbstractButton control
 
     Rectangle {
         x: (parent.width - width) / 2

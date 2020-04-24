@@ -30,6 +30,7 @@ import QtQuick.Controls
 
 //! [1]
 SpinBox {
+    id: spinBox
     from: 0
     to: items.length - 1
     value: 1 // "Medium"
@@ -49,7 +50,7 @@ SpinBox {
             if (items[i].toLowerCase().indexOf(text.toLowerCase()) === 0)
                 return i
         }
-        return sb.value
+        return spinBox.value
     }
 }
 //! [1]

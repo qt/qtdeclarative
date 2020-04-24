@@ -35,6 +35,7 @@
 ****************************************************************************/
 
 import QtQuick
+import QtQuick.Templates as T
 import QtQuick.Controls.Material
 import QtQuick.Controls.Material.impl
 
@@ -43,7 +44,7 @@ Item {
     implicitWidth: 38
     implicitHeight: 32
 
-    property Item control
+    property T.AbstractButton control
     property alias handle: handle
 
     Material.elevation: 1

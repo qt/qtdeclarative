@@ -50,8 +50,8 @@ T.ToolSeparator {
     verticalPadding: vertical ? 2 : 6
 
     contentItem: Rectangle {
-        implicitWidth: vertical ? 1 : 30
-        implicitHeight: vertical ? 30 : 1
+        implicitWidth: control.vertical ? 1 : 30
+        implicitHeight: control.vertical ? 30 : 1
         color: control.palette.mid
     }
 }

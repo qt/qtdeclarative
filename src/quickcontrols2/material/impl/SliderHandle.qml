@@ -56,7 +56,7 @@ Item {
         height: parent.height
         radius: width / 2
         scale: root.handlePressed ? 1.5 : 1
-        color: control.enabled ? root.control.Material.accentColor : root.control.Material.sliderDisabledColor
+        color: root.control.enabled ? root.control.Material.accentColor : root.control.Material.sliderDisabledColor
 
         Behavior on scale {
             NumberAnimation {

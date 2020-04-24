@@ -75,7 +75,7 @@ T.ComboBox {
             color: control.activeFocus ? control.Universal.accent :
                    control.pressed ? control.Universal.baseMediumLowColor :
                    control.hovered ? control.Universal.baseLowColor : "transparent"
-            visible: control.editable && !contentItem.hovered && (control.pressed || control.hovered)
+            visible: control.editable && !control.contentItem.hovered && (control.pressed || control.hovered)
             opacity: control.activeFocus && !control.pressed ? 0.4 : 1.0
         }
     }

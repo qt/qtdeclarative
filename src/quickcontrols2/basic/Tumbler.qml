@@ -53,6 +53,12 @@ T.Tumbler {
         opacity: 1.0 - Math.abs(Tumbler.displacement) / (control.visibleItemCount / 2)
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
+
+        // We use required property here to satisfy qmllint, but that means
+        // we also need to declare the index for the attached properties
+        // (see QQuickTumblerAttachedPrivate::init).
+        required property var modelData
+        required property int index
     }
 
     contentItem: TumblerView {

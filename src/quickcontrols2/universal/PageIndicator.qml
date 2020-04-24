@@ -56,6 +56,8 @@ T.PageIndicator {
         radius: width / 2
         color: index === control.currentIndex ? control.Universal.baseMediumHighColor :
                                       pressed ? control.Universal.baseMediumLowColor : control.Universal.baseLowColor
+
+        required property int index
     }
 
     contentItem: Row {

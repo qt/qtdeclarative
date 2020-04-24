@@ -35,6 +35,7 @@
 ****************************************************************************/
 
 import QtQuick
+import QtQuick.Templates as T
 import QtQuick.Controls.impl
 import QtQuick.Controls.Fusion
 import QtQuick.Controls.Fusion.impl
@@ -42,7 +43,7 @@ import QtQuick.Controls.Fusion.impl
 Rectangle {
     id: indicator
 
-    property Item control
+    property T.AbstractButton control
     readonly property color pressedColor: Fusion.mergedColors(control.palette.base, control.palette.windowText, 85)
     readonly property color checkMarkColor: Qt.darker(control.palette.text, 1.2)
 

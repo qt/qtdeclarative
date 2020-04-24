@@ -40,8 +40,11 @@ ListView {
     }
     delegate: SwipeDelegate {
         id: swipeDelegate
-        text: model.sender + " - " + model.title
+        text: sender + " - " + title
         width: parent.width
+
+        required property string sender
+        required property string title
 
         ListView.onRemove: SequentialAnimation {
             PropertyAction {
@@ -72,6 +75,8 @@ ListView {
             anchors.right: parent.right
 
             SwipeDelegate.onClicked: listView.model.remove(index)
+
+            required property int index
 
             background: Rectangle {
                 color: deleteLabel.SwipeDelegate.pressed ? Qt.darker("tomato", 1.1) : "tomato"

@@ -49,7 +49,7 @@ T.SplitView {
     handle: Rectangle {
         implicitWidth: control.orientation === Qt.Horizontal ? 2 : control.width
         implicitHeight: control.orientation === Qt.Horizontal ? control.height : 2
-        color: T.SplitHandle.pressed ? palette.dark
+        color: T.SplitHandle.pressed ? control.palette.dark
             : (T.SplitHandle.hovered ? control.palette.midlight : control.palette.mid)
     }
 }

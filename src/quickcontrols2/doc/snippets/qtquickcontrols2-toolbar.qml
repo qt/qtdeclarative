@@ -30,12 +30,13 @@ import QtQuick.Layouts
 import QtQuick.Controls
 
 Item {
+    id: root
     width: children[0].implicitWidth * 2
     height: children[0].implicitHeight
     Binding {
-        target: children[0]
+        target: root.children[0]
         property: "width"
-        value: width
+        value: root.width
     }
 //! [1]
 ToolBar {

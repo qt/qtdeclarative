@@ -31,6 +31,7 @@ import QtQuick.Controls.Material
 import QtQuick.Layouts
 
 Pane {
+    id: root
     implicitWidth: 400
     implicitHeight: 600
     padding: 10
@@ -43,21 +44,21 @@ Pane {
         id: measurementComponent
 
         Rectangle {
-            color: measurementColor
+            color: root.measurementColor
             width:  1
             height: parent.height
 
             Rectangle {
                 width: 5
                 height: 1
-                color: measurementColor
+                color: root.measurementColor
                 anchors.horizontalCenter: parent.horizontalCenter
             }
 
             Rectangle {
                 width: 5
                 height: 1
-                color: measurementColor
+                color: root.measurementColor
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottom: parent.bottom
             }
@@ -66,7 +67,7 @@ Pane {
                 x: 8
                 text: parent.height
                 height: parent.height
-                color: measurementColor
+                color: root.measurementColor
                 verticalAlignment: Text.AlignVCenter
             }
         }
@@ -77,7 +78,7 @@ Pane {
         spacing: 20
 
         ColumnLayout {
-            spacing: textTopMargin
+            spacing: root.textTopMargin
 
             Button {
                 id: button
@@ -87,18 +88,18 @@ Pane {
                     sourceComponent: measurementComponent
                     height: parent.height
                     anchors.left: parent.right
-                    anchors.leftMargin: barLeftMargin
+                    anchors.leftMargin: root.barLeftMargin
                 }
 
             }
             Text {
                 text: "Roboto " + button.font.pixelSize
-                color: measurementColor
+                color: root.measurementColor
             }
         }
 
         ColumnLayout {
-            spacing: textTopMargin
+            spacing: root.textTopMargin
 
             ItemDelegate {
                 id: itemDelegate
@@ -108,18 +109,18 @@ Pane {
                     sourceComponent: measurementComponent
                     height: parent.height
                     anchors.left: parent.right
-                    anchors.leftMargin: barLeftMargin
+                    anchors.leftMargin: root.barLeftMargin
                 }
 
             }
             Text {
                 text: "Roboto " + itemDelegate.font.pixelSize
-                color: measurementColor
+                color: root.measurementColor
             }
         }
 
         ColumnLayout {
-            spacing: textTopMargin
+            spacing: root.textTopMargin
 
             CheckDelegate {
                 id: checkDelegate
@@ -129,18 +130,18 @@ Pane {
                     sourceComponent: measurementComponent
                     height: parent.height
                     anchors.left: parent.right
-                    anchors.leftMargin: barLeftMargin
+                    anchors.leftMargin: root.barLeftMargin
                 }
 
             }
             Text {
                 text: "Roboto " + checkDelegate.font.pixelSize
-                color: measurementColor
+                color: root.measurementColor
             }
         }
 
         ColumnLayout {
-            spacing: textTopMargin
+            spacing: root.textTopMargin
 
             RadioDelegate {
                 id: radioDelegate
@@ -150,18 +151,18 @@ Pane {
                     sourceComponent: measurementComponent
                     height: parent.height
                     anchors.left: parent.right
-                    anchors.leftMargin: barLeftMargin
+                    anchors.leftMargin: root.barLeftMargin
                 }
 
             }
             Text {
                 text: "Roboto " + radioDelegate.font.pixelSize
-                color: measurementColor
+                color: root.measurementColor
             }
         }
 
         ColumnLayout {
-            spacing: textTopMargin
+            spacing: root.textTopMargin
 
             ComboBox {
                 id: comboBox
@@ -171,18 +172,18 @@ Pane {
                     sourceComponent: measurementComponent
                     height: parent.height
                     anchors.left: parent.right
-                    anchors.leftMargin: barLeftMargin
+                    anchors.leftMargin: root.barLeftMargin
                 }
 
             }
             Text {
                 text: "Roboto " + comboBox.font.pixelSize
-                color: measurementColor
+                color: root.measurementColor
             }
         }
 
         ColumnLayout {
-            spacing: textTopMargin
+            spacing: root.textTopMargin
 
             Item {
                 implicitWidth: groupBox.implicitWidth
@@ -196,12 +197,12 @@ Pane {
                     sourceComponent: measurementComponent
                     height: parent.height
                     anchors.left: parent.right
-                    anchors.leftMargin: barLeftMargin
+                    anchors.leftMargin: root.barLeftMargin
                 }
             }
             Text {
                 text: "Roboto " + groupBox.font.pixelSize
-                color: measurementColor
+                color: root.measurementColor
             }
         }
 
