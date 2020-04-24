@@ -39,6 +39,8 @@ ListView {
         text: modelData
         width: parent.width
         onClicked: console.log("clicked:", modelData)
+
+        required property string modelData
     }
 
     ScrollIndicator.vertical: ScrollIndicator { }

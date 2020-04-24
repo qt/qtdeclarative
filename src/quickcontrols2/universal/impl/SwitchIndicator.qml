@@ -43,6 +43,8 @@ Item {
     implicitWidth: 44
     implicitHeight: 20
 
+    property T.AbstractButton control
+
     Rectangle {
         width: parent.width
         height: parent.height
@@ -57,8 +59,6 @@ Item {
         opacity: indicator.control.hovered && indicator.control.checked && !indicator.control.pressed ? (indicator.control.Universal.theme === Universal.Light ? 0.7 : 0.9) : 1.0
         border.width: 2
     }
-
-    property Item control
 
     Rectangle {
         width: 10

@@ -60,7 +60,7 @@ T.BusyIndicator {
         Behavior on opacity { OpacityAnimator { duration: 250 } }
 
         RotationAnimator on rotation {
-            running: control.running || contentItem.visible
+            running: control.running || control.contentItem.visible
             from: 0
             to: 360
             duration: 1000

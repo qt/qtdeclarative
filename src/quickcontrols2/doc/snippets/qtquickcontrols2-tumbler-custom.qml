@@ -57,6 +57,8 @@ Tumbler {
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         opacity: 1.0 - Math.abs(Tumbler.displacement) / (control.visibleItemCount / 2)
+
+        required property var modelData
     }
 
     Rectangle {

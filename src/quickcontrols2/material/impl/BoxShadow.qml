@@ -66,5 +66,7 @@ RectangularGlow {
     height: implicitHeight + 2 * spreadRadius + (fullHeight ? 2 * cornerRadius : 0)
     glowRadius: blurRadius/2
     spread: 0.05
+    // qmllint disable unqualified
+    // Intentionally duck-typed (QTBUG-94807)
     cornerRadius: blurRadius + (source && source.radius || 0)
 }

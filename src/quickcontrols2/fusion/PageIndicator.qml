@@ -59,6 +59,9 @@ T.PageIndicator {
         color: control.palette.shadow
 
         opacity: index === currentIndex ? 0.95 : pressed ? 0.75 : 0.45
+
+        required property int index
+
         Behavior on opacity { OpacityAnimator { duration: 100 } }
     }
 

@@ -58,8 +58,8 @@ T.Dial {
     bottomInset: background ? -background.bottomInset || 0 : 0
 
     handle: Image {
-        x: background.x + background.width / 2 - width / 2
-        y: background.y + background.height / 2 - height / 2
+        x: control.background.x + control.background.width / 2 - width / 2
+        y: control.background.y + control.background.height / 2 - height / 2
 
         source: Imagine.url + "dial-handle"
         ImageSelector on source {
@@ -78,8 +78,8 @@ T.Dial {
             },
             Rotation {
                 angle: control.angle
-                origin.x: handle.width / 2
-                origin.y: handle.height / 2
+                origin.x: control.handle.width / 2
+                origin.y: control.handle.height / 2
             }
         ]
     }

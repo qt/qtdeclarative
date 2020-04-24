@@ -54,6 +54,8 @@ ScrollView {
         model: 20
         delegate: ItemDelegate {
             text: "Item " + index
+
+            required property int index
         }
     }
 }

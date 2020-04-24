@@ -43,6 +43,8 @@ ComboBox {
             verticalAlignment: Text.AlignVCenter
         }
         highlighted: control.highlightedIndex === index
+
+        required property int index
     }
 
     indicator: Canvas {

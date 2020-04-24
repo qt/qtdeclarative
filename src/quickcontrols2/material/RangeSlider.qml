@@ -55,19 +55,19 @@ T.RangeSlider {
     first.handle: SliderHandle {
         x: control.leftPadding + (control.horizontal ? control.first.visualPosition * (control.availableWidth - width) : (control.availableWidth - width) / 2)
         y: control.topPadding + (control.horizontal ? (control.availableHeight - height) / 2 : control.first.visualPosition * (control.availableHeight - height))
-        value: first.value
+        value: control.first.value
         handleHasFocus: activeFocus
-        handlePressed: first.pressed
-        handleHovered: first.hovered
+        handlePressed: control.first.pressed
+        handleHovered: control.first.hovered
     }
 
     second.handle: SliderHandle {
         x: control.leftPadding + (control.horizontal ? control.second.visualPosition * (control.availableWidth - width) : (control.availableWidth - width) / 2)
         y: control.topPadding + (control.horizontal ? (control.availableHeight - height) / 2 : control.second.visualPosition * (control.availableHeight - height))
-        value: second.value
+        value: control.second.value
         handleHasFocus: activeFocus
-        handlePressed: second.pressed
-        handleHovered: second.hovered
+        handlePressed: control.second.pressed
+        handleHovered: control.second.hovered
     }
 
     background: Rectangle {

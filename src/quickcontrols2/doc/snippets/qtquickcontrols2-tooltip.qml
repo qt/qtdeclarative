@@ -36,9 +36,9 @@ Item {
 
     property Button button: children[0]
 
-    Binding { target: button; property: "down"; value: root.Window.active }
-    Binding { target: button.anchors; property: "bottom"; value: root.bottom }
-    Binding { target: button.anchors; property: "horizontalCenter"; value: root.horizontalCenter }
+    Binding { target: root.button; property: "down"; value: root.Window.active }
+    Binding { target: root.button.anchors; property: "bottom"; value: root.bottom }
+    Binding { target: root.button.anchors; property: "horizontalCenter"; value: root.horizontalCenter }
 
     //! [1]
     Button {

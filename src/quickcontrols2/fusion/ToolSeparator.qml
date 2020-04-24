@@ -52,8 +52,8 @@ T.ToolSeparator {
     verticalPadding: vertical ? 2 : 6
 
     contentItem: Rectangle {
-        implicitWidth: vertical ? 2 : 8
-        implicitHeight: vertical ? 8 : 2
+        implicitWidth: control.vertical ? 2 : 8
+        implicitHeight: control.vertical ? 8 : 2
         color: Qt.darker(control.palette.window, 1.1)
 
         Rectangle {

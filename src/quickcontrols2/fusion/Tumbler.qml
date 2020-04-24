@@ -55,6 +55,9 @@ T.Tumbler {
         opacity: (1.0 - Math.abs(Tumbler.displacement) / (control.visibleItemCount / 2)) * (control.enabled ? 1 : 0.6)
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
+
+        required property var modelData
+        required property int index
     }
 
     contentItem: TumblerView {
