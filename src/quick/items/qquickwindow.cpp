@@ -1850,6 +1850,25 @@ bool QQuickWindow::event(QEvent *e)
         if (d->contentItem)
             QCoreApplication::sendEvent(d->contentItem, e);
         break;
+    case QEvent::InputMethod:
+    case QEvent::InputMethodQuery:
+        {
+            QQuickItem *target = d->activeFocusItem;
+            // while an input method delivers the event, this window might still be inactive
+            if (!target) {
+                target = d->contentItem;
+                if (!target || !target->isEnabled())
+                    break;
+                // see setFocusInScope for a similar loop
+                while (target->isFocusScope() && target->scopedFocusItem() && target->scopedFocusItem()->isEnabled())
+                    target = target->scopedFocusItem();
+            }
+            if (target) {
+                QCoreApplication::sendEvent(target, e);
+                return true;
+            }
+        }
+        break;
     default:
         break;
     }
