@@ -1,4 +1,5 @@
 import Test 1.0
+import QtQuick 2.15
 
 MyTypeObject {
     property string f_family: font.family
