@@ -100,6 +100,10 @@ public:
 
     void collectGarbage();
 
+    enum ObjectOwnership { CppOwnership, JavaScriptOwnership };
+    static void setObjectOwnership(QObject *, ObjectOwnership);
+    static ObjectOwnership objectOwnership(QObject *);
+
 #if QT_DEPRECATED_SINCE(5, 6)
     QT_DEPRECATED void installTranslatorFunctions(const QJSValue &object = QJSValue());
 #endif

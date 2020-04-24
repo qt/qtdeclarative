@@ -1007,6 +1007,72 @@ QJSEngine *qjsEngine(const QObject *object)
     return data->jsWrapper.engine()->jsEngine();
 }
 
+
+/*!
+  \enum QJSEngine::ObjectOwnership
+
+  ObjectOwnership controls whether or not the JavaScript memory manager automatically destroys the
+  QObject when the corresponding JavaScript object is garbage collected by the
+  engine. The two ownership options are:
+
+  \value CppOwnership The object is owned by C++ code and the JavaScript memory manager will never
+  delete it. The JavaScript destroy() method cannot be used on these objects. This
+  option is similar to QScriptEngine::QtOwnership.
+
+  \value JavaScriptOwnership The object is owned by JavaScript. When the object
+  is returned to the JavaScript memory manager as the return value of a method call, the JavaScript
+  memory manager will track it and delete it if there are no remaining JavaScript references to it
+  and it has no QObject::parent(). An object tracked by one QJSEngine will be deleted during that
+  QJSEngine's destructor. Thus, JavaScript references between objects with JavaScriptOwnership from
+  two different engines will not be valid if one of these engines is deleted. This option is similar
+  to QScriptEngine::ScriptOwnership.
+
+  Generally an application doesn't need to set an object's ownership explicitly. the JavaScript
+  memory manager uses a heuristic to set the default ownership. By default, an object that is
+  created by the JavaScript memory manager has JavaScriptOwnership. The exception to this are the
+  root objects created by calling QQmlComponent::create() or QQmlComponent::beginCreate(), which
+  have CppOwnership by default. The ownership of these root-level objects is considered to have been
+  transferred to the C++ caller.
+
+  Objects not-created by the JavaScript memory manager have CppOwnership by default. The exception
+  to this are objects returned from C++ method calls; their ownership will be set to
+  JavaScriptOwnership. This applies only to explicit invocations of Q_INVOKABLE methods or slots,
+  but not to property getter invocations.
+
+  Calling setObjectOwnership() overrides the default ownership.
+*/
+
+/*!
+  Sets the \a ownership of \a object.
+*/
+void QJSEngine::setObjectOwnership(QObject *object, ObjectOwnership ownership)
+{
+    if (!object)
+        return;
+
+    QQmlData *ddata = QQmlData::get(object, true);
+    if (!ddata)
+        return;
+
+    ddata->indestructible = (ownership == CppOwnership)?true:false;
+    ddata->explicitIndestructibleSet = true;
+}
+
+/*!
+  Returns the ownership of \a object.
+*/
+QJSEngine::ObjectOwnership QJSEngine::objectOwnership(QObject *object)
+{
+    if (!object)
+        return CppOwnership;
+
+    QQmlData *ddata = QQmlData::get(object, false);
+    if (!ddata)
+        return CppOwnership;
+    else
+        return ddata->indestructible?CppOwnership:JavaScriptOwnership;
+}
+
 QT_END_NAMESPACE
 
 #include "moc_qjsengine.cpp"

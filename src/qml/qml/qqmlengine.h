@@ -165,9 +165,6 @@ public:
     static QQmlContext *contextForObject(const QObject *);
     static void setContextForObject(QObject *, QQmlContext *);
 
-    enum ObjectOwnership { CppOwnership, JavaScriptOwnership };
-    static void setObjectOwnership(QObject *, ObjectOwnership);
-    static ObjectOwnership objectOwnership(QObject *);
 protected:
     QQmlEngine(QQmlEnginePrivate &dd, QObject *p);
     bool event(QEvent *) override;
