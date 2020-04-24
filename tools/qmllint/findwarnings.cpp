@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 
-#include "findunqualified.h"
+#include "findwarnings.h"
 #include "importedmembersvisitor.h"
 #include "scopetree.h"
 #include "typedescriptionreader.h"
@@ -65,17 +65,17 @@ static TypeDescriptionReader createQmltypesReaderForFile(const QString &filename
     return reader;
 }
 
-void FindUnqualifiedIDVisitor::enterEnvironment(ScopeType type, const QString &name)
+void FindWarningVisitor::enterEnvironment(ScopeType type, const QString &name)
 {
     m_currentScope = ScopeTree::create(type, name, m_currentScope);
 }
 
-void FindUnqualifiedIDVisitor::leaveEnvironment()
+void FindWarningVisitor::leaveEnvironment()
 {
     m_currentScope = m_currentScope->parentScope();
 }
 
-void FindUnqualifiedIDVisitor::parseHeaders(QQmlJS::AST::UiHeaderItemList *header)
+void FindWarningVisitor::parseHeaders(QQmlJS::AST::UiHeaderItemList *header)
 {
     using namespace QQmlJS::AST;
 
@@ -99,7 +99,7 @@ void FindUnqualifiedIDVisitor::parseHeaders(QQmlJS::AST::UiHeaderItemList *heade
     }
 }
 
-ScopeTree::Ptr FindUnqualifiedIDVisitor::parseProgram(QQmlJS::AST::Program *program,
+ScopeTree::Ptr FindWarningVisitor::parseProgram(QQmlJS::AST::Program *program,
                                                       const QString &name)
 {
     using namespace QQmlJS::AST;
@@ -185,8 +185,8 @@ QStringList completeImportPaths(const QString &uri, const QString &basePath, QTy
 static const QLatin1String SlashQmldir             = QLatin1String("/qmldir");
 static const QLatin1String SlashPluginsDotQmltypes = QLatin1String("/plugins.qmltypes");
 
-void FindUnqualifiedIDVisitor::readQmltypes(const QString &filename,
-                                            FindUnqualifiedIDVisitor::Import &result)
+void FindWarningVisitor::readQmltypes(const QString &filename,
+                                            FindWarningVisitor::Import &result)
 {
     auto reader = createQmltypesReaderForFile(filename);
     auto succ = reader(&result.objects, &result.dependencies);
@@ -194,7 +194,7 @@ void FindUnqualifiedIDVisitor::readQmltypes(const QString &filename,
         m_colorOut.writeUncolored(reader.errorMessage());
 }
 
-FindUnqualifiedIDVisitor::Import FindUnqualifiedIDVisitor::readQmldir(const QString &path)
+FindWarningVisitor::Import FindWarningVisitor::readQmldir(const QString &path)
 {
     Import result;
     auto reader = createQmldirParserForFile(path + SlashQmldir);
@@ -231,7 +231,7 @@ FindUnqualifiedIDVisitor::Import FindUnqualifiedIDVisitor::readQmldir(const QStr
     return result;
 }
 
-void FindUnqualifiedIDVisitor::processImport(const QString &prefix, const FindUnqualifiedIDVisitor::Import &import)
+void FindWarningVisitor::processImport(const QString &prefix, const FindWarningVisitor::Import &import)
 {
     for (auto const &dependency : qAsConst(import.dependencies)) {
         auto const split = dependency.split(" ");
@@ -264,7 +264,7 @@ void FindUnqualifiedIDVisitor::processImport(const QString &prefix, const FindUn
     }
 }
 
-void FindUnqualifiedIDVisitor::importHelper(const QString &module, const QString &prefix,
+void FindWarningVisitor::importHelper(const QString &module, const QString &prefix,
                                             QTypeRevision version)
 {
     const QString id = QString(module).replace(QLatin1Char('/'), QLatin1Char('.'));
@@ -310,7 +310,7 @@ void FindUnqualifiedIDVisitor::importHelper(const QString &module, const QString
     }
 }
 
-ScopeTree::Ptr FindUnqualifiedIDVisitor::localFile2ScopeTree(const QString &filePath)
+ScopeTree::Ptr FindWarningVisitor::localFile2ScopeTree(const QString &filePath)
 {
     using namespace QQmlJS::AST;
     const QFileInfo info { filePath };
@@ -356,7 +356,7 @@ ScopeTree::Ptr FindUnqualifiedIDVisitor::localFile2ScopeTree(const QString &file
     return parseProgram(QQmlJS::AST::cast<QQmlJS::AST::Program *>(parser.rootNode()), scopeName);
 }
 
-void FindUnqualifiedIDVisitor::importFileOrDirectory(const QString &fileOrDirectory,
+void FindWarningVisitor::importFileOrDirectory(const QString &fileOrDirectory,
                                                      const QString &prefix)
 {
     QString name = fileOrDirectory;
@@ -377,7 +377,7 @@ void FindUnqualifiedIDVisitor::importFileOrDirectory(const QString &fileOrDirect
     }
 }
 
-void FindUnqualifiedIDVisitor::importExportedNames(const QStringRef &prefix, QString name)
+void FindWarningVisitor::importExportedNames(const QStringRef &prefix, QString name)
 {
     QList<ScopeTree::ConstPtr> scopes;
     for (;;) {
@@ -392,10 +392,14 @@ void FindUnqualifiedIDVisitor::importExportedNames(const QStringRef &prefix, QSt
                     inheritenceCycle.append(seen->superclassName());
                 }
 
-                m_colorOut.write(QLatin1String("Warning: "), Warning);
-                m_colorOut.write(QString::fromLatin1("%1 is part of an inheritance cycle: %2\n")
-                                 .arg(name)
-                                 .arg(inheritenceCycle));
+
+                if (m_warnInheritanceCycle) {
+                    m_colorOut.write(QLatin1String("Warning: "), Warning);
+                    m_colorOut.write(QString::fromLatin1("%1 is part of an inheritance cycle: %2\n")
+                                     .arg(name)
+                                     .arg(inheritenceCycle));
+                }
+
                 m_unknownImports.insert(name);
                 m_visitFailed = true;
                 break;
@@ -422,14 +426,14 @@ void FindUnqualifiedIDVisitor::importExportedNames(const QStringRef &prefix, QSt
     }
 }
 
-void FindUnqualifiedIDVisitor::throwRecursionDepthError()
+void FindWarningVisitor::throwRecursionDepthError()
 {
     m_colorOut.write(QStringLiteral("Error"), Error);
     m_colorOut.write(QStringLiteral("Maximum statement or expression depth exceeded"), Error);
     m_visitFailed = true;
 }
 
-bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiProgram *)
+bool FindWarningVisitor::visit(QQmlJS::AST::UiProgram *)
 {
     enterEnvironment(ScopeType::QMLScope, "program");
     QHash<QString, ScopeTree::ConstPtr> objects;
@@ -476,78 +480,78 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiProgram *)
     return true;
 }
 
-void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::UiProgram *)
+void FindWarningVisitor::endVisit(QQmlJS::AST::UiProgram *)
 {
     leaveEnvironment();
 }
 
-bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::ClassExpression *ast)
+bool FindWarningVisitor::visit(QQmlJS::AST::ClassExpression *ast)
 {
     enterEnvironment(ScopeType::JSFunctionScope, ast->name.toString());
     return true;
 }
 
-void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::ClassExpression *)
+void FindWarningVisitor::endVisit(QQmlJS::AST::ClassExpression *)
 {
     leaveEnvironment();
 }
 
-bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::ClassDeclaration *ast)
+bool FindWarningVisitor::visit(QQmlJS::AST::ClassDeclaration *ast)
 {
     enterEnvironment(ScopeType::JSFunctionScope, ast->name.toString());
     return true;
 }
 
-void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::ClassDeclaration *)
+void FindWarningVisitor::endVisit(QQmlJS::AST::ClassDeclaration *)
 {
     leaveEnvironment();
 }
 
-bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::ForStatement *)
+bool FindWarningVisitor::visit(QQmlJS::AST::ForStatement *)
 {
     enterEnvironment(ScopeType::JSLexicalScope, "forloop");
     return true;
 }
 
-void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::ForStatement *)
+void FindWarningVisitor::endVisit(QQmlJS::AST::ForStatement *)
 {
     leaveEnvironment();
 }
 
-bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::ForEachStatement *)
+bool FindWarningVisitor::visit(QQmlJS::AST::ForEachStatement *)
 {
     enterEnvironment(ScopeType::JSLexicalScope, "foreachloop");
     return true;
 }
 
-void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::ForEachStatement *)
+void FindWarningVisitor::endVisit(QQmlJS::AST::ForEachStatement *)
 {
     leaveEnvironment();
 }
 
-bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::Block *)
+bool FindWarningVisitor::visit(QQmlJS::AST::Block *)
 {
     enterEnvironment(ScopeType::JSLexicalScope, "block");
     return true;
 }
 
-void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::Block *)
+void FindWarningVisitor::endVisit(QQmlJS::AST::Block *)
 {
     leaveEnvironment();
 }
 
-bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::CaseBlock *)
+bool FindWarningVisitor::visit(QQmlJS::AST::CaseBlock *)
 {
     enterEnvironment(ScopeType::JSLexicalScope, "case");
     return true;
 }
 
-void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::CaseBlock *)
+void FindWarningVisitor::endVisit(QQmlJS::AST::CaseBlock *)
 {
     leaveEnvironment();
 }
 
-bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::Catch *catchStatement)
+bool FindWarningVisitor::visit(QQmlJS::AST::Catch *catchStatement)
 {
     enterEnvironment(ScopeType::JSLexicalScope, "catch");
     m_currentScope->insertJSIdentifier(catchStatement->patternElement->bindingIdentifier.toString(),
@@ -555,25 +559,28 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::Catch *catchStatement)
     return true;
 }
 
-void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::Catch *)
+void FindWarningVisitor::endVisit(QQmlJS::AST::Catch *)
 {
     leaveEnvironment();
 }
 
-bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::WithStatement *withStatement)
+bool FindWarningVisitor::visit(QQmlJS::AST::WithStatement *withStatement)
 {
-    m_colorOut.write(QString::fromLatin1("Warning: "), Warning);
-    m_colorOut.write(QString::fromLatin1(
-                         "%1:%2: with statements are strongly discouraged in QML "
-                         "and might cause false positives when analysing unqalified identifiers\n")
-                     .arg(withStatement->firstSourceLocation().startLine)
-                     .arg(withStatement->firstSourceLocation().startColumn),
-                     Normal);
+    if (m_warnWithStatement) {
+        m_colorOut.write(QString::fromLatin1("Warning: "), Warning);
+        m_colorOut.write(QString::fromLatin1(
+                             "%1:%2: with statements are strongly discouraged in QML "
+                             "and might cause false positives when analysing unqalified identifiers\n")
+                         .arg(withStatement->firstSourceLocation().startLine)
+                         .arg(withStatement->firstSourceLocation().startColumn),
+                         Normal);
+    }
+
     enterEnvironment(ScopeType::JSLexicalScope, "with");
     return true;
 }
 
-void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::WithStatement *)
+void FindWarningVisitor::endVisit(QQmlJS::AST::WithStatement *)
 {
     leaveEnvironment();
 }
@@ -595,7 +602,7 @@ static QString signalName(QStringView handlerName)
     return QString();
 }
 
-bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
+bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
 {
     using namespace QQmlJS::AST;
     auto name = uisb->qualifiedId->name;
@@ -645,7 +652,7 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
     return true;
 }
 
-bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiPublicMember *uipm)
+bool FindWarningVisitor::visit(QQmlJS::AST::UiPublicMember *uipm)
 {
     // property bool inactive: !active
     // extract name inactive
@@ -663,7 +670,7 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiPublicMember *uipm)
     return true;
 }
 
-bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::IdentifierExpression *idexp)
+bool FindWarningVisitor::visit(QQmlJS::AST::IdentifierExpression *idexp)
 {
     auto name = idexp->name;
     m_currentScope->addIdToAccessed(name.toString(), idexp->firstSourceLocation());
@@ -671,15 +678,19 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::IdentifierExpression *idexp)
     return true;
 }
 
-FindUnqualifiedIDVisitor::FindUnqualifiedIDVisitor(QStringList qmltypeDirs, QStringList qmltypeFiles, QString code,
-                                                   QString fileName, bool silent)
+FindWarningVisitor::FindWarningVisitor(QStringList qmltypeDirs, QStringList qmltypeFiles, QString code,
+                                                   QString fileName, bool silent, bool warnUnqualified,
+                                                   bool warnWithStatement, bool warnInheritanceCycle)
     : m_rootScope(ScopeTree::create(ScopeType::JSFunctionScope, "global")),
       m_qmltypeDirs(std::move(qmltypeDirs)),
       m_qmltypeFiles(std::move(qmltypeFiles)),
       m_code(std::move(code)),
       m_rootId(QLatin1String("<id>")),
       m_filePath(std::move(fileName)),
-      m_colorOut(silent)
+      m_colorOut(silent),
+      m_warnUnqualified(warnUnqualified),
+      m_warnWithStatement(warnWithStatement),
+      m_warnInheritanceCycle(warnInheritanceCycle)
 {
     m_currentScope = m_rootScope;
 
@@ -711,7 +722,7 @@ FindUnqualifiedIDVisitor::FindUnqualifiedIDVisitor(QStringList qmltypeDirs, QStr
         m_currentScope->insertJSIdentifier(jsGlobVar, ScopeType::JSLexicalScope);
 }
 
-bool FindUnqualifiedIDVisitor::check()
+bool FindWarningVisitor::check()
 {
     if (m_visitFailed)
         return false;
@@ -725,11 +736,14 @@ bool FindUnqualifiedIDVisitor::check()
         outstandingConnection.uiod->initializer->accept(this);
     }
 
+    if (!m_warnUnqualified)
+        return true;
+
     CheckIdentifiers check(&m_colorOut, m_code, m_exportedName2Scope, m_filePath);
     return check(m_qmlid2scope, m_rootScope, m_rootId);
 }
 
-bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::VariableDeclarationList *vdl)
+bool FindWarningVisitor::visit(QQmlJS::AST::VariableDeclarationList *vdl)
 {
     while (vdl) {
         m_currentScope->insertJSIdentifier(
@@ -742,7 +756,7 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::VariableDeclarationList *vdl)
     return true;
 }
 
-void FindUnqualifiedIDVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExpression *fexpr)
+void FindWarningVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExpression *fexpr)
 {
     using namespace QQmlJS::AST;
     auto name = fexpr->name.toString();
@@ -757,36 +771,36 @@ void FindUnqualifiedIDVisitor::visitFunctionExpressionHelper(QQmlJS::AST::Functi
     }
 }
 
-bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::FunctionExpression *fexpr)
+bool FindWarningVisitor::visit(QQmlJS::AST::FunctionExpression *fexpr)
 {
     visitFunctionExpressionHelper(fexpr);
     return true;
 }
 
-void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::FunctionExpression *)
+void FindWarningVisitor::endVisit(QQmlJS::AST::FunctionExpression *)
 {
     leaveEnvironment();
 }
 
-bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::FunctionDeclaration *fdecl)
+bool FindWarningVisitor::visit(QQmlJS::AST::FunctionDeclaration *fdecl)
 {
     visitFunctionExpressionHelper(fdecl);
     return true;
 }
 
-void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::FunctionDeclaration *)
+void FindWarningVisitor::endVisit(QQmlJS::AST::FunctionDeclaration *)
 {
     leaveEnvironment();
 }
 
-bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::FormalParameterList *fpl)
+bool FindWarningVisitor::visit(QQmlJS::AST::FormalParameterList *fpl)
 {
     for (auto const &boundName : fpl->boundNames())
         m_currentScope->insertJSIdentifier(boundName.id, ScopeType::JSLexicalScope);
     return true;
 }
 
-bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiImport *import)
+bool FindWarningVisitor::visit(QQmlJS::AST::UiImport *import)
 {
     // construct path
     QString prefix = QLatin1String("");
@@ -817,7 +831,7 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiImport *import)
     return true;
 }
 
-bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiEnumDeclaration *uied)
+bool FindWarningVisitor::visit(QQmlJS::AST::UiEnumDeclaration *uied)
 {
     MetaEnum qmlEnum(uied->name.toString());
     for (const auto *member = uied->members; member; member = member->next)
@@ -826,7 +840,7 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiEnumDeclaration *uied)
     return true;
 }
 
-bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
+bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
 {
     // property QtObject __styleData: QtObject {...}
 
@@ -849,7 +863,7 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
     return true;
 }
 
-void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
+void FindWarningVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
 {
     const auto childScope = m_currentScope;
     leaveEnvironment();
@@ -862,7 +876,7 @@ void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
     m_currentScope->addProperty(property);
 }
 
-bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
+bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
 {
     using namespace QQmlJS::AST;
 
@@ -923,7 +937,7 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
     return true;
 }
 
-bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::PatternElement *element)
+bool FindWarningVisitor::visit(QQmlJS::AST::PatternElement *element)
 {
     if (element->isVariableDeclaration()) {
         QQmlJS::AST::BoundNames names;
@@ -939,19 +953,19 @@ bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::PatternElement *element)
     return true;
 }
 
-void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::UiObjectDefinition *)
+void FindWarningVisitor::endVisit(QQmlJS::AST::UiObjectDefinition *)
 {
     auto childScope = m_currentScope;
     leaveEnvironment();
     childScope->updateParentProperty(m_currentScope);
 }
 
-bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::FieldMemberExpression *)
+bool FindWarningVisitor::visit(QQmlJS::AST::FieldMemberExpression *)
 {
     return true;
 }
 
-void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::FieldMemberExpression *fieldMember)
+void FindWarningVisitor::endVisit(QQmlJS::AST::FieldMemberExpression *fieldMember)
 {
     using namespace QQmlJS::AST;
     ExpressionNode *base = fieldMember->base;
@@ -975,12 +989,12 @@ void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::FieldMemberExpression *fiel
     }
 }
 
-bool FindUnqualifiedIDVisitor::visit(QQmlJS::AST::BinaryExpression *)
+bool FindWarningVisitor::visit(QQmlJS::AST::BinaryExpression *)
 {
     return true;
 }
 
-void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::BinaryExpression *binExp)
+void FindWarningVisitor::endVisit(QQmlJS::AST::BinaryExpression *binExp)
 {
     if (binExp->op == QSOperator::As && m_fieldMemberBase == binExp->left)
         m_fieldMemberBase = binExp;

@@ -8,7 +8,7 @@ SOURCES += \
     $$METATYPEREADER_SOURCES \
     checkidentifiers.cpp \
     main.cpp \
-    findunqualified.cpp \
+    findwarnings.cpp \
     importedmembersvisitor.cpp \
     qcoloroutput.cpp
 
@@ -19,6 +19,6 @@ load(qt_tool)
 HEADERS += \
     $$METATYPEREADER_HEADERS \
     checkidentifiers.h \
-    findunqualified.h \
+    findwarnings.h \
     importedmembersvisitor.h \
     qcoloroutput.h

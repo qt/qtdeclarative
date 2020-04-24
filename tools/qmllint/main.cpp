@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 
-#include "findunqualified.h"
+#include "findwarnings.h"
 
 #include <QtQml/private/qqmljslexer_p.h>
 #include <QtQml/private/qqmljsparser_p.h>
@@ -47,7 +47,8 @@
 #include <QtCore/qlibraryinfo.h>
 #endif
 
-static bool lint_file(const QString &filename, const bool silent, const bool warnUnqualied,
+static bool lint_file(const QString &filename, const bool silent, const bool warnUnqualified,
+                      const bool warnWithStatement, const bool warnInheritanceCycle,
                       const QStringList &qmltypeDirs, const QStringList &qmltypeFiles)
 {
     QFile file(filename);
@@ -82,9 +83,10 @@ static bool lint_file(const QString &filename, const bool silent, const bool war
         }
     }
 
-    if (success && !isJavaScript && warnUnqualied) {
+    if (success && !isJavaScript) {
         auto root = parser.rootNode();
-        FindUnqualifiedIDVisitor v { qmltypeDirs, qmltypeFiles, code, filename, silent };
+        FindWarningVisitor v { qmltypeDirs, qmltypeFiles, code, filename, silent,
+                               warnUnqualified, warnWithStatement, warnInheritanceCycle };
         root->accept(&v);
         success = v.check();
     }
@@ -107,9 +109,18 @@ int main(int argv, char *argc[])
                                     QLatin1String("Don't output syntax errors"));
     parser.addOption(silentOption);
 
-    QCommandLineOption checkUnqualified(QStringList() << "U" << "check-unqualified",
-                                        QLatin1String("Warn about unqualified identifiers"));
-    parser.addOption(checkUnqualified);
+    QCommandLineOption disableCheckUnqualified(QStringList() << "no-unqualified-id",
+                                               QLatin1String("Don't warn about unqualified identifiers"));
+    parser.addOption(disableCheckUnqualified);
+
+    QCommandLineOption disableCheckWithStatement(QStringList() << "no-with-statement",
+                                                 QLatin1String("Don't warn about with statement"));
+    parser.addOption(disableCheckWithStatement);
+
+    QCommandLineOption disableCheckInheritanceCycle(QStringList() << "no-inheritance-cycle",
+                                                    QLatin1String("Don't warn about inheritance cycles"));
+
+    parser.addOption(disableCheckInheritanceCycle);
 
     QCommandLineOption qmltypesDirsOption(
             QStringList() << "I"
@@ -136,7 +147,10 @@ int main(int argv, char *argc[])
     }
 
     bool silent = parser.isSet(silentOption);
-    bool warnUnqualified = parser.isSet(checkUnqualified);
+    bool warnUnqualified = !parser.isSet(disableCheckUnqualified);
+    bool warnWithStatement = !parser.isSet(disableCheckWithStatement);
+    bool warnInheritanceCycle = !parser.isSet(disableCheckInheritanceCycle);
+
     // use host qml import path as a sane default if nothing else has been provided
     QStringList qmltypeDirs = parser.isSet(qmltypesDirsOption)
             ? parser.values(qmltypesDirsOption)
@@ -152,7 +166,9 @@ int main(int argv, char *argc[])
     QStringList qmltypeFiles = parser.isSet(qmltypesFilesOption) ? parser.values(qmltypesFilesOption) : QStringList {};
 #else
     bool silent = false;
-    bool warnUnqualified = false;
+    bool warnUnqualified = true;
+    bool warnWithStatement = true;
+    bool warnInheritanceCycle = true;
     QStringList qmltypeDirs {};
     QStringList qmltypeFiles {};
 #endif
@@ -163,7 +179,7 @@ int main(int argv, char *argc[])
     const auto arguments = app.arguments();
     for (const QString &filename : arguments)
 #endif
-        success &= lint_file(filename, silent, warnUnqualified, qmltypeDirs, qmltypeFiles);
+        success &= lint_file(filename, silent, warnUnqualified, warnWithStatement, warnInheritanceCycle, qmltypeDirs, qmltypeFiles);
 
     return success ? 0 : -1;
 }

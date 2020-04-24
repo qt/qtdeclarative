@@ -218,7 +218,7 @@ QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed)
 {
     auto qmlImportDir = QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
     QStringList args;
-    args << QStringLiteral("-U") << testFile(fileToLint)
+    args  << testFile(fileToLint)
          << QStringLiteral("-I") << qmlImportDir
          << QStringLiteral("-I") << dataDirectory()
          << QStringLiteral("--silent");

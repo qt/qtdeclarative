@@ -48,13 +48,14 @@
 
 #include <QtCore/qscopedpointer.h>
 
-class FindUnqualifiedIDVisitor : public QQmlJS::AST::Visitor
+class FindWarningVisitor : public QQmlJS::AST::Visitor
 {
-    Q_DISABLE_COPY_MOVE(FindUnqualifiedIDVisitor)
+    Q_DISABLE_COPY_MOVE(FindWarningVisitor)
 public:
-    explicit FindUnqualifiedIDVisitor(QStringList qmltypeDirs, QStringList qmltypeFiles, QString code,
-                                      QString fileName, bool silent);
-    ~FindUnqualifiedIDVisitor() override = default;
+    explicit FindWarningVisitor(QStringList qmltypeDirs, QStringList qmltypeFiles, QString code,
+                                      QString fileName, bool silent, bool warnUnqualified,
+                                      bool warnWithStatement, bool warnInheritanceCycle);
+    ~FindWarningVisitor() override = default;
     bool check();
 
 private:
@@ -78,6 +79,10 @@ private:
     QSet<QString> m_unknownImports;
     ColorOutput m_colorOut;
     bool m_visitFailed = false;
+
+    bool m_warnUnqualified;
+    bool m_warnWithStatement;
+    bool m_warnInheritanceCycle;
 
     struct OutstandingConnection
     {
