@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
@@ -39,68 +39,79 @@ import HelperWidgets 2.0
 import QtQuick.Layouts 1.12
 
 Section {
-    caption: qsTr("Control")
+    caption: qsTr("Inset")
 
     SectionLayout {
         Label {
-            text: qsTr("Enabled")
-            tooltip: qsTr("Whether the control is enabled.")
+            text: qsTr("Vertical")
         }
         SecondColumnLayout {
-            CheckBox {
-                text: backendValues.enabled.valueToString
-                backendValue: backendValues.enabled
-                Layout.fillWidth: true
+            Label {
+                text: qsTr("Top")
+                tooltip: qsTr("Top inset for the background.")
+                width: 42
             }
-        }
-
-        Label {
-            text: qsTr("Focus Policy")
-            tooltip: qsTr("Focus policy of the control.")
-        }
-        SecondColumnLayout {
-            ComboBox {
-                backendValue: backendValues.focusPolicy
-                model: [ "TabFocus", "ClickFocus", "StrongFocus", "WheelFocus", "NoFocus" ]
-                scope: "Qt"
-                Layout.fillWidth: true
-            }
-        }
-
-        Label {
-            text: qsTr("Hover")
-            tooltip: qsTr("Whether control accepts hover events.")
-        }
-        SecondColumnLayout {
-            CheckBox {
-                text: backendValues.hoverEnabled.valueToString
-                backendValue: backendValues.hoverEnabled
-                Layout.fillWidth: true
-            }
-        }
-
-        Label {
-            text: qsTr("Spacing")
-            tooltip: qsTr("Spacing between internal elements of the control.")
-        }
-        SecondColumnLayout {
             SpinBox {
-                maximumValue: 9999999
-                minimumValue: -9999999
+                maximumValue: 10000
+                minimumValue: -10000
+                realDragRange: 5000
                 decimals: 0
-                backendValue: backendValues.spacing
+                backendValue: backendValues.topInset
+                Layout.fillWidth: true
+            }
+            Item {
+                width: 4
+                height: 4
+            }
+
+            Label {
+                text: qsTr("Bottom")
+                tooltip: qsTr("Bottom inset for the background.")
+                width: 42
+            }
+            SpinBox {
+                maximumValue: 10000
+                minimumValue: -10000
+                realDragRange: 5000
+                decimals: 0
+                backendValue: backendValues.bottomInset
                 Layout.fillWidth: true
             }
         }
 
         Label {
-            text: qsTr("Wheel")
-            tooltip: qsTr("Whether control accepts wheel events.")
+            text: qsTr("Horizontal")
         }
         SecondColumnLayout {
-            CheckBox {
-                text: backendValues.wheelEnabled.valueToString
-                backendValue: backendValues.wheelEnabled
+            Label {
+                text: qsTr("Left")
+                tooltip: qsTr("Left inset for the background.")
+                width: 42
+            }
+            SpinBox {
+                maximumValue: 10000
+                minimumValue: -10000
+                realDragRange: 5000
+                decimals: 0
+                backendValue: backendValues.leftInset
+                Layout.fillWidth: true
+            }
+            Item {
+                width: 4
+                height: 4
+            }
+
+            Label {
+                text: qsTr("Right")
+                tooltip: qsTr("Right inset for the background.")
+                width: 42
+            }
+            SpinBox {
+                maximumValue: 10000
+                minimumValue: -10000
+                realDragRange: 5000
+                decimals: 0
+                backendValue: backendValues.rightInset
                 Layout.fillWidth: true
             }
         }

@@ -143,6 +143,20 @@ Column {
                     Layout.fillWidth: true
                 }
             }
+
+            Label {
+                text: qsTr("Touch drag threshold")
+                tooltip: qsTr("The threshold (in logical pixels) at which a touch drag event will be initiated.")
+            }
+            SecondColumnLayout {
+                SpinBox {
+                    minimumValue: 0
+                    maximumValue: 10000
+                    decimals: 0
+                    backendValue: backendValues.touchDragThreshold
+                    Layout.fillWidth: true
+                }
+            }
         }
     }
 
