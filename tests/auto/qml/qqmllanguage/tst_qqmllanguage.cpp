@@ -228,6 +228,7 @@ private slots:
     void scopedEnum();
     void scopedEnumsWithNameClash();
     void scopedEnumsWithResolvedNameClash();
+    void enumNoScopeLeak();
     void qmlEnums();
     void literals_data();
     void literals();
@@ -4153,6 +4154,62 @@ void tst_qqmllanguage::scopedEnumsWithResolvedNameClash()
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(obj != nullptr);
     QVERIFY(obj->property("success").toBool());
+}
+
+class ObjectA : public QObject
+{
+    Q_OBJECT
+
+public:
+
+    enum TestEnum {
+        Default = 42,
+        TestValue1,
+        TestValue2
+    };
+    Q_ENUM(TestEnum)
+
+    ObjectA() = default;
+};
+
+class ObjectB : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(ObjectA::TestEnum testEnum READ testEnum WRITE setTestEnum NOTIFY testEnumChanged)
+
+public:
+    ObjectB() = default;
+    ObjectA::TestEnum testEnum() const {return m_testEnum;}
+
+public slots:
+    void setTestEnum(ObjectA::TestEnum testEnum) {auto old = m_testEnum; m_testEnum = testEnum; if (old != m_testEnum) testEnumChanged(m_testEnum);}
+signals:
+    void testEnumChanged(ObjectA::TestEnum testEnum);
+private:
+    ObjectA::TestEnum m_testEnum = ObjectA::Default;
+};
+
+class ObjectC : public ObjectB
+{
+    Q_OBJECT
+
+public:
+    ObjectC() = default;
+};
+
+void tst_qqmllanguage::enumNoScopeLeak()
+{
+    qmlRegisterType<ObjectA>("test", 1, 0, "ObjectA");
+    qmlRegisterType<ObjectB>("test", 1, 0, "ObjectB");
+    qmlRegisterType<ObjectC>("test", 1, 0, "ObjectC");
+    QQmlEngine engine;
+    auto url = testFileUrl("enumScopeLeak.qml");
+    QQmlComponent component(&engine, url);
+    const auto msg = url.toString() + ":5:5: Unable to assign [undefined] to ObjectA::TestEnum";
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg, msg.toUtf8().constData());
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(root);
+    QCOMPARE(root->property("testEnum").toInt(), ObjectA::Default);
 }
 
 void tst_qqmllanguage::qmlEnums()

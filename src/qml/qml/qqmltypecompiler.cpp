@@ -616,10 +616,20 @@ bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(const QmlIR::Object *obj, 
     bool ok = false;
 
     auto *tr = resolvedType(obj->inheritedTypeNameIndex);
-    if (type.isValid() && tr && tr->type() == type) {
-        // When these two match, we can short cut the search
-        QMetaProperty mprop = propertyCache->firstCppMetaObject()->property(prop->coreIndex());
-        QMetaEnum menum = mprop.enumerator();
+
+    // When these two match, we can short cut the search, unless...
+    bool useFastPath = type.isValid() && tr && tr->type() == type;
+    QMetaProperty mprop;
+    QMetaEnum menum;
+    if (useFastPath) {
+        mprop = propertyCache->firstCppMetaObject()->property(prop->coreIndex());
+        menum = mprop.enumerator();
+        // ...the enumerator merely comes from a related metaobject, but the enum scope does not match
+        // the typename we resolved
+        if (!menum.isScoped() && scopedEnumName.isEmpty() && typeName != QString::fromUtf8(menum.scope()))
+            useFastPath = false;;
+    }
+    if (useFastPath) {
         QByteArray enumName = enumValue.toUtf8();
         if (menum.isScoped() && !scopedEnumName.isEmpty() && enumName != scopedEnumName.toUtf8())
             return true;
