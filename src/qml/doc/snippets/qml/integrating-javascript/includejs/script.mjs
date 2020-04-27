@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 //![0]
-// script.js
+// script.mjs
 import { factorial } from "factorial.mjs"
 
 function showCalculations(value) {
