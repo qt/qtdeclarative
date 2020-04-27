@@ -55,9 +55,75 @@ private slots:
     void metaObjectSize();
     void metaObjectChecksum();
     void metaObjectsForRootElements();
+    void derivedGadgetMethod();
 
 private:
     QQmlEngine engine;
+};
+
+class BaseGadget
+{
+    Q_GADGET
+    QML_ANONYMOUS
+public:
+    Q_INVOKABLE QString stringValue() { return QLatin1String("base"); }
+};
+
+Q_DECLARE_METATYPE(BaseGadget)
+
+class DerivedGadget : public BaseGadget
+{
+    Q_GADGET
+    QML_ANONYMOUS
+public:
+    Q_INVOKABLE QString stringValue() { return QLatin1String("derived"); }
+};
+
+Q_DECLARE_METATYPE(DerivedGadget)
+
+class GadgetUser : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(BaseGadget base READ base CONSTANT)
+    Q_PROPERTY(DerivedGadget derived READ derived CONSTANT)
+    Q_PROPERTY(QString baseString READ baseString WRITE setBaseString NOTIFY baseStringChanged)
+    Q_PROPERTY(QString derivedString READ derivedString WRITE setDerivedString NOTIFY derivedStringChanged)
+    QML_ELEMENT
+
+public:
+    BaseGadget base() const { return m_base; }
+    DerivedGadget derived() const { return m_derived; }
+    QString baseString() const { return m_baseString; }
+    QString derivedString() const { return m_derivedString; }
+
+public slots:
+    void setBaseString(QString baseString)
+    {
+        if (m_baseString == baseString)
+            return;
+
+        m_baseString = baseString;
+        emit baseStringChanged(m_baseString);
+    }
+
+    void setDerivedString(QString derivedString)
+    {
+        if (m_derivedString == derivedString)
+            return;
+
+        m_derivedString = derivedString;
+        emit derivedStringChanged(m_derivedString);
+    }
+
+signals:
+    void baseStringChanged(QString baseString);
+    void derivedStringChanged(QString derivedString);
+
+private:
+    BaseGadget m_base;
+    DerivedGadget m_derived;
+    QString m_baseString;
+    QString m_derivedString;
 };
 
 class BaseObject : public QObject
@@ -552,6 +618,20 @@ void tst_qqmlpropertycache::metaObjectsForRootElements()
     QScopedPointer<QObject> obj(c.create());
     QVERIFY(!obj.isNull());
     QCOMPARE(obj->property("result").toString(), QString::fromLatin1("good"));
+}
+
+void tst_qqmlpropertycache::derivedGadgetMethod()
+{
+    qmlRegisterTypesAndRevisions<BaseGadget, DerivedGadget, GadgetUser>("Test.PropertyCache", 1);
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("derivedGadgetMethod.qml"));
+    QVERIFY(c.isReady());
+    QScopedPointer<QObject> obj(c.create());
+    QVERIFY(!obj.isNull());
+    GadgetUser *gadgetUser = qobject_cast<GadgetUser *>(obj.data());
+    QVERIFY(gadgetUser);
+    QCOMPARE(gadgetUser->baseString(), QString::fromLatin1("base"));
+    QCOMPARE(gadgetUser->derivedString(), QString::fromLatin1("derived"));
 }
 
 QTEST_MAIN(tst_qqmlpropertycache)
