@@ -66,6 +66,8 @@ void BaselineJIT::generate()
     labels = collectLabelsInBytecode(code, len);
 
     as->generatePrologue();
+    // Make sure the ACC register is initialized and not clobbered by the caller.
+    as->loadAccumulatorFromFrame();
     decode(code, len);
     as->generateEpilogue();
 
