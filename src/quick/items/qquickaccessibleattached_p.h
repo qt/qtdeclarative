@@ -218,7 +218,7 @@ Q_SIGNALS:
     void nextPageAction();
 
 private:
-    QQuickItem *item() const { return static_cast<QQuickItem*>(parent()); }
+    QQuickItem *item() const { return qobject_cast<QQuickItem*>(parent()); }
 
     QAccessible::Role m_role;
     QAccessible::State m_state;

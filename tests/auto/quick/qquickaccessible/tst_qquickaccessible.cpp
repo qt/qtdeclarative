@@ -169,9 +169,22 @@ void tst_QQuickAccessible::quickAttachedProperties()
         delete object;
     }
 
-    // Attached property
+    // Attaching to non-item
     {
         QObject parent;
+        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML QtObject: Accessible must be attached to an Item");
+        QQuickAccessibleAttached *attachedObj = new QQuickAccessibleAttached(&parent);
+
+        QCOMPARE(attachedObj->ignored(), false);
+        attachedObj->setIgnored(true);
+        QCOMPARE(attachedObj->ignored(), false);
+        attachedObj->setIgnored(false);
+        QCOMPARE(attachedObj->ignored(), false);
+    }
+
+    // Attached property
+    {
+        QQuickItem parent;
         QQuickAccessibleAttached *attachedObj = new QQuickAccessibleAttached(&parent);
 
         attachedObj->name();
