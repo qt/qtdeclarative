@@ -496,7 +496,9 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
     static const int destroyedIdx2 = QObject::staticMetaObject.indexOfSignal("destroyed()");
     static const int deleteLaterIdx = QObject::staticMetaObject.indexOfSlot("deleteLater()");
     // These indices don't apply to gadgets, so don't block them.
-    const bool preventDestruction = metaObject->superClass() || metaObject == &QObject::staticMetaObject;
+    // It is enough to check for QObject::staticMetaObject here because the loop below excludes
+    // methods of parent classes: It starts at metaObject->methodOffset()
+    const bool preventDestruction = (metaObject == &QObject::staticMetaObject);
 
     int methodOffset = metaObject->methodOffset();
     int signalOffset = signalCount - QMetaObjectPrivate::get(metaObject)->signalCount;
