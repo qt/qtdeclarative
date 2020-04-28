@@ -444,11 +444,24 @@ function(qt6_target_qml_files target)
     file(APPEND ${qmldir_file} ${file_contents})
 endfunction()
 
+# QT_QMLTYPES_FILENAME: If the target has the target property QT_QMLTPYES_FILENAME set, it will be
+# used for the name of the generated file. Otherwise, the file will be named plugins.qmltypes if the
+# target is a plugin, or ${target}.qmltypes in all other cases
 function(qt6_qml_type_registration target)
 
     get_target_property(import_name ${target} QT_QML_MODULE_URI)
     if (NOT import_name)
         message(FATAL_ERROR "Target ${target} is not a QML module")
+    endif()
+    get_target_property(qmltypes_output_name ${target} QT_QMLTYPES_FILENAME)
+    if (NOT qmltypes_output_name)
+        get_target_property(compile_definitions_list ${target} COMPILE_DEFINITIONS)
+        list(FIND compile_definitions_list QT_PLUGIN is_a_plugin)
+        if (is_a_plugin GREATER_EQUAL 0)
+            set(qmltypes_output_name "plugins.qmltypes")
+        else()
+            set(qmltypes_output_name ${target}.qmltypes)
+        endif()
     endif()
 
     cmake_parse_arguments(args "COPY_OVER_INSTALL" "INSTALL_DIR" "" ${ARGN})
@@ -494,11 +507,11 @@ function(qt6_qml_type_registration target)
     # check if plugins.qmltypes is already defined
     get_target_property(target_plugin_qmltypes ${target} QT_QML_MODULE_PLUGIN_TYPES_FILE)
     if (target_plugin_qmltypes)
-        message(FATAL_ERROR "Target ${target} already has a plugins.qmltypes set.")
+        message(FATAL_ERROR "Target ${target} already has a qmltypes file set.")
     endif()
 
     set(cmd_args)
-    set(plugin_types_file ${target_binary_dir}/plugins.qmltypes)
+    set(plugin_types_file ${target_binary_dir}/${qmltypes_output_name})
     set_target_properties(${target} PROPERTIES
         QT_QML_MODULE_PLUGIN_TYPES_FILE ${plugin_types_file}
     )
@@ -598,7 +611,7 @@ function(qt6_qml_type_registration target)
             add_custom_command(TARGET ${target} POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E copy_if_different
                     "${plugin_types_file}"
-                    "${qml_install_dir}/plugins.qmltypes"
+                    "${qml_install_dir}/${qmltypes_output_name}"
                 COMMENT "Copying ${plugin_types_file} to ${qml_install_dir}"
             )
         endif()
