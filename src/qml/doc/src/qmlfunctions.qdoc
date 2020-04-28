@@ -79,6 +79,16 @@
   Declares the enclosing type or namespace to be available in QML, using \a name
   as the element name. Otherwise behaves the same as QML_ELEMENT.
 
+  \code
+  class SqlEventDatabase : public QObject
+  {
+      Q_OBJECT
+      QML_NAMED_ELEMENT(EventDatabase)
+
+      // ...
+  };
+  \endcode
+
   \sa {Choosing the Correct Integration Method Between C++ and QML}, QML_ELEMENT
 */
 
