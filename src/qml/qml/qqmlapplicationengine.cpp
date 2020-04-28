@@ -297,6 +297,17 @@ void QQmlApplicationEngine::load(const QString &filePath)
    Sets the \a initialProperties with which the QML component gets initialized after
    it gets loaded.
 
+   \code
+    QQmlApplicationEngine engine;
+
+    EventDatabase eventDatabase;
+    EventMonitor eventMonitor;
+
+    engine.setInitialProperties({
+        { "eventDatabase", QVariant::fromValue(&eventDatabase) },
+        { "eventMonitor", QVariant::fromValue(&eventMonitor) }
+    });
+   \endcode
 
    \sa QQmlComponent::setInitialProperties
    \sa QQmlApplicationEngine::load
