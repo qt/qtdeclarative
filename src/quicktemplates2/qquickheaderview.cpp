@@ -236,16 +236,11 @@ void QQuickHeaderViewBasePrivate::setModelImpl(const QVariant &newModel)
 void QQuickHeaderViewBasePrivate::syncModel()
 {
     Q_Q(QQuickHeaderViewBase);
+
     if (assignedSyncView && !m_modelExplicitlySetByUser) {
         auto newModel = assignedSyncView->model();
-        if (auto m = newModel.value<QAbstractTableModel *>()) {
+        if (auto m = newModel.value<QAbstractItemModel *>())
             proxyModelSetter(q, m_headerDataProxyModel, m);
-        } else if (orientation() == Qt::Horizontal) {
-            if (auto m = newModel.value<QAbstractItemModel *>())
-                proxyModelSetter(q, m_transposeProxyModel, m);
-        } else {
-            QQuickTableViewPrivate::setModelImpl(newModel);
-        }
     }
 
     QQuickTableViewPrivate::syncModel();
