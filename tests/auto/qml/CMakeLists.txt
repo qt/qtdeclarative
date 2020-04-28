@@ -97,5 +97,5 @@ if(QT_FEATURE_private_tests)
     add_subdirectory(qqmldelegatemodel) # special case
 endif()
 if(NOT CMAKE_CROSSCOMPILING)
-    # add_subdirectory(qmltyperegistrar) # special case need to port
+    add_subdirectory(qmltyperegistrar)
 endif()
