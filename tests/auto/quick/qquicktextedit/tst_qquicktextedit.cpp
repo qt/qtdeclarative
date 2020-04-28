@@ -3716,6 +3716,15 @@ void tst_qquicktextedit::boundingRect()
     QCOMPARE(edit->boundingRect().x(), qreal(0));
     QCOMPARE(edit->boundingRect().y(), qreal(0));
     QCOMPARE(edit->boundingRect().width(), line.naturalTextWidth() + edit->cursorRectangle().width() + 3);
+
+    QFontMetricsF fontMetrics(QGuiApplication::font());
+    qreal leading = fontMetrics.leading();
+    qreal ascent = fontMetrics.ascent();
+    qreal descent = fontMetrics.descent();
+
+    bool leadingOverflow = qCeil(ascent + descent) < qCeil(ascent + descent + leading);
+    if (leadingOverflow)
+        QEXPECT_FAIL("", "See QTBUG-82954", Continue);
     QCOMPARE(edit->boundingRect().height(), line.height());
 
     // the size of the bounding rect shouldn't be bounded by the size of item.
@@ -3723,12 +3732,18 @@ void tst_qquicktextedit::boundingRect()
     QCOMPARE(edit->boundingRect().x(), qreal(0));
     QCOMPARE(edit->boundingRect().y(), qreal(0));
     QCOMPARE(edit->boundingRect().width(), line.naturalTextWidth() + edit->cursorRectangle().width() + 3);
+
+    if (leadingOverflow)
+        QEXPECT_FAIL("", "See QTBUG-82954", Continue);
     QCOMPARE(edit->boundingRect().height(), line.height());
 
     edit->setHeight(edit->height() * 2);
     QCOMPARE(edit->boundingRect().x(), qreal(0));
     QCOMPARE(edit->boundingRect().y(), qreal(0));
     QCOMPARE(edit->boundingRect().width(), line.naturalTextWidth() + edit->cursorRectangle().width() + 3);
+
+    if (leadingOverflow)
+        QEXPECT_FAIL("", "See QTBUG-82954", Continue);
     QCOMPARE(edit->boundingRect().height(), line.height());
 
     QQmlComponent cursorComponent(&engine);
@@ -3741,12 +3756,18 @@ void tst_qquicktextedit::boundingRect()
     QCOMPARE(edit->boundingRect().x(), qreal(0));
     QCOMPARE(edit->boundingRect().y(), qreal(0));
     QCOMPARE(edit->boundingRect().width(), line.naturalTextWidth());
+
+    if (leadingOverflow)
+        QEXPECT_FAIL("", "See QTBUG-82954", Continue);
     QCOMPARE(edit->boundingRect().height(), line.height());
 
     edit->setHAlign(QQuickTextEdit::AlignRight);
     QCOMPARE(edit->boundingRect().x(), edit->width() - line.naturalTextWidth());
     QCOMPARE(edit->boundingRect().y(), qreal(0));
     QCOMPARE(edit->boundingRect().width(), line.naturalTextWidth());
+
+    if (leadingOverflow)
+        QEXPECT_FAIL("", "See QTBUG-82954", Continue);
     QCOMPARE(edit->boundingRect().height(), line.height());
 
     edit->setWrapMode(QQuickTextEdit::Wrap);

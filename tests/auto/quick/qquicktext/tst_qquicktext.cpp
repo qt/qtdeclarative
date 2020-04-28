@@ -2763,6 +2763,15 @@ void tst_qquicktext::boundingRect()
     QCOMPARE(text->boundingRect().x(), qreal(0));
     QCOMPARE(text->boundingRect().y(), qreal(0));
     QCOMPARE(text->boundingRect().width(), line.naturalTextWidth());
+
+    QFontMetricsF fontMetrics(QGuiApplication::font());
+    qreal leading = fontMetrics.leading();
+    qreal ascent = fontMetrics.ascent();
+    qreal descent = fontMetrics.descent();
+
+    bool leadingOverflow = text->textFormat() == QQuickText::RichText && qCeil(ascent + descent) < qCeil(ascent + descent + leading);
+    if (leadingOverflow)
+        QEXPECT_FAIL("", "See QTBUG-82954", Continue);
     QCOMPARE(text->boundingRect().height(), line.height());
 
     // the size of the bounding rect shouldn't be bounded by the size of item.
@@ -2770,30 +2779,45 @@ void tst_qquicktext::boundingRect()
     QCOMPARE(text->boundingRect().x(), qreal(0));
     QCOMPARE(text->boundingRect().y(), qreal(0));
     QCOMPARE(text->boundingRect().width(), line.naturalTextWidth());
+
+    if (leadingOverflow)
+        QEXPECT_FAIL("", "See QTBUG-82954", Continue);
     QCOMPARE(text->boundingRect().height(), line.height());
 
     text->setHeight(text->height() * 2);
     QCOMPARE(text->boundingRect().x(), qreal(0));
     QCOMPARE(text->boundingRect().y(), qreal(0));
     QCOMPARE(text->boundingRect().width(), line.naturalTextWidth());
+
+    if (leadingOverflow)
+        QEXPECT_FAIL("", "See QTBUG-82954", Continue);
     QCOMPARE(text->boundingRect().height(), line.height());
 
     text->setHAlign(QQuickText::AlignRight);
     QCOMPARE(text->boundingRect().x(), text->width() - line.naturalTextWidth());
     QCOMPARE(text->boundingRect().y(), qreal(0));
     QCOMPARE(text->boundingRect().width(), line.naturalTextWidth());
+
+    if (leadingOverflow)
+        QEXPECT_FAIL("", "See QTBUG-82954", Continue);
     QCOMPARE(text->boundingRect().height(), line.height());
 
     QQuickItemPrivate::get(text)->setLayoutMirror(true);
     QCOMPARE(text->boundingRect().x(), qreal(0));
     QCOMPARE(text->boundingRect().y(), qreal(0));
     QCOMPARE(text->boundingRect().width(), line.naturalTextWidth());
+
+    if (leadingOverflow)
+        QEXPECT_FAIL("", "See QTBUG-82954", Continue);
     QCOMPARE(text->boundingRect().height(), line.height());
 
     text->setHAlign(QQuickText::AlignLeft);
     QCOMPARE(text->boundingRect().x(), text->width() - line.naturalTextWidth());
     QCOMPARE(text->boundingRect().y(), qreal(0));
     QCOMPARE(text->boundingRect().width(), line.naturalTextWidth());
+
+    if (leadingOverflow)
+        QEXPECT_FAIL("", "See QTBUG-82954", Continue);
     QCOMPARE(text->boundingRect().height(), line.height());
 
     text->setWrapMode(QQuickText::Wrap);
