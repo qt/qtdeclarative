@@ -1,5 +1,6 @@
 CONFIG += testcase
 TARGET = tst_accessibility
+requires(qtConfig(accessibility))
 SOURCES += tst_accessibility.cpp
 
 macos:CONFIG -= app_bundle

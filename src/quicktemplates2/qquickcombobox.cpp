@@ -789,10 +789,12 @@ void QQuickComboBoxPrivate::hideOldPopup(QQuickPopup *popup)
 
     popup->setVisible(false);
     popup->setParentItem(nullptr);
+#if QT_CONFIG(accessibility)
     // Remove the item from the accessibility tree.
     QQuickAccessibleAttached *accessible = accessibleAttached(popup);
     if (accessible)
         accessible->setIgnored(true);
+#endif
 }
 
 QQuickComboBox::QQuickComboBox(QQuickItem *parent)

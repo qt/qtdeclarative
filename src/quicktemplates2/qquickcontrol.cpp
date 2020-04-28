@@ -773,10 +773,12 @@ void QQuickControlPrivate::hideOldItem(QQuickItem *item)
     item->setVisible(false);
     item->setParentItem(nullptr);
 
+#if QT_CONFIG(accessibility)
     // Remove the item from the accessibility tree.
     QQuickAccessibleAttached *accessible = accessibleAttached(item);
     if (accessible)
         accessible->setIgnored(true);
+#endif
 }
 
 void QQuickControlPrivate::updateBaselineOffset()
