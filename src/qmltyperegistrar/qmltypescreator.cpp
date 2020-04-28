@@ -50,6 +50,9 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
         m_qml.writeScriptBinding(QLatin1String("file"), enquote(collector.file));
     m_qml.writeScriptBinding(QLatin1String("name"), enquote(collector.className));
 
+    if (!collector.accessSemantics.isEmpty())
+        m_qml.writeScriptBinding(QLatin1String("accessSemantics"), enquote(collector.accessSemantics));
+
     if (!collector.defaultProp.isEmpty())
         m_qml.writeScriptBinding(QLatin1String("defaultProperty"), enquote(collector.defaultProp));
 

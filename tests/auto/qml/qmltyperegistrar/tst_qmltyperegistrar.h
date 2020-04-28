@@ -88,6 +88,7 @@ private slots:
     void qmltypesHasFileNames();
     void qmltypesHasFlags();
     void superAndForeignTypes();
+    void accessSemantics();
 
 private:
     QByteArray qmltypesData;

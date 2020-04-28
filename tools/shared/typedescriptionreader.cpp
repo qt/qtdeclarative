@@ -228,6 +228,18 @@ void TypeDescriptionReader::readComponent(UiObjectDefinition *ast)
                 scope->setIsCreatable(readBoolBinding(script));
             } else if (name == QLatin1String("isComposite")) {
                 scope->setIsComposite(readBoolBinding(script));
+            } else if (name == QLatin1String("accessSemantics")) {
+                const QString semantics = readStringBinding(script);
+                if (semantics == QLatin1String("reference")) {
+                    scope->setAccessSemantics(ScopeTree::AccessSemantics::Reference);
+                } else if (semantics == QLatin1String("value")) {
+                    scope->setAccessSemantics(ScopeTree::AccessSemantics::Value);
+                } else if (semantics == QLatin1String("none")) {
+                    scope->setAccessSemantics(ScopeTree::AccessSemantics::None);
+                } else {
+                    addWarning(script->firstSourceLocation(),
+                               tr("Unknown access semantics \"%1\".").arg(semantics));
+                }
             } else {
                 addWarning(script->firstSourceLocation(),
                            tr("Expected only name, prototype, defaultProperty, attachedType, "

@@ -179,8 +179,14 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
     if (className.isEmpty() && mode == TopLevel)
         className = classDef->value(QLatin1String("qualifiedClassName")).toString();
 
-    // If it's not a QObject, it's not creatable
-    isCreatable = isCreatable && classDef->value(QLatin1String("object")).toBool();
+    if (classDef->value(QLatin1String("object")).toBool()) {
+        accessSemantics = QLatin1String("reference");
+    } else {
+        isCreatable = false;
+        accessSemantics = classDef->value(QLatin1String("gadget")).toBool()
+                ? QLatin1String("value")
+                : QLatin1String("none");
+    }
 }
 
 void QmlTypesClassDescription::collectAttached(const QString &attached,

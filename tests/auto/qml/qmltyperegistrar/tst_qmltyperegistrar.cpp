@@ -75,4 +75,10 @@ void tst_qmltyperegistrar::superAndForeignTypes()
     QVERIFY(qmltypesData.contains("Method { name: \"sizeToString\"; type: \"string\" }"));
 }
 
+void tst_qmltyperegistrar::accessSemantics()
+{
+    QVERIFY(qmltypesData.contains("accessSemantics: \"reference\""));
+    QVERIFY(qmltypesData.contains("accessSemantics: \"value\""));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

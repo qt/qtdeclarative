@@ -44,6 +44,7 @@ struct QmlTypesClassDescription
     QString defaultProp;
     QString superClass;
     QString attachedType;
+    QString accessSemantics;
     QList<QTypeRevision> revisions;
     QTypeRevision addedInRevision;
     QTypeRevision removedInRevision;

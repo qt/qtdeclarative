@@ -71,6 +71,20 @@ public:
     using ConstPtr = QSharedPointer<const ScopeTree>;
     using WeakConstPtr = QWeakPointer<const ScopeTree>;
 
+    enum class AccessSemantics {
+        Reference,
+        Value,
+        None
+    };
+
+    enum Flag {
+        Creatable = 0x1,
+        Composite = 0x2,
+        Singleton = 0x4
+    };
+    Q_DECLARE_FLAGS(Flags, Flag)
+    Q_FLAGS(Flags);
+
     class Export {
     public:
         Export() = default;
@@ -149,12 +163,15 @@ public:
     QString attachedTypeName() const { return m_attachedTypeName; }
     void setAttachedTypeName(const QString &name) { m_attachedTypeName = name; }
 
-    bool isSingleton() const { return m_isSingleton; }
-    bool isCreatable() const { return m_isCreatable; }
-    bool isComposite() const { return m_isComposite; }
-    void setIsSingleton(bool value) { m_isSingleton = value; }
-    void setIsCreatable(bool value) { m_isCreatable = value; }
-    void setIsComposite(bool value) { m_isSingleton = value; }
+    bool isSingleton() const { return m_flags & Singleton; }
+    bool isCreatable() const { return m_flags & Creatable; }
+    bool isComposite() const { return m_flags & Composite; }
+    void setIsSingleton(bool v) { m_flags = v ? (m_flags | Singleton) : (m_flags & ~Singleton); }
+    void setIsCreatable(bool v) { m_flags = v ? (m_flags | Creatable) : (m_flags & ~Creatable); }
+    void setIsComposite(bool v) { m_flags = v ? (m_flags | Composite) : (m_flags & ~Composite); }
+
+    void setAccessSemantics(AccessSemantics semantics) { m_semantics = semantics; }
+    AccessSemantics accessSemantics() const { return m_semantics; }
 
     struct FieldMember
     {
@@ -214,9 +231,8 @@ private:
 
     QString m_defaultPropertyName;
     QString m_attachedTypeName;
-    bool m_isSingleton = false;
-    bool m_isCreatable = true;
-    bool m_isComposite = false;
+    Flags m_flags;
+    AccessSemantics m_semantics = AccessSemantics::Reference;
 };
 
 #endif // SCOPETREE_H
