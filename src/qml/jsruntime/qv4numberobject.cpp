@@ -196,7 +196,7 @@ ReturnedValue NumberPrototype::method_isSafeInteger(const FunctionObject *, cons
         return Encode(false);
 
     double iv = v.toInteger();
-    return Encode(dv == iv && std::fabs(iv) <= (2^53)-1);
+    return Encode(dv == iv && std::fabs(iv) <= (1LL << 53) - 1);
 }
 
 ReturnedValue NumberPrototype::method_isNaN(const FunctionObject *, const Value *, const Value *argv, int argc)
