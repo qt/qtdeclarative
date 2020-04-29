@@ -15,8 +15,9 @@ qtConfig(opengl(es1|es2)?) {
         qquickframebufferobject \
         qquickopenglinfo \
         qquickspritesequence \
-        qquickshadereffect \
-        qquickrendercontrol
+        qquickshadereffect
+
+        qtHaveModule(opengl): QUICKTESTS += qquickrendercontrol
 }
 
 !cross_compile: PRIVATETESTS += examples
