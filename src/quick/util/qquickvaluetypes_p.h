@@ -66,12 +66,6 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQuickValueTypes {
-
-void registerValueTypes();
-
-}
-
 class QQuickColorValueType
 {
     QColor v;

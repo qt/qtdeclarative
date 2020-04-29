@@ -1234,7 +1234,7 @@ void tst_qquickanimations::easingProperties()
 
     {
         QQmlEngine engine;
-        QString componentStr = "import QtQuick 2.0\nPropertyAnimation { easing.type: \"Bezier\"; easing.bezierCurve: [0.5, 0.2, 0.13, 0.65, 1.0, 1.0] }";
+        QString componentStr = "import QtQuick 2.0\nPropertyAnimation { easing.type: \"BezierSpline\"; easing.bezierCurve: [0.5, 0.2, 0.13, 0.65, 1.0, 1.0] }";
         QQmlComponent animationComponent(&engine);
         animationComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
         QScopedPointer<QObject> obj(animationComponent.create());

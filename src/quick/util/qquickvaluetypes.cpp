@@ -46,13 +46,6 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQuickValueTypes {
-    void registerValueTypes()
-    {
-        QQmlValueTypeFactory::registerValueTypes("QtQuick", 2, 0);
-    }
-}
-
 QString QQuickColorValueType::toString() const
 {
     return v.name(v.alpha() != 255 ? QColor::HexArgb : QColor::HexRgb);

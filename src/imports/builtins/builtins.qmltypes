@@ -1698,5 +1698,4 @@ Module {
             }
         }
     }
-    Component { name: "QEasingCurve"; prototype: "QQmlEasingValueType" }
 }

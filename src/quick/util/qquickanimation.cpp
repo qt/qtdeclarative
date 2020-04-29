@@ -2393,7 +2393,7 @@ void QQuickPropertyAnimation::setTo(const QVariant &t)
         \li Easing curve for a bounce (exponentially decaying parabolic bounce) function easing out/in: deceleration until halfway, then acceleration.
         \li \inlineimage qeasingcurve-outinbounce.png
     \row
-        \li \c Easing.Bezier
+        \li \c Easing.BezierSpline
         \li Custom easing curve defined by the easing.bezierCurve property.
         \li
     \endtable
@@ -2408,7 +2408,7 @@ void QQuickPropertyAnimation::setTo(const QVariant &t)
     \c easing.period is only applicable if easing.type is: \c Easing.InElastic, \c Easing.OutElastic,
     \c Easing.InOutElastic or \c Easing.OutInElastic.
 
-    \c easing.bezierCurve is only applicable if easing.type is: \c Easing.Bezier.  This property is a list<real> containing
+    \c easing.bezierCurve is only applicable if easing.type is: \c Easing.BezierSpline.  This property is a list<real> containing
     groups of three points defining a curve from 0,0 to 1,1 - control1, control2,
     end point: [cx1, cy1, cx2, cy2, endx, endy, ...].  The last point must be 1,1.
 

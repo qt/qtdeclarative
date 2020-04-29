@@ -102,7 +102,7 @@ Rectangle {
         ListElement { name: "Easing.InBounce"; type: Easing.InBounce; ballColor: "DimGray" }
         ListElement { name: "Easing.InOutBounce"; type: Easing.InOutBounce; ballColor: "SlateGray" }
         ListElement { name: "Easing.OutInBounce"; type: Easing.OutInBounce; ballColor: "DarkSlateGray" }
-        ListElement { name: "Easing.Bezier"; type: Easing.Bezier; ballColor: "Chartreuse"; }
+        ListElement { name: "Easing.BezierSpline"; type: Easing.BezierSpline; ballColor: "Chartreuse"; }
     }
 
     Component {
@@ -180,7 +180,7 @@ Rectangle {
 
     function getBezierCurve(name)
     {
-        if (name === "Easing.Bezier")
+        if (name === "Easing.BezierSpline")
             return easingCurve;
         return [];
     }

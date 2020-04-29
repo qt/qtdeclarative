@@ -189,7 +189,6 @@ void QQmlQtQuick2Module::defineModule()
     qRegisterMetaType<QKeySequence::StandardKey>();
 #endif
 
-    QQuickValueTypes::registerValueTypes();
     QQuickItemsModule::defineModule();
 
 #if QT_CONFIG(accessibility)

@@ -642,14 +642,6 @@ public:
         qml->writeEndObject();
     }
 
-    void writeEasingCurve()
-    {
-        qml->writeStartObject(QLatin1String("Component"));
-        qml->writeScriptBinding(QLatin1String("name"), enquote(QLatin1String("QEasingCurve")));
-        qml->writeScriptBinding(QLatin1String("prototype"), enquote(QLatin1String("QQmlEasingValueType")));
-        qml->writeEndObject();
-    }
-
 private:
 
     /* Removes pointer and list annotations from a type name, returning
@@ -1337,7 +1329,6 @@ int main(int argc, char *argv[])
 
     // setup static rewrites of type names
     cppToId.insert("QString", "string");
-    cppToId.insert("QQmlEasingValueType::Type", "Type");
 
     // start dumping data
     QByteArray bytes;
@@ -1380,11 +1371,6 @@ int main(int argc, char *argv[])
     QMap<QString, QList<QQmlType>>::const_iterator iter = compositeTypes.constBegin();
     for (; iter != compositeTypes.constEnd(); ++iter)
         dumper.dumpComposite(&engine, iter.value(), info);
-
-    // define QEasingCurve as an extension of QQmlEasingValueType, this way
-    // properties using the QEasingCurve type get useful type information.
-    if (pluginImportUri.isEmpty())
-        dumper.writeEasingCurve();
 
     // Insert merge file.
     qml.write(mergeComponents);

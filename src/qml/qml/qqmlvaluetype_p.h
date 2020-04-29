@@ -123,8 +123,6 @@ public:
     static bool isValueType(int idx);
     static QQmlValueType *valueType(int idx);
     static const QMetaObject *metaObjectForMetaType(int type);
-
-    static void registerValueTypes(const char *uri, int versionMajor, int versionMinor);
 };
 
 struct QQmlPointFValueType
@@ -265,19 +263,13 @@ public:
 };
 
 #if QT_CONFIG(easingcurve)
-struct QQmlEasingValueType
+struct QQmlEasingEnums
 {
-    QEasingCurve v;
     Q_GADGET
     QML_NAMED_ELEMENT(Easing)
     QML_ADDED_IN_VERSION(2, 0)
     QML_UNCREATABLE("Use the Type enum.")
 
-    Q_PROPERTY(QQmlEasingValueType::Type type READ type WRITE setType FINAL)
-    Q_PROPERTY(qreal amplitude READ amplitude WRITE setAmplitude FINAL)
-    Q_PROPERTY(qreal overshoot READ overshoot WRITE setOvershoot FINAL)
-    Q_PROPERTY(qreal period READ period WRITE setPeriod FINAL)
-    Q_PROPERTY(QVariantList bezierCurve READ bezierCurve WRITE setBezierCurve FINAL)
 public:
     enum Type {
         Linear = QEasingCurve::Linear,
@@ -303,10 +295,28 @@ public:
         InOutBounce = QEasingCurve::InOutBounce, OutInBounce = QEasingCurve::OutInBounce,
         InCurve = QEasingCurve::InCurve, OutCurve = QEasingCurve::OutCurve,
         SineCurve = QEasingCurve::SineCurve, CosineCurve = QEasingCurve::CosineCurve,
-        Bezier = QEasingCurve::BezierSpline
+        BezierSpline = QEasingCurve::BezierSpline,
+
+        Bezier = BezierSpline // Evil! Don't use this!
     };
     Q_ENUM(Type)
+};
 
+struct QQmlEasingValueType : public QQmlEasingEnums
+{
+    QEasingCurve v;
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN(QEasingCurve)
+    QML_ADDED_IN_VERSION(2, 0)
+
+    Q_PROPERTY(Type type READ type WRITE setType FINAL)
+    Q_PROPERTY(qreal amplitude READ amplitude WRITE setAmplitude FINAL)
+    Q_PROPERTY(qreal overshoot READ overshoot WRITE setOvershoot FINAL)
+    Q_PROPERTY(qreal period READ period WRITE setPeriod FINAL)
+    Q_PROPERTY(QVariantList bezierCurve READ bezierCurve WRITE setBezierCurve FINAL)
+
+public:
     Type type() const;
     qreal amplitude() const;
     qreal overshoot() const;
@@ -334,31 +344,6 @@ public:
     QObject *object() const;
     QString name() const;
 };
-
-template<typename T>
-int qmlRegisterValueTypeEnums(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
-{
-    QQmlPrivate::RegisterType type = {
-        0,
-
-        QMetaType::fromType<T*>(), QMetaType(), 0, nullptr,
-
-        QString(),
-
-        uri, QTypeRevision::fromVersion(versionMajor, versionMinor), qmlName, &T::staticMetaObject,
-
-        nullptr, nullptr,
-
-        0, 0, 0,
-
-        nullptr, nullptr,
-
-        nullptr,
-        QTypeRevision::zero()
-    };
-
-    return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
-}
 
 QT_END_NAMESPACE
 

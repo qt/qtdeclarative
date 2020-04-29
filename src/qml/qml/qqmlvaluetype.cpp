@@ -214,13 +214,6 @@ const QMetaObject *QQmlValueTypeFactory::metaObjectForMetaType(int type)
     return factoryImpl()->metaObjectForMetaType(type);
 }
 
-void QQmlValueTypeFactory::registerValueTypes(const char *uri, int versionMajor, int versionMinor)
-{
-#if QT_CONFIG(easingcurve)
-    qmlRegisterValueTypeEnums<QQmlEasingValueType>(uri, versionMajor, versionMinor, "Easing");
-#endif
-}
-
 QQmlValueType::QQmlValueType(int typeId, const QMetaObject *gadgetMetaObject)
     : metaType(typeId)
 {
