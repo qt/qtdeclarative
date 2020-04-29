@@ -266,6 +266,15 @@ void QQuickWindow::hideEvent(QHideEvent *)
 }
 
 /*! \reimp */
+void QQuickWindow::closeEvent(QCloseEvent *e)
+{
+    QQuickCloseEvent qev;
+    qev.setAccepted(e->isAccepted());
+    emit closing(&qev);
+    e->setAccepted(qev.isAccepted());
+}
+
+/*! \reimp */
 void QQuickWindow::focusOutEvent(QFocusEvent *ev)
 {
     Q_D(QQuickWindow);
@@ -1808,14 +1817,6 @@ bool QQuickWindow::event(QEvent *e)
         if (d->contentItem)
             d->contentItem->windowDeactivateEvent();
         break;
-    case QEvent::Close: {
-        // TOOD Qt 6 (binary incompatible)
-        // closeEvent(static_cast<QCloseEvent *>(e));
-        QQuickCloseEvent qev;
-        qev.setAccepted(e->isAccepted());
-        emit closing(&qev);
-        e->setAccepted(qev.isAccepted());
-        } break;
     case QEvent::PlatformSurface:
         if ((static_cast<QPlatformSurfaceEvent *>(e))->surfaceEventType() == QPlatformSurfaceEvent::SurfaceAboutToBeDestroyed) {
             // Ensure that the rendering thread is notified before

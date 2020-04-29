@@ -252,7 +252,7 @@ protected:
 
     void showEvent(QShowEvent *) override;
     void hideEvent(QHideEvent *) override;
-    // TODO Qt 6: reimplement QWindow::closeEvent to emit closing
+    void closeEvent(QCloseEvent *) override;
 
     void focusInEvent(QFocusEvent *) override;
     void focusOutEvent(QFocusEvent *) override;
