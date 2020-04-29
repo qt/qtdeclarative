@@ -742,11 +742,11 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *propert
                                                       .arg(rhsType())
                                                       .arg(propertyName)
                                                       .arg(typeName));
+    } else if (propType == qMetaTypeId<QQmlScriptString>()) {
+        return qQmlCompileError(binding->valueLocation, tr("Invalid property assignment: script expected"));
     } else if (QQmlValueTypeFactory::isValueType(propType)) {
         return qQmlCompileError(binding->location, tr("Cannot assign value of type \"%1\" to property \"%2\", expecting an object")
                                                       .arg(rhsType()).arg(propertyName));
-    } else if (propType == qMetaTypeId<QQmlScriptString>()) {
-        return qQmlCompileError(binding->valueLocation, tr("Invalid property assignment: script expected"));
     } else {
         // We want to use the raw metaObject here as the raw metaobject is the
         // actual property type before we applied any extensions that might
