@@ -1527,6 +1527,13 @@ private:
     UncreatableSingleton() { setObjectName("uncreatable"); }
 };
 
+class UncreatableElementNoReason : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_UNCREATABLE("")
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H

@@ -202,9 +202,14 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
         const bool creatable = (elementName != nullptr)
                 && boolClassInfo(type.classInfoMetaObject, "QML.Creatable", true);
 
-        const QString noCreateReason = creatable
-                ? QString()
-                : QString::fromUtf8(classInfo(type.classInfoMetaObject, "QML.UncreatableReason"));
+        QString noCreateReason;
+
+        if (!creatable) {
+            noCreateReason = QString::fromUtf8(classInfo(type.classInfoMetaObject, "QML.UncreatableReason"));
+            if (noCreateReason.isEmpty())
+                noCreateReason = QLatin1String("Type cannot be created in QML.");
+        }
+
         RegisterType revisionRegistration = {
             0,
             type.typeId,

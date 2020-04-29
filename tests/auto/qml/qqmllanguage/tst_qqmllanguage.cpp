@@ -333,6 +333,7 @@ private slots:
     void arrayToContainer();
     void qualifiedScopeInCustomParser();
 
+    void checkUncreatableNoReason();
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -5837,6 +5838,17 @@ void tst_qqmllanguage::qualifiedScopeInCustomParser()
     QVERIFY(component.isReady());
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
+}
+
+void tst_qqmllanguage::checkUncreatableNoReason()
+{
+    qmlRegisterTypesAndRevisions<UncreatableElementNoReason>("qt.uncreatable.noreason", 1, 0);
+    QQmlEngine engine;
+    QString qml = QString("import QtQuick 2.0\nimport qt.uncreatable.noreason 1.0\nUncreatableElementNoReason {}");
+    QQmlComponent c(&engine);
+    c.setData(qml.toUtf8(), QUrl::fromLocalFile(QDir::currentPath()));
+    QCOMPARE(c.errors().count(), 1);
+    QCOMPARE(c.errors().first().description(), QString("Type cannot be created in QML."));
 }
 
 QTEST_MAIN(tst_qqmllanguage)

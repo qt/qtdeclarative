@@ -151,6 +151,8 @@
   \l QML_NAMED_ELEMENT(). For such types, \l QML_UNCREATABLE() can be used to
   provide a custom error message.
 
+  Since Qt 6.0 you can use "" instead of a reason to use a standard message instead.
+
   \sa QML_ELEMENT, QML_NAMED_ELEMENT(), QML_ANONYMOUS
 */
 
