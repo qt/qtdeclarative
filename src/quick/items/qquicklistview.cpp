@@ -2440,7 +2440,7 @@ void QQuickListView::setOrientation(QQuickListView::Orientation orientation)
 
   \list
   \li Qt.LeftToRight (default) - Items will be laid out from left to right.
-  \li Qt.RightToLeft - Items will be laid out from right to let.
+  \li Qt.RightToLeft - Items will be laid out from right to left.
   \endlist
 
   Setting this property has no effect if the \l orientation is Qt.Vertical.
