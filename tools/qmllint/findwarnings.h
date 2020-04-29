@@ -98,7 +98,8 @@ private:
     void importHelper(const QString &module, const QString &prefix = QString(),
                       QTypeRevision version = QTypeRevision());
 
-    void readQmltypes(const QString &filename, Import &result);
+    void readQmltypes(const QString &filename, QHash<QString, ScopeTree::ConstPtr> *objects,
+                      QStringList *dependencies);
     Import readQmldir(const QString &dirname);
     void processImport(const QString &prefix, const Import &import);
 

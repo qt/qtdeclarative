@@ -50,8 +50,10 @@ private Q_SLOTS:
 
     void testUnknownCausesFail();
 
+    void directoryPassedAsQmlTypesFile();
+
 private:
-    QString runQmllint(const QString &fileToLint, bool shouldSucceed);
+    QString runQmllint(const QString &fileToLint, bool shouldSucceed, const QStringList &extraArgs = QStringList());
 
     QString m_qmllintPath;
 };
@@ -112,6 +114,15 @@ void TestQmllint::testUnknownCausesFail()
     const QString unknownNotFound = runQmllint("unknownElement.qml", false);
     QVERIFY(unknownNotFound.contains(
                 QStringLiteral("warning: Unknown was not found. Did you add all import paths?")));
+}
+
+void TestQmllint::directoryPassedAsQmlTypesFile()
+{
+    const QStringList iArg = QStringList() << QStringLiteral("-i") << dataDirectory();
+    const QString errorMessages = runQmllint("unknownElement.qml", false, iArg);
+    const QString expectedError = QStringLiteral("warning: QML types file cannot be a directory: ") + dataDirectory();
+    QVERIFY2(errorMessages.contains(expectedError), qPrintable(QString::fromLatin1(
+        "Expected error to contain \"%1\", but it didn't: %2").arg(expectedError, errorMessages)));
 }
 
 void TestQmllint::dirtyQmlCode_data()
@@ -214,14 +225,15 @@ void TestQmllint::cleanQmlCode()
     QVERIFY(warnings.isEmpty());
 }
 
-QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed)
+QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed, const QStringList &extraArgs)
 {
     auto qmlImportDir = QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
     QStringList args;
     args  << testFile(fileToLint)
          << QStringLiteral("-I") << qmlImportDir
-         << QStringLiteral("-I") << dataDirectory()
-         << QStringLiteral("--silent");
+         << QStringLiteral("-I") << dataDirectory();
+    args << extraArgs;
+    args << QStringLiteral("--silent");
     QString errors;
     auto verify = [&](bool isSilent) {
         QProcess process;

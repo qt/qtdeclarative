@@ -57,14 +57,6 @@ static QQmlDirParser createQmldirParserForFile(const QString &filename)
     return parser;
 }
 
-static TypeDescriptionReader createQmltypesReaderForFile(const QString &filename)
-{
-    QFile f(filename);
-    f.open(QFile::ReadOnly);
-    TypeDescriptionReader reader { filename, f.readAll() };
-    return reader;
-}
-
 void FindWarningVisitor::enterEnvironment(ScopeType type, const QString &name)
 {
     m_currentScope = ScopeTree::create(type, name, m_currentScope);
@@ -186,10 +178,25 @@ static const QLatin1String SlashQmldir             = QLatin1String("/qmldir");
 static const QLatin1String SlashPluginsDotQmltypes = QLatin1String("/plugins.qmltypes");
 
 void FindWarningVisitor::readQmltypes(const QString &filename,
-                                            FindWarningVisitor::Import &result)
+                                      QHash<QString, ScopeTree::ConstPtr> *objects, QStringList *dependencies)
 {
-    auto reader = createQmltypesReaderForFile(filename);
-    auto succ = reader(&result.objects, &result.dependencies);
+    const QFileInfo fileInfo(filename);
+    if (!fileInfo.exists()) {
+        m_colorOut.write(QLatin1String("warning: "), Warning);
+        m_colorOut.writeUncolored(QLatin1String("QML types file does not exist: ") + filename);
+        return;
+    }
+
+    if (fileInfo.isDir()) {
+        m_colorOut.write(QLatin1String("warning: "), Warning);
+        m_colorOut.writeUncolored(QLatin1String("QML types file cannot be a directory: ") + filename);
+        return;
+    }
+
+    QFile file(filename);
+    file.open(QFile::ReadOnly);
+    TypeDescriptionReader reader { filename, file.readAll() };
+    auto succ = reader(objects, dependencies);
     if (!succ)
         m_colorOut.writeUncolored(reader.errorMessage());
 }
@@ -226,7 +233,7 @@ FindWarningVisitor::Import FindWarningVisitor::readQmldir(const QString &path)
         result.objects.insert( it.key(), ScopeTree::ConstPtr(it.value()));
 
     if (!reader.plugins().isEmpty() && QFile::exists(path + SlashPluginsDotQmltypes))
-        readQmltypes(path + SlashPluginsDotQmltypes, result);
+        readQmltypes(path + SlashPluginsDotQmltypes, &result.objects, &result.dependencies);
 
     return result;
 }
@@ -293,7 +300,7 @@ void FindWarningVisitor::importHelper(const QString &module, const QString &pref
             QDirIterator it { qmltypesPath, QStringList() << QLatin1String("*.qmltypes"), QDir::Files };
 
             while (it.hasNext())
-                readQmltypes(it.next(), result);
+                readQmltypes(it.next(), &result.objects, &result.dependencies);
 
             processImport(prefix, result);
         }
@@ -304,7 +311,7 @@ void FindWarningVisitor::importHelper(const QString &module, const QString &pref
         Import result;
 
         for (const auto &qmltypeFile : m_qmltypeFiles)
-            readQmltypes(qmltypeFile, result);
+            readQmltypes(qmltypeFile, &result.objects, &result.dependencies);
 
         processImport("", result);
     }
@@ -442,20 +449,14 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiProgram *)
         QDirIterator it { dir, QStringList() << QLatin1String("builtins.qmltypes"), QDir::NoFilter,
                           QDirIterator::Subdirectories };
         while (it.hasNext()) {
-            auto reader = createQmltypesReaderForFile(it.next());
-            auto succ = reader(&objects, &dependencies);
-            if (!succ)
-                m_colorOut.writeUncolored(reader.errorMessage());
+            readQmltypes(it.next(), &objects, &dependencies);
         }
     }
 
     if (!m_qmltypeFiles.isEmpty())
     {
         for (const auto &qmltypeFile : m_qmltypeFiles) {
-            auto reader = createQmltypesReaderForFile(qmltypeFile);
-            auto succ = reader(&objects, &dependencies);
-            if (!succ)
-                m_colorOut.writeUncolored(reader.errorMessage());
+            readQmltypes(qmltypeFile, &objects, &dependencies);
         }
     }
 
