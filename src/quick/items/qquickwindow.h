@@ -236,6 +236,9 @@ Q_SIGNALS:
     Q_REVISION(6, 0) void paletteChanged();
     Q_REVISION(6, 0) void paletteCreated();
 
+    Q_REVISION(6, 0) void beforeFrameBegin();
+    Q_REVISION(6, 0) void afterFrameEnd();
+
 public Q_SLOTS:
     void update();
     void releaseResources();

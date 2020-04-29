@@ -4620,6 +4620,58 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 */
 
 /*!
+    \fn void QQuickWindow::beforeFrameBegin()
+
+    This signal is emitted before the scene graph starts preparing the frame.
+    This precedes signals like beforeSynchronizing() or beforeRendering(). It is
+    the earliest signal that is emitted by the scene graph rendering thread
+    when starting to prepare a new frame.
+
+    This signal is relevant for lower level graphics frameworks that need to
+    execute certain operations, such as resource cleanup, at a stage where Qt
+    Quick has not initiated the recording of a new frame via the underlying
+    rendering hardware interface APIs.
+
+    \warning This signal is emitted from the scene graph rendering thread. If your
+    slot function needs to finish before execution continues, you must make sure that
+    the connection is direct (see Qt::ConnectionType).
+
+    \since 6.0
+
+    \sa afterFrameEnd()
+*/
+
+/*!
+    \qmlsignal QtQuick.Window::Window::beforeFrameBegin()
+    \internal
+*/
+
+/*!
+    \fn void QQuickWindow::afterFrameEnd()
+
+    This signal is emitted when the scene graph has submitted a frame. This is
+    emitted after all other related signals, such as afterRendering(). It is
+    the last signal that is emitted by the scene graph rendering thread when
+    rendering a frame.
+
+    \note Unlike frameSwapped(), this signal is guaranteed to be emitted also
+    when the Qt Quick output is redirected via QQuickRenderControl.
+
+    \warning This signal is emitted from the scene graph rendering thread. If your
+    slot function needs to finish before execution continues, you must make sure that
+    the connection is direct (see Qt::ConnectionType).
+
+    \since 6.0
+
+    \sa beforeFrameBegin()
+*/
+
+/*!
+    \qmlsignal QtQuick.Window::Window::afterFrameEnd()
+    \internal
+*/
+
+/*!
     \qmlsignal QtQuick.Window::Window::afterRenderPassRecording()
     \internal
     \since 5.14

@@ -713,6 +713,8 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
     if (!grabRequested)
         pendingUpdate = 0;
 
+    emit window->beforeFrameBegin();
+
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
     // Begin the frame before syncing -> sync is where we may invoke
     // updatePaintNode() on the items and they may want to do resource updates.
@@ -882,6 +884,8 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
     }
 
     qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- rendering done");
+
+    emit window->afterFrameEnd();
 
     // Though it would be more correct to put this block directly after
     // fireFrameSwapped in the if (current) branch above, we don't do

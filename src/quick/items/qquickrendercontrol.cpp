@@ -660,6 +660,8 @@ void QQuickRenderControl::beginFrame()
     if (!d->rhi || d->rhi->isRecordingFrame())
         return;
 
+    emit d->window->beforeFrameBegin();
+
     d->rhi->beginOffscreenFrame(&d->cb, QRhi::ExternalContentsInPass); // must specify ExternalContents since we do not know in advance
 }
 
@@ -683,6 +685,8 @@ void QQuickRenderControl::endFrame()
 
     d->rhi->endOffscreenFrame();
     d->cb = nullptr;
+
+    emit d->window->afterFrameEnd();
 }
 
 bool QQuickRenderControlPrivate::initRhi()

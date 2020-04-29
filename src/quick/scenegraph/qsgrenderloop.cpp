@@ -704,6 +704,8 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
 
     emit window->afterAnimating();
 
+    emit window->beforeFrameBegin();
+
     // Begin the frame before syncing -> sync is where we may invoke
     // updatePaintNode() on the items and they may want to do resource updates.
     // Also relevant for applications that connect to the before/afterSynchronizing
@@ -798,6 +800,8 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     }
     if (needsPresent)
         cd->fireFrameSwapped();
+
+    emit window->afterFrameEnd();
 
     qint64 swapTime = 0;
     if (profileFrames)
