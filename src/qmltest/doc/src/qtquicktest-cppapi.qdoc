@@ -36,7 +36,7 @@
     The C++ macros and functions can be included into your application using
     the following include statement:
 
-    \snippet src_qmltest_qquicktest.cpp 0
+    \snippet src_qmltest_qquicktest_snippet.cpp 0
 
     There are two ways to link against the corresponding C++ library. If your
     test project uses a QML \l TestCase, you should already have the following

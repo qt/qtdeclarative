@@ -24,7 +24,14 @@ qtHaveModule(gui):qtConfig(qml-animation) {
 
     qtConfig(quick-particles): \
         SUBDIRS += particles
+
     qtHaveModule(widgets): SUBDIRS += quickwidgets
+    qtConfig(private_tests):qtConfig(testlib) {
+        src_qmltest_doc_snippets.subdir = qmltest/doc/snippets
+        src_qmltest_doc_snippets.target = sub-qmltest-doc-snippets
+        src_qmltest_doc_snippets.depends = src_qmltest
+        SUBDIRS += src_qmltest_doc_snippets
+    }
 }
 
 SUBDIRS += \

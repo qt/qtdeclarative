@@ -48,27 +48,10 @@
 **
 ****************************************************************************/
 
-//! [2]
-// src_qmltest_qquicktest.cpp
+//! [1]
+//! [0]
 #include <QtQuickTest>
-#include <QQmlEngine>
-#include <QQmlContext>
+//! [0]
+QUICK_TEST_MAIN(example)
+//! [1]
 
-class Setup : public QObject
-{
-    Q_OBJECT
-
-public:
-    Setup() {}
-
-public slots:
-    void qmlEngineAvailable(QQmlEngine *engine)
-    {
-        engine->rootContext()->setContextProperty("myContextProperty", QVariant(true));
-    }
-};
-
-QUICK_TEST_MAIN_WITH_SETUP(mytest, Setup)
-
-#include "src_qmltest_qquicktest.moc"
-//! [2]

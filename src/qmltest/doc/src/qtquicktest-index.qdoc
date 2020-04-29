@@ -69,7 +69,7 @@
     Test cases are launched by a C++ harness that consists of
     the following code:
 
-    \snippet src_qmltest_qquicktest.cpp 1
+    \snippet src_qmltest_qquicktest_snippet.cpp 1
 
     Where "example" is the identifier to use to uniquely identify
     this set of tests. Finally, add \c{CONFIG += qmltestcase} to the project
@@ -187,7 +187,7 @@
 
     The \c .moc include is based on the file name of the \c .cpp file.
     For example, in the example above, the \c .cpp file is named
-    \c tst_mytest.cpp. If the file was named \c MyTest.cpp, the include would
+    \c src_qmltest_qquicktest.cpp. If the file was named \c MyTest.cpp, the include would
     be:
 
     \code

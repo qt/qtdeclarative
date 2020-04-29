@@ -47,7 +47,7 @@
     \brief Sets up the entry point for a Qt Quick Test application.
     The \a name argument uniquely identifies this set of tests.
 
-    \snippet src_qmltest_qquicktest.cpp 1
+    \snippet src_qmltest_qquicktest_snippet.cpp 1
 
     \note The macro assumes that your test sources are in the current
     directory, unless the \c QUICK_TEST_SOURCE_DIR environment variable is set.
