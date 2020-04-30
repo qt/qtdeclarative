@@ -11,9 +11,7 @@ SUBDIRS=\
 
 qtHaveModule(gui):qtConfig(opengl(es1|es2)?) {
     SUBDIRS += particles
-# Disabled for Qt 6 until a conclusion on QQuickWidget is reached
-#    qtHaveModule(widgets): SUBDIRS += quickwidgets
-
+    qtHaveModule(widgets): SUBDIRS += quickwidgets
 }
 
 # console applications not supported

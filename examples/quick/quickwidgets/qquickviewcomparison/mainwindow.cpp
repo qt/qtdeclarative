@@ -179,8 +179,8 @@ void MainWindow::updateView()
         connect(quickWidget, &QQuickWidget::statusChanged, this, &MainWindow::onStatusChangedWidget);
         connect(quickWidget, &QQuickWidget::sceneGraphError, this, &MainWindow::onSceneGraphError);
         quickWidget->setSource(source);
-        m_currentRootObject = quickWidget->rootObject();
         switchTo(quickWidget);
+        m_currentRootObject = quickWidget->rootObject();
     }
 
     if (m_currentRootObject) {

@@ -152,6 +152,7 @@ private:
 
 tst_qquickwidget::tst_qquickwidget()
 {
+    QQuickWindow::setSceneGraphBackend(QSGRendererInterface::OpenGLRhi);
 }
 
 void tst_qquickwidget::showHide()
@@ -379,8 +380,8 @@ void tst_qquickwidget::readback()
 
     QImage img = view->grabFramebuffer();
     QVERIFY(!img.isNull());
-    QCOMPARE(img.width(), view->width());
-    QCOMPARE(img.height(), view->height());
+    QCOMPARE(img.width(), qCeil(view->width() * view->devicePixelRatioF()));
+    QCOMPARE(img.height(), qCeil(view->height() * view->devicePixelRatioF()));
 
     QRgb pix = img.pixel(5, 5);
     QCOMPARE(pix, qRgb(255, 0, 0));
@@ -447,13 +448,15 @@ void tst_qquickwidget::reparentToNewWindow()
     window2.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window2));
 
-    QSignalSpy afterRenderingSpy(qqw->quickWindow(), &QQuickWindow::afterRendering);
     qqw->setParent(&window2);
+
+    QSignalSpy afterRenderingSpy(qqw->quickWindow(), &QQuickWindow::afterRendering);
     qqw->show();
 
     QTRY_VERIFY(afterRenderingSpy.size() > 0);
 
     QImage img = qqw->grabFramebuffer();
+
     QCOMPARE(img.pixel(5, 5), qRgb(255, 0, 0));
 }
 

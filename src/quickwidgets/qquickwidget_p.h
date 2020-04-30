@@ -108,6 +108,7 @@ public:
 #endif
 
     void init(QQmlEngine* e = 0);
+    void initOffscreenWindow();
     void ensureEngine() const;
     void handleWindowChange();
     void invalidateRenderControl();

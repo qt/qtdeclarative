@@ -60,6 +60,9 @@ int main(int argc, char **argv)
 
     QApplication app(argc, argv);
 
+    // this example and QQuickWidget are only functional when rendering with OpenGL
+    QQuickWindow::setSceneGraphBackend(QSGRendererInterface::OpenGLRhi);
+
     QCoreApplication::setApplicationName("Qt QQuickView/QQuickWidget Comparison Example");
     QCoreApplication::setOrganizationName("QtProject");
     QCoreApplication::setApplicationVersion(QT_VERSION_STR);
