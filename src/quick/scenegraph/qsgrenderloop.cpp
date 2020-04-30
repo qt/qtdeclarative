@@ -39,7 +39,6 @@
 
 #include "qsgrenderloop_p.h"
 #include "qsgthreadedrenderloop_p.h"
-#include "qsgwindowsrenderloop_p.h"
 #include "qsgrhisupport_p.h"
 #include <private/qquickanimatorcontroller_p.h>
 
@@ -238,13 +237,10 @@ QSGRenderLoop *QSGRenderLoop::instance()
             } else {
                 loopType = BasicRenderLoop;
 #ifdef Q_OS_WIN
-                // With desktop OpenGL (opengl32.dll), use threaded. Otherwise (ANGLE) use windows.
                 if (QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGL
                         && QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ThreadedOpenGL))
                 {
                     loopType = ThreadedRenderLoop;
-                } else {
-                    loopType = WindowsRenderLoop;
                 }
 #else
                 if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ThreadedOpenGL))
@@ -271,10 +267,6 @@ QSGRenderLoop *QSGRenderLoop::instance()
                 default:
                     break;
                 }
-
-                // no 'windows' because that's not yet ported to the rhi
-                if (loopType == WindowsRenderLoop)
-                    loopType = BasicRenderLoop;
             }
 
             // The environment variables can always override. This is good
@@ -288,12 +280,14 @@ QSGRenderLoop *QSGRenderLoop::instance()
 
             if (Q_UNLIKELY(qEnvironmentVariableIsSet("QSG_RENDER_LOOP"))) {
                 const QByteArray loopName = qgetenv("QSG_RENDER_LOOP");
-                if (loopName == "windows")
-                    loopType = WindowsRenderLoop;
-                else if (loopName == "basic")
+                if (loopName == "windows") {
+                    qWarning("The 'windows' render loop is no longer supported. Using 'basic' instead.");
                     loopType = BasicRenderLoop;
-                else if (loopName == "threaded")
+                } else if (loopName == "basic") {
+                    loopType = BasicRenderLoop;
+                } else if (loopName == "threaded") {
                     loopType = ThreadedRenderLoop;
+                }
             }
 
             switch (loopType) {
@@ -303,12 +297,8 @@ QSGRenderLoop *QSGRenderLoop::instance()
                 s_instance = new QSGThreadedRenderLoop();
                 break;
 #endif
-            case WindowsRenderLoop:
-                qCDebug(QSG_LOG_INFO, "windows render loop");
-                s_instance = new QSGWindowsRenderLoop();
-                break;
             default:
-                qCDebug(QSG_LOG_INFO, "QSG: basic render loop");
+                qCDebug(QSG_LOG_INFO, "basic render loop");
                 s_instance = new QSGGuiThreadRenderLoop();
                 break;
             }

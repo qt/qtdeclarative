@@ -179,17 +179,15 @@ render loop.
 For detailed description of how the scene graph renderer works, see \l {Qt
 Quick Scene Graph Default Renderer}.
 
-There are three render loop variants available: \c basic, \c windows,
-and \c threaded. Out of these, \c basic and \c windows are
-single-threaded, while \c threaded performs scene graph rendering on a
-dedicated thread. Qt attempts to choose a suitable loop based on the
-platform and possibly the graphics drivers in use. When this is not
-satisfactory, or for testing purposes, the environment variable
-\c QSG_RENDER_LOOP can be used to force the usage of a given loop. To
-verify which render loop is in use, enable the \c qt.scenegraph.general
-\l {QLoggingCategory}{logging category}.
+There are two render loop variants available: \c basic, and \c threaded.
+\c basic is single-threaded, while \c threaded performs scene graph rendering on a
+dedicated thread. Qt attempts to choose a suitable loop based on the platform
+and possibly the graphics drivers in use. When this is not satisfactory, or for
+testing purposes, the environment variable \c QSG_RENDER_LOOP can be used to
+force the usage of a given loop. To verify which render loop is in use, enable
+the \c qt.scenegraph.general \l {QLoggingCategory}{logging category}.
 
-\note The \c threaded and \c windows render loops rely on the graphics API
+\note The \c threaded render loop relies on the graphics API
 implementation for throttling, for example, by requesting a swap interval of 1
 in case of OpenGL. Some graphics drivers allow users to override this setting
 and turn it off, ignoring Qt's request. Without blocking in the swap buffers
@@ -280,25 +278,21 @@ platform, but this is subject to change. It is always possible to force use of
 the threaded renderer by setting \c {QSG_RENDER_LOOP=threaded} in the
 environment.
 
-\section2 Non-threaded Render Loops ("basic" and "windows")
+\section2 Non-threaded Render Loop ("basic")
 
-The non-threaded render loop is currently used by default on Windows with ANGLE
-or a non-default opengl32 implementation, \macos with OpenGL, and Linux with
-some drivers. For the latter this is mostly a precautionary measure, as not all
-combinations of OpenGL drivers and windowing systems have been tested. At the
-same time implementations like ANGLE or Mesa llvmpipe are not able to function
-properly with threaded rendering at all so not using threaded rendering is
-essential for these.
+The non-threaded render loop is currently used by default on Windows with
+OpenGL when not using the system's standard opengl32.dll, \macos with OpenGL,
+and Linux with some drivers. For the latter this is mostly a precautionary
+measure, as not all combinations of OpenGL drivers and windowing systems have
+been tested. At the same time implementations like ANGLE or Mesa llvmpipe are
+not able to function properly with threaded rendering at all so not using
+threaded rendering is essential for these.
 
 On macOS and OpenGL, the threaded render loop is not supported when building
 with XCode 10 (10.14 SDK) or later, since this opts in to layer-backed views on
 macOS 10.14. You can build with Xcode 9 (10.13 SDK) to opt out of
 layer-backing, in which case the threaded render loop is available and used by
 default. There is no such restriction with Metal.
-
-By default \c windows is used for non-threaded rendering on Windows with ANGLE,
-while \c basic is used for all other platforms when non-threaded rendering is
-needed.
 
 Even when using the non-threaded render loop, you should write your code as if
 you are using the threaded renderer, as failing to do so will make the code

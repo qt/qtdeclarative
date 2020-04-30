@@ -137,8 +137,7 @@ qtConfig(opengl(es1|es2)?) {
         $$PWD/util/qsgdefaultrectanglenode.cpp \
         $$PWD/util/qsgdefaultimagenode.cpp \
         $$PWD/util/qsgdefaultninepatchnode.cpp \
-        $$PWD/qsgopengllayer.cpp \
-        $$PWD/qsgwindowsrenderloop.cpp
+        $$PWD/qsgopengllayer.cpp
     HEADERS += \
         $$PWD/qsgdefaultglyphnode_p.h \
         $$PWD/qsgopengldistancefieldglyphcache_p.h \
@@ -153,8 +152,7 @@ qtConfig(opengl(es1|es2)?) {
         $$PWD/util/qsgdefaultrectanglenode_p.h \
         $$PWD/util/qsgdefaultimagenode_p.h \
         $$PWD/util/qsgdefaultninepatchnode_p.h \
-        $$PWD/qsgopengllayer_p.h \
-        $$PWD/qsgwindowsrenderloop_p.h
+        $$PWD/qsgopengllayer_p.h
 
     qtConfig(thread) {
         SOURCES += \

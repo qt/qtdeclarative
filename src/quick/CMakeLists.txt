@@ -472,7 +472,6 @@ qt_extend_target(Quick CONDITION QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT
         scenegraph/qsgrhilayer.cpp scenegraph/qsgrhilayer_p.h
         scenegraph/qsgrhishadereffectnode.cpp scenegraph/qsgrhishadereffectnode_p.h
         scenegraph/qsgrhitextureglyphcache.cpp scenegraph/qsgrhitextureglyphcache_p.h
-        scenegraph/qsgwindowsrenderloop.cpp scenegraph/qsgwindowsrenderloop_p.h
         scenegraph/util/qsgdefaultimagenode.cpp scenegraph/util/qsgdefaultimagenode_p.h
         scenegraph/util/qsgdefaultninepatchnode.cpp scenegraph/util/qsgdefaultninepatchnode_p.h
         scenegraph/util/qsgdefaultpainternode.cpp scenegraph/util/qsgdefaultpainternode_p.h

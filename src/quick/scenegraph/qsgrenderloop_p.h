@@ -126,8 +126,7 @@ private:
 enum QSGRenderLoopType
 {
     BasicRenderLoop,
-    ThreadedRenderLoop,
-    WindowsRenderLoop
+    ThreadedRenderLoop
 };
 
 QT_END_NAMESPACE

@@ -67,7 +67,6 @@
 #include <QtQuick/private/qsgtexture_p.h>
 #include <QtQuick/private/qsgplaintexture_p.h>
 #include <QtQuick/private/qsgthreadedrenderloop_p.h>
-#include <QtQuick/private/qsgwindowsrenderloop_p.h>
 
 #include <QtQuick/private/qsgrhiatlastexture_p.h>
 #include <QtQuick/private/qsgrhidistancefieldglyphcache_p.h>
