@@ -43,6 +43,7 @@
 
 #include "QtQuick/private/qquickitem_p.h"
 #include "QtQuick/private/qquicktext_p.h"
+#include "QtQuick/private/qquicktextinput_p.h"
 #include "QtQuick/private/qquickaccessibleattached_p.h"
 #include "QtQuick/qquicktextdocument.h"
 QT_BEGIN_NAMESPACE
@@ -197,6 +198,9 @@ QAccessible::State QAccessibleQuickItem::state() const
         state.focusable = true;
     if (item()->hasActiveFocus())
         state.focused = true;
+    if (role() == QAccessible::EditableText)
+        if (auto ti = qobject_cast<QQuickTextInput *>(item()))
+            state.passwordEdit = ti->echoMode() != QQuickTextInput::Normal;
     return state;
 }
 
