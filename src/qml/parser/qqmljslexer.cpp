@@ -893,8 +893,10 @@ int Lexer::scanString(ScanStringMode mode)
     if (_engine) {
         while (_codePtr <= _endPtr) {
             if (isLineTerminator()) {
-                if ((quote == QLatin1Char('`') || qmlMode()))
+                if ((quote == QLatin1Char('`') || qmlMode())) {
+                    --_currentLineNumber; // will be read again in scanChar()
                     break;
+                }
                 _errorCode = IllegalCharacter;
                 _errorMessage = QCoreApplication::translate("QQmlParser", "Stray newline in string literal");
                 return T_ERROR;

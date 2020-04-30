@@ -328,6 +328,31 @@ void tst_qqmlparser::stringLiteral()
     QCOMPARE(literal->firstSourceLocation().begin(), offset);
     QCOMPARE(literal->firstSourceLocation().startLine, 1u);
     QCOMPARE(literal->lastSourceLocation().end(), quint32(code.size()));
+
+    leftCode = QLatin1String("'\u000Ahello\u000Abye'");
+    code = leftCode + plusCode + rightCode;
+    lexer.setCode(code, 1);
+    QVERIFY(parser.parseExpression());
+    expression = parser.expression();
+    QVERIFY(expression);
+
+    binaryExpression = QQmlJS::AST::cast<QQmlJS::AST::BinaryExpression *>(expression);
+    QVERIFY(binaryExpression);
+
+    literal = QQmlJS::AST::cast<QQmlJS::AST::StringLiteral *>(binaryExpression->left);
+    QVERIFY(literal);
+    QCOMPARE(literal->value, "\nhello\nbye");
+    QCOMPARE(literal->firstSourceLocation().begin(), 0u);
+    QCOMPARE(literal->firstSourceLocation().startLine, 1u);
+    QCOMPARE(literal->lastSourceLocation().end(), leftCode.size());
+
+    literal = QQmlJS::AST::cast<QQmlJS::AST::StringLiteral *>(binaryExpression->right);
+    QVERIFY(literal);
+    QCOMPARE(literal->value, "\nbye");
+    offset = quint32(leftCode.size() + plusCode.size());
+    QCOMPARE(literal->firstSourceLocation().begin(), offset);
+    QCOMPARE(literal->lastSourceLocation().startLine, 3u);
+    QCOMPARE(literal->lastSourceLocation().end(), code.size());
 }
 
 void tst_qqmlparser::noSubstitutionTemplateLiteral()
