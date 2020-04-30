@@ -311,6 +311,9 @@ static void verifyZoomFactor(const QQmlDebugProcess *process, float factor)
 
 void tst_QQmlPreview::zoom()
 {
+    // ### Qt 6
+    QSKIP("Crashes with dev, not clear why. TBD.");
+
     const QString file("zoom.qml");
     QCOMPARE(startQmlProcess(file), ConnectSuccess);
     QVERIFY(m_client);

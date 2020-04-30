@@ -138,7 +138,6 @@ private:
     struct {
         bool valid = false;
         QSGRendererInterface::GraphicsApi api;
-        uint rhi : 1;
     } m_requested;
     QRhi::Implementation m_rhiBackend = QRhi::Null;
     int m_killDeviceFrameCount;

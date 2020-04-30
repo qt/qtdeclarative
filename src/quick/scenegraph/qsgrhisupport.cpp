@@ -126,7 +126,7 @@ void QSGRhiSupport::applySettings()
 
     if (m_requested.valid) {
         // explicit rhi backend request from C++ (e.g. via QQuickWindow)
-        m_enableRhi = m_requested.rhi;
+        m_enableRhi = true;
         switch (m_requested.api) {
         case QSGRendererInterface::OpenGLRhi:
             m_rhiBackend = QRhi::OpenGLES2;
@@ -148,8 +148,11 @@ void QSGRhiSupport::applySettings()
             break;
         }
     } else {
+
+        // New Qt 6 default: enable RHI, unless QSG_NO_RHI is set
+        m_enableRhi = !qEnvironmentVariableIsSet("QSG_NO_RHI");
+
         // check env.vars., fall back to platform-specific defaults when backend is not set
-        m_enableRhi = uint(qEnvironmentVariableIntValue("QSG_RHI"));
         const QByteArray rhiBackend = qgetenv("QSG_RHI_BACKEND");
         if (rhiBackend == QByteArrayLiteral("gl")
                 || rhiBackend == QByteArrayLiteral("gles2")
@@ -268,7 +271,6 @@ void QSGRhiSupport::configure(QSGRendererInterface::GraphicsApi api)
     QSGRhiSupport *inst = staticInst();
     inst->m_requested.valid = true;
     inst->m_requested.api = api;
-    inst->m_requested.rhi = true;
     inst->applySettings();
 }
 
