@@ -58,7 +58,7 @@
 
 #define NOISE_SIZE 64
 
-class NoisyShader : public QSGMaterialRhiShader
+class NoisyShader : public QSGMaterialShader
 {
 public:
     NoisyShader() {
@@ -76,7 +76,6 @@ class NoisyMaterial : public QSGMaterial
 public:
     NoisyMaterial()
     {
-        setFlag(SupportsRhiShader);
         setFlag(Blending);
     }
 
@@ -93,7 +92,6 @@ public:
 
     QSGMaterialShader *createShader() const override
     {
-        Q_ASSERT(flags().testFlag(RhiShaderWanted));
         return new NoisyShader;
     }
 

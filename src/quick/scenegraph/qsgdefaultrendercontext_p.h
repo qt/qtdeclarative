@@ -65,7 +65,6 @@ class QRhiCommandBuffer;
 class QRhiRenderPassDescriptor;
 class QOpenGLContext;
 class QSGMaterialShader;
-class QSGMaterialRhiShader;
 class QOpenGLFramebufferObject;
 class QSGDepthStencilBufferManager;
 class QSGDepthStencilBuffer;
@@ -130,9 +129,9 @@ public:
     QSGRenderer *createRenderer() override;
     QSGTexture *compressedTextureForFactory(const QSGCompressedTextureFactory *factory) const override;
 
-    virtual void compileShader(QSGMaterialShader *shader, QSGMaterial *material, const char *vertexCode = nullptr, const char *fragmentCode = nullptr);
-    virtual void initializeShader(QSGMaterialShader *shader);
-    virtual void initializeRhiShader(QSGMaterialRhiShader *shader, QShader::Variant shaderVariant);
+    virtual void compileShader(QSGMaterialShader *shader, QSGMaterial *material, const char *vertexCode = nullptr, const char *fragmentCode = nullptr); // legacy GL only
+    virtual void initializeShader(QSGMaterialShader *shader); // legacy GL only
+    virtual void initializeRhiShader(QSGMaterialShader *shader, QShader::Variant shaderVariant);
 
     void setAttachToGraphicsContext(bool attach) override;
 

@@ -39,90 +39,20 @@
 
 #include "qsgflatcolormaterial.h"
 #include <private/qsgmaterialshader_p.h>
-#if QT_CONFIG(opengl)
-# include <qopenglshaderprogram.h>
-#endif
 
 QT_BEGIN_NAMESPACE
 
-class FlatColorMaterialShader : public QSGMaterialShader
-{
-public:
-    FlatColorMaterialShader();
-
-    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
-    char const *const *attributeNames() const override;
-
-    static QSGMaterialType type;
-
-private:
-    void initialize() override;
-#if QT_CONFIG(opengl)
-    int m_matrix_id;
-    int m_color_id;
-#endif
-};
-
-QSGMaterialType FlatColorMaterialShader::type;
-
-FlatColorMaterialShader::FlatColorMaterialShader()
-    : QSGMaterialShader(*new QSGMaterialShaderPrivate)
-{
-#if QT_CONFIG(opengl)
-    setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/scenegraph/shaders/flatcolor.vert"));
-    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/flatcolor.frag"));
-#endif
-}
-
-void FlatColorMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
-{
-#if QT_CONFIG(opengl)
-    Q_ASSERT(oldEffect == nullptr || newEffect->type() == oldEffect->type());
-    QSGFlatColorMaterial *oldMaterial = static_cast<QSGFlatColorMaterial *>(oldEffect);
-    QSGFlatColorMaterial *newMaterial = static_cast<QSGFlatColorMaterial *>(newEffect);
-
-    const QColor &c = newMaterial->color();
-
-    if (oldMaterial == nullptr || c != oldMaterial->color() || state.isOpacityDirty()) {
-        float opacity = state.opacity() * c.alphaF();
-        QVector4D v(c.redF() * opacity,
-                    c.greenF() *  opacity,
-                    c.blueF() * opacity,
-                    opacity);
-        program()->setUniformValue(m_color_id, v);
-    }
-
-    if (state.isMatrixDirty())
-        program()->setUniformValue(m_matrix_id, state.combinedMatrix());
-#else
-    Q_UNUSED(state)
-    Q_UNUSED(newEffect)
-    Q_UNUSED(oldEffect)
-#endif
-}
-
-char const *const *FlatColorMaterialShader::attributeNames() const
-{
-    static char const *const attr[] = { "vCoord", nullptr };
-    return attr;
-}
-
-void FlatColorMaterialShader::initialize()
-{
-#if QT_CONFIG(opengl)
-    m_matrix_id = program()->uniformLocation("matrix");
-    m_color_id = program()->uniformLocation("color");
-#endif
-}
-
-
-class FlatColorMaterialRhiShader : public QSGMaterialRhiShader
+class FlatColorMaterialRhiShader : public QSGMaterialShader
 {
 public:
     FlatColorMaterialRhiShader();
 
     bool updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
+
+    static QSGMaterialType type;
 };
+
+QSGMaterialType FlatColorMaterialRhiShader::type;
 
 FlatColorMaterialRhiShader::FlatColorMaterialRhiShader()
 {
@@ -195,7 +125,6 @@ bool FlatColorMaterialRhiShader::updateUniformData(RenderState &state,
 
 QSGFlatColorMaterial::QSGFlatColorMaterial() : m_color(QColor(255, 255, 255))
 {
-    setFlag(SupportsRhiShader, true);
 }
 
 /*!
@@ -226,7 +155,7 @@ void QSGFlatColorMaterial::setColor(const QColor &color)
 
 QSGMaterialType *QSGFlatColorMaterial::type() const
 {
-    return &FlatColorMaterialShader::type;
+    return &FlatColorMaterialRhiShader::type;
 }
 
 
@@ -237,10 +166,7 @@ QSGMaterialType *QSGFlatColorMaterial::type() const
 
 QSGMaterialShader *QSGFlatColorMaterial::createShader() const
 {
-    if (flags().testFlag(RhiShaderWanted))
-        return new FlatColorMaterialRhiShader;
-    else
-        return new FlatColorMaterialShader;
+    return new FlatColorMaterialRhiShader;
 }
 
 

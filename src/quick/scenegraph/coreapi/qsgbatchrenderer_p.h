@@ -672,7 +672,7 @@ struct ShaderManagerShader
         int pos_order;
     } programGL;
     struct {
-        QSGMaterialRhiShader *program = nullptr;
+        QSGMaterialShader *program = nullptr;
         QRhiVertexInputLayout inputLayout;
         QVarLengthArray<QRhiGraphicsShaderStage, 2> shaderStages;
     } programRhi;
@@ -804,10 +804,10 @@ private:
     void renderBatches();
     bool ensurePipelineState(Element *e, const ShaderManager::Shader *sms);
     QRhiTexture *dummyTexture();
-    void updateMaterialDynamicData(ShaderManager::Shader *sms, QSGMaterialRhiShader::RenderState &renderState,
+    void updateMaterialDynamicData(ShaderManager::Shader *sms, QSGMaterialShader::RenderState &renderState,
                                    QSGMaterial *material, ShaderManager::ShaderResourceBindingList *bindings,
                                    const Batch *batch, int ubufOffset, int ubufRegionSize);
-    void updateMaterialStaticData(ShaderManager::Shader *sms, QSGMaterialRhiShader::RenderState &renderState,
+    void updateMaterialStaticData(ShaderManager::Shader *sms, QSGMaterialShader::RenderState &renderState,
                                   QSGMaterial *material, Batch *batch, bool *gstateChanged);
     void checkLineWidth(QSGGeometry *g);
     bool prepareRenderMergedBatch(Batch *batch, PreparedRenderBatch *renderBatch);
@@ -828,7 +828,7 @@ private:
     bool prepareRhiRenderNode(Batch *batch, PreparedRenderBatch *renderBatch);
     void renderRhiRenderNode(const Batch *batch);
     void setActiveShader(QSGMaterialShader *program, ShaderManager::Shader *shader);
-    void setActiveRhiShader(QSGMaterialRhiShader *program, ShaderManager::Shader *shader);
+    void setActiveRhiShader(QSGMaterialShader *program, ShaderManager::Shader *shader);
 
     bool changeBatchRoot(Node *node, Node *newRoot);
     void registerBatchRoot(Node *childRoot, Node *parentRoot);
@@ -884,7 +884,6 @@ private:
     ShaderManager *m_shaderManager; // per rendercontext, shared
     QSGMaterial *m_currentMaterial;
     QSGMaterialShader *m_currentProgram;
-    QSGMaterialRhiShader *m_currentRhiProgram;
     ShaderManager::Shader *m_currentShader;
     ClipState m_currentClipState;
 

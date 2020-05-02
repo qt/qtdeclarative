@@ -7,8 +7,6 @@ HEADERS += \
     $$PWD/coreapi/qsgmaterialtype.h \
     $$PWD/coreapi/qsgmaterialshader.h \
     $$PWD/coreapi/qsgmaterialshader_p.h \
-    $$PWD/coreapi/qsgmaterialrhishader.h \
-    $$PWD/coreapi/qsgmaterialrhishader_p.h \
     $$PWD/coreapi/qsgnode.h \
     $$PWD/coreapi/qsgnode_p.h \
     $$PWD/coreapi/qsgnodeupdater_p.h \
@@ -27,7 +25,6 @@ SOURCES += \
     $$PWD/coreapi/qsggeometry.cpp \
     $$PWD/coreapi/qsgmaterial.cpp \
     $$PWD/coreapi/qsgmaterialshader.cpp \
-    $$PWD/coreapi/qsgmaterialrhishader.cpp \
     $$PWD/coreapi/qsgtexture.cpp \
     $$PWD/coreapi/qsgnode.cpp \
     $$PWD/coreapi/qsgnodeupdater.cpp \

@@ -243,27 +243,7 @@ public:
     static QSGMaterial *createConicalGradient(QQuickWindow *window, QQuickShapeGenericStrokeFillNode *node);
 };
 
-#if QT_CONFIG(opengl)
-
- class QQuickShapeLinearGradientShader : public QSGMaterialShader
-{
-public:
-    QQuickShapeLinearGradientShader();
-
-    void initialize() override;
-    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
-    char const *const *attributeNames() const override;
-
-private:
-    int m_opacityLoc = -1;
-    int m_matrixLoc = -1;
-    int m_gradStartLoc = -1;
-    int m_gradEndLoc = -1;
-};
-
-#endif // QT_CONFIG(opengl)
-
-class QQuickShapeLinearGradientRhiShader : public QSGMaterialRhiShader
+class QQuickShapeLinearGradientRhiShader : public QSGMaterialShader
 {
 public:
     QQuickShapeLinearGradientRhiShader();
@@ -289,7 +269,7 @@ public:
         // the vertex data. The shader will rely on the fact that
         // vertexCoord.xy is the Shape-space coordinate and so no modifications
         // are welcome.
-        setFlag(Blending | RequiresFullMatrix | SupportsRhiShader);
+        setFlag(Blending | RequiresFullMatrix);
     }
 
     QSGMaterialType *type() const override;
@@ -302,29 +282,7 @@ private:
     QQuickShapeGenericStrokeFillNode *m_node;
 };
 
-#if QT_CONFIG(opengl)
-
-class QQuickShapeRadialGradientShader : public QSGMaterialShader
-{
-public:
-    QQuickShapeRadialGradientShader();
-
-    void initialize() override;
-    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
-    char const *const *attributeNames() const override;
-
-private:
-    int m_opacityLoc = -1;
-    int m_matrixLoc = -1;
-    int m_translationPointLoc = -1;
-    int m_focalToCenterLoc = -1;
-    int m_centerRadiusLoc = -1;
-    int m_focalRadiusLoc = -1;
-};
-
-#endif // QT_CONFIG(opengl)
-
-class QQuickShapeRadialGradientRhiShader : public QSGMaterialRhiShader
+class QQuickShapeRadialGradientRhiShader : public QSGMaterialShader
 {
 public:
     QQuickShapeRadialGradientRhiShader();
@@ -347,7 +305,7 @@ public:
     QQuickShapeRadialGradientMaterial(QQuickShapeGenericStrokeFillNode *node)
         : m_node(node)
     {
-        setFlag(Blending | RequiresFullMatrix | SupportsRhiShader);
+        setFlag(Blending | RequiresFullMatrix);
     }
 
     QSGMaterialType *type() const override;
@@ -360,27 +318,7 @@ private:
     QQuickShapeGenericStrokeFillNode *m_node;
 };
 
-#if QT_CONFIG(opengl)
-
-class QQuickShapeConicalGradientShader : public QSGMaterialShader
-{
-public:
-    QQuickShapeConicalGradientShader();
-
-    void initialize() override;
-    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
-    char const *const *attributeNames() const override;
-
-private:
-    int m_opacityLoc = -1;
-    int m_matrixLoc = -1;
-    int m_angleLoc = -1;
-    int m_translationPointLoc = -1;
-};
-
-#endif // QT_CONFIG(opengl)
-
-class QQuickShapeConicalGradientRhiShader : public QSGMaterialRhiShader
+class QQuickShapeConicalGradientRhiShader : public QSGMaterialShader
 {
 public:
     QQuickShapeConicalGradientRhiShader();
@@ -401,7 +339,7 @@ public:
     QQuickShapeConicalGradientMaterial(QQuickShapeGenericStrokeFillNode *node)
         : m_node(node)
     {
-        setFlag(Blending | RequiresFullMatrix | SupportsRhiShader);
+        setFlag(Blending | RequiresFullMatrix);
     }
 
     QSGMaterialType *type() const override;

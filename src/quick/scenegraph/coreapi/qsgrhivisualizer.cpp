@@ -42,7 +42,7 @@
 #include "qsgrhivisualizer_p.h"
 #include <qmath.h>
 #include <QQuickWindow>
-#include <private/qsgmaterialrhishader_p.h>
+#include <private/qsgmaterialshader_p.h>
 #include <private/qsgshadersourcebuilder_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -94,9 +94,9 @@ void RhiVisualizer::prepareVisualize()
         return;
 
     if (!m_vs.isValid()) {
-        m_vs = QSGMaterialRhiShaderPrivate::loadShader(
+        m_vs = QSGMaterialShaderPrivate::loadShader(
                     QLatin1String(":/qt-project.org/scenegraph/shaders_ng/visualization.vert.qsb"));
-        m_fs = QSGMaterialRhiShaderPrivate::loadShader(
+        m_fs = QSGMaterialShaderPrivate::loadShader(
                     QLatin1String(":/qt-project.org/scenegraph/shaders_ng/visualization.frag.qsb"));
     }
 

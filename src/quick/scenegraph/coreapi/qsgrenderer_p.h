@@ -94,7 +94,6 @@ public:
     QSGNodeUpdater *nodeUpdater() const;
     void setNodeUpdater(QSGNodeUpdater *updater);
     inline QSGMaterialShader::RenderState state(QSGMaterialShader::RenderState::DirtyStates dirty) const;
-    inline QSGMaterialRhiShader::RenderState rhiState(QSGMaterialRhiShader::RenderState::DirtyStates dirty) const;
     virtual void setCustomRenderMode(const QByteArray &) { }
     virtual bool hasCustomRenderModeWithContinuousUpdate() const { return false; }
     virtual void releaseCachedResources() { }
@@ -102,7 +101,7 @@ public:
 
     void clearChangedFlag() { m_changed_emitted = false; }
 
-    // Accessed by QSGMaterialRhiShader::RenderState.
+    // Accessed by QSGMaterialShader::RenderState.
     QByteArray *currentUniformData() const { return m_current_uniform_data; }
     QRhiResourceUpdateBatch *currentResourceUpdateBatch() const { return m_current_resource_update_batch; }
     QRhi *currentRhi() const { return m_rhi; }
@@ -192,14 +191,6 @@ private:
 QSGMaterialShader::RenderState QSGRenderer::state(QSGMaterialShader::RenderState::DirtyStates dirty) const
 {
     QSGMaterialShader::RenderState s;
-    s.m_dirty = dirty;
-    s.m_data = this;
-    return s;
-}
-
-QSGMaterialRhiShader::RenderState QSGRenderer::rhiState(QSGMaterialRhiShader::RenderState::DirtyStates dirty) const
-{
-    QSGMaterialRhiShader::RenderState s;
     s.m_dirty = dirty;
     s.m_data = this;
     return s;

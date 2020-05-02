@@ -6,11 +6,6 @@
         <file>particleresources/star.png</file>
     </qresource>
     <qresource prefix="/particles">
-        <file>shaders/imageparticle.frag</file>
-        <file>shaders/imageparticle.vert</file>
-        <file>shaders/imageparticle_core.frag</file>
-        <file>shaders/imageparticle_core.vert</file>
-
         <file>shaders_ng/imageparticle_simple.vert.qsb</file>
         <file>shaders_ng/imageparticle_simple.frag.qsb</file>
         <file>shaders_ng/imageparticle_tabled.vert.qsb</file>

@@ -40,7 +40,7 @@
 #include "qsgrhishadereffectnode_p.h"
 #include "qsgdefaultrendercontext_p.h"
 #include "qsgrhisupport_p.h"
-#include <qsgmaterialrhishader.h>
+#include <qsgmaterialshader.h>
 #include <qsgtextureprovider.h>
 #include <private/qsgplaintexture_p.h>
 #include <QtGui/private/qshaderdescription_p.h>
@@ -209,7 +209,7 @@ QSGMaterialType *QSGRhiShaderMaterialTypeCache::get(const QShader &vs, const QSh
 
 static QSGRhiShaderMaterialTypeCache shaderMaterialTypeCache;
 
-class QSGRhiShaderEffectMaterialShader : public QSGMaterialRhiShader
+class QSGRhiShaderEffectMaterialShader : public QSGMaterialShader
 {
 public:
     QSGRhiShaderEffectMaterialShader(const QSGRhiShaderEffectMaterial *material);
@@ -450,7 +450,7 @@ bool QSGRhiShaderEffectMaterialShader::updateGraphicsPipelineState(RenderState &
 QSGRhiShaderEffectMaterial::QSGRhiShaderEffectMaterial(QSGRhiShaderEffectNode *node)
     : m_node(node)
 {
-    setFlag(SupportsRhiShader | Blending | RequiresFullMatrix, true); // may be changed in syncMaterial()
+    setFlag(Blending | RequiresFullMatrix, true); // may be changed in syncMaterial()
 }
 
 QSGRhiShaderEffectMaterial::~QSGRhiShaderEffectMaterial()
@@ -521,7 +521,6 @@ QSGMaterialType *QSGRhiShaderEffectMaterial::type() const
 
 QSGMaterialShader *QSGRhiShaderEffectMaterial::createShader() const
 {
-    Q_ASSERT(flags().testFlag(RhiShaderWanted));
     return new QSGRhiShaderEffectMaterialShader(this);
 }
 

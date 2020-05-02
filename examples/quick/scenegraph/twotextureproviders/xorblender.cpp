@@ -78,7 +78,7 @@ public:
     } state;
 };
 
-class XorBlendRhiShader : public QSGMaterialRhiShader
+class XorBlendRhiShader : public QSGMaterialShader
 {
 public:
     XorBlendRhiShader();
@@ -90,13 +90,11 @@ public:
 
 XorBlendMaterial::XorBlendMaterial()
 {
-    setFlag(SupportsRhiShader);
     setFlag(Blending);
 }
 
 QSGMaterialShader *XorBlendMaterial::createShader() const
 {
-    Q_ASSERT(flags().testFlag(RhiShaderWanted));
     return new XorBlendRhiShader;
 }
 

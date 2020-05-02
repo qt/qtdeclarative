@@ -56,39 +56,13 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICK_PRIVATE_EXPORT QSGOpaqueTextureMaterialShader : public QSGMaterialShader
-{
-public:
-    QSGOpaqueTextureMaterialShader();
-
-    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
-    char const *const *attributeNames() const override;
-
-protected:
-    void initialize() override;
-
-    int m_matrix_id;
-};
-
-class Q_QUICK_PRIVATE_EXPORT QSGOpaqueTextureMaterialRhiShader : public QSGMaterialRhiShader
+class Q_QUICK_PRIVATE_EXPORT QSGOpaqueTextureMaterialRhiShader : public QSGMaterialShader
 {
 public:
     QSGOpaqueTextureMaterialRhiShader();
 
     bool updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
     void updateSampledImage(RenderState &state, int binding, QSGTexture **texture, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
-};
-
-class QSGTextureMaterialShader : public QSGOpaqueTextureMaterialShader
-{
-public:
-    QSGTextureMaterialShader();
-
-    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
-    void initialize() override;
-
-protected:
-    int m_opacity_id;
 };
 
 class QSGTextureMaterialRhiShader : public QSGOpaqueTextureMaterialRhiShader

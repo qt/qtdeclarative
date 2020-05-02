@@ -107,7 +107,7 @@ void QQuickCustomMaterialShader::deactivate()
     QOpenGLContext::currentContext()->functions()->glDisable(GL_CULL_FACE);
 }
 
-void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
+void QQuickCustomMaterialShader::updateState(const RenderState &, QSGMaterial *newEffect, QSGMaterial *)
 {
     typedef QQuickOpenGLShaderEffectMaterial::UniformData UniformData;
 
@@ -142,6 +142,7 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
         textureProviderIndex = 0;
     }
 
+#if 0
     QOpenGLFunctions *functions = state.context()->functions();
     for (int shaderType = 0; shaderType < QQuickOpenGLShaderEffectMaterialKey::ShaderTypeCount; ++shaderType) {
         for (int i = 0; i < material->uniforms[shaderType].size(); ++i) {
@@ -254,6 +255,7 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
             break;
         }
     }
+#endif
 }
 
 char const *const *QQuickCustomMaterialShader::attributeNames() const

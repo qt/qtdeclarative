@@ -1,7 +1,6 @@
 /****************************************************************************
 **
 ** Copyright (C) 2019 The Qt Company Ltd.
-** Copyright (C) 2016 Klaralvdalens Datakonsult AB (KDAB).
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -53,21 +52,63 @@
 //
 
 #include <private/qtquickglobal_p.h>
+#include "qsgmaterialshader.h"
 #include "qsgmaterial.h"
+#include <QtGui/private/qrhi_p.h>
+#include <QtGui/private/qshader_p.h>
 
 QT_BEGIN_NAMESPACE
+
+class QRhiSampler;
 
 class Q_QUICK_PRIVATE_EXPORT QSGMaterialShaderPrivate
 {
 public:
-#if QT_CONFIG(opengl)
-    const char *loadShaderSource(QOpenGLShader::ShaderType type) const;
+    Q_DECLARE_PUBLIC(QSGMaterialShader)
 
-    QHash<QOpenGLShader::ShaderType, QStringList> m_sourceFiles;
-    mutable QHash<QOpenGLShader::ShaderType, QByteArray> m_sources;
-#endif
+    QSGMaterialShaderPrivate(QSGMaterialShader *q) : q_ptr(q) { }
+    static QSGMaterialShaderPrivate *get(QSGMaterialShader *s) { return s->d_func(); }
+    static const QSGMaterialShaderPrivate *get(const QSGMaterialShader *s) { return s->d_func(); }
+
+    void clearCachedRendererData();
+    void prepare(QShader::Variant vertexShaderVariant);
+
+    QShader shader(QShader::Stage stage) const { return shaders[stage].shader; }
+
+    static QShader loadShader(const QString &filename);
+
+    QSGMaterialShader *q_ptr;
+    QHash<QShader::Stage, QString> shaderFileNames;
+    QSGMaterialShader::Flags flags;
+
+    struct ShaderStageData {
+        ShaderStageData() { } // so shader.isValid() == false
+        ShaderStageData(const QShader &shader) : shader(shader) { }
+        QShader shader;
+        QShader::Variant shaderVariant = QShader::StandardShader;
+        QVector<int> vertexInputLocations; // excluding rewriter-inserted ones
+        int qt_order_attrib_location = -1; // rewriter-inserted
+    };
+    QHash<QShader::Stage, ShaderStageData> shaders;
+
+    static const int MAX_SHADER_RESOURCE_BINDINGS = 32;
+
+    int ubufBinding = -1;
+    int ubufSize = 0;
+    QRhiShaderResourceBinding::StageFlags ubufStages;
+    QRhiShaderResourceBinding::StageFlags combinedImageSamplerBindings[MAX_SHADER_RESOURCE_BINDINGS];
+
+    ShaderStageData *vertexShader = nullptr;
+    ShaderStageData *fragmentShader = nullptr;
+
+    QByteArray masterUniformData;
+
+    QSGTexture *textureBindingTable[MAX_SHADER_RESOURCE_BINDINGS];
+    QRhiSampler *samplerBindingTable[MAX_SHADER_RESOURCE_BINDINGS];
 };
+
+Q_DECLARE_TYPEINFO(QSGMaterialShaderPrivate::ShaderStageData, Q_MOVABLE_TYPE);
 
 QT_END_NAMESPACE
 
-#endif // QSGMATERIALSHADER_P_H
+#endif

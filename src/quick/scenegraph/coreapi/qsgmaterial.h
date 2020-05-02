@@ -42,7 +42,6 @@
 
 #include <QtQuick/qtquickglobal.h>
 #include <QtQuick/qsgmaterialshader.h>
-#include <QtQuick/qsgmaterialrhishader.h>
 #include <QtQuick/qsgmaterialtype.h>
 
 QT_BEGIN_NAMESPACE
@@ -56,11 +55,7 @@ public:
         RequiresFullMatrixExceptTranslate = 0x0004 | RequiresDeterminant, // Allow precalculated translation
         RequiresFullMatrix  = 0x0008 | RequiresFullMatrixExceptTranslate,
 
-        CustomCompileStep   = 0x0010,
-
-        SupportsRhiShader = 0x0020,
-
-        RhiShaderWanted = 0x1000 // // ### Qt 6: remove
+        CustomCompileStep   = 0x0010
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 

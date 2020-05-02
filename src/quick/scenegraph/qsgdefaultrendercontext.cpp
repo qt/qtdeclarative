@@ -46,7 +46,7 @@
 #include <QtQuick/private/qsgrenderer_p.h>
 #include <QtQuick/private/qsgrhiatlastexture_p.h>
 #include <QtQuick/private/qsgrhidistancefieldglyphcache_p.h>
-#include <QtQuick/private/qsgmaterialrhishader_p.h>
+#include <QtQuick/private/qsgmaterialshader_p.h>
 
 #include <QtQuick/private/qsgopenglatlastexture_p.h>
 #include <QtQuick/private/qsgcompressedtexture_p.h>
@@ -411,9 +411,9 @@ void QSGDefaultRenderContext::initializeShader(QSGMaterialShader *shader)
     shader->initialize();
 }
 
-void QSGDefaultRenderContext::initializeRhiShader(QSGMaterialRhiShader *shader, QShader::Variant shaderVariant)
+void QSGDefaultRenderContext::initializeRhiShader(QSGMaterialShader *shader, QShader::Variant shaderVariant)
 {
-    QSGMaterialRhiShaderPrivate::get(shader)->prepare(shaderVariant);
+    QSGMaterialShaderPrivate::get(shader)->prepare(shaderVariant);
 }
 
 void QSGDefaultRenderContext::setAttachToGraphicsContext(bool attach)

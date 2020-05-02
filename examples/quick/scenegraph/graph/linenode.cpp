@@ -54,7 +54,7 @@
 
 #include <QtQuick/QSGMaterial>
 
-class LineShader : public QSGMaterialRhiShader
+class LineShader : public QSGMaterialShader
 {
 public:
     LineShader() {
@@ -70,7 +70,6 @@ class LineMaterial : public QSGMaterial
 public:
     LineMaterial()
     {
-        setFlag(SupportsRhiShader);
         setFlag(Blending);
     }
 
@@ -82,7 +81,6 @@ public:
 
     QSGMaterialShader *createShader() const override
     {
-        Q_ASSERT(flags().testFlag(RhiShaderWanted));
         return new LineShader;
     }
 

@@ -451,7 +451,7 @@ QSGTexture::~QSGTexture()
 
     \a resourceUpdates is an optional resource update batch, on which texture
     operations, if any, are enqueued. Materials can retrieve an instance from
-    QSGMaterialRhiShader::RenderState. When null, the removedFromAtlas()
+    QSGMaterialShader::RenderState. When null, the removedFromAtlas()
     implementation creates its own batch and submit it right away. However,
     when a valid instance is specified, this function will not submit the
     update batch.

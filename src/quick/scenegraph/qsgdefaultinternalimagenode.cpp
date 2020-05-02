@@ -47,20 +47,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class SmoothTextureMaterialShader : public QSGTextureMaterialShader
-{
-public:
-    SmoothTextureMaterialShader();
-
-    void updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect) override;
-    char const *const *attributeNames() const override;
-
-protected:
-    void initialize() override;
-
-    int m_pixelSizeLoc;
-};
-
 class SmoothTextureMaterialRhiShader : public QSGTextureMaterialRhiShader
 {
 public:
@@ -72,7 +58,6 @@ public:
 
 QSGSmoothTextureMaterial::QSGSmoothTextureMaterial()
 {
-    setFlag(SupportsRhiShader, true);
     setFlag(RequiresFullMatrixExceptTranslate, true);
     setFlag(Blending, true);
 }
@@ -90,44 +75,7 @@ QSGMaterialType *QSGSmoothTextureMaterial::type() const
 
 QSGMaterialShader *QSGSmoothTextureMaterial::createShader() const
 {
-    if (flags().testFlag(RhiShaderWanted))
-        return new SmoothTextureMaterialRhiShader;
-    else
-        return new SmoothTextureMaterialShader;
-}
-
-SmoothTextureMaterialShader::SmoothTextureMaterialShader()
-{
-    setShaderSourceFile(QOpenGLShader::Vertex, QStringLiteral(":/qt-project.org/scenegraph/shaders/smoothtexture.vert"));
-    setShaderSourceFile(QOpenGLShader::Fragment, QStringLiteral(":/qt-project.org/scenegraph/shaders/smoothtexture.frag"));
-}
-
-void SmoothTextureMaterialShader::updateState(const RenderState &state, QSGMaterial *newEffect, QSGMaterial *oldEffect)
-{
-    if (oldEffect == nullptr) {
-        // The viewport is constant, so set the pixel size uniform only once.
-        QRect r = state.viewportRect();
-        program()->setUniformValue(m_pixelSizeLoc, 2.0f / r.width(), 2.0f / r.height());
-    }
-    QSGTextureMaterialShader::updateState(state, newEffect, oldEffect);
-}
-
-char const *const *SmoothTextureMaterialShader::attributeNames() const
-{
-    static char const *const attributes[] = {
-        "vertex",
-        "multiTexCoord",
-        "vertexOffset",
-        "texCoordOffset",
-        nullptr
-    };
-    return attributes;
-}
-
-void SmoothTextureMaterialShader::initialize()
-{
-    m_pixelSizeLoc = program()->uniformLocation("pixelSize");
-    QSGTextureMaterialShader::initialize();
+    return new SmoothTextureMaterialRhiShader;
 }
 
 SmoothTextureMaterialRhiShader::SmoothTextureMaterialRhiShader()

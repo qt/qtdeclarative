@@ -40,7 +40,6 @@
 #include "qquickshape_p.h"
 #include "qquickshape_p_p.h"
 #include "qquickshapegenericrenderer_p.h"
-#include "qquickshapenvprrenderer_p.h"
 #include "qquickshapesoftwarerenderer_p.h"
 #include <private/qsgplaintexture_p.h>
 #include <private/qquicksvgparser_p.h>
@@ -694,12 +693,6 @@ QQuickShape::~QQuickShape()
            engine. This is the default on non-NVIDIA hardware when the default,
            OpenGL Qt Quick scenegraph backend is in use.
 
-    \value Shape.NvprRenderer
-           Path items are rendered by performing OpenGL calls using the
-           \c{GL_NV_path_rendering} extension. This is the default on NVIDIA
-           hardware when the default, OpenGL Qt Quick scenegraph backend is in
-           use.
-
     \value Shape.SoftwareRenderer
            Pure QPainter drawing using the raster paint engine. This is the
            default, and only, option when the Qt Quick scenegraph is running
@@ -755,12 +748,9 @@ void QQuickShape::setAsynchronous(bool async)
 
     As of Qt 5.12 Shape.NvprRenderer is disabled by default and a uniform
     behavior, based on triangulating the path and generating QSGGeometryNode
-    instances, is used regardless of the graphics card and drivers. To enable
-    using vendor-specific path rendering approaches set the value to \c true.
-    Depending on the platform and content, this can lead to improved
-    performance. Setting the value to \c true is safe in any case since
-    rendering falls back to the default method when the vendor-specific
-    approach, such as \c GL_NV_path_rendering, is not supported at run time.
+    instances, is used regardless of the graphics card and drivers.
+
+    As of Qt 6.0 there are no vendor-specific rendering paths implemented.
  */
 
 bool QQuickShape::vendorExtensionsEnabled() const
@@ -993,13 +983,8 @@ void QQuickShapePrivate::createRenderer()
     switch (ri->graphicsApi()) {
 #if QT_CONFIG(opengl)
     case QSGRendererInterface::OpenGL:
-        if (enableVendorExts && QQuickShapeNvprRenderNode::isSupported()) {
-            rendererType = QQuickShape::NvprRenderer;
-            renderer = new QQuickShapeNvprRenderer;
-        } else {
-            rendererType = QQuickShape::GeometryRenderer;
-            renderer = new QQuickShapeGenericRenderer(q);
-        }
+        rendererType = QQuickShape::GeometryRenderer;
+        renderer = new QQuickShapeGenericRenderer(q);
         break;
 #endif
     case QSGRendererInterface::Software:
@@ -1031,15 +1016,9 @@ QSGNode *QQuickShapePrivate::createNode()
     switch (ri->graphicsApi()) {
 #if QT_CONFIG(opengl)
     case QSGRendererInterface::OpenGL:
-        if (enableVendorExts && QQuickShapeNvprRenderNode::isSupported()) {
-            node = new QQuickShapeNvprRenderNode;
-            static_cast<QQuickShapeNvprRenderer *>(renderer)->setNode(
-                static_cast<QQuickShapeNvprRenderNode *>(node));
-        } else {
-            node = new QQuickShapeGenericNode;
-            static_cast<QQuickShapeGenericRenderer *>(renderer)->setRootNode(
-                static_cast<QQuickShapeGenericNode *>(node));
-        }
+        node = new QQuickShapeGenericNode;
+        static_cast<QQuickShapeGenericRenderer *>(renderer)->setRootNode(
+            static_cast<QQuickShapeGenericNode *>(node));
         break;
 #endif
     case QSGRendererInterface::Software:

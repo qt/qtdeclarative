@@ -752,51 +752,6 @@ QSGMaterial *QQuickShapeGenericMaterialFactory::createConicalGradient(QQuickWind
     return nullptr;
 }
 
-#if QT_CONFIG(opengl)
-
-QQuickShapeLinearGradientShader::QQuickShapeLinearGradientShader()
-{
-    setShaderSourceFile(QOpenGLShader::Vertex,
-                        QStringLiteral(":/qt-project.org/shapes/shaders/lineargradient.vert"));
-    setShaderSourceFile(QOpenGLShader::Fragment,
-                        QStringLiteral(":/qt-project.org/shapes/shaders/lineargradient.frag"));
-}
-
-void QQuickShapeLinearGradientShader::initialize()
-{
-    m_opacityLoc = program()->uniformLocation("opacity");
-    m_matrixLoc = program()->uniformLocation("matrix");
-    m_gradStartLoc = program()->uniformLocation("gradStart");
-    m_gradEndLoc = program()->uniformLocation("gradEnd");
-}
-
-void QQuickShapeLinearGradientShader::updateState(const RenderState &state, QSGMaterial *mat, QSGMaterial *)
-{
-    QQuickShapeLinearGradientMaterial *m = static_cast<QQuickShapeLinearGradientMaterial *>(mat);
-
-    if (state.isOpacityDirty())
-        program()->setUniformValue(m_opacityLoc, state.opacity());
-
-    if (state.isMatrixDirty())
-        program()->setUniformValue(m_matrixLoc, state.combinedMatrix());
-
-    QQuickShapeGenericStrokeFillNode *node = m->node();
-    program()->setUniformValue(m_gradStartLoc, QVector2D(node->m_fillGradient.a));
-    program()->setUniformValue(m_gradEndLoc, QVector2D(node->m_fillGradient.b));
-
-    const QQuickShapeGradientCacheKey cacheKey(node->m_fillGradient.stops, node->m_fillGradient.spread);
-    QSGTexture *tx = QQuickShapeGradientOpenGLCache::currentCache()->get(cacheKey);
-    tx->bind();
-}
-
-char const *const *QQuickShapeLinearGradientShader::attributeNames() const
-{
-    static const char *const attr[] = { "vertexCoord", "vertexColor", nullptr };
-    return attr;
-}
-
-#endif // QT_CONFIG(opengl)
-
 QQuickShapeLinearGradientRhiShader::QQuickShapeLinearGradientRhiShader()
 {
     setShaderFileName(VertexStage, QStringLiteral(":/qt-project.org/shapes/shaders_ng/lineargradient.vert.qsb"));
@@ -903,72 +858,8 @@ int QQuickShapeLinearGradientMaterial::compare(const QSGMaterial *other) const
 
 QSGMaterialShader *QQuickShapeLinearGradientMaterial::createShader() const
 {
-    if (flags().testFlag(RhiShaderWanted))
-        return new QQuickShapeLinearGradientRhiShader;
-#if QT_CONFIG(opengl)
-    else
-        return new QQuickShapeLinearGradientShader;
-#else
-    return nullptr;
-#endif
+    return new QQuickShapeLinearGradientRhiShader;
 }
-
-#if QT_CONFIG(opengl)
-
-QQuickShapeRadialGradientShader::QQuickShapeRadialGradientShader()
-{
-    setShaderSourceFile(QOpenGLShader::Vertex,
-                        QStringLiteral(":/qt-project.org/shapes/shaders/radialgradient.vert"));
-    setShaderSourceFile(QOpenGLShader::Fragment,
-                        QStringLiteral(":/qt-project.org/shapes/shaders/radialgradient.frag"));
-}
-
-void QQuickShapeRadialGradientShader::initialize()
-{
-    QOpenGLShaderProgram *prog = program();
-    m_opacityLoc = prog->uniformLocation("opacity");
-    m_matrixLoc = prog->uniformLocation("matrix");
-    m_translationPointLoc = prog->uniformLocation("translationPoint");
-    m_focalToCenterLoc = prog->uniformLocation("focalToCenter");
-    m_centerRadiusLoc = prog->uniformLocation("centerRadius");
-    m_focalRadiusLoc = prog->uniformLocation("focalRadius");
-}
-
-void QQuickShapeRadialGradientShader::updateState(const RenderState &state, QSGMaterial *mat, QSGMaterial *)
-{
-    QQuickShapeRadialGradientMaterial *m = static_cast<QQuickShapeRadialGradientMaterial *>(mat);
-
-    if (state.isOpacityDirty())
-        program()->setUniformValue(m_opacityLoc, state.opacity());
-
-    if (state.isMatrixDirty())
-        program()->setUniformValue(m_matrixLoc, state.combinedMatrix());
-
-    QQuickShapeGenericStrokeFillNode *node = m->node();
-
-    const QPointF centerPoint = node->m_fillGradient.a;
-    const QPointF focalPoint = node->m_fillGradient.b;
-    const QPointF focalToCenter = centerPoint - focalPoint;
-    const GLfloat centerRadius = node->m_fillGradient.v0;
-    const GLfloat focalRadius = node->m_fillGradient.v1;
-
-    program()->setUniformValue(m_translationPointLoc, focalPoint);
-    program()->setUniformValue(m_centerRadiusLoc, centerRadius);
-    program()->setUniformValue(m_focalRadiusLoc, focalRadius);
-    program()->setUniformValue(m_focalToCenterLoc, focalToCenter);
-
-    const QQuickShapeGradientCacheKey cacheKey(node->m_fillGradient.stops, node->m_fillGradient.spread);
-    QSGTexture *tx = QQuickShapeGradientOpenGLCache::currentCache()->get(cacheKey);
-    tx->bind();
-}
-
-char const *const *QQuickShapeRadialGradientShader::attributeNames() const
-{
-    static const char *const attr[] = { "vertexCoord", "vertexColor", nullptr };
-    return attr;
-}
-
-#endif // QT_CONFIG(opengl)
 
 QQuickShapeRadialGradientRhiShader::QQuickShapeRadialGradientRhiShader()
 {
@@ -1100,65 +991,8 @@ int QQuickShapeRadialGradientMaterial::compare(const QSGMaterial *other) const
 
 QSGMaterialShader *QQuickShapeRadialGradientMaterial::createShader() const
 {
-    if (flags().testFlag(RhiShaderWanted))
-        return new QQuickShapeRadialGradientRhiShader;
-#if QT_CONFIG(opengl)
-    else
-        return new QQuickShapeRadialGradientShader;
-#else
-    return nullptr;
-#endif
+    return new QQuickShapeRadialGradientRhiShader;
 }
-
-#if QT_CONFIG(opengl)
-
-QQuickShapeConicalGradientShader::QQuickShapeConicalGradientShader()
-{
-    setShaderSourceFile(QOpenGLShader::Vertex,
-                        QStringLiteral(":/qt-project.org/shapes/shaders/conicalgradient.vert"));
-    setShaderSourceFile(QOpenGLShader::Fragment,
-                        QStringLiteral(":/qt-project.org/shapes/shaders/conicalgradient.frag"));
-}
-
-void QQuickShapeConicalGradientShader::initialize()
-{
-    QOpenGLShaderProgram *prog = program();
-    m_opacityLoc = prog->uniformLocation("opacity");
-    m_matrixLoc = prog->uniformLocation("matrix");
-    m_angleLoc = prog->uniformLocation("angle");
-    m_translationPointLoc = prog->uniformLocation("translationPoint");
-}
-
-void QQuickShapeConicalGradientShader::updateState(const RenderState &state, QSGMaterial *mat, QSGMaterial *)
-{
-    QQuickShapeConicalGradientMaterial *m = static_cast<QQuickShapeConicalGradientMaterial *>(mat);
-
-    if (state.isOpacityDirty())
-        program()->setUniformValue(m_opacityLoc, state.opacity());
-
-    if (state.isMatrixDirty())
-        program()->setUniformValue(m_matrixLoc, state.combinedMatrix());
-
-    QQuickShapeGenericStrokeFillNode *node = m->node();
-
-    const QPointF centerPoint = node->m_fillGradient.a;
-    const GLfloat angle = -qDegreesToRadians(node->m_fillGradient.v0);
-
-    program()->setUniformValue(m_angleLoc, angle);
-    program()->setUniformValue(m_translationPointLoc, centerPoint);
-
-    const QQuickShapeGradientCacheKey cacheKey(node->m_fillGradient.stops, QQuickShapeGradient::RepeatSpread);
-    QSGTexture *tx = QQuickShapeGradientOpenGLCache::currentCache()->get(cacheKey);
-    tx->bind();
-}
-
-char const *const *QQuickShapeConicalGradientShader::attributeNames() const
-{
-    static const char *const attr[] = { "vertexCoord", "vertexColor", nullptr };
-    return attr;
-}
-
-#endif // QT_CONFIG(opengl)
 
 QQuickShapeConicalGradientRhiShader::QQuickShapeConicalGradientRhiShader()
 {
@@ -1265,14 +1099,7 @@ int QQuickShapeConicalGradientMaterial::compare(const QSGMaterial *other) const
 
 QSGMaterialShader *QQuickShapeConicalGradientMaterial::createShader() const
 {
-    if (flags().testFlag(RhiShaderWanted))
-        return new QQuickShapeConicalGradientRhiShader;
-#if QT_CONFIG(opengl)
-    else
-        return new QQuickShapeConicalGradientShader;
-#else
-    return nullptr;
-#endif
+    return new QQuickShapeConicalGradientRhiShader;
 }
 
 QT_END_NAMESPACE
