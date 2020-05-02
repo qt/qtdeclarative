@@ -54,7 +54,6 @@
 #include <QtQuick/private/qtquickglobal_p.h>
 #include <QtQuick/qsgnode.h>
 #include <QtQuick/qsgrendernode.h>
-#include <functional>
 
 QT_BEGIN_NAMESPACE
 
@@ -68,11 +67,6 @@ public:
     const QMatrix4x4 *m_matrix;
     const QSGClipNode *m_clip_list;
     qreal m_opacity;
-
-    // ### Qt 6: change this into a value for flags()
-    bool m_needsExternalRendering;
-    // ### Qt 6: change this into a virtual prepare() function
-    std::function<void()> m_prepareCallback;
 };
 
 QT_END_NAMESPACE

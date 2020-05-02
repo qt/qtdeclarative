@@ -77,8 +77,6 @@ QSGRenderNodePrivate::QSGRenderNodePrivate()
     : m_matrix(nullptr)
     , m_clip_list(nullptr)
     , m_opacity(1)
-    , m_needsExternalRendering(true)
-    , m_prepareCallback(nullptr)
 {
 }
 
@@ -134,6 +132,24 @@ QSGRenderNodePrivate::QSGRenderNodePrivate()
 QSGRenderNode::StateFlags QSGRenderNode::changedStates() const
 {
     return {};
+}
+
+/*!
+    Called from the frame preparation phase. There is a call to this function
+    before each invocation of render().
+
+    Unlike render(), this function is called before the scenegraph starts
+    recording the render pass for the current frame on the underlying command
+    buffer. This is useful when doing rendering with graphics APIs, such as
+    Vulkan, where copy type of operations will need to be recorded before the
+    render pass.
+
+    The default implementation is empty.
+
+    \since 6.0
+ */
+void QSGRenderNode::prepare()
+{
 }
 
 /*!
@@ -300,6 +316,8 @@ void QSGRenderNode::releaseResources()
     renderers must assume that render() can also output semi or fully
     transparent pixels. Setting this flag can improve performance in some
     cases.
+
+    \omitvalue NoExternalRendering
 
     \sa render(), rect()
  */

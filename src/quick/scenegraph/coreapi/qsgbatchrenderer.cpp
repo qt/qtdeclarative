@@ -4538,8 +4538,7 @@ bool Renderer::prepareRhiRenderNode(Batch *batch, PreparedRenderBatch *renderBat
         opacity = opacity->parent();
     }
 
-    if (rd->m_prepareCallback)
-        rd->m_prepareCallback();
+    e->renderNode->prepare();
 
     renderBatch->batch = batch;
     renderBatch->sms = nullptr;
@@ -4572,7 +4571,7 @@ void Renderer::renderRhiRenderNode(const Batch *batch) // split prepare-render (
     const QSGRenderNode::StateFlags changes = e->renderNode->changedStates();
 
     QRhiCommandBuffer *cb = commandBuffer();
-    const bool needsExternal = rd->m_needsExternalRendering;
+    const bool needsExternal = !e->renderNode->flags().testFlag(QSGRenderNode::NoExternalRendering);
     if (needsExternal)
         cb->beginExternal();
     e->renderNode->render(&state);

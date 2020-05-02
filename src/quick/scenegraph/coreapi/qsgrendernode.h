@@ -64,7 +64,8 @@ public:
     enum RenderingFlag {
         BoundedRectRendering = 0x01,
         DepthAwareRendering = 0x02,
-        OpaqueRendering = 0x04
+        OpaqueRendering = 0x04,
+        NoExternalRendering = 0x08
     };
     Q_DECLARE_FLAGS(RenderingFlags, RenderingFlag)
 
@@ -83,6 +84,7 @@ public:
     ~QSGRenderNode() override;
 
     virtual StateFlags changedStates() const;
+    virtual void prepare();
     virtual void render(const RenderState *state) = 0;
     virtual void releaseResources();
     virtual RenderingFlags flags() const;
