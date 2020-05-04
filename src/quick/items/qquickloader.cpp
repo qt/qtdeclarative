@@ -711,7 +711,6 @@ void QQuickLoaderPrivate::incubatorStateChanged(QQmlIncubator::Status status)
     emit q->progressChanged();
     if (status == QQmlIncubator::Ready)
         emit q->loaded();
-    disposeInitialPropertyValues(); // cleanup
 }
 
 void QQuickLoaderPrivate::_q_sourceLoaded()
