@@ -700,6 +700,11 @@ void tst_QQuickLoader::initialPropertyValues_data()
                                                                                     << QStringList()
                                                                                     << (QStringList() << "oldi" << "i")
                                                                                     << (QVariantList() << 12 << 42);
+
+    QTest::newRow("ensure initial properties aren't disposed after active = true") << testFileUrl("initialPropertyValues.12.qml")
+            << QStringList()
+            << (QStringList() << "i")
+            << (QVariantList() << 12);
 }
 
 void tst_QQuickLoader::initialPropertyValues()
