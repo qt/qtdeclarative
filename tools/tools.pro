@@ -10,14 +10,14 @@ qtConfig(qml-devtools) {
     qtConfig(xmlstreamwriter): SUBDIRS += qmlcachegen
 }
 
-qtConfig(thread):!android|android_app:!wasm:!rtems {
+qtConfig(thread):!android:!wasm:!rtems {
     SUBDIRS += qml
 
     qtConfig(qml-profiler): SUBDIRS += qmlprofiler
     qtConfig(qml-preview): SUBDIRS += qmlpreview
 
     qtHaveModule(quick) {
-        !static: {
+        !contains(CONFIG, static) {
             SUBDIRS += \
                 qmlscene \
                 qmltime
