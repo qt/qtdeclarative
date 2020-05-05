@@ -789,11 +789,12 @@ void QSGTextMaskMaterial::populate(const QPointF &p,
                                    const QMargins &margins)
 {
     Q_ASSERT(m_font.isValid());
+    QPointF position(p.x(), p.y() - m_font.ascent());
     QVector<QFixedPoint> fixedPointPositions;
     const int glyphPositionsSize = glyphPositions.size();
     fixedPointPositions.reserve(glyphPositionsSize);
     for (int i=0; i < glyphPositionsSize; ++i)
-        fixedPointPositions.append(QFixedPoint::fromPointF(glyphPositions.at(i)));
+        fixedPointPositions.append(QFixedPoint::fromPointF(position + glyphPositions.at(i)));
 
     QTextureGlyphCache *cache = glyphCache();
 
@@ -815,17 +816,15 @@ void QSGTextMaskMaterial::populate(const QPointF &p,
     Q_ASSERT(geometry->sizeOfVertex() == sizeof(QVector4D));
     ushort *ip = geometry->indexDataAsUShort();
 
-    QPointF position(p.x(), p.y() - m_font.ascent());
     bool supportsSubPixelPositions = fontD->fontEngine->supportsSubPixelPositions();
     for (int i=0; i<glyphIndexes.size(); ++i) {
+         QPointF glyphPosition = glyphPositions.at(i) + position;
          QFixed subPixelPosition;
          if (supportsSubPixelPositions)
-             subPixelPosition = fontD->fontEngine->subPixelPositionForX(QFixed::fromReal(glyphPositions.at(i).x()));
+             subPixelPosition = fontD->fontEngine->subPixelPositionForX(QFixed::fromReal(glyphPosition.x()));
 
          QTextureGlyphCache::GlyphAndSubPixelPosition glyph(glyphIndexes.at(i), subPixelPosition);
          const QTextureGlyphCache::Coord &c = cache->coords.value(glyph);
-
-         QPointF glyphPosition = glyphPositions.at(i) + position;
 
          // On a retina screen the glyph positions are not pre-scaled (as opposed to
          // eg. the raster paint engine). To ensure that we get the same behavior as
