@@ -69,6 +69,7 @@ class QSGMaterialRhiShader;
 class QOpenGLFramebufferObject;
 class QSGDepthStencilBufferManager;
 class QSGDepthStencilBuffer;
+class QSurface;
 
 namespace QSGOpenGLAtlasTexture {
     class Manager;
