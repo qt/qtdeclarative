@@ -287,7 +287,8 @@ int QQuickRenderControl::samples() const
 bool QQuickRenderControl::initialize()
 {
     Q_D(QQuickRenderControl);
-
+// ### Qt 6 clean this up
+#if QT_CONFIG(opengl)
     if (!d->window) {
         qWarning("QQuickRenderControl::initialize called with no associated window");
         return false;
@@ -311,7 +312,7 @@ bool QQuickRenderControl::initialize()
         qWarning("QRhi is only compatible with default adaptation");
         return false;
     }
-
+#endif
     return true;
 }
 
