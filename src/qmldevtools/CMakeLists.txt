@@ -84,9 +84,9 @@ if(QT_FEATURE_framework)
         )
 else()
     set(_qml_dev_tools_public_includes
-            $<INSTALL_INTERFACE:include/${qml_module}>
-            $<INSTALL_INTERFACE:include/${qml_module}/${PROJECT_VERSION}>
-            $<INSTALL_INTERFACE:include/${qml_module}/${PROJECT_VERSION}/${qml_module}>
+            $<INSTALL_INTERFACE:${INSTALL_INCLUDEDIR}/${qml_module}>
+            $<INSTALL_INTERFACE:${INSTALL_INCLUDEDIR}/${qml_module}/${PROJECT_VERSION}>
+            $<INSTALL_INTERFACE:${INSTALL_INCLUDEDIR}/${qml_module}/${PROJECT_VERSION}/${qml_module}>
         )
 endif()
 target_include_directories(QmlDevTools PRIVATE ${_qml_dev_tools_public_includes})
