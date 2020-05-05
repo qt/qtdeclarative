@@ -1316,15 +1316,22 @@ void tst_QQuickTableView::checkSpacingValues()
     QCOMPARE(tableView->contentWidth(), expectedInitialContentWidth);
     QCOMPARE(tableView->contentHeight(), expectedInitialContentHeight);
 
-    // Invalid assignments (should ignore)
+    // Negative spacing is allowed, and can be used to eliminate double edges
+    // in the grid if the delegate is a rectangle with a border.
     tableView->setRowSpacing(-1);
-    tableView->setColumnSpacing(-5);
+    tableView->setColumnSpacing(-1);
+    QCOMPARE(tableView->rowSpacing(), -1);
+    QCOMPARE(tableView->columnSpacing(), -1);
+
+    tableView->setRowSpacing(10);
+    tableView->setColumnSpacing(10);
+    // Invalid assignments (should ignore)
     tableView->setRowSpacing(INFINITY);
     tableView->setColumnSpacing(INFINITY);
     tableView->setRowSpacing(NAN);
     tableView->setColumnSpacing(NAN);
-    QCOMPARE(tableView->rowSpacing(), 42);
-    QCOMPARE(tableView->columnSpacing(), 12);
+    QCOMPARE(tableView->rowSpacing(), 10);
+    QCOMPARE(tableView->columnSpacing(), 10);
 }
 
 void tst_QQuickTableView::checkDelegateParent()
