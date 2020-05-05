@@ -1,3 +1,4 @@
+
 /****************************************************************************
 **
 ** Copyright (C) 2016 The Qt Company Ltd.
@@ -113,7 +114,7 @@ void tst_Scenegraph::initTestCase()
 #else
     const char *defaultRhiBackend = "opengl";
 #endif
-    usingRhi = qEnvironmentVariableIntValue("QSG_RHI") != 0;
+    usingRhi = !qEnvironmentVariableIsSet("QSG_NO_RHI");
     QString stack;
     if (usingRhi) {
         const QString rhiBackend = qEnvironmentVariable("QSG_RHI_BACKEND", QString::fromLatin1(defaultRhiBackend));
