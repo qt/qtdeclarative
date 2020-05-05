@@ -41,6 +41,8 @@
 
 #if QT_CONFIG(accessibility)
 
+#include <QtQml/qqmlinfo.h>
+
 #include "private/qquickitem_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -335,14 +337,15 @@ QQuickAccessibleAttached::QQuickAccessibleAttached(QObject *parent)
     : QObject(parent), m_role(QAccessible::NoRole)
 {
     Q_ASSERT(parent);
-    QQuickItem *item = qobject_cast<QQuickItem*>(parent);
-    if (!item)
+    if (!item()) {
+        qmlWarning(parent) << "Accessible must be attached to an Item";
         return;
+    }
 
     // Enable accessibility for items with accessible content. This also
     // enables accessibility for the ancestors of souch items.
-    item->d_func()->setAccessible();
-    QAccessibleEvent ev(item, QAccessible::ObjectCreated);
+    item()->d_func()->setAccessible();
+    QAccessibleEvent ev(item(), QAccessible::ObjectCreated);
     QAccessible::updateAccessibility(&ev);
 
     if (!parent->property("value").isNull()) {
@@ -433,12 +436,12 @@ QQuickAccessibleAttached *QQuickAccessibleAttached::qmlAttachedProperties(QObjec
 
 bool QQuickAccessibleAttached::ignored() const
 {
-    return !item()->d_func()->isAccessible;
+    return item() ? !item()->d_func()->isAccessible : false;
 }
 
 void QQuickAccessibleAttached::setIgnored(bool ignored)
 {
-    if (this->ignored() != ignored) {
+    if (this->ignored() != ignored && item()) {
         item()->d_func()->isAccessible = !ignored;
         emit ignoredChanged();
     }

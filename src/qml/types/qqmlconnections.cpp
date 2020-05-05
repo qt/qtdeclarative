@@ -47,12 +47,15 @@
 #include <private/qqmlvmemetaobject_p.h>
 #include <qqmlinfo.h>
 
+#include <QtCore/qloggingcategory.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qstringlist.h>
 
 #include <private/qobject_p.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(lcQmlConnections, "qt.qml.connections")
 
 class QQmlConnectionsPrivate : public QObjectPrivate
 {
@@ -276,8 +279,10 @@ void QQmlConnections::connectSignals()
         connectSignalsToMethods();
     } else {
 #if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
-        qmlWarning(this) << tr("Implicitly defined onFoo properties in Connections are deprecated. "
-                               "Use this syntax instead: function onFoo(<arguments>) { ... }");
+        if (lcQmlConnections().isWarningEnabled()) {
+            qmlWarning(this) << tr("Implicitly defined onFoo properties in Connections are deprecated. "
+                                    "Use this syntax instead: function onFoo(<arguments>) { ... }");
+        }
 #endif
         connectSignalsToBindings();
     }

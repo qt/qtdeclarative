@@ -96,6 +96,9 @@ private Q_SLOTS:
     void setWindowVisibility();
 
 private:
+    bool transientParentVisible();
+
+private:
     Q_DISABLE_COPY(QQuickWindowQmlImpl)
     Q_DECLARE_PRIVATE(QQuickWindowQmlImpl)
 };
