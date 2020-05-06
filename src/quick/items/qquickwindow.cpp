@@ -561,8 +561,7 @@ void QQuickWindowPrivate::syncSceneGraph()
 
     // Calculate the dpr the same way renderSceneGraph() will.
     qreal devicePixelRatio = q->effectiveDevicePixelRatio();
-    const bool hasCustomRenderTarget = customRenderTargetGl.renderTargetId || redirect.rt.renderTarget;
-    if (hasCustomRenderTarget && !QQuickRenderControl::renderWindowFor(q))
+    if (redirect.rt.renderTarget && !QQuickRenderControl::renderWindowFor(q))
         devicePixelRatio = 1;
 
     QRhiCommandBuffer *cb = nullptr;
@@ -667,17 +666,9 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
         const bool flipY = rhi ? !rhi->isYUpInNDC() : false;
         if (flipY)
             matrixFlags |= QSGAbstractRenderer::MatrixTransformFlipY;
-        int fboId = 0;
         const qreal devicePixelRatio = q->effectiveDevicePixelRatio();
-        const bool hasCustomRenderTarget = customRenderTargetGl.renderTargetId || redirect.rt.renderTarget;
-        if (hasCustomRenderTarget) {
-            QRect rect;
-            if (redirect.rt.renderTarget) {
-                rect = QRect(QPoint(0, 0), redirect.rt.renderTarget->pixelSize());
-            } else {
-                fboId = customRenderTargetGl.renderTargetId;
-                rect = QRect(QPoint(0, 0), customRenderTargetGl.renderTargetSize);
-            }
+        if (redirect.rt.renderTarget) {
+            QRect rect(QPoint(0, 0), redirect.rt.renderTarget->pixelSize());
             renderer->setDeviceRect(rect);
             renderer->setViewportRect(rect);
             if (QQuickRenderControl::renderWindowFor(q)) {
@@ -704,10 +695,14 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
             renderer->setDevicePixelRatio(devicePixelRatio);
         }
 
-        if (rhi)
+        if (rhi) {
             context->renderNextRhiFrame(renderer);
-        else
-            context->renderNextFrame(renderer, fboId);
+        } else {
+            // This is the software backend (or some custom scenegraph context
+            // plugin) in practice, because the default implementation always
+            // hits the QRhi-based path in Qt 6.
+            context->renderNextFrame(renderer);
+        }
     }
     emit q->afterRendering();
     runAndClearJobs(&afterRenderingJobs);
@@ -4175,122 +4170,6 @@ bool QQuickWindow::isSceneGraphInitialized() const
     can implement an \c onClosing handler and set \c {close.accepted = false} if
     you need to do something else before the window can be closed.
  */
-
-#if QT_CONFIG(opengl)
-/*!
-    Sets the render target for this window to be \a fbo.
-
-    The specified fbo must be created in the context of the window
-    or one that shares with it.
-
-    \note
-    This function only has an effect when using the default OpenGL scene
-    graph adaptation.
-
-    \note This function has no effect when running on the RHI graphics abstraction.
-
-    \warning
-    This function can only be called from the thread doing
-    the rendering.
- */
-
-void QQuickWindow::setRenderTarget(QOpenGLFramebufferObject *fbo)
-{
-    Q_D(QQuickWindow);
-    if (d->rhi)
-        return;
-
-    if (d->context && QThread::currentThread() != d->context->thread()) {
-        qWarning("QQuickWindow::setRenderTarget: Cannot set render target from outside the rendering thread");
-        return;
-    }
-
-    d->customRenderTargetGl.renderTarget = fbo;
-    if (fbo) {
-        d->customRenderTargetGl.renderTargetId = fbo->handle();
-        d->customRenderTargetGl.renderTargetSize = fbo->size();
-    } else {
-        d->customRenderTargetGl.renderTargetId = 0;
-        d->customRenderTargetGl.renderTargetSize = QSize();
-    }
-}
-#endif
-/*!
-    \overload
-
-    Sets the render target for this window to be an FBO with
-    \a fboId and \a size.
-
-    The specified FBO must be created in the context of the window
-    or one that shares with it.
-
-    \note \a fboId can also be set to 0. In this case rendering will target the
-    default framebuffer of whichever surface is current when the scenegraph
-    renders. \a size must still be valid, specifying the dimensions of the
-    surface.
-
-    \note
-    This function only has an effect when using the default OpenGL scene
-    graph adaptation.
-
-    \warning
-    This function can only be called from the thread doing
-    the rendering.
-*/
-
-void QQuickWindow::setRenderTarget(uint fboId, const QSize &size)
-{
-    Q_D(QQuickWindow);
-    if (d->context && QThread::currentThread() != d->context->thread()) {
-        qWarning("QQuickWindow::setRenderThread: Cannot set render target from outside the rendering thread");
-        return;
-    }
-
-    d->customRenderTargetGl.renderTargetId = fboId;
-    d->customRenderTargetGl.renderTargetSize = size;
-
-    // Unset any previously set instance...
-    d->customRenderTargetGl.renderTarget = nullptr;
-}
-
-
-/*!
-    Returns the FBO id of the render target when set; otherwise returns 0.
- */
-uint QQuickWindow::renderTargetId() const
-{
-    Q_D(const QQuickWindow);
-    return d->customRenderTargetGl.renderTargetId;
-}
-
-/*!
-    Returns the size of the currently set render target; otherwise returns an empty size.
- */
-QSize QQuickWindow::renderTargetSize() const
-{
-    Q_D(const QQuickWindow);
-    return d->customRenderTargetGl.renderTargetSize;
-}
-
-#if QT_CONFIG(opengl)
-/*!
-    Returns the render target for this window.
-
-    The default is to render to the surface of the window, in which
-    case the render target is 0.
-
-    \note This function will return nullptr when not using the OpenGL scene
-    graph adaptation.
-
-    \note This function has no effect and returns nullptr when running on the
-    RHI graphics abstraction.
- */
-QOpenGLFramebufferObject *QQuickWindow::renderTarget() const
-{
-    Q_D(const QQuickWindow);
-    return d->customRenderTargetGl.renderTarget;
-}
-#endif
 
 /*!
     Sets the render target for this window to be \a target.

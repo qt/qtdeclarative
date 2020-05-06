@@ -157,9 +157,9 @@ QSGRenderer *QSGSoftwareRenderContext::createRenderer()
 }
 
 
-void QSGSoftwareRenderContext::renderNextFrame(QSGRenderer *renderer, uint fbo)
+void QSGSoftwareRenderContext::renderNextFrame(QSGRenderer *renderer)
 {
-    renderer->renderScene(fbo);
+    renderer->renderScene();
 }
 
 int QSGSoftwareRenderContext::maxTextureSize() const

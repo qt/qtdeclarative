@@ -3488,6 +3488,9 @@ void Renderer::deleteRemovedElements()
 
 void Renderer::render()
 {
+    if (!renderTarget())
+        return;
+
     if (Q_UNLIKELY(debug_dump())) {
         qDebug("\n");
         QSGNodeDumper::dump(rootNode());

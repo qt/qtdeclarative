@@ -61,7 +61,7 @@ public:
     QSGSoftwarePixmapRenderer(QSGRenderContext *context);
     virtual ~QSGSoftwarePixmapRenderer();
 
-    void renderScene(uint fboId = 0) final;
+    void renderScene() final;
     void render() final;
 
     void render(QPaintDevice *target);

@@ -59,14 +59,9 @@ QSGSoftwarePixmapRenderer::~QSGSoftwarePixmapRenderer()
 
 }
 
-void QSGSoftwarePixmapRenderer::renderScene(uint)
+void QSGSoftwarePixmapRenderer::renderScene()
 {
-    class B : public QSGBindable
-    {
-    public:
-        void bind() const override { }
-    } bindable;
-    QSGRenderer::renderScene(bindable);
+    QSGRenderer::renderScene();
 }
 
 void QSGSoftwarePixmapRenderer::render()

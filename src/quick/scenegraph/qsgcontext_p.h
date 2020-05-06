@@ -178,7 +178,7 @@ public:
                                 RenderPassCallback mainPassRecordingStart,
                                 RenderPassCallback mainPassRecordingEnd,
                                 void *callbackUserData);
-    virtual void renderNextFrame(QSGRenderer *renderer, uint fboId) = 0;
+    virtual void renderNextFrame(QSGRenderer *renderer) = 0;
     virtual void endNextFrame(QSGRenderer *renderer);
 
     virtual void beginNextRhiFrame(QSGRenderer *renderer,

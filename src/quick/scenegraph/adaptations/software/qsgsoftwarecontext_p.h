@@ -72,7 +72,7 @@ public:
     QSGSoftwareRenderContext(QSGContext *ctx);
     void initializeIfNeeded();
     void invalidate() override;
-    void renderNextFrame(QSGRenderer *renderer, uint fbo) override;
+    void renderNextFrame(QSGRenderer *renderer) override;
     QSGTexture *createTexture(const QImage &image, uint flags = CreateTexture_Alpha) const override;
     QSGRenderer *createRenderer() override;
     int maxTextureSize() const override;

@@ -109,7 +109,7 @@ public:
                         RenderPassCallback mainPassRecordingStart,
                         RenderPassCallback mainPassRecordingEnd,
                         void *callbackUserData) override;
-    void renderNextFrame(QSGRenderer *renderer, uint fboId) override;
+    void renderNextFrame(QSGRenderer *renderer) override;
     void endNextFrame(QSGRenderer *renderer) override;
 
     void beginNextRhiFrame(QSGRenderer *renderer,

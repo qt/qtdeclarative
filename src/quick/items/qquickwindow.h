@@ -58,7 +58,6 @@ class QInputMethodEvent;
 class QQuickWindowPrivate;
 class QQuickWindowAttached;
 class QOpenGLContext;
-class QOpenGLFramebufferObject;
 class QQmlIncubationController;
 class QInputMethodEvent;
 class QQuickCloseEvent;
@@ -132,15 +131,6 @@ public:
 #endif
 
     QImage grabWindow();
-
-    // ### Qt 6 remove all these 5 functions. Replaced by setRenderTarget(QQuickRenderTarget*).
-#if QT_CONFIG(opengl)
-    void setRenderTarget(QOpenGLFramebufferObject *fbo);
-    QOpenGLFramebufferObject *renderTarget() const;
-#endif
-    void setRenderTarget(uint fboId, const QSize &size);
-    uint renderTargetId() const;
-    QSize renderTargetSize() const;
 
     void setRenderTarget(const QQuickRenderTarget &target);
 

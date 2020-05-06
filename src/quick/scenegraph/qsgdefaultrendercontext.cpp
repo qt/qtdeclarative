@@ -231,12 +231,12 @@ void QSGDefaultRenderContext::beginNextFrame(QSGRenderer *renderer,
     renderer->setRenderPassRecordingCallbacks(mainPassRecordingStart, mainPassRecordingEnd, callbackUserData);
 }
 
-void QSGDefaultRenderContext::renderNextFrame(QSGRenderer *renderer, uint fboId)
+void QSGDefaultRenderContext::renderNextFrame(QSGRenderer *renderer)
 {
     if (m_serializedRender)
         qsg_framerender_mutex.lock();
 
-    renderer->renderScene(fboId);
+    renderer->renderScene();
 
     if (m_serializedRender)
         qsg_framerender_mutex.unlock();

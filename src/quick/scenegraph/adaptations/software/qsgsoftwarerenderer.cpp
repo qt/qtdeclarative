@@ -85,14 +85,9 @@ QRegion QSGSoftwareRenderer::flushRegion() const
     return m_flushRegion;
 }
 
-void QSGSoftwareRenderer::renderScene(uint)
+void QSGSoftwareRenderer::renderScene()
 {
-    class B : public QSGBindable
-    {
-    public:
-        void bind() const override { }
-    } bindable;
-    QSGRenderer::renderScene(bindable);
+    QSGRenderer::renderScene();
 }
 
 void QSGSoftwareRenderer::render()

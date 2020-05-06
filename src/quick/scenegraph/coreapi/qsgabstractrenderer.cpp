@@ -79,17 +79,9 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
-    \fn void QSGAbstractRenderer::renderScene(GLuint fboId = 0)
+    \fn void QSGAbstractRenderer::renderScene()
 
-    Render the scene to the specified \a fboId
-
-    If \a fboId isn't specified, the scene graph will be rendered
-    to the default framebuffer. You will have to call
-    QOpenGLContext::swapBuffers() yourself afterward.
-
-    The framebuffer specified by \a fboId will be bound automatically.
-
-    \sa QOpenGLContext::swapBuffers(), QOpenGLFramebufferObject::handle()
+    Renders the scene.
  */
 
 /*!

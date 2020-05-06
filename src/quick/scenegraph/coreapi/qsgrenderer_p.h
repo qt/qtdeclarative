@@ -59,7 +59,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QSGBindable;
 class QSGNodeUpdater;
 class QRhiRenderTarget;
 class QRhiCommandBuffer;
@@ -87,8 +86,7 @@ public:
     QSGRenderContext *context() const { return m_context; }
 
     bool isMirrored() const;
-    void renderScene(const QSGBindable &bindable);
-    void renderScene(uint fboId = 0) override;
+    void renderScene() override;
     void nodeChanged(QSGNode *node, QSGNode::DirtyState state) override;
 
     QSGNodeUpdater *nodeUpdater() const;
@@ -127,8 +125,6 @@ public:
 protected:
     virtual void render() = 0;
 
-    const QSGBindable *bindable() const { return m_bindable; }
-
     virtual void preprocess();
 
     void addNodesToPreprocess(QSGNode *node);
@@ -161,32 +157,10 @@ private:
     QSet<QSGNode *> m_nodes_to_preprocess;
     QSet<QSGNode *> m_nodes_dont_preprocess;
 
-    const QSGBindable *m_bindable;
-
     uint m_changed_emitted : 1;
     uint m_is_rendering : 1;
     uint m_is_preprocessing : 1;
 };
-
-class Q_QUICK_PRIVATE_EXPORT QSGBindable
-{
-public:
-    virtual ~QSGBindable() { }
-    virtual void bind() const = 0;
-    virtual void clear(QSGAbstractRenderer::ClearMode mode) const;
-    virtual void reactivate() const;
-};
-#if QT_CONFIG(opengl)
-class QSGBindableFboId : public QSGBindable
-{
-public:
-    QSGBindableFboId(GLuint);
-    void bind() const override;
-private:
-    GLuint m_id;
-};
-#endif
-
 
 QSGMaterialShader::RenderState QSGRenderer::state(QSGMaterialShader::RenderState::DirtyStates dirty) const
 {

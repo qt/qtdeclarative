@@ -73,6 +73,7 @@ class QQmlComponent;
 class QQuickRenderControl;
 class QOpenGLContext;
 class QOffscreenSurface;
+class QOpenGLFramebufferObject;
 
 class QQuickWidgetPrivate
         : public QWidgetPrivate,

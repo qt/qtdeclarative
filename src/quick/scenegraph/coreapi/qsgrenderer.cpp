@@ -39,11 +39,6 @@
 
 #include "qsgrenderer_p.h"
 #include "qsgnodeupdater_p.h"
-#if QT_CONFIG(opengl)
-# include <QOpenGLFramebufferObject>
-# include <QOpenGLContext>
-# include <QOpenGLFunctions>
-#endif
 #include <private/qquickprofiler_p.h>
 #include <qtquick_tracepoints_p.h>
 
@@ -68,38 +63,6 @@ int qt_sg_envInt(const char *name, int defaultValue)
     return ok ? value : defaultValue;
 }
 
-void QSGBindable::clear(QSGAbstractRenderer::ClearMode mode) const
-{
-#if QT_CONFIG(opengl)
-    GLuint bits = 0;
-    if (mode & QSGAbstractRenderer::ClearColorBuffer) bits |= GL_COLOR_BUFFER_BIT;
-    if (mode & QSGAbstractRenderer::ClearDepthBuffer) bits |= GL_DEPTH_BUFFER_BIT;
-    if (mode & QSGAbstractRenderer::ClearStencilBuffer) bits |= GL_STENCIL_BUFFER_BIT;
-    QOpenGLContext::currentContext()->functions()->glClear(bits);
-#else
-    Q_UNUSED(mode)
-#endif
-}
-
-// Reactivate the color buffer after switching to the stencil.
-void QSGBindable::reactivate() const
-{
-#if QT_CONFIG(opengl)
-    QOpenGLContext::currentContext()->functions()->glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-#endif
-}
-#if QT_CONFIG(opengl)
-QSGBindableFboId::QSGBindableFboId(GLuint id)
-    : m_id(id)
-{
-}
-
-
-void QSGBindableFboId::bind() const
-{
-    QOpenGLContext::currentContext()->functions()->glBindFramebuffer(GL_FRAMEBUFFER, m_id);
-}
-#endif
 /*!
     \class QSGRenderer
     \brief The renderer class is the abstract baseclass used for rendering the
@@ -140,7 +103,6 @@ QSGRenderer::QSGRenderer(QSGRenderContext *context)
     , m_cb(nullptr)
     , m_rp_desc(nullptr)
     , m_node_updater(nullptr)
-    , m_bindable(nullptr)
     , m_changed_emitted(false)
     , m_is_rendering(false)
     , m_is_preprocessing(false)
@@ -189,35 +151,7 @@ bool QSGRenderer::isMirrored() const
     return matrix(0, 0) * matrix(1, 1) - matrix(0, 1) * matrix(1, 0) > 0;
 }
 
-void QSGRenderer::renderScene(uint fboId)
-{
-    if (m_rt) {
-        class B : public QSGBindable
-        {
-        public:
-            void bind() const override { }
-        } bindable;
-        renderScene(bindable);
-    } else {
-#if QT_CONFIG(opengl)
-        if (fboId) {
-            QSGBindableFboId bindable(fboId);
-            renderScene(bindable);
-        } else {
-            class B : public QSGBindable
-            {
-            public:
-                void bind() const override { QOpenGLFramebufferObject::bindDefault(); }
-            } bindable;
-            renderScene(bindable);
-        }
-#else
-        Q_UNUSED(fboId)
-#endif
-    }
-}
-
-void QSGRenderer::renderScene(const QSGBindable &bindable)
+void QSGRenderer::renderScene()
 {
     if (!rootNode())
         return;
@@ -225,42 +159,16 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
     Q_TRACE_SCOPE(QSG_renderScene);
     m_is_rendering = true;
 
-
     bool profileFrames = QSG_LOG_TIME_RENDERER().isDebugEnabled();
     if (profileFrames)
         frameTimer.start();
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphRendererFrame);
 
-    qint64 bindTime = 0;
     qint64 renderTime = 0;
 
-    m_bindable = &bindable;
     preprocess();
 
-    Q_TRACE(QSG_binding_entry);
-    bindable.bind();
-    if (profileFrames)
-        bindTime = frameTimer.nsecsElapsed();
-    Q_TRACE(QSG_binding_exit);
-    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRendererFrame,
-                              QQuickProfiler::SceneGraphRendererBinding);
     Q_TRACE(QSG_render_entry);
-
-#if QT_CONFIG(opengl)
-    // Sanity check that attribute registers are disabled
-    if (qsg_sanity_check) {
-        GLint count = 0;
-        QOpenGLContext::currentContext()->functions()->glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &count);
-        GLint enabled;
-        for (int i=0; i<count; ++i) {
-            QOpenGLContext::currentContext()->functions()->glGetVertexAttribiv(i, GL_VERTEX_ATTRIB_ARRAY_ENABLED, &enabled);
-            if (enabled) {
-                qWarning("QSGRenderer: attribute %d is enabled, this can lead to memory corruption and crashes.", i);
-            }
-        }
-    }
-#endif
-
     render();
     if (profileFrames)
         renderTime = frameTimer.nsecsElapsed();
@@ -270,15 +178,13 @@ void QSGRenderer::renderScene(const QSGBindable &bindable)
 
     m_is_rendering = false;
     m_changed_emitted = false;
-    m_bindable = nullptr;
 
     qCDebug(QSG_LOG_TIME_RENDERER,
-            "time in renderer: total=%dms, preprocess=%d, updates=%d, binding=%d, rendering=%d",
+            "time in renderer: total=%dms, preprocess=%d, updates=%d, rendering=%d",
             int(renderTime / 1000000),
             int(preprocessTime / 1000000),
             int((updatePassTime - preprocessTime) / 1000000),
-            int((bindTime - updatePassTime) / 1000000),
-            int((renderTime - bindTime) / 1000000));
+            int((renderTime - updatePassTime) / 1000000));
 }
 
 /*!

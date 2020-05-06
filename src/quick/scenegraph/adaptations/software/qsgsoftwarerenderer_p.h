@@ -70,7 +70,7 @@ public:
     QRegion flushRegion() const;
 
 protected:
-    void renderScene(uint fboId = 0) final;
+    void renderScene() final;
     void render() final;
 
 private:

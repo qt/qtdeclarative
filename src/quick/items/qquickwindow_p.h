@@ -306,13 +306,6 @@ public:
 
     QQuickGraphicsDevice customDeviceObjects;
 
-    // ### Qt 6 remove
-    struct {
-        QOpenGLFramebufferObject *renderTarget = nullptr;
-        uint renderTargetId = 0;
-        QSize renderTargetSize;
-    } customRenderTargetGl;
-
     QOpenGLVertexArrayObjectHelper *vaoHelper; // ### Qt 6 remove
 
     mutable QQuickWindowIncubationController *incubationController;

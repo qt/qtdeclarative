@@ -107,7 +107,7 @@ public:
     void setClearMode(ClearMode mode);
     ClearMode clearMode() const;
 
-    virtual void renderScene(GLuint fboId = 0) = 0;
+    virtual void renderScene() = 0;
 
 Q_SIGNALS:
     void sceneGraphChanged();
