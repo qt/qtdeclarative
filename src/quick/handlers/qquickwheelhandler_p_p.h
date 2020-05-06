@@ -80,6 +80,7 @@ public:
     mutable bool metaPropertyDirty = true;
     bool invertible = true;
     bool targetTransformAroundCursor = true;
+    bool blocking = true;
     QQuickWheelEvent wheelEvent;
 };
 

@@ -71,6 +71,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickWheelHandler : public QQuickSinglePointHandle
     Q_PROPERTY(QString property READ property WRITE setProperty NOTIFY propertyChanged)
     Q_PROPERTY(qreal targetScaleMultiplier READ targetScaleMultiplier WRITE setTargetScaleMultiplier NOTIFY targetScaleMultiplierChanged)
     Q_PROPERTY(bool targetTransformAroundCursor READ isTargetTransformAroundCursor WRITE setTargetTransformAroundCursor NOTIFY targetTransformAroundCursorChanged)
+    Q_PROPERTY(bool blocking READ isBlocking WRITE setBlocking NOTIFY blockingChanged REVISION(6, 3))
 
     QML_NAMED_ELEMENT(WheelHandler)
     QML_ADDED_IN_VERSION(2, 14)
@@ -102,6 +103,9 @@ public:
     bool isTargetTransformAroundCursor() const;
     void setTargetTransformAroundCursor(bool ttac);
 
+    bool isBlocking() const;
+    void setBlocking(bool blocking);
+
 Q_SIGNALS:
     void wheel(QQuickWheelEvent *event);
 
@@ -113,6 +117,7 @@ Q_SIGNALS:
     void propertyChanged();
     void targetScaleMultiplierChanged();
     void targetTransformAroundCursorChanged();
+    Q_REVISION(6, 3) void blockingChanged();
 
 protected:
     bool wantsPointerEvent(QPointerEvent *event) override;

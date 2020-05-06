@@ -354,6 +354,29 @@ void QQuickWheelHandler::setTargetTransformAroundCursor(bool ttac)
     emit targetTransformAroundCursorChanged();
 }
 
+/*!
+    \qmlproperty bool QtQuick::WheelHandler::blocking
+    \since 6.3
+
+    Whether this handler prevents other items or handlers behind it from
+    handling the same wheel event. This property is \c true by default.
+*/
+bool QQuickWheelHandler::isBlocking() const
+{
+    Q_D(const QQuickWheelHandler);
+    return d->blocking;
+}
+
+void QQuickWheelHandler::setBlocking(bool blocking)
+{
+    Q_D(QQuickWheelHandler);
+    if (d->blocking == blocking)
+        return;
+
+    d->blocking = blocking;
+    emit blockingChanged();
+}
+
 bool QQuickWheelHandler::wantsPointerEvent(QPointerEvent *event)
 {
     if (!event)
@@ -393,7 +416,8 @@ void QQuickWheelHandler::handleEventPoint(QPointerEvent *ev, QEventPoint &point)
         return;
     const QWheelEvent *event = static_cast<const QWheelEvent *>(ev);
     setActive(true); // ScrollEnd will not happen unless it was already active (see setActive(false) below)
-    point.setAccepted();
+    if (d->blocking)
+        point.setAccepted();
     qreal inversion = !d->invertible && event->isInverted() ? -1 : 1;
     qreal angleDelta = inversion * qreal(orientation() == Qt::Horizontal ? event->angleDelta().x() :
                                                                            event->angleDelta().y()) / 8;

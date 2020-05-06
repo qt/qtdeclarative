@@ -50,6 +50,8 @@ private slots:
     void singleHandler();
     void nestedHandler_data();
     void nestedHandler();
+    void blocking_data();
+    void blocking();
 
 private:
     void sendWheelEvent(QQuickView &window, QPoint pos, QPoint angleDelta,
@@ -337,6 +339,51 @@ void tst_QQuickWheelHandler::nestedHandler()
         QTRY_COMPARE(outerHandler->active(), false);
         QCOMPARE(outerActiveChangedSpy.count(), 2);
     }
+}
+
+void tst_QQuickWheelHandler::blocking_data()
+{
+    // handler properties
+    QTest::addColumn<bool>("blocking");
+
+    // move the item
+    QTest::newRow("default: blocking") << true;
+    QTest::newRow("nonblocking") << false;
+}
+
+void tst_QQuickWheelHandler::blocking()
+{
+    QFETCH(bool, blocking);
+
+    QQuickView window;
+    QByteArray errorMessage;
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("nested.qml"), true, &errorMessage), errorMessage.constData());
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    QQuickItem *outerRect = window.rootObject();
+    QVERIFY(outerRect != nullptr);
+    QQuickWheelHandler *outerHandler = outerRect->findChild<QQuickWheelHandler*>("outerWheelHandler");
+    QVERIFY(outerHandler != nullptr);
+    QQuickWheelHandler *innerHandler = outerRect->findChild<QQuickWheelHandler*>("innerWheelHandler");
+    QVERIFY(innerHandler != nullptr);
+    QQuickItem *innerRect = innerHandler->parentItem();
+    QVERIFY(innerRect != nullptr);
+    QPoint eventPos = innerRect->mapToScene(innerRect->boundingRect().center()).toPoint();
+
+    QCOMPARE(innerHandler->isBlocking(), true); // default property value
+    innerHandler->setBlocking(blocking);
+    QSignalSpy innerActiveChangedSpy(innerHandler, SIGNAL(activeChanged()));
+    QSignalSpy outerActiveChangedSpy(outerHandler, SIGNAL(activeChanged()));
+
+    qreal innerPosWas = innerRect->position().x();
+    qreal outerPosWas = outerRect->position().x();
+
+    sendWheelEvent(window, eventPos, {0, 120}, {0, 0}, Qt::NoModifier, Qt::NoScrollPhase, false);
+    QTRY_COMPARE(innerActiveChangedSpy.count(), 2);
+    QCOMPARE(innerRect->position().x(), innerPosWas + 15);
+    QCOMPARE(outerActiveChangedSpy.count(), blocking ? 0 : 2);
+    QCOMPARE(outerRect->position().x(), outerPosWas + (blocking ? 0 : 15));
 }
 
 QTEST_MAIN(tst_QQuickWheelHandler)
