@@ -85,13 +85,25 @@ qmltyperegistrar_qmltypes.CONFIG = no_link
 qmltyperegistrar_qmltypes.commands = $$escape_expand(\\n)  # force creation of rule
 
 install_qmltypes {
-    isEmpty(QMLTYPES_INSTALL_DIR): \
-        QMLTYPES_INSTALL_DIR = $$[QT_INSTALL_QML]/$$TARGETPATH
-    do_install_qmltypes.files = $$OUT_PWD/$$QMLTYPES_FILENAME
-    do_install_qmltypes.path = $$QMLTYPES_INSTALL_DIR
-    do_install_qmltypes.CONFIG += no_check_exist
-    prefix_build: INSTALLS += do_install_qmltypes
-    else: COPIES += do_install_qmltypes
+    INSTALL_QML_FILES = false
+
+    android {
+        build_pass {
+            isEmpty(ANDROID_ABIS): ANDROID_ABIS = $$ALL_ANDROID_ABIS
+            ABI = $$first(ANDROID_ABIS)
+            equals(ABI,  $$QT_ARCH): INSTALL_QML_FILES = true
+        }
+    } else: !debug_and_release|!build_all|CONFIG(release, debug|release): INSTALL_QML_FILES = true
+
+    equals(INSTALL_QML_FILES, true) {
+        isEmpty(QMLTYPES_INSTALL_DIR): \
+            QMLTYPES_INSTALL_DIR = $$[QT_INSTALL_QML]/$$TARGETPATH
+        do_install_qmltypes.files = $$OUT_PWD/$$QMLTYPES_FILENAME
+        do_install_qmltypes.path = $$QMLTYPES_INSTALL_DIR
+        do_install_qmltypes.CONFIG += no_check_exist
+        prefix_build: INSTALLS += do_install_qmltypes
+        else: COPIES += do_install_qmltypes
+    }
 }
 
 QMAKE_EXTRA_COMPILERS += qmltyperegistrar_compiler qmltyperegistrar_qmltypes
