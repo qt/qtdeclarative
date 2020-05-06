@@ -49,7 +49,6 @@
 #include <QtQuick/private/qsgcontext_p.h>
 #include <QtQuick/private/qsgcontextplugin_p.h>
 #if QT_CONFIG(opengl)
-#include <QtQuick/private/qsgopengldistancefieldglyphcache_p.h>
 #include <QtQuick/private/qsgdefaultglyphnode_p.h>
 #include <QtQuick/private/qsgdefaultinternalimagenode_p.h>
 #include <QtQuick/private/qsgdefaultinternalrectanglenode_p.h>

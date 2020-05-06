@@ -45,7 +45,6 @@
 #include <QtQuick/private/qsgdefaultglyphnode_p.h>
 #include <QtQuick/private/qsgdistancefieldglyphnode_p.h>
 #include <QtQuick/private/qsgdistancefieldglyphnode_p_p.h>
-#include <QtQuick/private/qsgopengllayer_p.h>
 #include <QtQuick/private/qsgrhisupport_p.h>
 #include <QtQuick/private/qsgrhilayer_p.h>
 #include <QtQuick/private/qsgdefaultrendercontext_p.h>
@@ -222,11 +221,7 @@ QSGGlyphNode *QSGDefaultContext::createGlyphNode(QSGRenderContext *rc, bool pref
 
 QSGLayer *QSGDefaultContext::createLayer(QSGRenderContext *renderContext)
 {
-    auto rc = static_cast<const QSGDefaultRenderContext *>(renderContext);
-    if (rc->rhi())
-        return new QSGRhiLayer(renderContext);
-    else
-        return new QSGOpenGLLayer(renderContext);
+    return new QSGRhiLayer(renderContext);
 }
 
 QSurfaceFormat QSGDefaultContext::defaultSurfaceFormat() const

@@ -397,8 +397,6 @@ qt_extend_target(Quick CONDITION QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT
         scenegraph/qsgdefaultrendercontext.cpp scenegraph/qsgdefaultrendercontext_p.h
         scenegraph/qsgdistancefieldglyphnode.cpp scenegraph/qsgdistancefieldglyphnode_p.cpp scenegraph/qsgdistancefieldglyphnode_p.h
         scenegraph/qsgdistancefieldglyphnode_p_p.h
-        scenegraph/qsgopengldistancefieldglyphcache.cpp scenegraph/qsgopengldistancefieldglyphcache_p.h
-        scenegraph/qsgopengllayer.cpp scenegraph/qsgopengllayer_p.h
         scenegraph/qsgrhidistancefieldglyphcache.cpp scenegraph/qsgrhidistancefieldglyphcache_p.h
         scenegraph/qsgrhilayer.cpp scenegraph/qsgrhilayer_p.h
         scenegraph/qsgrhishadereffectnode.cpp scenegraph/qsgrhishadereffectnode_p.h

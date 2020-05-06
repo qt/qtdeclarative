@@ -121,7 +121,6 @@ qtConfig(opengl(es1|es2)?) {
     SOURCES += \
         $$PWD/qsgdefaultglyphnode.cpp \
         $$PWD/qsgdefaultglyphnode_p.cpp \
-        $$PWD/qsgopengldistancefieldglyphcache.cpp \
         $$PWD/qsgdistancefieldglyphnode.cpp \
         $$PWD/qsgdistancefieldglyphnode_p.cpp \
         $$PWD/qsgdefaultinternalimagenode.cpp \
@@ -131,11 +130,9 @@ qtConfig(opengl(es1|es2)?) {
         $$PWD/util/qsgdefaultpainternode.cpp \
         $$PWD/util/qsgdefaultrectanglenode.cpp \
         $$PWD/util/qsgdefaultimagenode.cpp \
-        $$PWD/util/qsgdefaultninepatchnode.cpp \
-        $$PWD/qsgopengllayer.cpp
+        $$PWD/util/qsgdefaultninepatchnode.cpp
     HEADERS += \
         $$PWD/qsgdefaultglyphnode_p.h \
-        $$PWD/qsgopengldistancefieldglyphcache_p.h \
         $$PWD/qsgdistancefieldglyphnode_p.h \
         $$PWD/qsgdistancefieldglyphnode_p_p.h \
         $$PWD/qsgdefaultglyphnode_p_p.h \
@@ -146,8 +143,7 @@ qtConfig(opengl(es1|es2)?) {
         $$PWD/util/qsgdefaultpainternode_p.h \
         $$PWD/util/qsgdefaultrectanglenode_p.h \
         $$PWD/util/qsgdefaultimagenode_p.h \
-        $$PWD/util/qsgdefaultninepatchnode_p.h \
-        $$PWD/qsgopengllayer_p.h
+        $$PWD/util/qsgdefaultninepatchnode_p.h
 
     qtConfig(thread) {
         SOURCES += \

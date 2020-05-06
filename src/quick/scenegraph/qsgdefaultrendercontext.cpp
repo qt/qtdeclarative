@@ -50,7 +50,6 @@
 
 #include <QtQuick/private/qsgopenglatlastexture_p.h>
 #include <QtQuick/private/qsgcompressedtexture_p.h>
-#include <QtQuick/private/qsgopengldistancefieldglyphcache_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -437,10 +436,7 @@ QSGDistanceFieldGlyphCache *QSGDefaultRenderContext::distanceFieldGlyphCache(con
     QString key = fontKey(font);
     QSGDistanceFieldGlyphCache *cache = m_glyphCaches.value(key, 0);
     if (!cache) {
-        if (m_rhi)
-            cache = new QSGRhiDistanceFieldGlyphCache(m_rhi, font);
-        else
-            cache = new QSGOpenGLDistanceFieldGlyphCache(openglContext(), font);
+        cache = new QSGRhiDistanceFieldGlyphCache(m_rhi, font);
         m_glyphCaches.insert(key, cache);
     }
 
