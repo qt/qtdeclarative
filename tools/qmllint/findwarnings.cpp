@@ -731,7 +731,7 @@ bool FindWarningVisitor::check()
     // now that all ids are known, revisit any Connections whose target were perviously unknown
     for (auto const &outstandingConnection: m_outstandingConnections) {
         auto targetScope = m_qmlid2scope[outstandingConnection.targetName];
-        if (outstandingConnection.scope)
+        if (outstandingConnection.scope && targetScope != nullptr)
             outstandingConnection.scope->addMethods(targetScope->methods());
         QScopedValueRollback<ScopeTree::Ptr> rollback(m_currentScope, outstandingConnection.scope);
         outstandingConnection.uiod->initializer->accept(this);

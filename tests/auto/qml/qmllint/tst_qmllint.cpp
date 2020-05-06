@@ -107,6 +107,10 @@ void TestQmllint::testUnqualified_data()
     QTest::newRow("CatchStatement") << QStringLiteral("CatchStatement.qml") << QStringLiteral("err") << 6 << 21;
 
     QTest::newRow("NonSpuriousParent") << QStringLiteral("nonSpuriousParentWarning.qml") << QStringLiteral("property int x: <id>.parent.x") << 6 << 25;
+
+    QTest::newRow("crashConnections")
+        << QStringLiteral("crashConnections.qml")
+        << QStringLiteral("target: FirstRunDialog") << 4 << 13;
 }
 
 void TestQmllint::testUnknownCausesFail()
