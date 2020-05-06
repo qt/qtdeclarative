@@ -56,7 +56,6 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLBuffer>
-#include <QOpenGLVertexArrayObject>
 #include <QOffscreenSurface>
 #include <QScreen>
 #include <QQmlEngine>
@@ -65,6 +64,8 @@
 #include <QQuickWindow>
 #include <QQuickRenderControl>
 #include <QCoreApplication>
+#include <QQuickRenderTarget>
+#include <QQuickGraphicsDevice>
 
 class RenderControl : public QQuickRenderControl
 {
@@ -85,16 +86,12 @@ QWindow *RenderControl::renderWindow(QPoint *offset)
 
 WindowSingleThreaded::WindowSingleThreaded()
     : m_rootItem(nullptr),
-      m_fbo(nullptr),
+      m_textureId(0),
       m_quickInitialized(false),
       m_quickReady(false),
       m_dpr(0)
 {
     setSurfaceType(QSurface::OpenGLSurface);
-
-    // The rendercontrol does not necessarily need an FBO. Demonstrate this
-    // when requested.
-    m_onscreen = QCoreApplication::arguments().contains(QStringLiteral("--onscreen"));
 
     QSurfaceFormat format;
     // Qt Quick may need a depth and stencil buffer. Always make sure these are available.
@@ -137,13 +134,13 @@ WindowSingleThreaded::WindowSingleThreaded()
     // Now hook up the signals. For simplicy we don't differentiate between
     // renderRequested (only render is needed, no sync) and sceneChanged (polish and sync
     // is needed too).
-    connect(m_quickWindow, &QQuickWindow::sceneGraphInitialized, this, &WindowSingleThreaded::createFbo);
-    connect(m_quickWindow, &QQuickWindow::sceneGraphInvalidated, this, &WindowSingleThreaded::destroyFbo);
+    connect(m_quickWindow, &QQuickWindow::sceneGraphInitialized, this, &WindowSingleThreaded::createTexture);
+    connect(m_quickWindow, &QQuickWindow::sceneGraphInvalidated, this, &WindowSingleThreaded::destroyTexture);
     connect(m_renderControl, &QQuickRenderControl::renderRequested, this, &WindowSingleThreaded::requestUpdate);
     connect(m_renderControl, &QQuickRenderControl::sceneChanged, this, &WindowSingleThreaded::requestUpdate);
 
-    // Just recreating the FBO on resize is not sufficient, when moving between screens
-    // with different devicePixelRatio the QWindow size may remain the same but the FBO
+    // Just recreating the texture on resize is not sufficient, when moving between screens
+    // with different devicePixelRatio the QWindow size may remain the same but the texture
     // dimension is to change regardless.
     connect(this, &QWindow::screenChanged, this, &WindowSingleThreaded::handleScreenChange);
 }
@@ -156,14 +153,13 @@ WindowSingleThreaded::~WindowSingleThreaded()
     // another surface that is valid for sure.
     m_context->makeCurrent(m_offscreenSurface);
 
-    // Delete the render control first since it will free the scenegraph resources.
-    // Destroy the QQuickWindow only afterwards.
+    delete m_qmlComponent;
+    delete m_qmlEngine;
+    delete m_quickWindow;
     delete m_renderControl;
 
-    delete m_qmlComponent;
-    delete m_quickWindow;
-    delete m_qmlEngine;
-    delete m_fbo;
+    if (m_textureId)
+        m_context->functions()->glDeleteTextures(1, &m_textureId);
 
     m_context->doneCurrent();
 
@@ -173,42 +169,42 @@ WindowSingleThreaded::~WindowSingleThreaded()
     delete m_context;
 }
 
-void WindowSingleThreaded::createFbo()
+void WindowSingleThreaded::createTexture()
 {
-    // The scene graph has been initialized. It is now time to create an FBO and associate
+    // The scene graph has been initialized. It is now time to create an texture and associate
     // it with the QQuickWindow.
     m_dpr = devicePixelRatio();
-    if (!m_onscreen) {
-        m_fbo = new QOpenGLFramebufferObject(size() * m_dpr, QOpenGLFramebufferObject::CombinedDepthStencil);
-        m_quickWindow->setRenderTarget(m_fbo);
-    } else {
-        // Special case: No FBO. Render directly to the window's default framebuffer.
-        m_onscreenSize = size() * m_dpr;
-        m_quickWindow->setRenderTarget(0, m_onscreenSize);
-    }
+    m_textureSize = size() * m_dpr;
+    QOpenGLFunctions *f = m_context->functions();
+    f->glGenTextures(1, &m_textureId);
+    f->glBindTexture(GL_TEXTURE_2D, m_textureId);
+    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    f->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_textureSize.width(), m_textureSize.height(), 0,
+                    GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    m_quickWindow->setRenderTarget(QQuickRenderTarget::fromNativeTexture({ &m_textureId, 0 }, m_textureSize));
 }
 
-void WindowSingleThreaded::destroyFbo()
+void WindowSingleThreaded::destroyTexture()
 {
-    delete m_fbo;
-    m_fbo = nullptr;
+    m_context->functions()->glDeleteTextures(1, &m_textureId);
+    m_textureId = 0;
 }
 
 void WindowSingleThreaded::render()
 {
-    QSurface *surface = m_offscreenSurface;
-    if (m_onscreen)
-        surface = this;
-    if (!m_context->makeCurrent(surface))
+    if (!m_context->makeCurrent(m_offscreenSurface))
         return;
 
-    // Polish, synchronize and render the next frame (into our fbo).  In this example
+    // Polish, synchronize and render the next frame (into our texture).  In this example
     // everything happens on the same thread and therefore all three steps are performed
     // in succession from here. In a threaded setup the render() call would happen on a
     // separate thread.
+    m_renderControl->beginFrame();
     m_renderControl->polishItems();
     m_renderControl->sync();
     m_renderControl->render();
+    m_renderControl->endFrame();
 
     m_quickWindow->resetOpenGLState();
     QOpenGLFramebufferObject::bindDefault();
@@ -218,10 +214,7 @@ void WindowSingleThreaded::render()
     m_quickReady = true;
 
     // Get something onto the screen.
-    if (!m_onscreen)
-        m_cubeRenderer->render(this, m_context, m_quickReady ? m_fbo->texture() : 0);
-    else
-        m_context->swapBuffers(this);
+    m_cubeRenderer->render(this, m_context, m_quickReady ? m_textureId : 0);
 }
 
 void WindowSingleThreaded::requestUpdate()
@@ -263,11 +256,9 @@ void WindowSingleThreaded::run()
     updateSizes();
 
     // Initialize the render control and our OpenGL resources.
-    QSurface *surface = m_offscreenSurface;
-    if (m_onscreen)
-        surface = this;
-    m_context->makeCurrent(surface);
-    m_renderControl->initialize(m_context);
+    m_context->makeCurrent(m_offscreenSurface);
+    m_quickWindow->setGraphicsDevice(QQuickGraphicsDevice::fromOpenGLContext(m_context));
+    m_renderControl->initialize();
     m_quickInitialized = true;
 }
 
@@ -295,21 +286,18 @@ void WindowSingleThreaded::exposeEvent(QExposeEvent *)
 {
     if (isExposed()) {
         if (!m_quickInitialized) {
-            if (!m_onscreen)
-                m_cubeRenderer->render(this, m_context, m_quickReady ? m_fbo->texture() : 0);
+            m_cubeRenderer->render(this, m_context, m_quickReady ? m_textureId : 0);
             startQuick(QStringLiteral("qrc:/rendercontrol/demo.qml"));
         }
     }
 }
 
-void WindowSingleThreaded::resizeFbo()
+void WindowSingleThreaded::resizeTexture()
 {
-    QSurface *surface = m_offscreenSurface;
-    if (m_onscreen)
-        surface = this;
-    if (m_rootItem && m_context->makeCurrent(surface)) {
-        delete m_fbo;
-        createFbo();
+    if (m_rootItem && m_context->makeCurrent(m_offscreenSurface)) {
+        m_context->functions()->glDeleteTextures(1, &m_textureId);
+        m_textureId = 0;
+        createTexture();
         m_context->doneCurrent();
         updateSizes();
         render();
@@ -318,21 +306,16 @@ void WindowSingleThreaded::resizeFbo()
 
 void WindowSingleThreaded::resizeEvent(QResizeEvent *)
 {
-    // If this is a resize after the scene is up and running, recreate the fbo and the
+    // If this is a resize after the scene is up and running, recreate the texture and the
     // Quick item and scene.
-    if (!m_onscreen) {
-        if (m_fbo && m_fbo->size() != size() * devicePixelRatio())
-            resizeFbo();
-    } else {
-        if (m_onscreenSize != size() * devicePixelRatio())
-            resizeFbo();
-    }
+    if (m_textureId && m_textureSize != size() * devicePixelRatio())
+        resizeTexture();
 }
 
 void WindowSingleThreaded::handleScreenChange()
 {
     if (m_dpr != devicePixelRatio())
-        resizeFbo();
+        resizeTexture();
 }
 
 void WindowSingleThreaded::mousePressEvent(QMouseEvent *e)

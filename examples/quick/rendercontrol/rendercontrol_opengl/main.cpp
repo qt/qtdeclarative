@@ -49,38 +49,19 @@
 ****************************************************************************/
 
 #include <QGuiApplication>
-#include <QCommandLineParser>
-#include <QCommandLineOption>
+#include <QQuickWindow>
 #include "window_singlethreaded.h"
-#include "window_multithreaded.h"
 
 int main(int argc, char **argv)
 {
     QGuiApplication app(argc, argv);
 
-    QCoreApplication::setApplicationName("Qt Render Control Example");
-    QCoreApplication::setOrganizationName("QtProject");
-    QCoreApplication::setApplicationVersion(QT_VERSION_STR);
-    QCommandLineParser parser;
-    parser.setApplicationDescription(QCoreApplication::applicationName());
-    parser.addHelpOption();
-    parser.addVersionOption();
-    QCommandLineOption threadedOption("threaded", "Threaded Rendering");
-    parser.addOption(threadedOption);
+    // only functional when Qt Quick is also using OpenGL
+    QQuickWindow::setSceneGraphBackend(QSGRendererInterface::OpenGLRhi);
 
-    parser.process(app);
-
-    QScopedPointer<QWindow> window;
-    if (parser.isSet(threadedOption)) {
-        qWarning("Using separate Qt Quick render thread");
-        window.reset(new WindowMultiThreaded);
-    } else {
-        qWarning("Using single-threaded rendering");
-        window.reset(new WindowSingleThreaded);
-    }
-
-    window->resize(1024, 768);
-    window->show();
+    WindowSingleThreaded window;
+    window.resize(1024, 768);
+    window.show();
 
     return app.exec();
 }
