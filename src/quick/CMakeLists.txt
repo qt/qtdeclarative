@@ -387,7 +387,6 @@ qt_extend_target(Quick CONDITION QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT
         scenegraph/compressedtexture/qsgcompressedatlastexture.cpp scenegraph/compressedtexture/qsgcompressedatlastexture_p.h
         scenegraph/compressedtexture/qsgcompressedtexture.cpp scenegraph/compressedtexture/qsgcompressedtexture_p.h
         scenegraph/coreapi/qsgbatchrenderer.cpp scenegraph/coreapi/qsgbatchrenderer_p.h
-        scenegraph/coreapi/qsgopenglvisualizer.cpp scenegraph/coreapi/qsgopenglvisualizer_p.h
         scenegraph/coreapi/qsgrhivisualizer.cpp scenegraph/coreapi/qsgrhivisualizer_p.h
         scenegraph/coreapi/qsgshaderrewriter.cpp
         scenegraph/qsgdefaultcontext.cpp scenegraph/qsgdefaultcontext_p.h

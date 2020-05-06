@@ -62,13 +62,10 @@
 
 #include <QtCore/QBitArray>
 #include <QtCore/QStack>
-#include <QOpenGLFunctions>
 
 #include <QtGui/private/qrhi_p.h>
 
 QT_BEGIN_NAMESPACE
-
-class QOpenGLVertexArrayObject;
 
 namespace QSGBatchRenderer
 {
@@ -298,7 +295,6 @@ inline QDebug operator << (QDebug d, const Rect &r) {
 }
 
 struct Buffer {
-    GLuint id;
     int size;
     // Data is only valid while preparing the upload. Exception is if we are using the
     // broken IBO workaround or we are using a visualization mode.
@@ -686,7 +682,7 @@ class ShaderManager : public QObject
 public:
     using Shader = ShaderManagerShader;
 
-    ShaderManager(QSGDefaultRenderContext *ctx) : blitProgram(nullptr), context(ctx) { }
+    ShaderManager(QSGDefaultRenderContext *ctx) : context(ctx) { }
     ~ShaderManager() {
         qDeleteAll(rewrittenShaders);
         qDeleteAll(stockShaders);
@@ -703,14 +699,13 @@ public Q_SLOTS:
     void invalidated();
 
 public:
-    Shader *prepareMaterial(QSGMaterial *material, bool enableRhiShaders = false, const QSGGeometry *geometry = nullptr);
-    Shader *prepareMaterialNoRewrite(QSGMaterial *material, bool enableRhiShaders = false, const QSGGeometry *geometry = nullptr);
+    Shader *prepareMaterial(QSGMaterial *material, const QSGGeometry *geometry = nullptr);
+    Shader *prepareMaterialNoRewrite(QSGMaterial *material, const QSGGeometry *geometry = nullptr);
 
 private:
     QHash<QSGMaterialType *, Shader *> rewrittenShaders;
     QHash<QSGMaterialType *, Shader *> stockShaders;
 
-    QOpenGLShaderProgram *blitProgram;
     QSGDefaultRenderContext *context;
 
     QHash<ShaderResourceBindingList, QRhiShaderResourceBindings *> srbCache;
@@ -754,7 +749,7 @@ protected:
     QHash<Node *, uint> m_visualizeChangeSet;
 };
 
-class Q_QUICK_PRIVATE_EXPORT Renderer : public QSGRenderer, public QOpenGLFunctions
+class Q_QUICK_PRIVATE_EXPORT Renderer : public QSGRenderer
 {
 public:
     Renderer(QSGDefaultRenderContext *);
@@ -774,7 +769,6 @@ private:
     };
 
     friend class Updater;
-    friend class OpenGLVisualizer;
     friend class RhiVisualizer;
 
     void destroyGraphicsResources();
@@ -874,7 +868,6 @@ private:
     int m_renderOrderRebuildLower;
     int m_renderOrderRebuildUpper;
 
-    GLuint m_bufferStrategy;
     int m_batchNodeThreshold;
     int m_batchVertexThreshold;
 
@@ -887,19 +880,8 @@ private:
     ShaderManager::Shader *m_currentShader;
     ClipState m_currentClipState;
 
-    // *** legacy (GL) only
-    QRect m_currentScissorRect;
-    int m_currentStencilValue;
-    QOpenGLShaderProgram m_clipProgram;
-    int m_clipMatrixId;
-    const QSGClipNode *m_currentClip;
-    ClipState::ClipType m_currentClipType;
-    // ***
-
     QDataBuffer<char> m_vertexUploadPool;
     QDataBuffer<char> m_indexUploadPool;
-    // For minimal OpenGL core profile support
-    QOpenGLVertexArrayObject *m_vao;
 
     Allocator<Node, 256> m_nodeAllocator;
     Allocator<Element, 64> m_elementAllocator;
