@@ -158,14 +158,6 @@ static int enumForSingleton(QV4::ExecutionEngine *v4, String *name, QObject *qob
     return -1;
 }
 
-static ReturnedValue throwLowercaseEnumError(QV4::ExecutionEngine *v4, String *name, const QQmlType &type)
-{
-    const QString message =
-            QStringLiteral("Cannot access enum value '%1' of '%2', enum values need to start with an uppercase letter.")
-                .arg(name->toQString()).arg(QLatin1String(type.typeName()));
-    return v4->throwTypeError(message);
-}
-
 ReturnedValue QQmlTypeWrapper::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
 {
     // Keep this code in sync with ::virtualResolveLookupGetter
@@ -219,13 +211,6 @@ ReturnedValue QQmlTypeWrapper::virtualGet(const Managed *m, PropertyKey id, cons
                     const ReturnedValue result = QV4::QObjectWrapper::getQmlProperty(v4, context, qobjectSingleton, name, QV4::QObjectWrapper::IgnoreRevision, &ok);
                     if (hasProperty)
                         *hasProperty = ok;
-
-                    // Warn when attempting to access a lowercased enum value, singleton case
-                    if (!ok && includeEnums && !name->startsWithUpper()) {
-                        enumForSingleton(v4, name, qobjectSingleton, type, &ok);
-                        if (ok)
-                            return throwLowercaseEnumError(v4, name, type);
-                    }
 
                     return result;
                 }
@@ -303,14 +288,6 @@ ReturnedValue QQmlTypeWrapper::virtualGet(const Managed *m, PropertyKey id, cons
     const ReturnedValue result = Object::virtualGet(m, id, receiver, &ok);
     if (hasProperty)
         *hasProperty = ok;
-
-    // Warn when attempting to access a lowercased enum value, non-singleton case
-    if (!ok && type.isValid() && !type.isSingleton() && !name->startsWithUpper()) {
-        bool enumOk = false;
-        type.enumValue(QQmlEnginePrivate::get(v4->qmlEngine()), name, &enumOk);
-        if (enumOk)
-            return throwLowercaseEnumError(v4, name, type);
-    }
 
     return result;
 }

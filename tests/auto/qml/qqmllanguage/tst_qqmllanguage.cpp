@@ -4073,40 +4073,35 @@ void tst_qqmllanguage::globalEnums()
 void tst_qqmllanguage::lowercaseEnumRuntime_data()
 {
     QTest::addColumn<QString>("file");
-    QTest::addColumn<QString>("errorMessage");
 
-    QTest::newRow("enum from normal type") << "lowercaseEnumRuntime.1.qml" << ":8: TypeError: Cannot access enum value 'lowercaseEnumVal' of 'MyTypeObject', enum values need to start with an uppercase letter.";
-    QTest::newRow("enum from singleton type") << "lowercaseEnumRuntime.2.qml" << ":8: TypeError: Cannot access enum value 'lowercaseEnumVal' of 'MyTypeObjectSingleton', enum values need to start with an uppercase letter.";
+    QTest::newRow("enum from normal type") << "lowercaseEnumRuntime.1.qml";
+    QTest::newRow("enum from singleton type") << "lowercaseEnumRuntime.2.qml";
 }
 
 void tst_qqmllanguage::lowercaseEnumRuntime()
 {
     QFETCH(QString, file);
-    QFETCH(QString, errorMessage);
 
     QQmlComponent component(&engine, testFileUrl(file));
     VERIFY_ERRORS(0);
-    QString warning = component.url().toString() + errorMessage;
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
     delete component.create();
 }
 
 void tst_qqmllanguage::lowercaseEnumCompileTime_data()
 {
     QTest::addColumn<QString>("file");
-    QTest::addColumn<QString>("errorFile");
 
-    QTest::newRow("assignment to int property") << "lowercaseEnumCompileTime.1.qml" << "lowercaseEnumCompileTime.1.errors.txt";
-    QTest::newRow("assignment to enum property") << "lowercaseEnumCompileTime.2.qml" << "lowercaseEnumCompileTime.2.errors.txt";
+    QTest::newRow("assignment to int property") << "lowercaseEnumCompileTime.1.qml";
+    QTest::newRow("assignment to enum property") << "lowercaseEnumCompileTime.2.qml";
 }
 
 void tst_qqmllanguage::lowercaseEnumCompileTime()
 {
     QFETCH(QString, file);
-    QFETCH(QString, errorFile);
 
     QQmlComponent component(&engine, testFileUrl(file));
-    VERIFY_ERRORS(qPrintable(errorFile));
+    VERIFY_ERRORS(0);
+    delete component.create();
 }
 
 void tst_qqmllanguage::scopedEnum()

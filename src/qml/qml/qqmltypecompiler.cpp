@@ -551,11 +551,8 @@ bool QQmlEnumTypeResolver::resolveEnumBindings()
     return true;
 }
 
-bool QQmlEnumTypeResolver::assignEnumToBinding(QmlIR::Binding *binding, const QStringRef &enumName, int enumValue, bool isQtObject)
+bool QQmlEnumTypeResolver::assignEnumToBinding(QmlIR::Binding *binding, const QStringRef &, int enumValue, bool)
 {
-    if (enumName.length() > 0 && enumName[0].isLower() && !isQtObject) {
-        COMPILE_EXCEPTION(binding, tr("Invalid property assignment: Enum value \"%1\" cannot start with a lowercase letter").arg(enumName.toString()));
-    }
     binding->type = QV4::CompiledData::Binding::Type_Number;
     binding->value.constantValueIndex = compiler->registerConstant(QV4::Encode((double)enumValue));
 //    binding->setNumberValueInternal((double)enumValue);
