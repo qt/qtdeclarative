@@ -63,6 +63,7 @@ qt_add_qml_module(pointerhandlersexample
         "components/images/mouse_left.png"
         "components/images/mouse_middle.png"
         "components/images/mouse_right.png"
+        "components/images/mouse_wheel_ridges.png"
         "images/arrowhead.png"
         "images/balloon.png"
         "images/cursor-airbrush.png"

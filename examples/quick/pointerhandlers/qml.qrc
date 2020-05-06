@@ -42,6 +42,7 @@
         <file>components/images/mouse_left.png</file>
         <file>components/images/mouse_middle.png</file>
         <file>components/images/mouse_right.png</file>
+        <file>components/images/mouse_wheel_ridges.png</file>
         <file>images/redball.png</file>
     </qresource>
 </RCC>
