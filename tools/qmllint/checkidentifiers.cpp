@@ -349,7 +349,7 @@ bool CheckIdentifiers::operator()(const QHash<QString, ScopeTree::ConstPtr> &qml
                     || firstElement->methods().contains(memberAccessBase.m_name)
                     || firstElement->enums().contains(memberAccessBase.m_name)) {
                 m_colorOut->write(QLatin1String("Note: "), Info);
-                m_colorOut->write(memberAccessBase.m_name + QLatin1String(" is a meber of the root element\n"), Normal );
+                m_colorOut->write(memberAccessBase.m_name + QLatin1String(" is a member of the root element\n"), Normal );
                 m_colorOut->write(QLatin1String("      You can qualify the access with its id to avoid this warning:\n"), Normal);
                 if (rootId == QLatin1String("<id>")) {
                     m_colorOut->write(QLatin1String("Note: "), Warning);
