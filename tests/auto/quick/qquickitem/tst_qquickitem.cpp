@@ -41,6 +41,7 @@
 #include "../shared/viewtestutil.h"
 #include <QSignalSpy>
 #include <QTranslator>
+#include <QtCore/qregularexpression.h>
 
 #ifdef TEST_QTBUG_60123
 #include <QWidget>
@@ -119,10 +120,15 @@ public:
     }
 
     bool wasPolished;
+    int repolishLoopCount = 0;
 
 protected:
     virtual void updatePolish() {
         wasPolished = true;
+        if (repolishLoopCount > 0) {
+            --repolishLoopCount;
+            polish();
+        }
     }
 
 public slots:
@@ -207,6 +213,8 @@ private slots:
 
     void setParentCalledInOnWindowChanged();
     void receivesLanguageChangeEvent();
+    void polishLoopDetection_data();
+    void polishLoopDetection();
 
 private:
 
@@ -1436,6 +1444,79 @@ void tst_qquickitem::polishOnCompleted()
     QVERIFY(item);
 
     QTRY_VERIFY(item->wasPolished);
+}
+
+struct PolishItemSpan {
+    int itemCount;      // Number of items...
+    int repolishCount;  // ...repolishing 'repolishCount' times
+};
+
+/*
+ * For instance, two consecutive spans {99,0} and {1,2000} } instructs to
+ * construct 99 items with no repolish, and 1 item with 2000 repolishes (in that sibling order)
+ */
+typedef QVector<PolishItemSpan> PolishItemSpans;
+
+Q_DECLARE_METATYPE(PolishItemSpan)
+Q_DECLARE_METATYPE(PolishItemSpans)
+
+void tst_qquickitem::polishLoopDetection_data()
+{
+    QTest::addColumn<PolishItemSpans>("listOfItemsToPolish");
+    QTest::addColumn<int>("expectedNumberOfWarnings");
+
+    QTest::newRow("test1.100") <<   PolishItemSpans({ {1, 100} }) << 0;
+    QTest::newRow("test1.1002") <<  PolishItemSpans({ {1, 1002} }) << 3;
+    QTest::newRow("test1.2020") <<  PolishItemSpans({ {1, 2020} }) << 10;
+
+    QTest::newRow("test5.1") <<    PolishItemSpans({ {5, 1} }) << 0;
+    QTest::newRow("test5.10") <<   PolishItemSpans({ {5, 10} }) << 0;
+    QTest::newRow("test5.100") <<  PolishItemSpans({ {5, 100} }) << 0;
+    QTest::newRow("test5.1000") << PolishItemSpans({ {5, 1000} }) << 5;
+
+    QTest::newRow("test1000.1") <<  PolishItemSpans({ {1000,1} }) << 0;
+    QTest::newRow("test2000.1") <<  PolishItemSpans({ {2000,1} }) << 0;
+
+    QTest::newRow("test99.0-1.1100") << PolishItemSpans({ {99,0},{1,1100} }) << 5;
+    QTest::newRow("test98.0-2.1100") << PolishItemSpans({ {98,0},{2,1100} }) << 5+5;
+
+    // reverse the two above
+    QTest::newRow("test1.1100-99.0") << PolishItemSpans({ {1,1100},{99,0} }) << 5;
+    QTest::newRow("test2.1100-98.0") << PolishItemSpans({ {2,1100},{98,0} }) << 5+5;
+}
+
+void tst_qquickitem::polishLoopDetection()
+{
+    QFETCH(PolishItemSpans, listOfItemsToPolish);
+    QFETCH(int, expectedNumberOfWarnings);
+
+    QQuickWindow window;
+    window.resize(200, 200);
+    window.show();
+
+    TestPolishItem *item = nullptr;
+    int count = 0;
+    for (PolishItemSpan s : listOfItemsToPolish) {
+        for (int i = 0; i < s.itemCount; ++i) {
+            item = new TestPolishItem(window.contentItem());
+            item->setSize(QSizeF(200, 100));
+            item->repolishLoopCount = s.repolishCount;
+            item->setObjectName(QString::fromLatin1("obj%1").arg(count++));
+        }
+    }
+
+    for (int i = 0; i < expectedNumberOfWarnings; ++i) {
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*possible QQuickItem..polish.. loop.*"));
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*TestPolishItem.* called polish.. inside updatePolish.. of TestPolishItem.*"));
+    }
+
+    QList<QQuickItem*> items = window.contentItem()->childItems();
+    for (int i = 0; i < items.count(); ++i) {
+        static_cast<TestPolishItem*>(items.at(i))->doPolish();
+    }
+    item = static_cast<TestPolishItem*>(items.first());
+    // item is the last item, so we wait until the last item reached 0
+    QVERIFY(QTest::qWaitFor([=](){return item->repolishLoopCount == 0 && item->wasPolished;}));
 }
 
 void tst_qquickitem::wheelEvent_data()
