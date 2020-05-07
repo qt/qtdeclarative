@@ -133,6 +133,7 @@ public:
 private:
     QSGRhiSupport();
     void applySettings();
+    void adjustToPlatformQuirks();
     static QSGRhiSupport *staticInst();
     struct {
         bool valid = false;

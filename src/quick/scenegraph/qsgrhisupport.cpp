@@ -51,6 +51,8 @@
 #include <QtGui/qvulkaninstance.h>
 #endif
 
+#include <QOperatingSystemVersion>
+
 QT_BEGIN_NAMESPACE
 
 #if QT_CONFIG(vulkan)
@@ -181,6 +183,14 @@ void QSGRhiSupport::applySettings()
     if (!m_enableRhi)
         return;
 
+    adjustToPlatformQuirks();
+
+    // At this point the RHI backend is fixed, it cannot be changed once we
+    // return from this function. This is because things like the QWindow
+    // (QQuickWindow) may depend on the graphics API as well (surfaceType
+    // f.ex.), and all that is based on what we report from here. So further
+    // adjustments are not possible (or, at minimum, not safe and portable).
+
     // validation layers (Vulkan) or debug layer (D3D)
     m_debugLayer = uint(qEnvironmentVariableIntValue("QSG_RHI_DEBUG_LAYER"));
 
@@ -201,6 +211,21 @@ void QSGRhiSupport::applySettings()
             qPrintable(backendName), m_debugLayer, m_profile);
     if (m_preferSoftwareRenderer)
         qCDebug(QSG_LOG_INFO, "Prioritizing software renderers");
+}
+
+void QSGRhiSupport::adjustToPlatformQuirks()
+{
+#if defined(Q_OS_WIN)
+    // Temporary Windows 7 workaround: no D3D. Just stick with OpenGL like Qt 5
+    // would. Can be removed when Win 7 support is finally dropped from Qt 6.
+    // (but as long as we have a Win 7 CI, this is mandatory)
+    if (QOperatingSystemVersion::current() <= QOperatingSystemVersion::Windows7) {
+        if (m_rhiBackend == QRhi::D3D11) {
+            qCDebug(QSG_LOG_INFO, "D3D on Windows 7 is not supported. Trying OpenGL instead.");
+            m_rhiBackend = QRhi::OpenGLES2;
+        }
+    }
+#endif
 }
 
 QSGRhiSupport *QSGRhiSupport::staticInst()
