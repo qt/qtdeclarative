@@ -73,6 +73,8 @@
 #include <QtCore/QLibraryInfo>
 #include <QtCore/QRunnable>
 #include <QtQml/qqmlincubator.h>
+#include <QtQml/qqmlinfo.h>
+#include <QtQml/private/qqmlmetatype_p.h>
 
 #include <QtQuick/private/qquickpixmapcache_p.h>
 
@@ -311,6 +313,79 @@ static bool transformDirtyOnItemOrAncestor(const QQuickItem *item)
 }
 #endif
 
+/*!
+ *  \internal
+
+    A "polish loop" can occur inside QQuickWindowPrivate::polishItems(). It is when an item calls
+    polish() on an(other?) item from updatePolish(). If this anomaly happens repeatedly and without
+    interruption (of a well-behaved updatePolish() that doesn't call polish()), it is a strong
+    indication that we are heading towards an infinite polish loop. A polish loop is not a bug in
+    Qt Quick - it is a bug caused by ill-behaved items put in the scene.
+
+    We can detect this sequence of polish loops easily, since the
+    QQuickWindowPrivate::itemsToPolish is basically a stack: polish() will push to it, and
+    polishItems() will pop from it.
+    Therefore if updatePolish() calls polish(), the immediate next item polishItems() processes is
+    the item that was polished by the previous call to updatePolish().
+    We therefore just need to count the number of polish loops we detected in _sequence_.
+*/
+struct PolishLoopDetector
+{
+    PolishLoopDetector(const QVector<QQuickItem*> &itemsToPolish)
+        : itemsToPolish(itemsToPolish)
+    {
+    }
+
+    /*
+     * returns true when it detected a likely infinite loop
+     * (suggests it should abort the polish loop)
+     **/
+    bool check(QQuickItem *item, int itemsRemainingBeforeUpdatePolish)
+    {
+        if (itemsToPolish.count() > itemsRemainingBeforeUpdatePolish) {
+            // Detected potential polish loop.
+            ++numPolishLoopsInSequence;
+            if (numPolishLoopsInSequence >= 1000) {
+                // Start to warn about polish loop after 1000 consecutive polish loops
+                if (numPolishLoopsInSequence == 100000) {
+                    // We have looped 100,000 times without actually reducing the list of items to
+                    // polish, give up for now.
+                    // This is not a fix, just a remedy so that the application can be somewhat
+                    // responsive.
+                    numPolishLoopsInSequence = 0;
+                    return true;
+                } else if (numPolishLoopsInSequence < 1005) {
+                    // Show the 5 next items involved in the polish loop.
+                    // (most likely they will be the same 5 items...)
+                    QQuickItem *guiltyItem = itemsToPolish.last();
+                    qmlWarning(item) << "possible QQuickItem::polish() loop";
+
+                    auto typeAndObjectName = [](QQuickItem *item) {
+                        QString typeName = QQmlMetaType::prettyTypeName(item);
+                        QString objName = item->objectName();
+                        if (!objName.isNull())
+                            return QLatin1String("%1(%2)").arg(typeName, objName);
+                        return typeName;
+                    };
+
+                    qmlWarning(guiltyItem) << typeAndObjectName(guiltyItem)
+                               << " called polish() inside updatePolish() of " << typeAndObjectName(item);
+
+                    if (numPolishLoopsInSequence == 1004)
+                        // Enough warnings. Reset counter in order to speed things up and re-detect
+                        // more loops
+                        numPolishLoopsInSequence = 0;
+                }
+            }
+        } else {
+            numPolishLoopsInSequence = 0;
+        }
+        return false;
+    }
+    const QVector<QQuickItem*> &itemsToPolish;      // Just a ref to the one in polishItems()
+    int numPolishLoopsInSequence = 0;
+};
+
 void QQuickWindowPrivate::polishItems()
 {
     // An item can trigger polish on another item, or itself for that matter,
@@ -318,19 +393,20 @@ void QQuickWindowPrivate::polishItems()
     // iterate through the set, we must continue pulling items out until it
     // is empty.
     // In the case where polish is called from updatePolish() either directly
-    // or indirectly, we use a recursionSafeguard to print a warning to
-    // the user.
-    int recursionSafeguard = INT_MAX;
-    while (!itemsToPolish.isEmpty() && --recursionSafeguard > 0) {
+    // or indirectly, we use a PolishLoopDetector to determine if a warning should
+    // be printed to the user.
+
+    PolishLoopDetector polishLoopDetector(itemsToPolish);
+    while (!itemsToPolish.isEmpty()) {
         QQuickItem *item = itemsToPolish.takeLast();
         QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
         itemPrivate->polishScheduled = false;
+        const int itemsRemaining = itemsToPolish.count();
         itemPrivate->updatePolish();
         item->updatePolish();
+        if (polishLoopDetector.check(item, itemsRemaining) == true)
+            break;
     }
-
-    if (recursionSafeguard == 0)
-        qWarning("QQuickWindow: possible QQuickItem::polish() loop");
 
 #if QT_CONFIG(im)
     if (QQuickItem *focusItem = q_func()->activeFocusItem()) {
