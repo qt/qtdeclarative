@@ -4615,6 +4615,22 @@ bool Renderer::hasCustomRenderModeWithContinuousUpdate() const
     return m_visualizer->mode() == Visualizer::VisualizeOverdraw;
 }
 
+void Renderer::invalidatePipelineCacheDependency(QRhiRenderPassDescriptor *rpDesc)
+{
+    if (!rpDesc)
+        return;
+
+    for (auto it = m_shaderManager->pipelineCache.begin(); it != m_shaderManager->pipelineCache.end(); ) {
+        if (it.key().compatibleRenderPassDescriptor == rpDesc) {
+            QRhiGraphicsPipeline *ps = it.value();
+            it = m_shaderManager->pipelineCache.erase(it);
+            ps->releaseAndDestroyLater(); // QRhi takes care of it in endFrame()
+        } else {
+            ++it;
+        }
+    }
+}
+
 bool operator==(const GraphicsState &a, const GraphicsState &b) Q_DECL_NOTHROW
 {
     return a.depthTest == b.depthTest

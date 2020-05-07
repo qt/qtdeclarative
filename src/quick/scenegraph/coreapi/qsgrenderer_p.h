@@ -98,6 +98,7 @@ public:
     virtual void setCustomRenderMode(const QByteArray &) { }
     virtual bool hasCustomRenderModeWithContinuousUpdate() const { return false; }
     virtual void releaseCachedResources() { }
+    virtual void invalidatePipelineCacheDependency(QRhiRenderPassDescriptor *) { }
 
     void clearChangedFlag() { m_changed_emitted = false; }
 

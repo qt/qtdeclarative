@@ -847,6 +847,8 @@ private:
     void setCustomRenderMode(const QByteArray &mode) override;
     bool hasCustomRenderModeWithContinuousUpdate() const override;
 
+    void invalidatePipelineCacheDependency(QRhiRenderPassDescriptor *rpDesc) override;
+
     QSGDefaultRenderContext *m_context;
     QSet<Node *> m_taggedRoots;
     QDataBuffer<Element *> m_opaqueRenderList;

@@ -225,8 +225,12 @@ void QSGRhiLayer::releaseResources()
     delete m_rt;
     m_rt = nullptr;
 
-    delete m_rtRp;
-    m_rtRp = nullptr;
+    if (m_rtRp) {
+        if (m_renderer)
+            m_renderer->invalidatePipelineCacheDependency(m_rtRp);
+        delete m_rtRp;
+        m_rtRp = nullptr;
+    }
 
     delete m_ds;
     m_ds = nullptr;
