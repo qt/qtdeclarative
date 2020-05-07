@@ -69,6 +69,11 @@
                     "#endif"
                 ]
             }
+        },
+        "qml-python": {
+            "label": "python",
+            "type": "detectPython",
+            "log": "location"
         }
     },
 
@@ -185,8 +190,24 @@
             "section": "QML",
             "condition": "features.itemmodel",
             "output": [ "privateFeature" ]
+        },
+        "qml-python": {
+            "label": "python",
+            "condition": "tests.qml-python",
+            "output": [
+                "privateFeature",
+                { "type": "varAssign", "name": "QMAKE_PYTHON", "value": "tests.qml-python.location" }
+            ]
         }
     },
+
+    "report": [
+        {
+            "type": "error",
+            "condition": "!features.qml-python",
+            "message": "Python is required to build QtQml."
+        }
+    ],
 
     "summary": [
         {

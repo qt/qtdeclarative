@@ -7,6 +7,9 @@ qtConfig(qml-network): \
 TRACEPOINT_PROVIDER = $$PWD/qtqml.tracepoints
 CONFIG += qt_tracepoints
 
+!qtConfig(qml-python): \
+    error(Python is required to build QtQml.)
+
 DEFINES   += QT_NO_URL_CAST_FROM_STRING QT_NO_INTEGER_EVENT_COORDINATES
 
 msvc:equals(QT_ARCH, i386): QMAKE_LFLAGS += /BASE:0x66000000
@@ -63,7 +66,6 @@ qtConfig(qml-animation) {
 }
 include(types/types.pri)
 include(../3rdparty/masm/masm-defs.pri)
-include(../3rdparty/masm/masm.pri)
 
 MODULE_PLUGIN_TYPES = \
     qmltooling
@@ -75,3 +77,5 @@ IMPORT_VERSION = 2.$$QT_MINOR_VERSION
 CONFIG += qmltypes install_qmltypes install_metatypes
 
 load(qt_module)
+
+include(../3rdparty/masm/masm.pri)
