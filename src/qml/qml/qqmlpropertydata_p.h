@@ -228,7 +228,7 @@ public:
     bool isAlias() const { return !isFunction() && m_flags.isAliasORisVMESignal; }
     bool isFinal() const { return !isFunction() && m_flags.isFinalORisV4Function; }
     bool isOverridden() const { return m_flags.isOverridden; }
-    bool isDirect() const { return m_flags.isOverload; }
+    bool isDirect() const { return m_flags.isDirect; }
     bool isRequired() const { return !isFunction() && m_flags.isRequiredORisCloned; }
     bool hasStaticMetaCallFunction() const { return staticMetaCallFunction() != nullptr; }
     bool isFunction() const { return m_flags.type == Flags::FunctionType; }
@@ -446,6 +446,7 @@ QQmlPropertyData::Flags::Flags()
     , isOverload(false)
     , isRequiredORisCloned(false)
     , isConstructor(false)
+    , isDirect(false)
     , isOverridden(false)
     , type(OtherType)
     , notFullyResolved(false)
