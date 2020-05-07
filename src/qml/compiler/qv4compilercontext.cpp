@@ -174,7 +174,10 @@ Context::ResolvedName Context::resolveName(const QString &name, const QQmlJS::So
         c = c->parent;
     }
 
-    if (c && c->contextType == ContextType::ESModule) {
+    if (!c)
+        return result;
+
+    if (c->contextType == ContextType::ESModule) {
         for (int i = 0; i < c->importEntries.count(); ++i) {
             if (c->importEntries.at(i).localName == name) {
                 result.index = i;
