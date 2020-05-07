@@ -1700,18 +1700,34 @@ void QQuickTableViewPrivate::layoutHorizontalEdge(Qt::Edge tableEdge)
 {
     int rowThatNeedsLayout;
     int neighbourRow;
-    qreal rowY;
-    qreal rowHeight;
 
     if (tableEdge == Qt::TopEdge) {
         rowThatNeedsLayout = topRow();
         neighbourRow = loadedRows.keys().value(1);
+    } else {
+        rowThatNeedsLayout = bottomRow();
+        neighbourRow = loadedRows.keys().value(loadedRows.count() - 2);
+    }
+
+    // Set the width first, since text items in QtQuick will calculate
+    // implicitHeight based on the text items width.
+    for (auto c = loadedColumns.cbegin(); c != loadedColumns.cend(); ++c) {
+        const int column = c.key();
+        auto fxTableItem = loadedTableItem(QPoint(column, rowThatNeedsLayout));
+        auto const neighbourItem = loadedTableItem(QPoint(column, neighbourRow));
+        const qreal columnX = neighbourItem->geometry().x();
+        const qreal columnWidth = neighbourItem->geometry().width();
+        fxTableItem->item->setX(columnX);
+        fxTableItem->item->setWidth(columnWidth);
+    }
+
+    qreal rowY;
+    qreal rowHeight;
+    if (tableEdge == Qt::TopEdge) {
         rowHeight = getRowLayoutHeight(rowThatNeedsLayout);
         const auto neighbourItem = loadedTableItem(QPoint(leftColumn(), neighbourRow));
         rowY = neighbourItem->geometry().top() - cellSpacing.height() - rowHeight;
     } else {
-        rowThatNeedsLayout = bottomRow();
-        neighbourRow = loadedRows.keys().value(loadedRows.count() - 2);
         rowHeight = getRowLayoutHeight(rowThatNeedsLayout);
         const auto neighbourItem = loadedTableItem(QPoint(leftColumn(), neighbourRow));
         rowY = neighbourItem->geometry().bottom() + cellSpacing.height();
@@ -1720,11 +1736,8 @@ void QQuickTableViewPrivate::layoutHorizontalEdge(Qt::Edge tableEdge)
     for (auto c = loadedColumns.cbegin(); c != loadedColumns.cend(); ++c) {
         const int column = c.key();
         auto fxTableItem = loadedTableItem(QPoint(column, rowThatNeedsLayout));
-        auto const neighbourItem = loadedTableItem(QPoint(column, neighbourRow));
-        const qreal columnX = neighbourItem->geometry().x();
-        const qreal columnWidth = neighbourItem->geometry().width();
-
-        fxTableItem->setGeometry(QRectF(columnX, rowY, columnWidth, rowHeight));
+        fxTableItem->item->setY(rowY);
+        fxTableItem->item->setHeight(rowHeight);
         fxTableItem->setVisible(true);
 
         qCDebug(lcTableViewDelegateLifecycle()) << "layout item:" << QPoint(column, rowThatNeedsLayout) << fxTableItem->geometry();
