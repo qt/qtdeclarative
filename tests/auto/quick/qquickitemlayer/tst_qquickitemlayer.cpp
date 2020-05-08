@@ -212,6 +212,9 @@ void tst_QQuickItemLayer::layerEffect()
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
         QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
 
+    if (!m_isOpenGLRenderer)
+        QSKIP("Only OpenGL Renderer supports GLSL ShaderEffects");
+
     QImage fb = runTest("Effect.qml");
     QVERIFY(!fb.size().isEmpty());
     QCOMPARE(fb.pixel(0, 0), qRgb(0xff, 0, 0));
