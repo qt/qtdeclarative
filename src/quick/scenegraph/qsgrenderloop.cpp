@@ -464,6 +464,15 @@ void QSGGuiThreadRenderLoop::handleDeviceLoss()
 void QSGGuiThreadRenderLoop::releaseSwapchain(QQuickWindow *window)
 {
     QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
+
+    // Unlike the threaded render loop, this one reuses the same rendercontext
+    // for all QQuickWindows for the entire lifetime of the render loop.
+    // Therefore the renderer, if there is one, needs to be notified about the
+    // destruction of certain resources because they may be referenced from
+    // per-rendercontext data structures.
+    if (wd->renderer)
+        wd->renderer->invalidatePipelineCacheDependency(wd->rpDescForSwapchain);
+
     delete wd->rpDescForSwapchain;
     wd->rpDescForSwapchain = nullptr;
     delete wd->swapchain;
