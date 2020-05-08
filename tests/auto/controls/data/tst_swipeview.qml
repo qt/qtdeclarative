@@ -224,7 +224,7 @@ TestCase {
         compare(control.itemAt(3).text, "2")
         compare(control.itemAt(4).text, "5")
 
-        control.removeItem(control.count - 1)
+        control.removeItem(control.itemAt(control.count - 1))
         compare(control.count, 4)
         compare(control.currentIndex, 3)
         compare(control.currentItem.text, "2")
@@ -233,7 +233,7 @@ TestCase {
         compare(control.itemAt(2).text, "3")
         compare(control.itemAt(3).text, "2")
 
-        control.removeItem(0)
+        control.removeItem(control.itemAt(0))
         compare(control.count, 3)
         compare(control.currentIndex, 2)
         compare(control.currentItem.text, "2")
@@ -241,7 +241,7 @@ TestCase {
         compare(control.itemAt(1).text, "3")
         compare(control.itemAt(2).text, "2")
 
-        control.removeItem(1)
+        control.removeItem(control.itemAt(1))
         compare(control.count, 2)
         compare(control.currentIndex, 1)
         compare(control.currentItem.text, "2")
@@ -250,14 +250,14 @@ TestCase {
 
         currentItemChangedSpy.clear()
 
-        control.removeItem(1)
+        control.removeItem(control.itemAt(1))
         compare(control.count, 1)
         compare(control.currentIndex, 0)
         compare(currentItemChangedSpy.count, 1)
         compare(control.currentItem.text, "1")
         compare(control.itemAt(0).text, "1")
 
-        control.removeItem(0)
+        control.removeItem(control.itemAt(0))
         compare(control.count, 0)
         compare(control.currentIndex, -1)
         compare(currentItemChangedSpy.count, 2)
@@ -302,7 +302,7 @@ TestCase {
         verify(compareObjectNames(control.contentData, ["object", "page1", "timer", "page2", "", "page3", "page4"]))
         verify(compareObjectNames(control.contentChildren, ["page4", "page2", "page1", "page3"]))
 
-        control.removeItem(0)
+        control.removeItem(control.itemAt(0))
         verify(compareObjectNames(control.contentData, ["object", "page1", "timer", "page2", "", "page3"]))
         verify(compareObjectNames(control.contentChildren, ["page2", "page1", "page3"]))
     }
@@ -538,7 +538,7 @@ TestCase {
         compare(page.isNextItem, false);
         compare(page.isPreviousItem, false);
 
-        control.removeItem(0);
+        control.removeItem(control.itemAt(0));
         compare(control.count, 0);
         compare(page.parent, null);
         compare(page.view, null);

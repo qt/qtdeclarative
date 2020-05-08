@@ -1609,7 +1609,7 @@ TestCase {
         verify(control)
 
         while (control.count > 0)
-            var itemToRemove = control.removeItem(0)
+            var itemToRemove = control.removeItem(control.itemAt(0))
         // Shouldn't crash.
     }
 
@@ -1940,7 +1940,7 @@ TestCase {
         verify(firstHandle.SplitHandle.pressed)
 
         // Then, remove it by removing the first item.
-        control.removeItem(0)
+        control.removeItem(control.itemAt(0))
         handles = findHandles(control)
         firstHandle = null
         compare(handles.length, 1)

@@ -435,7 +435,7 @@ void QQuickDialogButtonBoxPrivate::removeStandardButtons()
             if (attached) {
                 QQuickDialogButtonBoxAttachedPrivate *p = QQuickDialogButtonBoxAttachedPrivate::get(attached);
                 if (p->standardButton != QPlatformDialogHelper::NoButton) {
-                    q->removeItem(i);
+                    q->removeItem(button);
                     button->deleteLater();
                 }
             }

@@ -551,23 +551,6 @@ void QQuickContainer::moveItem(int from, int to)
 }
 
 /*!
-    \deprecated
-    \qmlmethod void QtQuick.Controls::Container::removeItem(int index)
-
-    Use Container::removeItem(Item) or Container::takeItem(int) instead.
-*/
-void QQuickContainer::removeItem(const QVariant &var)
-{
-    if (var.userType() == QMetaType::Nullptr)
-        return;
-
-    if (QQuickItem *item = var.value<QQuickItem *>())
-        removeItem(item);
-    else
-        takeItem(var.toInt());
-}
-
-/*!
     \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlmethod void QtQuick.Controls::Container::removeItem(Item item)
 

@@ -230,7 +230,7 @@ TestCase {
         compare(control.itemAt(4).text, "5")
         compare(contentChildrenSpy.count, 7)
 
-        control.removeItem(control.count - 1)
+        control.removeItem(control.itemAt(control.count - 1))
         compare(control.count, 4)
         compare(control.currentIndex, 3)
         compare(control.currentItem.text, "2")
@@ -240,7 +240,7 @@ TestCase {
         compare(control.itemAt(3).text, "2")
         compare(contentChildrenSpy.count, 8)
 
-        control.removeItem(0)
+        control.removeItem(control.itemAt(0))
         compare(control.count, 3)
         compare(control.currentIndex, 2)
         compare(control.currentItem.text, "2")
@@ -249,7 +249,7 @@ TestCase {
         compare(control.itemAt(2).text, "2")
         compare(contentChildrenSpy.count, 9)
 
-        control.removeItem(1)
+        control.removeItem(control.itemAt(1))
         compare(control.count, 2)
         compare(control.currentIndex, 1)
         compare(control.currentItem.text, "2")
@@ -257,14 +257,14 @@ TestCase {
         compare(control.itemAt(1).text, "2")
         compare(contentChildrenSpy.count, 10)
 
-        control.removeItem(1)
+        control.removeItem(control.itemAt(1))
         compare(control.count, 1)
         compare(control.currentIndex, 0)
         compare(control.currentItem.text, "1")
         compare(control.itemAt(0).text, "1")
         compare(contentChildrenSpy.count, 11)
 
-        control.removeItem(0)
+        control.removeItem(control.itemAt(0))
         compare(control.count, 0)
         compare(control.currentIndex, -1)
         compare(contentChildrenSpy.count, 12)
@@ -280,15 +280,15 @@ TestCase {
         compare(control.count, 3)
         compare(control.currentIndex, 1)
 
-        control.removeItem(1)
+        control.removeItem(control.itemAt(1))
         compare(control.count, 2)
         compare(control.currentIndex, 0)
 
-        control.removeItem(0)
+        control.removeItem(control.itemAt(0))
         compare(control.count, 1)
         compare(control.currentIndex, 0)
 
-        control.removeItem(0)
+        control.removeItem(control.itemAt(0))
         compare(control.count, 0)
         compare(control.currentIndex, -1)
     }
@@ -338,7 +338,7 @@ TestCase {
         verify(compareObjectNames(control.contentChildren, ["button4", "button2", "button1", "button3"]))
         compare(contentChildrenSpy.count, 4)
 
-        control.removeItem(0)
+        control.removeItem(control.itemAt(0))
         verify(compareObjectNames(control.contentData, ["object", "button1", "timer", "button2", "", "button3"]))
         verify(compareObjectNames(control.contentChildren, ["button2", "button1", "button3"]))
         compare(contentChildrenSpy.count, 5)
@@ -705,7 +705,7 @@ TestCase {
         compare(tab1.index, 3)
 
         // remove from the beginning
-        control.removeItem(0)
+        control.removeItem(control.itemAt(0))
         compare(tab2.index, -1)
         compare(tab2.tabBar, null)
         compare(tab2.position, TabBar.Header)
@@ -715,7 +715,7 @@ TestCase {
         compare(tab1.index, 2)
 
         // remove from the middle
-        control.removeItem(1)
+        control.removeItem(control.itemAt(1))
         compare(tab3.index, -1)
         compare(tab3.tabBar, null)
         compare(tab3.position, TabBar.Header)

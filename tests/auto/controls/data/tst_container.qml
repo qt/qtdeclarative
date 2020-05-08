@@ -212,11 +212,5 @@ TestCase {
         compare(control.count, 1)
         wait(1)
         verify(item3)
-
-        // deprecated removeItem(int) does not destroy
-        control.removeItem(0)
-        compare(control.count, 0)
-        wait(1)
-        verify(item3)
     }
 }
