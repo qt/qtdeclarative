@@ -72,10 +72,6 @@ ApplicationWindow {
         menu.removeItem(null)
     }
 
-    function removeFirstIndex() {
-        menu.removeItem(0)
-    }
-
     Menu {
         id: menu
         MenuItem {

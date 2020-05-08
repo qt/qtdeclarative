@@ -182,11 +182,11 @@ TestCase {
         compare(item1.menu, control)
         compare(item2.menu, control)
 
-        control.removeItem(1)
+        control.removeItem(control.itemAt(1))
         compare(item1.menu, control)
         compare(item2.menu, null)
 
-        control.removeItem(0)
+        control.removeItem(control.itemAt(0))
         compare(item1.menu, null)
         compare(item2.menu, null)
     }

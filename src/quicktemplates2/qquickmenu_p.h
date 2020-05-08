@@ -81,8 +81,7 @@ public:
     Q_INVOKABLE void addItem(QQuickItem *item);
     Q_INVOKABLE void insertItem(int index, QQuickItem *item);
     Q_INVOKABLE void moveItem(int from, int to);
-    Q_INVOKABLE void removeItem(const QVariant &item); // ### Qt 6: remove
-    void removeItem(QQuickItem *item); // ### Qt 6: Q_INVOKABLE
+    Q_INVOKABLE void removeItem(QQuickItem *item);
 
     QVariant contentModel() const;
     QQmlListProperty<QObject> contentData();

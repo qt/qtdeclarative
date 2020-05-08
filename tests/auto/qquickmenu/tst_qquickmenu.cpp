@@ -1013,12 +1013,6 @@ void tst_QQuickMenu::removeTakeItem()
     QCOMPARE(menuItem3->menu(), menu);
     QCoreApplication::sendPostedEvents(menuItem3, QEvent::DeferredDelete);
     QVERIFY(!menuItem3.isNull());
-
-    // deprecated removeItem(int) does not destroy
-    QVERIFY(QMetaObject::invokeMethod(window, "removeFirstIndex"));
-    QVERIFY(!menuItem3->menu());
-    QCoreApplication::sendPostedEvents(menuItem3, QEvent::DeferredDelete);
-    QVERIFY(!menuItem3.isNull());
 }
 
 void tst_QQuickMenu::subMenuMouse_data()
