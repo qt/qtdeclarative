@@ -899,6 +899,7 @@ QQmlInstanceModel *QQuickComboBox::delegateModel() const
 
 
 /*!
+    \readonly
     \qmlproperty bool QtQuick.Controls::ComboBox::pressed
 
     This property holds whether the combo box button is physically pressed.

@@ -66,7 +66,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickComboBox : public QQuickControl
     Q_PROPERTY(int count READ count NOTIFY countChanged FINAL)
     Q_PROPERTY(QVariant model READ model WRITE setModel NOTIFY modelChanged FINAL)
     Q_PROPERTY(QQmlInstanceModel *delegateModel READ delegateModel NOTIFY delegateModelChanged FINAL)
-    Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL) // ### Qt 6: should not be writable
+    Q_PROPERTY(bool pressed READ isPressed NOTIFY pressedChanged FINAL)
     Q_PROPERTY(int highlightedIndex READ highlightedIndex NOTIFY highlightedIndexChanged FINAL)
     Q_PROPERTY(int currentIndex READ currentIndex WRITE setCurrentIndex NOTIFY currentIndexChanged FINAL)
     Q_PROPERTY(QString currentText READ currentText NOTIFY currentTextChanged FINAL)
