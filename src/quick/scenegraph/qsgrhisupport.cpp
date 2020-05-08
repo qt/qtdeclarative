@@ -177,13 +177,16 @@ void QSGRhiSupport::applySettings()
             m_rhiBackend = QRhi::OpenGLES2;
 #endif
             // Vulkan has to be requested explicitly
+
+            // Now that we established our initial choice, we may want to opt
+            // for another backend under certain special circumstances.
+            if (m_enableRhi) // guard because this may do actual graphics calls on some platforms
+                adjustToPlatformQuirks();
         }
     }
 
     if (!m_enableRhi)
         return;
-
-    adjustToPlatformQuirks();
 
     // At this point the RHI backend is fixed, it cannot be changed once we
     // return from this function. This is because things like the QWindow
