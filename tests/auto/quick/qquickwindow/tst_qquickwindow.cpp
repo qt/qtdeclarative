@@ -2531,9 +2531,6 @@ void tst_qquickwindow::testRenderJob()
         window.scheduleRenderJob(new RenderJob(QQuickWindow::NoStage, &completedJobs),
                                  QQuickWindow::NoStage);
         QTRY_COMPARE(RenderJob::deleted, 1);
-        if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-            || (QGuiApplication::platformName() == QLatin1String("minimal")))
-            QEXPECT_FAIL("", "NoStage job fails on offscreen/minimal platforms", Continue);
         QCOMPARE(completedJobs.size(), 1);
 
 #if QT_CONFIG(opengl)
