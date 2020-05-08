@@ -464,7 +464,7 @@ function(qt6_qml_type_registration target)
         endif()
     endif()
 
-    cmake_parse_arguments(args "COPY_OVER_INSTALL" "INSTALL_DIR" "" ${ARGN})
+    cmake_parse_arguments(arg "COPY_OVER_INSTALL" "INSTALL_DIR" "" ${ARGN})
 
     set(meta_types_args)
     if (QT_BUILDING_QT AND NOT QT_WILL_INSTALL)
