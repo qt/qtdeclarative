@@ -1164,7 +1164,8 @@ void tst_qquickimage::hugeImages()
     QQuickView view;
     view.setSource(testFileUrl("hugeImages.qml"));
     view.setGeometry(0, 0, 200, 200);
-    view.create();
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
 
     QImage contents = view.grabWindow();
 
