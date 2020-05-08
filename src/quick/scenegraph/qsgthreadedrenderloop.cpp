@@ -1413,7 +1413,7 @@ bool QSGThreadedRenderLoop::eventFilter(QObject *watched, QEvent *event)
             QQuickWindow *window = qobject_cast<QQuickWindow *>(watched);
             if (window) {
                 Window *w = windowFor(m_windows, window);
-                if (w) {
+                if (w && w->thread->isRunning()) {
                     w->thread->mutex.lock();
                     w->thread->postEvent(new WMReleaseSwapchainEvent(window));
                     w->thread->waitCondition.wait(&w->thread->mutex);
