@@ -14,10 +14,10 @@ qtConfig(opengl(es1|es2)?) {
         qquickanimatedsprite \
         qquickframebufferobject \
         qquickopenglinfo \
-        qquickspritesequence \
-        qquickshadereffect
-
+        qquickspritesequence
         qtHaveModule(opengl): QUICKTESTS += qquickrendercontrol
+
+# qquickshadereffect test is disabled for now, re-enable when ported to Qt 6
 }
 
 !cross_compile: PRIVATETESTS += examples
