@@ -183,7 +183,7 @@ void tst_qquickimage::imageSource_data()
         << false << true << "<Unknown File>:2:1: QML Image: Cannot open: " + testFileUrl("no-such-file").toString();
     // Test that texture file is preferred over image file, when supported.
     // Since pattern.pkm has different size than pattern.png, these tests verify that the right file has been loaded
-    if (graphicsApi == QSGRendererInterface::OpenGL) {
+    if (graphicsApi != QSGRendererInterface::Software) {
         QTest::newRow("extless prefer-tex") << testFileUrl("pattern").toString() << 64.0 << 64.0 << false << false << true << "";
         QTest::newRow("extless prefer-tex async") << testFileUrl("pattern").toString() << 64.0 << 64.0 << false << true << true << "";
     } else {
