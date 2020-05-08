@@ -606,7 +606,7 @@ QSGNode *QQuickRectangle::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData 
                 // QSGInternalRectangleNode doesn't support stops in the wrong order,
                 // so we need to manually reverse them here.
                 QGradientStops reverseStops;
-                for (auto it = stops.rbegin(); it != stops.rend(); ++it) {
+                for (auto it = stops.crbegin(); it != stops.crend(); ++it) {
                     auto stop = *it;
                     stop.first = 1 - stop.first;
                     reverseStops.append(stop);
