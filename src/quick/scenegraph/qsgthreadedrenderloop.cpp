@@ -793,12 +793,16 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
             && !(pendingUpdate & RepaintRequest) // may have been set in sync()
             && sgrc->isValid()
             && !grabRequested
-            && (gl || (rhi && !rhi->isRecordingFrame())))
+            && (gl || rhi))
     {
         qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- no changes, render aborted");
+        if (rhi && rhi->isRecordingFrame())
+            rhi->endFrame(cd->swapchain, QRhi::SkipPresent);
+
         int waitTime = vsyncDelta - (int) waitTimer.elapsed();
         if (waitTime > 0)
             msleep(waitTime);
+
         return;
     }
 
