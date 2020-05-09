@@ -1808,7 +1808,7 @@ void QQuickFlickable::geometryChange(const QRectF &newGeometry, const QRectF &ol
     if (newGeometry.width() != oldGeometry.width()) {
         changed = true; // we must update visualArea.widthRatio
         if (d->hData.viewSize < 0)
-            d->contentItem->setWidth(width());
+            d->contentItem->setWidth(width() - d->hData.startMargin - d->hData.endMargin);
         // Make sure that we're entirely in view.
         if (!d->pressed && !d->hData.moving && !d->vData.moving) {
             d->fixupMode = QQuickFlickablePrivate::Immediate;
@@ -1818,7 +1818,7 @@ void QQuickFlickable::geometryChange(const QRectF &newGeometry, const QRectF &ol
     if (newGeometry.height() != oldGeometry.height()) {
         changed = true; // we must update visualArea.heightRatio
         if (d->vData.viewSize < 0)
-            d->contentItem->setHeight(height());
+            d->contentItem->setHeight(height() - d->vData.startMargin - d->vData.endMargin);
         // Make sure that we're entirely in view.
         if (!d->pressed && !d->hData.moving && !d->vData.moving) {
             d->fixupMode = QQuickFlickablePrivate::Immediate;
@@ -2079,7 +2079,7 @@ void QQuickFlickable::setContentWidth(qreal w)
         return;
     d->hData.viewSize = w;
     if (w < 0)
-        d->contentItem->setWidth(width());
+        d->contentItem->setWidth(width() - d->hData.startMargin - d->hData.endMargin);
     else
         d->contentItem->setWidth(w);
     d->hData.markExtentsDirty();
@@ -2108,7 +2108,7 @@ void QQuickFlickable::setContentHeight(qreal h)
         return;
     d->vData.viewSize = h;
     if (h < 0)
-        d->contentItem->setHeight(height());
+        d->contentItem->setHeight(height() - d->vData.startMargin - d->vData.endMargin);
     else
         d->contentItem->setHeight(h);
     d->vData.markExtentsDirty();
