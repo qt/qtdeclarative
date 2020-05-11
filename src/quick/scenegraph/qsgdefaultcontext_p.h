@@ -80,8 +80,7 @@ public:
     QSGSpriteNode *createSpriteNode() override;
 #endif
     QSGGuiThreadShaderEffectManager *createGuiThreadShaderEffectManager() override;
-    QSGShaderEffectNode *createShaderEffectNode(QSGRenderContext *renderContext,
-                                                QSGGuiThreadShaderEffectManager *mgr) override;
+    QSGShaderEffectNode *createShaderEffectNode(QSGRenderContext *renderContext) override;
 
     void setDistanceFieldEnabled(bool enabled);
     bool isDistanceFieldEnabled() const;

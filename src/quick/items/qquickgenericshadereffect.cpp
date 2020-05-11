@@ -269,12 +269,14 @@ QSGNode *QQuickGenericShaderEffect::handleUpdatePaintNode(QSGNode *oldNode, QQui
 
     if (!node) {
         QSGRenderContext *rc = QQuickWindowPrivate::get(m_item->window())->context;
-        node = rc->sceneGraphContext()->createShaderEffectNode(rc, mgr);
+        node = rc->sceneGraphContext()->createShaderEffectNode(rc);
         if (!node) {
             qWarning("No shader effect node");
             return nullptr;
         }
         m_dirty = QSGShaderEffectNode::DirtyShaderAll;
+        connect(node, &QSGShaderEffectNode::textureChanged,
+                this, &QQuickGenericShaderEffect::markGeometryDirtyAndUpdateIfSupportsAtlas);
     }
 
     QSGShaderEffectNode::SyncData sd;
@@ -369,7 +371,6 @@ QSGGuiThreadShaderEffectManager *QQuickGenericShaderEffect::shaderEffectManager(
             if (m_mgr) {
                 connect(m_mgr, SIGNAL(logAndStatusChanged()), m_item, SIGNAL(logChanged()));
                 connect(m_mgr, SIGNAL(logAndStatusChanged()), m_item, SIGNAL(statusChanged()));
-                connect(m_mgr, SIGNAL(textureChanged()), this, SLOT(markGeometryDirtyAndUpdateIfSupportsAtlas()));
                 connect(m_mgr, &QSGGuiThreadShaderEffectManager::shaderCodePrepared, this, &QQuickGenericShaderEffect::shaderCodePrepared);
             }
         }

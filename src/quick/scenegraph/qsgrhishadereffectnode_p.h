@@ -59,7 +59,6 @@ QT_BEGIN_NAMESPACE
 class QSGDefaultRenderContext;
 class QSGPlainTexture;
 class QSGRhiShaderEffectNode;
-class QSGRhiGuiThreadShaderEffectManager;
 class QFileSelector;
 
 class QSGRhiShaderLinker
@@ -121,12 +120,12 @@ public:
     QSGPlainTexture *m_dummyTexture = nullptr;
 };
 
-class QSGRhiShaderEffectNode : public QObject, public QSGShaderEffectNode
+class QSGRhiShaderEffectNode : public QSGShaderEffectNode
 {
     Q_OBJECT
 
 public:
-    QSGRhiShaderEffectNode(QSGDefaultRenderContext *rc, QSGRhiGuiThreadShaderEffectManager *mgr);
+    QSGRhiShaderEffectNode(QSGDefaultRenderContext *rc);
 
     QRectF updateNormalizedTextureSubRect(bool supportsAtlasTextures) override;
     void syncMaterial(SyncData *syncData) override;
@@ -140,7 +139,6 @@ private Q_SLOTS:
 
 private:
     QSGDefaultRenderContext *m_rc;
-    QSGRhiGuiThreadShaderEffectManager *m_mgr;
     QSGRhiShaderEffectMaterial m_material;
 };
 

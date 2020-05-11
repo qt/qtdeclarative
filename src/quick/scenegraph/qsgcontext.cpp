@@ -284,7 +284,7 @@ QSGGuiThreadShaderEffectManager *QSGContext::createGuiThreadShaderEffectManager(
     valid as long as the backend does not claim SupportsShaderEffectNode or
     ignoring ShaderEffect elements is acceptable.
  */
-QSGShaderEffectNode *QSGContext::createShaderEffectNode(QSGRenderContext *, QSGGuiThreadShaderEffectManager *)
+QSGShaderEffectNode *QSGContext::createShaderEffectNode(QSGRenderContext *)
 {
     return nullptr;
 }

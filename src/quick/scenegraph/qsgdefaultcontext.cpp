@@ -297,13 +297,10 @@ QSGGuiThreadShaderEffectManager *QSGDefaultContext::createGuiThreadShaderEffectM
     return nullptr;
 }
 
-QSGShaderEffectNode *QSGDefaultContext::createShaderEffectNode(QSGRenderContext *renderContext,
-                                                               QSGGuiThreadShaderEffectManager *mgr)
+QSGShaderEffectNode *QSGDefaultContext::createShaderEffectNode(QSGRenderContext *renderContext)
 {
-    if (QSGRhiSupport::instance()->isRhiEnabled()) {
-        return new QSGRhiShaderEffectNode(static_cast<QSGDefaultRenderContext *>(renderContext),
-                                          static_cast<QSGRhiGuiThreadShaderEffectManager *>(mgr));
-    }
+    if (QSGRhiSupport::instance()->isRhiEnabled())
+        return new QSGRhiShaderEffectNode(static_cast<QSGDefaultRenderContext *>(renderContext));
 
     return nullptr;
 }

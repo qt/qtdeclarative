@@ -299,7 +299,6 @@ public:
 
 Q_SIGNALS:
     void shaderCodePrepared(bool ok, ShaderInfo::Type typeHint, const QByteArray &src, ShaderInfo *result);
-    void textureChanged();
     void logAndStatusChanged();
 };
 
@@ -307,8 +306,10 @@ Q_SIGNALS:
 Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug debug, const QSGGuiThreadShaderEffectManager::ShaderInfo::Variable &v);
 #endif
 
-class Q_QUICK_PRIVATE_EXPORT QSGShaderEffectNode : public QSGVisitableNode
+class Q_QUICK_PRIVATE_EXPORT QSGShaderEffectNode : public QObject, public QSGVisitableNode
 {
+    Q_OBJECT
+
 public:
     enum DirtyShaderFlag {
         DirtyShaders = 0x01,
@@ -355,12 +356,14 @@ public:
     };
 
     // Each ShaderEffect item has one node (render thread) and one manager (gui thread).
-    QSGShaderEffectNode(QSGGuiThreadShaderEffectManager *) { }
 
     virtual QRectF updateNormalizedTextureSubRect(bool supportsAtlasTextures) = 0;
     virtual void syncMaterial(SyncData *syncData) = 0;
 
     void accept(QSGNodeVisitorEx *visitor) override { if (visitor->visit(this)) visitor->visitChildren(this); visitor->endVisit(this); }
+
+Q_SIGNALS:
+    void textureChanged();
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QSGShaderEffectNode::DirtyShaderFlags)

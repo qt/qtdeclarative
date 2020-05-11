@@ -568,10 +568,8 @@ void QSGRhiShaderEffectMaterial::updateTextureProviders(bool layoutChange)
     }
 }
 
-QSGRhiShaderEffectNode::QSGRhiShaderEffectNode(QSGDefaultRenderContext *rc, QSGRhiGuiThreadShaderEffectManager *mgr)
-    : QSGShaderEffectNode(mgr),
-      m_rc(rc),
-      m_mgr(mgr),
+QSGRhiShaderEffectNode::QSGRhiShaderEffectNode(QSGDefaultRenderContext *rc)
+    : m_rc(rc),
       m_material(this)
 {
     setFlag(UsePreprocess, true);
@@ -749,7 +747,7 @@ void QSGRhiShaderEffectNode::syncMaterial(SyncData *syncData)
 void QSGRhiShaderEffectNode::handleTextureChange()
 {
     markDirty(QSGNode::DirtyMaterial);
-    emit m_mgr->textureChanged();
+    emit textureChanged();
 }
 
 void QSGRhiShaderEffectNode::handleTextureProviderDestroyed(QObject *object)

@@ -128,8 +128,7 @@ public:
     virtual QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode) = 0;
     virtual QSGLayer *createLayer(QSGRenderContext *renderContext) = 0;
     virtual QSGGuiThreadShaderEffectManager *createGuiThreadShaderEffectManager();
-    virtual QSGShaderEffectNode *createShaderEffectNode(QSGRenderContext *renderContext,
-                                                        QSGGuiThreadShaderEffectManager *mgr);
+    virtual QSGShaderEffectNode *createShaderEffectNode(QSGRenderContext *renderContext);
 #if QT_CONFIG(quick_sprite)
     virtual QSGSpriteNode *createSpriteNode() = 0;
 #endif
