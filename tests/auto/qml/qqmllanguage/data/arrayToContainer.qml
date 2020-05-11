@@ -6,4 +6,5 @@ TestItem {
     property var myset
     positions: vector
     barrays: myset
+    convertibles: ["hello", "world"]
 }

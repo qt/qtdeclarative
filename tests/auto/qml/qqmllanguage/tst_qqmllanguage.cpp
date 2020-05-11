@@ -5699,23 +5699,47 @@ void tst_qqmllanguage::inlineComponentDuplicateNameError()
     QCOMPARE(component.errorString(), message);
 }
 
+struct QJSValueConvertible {
+
+    Q_GADGET
+
+public:
+    QString msg;
+};
+
+bool operator==(const QJSValueConvertible &lhs, const QJSValueConvertible &rhs) {
+    return lhs.msg == rhs.msg;
+}
+
 class TestItem : public QObject
 {
     Q_OBJECT
     Q_PROPERTY( QVector<QPointF> positions MEMBER m_points  )
     Q_PROPERTY( QSet<QByteArray> barrays MEMBER m_barrays  )
+    Q_PROPERTY( QVector<QJSValueConvertible> convertibles MEMBER m_convertibles)
 
 public:
     TestItem() = default;
     QVector< QPointF > m_points;
     QSet<QByteArray> m_barrays;
+    QVector<QJSValueConvertible> m_convertibles;
 };
 
 
 Q_DECLARE_METATYPE(QVector<QPointF>);
 Q_DECLARE_METATYPE(QSet<QByteArray>);
+Q_DECLARE_METATYPE(QJSValueConvertible);
+Q_DECLARE_METATYPE(QVector<QJSValueConvertible>);
+
 void tst_qqmllanguage::arrayToContainer()
 {
+    QMetaType::registerConverter< QJSValue, QJSValueConvertible >(
+
+        [](const QJSValue& value)
+        {
+            return QJSValueConvertible{value.toString()};
+        }
+    );
     QQmlEngine engine;
     qmlRegisterType<TestItem>("qt.test", 1, 0, "TestItem");
     QVector<QPointF> points { QPointF (2.0, 3.0) };
@@ -5728,6 +5752,8 @@ void tst_qqmllanguage::arrayToContainer()
     QCOMPARE(root->m_points.at(0), QPointF (2.0, 3.0) );
     QVERIFY(root->m_barrays.contains("hello"));
     QVERIFY(root->m_barrays.contains("world"));
+    QCOMPARE(root->m_convertibles.at(0).msg, QLatin1String("hello"));
+    QCOMPARE(root->m_convertibles.at(1).msg, QLatin1String("world"));
 }
 
 class EnumTester : public QObject

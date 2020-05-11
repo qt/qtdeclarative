@@ -1526,7 +1526,18 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
                 QV4::ScopedValue arrayValue(scope);
                 for (qint64 i = 0; i < length; ++i) {
                     arrayValue = a->get(i);
-                    QVariant asVariant = toVariant(e, arrayValue, retnAsIterable._metaType_id, false, visitedObjects);
+                    QVariant asVariant;
+                    if (QMetaType::hasRegisteredConverterFunction(qMetaTypeId<QJSValue>(), retnAsIterable._metaType_id)) {
+                        // before attempting a conversion from the concrete types,
+                        // check if there exists a conversion from QJSValue -> out type
+                        // prefer that one for compatibility reasons
+                        asVariant = QVariant::fromValue(QJSValue(scope.engine, arrayValue->asReturnedValue()));
+                        if (asVariant.convert(retnAsIterable._metaType_id)) {
+                            retnAsIterable.append(asVariant.constData());
+                            continue;
+                        }
+                    }
+                    asVariant = toVariant(e, arrayValue, retnAsIterable._metaType_id, false, visitedObjects);
                     auto originalType = asVariant.userType();
                     bool couldConvert = asVariant.convert(retnAsIterable._metaType_id);
                     if (!couldConvert) {
