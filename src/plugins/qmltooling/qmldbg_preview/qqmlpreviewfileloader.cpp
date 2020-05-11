@@ -54,6 +54,7 @@ QQmlPreviewFileLoader::QQmlPreviewFileLoader(QQmlPreviewServiceImpl *service) : 
     m_blacklist.blacklist(":/qt-project.org");
     m_blacklist.blacklist(":/QtQuick/Controls/Styles");
     m_blacklist.blacklist(":/ExtrasImports/QtQuick/Controls/Styles");
+    m_blacklist.blacklist(":/qgradient");
 
     // Target specific configuration should not replaced with files from the host.
     m_blacklist.blacklist("/etc");

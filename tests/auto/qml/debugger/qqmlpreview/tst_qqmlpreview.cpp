@@ -122,6 +122,7 @@ void checkFiles(const QStringList &files)
 {
     QVERIFY(!files.contains("/etc/localtime"));
     QVERIFY(!files.contains("/etc/timezome"));
+    QVERIFY(!files.contains(":/qgradient/webgradients.binaryjson"));
 }
 
 void tst_QQmlPreview::cleanup()
