@@ -11,7 +11,6 @@ qt_add_qml_module(qtquickcontrols2imaginestyleplugin
     CLASSNAME QtQuickControls2ImagineStylePlugin
     DEPENDENCIES
         QtQuick.Controls/2.5
-        QtGraphicalEffects/1.0
     SKIP_TYPE_REGISTRATION
     SOURCES
         qquickimageselector.cpp qquickimageselector_p.h
@@ -50,6 +49,9 @@ endforeach()
 set(qmake_qtquickcontrols2imaginestyle_resource_files
     ${resource_glob_0}
     ${resource_glob_1}
+    "shaders/+glslcore/OpacityMask.frag"
+    "shaders/+qsb/OpacityMask.frag"
+    "shaders/OpacityMask.frag"
 )
 
 qt_add_resource(qtquickcontrols2imaginestyleplugin "qmake_qtquickcontrols2imaginestyle"
@@ -87,6 +89,7 @@ set(qml_files
     "Menu.qml"
     "MenuItem.qml"
     "MenuSeparator.qml"
+    "OpacityMask.qml"
     "PageIndicator.qml"
     "Page.qml"
     "Pane.qml"
@@ -172,6 +175,9 @@ set_source_files_properties(MenuItem.qml PROPERTIES
     QT_QML_SKIP_QMLDIR_ENTRY TRUE
 )
 set_source_files_properties(MenuSeparator.qml PROPERTIES
+    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+)
+set_source_files_properties(OpacityMask.qml PROPERTIES
     QT_QML_SKIP_QMLDIR_ENTRY TRUE
 )
 set_source_files_properties(PageIndicator.qml PROPERTIES

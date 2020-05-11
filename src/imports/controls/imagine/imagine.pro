@@ -21,7 +21,10 @@ SOURCES += \
 qtquickcontrols2imaginestyle.prefix = qt-project.org/imports/QtQuick/Controls.2/Imagine
 qtquickcontrols2imaginestyle.files += \
     $$files($$PWD/images/*.png) \
-    $$files($$PWD/images/*.webp)
+    $$files($$PWD/images/*.webp) \
+    $$files($$PWD/shaders/OpacityMask.frag) \
+    $$files($$PWD/shaders/+glslcore/OpacityMask.frag) \
+    $$files($$PWD/shaders/+qsb/OpacityMask.frag)
 RESOURCES += qtquickcontrols2imaginestyle
 
 CONFIG += no_cxx_module install_qml_files builtin_resources qtquickcompiler

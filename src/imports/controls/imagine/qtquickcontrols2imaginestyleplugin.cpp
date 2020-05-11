@@ -77,6 +77,9 @@ void QtQuickControls2ImagineStylePlugin::registerTypes(const char *uri)
     qmlRegisterType<QQuickImageSelector>(import, 2, 3, "ImageSelector");
     qmlRegisterType<QQuickNinePatchImage>(import, 2, 3, "NinePatchImage");
     qmlRegisterType<QQuickNinePatchImageSelector>(import, 2, 3, "NinePatchImageSelector");
+
+    // Qt 6.0, import version may need to be updated.
+    qmlRegisterType(resolvedUrl(QStringLiteral("OpacityMask.qml")), import, 2, 0, "OpacityMask");
 }
 
 QString QtQuickControls2ImagineStylePlugin::name() const

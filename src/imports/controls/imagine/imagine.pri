@@ -18,6 +18,7 @@ QML_FILES += \
     $$PWD/Menu.qml \
     $$PWD/MenuItem.qml \
     $$PWD/MenuSeparator.qml \
+    $$PWD/OpacityMask.qml \
     $$PWD/PageIndicator.qml \
     $$PWD/Page.qml \
     $$PWD/Pane.qml \
