@@ -10,6 +10,7 @@
         <file>shaders/gradient3.frag</file>
         <file>shaders/gradient4.frag</file>
         <file>shaders/gradient5.frag</file>
+        <file>shaders/property.frag</file>
         <file>shaders/shadow.frag</file>
         <file>shaders/stencil.frag</file>
         <file>shaders/wave.vert</file>
@@ -23,6 +24,7 @@
         <file>shaders/+qsb/gradient3.frag</file>
         <file>shaders/+qsb/gradient4.frag</file>
         <file>shaders/+qsb/gradient5.frag</file>
+        <file>shaders/+qsb/property.frag</file>
         <file>shaders/+qsb/shadow.frag</file>
         <file>shaders/+qsb/stencil.frag</file>
         <file>shaders/+qsb/wave.vert</file>
