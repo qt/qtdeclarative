@@ -406,13 +406,13 @@ void QQuickComboBoxPrivate::createdItem(int index, QObject *object)
     }
 
     if (index == currentIndex && !q->isEditable())
-        updateCurrentText();
+        updateCurrentTextAndValue();
 }
 
 void QQuickComboBoxPrivate::modelUpdated()
 {
     if (!extra.isAllocated() || !extra->accepting)
-        updateCurrentText();
+        updateCurrentTextAndValue();
 }
 
 void QQuickComboBoxPrivate::countChanged()
@@ -870,11 +870,11 @@ void QQuickComboBox::setModel(const QVariant& m)
 
     if (QAbstractItemModel* aim = qvariant_cast<QAbstractItemModel *>(d->model)) {
         QObjectPrivate::disconnect(aim, &QAbstractItemModel::dataChanged,
-            d, QOverload<>::of(&QQuickComboBoxPrivate::updateCurrentText));
+            d, QOverload<>::of(&QQuickComboBoxPrivate::updateCurrentTextAndValue));
     }
     if (QAbstractItemModel* aim = qvariant_cast<QAbstractItemModel *>(model)) {
         QObjectPrivate::connect(aim, &QAbstractItemModel::dataChanged,
-            d, QOverload<>::of(&QQuickComboBoxPrivate::updateCurrentText));
+            d, QOverload<>::of(&QQuickComboBoxPrivate::updateCurrentTextAndValue));
     }
 
     d->model = model;
@@ -882,7 +882,7 @@ void QQuickComboBox::setModel(const QVariant& m)
     emit countChanged();
     if (isComponentComplete()) {
         setCurrentIndex(count() > 0 ? 0 : -1);
-        d->updateCurrentText();
+        d->updateCurrentTextAndValue();
     }
     emit modelChanged();
 }
@@ -1874,7 +1874,7 @@ bool QQuickComboBox::event(QEvent *e)
 {
     Q_D(QQuickComboBox);
     if (e->type() == QEvent::LanguageChange)
-        d->updateCurrentText();
+        d->updateCurrentTextAndValue();
     return QQuickControl::event(e);
 }
 
