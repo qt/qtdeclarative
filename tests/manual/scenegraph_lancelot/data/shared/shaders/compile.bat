@@ -1,6 +1,7 @@
 qsb -b --glsl "150,120,100 es" --hlsl 50 --msl 12 -o +qsb/wave.vert wave_rhi.vert
 
 qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -o +qsb/basic.frag basic_rhi.frag
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -o +qsb/basic_alpha.frag basic_alpha_rhi.frag
 qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -o +qsb/cmyk.frag cmyk_rhi.frag
 qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -o +qsb/culling.frag culling_rhi.frag
 qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -o +qsb/edge.frag edge_rhi.frag
