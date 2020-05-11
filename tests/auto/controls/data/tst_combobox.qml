@@ -296,11 +296,29 @@ TestCase {
         ListElement { name: "Banana"; color: "yellow" }
     }
 
+    Component {
+        id: fruitModelComponent
+        ListModel {
+            ListElement { name: "Apple"; color: "red" }
+            ListElement { name: "Orange"; color: "orange" }
+            ListElement { name: "Banana"; color: "yellow" }
+        }
+    }
+
     property var fruitarray: [
         { name: "Apple", color: "red" },
         { name: "Orange", color: "orange" },
         { name: "Banana", color: "yellow" }
     ]
+
+    Component {
+        id: birdModelComponent
+        ListModel {
+            ListElement { name: "Galah"; color: "pink" }
+            ListElement { name: "Kookaburra"; color: "brown" }
+            ListElement { name: "Magpie"; color: "black" }
+        }
+    }
 
     function test_textRole_data() {
         return [
@@ -447,6 +465,37 @@ TestCase {
         compare(control.indexOfValue(data.tag), data.expectedIndex)
     }
 
+    function test_currentValueAfterModelChanged() {
+        let fruitModel = createTemporaryObject(fruitModelComponent, testCase)
+        verify(fruitModel)
+
+        let control = createTemporaryObject(comboBox, testCase,
+            { model: fruitModel, textRole: "name", valueRole: "color", currentIndex: 1 })
+        verify(control)
+        compare(control.currentText, "Orange")
+        compare(control.currentValue, "orange")
+
+        // Remove "Apple"; the current item should now be "Banana", so currentValue should be "yellow".
+        fruitModel.remove(0)
+        compare(control.currentText, "Banana")
+        compare(control.currentValue, "yellow")
+    }
+
+    function test_currentValueAfterNewModelSet() {
+        let control = createTemporaryObject(comboBox, testCase,
+            { model: fruitmodel, textRole: "name", valueRole: "color", currentIndex: 0 })
+        verify(control)
+        compare(control.currentText, "Apple")
+        compare(control.currentValue, "red")
+
+        // Swap the model out entirely. Since the currentIndex was 0 and
+        // is reset to 0 when a new model is set, it remains 0.
+        let birdModel = createTemporaryObject(birdModelComponent, testCase)
+        verify(birdModel)
+        control.model = birdModel
+        compare(control.currentText, "Galah")
+        compare(control.currentValue, "pink")
+    }
 
     function test_arrowKeys() {
         var control = createTemporaryObject(comboBox, testCase,
