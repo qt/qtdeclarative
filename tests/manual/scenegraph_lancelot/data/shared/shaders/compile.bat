@@ -4,6 +4,7 @@ qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -o +qsb/basic.frag basic_rhi.frag
 qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -o +qsb/basic_alpha.frag basic_alpha_rhi.frag
 qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -o +qsb/cmyk.frag cmyk_rhi.frag
 qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -o +qsb/culling.frag culling_rhi.frag
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -o +qsb/desaturate.frag desaturate_rhi.frag
 qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -o +qsb/edge.frag edge_rhi.frag
 qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -o +qsb/gradient.frag gradient_rhi.frag
 qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -o +qsb/gradient2.frag gradient2_rhi.frag

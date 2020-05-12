@@ -4,6 +4,7 @@
         <file>shaders/basic_alpha.frag</file>
         <file>shaders/cmyk.frag</file>
         <file>shaders/culling.frag</file>
+        <file>shaders/desaturate.frag</file>
         <file>shaders/edge.frag</file>
         <file>shaders/gradient.frag</file>
         <file>shaders/gradient2.frag</file>
@@ -18,6 +19,7 @@
         <file>shaders/+qsb/basic_alpha.frag</file>
         <file>shaders/+qsb/cmyk.frag</file>
         <file>shaders/+qsb/culling.frag</file>
+        <file>shaders/+qsb/desaturate.frag</file>
         <file>shaders/+qsb/edge.frag</file>
         <file>shaders/+qsb/gradient.frag</file>
         <file>shaders/+qsb/gradient2.frag</file>
