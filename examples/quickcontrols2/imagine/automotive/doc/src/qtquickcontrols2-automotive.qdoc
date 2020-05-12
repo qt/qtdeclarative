@@ -36,6 +36,8 @@
     This example demonstrates how custom Imagine style assets can be used to
     style an automotive user interface.
 
+    \note This example requires \l {Qt Graphical Effects}.
+
     \image qtquickcontrols2-automotive.png
 
     \include examples-run.qdocinc

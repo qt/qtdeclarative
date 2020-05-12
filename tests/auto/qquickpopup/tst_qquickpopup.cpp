@@ -1266,6 +1266,9 @@ void tst_QQuickPopup::countChanged()
 // QTBUG-73243
 void tst_QQuickPopup::toolTipCrashOnClose()
 {
+    if (!canImportModule("import QtGraphicalEffects 1.15; DropShadow {}"))
+        QSKIP("Test requires QtGraphicalEffects");
+
     QQuickApplicationHelper helper(this, "toolTipCrashOnClose.qml");
 
     QQuickWindow *window = helper.window;

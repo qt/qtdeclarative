@@ -72,6 +72,8 @@ public:
     static QByteArray msgComponentError(const QQmlComponent &,
                                         const QQmlEngine *engine = 0);
 
+    bool canImportModule(const QString &importTestQmlSource) const;
+
 public slots:
     virtual void initTestCase();
 

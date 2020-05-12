@@ -763,6 +763,9 @@ void tst_QQuickApplicationWindow::focusAfterPopupClosed()
 
 void tst_QQuickApplicationWindow::clearFocusOnDestruction()
 {
+    if (!canImportModule("import QtGraphicalEffects 1.15; DropShadow {}"))
+        QSKIP("Test requires QtGraphicalEffects");
+
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.loadUrl(testFileUrl("clearfocusondestruction.qml"));

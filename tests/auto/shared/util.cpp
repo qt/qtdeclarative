@@ -108,6 +108,14 @@ QByteArray QQmlDataTest::msgComponentError(const QQmlComponent &c,
     return result.toLocal8Bit();
 }
 
+bool QQmlDataTest::canImportModule(const QString &importTestQmlSource) const
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(importTestQmlSource.toLatin1(), QUrl());
+    return !component.isError();
+}
+
 Q_GLOBAL_STATIC(QMutex, qQmlTestMessageHandlerMutex)
 
 QQmlTestMessageHandler *QQmlTestMessageHandler::m_instance = 0;
