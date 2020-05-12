@@ -1528,8 +1528,9 @@ bool QQuickWindow::isPersistentOpenGLContext() const
 
 
 /*!
-    Sets whether the scene graph nodes and resources can be released
-    to \a persistent.  The default value is true.
+    Sets whether the scene graph nodes and resources are \a persistent.
+    Persistent means the nodes and resources cannot be released.
+    The default value is \c true.
 
     The scene graph nodes and resources can be released to free up
     graphics resources when the window is obscured, hidden or not
