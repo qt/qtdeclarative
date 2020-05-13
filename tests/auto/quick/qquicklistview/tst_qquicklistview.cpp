@@ -4285,26 +4285,24 @@ void tst_QQuickListView::extents_data()
 
     QTest::newRow("Vertical, TopToBottom")
             << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::TopToBottom
-            << QPointF(0, -20) << QPointF(0, 0)
-            << QPointF(0, 20) << QPointF(240, 20)
+            << QPointF(0, -20) << QPointF(0, 0) << QPointF(0, 20) << QPointF(0, 20)
             << QPointF(0, -20) << QPointF(0, -20) << QPointF(0, -20);
 
     QTest::newRow("Vertical, BottomToTop")
             << QQuickListView::Vertical << Qt::LeftToRight << QQuickItemView::BottomToTop
-            << QPointF(0, 0) << QPointF(0, -30)
-            << QPointF(0, 320 - 20) << QPointF(240, 320 - 20)  // content flow is reversed
+            << QPointF(0, 0) << QPointF(0, -30) << QPointF(0, 320 - 20)
+            << QPointF(0, 320 - 20) // content flow is reversed
             << QPointF(0, -30) << QPointF(0, (-30.0 * 3) - 30) << QPointF(0, (-30.0 * 30) - 30);
 
     QTest::newRow("Horizontal, LeftToRight")
             << QQuickListView::Horizontal << Qt::LeftToRight << QQuickItemView::TopToBottom
-            << QPointF(-20, 0) << QPointF(0, 0)
-            << QPointF(20, 0) << QPointF(20, 320)
+            << QPointF(-20, 0) << QPointF(0, 0) << QPointF(20, 0) << QPointF(20, 0)
             << QPointF(-20, 0) << QPointF(-20, 0) << QPointF(-20, 0);
 
     QTest::newRow("Horizontal, RightToLeft")
             << QQuickListView::Horizontal << Qt::RightToLeft << QQuickItemView::TopToBottom
-            << QPointF(0, 0) << QPointF(-30, 0)
-            << QPointF(240 - 20, 0) << QPointF(240 - 20, 320)  // content flow is reversed
+            << QPointF(0, 0) << QPointF(-30, 0) << QPointF(240 - 20, 0)
+            << QPointF(240 - 20, 0) // content flow is reversed
             << QPointF(-30, 0) << QPointF((-240.0 * 3) - 30, 0) << QPointF((-240.0 * 30) - 30, 0);
 }
 
