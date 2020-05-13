@@ -3525,51 +3525,46 @@ void tst_QQuickGridView::extents_data()
 
     QTest::newRow("LeftToRight, LtR, TtB")
             << QQuickGridView::FlowLeftToRight << Qt::LeftToRight << QQuickItemView::TopToBottom
-            << QPointF(0, -20) << QPointF(0, 0)
-            << QPointF(0, 20) << QPointF(240, 20)
+            << QPointF(0, -20) << QPointF(0, 0) << QPointF(0, 20) << QPointF(0, 20)
             << QPointF(0, -20) << QPointF(0, -20);
 
     QTest::newRow("LeftToRight, RtL, TtB")
             << QQuickGridView::FlowLeftToRight << Qt::RightToLeft << QQuickItemView::TopToBottom
-            << QPointF(0, -20) << QPointF(0, 0)
-            << QPointF(0, 20) << QPointF(240, 20)
+            << QPointF(0, -20) << QPointF(0, 0) << QPointF(0, 20) << QPointF(0, 20)
             << QPointF(0, -20) << QPointF(0, -20);
 
     QTest::newRow("LeftToRight, LtR, BtT")
             << QQuickGridView::FlowLeftToRight << Qt::LeftToRight << QQuickItemView::BottomToTop
-            << QPointF(0, 0) << QPointF(0, -30)
-            << QPointF(0, 320 - 20) << QPointF(240, 320 - 20)  // content flow is reversed
+            << QPointF(0, 0) << QPointF(0, -30) << QPointF(0, 320 - 20)
+            << QPointF(0, 320 - 20) // content flow is reversed
             << QPointF(0, -30) << QPointF(0, (-60.0 * 10) - 30);
 
     QTest::newRow("LeftToRight, RtL, BtT")
             << QQuickGridView::FlowLeftToRight << Qt::RightToLeft << QQuickItemView::BottomToTop
-            << QPointF(0, 0) << QPointF(0, -30)
-            << QPointF(0, 320 - 20) << QPointF(240, 320 - 20)  // content flow is reversed
+            << QPointF(0, 0) << QPointF(0, -30) << QPointF(0, 320 - 20)
+            << QPointF(0, 320 - 20) // content flow is reversed
             << QPointF(0, -30) << QPointF(0, (-60.0 * 10) - 30);
-
 
     QTest::newRow("TopToBottom, LtR, TtB")
             << QQuickGridView::FlowTopToBottom << Qt::LeftToRight << QQuickItemView::TopToBottom
-            << QPointF(-20, 0) << QPointF(0, 0)
-            << QPointF(20, 0) << QPointF(20, 320)
+            << QPointF(-20, 0) << QPointF(0, 0) << QPointF(20, 0) << QPointF(20, 0)
             << QPointF(-20, 0) << QPointF(-20, 0);
 
     QTest::newRow("TopToBottom, RtL, TtB")
             << QQuickGridView::FlowTopToBottom << Qt::RightToLeft << QQuickItemView::TopToBottom
-            << QPointF(0, 0) << QPointF(-30, 0)
-            << QPointF(240 - 20, 0) << QPointF(240 - 20, 320)  // content flow is reversed
+            << QPointF(0, 0) << QPointF(-30, 0) << QPointF(240 - 20, 0)
+            << QPointF(240 - 20, 0) // content flow is reversed
             << QPointF(-30, 0) << QPointF((-80.0 * 6) - 30, 0);
 
     QTest::newRow("TopToBottom, LtR, BtT")
             << QQuickGridView::FlowTopToBottom << Qt::LeftToRight << QQuickItemView::BottomToTop
-            << QPointF(-20, -320) << QPointF(0, -320)
-            << QPointF(20, 0) << QPointF(20, 320)
+            << QPointF(-20, -320) << QPointF(0, -320) << QPointF(20, 0) << QPointF(20, 0)
             << QPointF(-20, 0) << QPointF(-20, 0);
 
     QTest::newRow("TopToBottom, RtL, BtT")
             << QQuickGridView::FlowTopToBottom << Qt::RightToLeft << QQuickItemView::BottomToTop
-            << QPointF(0, -320) << QPointF(-30, -320)
-            << QPointF(240 - 20, 0) << QPointF(240 - 20, 320)  // content flow is reversed
+            << QPointF(0, -320) << QPointF(-30, -320) << QPointF(240 - 20, 0)
+            << QPointF(240 - 20, 0) // content flow is reversed
             << QPointF(-30, 0) << QPointF((-80.0 * 6) - 30, 0);
 }
 

@@ -45,6 +45,8 @@ private slots:
     void tapDelegateDuringFlicking();
     void flickDuringFlicking_data();
     void flickDuringFlicking();
+    void maxExtent_data();
+    void maxExtent();
 
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
@@ -809,6 +811,61 @@ void tst_QQuickListView2::wheelSnap_data()
             << QQuickListView::Horizontal << Qt::RightToLeft << QQuickItemView::TopToBottom
             << QQuickItemView::ApplyRange << QPoint(120, 20) << -390.0 << -800.0 << -200.0 << 10.0
             << 210.0;
+}
+
+class FriendlyItemView : public QQuickItemView
+{
+    friend class ItemViewAccessor;
+};
+
+class ItemViewAccessor
+{
+public:
+    ItemViewAccessor(QQuickItemView *itemView) :
+        mItemView(reinterpret_cast<FriendlyItemView*>(itemView))
+    {
+    }
+
+    qreal maxXExtent() const
+    {
+        return mItemView->maxXExtent();
+    }
+
+    qreal maxYExtent() const
+    {
+        return mItemView->maxYExtent();
+    }
+
+private:
+    FriendlyItemView *mItemView = nullptr;
+};
+
+void tst_QQuickListView2::maxExtent_data()
+{
+    QTest::addColumn<QString>("qmlFilePath");
+    QTest::addRow("maxXExtent") << "maxXExtent.qml";
+    QTest::addRow("maxYExtent") << "maxYExtent.qml";
+}
+
+void tst_QQuickListView2::maxExtent()
+{
+    QFETCH(QString, qmlFilePath);
+
+    QScopedPointer<QQuickView> window(createView());
+    QVERIFY(window);
+    window->setSource(testFileUrl(qmlFilePath));
+    QVERIFY2(window->status() == QQuickView::Ready, qPrintable(QDebug::toString(window->errors())));
+    window->resize(640, 480);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *view = window->rootObject()->property("view").value<QQuickListView*>();
+    QVERIFY(view);
+    ItemViewAccessor viewAccessor(view);
+    if (view->orientation() == QQuickListView::Vertical)
+        QCOMPARE(viewAccessor.maxXExtent(), 0);
+    else if (view->orientation() == QQuickListView::Horizontal)
+        QCOMPARE(viewAccessor.maxYExtent(), 0);
 }
 
 QTEST_MAIN(tst_QQuickListView2)
