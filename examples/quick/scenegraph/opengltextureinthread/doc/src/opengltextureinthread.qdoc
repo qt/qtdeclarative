@@ -26,11 +26,11 @@
 ****************************************************************************/
 
 /*!
-    \example scenegraph/textureinthread
+    \example scenegraph/opengltextureinthread
     \title Scene Graph - Rendering FBOs in a thread
     \ingroup qtquickexamples
 
     \brief Shows how to use FramebufferObjects in a thread together with Qt Quick.
 
-    \image textureinthread-example.jpg
+    \image opengltextureinthread-example.jpg
  */

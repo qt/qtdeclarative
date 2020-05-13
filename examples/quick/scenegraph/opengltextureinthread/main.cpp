@@ -63,6 +63,9 @@ int main(int argc, char **argv)
 {
     QGuiApplication app(argc, argv);
 
+    // this example is only compatible with OpenGL
+    QQuickWindow::setSceneGraphBackend(QSGRendererInterface::OpenGLRhi);
+
     if (!QGuiApplicationPrivate::platform_integration->hasCapability(QPlatformIntegration::ThreadedOpenGL)) {
         QQuickView view;
         view.setSource(QUrl("qrc:///scenegraph/textureinthread/error.qml"));

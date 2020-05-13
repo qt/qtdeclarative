@@ -5,7 +5,7 @@ qtConfig(opengl(es1|es2)?) {
             graph \
             fboitem \
             openglunderqml \
-            textureinthread \
+            opengltextureinthread \
             twotextureproviders
 }
 

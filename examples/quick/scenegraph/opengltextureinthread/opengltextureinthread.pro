@@ -16,7 +16,7 @@ SOURCES += ../shared/logorenderer.cpp
 
 RESOURCES += textureinthread.qrc
 
-target.path = $$[QT_INSTALL_EXAMPLES]/quick/scenegraph/textureinthread
+target.path = $$[QT_INSTALL_EXAMPLES]/quick/scenegraph/opengltextureinthread
 INSTALLS += target
 
 OTHER_FILES += \
