@@ -1694,6 +1694,14 @@ TypeAnnotation: T_COLON Type;
     } break;
 ./
 
+
+TypeExpression: Type;
+/.
+    case $rule_number: {
+        sym(1).Expression = new (pool) AST::TypeExpression(sym(1).Type);
+    } break;
+./
+
 TypeAnnotationOpt: TypeAnnotation;
 TypeAnnotationOpt: ;
 /.
@@ -2664,9 +2672,9 @@ RelationalExpression_In: RelationalExpression_In T_IN ShiftExpression;
     } break;
 ./
 
-TypeAssertExpression_In: RelationalExpression_In T_AS Type;
+TypeAssertExpression_In: RelationalExpression_In T_AS TypeExpression;
 /.  case $rule_number: Q_FALLTHROUGH(); ./
-TypeAssertExpression: RelationalExpression T_AS Type;
+TypeAssertExpression: RelationalExpression T_AS TypeExpression;
 /.
     case $rule_number: {
         AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression, QSOperator::As, sym(3).Expression);

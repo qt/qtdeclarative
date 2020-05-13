@@ -141,6 +141,9 @@ public:
     virtual void endVisit(UiRequired *) = 0;
 
     // QQmlJS
+    virtual bool visit(TypeExpression *) = 0;
+    virtual void endVisit(TypeExpression *) = 0;
+
     virtual bool visit(ThisExpression *) = 0;
     virtual void endVisit(ThisExpression *) = 0;
 
@@ -482,6 +485,9 @@ public:
     void endVisit(UiRequired *) override {}
 
     // QQmlJS
+    bool visit(TypeExpression *) override { return true; }
+    void endVisit(TypeExpression *) override {}
+
     bool visit(ThisExpression *) override { return true; }
     void endVisit(ThisExpression *) override {}
 

@@ -421,6 +421,12 @@ void AstDumper::endVisit(UiAnnotation *) { stop("UiAnnotation"); }
 void AstDumper::endVisit(UiAnnotationList *) { stop("UiAnnotationList"); }
 
 // QQmlJS
+bool AstDumper::visit(AST::TypeExpression *el) {
+    start("TypeExpression");
+    return true;
+}
+void AstDumper::endVisit(AST::TypeExpression *) { stop("TypeExpression"); }
+
 bool AstDumper::visit(AST::ThisExpression *el) {
     start(QLatin1String("ThisExpression thisToken=%1")
           .arg(loc(el->thisToken)));

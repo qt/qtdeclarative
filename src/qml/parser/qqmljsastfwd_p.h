@@ -65,6 +65,7 @@ class Visitor;
 class Node;
 class ExpressionNode;
 class Statement;
+class TypeExpression;
 class ThisExpression;
 class IdentifierExpression;
 class NullExpression;

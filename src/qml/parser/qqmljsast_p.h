@@ -217,6 +217,7 @@ public:
         Kind_SwitchStatement,
         Kind_TemplateLiteral,
         Kind_TaggedTemplate,
+        Kind_TypeExpression,
         Kind_ThisExpression,
         Kind_ThrowStatement,
         Kind_TildeExpression,
@@ -502,6 +503,26 @@ public:
     ExpressionNode *expression;
     SourceLocation lparenToken;
     SourceLocation rparenToken;
+};
+
+
+class QML_PARSER_EXPORT TypeExpression : public ExpressionNode
+{
+public:
+    QQMLJS_DECLARE_AST_NODE(TypeExpression)
+    TypeExpression(Type *t) : m_type(t) { kind = K; }
+
+    void accept0(BaseVisitor *visitor) override;
+
+    SourceLocation firstSourceLocation() const override {
+        return m_type->firstSourceLocation();
+    }
+
+    SourceLocation lastSourceLocation() const override {
+        return m_type->lastSourceLocation();
+    }
+
+    Type *m_type;
 };
 
 class QML_PARSER_EXPORT ThisExpression: public LeftHandSideExpression

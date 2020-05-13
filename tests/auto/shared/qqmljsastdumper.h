@@ -146,6 +146,9 @@ public:
     void endVisit(AST::UiAnnotationList *) override;
 
     // QQmlJS
+    bool visit(AST::TypeExpression *) override;
+    void endVisit(AST::TypeExpression *) override;
+
     bool visit(AST::ThisExpression *) override;
     void endVisit(AST::ThisExpression *) override;
 

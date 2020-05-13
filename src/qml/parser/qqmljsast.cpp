@@ -157,6 +157,12 @@ BinaryExpression *BinaryExpression::binaryExpressionCast()
     return this;
 }
 
+void TypeExpression::accept0(BaseVisitor *visitor)
+{
+    visitor->visit(this);
+    visitor->endVisit(this);
+}
+
 Statement *Statement::statementCast()
 {
     return this;

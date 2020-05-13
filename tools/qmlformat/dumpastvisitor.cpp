@@ -490,9 +490,9 @@ QString DumpAstVisitor::parseExpression(ExpressionNode *expression)
         auto* expr = cast<Expression*>(expression);
         return parseExpression(expr->left)+", "+parseExpression(expr->right);
     }
-    case Node::Kind_Type: {
-        auto* type = reinterpret_cast<Type*>(expression);
-        return parseType(type);
+    case Node::Kind_TypeExpression: {
+        auto* type = cast<TypeExpression*>(expression);
+        return parseType(type->m_type);
     }
     case Node::Kind_RegExpLiteral: {
         auto* regexpLiteral = cast<RegExpLiteral*>(expression);
