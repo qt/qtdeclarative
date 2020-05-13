@@ -5932,14 +5932,14 @@ void tst_QQuickGridView::cacheBuffer()
         QVERIFY(findItem<QQuickItem>(gridview, "wrapper", i) == nullptr);
         QQuickItem *item = nullptr;
         while (!item) {
-            bool b = false;
+            std::atomic<bool> b = false;
             controller.incubateWhile(&b);
             item = findItem<QQuickItem>(gridview, "wrapper", i);
         }
     }
 
     {
-        bool b = true;
+        std::atomic<bool> b = true;
         controller.incubateWhile(&b);
     }
 
@@ -5971,14 +5971,14 @@ void tst_QQuickGridView::cacheBuffer()
         QQuickItem *item = nullptr;
         while (!item) {
             qGuiApp->processEvents(); // allow refill to happen
-            bool b = false;
+            std::atomic<bool> b = false;
             controller.incubateWhile(&b);
             item = findItem<QQuickItem>(gridview, "wrapper", i);
         }
     }
 
     {
-        bool b = true;
+        std::atomic<bool> b = true;
         controller.incubateWhile(&b);
     }
 
@@ -5999,7 +5999,7 @@ void tst_QQuickGridView::asynchronous()
 
     QQuickGridView *gridview = nullptr;
     while (!gridview) {
-        bool b = false;
+        std::atomic<bool> b = false;
         controller.incubateWhile(&b);
         gridview = rootObject->findChild<QQuickGridView*>("view");
     }
@@ -6009,14 +6009,14 @@ void tst_QQuickGridView::asynchronous()
         QVERIFY(findItem<QQuickItem>(gridview, "wrapper", i) == nullptr);
         QQuickItem *item = nullptr;
         while (!item) {
-            bool b = false;
+            std::atomic<bool> b = false;
             controller.incubateWhile(&b);
             item = findItem<QQuickItem>(gridview, "wrapper", i);
         }
     }
 
     {
-        bool b = true;
+        std::atomic<bool> b = true;
         controller.incubateWhile(&b);
     }
 

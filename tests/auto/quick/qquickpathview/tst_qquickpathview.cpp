@@ -1841,7 +1841,7 @@ void tst_QQuickPathView::asynchronous()
 
     QQuickPathView *pathview = nullptr;
     while (!pathview) {
-        bool b = false;
+        std::atomic<bool> b = false;
         controller.incubateWhile(&b);
         pathview = rootObject->findChild<QQuickPathView*>("view");
     }
@@ -1851,14 +1851,14 @@ void tst_QQuickPathView::asynchronous()
         QVERIFY(findItem<QQuickItem>(pathview, "wrapper", i) == nullptr);
         QQuickItem *item = nullptr;
         while (!item) {
-            bool b = false;
+            std::atomic<bool> b = false;
             controller.incubateWhile(&b);
             item = findItem<QQuickItem>(pathview, "wrapper", i);
         }
     }
 
     {
-        bool b = true;
+        std::atomic<bool> b = true;
         controller.incubateWhile(&b);
     }
 
@@ -2227,7 +2227,7 @@ void tst_QQuickPathView::cacheItemCount()
         QVERIFY(findItem<QQuickItem>(pathview, "wrapper", cached[i]) == nullptr);
         QQuickItem *item = nullptr;
         while (!item) {
-            bool b = false;
+            std::atomic<bool> b = false;
             controller.incubateWhile(&b);
             item = findItem<QQuickItem>(pathview, "wrapper", cached[i]);
         }
@@ -2235,7 +2235,7 @@ void tst_QQuickPathView::cacheItemCount()
     }
 
     {
-        bool b = true;
+        std::atomic<bool> b = true;
         controller.incubateWhile(&b);
     }
 
@@ -2255,13 +2255,13 @@ void tst_QQuickPathView::cacheItemCount()
     QVERIFY(findItem<QQuickItem>(pathview, "wrapper", 5) == nullptr);
     QQuickItem *item = nullptr;
     while (!item) {
-        bool b = false;
+        std::atomic<bool> b = false;
         controller.incubateWhile(&b);
         item = findItem<QQuickItem>(pathview, "wrapper", 5);
     }
 
     {
-        bool b = true;
+        std::atomic<bool> b = true;
         controller.incubateWhile(&b);
     }
 }

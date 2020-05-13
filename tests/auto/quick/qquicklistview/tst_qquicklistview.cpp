@@ -3204,14 +3204,14 @@ void tst_QQuickListView::cacheBuffer()
         QVERIFY(findItem<QQuickItem>(listview, "wrapper", i) == nullptr);
         QQuickItem *item = nullptr;
         while (!item) {
-            bool b = false;
+            std::atomic<bool> b = false;
             controller.incubateWhile(&b);
             item = findItem<QQuickItem>(listview, "wrapper", i);
         }
     }
 
     {
-        bool b = true;
+        std::atomic<bool> b = true;
         controller.incubateWhile(&b);
     }
 
@@ -3243,14 +3243,14 @@ void tst_QQuickListView::cacheBuffer()
         QQuickItem *item = nullptr;
         while (!item) {
             qGuiApp->processEvents(); // allow refill to happen
-            bool b = false;
+            std::atomic<bool> b = false;
             controller.incubateWhile(&b);
             item = findItem<QQuickItem>(listview, "wrapper", i);
         }
     }
 
     {
-        bool b = true;
+        std::atomic<bool> b = true;
         controller.incubateWhile(&b);
     }
 
@@ -6194,7 +6194,7 @@ void tst_QQuickListView::asynchronous()
 
     QQuickListView *listview = nullptr;
     while (!listview) {
-        bool b = false;
+        std::atomic<bool> b = false;
         controller.incubateWhile(&b);
         listview = rootObject->findChild<QQuickListView*>("view");
     }
@@ -6204,14 +6204,14 @@ void tst_QQuickListView::asynchronous()
         QVERIFY(findItem<QQuickItem>(listview, "wrapper", i) == nullptr);
         QQuickItem *item = nullptr;
         while (!item) {
-            bool b = false;
+            std::atomic<bool> b = false;
             controller.incubateWhile(&b);
             item = findItem<QQuickItem>(listview, "wrapper", i);
         }
     }
 
     {
-        bool b = true;
+        std::atomic<bool> b = true;
         controller.incubateWhile(&b);
     }
 

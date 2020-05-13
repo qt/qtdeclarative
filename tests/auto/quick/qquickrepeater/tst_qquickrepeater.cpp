@@ -717,14 +717,14 @@ void tst_QQuickRepeater::asynchronous()
     QQuickItem *container = findItem<QQuickItem>(rootObject, "container");
     QVERIFY(!container);
     while (!container) {
-        bool b = false;
+        std::atomic<bool> b = false;
         controller.incubateWhile(&b);
         container = findItem<QQuickItem>(rootObject, "container");
     }
 
     QQuickRepeater *repeater = nullptr;
     while (!repeater) {
-        bool b = false;
+        std::atomic<bool> b = false;
         controller.incubateWhile(&b);
         repeater = findItem<QQuickRepeater>(rootObject, "repeater");
     }
@@ -737,14 +737,14 @@ void tst_QQuickRepeater::asynchronous()
         QVERIFY(findItem<QQuickItem>(container, name) == nullptr);
         QQuickItem *item = nullptr;
         while (!item) {
-            bool b = false;
+            std::atomic<bool> b = false;
             controller.incubateWhile(&b);
             item = findItem<QQuickItem>(container, name);
         }
     }
 
     {
-        bool b = true;
+        std::atomic<bool> b = true;
         controller.incubateWhile(&b);
     }
 
