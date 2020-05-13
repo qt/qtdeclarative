@@ -4393,15 +4393,18 @@ QImage QQuickWindow::grabWindow()
         // backends like software can grab regardless of the window state
         if (d->windowManager && (d->windowManager->flags() & QSGRenderLoop::SupportsGrabWithoutExpose))
             return d->windowManager->grab(this);
-    }
 
-    if (!isVisible() && !d->renderControl) {
-        if (d->rhi) {
-            if (d->windowManager)
-                return d->windowManager->grab(this); // ### we may need a full offscreen round when non-exposed?
-            return QImage();
+        if (!isSceneGraphInitialized() && QSGRhiSupport::instance()->isRhiEnabled()) {
+            // We do not have rendering up and running. Forget the render loop,
+            // do a frame completely offscreen and synchronously into a
+            // texture. This can be *very* slow due to all the device/context
+            // and resource initialization but the documentation warns for it,
+            // and is still important for some use cases.
+            Q_ASSERT(!d->rhi);
+            return QSGRhiSupport::instance()->grabOffscreen(this);
         }
 
+        // ### Qt 6 remove
 #if QT_CONFIG(opengl)
         auto openglRenderContext = static_cast<QSGDefaultRenderContext *>(d->context);
         if (!openglRenderContext->openglContext()) {
@@ -4435,6 +4438,10 @@ QImage QQuickWindow::grabWindow()
 #endif
     }
 
+    // The common case: we have an exposed window with an initialized
+    // scenegraph, meaning we can request grabbing via the render loop, or we
+    // are not targeting the window, in which case the request is to be
+    // forwarded to the rendercontrol.
     if (d->renderControl)
         return QQuickRenderControlPrivate::get(d->renderControl)->grab();
     else if (d->windowManager)

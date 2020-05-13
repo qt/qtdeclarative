@@ -774,7 +774,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     if (data.grabOnly) {
         const bool alpha = window->format().alphaBufferSize() > 0 && window->color().alpha() != 255;
         if (cd->swapchain)
-            grabContent = rhiSupport->grabAndBlockInCurrentFrame(rhi, cd->swapchain);
+            grabContent = rhiSupport->grabAndBlockInCurrentFrame(rhi, cd->swapchain->currentFrameCommandBuffer());
         else
             grabContent = qt_gl_read_framebuffer(window->size() * window->effectiveDevicePixelRatio(), alpha, alpha);
         grabContent.setDevicePixelRatio(window->effectiveDevicePixelRatio());

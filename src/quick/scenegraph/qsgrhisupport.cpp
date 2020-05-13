@@ -52,6 +52,7 @@
 #endif
 
 #include <QOperatingSystemVersion>
+#include <QOffscreenSurface>
 
 QT_BEGIN_NAMESPACE
 
@@ -630,16 +631,16 @@ QRhi *QSGRhiSupport::createRhi(QQuickWindow *window, QOffscreenSurface *offscree
     return rhi;
 }
 
-QImage QSGRhiSupport::grabAndBlockInCurrentFrame(QRhi *rhi, QRhiSwapChain *swapchain)
+QImage QSGRhiSupport::grabAndBlockInCurrentFrame(QRhi *rhi, QRhiCommandBuffer *cb, QRhiTexture *src)
 {
     Q_ASSERT(rhi->isRecordingFrame());
 
     QRhiReadbackResult result;
-    QRhiReadbackDescription readbackDesc; // read from swapchain backbuffer
+    QRhiReadbackDescription readbackDesc(src); // null src == read from swapchain backbuffer
     QRhiResourceUpdateBatch *resourceUpdates = rhi->nextResourceUpdateBatch();
     resourceUpdates->readBackTexture(readbackDesc, &result);
 
-    swapchain->currentFrameCommandBuffer()->resourceUpdate(resourceUpdates);
+    cb->resourceUpdate(resourceUpdates);
     rhi->finish(); // make sure the readback has finished, stall the pipeline if needed
 
     // May be RGBA or BGRA. Plus premultiplied alpha.
@@ -662,6 +663,78 @@ QImage QSGRhiSupport::grabAndBlockInCurrentFrame(QRhi *rhi, QRhiSwapChain *swapc
         return img.mirrored();
 
     return img.copy();
+}
+
+QImage QSGRhiSupport::grabOffscreen(QQuickWindow *window)
+{
+    // Set up and then tear down the entire rendering infrastructure. This
+    // function is called on the gui/main thread - but that's alright because
+    // there is no onscreen rendering initialized at this point (so no render
+    // thread for instance).
+
+    QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
+    // It is expected that window is not using QQuickRenderControl, i.e. it is
+    // a normal QQuickWindow that just happens to be not exposed.
+    Q_ASSERT(!wd->renderControl);
+
+    QScopedPointer<QOffscreenSurface> offscreenSurface(maybeCreateOffscreenSurface(window));
+    QScopedPointer<QRhi> rhi(createRhi(window, offscreenSurface.data()));
+    if (!rhi) {
+        qWarning("Failed to initialize QRhi for offscreen readback");
+        return QImage();
+    }
+
+    const QSize pixelSize = window->size() * window->devicePixelRatio();
+    QScopedPointer<QRhiTexture> texture(rhi->newTexture(QRhiTexture::RGBA8, pixelSize, 1,
+                                                        QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource));
+    if (!texture->build()) {
+        qWarning("Failed to build texture for offscreen readback");
+        return QImage();
+    }
+    QScopedPointer<QRhiTextureRenderTarget> rt(rhi->newTextureRenderTarget({ texture.data() }));
+    QScopedPointer<QRhiRenderPassDescriptor> rpDesc(rt->newCompatibleRenderPassDescriptor());
+    rt->setRenderPassDescriptor(rpDesc.data());
+    if (!rt->build()) {
+        qWarning("Failed to build render target for offscreen readback");
+        return QImage();
+    }
+
+    wd->rhi = rhi.data();
+
+    QSGDefaultRenderContext::InitParams params;
+    params.rhi = rhi.data();
+    params.sampleCount = 1;
+    params.initialSurfacePixelSize = pixelSize;
+    params.maybeSurface = window;
+    wd->context->initialize(&params);
+
+    // There was no rendercontrol which means a custom render target
+    // should not be set either. Set our own, temporarily.
+    window->setRenderTarget(QQuickRenderTarget::fromRhiRenderTarget(rt.data()));
+
+    QRhiCommandBuffer *cb = nullptr;
+    if (rhi->beginOffscreenFrame(&cb) != QRhi::FrameOpSuccess) {
+        qWarning("Failed to start recording the frame for offscreen readback");
+        return QImage();
+    }
+
+    wd->setCustomCommandBuffer(cb);
+    wd->polishItems();
+    wd->syncSceneGraph();
+    wd->renderSceneGraph(window->size());
+    wd->setCustomCommandBuffer(nullptr);
+
+    QImage image = grabAndBlockInCurrentFrame(rhi.data(), cb, texture.data());
+    rhi->endOffscreenFrame();
+
+    image.setDevicePixelRatio(window->devicePixelRatio());
+    wd->cleanupNodesOnShutdown();
+    wd->context->invalidate();
+
+    window->setRenderTarget(QQuickRenderTarget());
+    wd->rhi = nullptr;
+
+    return image;
 }
 
 QSGRhiProfileConnection *QSGRhiProfileConnection::instance()

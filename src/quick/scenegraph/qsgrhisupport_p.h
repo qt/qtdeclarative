@@ -126,7 +126,9 @@ public:
     QOffscreenSurface *maybeCreateOffscreenSurface(QWindow *window);
     QRhi *createRhi(QQuickWindow *window, QOffscreenSurface *offscreenSurface);
 
-    QImage grabAndBlockInCurrentFrame(QRhi *rhi, QRhiSwapChain *swapchain);
+    QImage grabAndBlockInCurrentFrame(QRhi *rhi, QRhiCommandBuffer *cb, QRhiTexture *src = nullptr);
+
+    QImage grabOffscreen(QQuickWindow *window);
 
     static void checkEnvQSgInfo();
 

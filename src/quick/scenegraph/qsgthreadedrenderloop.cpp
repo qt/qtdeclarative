@@ -856,7 +856,7 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
         // through syncAndRender().
         if (grabRequested) {
             Q_ASSERT(rhi && !gl && cd->swapchain);
-            *grabImage = QSGRhiSupport::instance()->grabAndBlockInCurrentFrame(rhi, cd->swapchain);
+            *grabImage = QSGRhiSupport::instance()->grabAndBlockInCurrentFrame(rhi, cd->swapchain->currentFrameCommandBuffer());
         }
 
         if (cd->swapchain) {
