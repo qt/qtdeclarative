@@ -30,7 +30,6 @@
 
 #include <QtCore/qfile.h>
 #include <QtCore/qhash.h>
-#include <QtCore/qtextcodec.h>
 
 #ifndef Q_OS_WIN
 #include <unistd.h>

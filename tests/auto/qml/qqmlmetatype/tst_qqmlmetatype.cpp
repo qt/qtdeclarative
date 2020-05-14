@@ -220,13 +220,13 @@ void tst_qqmlmetatype::qmlType()
     QQmlType type = QQmlMetaType::qmlType(QString("ParserStatusTestType"), QString("Test"),
                                           QTypeRevision::fromVersion(1, 0));
     QVERIFY(type.isValid());
-    QVERIFY(type.module() == QLatin1String("Test"));
+    QVERIFY(type.module() == QHashedString("Test"));
     QVERIFY(type.elementName() == QLatin1String("ParserStatusTestType"));
     QCOMPARE(type.qmlTypeName(), QLatin1String("Test/ParserStatusTestType"));
 
     type = QQmlMetaType::qmlType("Test/ParserStatusTestType", QTypeRevision::fromVersion(1, 0));
     QVERIFY(type.isValid());
-    QVERIFY(type.module() == QLatin1String("Test"));
+    QVERIFY(type.module() == QHashedString("Test"));
     QVERIFY(type.elementName() == QLatin1String("ParserStatusTestType"));
     QCOMPARE(type.qmlTypeName(), QLatin1String("Test/ParserStatusTestType"));
 }
