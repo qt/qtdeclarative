@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -102,7 +102,7 @@ public:
     ~QStringHashNode()
     {
         if (isQString() && !arrayData->deref())
-            QTypedArrayData<ushort>::deallocate(arrayData);
+            QTypedArrayData<char16_t>::deallocate(arrayData);
     }
 
     enum Tag {
@@ -116,10 +116,10 @@ public:
     quint32 hash = 0;
     quint32 symbolId = 0;
 
-    QTypedArrayData<ushort> *arrayData = nullptr;
+    QTypedArrayData<char16_t> *arrayData = nullptr;
     union {
         const char *ckey = nullptr;
-        ushort *strData;
+        char16_t *strData;
     };
 
     inline QHashedString key() const
@@ -137,7 +137,7 @@ public:
 
     inline qsizetype size() const { return length; }
     inline const char *cStrData() const { return ckey; }
-    inline const quint16 *utf16Data() const { return strData; }
+    inline const char16_t *utf16Data() const { return strData; }
 
     inline bool equals(const QV4::Value &string) const {
         QString s = string.toQStringNoThrow();

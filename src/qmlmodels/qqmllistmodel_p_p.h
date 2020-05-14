@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -263,11 +263,11 @@ private:
     void clear();
 
     union {
-        ushort *stringData = nullptr;
+        char16_t *stringData = nullptr;
         const QV4::CompiledData::Binding *binding;
     };
 
-    QTypedArrayData<ushort> *arrayData = nullptr;
+    QTypedArrayData<char16_t> *arrayData = nullptr;
     uint stringSize = 0;
 };
 
