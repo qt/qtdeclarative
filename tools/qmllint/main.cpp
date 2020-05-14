@@ -114,7 +114,7 @@ int main(int argv, char *argc[])
     parser.addOption(disableCheckUnqualified);
 
     QCommandLineOption disableCheckWithStatement(QStringList() << "no-with-statement",
-                                                 QLatin1String("Don't warn about with statement"));
+                                                 QLatin1String("Don't warn about with statements"));
     parser.addOption(disableCheckWithStatement);
 
     QCommandLineOption disableCheckInheritanceCycle(QStringList() << "no-inheritance-cycle",
