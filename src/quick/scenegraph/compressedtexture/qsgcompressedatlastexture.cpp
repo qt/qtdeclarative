@@ -43,13 +43,10 @@
 #include <QtCore/QElapsedTimer>
 #include <QtCore/QtMath>
 
-#include <QOpenGLContext>
 #include <QtGui/QGuiApplication>
 #include <QtGui/QScreen>
 #include <QtGui/QSurface>
 #include <QtGui/QWindow>
-#include <QOpenGLFunctions>
-#include <QOpenGLTexture>
 #include <QDebug>
 
 #include <private/qqmlglobal_p.h>
@@ -59,14 +56,11 @@
 
 QT_BEGIN_NAMESPACE
 
-static QElapsedTimer qsg_renderer_timer;
-
 namespace QSGCompressedAtlasTexture
 {
 
-Atlas::Atlas(const QSize &size, uint format)
-    : QSGOpenGLAtlasTexture::AtlasBase(size)
-    , m_format(format)
+Atlas::Atlas(QSGDefaultRenderContext *rc, const QSize &size, uint format)
+    : QSGRhiAtlasTexture::AtlasBase(rc, size), m_format(format)
 {
 }
 
@@ -74,8 +68,10 @@ Atlas::~Atlas()
 {
 }
 
-Texture *Atlas::create(const QByteArray &data, int dataLength, int dataOffset, const QSize &size, const QSize &paddedSize)
+Texture *Atlas::create(const QByteArray &data, int dataLength, int dataOffset, const QSize &size)
 {
+    // Align reservation to 16x16, >= any compressed block size
+    QSize paddedSize(((size.width() + 15) / 16) * 16, ((size.height() + 15) / 16) * 16);
     // No need to lock, as manager already locked it.
     QRect rect = m_allocator.allocate(paddedSize);
     if (rect.width() > 0 && rect.height() > 0) {
@@ -86,53 +82,53 @@ Texture *Atlas::create(const QByteArray &data, int dataLength, int dataOffset, c
     return nullptr;
 }
 
-void Atlas::generateTexture()
+bool Atlas::generateTexture()
 {
-    int bytesPerBlock = 8;
-    switch (m_format) {
-    case QOpenGLTexture::RGBA8_ETC2_EAC:
-    case QOpenGLTexture::RGBA_DXT3:
-    case QOpenGLTexture::RGBA_DXT5:
-        bytesPerBlock = 16;
-    default:
-        break;
+    QSGCompressedTexture::FormatInfo fmt = QSGCompressedTexture::formatInfo(m_format);
+    QRhiTexture::Flags flags(QRhiTexture::UsedAsTransferSource | QRhiTexture::UsedAsCompressedAtlas);
+    flags.setFlag(QRhiTexture::sRGB, fmt.isSRGB);
+    m_texture = m_rhi->newTexture(fmt.rhiFormat, m_size, 1, flags);
+    if (!m_texture)
+        return false;
+
+    if (!m_texture->build()) {
+        delete m_texture;
+        m_texture = nullptr;
+        return false;
     }
 
-    QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
-    funcs->glCompressedTexImage2D(GL_TEXTURE_2D, 0, m_format,
-                                  m_size.width(), m_size.height(), 0,
-                                  (m_size.width() / 4 * m_size.height() / 4) * bytesPerBlock,
-                                  nullptr);
+    qCDebug(QSG_LOG_TEXTUREIO, "Created compressed atlas of size %dx%d for format 0x%x (rhi: %d)",
+            m_size.width(), m_size.height(), m_format, fmt.rhiFormat);
+
+    return true;
 }
 
-void Atlas::uploadPendingTexture(int i)
+void Atlas::enqueueTextureUpload(QSGRhiAtlasTexture::TextureBase *t, QRhiResourceUpdateBatch *rcub)
 {
-    Texture *texture = static_cast<Texture*>(m_pending_uploads.at(i));
+    Texture *texture = static_cast<Texture *>(t);
 
     const QRect &r = texture->atlasSubRect();
 
-    QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
-    funcs->glCompressedTexSubImage2D(GL_TEXTURE_2D, 0,
-                                     r.x(), r.y(), r.width(), r.height(), m_format,
-                                     texture->sizeInBytes(),
-                                     texture->data().constData() + texture->dataOffset());
+    const char *rawData = texture->data().constData() + texture->dataOffset();
+    QRhiTextureSubresourceUploadDescription subresDesc(rawData, texture->sizeInBytes());
+    subresDesc.setSourceSize(texture->textureSize());
+    subresDesc.setDestinationTopLeft(r.topLeft());
 
-    qCDebug(QSG_LOG_TIME_TEXTURE).nospace() << "compressed atlastexture uploaded in: " << qsg_renderer_timer.elapsed()
-                                       << "ms (" << texture->textureSize().width() << "x"
-                                       << texture->textureSize().height() << ")";
+    QRhiTextureUploadDescription desc(QRhiTextureUploadEntry(0, 0, subresDesc));
+    rcub->uploadTexture(m_texture, desc);
 
-    // TODO: consider releasing the data (as is done in the regular atlas)?
-    // The advantage of keeping this data around is that it makes it much easier
-    // to remove the texture from the atlas
+    qCDebug(QSG_LOG_TEXTUREIO, "compressed atlastexture upload, size %dx%d format 0x%x",
+            t->textureSize().width(), t->textureSize().height(), m_format);
 }
 
-Texture::Texture(Atlas *atlas, const QRect &textureRect, const QByteArray &data, int dataLength, int dataOffset, const QSize &size)
-    : QSGOpenGLAtlasTexture::TextureBase(atlas, textureRect)
-    , m_nonatlas_texture(nullptr)
-    , m_data(data)
-    , m_size(size)
-    , m_dataLength(dataLength)
-    , m_dataOffset(dataOffset)
+Texture::Texture(Atlas *atlas, const QRect &textureRect, const QByteArray &data, int dataLength,
+                 int dataOffset, const QSize &size)
+    : QSGRhiAtlasTexture::TextureBase(atlas, textureRect),
+      m_nonatlas_texture(nullptr),
+      m_data(data),
+      m_size(size),
+      m_dataLength(dataLength),
+      m_dataOffset(dataOffset)
 {
     float w = atlas->size().width();
     float h = atlas->size().height();

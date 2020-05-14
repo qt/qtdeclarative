@@ -163,23 +163,23 @@ void QSGCompressedTexture::bind()
 #endif // QT_CONFIG(opengl)
 }
 
-static QPair<QRhiTexture::Format, bool> toRhiCompressedFormat(uint glinternalformat)
+QSGCompressedTexture::FormatInfo QSGCompressedTexture::formatInfo(quint32 glTextureFormat)
 {
-    switch (glinternalformat) {
+    switch (glTextureFormat) {
     case QOpenGLTexture::RGB_DXT1:
         return { QRhiTexture::BC1, false };
     case QOpenGLTexture::SRGB_DXT1:
         return { QRhiTexture::BC1, true };
 
     case QOpenGLTexture::RGBA_DXT3:
-        return { QRhiTexture::BC3, false };
+        return { QRhiTexture::BC2, false };
     case QOpenGLTexture::SRGB_Alpha_DXT3:
-        return { QRhiTexture::BC3, true };
+        return { QRhiTexture::BC2, true };
 
     case QOpenGLTexture::RGBA_DXT5:
-        return { QRhiTexture::BC5, false };
+        return { QRhiTexture::BC3, false };
     case QOpenGLTexture::SRGB_Alpha_DXT5:
-        return { QRhiTexture::BC5, true };
+        return { QRhiTexture::BC3, true };
 
     case QOpenGLTexture::RGB8_ETC2:
         return { QRhiTexture::ETC2_RGB8, false };
@@ -288,23 +288,23 @@ void QSGCompressedTexture::commitTextureOperations(QRhi *rhi, QRhiResourceUpdate
         return;
     }
 
-    const QPair<QRhiTexture::Format, bool> fmt = toRhiCompressedFormat(m_textureData.glInternalFormat());
-    if (fmt.first == QRhiTexture::UnknownFormat) {
+    FormatInfo fmt = formatInfo(m_textureData.glInternalFormat());
+    if (fmt.rhiFormat == QRhiTexture::UnknownFormat) {
         qWarning("Unknown compressed format 0x%x", m_textureData.glInternalFormat());
         return;
     }
 
     QRhiTexture::Flags texFlags;
-    if (fmt.second)
+    if (fmt.isSRGB)
         texFlags |= QRhiTexture::sRGB;
 
-    if (!rhi->isTextureFormatSupported(fmt.first, texFlags)) {
+    if (!rhi->isTextureFormatSupported(fmt.rhiFormat, texFlags)) {
         qWarning("Unsupported compressed format 0x%x", m_textureData.glInternalFormat());
         return;
     }
 
     if (!m_texture) {
-        m_texture = rhi->newTexture(fmt.first, m_size, 1, texFlags);
+        m_texture = rhi->newTexture(fmt.rhiFormat, m_size, 1, texFlags);
         if (!m_texture->build()) {
             qWarning("Failed to create QRhiTexture for compressed data");
             delete m_texture;

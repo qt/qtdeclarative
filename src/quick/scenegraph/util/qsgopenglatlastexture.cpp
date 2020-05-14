@@ -71,7 +71,7 @@ int qt_sg_envInt(const char *name, int defaultValue);
 
 static QElapsedTimer qsg_renderer_timer;
 
-DEFINE_BOOL_CONFIG_OPTION(qsgEnableCompressedAtlas, QSG_ENABLE_COMPRESSED_ATLAS)
+// DEFINE_BOOL_CONFIG_OPTION(qsgEnableCompressedAtlas, QSG_ENABLE_COMPRESSED_ATLAS)
 
 namespace QSGOpenGLAtlasTexture
 {
@@ -141,6 +141,11 @@ QSGTexture *Manager::create(const QImage &image, bool hasAlphaChannel)
 
 QSGTexture *Manager::create(const QSGCompressedTextureFactory *factory)
 {
+    Q_UNUSED(factory)
+    return nullptr;
+
+    // DirectGL path disabled
+#if 0
     QSGTexture *t = nullptr;
     if (!qsgEnableCompressedAtlas() || !factory->m_textureData.isValid())
         return t;
@@ -176,6 +181,7 @@ QSGTexture *Manager::create(const QSGCompressedTextureFactory *factory)
         t = i.value()->create(data, factory->m_textureData.dataLength(), factory->m_textureData.dataOffset(), size, paddedSize);
     }
     return t;
+#endif
 }
 
 AtlasBase::AtlasBase(const QSize &size)

@@ -347,8 +347,8 @@ QSGTexture *QSGDefaultRenderContext::compressedTextureForFactory(const QSGCompre
 {
     // This is only used for atlasing compressed textures. Returning null implies no atlas.
 
-    if (m_rhi) {
-        // ###
+    if (m_rhi && QThread::currentThread() == m_rhi->thread()) {
+        return m_rhiAtlasManager->create(factory);
     } else if (openglContext() && QThread::currentThread() == openglContext()->thread()) {
         // The atlas implementation is only supported from the render thread
         return m_glAtlasManager->create(factory);

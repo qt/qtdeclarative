@@ -54,10 +54,13 @@
 #include <private/qtexturefiledata_p.h>
 #include <private/qsgcontext_p.h>
 #include <private/qsgtexture_p.h>
+#include <private/qrhi_p.h>
 #include <QQuickTextureFactory>
 #include <QOpenGLFunctions>
 
 QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_TEXTUREIO);
 
 class Q_QUICK_PRIVATE_EXPORT QSGCompressedTexture : public QSGTexture
 {
@@ -78,6 +81,12 @@ public:
 
     QTextureFileData textureData() const;
 
+    struct FormatInfo
+    {
+        QRhiTexture::Format rhiFormat;
+        bool isSRGB;
+    };
+    static FormatInfo formatInfo(quint32 glTextureFormat);
     static bool formatIsOpaque(quint32 glTextureFormat);
 
 protected:
@@ -101,11 +110,10 @@ public:
     int textureByteCount() const override;
     QSize textureSize() const override;
 
+    const QTextureFileData *textureData() const { return &m_textureData; }
+
 protected:
     QTextureFileData m_textureData;
-
-private:
-    friend class QSGOpenGLAtlasTexture::Manager;
 };
 
 QT_END_NAMESPACE

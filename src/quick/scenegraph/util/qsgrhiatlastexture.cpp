@@ -49,6 +49,8 @@
 #include <private/qquickprofiler_p.h>
 #include <private/qsgdefaultrendercontext_p.h>
 #include <private/qsgtexture_p.h>
+#include <private/qsgcompressedtexture_p.h>
+#include <private/qsgcompressedatlastexture_p.h>
 
 #include <qtquick_tracepoints_p.h>
 
@@ -63,7 +65,7 @@ int qt_sg_envInt(const char *name, int defaultValue);
 
 static QElapsedTimer qsg_renderer_timer;
 
-//DEFINE_BOOL_CONFIG_OPTION(qsgEnableCompressedAtlas, QSG_ENABLE_COMPRESSED_ATLAS)
+DEFINE_BOOL_CONFIG_OPTION(qsgDisableCompressedAtlas, QSG_DISABLE_COMPRESSED_ATLAS)
 
 namespace QSGRhiAtlasTexture
 {
@@ -105,7 +107,6 @@ void Manager::invalidate()
         m_atlas = nullptr;
     }
 
- #if 0
     QHash<unsigned int, QSGCompressedAtlasTexture::Atlas*>::iterator i = m_atlases.begin();
     while (i != m_atlases.end()) {
         i.value()->invalidate();
@@ -113,7 +114,6 @@ void Manager::invalidate()
         ++i;
     }
     m_atlases.clear();
-#endif
 }
 
 QSGTexture *Manager::create(const QImage &image, bool hasAlphaChannel)
@@ -131,38 +131,27 @@ QSGTexture *Manager::create(const QImage &image, bool hasAlphaChannel)
 
 QSGTexture *Manager::create(const QSGCompressedTextureFactory *factory)
 {
-    Q_UNUSED(factory);
-    return nullptr;
-    // ###
-
-#if 0
     QSGTexture *t = nullptr;
-    if (!qsgEnableCompressedAtlas() || !factory->m_textureData.isValid())
+    if (qsgDisableCompressedAtlas() || !factory->textureData()->isValid())
         return t;
 
-    // TODO: further abstract the atlas and remove this restriction
-    unsigned int format = factory->m_textureData.glInternalFormat();
-    switch (format) {
-    case QOpenGLTexture::RGB8_ETC1:
-    case QOpenGLTexture::RGB8_ETC2:
-    case QOpenGLTexture::RGBA8_ETC2_EAC:
-    case QOpenGLTexture::RGB8_PunchThrough_Alpha1_ETC2:
-        break;
-    default:
+    unsigned int format = factory->textureData()->glInternalFormat();
+    QSGCompressedTexture::FormatInfo fmt = QSGCompressedTexture::formatInfo(format);
+    if (!m_rhi->isTextureFormatSupported(fmt.rhiFormat))
         return t;
-    }
 
-    QSize size = factory->m_textureData.size();
+    QSize size = factory->textureData()->size();
     if (size.width() < m_atlas_size_limit && size.height() < m_atlas_size_limit) {
         QHash<unsigned int, QSGCompressedAtlasTexture::Atlas*>::iterator i = m_atlases.find(format);
-        if (i == m_atlases.end())
-            i = m_atlases.insert(format, new QSGCompressedAtlasTexture::Atlas(m_atlas_size, format));
-        // must be multiple of 4
-        QSize paddedSize(((size.width() + 3) / 4) * 4, ((size.height() + 3) / 4) * 4);
-        QByteArray data = factory->m_textureData.data();
-        t = i.value()->create(data, factory->m_textureData.dataLength(), factory->m_textureData.dataOffset(), size, paddedSize);
+        if (i == m_atlases.cend()) {
+            auto newAtlas = new QSGCompressedAtlasTexture::Atlas(m_rc, m_atlas_size, format);
+            i = m_atlases.insert(format, newAtlas);
+        }
+        const QTextureFileData *cmpData = factory->textureData();
+        t = i.value()->create(cmpData->data(), cmpData->dataLength(), cmpData->dataOffset(), size);
     }
-#endif
+
+    return t;
 }
 
 AtlasBase::AtlasBase(QSGDefaultRenderContext *rc, const QSize &size)

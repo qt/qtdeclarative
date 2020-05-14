@@ -53,11 +53,9 @@
 
 #include <QtCore/QSize>
 
-#include <qopengl.h>
-
 #include <QtQuick/QSGTexture>
 #include <QtQuick/private/qsgareaallocator_p.h>
-#include <QtQuick/private/qsgopenglatlastexture_p.h>
+#include <QtQuick/private/qsgrhiatlastexture_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -67,16 +65,17 @@ namespace QSGCompressedAtlasTexture {
 
 class Texture;
 
-class Atlas : public QSGOpenGLAtlasTexture::AtlasBase
+class Atlas : public QSGRhiAtlasTexture::AtlasBase
 {
 public:
-    Atlas(const QSize &size, uint format);
+    Atlas(QSGDefaultRenderContext *rc, const QSize &size, uint format);
     ~Atlas();
 
-    void generateTexture() override;
-    void uploadPendingTexture(int i) override;
+    bool generateTexture() override;
+    void enqueueTextureUpload(QSGRhiAtlasTexture::TextureBase *t,
+                              QRhiResourceUpdateBatch *rcub) override;
 
-    Texture *create(const QByteArray &data, int dataLength, int dataOffset, const QSize &size, const QSize &paddedSize);
+    Texture *create(const QByteArray &data, int dataLength, int dataOffset, const QSize &size);
 
     uint format() const { return m_format; }
 
@@ -84,7 +83,7 @@ private:
     uint m_format;
 };
 
-class Texture : public QSGOpenGLAtlasTexture::TextureBase
+class Texture : public QSGRhiAtlasTexture::TextureBase
 {
     Q_OBJECT
 public:
