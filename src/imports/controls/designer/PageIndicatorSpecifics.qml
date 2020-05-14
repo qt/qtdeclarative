@@ -73,14 +73,22 @@ Column {
                     Layout.fillWidth: true
                 }
             }
+
+            Label {
+                text: qsTr("Interactive")
+                tooltip: qsTr("Whether the control is interactive.")
+            }
+            SecondColumnLayout {
+                CheckBox {
+                    text: backendValues.interactive.valueToString
+                    backendValue: backendValues.interactive
+                    Layout.fillWidth: true
+                }
+            }
         }
     }
 
     ControlSection {
-        width: parent.width
-    }
-
-    FontSection {
         width: parent.width
     }
 

@@ -79,4 +79,8 @@ Column {
     PaddingSection {
         width: parent.width
     }
+
+    InsetSection {
+        width: parent.width
+    }
 }
