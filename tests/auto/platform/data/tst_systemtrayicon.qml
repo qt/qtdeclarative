@@ -50,7 +50,7 @@
 
 import QtQuick 2.12
 import QtTest 1.0
-import Qt.labs.platform 1.0
+import Qt.labs.platform 1.1
 
 TestCase {
     id: testCase
@@ -62,7 +62,10 @@ TestCase {
 
     Component {
         id: systemTrayIcon
-        SystemTrayIcon { }
+        // Check that icon.name can be used in this Qt.labs.platform version
+        SystemTrayIcon {
+            icon.name: ""
+        }
     }
 
     SignalSpy {
