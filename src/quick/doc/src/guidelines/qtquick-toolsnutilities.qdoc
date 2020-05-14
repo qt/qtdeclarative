@@ -133,4 +133,20 @@ via the -I flag.
   \li \l{qmltypes}
 \endlist
 
+\section1 qmlformat
+
+qmlformat is a tool that automatically formats QML files in accordance
+with the \l{QML Coding Conventions}.
+
+The tool groups all properties, functions, and signals together, instead of
+retaining the order you specified.
+
+Imports will also be sorted in alphabetical order. This can be disabled
+by specifying the \c{-n} flag.
+
+By default, qmlformat writes the formatted version of the file to stdout.
+If you wish to have your file updated in-place specify the \c{-i} flag.
+
+\section2 Related Information
+\sa \l{QML Coding Conventions}
 */
