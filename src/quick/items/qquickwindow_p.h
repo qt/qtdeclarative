@@ -110,7 +110,7 @@ public:
 class QQuickWindowRenderTarget
 {
 public:
-    void reset(QRhi *rhi);
+    void reset(QRhi *rhi, QSGRenderer *renderer);
     QRhiRenderTarget *renderTarget = nullptr;
     QRhiRenderPassDescriptor *rpDesc = nullptr;
     QRhiTexture *texture = nullptr;

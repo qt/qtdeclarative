@@ -510,9 +510,12 @@ void forceUpdate(QQuickItem *item)
         forceUpdate(items.at(i));
 }
 
-void QQuickWindowRenderTarget::reset(QRhi *rhi)
+void QQuickWindowRenderTarget::reset(QRhi *rhi, QSGRenderer *renderer)
 {
     if (rhi && owns) {
+        if (renderer != nullptr && rpDesc != nullptr)
+            renderer->invalidatePipelineCacheDependency(rpDesc);
+
         delete renderTarget;
         delete rpDesc;
         delete texture;
@@ -535,7 +538,7 @@ void QQuickWindowPrivate::ensureCustomRenderTarget()
 
     redirect.renderTargetDirty = false;
 
-    redirect.rt.reset(rhi);
+    redirect.rt.reset(rhi, renderer);
 
     // a default constructed QQuickRenderTarget means no redirection
     if (customRenderTarget.isNull())
@@ -765,7 +768,7 @@ QQuickWindowPrivate::QQuickWindowPrivate()
 
 QQuickWindowPrivate::~QQuickWindowPrivate()
 {
-    redirect.rt.reset(rhi);
+    redirect.rt.reset(rhi, renderer);
     delete customRenderStage;
     if (QQmlInspectorService *service = QQmlDebugConnector::service<QQmlInspectorService>())
         service->removeWindow(q_func());
