@@ -8,40 +8,30 @@ Item {
         id: text
         anchors.centerIn: parent
         font.pixelSize:  80
-        text: "Shaderz!"
+        text: "Shaderz\nroolz!"
+        horizontalAlignment: Text.AlignHCenter
     }
 
-    ShaderEffectSource {
-        id: source
-        sourceItem: text
-        sourceRect: Qt.rect(rect.x - text.x, rect.y - text.y, rect.width, rect.height)
+    ListModel {
+        id: rects
+        ListElement {x0: 50;  y0: 50;  w: 100; h: 100}
+        ListElement {x0: 50;  y0: 200; w: 100; h: 100}
+        ListElement {x0: 180; y0: 50;  w: 150; h: 380}
     }
 
-    ShaderEffect {
-        anchors.fill: rect
+    Repeater {
+        model: rects
 
-        property variant source: source
-
-        fragmentShader: "qrc:shaders/gradient.frag"
-    }
-
-    Rectangle {
-        id: rect
-        x: 100
-        y: 100
-        width: 100
-        height: 100
-        color: "transparent"
-        border.width: 2
-        border.color: "red"
-        MouseArea {
-            anchors.fill: parent
-            drag.target: parent
-            drag.axis: Drag.XAndYAxis
-            drag.minimumX: 0
-            drag.maximumX: parent.parent.width - width
-            drag.minimumY: 0
-            drag.maximumY: parent.parent.height - height
+        ShaderEffect {
+            x: x0
+            y: y0
+            width: w
+            height: h
+            property variant source: ShaderEffectSource {
+                sourceItem: text
+                sourceRect: Qt.rect(x0 - text.x, y0 - text.y, w, h)
+            }
+            fragmentShader: "qrc:shaders/gradient.frag"
         }
     }
 }
