@@ -56,7 +56,7 @@
 #include <QtQml/qjsengine.h>
 #include <QtQml/qqmlfile.h>
 #include <QtNetwork/qnetworkreply.h>
-#include <QtCore/qtextcodec.h>
+#include <QtCore/qstringconverter.h>
 #include <QtCore/qxmlstream.h>
 #include <QtCore/qstack.h>
 #include <QtCore/qdebug.h>
@@ -1062,10 +1062,7 @@ private:
     bool m_gotXml;
     QByteArray m_mime;
     QByteArray m_charset;
-    QTextCodec *m_textCodec;
-#if QT_CONFIG(textcodec)
-    QTextCodec* findTextCodec() const;
-#endif
+    QStringDecoder findTextDecoder() const;
     void readEncoding();
 
     PersistentValue m_thisObject;
@@ -1092,7 +1089,7 @@ private:
 
 QQmlXMLHttpRequest::QQmlXMLHttpRequest(QNetworkAccessManager *manager, QV4::ExecutionEngine *v4)
     : m_state(Unsent), m_errorFlag(false), m_sendFlag(false)
-    , m_redirectCount(0), m_gotXml(false), m_textCodec(nullptr), m_network(nullptr), m_nam(manager)
+    , m_redirectCount(0), m_gotXml(false), m_network(nullptr), m_nam(manager)
     , m_responseType()
     , m_parsedDocument()
 {
@@ -1534,43 +1531,41 @@ QV4::ReturnedValue QQmlXMLHttpRequest::xmlResponseBody(QV4::ExecutionEngine* eng
     return m_parsedDocument.value();
 }
 
-#if QT_CONFIG(textcodec)
-QTextCodec* QQmlXMLHttpRequest::findTextCodec() const
+QStringDecoder QQmlXMLHttpRequest::findTextDecoder() const
 {
-    QTextCodec *codec = nullptr;
+    QStringDecoder decoder;
 
     if (!m_charset.isEmpty())
-        codec = QTextCodec::codecForName(m_charset);
+        decoder = QStringDecoder(m_charset);
 
-    if (!codec && m_gotXml) {
+    if (!decoder.isValid() && m_gotXml) {
         QXmlStreamReader reader(m_responseEntityBody);
         reader.readNext();
-        codec = QTextCodec::codecForName(reader.documentEncoding().toString().toUtf8());
+        decoder = QStringDecoder(reader.documentEncoding().toString().toUtf8());
     }
 
-    if (!codec && m_mime == "text/html")
-        codec = QTextCodec::codecForHtml(m_responseEntityBody, nullptr);
+    if (!decoder.isValid() && m_mime == "text/html") {
+        auto encoding = QStringConverter::encodingForHtml(m_responseEntityBody.constData(), m_responseEntityBody.size());
+        if (encoding)
+            decoder = QStringDecoder(*encoding);
+    }
 
-    if (!codec)
-        codec = QTextCodec::codecForUtfText(m_responseEntityBody, nullptr);
+    if (!decoder.isValid()) {
+        auto encoding = QStringConverter::encodingForData(m_responseEntityBody.constData(), m_responseEntityBody.size());
+        if (encoding)
+            decoder = QStringDecoder(*encoding);
+    }
 
-    if (!codec)
-        codec = QTextCodec::codecForName("UTF-8");
-    return codec;
+    if (!decoder.isValid())
+        decoder = QStringDecoder(QStringDecoder::Utf8);
+
+    return decoder;
 }
-#endif
-
 
 QString QQmlXMLHttpRequest::responseBody()
 {
-#if QT_CONFIG(textcodec)
-    if (!m_textCodec)
-        m_textCodec = findTextCodec();
-    if (m_textCodec)
-        return m_textCodec->toUnicode(m_responseEntityBody);
-#endif
-
-    return QString::fromUtf8(m_responseEntityBody);
+    QStringDecoder toUtf16 = findTextDecoder();
+    return toUtf16(m_responseEntityBody);
 }
 
 const QByteArray &QQmlXMLHttpRequest::rawResponseBody() const
