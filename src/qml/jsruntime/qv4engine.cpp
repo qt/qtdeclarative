@@ -1730,6 +1730,8 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
                 return QV4::Encode((int)*reinterpret_cast<const unsigned char*>(ptr));
             case QMetaType::QChar:
                 return newString(*reinterpret_cast<const QChar *>(ptr))->asReturnedValue();
+            case QMetaType::Char16:
+                return newString(QString::fromUtf16(reinterpret_cast<const char16_t *>(ptr)))->asReturnedValue();
             case QMetaType::QDateTime:
                 return QV4::Encode(newDateObject(*reinterpret_cast<const QDateTime *>(ptr)));
             case QMetaType::QDate:

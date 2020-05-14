@@ -802,6 +802,9 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
         case QMetaType::QChar:
             *reinterpret_cast<QChar*>(ptr) = QV4::Value::toUInt32(d);
             return true;
+        case QMetaType::Char16:
+            *reinterpret_cast<char16_t *>(ptr) = QV4::Value::toUInt32(d);
+            return true;
         default:
             return false;
         }
