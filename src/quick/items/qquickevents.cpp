@@ -1759,6 +1759,8 @@ bool QQuickSinglePointEvent::hasExclusiveGrabber(const QQuickPointerHandler *han
 
 bool QQuickPointerMouseEvent::isPressEvent() const
 {
+    if (!m_event)
+        return false;
     auto me = static_cast<QMouseEvent*>(m_event);
     return ((me->type() == QEvent::MouseButtonPress || me->type() == QEvent::MouseButtonDblClick) &&
             (me->buttons() & me->button()) == me->buttons());
@@ -1766,18 +1768,24 @@ bool QQuickPointerMouseEvent::isPressEvent() const
 
 bool QQuickPointerMouseEvent::isDoubleClickEvent() const
 {
+    if (!m_event)
+        return false;
     auto me = static_cast<QMouseEvent*>(m_event);
     return (me->type() == QEvent::MouseButtonDblClick);
 }
 
 bool QQuickPointerMouseEvent::isUpdateEvent() const
 {
+    if (!m_event)
+        return false;
     auto me = static_cast<QMouseEvent*>(m_event);
     return me->type() == QEvent::MouseMove;
 }
 
 bool QQuickPointerMouseEvent::isReleaseEvent() const
 {
+    if (!m_event)
+        return false;
     auto me = static_cast<QMouseEvent*>(m_event);
     return me && me->type() == QEvent::MouseButtonRelease;
 }

@@ -746,8 +746,7 @@ inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versi
 }
 
 #ifdef Q_QDOC
-int qmlRegisterSingletonInstance(const char *uri, int versionMajor, int versionMinor,
-                                 const char *typeName, QObject *cppObject)
+int qmlRegisterSingletonInstance(const char *uri, int versionMajor, int versionMinor, const char *typeName, QObject *cppObject)
 #else
 template<typename T>
 inline auto qmlRegisterSingletonInstance(const char *uri, int versionMajor, int versionMinor,

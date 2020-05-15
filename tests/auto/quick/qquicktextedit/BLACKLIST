@@ -8,3 +8,6 @@ opensuse-leap
 # QTBUG-82052
 [linkHover]
 macos ci
+
+[hAlignVisual]
+sles

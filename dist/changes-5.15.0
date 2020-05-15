@@ -1,0 +1,283 @@
+Qt 5.15 introduces many new features and improvements as well as bugfixes
+over the 5.14.x series. For more details, refer to the online documentation
+included in this distribution. The documentation is also available online:
+
+https://doc.qt.io/qt-5/index.html
+
+The Qt version 5.15 series is binary compatible with the 5.14.x series.
+Applications compiled for 5.14 will continue to run with 5.15.
+
+Some of the changes listed in this file include issue tracking numbers
+corresponding to tasks in the Qt Bug Tracker:
+
+  https://bugreports.qt.io/
+
+Each of these identifiers can be entered in the bug tracker to obtain more
+information about a particular change.
+
+****************************************************************************
+*                   Important Behavior Changes                             *
+****************************************************************************
+
+ - [QTBUG-74137] CMake: Added a Qt6 forward compatible CMake API. Using this,
+   you can define projects that work with either Qt5 or Qt6, without further
+   changes.
+
+ - [QTBUG-79331] If you register the same revision of the same type multiple
+   times, the last registration is the one QML will use. This allows you to
+   override qmlRegisterSingleton*() calls, for example in order to register a
+   singleton instance for a type tagged with QML_SINGLETON. Previously, the
+   first registration would take effect.
+
+ - [QTBUG-79868] Using instanceof to check whether an instance has the type of
+   QObject or one of its derived classes used to raise a TypeError, if the
+   instance was not derived from QObject. Now, it instead returns false, which
+   is more in line with the ECMAScript semantic.
+
+ - The QML ObjectModel type had an undocumented "feature" which made it sort
+   items in list views into sections according to context properties of the QML
+   context the created objects belong to. Instead of context properties, object
+   properties are used now.
+
+ - [QTBUG-73669] Using the Qt Quick Compiler would exclude the original .qml
+   files from the resource system. This made it impossible to change the Qt
+   library binary later as the program binary was tied the to the exact Qt
+   version. In addition sometimes unrelated files (QTBUG-73669) were removed.
+   For the latter scenario, retain and skip options were added for the Qt
+   Quick Compiler. In Qt 5.15 the Qt Quick Compiler does not remove the input
+   files anymore. All files are retained and the compiler merely adds the
+   more efficient binary representation to the application.
+
+****************************************************************************
+*                            Deprecation Notice                            *
+****************************************************************************
+
+ - The qmlmin tool is deprecated and not needed anymore. The built-in caching of
+   qml files addresses the needs and unfortunately the tool does not work with
+   more advanced concepts such as required properties or the ES 7 yield
+   statement. It will be removed in Qt 6.
+
+ - qmlRegisterExtendedType() without URI or version, is deprecated. You should
+   state the module the type belongs to, by supplying a URI and version.
+
+ - qmlRegisterInterface(const char *typeName) without URI or version, is
+   deprecated. You should state the module the type belongs to, but supplying a
+   URI and version. Conversely, the typeName is redundant as the type itself
+   is already supplied as template parameter. None of the other registration
+   functions allow overriding the name for the metatype registration.
+
+ - QQmlIncubationController::incubateWhile(volatile bool *flag, int msecs) is
+   deprecated. The volatile parameter is used as a poor man's atomic bool, with
+   all the well known downsides of such a practice. A replacement method
+   taking an actual atomic is provided.
+
+ - In QML Connections elements, the handlers should be defined as plain
+   JavaScript functions, not as "onPropertyChanged properties".
+
+ - You can currently access local files from QML via XMLHttpRequest using
+   "file://..." URLs. This will not be allowed by default anymore in Qt6. If
+   you actually need this behavior, you can set the environment variables
+   QML_XHR_ALLOW_FILE_READ and/or QML_XHR_ALLOW_FILE_WRITE to 1. You can also
+   set them to 0 when using Qt 5.15 to prevent local file access.
+
+ - [QTBUG-78596] The class QSGEngine is now deprecated.
+
+****************************************************************************
+*                                  QtQml                                   *
+****************************************************************************
+
+ - QML allows a new attribute "required" to be attached to properties. Such
+   properties have to be set when instantiating a component. The various models
+   and views use this as the preferred way of communicating model data to
+   delegates. The old way of passing model data via context properties should
+   be avoided in new code.
+
+ - The qmllint tool has been extended to check for patterns considered to be
+   potentially problematic in Qt6, and suggest better solutions. Pass the -U
+   command line option to enable the checks.
+
+ - The new qmlformat tool can be used to pretty-print a QML file according to
+   the recommended code style.
+
+ - QML supports type assertions similar to typescript. So far this is only used
+   to make the intended type of an expression known to qmllint. At run time,
+   type assertions are ignored.
+
+ - C++ types can and should be registered to QML at compile time now. For this
+   purpose there are a number of macros available in qqml.h that can be added
+   to a class declaration. A new tool, qmltyperegistrar, will evaluate them and
+   generate the actual registrations. You should not need to call any
+   qmlRegister* function manually anymore in new code.
+
+ - New classes QQmlEngineExtensionInterface and QQmlEngineExtensionPlugin are
+   available and should be used in place of QQmlExtensionInterface and
+   QQmlExtensionPlugin. The new classes do not offer a virtual registerTypes()
+   method as types should be registered at compile time.
+
+ - [QTBUG-81631] Qt.formatDateTime, Qt.formatDate and Qt.formatTime now support
+   formatting according to a locale and an optional locale format type. If
+   locale dependent formatting is desired, this method should be used instead
+   of the locale-related DateFormat enum members.
+
+ - [QTBUG-77926] Nullish coalescing is now implemented as specified in
+   https://github.com/tc39/proposal-nullish-coalescing.
+
+ - It is now possible to declare new QML components in a QML file via the
+   component keyword. They can be used just as if they were declared in another
+   file, with the only difference that the type name needs to be prefixed with
+   the name of the containing type outside of the file were the inline
+   component has been declared.
+
+ - The Qt.uiLanguage and QJSEngine::uiLanguage properties were added. They can
+   be used to dynamically change the translation language from both QML and C++.
+   QQmlApplicationEngine does this automatically. When using other engines, you
+   need to listen for changes of QJSEngine::uiLanguage and load the respective
+   translator in response.
+
+ - [QTBUG-82743] Assigning to a QSet property from JS works again.
+
+ - [QTBUG-74087] There is now an option to disable the (necessarily)
+   conservative stack size checks when parsing and executing JavaScript. If the
+   environment variable QV4_CRASH_ON_STACKOVERFLOW is set, JavaScript stack
+   overflows crash the program the same way C++ stack overflows do. On the flip
+   side, more stack space is made available that way.
+
+ - [QTBUG-81714] You can add annotations, prefixed by "@" to QML elements now,
+   similar to Java type annotations. These annotations have to be written in QML
+   and are ignored by the QML interpreter. Tools processing QML can evaluate
+   them.
+
+ - [QTBUG-82843] Fixed a crash caused by creating QQmlValueTypeWrapper from
+   an invalid Q_GADGET type.
+
+ - [QTBUG-82150] QML Debugger now shows correct values for color objects.
+
+ - [QTBUG-81970] QQmlCustomParser now resolves import namespaces.
+
+ - [QTBUG-81678] Fixed qml loading problems caused by cycles.
+
+ - [QTBUG-81825] Array.includes now works with value types such as point.
+
+ - [QTBUG-79263] QQmlListProperty now has replace and removeLast functions.
+
+ - [QTBUG-81123] Fixed a crash in QQmlListProperty if a contained object is deleted.
+
+ - [QTBUG-58858] The path for storing QML cache files can now be customized.
+
+ - [QTBUG-80030] Implemented TypedArray.from()
+
+ - [QTBUG-80413] WorkerScript now has a ready property.
+
+ - [QTBUG-75110] Locale NumberOptions are now exposed to QML.
+
+ - [QTBUG-41087] Primitive self-references in composite types are now supported.
+
+ - [QTBUG-76074] Custom QML types can now be freed when unloading plugins.
+
+ - [QTBUG-73669] Fixed link errors when enabling CONFIG+=qtquickcompiler
+   on non-QML projects.
+
+ - [QTBUG-60908] Removed an unnecessary assert when setting a binding to alias.
+
+ - qml: The QML Runtime tool --selector option now allows defining a custom
+   QQmlFileSelector.
+
+****************************************************************************
+*                                 QtQuick                                  *
+****************************************************************************
+
+ - Animations:
+   * [QTBUG-48193] Fixed signal emission order for zero-duration animations.
+
+ - AnimatedSprite:
+   * [QTBUG-59090] Added finishBehavior to allow a sprite to finish on the
+     last frame.
+
+ - Behavior:
+   * [QTBUG-70964] Behavior now has a targetProperty property to allow custom
+     logic based on the target property's object or name.
+
+ - Event handlers:
+   * [QTBUG-68073] Pointer Handlers now have a cursorShape property to set the
+     cursor when the handler is active and the mouse or a tablet stylus is hovering,
+     and restore to the previous cursor when the pointing device leaves.
+   * [QTBUG-79660] QTabletEvents are now delivered to pointer handlers.
+     For example PointHandler { acceptedPointerTypes: PointerDevice.Pen }
+     is one way of receiving stroke information for drawing via Canvas or Shapes,
+     and HoverHandler can use the new cursorShape property to show when a
+     stylus is in use.
+   * [QTBUG-68075] Pointer Handlers now have a dragThreshold property to
+     define the distance at which DragHandler will activate and TapHandler
+     will deactiveate, for example.
+
+ - FolderListModel:
+   * [QTBUG-82298] The fileUrl property was added to replace the fileURL
+     property, which is now deprecated.
+
+ - Image:
+   * Image now has a sourceClipRect property to render a clipped image from a
+     region of the sourceSize.
+   * [QTBUG-80616] Image now has a colorSpace property.
+
+ - Item:
+   * Item.mapToItem() and mapFromItem() now work with QPointF and QRectF types
+     as well as with raw numbers.
+   * Item.mapToGlobal() and mapFromGlobal() now work with QPointF as well as
+     with raw numeric coordinates.
+
+ - Item Views:
+   * [QTBUG-81580] DelegateChooser now supports using a property name as
+     roleValue when an array of QObject instances is used as the model for a
+   * [QTBUG-74046] ListView no longer allows the user to press on an Overlay or
+     PullBack header or footer and start scrolling, but only on the content
+     delegates.
+   * [QTBUG-80507] ListView now has support for reusing delegate items. This can
+     be switched on by setting the reuseItems property of ListView to true.
+
+ - MouseArea:
+   * [QTBUG-74987] MouseArea no longer gets stuck in pressed state if it
+     is set invisible on press.
+
+ - MultiPointTouchArea:
+   * [QTBUG-81944] The TouchPoint.x and y properties are updated together
+     before the change signals are emitted.
+
+ - Particles:
+   * [QTBUG-76827] QQuickItemParticle::give() is now implemented.
+
+ - RHI / scene graph:
+   * [QTBUG-82927] QSGRenderNode is now usable in Quick3D.
+   * [QTBUG-78570] Added API to get the platform specific texture handle.
+   * [QTBUG-80690] Fixed invalid core profile shader code.
+   * [QTBUG-80498] We now avoid unnecessary rendering of an extra frame with QSG_RHI=1
+   * [QTBUG-80365] Initialization failure now results in a sensible error dialog
+     rather than an infinite loop.
+   * [QTBUG-82988] QSGSimpleMaterial and QSGSimpleMaterialShader are now
+     deprecated.
+
+ - Shapes:
+   * Added PathText path element which can be used together with Qt Quick Shapes
+     to get text rendering that does not cache glyphs in a texture, but
+     triangulates the outlines of the glyphs instead.
+
+ - Text:
+   * [QTBUG-78277] Added new API that exposes implicitWidth, and isLast on the
+     QQuickTextLine for use in the lineLaidOut signal. This allows the user to
+     layout other items relative to the lines of text.
+   * [QTBUG-80759] Reduced redundant renderering of glyphs, thus fixing incorrect
+     rendering of superscripts.
+
+ - TextInput:
+   * [QTBUG-76320] Inputmask X character now requires non-blank input.
+
+ - QQuickItem:
+   * [QTBUG-68176] ParentChange now avoids roundoff error when restoring the old position.
+
+ - QQuickWidget:
+   * [QTBUG-78323] When QQuickWidget is resized, an in-scene dialog or other
+     content that is rendered into an offscreen window is now resized correctly.
+
+ - QQuickWindow:
+   * [QTBUG-78141] LanguageChange events are now delivered to items to enable
+     them to update translations.
+   * [QTBUG-79268] createTextureFromId() is now deprecated.
