@@ -13,7 +13,6 @@ qtConfig(opengl(es1|es2)?) {
     QUICKTESTS += \
         qquickanimatedsprite \
         qquickframebufferobject \
-        qquickopenglinfo \
         qquickspritesequence
         qtHaveModule(opengl): QUICKTESTS += qquickrendercontrol
 
