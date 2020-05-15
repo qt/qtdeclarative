@@ -92,7 +92,7 @@ ReturnedValue DataViewCtor::virtualCallAsConstructor(const FunctionObject *f, co
     uint byteLength = (argc < 3 || argv[2].isUndefined()) ? (bufferLength - offset) : ::toIndex(scope.engine, argv[2]);
     if (scope.hasException())
         return Encode::undefined();
-    if (offset + byteLength > bufferLength)
+    if (offset > bufferLength ||  byteLength > bufferLength - offset)
         return scope.engine->throwRangeError(QStringLiteral("DataView: constructor arguments out of range"));
 
     Scoped<DataView> a(scope, scope.engine->memoryManager->allocate<DataView>());
