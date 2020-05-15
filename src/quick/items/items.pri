@@ -255,11 +255,9 @@ qtConfig(quick-sprite) {
 # Items that depend on OpenGL Renderer
 qtConfig(opengl(es1|es2)?) {
     SOURCES += \
-        $$PWD/qquickopenglinfo.cpp \
         $$PWD/qquickframebufferobject.cpp
 
     HEADERS += \
-        $$PWD/qquickopenglinfo_p.h \
         $$PWD/qquickframebufferobject.h
 }
 

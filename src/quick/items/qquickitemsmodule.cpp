@@ -101,9 +101,6 @@
 #include "qquickspritesequence_p.h"
 #include "qquickanimatedsprite_p.h"
 #endif
-#if QT_CONFIG(opengl)
-# include "qquickopenglinfo_p.h"
-#endif
 #include "qquickgraphicsinfo_p.h"
 #if QT_CONFIG(quick_shadereffect)
 #include <QtQuick/private/qquickshadereffectsource_p.h>

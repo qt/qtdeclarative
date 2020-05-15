@@ -451,7 +451,6 @@ qt_extend_target(Quick CONDITION QT_FEATURE_quick_path
 qt_extend_target(Quick CONDITION QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT_FEATURE_opengles3
     SOURCES
         items/qquickframebufferobject.cpp items/qquickframebufferobject.h
-        items/qquickopenglinfo.cpp items/qquickopenglinfo_p.h
         scenegraph/compressedtexture/qsgcompressedatlastexture.cpp scenegraph/compressedtexture/qsgcompressedatlastexture_p.h
         scenegraph/compressedtexture/qsgcompressedtexture.cpp scenegraph/compressedtexture/qsgcompressedtexture_p.h
         scenegraph/coreapi/qsgbatchrenderer.cpp scenegraph/coreapi/qsgbatchrenderer_p.h
