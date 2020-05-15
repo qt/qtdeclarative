@@ -32,10 +32,9 @@
 #include <private/qabstractanimation_p.h>
 #include <private/qquickanimatedsprite_p.h>
 #include <private/qquickitem_p.h>
+#include <private/qquickwindow_p.h>
 #include <QtCore/qscopedpointer.h>
 #include <QtGui/qpainter.h>
-#include <qopenglcontext.h>
-#include <qopenglfunctions.h>
 #include <QtGui/qoffscreensurface.h>
 #include <QtQml/qqmlproperty.h>
 
@@ -298,15 +297,7 @@ void tst_qquickanimatedsprite::test_largeAnimation()
         maxFrame = qMax(frame, maxFrame);
         prevFrame = frame;
     }
-    int maxTextureSize;
-    QOpenGLContext ctx;
-    ctx.create();
-    QOffscreenSurface offscreenSurface;
-    offscreenSurface.setFormat(ctx.format());
-    offscreenSurface.create();
-    QVERIFY(ctx.makeCurrent(&offscreenSurface));
-    ctx.functions()->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextureSize);
-    ctx.doneCurrent();
+    int maxTextureSize = QQuickWindowPrivate::get(window.data())->context->maxTextureSize();
     maxTextureSize /= 512;
     QVERIFY(maxFrame > maxTextureSize); // make sure we go beyond the texture width limitation
     QCOMPARE(loopCounter, sprite->loops());
