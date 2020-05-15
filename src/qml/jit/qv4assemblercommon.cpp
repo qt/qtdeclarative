@@ -76,7 +76,7 @@ public:
     ~QIODevicePrintStream()
     {}
 
-    void vprintf(const char* format, va_list argList) WTF_ATTRIBUTE_PRINTF(2, 0)
+    void vprintf(const char* format, va_list argList) override WTF_ATTRIBUTE_PRINTF(2, 0)
     {
         const int written = qvsnprintf(buf.data(), buf.size(), format, argList);
         if (written > 0)
@@ -84,7 +84,7 @@ public:
         memset(buf.data(), 0, qMin(written, buf.size()));
     }
 
-    void flush()
+    void flush() override
     {}
 
 private:

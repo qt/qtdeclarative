@@ -78,7 +78,7 @@ public:
     QQuickColorGroup *inactive() const;
     QQuickColorGroup *disabled() const;
 
-    QPalette::ColorGroup currentColorGroup() const;
+    QPalette::ColorGroup currentColorGroup() const override;
     void setCurrentGroup(QPalette::ColorGroup currentGroup);
 
     void fromQPalette(QPalette palette);

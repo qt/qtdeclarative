@@ -122,14 +122,14 @@ public:
 
         A default palette for this component.
     */
-    virtual QPalette defaultPalette() const;
+    QPalette defaultPalette() const override;
 
     /*!
         \internal
 
         A parent palette for this component. Can be null.
     */
-    virtual QPalette parentPalette() const;
+    QPalette parentPalette() const override;
 
     /*!
         \internal

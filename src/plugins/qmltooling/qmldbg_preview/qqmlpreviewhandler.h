@@ -104,7 +104,7 @@ signals:
     void fps(const FpsInfo &info);
 
 protected:
-    bool eventFilter(QObject *obj, QEvent *event);
+    bool eventFilter(QObject *obj, QEvent *event) override;
 private:
     void doZoom();
     void tryCreateObject();

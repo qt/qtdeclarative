@@ -78,10 +78,10 @@ struct FakeExpression : public QQmlJS::AST::NullExpression
         : location(start, length)
     {}
 
-    virtual QQmlJS::SourceLocation firstSourceLocation() const
+    QQmlJS::SourceLocation firstSourceLocation() const override
     { return location; }
 
-    virtual QQmlJS::SourceLocation lastSourceLocation() const
+    QQmlJS::SourceLocation lastSourceLocation() const override
     { return location; }
 
 private:

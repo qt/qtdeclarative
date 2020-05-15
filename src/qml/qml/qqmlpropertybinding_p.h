@@ -69,7 +69,7 @@ public:
                                           QObject *obj, const QQmlRefPointer<QQmlContextData> &ctxt,
                                           QV4::ExecutionContext *scope);
 
-    virtual void expressionChanged();
+    void expressionChanged() override;
 
 private:
     QQmlPropertyBinding(const QMetaType &metaType);
