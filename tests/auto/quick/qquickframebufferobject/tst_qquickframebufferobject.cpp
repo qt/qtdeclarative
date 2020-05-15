@@ -144,11 +144,18 @@ class tst_QQuickFramebufferObject: public QQmlDataTest
     Q_OBJECT
 public:
 private slots:
+    void initTestCase();
     void testThatStuffWorks_data();
     void testThatStuffWorks();
 
     void testInvalidate();
 };
+
+void tst_QQuickFramebufferObject::initTestCase()
+{
+    QQmlDataTest::initTestCase();
+    QQuickWindow::setSceneGraphBackend(QSGRendererInterface::OpenGLRhi);
+}
 
 void tst_QQuickFramebufferObject::testThatStuffWorks_data()
 {
