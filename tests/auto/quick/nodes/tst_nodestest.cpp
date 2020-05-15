@@ -29,8 +29,6 @@
 #include <QtCore/QString>
 #include <QtTest/QtTest>
 
-#include <QtGui/QOffscreenSurface>
-#include <QOpenGLContext>
 #include <QtQuick/qsgnode.h>
 #include <QtQuick/private/qsgbatchrenderer_p.h>
 #include <QtQuick/private/qsgnodeupdater_p.h>
@@ -43,6 +41,32 @@
 
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformintegration.h>
+#include <QtGui/qoffscreensurface.h>
+
+#include <QtGui/private/qrhi_p.h>
+#include <QtGui/private/qrhinull_p.h>
+
+#if QT_CONFIG(opengl)
+# include <QOpenGLContext>
+# include <QtGui/private/qrhigles2_p.h>
+# define TST_GL
+#endif
+
+#if QT_CONFIG(vulkan)
+# include <QVulkanInstance>
+# include <QtGui/private/qrhivulkan_p.h>
+# define TST_VK
+#endif
+
+#ifdef Q_OS_WIN
+#include <QtGui/private/qrhid3d11_p.h>
+# define TST_D3D11
+#endif
+
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+# include <QtGui/private/qrhimetal_p.h>
+# define TST_MTL
+#endif
 
 QT_BEGIN_NAMESPACE
 inline bool operator==(const QSGGeometry::TexturedPoint2D& l, const QSGGeometry::TexturedPoint2D& r)
@@ -63,57 +87,80 @@ private Q_SLOTS:
     void cleanupTestCase();
 
     // Root nodes
-    void propegate();
-    void propegateWithMultipleRoots();
+    void propagate_data();
+    void propagate();
+    void propagateWithMultipleRoots_data();
+    void propagateWithMultipleRoots();
 
     // Opacity nodes
+    void basicOpacityNode_data();
     void basicOpacityNode();
-    void opacityPropegation();
+    void opacityPropagation_data();
+    void opacityPropagation();
 
+    void isBlockedCheck_data();
     void isBlockedCheck();
 
+    void textureNodeTextureOwnership_data();
     void textureNodeTextureOwnership();
+    void textureNodeRect_data();
     void textureNodeRect();
 
 private:
+    void rhiTestData();
+
     QOffscreenSurface *surface = nullptr;
     QOpenGLContext *context = nullptr;
     QSGDefaultRenderContext *renderContext = nullptr;
+
+    struct {
+        QRhiNullInitParams null;
+#ifdef TST_GL
+        QRhiGles2InitParams gl;
+#endif
+#ifdef TST_VK
+        QRhiVulkanInitParams vk;
+#endif
+#ifdef TST_D3D11
+        QRhiD3D11InitParams d3d;
+#endif
+#ifdef TST_MTL
+        QRhiMetalInitParams mtl;
+#endif
+    } initParams;
+
+#ifdef TST_VK
+    QVulkanInstance vulkanInstance;
+#endif
+    QOffscreenSurface *fallbackSurface = nullptr;
 };
 
 void NodesTest::initTestCase()
 {
-    if (!QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::OpenGL))
-        QSKIP("OpenGL not supported by the platform");
+#ifdef TST_GL
+    fallbackSurface = QRhiGles2InitParams::newFallbackSurface();
+    initParams.gl.fallbackSurface = fallbackSurface;
+#endif
 
-    QSGRenderLoop *renderLoop = QSGRenderLoop::instance();
+#ifdef TST_VK
+    vulkanInstance.setLayers({ QByteArrayLiteral("VK_LAYER_LUNARG_standard_validation") });
+    vulkanInstance.setExtensions({ QByteArrayLiteral("VK_KHR_get_physical_device_properties2") });
+    vulkanInstance.create();
+    initParams.vk.inst = &vulkanInstance;
+#endif
 
-    surface = new QOffscreenSurface;
-    surface->create();
-    QVERIFY(surface->isValid());
-
-    context = new QOpenGLContext();
-    QVERIFY(context->create());
-    QVERIFY(context->makeCurrent(surface));
-
-    auto rc = renderLoop->createRenderContext(renderLoop->sceneGraphContext());
-    renderContext = static_cast<QSGDefaultRenderContext *>(rc);
-    QVERIFY(renderContext);
-    QSGDefaultRenderContext::InitParams rcParams;
-    rcParams.openGLContext = context;
-    rcParams.initialSurfacePixelSize = QSize(512, 512); // dummy, make up something
-    renderContext->initialize(&rcParams);
-    QVERIFY(renderContext->isValid());
+#ifdef TST_D3D11
+    initParams.d3d.enableDebugLayer = true;
+#endif
 }
 
 void NodesTest::cleanupTestCase()
 {
-    if (renderContext)
-        renderContext->invalidate();
-    if (context)
-        context->doneCurrent();
-    delete context;
-    delete surface;
+#ifdef TST_VK
+    vulkanInstance.destroy();
+#endif
+
+    delete fallbackSurface;
 }
 
 class DummyRenderer : public QSGBatchRenderer::Renderer
@@ -150,8 +197,55 @@ NodesTest::NodesTest()
 {
 }
 
-void NodesTest::propegate()
+void NodesTest::rhiTestData()
 {
+    QTest::addColumn<QRhi::Implementation>("impl");
+    QTest::addColumn<QRhiInitParams *>("initParams");
+
+    QTest::newRow("Null") << QRhi::Null << static_cast<QRhiInitParams *>(&initParams.null);
+#ifdef TST_GL
+    QTest::newRow("OpenGL") << QRhi::OpenGLES2 << static_cast<QRhiInitParams *>(&initParams.gl);
+#endif
+#ifdef TST_VK
+    if (vulkanInstance.isValid())
+        QTest::newRow("Vulkan") << QRhi::Vulkan << static_cast<QRhiInitParams *>(&initParams.vk);
+#endif
+#ifdef TST_D3D11
+    QTest::newRow("Direct3D 11") << QRhi::D3D11 << static_cast<QRhiInitParams *>(&initParams.d3d);
+#endif
+#ifdef TST_MTL
+    QTest::newRow("Metal") << QRhi::Metal << static_cast<QRhiInitParams *>(&initParams.mtl);
+#endif
+}
+
+#define INIT_RHI()                      \
+    QFETCH(QRhi::Implementation, impl); \
+    QFETCH(QRhiInitParams *, initParams); \
+    QScopedPointer<QRhi> rhi(QRhi::create(impl, initParams, QRhi::Flags(), nullptr)); \
+    if (!rhi) \
+        QSKIP("Failed to create QRhi, skipping test"); \
+    QSGRenderLoop *renderLoop = QSGRenderLoop::instance(); \
+    auto rc = renderLoop->createRenderContext(renderLoop->sceneGraphContext()); \
+    renderContext = static_cast<QSGDefaultRenderContext *>(rc); \
+    QVERIFY(renderContext); \
+    QSGDefaultRenderContext::InitParams rcParams; \
+    rcParams.rhi = rhi.data(); \
+    rcParams.initialSurfacePixelSize = QSize(512, 512); \
+    renderContext->initialize(&rcParams); \
+    QVERIFY(renderContext->isValid()); \
+    QSGRendererInterface *rif = renderLoop->sceneGraphContext()->rendererInterface(renderContext); \
+    if (!QSGRendererInterface::isApiRhiBased(rif->graphicsApi())) \
+        QSKIP("Skipping due to using software backend")
+
+void NodesTest::propagate_data()
+{
+    rhiTestData();
+}
+
+void NodesTest::propagate()
+{
+    INIT_RHI();
+
     QSGRootNode root;
     QSGNode child; child.setFlag(QSGNode::OwnedByParent, false);
     root.appendChildNode(&child);
@@ -162,11 +256,19 @@ void NodesTest::propegate()
 
     QCOMPARE(&child, renderer.changedNode);
     QCOMPARE((int) renderer.changedState, (int) QSGNode::DirtyGeometry);
+
+    renderContext->invalidate();
 }
 
-
-void NodesTest::propegateWithMultipleRoots()
+void NodesTest::propagateWithMultipleRoots_data()
 {
+    rhiTestData();
+}
+
+void NodesTest::propagateWithMultipleRoots()
+{
+    INIT_RHI();
+
     QSGRootNode root1;
     QSGNode child2; child2.setFlag(QSGNode::OwnedByParent, false);
     QSGRootNode root3; root3.setFlag(QSGNode::OwnedByParent, false);
@@ -186,10 +288,19 @@ void NodesTest::propegateWithMultipleRoots()
 
     QCOMPARE((int) ren1.changedState, (int) QSGNode::DirtyGeometry);
     QCOMPARE((int) ren2.changedState, (int) QSGNode::DirtyGeometry);
+
+    renderContext->invalidate();
+}
+
+void NodesTest::basicOpacityNode_data()
+{
+    rhiTestData();
 }
 
 void NodesTest::basicOpacityNode()
 {
+    INIT_RHI();
+
     QSGOpacityNode n;
     QCOMPARE(n.opacity(), 1.);
 
@@ -201,10 +312,19 @@ void NodesTest::basicOpacityNode()
 
     n.setOpacity(2);
     QCOMPARE(n.opacity(), 1.);
+
+    renderContext->invalidate();
 }
 
-void NodesTest::opacityPropegation()
+void NodesTest::opacityPropagation_data()
 {
+    rhiTestData();
+}
+
+void NodesTest::opacityPropagation()
+{
+    INIT_RHI();
+
     QSGRootNode root;
     QSGOpacityNode *a = new QSGOpacityNode;
     QSGOpacityNode *b = new QSGOpacityNode;
@@ -224,6 +344,10 @@ void NodesTest::opacityPropegation()
     b->setOpacity(0.8);
     c->setOpacity(0.7);
 
+    // We do not need to really render, but have to do the preprocessing.
+    // The expectation towards renderer is that calling renderScene()
+    // without a render target set does not render anything, but performs
+    // the preprocessing steps.
     renderer.renderScene();
 
     QCOMPARE(a->combinedOpacity(), 0.9);
@@ -248,10 +372,19 @@ void NodesTest::opacityPropegation()
     // subtree
     QCOMPARE(c->combinedOpacity(), 0.9 * 0.1 * 0.7);
     QCOMPARE(geometry->inheritedOpacity(), 0.9 * 0.1 * 0.7);
+
+    renderContext->invalidate();
+}
+
+void NodesTest::isBlockedCheck_data()
+{
+    rhiTestData();
 }
 
 void NodesTest::isBlockedCheck()
 {
+    INIT_RHI();
+
     QSGRootNode root;
     QSGOpacityNode *opacity = new QSGOpacityNode();
     QSGNode *node = new QSGNode();
@@ -266,10 +399,19 @@ void NodesTest::isBlockedCheck()
 
     opacity->setOpacity(1);
     QVERIFY(!updater.isNodeBlocked(node, &root));
+
+    renderContext->invalidate();
+}
+
+void NodesTest::textureNodeTextureOwnership_data()
+{
+    rhiTestData();
 }
 
 void NodesTest::textureNodeTextureOwnership()
 {
+    INIT_RHI();
+
     { // Check that it is not deleted by default
         QPointer<QSGTexture> texture(new QSGPlainTexture());
 
@@ -311,10 +453,19 @@ void NodesTest::textureNodeTextureOwnership()
 
         delete tn;
     }
+
+    renderContext->invalidate();
+}
+
+void NodesTest::textureNodeRect_data()
+{
+    rhiTestData();
 }
 
 void NodesTest::textureNodeRect()
 {
+    INIT_RHI();
+
     QSGPlainTexture texture;
     texture.setTextureSize(QSize(400, 400));
     QSGSimpleTextureNode tn;
@@ -361,6 +512,8 @@ void NodesTest::textureNodeRect()
     QCOMPARE(vertices[1], bottomLeft);
     QCOMPARE(vertices[2], topRight);
     QCOMPARE(vertices[3], bottomRight);
+
+    renderContext->invalidate();
 }
 
 QTEST_MAIN(NodesTest);
