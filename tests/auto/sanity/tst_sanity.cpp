@@ -365,7 +365,6 @@ void tst_Sanity::attachedObjects()
 void tst_Sanity::attachedObjects_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRowForEachControl(&engine, "calendar", "Qt/labs/calendar");
     addTestRowForEachControl(&engine, "controls", "QtQuick/Controls.2");
     addTestRowForEachControl(&engine, "controls/fusion", "QtQuick/Controls.2", QStringList() << "CheckIndicator" << "RadioIndicator" << "SliderGroove" << "SliderHandle" << "SwitchIndicator");
     addTestRowForEachControl(&engine, "controls/material", "QtQuick/Controls.2/Material", QStringList() << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator" << "BoxShadow" << "ElevationEffect" << "CursorDelegate");

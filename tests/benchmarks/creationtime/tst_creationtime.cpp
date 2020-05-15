@@ -63,9 +63,6 @@ private slots:
     void universal();
     void universal_data();
 
-    void calendar();
-    void calendar_data();
-
 private:
     QQmlEngine engine;
 };
@@ -148,18 +145,6 @@ void tst_CreationTime::universal_data()
 {
     QTest::addColumn<QUrl>("url");
     addTestRowForEachControl(&engine, "controls/universal", "QtQuick/Controls.2/Universal", QStringList() << "ApplicationWindow" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
-}
-
-void tst_CreationTime::calendar()
-{
-    QFETCH(QUrl, url);
-    doBenchmark(&engine, url);
-}
-
-void tst_CreationTime::calendar_data()
-{
-    QTest::addColumn<QUrl>("url");
-    addTestRowForEachControl(&engine, "calendar", "Qt/labs/calendar");
 }
 
 QTEST_MAIN(tst_CreationTime)

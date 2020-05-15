@@ -1,7 +1,6 @@
 # Generated from imports.pro.
 
 add_subdirectory(controls)
-add_subdirectory(calendar)
 add_subdirectory(platform)
 add_subdirectory(templates)
 add_subdirectory(controls/fusion)
