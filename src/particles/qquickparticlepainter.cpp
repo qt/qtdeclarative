@@ -145,14 +145,14 @@ void QQuickParticlePainter::load(QQuickParticleData* d)
     initialize(d->groupId, d->index);
     if (m_pleaseReset)
         return;
-    m_pendingCommits << qMakePair<int, int>(d->groupId, d->index);
+    m_pendingCommits << qMakePair(d->groupId, d->index);
 }
 
 void QQuickParticlePainter::reload(QQuickParticleData* d)
 {
     if (m_pleaseReset)
         return;
-    m_pendingCommits << qMakePair<int, int>(d->groupId, d->index);
+    m_pendingCommits << qMakePair(d->groupId, d->index);
 }
 
 void QQuickParticlePainter::reset()

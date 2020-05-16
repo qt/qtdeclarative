@@ -2030,7 +2030,7 @@ void QQuickWindowPrivate::deliverToPassiveGrabbers(const QVector<QPointer <QQuic
                 alreadyFiltered = it->second;
             } else {
                 alreadyFiltered = sendFilteredPointerEvent(pointerEvent, par);
-                sendFilteredPointerEventResult << qMakePair<QQuickItem*, bool>(par, alreadyFiltered);
+                sendFilteredPointerEventResult << qMakePair(par, alreadyFiltered);
             }
             if (!alreadyFiltered) {
                 pointerEvent->localize(handler->parentItem());
