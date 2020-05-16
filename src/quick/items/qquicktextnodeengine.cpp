@@ -700,9 +700,9 @@ void QQuickTextNodeEngine::addFrameDecorations(QTextDocument *document, QTextFra
     }
 }
 
-size_t qHash(const QQuickTextNodeEngine::BinaryTreeNodeKey &key)
+size_t qHash(const QQuickTextNodeEngine::BinaryTreeNodeKey &key, size_t seed = 0)
 {
-    return qHashMulti(/*seed=*/0, key.fontEngine, key.clipNode, key.color, key.selectionState);
+    return qHashMulti(seed, key.fontEngine, key.clipNode, key.color, key.selectionState);
 }
 
 void QQuickTextNodeEngine::mergeProcessedNodes(QList<BinaryTreeNode *> *regularNodes,
