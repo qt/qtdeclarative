@@ -1288,9 +1288,6 @@ void tst_QQuickPopup::setOverlayParentToNull()
 
     QQuickWindow *window = helper.window;
     window->show();
-#ifdef QT_DEBUG
-    QTest::ignoreMessage(QtWarningMsg, "ShaderEffectSource: 'recursive' must be set to true when rendering recursively.");
-#endif
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QVERIFY(QMetaObject::invokeMethod(window, "nullifyOverlayParent"));
