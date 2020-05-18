@@ -88,6 +88,7 @@ void tst_translation::dialogButtonBox()
     QTranslator translator;
     QVERIFY(translator.load("qtbase_fr.qm", ":/"));
     QVERIFY(qApp->installTranslator(&translator));
+    qApp->sendPostedEvents();
     view.engine()->retranslate();
 
     QString translatedSaveText = QGuiApplicationPrivate::platformTheme()->standardButtonText(QPlatformDialogHelper::Save);

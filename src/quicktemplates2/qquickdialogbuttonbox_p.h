@@ -131,6 +131,7 @@ protected:
 #if QT_CONFIG(accessibility)
     QAccessible::Role accessibleRole() const override;
 #endif
+    bool event(QEvent *e) override;
 
 private:
     Q_DISABLE_COPY(QQuickDialogButtonBox)

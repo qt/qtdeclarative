@@ -706,34 +706,19 @@ void QQuickDialogButtonBox::updatePolish()
     d->updateLayout();
 }
 
-class LanguageEventFilter : public QObject
+bool QQuickDialogButtonBox::event(QEvent *e)
 {
-public:
-    LanguageEventFilter(QQuickDialogButtonBoxPrivate *box)
-        : QObject(box->q_ptr)
-        , boxPrivate(box)
-    {
-    }
-
-protected:
-    bool eventFilter(QObject *, QEvent *event)
-    {
-        if (event->type() == QEvent::LanguageChange)
-            boxPrivate->updateLanguage();
-        return false;
-    }
-
-private:
-    QQuickDialogButtonBoxPrivate *boxPrivate;
-};
+    Q_D(QQuickDialogButtonBox);
+    if (e->type() == QEvent::LanguageChange)
+        d->updateLanguage();
+    return QQuickContainer::event(e);
+}
 
 void QQuickDialogButtonBox::componentComplete()
 {
     Q_D(QQuickDialogButtonBox);
     QQuickContainer::componentComplete();
     d->updateLayout();
-    // TODO: use the solution in QTBUG-78141 instead, when it's implemented.
-    qApp->installEventFilter(new LanguageEventFilter(d));
 }
 
 void QQuickDialogButtonBox::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
