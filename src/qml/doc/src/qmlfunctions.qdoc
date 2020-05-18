@@ -867,6 +867,7 @@
    \relates QQmlEngine
 
    \overload qmlRegisterSingletonType
+   \since 5.14
 */
 
 /*!
