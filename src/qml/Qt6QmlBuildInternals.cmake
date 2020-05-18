@@ -7,7 +7,7 @@ include_guard(GLOBAL)
 # This function creates a CMake target for qml modules. It will also make
 # sure that if no C++ source are present, that qml files show up in the project
 # in an IDE. Finally, it will also create a custom ${target}_qmltypes which
-# can be used to generate the respective plugin.qmltypes file.
+# can be used to generate the respective plugins.qmltypes file.
 #
 #  CPP_PLUGIN: Whether this qml module has any c++ source files.
 #  URI: Module's uri.
