@@ -1273,11 +1273,6 @@ void tst_QQuickPopup::toolTipCrashOnClose()
 
     QQuickWindow *window = helper.window;
     window->show();
-    // The warning only occurs with debug builds for some reason.
-    // In any case, the warning is irrelevant, but using ShaderEffectSource is important, so we ignore it.
-#ifdef QT_DEBUG
-    QTest::ignoreMessage(QtWarningMsg, "ShaderEffectSource: 'recursive' must be set to true when rendering recursively.");
-#endif
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QTest::mouseMove(window, QPoint(window->width() / 2, window->height() / 2));
