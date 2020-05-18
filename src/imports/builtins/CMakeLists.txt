@@ -9,11 +9,4 @@ qt_copy_or_install(FILES ${qml_type_file}
     DESTINATION ${qml_install_dir}
 )
 
-if (NOT CMAKE_CROSSCOMPILING)
-
-    add_custom_target(builtins_qmltypes
-        COMMAND qmlplugindump -builtins > ${CMAKE_CURRENT_SOURCE_DIR}/${qml_type_file}
-    )
-endif()
-
 # special case end
