@@ -977,8 +977,8 @@ void FindWarningVisitor::endVisit(QQmlJS::AST::FieldMemberExpression *fieldMembe
         QString type;
         if (auto *binary = cast<BinaryExpression *>(base)) {
             if (binary->op == QSOperator::As) {
-                if (auto *right = cast<IdentifierExpression *>(binary->right))
-                    type = right->name.toString();
+                if (auto *right = cast<TypeExpression *>(binary->right))
+                    type = right->m_type->toString();
             }
         }
         m_currentScope->accessMember(fieldMember->name.toString(),

@@ -186,15 +186,13 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
         if (!detectedRestrictiveName.isEmpty())
             continue;
 
-        auto type = m_types.value(scopeName);
+        auto type = m_types.value(access.m_parentType.isEmpty() ? scopeName : access.m_parentType);
         bool typeFound = false;
         while (type) {
             const auto typeProperties = type->properties();
             const auto typeIt = typeProperties.find(access.m_name);
             if (typeIt != typeProperties.end()) {
-                const ScopeTree::ConstPtr propType = access.m_parentType.isEmpty()
-                        ? typeIt->type()
-                        : m_types.value(access.m_parentType);
+                const ScopeTree::ConstPtr propType = typeIt->type();
                 scope = propType ? propType : m_types.value(typeIt->typeName());
                 typeFound = true;
                 break;
