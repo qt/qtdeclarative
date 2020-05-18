@@ -60,9 +60,6 @@ QML_TYPEREGISTRAR_FLAGS = \
     --minor-version=$$QML_IMPORT_MINOR_VERSION \
     --foreign-types=$$join(QML_FOREIGN_METATYPES, ',')
 
-DEPENDENCIESFILE = $$_PRO_FILE_PWD_/dependencies.json
-exists($$DEPENDENCIESFILE): QML_TYPEREGISTRAR_FLAGS += --dependencies=$$DEPENDENCIESFILE
-
 !isEmpty(MODULE_PRIVATE_INCLUDES): QML_TYPEREGISTRAR_FLAGS += --private-includes
 
 METATYPES_JSON = $$lower($$basename(TARGET))_metatypes.json

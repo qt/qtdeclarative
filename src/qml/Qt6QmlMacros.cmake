@@ -548,11 +548,6 @@ function(qt6_qml_type_registration target)
         "@${foreign_types_file}"
     )
 
-    set(dependencies_json_file "${target_source_dir}/dependencies.json")
-    if (EXISTS ${dependencies_json_file})
-        list(APPEND cmd_args --dependencies=${dependencies_json_file})
-    endif()
-
     if (TARGET ${target}Private)
         list(APPEND cmd_args --private-includes)
     endif()

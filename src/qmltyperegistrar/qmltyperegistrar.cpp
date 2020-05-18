@@ -267,12 +267,6 @@ int main(int argc, char **argv)
     foreignTypesOption.setValueName(QStringLiteral("foreign types"));
     parser.addOption(foreignTypesOption);
 
-    QCommandLineOption dependenciesOption(QStringLiteral("dependencies"));
-    dependenciesOption.setDescription(QStringLiteral("JSON file with dependencies to be stated in "
-                                                     "qmltypes file."));
-    dependenciesOption.setValueName(QStringLiteral("dependencies.json"));
-    parser.addOption(dependenciesOption);
-
     parser.addPositionalArgument(QStringLiteral("[MOC generated json file]"),
                                  QStringLiteral("MOC generated json output."));
 
@@ -491,6 +485,6 @@ int main(int argc, char **argv)
     creator.setModule(module);
     creator.setVersion(QTypeRevision::fromVersion(parser.value(majorVersionOption).toInt(), 0));
 
-    creator.generate(parser.value(pluginTypesOption), parser.value(dependenciesOption));
+    creator.generate(parser.value(pluginTypesOption));
     return EXIT_SUCCESS;
 }
