@@ -59,6 +59,7 @@ QT_BEGIN_NAMESPACE
 class QQmlContext;
 class QQmlComponent;
 struct QQuickStackTransition;
+class RequiredProperties;
 
 class QQuickStackElement : public QQuickItemViewTransitionableItem, public QQuickItemChangeListener
 {
@@ -71,8 +72,8 @@ public:
     static QQuickStackElement *fromObject(QObject *object, QQuickStackView *view, QString *error);
 
     bool load(QQuickStackView *parent);
-    void incubate(QObject *object);
-    void initialize();
+    void incubate(QObject *object, RequiredProperties &requiredProperties);
+    void initialize(RequiredProperties &requiredProperties);
 
     void setIndex(int index);
     void setView(QQuickStackView *view);

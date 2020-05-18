@@ -74,6 +74,8 @@ TestCase {
         SignalSpy { }
     }
 
+    Component { id: withRequired; Item { required property int i }}
+
     function test_initialItem() {
         var control1 = createTemporaryObject(stackView, testCase)
         verify(control1)
@@ -1540,5 +1542,15 @@ TestCase {
         // Blue rectangle is moved to the right and becomes invisible
         compare(blueRect.x, 200)
         compare(blueRect.opacity, 0)
+    }
+
+    function test_requiredProperties() {
+        var control = createTemporaryObject(stackView, testCase)
+        verify(control)
+        let failedPush = control.push(withRequired)
+        compare(failedPush, null);
+        control.push(withRequired, {"i": 42})
+        verify(control.currentItem.i === 42)
+        control.pop(StackView.Immediate)
     }
 }
