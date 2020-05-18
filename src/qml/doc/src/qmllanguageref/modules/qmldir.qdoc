@@ -390,27 +390,21 @@ error checking and other functionality to users of your module.
 Any module that uses plugins should also ship a type description file.
 
 The best way to create a qmltypes file for your module is to generate it
-using the \c qmlplugindump tool that is provided with Qt.
+using the build system and the \l QML_ELEMENT macros.
 
 Example:
-If your module is in \c /tmp/imports/My/Module, you could run
+If your module is in \c /tmp/imports/My/Module, a file caled \c plugins.qmltypes
+should be generated alongside the actual plugin binary.
+
+Add the line
 \code
-qmlplugindump My.Module 1.0 /tmp/imports > /tmp/imports/My/Module/mymodule.qmltypes
-\endcode
-to generate type information for your module. Afterwards, add the line
-\code
-typeinfo mymodule.qmltypes
+typeinfo plugins.qmltypes
 \endcode
 to \c /tmp/imports/My/Module/qmldir to register it.
 
-While the qmldump tool covers most cases, it does not work if:
-\list
-\li The plugin uses a \c{QQmlCustomParser}. The component that uses
-   the custom parser will not get its members documented.
-\li The plugin can not be loaded. In particular if you cross-compiled
-   the plugin for a different architecture, qmldump will not be able to
-   load it.
-\endlist
+While the automatic generation covers most cases, it does not work if the plugin
+uses a \c{QQmlCustomParser}. The component that uses the custom parser will not
+get its members documented.
 
 In case you have to create a qmltypes file manually or need to adjust
 an existing one, this is the file format:
