@@ -44,6 +44,7 @@
 #include <QtQml/private/qv4qobjectwrapper_p.h>
 #include <QtQml/private/qqmlcomponent_p.h>
 #include <QtQml/private/qqmlengine_p.h>
+#include <QtQml/private/qqmlincubator_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -65,7 +66,11 @@ public:
     }
 
 protected:
-    void setInitialState(QObject *object) override { element->incubate(object); }
+    void setInitialState(QObject *object) override
+    {
+        auto privIncubator = QQmlIncubatorPrivate::get(this);
+        element->incubate(object, privIncubator->requiredProperties());
+    }
 
 private:
     QQuickStackElement *element;
@@ -173,22 +178,23 @@ bool QQuickStackElement::load(QQuickStackView *parent)
         if (component->isError())
             QQuickStackViewPrivate::get(parent)->warn(component->errorString().trimmed());
     } else {
-        initialize();
+        RequiredProperties noRequiredProperties {};
+        initialize(noRequiredProperties);
     }
     return item;
 }
 
-void QQuickStackElement::incubate(QObject *object)
+void QQuickStackElement::incubate(QObject *object, RequiredProperties &requiredProperties)
 {
     item = qmlobject_cast<QQuickItem *>(object);
     if (item) {
         QQmlEngine::setObjectOwnership(item, QQmlEngine::CppOwnership);
         item->setParent(view);
-        initialize();
+        initialize(requiredProperties);
     }
 }
 
-void QQuickStackElement::initialize()
+void QQuickStackElement::initialize(RequiredProperties &requiredProperties)
 {
     if (!item || init)
         return;
@@ -210,9 +216,17 @@ void QQuickStackElement::initialize()
         QV4::ScopedValue ipv(scope, properties.value());
         QV4::Scoped<QV4::QmlContext> qmlContext(scope, qmlCallingContext.value());
         QV4::ScopedValue qmlObject(scope, QV4::QObjectWrapper::wrap(v4, item));
-        RequiredProperties requiredPropertiesCurrentlyNotSupported;
-        QQmlComponentPrivate::setInitialProperties(v4, qmlContext, qmlObject, ipv, requiredPropertiesCurrentlyNotSupported, item);
+        QQmlComponentPrivate::setInitialProperties(v4, qmlContext, qmlObject, ipv, requiredProperties, item);
         properties.clear();
+    }
+    if (!requiredProperties.empty()) {
+        QString error;
+        for (const auto &property: requiredProperties) {
+            error += QLatin1String("Property %1 was marked as required but not set.\n")
+                    .arg(property.propertyName);
+        }
+        QQuickStackViewPrivate::get(view)->warn(error);
+        item = nullptr;
     }
 
     init = true;
