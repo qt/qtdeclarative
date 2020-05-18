@@ -949,8 +949,9 @@ void FindUnqualifiedIDVisitor::endVisit(QQmlJS::AST::FieldMemberExpression *fiel
         QString type;
         if (auto *binary = cast<BinaryExpression *>(base)) {
             if (binary->op == QSOperator::As) {
-                if (auto *right = cast<IdentifierExpression *>(binary->right))
-                    type = right->name.toString();
+                // This is terrible. It's fixed in 6.0.
+                if (auto *right = cast<Type *>(static_cast<Node *>(binary->right)))
+                    type = right->toString();
             }
         }
         m_currentScope->accessMember(fieldMember->name.toString(),
