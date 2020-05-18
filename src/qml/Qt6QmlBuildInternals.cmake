@@ -15,8 +15,6 @@ include_guard(GLOBAL)
 #  to the module's URI where '.' is replaced with '/'. Use this to override the
 #  default substitution pattern.
 #  VERSION: Version of the qml module
-#  QML_PLUGINDUMP_DEPENDENCIES: Path to a dependencies.json file to be consumed
-#  with the ${target}_qmltypes target (optional)
 #  SKIP_TYPE_REGISTRATION: All qml files are expected to be registered by the
 #  c++ plugin code.
 #
@@ -33,7 +31,6 @@ function(qt_add_qml_module target)
         URI
         TARGET_PATH
         VERSION
-        QML_PLUGINDUMP_DEPENDENCIES
         CLASSNAME
     )
 
