@@ -73,6 +73,7 @@ set_target_properties(QmlModels PROPERTIES
     QT_QML_MODULE_VERSION ${CMAKE_PROJECT_VERSION}
     QT_QML_MODULE_URI QtQml.Models
     QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQml/Models"
+    QT_QMLTYPES_FILENAME "plugins.qmltypes"
 )
 
 qt6_qml_type_registration(QmlModels)
