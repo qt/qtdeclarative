@@ -1077,7 +1077,7 @@ void QQuickParticleSystem::updateCurrentTime( int currentTime )
         emitter->emitWindow(timeInt);
     foreach (QQuickParticleAffector* a, m_affectors)
         a->affectSystem(dt);
-    foreach (QQuickParticleData* d, needsReset)
+    for (QQuickParticleData* d : needsReset)
         foreach (QQuickParticlePainter* p, groupData[d->groupId]->painters)
             p->reload(d);
 

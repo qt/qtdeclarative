@@ -24,6 +24,7 @@ qt_add_module(QuickParticles
         qquickparticleaffector.cpp qquickparticleaffector_p.h
         qquickparticleemitter.cpp qquickparticleemitter_p.h
         qquickparticleextruder.cpp qquickparticleextruder_p.h
+        qquickparticleflatset_p.h
         qquickparticlegroup.cpp qquickparticlegroup_p.h
         qquickparticlepainter.cpp qquickparticlepainter_p.h
         qquickparticlesmodule.cpp qquickparticlesmodule_p.h
