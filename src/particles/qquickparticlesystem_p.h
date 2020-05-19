@@ -63,6 +63,7 @@
 #include <private/qv4global_p.h>
 #include <private/qv4staticvalue_p.h>
 #include "qtquickparticlesglobal_p.h"
+#include "qquickparticleflatset_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -409,7 +410,7 @@ public:
     int systemSync(QQuickParticlePainter* p);
 
     //Data members here for ease of related class and auto-test usage. Not "public" API. TODO: d_ptrize
-    QSet<QQuickParticleData*> needsReset;
+    QtQuickParticlesPrivate::QFlatSet<QQuickParticleData*> needsReset;
     QVector<QQuickParticleData*> bySysIdx; //Another reference to the data (data owned by group), but by sysIdx
     QQuickStochasticEngine* stateEngine;
 

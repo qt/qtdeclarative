@@ -13,6 +13,7 @@ HEADERS += \
     $$PWD/qquickparticleaffector_p.h \
     $$PWD/qquickparticleemitter_p.h \
     $$PWD/qquickparticleextruder_p.h \
+    $$PWD/qquickparticleflatset_p.h \
     $$PWD/qquickparticlepainter_p.h \
     $$PWD/qquickparticlesmodule_p.h \
     $$PWD/qquickparticlesystem_p.h \
