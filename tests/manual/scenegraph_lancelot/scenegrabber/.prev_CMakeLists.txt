@@ -5,7 +5,7 @@
 #####################################################################
 
 qt_add_manual_test(qmlscenegrabber
-    OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/.." # special case
+    OUTPUT_DIRECTORY ".."
     SOURCES
         main.cpp
     PUBLIC_LIBRARIES
