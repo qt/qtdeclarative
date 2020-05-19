@@ -650,9 +650,8 @@ void tst_RenderControl::renderAndReadBackWithVulkanNative()
     }
 
     // now that everything is destroyed, get rid of the VkDevice too
-    vulkanInstance.resetDeviceFunctions(dev);
     df->vkDestroyDevice(dev, nullptr);
-
+    vulkanInstance.resetDeviceFunctions(dev);
 #else
     QSKIP("No Vulkan support in Qt build, skipping native Vulkan test");
 #endif
