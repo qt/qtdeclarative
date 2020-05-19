@@ -170,7 +170,7 @@ public:
 #endif
 
     QSGTexture *createTextureFromNativeObject(NativeObjectType type,
-                                              const void *nativeObjectPtr,
+                                              quint64 nativeObjectHandle,
                                               int nativeLayout,
                                               const QSize &size,
                                               CreateTextureOptions options = CreateTextureOption()) const;

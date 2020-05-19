@@ -349,7 +349,7 @@ QSGNode *QQuickFramebufferObject::updatePaintNode(QSGNode *node, UpdatePaintNode
         }
 
         QSGTexture *wrapper = window()->createTextureFromNativeObject(QQuickWindow::NativeObjectTexture,
-                                                                      &displayTexture, 0,
+                                                                      displayTexture, 0,
                                                                       n->fbo->size(),
                                                                       QQuickWindow::TextureHasAlphaChannel);
         n->setTexture(wrapper);

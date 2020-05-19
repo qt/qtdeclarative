@@ -4314,7 +4314,7 @@ QOpenGLFramebufferObject *QQuickWindow::renderTarget() const
     however.
 
     \badcode
-        QQuickRenderTarget rt = QQuickRenderTarget::fromNativeTexture({ &vulkanImage, VK_IMAGE_LAYOUT_PREINITIALIZED }, pixelSize);
+        QQuickRenderTarget rt = QQuickRenderTarget::fromNativeTexture({ vulkanImage, VK_IMAGE_LAYOUT_PREINITIALIZED }, pixelSize);
         quickWindow->setRenderTarget(rt);
     \endcode
 
@@ -5059,15 +5059,10 @@ QSGTexture *QQuickWindow::createTextureFromId(uint id, const QSize &size, Create
 
     \a size specifies the size in pixels.
 
-    \a nativeObjectPtr is a pointer to the native object handle. With OpenGL,
-    the native handle is a GLuint value, so \a nativeObjectPtr is then a
-    pointer to a GLuint. With Vulkan, the native handle is a VkImage, so \a
-    nativeObjectPtr is a pointer to a VkImage. With Direct3D 11 and Metal \a
-    nativeObjectPtr is a pointer to a ID3D11Texture2D or MTLTexture pointer.
-
-    \note Pay attention to the fact that \a nativeObjectPtr is always a pointer
-    to the native texture handle type, even if the native type itself is a
-    pointer.
+    \a nativeObjectHandle is a 64-bit container for the native object handle. With
+    OpenGL, the native handle is a GLuint value, so \a nativeObjectHandle then
+    contains a GLuint. With Vulkan, \a nativeObjectHandle contains a VkImage, and
+    with Direct3D 11 and Metal it contains a ID3D11Texture2D or MTLTexture pointer.
 
     \a nativeLayout is only used for APIs like Vulkan. When applicable, it must
     specify the current image layout, such as, a VkImageLayout value.
@@ -5077,7 +5072,7 @@ QSGTexture *QQuickWindow::createTextureFromId(uint id, const QSize &size, Create
     \since 5.14
  */
 QSGTexture *QQuickWindow::createTextureFromNativeObject(NativeObjectType type,
-                                                        const void *nativeObjectPtr,
+                                                        quint64 nativeObjectHandle,
                                                         int nativeLayout,
                                                         const QSize &size,
                                                         CreateTextureOptions options) const
@@ -5091,7 +5086,7 @@ QSGTexture *QQuickWindow::createTextureFromNativeObject(NativeObjectType type,
     Q_D(const QQuickWindow);
     if (d->rhi) {
         QSGPlainTexture *texture = new QSGPlainTexture;
-        texture->setTextureFromNativeObject(d->rhi, type, nativeObjectPtr, nativeLayout,
+        texture->setTextureFromNativeObject(d->rhi, type, nativeObjectHandle, nativeLayout,
                                             size, options.testFlag(TextureHasMipmaps));
         texture->setHasAlphaChannel(options & TextureHasAlphaChannel);
         // note that the QRhiTexture does not (and cannot) own the native object
@@ -5100,7 +5095,7 @@ QSGTexture *QQuickWindow::createTextureFromNativeObject(NativeObjectType type,
         return texture;
     } else if (openglContext()) {
         QSGPlainTexture *texture = new QSGPlainTexture;
-        texture->setTextureId(*reinterpret_cast<const uint *>(nativeObjectPtr));
+        texture->setTextureId(uint(nativeObjectHandle));
         texture->setHasAlphaChannel(options & TextureHasAlphaChannel);
         texture->setOwnsTexture(options & TextureOwnsGLTexture);
         texture->setTextureSize(size);
@@ -6067,7 +6062,7 @@ QString QQuickWindow::sceneGraphBackend()
         ...
         window->setGraphicsDevice(QQuickGraphicsDevice::fromDeviceAndContext(device, context));
         renderControl->initialize();
-        window->setRenderTarget(QQuickRenderTarget::fromNativeTexture({ &texture, 0 }, textureSize);
+        window->setRenderTarget(QQuickRenderTarget::fromNativeTexture({ quint64(texture), 0 }, textureSize);
         ...
     \endcode
 

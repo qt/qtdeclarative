@@ -92,7 +92,7 @@ public:
 
     void setTexture(QRhiTexture *texture);
     void setTextureFromNativeObject(QRhi *rhi, QQuickWindow::NativeObjectType type,
-                                    const void *nativeObjectPtr, int nativeLayout,
+                                    quint64 nativeObjectHandle, int nativeLayout,
                                     const QSize &size, bool mipmap);
 
     static QSGPlainTexture *fromImage(const QImage &image) {

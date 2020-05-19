@@ -161,7 +161,7 @@ public:
     {
         // Our texture node must have a texture, so use the default 0 texture.
         GLuint id = 0;
-        m_texture = m_window->createTextureFromNativeObject(QQuickWindow::NativeObjectTexture, &id, 0, QSize(1, 1));
+        m_texture = m_window->createTextureFromNativeObject(QQuickWindow::NativeObjectTexture, id, 0, QSize(1, 1));
         setTexture(m_texture);
         setFiltering(QSGTexture::Linear);
     }
@@ -202,7 +202,7 @@ public slots:
             delete m_texture;
             // note: include QQuickWindow::TextureHasAlphaChannel if the rendered content
             // has alpha.
-            m_texture = m_window->createTextureFromNativeObject(QQuickWindow::NativeObjectTexture, &newId, 0, QSize(1, 1));
+            m_texture = m_window->createTextureFromNativeObject(QQuickWindow::NativeObjectTexture, newId, 0, QSize(1, 1));
             setTexture(m_texture);
 
             markDirty(DirtyMaterial);

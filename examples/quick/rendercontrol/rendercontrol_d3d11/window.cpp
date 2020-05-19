@@ -367,10 +367,8 @@ void Window::updateQuick()
         if (!m_renderControl->initialize())
             qWarning("Failed to initialize redirected Qt Quick rendering");
 
-        // Redirect Qt Quick's output. (note that the QSGTexture::NativeTexture
-        // struct is expected to contain a pointer to the native object, even
-        // if the native object type is a pointer, such as ID3D11Texture2D*)
-        m_quickWindow->setRenderTarget(QQuickRenderTarget::fromNativeTexture({ &m_res.texture, 0 },
+        // Redirect Qt Quick's output.
+        m_quickWindow->setRenderTarget(QQuickRenderTarget::fromNativeTexture({ quint64(m_res.texture), 0 },
                                                                              QSize(QML_WIDTH, QML_HEIGHT),
                                                                              SAMPLE_COUNT));
 

@@ -81,7 +81,7 @@ public:
     };
 
     struct NativeTexture {
-        const void *object;
+        quint64 object;
         int layout;
     };
 

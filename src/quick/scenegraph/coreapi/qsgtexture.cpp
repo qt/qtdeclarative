@@ -325,15 +325,11 @@ static void qt_debug_remove_texture(QSGTexture* texture)
 
 /*!
     \variable QSGTexture::NativeTexture::object
-    \brief a pointer to the native object handle.
+    \brief a 64-bit container of the native object handle.
 
-    With OpenGL, the native handle is a GLuint value, so \c object is then a
-    pointer to a GLuint. With Vulkan, the native handle is a VkImage, so \c
-    object is a pointer to a VkImage. With Direct3D 11 and Metal \c
-    object is a pointer to a ID3D11Texture2D or MTLTexture pointer, respectively.
-
-    \note Pay attention to the fact that \a object is always a pointer
-    to the native texture handle type, even if the native type itself is a
+    With OpenGL, the native handle is a GLuint value, so \c object then
+    contains a GLuint. With Vulkan, \c object contains a VkImage, and
+    with Direct3D 11 and Metal it contains a ID3D11Texture2D or MTLTexture
     pointer.
  */
 

@@ -264,7 +264,7 @@ void CustomTextureNode::sync()
         [desc release];
 
         QSGTexture *wrapper = m_window->createTextureFromNativeObject(QQuickWindow::NativeObjectTexture,
-                                                                      &m_texture,
+                                                                      quint64(m_texture),
                                                                       0,
                                                                       m_size);
 

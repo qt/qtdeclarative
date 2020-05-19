@@ -717,7 +717,7 @@ void CustomTextureNode::sync()
         freeTexture();
         buildTexture(m_size);
         QSGTexture *wrapper = m_window->createTextureFromNativeObject(QQuickWindow::NativeObjectTexture,
-                                                                      &m_texture,
+                                                                      quint64(m_texture),
                                                                       VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                                                                       m_size);
         setTexture(wrapper);

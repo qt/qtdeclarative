@@ -636,7 +636,7 @@ QQuickWindow *QQuickRenderControl::window() const
             if (!m_renderControl->initialize())
                 qWarning("Failed to initialize redirected Qt Quick rendering");
 
-            m_quickWindow->setRenderTarget(QQuickRenderTarget::fromNativeTexture({ &m_res.texture, 0 },
+            m_quickWindow->setRenderTarget(QQuickRenderTarget::fromNativeTexture({ quint64(m_res.texture), 0 },
                                                                                  QSize(QML_WIDTH, QML_HEIGHT),
                                                                                  SAMPLE_COUNT));
 

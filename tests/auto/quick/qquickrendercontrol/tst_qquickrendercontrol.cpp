@@ -487,7 +487,7 @@ void tst_RenderControl::renderAndReadBackWithVulkanNative()
         QCOMPARE(err, VK_SUCCESS);
 
         // Tell Qt Quick to target our VkImage.
-        quickWindow->setRenderTarget(QQuickRenderTarget::fromNativeTexture({ &img, VK_IMAGE_LAYOUT_PREINITIALIZED },
+        quickWindow->setRenderTarget(QQuickRenderTarget::fromNativeTexture({ quint64(img), VK_IMAGE_LAYOUT_PREINITIALIZED },
                                                                            rootItem->size().toSize()));
 
         // Create a readback buffer.
