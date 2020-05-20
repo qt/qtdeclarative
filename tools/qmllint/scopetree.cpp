@@ -209,7 +209,7 @@ bool ScopeTree::checkMemberAccess(
     if (scopeMethodIt != scope->m_methods.end())
         return true; // Access to property of JS function
 
-    for (const auto enumerator : scope->m_enums) {
+    for (const auto &enumerator : scope->m_enums) {
         for (const QString &key : enumerator.keys()) {
             if (access->m_name != key)
                 continue;
