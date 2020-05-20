@@ -76,7 +76,7 @@ void QQuickViewPrivate::init(QQmlEngine* e)
 }
 
 QQuickViewPrivate::QQuickViewPrivate()
-    : root(nullptr), component(nullptr), resizeMode(QQuickView::SizeViewToRootObject), initialSize(0,0)
+    : component(nullptr), resizeMode(QQuickView::SizeViewToRootObject), initialSize(0,0)
 {
 }
 
@@ -92,10 +92,8 @@ void QQuickViewPrivate::execute()
         return;
     }
 
-    if (root) {
+    if (root)
         delete root;
-        root = nullptr;
-    }
     if (component) {
         delete component;
         component = nullptr;
@@ -212,7 +210,6 @@ QQuickView::~QQuickView()
     // be a child of the QQuickViewPrivate, and will be destroyed by its dtor
     Q_D(QQuickView);
     delete d->root;
-    d->root = nullptr;
 }
 
 /*!
@@ -263,7 +260,8 @@ void QQuickView::setContent(const QUrl& url, QQmlComponent *component, QObject* 
         return;
     }
 
-    d->setRootObject(item);
+    if (!d->setRootObject(item))
+        delete item;
     emit statusChanged(status());
 }
 
@@ -486,43 +484,55 @@ void QQuickView::continueExecute()
         return;
     }
 
-    d->setRootObject(obj);
+    if (!d->setRootObject(obj))
+            delete obj;
     emit statusChanged(status());
 }
 
 
 /*!
   \internal
+
+  Sets \a obj as root object and returns true if that operation succeeds.
+  Otherwise returns \c false. If \c false is returned, the root object is
+  \c nullptr afterwards. You can explicitly set the root object to nullptr,
+  and the return value will be \c true.
 */
-void QQuickViewPrivate::setRootObject(QObject *obj)
+bool QQuickViewPrivate::setRootObject(QObject *obj)
 {
     Q_Q(QQuickView);
     if (root == obj)
-        return;
+        return true;
+
+    delete root;
+    if (obj == nullptr)
+        return true;
+
     if (QQuickItem *sgItem = qobject_cast<QQuickItem *>(obj)) {
         root = sgItem;
         sgItem->setParentItem(q->QQuickWindow::contentItem());
         QQml_setParent_noEvent(sgItem, q->QQuickWindow::contentItem());
-    } else if (qobject_cast<QWindow *>(obj)) {
-        qWarning() << "QQuickView does not support using windows as a root item." << endl
-                   << endl
-                   << "If you wish to create your root window from QML, consider using QQmlApplicationEngine instead." << endl;
-    } else {
-        qWarning() << "QQuickView only supports loading of root objects that derive from QQuickItem." << endl
-                   << endl
-                   << "Ensure your QML code is written for QtQuick 2, and uses a root that is or" << endl
-                   << "inherits from QtQuick's Item (not a Timer, QtObject, etc)." << endl;
-        delete obj;
-        root = nullptr;
-    }
-    if (root) {
         initialSize = rootObjectSize();
         if ((resizeMode == QQuickView::SizeViewToRootObject || q->width() <= 1 || q->height() <= 1) &&
             initialSize != q->size()) {
             q->resize(initialSize);
         }
         initResize();
+        return true;
     }
+
+    if (qobject_cast<QWindow *>(obj)) {
+        qWarning() << "QQuickView does not support using a window as a root item." << endl
+                   << endl
+                   << "If you wish to create your root window from QML, consider using QQmlApplicationEngine instead." << endl;
+        return false;
+    }
+
+    qWarning() << "QQuickView only supports loading of root objects that derive from QQuickItem." << endl
+               << endl
+               << "Ensure your QML code is written for QtQuick 2, and uses a root that is or" << endl
+               << "inherits from QtQuick's Item (not a Timer, QtObject, etc)." << endl;
+    return false;
 }
 
 /*!
