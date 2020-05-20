@@ -859,6 +859,9 @@ bool Batch::geometryWasChanged(QSGGeometryNode *gn)
 
 void Batch::cleanupRemovedElements()
 {
+    if (!needsPurge)
+        return;
+
     // remove from front of batch..
     while (first && first->removed) {
         first = first->nextInBatch;
@@ -875,6 +878,8 @@ void Batch::cleanupRemovedElements()
 
         }
     }
+
+    needsPurge = false;
 }
 
 /*
@@ -1379,6 +1384,7 @@ void Renderer::nodeWasRemoved(Node *node)
             }
             if (e->batch) {
                 e->batch->needsUpload = true;
+                e->batch->needsPurge = true;
             }
 
         }
@@ -1400,7 +1406,6 @@ void Renderer::nodeWasRemoved(Node *node)
         if (e) {
             e->removed = true;
             m_elementsToDelete.add(e);
-
             if (m_renderNodeElements.isEmpty()) {
                 static const bool useDepth = qEnvironmentVariableIsEmpty("QSG_NO_DEPTH_BUFFER");
                 if (m_rhi)
@@ -1408,6 +1413,9 @@ void Renderer::nodeWasRemoved(Node *node)
                 else
                     m_useDepthBuffer = useDepth && m_context->openglContext()->format().depthBufferSize() > 0;
             }
+
+            if (e->batch != nullptr)
+                e->batch->needsPurge = true;
         }
     }
 

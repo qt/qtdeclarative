@@ -463,6 +463,7 @@ struct Batch
         uploadedThisFrame = false;
         isRenderNode = false;
         ubufDataValid = false;
+        needsPurge = false;
         clipState.reset();
         blendConstant = QColor();
     }
@@ -482,6 +483,7 @@ struct Batch
     uint merged : 1;
     uint isRenderNode : 1;
     uint ubufDataValid : 1;
+    uint needsPurge : 1;
 
     mutable uint uploadedThisFrame : 1; // solely for debugging purposes
 
