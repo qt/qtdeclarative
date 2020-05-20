@@ -114,7 +114,7 @@ public:
         return attached->d_func();
     }
 
-    void itemParentChanged(QQuickItem *item, QQuickItem *parent);
+    void itemParentChanged(QQuickItem *item, QQuickItem *parent) override;
 
     bool explicitVisible = false;
     QQuickStackElement *element = nullptr;
