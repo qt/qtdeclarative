@@ -171,8 +171,8 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
         if (scopeMethodIt != methods.end())
             return true; // Access to property of JS function
 
-        const auto enums= scope->enums();
-        for (const auto enumerator : enums) {
+        const auto enums = scope->enums();
+        for (const auto &enumerator : enums) {
             for (const QString &key : enumerator.keys()) {
                 if (access.m_name == key) {
                     detectedRestrictiveKind = QLatin1String("enum");

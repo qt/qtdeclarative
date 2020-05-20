@@ -394,7 +394,7 @@ void FindWarningVisitor::importExportedNames(const QStringRef &prefix, QString n
         if (scope) {
             if (scopes.contains(scope)) {
                 QString inheritenceCycle = name;
-                for (const auto seen: qAsConst(scopes)) {
+                for (const auto &seen: qAsConst(scopes)) {
                     inheritenceCycle.append(QLatin1String(" -> "));
                     inheritenceCycle.append(seen->superclassName());
                 }
