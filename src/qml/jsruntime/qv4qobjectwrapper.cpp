@@ -392,7 +392,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(
         if (hasProperty)
             *hasProperty = true;
 
-        if (property)
+        if (property && result != &local)
             *property = result;
 
         return getProperty(engine, object, result);
