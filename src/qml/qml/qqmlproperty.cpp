@@ -310,7 +310,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
 
             QQmlPropertyData local;
             QQmlPropertyData *property =
-                    QQmlPropertyCache::property(engine, currentObject, pathName, context, local);
+                    QQmlPropertyCache::property(engine, currentObject, pathName, context, &local);
 
             if (!property) return; // Not a property
             if (property->isFunction())
@@ -412,7 +412,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
     // Property
     QQmlPropertyData local;
     QQmlPropertyData *property =
-        QQmlPropertyCache::property(engine, currentObject, terminal, context, local);
+        QQmlPropertyCache::property(engine, currentObject, terminal, context, &local);
     if (property && !property->isFunction()) {
         object = currentObject;
         core = *property;

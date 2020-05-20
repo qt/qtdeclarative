@@ -1014,7 +1014,7 @@ static inline QByteArray qQmlPropertyCacheToString(const QV4::String *string)
 template<typename T>
 QQmlPropertyData *
 qQmlPropertyCacheProperty(QJSEngine *engine, QObject *obj, T name,
-                          const QQmlRefPointer<QQmlContextData> &context, QQmlPropertyData &local)
+                          const QQmlRefPointer<QQmlContextData> &context, QQmlPropertyData *local)
 {
     QQmlPropertyCache *cache = nullptr;
 
@@ -1036,10 +1036,10 @@ qQmlPropertyCacheProperty(QJSEngine *engine, QObject *obj, T name,
 
     if (cache) {
         rv = cache->property(name, obj, context);
-    } else {
-        local = qQmlPropertyCacheCreate(obj->metaObject(), qQmlPropertyCacheToString(name));
-        if (local.isValid())
-            rv = &local;
+    } else if (local) {
+        *local = qQmlPropertyCacheCreate(obj->metaObject(), qQmlPropertyCacheToString(name));
+        if (local->isValid())
+            rv = local;
     }
 
     return rv;
@@ -1047,21 +1047,21 @@ qQmlPropertyCacheProperty(QJSEngine *engine, QObject *obj, T name,
 
 QQmlPropertyData *
 QQmlPropertyCache::property(QJSEngine *engine, QObject *obj, const QV4::String *name,
-                            const QQmlRefPointer<QQmlContextData> &context, QQmlPropertyData &local)
+                            const QQmlRefPointer<QQmlContextData> &context, QQmlPropertyData *local)
 {
     return qQmlPropertyCacheProperty<const QV4::String *>(engine, obj, name, context, local);
 }
 
 QQmlPropertyData *
 QQmlPropertyCache::property(QJSEngine *engine, QObject *obj, const QStringRef &name,
-                            const QQmlRefPointer<QQmlContextData> &context, QQmlPropertyData &local)
+                            const QQmlRefPointer<QQmlContextData> &context, QQmlPropertyData *local)
 {
     return qQmlPropertyCacheProperty<const QStringRef &>(engine, obj, name, context, local);
 }
 
 QQmlPropertyData *
 QQmlPropertyCache::property(QJSEngine *engine, QObject *obj, const QLatin1String &name,
-                            const QQmlRefPointer<QQmlContextData> &context, QQmlPropertyData &local)
+                            const QQmlRefPointer<QQmlContextData> &context, QQmlPropertyData *local)
 {
     return qQmlPropertyCacheProperty<const QLatin1String &>(engine, obj, name, context, local);
 }

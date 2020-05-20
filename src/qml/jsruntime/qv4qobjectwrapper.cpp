@@ -231,7 +231,7 @@ QQmlPropertyData *QObjectWrapper::findProperty(
     if (ddata && ddata->propertyCache)
         result = ddata->propertyCache->property(name, o, qmlContext);
     else
-        result = QQmlPropertyCache::property(engine->jsEngine(), o, name, qmlContext, *local);
+        result = QQmlPropertyCache::property(engine->jsEngine(), o, name, qmlContext, local);
     return result;
 }
 
@@ -433,7 +433,7 @@ bool QObjectWrapper::setQmlProperty(
         return false;
 
     QQmlPropertyData local;
-    QQmlPropertyData *result = QQmlPropertyCache::property(engine->jsEngine(), object, name, qmlContext, local);
+    QQmlPropertyData *result = QQmlPropertyCache::property(engine->jsEngine(), object, name, qmlContext, &local);
     if (!result)
         return false;
 
@@ -872,7 +872,7 @@ ReturnedValue QObjectWrapper::virtualResolveLookupGetter(const Object *object, E
     QQmlData *ddata = QQmlData::get(qobj, false);
     if (!ddata || !ddata->propertyCache) {
         QQmlPropertyData local;
-        QQmlPropertyData *property = QQmlPropertyCache::property(engine->jsEngine(), qobj, name, qmlContext, local);
+        QQmlPropertyData *property = QQmlPropertyCache::property(engine->jsEngine(), qobj, name, qmlContext, &local);
         return property ? getProperty(engine, qobj, property) : QV4::Encode::undefined();
     }
     QQmlPropertyData *property = ddata->propertyCache->property(name.getPointer(), qobj, qmlContext);

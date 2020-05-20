@@ -137,15 +137,15 @@ public:
     inline bool isAllowedInRevision(QQmlPropertyData *) const;
 
     static QQmlPropertyData *property(QJSEngine *, QObject *, const QStringRef &,
-                                      const QQmlRefPointer<QQmlContextData> &, QQmlPropertyData &);
+                                      const QQmlRefPointer<QQmlContextData> &, QQmlPropertyData *);
     static QQmlPropertyData *property(QJSEngine *, QObject *, const QLatin1String &,
-                                      const QQmlRefPointer<QQmlContextData> &, QQmlPropertyData &);
+                                      const QQmlRefPointer<QQmlContextData> &, QQmlPropertyData *);
     static QQmlPropertyData *property(QJSEngine *, QObject *, const QV4::String *,
-                                      const QQmlRefPointer<QQmlContextData> &, QQmlPropertyData &);
+                                      const QQmlRefPointer<QQmlContextData> &, QQmlPropertyData *);
 
     static QQmlPropertyData *property(QJSEngine *engine, QObject *obj, const QString &name,
                                       const QQmlRefPointer<QQmlContextData> &context,
-                                      QQmlPropertyData &local)
+                                      QQmlPropertyData *local)
     {
         return property(engine, obj, QStringRef(&name), context, local);
     }
