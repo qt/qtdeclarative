@@ -89,6 +89,7 @@ public:
     QHash<uint, Constant> m_constants; // offset -> Constant
     QHash<int, QVariant> m_samplers; // binding -> value (source ref)
     QHash<QByteArray, int> m_samplerNameMap; // name -> binding
+    QSet<int> m_subRectBindings;
 };
 
 QDebug operator<<(QDebug debug, const QSGRhiShaderLinker::Constant &c);
@@ -104,6 +105,8 @@ public:
     QSGMaterialShader *createShader() const override;
 
     void updateTextureProviders(bool layoutChange);
+
+    bool usesSubRectUniform(int binding) const { return m_linker.m_subRectBindings.contains(binding); }
 
     static const int MAX_BINDINGS = 32;
 

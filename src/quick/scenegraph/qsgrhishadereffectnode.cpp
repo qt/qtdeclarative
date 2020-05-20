@@ -62,6 +62,7 @@ void QSGRhiShaderLinker::reset(const QShader &vs, const QShader &fs)
     m_constants.clear();
     m_samplers.clear();
     m_samplerNameMap.clear();
+    m_subRectBindings.clear();
 }
 
 void QSGRhiShaderLinker::feedConstants(const QSGShaderEffectNode::ShaderData &shader, const QSet<int> *dirtyIndices)
@@ -140,7 +141,9 @@ void QSGRhiShaderLinker::linkTextureSubRects()
                 const QByteArray name = c.value.toByteArray();
                 if (!m_samplerNameMap.contains(name))
                     qWarning("ShaderEffect: qt_SubRect_%s refers to unknown source texture", name.constData());
-                c.value = m_samplerNameMap[name];
+                const int binding = m_samplerNameMap[name];
+                c.value = binding;
+                m_subRectBindings.insert(binding);
             }
         }
     }
@@ -394,7 +397,8 @@ void QSGRhiShaderEffectMaterialShader::updateSampledImage(RenderState &state, in
     if (tp) {
         if (QSGTexture *t = tp->texture()) {
             t->commitTextureOperations(state.rhi(), state.resourceUpdateBatch());
-            if (t->isAtlasTexture() && !mat->m_geometryUsesTextureSubRect) {
+
+            if (t->isAtlasTexture() && !mat->m_geometryUsesTextureSubRect && !mat->usesSubRectUniform(binding)) {
                 // Why the hassle with the batch: while removedFromAtlas() is
                 // able to operate with its own resource update batch (which is
                 // then committed immediately), that approach is wrong when the
