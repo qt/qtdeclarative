@@ -791,6 +791,9 @@ bool Batch::geometryWasChanged(QSGGeometryNode *gn)
 
 void Batch::cleanupRemovedElements()
 {
+    if (!needsPurge)
+        return;
+
     // remove from front of batch..
     while (first && first->removed) {
         first = first->nextInBatch;
@@ -807,6 +810,8 @@ void Batch::cleanupRemovedElements()
 
         }
     }
+
+    needsPurge = false;
 }
 
 /*
@@ -1250,6 +1255,7 @@ void Renderer::nodeWasRemoved(Node *node)
             }
             if (e->batch) {
                 e->batch->needsUpload = true;
+                e->batch->needsPurge = true;
             }
 
         }
@@ -1273,6 +1279,9 @@ void Renderer::nodeWasRemoved(Node *node)
             m_elementsToDelete.add(e);
             if (m_renderNodeElements.isEmpty())
                 m_forceNoDepthBuffer = false;
+
+            if (e->batch != nullptr)
+                e->batch->needsPurge = true;
         }
     }
 
