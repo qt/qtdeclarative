@@ -118,8 +118,8 @@ Rectangle {
                     maximumRotation: 45
                     minimumScale: 0.5
                     maximumScale: 3
-                    minimumX: 0
-                    maximumX: 600
+                    xAxis.minimum: 0
+                    xAxis.maximum: 600
                     // acceptedModifiers: Qt.ControlModifier
                 }
                 TapHandler { gesturePolicy: TapHandler.DragThreshold; onTapped: rect2.z = rect3.z + 1 }
