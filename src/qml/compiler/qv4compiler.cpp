@@ -524,25 +524,26 @@ void QV4::Compiler::JSUnitGenerator::writeClass(char *b, const QV4::Compiler::Cl
 
     static const bool showCode = qEnvironmentVariableIsSet("QV4_SHOW_BYTECODE");
     if (showCode) {
-        qDebug() << "=== Class " << stringForIndex(cls->nameIndex) << "static methods" << cls->nStaticMethods << "methods" << cls->nMethods;
+        qDebug() << "=== Class" << stringForIndex(cls->nameIndex) << "static methods"
+                 << cls->nStaticMethods << "methods" << cls->nMethods;
         qDebug() << "    constructor:" << cls->constructorFunction;
-        const char *staticString = ": static ";
         for (uint i = 0; i < cls->nStaticMethods + cls->nMethods; ++i) {
-            if (i == cls->nStaticMethods)
-                staticString = ": ";
-            const char *type;
+            QDebug output = qDebug().nospace();
+            output << "    " << i << ": ";
+            if (i < cls->nStaticMethods)
+                output << "static ";
             switch (cls->methodTable()[i].type) {
             case CompiledData::Method::Getter:
-                type = "get "; break;
+                output << "get "; break;
             case CompiledData::Method::Setter:
-                type = "set "; break;
+                output << "set "; break;
             default:
-                type = "";
-
+                break;
             }
-            qDebug() << "    " << i << staticString << type << stringForIndex(cls->methodTable()[i].name) << cls->methodTable()[i].function;
+            output << stringForIndex(cls->methodTable()[i].name) << " "
+                   << cls->methodTable()[i].function;
         }
-        qDebug();
+        qDebug().space();
     }
 }
 
