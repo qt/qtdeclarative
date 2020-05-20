@@ -91,7 +91,7 @@ public:
     void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &) override;
     void initResize();
     void updateSize();
-    void setRootObject(QObject *);
+    bool setRootObject(QObject *);
 
     void init(QQmlEngine* e = nullptr);
 
