@@ -370,7 +370,7 @@ ReturnedValue QtObject::method_colorEqual(const FunctionObject *b, const Value *
 }
 
 /*!
-    \qmlmethod rect Qt::rect(int x, int y, int width, int height)
+    \qmlmethod rect Qt::rect(real x, real y, real width, real height)
 
     Returns a rect with the top-left corner at \a x, \a y and the specified \a width and \a height.
 */
@@ -389,7 +389,7 @@ ReturnedValue QtObject::method_rect(const FunctionObject *b, const Value *, cons
 }
 
 /*!
-    \qmlmethod point Qt::point(int x, int y)
+    \qmlmethod point Qt::point(real x, real y)
 
     Returns a point with the specified \a x and \a y coordinates.
 */
@@ -406,7 +406,7 @@ ReturnedValue QtObject::method_point(const FunctionObject *b, const Value *, con
 }
 
 /*!
-    \qmlmethod size Qt::size(int width, int height)
+    \qmlmethod size Qt::size(real width, real height)
 
     Returns a size with the specified \a width and \a height.
 */
