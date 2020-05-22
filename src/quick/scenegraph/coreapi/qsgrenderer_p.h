@@ -87,6 +87,8 @@ public:
 
     bool isMirrored() const;
     void renderScene() override;
+    void prepareSceneInline() override;
+    void renderSceneInline() override;
     void nodeChanged(QSGNode *node, QSGNode::DirtyState state) override;
 
     QSGNodeUpdater *nodeUpdater() const;
@@ -124,6 +126,9 @@ public:
 
 protected:
     virtual void render() = 0;
+
+    virtual void prepareInline();
+    virtual void renderInline();
 
     virtual void preprocess();
 

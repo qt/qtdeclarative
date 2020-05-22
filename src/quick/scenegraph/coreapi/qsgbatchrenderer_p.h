@@ -758,7 +758,38 @@ public:
 protected:
     void nodeChanged(QSGNode *node, QSGNode::DirtyState state) override;
     void render() override;
+    void prepareInline() override;
+    void renderInline() override;
     void releaseCachedResources() override;
+
+    struct PreparedRenderBatch {
+        const Batch *batch;
+        ShaderManager::Shader *sms;
+    };
+
+    struct RenderPassContext {
+        bool valid = false;
+        QVarLengthArray<PreparedRenderBatch, 64> opaqueRenderBatches;
+        QVarLengthArray<PreparedRenderBatch, 64> alphaRenderBatches;
+        QElapsedTimer timer;
+        quint64 timeRenderLists;
+        quint64 timePrepareOpaque;
+        quint64 timePrepareAlpha;
+        quint64 timeSorting;
+        quint64 timeUploadOpaque;
+        quint64 timeUploadAlpha;
+    };
+
+    // update batches and queue and commit rhi resource updates
+    void prepareRenderPass(RenderPassContext *ctx);
+    // records the beginPass()
+    void beginRenderPass(RenderPassContext *ctx);
+    // records the draw calls, must be preceded by a prepareRenderPass at minimum,
+    // and also surrounded by begin/endRenderPass unless we are recording inside an
+    // already started pass.
+    void recordRenderPass(RenderPassContext *ctx);
+    // does visualizing if enabled and records the endPass()
+    void endRenderPass(RenderPassContext *ctx);
 
 private:
     enum RebuildFlag {
@@ -790,12 +821,6 @@ private:
     void uploadBatch(Batch *b);
     void uploadMergedElement(Element *e, int vaOffset, char **vertexData, char **zData, char **indexData, void *iBasePtr, int *indexCount);
 
-    struct PreparedRenderBatch {
-        const Batch *batch;
-        ShaderManager::Shader *sms;
-    };
-
-    void renderBatches();
     bool ensurePipelineState(Element *e, const ShaderManager::Shader *sms);
     QRhiTexture *dummyTexture();
     void updateMaterialDynamicData(ShaderManager::Shader *sms, QSGMaterialShader::RenderState &renderState,
@@ -886,6 +911,7 @@ private:
     Allocator<Node, 256> m_nodeAllocator;
     Allocator<Element, 64> m_elementAllocator;
 
+    RenderPassContext m_mainRenderPassContext;
     QRhiResourceUpdateBatch *m_resourceUpdates = nullptr;
     uint m_ubufAlignment;
     bool m_uint32IndexForRhi;

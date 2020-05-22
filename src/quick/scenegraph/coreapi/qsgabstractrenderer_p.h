@@ -109,6 +109,9 @@ public:
 
     virtual void renderScene() = 0;
 
+    virtual void prepareSceneInline();
+    virtual void renderSceneInline();
+
 Q_SIGNALS:
     void sceneGraphChanged();
 

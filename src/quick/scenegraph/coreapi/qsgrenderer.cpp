@@ -187,6 +187,29 @@ void QSGRenderer::renderScene()
             int((renderTime - updatePassTime) / 1000000));
 }
 
+void QSGRenderer::prepareSceneInline()
+{
+    if (!rootNode())
+        return;
+
+    Q_ASSERT(!m_is_rendering);
+    m_is_rendering = true;
+
+    preprocess();
+
+    prepareInline();
+}
+
+void QSGRenderer::renderSceneInline()
+{
+    Q_ASSERT(m_is_rendering);
+
+    renderInline();
+
+    m_is_rendering = false;
+    m_changed_emitted = false;
+}
+
 /*!
     Updates internal data structures and emits the sceneGraphChanged() signal.
 
@@ -283,6 +306,14 @@ void QSGRenderer::removeNodesToPreprocess(QSGNode *node)
         if (m_is_preprocessing)
             m_nodes_dont_preprocess.insert(node);
     }
+}
+
+void QSGRenderer::prepareInline()
+{
+}
+
+void QSGRenderer::renderInline()
+{
 }
 
 

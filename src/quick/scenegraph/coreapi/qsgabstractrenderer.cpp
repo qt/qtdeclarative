@@ -368,4 +368,12 @@ QSGAbstractRenderer::ClearMode QSGAbstractRenderer::clearMode() const
     \internal
  */
 
+void QSGAbstractRenderer::prepareSceneInline()
+{
+}
+
+void QSGAbstractRenderer::renderSceneInline()
+{
+}
+
 QT_END_NAMESPACE
