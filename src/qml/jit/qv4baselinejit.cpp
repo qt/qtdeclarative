@@ -567,10 +567,12 @@ void BaselineJIT::generate_SetException() { as->setException(); }
 
 void BaselineJIT::generate_CreateCallContext()
 {
+    as->saveAccumulatorInFrame();
     as->prepareCallWithArgCount(1);
     as->passCppFrameAsArg(0);
-    BASELINEJIT_GENERATE_RUNTIME_CALL(ExecutionContext::newCallContext, CallResultDestination::Ignore); // keeps result in return value register
+    BASELINEJIT_GENERATE_RUNTIME_CALL(ExecutionContext::newCallContext, CallResultDestination::InAccumulator);
     as->storeHeapObject(CallData::Context);
+    as->loadAccumulatorFromFrame();
 }
 
 void BaselineJIT::generate_PushCatchContext(int index, int name) { as->pushCatchContext(index, name); }
@@ -582,9 +584,10 @@ void BaselineJIT::generate_PushWithContext()
     as->prepareCallWithArgCount(2);
     as->passJSSlotAsArg(0, 1);
     as->passEngineAsArg(0);
-    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_createWithContext, CallResultDestination::Ignore);  // keeps result in return value register
+    BASELINEJIT_GENERATE_RUNTIME_CALL(Runtime::method_createWithContext, CallResultDestination::InAccumulator);
     as->checkException();
     as->storeHeapObject(CallData::Context);
+    as->loadAccumulatorFromFrame();
 }
 
 void BaselineJIT::generate_PushBlockContext(int index)

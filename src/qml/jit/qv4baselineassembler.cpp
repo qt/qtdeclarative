@@ -920,7 +920,7 @@ void BaselineAssembler::loadValue(ReturnedValue value)
 
 void BaselineAssembler::storeHeapObject(int reg)
 {
-    pasm()->storeHeapObject(PlatformAssembler::ReturnValueRegisterValue, regAddr(reg));
+    pasm()->storeHeapObject(PlatformAssembler::AccumulatorRegisterValue, regAddr(reg));
 }
 
 void BaselineAssembler::loadImport(int index)
