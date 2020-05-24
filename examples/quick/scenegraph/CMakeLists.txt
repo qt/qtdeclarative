@@ -18,5 +18,6 @@ if(WIN32)
     add_subdirectory(d3d11underqml)
 endif()
 if(QT_FEATURE_vulkan)
-    #add_subdirectory(vulkanunderqml) # special case not yet converted
+    add_subdirectory(vulkanunderqml)
+    add_subdirectory(vulkantextureimport)
 endif()
