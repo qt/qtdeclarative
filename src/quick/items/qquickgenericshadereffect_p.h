@@ -57,7 +57,13 @@
 #include "qquickshadereffect_p.h"
 #include "qquickshadereffectmesh_p.h"
 
+#include <functional>
+
 QT_BEGIN_NAMESPACE
+
+namespace QtPrivate {
+class EffectSlotMapper;
+}
 
 class Q_QUICK_PRIVATE_EXPORT QQuickGenericShaderEffect : public QObject
 {
@@ -117,9 +123,11 @@ private:
     bool updateShader(Shader shaderType, const QByteArray &src);
     void updateShaderVars(Shader shaderType);
     void disconnectSignals(Shader shaderType);
+    void clearMappers(Shader shaderType);
     bool sourceIsUnique(QQuickItem *source, Shader typeToSkip, int indexToSkip) const;
 
     QQuickShaderEffect *m_item;
+    const QMetaObject *m_itemMetaObject = nullptr;
     QSize m_meshResolution;
     QQuickShaderEffectMesh *m_mesh;
     QQuickGridMesh m_defaultMesh;
@@ -138,12 +146,7 @@ private:
     QSet<int> m_dirtyTextures[NShader];
     QSGGuiThreadShaderEffectManager::ShaderInfo *m_inProgress[NShader];
 
-    struct SignalMapper {
-        SignalMapper() : mapper(nullptr), active(false) { }
-        QObject *mapper;
-        bool active;
-    };
-    QVector<SignalMapper> m_signalMappers[NShader];
+    QVector<QtPrivate::EffectSlotMapper*> m_mappers[NShader];
 };
 
 QT_END_NAMESPACE

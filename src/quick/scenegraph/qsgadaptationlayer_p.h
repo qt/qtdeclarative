@@ -333,6 +333,7 @@ public:
 
         QVariant value;
         SpecialType specialType;
+        int propertyIndex = -1;
     };
 
     struct ShaderData {

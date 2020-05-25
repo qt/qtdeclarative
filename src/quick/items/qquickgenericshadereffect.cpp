@@ -43,23 +43,41 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace {
-class IntSignalMapper : public QObject
+namespace QtPrivate {
+class EffectSlotMapper: public QtPrivate::QSlotObjectBase
 {
-    Q_OBJECT
-
-    int value;
 public:
-    explicit IntSignalMapper(int v)
-        : QObject(nullptr), value(v) {}
+    typedef std::function<void()> PropChangedFunc;
 
-public Q_SLOTS:
-    void map() { emit mapped(value); }
+    explicit EffectSlotMapper(PropChangedFunc func)
+    : QSlotObjectBase(&impl), _signalIndex(-1), func(func)
+    { ref(); }
 
-Q_SIGNALS:
-    void mapped(int);
+    void setSignalIndex(int idx) { _signalIndex = idx; }
+    int signalIndex() const { return _signalIndex; }
+
+private:
+    int _signalIndex;
+    PropChangedFunc func;
+
+    static void impl(int which, QSlotObjectBase *this_, QObject *, void **a, bool *ret)
+    {
+    auto thiz = static_cast<EffectSlotMapper*>(this_);
+    switch (which) {
+    case Destroy:
+        delete thiz;
+        break;
+    case Call:
+        thiz->func();
+        break;
+    case Compare:
+        *ret = thiz == reinterpret_cast<EffectSlotMapper *>(a[0]);
+        break;
+    case NumOperations: ;
+    }
+    }
 };
-} // unnamed namespace
+} // namespace QtPrivate
 
 // The generic shader effect is used whenever on the RHI code path, or when the
 // scenegraph backend indicates SupportsShaderEffectNode. This, unlike the
@@ -88,8 +106,7 @@ QQuickGenericShaderEffect::~QQuickGenericShaderEffect()
 {
     for (int i = 0; i < NShader; ++i) {
         disconnectSignals(Shader(i));
-        for (const auto &sm : qAsConst(m_signalMappers[i]))
-            delete sm.mapper;
+        clearMappers(Shader(i));
     }
 
     delete m_mgr;
@@ -381,12 +398,10 @@ QSGGuiThreadShaderEffectManager *QQuickGenericShaderEffect::shaderEffectManager(
 
 void QQuickGenericShaderEffect::disconnectSignals(Shader shaderType)
 {
-    for (auto &sm : m_signalMappers[shaderType]) {
-        if (sm.active) {
-            sm.active = false;
-            QObject::disconnect(m_item, nullptr, sm.mapper, SLOT(map()));
-            QObject::disconnect(sm.mapper, SIGNAL(mapped(int)), this, SLOT(propertyChanged(int)));
-        }
+    for (auto *mapper : m_mappers[shaderType]) {
+        void *a = mapper;
+        if (mapper)
+            QObjectPrivate::disconnect(m_item, mapper->signalIndex(), &a);
     }
     for (const auto &vd : qAsConst(m_shaders[shaderType].varData)) {
         if (vd.specialType == QSGShaderEffectNode::VariableData::Source) {
@@ -398,6 +413,27 @@ void QQuickGenericShaderEffect::disconnectSignals(Shader shaderType)
             }
         }
     }
+}
+
+void QQuickGenericShaderEffect::clearMappers(QQuickGenericShaderEffect::Shader shaderType)
+{
+    for (auto *mapper : qAsConst(m_mappers[shaderType])) {
+        if (mapper)
+            mapper->destroyIfLastRef();
+    }
+    m_mappers[shaderType].clear();
+}
+
+static inline QVariant getValueFromProperty(QObject *item, const QMetaObject *itemMetaObject,
+                                            const QByteArray &name, int propertyIndex)
+{
+    QVariant value;
+    if (propertyIndex == -1) {
+        value = item->property(name);
+    } else {
+        value = itemMetaObject->property(propertyIndex).read(item);
+    }
+    return value;
 }
 
 struct ShaderInfoCache
@@ -521,8 +557,14 @@ void QQuickGenericShaderEffect::updateShaderVars(Shader shaderType)
 
     // Reuse signal mappers as much as possible since the mapping is based on
     // the index and shader type which are both constant.
-    if (m_signalMappers[shaderType].count() < varCount)
-        m_signalMappers[shaderType].resize(varCount);
+    if (m_mappers[shaderType].count() < varCount)
+        m_mappers[shaderType].resize(varCount);
+
+    auto *engine = qmlEngine(m_item);
+    QQmlPropertyCache *propCache = engine ? QQmlData::ensurePropertyCache(engine, m_item) : nullptr;
+
+    if (!m_itemMetaObject)
+        m_itemMetaObject = m_item->metaObject();
 
     // Hook up the signals to get notified about changes for properties that
     // correspond to variables in the shader. Store also the values.
@@ -558,28 +600,46 @@ void QQuickGenericShaderEffect::updateShaderVars(Shader shaderType)
         }
 
         // Find the property on the ShaderEffect item.
-        const int propIdx = m_item->metaObject()->indexOfProperty(v.name.constData());
+        int propIdx = -1;
+        QQmlPropertyData *pd = nullptr;
+        if (propCache) {
+            pd = propCache->property(QLatin1String(v.name), nullptr, nullptr);
+            if (pd) {
+                if (!pd->isFunction())
+                    propIdx = pd->coreIndex();
+            }
+        }
         if (propIdx >= 0) {
-            QMetaProperty mp = m_item->metaObject()->property(propIdx);
-            if (!mp.hasNotifySignal())
-                qWarning("ShaderEffect: property '%s' does not have notification method", v.name.constData());
-
-            // Have a IntSignalMapper that emits mapped() with an index+type on each property change notify signal.
-            auto &sm(m_signalMappers[shaderType][i]);
-            if (!sm.mapper)
-                sm.mapper = new IntSignalMapper(i | (shaderType << 16));
-            sm.active = true;
-            const QByteArray signalName = '2' + mp.notifySignal().methodSignature();
-            QObject::connect(m_item, signalName, sm.mapper, SLOT(map()));
-            QObject::connect(sm.mapper, SIGNAL(mapped(int)), this, SLOT(propertyChanged(int)));
+            if (pd && !pd->isFunction()) {
+                if (pd->notifyIndex() == -1) {
+                    qWarning("QQuickOpenGLShaderEffect: property '%s' does not have notification method!", v.name.constData());
+                } else {
+                    auto *&mapper = m_mappers[shaderType][i];
+                    if (!mapper) {
+                        const int mappedId = i | (shaderType << 16);
+                        mapper = new QtPrivate::EffectSlotMapper([this, mappedId](){
+                            this->propertyChanged(mappedId);
+                        });
+                    }
+                    mapper->setSignalIndex(m_itemMetaObject->property(propIdx).notifySignal().methodIndex());
+                    Q_ASSERT(m_item->metaObject() == m_itemMetaObject);
+                    bool ok = QObjectPrivate::connectImpl(m_item, pd->notifyIndex(), m_item, nullptr, mapper,
+                                                          Qt::AutoConnection, nullptr, m_itemMetaObject);
+                    if (!ok)
+                        qWarning() << "Failed to connect to property" << m_itemMetaObject->property(propIdx).name()
+                                   << "(" << propIdx << ", signal index" << pd->notifyIndex()
+                                   << ") of item" << m_item;
+                }
+            }
         } else {
             // Do not warn for dynamic properties.
             if (!m_item->property(v.name.constData()).isValid())
                 qWarning("ShaderEffect: '%s' does not have a matching property", v.name.constData());
         }
 
-        vd.value = m_item->property(v.name.constData());
 
+        vd.propertyIndex = propIdx;
+        vd.value = getValueFromProperty(m_item, m_itemMetaObject, v.name, vd.propertyIndex);
         if (vd.specialType == QSGShaderEffectNode::VariableData::Source) {
             QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(vd.value));
             if (source) {
@@ -612,6 +672,8 @@ void QQuickGenericShaderEffect::propertyChanged(int mappedId)
     const auto &v(m_shaders[type].shaderInfo.variables[idx]);
     auto &vd(m_shaders[type].varData[idx]);
 
+    vd.value = getValueFromProperty(m_item, m_itemMetaObject, v.name, vd.propertyIndex);
+
     if (vd.specialType == QSGShaderEffectNode::VariableData::Source) {
         QQuickItem *source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(vd.value));
         if (source) {
@@ -624,8 +686,6 @@ void QQuickGenericShaderEffect::propertyChanged(int mappedId)
             if (sourceIsUnique(source, type, idx))
                 QObject::disconnect(source, SIGNAL(destroyed(QObject*)), this, SLOT(sourceDestroyed(QObject*)));
         }
-
-        vd.value = m_item->property(v.name.constData());
 
         source = qobject_cast<QQuickItem *>(qvariant_cast<QObject *>(vd.value));
         if (source) {
@@ -642,7 +702,6 @@ void QQuickGenericShaderEffect::propertyChanged(int mappedId)
         m_dirtyTextures[type].insert(idx);
 
      } else {
-        vd.value = m_item->property(v.name.constData());
         m_dirty |= QSGShaderEffectNode::DirtyShaderConstant;
         m_dirtyConstants[type].insert(idx);
     }
@@ -677,4 +736,3 @@ void QQuickGenericShaderEffect::markGeometryDirtyAndUpdateIfSupportsAtlas()
 QT_END_NAMESPACE
 
 #include "moc_qquickgenericshadereffect_p.cpp"
-#include "qquickgenericshadereffect.moc"
