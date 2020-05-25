@@ -7,3 +7,4 @@ QML_FILES += \
     $$PWD/SpinBox.qml \
     $$PWD/TextField.qml \
     $$PWD/Frame.qml \
+    $$PWD/TextArea.qml \

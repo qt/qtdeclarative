@@ -11,3 +11,4 @@ DefaultGroupBox 6.0 controls/DefaultGroupBox.qml
 DefaultSpinBox 6.0 controls/DefaultSpinBox.qml
 DefaultTextField 6.0 controls/DefaultTextField.qml
 DefaultFrame 6.0 controls/DefaultFrame.qml
+DefaultTextArea 6.0 controls/DefaultTextArea.qml

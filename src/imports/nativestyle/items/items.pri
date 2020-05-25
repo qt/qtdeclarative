@@ -10,6 +10,7 @@ HEADERS += \
     $$PWD/qquickstyleitemspinbox.h \
     $$PWD/qquickstyleitemtextfield.h \
     $$PWD/qquickstyleitemframe.h \
+    $$PWD/qquickstyleitemtextarea.h \
 
 SOURCES += \
     $$PWD/qquickstyleitem.cpp \
@@ -21,3 +22,4 @@ SOURCES += \
     $$PWD/qquickstyleitemspinbox.cpp \
     $$PWD/qquickstyleitemtextfield.cpp \
     $$PWD/qquickstyleitemframe.cpp \
+    $$PWD/qquickstyleitemtextarea.cpp \

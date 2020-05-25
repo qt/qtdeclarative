@@ -35,83 +35,37 @@
 ****************************************************************************/
 
 import QtQuick 2.15
-import QtQuick.Window 2.13
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 2.15
 
-ApplicationWindow {
-    visible: true
-    width: 800
-    height: 600
-    title: qsTr("Desktop Gallery")
+ControlContainer {
+    id: container
+    title: "TextFields"
 
-    TabBar {
-        id: bar
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.margins: 20
-        anchors.rightMargin: 40
+    Row {
+        spacing: container.rowSpacing
 
-        TabButton {
-            text: qsTr("Default controls")
-        }
-
-        TabButton {
-            text: qsTr("Customized controls")
-        }
-    }
-
-    StackLayout {
-        currentIndex: bar.currentIndex
-        anchors.top: bar.bottom
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.margins: 20
-
-        ScrollView {
-            contentWidth: width
-            clip: true
-            ScrollBar.vertical.policy: ScrollBar.AlwaysOn
-
-            Column {
-                anchors.left: parent.left
-                anchors.right: parent.right
-                spacing: 20
-
-                Buttons { }
-                CheckBoxes { }
-                RadioButtons { }
-                SpinBoxes { }
-                TextFields { }
-                TextAreas { }
-                Frames { }
-                Sliders { }
-                SlidersSmall { }
-                SlidersMini { }
+        TextArea {
+            id: customBackground
+            width: 200
+            wrapMode: TextEdit.WordWrap
+            text: "Custom background - Lorem ipsum dolor sit amet, consectetur adipiscing elit, "
+                  + "sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+            background: Rectangle {
+                implicitWidth: customBackground.contentWidth
+                implicitHeight: customBackground.contentHeight
+                border.width: customBackground.activeFocus ? 2 : 1
+                color: control.palette.base
+                border.color: "green"
             }
         }
 
-        ScrollView {
-            contentWidth: width
-            clip: true
-            ScrollBar.vertical.policy: ScrollBar.AlwaysOn
-
-            Column {
-                anchors.left: parent.left
-                anchors.right: parent.right
-                spacing: 20
-
-                CustomButtons { }
-                CustomCheckBoxes { }
-                CustomRadioButtons { }
-                CustomSpinBoxes { }
-                CustomTextFields { }
-                CustomTextAreas { }
-                CustomFrames { }
-                CustomSliders { }
-            }
+        TextArea {
+            width: 200
+            placeholderText: "Large font"
+            font.pixelSize: 20
+            wrapMode: TextEdit.WordWrap
+            text: "Large font - Lorem ipsum dolor sit amet, consectetur adipiscing elit"
         }
     }
-
 }

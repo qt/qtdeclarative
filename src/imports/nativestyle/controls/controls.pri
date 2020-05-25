@@ -7,3 +7,4 @@ QML_FILES += \
     $$PWD/DefaultSpinBox.qml \
     $$PWD/DefaultTextField.qml \
     $$PWD/DefaultFrame.qml \
+    $$PWD/DefaultTextArea.qml \

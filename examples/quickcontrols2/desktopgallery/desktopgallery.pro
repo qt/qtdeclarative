@@ -22,6 +22,8 @@ QML_FILES = \
     CustomTextFields.qml \
     Frames.qml \
     CustomFrames.qml \
+    TextAreas.qml \
+    CustomTextAreas.qml \
 
 OTHER_FILES += $$QML_FILES
 RESOURCES += $$QML_FILES
