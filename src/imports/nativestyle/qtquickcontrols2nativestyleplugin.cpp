@@ -38,7 +38,11 @@
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
 
 #include "qquicknativestyle.h"
+#include "qquickcommonstyle.h"
+
+#if defined(Q_OS_MACOS)
 #include "qquickmacstyle_mac_p.h"
+#endif
 
 QT_BEGIN_NAMESPACE
 
