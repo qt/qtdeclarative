@@ -464,20 +464,7 @@ function(qt6_qml_type_registration target)
         endif()
     endif()
 
-    cmake_parse_arguments(arg "COPY_OVER_INSTALL" "INSTALL_DIR" "" ${ARGN})
-
-    set(meta_types_args)
-    if (QT_BUILDING_QT AND NOT QT_WILL_INSTALL)
-        set(arg_COPY_OVER_INSTALL TRUE)
-    endif()
-    if (arg_INSTALL_DIR)
-        list(APPEND meta_types_args INSTALL_DIR "${arg_INSTALL_DIR}")
-    endif()
-    if (arg_COPY_OVER_INSTALL)
-        list(APPEND meta_types_args COPY_OVER_INSTALL)
-    endif()
-
-    qt6_generate_meta_types_json_file(${target} ${meta_types_args})
+    qt6_generate_meta_types_json_file(${target})
 
     get_target_property(import_version ${target} QT_QML_MODULE_VERSION)
     get_target_property(target_source_dir ${target} SOURCE_DIR)
@@ -567,6 +554,7 @@ function(qt6_qml_type_registration target)
 
     set(extra_env_command)
     if (WIN32)
+        # TODO: FIXME: The env path is wrong when not building Qt, but a standalone example.
         file(TO_NATIVE_PATH "${${PROJECT_NAME}_BINARY_DIR}/bin$<SEMICOLON>${CMAKE_INSTALL_PREFIX}/${INSTALL_BINDIR}$<SEMICOLON>%PATH%" env_path_native)
         set(extra_env_command COMMAND set PATH=${env_path_native})
     endif()
@@ -590,25 +578,44 @@ function(qt6_qml_type_registration target)
         SKIP_AUTOGEN ON
     )
 
-    # Only install qml types if necessary
+    # Usually for Qt Qml-like modules and qml plugins, the installation destination of the .qmltypes
+    # file is somewhere under the ${qt_prefix}/qml (Qt qml import path).
+    #
+    # For user-written qml plugins, the file should be installed next to the
+    # binary / library, and not the Qt qml import path.
+    #
+    # Unfortunately CMake doesn't provide a way to query where a binary will be installed, so the
+    # only way to know where to install is to request the installation path via a property.
+    #
+    # Thus only install the qmltypes file if an explicit path via the QT_QML_MODULE_INSTALL_DIR
+    # property has been provided. Otherwise if installation is requested, and no path is provided,
+    # warn the user, and don't install the file.
     get_target_property(install_qmltypes ${target} QT_QML_MODULE_INSTALL_QMLTYPES)
     if (install_qmltypes)
         get_target_property(qml_install_dir ${target} QT_QML_MODULE_INSTALL_DIR)
-        if(NOT arg_COPY_OVER_INSTALL)
-            install(FILES ${plugin_types_file} DESTINATION ${qml_install_dir})
-        else()
-            # For regular modules that have not been declared using
-            # qt_add_qml_module (e.g: src/quick)
-            if (DEFINED QT_WILL_INSTALL AND NOT QT_WILL_INSTALL
-                    AND NOT IS_ABSOLUTE "${qml_install_dir}")
-                set(qml_install_dir "${QT_BUILD_DIR}/${qml_install_dir}")
+        if(qml_install_dir)
+            if(NOT DEFINED QT_WILL_INSTALL OR QT_WILL_INSTALL)
+                install(FILES ${plugin_types_file} DESTINATION "${qml_install_dir}")
+            else()
+                # Need to make the path absolute during a Qt non-prefix build, otherwise files are
+                # written to the source dir because the paths are relative to the source dir.
+                if(NOT IS_ABSOLUTE "${qml_install_dir}")
+                    set(qml_install_dir "${CMAKE_INSTALL_PREFIX}/${qml_install_dir}")
+                endif()
+
+                add_custom_command(TARGET ${target} POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                        "${plugin_types_file}"
+                        "${qml_install_dir}/${qmltypes_output_name}"
+                    COMMENT "Copying ${plugin_types_file} to ${qml_install_dir}"
+                )
             endif()
-            add_custom_command(TARGET ${target} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                    "${plugin_types_file}"
-                    "${qml_install_dir}/${qmltypes_output_name}"
-                COMMENT "Copying ${plugin_types_file} to ${qml_install_dir}"
-            )
+        else()
+            message(AUTHOR_WARNING
+                "No QT_QML_MODULE_INSTALL_DIR property value provided for the '${target}' target. "
+                "Please either provide a value, or don't set the "
+                "QT_QML_MODULE_INSTALL_QMLTYPES property. "
+                "Skipping installation of '${qmltypes_output_name}'.")
         endif()
     endif()
 
