@@ -494,7 +494,7 @@ int QSGRhiShaderEffectMaterial::compare(const QSGMaterial *other) const
             QSGTexture *t1 = tp1->texture();
             QSGTexture *t2 = tp2->texture();
             if (t1 && t2) {
-                if (int diff = t1->comparisonKey() - t2->comparisonKey())
+                if (qint64 diff = t1->comparisonKey() - t2->comparisonKey())
                     return diff;
             } else {
                 if (!t1 && t2)

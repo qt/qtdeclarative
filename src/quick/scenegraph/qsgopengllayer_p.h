@@ -90,7 +90,7 @@ public:
     bool hasMipmaps() const override;
     int textureId() const override;
     QSize textureSize() const override { return m_size; }
-    int comparisonKey() const override;
+    qint64 comparisonKey() const override;
 
     GLenum format() const { return m_format; }
     void setFormat(GLenum format) override;

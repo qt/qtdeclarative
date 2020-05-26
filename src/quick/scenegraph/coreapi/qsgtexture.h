@@ -85,7 +85,7 @@ public:
         int layout;
     };
 
-    virtual int comparisonKey() const = 0;
+    virtual qint64 comparisonKey() const = 0;
     virtual int textureId() const = 0; // ### Qt 6: remove
     virtual QRhiTexture *rhiTexture() const;
     NativeTexture nativeTexture() const;

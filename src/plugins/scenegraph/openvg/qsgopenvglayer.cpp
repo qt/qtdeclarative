@@ -313,7 +313,7 @@ void QSGOpenVGLayer::grab()
         markDirtyTexture(); // Continuously update if 'live' and 'recursive'.
 }
 
-int QSGOpenVGLayerPrivate::comparisonKey() const
+qint64 QSGOpenVGLayerPrivate::comparisonKey() const
 {
     return 0;
 }

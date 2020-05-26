@@ -73,7 +73,7 @@ public:
     bool hasAlphaChannel() const override;
     bool hasMipmaps() const override;
 
-    int comparisonKey() const override;
+    qint64 comparisonKey() const override;
     int textureId() const override;
     void bind() override;
     QRhiTexture *rhiTexture() const override;

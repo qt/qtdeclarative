@@ -117,10 +117,10 @@ int XorBlendMaterial::compare(const QSGMaterial *o) const
     if (!state.texture2 || !other->state.texture2)
         return state.texture2 ? -1 : 1;
 
-    if (int diff = state.texture1->comparisonKey() - other->state.texture1->comparisonKey())
+    if (qint64 diff = state.texture1->comparisonKey() - other->state.texture1->comparisonKey())
         return diff;
 
-    if (int diff = state.texture2->comparisonKey() - other->state.texture2->comparisonKey())
+    if (qint64 diff = state.texture2->comparisonKey() - other->state.texture2->comparisonKey())
         return diff;
 
     return 0;

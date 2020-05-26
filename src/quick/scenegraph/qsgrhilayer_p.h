@@ -75,7 +75,7 @@ public:
 
     void bind() override;
     int textureId() const override;
-    int comparisonKey() const override;
+    qint64 comparisonKey() const override;
     QRhiTexture *rhiTexture() const override;
     void commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates) override;
 

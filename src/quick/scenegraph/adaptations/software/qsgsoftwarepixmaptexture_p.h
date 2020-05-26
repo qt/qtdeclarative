@@ -64,7 +64,7 @@ public:
     QSGSoftwarePixmapTexture(const QImage &image, uint flags);
     QSGSoftwarePixmapTexture(const QPixmap &pixmap);
 
-    int comparisonKey() const override;
+    qint64 comparisonKey() const override;
     int textureId() const override;
     QSize textureSize() const override;
     bool hasAlphaChannel() const override;

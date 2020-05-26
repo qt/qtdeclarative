@@ -83,7 +83,7 @@ public:
     void setImage(const QImage &image);
     const QImage &image() { return m_image; }
 
-    int comparisonKey() const override;
+    qint64 comparisonKey() const override;
 
     void bind() override;
 

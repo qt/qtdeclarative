@@ -107,7 +107,7 @@ public:
         if (!state.texture || !other->state.texture)
             return state.texture ? 1 : -1;
 
-        if (int diff = state.texture->comparisonKey() - other->state.texture->comparisonKey())
+        if (qint64 diff = state.texture->comparisonKey() - other->state.texture->comparisonKey())
             return diff;
 
         return 0;

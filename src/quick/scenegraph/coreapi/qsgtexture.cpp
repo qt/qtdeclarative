@@ -489,21 +489,19 @@ bool QSGTexture::isAtlasTexture() const
  */
 
 /*!
-    \fn int QSGTexture::comparisonKey() const
+    \fn qint64 QSGTexture::comparisonKey() const
 
     Returns a key suitable for comparing textures. Typically used in
     QSGMaterial::compare() implementations.
 
     Just comparing QSGTexture pointers is not always sufficient because two
     QSGTexture instances that refer to the same native texture object
-    underneath should also be considered equal. Hence this function.
+    underneath should also be considered equal. Hence the need for this function.
 
-    \note Unlike textureId(), implementations of this function are not expected
-    to and should not create any graphics resources (so texture objects) in
-    case there is none yet.
-
+    Implementations of this function are not expected to, and should not create
+    any graphics resources (native texture objects) in case there are none yet.
     A QSGTexture that does not have a native texture object underneath is
-    typically not equal to any other QSGTexture. There are exceptions to this,
+    typically \b not equal to any other QSGTexture. There are exceptions to this,
     in particular when atlasing is used (where multiple textures share the same
     atlas texture under the hood), that is then up to the subclass
     implementations to deal with as appropriate.

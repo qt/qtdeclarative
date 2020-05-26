@@ -70,7 +70,7 @@ public:
 
     // QSGTexture interface
 public:
-    int comparisonKey() const override;
+    qint64 comparisonKey() const override;
     int textureId() const override;
     QSize textureSize() const override;
     bool hasAlphaChannel() const override;

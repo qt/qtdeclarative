@@ -141,7 +141,7 @@ int QSGOpenGLLayer::textureId() const
     return m_fbo ? m_fbo->texture() : 0;
 }
 
-int QSGOpenGLLayer::comparisonKey() const
+qint64 QSGOpenGLLayer::comparisonKey() const
 {
     return m_fbo ? m_fbo->texture() : 0;
 }

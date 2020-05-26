@@ -116,7 +116,7 @@ class QSGOpenVGLayerPrivate : public QSGTexturePrivate
 {
     Q_DECLARE_PUBLIC(QSGOpenVGLayer)
 public:
-    int comparisonKey() const override;
+    qint64 comparisonKey() const override;
 };
 
 QT_END_NAMESPACE

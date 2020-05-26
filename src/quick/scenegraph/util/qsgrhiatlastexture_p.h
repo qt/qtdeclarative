@@ -157,7 +157,7 @@ public:
     TextureBase(AtlasBase *atlas, const QRect &textureRect);
     ~TextureBase();
 
-    int comparisonKey() const override;
+    qint64 comparisonKey() const override;
     int textureId() const override { return 0; } // not used
     void bind() override { } // not used
     QRhiTexture *rhiTexture() const override;

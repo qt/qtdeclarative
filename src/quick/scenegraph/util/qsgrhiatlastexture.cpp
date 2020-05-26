@@ -381,7 +381,7 @@ TextureBase::~TextureBase()
     m_atlas->remove(this);
 }
 
-int TextureBase::comparisonKey() const
+qint64 TextureBase::comparisonKey() const
 {
     // We need special care here: a typical comparisonKey() implementation
     // returns a unique result when there is no underlying texture yet. This is
@@ -391,7 +391,7 @@ int TextureBase::comparisonKey() const
 
     // base the comparison on the atlas ptr; this way textures for the same
     // atlas are considered equal
-    return int(qintptr(m_atlas));
+    return qint64(m_atlas);
 }
 
 QRhiTexture *TextureBase::rhiTexture() const

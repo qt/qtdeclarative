@@ -70,7 +70,7 @@ int QSGSoftwareLayer::textureId() const
     return 0;
 }
 
-int QSGSoftwareLayer::comparisonKey() const
+qint64 QSGSoftwareLayer::comparisonKey() const
 {
     return 0;
 }

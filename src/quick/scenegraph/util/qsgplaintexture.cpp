@@ -304,17 +304,17 @@ void QSGPlainTexture::setTextureFromNativeObject(QRhi *rhi, QQuickWindow::Native
     setTexture(t);
 }
 
-int QSGPlainTexture::comparisonKey() const
+qint64 QSGPlainTexture::comparisonKey() const
 {
     // not textureId() as that would create an id when not yet done - that's not wanted here
     if (m_texture_id)
         return m_texture_id;
 
     if (m_texture)
-        return int(qintptr(m_texture));
+        return qint64(m_texture);
 
     // two textures (and so materials) with not-yet-created texture underneath are never equal
-    return int(qintptr(this));
+    return qint64(this);
 }
 
 QRhiTexture *QSGPlainTexture::rhiTexture() const

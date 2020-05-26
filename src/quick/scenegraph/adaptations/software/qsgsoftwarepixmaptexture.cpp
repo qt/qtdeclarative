@@ -85,7 +85,7 @@ void QSGSoftwarePixmapTexture::bind()
     Q_UNREACHABLE();
 }
 
-int QSGSoftwarePixmapTexture::comparisonKey() const
+qint64 QSGSoftwarePixmapTexture::comparisonKey() const
 {
     return 0;
 }
