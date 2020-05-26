@@ -192,11 +192,16 @@ void QQuickStyleItem::updateGeometry()
     m_styleItemGeometry = calculateGeometry();
 
 #ifdef QT_DEBUG
-    if (m_styleItemGeometry.implicitSize.isEmpty())
-        qmlWarning(this) << "implicitSize is empty!";
     if (m_styleItemGeometry.minimumSize.isEmpty())
         qmlWarning(this) << "minimumSize is empty!";
 #endif
+
+    if (m_styleItemGeometry.implicitSize.isEmpty()) {
+        // If the item has no contents (or its size is
+        // empty), we just use the minimum size as implicit size.
+        m_styleItemGeometry.implicitSize = m_styleItemGeometry.minimumSize;
+        qqc2Debug() << "implicitSize is empty, using minimumSize instead";
+    }
 
     if (contentPadding() != oldContentPadding)
         emit contentPaddingChanged();
