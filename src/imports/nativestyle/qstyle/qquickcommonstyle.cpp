@@ -4666,6 +4666,13 @@ QSize QCommonStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt, c
         if (const QStyleOptionSlider *option = qstyleoption_cast<const QStyleOptionSlider *>(opt))
             sz = subControlRect(QStyle::CC_Slider, option, QStyle::SC_SliderHandle).size();
         break;
+    case CT_Frame:
+        if (const QStyleOptionFrame *option = qstyleoption_cast<const QStyleOptionFrame *>(opt)) {
+            const int ninePatchSplit = 1;
+            int w = qMax(10, (option->lineWidth * 2) + ninePatchSplit);
+            sz = QSize(w, w);
+        }
+        break;
     case CT_ScrollBar:
     case CT_MenuBar:
     case CT_Menu:

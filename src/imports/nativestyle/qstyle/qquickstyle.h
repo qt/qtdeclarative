@@ -552,6 +552,7 @@ public:
         CT_GroupBox,
         CT_MdiControls,
         CT_ItemViewItem,
+        CT_Frame,
         // do not add any values below/greater than this
         CT_CustomBase = 0xf0000000
     };

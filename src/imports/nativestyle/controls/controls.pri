@@ -6,3 +6,4 @@ QML_FILES += \
     $$PWD/DefaultRadioButton.qml \
     $$PWD/DefaultSpinBox.qml \
     $$PWD/DefaultTextField.qml \
+    $$PWD/DefaultFrame.qml \

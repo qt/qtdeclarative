@@ -20,6 +20,8 @@ QML_FILES = \
     CustomSpinBoxes.qml \
     TextFields.qml \
     CustomTextFields.qml \
+    Frames.qml \
+    CustomFrames.qml \
 
 OTHER_FILES += $$QML_FILES
 RESOURCES += $$QML_FILES
