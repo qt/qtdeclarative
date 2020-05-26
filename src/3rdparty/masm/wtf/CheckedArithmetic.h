@@ -430,6 +430,9 @@ public:
     {
     }
 
+    Checked(const Checked &) = default;
+
+
     Checked(ResultOverflowedTag)
         : m_value(0)
     {

@@ -55,7 +55,6 @@ class Vector : public std::vector<T> {
 public:
     Vector() {}
     Vector(int initialSize) : std::vector<T>(initialSize) {}
-    Vector(const Vector &other) : std::vector<T>(other) {}
     Vector(std::initializer_list<T> list) : std::vector<T>(list) {}
 
     inline void append(const T& value)
