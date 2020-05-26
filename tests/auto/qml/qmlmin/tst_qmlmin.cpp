@@ -60,6 +60,9 @@ private:
 
 tst_qmlmin::tst_qmlmin()
 {
+    // this test can be slow, double the timeout from the default 5 minutes to 10 minutes
+    const int timeout = 10*60*1000;     // 10 minutes
+    qputenv("QTEST_FUNCTION_TIMEOUT", QByteArray::number(timeout));
 }
 
 void tst_qmlmin::initTestCase()
