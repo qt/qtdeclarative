@@ -172,6 +172,9 @@ private:
 
 struct ScopedValue
 {
+    ScopedValue(const ScopedValue &) = default;
+    ScopedValue(ScopedValue &&) = default;
+
     ScopedValue(const Scope &scope)
     {
         ptr = scope.alloc<Scope::Uninitialized>();
@@ -378,11 +381,6 @@ struct Scoped
 
     Scoped<T> &operator=(const ReturnedValue &v) {
         setPointer(QV4::Value::fromReturnedValue(v).as<T>());
-        return *this;
-    }
-
-    Scoped<T> &operator=(const Scoped<T> &other) {
-        *ptr = *other.ptr;
         return *this;
     }
 
