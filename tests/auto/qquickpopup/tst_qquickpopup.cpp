@@ -40,6 +40,7 @@
 #include "../shared/visualtestutil.h"
 #include "../shared/qtest_quickcontrols.h"
 
+#include <QtCore/qoperatingsystemversion.h>
 #include <QtGui/qpa/qwindowsysteminterface.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickpalette_p.h>
@@ -1266,6 +1267,8 @@ void tst_QQuickPopup::countChanged()
 // QTBUG-73243
 void tst_QQuickPopup::toolTipCrashOnClose()
 {
+    if (QOperatingSystemVersion::current() <= QOperatingSystemVersion::Windows7)
+        QSKIP("Test requires a version of Windows newer than 7: QTBUG-84443");
     if (!canImportModule("import QtGraphicalEffects 1.15; DropShadow {}"))
         QSKIP("Test requires QtGraphicalEffects");
 
@@ -1284,6 +1287,11 @@ void tst_QQuickPopup::toolTipCrashOnClose()
 
 void tst_QQuickPopup::setOverlayParentToNull()
 {
+    if (QOperatingSystemVersion::current() <= QOperatingSystemVersion::Windows7)
+        QSKIP("Test requires a version of Windows newer than 7: QTBUG-84443");
+    if (!canImportModule("import QtGraphicalEffects 1.15; DropShadow {}"))
+        QSKIP("Test requires QtGraphicalEffects");
+
     QQuickApplicationHelper helper(this, "toolTipCrashOnClose.qml");
 
     QQuickWindow *window = helper.window;
