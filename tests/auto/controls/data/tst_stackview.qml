@@ -804,7 +804,10 @@ TestCase {
         var item = control.push(component, StackView.Immediate)
         verify(item)
 
-        item.StackView.onRemoved.connect(function() { control.push(component, StackView.Immediate) } )
+        item.StackView.onRemoved.connect(function() {
+            ignoreWarning(/.*QML StackView: cannot push while already in the process of completing a pop/)
+            control.push(component, StackView.Immediate)
+        })
 
         // don't crash (QTBUG-62153)
         control.pop(StackView.Immediate)
@@ -1287,7 +1290,7 @@ TestCase {
         control.push(container.clearUponDestructionComponent, StackView.Immediate)
 
         // Shouldn't crash.
-        ignoreWarning(new RegExp(".*cannot clear while already in the process of removing elements"))
+        ignoreWarning(/.*cannot clear while already in the process of completing a clear/)
         control.clear(StackView.Immediate)
     }
 
@@ -1301,7 +1304,7 @@ TestCase {
 
         // Pop all items except the first, removing the second item we pushed in the process.
         // Shouldn't crash.
-        ignoreWarning(new RegExp(".*cannot clear while already in the process of removing elements"))
+        ignoreWarning(/.*cannot clear while already in the process of completing a pop/)
         control.pop(null, StackView.Immediate)
     }
 
@@ -1316,7 +1319,7 @@ TestCase {
         control.push(container.clearUponDestructionComponent, StackView.Immediate)
 
         // Pop the top item, then pop down to the first item in response.
-        ignoreWarning(new RegExp(".*cannot pop while already in the process of removing elements"))
+        ignoreWarning(/.*cannot pop while already in the process of completing a pop/)
         control.pop(StackView.Immediate)
     }
 
@@ -1329,7 +1332,7 @@ TestCase {
         control.push(container.clearUponDestructionComponent, StackView.Immediate)
 
         // Replace the top item, then clear in response.
-        ignoreWarning(new RegExp(".*cannot clear while already in the process of removing elements"))
+        ignoreWarning(/.*cannot clear while already in the process of completing a replace/)
         control.replace(component, StackView.Immediate)
     }
 
@@ -1342,7 +1345,7 @@ TestCase {
         control.push(container.clearUponDestructionComponent, StackView.Immediate)
 
         // Replace the top item, then clear in response.
-        ignoreWarning(new RegExp(".*cannot replace while already in the process of removing elements"))
+        ignoreWarning(/.*cannot replace while already in the process of completing a clear/)
         control.clear(StackView.Immediate)
     }
 
@@ -1403,5 +1406,28 @@ TestCase {
         // After finishing the transition, the red rect should still be visible.
         tryCompare(control, "busy", false)
         compare(redRect.visible, true)
+    }
+
+    // QTBUG-84381
+    function test_clearAndPushAfterDepthChange() {
+        var control = createTemporaryObject(stackView, testCase, {
+            popEnter: null, popExit: null, pushEnter: null,
+            pushExit: null, replaceEnter: null, replaceExit: null
+        })
+        verify(control)
+
+        control.depthChanged.connect(function() {
+            if (control.depth === 2) {
+                // Shouldn't assert.
+                ignoreWarning(/.*QML StackView: cannot clear while already in the process of completing a push/)
+                control.clear()
+                // Shouldn't crash.
+                ignoreWarning(/.*QML StackView: cannot push while already in the process of completing a push/)
+                control.push(component)
+            }
+        })
+
+        control.push(component)
+        control.push(component)
     }
 }
