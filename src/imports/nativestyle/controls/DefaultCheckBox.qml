@@ -43,7 +43,7 @@ import QtQuick.NativeStyle 6.0 as NativeStyle
 T.CheckBox {
     id: control
 
-    property bool nativeIndicator: indicator instanceof NativeStyle.StyleItem
+    readonly property bool nativeIndicator: indicator instanceof NativeStyle.StyleItem
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             implicitContentWidth + leftPadding + rightPadding)
