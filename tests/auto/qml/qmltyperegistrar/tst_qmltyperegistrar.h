@@ -32,6 +32,7 @@
 #include "foreign.h"
 
 #include <QtQml/qqml.h>
+#include <QtCore/qproperty.h>
 
 class SizeEnums
 {
@@ -66,6 +67,7 @@ class Local : public Foreign
 {
     Q_OBJECT
     QML_ELEMENT
+    Q_PROPERTY(int someProperty)
 public:
     enum Flag {
         Flag1 = 0x1,
@@ -75,6 +77,8 @@ public:
     };
     Q_DECLARE_FLAGS(Flags, Flag)
     Q_FLAG(Flags)
+
+    QProperty<int> someProperty;
 };
 
 class tst_qmltyperegistrar : public QObject
@@ -89,6 +93,7 @@ private slots:
     void qmltypesHasFlags();
     void superAndForeignTypes();
     void accessSemantics();
+    void isQProperty();
 
 private:
     QByteArray qmltypesData;
