@@ -247,12 +247,12 @@ bool QQuickRenderTargetPrivate::resolve(QRhi *rhi, QQuickWindowRenderTarget *dst
     case Type::NativeTexture:
     {
         QRhiTexture *texture = rhi->newTexture(QRhiTexture::RGBA8, pixelSize, sampleCount, QRhiTexture::RenderTarget);
-        if (!texture->buildFrom({ u.nativeTexture.object, u.nativeTexture.layout })) {
+        if (!texture->createFrom({ u.nativeTexture.object, u.nativeTexture.layout })) {
             qWarning("Failed to build texture for QQuickRenderTarget");
             return false;
         }
         QRhiRenderBuffer *depthStencil = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, pixelSize, sampleCount);
-        if (!depthStencil->build()) {
+        if (!depthStencil->create()) {
             qWarning("Failed to build depth-stencil buffer for QQuickRenderTarget");
             delete texture;
             return false;
@@ -264,7 +264,7 @@ bool QQuickRenderTargetPrivate::resolve(QRhi *rhi, QQuickWindowRenderTarget *dst
         QRhiTextureRenderTarget *rt = rhi->newTextureRenderTarget(rtDesc);
         QRhiRenderPassDescriptor *rp = rt->newCompatibleRenderPassDescriptor();
         rt->setRenderPassDescriptor(rp);
-        if (!rt->build()) {
+        if (!rt->create()) {
             qWarning("Failed to build texture render target for QQuickRenderTarget");
             delete rp;
             delete depthStencil;

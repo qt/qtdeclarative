@@ -734,7 +734,7 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
             if (cd->swapchainJustBecameRenderable)
                 qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "just became exposed");
 
-            cd->hasActiveSwapchain = cd->swapchain->buildOrResize();
+            cd->hasActiveSwapchain = cd->swapchain->createOrResize();
             if (!cd->hasActiveSwapchain && rhi->isDeviceLost()) {
                 handleDeviceLoss();
                 QCoreApplication::postEvent(window, new QEvent(QEvent::Type(QQuickWindowPrivate::FullUpdateRequest)));

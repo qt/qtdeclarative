@@ -416,7 +416,7 @@ QRhiShaderResourceBindings *ShaderManager::srb(const ShaderResourceBindingList &
 
     QRhiShaderResourceBindings *srb = context->rhi()->newShaderResourceBindings();
     srb->setBindings(bindings.cbegin(), bindings.cend());
-    if (srb->build()) {
+    if (srb->create()) {
         srbCache.insert(bindings, srb);
     } else {
         qWarning("Failed to build srb");
@@ -1177,7 +1177,7 @@ void Renderer::unmap(Buffer *buffer, bool isIndexBuf)
             buffer->buf = m_rhi->newBuffer(QRhiBuffer::Immutable,
                                            isIndexBuf ? QRhiBuffer::IndexBuffer : QRhiBuffer::VertexBuffer,
                                            buffer->size);
-            if (!buffer->buf->build())
+            if (!buffer->buf->create())
                 qWarning("Failed to build vertex/index buffer of size %d", buffer->size);
 //            else
 //                qDebug("created rhibuf %p size %d", buffer->buf, buffer->size);
@@ -1196,7 +1196,7 @@ void Renderer::unmap(Buffer *buffer, bool isIndexBuf)
             }
             if (needsRebuild) {
                 //qDebug("rebuilding rhibuf %p size %d type Dynamic", buffer->buf, buffer->size);
-                buffer->buf->build();
+                buffer->buf->create();
             }
         }
         if (buffer->buf->type() != QRhiBuffer::Dynamic) {
@@ -2656,7 +2656,7 @@ QRhiGraphicsPipeline *Renderer::buildStencilPipeline(const Batch *batch, bool fi
     ps->setShaderResourceBindings(batch->stencilClipState.srb); // use something, it just needs to be layout-compatible
     ps->setRenderPassDescriptor(renderPassDescriptor());
 
-    if (!ps->build()) {
+    if (!ps->create()) {
         qWarning("Failed to build stencil clip pipeline");
         delete ps;
         return nullptr;
@@ -2775,7 +2775,7 @@ void Renderer::updateClipState(const QSGClipNode *clipList, Batch *batch) // RHI
             rebuildVBuf = true;
         }
         if (rebuildVBuf) {
-            if (!batch->stencilClipState.vbuf->build()) {
+            if (!batch->stencilClipState.vbuf->create()) {
                 qWarning("Failed to build stencil clip vertex buffer");
                 delete batch->stencilClipState.vbuf;
                 batch->stencilClipState.vbuf = nullptr;
@@ -2793,7 +2793,7 @@ void Renderer::updateClipState(const QSGClipNode *clipList, Batch *batch) // RHI
                 rebuildIBuf = true;
             }
             if (rebuildIBuf) {
-                if (!batch->stencilClipState.ibuf->build()) {
+                if (!batch->stencilClipState.ibuf->create()) {
                     qWarning("Failed to build stencil clip index buffer");
                     delete batch->stencilClipState.ibuf;
                     batch->stencilClipState.ibuf = nullptr;
@@ -2811,7 +2811,7 @@ void Renderer::updateClipState(const QSGClipNode *clipList, Batch *batch) // RHI
             rebuildUBuf = true;
         }
         if (rebuildUBuf) {
-            if (!batch->stencilClipState.ubuf->build()) {
+            if (!batch->stencilClipState.ubuf->create()) {
                 qWarning("Failed to build stencil clip uniform buffer");
                 delete batch->stencilClipState.ubuf;
                 batch->stencilClipState.ubuf = nullptr;
@@ -2824,7 +2824,7 @@ void Renderer::updateClipState(const QSGClipNode *clipList, Batch *batch) // RHI
             const QRhiShaderResourceBinding ubufBinding = QRhiShaderResourceBinding::uniformBufferWithDynamicOffset(
                         0, QRhiShaderResourceBinding::VertexStage, batch->stencilClipState.ubuf, StencilClipUbufSize);
             batch->stencilClipState.srb->setBindings({ ubufBinding });
-            if (!batch->stencilClipState.srb->build()) {
+            if (!batch->stencilClipState.srb->create()) {
                 qWarning("Failed to build stencil clip srb");
                 delete batch->stencilClipState.srb;
                 batch->stencilClipState.srb = nullptr;
@@ -3300,7 +3300,7 @@ bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms)
     ps->setLineWidth(m_gstate.lineWidth);
 
     //qDebug("building new ps %p", ps);
-    if (!ps->build()) {
+    if (!ps->create()) {
         qWarning("Failed to build graphics pipeline state");
         delete ps;
         return false;
@@ -3389,7 +3389,7 @@ QRhiTexture *Renderer::dummyTexture()
 {
     if (!m_dummyTexture) {
         m_dummyTexture = m_rhi->newTexture(QRhiTexture::RGBA8, QSize(64, 64));
-        if (m_dummyTexture->build()) {
+        if (m_dummyTexture->create()) {
             if (m_resourceUpdates) {
                 QImage img(m_dummyTexture->pixelSize(), QImage::Format_RGBA8888_Premultiplied);
                 img.fill(0);
@@ -3488,7 +3488,7 @@ void Renderer::updateMaterialDynamicData(ShaderManager::Shader *sms,
                 Q_ASSERT(sampler);
             } else {
                 sampler = newSampler(m_rhi, samplerDesc);
-                if (!sampler->build()) {
+                if (!sampler->create()) {
                     qWarning("Failed to build sampler");
                     delete sampler;
                     continue;
@@ -3619,7 +3619,7 @@ bool Renderer::prepareRenderMergedBatch(Batch *batch, PreparedRenderBatch *rende
         }
         if (ubufRebuild) {
             batch->ubufDataValid = false;
-            if (!batch->ubuf->build()) {
+            if (!batch->ubuf->create()) {
                 qWarning("Failed to build uniform buffer of size %d bytes", ubufSize);
                 delete batch->ubuf;
                 batch->ubuf = nullptr;
@@ -3796,7 +3796,7 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
         }
         if (ubufRebuild) {
             batch->ubufDataValid = false;
-            if (!batch->ubuf->build()) {
+            if (!batch->ubuf->create()) {
                 qWarning("Failed to build uniform buffer of size %d bytes", totalUBufSize);
                 delete batch->ubuf;
                 batch->ubuf = nullptr;
@@ -4624,7 +4624,7 @@ void Renderer::invalidatePipelineCacheDependency(QRhiRenderPassDescriptor *rpDes
         if (it.key().compatibleRenderPassDescriptor == rpDesc) {
             QRhiGraphicsPipeline *ps = it.value();
             it = m_shaderManager->pipelineCache.erase(it);
-            ps->releaseAndDestroyLater(); // QRhi takes care of it in endFrame()
+            ps->deleteLater(); // QRhi takes care of it in endFrame()
         } else {
             ++it;
         }

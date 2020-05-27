@@ -227,7 +227,7 @@ void QSGRhiDistanceFieldGlyphCache::createTexture(TextureInfo *texInfo,
     }
 
     texInfo->texture = m_rhi->newTexture(QRhiTexture::RED_OR_ALPHA8, QSize(width, height), 1, QRhiTexture::UsedAsTransferSource);
-    if (texInfo->texture->build()) {
+    if (texInfo->texture->create()) {
         if (!m_resourceUpdates)
             m_resourceUpdates = m_rhi->nextResourceUpdateBatch();
 
@@ -555,7 +555,7 @@ void QSGRhiDistanceFieldGlyphCache::commitResourceUpdates(QRhiResourceUpdateBatc
 
     // now let's assume the resource updates will be committed in this frame
     for (QRhiTexture *t : m_pendingDispose)
-        t->releaseAndDestroyLater(); // will be releaseAndDestroyed after the frame is submitted -> safe
+        t->deleteLater(); // will be deleted after the frame is submitted -> safe
 
     m_pendingDispose.clear();
 }

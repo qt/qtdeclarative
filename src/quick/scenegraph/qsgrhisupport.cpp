@@ -687,14 +687,14 @@ QImage QSGRhiSupport::grabOffscreen(QQuickWindow *window)
     const QSize pixelSize = window->size() * window->devicePixelRatio();
     QScopedPointer<QRhiTexture> texture(rhi->newTexture(QRhiTexture::RGBA8, pixelSize, 1,
                                                         QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource));
-    if (!texture->build()) {
+    if (!texture->create()) {
         qWarning("Failed to build texture for offscreen readback");
         return QImage();
     }
     QScopedPointer<QRhiTextureRenderTarget> rt(rhi->newTextureRenderTarget({ texture.data() }));
     QScopedPointer<QRhiRenderPassDescriptor> rpDesc(rt->newCompatibleRenderPassDescriptor());
     rt->setRenderPassDescriptor(rpDesc.data());
-    if (!rt->build()) {
+    if (!rt->create()) {
         qWarning("Failed to build render target for offscreen readback");
         return QImage();
     }

@@ -68,7 +68,7 @@ QSGRhiTextureGlyphCache::~QSGRhiTextureGlyphCache()
 QRhiTexture *QSGRhiTextureGlyphCache::createEmptyTexture(QRhiTexture::Format format)
 {
     QRhiTexture *t = m_rhi->newTexture(format, m_size, 1, QRhiTexture::UsedAsTransferSource);
-    if (!t->build()) {
+    if (!t->create()) {
         qWarning("Failed to build new glyph cache texture of size %dx%d", m_size.width(), m_size.height());
         return nullptr;
     }
@@ -259,7 +259,7 @@ void QSGRhiTextureGlyphCache::commitResourceUpdates(QRhiResourceUpdateBatch *mer
 
     // now let's assume the resource updates will be committed in this frame
     for (QRhiTexture *t : m_pendingDispose)
-        t->releaseAndDestroyLater(); // will be releaseAndDestroyed after the frame is submitted -> safe
+        t->deleteLater(); // will be deleted after the frame is submitted -> safe
 
     m_pendingDispose.clear();
 }

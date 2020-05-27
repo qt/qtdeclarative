@@ -278,20 +278,20 @@ void QSGRhiLayer::grab()
         if (m_multisampling) {
             releaseResources();
             m_msaaColorBuffer = m_rhi->newRenderBuffer(QRhiRenderBuffer::Color, m_size, effectiveSamples);
-            if (!m_msaaColorBuffer->build()) {
+            if (!m_msaaColorBuffer->create()) {
                 qWarning("Failed to build multisample color buffer for layer of size %dx%d, sample count %d",
                          m_size.width(), m_size.height(), effectiveSamples);
                 releaseResources();
                 return;
             }
             m_texture = m_rhi->newTexture(m_format, m_size, 1, textureFlags);
-            if (!m_texture->build()) {
+            if (!m_texture->create()) {
                 qWarning("Failed to build texture for layer of size %dx%d", m_size.width(), m_size.height());
                 releaseResources();
                 return;
             }
             m_ds = m_rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, m_size, effectiveSamples);
-            if (!m_ds->build()) {
+            if (!m_ds->create()) {
                 qWarning("Failed to build depth-stencil buffer for layer");
                 releaseResources();
                 return;
@@ -309,7 +309,7 @@ void QSGRhiLayer::grab()
                 return;
             }
             m_rt->setRenderPassDescriptor(m_rtRp);
-            if (!m_rt->build()) {
+            if (!m_rt->create()) {
                 qWarning("Failed to build texture render target for layer");
                 releaseResources();
                 return;
@@ -317,13 +317,13 @@ void QSGRhiLayer::grab()
         } else {
             releaseResources();
             m_texture = m_rhi->newTexture(m_format, m_size, 1, textureFlags);
-            if (!m_texture->build()) {
+            if (!m_texture->create()) {
                 qWarning("Failed to build texture for layer of size %dx%d", m_size.width(), m_size.height());
                 releaseResources();
                 return;
             }
             m_ds = m_rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, m_size);
-            if (!m_ds->build()) {
+            if (!m_ds->create()) {
                 qWarning("Failed to build depth-stencil buffer for layer");
                 releaseResources();
                 return;
@@ -333,7 +333,7 @@ void QSGRhiLayer::grab()
                 // Here rt is associated with m_secondaryTexture instead of m_texture.
                 // We will issue a copy to m_texture afterwards.
                 m_secondaryTexture = m_rhi->newTexture(m_format, m_size, 1, textureFlags);
-                if (!m_secondaryTexture->build()) {
+                if (!m_secondaryTexture->create()) {
                     qWarning("Failed to build texture for layer of size %dx%d", m_size.width(), m_size.height());
                     releaseResources();
                     return;
@@ -348,7 +348,7 @@ void QSGRhiLayer::grab()
                 return;
             }
             m_rt->setRenderPassDescriptor(m_rtRp);
-            if (!m_rt->build()) {
+            if (!m_rt->create()) {
                 qWarning("Failed to build texture render target for layer");
                 releaseResources();
                 return;

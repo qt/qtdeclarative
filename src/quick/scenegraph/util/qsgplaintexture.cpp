@@ -299,7 +299,7 @@ void QSGPlainTexture::setTextureFromNativeObject(QRhi *rhi, QQuickWindow::Native
     QRhiTexture *t = rhi->newTexture(QRhiTexture::RGBA8, size, 1, flags);
 
     // ownership of the native object is never taken
-    t->buildFrom({nativeObjectHandle, nativeLayout});
+    t->createFrom({nativeObjectHandle, nativeLayout});
 
     setTexture(t);
 }
@@ -438,7 +438,7 @@ void QSGPlainTexture::commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch
     }
 
     if (needsRebuild) {
-        if (!m_texture->build()) {
+        if (!m_texture->create()) {
             qWarning("Failed to build texture for QSGPlainTexture (size %dx%d)",
                      m_texture_size.width(), m_texture_size.height());
             return;

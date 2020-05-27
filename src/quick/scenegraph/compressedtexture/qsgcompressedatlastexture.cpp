@@ -91,7 +91,7 @@ bool Atlas::generateTexture()
     if (!m_texture)
         return false;
 
-    if (!m_texture->build()) {
+    if (!m_texture->create()) {
         delete m_texture;
         m_texture = nullptr;
         return false;

@@ -256,7 +256,7 @@ bool Atlas::generateTexture()
     if (!m_texture)
         return false;
 
-    if (!m_texture->build()) {
+    if (!m_texture->create()) {
         delete m_texture;
         m_texture = nullptr;
         return false;
@@ -442,7 +442,7 @@ QSGTexture *Texture::removedFromAtlas(QRhiResourceUpdateBatch *resourceUpdates) 
             const QRect r = atlasSubRectWithoutPadding();
 
             QRhiTexture *extractTex = rhi->newTexture(m_atlas->texture()->format(), r.size());
-            if (extractTex->build()) {
+            if (extractTex->create()) {
                 bool ownResUpd = false;
                 QRhiResourceUpdateBatch *resUpd = resourceUpdates;
                 if (!resUpd) {

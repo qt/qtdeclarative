@@ -716,7 +716,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
             if (cd->swapchainJustBecameRenderable)
                 qCDebug(QSG_LOG_RENDERLOOP, "just became exposed");
 
-            cd->hasActiveSwapchain = cd->swapchain->buildOrResize();
+            cd->hasActiveSwapchain = cd->swapchain->createOrResize();
             if (!cd->hasActiveSwapchain && rhi->isDeviceLost()) {
                 handleDeviceLoss();
                 return;

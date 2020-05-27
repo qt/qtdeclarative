@@ -305,7 +305,7 @@ void QSGCompressedTexture::commitTextureOperations(QRhi *rhi, QRhiResourceUpdate
 
     if (!m_texture) {
         m_texture = rhi->newTexture(fmt.rhiFormat, m_size, 1, texFlags);
-        if (!m_texture->build()) {
+        if (!m_texture->create()) {
             qWarning("Failed to create QRhiTexture for compressed data");
             delete m_texture;
             m_texture = nullptr;
