@@ -859,13 +859,14 @@ bool QSGRhiGuiThreadShaderEffectManager::reflect(ShaderInfo *result)
             for (const QShaderDescription::BlockVariable &member : ubuf.members) {
                 ShaderInfo::Variable v;
                 v.type = ShaderInfo::Constant;
-                v.name = member.name.toUtf8();
+                v.name = member.name;
                 v.offset = member.offset;
                 v.size = member.size;
                 result->variables.append(v);
             }
         } else {
-            qWarning("Uniform block %s (binding %d) ignored", qPrintable(ubuf.blockName), ubuf.binding);
+            qWarning("Uniform block %s (binding %d) ignored", ubuf.blockName.constData(),
+                     ubuf.binding);
         }
     }
 
@@ -875,7 +876,7 @@ bool QSGRhiGuiThreadShaderEffectManager::reflect(ShaderInfo *result)
         const QShaderDescription::InOutVariable &combinedImageSampler(combinedImageSamplers[i]);
         ShaderInfo::Variable v;
         v.type = ShaderInfo::Sampler;
-        v.name = combinedImageSampler.name.toUtf8();
+        v.name = combinedImageSampler.name;
         v.bindPoint = combinedImageSampler.binding;
         result->variables.append(v);
     }

@@ -224,10 +224,8 @@ void QSGMaterialShaderPrivate::prepare(QShader::Variant vertexShaderVariant)
         const QShaderDescription desc = vsIt->shader.description();
         const QVector<QShaderDescription::InOutVariable> vertexInputs = desc.inputVariables();
         for (const QShaderDescription::InOutVariable &v : vertexInputs) {
-            const QByteArray name = v.name.toUtf8();
             if (vertexShaderVariant == QShader::BatchableVertexShader
-                    && name == QByteArrayLiteral("_qt_order"))
-            {
+                && v.name == QByteArrayLiteral("_qt_order")) {
                 vsIt->qt_order_attrib_location = v.location;
             } else {
                 vsIt->vertexInputLocations.append(v.location);
@@ -263,7 +261,8 @@ void QSGMaterialShaderPrivate::prepare(QShader::Variant vertexShaderVariant)
                 }
                 ubufStages |= toSrbStage(it->shader.stage());
             } else {
-                qWarning("Uniform block %s (binding %d) ignored", qPrintable(ubuf.blockName), ubuf.binding);
+                qWarning("Uniform block %s (binding %d) ignored", ubuf.blockName.constData(),
+                         ubuf.binding);
             }
         }
 
@@ -275,7 +274,7 @@ void QSGMaterialShaderPrivate::prepare(QShader::Variant vertexShaderVariant)
                 combinedImageSamplerBindings[var.binding] |= toSrbStage(it->shader.stage());
             else
                 qWarning("Encountered invalid combined image sampler (%s) binding %d",
-                         qPrintable(var.name), var.binding);
+                         var.name.constData(), var.binding);
         }
 
         if (it.key() == QShader::VertexStage)

@@ -261,7 +261,7 @@ static QStringList qExtractFontFamiliesFromString(const QStringRef &fontFamilies
     QString currentFamily;
     for (int index = 0; index < fontFamiliesString.size(); ++index) {
         const QChar ch = fontFamiliesString.at(index);
-        if (ch == '"' || ch == '\'') {
+        if (ch == u'"' || ch == u'\'') {
             if (quoteIndex == -1) {
                 quoteIndex = index;
             } else {
@@ -276,7 +276,7 @@ static QStringList qExtractFontFamiliesFromString(const QStringRef &fontFamilies
                     return QStringList();
                 }
             }
-        } else if (ch == ' ' && quoteIndex == -1) {
+        } else if (ch == u' ' && quoteIndex == -1) {
             // This is a space that's not within quotes...
             if (!currentFamily.isEmpty()) {
                 // and there is a current family; consider it the end of the current family.
@@ -384,7 +384,7 @@ static QFont qt_font_from_string(const QString& fontString, const QFont &current
         return currentFont;
     }
 
-    int fontSizeStart = fontString.lastIndexOf(' ', fontSizeEnd);
+    int fontSizeStart = fontString.lastIndexOf(u' ', fontSizeEnd);
     if (fontSizeStart == -1) {
         // The font size might be the first token in the font string, which is OK.
         // Regardless, we'll find out if the font is invalid with qSetFontSizeFromToken().
