@@ -3117,11 +3117,12 @@ void QMacStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, QPai
         break; }
 
     case PE_Frame: {
-        QPen oldPen = p->pen();
-        p->setPen(opt->palette.base().color().darker(140));
-        p->drawRect(opt->rect.adjusted(0, 0, -1, -1));
-        p->setPen(opt->palette.base().color().darker(180));
-        p->drawLine(opt->rect.topLeft(), opt->rect.topRight());
+        const QPen oldPen = p->pen();
+        QPen penCpy = p->pen();
+        penCpy.setWidth(2);
+        penCpy.setColor(opt->palette.dark().color());
+        p->setPen(penCpy);
+        p->drawRect(opt->rect);
         p->setPen(oldPen);
         break; }
     case PE_FrameLineEdit:
