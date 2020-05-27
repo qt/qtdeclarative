@@ -809,6 +809,7 @@ void QSGTextMaskMaterial::populate(const QPointF &p,
     qreal glyphCacheScaleY = cache->transform().m22();
     qreal glyphCacheInverseScaleX = 1.0 / glyphCacheScaleX;
     qreal glyphCacheInverseScaleY = 1.0 / glyphCacheScaleY;
+    qreal scaledMargin = margin * glyphCacheInverseScaleX;
 
     Q_ASSERT(geometry->indexType() == GL_UNSIGNED_SHORT);
     geometry->allocate(glyphIndexes.size() * 4, glyphIndexes.size() * 6);
@@ -833,14 +834,14 @@ void QSGTextMaskMaterial::populate(const QPointF &p,
          // apply the inverse scale to get back to the coordinate system of the node.
 
          qreal x = (qFloor(glyphPosition.x() * glyphCacheScaleX) * glyphCacheInverseScaleX) +
-                        (c.baseLineX * glyphCacheInverseScaleX) - margin;
+                        (c.baseLineX * glyphCacheInverseScaleX) - scaledMargin;
          qreal y = (qRound(glyphPosition.y() * glyphCacheScaleY) * glyphCacheInverseScaleY) -
-                        (c.baseLineY * glyphCacheInverseScaleY) - margin;
+                        (c.baseLineY * glyphCacheInverseScaleY) - scaledMargin;
 
          qreal w = c.w * glyphCacheInverseScaleX;
          qreal h = c.h * glyphCacheInverseScaleY;
 
-         *boundingRect |= QRectF(x + margin, y + margin, w, h);
+         *boundingRect |= QRectF(x + scaledMargin, y + scaledMargin, w, h);
 
          float cx1 = x - margins.left();
          float cx2 = x + w + margins.right();
