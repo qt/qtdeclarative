@@ -107,10 +107,8 @@ public:
         if (!state.texture || !other->state.texture)
             return state.texture ? 1 : -1;
 
-        if (qint64 diff = state.texture->comparisonKey() - other->state.texture->comparisonKey())
-            return diff;
-
-        return 0;
+        const qint64 diff = state.texture->comparisonKey() - other->state.texture->comparisonKey();
+        return diff < 0 ? -1 : (diff > 0 ? 1 : 0);
     }
 
     struct {

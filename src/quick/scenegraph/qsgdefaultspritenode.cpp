@@ -65,10 +65,6 @@ public:
     ~QQuickSpriteMaterial();
     QSGMaterialType *type() const  override { static QSGMaterialType type; return &type; }
     QSGMaterialShader *createShader() const override;
-    int compare(const QSGMaterial *other) const override
-    {
-        return this - static_cast<const QQuickSpriteMaterial *>(other);
-    }
 
     QSGTexture *texture = nullptr;
 

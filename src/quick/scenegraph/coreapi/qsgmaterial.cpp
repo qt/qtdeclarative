@@ -255,7 +255,8 @@ void QSGMaterial::setFlag(Flags flags, bool on)
 int QSGMaterial::compare(const QSGMaterial *other) const
 {
     Q_ASSERT(other && type() == other->type());
-    return qint64(this) - qint64(other);
+    const qintptr diff = qintptr(this) - qintptr(other);
+    return diff < 0 ? -1 : (diff > 0 ? 1 : 0);
 }
 
 
