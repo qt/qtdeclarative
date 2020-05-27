@@ -167,6 +167,7 @@ protected:
 
     QQuickPlatformIconLoader *iconLoader() const;
 
+    bool event(QEvent *e) override;
 private Q_SLOTS:
     void activate();
     void updateIcon();
@@ -187,6 +188,7 @@ private:
     QQuickPlatformMenuItemGroup *m_group;
     mutable QQuickPlatformIconLoader *m_iconLoader;
     QPlatformMenuItem *m_handle;
+    int m_shortcutId = -1;
 
     friend class QQuickPlatformMenu;
     friend class QQuickPlatformMenuItemGroup;
