@@ -1,10 +1,10 @@
 dependencies:
   ../qtdeclarative:
-    ref: 1c928f65ab9c7a495f84943ba1264acb4dbca0b8
+    ref: 201f28c7e332bc0cb37a80f4ffff0d473d24455a
     required: true
   ../qtgraphicaleffects:
-    ref: 4fd9f7f6a42d335c894c4e3c84cb0af9de026a0e
+    ref: f67311de118d89490e749295951024d19e224682
     required: false
   ../qtimageformats:
-    ref: 40a2b80aebd27b4efe8efd484cf31acdebf1bfa5
+    ref: 893acc1f63c0eeb295d333a86de70b8420af02f8
     required: false
