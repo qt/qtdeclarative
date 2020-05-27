@@ -54,10 +54,12 @@
 #include <QWindow>
 #include "engine.h"
 
+QT_BEGIN_NAMESPACE
 class QQuickRenderControl;
 class QQuickWindow;
 class QQmlEngine;
 class QQmlComponent;
+QT_END_NAMESPACE
 
 class Window : public QWindow
 {
