@@ -18,7 +18,7 @@ file(GLOB_RECURSE test_data_glob
     ${CMAKE_CURRENT_BINARY_DIR}/imports/*)
 list(APPEND test_data ${test_data_glob})
 
-add_qt_test(tst_qqmlmoduleplugin
+qt_add_test(tst_qqmlmoduleplugin
     SOURCES
         ../../shared/testhttpserver.cpp ../../shared/testhttpserver.h
         ../../shared/util.cpp ../../shared/util.h
@@ -38,7 +38,7 @@ set(qmake_waitingPlugin_resource_files
     "moduleWithWaitingPlugin"
 )
 
-add_qt_resource(tst_qqmlmoduleplugin "qmake_waitingPlugin"
+qt_add_resource(tst_qqmlmoduleplugin "qmake_waitingPlugin"
     PREFIX
         "/qt-project.org/imports/"
     FILES
@@ -48,7 +48,7 @@ set(qmake_staticPlugin_resource_files
     "moduleWithStaticPlugin"
 )
 
-add_qt_resource(tst_qqmlmoduleplugin "qmake_staticPlugin"
+qt_add_resource(tst_qqmlmoduleplugin "qmake_staticPlugin"
     PREFIX
         "/qt-project.org/imports/"
     FILES
@@ -77,12 +77,12 @@ add_qt_resource(tst_qqmlmoduleplugin staticPlugin
 ## Scopes:
 #####################################################################
 
-extend_target(tst_qqmlmoduleplugin CONDITION ANDROID OR IOS
+qt_extend_target(tst_qqmlmoduleplugin CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-extend_target(tst_qqmlmoduleplugin CONDITION NOT ANDROID AND NOT IOS
+qt_extend_target(tst_qqmlmoduleplugin CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

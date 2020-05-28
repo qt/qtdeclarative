@@ -1,4 +1,4 @@
-# Generated from tst_qqmltypeloader.pro.
+# Generated from qqmltypeloader.pro.
 
 #####################################################################
 ## tst_qqmltypeloader Test:
@@ -19,14 +19,13 @@ qt_add_test(tst_qqmltypeloader
     INCLUDE_DIRECTORIES
         ../../shared
     PUBLIC_LIBRARIES
-        Qt::Gui
         Qt::Qml
         Qt::QmlPrivate
         Qt::Quick
     TESTDATA ${test_data}
 )
 
-#### Keys ignored in scope 1:.:.:tst_qqmltypeloader.pro:<TRUE>:
+#### Keys ignored in scope 2:.:.:tst_qqmltypeloader.pro:<TRUE>:
 # QML_IMPORT_NAME = "declarative.import.for.typeloader.test"
 # QML_IMPORT_VERSION = "3.2"
 
@@ -50,3 +49,4 @@ set_target_properties(tst_qqmltypeloader PROPERTIES
 )
 
 qt6_qml_type_registration(tst_qqmltypeloader)
+add_subdirectory(SlowImport)

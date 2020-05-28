@@ -5,6 +5,7 @@
 #####################################################################
 
 qt_add_tool(qjstest
+    TARGET_DESCRIPTION "Javascript test runner"
     SOURCES
         main.cpp
         test262runner.cpp test262runner.h

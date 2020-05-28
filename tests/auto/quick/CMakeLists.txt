@@ -21,6 +21,8 @@ if(QT_FEATURE_private_tests)
     add_subdirectory(qquickstyledtext)
     add_subdirectory(qquickstates)
     add_subdirectory(qquicksystempalette)
+    # add_subdirectory(qquickcolorgroup) # special case need to port
+    # add_subdirectory(qquickpalette) # special case need to port
     add_subdirectory(qquicktimeline)
     # add_subdirectory(pointerhandlers) # skip building until fixed in dev # special case
     add_subdirectory(qquickaccessible)

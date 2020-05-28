@@ -1,4 +1,4 @@
-# Generated from tst_qqmlenginecleanup.pro.
+# Generated from qqmlenginecleanup.pro.
 
 #####################################################################
 ## tst_qqmlenginecleanup Test:
@@ -11,7 +11,6 @@ qt_add_test(tst_qqmlenginecleanup
     INCLUDE_DIRECTORIES
         ../../shared
     PUBLIC_LIBRARIES
-        Qt::Gui
         Qt::Qml
         Qt::QmlPrivate
 )
@@ -28,3 +27,4 @@ qt_extend_target(tst_qqmlenginecleanup CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )
+add_subdirectory(CustomModuleImport)

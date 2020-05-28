@@ -1,5 +1,10 @@
 # Generated from qml.pro.
 
+
+qt_exclude_tool_directories_from_default_target(
+    qmlplugindump
+)
+
 add_subdirectory(parserstress)
 add_subdirectory(qjsvalueiterator)
 add_subdirectory(qjsonbinding)
@@ -89,4 +94,7 @@ if(QT_FEATURE_private_tests)
     add_subdirectory(ecmascripttests)
     add_subdirectory(bindingdependencyapi)
     add_subdirectory(v4misc)
+endif()
+if(NOT CMAKE_CROSSCOMPILING)
+    # add_subdirectory(qmltyperegistrar) # special case need to port
 endif()
