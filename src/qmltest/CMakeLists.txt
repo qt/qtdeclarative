@@ -68,8 +68,8 @@ set_target_properties(QuickTest PROPERTIES
     QT_QML_MODULE_INSTALL_QMLTYPES TRUE
     QT_QML_MODULE_VERSION 1.0
     QT_QML_MODULE_URI Qt.test.qtestroot
+    QT_QMLTYPES_FILENAME plugins.qmltypes
     QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/Qt/test/qtestroot"
-    QT_QMLTYPES_FILENAME "plugins.qmltypes"
 )
 
 qt6_qml_type_registration(QuickTest)

@@ -4,7 +4,7 @@
 ## QQuickProfilerAdapterFactory Plugin:
 #####################################################################
 
-qt_add_plugin(QQuickProfilerAdapterFactory
+qt_internal_add_plugin(QQuickProfilerAdapterFactory
     OUTPUT_NAME qmldbg_quickprofiler
     TYPE qmltooling
     SOURCES

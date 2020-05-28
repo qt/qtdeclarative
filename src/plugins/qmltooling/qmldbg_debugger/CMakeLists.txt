@@ -4,7 +4,7 @@
 ## QQmlDebuggerServiceFactory Plugin:
 #####################################################################
 
-qt_add_plugin(QQmlDebuggerServiceFactory
+qt_internal_add_plugin(QQmlDebuggerServiceFactory
     OUTPUT_NAME qmldbg_debugger
     TYPE qmltooling
     SOURCES

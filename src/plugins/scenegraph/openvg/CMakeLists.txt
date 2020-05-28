@@ -4,9 +4,11 @@
 ## QSGOpenVGAdaptation Plugin:
 #####################################################################
 
-qt_add_plugin(QSGOpenVGAdaptation
+qt_internal_add_plugin(QSGOpenVGAdaptation
     OUTPUT_NAME qsgopenvgbackend
     TYPE scenegraph
+    TARGET_PRODUCT "Qt Quick OpenVG Renderer (Qt $$QT_VERSION)"
+    TARGET_DESCRIPTION "Quick OpenVG Renderer for Qt."
     SOURCES
         qopenvgcontext.cpp qopenvgcontext_p.h
         qopenvgmatrix.cpp qopenvgmatrix.h

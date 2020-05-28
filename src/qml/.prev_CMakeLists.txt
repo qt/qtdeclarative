@@ -363,7 +363,7 @@ qt_extend_target(Qml CONDITION WIN32 AND NOT WINRT
         shell32
 )
 
-#### Keys ignored in scope 6:.:.:qml.pro:solaris-cc_x_:
+#### Keys ignored in scope 7:.:.:qml.pro:solaris-cc_x_:
 # QMAKE_CXXFLAGS_RELEASE = "--O2"
 
 qt_extend_target(Qml CONDITION GCC AND (TEST_architecture_arch STREQUAL "mips")
@@ -385,10 +385,10 @@ qt_extend_target(Qml CONDITION release AND MSVC AND (QT_CL_MAJOR_VERSION EQUAL 1
         -d2SSAOptimizer-
 )
 
-#### Keys ignored in scope 10:.:.:qml.pro:ICC:
+#### Keys ignored in scope 11:.:.:qml.pro:ICC:
 # WERROR = "-ww2415"
 
-#### Keys ignored in scope 11:.:.:qml.pro:(QT_CLANG_MAJOR_VERSION GREATER 3) OR (QT_CLANG_MINOR_VERSION GREATER 3) OR (QT_APPLE_CLANG_MAJOR_VERSION GREATER 5) OR ( (QT_APPLE_CLANG_MAJOR_VERSION EQUAL 5) AND (QT_APPLE_CLANG_MINOR_VERSION GREATER 0) ):
+#### Keys ignored in scope 12:.:.:qml.pro:(QT_CLANG_MAJOR_VERSION GREATER 3) OR (QT_CLANG_MINOR_VERSION GREATER 3) OR (QT_APPLE_CLANG_MAJOR_VERSION GREATER 5) OR ( (QT_APPLE_CLANG_MAJOR_VERSION EQUAL 5) AND (QT_APPLE_CLANG_MINOR_VERSION GREATER 0) ):
 # WERROR = "-Wno-error=unused-const-variable"
 
 qt_extend_target(Qml CONDITION QT_FEATURE_qml_jit
@@ -415,19 +415,19 @@ qt_extend_target(Qml CONDITION QT_FEATURE_qml_animation
         animations
 )
 
-#### Keys ignored in scope 17:.:common:common/common.pri:NOT build_pass:
+#### Keys ignored in scope 18:.:common:common/common.pri:NOT build_pass:
 # compile_hash_contents = "// Generated file, DO NOT EDIT" "$${LITERAL_HASH}define QML_COMPILE_HASH "$$QML_COMPILE_HASH"" "$${LITERAL_HASH}define QML_COMPILE_HASH_LENGTH $$str_size($$QML_COMPILE_HASH)"
 # tag = <EMPTY>
 # tagFile = "$$PWD/../../.tag"
 
-#### Keys ignored in scope 18:.:common:common/common.pri:EXISTS _ss_tagFile:
+#### Keys ignored in scope 19:.:common:common/common.pri:EXISTS _ss_tagFile:
 # QMAKE_INTERNAL_INCLUDED_FILES = "$$tagFile"
 # tag = "$$cat($$tagFile, singleline)"
 
-#### Keys ignored in scope 19:.:common:common/common.pri:NOT tag___equals____ss_{LITERAL_DOLLAR}Format AND %H_ss_{LITERAL_DOLLAR}:
+#### Keys ignored in scope 20:.:common:common/common.pri:NOT tag___equals____ss_{LITERAL_DOLLAR}Format AND %H_ss_{LITERAL_DOLLAR}:
 # QML_COMPILE_HASH = "$$tag"
 
-#### Keys ignored in scope 21:.:common:common/common.pri:EXISTS _ss_PWD/../../.git:
+#### Keys ignored in scope 22:.:common:common/common.pri:EXISTS _ss_PWD/../../.git:
 # QML_COMPILE_HASH = "$$commit"
 # commit = "$$system(git rev-parse HEAD)"
 
@@ -551,7 +551,7 @@ qt_extend_target(Qml CONDITION GCC AND QT_COMPILER_VERSION_MAJOR STRGREATER 6 AN
         -Wno-expansion-to-defined
 )
 
-#### Keys ignored in scope 65:.:../3rdparty/masm:../3rdparty/masm/masm-defs.pri:(QT_COMPILER_VERSION_MAJOR STRGREATER 6):
+#### Keys ignored in scope 66:.:../3rdparty/masm:../3rdparty/masm/masm-defs.pri:(QT_COMPILER_VERSION_MAJOR STRGREATER 6):
 # QMAKE_CXXFLAGS_WARN_ON = "-Wno-expansion-to-defined"
 
 qt_extend_target(Qml CONDITION WINRT
@@ -580,21 +580,21 @@ qt_extend_target(Qml CONDITION DEFINES___contains___WTF_USE_UDIS86=1
         ../3rdparty/masm/disassembler/udis86/udis86_syn-intel.c
 )
 
-#### Keys ignored in scope 73:.:../3rdparty/masm:../3rdparty/masm/masm.pri:DEFINES___contains___WTF_USE_UDIS86=1:
+#### Keys ignored in scope 74:.:../3rdparty/masm:../3rdparty/masm/masm.pri:DEFINES___contains___WTF_USE_UDIS86=1:
 # ITAB = "$$PWD/disassembler/udis86/optable.xml"
 # QMAKE_EXTRA_COMPILERS = "udis86"
 # QMAKE_EXTRA_TARGETS = "udis86_tab_cfile"
 # udis86.CONFIG = "no_link"
-# udis86.commands = "python" "$$PWD/disassembler/udis86/itab.py" "${QMAKE_FILE_IN}"
+# udis86.commands = "$QMAKE_PYTHON" "$$PWD/disassembler/udis86/itab.py" "${QMAKE_FILE_IN}"
 # udis86.input = "ITAB"
 # udis86.output = "udis86_itab.h"
 # udis86_tab_cfile.depends = "udis86_itab.h"
 # udis86_tab_cfile.target = "$$OUT_PWD/udis86_itab.c"
 
-#### Keys ignored in scope 75:.:../3rdparty/masm:../3rdparty/masm/masm.pri:(CMAKE_BUILD_TYPE STREQUAL Debug):
+#### Keys ignored in scope 76:.:../3rdparty/masm:../3rdparty/masm/masm.pri:(CMAKE_BUILD_TYPE STREQUAL Debug):
 # GENERATEDDIR = "$$GENERATEDDIR/debug"
 
-#### Keys ignored in scope 76:.:../3rdparty/masm:../3rdparty/masm/masm.pri:else:
+#### Keys ignored in scope 77:.:../3rdparty/masm:../3rdparty/masm/masm.pri:else:
 # GENERATEDDIR = "$$GENERATEDDIR/release"
 
 qt_extend_target(Qml CONDITION (NOT c++11 AND NOT ICC) AND (CLANG)
@@ -619,6 +619,7 @@ set_target_properties(Qml PROPERTIES
     QT_QML_MODULE_INSTALL_QMLTYPES TRUE
     QT_QML_MODULE_VERSION ${CMAKE_PROJECT_VERSION}
     QT_QML_MODULE_URI QtQml
+    QT_QMLTYPES_FILENAME plugins.qmltypes
     QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQml"
 )
 

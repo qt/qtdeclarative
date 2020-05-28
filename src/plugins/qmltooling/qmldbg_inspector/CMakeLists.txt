@@ -4,7 +4,7 @@
 ## QQmlInspectorServiceFactory Plugin:
 #####################################################################
 
-qt_add_plugin(QQmlInspectorServiceFactory
+qt_internal_add_plugin(QQmlInspectorServiceFactory
     OUTPUT_NAME qmldbg_inspector
     TYPE qmltooling
     SOURCES

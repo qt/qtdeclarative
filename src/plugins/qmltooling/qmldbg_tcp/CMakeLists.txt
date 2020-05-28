@@ -4,7 +4,7 @@
 ## QTcpServerConnectionFactory Plugin:
 #####################################################################
 
-qt_add_plugin(QTcpServerConnectionFactory
+qt_internal_add_plugin(QTcpServerConnectionFactory
     OUTPUT_NAME qmldbg_tcp
     TYPE qmltooling
     SOURCES

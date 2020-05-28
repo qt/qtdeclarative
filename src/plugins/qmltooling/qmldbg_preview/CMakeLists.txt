@@ -4,7 +4,7 @@
 ## QQmlPreviewServiceFactory Plugin:
 #####################################################################
 
-qt_add_plugin(QQmlPreviewServiceFactory
+qt_internal_add_plugin(QQmlPreviewServiceFactory
     OUTPUT_NAME qmldbg_preview
     TYPE qmltooling
     SOURCES

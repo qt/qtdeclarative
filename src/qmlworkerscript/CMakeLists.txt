@@ -108,8 +108,8 @@ set_target_properties(QmlWorkerScript PROPERTIES
     QT_QML_MODULE_INSTALL_QMLTYPES TRUE
     QT_QML_MODULE_VERSION ${CMAKE_PROJECT_VERSION}
     QT_QML_MODULE_URI QtQml.WorkerScript
+    QT_QMLTYPES_FILENAME plugins.qmltypes
     QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQml/WorkerScript"
-    QT_QMLTYPES_FILENAME "plugins.qmltypes"
 )
 
 qt6_qml_type_registration(QmlWorkerScript)

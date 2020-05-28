@@ -4,7 +4,7 @@
 ## QDebugMessageServiceFactory Plugin:
 #####################################################################
 
-qt_add_plugin(QDebugMessageServiceFactory
+qt_internal_add_plugin(QDebugMessageServiceFactory
     OUTPUT_NAME qmldbg_messages
     TYPE qmltooling
     SOURCES

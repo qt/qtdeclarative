@@ -4,7 +4,7 @@
 ## QQmlProfilerServiceFactory Plugin:
 #####################################################################
 
-qt_add_plugin(QQmlProfilerServiceFactory
+qt_internal_add_plugin(QQmlProfilerServiceFactory
     OUTPUT_NAME qmldbg_profiler
     TYPE qmltooling
     SOURCES

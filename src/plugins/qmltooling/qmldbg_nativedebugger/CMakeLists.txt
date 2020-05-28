@@ -4,7 +4,7 @@
 ## QQmlNativeDebugServiceFactory Plugin:
 #####################################################################
 
-qt_add_plugin(QQmlNativeDebugServiceFactory
+qt_internal_add_plugin(QQmlNativeDebugServiceFactory
     OUTPUT_NAME qmldbg_nativedebugger
     TYPE qmltooling
     SOURCES

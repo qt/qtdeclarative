@@ -5,6 +5,7 @@
 #####################################################################
 
 qt_add_tool(qmltyperegistrar
+    TARGET_DESCRIPTION "QML Types Registrar"
     SOURCES
         ../../tools/shared/qmlstreamwriter.cpp ../../tools/shared/qmlstreamwriter.h
         qmltyperegistrar.cpp
