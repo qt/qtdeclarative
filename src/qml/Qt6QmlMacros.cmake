@@ -464,7 +464,18 @@ function(qt6_qml_type_registration target)
         endif()
     endif()
 
-    qt6_generate_meta_types_json_file(${target})
+    # Horrible hack workaround to not install metatypes.json files for examples/ qml plugins into
+    # ${qt_prefix}/lib/meta_types.
+    # Put them into QT_QML_MODULE_INSTALL_DIR/lib/meta_types instead.
+    get_target_property(qml_install_dir ${target} QT_QML_MODULE_INSTALL_DIR)
+    set(meta_types_json_args "")
+
+    if(QT_BUILDING_QT AND QT_WILL_INSTALL AND qml_install_dir AND
+            qml_install_dir MATCHES "^${INSTALL_EXAMPLESDIR}")
+        set(meta_types_json_args "INSTALL_DIR" "${qml_install_dir}/lib/metatypes")
+    endif()
+
+    qt6_generate_meta_types_json_file(${target} ${meta_types_json_args})
 
     get_target_property(import_version ${target} QT_QML_MODULE_VERSION)
     get_target_property(target_source_dir ${target} SOURCE_DIR)
@@ -592,7 +603,6 @@ function(qt6_qml_type_registration target)
     # warn the user, and don't install the file.
     get_target_property(install_qmltypes ${target} QT_QML_MODULE_INSTALL_QMLTYPES)
     if (install_qmltypes)
-        get_target_property(qml_install_dir ${target} QT_QML_MODULE_INSTALL_DIR)
         if(qml_install_dir)
             if(NOT DEFINED QT_WILL_INSTALL OR QT_WILL_INSTALL)
                 install(FILES ${plugin_types_file} DESTINATION "${qml_install_dir}")
