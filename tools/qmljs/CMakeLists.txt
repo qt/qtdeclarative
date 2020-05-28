@@ -5,6 +5,7 @@
 #####################################################################
 
 qt_add_tool(qmljs
+    TARGET_DESCRIPTION "QML JavaScript Tool"
     TOOLS_TARGET Qml # special case
     SOURCES
         qmljs.cpp

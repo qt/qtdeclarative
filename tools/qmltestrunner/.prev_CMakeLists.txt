@@ -5,6 +5,7 @@
 #####################################################################
 
 qt_add_tool(qmltestrunner
+    TARGET_DESCRIPTION "QML Test Runner"
     SOURCES
         main.cpp
     PUBLIC_LIBRARIES

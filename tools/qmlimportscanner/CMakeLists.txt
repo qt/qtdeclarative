@@ -5,6 +5,7 @@
 #####################################################################
 
 qt_add_tool(qmlimportscanner
+    TARGET_DESCRIPTION "QML Import Scanner"
     TOOLS_TARGET Qml # special case
     SOURCES
         ../shared/resourcefilemapper.cpp ../shared/resourcefilemapper.h

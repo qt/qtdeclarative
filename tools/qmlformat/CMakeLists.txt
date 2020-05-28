@@ -5,6 +5,7 @@
 #####################################################################
 
 qt_add_tool(qmlformat
+    TARGET_DESCRIPTION "QML Formatter"
     TOOLS_TARGET Qml # special case
     SOURCES
         commentastvisitor.cpp commentastvisitor.h

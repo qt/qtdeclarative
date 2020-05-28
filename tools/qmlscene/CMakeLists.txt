@@ -5,6 +5,7 @@
 #####################################################################
 
 qt_add_tool(qmlscene
+    TARGET_DESCRIPTION "QML Scene Viewer"
     TOOLS_TARGET Qml # special case
     SOURCES
         main.cpp

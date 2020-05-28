@@ -5,6 +5,7 @@
 #####################################################################
 
 qt_add_tool(qmlpreview
+    TARGET_DESCRIPTION "QML Preview"
     TOOLS_TARGET Qml # special case
     SOURCES
         main.cpp

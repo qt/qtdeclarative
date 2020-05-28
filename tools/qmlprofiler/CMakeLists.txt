@@ -5,6 +5,7 @@
 #####################################################################
 
 qt_add_tool(qmlprofiler
+    TARGET_DESCRIPTION "QML Profiler"
     TOOLS_TARGET Qml # special case
     SOURCES
         commandlistener.cpp commandlistener.h

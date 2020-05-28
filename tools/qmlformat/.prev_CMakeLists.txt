@@ -5,6 +5,7 @@
 #####################################################################
 
 qt_add_tool(qmlformat
+    TARGET_DESCRIPTION "QML Formatter"
     SOURCES
         commentastvisitor.cpp commentastvisitor.h
         dumpastvisitor.cpp dumpastvisitor.h

@@ -5,6 +5,7 @@
 #####################################################################
 
 qt_add_tool(qml
+    TARGET_DESCRIPTION "QML Runtime"
     TOOLS_TARGET Qml # special case
     SOURCES
         conf.h

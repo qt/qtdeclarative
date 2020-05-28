@@ -5,6 +5,7 @@
 #####################################################################
 
 qt_add_tool(qmlcachegen
+    TARGET_DESCRIPTION "QML Cache Generator"
     TOOLS_TARGET Qml # special case
     SOURCES
         ../shared/resourcefilemapper.cpp ../shared/resourcefilemapper.h

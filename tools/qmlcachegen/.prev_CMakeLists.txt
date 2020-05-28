@@ -5,8 +5,8 @@
 #####################################################################
 
 qt_add_tool(qmlcachegen
+    TARGET_DESCRIPTION "QML Cache Generator"
     SOURCES
-        ../shared/qmlstreamwriter.cpp ../shared/qmlstreamwriter.h
         ../shared/resourcefilemapper.cpp ../shared/resourcefilemapper.h
         generateloader.cpp
         qmlcachegen.cpp

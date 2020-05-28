@@ -5,6 +5,7 @@
 #####################################################################
 
 qt_add_tool(qmlimportscanner
+    TARGET_DESCRIPTION "QML Import Scanner"
     SOURCES
         ../shared/resourcefilemapper.cpp ../shared/resourcefilemapper.h
         main.cpp

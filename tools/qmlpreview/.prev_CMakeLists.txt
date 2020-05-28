@@ -5,6 +5,7 @@
 #####################################################################
 
 qt_add_tool(qmlpreview
+    TARGET_DESCRIPTION "QML Preview"
     SOURCES
         main.cpp
         qmlpreviewapplication.cpp qmlpreviewapplication.h

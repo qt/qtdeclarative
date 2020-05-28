@@ -5,6 +5,7 @@
 #####################################################################
 
 qt_add_tool(qml
+    TARGET_DESCRIPTION "QML Runtime"
     SOURCES
         conf.h
         main.cpp

@@ -5,6 +5,7 @@
 #####################################################################
 
 qt_add_tool(qmlplugindump
+    TARGET_DESCRIPTION "QML Plugin Metadata Dumper"
     TOOLS_TARGET Qml # special case
     SOURCES
         ../shared/qmlstreamwriter.cpp ../shared/qmlstreamwriter.h

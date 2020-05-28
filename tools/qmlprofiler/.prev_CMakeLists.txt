@@ -5,6 +5,7 @@
 #####################################################################
 
 qt_add_tool(qmlprofiler
+    TARGET_DESCRIPTION "QML Profiler"
     SOURCES
         commandlistener.cpp commandlistener.h
         constants.h

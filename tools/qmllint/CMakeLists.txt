@@ -5,6 +5,7 @@
 #####################################################################
 
 qt_add_tool(qmllint
+    TARGET_DESCRIPTION "QML Syntax Verifier"
     TOOLS_TARGET Qml # special case
     SOURCES
         ../shared/componentversion.cpp ../shared/componentversion.h
