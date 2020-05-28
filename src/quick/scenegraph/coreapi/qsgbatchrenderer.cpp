@@ -115,16 +115,9 @@ bool qsg_sort_batch_decreasing_order(Batch *a, Batch *b) { return a->first->orde
 
 QSGMaterial::Flag QSGMaterial_FullMatrix = (QSGMaterial::Flag) (QSGMaterial::RequiresFullMatrix & ~QSGMaterial::RequiresFullMatrixExceptTranslate);
 
-struct QMatrix4x4_Accessor
-{
-    float m[4][4];
-    int flagBits;
-
-    static bool isTranslate(const QMatrix4x4 &m) { return ((const QMatrix4x4_Accessor &) m).flagBits <= 0x1; }
-    static bool isScale(const QMatrix4x4 &m) { return ((const QMatrix4x4_Accessor &) m).flagBits <= 0x2; }
-    static bool is2DSafe(const QMatrix4x4 &m) { return ((const QMatrix4x4_Accessor &) m).flagBits < 0x8; }
-};
-Q_STATIC_ASSERT(sizeof(QMatrix4x4_Accessor) == sizeof(QMatrix4x4));
+static bool isTranslate(const QMatrix4x4 &m) { return m.flags() <= QMatrix4x4::Translation; }
+static bool isScale(const QMatrix4x4 &m) { return m.flags() <= QMatrix4x4::Scale; }
+static bool is2DSafe(const QMatrix4x4 &m) { return m.flags() < QMatrix4x4::Rotation; }
 
 const float OPAQUE_LIMIT                = 0.999f;
 
@@ -614,7 +607,7 @@ void Updater::visitGeometryNode(Node *n)
     if (m_added) {
         Element *e = n->element();
         e->root = m_roots.last();
-        e->translateOnlyToRoot = QMatrix4x4_Accessor::isTranslate(*gn->matrix());
+        e->translateOnlyToRoot = isTranslate(*gn->matrix());
 
         if (e->root) {
             BatchRootInfo *info = renderer->batchRootInfo(e->root);
@@ -637,7 +630,7 @@ void Updater::visitGeometryNode(Node *n)
     } else {
         if (m_transformChange) {
             Element *e = n->element();
-            e->translateOnlyToRoot = QMatrix4x4_Accessor::isTranslate(*gn->matrix());
+            e->translateOnlyToRoot = isTranslate(*gn->matrix());
         }
         if (m_opacityChange) {
             Element *e = n->element();
@@ -693,7 +686,7 @@ int qsg_positionAttribute(QSGGeometry *g)
 void Rect::map(const QMatrix4x4 &matrix)
 {
     const float *m = matrix.constData();
-    if (QMatrix4x4_Accessor::isScale(matrix)) {
+    if (isScale(matrix)) {
         tl.x = tl.x * m[0] + m[12];
         tl.y = tl.y * m[5] + m[13];
         br.x = br.x * m[0] + m[12];
@@ -868,7 +861,7 @@ bool Batch::isSafeToBatch() const {
     while (e) {
         if (e->boundsOutsideFloatRange)
             return false;
-        if (!QMatrix4x4_Accessor::is2DSafe(*e->node->matrix()))
+        if (!is2DSafe(*e->node->matrix()))
             return false;
         e = e->nextInBatch;
     }
@@ -1891,6 +1884,7 @@ void Renderer::uploadMergedElement(Element *e, int vaOffset, char **vertexData, 
     QSGGeometry *g = e->node->geometry();
 
     const QMatrix4x4 &localx = *e->node->matrix();
+    const float *localxdata = localx.constData();
 
     const int vCount = g->vertexCount();
     const int vSize = g->sizeOfVertex();
@@ -1898,14 +1892,14 @@ void Renderer::uploadMergedElement(Element *e, int vaOffset, char **vertexData, 
 
     // apply vertex transform..
     char *vdata = *vertexData + vaOffset;
-    if (((const QMatrix4x4_Accessor &) localx).flagBits == 1) {
+    if (localx.flags() == QMatrix4x4::Translation) {
         for (int i=0; i<vCount; ++i) {
             Pt *p = (Pt *) vdata;
-            p->x += ((const QMatrix4x4_Accessor &) localx).m[3][0];
-            p->y += ((const QMatrix4x4_Accessor &) localx).m[3][1];
+            p->x += localxdata[12];
+            p->y += localxdata[13];
             vdata += vSize;
         }
-    } else if (((const QMatrix4x4_Accessor &) localx).flagBits > 1) {
+    } else if (localx.flags() > QMatrix4x4::Translation) {
         for (int i=0; i<vCount; ++i) {
             ((Pt *) vdata)->map(localx);
             vdata += vSize;
