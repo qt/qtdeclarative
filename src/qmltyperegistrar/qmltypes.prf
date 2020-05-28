@@ -29,9 +29,12 @@ isEmpty(QML_IMPORT_MINOR_VERSION) {
     QML_IMPORT_MINOR_VERSION = 0
 }
 
+TARGET_BASENAME = $$lower($$basename(TARGET))
+TARGET_BASENAME ~= s/\s/_/g
+
 isEmpty(QMLTYPES_FILENAME) {
     plugin: QMLTYPES_FILENAME = plugins.qmltypes
-    else: QMLTYPES_FILENAME = $${TARGET}.qmltypes
+    else: QMLTYPES_FILENAME = $${TARGET_BASENAME}.qmltypes
 }
 
 qt_module_deps = $$replace(QT, -private$, '')
@@ -65,9 +68,9 @@ exists($$DEPENDENCIESFILE): QML_TYPEREGISTRAR_FLAGS += --dependencies=$$DEPENDEN
 
 !isEmpty(MODULE_PRIVATE_INCLUDES): QML_TYPEREGISTRAR_FLAGS += --private-includes
 
-METATYPES_JSON = $$lower($$basename(TARGET))_metatypes.json
+METATYPES_JSON = $${TARGET_BASENAME}_metatypes.json
 
-TYPEREGISTRATIONS = $$lower($$basename(TARGET))_qmltyperegistrations$${first(QMAKE_EXT_CPP)}
+TYPEREGISTRATIONS = $${TARGET_BASENAME}_qmltyperegistrations$${first(QMAKE_EXT_CPP)}
 
 qmltyperegistrar_compiler.CONFIG += combine
 qmltyperegistrar_compiler.commands = \
