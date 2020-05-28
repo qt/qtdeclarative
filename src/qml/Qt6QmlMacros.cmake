@@ -156,29 +156,33 @@ function(qt6_add_qml_module target)
         set(arg_RESOURCE_PREFIX "/org.qt-project/imports")
     endif()
 
+    set(should_install "TRUE")
     if (NOT arg_INSTALL_LOCATION)
-        set(arg_INSTALL_LOCATION "${INSTALL_QMLDIR}/${arg_TARGET_PATH}")
+        message(AUTHOR_WARNING "No Qml install location provided for target ${target}."
+                               "Consider specifying the INSTALL_LOCATION option.")
+        set(should_install "FALSE")
     endif()
+
     if (DEFINED QT_WILL_INSTALL AND NOT QT_WILL_INSTALL
-            AND NOT IS_ABSOLUTE "${arg_INSTALL_LOCATION}")
+            AND NOT IS_ABSOLUTE "${arg_INSTALL_LOCATION}" AND QT_BUILD_DIR)
         set(arg_INSTALL_LOCATION "${QT_BUILD_DIR}/${arg_INSTALL_LOCATION}")
     endif()
 
     set_target_properties(${target}
         PROPERTIES
-            QT_QML_MODULE_TARGET_PATH ${arg_TARGET_PATH}
-            QT_QML_MODULE_URI ${arg_URI}
-            QT_RESOURCE_PREFIX ${arg_RESOURCE_PREFIX}/${arg_TARGET_PATH}
-            QT_QML_MODULE_VERSION ${arg_VERSION}
-            QT_QML_MODULE_INSTALL_DIR ${arg_INSTALL_LOCATION}
+            QT_QML_MODULE_TARGET_PATH "${arg_TARGET_PATH}"
+            QT_QML_MODULE_URI "${arg_URI}"
+            QT_RESOURCE_PREFIX "${arg_RESOURCE_PREFIX}/${arg_TARGET_PATH}"
+            QT_QML_MODULE_VERSION "${arg_VERSION}"
+            QT_QML_MODULE_INSTALL_DIR "${arg_INSTALL_LOCATION}"
             QT_QML_MODULE_RESOURCE_EXPORT "${arg_RESOURCE_EXPORT}"
     )
 
     if (arg_OUTPUT_DIRECTORY AND NOT DO_NOT_CREATE_TARGET)
         set_target_properties(${target}
             PROPERTIES
-                LIBRARY_OUTPUT_DIRECTORY ${arg_OUTPUT_DIRECTORY}
-                ARCHIVE_OUTPUT_DIRECTORY ${arg_OUTPUT_DIRECTORY}
+                LIBRARY_OUTPUT_DIRECTORY "${arg_OUTPUT_DIRECTORY}"
+                ARCHIVE_OUTPUT_DIRECTORY "${arg_OUTPUT_DIRECTORY}"
          )
     endif()
     if (arg_OUTPUT_DIRECTORY)
@@ -273,7 +277,7 @@ function(qt6_add_qml_module target)
         if (resource_targets AND arg_RESOURCE_EXPORT)
             install(TARGETS ${resource_targets}
                 EXPORT "${arg_RESOURCE_EXPORT}"
-                DESTINATION ${arg_INSTALL_LOCATION}
+                DESTINATION "${arg_INSTALL_LOCATION}"
             )
         endif()
     else()
@@ -285,9 +289,9 @@ function(qt6_add_qml_module target)
         )
 
         # Install QMLDIR file
-        if (NOT DO_NOT_INSTALL_METADATA)
+        if (NOT DO_NOT_INSTALL_METADATA AND should_install)
             install(FILES ${qmldir_file}
-                DESTINATION ${arg_INSTALL_LOCATION}
+                DESTINATION "${arg_INSTALL_LOCATION}"
             )
         endif()
     endif()
@@ -299,9 +303,9 @@ function(qt6_add_qml_module target)
             PROPERTIES QT_QML_MODULE_PLUGIN_TYPES_FILE "${target_plugin_qmltypes}"
         )
         file(APPEND ${qmldir_file} "typeinfo plugins.qmltypes\n")
-        if (NOT arg_DO_NOT_INSTALL_METADATA)
-            install(FILES ${target_plugin_qmltypes}
-                DESTINATION ${arg_INSTALL_LOCATION}
+        if (NOT arg_DO_NOT_INSTALL_METADATA AND should_install)
+            install(FILES "${target_plugin_qmltypes}"
+                    DESTINATION "${arg_INSTALL_LOCATION}"
             )
         endif()
 
@@ -314,9 +318,9 @@ function(qt6_add_qml_module target)
 
     # Copy/Install type info file
     if (EXISTS ${arg_TYPEINFO})
-        if (NOT arg_DO_NOT_INSTALL_METADATA)
-            install(FILES ${arg_TYPEINFO}
-                DESTINATION ${arg_INSTALL_LOCATION}
+        if (NOT arg_DO_NOT_INSTALL_METADATA AND should_install)
+            install(FILES "${arg_TYPEINFO}"
+                    DESTINATION "${arg_INSTALL_LOCATION}"
             )
         endif()
 
@@ -390,6 +394,13 @@ function(qt6_target_qml_files target)
     get_target_property(skip_type_registration ${target} QT_QML_MODULE_SKIP_TYPE_REGISTRATION)
     get_target_property(target_resource_export ${target} QT_QML_MODULE_RESOURCE_EXPORT)
     get_target_property(qml_module_install_dir ${target} QT_QML_MODULE_INSTALL_DIR)
+
+    if(NOT qml_module_install_dir)
+        message(AUTHOR_WARNING
+            "No QT_QML_MODULE_INSTALL_DIR property value provided for the '${target}' target. "
+            "Installation of qml_files will most likely be broken.")
+    endif()
+
     if (resource_targets)
         install(TARGETS ${resource_targets}
             EXPORT "${target_resource_export}"
@@ -399,7 +410,7 @@ function(qt6_target_qml_files target)
 
     set(file_contents "")
     foreach(qml_file IN LISTS arg_FILES)
-        if (install_qml_files)
+        if (install_qml_files AND qml_module_install_dir)
             if (NOT QT_WILL_INSTALL)
                 file(COPY "${qml_file}" DESTINATION "${qml_module_install_dir}")
             else()
