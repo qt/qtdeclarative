@@ -75,6 +75,19 @@ TestCase {
     }
 
     Component {
+        id: flickableCustomBackground
+        Flickable {
+            width: 200
+            height: 200
+            TextArea.flickable: TextArea {
+                background: Rectangle {
+                    color: "green"
+                }
+            }
+        }
+    }
+
+    Component {
         id: signalSpy
         SignalSpy { }
     }
@@ -322,6 +335,20 @@ TestCase {
         verify(above > 0 && above < center)
         mouseClick(textArea, control.width / 2, 0)
         compare(textArea.cursorPosition, center) // no change
+    }
+
+    function test_flickableCustomBackground() {
+        // Test that the TextArea background item is parented out of the
+        // TextArea and into the Flicable, and that it has the same size
+        // as the flickable.
+        var flickable = createTemporaryObject(flickableCustomBackground, testCase)
+        verify(flickable)
+
+        var textArea = flickable.TextArea.flickable
+        verify(textArea)
+        verify(textArea.background)
+        compare(textArea.background.width, flickable.width)
+        compare(textArea.background.height, flickable.height)
     }
 
     function test_warning() {
