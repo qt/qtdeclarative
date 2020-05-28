@@ -166,8 +166,13 @@ void QQuickPlatformMenuItem::sync()
     m_handle->setText(m_text);
     m_handle->setFont(m_font);
     m_handle->setHasExclusiveGroup(m_group && m_group->isExclusive());
-    if (m_subMenu && m_subMenu->handle())
-        m_handle->setMenu(m_subMenu->handle());
+    if (m_subMenu) {
+        // Sync first as dynamically created menus may need to get the
+        // handle recreated
+        m_subMenu->sync();
+        if (m_subMenu->handle())
+            m_handle->setMenu(m_subMenu->handle());
+    }
 
 #if QT_CONFIG(shortcut)
     QKeySequence sequence;
