@@ -9,7 +9,11 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-set(INSTALL_EXAMPLEDIR "examples/qml/qmlextensionplugins/imports/TimeExample")
+if(NOT DEFINED INSTALL_EXAMPLESDIR)
+  set(INSTALL_EXAMPLESDIR "examples")
+endif()
+
+set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/qml/qmlextensionplugins/imports/TimeExample")
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -42,6 +46,7 @@ set_target_properties(qmlqtimeexampleplugin PROPERTIES
     QT_QML_MODULE_INSTALL_QMLTYPES TRUE
     QT_QML_MODULE_VERSION 1.0
     QT_QML_MODULE_URI TimeExample
+    QT_QMLTYPES_FILENAME imports/TimeExample/plugins.qmltypes
 )
 
 qt6_qml_type_registration(qmlqtimeexampleplugin)
