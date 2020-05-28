@@ -43,7 +43,6 @@ qt_extend_target(tst_qqmlproperty CONDITION NOT ANDROID AND NOT IOS
 )
 
 set_target_properties(tst_qqmlproperty PROPERTIES
-    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
     QT_QML_MODULE_VERSION 2.0
     QT_QML_MODULE_URI io.qt.bugreports
 )

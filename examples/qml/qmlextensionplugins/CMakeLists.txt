@@ -43,7 +43,6 @@ install(TARGETS qmlqtimeexampleplugin
 )
 
 set_target_properties(qmlqtimeexampleplugin PROPERTIES
-    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
     QT_QML_MODULE_VERSION 1.0
     QT_QML_MODULE_URI TimeExample
     QT_QMLTYPES_FILENAME imports/TimeExample/plugins.qmltypes

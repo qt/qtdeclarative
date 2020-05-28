@@ -48,7 +48,6 @@ install(TARGETS properties
 )
 
 set_target_properties(properties PROPERTIES
-    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
     QT_QML_MODULE_VERSION 1.0
     QT_QML_MODULE_URI People
 )
