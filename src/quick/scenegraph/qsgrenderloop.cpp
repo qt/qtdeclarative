@@ -466,7 +466,9 @@ void QSGGuiThreadRenderLoop::releaseSwapchain(QQuickWindow *window)
     QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
 
     // Unlike the threaded render loop, this one reuses the same rendercontext
-    // for all QQuickWindows for the entire lifetime of the render loop.
+    // for all QQuickWindows for the entire lifetime of the render loop. (and
+    // even if it wouldn't, special cases like destroy() - show() on the
+    // QQuickWindow still needed this)
     // Therefore the renderer, if there is one, needs to be notified about the
     // destruction of certain resources because they may be referenced from
     // per-rendercontext data structures.
@@ -489,10 +491,10 @@ bool QSGGuiThreadRenderLoop::eventFilter(QObject *watched, QEvent *event)
         // this is the proper time to tear down the swapchain (while the native window and surface are still around)
         if (static_cast<QPlatformSurfaceEvent *>(event)->surfaceEventType() == QPlatformSurfaceEvent::SurfaceAboutToBeDestroyed) {
             QQuickWindow *w = qobject_cast<QQuickWindow *>(watched);
-            if (w) {
+            if (w)
                 releaseSwapchain(w);
-                w->removeEventFilter(this);
-            }
+            // keep this filter on the window - needed for uncommon but valid
+            // sequences of calls like window->destroy(); window->show();
         }
         break;
     default:

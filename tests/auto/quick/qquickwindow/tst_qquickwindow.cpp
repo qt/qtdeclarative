@@ -390,6 +390,7 @@ private slots:
     void constantUpdatesOnWindow();
     void mouseFiltering();
     void headless();
+    void destroyShowWithoutHide();
     void noUpdateWhenNothingChanges();
 
     void touchEvent_basic();
@@ -1618,6 +1619,41 @@ void tst_qquickwindow::headless()
     QVERIFY(window->isSceneGraphInitialized());
 
     // Verify that the visual output is the same
+    QImage newContent = window->grabWindow();
+    QString errorMessage;
+    QVERIFY2(QQuickVisualTestUtil::compareImages(newContent, originalContent, &errorMessage),
+             qPrintable(errorMessage));
+}
+
+void tst_qquickwindow::destroyShowWithoutHide()
+{
+    // this is a variation of the headless case, to test if the more aggressive
+    // destroy(); show(); sequence survives.
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("Headless.qml"));
+    QObject *created = component.create();
+    QScopedPointer<QObject> cleanup(created);
+
+    QQuickWindow *window = qobject_cast<QQuickWindow*>(created);
+    QVERIFY(window);
+    window->setTitle(QTest::currentTestFunction());
+    window->show();
+
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(window->isSceneGraphInitialized());
+
+    QImage originalContent = window->grabWindow();
+
+    window->destroy();
+    QVERIFY(!window->handle());
+
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QVERIFY(window->isSceneGraphInitialized());
+
     QImage newContent = window->grabWindow();
     QString errorMessage;
     QVERIFY2(QQuickVisualTestUtil::compareImages(newContent, originalContent, &errorMessage),
