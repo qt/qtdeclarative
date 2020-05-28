@@ -1,6 +1,5 @@
 TEMPLATE = subdirs
 SUBDIRS += affectors \
-    customparticle \
     emitters \
     imageparticle \
     itemparticle \

@@ -64,12 +64,6 @@ qt_add_resource(QuickParticles "particles"
         ${particles_resource_files}
 )
 set(particles1_resource_files
-    "shaders/customparticle.frag"
-    "shaders/customparticle.vert"
-    "shaders/customparticle_core.frag"
-    "shaders/customparticle_core.vert"
-    "shaders/customparticletemplate.vert"
-    "shaders/customparticletemplate_core.vert"
     "shaders/imageparticle.frag"
     "shaders/imageparticle.vert"
     "shaders/imageparticle_core.frag"
@@ -119,11 +113,6 @@ qt_extend_target(QuickParticles CONDITION EXISTS "qqml_enable_gcov"
         -fno-elide-constructors
         -fprofile-arcs
         -ftest-coverage
-)
-
-qt_extend_target(QuickParticles CONDITION QT_FEATURE_quick_shadereffect
-    SOURCES
-        qquickcustomparticle.cpp qquickcustomparticle_p.h
 )
 
 set_target_properties(QuickParticles PROPERTIES

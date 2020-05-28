@@ -77,7 +77,7 @@ namespace QtPrivate {
 class MappedSlotObject;
 }
 
-// Common class for QQuickOpenGLShaderEffect and QQuickCustomParticle.
+// Used by QQuickOpenGLShaderEffect.
 struct Q_QUICK_PRIVATE_EXPORT QQuickOpenGLShaderEffectCommon
 {
     typedef QQuickOpenGLShaderEffectMaterialKey Key;

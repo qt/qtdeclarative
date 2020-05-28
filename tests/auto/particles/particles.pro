@@ -5,7 +5,6 @@ PRIVATETESTS += \
     qquickangleddirection \
     qquickcumulativedirection \
     qquickcustomaffector \
-    qquickcustomparticle \
     qquickellipseextruder \
     qquickgroupgoal \
     qquickfriction \

@@ -324,11 +324,6 @@ public:
     int modelIndex;
     //Used by custom affectors
     float update;
-    //Used by CustomParticle
-    float r;
-
-    // 4 bytes wasted
-
 
     void debugDump(QQuickParticleSystem *particleSystem) const;
     bool stillAlive(QQuickParticleSystem *particleSystem) const; //Only checks end, because usually that's all you need and it's a little faster.

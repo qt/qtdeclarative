@@ -100,10 +100,9 @@
     Painters are the types that visualize logical particles. For each logical particle in the groups assigned to it,
     which are within its bounds (or outside, if you do not set the clip property on the type) it will be visualized
     in a manner dependent on the type of ParticlePainter.  The base type of ParticlePainter does not draw anything.
-    ImageParticle renders an image at the particle location. CustomParticle allows you to write your own shaders to render
-    the particles, passing in the logical particle state as vertex data. ItemParticle allows you to visualize logical
-    particles using arbitrary QML delegates. ModelParticle is similar, but coordinates model data amongst the delegates
-    in a similar manner to the view classes.
+    ImageParticle renders an image at the particle location. ItemParticle allows you to visualize logical particles
+    using arbitrary QML delegates. ModelParticle is similar, but coordinates model data amongst the delegates in a
+    similar manner to the view classes.
 
     As the ParticlePainter is the QML type visualizing the particles in the scene, it is its Z value which is important
     when trying to place particles above or below other types visually.

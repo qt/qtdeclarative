@@ -459,7 +459,6 @@ QQuickParticleData::QQuickParticleData()
     color.g = 255;
     color.b = 255;
     color.a = 255;
-    r = 0;
     delegate = nullptr;
     modelIndex = -1;
 }
@@ -518,7 +517,6 @@ void QQuickParticleData::clone(const QQuickParticleData& other)
     color.g = other.color.g;
     color.b = other.color.b;
     color.a = other.color.a;
-    r = other.r;
     delegate = other.delegate;
     modelIndex = other.modelIndex;
 

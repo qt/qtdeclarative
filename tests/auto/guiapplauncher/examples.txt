@@ -23,7 +23,6 @@
 "quick/window Example", "examples/quick/window", "window", 10, -1
 "quick/particles/system Example", "examples/quick/particles/system", "system", 0, -1
 "quick/particles/emitters Example", "examples/quick/particles/emitters", "emitters", 0, -1
-"quick/particles/customparticle Example", "examples/quick/particles/customparticle", "customparticle", 0, -1
 "quick/particles/imageparticle Example", "examples/quick/particles/imageparticle", "imageparticle", 0, -1
 "quick/particles/affectors Example", "examples/quick/particles/affectors", "affectors", 0, -1
 "quick/localstorage/localstorage Example", "examples/quick/localstorage/localstorage", "localstorage", 0, -1

@@ -448,7 +448,6 @@ FLOAT_GETTER_AND_SETTER(frameDuration)
 FLOAT_GETTER_AND_SETTER(frameAt)
 FLOAT_GETTER_AND_SETTER(frameCount)
 FLOAT_GETTER_AND_SETTER(animT)
-FLOAT_GETTER_AND_SETTER(r)
 FAKE_FLOAT_GETTER_AND_SETTER(curX, curX, setInstantaneousX)
 FAKE_FLOAT_GETTER_AND_SETTER(curVX, curVX, setInstantaneousVX)
 FAKE_FLOAT_GETTER_AND_SETTER(curAX, curAX, setInstantaneousAX)
@@ -487,7 +486,6 @@ QV4ParticleDataDeletable::QV4ParticleDataDeletable(QV4::ExecutionEngine *v4)
     REGISTER_ACCESSOR(p, v4, frameAt, frameAt);
     REGISTER_ACCESSOR(p, v4, frameCount, frameCount);
     REGISTER_ACCESSOR(p, v4, animT, animationT);
-    REGISTER_ACCESSOR(p, v4, r, r);
     REGISTER_ACCESSOR(p, v4, update, update);
     REGISTER_ACCESSOR(p, v4, curX, x);
     REGISTER_ACCESSOR(p, v4, curVX, vx);

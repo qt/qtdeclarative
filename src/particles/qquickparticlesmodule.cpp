@@ -40,9 +40,6 @@
 #include <private/qtquickglobal_p.h>
 
 #include "qquickangledirection_p.h"
-#if QT_CONFIG(quick_shadereffect)
-#include "qquickcustomparticle_p.h"
-#endif
 #include "qquickellipseextruder_p.h"
 #include "qquicktrailemitter_p.h"
 #include "qquickfriction_p.h"
