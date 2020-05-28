@@ -393,7 +393,7 @@ function(qt6_target_qml_files target)
     if (resource_targets)
         install(TARGETS ${resource_targets}
             EXPORT "${target_resource_export}"
-            DESTINATION ${qm_module_install_dir}
+            DESTINATION "${qml_module_install_dir}"
         )
     endif()
 
