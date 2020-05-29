@@ -36,7 +36,6 @@
 
 #include "qquickstyleitem.h"
 
-#include <QtQml/qqmlinfo.h>
 #include <QtQuick/qsgninepatchnode.h>
 #include <QtQuick/private/qquickwindow_p.h>
 

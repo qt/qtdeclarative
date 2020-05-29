@@ -39,6 +39,7 @@
 
 #include <QtCore/qdebug.h>
 #include <QtQml/qqml.h>
+#include <QtQml/qqmlinfo.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
 
@@ -209,7 +210,16 @@ protected:
 
     inline QSize contentSize() { return m_contentSize.toSize(); }
     inline static QStyle *style() { return QQuickNativeStyle::style(); }
-    template <class T> inline const T* control() const { return static_cast<T *>(m_control.data()); }
+
+    template <class T> inline const T* control() const {
+#ifdef QT_DEBUG
+        if (!dynamic_cast<T *>(m_control.data())) {
+            qmlWarning(this) << "control property is not of correct type";
+            Q_UNREACHABLE();
+        }
+#endif
+        return static_cast<T *>(m_control.data());
+    }
 
 #ifdef QT_DEBUG
     bool m_debug = false;
