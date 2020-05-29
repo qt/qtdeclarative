@@ -8,3 +8,4 @@ QML_FILES += \
     $$PWD/TextField.qml \
     $$PWD/Frame.qml \
     $$PWD/TextArea.qml \
+    $$PWD/ComboBox.qml \

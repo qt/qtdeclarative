@@ -4619,22 +4619,28 @@ QRect QMacStyle::subElementRect(SubElement sr, const QStyleOption *opt) const
         }
         break;
     case SE_ComboBoxLayoutItem:
-//#ifndef QT_NO_TOOLBAR
-//        if (widget && qobject_cast<QToolBar *>(widget->parentWidget())) {
-//            // Do nothing, because QToolbar needs the entire widget rect.
-//            // Otherwise it will be clipped. Equivalent to
-//            // widget->setAttribute(Qt::WA_LayoutUsesWidgetRect), but without
-//            // all the hassle.
-//        } else
-//#endif
-        {
+        if (const auto *combo = qstyleoption_cast<const QStyleOptionComboBox *>(opt)) {
+            //#ifndef QT_NO_TOOLBAR
+            //        if (widget && qobject_cast<QToolBar *>(widget->parentWidget())) {
+            //            // Do nothing, because QToolbar needs the entire widget rect.
+            //            // Otherwise it will be clipped. Equivalent to
+            //            // widget->setAttribute(Qt::WA_LayoutUsesWidgetRect), but without
+            //            // all the hassle.
+            //        } else
+            //#endif
             rect = opt->rect;
             if (controlSize == QStyleHelper::SizeLarge) {
-                rect.adjust(+3, +2, -3, -4);
+                rect.adjust(5, 6, -6, -7);
             } else if (controlSize == QStyleHelper::SizeSmall) {
-                setLayoutItemMargins(+2, +1, -3, -4, &rect, opt->direction);
+                if (combo->editable)
+                    rect.adjust(4, 4, -5, -7);
+                else
+                    rect.adjust(6, 6, -6, -4);
             } else {
-                setLayoutItemMargins(+1, 0, -2, 0, &rect, opt->direction);
+                if (combo->editable)
+                    rect.adjust(5, 4, -4, -6);
+                else
+                    rect.adjust(8, 4, -4, -6);
             }
         }
         break;
@@ -5704,7 +5710,29 @@ QRect QMacStyle::subControlRect(ComplexControl cc, const QStyleOptionComplex *op
             const auto ct = cocoaControlType(combo);
             const auto cs = d->effectiveAquaSizeConstrain(combo);
             const auto cw = QMacStylePrivate::CocoaControl(ct, cs);
-            const auto editRect = QMacStylePrivate::comboboxEditBounds(cw.adjustedControlFrame(combo->rect), cw);
+
+            // Old widget path. Current not understood why it's needed:
+            //const auto editRect = QMacStylePrivate::comboboxEditBounds(cw.adjustedControlFrame(combo->rect), cw);
+
+            // New path:
+            QRectF editRect;
+            switch (cs) {
+            case QStyleHelper::SizeLarge:
+                editRect = combo->rect.adjusted(15, 7, -25, -9);
+                break;
+            case QStyleHelper::SizeSmall:
+                if (combo->editable)
+                    editRect = combo->rect.adjusted(15, 6, -22, -9);
+                else
+                    editRect = combo->rect.adjusted(15, 8, -22, -6);
+                break;
+            default:
+                if (combo->editable)
+                    editRect = combo->rect.adjusted(15, 6, -20, -7);
+                else
+                    editRect = combo->rect.adjusted(15, 5, -22, -6);
+                break;
+            }
 
             switch (sc) {
             case SC_ComboBoxEditField:{
@@ -6166,14 +6194,24 @@ QSize QMacStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt, cons
         return sz;
     case CT_ComboBox:
         if (const auto *cb = qstyleoption_cast<const QStyleOptionComboBox *>(opt)) {
-            const auto controlSize = d->effectiveAquaSizeConstrain(opt);
+            const int controlSize = getControlSize(opt);
+
             if (!cb->editable) {
+                if (sz.width() < 10) {
+                    // minimumSize (to ensure a nice nine patch image)
+                    sz.rwidth() += 10;
+                }
                 // Same as CT_PushButton, because we have to fit the focus
                 // ring and a non-editable combo box is a NSPopUpButton.
-                sz.rwidth() += QMacStylePrivate::PushButtonLeftOffset + QMacStylePrivate::PushButtonRightOffset + 12;
-                // All values as measured from HIThemeGetButtonBackgroundBounds()
-                if (controlSize != QStyleHelper::SizeMini)
-                    sz.rwidth() += 12; // We like 12 over here.
+                sz.rwidth() += QMacStylePrivate::PushButtonLeftOffset + QMacStylePrivate::PushButtonRightOffset;
+
+                if (controlSize == QStyleHelper::SizeLarge) {
+                    sz.rwidth() += 30;
+                } else if (controlSize == QStyleHelper::SizeSmall) {
+                    sz.rwidth() += 26;
+                } else {
+                    sz.rwidth() += 21;
+                }
             } else {
                 sz.rwidth() += 50; // FIXME Double check this
             }
@@ -6262,6 +6300,23 @@ QFont QMacStyle::font(QStyle::ControlElement element, const QStyle::State state)
     }
 
     return font;
+}
+
+QMargins QMacStyle::ninePatchMargins(QStyle::ComplexControl cc, const QStyleOptionComplex *opt, const QSize &imageSize) const
+{
+    QMargins margins;
+
+    switch (cc) {
+    case CC_ComboBox: {
+        const QRect arrow = subControlRect(CC_ComboBox, opt, SC_ComboBoxArrow);
+        margins = QMargins(10, 0, arrow.width(), -1);
+        break; }
+    default:
+        margins = QCommonStyle::ninePatchMargins(cc, opt, imageSize);
+        break;
+    }
+
+    return margins;
 }
 
 void QMacStyle::drawItemText(QPainter *p, const QRect &r, int flags, const QPalette &pal,

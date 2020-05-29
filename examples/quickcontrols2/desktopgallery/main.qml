@@ -85,6 +85,7 @@ ApplicationWindow {
                 SpinBoxes { }
                 TextFields { }
                 TextAreas { }
+                ComboBoxes { }
                 Frames { }
                 Sliders { }
                 SlidersSmall { }
@@ -108,6 +109,7 @@ ApplicationWindow {
                 CustomSpinBoxes { }
                 CustomTextFields { }
                 CustomTextAreas { }
+                CustomComboBoxes { }
                 CustomFrames { }
                 CustomSliders { }
             }

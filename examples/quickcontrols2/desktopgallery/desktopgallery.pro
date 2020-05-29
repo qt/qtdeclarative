@@ -24,6 +24,8 @@ QML_FILES = \
     CustomFrames.qml \
     TextAreas.qml \
     CustomTextAreas.qml \
+    ComboBoxes.qml \
+    CustomComboBoxes.qml \
 
 OTHER_FILES += $$QML_FILES
 RESOURCES += $$QML_FILES

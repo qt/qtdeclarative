@@ -11,6 +11,7 @@ HEADERS += \
     $$PWD/qquickstyleitemtextfield.h \
     $$PWD/qquickstyleitemframe.h \
     $$PWD/qquickstyleitemtextarea.h \
+    $$PWD/qquickstyleitemcombobox.h \
 
 SOURCES += \
     $$PWD/qquickstyleitem.cpp \
@@ -23,3 +24,4 @@ SOURCES += \
     $$PWD/qquickstyleitemtextfield.cpp \
     $$PWD/qquickstyleitemframe.cpp \
     $$PWD/qquickstyleitemtextarea.cpp \
+    $$PWD/qquickstyleitemcombobox.cpp \
