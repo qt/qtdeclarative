@@ -145,6 +145,15 @@ function(qt6_add_qml_module target)
         else()
             add_library(${target} MODULE)
             set(is_static FALSE)
+            if(APPLE)
+                # CMake defaults to using .so extensions for loadable modules, aka plugins,
+                # but Qt plugins are actually suffixed with .dylib.
+                set_property(TARGET "${target}" PROPERTY SUFFIX ".dylib")
+            endif()
+            if(WIN32)
+                # CMake sets for Windows-GNU platforms the suffix "lib"
+                set_property(TARGET "${target}" PROPERTY PREFIX "")
+            endif()
         endif()
     endif()
 
