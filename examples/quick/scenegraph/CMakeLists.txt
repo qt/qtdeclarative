@@ -10,9 +10,9 @@ if(QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT_FEATURE_opengles3)
     add_subdirectory(opengltextureinthread)
     add_subdirectory(twotextureproviders)
 endif()
-if(MACOS)
-    # add_subdirectory(metalunderqml) # special case needs fixing
-    # add_subdirectory(metaltextureimport) # special case TODO
+if(IOS OR MACOS)
+    add_subdirectory(metalunderqml)
+    add_subdirectory(metaltextureimport)
 endif()
 if(WIN32)
     add_subdirectory(d3d11underqml)
