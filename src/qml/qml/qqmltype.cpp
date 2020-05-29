@@ -466,7 +466,8 @@ QObject *QQmlType::create() const
     d->init();
 
     QObject *rv = (QObject *)operator new(d->extraData.cd->allocationSize);
-    d->extraData.cd->newFunc(rv);
+
+    d->extraData.cd->newFunc(rv, d->extraData.cd->userdata);
 
     if (rv && !d->metaObjects.isEmpty())
         (void)new QQmlProxyMetaObject(rv, &d->metaObjects);
@@ -482,7 +483,7 @@ void QQmlType::create(QObject **out, void **memory, size_t additionalMemory) con
     d->init();
 
     QObject *rv = (QObject *)operator new(d->extraData.cd->allocationSize + additionalMemory);
-    d->extraData.cd->newFunc(rv);
+    d->extraData.cd->newFunc(rv, d->extraData.cd->userdata);
 
     if (rv && !d->metaObjects.isEmpty())
         (void)new QQmlProxyMetaObject(rv, &d->metaObjects);

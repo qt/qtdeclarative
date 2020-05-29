@@ -141,6 +141,7 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
     d->typeId = type.typeId;
     d->listId = type.listId;
     d->extraData.cd->allocationSize = type.objectSize;
+    d->extraData.cd->userdata = type.userdata;
     d->extraData.cd->newFunc = type.create;
     d->extraData.cd->noCreationReason = type.noCreationReason;
     d->baseMetaObject = type.metaObject;

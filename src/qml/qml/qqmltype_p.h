@@ -107,8 +107,9 @@ public:
     QObject *create() const;
     void create(QObject **, void **, size_t) const;
 
-    typedef void (*CreateFunc)(void *);
+    typedef void (*CreateFunc)(void *, void *);
     CreateFunc createFunction() const;
+
     QQmlCustomParser *customParser() const;
 
     bool isCreatable() const;
@@ -150,7 +151,7 @@ public:
 
     struct Q_QML_PRIVATE_EXPORT SingletonInstanceInfo
     {
-        QJSValue (*scriptCallback)(QQmlEngine *, QJSEngine *) = nullptr;
+        std::function<QJSValue(QQmlEngine *, QJSEngine *)> scriptCallback = {};
         std::function<QObject *(QQmlEngine *, QJSEngine *)> qobjectCallback = {};
         const QMetaObject *instanceMetaObject = nullptr;
         QString typeName;

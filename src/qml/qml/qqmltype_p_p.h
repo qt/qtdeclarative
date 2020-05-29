@@ -113,7 +113,8 @@ public:
     struct QQmlCppTypeData
     {
         int allocationSize;
-        void (*newFunc)(void *);
+        void (*newFunc)(void *, void *);
+        void *userdata = nullptr;
         QString noCreationReason;
         int parserStatusCast;
         QObject *(*extFunc)(QObject *);

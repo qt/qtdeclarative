@@ -319,6 +319,7 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
             type.listId,
             creatable ? type.objectSize : 0,
             nullptr,
+            nullptr,
             noCreateReason,
             type.uri,
             type.version,
@@ -357,6 +358,7 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
             } else {
                 revisionRegistration.elementName = elementName;
                 revisionRegistration.create = creatable ? type.create : nullptr;
+                revisionRegistration.userdata = type.userdata;
             }
 
             assignVersions(&revisionRegistration, revision, type.version);
@@ -479,6 +481,7 @@ namespace QQmlPrivate {
             QMetaType::fromType<T *>(),
             QMetaType::fromType<QQmlListProperty<T>>(),
             0,
+            nullptr,
             nullptr,
 
             uri,

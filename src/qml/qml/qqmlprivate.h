@@ -151,7 +151,7 @@ namespace QQmlPrivate
     }
 
     template<typename T>
-    void createInto(void *memory) { new (memory) QQmlElement<T>; }
+    void createInto(void *memory, void *) { new (memory) QQmlElement<T>; }
 
     template<typename T>
     QObject *createSingletonInstance(QQmlEngine *, QJSEngine *) { return new T; }
@@ -159,7 +159,7 @@ namespace QQmlPrivate
     template<typename T>
     QObject *createParent(QObject *p) { return new T(p); }
 
-    using CreateIntoFunction = void (*)(void *);
+    using CreateIntoFunction = void (*)(void *, void *);
     using CreateSingletonFunction = QObject *(*)(QQmlEngine *, QJSEngine *);
     using CreateParentFunction = QObject *(*)(QObject *);
 
@@ -336,7 +336,9 @@ namespace QQmlPrivate
         QMetaType typeId;
         QMetaType listId;
         int objectSize;
-        void (*create)(void *);
+        // The second parameter of create is for userdata
+        void (*create)(void *, void *);
+        void *userdata;
         QString noCreationReason;
 
         const char *uri;
@@ -366,7 +368,8 @@ namespace QQmlPrivate
         QMetaType typeId;
         QMetaType listId;
         int objectSize;
-        void (*create)(void *);
+        void (*create)(void *, void *);
+        void *userdata;
 
         const char *uri;
         QTypeRevision version;
@@ -413,7 +416,7 @@ namespace QQmlPrivate
         QTypeRevision version;
         const char *typeName;
 
-        QJSValue (*scriptApi)(QQmlEngine *, QJSEngine *);
+        std::function<QJSValue(QQmlEngine *, QJSEngine *)> scriptApi;
         std::function<QObject*(QQmlEngine *, QJSEngine *)> qObjectApi;
 
         const QMetaObject *instanceMetaObject;
@@ -623,7 +626,7 @@ namespace QQmlPrivate
             QMetaType::fromType<T*>(),
             QMetaType::fromType<QQmlListProperty<T>>(),
             int(sizeof(T)),
-            Constructors<T>::createInto,
+            Constructors<T>::createInto, nullptr,
 
             uri,
             QTypeRevision::fromMajorVersion(versionMajor),

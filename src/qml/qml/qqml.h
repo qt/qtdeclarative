@@ -41,6 +41,7 @@
 #define QQML_H
 
 #include <QtQml/qqmlprivate.h>
+#include <QtQml/qjsvalue.h>
 
 #include <QtCore/qbytearray.h>
 #include <QtCore/qmetaobject.h>
@@ -162,11 +163,10 @@ int qmlRegisterAnonymousType(const char *uri, int versionMajor)
 {
     QQmlPrivate::RegisterType type = {
         0,
-
         QMetaType::fromType<T *>(),
         QMetaType::fromType<QQmlListProperty<T> >(),
         0,
-        nullptr,
+        nullptr, nullptr,
         QString(),
 
         uri, QTypeRevision::fromVersion(versionMajor, 0), nullptr, &T::staticMetaObject,
@@ -203,10 +203,10 @@ int qmlRegisterUncreatableType(const char *uri, int versionMajor, int versionMin
 {
     QQmlPrivate::RegisterType type = {
         0,
-
         QMetaType::fromType<T *>(),
         QMetaType::fromType<QQmlListProperty<T>>(),
         0,
+        nullptr,
         nullptr,
         reason,
 
@@ -233,10 +233,10 @@ int qmlRegisterUncreatableType(const char *uri, int versionMajor, int versionMin
 {
     QQmlPrivate::RegisterType type = {
         0,
-
         QMetaType::fromType<T *>(),
         QMetaType::fromType<QQmlListProperty<T> >(),
         0,
+        nullptr,
         nullptr,
         reason,
 
@@ -270,10 +270,10 @@ int qmlRegisterExtendedUncreatableType(const char *uri, int versionMajor, int ve
 
     QQmlPrivate::RegisterType type = {
         0,
-
         QMetaType::fromType<T *>(),
         QMetaType::fromType<QQmlListProperty<T> >(),
         0,
+        nullptr,
         nullptr,
         reason,
 
@@ -307,10 +307,10 @@ int qmlRegisterExtendedUncreatableType(const char *uri, int versionMajor, int ve
 
     QQmlPrivate::RegisterType type = {
         0,
-
         QMetaType::fromType<T *>(),
         QMetaType::fromType<QQmlListProperty<T> >(),
         0,
+        nullptr,
         nullptr,
         reason,
 
@@ -339,10 +339,9 @@ int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const c
 {
     QQmlPrivate::RegisterType type = {
         0,
-
         QMetaType::fromType<T *>(),
         QMetaType::fromType<QQmlListProperty<T> >(),
-        sizeof(T), QQmlPrivate::createInto<T>,
+        sizeof(T), QQmlPrivate::createInto<T>, nullptr,
         QString(),
 
         uri, QTypeRevision::fromVersion(versionMajor, versionMinor), qmlName, &T::staticMetaObject,
@@ -368,10 +367,9 @@ int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const c
 {
     QQmlPrivate::RegisterType type = {
         0,
-
         QMetaType::fromType<T *>(),
         QMetaType::fromType<QQmlListProperty<T> >(),
-        sizeof(T), QQmlPrivate::createInto<T>,
+        sizeof(T), QQmlPrivate::createInto<T>, nullptr,
         QString(),
 
         uri, QTypeRevision::fromVersion(versionMajor, versionMinor), qmlName, &T::staticMetaObject,
@@ -397,10 +395,9 @@ int qmlRegisterRevision(const char *uri, int versionMajor, int versionMinor)
 {
     QQmlPrivate::RegisterType type = {
         0,
-
         QMetaType::fromType<T *>(),
         QMetaType::fromType<QQmlListProperty<T> >(),
-        sizeof(T), QQmlPrivate::createInto<T>,
+        sizeof(T), QQmlPrivate::createInto<T>, nullptr,
         QString(),
 
         uri, QTypeRevision::fromVersion(versionMajor, versionMinor), nullptr, &T::staticMetaObject,
@@ -426,10 +423,10 @@ int qmlRegisterExtendedType(const char *uri, int versionMajor)
 {
     QQmlPrivate::RegisterType type = {
         0,
-
         QMetaType::fromType<T *>(),
         QMetaType::fromType<QQmlListProperty<T> >(),
         0,
+        nullptr,
         nullptr,
         QString(),
 
@@ -473,10 +470,9 @@ int qmlRegisterExtendedType(const char *uri, int versionMajor, int versionMinor,
 
     QQmlPrivate::RegisterType type = {
         0,
-
         QMetaType::fromType<T *>(),
         QMetaType::fromType<QQmlListProperty<T> >(),
-        sizeof(T), QQmlPrivate::createInto<T>,
+        sizeof(T), QQmlPrivate::createInto<T>, nullptr,
         QString(),
 
         uri, QTypeRevision::fromVersion(versionMajor, versionMinor), qmlName, &T::staticMetaObject,
@@ -544,10 +540,9 @@ int qmlRegisterCustomType(const char *uri, int versionMajor, int versionMinor,
 {
     QQmlPrivate::RegisterType type = {
         0,
-
         QMetaType::fromType<T *>(),
         QMetaType::fromType<QQmlListProperty<T> >(),
-        sizeof(T), QQmlPrivate::createInto<T>,
+        sizeof(T), QQmlPrivate::createInto<T>, nullptr,
         QString(),
 
         uri, QTypeRevision::fromVersion(versionMajor, versionMinor), qmlName, &T::staticMetaObject,
@@ -574,10 +569,9 @@ int qmlRegisterCustomType(const char *uri, int versionMajor, int versionMinor,
 {
     QQmlPrivate::RegisterType type = {
         0,
-
         QMetaType::fromType<T *>(),
         QMetaType::fromType<QQmlListProperty<T> >(),
-        sizeof(T), QQmlPrivate::createInto<T>,
+        sizeof(T), QQmlPrivate::createInto<T>, nullptr,
         QString(),
 
         uri, QTypeRevision::fromVersion(versionMajor, versionMinor), qmlName, &T::staticMetaObject,
@@ -611,10 +605,9 @@ int qmlRegisterCustomExtendedType(const char *uri, int versionMajor, int version
 
     QQmlPrivate::RegisterType type = {
         0,
-
         QMetaType::fromType<T *>(),
         QMetaType::fromType<QQmlListProperty<T> >(),
-        sizeof(T), QQmlPrivate::createInto<T>,
+        sizeof(T), QQmlPrivate::createInto<T>, nullptr,
         QString(),
 
         uri, QTypeRevision::fromVersion(versionMajor, versionMinor), qmlName, &T::staticMetaObject,
@@ -709,7 +702,8 @@ inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versi
 
         uri, QTypeRevision::fromVersion(versionMajor, versionMinor), typeName,
 
-        callback, nullptr, nullptr, QMetaType(), QTypeRevision::zero()
+        callback,
+        nullptr, nullptr, QMetaType(), QTypeRevision::zero()
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::SingletonRegistration, &api);
@@ -871,6 +865,7 @@ inline void qmlRegisterNamespaceAndRevisions(const QMetaObject *metaObject, cons
         QMetaType(),
         QMetaType(),
         0,
+        nullptr,
         nullptr,
 
         uri,

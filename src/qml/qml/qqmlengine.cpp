@@ -108,10 +108,10 @@ int qmlRegisterUncreatableMetaObject(const QMetaObject &staticMetaObject,
 {
     QQmlPrivate::RegisterType type = {
         0,
-
         QMetaType(),
         QMetaType(),
         0,
+        nullptr,
         nullptr,
         reason,
 
