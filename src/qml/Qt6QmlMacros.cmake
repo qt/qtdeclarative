@@ -578,7 +578,7 @@ function(qt6_qml_type_registration target)
     if (WIN32)
         # TODO: FIXME: The env path is wrong when not building Qt, but a standalone example.
         file(TO_NATIVE_PATH "${${PROJECT_NAME}_BINARY_DIR}/bin$<SEMICOLON>${CMAKE_INSTALL_PREFIX}/${INSTALL_BINDIR}$<SEMICOLON>%PATH%" env_path_native)
-        set(extra_env_command COMMAND set PATH=${env_path_native})
+        set(extra_env_command COMMAND set \"PATH=${env_path_native}\")
     endif()
     add_custom_command(OUTPUT ${type_registration_cpp_file}
         DEPENDS
