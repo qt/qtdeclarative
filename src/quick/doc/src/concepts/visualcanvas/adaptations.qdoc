@@ -31,8 +31,8 @@
 
 \section1 Scene Graph Adaptations in Qt Quick
 
-Originally, Qt Quick always relied on OpenGL (OpenGL ES 2.0 or OpenGL 2.0) to
-parse the scene graph and render the results to a render target
+In Qt 5.0, Qt Quick always relied on OpenGL (OpenGL ES 2.0 or OpenGL 2.0) to
+parse the scene graph and render the results to a render target.
 
 From Qt 5.8 onwards, Qt Quick also supports rendering in software, and with
 OpenVG.  This is realized by having additional scene graph adaptations, either
@@ -48,15 +48,19 @@ Shader handling is also unified by writing shader code once, compiling to
 \l{https://www.khronos.org/spir/}{SPIR-V}, and then translating to the language
 appropriate for the various graphics APIs.
 
+Starting with Qt 6.0, the RHI-based rendering model is the default, and there is
+no option to fall back to directly using OpenGL.
+
 \target Switching Between the Adaptation Used by the Application
 \section1 Switch Between Adaptations in Your Application
 
-Unlike \c software, the RHI-based renderer is not an additional
-adaptation, and is always built-in. As of Qt 5.14 it can be enabled by setting
-the environment variable \c{QSG_RHI} to a non-zero value before starting the
-application, or via \l QQuickWindow::setSceneGraphBackend() in combination with
-\l QSGRendererInterface::GraphicsApi. When none of this is done, OpenGL is used
-directly like in previous versions.
+Unlike \c software, the RHI-based renderer is not an additional adaptation, and
+is always built-in. As of Qt 6.0 it is always enabled. On platforms where
+multiple graphics APIs are available, the scenegraph makes a platform-specific
+choice. If this is not desired, applications can force a specified graphics API
+by setting the environment variable \c{QSG_RHI_BACKEND} or via \l
+QQuickWindow::setSceneGraphBackend() in combination with \l
+QSGRendererInterface::GraphicsApi.
 
 Switching to a different adaptation can be achieved in two ways:
 
@@ -82,8 +86,9 @@ To find out which backend is in use, you can enable basic scene graph informatio
 \c{QSG_INFO} environment variable or the \c{qt.scenegraph.general} logging category. This results
 in some information being printed onto the debug output, during application startup.
 
-\note In Qt builds with OpenGL disabled, the default adaptation is \c software.
-This may change in future releases.
+\note In Qt builds with both OpenGL and Vulkan disabled, the default adaptation
+is \c software. This does not apply to Windows or \macos however, because these
+platforms always have Direct 3D or Metal support, respectively, enabled.
 
 \note Typically, adaptations other than the default one come with a set of
 limitations as they are unlikely to provide a feature set that's 100%
@@ -96,11 +101,6 @@ adaptations, refer to the sections below.
 When using OpenGL directly, the default adaptation is capable of providing the
 full Qt Quick 2 feature set. For more details, see
 \l{qtquick-visualcanvas-scenegraph-renderer.html}{Default Adaptation}.
-
-When using OpenGL, Vulkan, Metal, or Direct 3D via the RHI, the default
-adaptation is capable of providing most features, including the full batching
-renderer described in \l{qtquick-visualcanvas-scenegraph-renderer.html}{Default
-Adaptation}, but some additional features may not be available as of Qt 5.14.
 
 \section1 Software Adaptation
 

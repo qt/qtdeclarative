@@ -272,10 +272,11 @@ animations, process events, etc.
 \endlist
 
 The threaded renderer is currently used by default on Windows with
-opengl32.dll, Linux excluding Mesa llvmpipe, \macos with Metal, mobile
-platforms, and Embedded Linux with EGLFS, and with Vulkan regardless of the
-platform, but this is subject to change. It is always possible to force use of
-the threaded renderer by setting \c {QSG_RENDER_LOOP=threaded} in the
+Direct3D 11 and with OpenGL when using opengl32.dll, Linux excluding
+Mesa llvmpipe, \macos with Metal, mobile platforms, and Embedded Linux
+with EGLFS, and with Vulkan regardless of the platform. All this may
+change in future releases.  It is always possible to force use of the
+threaded renderer by setting \c {QSG_RENDER_LOOP=threaded} in the
 environment.
 
 \section2 Non-threaded Render Loop ("basic")
@@ -284,9 +285,7 @@ The non-threaded render loop is currently used by default on Windows with
 OpenGL when not using the system's standard opengl32.dll, \macos with OpenGL,
 and Linux with some drivers. For the latter this is mostly a precautionary
 measure, as not all combinations of OpenGL drivers and windowing systems have
-been tested. At the same time implementations like ANGLE or Mesa llvmpipe are
-not able to function properly with threaded rendering at all so not using
-threaded rendering is essential for these.
+been tested.
 
 On macOS and OpenGL, the threaded render loop is not supported when building
 with XCode 10 (10.14 SDK) or later, since this opts in to layer-backed views on
@@ -967,17 +966,16 @@ with multiple windows.
 
   \section1 Rendering via the Qt Rendering Hardware Interface
 
-  From Qt 5.14 onwards, the default adaptation gains the option of rendering
-  via a graphics abstraction layer, the Qt Rendering Hardware Interface (RHI),
-  provided by the \l QtGui module. When enabled, no direct OpenGL calls are
-  made. Rather, the scene graph renders by using the APIs provided by the
-  abstraction layer, which is then translated into OpenGL, Vulkan, Metal, or
-  Direct 3D calls. Shader handling is also unified by writing shader code once,
-  compiling to \l{https://www.khronos.org/spir/}{SPIR-V}, and then translating
-  to the language appropriate for the various graphics APIs.
+  From Qt 6.0 onwards, the default adaptation always renders via a graphics
+  abstraction layer, the Qt Rendering Hardware Interface (RHI), provided by the
+  \l QtGui module. This means that, unlike Qt 5, no direct OpenGL calls are made
+  by the scene graph. Rather, it records resource and draw commands by using the
+  RHI APIs, which then translate the command stream into OpenGL, Vulkan, Metal,
+  or Direct 3D calls. Shader handling is also unified by writing shader code
+  once, compiling to \l{https://www.khronos.org/spir/}{SPIR-V}, and then
+  translating to the language appropriate for the various graphics APIs.
 
-  To enable this instead of directly using OpenGL, the following environment
-  variables can be used:
+  To control the behavior, the following environment variables can be used:
 
   \table 100%
   \header
@@ -986,16 +984,12 @@ with multiple windows.
     \li Description
 
   \row
-    \li \c QSG_RHI
-    \li \c 1
-    \li Enables rendering via the RHI. The targeted graphics API is chosen based on
-    the platform, unless overridden by \c QSG_RHI_BACKEND. The defaults are currently
-    Direct3D 11 for Windows, Metal for macOS, OpenGL elsehwere.
-
-  \row
    \li \c QSG_RHI_BACKEND
    \li \c vulkan, \c metal, \c opengl, \c d3d11
-   \li Requests the specific RHI backend.
+   \li Requests the specific RHI backend. By default the targeted graphics API
+   is chosen based on the platform, unless overridden by this variable or the
+   equivalent C++ APIs. The defaults are currently Direct3D 11 for Windows,
+   Metal for macOS, OpenGL elsewhere.
 
   \row
    \li \c QSG_INFO
