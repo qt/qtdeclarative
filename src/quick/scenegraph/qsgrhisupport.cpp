@@ -436,7 +436,8 @@ static const void *qsgrhi_mtl_rifResource(QSGRendererInterface::Resource res, co
 #endif
 
 const void *QSGRhiSupport::rifResource(QSGRendererInterface::Resource res,
-                                       const QSGDefaultRenderContext *rc)
+                                       const QSGDefaultRenderContext *rc,
+                                       const QQuickWindow *w)
 {
 // ### This condition is a temporary workaround to allow compilation
 // with -no-opengl, but Vulkan or Metal enabled, to succeed. Full
@@ -447,6 +448,8 @@ const void *QSGRhiSupport::rifResource(QSGRendererInterface::Resource res,
     QRhi *rhi = rc->rhi();
     if (res == QSGRendererInterface::RhiResource || !rhi)
         return rhi;
+    if (res == QSGRendererInterface::RhiSwapchainResource)
+        return QQuickWindowPrivate::get(w)->swapchain;
 
     const QRhiNativeHandles *nat = rhi->nativeHandles();
     if (!nat)

@@ -324,13 +324,13 @@ void *QSGDefaultContext::getResource(QQuickWindow *window, Resource resource) co
         if (rhiSupport->graphicsApi() == OpenGL)
             return rc->openglContext();
         else
-            return const_cast<void *>(rhiSupport->rifResource(resource, rc));
+            return const_cast<void *>(rhiSupport->rifResource(resource, rc, window));
 #if QT_CONFIG(vulkan)
     case VulkanInstanceResource:
         return window->vulkanInstance();
 #endif
     default:
-        return const_cast<void *>(rhiSupport->rifResource(resource, rc));
+        return const_cast<void *>(rhiSupport->rifResource(resource, rc, window));
     }
 }
 

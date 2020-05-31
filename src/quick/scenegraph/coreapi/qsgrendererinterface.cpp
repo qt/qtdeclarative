@@ -112,6 +112,10 @@ QT_BEGIN_NAMESPACE
     \value RhiResource The resource is a pointer to the QRhi instance used by
     the scenegraph, when applicable. This value was introduced in Qt 5.14.
 
+    \value RhiSwapchainResource The resource is a pointer to a QRhiSwapchain
+    instance that is associated with the window. This value was introduced in
+    Qt 6.0.
+
     \value PhysicalDeviceResource The resource is a pointer to the pysical
     device object used by the scenegraph, when applicable. For example, a
     \c{VkPhysicalDevice *}. Note that with Vulkan the returned value is a

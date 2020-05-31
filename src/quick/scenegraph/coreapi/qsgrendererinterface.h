@@ -67,6 +67,7 @@ public:
         CommandListResource,
         PainterResource,
         RhiResource,
+        RhiSwapchainResource,
         PhysicalDeviceResource,
         OpenGLContextResource,
         DeviceContextResource,

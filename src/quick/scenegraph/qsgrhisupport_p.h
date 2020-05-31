@@ -119,7 +119,9 @@ public:
 
     QSurface::SurfaceType windowSurfaceType() const;
 
-    const void *rifResource(QSGRendererInterface::Resource res, const QSGDefaultRenderContext *rc);
+    const void *rifResource(QSGRendererInterface::Resource res,
+                            const QSGDefaultRenderContext *rc,
+                            const QQuickWindow *w);
 
     int chooseSampleCountForWindowWithRhi(QWindow *window, QRhi *rhi);
 

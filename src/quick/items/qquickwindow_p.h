@@ -131,6 +131,7 @@ public:
     };
 
     static inline QQuickWindowPrivate *get(QQuickWindow *c) { return c->d_func(); }
+    static inline const QQuickWindowPrivate *get(const QQuickWindow *c) { return c->d_func(); }
 
     QQuickWindowPrivate();
     ~QQuickWindowPrivate() override;
