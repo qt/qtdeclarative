@@ -378,11 +378,12 @@ void QQuickWidgetPrivate::renderSceneGraph()
         return;
 
     if (!useSoftwareRenderer) {
+#if QT_CONFIG(opengl)
         if (!context) {
             qWarning("QQuickWidget: Attempted to render scene with no context");
             return;
         }
-
+#endif
         Q_ASSERT(offscreenSurface);
     }
 
@@ -417,7 +418,11 @@ QImage QQuickWidgetPrivate::grabFramebuffer()
     // prefer the FBO's toImage() if available. When the software renderer
     // is in use, however, there will be no FBO and we fall back to grabWindow()
     // instead.
-    return fbo != nullptr ? fbo->toImage() : offscreenWindow->grabWindow();
+    return
+#if QT_CONFIG(opengl)
+            fbo != nullptr ? fbo->toImage() :
+#endif
+                           offscreenWindow->grabWindow();
 }
 
 // Intentionally not overriding the QQuickWindow's focusObject.

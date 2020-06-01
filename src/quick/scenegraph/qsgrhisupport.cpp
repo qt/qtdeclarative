@@ -701,13 +701,18 @@ QImage QSGRhiSupport::grabOffscreen(QQuickWindow *window)
 
     wd->rhi = rhi.data();
 
+// ### This condition is a temporary workaround to allow compilation
+// with -no-opengl, but Vulkan or Metal enabled, to succeed. Full
+// support for RHI-capable -no-opengl builds will be available in
+// Qt 6 once the direct OpenGL code path gets removed.
+#if QT_CONFIG(opengl)
     QSGDefaultRenderContext::InitParams params;
     params.rhi = rhi.data();
     params.sampleCount = 1;
     params.initialSurfacePixelSize = pixelSize;
     params.maybeSurface = window;
     wd->context->initialize(&params);
-
+#endif
     // There was no rendercontrol which means a custom render target
     // should not be set either. Set our own, temporarily.
     window->setRenderTarget(QQuickRenderTarget::fromRhiRenderTarget(rt.data()));
