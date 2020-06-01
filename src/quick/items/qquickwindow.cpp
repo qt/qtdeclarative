@@ -5102,7 +5102,7 @@ QSGTexture *QQuickWindow::createTextureFromNativeObject(NativeObjectType type,
         return texture;
     }
 #else
-    Q_UNUSED(nativeObjectPtr);
+    Q_UNUSED(nativeObjectHandle);
     Q_UNUSED(nativeLayout);
     Q_UNUSED(size);
     Q_UNUSED(options);
