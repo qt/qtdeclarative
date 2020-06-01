@@ -965,7 +965,10 @@ void QQuickWidgetPrivate::createContext()
     if (context->makeCurrent(offscreenSurface)) {
         if (!offscreenWindow->isSceneGraphInitialized()) {
             offscreenWindow->setGraphicsDevice(QQuickGraphicsDevice::fromOpenGLContext(context));
-            renderControl->initialize();
+            if (QSGRhiSupport::instance()->isRhiEnabled())
+                renderControl->initialize();
+            else
+                renderControl->initialize(context);
         }
     } else
 #endif
