@@ -211,9 +211,9 @@ void tst_Sanity::functions_data()
 class SignalHandlerValidator : public BaseValidator
 {
 protected:
-    static bool isSignalHandler(const QStringRef &name)
+    static bool isSignalHandler(QStringView name)
     {
-        return name.length() > 2 && name.startsWith("on") && name.at(2).isUpper();
+        return name.length() > 2 && name.startsWith(QLatin1String("on")) && name.at(2).isUpper();
     }
 
     virtual bool visit(QQmlJS::AST::UiScriptBinding *node)
