@@ -51,7 +51,7 @@
 #include <QQmlContext>
 
 #include <QApplication>
-#include <QDirModel>
+#include <QFileSystemModel>
 
 //![0]
 int main(int argc, char ** argv)
@@ -60,8 +60,8 @@ int main(int argc, char ** argv)
 
     QQuickView view;
 
-    QDirModel model;
-    view.rootContext()->setContextProperty("dirModel", &model);
+    QFileSystemModel model;
+    view.rootContext()->setContextProperty("fileSystemModel", &model);
 
     view.setSource(QUrl::fromLocalFile("view.qml"));
     view.show();

@@ -57,7 +57,7 @@ ListView {
     height: 400
 
     model: DelegateModel {
-        model: dirModel
+        model: fileSystemModel
 
         delegate: Rectangle {
             width: 200; height: 25
