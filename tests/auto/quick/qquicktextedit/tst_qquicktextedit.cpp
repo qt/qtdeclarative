@@ -220,6 +220,7 @@ private slots:
     void QTBUG_51115_readOnlyResetsSelection();
     void keys_shortcutoverride();
 
+    void transparentSelectionColor();
 private:
     void simulateKeys(QWindow *window, const QList<Key> &keys);
 #if QT_CONFIG(shortcut)
@@ -5808,6 +5809,32 @@ void tst_qquicktextedit::keys_shortcutoverride()
     textEdit->setFocus(true);
     QTest::keyPress(&view, Qt::Key_Escape);
     QCOMPARE(root->property("who").value<QString>(), QLatin1String("TextEdit"));
+}
+
+void tst_qquicktextedit::transparentSelectionColor()
+{
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Skipping due to grabToImage not functional on offscreen/minimal platforms");
+
+    QQuickView view;
+    view.setSource(testFileUrl("transparentSelectionColor.qml"));
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+    QObject *root = view.rootObject();
+    QVERIFY(root);
+
+    QQuickTextEdit *textEdit = root->findChild<QQuickTextEdit *>();
+    QVERIFY(textEdit);
+    textEdit->selectAll();
+
+    QImage img = view.grabWindow();
+    QCOMPARE(img.isNull(), false);
+
+    QColor color = img.pixelColor(int(textEdit->width() / 2), int(textEdit->height()) / 2);
+    QVERIFY(color.red() > 250);
+    QVERIFY(color.blue() < 10);
+    QVERIFY(color.green() < 10);
 }
 
 QTEST_MAIN(tst_qquicktextedit)

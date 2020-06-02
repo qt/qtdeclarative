@@ -800,8 +800,8 @@ void  QQuickTextNodeEngine::addToSceneGraph(QQuickTextNode *parentNode,
     // Then, prepend all selection rectangles to the tree
     for (int i = 0; i < m_selectionRects.size(); ++i) {
         const QRectF &rect = m_selectionRects.at(i);
-
-        parentNode->addRectangleNode(rect, m_selectionColor);
+        if (m_selectionColor.alpha() != 0)
+            parentNode->addRectangleNode(rect, m_selectionColor);
     }
 
     // Add decorations for each node to the tree.
