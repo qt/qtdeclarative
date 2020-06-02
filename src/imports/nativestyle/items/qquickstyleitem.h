@@ -55,8 +55,8 @@
 #endif
 
 #ifdef QT_DEBUG
-#define qqc2Debug() if (!m_debug.isEmpty()) qDebug() << m_debug << __FUNCTION__ << ":"
-#define qqc2DebugHeading(HEADING) if (!m_debug.isEmpty()) qDebug() << "--------" << HEADING << "--------"
+#define qqc2Debug() if (m_debug) qDebug() << __FUNCTION__ << ":"
+#define qqc2DebugHeading(HEADING) if (m_debug) qDebug() << "--------" << HEADING << "--------"
 #else
 #define qqc2Debug() if (false) qDebug()
 #define qqc2DebugHeading(HEADING) if (false) qDebug()
@@ -212,7 +212,8 @@ protected:
     template <class T> inline const T* control() const { return static_cast<T *>(m_control.data()); }
 
 #ifdef QT_DEBUG
-    QString m_debug;
+    bool m_debug = false;
+    bool m_debugNinePatchImage = false;
 #endif
 
 private:

@@ -116,8 +116,18 @@ QSGNode *QQuickStyleItem::updatePaintNode(QSGNode *oldNode, QQuickItem::UpdatePa
     auto texture = window()->createTextureFromImage(m_paintedImage, QQuickWindow::TextureCanUseAtlas);
     const QSize padding = m_useNinePatchImage ? m_styleItemGeometry.minimumSize / 2 : QSize(0, 0);
 
-    node->setTexture(texture);
     node->setBounds(boundingRect());
+
+#ifdef QT_DEBUG
+    if (m_debugNinePatchImage) {
+        const qreal scale = window()->devicePixelRatio();
+        const QSizeF ninePatchImageSize = m_paintedImage.rect().size() / scale;
+        node->setBounds(QRectF(QPointF(), ninePatchImageSize));
+        qqc2Debug() << "Setting paint node size to size of image:" << ninePatchImageSize;
+    }
+#endif
+
+    node->setTexture(texture);
     node->setDevicePixelRatio(window()->devicePixelRatio());
     node->setPadding(padding.width(), padding.height(), padding.width(), padding.height());
     node->update();
@@ -239,8 +249,15 @@ void QQuickStyleItem::paintControlToImage()
     paintEvent(&painter);
 
 #ifdef QT_DEBUG
-    if (!m_debug.isEmpty())
+    if (m_debug) {
         painter.fillRect(m_paintedImage.rect(), QColor(rand() % 255, rand() % 255, rand() % 255, 50));
+        if (m_debugNinePatchImage) {
+            const QPoint center = m_paintedImage.rect().center() / scale;
+            painter.setPen(Qt::red);
+            painter.drawLine(center.x(), 0, center.x(), m_paintedImage.rect().height());
+            painter.drawLine(0, center.y(), m_paintedImage.rect().width(), center.y());
+        }
+    }
 #endif
 
     update();
@@ -263,14 +280,13 @@ void QQuickStyleItem::componentComplete()
         m_useNinePatchImage = false;
     if (qEnvironmentVariable("QQC2_DEBUG") == QStringLiteral("true")) {
         // Set the object name of any QML item to "debug" to print out
-        // extra information about that item. Optionally add some extra
-        // text to prefix the output (e.g "debug myButton").
-        const QString prefix(QLatin1String("debug"));
+        // extra information about that item. Optionally add "image"
+        // to draw the nine patch image (with markers) instead of the
+        // scaled image.
         const QString name = m_control->objectName();
-        if (name.startsWith(prefix)) {
-            m_debug = m_control->objectName().mid(prefix.length() + 1);
-            if (m_debug.isEmpty())
-                m_debug = QStringLiteral("-");
+        if (name.startsWith(QLatin1String("debug"))) {
+            m_debug = true;
+            m_debugNinePatchImage = name.contains(QStringLiteral("image"));
         }
     }
 #endif
