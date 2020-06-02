@@ -140,11 +140,6 @@ void QQmlMetaObject::resolveGadgetMethodOrPropertyIndex(QMetaObject::Call type, 
     case QMetaObject::ReadProperty:
     case QMetaObject::WriteProperty:
     case QMetaObject::ResetProperty:
-    case QMetaObject::QueryPropertyDesignable:
-    case QMetaObject::QueryPropertyEditable:
-    case QMetaObject::QueryPropertyScriptable:
-    case QMetaObject::QueryPropertyStored:
-    case QMetaObject::QueryPropertyUser:
         offset = (*metaObject)->propertyOffset();
         while (*index < offset) {
             *metaObject = (*metaObject)->superClass();

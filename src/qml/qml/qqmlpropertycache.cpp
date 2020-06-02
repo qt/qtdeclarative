@@ -1254,35 +1254,15 @@ template <typename StringVisitor, typename TypeInfoVisitor>
 int visitProperties(const QMetaObject &mo, StringVisitor visitString, TypeInfoVisitor visitTypeInfo)
 {
     const QMetaObjectPrivate *const priv = reinterpret_cast<const QMetaObjectPrivate*>(mo.d.data);
-    const int intsPerProperty = 3;
-
-    bool hasRevisionedProperties = false;
-    bool hasNotifySignals = false;
 
     for (int i = 0; i < priv->propertyCount; ++i) {
-        const int handle = priv->propertyData + i * intsPerProperty;
-
-        const auto flags = mo.d.data[handle + 2];
-        if (flags & Revisioned) {
-            hasRevisionedProperties = true;
-        }
-        if (flags & Notify)
-            hasNotifySignals = true;
+        const int handle = priv->propertyData + i * QMetaObjectPrivate::IntsPerProperty;
 
         visitString(mo.d.data[handle]); // name
         visitTypeInfo(mo.d.data[handle + 1]);
     }
 
-    int fieldsForPropertyRevisions = 0;
-    if (hasRevisionedProperties)
-        fieldsForPropertyRevisions = priv->propertyCount;
-
-    int fieldsForNotifySignals = 0;
-    if (hasNotifySignals)
-        fieldsForNotifySignals = priv->propertyCount;
-
-    return priv->propertyCount * intsPerProperty + fieldsForPropertyRevisions
-            + fieldsForNotifySignals;
+    return priv->propertyCount * QMetaObjectPrivate::IntsPerProperty;
 }
 
 template <typename StringVisitor>
@@ -1305,21 +1285,19 @@ template <typename StringVisitor>
 int visitEnumerations(const QMetaObject &mo, StringVisitor visitString)
 {
     const QMetaObjectPrivate *const priv = reinterpret_cast<const QMetaObjectPrivate*>(mo.d.data);
-    const int intsPerEnumerator = priv->revision >= 8 ? 5 : 4;
 
-    int fieldCount = priv->enumeratorCount * intsPerEnumerator;
+    int fieldCount = priv->enumeratorCount * QMetaObjectPrivate::IntsPerEnum;
 
     for (int i = 0; i < priv->enumeratorCount; ++i) {
-        const uint *enumeratorData = mo.d.data + priv->enumeratorData + i * intsPerEnumerator;
+        const uint *enumeratorData = mo.d.data + priv->enumeratorData + i * QMetaObjectPrivate::IntsPerEnum;
 
-        const uint keyCount = enumeratorData[intsPerEnumerator == 5 ? 3 : 2];
+        const uint keyCount = enumeratorData[3];
         fieldCount += keyCount * 2;
 
         visitString(enumeratorData[0]); // name
-        if (intsPerEnumerator == 5)
-            visitString(enumeratorData[1]); // enum name
+        visitString(enumeratorData[1]); // enum name
 
-        const uint keyOffset = enumeratorData[intsPerEnumerator == 5 ? 4 : 3];
+        const uint keyOffset = enumeratorData[4];
 
         for (uint j = 0; j < keyCount; ++j) {
             visitString(mo.d.data[keyOffset + 2 * j]);

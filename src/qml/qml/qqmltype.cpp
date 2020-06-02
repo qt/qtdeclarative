@@ -189,20 +189,7 @@ QQmlPropertyCache *QQmlTypePrivate::compositePropertyCache(QQmlEnginePrivate *en
 
 static bool isPropertyRevisioned(const QMetaObject *mo, int index)
 {
-    int i = index;
-    i -= mo->propertyOffset();
-    if (i < 0 && mo->d.superdata)
-        return isPropertyRevisioned(mo->d.superdata, index);
-
-    const QMetaObjectPrivate *mop = reinterpret_cast<const QMetaObjectPrivate*>(mo->d.data);
-    if (i >= 0 && i < mop->propertyCount) {
-        int handle = mop->propertyData + 3*i;
-        int flags = mo->d.data[handle + 2];
-
-        return (flags & Revisioned);
-    }
-
-    return false;
+    return mo->property(index).revision();
 }
 
 void QQmlTypePrivate::init() const
