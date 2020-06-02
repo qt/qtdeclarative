@@ -51,11 +51,6 @@ Rectangle {
         sei.source = doomed;
         doomed.destroy();
         // now set a fragment shader to trigger source texture detection.
-        sei.fragmentShader = "varying highp vec2 qt_TexCoord0;\
-                              uniform sampler2D source;\
-                              uniform lowp float qt_Opacity;\
-                              void main() {\
-                                  gl_FragColor = texture2D(source, qt_TexCoord0) * qt_Opacity;\
-                              }";
+        sei.fragmentShader = "qrc:/data/test.frag";
     }
 }

@@ -16,6 +16,7 @@ qtConfig(opengl(es1|es2)?) {
         qquickspritesequence
         qtHaveModule(opengl): QUICKTESTS += qquickrendercontrol
 
+    QUICKTESTS += qquickshadereffect
 # qquickshadereffect test is disabled for now, re-enable when ported to Qt 6
 }
 

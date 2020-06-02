@@ -76,11 +76,6 @@ Item {
 
         property Image source: visible ? image : null
 
-        fragmentShader: "
-            varying highp vec2 qt_TexCoord0;
-            uniform sampler2D source;
-            void main() {
-                gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-            }"
+        fragmentShader: "qrc:/data/red.frag"
     }
 }

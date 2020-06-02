@@ -6,3 +6,6 @@ include (../../shared/util.pri)
 macx:CONFIG -= app_bundle
 
 QT += core-private gui-private qml-private quick-private testlib
+
+RESOURCES += \
+    resources.qrc
