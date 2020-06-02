@@ -150,8 +150,8 @@ void QSGRhiSupport::applySettings()
         }
     } else {
 
-        // New Qt 6 default: enable RHI, unless QSG_NO_RHI is set
-        m_enableRhi = !qEnvironmentVariableIsSet("QSG_NO_RHI");
+        // There is no other way in Qt 6. The direct OpenGL rendering path of Qt 5 has been removed.
+        m_enableRhi = true;
 
         // check env.vars., fall back to platform-specific defaults when backend is not set
         const QByteArray rhiBackend = qgetenv("QSG_RHI_BACKEND");
@@ -189,8 +189,7 @@ void QSGRhiSupport::applySettings()
         }
     }
 
-    if (!m_enableRhi)
-        return;
+    Q_ASSERT(m_enableRhi); // cannot be anything else in Qt 6
 
     // At this point the RHI backend is fixed, it cannot be changed once we
     // return from this function. This is because things like the QWindow
