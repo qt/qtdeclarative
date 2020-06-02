@@ -681,9 +681,9 @@ public:
 };
 
 
-bool QQmlMetaType::registerPluginTypes(QObject *instance, const QString &basePath,
-                                       const QString &uri, const QString &typeNamespace,
-                                       QTypeRevision version, QList<QQmlError> *errors)
+QQmlMetaType::RegistrationResult QQmlMetaType::registerPluginTypes(
+        QObject *instance, const QString &basePath, const QString &uri,
+        const QString &typeNamespace, QTypeRevision version, QList<QQmlError> *errors)
 {
     if (!typeNamespace.isEmpty() && typeNamespace != uri) {
         // This is an 'identified' module
@@ -695,7 +695,7 @@ bool QQmlMetaType::registerPluginTypes(QObject *instance, const QString &basePat
                             .arg(typeNamespace).arg(uri));
             errors->prepend(error);
         }
-        return false;
+        return RegistrationResult::Failure;
     }
 
     QStringList failures;
@@ -713,7 +713,7 @@ bool QQmlMetaType::registerPluginTypes(QObject *instance, const QString &basePat
                                                  .arg(typeNamespace));
                     errors->prepend(error);
                 }
-                return false;
+                return RegistrationResult::Failure;
             }
         } else {
             // This is not an identified module - provide a warning
@@ -722,7 +722,7 @@ bool QQmlMetaType::registerPluginTypes(QObject *instance, const QString &basePat
                                    "it cannot be protected from external registrations.").arg(uri));
         }
 
-        if (!qobject_cast<QQmlEngineExtensionInterface *>(instance)) {
+        if (instance && !qobject_cast<QQmlEngineExtensionInterface *>(instance)) {
             QQmlTypesExtensionInterface *iface = qobject_cast<QQmlTypesExtensionInterface *>(instance);
             if (!iface) {
                 if (errors) {
@@ -732,7 +732,7 @@ bool QQmlMetaType::registerPluginTypes(QObject *instance, const QString &basePat
                                                         "QQmlEngineExtensionInterface").arg(typeNamespace));
                     errors->prepend(error);
                 }
-                return false;
+                return RegistrationResult::Failure;
             }
 
             if (auto *plugin = qobject_cast<QQmlExtensionPlugin *>(instance)) {
@@ -746,7 +746,8 @@ bool QQmlMetaType::registerPluginTypes(QObject *instance, const QString &basePat
             iface->registerTypes(moduleId);
         }
 
-        data->registerModuleTypes(uri);
+        if (failures.isEmpty() && !data->registerModuleTypes(uri))
+            return RegistrationResult::NoRegistrationFunction;
 
         if (!failures.isEmpty()) {
             if (errors) {
@@ -756,11 +757,11 @@ bool QQmlMetaType::registerPluginTypes(QObject *instance, const QString &basePat
                     errors->prepend(error);
                 }
             }
-            return false;
+            return RegistrationResult::Failure;
         }
     }
 
-    return true;
+    return RegistrationResult::Success;
 }
 
 /*

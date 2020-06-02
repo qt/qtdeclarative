@@ -138,7 +138,7 @@ bool isPathAbsolute(const QString &path)
 
 struct RegisteredPlugin {
     QString uri;
-    QPluginLoader* loader;
+    QPluginLoader *loader = nullptr;
 };
 
 struct StringRegisteredPluginMap : public QMap<QString, RegisteredPlugin> {
@@ -1229,30 +1229,36 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
         int dynamicPluginsFound = 0;
         int staticPluginsFound = 0;
 
-#if QT_CONFIG(library)
+        auto handleErrors = [&]() {
+            if (errors) {
+                // XXX TODO: should we leave the import plugin error alone?
+                // Here, we pop it off the top and coalesce it into this error's message.
+                // The reason is that the lower level may add url and line/column numbering information.
+                QQmlError error;
+                error.setDescription(
+                        QQmlImportDatabase::tr(
+                                "plugin cannot be loaded for module \"%1\": %2")
+                                .arg(uri, errors->takeFirst().description()));
+                error.setUrl(QUrl::fromLocalFile(qmldirFilePath));
+                errors->prepend(error);
+            }
+        };
+
         const auto qmldirPlugins = qmldir.plugins();
         for (const QQmlDirParser::Plugin &plugin : qmldirPlugins) {
-            QString resolvedFilePath = database->resolvePlugin(typeLoader, qmldirPath, plugin.path, plugin.name);
-            if (!resolvedFilePath.isEmpty()) {
-                dynamicPluginsFound++;
-                if (!database->importDynamicPlugin(resolvedFilePath, uri, typeNamespace, version, errors)) {
-                    if (errors) {
-                        // XXX TODO: should we leave the import plugin error alone?
-                        // Here, we pop it off the top and coalesce it into this error's message.
-                        // The reason is that the lower level may add url and line/column numbering information.
-                        QQmlError error;
-                        error.setDescription(
-                                QQmlImportDatabase::tr(
-                                        "plugin cannot be loaded for module \"%1\": %2")
-                                        .arg(uri, errors->takeFirst().description()));
-                        error.setUrl(QUrl::fromLocalFile(qmldirFilePath));
-                        errors->prepend(error);
-                    }
-                    return false;
-                }
+            const QString resolvedFilePath = database->resolvePlugin(
+                        typeLoader, qmldirPath, plugin.path, plugin.name);
+
+            if (resolvedFilePath.isEmpty())
+                continue;
+
+            ++dynamicPluginsFound;
+            if (!database->importDynamicPlugin(
+                        resolvedFilePath, uri, typeNamespace, version, plugin.optional, errors)) {
+                handleErrors();
+                return false;
             }
         }
-#endif // QT_CONFIG(library)
 
         if (dynamicPluginsFound < qmldirPluginCount) {
             // Check if the missing plugins can be resolved statically. We do this by looking at
@@ -2178,16 +2184,9 @@ void QQmlImportDatabase::setImportPathList(const QStringList &paths)
 /*!
     \internal
 */
-static bool registerPluginTypes(QObject *instance, const QString &basePath, const QString &uri,
-                                const QString &typeNamespace, QTypeRevision version,
-                                QList<QQmlError> *errors)
+static bool lockModule(const QString &uri, const QString &typeNamespace, QTypeRevision version,
+                       QList<QQmlError> *errors)
 {
-    if (qmlImportTrace())
-        qDebug().nospace() << "QQmlImportDatabase::registerPluginTypes: " << uri << " from " << basePath;
-
-    if (!QQmlMetaType::registerPluginTypes(instance, basePath, uri, typeNamespace, version, errors))
-        return false;
-
     if (version.hasMajorVersion() && !typeNamespace.isEmpty()
             && !QQmlMetaType::protectModule(uri, version)) {
         QQmlError error;
@@ -2229,8 +2228,12 @@ bool QQmlImportDatabase::importStaticPlugin(
             plugin.loader = nullptr;
             plugins->insert(uniquePluginID, plugin);
 
-            if (!registerPluginTypes(instance, basePath, uri, typeNamespace, version, errors))
+            if (QQmlMetaType::registerPluginTypes(
+                        instance, basePath, uri, typeNamespace, version, errors)
+                    == QQmlMetaType::RegistrationResult::Failure
+                    || !lockModule(uri, typeNamespace, version, errors)) {
                 return false;
+            }
         }
 
         // Release the lock on plugins early as we're done with the global part. Releasing the lock
@@ -2245,13 +2248,12 @@ bool QQmlImportDatabase::importStaticPlugin(
     return true;
 }
 
-#if QT_CONFIG(library)
 /*!
     \internal
 */
 bool QQmlImportDatabase::importDynamicPlugin(
         const QString &filePath, const QString &uri, const QString &typeNamespace,
-        QTypeRevision version, QList<QQmlError> *errors)
+        QTypeRevision version, bool isOptional, QList<QQmlError> *errors)
 {
     QFileInfo fileInfo(filePath);
     const QString absoluteFilePath = fileInfo.absoluteFilePath();
@@ -2279,35 +2281,56 @@ bool QQmlImportDatabase::importDynamicPlugin(
                 return false;
             }
 
-            QPluginLoader* loader = nullptr;
-            if (!typesRegistered) {
-                loader = new QPluginLoader(absoluteFilePath);
+            RegisteredPlugin plugin;
+            plugin.uri = uri;
 
-                if (!loader->load()) {
-                    if (errors) {
-                        QQmlError error;
-                        error.setDescription(loader->errorString());
-                        errors->prepend(error);
-                    }
-                    delete loader;
+            const QString absolutePath = fileInfo.absolutePath();
+            if (!typesRegistered && isOptional) {
+                switch (QQmlMetaType::registerPluginTypes(nullptr, absolutePath, uri, typeNamespace,
+                                                          version, errors)) {
+                case QQmlMetaType::RegistrationResult::NoRegistrationFunction:
+                    // try again with plugin
+                    break;
+                case QQmlMetaType::RegistrationResult::Success:
+                    if (!lockModule(uri, typeNamespace, version, errors))
+                        return false;
+                    // instance and loader intentionally left at nullptr
+                    plugins->insert(absoluteFilePath, plugin);
+                    typesRegistered = true;
+                    break;
+                case QQmlMetaType::RegistrationResult::Failure:
                     return false;
                 }
-            } else {
-                loader = plugins->value(absoluteFilePath).loader;
             }
 
-            instance = loader->instance();
-
+#if QT_CONFIG(library)
             if (!typesRegistered) {
-                RegisteredPlugin plugin;
-                plugin.uri = uri;
-                plugin.loader = loader;
+                plugin.loader = new QPluginLoader(absoluteFilePath);
+                if (!plugin.loader->load()) {
+                    if (errors) {
+                        QQmlError error;
+                        error.setDescription(plugin.loader->errorString());
+                        errors->prepend(error);
+                    }
+                    delete plugin.loader;
+                    return false;
+                }
+
+                instance = plugin.loader->instance();
                 plugins->insert(absoluteFilePath, plugin);
 
                 // Continue with shared code path for dynamic and static plugins:
-                if (!registerPluginTypes(instance, fileInfo.absolutePath(), uri, typeNamespace, version, errors))
+                if (QQmlMetaType::registerPluginTypes(
+                            instance, fileInfo.absolutePath(), uri, typeNamespace, version, errors)
+                        == QQmlMetaType::RegistrationResult::Failure
+                        || !lockModule(uri, typeNamespace, version, errors)) {
                     return false;
+                }
+            } else {
+                if (QPluginLoader *loader = plugins->value(absoluteFilePath).loader)
+                    instance = loader->instance();
             }
+#endif // QT_CONFIG(library)
         }
 
     // Release the lock on plugins early as we're done with the global part. Releasing the lock
@@ -2335,10 +2358,12 @@ bool QQmlImportDatabase::removeDynamicPlugin(const QString &filePath)
     if (!loader)
         return false;
 
+#if QT_CONFIG(library)
     if (!loader->unload()) {
         qWarning("Unloading %s failed: %s", qPrintable(it->uri),
                  qPrintable(loader->errorString()));
     }
+#endif
 
     delete loader;
     plugins->erase(it);
@@ -2356,7 +2381,6 @@ QStringList QQmlImportDatabase::dynamicPlugins() const
     }
     return results;
 }
-#endif // QT_CONFIG(library)
 
 void QQmlImportDatabase::clearDirCache()
 {

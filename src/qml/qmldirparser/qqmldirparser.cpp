@@ -178,13 +178,30 @@ bool QQmlDirParser::parse(const QString &source)
         } else if (sections[0] == QLatin1String("plugin")) {
             if (sectionCount < 2 || sectionCount > 3) {
                 reportError(lineNumber, 0,
-                            QStringLiteral("plugin directive requires one or two arguments, but %1 were provided").arg(sectionCount - 1));
+                            QStringLiteral("plugin directive requires one or two arguments, but %1 were provided")
+                            .arg(sectionCount - 1));
 
                 continue;
             }
 
-            const Plugin entry(sections[1], sections[2]);
+            const Plugin entry(sections[1], sections[2], false);
 
+            _plugins.append(entry);
+
+        } else if (sections[0] == QLatin1String("optional")) {
+            if (sectionCount < 2 || sections[1] != QLatin1String("plugin")) {
+                reportError(lineNumber, 0, QStringLiteral("only plugins can be optional"));
+                continue;
+            }
+
+            if (sectionCount < 3 || sectionCount > 4) {
+                reportError(lineNumber, 0,
+                            QStringLiteral("plugin directive requires one or two arguments, but %1 were provided")
+                            .arg(sectionCount - 2));
+                continue;
+            }
+
+            const Plugin entry(sections[2], sections[3], true);
             _plugins.append(entry);
 
         } else if (sections[0] == QLatin1String("classname")) {

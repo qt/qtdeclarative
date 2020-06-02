@@ -88,14 +88,15 @@ public:
     {
         Plugin() = default;
 
-        Plugin(const QString &name, const QString &path)
-            : name(name), path(path)
+        Plugin(const QString &name, const QString &path, bool optional)
+            : name(name), path(path), optional(optional)
         {
             checkNonRelative("Plugin", name, path);
         }
 
         QString name;
         QString path;
+        bool optional = false;
     };
 
     struct Component

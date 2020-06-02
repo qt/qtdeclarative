@@ -39,6 +39,8 @@
 #include <QCborValue>
 #endif
 
+#include <QtQuickShapes/private/qquickshapesglobal_p.h>
+
 #if defined(Q_OS_MAC)
 // For _PC_CASE_SENSITIVE
 #include <unistd.h>
@@ -83,6 +85,7 @@ private slots:
     void importsChildPlugin21();
     void parallelPluginImport();
     void multiSingleton();
+    void optionalPlugin();
 
 private:
     QString m_importsDirectory;
@@ -803,6 +806,20 @@ void tst_qqmlmoduleplugin::multiSingleton()
     QVERIFY(object != nullptr);
     QCOMPARE(obj.objectName(), QLatin1String("first"));
     delete object;
+}
+
+void tst_qqmlmoduleplugin::optionalPlugin()
+{
+    // Force QtQuickShapes to be linked.
+    volatile auto registration = &qml_register_types_QtQuick_Shapes;
+    Q_UNUSED(registration);
+
+    QQmlEngine engine;
+    engine.setImportPathList({m_importsDirectory});
+    QQmlComponent component(&engine);
+    component.setData("import QtQuick.Shapes\nShapePath {}\n", QUrl());
+    QScopedPointer<QObject> object10(component.create());
+    QVERIFY(!object10.isNull());
 }
 
 

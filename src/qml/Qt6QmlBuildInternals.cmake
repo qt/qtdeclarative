@@ -17,6 +17,7 @@ include_guard(GLOBAL)
 #  VERSION: Version of the qml module
 #  SKIP_TYPE_REGISTRATION: All qml files are expected to be registered by the
 #  c++ plugin code.
+#  PLUGIN_OPTIONAL: Any plugins are optional
 #
 function(qt_add_qml_module target)
 
@@ -25,6 +26,7 @@ function(qt_add_qml_module target)
         DESIGNER_SUPPORTED
         DO_NOT_INSTALL
         SKIP_TYPE_REGISTRATION
+        PLUGIN_OPTIONAL
     )
 
     set(qml_module_single_args
@@ -103,6 +105,10 @@ function(qt_add_qml_module target)
         set(skip_registration_arg SKIP_TYPE_REGISTRATION)
     endif()
 
+    if (arg_PLUGIN_OPTIONAL)
+        set(plugin_optional_arg PLUGIN_OPTIONAL)
+    endif()
+
     if (arg_GENERATE_QMLTYPES)
         set(generate_qmltypes_arg GENERATE_QMLTYPES)
     endif()
@@ -113,6 +119,7 @@ function(qt_add_qml_module target)
         ${designer_supported_arg}
         ${no_create_option}
         ${skip_registration_arg}
+        ${plugin_optional_arg}
         ${classname_arg}
         ${generate_qmltypes_arg}
         RESOURCE_PREFIX "/qt-project.org/imports"

@@ -226,13 +226,11 @@ public:
     QQmlImportDatabase(QQmlEngine *);
     ~QQmlImportDatabase();
 
-#if QT_CONFIG(library)
     bool importDynamicPlugin(const QString &filePath, const QString &uri,
                              const QString &importNamespace, QTypeRevision version,
-                             QList<QQmlError> *errors);
+                             bool isOptional, QList<QQmlError> *errors);
     bool removeDynamicPlugin(const QString &filePath);
     QStringList dynamicPlugins() const;
-#endif
 
     QStringList importPathList(PathType type = LocalOrRemote) const;
     void setImportPathList(const QStringList &paths);

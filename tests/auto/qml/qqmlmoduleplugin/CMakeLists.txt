@@ -30,6 +30,7 @@ qt_add_test(tst_qqmlmoduleplugin
         Qt::GuiPrivate
         Qt::Network
         Qt::QmlPrivate
+        Qt::QuickShapesPrivate
     TESTDATA ${test_data}
 )
 
@@ -107,3 +108,4 @@ add_subdirectory(plugin.2/childplugin)
 add_subdirectory(plugin.2.1/childplugin)
 add_subdirectory(plugin.2.2)
 add_subdirectory(moduleWithQmlSingleton)
+add_subdirectory(optionalPlugin)

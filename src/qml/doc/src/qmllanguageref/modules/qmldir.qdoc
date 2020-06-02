@@ -163,11 +163,16 @@ MyScript 1.0 MyScript.js
     \row
         \li
             \code
-plugin <Name> [<Path>]
+[optional] plugin <Name> [<Path>]
             \endcode
         \li Declares a plugin to be made available by the module.
 
             \list
+            \li \c optional denotes that the plugin itself does not contain
+                any relevant code and only serves to load a library it links
+                to. If given, and if any types for the module are already
+                available, indicating that the library has been loaded by some
+                other means, QML will not load the plugin.
             \li \c <Name> is the plugin library name. This is usually not the
                 same as the file name of the plugin binary, which is platform
                 dependent; e.g. the library \c MyAppTypes would produce

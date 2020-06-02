@@ -68,6 +68,10 @@
 #   to not list any qml types. These are expected to be registered by the
 #   c++ plugin code instead.
 #
+# PLUGIN_OPTIONAL: The plugin is marked as optional in the qmldir file. If the
+#   type registration functions are already available by other means, typically
+#   by linking a library proxied by the plugin, it won't be loaded.
+#
 
 function(qt6_add_qml_module target)
 
@@ -76,6 +80,7 @@ function(qt6_add_qml_module target)
         DESIGNER_SUPPORTED
         DO_NOT_INSTALL_METADATA
         SKIP_TYPE_REGISTRATION
+        PLUGIN_OPTIONAL
         INSTALL_QML_FILES
     )
 
@@ -224,7 +229,13 @@ function(qt6_add_qml_module target)
     set(qmldir_file "${CMAKE_CURRENT_BINARY_DIR}/qmldir")
     set_target_properties(${target} PROPERTIES QT_QML_MODULE_QMLDIR_FILE ${qmldir_file})
     set(qmldir_file_contents "module ${arg_URI}\n")
-    string(APPEND qmldir_file_contents "plugin ${target}\n")
+
+    if (arg_PLUGIN_OPTIONAL)
+        string(APPEND qmldir_file_contents "optional plugin ${target}\n")
+    else()
+        string(APPEND qmldir_file_contents "plugin ${target}\n")
+    endif()
+
     if (arg_CLASSNAME)
         string(APPEND qmldir_file_contents "classname ${arg_CLASSNAME}\n")
     endif()

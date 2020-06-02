@@ -351,6 +351,10 @@ public:
             if (line.isEmpty())
                 continue;
             QList<QByteArray> segments = line.split(' ');
+            if (segments.startsWith("optional")) {
+                result.append("optional ");
+                segments.removeFirst();
+            }
             if (segments.startsWith("plugin")) {
                 if (segments.length() == 2) {
                     segments.append(path);

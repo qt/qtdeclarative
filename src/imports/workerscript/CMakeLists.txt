@@ -9,7 +9,7 @@ qt_add_qml_module(workerscriptplugin
     VERSION "${CMAKE_PROJECT_VERSION}"
     DESIGNER_SUPPORTED
     CLASSNAME QtQmlWorkerScriptPlugin
-    SKIP_TYPE_REGISTRATION
+    PLUGIN_OPTIONAL # special case
     SOURCES
         plugin.cpp
     PUBLIC_LIBRARIES

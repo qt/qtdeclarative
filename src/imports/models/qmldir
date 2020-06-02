@@ -1,4 +1,4 @@
 module QtQml.Models
-plugin modelsplugin
+optional plugin modelsplugin
 classname QtQmlModelsPlugin
 designersupported

@@ -73,14 +73,20 @@ struct CompositeMetaTypeIds
 class Q_QML_PRIVATE_EXPORT QQmlMetaType
 {
 public:
+    enum class RegistrationResult {
+        Success,
+        Failure,
+        NoRegistrationFunction
+    };
+
     static QQmlType registerType(const QQmlPrivate::RegisterType &type);
     static QQmlType registerInterface(const QQmlPrivate::RegisterInterface &type);
     static QQmlType registerSingletonType(const QQmlPrivate::RegisterSingletonType &type);
     static QQmlType registerCompositeSingletonType(const QQmlPrivate::RegisterCompositeSingletonType &type);
     static QQmlType registerCompositeType(const QQmlPrivate::RegisterCompositeType &type);
-    static bool registerPluginTypes(QObject *instance, const QString &basePath,
-                                    const QString &uri, const QString &typeNamespace,
-                                    QTypeRevision version, QList<QQmlError> *errors);
+    static RegistrationResult registerPluginTypes(QObject *instance, const QString &basePath,
+                                                  const QString &uri, const QString &typeNamespace,
+                                                  QTypeRevision version, QList<QQmlError> *errors);
     static QQmlType typeForUrl(const QString &urlString, const QHashedStringRef& typeName,
                                bool isCompositeSingleton, QList<QQmlError> *errors,
                                QTypeRevision version = QTypeRevision());

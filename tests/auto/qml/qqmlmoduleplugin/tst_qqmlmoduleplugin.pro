@@ -18,4 +18,4 @@ staticPlugin.files = moduleWithStaticPlugin
 staticPlugin.prefix = /qt-project.org/imports/
 RESOURCES += staticPlugin
 
-QT += core-private gui-private qml-private network testlib
+QT += core-private gui-private qml-private network testlib quickshapes-private
