@@ -77,7 +77,7 @@ ControlContainer {
                 wrapMode: TextEdit.WordWrap
             }
 
-            ScrollBar.vertical: ScrollBar { }
+            ScrollBar.vertical: ScrollBar { policy: ScrollBar.AlwaysOn }
         }
     }
 
