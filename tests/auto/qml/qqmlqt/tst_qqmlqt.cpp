@@ -50,9 +50,6 @@
 #ifdef Q_OS_WIN
 # include <qt_windows.h>
 # include <time.h>
-#  if defined(Q_OS_WINRT)
-#    define tzset()
-#  endif
 #endif
 
 class tst_qqmlqt : public QQmlDataTest

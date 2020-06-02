@@ -157,7 +157,7 @@ unix: SOURCES += $$PWD/qv4compilationunitmapper_unix.cpp
 else: SOURCES += $$PWD/qv4compilationunitmapper_win.cpp
 
 win32 {
-    !winrt:equals(QT_ARCH, x86_64) {
+    equals(QT_ARCH, x86_64) {
         SOURCES += \
             $$PWD/qv4functiontable_win64.cpp
     } else {

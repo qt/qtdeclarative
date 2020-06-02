@@ -672,9 +672,6 @@ QRectF QQmlVMEMetaObject::readPropertyAsRectF(int id) const
     return v->d()->data().value<QRectF>();
 }
 
-#if defined(Q_OS_WINRT) && defined(_M_ARM)
-#pragma optimize("", off)
-#endif
 int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void **a)
 {
     Q_ASSERT(o == object);
@@ -1049,9 +1046,6 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
     else
         return object->qt_metacall(c, _id, a);
 }
-#if defined(Q_OS_WINRT) && defined(_M_ARM)
-#pragma optimize("", on)
-#endif
 
 QV4::ReturnedValue QQmlVMEMetaObject::method(int index) const
 {

@@ -66,7 +66,6 @@ private slots:
     void refresh();
     void cdUp();
 #ifdef Q_OS_WIN32
-    // WinCE/WinRT do not have drive APIs, so let's execute this test only on desktop Windows.
     void changeDrive();
 #endif
     void showDotAndDotDot();

@@ -91,9 +91,7 @@
 
 #ifdef Q_OS_WIN // for %APPDATA%
 #  include <qt_windows.h>
-#  ifndef Q_OS_WINRT
-#    include <shlobj.h>
-#  endif
+#  include <shlobj.h>
 #  include <qlibrary.h>
 #  ifndef CSIDL_APPDATA
 #    define CSIDL_APPDATA           0x001a  // <username>\Application Data
@@ -390,7 +388,6 @@ The following functions are also on the Qt object.
         \li \c "qnx" - QNX (since Qt 5.9.3)
         \li \c "unix" - Other Unix-based OS
         \li \c "windows" - Windows
-        \li \c "winrt" - WinRT / UWP
         \li \c "wasm" - WebAssembly
     \endlist
 
@@ -2506,7 +2503,7 @@ bool QQmlEnginePrivate::isScriptLoaded(const QUrl &url) const
     return typeLoader.isScriptLoaded(url);
 }
 
-#if defined(Q_OS_WIN) && !defined(Q_OS_WINRT)
+#if defined(Q_OS_WIN)
 // Normalize a file name using Shell API. As opposed to converting it
 // to a short 8.3 name and back, this also works for drives where 8.3 notation
 // is disabled (see 8dot3name options of fsutil.exe).
@@ -2538,7 +2535,7 @@ static inline QString shellNormalizeFileName(const QString &name)
         canonicalName[0] = canonicalName.at(0).toUpper();
     return QDir::cleanPath(canonicalName);
 }
-#endif // Q_OS_WIN && !Q_OS_WINRT
+#endif // Q_OS_WIN
 
 bool QQml_isFileCaseCorrect(const QString &fileName, int lengthIn /* = -1 */)
 {
@@ -2546,7 +2543,7 @@ bool QQml_isFileCaseCorrect(const QString &fileName, int lengthIn /* = -1 */)
     QFileInfo info(fileName);
     const QString absolute = info.absoluteFilePath();
 
-#if defined(Q_OS_DARWIN) || defined(Q_OS_WINRT)
+#if defined(Q_OS_DARWIN)
     const QString canonical = info.canonicalFilePath();
 #elif defined(Q_OS_WIN)
     // No difference if the path is qrc based

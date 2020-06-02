@@ -317,7 +317,7 @@ qt_extend_target(Quick CONDITION MSVC
 #### Keys ignored in scope 5:.:.:quick.pro:solaris-cc_x_:
 # QMAKE_CXXFLAGS_RELEASE = "--O2"
 
-qt_extend_target(Quick CONDITION WIN32 AND NOT WINRT
+qt_extend_target(Quick CONDITION WIN32
     PUBLIC_LIBRARIES
         user32
 )

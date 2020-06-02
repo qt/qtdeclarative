@@ -363,9 +363,12 @@ qt_extend_target(Qml CONDITION MSVC
         _CRT_SECURE_NO_WARNINGS
 )
 
-qt_extend_target(Qml CONDITION WIN32 AND NOT WINRT
+qt_extend_target(Qml CONDITION WIN32
     SOURCES
         ../3rdparty/masm/wtf/OSAllocatorWin.cpp
+        jsruntime/qv4compilationunitmapper_win.cpp
+    DEFINES
+        NOMINMAX
     PUBLIC_LIBRARIES
         shell32
 )
@@ -471,19 +474,12 @@ qt_extend_target(Qml CONDITION UNIX
         jsruntime/qv4functiontable_unix.cpp
 )
 
-qt_extend_target(Qml CONDITION WIN32
-    SOURCES
-        jsruntime/qv4compilationunitmapper_win.cpp
-    DEFINES
-        NOMINMAX
-)
-
-qt_extend_target(Qml CONDITION (TEST_architecture_arch STREQUAL "x86_64") AND WIN32 AND NOT WINRT
+qt_extend_target(Qml CONDITION (TEST_architecture_arch STREQUAL "x86_64") AND WIN32
     SOURCES
         jsruntime/qv4functiontable_win64.cpp
 )
 
-qt_extend_target(Qml CONDITION WIN32 AND (WINRT OR NOT (TEST_architecture_arch STREQUAL "x86_64"))
+qt_extend_target(Qml CONDITION WIN32 AND NOT (TEST_architecture_arch STREQUAL "x86_64")
     SOURCES
         jsruntime/qv4functiontable_noop.cpp
 )
@@ -561,17 +557,12 @@ qt_extend_target(Qml CONDITION GCC AND QT_COMPILER_VERSION_MAJOR STRGREATER 6 AN
 #### Keys ignored in scope 66:.:../3rdparty/masm:../3rdparty/masm/masm-defs.pri:(QT_COMPILER_VERSION_MAJOR STRGREATER 6):
 # QMAKE_CXXFLAGS_WARN_ON = "-Wno-expansion-to-defined"
 
-qt_extend_target(Qml CONDITION WINRT
-    SOURCES
-        ../3rdparty/masm/wtf/OSAllocatorWinRT.cpp
-)
-
 qt_extend_target(Qml CONDITION INTEGRITY
     SOURCES
         ../3rdparty/masm/wtf/OSAllocatorIntegrity.cpp
 )
 
-qt_extend_target(Qml CONDITION UNIX AND NOT INTEGRITY AND NOT WINRT
+qt_extend_target(Qml CONDITION UNIX AND NOT INTEGRITY
     SOURCES
         ../3rdparty/masm/wtf/OSAllocatorPosix.cpp
 )
@@ -587,7 +578,7 @@ qt_extend_target(Qml CONDITION DEFINES___contains___WTF_USE_UDIS86=1
         ../3rdparty/masm/disassembler/udis86/udis86_syn-intel.c
 )
 
-#### Keys ignored in scope 74:.:../3rdparty/masm:../3rdparty/masm/masm.pri:DEFINES___contains___WTF_USE_UDIS86=1:
+#### Keys ignored in scope 72:.:../3rdparty/masm:../3rdparty/masm/masm.pri:DEFINES___contains___WTF_USE_UDIS86=1:
 # ITAB = "$$PWD/disassembler/udis86/optable.xml"
 # QMAKE_EXTRA_COMPILERS = "udis86"
 # QMAKE_EXTRA_TARGETS = "udis86_tab_cfile"
@@ -598,10 +589,10 @@ qt_extend_target(Qml CONDITION DEFINES___contains___WTF_USE_UDIS86=1
 # udis86_tab_cfile.depends = "udis86_itab.h"
 # udis86_tab_cfile.target = "$$OUT_PWD/udis86_itab.c"
 
-#### Keys ignored in scope 76:.:../3rdparty/masm:../3rdparty/masm/masm.pri:(CMAKE_BUILD_TYPE STREQUAL Debug):
+#### Keys ignored in scope 74:.:../3rdparty/masm:../3rdparty/masm/masm.pri:(CMAKE_BUILD_TYPE STREQUAL Debug):
 # GENERATEDDIR = "$$GENERATEDDIR/debug"
 
-#### Keys ignored in scope 77:.:../3rdparty/masm:../3rdparty/masm/masm.pri:else:
+#### Keys ignored in scope 75:.:../3rdparty/masm:../3rdparty/masm/masm.pri:else:
 # GENERATEDDIR = "$$GENERATEDDIR/release"
 
 qt_extend_target(Qml CONDITION (NOT c++11 AND NOT ICC) AND (CLANG)

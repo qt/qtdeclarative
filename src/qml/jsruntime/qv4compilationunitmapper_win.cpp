@@ -56,16 +56,10 @@ CompiledData::Unit *CompilationUnitMapper::open(const QString &cacheFileName, co
     // ### TODO: fix up file encoding/normalization/unc handling once QFileSystemEntry
     // is exported from QtCore.
     HANDLE handle =
-#if defined(Q_OS_WINRT)
-        CreateFile2(reinterpret_cast<const wchar_t*>(cacheFileName.constData()),
-                   GENERIC_READ | GENERIC_EXECUTE, FILE_SHARE_READ,
-                   OPEN_EXISTING, nullptr);
-#else
         CreateFile(reinterpret_cast<const wchar_t*>(cacheFileName.constData()),
                    GENERIC_READ | GENERIC_EXECUTE, FILE_SHARE_READ,
                    nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
                    nullptr);
-#endif
     if (handle == INVALID_HANDLE_VALUE) {
         *errorString = qt_error_string(GetLastError());
         return nullptr;

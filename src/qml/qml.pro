@@ -14,7 +14,7 @@ DEFINES   += QT_NO_URL_CAST_FROM_STRING QT_NO_INTEGER_EVENT_COORDINATES
 
 msvc:equals(QT_ARCH, i386): QMAKE_LFLAGS += /BASE:0x66000000
 msvc:DEFINES *= _CRT_SECURE_NO_WARNINGS
-win32:!winrt:LIBS += -lshell32
+win32:LIBS += -lshell32
 solaris-cc*:QMAKE_CXXFLAGS_RELEASE -= -O2
 
 # Ensure this gcc optimization is switched off for mips platforms to avoid trouble with JIT.
