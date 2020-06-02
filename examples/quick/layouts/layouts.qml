@@ -58,8 +58,12 @@ ApplicationWindow {
     visible: true
     title: "Basic layouts"
     property int margin: 11
-    width: mainLayout.implicitWidth + 2 * margin
-    height: mainLayout.implicitHeight + 2 * margin
+
+    Component.onCompleted: {
+        width = mainLayout.implicitWidth + 2 * margin
+        height = mainLayout.implicitHeight + 2 * margin
+    }
+
     minimumWidth: mainLayout.Layout.minimumWidth + 2 * margin
     minimumHeight: mainLayout.Layout.minimumHeight + 2 * margin
 
@@ -71,6 +75,7 @@ ApplicationWindow {
             id: rowBox
             title: "Row layout"
             Layout.fillWidth: true
+            Layout.minimumWidth: rowLayout.Layout.minimumWidth + 30
 
             RowLayout {
                 id: rowLayout
@@ -89,6 +94,7 @@ ApplicationWindow {
             id: gridBox
             title: "Grid layout"
             Layout.fillWidth: true
+            Layout.minimumWidth: gridLayout.Layout.minimumWidth + 30
 
             GridLayout {
                 id: gridLayout
@@ -107,9 +113,12 @@ ApplicationWindow {
                 TextArea {
                     text: "This widget spans over three rows in the GridLayout.\n"
                         + "All items in the GridLayout are implicitly positioned from top to bottom."
+                    wrapMode: TextArea.WordWrap
                     Layout.rowSpan: 3
                     Layout.fillHeight: true
                     Layout.fillWidth: true
+                    Layout.minimumHeight: implicitHeight
+                    Layout.minimumWidth: 100     // guesstimate, should be size of largest word
                 }
             }
         }
@@ -125,6 +134,7 @@ ApplicationWindow {
             title: "Stack layout"
             implicitWidth: 200
             implicitHeight: 60
+            Layout.minimumHeight: 60
             Layout.fillWidth: true
             Layout.fillHeight: true
             StackLayout {
