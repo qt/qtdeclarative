@@ -355,16 +355,14 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
         terminal = path.last();
     }
 
-    if (terminal.count() >= 3 &&
-        terminal.at(0) == QLatin1Char('o') &&
-        terminal.at(1) == QLatin1Char('n') &&
-        (terminal.at(2).isUpper() || terminal.at(2) == '_')) {
+    if (terminal.count() >= 3 && terminal.at(0) == u'o' && terminal.at(1) == u'n'
+            && (terminal.at(2).isUpper() || terminal.at(2) == u'_')) {
 
         QString signalName = terminal.mid(2).toString();
         int firstNon_;
         int length = signalName.length();
         for (firstNon_ = 0; firstNon_ < length; ++firstNon_)
-            if (signalName.at(firstNon_) != '_')
+            if (signalName.at(firstNon_) != u'_')
                 break;
         signalName[firstNon_] = signalName.at(firstNon_).toLower();
 

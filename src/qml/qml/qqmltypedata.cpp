@@ -351,7 +351,7 @@ void QQmlTypeData::done()
             auto objectId = containingType.lookupInlineComponentIdByName(type.type.pendingResolutionName());
             if (objectId < 0) { // can be any negative number if we tentatively resolved it in QQmlImport but it actually was not an inline component
                 const QString typeName = stringAt(it.key());
-                int lastDot = typeName.lastIndexOf('.');
+                int lastDot = typeName.lastIndexOf(u'.');
 
                 QList<QQmlError> errors = type.typeData ? type.typeData->errors() : QList<QQmlError>{};
                 QQmlError error;
@@ -505,7 +505,7 @@ void QQmlTypeData::done()
 
     // associate inline components to root component
     {
-        auto typeName = finalUrlString().splitRef('/').last().split('.').first().toString();
+        auto typeName = finalUrlString().splitRef(u'/').last().split(u'.').first().toString();
         // typeName can be empty if a QQmlComponent was constructed with an empty QUrl parameter
         if (!typeName.isEmpty() && typeName.at(0).isUpper() && !m_inlineComponentData.isEmpty()) {
             QHashedStringRef const hashedStringRef { typeName };

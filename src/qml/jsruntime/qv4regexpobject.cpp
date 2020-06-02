@@ -171,7 +171,7 @@ QString RegExpObject::toString() const
         p = QStringLiteral("(?:)");
     } else {
         // escape certain parts, see ch. 15.10.4
-        p.replace('/', QLatin1String("\\/"));
+        p.replace(u'/', QLatin1String("\\/"));
     }
     return p;
 }

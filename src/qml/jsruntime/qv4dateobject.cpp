@@ -452,16 +452,16 @@ static inline double ParseString(const QString &s, double localTZA)
     bool seenZ = false; // Have seen zone, i.e. +HH:mm or literal Z.
 
     bool error = false;
-    if (*ch == '+' || *ch == '-') {
+    if (*ch == u'+' || *ch == u'-') {
         extendedYear = true;
-        if (*ch == '-')
+        if (*ch == u'-')
             yearSign = -1;
         ++ch;
     }
     for (; ch <= end && !error && format != Done; ++ch) {
-        if (*ch >= '0' && *ch <= '9') {
+        if (*ch >= u'0' && *ch <= u'9') {
             current *= 10;
-            current += ch->unicode() - '0';
+            current += ch->unicode() - u'0';
             ++currentSize;
         } else { // other char, delimits field
             switch (format) {
@@ -507,12 +507,12 @@ static inline double ParseString(const QString &s, double localTZA)
                 error = (currentSize != 2) || current >= 60;
                 break;
             }
-            if (*ch == 'T') {
+            if (*ch == u'T') {
                 if (format >= Hour)
                     error = true;
                 format = Hour;
                 seenT = true;
-            } else if (*ch == '-') {
+            } else if (*ch == u'-') {
                 if (format < Day)
                     ++format;
                 else if (format < Minute)
@@ -524,19 +524,19 @@ static inline double ParseString(const QString &s, double localTZA)
                     offsetSign = -1;
                     format = TimezoneHour;
                 }
-            } else if (*ch == ':') {
+            } else if (*ch == u':') {
                 if (format != Hour && format != Minute && format != TimezoneHour)
                     error = true;
                 ++format;
-            } else if (*ch == '.') {
+            } else if (*ch == u'.') {
                 if (format != Second)
                     error = true;
                 ++format;
-            } else if (*ch == '+') {
+            } else if (*ch == u'+') {
                 if (seenZ || format < Minute || format >= TimezoneHour)
                     error = true;
                 format = TimezoneHour;
-            } else if (*ch == 'Z') {
+            } else if (*ch == u'Z') {
                 if (seenZ || format < Minute || format >= TimezoneHour)
                     error = true;
                 else

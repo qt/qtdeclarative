@@ -58,7 +58,7 @@ public:
 ErrorCode checkSyntax(const String& pattern, const String& flags)
 {
     SyntaxChecker syntaxChecker;
-    return parse(syntaxChecker, pattern, flags.contains('u'));
+    return parse(syntaxChecker, pattern, flags.contains(u'u'));
 }
 
 }} // JSC::Yarr

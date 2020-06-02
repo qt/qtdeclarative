@@ -80,13 +80,13 @@ static QString escape(const QString &input)
                 || (uc == 0x5F)) {
                 output.append(QChar(uc));
             } else {
-                output.append('%');
+                output.append(u'%');
                 output.append(QLatin1Char(toHexUpper(uc >> 4)));
                 output.append(QLatin1Char(toHexUpper(uc)));
             }
         } else {
-            output.append('%');
-            output.append('u');
+            output.append(u'%');
+            output.append(u'u');
             output.append(QLatin1Char(toHexUpper(uc >> 12)));
             output.append(QLatin1Char(toHexUpper(uc >> 8)));
             output.append(QLatin1Char(toHexUpper(uc >> 4)));
@@ -104,9 +104,9 @@ static QString unescape(const QString &input)
     const int length = input.length();
     while (i < length) {
         QChar c = input.at(i++);
-        if ((c == '%') && (i + 1 < length)) {
+        if ((c == u'%') && (i + 1 < length)) {
             QChar a = input.at(i);
-            if ((a == 'u') && (i + 4 < length)) {
+            if ((a == u'u') && (i + 4 < length)) {
                 int d3 = fromHex(input.at(i+1).unicode());
                 int d2 = fromHex(input.at(i+2).unicode());
                 int d1 = fromHex(input.at(i+3).unicode());

@@ -379,7 +379,7 @@ bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *da
 
         int typeNameLen = typeName.length();
         for (int ii = 0; ii < typeNameLen; ++ii) {
-            if (!(typeName.at(ii).isLetterOrNumber() || typeName.at(ii) == '_')) {
+            if (!(typeName.at(ii).isLetterOrNumber() || typeName.at(ii) == u'_')) {
                 QString failure(QCoreApplication::translate("qmlRegisterType", "Invalid QML %1 name \"%2\""));
                 data->recordTypeRegFailure(failure.arg(registrationTypeString(typeType)).arg(typeName));
                 return false;
@@ -846,10 +846,10 @@ QQmlType QQmlMetaType::typeForUrl(const QString &urlString,
     // data.
     if (errors) {
         QQmlError error;
-        error.setDescription(failures.join('\n'));
+        error.setDescription(failures.join(u'\n'));
         errors->prepend(error);
     } else {
-        qWarning("%s", failures.join('\n').toLatin1().constData());
+        qWarning("%s", failures.join(u'\n').toLatin1().constData());
     }
     return QQmlType();
 }
