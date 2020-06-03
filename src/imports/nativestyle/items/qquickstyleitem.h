@@ -56,8 +56,8 @@
 #endif
 
 #ifdef QT_DEBUG
-#define qqc2Debug() if (m_debug) qDebug() << __FUNCTION__ << ":"
-#define qqc2DebugHeading(HEADING) if (m_debug) qDebug() << "--------" << HEADING << "--------"
+#define qqc2Debug() if (m_debugFlags.testFlag(PrintOutput)) qDebug() << __FUNCTION__ << ":"
+#define qqc2DebugHeading(HEADING) if (m_debugFlags.testFlag(PrintOutput)) qDebug() << "--------" << HEADING << "--------"
 #else
 #define qqc2Debug() if (false) qDebug()
 #define qqc2DebugHeading(HEADING) if (false) qDebug()
@@ -174,6 +174,19 @@ public:
     };
     Q_DECLARE_FLAGS(DirtyFlags, DirtyFlag)
 
+#ifdef QT_DEBUG
+    enum DebugFlag {
+        NoDebug = 0x00,
+        PrintOutput = 0x01,
+        ShowImageRect = 0x02,
+        ShowContentRect = 0x04,
+        ShowLayoutRect = 0x08,
+        ShowUnscaled = 0x10,
+        ShowInputContentSize = 0x20
+    };
+    Q_DECLARE_FLAGS(DebugFlags, DebugFlag)
+#endif
+
     QQuickStyleItem();
     ~QQuickStyleItem() override;
 
@@ -222,8 +235,7 @@ protected:
     }
 
 #ifdef QT_DEBUG
-    bool m_debug = false;
-    bool m_debugNinePatchImage = false;
+    DebugFlags m_debugFlags = NoDebug;
 #endif
 
 private:
@@ -245,6 +257,11 @@ private:
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickStyleItem::DirtyFlags)
+
+#ifdef QT_DEBUG
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickStyleItem::DebugFlags)
+#endif
+
 QML_DECLARE_TYPE(QQuickStyleItem)
 
 QT_END_NAMESPACE

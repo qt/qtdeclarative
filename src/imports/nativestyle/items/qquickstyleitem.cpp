@@ -118,7 +118,7 @@ QSGNode *QQuickStyleItem::updatePaintNode(QSGNode *oldNode, QQuickItem::UpdatePa
     node->setBounds(boundingRect());
 
 #ifdef QT_DEBUG
-    if (m_debugNinePatchImage) {
+    if (m_debugFlags.testFlag(ShowUnscaled)) {
         const qreal scale = window()->devicePixelRatio();
         const QSizeF ninePatchImageSize = m_paintedImage.rect().size() / scale;
         node->setBounds(QRectF(QPointF(), ninePatchImageSize));
@@ -248,11 +248,22 @@ void QQuickStyleItem::paintControlToImage()
     paintEvent(&painter);
 
 #ifdef QT_DEBUG
-    if (m_debug) {
-        painter.fillRect(m_paintedImage.rect(), QColor(rand() % 255, rand() % 255, rand() % 255, 50));
-        if (m_debugNinePatchImage) {
+    if (m_debugFlags != NoDebug) {
+        painter.setPen(QColor(255, 0, 0, 255));
+        if (m_debugFlags.testFlag(ShowImageRect))
+            painter.drawRect(QRect(QPoint(0, 0), m_paintedImage.size() / scale));
+        if (m_debugFlags.testFlag(ShowLayoutRect))
+            painter.drawRect(m_styleItemGeometry.layoutRect);
+        if (m_debugFlags.testFlag(ShowContentRect))
+            painter.drawRect(m_styleItemGeometry.contentRect);
+        if (m_debugFlags.testFlag(ShowInputContentSize)) {
+            const int offset = 2;
+            const QPoint p = m_styleItemGeometry.contentRect.topLeft();
+            painter.drawLine(p.x() - offset, p.y() - offset, p.x() + m_contentSize.width(), p.y() - offset);
+            painter.drawLine(p.x() - offset, p.y() - offset, p.x() - offset, p.y() + m_contentSize.height());
+        }
+        if (m_debugFlags.testFlag(ShowUnscaled)) {
             const QPoint center = m_paintedImage.rect().center() / scale;
-            painter.setPen(Qt::red);
             painter.drawLine(center.x(), 0, center.x(), m_paintedImage.rect().height());
             painter.drawLine(0, center.y(), m_paintedImage.rect().width(), center.y());
         }
@@ -278,17 +289,50 @@ void QQuickStyleItem::componentComplete()
     Q_ASSERT_X(m_control, Q_FUNC_INFO, "You need to assign a value to property 'control'");
 
 #ifdef QT_DEBUG
-    if (qEnvironmentVariable("QQC2_USE_NINEPATCH_IMAGE") == QStringLiteral("false"))
-        m_useNinePatchImage = false;
-    if (qEnvironmentVariable("QQC2_DEBUG") == QStringLiteral("true")) {
-        // Set the object name of any QML item to "debug" to print out
-        // extra information about that item. Optionally add "image"
-        // to draw the nine patch image (with markers) instead of the
-        // scaled image.
+    if (!qEnvironmentVariable("QQC2_NATIVESTYLE_DEBUG").isEmpty()) {
+        // Set objectName to "debug" pluss one or more options separated
+        // by space to show extra information about this item. Note that
+        // some of the options cannot be shown unless we switch off using
+        // nine patch image scaling.
         const QString name = m_control->objectName();
         if (name.startsWith(QLatin1String("debug"))) {
-            m_debug = true;
-            m_debugNinePatchImage = name.contains(QStringLiteral("image"));
+            if (name.contains(QStringLiteral("output"))) {
+                m_debugFlags.setFlag(PrintOutput);
+                qDebug() << "debug: setting PrintOutput";
+            }
+            if (name.contains(QStringLiteral("imagerect"))) {
+                m_debugFlags.setFlag(ShowImageRect);
+                qDebug() << "debug: setting ShowImageRect";
+            }
+            if (name.contains(QStringLiteral("contentrect"))) {
+                m_debugFlags.setFlag(ShowContentRect);
+                m_useNinePatchImage = false;
+                qDebug() << "debug: setting ShowContentRect";
+                qDebug() << "debug: setting useNinePatchImage to false";
+            }
+            if (name.contains(QStringLiteral("layoutrect"))) {
+                m_debugFlags.setFlag(ShowLayoutRect);
+                m_useNinePatchImage = false;
+                qDebug() << "debug: setting ShowLayoutRect";
+                qDebug() << "debug: setting useNinePatchImage to false";
+            }
+            if (name.contains(QStringLiteral("inputcontentsize"))) {
+                m_debugFlags.setFlag(ShowInputContentSize);
+                m_useNinePatchImage = false;
+                qDebug() << "debug: setting ShowInputContentSize";
+                qDebug() << "debug: setting useNinePatchImage to false";
+            }
+            if (name.contains(QStringLiteral("dontuseninepatchimage"))) {
+                m_useNinePatchImage = false;
+                qDebug() << "debug: setting useNinePatchImage to false";
+            }
+            if (name.contains(QStringLiteral("unscaled"))) {
+                m_debugFlags.setFlag(ShowUnscaled);
+                qDebug() << "debug: setting ShowUnscaled";
+            }
+            if (m_debugFlags == NoDebug)
+                qDebug() << "debug options: output, imagerect, contentrect"
+                         << "layoutrect, unscaled, inputcontentsize, dontuseninepatchimage";
         }
     }
 #endif
