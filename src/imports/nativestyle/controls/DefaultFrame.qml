@@ -50,15 +50,10 @@ T.Frame {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              contentHeight + topPadding + bottomPadding)
 
-    leftPadding: nativeBackground ? background.contentPadding.left + leftInset : 12
-    rightPadding: nativeBackground ? background.contentPadding.right + rightInset : 12
-    topPadding: nativeBackground ? background.contentPadding.top + topInset : 12
-    bottomPadding: nativeBackground ? background.contentPadding.bottom + bottomInset : 12
-
-    topInset: nativeBackground ? background.insets.top : 0
-    bottomInset: nativeBackground ? background.insets.bottom : 0
-    leftInset: nativeBackground ? background.insets.left : 0
-    rightInset: nativeBackground ? background.insets.right : 0
+    leftPadding: nativeBackground ? background.contentPadding.left : 12
+    rightPadding: nativeBackground ? background.contentPadding.right : 12
+    topPadding: nativeBackground ? background.contentPadding.top : 12
+    bottomPadding: nativeBackground ? background.contentPadding.bottom : 12
 
     background: NativeStyle.Frame {
         control: control

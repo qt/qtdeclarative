@@ -53,10 +53,10 @@ T.Button {
 
     font.pixelSize: nativeBackground ? background.styleFont(control).pixelSize : undefined
 
-    leftPadding: nativeBackground ? background.contentPadding.left + leftInset: 5
-    rightPadding: nativeBackground ? background.contentPadding.right + rightInset: 5
-    topPadding: nativeBackground ? background.contentPadding.top + topInset: 5
-    bottomPadding: nativeBackground ? background.contentPadding.bottom + bottomInset : 5
+    leftPadding: nativeBackground ? background.contentPadding.left : 5
+    rightPadding: nativeBackground ? background.contentPadding.right : 5
+    topPadding: nativeBackground ? background.contentPadding.top : 5
+    bottomPadding: nativeBackground ? background.contentPadding.bottom : 5
 
     topInset: nativeBackground ? background.insets.top : 0
     bottomInset: nativeBackground ? background.insets.bottom : 0

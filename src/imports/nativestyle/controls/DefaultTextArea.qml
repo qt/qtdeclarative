@@ -55,11 +55,6 @@ T.TextArea {
     topPadding: nativeBackground ? background.contentPadding.top : 3
     bottomPadding: nativeBackground ? background.contentPadding.bottom + 5: 3
 
-    topInset: nativeBackground ? background.insets.top : 0
-    bottomInset: nativeBackground ? background.insets.bottom: 0
-    leftInset: nativeBackground ? background.insets.left : 0
-    rightInset: nativeBackground ? background.insets.right : 0
-
     color: control.palette.text
     selectionColor: control.palette.highlight
     selectedTextColor: control.palette.highlightedText

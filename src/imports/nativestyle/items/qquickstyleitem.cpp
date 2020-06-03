@@ -196,7 +196,7 @@ void QQuickStyleItem::updateGeometry()
     m_dirty.setFlag(DirtyFlag::Geometry, false);
 
     const QQuickStyleMargins oldContentPadding = contentPadding();
-    const QQuickStyleMargins oldInsets = insets();
+    const QRectF oldLayoutRect = layoutRect();
 
     m_styleItemGeometry = calculateGeometry();
 
@@ -214,8 +214,8 @@ void QQuickStyleItem::updateGeometry()
 
     if (contentPadding() != oldContentPadding)
         emit contentPaddingChanged();
-    if (insets() != oldInsets)
-        emit insetsChanged();
+    if (layoutRect() != oldLayoutRect)
+        emit layoutRectChanged();
 
     setImplicitSize(m_styleItemGeometry.implicitSize.width(), m_styleItemGeometry.implicitSize.height());
     // Clear the dirty flag after setting implicit size, since the following call
@@ -227,8 +227,8 @@ void QQuickStyleItem::updateGeometry()
 
     qqc2Debug() << m_styleItemGeometry
                 << "bounding rect:" << boundingRect()
+                << "layout rect:" << layoutRect()
                 << "content padding:" << contentPadding()
-                << "insets:" << insets()
                 << "input content size:" << m_contentSize;
 }
 
@@ -329,12 +329,15 @@ QQuickStyleMargins QQuickStyleItem::contentPadding() const
     return QQuickStyleMargins(outerRect, m_styleItemGeometry.contentRect);
 }
 
-QQuickStyleMargins QQuickStyleItem::insets() const
+QRectF QQuickStyleItem::layoutRect() const
 {
-    if (m_styleItemGeometry.layoutRect.isEmpty())
-        return QQuickStyleMargins();
-    const QRect innerRect(QPoint(0, 0), m_styleItemGeometry.implicitSize);
-    return QQuickStyleMargins(m_styleItemGeometry.layoutRect, innerRect);
+    // ### TODO: layoutRect is currently not being used for anything. But
+    // eventually this information will be needed by layouts to align the controls
+    // correctly. This because the images drawn by QStyle are usually a bit bigger
+    // than the control(frame) itself, to e.g make room for shadow effects
+    // or focus rects/glow. And this will differ from control to control. The
+    // layoutRect will then inform where the frame of the control is.
+    return m_styleItemGeometry.layoutRect;
 }
 
 QFont QQuickStyleItem::styleFont(QQuickItem *control)

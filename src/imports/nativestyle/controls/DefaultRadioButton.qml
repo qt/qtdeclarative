@@ -56,11 +56,6 @@ T.RadioButton {
     spacing: nativeIndicator ? 0 : 6
     padding: nativeIndicator ? 0 : 6
 
-    topInset: nativeIndicator ? indicator.insets.top : 0
-    bottomInset: nativeIndicator ? indicator.insets.bottom : 0
-    leftInset: nativeIndicator ? indicator.insets.left : 0
-    rightInset: nativeIndicator ? indicator.insets.right : 0
-
     indicator: NativeStyle.RadioButton {
         control: control
         contentWidth: contentItem.implicitWidth
