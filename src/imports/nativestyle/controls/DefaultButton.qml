@@ -58,11 +58,6 @@ T.Button {
     topPadding: nativeBackground ? background.contentPadding.top : 5
     bottomPadding: nativeBackground ? background.contentPadding.bottom : 5
 
-    topInset: nativeBackground ? background.insets.top : 0
-    bottomInset: nativeBackground ? background.insets.bottom : 0
-    leftInset: nativeBackground ? background.insets.left : 0
-    rightInset: nativeBackground ? background.insets.right : 0
-
     background: NativeStyle.Button {
         control: control
         contentWidth: contentItem.implicitWidth
