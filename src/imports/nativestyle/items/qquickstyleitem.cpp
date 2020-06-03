@@ -264,9 +264,12 @@ void QQuickStyleItem::paintControlToImage()
 
 void QQuickStyleItem::updatePolish()
 {
-    if (m_dirty.testFlag(DirtyFlag::Geometry))
+    const bool dirtyGeometry = m_dirty & DirtyFlag::Geometry;
+    const bool dirtyImage = (m_dirty & DirtyFlag::Image) || (!m_useNinePatchImage && dirtyGeometry);
+
+    if (dirtyGeometry)
         updateGeometry();
-    if (m_dirty.testFlag(DirtyFlag::Image))
+    if (dirtyImage)
         paintControlToImage();
 }
 
