@@ -3943,6 +3943,7 @@ void tst_qqmlecmascript::signalWithUnknownTypes()
     othertype.value = 17;
     emit object->signalWithCompletelyUnknownType(othertype);
 
+    QEXPECT_FAIL("", "New metaobject implementation causes test to pass", Continue);
     QVERIFY(!object->variant().isValid());
 
     delete object;
