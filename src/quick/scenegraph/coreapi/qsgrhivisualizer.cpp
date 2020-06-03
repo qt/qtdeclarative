@@ -41,7 +41,6 @@
 
 #include "qsgrhivisualizer_p.h"
 #include <qmath.h>
-#include <QQuickWindow>
 #include <private/qsgmaterialshader_p.h>
 #include <private/qsgshadersourcebuilder_p.h>
 

@@ -51,20 +51,20 @@
 // We mean it.
 //
 
-#include "qquickitem.h"
-#include "qquickwindow.h"
-#include "qquickevents_p_p.h"
-
+#include <QtQuick/private/qquickevents_p_p.h>
 #include <QtQuick/private/qsgcontext_p.h>
 #include <QtQuick/private/qquickpaletteproviderprivatebase_p.h>
 #include <QtQuick/private/qquickrendertarget_p.h>
 #include <QtQuick/private/qquickgraphicsdevice_p.h>
+#include <QtQuick/qquickitem.h>
+#include <QtQuick/qquickwindow.h>
 
 #include <QtCore/qthread.h>
 #include <QtCore/qmutex.h>
 #include <QtCore/qwaitcondition.h>
 #include <QtCore/qrunnable.h>
-#include <private/qwindow_p.h>
+
+#include <QtGui/private/qwindow_p.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qstylehints.h>
 #include <QtGui/qguiapplication.h>

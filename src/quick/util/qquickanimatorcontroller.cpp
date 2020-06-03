@@ -40,7 +40,6 @@
 
 #include "qquickanimatorcontroller_p.h"
 
-#include <private/qquickwindow_p.h>
 #include <private/qquickitem_p.h>
 #include <private/qsgrenderloop_p.h>
 

@@ -51,12 +51,15 @@
 // We mean it.
 //
 
-#include <QtCore/QObject>
-#include <QtGui/QFont>
-#include <qqml.h>
+#include <QtQuick/private/qtquickglobal_p.h>
+#include <QtQuick/private/qquickscreen_p.h>
+
+#include <QtQml/qqml.h>
 #include <QtQml/private/qqmlglobal_p.h>
-#include <private/qtquickglobal_p.h>
-#include "../items/qquickscreen_p.h"
+
+#include <QtGui/qfont.h>
+
+#include <QtCore/qobject.h>
 
 QT_BEGIN_NAMESPACE
 

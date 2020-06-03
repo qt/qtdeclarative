@@ -37,14 +37,13 @@
 **
 ****************************************************************************/
 
-#include "qquickscreen_p.h"
+#include <QtQuick/private/qquickscreen_p.h>
+#include <QtQuick/qquickwindow.h>
 
-#include "qquickitem.h"
-#include "qquickitem_p.h"
-#include "qquickwindow.h"
+#include <QtQuick/private/qquickitem_p.h>
 
-#include <QGuiApplication>
-#include <QScreen>
+#include <QtGui/qguiapplication.h>
+#include <QtGui/qscreen.h>
 
 QT_BEGIN_NAMESPACE
 

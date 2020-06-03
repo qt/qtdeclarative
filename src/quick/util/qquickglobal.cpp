@@ -38,17 +38,17 @@
 **
 ****************************************************************************/
 
-#include <private/qquickvaluetypes_p.h>
-#include <private/qquickapplication_p.h>
-#include <private/qqmlglobal_p.h>
+#include <QtQuick/private/qquickvaluetypes_p.h>
+#include <QtQuick/private/qquickapplication_p.h>
 
 #include <QtGui/QGuiApplication>
 #include <QtGui/qdesktopservices.h>
 #include <QtGui/qfontdatabase.h>
 #include <QtGui/qstylehints.h>
 
-#include <private/qv4engine_p.h>
-#include <private/qv4object_p.h>
+#include <QtQml/private/qqmlglobal_p.h>
+#include <QtQml/private/qv4engine_p.h>
+#include <QtQml/private/qv4object_p.h>
 
 #ifdef Q_CC_MSVC
 // MSVC2010 warns about 'unused variable t', even if it's used in t->~T()

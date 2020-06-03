@@ -51,35 +51,32 @@
 // We mean it.
 //
 
-#include "qquickitem.h"
-
-#include "qquickanchors_p.h"
-#include "qquickanchors_p_p.h"
-#include "qquickitemchangelistener_p.h"
-#include "qquickevents_p_p.h"
-
-#include "qquickwindow_p.h"
-
-#include <QtQuick/qsgnode.h>
-#include "qquickclipnode_p.h"
-
+#include <QtQuick/private/qquickanchors_p.h>
+#include <QtQuick/private/qquickanchors_p_p.h>
+#include <QtQuick/private/qquickitemchangelistener_p.h>
+#include <QtQuick/private/qquickevents_p_p.h>
+#include <QtQuick/private/qquickclipnode_p.h>
 #include <QtQuick/private/qquickstate_p.h>
-#include <private/qqmlnullablevalue_p.h>
-#include <private/qqmlnotifier_p.h>
-#include <private/qqmlglobal_p.h>
-#include <private/qlazilyallocated_p.h>
-
-#include <qqml.h>
-#include <qqmlcontext.h>
-
-#include <QtCore/qlist.h>
-#include <QtCore/qdebug.h>
-#include <QtCore/qelapsedtimer.h>
 #include <QtQuick/private/qquickpaletteproviderprivatebase_p.h>
+#include <QtQuick/private/qquickwindow_p.h>
 
 #if QT_CONFIG(quick_shadereffect)
 #include <QtQuick/private/qquickshadereffectsource_p.h>
 #endif
+
+#include <QtQuick/qquickitem.h>
+#include <QtQuick/qsgnode.h>
+
+#include <QtQml/private/qqmlnullablevalue_p.h>
+#include <QtQml/private/qqmlnotifier_p.h>
+#include <QtQml/private/qqmlglobal_p.h>
+#include <QtQml/private/qlazilyallocated_p.h>
+#include <QtQml/qqml.h>
+#include <QtQml/qqmlcontext.h>
+
+#include <QtCore/qlist.h>
+#include <QtCore/qdebug.h>
+#include <QtCore/qelapsedtimer.h>
 
 QT_BEGIN_NAMESPACE
 

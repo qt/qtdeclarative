@@ -37,14 +37,16 @@
 **
 ****************************************************************************/
 
-#include "qquickapplication_p.h"
-#include <private/qquickscreen_p.h>
-#include <private/qobject_p.h>
-#include <private/qguiapplication_p.h>
-#include <qpa/qplatformintegration.h>
-#include <QtGui/QGuiApplication>
-#include <QtCore/QDebug>
+#include <QtQuick/private/qquickapplication_p.h>
+
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qpa/qplatformintegration.h>
+#include <QtGui/qguiapplication.h>
+
 #include <QtQml/private/qqmlglobal_p.h>
+
+#include <QtCore/private/qobject_p.h>
+#include <QtCore/qdebug.h>
 
 QT_BEGIN_NAMESPACE
 

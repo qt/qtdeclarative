@@ -42,7 +42,6 @@
 #include "qquickanimatorjob_p.h"
 #include "qquickanimator_p.h"
 #include "qquickanimator_p_p.h"
-#include <private/qquickwindow_p.h>
 #include <private/qquickitem_p.h>
 #if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
 # include <private/qquickopenglshadereffectnode_p.h>

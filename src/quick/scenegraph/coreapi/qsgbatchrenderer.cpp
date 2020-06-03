@@ -41,8 +41,6 @@
 
 #include "qsgbatchrenderer_p.h"
 
-#include <QQuickWindow>
-
 #include <qmath.h>
 
 #include <QtCore/QElapsedTimer>

@@ -37,43 +37,38 @@
 **
 ****************************************************************************/
 
-#include "qquickpixmapcache_p.h"
-#include <qquickimageprovider.h>
-#include "qquickimageprovider_p.h"
-
-#include <qqmlengine.h>
-#include <private/qqmlglobal_p.h>
-#include <private/qqmlengine_p.h>
+#include <QtQuick/private/qquickpixmapcache_p.h>
+#include <QtQuick/private/qquickimageprovider_p.h>
+#include <QtQuick/private/qquickprofiler_p.h>
+#include <QtQuick/private/qsgcontext_p.h>
+#include <QtQuick/private/qsgtexturereader_p.h>
+#include <QtQuick/qquickwindow.h>
 
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/private/qimage_p.h>
-#include <qpa/qplatformintegration.h>
+#include <QtGui/qpa/qplatformintegration.h>
+#include <QtGui/qimagereader.h>
+#include <QtGui/qpixmapcache.h>
 
-#include <QtQuick/private/qsgcontext_p.h>
-#include <QtQuick/private/qsgtexturereader_p.h>
+#include <QtQml/private/qqmlglobal_p.h>
+#include <QtQml/private/qqmlengine_p.h>
+#include <QtQml/qqmlfile.h>
 
-#include <QQuickWindow>
-#include <QCoreApplication>
-#include <QImageReader>
-#include <QHash>
-#include <QPixmapCache>
-#include <QFile>
-#include <QThread>
-#include <QMutex>
-#include <QMutexLocker>
-#include <QBuffer>
+#include <QtCore/private/qobject_p.h>
+#include <QtCore/qcoreapplication.h>
+#include <QtCore/qhash.h>
+#include <QtCore/qfile.h>
+#include <QtCore/qthread.h>
+#include <QtCore/qmutex.h>
+#include <QtCore/qbuffer.h>
 #include <QtCore/qdebug.h>
-#include <private/qobject_p.h>
-#include <QQmlFile>
-#include <QMetaMethod>
+#include <QtCore/qmetaobject.h>
 
 #if QT_CONFIG(qml_network)
-#include <qqmlnetworkaccessmanagerfactory.h>
-#include <QNetworkReply>
-#include <QSslError>
+#include <QtQml/qqmlnetworkaccessmanagerfactory.h>
+#include <QtNetwork/qnetworkreply.h>
+#include <QtNetwork/qsslerror.h>
 #endif
-
-#include <private/qquickprofiler_p.h>
 
 #define IMAGEREQUEST_MAX_NETWORK_REQUEST_COUNT 8
 #define IMAGEREQUEST_MAX_REDIRECT_RECURSION 16

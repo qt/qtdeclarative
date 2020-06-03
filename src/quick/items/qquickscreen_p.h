@@ -51,10 +51,8 @@
 // We mean it.
 //
 
-#include <qqml.h>
-#include <QRect>
-#include <QSize>
-#include <private/qtquickglobal_p.h>
+#include <QtQml/qqml.h>
+#include <QtQuick/private/qtquickglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
