@@ -1368,6 +1368,7 @@ void QQuickMouseArea::resetPressAndHoldInterval()
     \qmlproperty real QtQuick::MouseArea::drag.maximumY
     \qmlproperty bool QtQuick::MouseArea::drag.filterChildren
     \qmlproperty real QtQuick::MouseArea::drag.threshold
+    \qmlproperty bool QtQuick::MouseArea::drag.smoothed
 
     \c drag provides a convenient way to make an item draggable.
 
