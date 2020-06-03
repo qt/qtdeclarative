@@ -38,8 +38,7 @@ qtConfig(opengl(es1|es2)?) {
         $$PWD/coreapi/qsgrhivisualizer_p.h
     SOURCES += \
         $$PWD/coreapi/qsgbatchrenderer.cpp \
-        $$PWD/coreapi/qsgrhivisualizer.cpp \
-        $$PWD/coreapi/qsgshaderrewriter.cpp
+        $$PWD/coreapi/qsgrhivisualizer.cpp
 }
 
 # Util API
