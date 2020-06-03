@@ -504,7 +504,7 @@ QQuickRotationAnimator::RotationDirection QQuickRotationAnimator::direction() co
     return d->direction;
 }
 
-#if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
+#if 0 // QTBUG-83976
 /*!
     \qmltype UniformAnimator
     \instantiates QQuickUniformAnimator

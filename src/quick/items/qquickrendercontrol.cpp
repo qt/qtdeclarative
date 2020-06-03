@@ -46,11 +46,10 @@
 #include <QtQuick/private/qsgdefaultrendercontext_p.h>
 #include <QtQuick/private/qsgrhisupport_p.h>
 
+#include <private/qsgrhishadereffectnode_p.h>
+
 #if QT_CONFIG(opengl)
 # include <QOpenGLContext>
-#if QT_CONFIG(quick_shadereffect)
-# include <QtQuick/private/qquickopenglshadereffectnode_p.h>
-#endif
 #endif
 #include <QtGui/private/qguiapplication_p.h>
 #include <qpa/qplatformintegration.h>
@@ -207,12 +206,9 @@ void QQuickRenderControlPrivate::windowDestroyed()
         rc->invalidate();
 
         QQuickWindowPrivate::get(window)->animationController.reset();
-
-#if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
-        if (QOpenGLContext::currentContext())
-            QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache();
+#if QT_CONFIG(quick_shadereffect)
+    QSGRhiShaderEffectNode::cleanupMaterialTypeCache();
 #endif
-
         window = nullptr;
     }
 }

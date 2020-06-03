@@ -66,9 +66,6 @@
 
 #if QT_CONFIG(opengl)
 #include <QOpenGLContext>
-#if QT_CONFIG(quick_shadereffect)
-#include <private/qquickopenglshadereffectnode_p.h>
-#endif
 #include <private/qsgdefaultrendercontext_p.h>
 #endif
 
@@ -406,9 +403,6 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
 
 #if QT_CONFIG(quick_shadereffect)
     QSGRhiShaderEffectNode::cleanupMaterialTypeCache();
-#if QT_CONFIG(opengl)
-    QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache();
-#endif
 #endif
 
     if (d->swapchain) {

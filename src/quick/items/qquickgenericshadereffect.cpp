@@ -612,7 +612,7 @@ void QQuickGenericShaderEffect::updateShaderVars(Shader shaderType)
         if (propIdx >= 0) {
             if (pd && !pd->isFunction()) {
                 if (pd->notifyIndex() == -1) {
-                    qWarning("QQuickOpenGLShaderEffect: property '%s' does not have notification method!", v.name.constData());
+                    qWarning("QQuickGenericShaderEffect: property '%s' does not have notification method!", v.name.constData());
                 } else {
                     auto *&mapper = m_mappers[shaderType][i];
                     if (!mapper) {

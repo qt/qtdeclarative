@@ -218,13 +218,6 @@ qtConfig(quick-shadereffect) {
         $$PWD/qquickgenericshadereffect.cpp
 
     qtConfig(opengl) {
-        SOURCES += \
-            $$PWD/qquickopenglshadereffect.cpp \
-            $$PWD/qquickopenglshadereffectnode.cpp
-        HEADERS += \
-            $$PWD/qquickopenglshadereffect_p.h \
-            $$PWD/qquickopenglshadereffectnode_p.h
-
         OTHER_FILES += \
             $$PWD/shaders/shadereffect.vert \
             $$PWD/shaders/shadereffect.frag \

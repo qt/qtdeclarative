@@ -69,7 +69,7 @@ class QQuickAbstractAnimation;
 
 class QQuickAnimatorController;
 class QQuickAnimatorProxyJobPrivate;
-class QQuickOpenGLShaderEffectNode;
+class QQuickShaderEffectNode;
 
 class QSGOpacityNode;
 
@@ -289,7 +289,7 @@ public:
 private:
     QSGOpacityNode *m_opacityNode;
 };
-#if QT_CONFIG(opengl)
+#if 0 // QTBUG-83976
 class Q_QUICK_PRIVATE_EXPORT QQuickUniformAnimatorJob : public QQuickAnimatorJob
 {
 public:

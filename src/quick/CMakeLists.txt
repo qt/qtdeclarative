@@ -502,12 +502,6 @@ qt_extend_target(Quick CONDITION QT_FEATURE_quick_shadereffect
         items/qquickshadereffectsource.cpp items/qquickshadereffectsource_p.h
 )
 
-qt_extend_target(Quick CONDITION QT_FEATURE_opengl AND QT_FEATURE_quick_shadereffect
-    SOURCES
-        items/qquickopenglshadereffect.cpp items/qquickopenglshadereffect_p.h
-        items/qquickopenglshadereffectnode.cpp items/qquickopenglshadereffectnode_p.h
-)
-
 #### Keys ignored in scope 41:.:items:items/items.pri:QT_FEATURE_opengl:
 # OTHER_FILES = "$$PWD/shaders/shadereffect.vert" "$$PWD/shaders/shadereffect.frag" "$$PWD/shaders/shadereffectfallback.vert" "$$PWD/shaders/shadereffectfallback.frag" "$$PWD/shaders/shadereffect_core.vert" "$$PWD/shaders/shadereffect_core.frag" "$$PWD/shaders/shadereffectfallback_core.vert" "$$PWD/shaders/shadereffectfallback_core.frag"
 

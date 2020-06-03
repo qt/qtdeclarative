@@ -30,7 +30,7 @@
 
 #include <QList>
 #include <QByteArray>
-#include <private/qquickopenglshadereffect_p.h>
+#include <private/qquickshadereffect_p.h>
 #include <QMatrix4x4>
 #include <QtQuick/QQuickView>
 #include <QtQml/QQmlEngine>

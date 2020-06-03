@@ -60,7 +60,6 @@ QT_REQUIRE_CONFIG(quick_shadereffect);
 
 QT_BEGIN_NAMESPACE
 
-class QQuickOpenGLShaderEffect;
 class QQuickGenericShaderEffect;
 class QQuickShaderEffectPrivate;
 
@@ -120,10 +119,6 @@ public:
     bool isComponentComplete() const;
     QString parseLog();
 
-#if QT_CONFIG(opengl)
-    bool isOpenGLShaderEffect() const;
-#endif
-
 Q_SIGNALS:
     void fragmentShaderChanged();
     void vertexShaderChanged();
@@ -142,9 +137,6 @@ protected:
     void itemChange(ItemChange change, const ItemChangeData &value) override;
 
 private:
-#if QT_CONFIG(opengl)
-    QQuickOpenGLShaderEffect *m_glImpl;
-#endif
     QQuickGenericShaderEffect *m_impl;
 
     Q_DECLARE_PRIVATE(QQuickShaderEffect)

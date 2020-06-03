@@ -184,7 +184,7 @@ protected:
     QString propertyName() const override { return QStringLiteral("rotation"); }
 };
 
-#if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
+#if 0 // QTBUG-83976
 class QQuickUniformAnimatorPrivate;
 class Q_QUICK_PRIVATE_EXPORT QQuickUniformAnimator : public QQuickAnimator
 {
@@ -217,7 +217,7 @@ QML_DECLARE_TYPE(QQuickYAnimator)
 QML_DECLARE_TYPE(QQuickScaleAnimator)
 QML_DECLARE_TYPE(QQuickRotationAnimator)
 QML_DECLARE_TYPE(QQuickOpacityAnimator)
-#if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
+#if 0 // QTBUG-83976
 QML_DECLARE_TYPE(QQuickUniformAnimator)
 #endif
 #endif // QQUICKANIMATOR_P_H

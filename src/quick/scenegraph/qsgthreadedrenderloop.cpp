@@ -65,9 +65,6 @@
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qqmldebugconnector_p.h>
 
-#if QT_CONFIG(quick_shadereffect)
-#include <private/qquickopenglshadereffectnode_p.h>
-#endif
 #include <private/qsgrhishadereffectnode_p.h>
 #include <private/qsgdefaultrendercontext_p.h>
 
@@ -550,10 +547,6 @@ void QSGRenderThread::invalidateGraphics(QQuickWindow *window, bool inDestructor
 
 #if QT_CONFIG(quick_shadereffect)
     QSGRhiShaderEffectNode::cleanupMaterialTypeCache();
-#if QT_CONFIG(opengl)
-    if (current)
-        QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache();
-#endif
 #endif
 
     // The canvas nodes must be cleaned up regardless if we are in the destructor..
