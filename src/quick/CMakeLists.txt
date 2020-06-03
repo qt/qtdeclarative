@@ -198,12 +198,6 @@ qt_add_module(Quick
 
 # Resources:
 set(scenegraph_resource_files
-    "shaders/stencilclip.frag"
-    "shaders/stencilclip.vert"
-    "shaders/stencilclip_core.frag"
-    "shaders/stencilclip_core.vert"
-    "shaders/visualization.frag"
-    "shaders/visualization.vert"
     "shaders_ng/24bittextmask.frag.qsb"
     "shaders_ng/32bitcolortext.frag.qsb"
     "shaders_ng/8bittextmask.frag.qsb"

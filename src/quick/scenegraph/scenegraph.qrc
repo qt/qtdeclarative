@@ -1,12 +1,5 @@
 <RCC>
     <qresource prefix="/qt-project.org/scenegraph">
-        <file>shaders/stencilclip.frag</file>
-        <file>shaders/stencilclip.vert</file>
-        <file>shaders/stencilclip_core.frag</file>
-        <file>shaders/stencilclip_core.vert</file>
-        <file>shaders/visualization.vert</file>
-        <file>shaders/visualization.frag</file>
-
         <file>shaders_ng/vertexcolor.vert.qsb</file>
         <file>shaders_ng/vertexcolor.frag.qsb</file>
         <file>shaders_ng/flatcolor.vert.qsb</file>
