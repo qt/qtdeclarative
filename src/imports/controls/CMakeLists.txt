@@ -71,7 +71,7 @@ qt_add_resource(qtquickcontrols2plugin "qtquickcontrols2plugin"
 
 #### Keys ignored in scope 1:.:.:controls.pro:<TRUE>:
 # IMPORT_VERSION = "2.$$QT_MINOR_VERSION"
-# OTHER_FILES = "qmldir" "$$QML_FILES" "$$PWD/snippets/*.qml" "$$PWD/src/*.qdoc" "$$PWD/src/calendar/*.qdoc" "$$PWD/src/templates/*.qdoc"
+# OTHER_FILES = "qmldir" "$$QML_FILES" "$$PWD/snippets/*.qml" "$$PWD/src/*.qdoc" "$$PWD/src/templates/*.qdoc"
 # TARGETPATH = "QtQuick/Controls.2"
 # _REQUIREMENTS = "qtConfig(quickcontrols2-default)"
 

@@ -56,6 +56,12 @@ void QQuickStackViewPrivate::warn(const QString &error)
         qmlWarning(q) << operation << ": " << error;
 }
 
+void QQuickStackViewPrivate::warnOfInterruption(const QString &attemptedOperation)
+{
+    Q_Q(QQuickStackView);
+    qmlWarning(q) << "cannot " << attemptedOperation << " while already in the process of completing a " << operation;
+}
+
 void QQuickStackViewPrivate::setCurrentItem(QQuickStackElement *element)
 {
     Q_Q(QQuickStackView);

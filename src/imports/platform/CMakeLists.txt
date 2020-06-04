@@ -33,6 +33,7 @@ qt_add_qml_module(qtlabsplatformplugin
         Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::QuickPrivate
+        Qt::QuickTemplates2Private
     PUBLIC_LIBRARIES
         Qt::Core
         Qt::Gui

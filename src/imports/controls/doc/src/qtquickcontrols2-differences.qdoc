@@ -224,12 +224,12 @@
     \row
         \li \l [QML QtQuickControls1] {Calendar}
         \li \mdash
-        \li \l [QML QtLabsCalendar] {MonthGrid},\br
-            \l [QML QtLabsCalendar] {DayOfWeekRow},\br
-            \l [QML QtLabsCalendar] {WeekNumberColumn} \br\sup {(Qt Labs Calendar)}
+        \li \l [QML QtQuickCalendar] {MonthGrid},\br
+            \l [QML QtQuickCalendar] {DayOfWeekRow},\br
+            \l [QML QtQuickCalendar] {WeekNumberColumn} \br\sup {(Qt Quick Calendar)}
         \li \list
-                \li \b {Qt Labs Calendar}: \c MonthGrid, \c DayOfWeek, and \c WeekNumberColumn
-                    are \e experimental unstyled building blocks for calendar views.
+                \li \b {Qt Quick Calendar}: \c MonthGrid, \c DayOfWeek, and \c WeekNumberColumn
+                    are \e unstyled building blocks for calendar views.
             \endlist
     \row
         \li \l [QML QtQuickControls1] {CheckBox}

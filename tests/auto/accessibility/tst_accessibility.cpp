@@ -144,10 +144,6 @@ void tst_accessibility::a11y_data()
     QTest::newRow("ToolButton") << "toolbutton" << QAccessible::Button << "ToolButton";
     QTest::newRow("ToolTip") << "tooltip" << QAccessible::ToolTip << "ToolTip";
     QTest::newRow("Tumbler") << "tumbler" << QAccessible::NoRole << ""; // TODO
-
-    QTest::newRow("DayOfWeekRow") << "dayofweekrow" << QAccessible::NoRole << "DayOfWeekRow";
-    QTest::newRow("MonthGrid") << "monthgrid" << QAccessible::NoRole << "MonthGrid";
-    QTest::newRow("WeekNumberColumn") << "weeknumbercolumn" << QAccessible::NoRole << "WeekNumberColumn";
 }
 
 void tst_accessibility::a11y()
@@ -167,19 +163,15 @@ void tst_accessibility::a11y()
 
 #if QT_CONFIG(accessibility)
     QQuickAccessibleAttached *attached = QQuickAccessibleAttached::attachedProperties(item);
-    if (fileBaseName != QLatin1String("dayofweekrow")
-            && fileBaseName != QLatin1String("monthgrid")
-            && fileBaseName != QLatin1String("weeknumbercolumn")) {
-        if (QAccessible::isActive()) {
-            QVERIFY(attached);
-        } else {
-            QVERIFY(!attached);
-            QPlatformAccessibility *accessibility = platformAccessibility();
-            if (!accessibility)
-                QSKIP("No QPlatformAccessibility available.");
-            accessibility->setActive(true);
-            attached = QQuickAccessibleAttached::attachedProperties(item);
-        }
+    if (QAccessible::isActive()) {
+        QVERIFY(attached);
+    } else {
+        QVERIFY(!attached);
+        QPlatformAccessibility *accessibility = platformAccessibility();
+        if (!accessibility)
+            QSKIP("No QPlatformAccessibility available.");
+        accessibility->setActive(true);
+        attached = QQuickAccessibleAttached::attachedProperties(item);
     }
     QVERIFY(attached);
     QCOMPARE(attached->role(), role);
@@ -237,10 +229,6 @@ void tst_accessibility::override_data()
     QTest::newRow("ToolButton") << QAccessible::Button;
     QTest::newRow("ToolTip") << QAccessible::ToolTip;
     QTest::newRow("Tumbler") << QAccessible::NoRole;
-
-    QTest::newRow("DayOfWeekRow") << QAccessible::NoRole;
-    QTest::newRow("MonthGrid") << QAccessible::NoRole;
-    QTest::newRow("WeekNumberColumn") << QAccessible::NoRole;
 }
 
 void tst_accessibility::override()
@@ -261,19 +249,15 @@ void tst_accessibility::override()
 
 #if QT_CONFIG(accessibility)
     QQuickAccessibleAttached *attached = QQuickAccessibleAttached::attachedProperties(item);
-    if (fileBaseName != QLatin1String("dayofweekrow")
-            && fileBaseName != QLatin1String("monthgrid")
-            && fileBaseName != QLatin1String("weeknumbercolumn")) {
-        if (QAccessible::isActive()) {
-            QVERIFY(attached);
-        } else {
-            QPlatformAccessibility *accessibility = platformAccessibility();
-            if (!accessibility)
-                QSKIP("No QPlatformAccessibility available.");
-            accessibility->setActive(true);
-            if (!attached)
-                attached = QQuickAccessibleAttached::attachedProperties(item);
-        }
+    if (QAccessible::isActive()) {
+        QVERIFY(attached);
+    } else {
+        QPlatformAccessibility *accessibility = platformAccessibility();
+        if (!accessibility)
+            QSKIP("No QPlatformAccessibility available.");
+        accessibility->setActive(true);
+        if (!attached)
+            attached = QQuickAccessibleAttached::attachedProperties(item);
     }
 
     QVERIFY(attached);

@@ -90,7 +90,7 @@
             \l {Material Style}{\c QtQuick.Controls.Material},\br
             \l {Universal Style}{\c QtQuick.Controls.Universal},\br
             \l {Qt Quick Templates 2 QML Types}{\c QtQuick.Templates}
-        \li \l {Qt Labs Calendar QML Types}{\c Qt.labs.calendar},\br
+        \li \l {Qt Quick Calendar QML Types}{\c QtQuick.Calendar},\br
             \l {Qt Labs Platform QML Types}{\c Qt.labs.platform}
       \row
         \li 5.7
@@ -182,7 +182,7 @@
       \li \l{Qt Quick}
       \li \l{Qt Quick Layouts}
       \li \l{Qt Quick Templates 2}
-      \li \l{Qt Labs Calendar}
+      \li \l{Qt Quick Calendar}
       \li \l{Qt Labs Platform}
     \endlist
 */

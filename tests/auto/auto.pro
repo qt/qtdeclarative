@@ -1,7 +1,6 @@
 TEMPLATE = subdirs
 SUBDIRS += \
     accessibility \
-    calendar \
     controls \
     cursor \
     customization \

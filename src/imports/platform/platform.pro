@@ -3,7 +3,7 @@ TARGETPATH = Qt/labs/platform
 IMPORT_VERSION = 1.1
 
 QT += qml quick
-QT_PRIVATE += core-private gui-private qml-private quick-private
+QT_PRIVATE += core-private gui-private qml-private quick-private quicktemplates2-private
 
 DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
 

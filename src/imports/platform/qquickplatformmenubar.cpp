@@ -205,6 +205,7 @@ void QQuickPlatformMenuBar::insertMenu(int index, QQuickPlatformMenu *menu)
     menu->setMenuBar(this);
     if (m_handle)
         m_handle->insertMenu(menu->create(), before ? before->handle() : nullptr);
+    menu->sync();
     emit menusChanged();
 }
 

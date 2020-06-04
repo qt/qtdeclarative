@@ -219,16 +219,25 @@ void QQuickTextAreaPrivate::resizeBackground()
 
     resizingBackground = true;
 
+    // When using the attached property TextArea.flickable, we reparent the background out
+    // of TextArea and into the Flickable since we don't want the background to move while
+    // flicking. This means that the size of the background should also follow the size of
+    // the Flickable rather than the size of the TextArea.
+    const auto flickable = qobject_cast<QQuickFlickable *>(background->parentItem());
+
     QQuickItemPrivate *p = QQuickItemPrivate::get(background);
     if (((!p->widthValid || !extra.isAllocated() || !extra->hasBackgroundWidth) && qFuzzyIsNull(background->x()))
             || (extra.isAllocated() && (extra->hasLeftInset || extra->hasRightInset))) {
+        const qreal bgWidth = flickable ? flickable->width() : width;
         background->setX(getLeftInset());
-        background->setWidth(width - getLeftInset() - getRightInset());
+        background->setWidth(bgWidth - getLeftInset() - getRightInset());
     }
+
     if (((!p->heightValid || !extra.isAllocated() || !extra->hasBackgroundHeight) && qFuzzyIsNull(background->y()))
             || (extra.isAllocated() && (extra->hasTopInset || extra->hasBottomInset))) {
+        const qreal bgHeight = flickable ? flickable->height() : height;
         background->setY(getTopInset());
-        background->setHeight(height - getTopInset() - getBottomInset());
+        background->setHeight(bgHeight - getTopInset() - getBottomInset());
     }
 
     resizingBackground = false;
