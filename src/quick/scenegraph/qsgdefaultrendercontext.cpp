@@ -296,34 +296,6 @@ QSGTexture *QSGDefaultRenderContext::compressedTextureForFactory(const QSGCompre
     return nullptr;
 }
 
-/*!
-    Compile \a shader, optionally using \a vertexCode and \a fragmentCode as
-    replacement for the source code supplied by \a shader.
-
-    If \a vertexCode or \a fragmentCode is supplied, the caller is responsible
-    for setting up attribute bindings.
-
-    \a material is supplied in case the implementation needs to take the
-    material flags into account.
- */
-void QSGDefaultRenderContext::compileShader(QSGMaterialShader *shader, QSGMaterial *material, const char *vertexCode, const char *fragmentCode)
-{
-    Q_UNUSED(material);
-    if (vertexCode || fragmentCode) {
-        Q_ASSERT_X((material->flags() & QSGMaterial::CustomCompileStep) == 0,
-                   "QSGRenderContext::compile()",
-                   "materials with custom compile step cannot have modified vertex or fragment code");
-        QOpenGLShaderProgram *p = shader->program();
-        p->addCacheableShaderFromSourceCode(QOpenGLShader::Vertex, vertexCode ? vertexCode : shader->vertexShader());
-        p->addCacheableShaderFromSourceCode(QOpenGLShader::Fragment, fragmentCode ? fragmentCode : shader->fragmentShader());
-        p->link();
-        if (!p->isLinked())
-            qWarning() << "shader compilation failed:" << Qt::endl << p->log();
-    } else {
-        shader->compile();
-    }
-}
-
 QString QSGDefaultRenderContext::fontKey(const QRawFont &font)
 {
     QFontEngine *fe = QRawFontPrivate::get(font)->fontEngine;
@@ -342,12 +314,6 @@ QString QSGDefaultRenderContext::fontKey(const QRawFont &font)
             .arg(font.weight())
             .arg(font.style());
     }
-}
-
-void QSGDefaultRenderContext::initializeShader(QSGMaterialShader *shader)
-{
-    shader->program()->bind();
-    shader->initialize();
 }
 
 void QSGDefaultRenderContext::initializeRhiShader(QSGMaterialShader *shader, QShader::Variant shaderVariant)

@@ -46,11 +46,6 @@
 #include <QtGui/QColor>
 #include <QtQuick/qsgmaterialtype.h>
 
-// ### glpurge Remove when purging direct OpenGL usage
-#if QT_CONFIG(opengl)
-# include <qopenglshaderprogram.h>
-#endif
-
 QT_BEGIN_NAMESPACE
 
 class QSGMaterial;
@@ -169,25 +164,6 @@ public:
 
     Flags flags() const;
     void setFlag(Flags flags, bool on = true);
-
-    // ### glpurge Remove when purging direct OpenGL usage
-    virtual char const *const *attributeNames() const { return nullptr; }
-    virtual void activate() { }
-    virtual void deactivate() { }
-    virtual void updateState(const RenderState &, QSGMaterial *, QSGMaterial *) { }
-#if QT_CONFIG(opengl)
-    inline QOpenGLShaderProgram *program() { return nullptr; }
-#endif
-#if QT_CONFIG(opengl)
-    void setShaderSourceFile(QOpenGLShader::ShaderType, const QString &) { }
-    void setShaderSourceFiles(QOpenGLShader::ShaderType, const QStringList &) { }
-    virtual void compile() { }
-#endif
-    virtual void initialize() { }
-#if QT_CONFIG(opengl)
-    virtual const char *vertexShader() const { return nullptr; }
-    virtual const char *fragmentShader() const { return nullptr; }
-#endif
 
 protected:
     Q_DECLARE_PRIVATE(QSGMaterialShader)

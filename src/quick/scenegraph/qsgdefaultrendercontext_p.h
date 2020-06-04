@@ -128,8 +128,6 @@ public:
     QSGRenderer *createRenderer() override;
     QSGTexture *compressedTextureForFactory(const QSGCompressedTextureFactory *factory) const override;
 
-    virtual void compileShader(QSGMaterialShader *shader, QSGMaterial *material, const char *vertexCode = nullptr, const char *fragmentCode = nullptr); // legacy GL only
-    virtual void initializeShader(QSGMaterialShader *shader); // legacy GL only
     virtual void initializeRhiShader(QSGMaterialShader *shader, QShader::Variant shaderVariant);
 
     void setAttachToGraphicsContext(bool attach) override;
