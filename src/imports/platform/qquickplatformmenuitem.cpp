@@ -121,6 +121,16 @@ QQuickPlatformMenuItem::~QQuickPlatformMenuItem()
         m_menu->removeItem(this);
     if (m_group)
         m_group->removeItem(this);
+#if QT_CONFIG(shortcut)
+    if (m_shortcutId != -1) {
+        QKeySequence sequence;
+        if (m_shortcut.type() == QVariant::Int)
+            sequence = QKeySequence(static_cast<QKeySequence::StandardKey>(m_shortcut.toInt()));
+        else
+            sequence = QKeySequence::fromString(m_shortcut.toString());
+        QGuiApplicationPrivate::instance()->shortcutMap.removeShortcut(m_shortcutId, this, sequence);
+    }
+#endif
     delete m_iconLoader;
     m_iconLoader = nullptr;
     delete m_handle;
