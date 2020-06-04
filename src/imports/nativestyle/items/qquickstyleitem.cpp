@@ -115,7 +115,11 @@ QSGNode *QQuickStyleItem::updatePaintNode(QSGNode *oldNode, QQuickItem::UpdatePa
         node = window()->createNinePatchNode();
 
     auto texture = window()->createTextureFromImage(m_paintedImage, QQuickWindow::TextureCanUseAtlas);
-    const QSize padding = m_useNinePatchImage ? m_styleItemGeometry.minimumSize / 2 : QSize(0, 0);
+    QSize padding = m_useNinePatchImage ? m_styleItemGeometry.minimumSize / 2 : QSize(0, 0);
+    if (boundingRect().width() < m_styleItemGeometry.minimumSize.width())
+        padding.setWidth(0);
+    if (boundingRect().height() < m_styleItemGeometry.minimumSize.height())
+        padding.setHeight(0);
 
     node->setBounds(boundingRect());
 
