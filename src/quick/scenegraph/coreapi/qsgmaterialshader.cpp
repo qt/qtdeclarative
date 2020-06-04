@@ -51,100 +51,138 @@ QT_BEGIN_NAMESPACE
     \ingroup qtquick-scenegraph-materials
     \since 5.14
 
-    // ### glpurge Rewrite to not talk about OpenGL and GLSL directly anymore
-
-    QSGMaterialShader is a modern, cross-platform alternative to
-    QSGMaterialShader. The latter is tied to OpenGL and GLSL by design, whereas
-    QSGMaterialShader is based on QShader, a container for multiple
-    versions of a graphics shader together with reflection information.
+    QSGMaterialShader represents a combination of vertex and fragment shaders,
+    data that define the graphics pipeline state changes, and logic that
+    updates graphics resources, such as uniform buffers and textures.
 
     \note All classes with QSG prefix should be used solely on the scene graph's
     rendering thread. See \l {Scene Graph and Rendering} for more information.
 
     The QSGMaterial and QSGMaterialShader form a tight relationship. For one
-    scene graph (including nested graphs), there is one unique QSGMaterialShader
-    instance which encapsulates the QOpenGLShaderProgram the scene graph uses
-    to render that material, such as a shader to flat coloring of geometry.
-    Each QSGGeometryNode can have a unique QSGMaterial containing the
-    how the shader should be configured when drawing that node, such as
-    the actual color used to render the geometry.
+    scene graph (including nested graphs), there is one unique
+    QSGMaterialShader instance that encapsulates the shaders and other data
+    the scene graph uses to render an object with that material. Each
+    QSGGeometryNode can have a unique QSGMaterial that defines how the graphics
+    pipeline must be configured while drawing the node. An instance of
+    QSGMaterialShader is never created explicitly by the user, it will be
+    created on demand by the scene graph through QSGMaterial::createShader().
+    The scene graph creates an instance of QSGMaterialShader by calling the
+    QSGMaterial::createShader() method, ensuring that there is only one
+    instance of each shader implementation.
 
-    An instance of QSGMaterialShader is never created explicitly by the user,
-    it will be created on demand by the scene graph through
-    QSGMaterial::createShader(). The scene graph will make sure that there
-    is only one instance of each shader implementation through a scene graph.
+    In Qt 5, QSGMaterialShader was tied to OpenGL. It was built directly on
+    QOpenGLShaderProgram and had functions like \c updateState() that could
+    issue arbitrary OpenGL commands. This is no longer the case in Qt 6.
+    QSGMaterialShader is not strictly data-oriented, meaning it provides data
+    (shaders and the desired pipeline state changes) together with logic that
+    updates data in a uniform buffer. Graphics API access is not provided.  This
+    means that a QSGMaterialShader cannot make OpenGL, Vulkan, Metal, or Direct
+    3D calls on its own. Together with the unified shader management, this
+    allows a QSGMaterialShader to be written once, and be functional with any of
+    the supported graphics APIs at run time.
 
-    The source code returned from vertexShader() is used to control what the
-    material does with the vertiex data that comes in from the geometry.
-    The source code returned from the fragmentShader() is used to control
-    what how the material should fill each individual pixel in the geometry.
-    The vertex and fragment source code is queried once during initialization,
-    changing what is returned from these functions later will not have
-    any effect.
+    The shaders set by calling the protected setShaderFileName() function
+    control what material does with the vertex data from the geometry, and how
+    the fragments are shaded. A QSGMaterialShader will typically set a vertex
+    and a fragment shader during construction. Changing the shaders afterwards
+    may not lead to the desired effect and must be avoided.
 
-    The activate() function is called by the scene graph when a shader is
-    is starting to be used. The deactivate function is called by the scene
-    graph when the shader is no longer going to be used. While active,
-    the scene graph may make one or more calls to updateState() which
-    will update the state of the shader for each individual geometry to
-    render.
+    In Qt 6, the default approach is to ship \c{.qsb} files with the application,
+    typically embedded via the resource system, and referenced when calling
+    setShaderFileName(). The \c{.qsb} files are generated offline, or at latest
+    at application build time, from Vulkan-style GLSL source code using the \c
+    qsb tool from the Qt Shader Tools module.
 
-    The attributeNames() returns the name of the attributes used in the
-    vertexShader(). These are used in the default implementation of
-    activate() and deactivate() to decide whice vertex registers are enabled.
+    There are three virtuals that can be overridden. These provide the data, or
+    the logic to generate the data, for uniform buffers, textures, and pipeline
+    state changes.
 
-    The initialize() function is called during program creation to allow
-    subclasses to prepare for use, such as resolve uniform names in the
-    vertexShader() and fragmentShader().
+    updateUniformData() is the function that is most commonly reimplemented in
+    subclasses. This function is expected to update the contents of a
+    QByteArray that will then be exposed to the shaders as a uniform buffer.
+    Any QSGMaterialShader that has a uniform block in its vertex or fragment
+    shader must reimplement updateUniformData().
 
-    A minimal example:
+    updateSampledImage() is relevant when the shader code samples textures. The
+    function will be invoked for each sampler (or combined image sampler, in
+    APIs where relevant), giving it the option to specify which QSGTexture
+    should be exposed to the shader.
+
+    The shader pipeline state changes are less often used. One use case is
+    materials that wish to use a specific blend mode. The relevant function is
+    updateGraphicsPipelineState(). This function is not called unless the
+    QSGMaterialShader has opted in by setting the flag
+    UpdatesGraphicsPipelineState. The task of the function is to update the
+    GraphicsPipelineState struct instance that is passed to it with the
+    desired changes. Currently only blending and culling-related features are
+    available, other states cannot be controlled by materials.
+
+    A minimal example, that also includes texture support, could be the
+    following. Here we assume that Material is the QSGMaterial that creates an
+    instance of Shader in its \l{QSGMaterial::createShader()}{createShader()},
+    and that it holds a QSGTexture we want to sample in the fragment shader. The
+    vertex shader relies only on the modelview-projection matrix.
+
     \code
         class Shader : public QSGMaterialShader
         {
         public:
-            const char *vertexShader() const {
-                return
-                "attribute highp vec4 vertex;          \n"
-                "uniform highp mat4 matrix;            \n"
-                "void main() {                         \n"
-                "    gl_Position = matrix * vertex;    \n"
-                "}";
-            }
-
-            const char *fragmentShader() const {
-                return
-                "uniform lowp float opacity;                            \n"
-                "void main() {                                          \n"
-                        "    gl_FragColor = vec4(1, 0, 0, 1) * opacity; \n"
-                "}";
-            }
-
-            char const *const *attributeNames() const
+            Shader()
             {
-                static char const *const names[] = { "vertex", 0 };
-                return names;
+                setShaderFileName(VertexStage, QLatin1String(":/materialshader.vert.qsb"));
+                setShaderFileName(FragmentStage, QLatin1String(":/materialshader.frag.qsb"));
             }
 
-            void initialize()
+            bool updateUniformData(RenderState &state, QSGMaterial *, QSGMaterial *)
             {
-                QSGMaterialShader::initialize();
-                m_id_matrix = program()->uniformLocation("matrix");
-                m_id_opacity = program()->uniformLocation("opacity");
+                bool changed = false;
+                QByteArray *buf = state.uniformData();
+                if (state.isMatrixDirty()) {
+                    const QMatrix4x4 m = state.combinedMatrix();
+                    memcpy(buf->data(), m.constData(), 64);
+                    changed = true;
+                }
+                return changed;
             }
 
-            void updateState(const RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
+            void updateSampledImage(RenderState &, int binding, QSGTexture **texture, QSGMaterial *newMaterial, QSGMaterial *)
             {
-                Q_ASSERT(program()->isLinked());
-                if (state.isMatrixDirty())
-                    program()->setUniformValue(m_id_matrix, state.combinedMatrix());
-                if (state.isOpacityDirty())
-                    program()->setUniformValue(m_id_opacity, state.opacity());
+                Material *mat = static_cast<Material *>(newMaterial);
+                if (binding == 1)
+                    *texture = mat->texture();
             }
-
-        private:
-            int m_id_matrix;
-            int m_id_opacity;
         };
+    \endcode
+
+    The Vulkan-style GLSL source code for the shaders could look like the
+    following. These are expected to be preprocessed offline using the \c qsb
+    tool, which generates the \c{.qsb} files referenced in the Shader()
+    constructor.
+
+    \badcode
+        #version 440
+        layout(location = 0) in vec4 aVertex;
+        layout(location = 1) in vec2 aTexCoord;
+        layout(location = 0) out vec2 vTexCoord;
+        layout(std140, binding = 0) uniform buf {
+            mat4 qt_Matrix;
+        } ubuf;
+        out gl_PerVertex { vec4 gl_Position; };
+        void main() {
+            gl_Position = ubuf.qt_Matrix * aVertex;
+            vTexCoord = aTexCoord;
+        }
+    \endcode
+
+    \badcode
+        #version 440
+        layout(location = 0) in vec2 vTexCoord;
+        layout(location = 0) out vec4 fragColor;
+        layout(binding = 1) uniform sampler2D srcTex;
+        void main() {
+            vec4 c = texture(srcTex, vTexCoord);
+            fragColor = vec4(c.rgb * 0.5, 1.0);
+        }
     \endcode
 
     \note All classes with QSG prefix should be used solely on the scene graph's
@@ -406,8 +444,8 @@ bool QSGMaterialShader::updateUniformData(RenderState &state,
     in the shader, typically in form of a combined image sampler.
 
     \a binding is the binding number of the sampler. The function is called for
-    each variable in the material's shaders'
-    \l{QShaderDescription::combinedImageSamplers()}.
+    each combined image sampler variable in the shader code associated with the
+    QSGMaterialShader.
 
     When *\a{texture} is null, it must be set to a QSGTexture pointer before
     returning. When non-null, it is up to the material to decide if a new
@@ -415,9 +453,11 @@ bool QSGMaterialShader::updateUniformData(RenderState &state,
     already known QSGTexture. The ownership of the QSGTexture is not
     transferred.
 
-    The current rendering \a state is passed from the scene graph. It is up to
-    the material to enqueue the texture data uploads to the
-    QRhiResourceUpdateBatch retriveable via RenderState::resourceUpdateBatch().
+    The current rendering \a state is passed from the scene graph. Where
+    relevant, it is up to the material to trigger enqueuing texture data
+    uploads. This is typically done by calling the virtual
+    QSGTexture::commitTextureOperations() with \c{state.rhi()} and
+    \c{state.resourceUpdateBatch()}.
 
     The subclass specific state can be extracted from \a newMaterial.
 
