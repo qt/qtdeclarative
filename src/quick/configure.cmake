@@ -72,7 +72,7 @@ qt_feature("quick-path" PRIVATE
     SECTION "Qt Quick"
     LABEL "Path support"
     PURPOSE "Provides Path elements."
-    CONDITION QT_FEATURE_quick_shadereffect
+    CONDITION TARGET Qt::Gui
 )
 qt_feature("quick-pathview" PRIVATE
     SECTION "Qt Quick"
@@ -107,3 +107,18 @@ qt_feature("quick-draganddrop" PUBLIC
     PURPOSE "Drag and drop support for Qt Quick"
     CONDITION ( QT_FEATURE_draganddrop ) AND ( QT_FEATURE_regularexpression )
 )
+qt_configure_add_summary_section(NAME "Qt Quick")
+qt_configure_add_summary_entry(ARGS "quick-animatedimage")
+qt_configure_add_summary_entry(ARGS "quick-canvas")
+qt_configure_add_summary_entry(ARGS "quick-designer")
+qt_configure_add_summary_entry(ARGS "quick-flipable")
+qt_configure_add_summary_entry(ARGS "quick-gridview")
+qt_configure_add_summary_entry(ARGS "quick-listview")
+qt_configure_add_summary_entry(ARGS "quick-tableview")
+qt_configure_add_summary_entry(ARGS "quick-path")
+qt_configure_add_summary_entry(ARGS "quick-pathview")
+qt_configure_add_summary_entry(ARGS "quick-positioners")
+qt_configure_add_summary_entry(ARGS "quick-repeater")
+qt_configure_add_summary_entry(ARGS "quick-shadereffect")
+qt_configure_add_summary_entry(ARGS "quick-sprite")
+qt_configure_end_summary_section() # end of "Qt Quick" section

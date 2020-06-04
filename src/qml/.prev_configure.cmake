@@ -187,14 +187,9 @@ qt_feature("qml-itemmodel" PRIVATE
     PURPOSE "Provides the item model for item views in QML"
     CONDITION QT_FEATURE_itemmodel
 )
-
-# special case begin
-qt_qml_find_python(__qt_qml_python_path __qt_qml_python_found)
-# special case end
-
 qt_feature("qml-python" PRIVATE
     LABEL "python"
-    CONDITION __qt_qml_python_found # special case
+    CONDITION tests.qml-python OR FIXME
 )
 qt_configure_add_summary_section(NAME "Qt QML")
 qt_configure_add_summary_entry(ARGS "qml-network")

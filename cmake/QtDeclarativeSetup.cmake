@@ -46,3 +46,15 @@ function(qt_declarative_generate_reg_exp_jit_tables consuming_target)
     target_sources(${consuming_target} PRIVATE ${output_file})
     target_include_directories(${consuming_target} PRIVATE $<BUILD_INTERFACE:${generate_dir}>)
 endfunction()
+
+function(qt_qml_find_python out_var_path out_var_found)
+    find_program(QT_QML_PYTHON_PATH
+                 NAMES python python2 python3 py
+                 DOC "Qt Declarative python path")
+    if(QT_QML_PYTHON_PATH)
+        set(${out_var_path} "${QT_QML_PYTHON_PATH}" PARENT_SCOPE)
+        set(${out_var_found} "TRUE" PARENT_SCOPE)
+    else()
+        set(${out_var_found} "FALSE" PARENT_SCOPE)
+    endif()
+endfunction()
