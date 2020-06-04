@@ -1221,14 +1221,12 @@ template <typename StringVisitor, typename TypeInfoVisitor>
 int visitMethods(const QMetaObject &mo, int methodOffset, int methodCount,
                  StringVisitor visitString, TypeInfoVisitor visitTypeInfo)
 {
-    const int intsPerMethod = 5;
-
     int fieldsForParameterData = 0;
 
     bool hasRevisionedMethods = false;
 
     for (int i = 0; i < methodCount; ++i) {
-        const int handle = methodOffset + i * intsPerMethod;
+        const int handle = methodOffset + i * QMetaObjectPrivate::IntsPerMethod;
 
         const uint flags = mo.d.data[handle + 4];
         if (flags & MethodRevisioned)
@@ -1258,7 +1256,8 @@ int visitMethods(const QMetaObject &mo, int methodOffset, int methodCount,
     if (hasRevisionedMethods)
         fieldsForRevisions = methodCount;
 
-    return methodCount * intsPerMethod + fieldsForRevisions + fieldsForParameterData;
+    return methodCount * QMetaObjectPrivate::IntsPerMethod
+            + fieldsForRevisions + fieldsForParameterData;
 }
 
 template <typename StringVisitor, typename TypeInfoVisitor>
@@ -1370,9 +1369,8 @@ bool QQmlPropertyCache::determineMetaObjectSizes(const QMetaObject &mo, int *fie
                                                  int *stringCount)
 {
     const QMetaObjectPrivate *priv = reinterpret_cast<const QMetaObjectPrivate*>(mo.d.data);
-    if (priv->revision < 7 || priv->revision > 8) {
+    if (priv->revision != 9)
         return false;
-    }
 
     uint highestStringIndex = 0;
     const auto stringIndexVisitor = [&highestStringIndex](uint index) {
