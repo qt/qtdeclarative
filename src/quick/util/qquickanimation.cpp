@@ -1009,7 +1009,7 @@ void QQuickScriptActionPrivate::debugAction(QDebug d, int indentLevel) const
 
         QByteArray ind(indentLevel, ' ');
         QString exprStr = expr.expression();
-        int endOfFirstLine = exprStr.indexOf('\n');
+        int endOfFirstLine = exprStr.indexOf(u'\n');
         d << "\n" << ind.constData() << exprStr.leftRef(endOfFirstLine);
         if (endOfFirstLine != -1 && endOfFirstLine < exprStr.length())
             d << "...";

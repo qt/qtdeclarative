@@ -618,7 +618,7 @@ static const QString pointDeviceName(const QQuickEventPoint *point)
 {
     auto device = static_cast<const QQuickPointerEvent *>(point->parent())->device();
     QString deviceName = (device ? device->name() : QLatin1String("null device"));
-    deviceName.resize(16, ' '); // shorten, and align in case of sequential output
+    deviceName.resize(16, u' '); // shorten, and align in case of sequential output
     return deviceName;
 }
 
