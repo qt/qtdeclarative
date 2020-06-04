@@ -6053,6 +6053,29 @@ QSize QMacStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt, cons
             }
         }
         break;
+    case CT_LineEdit:
+        if (const QStyleOptionFrame *f = qstyleoption_cast<const QStyleOptionFrame *>(opt)) {
+            if (sz.isEmpty()) {
+                // Minimum size (10, 10)
+                sz.rwidth() += 2;
+                sz.rheight() += 6;
+            }
+            // From using pixelTool with XCode/NSTextTextField
+            int leftPadding = 4;
+            int rightPadding = 4;
+            int topPadding = 4;
+            int bottomPadding = 0;
+
+            if (opt->state & QStyle::State_Small) {
+                topPadding = 3;
+            } else if (opt->state & QStyle::State_Mini) {
+                topPadding = 2;
+            }
+
+            sz.rwidth() += leftPadding + rightPadding;
+            sz.rheight() += topPadding + bottomPadding;
+        }
+        break;
     case QStyle::CT_PushButton: {
         if (const QStyleOptionButton *btn = qstyleoption_cast<const QStyleOptionButton *>(opt))
             if (btn->features & QStyleOptionButton::CommandLinkButton)

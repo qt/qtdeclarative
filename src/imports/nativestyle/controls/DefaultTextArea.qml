@@ -45,8 +45,12 @@ T.TextArea {
 
     readonly property bool nativeBackground: background instanceof NativeStyle.StyleItem
 
-    implicitWidth: Math.max(96, background.implicitWidth + leftPadding + rightPadding + leftInset + rightInset)
-    implicitHeight: background.implicitHeight + topPadding + bottomPadding + topInset + bottomInset
+    implicitWidth: Math.max(contentWidth + leftPadding + rightPadding,
+                            implicitBackgroundWidth + leftInset + rightInset,
+                            placeholder.implicitWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(contentHeight + topPadding + bottomPadding,
+                             implicitBackgroundHeight + topInset + bottomInset,
+                             placeholder.implicitHeight + topPadding + bottomPadding)
 
     font.pixelSize: nativeBackground ? background.styleFont(control).pixelSize : undefined
 

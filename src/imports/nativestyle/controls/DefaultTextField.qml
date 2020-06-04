@@ -45,8 +45,11 @@ T.TextField {
 
     readonly property bool nativeBackground: background instanceof NativeStyle.StyleItem
 
-    implicitWidth: Math.max(96, background.implicitWidth + leftPadding + rightPadding + leftInset + rightInset)
-    implicitHeight: background.implicitHeight + topPadding + bottomPadding + topInset + bottomInset
+    implicitWidth: implicitBackgroundWidth + leftInset + rightInset
+                   || Math.max(contentWidth, placeholder.implicitWidth) + leftPadding + rightPadding
+    implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
+                             contentHeight + topPadding + bottomPadding,
+                             placeholder.implicitHeight + topPadding + bottomPadding)
 
     font.pixelSize: nativeBackground ? background.styleFont(control).pixelSize : undefined
 
