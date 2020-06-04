@@ -36,6 +36,8 @@
 
 #include "qquickstyleitem.h"
 
+#include <QtCore/qscopedvaluerollback.h>
+
 #include <QtQuick/qsgninepatchnode.h>
 #include <QtQuick/private/qquickwindow_p.h>
 
@@ -176,18 +178,11 @@ void QQuickStyleItem::geometryChange(const QRectF &newGeometry, const QRectF &ol
 {
     QQuickItem::geometryChange(newGeometry, oldGeometry);
 
-    // Note that a change in geometry should not lead us into
-    // recalculating the styling based geometry, as that will
-    // change our implicitSize and controlSize, which will
-    // cause a binding loop.
-    if (!m_useNinePatchImage) {
-        // Since the image has the same size as
-        // the control, we need to repaint it.
-        m_dirty.setFlag(DirtyFlag::Image);
-        polish();
-    } else {
-        update();
-    }
+    // Ensure that we only schedule a new geometry update
+    // and polish if this geometry change was caused by
+    // something else than us already updating geometry.
+    if (!m_polishing)
+        markGeometryDirty();
 }
 
 void QQuickStyleItem::updateGeometry()
@@ -218,9 +213,6 @@ void QQuickStyleItem::updateGeometry()
         emit layoutRectChanged();
 
     setImplicitSize(m_styleItemGeometry.implicitSize.width(), m_styleItemGeometry.implicitSize.height());
-    // Clear the dirty flag after setting implicit size, since the following call
-    // to geometryChanged() might set it again, which is unnecessary.
-    m_dirty.setFlag(DirtyFlag::Geometry, false);
 
     if (!m_useNinePatchImage)
         m_styleItemGeometry.minimumSize = size().toSize();
@@ -275,6 +267,8 @@ void QQuickStyleItem::paintControlToImage()
 
 void QQuickStyleItem::updatePolish()
 {
+    QScopedValueRollback<bool> guard(m_polishing, true);
+
     const bool dirtyGeometry = m_dirty & DirtyFlag::Geometry;
     const bool dirtyImage = (m_dirty & DirtyFlag::Image) || (!m_useNinePatchImage && dirtyGeometry);
 

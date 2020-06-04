@@ -250,6 +250,7 @@ private:
 
     DirtyFlags m_dirty = Everything;
     bool m_useNinePatchImage = true;
+    bool m_polishing = false;
 
 private:
     static QStyle *s_style;
