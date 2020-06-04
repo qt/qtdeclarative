@@ -87,17 +87,6 @@ bool QSGRhiLayer::hasMipmaps() const
     return m_mipmap;
 }
 
-int QSGRhiLayer::textureId() const
-{
-    Q_ASSERT_X(false, "QSGRhiLayer::textureId()", "Not implemented for RHI");
-    return 0;
-}
-
-void QSGRhiLayer::bind()
-{
-    Q_ASSERT_X(false, "QSGRhiLayer::bind()", "Not implemented for RHI");
-}
-
 QRhiTexture *QSGRhiLayer::rhiTexture() const
 {
     return m_texture;

@@ -71,11 +71,9 @@ public:
     // QSGTexture interface
 public:
     qint64 comparisonKey() const override;
-    int textureId() const override;
     QSize textureSize() const override;
     bool hasAlphaChannel() const override;
     bool hasMipmaps() const override;
-    void bind() override;
 
     // QSGDynamicTexture interface
 public:

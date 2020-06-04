@@ -158,8 +158,6 @@ public:
     ~TextureBase();
 
     qint64 comparisonKey() const override;
-    int textureId() const override { return 0; } // not used
-    void bind() override { } // not used
     QRhiTexture *rhiTexture() const override;
     void commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates) override;
 

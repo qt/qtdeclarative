@@ -302,19 +302,6 @@ void QSGDistanceFieldGlyphCache::markGlyphsToRender(const QVector<glyph_t> &glyp
         m_pendingGlyphs.add(glyphs.at(i));
 }
 
-void QSGDistanceFieldGlyphCache::updateTexture(uint oldTex, uint newTex, const QSize &newTexSize)
-{
-    int count = m_textures.count();
-    for (int i = 0; i < count; ++i) {
-        Texture &tex = m_textures[i];
-        if (tex.textureId == oldTex) {
-            tex.textureId = newTex;
-            tex.size = newTexSize;
-            return;
-        }
-    }
-}
-
 void QSGDistanceFieldGlyphCache::updateRhiTexture(QRhiTexture *oldTex, QRhiTexture *newTex, const QSize &newTexSize)
 {
     int count = m_textures.count();

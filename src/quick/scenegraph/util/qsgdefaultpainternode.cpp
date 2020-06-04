@@ -60,19 +60,6 @@ QSGPainterTexture::QSGPainterTexture()
     m_retain_image = true;
 }
 
-void QSGPainterTexture::bind()
-{
-    if (m_dirty_rect.isNull()) {
-        QSGPlainTexture::bind();
-        return;
-    }
-
-    setImage(m_image);
-    QSGPlainTexture::bind();
-
-    m_dirty_rect = QRect();
-}
-
 void QSGPainterTexture::commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates)
 {
     if (!m_dirty_rect.isNull()) {
@@ -324,7 +311,8 @@ void QSGDefaultPainterNode::updateRenderTarget()
         texture->setOwnsTexture(true);
         texture->setTextureSize(m_textureSize);
     } else {
-        texture->setTextureId(m_fbo->texture());
+        // ### glpurge
+        //texture->setTextureId(m_fbo->texture());
         texture->setOwnsTexture(false);
         texture->setTextureSize(m_fboSize);
     }

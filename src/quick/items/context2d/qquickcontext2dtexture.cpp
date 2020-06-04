@@ -463,11 +463,13 @@ QSGTexture *QQuickContext2DFBOTexture::textureForNextFrame(QSGTexture *lastTextu
         if (m_dirtyTexture) {
             if (!m_gl) {
                 // on a rendering thread, use the fbo directly...
-                texture->setTextureId(m_fbo->texture());
+                // ### glpurge
+                //texture->setTextureId(m_fbo->texture());
             } else {
                 // on GUI or custom thread, use display textures...
                 m_displayTexture = m_displayTexture == 0 ? 1 : 0;
-                texture->setTextureId(m_displayTextures[m_displayTexture]);
+                // ### glpurge
+                //texture->setTextureId(m_displayTextures[m_displayTexture]);
             }
             texture->setTextureSize(m_fbo->size());
             m_dirtyTexture = false;

@@ -4846,59 +4846,6 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image, CreateText
     return d->context->createTexture(image, flags);
 }
 
-
-#if QT_DEPRECATED_SINCE(5, 15)
-/*!
-    Creates a new QSGTexture object from an existing OpenGL texture \a id and \a size.
-
-    The caller of the function is responsible for deleting the returned texture.
-
-    The returned texture will be using \c GL_TEXTURE_2D as texture target and
-    assumes that internal format is \c {GL_RGBA}. Reimplement QSGTexture to
-    create textures with different parameters.
-
-    Use \a options to customize the texture attributes. The TextureUsesAtlas
-    option is ignored.
-
-    \warning This function will return null if the scenegraph has not yet been
-    initialized or OpenGL is not in use.
-
-    \note This function only has an effect when using the default OpenGL scene graph
-    adaptation.
-
-    \note This function has no effect when running on the RHI graphics
-    abstraction. Use createTextureFromNativeObject() instead.
-
-    \obsolete
-
-    \sa sceneGraphInitialized(), QSGTexture
- */
-QSGTexture *QQuickWindow::createTextureFromId(uint id, const QSize &size, CreateTextureOptions options) const
-{
-#if QT_CONFIG(opengl)
-    Q_D(const QQuickWindow);
-    if (!d->rhi) {
-        if (openglContext()) {
-            QSGPlainTexture *texture = new QSGPlainTexture();
-            texture->setTextureId(id);
-            texture->setHasAlphaChannel(options & TextureHasAlphaChannel);
-            texture->setOwnsTexture(options & TextureOwnsGLTexture);
-            texture->setTextureSize(size);
-            return texture;
-        }
-    } else {
-        qWarning("createTextureFromId() must not be called when running on the RHI. "
-                 "Use createTextureFromNativeObject() instead.");
-    }
-#else
-    Q_UNUSED(id)
-    Q_UNUSED(size)
-    Q_UNUSED(options)
-#endif
-    return nullptr;
-}
-#endif
-
 /*!
     \enum QQuickWindow::NativeObjectType
     \since 5.14
@@ -4970,13 +4917,6 @@ QSGTexture *QQuickWindow::createTextureFromNativeObject(NativeObjectType type,
         texture->setHasAlphaChannel(options & TextureHasAlphaChannel);
         // note that the QRhiTexture does not (and cannot) own the native object
         texture->setOwnsTexture(true); // texture meaning the QRhiTexture here, not the native object
-        texture->setTextureSize(size);
-        return texture;
-    } else if (openglContext()) {
-        QSGPlainTexture *texture = new QSGPlainTexture;
-        texture->setTextureId(uint(nativeObjectHandle));
-        texture->setHasAlphaChannel(options & TextureHasAlphaChannel);
-        texture->setOwnsTexture(options & TextureOwnsGLTexture);
         texture->setTextureSize(size);
         return texture;
     }

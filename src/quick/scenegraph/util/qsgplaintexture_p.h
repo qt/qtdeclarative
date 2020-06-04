@@ -70,8 +70,6 @@ public:
     void setOwnsTexture(bool owns) { m_owns_texture = owns; }
     bool ownsTexture() const { return m_owns_texture; }
 
-    void setTextureId(int id);
-    int textureId() const override;
     void setTextureSize(const QSize &size) { m_texture_size = size; }
     QSize textureSize() const override { return m_texture_size; }
 
@@ -84,8 +82,6 @@ public:
     const QImage &image() { return m_image; }
 
     qint64 comparisonKey() const override;
-
-    void bind() override;
 
     QRhiTexture *rhiTexture() const override;
     void commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates) override;
@@ -106,7 +102,6 @@ protected:
 
     QImage m_image;
 
-    uint m_texture_id;
     QSize m_texture_size;
     QRectF m_texture_rect;
     QRhiTexture *m_texture;

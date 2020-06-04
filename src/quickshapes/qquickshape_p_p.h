@@ -219,27 +219,6 @@ private:
     QHash<QQuickShapeGradientCacheKey, QSGPlainTexture *> m_textures;
 };
 
-#if QT_CONFIG(opengl)
-
-class QQuickShapeGradientOpenGLCache : public QOpenGLSharedResource
-{
-public:
-    QQuickShapeGradientOpenGLCache(QOpenGLContext *context) : QOpenGLSharedResource(context->shareGroup()) { }
-    ~QQuickShapeGradientOpenGLCache();
-
-    void invalidateResource() override;
-    void freeResource(QOpenGLContext *) override;
-
-    QSGTexture *get(const QQuickShapeGradientCacheKey &grad);
-
-    static QQuickShapeGradientOpenGLCache *currentCache();
-
-private:
-    QHash<QQuickShapeGradientCacheKey, QSGPlainTexture *> m_cache;
-};
-
-#endif // QT_CONFIG(opengl)
-
 QT_END_NAMESPACE
 
 #endif

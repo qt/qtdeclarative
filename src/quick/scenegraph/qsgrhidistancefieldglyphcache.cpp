@@ -193,7 +193,6 @@ void QSGRhiDistanceFieldGlyphCache::storeGlyphs(const QList<QDistanceField> &gly
         Texture t;
         t.texture = i.key()->texture;
         t.size = i.key()->size;
-        t.rhiBased = true;
         setGlyphsTexture(i.value(), t);
     }
 }
@@ -526,7 +525,6 @@ bool QSGRhiDistanceFieldGlyphCache::loadPregeneratedCache(const QRawFont &font)
             Texture t;
             t.texture = texInfo->texture;
             t.size = texInfo->size;
-            t.rhiBased = true;
 
             setGlyphsTexture(glyphs, t);
 

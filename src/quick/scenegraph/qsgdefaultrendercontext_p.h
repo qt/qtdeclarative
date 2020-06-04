@@ -174,7 +174,6 @@ protected:
     bool m_brokenIBOs;
     bool m_serializedRender;
     bool m_attachToGLContext;
-    QSGOpenGLAtlasTexture::Manager *m_glAtlasManager;
     QSGRhiAtlasTexture::Manager *m_rhiAtlasManager;
     QRhiCommandBuffer *m_currentFrameCommandBuffer;
     QRhiRenderPassDescriptor *m_currentFrameRenderPass;

@@ -447,18 +447,11 @@ public:
     };
 
     struct Texture {
-        uint textureId = 0;
         QRhiTexture *texture = nullptr;
         QSize size;
-        bool rhiBased = false;
 
         bool operator == (const Texture &other) const {
-            if (rhiBased != other.rhiBased)
-                return false;
-            if (rhiBased)
-                return texture == other.texture;
-            else
-                return textureId == other.textureId;
+            return texture == other.texture;
         }
     };
 
@@ -519,11 +512,9 @@ protected:
     void markGlyphsToRender(const QVector<glyph_t> &glyphs);
     inline void removeGlyph(glyph_t glyph);
 
-    void updateTexture(uint oldTex, uint newTex, const QSize &newTexSize);
     void updateRhiTexture(QRhiTexture *oldTex, QRhiTexture *newTex, const QSize &newTexSize);
 
     inline bool containsGlyph(glyph_t glyph);
-    uint textureIdForGlyph(glyph_t glyph) const;
 
     GlyphData &glyphData(glyph_t glyph);
     GlyphData &emptyData(glyph_t glyph);

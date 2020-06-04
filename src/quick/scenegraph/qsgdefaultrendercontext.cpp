@@ -48,7 +48,6 @@
 #include <QtQuick/private/qsgrhidistancefieldglyphcache_p.h>
 #include <QtQuick/private/qsgmaterialshader_p.h>
 
-#include <QtQuick/private/qsgopenglatlastexture_p.h>
 #include <QtQuick/private/qsgcompressedtexture_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -64,7 +63,6 @@ QSGDefaultRenderContext::QSGDefaultRenderContext(QSGContext *context)
     , m_brokenIBOs(false)
     , m_serializedRender(false)
     , m_attachToGLContext(true)
-    , m_glAtlasManager(nullptr)
     , m_rhiAtlasManager(nullptr)
     , m_currentFrameCommandBuffer(nullptr)
     , m_currentFrameRenderPass(nullptr)
@@ -124,9 +122,6 @@ void QSGDefaultRenderContext::initialize(const QSGRenderContext::InitParams *par
             m_gl->setProperty(QSG_RENDERCONTEXT_PROPERTY, QVariant::fromValue(this));
         }
 
-        if (!m_glAtlasManager)
-            m_glAtlasManager = new QSGOpenGLAtlasTexture::Manager(m_initParams.initialSurfacePixelSize);
-
         // WebGL: A given WebGLBuffer object may only be bound to one of
         // the ARRAY_BUFFER or ELEMENT_ARRAY_BUFFER target in its
         // lifetime. An attempt to bind a buffer object to the other
@@ -169,11 +164,6 @@ void QSGDefaultRenderContext::invalidate()
        Another alternative would be to use a QPointer in
        QSGOpenGLAtlasTexture::Texture, but this seemed simpler.
      */
-    if (m_glAtlasManager) {
-        m_glAtlasManager->invalidate();
-        m_glAtlasManager->deleteLater();
-        m_glAtlasManager = nullptr;
-    }
     if (m_rhiAtlasManager) {
         m_rhiAtlasManager->invalidate();
         m_rhiAtlasManager->deleteLater();
@@ -321,12 +311,6 @@ QSGTexture *QSGDefaultRenderContext::createTexture(const QImage &image, uint fla
             if (t)
                 return t;
         }
-    } else {
-        if (!mipmap && atlas && openglContext() && QThread::currentThread() == openglContext()->thread()) {
-            QSGTexture *t = m_glAtlasManager->create(image, alpha);
-            if (t)
-                return t;
-        }
     }
 
     QSGPlainTexture *texture = new QSGPlainTexture;
@@ -346,12 +330,8 @@ QSGTexture *QSGDefaultRenderContext::compressedTextureForFactory(const QSGCompre
 {
     // This is only used for atlasing compressed textures. Returning null implies no atlas.
 
-    if (m_rhi && QThread::currentThread() == m_rhi->thread()) {
+    if (m_rhi && QThread::currentThread() == m_rhi->thread())
         return m_rhiAtlasManager->create(factory);
-    } else if (openglContext() && QThread::currentThread() == openglContext()->thread()) {
-        // The atlas implementation is only supported from the render thread
-        return m_glAtlasManager->create(factory);
-    }
 
     return nullptr;
 }

@@ -73,8 +73,6 @@ public:
     bool hasMipmaps() const override;
     QSize textureSize() const override { return m_size; }
 
-    void bind() override;
-    int textureId() const override;
     qint64 comparisonKey() const override;
     QRhiTexture *rhiTexture() const override;
     void commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates) override;

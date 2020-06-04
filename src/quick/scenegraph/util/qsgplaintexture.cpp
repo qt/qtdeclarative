@@ -44,37 +44,17 @@
 #include <private/qqmlglobal_p.h>
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qpa/qplatformnativeinterface.h>
-#if QT_CONFIG(opengl)
-# include <qopenglcontext.h>
-# include <qopenglfunctions.h>
-# include <private/qopengltextureuploader_p.h>
-# include <private/qsgdefaultrendercontext_p.h>
-#endif
 #include <QtGui/private/qrhi_p.h>
 
 #include <qtquick_tracepoints_p.h>
-
-#if QT_CONFIG(opengl)
-static QElapsedTimer qsg_renderer_timer;
-#endif
-
-#ifndef GL_BGRA
-#define GL_BGRA 0x80E1
-#endif
-
-#ifndef GL_TEXTURE_MAX_ANISOTROPY_EXT
-#define GL_TEXTURE_MAX_ANISOTROPY_EXT 0x84FE
-#endif
 
 QT_BEGIN_NAMESPACE
 
 QSGPlainTexture::QSGPlainTexture()
     : QSGTexture(*(new QSGPlainTexturePrivate))
-    , m_texture_id(0)
     , m_texture(nullptr)
     , m_has_alpha(false)
     , m_dirty_texture(false)
-    , m_dirty_bind_options(false)
     , m_owns_texture(true)
     , m_mipmaps_generated(false)
     , m_retain_image(false)
@@ -84,11 +64,9 @@ QSGPlainTexture::QSGPlainTexture()
 
 QSGPlainTexture::QSGPlainTexture(QSGPlainTexturePrivate &dd)
     : QSGTexture(dd)
-    , m_texture_id(0)
     , m_texture(nullptr)
     , m_has_alpha(false)
     , m_dirty_texture(false)
-    , m_dirty_bind_options(false)
     , m_owns_texture(true)
     , m_mipmaps_generated(false)
     , m_retain_image(false)
@@ -98,10 +76,6 @@ QSGPlainTexture::QSGPlainTexture(QSGPlainTexturePrivate &dd)
 
 QSGPlainTexture::~QSGPlainTexture()
 {
-#if QT_CONFIG(opengl)
-    if (m_texture_id && m_owns_texture && QOpenGLContext::currentContext())
-        QOpenGLContext::currentContext()->functions()->glDeleteTextures(1, &m_texture_id);
-#endif
     if (m_texture && m_owns_texture)
         delete m_texture;
 }
@@ -112,166 +86,7 @@ void QSGPlainTexture::setImage(const QImage &image)
     m_texture_size = image.size();
     m_has_alpha = image.hasAlphaChannel();
     m_dirty_texture = true;
-    m_dirty_bind_options = true;
     m_mipmaps_generated = false;
- }
-
-int QSGPlainTexture::textureId() const // legacy (GL-only)
-{
-    if (m_dirty_texture) {
-        if (m_image.isNull()) {
-            // The actual texture and id will be updated/deleted in a later bind()
-            // or ~QSGPlainTexture so just keep it minimal here.
-            return 0;
-        } else if (m_texture_id == 0){
-#if QT_CONFIG(opengl)
-            // Generate a texture id for use later and return it.
-            QOpenGLContext::currentContext()->functions()->glGenTextures(1, &const_cast<QSGPlainTexture *>(this)->m_texture_id);
-#endif
-            return m_texture_id;
-        }
-    }
-    return m_texture_id;
-}
-
-void QSGPlainTexture::setTextureId(int id) // legacy (GL-only)
-{
-#if QT_CONFIG(opengl)
-    if (m_texture_id && m_owns_texture)
-        QOpenGLContext::currentContext()->functions()->glDeleteTextures(1, &m_texture_id);
-#endif
-
-    m_texture_id = id;
-    m_dirty_texture = false;
-    m_dirty_bind_options = true;
-    m_image = QImage();
-    m_mipmaps_generated = false;
-}
-
-void QSGPlainTexture::bind() // legacy (GL-only)
-{
-#if QT_CONFIG(opengl)
-    Q_TRACE_SCOPE(QSG_texture_prepare);
-    QOpenGLContext *context = QOpenGLContext::currentContext();
-    QOpenGLFunctions *funcs = context->functions();
-    if (!m_dirty_texture) {
-        Q_TRACE_SCOPE(QSG_texture_bind);
-        funcs->glBindTexture(GL_TEXTURE_2D, m_texture_id);
-        if (mipmapFiltering() != QSGTexture::None && !m_mipmaps_generated) {
-            funcs->glGenerateMipmap(GL_TEXTURE_2D);
-            m_mipmaps_generated = true;
-        }
-        updateBindOptions(m_dirty_bind_options);
-        m_dirty_bind_options = false;
-        return;
-    }
-
-    m_dirty_texture = false;
-
-    bool profileFrames = QSG_LOG_TIME_TEXTURE().isDebugEnabled();
-    if (profileFrames)
-        qsg_renderer_timer.start();
-    Q_QUICK_SG_PROFILE_START_SYNCHRONIZED(QQuickProfiler::SceneGraphTexturePrepare,
-                                          QQuickProfiler::SceneGraphTextureDeletion);
-
-
-    if (m_image.isNull()) {
-        if (m_texture_id && m_owns_texture) {
-            Q_TRACE_SCOPE(QSG_texture_delete);
-            funcs->glDeleteTextures(1, &m_texture_id);
-            qCDebug(QSG_LOG_TIME_TEXTURE, "plain texture deleted in %dms - %dx%d",
-                    (int) qsg_renderer_timer.elapsed(),
-                    m_texture_size.width(),
-                    m_texture_size.height());
-            Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphTextureDeletion,
-                                   QQuickProfiler::SceneGraphTextureDeletionDelete);
-        }
-        m_texture_id = 0;
-        m_texture_size = QSize();
-        m_has_alpha = false;
-
-        return;
-    }
-
-    Q_TRACE(QSG_texture_bind_entry);
-
-    if (m_texture_id == 0)
-        funcs->glGenTextures(1, &m_texture_id);
-    funcs->glBindTexture(GL_TEXTURE_2D, m_texture_id);
-
-    qint64 bindTime = 0;
-    if (profileFrames)
-        bindTime = qsg_renderer_timer.nsecsElapsed();
-    Q_TRACE(QSG_texture_bind_exit);
-    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphTexturePrepare,
-                              QQuickProfiler::SceneGraphTexturePrepareBind);
-    Q_TRACE(QSG_texture_upload_entry);
-
-    // ### TODO: check for out-of-memory situations...
-
-    QOpenGLTextureUploader::BindOptions options = QOpenGLTextureUploader::PremultipliedAlphaBindOption;
-
-    // Downscale the texture to fit inside the max texture limit if it is too big.
-    // It would be better if the image was already downscaled to the right size,
-    // but this information is not always available at that time, so as a last
-    // resort we can do it here. Texture coordinates are normalized, so it
-    // won't cause any problems and actual texture sizes will be written
-    // based on QSGTexture::textureSize which is updated after this, so that
-    // should be ok.
-    int max;
-    if (auto rc = QSGDefaultRenderContext::from(context))
-        max = rc->maxTextureSize();
-    else
-        funcs->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max);
-
-    m_texture_size = m_texture_size.boundedTo(QSize(max, max));
-
-    // Scale to a power of two size if mipmapping is requested and the
-    // texture is npot and npot textures are not properly supported.
-    if (mipmapFiltering() != QSGTexture::None
-        && !funcs->hasOpenGLFeature(QOpenGLFunctions::NPOTTextures)) {
-        options |= QOpenGLTextureUploader::PowerOfTwoBindOption;
-    }
-
-    updateBindOptions(m_dirty_bind_options);
-
-    QOpenGLTextureUploader::textureImage(GL_TEXTURE_2D, m_image, options, QSize(max, max));
-
-    qint64 uploadTime = 0;
-    if (profileFrames)
-        uploadTime = qsg_renderer_timer.nsecsElapsed();
-    Q_TRACE(QSG_texture_upload_exit);
-    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphTexturePrepare,
-                              QQuickProfiler::SceneGraphTexturePrepareUpload);
-    Q_TRACE(QSG_texture_mipmap_entry);
-
-    if (mipmapFiltering() != QSGTexture::None) {
-        funcs->glGenerateMipmap(GL_TEXTURE_2D);
-        m_mipmaps_generated = true;
-    }
-
-    qint64 mipmapTime = 0;
-    if (profileFrames) {
-        mipmapTime = qsg_renderer_timer.nsecsElapsed();
-        qCDebug(QSG_LOG_TIME_TEXTURE,
-                "plain texture uploaded in: %dms (%dx%d), bind=%d, upload=%d, mipmap=%d%s",
-                int(mipmapTime / 1000000),
-                m_texture_size.width(), m_texture_size.height(),
-                int(bindTime / 1000000),
-                int((uploadTime - bindTime)/1000000),
-                int((mipmapTime - uploadTime)/1000000),
-                m_texture_size != m_image.size() ? " (scaled to GL_MAX_TEXTURE_SIZE)" : "");
-    }
-    Q_TRACE(QSG_texture_mipmap_exit);
-    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphTexturePrepare,
-                           QQuickProfiler::SceneGraphTexturePrepareMipmap);
-
-    m_texture_rect = QRectF(0, 0, 1, 1);
-
-    m_dirty_bind_options = false;
-    if (!m_retain_image)
-        m_image = QImage();
-#endif
 }
 
 void QSGPlainTexture::setTexture(QRhiTexture *texture) // RHI only
@@ -281,7 +96,6 @@ void QSGPlainTexture::setTexture(QRhiTexture *texture) // RHI only
 
     m_texture = texture;
     m_dirty_texture = false;
-    m_dirty_bind_options = true;
     m_image = QImage();
     m_mipmaps_generated = false;
 }
@@ -306,10 +120,6 @@ void QSGPlainTexture::setTextureFromNativeObject(QRhi *rhi, QQuickWindow::Native
 
 qint64 QSGPlainTexture::comparisonKey() const
 {
-    // not textureId() as that would create an id when not yet done - that's not wanted here
-    if (m_texture_id)
-        return m_texture_id;
-
     if (m_texture)
         return qint64(m_texture);
 

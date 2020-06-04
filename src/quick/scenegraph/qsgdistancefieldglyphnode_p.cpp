@@ -39,7 +39,6 @@
 
 #include "qsgdistancefieldglyphnode_p_p.h"
 #include "qsgrhidistancefieldglyphcache_p.h"
-#include <qopenglfunctions.h>
 #include <QtGui/qsurface.h>
 #include <QtGui/qwindow.h>
 #include <qmath.h>
@@ -241,8 +240,8 @@ int QSGDistanceFieldTextMaterial::compare(const QSGMaterial *o) const
     }
     if (m_color != other->m_color)
         return &m_color < &other->m_color ? -1 : 1;
-    qintptr t0 = m_texture ? (m_texture->rhiBased ? qintptr(m_texture->texture) : qintptr(m_texture->textureId)) : 0;
-    qintptr t1 = other->m_texture ? (other->m_texture->rhiBased ? qintptr(other->m_texture->texture) : qintptr(other->m_texture->textureId)) : 0;
+    qintptr t0 = m_texture ? qintptr(m_texture->texture) : 0;
+    qintptr t1 = other->m_texture ? qintptr(other->m_texture->texture) : 0;
     const qintptr diff = t0 - t1;
     return diff < 0 ? -1 : (diff > 0 ? 1 : 0);
 }

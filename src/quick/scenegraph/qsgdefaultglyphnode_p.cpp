@@ -638,35 +638,19 @@ int QSGTextMaskMaterial::compare(const QSGMaterial *o) const
 
 bool QSGTextMaskMaterial::ensureUpToDate()
 {
-    if (m_rhi) {
-        QSGRhiTextureGlyphCache *gc = rhiGlyphCache();
-        QSize glyphCacheSize(gc->width(), gc->height());
-        if (glyphCacheSize != m_size) {
-            if (m_texture)
-                delete m_texture;
-            m_texture = new QSGPlainTexture;
-            m_texture->setTexture(gc->texture());
-            m_texture->setTextureSize(QSize(gc->width(), gc->height()));
-            m_texture->setOwnsTexture(false);
-            m_size = glyphCacheSize;
-            return true;
-        }
-        return false;
-
-    } else {
-        QSize glyphCacheSize(openglGlyphCache()->width(), openglGlyphCache()->height());
-        if (glyphCacheSize != m_size) {
-            if (m_texture)
-                delete m_texture;
-            m_texture = new QSGPlainTexture();
-            m_texture->setTextureId(openglGlyphCache()->texture());
-            m_texture->setTextureSize(QSize(openglGlyphCache()->width(), openglGlyphCache()->height()));
-            m_texture->setOwnsTexture(false);
-            m_size = glyphCacheSize;
-            return true;
-        }
-        return false;
+    QSGRhiTextureGlyphCache *gc = rhiGlyphCache();
+    QSize glyphCacheSize(gc->width(), gc->height());
+    if (glyphCacheSize != m_size) {
+        if (m_texture)
+            delete m_texture;
+        m_texture = new QSGPlainTexture;
+        m_texture->setTexture(gc->texture());
+        m_texture->setTextureSize(QSize(gc->width(), gc->height()));
+        m_texture->setOwnsTexture(false);
+        m_size = glyphCacheSize;
+        return true;
     }
+    return false;
 }
 
 

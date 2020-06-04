@@ -60,11 +60,6 @@ QSGSoftwarePixmapTexture::QSGSoftwarePixmapTexture(const QPixmap &pixmap)
 {
 }
 
-int QSGSoftwarePixmapTexture::textureId() const
-{
-    return 0;
-}
-
 QSize QSGSoftwarePixmapTexture::textureSize() const
 {
     return m_pixmap.size();
@@ -78,11 +73,6 @@ bool QSGSoftwarePixmapTexture::hasAlphaChannel() const
 bool QSGSoftwarePixmapTexture::hasMipmaps() const
 {
     return false;
-}
-
-void QSGSoftwarePixmapTexture::bind()
-{
-    Q_UNREACHABLE();
 }
 
 qint64 QSGSoftwarePixmapTexture::comparisonKey() const

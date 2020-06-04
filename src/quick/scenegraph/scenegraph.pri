@@ -72,11 +72,9 @@ SOURCES += \
 qtConfig(opengl(es1|es2)?) {
     HEADERS += \
         $$PWD/util/qsgdepthstencilbuffer_p.h \
-        $$PWD/util/qsgshadersourcebuilder_p.h \
-        $$PWD/util/qsgopenglatlastexture_p.h
+        $$PWD/util/qsgshadersourcebuilder_p.h
     SOURCES += \
         $$PWD/util/qsgdepthstencilbuffer.cpp \
-        $$PWD/util/qsgopenglatlastexture.cpp \
         $$PWD/util/qsgshadersourcebuilder.cpp
 
     # rhi, still tied to OpenGL-enabled Qt builds for now

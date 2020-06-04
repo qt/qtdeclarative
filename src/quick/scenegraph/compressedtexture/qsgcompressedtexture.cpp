@@ -39,9 +39,7 @@
 
 
 #include "qsgcompressedtexture_p.h"
-#include <QOpenGLContext>
 #include <QOpenGLTexture>
-#include <QOpenGLFunctions>
 #include <QDebug>
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qquickitem_p.h>
@@ -61,41 +59,11 @@ QSGCompressedTexture::QSGCompressedTexture(const QTextureFileData &texData)
 
 QSGCompressedTexture::~QSGCompressedTexture()
 {
-#if QT_CONFIG(opengl)
-    if (m_textureId) {
-        QOpenGLContext *ctx = QOpenGLContext::currentContext();
-        QOpenGLFunctions *funcs = ctx ? ctx->functions() : nullptr;
-        if (!funcs)
-            return;
-
-        funcs->glDeleteTextures(1, &m_textureId);
-    }
-#endif
-
     delete m_texture;
-}
-
-int QSGCompressedTexture::textureId() const
-{
-#if QT_CONFIG(opengl)
-    if (!m_textureId) {
-        QOpenGLContext *ctx = QOpenGLContext::currentContext();
-        QOpenGLFunctions *funcs = ctx ? ctx->functions() : nullptr;
-        if (!funcs)
-            return 0;
-
-        funcs->glGenTextures(1, &m_textureId);
-    }
-#endif
-    return m_textureId;
 }
 
 qint64 QSGCompressedTexture::comparisonKey() const
 {
-    // not textureId() as that would create an id when not yet done - that's not wanted here
-    if (m_textureId)
-        return m_textureId;
-
     if (m_texture)
         return qint64(m_texture);
 
@@ -116,51 +84,6 @@ bool QSGCompressedTexture::hasAlphaChannel() const
 bool QSGCompressedTexture::hasMipmaps() const
 {
     return false;
-}
-
-void QSGCompressedTexture::bind()
-{
-#if QT_CONFIG(opengl)
-    QOpenGLContext *ctx = QOpenGLContext::currentContext();
-    QOpenGLFunctions *funcs = ctx ? ctx->functions() : nullptr;
-    if (!funcs)
-        return;
-
-    if (!textureId())
-        return;
-
-    funcs->glBindTexture(GL_TEXTURE_2D, m_textureId);
-
-    if (m_uploaded)
-        return;
-
-    if (!m_textureData.isValid()) {
-        qCDebug(QSG_LOG_TEXTUREIO, "Invalid texture data for %s", m_textureData.logName().constData());
-        funcs->glBindTexture(GL_TEXTURE_2D, 0);
-        return;
-    }
-
-    if (Q_UNLIKELY(QSG_LOG_TEXTUREIO().isDebugEnabled())) {
-        qCDebug(QSG_LOG_TEXTUREIO) << "Uploading texture" << m_textureData;
-        while (funcs->glGetError() != GL_NO_ERROR);
-    }
-
-    funcs->glCompressedTexImage2D(GL_TEXTURE_2D, 0, m_textureData.glInternalFormat(),
-                                  m_size.width(), m_size.height(), 0, m_textureData.dataLength(),
-                                  m_textureData.data().constData() + m_textureData.dataOffset());
-
-    if (Q_UNLIKELY(QSG_LOG_TEXTUREIO().isDebugEnabled())) {
-        GLuint error = funcs->glGetError();
-        if (error != GL_NO_ERROR) {
-            qCDebug(QSG_LOG_TEXTUREIO, "glCompressedTexImage2D failed for %s, error 0x%x", m_textureData.logName().constData(), error);
-        }
-    }
-
-    m_textureData = QTextureFileData();  // Release this memory, not needed anymore
-
-    updateBindOptions(true);
-    m_uploaded = true;
-#endif // QT_CONFIG(opengl)
 }
 
 QSGCompressedTexture::FormatInfo QSGCompressedTexture::formatInfo(quint32 glTextureFormat)

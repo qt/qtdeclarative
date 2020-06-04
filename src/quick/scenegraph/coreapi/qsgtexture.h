@@ -86,7 +86,6 @@ public:
     };
 
     virtual qint64 comparisonKey() const = 0;
-    virtual int textureId() const = 0; // ### Qt 6: remove
     virtual QRhiTexture *rhiTexture() const;
     NativeTexture nativeTexture() const;
     virtual QSize textureSize() const = 0;
@@ -98,9 +97,6 @@ public:
     virtual bool isAtlasTexture() const;
 
     virtual QSGTexture *removedFromAtlas(QRhiResourceUpdateBatch *resourceUpdates = nullptr) const;
-
-    virtual void bind() = 0; // ### Qt 6: remove
-    void updateBindOptions(bool force = false); // ### Qt 6: remove
 
     virtual void commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates);
 

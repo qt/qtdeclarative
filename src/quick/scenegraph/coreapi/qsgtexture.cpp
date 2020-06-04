@@ -38,10 +38,6 @@
 ****************************************************************************/
 
 #include "qsgtexture_p.h"
-#if QT_CONFIG(opengl)
-# include <qopenglcontext.h>
-# include <qopenglfunctions.h>
-#endif
 #include <private/qqmlglobal_p.h>
 #include <private/qsgmaterialshader_p.h>
 #include <QtGui/private/qrhi_p.h>
@@ -64,6 +60,8 @@
 #endif
 
 #ifndef QT_NO_DEBUG
+Q_GLOBAL_STATIC(QSet<QSGTexture *>, qsg_valid_texture_set)
+Q_GLOBAL_STATIC(QMutex, qsg_valid_texture_mutex)
 static const bool qsg_leak_check = !qEnvironmentVariableIsEmpty("QML_LEAK_CHECK");
 #endif
 
@@ -102,16 +100,6 @@ QSGSamplerDescription QSGSamplerDescription::fromTexture(QSGTexture *t)
     s.anisotropylevel = t->anisotropyLevel();
     return s;
 }
-
-#if QT_CONFIG(opengl)
-#ifndef QT_NO_DEBUG
-inline static bool isPowerOfTwo(int x)
-{
-    // Assumption: x >= 1
-    return x == (x & -x);
-}
-#endif
-#endif
 
 QSGTexturePrivate::QSGTexturePrivate()
     : wrapChanged(false)
@@ -340,32 +328,6 @@ static void qt_debug_remove_texture(QSGTexture* texture)
     For Vulkan, \c layout contains a \c VkImageLayout value.
  */
 
-
-#ifndef QT_NO_DEBUG
-Q_QUICK_PRIVATE_EXPORT void qsg_set_material_failure();
-#endif
-
-#ifndef QT_NO_DEBUG
-Q_GLOBAL_STATIC(QSet<QSGTexture *>, qsg_valid_texture_set)
-Q_GLOBAL_STATIC(QMutex, qsg_valid_texture_mutex)
-
-bool qsg_safeguard_texture(QSGTexture *texture)
-{
-#if QT_CONFIG(opengl)
-    QMutexLocker locker(qsg_valid_texture_mutex());
-    if (!qsg_valid_texture_set()->contains(texture)) {
-        qWarning() << "Invalid texture accessed:" << (void *) texture;
-        qsg_set_material_failure();
-        QOpenGLContext::currentContext()->functions()->glBindTexture(GL_TEXTURE_2D, 0);
-        return false;
-    }
-#else
-    Q_UNUSED(texture)
-#endif
-    return true;
-}
-#endif
-
 /*!
     Constructs the QSGTexture base class.
  */
@@ -409,21 +371,6 @@ QSGTexture::~QSGTexture()
     qsg_valid_texture_set()->remove(this);
 #endif
 }
-
-/*!
-    \fn void QSGTexture::bind()
-
-    Call this function to bind this texture to the current texture
-    target.
-
-    Binding a texture may also include uploading the texture data from
-    a previously set QImage.
-
-    \warning This function should only be called when running with the
-    direct OpenGL rendering path.
-
-    \warning This function can only be called from the rendering thread.
- */
 
 /*!
     \fn QRectF QSGTexture::convertToNormalizedSourceRect(const QRectF &rect) const
@@ -475,18 +422,6 @@ bool QSGTexture::isAtlasTexture() const
 {
     return false;
 }
-
-/*!
-    \fn int QSGTexture::textureId() const
-
-    Returns the OpenGL texture id for this texture.
-
-    The default value is 0, indicating that it is an invalid texture id.
-
-    The function should at all times return the correct texture id.
-
-    \warning This function can only be called from the rendering thread.
- */
 
 /*!
     \fn qint64 QSGTexture::comparisonKey() const
@@ -655,74 +590,6 @@ void QSGTexture::setVerticalWrapMode(WrapMode vwrap)
 QSGTexture::WrapMode QSGTexture::verticalWrapMode() const
 {
     return (QSGTexture::WrapMode) d_func()->verticalWrap;
-}
-
-
-/*!
-    Update the texture state to match the filtering, mipmap and wrap options
-    currently set.
-
-    If \a force is true, all properties will be updated regardless of weither
-    they have changed or not.
- */
-void QSGTexture::updateBindOptions(bool force) // legacy (GL-only)
-{
-#if QT_CONFIG(opengl)
-    Q_D(QSGTexture);
-    QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
-    force |= isAtlasTexture();
-
-    if (force || d->filteringChanged) {
-        bool linear = d->filterMode == Linear;
-        GLint minFilter = linear ? GL_LINEAR : GL_NEAREST;
-        GLint magFilter = linear ? GL_LINEAR : GL_NEAREST;
-
-        if (hasMipmaps()) {
-            if (d->mipmapMode == Nearest)
-                minFilter = linear ? GL_LINEAR_MIPMAP_NEAREST : GL_NEAREST_MIPMAP_NEAREST;
-            else if (d->mipmapMode == Linear)
-                minFilter = linear ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_LINEAR;
-        }
-        funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
-        funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
-        d->filteringChanged = false;
-    }
-
-    if (force || d->anisotropyChanged) {
-        d->anisotropyChanged = false;
-        if (QOpenGLContext::currentContext()->hasExtension(QByteArrayLiteral("GL_EXT_texture_filter_anisotropic")))
-            funcs->glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, float(1 << (d->anisotropyLevel)));
-    }
-
-    if (force || d->wrapChanged) {
-#ifndef QT_NO_DEBUG
-        if (d->horizontalWrap == Repeat || d->verticalWrap == Repeat
-            || d->horizontalWrap == MirroredRepeat || d->verticalWrap == MirroredRepeat)
-        {
-            bool npotSupported = QOpenGLFunctions(QOpenGLContext::currentContext()).hasOpenGLFeature(QOpenGLFunctions::NPOTTextures);
-            QSize size = textureSize();
-            bool isNpot = !isPowerOfTwo(size.width()) || !isPowerOfTwo(size.height());
-            if (!npotSupported && isNpot)
-                qWarning("Scene Graph: This system does not support the REPEAT wrap mode for non-power-of-two textures.");
-        }
-#endif
-        GLenum wrapS = GL_CLAMP_TO_EDGE;
-        if (d->horizontalWrap == Repeat)
-            wrapS = GL_REPEAT;
-        else if (d->horizontalWrap == MirroredRepeat)
-            wrapS = GL_MIRRORED_REPEAT;
-        GLenum wrapT = GL_CLAMP_TO_EDGE;
-        if (d->verticalWrap == Repeat)
-            wrapT = GL_REPEAT;
-        else if (d->verticalWrap == MirroredRepeat)
-            wrapT = GL_MIRRORED_REPEAT;
-        funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapS);
-        funcs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapT);
-        d->wrapChanged = false;
-    }
-#else
-    Q_UNUSED(force)
-#endif
 }
 
 /*!

@@ -224,11 +224,8 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
         const QPointF position = positions.at(i);
 
         const QSGDistanceFieldGlyphCache::Texture *texture = m_glyph_cache->glyphTexture(glyphIndex);
-        if ((!texture->rhiBased && texture->textureId && !m_texture)
-                || (texture->rhiBased && texture->texture && !m_texture))
-        {
+        if (texture->texture && !m_texture)
             m_texture = texture;
-        }
 
         // As we use UNSIGNED_SHORT indexing in the geometry, we overload the
         // "glyphsInOtherTextures" concept as overflow for if there are more
@@ -237,7 +234,7 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
         // primitive restart) This will cause sub-nodes to be recursively
         // created to handle any number of glyphs.
         if (m_texture != texture || vp.size() >= 65535) {
-            if (texture->textureId) {
+            if (texture->texture) {
                 GlyphInfo &glyphInfo = glyphsInOtherTextures[texture];
                 glyphInfo.indexes.append(glyphIndex);
                 glyphInfo.positions.append(position);

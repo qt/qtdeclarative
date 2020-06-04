@@ -72,7 +72,6 @@ public:
 
     void setDirtyRect(const QRect &rect) { m_dirty_rect = rect; }
 
-    void bind() override;
     void commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates) override;
 
 private:

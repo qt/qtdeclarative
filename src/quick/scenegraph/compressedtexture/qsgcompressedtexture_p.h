@@ -74,8 +74,6 @@ public:
     bool hasMipmaps() const override;
 
     qint64 comparisonKey() const override;
-    int textureId() const override;
-    void bind() override;
     QRhiTexture *rhiTexture() const override;
     void commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates) override;
 
@@ -92,7 +90,6 @@ public:
 protected:
     QTextureFileData m_textureData;
     QSize m_size;
-    mutable uint m_textureId = 0;
     QRhiTexture *m_texture = nullptr;
     bool m_hasAlpha = false;
     bool m_uploaded = false;
