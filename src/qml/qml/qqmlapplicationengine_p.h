@@ -78,8 +78,8 @@ public:
     QString translationsDirectory;
 #if QT_CONFIG(translation)
     QScopedPointer<QTranslator> activeTranslator;
-    bool isInitialized = false;
 #endif
+    bool isInitialized = false;
 };
 
 QT_END_NAMESPACE
