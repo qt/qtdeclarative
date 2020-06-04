@@ -52,6 +52,7 @@ private slots:
     void partialImportVersions_data();
     void partialImportVersions();
     void registerModuleImport();
+    void importDependenciesPrecedence();
     void cleanup();
     void envResourceImportPath();
 };
@@ -386,6 +387,20 @@ void tst_QQmlImport::registerModuleImport()
         component.setData("import MyPluginSupported; Item {}", QUrl());
         QVERIFY(component.isError());
     }
+}
+
+void tst_QQmlImport::importDependenciesPrecedence()
+{
+    QQmlEngine engine;
+    engine.addImportPath(dataDirectory());
+
+    QQmlComponent component(&engine, testFile("dependencies.qml"));
+    QVERIFY(component.isReady());
+
+    QScopedPointer<QObject> instance(component.create());
+    QVERIFY(!instance.isNull());
+    QCOMPARE(instance->property("a").toString(), QString::fromLatin1("a"));
+    QCOMPARE(instance->property("b").toString(), QString::fromLatin1("b"));
 }
 
 

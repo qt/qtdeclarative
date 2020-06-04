@@ -234,7 +234,7 @@ void QQmlScriptBlob::initializeFromCompilationUnit(const QQmlRefPointer<QV4::Exe
         QList<QQmlError> errors;
         for (quint32 i = 0, count = script->importCount(); i < count; ++i) {
             const QV4::CompiledData::Import *import = script->importAt(i);
-            if (!addImport(import, &errors)) {
+            if (!addImport(import, {}, &errors)) {
                 Q_ASSERT(errors.size());
                 QQmlError error(errors.takeFirst());
                 error.setUrl(m_importCache.baseUrl());

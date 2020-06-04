@@ -242,12 +242,12 @@ public:
 
     bool addLibraryImport(const QString& uri, const QString &prefix,
                           QTypeRevision version, const QString &qmldirIdentifier,
-                          const QString &qmldirUrl, bool incomplete,
+                          const QString &qmldirUrl, uint flags,
                           QQmlImportDatabase *database,
                           QList<QQmlError> *errors);
 
     bool addFileImport(const QString &uri, const QString &prefix, QTypeRevision version,
-                       bool isImplicitImport, bool incomplete, QQmlImportDatabase *database,
+                       uint flags, QQmlImportDatabase *database,
                        QList<QQmlError> *errors);
 
     bool updateQmldirContent(const QString &uri, const QString &prefix,
@@ -294,7 +294,7 @@ public:
     QQmlImportInstance *addImportToNamespace(QQmlImportNamespace *nameSpace, const QString &uri,
                                              const QString &url, QTypeRevision version,
                                              QV4::CompiledData::Import::ImportType type,
-                                             QList<QQmlError> *errors, bool lowPrecedence = false);
+                                             QList<QQmlError> *errors, uint flags);
 
     bool populatePluginPairVector(QVector<StaticPluginPair> &result, const QString &uri, const QStringList &versionUris,
                                      const QString &qmldirPath, QList<QQmlError> *errors);
@@ -1513,7 +1513,7 @@ QQmlImportNamespace *QQmlImportsPrivate::importNamespace(const QString &prefix) 
 
 QQmlImportInstance *QQmlImportsPrivate::addImportToNamespace(
         QQmlImportNamespace *nameSpace, const QString &uri, const QString &url, QTypeRevision version,
-        QV4::CompiledData::Import::ImportType type, QList<QQmlError> *errors, bool lowPrecedence)
+        QV4::CompiledData::Import::ImportType type, QList<QQmlError> *errors, uint flags)
 {
     Q_ASSERT(nameSpace);
     Q_ASSERT(errors);
@@ -1526,18 +1526,32 @@ QQmlImportInstance *QQmlImportsPrivate::addImportToNamespace(
     import->localDirectoryPath = QQmlFile::urlToLocalFileOrQrc(url);
     import->version = version;
     import->isLibrary = (type == QV4::CompiledData::Import::ImportLibrary);
-
-    if (lowPrecedence)
+    if (flags & QQmlImports::ImportImplicit) {
+        import->implicitlyImported = true;
         nameSpace->imports.append(import);
-    else
+    } else if (flags & QQmlImports::ImportLowPrecedence) {
+        if (nameSpace->imports.isEmpty()) {
+            nameSpace->imports.append(import);
+        } else {
+            for (auto it = nameSpace->imports.rbegin(), end = nameSpace->imports.rend();
+                 it != end; ++it) {
+
+                if (!(*it)->implicitlyImported) {
+                    nameSpace->imports.insert(it.base(), import);
+                    break;
+                }
+            }
+        }
+    } else {
         nameSpace->imports.prepend(import);
+    }
 
     return import;
 }
 
 bool QQmlImportsPrivate::addLibraryImport(
         const QString& uri, const QString &prefix, QTypeRevision version,
-        const QString &qmldirIdentifier, const QString &qmldirUrl, bool incomplete,
+        const QString &qmldirIdentifier, const QString &qmldirUrl, uint flags,
         QQmlImportDatabase *database, QList<QQmlError> *errors)
 {
     Q_ASSERT(database);
@@ -1548,10 +1562,11 @@ bool QQmlImportsPrivate::addLibraryImport(
 
     QQmlImportInstance *inserted = addImportToNamespace(
                 nameSpace, uri, qmldirUrl, version,
-                QV4::CompiledData::Import::ImportLibrary, errors);
+                QV4::CompiledData::Import::ImportLibrary, errors,
+                flags);
     Q_ASSERT(inserted);
 
-    if (!incomplete) {
+    if (!(flags & QQmlImports::ImportIncomplete)) {
         QQmlTypeLoaderQmldirContent qmldir;
 
         if (!qmldirIdentifier.isEmpty()) {
@@ -1596,8 +1611,8 @@ bool QQmlImportsPrivate::addLibraryImport(
     return true;
 }
 
-bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix, QTypeRevision version,
-                                       bool isImplicitImport, bool incomplete,
+bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix,
+                                       QTypeRevision version, uint flags,
                                        QQmlImportDatabase *database, QList<QQmlError> *errors)
 {
     Q_ASSERT(errors);
@@ -1622,7 +1637,7 @@ bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix
 
         const QString dir = localFileOrQrc.left(localFileOrQrc.lastIndexOf(Slash) + 1);
         if (!typeLoader->directoryExists(dir)) {
-            if (!isImplicitImport) {
+            if (!(flags & QQmlImports::ImportImplicit)) {
                 QQmlError error;
                 error.setDescription(QQmlImportDatabase::tr("\"%1\": no such directory").arg(uri));
                 error.setUrl(QUrl(qmldirUrl));
@@ -1640,9 +1655,9 @@ bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix
         if (!typeLoader->absoluteFilePath(localFileOrQrc).isEmpty())
             qmldirIdentifier = localFileOrQrc;
 
-    } else if (nameSpace->prefix.isEmpty() && !incomplete) {
+    } else if (nameSpace->prefix.isEmpty() && !(flags & QQmlImports::ImportIncomplete)) {
 
-        if (!isImplicitImport) {
+        if (!(flags & QQmlImports::ImportImplicit)) {
             QQmlError error;
             error.setDescription(QQmlImportDatabase::tr("import \"%1\" has no qmldir and no namespace").arg(importUri));
             error.setUrl(QUrl(qmldirUrl));
@@ -1662,7 +1677,7 @@ bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix
     //     if the implicit import has already been explicitly added, otherwise we can run into issues
     //     with duplicate imports. However remember that we attempted to add this as implicit import, to
     //     allow for the loading of internal types.
-    if (isImplicitImport) {
+    if (flags & QQmlImports::ImportImplicit) {
         for (QList<QQmlImportInstance *>::const_iterator it = nameSpace->imports.constBegin();
              it != nameSpace->imports.constEnd(); ++it) {
             if ((*it)->url == url) {
@@ -1674,10 +1689,12 @@ bool QQmlImportsPrivate::addFileImport(const QString& uri, const QString &prefix
 
     QQmlImportInstance *inserted = addImportToNamespace(
                 nameSpace, importUri, url, version, QV4::CompiledData::Import::ImportFile,
-                errors, isImplicitImport);
+                errors, flags);
     Q_ASSERT(inserted);
+    if (flags & QQmlImports::ImportImplicit)
+        inserted->implicitlyImported = true;
 
-    if (!incomplete && !qmldirIdentifier.isEmpty()) {
+    if (!(flags & QQmlImports::ImportIncomplete) && !qmldirIdentifier.isEmpty()) {
         QQmlTypeLoaderQmldirContent qmldir;
         if (!getQmldirContent(qmldirIdentifier, importUri, &qmldir, errors))
             return false;
@@ -1760,8 +1777,8 @@ bool QQmlImports::addImplicitImport(QQmlImportDatabase *importDb, QList<QQmlErro
         qDebug().nospace() << "QQmlImports(" << qPrintable(baseUrl().toString())
                            << ")::addImplicitImport";
 
-    bool incomplete = !isLocal(baseUrl());
-    return d->addFileImport(QLatin1String("."), QString(), QTypeRevision(), true, incomplete,
+    uint flags = ImportImplicit | (!isLocal(baseUrl()) ? ImportIncomplete : 0);
+    return d->addFileImport(QLatin1String("."), QString(), QTypeRevision(), flags,
                             importDb, errors);
 }
 
@@ -1803,7 +1820,7 @@ bool QQmlImports::addInlineComponentImport(QQmlImportInstance *const importInsta
 */
 bool QQmlImports::addFileImport(QQmlImportDatabase *importDb,
                                 const QString& uri, const QString& prefix, QTypeRevision version,
-                                bool incomplete, QList<QQmlError> *errors)
+                                uint flags, QList<QQmlError> *errors)
 {
     Q_ASSERT(importDb);
     Q_ASSERT(errors);
@@ -1812,12 +1829,13 @@ bool QQmlImports::addFileImport(QQmlImportDatabase *importDb,
         qDebug().nospace() << "QQmlImports(" << qPrintable(baseUrl().toString()) << ')' << "::addFileImport: "
                            << uri << ' ' << version << " as " << prefix;
 
-    return d->addFileImport(uri, prefix, version, false, incomplete, importDb, errors);
+    return d->addFileImport(uri, prefix, version, flags, importDb, errors);
 }
 
 bool QQmlImports::addLibraryImport(QQmlImportDatabase *importDb,
                                    const QString &uri, const QString &prefix, QTypeRevision version,
-                                   const QString &qmldirIdentifier, const QString& qmldirUrl, bool incomplete, QList<QQmlError> *errors)
+                                   const QString &qmldirIdentifier, const QString& qmldirUrl,
+                                   uint flags, QList<QQmlError> *errors)
 {
     Q_ASSERT(importDb);
     Q_ASSERT(errors);
@@ -1826,7 +1844,8 @@ bool QQmlImports::addLibraryImport(QQmlImportDatabase *importDb,
         qDebug().nospace() << "QQmlImports(" << qPrintable(baseUrl().toString()) << ')' << "::addLibraryImport: "
                            << uri << ' ' << version << " as " << prefix;
 
-    return d->addLibraryImport(uri, prefix, version, qmldirIdentifier, qmldirUrl, incomplete, importDb, errors);
+    return d->addLibraryImport(uri, prefix, version, qmldirIdentifier, qmldirUrl, flags,
+                               importDb, errors);
 }
 
 bool QQmlImports::updateQmldirContent(QQmlImportDatabase *importDb,

@@ -109,8 +109,9 @@ public:
         using PendingImportPtr = std::shared_ptr<PendingImport>;
 
     protected:
-        bool addImport(const QV4::CompiledData::Import *import, QList<QQmlError> *errors);
-        bool addImport(PendingImportPtr import, QList<QQmlError> *errors);
+        bool addImport(const QV4::CompiledData::Import *import, uint flags,
+                       QList<QQmlError> *errors);
+        bool addImport(PendingImportPtr import, uint flags, QList<QQmlError> *errors);
 
         bool fetchQmldir(const QUrl &url, PendingImportPtr import, int priority, QList<QQmlError> *errors);
         bool updateQmldir(const QQmlRefPointer<QQmlQmldirData> &data, PendingImportPtr import, QList<QQmlError> *errors);

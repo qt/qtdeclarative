@@ -556,12 +556,14 @@ bool QQmlTypeLoader::Blob::updateQmldir(const QQmlRefPointer<QQmlQmldirData> &da
     return true;
 }
 
-bool QQmlTypeLoader::Blob::addImport(const QV4::CompiledData::Import *import, QList<QQmlError> *errors)
+bool QQmlTypeLoader::Blob::addImport(const QV4::CompiledData::Import *import, uint flags,
+                                     QList<QQmlError> *errors)
 {
-    return addImport(std::make_shared<PendingImport>(this, import), errors);
+    return addImport(std::make_shared<PendingImport>(this, import), flags, errors);
 }
 
-bool QQmlTypeLoader::Blob::addImport(QQmlTypeLoader::Blob::PendingImportPtr import, QList<QQmlError> *errors)
+bool QQmlTypeLoader::Blob::addImport(QQmlTypeLoader::Blob::PendingImportPtr import, uint flags,
+                                     QList<QQmlError> *errors)
 {
     Q_ASSERT(errors);
 
@@ -584,7 +586,7 @@ bool QQmlTypeLoader::Blob::addImport(QQmlTypeLoader::Blob::PendingImportPtr impo
             // This is a local library import
             if (!m_importCache.addLibraryImport(
                         importDatabase, import->uri, import->qualifier,
-                        import->version, qmldirFilePath, qmldirUrl, false, errors))
+                        import->version, qmldirFilePath, qmldirUrl, flags, errors))
                 return false;
 
             if (!loadImportDependencies(import, qmldirFilePath, errors))
@@ -618,7 +620,7 @@ bool QQmlTypeLoader::Blob::addImport(QQmlTypeLoader::Blob::PendingImportPtr impo
 
             if (!m_importCache.addLibraryImport(
                         importDatabase, import->uri, import->qualifier, import->version,
-                        QString(), QString(), false, errors)) {
+                        QString(), QString(), flags, errors)) {
                 return false;
             }
         } else {
@@ -638,7 +640,7 @@ bool QQmlTypeLoader::Blob::addImport(QQmlTypeLoader::Blob::PendingImportPtr impo
                 // Add this library and request the possible locations for it
                 if (!m_importCache.addLibraryImport(
                             importDatabase, import->uri, import->qualifier, import->version,
-                            QString(), QString(), true, errors))
+                            QString(), QString(), flags | QQmlImports::ImportIncomplete, errors))
                     return false;
 
                 // Probe for all possible locations
@@ -721,10 +723,18 @@ bool QQmlTypeLoader::Blob::loadImportDependencies(PendingImportPtr currentImport
         dependencyImport->uri = implicitImport;
         dependencyImport->qualifier = currentImport->qualifier;
         dependencyImport->version = currentImport->version;
-        if (!addImport(dependencyImport, errors))
+        if (!addImport(dependencyImport, QQmlImports::ImportLowPrecedence, errors)) {
+            QQmlError error;
+            error.setDescription(
+                        QString::fromLatin1(
+                            "Failed to load dependencies for module \"%1\" version %2.%3")
+                        .arg(currentImport->uri)
+                        .arg(currentImport->version.majorVersion())
+                        .arg(currentImport->version.minorVersion()));
+            errors->append(error);
             return false;
+        }
     }
-
 
     return true;
 }

@@ -134,6 +134,7 @@ class Q_QML_PRIVATE_EXPORT QQmlImports
 {
 public:
     enum ImportVersion { FullyVersioned, PartiallyVersioned, Unversioned };
+    enum ImportFlag { ImportIncomplete = 0x1, ImportLowPrecedence = 0x2, ImportImplicit = 0x4 };
 
     QQmlImports(QQmlTypeLoader *);
     QQmlImports(const QQmlImports &);
@@ -162,11 +163,12 @@ public:
 
     bool addFileImport(QQmlImportDatabase *,
                        const QString& uri, const QString& prefix, QTypeRevision version,
-                       bool incomplete, QList<QQmlError> *errors);
+                       uint flags, QList<QQmlError> *errors);
 
     bool addLibraryImport(QQmlImportDatabase *importDb,
                           const QString &uri, const QString &prefix, QTypeRevision version,
-                          const QString &qmldirIdentifier, const QString &qmldirUrl, bool incomplete, QList<QQmlError> *errors);
+                          const QString &qmldirIdentifier, const QString &qmldirUrl, uint flags,
+                          QList<QQmlError> *errors);
 
     bool updateQmldirContent(QQmlImportDatabase *importDb,
                              const QString &uri, const QString &prefix,

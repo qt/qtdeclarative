@@ -199,7 +199,7 @@ bool QQmlTypeData::tryLoadFromDiskCache()
     for (int i = 0, count = m_compiledData->importCount(); i < count; ++i) {
         const QV4::CompiledData::Import *import = m_compiledData->importAt(i);
         QList<QQmlError> errors;
-        if (!addImport(import, &errors)) {
+        if (!addImport(import, {}, &errors)) {
             Q_ASSERT(errors.size());
             QQmlError error(errors.takeFirst());
             error.setUrl(m_importCache.baseUrl());
@@ -699,7 +699,7 @@ void QQmlTypeData::continueLoadFromIR()
     QList<QQmlError> errors;
 
     for (const QV4::CompiledData::Import *import : qAsConst(m_document->imports)) {
-        if (!addImport(import, &errors)) {
+        if (!addImport(import, {}, &errors)) {
             Q_ASSERT(errors.size());
             QQmlError error(errors.takeFirst());
             error.setUrl(m_importCache.baseUrl());
