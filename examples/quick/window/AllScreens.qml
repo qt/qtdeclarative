@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -49,7 +49,6 @@
 ****************************************************************************/
 
 import QtQuick 2.3
-import QtQuick.Window 2.3
 import "../shared" as Shared
 
 Column {

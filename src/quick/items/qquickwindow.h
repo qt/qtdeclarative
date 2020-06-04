@@ -77,6 +77,10 @@ class Q_QUICK_EXPORT QQuickWindow : public QWindow
     Q_PROPERTY(QQuickItem* activeFocusItem READ activeFocusItem NOTIFY activeFocusItemChanged REVISION(2, 1))
     Q_CLASSINFO("DefaultProperty", "data")
     Q_DECLARE_PRIVATE(QQuickWindow)
+
+    QML_NAMED_ELEMENT(Window)
+    QML_ADDED_IN_VERSION(2, 0)
+    QML_REMOVED_IN_VERSION(2, 1)
 public:
     enum CreateTextureOption {
         TextureHasAlphaChannel  = 0x0001,

@@ -1585,6 +1585,8 @@ bool QQmlImportsPrivate::addLibraryImport(
         // Ensure that we are actually providing something
         if (!QQmlMetaType::isModule(uri, version)) {
             if (inserted->qmlDirComponents.isEmpty() && inserted->qmlDirScripts.isEmpty()) {
+                if (qmldir.plugins().isEmpty() && !qmldir.imports().isEmpty())
+                    return true; // This is a pure redirection
                 QQmlError error;
                 if (QQmlMetaType::isAnyModule(uri)) {
                     error.setDescription(QQmlImportDatabase::tr(

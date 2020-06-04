@@ -57,3 +57,9 @@ QMLTYPES_INSTALL_DIR = $$[QT_INSTALL_QML]/QtQuick
 QML_IMPORT_NAME = QtQuick
 QML_IMPORT_VERSION = $$QT_VERSION
 CONFIG += qmltypes install_qmltypes install_metatypes
+
+# Install QtQuick.Window qmldir
+qmldir.files = $$PWD/../imports/window/qmldir
+qmldir.path = $$[QT_INSTALL_QML]/QtQuick/Window
+prefix_build: INSTALLS += qmldir
+else: COPIES += qmldir

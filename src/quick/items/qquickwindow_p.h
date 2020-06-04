@@ -92,6 +92,8 @@ class QRhiTexture;
 class Q_QUICK_PRIVATE_EXPORT QQuickRootItem : public QQuickItem
 {
     Q_OBJECT
+    QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 public:
     QQuickRootItem();
 public Q_SLOTS:

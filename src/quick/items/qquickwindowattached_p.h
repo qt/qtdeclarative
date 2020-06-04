@@ -71,6 +71,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickWindowAttached : public QObject
     Q_PROPERTY(int width READ width NOTIFY widthChanged)
     Q_PROPERTY(int height READ height NOTIFY heightChanged)
     Q_PROPERTY(QQuickWindow *window READ window NOTIFY windowChanged)
+    QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     QQuickWindowAttached(QObject* attachee);

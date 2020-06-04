@@ -287,6 +287,8 @@ endif()
 # QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQuick"
 # QML_IMPORT_NAME = "QtQuick"
 # QML_IMPORT_VERSION = "$$QT_VERSION"
+# qmldir.files = "$$PWD/../imports/window/qmldir"
+# qmldir.path = "$$[QT_INSTALL_QML]/QtQuick/Window"
 
 ## Scopes:
 #####################################################################
@@ -357,6 +359,12 @@ qt_extend_target(Quick CONDITION QT_FEATURE_accessibility
         Qt::GuiPrivate
         Qt::QmlPrivate
 )
+
+#### Keys ignored in scope 10:.:.:quick.pro:prefix_build:
+# INSTALLS = "qmldir"
+
+#### Keys ignored in scope 11:.:.:quick.pro:else:
+# COPIES = "qmldir"
 
 qt_extend_target(Quick CONDITION QT_FEATURE_qml_debug
     SOURCES
@@ -533,3 +541,11 @@ set_target_properties(Quick PROPERTIES
 )
 
 qt6_qml_type_registration(Quick)
+
+#special case begin
+if (QT_WILL_INSTALL)
+    install(FILES ../imports/window/qmldir DESTINATION "${INSTALL_QMLDIR}/QtQuick/Window")
+else()
+    file(COPY ../imports/window/qmldir DESTINATION "${QT_BUILD_DIR}/${INSTALL_QMLDIR}/QtQuick/Window")
+endif()
+#special case end

@@ -60,6 +60,14 @@ QT_BEGIN_NAMESPACE
 
 class QQuickWindowQmlImplPrivate;
 
+struct QWindowForeign
+{
+    Q_GADGET
+    QML_FOREIGN(QWindow)
+    QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 1)
+};
+
 class Q_QUICK_PRIVATE_EXPORT QQuickWindowQmlImpl : public QQuickWindow, public QQmlParserStatus
 {
     Q_OBJECT
@@ -69,6 +77,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickWindowQmlImpl : public QQuickWindow, public Q
     Q_PROPERTY(Visibility visibility READ visibility WRITE setVisibility NOTIFY visibilityChanged)
     Q_PROPERTY(QObject *screen READ screen WRITE setScreen NOTIFY screenChanged REVISION(2, 3))
     QML_ATTACHED(QQuickWindowAttached)
+    QML_NAMED_ELEMENT(Window)
+    QML_ADDED_IN_VERSION(2, 1)
 
 public:
     QQuickWindowQmlImpl(QWindow *parent = nullptr);

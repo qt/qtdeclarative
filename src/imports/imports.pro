@@ -19,8 +19,7 @@ qtHaveModule(quick) {
     SUBDIRS += \
         labsanimation \
         layouts \
-        qtquick2 \
-        window
+        qtquick2
 
     qtConfig(quick-shadereffect): SUBDIRS += wavefrontmesh
 
