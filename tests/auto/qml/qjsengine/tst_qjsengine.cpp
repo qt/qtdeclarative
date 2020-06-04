@@ -78,6 +78,7 @@ private slots:
     void newDate();
     void jsParseDate();
     void newQObject();
+    void newQObjectRace();
     void newQObject_ownership();
     void newQObject_deletedEngine();
     void newQObjectPropertyCache();
@@ -782,6 +783,28 @@ void tst_QJSEngine::newQObject()
         QEXPECT_FAIL("", "FIXME: newly created QObject's prototype is an JS Object", Continue);
         QCOMPARE(qobject.prototype().isQObject(), true);
     }
+}
+
+void tst_QJSEngine::newQObjectRace()
+{
+    class Thread : public QThread
+    {
+        void run() override
+        {
+            for (int i=0;i<100;++i)
+            {
+                QJSEngine e;
+                auto obj = e.newQObject(new QObject);
+            }
+        }
+    };
+
+
+    Thread threads[8];
+    for (auto& t : threads)
+        t.start(); // should not crash
+    for (auto& t : threads)
+        t.wait();
 }
 
 void tst_QJSEngine::newQObject_ownership()

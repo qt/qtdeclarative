@@ -118,7 +118,7 @@ struct QQmlMetaTypeData
     void setPropertyCacheForMinorVersion(int index, int minorVersion, QQmlPropertyCache *cache);
     void clearPropertyCachesForMinorVersion(int index);
 
-    QQmlPropertyCache *propertyCache(const QMetaObject *metaObject, int minorVersion);
+    QQmlRefPointer<QQmlPropertyCache> propertyCache(const QMetaObject *metaObject, int minorVersion);
     QQmlPropertyCache *propertyCache(const QQmlType &type, int minorVersion);
 
     void setTypeRegistrationFailures(QStringList *failures)

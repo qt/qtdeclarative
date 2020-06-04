@@ -109,7 +109,7 @@ void QQmlMetaTypeData::clearPropertyCachesForMinorVersion(int index)
         typePropertyCaches[index].clear();
 }
 
-QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QMetaObject *metaObject, int minorVersion)
+QQmlRefPointer<QQmlPropertyCache> QQmlMetaTypeData::propertyCache(const QMetaObject *metaObject, int minorVersion)
 {
     if (QQmlPropertyCache *rv = propertyCaches.value(metaObject))
         return rv;
@@ -119,7 +119,7 @@ QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QMetaObject *metaObject
         propertyCaches.insert(metaObject, rv);
         return rv;
     }
-    QQmlPropertyCache *super = propertyCache(metaObject->superClass(), minorVersion);
+    auto super = propertyCache(metaObject->superClass(), minorVersion);
     QQmlPropertyCache *rv = super->copyAndAppend(metaObject, minorVersion);
     propertyCaches.insert(metaObject, rv);
     return rv;
@@ -155,7 +155,7 @@ QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QQmlType &type, int min
         return pc;
     }
 
-    QQmlPropertyCache *raw = propertyCache(type.metaObject(), minorVersion);
+    QQmlPropertyCache *raw = propertyCache(type.metaObject(), minorVersion).data();
 
     bool hasCopied = false;
 
