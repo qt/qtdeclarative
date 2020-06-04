@@ -114,6 +114,7 @@ QSGNode *QQuickStyleItem::updatePaintNode(QSGNode *oldNode, QQuickItem::UpdatePa
     if (!node)
         node = window()->createNinePatchNode();
 
+    QRectF bounds = boundingRect();
     auto texture = window()->createTextureFromImage(m_paintedImage, QQuickWindow::TextureCanUseAtlas);
     QSize padding = m_useNinePatchImage ? m_styleItemGeometry.minimumSize / 2 : QSize(0, 0);
     if (boundingRect().width() < m_styleItemGeometry.minimumSize.width())
@@ -121,17 +122,16 @@ QSGNode *QQuickStyleItem::updatePaintNode(QSGNode *oldNode, QQuickItem::UpdatePa
     if (boundingRect().height() < m_styleItemGeometry.minimumSize.height())
         padding.setHeight(0);
 
-    node->setBounds(boundingRect());
-
 #ifdef QT_DEBUG
     if (m_debugFlags.testFlag(ShowUnscaled)) {
         const qreal scale = window()->devicePixelRatio();
         const QSizeF ninePatchImageSize = m_paintedImage.rect().size() / scale;
-        node->setBounds(QRectF(QPointF(), ninePatchImageSize));
-        qqc2Debug() << "Setting paint node size to size of image:" << ninePatchImageSize;
+        bounds = QRectF(QPointF(), ninePatchImageSize);
+        qqc2Debug() << "Setting paint node bounds to size of image:" << bounds;
     }
 #endif
 
+    node->setBounds(bounds);
     node->setTexture(texture);
     node->setDevicePixelRatio(window()->devicePixelRatio());
     node->setPadding(padding.width(), padding.height(), padding.width(), padding.height());
