@@ -1947,9 +1947,7 @@ QQmlData *QQmlData::createQQmlData(QObjectPrivate *priv)
 QQmlPropertyCache *QQmlData::createPropertyCache(QJSEngine *engine, QObject *object)
 {
     QQmlData *ddata = QQmlData::get(object, /*create*/true);
-    ddata->propertyCache = QJSEnginePrivate::get(engine)->cache(object);
-    if (ddata->propertyCache)
-        ddata->propertyCache->addref();
+    ddata->propertyCache = QJSEnginePrivate::get(engine)->cache(object, QTypeRevision {}, true);
     return ddata->propertyCache;
 }
 

@@ -111,8 +111,8 @@ public:
     QProperty<QString> uiLanguage;
 
     // These methods may be called from the QML loader thread
-    inline QQmlPropertyCache *cache(QObject *obj, QTypeRevision version = QTypeRevision());
-    inline QQmlPropertyCache *cache(const QMetaObject *obj, QTypeRevision version = QTypeRevision());
+    inline QQmlPropertyCache *cache(QObject *obj, QTypeRevision version = QTypeRevision(), bool doRef = false);
+    inline QQmlPropertyCache *cache(const QMetaObject *obj, QTypeRevision version = QTypeRevision(), bool doRef = false);
 };
 
 QJSEnginePrivate::Locker::Locker(const QJSEngine *e)
@@ -162,14 +162,14 @@ and deleted before the loader thread has a chance to use or reference it.  This
 can't currently happen as the cache holds a reference to the
 QQmlPropertyCache until the QQmlEngine is destroyed.
 */
-QQmlPropertyCache *QJSEnginePrivate::cache(QObject *obj, QTypeRevision version)
+QQmlPropertyCache *QJSEnginePrivate::cache(QObject *obj, QTypeRevision version, bool doRef)
 {
     if (!obj || QObjectPrivate::get(obj)->metaObject || QObjectPrivate::get(obj)->wasDeleted)
         return nullptr;
 
     Locker locker(this);
     const QMetaObject *mo = obj->metaObject();
-    return QQmlMetaType::propertyCache(mo, version);
+    return QQmlMetaType::propertyCache(mo, version, doRef);
 }
 
 /*!
@@ -181,12 +181,12 @@ exist for the lifetime of the QQmlEngine.
 
 The returned cache is not referenced, so if it is to be stored, call addref().
 */
-QQmlPropertyCache *QJSEnginePrivate::cache(const QMetaObject *metaObject, QTypeRevision version)
+QQmlPropertyCache *QJSEnginePrivate::cache(const QMetaObject *metaObject, QTypeRevision version, bool doRef)
 {
     Q_ASSERT(metaObject);
 
     Locker locker(this);
-    return QQmlMetaType::propertyCache(metaObject, version);
+    return QQmlMetaType::propertyCache(metaObject, version, doRef);
 }
 
 

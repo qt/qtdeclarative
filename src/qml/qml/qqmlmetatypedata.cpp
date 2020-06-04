@@ -109,7 +109,7 @@ void QQmlMetaTypeData::clearPropertyCachesForVersion(int index)
         typePropertyCaches[index].clear();
 }
 
-QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QMetaObject *metaObject, QTypeRevision version)
+QQmlRefPointer<QQmlPropertyCache> QQmlMetaTypeData::propertyCache(const QMetaObject *metaObject, QTypeRevision version)
 {
     if (QQmlPropertyCache *rv = propertyCaches.value(metaObject))
         return rv;
@@ -119,7 +119,7 @@ QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QMetaObject *metaObject
         propertyCaches.insert(metaObject, rv);
         return rv;
     }
-    QQmlPropertyCache *super = propertyCache(metaObject->superClass(), version);
+    auto super = propertyCache(metaObject->superClass(), version);
     QQmlPropertyCache *rv = super->copyAndAppend(metaObject, version);
     propertyCaches.insert(metaObject, rv);
     return rv;
@@ -164,7 +164,7 @@ QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QQmlType &type, QTypeRe
         return pc;
     }
 
-    QQmlPropertyCache *raw = propertyCache(type.metaObject(), combinedVersion);
+    QQmlPropertyCache *raw = propertyCache(type.metaObject(), combinedVersion).data();
 
     bool hasCopied = false;
 

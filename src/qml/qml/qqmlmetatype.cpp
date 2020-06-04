@@ -1239,10 +1239,14 @@ QQmlType QQmlMetaType::qmlType(const QUrl &unNormalizedUrl, bool includeNonFileI
         return QQmlType();
 }
 
-QQmlPropertyCache *QQmlMetaType::propertyCache(const QMetaObject *metaObject, QTypeRevision version)
+QQmlPropertyCache *QQmlMetaType::propertyCache(const QMetaObject *metaObject, QTypeRevision version, bool doRef)
 {
     QQmlMetaTypeDataPtr data; // not const: the cache is created on demand
-    return data->propertyCache(metaObject, version);
+    auto ret =  data->propertyCache(metaObject, version);
+    if (doRef)
+        return ret.take();
+    else
+        return ret.data();
 }
 
 QQmlPropertyCache *QQmlMetaType::propertyCache(const QQmlType &type, QTypeRevision version)
