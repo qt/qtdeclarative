@@ -1,7 +1,7 @@
 # Generated from gallery.pro.
 
 cmake_minimum_required(VERSION 3.14)
-project(gallery_controls2 LANGUAGES CXX) # special case
+project(gallery LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -20,10 +20,10 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS QuickControls2)
 
-add_qt_gui_executable(gallery_controls2 # special case
+add_qt_gui_executable(gallery
     gallery.cpp
 )
-target_link_libraries(gallery_controls2 PUBLIC # special case
+target_link_libraries(gallery PUBLIC
     Qt::Core
     Qt::Gui
     Qt::Quick
@@ -89,14 +89,14 @@ set(qmake_immediate_resource_files
     "qtquickcontrols2.conf"
 )
 
-qt6_add_resources(gallery_controls2 "qmake_immediate" # special case
+qt6_add_resources(gallery "qmake_immediate"
     PREFIX
         "/"
     FILES
         ${qmake_immediate_resource_files}
 )
 
-install(TARGETS gallery_controls2 # special case
+install(TARGETS gallery
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
