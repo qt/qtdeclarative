@@ -57,6 +57,7 @@ private slots:
 void tst_qquickmaterialstyleconf::conf()
 {
     QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
 
     QFont customFont;
     customFont.setFamily("Courier");
@@ -101,6 +102,7 @@ void tst_qquickmaterialstyleconf::variants()
     qputenv("QT_QUICK_CONTROLS_CONF", confPath);
 
     QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();

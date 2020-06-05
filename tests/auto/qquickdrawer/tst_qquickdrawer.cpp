@@ -180,6 +180,7 @@ void tst_QQuickDrawer::visible()
 {
     QFETCH(QString, source);
     QQuickApplicationHelper helper(this, source);
+    QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickWindow *window = helper.window;
     window->show();
@@ -220,6 +221,7 @@ void tst_QQuickDrawer::visible()
 void tst_QQuickDrawer::state()
 {
     QQuickApplicationHelper helper(this, "applicationwindow.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickWindow *window = helper.window;
     window->show();
@@ -340,6 +342,7 @@ void tst_QQuickDrawer::position()
     QFETCH(qreal, position);
 
     QQuickApplicationHelper helper(this, QStringLiteral("applicationwindow.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
@@ -387,6 +390,7 @@ void tst_QQuickDrawer::dragMargin()
     QFETCH(qreal, dragFromRight);
 
     QQuickApplicationHelper helper(this, QStringLiteral("applicationwindow.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
@@ -433,6 +437,7 @@ static QRectF geometry(const QQuickItem *item)
 void tst_QQuickDrawer::reposition()
 {
     QQuickApplicationHelper helper(this, QStringLiteral("reposition.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
@@ -491,6 +496,7 @@ void tst_QQuickDrawer::reposition()
 void tst_QQuickDrawer::header()
 {
     QQuickApplicationHelper helper(this, QStringLiteral("header.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
@@ -545,6 +551,7 @@ void tst_QQuickDrawer::hover()
     QFETCH(bool, modal);
 
     QQuickApplicationHelper helper(this, source);
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
     window->requestActivate();
@@ -628,6 +635,7 @@ void tst_QQuickDrawer::wheel()
     QFETCH(bool, modal);
 
     QQuickApplicationHelper helper(this, source);
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
@@ -690,6 +698,7 @@ void tst_QQuickDrawer::wheel()
 void tst_QQuickDrawer::multiple()
 {
     QQuickApplicationHelper helper(this, QStringLiteral("multiple.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
@@ -834,6 +843,7 @@ void tst_QQuickDrawer::touch()
     QFETCH(QPoint, to);
 
     QQuickApplicationHelper helper(this, source);
+    QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickWindow *window = helper.window;
     window->show();
@@ -868,6 +878,7 @@ void tst_QQuickDrawer::touch()
 void tst_QQuickDrawer::multiTouch()
 {
     QQuickApplicationHelper helper(this, QStringLiteral("multiTouch.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
@@ -981,6 +992,7 @@ void tst_QQuickDrawer::multiTouch()
 void tst_QQuickDrawer::grabber()
 {
     QQuickApplicationHelper helper(this, QStringLiteral("grabber.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
@@ -1025,6 +1037,7 @@ void tst_QQuickDrawer::interactive()
 {
     QFETCH(QString, source);
     QQuickApplicationHelper helper(this, source);
+    QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickWindow *window = helper.window;
     window->show();
@@ -1087,6 +1100,7 @@ void tst_QQuickDrawer::flickable()
     QFETCH(QPoint, to);
 
     QQuickApplicationHelper helper(this, QStringLiteral("flickable.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
@@ -1143,6 +1157,7 @@ void tst_QQuickDrawer::dragOverModalShadow()
     QFETCH(bool, mouse);
 
     QQuickApplicationHelper helper(this, QStringLiteral("dragOverModalShadow.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
@@ -1199,6 +1214,7 @@ void tst_QQuickDrawer::nonModal()
     QFETCH(bool, mouse);
 
     QQuickApplicationHelper helper(this, QStringLiteral("window.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
@@ -1282,6 +1298,7 @@ void tst_QQuickDrawer::slider()
     QFETCH(int, delta);
 
     QQuickApplicationHelper helper(this, QStringLiteral("slider.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
@@ -1325,6 +1342,7 @@ void tst_QQuickDrawer::slider()
 void tst_QQuickDrawer::topEdgeScreenEdge()
 {
     QQuickApplicationHelper helper(this, QStringLiteral("topEdgeScreenEdge.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
