@@ -242,15 +242,15 @@ public:
     void setPluginPathList(const QStringList &paths);
     void addPluginPath(const QString& path);
 
+    QString resolvePlugin(QQmlTypeLoader *typeLoader,
+                          const QString &qmldirPath, const QString &qmldirPluginPath,
+                          const QString &baseName) const;
 private:
     friend class QQmlImportsPrivate;
     QString resolvePlugin(QQmlTypeLoader *typeLoader,
                           const QString &qmldirPath, const QString &qmldirPluginPath,
                           const QString &baseName, const QStringList &suffixes,
-                          const QString &prefix = QString());
-    QString resolvePlugin(QQmlTypeLoader *typeLoader,
-                          const QString &qmldirPath, const QString &qmldirPluginPath,
-                          const QString &baseName);
+                          const QString &prefix = QString()) const;
     bool importStaticPlugin(QObject *instance, const QString &basePath, const QString &uri,
                             const QString &typeNamespace, QTypeRevision version,
                             QList<QQmlError> *errors);

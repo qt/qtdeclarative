@@ -1957,7 +1957,7 @@ QString QQmlImportDatabase::resolvePlugin(QQmlTypeLoader *typeLoader,
                                           const QString &qmldirPath,
                                           const QString &qmldirPluginPath,
                                           const QString &baseName, const QStringList &suffixes,
-                                          const QString &prefix)
+                                          const QString &prefix) const
 {
     QStringList searchPaths = filePluginPath;
     bool qmldirPluginPathIsRelative = QDir::isRelativePath(qmldirPluginPath);
@@ -2029,7 +2029,7 @@ QString QQmlImportDatabase::resolvePlugin(QQmlTypeLoader *typeLoader,
 */
 QString QQmlImportDatabase::resolvePlugin(QQmlTypeLoader *typeLoader,
                                                   const QString &qmldirPath, const QString &qmldirPluginPath,
-                                                  const QString &baseName)
+                                                  const QString &baseName) const
 {
 #if defined(Q_OS_WIN)
     static const QString prefix;
