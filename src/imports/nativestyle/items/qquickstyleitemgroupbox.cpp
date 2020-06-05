@@ -60,6 +60,7 @@ StyleItemGeometry QQuickStyleItemGroupBox::calculateGeometry()
     styleOption.rect.setSize(geometry.implicitSize);
     geometry.contentRect = style()->subControlRect(QStyle::CC_GroupBox, &styleOption, QStyle::SC_GroupBoxContents);
     geometry.layoutRect = style()->subElementRect(QStyle::SE_GroupBoxLayoutItem, &styleOption);
+    geometry.ninePatchMargins = style()->ninePatchMargins(QStyle::CC_GroupBox, &styleOption, geometry.minimumSize);
 
     const QQuickStyleMargins oldGroupBoxPadding = m_groupBoxPadding;
     const QRect frame = style()->subControlRect(QStyle::CC_GroupBox, &styleOption, QStyle::SC_GroupBoxFrame);

@@ -60,6 +60,7 @@ StyleItemGeometry QQuickStyleItemTextArea::calculateGeometry()
     geometry.implicitSize = style()->sizeFromContents(QStyle::CT_LineEdit, &styleOption, contentSize());
     styleOption.rect = QRect(QPoint(0, 0), geometry.implicitSize);
     geometry.contentRect = style()->subElementRect(QStyle::SE_LineEditContents, &styleOption);
+    geometry.ninePatchMargins = style()->ninePatchMargins(QStyle::CE_ShapedFrame, &styleOption, geometry.minimumSize);
 
     return geometry;
 }

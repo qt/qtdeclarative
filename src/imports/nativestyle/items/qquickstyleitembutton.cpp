@@ -59,6 +59,7 @@ StyleItemGeometry QQuickStyleItemButton::calculateGeometry()
     styleOption.rect = QRect(QPoint(0, 0), geometry.implicitSize);
     geometry.contentRect = style()->subElementRect(QStyle::SE_PushButtonContents, &styleOption);
     geometry.layoutRect = style()->subElementRect(QStyle::SE_PushButtonLayoutItem, &styleOption);
+    geometry.ninePatchMargins = style()->ninePatchMargins(QStyle::CE_PushButtonBevel, &styleOption, geometry.minimumSize);
 
     return geometry;
 }

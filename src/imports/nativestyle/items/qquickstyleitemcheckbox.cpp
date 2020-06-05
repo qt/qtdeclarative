@@ -60,6 +60,7 @@ StyleItemGeometry QQuickStyleItemCheckBox::calculateGeometry()
     styleOption.rect = QRect(QPoint(0, 0), geometry.implicitSize);
     geometry.contentRect = style()->subElementRect(QStyle::SE_CheckBoxContents, &styleOption);
     geometry.layoutRect = style()->subElementRect(QStyle::SE_CheckBoxLayoutItem, &styleOption);
+    geometry.ninePatchMargins = style()->ninePatchMargins(QStyle::CE_CheckBox, &styleOption, geometry.minimumSize);
 
     // Spacing seems to already be baked into SE_CheckBoxContents, so ignore until needed
     //const int space = style()->pixelMetric(QStyle::PM_CheckBoxLabelSpacing, &styleOption);

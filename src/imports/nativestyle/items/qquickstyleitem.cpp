@@ -114,27 +114,44 @@ QSGNode *QQuickStyleItem::updatePaintNode(QSGNode *oldNode, QQuickItem::UpdatePa
     if (!node)
         node = window()->createNinePatchNode();
 
-    QRectF bounds = boundingRect();
     auto texture = window()->createTextureFromImage(m_paintedImage, QQuickWindow::TextureCanUseAtlas);
-    QSize padding = m_useNinePatchImage ? m_styleItemGeometry.minimumSize / 2 : QSize(0, 0);
-    if (boundingRect().width() < m_styleItemGeometry.minimumSize.width())
-        padding.setWidth(0);
-    if (boundingRect().height() < m_styleItemGeometry.minimumSize.height())
-        padding.setHeight(0);
 
+    QRectF bounds = boundingRect();
+    const qreal scale = window()->devicePixelRatio();
+    const QSizeF ninePatchImageSize = m_paintedImage.rect().size() / scale;
 #ifdef QT_DEBUG
     if (m_debugFlags.testFlag(ShowUnscaled)) {
-        const qreal scale = window()->devicePixelRatio();
-        const QSizeF ninePatchImageSize = m_paintedImage.rect().size() / scale;
         bounds = QRectF(QPointF(), ninePatchImageSize);
         qqc2Debug() << "Setting paint node bounds to size of image:" << bounds;
     }
 #endif
 
+    QMargins padding = m_useNinePatchImage ? m_styleItemGeometry.ninePatchMargins : QMargins(0, 0, 0, 0);
+    if (padding.right() == -1) {
+        // Special case: a right padding of -1 means that
+        // the image should not scale horizontally.
+        bounds.setWidth(ninePatchImageSize.width());
+        padding.setLeft(0);
+        padding.setRight(0);
+    } else if (boundingRect().width() < m_styleItemGeometry.minimumSize.width()) {
+        // If the item size is smaller that the image, using nine-patch scaling
+        // ends up wrapping it. In that case we scale the whole image instead.
+        padding.setLeft(0);
+        padding.setRight(0);
+    }
+    if (padding.bottom() == -1) {
+        bounds.setHeight(ninePatchImageSize.height());
+        padding.setTop(0);
+        padding.setBottom(0);
+    } else if (boundingRect().height() < m_styleItemGeometry.minimumSize.height()) {
+        padding.setTop(0);
+        padding.setBottom(0);
+    }
+
     node->setBounds(bounds);
     node->setTexture(texture);
     node->setDevicePixelRatio(window()->devicePixelRatio());
-    node->setPadding(padding.width(), padding.height(), padding.width(), padding.height());
+    node->setPadding(padding.left(), padding.top(), padding.right(), padding.bottom());
     node->update();
 
     return node;
@@ -259,9 +276,17 @@ void QQuickStyleItem::paintControlToImage()
             painter.drawLine(p.x() - offset, p.y() - offset, p.x() - offset, p.y() + m_contentSize.height());
         }
         if (m_debugFlags.testFlag(ShowUnscaled)) {
-            const QPoint center = m_paintedImage.rect().center() / scale;
-            painter.drawLine(center.x(), 0, center.x(), m_paintedImage.rect().height());
-            painter.drawLine(0, center.y(), m_paintedImage.rect().width(), center.y());
+            const QMargins m = m_styleItemGeometry.ninePatchMargins;
+            const int w = int(m_paintedImage.rect().width() / scale);
+            const int h = int(m_paintedImage.rect().height() / scale);
+            if (m.right() != -1) {
+                painter.drawLine(m.left(), 0, m.left(), h);
+                painter.drawLine(w - m.right(), 0, w - m.right(), h);
+            }
+            if (m.bottom() != -1) {
+                painter.drawLine(0, m.top(), w, m.top());
+                painter.drawLine(0, h - m.bottom(), w, h - m.bottom());
+            }
         }
     }
 #endif

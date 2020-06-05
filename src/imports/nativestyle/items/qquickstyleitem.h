@@ -144,6 +144,7 @@ struct StyleItemGeometry
     QSize implicitSize;
     QRect contentRect;
     QRect layoutRect;
+    QMargins ninePatchMargins;
 };
 
 QDebug operator<<(QDebug debug, const StyleItemGeometry &cg);

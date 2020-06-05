@@ -60,6 +60,7 @@ StyleItemGeometry QQuickStyleItemRadioButton::calculateGeometry()
     styleOption.rect = QRect(QPoint(0, 0), geometry.implicitSize);
     geometry.contentRect = style()->subElementRect(QStyle::SE_RadioButtonContents, &styleOption);
     geometry.layoutRect = style()->subElementRect(QStyle::SE_RadioButtonLayoutItem, &styleOption);
+    geometry.ninePatchMargins = style()->ninePatchMargins(QStyle::CE_RadioButton, &styleOption, geometry.minimumSize);
 
     return geometry;
 }

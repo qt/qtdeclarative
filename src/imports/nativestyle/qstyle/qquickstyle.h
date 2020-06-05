@@ -782,6 +782,8 @@ public:
 
     virtual QSize sizeFromContents(ContentsType ct, const QStyleOption *opt, const QSize &contentsSize) const = 0;
     virtual QFont font(ControlElement element, const QStyle::State state) const = 0;
+    virtual QMargins ninePatchMargins(ControlElement ce, const QStyleOption *opt, const QSize &imageSize) const = 0;
+    virtual QMargins ninePatchMargins(ComplexControl cc, const QStyleOptionComplex *opt, const QSize &imageSize) const = 0;
 
     virtual SubControl hitTestComplexControl(ComplexControl cc, const QStyleOptionComplex *opt, const QPoint &pt) const = 0;
 

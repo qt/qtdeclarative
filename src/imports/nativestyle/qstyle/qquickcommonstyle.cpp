@@ -4694,6 +4694,22 @@ QFont QCommonStyle::font(QStyle::ControlElement element, const QStyle::State sta
     return QGuiApplication::font();
 }
 
+QMargins QCommonStyle::ninePatchMargins(QStyle::ControlElement ce, const QStyleOption *opt, const QSize &imageSize) const
+{
+    // By default, we just divide the image at the center
+    int w = imageSize.width() / 2;
+    int h = imageSize.height() / 2;
+    return QMargins(w, h, w, h);
+}
+
+QMargins QCommonStyle::ninePatchMargins(QStyle::ComplexControl cc, const QStyleOptionComplex *opt, const QSize &imageSize) const
+{
+    // By default, we just divide the image at the center
+    int w = imageSize.width() / 2;
+    int h = imageSize.height() / 2;
+    return QMargins(w, h, w, h);
+}
+
 int QCommonStyle::styleHint(StyleHint sh, const QStyleOption *opt, QStyleHintReturn *hret) const
 {
     int ret = 0;

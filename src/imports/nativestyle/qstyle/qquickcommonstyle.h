@@ -62,6 +62,8 @@ public:
 
     QSize sizeFromContents(ContentsType ct, const QStyleOption *opt, const QSize &contentsSize) const override;
     QFont font(ControlElement element, const QStyle::State state) const override;
+    QMargins ninePatchMargins(ControlElement ce, const QStyleOption *opt, const QSize &imageSize) const override;
+    QMargins ninePatchMargins(ComplexControl cc, const QStyleOptionComplex *opt, const QSize &imageSize) const override;
 
     int pixelMetric(PixelMetric m, const QStyleOption *opt = nullptr) const override;
     int styleHint(StyleHint sh, const QStyleOption *opt = nullptr, QStyleHintReturn *shret = nullptr) const override;
