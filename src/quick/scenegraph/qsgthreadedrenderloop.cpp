@@ -622,12 +622,18 @@ void QSGRenderThread::sync(bool inExpose, bool inGrab)
             }
         }
     } else if (rhi) {
-        // With the rhi making the (OpenGL) context current serves only one
-        // purpose: to enable external OpenGL rendering connected to one of
-        // the QQuickWindow signals (beforeSynchronizing, beforeRendering,
-        // etc.) to function like it did on the direct OpenGL path. For our
-        // own rendering this call would not be necessary.
-        rhi->makeThreadLocalNativeContextCurrent();
+        if (windowSize.width() > 0 && windowSize.height() > 0) {
+            // With the rhi making the (OpenGL) context current serves only one
+            // purpose: to enable external OpenGL rendering connected to one of
+            // the QQuickWindow signals (beforeSynchronizing, beforeRendering,
+            // etc.) to function like it did on the direct OpenGL path. For our
+            // own rendering this call would not be necessary.
+            rhi->makeThreadLocalNativeContextCurrent();
+        } else {
+            // Zero size windows do not initialize a swapchain and
+            // rendercontext. So no sync or render can be done then.
+            current = false;
+        }
     } else {
         current = false;
     }
@@ -823,6 +829,8 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
         else
             rhi->makeThreadLocalNativeContextCurrent();
     } else {
+        // Zero size windows do not initialize a swapchain and
+        // rendercontext. So no sync or render can be done then.
         current = false;
     }
     // Check for context loss (GL, RHI case handled after the beginFrame() above)
