@@ -157,9 +157,12 @@ void tst_QQuickMenu::mouse()
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
+    QVERIFY(menu);
     menu->open();
     QVERIFY(menu->isVisible());
-    QVERIFY(window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
+    QQuickOverlay *overlay = window->property("overlay").value<QQuickOverlay*>();
+    QVERIFY(overlay);
+    QVERIFY(overlay->childItems().contains(menu->contentItem()->parentItem()));
     QTRY_VERIFY(menu->isOpened());
 
     QQuickItem *firstItem = menu->itemAt(0);
@@ -182,14 +185,14 @@ void tst_QQuickMenu::mouse()
     QCOMPARE(triggeredSpy.count(), 1);
     QTRY_COMPARE(visibleSpy.count(), 1);
     QVERIFY(!menu->isVisible());
-    QVERIFY(!window->overlay()->childItems().contains(menu->contentItem()));
+    QVERIFY(!overlay->childItems().contains(menu->contentItem()));
     QCOMPARE(menu->currentIndex(), -1);
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 
     menu->open();
     QCOMPARE(visibleSpy.count(), 2);
     QVERIFY(menu->isVisible());
-    QVERIFY(window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
+    QVERIFY(overlay->childItems().contains(menu->contentItem()->parentItem()));
     QTRY_VERIFY(menu->isOpened());
 
     // Ensure that we have enough space to click outside of the menu.
@@ -199,12 +202,12 @@ void tst_QQuickMenu::mouse()
         QPoint(menu->contentItem()->width() + 1, menu->contentItem()->height() + 1));
     QTRY_COMPARE(visibleSpy.count(), 3);
     QVERIFY(!menu->isVisible());
-    QVERIFY(!window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
+    QVERIFY(!overlay->childItems().contains(menu->contentItem()->parentItem()));
 
     menu->open();
     QCOMPARE(visibleSpy.count(), 4);
     QVERIFY(menu->isVisible());
-    QVERIFY(window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
+    QVERIFY(overlay->childItems().contains(menu->contentItem()->parentItem()));
     QTRY_VERIFY(menu->isOpened());
 
     // Hover-highlight through the menu items one by one
@@ -237,7 +240,7 @@ void tst_QQuickMenu::mouse()
 //    QCOMPARE(triggeredSpy.count(), 1);
 //    QCOMPARE(visibleSpy.count(), 5);
 //    QVERIFY(!menu->isVisible());
-//    QVERIFY(!window->overlay()->childItems().contains(menu->contentItem()));
+//    QVERIFY(!overlay->childItems().contains(menu->contentItem()));
 //    QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 }
 
@@ -289,7 +292,9 @@ void tst_QQuickMenu::contextMenuKeyboard()
     menu->open();
     QCOMPARE(visibleSpy.count(), 1);
     QVERIFY(menu->isVisible());
-    QVERIFY(window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
+    QQuickOverlay *overlay = window->property("overlay").value<QQuickOverlay*>();
+    QVERIFY(overlay);
+    QVERIFY(overlay->childItems().contains(menu->contentItem()->parentItem()));
     QTRY_VERIFY(menu->isOpened());
     QVERIFY(!firstItem->hasActiveFocus());
     QVERIFY(!firstItem->property("highlighted").toBool());
@@ -322,7 +327,7 @@ void tst_QQuickMenu::contextMenuKeyboard()
     QCOMPARE(secondTriggeredSpy.count(), 1);
     QTRY_COMPARE(visibleSpy.count(), 2);
     QVERIFY(!menu->isVisible());
-    QVERIFY(!window->overlay()->childItems().contains(menu->contentItem()));
+    QVERIFY(!overlay->childItems().contains(menu->contentItem()));
     QVERIFY(!firstItem->hasActiveFocus());
     QVERIFY(!firstItem->hasVisualFocus());
     QVERIFY(!firstItem->isHighlighted());
@@ -352,7 +357,7 @@ void tst_QQuickMenu::contextMenuKeyboard()
     QCOMPARE(firstTriggeredSpy.count(), 1);
     QTRY_COMPARE(visibleSpy.count(), 4);
     QVERIFY(!menu->isVisible());
-    QVERIFY(!window->overlay()->childItems().contains(menu->contentItem()));
+    QVERIFY(!overlay->childItems().contains(menu->contentItem()));
     QVERIFY(!firstItem->hasActiveFocus());
     QVERIFY(!firstItem->hasVisualFocus());
     QVERIFY(!firstItem->isHighlighted());
@@ -365,7 +370,7 @@ void tst_QQuickMenu::contextMenuKeyboard()
     menu->open();
     QCOMPARE(visibleSpy.count(), 5);
     QVERIFY(menu->isVisible());
-    QVERIFY(window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
+    QVERIFY(overlay->childItems().contains(menu->contentItem()->parentItem()));
     QTRY_VERIFY(menu->isOpened());
     QVERIFY(!firstItem->hasActiveFocus());
     QVERIFY(!firstItem->hasVisualFocus());

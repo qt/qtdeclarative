@@ -368,10 +368,6 @@ QQuickOverlay *QQuickOverlay::overlay(QQuickWindow *window)
     if (!window)
         return nullptr;
 
-    QQuickApplicationWindow *applicationWindow = qobject_cast<QQuickApplicationWindow *>(window);
-    if (applicationWindow)
-        return applicationWindow->overlay();
-
     const char *name = "_q_QQuickOverlay";
     QQuickOverlay *overlay = window->property(name).value<QQuickOverlay *>();
     if (!overlay) {

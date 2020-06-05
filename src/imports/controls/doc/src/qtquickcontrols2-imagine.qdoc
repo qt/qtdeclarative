@@ -87,11 +87,6 @@
             \li active
             \li .9.png (or .png)
         \row
-            \li
-            \li overlay
-            \li modal
-            \li .9.png (or .png)
-        \row
             \li \l BusyIndicator
             \li animation
             \li disabled, running, mirrored, hovered

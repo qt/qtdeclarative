@@ -488,9 +488,7 @@
     \section2 Customizing ApplicationWindow
 
         ApplicationWindow consists of one visual item:
-        \l {ApplicationWindow::background}{background}. It is also possible
-        to customize the \l {ApplicationWindow::overlay}{modal} and
-        \l {ApplicationWindow::overlay}{modeless} items.
+        \l {ApplicationWindow::background}{background}.
 
         \code \QtMinorVersion
         import QtQuick 2.\1
@@ -504,14 +502,6 @@
                     GradientStop { position: 0; color: "#ffffff" }
                     GradientStop { position: 1; color: "#c1bbf9" }
                 }
-            }
-
-            overlay.modal: Rectangle {
-                color: "#8f28282a"
-            }
-
-            overlay.modeless: Rectangle {
-                color: "#2f28282a"
             }
         }
         \endcode

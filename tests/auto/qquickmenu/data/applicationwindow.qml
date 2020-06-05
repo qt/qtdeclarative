@@ -59,6 +59,7 @@ ApplicationWindow {
     property alias emptyMenu: emptyMenu
     property alias menu: menu
     property alias menuButton: menuButton
+    property Overlay overlay: menu.Overlay.overlay
 
     Menu {
         id: emptyMenu
