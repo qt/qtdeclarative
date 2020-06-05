@@ -269,7 +269,7 @@ public:
             return;
         m_buffer.clear();
         setError(ContentNotFoundError, "content not found");
-        emit error(ContentNotFoundError);
+        emit errorOccurred(ContentNotFoundError);
         setFinished(true);
         emit finished();
     }
