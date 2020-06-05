@@ -62,6 +62,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <unordered_map>
 
 QT_BEGIN_NAMESPACE
 
@@ -136,40 +137,59 @@ bool isPathAbsolute(const QString &path)
 
 } // namespace
 
-struct RegisteredPlugin {
+struct QmlPlugin {
     QString uri;
-    QPluginLoader *loader = nullptr;
+    std::unique_ptr<QPluginLoader> loader;
 };
 
-struct StringRegisteredPluginMap : public QMap<QString, RegisteredPlugin> {
-    QMutex mutex;
+class PathPluginMap
+{
+    Q_DISABLE_COPY_MOVE(PathPluginMap)
+public:
+    PathPluginMap() = default;
+    using Container = std::unordered_map<QString, QmlPlugin>;
 
-    ~StringRegisteredPluginMap()
-    {
-        QMutexLocker lock(&mutex);
-        for (const RegisteredPlugin &plugin : qAsConst(*this))
-            delete plugin.loader;
-    }
+private:
+    QBasicMutex mutex;
+    Container plugins;
+    friend class PathPluginMapPtr;
 };
 
-Q_GLOBAL_STATIC(StringRegisteredPluginMap, qmlEnginePluginsWithRegisteredTypes); // stores the uri and the PluginLoaders
+class PathPluginMapPtr
+{
+    Q_DISABLE_COPY_MOVE(PathPluginMapPtr)
+public:
+    PathPluginMapPtr(PathPluginMap *map) : map(map), locker(&map->mutex) {}
+
+    PathPluginMap::Container &operator*() { return map->plugins; }
+    const PathPluginMap::Container &operator*() const { return map->plugins; }
+
+    PathPluginMap::Container *operator->() { return &map->plugins; }
+    const PathPluginMap::Container *operator->() const { return &map->plugins; }
+
+private:
+    PathPluginMap *map;
+    QMutexLocker locker;
+};
+
+Q_GLOBAL_STATIC(PathPluginMap, qmlPluginsByPath); // stores the uri and the PluginLoaders
 
 void qmlClearEnginePlugins()
 {
-    StringRegisteredPluginMap *plugins = qmlEnginePluginsWithRegisteredTypes();
-    QMutexLocker lock(&plugins->mutex);
+    PathPluginMapPtr plugins(qmlPluginsByPath());
 #if QT_CONFIG(library)
-    for (auto &plugin : qAsConst(*plugins)) {
-        QPluginLoader* loader = plugin.loader;
+    for (const auto &plugin : qAsConst(*plugins)) {
+        const auto &loader = plugin.second.loader;
         if (loader) {
             auto extensionPlugin = qobject_cast<QQmlExtensionPlugin *>(loader->instance());
             if (extensionPlugin) {
                 extensionPlugin->unregisterTypes();
             }
 #ifndef Q_OS_MACOS
-            if (!loader->unload())
-                qWarning("Unloading %s failed: %s", qPrintable(plugin.uri), qPrintable(loader->errorString()));
-            delete loader;
+            if (!loader->unload()) {
+                qWarning("Unloading %s failed: %s", qPrintable(plugin.second.uri),
+                         qPrintable(loader->errorString()));
+            }
 #endif
         }
     }
@@ -2211,22 +2231,20 @@ bool QQmlImportDatabase::importStaticPlugin(
     // don't have that information so we use their address as key instead.
     const QString uniquePluginID = QString::asprintf("%p", instance);
     {
-        StringRegisteredPluginMap *plugins = qmlEnginePluginsWithRegisteredTypes();
-        QMutexLocker lock(&plugins->mutex);
+        PathPluginMapPtr plugins(qmlPluginsByPath());
 
         // Plugin types are global across all engines and should only be
         // registered once. But each engine still needs to be initialized.
-        bool typesRegistered = plugins->contains(uniquePluginID);
+        bool typesRegistered = plugins->find(uniquePluginID) != plugins->end();
 
         if (typesRegistered) {
-            Q_ASSERT_X(plugins->value(uniquePluginID).uri == uri,
+            Q_ASSERT_X((*plugins)[uniquePluginID].uri == uri,
                        "QQmlImportDatabase::importStaticPlugin",
                        "Internal error: Static plugin imported previously with different uri");
         } else {
-            RegisteredPlugin plugin;
+            QmlPlugin plugin;
             plugin.uri = uri;
-            plugin.loader = nullptr;
-            plugins->insert(uniquePluginID, plugin);
+            plugins->insert(std::make_pair(uniquePluginID, std::move(plugin)));
 
             if (QQmlMetaType::registerPluginTypes(
                         instance, basePath, uri, typeNamespace, version, errors)
@@ -2261,12 +2279,11 @@ bool QQmlImportDatabase::importDynamicPlugin(
     QObject *instance = nullptr;
     bool engineInitialized = initializedPlugins.contains(absoluteFilePath);
     {
-        StringRegisteredPluginMap *plugins = qmlEnginePluginsWithRegisteredTypes();
-        QMutexLocker lock(&plugins->mutex);
-        bool typesRegistered = plugins->contains(absoluteFilePath);
+        PathPluginMapPtr plugins(qmlPluginsByPath());
+        bool typesRegistered = plugins->find(absoluteFilePath) != plugins->end();
 
         if (typesRegistered) {
-            Q_ASSERT_X(plugins->value(absoluteFilePath).uri == uri,
+            Q_ASSERT_X((*plugins)[absoluteFilePath].uri == uri,
                        "QQmlImportDatabase::importDynamicPlugin",
                        "Internal error: Plugin imported previously with different uri");
         }
@@ -2281,7 +2298,7 @@ bool QQmlImportDatabase::importDynamicPlugin(
                 return false;
             }
 
-            RegisteredPlugin plugin;
+            QmlPlugin plugin;
             plugin.uri = uri;
 
             const QString absolutePath = fileInfo.absolutePath();
@@ -2295,9 +2312,10 @@ bool QQmlImportDatabase::importDynamicPlugin(
                     if (!lockModule(uri, typeNamespace, version, errors))
                         return false;
                     // instance and loader intentionally left at nullptr
-                    plugins->insert(absoluteFilePath, plugin);
-                    typesRegistered = true;
-                    break;
+                    plugins->insert(std::make_pair(absoluteFilePath, std::move(plugin)));
+                    // Not calling initializeEngine with null instance
+                    initializedPlugins.insert(absoluteFilePath);
+                    return true;
                 case QQmlMetaType::RegistrationResult::Failure:
                     return false;
                 }
@@ -2305,19 +2323,18 @@ bool QQmlImportDatabase::importDynamicPlugin(
 
 #if QT_CONFIG(library)
             if (!typesRegistered) {
-                plugin.loader = new QPluginLoader(absoluteFilePath);
+                plugin.loader = std::make_unique<QPluginLoader>(absoluteFilePath);
                 if (!plugin.loader->load()) {
                     if (errors) {
                         QQmlError error;
                         error.setDescription(plugin.loader->errorString());
                         errors->prepend(error);
                     }
-                    delete plugin.loader;
                     return false;
                 }
 
                 instance = plugin.loader->instance();
-                plugins->insert(absoluteFilePath, plugin);
+                plugins->insert(std::make_pair(absoluteFilePath, std::move(plugin)));
 
                 // Continue with shared code path for dynamic and static plugins:
                 if (QQmlMetaType::registerPluginTypes(
@@ -2327,8 +2344,9 @@ bool QQmlImportDatabase::importDynamicPlugin(
                     return false;
                 }
             } else {
-                if (QPluginLoader *loader = plugins->value(absoluteFilePath).loader)
-                    instance = loader->instance();
+                auto it = plugins->find(absoluteFilePath);
+                if (it != plugins->end() && it->second.loader)
+                    instance = it->second.loader->instance();
             }
 #endif // QT_CONFIG(library)
         }
@@ -2347,37 +2365,34 @@ bool QQmlImportDatabase::importDynamicPlugin(
 
 bool QQmlImportDatabase::removeDynamicPlugin(const QString &filePath)
 {
-    StringRegisteredPluginMap *plugins = qmlEnginePluginsWithRegisteredTypes();
-    QMutexLocker lock(&plugins->mutex);
+    PathPluginMapPtr plugins(qmlPluginsByPath());
 
     auto it = plugins->find(QFileInfo(filePath).absoluteFilePath());
     if (it == plugins->end())
         return false;
 
-    QPluginLoader *loader = it->loader;
+    auto &loader = it->second.loader;
     if (!loader)
         return false;
 
 #if QT_CONFIG(library)
     if (!loader->unload()) {
-        qWarning("Unloading %s failed: %s", qPrintable(it->uri),
+        qWarning("Unloading %s failed: %s", qPrintable(it->second.uri),
                  qPrintable(loader->errorString()));
     }
 #endif
 
-    delete loader;
     plugins->erase(it);
     return true;
 }
 
 QStringList QQmlImportDatabase::dynamicPlugins() const
 {
-    StringRegisteredPluginMap *plugins = qmlEnginePluginsWithRegisteredTypes();
-    QMutexLocker lock(&plugins->mutex);
+    PathPluginMapPtr plugins(qmlPluginsByPath());
     QStringList results;
-    for (auto it = plugins->constBegin(), end = plugins->constEnd(); it != end; ++it) {
-        if (it->loader != nullptr)
-            results.append(it.key());
+    for (auto it = plugins->cbegin(), end = plugins->cend(); it != end; ++it) {
+        if (it->second.loader != nullptr)
+            results.append(it->first);
     }
     return results;
 }
