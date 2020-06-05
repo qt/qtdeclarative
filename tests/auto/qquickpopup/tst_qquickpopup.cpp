@@ -99,6 +99,7 @@ private slots:
     void setOverlayParentToNull();
     void tabFence();
     void invisibleToolTipOpen();
+    void centerInOverlayWithinStackViewItem();
 };
 
 void tst_QQuickPopup::initTestCase()
@@ -1401,6 +1402,22 @@ void tst_QQuickPopup::invisibleToolTipOpen()
     QTRY_COMPARE(componentLoadedSpy.count(), 1);
 
     QTRY_VERIFY(mouseArea->property("isToolTipVisible").toBool());
+}
+
+void tst_QQuickPopup::centerInOverlayWithinStackViewItem()
+{
+    QQuickApplicationHelper helper(this, "centerInOverlayWithinStackViewItem.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickPopup *popup = window->property("popup").value<QQuickPopup*>();
+    QVERIFY(popup);
+    QTRY_COMPARE(popup->isVisible(), true);
+
+    // Shouldn't crash on exit.
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)

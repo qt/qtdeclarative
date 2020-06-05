@@ -47,6 +47,15 @@ QQuickPopupAnchors::QQuickPopupAnchors(QQuickPopup *popup)
     d->popup = popup;
 }
 
+QQuickPopupAnchors::~QQuickPopupAnchors()
+{
+    Q_D(const QQuickPopupAnchors);
+    if (d->centerIn) {
+        auto centerInPrivate = QQuickItemPrivate::get(d->centerIn);
+        centerInPrivate->removeItemChangeListener(this, QQuickItemPrivate::Destroyed);
+    }
+}
+
 QQuickItem *QQuickPopupAnchors::centerIn() const
 {
     Q_D(const QQuickPopupAnchors);
@@ -59,14 +68,31 @@ void QQuickPopupAnchors::setCenterIn(QQuickItem *item)
     if (item == d->centerIn)
         return;
 
+    if (d->centerIn) {
+        auto centerInPrivate = QQuickItemPrivate::get(d->centerIn);
+        centerInPrivate->removeItemChangeListener(this, QQuickItemPrivate::Destroyed);
+    }
+
     d->centerIn = item;
+
+    if (d->centerIn) {
+        auto centerInPrivate = QQuickItemPrivate::get(d->centerIn);
+        centerInPrivate->addItemChangeListener(this, QQuickItemPrivate::Destroyed);
+    }
+
     QQuickPopupPrivate::get(d->popup)->reposition();
+
     emit centerInChanged();
 }
 
 void QQuickPopupAnchors::resetCenterIn()
 {
     setCenterIn(nullptr);
+}
+
+void QQuickPopupAnchors::itemDestroyed(QQuickItem *)
+{
+    resetCenterIn();
 }
 
 QT_END_NAMESPACE
