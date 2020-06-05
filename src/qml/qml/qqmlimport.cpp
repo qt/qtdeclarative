@@ -138,7 +138,6 @@ bool isPathAbsolute(const QString &path)
 } // namespace
 
 struct QmlPlugin {
-    QString uri;
     std::unique_ptr<QPluginLoader> loader;
 };
 
@@ -187,7 +186,7 @@ void qmlClearEnginePlugins()
             }
 #ifndef Q_OS_MACOS
             if (!loader->unload()) {
-                qWarning("Unloading %s failed: %s", qPrintable(plugin.second.uri),
+                qWarning("Unloading %s failed: %s", qPrintable(plugin.first),
                          qPrintable(loader->errorString()));
             }
 #endif
@@ -2237,15 +2236,8 @@ bool QQmlImportDatabase::importStaticPlugin(
         // registered once. But each engine still needs to be initialized.
         bool typesRegistered = plugins->find(uniquePluginID) != plugins->end();
 
-        if (typesRegistered) {
-            Q_ASSERT_X((*plugins)[uniquePluginID].uri == uri,
-                       "QQmlImportDatabase::importStaticPlugin",
-                       "Internal error: Static plugin imported previously with different uri");
-        } else {
-            QmlPlugin plugin;
-            plugin.uri = uri;
-            plugins->insert(std::make_pair(uniquePluginID, std::move(plugin)));
-
+        if (!typesRegistered) {
+            plugins->insert(std::make_pair(uniquePluginID, QmlPlugin()));
             if (QQmlMetaType::registerPluginTypes(
                         instance, basePath, uri, typeNamespace, version, errors)
                     == QQmlMetaType::RegistrationResult::Failure
@@ -2282,12 +2274,6 @@ bool QQmlImportDatabase::importDynamicPlugin(
         PathPluginMapPtr plugins(qmlPluginsByPath());
         bool typesRegistered = plugins->find(absoluteFilePath) != plugins->end();
 
-        if (typesRegistered) {
-            Q_ASSERT_X((*plugins)[absoluteFilePath].uri == uri,
-                       "QQmlImportDatabase::importDynamicPlugin",
-                       "Internal error: Plugin imported previously with different uri");
-        }
-
         if (!engineInitialized || !typesRegistered) {
             if (!QQml_isFileCaseCorrect(absoluteFilePath)) {
                 if (errors) {
@@ -2299,7 +2285,6 @@ bool QQmlImportDatabase::importDynamicPlugin(
             }
 
             QmlPlugin plugin;
-            plugin.uri = uri;
 
             const QString absolutePath = fileInfo.absolutePath();
             if (!typesRegistered && isOptional) {
@@ -2377,7 +2362,7 @@ bool QQmlImportDatabase::removeDynamicPlugin(const QString &filePath)
 
 #if QT_CONFIG(library)
     if (!loader->unload()) {
-        qWarning("Unloading %s failed: %s", qPrintable(it->second.uri),
+        qWarning("Unloading %s failed: %s", qPrintable(it->first),
                  qPrintable(loader->errorString()));
     }
 #endif
