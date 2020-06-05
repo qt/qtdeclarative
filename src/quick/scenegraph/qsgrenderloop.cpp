@@ -65,7 +65,6 @@
 #include <private/qsgrhishadereffectnode_p.h>
 
 #if QT_CONFIG(opengl)
-#include <QOpenGLContext>
 #include <private/qsgdefaultrendercontext_p.h>
 #endif
 
@@ -89,12 +88,10 @@ extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_
 #define ENABLE_DEFAULT_BACKEND
 
 /*
-    expectations for this manager to work:
-     - one opengl context to render multiple windows
-     - OpenGL pipeline will not block for vsync in swap
-     - OpenGL pipeline will block based on a full buffer queue.
-     - Multiple screens can share the OpenGL context
-     - Animations are advanced for all windows once per swap
+     - Uses one QRhi (and so OpenGL Context, Vulkan device, etc.) to render multiple windows.
+     - This assumes multiple screens can use the OpenGL context.
+     - Animations are advanced using the standard timer, so QML animations run as expected even when
+       vsync throttling is broken.
  */
 
 DEFINE_BOOL_CONFIG_OPTION(qmlNoThreadedRenderer, QML_BAD_GUI_RENDER_LOOP);
@@ -141,17 +138,10 @@ void QSGRenderLoop::postJob(QQuickWindow *window, QRunnable *job)
     Q_ASSERT(job);
 #ifdef ENABLE_DEFAULT_BACKEND
     Q_ASSERT(window);
-    if (!QSGRhiSupport::instance()->isRhiEnabled()) {
-        if (window->openglContext()) {
-            window->openglContext()->makeCurrent(window);
-            job->run();
-        }
-    } else {
-        QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
-        if (cd->rhi)
-            cd->rhi->makeThreadLocalNativeContextCurrent();
-        job->run();
-    }
+    QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
+    if (cd->rhi)
+        cd->rhi->makeThreadLocalNativeContextCurrent();
+    job->run();
 #else
     Q_UNUSED(window)
     job->run();
@@ -207,7 +197,6 @@ public:
 
     QHash<QQuickWindow *, WindowData> m_windows;
 
-    QOpenGLContext *gl = nullptr;
     QOffscreenSurface *offscreenSurface = nullptr;
     QRhi *rhi = nullptr;
     QSGContext *sg;
@@ -382,23 +371,11 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
     hide(window);
     QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
 
-    bool current = false;
-    if (gl || rhi) {
-        if (rhi) {
-            // Direct OpenGL calls in user code need a current context, like
-            // when rendering; ensure this (no-op when not running on GL).
-            // Also works when there is no handle() anymore.
-            rhi->makeThreadLocalNativeContextCurrent();
-            current = true;
-        } else {
-            QSurface *surface = window;
-            // There may be no platform window if the window got closed.
-            if (!window->handle())
-                surface = offscreenSurface;
-            current = gl->makeCurrent(surface);
-        }
-        if (Q_UNLIKELY(!current))
-            qCDebug(QSG_LOG_RENDERLOOP, "cleanup without an OpenGL context");
+    if (rhi) {
+        // Direct OpenGL calls in user code need a current context, like
+        // when rendering; ensure this (no-op when not running on GL).
+        // Also works when there is no handle() anymore.
+        rhi->makeThreadLocalNativeContextCurrent();
     }
 
 #if QT_CONFIG(quick_shadereffect)
@@ -422,13 +399,8 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
         d->rhi = nullptr;
         delete rhi;
         rhi = nullptr;
-        delete gl;
-        gl = nullptr;
         delete offscreenSurface;
         offscreenSurface = nullptr;
-    } else if (gl && window == gl->surface() && current) {
-        if (!rhi)
-            gl->doneCurrent();
     }
 
     d->animationController.reset();
@@ -513,9 +485,8 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     bool current = false;
     QSGRhiSupport *rhiSupport = QSGRhiSupport::instance();
     int rhiSampleCount = 1;
-    const bool enableRhi = rhiSupport->isRhiEnabled();
 
-    if (enableRhi && !rhi) {
+    if (!rhi) {
         // This block below handles both the initial QRhi initialization and
         // also the subsequent reinitialization attempts after a device lost
         // (reset) situation.
@@ -556,48 +527,17 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
             }
             // otherwise no error, will retry on a subsequent rendering attempt
         }
-    } else if (!enableRhi && !gl) {
-        gl = new QOpenGLContext();
-        gl->setFormat(window->requestedFormat());
-        gl->setScreen(window->screen());
-        if (qt_gl_global_share_context())
-            gl->setShareContext(qt_gl_global_share_context());
-        if (!gl->create()) {
-            delete gl;
-            gl = nullptr;
-            handleContextCreationFailure(window);
-        } else {
-            if (!offscreenSurface) {
-                offscreenSurface = new QOffscreenSurface;
-                offscreenSurface->setFormat(gl->format());
-                offscreenSurface->create();
-            }
-            cd->fireOpenGLContextCreated(gl);
-            current = gl->makeCurrent(window);
-        }
-        if (current) {
-            QSGDefaultRenderContext::InitParams rcParams;
-            rcParams.sampleCount = qMax(1, gl->format().samples());
-            rcParams.openGLContext = gl;
-            rcParams.initialSurfacePixelSize = window->size() * window->effectiveDevicePixelRatio();
-            rcParams.maybeSurface = window;
-            cd->context->initialize(&rcParams);
-        }
     } else {
-        if (rhi) {
-            current = true;
-            // With the rhi making the (OpenGL) context current serves only one
-            // purpose: to enable external OpenGL rendering connected to one of
-            // the QQuickWindow signals (beforeSynchronizing, beforeRendering,
-            // etc.) to function like it did on the direct OpenGL path. For our
-            // own rendering this call would not be necessary.
-            rhi->makeThreadLocalNativeContextCurrent();
-        } else {
-            current = gl->makeCurrent(window);
-        }
+        current = true;
+        // With the rhi making the (OpenGL) context current serves only one
+        // purpose: to enable external OpenGL rendering connected to one of
+        // the QQuickWindow signals (beforeSynchronizing, beforeRendering,
+        // etc.) to function like it did on the direct OpenGL path. For our
+        // own rendering this call would not be necessary.
+        rhi->makeThreadLocalNativeContextCurrent();
     }
 
-    if (enableRhi && rhi && !cd->swapchain) {
+    if (rhi && !cd->swapchain) {
         // if it's not the first window then the rhi is not yet stored to
         // QQuickWindowPrivate, do it now
         cd->rhi = rhi;
@@ -637,24 +577,6 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
             break;
         }
         i++;
-    }
-
-    // Check for context loss. (legacy GL only)
-    if (!current && !rhi && !gl->isValid()) {
-        for (auto it = m_windows.constBegin() ; it != m_windows.constEnd(); it++) {
-            QQuickWindowPrivate *windowPrivate = QQuickWindowPrivate::get(it.key());
-            windowPrivate->cleanupNodesOnShutdown();
-        }
-        rc->invalidate();
-        current = gl->create() && gl->makeCurrent(window);
-        if (current) {
-            QSGDefaultRenderContext::InitParams rcParams;
-            rcParams.sampleCount = qMax(1, gl->format().samples());
-            rcParams.openGLContext = gl;
-            rcParams.initialSurfacePixelSize = window->size() * window->effectiveDevicePixelRatio();
-            rcParams.maybeSurface = window;
-            rc->initialize(&rcParams);
-        }
     }
 
     if (!current)
@@ -789,9 +711,6 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
             else if (frameResult == QRhi::FrameOpError)
                 qWarning("Failed to end frame");
         }
-    } else if (needsPresent) {
-        if (!cd->customRenderStage || !cd->customRenderStage->swap())
-            gl->swapBuffers(window);
     }
     if (needsPresent)
         cd->fireFrameSwapped();

@@ -315,8 +315,10 @@ void QQuickWidgetPrivate::render(bool needsSync)
         if (!current && !context->isValid()) {
             renderControl->invalidate();
             current = context->create() && context->makeCurrent(offscreenSurface);
-            if (current)
-                renderControl->initialize(context);
+            if (current) {
+                offscreenWindow->setGraphicsDevice(QQuickGraphicsDevice::fromOpenGLContext(context));
+                renderControl->initialize();
+            }
         }
 
         if (!current) {
@@ -970,10 +972,7 @@ void QQuickWidgetPrivate::createContext()
     if (context->makeCurrent(offscreenSurface)) {
         if (!offscreenWindow->isSceneGraphInitialized()) {
             offscreenWindow->setGraphicsDevice(QQuickGraphicsDevice::fromOpenGLContext(context));
-            if (QSGRhiSupport::instance()->isRhiEnabled())
-                renderControl->initialize();
-            else
-                renderControl->initialize(context);
+            renderControl->initialize();
         }
     } else
 #endif

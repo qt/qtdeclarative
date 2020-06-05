@@ -93,7 +93,6 @@ public:
         int sType = INIT_PARAMS_MAGIC; // help discovering broken code passing something else as 'context'
         QRhi *rhi = nullptr;
         int sampleCount = 1; // 1, 4, 8, ...
-        QOpenGLContext *openGLContext = nullptr; // ### Qt 6: remove
         // only used as a hint f.ex. in the texture atlas init
         QSize initialSurfacePixelSize;
         // The first window that will be used with this rc, if available.

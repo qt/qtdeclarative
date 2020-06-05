@@ -52,7 +52,6 @@
 //
 
 #include <QtCore/QThread>
-#include <QOpenGLContext>
 #include <private/qsgcontext_p.h>
 
 #include "qsgrenderloop_p.h"
@@ -136,8 +135,6 @@ private:
 
     bool m_lockedForSync;
 };
-
-
 
 QT_END_NAMESPACE
 

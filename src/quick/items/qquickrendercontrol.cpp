@@ -48,9 +48,6 @@
 
 #include <private/qsgrhishadereffectnode_p.h>
 
-#if QT_CONFIG(opengl)
-# include <QOpenGLContext>
-#endif
 #include <QtGui/private/qguiapplication_p.h>
 #include <qpa/qplatformintegration.h>
 #include <QtGui/qoffscreensurface.h>
@@ -68,9 +65,6 @@
 #include <QtGui/private/qrhi_p.h>
 
 QT_BEGIN_NAMESPACE
-#if QT_CONFIG(opengl)
-extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
-#endif
 
 /*!
   \class QQuickRenderControl
@@ -313,52 +307,6 @@ bool QQuickRenderControl::initialize()
 }
 
 /*!
-  Initializes the scene graph resources. The context \a gl has to be the
-  current OpenGL context or null if it is not relevant because a Qt Quick
-  backend other than OpenGL is in use.
-
-  \note Qt Quick does not take ownership of the context. It is up to the
-  application to destroy it after a call to invalidate() or after the
-  QQuickRenderControl instance is destroyed.
- */
-void QQuickRenderControl::initialize(QOpenGLContext *gl)
-{
-
-    Q_D(QQuickRenderControl);
-#if QT_CONFIG(opengl)
-    if (!d->window) {
-        qWarning("QQuickRenderControl::initialize called with no associated window");
-        return;
-    }
-
-    if (QOpenGLContext::currentContext() != gl) {
-        qWarning("QQuickRenderControl::initialize called with incorrect current context");
-        return;
-    }
-
-    // It is the caller's responsiblity to make a context/surface current.
-    // It cannot be done here since the surface to use may not be the
-    // surface belonging to window. In fact window may not have a native
-    // window/surface at all.
-    QSGDefaultRenderContext *rc = qobject_cast<QSGDefaultRenderContext *>(d->rc);
-    if (rc) {
-        QSGDefaultRenderContext::InitParams params;
-        params.sampleCount = qMax(1, gl->format().samples());
-        params.openGLContext = gl;
-        params.initialSurfacePixelSize = d->window->size() * d->window->effectiveDevicePixelRatio();
-        params.maybeSurface = d->window;
-        rc->initialize(&params);
-    } else {
-        // can this happen?
-        d->rc->initialize(nullptr);
-    }
-#else
-    Q_UNUSED(gl)
-#endif
-    d->initialized = true;
-}
-
-/*!
   This function should be called as late as possible before
   sync(). In a threaded scenario, rendering can happen in parallel
   with this function.
@@ -513,19 +461,6 @@ QImage QQuickRenderControlPrivate::grab()
         // does not support custom render targets, so the grab implementation
         // here is still valuable)
 
-    } else if (window->rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL) {
-#if QT_CONFIG(opengl)
-        QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
-        cd->polishItems();
-        cd->syncSceneGraph();
-        rc->endSync();
-        q->render();
-        const bool alpha = window->format().alphaBufferSize() > 0 && window->color().alpha() < 255;
-        grabContent = qt_gl_read_framebuffer(window->size() * window->effectiveDevicePixelRatio(), alpha, alpha);
-        if (QQuickRenderControl::renderWindowFor(window)) {
-            grabContent.setDevicePixelRatio(window->effectiveDevicePixelRatio());
-        }
-#endif
 #if QT_CONFIG(thread)
     } else if (window->rendererInterface()->graphicsApi() == QSGRendererInterface::Software) {
         QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);

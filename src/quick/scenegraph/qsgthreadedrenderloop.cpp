@@ -95,7 +95,7 @@
 
    ---
 
-   There is one thread per window and one opengl context per thread.
+   There is one thread per window and one QRhi instance per thread.
 
    ---
 
@@ -280,8 +280,6 @@ class QSGRenderThread : public QThread
 public:
     QSGRenderThread(QSGThreadedRenderLoop *w, QSGRenderContext *renderContext)
         : wm(w)
-        , gl(nullptr)
-        , enableRhi(false)
         , rhi(nullptr)
         , offscreenSurface(nullptr)
         , animatorDriver(nullptr)
@@ -306,7 +304,7 @@ public:
         delete offscreenSurface;
     }
 
-    void invalidateGraphics(QQuickWindow *window, bool inDestructor, QOffscreenSurface *backupSurface);
+    void invalidateGraphics(QQuickWindow *window, bool inDestructor);
 
     bool event(QEvent *) override;
     void run() override;
@@ -343,8 +341,6 @@ public:
     void handleDeviceLoss();
 
     QSGThreadedRenderLoop *wm;
-    QOpenGLContext *gl;
-    bool enableRhi;
     QRhi *rhi;
     QSGDefaultRenderContext *sgrc;
     QOffscreenSurface *offscreenSurface;
@@ -423,9 +419,9 @@ bool QSGRenderThread::event(QEvent *e)
         wm->m_lockedForSync = true;
         WMTryReleaseEvent *wme = static_cast<WMTryReleaseEvent *>(e);
         if (!window || wme->inDestructor) {
-            qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- setting exit flag and invalidating OpenGL");
-            invalidateGraphics(wme->window, wme->inDestructor, wme->needsFallback ? offscreenSurface : nullptr);
-            active = gl || rhi;
+            qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- setting exit flag and invalidating");
+            invalidateGraphics(wme->window, wme->inDestructor);
+            active = rhi != nullptr;
             Q_ASSERT_X(!wme->inDestructor || !active, "QSGRenderThread::invalidateGraphics()", "Thread's active state is not set to false when shutting down");
             if (sleeping)
                 stopEventProcessing = true;
@@ -452,24 +448,9 @@ bool QSGRenderThread::event(QEvent *e)
         Q_ASSERT(ce->window == window || !window);
         mutex.lock();
         if (ce->window) {
-            const bool alpha = ce->window->format().alphaBufferSize() > 0 && ce->window->color().alpha() != 255;
-            const QSize readbackSize = windowSize * ce->window->effectiveDevicePixelRatio();
             if (rhi) {
                 rhi->makeThreadLocalNativeContextCurrent();
                 syncAndRender(ce->image);
-            } else {
-                gl->makeCurrent(ce->window);
-
-                qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- sync scene graph");
-                QQuickWindowPrivate *d = QQuickWindowPrivate::get(ce->window);
-                d->syncSceneGraph();
-                sgrc->endSync();
-
-                qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- rendering scene graph");
-                QQuickWindowPrivate::get(ce->window)->renderSceneGraph(ce->window->size());
-
-                qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- grabbing result");
-                *ce->image = qt_gl_read_framebuffer(readbackSize, alpha, alpha);
             }
             ce->image->setDevicePixelRatio(ce->window->effectiveDevicePixelRatio());
         }
@@ -486,8 +467,6 @@ bool QSGRenderThread::event(QEvent *e)
         if (window) {
             if (rhi)
                 rhi->makeThreadLocalNativeContextCurrent();
-            else
-                gl->makeCurrent(window);
             ce->job->run();
             delete ce->job;
             ce->job = nullptr;
@@ -517,11 +496,11 @@ bool QSGRenderThread::event(QEvent *e)
     return QThread::event(e);
 }
 
-void QSGRenderThread::invalidateGraphics(QQuickWindow *window, bool inDestructor, QOffscreenSurface *fallback)
+void QSGRenderThread::invalidateGraphics(QQuickWindow *window, bool inDestructor)
 {
     qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "invalidateGraphics()");
 
-    if (!gl && !rhi)
+    if (!rhi)
         return;
 
     if (!window) {
@@ -531,12 +510,10 @@ void QSGRenderThread::invalidateGraphics(QQuickWindow *window, bool inDestructor
 
 
     bool wipeSG = inDestructor || !window->isPersistentSceneGraph();
-    bool wipeGL = inDestructor || (wipeSG && !window->isPersistentOpenGLContext());
+    bool wipeGraphics = inDestructor || (wipeSG && !window->isPersistentOpenGLContext());
 
     bool current = true;
-    if (gl)
-        current = gl->makeCurrent(fallback ? static_cast<QSurface *>(fallback) : static_cast<QSurface *>(window));
-    else if (rhi)
+    if (rhi)
         rhi->makeThreadLocalNativeContextCurrent();
 
     if (Q_UNLIKELY(!current)) {
@@ -554,8 +531,6 @@ void QSGRenderThread::invalidateGraphics(QQuickWindow *window, bool inDestructor
         dd->cleanupNodesOnShutdown();
     } else {
         qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- persistent SG, avoiding cleanup");
-        if (current && gl)
-            gl->doneCurrent();
         return;
     }
 
@@ -564,11 +539,10 @@ void QSGRenderThread::invalidateGraphics(QQuickWindow *window, bool inDestructor
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
     if (inDestructor)
         dd->animationController.reset();
-    if (current && gl)
-        gl->doneCurrent();
+
     qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- invalidating scene graph");
 
-    if (wipeGL) {
+    if (wipeGraphics) {
         if (dd->swapchain) {
             if (window->handle()) {
                 // We get here when exiting via QCoreApplication::quit() instead of
@@ -579,11 +553,9 @@ void QSGRenderThread::invalidateGraphics(QQuickWindow *window, bool inDestructor
                          window, dd->swapchain);
             }
         }
-        delete gl;
-        gl = nullptr;
         delete rhi;
         rhi = nullptr;
-        qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- invalidated OpenGL");
+        qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- QRhi destroyed");
     } else {
         qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- persistent GL, avoiding cleanup");
     }
@@ -602,26 +574,7 @@ void QSGRenderThread::sync(bool inExpose, bool inGrab)
     Q_ASSERT_X(wm->m_lockedForSync, "QSGRenderThread::sync()", "sync triggered on bad terms as gui is not already locked...");
 
     bool current = true;
-    if (gl) {
-        if (windowSize.width() > 0 && windowSize.height() > 0)
-            current = gl->makeCurrent(window);
-        else
-            current = false;
-        // Check for context loss.
-        if (!current && !gl->isValid()) {
-            QQuickWindowPrivate::get(window)->cleanupNodesOnShutdown();
-            sgrc->invalidate();
-            current = gl->create() && gl->makeCurrent(window);
-            if (current) {
-                QSGDefaultRenderContext::InitParams rcParams;
-                rcParams.sampleCount = qMax(1, gl->format().samples());
-                rcParams.openGLContext = gl;
-                rcParams.initialSurfacePixelSize = windowSize * qreal(dpr);
-                rcParams.maybeSurface = window;
-                sgrc->initialize(&rcParams);
-            }
-        }
-    } else if (rhi) {
+    if (rhi) {
         if (windowSize.width() > 0 && windowSize.height() > 0) {
             // With the rhi making the (OpenGL) context current serves only one
             // purpose: to enable external OpenGL rendering connected to one of
@@ -792,7 +745,7 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
             && !(pendingUpdate & RepaintRequest) // may have been set in sync()
             && sgrc->isValid()
             && !grabRequested
-            && (gl || rhi))
+            && rhi)
     {
         qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- no changes, render aborted");
         if (rhi && rhi->isRecordingFrame())
@@ -823,24 +776,13 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
     }
 
     bool current = true;
-    if (d->renderer && windowSize.width() > 0 && windowSize.height() > 0 && (gl || rhi)) {
-        if (gl)
-            current = gl->makeCurrent(window);
-        else
-            rhi->makeThreadLocalNativeContextCurrent();
-    } else {
-        // Zero size windows do not initialize a swapchain and
-        // rendercontext. So no sync or render can be done then.
+    // Zero size windows do not initialize a swapchain and
+    // rendercontext. So no sync or render can be done then.
+    if (d->renderer && windowSize.width() > 0 && windowSize.height() > 0 && rhi)
+        rhi->makeThreadLocalNativeContextCurrent();
+    else
         current = false;
-    }
-    // Check for context loss (GL, RHI case handled after the beginFrame() above)
-    if (gl) {
-        if (!current && !gl->isValid()) {
-            // Cannot do anything here because gui is not locked. Request a new
-            // sync+render round on the gui thread and let the sync handle it.
-            QCoreApplication::postEvent(window, new QEvent(QEvent::Type(QQuickWindowPrivate::FullUpdateRequest)));
-        }
-    }
+
     if (current) {
         d->renderSceneGraph(windowSize, rhi ? cd->swapchain->currentPixelSize() : QSize());
 
@@ -856,7 +798,7 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
         // grabs as it rather invokes sync/render directly without going
         // through syncAndRender().
         if (grabRequested) {
-            Q_ASSERT(rhi && !gl && cd->swapchain);
+            Q_ASSERT(rhi && cd->swapchain);
             *grabImage = QSGRhiSupport::instance()->grabAndBlockInCurrentFrame(rhi, cd->swapchain->currentFrameCommandBuffer());
         }
 
@@ -873,9 +815,6 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
                 if (frameResult == QRhi::FrameOpDeviceLost || frameResult == QRhi::FrameOpSwapChainOutOfDate)
                     QCoreApplication::postEvent(window, new QEvent(QEvent::Type(QQuickWindowPrivate::FullUpdateRequest)));
             }
-        } else {
-            if (!cd->customRenderStage || !cd->customRenderStage->swap())
-                gl->swapBuffers(window);
         }
 
         if (!grabRequested)
@@ -976,7 +915,6 @@ void QSGRenderThread::ensureRhi()
         QSGDefaultRenderContext::InitParams rcParams;
         rcParams.rhi = rhi;
         rcParams.sampleCount = rhiSampleCount;
-        rcParams.openGLContext = nullptr;
         rcParams.initialSurfacePixelSize = windowSize * qreal(dpr);
         rcParams.maybeSurface = window;
         sgrc->initialize(&rcParams);
@@ -1022,35 +960,21 @@ void QSGRenderThread::run()
 #endif
 
         if (window) {
-            if (enableRhi) {
+            ensureRhi();
 
-                ensureRhi();
+            // We absolutely have to syncAndRender() here, even when QRhi
+            // failed to initialize otherwise the gui thread will be left
+            // in a blocked state. It is up to syncAndRender() to
+            // gracefully skip all graphics stuff when rhi is null.
 
-                // We absolutely have to syncAndRender() here, even when QRhi
-                // failed to initialize otherwise the gui thread will be left
-                // in a blocked state. It is up to syncAndRender() to
-                // gracefully skip all graphics stuff when rhi is null.
+            syncAndRender();
 
-                syncAndRender();
-
-                // Now we can do something about rhi init failures. (reinit
-                // failure after device reset does not count)
-                if (rhiDoomed && !guiNotifiedAboutRhiFailure) {
-                    guiNotifiedAboutRhiFailure = true;
-                    QEvent *e = new QEvent(QEvent::Type(QQuickWindowPrivate::TriggerContextCreationFailure));
-                    QCoreApplication::postEvent(window, e);
-                }
-
-            } else {
-                if (!sgrc->openglContext() && windowSize.width() > 0 && windowSize.height() > 0 && gl->makeCurrent(window)) {
-                    QSGDefaultRenderContext::InitParams rcParams;
-                    rcParams.sampleCount = qMax(1, gl->format().samples());
-                    rcParams.openGLContext = gl;
-                    rcParams.initialSurfacePixelSize = windowSize * qreal(dpr);
-                    rcParams.maybeSurface = window;
-                    sgrc->initialize(&rcParams);
-                }
-                syncAndRender();
+            // Now we can do something about rhi init failures. (reinit
+            // failure after device reset does not count)
+            if (rhiDoomed && !guiNotifiedAboutRhiFailure) {
+                guiNotifiedAboutRhiFailure = true;
+                QEvent *e = new QEvent(QEvent::Type(QQuickWindowPrivate::TriggerContextCreationFailure));
+                QCoreApplication::postEvent(window, e);
             }
         }
 
@@ -1065,7 +989,7 @@ void QSGRenderThread::run()
         }
     }
 
-    Q_ASSERT_X(!gl && !rhi, "QSGRenderThread::run()", "The graphics context should be cleaned up before exiting the render thread...");
+    Q_ASSERT_X(!rhi, "QSGRenderThread::run()", "The graphics context should be cleaned up before exiting the render thread...");
 
     qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "run() completed");
 
@@ -1344,36 +1268,10 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
     if (!w->thread->isRunning()) {
         qCDebug(QSG_LOG_RENDERLOOP, "- starting render thread");
 
-        w->thread->enableRhi = QSGRhiSupport::instance()->isRhiEnabled();
-        if (w->thread->enableRhi) {
-            if (!w->thread->rhi) {
-                QSGRhiSupport *rhiSupport = QSGRhiSupport::instance();
-                w->thread->offscreenSurface = rhiSupport->maybeCreateOffscreenSurface(window);
-                window->installEventFilter(this);
-            }
-        } else {
-            if (!w->thread->gl) {
-                w->thread->gl = new QOpenGLContext();
-                if (qt_gl_global_share_context())
-                    w->thread->gl->setShareContext(qt_gl_global_share_context());
-                w->thread->gl->setFormat(w->window->requestedFormat());
-                w->thread->gl->setScreen(w->window->screen());
-                if (!w->thread->gl->create()) {
-                    delete w->thread->gl;
-                    w->thread->gl = nullptr;
-                    handleContextCreationFailure(w->window);
-                    return;
-                }
-
-                QQuickWindowPrivate::get(w->window)->fireOpenGLContextCreated(w->thread->gl);
-
-                w->thread->gl->moveToThread(w->thread);
-                qCDebug(QSG_LOG_RENDERLOOP, "- OpenGL context created");
-
-                w->thread->offscreenSurface = new QOffscreenSurface();
-                w->thread->offscreenSurface->setFormat(w->actualWindowFormat);
-                w->thread->offscreenSurface->create();
-            }
+        if (!w->thread->rhi) {
+            QSGRhiSupport *rhiSupport = QSGRhiSupport::instance();
+            w->thread->offscreenSurface = rhiSupport->maybeCreateOffscreenSurface(window);
+            window->installEventFilter(this);
         }
 
         QQuickAnimatorController *controller
@@ -1540,8 +1438,7 @@ void QSGThreadedRenderLoop::releaseResources(Window *w, bool inDestructor)
         // The platform window might have been destroyed before
         // hide/release/windowDestroyed is called, so we may need to have a
         // fallback surface to perform the cleanup of the scene graph and the
-        // OpenGL resources. QOffscreenSurface must be created on the GUI
-        // thread so that is done for us already.
+        // RHI resources.
 
         qCDebug(QSG_LOG_RENDERLOOP, "- posting release request to render thread");
         w->thread->postEvent(new WMTryReleaseEvent(window, inDestructor, window->handle() == nullptr));

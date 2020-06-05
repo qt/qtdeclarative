@@ -64,7 +64,6 @@ public:
     int samples() const;
 
     bool initialize();
-    void initialize(QOpenGLContext *gl); // ### Qt 6 remove
 
     void invalidate();
 

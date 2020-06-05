@@ -4282,39 +4282,6 @@ QImage QQuickWindow::grabWindow()
             Q_ASSERT(!d->rhi);
             return QSGRhiSupport::instance()->grabOffscreen(this);
         }
-
-        // ### Qt 6 remove
-#if QT_CONFIG(opengl)
-        auto openglRenderContext = static_cast<QSGDefaultRenderContext *>(d->context);
-        if (!openglRenderContext->openglContext()) {
-            if (!handle() || !size().isValid()) {
-                qWarning("QQuickWindow::grabWindow: window must be created and have a valid size");
-                return QImage();
-            }
-
-            QOpenGLContext context;
-            context.setFormat(requestedFormat());
-            context.setShareContext(qt_gl_global_share_context());
-            context.create();
-            context.makeCurrent(this);
-            QSGDefaultRenderContext::InitParams rcParams;
-            rcParams.openGLContext = &context;
-            d->context->initialize(&rcParams);
-
-            d->polishItems();
-            d->syncSceneGraph();
-            d->renderSceneGraph(size());
-
-            bool alpha = format().alphaBufferSize() > 0 && color().alpha() < 255;
-            QImage image = qt_gl_read_framebuffer(size() * effectiveDevicePixelRatio(), alpha, alpha);
-            image.setDevicePixelRatio(effectiveDevicePixelRatio());
-            d->cleanupNodesOnShutdown();
-            d->context->invalidate();
-            context.doneCurrent();
-
-            return image;
-        }
-#endif
     }
 
     // The common case: we have an exposed window with an initialized

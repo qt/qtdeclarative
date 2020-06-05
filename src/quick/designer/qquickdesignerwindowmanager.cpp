@@ -77,7 +77,8 @@ void QQuickDesignerWindowManager::makeOpenGLContext(QQuickWindow *window)
             qWarning("QQuickWindow: makeCurrent() failed...");
         QSGDefaultRenderContext::InitParams params;
         params.sampleCount = qMax(1, m_openGlContext->format().samples());
-        params.openGLContext = m_openGlContext.data();
+        // ### glpurge Designer's RHI migration is left as a future exercise (QTBUG-78598)
+        //params.openGLContext = m_openGlContext.data();
         params.initialSurfacePixelSize = window->size() * window->effectiveDevicePixelRatio();
         params.maybeSurface = window;
         m_renderContext->initialize(&params);

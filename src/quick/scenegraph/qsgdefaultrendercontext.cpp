@@ -86,51 +86,11 @@ void QSGDefaultRenderContext::initialize(const QSGRenderContext::InitParams *par
     m_initParams = *initParams;
 
     m_rhi = m_initParams.rhi;
-    if (m_rhi) {
-        m_maxTextureSize = m_rhi->resourceLimit(QRhi::TextureSizeMax);
-        if (!m_rhiAtlasManager)
-            m_rhiAtlasManager = new QSGRhiAtlasTexture::Manager(this, m_initParams.initialSurfacePixelSize, m_initParams.maybeSurface);
-        // unlike OpenGL (and like WebGL), QRhi does not guarantee buffer usage types can be mixed
-        m_separateIndexBuffer = true;
-    } else {
-        QOpenGLFunctions *funcs = m_rhi ? nullptr : QOpenGLContext::currentContext()->functions();
-        funcs->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &m_maxTextureSize);
-
-        // Sanity check the surface format, in case it was overridden by the application
-        QSurfaceFormat requested = m_sg->defaultSurfaceFormat();
-        QSurfaceFormat actual = m_initParams.openGLContext->format();
-        if (requested.depthBufferSize() > 0 && actual.depthBufferSize() <= 0)
-            qWarning("QSGContext::initialize: depth buffer support missing, expect rendering errors");
-        if (requested.stencilBufferSize() > 0 && actual.stencilBufferSize() <= 0)
-            qWarning("QSGContext::initialize: stencil buffer support missing, expect rendering errors");
-
-#ifdef Q_OS_LINUX
-        const char *vendor = (const char *) funcs->glGetString(GL_VENDOR);
-        if (vendor && strstr(vendor, "nouveau"))
-            m_brokenIBOs = true;
-        const char *renderer = (const char *) funcs->glGetString(GL_RENDERER);
-        if (renderer && strstr(renderer, "llvmpipe"))
-            m_serializedRender = true;
-        if (vendor && renderer && strstr(vendor, "Hisilicon Technologies") && strstr(renderer, "Immersion.16"))
-            m_brokenIBOs = true;
-#endif
-
-        Q_ASSERT_X(!m_gl, "QSGRenderContext::initialize", "already initialized!");
-        m_gl = m_initParams.openGLContext;
-        if (m_attachToGLContext) {
-            Q_ASSERT(!m_gl->property(QSG_RENDERCONTEXT_PROPERTY).isValid());
-            m_gl->setProperty(QSG_RENDERCONTEXT_PROPERTY, QVariant::fromValue(this));
-        }
-
-        // WebGL: A given WebGLBuffer object may only be bound to one of
-        // the ARRAY_BUFFER or ELEMENT_ARRAY_BUFFER target in its
-        // lifetime. An attempt to bind a buffer object to the other
-        // target will generate an INVALID_OPERATION error, and the
-        // current binding will remain untouched.
-        const bool isWebGL = (qGuiApp->platformName().compare(QLatin1String("webgl")) == 0
-                              || qGuiApp->platformName().compare(QLatin1String("wasm")) == 0);
-        m_separateIndexBuffer = isWebGL;
-    }
+    m_maxTextureSize = m_rhi->resourceLimit(QRhi::TextureSizeMax);
+    if (!m_rhiAtlasManager)
+        m_rhiAtlasManager = new QSGRhiAtlasTexture::Manager(this, m_initParams.initialSurfacePixelSize, m_initParams.maybeSurface);
+    // unlike OpenGL (and like WebGL), QRhi does not guarantee buffer usage types can be mixed
+    m_separateIndexBuffer = true;
 
     m_sg->renderContextInitialized(this);
 
