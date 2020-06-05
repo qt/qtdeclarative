@@ -43,6 +43,7 @@
 
 #include <private/qsgcontext_p.h>
 #include <private/qsgrenderloop_p.h>
+#include <private/qsgrhisupport_p.h>
 
 #include "../../shared/util.h"
 #include "../shared/visualtestutil.h"
@@ -116,7 +117,6 @@ private slots:
     void createTextureFromImage();
 
 private:
-    bool m_brokenMipmapSupport;
     QQuickView *createView(const QString &file, QWindow *parent = nullptr, int x = -1, int y = -1, int w = -1, int h = -1);
     bool isRunningOnOpenGLDirectly();
     bool isRunningOnRhi();
@@ -134,44 +134,8 @@ void tst_SceneGraph::initTestCase()
     QQmlDataTest::initTestCase();
 
     QSGRenderLoop *loop = QSGRenderLoop::instance();
-    qDebug() << "RenderLoop:        " << loop;
-
-#if QT_CONFIG(opengl)
-    if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::OpenGL)) {
-        QOpenGLContext context;
-        context.setFormat(loop->sceneGraphContext()->defaultSurfaceFormat());
-        context.create();
-        QSurfaceFormat format = context.format();
-
-        QOffscreenSurface surface;
-        surface.setFormat(format);
-        surface.create();
-        if (!context.makeCurrent(&surface))
-            qFatal("Failed to create a GL context...");
-
-        QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
-        qDebug() << "R/G/B/A Buffers:   " << format.redBufferSize() << format.greenBufferSize() << format.blueBufferSize() << format.alphaBufferSize();
-        qDebug() << "Depth Buffer:      " << format.depthBufferSize();
-        qDebug() << "Stencil Buffer:    " << format.stencilBufferSize();
-        qDebug() << "Samples:           " << format.samples();
-        int textureSize;
-        funcs->glGetIntegerv(GL_MAX_TEXTURE_SIZE, &textureSize);
-        qDebug() << "Max Texture Size:  " << textureSize;
-        qDebug() << "GL_VENDOR:         " << (const char *) funcs->glGetString(GL_VENDOR);
-        qDebug() << "GL_RENDERER:       " << (const char *) funcs->glGetString(GL_RENDERER);
-        QByteArray version = (const char *) funcs->glGetString(GL_VERSION);
-        qDebug() << "GL_VERSION:        " << version.constData();
-        QSet<QByteArray> exts = context.extensions();
-        QByteArray all;
-        foreach (const QByteArray &e, exts) all += ' ' + e;
-        qDebug() << "GL_EXTENSIONS:    " << all.constData();
-
-        m_brokenMipmapSupport = version.contains("Mesa 10.1") || version.contains("Mesa 9.");
-        qDebug() << "Broken Mipmap:    " << m_brokenMipmapSupport;
-
-        context.doneCurrent();
-    }
-#endif
+    qDebug() << "RenderLoop:" << loop
+             << "RHI backend:" << QSGRhiSupport::instance()->rhiBackendName();
 }
 
 QQuickView *tst_SceneGraph::createView(const QString &file, QWindow *parent, int x, int y, int w, int h)
@@ -402,9 +366,8 @@ void tst_SceneGraph::render_data()
           << "render_StackingOrder.qml"
           << "render_ImageFiltering.qml"
           << "render_bug37422.qml"
-          << "render_OpacityThroughBatchRoot.qml";
-    if (!m_brokenMipmapSupport)
-        files << "render_Mipmap.qml";
+          << "render_OpacityThroughBatchRoot.qml"
+          << "render_Mipmap.qml";
 
     QRegularExpression sampleCount("#samples: *(\\d+)");
     //                          X:int   Y:int   R:float       G:float       B:float       Error:float
