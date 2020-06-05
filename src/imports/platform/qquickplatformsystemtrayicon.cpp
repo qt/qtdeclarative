@@ -253,48 +253,6 @@ void QQuickPlatformSystemTrayIcon::setVisible(bool visible)
 }
 
 /*!
-    \qmlproperty url Qt.labs.platform::SystemTrayIcon::iconSource
-    \deprecated Use icon.source instead.
-    \sa icon
-*/
-QUrl QQuickPlatformSystemTrayIcon::iconSource() const
-{
-    return icon().source();
-}
-
-void QQuickPlatformSystemTrayIcon::setIconSource(const QUrl& source)
-{
-    QQuickPlatformIcon newIcon = icon();
-    if (source == newIcon.source())
-        return;
-
-    newIcon.setSource(source);
-    iconLoader()->setIcon(newIcon);
-    emit iconSourceChanged();
-}
-
-/*!
-    \qmlproperty string Qt.labs.platform::SystemTrayIcon::iconName
-    \deprecated Use icon.name instead.
-    \sa icon
-*/
-QString QQuickPlatformSystemTrayIcon::iconName() const
-{
-    return icon().name();
-}
-
-void QQuickPlatformSystemTrayIcon::setIconName(const QString& name)
-{
-    QQuickPlatformIcon newIcon = icon();
-    if (name == newIcon.name())
-        return;
-
-    newIcon.setName(name);
-    iconLoader()->setIcon(newIcon);
-    emit iconNameChanged();
-}
-
-/*!
     \qmlproperty string Qt.labs.platform::SystemTrayIcon::tooltip
 
     This property holds the tooltip of the system tray icon.

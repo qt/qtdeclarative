@@ -419,8 +419,7 @@ QQuickPlatformMenuItem *QQuickPlatformMenu::menuItem() const
         m_menuItem = new QQuickPlatformMenuItem(that);
         m_menuItem->setSubMenu(that);
         m_menuItem->setText(m_title);
-        m_menuItem->setIconName(iconName());
-        m_menuItem->setIconSource(iconSource());
+        m_menuItem->setIcon(icon());
         m_menuItem->setVisible(m_visible);
         m_menuItem->setEnabled(m_enabled);
         m_menuItem->componentComplete();
@@ -540,51 +539,6 @@ void QQuickPlatformMenu::setTitle(const QString &title)
     sync();
     emit titleChanged();
 }
-
-/*!
-    \qmlproperty url Qt.labs.platform::Menu::iconSource
-    \deprecated Use icon.source instead
-*/
-QUrl QQuickPlatformMenu::iconSource() const
-{
-    return icon().source();
-}
-
-void QQuickPlatformMenu::setIconSource(const QUrl& source)
-{
-    QQuickPlatformIcon newIcon = icon();
-    if (source == newIcon.source())
-        return;
-
-    if (m_menuItem)
-        m_menuItem->setIconSource(source);
-
-    newIcon.setSource(source);
-    iconLoader()->setIcon(newIcon);
-    emit iconSourceChanged();
-}
-
-/*!
-    \qmlproperty string Qt.labs.platform::Menu::iconName
-    \deprecated Use icon.name instead
-*/
-QString QQuickPlatformMenu::iconName() const
-{
-    return icon().name();
-}
-
-void QQuickPlatformMenu::setIconName(const QString& name)
-{
-    QQuickPlatformIcon newIcon = icon();
-    if (name == newIcon.name())
-        return;
-
-    if (m_menuItem)
-        m_menuItem->setIconName(name);
-
-    newIcon.setName(name);
-    iconLoader()->setIcon(newIcon);
-    emit iconNameChanged();}
 
 /*!
     \qmlproperty font Qt.labs.platform::Menu::font

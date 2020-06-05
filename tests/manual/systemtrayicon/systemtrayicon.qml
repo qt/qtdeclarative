@@ -75,7 +75,7 @@ ApplicationWindow {
 
     SystemTrayIcon {
         visible: true
-        iconSource: "qrc:/files/images/qt_logo_green_256.png"
+        icon.source: "qrc:/files/images/qt_logo_green_256.png"
 
         menu: Menu {
             MenuItem {

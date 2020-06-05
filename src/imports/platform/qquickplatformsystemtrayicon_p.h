@@ -70,8 +70,6 @@ class QQuickPlatformSystemTrayIcon : public QObject, public QQmlParserStatus
     Q_PROPERTY(bool available READ isAvailable CONSTANT FINAL)
     Q_PROPERTY(bool supportsMessages READ supportsMessages CONSTANT FINAL)
     Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged FINAL)
-    Q_PROPERTY(QUrl iconSource READ iconSource WRITE setIconSource NOTIFY iconSourceChanged FINAL)
-    Q_PROPERTY(QString iconName READ iconName WRITE setIconName NOTIFY iconNameChanged FINAL)
     Q_PROPERTY(QString tooltip READ tooltip WRITE setTooltip NOTIFY tooltipChanged FINAL)
     Q_PROPERTY(QQuickPlatformMenu *menu READ menu WRITE setMenu NOTIFY menuChanged FINAL)
     Q_PROPERTY(QRect geometry READ geometry NOTIFY geometryChanged FINAL REVISION 1)
@@ -89,12 +87,6 @@ public:
 
     bool isVisible() const;
     void setVisible(bool visible);
-
-    QUrl iconSource() const;
-    void setIconSource(const QUrl &source);
-
-    QString iconName() const;
-    void setIconName(const QString &name);
 
     QString tooltip() const;
     void setTooltip(const QString &tooltip);
@@ -118,8 +110,6 @@ Q_SIGNALS:
     void activated(QPlatformSystemTrayIcon::ActivationReason reason);
     void messageClicked();
     void visibleChanged();
-    void iconSourceChanged();
-    void iconNameChanged();
     void tooltipChanged();
     void menuChanged();
     Q_REVISION(1) void geometryChanged();

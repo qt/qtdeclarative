@@ -78,8 +78,6 @@ class QQuickPlatformMenuItem : public QObject, public QQmlParserStatus
     Q_PROPERTY(bool checked READ isChecked WRITE setChecked NOTIFY checkedChanged FINAL)
     Q_PROPERTY(QPlatformMenuItem::MenuRole role READ role WRITE setRole NOTIFY roleChanged FINAL)
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged FINAL)
-    Q_PROPERTY(QUrl iconSource READ iconSource WRITE setIconSource NOTIFY iconSourceChanged FINAL)
-    Q_PROPERTY(QString iconName READ iconName WRITE setIconName NOTIFY iconNameChanged FINAL)
     Q_PROPERTY(QVariant shortcut READ shortcut WRITE setShortcut NOTIFY shortcutChanged FINAL)
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged FINAL)
     Q_PROPERTY(QQuickPlatformIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION 1)
@@ -123,12 +121,6 @@ public:
     QString text() const;
     void setText(const QString &text);
 
-    QUrl iconSource() const;
-    void setIconSource(const QUrl &source);
-
-    QString iconName() const;
-    void setIconName(const QString &name);
-
     QVariant shortcut() const;
     void setShortcut(const QVariant& shortcut);
 
@@ -155,8 +147,6 @@ Q_SIGNALS:
     void checkedChanged();
     void roleChanged();
     void textChanged();
-    void iconSourceChanged();
-    void iconNameChanged();
     void shortcutChanged();
     void fontChanged();
     Q_REVISION(1) void iconChanged();

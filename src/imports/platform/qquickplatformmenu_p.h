@@ -85,8 +85,6 @@ class QQuickPlatformMenu : public QObject, public QQmlParserStatus
     Q_PROPERTY(int minimumWidth READ minimumWidth WRITE setMinimumWidth NOTIFY minimumWidthChanged FINAL)
     Q_PROPERTY(QPlatformMenu::MenuType type READ type WRITE setType NOTIFY typeChanged FINAL)
     Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged FINAL)
-    Q_PROPERTY(QUrl iconSource READ iconSource WRITE setIconSource NOTIFY iconSourceChanged FINAL)
-    Q_PROPERTY(QString iconName READ iconName WRITE setIconName NOTIFY iconNameChanged FINAL)
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged FINAL)
     Q_PROPERTY(QQuickPlatformIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION 1)
     Q_ENUMS(QPlatformMenu::MenuType)
@@ -130,12 +128,6 @@ public:
     QString title() const;
     void setTitle(const QString &title);
 
-    QUrl iconSource() const;
-    void setIconSource(const QUrl &source);
-
-    QString iconName() const;
-    void setIconName(const QString &name);
-
     QFont font() const;
     void setFont(const QFont &font);
 
@@ -165,8 +157,6 @@ Q_SIGNALS:
     void parentMenuChanged();
     void systemTrayIconChanged();
     void titleChanged();
-    void iconSourceChanged();
-    void iconNameChanged();
     void enabledChanged();
     void visibleChanged();
     void minimumWidthChanged();
