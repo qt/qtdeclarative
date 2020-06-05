@@ -212,42 +212,54 @@ static void qt_debug_remove_texture(QSGTexture* texture)
 
     \inmodule QtQuick
 
-    \brief The QSGTexture class is a baseclass for textures used in
+    \brief The QSGTexture class is the base class for textures used in
     the scene graph.
 
+    Users can freely implement their own texture classes to support arbitrary
+    input textures, such as YUV video frames or 8 bit alpha masks. The scene
+    graph provides a default implementation for RGBA textures.The default
+    implementation is not instantiated directly, rather they are constructed
+    via factory functions, such as QQuickWindow::createTextureFromImage().
 
-    Users can freely implement their own texture classes to support
-    arbitrary input textures, such as YUV video frames or 8 bit alpha
-    masks. The scene graph backend provides a default implementation
-    of normal color textures. As the implementation of these may be
-    hardware specific, they are constructed via the factory
-    function QQuickWindow::createTextureFromImage().
+    With the default implementation, each QSGTexture is backed by a
+    QRhiTexture, which in turn contains a native texture object, such as an
+    OpenGL texture or a Vulkan image.
 
-    The texture is a wrapper around an OpenGL texture, which texture
-    id is given by textureId() and which size in pixels is given by
-    textureSize(). hasAlphaChannel() reports if the texture contains
-    opacity values and hasMipmaps() reports if the texture contains
-    mipmap levels.
+    The size in pixels is given by textureSize(). hasAlphaChannel() reports if
+    the texture contains opacity values and hasMipmaps() reports if the texture
+    contains mipmap levels.
 
-    To use a texture, call the bind() function. The texture parameters
-    specifying how the texture is bound, can be specified with
+    \l{QSGMaterial}{Materials} that work with textures reimplement
+    \l{QSGMaterialShader::updateSampledImage()}{updateSampledImage()} to
+    provide logic that decides which QSGTexture's underlying native texture
+    should be exposed at a given shader resource binding point. In addition,
+    many texture-based materials will also call commitTextureOperations() to
+    trigger enqueing resource update operations on the underlying command
+    buffers.
+
+    QSGTexture does not separate image (texture) and sampler objects. The
+    parameters for filtering and wrapping can be specified with
     setMipmapFiltering(), setFiltering(), setHorizontalWrapMode() and
-    setVerticalWrapMode(). The texture will internally try to store
-    these values to minimize the OpenGL state changes when the texture
-    is bound.
+    setVerticalWrapMode(). The scene graph and Qt's graphics abstraction takes
+    care of creating separate sampler objects, when applicable.
 
-    \section1 Texture Atlasses
+    \section1 Texture Atlases
 
-    Some scene graph backends use texture atlasses, grouping multiple
-    small textures into one large texture. If this is the case, the
-    function isAtlasTexture() will return true. Atlasses are used to
-    aid the rendering algorithm to do better sorting which increases
-    performance. The location of the texture inside the atlas is
-    given with the normalizedTextureSubRect() function.
+    Some scene graph backends use texture atlasses, grouping multiple small
+    textures into one large texture. If this is the case, the function
+    isAtlasTexture() will return true. Atlases are used to aid the rendering
+    algorithm to do better sorting which increases performance. Atlases are
+    also essential for batching (merging together geometry to reduce the number
+    of draw calls), because two instances of the same material using two
+    different QSGTextures are not batchable, whereas if both QSGTextures refer
+    to the same atlas, batching can happen, assuming the materials are
+    otherwise compatible.
 
-    If the texture is used in such a way that atlas is not preferable,
-    the function removedFromAtlas() can be used to extract a
-    non-atlassed copy.
+    The location of the texture inside the atlas is given with the
+    normalizedTextureSubRect() function.
+
+    If the texture is used in such a way that atlas is not preferable, the
+    function removedFromAtlas() can be used to extract a non-atlased copy.
 
     \note All classes with QSG prefix should be used solely on the scene graph's
     rendering thread. See \l {Scene Graph and Rendering} for more information.
@@ -258,7 +270,7 @@ static void qt_debug_remove_texture(QSGTexture* texture)
 /*!
     \enum QSGTexture::WrapMode
 
-    Specifies how the texture should treat texture coordinates.
+    Specifies how the sampler should treat texture coordinates.
 
     \value Repeat Only the fractional part of the texture coordinate is
     used, causing values above 1 and below 0 to repeat.
@@ -414,7 +426,7 @@ QSGTexture *QSGTexture::removedFromAtlas(QRhiResourceUpdateBatch *resourceUpdate
 }
 
 /*!
-    Returns weither this texture is part of an atlas or not.
+    Returns whether this texture is part of an atlas or not.
 
     The default implementation returns false.
  */
@@ -435,11 +447,13 @@ bool QSGTexture::isAtlasTexture() const
 
     Implementations of this function are not expected to, and should not create
     any graphics resources (native texture objects) in case there are none yet.
+
     A QSGTexture that does not have a native texture object underneath is
-    typically \b not equal to any other QSGTexture. There are exceptions to this,
-    in particular when atlasing is used (where multiple textures share the same
-    atlas texture under the hood), that is then up to the subclass
-    implementations to deal with as appropriate.
+    typically \b not equal to any other QSGTexture, so the return value has to
+    be crafted accordingly. There are exceptions to this, in particular when
+    atlasing is used (where multiple textures share the same atlas texture
+    under the hood), that is then up to the subclass implementations to deal
+    with as appropriate.
 
     \warning This function can only be called from the rendering thread.
 
@@ -523,8 +537,12 @@ QSGTexture::Filtering QSGTexture::filtering() const
 }
 
 /*!
-    Sets the level of anisotropic filtering to be used for the upcoming bind() call to \a level.
-    The default value is QSGTexture::AnisotropyNone, which means no anisotropic filtering is enabled.
+    Sets the level of anisotropic filtering to be used for the upcoming bind()
+    call to \a level. The default value is QSGTexture::AnisotropyNone, which
+    means no anisotropic filtering is enabled.
+
+    \note The request may be ignored depending on the graphics API in use.
+    There is no guarantee anisotropic filtering is supported at run time.
 
     \since 5.9
  */
@@ -598,8 +616,9 @@ QSGTexture::WrapMode QSGTexture::verticalWrapMode() const
     concept is not applicable to the scenegraph backend in use).
 
     This function is not expected to create a new QRhiTexture in case there is
-    none. Just return null in that case. The expectation towards the renderer
-    is that a null texture leads to using a transparent, dummy texture instead.
+    none. It should return null in that case. The expectation towards the
+    renderer is that a null texture leads to using a transparent, dummy texture
+    instead.
 
     \warning This function can only be called from the rendering thread.
 
@@ -639,9 +658,6 @@ void QSGTexture::commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch *res
 
 /*!
     \return the platform-specific texture data for this texture.
-
-    \note This is only available when running the graphics API independent
-    rendering path of the scene graph. Use textureId() otherwise.
 
     Returns an empty result (\c object is null) if there is no available
     underlying native texture.
