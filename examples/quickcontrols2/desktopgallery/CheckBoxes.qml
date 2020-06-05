@@ -48,6 +48,7 @@ ControlContainer {
 
         CheckBox {
             text: "Default"
+            checked: true
         }
 
         CheckBox {
@@ -58,6 +59,7 @@ ControlContainer {
         CheckBox {
             text: "Tri-state"
             tristate: true
+            checkState: Qt.PartiallyChecked
         }
 
         CheckBox {
@@ -68,6 +70,7 @@ ControlContainer {
         CheckBox {
             text: "Mini"
             property bool qqc2_style_mini
+            checked: true
         }
     }
 }

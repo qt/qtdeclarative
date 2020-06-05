@@ -49,6 +49,7 @@ ControlContainer {
         Column {
             RadioButton {
                 text: "Default"
+                checked: true
             }
             RadioButton {
                 text: "Default"
@@ -70,6 +71,7 @@ ControlContainer {
             RadioButton {
                 text: "Disabled"
                 enabled: false
+                checked: true
             }
         }
 
@@ -80,6 +82,7 @@ ControlContainer {
             }
             RadioButton {
                 text: "Small"
+                checked: true
                 property bool qqc2_style_small
             }
             RadioButton {
@@ -99,6 +102,7 @@ ControlContainer {
             }
             RadioButton {
                 text: "Mini"
+                checked: true
                 property bool qqc2_style_mini
             }
         }
