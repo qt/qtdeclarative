@@ -99,14 +99,6 @@ public Q_SLOTS:
     void setHeight(int h) {QQuickItem::setHeight(qreal(h));}
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickCustomRenderStage
-{
-public:
-    virtual ~QQuickCustomRenderStage() {}
-    virtual bool render() = 0;
-    virtual bool swap() = 0;
-};
-
 class QQuickWindowRenderTarget
 {
 public:
@@ -278,7 +270,6 @@ public:
     QScopedPointer<QTouchEvent> delayedTouch;
 
     int pointerEventRecursionGuard;
-    QQuickCustomRenderStage *customRenderStage;
 
     QColor clearColor;
 

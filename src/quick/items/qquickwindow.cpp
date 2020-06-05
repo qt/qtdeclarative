@@ -661,49 +661,49 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
     animationController->advance();
     emit q->beforeRendering();
     runAndClearJobs(&beforeRenderingJobs);
-    if (!customRenderStage || !customRenderStage->render()) {
-        QSGAbstractRenderer::MatrixTransformFlags matrixFlags;
-        const bool flipY = rhi ? !rhi->isYUpInNDC() : false;
-        if (flipY)
-            matrixFlags |= QSGAbstractRenderer::MatrixTransformFlipY;
-        const qreal devicePixelRatio = q->effectiveDevicePixelRatio();
-        if (redirect.rt.renderTarget) {
-            QRect rect(QPoint(0, 0), redirect.rt.renderTarget->pixelSize());
-            renderer->setDeviceRect(rect);
-            renderer->setViewportRect(rect);
-            if (QQuickRenderControl::renderWindowFor(q)) {
-                renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), size), matrixFlags);
-                renderer->setDevicePixelRatio(devicePixelRatio);
-            } else {
-                renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), rect.size()), matrixFlags);
-                renderer->setDevicePixelRatio(1);
-            }
-        } else {
-            QSize pixelSize;
-            QSizeF logicalSize;
-            if (surfaceSize.isEmpty()) {
-                pixelSize = size * devicePixelRatio;
-                logicalSize = size;
-            } else {
-                pixelSize = surfaceSize;
-                logicalSize = QSizeF(surfaceSize) / devicePixelRatio;
-            }
-            QRect rect(QPoint(0, 0), pixelSize);
-            renderer->setDeviceRect(rect);
-            renderer->setViewportRect(rect);
-            renderer->setProjectionMatrixToRect(QRectF(QPoint(0, 0), logicalSize), matrixFlags);
-            renderer->setDevicePixelRatio(devicePixelRatio);
-        }
 
-        if (rhi) {
-            context->renderNextRhiFrame(renderer);
+    QSGAbstractRenderer::MatrixTransformFlags matrixFlags;
+    const bool flipY = rhi ? !rhi->isYUpInNDC() : false;
+    if (flipY)
+        matrixFlags |= QSGAbstractRenderer::MatrixTransformFlipY;
+    const qreal devicePixelRatio = q->effectiveDevicePixelRatio();
+    if (redirect.rt.renderTarget) {
+        QRect rect(QPoint(0, 0), redirect.rt.renderTarget->pixelSize());
+        renderer->setDeviceRect(rect);
+        renderer->setViewportRect(rect);
+        if (QQuickRenderControl::renderWindowFor(q)) {
+            renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), size), matrixFlags);
+            renderer->setDevicePixelRatio(devicePixelRatio);
         } else {
-            // This is the software backend (or some custom scenegraph context
-            // plugin) in practice, because the default implementation always
-            // hits the QRhi-based path in Qt 6.
-            context->renderNextFrame(renderer);
+            renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), rect.size()), matrixFlags);
+            renderer->setDevicePixelRatio(1);
         }
+    } else {
+        QSize pixelSize;
+        QSizeF logicalSize;
+        if (surfaceSize.isEmpty()) {
+            pixelSize = size * devicePixelRatio;
+            logicalSize = size;
+        } else {
+            pixelSize = surfaceSize;
+            logicalSize = QSizeF(surfaceSize) / devicePixelRatio;
+        }
+        QRect rect(QPoint(0, 0), pixelSize);
+        renderer->setDeviceRect(rect);
+        renderer->setViewportRect(rect);
+        renderer->setProjectionMatrixToRect(QRectF(QPoint(0, 0), logicalSize), matrixFlags);
+        renderer->setDevicePixelRatio(devicePixelRatio);
     }
+
+    if (rhi) {
+        context->renderNextRhiFrame(renderer);
+    } else {
+        // This is the software backend (or some custom scenegraph context
+        // plugin) in practice, because the default implementation always
+        // hits the QRhi-based path in Qt 6.
+        context->renderNextFrame(renderer);
+    }
+
     emit q->afterRendering();
     runAndClearJobs(&afterRenderingJobs);
 
@@ -740,7 +740,6 @@ QQuickWindowPrivate::QQuickWindowPrivate()
     , windowManager(nullptr)
     , renderControl(nullptr)
     , pointerEventRecursionGuard(0)
-    , customRenderStage(nullptr)
     , clearColor(Qt::white)
     , clearBeforeRendering(true)
     , persistentGLContext(true)
@@ -764,7 +763,6 @@ QQuickWindowPrivate::QQuickWindowPrivate()
 QQuickWindowPrivate::~QQuickWindowPrivate()
 {
     redirect.rt.reset(rhi, renderer);
-    delete customRenderStage;
     if (QQmlInspectorService *service = QQmlDebugConnector::service<QQmlInspectorService>())
         service->removeWindow(q_func());
 }

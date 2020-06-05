@@ -472,7 +472,7 @@ void QSGSoftwareRenderThread::syncAndRender()
     syncResultedInChanges = false;
     QQuickWindowPrivate *wd = QQuickWindowPrivate::get(exposedWindow);
 
-    const bool repaintRequested = (pendingUpdate & RepaintRequest) || wd->customRenderStage;
+    const bool repaintRequested = pendingUpdate & RepaintRequest;
     const bool syncRequested = pendingUpdate & SyncRequest;
     const bool exposeRequested = (pendingUpdate & ExposeRequest) == ExposeRequest;
     pendingUpdate = 0;
@@ -514,7 +514,7 @@ void QSGSoftwareRenderThread::syncAndRender()
                                   QQuickProfiler::SceneGraphRenderLoopRender);
         Q_TRACE(QSG_swap_entry);
 
-        if (softwareRenderer && (!wd->customRenderStage || !wd->customRenderStage->swap()))
+        if (softwareRenderer)
             backingStore->flush(softwareRenderer->flushRegion());
 
         // Since there is no V-Sync with QBackingStore, throttle rendering the refresh
