@@ -82,7 +82,6 @@ public:
     static QSGTexturePrivate *get(QSGTexture *t) { return t->d_func(); }
     void resetDirtySamplerOptions();
     bool hasDirtySamplerOptions() const;
-    QRhiTexture *rhiTexture() const;
 
     uint wrapChanged : 1;
     uint filteringChanged : 1;

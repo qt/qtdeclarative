@@ -629,14 +629,6 @@ QRhiTexture *QSGTexture::rhiTexture() const
     return nullptr;
 }
 
-QRhiTexture *QSGTexturePrivate::rhiTexture() const
-{
-    // Just calls the public API, this private function exists for internal
-    // source compatibility only until all Qt modules migrate away from it.
-    Q_Q(const QSGTexture);
-    return q->rhiTexture();
-}
-
 /*!
     Call this function to enqueue image upload operations to \a
     resourceUpdates, in case there are any pending ones. When there is no new
