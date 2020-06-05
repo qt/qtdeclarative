@@ -498,7 +498,7 @@ QQuickItem *QQuickStackView::find(const QJSValue &callback, LoadBehavior behavio
 /*!
     \qmlmethod Item QtQuick.Controls::StackView::push(item, properties, operation)
 
-    Pushes an \a item onto the stack using the specified \a operation, and
+    Pushes an \a item onto the stack using an optional \a operation, and
     optionally applies a set of \a properties on the item. The item can be
     an \l Item, \l Component, or a \l [QML] url. Returns the item that became
     current.
@@ -545,11 +545,12 @@ QQuickItem *QQuickStackView::find(const QJSValue &callback, LoadBehavior behavio
     An \a operation can be optionally specified as the last argument. Supported
     operations:
 
-    \value StackView.Transition An operation with default transitions (default).
     \value StackView.Immediate An immediate operation without transitions.
     \value StackView.PushTransition An operation with push transitions (since QtQuick.Controls 2.1).
     \value StackView.ReplaceTransition An operation with replace transitions (since QtQuick.Controls 2.1).
     \value StackView.PopTransition An operation with pop transitions (since QtQuick.Controls 2.1).
+
+    If no operation is provided, \c PushTransition will be used.
 
     \note Items that already exist in the stack are not pushed.
 
@@ -639,11 +640,12 @@ void QQuickStackView::push(QQmlV4Function *args)
     An \a operation can be optionally specified as the last argument. Supported
     operations:
 
-    \value StackView.Transition An operation with default transitions (default).
     \value StackView.Immediate An immediate operation without transitions.
     \value StackView.PushTransition An operation with push transitions (since QtQuick.Controls 2.1).
     \value StackView.ReplaceTransition An operation with replace transitions (since QtQuick.Controls 2.1).
     \value StackView.PopTransition An operation with pop transitions (since QtQuick.Controls 2.1).
+
+    If no operation is provided, \c PopTransition will be used.
 
     Examples:
     \code
@@ -733,7 +735,7 @@ void QQuickStackView::pop(QQmlV4Function *args)
     \qmlmethod Item QtQuick.Controls::StackView::replace(target, item, properties, operation)
 
     Replaces one or more items on the stack with the specified \a item and
-    \a operation, and optionally applies a set of \a properties on the
+    optional \a operation, and optionally applies a set of \a properties on the
     item. The item can be an \l Item, \l Component, or a \l [QML] url.
     Returns the item that became current.
 
@@ -782,11 +784,12 @@ void QQuickStackView::pop(QQmlV4Function *args)
     An \a operation can be optionally specified as the last argument. Supported
     operations:
 
-    \value StackView.Transition An operation with default transitions (default).
     \value StackView.Immediate An immediate operation without transitions.
     \value StackView.PushTransition An operation with push transitions (since QtQuick.Controls 2.1).
     \value StackView.ReplaceTransition An operation with replace transitions (since QtQuick.Controls 2.1).
     \value StackView.PopTransition An operation with pop transitions (since QtQuick.Controls 2.1).
+
+    If no operation is provided, \c ReplaceTransition will be used.
 
     The following example illustrates the use of push and pop transitions with replace().
 

@@ -124,7 +124,7 @@ public:
     Q_INVOKABLE QQuickItem *find(const QJSValue &callback, LoadBehavior behavior = DontLoad);
 
     enum Operation {
-        Transition = -1, // deprecated
+        Transition = -1, // ### Deprecated in Qt 6; remove in Qt 7.
         Immediate = 0,
         PushTransition = 1,
         ReplaceTransition = 2,
