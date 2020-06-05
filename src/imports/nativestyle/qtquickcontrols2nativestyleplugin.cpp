@@ -42,6 +42,8 @@
 
 #if defined(Q_OS_MACOS)
 #include "qquickmacstyle_mac_p.h"
+#elif defined(Q_OS_WINDOWS)
+# include "qquickwindowsstyle_p.h"
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -77,16 +79,34 @@ void QtQuickControls2NativeStylePlugin::initializeEngine(QQmlEngine *engine, con
     Q_UNUSED(uri);
     // Enable commonstyle as a reference style while
     // the native styles are under development.
-    if (qEnvironmentVariable("QQC2_COMMONSTYLE") == QStringLiteral("true"))
-        QQuickNativeStyle::setStyle(new QCommonStyle);
-    else
+    QStyle *style = nullptr;
+    if (qEnvironmentVariable("QQC2_COMMONSTYLE") == QStringLiteral("true")) {
+        style = new QCommonStyle;
+    } else {
+        const QString envStyle = qEnvironmentVariable("QQC2_STYLE");
+        if (!envStyle.isNull()) {
+            if (envStyle.compare(QLatin1String("common")))
+                style = new QCommonStyle;
 #if defined(Q_OS_MACOS)
-        QQuickNativeStyle::setStyle(new QMacStyle);
-#elif defined(Q_OS_WINDOWS)
-        QQuickNativeStyle::setStyle(new QCommonStyle);
-#else
-        QQuickNativeStyle::setStyle(new QCommonStyle);
+            else if (envStyle.compare(QLatin1String("mac")))
+                style = new QMacStyle;
 #endif
+#if defined(Q_OS_WINDOWS)
+            else if (envStyle.compare(QLatin1String("windows")))
+                style = new QWindowsStyle;
+#endif
+        }
+        if (!style) {
+#if defined(Q_OS_MACOS)
+            style = new QMacStyle;
+#elif defined(Q_OS_WINDOWS)
+            style = new QWindowsStyle;
+#else
+            style = new QCommonStyle;
+#endif
+        }
+    }
+    QQuickNativeStyle::setStyle(style);
 }
 
 void QtQuickControls2NativeStylePlugin::registerTypes(const char *uri)

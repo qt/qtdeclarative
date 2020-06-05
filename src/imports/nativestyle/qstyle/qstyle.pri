@@ -20,3 +20,4 @@ SOURCES += \
     $$PWD/qquickstyleoption.cpp
 
 macos: include(mac/mac.pri)
+windows: include(windows/windows.pri)
