@@ -155,6 +155,12 @@ class Q_QUICK_PRIVATE_EXPORT QSGRenderContext : public QObject
 {
     Q_OBJECT
 public:
+    enum RenderMode {
+        RenderMode2D,
+        RenderMode2DNoDepthBuffer,
+        RenderMode3D
+    };
+
     enum CreateTextureFlags {
         CreateTexture_Alpha       = 0x1,
         CreateTexture_Atlas       = 0x2,
@@ -195,7 +201,7 @@ public:
     QSGTexture *textureForFactory(QQuickTextureFactory *factory, QQuickWindow *window);
 
     virtual QSGTexture *createTexture(const QImage &image, uint flags = CreateTexture_Alpha) const = 0;
-    virtual QSGRenderer *createRenderer() = 0;
+    virtual QSGRenderer *createRenderer(RenderMode renderMode = RenderMode2D) = 0;
     virtual QSGTexture *compressedTextureForFactory(const QSGCompressedTextureFactory *) const;
 
     virtual void setAttachToGraphicsContext(bool attach) { Q_UNUSED(attach); }

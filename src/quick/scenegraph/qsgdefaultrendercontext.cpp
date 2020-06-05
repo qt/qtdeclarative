@@ -281,9 +281,9 @@ QSGTexture *QSGDefaultRenderContext::createTexture(const QImage &image, uint fla
     return texture;
 }
 
-QSGRenderer *QSGDefaultRenderContext::createRenderer()
+QSGRenderer *QSGDefaultRenderContext::createRenderer(RenderMode renderMode)
 {
-    return new QSGBatchRenderer::Renderer(this);
+    return new QSGBatchRenderer::Renderer(this, renderMode);
 }
 
 QSGTexture *QSGDefaultRenderContext::compressedTextureForFactory(const QSGCompressedTextureFactory *factory) const

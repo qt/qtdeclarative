@@ -888,15 +888,16 @@ static int qsg_countNodesInBatches(const QDataBuffer<Batch *> &batches)
     return sum;
 }
 
-Renderer::Renderer(QSGDefaultRenderContext *ctx)
+Renderer::Renderer(QSGDefaultRenderContext *ctx, QSGRenderContext::RenderMode renderMode)
     : QSGRenderer(ctx)
     , m_context(ctx)
+    , m_renderMode(renderMode)
     , m_opaqueRenderList(64)
     , m_alphaRenderList(64)
     , m_nextRenderOrder(0)
     , m_partialRebuild(false)
     , m_partialRebuildRoot(nullptr)
-    , m_useDepthBuffer(true)
+    , m_forceNoDepthBuffer(false)
     , m_opaqueBatches(16)
     , m_alphaBatches(16)
     , m_batchPool(16)
@@ -943,9 +944,6 @@ Renderer::Renderer(QSGDefaultRenderContext *ctx)
         qDebug("Batch thresholds: nodes: %d vertices: %d",
                m_batchNodeThreshold, m_batchVertexThreshold);
     }
-
-    static const bool useDepth = qEnvironmentVariableIsEmpty("QSG_NO_DEPTH_BUFFER");
-    m_useDepthBuffer = useDepth;
 }
 
 static void qsg_wipeBuffer(Buffer *buffer)
@@ -1216,7 +1214,7 @@ void Renderer::nodeWasAdded(QSGNode *node, Node *shadowParent)
         Q_ASSERT(!m_renderNodeElements.contains(rn));
         m_renderNodeElements.insert(e->renderNode, e);
         if (!rn->flags().testFlag(QSGRenderNode::DepthAwareRendering))
-            m_useDepthBuffer = false;
+            m_forceNoDepthBuffer = true;
         m_rebuild |= FullRebuild;
     }
 
@@ -1273,11 +1271,8 @@ void Renderer::nodeWasRemoved(Node *node)
         if (e) {
             e->removed = true;
             m_elementsToDelete.add(e);
-
-            if (m_renderNodeElements.isEmpty()) {
-                static const bool useDepth = qEnvironmentVariableIsEmpty("QSG_NO_DEPTH_BUFFER");
-                m_useDepthBuffer = useDepth;
-            }
+            if (m_renderNodeElements.isEmpty())
+                m_forceNoDepthBuffer = false;
         }
     }
 
@@ -1476,7 +1471,7 @@ void Renderer::buildRenderLists(QSGNode *node)
         Q_ASSERT(e);
 
         bool opaque = gn->inheritedOpacity() > OPAQUE_LIMIT && !(gn->activeMaterial()->flags() & QSGMaterial::Blending);
-        if (opaque && m_useDepthBuffer)
+        if (opaque && useDepthBuffer())
             m_opaqueRenderList << e;
         else
             m_alphaRenderList << e;
@@ -1906,7 +1901,7 @@ void Renderer::uploadMergedElement(Element *e, int vaOffset, char **vertexData, 
         }
     }
 
-    if (m_useDepthBuffer) {
+    if (useDepthBuffer()) {
         float *vzorder = (float *) *zData;
         float zorder = 1.0f - e->order * m_zRange;
         for (int i=0; i<vCount; ++i)
@@ -2066,7 +2061,7 @@ void Renderer::uploadBatch(Batch *b)
     int ibufferSize = 0;
     if (b->merged) {
         ibufferSize = b->indexCount * mergedIndexElemSize();
-        if (m_useDepthBuffer)
+        if (useDepthBuffer())
             bufferSize += b->vertexCount * sizeof(float);
     } else {
         ibufferSize = unmergedIndexSize;
@@ -2088,7 +2083,7 @@ void Renderer::uploadBatch(Batch *b)
         char *zData = vertexData + b->vertexCount * g->sizeOfVertex();
         char *indexData = separateIndexBuffer
                 ? b->ibo.data
-                : zData + (int(m_useDepthBuffer) * b->vertexCount * sizeof(float));
+                : zData + (int(useDepthBuffer()) * b->vertexCount * sizeof(float));
 
         quint16 iOffset16 = 0;
         quint32 iOffset32 = 0;
@@ -2189,7 +2184,7 @@ void Renderer::uploadBatch(Batch *b)
                 dump << ") ";
                 offset += attr.tupleSize * size_of_type(attr.type);
             }
-            if (b->merged && m_useDepthBuffer) {
+            if (b->merged && useDepthBuffer()) {
                 float zorder = ((float*)(b->vbo.data + b->vertexCount * g->sizeOfVertex()))[i];
                 dump << " Z:(" << zorder << ")";
             }
@@ -2609,7 +2604,7 @@ static inline bool needsBlendConstant(QRhiGraphicsPipeline::BlendFactor f)
 // available from Batch/Element at this stage. Bookkeeping of state in the
 // renderpass is done via m_pstate.
 
-bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms)
+bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms, bool depthPostPass)
 {
     // In unmerged batches the srbs in the elements are all compatible
     // layout-wise. Note the key's == and qHash implementations: the rp desc and
@@ -2622,7 +2617,10 @@ bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms)
     // See if there is an existing, matching pipeline state object.
     auto it = m_shaderManager->pipelineCache.constFind(k);
     if (it != m_shaderManager->pipelineCache.constEnd()) {
-        e->ps = *it;
+        if (depthPostPass)
+            e->depthPostPassPs = *it;
+        else
+            e->ps = *it;
         return true;
     }
 
@@ -2678,7 +2676,10 @@ bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms)
     }
 
     m_shaderManager->pipelineCache.insert(k, ps);
-    e->ps = ps;
+    if (depthPostPass)
+        e->depthPostPassPs = ps;
+    else
+        e->ps = ps;
     return true;
 }
 
@@ -2960,7 +2961,7 @@ bool Renderer::prepareRenderMergedBatch(Batch *batch, PreparedRenderBatch *rende
     updateClipState(gn->clipList(), batch);
 
     const QSGGeometry *g = gn->geometry();
-    ShaderManager::Shader *sms = m_useDepthBuffer ? m_shaderManager->prepareMaterial(material, g)
+    ShaderManager::Shader *sms = useDepthBuffer() ? m_shaderManager->prepareMaterial(material, g)
                                                   : m_shaderManager->prepareMaterialNoRewrite(material, g);
     if (!sms)
         return false;
@@ -3033,6 +3034,13 @@ bool Renderer::prepareRenderMergedBatch(Batch *batch, PreparedRenderBatch *rende
     if (!hasPipeline)
         return false;
 
+    if (m_renderMode == QSGRenderContext::RenderMode3D) {
+        m_gstateStack.push(m_gstate);
+        setStateForDepthPostPass();
+        ensurePipelineState(e, sms, true);
+        m_gstate = m_gstateStack.pop();
+    }
+
     batch->ubufDataValid = true;
 
     m_currentMaterial = material;
@@ -3068,7 +3076,7 @@ void Renderer::checkLineWidth(QSGGeometry *g)
     }
 }
 
-void Renderer::renderMergedBatch(PreparedRenderBatch *renderBatch)
+void Renderer::renderMergedBatch(PreparedRenderBatch *renderBatch, bool depthPostPass)
 {
     const Batch *batch = renderBatch->batch;
     Element *e = batch->first;
@@ -3080,7 +3088,7 @@ void Renderer::renderMergedBatch(PreparedRenderBatch *renderBatch)
         enqueueStencilDraw(batch);
 
     QRhiCommandBuffer *cb = commandBuffer();
-    setGraphicsPipeline(cb, batch, e);
+    setGraphicsPipeline(cb, batch, e, depthPostPass);
 
     for (int i = 0, ie = batch->drawSets.size(); i != ie; ++i) {
         const DrawSet &draw = batch->drawSets.at(i);
@@ -3088,7 +3096,7 @@ void Renderer::renderMergedBatch(PreparedRenderBatch *renderBatch)
             { batch->vbo.buf, quint32(draw.vertices) },
             { batch->vbo.buf, quint32(draw.zorders) }
         };
-        cb->setVertexInput(VERTEX_BUFFER_BINDING, m_useDepthBuffer ? 2 : 1, vbufBindings,
+        cb->setVertexInput(VERTEX_BUFFER_BINDING, useDepthBuffer() ? 2 : 1, vbufBindings,
                            batch->ibo.buf, draw.indices,
                            m_uint32IndexForRhi ? QRhiCommandBuffer::IndexUInt32 : QRhiCommandBuffer::IndexUInt16);
         cb->drawIndexed(draw.indexCount);
@@ -3183,6 +3191,7 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
 
     int ubufOffset = 0;
     QRhiGraphicsPipeline *ps = nullptr;
+    QRhiGraphicsPipeline *depthPostPassPs = nullptr;
     e = batch->first;
     while (e) {
         gn = e->node;
@@ -3192,7 +3201,7 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
 
         m_current_projection_matrix = projectionMatrix();
         m_current_projection_matrix_native_ndc = projectionMatrixWithNativeNDC();
-        if (m_useDepthBuffer) {
+        if (useDepthBuffer()) {
             m_current_projection_matrix(2, 2) = m_zRange;
             m_current_projection_matrix(2, 3) = 1.0f - e->order * m_zRange;
         }
@@ -3231,8 +3240,17 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
                 return false;
             }
             ps = e->ps;
+            if (m_renderMode == QSGRenderContext::RenderMode3D) {
+                m_gstateStack.push(m_gstate);
+                setStateForDepthPostPass();
+                ensurePipelineState(e, sms, true);
+                m_gstate = m_gstateStack.pop();
+                depthPostPassPs = e->depthPostPassPs;
+            }
         } else {
             e->ps = ps;
+            if (m_renderMode == QSGRenderContext::RenderMode3D)
+                e->depthPostPassPs = depthPostPassPs;
         }
 
         // We don't need to bother with asking each node for its material as they
@@ -3256,7 +3274,7 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
     return true;
 }
 
-void Renderer::renderUnmergedBatch(PreparedRenderBatch *renderBatch)
+void Renderer::renderUnmergedBatch(PreparedRenderBatch *renderBatch, bool depthPostPass)
 {
     const Batch *batch = renderBatch->batch;
     Element *e = batch->first;
@@ -3275,7 +3293,7 @@ void Renderer::renderUnmergedBatch(PreparedRenderBatch *renderBatch)
         checkLineWidth(g);
         const int effectiveIndexSize = m_uint32IndexForRhi ? sizeof(quint32) : g->sizeOfIndex();
 
-        setGraphicsPipeline(cb, batch, e);
+        setGraphicsPipeline(cb, batch, e, depthPostPass);
 
         const QRhiCommandBuffer::VertexInput vbufBinding(batch->vbo.buf, vOffset);
         if (g->indexCount()) {
@@ -3296,9 +3314,9 @@ void Renderer::renderUnmergedBatch(PreparedRenderBatch *renderBatch)
     }
 }
 
-void Renderer::setGraphicsPipeline(QRhiCommandBuffer *cb, const Batch *batch, Element *e)
+void Renderer::setGraphicsPipeline(QRhiCommandBuffer *cb, const Batch *batch, Element *e, bool depthPostPass)
 {
-    cb->setGraphicsPipeline(e->ps);
+    cb->setGraphicsPipeline(depthPostPass ? e->depthPostPassPs : e->ps);
 
     if (!m_pstate.viewportSet) {
         m_pstate.viewportSet = true;
@@ -3553,8 +3571,8 @@ void Renderer::prepareRenderPass(RenderPassContext *ctx)
     m_pstate.viewportSet = false;
     m_pstate.scissorSet = false;
 
-    m_gstate.depthTest = m_useDepthBuffer;
-    m_gstate.depthWrite = m_useDepthBuffer;
+    m_gstate.depthTest = useDepthBuffer();
+    m_gstate.depthWrite = useDepthBuffer();
     m_gstate.depthFunc = QRhiGraphicsPipeline::Less;
     m_gstate.blending = false;
 
@@ -3586,9 +3604,17 @@ void Renderer::prepareRenderPass(RenderPassContext *ctx)
     m_gstate.blending = true;
     // factors never change, always set for premultiplied alpha based blending
 
-    // depth test stays enabled (if m_useDepthBuffer, that is) but no need
+    // depth test stays enabled (if useDepthBuffer(), that is) but no need
     // to write out depth from the transparent (back-to-front) pass
     m_gstate.depthWrite = false;
+
+    // special case: the 3D plane mode tests against the depth buffer, but does
+    // not write (and all batches are alpha because this render mode evaluates
+    // to useDepthBuffer()==false)
+    if (m_renderMode == QSGRenderContext::RenderMode3D) {
+        Q_ASSERT(m_opaqueBatches.isEmpty());
+        m_gstate.depthTest = true;
+    }
 
     ctx->alphaRenderBatches.clear();
     if (Q_LIKELY(renderAlpha)) {
@@ -3660,6 +3686,17 @@ void Renderer::recordRenderPass(RenderPassContext *ctx)
             renderRhiRenderNode(renderBatch->batch);
         else
             renderUnmergedBatch(renderBatch);
+    }
+
+    if (m_renderMode == QSGRenderContext::RenderMode3D) {
+        // depth post-pass
+        for (int i = 0, ie = ctx->alphaRenderBatches.count(); i != ie; ++i) {
+            PreparedRenderBatch *renderBatch = &ctx->alphaRenderBatches[i];
+            if (renderBatch->batch->merged)
+                renderMergedBatch(renderBatch, true);
+            else if (!renderBatch->batch->isRenderNode) // rendernodes are skipped here for now
+                renderUnmergedBatch(renderBatch, true);
+        }
     }
 
     if (m_currentShader)
@@ -3770,7 +3807,7 @@ void Renderer::renderRhiRenderNode(const Batch *batch)
     QSGRenderNodePrivate *rd = QSGRenderNodePrivate::get(e->renderNode);
 
     QMatrix4x4 pm = projectionMatrix();
-    if (m_useDepthBuffer) {
+    if (useDepthBuffer()) {
         pm(2, 2) = m_zRange;
         pm(2, 3) = 1.0f - e->order * m_zRange;
     }
@@ -3811,7 +3848,7 @@ void Renderer::renderRhiRenderNode(const Batch *batch)
     // which is in renderpass recording state.
 }
 
-void Renderer::setCustomRenderMode(const QByteArray &mode)
+void Renderer::setVisualizationMode(const QByteArray &mode)
 {
     if (mode.isEmpty())
         m_visualizer->setMode(Visualizer::VisualizeNothing);
@@ -3825,7 +3862,7 @@ void Renderer::setCustomRenderMode(const QByteArray &mode)
         m_visualizer->setMode(Visualizer::VisualizeChanges);
 }
 
-bool Renderer::hasCustomRenderModeWithContinuousUpdate() const
+bool Renderer::hasVisualizationModeWithContinuousUpdate() const
 {
     return m_visualizer->mode() == Visualizer::VisualizeOverdraw;
 }

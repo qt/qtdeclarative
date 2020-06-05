@@ -94,8 +94,8 @@ public:
     QSGNodeUpdater *nodeUpdater() const;
     void setNodeUpdater(QSGNodeUpdater *updater);
     inline QSGMaterialShader::RenderState state(QSGMaterialShader::RenderState::DirtyStates dirty) const;
-    virtual void setCustomRenderMode(const QByteArray &) { }
-    virtual bool hasCustomRenderModeWithContinuousUpdate() const { return false; }
+    virtual void setVisualizationMode(const QByteArray &) { }
+    virtual bool hasVisualizationModeWithContinuousUpdate() const { return false; }
     virtual void releaseCachedResources() { }
     virtual void invalidatePipelineCacheDependency(QRhiRenderPassDescriptor *) { }
 

@@ -262,7 +262,7 @@ public:
 
     QSGRenderContext *context;
     QSGRenderer *renderer;
-    QByteArray customRenderMode; // Default renderer supports "clip", "overdraw", "changes", "batches" and blank.
+    QByteArray visualizationMode; // Default renderer supports "clip", "overdraw", "changes", "batches" and blank.
 
     QSGRenderLoop *windowManager;
     QQuickRenderControl *renderControl;

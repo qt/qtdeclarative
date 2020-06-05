@@ -352,7 +352,10 @@ void QSGRhiLayer::grab()
         return;
 
     if (!m_renderer) {
-        m_renderer = m_context->createRenderer();
+        static const bool useDepth = qEnvironmentVariableIsEmpty("QSG_NO_DEPTH_BUFFER");
+        static const QSGRenderContext::RenderMode renderMode = useDepth ? QSGRenderContext::RenderMode2D
+                                                                        : QSGRenderContext::RenderMode2DNoDepthBuffer;
+        m_renderer = m_context->createRenderer(renderMode);
         connect(m_renderer, SIGNAL(sceneGraphChanged()), this, SLOT(markDirtyTexture()));
     }
     m_renderer->setRootNode(static_cast<QSGRootNode *>(root));

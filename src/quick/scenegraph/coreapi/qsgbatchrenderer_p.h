@@ -336,6 +336,7 @@ struct Element {
     int order = 0;
     QRhiShaderResourceBindings *srb = nullptr;
     QRhiGraphicsPipeline *ps = nullptr;
+    QRhiGraphicsPipeline *depthPostPassPs = nullptr;
 
     uint boundsComputed : 1;
     uint boundsOutsideFloatRange : 1;
@@ -752,7 +753,7 @@ protected:
 class Q_QUICK_PRIVATE_EXPORT Renderer : public QSGRenderer
 {
 public:
-    Renderer(QSGDefaultRenderContext *);
+    Renderer(QSGDefaultRenderContext *ctx, QSGRenderContext::RenderMode renderMode = QSGRenderContext::RenderMode2D);
     ~Renderer();
 
 protected:
@@ -821,7 +822,7 @@ private:
     void uploadBatch(Batch *b);
     void uploadMergedElement(Element *e, int vaOffset, char **vertexData, char **zData, char **indexData, void *iBasePtr, int *indexCount);
 
-    bool ensurePipelineState(Element *e, const ShaderManager::Shader *sms);
+    bool ensurePipelineState(Element *e, const ShaderManager::Shader *sms, bool depthPostPass = false);
     QRhiTexture *dummyTexture();
     void updateMaterialDynamicData(ShaderManager::Shader *sms, QSGMaterialShader::RenderState &renderState,
                                    QSGMaterial *material, ShaderManager::ShaderResourceBindingList *bindings,
@@ -830,10 +831,10 @@ private:
                                   QSGMaterial *material, Batch *batch, bool *gstateChanged);
     void checkLineWidth(QSGGeometry *g);
     bool prepareRenderMergedBatch(Batch *batch, PreparedRenderBatch *renderBatch);
-    void renderMergedBatch(PreparedRenderBatch *renderBatch);
+    void renderMergedBatch(PreparedRenderBatch *renderBatch, bool depthPostPass = false);
     bool prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *renderBatch);
-    void renderUnmergedBatch(PreparedRenderBatch *renderBatch);
-    void setGraphicsPipeline(QRhiCommandBuffer *cb, const Batch *batch, Element *e);
+    void renderUnmergedBatch(PreparedRenderBatch *renderBatch, bool depthPostPass = false);
+    void setGraphicsPipeline(QRhiCommandBuffer *cb, const Batch *batch, Element *e, bool depthPostPass = false);
     void renderMergedBatch(const Batch *batch); // GL
     void renderUnmergedBatch(const Batch *batch); // GL
     ClipState::ClipType updateStencilClip(const QSGClipNode *clip);
@@ -863,20 +864,20 @@ private:
     inline Batch *newBatch();
     void invalidateAndRecycleBatch(Batch *b);
 
-    void setCustomRenderMode(const QByteArray &mode) override;
-    bool hasCustomRenderModeWithContinuousUpdate() const override;
+    void setVisualizationMode(const QByteArray &mode) override;
+    bool hasVisualizationModeWithContinuousUpdate() const override;
 
     void invalidatePipelineCacheDependency(QRhiRenderPassDescriptor *rpDesc) override;
 
     QSGDefaultRenderContext *m_context;
+    QSGRenderContext::RenderMode m_renderMode;
     QSet<Node *> m_taggedRoots;
     QDataBuffer<Element *> m_opaqueRenderList;
     QDataBuffer<Element *> m_alphaRenderList;
     int m_nextRenderOrder;
     bool m_partialRebuild;
     QSGNode *m_partialRebuildRoot;
-
-    bool m_useDepthBuffer;
+    bool m_forceNoDepthBuffer;
 
     QHash<QSGRenderNode *, RenderNodeElement *> m_renderNodeElements;
     QDataBuffer<Batch *> m_opaqueBatches;
@@ -932,6 +933,8 @@ private:
     } m_stencilClipCommon;
 
     inline int mergedIndexElemSize() const;
+    inline bool useDepthBuffer() const;
+    inline void setStateForDepthPostPass();
 };
 
 Batch *Renderer::newBatch()
@@ -957,6 +960,19 @@ Batch *Renderer::newBatch()
 int Renderer::mergedIndexElemSize() const
 {
     return m_uint32IndexForRhi ? sizeof(quint32) : sizeof(quint16);
+}
+
+bool Renderer::useDepthBuffer() const
+{
+    return !m_forceNoDepthBuffer && m_renderMode == QSGRenderContext::RenderMode2D;
+}
+
+void Renderer::setStateForDepthPostPass()
+{
+    m_gstate.colorWrite = {};
+    m_gstate.depthWrite = true;
+    m_gstate.depthTest = true;
+    m_gstate.depthFunc = QRhiGraphicsPipeline::Less;
 }
 
 void Renderer::StencilClipCommonData::reset()

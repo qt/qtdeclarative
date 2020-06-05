@@ -151,7 +151,7 @@ QSGTexture *QSGSoftwareRenderContext::createTexture(const QImage &image, uint fl
     return new QSGSoftwarePixmapTexture(image, flags);
 }
 
-QSGRenderer *QSGSoftwareRenderContext::createRenderer()
+QSGRenderer *QSGSoftwareRenderContext::createRenderer(RenderMode)
 {
     return new QSGSoftwareRenderer(this);
 }

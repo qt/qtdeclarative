@@ -125,7 +125,7 @@ public:
     QSGDepthStencilBufferManager *depthStencilBufferManager();
 
     QSGTexture *createTexture(const QImage &image, uint flags) const override;
-    QSGRenderer *createRenderer() override;
+    QSGRenderer *createRenderer(RenderMode renderMode = RenderMode2D) override;
     QSGTexture *compressedTextureForFactory(const QSGCompressedTextureFactory *factory) const override;
 
     virtual void initializeRhiShader(QSGMaterialShader *shader, QShader::Variant shaderVariant);

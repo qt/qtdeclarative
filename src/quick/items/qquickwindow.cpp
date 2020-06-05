@@ -582,7 +582,10 @@ void QQuickWindowPrivate::syncSceneGraph()
 
         QSGRootNode *rootNode = new QSGRootNode;
         rootNode->appendChildNode(QQuickItemPrivate::get(contentItem)->itemNode());
-        renderer = context->createRenderer();
+        static const bool useDepth = qEnvironmentVariableIsEmpty("QSG_NO_DEPTH_BUFFER");
+        static const QSGRenderContext::RenderMode renderMode = useDepth ? QSGRenderContext::RenderMode2D
+                                                                        : QSGRenderContext::RenderMode2DNoDepthBuffer;
+        renderer = context->createRenderer(renderMode);
         renderer->setRootNode(rootNode);
     }
 
@@ -597,7 +600,7 @@ void QQuickWindowPrivate::syncSceneGraph()
         mode |= QSGAbstractRenderer::ClearColorBuffer;
     renderer->setClearMode(mode);
 
-    renderer->setCustomRenderMode(customRenderMode);
+    renderer->setVisualizationMode(visualizationMode);
 
     emit q->afterSynchronizing();
     runAndClearJobs(&afterSynchronizingJobs);
@@ -712,7 +715,7 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
     else
         context->endNextFrame(renderer);
 
-    if (renderer && renderer->hasCustomRenderModeWithContinuousUpdate()) {
+    if (renderer && renderer->hasVisualizationModeWithContinuousUpdate()) {
         // For the overdraw visualizer. This update is not urgent so avoid a
         // direct update() call, this is only here to keep the overdraw
         // visualization box rotating even when the scene is static.
@@ -783,7 +786,7 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
     contentItemPrivate->flags |= QQuickItem::ItemIsFocusScope;
     contentItem->setSize(q->size());
 
-    customRenderMode = qgetenv("QSG_VISUALIZE");
+    visualizationMode = qgetenv("QSG_VISUALIZE");
     renderControl = control;
     if (renderControl)
         QQuickRenderControlPrivate::get(renderControl)->window = q;
