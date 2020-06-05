@@ -87,7 +87,7 @@ void QQmlContextData::emitDestruction()
                 emit attached->destruction();
             }
 
-            for (QQmlContextData *child = m_childContexts; child; child = child->m_nextChild)
+            for (QQmlRefPointer<QQmlContextData> child = m_childContexts; !child.isNull(); child = child->m_nextChild)
                 child->emitDestruction();
         }
     }
@@ -144,12 +144,12 @@ void QQmlContextData::clearContext()
 QQmlContextData::~QQmlContextData()
 {
     Q_ASSERT(refCount() == 0);
-    m_linkedContext = nullptr;
 
     // avoid recursion
     addref();
     if (m_engine)
         invalidate();
+    m_linkedContext = nullptr;
 
     Q_ASSERT(refCount() == 1);
     clearContext();
