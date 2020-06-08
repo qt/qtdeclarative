@@ -398,7 +398,6 @@ qt_extend_target(Quick CONDITION QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT
         scenegraph/util/qsgdefaultninepatchnode.cpp scenegraph/util/qsgdefaultninepatchnode_p.h
         scenegraph/util/qsgdefaultpainternode.cpp scenegraph/util/qsgdefaultpainternode_p.h
         scenegraph/util/qsgdefaultrectanglenode.cpp scenegraph/util/qsgdefaultrectanglenode_p.h
-        scenegraph/util/qsgdepthstencilbuffer.cpp scenegraph/util/qsgdepthstencilbuffer_p.h
         scenegraph/util/qsgrhiatlastexture.cpp scenegraph/util/qsgrhiatlastexture_p.h
         scenegraph/util/qsgshadersourcebuilder.cpp scenegraph/util/qsgshadersourcebuilder_p.h
 )
