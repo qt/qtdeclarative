@@ -49,10 +49,10 @@ QT_BEGIN_NAMESPACE
 void QQuickPressHandler::mousePressEvent(QMouseEvent *event)
 {
     longPress = false;
-    pressPos = event->localPos();
+    pressPos = event->position();
     if (Qt::LeftButton == (event->buttons() & Qt::LeftButton)) {
         timer.start(QGuiApplication::styleHints()->mousePressAndHoldInterval(), control);
-        delayedMousePressEvent = new QMouseEvent(event->type(), event->pos(), event->button(), event->buttons(), event->modifiers());
+        delayedMousePressEvent = new QMouseEvent(event->type(), event->position().toPoint(), event->button(), event->buttons(), event->modifiers());
     } else {
         timer.stop();
     }
@@ -71,7 +71,7 @@ void QQuickPressHandler::mousePressEvent(QMouseEvent *event)
 
 void QQuickPressHandler::mouseMoveEvent(QMouseEvent *event)
 {
-    if (qAbs(int(event->localPos().x() - pressPos.x())) > QGuiApplication::styleHints()->startDragDistance())
+    if (qAbs(int(event->position().x() - pressPos.x())) > QGuiApplication::styleHints()->startDragDistance())
         timer.stop();
 }
 

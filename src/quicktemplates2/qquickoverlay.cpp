@@ -194,7 +194,7 @@ bool QQuickOverlayPrivate::handleMouseEvent(QQuickItem *source, QMouseEvent *eve
 {
     switch (event->type()) {
     case QEvent::MouseButtonPress:
-        if (!target && startDrag(event, event->windowPos()))
+        if (!target && startDrag(event, event->scenePosition()))
             return true;
         return handlePress(source, event, target);
     case QEvent::MouseMove:
@@ -218,7 +218,7 @@ bool QQuickOverlayPrivate::handleTouchEvent(QQuickItem *source, QTouchEvent *eve
         for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
             switch (point.state()) {
             case Qt::TouchPointPressed:
-                if (!target && startDrag(event, point.scenePos()))
+                if (!target && startDrag(event, point.scenePosition()))
                     handled = true;
                 else
                     handled |= handlePress(source, event, target);

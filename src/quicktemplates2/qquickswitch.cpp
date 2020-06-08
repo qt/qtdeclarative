@@ -180,7 +180,7 @@ void QQuickSwitch::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickSwitch);
     if (!keepMouseGrab()) {
-        const QPointF movePoint = event->localPos();
+        const QPointF movePoint = event->position();
         if (d->canDrag(movePoint))
             setKeepMouseGrab(QQuickWindowPrivate::dragOverThreshold(movePoint.x() - d->pressPoint.x(), Qt::XAxis, event));
     }
@@ -195,8 +195,8 @@ void QQuickSwitch::touchEvent(QTouchEvent *event)
         for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
             if (point.id() != d->touchId || point.state() != Qt::TouchPointMoved)
                 continue;
-            if (d->canDrag(point.pos()))
-                setKeepTouchGrab(QQuickWindowPrivate::dragOverThreshold(point.pos().x() - d->pressPoint.x(), Qt::XAxis, &point));
+            if (d->canDrag(point.position()))
+                setKeepTouchGrab(QQuickWindowPrivate::dragOverThreshold(point.position().x() - d->pressPoint.x(), Qt::XAxis, &point));
         }
     }
     QQuickAbstractButton::touchEvent(event);
