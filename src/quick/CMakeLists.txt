@@ -399,7 +399,6 @@ qt_extend_target(Quick CONDITION QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT
         scenegraph/util/qsgdefaultpainternode.cpp scenegraph/util/qsgdefaultpainternode_p.h
         scenegraph/util/qsgdefaultrectanglenode.cpp scenegraph/util/qsgdefaultrectanglenode_p.h
         scenegraph/util/qsgrhiatlastexture.cpp scenegraph/util/qsgrhiatlastexture_p.h
-        scenegraph/util/qsgshadersourcebuilder.cpp scenegraph/util/qsgshadersourcebuilder_p.h
 )
 
 qt_extend_target(Quick CONDITION QT_FEATURE_thread AND (QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT_FEATURE_opengles3)

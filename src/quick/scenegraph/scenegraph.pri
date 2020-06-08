@@ -70,11 +70,6 @@ SOURCES += \
     $$PWD/util/qsgninepatchnode.cpp
 
 qtConfig(opengl(es1|es2)?) {
-    HEADERS += \
-        $$PWD/util/qsgshadersourcebuilder_p.h
-    SOURCES += \
-        $$PWD/util/qsgshadersourcebuilder.cpp
-
     # rhi, still tied to OpenGL-enabled Qt builds for now
     HEADERS += \
         $$PWD/qsgrhitextureglyphcache_p.h \
