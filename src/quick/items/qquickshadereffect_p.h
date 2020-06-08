@@ -60,7 +60,7 @@ QT_REQUIRE_CONFIG(quick_shadereffect);
 
 QT_BEGIN_NAMESPACE
 
-class QQuickGenericShaderEffect;
+class QQuickShaderEffectImpl;
 class QQuickShaderEffectPrivate;
 
 class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffect : public QQuickItem
@@ -137,7 +137,7 @@ protected:
     void itemChange(ItemChange change, const ItemChangeData &value) override;
 
 private:
-    QQuickGenericShaderEffect *m_impl;
+    QQuickShaderEffectImpl *m_impl;
 
     Q_DECLARE_PRIVATE(QQuickShaderEffect)
 };

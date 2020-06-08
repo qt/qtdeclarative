@@ -209,13 +209,11 @@ qtConfig(quick-shadereffect) {
     HEADERS += \
         $$PWD/qquickshadereffectsource_p.h \
         $$PWD/qquickshadereffectmesh_p.h \
-        $$PWD/qquickshadereffect_p.h \
-        $$PWD/qquickgenericshadereffect_p.h
+        $$PWD/qquickshadereffect_p.h
     SOURCES += \
         $$PWD/qquickshadereffectsource.cpp \
         $$PWD/qquickshadereffectmesh.cpp \
-        $$PWD/qquickshadereffect.cpp \
-        $$PWD/qquickgenericshadereffect.cpp
+        $$PWD/qquickshadereffect.cpp
 
     qtConfig(opengl) {
         OTHER_FILES += \

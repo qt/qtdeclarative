@@ -495,7 +495,6 @@ qt_extend_target(Quick CONDITION QT_FEATURE_quick_repeater
 
 qt_extend_target(Quick CONDITION QT_FEATURE_quick_shadereffect
     SOURCES
-        items/qquickgenericshadereffect.cpp items/qquickgenericshadereffect_p.h
         items/qquickshadereffect.cpp items/qquickshadereffect_p.h
         items/qquickshadereffectmesh.cpp items/qquickshadereffectmesh_p.h
         items/qquickshadereffectsource.cpp items/qquickshadereffectsource_p.h
