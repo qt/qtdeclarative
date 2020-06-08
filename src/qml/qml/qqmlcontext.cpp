@@ -626,12 +626,12 @@ void QQmlContextData::clearContext()
 void QQmlContextData::destroy()
 {
     Q_ASSERT(refCount == 0);
-    linkedContext = nullptr;
 
     // avoid recursion
     ++refCount;
     if (engine)
         invalidate();
+    linkedContext = nullptr;
 
     Q_ASSERT(refCount == 1);
     clearContext();
