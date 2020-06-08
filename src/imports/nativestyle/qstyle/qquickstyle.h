@@ -296,6 +296,7 @@ public:
         SE_PushButtonLayoutItem,
         SE_RadioButtonLayoutItem,
         SE_SliderLayoutItem,
+        SE_ScrollBarLayoutItem,
         SE_SpinBoxLayoutItem,
         SE_ToolButtonLayoutItem,
 

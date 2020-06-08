@@ -2694,14 +2694,10 @@ int QMacStyle::styleHint(StyleHint sh, const QStyleOption *opt, QStyleHintReturn
         ret = false;
         break;
     case SH_ScrollBar_Transient:
-//        if ((qobject_cast<const QScrollBar *>(w) && w->parent() &&
-//                qobject_cast<QAbstractScrollArea*>(w->parent()->parent()))
-//#ifndef QT_NO_ACCESSIBILITY
-//                || (opt && QStyleHelper::hasAncestor(opt->styleObject, QAccessible::ScrollBar))
-//#endif
-//        ) {
-            ret = [NSScroller preferredScrollerStyle] == NSScrollerStyleOverlay;
-//        }
+        // For the initial version in QQC2, we don't support transient scrollbars. When the
+        // time comes, consider doing all such animations from QML.
+        // ret = [NSScroller preferredScrollerStyle] == NSScrollerStyleOverlay;
+        ret = false;
         break;
     case SH_TitleBar_ShowToolTipsOnButtons:
         // min/max/close buttons on windows don't show tool tips
@@ -4713,6 +4709,10 @@ QRect QMacStyle::subElementRect(SubElement sr, const QStyleOption *opt) const
             }
         }
         break;
+    case SE_ScrollBarLayoutItem:
+        if (const QStyleOptionSlider *sliderOpt = qstyleoption_cast<const QStyleOptionSlider *>(opt)) {
+            rect = opt->rect;
+        }
     case SE_FrameLayoutItem:
         // hack because QStyleOptionFrame doesn't have a frameStyle member
 //        if (const QFrame *frame = qobject_cast<const QFrame *>(widget)) {
@@ -5069,7 +5069,7 @@ void QMacStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComplex 
                 } else {
                     [scroller drawKnob];
 
-                    if (!isTransient && opt->activeSubControls) {
+                    if (!isTransient && opt->state & State_Sunken) {
                         // The knob should appear darker (going from 0.76 down to 0.49).
                         // But no blending mode can help darken enough in a single pass,
                         // so we resort to drawing the knob twice with a small help from
@@ -6245,11 +6245,15 @@ QSize QMacStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt, cons
     case CT_ScrollBar :
         // Make sure that the scroll bar is large enough to display the thumb indicator.
         if (const QStyleOptionSlider *slider = qstyleoption_cast<const QStyleOptionSlider *>(opt)) {
-            const int minimumSize = 24; // Smallest knob size, but Cocoa doesn't seem to care
-            if (slider->orientation == Qt::Horizontal)
-                sz = sz.expandedTo(QSize(minimumSize, sz.height()));
-            else
-                sz = sz.expandedTo(QSize(sz.width(), minimumSize));
+            const int minimumWidth = 24;
+            const int absoluteHeight = 14;
+            if (slider->orientation == Qt::Horizontal) {
+                sz = sz.expandedTo(QSize(minimumWidth, sz.height()));
+                sz.setHeight(absoluteHeight);
+            } else {
+                sz = sz.expandedTo(QSize(sz.width(), minimumWidth));
+                sz.setWidth(absoluteHeight);
+            }
         }
         break;
     case CT_ItemViewItem:

@@ -26,6 +26,8 @@ QML_FILES = \
     CustomTextAreas.qml \
     ComboBoxes.qml \
     CustomComboBoxes.qml \
+    ScrollBars.qml \
+    CustomScrollBars.qml \
 
 OTHER_FILES += $$QML_FILES
 RESOURCES += $$QML_FILES

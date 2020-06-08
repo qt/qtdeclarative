@@ -9,3 +9,4 @@ QML_FILES += \
     $$PWD/DefaultFrame.qml \
     $$PWD/DefaultTextArea.qml \
     $$PWD/DefaultComboBox.qml \
+    $$PWD/DefaultScrollBar.qml \

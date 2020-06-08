@@ -87,6 +87,7 @@ ApplicationWindow {
                 TextAreas { }
                 ComboBoxes { }
                 Frames { }
+                ScrollBars { }
                 Sliders { }
                 SlidersSmall { }
                 SlidersMini { }
@@ -111,6 +112,7 @@ ApplicationWindow {
                 CustomTextAreas { }
                 CustomComboBoxes { }
                 CustomFrames { }
+                CustomScrollBars { }
                 CustomSliders { }
             }
         }
