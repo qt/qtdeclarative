@@ -662,18 +662,12 @@ struct ShaderManagerShader
 {
     ~ShaderManagerShader() {
         delete programRhi.program;
-        delete programGL.program;
     }
-    struct {
-        QSGMaterialShader *program = nullptr;
-        int pos_order;
-    } programGL;
     struct {
         QSGMaterialShader *program = nullptr;
         QRhiVertexInputLayout inputLayout;
         QVarLengthArray<QRhiGraphicsShaderStage, 2> shaderStages;
     } programRhi;
-
     float lastOpacity;
 };
 
@@ -835,8 +829,6 @@ private:
     bool prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *renderBatch);
     void renderUnmergedBatch(PreparedRenderBatch *renderBatch, bool depthPostPass = false);
     void setGraphicsPipeline(QRhiCommandBuffer *cb, const Batch *batch, Element *e, bool depthPostPass = false);
-    void renderMergedBatch(const Batch *batch); // GL
-    void renderUnmergedBatch(const Batch *batch); // GL
     ClipState::ClipType updateStencilClip(const QSGClipNode *clip);
     void updateClip(const QSGClipNode *clipList, const Batch *batch);
     void applyClipStateToGraphicsState();
@@ -899,7 +891,6 @@ private:
 
     Visualizer *m_visualizer;
 
-    // Stuff used during rendering only...
     ShaderManager *m_shaderManager; // per rendercontext, shared
     QSGMaterial *m_currentMaterial;
     QSGMaterialShader *m_currentProgram;
