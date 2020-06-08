@@ -88,7 +88,6 @@ public:
     bool ensureUpToDate();
 
     QTextureGlyphCache *glyphCache() const;
-    QOpenGLTextureGlyphCache *openglGlyphCache() const;
     QSGRhiTextureGlyphCache *rhiGlyphCache() const;
 
     void populate(const QPointF &position,
