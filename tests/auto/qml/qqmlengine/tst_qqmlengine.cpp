@@ -545,10 +545,10 @@ void tst_qqmlengine::outputWarningsToStandardError()
 
     QQmlTestMessageHandler messageHandler;
 
-    QObject *o = c.create();
+    QScopedPointer<QObject> o(c.create());
 
     QVERIFY(o != nullptr);
-    delete o;
+    o.reset();
 
     QCOMPARE(messageHandler.messages().count(), 1);
     QCOMPARE(messageHandler.messages().at(0), QLatin1String("<Unknown File>:1:32: Unable to assign [undefined] to int"));
@@ -557,10 +557,10 @@ void tst_qqmlengine::outputWarningsToStandardError()
     engine.setOutputWarningsToStandardError(false);
     QCOMPARE(engine.outputWarningsToStandardError(), false);
 
-    o = c.create();
+    o.reset(c.create());
 
     QVERIFY(o != nullptr);
-    delete o;
+    o.reset();
 
     QVERIFY2(messageHandler.messages().isEmpty(), qPrintable(messageHandler.messageString()));
 }
@@ -589,15 +589,15 @@ void tst_qqmlengine::objectOwnership()
     QQmlComponent c(&engine);
     c.setData("import QtQuick 2.0; QtObject { property QtObject object: QtObject {} }", QUrl());
 
-    QObject *o = c.create();
-    QVERIFY(o != nullptr);
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
 
-    QCOMPARE(QQmlEngine::objectOwnership(o), QQmlEngine::CppOwnership);
+    QCOMPARE(QQmlEngine::objectOwnership(o.data()), QQmlEngine::CppOwnership);
 
     QObject *o2 = qvariant_cast<QObject *>(o->property("object"));
     QCOMPARE(QQmlEngine::objectOwnership(o2), QQmlEngine::JavaScriptOwnership);
 
-    delete o;
+    o.reset();
     }
     {
         QObject *ptr = createAQObjectForOwnershipTest();
@@ -608,7 +608,8 @@ void tst_qqmlengine::objectOwnership()
             QQmlEngine::setObjectOwnership(ptr, QQmlEngine::JavaScriptOwnership);
             c.setData("import QtQuick 2.0; Item { required property QtObject test; property int data: test.createAQObjectForOwnershipTest() ? 0 : 1 }", QUrl());
             QVERIFY(c.isReady());
-            QObject *o = c.createWithInitialProperties( {{"test", QVariant::fromValue(this)}} );
+            QScopedPointer<QObject> o(
+                        c.createWithInitialProperties({{"test", QVariant::fromValue(this)}}));
             QVERIFY(o != nullptr);
         }
         QTRY_VERIFY(spy.count());
@@ -622,9 +623,10 @@ void tst_qqmlengine::objectOwnership()
             QQmlEngine::setObjectOwnership(ptr, QQmlEngine::JavaScriptOwnership);
             c.setData("import QtQuick 2.0; QtObject { required property QtObject test; property var object: { var i = test; test ? 0 : 1 }  }", QUrl());
             QVERIFY(c.isReady());
-            QObject *o = c.createWithInitialProperties({{"test", QVariant::fromValue(ptr)}});
+            QScopedPointer<QObject> o(
+                        c.createWithInitialProperties({{"test", QVariant::fromValue(ptr)}}));
             QVERIFY(o != nullptr);
-            QQmlProperty testProp(o, "test");
+            QQmlProperty testProp(o.data(), "test");
             testProp.write(QVariant::fromValue<QObject*>(nullptr));
         }
         QTRY_VERIFY(spy.count());
@@ -736,9 +738,8 @@ void tst_qqmlengine::qtqmlModule()
     QQmlEngine e;
     QQmlComponent c(&e, testFile);
     if (expectedError.isEmpty()) {
-        QObject *o = c.create();
+        QScopedPointer<QObject> o(c.create());
         QVERIFY(o);
-        delete o;
     } else {
         QCOMPARE(c.errorString(), expectedError);
     }
@@ -854,7 +855,7 @@ void tst_qqmlengine::urlInterceptor()
     cs.m_interceptionPoints = interceptionPoint;
     e.addUrlInterceptor(&cs);
     QQmlComponent c(&e, testFile); //Note that this can get intercepted too
-    QObject *o = c.create();
+    QScopedPointer<QObject> o(c.create());
     if (!o)
         qDebug() << c.errorString();
     QVERIFY(o);
@@ -874,7 +875,7 @@ void tst_qqmlengine::qmlContextProperties()
     QQmlEngine e;
 
     QQmlComponent c(&e, testFileUrl("TypeofQmlProperty.qml"));
-    QObject *o = c.create();
+    QScopedPointer<QObject> o(c.create());
     if (!o) {
         qDebug() << c.errorString();
     }
@@ -890,7 +891,7 @@ void tst_qqmlengine::testGCCorruption()
     QQmlEngine e;
 
     QQmlComponent c(&e, testFileUrl("testGCCorruption.qml"));
-    QObject *o = c.create();
+    QScopedPointer<QObject> o(c.create());
     QVERIFY2(o, qPrintable(c.errorString()));
 }
 
