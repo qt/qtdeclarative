@@ -204,8 +204,6 @@ public:
     virtual QSGRenderer *createRenderer(RenderMode renderMode = RenderMode2D) = 0;
     virtual QSGTexture *compressedTextureForFactory(const QSGCompressedTextureFactory *) const;
 
-    virtual void setAttachToGraphicsContext(bool attach) { Q_UNUSED(attach); }
-
     virtual int maxTextureSize() const = 0;
 
     void registerFontengineForCleanup(QFontEngine *engine);

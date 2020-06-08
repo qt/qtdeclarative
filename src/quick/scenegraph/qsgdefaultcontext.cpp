@@ -154,28 +154,6 @@ void QSGDefaultContext::renderContextInitialized(QSGRenderContext *renderContext
 #endif
     }
 
-    static bool dumped = false;
-    if (!dumped && QSG_LOG_INFO().isDebugEnabled() && !rc->rhi()) {
-        dumped = true;
-        QSurfaceFormat format = rc->openglContext()->format();
-        QOpenGLFunctions *funcs = QOpenGLContext::currentContext()->functions();
-        qCDebug(QSG_LOG_INFO, "R/G/B/A Buffers:   %d %d %d %d", format.redBufferSize(),
-                format.greenBufferSize(), format.blueBufferSize(), format.alphaBufferSize());
-        qCDebug(QSG_LOG_INFO, "Depth Buffer:      %d", format.depthBufferSize());
-        qCDebug(QSG_LOG_INFO, "Stencil Buffer:    %d", format.stencilBufferSize());
-        qCDebug(QSG_LOG_INFO, "Samples:           %d", format.samples());
-        qCDebug(QSG_LOG_INFO, "GL_VENDOR:         %s", (const char*)funcs->glGetString(GL_VENDOR));
-        qCDebug(QSG_LOG_INFO, "GL_RENDERER:       %s",
-                (const char*)funcs->glGetString(GL_RENDERER));
-        qCDebug(QSG_LOG_INFO, "GL_VERSION:        %s", (const char*)funcs->glGetString(GL_VERSION));
-        QByteArrayList exts = rc->openglContext()->extensions().values();
-        std::sort(exts.begin(), exts.end());
-        qCDebug(QSG_LOG_INFO, "GL_EXTENSIONS:    %s", exts.join(' ').constData());
-        qCDebug(QSG_LOG_INFO, "Max Texture Size: %d", rc->maxTextureSize());
-        qCDebug(QSG_LOG_INFO, "Debug context:    %s",
-                format.testOption(QSurfaceFormat::DebugContext) ? "true" : "false");
-    }
-
     m_mutex.unlock();
 }
 
@@ -320,11 +298,6 @@ void *QSGDefaultContext::getResource(QQuickWindow *window, Resource resource) co
     QSGRhiSupport *rhiSupport = QSGRhiSupport::instance();
 
     switch (resource) {
-    case OpenGLContextResource:
-        if (rhiSupport->graphicsApi() == OpenGL)
-            return rc->openglContext();
-        else
-            return const_cast<void *>(rhiSupport->rifResource(resource, rc, window));
 #if QT_CONFIG(vulkan)
     case VulkanInstanceResource:
         return window->vulkanInstance();

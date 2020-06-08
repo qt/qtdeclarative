@@ -268,7 +268,8 @@ void QSGDefaultPainterNode::updateRenderTarget()
             m_actualRenderTarget == QQuickPaintedItem::InvertedYFramebufferObject)
     {
         Q_ASSERT(!m_context->rhi());
-        const QOpenGLContext *ctx = m_context->openglContext();
+        // ### glpurge
+        const QOpenGLContext *ctx = nullptr; // m_context->openglContext();
         if (m_fbo && !m_dirtyGeometry && (!ctx->format().samples() || !m_multisamplingSupported))
             return;
 

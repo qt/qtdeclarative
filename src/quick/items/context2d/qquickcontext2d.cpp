@@ -4375,8 +4375,9 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
         m_texture->moveToThread(renderThread);
 #if QT_CONFIG(opengl)
     if (m_renderTarget == QQuickCanvasItem::FramebufferObject && renderThread != sceneGraphThread) {
-         auto openglRenderContext = static_cast<const QSGDefaultRenderContext *>(QQuickWindowPrivate::get(window)->context);
-         QOpenGLContext *cc = openglRenderContext->openglContext();
+         //auto openglRenderContext = static_cast<const QSGDefaultRenderContext *>(QQuickWindowPrivate::get(window)->context);
+         // ### glpurge
+         QOpenGLContext *cc = nullptr; // openglRenderContext->openglContext();
          m_surface.reset(new QOffscreenSurface);
          m_surface->setFormat(window->format());
          m_surface->create();

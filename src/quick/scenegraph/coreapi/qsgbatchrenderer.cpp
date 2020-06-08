@@ -1036,7 +1036,7 @@ void Renderer::invalidateAndRecycleBatch(Batch *b)
 
 void Renderer::map(Buffer *buffer, int byteSize, bool isIndexBuf)
 {
-    if (!m_context->hasBrokenIndexBufferObjects() && m_visualizer->mode() == Visualizer::VisualizeNothing) {
+    if (m_visualizer->mode() == Visualizer::VisualizeNothing) {
         // Common case, use a shared memory pool for uploading vertex data to avoid
         // excessive reevaluation
         QDataBuffer<char> &pool = m_context->separateIndexBuffer() && isIndexBuf

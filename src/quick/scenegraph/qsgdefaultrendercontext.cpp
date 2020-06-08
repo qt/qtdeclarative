@@ -40,7 +40,6 @@
 #include "qsgdefaultrendercontext_p.h"
 
 #include <QtGui/QGuiApplication>
-#include <QOpenGLFramebufferObject>
 
 #include <QtQuick/private/qsgbatchrenderer_p.h>
 #include <QtQuick/private/qsgrenderer_p.h>
@@ -52,17 +51,11 @@
 
 QT_BEGIN_NAMESPACE
 
-#define QSG_RENDERCONTEXT_PROPERTY "_q_sgrendercontext"
-
 QSGDefaultRenderContext::QSGDefaultRenderContext(QSGContext *context)
     : QSGRenderContext(context)
     , m_rhi(nullptr)
-    , m_gl(nullptr)
-    , m_depthStencilManager(nullptr)
     , m_maxTextureSize(0)
-    , m_brokenIBOs(false)
     , m_serializedRender(false)
-    , m_attachToGLContext(true)
     , m_rhiAtlasManager(nullptr)
     , m_currentFrameCommandBuffer(nullptr)
     , m_currentFrameRenderPass(nullptr)
@@ -99,7 +92,7 @@ void QSGDefaultRenderContext::initialize(const QSGRenderContext::InitParams *par
 
 void QSGDefaultRenderContext::invalidate()
 {
-    if (!m_gl && !m_rhi)
+    if (!m_rhi)
         return;
 
     qDeleteAll(m_texturesToDelete);
@@ -137,22 +130,16 @@ void QSGDefaultRenderContext::invalidate()
     // sequence. (see qsgdefaultglyphnode_p.cpp's init())
     for (QSet<QFontEngine *>::const_iterator it = m_fontEnginesToClean.constBegin(),
          end = m_fontEnginesToClean.constEnd(); it != end; ++it) {
-        (*it)->clearGlyphCache(m_gl ? (void *) m_gl : (void *) m_rhi);
+        (*it)->clearGlyphCache(m_rhi);
         if (!(*it)->ref.deref())
             delete *it;
     }
     m_fontEnginesToClean.clear();
 
-    delete m_depthStencilManager;
-    m_depthStencilManager = nullptr;
 
     qDeleteAll(m_glyphCaches);
     m_glyphCaches.clear();
 
-    if (m_gl && m_gl->property(QSG_RENDERCONTEXT_PROPERTY) == QVariant::fromValue(this))
-        m_gl->setProperty(QSG_RENDERCONTEXT_PROPERTY, QVariant());
-
-    m_gl = nullptr;
     m_rhi = nullptr;
 
     if (m_sg)
@@ -224,39 +211,6 @@ void QSGDefaultRenderContext::endNextRhiFrame(QSGRenderer *renderer)
     m_currentFrameRenderPass = nullptr;
 }
 
-/*!
-    Returns a shared pointer to a depth stencil buffer that can be used with \a fbo.
-*/
-QSharedPointer<QSGDepthStencilBuffer> QSGDefaultRenderContext::depthStencilBufferForFbo(QOpenGLFramebufferObject *fbo)
-{
-    if (!m_gl)
-        return QSharedPointer<QSGDepthStencilBuffer>();
-    QSGDepthStencilBufferManager *manager = depthStencilBufferManager();
-    QSGDepthStencilBuffer::Format format;
-    format.size = fbo->size();
-    format.samples = fbo->format().samples();
-    format.attachments = QSGDepthStencilBuffer::DepthAttachment | QSGDepthStencilBuffer::StencilAttachment;
-    QSharedPointer<QSGDepthStencilBuffer> buffer = manager->bufferForFormat(format);
-    if (buffer.isNull()) {
-        buffer = QSharedPointer<QSGDepthStencilBuffer>(new QSGDefaultDepthStencilBuffer(m_gl, format));
-        manager->insertBuffer(buffer);
-    }
-    return buffer;
-}
-
-/*!
-    Returns a pointer to the context's depth/stencil buffer manager. This is useful for custom
-    implementations of \l depthStencilBufferForFbo().
-*/
-QSGDepthStencilBufferManager *QSGDefaultRenderContext::depthStencilBufferManager()
-{
-    if (!m_gl)
-        return nullptr;
-    if (!m_depthStencilManager)
-        m_depthStencilManager = new QSGDepthStencilBufferManager(m_gl);
-    return m_depthStencilManager;
-}
-
 QSGTexture *QSGDefaultRenderContext::createTexture(const QImage &image, uint flags) const
 {
     bool atlas = flags & CreateTexture_Atlas;
@@ -319,17 +273,6 @@ QString QSGDefaultRenderContext::fontKey(const QRawFont &font)
 void QSGDefaultRenderContext::initializeRhiShader(QSGMaterialShader *shader, QShader::Variant shaderVariant)
 {
     QSGMaterialShaderPrivate::get(shader)->prepare(shaderVariant);
-}
-
-void QSGDefaultRenderContext::setAttachToGraphicsContext(bool attach)
-{
-    Q_ASSERT(!isValid());
-    m_attachToGLContext = attach;
-}
-
-QSGDefaultRenderContext *QSGDefaultRenderContext::from(QOpenGLContext *context)
-{
-    return qobject_cast<QSGDefaultRenderContext *>(context->property(QSG_RENDERCONTEXT_PROPERTY).value<QObject *>());
 }
 
 bool QSGDefaultRenderContext::separateIndexBuffer() const

@@ -54,25 +54,13 @@
 #include <QtQuick/private/qsgcontext_p.h>
 #include <QtGui/private/qshader_p.h>
 
-#if QT_CONFIG(opengl)
-#include <QtQuick/private/qsgdepthstencilbuffer_p.h>
-#endif
-
 QT_BEGIN_NAMESPACE
 
 class QRhi;
 class QRhiCommandBuffer;
 class QRhiRenderPassDescriptor;
-class QOpenGLContext;
 class QSGMaterialShader;
-class QOpenGLFramebufferObject;
-class QSGDepthStencilBufferManager;
-class QSGDepthStencilBuffer;
 class QSurface;
-
-namespace QSGOpenGLAtlasTexture {
-    class Manager;
-}
 
 namespace QSGRhiAtlasTexture {
     class Manager;
@@ -85,8 +73,7 @@ public:
     QSGDefaultRenderContext(QSGContext *context);
 
     QRhi *rhi() const override { return m_rhi; }
-    QOpenGLContext *openglContext() const { return m_gl; }
-    bool isValid() const override { return m_gl || m_rhi; }
+    bool isValid() const override { return m_rhi != nullptr; }
 
     static const int INIT_PARAMS_MAGIC = 0x50E;
     struct InitParams : public QSGRenderContext::InitParams {
@@ -121,20 +108,12 @@ public:
 
     QSGDistanceFieldGlyphCache *distanceFieldGlyphCache(const QRawFont &font) override;
 
-    virtual QSharedPointer<QSGDepthStencilBuffer> depthStencilBufferForFbo(QOpenGLFramebufferObject *fbo);
-    QSGDepthStencilBufferManager *depthStencilBufferManager();
-
     QSGTexture *createTexture(const QImage &image, uint flags) const override;
     QSGRenderer *createRenderer(RenderMode renderMode = RenderMode2D) override;
     QSGTexture *compressedTextureForFactory(const QSGCompressedTextureFactory *factory) const override;
 
     virtual void initializeRhiShader(QSGMaterialShader *shader, QShader::Variant shaderVariant);
 
-    void setAttachToGraphicsContext(bool attach) override;
-
-    static QSGDefaultRenderContext *from(QOpenGLContext *context);
-
-    bool hasBrokenIndexBufferObjects() const { return m_brokenIBOs; }
     int maxTextureSize() const override { return m_maxTextureSize; }
     bool separateIndexBuffer() const;
 
@@ -165,12 +144,8 @@ protected:
 
     InitParams m_initParams;
     QRhi *m_rhi;
-    QOpenGLContext *m_gl;
-    QSGDepthStencilBufferManager *m_depthStencilManager;
     int m_maxTextureSize;
-    bool m_brokenIBOs;
     bool m_serializedRender;
-    bool m_attachToGLContext;
     QSGRhiAtlasTexture::Manager *m_rhiAtlasManager;
     QRhiCommandBuffer *m_currentFrameCommandBuffer;
     QRhiRenderPassDescriptor *m_currentFrameRenderPass;
