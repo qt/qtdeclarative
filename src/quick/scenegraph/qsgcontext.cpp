@@ -233,7 +233,7 @@ public:
 
     \brief The QSGContext holds the scene graph entry points for one QML engine.
 
-    The context is not ready for use until it has a QOpenGLContext. Once that happens,
+    The context is not ready for use until it has a QRhi. Once that happens,
     the scene graph population can start.
 
     \internal

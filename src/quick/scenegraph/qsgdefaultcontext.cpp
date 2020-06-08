@@ -135,23 +135,17 @@ void QSGDefaultContext::renderContextInitialized(QSGRenderContext *renderContext
             m_antialiasingMethod = rc->msaaSampleCount() > 1 ? MsaaAntialiasing : VertexAntialiasing;
     }
 
-    // With OpenGL ES, except for Angle on Windows, use GrayAntialiasing, unless
+    // With OpenGL ES, use GrayAntialiasing, unless
     // some value had been requested explicitly. This could not be decided
     // before without a context. Now the context is ready.
     if (!m_distanceFieldAntialiasingDecided) {
         m_distanceFieldAntialiasingDecided = true;
-#ifndef Q_OS_WIN32
-        if (rc->rhi()) {
-            if (rc->rhi()->backend() == QRhi::OpenGLES2
-                    && static_cast<const QRhiGles2NativeHandles *>(rc->rhi()->nativeHandles())->context->isOpenGLES())
-            {
-                    m_distanceFieldAntialiasing = QSGGlyphNode::GrayAntialiasing;
-            }
-        } else {
-            if (rc->openglContext()->isOpenGLES())
-                m_distanceFieldAntialiasing = QSGGlyphNode::GrayAntialiasing;
+        Q_ASSERT(rc->rhi());
+        if (rc->rhi()->backend() == QRhi::OpenGLES2
+                && static_cast<const QRhiGles2NativeHandles *>(rc->rhi()->nativeHandles())->context->isOpenGLES())
+        {
+            m_distanceFieldAntialiasing = QSGGlyphNode::GrayAntialiasing;
         }
-#endif
     }
 
     m_mutex.unlock();
