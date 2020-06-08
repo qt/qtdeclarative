@@ -39,11 +39,6 @@
 
 #include "qsggeometry.h"
 #include "qsggeometry_p.h"
-#if QT_CONFIG(opengl)
-# include <qopenglcontext.h>
-# include <qopenglfunctions.h>
-# include <private/qopenglextensions_p.h>
-#endif
 
 #ifdef Q_OS_QNX
 #include <malloc.h>
@@ -441,15 +436,6 @@ QSGGeometry::QSGGeometry(const QSGGeometry::AttributeSet &attributes,
     Q_UNUSED(m_reserved_bits);
     Q_ASSERT(m_attributes.count > 0);
     Q_ASSERT(m_attributes.stride > 0);
-#if QT_CONFIG(opengl)
-    Q_ASSERT_X(indexType != GL_UNSIGNED_INT
-               || !QOpenGLContext::currentContext() // rhi, support for uint cannot be checked here
-               || static_cast<QOpenGLExtensions *>(QOpenGLContext::currentContext()->functions())
-                  ->hasOpenGLExtension(QOpenGLExtensions::ElementIndexUint),
-               "QSGGeometry::QSGGeometry",
-               "GL_UNSIGNED_INT is not supported, geometry will not render"
-               );
-#endif
     if (indexType != UnsignedByteType
         && indexType != UnsignedShortType
         && indexType != UnsignedIntType) {
