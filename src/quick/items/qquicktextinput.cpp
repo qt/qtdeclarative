@@ -1544,11 +1544,11 @@ void QQuickTextInput::mouseDoubleClickEvent(QMouseEvent *event)
 #if QT_CONFIG(im)
         d->commitPreedit();
 #endif
-        int cursor = d->positionAt(event->localPos());
+        int cursor = d->positionAt(event->position());
         d->selectWordAtPos(cursor);
         event->setAccepted(true);
         if (!d->hasPendingTripleClick()) {
-            d->tripleClickStartPoint = event->localPos();
+            d->tripleClickStartPoint = event->position();
             d->tripleClickTimer.start();
         }
     } else {
@@ -1562,7 +1562,7 @@ void QQuickTextInput::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextInput);
 
-    d->pressPos = event->localPos();
+    d->pressPos = event->position();
 
     if (d->sendMouseEventToInputContext(event))
         return;
@@ -1580,7 +1580,7 @@ void QQuickTextInput::mousePressEvent(QMouseEvent *event)
     }
 
     bool mark = (event->modifiers() & Qt::ShiftModifier) && d->selectByMouse;
-    int cursor = d->positionAt(event->localPos());
+    int cursor = d->positionAt(event->position());
     d->moveCursor(cursor, mark);
 
     if (d->focusOnPress && !qGuiApp->styleHints()->setFocusOnTouchRelease())
@@ -1594,20 +1594,20 @@ void QQuickTextInput::mouseMoveEvent(QMouseEvent *event)
     Q_D(QQuickTextInput);
 
     if (d->selectPressed) {
-        if (qAbs(int(event->localPos().x() - d->pressPos.x())) > QGuiApplication::styleHints()->startDragDistance())
+        if (qAbs(int(event->position().x() - d->pressPos.x())) > QGuiApplication::styleHints()->startDragDistance())
             setKeepMouseGrab(true);
 
 #if QT_CONFIG(im)
         if (d->composeMode()) {
             // start selection
             int startPos = d->positionAt(d->pressPos);
-            int currentPos = d->positionAt(event->localPos());
+            int currentPos = d->positionAt(event->position());
             if (startPos != currentPos)
                 d->setSelection(startPos, currentPos - startPos);
         } else
 #endif
         {
-            moveCursorSelection(d->positionAt(event->localPos()), d->mouseSelectionMode);
+            moveCursorSelection(d->positionAt(event->position()), d->mouseSelectionMode);
         }
         event->setAccepted(true);
     } else {
@@ -1646,7 +1646,7 @@ bool QQuickTextInputPrivate::sendMouseEventToInputContext(QMouseEvent *event)
 {
 #if QT_CONFIG(im)
     if (composeMode()) {
-        int tmp_cursor = positionAt(event->localPos());
+        int tmp_cursor = positionAt(event->position());
         int mousePos = tmp_cursor - m_cursor;
         if (mousePos >= 0 && mousePos <= m_textLayout.preeditAreaText().length()) {
             if (event->type() == QEvent::MouseButtonRelease) {

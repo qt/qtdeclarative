@@ -861,7 +861,7 @@ static QMouseEvent *touchToMouseEvent(QEvent::Type type, const QTouchEvent::Touc
 {
     Q_ASSERT(QCoreApplication::testAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents));
     // The touch point local position and velocity are not yet transformed.
-    QMouseEvent *me = new QMouseEvent(type, transformNeeded ? item->mapFromScene(p.scenePos()) : p.pos(), p.scenePos(), p.screenPos(),
+    QMouseEvent *me = new QMouseEvent(type, transformNeeded ? item->mapFromScene(p.scenePosition()) : p.position(), p.scenePosition(), p.globalPosition(),
                                       Qt::LeftButton, (type == QEvent::MouseButtonRelease ? Qt::NoButton : Qt::LeftButton), event->modifiers());
     me->setAccepted(true);
     me->setTimestamp(event->timestamp());
@@ -934,7 +934,7 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
         const QTouchEvent::TouchPoint &p = event->touchPoints().at(i);
         // A new touch point
         if (touchMouseId == -1 && p.state() & Qt::TouchPointPressed) {
-            QPointF pos = item->mapFromScene(p.scenePos());
+            QPointF pos = item->mapFromScene(p.scenePosition());
 
             // probably redundant, we check bounds in the calling function (matchingNewPoints)
             if (!item->contains(pos))
@@ -954,7 +954,7 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
                 if (auto pointerEventPoint = pointerEvent->pointById(p.id()))
                     pointerEventPoint->setGrabberItem(item);
 
-                if (checkIfDoubleTapped(event->timestamp(), p.screenPos().toPoint())) {
+                if (checkIfDoubleTapped(event->timestamp(), p.globalPosition().toPoint())) {
                     // since we synth the mouse event from from touch, we respect the
                     // QPlatformTheme::TouchDoubleTapDistance instead of QPlatformTheme::MouseDoubleClickDistance
                     QScopedPointer<QMouseEvent> mouseDoubleClick(touchToMouseEvent(QEvent::MouseButtonDblClick, p, event.data(), item, false));
@@ -973,7 +973,7 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
             if (p.state() & Qt::TouchPointMoved) {
                 if (touchMousePressTimestamp != 0) {
                     const int doubleTapDistance = QGuiApplicationPrivate::platformTheme()->themeHint(QPlatformTheme::TouchDoubleTapDistance).toInt();
-                    const QPoint moveDelta = p.screenPos().toPoint() - touchMousePressPos;
+                    const QPoint moveDelta = p.globalPosition().toPoint() - touchMousePressPos;
                     if (moveDelta.x() >= doubleTapDistance || moveDelta.y() >= doubleTapDistance)
                         touchMousePressTimestamp = 0;   // Got dragged too far, dismiss the double tap
                 }
@@ -991,12 +991,12 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
                     // hover for touch???
                     QScopedPointer<QMouseEvent> me(touchToMouseEvent(QEvent::MouseMove, p, event.data(), item, false));
                     if (lastMousePosition.isNull())
-                        lastMousePosition = me->windowPos();
+                        lastMousePosition = me->scenePosition();
                     QPointF last = lastMousePosition;
-                    lastMousePosition = me->windowPos();
+                    lastMousePosition = me->scenePosition();
 
                     bool accepted = me->isAccepted();
-                    bool delivered = deliverHoverEvent(contentItem, me->windowPos(), last, me->modifiers(), me->timestamp(), accepted);
+                    bool delivered = deliverHoverEvent(contentItem, me->scenePosition(), last, me->modifiers(), me->timestamp(), accepted);
                     if (!delivered) {
                         //take care of any exits
                         accepted = clearHover(me->timestamp());
@@ -1010,7 +1010,7 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
                     QScopedPointer<QMouseEvent> me(touchToMouseEvent(QEvent::MouseButtonRelease, p, event.data(), mouseGrabberItem, false));
                     QCoreApplication::sendEvent(item, me.data());
 
-                    if (item->acceptHoverEvents() && p.screenPos() != QGuiApplicationPrivate::lastCursorPosition) {
+                    if (item->acceptHoverEvents() && p.globalPosition() != QGuiApplicationPrivate::lastCursorPosition) {
                         QPointF localMousePos(qInf(), qInf());
                         if (QWindow *w = item->window())
                             localMousePos = item->mapFromScene(w->mapFromGlobal(QGuiApplicationPrivate::lastCursorPosition.toPoint()));
@@ -1138,8 +1138,8 @@ void QQuickWindowPrivate::translateTouchEvent(QTouchEvent *touchEvent)
     QList<QTouchEvent::TouchPoint> touchPoints = touchEvent->touchPoints();
     for (int i = 0; i < touchPoints.count(); ++i) {
         QTouchEvent::TouchPoint &touchPoint = touchPoints[i];
-        touchPoint.setScenePos(touchPoint.pos());
-        touchPoint.setStartScenePos(touchPoint.startPos());
+        touchPoint.setScenePos(touchPoint.position());
+        touchPoint.setStartScenePos(touchPoint.pressPosition());
         touchPoint.setLastScenePos(touchPoint.lastPos());
     }
     touchEvent->setTouchPoints(touchPoints);
@@ -2011,8 +2011,8 @@ QMouseEvent *QQuickWindowPrivate::cloneMouseEvent(QMouseEvent *event, QPointF *t
     int caps = QGuiApplicationPrivate::mouseEventCaps(event);
     QVector2D velocity = QGuiApplicationPrivate::mouseEventVelocity(event);
     QMouseEvent *me = new QMouseEvent(event->type(),
-                                      transformedLocalPos ? *transformedLocalPos : event->localPos(),
-                                      event->windowPos(), event->screenPos(),
+                                      transformedLocalPos ? *transformedLocalPos : event->position(),
+                                      event->scenePosition(), event->globalPosition(),
                                       event->button(), event->buttons(), event->modifiers());
     QGuiApplicationPrivate::setMouseEventCapsAndVelocity(me, caps, velocity);
     QGuiApplicationPrivate::setMouseEventSource(me, QGuiApplicationPrivate::mouseEventSource(event));
@@ -2428,7 +2428,7 @@ void QQuickWindowPrivate::handleTouchEvent(QTouchEvent *event)
         if (point.state() == Qt::TouchPointReleased) {
             lastMousePosition = QPointF();
         } else {
-            lastMousePosition = point.pos();
+            lastMousePosition = point.position();
         }
     }
 
@@ -2479,7 +2479,7 @@ void QQuickWindowPrivate::handleMouseEvent(QMouseEvent *event)
         event->accept();
         return;
     }
-    qCDebug(DBG_MOUSE) << "QQuickWindow::handleMouseEvent()" << event->type() << event->localPos() << event->button() << event->buttons();
+    qCDebug(DBG_MOUSE) << "QQuickWindow::handleMouseEvent()" << event->type() << event->position() << event->button() << event->buttons();
 
     switch (event->type()) {
     case QEvent::MouseButtonPress:
@@ -2500,20 +2500,20 @@ void QQuickWindowPrivate::handleMouseEvent(QMouseEvent *event)
         break;
     case QEvent::MouseMove:
         Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMouseMove,
-                              event->localPos().x(), event->localPos().y());
+                              event->position().x(), event->localPos().y());
 
         qCDebug(DBG_HOVER_TRACE) << this;
 
     #if QT_CONFIG(cursor)
-        updateCursor(event->windowPos());
+        updateCursor(event->scenePosition());
     #endif
 
         if (!pointerEventInstance(QQuickPointerDevice::genericMouseDevice())->point(0)->exclusiveGrabber()) {
-            QPointF last = lastMousePosition.isNull() ? event->windowPos() : lastMousePosition;
-            lastMousePosition = event->windowPos();
+            QPointF last = lastMousePosition.isNull() ? event->scenePosition() : lastMousePosition;
+            lastMousePosition = event->scenePosition();
 
             bool accepted = event->isAccepted();
-            bool delivered = deliverHoverEvent(contentItem, event->windowPos(), last, event->modifiers(), event->timestamp(), accepted);
+            bool delivered = deliverHoverEvent(contentItem, event->scenePosition(), last, event->modifiers(), event->timestamp(), accepted);
             if (!delivered) {
                 //take care of any exits
                 accepted = clearHover(event->timestamp());
@@ -3034,13 +3034,13 @@ void QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QEvent *e
         if (event->type() == QEvent::Drop) {
             QDropEvent *e = static_cast<QDropEvent *>(event);
             for (e->setAccepted(false); !e->isAccepted() && grabItem != grabber->end(); grabItem = grabber->release(grabItem)) {
-                QPointF p = (**grabItem)->mapFromScene(e->pos());
+                QPointF p = (**grabItem)->mapFromScene(e->position().toPoint());
                 QDropEvent translatedEvent(
                         p.toPoint(),
                         e->possibleActions(),
                         e->mimeData(),
-                        e->mouseButtons(),
-                        e->keyboardModifiers());
+                        e->buttons(),
+                        e->modifiers());
                 QQuickDropEventEx::copyActions(&translatedEvent, *e);
                 QCoreApplication::sendEvent(**grabItem, &translatedEvent);
                 e->setAccepted(translatedEvent.isAccepted());
@@ -3064,11 +3064,11 @@ void QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QEvent *e
 
             // Look for any other potential drop targets that are higher than the current ones
             QDragEnterEvent enterEvent(
-                    moveEvent->pos(),
+                    moveEvent->position().toPoint(),
                     moveEvent->possibleActions(),
                     moveEvent->mimeData(),
-                    moveEvent->mouseButtons(),
-                    moveEvent->keyboardModifiers());
+                    moveEvent->buttons(),
+                    moveEvent->modifiers());
             QQuickDropEventEx::copyActions(&enterEvent, *moveEvent);
             event->setAccepted(deliverDragEvent(grabber, contentItem, &enterEvent, &currentGrabItems));
 
@@ -3078,11 +3078,11 @@ void QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QEvent *e
                     currentGrabItems.remove(i);
                     // Still grabbed: send move event
                     QDragMoveEvent translatedEvent(
-                            (**grabItem)->mapFromScene(moveEvent->pos()).toPoint(),
+                            (**grabItem)->mapFromScene(moveEvent->position().toPoint()).toPoint(),
                             moveEvent->possibleActions(),
                             moveEvent->mimeData(),
-                            moveEvent->mouseButtons(),
-                            moveEvent->keyboardModifiers());
+                            moveEvent->buttons(),
+                            moveEvent->modifiers());
                     QQuickDropEventEx::copyActions(&translatedEvent, *moveEvent);
                     QCoreApplication::sendEvent(**grabItem, &translatedEvent);
                     event->setAccepted(translatedEvent.isAccepted());
@@ -3101,11 +3101,11 @@ void QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QEvent *e
     if (event->type() == QEvent::DragEnter || event->type() == QEvent::DragMove) {
         QDragMoveEvent *e = static_cast<QDragMoveEvent *>(event);
         QDragEnterEvent enterEvent(
-                e->pos(),
+                e->position().toPoint(),
                 e->possibleActions(),
                 e->mimeData(),
-                e->mouseButtons(),
-                e->keyboardModifiers());
+                e->buttons(),
+                e->modifiers());
         QQuickDropEventEx::copyActions(&enterEvent, *e);
         event->setAccepted(deliverDragEvent(grabber, contentItem, &enterEvent));
     }
@@ -3116,7 +3116,7 @@ bool QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQuickIte
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
     if (!item->isVisible() || !item->isEnabled() || QQuickItemPrivate::get(item)->culled)
         return false;
-    QPointF p = item->mapFromScene(event->pos());
+    QPointF p = item->mapFromScene(event->position().toPoint());
     bool itemContained = item->contains(p);
 
     if (!itemContained && itemPrivate->flags & QQuickItem::ItemClipsChildrenToShape) {
@@ -3124,11 +3124,11 @@ bool QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQuickIte
     }
 
     QDragEnterEvent enterEvent(
-            event->pos(),
+            event->position().toPoint(),
             event->possibleActions(),
             event->mimeData(),
-            event->mouseButtons(),
-            event->keyboardModifiers());
+            event->buttons(),
+            event->modifiers());
     QQuickDropEventEx::copyActions(&enterEvent, *event);
     QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
 
@@ -3154,8 +3154,8 @@ bool QQuickWindowPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQuickIte
                     p.toPoint(),
                     event->possibleActions(),
                     event->mimeData(),
-                    event->mouseButtons(),
-                    event->keyboardModifiers(),
+                    event->buttons(),
+                    event->modifiers(),
                     event->type());
             QQuickDropEventEx::copyActions(&translatedEvent, *event);
             translatedEvent.setAccepted(event->isAccepted());

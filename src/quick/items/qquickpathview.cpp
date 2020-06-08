@@ -1657,16 +1657,16 @@ void QQuickPathViewPrivate::handleMousePressEvent(QMouseEvent *event)
     int idx = 0;
     for (; idx < items.count(); ++idx) {
         QQuickItem *item = items.at(idx);
-        if (item->contains(item->mapFromScene(event->windowPos())))
+        if (item->contains(item->mapFromScene(event->scenePosition())))
             break;
     }
     if (idx == items.count() && qFuzzyIsNull(dragMargin))  // didn't click on an item
         return;
 
-    startPoint = pointNear(event->localPos(), &startPc);
-    startPos = event->localPos();
+    startPoint = pointNear(event->position(), &startPc);
+    startPos = event->position();
     if (idx == items.count()) {
-        qreal distance = qAbs(event->localPos().x() - startPoint.x()) + qAbs(event->localPos().y() - startPoint.y());
+        qreal distance = qAbs(event->position().x() - startPoint.x()) + qAbs(event->position().y() - startPoint.y());
         if (distance > dragMargin)
             return;
     }
@@ -1703,9 +1703,9 @@ void QQuickPathViewPrivate::handleMouseMoveEvent(QMouseEvent *event)
 
     qint64 currentTimestamp = computeCurrentTime(event);
     qreal newPc;
-    QPointF pathPoint = pointNear(event->localPos(), &newPc);
+    QPointF pathPoint = pointNear(event->position(), &newPc);
     if (!stealMouse) {
-        QPointF posDelta = event->localPos() - startPos;
+        QPointF posDelta = event->position() - startPos;
         if (QQuickWindowPrivate::dragOverThreshold(posDelta.y(), Qt::YAxis, event) || QQuickWindowPrivate::dragOverThreshold(posDelta.x(), Qt::XAxis, event)) {
             // The touch has exceeded the threshold. If the movement along the path is close to the drag threshold
             // then we'll assume that this gesture targets the PathView. This ensures PathView gesture grabbing
@@ -1840,7 +1840,7 @@ void QQuickPathViewPrivate::handleMouseReleaseEvent(QMouseEvent *event)
 bool QQuickPathView::sendMouseEvent(QMouseEvent *event)
 {
     Q_D(QQuickPathView);
-    QPointF localPos = mapFromScene(event->windowPos());
+    QPointF localPos = mapFromScene(event->scenePosition());
 
     QQuickWindow *c = window();
     QQuickItem *grabber = c ? c->mouseGrabberItem() : nullptr;

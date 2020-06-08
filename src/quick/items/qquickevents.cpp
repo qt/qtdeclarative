@@ -1206,7 +1206,7 @@ QQuickEventTouchPoint::QQuickEventTouchPoint(QQuickPointerTouchEvent *parent)
 
 void QQuickEventTouchPoint::reset(const QTouchEvent::TouchPoint &tp, ulong timestamp)
 {
-    QQuickEventPoint::reset(tp.state(), tp.scenePos(), tp.id(), timestamp, tp.velocity());
+    QQuickEventPoint::reset(tp.state(), tp.scenePosition(), tp.id(), timestamp, tp.velocity());
     m_exclusiveGrabber.clear();
     m_passiveGrabbers.clear();
     m_rotation = tp.rotation();
@@ -1396,7 +1396,7 @@ QQuickPointerEvent *QQuickPointerMouseEvent::reset(QEvent *event)
     default:
         break;
     }
-    m_point->reset(state, ev->windowPos(), quint64(1) << 24, ev->timestamp());  // mouse has device ID 1
+    m_point->reset(state, ev->scenePosition(), quint64(1) << 24, ev->timestamp());  // mouse has device ID 1
     return this;
 }
 
@@ -1509,7 +1509,7 @@ QQuickPointerEvent *QQuickPointerNativeGestureEvent::reset(QEvent *event)
         break;
     }
     quint64 deviceId = QTouchDevicePrivate::get(const_cast<QTouchDevice *>(ev->device()))->id; // a bit roundabout since QTouchDevice::mTouchDeviceId is protected
-    m_point->reset(state, ev->windowPos(), deviceId << 24, ev->timestamp());
+    m_point->reset(state, ev->scenePosition(), deviceId << 24, ev->timestamp());
     return this;
 }
 #endif // QT_CONFIG(gestures)
@@ -1919,8 +1919,8 @@ QMouseEvent *QQuickPointerTouchEvent::syntheticMouseEvent(int pointID, QQuickIte
         Q_ASSERT(false);
         return nullptr;
     }
-    m_synthMouseEvent = QMouseEvent(type, relativeTo->mapFromScene(p->scenePos()),
-        p->scenePos(), p->screenPos(), Qt::LeftButton, buttons, m_event->modifiers());
+    m_synthMouseEvent = QMouseEvent(type, relativeTo->mapFromScene(p->scenePosition()),
+        p->scenePosition(), p->globalPosition(), Qt::LeftButton, buttons, m_event->modifiers());
     m_synthMouseEvent.setAccepted(true);
     m_synthMouseEvent.setTimestamp(m_event->timestamp());
     // In the future we will try to always have valid velocity in every QQuickEventPoint.
@@ -1980,7 +1980,7 @@ void QQuickEventTabletPoint::reset(const QTabletEvent *ev)
     default:
         break;
     }
-    QQuickEventPoint::reset(state, ev->posF(), 1, ev->timestamp());
+    QQuickEventPoint::reset(state, ev->position(), 1, ev->timestamp());
     m_rotation = ev->rotation();
     m_pressure = ev->pressure();
     m_tangentialPressure = ev->tangentialPressure();
@@ -2176,9 +2176,9 @@ QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(QQuickItem *item, bool i
                 anyStationaryWithModifiedPropertyInside = true;
             eventStates |= tp->state();
             QTouchEvent::TouchPoint tpCopy = *tp;
-            tpCopy.setPos(item->mapFromScene(tpCopy.scenePos()));
+            tpCopy.setPos(item->mapFromScene(tpCopy.scenePosition()));
             tpCopy.setLastPos(item->mapFromScene(tpCopy.lastScenePos()));
-            tpCopy.setStartPos(item->mapFromScene(tpCopy.startScenePos()));
+            tpCopy.setStartPos(item->mapFromScene(tpCopy.scenePressPosition()));
             tpCopy.setEllipseDiameters(tpCopy.ellipseDiameters());
             tpCopy.setVelocity(transformMatrix.mapVector(tpCopy.velocity()).toVector2D());
             touchPoints << tpCopy;

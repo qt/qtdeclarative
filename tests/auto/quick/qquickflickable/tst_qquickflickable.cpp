@@ -119,7 +119,7 @@ protected:
         }
         touchPointStates << touchpoint.state();
         ++touchEvents;
-        m_pos = touchpoint.pos();
+        m_pos = touchpoint.position();
         emit posChanged();
     }
 

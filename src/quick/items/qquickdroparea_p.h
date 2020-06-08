@@ -85,8 +85,8 @@ class QQuickDropEvent : public QObject
 public:
     QQuickDropEvent(QQuickDropAreaPrivate *d, QDropEvent *event) : d(d), event(event) {}
 
-    qreal x() const { return event->pos().x(); }
-    qreal y() const { return event->pos().y(); }
+    qreal x() const { return event->position().x(); }
+    qreal y() const { return event->position().y(); }
 
     QObject *source() const;
 

@@ -1349,7 +1349,7 @@ void tst_qquickitem::touchEventAcceptIgnore()
         QTouchEvent::TouchPoint point;
         point.setId(1);
         point.setPos(QPointF(50, 50));
-        point.setScreenPos(point.pos());
+        point.setScreenPos(point.position());
         point.setState(Qt::TouchPointPressed);
 
         QTouchEvent event(QEvent::TouchBegin, device,
@@ -1373,7 +1373,7 @@ void tst_qquickitem::touchEventAcceptIgnore()
         QTouchEvent::TouchPoint point;
         point.setId(1);
         point.setPos(QPointF(60, 60));
-        point.setScreenPos(point.pos());
+        point.setScreenPos(point.position());
         point.setState(Qt::TouchPointMoved);
 
         QTouchEvent event(QEvent::TouchUpdate, device,
@@ -1397,7 +1397,7 @@ void tst_qquickitem::touchEventAcceptIgnore()
         QTouchEvent::TouchPoint point;
         point.setId(1);
         point.setPos(QPointF(60, 60));
-        point.setScreenPos(point.pos());
+        point.setScreenPos(point.position());
         point.setState(Qt::TouchPointReleased);
 
         QTouchEvent event(QEvent::TouchEnd, device,

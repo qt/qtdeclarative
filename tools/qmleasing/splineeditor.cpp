@@ -206,12 +206,12 @@ void SplineEditor::paintEvent(QPaintEvent *)
 void SplineEditor::mousePressEvent(QMouseEvent *e)
 {
     if (e->button() == Qt::LeftButton) {
-        m_activeControlPoint = findControlPoint(e->pos());
+        m_activeControlPoint = findControlPoint(e->position().toPoint());
 
         if (m_activeControlPoint != -1) {
             mouseMoveEvent(e);
         }
-        m_mousePress = e->pos();
+        m_mousePress = e->position().toPoint();
         e->accept();
     }
 }
@@ -612,10 +612,10 @@ QPointF limitToCanvas(const QPointF point)
 void SplineEditor::mouseMoveEvent(QMouseEvent *e)
 {
     // If we've moved more then 25 pixels, assume user is dragging
-    if (!m_mouseDrag && QPoint(m_mousePress - e->pos()).manhattanLength() > qApp->startDragDistance())
+    if (!m_mouseDrag && QPoint(m_mousePress - e->position().toPoint()).manhattanLength() > qApp->startDragDistance())
         m_mouseDrag = true;
 
-    QPointF p = mapFromCanvas(e->pos());
+    QPointF p = mapFromCanvas(e->position().toPoint());
 
     if (m_mouseDrag && m_activeControlPoint >= 0 && m_activeControlPoint < m_controlPoints.size()) {
         p = limitToCanvas(p);

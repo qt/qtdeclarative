@@ -592,9 +592,9 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
     case QEvent::MouseMove:
     case QEvent::MouseButtonRelease: {
         QMouseEvent *me = static_cast<QMouseEvent*>(event);
-        _mouseQpaTouchPoint.setPos(me->localPos());
-        _mouseQpaTouchPoint.setScenePos(me->windowPos());
-        _mouseQpaTouchPoint.setScreenPos(me->screenPos());
+        _mouseQpaTouchPoint.setPos(me->position());
+        _mouseQpaTouchPoint.setScenePos(me->scenePosition());
+        _mouseQpaTouchPoint.setScreenPos(me->globalPosition());
         if (event->type() == QEvent::MouseMove)
             _mouseQpaTouchPoint.setState(Qt::TouchPointMoved);
         else if (event->type() == QEvent::MouseButtonRelease)
@@ -602,9 +602,9 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
         else { // QEvent::MouseButtonPress
             addTouchPoint(me);
             started = true;
-            _mouseQpaTouchPoint.setStartPos(me->localPos());
-            _mouseQpaTouchPoint.setStartScenePos(me->windowPos());
-            _mouseQpaTouchPoint.setStartScreenPos(me->screenPos());
+            _mouseQpaTouchPoint.setStartPos(me->position());
+            _mouseQpaTouchPoint.setStartScenePos(me->scenePosition());
+            _mouseQpaTouchPoint.setStartScreenPos(me->globalPosition());
             _mouseQpaTouchPoint.setState(Qt::TouchPointPressed);
         }
         touchPoints << _mouseQpaTouchPoint;
@@ -662,8 +662,8 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
             for (const QTouchEvent::TouchPoint &p : qAsConst(touchPoints)) {
                 if (p.state() == Qt::TouchPointReleased)
                     continue;
-                const QPointF &currentPos = p.scenePos();
-                const QPointF &startPos = p.startScenePos();
+                const QPointF &currentPos = p.scenePosition();
+                const QPointF &startPos = p.scenePressPosition();
                 if (qAbs(currentPos.x() - startPos.x()) > dragThreshold)
                     offerGrab = true;
                 else if (qAbs(currentPos.y() - startPos.y()) > dragThreshold)
@@ -784,33 +784,33 @@ void QQuickMultiPointTouchArea::updateTouchPoint(QQuickTouchPoint *dtp, const QT
     //TODO: if !qmlDefined, could bypass setters.
     //      also, should only emit signals after all values have been set
     dtp->setUniqueId(p->uniqueId());
-    dtp->setPosition(p->pos());
+    dtp->setPosition(p->position());
     dtp->setEllipseDiameters(p->ellipseDiameters());
     dtp->setPressure(p->pressure());
     dtp->setRotation(p->rotation());
     dtp->setVelocity(p->velocity());
     QRectF area(QPointF(), p->ellipseDiameters());
-    area.moveCenter(p->pos());
+    area.moveCenter(p->position());
     dtp->setArea(area);
-    dtp->setStartX(p->startPos().x());
-    dtp->setStartY(p->startPos().y());
+    dtp->setStartX(p->pressPosition().x());
+    dtp->setStartY(p->pressPosition().y());
     dtp->setPreviousX(p->lastPos().x());
     dtp->setPreviousY(p->lastPos().y());
-    dtp->setSceneX(p->scenePos().x());
-    dtp->setSceneY(p->scenePos().y());
+    dtp->setSceneX(p->scenePosition().x());
+    dtp->setSceneY(p->scenePosition().y());
 }
 
 void QQuickMultiPointTouchArea::updateTouchPoint(QQuickTouchPoint *dtp, const QMouseEvent *e)
 {
     dtp->setPreviousX(dtp->x());
     dtp->setPreviousY(dtp->y());
-    dtp->setPosition(e->localPos());
+    dtp->setPosition(e->position());
     if (e->type() == QEvent::MouseButtonPress) {
-        dtp->setStartX(e->localPos().x());
-        dtp->setStartY(e->localPos().y());
+        dtp->setStartX(e->position().x());
+        dtp->setStartY(e->position().y());
     }
-    dtp->setSceneX(e->windowPos().x());
-    dtp->setSceneY(e->windowPos().y());
+    dtp->setSceneX(e->scenePosition().x());
+    dtp->setSceneY(e->scenePosition().y());
 }
 
 void QQuickMultiPointTouchArea::mousePressEvent(QMouseEvent *event)
@@ -823,7 +823,7 @@ void QQuickMultiPointTouchArea::mousePressEvent(QMouseEvent *event)
     _stealMouse = false;
     setKeepMouseGrab(false);
     event->setAccepted(true);
-    _mousePos = event->localPos();
+    _mousePos = event->position();
     if (event->source() != Qt::MouseEventNotSynthesized && event->source() != Qt::MouseEventSynthesizedByQt)
         return;
 
@@ -904,13 +904,13 @@ void QQuickMultiPointTouchArea::touchUngrabEvent()
 
 bool QQuickMultiPointTouchArea::sendMouseEvent(QMouseEvent *event)
 {
-    QPointF localPos = mapFromScene(event->windowPos());
+    QPointF localPos = mapFromScene(event->scenePosition());
 
     QQuickWindow *c = window();
     QQuickItem *grabber = c ? c->mouseGrabberItem() : nullptr;
     bool stealThisEvent = _stealMouse;
     if ((stealThisEvent || contains(localPos)) && (!grabber || !grabber->keepMouseGrab())) {
-        QMouseEvent mouseEvent(event->type(), localPos, event->windowPos(), event->screenPos(),
+        QMouseEvent mouseEvent(event->type(), localPos, event->scenePosition(), event->globalPosition(),
                                event->button(), event->buttons(), event->modifiers());
         mouseEvent.setAccepted(false);
         QGuiApplicationPrivate::setMouseEventCapsAndVelocity(&mouseEvent,
@@ -1000,7 +1000,7 @@ bool QQuickMultiPointTouchArea::shouldFilter(QEvent *event)
         case QEvent::MouseMove:
         case QEvent::MouseButtonRelease: {
                 QMouseEvent *me = static_cast<QMouseEvent*>(event);
-                containsPoint = contains(mapFromScene(me->windowPos()));
+                containsPoint = contains(mapFromScene(me->scenePosition()));
             }
             break;
         case QEvent::TouchBegin:
@@ -1008,7 +1008,7 @@ bool QQuickMultiPointTouchArea::shouldFilter(QEvent *event)
         case QEvent::TouchEnd: {
                 QTouchEvent *te = static_cast<QTouchEvent*>(event);
                 for (const QTouchEvent::TouchPoint &point : te->touchPoints()) {
-                    if (contains(mapFromScene(point.scenePos()))) {
+                    if (contains(mapFromScene(point.scenePosition()))) {
                         containsPoint = true;
                         break;
                     }

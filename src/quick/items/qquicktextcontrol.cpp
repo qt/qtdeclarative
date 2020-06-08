@@ -741,25 +741,25 @@ void QQuickTextControl::processEvent(QEvent *e, const QTransform &transform)
             break;
         case QEvent::MouseButtonPress: {
             QMouseEvent *ev = static_cast<QMouseEvent *>(e);
-            d->mousePressEvent(ev, transform.map(ev->localPos()));
+            d->mousePressEvent(ev, transform.map(ev->position()));
             break; }
         case QEvent::MouseMove: {
             QMouseEvent *ev = static_cast<QMouseEvent *>(e);
-            d->mouseMoveEvent(ev, transform.map(ev->localPos()));
+            d->mouseMoveEvent(ev, transform.map(ev->position()));
             break; }
         case QEvent::MouseButtonRelease: {
             QMouseEvent *ev = static_cast<QMouseEvent *>(e);
-            d->mouseReleaseEvent(ev, transform.map(ev->localPos()));
+            d->mouseReleaseEvent(ev, transform.map(ev->position()));
             break; }
         case QEvent::MouseButtonDblClick: {
             QMouseEvent *ev = static_cast<QMouseEvent *>(e);
-            d->mouseDoubleClickEvent(ev, transform.map(ev->localPos()));
+            d->mouseDoubleClickEvent(ev, transform.map(ev->position()));
             break; }
         case QEvent::HoverEnter:
         case QEvent::HoverMove:
         case QEvent::HoverLeave: {
             QHoverEvent *ev = static_cast<QHoverEvent *>(e);
-            d->hoverEvent(ev, transform.map(ev->posF()));
+            d->hoverEvent(ev, transform.map(ev->position()));
             break; }
 #if QT_CONFIG(im)
         case QEvent::InputMethod:

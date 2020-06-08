@@ -68,7 +68,7 @@ static QTouchEvent::TouchPoint makeTouchPoint(QQuickItem *item, const QPointF &p
     tp.setLastPos(last);
     tp.setScenePos(item->mapToScene(p));
     tp.setLastScenePos(item->mapToScene(last));
-    tp.setScreenPos(item->window()->mapToGlobal(tp.scenePos().toPoint()));
+    tp.setScreenPos(item->window()->mapToGlobal(tp.scenePosition().toPoint()));
     tp.setLastScreenPos(item->window()->mapToGlobal(tp.lastScenePos().toPoint()));
     return tp;
 }
@@ -88,7 +88,7 @@ static TouchEventData makeTouchData(QEvent::Type type, QWindow *w, Qt::TouchPoin
 
 #define COMPARE_TOUCH_POINTS(tp1, tp2) \
 { \
-    QCOMPARE(tp1.pos(), tp2.pos()); \
+    QCOMPARE(tp1.position(), tp2.pos()); \
     QCOMPARE(tp1.lastPos(), tp2.lastPos()); \
     QCOMPARE(tp1.scenePos(), tp2.scenePos()); \
     QCOMPARE(tp1.lastScenePos(), tp2.lastScenePos()); \
@@ -214,7 +214,7 @@ public:
             return;
         }
         mousePressCount = ++mousePressNum;
-        lastMousePos = e->pos();
+        lastMousePos = e->position().toPoint();
         lastMouseCapabilityFlags = QGuiApplicationPrivate::mouseEventCaps(e);
     }
 
@@ -226,7 +226,7 @@ public:
         mouseMoveCount = ++mouseMoveNum;
         lastVelocityFromMouseMove = QGuiApplicationPrivate::mouseEventVelocity(e);
         lastMouseCapabilityFlags = QGuiApplicationPrivate::mouseEventCaps(e);
-        lastMousePos = e->pos();
+        lastMousePos = e->position().toPoint();
     }
 
     void mouseReleaseEvent(QMouseEvent *e) {
@@ -235,7 +235,7 @@ public:
             return;
         }
         ++mouseReleaseNum;
-        lastMousePos = e->pos();
+        lastMousePos = e->position().toPoint();
         lastMouseCapabilityFlags = QGuiApplicationPrivate::mouseEventCaps(e);
     }
 
@@ -1024,15 +1024,15 @@ void tst_qquickwindow::touchEvent_velocity()
     QMatrix4x4 transformMatrix;
     transformMatrix.rotate(-90, 0, 0, 1); // counterclockwise
     QVector2D transformedVelocity = transformMatrix.mapVector(velocity).toVector2D();
-    points[0].setPos(points[0].pos() + QPointF(5, 5));
-    points[0].setScreenPos(points[0].screenPos() + QPointF(5, 5));
+    points[0].setPos(points[0].position() + QPointF(5, 5));
+    points[0].setScreenPos(points[0].globalPosition() + QPointF(5, 5));
     QWindowSystemInterface::handleTouchEvent(window, touchDeviceWithVelocity,
                                              QWindowSystemInterfacePrivate::toNativeTouchPoints(points, window));
     QGuiApplication::processEvents();
     QQuickTouchUtils::flush(window);
     QCOMPARE(item->lastVelocity, transformedVelocity);
-    QPoint itemLocalPos = item->mapFromScene(points[0].pos()).toPoint();
-    QPoint itemLocalPosFromEvent = item->lastEvent.touchPoints[0].pos().toPoint();
+    QPoint itemLocalPos = item->mapFromScene(points[0].position()).toPoint();
+    QPoint itemLocalPosFromEvent = item->lastEvent.touchPoints[0].position().toPoint();
     QCOMPARE(itemLocalPos, itemLocalPosFromEvent);
 
     points[0].setState(Qt::TouchPointReleased);
@@ -1158,7 +1158,7 @@ void tst_qquickwindow::mouseFromTouch_basic()
     QCOMPARE(item->mousePressNum, 1);
     QCOMPARE(item->mouseMoveNum, 1);
     QCOMPARE(item->mouseReleaseNum, 1);
-    QCOMPARE(item->lastMousePos.toPoint(), item->mapFromScene(points[0].pos()).toPoint());
+    QCOMPARE(item->lastMousePos.toPoint(), item->mapFromScene(points[0].position()).toPoint());
     QCOMPARE(item->lastVelocityFromMouseMove, velocity);
     QVERIFY((item->lastMouseCapabilityFlags & QTouchDevice::Velocity) != 0);
 
@@ -1182,7 +1182,7 @@ void tst_qquickwindow::mouseFromTouch_basic()
                                              QWindowSystemInterfacePrivate::toNativeTouchPoints(points, window));
     QGuiApplication::processEvents();
     QQuickTouchUtils::flush(window);
-    QCOMPARE(item->lastMousePos.toPoint(), item->mapFromScene(points[0].pos()).toPoint());
+    QCOMPARE(item->lastMousePos.toPoint(), item->mapFromScene(points[0].position()).toPoint());
     QCOMPARE(item->lastVelocityFromMouseMove, transformedVelocity);
 
     points[0].setState(Qt::TouchPointReleased);
@@ -2777,7 +2777,7 @@ public:
     bool childMouseEventFilter(QQuickItem *item, QEvent *event) override
     {
         Q_UNUSED(item)
-        if (event->type() == QEvent::MouseButtonPress && !contains(static_cast<QMouseEvent*>(event)->pos())) {
+        if (event->type() == QEvent::MouseButtonPress && !contains(static_cast<QMouseEvent*>(event)->position().toPoint())) {
             // This is an evil hack: in case of items that are not rectangles, we never accept the event.
             // Instead the events are now delivered to QDeclarativeGeoMapItemBase which doesn't to anything with them.
             // The map below it still works since it filters events and steals the events at some point.
@@ -2861,8 +2861,8 @@ void tst_qquickwindow::pointerEventTypeAndPointCount()
 //    QVERIFY(!pe->asTabletEvent()); // TODO
     QCOMPARE(pme.pointCount(), 1);
     QCOMPARE(pme.point(0)->scenePosition(), scenePosition);
-    QCOMPARE(pme.asMouseEvent(localPosition)->localPos(), localPosition);
-    QCOMPARE(pme.asMouseEvent(localPosition)->screenPos(), screenPosition);
+    QCOMPARE(pme.asMouseEvent(localPosition)->position(), localPosition);
+    QCOMPARE(pme.asMouseEvent(localPosition)->globalPosition(), screenPosition);
 
     QQuickPointerTouchEvent pte(nullptr, QQuickPointerDevice::touchDevice(touchDevice));
     pte.reset(&te);

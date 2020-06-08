@@ -106,31 +106,31 @@ public:
     {
         qCDebug(lcPointerTests) << event << "will accept?" << acceptTouch;
         for (const QTouchEvent::TouchPoint &tp : event->touchPoints())
-            eventList.append(Event(Event::TouchDestination, event->type(), tp.state(), grabTransition(acceptTouch, tp.state()), tp.pos(), tp.scenePos()));
+            eventList.append(Event(Event::TouchDestination, event->type(), tp.state(), grabTransition(acceptTouch, tp.state()), tp.position(), tp.scenePosition()));
         event->setAccepted(acceptTouch);
     }
     void mousePressEvent(QMouseEvent *event)
     {
         qCDebug(lcPointerTests) << event;
-        eventList.append(Event(Event::MouseDestination, event->type(), Qt::TouchPointPressed, grabTransition(acceptMouse, Qt::TouchPointPressed), event->pos(), event->windowPos()));
+        eventList.append(Event(Event::MouseDestination, event->type(), Qt::TouchPointPressed, grabTransition(acceptMouse, Qt::TouchPointPressed), event->position().toPoint(), event->scenePosition()));
         event->setAccepted(acceptMouse);
     }
     void mouseMoveEvent(QMouseEvent *event)
     {
         qCDebug(lcPointerTests) << event;
-        eventList.append(Event(Event::MouseDestination, event->type(), Qt::TouchPointMoved, grabTransition(acceptMouse, Qt::TouchPointMoved), event->pos(), event->windowPos()));
+        eventList.append(Event(Event::MouseDestination, event->type(), Qt::TouchPointMoved, grabTransition(acceptMouse, Qt::TouchPointMoved), event->position().toPoint(), event->scenePosition()));
         event->setAccepted(acceptMouse);
     }
     void mouseReleaseEvent(QMouseEvent *event)
     {
         qCDebug(lcPointerTests) << event;
-        eventList.append(Event(Event::MouseDestination, event->type(), Qt::TouchPointReleased, grabTransition(acceptMouse, Qt::TouchPointReleased), event->pos(), event->windowPos()));
+        eventList.append(Event(Event::MouseDestination, event->type(), Qt::TouchPointReleased, grabTransition(acceptMouse, Qt::TouchPointReleased), event->position().toPoint(), event->scenePosition()));
         event->setAccepted(acceptMouse);
     }
     void mouseDoubleClickEvent(QMouseEvent *event)
     {
         qCDebug(lcPointerTests) << event;
-        eventList.append(Event(Event::MouseDestination, event->type(), Qt::TouchPointPressed, grabTransition(acceptMouse, Qt::TouchPointPressed), event->pos(), event->windowPos()));
+        eventList.append(Event(Event::MouseDestination, event->type(), Qt::TouchPointPressed, grabTransition(acceptMouse, Qt::TouchPointPressed), event->position().toPoint(), event->scenePosition()));
         event->setAccepted(acceptMouse);
     }
 
@@ -162,7 +162,7 @@ public:
                 event->type() == QEvent::TouchEnd) {
             QTouchEvent *touch = static_cast<QTouchEvent*>(event);
             for (const QTouchEvent::TouchPoint &tp : touch->touchPoints())
-                eventList.append(Event(Event::FilterDestination, event->type(), tp.state(), QQuickEventPoint::GrabExclusive, tp.pos(), tp.scenePos()));
+                eventList.append(Event(Event::FilterDestination, event->type(), tp.state(), QQuickEventPoint::GrabExclusive, tp.position(), tp.scenePosition()));
             if (filterTouch)
                 event->accept();
             return true;
@@ -265,7 +265,7 @@ protected:
         }
         QMouseEvent *me = static_cast<QMouseEvent*>(event);
         filteredEventList.append(Event(Event::FilterDestination, event->type(), tpState,
-                                       0, me->pos(), me->globalPos()));
+                                       0, me->position().toPoint(), me->globalPosition().toPoint()));
         return false;
     }
 

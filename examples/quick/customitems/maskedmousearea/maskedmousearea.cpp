@@ -115,7 +115,7 @@ bool MaskedMouseArea::contains(const QPointF &point) const
 void MaskedMouseArea::mousePressEvent(QMouseEvent *event)
 {
     setPressed(true);
-    m_pressPoint = event->pos();
+    m_pressPoint = event->position().toPoint();
     emit pressed();
 }
 
@@ -125,8 +125,8 @@ void MaskedMouseArea::mouseReleaseEvent(QMouseEvent *event)
     emit released();
 
     const int threshold = qApp->styleHints()->startDragDistance();
-    const bool isClick = (threshold >= qAbs(event->x() - m_pressPoint.x()) &&
-                          threshold >= qAbs(event->y() - m_pressPoint.y()));
+    const bool isClick = (threshold >= qAbs(event->position().toPoint().x() - m_pressPoint.x()) &&
+                          threshold >= qAbs(event->position().toPoint().y() - m_pressPoint.y()));
 
     if (isClick)
         emit clicked();

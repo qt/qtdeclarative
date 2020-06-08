@@ -77,7 +77,7 @@ public:
     void dragEnterEvent(QDragEnterEvent *event)
     {
         ++enterEvents;
-        position = event->pos();
+        position = event->position().toPoint();
         defaultAction = event->dropAction();
         proposedAction = event->proposedAction();
         supportedActions = event->possibleActions();
@@ -87,7 +87,7 @@ public:
     void dragMoveEvent(QDragMoveEvent *event)
     {
         ++moveEvents;
-        position = event->pos();
+        position = event->position().toPoint();
         defaultAction = event->dropAction();
         proposedAction = event->proposedAction();
         supportedActions = event->possibleActions();
@@ -103,7 +103,7 @@ public:
     void dropEvent(QDropEvent *event)
     {
         ++dropEvents;
-        position = event->pos();
+        position = event->position().toPoint();
         defaultAction = event->dropAction();
         proposedAction = event->proposedAction();
         supportedActions = event->possibleActions();

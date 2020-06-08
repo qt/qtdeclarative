@@ -109,22 +109,22 @@ public:
     }
     void mousePressEvent(QMouseEvent *event)
     {
-        eventList.append(Event(event->type(), event->pos(), event->globalPos()));
+        eventList.append(Event(event->type(), event->position().toPoint(), event->globalPosition().toPoint()));
         event->setAccepted(acceptMouse);
     }
     void mouseMoveEvent(QMouseEvent *event)
     {
-        eventList.append(Event(event->type(), event->pos(), event->globalPos()));
+        eventList.append(Event(event->type(), event->position().toPoint(), event->globalPosition().toPoint()));
         event->setAccepted(acceptMouse);
     }
     void mouseReleaseEvent(QMouseEvent *event)
     {
-        eventList.append(Event(event->type(), event->pos(), event->globalPos()));
+        eventList.append(Event(event->type(), event->position().toPoint(), event->globalPosition().toPoint()));
         event->setAccepted(acceptMouse);
     }
     void mouseDoubleClickEvent(QMouseEvent *event)
     {
-        eventList.append(Event(event->type(), event->pos(), event->globalPos()));
+        eventList.append(Event(event->type(), event->position().toPoint(), event->globalPosition().toPoint()));
         event->setAccepted(acceptMouse);
     }
 
@@ -211,7 +211,7 @@ protected:
                 event->type() == QEvent::MouseMove ||
                 event->type() == QEvent::MouseButtonRelease) {
             QMouseEvent *me = static_cast<QMouseEvent*>(event);
-            filteredEventList.append(Event(me->type(), me->pos(), me->globalPos()));
+            filteredEventList.append(Event(me->type(), me->position().toPoint(), me->globalPosition().toPoint()));
         }
         return false;
     }
@@ -308,9 +308,9 @@ void tst_TouchMouse::simpleTouchEvent()
     QPoint localPos = eventItem1->mapFromScene(p1).toPoint();
     QPoint globalPos = window->mapToGlobal(p1);
     QPoint scenePos = p1; // item is at 0,0
-    QCOMPARE(eventItem1->eventList.at(0).points.at(0).pos().toPoint(), localPos);
-    QCOMPARE(eventItem1->eventList.at(0).points.at(0).scenePos().toPoint(), scenePos);
-    QCOMPARE(eventItem1->eventList.at(0).points.at(0).screenPos().toPoint(), globalPos);
+    QCOMPARE(eventItem1->eventList.at(0).points.at(0).position().toPoint(), localPos);
+    QCOMPARE(eventItem1->eventList.at(0).points.at(0).scenePosition().toPoint(), scenePos);
+    QCOMPARE(eventItem1->eventList.at(0).points.at(0).globalPosition().toPoint(), globalPos);
     if (synthMouse) {
         QCOMPARE(eventItem1->eventList.at(1).mousePos, localPos);
         QCOMPARE(eventItem1->eventList.at(1).mousePosGlobal, globalPos);

@@ -469,10 +469,10 @@ void QQuickPinchArea::updatePinch()
     QTouchEvent::TouchPoint touchPoint2 = d->touchPoints.at(d->touchPoints. count() >= 2 ? 1 : 0);
 
     if (touchPoint1.state() == Qt::TouchPointPressed)
-        d->sceneStartPoint1 = touchPoint1.scenePos();
+        d->sceneStartPoint1 = touchPoint1.scenePosition();
 
     if (touchPoint2.state() == Qt::TouchPointPressed)
-        d->sceneStartPoint2 = touchPoint2.scenePos();
+        d->sceneStartPoint2 = touchPoint2.scenePosition();
 
     QRectF bounds = clipRect();
     // Pinch is not started unless there are exactly two touch points
@@ -480,7 +480,7 @@ void QQuickPinchArea::updatePinch()
     // AND both points are inside the bounds.
     if (d->touchPoints.count() == 2
             && (touchPoint1.state() & Qt::TouchPointPressed || touchPoint2.state() & Qt::TouchPointPressed) &&
-            bounds.contains(touchPoint1.pos()) && bounds.contains(touchPoint2.pos())) {
+            bounds.contains(touchPoint1.position()) && bounds.contains(touchPoint2.position())) {
         d->id1 = touchPoint1.id();
         d->pinchActivated = true;
         d->initPinch = true;
@@ -494,8 +494,8 @@ void QQuickPinchArea::updatePinch()
     }
     if (d->pinchActivated && !d->pinchRejected) {
         const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
-        QPointF p1 = touchPoint1.scenePos();
-        QPointF p2 = touchPoint2.scenePos();
+        QPointF p1 = touchPoint1.scenePosition();
+        QPointF p2 = touchPoint2.scenePosition();
         qreal dx = p1.x() - p2.x();
         qreal dy = p1.y() - p2.y();
         qreal dist = qSqrt(dx*dx + dy*dy);
@@ -504,9 +504,9 @@ void QQuickPinchArea::updatePinch()
         if (d->touchPoints.count() == 1) {
             // If we only have one point then just move the center
             if (d->id1 == touchPoint1.id())
-                sceneCenter = d->sceneLastCenter + touchPoint1.scenePos() - d->lastPoint1;
+                sceneCenter = d->sceneLastCenter + touchPoint1.scenePosition() - d->lastPoint1;
             else
-                sceneCenter = d->sceneLastCenter + touchPoint2.scenePos() - d->lastPoint2;
+                sceneCenter = d->sceneLastCenter + touchPoint2.scenePosition() - d->lastPoint2;
             angle = d->pinchLastAngle;
         }
         d->id1 = touchPoint1.id();
@@ -582,14 +582,14 @@ void QQuickPinchArea::updatePinch()
             pe.setPreviousScale(d->pinchLastScale);
             pe.setStartPoint1(mapFromScene(d->sceneStartPoint1));
             pe.setStartPoint2(mapFromScene(d->sceneStartPoint2));
-            pe.setPoint1(touchPoint1.pos());
-            pe.setPoint2(touchPoint2.pos());
+            pe.setPoint1(touchPoint1.position());
+            pe.setPoint2(touchPoint2.position());
             pe.setPointCount(d->touchPoints.count());
             d->pinchLastScale = scale;
             d->sceneLastCenter = sceneCenter;
             d->pinchLastAngle = angle;
-            d->lastPoint1 = touchPoint1.scenePos();
-            d->lastPoint2 = touchPoint2.scenePos();
+            d->lastPoint1 = touchPoint1.scenePosition();
+            d->lastPoint2 = touchPoint2.scenePosition();
             emit pinchUpdated(&pe);
             updatePinchTarget();
         }
@@ -681,17 +681,17 @@ bool QQuickPinchArea::event(QEvent *event)
         switch (gesture->gestureType()) {
         case Qt::BeginNativeGesture:
             clearPinch(); // probably not necessary; JIC
-            d->pinchStartCenter = gesture->localPos();
+            d->pinchStartCenter = gesture->position();
             d->pinchStartAngle = 0.0;
             d->pinchStartRotation = 0.0;
             d->pinchRotation = 0.0;
             d->pinchStartScale = 1.0;
             d->pinchLastAngle = 0.0;
             d->pinchLastScale = 1.0;
-            d->sceneStartPoint1 = gesture->windowPos();
-            d->sceneStartPoint2 = gesture->windowPos(); // TODO we never really know
-            d->lastPoint1 = gesture->windowPos();
-            d->lastPoint2 = gesture->windowPos(); // TODO we never really know
+            d->sceneStartPoint1 = gesture->scenePosition();
+            d->sceneStartPoint2 = gesture->scenePosition(); // TODO we never really know
+            d->lastPoint1 = gesture->scenePosition();
+            d->lastPoint2 = gesture->scenePosition(); // TODO we never really know
             if (d->pinch && d->pinch->target()) {
                 d->pinchStartPos = d->pinch->target()->position();
                 d->pinchStartScale = d->pinch->target()->scale();
@@ -731,15 +731,15 @@ bool QQuickPinchArea::event(QEvent *event)
                 d->pinchLastScale = d->pinchStartScale = d->pinch->target()->scale();
                 d->pinchLastAngle = d->pinchStartRotation = d->pinch->target()->rotation();
             }
-            QQuickPinchEvent pe(gesture->localPos(), gesture->value(), d->pinchLastAngle, 0.0);
-            pe.setStartCenter(gesture->localPos());
+            QQuickPinchEvent pe(gesture->position(), gesture->value(), d->pinchLastAngle, 0.0);
+            pe.setStartCenter(gesture->position());
             pe.setPreviousCenter(d->pinchStartCenter);
             pe.setPreviousAngle(d->pinchLastAngle);
             pe.setPreviousScale(d->pinchLastScale);
-            pe.setStartPoint1(gesture->localPos());
-            pe.setStartPoint2(gesture->localPos());
-            pe.setPoint1(mapFromScene(gesture->windowPos()));
-            pe.setPoint2(mapFromScene(gesture->windowPos()));
+            pe.setStartPoint1(gesture->position());
+            pe.setStartPoint2(gesture->position());
+            pe.setPoint1(mapFromScene(gesture->scenePosition()));
+            pe.setPoint2(mapFromScene(gesture->scenePosition()));
             pe.setPointCount(2);
             emit smartZoom(&pe);
         } break;

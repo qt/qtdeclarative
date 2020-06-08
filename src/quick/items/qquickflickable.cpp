@@ -1060,7 +1060,7 @@ void QQuickFlickablePrivate::handleMousePressEvent(QMouseEvent *event)
     }
     q->setKeepMouseGrab(stealMouse);
 
-    maybeBeginDrag(computeCurrentTime(event), event->localPos());
+    maybeBeginDrag(computeCurrentTime(event), event->position());
 }
 
 void QQuickFlickablePrivate::maybeBeginDrag(qint64 currentTimestamp, const QPointF &pressPosn)
@@ -1318,7 +1318,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
         return;
 
     qint64 currentTimestamp = computeCurrentTime(event);
-    QVector2D deltas = QVector2D(event->localPos() - pressPos);
+    QVector2D deltas = QVector2D(event->position() - pressPos);
     bool overThreshold = false;
     QVector2D velocity = QGuiApplicationPrivate::mouseEventVelocity(event);
     // TODO guarantee that events always have velocity so that it never needs to be computed here
@@ -1327,7 +1327,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
         if (currentTimestamp == lastTimestamp)
             return; // events are too close together: velocity would be infinite
         qreal elapsed = qreal(currentTimestamp - lastTimestamp) / 1000.;
-        velocity = QVector2D(event->localPos() - (lastPos.isNull() ? pressPos : lastPos)) / elapsed;
+        velocity = QVector2D(event->position() - (lastPos.isNull() ? pressPos : lastPos)) / elapsed;
     }
 
     if (q->yflick())
@@ -1335,7 +1335,7 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
     if (q->xflick())
         overThreshold |= QQuickWindowPrivate::dragOverThreshold(deltas.x(), Qt::XAxis, event);
 
-    drag(currentTimestamp, event->type(), event->localPos(), deltas, overThreshold, false, false, velocity);
+    drag(currentTimestamp, event->type(), event->position(), deltas, overThreshold, false, false, velocity);
 }
 
 void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
@@ -1394,7 +1394,7 @@ void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
 
     bool flickedVertically = false;
     vVelocity *= flickBoost;
-    bool isVerticalFlickAllowed = q->yflick() && qAbs(vVelocity) > MinimumFlickVelocity && qAbs(event->localPos().y() - pressPos.y()) > FlickThreshold;
+    bool isVerticalFlickAllowed = q->yflick() && qAbs(vVelocity) > MinimumFlickVelocity && qAbs(event->position().y() - pressPos.y()) > FlickThreshold;
     if (isVerticalFlickAllowed) {
         velocityTimeline.reset(vData.smoothVelocity);
         vData.smoothVelocity.setValue(-vVelocity);
@@ -1403,7 +1403,7 @@ void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
 
     bool flickedHorizontally = false;
     hVelocity *= flickBoost;
-    bool isHorizontalFlickAllowed = q->xflick() && qAbs(hVelocity) > MinimumFlickVelocity && qAbs(event->localPos().x() - pressPos.x()) > FlickThreshold;
+    bool isHorizontalFlickAllowed = q->xflick() && qAbs(hVelocity) > MinimumFlickVelocity && qAbs(event->position().x() - pressPos.x()) > FlickThreshold;
     if (isHorizontalFlickAllowed) {
         velocityTimeline.reset(hData.smoothVelocity);
         hData.smoothVelocity.setValue(-hVelocity);
@@ -1453,7 +1453,7 @@ void QQuickFlickable::mouseReleaseEvent(QMouseEvent *event)
 
             // Now send the release
             if (window() && window()->mouseGrabberItem()) {
-                QPointF localPos = window()->mouseGrabberItem()->mapFromScene(event->windowPos());
+                QPointF localPos = window()->mouseGrabberItem()->mapFromScene(event->scenePosition());
                 QScopedPointer<QMouseEvent> mouseEvent(QQuickWindowPrivate::cloneMouseEvent(event, &localPos));
                 QCoreApplication::sendEvent(window(), mouseEvent.data());
             }
@@ -2383,7 +2383,7 @@ void QQuickFlickablePrivate::addPointerHandler(QQuickPointerHandler *h)
 bool QQuickFlickable::filterMouseEvent(QQuickItem *receiver, QMouseEvent *event)
 {
     Q_D(QQuickFlickable);
-    QPointF localPos = mapFromScene(event->windowPos());
+    QPointF localPos = mapFromScene(event->scenePosition());
 
     Q_ASSERT_X(receiver != this, "", "Flickable received a filter event for itself");
     if (receiver == this && d->stealMouse) {

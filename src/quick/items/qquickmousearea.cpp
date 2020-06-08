@@ -96,8 +96,8 @@ void QQuickMouseAreaPrivate::init()
 
 void QQuickMouseAreaPrivate::saveEvent(QMouseEvent *event)
 {
-    lastPos = event->localPos();
-    lastScenePos = event->windowPos();
+    lastPos = event->position();
+    lastScenePos = event->scenePosition();
     lastButton = event->button();
     lastButtons = event->buttons();
     lastModifiers = event->modifiers();
@@ -672,7 +672,7 @@ void QQuickMouseArea::mousePressEvent(QMouseEvent *event)
             d->drag->setActive(false);
 #endif
         setHovered(true);
-        d->startScene = event->windowPos();
+        d->startScene = event->scenePosition();
         setKeepMouseGrab(d->stealMouse);
         event->setAccepted(setPressed(event->button(), true, event->source()));
         if (event->isAccepted())
@@ -690,7 +690,7 @@ void QQuickMouseArea::mouseMoveEvent(QMouseEvent *event)
 
     // ### we should skip this if these signals aren't used
     // ### can GV handle this for us?
-    setHovered(contains(event->localPos()));
+    setHovered(contains(event->position()));
 
     if ((event->buttons() & acceptedMouseButtons()) == 0) {
         QQuickItem::mouseMoveEvent(event);
@@ -712,10 +712,10 @@ void QQuickMouseArea::mouseMoveEvent(QMouseEvent *event)
         QPointF curLocalPos;
         if (drag()->target()->parentItem()) {
             startLocalPos = drag()->target()->parentItem()->mapFromScene(d->startScene);
-            curLocalPos = drag()->target()->parentItem()->mapFromScene(event->windowPos());
+            curLocalPos = drag()->target()->parentItem()->mapFromScene(event->scenePosition());
         } else {
             startLocalPos = d->startScene;
-            curLocalPos = event->windowPos();
+            curLocalPos = event->scenePosition();
         }
 
         if (keepMouseGrab() && d->stealMouse && d->overThreshold && !d->drag->active())
@@ -762,7 +762,7 @@ void QQuickMouseArea::mouseMoveEvent(QMouseEvent *event)
         {
             d->overThreshold = true;
             if (d->drag->smoothed())
-                d->startScene = event->windowPos();
+                d->startScene = event->scenePosition();
         }
 
         if (!keepMouseGrab() && d->overThreshold) {
@@ -836,7 +836,7 @@ void QQuickMouseArea::hoverEnterEvent(QHoverEvent *event)
     if (!d->enabled && !d->pressed) {
         QQuickItem::hoverEnterEvent(event);
     } else {
-        d->lastPos = event->posF();
+        d->lastPos = event->position();
         d->lastModifiers = event->modifiers();
         setHovered(true);
         QQuickMouseEvent &me = d->quickMouseEvent;
@@ -853,8 +853,8 @@ void QQuickMouseArea::hoverMoveEvent(QHoverEvent *event)
     Q_D(QQuickMouseArea);
     if (!d->enabled && !d->pressed) {
         QQuickItem::hoverMoveEvent(event);
-    } else if (d->lastPos != event->posF()) {
-        d->lastPos = event->posF();
+    } else if (d->lastPos != event->position()) {
+        d->lastPos = event->position();
         d->lastModifiers = event->modifiers();
         QQuickMouseEvent &me = d->quickMouseEvent;
         me.reset(d->lastPos.x(), d->lastPos.y(), Qt::NoButton, Qt::NoButton, d->lastModifiers, false, false);
@@ -937,13 +937,13 @@ void QQuickMouseArea::touchUngrabEvent()
 bool QQuickMouseArea::sendMouseEvent(QMouseEvent *event)
 {
     Q_D(QQuickMouseArea);
-    QPointF localPos = mapFromScene(event->windowPos());
+    QPointF localPos = mapFromScene(event->scenePosition());
 
     QQuickWindow *c = window();
     QQuickItem *grabber = c ? c->mouseGrabberItem() : nullptr;
     bool stealThisEvent = d->stealMouse;
     if ((stealThisEvent || contains(localPos)) && (!grabber || !grabber->keepMouseGrab())) {
-        QMouseEvent mouseEvent(event->type(), localPos, event->windowPos(), event->screenPos(),
+        QMouseEvent mouseEvent(event->type(), localPos, event->scenePosition(), event->globalPosition(),
                                event->button(), event->buttons(), event->modifiers());
         mouseEvent.setAccepted(false);
 

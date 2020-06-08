@@ -324,12 +324,12 @@ void WindowSingleThreaded::mousePressEvent(QMouseEvent *e)
     // event's localPos and windowPos, and screenPos into the event's screenPos. This way
     // the windowPos in e is ignored and is replaced by localPos. This is necessary
     // because QQuickWindow thinks of itself as a top-level window always.
-    QMouseEvent mappedEvent(e->type(), e->localPos(), e->screenPos(), e->button(), e->buttons(), e->modifiers());
+    QMouseEvent mappedEvent(e->type(), e->position(), e->globalPosition(), e->button(), e->buttons(), e->modifiers());
     QCoreApplication::sendEvent(m_quickWindow, &mappedEvent);
 }
 
 void WindowSingleThreaded::mouseReleaseEvent(QMouseEvent *e)
 {
-    QMouseEvent mappedEvent(e->type(), e->localPos(), e->screenPos(), e->button(), e->buttons(), e->modifiers());
+    QMouseEvent mappedEvent(e->type(), e->position(), e->globalPosition(), e->button(), e->buttons(), e->modifiers());
     QCoreApplication::sendEvent(m_quickWindow, &mappedEvent);
 }

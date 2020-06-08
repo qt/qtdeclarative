@@ -2816,7 +2816,7 @@ void QQuickText::mousePressEvent(QMouseEvent *event)
 
     QString link;
     if (d->isLinkActivatedConnected())
-        link = d->anchorAt(event->localPos());
+        link = d->anchorAt(event->position());
 
     if (link.isEmpty()) {
         event->setAccepted(false);
@@ -2840,7 +2840,7 @@ void QQuickText::mouseReleaseEvent(QMouseEvent *event)
 
     QString link;
     if (d->isLinkActivatedConnected())
-        link = d->anchorAt(event->localPos());
+        link = d->anchorAt(event->position());
 
     if (!link.isEmpty() && d->extra.isAllocated() && d->extra->activeLink == link)
         emit linkActivated(d->extra->activeLink);
@@ -2903,7 +2903,7 @@ void QQuickTextPrivate::processHoverEvent(QHoverEvent *event)
     QString link;
     if (isLinkHoveredConnected()) {
         if (event->type() != QEvent::HoverLeave)
-            link = anchorAt(event->posF());
+            link = anchorAt(event->position());
 
         if ((!extra.isAllocated() && !link.isEmpty()) || (extra.isAllocated() && extra->hoveredLink != link)) {
             extra.value().hoveredLink = link;

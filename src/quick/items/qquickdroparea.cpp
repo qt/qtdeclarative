@@ -220,7 +220,7 @@ void QQuickDropArea::dragMoveEvent(QDragMoveEvent *event)
     if (!d->containsDrag)
         return;
 
-    d->dragPosition = event->pos();
+    d->dragPosition = event->position().toPoint();
     if (d->drag)
         emit d->drag->positionChanged();
 
@@ -261,7 +261,7 @@ void QQuickDropArea::dragEnterEvent(QDragEnterEvent *event)
     if (!d->effectiveEnable || d->containsDrag || !mimeData || !d->hasMatchingKey(d->getKeys(mimeData)))
         return;
 
-    d->dragPosition = event->pos();
+    d->dragPosition = event->position().toPoint();
 
     event->accept();
 
@@ -275,7 +275,7 @@ void QQuickDropArea::dragEnterEvent(QDragEnterEvent *event)
         d->source = dragMime->source();
     else
         d->source = event->source();
-    d->dragPosition = event->pos();
+    d->dragPosition = event->position().toPoint();
     if (d->drag) {
         emit d->drag->positionChanged();
         emit d->drag->sourceChanged();
