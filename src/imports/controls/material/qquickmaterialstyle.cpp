@@ -661,6 +661,7 @@ void QQuickMaterialStyle::setForeground(const QVariant &var)
     m_foreground = foreground;
     propagateForeground();
     emit foregroundChanged();
+    emit paletteChanged();
 }
 
 void QQuickMaterialStyle::inheritForeground(uint foreground, bool custom, bool has)
