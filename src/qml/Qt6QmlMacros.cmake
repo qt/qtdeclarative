@@ -616,8 +616,16 @@ function(qt6_qml_type_registration target)
     )
 
     target_sources(${target} PRIVATE ${type_registration_cpp_file})
+
+    # Circumvent "too many sections" error when doing a 32 bit debug build on Windows with
+    # MinGW.
+    set(additional_source_files_properties "")
+    if(MINGW)
+        set(additional_source_files_properties "COMPILE_OPTIONS" "-Wa,-mbig-obj")
+    endif()
     set_source_files_properties(${type_registration_cpp_file} PROPERTIES
         SKIP_AUTOGEN ON
+        ${additional_source_files_properties}
     )
 
     # Usually for Qt Qml-like modules and qml plugins, the installation destination of the .qmltypes
