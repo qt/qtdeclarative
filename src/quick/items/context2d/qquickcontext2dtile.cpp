@@ -38,11 +38,6 @@
 ****************************************************************************/
 
 #include "qquickcontext2dtile_p.h"
-#if QT_CONFIG(opengl)
-# include <QOpenGLFramebufferObject>
-# include <QOpenGLFramebufferObjectFormat>
-# include <QOpenGLPaintDevice>
-#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -97,57 +92,6 @@ QPainter* QQuickContext2DTile::createPainter(bool smooth, bool antialiasing)
 
     return nullptr;
 }
-#if QT_CONFIG(opengl)
-QQuickContext2DFBOTile::QQuickContext2DFBOTile()
-    : QQuickContext2DTile()
-    , m_fbo(nullptr)
-{
-}
-
-
-QQuickContext2DFBOTile::~QQuickContext2DFBOTile()
-{
-    if (m_fbo)
-        m_fbo->release();
-    delete m_fbo;
-}
-
-void QQuickContext2DFBOTile::aboutToDraw()
-{
-    m_fbo->bind();
-    if (!m_device) {
-        QOpenGLPaintDevice *gl_device = new QOpenGLPaintDevice(rect().size());
-        m_device = gl_device;
-        QPainter p(m_device);
-        p.fillRect(QRectF(0, 0, m_fbo->width(), m_fbo->height()), QColor(qRgba(0, 0, 0, 0)));
-        p.end();
-    }
-}
-
-void QQuickContext2DFBOTile::drawFinished()
-{
-}
-
-void QQuickContext2DFBOTile::setRect(const QRect& r)
-{
-    if (m_rect == r)
-        return;
-    m_rect = r;
-    m_dirty = true;
-    if (!m_fbo || m_fbo->size() != r.size()) {
-        QOpenGLFramebufferObjectFormat format;
-        format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
-        format.setInternalTextureFormat(GL_RGBA);
-        format.setMipmap(false);
-
-        if (m_painter.isActive())
-            m_painter.end();
-
-        delete m_fbo;
-        m_fbo = new QOpenGLFramebufferObject(r.size(), format);
-    }
-}
-#endif
 
 QQuickContext2DImageTile::QQuickContext2DImageTile()
     : QQuickContext2DTile()

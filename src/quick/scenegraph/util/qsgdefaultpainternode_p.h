@@ -61,8 +61,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QOpenGLFramebufferObject;
-class QOpenGLPaintDevice;
 class QSGDefaultRenderContext;
 
 class Q_QUICK_PRIVATE_EXPORT QSGPainterTexture : public QSGPlainTexture
@@ -126,7 +124,6 @@ private:
     void updateTexture();
     void updateGeometry();
     void updateRenderTarget();
-    void updateFBOSize();
 
     QSGDefaultRenderContext *m_context;
 
@@ -135,18 +132,14 @@ private:
 
     QQuickPaintedItem *m_item;
 
-    QOpenGLFramebufferObject *m_fbo;
-    QOpenGLFramebufferObject *m_multisampledFbo;
     QImage m_image;
 
     QSGOpaqueTextureMaterial m_material;
     QSGTextureMaterial m_materialO;
     QSGGeometry m_geometry;
     QSGPainterTexture *m_texture;
-    QOpenGLPaintDevice *m_gl_device;
 
     QSize m_size;
-    QSize m_fboSize;
     QSize m_textureSize;
     QRect m_dirtyRect;
     QColor m_fillColor;
@@ -157,7 +150,6 @@ private:
     bool m_linear_filtering : 1;
     bool m_mipmapping : 1;
     bool m_smoothPainting : 1;
-    bool m_extensionsChecked : 1;
     bool m_multisamplingSupported : 1;
     bool m_fastFBOResizing : 1;
     bool m_dirtyGeometry : 1;

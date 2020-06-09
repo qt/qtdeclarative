@@ -77,10 +77,7 @@
 #include <private/qguiapplication_p.h>
 #include <qpa/qplatformintegration.h>
 
-#if QT_CONFIG(opengl)
-#include <qopenglframebufferobject.h>
 #include <private/qsgdefaultrendercontext_p.h>
-#endif
 
 #include <cmath>
 #if defined(Q_OS_QNX) || defined(Q_OS_ANDROID)
@@ -4209,36 +4206,6 @@ bool QQuickContext2D::isPointInPath(qreal x, qreal y) const
     return contains;
 }
 
-class QQuickContext2DThreadCleanup : public QObject
-{
-public:
-    QQuickContext2DThreadCleanup(QOpenGLContext *gl, QQuickContext2DTexture *t, QOffscreenSurface *s)
-        : context(gl), texture(t), surface(s)
-    { }
-
-    ~QQuickContext2DThreadCleanup()
-    {
-#if QT_CONFIG(opengl)
-        context->makeCurrent(surface);
-        delete texture;
-        context->doneCurrent();
-        delete context;
-#endif
-        surface->deleteLater();
-    }
-
-    QOpenGLContext *context;
-    QQuickContext2DTexture *texture;
-    QOffscreenSurface *surface;
-};
-
-class QQuickContext2DTextureCleanup : public QRunnable
-{
-public:
-    QQuickContext2DTexture *texture;
-    void run() override { delete texture; }
-};
-
 QMutex QQuickContext2D::mutex;
 
 QQuickContext2D::QQuickContext2D(QObject *parent)
@@ -4246,7 +4213,6 @@ QQuickContext2D::QQuickContext2D(QObject *parent)
     , m_buffer(new QQuickContext2DCommandBuffer)
     , m_v4engine(nullptr)
     , m_surface(nullptr)
-    , m_glContext(nullptr)
     , m_thread(nullptr)
     , m_grabbed(false)
 {
@@ -4257,36 +4223,8 @@ QQuickContext2D::~QQuickContext2D()
     mutex.lock();
     m_texture->setItem(nullptr);
     delete m_buffer;
+    m_texture->deleteLater();
 
-    if (m_renderTarget == QQuickCanvasItem::FramebufferObject) {
-#if QT_CONFIG(opengl)
-        if (m_renderStrategy == QQuickCanvasItem::Immediate && m_glContext) {
-            Q_ASSERT(QThread::currentThread() == m_glContext->thread());
-            m_glContext->makeCurrent(m_surface.data());
-            delete m_texture;
-            m_glContext->doneCurrent();
-            delete m_glContext;
-        } else if (m_texture->isOnCustomThread()) {
-            Q_ASSERT(m_glContext);
-            QQuickContext2DThreadCleanup *cleaner = new QQuickContext2DThreadCleanup(m_glContext, m_texture, m_surface.take());
-            cleaner->moveToThread(m_texture->thread());
-            cleaner->deleteLater();
-        } else {
-            if (m_canvas->window()) {
-                QQuickContext2DTextureCleanup *c = new QQuickContext2DTextureCleanup;
-                c->texture = m_texture;
-                m_canvas->window()->scheduleRenderJob(c, QQuickWindow::AfterSynchronizingStage);
-            } else {
-                m_texture->deleteLater();
-            }
-        }
-#endif
-    } else {
-        // Image based does not have GL resources, but must still be deleted
-        // on its designated thread after it has completed whatever it might
-        // currently be doing.
-        m_texture->deleteLater();
-    }
     mutex.unlock();
 }
 
@@ -4308,15 +4246,6 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
     m_renderTarget = canvasItem->renderTarget();
     m_renderStrategy = canvasItem->renderStrategy();
 
-#ifdef Q_OS_WIN
-    if (m_renderTarget == QQuickCanvasItem::FramebufferObject
-            && (m_renderStrategy != QQuickCanvasItem::Cooperative)) {
-        // On windows a context needs to be unbound set up sharing, so
-        // for simplicity we disallow FBO + !coop here.
-        m_renderTarget = QQuickCanvasItem::Image;
-    }
-#endif
-
     // Disable threaded background rendering if the platform has issues with it
     if (m_renderTarget == QQuickCanvasItem::FramebufferObject
             && m_renderStrategy == QQuickCanvasItem::Threaded
@@ -4332,19 +4261,8 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
             m_renderTarget = QQuickCanvasItem::Image;
     }
 
-    switch (m_renderTarget) {
-    case QQuickCanvasItem::Image:
-        m_texture = new QQuickContext2DImageTexture;
-        break;
-    case QQuickCanvasItem::FramebufferObject:
-#if QT_CONFIG(opengl)
-        m_texture = new QQuickContext2DFBOTexture;
-#else
-        // It shouldn't be possible to use a FramebufferObject without OpenGL
-        m_texture = nullptr;
-#endif
-        break;
-    }
+    Q_ASSERT(m_renderTarget == QQuickCanvasItem::Image);
+    m_texture = new QQuickContext2DImageTexture;
 
     m_texture->setItem(canvasItem);
     m_texture->setCanvasWindow(canvasItem->canvasWindow().toRect());
@@ -4356,39 +4274,10 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
     m_thread = QThread::currentThread();
 
     QThread *renderThread = m_thread;
-#if QT_CONFIG(opengl)
-    QQuickWindow *window = canvasItem->window();
-    QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
-    QThread *sceneGraphThread = wd->context->thread();
-
     if (m_renderStrategy == QQuickCanvasItem::Threaded)
         renderThread = QQuickContext2DRenderThread::instance(qmlEngine(canvasItem));
-    else if (m_renderStrategy == QQuickCanvasItem::Cooperative)
-        renderThread = sceneGraphThread;
-#else
-    if (m_renderStrategy == QQuickCanvasItem::Threaded)
-        renderThread = QQuickContext2DRenderThread::instance(qmlEngine(canvasItem));
-#endif
-
-
     if (renderThread && renderThread != QThread::currentThread())
         m_texture->moveToThread(renderThread);
-#if QT_CONFIG(opengl)
-    if (m_renderTarget == QQuickCanvasItem::FramebufferObject && renderThread != sceneGraphThread) {
-         //auto openglRenderContext = static_cast<const QSGDefaultRenderContext *>(QQuickWindowPrivate::get(window)->context);
-         // ### glpurge
-         QOpenGLContext *cc = nullptr; // openglRenderContext->openglContext();
-         m_surface.reset(new QOffscreenSurface);
-         m_surface->setFormat(window->format());
-         m_surface->create();
-         m_glContext = new QOpenGLContext;
-         m_glContext->setFormat(cc->format());
-         m_glContext->setShareContext(cc);
-         if (renderThread != QThread::currentThread())
-             m_glContext->moveToThread(renderThread);
-         m_texture->initializeOpenGL(m_glContext, m_surface.data());
-    }
-#endif
     connect(m_texture, SIGNAL(textureChanged()), SIGNAL(textureChanged()));
 
     reset();
@@ -4428,34 +4317,8 @@ QQuickContext2DTexture *QQuickContext2D::texture() const
 QImage QQuickContext2D::toImage(const QRectF& bounds)
 {
     if (m_texture->thread() == QThread::currentThread()) {
-        // if we're either not rendering to an fbo or we have a separate opengl context we can just
-        // flush. Otherwise we have to make sure the shared opengl context is current before we do
-        // so. It may or may not be current already, depending on how this method is called.
-        if (m_renderTarget != QQuickCanvasItem::FramebufferObject || m_glContext) {
             flush();
             m_texture->grabImage(bounds);
-        } else {
-#if QT_CONFIG(opengl)
-            QQuickWindow *window = m_canvas->window();
-            QOpenGLContext *ctx =  window ? window->openglContext() : nullptr;
-            if (ctx && ctx->isValid()) {
-                if (ctx == QOpenGLContext::currentContext()) {
-                    flush();
-                } else {
-                    ctx->makeCurrent(window);
-                    flush();
-                    ctx->doneCurrent();
-                }
-                m_texture->grabImage(bounds);
-            } else {
-                qWarning() << "Cannot read pixels from canvas before opengl context is valid";
-                return QImage();
-            }
-#else
-            flush();
-            m_texture->grabImage(bounds);
-#endif
-        }
     } else if (m_renderStrategy == QQuickCanvasItem::Cooperative) {
         qWarning() << "Pixel readback is not supported in Cooperative mode, please try Threaded or Immediate mode";
         return QImage();

@@ -56,9 +56,6 @@
 QT_REQUIRE_CONFIG(quick_canvas);
 
 #include "qquickcontext2d_p.h"
-#if QT_CONFIG(opengl)
-# include <QOpenGLFramebufferObject>
-#endif
 QT_BEGIN_NAMESPACE
 
 class QQuickContext2DTexture;
@@ -87,24 +84,6 @@ protected:
     QPainter m_painter;
 };
 
-#if QT_CONFIG(opengl)
-class QQuickContext2DFBOTile : public QQuickContext2DTile
-{
-public:
-    QQuickContext2DFBOTile();
-    ~QQuickContext2DFBOTile();
-    void setRect(const QRect& r) override;
-    QOpenGLFramebufferObject* fbo() const {return m_fbo;}
-    void drawFinished() override;
-
-protected:
-    void aboutToDraw() override;
-private:
-
-
-    QOpenGLFramebufferObject *m_fbo;
-};
-#endif
 class QQuickContext2DImageTile : public QQuickContext2DTile
 {
 public:

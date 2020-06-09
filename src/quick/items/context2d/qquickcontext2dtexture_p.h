@@ -58,10 +58,6 @@ QT_REQUIRE_CONFIG(quick_canvas);
 #include <QtQuick/qsgtexture.h>
 #include "qquickcanvasitem_p.h"
 #include "qquickcontext2d_p.h"
-#if QT_CONFIG(opengl)
-# include <QOpenGLContext>
-# include <QOpenGLFramebufferObject>
-#endif
 #include <QtCore/QMutex>
 #include <QtCore/QWaitCondition>
 #include <QtCore/QThread>
@@ -125,12 +121,6 @@ public:
     // Called during sync() on the scene graph thread while GUI is blocked.
     virtual QSGTexture *textureForNextFrame(QSGTexture *lastFrame, QQuickWindow *window) = 0;
     bool event(QEvent *e) override;
-#if QT_CONFIG(opengl)
-    void initializeOpenGL(QOpenGLContext *gl, QOffscreenSurface *s) {
-        m_gl = gl;
-        m_surface = s;
-    }
-#endif
 
 Q_SIGNALS:
     void textureChanged();
@@ -157,9 +147,6 @@ protected:
 
     QList<QQuickContext2DTile*> m_tiles;
     QQuickContext2D *m_context;
-#if QT_CONFIG(opengl)
-    QOpenGLContext *m_gl;
-#endif
     QSurface *m_surface;
 
     QQuickContext2D::State m_state;
@@ -181,42 +168,7 @@ protected:
     uint m_painting : 1;
     uint m_onCustomThread : 1; // Not GUI and not SGRender
 };
-#if QT_CONFIG(opengl)
-class QQuickContext2DFBOTexture : public QQuickContext2DTexture
-{
-    Q_OBJECT
 
-public:
-    QQuickContext2DFBOTexture();
-    ~QQuickContext2DFBOTexture();
-    QQuickContext2DTile* createTile() const override;
-    QPaintDevice* beginPainting() override;
-    void endPainting() override;
-    QRectF normalizedTextureSubRect() const;
-    QQuickCanvasItem::RenderTarget renderTarget() const override;
-    void compositeTile(QQuickContext2DTile* tile) override;
-    QSize adjustedTileSize(const QSize &ts) override;
-
-    QSGTexture *textureForNextFrame(QSGTexture *, QQuickWindow *window) override;
-
-protected:
-    QVector2D scaleFactor() const override;
-
-public Q_SLOTS:
-    void grabImage(const QRectF& region = QRectF()) override;
-
-private:
-    bool doMultisampling() const;
-    QOpenGLFramebufferObject *m_fbo;
-    QOpenGLFramebufferObject *m_multisampledFbo;
-    QSize m_fboSize;
-    QPaintDevice *m_paint_device;
-
-
-    GLuint m_displayTextures[2];
-    int m_displayTexture;
-};
-#endif
 class QSGPlainTexture;
 class QQuickContext2DImageTexture : public QQuickContext2DTexture
 {
