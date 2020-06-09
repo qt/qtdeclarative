@@ -82,6 +82,28 @@ static bool designerSupportRequired = false;
 
 namespace {
 
+QTypeRevision relevantVersion(const QString &uri, QTypeRevision version)
+{
+    return QQmlMetaType::isAnyModule(uri) ? version : QTypeRevision();
+}
+
+QQmlError moduleNotFoundError(const QString &uri, QTypeRevision version)
+{
+    QQmlError error;
+    if (version.hasMajorVersion()) {
+        error.setDescription(QQmlImportDatabase::tr(
+                                 "module \"%1\" version %2.%3 is not installed")
+                             .arg(uri).arg(version.majorVersion())
+                             .arg(version.hasMinorVersion()
+                                  ? QString::number(version.minorVersion())
+                                  : QLatin1String("x")));
+    } else {
+        error.setDescription(QQmlImportDatabase::tr("module \"%1\" is not installed")
+                             .arg(uri));
+    }
+    return error;
+}
+
 QString resolveLocalUrl(const QString &url, const QString &relative)
 {
     if (relative.contains(Colon)) {
@@ -1466,10 +1488,7 @@ bool QQmlImportsPrivate::validateQmldirVersion(const QQmlTypeLoaderQmldirContent
     }
 
     if (lowest_min > version.minorVersion() || highest_min < version.minorVersion()) {
-        QQmlError error;
-        error.setDescription(QQmlImportDatabase::tr("module \"%1\" version %2.%3 is not installed")
-                             .arg(uri).arg(version.majorVersion()).arg(version.minorVersion()));
-        errors->prepend(error);
+        errors->prepend(moduleNotFoundError(uri, version));
         return false;
     }
 
@@ -1571,19 +1590,7 @@ bool QQmlImportsPrivate::addLibraryImport(
             if (inserted->qmlDirComponents.isEmpty() && inserted->qmlDirScripts.isEmpty()) {
                 if (qmldir.plugins().isEmpty() && !qmldir.imports().isEmpty())
                     return true; // This is a pure redirection
-                QQmlError error;
-                if (QQmlMetaType::isAnyModule(uri)) {
-                    error.setDescription(QQmlImportDatabase::tr(
-                                             "module \"%1\" version %2.%3 is not installed")
-                                         .arg(uri).arg(version.majorVersion())
-                                         .arg(version.hasMinorVersion()
-                                              ? QString::number(version.minorVersion())
-                                              : QLatin1String("x")));
-                } else {
-                    error.setDescription(QQmlImportDatabase::tr("module \"%1\" is not installed")
-                                         .arg(uri));
-                }
-                errors->prepend(error);
+                errors->prepend(moduleNotFoundError(uri, relevantVersion(uri, version)));
                 return false;
             } else if (version.hasMajorVersion() && version.hasMinorVersion()
                        && qmldir.hasContent()) {
@@ -1718,14 +1725,7 @@ bool QQmlImportsPrivate::updateQmldirContent(const QString &uri, const QString &
                 if (import->qmlDirComponents.isEmpty() && import->qmlDirScripts.isEmpty()) {
                     // The implicit import qmldir can be empty, and plugins have no extra versions
                     if (uri != QLatin1String(".") && !QQmlMetaType::isModule(uri, version)) {
-                        QQmlError error;
-                        if (QQmlMetaType::isAnyModule(uri)) {
-                            error.setDescription(QQmlImportDatabase::tr("module \"%1\" version %2.%3 is not installed")
-                                                 .arg(uri).arg(version.majorVersion()).arg(version.minorVersion()));
-                        } else {
-                            error.setDescription(QQmlImportDatabase::tr("module \"%1\" is not installed").arg(uri));
-                        }
-                        errors->prepend(error);
+                        errors->prepend(moduleNotFoundError(uri, relevantVersion(uri, version)));
                         return false;
                     }
                 } else if (version.hasMajorVersion() && version.hasMinorVersion()) {
@@ -2181,11 +2181,12 @@ static bool lockModule(const QString &uri, const QString &typeNamespace, QTypeRe
 {
     if (version.hasMajorVersion() && !typeNamespace.isEmpty()
             && !QQmlMetaType::protectModule(uri, version)) {
-        QQmlError error;
-        error.setDescription(
-                    QString::fromLatin1("Cannot protect module %1 %2 as it was never registered")
-                    .arg(uri).arg(version.majorVersion()));
-        errors->append(error);
+        // Not being able to protect the module means there are not types registered for it,
+        // means the plugin we loaded didn't provide any, means we didn't find the module.
+        // We output the generic error message as depending on the load order of imports we may
+        // hit this path or another one that only figures "plugin is already loaded but module
+        // unavailable" and doesn't try to protect it anymore.
+        errors->prepend(moduleNotFoundError(uri, version));
         return false;
     }
 
