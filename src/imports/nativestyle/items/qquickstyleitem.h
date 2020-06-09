@@ -72,8 +72,8 @@ class QQuickStyleMargins
     Q_GADGET
 
     Q_PROPERTY(int left READ left())
-    Q_PROPERTY(int right READ right())
     Q_PROPERTY(int top READ top())
+    Q_PROPERTY(int right READ right())
     Q_PROPERTY(int bottom READ bottom())
 
     QML_NAMED_ELEMENT(StyleMargins)
