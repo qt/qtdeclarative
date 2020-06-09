@@ -2958,7 +2958,8 @@ bool Renderer::prepareRenderMergedBatch(Batch *batch, PreparedRenderBatch *rende
     m_current_projection_matrix_native_ndc = projectionMatrixWithNativeNDC();
 
     QSGMaterial *material = gn->activeMaterial();
-    updateClipState(gn->clipList(), batch);
+    if (m_renderMode != QSGRenderContext::RenderMode3D)
+        updateClipState(gn->clipList(), batch);
 
     const QSGGeometry *g = gn->geometry();
     ShaderManager::Shader *sms = useDepthBuffer() ? m_shaderManager->prepareMaterial(material, g)
@@ -3130,7 +3131,8 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
     m_current_projection_matrix_native_ndc = projectionMatrixWithNativeNDC();
 
     QSGGeometryNode *gn = e->node;
-    updateClipState(gn->clipList(), batch);
+    if (m_renderMode != QSGRenderContext::RenderMode3D)
+        updateClipState(gn->clipList(), batch);
 
     // We always have dirty matrix as all batches are at a unique z range.
     QSGMaterialShader::RenderState::DirtyStates dirty = QSGMaterialShader::RenderState::DirtyMatrix;
@@ -3751,18 +3753,19 @@ bool Renderer::prepareRhiRenderNode(Batch *batch, PreparedRenderBatch *renderBat
 
     setActiveRhiShader(nullptr, nullptr);
 
-    QSGNode *clip = e->renderNode->parent();
     QSGRenderNodePrivate *rd = QSGRenderNodePrivate::get(e->renderNode);
     rd->m_clip_list = nullptr;
-    while (clip != rootNode()) {
-        if (clip->type() == QSGNode::ClipNodeType) {
-            rd->m_clip_list = static_cast<QSGClipNode *>(clip);
-            break;
+    if (m_renderMode != QSGRenderContext::RenderMode3D) {
+        QSGNode *clip = e->renderNode->parent();
+        while (clip != rootNode()) {
+            if (clip->type() == QSGNode::ClipNodeType) {
+                rd->m_clip_list = static_cast<QSGClipNode *>(clip);
+                break;
+            }
+            clip = clip->parent();
         }
-        clip = clip->parent();
+        updateClipState(rd->m_clip_list, batch);
     }
-
-    updateClipState(rd->m_clip_list, batch);
 
     QSGNode *xform = e->renderNode->parent();
     QMatrix4x4 matrix;
