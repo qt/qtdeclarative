@@ -113,18 +113,8 @@ void QQmlTypeModule::add(QQmlTypePrivate *type)
 void QQmlTypeModule::remove(const QQmlTypePrivate *type)
 {
     QMutexLocker lock(&d->mutex);
-    for (auto elementIt = d->typeHash.begin(); elementIt != d->typeHash.end();) {
+    for (auto elementIt = d->typeHash.begin(); elementIt != d->typeHash.end(); ++elementIt)
         QQmlMetaType::removeQQmlTypePrivate(elementIt.value(), type);
-
-#if 0
-        if (list.isEmpty())
-            elementIt = typeHash.erase(elementIt);
-        else
-            ++elementIt;
-#else
-        ++elementIt;
-#endif
-    }
 }
 
 bool QQmlTypeModule::isLocked() const
