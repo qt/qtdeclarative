@@ -58,6 +58,8 @@
 #include <private/qqmlpropertycache_p.h>
 #include <private/qqmlmetatype_p.h>
 
+#include <QAtomicInteger>
+
 QT_BEGIN_NAMESPACE
 
 class QQmlTypePrivate : public QQmlRefCount
@@ -166,10 +168,10 @@ public:
     const QMetaObject *baseMetaObject;
 
     int index;
-    mutable volatile bool isSetup:1;
-    mutable volatile bool isEnumFromCacheSetup:1;
-    mutable volatile bool isEnumFromBaseSetup:1;
-    mutable bool haveSuperType:1;
+    mutable QAtomicInteger<bool> isSetup;
+    mutable QAtomicInteger<bool> isEnumFromCacheSetup;
+    mutable QAtomicInteger<bool> isEnumFromBaseSetup;
+    mutable bool haveSuperType;
     mutable QList<QQmlProxyMetaObject::ProxyData> metaObjects;
     mutable QStringHash<int> enums;
     mutable QStringHash<int> scopedEnumIndex; // maps from enum name to index in scopedEnums

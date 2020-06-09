@@ -91,7 +91,7 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data,
     d->iid = type.iid;
     d->typeId = type.typeId;
     d->listId = type.listId;
-    d->isSetup = true;
+    d->isSetup.storeRelease(true);
     d->module = QString::fromUtf8(type.uri);
     d->version = type.version;
     data->registerType(d);

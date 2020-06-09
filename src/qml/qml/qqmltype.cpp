@@ -207,11 +207,11 @@ static bool isPropertyRevisioned(const QMetaObject *mo, int index)
 
 void QQmlTypePrivate::init() const
 {
-    if (isSetup)
+    if (isSetup.loadAcquire())
         return;
 
     QMutexLocker lock(QQmlMetaType::typeRegistrationLock());
-    if (isSetup)
+    if (isSetup.loadAcquire())
         return;
 
     const QMetaObject *mo = baseMetaObject;
@@ -265,17 +265,17 @@ void QQmlTypePrivate::init() const
         }
     }
 
-    isSetup = true;
+    isSetup.storeRelease(true);
     lock.unlock();
 }
 
 void QQmlTypePrivate::initEnums(QQmlEnginePrivate *engine) const
 {
-    const QQmlPropertyCache *cache = (!isEnumFromCacheSetup && isComposite())
+    const QQmlPropertyCache *cache = (!isEnumFromCacheSetup.loadAcquire() && isComposite())
             ? compositePropertyCache(engine)
             : nullptr;
 
-    const QMetaObject *metaObject = !isEnumFromBaseSetup
+    const QMetaObject *metaObject = !isEnumFromBaseSetup.loadAcquire()
             ? baseMetaObject // beware: It could be a singleton type without metaobject
             : nullptr;
 
@@ -288,12 +288,12 @@ void QQmlTypePrivate::initEnums(QQmlEnginePrivate *engine) const
 
     if (cache) {
         insertEnumsFromPropertyCache(cache);
-        isEnumFromCacheSetup = true;
+        isEnumFromCacheSetup.storeRelease(true);
     }
 
     if (metaObject) {
         insertEnums(metaObject);
-        isEnumFromBaseSetup = true;
+        isEnumFromBaseSetup.storeRelease(true);
     }
 }
 
