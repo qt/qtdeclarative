@@ -390,7 +390,7 @@ bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *da
     if (uri && !typeName.isEmpty()) {
         QString nameSpace = QString::fromUtf8(uri);
         QQmlMetaTypeData::VersionedUri versionedUri(nameSpace, version);
-        if (QQmlTypeModule* qqtm = data->uriToModule.value(versionedUri, 0)){
+        if (QQmlTypeModule *qqtm = data->uriToModule.value(versionedUri)){
             if (qqtm->isLocked()){
                 QString failure(QCoreApplication::translate("qmlRegisterType",
                                                             "Cannot install %1 '%2' into protected module '%3' version '%4'"));
@@ -610,8 +610,8 @@ bool QQmlMetaType::protectModule(const QString &uri, QTypeRevision version)
 {
     QQmlMetaTypeDataPtr data;
 
-    if (QQmlTypeModule* qqtm = data->uriToModule.value(
-                QQmlMetaTypeData::VersionedUri(uri, version), nullptr)) {
+    if (QQmlTypeModule *qqtm = data->uriToModule.value(
+                QQmlMetaTypeData::VersionedUri(uri, version))) {
         qqtm->lock();
         return true;
     }
