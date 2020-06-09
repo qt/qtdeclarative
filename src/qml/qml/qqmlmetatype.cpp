@@ -62,6 +62,12 @@ struct LockedData : private QQmlMetaTypeData
 Q_GLOBAL_STATIC(LockedData, metaTypeData)
 Q_GLOBAL_STATIC(QRecursiveMutex, metaTypeDataLock)
 
+struct ModuleUri : public QString
+{
+    ModuleUri(const QString &string) : QString(string) {}
+    ModuleUri(const std::unique_ptr<QQmlTypeModule> &module) : QString(module->module()) {}
+};
+
 class QQmlMetaTypeDataPtr
 {
     Q_DISABLE_COPY_MOVE(QQmlMetaTypeDataPtr)
@@ -299,9 +305,7 @@ void QQmlMetaType::clearTypeRegistrations()
     //Only cleans global static, assumed no running engine
     QQmlMetaTypeDataPtr data;
 
-    for (QQmlMetaTypeData::TypeModules::const_iterator i = data->uriToModule.constBegin(), cend = data->uriToModule.constEnd(); i != cend; ++i)
-        delete *i;
-
+    data->uriToModule.clear();
     data->types.clear();
     data->idToType.clear();
     data->nameToType.clear();
@@ -309,7 +313,6 @@ void QQmlMetaType::clearTypeRegistrations()
     data->typePropertyCaches.clear();
     data->urlToNonFileImportType.clear();
     data->metaObjectToType.clear();
-    data->uriToModule.clear();
     data->undeletableTypes.clear();
 }
 
@@ -389,16 +392,15 @@ bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *da
 
     if (uri && !typeName.isEmpty()) {
         QString nameSpace = QString::fromUtf8(uri);
-        QQmlMetaTypeData::VersionedUri versionedUri(nameSpace, version);
-        if (QQmlTypeModule *qqtm = data->uriToModule.value(versionedUri)){
-            if (qqtm->isLocked()){
-                QString failure(QCoreApplication::translate("qmlRegisterType",
-                                                            "Cannot install %1 '%2' into protected module '%3' version '%4'"));
-                data->recordTypeRegFailure(failure.arg(registrationTypeString(typeType))
-                                           .arg(typeName).arg(nameSpace)
-                                           .arg(version.majorVersion()));
-                return false;
-            }
+        QQmlTypeModule *qqtm = data->findTypeModule(nameSpace, version);
+        if (qqtm && qqtm->isLocked()) {
+            QString failure(QCoreApplication::translate(
+                                "qmlRegisterType",
+                                "Cannot install %1 '%2' into protected module '%3' version '%4'"));
+            data->recordTypeRegFailure(failure.arg(registrationTypeString(typeType))
+                                       .arg(typeName).arg(nameSpace)
+                                       .arg(version.majorVersion()));
+            return false;
         }
     }
 
@@ -408,13 +410,9 @@ bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *da
 // NOTE: caller must hold a QMutexLocker on "data"
 QQmlTypeModule *getTypeModule(const QHashedString &uri, QTypeRevision version, QQmlMetaTypeData *data)
 {
-    QQmlMetaTypeData::VersionedUri versionedUri(uri, version);
-    QQmlTypeModule *module = data->uriToModule.value(versionedUri);
-    if (!module) {
-        module = new QQmlTypeModule(versionedUri.uri, versionedUri.majorVersion);
-        data->uriToModule.insert(versionedUri, module);
-    }
-    return module;
+    if (QQmlTypeModule *module = data->findTypeModule(uri, version))
+        return module;
+    return data->addTypeModule(std::make_unique<QQmlTypeModule>(uri, version.majorVersion()));
 }
 
 // NOTE: caller must hold a QMutexLocker on "data"
@@ -609,10 +607,8 @@ int QQmlMetaType::registerUnitCacheHook(
 bool QQmlMetaType::protectModule(const QString &uri, QTypeRevision version)
 {
     QQmlMetaTypeDataPtr data;
-
-    if (QQmlTypeModule *qqtm = data->uriToModule.value(
-                QQmlMetaTypeData::VersionedUri(uri, version))) {
-        qqtm->lock();
+    if (QQmlTypeModule *module = data->findTypeModule(uri, version)) {
+        module->lock();
         return true;
     }
     return false;
@@ -884,14 +880,8 @@ QRecursiveMutex *QQmlMetaType::typeRegistrationLock()
 bool QQmlMetaType::isAnyModule(const QString &uri)
 {
     QQmlMetaTypeDataPtr data;
-
-    for (QQmlMetaTypeData::TypeModules::ConstIterator iter = data->uriToModule.cbegin();
-         iter != data->uriToModule.cend(); ++iter) {
-        if ((*iter)->module() == uri)
-            return true;
-    }
-
-    return false;
+    return std::binary_search(data->uriToModule.begin(), data->uriToModule.end(), uri,
+                              std::less<ModuleUri>());
 }
 
 /*
@@ -901,8 +891,7 @@ bool QQmlMetaType::isLockedModule(const QString &uri, QTypeRevision version)
 {
     QQmlMetaTypeDataPtr data;
 
-    if (QQmlTypeModule* qqtm = data->uriToModule.value(
-                QQmlMetaTypeData::VersionedUri(uri, version), nullptr))
+    if (QQmlTypeModule* qqtm = data->findTypeModule(uri, version))
         return qqtm->isLocked();
     return false;
 }
@@ -922,8 +911,7 @@ bool QQmlMetaType::isModule(const QString &module, QTypeRevision version)
     QQmlMetaTypeDataPtr data;
 
     // first, check Types
-    if (QQmlTypeModule *tm
-            = data->uriToModule.value(QQmlMetaTypeData::VersionedUri(module, version))) {
+    if (QQmlTypeModule *tm = data->findTypeModule(module, version)) {
         return !version.hasMinorVersion()
                 || (tm->minimumMinorVersion() <= version.minorVersion()
                     && tm->maximumMinorVersion() >= version.minorVersion());
@@ -937,20 +925,12 @@ QQmlTypeModule *QQmlMetaType::typeModule(const QString &uri, QTypeRevision versi
     QQmlMetaTypeDataPtr data;
 
     if (version.hasMajorVersion())
-        return data->uriToModule.value(QQmlMetaTypeData::VersionedUri(uri, version));
+        return data->findTypeModule(uri, version);
 
-    QQmlTypeModule *latestModule = nullptr;
-    for (QQmlMetaTypeData::TypeModules::ConstIterator iter = data->uriToModule.cbegin();
-         iter != data->uriToModule.cend(); ++iter) {
-        QQmlTypeModule *module = *iter;
-        if (module->module() != uri)
-            continue;
+    auto range = std::equal_range(data->uriToModule.begin(), data->uriToModule.end(),
+                                  uri, std::less<ModuleUri>());
 
-        if (!latestModule || module->majorVersion() > latestModule->majorVersion())
-            latestModule = module;
-    }
-
-    return latestModule;
+    return range.first == range.second ? nullptr : (--range.second)->get();
 }
 
 QList<QQmlPrivate::AutoParentFunction> QQmlMetaType::parentFunctions()

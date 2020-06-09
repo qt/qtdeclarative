@@ -51,10 +51,7 @@ QQmlMetaTypeData::QQmlMetaTypeData()
 
 QQmlMetaTypeData::~QQmlMetaTypeData()
 {
-    for (TypeModules::const_iterator i = uriToModule.constBegin(), cend = uriToModule.constEnd(); i != cend; ++i)
-        delete *i;
-    for (QHash<const QMetaObject *, QQmlPropertyCache *>::Iterator it = propertyCaches.begin(), end = propertyCaches.end();
-         it != end; ++it)
+    for (auto it = propertyCaches.begin(), end = propertyCaches.end(); it != end; ++it)
         (*it)->release();
 
     // Do this before the attached properties disappear.
@@ -76,6 +73,38 @@ void QQmlMetaTypeData::registerType(QQmlTypePrivate *priv)
     types.append(QQmlType(priv));
     priv->index = types.count() - 1;
     priv->release();
+}
+
+QQmlMetaTypeData::VersionedUri::VersionedUri(const std::unique_ptr<QQmlTypeModule> &module)
+    : uri(module->module()), majorVersion(module->majorVersion())
+{
+}
+
+QQmlTypeModule *QQmlMetaTypeData::findTypeModule(const QString &module, QTypeRevision version)
+{
+    const auto qqtm = std::lower_bound(
+                uriToModule.begin(), uriToModule.end(), VersionedUri(module, version),
+                std::less<QQmlMetaTypeData::VersionedUri>());
+    if (qqtm == uriToModule.end())
+        return nullptr;
+
+    QQmlTypeModule *candidate = qqtm->get();
+    return (candidate->module() == module && candidate->majorVersion() == version.majorVersion())
+            ? candidate
+            : nullptr;
+}
+
+QQmlTypeModule *QQmlMetaTypeData::addTypeModule(std::unique_ptr<QQmlTypeModule> module)
+{
+    QQmlTypeModule *ret = module.get();
+    uriToModule.emplace_back(std::move(module));
+    std::sort(uriToModule.begin(), uriToModule.end(),
+              [](const std::unique_ptr<QQmlTypeModule> &a,
+                 const std::unique_ptr<QQmlTypeModule> &b) {
+        const int diff = a->module().compare(b->module());
+        return diff < 0 || (diff == 0 && a->majorVersion() < b->majorVersion());
+    });
+    return ret;
 }
 
 bool QQmlMetaTypeData::registerModuleTypes(const QString &uri)

@@ -85,9 +85,10 @@ struct QQmlMetaTypeData
     QVector<QHash<QTypeRevision, QQmlRefPointer<QQmlPropertyCache>>> typePropertyCaches;
 
     struct VersionedUri {
-        VersionedUri() : majorVersion(0) {}
-        VersionedUri(const QHashedString &uri, QTypeRevision version)
+        VersionedUri() = default;
+        VersionedUri(const QString &uri, QTypeRevision version)
             : uri(uri), majorVersion(version.majorVersion()) {}
+        VersionedUri(const std::unique_ptr<QQmlTypeModule> &module);
 
         friend bool operator==(const VersionedUri &a, const VersionedUri &b)
         {
@@ -99,12 +100,21 @@ struct QQmlMetaTypeData
             return qHashMulti(seed, v.uri, v.majorVersion);
         }
 
-        QHashedString uri;
-        quint8 majorVersion;
+        friend bool operator<(const QQmlMetaTypeData::VersionedUri &a,
+                              const QQmlMetaTypeData::VersionedUri &b)
+        {
+            const int diff = a.uri.compare(b.uri);
+            return diff < 0 || (diff == 0 && a.majorVersion < b.majorVersion);
+        }
+
+        QString uri;
+        quint8 majorVersion = 0;
     };
 
-    typedef QHash<VersionedUri, QQmlTypeModule *> TypeModules;
+    typedef std::vector<std::unique_ptr<QQmlTypeModule>> TypeModules;
     TypeModules uriToModule;
+    QQmlTypeModule *findTypeModule(const QString &module, QTypeRevision version);
+    QQmlTypeModule *addTypeModule(std::unique_ptr<QQmlTypeModule> module);
 
     QHash<QString, void (*)()> moduleTypeRegistrationFunctions;
     bool registerModuleTypes(const QString &uri);
