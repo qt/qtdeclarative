@@ -52,6 +52,8 @@
 //
 
 #include <QtQml/qtqmlglobal.h>
+#include <QtQml/private/qstringhash_p.h>
+#include <QtCore/qmutex.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qversionnumber.h>
 
@@ -62,32 +64,40 @@ QT_BEGIN_NAMESPACE
 class QQmlType;
 class QQmlTypePrivate;
 struct QQmlMetaTypeData;
-class QHashedString;
-class QHashedStringRef;
 
 namespace QV4 {
 struct String;
 }
 
-class QQmlTypeModulePrivate;
 class QQmlTypeModule
 {
 public:
-    QQmlTypeModule(const QString &uri = QString(), quint8 majorVersion = 0);
-    ~QQmlTypeModule();
+    QQmlTypeModule() = default;
+    QQmlTypeModule(const QString &uri, quint8 majorVersion)
+        : m_module(uri), m_majorVersion(majorVersion)
+    {}
 
     void add(QQmlTypePrivate *);
     void remove(const QQmlTypePrivate *type);
 
-    bool isLocked() const;
-    void lock();
+    bool isLocked() const { return m_locked.loadRelaxed() != 0; }
+    void lock() { m_locked.storeRelaxed(1); }
 
-    QString module() const;
-    quint8 majorVersion() const;
+    QString module() const
+    {
+        // No need to lock. m_module is const
+        return m_module;
+    }
+
+    quint8 majorVersion() const
+    {
+        // No need to lock. d->majorVersion is const
+        return m_majorVersion;
+    }
 
     void addMinorVersion(quint8 minorVersion);
-    quint8 minimumMinorVersion() const;
-    quint8 maximumMinorVersion() const;
+    quint8 minimumMinorVersion() const { return m_minMinorVersion.loadRelaxed(); }
+    quint8 maximumMinorVersion() const { return m_maxMinorVersion.loadRelaxed(); }
 
     QQmlType type(const QHashedStringRef &, QTypeRevision version) const;
     QQmlType type(const QV4::String *, QTypeRevision version) const;
@@ -99,7 +109,24 @@ public:
     QStringList imports() const;
 
 private:
-    QQmlTypeModulePrivate *d;
+    const QString m_module;
+    const quint8 m_majorVersion = 0;
+
+    QStringList m_imports;
+
+    // Can only ever decrease
+    QAtomicInt m_minMinorVersion = std::numeric_limits<quint8>::max();
+
+    // Can only ever increase
+    QAtomicInt m_maxMinorVersion = 0;
+
+    // Bool. Can only be set to 1 once.
+    QAtomicInt m_locked = 0;
+
+    using TypeHash = QStringHash<QList<QQmlTypePrivate *>>;
+    TypeHash m_typeHash;
+
+    mutable QMutex m_mutex;
 };
 
 QT_END_NAMESPACE

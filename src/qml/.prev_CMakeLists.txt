@@ -259,7 +259,6 @@ qt_add_module(Qml
         qml/qqmltypeloaderqmldircontent.cpp qml/qqmltypeloaderqmldircontent_p.h
         qml/qqmltypeloaderthread.cpp qml/qqmltypeloaderthread_p.h
         qml/qqmltypemodule.cpp qml/qqmltypemodule_p.h
-        qml/qqmltypemodule_p_p.h
         qml/qqmltypemoduleversion.cpp qml/qqmltypemoduleversion_p.h
         qml/qqmltypenamecache.cpp qml/qqmltypenamecache_p.h
         qml/qqmltypenotavailable.cpp qml/qqmltypenotavailable_p.h

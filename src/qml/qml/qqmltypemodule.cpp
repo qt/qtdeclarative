@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-#include "qqmltypemodule_p_p.h"
+#include "qqmltypemodule_p.h"
 
 #include <private/qqmltype_p_p.h>
 
@@ -45,57 +45,25 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlTypeModule::QQmlTypeModule(const QString &module, quint8 majorVersion)
-    : d(new QQmlTypeModulePrivate(module, majorVersion))
-{
-}
-
-QQmlTypeModule::~QQmlTypeModule()
-{
-    delete d;
-}
-
-QString QQmlTypeModule::module() const
-{
-    // No need to lock. d->module is const
-    return d->module;
-}
-
-quint8 QQmlTypeModule::majorVersion() const
-{
-    // No need to lock. d->majorVersion is const
-    return d->majorVersion;
-}
-
-quint8 QQmlTypeModule::minimumMinorVersion() const
-{
-    return d->minMinorVersion.loadRelaxed();
-}
-
-quint8 QQmlTypeModule::maximumMinorVersion() const
-{
-    return d->maxMinorVersion.loadRelaxed();
-}
-
 void QQmlTypeModule::addMinorVersion(quint8 version)
 {
-    for (int oldVersion = d->minMinorVersion.loadRelaxed();
-         oldVersion > version && !d->minMinorVersion.testAndSetOrdered(oldVersion, version);
-         oldVersion = d->minMinorVersion.loadRelaxed()) {
+    for (int oldVersion = m_minMinorVersion.loadRelaxed();
+         oldVersion > version && !m_minMinorVersion.testAndSetOrdered(oldVersion, version);
+         oldVersion = m_minMinorVersion.loadRelaxed()) {
     }
 
-    for (int oldVersion = d->maxMinorVersion.loadRelaxed();
-         oldVersion < version && !d->maxMinorVersion.testAndSetOrdered(oldVersion, version);
-         oldVersion = d->maxMinorVersion.loadRelaxed()) {
+    for (int oldVersion = m_maxMinorVersion.loadRelaxed();
+         oldVersion < version && !m_maxMinorVersion.testAndSetOrdered(oldVersion, version);
+         oldVersion = m_maxMinorVersion.loadRelaxed()) {
     }
 }
 
 void QQmlTypeModule::add(QQmlTypePrivate *type)
 {
-    QMutexLocker lock(&d->mutex);
+    QMutexLocker lock(&m_mutex);
     addMinorVersion(type->version.minorVersion());
 
-    QList<QQmlTypePrivate *> &list = d->typeHash[type->elementName];
+    QList<QQmlTypePrivate *> &list = m_typeHash[type->elementName];
     for (int ii = 0; ii < list.count(); ++ii) {
         QQmlTypePrivate *in_list = list.at(ii);
         Q_ASSERT(in_list);
@@ -112,25 +80,15 @@ void QQmlTypeModule::add(QQmlTypePrivate *type)
 
 void QQmlTypeModule::remove(const QQmlTypePrivate *type)
 {
-    QMutexLocker lock(&d->mutex);
-    for (auto elementIt = d->typeHash.begin(); elementIt != d->typeHash.end(); ++elementIt)
+    QMutexLocker lock(&m_mutex);
+    for (auto elementIt = m_typeHash.begin(); elementIt != m_typeHash.end(); ++elementIt)
         QQmlMetaType::removeQQmlTypePrivate(elementIt.value(), type);
-}
-
-bool QQmlTypeModule::isLocked() const
-{
-    return d->locked.loadRelaxed() != 0;
-}
-
-void QQmlTypeModule::lock()
-{
-    d->locked.storeRelaxed(1);
 }
 
 QQmlType QQmlTypeModule::type(const QHashedStringRef &name, QTypeRevision version) const
 {
-    QMutexLocker lock(&d->mutex);
-    QList<QQmlTypePrivate *> *types = d->typeHash.value(name);
+    QMutexLocker lock(&m_mutex);
+    QList<QQmlTypePrivate *> *types = m_typeHash.value(name);
     if (types) {
         for (int ii = 0; ii < types->count(); ++ii)
             if (types->at(ii)->version.minorVersion() <= version.minorVersion())
@@ -142,8 +100,8 @@ QQmlType QQmlTypeModule::type(const QHashedStringRef &name, QTypeRevision versio
 
 QQmlType QQmlTypeModule::type(const QV4::String *name, QTypeRevision version) const
 {
-    QMutexLocker lock(&d->mutex);
-    QList<QQmlTypePrivate *> *types = d->typeHash.value(name);
+    QMutexLocker lock(&m_mutex);
+    QList<QQmlTypePrivate *> *types = m_typeHash.value(name);
     if (types) {
         for (int ii = 0; ii < types->count(); ++ii)
             if (types->at(ii)->version.minorVersion() <= version.minorVersion())
@@ -155,8 +113,8 @@ QQmlType QQmlTypeModule::type(const QV4::String *name, QTypeRevision version) co
 
 void QQmlTypeModule::walkCompositeSingletons(const std::function<void(const QQmlType &)> &callback) const
 {
-    QMutexLocker lock(&d->mutex);
-    for (auto typeCandidates = d->typeHash.begin(), end = d->typeHash.end();
+    QMutexLocker lock(&m_mutex);
+    for (auto typeCandidates = m_typeHash.begin(), end = m_typeHash.end();
          typeCandidates != end; ++typeCandidates) {
         for (auto type: typeCandidates.value()) {
             if (type->regType == QQmlType::CompositeSingletonType)
@@ -167,17 +125,17 @@ void QQmlTypeModule::walkCompositeSingletons(const std::function<void(const QQml
 
 QStringList QQmlTypeModule::imports() const
 {
-    return d->imports;
+    return m_imports;
 }
 
 void QQmlTypeModule::addImport(const QString &import)
 {
-    d->imports.append(import);
+    m_imports.append(import);
 }
 
 void QQmlTypeModule::removeImport(const QString &import)
 {
-    d->imports.removeAll(import);
+    m_imports.removeAll(import);
 }
 
 QT_END_NAMESPACE

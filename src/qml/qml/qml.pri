@@ -105,7 +105,6 @@ HEADERS += \
     $$PWD/qqmltype_p.h \
     $$PWD/qqmltype_p_p.h \
     $$PWD/qqmltypemodule_p.h \
-    $$PWD/qqmltypemodule_p_p.h \
     $$PWD/qqmltypemoduleversion_p.h \
     $$PWD/qqmlengine.h \
     $$PWD/qqmlcontext.h \
