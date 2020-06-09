@@ -473,6 +473,13 @@ class Switcher : public QObject
     Q_OBJECT
 public:
     Switcher(QQmlEngine *e) : QObject(), engine(e) { }
+    ~Switcher()
+    {
+        if (component)
+            component->deleteLater();
+        if (incubator && incubator->object())
+            incubator->object()->deleteLater();
+    }
 
     struct MyIncubator : public QQmlIncubator
     {
@@ -489,13 +496,13 @@ public:
 
     void start()
     {
-        incubator = new MyIncubator(QQmlIncubator::Synchronous, this);
+        incubator.reset(new MyIncubator(QQmlIncubator::Synchronous, this));
         component = new QQmlComponent(engine, QQmlDataTest::instance()->testFileUrl("recursiveClear.1.qml"));
         component->create(*incubator);
     }
 
     QQmlEngine *engine;
-    MyIncubator *incubator;
+    QScopedPointer<MyIncubator> incubator;
     QQmlComponent *component;
 
 public slots:
@@ -594,18 +601,17 @@ void tst_qqmlincubator::asynchronousIfNested()
     QQmlComponent component(&engine, testFileUrl("asynchronousIfNested.1.qml"));
     QVERIFY(component.isReady());
 
-    QObject *object = component.create();
-    QVERIFY(object != nullptr);
+    QScopedPointer<QObject> object { component.create() };
+    QVERIFY(object);
     QCOMPARE(object->property("a").toInt(), 10);
 
     QQmlIncubator incubator(QQmlIncubator::AsynchronousIfNested);
-    component.create(incubator, nullptr, qmlContext(object));
+    component.create(incubator, nullptr, qmlContext(object.get()));
 
     QVERIFY(incubator.isReady());
     QVERIFY(incubator.object());
     QCOMPARE(incubator.object()->property("a").toInt(), 10);
     delete incubator.object();
-    delete object;
     }
 
     // Asynchronous if nested within an executing context behaves asynchronously, but prevents
@@ -679,6 +685,7 @@ void tst_qqmlincubator::asynchronousIfNested()
             if (incubator.object()->property("a").toInt() != 10) return;
 
             d->pass = true;
+            incubator.object()->deleteLater();
         }
     };
 
@@ -806,6 +813,9 @@ void tst_qqmlincubator::chainedAsynchronousIfNested()
     QVERIFY(incubator.isReady());
     QVERIFY(incubator1.isReady());
     QVERIFY(incubator2.isReady());
+    incubator.object()->deleteLater();
+    incubator1.object()->deleteLater();
+    incubator2.object()->deleteLater();
 }
 
 // Checks that new AsynchronousIfNested incubators can be correctly chained if started in
@@ -934,6 +944,11 @@ void tst_qqmlincubator::chainedAsynchronousIfNestedOnCompleted()
     QVERIFY(incubator1.isReady());
     QVERIFY(incubator2.isReady());
     QVERIFY(incubator3.isReady());
+
+    incubator.object()->deleteLater();
+    incubator1.object()->deleteLater();
+    incubator2.object()->deleteLater();
+    incubator3.object()->deleteLater();
 }
 
 // Checks that new AsynchronousIfNested incubators can be correctly cleared if started in
@@ -1050,6 +1065,10 @@ void tst_qqmlincubator::chainedAsynchronousClear()
     QVERIFY(incubator1.isReady());
     QVERIFY(incubator2.isReady());
     QVERIFY(incubator3.isNull());
+
+
+    incubator1.object()->deleteLater();
+    incubator2.object()->deleteLater();
 }
 
 void tst_qqmlincubator::selfDelete()
