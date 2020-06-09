@@ -373,17 +373,6 @@ QList<QObject *> QQmlApplicationEngine::rootObjects() const
     return d->objects;
 }
 
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-/*!
-    \overload
-    \internal
-*/
-QList<QObject *> QQmlApplicationEngine::rootObjects()
-{
-    return qAsConst(*this).rootObjects();
-}
-#endif // < Qt 6
-
 QT_END_NAMESPACE
 
 #include "moc_qqmlapplicationengine.cpp"
