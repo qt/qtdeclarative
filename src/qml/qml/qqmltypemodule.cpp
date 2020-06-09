@@ -125,16 +125,19 @@ void QQmlTypeModule::walkCompositeSingletons(const std::function<void(const QQml
 
 QStringList QQmlTypeModule::imports() const
 {
+    QMutexLocker lock(&m_mutex);
     return m_imports;
 }
 
 void QQmlTypeModule::addImport(const QString &import)
 {
+    QMutexLocker lock(&m_mutex);
     m_imports.append(import);
 }
 
 void QQmlTypeModule::removeImport(const QString &import)
 {
+    QMutexLocker lock(&m_mutex);
     m_imports.removeAll(import);
 }
 
