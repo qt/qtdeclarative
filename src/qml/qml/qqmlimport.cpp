@@ -1200,21 +1200,6 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
         int dynamicPluginsFound = 0;
         int staticPluginsFound = 0;
 
-        auto handleErrors = [&]() {
-            if (errors) {
-                // XXX TODO: should we leave the import plugin error alone?
-                // Here, we pop it off the top and coalesce it into this error's message.
-                // The reason is that the lower level may add url and line/column numbering information.
-                QQmlError error;
-                error.setDescription(
-                        QQmlImportDatabase::tr(
-                                "plugin cannot be loaded for module \"%1\": %2")
-                                .arg(uri, errors->takeFirst().description()));
-                error.setUrl(QUrl::fromLocalFile(qmldirFilePath));
-                errors->prepend(error);
-            }
-        };
-
         const auto qmldirPlugins = qmldir.plugins();
         for (const QQmlDirParser::Plugin &plugin : qmldirPlugins) {
             const QString resolvedFilePath = database->resolvePlugin(
@@ -1226,7 +1211,6 @@ bool QQmlImportsPrivate::importExtension(const QString &qmldirFilePath,
             ++dynamicPluginsFound;
             if (!database->importDynamicPlugin(
                         resolvedFilePath, uri, typeNamespace, version, plugin.optional, errors)) {
-                handleErrors();
                 return false;
             }
         }

@@ -279,7 +279,7 @@ void tst_qqmlmoduleplugin::incorrectPluginCase()
     QString libname = "PluGin.dll";
 #endif
     if (!caseSensitive) {
-        expectedError = QLatin1String("plugin cannot be loaded for module \"org.qtproject.WrongCase\": File name case mismatch for \"")
+        expectedError = QLatin1String("File name case mismatch for \"")
             + QDir(m_importsDirectory).filePath("org/qtproject/WrongCase/" + libname)
             + QLatin1Char('"');
     }
@@ -631,20 +631,20 @@ void tst_qqmlmoduleplugin::importStrictModule_data()
         << "import org.qtproject.NonstrictModule 1.0\n"
            "MyPluginType {}"
         << "Module 'org.qtproject.NonstrictModule' does not contain a module identifier directive - it cannot be protected from external registrations."
-        << ":1:1: plugin cannot be loaded for module \"org.qtproject.NonstrictModule\": Cannot install element 'MyPluginType' into protected module 'org.qtproject.StrictModule' version '1'";
+        << ":1:1: Cannot install element 'MyPluginType' into protected module 'org.qtproject.StrictModule' version '1'";
 
     QTest::newRow("non-strict preemption")
         << "import org.qtproject.PreemptiveModule 1.0\n"
            "import org.qtproject.PreemptedStrictModule 1.0\n"
            "MyPluginType {}"
         << "Module 'org.qtproject.PreemptiveModule' does not contain a module identifier directive - it cannot be protected from external registrations."
-        << ":2:1: plugin cannot be loaded for module \"org.qtproject.PreemptedStrictModule\": Namespace 'org.qtproject.PreemptedStrictModule' has already been used for type registration";
+        << ":2:1: Namespace 'org.qtproject.PreemptedStrictModule' has already been used for type registration";
 
     QTest::newRow("invalid namespace")
         << "import org.qtproject.InvalidNamespaceModule 1.0\n"
            "MyPluginType {}"
         << QString()
-        << ":1:1: plugin cannot be loaded for module \"org.qtproject.InvalidNamespaceModule\": Module namespace 'org.qtproject.AwesomeModule' does not match import URI 'org.qtproject.InvalidNamespaceModule'";
+        << ":1:1: Module namespace 'org.qtproject.AwesomeModule' does not match import URI 'org.qtproject.InvalidNamespaceModule'";
 
     QTest::newRow("module directive must be first")
         << "import org.qtproject.InvalidFirstCommandModule 1.0\n"
