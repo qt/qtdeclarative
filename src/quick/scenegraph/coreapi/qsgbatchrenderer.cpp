@@ -3341,7 +3341,7 @@ void Renderer::setGraphicsPipeline(QRhiCommandBuffer *cb, const Batch *batch, El
         Q_ASSERT(e->ps->flags().testFlag(QRhiGraphicsPipeline::UsesStencilRef));
         cb->setStencilRef(batch->clipState.stencilRef);
     }
-    if (e->ps->flags().testFlag(QRhiGraphicsPipeline::UsesBlendConstants))
+    if (!depthPostPass && e->ps->flags().testFlag(QRhiGraphicsPipeline::UsesBlendConstants))
         cb->setBlendConstants(batch->blendConstant);
 
     cb->setShaderResources(e->srb);
