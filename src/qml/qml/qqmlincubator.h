@@ -113,10 +113,6 @@ public:
     int incubatingObjectCount() const;
 
     void incubateFor(int msecs);
-#if QT_DEPRECATED_SINCE(5, 15)
-    QT_DEPRECATED_VERSION_X(5, 15, "Use the overload that takes a std::atomic<bool>")
-    void incubateWhile(volatile bool *flag, int msecs=0);
-#endif
     void incubateWhile(std::atomic<bool> *flag, int msecs = 0);
 
 protected:

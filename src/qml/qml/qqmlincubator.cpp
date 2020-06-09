@@ -409,26 +409,6 @@ void QQmlIncubationController::incubateFor(int msecs)
     } while (d && d->incubatorCount != 0 && !i.shouldInterrupt());
 }
 
-#if QT_DEPRECATED_SINCE(5, 15)
-/*!
-\obsolete
-
-\warning Do not use this function.
-Use the overload taking a \c{std::atomic<bool>} instead.
-*/
-void QQmlIncubationController::incubateWhile(volatile bool *flag, int msecs)
-{
-    if (!d || !d->incubatorCount)
-        return;
-
-    QQmlInstantiationInterrupt i(flag, msecs * Q_INT64_C(1000000));
-    i.reset();
-    do {
-        static_cast<QQmlIncubatorPrivate*>(d->incubatorList.first())->incubate(i);
-    } while (d && d->incubatorCount != 0 && !i.shouldInterrupt());
-}
-#endif
-
 /*!
 \since 5.15
 

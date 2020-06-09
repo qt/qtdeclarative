@@ -99,19 +99,16 @@ class QTypeInfo<QQmlVMETypes::State> : public QTypeInfoMerger<QQmlVMETypes::Stat
 class QQmlInstantiationInterrupt {
 public:
     inline QQmlInstantiationInterrupt();
-    // ### Qt 6: remove
-    inline QQmlInstantiationInterrupt(volatile bool *runWhile, qint64 nsecs=0);
     inline QQmlInstantiationInterrupt(std::atomic<bool> *runWhile, qint64 nsecs = 0);
     inline QQmlInstantiationInterrupt(qint64 nsecs);
 
     inline void reset();
     inline bool shouldInterrupt() const;
 private:
-    enum Mode { None, Time, LegacyFlag, Flag }; // ### Qt 6: remove LegacyFlag
+    enum Mode { None, Time, Flag };
     Mode mode;
     QElapsedTimer timer;
     qint64 nsecs = 0;
-    volatile bool *runWhileLegacy = nullptr; // ### Qt 6: remove
     std::atomic<bool> *runWhile = nullptr;
 };
 
@@ -156,11 +153,6 @@ QQmlInstantiationInterrupt::QQmlInstantiationInterrupt()
 {
 }
 
-QQmlInstantiationInterrupt::QQmlInstantiationInterrupt(volatile bool *runWhile, qint64 nsecs)
-    : mode(LegacyFlag), nsecs(nsecs), runWhileLegacy(runWhile)
-{
-}
-
 QQmlInstantiationInterrupt::QQmlInstantiationInterrupt(std::atomic<bool> *runWhile, qint64 nsecs)
     : mode(Flag), nsecs(nsecs), runWhile(runWhile)
 {
@@ -184,8 +176,6 @@ bool QQmlInstantiationInterrupt::shouldInterrupt() const
         return false;
     case Time:
         return timer.nsecsElapsed() > nsecs;
-    case LegacyFlag:
-        return !*runWhileLegacy || (nsecs && timer.nsecsElapsed() > nsecs);
     case Flag:
         return !runWhile->load(std::memory_order_acquire) || (nsecs && timer.nsecsElapsed() > nsecs);
     }
