@@ -49,7 +49,6 @@
 #include <private/qquicksprite_p.h>
 #include <private/qquickspriteengine_p.h>
 #include <QSGRendererInterface>
-#include <QtQuick/private/qsgshadersourcebuilder_p.h>
 #include <QtQuick/private/qsgplaintexture_p.h>
 #include <private/qqmlglobal_p.h>
 #include <QtQml/qqmlinfo.h>
