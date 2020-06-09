@@ -96,7 +96,8 @@ public:
     static CompositeMetaTypeIds registerInternalCompositeType(const QByteArray &className);
     static void unregisterInternalCompositeType(const CompositeMetaTypeIds &typeIds);
     static void registerModule(const char *uri, QTypeRevision version);
-    static bool protectModule(const QString &uri, QTypeRevision version);
+    static bool protectModule(const QString &uri, QTypeRevision version,
+                              bool protectAllVersions = false);
     static void registerModuleImport(const QString &uri, QTypeRevision version, const QString &import);
     static void unregisterModuleImport(const QString &uri, QTypeRevision version, const QString &import);
 

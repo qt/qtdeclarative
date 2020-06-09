@@ -604,14 +604,28 @@ int QQmlMetaType::registerUnitCacheHook(
     return 0;
 }
 
-bool QQmlMetaType::protectModule(const QString &uri, QTypeRevision version)
+bool QQmlMetaType::protectModule(const QString &uri, QTypeRevision version, bool protectAllVersions)
 {
     QQmlMetaTypeDataPtr data;
+    if (version.hasMajorVersion()) {
     if (QQmlTypeModule *module = data->findTypeModule(uri, version)) {
-        module->lock();
-        return true;
+        if (!protectAllVersions) {
+            module->lock();
+            return true;
+        }
+    } else {
+        return false;
     }
-    return false;
+    }
+
+    const auto range = std::equal_range(
+                data->uriToModule.begin(), data->uriToModule.end(), uri,
+                std::less<ModuleUri>());
+
+    for (auto it = range.first; it != range.second; ++it)
+        (*it)->lock();
+
+    return range.first != range.second;
 }
 
 void QQmlMetaType::registerModuleImport(const QString &uri, QTypeRevision version, const QString &import)

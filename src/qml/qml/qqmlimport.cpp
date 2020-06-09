@@ -2180,7 +2180,7 @@ static bool lockModule(const QString &uri, const QString &typeNamespace, QTypeRe
                        QList<QQmlError> *errors)
 {
     if (version.hasMajorVersion() && !typeNamespace.isEmpty()
-            && !QQmlMetaType::protectModule(uri, version)) {
+            && !QQmlMetaType::protectModule(uri, version, true)) {
         // Not being able to protect the module means there are not types registered for it,
         // means the plugin we loaded didn't provide any, means we didn't find the module.
         // We output the generic error message as depending on the load order of imports we may
