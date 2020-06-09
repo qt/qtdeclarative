@@ -51,8 +51,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QStyle *QQuickStyleItem::s_style = nullptr;
-
 QDebug operator<<(QDebug debug, const QQuickStyleMargins &padding)
 {
     QDebugStateSaver saver(debug);

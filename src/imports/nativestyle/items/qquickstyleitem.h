@@ -254,7 +254,6 @@ private:
     bool m_polishing = false;
 
 private:
-    static QStyle *s_style;
     friend class QtQuickControls2MacOSStylePlugin;
 };
 
