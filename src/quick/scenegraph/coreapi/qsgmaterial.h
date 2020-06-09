@@ -43,6 +43,7 @@
 #include <QtQuick/qtquickglobal.h>
 #include <QtQuick/qsgmaterialshader.h>
 #include <QtQuick/qsgmaterialtype.h>
+#include <QtQuick/qsgrendererinterface.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -63,7 +64,7 @@ public:
     virtual ~QSGMaterial();
 
     virtual QSGMaterialType *type() const = 0;
-    virtual QSGMaterialShader *createShader() const = 0;
+    virtual QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const = 0;
     virtual int compare(const QSGMaterial *other) const;
 
     QSGMaterial::Flags flags() const { return m_flags; }

@@ -69,7 +69,7 @@ class XorBlendMaterial : public QSGMaterial
 public:
     XorBlendMaterial();
     QSGMaterialType *type() const override;
-    QSGMaterialShader *createShader() const override;
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
     int compare(const QSGMaterial *other) const override;
 
     struct {
@@ -93,7 +93,7 @@ XorBlendMaterial::XorBlendMaterial()
     setFlag(Blending);
 }
 
-QSGMaterialShader *XorBlendMaterial::createShader() const
+QSGMaterialShader *XorBlendMaterial::createShader(QSGRendererInterface::RenderMode) const
 {
     return new XorBlendRhiShader;
 }

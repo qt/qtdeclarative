@@ -67,7 +67,7 @@ public:
     ~QSGDistanceFieldTextMaterial();
 
     QSGMaterialType *type() const override;
-    QSGMaterialShader *createShader() const override;
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
     int compare(const QSGMaterial *other) const override;
 
     virtual void setColor(const QColor &color);
@@ -104,7 +104,7 @@ public:
     ~QSGDistanceFieldStyledTextMaterial();
 
     QSGMaterialType *type() const override = 0;
-    QSGMaterialShader *createShader() const override = 0;
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override = 0;
     int compare(const QSGMaterial *other) const override;
 
     void setStyleColor(const QColor &color);
@@ -121,7 +121,7 @@ public:
     ~QSGDistanceFieldOutlineTextMaterial();
 
     QSGMaterialType *type() const override;
-    QSGMaterialShader *createShader() const override;
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QSGDistanceFieldShiftedStyleTextMaterial : public QSGDistanceFieldStyledTextMaterial
@@ -131,7 +131,7 @@ public:
     ~QSGDistanceFieldShiftedStyleTextMaterial();
 
     QSGMaterialType *type() const override;
-    QSGMaterialShader *createShader() const override;
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
     int compare(const QSGMaterial *other) const override;
 
     void setShift(const QPointF &shift) { m_shift = shift; }
@@ -145,7 +145,7 @@ class Q_QUICK_PRIVATE_EXPORT QSGHiQSubPixelDistanceFieldTextMaterial : public QS
 {
 public:
     QSGMaterialType *type() const override;
-    QSGMaterialShader *createShader() const override;
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
     void setColor(const QColor &color) override { m_color = QVector4D(color.redF(), color.greenF(), color.blueF(), color.alphaF()); }
 };
 
@@ -153,7 +153,7 @@ class Q_QUICK_PRIVATE_EXPORT QSGLoQSubPixelDistanceFieldTextMaterial : public QS
 {
 public:
     QSGMaterialType *type() const override;
-    QSGMaterialShader *createShader() const override;
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
     void setColor(const QColor &color) override { m_color = QVector4D(color.redF(), color.greenF(), color.blueF(), color.alphaF()); }
 };
 

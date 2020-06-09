@@ -21,6 +21,11 @@ void main()
 {
     float distance = texture(_qt_texture, sampleCoord).r;
     float f = fwidth(distance);
-    fragColor = mix(ubuf.styleColor, ubuf.color, smoothstep(0.5 - f, 0.5 + f, distance))
-            * smoothstep(ubuf.outlineAlphaMax0, ubuf.outlineAlphaMax1, distance);
+
+    // The outlineLimit is based on font size, but scales with the transform, so
+    // we can calculate it from the outline span.
+    float outlineLimit = (ubuf.outlineAlphaMax1 - ubuf.outlineAlphaMax0) / 2.0 + ubuf.outlineAlphaMax0;
+
+    fragColor = mix(ubuf.styleColor, ubuf.color, smoothstep(max(0.0, 0.5 - f), min(1.0, 0.5 + f), distance))
+            * smoothstep(max(0.0, outlineLimit - f), min(outlineLimit + f, 0.5 - f), distance);
 }

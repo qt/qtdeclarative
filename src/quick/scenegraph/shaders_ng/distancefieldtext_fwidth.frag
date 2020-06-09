@@ -11,16 +11,11 @@ layout(std140, binding = 0) uniform buf {
     vec4 color;
     float alphaMin;
     float alphaMax;
-    // up to this point it must match distancefieldtext
-    vec4 styleColor;
-    float outlineAlphaMax0;
-    float outlineAlphaMax1;
 } ubuf;
 
 void main()
 {
     float distance = texture(_qt_texture, sampleCoord).r;
     float f = fwidth(distance);
-    fragColor = mix(ubuf.styleColor, ubuf.color, smoothstep(0.5 - f, 0.5 + f, distance))
-            * smoothstep(ubuf.outlineAlphaMax0, ubuf.outlineAlphaMax1, distance);
+    fragColor = ubuf.color * smoothstep(max(0.0, 0.5 - f), min(1.0, 0.5 + f), distance);
 }

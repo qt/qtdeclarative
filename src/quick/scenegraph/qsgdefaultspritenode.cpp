@@ -63,7 +63,7 @@ public:
     QQuickSpriteMaterial();
     ~QQuickSpriteMaterial();
     QSGMaterialType *type() const  override { static QSGMaterialType type; return &type; }
-    QSGMaterialShader *createShader() const override;
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
 
     QSGTexture *texture = nullptr;
 
@@ -153,8 +153,9 @@ void SpriteMaterialRhiShader::updateSampledImage(RenderState &state, int binding
     *texture = t;
 }
 
-QSGMaterialShader *QQuickSpriteMaterial::createShader() const
+QSGMaterialShader *QQuickSpriteMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
+    Q_UNUSED(renderMode);
     return new SpriteMaterialRhiShader;
 }
 

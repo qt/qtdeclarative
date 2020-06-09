@@ -696,12 +696,13 @@ public Q_SLOTS:
     void invalidated();
 
 public:
-    Shader *prepareMaterial(QSGMaterial *material, const QSGGeometry *geometry = nullptr);
-    Shader *prepareMaterialNoRewrite(QSGMaterial *material, const QSGGeometry *geometry = nullptr);
+    Shader *prepareMaterial(QSGMaterial *material, const QSGGeometry *geometry = nullptr, QSGRendererInterface::RenderMode renderMode = QSGRendererInterface::RenderMode2D);
+    Shader *prepareMaterialNoRewrite(QSGMaterial *material, const QSGGeometry *geometry = nullptr, QSGRendererInterface::RenderMode renderMode = QSGRendererInterface::RenderMode2D);
 
 private:
-    QHash<QSGMaterialType *, Shader *> rewrittenShaders;
-    QHash<QSGMaterialType *, Shader *> stockShaders;
+    typedef QPair<QSGMaterialType *, QSGRendererInterface::RenderMode> ShaderKey;
+    QHash<ShaderKey, Shader *> rewrittenShaders;
+    QHash<ShaderKey, Shader *> stockShaders;
 
     QSGDefaultRenderContext *context;
 

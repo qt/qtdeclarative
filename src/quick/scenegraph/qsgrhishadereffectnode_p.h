@@ -102,7 +102,7 @@ public:
 
     int compare(const QSGMaterial *other) const override;
     QSGMaterialType *type() const override;
-    QSGMaterialShader *createShader() const override;
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
 
     void updateTextureProviders(bool layoutChange);
 

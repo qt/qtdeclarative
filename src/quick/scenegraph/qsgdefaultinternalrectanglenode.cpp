@@ -112,8 +112,9 @@ QSGMaterialType *QSGSmoothColorMaterial::type() const
     return &type;
 }
 
-QSGMaterialShader *QSGSmoothColorMaterial::createShader() const
+QSGMaterialShader *QSGSmoothColorMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
+    Q_UNUSED(renderMode);
     return new SmoothColorMaterialRhiShader;
 }
 

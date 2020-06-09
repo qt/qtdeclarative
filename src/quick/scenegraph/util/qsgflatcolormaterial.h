@@ -50,7 +50,7 @@ class Q_QUICK_EXPORT QSGFlatColorMaterial : public QSGMaterial
 public:
     QSGFlatColorMaterial();
     QSGMaterialType *type() const override;
-    QSGMaterialShader *createShader() const override;
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
 
     void setColor(const QColor &color);
     const QColor &color() const { return m_color; }

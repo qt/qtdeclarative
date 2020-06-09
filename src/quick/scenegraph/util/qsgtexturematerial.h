@@ -51,7 +51,7 @@ public:
     QSGOpaqueTextureMaterial();
 
     QSGMaterialType *type() const override;
-    QSGMaterialShader *createShader() const override;
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
     int compare(const QSGMaterial *other) const override;
 
     void setTexture(QSGTexture *texture);
@@ -88,7 +88,7 @@ class Q_QUICK_EXPORT QSGTextureMaterial : public QSGOpaqueTextureMaterial
 {
 public:
     QSGMaterialType *type() const override;
-    QSGMaterialShader *createShader() const override;
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
 };
 
 QT_END_NAMESPACE

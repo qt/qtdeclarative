@@ -79,7 +79,7 @@ public:
         return &type;
     }
 
-    QSGMaterialShader *createShader() const override
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode) const override
     {
         return new LineShader;
     }

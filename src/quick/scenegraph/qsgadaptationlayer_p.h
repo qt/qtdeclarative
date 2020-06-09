@@ -485,6 +485,7 @@ public:
     virtual void processPendingGlyphs();
 
     virtual bool eightBitFormatIsAlphaSwizzled() const = 0;
+    virtual bool screenSpaceDerivativesSupported() const = 0;
 
 protected:
     struct GlyphPosition {

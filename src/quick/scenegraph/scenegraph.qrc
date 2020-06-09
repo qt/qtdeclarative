@@ -30,13 +30,19 @@
 
         <file>shaders_ng/distancefieldtext.vert.qsb</file>
         <file>shaders_ng/distancefieldtext.frag.qsb</file>
+        <file>shaders_ng/distancefieldtext_fwidth.frag.qsb</file>
         <file>shaders_ng/distancefieldtext_a.frag.qsb</file>
+        <file>shaders_ng/distancefieldtext_a_fwidth.frag.qsb</file>
         <file>shaders_ng/distancefieldshiftedtext.vert.qsb</file>
         <file>shaders_ng/distancefieldshiftedtext.frag.qsb</file>
+        <file>shaders_ng/distancefieldshiftedtext_fwidth.frag.qsb</file>
         <file>shaders_ng/distancefieldshiftedtext_a.frag.qsb</file>
+        <file>shaders_ng/distancefieldshiftedtext_a_fwidth.frag.qsb</file>
         <file>shaders_ng/distancefieldoutlinetext.vert.qsb</file>
         <file>shaders_ng/distancefieldoutlinetext.frag.qsb</file>
+        <file>shaders_ng/distancefieldoutlinetext_fwidth.frag.qsb</file>
         <file>shaders_ng/distancefieldoutlinetext_a.frag.qsb</file>
+        <file>shaders_ng/distancefieldoutlinetext_a_fwidth.frag.qsb</file>
         <file>shaders_ng/hiqsubpixeldistancefieldtext.vert.qsb</file>
         <file>shaders_ng/hiqsubpixeldistancefieldtext.frag.qsb</file>
         <file>shaders_ng/hiqsubpixeldistancefieldtext_a.frag.qsb</file>

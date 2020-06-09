@@ -53,7 +53,7 @@ public:
 
 protected:
     QSGMaterialType *type() const override;
-    QSGMaterialShader *createShader() const override;
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
 };
 
 QT_END_NAMESPACE

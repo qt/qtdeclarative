@@ -164,8 +164,9 @@ QSGMaterialType *QSGFlatColorMaterial::type() const
     \internal
  */
 
-QSGMaterialShader *QSGFlatColorMaterial::createShader() const
+QSGMaterialShader *QSGFlatColorMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
+    Q_UNUSED(renderMode);
     return new FlatColorMaterialRhiShader;
 }
 

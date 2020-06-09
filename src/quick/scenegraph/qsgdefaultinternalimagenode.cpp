@@ -73,8 +73,9 @@ QSGMaterialType *QSGSmoothTextureMaterial::type() const
     return &type;
 }
 
-QSGMaterialShader *QSGSmoothTextureMaterial::createShader() const
+QSGMaterialShader *QSGSmoothTextureMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
+    Q_UNUSED(renderMode);
     return new SmoothTextureMaterialRhiShader;
 }
 

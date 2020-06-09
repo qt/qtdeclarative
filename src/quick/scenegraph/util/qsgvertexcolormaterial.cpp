@@ -147,8 +147,9 @@ QSGMaterialType *QSGVertexColorMaterial::type() const
     \internal
  */
 
-QSGMaterialShader *QSGVertexColorMaterial::createShader() const
+QSGMaterialShader *QSGVertexColorMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
+    Q_UNUSED(renderMode);
     return new QSGVertexColorMaterialRhiShader;
 }
 

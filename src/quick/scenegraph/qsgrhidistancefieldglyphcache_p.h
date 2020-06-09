@@ -78,6 +78,7 @@ public:
     void commitResourceUpdates(QRhiResourceUpdateBatch *mergeInto);
 
     bool eightBitFormatIsAlphaSwizzled() const override;
+    bool screenSpaceDerivativesSupported() const override;
 
 #if defined(QSG_DISTANCEFIELD_CACHE_DEBUG)
     void saveTexture(QRhiTexture *texture, const QString &nameBase) const override;

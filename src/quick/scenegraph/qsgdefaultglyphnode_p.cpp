@@ -564,8 +564,9 @@ QSGRhiTextureGlyphCache *QSGTextMaskMaterial::rhiGlyphCache() const
     return static_cast<QSGRhiTextureGlyphCache *>(glyphCache());
 }
 
-QSGMaterialShader *QSGTextMaskMaterial::createShader() const
+QSGMaterialShader *QSGTextMaskMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
+    Q_UNUSED(renderMode);
     QSGRhiTextureGlyphCache *gc = rhiGlyphCache();
     const QFontEngine::GlyphFormat glyphFormat = gc->glyphFormat();
     switch (glyphFormat) {
@@ -630,8 +631,9 @@ QSGMaterialType *QSGStyledTextMaterial::type() const
     return &type;
 }
 
-QSGMaterialShader *QSGStyledTextMaterial::createShader() const
+QSGMaterialShader *QSGStyledTextMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
+    Q_UNUSED(renderMode);
     QSGRhiTextureGlyphCache *gc = rhiGlyphCache();
     return new QSGStyledTextRhiShader(gc->glyphFormat(), gc->eightBitFormatIsAlphaSwizzled());
 }
@@ -661,8 +663,9 @@ QSGMaterialType *QSGOutlinedTextMaterial::type() const
     return &type;
 }
 
-QSGMaterialShader *QSGOutlinedTextMaterial::createShader() const
+QSGMaterialShader *QSGOutlinedTextMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
+    Q_UNUSED(renderMode);
     QSGRhiTextureGlyphCache *gc = rhiGlyphCache();
     return new QSGOutlinedTextRhiShader(gc->glyphFormat(), gc->eightBitFormatIsAlphaSwizzled());
 }

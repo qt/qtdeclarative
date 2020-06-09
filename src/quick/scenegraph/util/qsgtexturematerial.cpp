@@ -171,8 +171,9 @@ QSGMaterialType *QSGOpaqueTextureMaterial::type() const
 /*!
     \internal
  */
-QSGMaterialShader *QSGOpaqueTextureMaterial::createShader() const
+QSGMaterialShader *QSGOpaqueTextureMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
+    Q_UNUSED(renderMode);
     return new QSGOpaqueTextureMaterialRhiShader;
 }
 
@@ -359,8 +360,9 @@ QSGMaterialType *QSGTextureMaterial::type() const
     \internal
  */
 
-QSGMaterialShader *QSGTextureMaterial::createShader() const
+QSGMaterialShader *QSGTextureMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
+    Q_UNUSED(renderMode);
     return new QSGTextureMaterialRhiShader;
 }
 

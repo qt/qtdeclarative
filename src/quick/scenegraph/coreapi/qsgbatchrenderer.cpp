@@ -240,10 +240,14 @@ QRhiGraphicsPipeline::Topology qsg_topology(int geomDrawMode)
     return topology;
 }
 
-ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material, const QSGGeometry *geometry)
+ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material,
+                                                      const QSGGeometry *geometry,
+                                                      QSGRendererInterface::RenderMode renderMode)
 {
     QSGMaterialType *type = material->type();
-    Shader *shader = rewrittenShaders.value(type, 0);
+
+    ShaderKey key = qMakePair(type, renderMode);
+    Shader *shader = rewrittenShaders.value(key, nullptr);
     if (shader)
         return shader;
 
@@ -253,7 +257,7 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material, con
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphContextFrame);
 
     shader = new Shader;
-    QSGMaterialShader *s = static_cast<QSGMaterialShader *>(material->createShader());
+    QSGMaterialShader *s = static_cast<QSGMaterialShader *>(material->createShader(renderMode));
     context->initializeRhiShader(s, QShader::BatchableVertexShader);
     shader->programRhi.program = s;
     shader->programRhi.inputLayout = calculateVertexInputLayout(s, geometry, true);
@@ -270,14 +274,18 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material, con
     Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphContextFrame,
                            QQuickProfiler::SceneGraphContextMaterialCompile);
 
-    rewrittenShaders[type] = shader;
+    rewrittenShaders[key] = shader;
     return shader;
 }
 
-ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *material, const QSGGeometry *geometry)
+ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *material,
+                                                               const QSGGeometry *geometry,
+                                                               QSGRendererInterface::RenderMode renderMode)
 {
     QSGMaterialType *type = material->type();
-    Shader *shader = stockShaders.value(type, 0);
+
+    ShaderKey key = qMakePair(type, renderMode);
+    Shader *shader = stockShaders.value(key, nullptr);
     if (shader)
         return shader;
 
@@ -287,7 +295,7 @@ ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *mate
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphContextFrame);
 
     shader = new Shader;
-    QSGMaterialShader *s = static_cast<QSGMaterialShader *>(material->createShader());
+    QSGMaterialShader *s = static_cast<QSGMaterialShader *>(material->createShader(renderMode));
     context->initializeRhiShader(s, QShader::StandardShader);
     shader->programRhi.program = s;
     shader->programRhi.inputLayout = calculateVertexInputLayout(s, geometry, false);
@@ -299,7 +307,7 @@ ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *mate
 
     shader->lastOpacity = 0;
 
-    stockShaders[type] = shader;
+    stockShaders[key] = shader;
 
     qCDebug(QSG_LOG_TIME_COMPILATION, "shader compiled in %dms (no rewrite)", (int) qsg_renderer_timer.elapsed());
 
@@ -2971,8 +2979,8 @@ bool Renderer::prepareRenderMergedBatch(Batch *batch, PreparedRenderBatch *rende
         updateClipState(gn->clipList(), batch);
 
     const QSGGeometry *g = gn->geometry();
-    ShaderManager::Shader *sms = useDepthBuffer() ? m_shaderManager->prepareMaterial(material, g)
-                                                  : m_shaderManager->prepareMaterialNoRewrite(material, g);
+    ShaderManager::Shader *sms = useDepthBuffer() ? m_shaderManager->prepareMaterial(material, g, m_renderMode)
+                                                  : m_shaderManager->prepareMaterialNoRewrite(material, g, m_renderMode);
     if (!sms)
         return false;
 

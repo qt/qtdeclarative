@@ -69,7 +69,7 @@ public:
 
 protected:
     QSGMaterialType *type() const override;
-    QSGMaterialShader *createShader() const override;
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QSGDefaultInternalRectangleNode : public QSGBasicInternalRectangleNode

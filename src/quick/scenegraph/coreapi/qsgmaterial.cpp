@@ -119,7 +119,7 @@ static void qt_print_material_count()
         {
         public:
             QSGMaterialType *type() const { static QSGMaterialType type; return &type; }
-            QSGMaterialShader *createShader() const { return new Shader; }
+            QSGMaterialShader *createShader(QSGRendererInterface::RenderMode) const { return new Shader; }
         };
     \endcode
 
@@ -239,14 +239,19 @@ int QSGMaterial::compare(const QSGMaterial *other) const
 
 
 /*!
-    \fn QSGMaterialShader *QSGMaterial::createShader() const
+    \fn QSGMaterialShader *QSGMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 
     This function returns a new instance of a the QSGMaterialShader
-    implementatation used to render geometry for a specific implementation
+    implementation used to render geometry for a specific implementation
     of QSGMaterial.
 
-    The function will be called only once for each material type that
-    exists in the scene graph and will be cached internally.
+    The function will be called only once for each combination of material type and \a renderMode
+    and will be cached internally.
+
+    For most materials, the \a renderMode can be ignored. A few materials may need
+    custom handling for specific render modes. For instance if the material implements
+    antialiasing in a way that needs to account for perspective transformations when
+    RenderMode3D is in use.
 */
 
 QT_END_NAMESPACE

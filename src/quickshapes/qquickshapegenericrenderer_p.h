@@ -274,7 +274,7 @@ public:
 
     QSGMaterialType *type() const override;
     int compare(const QSGMaterial *other) const override;
-    QSGMaterialShader *createShader() const override;
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
 
     QQuickShapeGenericStrokeFillNode *node() const { return m_node; }
 
@@ -310,7 +310,7 @@ public:
 
     QSGMaterialType *type() const override;
     int compare(const QSGMaterial *other) const override;
-    QSGMaterialShader *createShader() const override;
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
 
     QQuickShapeGenericStrokeFillNode *node() const { return m_node; }
 
@@ -344,7 +344,7 @@ public:
 
     QSGMaterialType *type() const override;
     int compare(const QSGMaterial *other) const override;
-    QSGMaterialShader *createShader() const override;
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
 
     QQuickShapeGenericStrokeFillNode *node() const { return m_node; }
 

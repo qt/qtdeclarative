@@ -68,13 +68,19 @@ qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o styledtext.frag.qsb styledt
 qsb --glsl "150,120,100 es" -o styledtext_a.frag.qsb styledtext_a.frag
 qsb -b --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldtext.vert.qsb distancefieldtext.vert
 qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldtext.frag.qsb distancefieldtext.frag
+qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldtext_fwidth.frag.qsb distancefieldtext_fwidth.frag
 qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldtext_a.frag.qsb distancefieldtext_a.frag
+qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldtext_a_fwidth.frag.qsb distancefieldtext_a_fwidth.frag
 qsb -b --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldshiftedtext.vert.qsb distancefieldshiftedtext.vert
 qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldshiftedtext.frag.qsb distancefieldshiftedtext.frag
+qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldshiftedtext_fwidth.frag.qsb distancefieldshiftedtext_fwidth.frag
 qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldshiftedtext_a.frag.qsb distancefieldshiftedtext_a.frag
+qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldshiftedtext_a_fwidth.frag.qsb distancefieldshiftedtext_a_fwidth.frag
 qsb -b --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldoutlinetext.vert.qsb distancefieldoutlinetext.vert
 qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldoutlinetext.frag.qsb distancefieldoutlinetext.frag
+qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldoutlinetext_fwidth.frag.qsb distancefieldoutlinetext_fwidth.frag
 qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldoutlinetext_a.frag.qsb distancefieldoutlinetext_a.frag
+qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldoutlinetext_a_fwidth.frag.qsb distancefieldoutlinetext_a_fwidth.frag
 qsb -b --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o hiqsubpixeldistancefieldtext.vert.qsb hiqsubpixeldistancefieldtext.vert
 qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o hiqsubpixeldistancefieldtext.frag.qsb hiqsubpixeldistancefieldtext.frag
 qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o hiqsubpixeldistancefieldtext_a.frag.qsb hiqsubpixeldistancefieldtext_a.frag

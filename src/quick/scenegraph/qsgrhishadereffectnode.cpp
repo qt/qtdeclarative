@@ -519,8 +519,9 @@ QSGMaterialType *QSGRhiShaderEffectMaterial::type() const
     return m_materialType;
 }
 
-QSGMaterialShader *QSGRhiShaderEffectMaterial::createShader() const
+QSGMaterialShader *QSGRhiShaderEffectMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
+    Q_UNUSED(renderMode);
     return new QSGRhiShaderEffectMaterialShader(this);
 }
 

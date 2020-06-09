@@ -565,6 +565,11 @@ bool QSGRhiDistanceFieldGlyphCache::eightBitFormatIsAlphaSwizzled() const
     return !m_rhi->isFeatureSupported(QRhi::RedOrAlpha8IsRed);
 }
 
+bool QSGRhiDistanceFieldGlyphCache::screenSpaceDerivativesSupported() const
+{
+    return m_rhi->isFeatureSupported(QRhi::ScreenSpaceDerivatives);
+}
+
 #if defined(QSG_DISTANCEFIELD_CACHE_DEBUG)
 void QSGRhiDistanceFieldGlyphCache::saveTexture(QRhiTexture *texture, const QString &nameBase) const
 {

@@ -76,7 +76,7 @@ public:
     virtual ~QSGTextMaskMaterial();
 
     QSGMaterialType *type() const override;
-    QSGMaterialShader *createShader() const override;
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
     int compare(const QSGMaterial *other) const override;
 
     void setColor(const QColor &c) { setColor(QVector4D(c.redF(), c.greenF(), c.blueF(), c.alphaF())); }
@@ -122,7 +122,7 @@ public:
     const QVector4D &styleColor() const { return m_styleColor; }
 
     QSGMaterialType *type() const override;
-    QSGMaterialShader *createShader() const override;
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
     int compare(const QSGMaterial *other) const override;
 
 private:
@@ -137,7 +137,7 @@ public:
     ~QSGOutlinedTextMaterial() { }
 
     QSGMaterialType *type() const override;
-    QSGMaterialShader *createShader() const override;
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
 };
 
 QT_END_NAMESPACE

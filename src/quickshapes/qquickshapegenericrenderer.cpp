@@ -856,8 +856,9 @@ int QQuickShapeLinearGradientMaterial::compare(const QSGMaterial *other) const
     return 0;
 }
 
-QSGMaterialShader *QQuickShapeLinearGradientMaterial::createShader() const
+QSGMaterialShader *QQuickShapeLinearGradientMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
+    Q_UNUSED(renderMode);
     return new QQuickShapeLinearGradientRhiShader;
 }
 
@@ -989,8 +990,9 @@ int QQuickShapeRadialGradientMaterial::compare(const QSGMaterial *other) const
     return 0;
 }
 
-QSGMaterialShader *QQuickShapeRadialGradientMaterial::createShader() const
+QSGMaterialShader *QQuickShapeRadialGradientMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
+    Q_UNUSED(renderMode);
     return new QQuickShapeRadialGradientRhiShader;
 }
 
@@ -1097,8 +1099,9 @@ int QQuickShapeConicalGradientMaterial::compare(const QSGMaterial *other) const
     return 0;
 }
 
-QSGMaterialShader *QQuickShapeConicalGradientMaterial::createShader() const
+QSGMaterialShader *QQuickShapeConicalGradientMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
+    Q_UNUSED(renderMode);
     return new QQuickShapeConicalGradientRhiShader;
 }
 

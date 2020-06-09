@@ -147,7 +147,8 @@ public:
 class TabledMaterial : public ImageMaterial
 {
 public:
-    QSGMaterialShader *createShader() const override {
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override {
+        Q_UNUSED(renderMode);
         return new TabledMaterialRhiShader;
     }
     QSGMaterialType *type() const override { return &m_type; }
@@ -210,7 +211,8 @@ public:
 class DeformableMaterial : public ImageMaterial
 {
 public:
-    QSGMaterialShader *createShader() const override {
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override {
+        Q_UNUSED(renderMode);
         return new DeformableMaterialRhiShader;
     }
     QSGMaterialType *type() const override { return &m_type; }
@@ -287,7 +289,8 @@ public:
 class SpriteMaterial : public ImageMaterial
 {
 public:
-    QSGMaterialShader *createShader() const override {
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override {
+        Q_UNUSED(renderMode);
         return new ParticleSpriteMaterialRhiShader;
     }
     QSGMaterialType *type() const override { return &m_type; }
@@ -350,7 +353,8 @@ public:
 class ColoredMaterial : public ImageMaterial
 {
 public:
-    QSGMaterialShader *createShader() const override {
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override {
+        Q_UNUSED(renderMode);
         return new ColoredMaterialRhiShader;
     }
     QSGMaterialType *type() const override { return &m_type; }
@@ -413,7 +417,8 @@ public:
 class SimpleMaterial : public ImageMaterial
 {
 public:
-    QSGMaterialShader *createShader() const override {
+    QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override {
+        Q_UNUSED(renderMode);
         return new SimpleMaterialRhiShader;
     }
     QSGMaterialType *type() const override { return &m_type; }
