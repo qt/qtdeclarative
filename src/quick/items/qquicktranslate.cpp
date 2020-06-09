@@ -265,6 +265,14 @@ void QQuickScale::setYScale(qreal scale)
     emit scaleChanged();
 }
 
+/*!
+    \qmlproperty real QtQuick::Scale::zScale
+    \internal
+
+    The scaling factor for the Z axis.
+
+    The default value is 1.0.
+*/
 qreal QQuickScale::zScale() const
 {
     Q_D(const QQuickScale);
