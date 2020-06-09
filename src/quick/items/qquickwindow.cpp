@@ -85,6 +85,7 @@
 #include <private/qsgdefaultrendercontext_p.h>
 #include <private/qopengl_p.h>
 #include <QOpenGLContext>
+#include <QOpenGLFunctions>
 #include <QOpenGLFramebufferObject>
 #endif
 #ifndef QT_NO_DEBUG_STREAM
