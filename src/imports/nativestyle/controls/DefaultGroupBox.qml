@@ -53,15 +53,25 @@ T.GroupBox {
 
     font.pixelSize: nativeBackground ? background.styleFont(control).pixelSize : undefined
 
-    label: Text {
-        x: control.leftPadding
-        width: control.availableWidth
-
-        text: control.title
-        font: control.font
-        color: control.palette.windowText
-        elide: Text.ElideRight
-        verticalAlignment: Text.AlignVCenter
+    label: Rectangle {
+        color: control.palette.window
+        property point labelPos : control.nativeBackground
+                                  ? background.labelPos
+                                  : Qt.point(0,0)
+        x: labelPos.x + background.x
+        y: labelPos.y + background.y - groupBoxPadding.top
+        width: txt.implicitWidth
+        height: txt.implicitHeight
+        Text {
+            id: txt
+            width: parent.width
+            height: parent.height
+            text: control.title
+            font: control.font
+            color: control.palette.windowText
+            elide: Text.ElideRight
+            verticalAlignment: Text.AlignVCenter
+        }
     }
 
     leftPadding: nativeBackground ? background.contentPadding.left : 0

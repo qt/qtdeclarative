@@ -68,6 +68,10 @@ StyleItemGeometry QQuickStyleItemGroupBox::calculateGeometry()
     if (m_groupBoxPadding != oldGroupBoxPadding)
         emit groupBoxPaddingChanged();
 
+    const QPointF oldLabelPos = m_labelPos;
+    m_labelPos = style()->subControlRect(QStyle::CC_GroupBox, &styleOption, QStyle::SC_GroupBoxLabel).topLeft();
+    if (m_labelPos != oldLabelPos)
+        emit labelPosChanged();
     return geometry;
 }
 
@@ -88,4 +92,9 @@ void QQuickStyleItemGroupBox::initStyleOption(QStyleOptionGroupBox &styleOption)
 QQuickStyleMargins QQuickStyleItemGroupBox::groupBoxPadding() const
 {
     return m_groupBoxPadding;
+}
+
+QPointF QQuickStyleItemGroupBox::labelPos() const
+{
+    return m_labelPos;
 }
