@@ -83,8 +83,7 @@ public:
     void setContextProperty(const QString &, const QVariant &);
     void setContextProperties(const QVector<PropertyPair> &properties);
 
-    // ### Qt 6: no need for a mutable object, this should become a const QObject pointer
-    QString nameForObject(QObject *) const;
+    QString nameForObject(const QObject *) const;
 
     QUrl resolvedUrl(const QUrl &) const;
 

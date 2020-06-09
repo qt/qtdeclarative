@@ -397,7 +397,7 @@ the case of QML created contexts.
 
 If the object has multiple names, the first is returned.
 */
-QString QQmlContext::nameForObject(QObject *object) const
+QString QQmlContext::nameForObject(const QObject *object) const
 {
     Q_D(const QQmlContext);
 
