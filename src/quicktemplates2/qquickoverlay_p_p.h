@@ -82,8 +82,8 @@ public:
     void removePopup(QQuickPopup *popup);
     void setMouseGrabberPopup(QQuickPopup *popup);
 
-    QVector<QQuickPopup *> stackingOrderPopups() const;
-    QVector<QQuickDrawer *> stackingOrderDrawers() const;
+    QList<QQuickPopup *> stackingOrderPopups() const;
+    QList<QQuickDrawer *> stackingOrderDrawers() const;
 
     void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) override;
 
@@ -91,8 +91,8 @@ public:
 
     QQmlComponent *modal = nullptr;
     QQmlComponent *modeless = nullptr;
-    QVector<QQuickPopup *> allPopups;
-    QVector<QQuickDrawer *> allDrawers;
+    QList<QQuickPopup *> allPopups;
+    QList<QQuickDrawer *> allDrawers;
     QPointer<QQuickPopup> mouseGrabberPopup;
 };
 

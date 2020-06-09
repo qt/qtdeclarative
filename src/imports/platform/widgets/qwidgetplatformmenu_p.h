@@ -90,7 +90,7 @@ public:
 
 private:
     QScopedPointer<QMenu> m_menu;
-    QVector<QWidgetPlatformMenuItem *> m_items;
+    QList<QWidgetPlatformMenuItem *> m_items;
 };
 
 QT_END_NAMESPACE

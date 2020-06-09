@@ -72,7 +72,7 @@ void QQuickUniversalFocusRectangle::paint(QPainter *painter)
         p.drawRect(bounds);
 
         pen.setColor(Qt::black);
-        pen.setDashPattern(QVector<qreal>(2, 1));
+        pen.setDashPattern(QList<qreal>(2, 1));
         p.setPen(pen);
         p.drawRect(bounds);
 

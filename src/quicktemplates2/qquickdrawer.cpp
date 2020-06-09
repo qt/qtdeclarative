@@ -416,7 +416,7 @@ bool QQuickDrawerPrivate::grabTouch(QQuickItem *item, QTouchEvent *event)
         }
 
         if (overThreshold) {
-            popupItem->grabTouchPoints(QVector<int>() << touchId);
+            popupItem->grabTouchPoints(QList<int>() << touchId);
             popupItem->setKeepTouchGrab(true);
             offset = offsetAt(movePoint);
         }

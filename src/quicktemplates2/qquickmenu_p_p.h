@@ -48,7 +48,7 @@
 // We mean it.
 //
 
-#include <QtCore/qvector.h>
+#include <QtCore/qlist.h>
 #include <QtCore/qpointer.h>
 
 #include <QtQuickTemplates2/private/qquickmenu_p.h>
@@ -131,7 +131,7 @@ public:
     QPointer<QQuickMenu> parentMenu;
     QPointer<QQuickMenuItem> currentItem;
     QQuickItem *contentItem = nullptr; // TODO: cleanup
-    QVector<QObject *> contentData;
+    QList<QObject *> contentData;
     QQmlObjectModel *contentModel;
     QQmlComponent *delegate = nullptr;
     QString title;

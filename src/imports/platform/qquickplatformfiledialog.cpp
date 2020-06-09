@@ -36,7 +36,7 @@
 
 #include "qquickplatformfiledialog_p.h"
 
-#include <QtCore/qvector.h>
+#include <QtCore/qlist.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -622,7 +622,7 @@ static QStringList extractExtensions(const QString &filter)
     const int to = filter.lastIndexOf(QLatin1Char(')')) - 1;
     if (from >= 0 && from < to) {
         const QStringRef ref = filter.midRef(from + 1, to - from);
-        const QVector<QStringRef> exts = ref.split(QLatin1Char(' '), Qt::SkipEmptyParts);
+        const QList<QStringRef> exts = ref.split(QLatin1Char(' '), Qt::SkipEmptyParts);
         for (const QStringRef &ref : exts)
             extensions += extractExtension(ref.toString());
     }

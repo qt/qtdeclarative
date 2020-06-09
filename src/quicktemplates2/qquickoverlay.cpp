@@ -69,11 +69,11 @@ QT_BEGIN_NAMESPACE
     \sa ApplicationWindow
 */
 
-QVector<QQuickPopup *> QQuickOverlayPrivate::stackingOrderPopups() const
+QList<QQuickPopup *> QQuickOverlayPrivate::stackingOrderPopups() const
 {
     const QList<QQuickItem *> children = paintOrderChildItems();
 
-    QVector<QQuickPopup *> popups;
+    QList<QQuickPopup *> popups;
     popups.reserve(children.count());
 
     for (auto it = children.crbegin(), end = children.crend(); it != end; ++it) {
@@ -85,9 +85,9 @@ QVector<QQuickPopup *> QQuickOverlayPrivate::stackingOrderPopups() const
     return popups;
 }
 
-QVector<QQuickDrawer *> QQuickOverlayPrivate::stackingOrderDrawers() const
+QList<QQuickDrawer *> QQuickOverlayPrivate::stackingOrderDrawers() const
 {
-    QVector<QQuickDrawer *> sorted(allDrawers);
+    QList<QQuickDrawer *> sorted(allDrawers);
     std::sort(sorted.begin(), sorted.end(), [](const QQuickDrawer *one, const QQuickDrawer *another) {
         return one->z() > another->z();
     });
@@ -116,7 +116,7 @@ bool QQuickOverlayPrivate::startDrag(QEvent *event, const QPointF &pos)
         }
     }
 
-    const QVector<QQuickDrawer *> drawers = stackingOrderDrawers();
+    const QList<QQuickDrawer *> drawers = stackingOrderDrawers();
     for (QQuickDrawer *drawer : drawers) {
         QQuickDrawerPrivate *p = QQuickDrawerPrivate::get(drawer);
         if (p->startDrag(event)) {

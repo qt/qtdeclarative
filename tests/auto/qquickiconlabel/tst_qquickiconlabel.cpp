@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 
-#include <QtCore/qvector.h>
+#include <QtCore/qlist.h>
 
 #include <qtest.h>
 
@@ -64,13 +64,13 @@ tst_qquickiconlabel::tst_qquickiconlabel()
 
 void tst_qquickiconlabel::display_data()
 {
-    QTest::addColumn<QVector<QQuickIconLabel::Display> >("displayTypes");
+    QTest::addColumn<QList<QQuickIconLabel::Display> >("displayTypes");
     QTest::addColumn<bool>("mirrored");
     QTest::addColumn<qreal>("labelWidth");
     QTest::addColumn<qreal>("labelHeight");
     QTest::addColumn<qreal>("spacing");
 
-    typedef QVector<QQuickIconLabel::Display> DisplayVector;
+    typedef QList<QQuickIconLabel::Display> DisplayVector;
     QQuickIconLabel::Display IconOnly = QQuickIconLabel::IconOnly;
     QQuickIconLabel::Display TextOnly = QQuickIconLabel::TextOnly;
     QQuickIconLabel::Display TextUnderIcon = QQuickIconLabel::TextUnderIcon;
@@ -108,7 +108,7 @@ void tst_qquickiconlabel::display_data()
 
 void tst_qquickiconlabel::display()
 {
-    QFETCH(QVector<QQuickIconLabel::Display>, displayTypes);
+    QFETCH(QList<QQuickIconLabel::Display>, displayTypes);
     QFETCH(bool, mirrored);
     QFETCH(qreal, labelWidth);
     QFETCH(qreal, labelHeight);

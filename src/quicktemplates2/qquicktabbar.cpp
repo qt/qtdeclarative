@@ -158,7 +158,7 @@ void QQuickTabBarPrivate::updateLayout()
     qreal reservedWidth = 0;
     int resizableCount = 0;
 
-    QVector<QQuickItem *> allItems;
+    QList<QQuickItem *> allItems;
     allItems.reserve(count);
 
     for (int i = 0; i < count; ++i) {

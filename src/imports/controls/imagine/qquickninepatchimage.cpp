@@ -46,22 +46,22 @@ QT_BEGIN_NAMESPACE
 
 struct QQuickNinePatchData
 {
-    QVector<qreal> coordsForSize(qreal count) const;
+    QList<qreal> coordsForSize(qreal count) const;
 
     inline bool isNull() const { return data.isEmpty(); }
     inline int count() const { return data.size(); }
     inline qreal at(int index) const { return data.at(index); }
     inline qreal size() const { return data.last(); }
 
-    void fill(const QVector<qreal> &coords, qreal count);
+    void fill(const QList<qreal> &coords, qreal count);
     void clear();
 
 private:
     bool inverted = false;
-    QVector<qreal> data;
+    QList<qreal> data;
 };
 
-QVector<qreal> QQuickNinePatchData::coordsForSize(qreal size) const
+QList<qreal> QQuickNinePatchData::coordsForSize(qreal size) const
 {
     // n = number of stretchable sections
     // We have to compensate when adding 0 and/or
@@ -70,7 +70,7 @@ QVector<qreal> QQuickNinePatchData::coordsForSize(qreal size) const
     const int n = (inverted ? l - 1 : l) / 2;
     const qreal stretch = (size - data.last()) / n;
 
-    QVector<qreal> coords;
+    QList<qreal> coords;
     coords.reserve(l);
     coords.append(0);
 
@@ -87,7 +87,7 @@ QVector<qreal> QQuickNinePatchData::coordsForSize(qreal size) const
     return coords;
 }
 
-void QQuickNinePatchData::fill(const QVector<qreal> &coords, qreal size)
+void QQuickNinePatchData::fill(const QList<qreal> &coords, qreal size)
 {
     data.clear();
     inverted = coords.isEmpty() || coords.first() != 0;
@@ -151,8 +151,8 @@ void QQuickNinePatchNode::initialize(QSGTexture *texture, const QSizeF &targetSi
         m_geometry.allocate(xlen * ylen, verticesPerQuad * quads);
 
         QSGGeometry::TexturedPoint2D *vertices = m_geometry.vertexDataAsTexturedPoint2D();
-        QVector<qreal> xCoords = xDivs.coordsForSize(targetSize.width());
-        QVector<qreal> yCoords = yDivs.coordsForSize(targetSize.height());
+        QList<qreal> xCoords = xDivs.coordsForSize(targetSize.width());
+        QList<qreal> yCoords = yDivs.coordsForSize(targetSize.height());
 
         for (int y = 0; y < ylen; ++y) {
             for (int x = 0; x < xlen; ++x, ++vertices)
@@ -189,8 +189,8 @@ class QQuickNinePatchImagePrivate : public QQuickImagePrivate
 
 public:
     void updatePatches();
-    void updatePaddings(const QSizeF &size, const QVector<qreal> &horizontal, const QVector<qreal> &vertical);
-    void updateInsets(const QVector<qreal> &horizontal, const QVector<qreal> &vertical);
+    void updatePaddings(const QSizeF &size, const QList<qreal> &horizontal, const QList<qreal> &vertical);
+    void updateInsets(const QList<qreal> &horizontal, const QList<qreal> &vertical);
 
     bool resetNode = false;
     qreal topPadding = 0;
@@ -207,10 +207,10 @@ public:
     QQuickNinePatchData yDivs;
 };
 
-static QVector<qreal> readCoords(const QRgb *data, int from, int count, int offset, QRgb color)
+static QList<qreal> readCoords(const QRgb *data, int from, int count, int offset, QRgb color)
 {
     int p1 = -1;
-    QVector<qreal> coords;
+    QList<qreal> coords;
     for (int i = 0; i < count; ++i) {
         int p2 = from + i * offset;
         if (data[p2] == color) {
@@ -243,17 +243,17 @@ void QQuickNinePatchImagePrivate::updatePatches()
     xDivs.fill(readCoords(data, 1, w - 1, 1, black), w - 2); // top left -> top right
     yDivs.fill(readCoords(data, w, h - 1, w, black), h - 2); // top left -> bottom left
 
-    QVector<qreal> hInsets = readCoords(data, (h - 1) * w + 1, w - 1, 1, red); // bottom left -> bottom right
-    QVector<qreal> vInsets = readCoords(data, 2 * w - 1, h - 1, w, red); // top right -> bottom right
+    QList<qreal> hInsets = readCoords(data, (h - 1) * w + 1, w - 1, 1, red); // bottom left -> bottom right
+    QList<qreal> vInsets = readCoords(data, 2 * w - 1, h - 1, w, red); // top right -> bottom right
     updateInsets(hInsets, vInsets);
 
     const QSizeF sz(w - leftInset - rightInset, h - topInset - bottomInset);
-    QVector<qreal> hPaddings = readCoords(data, (h - 1) * w + leftInset + 1, sz.width() - 2, 1, black); // bottom left -> bottom right
-    QVector<qreal> vPaddings = readCoords(data, (2 + topInset) * w - 1, sz.height() - 2, w, black); // top right -> bottom right
+    QList<qreal> hPaddings = readCoords(data, (h - 1) * w + leftInset + 1, sz.width() - 2, 1, black); // bottom left -> bottom right
+    QList<qreal> vPaddings = readCoords(data, (2 + topInset) * w - 1, sz.height() - 2, w, black); // top right -> bottom right
     updatePaddings(sz, hPaddings, vPaddings);
 }
 
-void QQuickNinePatchImagePrivate::updatePaddings(const QSizeF &size, const QVector<qreal> &horizontal, const QVector<qreal> &vertical)
+void QQuickNinePatchImagePrivate::updatePaddings(const QSizeF &size, const QList<qreal> &horizontal, const QList<qreal> &vertical)
 {
     Q_Q(QQuickNinePatchImage);
     qreal oldTopPadding = topPadding;
@@ -287,7 +287,7 @@ void QQuickNinePatchImagePrivate::updatePaddings(const QSizeF &size, const QVect
         emit q->rightPaddingChanged();
 }
 
-void QQuickNinePatchImagePrivate::updateInsets(const QVector<qreal> &horizontal, const QVector<qreal> &vertical)
+void QQuickNinePatchImagePrivate::updateInsets(const QList<qreal> &horizontal, const QList<qreal> &vertical)
 {
     Q_Q(QQuickNinePatchImage);
     qreal oldTopInset = topInset;

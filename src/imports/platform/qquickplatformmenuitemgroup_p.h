@@ -49,7 +49,7 @@
 //
 
 #include <QtCore/qobject.h>
-#include <QtCore/qvector.h>
+#include <QtCore/qlist.h>
 #include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
@@ -113,7 +113,7 @@ private:
     bool m_visible;
     bool m_exclusive;
     QQuickPlatformMenuItem *m_checkedItem;
-    QVector<QQuickPlatformMenuItem*> m_items;
+    QList<QQuickPlatformMenuItem*> m_items;
 };
 
 QT_END_NAMESPACE
