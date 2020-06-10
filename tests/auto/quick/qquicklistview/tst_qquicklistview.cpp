@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2018 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -255,8 +255,8 @@ private slots:
 
     void layoutChange();
 
-    void QTBUG_39492_data();
-    void QTBUG_39492();
+    void treeDelegateModelLayoutChange_data();
+    void treeDelegateModelLayoutChange();
 
     void jsArrayChange();
     void objectModel();
@@ -8945,7 +8945,7 @@ void tst_QQuickListView::layoutChange()
     }
 }
 
-void tst_QQuickListView::QTBUG_39492_data()
+void tst_QQuickListView::treeDelegateModelLayoutChange_data()
 {
     QStandardItemModel *sourceModel = new QStandardItemModel(this);
     for (int i = 0; i < 5; ++i) {
@@ -8981,14 +8981,15 @@ void tst_QQuickListView::QTBUG_39492_data()
         << QPersistentModelIndex(sortModel->index(1, 0, rootIndex2));
 }
 
-void tst_QQuickListView::QTBUG_39492()
+void tst_QQuickListView::treeDelegateModelLayoutChange() // QTBUG-39492
 {
     QFETCH(QSortFilterProxyModel*, model);
     QFETCH(QPersistentModelIndex, rootIndex);
 
+    qmlRegisterSingletonInstance("Qt.treemodel", 1, 0, "TreeModelCpp", model);
+
     QQuickView *window = getView();
-    window->rootContext()->setContextProperty("testModel", QVariant::fromValue(model));
-    window->setSource(testFileUrl("qtbug39492.qml"));
+    window->setSource(testFileUrl("treeDelegateModel.qml"));
 
     QQuickListView *listview = window->rootObject()->findChild<QQuickListView *>("listView");
     QVERIFY(listview);

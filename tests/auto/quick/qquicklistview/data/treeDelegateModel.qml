@@ -1,5 +1,6 @@
-import QtQuick 2.0
-import QtQml.Models 2.1
+import QtQuick 2.15
+import QtQml.Models 2.15
+import Qt.treemodel
 
 Rectangle {
     id: root
@@ -7,12 +8,12 @@ Rectangle {
     height: 320
     color: "#ffffff"
 
-
     Component {
         id: myDelegate
         Rectangle {
             id: wrapper
             objectName: "wrapper"
+            required property string display
             height: 20
             width: 240
             Text {
@@ -26,14 +27,14 @@ Rectangle {
     DelegateModel {
         id: delegateModel
         objectName: "delegateModel"
-        model: testModel
+        model: TreeModelCpp
         delegate: myDelegate
     }
 
     ListView {
         id: list
         objectName: "listView"
-        model: delegateModel;
+        model: delegateModel
         focus: true
         anchors.fill: parent
     }
