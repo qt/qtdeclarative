@@ -94,6 +94,7 @@ if(QT_FEATURE_private_tests)
     add_subdirectory(ecmascripttests)
     add_subdirectory(bindingdependencyapi)
     add_subdirectory(v4misc)
+    add_subdirectory(qqmldelegatemodel) # special case
 endif()
 if(NOT CMAKE_CROSSCOMPILING)
     # add_subdirectory(qmltyperegistrar) # special case need to port
