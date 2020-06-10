@@ -236,11 +236,8 @@ public Q_SLOTS:
         if (renderPending) {
             renderPending = false;
 
-            const bool needsWrap = QSGRendererInterface::isApiRhiBased(window->rendererInterface()->graphicsApi());
-            if (needsWrap) {
-                window->beginExternalCommands();
-                window->resetOpenGLState();
-            }
+            window->beginExternalCommands();
+            window->resetOpenGLState();
 
             fbo->bind();
             QOpenGLContext::currentContext()->functions()->glViewport(0, 0, fbo->width(), fbo->height());
@@ -250,8 +247,7 @@ public Q_SLOTS:
             if (msDisplayFbo)
                 QOpenGLFramebufferObject::blitFramebuffer(msDisplayFbo, fbo);
 
-            if (needsWrap)
-                window->endExternalCommands();
+            window->endExternalCommands();
 
             markDirty(QSGNode::DirtyMaterial);
             emit textureChanged();
