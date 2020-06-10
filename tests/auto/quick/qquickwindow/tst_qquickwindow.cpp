@@ -3188,9 +3188,9 @@ void tst_qquickwindow::findChild()
 class DeliveryRecord : public QPair<QString, QString>
 {
 public:
-    DeliveryRecord(const QString &filter, const QString &receiver) : QPair(filter, receiver) { }
-    DeliveryRecord(const QString &receiver) : QPair(QString(), receiver) { }
-    DeliveryRecord() : QPair() { }
+    DeliveryRecord(const QString &filter, const QString &receiver) : QPair<QString, QString>(filter, receiver) { }
+    DeliveryRecord(const QString &receiver) : QPair<QString, QString>(QString(), receiver) { }
+    DeliveryRecord() : QPair<QString, QString>() { }
     QString toString() const {
         if (second.isEmpty())
             return QLatin1String("Delivery(no receiver)");
