@@ -687,5 +687,3 @@ int main(int argc, char ** argv)
 
     return exitCode;
 }
-
-#include "main.moc"
