@@ -1621,12 +1621,16 @@ QQuickWindow::~QQuickWindow()
 /*!
     This function tries to release redundant resources currently held by the QML scene.
 
-    Calling this function might result in the scene graph and the OpenGL context used
-    for rendering being released to release graphics memory. If this happens, the
-    sceneGraphInvalidated() signal will be called, allowing users to clean up their
-    own graphics resources. The setPersistentOpenGLContext() and setPersistentSceneGraph()
-    functions can be used to prevent this from happening, if handling the cleanup is
-    not feasible in the application, at the cost of higher memory usage.
+    Calling this function requests the scene graph to release cached graphics
+    resources, such as graphics pipeline objects or shader programs.
+
+    Additionally, depending on the render loop in use, this function may also
+    result in the scene graph and all rendering resources to be released. If
+    this happens, the sceneGraphInvalidated() signal will be emitted, allowing
+    users to clean up their own graphics resources. The
+    setPersistentOpenGLContext() and setPersistentSceneGraph() functions can be
+    used to prevent this from happening, if handling the cleanup is not feasible
+    in the application, at the cost of higher memory usage.
 
     \sa sceneGraphInvalidated(), setPersistentOpenGLContext(), setPersistentSceneGraph()
  */
