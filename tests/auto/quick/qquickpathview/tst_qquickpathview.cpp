@@ -1672,13 +1672,12 @@ void tst_QQuickPathView::flickNClick() // QTBUG-77173
 
 void tst_QQuickPathView::treeModel()
 {
-    QScopedPointer<QQuickView> window(createView());
-    window->show();
-
     QStandardItemModel model;
     initStandardTreeModel(&model);
-    window->engine()->rootContext()->setContextProperty("myModel", &model);
+    qmlRegisterSingletonInstance("Qt.treemodel", 1, 0, "TreeModelCpp", &model);
 
+    QScopedPointer<QQuickView> window(createView());
+    window->show();
     window->setSource(testFileUrl("treemodel.qml"));
 
     QQuickPathView *pathview = qobject_cast<QQuickPathView*>(window->rootObject());

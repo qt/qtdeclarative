@@ -1,5 +1,6 @@
-import QtQuick 2.0
-import QtQml.Models 2.12
+import QtQuick 2.15
+import QtQml.Models 2.15
+import Qt.treemodel
 
 PathView {
     width: 320
@@ -9,8 +10,12 @@ PathView {
     }
     model: DelegateModel {
         id: vdm
-        model: myModel
-        delegate: Text { objectName: "wrapper"; text: display }
+        model: TreeModelCpp
+        delegate: Text {
+            required property string display
+            objectName: "wrapper"
+            text: display
+        }
     }
 
     path: Path {
