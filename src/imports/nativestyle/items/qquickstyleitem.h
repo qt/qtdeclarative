@@ -56,8 +56,8 @@
 #endif
 
 #ifdef QT_DEBUG
-#define qqc2Debug() if (m_debugFlags.testFlag(PrintOutput)) qDebug() << __FUNCTION__ << ":"
-#define qqc2DebugHeading(HEADING) if (m_debugFlags.testFlag(PrintOutput)) qDebug() << "--------" << HEADING << "--------"
+#define qqc2Debug() if (m_debugFlags.testFlag(Output)) qDebug() << __FUNCTION__ << ":"
+#define qqc2DebugHeading(HEADING) if (m_debugFlags.testFlag(Output)) qDebug() << "--------" << HEADING << "--------"
 #else
 #define qqc2Debug() if (false) qDebug()
 #define qqc2DebugHeading(HEADING) if (false) qDebug()
@@ -178,13 +178,15 @@ public:
 #ifdef QT_DEBUG
     enum DebugFlag {
         NoDebug = 0x00,
-        PrintOutput = 0x01,
+        Output = 0x01,
         ShowImageRect = 0x02,
         ShowContentRect = 0x04,
         ShowLayoutRect = 0x08,
         ShowUnscaled = 0x10,
-        ShowInputContentSize = 0x20
+        ShowInputContentSize = 0x20,
+        DontUseNinePatchImage = 0x40
     };
+    Q_FLAG(DebugFlag)
     Q_DECLARE_FLAGS(DebugFlags, DebugFlag)
 #endif
 

@@ -313,48 +313,32 @@ void QQuickStyleItem::componentComplete()
 #ifdef QT_DEBUG
     if (!qEnvironmentVariable("QQC2_NATIVESTYLE_DEBUG").isEmpty()) {
         // Set objectName to "debug" pluss one or more options separated
-        // by space to show extra information about this item. Note that
-        // some of the options cannot be shown unless we switch off using
-        // nine patch image scaling.
-        const QString name = m_control->objectName();
-        if (name.startsWith(QLatin1String("debug"))) {
-            if (name.contains(QStringLiteral("output"))) {
-                m_debugFlags.setFlag(PrintOutput);
-                qDebug() << "debug: setting PrintOutput";
-            }
-            if (name.contains(QStringLiteral("imagerect"))) {
-                m_debugFlags.setFlag(ShowImageRect);
-                qDebug() << "debug: setting ShowImageRect";
-            }
-            if (name.contains(QStringLiteral("contentrect"))) {
-                m_debugFlags.setFlag(ShowContentRect);
+        // by space to show extra information about this item.
+
+#define QQC2_DEBUG_FLAG(FLAG) \
+    if (name.contains(QString(QLatin1String(#FLAG)).toLower())) m_debugFlags |= FLAG
+
+        const QString name = m_control->objectName().toLower();
+        if (name.startsWith(QString(QLatin1String("debug")).toLower())) {
+            QQC2_DEBUG_FLAG(Output);
+            QQC2_DEBUG_FLAG(ShowImageRect);
+            QQC2_DEBUG_FLAG(ShowContentRect);
+            QQC2_DEBUG_FLAG(ShowLayoutRect);
+            QQC2_DEBUG_FLAG(ShowInputContentSize);
+            QQC2_DEBUG_FLAG(DontUseNinePatchImage);
+            QQC2_DEBUG_FLAG(ShowUnscaled);
+
+            if (m_debugFlags & (DontUseNinePatchImage | ShowInputContentSize | ShowContentRect | ShowLayoutRect)) {
+                // Some rects will not fit inside the drawn image unless
+                // we switch off (nine patch) image scaling.
+                m_debugFlags |= DontUseNinePatchImage;
                 m_useNinePatchImage = false;
-                qDebug() << "debug: setting ShowContentRect";
-                qDebug() << "debug: setting useNinePatchImage to false";
             }
-            if (name.contains(QStringLiteral("layoutrect"))) {
-                m_debugFlags.setFlag(ShowLayoutRect);
-                m_useNinePatchImage = false;
-                qDebug() << "debug: setting ShowLayoutRect";
-                qDebug() << "debug: setting useNinePatchImage to false";
-            }
-            if (name.contains(QStringLiteral("inputcontentsize"))) {
-                m_debugFlags.setFlag(ShowInputContentSize);
-                m_useNinePatchImage = false;
-                qDebug() << "debug: setting ShowInputContentSize";
-                qDebug() << "debug: setting useNinePatchImage to false";
-            }
-            if (name.contains(QStringLiteral("dontuseninepatchimage"))) {
-                m_useNinePatchImage = false;
-                qDebug() << "debug: setting useNinePatchImage to false";
-            }
-            if (name.contains(QStringLiteral("unscaled"))) {
-                m_debugFlags.setFlag(ShowUnscaled);
-                qDebug() << "debug: setting ShowUnscaled";
-            }
-            if (m_debugFlags == NoDebug)
-                qDebug() << "debug options: output, imagerect, contentrect"
-                         << "layoutrect, unscaled, inputcontentsize, dontuseninepatchimage";
+
+            if (m_debugFlags != NoDebug)
+                qDebug() << "debug options set:" << m_debugFlags;
+            else
+                qDebug() << "available debug options:" << DebugFlags(0xFFFF);
         }
     }
 #endif
