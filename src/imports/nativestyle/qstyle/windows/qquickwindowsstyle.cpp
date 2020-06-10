@@ -41,10 +41,9 @@
 #include "qquickwindowsstyle_p_p.h"
 #include "qquickstyleoption.h"
 #include "qquickstylehelper_p.h"
+#include "qquickdrawutil.h"
 
 #include <QtGui/qbitmap.h>
-#include "qdrawutil.h"
-//#include "qdrawutil.h" // for now
 #include <QtGui/qevent.h>
 #include <QtGui/qpaintengine.h>
 #include <QtGui/qpainter.h>

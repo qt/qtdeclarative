@@ -4,7 +4,6 @@ INCLUDEPATH += $$PWD
 HEADERS += \
     $$PWD/qquickwindowsstyle_p.h \
     $$PWD/qquickwindowsstyle_p_p.h \
-    $$PWD/qdrawutil.h
 #    $$PWD/qquickwindowsvistastyle_p.h \
 #    $$PWD/qquickwindowsvistastyle_p_p.h \
 #    $$PWD/qquickwindowsxpstyle_p.h \
@@ -12,7 +11,6 @@ HEADERS += \
 
 SOURCES += \
     $$PWD/qquickwindowsstyle.cpp \
-    $$PWD/qdrawutil.cpp
 #    $$PWD/qquickwindowsvistastyle.cpp \
 #    $$PWD/qquickwindowsxpstyle.cpp
 
