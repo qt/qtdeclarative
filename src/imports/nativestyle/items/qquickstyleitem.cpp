@@ -72,7 +72,8 @@ QDebug operator<<(QDebug debug, const StyleItemGeometry &cg)
     debug << "implicitSize:" << cg.implicitSize << ", ";
     debug << "contentRect:" << cg.contentRect << ", ";
     debug << "layoutRect:" << cg.layoutRect << ", ";
-    debug << "minimumSize:" << cg.minimumSize;
+    debug << "minimumSize:" << cg.minimumSize << ", ";
+    debug << "9patchMargins:" << cg.ninePatchMargins;
     debug << ')';
     return debug;
 }
