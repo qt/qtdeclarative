@@ -35,11 +35,6 @@
 
 #include "../../shared/util.h"
 
-#if QT_CONFIG(opengl)
-#include <qopenglcontext.h>
-#include <QtGui/qsurfaceformat.h>
-#endif
-
 class tst_QQuickGraphicsInfo : public QQmlDataTest
 {
     Q_OBJECT
@@ -66,18 +61,6 @@ void tst_QQuickGraphicsInfo::testProperties()
     const int expectedAPI = rif ? rif->graphicsApi() : QSGRendererInterface::Unknown;
 
     QCOMPARE(obj->property("api").toInt(), expectedAPI);
-
-#if QT_CONFIG(opengl)
-    if (expectedAPI == QSGRendererInterface::OpenGL) {
-        QCOMPARE(obj->property("shaderType").toInt(), int(QSGRendererInterface::GLSL));
-        QVERIFY(view.openglContext());
-        QSurfaceFormat format = view.openglContext()->format();
-        QCOMPARE(obj->property("majorVersion").toInt(), format.majorVersion());
-        QCOMPARE(obj->property("minorVersion").toInt(), format.minorVersion());
-        QCOMPARE(obj->property("profile").toInt(), static_cast<int>(format.profile()));
-        QCOMPARE(obj->property("renderableType").toInt(), static_cast<int>(format.renderableType()));
-    }
-#endif
 }
 
 QTEST_MAIN(tst_QQuickGraphicsInfo)

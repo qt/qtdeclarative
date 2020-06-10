@@ -58,7 +58,6 @@ class QSGTexture;
 class QInputMethodEvent;
 class QQuickWindowPrivate;
 class QQuickWindowAttached;
-class QOpenGLContext;
 class QQmlIncubationController;
 class QInputMethodEvent;
 class QQuickCloseEvent;
@@ -175,8 +174,6 @@ public:
 
     void setPersistentSceneGraph(bool persistent);
     bool isPersistentSceneGraph() const;
-
-    QOpenGLContext *openglContext() const; // ### Qt 6 consider if this is kept or not
 
     bool isSceneGraphInitialized() const;
 

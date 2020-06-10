@@ -2409,10 +2409,11 @@ void tst_qquickwindow::defaultSurfaceFormat()
     // Depth and stencil should be >= what has been requested. For real. But use
     // the context since the window's surface format is only partially updated
     // on most platforms.
-    const QOpenGLContext *openglContext = nullptr;
-    QTRY_VERIFY((openglContext = window.openglContext()) != nullptr);
-    QVERIFY(openglContext->format().depthBufferSize() >= 16);
-    QVERIFY(openglContext->format().stencilBufferSize() >= 8);
+    const QOpenGLContext *ctx = nullptr;
+    QTRY_VERIFY((ctx = static_cast<QOpenGLContext *>(window.rendererInterface()->getResource(
+                                                         &window, QSGRendererInterface::OpenGLContextResource))) != nullptr);
+    QVERIFY(ctx->format().depthBufferSize() >= 16);
+    QVERIFY(ctx->format().stencilBufferSize() >= 8);
 #endif
     QSurfaceFormat::setDefaultFormat(savedDefaultFormat);
 }
@@ -2539,7 +2540,10 @@ void tst_qquickwindow::testRenderJob()
             // Do a synchronized GL job.
             GLubyte readPixel[4] = {0, 0, 0, 0};
             GlRenderJob *glJob = new GlRenderJob(readPixel);
-            if (window.openglContext()->thread() != QThread::currentThread()) {
+            QOpenGLContext *ctx = static_cast<QOpenGLContext *>(window.rendererInterface()->getResource(
+                                                                    &window, QSGRendererInterface::OpenGLContextResource));
+            QVERIFY(ctx);
+            if (ctx->thread() != QThread::currentThread()) {
                 QMutex mutex;
                 QWaitCondition condition;
                 glJob->mutex = &mutex;

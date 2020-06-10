@@ -38,8 +38,7 @@
 ****************************************************************************/
 
 #include "qquickgraphicsinfo_p.h"
-#include "qquickwindow.h"
-#include "qquickitem.h"
+#include <private/qquickitem_p.h>
 #include <qopenglcontext.h>
 
 QT_BEGIN_NAMESPACE
@@ -265,7 +264,7 @@ void QQuickGraphicsInfo::updateInfo()
     QSurfaceFormat format = QSurfaceFormat::defaultFormat();
 #if QT_CONFIG(opengl)
     if (m_window && m_window->isSceneGraphInitialized()) {
-        QOpenGLContext *context = m_window->openglContext();
+        QOpenGLContext *context = QQuickWindowPrivate::get(m_window)->openglContext();
         if (context)
             format = context->format();
     }

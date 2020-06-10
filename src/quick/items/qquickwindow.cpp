@@ -4012,23 +4012,14 @@ void QQuickWindow::setTransientParent_helper(QQuickWindow *window)
                this, SLOT(setTransientParent_helper(QQuickWindow*)));
 }
 
-/*!
-    Returns the OpenGL context used for rendering.
-
-    \note If the scene graph is not ready, or the scene graph is not using
-    OpenGL (or RHI over OpenGL), this function will return null.
-
-    \sa sceneGraphInitialized(), sceneGraphInvalidated()
- */
-QOpenGLContext *QQuickWindow::openglContext() const
+QOpenGLContext *QQuickWindowPrivate::openglContext()
 {
 #if QT_CONFIG(opengl)
-    Q_D(const QQuickWindow);
-    if (d->context && d->context->isValid()) {
-        QSGRendererInterface *rif = d->context->sceneGraphContext()->rendererInterface(d->context);
+    if (context && context->isValid()) {
+        QSGRendererInterface *rif = context->sceneGraphContext()->rendererInterface(context);
         if (rif) {
-            return reinterpret_cast<QOpenGLContext *>(rif->getResource(const_cast<QQuickWindow *>(this),
-                                                                       QSGRendererInterface::OpenGLContextResource));
+            Q_Q(QQuickWindow);
+            return reinterpret_cast<QOpenGLContext *>(rif->getResource(q, QSGRendererInterface::OpenGLContextResource));
         }
     }
 #endif
@@ -4981,12 +4972,11 @@ void QQuickWindow::resetOpenGLState()
 {
     Q_D(QQuickWindow);
 
-    if (!openglContext())
+    QOpenGLContext *ctx = d->openglContext();
+    if (!ctx)
         return;
 
-    QOpenGLContext *ctx = openglContext();
     QOpenGLFunctions *gl = ctx->functions();
-
     gl->glBindBuffer(GL_ARRAY_BUFFER, 0);
     gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
@@ -5635,11 +5625,7 @@ void QQuickWindow::scheduleRenderJob(QRunnable *job, RenderStage stage)
     } else if (stage == AfterSwapStage) {
         d->afterSwapJobs << job;
     } else if (stage == NoStage) {
-        if (d->renderControl && openglContext()
-#if QT_CONFIG(opengl)
-            && openglContext()->thread() == QThread::currentThread()
-#endif
-            ) {
+        if (d->renderControl && d->rhi && d->rhi->thread() == QThread::currentThread()) {
             job->run();
             delete job;
         } else if (isExposed()) {

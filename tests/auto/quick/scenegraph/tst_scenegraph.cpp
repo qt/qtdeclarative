@@ -118,7 +118,6 @@ private slots:
 
 private:
     QQuickView *createView(const QString &file, QWindow *parent = nullptr, int x = -1, int y = -1, int w = -1, int h = -1);
-    bool isRunningOnOpenGLDirectly();
     bool isRunningOnRhi();
 };
 
@@ -411,8 +410,8 @@ void tst_SceneGraph::render_data()
 
 void tst_SceneGraph::render()
 {
-    if (!isRunningOnOpenGLDirectly() && !isRunningOnRhi())
-        QSKIP("Skipping complex rendering tests due to not running with OpenGL or QRhi");
+    if (!isRunningOnRhi())
+        QSKIP("Skipping complex rendering tests due to not running with QRhi");
 
     QFETCH(QString, file);
     QFETCH(QList<Sample>, baseStage);
@@ -462,8 +461,8 @@ void tst_SceneGraph::render()
 // current on the other window.
 void tst_SceneGraph::hideWithOtherContext()
 {
-    if (!isRunningOnOpenGLDirectly())
-        QSKIP("Skipping OpenGL context test due to not running with OpenGL");
+    if (!isRunningOnRhi())
+        QSKIP("Skipping OpenGL context test due to not running with QRhi");
 
     QWindow window;
     window.setSurfaceType(QWindow::OpenGLSurface);
@@ -480,7 +479,12 @@ void tst_SceneGraph::hideWithOtherContext()
         view.show();
         QVERIFY(QTest::qWaitForWindowExposed(&view));
 
-        renderingOnMainThread = view.openglContext()->thread() == QGuiApplication::instance()->thread();
+        if (view.rendererInterface()->graphicsApi() != QSGRendererInterface::OpenGLRhi)
+            QSKIP("Skipping OpenGL context test due to not using OpenGL");
+
+        QOpenGLContext *ctx = static_cast<QOpenGLContext *>(view.rendererInterface()->getResource(
+                                                                &view, QSGRendererInterface::OpenGLContextResource));
+        renderingOnMainThread = ctx->thread() == QGuiApplication::instance()->thread();
 
         // Make the local context current on the local window...
         context.makeCurrent(&window);
@@ -524,21 +528,6 @@ void tst_SceneGraph::createTextureFromImage()
 
     QScopedPointer<QSGTexture> texture(view.createTextureFromImage(image, (QQuickWindow::CreateTextureOptions) flags));
     QCOMPARE(texture->hasAlphaChannel(), expectedAlpha);
-}
-
-bool tst_SceneGraph::isRunningOnOpenGLDirectly()
-{
-    static bool retval = false;
-    static bool decided = false;
-    if (!decided) {
-        decided = true;
-        QQuickView dummy;
-        dummy.show();
-        if (QTest::qWaitForWindowExposed(&dummy))
-            retval = dummy.rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL;
-        dummy.hide();
-    }
-    return retval;
 }
 
 bool tst_SceneGraph::isRunningOnRhi()

@@ -44,6 +44,7 @@
 #include <private/qquickitem_p.h>
 #include <private/qsgadaptationlayer_p.h>
 #include <qsgtextureprovider.h>
+#include <QtGui/private/qrhi_p.h>
 
 #include <QSGSimpleTextureNode>
 #include <QSGRendererInterface>
@@ -381,7 +382,7 @@ QSGTextureProvider *QQuickFramebufferObject::textureProvider() const
 
     Q_D(const QQuickFramebufferObject);
     QQuickWindow *w = window();
-    if (!w || !w->openglContext() || QThread::currentThread() != w->openglContext()->thread()) {
+    if (!w || !w->isSceneGraphInitialized() || QThread::currentThread() != QQuickWindowPrivate::get(w)->context->thread()) {
         qWarning("QQuickFramebufferObject::textureProvider: can only be queried on the rendering thread of an exposed window");
         return nullptr;
     }

@@ -71,6 +71,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QOpenContext;
 class QOpenGLVertexArrayObjectHelper;
 class QQuickAnimatorController;
 class QQuickDragGrabber;
@@ -336,6 +337,7 @@ public:
     QList<QRunnable *> afterSwapJobs;
 
     void runAndClearJobs(QList<QRunnable *> *jobs);
+    QOpenGLContext *openglContext();
 
     QQuickWindow::GraphicsStateInfo rhiStateInfo;
     QRhi *rhi = nullptr;

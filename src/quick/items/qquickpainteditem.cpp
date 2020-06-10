@@ -44,9 +44,7 @@
 #include <QtQuick/private/qsgcontext_p.h>
 #include <private/qsgadaptationlayer_p.h>
 #include <qsgtextureprovider.h>
-#if QT_CONFIG(opengl)
-#include <QOpenGLContext>
-#endif // QT_CONFIG(opengl)
+#include <QtGui/private/qrhi_p.h>
 
 #include <qmath.h>
 
@@ -662,7 +660,7 @@ QSGTextureProvider *QQuickPaintedItem::textureProvider() const
     Q_D(const QQuickPaintedItem);
 #if QT_CONFIG(opengl)
     QQuickWindow *w = window();
-    if (!w || !w->openglContext() || QThread::currentThread() != w->openglContext()->thread()) {
+    if (!w || !w->isSceneGraphInitialized() || QThread::currentThread() != QQuickWindowPrivate::get(w)->context->thread()) {
         qWarning("QQuickPaintedItem::textureProvider: can only be queried on the rendering thread of an exposed window");
         return nullptr;
     }
