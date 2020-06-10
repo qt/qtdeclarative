@@ -407,8 +407,8 @@ bool DistanceFieldShiftedStyleTextMaterialRhiShader::updateUniformData(RenderSta
     if (!oldMat || oldMat->fontScale() != mat->fontScale() || oldMat->shift() != mat->shift()
             || oldMat->textureSize() != mat->textureSize())
     {
-        QPointF shift(1.0 / mat->fontScale() * mat->shift().x(),
-                      1.0 / mat->fontScale() * mat->shift().y());
+        QVector2D shift(1.0 / mat->fontScale() * mat->shift().x(),
+                        1.0 / mat->fontScale() * mat->shift().y());
         memcpy(buf->data() + 128, &shift, 8);
         changed = true;
     }
