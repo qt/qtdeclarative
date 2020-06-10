@@ -2368,13 +2368,13 @@ void tst_QQuickPathView::nestedinFlickable()
     fflickStartedSpy.clear();
     fflickEndedSpy.clear();
     int shortInterval = 2;
-    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(23,216));
+    QTest::mousePress(window.data(), Qt::LeftButton, {}, QPoint(23,216));
     QTest::mouseMove(window.data(), QPoint(48,216), shortInterval);
-    QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(73,217));
+    QTest::mouseRelease(window.data(), Qt::LeftButton, {}, QPoint(73,217));
     QVERIFY(pathview->isMoving());
-    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(21,216));
+    QTest::mousePress(window.data(), Qt::LeftButton, {}, QPoint(21,216));
     QTest::mouseMove(window.data(), QPoint(46,216), shortInterval);
-    QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(71,217));
+    QTest::mouseRelease(window.data(), Qt::LeftButton, {}, QPoint(71,217));
     QVERIFY(pathview->isMoving());
     // moveEndedSpy.count() and moveStartedSpy.count() should be exactly 1
     // but in CI we sometimes see a scheduling issue being hit which
@@ -2430,14 +2430,14 @@ void tst_QQuickPathView::ungrabNestedinFlickable()
     double pathviewOffsetBefore = pathview->offset();
 
     // Drag slowly upwards so that it does not flick, release, and let it start snapping back
-    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(200, 350));
+    QTest::mousePress(window.data(), Qt::LeftButton, {}, QPoint(200, 350));
     for (int i = 0; i < 4; ++i)
         QTest::mouseMove(window.data(), QPoint(200, 325 - i * 25), 500);
-    QTest::mouseRelease(window.data(), Qt::LeftButton, 0,  QPoint(200, 250));
+    QTest::mouseRelease(window.data(), Qt::LeftButton, {}, QPoint(200, 250));
     QCOMPARE(pathview->isMoving(), true);
 
     // Press again to stop moving
-    QTest::mousePress(window.data(), Qt::LeftButton, 0, QPoint(200, 350));
+    QTest::mousePress(window.data(), Qt::LeftButton, {}, QPoint(200, 350));
     QTRY_COMPARE(pathview->isMoving(), false);
 
     // Cancel the grab, wait for movement to stop, and expect it to snap to
@@ -2445,7 +2445,7 @@ void tst_QQuickPathView::ungrabNestedinFlickable()
     pathview->ungrabMouse();
     QTRY_COMPARE(pathview->offset(), pathviewOffsetBefore);
     QCOMPARE(pathview->isMoving(), false);
-    QTest::mouseRelease(window.data(), Qt::LeftButton, 0, QPoint(200, 350));
+    QTest::mouseRelease(window.data(), Qt::LeftButton, {}, QPoint(200, 350));
 }
 
 void tst_QQuickPathView::flickableDelegate()
@@ -2742,7 +2742,7 @@ void tst_QQuickPathView::objectModelMove()
     QVector<QString> itemObjectNames;
     itemObjectNames << QLatin1String("red") << QLatin1String("green") << QLatin1String("blue");
     QVector<QQuickItem*> childItems;
-    for (const QString itemObjectName : qAsConst(itemObjectNames)) {
+    for (const QString &itemObjectName : qAsConst(itemObjectNames)) {
         QQuickItem *childItem = findItem<QQuickItem>(pathView, itemObjectName);
         QVERIFY(childItem);
         childItems.append(childItem);
