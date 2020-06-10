@@ -244,7 +244,7 @@ void tst_examples::sgexamples()
 {
     QFETCH(QString, file);
     QQuickWindow window;
-    window.setPersistentOpenGLContext(true);
+    window.setPersistentGraphics(true);
     window.setPersistentSceneGraph(true);
 
     QQmlComponent component(&engine, QUrl::fromLocalFile(file));
