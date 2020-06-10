@@ -413,6 +413,12 @@ int main(int argc, char **argv)
 
     fprintf(output, "void %s()\n{", qPrintable(functionName));
     const auto majorVersion = parser.value(majorVersionOption);
+    const auto minorVersion = parser.value(minorVersionOption);
+
+    if (minorVersion.toInt() != 0) {
+        fprintf(output, "\n    qmlRegisterModule(\"%s\", %s, 0);",
+                qPrintable(module), qPrintable(majorVersion));
+    }
 
     for (const QJsonObject &classDef : qAsConst(types)) {
         if (!classDef.value(QLatin1String("registerable")).toBool())
@@ -430,8 +436,7 @@ int main(int argc, char **argv)
     }
 
     fprintf(output, "\n    qmlRegisterModule(\"%s\", %s, %s);",
-            qPrintable(module), qPrintable(majorVersion),
-            qPrintable(parser.value(minorVersionOption)));
+            qPrintable(module), qPrintable(majorVersion), qPrintable(minorVersion));
     fprintf(output, "\n}\n");
     fprintf(output, "\nstatic const QQmlModuleRegistration registration(\"%s\", %s);\n",
             qPrintable(module), qPrintable(functionName));
