@@ -889,12 +889,14 @@ int Lexer::scanString(ScanStringMode mode)
     // in case we just parsed a \r, we need to reset this flag to get things working
     // correctly in the loop below and afterwards
     _skipLinefeed = false;
+    bool first = true;
 
     if (_engine) {
         while (_codePtr <= _endPtr) {
             if (isLineTerminator()) {
                 if ((quote == u'`' || qmlMode())) {
-                    --_currentLineNumber; // will be read again in scanChar()
+                    if (first)
+                        --_currentLineNumber; // will be read again in scanChar()
                     break;
                 }
                 _errorCode = IllegalCharacter;
@@ -922,6 +924,7 @@ int Lexer::scanString(ScanStringMode mode)
             // don't use scanChar() here, that would transform \r sequences and the midRef() call would create the wrong result
             _char = *_codePtr++;
             ++_currentColumnNumber;
+            first = false;
         }
     }
 

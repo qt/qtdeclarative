@@ -55,6 +55,8 @@ private slots:
 #endif
     void invalidEscapeSequence();
     void stringLiteral();
+    void codeLocationsWithContinuationStringLiteral();
+    void codeLocationsWithContinuationStringLiteral_data();
     void noSubstitutionTemplateLiteral();
     void templateLiteral();
     void leadingSemicolonInClass();
@@ -92,7 +94,7 @@ public:
         AST::Node::accept(node, this);
     }
 
-    void checkNode(AST::Node *node)
+    virtual void checkNode(AST::Node *node)
     {
         if (! nodeStack.isEmpty()) {
             AST::Node *parent = nodeStack.last();
@@ -172,6 +174,50 @@ struct ExpressionStatementObserver: public AST::Visitor
     {
         QFAIL("Maximum statement or expression depth exceeded");
     }
+};
+
+class CheckLocations : public Check
+{
+public:
+    CheckLocations(const QString &code)
+    {
+        m_code = code.split('\u000A');
+    }
+
+    void checkNode(AST::Node *node)
+    {
+        SourceLocation first = node->firstSourceLocation();
+        SourceLocation last = node->lastSourceLocation();
+        int startLine = first.startLine - 1;
+        int endLine = last.startLine - 1;
+        QVERIFY(startLine >= 0 && startLine < m_code.size());
+        QVERIFY(endLine >= 0 && endLine < m_code.size());
+        const int length = last.offset + last.length - first.offset;
+        QString expected = m_code.join('\n').mid(first.offset, length);
+        int startColumn = first.startColumn - 1;
+        QString found;
+        while (startLine < endLine) {
+            found.append(m_code.at(startLine).mid(startColumn)).append('\n');
+            ++startLine;
+            startColumn = 0;
+        }
+        found.append(m_code.at(endLine).mid(startColumn,
+                                            last.startColumn + last.length - startColumn - 1));
+        ++startLine;
+        // handle possible continuation strings correctly
+        while (found.size() != length && startLine < m_code.size()) {
+            const QString line = m_code.at(startLine);
+            found.append('\n');
+            if (length - found.size() > line.size())
+                found.append(line);
+            else
+                found.append(line.left(length - found.size()));
+            ++startLine;
+        }
+        QCOMPARE(expected, found);
+    }
+private:
+    QStringList m_code;
 };
 
 }
@@ -353,6 +399,68 @@ void tst_qqmlparser::stringLiteral()
     QCOMPARE(literal->firstSourceLocation().begin(), offset);
     QCOMPARE(literal->lastSourceLocation().startLine, 3u);
     QCOMPARE(literal->lastSourceLocation().end(), code.size());
+
+}
+
+void tst_qqmlparser::codeLocationsWithContinuationStringLiteral()
+{
+    using namespace QQmlJS;
+    QFETCH(QString, code);
+    Engine engine;
+    Lexer lexer(&engine);
+    lexer.setCode(code, 1);
+    Parser parser(&engine);
+    QVERIFY(parser.parse());
+
+    check::CheckLocations chk(code);
+    chk(parser.rootNode());
+}
+
+void tst_qqmlparser::codeLocationsWithContinuationStringLiteral_data()
+{
+    QTest::addColumn<QString>("code");
+    QString code("A {\u000A"
+                 "    property string dummy: \"this\u000A"
+                 "                             may break lexer\"\u000A"
+                 "    B { }\u000A"
+                 "}");
+    QTest::newRow("withTextBeforeLF") << code;
+    code = QString("A {\u000A"
+                   "    property string dummy: \"\u000A"
+                   "                             may break lexer\"\u000A"
+                   "    B { }\u000A"
+                   "}");
+    QTest::newRow("withoutTextBeforeLF") << code;
+    code = QString("A {\u000A"
+                   "    property string dummy: \"this\\\u000A"
+                   "                             may break lexer\"\u000A"
+                   "    B { }\u000A"
+                   "}");
+    QTest::newRow("withTextBeforeEscapedLF") << code;
+    code = QString("A {\u000A"
+                   "    property string dummy: \"th\\\"is\u000A"
+                   "                             may break lexer\"\u000A"
+                   "    B { }\u000A"
+                   "}");
+    QTest::newRow("withTextBeforeWithEscapeSequence") << code;
+    code = QString("A {\u000A"
+                   "    property string first: \"\u000A"
+                   "                             first\"\u000A"
+                   "    property string dummy: \"th\\\"is\u000A"
+                   "                             may break lexer\"\u000A"
+                   "    B { }\u000A"
+                   "}");
+    QTest::newRow("withTextBeforeLFwithEscapeSequenceCombined") << code;
+    // reference data
+    code = QString("A {\u000A"
+                   "    B {\u000A"
+                   "        property int dummy: 1\u000A"
+                   "    }\u000A"
+                   "    C {\u000A"
+                   "        D { }\u000A"
+                   "    }\u000A"
+                   "}");
+    QTest::newRow("noStringLiteralAtAll") << code;
 }
 
 void tst_qqmlparser::noSubstitutionTemplateLiteral()
