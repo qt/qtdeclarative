@@ -4658,34 +4658,6 @@ QQmlIncubationController *QQuickWindow::incubationController() const
  */
 
 /*!
-    \fn void QQuickWindow::openglContextCreated(QOpenGLContext *context)
-
-    This signal is emitted on the gui thread when the OpenGL \a context
-    for this window is created, before it is made current.
-
-    Some implementations will share the same OpenGL context between
-    multiple QQuickWindow instances. The openglContextCreated() signal
-    will in this case only be emitted for the first window, when the
-    OpenGL context is actually created.
-
-    QQuickWindow::openglContext() will still return 0 for this window
-    until after the QQuickWindow::sceneGraphInitialized() has been
-    emitted.
-
-    \note
-    This signal will only be emmited when using the default OpenGL scene
-    graph adaptation.
-
-    \since 5.3
- */
-
-/*!
-    \qmlsignal QtQuick.Window::Window::openglContextCreated()
-    \internal
-    \since 5.3
- */
-
-/*!
     \fn void QQuickWindow::sceneGraphAboutToStop()
 
     This signal is emitted on the render thread when the scene graph is

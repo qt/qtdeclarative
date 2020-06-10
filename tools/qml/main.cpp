@@ -35,8 +35,6 @@
 #include <QGuiApplication>
 #include <QWindow>
 #include <QFileOpenEvent>
-#include <QOpenGLContext>
-#include <QOpenGLFunctions>
 #include <QSurfaceFormat>
 #ifdef QT_WIDGETS_LIB
 #include <QApplication>
@@ -258,10 +256,6 @@ public Q_SLOTS:
         returnCode = retCode;
     }
 
-#if defined(QT_GUI_LIB) && QT_CONFIG(opengl)
-    void onOpenGlContextCreated(QOpenGLContext *context);
-#endif
-
 private:
     void contain(QObject *o, const QUrl &containPath);
     void checkForWindow(QObject *o);
@@ -289,34 +283,12 @@ void LoadWatcher::contain(QObject *o, const QUrl &containPath)
 void LoadWatcher::checkForWindow(QObject *o)
 {
 #if defined(QT_GUI_LIB) && QT_CONFIG(opengl)
-    if (o->isWindowType() && o->inherits("QQuickWindow")) {
+    if (o->isWindowType() && o->inherits("QQuickWindow"))
         haveWindow = true;
-        if (verboseMode)
-            connect(o, SIGNAL(openglContextCreated(QOpenGLContext*)),
-                    this, SLOT(onOpenGlContextCreated(QOpenGLContext*)));
-    }
 #else
     Q_UNUSED(o)
 #endif // QT_GUI_LIB && !QT_NO_OPENGL
 }
-
-#if defined(QT_GUI_LIB) && QT_CONFIG(opengl)
-void LoadWatcher::onOpenGlContextCreated(QOpenGLContext *context)
-{
-    context->makeCurrent(qobject_cast<QWindow *>(sender()));
-    QOpenGLFunctions functions(context);
-    QByteArray output = "Vendor  : ";
-    output += reinterpret_cast<const char *>(functions.glGetString(GL_VENDOR));
-    output += "\nRenderer: ";
-    output += reinterpret_cast<const char *>(functions.glGetString(GL_RENDERER));
-    output += "\nVersion : ";
-    output += reinterpret_cast<const char *>(functions.glGetString(GL_VERSION));
-    output += "\nLanguage: ";
-    output += reinterpret_cast<const char *>(functions.glGetString(GL_SHADING_LANGUAGE_VERSION));
-    puts(output.constData());
-    context->doneCurrent();
-}
-#endif // QT_GUI_LIB && !QT_NO_OPENGL
 
 void quietMessageHandler(QtMsgType type, const QMessageLogContext &ctxt, const QString &msg)
 {

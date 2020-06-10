@@ -36,7 +36,6 @@
 #include <QtCore/qregularexpression.h>
 
 #include <QtGui/QGuiApplication>
-#include <QOpenGLFunctions>
 
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlengine.h>
@@ -378,37 +377,6 @@ static void usage()
     puts(" ");
     exit(1);
 }
-#if QT_CONFIG(opengl)
-// Listen on GL context creation of the QQuickWindow in order to print diagnostic output.
-class DiagnosticGlContextCreationListener : public QObject {
-    Q_OBJECT
-public:
-    explicit DiagnosticGlContextCreationListener(QQuickWindow *window) : QObject(window)
-    {
-        connect(window, &QQuickWindow::openglContextCreated,
-                this, &DiagnosticGlContextCreationListener::onOpenGlContextCreated);
-    }
-
-private slots:
-    void onOpenGlContextCreated(QOpenGLContext *context)
-    {
-        context->makeCurrent(qobject_cast<QQuickWindow *>(parent()));
-        QOpenGLFunctions functions(context);
-        QByteArray output = "Vendor  : ";
-        output += reinterpret_cast<const char *>(functions.glGetString(GL_VENDOR));
-        output += "\nRenderer: ";
-        output += reinterpret_cast<const char *>(functions.glGetString(GL_RENDERER));
-        output += "\nVersion : ";
-        output += reinterpret_cast<const char *>(functions.glGetString(GL_VERSION));
-        output += "\nLanguage: ";
-        output += reinterpret_cast<const char *>(functions.glGetString(GL_SHADING_LANGUAGE_VERSION));
-        puts(output.constData());
-        context->doneCurrent();
-        deleteLater();
-    }
-
-};
-#endif
 
 static void setWindowTitle(bool verbose, const QObject *topLevel, QWindow *window)
 {
@@ -680,10 +648,6 @@ int main(int argc, char ** argv)
 
             if (window) {
                 setWindowTitle(options.verbose, topLevel, window.data());
-#if QT_CONFIG(opengl)
-                if (options.verbose)
-                    new DiagnosticGlContextCreationListener(window.data());
-#endif
                 if (options.transparent) {
                     window->setClearBeforeRendering(true);
                     window->setColor(QColor(Qt::transparent));

@@ -201,7 +201,6 @@ public:
 
 Q_SIGNALS:
     void frameSwapped();
-    Q_REVISION(2, 2) void openglContextCreated(QOpenGLContext *context); // ### Qt 6 remove
     void sceneGraphInitialized();
     void sceneGraphInvalidated();
     void beforeSynchronizing();
