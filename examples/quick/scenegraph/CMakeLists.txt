@@ -1,13 +1,11 @@
 # Generated from scenegraph.pro.
 
 add_subdirectory(customgeometry)
-# add_subdirectory(rendernode) # special case needs fixing
 add_subdirectory(threadedanimation)
 if(QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT_FEATURE_opengles3)
     add_subdirectory(graph)
     add_subdirectory(fboitem)
     add_subdirectory(openglunderqml)
-    add_subdirectory(opengltextureinthread)
     add_subdirectory(twotextureproviders)
 endif()
 if(IOS OR MACOS)

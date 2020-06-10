@@ -5,13 +5,11 @@ qtConfig(opengl(es1|es2)?) {
             graph \
             fboitem \
             openglunderqml \
-            opengltextureinthread \
             twotextureproviders
 }
 
 SUBDIRS += \
         customgeometry \
-        rendernode \
         threadedanimation
 
 macos|ios {
