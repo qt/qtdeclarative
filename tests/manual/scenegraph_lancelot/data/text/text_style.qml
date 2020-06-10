@@ -22,7 +22,7 @@ Item {
         anchors.top: text_0000.bottom
         anchors.left: parent.left
         width: 150
-        text: "The quick brown fox jumps over the lazy dog. 0123456789. style: Outline (looks a bit shit)"
+        text: "The quick brown fox jumps over the lazy dog. 0123456789. style: Outline"
         style: Text.Outline
         color: "black"
         font.family: "Helvetica"
