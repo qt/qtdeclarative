@@ -1893,12 +1893,28 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
     // env import paths
     if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty("QML2_IMPORT_PATH"))) {
         const QString envImportPath = qEnvironmentVariable("QML2_IMPORT_PATH");
-#if defined(Q_OS_WIN)
-        QLatin1Char pathSep(';');
-#else
-        QLatin1Char pathSep(':');
-#endif
-        QStringList paths = envImportPath.split(pathSep, Qt::SkipEmptyParts);
+        const QChar pathSep = QDir::listSeparator();
+        QStringList paths;
+        if (pathSep == u':') {
+            // Double colons are interpreted as separator + resource path.
+            paths = envImportPath.split(u':');
+            bool wasEmpty = false;
+            for (auto it = paths.begin(); it != paths.end();) {
+                if (it->isEmpty()) {
+                    wasEmpty = true;
+                    it = paths.erase(it);
+                } else {
+                    if (wasEmpty) {
+                        it->prepend(u':');
+                        wasEmpty = false;
+                    }
+                    ++it;
+                }
+            }
+        } else {
+            paths = envImportPath.split(pathSep, Qt::SkipEmptyParts);
+        }
+
         for (int ii = paths.count() - 1; ii >= 0; --ii)
             addImportPath(paths.at(ii));
     }

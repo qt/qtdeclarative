@@ -26,6 +26,7 @@
 **
 ****************************************************************************/
 
+#include <QtCore/qscopeguard.h>
 #include <QtTest/QtTest>
 #include <QQmlApplicationEngine>
 #include <QQmlAbstractUrlInterceptor>
@@ -52,11 +53,39 @@ private slots:
     void partialImportVersions();
     void registerModuleImport();
     void cleanup();
+    void envResourceImportPath();
 };
 
 void tst_QQmlImport::cleanup()
 {
     QQmlImports::setDesignerSupportRequired(false);
+}
+
+void tst_QQmlImport::envResourceImportPath()
+{
+    const bool hadEnv = qEnvironmentVariableIsSet("QML2_IMPORT_PATH");
+    const QByteArray oldEnv = hadEnv ? qgetenv("QML2_IMPORT_PATH") : QByteArray();
+    auto guard = qScopeGuard([&] {
+        if (hadEnv)
+            qputenv("QML2_IMPORT_PATH", oldEnv);
+        else
+            qunsetenv("QML2_IMPORT_PATH");
+    });
+
+    const QStringList envPaths({
+        QLatin1String(":/some/resource"),
+        dataDirectory(),
+        QLatin1String(":/some/other/resource"),
+        directory()
+    });
+
+    qputenv("QML2_IMPORT_PATH", envPaths.join(QDir::listSeparator()).toUtf8());
+
+    QQmlImportDatabase importDb(nullptr);
+    const QStringList importPaths = importDb.importPathList();
+
+    for (const QString &path : envPaths)
+        QVERIFY((importPaths.contains(path.startsWith(u':') ? QLatin1String("qrc") + path : path)));
 }
 
 void tst_QQmlImport::testDesignerSupported()
