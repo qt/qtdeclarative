@@ -274,7 +274,7 @@ public:
 
     uint clearBeforeRendering : 1;
 
-    uint persistentGLContext : 1;
+    uint persistentGraphics : 1;
     uint persistentSceneGraph : 1;
 
     uint lastWheelEventAccepted : 1;

@@ -510,7 +510,7 @@ void QSGRenderThread::invalidateGraphics(QQuickWindow *window, bool inDestructor
 
 
     bool wipeSG = inDestructor || !window->isPersistentSceneGraph();
-    bool wipeGraphics = inDestructor || (wipeSG && !window->isPersistentOpenGLContext());
+    bool wipeGraphics = inDestructor || (wipeSG && !window->isPersistentGraphics());
 
     bool current = true;
     if (rhi)

@@ -375,7 +375,7 @@ bool QQuickRenderControl::sync()
 
   \note This function does not take
   QQuickWindow::persistentSceneGraph() or
-  QQuickWindow::persistentOpenGLContext() into account. This means
+  QQuickWindow::persistentGraphics() into account. This means
   that context-specific resources are always released.
  */
 void QQuickRenderControl::invalidate()

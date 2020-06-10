@@ -170,10 +170,10 @@ public:
     static bool hasDefaultAlphaBuffer();
     static void setDefaultAlphaBuffer(bool useAlpha);
 
-    void setPersistentOpenGLContext(bool persistent); // ### Qt 6 is this relevant / usable anymore?
-    bool isPersistentOpenGLContext() const;
+    void setPersistentGraphics(bool persistent);
+    bool isPersistentGraphics() const;
 
-    void setPersistentSceneGraph(bool persistent); // ### Qt 6 is this relevant / usable anymore?
+    void setPersistentSceneGraph(bool persistent);
     bool isPersistentSceneGraph() const;
 
     QOpenGLContext *openglContext() const; // ### Qt 6 consider if this is kept or not

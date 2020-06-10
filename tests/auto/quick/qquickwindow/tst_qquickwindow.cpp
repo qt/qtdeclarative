@@ -380,9 +380,6 @@ public:
 
 private slots:
     void cleanup();
-#if QT_CONFIG(opengl)
-    void openglContextCreatedSignal();
-#endif
     void aboutToStopSignal();
 
     void constantUpdates();
@@ -491,34 +488,16 @@ private:
     QTouchDevice *touchDevice;
     QTouchDevice *touchDeviceWithVelocity;
 };
+
 #if QT_CONFIG(opengl)
 Q_DECLARE_METATYPE(QOpenGLContext *);
 #endif
+
 void tst_qquickwindow::cleanup()
 {
     QVERIFY(QGuiApplication::topLevelWindows().isEmpty());
 }
-#if QT_CONFIG(opengl)
-void tst_qquickwindow::openglContextCreatedSignal()
-{
-    qRegisterMetaType<QOpenGLContext *>();
 
-    QQuickWindow window;
-    QSignalSpy spy(&window, SIGNAL(openglContextCreated(QOpenGLContext*)));
-
-    window.setTitle(QTest::currentTestFunction());
-    window.show();
-    QVERIFY(QTest::qWaitForWindowExposed(&window));
-
-    if (window.rendererInterface()->graphicsApi() != QSGRendererInterface::OpenGL)
-        QSKIP("Skipping OpenGL context test due to not running with OpenGL");
-
-    QTRY_VERIFY(spy.size() > 0);
-
-    QVariant ctx = spy.at(0).at(0);
-    QCOMPARE(qvariant_cast<QOpenGLContext *>(ctx), window.openglContext());
-}
-#endif
 void tst_qquickwindow::aboutToStopSignal()
 {
     QQuickWindow window;
@@ -1576,7 +1555,7 @@ void tst_qquickwindow::headless()
     QScopedPointer<QObject> cleanup(created);
 
     QQuickWindow *window = qobject_cast<QQuickWindow*>(created);
-    window->setPersistentOpenGLContext(false);
+    window->setPersistentGraphics(false);
     window->setPersistentSceneGraph(false);
     QVERIFY(window);
     window->setTitle(QTest::currentTestFunction());
@@ -1970,20 +1949,19 @@ void tst_qquickwindow::cursor()
 void tst_qquickwindow::hideThenDelete_data()
 {
     QTest::addColumn<bool>("persistentSG");
-    QTest::addColumn<bool>("persistentGL");
+    QTest::addColumn<bool>("persistentGraphics");
 
-    QTest::newRow("persistent:SG=false,GL=false") << false << false;
-    QTest::newRow("persistent:SG=true,GL=false") << true << false;
-    QTest::newRow("persistent:SG=false,GL=true") << false << true;
-    QTest::newRow("persistent:SG=true,GL=true") << true << true;
+    QTest::newRow("persistent:SG=false,Graphics=false") << false << false;
+    QTest::newRow("persistent:SG=true,Graphics=false") << true << false;
+    QTest::newRow("persistent:SG=false,Graphics=true") << false << true;
+    QTest::newRow("persistent:SG=true,Graphics=true") << true << true;
 }
 
 void tst_qquickwindow::hideThenDelete()
 {
     QFETCH(bool, persistentSG);
-    QFETCH(bool, persistentGL);
+    QFETCH(bool, persistentGraphics);
 
-    QScopedPointer<QSignalSpy> openglDestroyed;
     QScopedPointer<QSignalSpy> sgInvalidated;
 
     {
@@ -1993,18 +1971,13 @@ void tst_qquickwindow::hideThenDelete()
         window.setColor(Qt::red);
 
         window.setPersistentSceneGraph(persistentSG);
-        window.setPersistentOpenGLContext(persistentGL);
+        window.setPersistentGraphics(persistentGraphics);
 
         window.resize(400, 300);
         window.show();
 
         QVERIFY(QTest::qWaitForWindowExposed(&window));
         const bool threaded = QQuickWindowPrivate::get(&window)->context->thread() != QGuiApplication::instance()->thread();
-        const bool isGL = window.rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL;
-#if QT_CONFIG(opengl)
-        if (isGL)
-            openglDestroyed.reset(new QSignalSpy(window.openglContext(), SIGNAL(aboutToBeDestroyed())));
-#endif
 
         sgInvalidated.reset(new QSignalSpy(&window, SIGNAL(sceneGraphInvalidated())));
 
@@ -2012,28 +1985,20 @@ void tst_qquickwindow::hideThenDelete()
 
         QTRY_VERIFY(!window.isExposed());
 
+        // Only the threaded render loop implements the opt-in full
+        // scenegraph and graphics teardown on unexpose.
         if (threaded) {
-            if (!isGL)
-                QSKIP("Skipping persistency verification due to not running with OpenGL");
+            if (!QSGRendererInterface::isApiRhiBased(window.rendererInterface()->graphicsApi()))
+                QSKIP("Skipping persistency verification due to not running with RHI");
 
-            if (!persistentSG) {
+            if (!persistentSG)
                 QVERIFY(sgInvalidated->size() > 0);
-                if (!persistentGL)
-                    QVERIFY(openglDestroyed->size() > 0);
-                else
-                    QCOMPARE(openglDestroyed->size(), 0);
-            } else {
+            else
                 QCOMPARE(sgInvalidated->size(), 0);
-                QCOMPARE(openglDestroyed->size(), 0);
-            }
         }
     }
 
     QVERIFY(sgInvalidated->size() > 0);
-#if QT_CONFIG(opengl)
-    if (openglDestroyed)
-        QVERIFY(openglDestroyed->size() > 0);
-#endif
 }
 
 void tst_qquickwindow::showHideAnimate()
@@ -2429,7 +2394,7 @@ void tst_qquickwindow::defaultSurfaceFormat()
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
 
-    if (window.rendererInterface()->graphicsApi() != QSGRendererInterface::OpenGL)
+    if (window.rendererInterface()->graphicsApi() != QSGRendererInterface::OpenGLRhi)
         QSKIP("Skipping OpenGL context test due to not running with OpenGL");
 
     const QSurfaceFormat reqFmt = window.requestedFormat();
