@@ -38,6 +38,7 @@ qt_add_module(QmlDevTools
         ../qml/parser/qqmljskeywords_p.h
         ../qml/parser/qqmljslexer.cpp ../qml/parser/qqmljslexer_p.h
         ../qml/qmldirparser/qqmldirparser.cpp ../qml/qmldirparser/qqmldirparser_p.h
+        ../qml/qmldirparser/qqmlimportresolver.cpp ../qml/qmldirparser/qqmlimportresolver_p.h
     INCLUDE_DIRECTORIES
         ${CMAKE_CURRENT_BINARY_DIR}/../qml
         ${CMAKE_CURRENT_BINARY_DIR}/../qml/compiler

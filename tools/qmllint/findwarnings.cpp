@@ -37,6 +37,7 @@
 #include <QtQml/private/qqmljsparser_p.h>
 #include <QtQml/private/qv4codegen_p.h>
 #include <QtQml/private/qqmldirparser_p.h>
+#include <QtQml/private/qqmlimportresolver_p.h>
 
 #include <QtCore/qfile.h>
 #include <QtCore/qdiriterator.h>
@@ -106,72 +107,6 @@ ScopeTree::Ptr FindWarningVisitor::parseProgram(QQmlJS::AST::Program *program,
         }
     }
     return result;
-}
-
-enum ImportVersion { FullyVersioned, PartiallyVersioned, Unversioned, BasePath };
-
-QStringList completeImportPaths(const QString &uri, const QString &basePath, QTypeRevision version)
-{
-    static const QLatin1Char Slash('/');
-    static const QLatin1Char Backslash('\\');
-
-    const QVector<QStringRef> parts = uri.splitRef(QLatin1Char('.'), Qt::SkipEmptyParts);
-
-    QStringList qmlDirPathsPaths;
-    // fully & partially versioned parts + 1 unversioned for each base path
-    qmlDirPathsPaths.reserve(2 * parts.count() + 1);
-
-    auto versionString = [](QTypeRevision version, ImportVersion mode)
-    {
-        if (mode == FullyVersioned) {
-            // extension with fully encoded version number (eg. MyModule.3.2)
-            return QString::fromLatin1(".%1.%2").arg(version.majorVersion())
-                    .arg(version.minorVersion());
-        }
-        if (mode == PartiallyVersioned) {
-            // extension with encoded version major (eg. MyModule.3)
-            return QString::fromLatin1(".%1").arg(version.majorVersion());
-        }
-        // else extension without version number (eg. MyModule)
-        return QString();
-    };
-    auto joinStringRefs = [](const QVector<QStringRef> &refs, const QChar &sep) {
-        QString str;
-        for (auto it = refs.cbegin(); it != refs.cend(); ++it) {
-            if (it != refs.cbegin())
-                str += sep;
-            str += *it;
-        }
-        return str;
-    };
-
-    const ImportVersion initial = (version.hasMinorVersion())
-            ? FullyVersioned
-            : (version.hasMajorVersion() ? PartiallyVersioned : Unversioned);
-    for (int mode = initial; mode <= BasePath; ++mode) {
-        const QString ver = versionString(version, ImportVersion(mode));
-
-        QString dir = basePath;
-        if (!dir.endsWith(Slash) && !dir.endsWith(Backslash))
-            dir += Slash;
-
-        if (mode == BasePath) {
-            qmlDirPathsPaths += dir;
-        } else {
-            // append to the end
-            qmlDirPathsPaths += dir + joinStringRefs(parts, Slash) + ver;
-        }
-
-        if (mode < Unversioned) {
-            // insert in the middle
-            for (int index = parts.count() - 2; index >= 0; --index) {
-                qmlDirPathsPaths += dir + joinStringRefs(parts.mid(0, index + 1), Slash)
-                        + ver + Slash
-                        + joinStringRefs(parts.mid(index + 1), Slash);
-            }
-        }
-    }
-    return qmlDirPathsPaths;
 }
 
 static const QLatin1String SlashQmldir             = QLatin1String("/qmldir");
@@ -280,30 +215,28 @@ void FindWarningVisitor::importHelper(const QString &module, const QString &pref
         return;
     m_alreadySeenImports.insert(importId);
 
-    for (const QString &qmltypeDir : m_qmltypeDirs) {
-        auto qmltypesPaths = completeImportPaths(id, qmltypeDir, version);
+    auto qmltypesPaths = qQmlResolveImportPaths(id, m_qmltypeDirs, version) + m_qmltypeDirs;
 
-        for (auto const &qmltypesPath : qmltypesPaths) {
-            if (QFile::exists(qmltypesPath + SlashQmldir)) {
-                processImport(prefix, readQmldir(qmltypesPath));
+    for (auto const &qmltypesPath : qmltypesPaths) {
+        if (QFile::exists(qmltypesPath + SlashQmldir)) {
+            processImport(prefix, readQmldir(qmltypesPath));
 
-                // break so that we don't import unversioned qml components
-                // in addition to versioned ones
-                break;
-            }
-
-            if (!m_qmltypeFiles.isEmpty())
-                continue;
-
-            Import result;
-
-            QDirIterator it { qmltypesPath, QStringList() << QLatin1String("*.qmltypes"), QDir::Files };
-
-            while (it.hasNext())
-                readQmltypes(it.next(), &result.objects, &result.dependencies);
-
-            processImport(prefix, result);
+            // break so that we don't import unversioned qml components
+            // in addition to versioned ones
+            break;
         }
+
+        if (!m_qmltypeFiles.isEmpty())
+            continue;
+
+        Import result;
+
+        QDirIterator it { qmltypesPath, QStringList() << QLatin1String("*.qmltypes"), QDir::Files };
+
+        while (it.hasNext())
+            readQmltypes(it.next(), &result.objects, &result.dependencies);
+
+        processImport(prefix, result);
     }
 
     if (!m_qmltypeFiles.isEmpty())

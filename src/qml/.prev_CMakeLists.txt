@@ -272,6 +272,7 @@ qt_add_module(Qml
         qml/v8/qv4domerrors.cpp qml/v8/qv4domerrors_p.h
         qml/v8/qv4sqlerrors.cpp qml/v8/qv4sqlerrors_p.h
         qmldirparser/qqmldirparser.cpp qmldirparser/qqmldirparser_p.h
+        qmldirparser/qqmlimportresolver.cpp qmldirparser/qqmlimportresolver_p.h
         qtqmlcompilerglobal.h qtqmlcompilerglobal_p.h
         qtqmlglobal.h qtqmlglobal_p.h
         types/qqmlbind.cpp types/qqmlbind_p.h

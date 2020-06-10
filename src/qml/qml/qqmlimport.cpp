@@ -59,6 +59,7 @@
 #include <QtCore/qjsonobject.h>
 #include <QtCore/qjsonarray.h>
 #include <QtQml/private/qqmltype_p_p.h>
+#include <QtQml/private/qqmlimportresolver_p.h>
 
 #include <algorithm>
 #include <functional>
@@ -536,17 +537,6 @@ QList<QQmlImports::ScriptReference> QQmlImports::resolvedScripts() const
     return scripts;
 }
 
-static QString joinStringRefs(const QVector<QStringRef> &refs, const QChar &sep)
-{
-    QString str;
-    for (auto it = refs.cbegin(); it != refs.cend(); ++it) {
-        if (it != refs.cbegin())
-            str += sep;
-        str += *it;
-    }
-    return str;
-}
-
 /*!
     Forms complete paths to a qmldir file, from a base URL, a module URI and version specification.
 
@@ -560,48 +550,10 @@ static QString joinStringRefs(const QVector<QStringRef> &refs, const QChar &sep)
 QStringList QQmlImports::completeQmldirPaths(const QString &uri, const QStringList &basePaths,
                                              QTypeRevision version)
 {
-    const QVector<QStringRef> parts = uri.splitRef(Dot, Qt::SkipEmptyParts);
-
-    QStringList qmlDirPathsPaths;
-    // fully & partially versioned parts + 1 unversioned for each base path
-    qmlDirPathsPaths.reserve(basePaths.count() * (2 * parts.count() + 1));
-
-    for (int versionMode = FullyVersioned; versionMode <= Unversioned; ++versionMode) {
-        switch (versionMode) {
-        case FullyVersioned:
-            if (!version.hasMinorVersion())
-                continue;
-            break;
-        case PartiallyVersioned:
-            if (!version.hasMajorVersion())
-                continue;
-            break;
-        default:
-            break;
-        }
-
-        const QString ver = versionString(version, QQmlImports::ImportVersion(versionMode));
-
-        for (const QString &path : basePaths) {
-            QString dir = path;
-            if (!dir.endsWith(Slash) && !dir.endsWith(Backslash))
-                dir += Slash;
-
-            // append to the end
-            qmlDirPathsPaths += dir + joinStringRefs(parts, Slash) + ver + Slash_qmldir;
-
-            if (versionMode != Unversioned) {
-                // insert in the middle
-                for (int index = parts.count() - 2; index >= 0; --index) {
-                    qmlDirPathsPaths += dir + joinStringRefs(parts.mid(0, index + 1), Slash)
-                                            + ver + Slash
-                                            + joinStringRefs(parts.mid(index + 1), Slash) + Slash_qmldir;
-                }
-            }
-        }
-    }
-
-    return qmlDirPathsPaths;
+    QStringList paths = qQmlResolveImportPaths(uri, basePaths, version);
+    for (QString &path : paths)
+        path += Slash_qmldir;
+    return paths;
 }
 
 QString QQmlImports::versionString(QTypeRevision version, ImportVersion versionMode)
