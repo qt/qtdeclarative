@@ -58,6 +58,8 @@ int main(int argc, char **argv)
 {
     QGuiApplication app(argc, argv);
 
+    QQuickWindow::setSceneGraphBackend(QSGRendererInterface::OpenGLRhi);
+
     QQuickView view;
     view.setResizeMode(QQuickView::SizeRootObjectToView);
     view.setSource(QUrl("qrc:///scenegraph/fboitem/main.qml"));
