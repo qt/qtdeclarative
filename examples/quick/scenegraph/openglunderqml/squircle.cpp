@@ -202,10 +202,6 @@ void SquircleRenderer::paint()
     m_program->disableAttributeArray(0);
     m_program->release();
 
-    // Not strictly needed for this example, but generally useful for when
-    // mixing with raw OpenGL.
-    m_window->resetOpenGLState();
-
     m_window->endExternalCommands();
 }
 //! [5]
