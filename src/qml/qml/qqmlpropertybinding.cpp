@@ -85,7 +85,12 @@ QQmlPropertyBinding::QQmlPropertyBinding(const QMetaType &mt)
 
 QUntypedPropertyBinding::BindingEvaluationResult QQmlPropertyBinding::evaluate(const QMetaType &metaType, void *dataPtr)
 {
-    QQmlEngine *engine = context()->engine();
+    const auto ctxt = context();
+    QQmlEngine *engine = ctxt ? ctxt->engine() : nullptr;
+    if (!engine) {
+        QPropertyBindingError error(QPropertyBindingError::EvaluationError);
+        return error;
+    }
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
     ep->referenceScarceResources();
 
