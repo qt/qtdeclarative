@@ -41,6 +41,7 @@
 
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFunctions>
+#include <private/qopenglvertexarrayobject_p.h>
 #include <private/qquickitem_p.h>
 #include <private/qsgadaptationlayer_p.h>
 #include <qsgtextureprovider.h>
@@ -208,6 +209,7 @@ public:
         , renderPending(true)
         , invalidatePending(false)
         , devicePixelRatio(1)
+        , vaoHelper(nullptr)
     {
         qsgnode_set_description(this, QStringLiteral("fbonode"));
     }
@@ -218,6 +220,7 @@ public:
         delete texture();
         delete fbo;
         delete msDisplayFbo;
+        delete vaoHelper;
     }
 
     void scheduleRender()
@@ -238,7 +241,7 @@ public Q_SLOTS:
             renderPending = false;
 
             window->beginExternalCommands();
-            window->resetOpenGLState();
+            renderer->resetOpenGLState();
 
             fbo->bind();
             QOpenGLContext::currentContext()->functions()->glViewport(0, 0, fbo->width(), fbo->height());
@@ -274,6 +277,7 @@ public:
     bool invalidatePending;
 
     qreal devicePixelRatio;
+    QOpenGLVertexArrayObjectHelper *vaoHelper;
 };
 
 static inline bool isOpenGL(QSGRenderContext *rc)
@@ -473,7 +477,7 @@ QOpenGLFramebufferObject *QQuickFramebufferObject::Renderer::framebufferObject()
  * context. This means that the state might have been modified by Quick before
  * invoking this function.
  *
- * \note It is recommended to call QQuickWindow::resetOpenGLState() before
+ * \note It is recommended to call resetOpenGLState() before
  * returning. This resets OpenGL state used by the Qt Quick renderer and thus
  * avoids interference from the state changes made by the rendering code in this
  * function.
@@ -549,6 +553,76 @@ void QQuickFramebufferObject::Renderer::update()
         ((QSGFramebufferObjectNode *) data)->scheduleRender();
 }
 
+/*!
+    Call this function to reset the OpenGL context its default state.
+
+    The scene graph uses the OpenGL context and will both rely on and
+    clobber its state. When mixing raw OpenGL commands with scene
+    graph rendering, this function provides a convenient way of
+    resetting the OpenGL context state back to its default values.
+
+    This function does not touch state in the fixed-function pipeline.
+
+    \warning This function will only reset the OpenGL context in
+    relation to what may be changed internally as part of the OpenGL
+    scene graph. It does not reset anything that has been changed
+    externally such as direct OpenGL calls done inside the application
+    code if those same calls are not used internally. (for example,
+    various OpenGL 3.x or 4.x specific state)
+
+    \since 6.0
+ */
+void QQuickFramebufferObject::Renderer::resetOpenGLState()
+{
+    QOpenGLContext *ctx = QOpenGLContext::currentContext();
+    if (!ctx || !data)
+        return;
+
+    QOpenGLFunctions *gl = ctx->functions();
+
+    gl->glBindBuffer(GL_ARRAY_BUFFER, 0);
+    gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    QOpenGLVertexArrayObjectHelper *&vaoHelper(static_cast<QSGFramebufferObjectNode *>(data)->vaoHelper);
+    if (!vaoHelper)
+        vaoHelper = new QOpenGLVertexArrayObjectHelper(ctx);
+    if (vaoHelper->isValid())
+        vaoHelper->glBindVertexArray(0);
+
+    if (ctx->isOpenGLES() || (gl->openGLFeatures() & QOpenGLFunctions::FixedFunctionPipeline)) {
+        int maxAttribs;
+        gl->glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxAttribs);
+        for (int i=0; i<maxAttribs; ++i) {
+            gl->glVertexAttribPointer(i, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
+            gl->glDisableVertexAttribArray(i);
+        }
+    }
+
+    gl->glActiveTexture(GL_TEXTURE0);
+    gl->glBindTexture(GL_TEXTURE_2D, 0);
+
+    gl->glDisable(GL_DEPTH_TEST);
+    gl->glDisable(GL_STENCIL_TEST);
+    gl->glDisable(GL_SCISSOR_TEST);
+
+    gl->glColorMask(true, true, true, true);
+    gl->glClearColor(0, 0, 0, 0);
+
+    gl->glDepthMask(true);
+    gl->glDepthFunc(GL_LESS);
+    gl->glClearDepthf(1);
+
+    gl->glStencilMask(0xff);
+    gl->glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+    gl->glStencilFunc(GL_ALWAYS, 0, 0xff);
+
+    gl->glDisable(GL_BLEND);
+    gl->glBlendFunc(GL_ONE, GL_ZERO);
+
+    gl->glUseProgram(0);
+
+    QOpenGLFramebufferObject::bindDefault();
+}
 
 #include "qquickframebufferobject.moc"
 #include "moc_qquickframebufferobject.cpp"

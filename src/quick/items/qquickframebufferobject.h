@@ -68,6 +68,7 @@ public:
         QOpenGLFramebufferObject *framebufferObject() const;
         void update();
         void invalidateFramebufferObject();
+        void resetOpenGLState();
     private:
         friend class QSGFramebufferObjectNode;
         friend class QQuickFramebufferObject;

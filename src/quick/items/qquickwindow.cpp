@@ -81,12 +81,9 @@
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qqmldebugconnector_p.h>
 #if QT_CONFIG(opengl)
-#include <private/qopenglvertexarrayobject_p.h>
 #include <private/qsgdefaultrendercontext_p.h>
 #include <private/qopengl_p.h>
 #include <QOpenGLContext>
-#include <QOpenGLFunctions>
-#include <QOpenGLFramebufferObject>
 #endif
 #ifndef QT_NO_DEBUG_STREAM
 #include <private/qdebug_p.h>
@@ -753,7 +750,6 @@ QQuickWindowPrivate::QQuickWindowPrivate()
     , allowChildEventFiltering(true)
     , allowDoubleClick(true)
     , lastFocusReason(Qt::OtherFocusReason)
-    , vaoHelper(nullptr)
     , incubationController(nullptr)
     , hasActiveSwapchain(false)
     , hasRenderableSwapchain(false)
@@ -3986,10 +3982,6 @@ void QQuickWindow::maybeUpdate()
 void QQuickWindow::cleanupSceneGraph()
 {
     Q_D(QQuickWindow);
-#if QT_CONFIG(opengl)
-    delete d->vaoHelper;
-    d->vaoHelper = nullptr;
-#endif
     if (!d->renderer)
         return;
 
@@ -4389,8 +4381,6 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     \warning Make very sure that a signal handler for beforeSynchronizing leaves the GL
     context in the same state as it was when the signal handler was entered. Failing to
     do so can result in the scene not rendering properly.
-
-    \sa resetOpenGLState()
 */
 
 /*!
@@ -4418,7 +4408,6 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     properly.
 
     \since 5.3
-    \sa resetOpenGLState()
  */
 
 /*!
@@ -4458,8 +4447,6 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     \warning Make very sure that a signal handler for beforeRendering leaves the OpenGL
     context in the same state as it was when the signal handler was entered. Failing to
     do so can result in the scene not rendering properly.
-
-    \sa resetOpenGLState()
 */
 
 /*!
@@ -4496,8 +4483,6 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     \warning Make very sure that a signal handler for afterRendering() leaves the OpenGL
     context in the same state as it was when the signal handler was entered. Failing to
     do so can result in the scene not rendering properly.
-
-    \sa resetOpenGLState()
  */
 
 /*!
@@ -4676,7 +4661,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     graphics context in the same state as it was when the signal handler was entered.
     Failing to do so can result in the scene not rendering properly.
 
-    \sa sceneGraphInvalidated(), resetOpenGLState()
+    \sa sceneGraphInvalidated()
     \since 5.3
  */
 
@@ -4937,89 +4922,6 @@ void QQuickWindow::setDefaultAlphaBuffer(bool useAlpha)
 {
     QQuickWindowPrivate::defaultAlphaBuffer = useAlpha;
 }
-#if QT_CONFIG(opengl)
-/*!
-    \since 5.2
-
-    Call this function to reset the OpenGL context its default state.
-
-    The scene graph uses the OpenGL context and will both rely on and
-    clobber its state. When mixing raw OpenGL commands with scene
-    graph rendering, this function provides a convenient way of
-    resetting the OpenGL context state back to its default values.
-
-    This function does not touch state in the fixed-function pipeline.
-
-    This function does not clear the color, depth and stencil buffers. Use
-    QQuickWindow::setClearBeforeRendering to control clearing of the color
-    buffer. The depth and stencil buffer might be clobbered by the scene
-    graph renderer. Clear these manually on demand.
-
-    \note This function only has an effect when using the default OpenGL scene graph
-    adaptation.
-
-    \note This function will only reset the OpenGL context in relation to what has been changed
-    internally as part of the OpenGL scene graph. It does not reset anything that has been changed
-    externally such as direct OpenGL calls done inside the application code if those same calls are
-    not used internally.
-
-    \note This function has no effect when running on the RHI graphics
-    abstraction and the underlying RHI backend is not OpenGL.
-
-    \sa QQuickWindow::beforeRendering(), beginExternalCommands(), endExternalCommands()
- */
-void QQuickWindow::resetOpenGLState()
-{
-    Q_D(QQuickWindow);
-
-    QOpenGLContext *ctx = d->openglContext();
-    if (!ctx)
-        return;
-
-    QOpenGLFunctions *gl = ctx->functions();
-    gl->glBindBuffer(GL_ARRAY_BUFFER, 0);
-    gl->glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-    if (!d->vaoHelper)
-        d->vaoHelper = new QOpenGLVertexArrayObjectHelper(ctx);
-    if (d->vaoHelper->isValid())
-        d->vaoHelper->glBindVertexArray(0);
-
-    if (ctx->isOpenGLES() || (gl->openGLFeatures() & QOpenGLFunctions::FixedFunctionPipeline)) {
-        int maxAttribs;
-        gl->glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxAttribs);
-        for (int i=0; i<maxAttribs; ++i) {
-            gl->glVertexAttribPointer(i, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
-            gl->glDisableVertexAttribArray(i);
-        }
-    }
-
-    gl->glActiveTexture(GL_TEXTURE0);
-    gl->glBindTexture(GL_TEXTURE_2D, 0);
-
-    gl->glDisable(GL_DEPTH_TEST);
-    gl->glDisable(GL_STENCIL_TEST);
-    gl->glDisable(GL_SCISSOR_TEST);
-
-    gl->glColorMask(true, true, true, true);
-    gl->glClearColor(0, 0, 0, 0);
-
-    gl->glDepthMask(true);
-    gl->glDepthFunc(GL_LESS);
-    gl->glClearDepthf(1);
-
-    gl->glStencilMask(0xff);
-    gl->glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-    gl->glStencilFunc(GL_ALWAYS, 0, 0xff);
-
-    gl->glDisable(GL_BLEND);
-    gl->glBlendFunc(GL_ONE, GL_ZERO);
-
-    gl->glUseProgram(0);
-
-    QOpenGLFramebufferObject::bindDefault();
-}
-#endif
 
 /*!
     \struct QQuickWindow::GraphicsStateInfo
@@ -5064,7 +4966,7 @@ const QQuickWindow::GraphicsStateInfo &QQuickWindow::graphicsStateInfo()
     application, not retrieved from the scene graph). With graphics APIs where
     no native command buffer concept is exposed (OpenGL, Direct 3D 11),
     beginExternalCommands() and endExternalCommands() together provide a
-    replacement for resetOpenGLState().
+    replacement for the removed Qt 5 resetOpenGLState() function.
 
     Calling this function and endExternalCommands() is not necessary within the
     \l{QSGRenderNode::render()}{render()} implementation of a QSGRenderNode
@@ -5082,17 +4984,12 @@ const QQuickWindow::GraphicsStateInfo &QQuickWindow::graphicsStateInfo()
     Therefore, always query CommandListResource after calling this function. Do
     not attempt to reuse an object from an earlier query.
 
-    \note This function has no effect when the scene graph is using OpenGL
-    directly and the RHI graphics abstraction layer is not in use. Refer to
-    resetOpenGLState() in that case.
-
     \note When the scenegraph is using the RHI graphics abstraction layer with
     the OpenGL backend underneath, pay attention to the fact that the OpenGL
     state in the context can have arbitrary settings, and this function does not
-    perform any resetting of the state back to defaults. Call
-    resetOpenGLState() if that is seen necessary.
+    perform any resetting of the state back to defaults.
 
-    \sa endExternalCommands(), resetOpenGLState()
+    \sa endExternalCommands()
 
     \since 5.14
  */
@@ -5124,16 +5021,12 @@ void QQuickWindow::beginExternalCommands()
     application, not retrieved from the scene graph). With graphics APIs where
     no native command buffer concept is exposed (OpenGL, Direct 3D 11),
     beginExternalCommands() and endExternalCommands() together provide a
-    replacement for resetOpenGLState().
+    replacement for the removed Qt 5 resetOpenGLState() function.
 
     Calling this function and beginExternalCommands() is not necessary within the
     \l{QSGRenderNode::render()}{render()} implementation of a QSGRenderNode
     because the scene graph performs the necessary steps implicitly for render
     nodes.
-
-    \note This function has no effect when the scene graph is using OpenGL
-    directly and the RHI graphics abstraction layer is not in use. Refer to
-    resetOpenGLState() in that case.
 
     \sa beginExternalCommands()
 

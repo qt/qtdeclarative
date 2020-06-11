@@ -71,8 +71,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QOpenContext;
-class QOpenGLVertexArrayObjectHelper;
+class QOpenGLContext;
 class QQuickAnimatorController;
 class QQuickDragGrabber;
 class QQuickItemPrivate;
@@ -297,8 +296,6 @@ public:
     } redirect;
 
     QQuickGraphicsDevice customDeviceObjects;
-
-    QOpenGLVertexArrayObjectHelper *vaoHelper; // ### Qt 6 remove
 
     mutable QQuickWindowIncubationController *incubationController;
 

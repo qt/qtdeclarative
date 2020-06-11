@@ -206,9 +206,7 @@ void WindowSingleThreaded::render()
     m_renderControl->render();
     m_renderControl->endFrame();
 
-    m_quickWindow->resetOpenGLState();
     QOpenGLFramebufferObject::bindDefault();
-
     m_context->functions()->glFlush();
 
     m_quickReady = true;

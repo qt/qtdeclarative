@@ -134,9 +134,6 @@ public:
 
     void setRenderTarget(const QQuickRenderTarget &target);
 
-#if QT_CONFIG(opengl)
-    void resetOpenGLState(); // ### Qt 6 remove
-#endif
     struct GraphicsStateInfo {
         int currentFrameSlot;
         int framesInFlight;
