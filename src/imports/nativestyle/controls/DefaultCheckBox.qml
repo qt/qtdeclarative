@@ -58,6 +58,7 @@ T.CheckBox {
 
     indicator: NativeStyle.CheckBox {
         control: control
+        y: control.topPadding + (control.availableHeight - height) >> 1
         contentWidth: contentItem.implicitWidth
         contentHeight: contentItem.implicitHeight
         useNinePatchImage: false
@@ -81,6 +82,7 @@ T.CheckBox {
                 indicator && !mirrored ? indicator.width + spacing : 0
         }
 
+        topPadding: nativeIndicator ? indicator.contentPadding.top : 0
         rightPadding: {
             if (nativeIndicator)
                 indicator.contentPadding.right
