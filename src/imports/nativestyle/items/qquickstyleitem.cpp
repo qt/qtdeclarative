@@ -119,7 +119,7 @@ QSGNode *QQuickStyleItem::updatePaintNode(QSGNode *oldNode, QQuickItem::UpdatePa
     const qreal scale = window()->devicePixelRatio();
     const QSizeF ninePatchImageSize = m_paintedImage.rect().size() / scale;
 #ifdef QT_DEBUG
-    if (m_debugFlags.testFlag(ShowUnscaled)) {
+    if (m_debugFlags.testFlag(Unscaled)) {
         bounds = QRectF(QPointF(), ninePatchImageSize);
         qqc2Debug() << "Setting paint node bounds to size of image:" << bounds;
     }
@@ -262,27 +262,27 @@ void QQuickStyleItem::paintControlToImage()
 #ifdef QT_DEBUG
     if (m_debugFlags != NoDebug) {
         painter.setPen(QColor(255, 0, 0, 255));
-        if (m_debugFlags.testFlag(ShowImageRect))
+        if (m_debugFlags.testFlag(ImageRect))
             painter.drawRect(QRect(QPoint(0, 0), m_paintedImage.size() / scale));
-        if (m_debugFlags.testFlag(ShowLayoutRect)) {
+        if (m_debugFlags.testFlag(LayoutRect)) {
             const auto m = layoutMargins();
             QRect rect = QRect(QPoint(0, 0), m_paintedImage.size() / scale);
             rect.adjust(m.left(), m.top(), -m.right(), -m.bottom());
             painter.drawRect(rect);
         }
-        if (m_debugFlags.testFlag(ShowContentRect)) {
+        if (m_debugFlags.testFlag(ContentRect)) {
             const auto p = contentPadding();
             QRect rect = QRect(QPoint(0, 0), m_paintedImage.size() / scale);
             rect.adjust(p.left(), p.top(), -p.right(), -p.bottom());
             painter.drawRect(rect);
         }
-        if (m_debugFlags.testFlag(ShowInputContentSize)) {
+        if (m_debugFlags.testFlag(InputContentSize)) {
             const int offset = 2;
             const QPoint p = m_styleItemGeometry.contentRect.topLeft();
             painter.drawLine(p.x() - offset, p.y() - offset, p.x() + m_contentSize.width(), p.y() - offset);
             painter.drawLine(p.x() - offset, p.y() - offset, p.x() - offset, p.y() + m_contentSize.height());
         }
-        if (m_debugFlags.testFlag(ShowUnscaled)) {
+        if (m_debugFlags.testFlag(NinePatchMargins)) {
             const QMargins m = m_styleItemGeometry.ninePatchMargins;
             const int w = int(m_paintedImage.rect().width() / scale);
             const int h = int(m_paintedImage.rect().height() / scale);
@@ -329,14 +329,19 @@ void QQuickStyleItem::componentComplete()
         const QString name = m_control->objectName().toLower();
         if (name.startsWith(QString(QLatin1String("debug")).toLower())) {
             QQC2_DEBUG_FLAG(Output);
-            QQC2_DEBUG_FLAG(ShowImageRect);
-            QQC2_DEBUG_FLAG(ShowContentRect);
-            QQC2_DEBUG_FLAG(ShowLayoutRect);
-            QQC2_DEBUG_FLAG(ShowInputContentSize);
+            QQC2_DEBUG_FLAG(ImageRect);
+            QQC2_DEBUG_FLAG(ContentRect);
+            QQC2_DEBUG_FLAG(LayoutRect);
+            QQC2_DEBUG_FLAG(InputContentSize);
             QQC2_DEBUG_FLAG(DontUseNinePatchImage);
-            QQC2_DEBUG_FLAG(ShowUnscaled);
+            QQC2_DEBUG_FLAG(NinePatchMargins);
+            QQC2_DEBUG_FLAG(Unscaled);
 
-            if (m_debugFlags & (DontUseNinePatchImage | ShowInputContentSize | ShowContentRect | ShowLayoutRect)) {
+            if (m_debugFlags & (DontUseNinePatchImage
+                                | InputContentSize
+                                | ContentRect
+                                | LayoutRect
+                                | NinePatchMargins)) {
                 // Some rects will not fit inside the drawn image unless
                 // we switch off (nine patch) image scaling.
                 m_debugFlags |= DontUseNinePatchImage;

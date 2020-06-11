@@ -179,12 +179,13 @@ public:
     enum DebugFlag {
         NoDebug = 0x00,
         Output = 0x01,
-        ShowImageRect = 0x02,
-        ShowContentRect = 0x04,
-        ShowLayoutRect = 0x08,
-        ShowUnscaled = 0x10,
-        ShowInputContentSize = 0x20,
-        DontUseNinePatchImage = 0x40
+        ImageRect = 0x02,
+        ContentRect = 0x04,
+        LayoutRect = 0x08,
+        Unscaled = 0x10,
+        InputContentSize = 0x20,
+        DontUseNinePatchImage = 0x40,
+        NinePatchMargins = 0x80
     };
     Q_FLAG(DebugFlag)
     Q_DECLARE_FLAGS(DebugFlags, DebugFlag)
