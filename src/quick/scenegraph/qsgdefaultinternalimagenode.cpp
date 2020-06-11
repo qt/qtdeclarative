@@ -195,24 +195,8 @@ inline static bool isPowerOfTwo(int x)
 
 bool QSGDefaultInternalImageNode::supportsWrap(const QSize &size) const
 {
-    bool wrapSupported = true;
-
-    if (m_rc->rhi()) {
-        wrapSupported = m_rc->rhi()->isFeatureSupported(QRhi::NPOTTextureRepeat)
-                || (isPowerOfTwo(size.width()) && isPowerOfTwo(size.height()));
-    } else {
-        QOpenGLContext *ctx = QOpenGLContext::currentContext();
-#if !QT_CONFIG(opengles2)
-        if (ctx->isOpenGLES())
-#endif
-        {
-            bool npotSupported = ctx->functions()->hasOpenGLFeature(QOpenGLFunctions::NPOTTextureRepeat);
-            const bool isNpot = !isPowerOfTwo(size.width()) || !isPowerOfTwo(size.height());
-            wrapSupported = npotSupported || !isNpot;
-        }
-    }
-
-    return wrapSupported;
+    bool npotSupported = m_rc->rhi() && m_rc->rhi()->isFeatureSupported(QRhi::NPOTTextureRepeat);
+    return npotSupported || (isPowerOfTwo(size.width()) && isPowerOfTwo(size.height()));
 }
 
 QT_END_NAMESPACE
