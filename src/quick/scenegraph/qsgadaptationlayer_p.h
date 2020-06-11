@@ -520,7 +520,7 @@ protected:
     GlyphData &emptyData(glyph_t glyph);
 
 #if defined(QSG_DISTANCEFIELD_CACHE_DEBUG)
-    void saveTexture(GLuint textureId, int width, int height) const;
+    virtual void saveTexture(QRhiTexture *texture, const QString &nameBase) const = 0;
 #endif
 
     bool m_doubleGlyphResolution;

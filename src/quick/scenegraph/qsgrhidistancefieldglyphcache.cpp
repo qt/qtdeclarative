@@ -565,4 +565,40 @@ bool QSGRhiDistanceFieldGlyphCache::eightBitFormatIsAlphaSwizzled() const
     return !m_rhi->isFeatureSupported(QRhi::RedOrAlpha8IsRed);
 }
 
+#if defined(QSG_DISTANCEFIELD_CACHE_DEBUG)
+void QSGRhiDistanceFieldGlyphCache::saveTexture(QRhiTexture *texture, const QString &nameBase) const
+{
+    quint64 textureId = texture->nativeTexture().object;
+    QString fileName = nameBase + QLatin1Char('_') + QString::number(textureId, 16);
+    fileName.replace(QLatin1Char('/'), QLatin1Char('_'));
+    fileName.replace(QLatin1Char(' '), QLatin1Char('_'));
+    fileName.append(QLatin1String(".png"));
+
+    QRhiReadbackResult *rbResult = new QRhiReadbackResult;
+    rbResult->completed = [rbResult, fileName] {
+        const QSize size = rbResult->pixelSize;
+        const qint64 numPixels = qint64(size.width()) * size.height();
+        if (numPixels == rbResult->data.size()) {
+            // 1 bpp data, may be packed; copy it to ensure QImage scanline alignment
+            QImage image(size, QImage::Format_Grayscale8);
+            const char *p = rbResult->data.constData();
+            for (int i = 0; i < size.height(); i++)
+                memcpy(image.scanLine(i), p + (i * size.width()), size.width());
+            image.save(fileName);
+        } else if (4 * numPixels == rbResult->data.size()) {
+            // 4 bpp data
+            const uchar *p = reinterpret_cast<const uchar *>(rbResult->data.constData());
+            QImage image(p, size.width(), size.height(), QImage::Format_RGBA8888);
+            image.save(fileName);
+        } else {
+            qWarning("Unhandled data format in glyph texture");
+        }
+        delete rbResult;
+    };
+
+    QRhiReadbackDescription rb(texture);
+    m_resourceUpdates->readBackTexture(rb, rbResult);
+}
+#endif
+
 QT_END_NAMESPACE

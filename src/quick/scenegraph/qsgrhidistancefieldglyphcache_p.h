@@ -79,6 +79,10 @@ public:
 
     bool eightBitFormatIsAlphaSwizzled() const override;
 
+#if defined(QSG_DISTANCEFIELD_CACHE_DEBUG)
+    void saveTexture(QRhiTexture *texture, const QString &nameBase) const override;
+#endif
+
 private:
     bool loadPregeneratedCache(const QRawFont &font);
 
