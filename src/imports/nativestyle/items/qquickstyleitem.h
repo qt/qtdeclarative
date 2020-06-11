@@ -161,7 +161,7 @@ class QQuickStyleItem : public QQuickItem
 
     // Output
     Q_PROPERTY(QQuickStyleMargins contentPadding READ contentPadding() NOTIFY contentPaddingChanged)
-    Q_PROPERTY(QRectF layoutRect READ layoutRect() NOTIFY layoutRectChanged)
+    Q_PROPERTY(QQuickStyleMargins layoutMargins READ layoutMargins() NOTIFY layoutMarginsChanged)
 
     QML_NAMED_ELEMENT(StyleItem)
     QML_UNCREATABLE("StyleItem is an abstract base class.")
@@ -199,7 +199,7 @@ public:
     void setContentHeight(qreal contentHeight);
 
     QQuickStyleMargins contentPadding() const;
-    QRectF layoutRect() const;
+    QQuickStyleMargins layoutMargins() const;
 
     Q_INVOKABLE virtual QFont styleFont(QQuickItem *control);
 
@@ -208,7 +208,7 @@ public:
 
 signals:
     void contentPaddingChanged();
-    void layoutRectChanged();
+    void layoutMarginsChanged();
     void fontChanged();
 
 protected:

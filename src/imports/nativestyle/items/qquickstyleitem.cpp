@@ -211,7 +211,7 @@ void QQuickStyleItem::updateGeometry()
     m_dirty.setFlag(DirtyFlag::Geometry, false);
 
     const QQuickStyleMargins oldContentPadding = contentPadding();
-    const QRectF oldLayoutRect = layoutRect();
+    const QQuickStyleMargins oldLayoutMargins = layoutMargins();
 
     m_styleItemGeometry = calculateGeometry();
 
@@ -229,8 +229,8 @@ void QQuickStyleItem::updateGeometry()
 
     if (contentPadding() != oldContentPadding)
         emit contentPaddingChanged();
-    if (layoutRect() != oldLayoutRect)
-        emit layoutRectChanged();
+    if (layoutMargins() != oldLayoutMargins)
+        emit layoutMarginsChanged();
 
     setImplicitSize(m_styleItemGeometry.implicitSize.width(), m_styleItemGeometry.implicitSize.height());
 
@@ -239,7 +239,7 @@ void QQuickStyleItem::updateGeometry()
 
     qqc2Debug() << m_styleItemGeometry
                 << "bounding rect:" << boundingRect()
-                << "layout rect:" << layoutRect()
+                << "layout margins:" << layoutMargins()
                 << "content padding:" << contentPadding()
                 << "input content size:" << m_contentSize;
 }
@@ -264,8 +264,12 @@ void QQuickStyleItem::paintControlToImage()
         painter.setPen(QColor(255, 0, 0, 255));
         if (m_debugFlags.testFlag(ShowImageRect))
             painter.drawRect(QRect(QPoint(0, 0), m_paintedImage.size() / scale));
-        if (m_debugFlags.testFlag(ShowLayoutRect))
-            painter.drawRect(m_styleItemGeometry.layoutRect);
+        if (m_debugFlags.testFlag(ShowLayoutRect)) {
+            const auto m = layoutMargins();
+            QRect rect = QRect(QPoint(0, 0), m_paintedImage.size() / scale);
+            rect.adjust(m.left(), m.top(), -m.right(), -m.bottom());
+            painter.drawRect(rect);
+        }
         if (m_debugFlags.testFlag(ShowContentRect))
             painter.drawRect(m_styleItemGeometry.contentRect);
         if (m_debugFlags.testFlag(ShowInputContentSize)) {
@@ -382,7 +386,7 @@ QQuickStyleMargins QQuickStyleItem::contentPadding() const
     return QQuickStyleMargins(outerRect, m_styleItemGeometry.contentRect);
 }
 
-QRectF QQuickStyleItem::layoutRect() const
+QQuickStyleMargins QQuickStyleItem::layoutMargins() const
 {
     // ### TODO: layoutRect is currently not being used for anything. But
     // eventually this information will be needed by layouts to align the controls
@@ -390,7 +394,8 @@ QRectF QQuickStyleItem::layoutRect() const
     // than the control(frame) itself, to e.g make room for shadow effects
     // or focus rects/glow. And this will differ from control to control. The
     // layoutRect will then inform where the frame of the control is.
-    return m_styleItemGeometry.layoutRect;
+    const QRect outerRect(QPoint(0, 0), m_styleItemGeometry.implicitSize);
+    return QQuickStyleMargins(outerRect, m_styleItemGeometry.layoutRect);
 }
 
 QFont QQuickStyleItem::styleFont(QQuickItem *control)
