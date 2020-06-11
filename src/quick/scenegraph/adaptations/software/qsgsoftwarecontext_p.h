@@ -74,7 +74,7 @@ public:
     void invalidate() override;
     void renderNextFrame(QSGRenderer *renderer) override;
     QSGTexture *createTexture(const QImage &image, uint flags = CreateTexture_Alpha) const override;
-    QSGRenderer *createRenderer(RenderMode) override;
+    QSGRenderer *createRenderer(QSGRendererInterface::RenderMode) override;
     int maxTextureSize() const override;
 
     bool m_initialized;

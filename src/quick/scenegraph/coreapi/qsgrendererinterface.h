@@ -96,6 +96,12 @@ public:
     };
     Q_DECLARE_FLAGS(ShaderSourceTypes, ShaderSourceType)
 
+    enum RenderMode {
+        RenderMode2D,
+        RenderMode2DNoDepthBuffer,
+        RenderMode3D
+    };
+
     virtual ~QSGRendererInterface();
 
     virtual GraphicsApi graphicsApi() const = 0;

@@ -353,8 +353,8 @@ void QSGRhiLayer::grab()
 
     if (!m_renderer) {
         static const bool useDepth = qEnvironmentVariableIsEmpty("QSG_NO_DEPTH_BUFFER");
-        static const QSGRenderContext::RenderMode renderMode = useDepth ? QSGRenderContext::RenderMode2D
-                                                                        : QSGRenderContext::RenderMode2DNoDepthBuffer;
+        static const QSGRendererInterface::RenderMode renderMode = useDepth ? QSGRendererInterface::RenderMode2D
+                                                                            : QSGRendererInterface::RenderMode2DNoDepthBuffer;
         m_renderer = m_context->createRenderer(renderMode);
         connect(m_renderer, SIGNAL(sceneGraphChanged()), this, SLOT(markDirtyTexture()));
     }

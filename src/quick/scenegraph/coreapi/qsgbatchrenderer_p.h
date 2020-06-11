@@ -747,7 +747,7 @@ protected:
 class Q_QUICK_PRIVATE_EXPORT Renderer : public QSGRenderer
 {
 public:
-    Renderer(QSGDefaultRenderContext *ctx, QSGRenderContext::RenderMode renderMode = QSGRenderContext::RenderMode2D);
+    Renderer(QSGDefaultRenderContext *ctx, QSGRendererInterface::RenderMode renderMode = QSGRendererInterface::RenderMode2D);
     ~Renderer();
 
 protected:
@@ -862,7 +862,7 @@ private:
     void invalidatePipelineCacheDependency(QRhiRenderPassDescriptor *rpDesc) override;
 
     QSGDefaultRenderContext *m_context;
-    QSGRenderContext::RenderMode m_renderMode;
+    QSGRendererInterface::RenderMode m_renderMode;
     QSet<Node *> m_taggedRoots;
     QDataBuffer<Element *> m_opaqueRenderList;
     QDataBuffer<Element *> m_alphaRenderList;
@@ -955,7 +955,7 @@ int Renderer::mergedIndexElemSize() const
 
 bool Renderer::useDepthBuffer() const
 {
-    return !m_forceNoDepthBuffer && m_renderMode == QSGRenderContext::RenderMode2D;
+    return !m_forceNoDepthBuffer && m_renderMode == QSGRendererInterface::RenderMode2D;
 }
 
 void Renderer::setStateForDepthPostPass()

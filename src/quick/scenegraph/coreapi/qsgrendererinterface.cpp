@@ -175,6 +175,13 @@ QT_BEGIN_NAMESPACE
     supported
  */
 
+/*!
+    \enum QSGRendererInterface::RenderMode
+
+    \value RenderMode2D Normal 2D rendering
+    \value RenderMode2DNoDepthBuffer Normal 2D rendering with depth buffer disabled
+    \value RenderMode3D Scene is rendered as part of a 3D graph
+ */
 QSGRendererInterface::~QSGRendererInterface()
 {
 }

@@ -888,7 +888,7 @@ static int qsg_countNodesInBatches(const QDataBuffer<Batch *> &batches)
     return sum;
 }
 
-Renderer::Renderer(QSGDefaultRenderContext *ctx, QSGRenderContext::RenderMode renderMode)
+Renderer::Renderer(QSGDefaultRenderContext *ctx, QSGRendererInterface::RenderMode renderMode)
     : QSGRenderer(ctx)
     , m_context(ctx)
     , m_renderMode(renderMode)
@@ -2958,7 +2958,7 @@ bool Renderer::prepareRenderMergedBatch(Batch *batch, PreparedRenderBatch *rende
     m_current_projection_matrix_native_ndc = projectionMatrixWithNativeNDC();
 
     QSGMaterial *material = gn->activeMaterial();
-    if (m_renderMode != QSGRenderContext::RenderMode3D)
+    if (m_renderMode != QSGRendererInterface::RenderMode3D)
         updateClipState(gn->clipList(), batch);
 
     const QSGGeometry *g = gn->geometry();
@@ -3035,7 +3035,7 @@ bool Renderer::prepareRenderMergedBatch(Batch *batch, PreparedRenderBatch *rende
     if (!hasPipeline)
         return false;
 
-    if (m_renderMode == QSGRenderContext::RenderMode3D) {
+    if (m_renderMode == QSGRendererInterface::RenderMode3D) {
         m_gstateStack.push(m_gstate);
         setStateForDepthPostPass();
         ensurePipelineState(e, sms, true);
@@ -3131,7 +3131,7 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
     m_current_projection_matrix_native_ndc = projectionMatrixWithNativeNDC();
 
     QSGGeometryNode *gn = e->node;
-    if (m_renderMode != QSGRenderContext::RenderMode3D)
+    if (m_renderMode != QSGRendererInterface::RenderMode3D)
         updateClipState(gn->clipList(), batch);
 
     // We always have dirty matrix as all batches are at a unique z range.
@@ -3242,7 +3242,7 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
                 return false;
             }
             ps = e->ps;
-            if (m_renderMode == QSGRenderContext::RenderMode3D) {
+            if (m_renderMode == QSGRendererInterface::RenderMode3D) {
                 m_gstateStack.push(m_gstate);
                 setStateForDepthPostPass();
                 ensurePipelineState(e, sms, true);
@@ -3251,7 +3251,7 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
             }
         } else {
             e->ps = ps;
-            if (m_renderMode == QSGRenderContext::RenderMode3D)
+            if (m_renderMode == QSGRendererInterface::RenderMode3D)
                 e->depthPostPassPs = depthPostPassPs;
         }
 
@@ -3613,7 +3613,7 @@ void Renderer::prepareRenderPass(RenderPassContext *ctx)
     // special case: the 3D plane mode tests against the depth buffer, but does
     // not write (and all batches are alpha because this render mode evaluates
     // to useDepthBuffer()==false)
-    if (m_renderMode == QSGRenderContext::RenderMode3D) {
+    if (m_renderMode == QSGRendererInterface::RenderMode3D) {
         Q_ASSERT(m_opaqueBatches.isEmpty());
         m_gstate.depthTest = true;
     }
@@ -3690,7 +3690,7 @@ void Renderer::recordRenderPass(RenderPassContext *ctx)
             renderUnmergedBatch(renderBatch);
     }
 
-    if (m_renderMode == QSGRenderContext::RenderMode3D) {
+    if (m_renderMode == QSGRendererInterface::RenderMode3D) {
         // depth post-pass
         for (int i = 0, ie = ctx->alphaRenderBatches.count(); i != ie; ++i) {
             PreparedRenderBatch *renderBatch = &ctx->alphaRenderBatches[i];
@@ -3755,7 +3755,7 @@ bool Renderer::prepareRhiRenderNode(Batch *batch, PreparedRenderBatch *renderBat
 
     QSGRenderNodePrivate *rd = QSGRenderNodePrivate::get(e->renderNode);
     rd->m_clip_list = nullptr;
-    if (m_renderMode != QSGRenderContext::RenderMode3D) {
+    if (m_renderMode != QSGRendererInterface::RenderMode3D) {
         QSGNode *clip = e->renderNode->parent();
         while (clip != rootNode()) {
             if (clip->type() == QSGNode::ClipNodeType) {

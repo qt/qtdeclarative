@@ -49,6 +49,8 @@
 
 #include <QtQuick/private/qsgcompressedtexture_p.h>
 
+#include <QtQuick/qsgrendererinterface.h>
+
 QT_BEGIN_NAMESPACE
 
 QSGDefaultRenderContext::QSGDefaultRenderContext(QSGContext *context)
@@ -235,7 +237,7 @@ QSGTexture *QSGDefaultRenderContext::createTexture(const QImage &image, uint fla
     return texture;
 }
 
-QSGRenderer *QSGDefaultRenderContext::createRenderer(RenderMode renderMode)
+QSGRenderer *QSGDefaultRenderContext::createRenderer(QSGRendererInterface::RenderMode renderMode)
 {
     return new QSGBatchRenderer::Renderer(this, renderMode);
 }

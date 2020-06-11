@@ -584,8 +584,8 @@ void QQuickWindowPrivate::syncSceneGraph()
         QSGRootNode *rootNode = new QSGRootNode;
         rootNode->appendChildNode(QQuickItemPrivate::get(contentItem)->itemNode());
         static const bool useDepth = qEnvironmentVariableIsEmpty("QSG_NO_DEPTH_BUFFER");
-        static const QSGRenderContext::RenderMode renderMode = useDepth ? QSGRenderContext::RenderMode2D
-                                                                        : QSGRenderContext::RenderMode2DNoDepthBuffer;
+        static const QSGRendererInterface::RenderMode renderMode = useDepth ? QSGRendererInterface::RenderMode2D
+                                                                            : QSGRendererInterface::RenderMode2DNoDepthBuffer;
         renderer = context->createRenderer(renderMode);
         renderer->setRootNode(rootNode);
     }

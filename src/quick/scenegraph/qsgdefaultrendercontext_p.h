@@ -109,7 +109,7 @@ public:
     QSGDistanceFieldGlyphCache *distanceFieldGlyphCache(const QRawFont &font) override;
 
     QSGTexture *createTexture(const QImage &image, uint flags) const override;
-    QSGRenderer *createRenderer(RenderMode renderMode = RenderMode2D) override;
+    QSGRenderer *createRenderer(QSGRendererInterface::RenderMode renderMode = QSGRendererInterface::RenderMode2D) override;
     QSGTexture *compressedTextureForFactory(const QSGCompressedTextureFactory *factory) const override;
 
     virtual void initializeRhiShader(QSGMaterialShader *shader, QShader::Variant shaderVariant);
