@@ -34,19 +34,41 @@
     \l{Mozilla Developer Network Date Reference}{JS Date object} with
     locale aware functions.
 
-    Functions that accept a locale format may be either an enumeration
-    value:
+    Functions that accept a \c format argument take either Locale.LongFormat,
+    Locale.ShortFormat, Locale.NarrowFormat enumeration values,
+    or a string specifying the format.
+
+    \section1 Format Enumeration Values
+
+    Use the enumeration values when you want a format that matches the locale
+    preferences.
+
     \table
-    \row \li Locale.LongFormat \li The long version of the string; for example, returning "January" as a month name.
-    \row \li Locale.ShortFormat \li The short version of the string; for example, returning "Jan" as a month name.
-    \row \li Locale.NarrowFormat \li A special version for use when space is limited;
-        for example, returning "J" as a month name. Note that the narrow format might contain
-        the same text for different months and days or it can even be an empty string if the
-        locale doesn't support narrow names, so you should avoid using it for date formatting.
-        Also, for the system locale this format is the same as ShortFormat.
+    \row \li Locale.LongFormat \li Longer format
+    \row \li Locale.ShortFormat \li Shorter format
+    \row \li Locale.NarrowFormat \li In this context same as Locale.ShortFormat
     \endtable
 
-    or a string specifying the format  These expressions may be used for format dates:
+    The format that the enumerations represent will depend on your locale, but also
+    the method that the enumeration is used for.
+
+    For example, for the \c en_US locale, these format strings are used:
+
+    \table
+    \header \li Function \li Locale Enum \li Format String
+    \row \li fromLocaleDateString, toLocaleDateString \li Locale.LongFormat \li \c{dddd, MMMM d, yyyy}
+    \row \li fromLocaleDateString, toLocaleDateString \li Locale.ShortFormat \li \c{M/d/yy}
+    \row \li fromLocaleTimeString, toLocaleTimeString \li Locale.LongFormat \li \c{h:mm:ss AP t}
+    \row \li fromLocaleTimeString, toLocaleTimeString \li Locale.ShortFormat \li \c{h:mm AP}
+    \row \li fromLocaleString, toLocaleString \li Locale.LongFormat \li \c{dddd, MMMM d, yyyy h:mm:ss AP t}
+    \row \li fromLocaleString, toLocaleString \li Locale.ShortFormat \li \c{M/d/yy h:mm AP}
+    \endtable
+
+    \section1 Format Strings
+
+    You can also directly specify a format string.
+
+    These expressions may be used for format dates:
     \table
     \header \li Expression \li Output
     \row \li d \li the day as number without a leading zero (1 to 31)
@@ -122,7 +144,9 @@
 
     If the date is invalid, an empty string will be returned.
 
-    Note: Using the locale-aware functions to perform date or time formatting can
+    \section1 Further Notes
+
+    Using the locale-aware functions to perform date or time formatting can
     result in incorrectly formatted times, due to an inconsistency in specification
     between Qt and JS.  ECMA-262 specifies that historical dates should be intrepreted
     by projecting the current rules for daylight-saving onto past years, while Qt uses
@@ -132,7 +156,7 @@
     hour, if DST is currently in effect, while it was not for the time specified, or
     vice versa.
 
-    Note: There are different date formats with different understandings of negative years. Common
+    There are different date formats with different understandings of negative years. Common
     human language does not have a year 0. The year after 1BC is 1AD. This understanding is
     reflected when printing or parsing dates in one of the formats not standardized by ECMAScript.
     That is: toString(), toLocaleString(), toUTCString() and friends. ECMAScript does standardize
