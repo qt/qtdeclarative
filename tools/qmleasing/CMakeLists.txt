@@ -15,6 +15,7 @@ qt_add_executable(qmleasing
         segmentproperties.cpp segmentproperties.h
         splineeditor.cpp splineeditor.h
     PUBLIC_LIBRARIES
+        Qt::OpenGL # special case QTBUG-83498
         Qt::Gui
         Qt::Qml
         Qt::Quick
