@@ -10,7 +10,6 @@ qt_add_tool(qmltestrunner
     SOURCES
         main.cpp
     PUBLIC_LIBRARIES
-        Qt::OpenGL # special case QTBUG-83498
         Qt::Gui
         Qt::Qml
         Qt::QuickTest
