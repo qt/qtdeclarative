@@ -270,8 +270,12 @@ void QQuickStyleItem::paintControlToImage()
             rect.adjust(m.left(), m.top(), -m.right(), -m.bottom());
             painter.drawRect(rect);
         }
-        if (m_debugFlags.testFlag(ShowContentRect))
-            painter.drawRect(m_styleItemGeometry.contentRect);
+        if (m_debugFlags.testFlag(ShowContentRect)) {
+            const auto p = contentPadding();
+            QRect rect = QRect(QPoint(0, 0), m_paintedImage.size() / scale);
+            rect.adjust(p.left(), p.top(), -p.right(), -p.bottom());
+            painter.drawRect(rect);
+        }
         if (m_debugFlags.testFlag(ShowInputContentSize)) {
             const int offset = 2;
             const QPoint p = m_styleItemGeometry.contentRect.topLeft();
