@@ -692,6 +692,10 @@ QString DumpAstVisitor::parseStatement(Statement *statement, bool blockHasNext,
                 result += formatLine("else", false);
 
             if (ifFalseBlock) {
+                // Blocks generate an extra newline that we don't want here.
+                if (!m_blockNeededBraces && ifFalse.endsWith(QLatin1String("\n")))
+                    ifFalse.chop(1);
+
                 result += " " + ifFalse;
             } else {
                 result += "\n";
