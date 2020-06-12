@@ -65,14 +65,12 @@ public:
 
     \inmodule QtQuick
 
-    The QQuickPaintedItem makes it possible to use the QPainter API with the
-    QML Scene Graph. It sets up a textured rectangle in the Scene Graph and
-    uses a QPainter to paint onto the texture. The render target can be either
-    a QImage or, when OpenGL is in use, a QOpenGLFramebufferObject. When the
-    render target is a QImage, QPainter first renders into the image then the
-    content is uploaded to the texture. When a QOpenGLFramebufferObject is
-    used, QPainter paints directly onto the texture. Call update() to trigger a
-    repaint.
+    The QQuickPaintedItem makes it possible to use the QPainter API with the QML
+    Scene Graph. It sets up a textured rectangle in the Scene Graph and uses a
+    QPainter to paint onto the texture. The render target in Qt 6 is always a
+    QImage.  When the render target is a QImage, QPainter first renders into the
+    image then the content is uploaded to the texture.  Call update() to trigger
+    a repaint.
 
     To enable QPainter to do anti-aliased rendering, use setAntialiasing().
 
@@ -98,16 +96,9 @@ public:
     can potentially be slow if the item is large. This render target allows high quality
     anti-aliasing and fast item resizing.
 
-    \value FramebufferObject QPainter paints into a QOpenGLFramebufferObject using the GL
-    paint engine. Painting can be faster as no texture upload is required, but anti-aliasing
-    quality is not as good as if using an image. This render target allows faster rendering
-    in some cases, but you should avoid using it if the item is resized often.
+    \value FramebufferObject As of Qt 6.0, this value is ignored.
 
-    \value InvertedYFramebufferObject Exactly as for FramebufferObject above, except once
-    the painting is done, prior to rendering the painted image is flipped about the
-    x-axis so that the top-most pixels are now at the bottom.  Since this is done with the
-    OpenGL texture coordinates it is a much faster way to achieve this effect than using a
-    painter transform.
+    \value InvertedYFramebufferObject As of Qt 6.0, this value is ignored.
 
     \sa setRenderTarget()
 */
@@ -118,12 +109,7 @@ public:
     This enum describes flags that you can enable to improve rendering
     performance in QQuickPaintedItem. By default, none of these flags are set.
 
-    \value FastFBOResizing Resizing an FBO can be a costly operation on a few
-    OpenGL driver implementations. To work around this, one can set this flag
-    to let the QQuickPaintedItem allocate one large framebuffer object and
-    instead draw into a subregion of it. This saves the resize at the cost of
-    using more memory. Please note that this is not a common problem.
-
+    \value FastFBOResizing As of Qt 6.0, this value is ignored.
 */
 
 /*!
@@ -499,12 +485,6 @@ void QQuickPaintedItem::setFillColor(const QColor &c)
     the QQuickPaintedItem::FramebufferObject render target if the item gets resized often.
 
     By default, the render target is QQuickPaintedItem::Image.
-
-    \note Some Qt Quick backends may not support all render target options. For
-    example, it is likely that non-OpenGL backends will lack support for
-    QQuickPaintedItem::FramebufferObject and
-    QQuickPaintedItem::InvertedYFramebufferObject. Requesting these will then
-    be ignored.
 */
 QQuickPaintedItem::RenderTarget QQuickPaintedItem::renderTarget() const
 {
@@ -539,11 +519,13 @@ void QQuickPaintedItem::setRenderTarget(RenderTarget target)
     Reimplement this function in a QQuickPaintedItem subclass to provide the
     item's painting implementation, using \a painter.
 
-    \note The QML Scene Graph uses two separate threads, the main thread does things such as
-    processing events or updating animations while a second thread does the actual OpenGL rendering.
-    As a consequence, paint() is not called from the main GUI thread but from the GL enabled
-    renderer thread. At the moment paint() is called, the GUI thread is blocked and this is
-    therefore thread-safe.
+    \note The QML Scene Graph uses two separate threads, the main thread does
+    things such as processing events or updating animations while a second
+    thread does the actual issuing of graphics resource updates and the
+    recording of draw calls.  As a consequence, paint() is not called from the
+    main GUI thread but from the GL enabled renderer thread. At the moment
+    paint() is called, the GUI thread is blocked and this is therefore
+    thread-safe.
 
     \warning Extreme caution must be used when creating QObjects, emitting signals, starting
     timers and similar inside this function as these will have affinity to the rendering thread.
