@@ -51,6 +51,7 @@ private Q_SLOTS:
     void testIfBlocks();
 
     void testReadOnlyProps();
+    void testVerbatimStrings();
 
 #if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
     void testExample();
@@ -215,6 +216,12 @@ void TestQmlformat::testIfBlocks()
 void TestQmlformat::testReadOnlyProps()
 {
     QCOMPARE(runQmlformat(testFile("readOnlyProps.qml"), false, true), readTestFile("readOnlyProps.formatted.qml"));
+}
+
+void TestQmlformat::testVerbatimStrings()
+{
+    QCOMPARE(runQmlformat(testFile("verbatimString.qml"), false, true),
+             readTestFile("verbatimString.formatted.qml"));
 }
 
 void TestQmlformat::testLineEndings()

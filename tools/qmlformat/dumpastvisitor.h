@@ -43,7 +43,7 @@ using namespace QQmlJS;
 class DumpAstVisitor : protected Visitor
 {
 public:
-    DumpAstVisitor(Node *rootNode, CommentAstVisitor *comment);
+    DumpAstVisitor(QQmlJS::Engine *engine, Node *rootNode, CommentAstVisitor *comment);
 
     QString toString() const { return m_result; }
 
@@ -143,6 +143,7 @@ private:
     QStack<ScopeProperties> m_scope_properties;
 
     QString m_result = "";
+    QQmlJS::Engine *m_engine;
     CommentAstVisitor *m_comment;
 };
 

@@ -99,7 +99,7 @@ bool parseFile(const QString& filename, bool inplace, bool verbose, bool sortImp
     if (verbose)
         qWarning().noquote() << "Dumping" << filename;
 
-    DumpAstVisitor dump(parser.rootNode(), &comment);
+    DumpAstVisitor dump(&engine, parser.rootNode(), &comment);
 
     QString dumpCode = dump.toString();
 
