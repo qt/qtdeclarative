@@ -55,6 +55,8 @@ private Q_SLOTS:
     void testLargeBindings();
     void testVerbatimStrings();
 
+    void testQtbug85003();
+
 #if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
     void testExample();
     void testExample_data();
@@ -251,6 +253,12 @@ void TestQmlformat::testLineEndings()
     const QString unixContents = runQmlformat(testFile("Example1.formatted.qml"), false, true, "unix");
     QVERIFY(unixContents.contains("\n"));
     QVERIFY(!unixContents.contains("\r"));
+}
+
+void TestQmlformat::testQtbug85003()
+{
+    QCOMPARE(runQmlformat(testFile("QtBug85003.qml"), false, true),
+             readTestFile("QtBug85003.formatted.qml"));
 }
 
 #if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled

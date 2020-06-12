@@ -24,7 +24,6 @@ Item {
             console.log("bar");
         else
             console.log("baz");
-
         //// The following if blocks should HAVE braces
         // Single branch, braces
         if (true) {

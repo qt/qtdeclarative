@@ -97,7 +97,6 @@ Item {
             console.log("other thing");
         else
             console.log("false");
-
         if (x == 50) {
             console.log("true");
         } else if (x == 50) {
