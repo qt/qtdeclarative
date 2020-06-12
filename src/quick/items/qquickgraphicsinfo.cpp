@@ -50,10 +50,10 @@ QT_BEGIN_NAMESPACE
     \ingroup qtquick-visual
     \since 5.8
     \since QtQuick 2.8
-    \brief Provides information about the used Qt Quick backend.
+    \brief Provides information about the scenegraph backend and the graphics API used by Qt Quick.
 
     The GraphicsInfo attached type provides information about the scenegraph
-    backend used to render the contents of the associated window.
+    backend and the graphics API used to render the contents of the associated window.
 
     If the item to which the properties are attached is not currently
     associated with any window, the properties are set to default values. When
@@ -194,6 +194,8 @@ QQuickGraphicsInfo *QQuickGraphicsInfo::qmlAttachedProperties(QObject *object)
 
     With OpenGL the default version is \c 2.0.
 
+    \note This is applicable only to OpenGL.
+
     \sa minorVersion, profile
  */
 
@@ -203,6 +205,8 @@ QQuickGraphicsInfo *QQuickGraphicsInfo::qmlAttachedProperties(QObject *object)
     This property holds the minor version of the graphics API in use.
 
     With OpenGL the default version is \c 2.0.
+
+    \note This is applicable only to OpenGL.
 
     \sa majorVersion, profile
  */
@@ -222,6 +226,8 @@ QQuickGraphicsInfo *QQuickGraphicsInfo::qmlAttachedProperties(QObject *object)
     Reusable QML components will typically use this property in bindings in order to
     choose between core and non core profile compatible shader sources.
 
+    \note This is applicable only to OpenGL.
+
     \sa majorVersion, minorVersion, QSurfaceFormat
  */
 
@@ -237,6 +243,8 @@ QQuickGraphicsInfo *QQuickGraphicsInfo::qmlAttachedProperties(QObject *object)
     \li GraphicsInfo.SurfaceFormatOpenGL - Desktop OpenGL or other graphics API
     \li GraphicsInfo.SurfaceFormatOpenGLES - OpenGL ES
     \endlist
+
+    \note This is applicable only to OpenGL.
 
     \sa QSurfaceFormat
  */
