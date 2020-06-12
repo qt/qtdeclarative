@@ -77,27 +77,30 @@ QT_BEGIN_NAMESPACE
 
   QQuickWindow and QQuickView and their associated internal render loops render
   the Qt Quick scene onto a native window. In some cases, for example when
-  integrating with 3rd party OpenGL renderers, it might be beneficial to get the
-  scene into a texture that can then be used in arbitrary ways by the external
-  rendering engine. QQuickRenderControl makes this possible in a hardware
-  accelerated manner, unlike the performance-wise limited alternative of using
-  QQuickWindow::grabWindow()
+  integrating with 3rd party OpenGL, Vulkan, Metal, or Direct 3D renderers, it
+  can be useful to get the scene into a texture that can then be used in
+  arbitrary ways by the external rendering engine. Such a mechanism is also
+  essential when integrating with a VR framework. QQuickRenderControl makes this
+  possible in a hardware accelerated manner, unlike the performance-wise limited
+  alternative of using QQuickWindow::grabWindow()
 
   When using a QQuickRenderControl, the QQuickWindow does not have to be shown
   or even created at all. This means there will not be an underlying native
   window for it. Instead, the QQuickWindow instance is associated with the
-  render control, using the overload of the QQuickWindow constructor, and an
-  OpenGL framebuffer object by calling QQuickWindow::setRenderTarget().
+  render control, using the overload of the QQuickWindow constructor, and a
+  texture or image object specified via QQuickWindow::setRenderTarget().
 
-  Management of the context and framebuffer object is up to the application. The
-  context that will be used by Qt Quick must be created before calling
-  initialize(). The creation of the framebuffer object can be deferred, see
-  below. Qt 5.4 introduces the ability for QOpenGLContext to adopt existing
-  native contexts. Together with QQuickRenderControl this makes it possible to
-  create a QOpenGLContext that shares with an external rendering engine's
-  existing context. This new QOpenGLContext can then be used to render the Qt
-  Quick scene into a texture that is accessible by the other engine's context
-  too.
+  Management of the graphics devices, contexts, image and texture objects is up
+  to the application. The device or context that will be used by Qt Quick must
+  be created before calling initialize(). The creation of the the texture object
+  can be deferred, see below. Qt 5.4 introduces the ability for QOpenGLContext
+  to adopt existing native contexts. Together with QQuickRenderControl this
+  makes it possible to create a QOpenGLContext that shares with an external
+  rendering engine's existing context. This new QOpenGLContext can then be used
+  to render the Qt Quick scene into a texture that is accessible by the other
+  engine's context too. For Vulkan, Metal, and Direct 3D there are no
+  Qt-provided wrappers for device objects, so existing ones can be passed as-is
+  via QQuickWindow::setGraphicsDevice().
 
   Loading and instantiation of the QML components happen by using a
   QQmlEngine. Once the root object is created, it will need to be parented to
