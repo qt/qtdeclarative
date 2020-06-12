@@ -81,7 +81,7 @@ public:
  * OpenGL. It is not compatible with other graphics APIs, such as Vulkan or
  * Metal. It should be treated as a legacy class that is only present in order
  * to enable Qt 5 applications to function without source compatibility breaks
- * as long as they tie themselves to openGL.
+ * as long as they tie themselves to OpenGL.
  *
  * On most platforms, the rendering will occur on a \l {Scene Graph and Rendering}{dedicated thread}.
  * For this reason, the QQuickFramebufferObject class enforces a strict
