@@ -115,13 +115,13 @@ QQuickImagePrivate::QQuickImagePrivate()
 
     \clearfloat
 
-    \section1 OpenGL Texture Files
+    \section1 Compressed Texture Files
 
-    When the default OpenGL \l{Qt Quick Scene Graph}{scene graph} backend is in
-    use, images can also be supplied in compressed texture files. The content
-    must be a simple RGB(A) format 2D texture. Supported compression schemes
-    are only limited by the underlying OpenGL driver and GPU. The following
-    container file formats are supported:
+    When supported by the implementation of the underlying graphics API at run
+    time, images can also be supplied in compressed texture files. The content
+    must be a simple RGB(A) format 2D texture. Supported compression schemes are
+    only limited by the underlying driver and GPU. The following container file
+    formats are supported:
 
     \list
     \li \c PKM (since Qt 5.10)
@@ -144,10 +144,10 @@ QQuickImagePrivate::QQuickImagePrivate()
     file can be found by appending any of the supported image file extensions
     to the \l source URL, then that file will be loaded.
 
-    If the OpenGL \l{Qt Quick Scene Graph}{scene graph} backend is in use, the
-    file search the attempts the OpenGL texture file extensions first. If the
-    search is unsuccessful, it attempts to search with the file extensions for
-    the \l{QImageReader::supportedImageFormats()}{conventional image file
+    The file search attempts to look for compressed texture container file
+    extensions first. If the search is unsuccessful, it attempts to search with
+    the file extensions for the
+    \l{QImageReader::supportedImageFormats()}{conventional image file
     types}. For example:
 
     \snippet qml/image-ext.qml ext
@@ -532,7 +532,7 @@ qreal QQuickImage::paintedHeight() const
 
     The URL may be absolute, or relative to the URL of the component.
 
-    \sa QQuickImageProvider {OpenGL Texture Files} {Automatic Detection of File Extension}
+    \sa QQuickImageProvider {Compressed Texture Files} {Automatic Detection of File Extension}
 */
 
 /*!
