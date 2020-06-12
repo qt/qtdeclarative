@@ -192,6 +192,7 @@ public:
 
     virtual void endSync();
 
+    virtual void preprocess();
     virtual QSGDistanceFieldGlyphCache *distanceFieldGlyphCache(const QRawFont &font);
     QSGTexture *textureForFactory(QQuickTextureFactory *factory, QQuickWindow *window);
 

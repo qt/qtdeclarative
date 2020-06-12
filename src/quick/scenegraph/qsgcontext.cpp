@@ -395,6 +395,13 @@ void QSGRenderContext::endSync()
 }
 
 /*!
+    Do necessary preprocessing before the frame
+*/
+void QSGRenderContext::preprocess()
+{
+}
+
+/*!
     Factory function for scene graph backends of the distance-field glyph cache.
  */
 QSGDistanceFieldGlyphCache *QSGRenderContext::distanceFieldGlyphCache(const QRawFont &)

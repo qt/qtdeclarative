@@ -106,6 +106,7 @@ public:
     void renderNextRhiFrame(QSGRenderer *renderer) override;
     void endNextRhiFrame(QSGRenderer *renderer) override;
 
+    void preprocess() override;
     QSGDistanceFieldGlyphCache *distanceFieldGlyphCache(const QRawFont &font) override;
 
     QSGTexture *createTexture(const QImage &image, uint flags) const override;
