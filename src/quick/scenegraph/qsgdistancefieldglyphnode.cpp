@@ -57,7 +57,6 @@ QSGDistanceFieldGlyphNode::QSGDistanceFieldGlyphNode(QSGRenderContext *context)
 {
     m_geometry.setDrawingMode(GL_TRIANGLES);
     setGeometry(&m_geometry);
-    setFlag(UsePreprocess);
 #ifdef QSG_RUNTIME_DESCRIPTION
     qsgnode_set_description(this, QLatin1String("glyphs"));
 #endif
@@ -105,6 +104,7 @@ void QSGDistanceFieldGlyphNode::setGlyphs(const QPointF &position, const QGlyphR
 
     m_dirtyGeometry = true;
     m_dirtyMaterial = true;
+    setFlag(UsePreprocess);
 
     QSGDistanceFieldGlyphCache *oldCache = m_glyph_cache;
     m_glyph_cache = m_context->distanceFieldGlyphCache(m_glyphs.rawFont());
@@ -152,13 +152,10 @@ void QSGDistanceFieldGlyphNode::update()
 
 void QSGDistanceFieldGlyphNode::preprocess()
 {
-    Q_ASSERT(m_glyph_cache);
-
-    m_glyph_cache->processPendingGlyphs();
-    m_glyph_cache->update();
-
     if (m_dirtyGeometry)
         updateGeometry();
+
+    setFlag(UsePreprocess, false);
 }
 
 void QSGDistanceFieldGlyphNode::invalidateGlyphs(const QVector<quint32> &glyphs)
@@ -169,6 +166,7 @@ void QSGDistanceFieldGlyphNode::invalidateGlyphs(const QVector<quint32> &glyphs)
     for (int i = 0; i < glyphs.count(); ++i) {
         if (m_allGlyphIndexesLookup.contains(glyphs.at(i))) {
             m_dirtyGeometry = true;
+            setFlag(UsePreprocess);
             return;
         }
     }

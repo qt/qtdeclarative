@@ -323,6 +323,8 @@ void QSGRenderer::preprocess()
     // For the default case, when this does not happen, the cost is negligible.
     QSet<QSGNode *> items = m_nodes_to_preprocess;
 
+    m_context->preprocess();
+
     for (QSet<QSGNode *>::const_iterator it = items.constBegin();
          it != items.constEnd(); ++it) {
         QSGNode *n = *it;

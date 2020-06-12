@@ -430,6 +430,14 @@ bool QSGDefaultRenderContext::separateIndexBuffer() const
     return isWebGL;
 }
 
+void QSGDefaultRenderContext::preprocess()
+{
+    for (auto it = m_glyphCaches.begin(); it != m_glyphCaches.end(); ++it) {
+        it.value()->processPendingGlyphs();
+        it.value()->update();
+    }
+}
+
 QSGDistanceFieldGlyphCache *QSGDefaultRenderContext::distanceFieldGlyphCache(const QRawFont &font)
 {
     QString key = fontKey(font);

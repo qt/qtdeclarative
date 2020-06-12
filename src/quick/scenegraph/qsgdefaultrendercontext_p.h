@@ -120,6 +120,7 @@ public:
     void renderNextRhiFrame(QSGRenderer *renderer) override;
     void endNextRhiFrame(QSGRenderer *renderer) override;
 
+    void preprocess() override;
     QSGDistanceFieldGlyphCache *distanceFieldGlyphCache(const QRawFont &font) override;
 
     virtual QSharedPointer<QSGDepthStencilBuffer> depthStencilBufferForFbo(QOpenGLFramebufferObject *fbo);
