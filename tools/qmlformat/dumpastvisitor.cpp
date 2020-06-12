@@ -30,7 +30,8 @@
 
 #include <QtQml/private/qqmljslexer_p.h>
 
-DumpAstVisitor::DumpAstVisitor(Node *rootNode, CommentAstVisitor *comment): m_comment(comment)
+DumpAstVisitor::DumpAstVisitor(QQmlJS::Engine *engine, Node *rootNode, CommentAstVisitor *comment)
+    : m_engine(engine), m_comment(comment)
 {
     // Add all completely orphaned comments
     m_result += getOrphanedComments(nullptr);
@@ -417,8 +418,11 @@ QString DumpAstVisitor::parseExpression(ExpressionNode *expression)
         return "--"+parseExpression(cast<PreDecrementExpression *>(expression)->expression);
     case Node::Kind_NumericLiteral:
         return QString::number(cast<NumericLiteral *>(expression)->value);
-    case Node::Kind_StringLiteral:
-        return escapeString(cast<StringLiteral *>(expression)->value.toString());
+    case Node::Kind_StringLiteral: {
+        auto srcLoc = cast<StringLiteral *>(expression)->firstSourceLocation();
+        return m_engine->code().mid(static_cast<int>(srcLoc.begin()),
+                                    static_cast<int>(srcLoc.end() - srcLoc.begin()));
+    }
     case Node::Kind_BinaryExpression: {
         auto *binExpr = expression->binaryExpressionCast();
         return parseExpression(binExpr->left) + " " + operatorToString(binExpr->op)
