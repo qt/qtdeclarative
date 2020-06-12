@@ -1739,14 +1739,15 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
 
     \section1 Custom Scene Graph Items
 
-    All visual QML items are rendered using the scene graph, the default
-    implementation of which is a low-level, high-performance rendering stack,
-    closely tied to OpenGL. It is possible for subclasses of QQuickItem to add
-    their own custom content into the scene graph by setting the
-    QQuickItem::ItemHasContents flag and reimplementing the
-    QQuickItem::updatePaintNode() function.
+    All visual QML items are rendered using the scene graph, the
+    default implementation of which is a low-level, high-performance
+    rendering stack, closely tied to accelerated graphics APIs, such
+    as OpenGL, Vulkan, Metal, or Direct 3D. It is possible for
+    subclasses of QQuickItem to add their own custom content into the
+    scene graph by setting the QQuickItem::ItemHasContents flag and
+    reimplementing the QQuickItem::updatePaintNode() function.
 
-    \warning It is crucial that OpenGL operations and interaction with
+    \warning It is crucial that graphics operations and interaction with
     the scene graph happens exclusively on the rendering thread,
     primarily during the updatePaintNode() call. The best rule of
     thumb is to only use classes with the "QSG" prefix inside the
@@ -1773,15 +1774,17 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
 
     \list
 
-    \li The scene graph is invalidated; This can happen, for instance,
-    if the window is hidden using QQuickWindow::hide(). If the item
-    class implements a \c slot named \c invalidateSceneGraph(), this
-    slot will be called on the rendering thread while the GUI thread
-    is blocked. This is equivalent to connecting to
-    QQuickWindow::sceneGraphInvalidated(). The OpenGL context of this
-    item's window will be bound when this slot is called. The only
-    exception is if the native OpenGL has been destroyed outside Qt's
-    control, for instance through \c EGL_CONTEXT_LOST.
+    \li The scene graph is invalidated; This can happen, depending on
+    the platform and QQuickWindow configuration, when the window is
+    hidden using QQuickWindow::hide(), or when it is closed. If the
+    item class implements a \c slot named \c invalidateSceneGraph(),
+    this slot will be called on the rendering thread while the GUI
+    thread is blocked. This is equivalent to connecting to
+    QQuickWindow::sceneGraphInvalidated(). When rendering through
+    OpenGL, the OpenGL context of this item's window will be bound
+    when this slot is called. The only exception is if the native
+    OpenGL has been destroyed outside Qt's control, for instance
+    through \c EGL_CONTEXT_LOST.
 
     \li The item is removed from the scene; If an item is taken out of
     the scene, for instance because it's parent was set to \c null or
@@ -1811,9 +1814,9 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     have not been updated.
 
     \note Use of QObject::deleteLater() to clean up graphics resources
-    is not recommended as this will run at an arbitrary time and it is
-    unknown if there will be an OpenGL context bound when the deletion
-    takes place.
+    is strongly discouraged as this will make the \c delete operation
+    run at an arbitrary time and it is unknown if there will be an
+    OpenGL context bound when the deletion takes place.
 
     \section1 Custom QPainter Items
 
@@ -1821,11 +1824,10 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     allows the users to render content using QPainter.
 
     \warning Using QQuickPaintedItem uses an indirect 2D surface to
-    render its content, either using software rasterization or using
-    an OpenGL framebuffer object (FBO), so the rendering is a two-step
-    operation. First rasterize the surface, then draw the
-    surface. Using scene graph API directly is always significantly
-    faster.
+    render its content, using software rasterization, so the rendering
+    is a two-step operation. First rasterize the surface, then draw
+    the surface. Using scene graph API directly is always
+    significantly faster.
 
     \section1 Behavior Animations
 
@@ -3788,7 +3790,7 @@ void QQuickItem::geometryChange(const QRectF &newGeometry, const QRectF &oldGeom
     the underlying implementation may decide to not render the scene again as
     the visual outcome is identical.
 
-    \warning It is crucial that OpenGL operations and interaction with
+    \warning It is crucial that graphics operations and interaction with
     the scene graph happens exclusively on the render thread,
     primarily during the QQuickItem::updatePaintNode() call. The best
     rule of thumb is to only use classes with the "QSG" prefix inside
@@ -8574,7 +8576,7 @@ void QQuickItemLayer::setMipmap(bool mipmap)
 /*!
     \qmlproperty enumeration QtQuick::Item::layer.format
 
-    This property defines the internal OpenGL format of the texture.
+    This property defines the internal format of the texture.
     Modifying this property makes most sense when the \a layer.effect is also
     specified. Depending on the OpenGL implementation, this property might
     allow you to save some texture memory.
@@ -8680,7 +8682,7 @@ void QQuickItemLayer::setSize(const QSize &size)
 /*!
     \qmlproperty enumeration QtQuick::Item::layer.wrapMode
 
-    This property defines the OpenGL wrap modes associated with the texture.
+    This property defines the wrap modes associated with the texture.
     Modifying this property makes most sense when the \a layer.effect is
     specified.
 
@@ -8713,7 +8715,7 @@ void QQuickItemLayer::setWrapMode(QQuickShaderEffectSource::WrapMode mode)
     \qmlproperty enumeration QtQuick::Item::layer.textureMirroring
     \since 5.6
 
-    This property defines how the generated OpenGL texture should be mirrored.
+    This property defines how the generated texture should be mirrored.
     The default value is \c{ShaderEffectSource.MirrorVertically}.
     Custom mirroring can be useful if the generated texture is directly accessed by custom shaders,
     such as those specified by ShaderEffect. If no effect is specified for the layered
