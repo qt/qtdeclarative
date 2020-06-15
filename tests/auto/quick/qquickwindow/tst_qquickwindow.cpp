@@ -1043,64 +1043,73 @@ void tst_qquickwindow::touchEvent_velocity()
     delete item;
 }
 
+using ItemVector = QVector<std::shared_ptr<QQuickItem>>;
 void tst_qquickwindow::mergeTouchPointLists_data()
 {
-    QTest::addColumn<QVector<QQuickItem*>>("list1");
-    QTest::addColumn<QVector<QQuickItem*>>("list2");
-    QTest::addColumn<QVector<QQuickItem*>>("expected");
+    QTest::addColumn<ItemVector>("list1");
+    QTest::addColumn<ItemVector>("list2");
+    QTest::addColumn<QVector<QQuickItem *>>("expected");
     QTest::addColumn<bool>("showItem");
 
-    // FIXME: do not leak all these items
-    auto item1 = new QQuickItem();
-    auto item2 = new QQuickItem();
-    auto item3 = new QQuickItem();
-    auto item4 = new QQuickItem();
-    auto item5 = new QQuickItem();
+    auto item1 = std::make_shared<QQuickItem>();
+    auto item2 = std::make_shared<QQuickItem>();
+    auto item3 = std::make_shared<QQuickItem>();
+    auto item4 = std::make_shared<QQuickItem>();
+    auto item5 = std::make_shared<QQuickItem>();
 
-    QTest::newRow("empty") << QVector<QQuickItem*>() << QVector<QQuickItem*>() << QVector<QQuickItem*>();
+    QTest::newRow("empty") << ItemVector() << ItemVector() << QVector<QQuickItem *>();
     QTest::newRow("single list left")
-            << (QVector<QQuickItem*>() << item1 << item2 << item3)
-            << QVector<QQuickItem*>()
-            << (QVector<QQuickItem*>() << item1 << item2 << item3);
+            << (ItemVector() << item1 << item2 << item3)
+            << ItemVector()
+            << (QVector<QQuickItem *>() << item1.get() << item2.get() << item3.get());
     QTest::newRow("single list right")
-            << QVector<QQuickItem*>()
-            << (QVector<QQuickItem*>() << item1 << item2 << item3)
-            << (QVector<QQuickItem*>() << item1 << item2 << item3);
+            << ItemVector()
+            << (ItemVector() << item1 << item2 << item3)
+            << (QVector<QQuickItem *>() << item1.get() << item2.get() << item3.get());
     QTest::newRow("two lists identical")
-            << (QVector<QQuickItem*>() << item1 << item2 << item3)
-            << (QVector<QQuickItem*>() << item1 << item2 << item3)
-            << (QVector<QQuickItem*>() << item1 << item2 << item3);
+            << (ItemVector() << item1 << item2 << item3)
+            << (ItemVector() << item1 << item2 << item3)
+            << (QVector<QQuickItem *>() << item1.get() << item2.get() << item3.get());
     QTest::newRow("two lists 1")
-            << (QVector<QQuickItem*>() << item1 << item2 << item5)
-            << (QVector<QQuickItem*>() << item3 << item4 << item5)
-            << (QVector<QQuickItem*>() << item1 << item2 << item3 << item4 << item5);
+            << (ItemVector() << item1 << item2 << item5)
+            << (ItemVector() << item3 << item4 << item5)
+            << (QVector<QQuickItem *>() << item1.get() << item2.get() << item3.get() << item4.get() << item5.get());
     QTest::newRow("two lists 2")
-            << (QVector<QQuickItem*>() << item1 << item2 << item5)
-            << (QVector<QQuickItem*>() << item3 << item4 << item5)
-            << (QVector<QQuickItem*>() << item1 << item2 << item3 << item4 << item5);
+            << (ItemVector() << item1 << item2 << item5)
+            << (ItemVector() << item3 << item4 << item5)
+            << (QVector<QQuickItem *>() << item1.get() << item2.get() << item3.get() << item4.get() << item5.get());
     QTest::newRow("two lists 3")
-            << (QVector<QQuickItem*>() << item1 << item2 << item3)
-            << (QVector<QQuickItem*>() << item1 << item4 << item5)
-            << (QVector<QQuickItem*>() << item1 << item2 << item3 << item4 << item5);
+            << (ItemVector() << item1 << item2 << item3)
+            << (ItemVector() << item1 << item4 << item5)
+            << (QVector<QQuickItem *>() << item1.get() << item2.get() << item3.get() << item4.get() << item5.get());
     QTest::newRow("two lists 4")
-            << (QVector<QQuickItem*>() << item1 << item3 << item4)
-            << (QVector<QQuickItem*>() << item2 << item3 << item5)
-            << (QVector<QQuickItem*>() << item1 << item2 << item3 << item4 << item5);
+            << (ItemVector() << item1 << item3 << item4)
+            << (ItemVector() << item2 << item3 << item5)
+            << (QVector<QQuickItem *>() << item1.get() << item2.get() << item3.get() << item4.get() << item5.get());
     QTest::newRow("two lists 5")
-            << (QVector<QQuickItem*>() << item1 << item2 << item4)
-            << (QVector<QQuickItem*>() << item1 << item3 << item4)
-            << (QVector<QQuickItem*>() << item1 << item2 << item3 << item4);
+            << (ItemVector() << item1 << item2 << item4)
+            << (ItemVector() << item1 << item3 << item4)
+            << (QVector<QQuickItem *>() << item1.get() << item2.get() << item3.get() << item4.get());
 }
 
 void tst_qquickwindow::mergeTouchPointLists()
 {
-    QFETCH(QVector<QQuickItem*>, list1);
-    QFETCH(QVector<QQuickItem*>, list2);
-    QFETCH(QVector<QQuickItem*>, expected);
+    QFETCH(ItemVector, list1);
+    QFETCH(ItemVector, list2);
+    QFETCH(QVector<QQuickItem *>, expected);
 
     QQuickWindow win;
     auto windowPrivate = QQuickWindowPrivate::get(&win);
-    auto targetList = windowPrivate->mergePointerTargets(list1, list2);
+
+    QVector<QQuickItem *> a;
+    for (const auto &item : list1)
+        a.append(item.get());
+
+    QVector<QQuickItem *> b;
+    for (const auto &item : list2)
+        b.append(item.get());
+
+    auto targetList = windowPrivate->mergePointerTargets(a, b);
     QCOMPARE(targetList, expected);
 }
 
@@ -3493,8 +3502,8 @@ void tst_qquickwindow::testChildMouseEventFilter()
     root->setAcceptedMouseButtons(Qt::LeftButton);
 
     root->setObjectName("root");
-    EventFilter *rootFilter = new EventFilter;
-    root->installEventFilter(rootFilter);
+    QScopedPointer<EventFilter> rootFilter(new EventFilter);
+    root->installEventFilter(rootFilter.data());
 
     // Create 4 items; each item a child of the previous item.
     EventItem *r[4];
