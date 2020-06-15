@@ -227,7 +227,7 @@ Item {
         }
 
         function test_clearSource() {
-            compare(clearSource.source, Qt.resolvedUrl(srcImage))
+            compare(clearSource.source, srcImage)
             compare(clearSource.width, 160)
             compare(clearSource.height, 120)
 

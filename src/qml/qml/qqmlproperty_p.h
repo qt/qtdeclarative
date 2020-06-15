@@ -150,8 +150,7 @@ public:
                         int type = 0, int *types = nullptr);
     static void flushSignal(const QObject *sender, int signal_index);
 
-    static QVariant resolvedUrlSequence(
-            const QVariant &value, const QQmlRefPointer<QQmlContextData> &context);
+    static QVariant urlSequence(const QVariant &value);
     static QQmlProperty create(
             QObject *target, const QString &propertyName,
             const QQmlRefPointer<QQmlContextData> &context);

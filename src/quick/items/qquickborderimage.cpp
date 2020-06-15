@@ -299,7 +299,9 @@ void QQuickBorderImage::load()
         loadEmptyUrl();
     } else {
         if (d->url.path().endsWith(QLatin1String("sci"))) {
-            QString lf = QQmlFile::urlToLocalFileOrQrc(d->url);
+            const QQmlContext *context = qmlContext(this);
+            QString lf = QQmlFile::urlToLocalFileOrQrc(context ? context->resolvedUrl(d->url)
+                                                               : d->url);
             if (!lf.isEmpty()) {
                 QFile file(lf);
                 file.open(QIODevice::ReadOnly);

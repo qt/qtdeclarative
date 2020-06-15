@@ -339,8 +339,10 @@ void QQuickAnimatedImage::load()
         const qreal targetDevicePixelRatio = (window() ? window()->effectiveDevicePixelRatio() : qApp->devicePixelRatio());
         d->devicePixelRatio = 1.0;
 
-        QUrl loadUrl = d->url;
-        resolve2xLocalFile(d->url, targetDevicePixelRatio, &loadUrl, &d->devicePixelRatio);
+        const auto context = qmlContext(this);
+        QUrl loadUrl = context ? context->resolvedUrl(d->url) : d->url;
+        const QUrl resolvedUrl = loadUrl;
+        resolve2xLocalFile(resolvedUrl, targetDevicePixelRatio, &loadUrl, &d->devicePixelRatio);
         QString lf = QQmlFile::urlToLocalFileOrQrc(loadUrl);
 
         if (!lf.isEmpty()) {
@@ -393,7 +395,9 @@ void QQuickAnimatedImage::movieRequestFinished()
 #endif
 
     if (!d->movie || !d->movie->isValid()) {
-        qmlWarning(this) << "Error Reading Animated Image File " << d->url.toString();
+        const QQmlContext *context = qmlContext(this);
+        qmlWarning(this) << "Error Reading Animated Image File "
+                         << (context ? context->resolvedUrl(d->url) : d->url).toString();
         d->setMovie(nullptr);
         d->setImage(QImage());
         if (d->progress != 0) {

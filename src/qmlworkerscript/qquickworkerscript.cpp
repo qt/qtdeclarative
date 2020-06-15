@@ -553,8 +553,10 @@ void QQuickWorkerScript::setSource(const QUrl &source)
 
     m_source = source;
 
-    if (engine())
-        m_engine->executeUrl(m_scriptId, m_source);
+    if (engine()) {
+        const QQmlContext *context = qmlContext(this);
+        m_engine->executeUrl(m_scriptId, context ? context->resolvedUrl(m_source) : m_source);
+    }
 
     emit sourceChanged();
 }
@@ -614,7 +616,8 @@ QQuickWorkerScriptEngine *QQuickWorkerScript::engine()
 {
     if (m_engine) return m_engine;
     if (m_componentComplete) {
-        QQmlEngine *engine = qmlEngine(this);
+        const QQmlContext *context = qmlContext(this);
+        QQmlEngine *engine = context ? context->engine() : nullptr;
         if (!engine) {
             qWarning("QQuickWorkerScript: engine() called without qmlEngine() set");
             return nullptr;
@@ -628,7 +631,7 @@ QQuickWorkerScriptEngine *QQuickWorkerScript::engine()
         m_scriptId = m_engine->registerWorkerScript(this);
 
         if (m_source.isValid())
-            m_engine->executeUrl(m_scriptId, m_source);
+            m_engine->executeUrl(m_scriptId, context->resolvedUrl(m_source));
 
         emit readyChanged();
 

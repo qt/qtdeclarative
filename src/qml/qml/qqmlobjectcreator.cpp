@@ -452,10 +452,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     case QMetaType::QUrl: {
         assertType(QV4::CompiledData::Binding::Type_String);
         const QString string = compilationUnit->bindingValueAsString(binding);
-        QUrl value = string.isEmpty() ? QUrl()
-                                      : compilationUnit->finalUrl().resolved(QUrl(string));
-        // Apply URL interceptor
-        value = engine->interceptUrl(value, QQmlAbstractUrlInterceptor::UrlString);
+        QUrl value(string);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
@@ -646,11 +643,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
             break;
         } else if (property->propType() == qMetaTypeId<QList<QUrl> >()) {
             assertType(QV4::CompiledData::Binding::Type_String);
-            QString urlString = compilationUnit->bindingValueAsString(binding);
-            QUrl u = urlString.isEmpty() ? QUrl()
-                                         : compilationUnit->finalUrl().resolved(QUrl(urlString));
-            QList<QUrl> value;
-            value.append(u);
+            QList<QUrl> value { QUrl(compilationUnit->bindingValueAsString(binding)) };
             property->writeProperty(_qobject, &value, propertyWriteFlags);
             break;
         } else if (property->propType() == qMetaTypeId<QList<QString> >()) {

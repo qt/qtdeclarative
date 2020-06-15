@@ -380,11 +380,11 @@ Item {
         function test_multipleDelegates_data() {
             return [
                 { y: 25, type: "Rectangle", value: "red" },
-                { y: 75, type: "Image", value: Qt.resolvedUrl("data/logo.png") },
+                { y: 75, type: "Image", value: "logo.png" },
                 { y: 125, type: "Text", value: "Hello" },
                 { y: 175, type: "Text", value: "World" },
                 { y: 225, type: "Rectangle", value: "green" },
-                { y: 275, type: "Image", value: Qt.resolvedUrl("data/logo.png") },
+                { y: 275, type: "Image", value: "logo.png" },
                 { y: 325, type: "Rectangle", value: "blue" },
                 { y: 375, type: "Item", value: "" }
             ]

@@ -1169,22 +1169,33 @@ bool QQuickImageParticle::loadingSomething()
 
 void QQuickImageParticle::mainThreadFetchImageData()
 {
+    const QQmlContext *context = nullptr;
+    QQmlEngine *engine = nullptr;
+    const auto loadPix = [&](ImageData *image) {
+        if (!engine) {
+            context = qmlContext(this);
+            engine = context->engine();
+        }
+        image->pix.load(engine, context->resolvedUrl(image->source));
+    };
+
+
     if (m_image) {//ImageData created on setSource
         m_image->pix.clear(this);
-        m_image->pix.load(qmlEngine(this), m_image->source);
+        loadPix(m_image.get());
     }
 
     if (m_spriteEngine)
         m_spriteEngine->startAssemblingImage();
 
     if (m_colorTable)
-        m_colorTable->pix.load(qmlEngine(this), m_colorTable->source);
+        loadPix(m_colorTable.get());
 
     if (m_sizeTable)
-        m_sizeTable->pix.load(qmlEngine(this), m_sizeTable->source);
+        loadPix(m_sizeTable.get());
 
     if (m_opacityTable)
-        m_opacityTable->pix.load(qmlEngine(this), m_opacityTable->source);
+        loadPix(m_opacityTable.get());
 
     m_startedImageLoading = 2;
 }

@@ -439,9 +439,8 @@ void QQuickLoader::loadFromSource()
     }
 
     if (isComponentComplete()) {
-        QQmlComponent::CompilationMode mode = d->asynchronous ? QQmlComponent::Asynchronous : QQmlComponent::PreferSynchronous;
         if (!d->component)
-            d->component.setObject(new QQmlComponent(qmlEngine(this), d->source, mode, this), this);
+            d->createComponent();
         d->load();
     }
 }
@@ -796,11 +795,8 @@ void QQuickLoader::componentComplete()
     Q_D(QQuickLoader);
     QQuickItem::componentComplete();
     if (active()) {
-        if (d->loadingFromSource) {
-            QQmlComponent::CompilationMode mode = d->asynchronous ? QQmlComponent::Asynchronous : QQmlComponent::PreferSynchronous;
-            if (!d->component)
-                d->component.setObject(new QQmlComponent(qmlEngine(this), d->source, mode, this), this);
-        }
+        if (d->loadingFromSource)
+            d->createComponent();
         d->load();
     }
 }
@@ -1025,6 +1021,17 @@ void QQuickLoaderPrivate::updateStatus()
         status = newStatus;
         emit q->statusChanged();
     }
+}
+
+void QQuickLoaderPrivate::createComponent()
+{
+    Q_Q(QQuickLoader);
+    const QQmlComponent::CompilationMode mode = asynchronous
+            ? QQmlComponent::Asynchronous
+            : QQmlComponent::PreferSynchronous;
+    QQmlContext *context = qmlContext(q);
+    component.setObject(new QQmlComponent(
+                            context->engine(), context->resolvedUrl(source), mode, q), q);
 }
 
 #include <moc_qquickloader_p.cpp>

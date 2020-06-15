@@ -799,7 +799,6 @@ void tst_qqmlengine::urlInterceptor_data()
 {
     QTest::addColumn<QUrl>("testFile");
     QTest::addColumn<QList<QQmlAbstractUrlInterceptor::DataType> >("interceptionPoint");
-    QTest::addColumn<QString>("expectedFilePath");
     QTest::addColumn<QString>("expectedChildString");
     QTest::addColumn<QString>("expectedScriptString");
     QTest::addColumn<QString>("expectedResolvedUrl");
@@ -808,7 +807,6 @@ void tst_qqmlengine::urlInterceptor_data()
     QTest::newRow("InterceptTypes")
         << testFileUrl("interception/types/urlInterceptor.qml")
         << (QList<QQmlAbstractUrlInterceptor::DataType>() << QQmlAbstractUrlInterceptor::QmlFile << QQmlAbstractUrlInterceptor::JavaScriptFile << QQmlAbstractUrlInterceptor::UrlString)
-        << testFileUrl("interception/types/intercepted/doesNotExist.file").toString()
         << QStringLiteral("intercepted")
         << QStringLiteral("intercepted")
         << testFileUrl("interception/types/intercepted/doesNotExist.file").toString()
@@ -817,7 +815,6 @@ void tst_qqmlengine::urlInterceptor_data()
     QTest::newRow("InterceptQmlDir")
         << testFileUrl("interception/qmldir/urlInterceptor.qml")
         << (QList<QQmlAbstractUrlInterceptor::DataType>() << QQmlAbstractUrlInterceptor::QmldirFile << QQmlAbstractUrlInterceptor::UrlString)
-        << testFileUrl("interception/qmldir/intercepted/doesNotExist.file").toString()
         << QStringLiteral("intercepted")
         << QStringLiteral("base file")
         << testFileUrl("interception/qmldir/intercepted/doesNotExist.file").toString()
@@ -826,7 +823,6 @@ void tst_qqmlengine::urlInterceptor_data()
     QTest::newRow("InterceptModule")//just a Test{}, needs to intercept the module import for it to work
         << testFileUrl("interception/module/urlInterceptor.qml")
         << (QList<QQmlAbstractUrlInterceptor::DataType>() << QQmlAbstractUrlInterceptor::QmldirFile )
-        << testFileUrl("interception/module/intercepted/doesNotExist.file").toString()
         << QStringLiteral("intercepted")
         << QStringLiteral("intercepted")
         << testFileUrl("interception/module/intercepted/doesNotExist.file").toString()
@@ -835,7 +831,6 @@ void tst_qqmlengine::urlInterceptor_data()
     QTest::newRow("InterceptStrings")
         << testFileUrl("interception/strings/urlInterceptor.qml")
         << (QList<QQmlAbstractUrlInterceptor::DataType>() << QQmlAbstractUrlInterceptor::UrlString)
-        << testFileUrl("interception/strings/intercepted/doesNotExist.file").toString()
         << QStringLiteral("base file")
         << QStringLiteral("base file")
         << testFileUrl("interception/strings/intercepted/doesNotExist.file").toString()
@@ -844,7 +839,6 @@ void tst_qqmlengine::urlInterceptor_data()
     QTest::newRow("InterceptIncludes")
         << testFileUrl("interception/includes/urlInterceptor.qml")
         << (QList<QQmlAbstractUrlInterceptor::DataType>() << QQmlAbstractUrlInterceptor::JavaScriptFile)
-        << testFileUrl("interception/includes/doesNotExist.file").toString()
         << QStringLiteral("base file")
         << QStringLiteral("intercepted include file")
         << testFileUrl("interception/includes/doesNotExist.file").toString()
@@ -856,7 +850,6 @@ void tst_qqmlengine::urlInterceptor()
 
     QFETCH(QUrl, testFile);
     QFETCH(QList<QQmlAbstractUrlInterceptor::DataType>, interceptionPoint);
-    QFETCH(QString, expectedFilePath);
     QFETCH(QString, expectedChildString);
     QFETCH(QString, expectedScriptString);
     QFETCH(QString, expectedResolvedUrl);
@@ -873,7 +866,7 @@ void tst_qqmlengine::urlInterceptor()
         qDebug() << c.errorString();
     QVERIFY(o);
     //Test a URL as a property initialization
-    QCOMPARE(o->property("filePath").toString(), expectedFilePath);
+    QCOMPARE(o->property("filePath").toString(), QUrl("doesNotExist.file").toString());
     //Test a URL as a Type location
     QCOMPARE(o->property("childString").toString(), expectedChildString);
     //Test a URL as a Script location

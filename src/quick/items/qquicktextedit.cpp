@@ -1465,7 +1465,9 @@ void QQuickTextEdit::componentComplete()
     Q_D(QQuickTextEdit);
     QQuickImplicitSizeItem::componentComplete();
 
-    d->document->setBaseUrl(baseUrl());
+    const QUrl url = baseUrl();
+    const QQmlContext *context = qmlContext(this);
+    d->document->setBaseUrl(context ? context->resolvedUrl(url) : url);
 #if QT_CONFIG(texthtmlparser)
     if (d->richText)
         d->control->setHtml(d->text);

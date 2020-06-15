@@ -1396,29 +1396,25 @@ void tst_qqmlproperty::write()
     {
         PropertyObject o;
         QQmlProperty p(&o, "url");
+        const QUrl url = QUrl("main.qml");
 
-        QCOMPARE(p.write(QUrl("main.qml")), true);
-        QCOMPARE(o.url(), QUrl("main.qml"));
+        QCOMPARE(p.write(url), true);
+        QCOMPARE(o.url(), url);
 
         QQmlProperty p2(&o, "url", engine.rootContext());
 
-        QUrl result = engine.baseUrl().resolved(QUrl("main.qml"));
-        QVERIFY(result != QUrl("main.qml"));
-
-        QCOMPARE(p2.write(QUrl("main.qml")), true);
-        QCOMPARE(o.url(), result);
+        QCOMPARE(p2.write(url), true);
+        QCOMPARE(o.url(), url);
     }
     {   // static
         PropertyObject o;
+        const QUrl url = QUrl("main.qml");
 
-        QCOMPARE(QQmlProperty::write(&o, "url", QUrl("main.qml")), true);
-        QCOMPARE(o.url(), QUrl("main.qml"));
+        QCOMPARE(QQmlProperty::write(&o, "url", url), true);
+        QCOMPARE(o.url(), url);
 
-        QUrl result = engine.baseUrl().resolved(QUrl("main.qml"));
-        QVERIFY(result != QUrl("main.qml"));
-
-        QCOMPARE(QQmlProperty::write(&o, "url", QUrl("main.qml"), engine.rootContext()), true);
-        QCOMPARE(o.url(), result);
+        QCOMPARE(QQmlProperty::write(&o, "url", url, engine.rootContext()), true);
+        QCOMPARE(o.url(), url);
     }
 
     // Char/string-property

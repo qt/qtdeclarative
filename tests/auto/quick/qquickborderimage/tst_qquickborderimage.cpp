@@ -429,7 +429,7 @@ void tst_qquickborderimage::statusChanges_data()
     QTest::newRow("localfile") << testFileUrl("colors.png").toString() << 1 << false << QQuickImageBase::Ready;
     QTest::newRow("nofile") << "" << 0 << false << QQuickImageBase::Null;
     QTest::newRow("nonexistent") << testFileUrl("thisfiledoesnotexist.png").toString() << 1 << false << QQuickImageBase::Error;
-    QTest::newRow("noprotocol") << QString("thisfiledoesnotexisteither.png") << 2 << false << QQuickImageBase::Error;
+    QTest::newRow("noprotocol") << QString("thisfiledoesnotexisteither.png") << 1 << false << QQuickImageBase::Error;
     QTest::newRow("remote") << "/colors.png" << 2 << true << QQuickImageBase::Ready;
 }
 

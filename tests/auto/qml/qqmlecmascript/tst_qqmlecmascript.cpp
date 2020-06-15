@@ -481,7 +481,7 @@ void tst_qqmlecmascript::assignBasicTypes()
     QCOMPARE(object->boolProperty(), true);
     QCOMPARE(object->variantProperty(), QVariant("Hello World!"));
     QCOMPARE(object->vectorProperty(), QVector3D(10, 1, 2.2f));
-    QCOMPARE(object->urlProperty(), component.url().resolved(QUrl("main.qml")));
+    QCOMPARE(object->urlProperty(), QUrl("main.qml"));
     delete object;
     }
     {
@@ -510,7 +510,7 @@ void tst_qqmlecmascript::assignBasicTypes()
     QCOMPARE(object->boolProperty(), true);
     QCOMPARE(object->variantProperty(), QVariant("Hello World!"));
     QCOMPARE(object->vectorProperty(), QVector3D(10, 1, 2.2f));
-    QCOMPARE(object->urlProperty(), component.url().resolved(QUrl("main.qml")));
+    QCOMPARE(object->urlProperty(), QUrl("main.qml"));
     delete object;
     }
 }
@@ -6036,10 +6036,10 @@ void tst_qqmlecmascript::assignSequenceTypes()
     MySequenceConversionObject *msco4 = object->findChild<MySequenceConversionObject *>(QLatin1String("msco4"));
     MySequenceConversionObject *msco5 = object->findChild<MySequenceConversionObject *>(QLatin1String("msco5"));
     QVERIFY(msco1 != nullptr && msco2 != nullptr && msco3 != nullptr && msco4 != nullptr && msco5 != nullptr);
-    QCOMPARE(msco1->urlListProperty(), (QList<QUrl>() << QUrl(testFileUrl("example.html"))));
-    QCOMPARE(msco2->urlListProperty(), (QList<QUrl>() << QUrl(testFileUrl("example.html"))));
-    QCOMPARE(msco3->urlListProperty(), (QList<QUrl>() << QUrl(testFileUrl("example.html")) << QUrl(testFileUrl("example2.html"))));
-    QCOMPARE(msco4->urlListProperty(), (QList<QUrl>() << QUrl(testFileUrl("example.html")) << QUrl(testFileUrl("example2.html"))));
+    QCOMPARE(msco1->urlListProperty(), (QList<QUrl>() << QUrl("example.html")));
+    QCOMPARE(msco2->urlListProperty(), (QList<QUrl>() << QUrl("example.html")));
+    QCOMPARE(msco3->urlListProperty(), (QList<QUrl>() << QUrl("example.html") << QUrl("example2.html")));
+    QCOMPARE(msco4->urlListProperty(), (QList<QUrl>() << QUrl("example.html") << QUrl("example2.html")));
     QCOMPARE(msco5->urlListProperty(), (QList<QUrl>() << QUrl(testFileUrl("example.html")) << QUrl(testFileUrl("example2.html"))));
     delete object;
     }

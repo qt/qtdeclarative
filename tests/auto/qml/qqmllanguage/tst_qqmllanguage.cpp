@@ -814,7 +814,7 @@ void tst_qqmllanguage::assignBasicTypes()
     QCOMPARE(object->vector2Property(), QVector2D(2, 3));
     QCOMPARE(object->vector4Property(), QVector4D(10, 1, 2.2f, 2.3f));
     const QUrl encoded = QUrl::fromEncoded("main.qml?with%3cencoded%3edata", QUrl::TolerantMode);
-    QCOMPARE(object->urlProperty(), component.url().resolved(encoded));
+    QCOMPARE(object->urlProperty(), encoded);
     QVERIFY(object->objectProperty() != nullptr);
     MyTypeObject *child = qobject_cast<MyTypeObject *>(object->objectProperty());
     QVERIFY(child != nullptr);
@@ -1293,7 +1293,7 @@ void tst_qqmllanguage::bindTypeToJSValue()
         MyQmlObject *object = root->findChild<MyQmlObject *>("urlProperty");
         QJSValue value = object->qjsvalue();
         const QUrl encoded = QUrl::fromEncoded("main.qml?with%3cencoded%3edata", QUrl::TolerantMode);
-        QCOMPARE(value.toString(), component.url().resolved(encoded).toString());
+        QCOMPARE(value.toString(), encoded.toString());
     } {
         MyQmlObject *object = root->findChild<MyQmlObject *>("objectProperty");
         QJSValue value = object->qjsvalue();
@@ -1468,7 +1468,7 @@ void tst_qqmllanguage::dynamicProperties()
     QCOMPARE(object->property("doubleProperty"), QVariant(-10.1));
     QCOMPARE(object->property("realProperty"), QVariant((qreal)-19.9));
     QCOMPARE(object->property("stringProperty"), QVariant("Hello World!"));
-    QCOMPARE(object->property("urlProperty"), QVariant(testFileUrl("main.qml")));
+    QCOMPARE(object->property("urlProperty"), QVariant(QUrl("main.qml")));
     QCOMPARE(object->property("colorProperty"), QVariant(QColor("red")));
     QCOMPARE(object->property("dateProperty"), QVariant(QDate(1945, 9, 2)));
     QCOMPARE(object->property("varProperty"), QVariant("Hello World!"));

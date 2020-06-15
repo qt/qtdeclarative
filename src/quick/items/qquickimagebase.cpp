@@ -298,8 +298,9 @@ void QQuickImageBase::loadPixmap(const QUrl &url, LoadPixmapOptions loadOptions)
         options |= QQuickPixmap::Cache;
     d->pix.clear(this);
     QUrl loadUrl = url;
-    if (const QQmlEngine *engine = qmlEngine(this))
-        loadUrl = engine->interceptUrl(loadUrl, QQmlAbstractUrlInterceptor::UrlString);
+    const QQmlContext *context = qmlContext(this);
+    if (context)
+        loadUrl = context->resolvedUrl(url);
 
     if (loadOptions & HandleDPR) {
         const qreal targetDevicePixelRatio = (window() ? window()->effectiveDevicePixelRatio() : qApp->devicePixelRatio());
@@ -311,7 +312,8 @@ void QQuickImageBase::loadPixmap(const QUrl &url, LoadPixmapOptions loadOptions)
         if (!updatedDevicePixelRatio) {
             // (possible) local file: loadUrl and d->devicePixelRatio will be modified if
             // an "@2x" file is found.
-            resolve2xLocalFile(d->url, targetDevicePixelRatio, &loadUrl, &d->devicePixelRatio);
+            resolve2xLocalFile(context ? context->resolvedUrl(d->url) : d->url,
+                               targetDevicePixelRatio, &loadUrl, &d->devicePixelRatio);
         }
     }
 

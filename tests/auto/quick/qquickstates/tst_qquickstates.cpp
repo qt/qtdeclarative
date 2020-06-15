@@ -1360,7 +1360,7 @@ void tst_qquickstates::urlResolution()
     QVERIFY(myType != nullptr && image1 != nullptr && image2 != nullptr && image3 != nullptr);
 
     QQuickItemPrivate::get(myType)->setState("SetImageState");
-    QUrl resolved = testFileUrl("Implementation/images/qt-logo.png");
+    QUrl resolved = QUrl("images/qt-logo.png");
     QCOMPARE(image1->source(), resolved);
     QCOMPARE(image2->source(), resolved);
     QCOMPARE(image3->source(), resolved);

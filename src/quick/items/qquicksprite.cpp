@@ -40,6 +40,7 @@
 #include "qquicksprite_p.h"
 #include "qquickimagebase_p.h"
 #include <qqml.h>
+#include <QQmlContext>
 #include <QDebug>
 #include <QRandomGenerator>
 
@@ -261,14 +262,18 @@ void QQuickSprite::startImageLoading()
 {
     m_pix.clear(this);
     if (!m_source.isEmpty()) {
-        QQmlEngine *e = qmlEngine(this);
+        const QQmlContext *context = qmlContext(this);
+        QQmlEngine *e = context ? context->engine() : nullptr;
         if (!e) { //If not created in QML, you must set the QObject parent to the QML element so this can work
-            e = qmlEngine(parent());
+            context = qmlContext(parent());
+            e = context ? context->engine() : nullptr;
             if (!e)
                 qWarning() << "QQuickSprite: Cannot find QQmlEngine - this class is only for use in QML and may not work";
         }
-        QUrl loadUrl = m_source;
-        QQuickImageBase::resolve2xLocalFile(m_source, m_devicePixelRatio, &loadUrl, &m_devicePixelRatio);
+        const QUrl resolvedUrl = context ? context->resolvedUrl(m_source) : m_source;
+        QUrl loadUrl = resolvedUrl;
+        QQuickImageBase::resolve2xLocalFile(resolvedUrl, m_devicePixelRatio, &loadUrl,
+                                            &m_devicePixelRatio);
 
         m_pix.load(e, loadUrl);
     }

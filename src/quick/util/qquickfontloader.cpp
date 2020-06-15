@@ -247,24 +247,27 @@ void QQuickFontLoader::setSource(const QUrl &url)
     d->url = url;
     emit sourceChanged();
 
-    QString localFile = QQmlFile::urlToLocalFileOrQrc(d->url);
+    const QQmlContext *context = qmlContext(this);
+    const QUrl &resolvedUrl = context ? context->resolvedUrl(d->url) : d->url;
+    QString localFile = QQmlFile::urlToLocalFileOrQrc(resolvedUrl);
     if (!localFile.isEmpty()) {
-        if (!fontLoaderFonts()->map.contains(d->url)) {
+        if (!fontLoaderFonts()->map.contains(resolvedUrl)) {
             int id = QFontDatabase::addApplicationFont(localFile);
             updateFontInfo(id);
             if (id != -1) {
                 QQuickFontObject *fo = new QQuickFontObject(id);
-                fontLoaderFonts()->map[d->url] = fo;
+                fontLoaderFonts()->map[resolvedUrl] = fo;
             }
         } else {
-            updateFontInfo(fontLoaderFonts()->map.value(d->url)->id);
+            updateFontInfo(fontLoaderFonts()->map.value(resolvedUrl)->id);
         }
     } else {
-        if (!fontLoaderFonts()->map.contains(d->url)) {
+        if (!fontLoaderFonts()->map.contains(resolvedUrl)) {
+            Q_ASSERT(context);
 #if QT_CONFIG(qml_network)
             QQuickFontObject *fo = new QQuickFontObject;
-            fontLoaderFonts()->map[d->url] = fo;
-            fo->download(d->url, qmlEngine(this)->networkAccessManager());
+            fontLoaderFonts()->map[resolvedUrl] = fo;
+            fo->download(resolvedUrl, context->engine()->networkAccessManager());
             d->status = Loading;
             emit statusChanged();
             QObject::connect(fo, SIGNAL(fontDownloaded(int)),
@@ -273,7 +276,7 @@ void QQuickFontLoader::setSource(const QUrl &url)
 // Silently fail if compiled with no_network
 #endif
         } else {
-            QQuickFontObject *fo = fontLoaderFonts()->map.value(d->url);
+            QQuickFontObject *fo = fontLoaderFonts()->map.value(resolvedUrl);
             if (fo->id == -1) {
 #if QT_CONFIG(qml_network)
                 d->status = Loading;
@@ -321,8 +324,11 @@ void QQuickFontLoader::updateFontInfo(int id)
     }
 
     if (status != d->status) {
-        if (status == Error)
-            qmlWarning(this) << "Cannot load font: \"" << d->url.toString() << '"';
+        if (status == Error) {
+            const QQmlContext *context = qmlContext(this);
+            qmlWarning(this) << "Cannot load font: \""
+                             << (context ? context->resolvedUrl(d->url) : d->url).toString() << '"';
+        }
         d->status = status;
         emit statusChanged();
     }

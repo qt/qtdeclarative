@@ -1100,8 +1100,7 @@ QVariant QQmlPropertyPrivate::readValueProperty()
 }
 
 // helper function to allow assignment / binding to QList<QUrl> properties.
-QVariant QQmlPropertyPrivate::resolvedUrlSequence(
-        const QVariant &value, const QQmlRefPointer<QQmlContextData> &context)
+QVariant QQmlPropertyPrivate::urlSequence(const QVariant &value)
 {
     QList<QUrl> urls;
     if (value.userType() == qMetaTypeId<QUrl>()) {
@@ -1126,17 +1125,7 @@ QVariant QQmlPropertyPrivate::resolvedUrlSequence(
             urls.append(QUrl(urlStrings.at(i)));
     } // note: QList<QByteArray> is not currently supported.
 
-    QList<QUrl> resolvedUrls;
-    const int urlsSize = urls.size();
-    resolvedUrls.reserve(urlsSize);
-    for (int i = 0; i < urlsSize; ++i) {
-        QUrl u = urls.at(i);
-        if (context && u.isRelative() && !u.isEmpty())
-            u = context->resolvedUrl(u);
-        resolvedUrls.append(u);
-    }
-
-    return QVariant::fromValue<QList<QUrl> >(resolvedUrls);
+    return QVariant::fromValue<QList<QUrl> >(urls);
 }
 
 //writeEnumProperty MIRRORS the relelvant bit of QMetaProperty::write AND MUST BE KEPT IN SYNC!
@@ -1318,11 +1307,9 @@ bool QQmlPropertyPrivate::write(
         else
             return false;
 
-        if (context && u.isRelative() && !u.isEmpty())
-            u = context->resolvedUrl(u);
         return property.writeProperty(object, &u, flags);
     } else if (propertyType == qMetaTypeId<QList<QUrl>>()) {
-        QList<QUrl> urlSeq = resolvedUrlSequence(value, context).value<QList<QUrl>>();
+        QList<QUrl> urlSeq = urlSequence(value).value<QList<QUrl>>();
         return property.writeProperty(object, &urlSeq, flags);
     } else if (property.isQList()) {
         QQmlMetaObject listType;

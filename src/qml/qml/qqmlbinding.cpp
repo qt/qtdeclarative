@@ -426,7 +426,7 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
     } else if (result.isNull() && core.isQObject()) {
         value = QVariant::fromValue((QObject *)nullptr);
     } else if (core.propType() == qMetaTypeId<QList<QUrl> >()) {
-        value = QQmlPropertyPrivate::resolvedUrlSequence(v4engine->toVariant(result, qMetaTypeId<QList<QUrl> >()), context());
+        value = QQmlPropertyPrivate::urlSequence(v4engine->toVariant(result, qMetaTypeId<QList<QUrl>>()));
     } else if (!isVarProperty && type != qMetaTypeId<QJSValue>()) {
         value = v4engine->toVariant(result, type);
     }

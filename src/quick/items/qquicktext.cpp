@@ -1218,8 +1218,9 @@ void QQuickTextPrivate::setLineGeometry(QTextLine &line, qreal lineWidth, qreal 
                 image->position < line.textStart() + line.textLength()) {
 
                 if (!image->pix) {
-                    QUrl url = q->baseUrl().resolved(image->url);
-                    image->pix = new QQuickPixmap(qmlEngine(q), url, QRect(), image->size);
+                    const QQmlContext *context = qmlContext(q);
+                    const QUrl url = context->resolvedUrl(q->baseUrl()).resolved(image->url);
+                    image->pix = new QQuickPixmap(context->engine(), url, QRect(), image->size);
                     if (image->pix->isLoading()) {
                         image->pix->connectFinished(q, SLOT(imageDownloadFinished()));
                         if (!extra.isAllocated() || !extra->nbActiveDownloads)
@@ -1285,7 +1286,8 @@ void QQuickTextPrivate::ensureDoc()
         extra.value().doc = new QQuickTextDocumentWithImageResources(q);
         extra->doc->setPageSize(QSizeF(0, 0));
         extra->doc->setDocumentMargin(0);
-        extra->doc->setBaseUrl(q->baseUrl());
+        const QQmlContext *context = qmlContext(q);
+        extra->doc->setBaseUrl(context ? context->resolvedUrl(q->baseUrl()) : q->baseUrl());
         qmlobject_connect(extra->doc, QQuickTextDocumentWithImageResources, SIGNAL(imagesLoaded()),
                           q, QQuickText, SLOT(q_updateLayout()));
     }

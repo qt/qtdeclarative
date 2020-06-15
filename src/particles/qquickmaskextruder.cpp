@@ -40,9 +40,12 @@
 #include "qquickmaskextruder_p.h"
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlinfo.h>
+#include <QtQml/qqmlcontext.h>
+
 #include <QImage>
 #include <QDebug>
 #include <QRandomGenerator>
+
 QT_BEGIN_NAMESPACE
 /*!
     \qmltype MaskShape
@@ -85,7 +88,8 @@ void QQuickMaskExtruder::startMaskLoading()
     m_pix.clear(this);
     if (m_source.isEmpty())
         return;
-    m_pix.load(qmlEngine(this), m_source);
+    const QQmlContext *context = qmlContext(this);
+    m_pix.load(context->engine(), context->resolvedUrl(m_source));
     if (m_pix.isLoading())
         m_pix.connectFinished(this, SLOT(finishMaskLoading()));
     else

@@ -162,7 +162,7 @@ Item {
         }
 
         function test_clearSource() {
-            compare(clearSource.source, Qt.resolvedUrl("colors.png"))
+            compare(clearSource.source, "colors.png")
             compare(clearSource.width, 120)
             compare(clearSource.height, 120)
 
@@ -235,7 +235,7 @@ Item {
                 img.source = row.source;
             }
 
-            compare(img.source, Qt.resolvedUrl(row.source))
+            compare(img.source, row.source)
             compare(img.width, 300)
             compare(img.height, 300)
 
