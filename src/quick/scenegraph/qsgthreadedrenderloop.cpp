@@ -1270,7 +1270,8 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
 
         if (!w->thread->rhi) {
             QSGRhiSupport *rhiSupport = QSGRhiSupport::instance();
-            w->thread->offscreenSurface = rhiSupport->maybeCreateOffscreenSurface(window);
+            if (!w->thread->offscreenSurface)
+                w->thread->offscreenSurface = rhiSupport->maybeCreateOffscreenSurface(window);
             window->installEventFilter(this);
         }
 
