@@ -274,8 +274,6 @@ public:
 
     QColor clearColor;
 
-    uint clearBeforeRendering : 1;
-
     uint persistentGraphics : 1;
     uint persistentSceneGraph : 1;
 

@@ -593,9 +593,10 @@ void QQuickWindowPrivate::syncSceneGraph()
 
     // Copy the current state of clearing from window into renderer.
     renderer->setClearColor(clearColor);
-    QSGAbstractRenderer::ClearMode mode = QSGAbstractRenderer::ClearStencilBuffer | QSGAbstractRenderer::ClearDepthBuffer;
-    if (clearBeforeRendering)
-        mode |= QSGAbstractRenderer::ClearColorBuffer;
+    // Cannot skip clearing the color buffer in Qt 6 anymore.
+    const QSGAbstractRenderer::ClearMode mode = QSGAbstractRenderer::ClearColorBuffer
+                                                | QSGAbstractRenderer::ClearStencilBuffer
+                                                | QSGAbstractRenderer::ClearDepthBuffer;
     renderer->setClearMode(mode);
 
     renderer->setVisualizationMode(visualizationMode);
@@ -742,7 +743,6 @@ QQuickWindowPrivate::QQuickWindowPrivate()
     , renderControl(nullptr)
     , pointerEventRecursionGuard(0)
     , clearColor(Qt::white)
-    , clearBeforeRendering(true)
     , persistentGraphics(true)
     , persistentSceneGraph(true)
     , lastWheelEventAccepted(false)
@@ -4667,43 +4667,6 @@ QQmlIncubationController *QQuickWindow::incubationController() const
  */
 
 /*!
-    Sets whether the scene graph rendering of QML should clear the color buffer
-    before it starts rendering to \a enabled.
-
-    By disabling clearing of the color buffer, it is possible to render OpengGL content
-    under the scene graph.
-
-    The color buffer is cleared by default.
-
-    \warning As of Qt 6.0, setting \a enabled to false has no effect. As
-    explicit clear commands do not exist in some modern APIs, the scene graph
-    cannot offer this flexibility anymore. The images associated with a render
-    target will always get cleared when a render pass starts. As a solution, an
-    alternative to disabling scene graph issued clears is provided in form of
-    the beforeRenderPassRecording() signal.
-
-    \sa beforeRendering(), beforeRenderPassRecording()
- */
-
-void QQuickWindow::setClearBeforeRendering(bool enabled)
-{
-    Q_D(QQuickWindow);
-    d->clearBeforeRendering = enabled;
-}
-
-
-
-/*!
-    Returns whether clearing of the color buffer is done before rendering or not.
- */
-
-bool QQuickWindow::clearBeforeRendering() const
-{
-    Q_D(const QQuickWindow);
-    return d->clearBeforeRendering;
-}
-
-/*!
     \overload
  */
 
@@ -4862,10 +4825,9 @@ QSGTexture *QQuickWindow::createTextureFromNativeObject(NativeObjectType type,
     \property QQuickWindow::color
     \brief The color used to clear the color buffer at the beginning of each frame.
 
-    Setting the clear color has no effect when clearing is disabled.
     By default, the clear color is white.
 
-    \sa setClearBeforeRendering(), setDefaultAlphaBuffer()
+    \sa setDefaultAlphaBuffer()
  */
 
 void QQuickWindow::setColor(const QColor &color)

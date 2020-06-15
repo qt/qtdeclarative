@@ -649,7 +649,6 @@ int main(int argc, char ** argv)
             if (window) {
                 setWindowTitle(options.verbose, topLevel, window.data());
                 if (options.transparent) {
-                    window->setClearBeforeRendering(true);
                     window->setColor(QColor(Qt::transparent));
                     window->setFlags(Qt::FramelessWindowHint);
                 }

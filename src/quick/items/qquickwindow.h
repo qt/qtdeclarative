@@ -161,9 +161,6 @@ public:
                                               const QSize &size,
                                               CreateTextureOptions options = CreateTextureOption()) const;
 
-    void setClearBeforeRendering(bool enabled);
-    bool clearBeforeRendering() const;
-
     void setColor(const QColor &color);
     QColor color() const;
 
