@@ -102,9 +102,10 @@ T.ComboBox {
     }
 
     popup: T.Popup {
-        x: control.nativeBackground ? control.background.layoutRect.x : 0
-        y: control.nativeBackground ? control.background.layoutRect.y + control.background.layoutRect.height : control.height
-        width: control.nativeBackground ? control.background.layoutRect.width : control.width
+        readonly property var layoutMargins: control.nativeBackground ? control.background.layoutMargins : null
+        x: layoutMargins ? layoutMargins.left : 0
+        y: control.height - (layoutMargins ? layoutMargins.bottom : 0)
+        width: control.width - (layoutMargins ? layoutMargins.left + layoutMargins.right : 0)
         height: Math.min(contentItem.implicitHeight, control.Window.height - topMargin - bottomMargin)
         topMargin: 6
         bottomMargin: 6
