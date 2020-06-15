@@ -295,9 +295,7 @@ property is only invoked when the property is reassigned to a different object v
     Additionally, URLs may contain encoded characters using the 'percent-encoding' scheme
     specified by \l {http://tools.ietf.org/html/rfc3986}{RFC 3986}.  These characters
     will be preserved within properties of type \c url, to allow QML code to
-    construct precise URL values. An exception to this rule is the preemptive
-    decoding of directory-separator characters (\c '/') - these characters are decoded
-    to allow the URL to be correctly classified.
+    construct precise URL values.
 
     For example, a local file containing a '#' character, which would normally be
     interpreted as the beginning of the URL 'fragment' element, can be accessed by

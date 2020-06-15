@@ -214,11 +214,16 @@ void tst_QQuickLoader::sourceOrComponent_data()
     QTest::addColumn<QUrl>("sourceUrl");
     QTest::addColumn<QString>("errorString");
 
+    auto encodedTestFileUrl = [&](const char *file)
+    {
+        return dataDirectoryUrl().resolved(QUrl(file));
+    };
+
     QTest::newRow("source") << "source" << "source: 'Rect120x60.qml'\n" << testFileUrl("Rect120x60.qml") << "";
     QTest::newRow("source with subdir") << "source" << "source: 'subdir/Test.qml'\n" << testFileUrl("subdir/Test.qml") << "";
-    QTest::newRow("source with encoded subdir literal") << "source" << "source: 'subdir%2fTest.qml'\n" << testFileUrl("subdir/Test.qml") << "";
-    QTest::newRow("source with encoded subdir optimized binding") << "source" << "source: 'subdir' + '%2fTest.qml'\n" << testFileUrl("subdir/Test.qml") << "";
-    QTest::newRow("source with encoded subdir binding") << "source" << "source: encodeURIComponent('subdir/Test.qml')\n" << testFileUrl("subdir/Test.qml") << "";
+    QTest::newRow("source with encoded subdir literal") << "source" << "source: 'subdir%2fTest.qml'\n" << encodedTestFileUrl("subdir%2FTest.qml") << "";
+    QTest::newRow("source with encoded subdir optimized binding") << "source" << "source: 'subdir' + '%2fTest.qml'\n" << encodedTestFileUrl("subdir%2FTest.qml") << "";
+    QTest::newRow("source with encoded subdir binding") << "source" << "source: encodeURIComponent('subdir/Test.qml')\n" << encodedTestFileUrl("subdir%2FTest.qml") << "";
     QTest::newRow("sourceComponent") << "component" << "Component { id: comp; Rectangle { width: 100; height: 50 } }\n sourceComponent: comp\n" << QUrl() << "";
     QTest::newRow("invalid source") << "source" << "source: 'IDontExist.qml'\n" << testFileUrl("IDontExist.qml")
             << QString(testFileUrl("IDontExist.qml").toString() + ": No such file or directory");

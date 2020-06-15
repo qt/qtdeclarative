@@ -451,10 +451,9 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     break;
     case QMetaType::QUrl: {
         assertType(QV4::CompiledData::Binding::Type_String);
-        QString string = compilationUnit->bindingValueAsString(binding);
-        // Encoded dir-separators defeat QUrl processing - decode them first
-        string.replace(QLatin1String("%2f"), QLatin1String("/"), Qt::CaseInsensitive);
-        QUrl value = string.isEmpty() ? QUrl() : compilationUnit->finalUrl().resolved(QUrl(string));
+        const QString string = compilationUnit->bindingValueAsString(binding);
+        QUrl value = string.isEmpty() ? QUrl()
+                                      : compilationUnit->finalUrl().resolved(QUrl(string));
         // Apply URL interceptor
         value = engine->interceptUrl(value, QQmlAbstractUrlInterceptor::UrlString);
         property->writeProperty(_qobject, &value, propertyWriteFlags);

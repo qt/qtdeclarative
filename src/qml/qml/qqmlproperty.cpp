@@ -1309,21 +1309,14 @@ bool QQmlPropertyPrivate::write(
         return property.writeProperty(object, const_cast<QVariant *>(&value), flags);
     } else if (isUrl) {
         QUrl u;
-        if (variantType == QMetaType::QUrl) {
+        if (variantType == QMetaType::QUrl)
             u = value.toUrl();
-        } else if (variantType == QMetaType::QByteArray) {
-            QString input(QString::fromUtf8(value.toByteArray()));
-            // Encoded dir-separators defeat QUrl processing - decode them first
-            input.replace(QLatin1String("%2f"), QLatin1String("/"), Qt::CaseInsensitive);
-            u = QUrl(input);
-        } else if (variantType == QMetaType::QString) {
-            QString input(value.toString());
-            // Encoded dir-separators defeat QUrl processing - decode them first
-            input.replace(QLatin1String("%2f"), QLatin1String("/"), Qt::CaseInsensitive);
-            u = QUrl(input);
-        } else {
+        else if (variantType == QMetaType::QByteArray)
+            u = QUrl(QString::fromUtf8(value.toByteArray()));
+        else if (variantType == QMetaType::QString)
+            u = QUrl(value.toString());
+        else
             return false;
-        }
 
         if (context && u.isRelative() && !u.isEmpty())
             u = context->resolvedUrl(u);
