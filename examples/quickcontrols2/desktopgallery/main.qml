@@ -87,6 +87,7 @@ ApplicationWindow {
                 TextAreas { }
                 ComboBoxes { }
                 Frames { }
+                ProgressBars { }
                 ScrollBars { }
                 Sliders { }
                 SlidersSmall { }
@@ -112,6 +113,7 @@ ApplicationWindow {
                 CustomTextAreas { }
                 CustomComboBoxes { }
                 CustomFrames { }
+                CustomProgressBars { }
                 CustomScrollBars { }
                 CustomSliders { }
             }

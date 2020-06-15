@@ -357,8 +357,6 @@ protected:
     QStyleOptionProgressBar(int version);
 };
 
-typedef Q_DECL_DEPRECATED QStyleOptionProgressBar QStyleOptionProgressBarV2;
-
 class QStyleOptionMenuItem : public QStyleOption
 {
 public:

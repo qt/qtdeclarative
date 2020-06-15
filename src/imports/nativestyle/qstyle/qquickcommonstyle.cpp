@@ -4673,11 +4673,16 @@ QSize QCommonStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt, c
             sz = QSize(w, w);
         }
         break;
+    case CT_ProgressBar:
+        if (sz.isNull()) {
+            // Special case: return minimum nine patch image size
+            sz = QSize(10, 10);
+        }
+        break;
     case CT_ScrollBar:
     case CT_MenuBar:
     case CT_Menu:
     case CT_MenuBarItem:
-    case CT_ProgressBar:
     case CT_TabBarTab:
         // just return the contentsSize for now
         Q_FALLTHROUGH();

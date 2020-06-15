@@ -28,6 +28,8 @@ QML_FILES = \
     CustomComboBoxes.qml \
     ScrollBars.qml \
     CustomScrollBars.qml \
+    ProgressBars.qml \
+    CustomProgressBars.qml \
 
 OTHER_FILES += $$QML_FILES
 RESOURCES += $$QML_FILES

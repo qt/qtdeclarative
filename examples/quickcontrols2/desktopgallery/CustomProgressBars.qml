@@ -37,26 +37,79 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 2.15
+import QtQuick.Controls.impl 2.12
 
-Item {
-    anchors.left: parent.left
-    anchors.right: parent.right
-    anchors.rightMargin: 20 // make room for scrollbar
-    implicitHeight: groupBox.height
+ControlContainer {
+    id: container
+    title: "ProgressBars"
 
-    property alias title: groupBox.title
-    property real rowSpacing: 20
+    property int time: 0
+    Timer {
+        interval: 1000
+        running: true
+        repeat: true
+        onTriggered: {
+            time++
+            if (time > 10)
+                time = 0
+        }
+    }
 
-    default property alias data: layout.data
+    Row {
+        spacing: container.rowSpacing
 
-    GroupBox {
-        id: groupBox
-        anchors.left: parent.left
-        anchors.right: parent.right
+        ProgressBar {
+            id: c1
+            width: 100
+            from: 0
+            to: 10
+            value: time
+            indeterminate: false
+            padding: 5
+            background: Rectangle {
+                implicitWidth: 100
+                implicitHeight: 6
+                color: "darkgray"
+            }
+        }
 
-        ColumnLayout {
-            id: layout
-            spacing: 15
+        ProgressBar {
+            id: c2
+            width: 100
+            from: 0
+            to: 10
+            value: time
+            indeterminate: false
+            padding: 5
+            contentItem: ProgressBarImpl {
+                implicitHeight: 6
+                implicitWidth: 100
+                progress: c2.position
+                indeterminate: false
+                color: "lightgreen"
+            }
+        }
+
+        ProgressBar {
+            id: c3
+            width: 100
+            from: 0
+            to: 10
+            value: time
+            indeterminate: false
+            padding: 5
+            background: Rectangle {
+                implicitWidth: 100
+                implicitHeight: 6
+                color: "darkgray"
+            }
+            contentItem: ProgressBarImpl {
+                implicitHeight: 6
+                implicitWidth: 100
+                progress: c3.position
+                indeterminate: false
+                color: "lightgreen"
+            }
         }
     }
 }

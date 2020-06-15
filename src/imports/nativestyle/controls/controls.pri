@@ -10,3 +10,4 @@ QML_FILES += \
     $$PWD/DefaultTextArea.qml \
     $$PWD/DefaultComboBox.qml \
     $$PWD/DefaultScrollBar.qml \
+    $$PWD/DefaultProgressBar.qml \

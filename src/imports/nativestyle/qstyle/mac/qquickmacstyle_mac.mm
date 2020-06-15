@@ -1422,72 +1422,16 @@ QStyleHelper::WidgetSizePolicy QMacStylePrivate::effectiveAquaSizeConstrain(cons
 QStyleHelper::WidgetSizePolicy QMacStylePrivate::aquaSizeConstrain(const QStyleOption *option,
                                        QStyle::ContentsType ct, QSize szHint, QSize *insz) const
 {
-#if defined(QMAC_QAQUASTYLE_SIZE_CONSTRAIN) || defined(DEBUG_SIZE_CONSTRAINT)
-    if (option) {
-        if (option->state & QStyle::State_Small)
-            return QStyleHelper::SizeSmall;
-        if (option->state & QStyle::State_Mini)
-            return QStyleHelper::SizeMini;
-    }
+    if (!option)
+        return QStyleHelper::SizeLarge;
 
-    if (insz)
-        *insz = QSize();
-    if (qEnvironmentVariableIsSet("QWIDGET_ALL_SMALL"))
+    if (option->state & QStyle::State_Small)
         return QStyleHelper::SizeSmall;
-    if (qEnvironmentVariableIsSet("QWIDGET_ALL_MINI"))
+    if (option->state & QStyle::State_Mini)
         return QStyleHelper::SizeMini;
-    return QStyleHelper::SizeDefault;
 
-    QSize large = qt_aqua_get_known_size(ct, option, szHint, QStyleHelper::SizeLarge),
-          small = qt_aqua_get_known_size(ct, option, szHint, QStyleHelper::SizeSmall),
-          mini  = qt_aqua_get_known_size(ct, option, szHint, QStyleHelper::SizeMini);
-    bool guess_size = false;
-    QStyleHelper::WidgetSizePolicy ret = QStyleHelper::SizeDefault;
-    QStyleHelper::WidgetSizePolicy wsp = QStyleHelper::widgetSizePolicy(option);
-    if (wsp == QStyleHelper::SizeDefault)
-        guess_size = true;
-    else if (wsp == QStyleHelper::SizeMini)
-        ret = QStyleHelper::SizeMini;
-    else if (wsp == QStyleHelper::SizeSmall)
-        ret = QStyleHelper::SizeSmall;
-    else if (wsp == QStyleHelper::SizeLarge)
-        ret = QStyleHelper::SizeLarge;
-    if (guess_size)
-        ret = qt_aqua_guess_size(large, small, mini);
+    return QStyleHelper::SizeLarge;
 
-    QSize *sz = 0;
-    if (ret == QStyleHelper::SizeSmall)
-        sz = &small;
-    else if (ret == QStyleHelper::SizeLarge)
-        sz = &large;
-    else if (ret == QStyleHelper::SizeMini)
-        sz = &mini;
-    if (insz)
-        *insz = sz ? *sz : QSize(-1, -1);
-#ifdef DEBUG_SIZE_CONSTRAINT
-    if (sz) {
-        const char *size_desc = "Unknown";
-        if (sz == &small)
-            size_desc = "Small";
-        else if (sz == &large)
-            size_desc = "Large";
-        else if (sz == &mini)
-            size_desc = "Mini";
-        qDebug("%s - %s: %s taken (%d, %d) [%d, %d]",
-               widg ? widg->objectName().toLatin1().constData() : "*Unknown*",
-               widg ? widg->metaObject()->className() : "*Unknown*", size_desc, widg->width(), widg->height(),
-               sz->width(), sz->height());
-    }
-#endif
-    return ret;
-#else
-    if (insz)
-        *insz = QSize();
-    Q_UNUSED(widg);
-    Q_UNUSED(ct);
-    Q_UNUSED(szHint);
-    return QStyleHelper::SizeDefault;
-#endif
 }
 
 uint qHash(const QMacStylePrivate::CocoaControl &cw, uint seed = 0)
@@ -4155,10 +4099,9 @@ void QMacStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter
         }
         break;
     case CE_ProgressBarLabel:
-    case CE_ProgressBarGroove:
-        // Do nothing. All done in CE_ProgressBarContents. Only keep these for proxy style overrides.
-        break;
     case CE_ProgressBarContents:
+        break;
+    case CE_ProgressBarGroove:
         if (const QStyleOptionProgressBar *pb = qstyleoption_cast<const QStyleOptionProgressBar *>(opt)) {
             const bool isIndeterminate = (pb->minimum == 0 && pb->maximum == 0);
             const bool inverted = pb->invertedAppearance;
@@ -4169,7 +4112,8 @@ void QMacStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter
             QRect rect = pb->rect;
             const CGRect cgRect = rect.toCGRect();
 
-            const auto aquaSize = d->effectiveAquaSizeConstrain(opt);
+            const auto aquaSize = d->aquaSizeConstrain(opt);
+
 //            const QProgressStyleAnimation *animation = qobject_cast<QProgressStyleAnimation*>(d->animation(opt->styleObject));
             QIndeterminateProgressIndicator *ipi = nil;
 //            if (isIndeterminate || animation)
@@ -4644,16 +4588,18 @@ QRect QMacStyle::subElementRect(SubElement sr, const QStyleOption *opt) const
         rect = opt->rect;
         setLayoutItemMargins(+1, 0 /* SHOULD be -1, done for alignment */, 0, 0 /* SHOULD be -1, done for alignment */, &rect, opt->direction);
         break;
-    case SE_ProgressBarLayoutItem: {
-        rect = opt->rect;
-        int bottom = SIZE(3, 8, 8);
-        if (opt->state & State_Horizontal) {
-            rect.adjust(0, +1, 0, -bottom);
-        } else {
-            setLayoutItemMargins(+1, 0, -bottom, 0, &rect, opt->direction);
+    case SE_ProgressBarLayoutItem:
+        if (const QStyleOptionProgressBar *pb = qstyleoption_cast<const QStyleOptionProgressBar *>(opt)) {
+            const bool isIndeterminate = (pb->minimum == 0 && pb->maximum == 0);
+            rect = opt->rect;
+
+            if (isIndeterminate) {
+                rect.adjust(1, 2, -1, -2);
+            } else {
+                rect.adjust(1, 1, -1, -2);
+            }
         }
         break;
-    }
     case SE_PushButtonLayoutItem:
         if (const QStyleOptionButton *buttonOpt
                 = qstyleoption_cast<const QStyleOptionButton *>(opt)) {

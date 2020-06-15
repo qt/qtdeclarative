@@ -14,3 +14,4 @@ DefaultFrame 6.0 controls/DefaultFrame.qml
 DefaultTextArea 6.0 controls/DefaultTextArea.qml
 DefaultComboBox 6.0 controls/DefaultComboBox.qml
 DefaultScrollBar 6.0 controls/DefaultScrollBar.qml
+DefaultProgressBar 6.0 controls/DefaultProgressBar.qml

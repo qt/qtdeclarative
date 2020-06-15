@@ -34,29 +34,39 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Layouts 2.15
+#ifndef QQUICKSTYLEITEMPROGRESSBAR_H
+#define QQUICKSTYLEITEMPROGRESSBAR_H
 
-Item {
-    anchors.left: parent.left
-    anchors.right: parent.right
-    anchors.rightMargin: 20 // make room for scrollbar
-    implicitHeight: groupBox.height
+#include "qquickstyleitem.h"
+#include <QtQuickTemplates2/private/qquickprogressbar_p.h>
 
-    property alias title: groupBox.title
-    property real rowSpacing: 20
+class QQuickStyleItemProgressBar : public QQuickStyleItem
+{
+    Q_OBJECT
 
-    default property alias data: layout.data
+    Q_PROPERTY(SubControl subControl MEMBER m_subControl)
 
-    GroupBox {
-        id: groupBox
-        anchors.left: parent.left
-        anchors.right: parent.right
+    QML_NAMED_ELEMENT(ProgressBar)
 
-        ColumnLayout {
-            id: layout
-            spacing: 15
-        }
-    }
-}
+public:
+    enum SubControl {
+        Groove = 1,
+        Contents,
+    };
+    Q_ENUM(SubControl)
+
+    QFont styleFont(QQuickItem *control) override;
+
+protected:
+    void connectToControl() override;
+    void paintEvent(QPainter *painter) override;
+    StyleItemGeometry calculateGeometry() override;
+
+private:
+    void initStyleOption(QStyleOptionProgressBar &styleOption);
+
+private:
+   SubControl m_subControl = Groove;
+};
+
+#endif // QQUICKSTYLEITEMPROGRESSBAR_H

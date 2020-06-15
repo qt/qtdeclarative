@@ -38,25 +38,65 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 2.15
 
-Item {
-    anchors.left: parent.left
-    anchors.right: parent.right
-    anchors.rightMargin: 20 // make room for scrollbar
-    implicitHeight: groupBox.height
+ControlContainer {
+    id: container
+    title: "ProgressBars"
 
-    property alias title: groupBox.title
-    property real rowSpacing: 20
+    property int time: 0
+    Timer {
+        interval: 1000
+        running: true
+        repeat: true
+        onTriggered: {
+            time++
+            if (time > 10)
+                time = 0
+        }
+    }
 
-    default property alias data: layout.data
+    Row {
+        spacing: container.rowSpacing
 
-    GroupBox {
-        id: groupBox
-        anchors.left: parent.left
-        anchors.right: parent.right
+        ProgressBar {
+            width: 100
+            from: 0
+            to: 10
+            value: time
+            indeterminate: false
+        }
 
-        ColumnLayout {
-            id: layout
-            spacing: 15
+        ProgressBar {
+            width: 100
+            from: 0
+            to: 10
+            value: time
+            enabled: false
+            indeterminate: false
+        }
+
+        ProgressBar {
+            width: 100
+            from: 0
+            to: 10
+            indeterminate: true
+        }
+
+        ProgressBar {
+            width: 80
+            from: 0
+            to: 10
+            value: time
+            indeterminate: false
+            property bool qqc2_style_small
+        }
+
+        ProgressBar {
+            width: 60
+            from: 0
+            to: 10
+            value: time
+            indeterminate: false
+            property bool qqc2_style_mini
         }
     }
 }
