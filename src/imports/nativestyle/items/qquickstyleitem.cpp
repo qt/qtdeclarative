@@ -40,6 +40,7 @@
 
 #include <QtQuick/qsgninepatchnode.h>
 #include <QtQuick/private/qquickwindow_p.h>
+#include <QtQuick/qquickwindow.h>
 
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
@@ -181,14 +182,18 @@ void QQuickStyleItem::initStyleOptionBase(QStyleOption &styleOption)
         styleOption.state |= QStyle::State_Active;
 
     // Note: not all controls inherit from QQuickControl (e.g QQuickTextField)
-    if (const auto quickControl = dynamic_cast<QQuickControl *>(m_control.data())) {
+    if (const auto quickControl = dynamic_cast<QQuickControl *>(m_control.data()))
         styleOption.direction = quickControl->isMirrored() ? Qt::RightToLeft : Qt::LeftToRight;
-        if (quickControl->isEnabled())
+
+    if (window()) {
+        if (m_control->isEnabled())
             styleOption.state |= QStyle::State_Enabled;
-        if (quickControl->hasVisualFocus())
+        if (m_control->hasActiveFocus())
             styleOption.state |= QStyle::State_HasFocus;
-        if (quickControl->isUnderMouse())
+        if (m_control->isUnderMouse())
             styleOption.state |= QStyle::State_MouseOver;
+        // Should this depend on the focusReason (e.g. only TabFocus) ?
+        styleOption.state |= QStyle::State_KeyboardFocusChange;
     }
 
     qqc2Debug() << styleOption;

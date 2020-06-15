@@ -1168,12 +1168,6 @@ void QCommonStyle::drawControl(ControlElement element, const QStyleOption *opt, 
             QStyleOptionButton subopt = *btn;
             subopt.rect = subElementRect(SE_PushButtonContents, btn);
             proxy()->drawControl(CE_PushButtonLabel, &subopt, p);
-            if (btn->state & State_HasFocus) {
-                QStyleOptionFocusRect fropt;
-                fropt.QStyleOption::operator=(*btn);
-                fropt.rect = subElementRect(SE_PushButtonFocusRect, btn);
-                proxy()->drawPrimitive(PE_FrameFocusRect, &fropt, p);
-            }
         }
         break;
     case CE_PushButtonBevel:
@@ -1197,6 +1191,12 @@ void QCommonStyle::drawControl(ControlElement element, const QStyleOption *opt, 
                 QStyleOptionButton newBtn = *btn;
                 newBtn.rect = QRect(ir.right() - mbi + 2, ir.height()/2 - mbi/2 + 3, mbi - 6, mbi - 6);
                 proxy()->drawPrimitive(PE_IndicatorArrowDown, &newBtn, p);
+            }
+            if (btn->state & State_HasFocus) {
+                QStyleOptionFocusRect fropt;
+                fropt.QStyleOption::operator=(*btn);
+                fropt.rect = subElementRect(SE_PushButtonFocusRect, btn);
+                proxy()->drawPrimitive(PE_FrameFocusRect, &fropt, p);
             }
         }
         break;
