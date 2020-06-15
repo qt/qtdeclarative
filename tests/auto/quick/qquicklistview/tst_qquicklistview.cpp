@@ -294,6 +294,7 @@ private slots:
     void reuse_checkThatItemsAreReused();
     void moveObjectModelItemToAnotherObjectModel();
     void changeModelAndDestroyTheOldOne();
+    void objectModelCulling();
 
     void requiredObjectListModel();
 
@@ -9986,6 +9987,30 @@ void tst_QQuickListView::changeModelAndDestroyTheOldOne()  // QTBUG-80203
 
     QVERIFY(QQuickTest::qWaitForItemPolished(root));
     // no crash
+}
+
+void tst_QQuickListView::objectModelCulling()
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("objectModelCulling.qml"));
+    window->resize(640, 480);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+    QObject *root = window->rootObject();
+    QVERIFY(root);
+    auto listView = root->findChild<QQuickListView *>("lv");
+    QVERIFY(listView);
+    auto model1 = root->findChild<QObject *>("model1");
+    QVERIFY(model1);
+    auto model2 = root->findChild<QObject *>("model2");
+    QVERIFY(model2);
+    auto redRect = root->findChild<QQuickItem *>("redRect");
+    QVERIFY(redRect);
+    auto redRectPriv = QQuickItemPrivate::get(redRect);
+    listView->setModel(QVariant::fromValue(model1));
+    QVERIFY(!redRectPriv->culled);
+    listView->setModel(QVariant::fromValue(model2));
+    QTRY_VERIFY(redRectPriv->culled);
 }
 
 class DataObject : public QObject
