@@ -1460,62 +1460,97 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     \section1 Rendering
 
     QQuickWindow uses a scene graph to represent what needs to be rendered.
-    This scene graph is disconnected from the QML scene and
-    potentially lives in another thread, depending on the platform
-    implementation. Since the rendering scene graph lives
-    independently from the QML scene, it can also be completely
-    released without affecting the state of the QML scene.
+    This scene graph is disconnected from the QML scene and potentially lives in
+    another thread, depending on the platform implementation. Since the
+    rendering scene graph lives independently from the QML scene, it can also be
+    completely released without affecting the state of the QML scene.
 
-    The sceneGraphInitialized() signal is emitted on the rendering
-    thread before the QML scene is rendered to the screen for the
-    first time. If the rendering scene graph has been released, the
-    signal will be emitted again before the next frame is rendered.
+    The sceneGraphInitialized() signal is emitted on the rendering thread before
+    the QML scene is rendered to the screen for the first time. If the rendering
+    scene graph has been released, the signal will be emitted again before the
+    next frame is rendered. A visible, on-screen QQuickWindow is driven
+    internally by a \c{render loop}, of which there are multiple implementations
+    provided in the scene graph. For details on the scene graph rendering
+    process, see \l{Qt Quick Scene Graph}.
 
+    By default, a QQuickWindow renders using an accelerated 3D graphics API,
+    such as OpenGL or Vulkan. See \l{Scene Graph Adaptations} for a detailed
+    overview of scene graph backends and the supported graphics APIs.
 
-    \section2 Integration with OpenGL
+    \warning It is crucial that graphics operations and interaction with the
+    scene graph happens exclusively on the rendering thread, primarily during
+    the updatePaintNode() phase.
 
-    When using the default OpenGL adaptation, it is possible to integrate
-    OpenGL calls directly into the QQuickWindow using the same OpenGL
-    context as the Qt Quick Scene Graph. This is done by connecting to the
-    QQuickWindow::beforeRendering() or QQuickWindow::afterRendering()
-    signal.
+    \warning As many of the signals related to rendering are emitted from the
+    rendering thread, connections should be made using Qt::DirectConnection.
 
-    \note When using QQuickWindow::beforeRendering(), make sure to
-    disable clearing before rendering with
-    QQuickWindow::setClearBeforeRendering().
+    \section2 Integration with Accelerated 3D Graphics APIs
 
+    It is possible to integrate OpenGL, Vulkan, Metal, or Direct3D 11 calls
+    directly into the QQuickWindow, as long as the QQuickWindow and the
+    underlying scene graph is rendering using the same API. To access native
+    graphics objects, such as device or context object handles, use
+    QSGRendererInterface. An instance of QSGRendererInterface is queriable from
+    QQuickWindow by calling rendererInterface(). The enablers for this
+    integration are the beforeRendering(), beforeRenderPassRecording(),
+    afterRenderPassRecording(), and related signals. These allow rendering
+    underlays or overlays. Alternatively, createTextureFromNativeObject() allows
+    wrapping an existing native texture or image object in a QSGTexture that can
+    then be used with the scene graph.
 
-    \section2 Exposure and Visibility
+    \section2 Rendering without Acceleration
 
-    When a QQuickWindow instance is deliberately hidden with hide() or
-    setVisible(false), it will stop rendering and its scene graph and
-    graphics context might be released. The sceneGraphInvalidated()
-    signal will be emitted when this happens.
+    A limited, pure software based rendering path is available as well. With the
+    \c software backend, a number of Qt Quick features are not available, QML
+    items relying on these will not be rendered at all. At the same time, this
+    allows QQuickWindow to be functional even on systems where there is no 3D
+    graphics API available at all. See \l{Qt Quick Software Adaptation} for more
+    details.
 
-    \warning It is crucial that graphics operations and interaction with
-    the scene graph happens exclusively on the rendering thread,
-    primarily during the updatePaintNode() phase.
+    \section2 Redirected Rendering
 
-    \warning As signals related to rendering might be emitted from the
-    rendering thread, connections should be made using
-    Qt::DirectConnection.
-
+    A QQuickWindow is not necessarily backed by a native window on screen. The
+    rendering can be redirected to target a custom render target, such as a
+    given native texture. This is achieved in combination with the
+    QQuickRenderControl class, and functions such as setRenderTarge() and
+    setGraphicsDevice(). In this case, the QQuickWindow represents the scene,
+    and provides the intrastructure for rendering a frame. It will not be backed
+    by a render loop and a native window. Instead, in this case the application
+    drives rendering, effectively substituting for the render loops. This allows
+    generating image sequences, rendering into textures for use in external 3D
+    engines, or rendering Qt Quick content within a VR environment.
 
     \section2 Resource Management
 
-    QML will try to cache images and scene graph nodes to
-    improve performance, but in some low-memory scenarios it might be
-    required to aggressively release these resources. The
-    releaseResources() can be used to force the clean up of certain
-    resources. Calling releaseResources() may result in the entire
-    scene graph and in the case of the OpenGL adaptation the associated
-    context will be deleted. The sceneGraphInvalidated() signal will be
-    emitted when this happens.
+    QML will try to cache images and scene graph nodes to improve performance,
+    but in some low-memory scenarios it might be required to aggressively
+    release these resources. The releaseResources() function can be used to
+    force the clean up of certain resources, especially resource that are cached
+    and can be recreated later when needed again.
+
+    Additionally, calling releaseResources() may result in releasing the entire
+    scene graph and the associated graphics resources. The
+    sceneGraphInvalidated() signal will be emitted when this happens. This
+    behavior is controlled by the setPersistentGraphics() and
+    setPersistentSceneGraph() functions.
 
     \note All classes with QSG prefix should be used solely on the scene graph's
     rendering thread. See \l {Scene Graph and Rendering} for more information.
 
-    \section2 Context and Surface Formats
+    \section2 Exposure and Visibility
+
+    When a QQuickWindow instance is deliberately hidden with hide() or
+    setVisible(false), it will stop rendering and its scene graph and graphics
+    context might be released as well. This depends on the settings configured
+    by setPersistentGraphics() and setPersistentSceneGraph(). The behavior in
+    this respect is identical to explicitly calling the releaseResources()
+    function. A window can become not exposed, in other words non-renderable, by
+    other means as well. This depends on the platform and windowing system. For
+    example, on Windows minimizing a window makes it stop rendering.  On \macos
+    fully obscuring a window by other windows on top triggers the same. On
+    Linux/X11, the behavior is dependent on the window manager.
+
+    \section2 OpenGL Context and Surface Formats
 
     While it is possible to specify a QSurfaceFormat for every QQuickWindow by
     calling the member function setFormat(), windows may also be created from
@@ -1525,8 +1560,6 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     example to request a given OpenGL version or profile. Such applications can
     call the static function QSurfaceFormat::setDefaultFormat() at startup. The
     specified format will be used for all Quick windows created afterwards.
-
-    \sa {Scene Graph - OpenGL Under QML}
 */
 
 /*!
@@ -4038,10 +4071,10 @@ bool QQuickWindow::isSceneGraphInitialized() const
     has been invalidated and all user resources tied to that context
     should be released.
 
-    In the case of the default OpenGL adaptation the context of this
-    window will be bound when this function is called. The only exception
-    is if the native OpenGL has been destroyed outside Qt's control,
-    for instance through EGL_CONTEXT_LOST.
+    When rendering with OpenGL, the QOpenGLContext of this window will
+    be bound when this function is called. The only exception is if
+    the native OpenGL has been destroyed outside Qt's control, for
+    instance through EGL_CONTEXT_LOST.
 
     This signal will be emitted from the scene graph rendering thread.
  */
@@ -4293,8 +4326,10 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     \value TextureHasMipmaps The texture has mipmaps and can be drawn with
     mipmapping enabled.
 
-    \value TextureOwnsGLTexture The texture object owns the texture id and
-    will delete the OpenGL texture when the texture object is deleted.
+    \value TextureOwnsGLTexture As of Qt 6.0, this flag is not used in practice
+    and is ignored. Native graphics resource ownership is not transferable to
+    the wrapping QSGTexture, because Qt Quick may not have the necessary details
+    on how such an object and the associated memory should be freed.
 
     \value TextureCanUseAtlas The image can be uploaded into a texture atlas.
 
@@ -4343,15 +4378,16 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     This signal can be used to do any preparation required before calls to
     QQuickItem::updatePaintNode().
 
-    The OpenGL context used for rendering the scene graph will be bound at this point.
+    When using OpenGL, the QOpenGLContext used for rendering by the scene graph
+    will be bound at this point.
 
     \warning This signal is emitted from the scene graph rendering thread. If your
     slot function needs to finish before execution continues, you must make sure that
     the connection is direct (see Qt::ConnectionType).
 
-    \warning Make very sure that a signal handler for beforeSynchronizing leaves the GL
-    context in the same state as it was when the signal handler was entered. Failing to
-    do so can result in the scene not rendering properly.
+    \warning When using OpenGL, be aware that setting OpenGL 3.x or 4.x specific
+    states and leaving these enabled or set to non-default values when returning
+    from the connected slot can interfere with the scene graph's rendering.
 */
 
 /*!
@@ -4367,16 +4403,16 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     This signal can be used to do preparation required after calls to
     QQuickItem::updatePaintNode(), while the GUI thread is still locked.
 
-    The graphics context used for rendering the scene graph will be bound at this point.
+    When using OpenGL, the QOpenGLContext used for rendering by the scene graph
+    will be bound at this point.
 
     \warning This signal is emitted from the scene graph rendering thread. If your
     slot function needs to finish before execution continues, you must make sure that
     the connection is direct (see Qt::ConnectionType).
 
-    \warning When using the OpenGL adaptation, make sure that a signal handler for
-    afterSynchronizing leaves the OpenGL context in the same state as it was when the
-    signal handler was entered. Failing to do so can result in the scene not rendering
-    properly.
+    \warning When using OpenGL, be aware that setting OpenGL 3.x or 4.x specific
+    states and leaving these enabled or set to non-default values when returning
+    from the connected slot can interfere with the scene graph's rendering.
 
     \since 5.3
  */
@@ -4390,34 +4426,31 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 /*!
     \fn void QQuickWindow::beforeRendering()
 
-    This signal is emitted before the scene starts rendering.
+    This signal is emitted after the preparations for the frame have been done,
+    meaning there is a command buffer in recording mode, where applicable. If
+    desired, the slot function connected to this signal can query native
+    resources like the command before via QSGRendererInterface. Note however
+    that the recording of the main render pass is not yet started at this point
+    and it is not possible to add commands within that pass. Starting a pass
+    means clearing the color, depth, and stencil buffers so it is not possible
+    to achieve an underlay type of rendering by just connecting to this
+    signal. Rather, connect to beforeRenderPassRecording(). However, connecting
+    to this signal is still important if the recording of copy type of commands
+    is desired since those cannot be enqueued within a render pass.
 
-    Combined with the modes for clearing the background, this option
-    can be used to paint using raw OpenGL under QML content.
-
-    The OpenGL context used for rendering the scene graph will be bound
-    at this point.
-
-    When using the RHI, the signal is emitted after the preparations for the
-    frame have been done, meaning there is a command buffer in recording mode,
-    where applicable. If desired, the slot function connected to this signal
-    can query native resources like the command before via
-    QSGRendererInterface. Note however that the recording of the main render
-    pass is not yet started at this point and it is not possible to add
-    commands within that pass. Starting a pass means clearing the color, depth,
-    and stencil buffers so it is not possible to achieve an underlay type of
-    rendering by just connecting to this signal. Rather, connect to
-    beforeRenderPassRecording(). However, connecting to this signal is still
-    important if the recording of copy type of commands is desired since those
-    cannot be enqueued within a render pass.
+    When using OpenGL, the QOpenGLContext used for rendering by the scene graph
+    will be bound at this point.
 
     \warning This signal is emitted from the scene graph rendering thread. If your
     slot function needs to finish before execution continues, you must make sure that
     the connection is direct (see Qt::ConnectionType).
 
-    \warning Make very sure that a signal handler for beforeRendering leaves the OpenGL
-    context in the same state as it was when the signal handler was entered. Failing to
-    do so can result in the scene not rendering properly.
+    \warning When using OpenGL, be aware that setting OpenGL 3.x or 4.x specific
+    states and leaving these enabled or set to non-default values when returning
+    from the connected slot can interfere with the scene graph's rendering.
+
+    \sa rendererInterface(), {Scene Graph - OpenGL Under QML}, {Scene Graph - Metal Under QML},
+    {Scene Graph - Vulkan Under QML}, {Scene Graph - Direct3D 11 Under QML}
 */
 
 /*!
@@ -4428,32 +4461,31 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 /*!
     \fn void QQuickWindow::afterRendering()
 
-    This signal is emitted after the scene has completed rendering, before swapbuffers is called.
-
-    This signal can be used to paint using raw OpenGL on top of QML content,
-    or to do screen scraping of the current frame buffer.
-
-    The OpenGL context used for rendering the scene graph will be bound at this point.
-
-    When using the RHI, the signal is emitted after scene graph has added its
-    commands to the command buffer, which is not yet submitted to the graphics
-    queue. If desired, the slot function connected to this signal can query
-    native resources, like the command buffer, before via QSGRendererInterface.
-    Note however that the render pass (or passes) are already recorded at this
-    point and it is not possible to add more commands within the scenegraph's
+    The signal is emitted after scene graph has added its commands to the
+    command buffer, which is not yet submitted to the graphics queue. If
+    desired, the slot function connected to this signal can query native
+    resources, like the command buffer, before via QSGRendererInterface.  Note
+    however that the render pass (or passes) are already recorded at this point
+    and it is not possible to add more commands within the scenegraph's
     pass. Instead, use afterRenderPassRecording() for that. This signal has
-    therefore limited use and is rarely needed in an RHI-based setup. Rather,
-    it is the combination of beforeRendering() + beforeRenderPassRecording() or
-    beforeRendering() + afterRenderPassRecording() that is typically used to
-    achieve under- or overlaying of the custom rendering.
+    therefore limited use in Qt 6, unlike in Qt 5. Rather, it is the combination
+    of beforeRendering() and beforeRenderPassRecording(), or beforeRendering()
+    and afterRenderPassRecording(), that is typically used to achieve under- or
+    overlaying of the custom rendering.
+
+    When using OpenGL, the QOpenGLContext used for rendering by the scene graph
+    will be bound at this point.
 
     \warning This signal is emitted from the scene graph rendering thread. If your
     slot function needs to finish before execution continues, you must make sure that
     the connection is direct (see Qt::ConnectionType).
 
-    \warning Make very sure that a signal handler for afterRendering() leaves the OpenGL
-    context in the same state as it was when the signal handler was entered. Failing to
-    do so can result in the scene not rendering properly.
+    \warning When using OpenGL, be aware that setting OpenGL 3.x or 4.x specific
+    states and leaving these enabled or set to non-default values when returning
+    from the connected slot can interfere with the scene graph's rendering.
+
+    \sa rendererInterface(), {Scene Graph - OpenGL Under QML}, {Scene Graph - Metal Under QML},
+    {Scene Graph - Vulkan Under QML}, {Scene Graph - Direct3D 11 Under QML}
  */
 
 /*!
@@ -4469,18 +4501,12 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     by the time this signal is emitted.) The render pass is already active on
     the command buffer when the signal is emitted.
 
-    This signal is applicable when using the RHI graphics abstraction with the
-    scenegraph. It is emitted later than beforeRendering() and it guarantees
-    that not just the frame, but also the recording of the scenegraph's main
-    render pass is active. This allows inserting commands without having to
-    generate an entire, separate render pass (which would typically clear the
-    attached images). The native graphics objects can be queried via
+    This signal is emitted later than beforeRendering() and it guarantees that
+    not just the frame, but also the recording of the scenegraph's main render
+    pass is active. This allows inserting commands without having to generate an
+    entire, separate render pass (which would typically clear the attached
+    images). The native graphics objects can be queried via
     QSGRendererInterface.
-
-    When not running with the RHI (and using OpenGL directly), the signal is
-    emitted after the renderer has cleared the render target. This makes it
-    possible to create applications that function identically both with and
-    without the RHI.
 
     \note Resource updates (uploads, copies) typically cannot be enqueued from
     within a render pass. Therefore, more complex user rendering will need to
@@ -4489,6 +4515,8 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     \warning This signal is emitted from the scene graph rendering thread. If your
     slot function needs to finish before execution continues, you must make sure that
     the connection is direct (see Qt::ConnectionType).
+
+    \sa rendererInterface()
 
     \since 5.14
 */
@@ -4506,18 +4534,12 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     its main render pass, but the pass is not yet finalized on the command
     buffer.
 
-    This signal is applicable when using the RHI graphics abstraction with the
-    scenegraph. It is emitted earlier than afterRendering() and it guarantees
-    that not just the frame, but also the recording of the scenegraph's main
-    render pass is still active. This allows inserting commands without having
-    to generate an entire, separate render pass (which would typically clear
-    the attached images). The native graphics objects can be queried via
+    This signal is emitted earlier than afterRendering(), and it guarantees that
+    not just the frame but also the recording of the scenegraph's main render
+    pass is still active. This allows inserting commands without having to
+    generate an entire, separate render pass (which would typically clear the
+    attached images). The native graphics objects can be queried via
     QSGRendererInterface.
-
-    When not running with the RHI (and using OpenGL directly), the signal is
-    emitted after the renderer has finished its rendering, but before
-    afterRendering(). This makes it possible to create applications that
-    function identically both with and without the RHI.
 
     \note Resource updates (uploads, copies) typically cannot be enqueued from
     within a render pass. Therefore, more complex user rendering will need to
@@ -4526,6 +4548,8 @@ QQmlIncubationController *QQuickWindow::incubationController() const
     \warning This signal is emitted from the scene graph rendering thread. If your
     slot function needs to finish before execution continues, you must make sure that
     the connection is direct (see Qt::ConnectionType).
+
+    \sa rendererInterface()
 
     \since 5.14
 */
@@ -4549,7 +4573,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 
     \since 6.0
 
-    \sa afterFrameEnd()
+    \sa afterFrameEnd(), rendererInterface()
 */
 
 /*!
@@ -4574,7 +4598,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 
     \since 6.0
 
-    \sa beforeFrameBegin()
+    \sa beforeFrameBegin(), rendererInterface()
 */
 
 /*!
@@ -4651,13 +4675,12 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 
     The color buffer is cleared by default.
 
-    \warning This flag is ignored completely when running with the RHI graphics
-    abstraction instead of using OpenGL directly. As explicit clear commands
-    simply do not exist in some modern APIs, the scene graph cannot offer this
-    flexibility anymore. The images associated with a render target will always
-    get cleared when a render pass starts. As a solution, an alternative to
-    disabling scene graph issued clears is provided in form of the
-    beforeRenderPassRecording() signal.
+    \warning As of Qt 6.0, setting \a enabled to false has no effect. As
+    explicit clear commands do not exist in some modern APIs, the scene graph
+    cannot offer this flexibility anymore. The images associated with a render
+    target will always get cleared when a render pass starts. As a solution, an
+    alternative to disabling scene graph issued clears is provided in form of
+    the beforeRenderPassRecording() signal.
 
     \sa beforeRendering(), beforeRenderPassRecording()
  */
@@ -4695,8 +4718,8 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image) const
     alpha channel, the corresponding texture will have an alpha channel.
 
     The caller of the function is responsible for deleting the returned texture.
-    For example whe using the OpenGL adaptation the actual OpenGL texture will
-    be deleted when the texture object is deleted.
+    The underlying native texture object is then destroyed together with the
+    QSGTexture.
 
     When \a options contains TextureCanUseAtlas, the engine may put the image
     into a texture atlas. Textures in an atlas need to rely on
@@ -4713,9 +4736,10 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image) const
     texture which can use mipmap filtering. Mipmapped textures can not be in
     an atlas.
 
-    When using the OpenGL adaptation, the returned texture will be using
-    \c GL_TEXTURE_2D as texture target and \c GL_RGBA as internal format.
-    Reimplement QSGTexture to create textures with different parameters.
+    When the scene graph uses OpenGL, the returned texture will be using \c
+    GL_TEXTURE_2D as texture target and \c GL_RGBA as internal format. With
+    other graphics APIs, the texture format is typically \c RGBA8. Reimplement
+    QSGTexture to create textures with different parameters.
 
     \warning This function will return 0 if the scene graph has not yet been
     initialized.
@@ -4768,17 +4792,15 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image, CreateText
 
     This function is currently suitable for 2D RGBA textures only.
 
-    Unlike createTextureFromId(), this function supports both direct OpenGL
-    usage and the RHI abstracted rendering path.
-
     \warning This function will return null if the scenegraph has not yet been
     initialized.
 
     Use \a options to customize the texture attributes. Only the
     TextureHasAlphaChannel and TextureHasMipmaps are taken into account here.
 
-    \warning Unlike createTextureFromId(), this function never takes ownership
-    of the native object, and the TextureOwnsGLTexture flag is ignored.
+    \warning Unlike the now-removed createTextureFromId() in Qt 5, this function
+    never takes ownership of the native object, and the TextureOwnsGLTexture
+    flag is ignored.
 
     \a size specifies the size in pixels.
 
@@ -4790,7 +4812,8 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image, CreateText
     \a nativeLayout is only used for APIs like Vulkan. When applicable, it must
     specify the current image layout, such as, a VkImageLayout value.
 
-    \sa sceneGraphInitialized(), QSGTexture, QSGTexture::nativeTexture()
+    \sa sceneGraphInitialized(), QSGTexture, QSGTexture::nativeTexture(),
+    {Scene Graph - Metal Texture Import}, {Scene Graph - Vulkan Texture Import}
 
     \since 5.14
  */
@@ -4837,7 +4860,7 @@ QSGTexture *QQuickWindow::createTextureFromNativeObject(NativeObjectType type,
 
 /*!
     \property QQuickWindow::color
-    \brief The color used to clear the OpenGL context.
+    \brief The color used to clear the color buffer at the beginning of each frame.
 
     Setting the clear color has no effect when clearing is disabled.
     By default, the clear color is white.
@@ -4955,10 +4978,9 @@ const QQuickWindow::GraphicsStateInfo &QQuickWindow::graphicsStateInfo()
     Therefore, always query CommandListResource after calling this function. Do
     not attempt to reuse an object from an earlier query.
 
-    \note When the scenegraph is using the RHI graphics abstraction layer with
-    the OpenGL backend underneath, pay attention to the fact that the OpenGL
-    state in the context can have arbitrary settings, and this function does not
-    perform any resetting of the state back to defaults.
+    \note When the scenegraph is using OpenGL, pay attention to the fact that
+    the OpenGL state in the context can have arbitrary settings, and this
+    function does not perform any resetting of the state back to defaults.
 
     \sa endExternalCommands()
 
@@ -5457,13 +5479,12 @@ void QQuickWindow::endExternalCommands()
     will happen on the rendering thread.
 
     If \a stage is \l NoStage, \a job will be run at the earliest opportunity
-    whenever the render thread is not busy rendering a frame. If there is no
-    OpenGL context available or the window is not exposed at the time the job is
-    either posted or handled, it is deleted without executing the run() method.
-    If a non-threaded renderer is in use, the run() method of the job is executed
-    synchronously.
-    The OpenGL context is changed to the renderer context before executing a
-    \l NoStage job.
+    whenever the render thread is not busy rendering a frame. If the window is
+    not exposed, and is not renderable, at the time the job is either posted or
+    handled, the job is deleted without executing the run() method.  If a
+    non-threaded renderer is in use, the run() method of the job is executed
+    synchronously. When rendering with OpenGL, the OpenGL context is changed to
+    the renderer's context before executing any job, including \l NoStage jobs.
 
     \note This function does not trigger rendering; the jobs targeting any other
     stage than NoStage will be stored run until rendering is triggered elsewhere.
@@ -5573,9 +5594,12 @@ QSGRendererInterface *QQuickWindow::rendererInterface() const
 }
 
 /*!
-    Requests a Qt Quick scenegraph backend for the specified graphics \a api.
-    Backends can either be built-in or be installed in form of dynamically
-    loaded plugins.
+    Requests the specified scene graph or RHI \a backend. Backends can either be
+    built-in or be installed in form of dynamically loaded plugins. When the
+    built-in, default graphics adaptation is used, \a backend specifies which
+    graphics API (OpenGL, Vulkan, Metal, or Direct3D) the scene graph should use
+    to render. In addition, the \c software backend is built-in as well, and can
+    be requested by setting \a api to QSGRendererInterface::Software.
 
     \note The call to the function must happen before constructing the first
     QQuickWindow in the application. The graphics API cannot be changed
@@ -5583,9 +5607,6 @@ QSGRendererInterface *QQuickWindow::rendererInterface() const
     relaxed: it is possible to change the graphics API, but only when all
     existing QQuickRenderControl and QQuickWindow instances have been
     destroyed.
-
-    If the selected backend is invalid or an error occurs, the default backend
-    (OpenGL or software, depending on the Qt configuration) is used.
 
     \since 5.8
  */
@@ -5605,16 +5626,16 @@ void QQuickWindow::setSceneGraphBackend(QSGRendererInterface::GraphicsApi api)
 }
 
 /*!
-    Requests the specified Qt Quick scenegraph \a backend. Backends can either
-    be built-in or be installed in form of dynamically loaded plugins.
+    Requests a Qt Quick scenegraph backend for the specified graphics \a api.
+    Backends can either be built-in or be installed in form of dynamically
+    loaded plugins.
 
     \overload
 
     \note The call to the function must happen before constructing the first
     QQuickWindow in the application. It cannot be changed afterwards.
 
-    If \a backend is invalid or an error occurs, the default backend (OpenGL or
-    software, depending on the Qt configuration) is used.
+    If \a backend is invalid or an error occurs, the request is ignored.
 
     \note Calling this function is equivalent to setting the
     \c QT_QUICK_BACKEND or \c QMLSCENE_DEVICE environment variables. However, this
