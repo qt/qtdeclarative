@@ -125,6 +125,9 @@
     template<typename T, typename... Args> \
     friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QList<int> *);
 
+#define QML_FOREIGN_NAMESPACE(FOREIGN_NAMESPACE) \
+    Q_CLASSINFO("QML.Foreign", #FOREIGN_NAMESPACE)
+
 #define QML_INTERFACE \
     Q_CLASSINFO("QML.Element", "anonymous") \
     enum class QmlIsInterface {yes = true}; \
@@ -850,8 +853,10 @@ inline void qmlRegisterTypesAndRevisions<>(const char *, int, QList<int> *)
 {
 }
 
-inline void qmlRegisterNamespaceAndRevisions(const QMetaObject *metaObject, const char *uri,
-                                             int versionMajor, QList<int> *qmlTypeIds = nullptr)
+inline void qmlRegisterNamespaceAndRevisions(const QMetaObject *metaObject,
+                                             const char *uri, int versionMajor,
+                                             QList<int> *qmlTypeIds = nullptr,
+                                             const QMetaObject *classInfoMetaObject = nullptr)
 {
     QQmlPrivate::RegisterTypeAndRevisions type = {
         0,
@@ -865,7 +870,7 @@ inline void qmlRegisterNamespaceAndRevisions(const QMetaObject *metaObject, cons
         QTypeRevision::fromMajorVersion(versionMajor),
 
         metaObject,
-        metaObject,
+        (classInfoMetaObject ? classInfoMetaObject : metaObject),
 
         nullptr,
         nullptr,

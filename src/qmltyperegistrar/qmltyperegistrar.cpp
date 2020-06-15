@@ -355,7 +355,14 @@ int main(int argc, char **argv)
                                 qPrintable(include));
                     }
                     includes.append(include);
-                    classDef.insert(QLatin1String("registerable"), true);
+                    {
+                        bool shouldRegister = true;
+                        for (const QJsonValue &v : classDef.value(QLatin1String("classInfos")).toArray()) {
+                            if (v[QLatin1String("name")].toString() == QLatin1String("QML.ManualRegistration"))
+                                shouldRegister = QStringView(u"true").compare(v[QLatin1String("value")].toString(), Qt::CaseInsensitive) != 0;
+                        }
+                        classDef.insert(QLatin1String("registerable"), shouldRegister);
+                    }
 
                     types.append(classDef);
                     break;
@@ -427,8 +434,13 @@ int main(int argc, char **argv)
         const QString className = classDef[QLatin1String("qualifiedClassName")].toString();
 
         if (classDef.value(QLatin1String("namespace")).toBool()) {
-            fprintf(output, "\n    qmlRegisterNamespaceAndRevisions(&%s::staticMetaObject, \"%s\", %s);",
-                    qPrintable(className), qPrintable(module), qPrintable(majorVersion));
+            QString targetName = className;
+            for (const QJsonValue &v : classDef.value(QLatin1String("classInfos")).toArray()) {
+                if (v[QLatin1String("name")].toString() == QLatin1String("QML.Foreign"))
+                    targetName = v[QLatin1String("value")].toString();
+            }
+            fprintf(output, "\n    qmlRegisterNamespaceAndRevisions(&%s::staticMetaObject, \"%s\", %s, nullptr, &%s::staticMetaObject);",
+                    qPrintable(targetName), qPrintable(module), qPrintable(majorVersion), qPrintable(className));
         } else {
             fprintf(output, "\n    qmlRegisterTypesAndRevisions<%s>(\"%s\", %s);",
                     qPrintable(className), qPrintable(module), qPrintable(majorVersion));

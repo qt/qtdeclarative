@@ -54,6 +54,7 @@
 #include <private/qqmlglobal_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qjsengine_p.h>
+#include <QtCore/qnamespace.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -87,6 +88,15 @@ DECLARE_HEAP_OBJECT(QQmlBindingFunction, FunctionObject) {
     void init(const QV4::FunctionObject *bindingFunction);
 };
 
+}
+
+namespace QtInQml {
+Q_NAMESPACE
+QML_FOREIGN_NAMESPACE(Qt)
+QML_NAMED_ELEMENT(Qt)
+QML_ADDED_IN_VERSION(2, 0)
+Q_CLASSINFO("QML.ManualRegistration", "true")
+// should add the functions defined below...
 }
 
 struct QtObject : Object
