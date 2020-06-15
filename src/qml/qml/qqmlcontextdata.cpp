@@ -46,22 +46,25 @@
 
 QT_BEGIN_NAMESPACE
 
-QUrl QQmlContextData::resolvedUrl(const QUrl &src)
+QUrl QQmlContextData::resolvedUrl(const QUrl &src) const
 {
     QUrl resolved;
     if (src.isRelative() && !src.isEmpty()) {
-        QQmlRefPointer<QQmlContextData> ctxt = this;
-        do {
-            if (ctxt->url().isValid())
-                break;
-            else
-                ctxt = ctxt->parent();
-        } while (ctxt);
+        const QUrl ownUrl = url();
+        if (ownUrl.isValid()) {
+            resolved = ownUrl.resolved(src);
+        } else {
+            for (QQmlRefPointer<QQmlContextData> ctxt = parent(); ctxt; ctxt = ctxt->parent())  {
+                const QUrl ctxtUrl = ctxt->url();
+                if (ctxtUrl.isValid()) {
+                    resolved = ctxtUrl.resolved(src);
+                    break;
+                }
+            }
 
-        if (ctxt)
-            resolved = ctxt->url().resolved(src);
-        else if (m_engine)
-            resolved = m_engine->baseUrl().resolved(src);
+            if (m_engine && resolved.isEmpty())
+                resolved = m_engine->baseUrl().resolved(src);
+        }
     } else {
         resolved = src;
     }

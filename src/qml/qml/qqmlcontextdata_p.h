@@ -138,7 +138,7 @@ public:
     QQmlData *ownedObjects() const { return m_ownedObjects; }
     void setOwnedObjects(QQmlData *ownedObjects) { m_ownedObjects = ownedObjects; }
 
-    QUrl resolvedUrl(const QUrl &);
+    QUrl resolvedUrl(const QUrl &) const;
 
     // My containing QQmlContext.  If isInternal is true this owns publicContext.
     // If internal is false publicContext owns this.

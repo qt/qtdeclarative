@@ -86,7 +86,7 @@ public:
     // ### Qt 6: no need for a mutable object, this should become a const QObject pointer
     QString nameForObject(QObject *) const;
 
-    QUrl resolvedUrl(const QUrl &);
+    QUrl resolvedUrl(const QUrl &) const;
 
     void setBaseUrl(const QUrl &);
     QUrl baseUrl() const;

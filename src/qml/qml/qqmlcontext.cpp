@@ -410,9 +410,9 @@ QString QQmlContext::nameForObject(QObject *object) const
 
     \sa QQmlEngine::baseUrl(), setBaseUrl()
 */
-QUrl QQmlContext::resolvedUrl(const QUrl &src)
+QUrl QQmlContext::resolvedUrl(const QUrl &src) const
 {
-    Q_D(QQmlContext);
+    Q_D(const QQmlContext);
     return d->m_data->resolvedUrl(src);
 }
 
