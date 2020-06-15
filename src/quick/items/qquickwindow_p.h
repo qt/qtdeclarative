@@ -318,9 +318,6 @@ public:
     static void data_replace(QQmlListProperty<QObject> *, int, QObject *);
     static void data_removeLast(QQmlListProperty<QObject> *);
 
-    static void contextCreationFailureMessage(const QSurfaceFormat &format,
-                                              QString *translatedMessage,
-                                              QString *untranslatedMessage);
     static void rhiCreationFailureMessage(const QString &backendName,
                                           QString *translatedMessage,
                                           QString *untranslatedMessage);

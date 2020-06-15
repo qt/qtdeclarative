@@ -306,15 +306,9 @@ void QSGRenderLoop::handleContextCreationFailure(QQuickWindow *window)
 {
     QString translatedMessage;
     QString untranslatedMessage;
-    if (QSGRhiSupport::instance()->isRhiEnabled()) {
-        QQuickWindowPrivate::rhiCreationFailureMessage(QSGRhiSupport::instance()->rhiBackendName(),
-                                                       &translatedMessage,
-                                                       &untranslatedMessage);
-    } else {
-        QQuickWindowPrivate::contextCreationFailureMessage(window->requestedFormat(),
-                                                           &translatedMessage,
-                                                           &untranslatedMessage);
-    }
+    QQuickWindowPrivate::rhiCreationFailureMessage(QSGRhiSupport::instance()->rhiBackendName(),
+                                                   &translatedMessage,
+                                                   &untranslatedMessage);
     // If there is a slot connected to the error signal, emit it and leave it to
     // the application to do something with the message. If nothing is connected,
     // show a message on our own and terminate.

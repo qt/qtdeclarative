@@ -906,13 +906,13 @@ QSize QQuickWidgetPrivate::rootObjectSize() const
     return rootObjectSize;
 }
 
-void QQuickWidgetPrivate::handleContextCreationFailure(const QSurfaceFormat &format)
+void QQuickWidgetPrivate::handleContextCreationFailure(const QSurfaceFormat &)
 {
     Q_Q(QQuickWidget);
 
     QString translatedMessage;
     QString untranslatedMessage;
-    QQuickWindowPrivate::contextCreationFailureMessage(format, &translatedMessage, &untranslatedMessage);
+    QQuickWindowPrivate::rhiCreationFailureMessage(QLatin1String("OpenGL"), &translatedMessage, &untranslatedMessage);
 
     static const QMetaMethod errorSignal = QMetaMethod::fromSignal(&QQuickWidget::sceneGraphError);
     const bool signalConnected = q->isSignalConnected(errorSignal);
