@@ -981,12 +981,6 @@ void QQuickShapePrivate::createRenderer()
         return;
 
     switch (ri->graphicsApi()) {
-#if QT_CONFIG(opengl)
-    case QSGRendererInterface::OpenGL:
-        rendererType = QQuickShape::GeometryRenderer;
-        renderer = new QQuickShapeGenericRenderer(q);
-        break;
-#endif
     case QSGRendererInterface::Software:
         rendererType = QQuickShape::SoftwareRenderer;
         renderer = new QQuickShapeSoftwareRenderer;
@@ -1014,13 +1008,6 @@ QSGNode *QQuickShapePrivate::createNode()
         return node;
 
     switch (ri->graphicsApi()) {
-#if QT_CONFIG(opengl)
-    case QSGRendererInterface::OpenGL:
-        node = new QQuickShapeGenericNode;
-        static_cast<QQuickShapeGenericRenderer *>(renderer)->setRootNode(
-            static_cast<QQuickShapeGenericNode *>(node));
-        break;
-#endif
     case QSGRendererInterface::Software:
         node = new QQuickShapeSoftwareRenderNode(q);
         static_cast<QQuickShapeSoftwareRenderer *>(renderer)->setNode(

@@ -640,13 +640,11 @@ QSGTextureProvider *QQuickPaintedItem::textureProvider() const
         return QQuickItem::textureProvider();
 
     Q_D(const QQuickPaintedItem);
-#if QT_CONFIG(opengl)
     QQuickWindow *w = window();
-    if (!w || !w->isSceneGraphInitialized() || QThread::currentThread() != QQuickWindowPrivate::get(w)->context->thread()) {
+    if (!w || !w->isSceneGraphInitialized() || QThread::currentThread() != d->sceneGraphContext()->thread()) {
         qWarning("QQuickPaintedItem::textureProvider: can only be queried on the rendering thread of an exposed window");
         return nullptr;
     }
-#endif
     if (!d->textureProvider)
         d->textureProvider = new QQuickPaintedItemTextureProvider();
     d->textureProvider->node = d->node;

@@ -282,12 +282,12 @@ void LoadWatcher::contain(QObject *o, const QUrl &containPath)
 
 void LoadWatcher::checkForWindow(QObject *o)
 {
-#if defined(QT_GUI_LIB) && QT_CONFIG(opengl)
+#if defined(QT_GUI_LIB)
     if (o->isWindowType() && o->inherits("QQuickWindow"))
         haveWindow = true;
 #else
     Q_UNUSED(o)
-#endif // QT_GUI_LIB && !QT_NO_OPENGL
+#endif // QT_GUI_LIB
 }
 
 void quietMessageHandler(QtMsgType type, const QMessageLogContext &ctxt, const QString &msg)
@@ -480,7 +480,7 @@ int main(int argc, char *argv[])
         QCoreApplication::translate("main", "Run animations off animation tick rather than wall time."));
     parser.addOption(fixedAnimationsOption);
     QCommandLineOption rhiOption(QStringList() << QStringLiteral("r") << QStringLiteral("rhi"),
-        QCoreApplication::translate("main", "Use the Qt graphics abstraction (RHI) instead of OpenGL directly. "
+        QCoreApplication::translate("main", "Set the backend for the Qt graphics abstraction (RHI). "
                                     "Backend is one of: default, vulkan, metal, d3d11, gl"),
                                  QStringLiteral("backend"));
     parser.addOption(rhiOption);
@@ -534,7 +534,7 @@ int main(int argc, char *argv[])
     if (!customSelectors.isEmpty())
         e.setExtraFileSelectors(customSelectors);
 
-#if defined(QT_GUI_LIB) && QT_CONFIG(opengl)
+#if defined(QT_GUI_LIB)
     if (qEnvironmentVariableIsSet("QSG_CORE_PROFILE") || qEnvironmentVariableIsSet("QML_CORE_PROFILE")) {
         QSurfaceFormat surfaceFormat;
         surfaceFormat.setStencilBufferSize(8);
@@ -553,7 +553,6 @@ int main(int argc, char *argv[])
     if (parser.isSet(dummyDataOption))
         dummyDir = parser.value(dummyDataOption);
     if (parser.isSet(rhiOption)) {
-        qputenv("QSG_RHI", "1");
         const QString rhiBackend = parser.value(rhiOption);
         if (rhiBackend == QLatin1String("default"))
             qunsetenv("QSG_RHI_BACKEND");

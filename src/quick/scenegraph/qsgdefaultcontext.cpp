@@ -135,6 +135,7 @@ void QSGDefaultContext::renderContextInitialized(QSGRenderContext *renderContext
             m_antialiasingMethod = rc->msaaSampleCount() > 1 ? MsaaAntialiasing : VertexAntialiasing;
     }
 
+#if QT_CONFIG(opengl)
     // With OpenGL ES, use GrayAntialiasing, unless
     // some value had been requested explicitly. This could not be decided
     // before without a context. Now the context is ready.
@@ -147,6 +148,7 @@ void QSGDefaultContext::renderContextInitialized(QSGRenderContext *renderContext
             m_distanceFieldAntialiasing = QSGGlyphNode::GrayAntialiasing;
         }
     }
+#endif
 
     m_mutex.unlock();
 }

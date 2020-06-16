@@ -3,6 +3,8 @@ TARGET = QtQuick
 QT = core-private gui-private qml-private qmlmodels-private
 qtConfig(qml-network): \
     QT_PRIVATE += network
+
+### To support compatibility API that is only available when using RHI/OpenGL
 qtConfig(opengl) {
     QT_PRIVATE += opengl-private
     QT += opengl

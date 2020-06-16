@@ -39,9 +39,7 @@
 
 #include "qsgrhisupport_p.h"
 #include "qsgcontext_p.h"
-#if QT_CONFIG(opengl)
 #  include "qsgdefaultrendercontext_p.h"
-#endif
 
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
@@ -177,10 +175,11 @@ void QSGRhiSupport::applySettings()
             m_rhiBackend = QRhi::D3D11;
 #elif defined(Q_OS_MACOS) || defined(Q_OS_IOS)
             m_rhiBackend = QRhi::Metal;
-#else
+#elif QT_CONFIG(opengl)
             m_rhiBackend = QRhi::OpenGLES2;
+#else
+            m_rhiBackend = QRhi::Vulkan;
 #endif
-            // Vulkan has to be requested explicitly
 
             // Now that we established our initial choice, we may want to opt
             // for another backend under certain special circumstances.
@@ -439,12 +438,6 @@ const void *QSGRhiSupport::rifResource(QSGRendererInterface::Resource res,
                                        const QSGDefaultRenderContext *rc,
                                        const QQuickWindow *w)
 {
-// ### This condition is a temporary workaround to allow compilation
-// with -no-opengl, but Vulkan or Metal enabled, to succeed. Full
-// support for RHI-capable -no-opengl builds will be available in
-// Qt 6 once the direct OpenGL code path gets removed.
-#if QT_CONFIG(opengl)
-
     QRhi *rhi = rc->rhi();
     if (res == QSGRendererInterface::RhiResource || !rhi)
         return rhi;
@@ -484,12 +477,6 @@ const void *QSGRhiSupport::rifResource(QSGRendererInterface::Resource res,
     default:
         return nullptr;
     }
-
-#else
-    Q_UNUSED(res);
-    Q_UNUSED(rc);
-    return nullptr;
-#endif
 }
 
 int QSGRhiSupport::chooseSampleCountForWindowWithRhi(QWindow *window, QRhi *rhi)
@@ -703,18 +690,13 @@ QImage QSGRhiSupport::grabOffscreen(QQuickWindow *window)
 
     wd->rhi = rhi.data();
 
-// ### This condition is a temporary workaround to allow compilation
-// with -no-opengl, but Vulkan or Metal enabled, to succeed. Full
-// support for RHI-capable -no-opengl builds will be available in
-// Qt 6 once the direct OpenGL code path gets removed.
-#if QT_CONFIG(opengl)
     QSGDefaultRenderContext::InitParams params;
     params.rhi = rhi.data();
     params.sampleCount = 1;
     params.initialSurfacePixelSize = pixelSize;
     params.maybeSurface = window;
     wd->context->initialize(&params);
-#endif
+
     // There was no rendercontrol which means a custom render target
     // should not be set either. Set our own, temporarily.
     window->setRenderTarget(QQuickRenderTarget::fromRhiRenderTarget(rt.data()));

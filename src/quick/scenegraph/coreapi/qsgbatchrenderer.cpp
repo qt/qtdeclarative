@@ -2370,10 +2370,10 @@ void Renderer::updateClipState(const QSGClipNode *clipList, Batch *batch)
 
             QRect deviceRect = this->deviceRect();
 
-            GLint ix1 = qRound((fx1 + 1) * deviceRect.width() * qreal(0.5));
-            GLint iy1 = qRound((fy1 + 1) * deviceRect.height() * qreal(0.5));
-            GLint ix2 = qRound((fx2 + 1) * deviceRect.width() * qreal(0.5));
-            GLint iy2 = qRound((fy2 + 1) * deviceRect.height() * qreal(0.5));
+            qint32 ix1 = qRound((fx1 + 1) * deviceRect.width() * qreal(0.5));
+            qint32 iy1 = qRound((fy1 + 1) * deviceRect.height() * qreal(0.5));
+            qint32 ix2 = qRound((fx2 + 1) * deviceRect.width() * qreal(0.5));
+            qint32 iy2 = qRound((fy2 + 1) * deviceRect.height() * qreal(0.5));
 
             if (!(clipType & ClipState::ScissorClip)) {
                 clipType |= ClipState::ScissorClip;

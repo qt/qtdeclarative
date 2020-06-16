@@ -480,7 +480,7 @@ void QSGTextMaskMaterial::populate(const QPointF &p,
     qreal glyphCacheInverseScaleY = 1.0 / glyphCacheScaleY;
     qreal scaledMargin = margin * glyphCacheInverseScaleX;
 
-    Q_ASSERT(geometry->indexType() == GL_UNSIGNED_SHORT);
+    Q_ASSERT(geometry->indexType() ==  QSGGeometry::UnsignedShortType);
     geometry->allocate(glyphIndexes.size() * 4, glyphIndexes.size() * 6);
     QVector4D *vp = (QVector4D *)geometry->vertexDataAsTexturedPoint2D();
     Q_ASSERT(geometry->sizeOfVertex() == sizeof(QVector4D));

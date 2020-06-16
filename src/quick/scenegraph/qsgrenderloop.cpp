@@ -64,9 +64,7 @@
 
 #include <private/qsgrhishadereffectnode_p.h>
 
-#if QT_CONFIG(opengl)
 #include <private/qsgdefaultrendercontext_p.h>
-#endif
 
 #ifdef Q_OS_WIN
 #include <QtCore/qt_windows.h>
@@ -75,15 +73,6 @@
 QT_BEGIN_NAMESPACE
 
 extern bool qsg_useConsistentTiming();
-extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
-
-// ### We do not yet support using Qt Quick with QRhi (and Vulkan, D3D
-// or Metal) in -no-opengl builds as of Qt 5.14. This is due to to the
-// widespread direct OpenGL usage all over the place in qsgdefault*
-// and the related classes. To be cleaned up in Qt 6 when the direct
-// GL code path is removed.
-
-#if QT_CONFIG(opengl) /* || QT_CONFIG(vulkan) || defined(Q_OS_WIN) || defined(Q_OS_DARWIN) */
 
 #define ENABLE_DEFAULT_BACKEND
 
@@ -96,7 +85,6 @@ extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_
 
 DEFINE_BOOL_CONFIG_OPTION(qmlNoThreadedRenderer, QML_BAD_GUI_RENDER_LOOP);
 DEFINE_BOOL_CONFIG_OPTION(qmlForceThreadedRenderer, QML_FORCE_THREADED_RENDERER); // Might trigger graphics driver threading bugs, use at own risk
-#endif
 
 QSGRenderLoop *QSGRenderLoop::s_instance = nullptr;
 
@@ -221,17 +209,10 @@ QSGRenderLoop *QSGRenderLoop::instance()
             if (rhiSupport->isRhiEnabled() && rhiSupport->rhiBackend() != QRhi::OpenGLES2) {
                 loopType = ThreadedRenderLoop;
             } else {
-                loopType = BasicRenderLoop;
-#ifdef Q_OS_WIN
-                if (QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGL
-                        && QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ThreadedOpenGL))
-                {
-                    loopType = ThreadedRenderLoop;
-                }
-#else
                 if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ThreadedOpenGL))
                     loopType = ThreadedRenderLoop;
-#endif
+                else
+                    loopType = BasicRenderLoop;
             }
 
             if (rhiSupport->isRhiEnabled()) {
@@ -684,11 +665,8 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     Q_TRACE(QSG_swap_entry);
 
     if (data.grabOnly) {
-        const bool alpha = window->format().alphaBufferSize() > 0 && window->color().alpha() != 255;
         if (cd->swapchain)
             grabContent = rhiSupport->grabAndBlockInCurrentFrame(rhi, cd->swapchain->currentFrameCommandBuffer());
-        else
-            grabContent = qt_gl_read_framebuffer(window->size() * window->effectiveDevicePixelRatio(), alpha, alpha);
         grabContent.setDevicePixelRatio(window->effectiveDevicePixelRatio());
         data.grabOnly = false;
     }

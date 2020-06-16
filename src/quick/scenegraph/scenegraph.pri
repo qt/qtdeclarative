@@ -18,7 +18,9 @@ HEADERS += \
     $$PWD/coreapi/qsgrendererinterface.h \
     $$PWD/coreapi/qsggeometry_p.h \
     $$PWD/coreapi/qsgtexture.h \
-    $$PWD/coreapi/qsgtexture_p.h
+    $$PWD/coreapi/qsgtexture_p.h \
+    $$PWD/coreapi/qsgbatchrenderer_p.h \
+    $$PWD/coreapi/qsgrhivisualizer_p.h
 
 SOURCES += \
     $$PWD/coreapi/qsgabstractrenderer.cpp \
@@ -30,16 +32,10 @@ SOURCES += \
     $$PWD/coreapi/qsgnodeupdater.cpp \
     $$PWD/coreapi/qsgrenderer.cpp \
     $$PWD/coreapi/qsgrendernode.cpp \
-    $$PWD/coreapi/qsgrendererinterface.cpp
+    $$PWD/coreapi/qsgrendererinterface.cpp \
+    $$PWD/coreapi/qsgbatchrenderer.cpp \
+    $$PWD/coreapi/qsgrhivisualizer.cpp
 
-qtConfig(opengl(es1|es2)?) {
-    HEADERS += \
-        $$PWD/coreapi/qsgbatchrenderer_p.h \
-        $$PWD/coreapi/qsgrhivisualizer_p.h
-    SOURCES += \
-        $$PWD/coreapi/qsgbatchrenderer.cpp \
-        $$PWD/coreapi/qsgrhivisualizer.cpp
-}
 
 # Util API
 HEADERS += \
@@ -69,22 +65,20 @@ SOURCES += \
     $$PWD/util/qsgimagenode.cpp \
     $$PWD/util/qsgninepatchnode.cpp
 
-qtConfig(opengl(es1|es2)?) {
-    # rhi, still tied to OpenGL-enabled Qt builds for now
-    HEADERS += \
-        $$PWD/qsgrhitextureglyphcache_p.h \
-        $$PWD/util/qsgrhiatlastexture_p.h \
-        $$PWD/qsgrhilayer_p.h \
-        $$PWD/qsgrhishadereffectnode_p.h \
-        $$PWD/qsgrhidistancefieldglyphcache_p.h
+# RHI
+HEADERS += \
+    $$PWD/qsgrhitextureglyphcache_p.h \
+    $$PWD/util/qsgrhiatlastexture_p.h \
+    $$PWD/qsgrhilayer_p.h \
+    $$PWD/qsgrhishadereffectnode_p.h \
+    $$PWD/qsgrhidistancefieldglyphcache_p.h
 
-    SOURCES += \
-        $$PWD/qsgrhitextureglyphcache.cpp \
-        $$PWD/qsgrhilayer.cpp \
-        $$PWD/qsgrhishadereffectnode.cpp \
-        $$PWD/util/qsgrhiatlastexture.cpp \
-        $$PWD/qsgrhidistancefieldglyphcache.cpp
-}
+SOURCES += \
+    $$PWD/qsgrhitextureglyphcache.cpp \
+    $$PWD/qsgrhilayer.cpp \
+    $$PWD/qsgrhishadereffectnode.cpp \
+    $$PWD/util/qsgrhiatlastexture.cpp \
+    $$PWD/qsgrhidistancefieldglyphcache.cpp
 
 # QML / Adaptations API
 HEADERS += \
@@ -107,47 +101,45 @@ SOURCES += \
     $$PWD/qsgrenderloop.cpp \
     $$PWD/qsgrhisupport.cpp
 
-qtConfig(opengl(es1|es2)?) {
+SOURCES += \
+    $$PWD/qsgdefaultglyphnode.cpp \
+    $$PWD/qsgdefaultglyphnode_p.cpp \
+    $$PWD/qsgdistancefieldglyphnode.cpp \
+    $$PWD/qsgdistancefieldglyphnode_p.cpp \
+    $$PWD/qsgdefaultinternalimagenode.cpp \
+    $$PWD/qsgdefaultinternalrectanglenode.cpp \
+    $$PWD/qsgdefaultrendercontext.cpp \
+    $$PWD/qsgdefaultcontext.cpp \
+    $$PWD/util/qsgdefaultpainternode.cpp \
+    $$PWD/util/qsgdefaultrectanglenode.cpp \
+    $$PWD/util/qsgdefaultimagenode.cpp \
+    $$PWD/util/qsgdefaultninepatchnode.cpp
+HEADERS += \
+    $$PWD/qsgdefaultglyphnode_p.h \
+    $$PWD/qsgdistancefieldglyphnode_p.h \
+    $$PWD/qsgdistancefieldglyphnode_p_p.h \
+    $$PWD/qsgdefaultglyphnode_p_p.h \
+    $$PWD/qsgdefaultinternalimagenode_p.h \
+    $$PWD/qsgdefaultinternalrectanglenode_p.h \
+    $$PWD/qsgdefaultrendercontext_p.h \
+    $$PWD/qsgdefaultcontext_p.h \
+    $$PWD/util/qsgdefaultpainternode_p.h \
+    $$PWD/util/qsgdefaultrectanglenode_p.h \
+    $$PWD/util/qsgdefaultimagenode_p.h \
+    $$PWD/util/qsgdefaultninepatchnode_p.h
+
+qtConfig(thread) {
     SOURCES += \
-        $$PWD/qsgdefaultglyphnode.cpp \
-        $$PWD/qsgdefaultglyphnode_p.cpp \
-        $$PWD/qsgdistancefieldglyphnode.cpp \
-        $$PWD/qsgdistancefieldglyphnode_p.cpp \
-        $$PWD/qsgdefaultinternalimagenode.cpp \
-        $$PWD/qsgdefaultinternalrectanglenode.cpp \
-        $$PWD/qsgdefaultrendercontext.cpp \
-        $$PWD/qsgdefaultcontext.cpp \
-        $$PWD/util/qsgdefaultpainternode.cpp \
-        $$PWD/util/qsgdefaultrectanglenode.cpp \
-        $$PWD/util/qsgdefaultimagenode.cpp \
-        $$PWD/util/qsgdefaultninepatchnode.cpp
+        $$PWD/qsgthreadedrenderloop.cpp
     HEADERS += \
-        $$PWD/qsgdefaultglyphnode_p.h \
-        $$PWD/qsgdistancefieldglyphnode_p.h \
-        $$PWD/qsgdistancefieldglyphnode_p_p.h \
-        $$PWD/qsgdefaultglyphnode_p_p.h \
-        $$PWD/qsgdefaultinternalimagenode_p.h \
-        $$PWD/qsgdefaultinternalrectanglenode_p.h \
-        $$PWD/qsgdefaultrendercontext_p.h \
-        $$PWD/qsgdefaultcontext_p.h \
-        $$PWD/util/qsgdefaultpainternode_p.h \
-        $$PWD/util/qsgdefaultrectanglenode_p.h \
-        $$PWD/util/qsgdefaultimagenode_p.h \
-        $$PWD/util/qsgdefaultninepatchnode_p.h
+        $$PWD/qsgthreadedrenderloop_p.h
+}
 
-    qtConfig(thread) {
-        SOURCES += \
-            $$PWD/qsgthreadedrenderloop.cpp
-        HEADERS += \
-            $$PWD/qsgthreadedrenderloop_p.h
-    }
-
-    qtConfig(quick-sprite) {
-        SOURCES += \
-            $$PWD/qsgdefaultspritenode.cpp
-        HEADERS += \
-            $$PWD/qsgdefaultspritenode_p.h
-    }
+qtConfig(quick-sprite) {
+    SOURCES += \
+        $$PWD/qsgdefaultspritenode.cpp
+    HEADERS += \
+        $$PWD/qsgdefaultspritenode_p.h
 }
 
 # Built-in, non-plugin-based adaptations
@@ -156,77 +148,6 @@ include(adaptations/adaptations.pri)
 RESOURCES += \
     $$PWD/scenegraph.qrc
 
-# OpenGL Shaders
-qtConfig(opengl(es1|es2)?) {
-    OTHER_FILES += \
-        $$PWD/shaders/24bittextmask.frag \
-        $$PWD/shaders/8bittextmask.frag \
-        $$PWD/shaders/distancefieldoutlinetext.frag \
-        $$PWD/shaders/distancefieldshiftedtext.frag \
-        $$PWD/shaders/distancefieldshiftedtext.vert \
-        $$PWD/shaders/distancefieldtext.frag \
-        $$PWD/shaders/distancefieldtext.vert \
-        $$PWD/shaders/flatcolor.frag \
-        $$PWD/shaders/flatcolor.vert \
-        $$PWD/shaders/hiqsubpixeldistancefieldtext.frag \
-        $$PWD/shaders/hiqsubpixeldistancefieldtext.vert \
-        $$PWD/shaders/loqsubpixeldistancefieldtext.frag \
-        $$PWD/shaders/loqsubpixeldistancefieldtext.vert \
-        $$PWD/shaders/opaquetexture.frag \
-        $$PWD/shaders/opaquetexture.vert \
-        $$PWD/shaders/outlinedtext.frag \
-        $$PWD/shaders/outlinedtext.vert \
-        $$PWD/shaders/rendernode.frag \
-        $$PWD/shaders/rendernode.vert \
-        $$PWD/shaders/smoothcolor.frag \
-        $$PWD/shaders/smoothcolor.vert \
-        $$PWD/shaders/smoothtexture.frag \
-        $$PWD/shaders/smoothtexture.vert \
-        $$PWD/shaders/stencilclip.frag \
-        $$PWD/shaders/stencilclip.vert \
-        $$PWD/shaders/styledtext.frag \
-        $$PWD/shaders/styledtext.vert \
-        $$PWD/shaders/textmask.frag \
-        $$PWD/shaders/textmask.vert \
-        $$PWD/shaders/texture.frag \
-        $$PWD/shaders/vertexcolor.frag \
-        $$PWD/shaders/vertexcolor.vert \
-        $$PWD/shaders/24bittextmask_core.frag \
-        $$PWD/shaders/8bittextmask_core.frag \
-        $$PWD/shaders/distancefieldoutlinetext_core.frag \
-        $$PWD/shaders/distancefieldshiftedtext_core.frag \
-        $$PWD/shaders/distancefieldshiftedtext_core.vert \
-        $$PWD/shaders/distancefieldtext_core.frag \
-        $$PWD/shaders/distancefieldtext_core.vert \
-        $$PWD/shaders/flatcolor_core.frag \
-        $$PWD/shaders/flatcolor_core.vert \
-        $$PWD/shaders/hiqsubpixeldistancefieldtext_core.frag \
-        $$PWD/shaders/hiqsubpixeldistancefieldtext_core.vert \
-        $$PWD/shaders/loqsubpixeldistancefieldtext_core.frag \
-        $$PWD/shaders/loqsubpixeldistancefieldtext_core.vert \
-        $$PWD/shaders/opaquetexture_core.frag \
-        $$PWD/shaders/opaquetexture_core.vert \
-        $$PWD/shaders/outlinedtext_core.frag \
-        $$PWD/shaders/outlinedtext_core.vert \
-        $$PWD/shaders/rendernode_core.frag \
-        $$PWD/shaders/rendernode_core.vert \
-        $$PWD/shaders/smoothcolor_core.frag \
-        $$PWD/shaders/smoothcolor_core.vert \
-        $$PWD/shaders/smoothtexture_core.frag \
-        $$PWD/shaders/smoothtexture_core.vert \
-        $$PWD/shaders/stencilclip_core.frag \
-        $$PWD/shaders/stencilclip_core.vert \
-        $$PWD/shaders/styledtext_core.frag \
-        $$PWD/shaders/styledtext_core.vert \
-        $$PWD/shaders/textmask_core.frag \
-        $$PWD/shaders/textmask_core.vert \
-        $$PWD/shaders/texture_core.frag \
-        $$PWD/shaders/vertexcolor_core.frag \
-        $$PWD/shaders/vertexcolor_core.vert \
-        $$PWD/shaders/visualization.frag \
-        $$PWD/shaders/visualization.vert
-}
-
 # Compressed Texture API
 HEADERS += \
     $$PWD/util/qsgtexturereader_p.h
@@ -234,7 +155,6 @@ HEADERS += \
 SOURCES += \
     $$PWD/util/qsgtexturereader.cpp
 
-qtConfig(opengl(es1|es2)?) {
     HEADERS += \
         $$PWD/compressedtexture/qsgcompressedatlastexture_p.h \
         $$PWD/compressedtexture/qsgcompressedtexture_p.h
@@ -242,4 +162,4 @@ qtConfig(opengl(es1|es2)?) {
     SOURCES += \
         $$PWD/compressedtexture/qsgcompressedatlastexture.cpp \
         $$PWD/compressedtexture/qsgcompressedtexture.cpp
-}
+

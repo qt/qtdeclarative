@@ -517,11 +517,3 @@ set_target_properties(Quick PROPERTIES
 )
 
 qt6_qml_type_registration(Quick)
-
-#special case begin
-if (QT_WILL_INSTALL)
-    install(FILES ../imports/window/qmldir DESTINATION "${INSTALL_QMLDIR}/QtQuick/Window")
-else()
-    file(COPY ../imports/window/qmldir DESTINATION "${QT_BUILD_DIR}/${INSTALL_QMLDIR}/QtQuick/Window")
-endif()
-#special case end

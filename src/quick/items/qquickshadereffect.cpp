@@ -40,9 +40,7 @@
 #include <private/qquickshadereffect_p.h>
 #include <private/qsgcontextplugin_p.h>
 #include <private/qquickitem_p.h>
-#if QT_CONFIG(opengl) /* || QT_CONFIG(vulkan) || defined(Q_OS_WIN) || defined(Q_OS_DARWIN) */
 #include <private/qsgrhisupport_p.h>
-#endif
 
 #include <private/qquickwindow_p.h>
 #include <private/qquickitem_p.h>

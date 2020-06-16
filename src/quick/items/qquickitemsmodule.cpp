@@ -182,16 +182,16 @@ static void qt_quickitems_defineModule()
     qRegisterMetaType<QQuickHandlerPoint>();
 }
 
-static void initResources()
-{
-    Q_INIT_RESOURCE(items);
-}
+//static void initResources()
+//{
+//    Q_INIT_RESOURCE(items);
+//}
 
 QT_BEGIN_NAMESPACE
 
 void QQuickItemsModule::defineModule()
 {
-    initResources();
+//    initResources();
     qt_quickitems_defineModule();
 }
 

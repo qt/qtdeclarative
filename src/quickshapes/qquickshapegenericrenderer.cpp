@@ -40,16 +40,11 @@
 #include "qquickshapegenericrenderer_p.h"
 #include <QtGui/private/qtriangulator_p.h>
 #include <QtGui/private/qtriangulatingstroker_p.h>
+#include <QtGui/private/qrhi_p.h>
 #include <QSGVertexColorMaterial>
 
 #if QT_CONFIG(thread)
 #include <QThreadPool>
-#endif
-
-#if QT_CONFIG(opengl)
-#include <QOpenGLContext>
-#include <QOffscreenSurface>
-#include <private/qopenglextensions_p.h>
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -112,47 +107,6 @@ void QQuickShapeGenericStrokeFillNode::activateMaterial(QQuickWindow *window, Ma
 
     if (material() != m_material.data())
         setMaterial(m_material.data());
-}
-
-static bool q_supportsElementIndexUint(QSGRendererInterface::GraphicsApi api)
-{
-    static bool elementIndexUint = true;
-#if QT_CONFIG(opengl)
-    if (api == QSGRendererInterface::OpenGL) {
-        static bool elementIndexUintChecked = false;
-        if (!elementIndexUintChecked) {
-            elementIndexUintChecked = true;
-            QOpenGLContext *context = QOpenGLContext::currentContext();
-            const bool needsTempContext = !context;
-            QScopedPointer<QOpenGLContext> dummyContext;
-            QScopedPointer<QOffscreenSurface> dummySurface;
-            bool ok = true;
-            if (needsTempContext) {
-                dummyContext.reset(new QOpenGLContext);
-                dummyContext->create();
-                context = dummyContext.data();
-                dummySurface.reset(new QOffscreenSurface);
-                dummySurface->setFormat(context->format());
-                dummySurface->create();
-                ok = context->makeCurrent(dummySurface.data());
-            }
-            if (ok) {
-                elementIndexUint = static_cast<QOpenGLExtensions *>(context->functions())->hasOpenGLExtension(
-                            QOpenGLExtensions::ElementIndexUint);
-
-                if (needsTempContext) {
-                    // Must not let the temprary context be destroyed while current and
-                    // the associated surface already gone, because some implementations
-                    // (Mesa on drm) do not like that.
-                    context->doneCurrent();
-                }
-            }
-        }
-    }
-#else
-    Q_UNUSED(api);
-#endif
-    return elementIndexUint;
 }
 
 QQuickShapeGenericRenderer::~QQuickShapeGenericRenderer()
@@ -338,6 +292,14 @@ void QQuickShapeGenericRenderer::endSync(bool async)
             pathWorkThreadPool->setMaxThreadCount(idealCount > 0 ? idealCount * 2 : 4);
         }
 #endif
+        auto testFeatureIndexUint = [](QQuickItem *item) -> bool {
+            if (auto *w = item->window()) {
+                if (auto *rhi = QQuickWindowPrivate::get(w)->rhi)
+                    return rhi->isFeatureSupported(QRhi::ElementIndexUint);
+            }
+            return true;
+        };
+        static bool supportsElementIndexUint = testFeatureIndexUint(m_item);
         if ((d.syncDirty & DirtyFillGeom) && d.fillColor.a) {
             d.path.setFillRule(d.fillRule);
             if (m_api == QSGRendererInterface::Unknown)
@@ -350,7 +312,7 @@ void QQuickShapeGenericRenderer::endSync(bool async)
                 d.pendingFill = r;
                 r->path = d.path;
                 r->fillColor = d.fillColor;
-                r->supportsElementIndexUint = q_supportsElementIndexUint(m_api);
+                r->supportsElementIndexUint = supportsElementIndexUint;
                 // Unlikely in practice but in theory m_sp could be
                 // resized. Therefore, capture 'i' instead of 'd'.
                 QObject::connect(r, &QQuickShapeFillRunnable::done, qApp, [this, i](QQuickShapeFillRunnable *r) {
@@ -375,7 +337,7 @@ void QQuickShapeGenericRenderer::endSync(bool async)
                 pathWorkThreadPool->start(r);
 #endif
             } else {
-                triangulateFill(d.path, d.fillColor, &d.fillVertices, &d.fillIndices, &d.indexType, q_supportsElementIndexUint(m_api));
+                triangulateFill(d.path, d.fillColor, &d.fillVertices, &d.fillIndices, &d.indexType, supportsElementIndexUint);
             }
         }
 

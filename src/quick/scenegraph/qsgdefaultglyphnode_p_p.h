@@ -52,7 +52,6 @@
 //
 
 #include <qcolor.h>
-#include <private/qopengltextureglyphcache_p.h>
 #include <QtQuick/qsgmaterial.h>
 #include <QtQuick/qsgtexture.h>
 #include <QtQuick/qsggeometry.h>

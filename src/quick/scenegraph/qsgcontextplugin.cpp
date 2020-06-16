@@ -45,9 +45,7 @@
 
 // Built-in adaptations
 #include <QtQuick/private/qsgsoftwareadaptation_p.h>
-#if QT_CONFIG(opengl)
 #include <QtQuick/private/qsgdefaultcontext_p.h>
-#endif
 
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformintegration.h>
@@ -135,13 +133,14 @@ QSGAdaptationBackendData *contextFactory()
         if (requestedBackend.isEmpty())
             requestedBackend = qEnvironmentVariable("QT_QUICK_BACKEND");
 
-        // If this platform does not support OpenGL, and no backend has been set
+        // If this platform does not support OpenGL, Vulkan, D3D11, or Metal, and no backend has been set
         // default to the software renderer
+#if !QT_CONFIG(vulkan) && !defined(Q_OS_WIN) && !defined(Q_OS_MACOS) && !defined(Q_OS_IOS)
         if (requestedBackend.isEmpty()
             && !QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::OpenGL)) {
             requestedBackend = QString::fromLocal8Bit("software");
         }
-
+#endif
         if (!requestedBackend.isEmpty()) {
             qCDebug(QSG_LOG_INFO, "Loading backend %s", qUtf8Printable(requestedBackend));
 
@@ -192,11 +191,7 @@ QSGContext *QSGContext::createDefaultContext()
     QSGAdaptationBackendData *backendData = contextFactory();
     if (backendData->factory)
         return backendData->factory->create(backendData->name);
-#if QT_CONFIG(opengl)
     return new QSGDefaultContext();
-#else
-    return nullptr;
-#endif
 }
 
 

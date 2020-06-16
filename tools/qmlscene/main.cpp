@@ -47,7 +47,6 @@
 #include <QtQuick/qquickview.h>
 
 #include <private/qabstractanimation_p.h>
-#include <private/qopenglcontext_p.h>
 
 #ifdef QT_WIDGETS_LIB
 #include <QtWidgets/QApplication>
@@ -351,8 +350,7 @@ static void usage()
     puts("  --transparent .................... Make the window transparent");
     puts("  --multisample .................... Enable multisampling (OpenGL anti-aliasing)");
     puts("  --core-profile ................... Request a core profile OpenGL context");
-    puts("  --rhi [vulkan|metal|d3d11|gl] .... Use the Qt graphics abstraction (RHI) instead of OpenGL directly.\n"
-         "                                .... Backend has platform specific defaults. Specify to override.");
+    puts("  --rhi [vulkan|metal|d3d11|gl] .... Specify backend for the Qt graphics abstraction (RHI).\n");
     puts("  --no-version-detection ........... Do not try to detect the version of the .qml file");
     puts("  --slow-animations ................ Run all animations in slow motion");
     puts("  --resize-to-root ................. Resize the window to the size of the root item");
@@ -390,10 +388,6 @@ static void setWindowTitle(bool verbose, const QObject *topLevel, QWindow *windo
     if (verbose) {
         newTitle += QLatin1String(" [Qt ") + QLatin1String(QT_VERSION_STR) + QLatin1Char(' ')
             + QGuiApplication::platformName() + QLatin1Char(' ');
-#if QT_CONFIG(opengl)
-        newTitle += QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGL
-            ? QLatin1String("GL") : QLatin1String("GLES");
-#endif
         newTitle += QLatin1Char(']');
     }
     if (oldTitle != newTitle)
@@ -573,7 +567,6 @@ int main(int argc, char ** argv)
     QUnifiedTimer::instance()->setSlowModeEnabled(options.slowAnimations);
 
     if (options.rhi) {
-        qputenv("QSG_RHI", "1");
         if (options.rhiBackendSet)
             qputenv("QSG_RHI_BACKEND", options.rhiBackend.toLatin1());
         else

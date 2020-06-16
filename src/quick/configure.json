@@ -107,7 +107,7 @@
             "label": "Particle support",
             "purpose": "Provides a particle system.",
             "section": "Qt Quick",
-            "condition": "module.gui && features.quick-shadereffect && features.quick-sprite && features.opengl",
+            "condition": "module.gui && features.quick-shadereffect && features.quick-sprite",
             "output": [
                 "privateFeature"
             ]

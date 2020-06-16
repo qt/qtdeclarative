@@ -40,20 +40,13 @@
 #include "qsgtexturereader_p.h"
 #include <private/qtexturefilereader_p.h>
 
-#if QT_CONFIG(opengl)
 #include <private/qsgcompressedtexture_p.h>
-#endif
 
 QT_BEGIN_NAMESPACE
 
 QSGTextureReader::QSGTextureReader(QIODevice *device, const QString &fileName)
 {
-#if QT_CONFIG(opengl)
     m_reader = new QTextureFileReader(device, fileName);
-#else
-    Q_UNUSED(device);
-    Q_UNUSED(fileName);
-#endif
 }
 
 QSGTextureReader::~QSGTextureReader()
@@ -63,7 +56,6 @@ QSGTextureReader::~QSGTextureReader()
 
 QQuickTextureFactory *QSGTextureReader::read()
 {
-#if QT_CONFIG(opengl)
     if (!m_reader)
         return nullptr;
 
@@ -72,9 +64,6 @@ QQuickTextureFactory *QSGTextureReader::read()
         return nullptr;
 
     return new QSGCompressedTextureFactory(texData);
-#else
-    return nullptr;
-#endif
 }
 
 bool QSGTextureReader::isTexture()

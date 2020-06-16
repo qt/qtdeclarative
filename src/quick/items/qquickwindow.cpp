@@ -80,8 +80,8 @@
 
 #include <private/qqmldebugserviceinterfaces_p.h>
 #include <private/qqmldebugconnector_p.h>
-#if QT_CONFIG(opengl)
 #include <private/qsgdefaultrendercontext_p.h>
+#if QT_CONFIG(opengl)
 #include <private/qopengl_p.h>
 #include <QOpenGLContext>
 #endif
@@ -105,7 +105,6 @@ Q_LOGGING_CATEGORY(DBG_FOCUS, "qt.quick.focus")
 Q_LOGGING_CATEGORY(DBG_DIRTY, "qt.quick.dirty")
 Q_LOGGING_CATEGORY(lcTransient, "qt.quick.window.transient")
 
-extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
 extern Q_GUI_EXPORT bool qt_sendShortcutOverrideEvent(QObject *o, ulong timestamp, int k, Qt::KeyboardModifiers mods, const QString &text = QString(), bool autorep = false, ushort count = 1);
 
 bool QQuickWindowPrivate::defaultAlphaBuffer = false;
@@ -4791,7 +4790,6 @@ QSGTexture *QQuickWindow::createTextureFromNativeObject(NativeObjectType type,
         return nullptr;
     }
 
-#if QT_CONFIG(opengl) /* || QT_CONFIG(vulkan) || defined(Q_OS_WIN) || defined(Q_OS_DARWIN) */
     Q_D(const QQuickWindow);
     if (d->rhi) {
         QSGPlainTexture *texture = new QSGPlainTexture;
@@ -4803,12 +4801,6 @@ QSGTexture *QQuickWindow::createTextureFromNativeObject(NativeObjectType type,
         texture->setTextureSize(size);
         return texture;
     }
-#else
-    Q_UNUSED(nativeObjectHandle);
-    Q_UNUSED(nativeLayout);
-    Q_UNUSED(size);
-    Q_UNUSED(options);
-#endif
 
     return nullptr;
 }
@@ -4950,7 +4942,6 @@ const QQuickWindow::GraphicsStateInfo &QQuickWindow::graphicsStateInfo()
  */
 void QQuickWindow::beginExternalCommands()
 {
-#if QT_CONFIG(opengl) /* || QT_CONFIG(vulkan) || defined(Q_OS_WIN) || defined(Q_OS_DARWIN) */
     Q_D(QQuickWindow);
     if (d->rhi && d->context && d->context->isValid()) {
         QSGDefaultRenderContext *rc = static_cast<QSGDefaultRenderContext *>(d->context);
@@ -4958,7 +4949,6 @@ void QQuickWindow::beginExternalCommands()
         if (cb)
             cb->beginExternal();
     }
-#endif
 }
 
 /*!
@@ -4989,7 +4979,6 @@ void QQuickWindow::beginExternalCommands()
  */
 void QQuickWindow::endExternalCommands()
 {
-#if QT_CONFIG(opengl) /* || QT_CONFIG(vulkan) || defined(Q_OS_WIN) || defined(Q_OS_DARWIN) */
     Q_D(QQuickWindow);
     if (d->rhi && d->context && d->context->isValid()) {
         QSGDefaultRenderContext *rc = static_cast<QSGDefaultRenderContext *>(d->context);
@@ -4997,7 +4986,6 @@ void QQuickWindow::endExternalCommands()
         if (cb)
             cb->endExternal();
     }
-#endif
 }
 
 /*!
@@ -5581,10 +5569,8 @@ void QQuickWindow::setSceneGraphBackend(QSGRendererInterface::GraphicsApi api)
     default:
         break;
     }
-#if QT_CONFIG(opengl) /* || QT_CONFIG(vulkan) || defined(Q_OS_WIN) || defined(Q_OS_DARWIN) */
     if (QSGRendererInterface::isApiRhiBased(api))
         QSGRhiSupport::configure(api);
-#endif
 }
 
 /*!

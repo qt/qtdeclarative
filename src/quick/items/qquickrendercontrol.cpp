@@ -203,8 +203,7 @@ void QQuickRenderControlPrivate::windowDestroyed()
         rc->invalidate();
 
         QQuickWindowPrivate::get(window)->animationController.reset();
-// ### Qt 6 clean this up
-#if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
+#if QT_CONFIG(quick_shadereffect)
         QSGRhiShaderEffectNode::cleanupMaterialTypeCache();
 #endif
         window = nullptr;
@@ -281,8 +280,6 @@ int QQuickRenderControl::samples() const
 bool QQuickRenderControl::initialize()
 {
     Q_D(QQuickRenderControl);
-// ### Qt 6 clean this up
-#if QT_CONFIG(opengl)
     if (!d->window) {
         qWarning("QQuickRenderControl::initialize called with no associated window");
         return false;
@@ -306,7 +303,6 @@ bool QQuickRenderControl::initialize()
         qWarning("QRhi is only compatible with default adaptation");
         return false;
     }
-#endif
     return true;
 }
 

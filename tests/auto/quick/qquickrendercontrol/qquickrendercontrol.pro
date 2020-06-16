@@ -6,7 +6,7 @@ include (../../shared/util.pri)
 
 macos:CONFIG -= app_bundle
 
-QT += core-private gui-private qml-private quick-private testlib opengl
+QT += core-private gui-private qml-private quick-private testlib
 
 OTHER_FILES += \
     data/rect.qml

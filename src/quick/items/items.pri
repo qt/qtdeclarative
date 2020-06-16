@@ -214,18 +214,6 @@ qtConfig(quick-shadereffect) {
         $$PWD/qquickshadereffectsource.cpp \
         $$PWD/qquickshadereffectmesh.cpp \
         $$PWD/qquickshadereffect.cpp
-
-    qtConfig(opengl) {
-        OTHER_FILES += \
-            $$PWD/shaders/shadereffect.vert \
-            $$PWD/shaders/shadereffect.frag \
-            $$PWD/shaders/shadereffectfallback.vert \
-            $$PWD/shaders/shadereffectfallback.frag \
-            $$PWD/shaders/shadereffect_core.vert \
-            $$PWD/shaders/shadereffect_core.frag \
-            $$PWD/shaders/shadereffectfallback_core.vert \
-            $$PWD/shaders/shadereffectfallback_core.frag
-    }
 }
 
 qtConfig(quick-sprite) {
@@ -252,8 +240,6 @@ qtConfig(opengl(es1|es2)?) {
         $$PWD/qquickframebufferobject.h
 }
 
-RESOURCES += \
-    $$PWD/items.qrc
 
 qtConfig(quick-canvas): \
     include(context2d/context2d.pri)

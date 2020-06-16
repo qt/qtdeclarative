@@ -55,7 +55,7 @@ QSGDistanceFieldGlyphNode::QSGDistanceFieldGlyphNode(QSGRenderContext *context)
     , m_dirtyGeometry(false)
     , m_dirtyMaterial(false)
 {
-    m_geometry.setDrawingMode(GL_TRIANGLES);
+    m_geometry.setDrawingMode(QSGGeometry::DrawTriangles);
     setGeometry(&m_geometry);
 #ifdef QSG_RUNTIME_DESCRIPTION
     qsgnode_set_description(this, QLatin1String("glyphs"));
@@ -188,7 +188,7 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
 
     QSGGeometry *g = geometry();
 
-    Q_ASSERT(g->indexType() == GL_UNSIGNED_SHORT);
+    Q_ASSERT(g->indexType() == QSGGeometry::UnsignedShortType);
 
     QHash<const QSGDistanceFieldGlyphCache::Texture *, GlyphInfo> glyphsInOtherTextures;
 

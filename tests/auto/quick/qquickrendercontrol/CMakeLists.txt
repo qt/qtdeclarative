@@ -14,7 +14,6 @@ qt_add_test(tst_qquickrendercontrol
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate
-        Qt::OpenGL
         Qt::QmlPrivate
         Qt::QuickPrivate
 )
