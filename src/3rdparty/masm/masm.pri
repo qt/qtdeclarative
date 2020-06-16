@@ -57,7 +57,7 @@ contains(DEFINES, WTF_USE_UDIS86=1) {
     udis86.output = udis86_itab.h
     udis86.input = ITAB
     udis86.CONFIG += no_link
-    udis86.commands = $QMAKE_PYTHON $$PWD/disassembler/udis86/itab.py ${QMAKE_FILE_IN}
+    udis86.commands = $$QMAKE_PYTHON $$PWD/disassembler/udis86/itab.py ${QMAKE_FILE_IN}
     QMAKE_EXTRA_COMPILERS += udis86
 
     udis86_tab_cfile.target = $$OUT_PWD/udis86_itab.c
