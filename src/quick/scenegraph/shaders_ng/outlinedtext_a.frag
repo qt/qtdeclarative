@@ -22,12 +22,12 @@ layout(std140, binding = 0) uniform buf {
 
 void main()
 {
-    float glyph = texture(_qt_texture, sampleCoord).a; // take .a instead of .r
+    //float glyph = texture(_qt_texture, sampleCoord).a; // take .a instead of .r
     float outline = clamp(clamp(texture(_qt_texture, sCoordUp).a +
                                 texture(_qt_texture, sCoordDown).a +
                                 texture(_qt_texture, sCoordLeft).a +
                                 texture(_qt_texture, sCoordRight).a,
-                                0.0, 1.0) - glyph,
+                                0.0, 1.0),
                           0.0, 1.0);
-    fragColor = outline * ubuf.styleColor + glyph * ubuf.color;
+    fragColor = outline * ubuf.styleColor;
 }

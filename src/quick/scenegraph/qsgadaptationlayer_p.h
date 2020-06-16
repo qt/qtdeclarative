@@ -378,6 +378,7 @@ class Q_QUICK_PRIVATE_EXPORT QSGGlyphNode : public QSGVisitableNode
 public:
     enum AntialiasingMode
     {
+        DefaultAntialiasing = -1,
         GrayAntialiasing,
         LowQualitySubPixelAntialiasing,
         HighQualitySubPixelAntialiasing

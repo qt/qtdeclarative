@@ -129,6 +129,22 @@ QSGGlyphNode *QQuickTextNode::addGlyphs(const QPointF &position, const QGlyphRun
         parentNode = this;
     parentNode->appendChildNode(node);
 
+    if (style == QQuickText::Outline && color.alpha() > 0 && styleColor != color) {
+        QSGGlyphNode *fillNode = sg->sceneGraphContext()->createGlyphNode(sg, preferNativeGlyphNode);
+        fillNode->setOwnerElement(m_ownerElement);
+        fillNode->setGlyphs(position + QPointF(0, glyphs.rawFont().ascent()), glyphs);
+        fillNode->setStyle(QQuickText::Normal);
+        fillNode->setPreferredAntialiasingMode(QSGGlyphNode::GrayAntialiasing);
+        fillNode->setColor(color);
+        fillNode->update();
+
+        fillNode->geometry()->setIndexDataPattern(QSGGeometry::StaticPattern);
+        fillNode->geometry()->setVertexDataPattern(QSGGeometry::StaticPattern);
+
+        parentNode->appendChildNode(fillNode);
+        fillNode->setRenderOrder(node->renderOrder() + 1);
+    }
+
     return node;
 }
 

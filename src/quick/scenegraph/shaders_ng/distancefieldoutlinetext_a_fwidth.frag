@@ -26,6 +26,6 @@ void main()
     // we can calculate it from the outline span.
     float outlineLimit = (ubuf.outlineAlphaMax1 - ubuf.outlineAlphaMax0) / 2.0 + ubuf.outlineAlphaMax0;
 
-    fragColor = mix(ubuf.styleColor, ubuf.color, smoothstep(max(0.0, 0.5 - f), min(1.0, 0.5 + f), distance))
-            * smoothstep(max(0.0, outlineLimit - f), min(outlineLimit + f, 0.5 - f), distance);
+    float a = smoothstep(max(0.0, 0.5 - f), min(1.0, 0.5 + f), distance);
+    fragColor = (1.0 - a) * ubuf.styleColor * smoothstep(max(0.0, outlineLimit - f), min(outlineLimit + f, 0.5 - f), distance);
 }
