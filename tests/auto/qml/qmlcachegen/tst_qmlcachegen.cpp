@@ -371,7 +371,9 @@ void tst_qmlcachegen::versionChecksForAheadOfTimeUnits()
             QUrl("qrc:/data/versionchecks.qml"), &error);
     QVERIFY(originalUnit);
     QV4::CompiledData::Unit *tweakedUnit = (QV4::CompiledData::Unit *)malloc(originalUnit->qmlData->unitSize);
-    memcpy(reinterpret_cast<void *>(tweakedUnit), reinterpret_cast<const void *>(originalUnit), originalUnit->qmlData->unitSize);
+    memcpy(reinterpret_cast<void *>(tweakedUnit),
+           reinterpret_cast<const void *>(originalUnit->qmlData),
+           originalUnit->qmlData->unitSize);
     tweakedUnit->version = QV4_DATA_STRUCTURE_VERSION - 1;
     temporaryModifiedCachedUnit = new QQmlPrivate::CachedQmlUnit{tweakedUnit, nullptr, nullptr};
 
