@@ -57,37 +57,77 @@ QT_BEGIN_NAMESPACE
     \ingroup qtquick-effects
     \brief Applies custom shaders to a rectangle.
 
-    The ShaderEffect type applies a custom
-    \l{vertexShader}{vertex} and \l{fragmentShader}{fragment (pixel)} shader to a
-    rectangle. It allows you to write effects such as drop shadow, blur,
-    colorize and page curl directly in QML.
+    The ShaderEffect type applies a custom \l{vertexShader}{vertex} and
+    \l{fragmentShader}{fragment (pixel)} shader to a rectangle. It allows
+    adding effects such as drop shadow, blur, colorize and page curl into the
+    QML scene.
 
     \note Depending on the Qt Quick scenegraph backend in use, the ShaderEffect
-    type may not be supported (for example, with the software backend), or may
-    use a different shading language with rules and expectations different from
-    OpenGL and GLSL.
+    type may not be supported. For example, with the \c software backend
+    effects will not be rendered at all.
 
-    \section1 OpenGL and GLSL
+    \section1 Shaders
 
-    There are two types of input to the \l vertexShader:
-    uniform variables and attributes. Some are predefined:
+    In Qt 5, effects were provided in form of GLSL (OpenGL Shading Language)
+    source code, often embedded as strings into QML. Starting with Qt 5.8,
+    referring to files, either local ones or in the Qt resource system, became
+    possible as well.
+
+    In Qt 6, Qt Quick has support for graphics APIs, such as Vulkan, Metal, and
+    Direct3D 11 as well. Therefore, working with GLSL source strings is no
+    longer feasible. Rather, the new shader pipeline is based on compiling
+    Vulkan-compatible GLSL code into \l{https://www.khronos.org/spir/}{SPIR-V},
+    followed by gathering reflection information and translating into other
+    shading languages, such as HLSL, the Metal Shading Language, and various
+    GLSL versions. The resulting assets are packed together into a single
+    package, typically stored in files with an extension of \c{.qsb}. This
+    process is done offline or at application build time at latest. At run
+    time, the scene graph and the underlying graphics abstraction consumes
+    these \c{.qsb} files. Therefore, ShaderEffect expects file (local or qrc)
+    references in Qt 6 in place of inline shader code.
+
+    The \l vertexShader and \l fragmentShader properties are URLs in Qt 6, and
+    work very similarly to \l{Image::source}{Image.source}, for example. Only
+    the \c file and \c qrc schemes are supported with ShaderEffect, however. It
+    is also possible to omit the \c file scheme, allowing to specify a relative
+    path in a convenient way. Such a path is resolved relative to the
+    component's (the \c{.qml} file's) location.
+
+    \section1 Shader Inputs and Resources
+
+    There are two types of input to the \l vertexShader: uniforms and vertex
+    inputs.
+
+    The following inputs are predefined:
+
     \list
-    \li uniform mat4 qt_Matrix - combined transformation
-       matrix, the product of the matrices from the root item to this
-       ShaderEffect, and an orthogonal projection.
-    \li uniform float qt_Opacity - combined opacity, the product of the
-       opacities from the root item to this ShaderEffect.
-    \li attribute vec4 qt_Vertex - vertex position, the top-left vertex has
+    \li vec4 qt_Vertex - vertex position, the top-left vertex has
        position (0, 0), the bottom-right (\l{Item::width}{width},
        \l{Item::height}{height}).
-    \li attribute vec2 qt_MultiTexCoord0 - texture coordinate, the top-left
+    \li vec2 qt_MultiTexCoord0 - texture coordinate, the top-left
        coordinate is (0, 0), the bottom-right (1, 1). If \l supportsAtlasTextures
        is true, coordinates will be based on position in the atlas instead.
     \endlist
 
-    In addition, any property that can be mapped to an OpenGL Shading Language
-    (GLSL) type is available as a uniform variable. The following list shows
-    how properties are mapped to GLSL uniform variables:
+    The following uniforms are predefined:
+
+    \list
+    \li mat4 qt_Matrix - combined transformation
+       matrix, the product of the matrices from the root item to this
+       ShaderEffect, and an orthogonal projection.
+    \li float qt_Opacity - combined opacity, the product of the
+       opacities from the root item to this ShaderEffect.
+    \endlist
+
+    \note Vulkan-style GLSL has no separate uniform variables. Instead, shaders
+    must always use a uniform block with a binding point of \c 0.
+
+    \note The uniform block layout qualifier must always be \c std140.
+
+    In addition, any property that can be mapped to a GLSL type can be made
+    available to the shaders. The following list shows how properties are
+    mapped:
+
     \list
     \li bool, int, qreal -> bool, int, float - If the type in the shader is not
        the same as in QML, the value is converted automatically.
@@ -109,6 +149,18 @@ QT_BEGIN_NAMESPACE
     \li \l ShaderEffectSource -> sampler2D - Origin is in the top-left
         corner, and the color values are premultiplied.
     \endlist
+
+    Samplers are still declared as separate uniform variables in the shader
+    code. The shaders are free to choose any binding point for these, except
+    for \c 0 because that is reserved for the uniform block.
+
+    Some shading languages and APIs have a concept of separate image and
+    sampler objects. Qt Quick always works with combined image sampler objects
+    in shaders, as supported by SPIR-V. Therefore shaders supplied for
+    ShaderEffect should always use \c{layout(binding = 1) uniform sampler2D
+    tex;} style sampler declarations. The underlying abstraction layer and the
+    shader pipeline takes care of making this work for all the supported APIs
+    and shading languages, transparently to the applications.
 
     The QML scene graph back-end may choose to allocate textures in texture
     atlases. If a texture allocated in an atlas is passed to a ShaderEffect,
@@ -143,115 +195,72 @@ QT_BEGIN_NAMESPACE
                 ShaderEffect {
                     width: 100; height: 100
                     property variant src: img
-                    vertexShader: "
-                        uniform highp mat4 qt_Matrix;
-                        attribute highp vec4 qt_Vertex;
-                        attribute highp vec2 qt_MultiTexCoord0;
-                        varying highp vec2 coord;
-                        void main() {
-                            coord = qt_MultiTexCoord0;
-                            gl_Position = qt_Matrix * qt_Vertex;
-                        }"
-                    fragmentShader: "
-                        varying highp vec2 coord;
-                        uniform sampler2D src;
-                        uniform lowp float qt_Opacity;
-                        void main() {
-                            lowp vec4 tex = texture2D(src, coord);
-                            gl_FragColor = vec4(vec3(dot(tex.rgb,
-                                                vec3(0.344, 0.5, 0.156))),
-                                                     tex.a) * qt_Opacity;
-                        }"
+                    vertexShader: "myeffect.vert.qsb"
+                    fragmentShader: "myeffect.frag.qsb"
                 }
             }
         }
         \endqml
     \endtable
+
+    The example assumes \c{myeffect.vert} and \c{myeffect.frag} contain
+    Vulkan-style GLSL code, processed by the \c qsb tool in order to generate
+    the \c{.qsb} files.
+
+    \badcode
+        #version 440
+        layout(location = 0) in vec4 qt_Vertex;
+        layout(location = 1) in vec2 qt_MultiTexCoord0;
+        layout(location = 0) out vec2 coord;
+        layout(std140, binding = 0) uniform buf {
+            mat4 qt_Matrix;
+            float qt_Opacity;
+        };
+        out gl_PerVertex { vec4 gl_Position; };
+        void main() {
+            coord = qt_MultiTexCoord0;
+            gl_Position = qt_Matrix * qt_Vertex;
+        }
+    \endcode
+
+    \badcode
+        #version 440
+        layout(location = 0) in vec2 coord;
+        layout(location = 0) out vec4 fragColor;
+        layout(std140, binding = 0) uniform buf {
+            mat4 qt_Matrix;
+            float qt_Opacity;
+        };
+        layout(binding = 1) uniform sampler2D src;
+        void main() {
+            vec4 tex = texture(src, coord);
+            fragColor = vec4(vec3(dot(tex.rgb, vec3(0.344, 0.5, 0.156))), tex.a) * qt_Opacity;
+        }
+    \endcode
 
     \note Scene Graph textures have origin in the top-left corner rather than
     bottom-left which is common in OpenGL.
 
-    For information about the GLSL version being used, see \l QtQuick::GraphicsInfo.
+    \section1 Having One Shader Only
 
-    Starting from Qt 5.8 ShaderEffect also supports reading the GLSL source
-    code from files. Whenever the fragmentShader or vertexShader property value
-    is a URL with the \c file or \c qrc schema, it is treated as a file
-    reference and the source code is read from the specified file.
+    Specifying both \l vertexShader and \l fragmentShader is not mandatory.
+    Many ShaderEffect implementations will want to provide a fragment shader
+    only in practice, while relying on the default, built-in vertex shader.
 
-    \section1 Cross-platform, Cross-API ShaderEffect Items
+    The default vertex shader passes the texture coordinate along to the
+    fragment shader as \c{vec2 qt_TexCoord0} at location \c 0.
 
-    Some applications will want to be functional with multiple graphics
-    APIs. This has consequences for ShaderEffect items because the supported
-    shading languages may vary from backend to backend.
+    The default fragment shader expects the texture coordinate to be passed
+    from the vertex shader as \c{vec2 qt_TexCoord0} at location \c 0, and it
+    samples from a sampler2D named \c source at binding point \c 1.
 
-    There are two approaches to handle this: either write conditional property
-    values based on GraphicsInfo.shaderType, or use file selectors. In practice
-    the latter is strongly recommended as it leads to more concise and cleaner
-    application code. The only case it is not suitable is when the source
-    strings are constructed dynamically.
-
-    \table 70%
-    \row
-    \li \qml
-        import QtQuick 2.8 // for GraphicsInfo
-
-        Rectangle {
-            width: 200; height: 100
-            Row {
-                Image { id: img;
-                        sourceSize { width: 100; height: 100 } source: "qt-logo.png" }
-                ShaderEffect {
-                    width: 100; height: 100
-                    property variant src: img
-                    property variant color: Qt.vector3d(0.344, 0.5, 0.156)
-                    fragmentShader: GraphicsInfo.shaderType === GraphicsInfo.GLSL ?
-                        "varying highp vec2 coord;
-                        uniform sampler2D src;
-                        uniform lowp float qt_Opacity;
-                        void main() {
-                            lowp vec4 tex = texture2D(src, coord);
-                            gl_FragColor = vec4(vec3(dot(tex.rgb,
-                                                vec3(0.344, 0.5, 0.156))),
-                                                     tex.a) * qt_Opacity;"
-                    : GraphicsInfo.shaderType === GraphicsInfo.RhiShader ?
-                        "qrc:/shader.frag.qsb"
-                    : ""
-                }
-            }
-        }
-        \endqml
-    \row
-
-    \li This is the first approach based on GraphicsInfo. Note that the value
-    reported by GraphicsInfo is not up-to-date until the ShaderEffect item gets
-    associated with a QQuickWindow. Before that, the reported value is
-    GraphicsInfo.UnknownShadingLanguage. The alternative is to place the GLSL
-    source code and the RHI-compatible shader pack into the files
-    \c{shaders/effect.frag} and \c{shaders/+qsb/effect.frag}, include them in
-    the Qt resource system, and let the ShaderEffect's internal QFileSelector do
-    its job. The selector-less version is the GLSL source, while the \c qsb
-    selector is used when running with the Qt graphics abstraction (RHI).
-    Additionally, when using a version 3.2 or newer core profile context with
-    OpenGL, GLSL sources with a core profile compatible syntax can be placed
-    under \c{+glslcore}.
-        \qml
-        import QtQuick 2.8 // for GraphicsInfo
-
-        Rectangle {
-            width: 200; height: 100
-            Row {
-                Image { id: img;
-                        sourceSize { width: 100; height: 100 } source: "qt-logo.png" }
-                ShaderEffect {
-                    width: 100; height: 100
-                    property variant src: img
-                    property variant color: Qt.vector3d(0.344, 0.5, 0.156)
-                    fragmentShader: "qrc:shaders/effect.frag" // selects the correct variant automatically
-                }
-            }
-        }
-        \endqml
-    \endtable
+    \warning When only one of the shaders is specified, the writer of the
+    shader must be aware of the uniform block layout expected by the default
+    shaders: qt_Matrix must always be at offset 0, followed by qt_Opacity at
+    offset 64. Any custom uniforms must be placed after these two. This is
+    mandatory even when the application-provided shader does not use the matrix
+    or the opacity, because at run time there is one single uniform buffer that
+    is exposed to both the vertex and fragment shader.
 
     \section1 ShaderEffect and Item Layers
 
@@ -262,7 +271,30 @@ QT_BEGIN_NAMESPACE
       \li \b {Layer with effect disabled} \inlineimage qml-shadereffect-nolayereffect.png
       \li \b {Layer with effect enabled} \inlineimage qml-shadereffect-layereffect.png
     \row
-      \li \snippet qml/layerwitheffect.qml 1
+      \li \qml
+          Item {
+              id: layerRoot
+              layer.enabled: true
+              layer.effect: ShaderEffect {
+              fragmentShader: "effect.frag.qsb"
+          }
+          \endqml
+
+          \badcode
+          #version 440
+          layout(location = 0) in vec2 qt_TexCoord0;
+          layout(location = 0) out vec4 fragColor;
+          layout(std140, binding = 0) uniform buf {
+              mat4 qt_Matrix;
+              float qt_Opacity;
+          };
+          layout(binding = 1) uniform sampler2D source;
+          void main() {
+              vec4 p = texture(source, qt_TexCoord0);
+              float g = dot(p.xyz, vec3(0.344, 0.5, 0.156));
+              fragColor = vec4(g, g, g, p.a) * qt_Opacity;
+          }
+          \endcode
     \endtable
 
     It is also possible to combine multiple layered items:
@@ -271,7 +303,50 @@ QT_BEGIN_NAMESPACE
     \row
       \li \inlineimage qml-shadereffect-opacitymask.png
     \row
-      \li \snippet qml/opacitymask.qml 1
+      \li \qml
+          Rectangle {
+              id: gradientRect;
+              width: 10
+              height: 10
+              gradient: Gradient {
+                  GradientStop { position: 0; color: "white" }
+                  GradientStop { position: 1; color: "steelblue" }
+              }
+              visible: false; // should not be visible on screen.
+              layer.enabled: true;
+              layer.smooth: true
+           }
+           Text {
+              id: textItem
+              font.pixelSize: 48
+              text: "Gradient Text"
+              anchors.centerIn: parent
+              layer.enabled: true
+              // This item should be used as the 'mask'
+              layer.samplerName: "maskSource"
+              layer.effect: ShaderEffect {
+                  property var colorSource: gradientRect;
+                  fragmentShader: "mask.frag.qsb"
+              }
+          }
+          \endqml
+
+          \badcode
+          #version 440
+          layout(location = 0) in vec2 qt_TexCoord0;
+          layout(location = 0) out vec4 fragColor;
+          layout(std140, binding = 0) uniform buf {
+              mat4 qt_Matrix;
+              float qt_Opacity;
+          };
+          layout(binding = 1) uniform sampler2D colorSource;
+          layout(binding = 2) uniform sampler2D maskSource;
+          void main() {
+              fragColor = texture(colorSource, qt_TexCoord0)
+                              * texture(maskSource, qt_TexCoord0).a
+                              * qt_Opacity;
+          }
+          \endcode
     \endtable
 
     \section1 Other Notes
@@ -582,7 +657,7 @@ void QQuickShaderEffect::setSupportsAtlasTextures(bool supports)
 /*!
     \qmlproperty enumeration QtQuick::ShaderEffect::status
 
-    This property tells the current status of the OpenGL shader program.
+    This property tells the current status of the shaders.
 
     \list
     \li ShaderEffect.Compiled - the shader program was successfully compiled and linked.
@@ -609,8 +684,15 @@ void QQuickShaderEffect::setSupportsAtlasTextures(bool supports)
     \qmlproperty string QtQuick::ShaderEffect::log
 
     This property holds a log of warnings and errors from the latest attempt at
-    compiling and linking the OpenGL shader program. It is updated at the same
-    time \l status is set to Compiled or Error.
+    compiling the shaders. It is updated at the same time \l status is set to
+    Compiled or Error.
+
+    \note In Qt 6, the shader pipeline promotes compiling and translating the
+    Vulkan-style GLSL shaders offline, or at build time at latest. This does
+    not necessarily mean there is no shader compilation happening at run time,
+    but even if there is, ShaderEffect is not involved in that, and syntax and
+    similar errors should not occur anymore at that stage. Therefore the value
+    of this property is typically empty.
 
     \sa status
 */
