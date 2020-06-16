@@ -183,9 +183,9 @@ QQmlNativeDebugConnector::QQmlNativeDebugConnector()
     : m_blockingMode(false)
 {
     const QString args = commandLineArguments();
-    const auto lstjsDebugArguments = args.splitRef(QLatin1Char(','), Qt::SkipEmptyParts);
+    const auto lstjsDebugArguments = QStringView{args}.split(QLatin1Char(','), Qt::SkipEmptyParts);
     QStringList services;
-    for (const QStringRef &strArgument : lstjsDebugArguments) {
+    for (const QStringView &strArgument : lstjsDebugArguments) {
         if (strArgument == QLatin1String("block")) {
             m_blockingMode = true;
         } else if (strArgument == QLatin1String("native")) {

@@ -726,12 +726,12 @@ ReturnedValue RegExpPrototype::method_replace(const FunctionObject *f, const Val
         if (scope.hasException())
             return Encode::undefined();
         if (position >= nextSourcePosition) {
-            accumulatedResult += s->toQString().midRef(nextSourcePosition, position - nextSourcePosition) + replacement;
+            accumulatedResult += QStringView{s->toQString()}.mid(nextSourcePosition, position - nextSourcePosition) + replacement;
             nextSourcePosition = position + matchLength;
         }
     }
     if (nextSourcePosition < lengthS) {
-        accumulatedResult += s->toQString().midRef(nextSourcePosition);
+        accumulatedResult += QStringView{s->toQString()}.mid(nextSourcePosition);
     }
     return scope.engine->newString(accumulatedResult)->asReturnedValue();
 }

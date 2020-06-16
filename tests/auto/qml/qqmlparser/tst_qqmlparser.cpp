@@ -342,7 +342,7 @@ void tst_qqmlparser::stringLiteral()
     QVERIFY(expression);
     auto *literal = QQmlJS::AST::cast<QQmlJS::AST::StringLiteral *>(expression);
     QVERIFY(literal);
-    QCOMPARE(literal->value, "hello string");
+    QCOMPARE(literal->value, u"hello string");
     QCOMPARE(literal->firstSourceLocation().begin(), 0u);
     QCOMPARE(literal->lastSourceLocation().end(), quint32(code.size()));
 
@@ -361,7 +361,7 @@ void tst_qqmlparser::stringLiteral()
 
     literal = QQmlJS::AST::cast<QQmlJS::AST::StringLiteral *>(binaryExpression->left);
     QVERIFY(literal);
-    QCOMPARE(literal->value, "hello\n\tstring");
+    QCOMPARE(literal->value, u"hello\n\tstring");
     QCOMPARE(literal->firstSourceLocation().begin(), 0u);
     QCOMPARE(literal->firstSourceLocation().startLine, 1u);
     QCOMPARE(literal->lastSourceLocation().end(), quint32(leftCode.size()));
@@ -369,7 +369,7 @@ void tst_qqmlparser::stringLiteral()
     QVERIFY(binaryExpression->right);
     literal = QQmlJS::AST::cast<QQmlJS::AST::StringLiteral *>(binaryExpression->right);
     QVERIFY(literal);
-    QCOMPARE(literal->value, "\nbye");
+    QCOMPARE(literal->value, u"\nbye");
     quint32 offset = quint32(leftCode.size() + plusCode.size());
     QCOMPARE(literal->firstSourceLocation().begin(), offset);
     QCOMPARE(literal->firstSourceLocation().startLine, 1u);
@@ -387,14 +387,14 @@ void tst_qqmlparser::stringLiteral()
 
     literal = QQmlJS::AST::cast<QQmlJS::AST::StringLiteral *>(binaryExpression->left);
     QVERIFY(literal);
-    QCOMPARE(literal->value, "\nhello\nbye");
+    QCOMPARE(literal->value, u"\nhello\nbye");
     QCOMPARE(literal->firstSourceLocation().begin(), 0u);
     QCOMPARE(literal->firstSourceLocation().startLine, 1u);
     QCOMPARE(literal->lastSourceLocation().end(), leftCode.size());
 
     literal = QQmlJS::AST::cast<QQmlJS::AST::StringLiteral *>(binaryExpression->right);
     QVERIFY(literal);
-    QCOMPARE(literal->value, "\nbye");
+    QCOMPARE(literal->value, u"\nbye");
     offset = quint32(leftCode.size() + plusCode.size());
     QCOMPARE(literal->firstSourceLocation().begin(), offset);
     QCOMPARE(literal->lastSourceLocation().startLine, 3u);
@@ -479,7 +479,7 @@ void tst_qqmlparser::noSubstitutionTemplateLiteral()
     auto *literal = QQmlJS::AST::cast<QQmlJS::AST::TemplateLiteral *>(expression);
     QVERIFY(literal);
 
-    QCOMPARE(literal->value, "hello template");
+    QCOMPARE(literal->value, u"hello template");
     QCOMPARE(literal->firstSourceLocation().begin(), 0u);
     QCOMPARE(literal->lastSourceLocation().end(), quint32(code.size()));
 }
@@ -696,7 +696,7 @@ void tst_qqmlparser::annotations_data()
 
     for (const QString &file: qAsConst(files)) {
         auto fileNameStart = file.lastIndexOf(QDir::separator());
-        QStringRef fileName(&file, fileNameStart, file.length()-fileNameStart);
+        auto fileName = QStringView(file).mid(fileNameStart, file.length()-fileNameStart);
         auto ref=std::find_if(refFiles.constBegin(),refFiles.constEnd(), [fileName](const QString &s){ return s.endsWith(fileName); });
         if (ref != refFiles.constEnd())
             QTest::newRow(qPrintable(file)) << file << *ref;

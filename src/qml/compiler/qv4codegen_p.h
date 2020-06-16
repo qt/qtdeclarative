@@ -105,15 +105,15 @@ public:
     class VolatileMemoryLocations {
         friend VolatileMemoryLocationScanner;
         bool allVolatile = false;
-        QVector<QStringView> specificLocations;
+        QList<QStringView> specificLocations;
     public:
-        bool isVolatile(const QStringView &name) {
+        bool isVolatile(QStringView name) {
             if (allVolatile)
                 return true;
             return specificLocations.contains(name);
         }
 
-        void add(const QStringRef &name) { if (!allVolatile) specificLocations.append(name); }
+        void add(QStringView name) { if (!allVolatile) specificLocations.append(name); }
         void setAllVolatile() { allVolatile = true; }
     };
     class RValue {

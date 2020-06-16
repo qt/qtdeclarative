@@ -43,7 +43,7 @@
 
 QT_BEGIN_NAMESPACE
 
-static int parseInt(const QStringRef &str, bool *ok)
+static int parseInt(QStringView str, bool *ok)
 {
     int pos = 0;
     int number = 0;
@@ -65,9 +65,9 @@ static QTypeRevision parseVersion(const QString &str)
     const int dotIndex = str.indexOf(QLatin1Char('.'));
     if (dotIndex != -1 && str.indexOf(QLatin1Char('.'), dotIndex + 1) == -1) {
         bool ok = false;
-        const int major = parseInt(QStringRef(&str, 0, dotIndex), &ok);
+        const int major = parseInt(QStringView(str).left(dotIndex), &ok);
         if (!ok) return QTypeRevision();
-        const int minor = parseInt(QStringRef(&str, dotIndex + 1, str.length() - dotIndex - 1), &ok);
+        const int minor = parseInt(QStringView(str).mid(dotIndex + 1, str.length() - dotIndex - 1), &ok);
         return ok ? QTypeRevision::fromVersion(major, minor) : QTypeRevision();
     }
     return QTypeRevision();

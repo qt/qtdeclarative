@@ -616,13 +616,13 @@ QString QQmlFile::urlToLocalFileOrQrc(const QString& url)
 {
     if (url.startsWith(QLatin1String("qrc://"), Qt::CaseInsensitive)) {
         if (url.length() > 6)
-            return QLatin1Char(':') + url.midRef(6);
+            return QLatin1Char(':') + QStringView{url}.mid(6);
         return QString();
     }
 
     if (url.startsWith(QLatin1String("qrc:"), Qt::CaseInsensitive)) {
         if (url.length() > 4)
-            return QLatin1Char(':') + url.midRef(4);
+            return QLatin1Char(':') + QStringView{url}.mid(4);
         return QString();
     }
 

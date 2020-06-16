@@ -254,7 +254,7 @@ QVariantList findPathsForModuleImports(const QVariantList &imports)
             if (plugininfo.contains(dependenciesLiteral())) {
                 const QStringList dependencies = plugininfo.value(dependenciesLiteral()).toStringList();
                 for (const QString &line : dependencies) {
-                    const auto dep = line.splitRef(QLatin1Char(' '));
+                    const auto dep = QStringView{line}.split(QLatin1Char(' '));
                     QVariantMap depImport;
                     depImport[typeLiteral()] = moduleLiteral();
                     depImport[nameLiteral()] = dep[0].toString();

@@ -35,10 +35,10 @@ ComponentVersion::ComponentVersion(const QString &versionString)
     if (dotIdx == -1)
         return;
     bool ok = false;
-    const int maybeMajor = versionString.leftRef(dotIdx).toInt(&ok);
+    const int maybeMajor = QStringView{versionString}.left(dotIdx).toInt(&ok);
     if (!ok)
         return;
-    const int maybeMinor = versionString.midRef(dotIdx + 1).toInt(&ok);
+    const int maybeMinor = QStringView{versionString}.mid(dotIdx + 1).toInt(&ok);
     if (!ok)
         return;
     m_version = QTypeRevision::fromVersion(maybeMajor, maybeMinor);

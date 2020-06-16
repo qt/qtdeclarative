@@ -1999,7 +1999,7 @@ QVariant QQuickTextInput::inputMethodQuery(Qt::InputMethodQuery property, const 
         return QVariant(d->m_text.mid(d->m_cursor));
     case Qt::ImTextBeforeCursor:
         if (argument.isValid())
-            return QVariant(d->m_text.leftRef(d->m_cursor).right(argument.toInt()).toString());
+            return QVariant(QStringView{d->m_text}.left(d->m_cursor).right(argument.toInt()).toString());
         return QVariant(d->m_text.left(d->m_cursor));
     default:
         return QQuickItem::inputMethodQuery(property);
@@ -2041,7 +2041,7 @@ bool QQuickTextInput::isRightToLeft(int start, int end)
         qmlWarning(this) << "isRightToLeft(start, end) called with the end property being smaller than the start.";
         return false;
     } else {
-        return text().midRef(start, end - start).isRightToLeft();
+        return QStringView{text()}.mid(start, end - start).isRightToLeft();
     }
 }
 
@@ -3728,7 +3728,7 @@ void QQuickTextInputPrivate::internalInsert(const QString &s)
     } else {
         int remaining = m_maxLength - m_text.length();
         if (remaining != 0) {
-            const QStringRef remainingStr = s.leftRef(remaining);
+            const QStringView remainingStr = QStringView{s}.left(remaining);
             m_text.insert(m_cursor, remainingStr);
             for (auto e : remainingStr)
                addCommand(Command(Insert, m_cursor++, e, -1, -1));
@@ -4084,14 +4084,14 @@ QString QQuickTextInputPrivate::maskString(uint pos, const QString &str, bool cl
                     int n = findInMask(i, true, true, str[strIndex]);
                     if (n != -1) {
                         if (str.length() != 1 || i == 0 || (i > 0 && (!m_maskData[i-1].separator || m_maskData[i-1].maskChar != str[strIndex]))) {
-                            s += fill.midRef(i, n-i+1);
+                            s += QStringView{fill}.mid(i, n-i+1);
                             i = n + 1; // update i to find + 1
                         }
                     } else {
                         // search for valid m_blank if not
                         n = findInMask(i, true, false, str[strIndex]);
                         if (n != -1) {
-                            s += fill.midRef(i, n-i);
+                            s += QStringView{fill}.mid(i, n-i);
                             switch (m_maskData[n].caseMode) {
                             case MaskInputData::Upper:
                                 s += str[strIndex].toUpper();

@@ -118,7 +118,7 @@ public:
     void setComponentRoots(const QVector<quint32> &roots) { m_componentRoots = roots; }
     const QVector<quint32> &componentRoots() const { return m_componentRoots; }
     QQmlJS::MemoryPool *memoryPool();
-    QStringRef newStringRef(const QString &string);
+    QStringView newStringRef(const QString &string);
     const QV4::Compiler::StringTableGenerator *stringPool() const;
 
     const QHash<int, QQmlCustomParser*> &customParserCache() const { return customParsers; }
@@ -207,15 +207,15 @@ public:
     bool resolveEnumBindings();
 
 private:
-    bool assignEnumToBinding(QmlIR::Binding *binding, const QStringRef &enumName, int enumValue, bool isQtObject);
+    bool assignEnumToBinding(QmlIR::Binding *binding, QStringView enumName, int enumValue, bool isQtObject);
     bool assignEnumToBinding(QmlIR::Binding *binding, const QString &enumName, int enumValue, bool isQtObject)
     {
-        return assignEnumToBinding(binding, QStringRef(&enumName), enumValue, isQtObject);
+        return assignEnumToBinding(binding, QStringView(enumName), enumValue, isQtObject);
     }
     bool tryQualifiedEnumAssignment(const QmlIR::Object *obj, const QQmlPropertyCache *propertyCache,
                                     const QQmlPropertyData *prop,
                                     QmlIR::Binding *binding);
-    int evaluateEnum(const QString &scope, const QStringRef &enumName, const QStringRef &enumValue, bool *ok) const;
+    int evaluateEnum(const QString &scope, QStringView enumName, QStringView enumValue, bool *ok) const;
 
 
     const QVector<QmlIR::Object*> &qmlObjects;

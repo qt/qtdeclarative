@@ -407,7 +407,7 @@ void ScriptDirectivesCollector::importModule(const QString &uri, const QString &
     QV4::CompiledData::Import *import = engine->pool()->New<QV4::CompiledData::Import>();
     import->type = QV4::CompiledData::Import::ImportLibrary;
     import->uriIndex = jsGenerator->registerString(uri);
-    import->version = IRBuilder::extractVersion(QStringRef(&version));
+    import->version = IRBuilder::extractVersion(QStringView(version));
     import->qualifierIndex = jsGenerator->registerString(module);
     import->location.line = lineNumber;
     import->location.column = column;
@@ -526,7 +526,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiObjectDefinition *node)
     QQmlJS::AST::UiQualifiedId *lastId = node->qualifiedTypeNameId;
     while (lastId->next)
         lastId = lastId->next;
-    bool isType = lastId->name.unicode()->isUpper();
+    bool isType = lastId->name.data()->isUpper();
     if (isType) {
         int idx = 0;
         if (!defineQMLObject(&idx, node))
@@ -915,7 +915,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
         if (memberType == QLatin1String("alias")) {
             return appendAlias(node);
         } else {
-            const QStringRef &name = node->name;
+            const QStringView &name = node->name;
 
             Property *property = New<Property>();
             property->isReadOnly = node->isReadonlyMember;
@@ -927,7 +927,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
                 property->setBuiltinType(builtinPropertyType);
 
             if (!typeFound && memberType.at(0).isUpper()) {
-                const QStringRef &typeModifier = node->typeModifier;
+                const QStringView &typeModifier = node->typeModifier;
 
                 property->setCustomType(registerString(memberType));
                 if (typeModifier == QLatin1String("list")) {
@@ -1043,15 +1043,15 @@ QString IRBuilder::asString(QQmlJS::AST::UiQualifiedId *node)
     return s;
 }
 
-QStringRef IRBuilder::asStringRef(QQmlJS::AST::Node *node)
+QStringView IRBuilder::asStringRef(QQmlJS::AST::Node *node)
 {
     if (!node)
-        return QStringRef();
+        return QStringView();
 
     return textRefAt(node->firstSourceLocation(), node->lastSourceLocation());
 }
 
-QTypeRevision IRBuilder::extractVersion(const QStringRef &string)
+QTypeRevision IRBuilder::extractVersion(QStringView string)
 {
     if (string.isEmpty())
         return QTypeRevision();
@@ -1062,9 +1062,9 @@ QTypeRevision IRBuilder::extractVersion(const QStringRef &string)
         : QTypeRevision::fromVersion(string.left(dot).toInt(), string.mid(dot + 1).toInt());
 }
 
-QStringRef IRBuilder::textRefAt(const QQmlJS::SourceLocation &first, const QQmlJS::SourceLocation &last) const
+QStringView IRBuilder::textRefAt(const QQmlJS::SourceLocation &first, const QQmlJS::SourceLocation &last) const
 {
-    return QStringRef(&sourceCode, first.offset, last.offset + last.length - first.offset);
+    return QStringView(sourceCode).mid(first.offset, last.offset + last.length - first.offset);
 }
 
 void IRBuilder::setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST::Statement *statement, QQmlJS::AST::Node *parentNode)
@@ -1127,7 +1127,7 @@ void IRBuilder::setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST
     }
 }
 
-void IRBuilder::tryGeneratingTranslationBinding(const QStringRef &base, AST::ArgumentList *args, QV4::CompiledData::Binding *binding)
+void IRBuilder::tryGeneratingTranslationBinding(QStringView base, AST::ArgumentList *args, QV4::CompiledData::Binding *binding)
 {
     if (base == QLatin1String("qsTr")) {
         QV4::CompiledData::TranslationData translationData;
@@ -1138,7 +1138,7 @@ void IRBuilder::tryGeneratingTranslationBinding(const QStringRef &base, AST::Arg
         if (!args || !args->expression)
             return; // no arguments, stop
 
-        QStringRef translation;
+        QStringView translation;
         if (QQmlJS::AST::StringLiteral *arg1 = QQmlJS::AST::cast<QQmlJS::AST::StringLiteral *>(args->expression)) {
             translation = arg1->value;
         } else {
@@ -1179,7 +1179,7 @@ void IRBuilder::tryGeneratingTranslationBinding(const QStringRef &base, AST::Arg
         if (!args || !args->expression)
             return; // no arguments, stop
 
-        QStringRef id;
+        QStringView id;
         if (QQmlJS::AST::StringLiteral *arg1 = QQmlJS::AST::cast<QQmlJS::AST::StringLiteral *>(args->expression)) {
             id = arg1->value;
         } else {
@@ -1207,7 +1207,7 @@ void IRBuilder::tryGeneratingTranslationBinding(const QStringRef &base, AST::Arg
         if (!args || !args->expression)
             return; // no arguments, stop
 
-        QStringRef str;
+        QStringView str;
         if (QQmlJS::AST::StringLiteral *arg1 = QQmlJS::AST::cast<QQmlJS::AST::StringLiteral *>(args->expression)) {
             str = arg1->value;
         } else {
@@ -1228,7 +1228,7 @@ void IRBuilder::tryGeneratingTranslationBinding(const QStringRef &base, AST::Arg
         if (!args || !args->expression)
             return; // no second arguments, stop
 
-        QStringRef str;
+        QStringView str;
         if (QQmlJS::AST::StringLiteral *arg2 = QQmlJS::AST::cast<QQmlJS::AST::StringLiteral *>(args->expression)) {
             str = arg2->value;
         } else {
@@ -1408,7 +1408,7 @@ Object *IRBuilder::bindingsTarget() const
 bool IRBuilder::setId(const QQmlJS::SourceLocation &idLocation, QQmlJS::AST::Statement *value)
 {
     QQmlJS::SourceLocation loc = value->firstSourceLocation();
-    QStringRef str;
+    QStringView str;
 
     QQmlJS::AST::Node *node = value;
     if (QQmlJS::AST::ExpressionStatement *stmt = QQmlJS::AST::cast<QQmlJS::AST::ExpressionStatement *>(node)) {
@@ -1433,7 +1433,7 @@ bool IRBuilder::setId(const QQmlJS::SourceLocation &idLocation, QQmlJS::AST::Sta
     if (!ch.isLetter() && ch != u)
         COMPILE_EXCEPTION(loc, tr( "IDs must start with a letter or underscore"));
 
-    for (int ii = 1; ii < str.count(); ++ii) {
+    for (int ii = 1; ii < str.size(); ++ii) {
         ch = str.at(ii);
         if (!ch.isLetterOrNumber() && ch != u)
             COMPILE_EXCEPTION(loc, tr( "IDs must contain only letters, numbers, and underscores"));
@@ -1469,7 +1469,7 @@ bool IRBuilder::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, O
                 qualifiedIdElement = qualifiedIdElement->next;
                 currentName += QLatin1Char('.') + qualifiedIdElement->name;
 
-                if (!qualifiedIdElement->name.unicode()->isUpper())
+                if (!qualifiedIdElement->name.data()->isUpper())
                     COMPILE_EXCEPTION(qualifiedIdElement->firstSourceLocation(), tr("Expected type name"));
 
                 break;
@@ -1479,7 +1479,7 @@ bool IRBuilder::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, O
     *object = _object;
     while (qualifiedIdElement->next) {
         const quint32 propertyNameIndex = registerString(currentName);
-        const bool isAttachedProperty = qualifiedIdElement->name.unicode()->isUpper();
+        const bool isAttachedProperty = qualifiedIdElement->name.data()->isUpper();
 
         Binding *binding = (*object)->findBinding(propertyNameIndex);
         if (binding) {

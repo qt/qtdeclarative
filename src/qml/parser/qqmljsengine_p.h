@@ -98,7 +98,7 @@ class QML_PARSER_EXPORT Engine
     Directives *_directives;
     MemoryPool _pool;
     QList<SourceLocation> _comments;
-    QString _extraCode;
+    QStringList _extraCode;
     QString _code;
 
 public:
@@ -119,10 +119,10 @@ public:
 
     MemoryPool *pool();
 
-    inline QStringRef midRef(int position, int size) { return _code.midRef(position, size); }
+    inline QStringView midRef(int position, int size) { return QStringView{_code}.mid(position, size); }
 
-    QStringRef newStringRef(const QString &s);
-    QStringRef newStringRef(const QChar *chars, int size);
+    QStringView newStringRef(const QString &s);
+    QStringView newStringRef(const QChar *chars, int size);
 };
 
 double integerFromString(const char *buf, int size, int radix);

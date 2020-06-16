@@ -1133,7 +1133,7 @@ static const char* mimeToType(const QString &mime)
     const QLatin1String imagePrefix("image/");
     if (!mime.startsWith(imagePrefix))
         return nullptr;
-    const QStringRef mimeExt = mime.midRef(imagePrefix.size());
+    const QStringView mimeExt = QStringView{mime}.mid(imagePrefix.size());
     if (mimeExt == QLatin1String("png"))
         return "png";
     else if (mimeExt == QLatin1String("bmp"))

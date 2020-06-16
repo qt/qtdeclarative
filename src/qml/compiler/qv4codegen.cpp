@@ -3969,14 +3969,14 @@ public:
     }
 
 private:
-    void collectIdentifiers(QVector<QStringView> &ids, AST::Node *node) {
+    void collectIdentifiers(QList<QStringView> &ids, AST::Node *node) {
         class Collector: public QQmlJS::AST::Visitor {
         private:
-            QVector<QStringView> &ids;
+            QList<QStringView> &ids;
             VolatileMemoryLocationScanner *parent;
 
         public:
-            Collector(QVector<QStringView> &ids, VolatileMemoryLocationScanner *parent) :
+            Collector(QList<QStringView> &ids, VolatileMemoryLocationScanner *parent) :
                 QQmlJS::AST::Visitor(parent->recursionDepth()), ids(ids), parent(parent)
             {}
 

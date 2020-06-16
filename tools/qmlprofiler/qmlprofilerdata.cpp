@@ -198,7 +198,7 @@ void QmlProfilerData::addEventType(const QQmlProfilerEventType &type)
         break;
     case PixmapCacheEvent: {
         const QString filePath = QUrl(type.location().filename()).path();
-        displayName = filePath.midRef(filePath.lastIndexOf(QLatin1Char('/')) + 1)
+        displayName = QStringView{filePath}.mid(filePath.lastIndexOf(QLatin1Char('/')) + 1)
                 + QLatin1Char(':') + QString::number(type.detailType());
         break;
     }
@@ -218,7 +218,7 @@ void QmlProfilerData::addEventType(const QQmlProfilerEventType &type)
             displayName = QString::fromLatin1("Unknown");
         } else {
             const QString filePath = QUrl(eventLocation.filename()).path();
-            displayName = filePath.midRef(
+            displayName = QStringView{filePath}.mid(
                         filePath.lastIndexOf(QLatin1Char('/')) + 1) +
                         QLatin1Char(':') + QString::number(eventLocation.line());
         }

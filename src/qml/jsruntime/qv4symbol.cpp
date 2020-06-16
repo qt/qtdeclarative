@@ -182,5 +182,5 @@ Heap::Symbol *Symbol::create(ExecutionEngine *e, const QString &s)
 
 QString Symbol::descriptiveString() const
 {
-    return QLatin1String("Symbol(") + toQString().midRef(1) + QLatin1String(")");
+    return QLatin1String("Symbol(") + QStringView{toQString()}.mid(1) + QLatin1String(")");
 }

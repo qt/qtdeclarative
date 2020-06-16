@@ -92,7 +92,7 @@ QString resolveLocalUrl(const QString &url, const QString &relative)
     } else if (relative.at(0) == Slash || !url.contains(Slash)) {
         return relative;
     } else {
-        const QStringRef baseRef = url.leftRef(url.lastIndexOf(Slash) + 1);
+        const QStringView baseRef = QStringView{url}.left(url.lastIndexOf(Slash) + 1);
         if (relative == QLatin1String("."))
             return baseRef.toString();
 
@@ -406,7 +406,7 @@ bool excludeBaseUrl(const QString &importUrl, const QString &fileName, const QSt
 
     if (baseUrl.startsWith(importUrl))
     {
-        if (fileName == baseUrl.midRef(importUrl.size()))
+        if (fileName == QStringView{baseUrl}.mid(importUrl.size()))
             return false;
     }
 
@@ -1000,17 +1000,17 @@ bool QQmlImportNamespace::resolveType(QQmlTypeLoader *typeLoader, const QHashedS
                             QString u1 = import->url;
                             QString u2 = import2->url;
                             if (base) {
-                                QStringRef b(base);
+                                QStringView b(*base);
                                 int dot = b.lastIndexOf(Dot);
                                 if (dot >= 0) {
                                     b = b.left(dot+1);
-                                    QStringRef l = b.left(dot);
+                                    QStringView l = b.left(dot);
                                     if (u1.startsWith(b))
-                                        u1 = u1.mid(b.count());
+                                        u1 = u1.mid(b.size());
                                     else if (u1 == l)
                                         u1 = QQmlImportDatabase::tr("local directory");
                                     if (u2.startsWith(b))
-                                        u2 = u2.mid(b.count());
+                                        u2 = u2.mid(b.size());
                                     else if (u2 == l)
                                         u2 = QQmlImportDatabase::tr("local directory");
                                 }
@@ -1400,7 +1400,7 @@ QQmlImports::LocalQmldirResult QQmlImportsPrivate::locateLocalQmldir(
         QString absoluteFilePath = typeLoader.absoluteFilePath(qmldirPath);
         if (!absoluteFilePath.isEmpty()) {
             QString url;
-            const QStringRef absolutePath = absoluteFilePath.leftRef(absoluteFilePath.lastIndexOf(Slash) + 1);
+            const QStringView absolutePath = QStringView{absoluteFilePath}.left(absoluteFilePath.lastIndexOf(Slash) + 1);
             if (absolutePath.at(0) == Colon)
                 url = QLatin1String("qrc") + absolutePath;
             else

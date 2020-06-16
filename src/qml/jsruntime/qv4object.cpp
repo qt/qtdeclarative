@@ -177,7 +177,7 @@ void Object::defineAccessorProperty(StringOrSymbol *name, VTable::Call getter, V
     ScopedProperty p(scope);
     QString n = name->toQString();
     if (n.at(0) == QLatin1Char('@'))
-        n = QChar::fromLatin1('[') + n.midRef(1) + QChar::fromLatin1(']');
+        n = QChar::fromLatin1('[') + QStringView{n}.mid(1) + QChar::fromLatin1(']');
     if (getter) {
         ScopedString getName(scope, v4->newString(QString::fromLatin1("get ") + n));
         p->setGetter(ScopedFunctionObject(scope, FunctionObject::createBuiltinFunction(v4, getName, getter, 0)));

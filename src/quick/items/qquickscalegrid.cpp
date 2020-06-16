@@ -140,8 +140,8 @@ QQuickGridScaledImage::QQuickGridScaledImage(QIODevice *data)
         if (colonId <= 0)
             return;
 
-        const QStringRef property = line.leftRef(colonId).trimmed();
-        QStringRef value = line.midRef(colonId + 1).trimmed();
+        const QStringView property = QStringView{line}.left(colonId).trimmed();
+        QStringView value = QStringView{line}.mid(colonId + 1).trimmed();
 
         if (property == QLatin1String("border.left")) {
             l = value.toInt();
@@ -169,9 +169,9 @@ QQuickGridScaledImage::QQuickGridScaledImage(QIODevice *data)
     _pix = imgFile;
 }
 
-QQuickBorderImage::TileMode QQuickGridScaledImage::stringToRule(const QStringRef &s)
+QQuickBorderImage::TileMode QQuickGridScaledImage::stringToRule(QStringView s)
 {
-    QStringRef string = s;
+    QStringView string = s;
     if (string.startsWith(QLatin1Char('"')) && string.endsWith(QLatin1Char('"')))
         string = string.mid(1, string.size() - 2); // remove leading/trailing quotes.
 

@@ -57,7 +57,7 @@
 
 QT_BEGIN_NAMESPACE
 
-QStringList qQmlResolveImportPaths(const QString &uri, const QStringList &basePaths,
+QStringList qQmlResolveImportPaths(QStringView uri, const QStringList &basePaths,
                                    QTypeRevision version);
 
 QT_END_NAMESPACE

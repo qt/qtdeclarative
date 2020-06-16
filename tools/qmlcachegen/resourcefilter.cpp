@@ -61,7 +61,7 @@ int filterResourceFile(const QString &input, const QString &output)
     while (!reader.atEnd()) {
         switch (reader.readNext()) {
         case QXmlStreamReader::StartDocument: {
-            QStringRef version = reader.documentVersion();
+            QStringView version = reader.documentVersion();
             if (!version.isEmpty())
                 writer.writeStartDocument(version.toString());
             else

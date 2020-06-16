@@ -37,21 +37,21 @@ class IssueLocationWithContext
 public:
     IssueLocationWithContext(const QString &code, const QQmlJS::SourceLocation &location) {
         int before = std::max(0,code.lastIndexOf(QLatin1Char('\n'), location.offset));
-        m_beforeText = code.midRef(before + 1, int(location.offset - (before + 1)));
-        m_issueText = code.midRef(location.offset, location.length);
+        m_beforeText = QStringView{code}.mid(before + 1, int(location.offset - (before + 1)));
+        m_issueText = QStringView{code}.mid(location.offset, location.length);
         int after = code.indexOf(QLatin1Char('\n'), int(location.offset + location.length));
-        m_afterText = code.midRef(int(location.offset + location.length),
+        m_afterText = QStringView{code}.mid(int(location.offset + location.length),
                                   int(after - (location.offset+location.length)));
     }
 
-    QStringRef beforeText() const { return m_beforeText; }
-    QStringRef issueText() const { return m_issueText; }
-    QStringRef afterText() const { return m_afterText; }
+    QStringView beforeText() const { return m_beforeText; }
+    QStringView issueText() const { return m_issueText; }
+    QStringView afterText() const { return m_afterText; }
 
 private:
-    QStringRef m_beforeText;
-    QStringRef m_issueText;
-    QStringRef m_afterText;
+    QStringView m_beforeText;
+    QStringView m_issueText;
+    QStringView m_afterText;
 };
 
 static void writeWarning(ColorOutput *out)

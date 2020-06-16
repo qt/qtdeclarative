@@ -358,7 +358,7 @@ void QQmlTypeData::done()
                 error.setUrl(url());
                 error.setLine(qmlConvertSourceCoordinate<quint32, int>(type.location.line));
                 error.setColumn(qmlConvertSourceCoordinate<quint32, int>(type.location.column));
-                error.setDescription(QQmlTypeLoader::tr("Type %1 has no inline component type called %2").arg(typeName.leftRef(lastDot), type.type.pendingResolutionName()));
+                error.setDescription(QQmlTypeLoader::tr("Type %1 has no inline component type called %2").arg(QStringView{typeName}.left(lastDot), type.type.pendingResolutionName()));
                 errors.prepend(error);
                 setError(errors);
                 return;
@@ -505,7 +505,7 @@ void QQmlTypeData::done()
 
     // associate inline components to root component
     {
-        auto typeName = finalUrlString().splitRef(u'/').last().split(u'.').first().toString();
+        auto typeName = QStringView{finalUrlString()}.split(u'/').last().split(u'.').first().toString();
         // typeName can be empty if a QQmlComponent was constructed with an empty QUrl parameter
         if (!typeName.isEmpty() && typeName.at(0).isUpper() && !m_inlineComponentData.isEmpty()) {
             QHashedStringRef const hashedStringRef { typeName };
@@ -529,7 +529,7 @@ void QQmlTypeData::done()
         for (int scriptIndex = 0; scriptIndex < m_scripts.count(); ++scriptIndex) {
             const QQmlTypeData::ScriptReference &script = m_scripts.at(scriptIndex);
 
-            QStringRef qualifier(&script.qualifier);
+            QStringView qualifier(script.qualifier);
             QString enclosingNamespace;
 
             const int lastDotIndex = qualifier.lastIndexOf(QLatin1Char('.'));

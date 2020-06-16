@@ -262,16 +262,16 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
     QQmlRefPointer<QQmlTypeNameCache> typeNameCache = context ? context->imports() : nullptr;
 
     QObject *currentObject = obj;
-    QVector<QStringRef> path;
-    QStringRef terminal(&name);
+    QList<QStringView> path;
+    QStringView terminal(name);
 
     if (name.contains(QLatin1Char('.'))) {
-        path = name.splitRef(QLatin1Char('.'));
+        path = QStringView{name}.split(QLatin1Char('.'));
         if (path.isEmpty()) return;
 
         // Everything up to the last property must be an "object type" property
         for (int ii = 0; ii < path.count() - 1; ++ii) {
-            const QStringRef &pathName = path.at(ii);
+            const QStringView &pathName = path.at(ii);
 
             // Types must begin with an uppercase letter (see checkRegistration()
             // in qqmlmetatype.cpp for the enforcement of this).
@@ -355,7 +355,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
         terminal = path.last();
     }
 
-    if (terminal.count() >= 3 && terminal.at(0) == u'o' && terminal.at(1) == u'n'
+    if (terminal.size() >= 3 && terminal.at(0) == u'o' && terminal.at(1) == u'n'
             && (terminal.at(2).isUpper() || terminal.at(2) == u'_')) {
 
         QString signalName = terminal.mid(2).toString();
@@ -384,7 +384,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
 
             // Try property
             if (signalName.endsWith(QLatin1String("Changed"))) {
-                const QStringRef propName = signalName.midRef(0, signalName.length() - 7);
+                const QStringView propName = QStringView{signalName}.mid(0, signalName.length() - 7);
                 QQmlPropertyData *d = ddata->propertyCache->property(propName, currentObject, context);
                 while (d && d->isFunction())
                     d = ddata->propertyCache->overrideData(d);

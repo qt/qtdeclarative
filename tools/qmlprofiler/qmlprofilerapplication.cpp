@@ -354,7 +354,7 @@ bool QmlProfilerApplication::checkOutputFile(PendingRequest pending)
 
 void QmlProfilerApplication::userCommand(const QString &command)
 {
-    auto args = command.splitRef(QChar::Space, Qt::SkipEmptyParts);
+    auto args = QStringView{command}.split(QChar::Space, Qt::SkipEmptyParts);
     if (args.isEmpty()) {
         prompt();
         return;

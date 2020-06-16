@@ -249,7 +249,7 @@ QQmlJS::MemoryPool *QQmlTypeCompiler::memoryPool()
     return document->jsParserEngine.pool();
 }
 
-QStringRef QQmlTypeCompiler::newStringRef(const QString &string)
+QStringView QQmlTypeCompiler::newStringRef(const QString &string)
 {
     return document->jsParserEngine.newStringRef(string);
 }
@@ -468,7 +468,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
 
         QQmlJS::AST::FormalParameterList *paramList = nullptr;
         for (const QString &param : qAsConst(parameters)) {
-            QStringRef paramNameRef = compiler->newStringRef(param);
+            QStringView paramNameRef = compiler->newStringRef(param);
 
             QQmlJS::AST::PatternElement *b = new (pool) QQmlJS::AST::PatternElement(paramNameRef, nullptr);
             paramList = new (pool) QQmlJS::AST::FormalParameterList(paramList, b);
@@ -551,7 +551,7 @@ bool QQmlEnumTypeResolver::resolveEnumBindings()
     return true;
 }
 
-bool QQmlEnumTypeResolver::assignEnumToBinding(QmlIR::Binding *binding, const QStringRef &, int enumValue, bool)
+bool QQmlEnumTypeResolver::assignEnumToBinding(QmlIR::Binding *binding, QStringView, int enumValue, bool)
 {
     binding->type = QV4::CompiledData::Binding::Type_Number;
     binding->value.constantValueIndex = compiler->registerConstant(QV4::Encode((double)enumValue));
@@ -592,9 +592,9 @@ bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(const QmlIR::Object *obj, 
 
     QHashedStringRef typeName(string.constData(), dot);
     const bool isQtObject = (typeName == QLatin1String("Qt"));
-    const QStringRef scopedEnumName = (dot2 != -1 ? string.midRef(dot + 1, dot2 - dot - 1) : QStringRef());
+    const QStringView scopedEnumName = (dot2 != -1 ? QStringView{string}.mid(dot + 1, dot2 - dot - 1) : QStringView());
     // ### consider supporting scoped enums in Qt namespace
-    const QStringRef enumValue = string.midRef(!isQtObject && dot2 != -1 ? dot2 + 1 : dot + 1);
+    const QStringView enumValue = QStringView{string}.mid(!isQtObject && dot2 != -1 ? dot2 + 1 : dot + 1);
 
     if (isIntProp) { // ### C++11 allows enums to be other integral types. Should we support other integral types here?
         // Allow enum assignment to ints.
@@ -652,7 +652,7 @@ bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(const QmlIR::Object *obj, 
     return assignEnumToBinding(binding, enumValue, value, isQtObject);
 }
 
-int QQmlEnumTypeResolver::evaluateEnum(const QString &scope, const QStringRef &enumName, const QStringRef &enumValue, bool *ok) const
+int QQmlEnumTypeResolver::evaluateEnum(const QString &scope, QStringView enumName, QStringView enumValue, bool *ok) const
 {
     Q_ASSERT_X(ok, "QQmlEnumTypeResolver::evaluateEnum", "ok must not be a null pointer");
     *ok = false;
@@ -1104,15 +1104,15 @@ QQmlComponentAndAliasResolver::resolveAliasesInObject(int objectIndex,
 
         const QString aliasPropertyValue = stringAt(alias->propertyNameIndex);
 
-        QStringRef property;
-        QStringRef subProperty;
+        QStringView property;
+        QStringView subProperty;
 
         const int propertySeparator = aliasPropertyValue.indexOf(QLatin1Char('.'));
         if (propertySeparator != -1) {
-            property = aliasPropertyValue.leftRef(propertySeparator);
-            subProperty = aliasPropertyValue.midRef(propertySeparator + 1);
+            property = QStringView{aliasPropertyValue}.left(propertySeparator);
+            subProperty = QStringView{aliasPropertyValue}.mid(propertySeparator + 1);
         } else
-            property = QStringRef(&aliasPropertyValue, 0, aliasPropertyValue.length());
+            property = QStringView(aliasPropertyValue);
 
         QQmlPropertyIndex propIdx;
 

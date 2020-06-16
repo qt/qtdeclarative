@@ -318,10 +318,10 @@ QDebug operator<<(QDebug debug, const QQmlError &error)
             QByteArray data = f.readAll();
             QTextStream stream(data, QIODevice::ReadOnly);
             const QString code = stream.readAll();
-            const auto lines = code.splitRef(QLatin1Char('\n'));
+            const auto lines = QStringView{code}.split(QLatin1Char('\n'));
 
             if (lines.count() >= error.line()) {
-                const QStringRef &line = lines.at(error.line() - 1);
+                const QStringView &line = lines.at(error.line() - 1);
                 debug << "\n    " << line.toLocal8Bit().constData();
 
                 if(error.column() > 0) {

@@ -185,7 +185,7 @@ public:
     inline QQmlPropertyData *overrideData(QQmlPropertyData *) const;
     inline bool isAllowedInRevision(QQmlPropertyData *) const;
 
-    static QQmlPropertyData *property(QJSEngine *, QObject *, const QStringRef &,
+    static QQmlPropertyData *property(QJSEngine *, QObject *, QStringView,
                                       const QQmlRefPointer<QQmlContextData> &, QQmlPropertyData *);
     static QQmlPropertyData *property(QJSEngine *, QObject *, const QLatin1String &,
                                       const QQmlRefPointer<QQmlContextData> &, QQmlPropertyData *);
@@ -196,7 +196,7 @@ public:
                                       const QQmlRefPointer<QQmlContextData> &context,
                                       QQmlPropertyData *local)
     {
-        return property(engine, obj, QStringRef(&name), context, local);
+        return property(engine, obj, QStringView(name), context, local);
     }
 
     //see QMetaObjectPrivate::originalClone

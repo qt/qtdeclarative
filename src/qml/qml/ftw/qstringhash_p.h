@@ -253,7 +253,7 @@ template<typename T>
 struct HashedForm {};
 
 template<> struct HashedForm<QString> { typedef QHashedString Type; };
-template<> struct HashedForm<QStringRef> { typedef QHashedStringRef Type; };
+template<> struct HashedForm<QStringView> { typedef QHashedStringRef Type; };
 template<> struct HashedForm<QHashedString> { typedef const QHashedString &Type; };
 template<> struct HashedForm<QV4::String *> { typedef const QV4::String *Type; };
 template<> struct HashedForm<const QV4::String *> { typedef const QV4::String *Type; };
@@ -265,7 +265,7 @@ class QStringHashBase
 {
 public:
     static HashedForm<QString>::Type hashedString(const QString &s) { return QHashedString(s);}
-    static HashedForm<QStringRef>::Type hashedString(const QStringRef &s) { return QHashedStringRef(s.constData(), s.size());}
+    static HashedForm<QStringView>::Type hashedString(QStringView s) { return QHashedStringRef(s.constData(), s.size());}
     static HashedForm<QHashedString>::Type hashedString(const QHashedString &s) { return s; }
     static HashedForm<QV4::String *>::Type hashedString(QV4::String *s) { return s; }
     static HashedForm<const QV4::String *>::Type hashedString(const QV4::String *s) { return s; }

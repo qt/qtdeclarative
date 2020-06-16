@@ -89,7 +89,7 @@ public:
 
     QString qs(const QString &s);
     QString qs(const char *s);
-    QString qs(const QStringRef &s);
+    QString qs(QStringView s);
 
     QString loc(const SourceLocation &s);
 

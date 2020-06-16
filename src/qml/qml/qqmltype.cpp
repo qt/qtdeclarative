@@ -846,7 +846,7 @@ int QQmlType::scopedEnumValue(QQmlEnginePrivate *engine, const QByteArray &scope
     return -1;
 }
 
-int QQmlType::scopedEnumValue(QQmlEnginePrivate *engine, const QStringRef &scopedEnumName, const QStringRef &name, bool *ok) const
+int QQmlType::scopedEnumValue(QQmlEnginePrivate *engine, QStringView scopedEnumName, QStringView name, bool *ok) const
 {
     Q_ASSERT(ok);
     if (d) {

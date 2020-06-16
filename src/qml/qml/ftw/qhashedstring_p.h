@@ -100,7 +100,7 @@ class Q_QML_PRIVATE_EXPORT QHashedStringRef
 public:
     inline QHashedStringRef();
     inline QHashedStringRef(const QString &);
-    inline QHashedStringRef(const QStringRef &);
+    inline QHashedStringRef(QStringView);
     inline QHashedStringRef(const QChar *, int);
     inline QHashedStringRef(const QChar *, int, quint32);
     inline QHashedStringRef(const QHashedString &);
@@ -242,7 +242,7 @@ QHashedStringRef::QHashedStringRef(const QString &str)
 {
 }
 
-QHashedStringRef::QHashedStringRef(const QStringRef &str)
+QHashedStringRef::QHashedStringRef(QStringView str)
 : m_data(str.constData()), m_length(str.length()), m_hash(0)
 {
 }

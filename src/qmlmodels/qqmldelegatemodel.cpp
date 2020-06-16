@@ -1365,7 +1365,7 @@ QVariant QQmlDelegateModelPrivate::variantValue(QQmlListCompositor::Group group,
                 return QVariant();
             const int from = dot + 1;
             dot = name.indexOf(QLatin1Char('.'), from);
-            value = obj->property(name.midRef(from, dot - from).toUtf8());
+            value = obj->property(QStringView{name}.mid(from, dot - from).toUtf8());
         }
         return value;
     }

@@ -103,7 +103,7 @@ QV4::Heap::String *QV4::PropertyKey::asFunctionName(ExecutionEngine *engine, Fun
         if (s->internalClass->vtable->isString)
             n += s->toQString();
         else if (str.length() > 1)
-            n += QChar::fromLatin1('[') + str.midRef(1) + QChar::fromLatin1(']');
+            n += QChar::fromLatin1('[') + QStringView{str}.mid(1) + QChar::fromLatin1(']');
     }
     return engine->newString(n);
 }

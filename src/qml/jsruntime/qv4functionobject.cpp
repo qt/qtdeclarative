@@ -198,7 +198,7 @@ Heap::FunctionObject *FunctionObject::createBuiltinFunction(ExecutionEngine *eng
     Scope scope(engine);
     ScopedString name(scope, nameOrSymbol);
     if (!name)
-        name = engine->newString(QChar::fromLatin1('[') + nameOrSymbol->toQString().midRef(1) + QChar::fromLatin1(']'));
+        name = engine->newString(QChar::fromLatin1('[') + QStringView{nameOrSymbol->toQString()}.mid(1) + QChar::fromLatin1(']'));
 
     ScopedFunctionObject function(scope, engine->memoryManager->allocate<FunctionObject>(engine->rootContext(), name, code));
     function->defineReadonlyConfigurableProperty(engine->id_length(), Value::fromInt32(argumentCount));

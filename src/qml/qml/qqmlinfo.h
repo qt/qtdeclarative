@@ -91,7 +91,7 @@ public:
     inline QQmlInfo &operator<<(double t) { QDebug::operator<<(t); return *this; }
     inline QQmlInfo &operator<<(const char* t) { QDebug::operator<<(t); return *this; }
     inline QQmlInfo &operator<<(const QString & t) { QDebug::operator<<(t.toLocal8Bit().constData()); return *this; }
-    inline QQmlInfo &operator<<(const QStringRef & t) { return operator<<(t.toString()); }
+    inline QQmlInfo &operator<<(QStringView t) { return operator<<(t.toString()); }
     inline QQmlInfo &operator<<(const QLatin1String &t) { QDebug::operator<<(t.latin1()); return *this; }
     inline QQmlInfo &operator<<(const QByteArray & t) { QDebug::operator<<(t); return *this; }
     inline QQmlInfo &operator<<(const void * t) { QDebug::operator<<(t); return *this; }

@@ -1481,7 +1481,7 @@ QString QQmlMetaType::prettyTypeName(const QObject *object)
 
         marker = typeName.indexOf(QLatin1String("_QML_"));
         if (marker != -1) {
-            typeName = typeName.leftRef(marker) + QLatin1Char('*');
+            typeName = QStringView{typeName}.left(marker) + QLatin1Char('*');
             type = QQmlMetaType::qmlType(QMetaType::type(typeName.toLatin1()));
             if (type.isValid()) {
                 QString qmlTypeName = type.qmlTypeName();

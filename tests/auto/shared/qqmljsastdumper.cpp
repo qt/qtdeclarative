@@ -212,7 +212,7 @@ QString AstDumper::qs(const char *s) {
     return qs(QLatin1String(s));
 }
 
-QString AstDumper::qs(const QStringRef &s) {
+QString AstDumper::qs(QStringView s) {
     return qs(s.toString());
 }
 

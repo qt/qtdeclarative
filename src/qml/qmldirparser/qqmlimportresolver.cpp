@@ -54,13 +54,13 @@ enum ImportVersion { FullyVersioned, PartiallyVersioned, Unversioned };
     - base/QtQml.2/Models
     - base/QtQml/Models
 */
-QStringList qQmlResolveImportPaths(const QString &uri, const QStringList &basePaths,
+QStringList qQmlResolveImportPaths(QStringView uri, const QStringList &basePaths,
                                    QTypeRevision version)
 {
     static const QLatin1Char Slash('/');
     static const QLatin1Char Backslash('\\');
 
-    const QVector<QStringRef> parts = uri.splitRef(QLatin1Char('.'), Qt::SkipEmptyParts);
+    const QVector<QStringView> parts = uri.split(u'.', Qt::SkipEmptyParts);
 
     QStringList importPaths;
     // fully & partially versioned parts + 1 unversioned for each base path
@@ -81,7 +81,7 @@ QStringList qQmlResolveImportPaths(const QString &uri, const QStringList &basePa
         return QString();
     };
 
-    auto joinStringRefs = [](const QVector<QStringRef> &refs, const QChar &sep) {
+    auto joinStringRefs = [](const QVector<QStringView> &refs, const QChar &sep) {
         QString str;
         for (auto it = refs.cbegin(); it != refs.cend(); ++it) {
             if (it != refs.cbegin())

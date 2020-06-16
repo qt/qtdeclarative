@@ -417,7 +417,7 @@ double RuntimeHelpers::stringToNumber(const QString &string)
     if (string.length() > excessiveLength)
         return qQNaN();
 
-    const QStringRef s = QStringRef(&string).trimmed();
+    const QStringView s = QStringView(string).trimmed();
     if (s.startsWith(QLatin1Char('0'))) {
         int base = -1;
         if (s.startsWith(QLatin1String("0x")) || s.startsWith(QLatin1String("0X")))

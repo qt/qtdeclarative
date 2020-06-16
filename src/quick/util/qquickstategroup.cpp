@@ -420,26 +420,26 @@ QQuickTransition *QQuickStateGroupPrivate::findTransition(const QString &from, c
             const QString fromStateStr = t->fromState();
             const QString toStateStr = t->toState();
 
-            QVector<QStringRef> fromState = fromStateStr.splitRef(QLatin1Char(','));
+            auto fromState = QStringView{fromStateStr}.split(QLatin1Char(','));
             for (int jj = 0; jj < fromState.count(); ++jj)
                 fromState[jj] = fromState.at(jj).trimmed();
-            QVector<QStringRef> toState = toStateStr.splitRef(QLatin1Char(','));
+            auto toState = QStringView{toStateStr}.split(QLatin1Char(','));
             for (int jj = 0; jj < toState.count(); ++jj)
                 toState[jj] = toState.at(jj).trimmed();
             if (ii == 1)
                 qSwap(fromState, toState);
             int tScore = 0;
             const QString asterisk = QStringLiteral("*");
-            if (fromState.contains(QStringRef(&from)))
+            if (fromState.contains(QStringView(from)))
                 tScore += 2;
-            else if (fromState.contains(QStringRef(&asterisk)))
+            else if (fromState.contains(QStringView(asterisk)))
                 tScore += 1;
             else
                 continue;
 
-            if (toState.contains(QStringRef(&to)))
+            if (toState.contains(QStringView(to)))
                 tScore += 2;
-            else if (toState.contains(QStringRef(&asterisk)))
+            else if (toState.contains(QStringView(asterisk)))
                 tScore += 1;
             else
                 continue;

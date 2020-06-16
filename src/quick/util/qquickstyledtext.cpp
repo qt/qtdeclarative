@@ -104,8 +104,8 @@ public:
     bool parseUnorderedListAttributes(const QChar *&ch, const QString &textIn);
     bool parseAnchorAttributes(const QChar *&ch, const QString &textIn, QTextCharFormat &format);
     void parseImageAttributes(const QChar *&ch, const QString &textIn, QString &textOut);
-    QPair<QStringRef,QStringRef> parseAttribute(const QChar *&ch, const QString &textIn);
-    QStringRef parseValue(const QChar *&ch, const QString &textIn);
+    QPair<QStringView,QStringView> parseAttribute(const QChar *&ch, const QString &textIn);
+    QStringView parseValue(const QChar *&ch, const QString &textIn);
     void setFontSize(int size, QTextCharFormat &format);
 
     inline void skipSpace(const QChar *&ch) {
@@ -298,7 +298,7 @@ void QQuickStyledTextPrivate::appendText(const QString &textIn, int start, int l
 {
     if (prependSpace)
         textOut.append(space);
-    textOut.append(QStringRef(&textIn, start, length));
+    textOut.append(QStringView(textIn).mid(start, length));
     prependSpace = false;
     hasSpace = false;
     hasNewLine = false;
@@ -328,7 +328,7 @@ bool QQuickStyledTextPrivate::parseTag(const QChar *&ch, const QString &textIn, 
         if (*ch == greaterThan) {
             if (tagLength == 0)
                 return false;
-            QStringRef tag(&textIn, tagStart, tagLength);
+            auto tag = QStringView(textIn).mid(tagStart, tagLength);
             const QChar char0 = tag.at(0);
             if (char0 == QLatin1Char('b')) {
                 if (tagLength == 1) {
@@ -437,7 +437,7 @@ bool QQuickStyledTextPrivate::parseTag(const QChar *&ch, const QString &textIn, 
             return false;
         } else if (ch->isSpace()) {
             // may have params.
-            QStringRef tag(&textIn, tagStart, tagLength);
+            auto tag = QStringView(textIn).mid(tagStart, tagLength);
             if (tag == QLatin1String("font"))
                 return parseFontAttributes(ch, textIn, format);
             if (tag == QLatin1String("ol")) {
@@ -475,7 +475,7 @@ bool QQuickStyledTextPrivate::parseCloseTag(const QChar *&ch, const QString &tex
         if (*ch == greaterThan) {
             if (tagLength == 0)
                 return false;
-            QStringRef tag(&textIn, tagStart, tagLength);
+            auto tag = QStringView(textIn).mid(tagStart, tagLength);
             const QChar char0 = tag.at(0);
             hasNewLine = false;
             if (char0 == QLatin1Char('b')) {
@@ -555,7 +555,7 @@ void QQuickStyledTextPrivate::parseEntity(const QChar *&ch, const QString &textI
     int entityLength = 0;
     while (!ch->isNull()) {
         if (*ch == QLatin1Char(';')) {
-            QStringRef entity(&textIn, entityStart, entityLength);
+            auto entity = QStringView(textIn).mid(entityStart, entityLength);
             if (entity == QLatin1String("gt"))
                 textOut += QChar(62);
             else if (entity == QLatin1String("lt"))
@@ -568,7 +568,7 @@ void QQuickStyledTextPrivate::parseEntity(const QChar *&ch, const QString &textI
                 textOut += QChar(QChar::Nbsp);
             return;
         } else if (*ch == QLatin1Char(' ')) {
-            QStringRef entity(&textIn, entityStart - 1, entityLength + 1);
+            auto entity = QStringView(textIn).mid(entityStart - 1, entityLength + 1);
             textOut += entity + *ch;
             return;
         }
@@ -580,7 +580,7 @@ void QQuickStyledTextPrivate::parseEntity(const QChar *&ch, const QString &textI
 bool QQuickStyledTextPrivate::parseFontAttributes(const QChar *&ch, const QString &textIn, QTextCharFormat &format)
 {
     bool valid = false;
-    QPair<QStringRef,QStringRef> attr;
+    QPair<QStringView,QStringView> attr;
     do {
         attr = parseAttribute(ch, textIn);
         if (attr.first == QLatin1String("color")) {
@@ -608,7 +608,7 @@ bool QQuickStyledTextPrivate::parseOrderedListAttributes(const QChar *&ch, const
     listItem.type = Ordered;
     listItem.format = Decimal;
 
-    QPair<QStringRef,QStringRef> attr;
+    QPair<QStringView,QStringView> attr;
     do {
         attr = parseAttribute(ch, textIn);
         if (attr.first == QLatin1String("type")) {
@@ -637,7 +637,7 @@ bool QQuickStyledTextPrivate::parseUnorderedListAttributes(const QChar *&ch, con
     listItem.type = Unordered;
     listItem.format = Bullet;
 
-    QPair<QStringRef,QStringRef> attr;
+    QPair<QStringView,QStringView> attr;
     do {
         attr = parseAttribute(ch, textIn);
         if (attr.first == QLatin1String("type")) {
@@ -657,7 +657,7 @@ bool QQuickStyledTextPrivate::parseAnchorAttributes(const QChar *&ch, const QStr
 {
     bool valid = false;
 
-    QPair<QStringRef,QStringRef> attr;
+    QPair<QStringView,QStringView> attr;
     do {
         attr = parseAttribute(ch, textIn);
         if (attr.first == QLatin1String("href")) {
@@ -682,7 +682,7 @@ void QQuickStyledTextPrivate::parseImageAttributes(const QChar *&ch, const QStri
         QQuickStyledTextImgTag *image = new QQuickStyledTextImgTag;
         image->position = textOut.length() + (trailingSpace ? 0 : 1);
 
-        QPair<QStringRef,QStringRef> attr;
+        QPair<QStringView,QStringView> attr;
         do {
             attr = parseAttribute(ch, textIn);
             if (attr.first == QLatin1String("src")) {
@@ -727,7 +727,7 @@ void QQuickStyledTextPrivate::parseImageAttributes(const QChar *&ch, const QStri
         image->position = textOut.length() + (trailingSpace ? 0 : 1);
         imgWidth = image->size.width();
         image->offset = -std::fmod(imgWidth, spaceWidth) / 2.0;
-        QPair<QStringRef,QStringRef> attr;
+        QPair<QStringView,QStringView> attr;
         do {
             attr = parseAttribute(ch, textIn);
         } while (!ch->isNull() && !attr.first.isEmpty());
@@ -740,7 +740,7 @@ void QQuickStyledTextPrivate::parseImageAttributes(const QChar *&ch, const QStri
     textOut += padding + QLatin1Char(' ');
 }
 
-QPair<QStringRef,QStringRef> QQuickStyledTextPrivate::parseAttribute(const QChar *&ch, const QString &textIn)
+QPair<QStringView,QStringView> QQuickStyledTextPrivate::parseAttribute(const QChar *&ch, const QString &textIn)
 {
     skipSpace(ch);
 
@@ -759,10 +759,10 @@ QPair<QStringRef,QStringRef> QQuickStyledTextPrivate::parseAttribute(const QChar
             ++ch;
             if (!attrLength)
                 break;
-            QStringRef attr(&textIn, attrStart, attrLength);
-            QStringRef val = parseValue(ch, textIn);
+            auto attr = QStringView(textIn).mid(attrStart, attrLength);
+            QStringView val = parseValue(ch, textIn);
             if (!val.isEmpty())
-                return QPair<QStringRef,QStringRef>(attr,val);
+                return QPair<QStringView,QStringView>(attr,val);
             break;
         } else {
             ++attrLength;
@@ -770,10 +770,10 @@ QPair<QStringRef,QStringRef> QQuickStyledTextPrivate::parseAttribute(const QChar
         ++ch;
     }
 
-    return QPair<QStringRef,QStringRef>();
+    return QPair<QStringView,QStringView>();
 }
 
-QStringRef QQuickStyledTextPrivate::parseValue(const QChar *&ch, const QString &textIn)
+QStringView QQuickStyledTextPrivate::parseValue(const QChar *&ch, const QString &textIn)
 {
     int valStart = ch - textIn.constData();
     int valLength = 0;
@@ -782,10 +782,10 @@ QStringRef QQuickStyledTextPrivate::parseValue(const QChar *&ch, const QString &
         ++ch;
     }
     if (ch->isNull())
-        return QStringRef();
+        return QStringView();
     ++ch; // skip quote
 
-    return QStringRef(&textIn, valStart, valLength);
+    return QStringView(textIn).mid(valStart, valLength);
 }
 
 QString QQuickStyledTextPrivate::toAlpha(int value, bool upper)

@@ -115,7 +115,7 @@ void ScanFunctions::checkDirectivePrologue(StatementList *ast)
                 // allowed.
                 if (strLit->literalToken.length < 2)
                     continue;
-                QStringRef str = _sourceCode.midRef(strLit->literalToken.offset + 1, strLit->literalToken.length - 2);
+                QStringView str = QStringView{_sourceCode}.mid(strLit->literalToken.offset + 1, strLit->literalToken.length - 2);
                 if (str == QLatin1String("use strict")) {
                     _context->isStrict = true;
                 } else {
@@ -129,7 +129,7 @@ void ScanFunctions::checkDirectivePrologue(StatementList *ast)
     }
 }
 
-void ScanFunctions::checkName(const QStringRef &name, const QQmlJS::SourceLocation &loc)
+void ScanFunctions::checkName(QStringView name, const QQmlJS::SourceLocation &loc)
 {
     if (_context->isStrict) {
         if (name == QLatin1String("implements")
@@ -337,7 +337,7 @@ bool ScanFunctions::visit(PatternElement *ast)
     for (const auto &name : qAsConst(names)) {
         if (_context->isStrict && (name.id == QLatin1String("eval") || name.id == QLatin1String("arguments")))
             _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Variable name may not be eval or arguments in strict mode"));
-        checkName(QStringRef(&name.id), ast->identifierToken);
+        checkName(QStringView(name.id), ast->identifierToken);
         if (name.id == QLatin1String("arguments"))
             _context->usesArgumentsObject = Context::ArgumentsObjectNotUsed;
         if (ast->scope == VariableScope::Const && !ast->initializer && !ast->isForDeclaration && !ast->destructuringPattern()) {
@@ -376,7 +376,7 @@ bool ScanFunctions::visit(ExpressionStatement *ast)
         return false;
     } else {
         SourceLocation firstToken = ast->firstSourceLocation();
-        if (_sourceCode.midRef(firstToken.offset, firstToken.length) == QLatin1String("function")) {
+        if (QStringView{_sourceCode}.mid(firstToken.offset, firstToken.length) == QLatin1String("function")) {
             _cg->throwSyntaxError(firstToken, QStringLiteral("unexpected token"));
         }
     }

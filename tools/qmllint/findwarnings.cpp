@@ -317,7 +317,7 @@ void FindWarningVisitor::importFileOrDirectory(const QString &fileOrDirectory,
     }
 }
 
-void FindWarningVisitor::importExportedNames(const QStringRef &prefix, QString name)
+void FindWarningVisitor::importExportedNames(QStringView prefix, QString name)
 {
     QList<ScopeTree::ConstPtr> scopes;
     for (;;) {
@@ -780,7 +780,7 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
 
     QString name {};
     auto id = uiob->qualifiedTypeNameId;
-    QStringRef prefix = uiob->qualifiedTypeNameId->name;
+    QStringView prefix = uiob->qualifiedTypeNameId->name;
     while (id) {
         name += id->name.toString() + QLatin1Char('.');
         id = id->next;
@@ -816,7 +816,7 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
 
     QString name {};
     auto id = uiod->qualifiedTypeNameId;
-    QStringRef prefix = uiod->qualifiedTypeNameId->name;
+    QStringView prefix = uiod->qualifiedTypeNameId->name;
     while (id) {
         name += id->name.toString() + QLatin1Char('.');
         id = id->next;

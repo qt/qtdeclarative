@@ -345,9 +345,9 @@ void QQmlDebugServerImpl::parseArguments()
     QString fileName;
     QStringList services;
 
-    const auto lstjsDebugArguments = args.splitRef(QLatin1Char(','), Qt::SkipEmptyParts);
+    const auto lstjsDebugArguments = QStringView{args}.split(QLatin1Char(','), Qt::SkipEmptyParts);
     for (auto argsIt = lstjsDebugArguments.begin(), argsItEnd = lstjsDebugArguments.end(); argsIt != argsItEnd; ++argsIt) {
-        const QStringRef &strArgument = *argsIt;
+        const QStringView &strArgument = *argsIt;
         if (strArgument.startsWith(QLatin1String("port:"))) {
             portFrom = strArgument.mid(5).toInt(&ok);
             portTo = portFrom;

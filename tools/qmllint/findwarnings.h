@@ -106,7 +106,7 @@ private:
     ScopeTree::Ptr localFile2ScopeTree(const QString &filePath);
 
     void importFileOrDirectory(const QString &directory, const QString &prefix);
-    void importExportedNames(const QStringRef &prefix, QString name);
+    void importExportedNames(QStringView prefix, QString name);
 
     void parseHeaders(QQmlJS::AST::UiHeaderItemList *headers);
     ScopeTree::Ptr parseProgram(QQmlJS::AST::Program *program, const QString &name);

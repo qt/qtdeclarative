@@ -839,8 +839,8 @@ QString ExecutableCompilationUnit::bindingValueAsString(const CompiledData::Bind
         // This code must match that in the qsTr() implementation
         const QString &path = fileName();
         int lastSlash = path.lastIndexOf(QLatin1Char('/'));
-        QStringRef context = (lastSlash > -1) ? path.midRef(lastSlash + 1, path.length() - lastSlash - 5)
-                                              : QStringRef();
+        QStringView context = (lastSlash > -1) ? QStringView{path}.mid(lastSlash + 1, path.length() - lastSlash - 5)
+                                              : QStringView();
         QByteArray contextUtf8 = context.toUtf8();
         QByteArray comment = stringAt(translation.commentIndex).toUtf8();
         QByteArray text = stringAt(translation.stringIndex).toUtf8();

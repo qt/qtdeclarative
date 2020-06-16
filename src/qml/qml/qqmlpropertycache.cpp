@@ -551,7 +551,7 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
             setNamedProperty(methodName, ii, data, (old != nullptr));
 
             if (data->isSignal()) {
-                QHashedString on(QLatin1String("on") % methodName.at(0).toUpper() % methodName.midRef(1));
+                QHashedString on(QLatin1String("on") % methodName.at(0).toUpper() % QStringView{methodName}.mid(1));
                 setNamedProperty(on, ii, sigdata, (old != nullptr));
                 ++signalHandlerIndex;
             }
@@ -991,7 +991,7 @@ static inline const char *qQmlPropertyCacheToString(QLatin1String string)
     return string.data();
 }
 
-static inline QByteArray qQmlPropertyCacheToString(const QStringRef &string)
+static inline QByteArray qQmlPropertyCacheToString(QStringView string)
 {
     return string.toUtf8();
 }
@@ -1043,10 +1043,10 @@ QQmlPropertyCache::property(QJSEngine *engine, QObject *obj, const QV4::String *
 }
 
 QQmlPropertyData *
-QQmlPropertyCache::property(QJSEngine *engine, QObject *obj, const QStringRef &name,
+QQmlPropertyCache::property(QJSEngine *engine, QObject *obj, QStringView name,
                             const QQmlRefPointer<QQmlContextData> &context, QQmlPropertyData *local)
 {
-    return qQmlPropertyCacheProperty<const QStringRef &>(engine, obj, name, context, local);
+    return qQmlPropertyCacheProperty<const QStringView &>(engine, obj, name, context, local);
 }
 
 QQmlPropertyData *

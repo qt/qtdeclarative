@@ -497,16 +497,16 @@ public:
     { return defineQMLObject(objectIndex, node->qualifiedTypeNameId, node->qualifiedTypeNameId->firstSourceLocation(), node->initializer, declarationsOverride); }
 
     static QString asString(QQmlJS::AST::UiQualifiedId *node);
-    QStringRef asStringRef(QQmlJS::AST::Node *node);
-    static QTypeRevision extractVersion(const QStringRef &string);
-    QStringRef textRefAt(const QQmlJS::SourceLocation &loc) const
-    { return QStringRef(&sourceCode, loc.offset, loc.length); }
-    QStringRef textRefAt(const QQmlJS::SourceLocation &first,
+    QStringView asStringRef(QQmlJS::AST::Node *node);
+    static QTypeRevision extractVersion(QStringView string);
+    QStringView textRefAt(const QQmlJS::SourceLocation &loc) const
+    { return QStringView(sourceCode).mid(loc.offset, loc.length); }
+    QStringView textRefAt(const QQmlJS::SourceLocation &first,
                          const QQmlJS::SourceLocation &last) const;
 
     void setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST::Statement *statement,
                          QQmlJS::AST::Node *parentNode);
-    void tryGeneratingTranslationBinding(const QStringRef &base, QQmlJS::AST::ArgumentList *args, QV4::CompiledData::Binding *binding);
+    void tryGeneratingTranslationBinding(QStringView base, QQmlJS::AST::ArgumentList *args, QV4::CompiledData::Binding *binding);
 
     void appendBinding(QQmlJS::AST::UiQualifiedId *name, QQmlJS::AST::Statement *value,
                        QQmlJS::AST::Node *parentNode);

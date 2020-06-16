@@ -722,7 +722,7 @@ bool QQmlEngineDebugServiceImpl::resetBinding(int objectId, const QString &prope
     QQmlContext *context = qmlContext(object);
 
     if (object && context && context->isValid()) {
-        QStringRef parentPropertyRef(&propertyName);
+        QStringView parentPropertyRef(propertyName);
         const int idx = parentPropertyRef.indexOf(QLatin1Char('.'));
         if (idx != -1)
             parentPropertyRef = parentPropertyRef.left(idx);

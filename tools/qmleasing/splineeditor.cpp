@@ -675,12 +675,12 @@ void SplineEditor::setEasingCurve(const QString &code)
     if (m_block)
         return;
     if (code.startsWith(QLatin1Char('[')) && code.endsWith(QLatin1Char(']'))) {
-        const QStringRef cleanCode(&code, 1, code.size() - 2);
+        const auto cleanCode = QStringView(code).mid(1, code.size() - 2);
         const auto stringList = cleanCode.split(QLatin1Char(','), Qt::SkipEmptyParts);
         if (stringList.count() >= 6 && (stringList.count() % 6 == 0)) {
             QVector<qreal> realList;
             realList.reserve(stringList.count());
-            for (const QStringRef &string : stringList) {
+            for (const QStringView &string : stringList) {
                 bool ok;
                 realList.append(string.toDouble(&ok));
                 if (!ok)

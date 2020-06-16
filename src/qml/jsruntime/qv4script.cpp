@@ -96,7 +96,7 @@ void Script::parse()
     if (sourceCode.startsWith(QLatin1String("function("))) {
         static const int snippetLength = 70;
         qWarning() << "Warning: Using function expressions as statements in scripts is not compliant with the ECMAScript specification:\n"
-                   << (sourceCode.leftRef(snippetLength) + QLatin1String("..."))
+                   << (QStringView{sourceCode}.left(snippetLength) + QLatin1String("..."))
                    << "\nThis will throw a syntax error in Qt 5.12. If you want a function expression, surround it by parentheses.";
     }
 

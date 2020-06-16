@@ -728,7 +728,7 @@ ReturnedValue Text::method_isElementContentWhitespace(const FunctionObject *b, c
     if (!r)
         RETURN_UNDEFINED();
 
-    return Encode(QStringRef(&r->d()->d->data).trimmed().isEmpty());
+    return Encode(QStringView(r->d()->d->data).trimmed().isEmpty());
 }
 
 ReturnedValue Text::method_wholeText(const FunctionObject *b, const Value *thisObject, const Value *, int)
