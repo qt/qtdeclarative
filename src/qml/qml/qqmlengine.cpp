@@ -709,16 +709,12 @@ QQmlData::~QQmlData()
 void QQmlData::destroyed(QAbstractDeclarativeData *d, QObject *o)
 {
     QQmlData *ddata = static_cast<QQmlData *>(d);
-    if (ddata->ownedByQml1)
-        return;
     ddata->destroyed(o);
 }
 
 void QQmlData::parentChanged(QAbstractDeclarativeData *d, QObject *o, QObject *p)
 {
     QQmlData *ddata = static_cast<QQmlData *>(d);
-    if (ddata->ownedByQml1)
-        return;
     ddata->parentChanged(o, p);
 }
 
@@ -748,7 +744,6 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
 {
     QQmlData *ddata = QQmlData::get(object, false);
     if (!ddata) return; // Probably being deleted
-    if (ddata->ownedByQml1) return;
 
     // In general, QML only supports QObject's that live on the same thread as the QQmlEngine
     // that they're exposed to.  However, to make writing "worker objects" that calculate data
@@ -805,16 +800,12 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
 int QQmlData::receivers(QAbstractDeclarativeData *d, const QObject *, int index)
 {
     QQmlData *ddata = static_cast<QQmlData *>(d);
-    if (ddata->ownedByQml1)
-        return 0;
     return ddata->endpointCount(index);
 }
 
 bool QQmlData::isSignalConnected(QAbstractDeclarativeData *d, const QObject *, int index)
 {
     QQmlData *ddata = static_cast<QQmlData *>(d);
-    if (ddata->ownedByQml1)
-        return false;
     return ddata->signalHasEndpoint(index);
 }
 
