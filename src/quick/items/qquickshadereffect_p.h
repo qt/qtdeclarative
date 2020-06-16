@@ -66,8 +66,8 @@ class QQuickShaderEffectPrivate;
 class Q_QUICK_PRIVATE_EXPORT QQuickShaderEffect : public QQuickItem
 {
     Q_OBJECT
-    Q_PROPERTY(QByteArray fragmentShader READ fragmentShader WRITE setFragmentShader NOTIFY fragmentShaderChanged)
-    Q_PROPERTY(QByteArray vertexShader READ vertexShader WRITE setVertexShader NOTIFY vertexShaderChanged)
+    Q_PROPERTY(QUrl fragmentShader READ fragmentShader WRITE setFragmentShader NOTIFY fragmentShaderChanged)
+    Q_PROPERTY(QUrl vertexShader READ vertexShader WRITE setVertexShader NOTIFY vertexShaderChanged)
     Q_PROPERTY(bool blending READ blending WRITE setBlending NOTIFY blendingChanged)
     Q_PROPERTY(QVariant mesh READ mesh WRITE setMesh NOTIFY meshChanged)
     Q_PROPERTY(CullMode cullMode READ cullMode WRITE setCullMode NOTIFY cullModeChanged)
@@ -95,11 +95,11 @@ public:
     QQuickShaderEffect(QQuickItem *parent = nullptr);
     ~QQuickShaderEffect() override;
 
-    QByteArray fragmentShader() const;
-    void setFragmentShader(const QByteArray &code);
+    QUrl fragmentShader() const;
+    void setFragmentShader(const QUrl &code);
 
-    QByteArray vertexShader() const;
-    void setVertexShader(const QByteArray &code);
+    QUrl vertexShader() const;
+    void setVertexShader(const QUrl &code);
 
     bool blending() const;
     void setBlending(bool enable);

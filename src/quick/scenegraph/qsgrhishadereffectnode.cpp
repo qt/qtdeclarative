@@ -793,15 +793,14 @@ QSGGuiThreadShaderEffectManager::Status QSGRhiGuiThreadShaderEffectManager::stat
     return m_status;
 }
 
-void QSGRhiGuiThreadShaderEffectManager::prepareShaderCode(ShaderInfo::Type typeHint, const QByteArray &src, ShaderInfo *result)
+void QSGRhiGuiThreadShaderEffectManager::prepareShaderCode(ShaderInfo::Type typeHint, const QUrl &src, ShaderInfo *result)
 {
-    QUrl srcUrl(QString::fromUtf8(src));
-    if (!srcUrl.scheme().compare(QLatin1String("qrc"), Qt::CaseInsensitive) || srcUrl.isLocalFile()) {
+    if (!src.scheme().compare(QLatin1String("qrc"), Qt::CaseInsensitive) || src.isLocalFile()) {
         if (!m_fileSelector) {
             m_fileSelector = new QFileSelector(this);
             m_fileSelector->setExtraSelectors(QStringList() << QStringLiteral("qsb"));
         }
-        const QString fn = m_fileSelector->select(QQmlFile::urlToLocalFileOrQrc(srcUrl));
+        const QString fn = m_fileSelector->select(QQmlFile::urlToLocalFileOrQrc(src));
         QFile f(fn);
         if (!f.open(QIODevice::ReadOnly)) {
             qWarning("ShaderEffect: Failed to read %s", qPrintable(fn));

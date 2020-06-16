@@ -45,6 +45,7 @@
 #include <private/qquickwindow_p.h>
 #include <private/qquickitem_p.h>
 #include "qquickshadereffectmesh_p.h"
+#include <QQmlAbstractUrlInterceptor>
 
 QT_BEGIN_NAMESPACE
 
@@ -330,11 +331,11 @@ public:
     QQuickShaderEffectImpl(QQuickShaderEffect *item);
     ~QQuickShaderEffectImpl();
 
-    QByteArray fragmentShader() const { return m_fragShader; }
-    void setFragmentShader(const QByteArray &src);
+    QUrl fragmentShader() const { return m_fragShader; }
+    void setFragmentShader(const QUrl &src);
 
-    QByteArray vertexShader() const { return m_vertShader; }
-    void setVertexShader(const QByteArray &src);
+    QUrl vertexShader() const { return m_vertShader; }
+    void setVertexShader(const QUrl &src);
 
     bool blending() const { return m_blending; }
     void setBlending(bool enable);
@@ -366,7 +367,7 @@ private slots:
     void markGeometryDirtyAndUpdate();
     void markGeometryDirtyAndUpdateIfSupportsAtlas();
     void shaderCodePrepared(bool ok, QSGGuiThreadShaderEffectManager::ShaderInfo::Type typeHint,
-                            const QByteArray &src, QSGGuiThreadShaderEffectManager::ShaderInfo *result);
+                            const QUrl &src, QSGGuiThreadShaderEffectManager::ShaderInfo *result);
 
 private:
     QSGGuiThreadShaderEffectManager *shaderEffectManager() const;
@@ -377,7 +378,7 @@ private:
 
         NShader
     };
-    bool updateShader(Shader shaderType, const QByteArray &src);
+    bool updateShader(Shader shaderType, const QUrl &src);
     void updateShaderVars(Shader shaderType);
     void disconnectSignals(Shader shaderType);
     void clearMappers(Shader shaderType);
@@ -392,9 +393,9 @@ private:
     bool m_blending;
     bool m_supportsAtlasTextures;
     mutable QSGGuiThreadShaderEffectManager *m_mgr;
-    QByteArray m_fragShader;
+    QUrl m_fragShader;
     bool m_fragNeedsUpdate;
-    QByteArray m_vertShader;
+    QUrl m_vertShader;
     bool m_vertNeedsUpdate;
 
     QSGShaderEffectNode::ShaderData m_shaders[NShader];
@@ -436,56 +437,47 @@ QQuickShaderEffect::~QQuickShaderEffect()
 }
 
 /*!
-    \qmlproperty string QtQuick::ShaderEffect::fragmentShader
+    \qmlproperty url QtQuick::ShaderEffect::fragmentShader
 
-    This property holds the fragment (pixel) shader's source code or a
-    reference to the pre-compiled bytecode. Some APIs, like OpenGL, always
-    support runtime compilation and therefore the traditional Qt Quick way of
-    inlining shader source strings is functional. Qt Quick backends for other
-    APIs may however limit support to pre-compiled bytecode like SPIR-V or D3D
-    shader bytecode. There the string is simply a filename, which may be a file
-    in the filesystem or bundled with the executable via Qt's resource system.
+    This property contains a reference to a file with the preprocessed fragment
+    shader package, typically with an extension of \c{.qsb}. The value is
+    treated as a \l{QUrl}{URL}, similarly to other QML types, such as Image. It
+    must either be a local file or use the qrc scheme to access files embedded
+    via the Qt resource system. The URL may be absolute, or relative to the URL
+    of the component.
 
-    With GLSL the default shader expects the texture coordinate to be passed
-    from the vertex shader as \c{varying highp vec2 qt_TexCoord0}, and it
-    samples from a sampler2D named \c source.
-
-    \sa vertexShader, GraphicsInfo
+    \sa vertexShader
 */
 
-QByteArray QQuickShaderEffect::fragmentShader() const
+QUrl QQuickShaderEffect::fragmentShader() const
 {
     return m_impl->fragmentShader();
 }
 
-void QQuickShaderEffect::setFragmentShader(const QByteArray &code)
+void QQuickShaderEffect::setFragmentShader(const QUrl &code)
 {
     m_impl->setFragmentShader(code);
 }
 
 /*!
-    \qmlproperty string QtQuick::ShaderEffect::vertexShader
+    \qmlproperty url QtQuick::ShaderEffect::vertexShader
 
-    This property holds the vertex shader's source code or a reference to the
-    pre-compiled bytecode. Some APIs, like OpenGL, always support runtime
-    compilation and therefore the traditional Qt Quick way of inlining shader
-    source strings is functional. Qt Quick backends for other APIs may however
-    limit support to pre-compiled bytecode like SPIR-V or D3D shader bytecode.
-    There the string is simply a filename, which may be a file in the
-    filesystem or bundled with the executable via Qt's resource system.
+    This property contains a reference to a file with the preprocessed vertex
+    shader package, typically with an extension of \c{.qsb}. The value is
+    treated as a \l{QUrl}{URL}, similarly to other QML types, such as Image. It
+    must either be a local file or use the qrc scheme to access files embedded
+    via the Qt resource system. The URL may be absolute, or relative to the URL
+    of the component.
 
-    With GLSL the default shader passes the texture coordinate along to the
-    fragment shader as \c{varying highp vec2 qt_TexCoord0}.
-
-    \sa fragmentShader, GraphicsInfo
+    \sa fragmentShader
 */
 
-QByteArray QQuickShaderEffect::vertexShader() const
+QUrl QQuickShaderEffect::vertexShader() const
 {
     return m_impl->vertexShader();
 }
 
-void QQuickShaderEffect::setVertexShader(const QByteArray &code)
+void QQuickShaderEffect::setVertexShader(const QUrl &code)
 {
     m_impl->setVertexShader(code);
 }
@@ -708,7 +700,7 @@ QQuickShaderEffectImpl::~QQuickShaderEffectImpl()
     delete m_mgr;
 }
 
-void QQuickShaderEffectImpl::setFragmentShader(const QByteArray &src)
+void QQuickShaderEffectImpl::setFragmentShader(const QUrl &src)
 {
     // Compare the actual values since they are often just filenames.
     // Optimizing by comparing constData() is a bad idea since seemingly static
@@ -726,7 +718,7 @@ void QQuickShaderEffectImpl::setFragmentShader(const QByteArray &src)
     emit m_item->fragmentShaderChanged();
 }
 
-void QQuickShaderEffectImpl::setVertexShader(const QByteArray &src)
+void QQuickShaderEffectImpl::setVertexShader(const QUrl &src)
 {
     if (m_vertShader == src)
         return;
@@ -1034,27 +1026,27 @@ static inline QVariant getValueFromProperty(QObject *item, const QMetaObject *it
 
 struct ShaderInfoCache
 {
-    bool contains(const QByteArray &key) const
+    bool contains(const QUrl &key) const
     {
         return m_shaderInfoCache.contains(key);
     }
 
-    QSGGuiThreadShaderEffectManager::ShaderInfo value(const QByteArray &key) const
+    QSGGuiThreadShaderEffectManager::ShaderInfo value(const QUrl &key) const
     {
         return m_shaderInfoCache.value(key);
     }
 
-    void insert(const QByteArray &key, const QSGGuiThreadShaderEffectManager::ShaderInfo &value)
+    void insert(const QUrl &key, const QSGGuiThreadShaderEffectManager::ShaderInfo &value)
     {
         m_shaderInfoCache.insert(key, value);
     }
 
-    QHash<QByteArray, QSGGuiThreadShaderEffectManager::ShaderInfo> m_shaderInfoCache;
+    QHash<QUrl, QSGGuiThreadShaderEffectManager::ShaderInfo> m_shaderInfoCache;
 };
 
 Q_GLOBAL_STATIC(ShaderInfoCache, shaderInfoCache)
 
-bool QQuickShaderEffectImpl::updateShader(Shader shaderType, const QByteArray &src)
+bool QQuickShaderEffectImpl::updateShader(Shader shaderType, const QUrl &src)
 {
     QSGGuiThreadShaderEffectManager *mgr = shaderEffectManager();
     if (!mgr)
@@ -1080,11 +1072,14 @@ bool QQuickShaderEffectImpl::updateShader(Shader shaderType, const QByteArray &s
             const QSGGuiThreadShaderEffectManager::ShaderInfo::Type typeHint =
                     shaderType == Vertex ? QSGGuiThreadShaderEffectManager::ShaderInfo::TypeVertex
                                          : QSGGuiThreadShaderEffectManager::ShaderInfo::TypeFragment;
+            QUrl loadUrl = src;
+            if (const QQmlEngine *engine = qmlEngine(m_item))
+                loadUrl = engine->interceptUrl(loadUrl, QQmlAbstractUrlInterceptor::UrlString);
             // Figure out what input parameters and variables are used in the
-            // shader. For file-based shader source/bytecode this is where the data
-            // is pulled in from the file. Some backends may choose to do
-            // source->bytecode compilation as well in this step.
-            mgr->prepareShaderCode(typeHint, src, m_inProgress[shaderType]);
+            // shader. This is where the data is pulled in from the file.
+            // (however, if there is compilation involved, that happens at a
+            // later stage, up to the QRhi backend)
+            mgr->prepareShaderCode(typeHint, loadUrl, m_inProgress[shaderType]);
             // the rest is handled in shaderCodePrepared()
             return true;
         }
@@ -1112,7 +1107,7 @@ bool QQuickShaderEffectImpl::updateShader(Shader shaderType, const QByteArray &s
 }
 
 void QQuickShaderEffectImpl::shaderCodePrepared(bool ok, QSGGuiThreadShaderEffectManager::ShaderInfo::Type typeHint,
-                                                   const QByteArray &src, QSGGuiThreadShaderEffectManager::ShaderInfo *result)
+                                                const QUrl &src, QSGGuiThreadShaderEffectManager::ShaderInfo *result)
 {
     const Shader shaderType = typeHint == QSGGuiThreadShaderEffectManager::ShaderInfo::TypeVertex ? Vertex : Fragment;
 
@@ -1128,7 +1123,8 @@ void QQuickShaderEffectImpl::shaderCodePrepared(bool ok, QSGGuiThreadShaderEffec
     m_inProgress[shaderType] = nullptr;
 
     if (!ok) {
-        qWarning("ShaderEffect: shader preparation failed for %s\n%s\n", src.constData(), qPrintable(log()));
+        qWarning("ShaderEffect: shader preparation failed for %s\n%s\n",
+                 qPrintable(src.toString()), qPrintable(log()));
         m_shaders[shaderType].hasShaderCode = false;
         return;
     }

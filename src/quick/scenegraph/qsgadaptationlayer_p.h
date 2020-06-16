@@ -295,10 +295,10 @@ public:
         // QSGGeometry::defaultAttributes_TexturedPoint2D()).
     };
 
-    virtual void prepareShaderCode(ShaderInfo::Type typeHint, const QByteArray &src, ShaderInfo *result) = 0;
+    virtual void prepareShaderCode(ShaderInfo::Type typeHint, const QUrl &src, ShaderInfo *result) = 0;
 
 Q_SIGNALS:
-    void shaderCodePrepared(bool ok, ShaderInfo::Type typeHint, const QByteArray &src, ShaderInfo *result);
+    void shaderCodePrepared(bool ok, ShaderInfo::Type typeHint, const QUrl &src, ShaderInfo *result);
     void logAndStatusChanged();
 };
 

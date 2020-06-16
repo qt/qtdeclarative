@@ -53,6 +53,7 @@
 
 #include <private/qsgadaptationlayer_p.h>
 #include <qsgmaterial.h>
+#include <QUrl>
 
 QT_BEGIN_NAMESPACE
 
@@ -151,7 +152,7 @@ public:
     bool hasSeparateSamplerAndTextureObjects() const override;
     QString log() const override;
     Status status() const override;
-    void prepareShaderCode(ShaderInfo::Type typeHint, const QByteArray &src, ShaderInfo *result) override;
+    void prepareShaderCode(ShaderInfo::Type typeHint, const QUrl &src, ShaderInfo *result) override;
 
 private:
     bool reflect(ShaderInfo *result);

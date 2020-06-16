@@ -172,7 +172,7 @@ void tst_qquickshadereffect::withoutQmlEngine()
     // using a shader without QML engine used to crash
     auto window = new QQuickWindow;
     auto shaderEffect = new TestShaderEffect(window->contentItem());
-    shaderEffect->setVertexShader("");
+    shaderEffect->setVertexShader(QUrl());
     QVERIFY(shaderEffect->isComponentComplete());
     delete window;
 }
