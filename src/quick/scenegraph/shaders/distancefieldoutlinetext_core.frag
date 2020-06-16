@@ -15,6 +15,6 @@ uniform float outlineAlphaMax1;
 void main()
 {
     float d = texture(_qt_texture, sampleCoord).r;
-    fragColor = mix(styleColor, color, smoothstep(alphaMin, alphaMax, d))
-                    * smoothstep(outlineAlphaMax0, outlineAlphaMax1, d);
+    float a = smoothstep(alphaMin, alphaMax, d);
+    fragColor = (1.0 - a) * styleColor * smoothstep(outlineAlphaMax0, outlineAlphaMax1, d);
 }

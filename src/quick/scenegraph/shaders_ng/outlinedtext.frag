@@ -29,5 +29,5 @@ void main()
                                 texture(_qt_texture, sCoordRight).r,
                                 0.0, 1.0) - glyph,
                           0.0, 1.0);
-    fragColor = outline * ubuf.styleColor + glyph * ubuf.color;
+    fragColor = outline * ubuf.styleColor;
 }

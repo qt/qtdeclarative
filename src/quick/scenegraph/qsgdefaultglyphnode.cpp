@@ -40,12 +40,15 @@
 #include "qsgdefaultglyphnode_p.h"
 #include "qsgdefaultglyphnode_p_p.h"
 
+#include <private/qrawfont_p.h>
+
 QT_BEGIN_NAMESPACE
 
 QSGDefaultGlyphNode::QSGDefaultGlyphNode(QSGRenderContext *context)
     : m_context(context)
     , m_glyphNodeType(RootGlyphNode)
     , m_dirtyGeometry(false)
+    , m_preferredAntialiasingMode(DefaultAntialiasing)
 {
     setFlag(UsePreprocess);
 }
@@ -57,6 +60,11 @@ QSGDefaultGlyphNode::~QSGDefaultGlyphNode()
 
     qDeleteAll(m_nodesToDelete);
     m_nodesToDelete.clear();
+}
+
+void QSGDefaultGlyphNode::setPreferredAntialiasingMode(AntialiasingMode mode)
+{
+    m_preferredAntialiasingMode = mode;
 }
 
 void QSGDefaultGlyphNode::setMaterialColor(const QColor &color)
@@ -76,7 +84,27 @@ void QSGDefaultGlyphNode::update()
     QMargins margins(0, 0, 0, 0);
 
     if (m_style == QQuickText::Normal) {
-        m_material = new QSGTextMaskMaterial(m_context, QVector4D(m_color.redF(), m_color.greenF(), m_color.blueF(), m_color.alphaF()), font);
+        QFontEngine::GlyphFormat glyphFormat;
+
+        // Don't try to override glyph format of color fonts
+        if (QRawFontPrivate::get(font)->fontEngine->glyphFormat == QFontEngine::Format_ARGB) {
+            glyphFormat = QFontEngine::Format_None;
+        } else {
+            switch (m_preferredAntialiasingMode) {
+            case GrayAntialiasing:
+                glyphFormat = QFontEngine::Format_A8;
+                break;
+            case HighQualitySubPixelAntialiasing:
+            case LowQualitySubPixelAntialiasing:
+                glyphFormat = QFontEngine::Format_A32;
+                break;
+            default:
+                glyphFormat = QFontEngine::Format_None;
+                break;
+            }
+        }
+
+        m_material = new QSGTextMaskMaterial(m_context, QVector4D(m_color.redF(), m_color.greenF(), m_color.blueF(), m_color.alphaF()), font, glyphFormat);
     } else if (m_style == QQuickText::Outline) {
         QSGOutlinedTextMaterial *material = new QSGOutlinedTextMaterial(m_context, font);
         material->setStyleColor(m_styleColor);

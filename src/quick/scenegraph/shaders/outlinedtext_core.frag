@@ -21,5 +21,5 @@ void main()
                                 texture(_qt_texture, sCoordRight).r,
                                 0.0, 1.0) - glyph,
                           0.0, 1.0);
-    fragColor = outline * styleColor + glyph * color;
+    fragColor = outline * styleColor;
 }

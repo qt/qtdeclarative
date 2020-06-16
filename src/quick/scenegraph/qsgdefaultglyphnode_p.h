@@ -66,6 +66,7 @@ public:
     void setGlyphs(const QPointF &position, const QGlyphRun &glyphs) override;
     void update() override;
     void preprocess() override;
+    void setPreferredAntialiasingMode(AntialiasingMode) override;
     void updateGeometry();
 
 private:
@@ -86,6 +87,8 @@ private:
     };
 
     uint m_dirtyGeometry: 1;
+
+    AntialiasingMode m_preferredAntialiasingMode;
 };
 
 QT_END_NAMESPACE
