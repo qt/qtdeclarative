@@ -2793,7 +2793,7 @@ bool QQmlListModelParser::applyProperty(
                     v4->catchException();
                 else
                     QJSValuePrivate::setValue(&v, result->asReturnedValue());
-                value.setValue<QJSValue>(v);
+                value.setValue(v);
             } else {
                 QByteArray script = scriptStr.toUtf8();
                 bool ok;
