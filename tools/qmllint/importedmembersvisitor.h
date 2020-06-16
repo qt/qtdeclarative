@@ -59,6 +59,7 @@ private:
     bool visit(QQmlJS::AST::UiPublicMember *) override;
     bool visit(QQmlJS::AST::UiSourceElement *) override;
     bool visit(QQmlJS::AST::UiScriptBinding *) override;
+    bool visit(QQmlJS::AST::UiEnumDeclaration *uied) override;
     void throwRecursionDepthError() override;
 
     ScopeTree::Ptr currentObject() const { return m_currentObjects.back(); }

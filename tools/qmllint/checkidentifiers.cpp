@@ -173,6 +173,12 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
 
         const auto enums = scope->enums();
         for (const auto &enumerator : enums) {
+            if (enumerator.name() == access.m_name) {
+                detectedRestrictiveKind = QLatin1String("enum");
+                detectedRestrictiveName = access.m_name;
+                expectedNext.append(enumerator.keys());
+                break;
+            }
             for (const QString &key : enumerator.keys()) {
                 if (access.m_name == key) {
                     detectedRestrictiveKind = QLatin1String("enum");

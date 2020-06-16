@@ -220,6 +220,8 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("unknownBuiltinFont")        << QStringLiteral("ButtonLoader.qml");
     QTest::newRow("confusingImport")           << QStringLiteral("Dialog.qml");
     QTest::newRow("qualifiedAttached")         << QStringLiteral("Drawer.qml");
+    QTest::newRow("EnumAccess1") << QStringLiteral("EnumAccess1.qml");
+    QTest::newRow("EnumAccess2") << QStringLiteral("EnumAccess2.qml");
 }
 
 void TestQmllint::cleanQmlCode()

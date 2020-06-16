@@ -51,6 +51,9 @@ ScopeTree::Ptr ImportedMembersVisitor::result(const QString &scopeName) const
     for (const auto &method : m_rootObject->methods())
         result->addMethod(method);
 
+    for (const auto &enumerator : m_rootObject->enums())
+        result->addEnum(enumerator);
+
     return result;
 }
 
@@ -148,6 +151,15 @@ bool ImportedMembersVisitor::visit(UiScriptBinding *scriptBinding)
         const auto *idExprension = cast<IdentifierExpression *>(statement->expression);
         m_objects.insert(idExprension->name.toString(), currentObject());
     }
+    return true;
+}
+
+bool ImportedMembersVisitor::visit(QQmlJS::AST::UiEnumDeclaration *uied)
+{
+    MetaEnum qmlEnum(uied->name.toString());
+    for (const auto *member = uied->members; member; member = member->next)
+        qmlEnum.addKey(member->member.toString());
+    currentObject()->addEnum(qmlEnum);
     return true;
 }
 
