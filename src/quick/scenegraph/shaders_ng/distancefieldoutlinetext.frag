@@ -19,8 +19,7 @@ layout(std140, binding = 0) uniform buf {
 
 void main()
 {
-    float distance = texture(_qt_texture, sampleCoord).r;
-    float f = fwidth(distance);
-    fragColor = mix(ubuf.styleColor, ubuf.color, smoothstep(0.5 - f, 0.5 + f, distance))
-            * smoothstep(ubuf.outlineAlphaMax0, ubuf.outlineAlphaMax1, distance);
+    float d = texture(_qt_texture, sampleCoord).r;
+    fragColor = mix(ubuf.styleColor, ubuf.color, smoothstep(ubuf.alphaMin, ubuf.alphaMax, d))
+            * smoothstep(ubuf.outlineAlphaMax0, ubuf.outlineAlphaMax1, d);
 }
