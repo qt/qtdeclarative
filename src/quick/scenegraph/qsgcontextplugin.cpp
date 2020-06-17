@@ -137,10 +137,17 @@ QSGAdaptationBackendData *contextFactory()
         // default to the software renderer
 #if !QT_CONFIG(vulkan) && !defined(Q_OS_WIN) && !defined(Q_OS_MACOS) && !defined(Q_OS_IOS)
         if (requestedBackend.isEmpty()
-            && !QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::OpenGL)) {
-            requestedBackend = QString::fromLocal8Bit("software");
+            && !QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::OpenGL))
+        {
+            requestedBackend = QLatin1String("software");
         }
 #endif
+
+        // This is handy if some of the logic above goes wrong and we select
+        // e.g. the software backend when it is not desired.
+        if (requestedBackend == QLatin1String("rhi"))
+            requestedBackend.clear(); // empty = no custom backend to load
+
         if (!requestedBackend.isEmpty()) {
             qCDebug(QSG_LOG_INFO, "Loading backend %s", qUtf8Printable(requestedBackend));
 
