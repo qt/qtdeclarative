@@ -606,6 +606,7 @@ TestCase {
 
         verify(!control.activeFocus)
         mouseClick(control.indicator)
-        verify(control.activeFocus)
+        // should not get activeFocus on mouseClick on macOS
+        compare(control.activeFocus, Qt.platform.os !== "osx" && Qt.platform.os !== "macos")
     }
 }
