@@ -52,7 +52,6 @@ public:
 
     void nodeChanged(QSGNode *node, QSGNode::DirtyState state) override;
 
-    void renderScene(uint fboId = 0) final;
     void render() final;
 };
 

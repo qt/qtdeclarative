@@ -60,17 +60,6 @@ QSGOpenVGRenderer::~QSGOpenVGRenderer()
 
 }
 
-void QSGOpenVGRenderer::renderScene(uint fboId)
-{
-    Q_UNUSED(fboId)
-    class B : public QSGBindable
-    {
-    public:
-        void bind() const { }
-    } bindable;
-    QSGRenderer::renderScene(bindable);
-}
-
 void QSGOpenVGRenderer::render()
 {
     //Clear the window geometry with the clear color

@@ -106,7 +106,7 @@ QSGTexture *QSGOpenVGRenderContext::createTexture(const QImage &image, uint flag
     return new QSGOpenVGTexture(tmp, flags);
 }
 
-QSGRenderer *QSGOpenVGRenderContext::createRenderer()
+QSGRenderer *QSGOpenVGRenderContext::createRenderer(QSGRendererInterface::RenderMode)
 {
     return new QSGOpenVGRenderer(this);
 }

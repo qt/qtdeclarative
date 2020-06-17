@@ -52,14 +52,13 @@ public:
     QSGOpenVGTexture(const QImage &image, uint flags);
     ~QSGOpenVGTexture();
 
-    int textureId() const override;
+    qint64 comparisonKey() const override;
     QSize textureSize() const override;
     bool hasAlphaChannel() const override;
     bool hasMipmaps() const override;
-    void bind() override;
 
 private:
-    VGImage m_image;;
+    VGImage m_image;
 };
 
 QT_END_NAMESPACE
