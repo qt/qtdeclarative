@@ -178,14 +178,14 @@ void QQuickStyleItem::initStyleOptionBase(QStyleOption &styleOption)
 
     styleOption.state = QStyle::State_None;
     styleOption.state |= controlSize(styleOption.control);
-    if (styleOption.window->isActive())
-        styleOption.state |= QStyle::State_Active;
 
     // Note: not all controls inherit from QQuickControl (e.g QQuickTextField)
     if (const auto quickControl = dynamic_cast<QQuickControl *>(m_control.data()))
         styleOption.direction = quickControl->isMirrored() ? Qt::RightToLeft : Qt::LeftToRight;
 
     if (window()) {
+        if (styleOption.window->isActive())
+            styleOption.state |= QStyle::State_Active;
         if (m_control->isEnabled())
             styleOption.state |= QStyle::State_Enabled;
         if (m_control->hasActiveFocus())
