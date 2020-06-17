@@ -57,6 +57,8 @@ private Q_SLOTS:
 
     void testQtbug85003();
 
+    void testNestedIf();
+
 #if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
     void testExample();
     void testExample_data();
@@ -236,6 +238,12 @@ void TestQmlformat::testVerbatimStrings()
 {
     QCOMPARE(runQmlformat(testFile("verbatimString.qml"), false, true),
              readTestFile("verbatimString.formatted.qml"));
+}
+
+void TestQmlformat::testNestedIf()
+{
+    QCOMPARE(runQmlformat(testFile("nestedIf.qml"), false, true),
+             readTestFile("nestedIf.formatted.qml"));
 }
 
 void TestQmlformat::testLineEndings()

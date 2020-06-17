@@ -578,6 +578,23 @@ QString DumpAstVisitor::parseExportsList(ExportsList *list)
     return result;
 }
 
+bool needsSemicolon(int kind)
+{
+    switch (kind) {
+    case Node::Kind_ForStatement:
+    case Node::Kind_ForEachStatement:
+    case Node::Kind_IfStatement:
+    case Node::Kind_SwitchStatement:
+    case Node::Kind_WhileStatement:
+    case Node::Kind_DoWhileStatement:
+    case Node::Kind_TryStatement:
+    case Node::Kind_WithStatement:
+        return false;
+    default:
+        return true;
+    }
+}
+
 QString DumpAstVisitor::parseBlock(Block *block, bool hasNext, bool allowBraceless)
 {
     bool hasOneLine = (block->statements == nullptr || block->statements->next == nullptr) && allowBraceless;
@@ -593,7 +610,10 @@ QString DumpAstVisitor::parseBlock(Block *block, bool hasNext, bool allowBracele
     if (!hasNext && !hasOneLine)
         result += formatLine("}", false);
 
-    m_blockNeededBraces |= (block->statements && block->statements->next != nullptr);
+    if (block->statements) {
+        m_blockNeededBraces |= !needsSemicolon(block->statements->statement->kind)
+                || (block->statements->next != nullptr);
+    }
 
     return result;
 }
@@ -831,24 +851,6 @@ QString DumpAstVisitor::parseStatement(Statement *statement, bool blockHasNext,
     default:
         m_error = true;
         return "unknown_statement_"+QString::number(statement->kind);
-    }
-}
-
-bool needsSemicolon(int kind)
-{
-    switch (kind)
-    {
-    case Node::Kind_ForStatement:
-    case Node::Kind_ForEachStatement:
-    case Node::Kind_IfStatement:
-    case Node::Kind_SwitchStatement:
-    case Node::Kind_WhileStatement:
-    case Node::Kind_DoWhileStatement:
-    case Node::Kind_TryStatement:
-    case Node::Kind_WithStatement:
-        return false;
-    default:
-        return true;
     }
 }
 
