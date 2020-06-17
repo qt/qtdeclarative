@@ -154,8 +154,11 @@ private:
 };
 
 // Sends QRhi resource statistics over a QTcpSocket. To be initialized by the
-// renderloop when QSGRhiSupport::isProfilingRequested() is true. Will not do
-// anything unless extra env vars (QSG_RHI_PROFILE_HOST) are set.
+// renderloop when QSGRhiSupport::isProfilingRequested() is true. From the
+// applications' side this is enabled by setting the env.vars. QSG_RHI_PROFILE=1
+// and QSG_RHI_PROFILE_HOST=<address>. For security, this is also tied to
+// CONFIG+=qml_debug in the application (just like QML debugging), so it won't
+// be doing anything otherwise, even if the env vars are set.
 class QSGRhiProfileConnection
 {
 public:

@@ -52,6 +52,8 @@
 #include <QOperatingSystemVersion>
 #include <QOffscreenSurface>
 
+#include <QtQml/private/qqmlengine_p.h>
+
 QT_BEGIN_NAMESPACE
 
 #if QT_CONFIG(vulkan)
@@ -737,6 +739,11 @@ void QSGRhiProfileConnection::initialize(QRhi *rhi)
 #ifdef RHI_REMOTE_PROFILER
     const QString profHost = qEnvironmentVariable("QSG_RHI_PROFILE_HOST");
     if (!profHost.isEmpty()) {
+        if (!QQmlEnginePrivate::qml_debugging_enabled) {
+            qWarning("RHI profiling cannot be enabled without QML debugging, for security reasons. "
+                     "Set CONFIG+=qml_debug in the application project.");
+            return;
+        }
         int profPort = qEnvironmentVariableIntValue("QSG_RHI_PROFILE_PORT");
         if (!profPort)
             profPort = 30667;
