@@ -144,8 +144,8 @@ struct LineVertex {
 static const QSGGeometry::AttributeSet &attributes()
 {
     static QSGGeometry::Attribute attr[] = {
-        QSGGeometry::Attribute::create(0, 2, GL_FLOAT, true),
-        QSGGeometry::Attribute::create(1, 1, GL_FLOAT)
+        QSGGeometry::Attribute::create(0, 2, QSGGeometry::FloatType, true),
+        QSGGeometry::Attribute::create(1, 1, QSGGeometry::FloatType)
     };
     static QSGGeometry::AttributeSet set = { 2, 3 * sizeof(float), attr };
     return set;
@@ -155,7 +155,7 @@ LineNode::LineNode(float size, float spread, const QColor &color)
     : m_geometry(attributes(), 0)
 {
     setGeometry(&m_geometry);
-    m_geometry.setDrawingMode(GL_TRIANGLE_STRIP);
+    m_geometry.setDrawingMode(QSGGeometry::DrawTriangleStrip);
 
     LineMaterial *m = new LineMaterial;
     m->state.color = color;

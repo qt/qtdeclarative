@@ -180,7 +180,7 @@
 
     \quotefile scenegraph/customgeometry/customgeometry.pro
 
-    As the bezier curve is drawn using GL_LINE_STRIP, we specify that
+    As the bezier curve is drawn as line strips, we specify that
     the view should be multisampled to get antialiasing. This is not
     required, but it will make the item look a bit nicer on hardware
     that supports it. Multisampling is not enabled by default because

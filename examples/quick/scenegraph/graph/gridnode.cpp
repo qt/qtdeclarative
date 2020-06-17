@@ -58,7 +58,7 @@ GridNode::GridNode()
     : m_geometry(QSGGeometry::defaultAttributes_Point2D(), 0)
 {
     setGeometry(&m_geometry);
-    m_geometry.setDrawingMode(GL_LINES);
+    m_geometry.setDrawingMode(QSGGeometry::DrawLines);
 
     setMaterial(&m_material);
     m_material.setColor(Qt::gray);

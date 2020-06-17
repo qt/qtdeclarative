@@ -79,7 +79,7 @@ Item {
         width: parent.width - 40
         wrapMode: Text.WordWrap
 
-        text: "This curve is a custom scene graph item, implemented using GL_LINE_STRIP"
+        text: "This curve is a custom scene graph item, implemented using line strips"
     }
 }
 //! [4]
