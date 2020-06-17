@@ -57,6 +57,8 @@ private Q_SLOTS:
 
     void testQtbug85003();
 
+    void testNestedIf();
+
 #if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
     void testExample();
     void testExample_data();
@@ -238,6 +240,12 @@ void TestQmlformat::testLargeBindings()
 {
     QCOMPARE(runQmlformat(testFile("largeBindings.qml"), false, true),
              readTestFile("largeBindings.formatted.qml"));
+}
+
+void TestQmlformat::testNestedIf()
+{
+    QCOMPARE(runQmlformat(testFile("nestedIf.qml"), false, true),
+             readTestFile("nestedIf.formatted.qml"));
 }
 
 void TestQmlformat::testLineEndings()
