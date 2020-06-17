@@ -232,10 +232,7 @@ static void qt_debug_remove_texture(QSGTexture* texture)
     \l{QSGMaterial}{Materials} that work with textures reimplement
     \l{QSGMaterialShader::updateSampledImage()}{updateSampledImage()} to
     provide logic that decides which QSGTexture's underlying native texture
-    should be exposed at a given shader resource binding point. In addition,
-    many texture-based materials will also call commitTextureOperations() to
-    trigger enqueing resource update operations on the underlying command
-    buffers.
+    should be exposed at a given shader resource binding point.
 
     QSGTexture does not separate image (texture) and sampler objects. The
     parameters for filtering and wrapping can be specified with
@@ -623,6 +620,8 @@ QSGTexture::WrapMode QSGTexture::verticalWrapMode() const
     \warning This function can only be called from the rendering thread.
 
     \since 6.0
+
+    \internal
  */
 QRhiTexture *QSGTexture::rhiTexture() const
 {
@@ -636,11 +635,15 @@ QRhiTexture *QSGTexture::rhiTexture() const
     this function), the function does nothing.
 
     Materials involving \a rhi textures are expected to call this function from
-    their updateSampledImage() implementation, typically without any conditions.
+    their \l{QSGMaterialShader::updateSampledImage()}{updateSampledImage()}
+    implementation, typically without any conditions, passing \c{state.rhi()}
+    and \c{state.resourceUpdateBatch()} from the QSGMaterialShader::RenderState.
 
     \warning This function can only be called from the rendering thread.
 
     \since 6.0
+
+    \internal
  */
 void QSGTexture::commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates)
 {

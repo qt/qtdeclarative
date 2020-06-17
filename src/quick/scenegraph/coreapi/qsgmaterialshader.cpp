@@ -455,9 +455,7 @@ bool QSGMaterialShader::updateUniformData(RenderState &state,
 
     The current rendering \a state is passed from the scene graph. Where
     relevant, it is up to the material to trigger enqueuing texture data
-    uploads. This is typically done by calling the virtual
-    QSGTexture::commitTextureOperations() with \c{state.rhi()} and
-    \c{state.resourceUpdateBatch()}.
+    uploads.
 
     The subclass specific state can be extracted from \a newMaterial.
 
