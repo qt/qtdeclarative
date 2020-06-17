@@ -49,12 +49,9 @@
 #include <QtGui/QGuiApplication>
 
 #include <private/qnumeric_p.h>
-#include <private/qquickprofiler_p.h>
 #include "qsgmaterialshader_p.h"
 
 #include "qsgrhivisualizer_p.h"
-
-#include <qtquick_tracepoints_p.h>
 
 #include <algorithm>
 
@@ -251,11 +248,6 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material,
     if (shader)
         return shader;
 
-    Q_TRACE_SCOPE(QSG_prepareMaterial);
-    if (QSG_LOG_TIME_COMPILATION().isDebugEnabled())
-        qsg_renderer_timer.start();
-    Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphContextFrame);
-
     shader = new Shader;
     QSGMaterialShader *s = static_cast<QSGMaterialShader *>(material->createShader(renderMode));
     context->initializeRhiShader(s, QShader::BatchableVertexShader);
@@ -268,11 +260,6 @@ ShaderManager::Shader *ShaderManager::prepareMaterial(QSGMaterial *material,
     };
 
     shader->lastOpacity = 0;
-
-    qCDebug(QSG_LOG_TIME_COMPILATION, "material shaders prepared in %dms", (int) qsg_renderer_timer.elapsed());
-
-    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphContextFrame,
-                           QQuickProfiler::SceneGraphContextMaterialCompile);
 
     rewrittenShaders[key] = shader;
     return shader;
@@ -289,11 +276,6 @@ ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *mate
     if (shader)
         return shader;
 
-    Q_TRACE_SCOPE(QSG_prepareMaterial);
-    if (QSG_LOG_TIME_COMPILATION().isDebugEnabled())
-        qsg_renderer_timer.start();
-    Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphContextFrame);
-
     shader = new Shader;
     QSGMaterialShader *s = static_cast<QSGMaterialShader *>(material->createShader(renderMode));
     context->initializeRhiShader(s, QShader::StandardShader);
@@ -309,10 +291,6 @@ ShaderManager::Shader *ShaderManager::prepareMaterialNoRewrite(QSGMaterial *mate
 
     stockShaders[key] = shader;
 
-    qCDebug(QSG_LOG_TIME_COMPILATION, "shader compiled in %dms (no rewrite)", (int) qsg_renderer_timer.elapsed());
-
-    Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphContextFrame,
-                           QQuickProfiler::SceneGraphContextMaterialCompile);
     return shader;
 }
 

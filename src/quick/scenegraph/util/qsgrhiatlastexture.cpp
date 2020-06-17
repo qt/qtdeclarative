@@ -46,18 +46,10 @@
 #include <QtGui/QWindow>
 
 #include <private/qqmlglobal_p.h>
-#include <private/qquickprofiler_p.h>
 #include <private/qsgdefaultrendercontext_p.h>
 #include <private/qsgtexture_p.h>
 #include <private/qsgcompressedtexture_p.h>
 #include <private/qsgcompressedatlastexture_p.h>
-
-#include <qtquick_tracepoints_p.h>
-
-#if 0
-#include <private/qsgcompressedtexture_p.h>
-#include <private/qsgcompressedatlastexture_p.h>
-#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -183,32 +175,8 @@ void AtlasBase::commitTextureOperations(QRhiResourceUpdateBatch *resourceUpdates
         }
     }
 
-    for (TextureBase *t : m_pending_uploads) {
-        // ### this profiling is all wrong, the real work is done elsewhere
-        bool profileFrames = QSG_LOG_TIME_TEXTURE().isDebugEnabled();
-        if (profileFrames)
-            qsg_renderer_timer.start();
-
-        Q_TRACE_SCOPE(QSG_texture_prepare);
-        Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphTexturePrepare);
-
-        // Skip bind, convert, swizzle; they're irrelevant
-        Q_QUICK_SG_PROFILE_SKIP(QQuickProfiler::SceneGraphTexturePrepare,
-                                QQuickProfiler::SceneGraphTexturePrepareStart, 3);
-        Q_TRACE(QSG_texture_upload_entry);
-
+    for (TextureBase *t : m_pending_uploads)
         enqueueTextureUpload(t, resourceUpdates);
-
-        Q_TRACE(QSG_texture_upload_exit);
-        Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphTexturePrepare,
-                                  QQuickProfiler::SceneGraphTexturePrepareUpload);
-
-        // Skip mipmap; unused
-        Q_QUICK_SG_PROFILE_SKIP(QQuickProfiler::SceneGraphTexturePrepare,
-                                QQuickProfiler::SceneGraphTexturePrepareUpload, 1);
-        Q_QUICK_SG_PROFILE_REPORT(QQuickProfiler::SceneGraphTexturePrepare,
-                                  QQuickProfiler::SceneGraphTexturePrepareMipmap);
-    }
 
     m_pending_uploads.clear();
 }
