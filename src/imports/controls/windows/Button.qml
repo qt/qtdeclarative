@@ -37,7 +37,49 @@
 import QtQuick 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Controls.impl 2.12
+import QtQuick.Templates 2.12 as T
 import QtQuick.NativeStyle 6.0 as NativeStyle
 
-NativeStyle.DefaultButton {
+T.Button {
+    id: control
+
+    readonly property bool nativeBackground: background instanceof NativeStyle.StyleItem
+
+    // Since QQuickControl will subtract the insets from the control size to
+    // figure out the background size, we need to reverse that here, otherwise
+    // the control ends up too big.
+    implicitWidth: implicitBackgroundWidth + leftInset + rightInset
+    implicitHeight: implicitBackgroundHeight + topInset + bottomInset
+
+    font.pixelSize: nativeBackground ? background.styleFont(control).pixelSize : undefined
+
+    leftPadding: nativeBackground ? background.contentPadding.left : 5
+    rightPadding: nativeBackground ? background.contentPadding.right : 5
+    topPadding: nativeBackground ? background.contentPadding.top : 5
+    bottomPadding: nativeBackground ? background.contentPadding.bottom : 5
+
+    background: NativeStyle.Button {
+        control: control
+        contentWidth: contentItem.implicitWidth
+        contentHeight: contentItem.implicitHeight
+        useNinePatchImage: false
+
+    }
+
+    icon.width: 24
+    icon.height: 24
+    icon.color: control.checked || control.highlighted ? control.palette.brightText :
+                control.flat && !control.down ? (control.visualFocus ? control.palette.highlight : control.palette.windowText) : control.palette.buttonText
+
+    contentItem: IconLabel {
+        spacing: control.spacing
+        mirrored: control.mirrored
+        display: control.display
+
+        icon: control.icon
+        text: control.text
+        font: control.font
+        color: control.checked || control.highlighted ? control.palette.brightText :
+                                                        control.flat && !control.down ? (control.visualFocus ? control.palette.highlight : control.palette.windowText) : control.palette.buttonText
+    }
 }
