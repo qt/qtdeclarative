@@ -133,14 +133,15 @@ QSGAdaptationBackendData *contextFactory()
         if (requestedBackend.isEmpty())
             requestedBackend = qEnvironmentVariable("QT_QUICK_BACKEND");
 
-        // If this platform does not support OpenGL, Vulkan, D3D11, or Metal, and no backend has been set
-        // default to the software renderer
-#if !QT_CONFIG(vulkan) && !defined(Q_OS_WIN) && !defined(Q_OS_MACOS) && !defined(Q_OS_IOS)
-        if (requestedBackend.isEmpty()
-            && !QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::OpenGL))
-        {
+        // If this platform does not support OpenGL, Vulkan, D3D11, or Metal, and no
+        // backend has been set, default to the software renderer. We rely on the
+        // static, build time flags only. This is to prevent the inevitable confusion
+        // caused by run time hocus pocus. If one wants to use the software backend
+        // in a GL or Vulkan capable Qt build (or on Windows or Apple platforms), it
+        // has to be requested explicitly.
+#if !QT_CONFIG(opengl) && !QT_CONFIG(vulkan) && !defined(Q_OS_WIN) && !defined(Q_OS_MACOS) && !defined(Q_OS_IOS)
+        if (requestedBackend.isEmpty())
             requestedBackend = QLatin1String("software");
-        }
 #endif
 
         // This is handy if some of the logic above goes wrong and we select
