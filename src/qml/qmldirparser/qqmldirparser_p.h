@@ -132,9 +132,20 @@ public:
         QTypeRevision version = QTypeRevision::zero();
     };
 
+    struct Import
+    {
+        Import() = default;
+        Import(QString module, QTypeRevision version, bool isAutoImport)
+            : module(module), version(version), isAutoImport(isAutoImport) {}
+
+        QString module;
+        QTypeRevision version;     // default: lastest version
+        bool isAutoImport = false; // if set: forward the version of the importing module
+    };
+
     QMultiHash<QString,Component> components() const;
     QHash<QString,Component> dependencies() const;
-    QStringList imports() const;
+    QList<Import> imports() const;
     QList<Script> scripts() const;
     QList<Plugin> plugins() const;
     bool designerSupported() const;
@@ -161,7 +172,7 @@ private:
     QString _typeNamespace;
     QMultiHash<QString,Component> _components;
     QHash<QString,Component> _dependencies;
-    QStringList _imports;
+    QList<Import> _imports;
     QList<Script> _scripts;
     QList<Plugin> _plugins;
     bool _designerSupported = false;
@@ -172,6 +183,7 @@ private:
 using QQmlDirComponents = QMultiHash<QString,QQmlDirParser::Component>;
 using QQmlDirScripts = QList<QQmlDirParser::Script>;
 using QQmlDirPlugins = QList<QQmlDirParser::Plugin>;
+using QQmlDirImports = QList<QQmlDirParser::Import>;
 
 QDebug &operator<< (QDebug &, const QQmlDirParser::Component &);
 QDebug &operator<< (QDebug &, const QQmlDirParser::Script &);

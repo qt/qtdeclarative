@@ -104,15 +104,9 @@ public:
 
     void walkCompositeSingletons(const std::function<void(const QQmlType &)> &callback) const;
 
-    void addImport(const QString &import);
-    void removeImport(const QString &import);
-    QStringList imports() const;
-
 private:
     const QString m_module;
     const quint8 m_majorVersion = 0;
-
-    QStringList m_imports;
 
     // Can only ever decrease
     QAtomicInt m_minMinorVersion = std::numeric_limits<quint8>::max();

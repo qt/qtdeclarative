@@ -1,12 +1,12 @@
 # Generated from qtqml.pro.
 
 set(module_dynamic_qml_imports
-    QtQml.Models
+    QtQml.Models/auto
 )
 
 if (QT_FEATURE_qml_worker_script)
     list(APPEND module_dynamic_qml_imports
-        QtQml.WorkerScript
+        QtQml.WorkerScript/auto
     )
 endif()
 

@@ -116,6 +116,9 @@ struct QQmlMetaTypeData
     QQmlTypeModule *findTypeModule(const QString &module, QTypeRevision version);
     QQmlTypeModule *addTypeModule(std::unique_ptr<QQmlTypeModule> module);
 
+    using ModuleImports = QMultiMap<VersionedUri, QQmlDirParser::Import>;
+    ModuleImports moduleImports;
+
     QHash<QString, void (*)()> moduleTypeRegistrationFunctions;
     bool registerModuleTypes(const QString &uri);
 

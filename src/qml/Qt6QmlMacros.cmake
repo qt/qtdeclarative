@@ -57,7 +57,11 @@
 #   that can be read by QML tools such as Qt Creator to access information about
 #   the types defined by the module's plugins. (OPTIONAL)
 #
-# IMPORTS: List of other Qml Modules that this module imports. (OPTIONAL)
+# IMPORTS: List of other Qml Modules that this module imports. A version can be
+#   specified by appending it after a slash(/), e.g QtQuick/2.0. The minor
+#   version may be omitted, e.g. QtQuick/2. Alternatively "auto" may be given
+#   as version to forward the version the current module is being imported with,
+#   e.g. QtQuick/auto. (OPTIONAL)
 #
 # RESOURCE_EXPORT: In static builds, when Qml files are processed via the Qt
 #   Quick Compiler generate a separate static library that will be linked in
@@ -254,7 +258,21 @@ function(qt6_add_qml_module target)
         string(APPEND qmldir_file_contents "typeinfo plugins.qmltypes\n")
     endif()
     foreach(import IN LISTS arg_IMPORTS)
-        string(APPEND qmldir_file_contents "import ${import}\n")
+        string(FIND ${import} "/" slash_position REVERSE)
+        if (slash_position EQUAL -1)
+            string(APPEND qmldir_file_contents "import ${import}\n")
+        else()
+            string(SUBSTRING ${import} 0 ${slash_position} import_module)
+            math(EXPR slash_position "${slash_position} + 1")
+            string(SUBSTRING ${import} ${slash_position} -1 import_version)
+            if (import_version MATCHES "[0-9]+\\.[0-9]+" OR import_version MATCHES "[0-9]+")
+                string(APPEND qmldir_file_contents "import ${import_module} ${import_version}\n")
+            elseif (import_version MATCHES "auto")
+                string(APPEND qmldir_file_contents "import ${import_module} auto\n")
+            else()
+                message(FATAL_ERROR "Invalid module import version number. Expected 'VersionMajor', 'VersionMajor.VersionMinor' or 'auto'.")
+            endif()
+        endif()
     endforeach()
 
     foreach(dependency IN LISTS arg_DEPENDENCIES)

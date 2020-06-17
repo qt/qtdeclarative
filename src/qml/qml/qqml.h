@@ -675,8 +675,20 @@ QT_WARNING_POP
 Q_QML_EXPORT bool qmlProtectModule(const char* uri, int majVersion);
 Q_QML_EXPORT void qmlRegisterModule(const char *uri, int versionMajor, int versionMinor);
 
-Q_QML_EXPORT void qmlRegisterModuleImport(const char *uri, int majorVersion, const char *import);
-Q_QML_EXPORT void qmlUnregisterModuleImport(const char *uri, int majorVersion, const char *import);
+enum QQmlModuleImportSpecialVersions: int {
+    QQmlModuleImportModuleAny = -1,
+    QQmlModuleImportLatest = -1,
+    QQmlModuleImportAuto = -2
+};
+
+Q_QML_EXPORT void qmlRegisterModuleImport(const char *uri, int moduleMajor,
+                                          const char *import,
+                                          int importMajor = QQmlModuleImportLatest,
+                                          int importMinor = QQmlModuleImportLatest);
+Q_QML_EXPORT void qmlUnregisterModuleImport(const char *uri, int moduleMajor,
+                                            const char *import,
+                                            int importMajor = QQmlModuleImportLatest,
+                                            int importMinor = QQmlModuleImportLatest);
 
 template<typename T>
 QObject *qmlAttachedPropertiesObject(const QObject *obj, bool create = true)

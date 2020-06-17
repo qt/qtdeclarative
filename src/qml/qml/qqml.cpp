@@ -72,35 +72,107 @@ void qmlRegisterModule(const char *uri, int versionMajor, int versionMinor)
     QQmlMetaType::registerModule(uri, QTypeRevision::fromVersion(versionMajor, versionMinor));
 }
 
+static QQmlDirParser::Import resolveImport(const QString &uri, int importMajor, int importMinor)
+{
+    if (importMajor == QQmlModuleImportAuto)
+        return QQmlDirParser::Import(uri, QTypeRevision(), true);
+    else if (importMajor == QQmlModuleImportLatest)
+        return QQmlDirParser::Import(uri, QTypeRevision(), false);
+    else if (importMinor == QQmlModuleImportLatest)
+        return QQmlDirParser::Import(uri, QTypeRevision::fromMajorVersion(importMajor), false);
+    return QQmlDirParser::Import(uri, QTypeRevision::fromVersion(importMajor, importMinor), false);
+}
+
+static QTypeRevision resolveModuleVersion(int moduleMajor)
+{
+    return moduleMajor == QQmlModuleImportModuleAny
+            ? QTypeRevision()
+            : QTypeRevision::fromMajorVersion(moduleMajor);
+}
+
+/*!
+ * \enum QQmlModuleImportSpecialVersions
+ *
+ * Defines some special values that can be passed to the version arguments of
+ * qmlRegisterModuleImport() and qmlUnregisterModuleImport().
+ *
+ * \value QQmlModuleImportModuleAny When passed as majorVersion of the base
+ *                                  module, signifies that the import is to be
+ *                                  applied to any version of the module.
+ * \value QQmlModuleImportLatest    When passed as major or minor version of
+ *                                  the imported module, signifies that the
+ *                                  latest overall, or latest minor version
+ *                                  of a specified major version shall be
+ *                                  imported.
+ * \value QQmlModuleImportAuto      When passed as major version of the imported
+ *                                  module, signifies that the version of the
+ *                                  base module shall be forwarded.
+ */
+
 /*!
  * Registers an implicit import for module \a uri of major version \a majorVersion
  *
  * This has the same effect as an \c import statement in a qmldir file: Whenever
- * \a uri version \a majorVersion is imported, \a import is automatically
- * imported, too, with the same version.
+ * \a uri of version \a moduleMajor is imported, \a import of version
+ * \a importMajor.\a importMinor is automatically imported, too. If
+ * \a importMajor is \l QmlModuleImportLatest the latest version
+ * available of that module is imported, and \a importMinor does not matter. If
+ * \a importMinor is \l QmlModuleImportLatest the latest minor version of a
+ * \a importMajor is chosen. If \a importMajor is \l QmlModuleImportAuto the
+ * version of \a import is version of \a uri being imported, and \a importMinor
+ * does not matter. If \a moduleMajor is \a QmlModuleImportModuleAny the module
+ * import is applied for any major version of \a uri. For example, you may
+ * specify that whenever any version of MyModule is imported, the latest version
+ * of MyOtherModule should be imported. Then, the following call would be
+ * appropriate:
+ *
+ * \code
+ * qmlRegisterModuleImport("MyModule", QmlModuleImportModuleAny,
+ *                         "MyOtherModule", QmlModuleImportLatest);
+ * \endcode
+ *
+ * Or, you may specify that whenever major version 5 of "MyModule" is imported,
+ * then version 3.14 of "MyOtherModule" should be imported:
+ *
+ * \code
+ * qmlRegisterModuleImport("MyModule", 5, "MyOtherModule", 3, 14);
+ * \endcode
+ *
+ * Finally, if you always want the same version of "MyOtherModule" to be
+ * imported whenever "MyModule" is imported, specify the following:
+ *
+ * \code
+ * qmlRegisterModuleImport("MyModule", QmlModuleImportModuleAny,
+ *                         "MyOtherModule", QmlModuleImportAuto);
+ * \endcode
  *
  * \sa qmlUnregisterModuleImport()
  */
-void qmlRegisterModuleImport(const char *uri, int majorVersion, const char *import)
+void qmlRegisterModuleImport(const char *uri, int moduleMajor,
+                             const char *import, int importMajor, int importMinor)
 {
     QQmlMetaType::registerModuleImport(
-                QString::fromUtf8(uri), QTypeRevision::fromMajorVersion(majorVersion),
-                QString::fromUtf8(import));
+                QString::fromUtf8(uri), resolveModuleVersion(moduleMajor),
+                resolveImport(QString::fromUtf8(import), importMajor, importMinor));
 }
+
 
 /*!
  * Removes a module import previously registered with qmlRegisterModuleImport()
  *
- * Calling this function makes sure that \a import is not automatically imported
- * anymore when \a uri of version \a majorVersion is.
+ * Calling this function makes sure that \a import of version
+ * \a{importMajor}.\a{importMinor} is not automatically imported anymore when
+ * \a uri of version \a moduleMajor is. The version resolution works the same
+ * way as with \l qmlRegisterModuleImport().
  *
  * \sa qmlRegisterModuleImport()
  */
-void qmlUnregisterModuleImport(const char *uri, int majorVersion, const char *import)
+void qmlUnregisterModuleImport(const char *uri, int moduleMajor,
+                               const char *import, int importMajor, int importMinor)
 {
     QQmlMetaType::unregisterModuleImport(
-                QString::fromUtf8(uri), QTypeRevision::fromMajorVersion(majorVersion),
-                QString::fromUtf8(import));
+                QString::fromUtf8(uri), resolveModuleVersion(moduleMajor),
+                resolveImport(QString::fromUtf8(import), importMajor, importMinor));
 }
 
 //From qqml.h

@@ -276,12 +276,28 @@ bool QQmlDirParser::parse(const QString &source)
                 reportError(lineNumber, 0, QStringLiteral("invalid version %1, expected <major>.<minor>").arg(sections[2]));
             }
         } else if (sections[0] == QLatin1String("import")) {
-            if (sectionCount != 2) {
+            if (sectionCount == 2) {
+                _imports << Import(sections[1], QTypeRevision(), false);
+            } else if (sectionCount == 3) {
+                if (sections[2] == QLatin1String("auto")) {
+                    _imports << Import(sections[1], QTypeRevision(), true);
+                } else {
+                    const auto version = parseVersion(sections[2]);
+                    if (version.isValid()) {
+                        _imports << Import(sections[1], version, false);
+                    } else {
+                        reportError(lineNumber, 0,
+                                    QStringLiteral("invalid version %1, expected <major>.<minor>")
+                                    .arg(sections[2]));
+                        continue;
+                    }
+                }
+            } else {
                 reportError(lineNumber, 0,
-                            QStringLiteral("import requires 2 arguments, but %1 were provided").arg(sectionCount - 1));
+                            QStringLiteral("import requires 1 or 2 arguments, but %1 were provided")
+                            .arg(sectionCount - 1));
                 continue;
             }
-            _imports << sections[1];
         } else if (sectionCount == 2) {
             // No version specified (should only be used for relative qmldir files)
             const Component entry(sections[0], sections[1], QTypeRevision());
@@ -374,7 +390,7 @@ QHash<QString, QQmlDirParser::Component> QQmlDirParser::dependencies() const
     return _dependencies;
 }
 
-QStringList QQmlDirParser::imports() const
+QList<QQmlDirParser::Import> QQmlDirParser::imports() const
 {
     return _imports;
 }

@@ -141,8 +141,8 @@ FindWarningVisitor::Import FindWarningVisitor::readQmldir(const QString &path)
     Import result;
     auto reader = createQmldirParserForFile(path + SlashQmldir);
     const auto imports = reader.imports();
-    for (const QString &import : imports)
-        result.dependencies.append(import);
+    for (const auto &import : imports)
+        result.dependencies.append(import.module); // TODO: version
 
     QHash<QString, ScopeTree::Ptr> qmlComponents;
     const auto components = reader.components();

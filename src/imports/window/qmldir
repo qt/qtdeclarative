@@ -1,2 +1,2 @@
 module QtQuick.Window
-import QtQuick
+import QtQuick auto

@@ -579,10 +579,25 @@ void tst_QQMLTypeLoader::implicitImport()
 {
     QQmlEngine engine;
     engine.addImportPath(testFile("imports"));
-    QQmlComponent component(&engine, testFileUrl("implicitimporttest.qml"));
-    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
-    QScopedPointer<QObject> obj(component.create());
-    QVERIFY(!obj.isNull());
+    {
+        QQmlComponent component(&engine, testFileUrl("implicitimporttest.qml"));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+    }
+    {
+        QQmlComponent component(&engine, testFileUrl("implicitautoimporttest.qml"));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+    }
+    {
+        QQmlComponent component(&engine, testFileUrl("implicitversionedimporttest.qml"));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(!obj.isNull());
+    }
+
 }
 
 void tst_QQMLTypeLoader::compositeSingletonCycle()

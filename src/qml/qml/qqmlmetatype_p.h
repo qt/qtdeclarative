@@ -54,6 +54,7 @@
 #include <private/qtqmlglobal_p.h>
 #include <private/qqmltype_p.h>
 #include <private/qqmlproxymetaobject_p.h>
+#include <private/qqmldirparser_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -98,8 +99,12 @@ public:
     static void registerModule(const char *uri, QTypeRevision version);
     static bool protectModule(const QString &uri, QTypeRevision version,
                               bool protectAllVersions = false);
-    static void registerModuleImport(const QString &uri, QTypeRevision version, const QString &import);
-    static void unregisterModuleImport(const QString &uri, QTypeRevision version, const QString &import);
+
+    static void registerModuleImport(const QString &uri, QTypeRevision version,
+                                     const QQmlDirParser::Import &import);
+    static void unregisterModuleImport(const QString &uri, QTypeRevision version,
+                                       const QQmlDirParser::Import &import);
+    static QList<QQmlDirParser::Import> moduleImports(const QString &uri, QTypeRevision version);
 
     static int typeId(const char *uri, QTypeRevision version, const char *qmlName);
 

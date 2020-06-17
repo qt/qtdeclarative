@@ -714,15 +714,15 @@ void QQmlTypeLoader::Blob::dependencyComplete(QQmlDataBlob *blob)
 bool QQmlTypeLoader::Blob::loadImportDependencies(PendingImportPtr currentImport, const QString &qmldirUri, QList<QQmlError> *errors)
 {
     const QQmlTypeLoaderQmldirContent qmldir = typeLoader()->qmldirContent(qmldirUri);
-    const QQmlTypeModule *module = QQmlMetaType::typeModule(currentImport->uri,
-                                                            currentImport->version);
-    const QStringList implicitImports = module ? (module->imports() + qmldir.imports())
-                                               : qmldir.imports();
-    for (const QString &implicitImport : implicitImports) {
+    const QList<QQmlDirParser::Import> implicitImports
+            = QQmlMetaType::moduleImports(currentImport->uri, currentImport->version)
+            + qmldir.imports();
+    for (const auto &implicitImport : implicitImports) {
         auto dependencyImport = std::make_shared<PendingImport>();
-        dependencyImport->uri = implicitImport;
+        dependencyImport->uri = implicitImport.module;
         dependencyImport->qualifier = currentImport->qualifier;
-        dependencyImport->version = currentImport->version;
+        dependencyImport->version = implicitImport.isAutoImport ? currentImport->version
+                                                                : implicitImport.version;
         if (!addImport(dependencyImport, QQmlImports::ImportLowPrecedence, errors)) {
             QQmlError error;
             error.setDescription(

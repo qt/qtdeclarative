@@ -15,9 +15,9 @@ DYNAMIC_QMLDIR = \
     "classname QtQmlPlugin" \
     "typeinfo plugins.qmltypes" \
     "designersupported" \
-    "import QtQml.Models"
+    "import QtQml.Models auto"
 
 qtConfig(qml-worker-script): DYNAMIC_QMLDIR += \
-    "import QtQml.WorkerScript"
+    "import QtQml.WorkerScript auto"
 
 load(qml_plugin)

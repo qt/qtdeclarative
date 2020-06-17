@@ -628,22 +628,53 @@ bool QQmlMetaType::protectModule(const QString &uri, QTypeRevision version, bool
     return range.first != range.second;
 }
 
-void QQmlMetaType::registerModuleImport(const QString &uri, QTypeRevision version, const QString &import)
+void QQmlMetaType::registerModuleImport(const QString &uri, QTypeRevision moduleVersion,
+                                        const QQmlDirParser::Import &import)
 {
     QQmlMetaTypeDataPtr data;
 
-    QQmlTypeModule *module = getTypeModule(uri, version, data);
-    Q_ASSERT(module);
-    module->addImport(import);
+    data->moduleImports.insert(QQmlMetaTypeData::VersionedUri(uri, moduleVersion), import);
 }
 
-void QQmlMetaType::unregisterModuleImport(const QString &uri, QTypeRevision version, const QString &import)
+static bool operator==(const QQmlDirParser::Import &a, const QQmlDirParser::Import &b)
+{
+    return a.module == b.module && a.version == b.version && a.isAutoImport == b.isAutoImport;
+}
+
+void QQmlMetaType::unregisterModuleImport(const QString &uri, QTypeRevision moduleVersion,
+                                          const QQmlDirParser::Import &import)
+{
+    QQmlMetaTypeDataPtr data;
+    data->moduleImports.remove(QQmlMetaTypeData::VersionedUri(uri, moduleVersion), import);
+}
+
+QList<QQmlDirParser::Import> QQmlMetaType::moduleImports(
+        const QString &uri, QTypeRevision version)
 {
     QQmlMetaTypeDataPtr data;
 
-    QQmlTypeModule *module = getTypeModule(uri, version, data);
-    Q_ASSERT(module);
-    module->removeImport(import);
+    const auto unrevisioned = data->moduleImports.equal_range(
+                QQmlMetaTypeData::VersionedUri(uri, QTypeRevision()));
+
+    QList<QQmlDirParser::Import> result(unrevisioned.first, unrevisioned.second);
+    if (version.hasMajorVersion())
+        return result + data->moduleImports.values(QQmlMetaTypeData::VersionedUri(uri, version));
+
+    // Use latest module available with that URI.
+    const auto begin = data->moduleImports.begin();
+    auto it = unrevisioned.first;
+    if (it == begin)
+        return result;
+
+    const QQmlMetaTypeData::VersionedUri latestVersion = (--it).key();
+    if (latestVersion.uri != uri)
+        return result;
+
+    do {
+        result += *it;
+    } while (it != begin && (--it).key() == latestVersion);
+
+    return result;
 }
 
 void QQmlMetaType::registerModule(const char *uri, QTypeRevision version)

@@ -246,6 +246,23 @@ depends MyOtherModule 1.0
             load QML (perhaps conditionally) which then depends on other
             modules. In such cases, the \c depends declaration is necessary
             to include the other modules in application packages.
+    \row
+        \li
+            \code
+import <ModuleIdentifier> [<Version>]
+            \endcode
+        \li Declares that this module imports another.
+
+            Example:
+            \code
+import MyOtherModule 1.0
+            \endcode
+
+            The types from the other module are made available in the same type
+            namespace as this module is imported into. Omitting the version
+            imports the latest version available of the other module, specifying
+            \c auto as version imports the same version as the version of this
+            module specified in the QML \c import statement.
 
     \row
         \li
