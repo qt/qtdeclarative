@@ -46,7 +46,8 @@ public:
 
 private:
     bool checkMemberAccess(const QVector<ScopeTree::FieldMember> &members,
-                           const ScopeTree::ConstPtr &outerScope) const;
+                           const ScopeTree::ConstPtr &outerScope,
+                           const MetaProperty *prop = nullptr) const;
     void printContext(const QQmlJS::SourceLocation &location) const;
 
     ColorOutput *m_colorOut = nullptr;

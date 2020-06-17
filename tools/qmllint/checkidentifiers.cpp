@@ -83,11 +83,18 @@ void CheckIdentifiers::printContext(const QQmlJS::SourceLocation &location) cons
 }
 
 bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &members,
-                                         const ScopeTree::ConstPtr &outerScope) const
+                                         const ScopeTree::ConstPtr &outerScope,
+                                         const MetaProperty *prop) const
 {
+
     QStringList expectedNext;
     QString detectedRestrictiveName;
     QString detectedRestrictiveKind;
+
+    if (prop != nullptr && prop->isList()) {
+        detectedRestrictiveKind = QLatin1String("list");
+        expectedNext.append(QLatin1String("length"));
+    }
 
     ScopeTree::ConstPtr scope = outerScope;
     for (const ScopeTree::FieldMember &access : members) {
@@ -319,7 +326,7 @@ bool CheckIdentifiers::operator()(const QHash<QString, ScopeTree::ConstPtr> &qml
                                            .arg(memberAccessBase.m_location.startColumn), Normal);
                     printContext(memberAccessBase.m_location);
                     noUnqualifiedIdentifier = false;
-                } else if (!checkMemberAccess(memberAccessChain, qmlIt->type())) {
+                } else if (!checkMemberAccess(memberAccessChain, qmlIt->type(), &*qmlIt)) {
                     noUnqualifiedIdentifier = false;
                 }
 

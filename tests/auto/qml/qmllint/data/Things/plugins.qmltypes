@@ -14,4 +14,20 @@ Module {
         }
         Property { name: "palette"; type: "QPalette" }
     }
+    Component {
+        name: "Frame"
+        prototype: "MyPane"
+        exports: ["Things.Templates/Frame 1.0"]
+        exportMetaObjectRevisions: [0]
+    }
+    Component {
+        name: "MyPane"
+        prototype: "QObject"
+        exports: ["Things.Templates/Pane 1.0"]
+        exportMetaObjectRevisions: [0]
+        Property { name: "contentWidth"; type: "double" }
+        Property { name: "contentHeight"; type: "double" }
+        Property { name: "contentData"; type: "QObject"; isList: true; isReadonly: true }
+        Property { name: "contentChildren"; type: "QQuickItem"; isList: true; isReadonly: true }
+    }
 }
