@@ -89,9 +89,9 @@ QQuickStyleItem::~QQuickStyleItem()
 
 void QQuickStyleItem::connectToControl()
 {
-    connect(this, &QQuickStyleItem::enabledChanged, this, &QQuickStyleItem::markImageDirty);
-    connect(this, &QQuickStyleItem::activeFocusChanged, this, &QQuickStyleItem::markImageDirty);
-    connect(this, &QQuickStyleItem::windowChanged, this, &QQuickStyleItem::markImageDirty);
+    connect(m_control, &QQuickStyleItem::enabledChanged, this, &QQuickStyleItem::markImageDirty);
+    connect(m_control, &QQuickItem::activeFocusChanged, this, &QQuickStyleItem::markImageDirty);
+    connect(m_control, &QQuickStyleItem::windowChanged, this, &QQuickStyleItem::markImageDirty);
     connect(window(), &QQuickWindow::activeChanged, this, &QQuickStyleItem::markImageDirty);
 }
 
