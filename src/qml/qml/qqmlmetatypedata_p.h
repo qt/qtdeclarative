@@ -88,9 +88,17 @@ struct QQmlMetaTypeData
         VersionedUri() : majorVersion(0) {}
         VersionedUri(const QHashedString &uri, QTypeRevision version)
             : uri(uri), majorVersion(version.majorVersion()) {}
-        bool operator==(const VersionedUri &other) const {
-            return other.majorVersion == majorVersion && other.uri == uri;
+
+        friend bool operator==(const VersionedUri &a, const VersionedUri &b)
+        {
+            return a.majorVersion == b.majorVersion && a.uri == b.uri;
         }
+
+        friend size_t qHash(const VersionedUri &v, size_t seed = 0)
+        {
+            return qHashMulti(seed, v.uri, v.majorVersion);
+        }
+
         QHashedString uri;
         quint8 majorVersion;
     };
@@ -135,11 +143,6 @@ struct QQmlMetaTypeData
 private:
     QStringList *m_typeRegistrationFailures = nullptr;
 };
-
-inline size_t qHash(const QQmlMetaTypeData::VersionedUri &v)
-{
-    return v.uri.hash() ^ qHash(v.majorVersion);
-}
 
 QT_END_NAMESPACE
 
