@@ -51,6 +51,7 @@
 #include <qjsengine.h>
 #include <QtCore/qvarlengtharray.h>
 #include <private/qmetaobject_p.h>
+#include <QtQml/private/qqmlcontext_p.h>
 #include <QtCore/qdebug.h>
 
 QT_BEGIN_NAMESPACE
@@ -562,8 +563,8 @@ void QQmlContextData::emitDestruction()
                 emit a->destruction();
             }
 
-            QQmlContextData * child = childContexts;
-            while (child) {
+            QQmlContextDataRef  child = childContexts;
+            while (!child.isNull()) {
                 child->emitDestruction();
                 child = child->nextChild;
             }
@@ -625,12 +626,12 @@ void QQmlContextData::clearContext()
 void QQmlContextData::destroy()
 {
     Q_ASSERT(refCount == 0);
-    linkedContext = nullptr;
 
     // avoid recursion
     ++refCount;
     if (engine)
         invalidate();
+    linkedContext = nullptr;
 
     Q_ASSERT(refCount == 1);
     clearContext();
