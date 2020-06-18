@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/scenegraph/custommaterial">
+        <file>main.qml</file>
+        <file>shaders/mandelbrot.frag.qsb</file>
+        <file>shaders/mandelbrot.vert.qsb</file>
+    </qresource>
+</RCC>

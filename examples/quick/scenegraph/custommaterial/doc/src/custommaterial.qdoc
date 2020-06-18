@@ -1,0 +1,104 @@
+/****************************************************************************
+**
+** Copyright (C) 2017 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \example scenegraph/custommaterial
+    \title Scene Graph - Custom Material
+    \ingroup qtquickexamples
+    \brief Shows how to implement a custom material in the Qt Quick Scene Graph.
+
+    The custom material example shows how to implement an item that is rendered
+    using a material with a custom vertex and fragment shader.
+
+    \image custom-material-example.jpg
+
+    \section1 Shader and material
+
+    The main functionality is in the fragment shader
+
+    \quotefile scenegraph/custommaterial/shaders/mandelbrot.frag
+
+    The fragment and vertex shaders are combined into a \l QSGMaterialShader subclass.
+
+    \snippet scenegraph/custommaterial/customitem.cpp 2
+
+    A QSGMaterial subclass encapsulates the shader together with the render state. In
+    this example, we add state information corresponding to the shader uniforms. The
+    material is responsible for creating the shader by reimplementing
+    \l QSGMaterial::createShader().
+
+    \snippet scenegraph/custommaterial/customitem.cpp 1
+
+
+    To update the uniform data, we reimplement \l QSGMaterialShader::updateUniformData().
+
+    \snippet scenegraph/custommaterial/customitem.cpp 3
+
+    \section1 Item and node
+
+    We create a custom item to show off our new material:
+
+    \snippet scenegraph/custommaterial/customitem.h 1
+
+    The CustomItem declaration adds three
+    properties corresponding to the uniforms that we want to expose to QML.
+
+    \snippet scenegraph/custommaterial/customitem.h 2
+
+    As with every custom Qt Quick item, the implementation is split in two:
+    in addition to \c CustomItem, which lives in the GUI thread, we create
+    a \l QSGNode subclass that lives in the render thread.
+
+    \snippet scenegraph/custommaterial/customitem.cpp 4
+
+    The node owns an instance of the material, and has logic to update
+    the material's state. The item maintains the corresponding QML properties.
+    It needs to duplicate the information from the material since the item and
+    material live on different threads.
+
+    \snippet scenegraph/custommaterial/customitem.cpp 5
+
+    The information is copied from the item to the scene graph in a
+    reimplementation of \l QQuickItem::updatePaintNode(). The two threads
+    are at a synchronization point when the function is called, so it is safe
+    to access both classes.
+
+    \snippet scenegraph/custommaterial/customitem.cpp 6
+
+    \section1 The rest of the example
+
+    The application is a straightforward QML application, with a
+    QGuiApplication and a QQuickView that we pass a .qml file.
+
+    In the QML file, we create the
+    customitem which we anchor to fill the root.
+
+    \snippet scenegraph/custommaterial/main.qml 1
+
+    To make the example a bit more interesting we add an animation to
+    change the zoom level and iteration limit. The center stays constant.
+ */
