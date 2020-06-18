@@ -30,4 +30,29 @@ Module {
         Property { name: "contentData"; type: "QObject"; isList: true; isReadonly: true }
         Property { name: "contentChildren"; type: "QQuickItem"; isList: true; isReadonly: true }
     }
+    Component {
+        name: "MyScreen"
+        prototype: "QObject"
+        exports: [
+            "Things.Window/Screen 1.0",
+        ]
+        isCreatable: false
+        attachedType: "MyScreenAttached"
+    }
+    Component {
+        name: "MyScreenAttached"
+        prototype: "MyScreenInfo"
+        exports: [
+            "Things.Window/ScreenAttached 1.0",
+        ]
+    }
+    Component {
+        name: "MyScreenInfo"
+        prototype: "QObject"
+        exports: [
+            "Things.Window/ScreenInfo 1.0",
+        ]
+        isCreatable: false
+        Property { name: "pixelDensity"; type: "double"; isReadonly: true }
+    }
 }

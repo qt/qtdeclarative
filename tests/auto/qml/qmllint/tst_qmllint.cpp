@@ -223,6 +223,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("EnumAccess1") << QStringLiteral("EnumAccess1.qml");
     QTest::newRow("EnumAccess2") << QStringLiteral("EnumAccess2.qml");
     QTest::newRow("ListProperty") << QStringLiteral("ListProperty.qml");
+    QTest::newRow("AttachedType") << QStringLiteral("AttachedType.qml");
 }
 
 void TestQmllint::cleanQmlCode()

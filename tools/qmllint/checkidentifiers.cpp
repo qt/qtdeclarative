@@ -31,6 +31,7 @@
 
 #include <QtCore/qqueue.h>
 #include <QtCore/qsharedpointer.h>
+#include <stack>
 
 class IssueLocationWithContext
 {
@@ -80,6 +81,30 @@ void CheckIdentifiers::printContext(const QQmlJS::SourceLocation &location) cons
                            + QString::fromLatin1("\t").repeated(tabCount)
                            + QString::fromLatin1("^").repeated(location.length)
                            + QLatin1Char('\n'), Normal);
+}
+
+static bool walkViaParentAndAttachedScopes(ScopeTree::ConstPtr rootType,
+                                           const QHash<QString, ScopeTree::ConstPtr> &allTypes,
+                                           std::function<bool(ScopeTree::ConstPtr)> visit)
+{
+    if (rootType == nullptr)
+        return false;
+    std::stack<ScopeTree::ConstPtr> stack;
+    stack.push(rootType);
+    while (!stack.empty()) {
+        const auto type = stack.top();
+        stack.pop();
+
+        if (visit(type))
+            return true;
+
+        if (auto superType = allTypes.value(type->superclassName()))
+            stack.push(superType);
+
+        if (auto attachedType = allTypes.value(type->attachedTypeName()))
+            stack.push(attachedType);
+    }
+    return false;
 }
 
 bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &members,
@@ -199,29 +224,27 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
         if (!detectedRestrictiveName.isEmpty())
             continue;
 
-        auto type = m_types.value(access.m_parentType.isEmpty() ? scopeName : access.m_parentType);
-        bool typeFound = false;
-        while (type) {
-            const auto typeProperties = type->properties();
-            const auto typeIt = typeProperties.find(access.m_name);
-            if (typeIt != typeProperties.end()) {
-                const ScopeTree::ConstPtr propType = typeIt->type();
-                scope = propType ? propType : m_types.value(typeIt->typeName());
-                typeFound = true;
-                break;
-            }
+        auto rootType =
+                m_types.value(access.m_parentType.isEmpty() ? scopeName : access.m_parentType);
+        bool typeFound =
+                walkViaParentAndAttachedScopes(rootType, m_types, [&](ScopeTree::ConstPtr type) {
+                    const auto typeProperties = type->properties();
+                    const auto typeIt = typeProperties.find(access.m_name);
+                    if (typeIt != typeProperties.end()) {
+                        const ScopeTree::ConstPtr propType = typeIt->type();
+                        scope = propType ? propType : m_types.value(typeIt->typeName());
+                        return true;
+                    }
 
-            const auto typeMethods = type->methods();
-            const auto typeMethodIt = typeMethods.find(access.m_name);
-            if (typeMethodIt != typeMethods.end()) {
-                detectedRestrictiveName = access.m_name;
-                detectedRestrictiveKind = QLatin1String("method");
-                typeFound = true;
-                break;
-            }
-
-            type = m_types.value(type->superclassName());
-        }
+                    const auto typeMethods = type->methods();
+                    const auto typeMethodIt = typeMethods.find(access.m_name);
+                    if (typeMethodIt != typeMethods.end()) {
+                        detectedRestrictiveName = access.m_name;
+                        detectedRestrictiveKind = QLatin1String("method");
+                        return true;
+                    }
+                    return false;
+                });
         if (typeFound)
             continue;
 
