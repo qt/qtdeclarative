@@ -28,6 +28,7 @@
 
 #include <QCoreApplication>
 #include <QFile>
+#include <QTextStream>
 
 #include <QtQml/private/qqmljslexer_p.h>
 #include <QtQml/private/qqmljsparser_p.h>
@@ -190,6 +191,9 @@ int main(int argc, char *argv[])
     parser.addOption(QCommandLineOption({"f", "force"},
                      QStringLiteral("Continue even if an error has occurred.")));
 
+    parser.addOption(QCommandLineOption(
+            { "F", "files" }, QStringLiteral("Format all files listed in file, in-place"), "file"));
+
     parser.addOption(QCommandLineOption({"l", "newline"},
                      QStringLiteral("Override the new line format to use (native macos unix windows)."),
                      "newline", "native"));
@@ -200,7 +204,7 @@ int main(int argc, char *argv[])
 
     const auto positionalArguments = parser.positionalArguments();
 
-    if (positionalArguments.isEmpty())
+    if (positionalArguments.isEmpty() && !parser.isSet("files"))
         parser.showHelp(-1);
 
     if (!parser.isSet("inplace") && parser.value("newline") != "native") {
@@ -208,9 +212,30 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    for (const QString& file: parser.positionalArguments()) {
-        if (!parseFile(file, parser.isSet("inplace"), parser.isSet("verbose"), !parser.isSet("no-sort"), parser.isSet("force"), parser.value("newline")))
-            success = false;
+    if (parser.isSet("files")) {
+        if (!positionalArguments.isEmpty())
+            qWarning() << "Warning: Positional arguments are ignored when -F is used";
+
+        QFile file(parser.value("files"));
+        file.open(QIODevice::Text | QIODevice::ReadOnly);
+        QTextStream in(&file);
+        while (!in.atEnd()) {
+            QString file = in.readLine();
+
+            if (file.isEmpty())
+                continue;
+
+            if (!parseFile(file, true, parser.isSet("verbose"), !parser.isSet("no-sort"),
+                           parser.isSet("force"), parser.value("newline")))
+                success = false;
+        }
+    } else {
+        for (const QString &file : parser.positionalArguments()) {
+            if (!parseFile(file, parser.isSet("inplace"), parser.isSet("verbose"),
+                           !parser.isSet("no-sort"), parser.isSet("force"),
+                           parser.value("newline")))
+                success = false;
+        }
     }
 #endif
 
