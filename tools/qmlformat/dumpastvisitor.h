@@ -58,6 +58,7 @@ public:
     void endVisit(UiObjectBinding *node) override;
 
     bool visit(FunctionDeclaration *node) override;
+    void endVisit(FunctionDeclaration *node) override;
 
     bool visit(UiInlineComponent *node) override;
     void endVisit(UiInlineComponent *node) override;
@@ -86,6 +87,7 @@ private:
         bool m_firstProperty = true;
         bool m_firstBinding = true;
         bool m_firstObject = true;
+        bool m_firstFunction = true;
         bool m_inArrayBinding = false;
         bool m_pendingBinding = false;
 
