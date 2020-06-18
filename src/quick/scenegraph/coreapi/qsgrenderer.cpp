@@ -160,6 +160,13 @@ void QSGRenderer::renderScene()
         frameTimer.start();
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphRendererFrame);
 
+    // The QML Profiler architecture is extremely fragile: we have to record a
+    // hardcoded number of data points for each event, otherwise the view will
+    // show weird things in Creator. So record a dummy Binding data point, even
+    // though it is meaningless for our purposes.
+    Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRendererFrame,
+                              QQuickProfiler::SceneGraphRendererBinding);
+
     qint64 renderTime = 0;
 
     preprocess();
