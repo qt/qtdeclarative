@@ -59,6 +59,8 @@ private Q_SLOTS:
 
     void testNestedIf();
 
+    void testNestedFunctions();
+
 #if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
     void testExample();
     void testExample_data();
@@ -269,6 +271,12 @@ void TestQmlformat::testQtbug85003()
 {
     QCOMPARE(runQmlformat(testFile("QtBug85003.qml"), false, true),
              readTestFile("QtBug85003.formatted.qml"));
+}
+
+void TestQmlformat::testNestedFunctions()
+{
+    QCOMPARE(runQmlformat(testFile("nestedFunctions.qml"), false, true),
+             readTestFile("nestedFunctions.formatted.qml"));
 }
 
 #if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled

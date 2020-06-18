@@ -1232,8 +1232,14 @@ void DumpAstVisitor::endVisit(UiArrayBinding *) {
 }
 
 bool DumpAstVisitor::visit(FunctionDeclaration *node) {
+    if (scope().m_firstFunction) {
+        if (scope().m_firstOfAll)
+            scope().m_firstOfAll = false;
+        else
+            addNewLine();
 
-    addNewLine();
+        scope().m_firstFunction = false;
+    }
 
     addLine(getComment(node, Comment::Location::Front));
 
@@ -1251,13 +1257,16 @@ bool DumpAstVisitor::visit(FunctionDeclaration *node) {
 
     addLine(head);
     m_indentLevel++;
+
+    return true;
+}
+
+void DumpAstVisitor::endVisit(FunctionDeclaration *node)
+{
     m_result += parseStatementList(node->body);
     m_indentLevel--;
     addLine("}");
-
     addNewLine();
-
-    return true;
 }
 
 bool DumpAstVisitor::visit(UiObjectBinding *node) {
