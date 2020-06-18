@@ -4970,7 +4970,7 @@ const QQuickWindow::GraphicsStateInfo &QQuickWindow::graphicsStateInfo()
     application, not retrieved from the scene graph). With graphics APIs where
     no native command buffer concept is exposed (OpenGL, Direct 3D 11),
     beginExternalCommands() and endExternalCommands() together provide a
-    replacement for the removed Qt 5 resetOpenGLState() function.
+    replacement for the Qt 5 resetOpenGLState() function.
 
     Calling this function and endExternalCommands() is not necessary within the
     \l{QSGRenderNode::render()}{render()} implementation of a QSGRenderNode
@@ -4992,7 +4992,7 @@ const QQuickWindow::GraphicsStateInfo &QQuickWindow::graphicsStateInfo()
     the OpenGL state in the context can have arbitrary settings, and this
     function does not perform any resetting of the state back to defaults.
 
-    \sa endExternalCommands()
+    \sa endExternalCommands(), QQuickOpenGLUtils::resetOpenGLState()
 
     \since 5.14
  */
@@ -5022,14 +5022,14 @@ void QQuickWindow::beginExternalCommands()
     application, not retrieved from the scene graph). With graphics APIs where
     no native command buffer concept is exposed (OpenGL, Direct 3D 11),
     beginExternalCommands() and endExternalCommands() together provide a
-    replacement for the removed Qt 5 resetOpenGLState() function.
+    replacement for the Qt 5 resetOpenGLState() function.
 
     Calling this function and beginExternalCommands() is not necessary within the
     \l{QSGRenderNode::render()}{render()} implementation of a QSGRenderNode
     because the scene graph performs the necessary steps implicitly for render
     nodes.
 
-    \sa beginExternalCommands()
+    \sa beginExternalCommands(), QQuickOpenGLUtils::resetOpenGLState()
 
     \since 5.14
  */

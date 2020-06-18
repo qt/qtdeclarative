@@ -484,6 +484,7 @@ qt_extend_target(Quick CONDITION QT_FEATURE_quick_shadereffect
 qt_extend_target(Quick CONDITION QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT_FEATURE_opengles3
     SOURCES
         items/qquickframebufferobject.cpp items/qquickframebufferobject.h
+        util/qquickopenglutils.cpp util/qquickopenglutils.h
 )
 
 qt_extend_target(Quick CONDITION QT_FEATURE_quick_canvas

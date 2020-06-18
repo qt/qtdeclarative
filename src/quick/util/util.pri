@@ -80,3 +80,11 @@ qtConfig(quick-path) {
         $$PWD/qquickpath_p_p.h \
         $$PWD/qquickpathinterpolator_p.h
 }
+
+qtConfig(opengl(es1|es2)?) {
+    SOURCES += \
+        $$PWD/qquickopenglutils.cpp
+
+    HEADERS += \
+        $$PWD/qquickopenglutils.h
+}
