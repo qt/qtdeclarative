@@ -68,6 +68,8 @@ public:
         PainterResource,
         RhiResource,
         RhiSwapchainResource,
+        RhiRedirectCommandBuffer,
+        RhiRedirectRenderTarget,
         PhysicalDeviceResource,
         OpenGLContextResource,
         DeviceContextResource,

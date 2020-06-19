@@ -113,8 +113,19 @@ QT_BEGIN_NAMESPACE
     the scenegraph, when applicable. This value was introduced in Qt 5.14.
 
     \value RhiSwapchainResource The resource is a pointer to a QRhiSwapchain
-    instance that is associated with the window. This value was introduced in
-    Qt 6.0.
+    instance that is associated with the window. The value is null when the
+    window is used in combination with QQuickRenderControl. This value was
+    introduced in Qt 6.0.
+
+    \value RhiRedirectCommandBuffer The resource is a pointer to a
+    QRhiCommandBuffer instance that is associated with the window and its
+    QQuickRenderControl. The value is null when the window is not associated
+    with a QQuickRenderControl. This value was introduced in Qt 6.0.
+
+    \value RhiRedirectRenderTarget The resource is a pointer to a
+    QRhiTextureRenderTarget instance that is associated with the window and its
+    QQuickRenderControl. The value is null when the window is not associated
+    with a QQuickRenderControl. This value was introduced in Qt 6.0.
 
     \value PhysicalDeviceResource The resource is a pointer to the pysical
     device object used by the scenegraph, when applicable. For example, a

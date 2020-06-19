@@ -441,10 +441,23 @@ const void *QSGRhiSupport::rifResource(QSGRendererInterface::Resource res,
                                        const QQuickWindow *w)
 {
     QRhi *rhi = rc->rhi();
-    if (res == QSGRendererInterface::RhiResource || !rhi)
+    if (!rhi)
+        return nullptr;
+
+    // Accessing the underlying QRhi* objects are essential both for Qt Quick
+    // 3D and advanced solutions, such as VR engine integrations.
+    switch (res) {
+    case QSGRendererInterface::RhiResource:
         return rhi;
-    if (res == QSGRendererInterface::RhiSwapchainResource)
+    case QSGRendererInterface::RhiSwapchainResource:
         return QQuickWindowPrivate::get(w)->swapchain;
+    case QSGRendererInterface::RhiRedirectCommandBuffer:
+        return QQuickWindowPrivate::get(w)->redirect.commandBuffer;
+    case QSGRendererInterface::RhiRedirectRenderTarget:
+        return QQuickWindowPrivate::get(w)->redirect.rt.renderTarget;
+    default:
+        break;
+    }
 
     const QRhiNativeHandles *nat = rhi->nativeHandles();
     if (!nat)
