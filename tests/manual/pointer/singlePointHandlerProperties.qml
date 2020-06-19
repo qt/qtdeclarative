@@ -69,7 +69,8 @@ Rectangle {
                 implicitHeight: label.implicitHeight
                 Text {
                     id: label
-                    text: 'id: ' + pointHandler.point.id.toString(16) + " uid: " + pointHandler.point.uniqueId.numericId +
+                    text: 'seat: ' + pointHandler.point.device.seatName + '\ndevice: ' + pointHandler.point.device.name +
+                        '\nid: ' + pointHandler.point.id.toString(16) + " uid: " + pointHandler.point.uniqueId.numericId +
                         '\npos: (' + pointHandler.point.position.x.toFixed(2) + ', ' + pointHandler.point.position.y.toFixed(2) + ')' +
                         '\nmodifiers: ' + pointHandler.point.modifiers.toString(16)
                 }

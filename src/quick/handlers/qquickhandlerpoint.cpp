@@ -83,6 +83,7 @@ void QQuickHandlerPoint::localize(QQuickItem *item)
 void QQuickHandlerPoint::reset()
 {
     m_id = 0;
+    m_device = QPointingDevice::primaryPointingDevice();
     m_uniqueId = QPointingDeviceUniqueId();
     m_position = QPointF();
     m_scenePosition = QPointF();
@@ -100,6 +101,7 @@ void QQuickHandlerPoint::reset()
 void QQuickHandlerPoint::reset(const QQuickEventPoint *point)
 {
     m_id = point->pointId();
+    m_device = point->pointerEvent()->device();
     const QQuickPointerEvent *event = point->pointerEvent();
     switch (point->state()) {
     case QQuickEventPoint::Pressed:
@@ -166,6 +168,7 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
         ellipseDiameterSum += point.ellipseDiameters();
     }
     m_id = 0;
+    m_device = nullptr;
     m_uniqueId = QPointingDeviceUniqueId();
     // all points are required to be from the same event, so pressed buttons and modifiers should be the same
     m_pressedButtons = points.first().pressedButtons();
