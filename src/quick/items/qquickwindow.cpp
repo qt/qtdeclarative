@@ -4251,6 +4251,20 @@ void QQuickWindow::setRenderTarget(const QQuickRenderTarget &target)
 }
 
 /*!
+    \return the QQuickRenderTarget passed to setRenderTarget(), or a default
+    constructed one otherwise
+
+    \since 6.0
+
+    \sa setRenderTarget()
+ */
+QQuickRenderTarget QQuickWindow::renderTarget() const
+{
+    Q_D(const QQuickWindow);
+    return d->customRenderTarget;
+}
+
+/*!
     Grabs the contents of the window and returns it as an image.
 
     It is possible to call the grabWindow() function when the window is not
@@ -5669,6 +5683,10 @@ QString QQuickWindow::sceneGraphBackend()
     renderer. This requires using the same graphics device (or with OpenGL,
     OpenGL context).
 
+    QQuickGraphicsDevice instances are implicitly shared, copyable, and
+    can be passed by value. They do not own the associated native objects (such
+    as, the ID3D11Device in the example).
+
     \note Using QQuickRenderControl does not always imply having to call this
     function. When adopting an existing device or context is not needed, this
     function should not be called, and the scene graph will then initialize its
@@ -5686,6 +5704,20 @@ void QQuickWindow::setGraphicsDevice(const QQuickGraphicsDevice &device)
 }
 
 /*!
+    \return the QQuickGraphicsDevice passed to setGraphicsDevice(), or a
+    default constructed one otherwise
+
+    \since 6.0
+
+    \sa setGraphicsDevice()
+ */
+QQuickGraphicsDevice QQuickWindow::graphicsDevice() const
+{
+    Q_D(const QQuickWindow);
+    return d->customDeviceObjects;
+}
+
+/*!
     Sets the graphics configuration for this window. \a config contains various
     settings that may be taken into account by the scene graph when
     initializing the underlying graphics devices and contexts.
@@ -5700,6 +5732,9 @@ void QQuickWindow::setGraphicsDevice(const QQuickGraphicsDevice &device)
     via setGraphicsDevice() since the scene graph is then not in control of the
     actual construction of those objects.
 
+    QQuickGraphicsConfiguration instances are implicitly shared, copyable, and
+    can be passed by value.
+
     \warning Setting a QQuickGraphicsConfiguration on a QQuickWindow must
     happen early enough, before the scene graph is initialized for the first
     time for that window. With on-screen windows this means the call must be
@@ -5713,6 +5748,20 @@ void QQuickWindow::setGraphicsConfiguration(const QQuickGraphicsConfiguration &c
 {
     Q_D(QQuickWindow);
     d->graphicsConfig = config;
+}
+
+/*!
+    \return the QQuickGraphicsDevice passed to setGraphicsDevice(), or a
+    default constructed one otherwise
+
+    \since 6.0
+
+    \sa setGraphicsConfiguration()
+ */
+QQuickGraphicsConfiguration QQuickWindow::graphicsConfiguration() const
+{
+    Q_D(const QQuickWindow);
+    return d->graphicsConfig;
 }
 
 /*!

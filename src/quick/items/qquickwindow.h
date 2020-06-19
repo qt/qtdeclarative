@@ -137,6 +137,7 @@ public:
     QImage grabWindow();
 
     void setRenderTarget(const QQuickRenderTarget &target);
+    QQuickRenderTarget renderTarget() const;
 
     struct GraphicsStateInfo {
         int currentFrameSlot;
@@ -186,8 +187,10 @@ public:
     static QString sceneGraphBackend();
 
     void setGraphicsDevice(const QQuickGraphicsDevice &device);
+    QQuickGraphicsDevice graphicsDevice() const;
 
     void setGraphicsConfiguration(const QQuickGraphicsConfiguration &config);
+    QQuickGraphicsConfiguration graphicsConfiguration() const;
 
     QSGRectangleNode *createRectangleNode() const;
     QSGImageNode *createImageNode() const;
