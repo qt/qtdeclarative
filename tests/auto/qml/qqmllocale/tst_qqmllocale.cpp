@@ -34,6 +34,7 @@
 #include <QtCore/QDateTime>
 #include <QtCore/qscopeguard.h>
 #include <QtCore/qscopedpointer.h>
+#include <QtCore/qtimezone.h>
 #include <qcolor.h>
 #include "../../shared/util.h"
 
@@ -1297,6 +1298,13 @@ static void setTimeZone(const QByteArray &tz)
 
 void tst_qqmllocale::timeZoneUpdated()
 {
+    // Note: This test may not reliably hit the QEXPECT_FAIL clauses below if the initial
+    //       system time zone is equivalent to either Australia/Brisbane or Asia/Kalkota.
+
+    // Initialize the system time zone, so that we actually _change_ something below.
+    QVERIFY2(QTimeZone::systemTimeZone().isValid(),
+             "You know, Toto, I do believe we're not in Kansas any more.");
+
     QByteArray original(qgetenv("TZ"));
 
     // Set the timezone to Brisbane time, AEST-10:00
@@ -1318,12 +1326,20 @@ void tst_qqmllocale::timeZoneUpdated()
     QVERIFY2(!c.isError(), qPrintable(c.errorString()));
     obj.reset(c.create());
     QVERIFY(obj);
+
+#if !defined(Q_OS_WIN) && QT_CONFIG(timezone) && (!defined(Q_OS_LINUX) || defined(Q_OS_ANDROID))
+    QEXPECT_FAIL("", "Date.timeZoneUpdated() only works on non-Android Linux with QT_CONFIG(timezone).", Continue);
+#endif
     QVERIFY(obj->property("success").toBool());
 
     // Change to Indian time, IST-05:30
     setTimeZone(QByteArray("Asia/Kolkata"));
 
     QMetaObject::invokeMethod(obj.data(), "check");
+
+#if !defined(Q_OS_WIN) && QT_CONFIG(timezone) && (!defined(Q_OS_LINUX) || defined(Q_OS_ANDROID))
+    QEXPECT_FAIL("", "Date.timeZoneUpdated() only works on non-Android Linux with QT_CONFIG(timezone).", Continue);
+#endif
     QVERIFY(obj->property("success").toBool());
 }
 #endif
