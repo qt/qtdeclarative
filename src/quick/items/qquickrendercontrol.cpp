@@ -270,6 +270,14 @@ int QQuickRenderControl::samples() const
     specify an appropriate QQuickGraphicsDevice, wrapping existing graphics
     objects, by calling QQuickWindow::setGraphicsDevice().
 
+    To configure which device extensions to enable (for example, for Vulkan),
+    call QQuickWindow::setGraphicsConfiguration() before this function.
+
+    \note When using Vulkan, QQuickRenderControl does not create a
+    QVulkanInstance automatically. Rather, it is the application's
+    responsibility to create a suitable QVulkanInstance and
+    \l{QWindow::setVulkanInstance()}{associate it} with the QQuickWindow.
+
     \note This function does not need to be, and must not be, called when using
     the \c software adaptation of Qt Quick.
 

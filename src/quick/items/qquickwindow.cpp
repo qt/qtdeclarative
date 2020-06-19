@@ -568,7 +568,7 @@ void QQuickWindowPrivate::syncSceneGraph()
         else
             cb = swapchain->currentFrameCommandBuffer();
     }
-    context->prepareSync(devicePixelRatio, cb);
+    context->prepareSync(devicePixelRatio, cb, graphicsConfig);
 
     animationController->beforeNodeSync();
 
@@ -579,9 +579,9 @@ void QQuickWindowPrivate::syncSceneGraph()
 
         QSGRootNode *rootNode = new QSGRootNode;
         rootNode->appendChildNode(QQuickItemPrivate::get(contentItem)->itemNode());
-        static const bool useDepth = qEnvironmentVariableIsEmpty("QSG_NO_DEPTH_BUFFER");
-        static const QSGRendererInterface::RenderMode renderMode = useDepth ? QSGRendererInterface::RenderMode2D
-                                                                            : QSGRendererInterface::RenderMode2DNoDepthBuffer;
+        const bool useDepth = graphicsConfig.isDepthBufferEnabledFor2D();
+        const QSGRendererInterface::RenderMode renderMode = useDepth ? QSGRendererInterface::RenderMode2D
+                                                                     : QSGRendererInterface::RenderMode2DNoDepthBuffer;
         renderer = context->createRenderer(renderMode);
         renderer->setRootNode(rootNode);
     }
@@ -809,8 +809,14 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
     q->setSurfaceType(windowManager ? windowManager->windowSurfaceType() : QSurface::OpenGLSurface);
     q->setFormat(sg->defaultSurfaceFormat());
 #if QT_CONFIG(vulkan)
+    // Normal QQuickWindows must get a QVulkanInstance automatically (it is
+    // created when the first window is constructed and is destroyed only on
+    // exit). With QQuickRenderControl however, no QVulkanInstance is created,
+    // because it must be under the application's control then (since the
+    // default instance we could create here would not be configurable by the
+    // application in any way, and that is not acceptable in advanced use cases).
     if (!renderControl && q->surfaceType() == QSurface::VulkanSurface)
-        q->setVulkanInstance(QSGRhiSupport::vulkanInstance());
+        q->setVulkanInstance(QSGRhiSupport::defaultVulkanInstance());
 #endif
 
     animationController.reset(new QQuickAnimatorController(q));
@@ -1511,11 +1517,13 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     A QQuickWindow is not necessarily backed by a native window on screen. The
     rendering can be redirected to target a custom render target, such as a
     given native texture. This is achieved in combination with the
-    QQuickRenderControl class, and functions such as setRenderTarge() and
-    setGraphicsDevice(). In this case, the QQuickWindow represents the scene,
-    and provides the intrastructure for rendering a frame. It will not be backed
-    by a render loop and a native window. Instead, in this case the application
-    drives rendering, effectively substituting for the render loops. This allows
+    QQuickRenderControl class, and functions such as setRenderTarget(),
+    setGraphicsDevice(), and setGraphicsConfiguration().
+
+    In this case, the QQuickWindow represents the scene, and provides the
+    intrastructure for rendering a frame. It will not be backed by a render
+    loop and a native window. Instead, in this case the application drives
+    rendering, effectively substituting for the render loops. This allows
     generating image sequences, rendering into textures for use in external 3D
     engines, or rendering Qt Quick content within a VR environment.
 
@@ -4216,7 +4224,8 @@ bool QQuickWindow::isSceneGraphInitialized() const
     referred to in \a target are valid for the scenegraph renderer too. For
     instance, with Vulkan, Metal, and Direct3D this implies that the texture or
     image is created on the same graphics device that is used by the scenegraph
-    internally. This is often achieved by using this function in combination
+    internally. Therefore, when texture objects created on an already existing
+    device or context are involved, this function is often used in combination
     with setGraphicsDevice().
 
     \note With graphics APIs where relevant, the application must pay attention
@@ -5660,6 +5669,12 @@ QString QQuickWindow::sceneGraphBackend()
     renderer. This requires using the same graphics device (or with OpenGL,
     OpenGL context).
 
+    \note Using QQuickRenderControl does not always imply having to call this
+    function. When adopting an existing device or context is not needed, this
+    function should not be called, and the scene graph will then initialize its
+    own devices and contexts normally, just as it would with an on-screen
+    QQuickWindow.
+
     \since 6.0
 
     \sa QQuickRenderControl, setRenderTarget(), setSceneGraphBackend()
@@ -5668,6 +5683,36 @@ void QQuickWindow::setGraphicsDevice(const QQuickGraphicsDevice &device)
 {
     Q_D(QQuickWindow);
     d->customDeviceObjects = device;
+}
+
+/*!
+    Sets the graphics configuration for this window. \a config contains various
+    settings that may be taken into account by the scene graph when
+    initializing the underlying graphics devices and contexts.
+
+    Such additional configuration, specifying for example what device
+    extensions to enable for Vulkan, becomes relevant and essential when
+    integrating native graphics rendering code that relies on certain
+    extensions. The same is true when integrating with an external 3D or VR
+    engines, such as OpenXR.
+
+    \note The configuration is ignored when adopting existing graphics devices
+    via setGraphicsDevice() since the scene graph is then not in control of the
+    actual construction of those objects.
+
+    \warning Setting a QQuickGraphicsConfiguration on a QQuickWindow must
+    happen early enough, before the scene graph is initialized for the first
+    time for that window. With on-screen windows this means the call must be
+    done before invoking show() on the QQuickWindow or QQuickView. With
+    QQuickRenderControl the configuration must be finalized before calling
+    \l{QQuickRenderControl::initialize()}{initialize()}.
+
+    \since 6.0
+  */
+void QQuickWindow::setGraphicsConfiguration(const QQuickGraphicsConfiguration &config)
+{
+    Q_D(QQuickWindow);
+    d->graphicsConfig = config;
 }
 
 /*!

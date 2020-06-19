@@ -104,8 +104,8 @@ class Q_QUICK_PRIVATE_EXPORT QSGRhiSupport
 public:
     static void configure(QSGRendererInterface::GraphicsApi api);
     static QSGRhiSupport *instance();
-    static QVulkanInstance *vulkanInstance();
-    static void cleanupVulkanInstance();
+    static QVulkanInstance *defaultVulkanInstance();
+    static void cleanupDefaultVulkanInstance();
 
     bool isRhiEnabled() const { return m_enableRhi; }
     QRhi::Implementation rhiBackend() const { return m_rhiBackend; }

@@ -341,10 +341,13 @@ void QSGRenderContext::invalidate()
 {
 }
 
-void QSGRenderContext::prepareSync(qreal devicePixelRatio, QRhiCommandBuffer *cb)
+void QSGRenderContext::prepareSync(qreal devicePixelRatio,
+                                   QRhiCommandBuffer *cb,
+                                   const QQuickGraphicsConfiguration &config)
 {
     Q_UNUSED(devicePixelRatio);
     Q_UNUSED(cb);
+    Q_UNUSED(config);
 }
 
 void QSGRenderContext::beginNextFrame(QSGRenderer *renderer,

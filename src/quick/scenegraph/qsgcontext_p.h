@@ -94,6 +94,7 @@ class QRhi;
 class QRhiRenderTarget;
 class QRhiRenderPassDescriptor;
 class QRhiCommandBuffer;
+class QQuickGraphicsConfiguration;
 
 Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_TIME_RENDERLOOP)
 Q_DECLARE_LOGGING_CATEGORY(QSG_LOG_TIME_COMPILATION)
@@ -174,7 +175,10 @@ public:
 
     using RenderPassCallback = void (*)(void *);
 
-    virtual void prepareSync(qreal devicePixelRatio, QRhiCommandBuffer *cb);
+    virtual void prepareSync(qreal devicePixelRatio,
+                             QRhiCommandBuffer *cb,
+                             const QQuickGraphicsConfiguration &config);
+
     virtual void beginNextFrame(QSGRenderer *renderer,
                                 RenderPassCallback mainPassRecordingStart,
                                 RenderPassCallback mainPassRecordingEnd,

@@ -90,7 +90,10 @@ public:
     void initialize(const QSGRenderContext::InitParams *params) override;
     void invalidate() override;
 
-    void prepareSync(qreal devicePixelRatio, QRhiCommandBuffer *cb) override;
+    void prepareSync(qreal devicePixelRatio,
+                     QRhiCommandBuffer *cb,
+                     const QQuickGraphicsConfiguration &config) override;
+
     void beginNextFrame(QSGRenderer *renderer,
                         RenderPassCallback mainPassRecordingStart,
                         RenderPassCallback mainPassRecordingEnd,
@@ -116,8 +119,8 @@ public:
     virtual void initializeRhiShader(QSGMaterialShader *shader, QShader::Variant shaderVariant);
 
     int maxTextureSize() const override { return m_maxTextureSize; }
-    bool separateIndexBuffer() const;
-
+    bool separateIndexBuffer() const { return m_separateIndexBuffer; }
+    bool useDepthBufferFor2D() const { return m_useDepthBufferFor2D; }
     int msaaSampleCount() const { return m_initParams.sampleCount; }
 
     QRhiCommandBuffer *currentFrameCommandBuffer() const {
@@ -152,6 +155,7 @@ protected:
     QRhiRenderPassDescriptor *m_currentFrameRenderPass;
     qreal m_currentDevicePixelRatio;
     bool m_separateIndexBuffer;
+    bool m_useDepthBufferFor2D;
 };
 
 QT_END_NAMESPACE

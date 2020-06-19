@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
 QVulkanInstance *s_vulkanInstance = nullptr;
 #endif
 
-QVulkanInstance *QSGRhiSupport::vulkanInstance()
+QVulkanInstance *QSGRhiSupport::defaultVulkanInstance()
 {
 #if QT_CONFIG(vulkan)
     QSGRhiSupport *inst = QSGRhiSupport::instance();
@@ -97,7 +97,7 @@ QVulkanInstance *QSGRhiSupport::vulkanInstance()
 #endif
 }
 
-void QSGRhiSupport::cleanupVulkanInstance()
+void QSGRhiSupport::cleanupDefaultVulkanInstance()
 {
 #if QT_CONFIG(vulkan)
     delete s_vulkanInstance;
@@ -537,7 +537,8 @@ QOffscreenSurface *QSGRhiSupport::maybeCreateOffscreenSurface(QWindow *window)
 // must be called on the render thread
 QRhi *QSGRhiSupport::createRhi(QQuickWindow *window, QOffscreenSurface *offscreenSurface)
 {
-    const QQuickGraphicsDevice &customDev(QQuickWindowPrivate::get(window)->customDeviceObjects);
+    QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
+    const QQuickGraphicsDevice &customDev(wd->customDeviceObjects);
     const QQuickGraphicsDevicePrivate *customDevD = QQuickGraphicsDevicePrivate::get(&customDev);
 
     QRhi *rhi = nullptr;
@@ -580,6 +581,7 @@ QRhi *QSGRhiSupport::createRhi(QQuickWindow *window, QOffscreenSurface *offscree
             qWarning("No QVulkanInstance set for QQuickWindow, this is wrong.");
         if (window->handle()) // only used for vkGetPhysicalDeviceSurfaceSupportKHR and that implies having a valid native window
             rhiParams.window = window;
+        rhiParams.deviceExtensions = wd->graphicsConfig.deviceExtensions();
         if (customDevD->type == QQuickGraphicsDevicePrivate::Type::DeviceObjects) {
             QRhiVulkanNativeHandles importDev;
             importDev.physDev = reinterpret_cast<VkPhysicalDevice>(customDevD->u.deviceObjects.physicalDevice);

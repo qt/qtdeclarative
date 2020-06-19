@@ -50,6 +50,7 @@
 #include <QtQuick/private/qsgcompressedtexture_p.h>
 
 #include <QtQuick/qsgrendererinterface.h>
+#include <QtQuick/qquickgraphicsconfiguration.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -62,6 +63,7 @@ QSGDefaultRenderContext::QSGDefaultRenderContext(QSGContext *context)
     , m_currentFrameCommandBuffer(nullptr)
     , m_currentFrameRenderPass(nullptr)
     , m_separateIndexBuffer(false)
+    , m_useDepthBufferFor2D(true)
 {
 }
 
@@ -150,9 +152,12 @@ void QSGDefaultRenderContext::invalidate()
     emit invalidated();
 }
 
-void QSGDefaultRenderContext::prepareSync(qreal devicePixelRatio, QRhiCommandBuffer *cb)
+void QSGDefaultRenderContext::prepareSync(qreal devicePixelRatio,
+                                          QRhiCommandBuffer *cb,
+                                          const QQuickGraphicsConfiguration &config)
 {
     m_currentDevicePixelRatio = devicePixelRatio;
+    m_useDepthBufferFor2D = config.isDepthBufferEnabledFor2D();
 
     // we store the command buffer already here, in case there is something in
     // an updatePaintNode() implementation that leads to needing it (for
@@ -275,11 +280,6 @@ QString QSGDefaultRenderContext::fontKey(const QRawFont &font)
 void QSGDefaultRenderContext::initializeRhiShader(QSGMaterialShader *shader, QShader::Variant shaderVariant)
 {
     QSGMaterialShaderPrivate::get(shader)->prepare(shaderVariant);
-}
-
-bool QSGDefaultRenderContext::separateIndexBuffer() const
-{
-    return m_separateIndexBuffer;
 }
 
 void QSGDefaultRenderContext::preprocess()

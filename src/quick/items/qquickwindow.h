@@ -66,6 +66,7 @@ class QSGImageNode;
 class QSGNinePatchNode;
 class QQuickRenderTarget;
 class QQuickGraphicsDevice;
+class QQuickGraphicsConfiguration;
 
 class Q_QUICK_EXPORT QQuickWindow : public QWindow
 {
@@ -185,6 +186,8 @@ public:
     static QString sceneGraphBackend();
 
     void setGraphicsDevice(const QQuickGraphicsDevice &device);
+
+    void setGraphicsConfiguration(const QQuickGraphicsConfiguration &config);
 
     QSGRectangleNode *createRectangleNode() const;
     QSGImageNode *createImageNode() const;

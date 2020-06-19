@@ -69,7 +69,9 @@ HEADERS += \
     $$PWD/qquickrendertarget.h \
     $$PWD/qquickrendertarget_p.h \
     $$PWD/qquickgraphicsdevice.h \
-    $$PWD/qquickgraphicsdevice_p.h
+    $$PWD/qquickgraphicsdevice_p.h \
+    $$PWD/qquickgraphicsconfiguration.h \
+    $$PWD/qquickgraphicsconfiguration_p.h
 
 SOURCES += \
     $$PWD/qquickevents.cpp \
@@ -114,7 +116,8 @@ SOURCES += \
     $$PWD/qquickcolorgroup.cpp \
     $$PWD/qquickpalette.cpp \
     $$PWD/qquickrendertarget.cpp \
-    $$PWD/qquickgraphicsdevice.cpp
+    $$PWD/qquickgraphicsdevice.cpp \
+    $$PWD/qquickgraphicsconfiguration.cpp
 
 qtConfig(quick-draganddrop) {
     HEADERS += \

@@ -56,6 +56,7 @@
 #include <QtQuick/private/qquickpaletteproviderprivatebase_p.h>
 #include <QtQuick/private/qquickrendertarget_p.h>
 #include <QtQuick/private/qquickgraphicsdevice_p.h>
+#include <QtQuick/private/qquickgraphicsconfiguration_p.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickwindow.h>
 
@@ -296,6 +297,8 @@ public:
     } redirect;
 
     QQuickGraphicsDevice customDeviceObjects;
+
+    QQuickGraphicsConfiguration graphicsConfig;
 
     mutable QQuickWindowIncubationController *incubationController;
 
