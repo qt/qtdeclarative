@@ -806,8 +806,6 @@ void Batch::cleanupRemovedElements()
  */
 void Batch::invalidate()
 {
-    // If doing removal here is a performance issue, we might add a "hasRemoved" bit to
-    // the batch to do an early out..
     cleanupRemovedElements();
     Element *e = first;
     first = nullptr;
