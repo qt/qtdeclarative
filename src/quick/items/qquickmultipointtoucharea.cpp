@@ -540,7 +540,7 @@ void QQuickMultiPointTouchArea::touchEvent(QTouchEvent *event)
         }
         updateTouchData(event);
         if (event->type() == QEvent::TouchEnd)
-            ungrab();
+            ungrab(true);
         break;
     }
     case QEvent::TouchCancel:
@@ -878,7 +878,8 @@ void QQuickMultiPointTouchArea::ungrab(bool normalRelease)
     if (_touchPoints.count()) {
         for (QObject *obj : qAsConst(_touchPoints))
             static_cast<QQuickTouchPoint*>(obj)->setPressed(false);
-        emit canceled(_touchPoints.values());
+        if (!normalRelease)
+            emit canceled(_touchPoints.values());
         clearTouchLists();
         for (QObject *obj : qAsConst(_touchPoints)) {
             QQuickTouchPoint *dtp = static_cast<QQuickTouchPoint*>(obj);
