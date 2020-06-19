@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    Constructs a default QQuickGraphicsDEvice that does not reference any native
+    Constructs a default QQuickGraphicsDevice that does not reference any native
     objects.
  */
 QQuickGraphicsDevice::QQuickGraphicsDevice()
@@ -97,8 +97,8 @@ QQuickGraphicsDevice::~QQuickGraphicsDevice()
 }
 
 /*!
-    Constructs a default QQuickRenderTarget that does not reference any native
-    objects.
+    \return true if this is a default constructed graphics device that
+    does not reference any native objects.
  */
 bool QQuickGraphicsDevice::isNull() const
 {
