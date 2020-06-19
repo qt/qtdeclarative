@@ -53,7 +53,6 @@
 
 #include <QtQuick/private/qtquickglobal_p.h>
 #include <QAtomicInt>
-#include <QByteArrayList>
 #include "qquickgraphicsconfiguration.h"
 
 QT_BEGIN_NAMESPACE

@@ -41,6 +41,7 @@
 #define QQUICKGRAPHICSCONFIGURATION_H
 
 #include <QtQuick/qtquickglobal.h>
+#include <QtCore/QByteArrayList>
 
 QT_BEGIN_NAMESPACE
 
