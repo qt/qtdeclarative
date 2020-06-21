@@ -455,6 +455,7 @@ private slots:
 #endif
 
     void animatingSignal();
+    void frameSignals();
 
     void contentItemSize();
 
@@ -2339,6 +2340,25 @@ void tst_qquickwindow::animatingSignal()
     QTRY_VERIFY(window.isExposed());
 
     QTRY_VERIFY(spy.count() > 1);
+}
+
+void tst_qquickwindow::frameSignals()
+{
+    QQuickWindow window;
+    window.setTitle(QTest::currentTestFunction());
+    window.setGeometry(100, 100, 300, 200);
+
+    QSignalSpy beforeSpy(&window, SIGNAL(beforeFrameBegin()));
+    QSignalSpy afterSpy(&window, SIGNAL(afterFrameEnd()));
+
+    window.show();
+    QTRY_VERIFY(window.isExposed());
+    QSGRendererInterface *rif = window.rendererInterface();
+    QVERIFY(rif);
+
+    QTRY_VERIFY(beforeSpy.count() > 1);
+    QTRY_VERIFY(afterSpy.count() > 1);
+    QTRY_COMPARE(beforeSpy.count(), afterSpy.count());
 }
 
 // QTBUG-36938

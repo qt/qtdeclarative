@@ -158,6 +158,8 @@ void QSGSoftwareRenderLoop::renderWindow(QQuickWindow *window, bool isNewExpose)
 
     emit window->afterAnimating();
 
+    emit window->beforeFrameBegin();
+
     cd->syncSceneGraph();
     rc->endSync();
 
@@ -195,6 +197,8 @@ void QSGSoftwareRenderLoop::renderWindow(QQuickWindow *window, bool isNewExpose)
             m_backingStores[window]->flush(QRegion(QRect(QPoint(0,0), window->size())));
         cd->fireFrameSwapped();
     }
+
+    emit window->afterFrameEnd();
 
     qint64 swapTime = 0;
     if (profileFrames)

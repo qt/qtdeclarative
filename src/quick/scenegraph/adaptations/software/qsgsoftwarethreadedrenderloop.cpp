@@ -477,6 +477,8 @@ void QSGSoftwareRenderThread::syncAndRender()
     const bool exposeRequested = (pendingUpdate & ExposeRequest) == ExposeRequest;
     pendingUpdate = 0;
 
+    emit exposedWindow->beforeFrameBegin();
+
     if (syncRequested)
         sync(exposeRequested);
 
@@ -536,6 +538,8 @@ void QSGSoftwareRenderThread::syncAndRender()
     }
 
     qCDebug(QSG_RASTER_LOG_RENDERLOOP, "RT - rendering done");
+
+    emit exposedWindow->afterFrameEnd();
 
     if (exposeRequested) {
         qCDebug(QSG_RASTER_LOG_RENDERLOOP, "RT - wake gui after initial expose");
