@@ -808,16 +808,10 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
 
     q->setSurfaceType(windowManager ? windowManager->windowSurfaceType() : QSurface::OpenGLSurface);
     q->setFormat(sg->defaultSurfaceFormat());
-#if QT_CONFIG(vulkan)
-    // Normal QQuickWindows must get a QVulkanInstance automatically (it is
-    // created when the first window is constructed and is destroyed only on
-    // exit). With QQuickRenderControl however, no QVulkanInstance is created,
-    // because it must be under the application's control then (since the
-    // default instance we could create here would not be configurable by the
-    // application in any way, and that is not acceptable in advanced use cases).
-    if (!renderControl && q->surfaceType() == QSurface::VulkanSurface)
-        q->setVulkanInstance(QSGRhiSupport::defaultVulkanInstance());
-#endif
+    // When using Vulkan, associating a scenegraph-managed QVulkanInstance with
+    // the window (but only when not using renderControl) is deferred to
+    // QSGRhiSupport::createRhi(). This allows applications to set up their own
+    // QVulkanInstance and set that on the window, if they wish to.
 
     animationController.reset(new QQuickAnimatorController(q));
 
