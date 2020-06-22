@@ -154,7 +154,7 @@ QV4::CompiledData::BuiltinType Parameter::stringToBuiltinType(const QString &typ
         { "vector4d", strlen("vector4d"), QV4::CompiledData::BuiltinType::Vector4D },
         { "quaternion", strlen("quaternion"), QV4::CompiledData::BuiltinType::Quaternion },
         { "matrix4x4", strlen("matrix4x4"), QV4::CompiledData::BuiltinType::Matrix4x4 },
-        { "variant", strlen("variant"), QV4::CompiledData::BuiltinType::Variant },
+        { "variant", strlen("variant"), QV4::CompiledData::BuiltinType::Var },
         { "var", strlen("var"), QV4::CompiledData::BuiltinType::Var }
     };
     static const int propTypeNameToTypesCount = sizeof(propTypeNameToTypes) /

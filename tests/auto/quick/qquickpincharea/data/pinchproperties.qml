@@ -1,7 +1,7 @@
 import QtQuick 2.0
 Rectangle {
     id: whiteRect
-    property variant center
+    property point center
     property real scale: -1.0
     property int pointCount: 0
     property bool pinchActive: false

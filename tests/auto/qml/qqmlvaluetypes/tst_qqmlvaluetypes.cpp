@@ -65,7 +65,6 @@ private slots:
     void matrix4x4();
     void font();
     void color();
-    void variant();
     void locale();
     void qmlproperty();
 
@@ -287,39 +286,6 @@ void tst_qqmlvaluetypes::sizef()
         QCOMPARE(object->property("sizefEqualsSize").toBool(), true);
 
         delete object;
-    }
-}
-
-void tst_qqmlvaluetypes::variant()
-{
-    {
-    QQmlComponent component(&engine, testFileUrl("variant_read.qml"));
-    MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
-    QVERIFY(object != nullptr);
-
-    QCOMPARE(float(object->property("s_width").toDouble()), float(0.1));
-    QCOMPARE(float(object->property("s_height").toDouble()), float(100923.2));
-    QCOMPARE(object->property("copy"), QVariant(QSizeF(0.1, 100923.2)));
-
-    delete object;
-    }
-
-    {
-    QQmlComponent component(&engine, testFileUrl("variant_write.1.qml"));
-    QObject *object = component.create();
-    QVERIFY(object != nullptr);
-    QVERIFY(object->property("complete").toBool());
-    QVERIFY(object->property("success").toBool());
-    delete object;
-    }
-
-    {
-    QQmlComponent component(&engine, testFileUrl("variant_write.2.qml"));
-    QObject *object = component.create();
-    QVERIFY(object != nullptr);
-    QVERIFY(object->property("complete").toBool());
-    QVERIFY(object->property("success").toBool());
-    delete object;
     }
 }
 

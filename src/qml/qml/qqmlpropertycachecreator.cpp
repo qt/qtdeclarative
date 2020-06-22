@@ -50,7 +50,6 @@ int QQmlPropertyCacheCreatorBase::metaTypeForPropertyType(QV4::CompiledData::Bui
 {
     switch (type) {
     case QV4::CompiledData::BuiltinType::Var: return QMetaType::QVariant;
-    case QV4::CompiledData::BuiltinType::Variant: return QMetaType::QVariant;
     case QV4::CompiledData::BuiltinType::Int: return QMetaType::Int;
     case QV4::CompiledData::BuiltinType::Bool: return QMetaType::Bool;
     case QV4::CompiledData::BuiltinType::Real: return QMetaType::Double;

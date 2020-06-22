@@ -115,12 +115,6 @@ void tst_QQmlMetaObject::property_data()
             << QVariant(QDate(2012, 2, 7).startOfDay())
             << true // writable
             << QVariant(QDate(2010, 7, 2).startOfDay());
-    QTest::newRow("variant") << "property.variant.qml"
-            << QByteArray("QVariant") << int(QMetaType::QVariant)
-            << true // default
-            << QVariant(QPointF(12, 34))
-            << true // writable
-            << QVariant(QSizeF(45, 67));
     QTest::newRow("var") << "property.var.qml"
             << QByteArray("QVariant") << int(QMetaType::QVariant)
             << false // default

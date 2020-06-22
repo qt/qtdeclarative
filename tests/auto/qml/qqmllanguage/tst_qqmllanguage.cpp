@@ -104,7 +104,6 @@ private slots:
     void assignBasicTypes();
     void assignTypeExtremes();
     void assignCompositeToType();
-    void assignLiteralToVariant();
     void assignLiteralToVar();
     void assignLiteralToJSValue();
     void assignNullStrings();
@@ -847,41 +846,6 @@ void tst_qqmllanguage::assignCompositeToType()
     VERIFY_ERRORS(0);
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
-}
-
-// Test that literals are stored correctly in variant properties
-void tst_qqmllanguage::assignLiteralToVariant()
-{
-    QQmlComponent component(&engine, testFileUrl("assignLiteralToVariant.qml"));
-    VERIFY_ERRORS(0);
-    QScopedPointer<QObject> object(component.create());
-    QVERIFY(object != nullptr);
-
-    QVERIFY(isJSNumberType(object->property("test1").userType()));
-    QVERIFY(isJSNumberType(object->property("test2").userType()));
-    QCOMPARE(object->property("test3").userType(), (int)QVariant::String);
-    QCOMPARE(object->property("test4").userType(), (int)QVariant::Color);
-    QCOMPARE(object->property("test5").userType(), (int)QVariant::RectF);
-    QCOMPARE(object->property("test6").userType(), (int)QVariant::PointF);
-    QCOMPARE(object->property("test7").userType(), (int)QVariant::SizeF);
-    QCOMPARE(object->property("test8").userType(), (int)QVariant::Vector3D);
-    QCOMPARE(object->property("test9").userType(), (int)QVariant::String);
-    QCOMPARE(object->property("test10").userType(), (int)QVariant::Bool);
-    QCOMPARE(object->property("test11").userType(), (int)QVariant::Bool);
-    QCOMPARE(object->property("test12").userType(), (int)QVariant::Vector4D);
-
-    QCOMPARE(object->property("test1"), QVariant(1));
-    QCOMPARE(object->property("test2"), QVariant((double)1.7));
-    QVERIFY(object->property("test3") == QVariant(QString(QLatin1String("Hello world!"))));
-    QCOMPARE(object->property("test4"), QVariant(QColor::fromRgb(0xFF008800)));
-    QVERIFY(object->property("test5") == QVariant(QRectF(10, 10, 10, 10)));
-    QVERIFY(object->property("test6") == QVariant(QPointF(10, 10)));
-    QVERIFY(object->property("test7") == QVariant(QSizeF(10, 10)));
-    QVERIFY(object->property("test8") == QVariant(QVector3D(100, 100, 100)));
-    QCOMPARE(object->property("test9"), QVariant(QString(QLatin1String("#FF008800"))));
-    QCOMPARE(object->property("test10"), QVariant(bool(true)));
-    QCOMPARE(object->property("test11"), QVariant(bool(false)));
-    QVERIFY(object->property("test12") == QVariant(QVector4D(100, 100, 100, 100)));
 }
 
 // Test that literals are stored correctly in "var" properties
@@ -3560,6 +3524,7 @@ void tst_qqmllanguage::variantNotify()
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
 
+    QEXPECT_FAIL("", "var properties always trigger notify", Continue);
     QCOMPARE(object->property("notifyCount").toInt(), 1);
 }
 

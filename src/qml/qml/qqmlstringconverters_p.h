@@ -66,7 +66,6 @@ class QByteArray;
 
 namespace QQmlStringConverters
 {
-    Q_QML_PRIVATE_EXPORT QVariant variantFromString(const QString &);
     Q_QML_PRIVATE_EXPORT QVariant variantFromString(const QString &, int preferredType, bool *ok = nullptr);
 
     Q_QML_PRIVATE_EXPORT QVariant colorFromString(const QString &, bool *ok = nullptr);

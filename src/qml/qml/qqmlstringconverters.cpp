@@ -48,22 +48,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QVariant QQmlStringConverters::variantFromString(const QString &s)
-{
-    if (s.isEmpty())
-        return QVariant(s);
-
-    bool ok = false;
-    QRectF r = rectFFromString(s, &ok);
-    if (ok) return QVariant(r);
-    QPointF p = pointFFromString(s, &ok);
-    if (ok) return QVariant(p);
-    QSizeF sz = sizeFFromString(s, &ok);
-    if (ok) return QVariant(sz);
-
-    return QQml_valueTypeProvider()->createVariantFromString(s);
-}
-
 QVariant QQmlStringConverters::variantFromString(const QString &s, int preferredType, bool *ok)
 {
     switch (preferredType) {

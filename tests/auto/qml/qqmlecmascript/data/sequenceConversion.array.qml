@@ -17,54 +17,36 @@ Item {
 
     property bool success: false
 
-    property variant intList
-    property variant qrealList
-    property variant boolList
-    property variant stringList
-
     function indexedAccess() {
-        intList = msco.intListProperty;
         var jsIntList = msco.intListProperty;
-        qrealList = msco.qrealListProperty;
         var jsQrealList = msco.qrealListProperty;
-        boolList = msco.boolListProperty;
         var jsBoolList = msco.boolListProperty;
-        stringList = msco.stringListProperty;
         var jsStringList = msco.stringListProperty;
 
-        // Three cases: direct property modification, variant copy modification, js var reference modification.
-        // Only the first and third should "write back" to the original QObject Q_PROPERTY; the second one
-        // should have no effect whatsoever to maintain "property variant" semantics (see e.g., valuetype).
+        // Two cases: direct property modification,  js var reference modification.
+        // Both should "write back" to the original QObject Q_PROPERTY
         success = true;
 
         msco.intListProperty[1] = 33;
         if (msco.intListProperty[1] != 33) success = false;                  // ensure write back
-        intList[1] = 44;
-        if (intList[1] == 44) success = false;                               // ensure no effect
         jsIntList[1] = 55;
         if (jsIntList[1] != 55
                 || jsIntList[1] != msco.intListProperty[1]) success = false; // ensure write back
 
         msco.qrealListProperty[1] = 33.3;
         if (msco.qrealListProperty[1] != 33.3) success = false;               // ensure write back
-        qrealList[1] = 44.4;
-        if (qrealList[1] == 44.4) success = false;                            // ensure no effect
         jsQrealList[1] = 55.5;
         if (jsQrealList[1] != 55.5
                 || jsQrealList[1] != msco.qrealListProperty[1]) success = false; // ensure write back
 
         msco.boolListProperty[1] = true;
         if (msco.boolListProperty[1] != true) success = false;           // ensure write back
-        boolList[1] = true;
-        if (boolList[1] != false) success = false;                       // ensure no effect
         jsBoolList[1] = false;
         if (jsBoolList[1] != false
                 || jsBoolList[1] != msco.boolListProperty[1]) success = false; // ensure write back
 
         msco.stringListProperty[1] = "changed";
         if (msco.stringListProperty[1] != "changed") success = false;    // ensure write back
-        stringList[1] = "changed";
-        if (stringList[1] != "second") success = false;                  // ensure no effect
         jsStringList[1] = "different";
         if (jsStringList[1] != "different"
                 || jsStringList[1] != msco.stringListProperty[1]) success = false; // ensure write back

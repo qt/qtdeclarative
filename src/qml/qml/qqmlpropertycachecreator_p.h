@@ -544,9 +544,6 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int
 
         if (type != QV4::CompiledData::BuiltinType::InvalidBuiltin) {
             propertyType = metaTypeForPropertyType(type);
-
-            if (type == QV4::CompiledData::BuiltinType::Variant)
-                propertyFlags.type = QQmlPropertyData::Flags::QVariantType;
         } else {
             Q_ASSERT(!p->isBuiltinType);
 

@@ -205,7 +205,6 @@ private slots:
     void sequenceConversionIndexes();
     void sequenceConversionThreads();
     void sequenceConversionBindings();
-    void sequenceConversionCopy();
     void assignSequenceTypes();
     void sequenceSort_data();
     void sequenceSort();
@@ -4887,94 +4886,6 @@ void tst_qqmlecmascript::scarceResources_data()
         << (QList<QVariant>() << false << false) // invalidating one should invalidate the other, because they're references to the same JS object.
         << (QList<QVariant>() << QVariant() << QVariant())
         << QStringList();
-
-
-    /* property variant semantics */
-
-    // in the following three cases, the instance created from the component
-    // has a property which is a copy of the scarce resource; hence, the
-    // resource should NOT be detached prior to deletion of the object instance,
-    // unless the resource is destroyed explicitly.
-    QTest::newRow("variant: import scarce resource copy directly")
-        << testFileUrl("scarceResourceCopy.variant.qml")
-        << true
-        << false // won't be detached, because assigned to property and not explicitly released
-        << (QStringList() << QLatin1String("scarceResourceCopy"))
-        << (QList<QVariant>() << true)
-        << (QList<QVariant>() << origPixmap)
-        << QStringList();
-
-    QTest::newRow("variant: import scarce resource copy from JS")
-        << testFileUrl("scarceResourceCopyFromJs.variant.qml")
-        << true
-        << false // won't be detached, because assigned to property and not explicitly released
-        << (QStringList() << QLatin1String("scarceResourceCopy"))
-        << (QList<QVariant>() << true)
-        << (QList<QVariant>() << origPixmap)
-        << QStringList();
-
-    QTest::newRow("variant: import released scarce resource copy from JS")
-        << testFileUrl("scarceResourceDestroyedCopy.variant.qml")
-        << true
-        << true // explicitly released, so it will be detached
-        << (QStringList() << QLatin1String("scarceResourceCopy"))
-        << (QList<QVariant>() << false)
-        << (QList<QVariant>() << QVariant())
-        << QStringList();
-
-    // in the following three cases, no other copy should exist in memory,
-    // and so it should be detached (unless explicitly preserved).
-    QTest::newRow("variant: import auto-release SR from JS in binding side-effect")
-        << testFileUrl("scarceResourceTest.variant.qml")
-        << true
-        << true // auto released, so it will be detached
-        << (QStringList() << QLatin1String("scarceResourceTest"))
-        << (QList<QVariant>() << true)
-        << (QList<QVariant>() << QVariant(100))
-        << QStringList();
-    QTest::newRow("variant: import explicit-preserve SR from JS in binding side-effect")
-        << testFileUrl("scarceResourceTestPreserve.variant.qml")
-        << true
-        << false // won't be detached because we explicitly preserve it
-        << (QStringList() << QLatin1String("scarceResourceTest"))
-        << (QList<QVariant>() << true)
-        << (QList<QVariant>() << QVariant(100))
-        << QStringList();
-    QTest::newRow("variant: import multiple scarce resources")
-        << testFileUrl("scarceResourceTestMultiple.variant.qml")
-        << true
-        << true // will be detached because all resources were released manually or automatically.
-        << (QStringList() << QLatin1String("scarceResourceTest"))
-        << (QList<QVariant>() << true)
-        << (QList<QVariant>() << QVariant(100))
-        << QStringList();
-
-    // In the following three cases, test that scarce resources are handled
-    // correctly for imports.
-    QTest::newRow("variant: import with no binding")
-        << testFileUrl("scarceResourceCopyImportNoBinding.variant.qml")
-        << false // cannot check detach status.
-        << false
-        << QStringList()
-        << QList<QVariant>()
-        << QList<QVariant>()
-        << QStringList();
-    QTest::newRow("variant: import with binding without explicit preserve")
-        << testFileUrl("scarceResourceCopyImportNoBinding.variant.qml")
-        << false
-        << false
-        << (QStringList() << QLatin1String("scarceResourceCopy"))
-        << (QList<QVariant>() << false) // will have been released prior to evaluation of binding.
-        << (QList<QVariant>() << QVariant())
-        << QStringList();
-    QTest::newRow("variant: import with explicit release after binding evaluation")
-        << testFileUrl("scarceResourceCopyImport.variant.qml")
-        << false
-        << false
-        << (QStringList() << QLatin1String("scarceResourceImportedCopy") << QLatin1String("scarceResourceAssignedCopyOne") << QLatin1String("scarceResourceAssignedCopyTwo"))
-        << (QList<QVariant>() << true << true << false) // since property variant = variant copy, releasing the provider's resource does not invalidate previously assigned copies.
-        << (QList<QVariant>() << origPixmap << origPixmap << QVariant())
-        << QStringList();
 }
 
 void tst_qqmlecmascript::scarceResources()
@@ -5923,26 +5834,6 @@ void tst_qqmlecmascript::sequenceConversionBindings()
     }
 }
 
-void tst_qqmlecmascript::sequenceConversionCopy()
-{
-    QUrl qmlFile = testFileUrl("sequenceConversion.copy.qml");
-    QQmlEngine engine;
-    QQmlComponent component(&engine, qmlFile);
-    QObject *object = component.create();
-    QVERIFY(object != nullptr);
-    QMetaObject::invokeMethod(object, "testCopySequences");
-    QCOMPARE(object->property("success").toBool(), true);
-    QMetaObject::invokeMethod(object, "readSequenceCopyElements");
-    QCOMPARE(object->property("success").toBool(), true);
-    QMetaObject::invokeMethod(object, "testEqualitySemantics");
-    QCOMPARE(object->property("success").toBool(), true);
-    QMetaObject::invokeMethod(object, "testCopyParameters");
-    QCOMPARE(object->property("success").toBool(), true);
-    QMetaObject::invokeMethod(object, "testReferenceParameters");
-    QCOMPARE(object->property("success").toBool(), true);
-    delete object;
-}
-
 void tst_qqmlecmascript::assignSequenceTypes()
 {
     QQmlEngine engine;
@@ -6317,19 +6208,14 @@ void tst_qqmlecmascript::functionAssignment_fromBinding()
     QQmlComponent component(&engine, testFileUrl("functionAssignment.1.qml"));
 
     QString url = component.url().toString();
-    QString w1 = url + ":4:5: Unable to assign a function to a property of any type other than var.";
+    QString w1 = url + ":4:5: Invalid use of Qt.binding() in a binding declaration.";
     QString w2 = url + ":5:5: Invalid use of Qt.binding() in a binding declaration.";
-    QString w3 = url + ":6:5: Invalid use of Qt.binding() in a binding declaration.";
-    QString w4 = url + ":7:5: Invalid use of Qt.binding() in a binding declaration.";
     QTest::ignoreMessage(QtWarningMsg, w1.toLatin1().constData());
     QTest::ignoreMessage(QtWarningMsg, w2.toLatin1().constData());
-    QTest::ignoreMessage(QtWarningMsg, w3.toLatin1().constData());
-    QTest::ignoreMessage(QtWarningMsg, w4.toLatin1().constData());
 
     MyQmlObject *o = qobject_cast<MyQmlObject *>(component.create());
     QVERIFY(o != nullptr);
 
-    QVERIFY(!o->property("a").isValid());
 
     delete o;
 }

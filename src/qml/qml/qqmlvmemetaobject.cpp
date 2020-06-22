@@ -734,9 +734,6 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                     case QV4::CompiledData::BuiltinType::Point:
                         *reinterpret_cast<QPointF *>(a[0]) = readPropertyAsPointF(id);
                         break;
-                    case QV4::CompiledData::BuiltinType::Variant:
-                        *reinterpret_cast<QVariant *>(a[0]) = readPropertyAsVariant(id);
-                        break;
                     case QV4::CompiledData::BuiltinType::Font:
                     case QV4::CompiledData::BuiltinType::Time:
                     case QV4::CompiledData::BuiltinType::Color:
@@ -841,9 +838,6 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                     case QV4::CompiledData::BuiltinType::Point:
                         needActivate = *reinterpret_cast<QPointF *>(a[0]) != readPropertyAsPointF(id);
                         writeProperty(id, *reinterpret_cast<QPointF *>(a[0]));
-                        break;
-                    case QV4::CompiledData::BuiltinType::Variant:
-                        writeProperty(id, *reinterpret_cast<QVariant *>(a[0]));
                         break;
                     case QV4::CompiledData::BuiltinType::Font:
                     case QV4::CompiledData::BuiltinType::Time:
