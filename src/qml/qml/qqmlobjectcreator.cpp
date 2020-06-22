@@ -1028,7 +1028,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
             QMetaMethod signalMethod = _qobject->metaObject()->method(bindingProperty->coreIndex());
             if (!QMetaObject::checkConnectArgs(signalMethod, method)) {
                 recordError(binding->valueLocation,
-                            tr("Cannot connect mismatched signal/slot %1 %vs. %2")
+                            tr("Cannot connect mismatched signal/slot %1 vs %2")
                             .arg(QString::fromUtf8(method.methodSignature()))
                             .arg(QString::fromUtf8(signalMethod.methodSignature())));
                 return false;
