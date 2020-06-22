@@ -133,7 +133,7 @@ Rectangle {
 
     Connections {
         target: button
-        onClicked: {
+        function onClicked(): {
             rect.color = Qt.rgba(Math.random(), Math.random(), Math.random(), 1);
         }
     }
