@@ -183,6 +183,10 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("Cycle1.qml")
             << QString("Warning: Cycle2 is part of an inheritance cycle: Cycle2 -> Cycle3 -> Cycle1 -> Cycle2")
             << QString();
+    QTest::newRow("badQmldirImportAndDepend")
+            << QStringLiteral("qmldirImportAndDepend/bad.qml")
+            << QString("warning: Item was not found. Did you add all import paths?")
+            << QString();
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -224,6 +228,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("EnumAccess2") << QStringLiteral("EnumAccess2.qml");
     QTest::newRow("ListProperty") << QStringLiteral("ListProperty.qml");
     QTest::newRow("AttachedType") << QStringLiteral("AttachedType.qml");
+    QTest::newRow("qmldirImportAndDepend") << QStringLiteral("qmldirImportAndDepend/good.qml");
 }
 
 void TestQmllint::cleanQmlCode()

@@ -43,6 +43,7 @@
 #include "scopetree.h"
 #include "qcoloroutput.h"
 
+#include <QtQml/private/qqmldirparser_p.h>
 #include <QtQml/private/qqmljsastvisitor_p.h>
 #include <QtQml/private/qqmljsast_p.h>
 
@@ -52,25 +53,25 @@ class FindWarningVisitor : public QQmlJS::AST::Visitor
 {
     Q_DISABLE_COPY_MOVE(FindWarningVisitor)
 public:
-    explicit FindWarningVisitor(QStringList qmltypeDirs, QStringList qmltypeFiles, QString code,
-                                      QString fileName, bool silent, bool warnUnqualified,
-                                      bool warnWithStatement, bool warnInheritanceCycle);
+    explicit FindWarningVisitor(
+            QStringList qmltypeDirs, QStringList qmltypesFiles, QString code, QString fileName,
+            bool silent, bool warnUnqualified, bool warnWithStatement, bool warnInheritanceCycle);
     ~FindWarningVisitor() override = default;
     bool check();
 
 private:
     struct Import {
         QHash<QString, ScopeTree::ConstPtr> objects;
-        QStringList dependencies;
+        QList<QQmlDirParser::Import> imports;
+        QList<QQmlDirParser::Component> dependencies;
     };
 
     ScopeTree::Ptr m_rootScope;
     ScopeTree::Ptr m_currentScope;
     QQmlJS::AST::ExpressionNode *m_fieldMemberBase = nullptr;
-    QHash<QString, ScopeTree::ConstPtr> m_types;
     QHash<QString, ScopeTree::ConstPtr> m_exportedName2Scope;
-    QStringList m_qmltypeDirs;
-    QStringList m_qmltypeFiles;
+    QStringList m_qmltypesDirs;
+    QStringList m_qmltypesFiles;
     QString m_code;
     QHash<QString, ScopeTree::ConstPtr> m_qmlid2scope;
     QString m_rootId;
@@ -95,13 +96,14 @@ private:
 
     void enterEnvironment(ScopeType type, const QString &name);
     void leaveEnvironment();
+
+    void importBareQmlTypes();
     void importHelper(const QString &module, const QString &prefix = QString(),
                       QTypeRevision version = QTypeRevision());
 
-    void readQmltypes(const QString &filename, QHash<QString, ScopeTree::ConstPtr> *objects,
-                      QStringList *dependencies);
+    void readQmltypes(const QString &filename, QHash<QString, ScopeTree::ConstPtr> *objects);
     Import readQmldir(const QString &dirname);
-    void processImport(const QString &prefix, const Import &import);
+    void processImport(const QString &prefix, const Import &import, QTypeRevision version);
 
     ScopeTree::Ptr localFile2ScopeTree(const QString &filePath);
 

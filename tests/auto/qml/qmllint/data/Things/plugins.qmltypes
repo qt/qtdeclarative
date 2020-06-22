@@ -55,4 +55,11 @@ Module {
         isCreatable: false
         Property { name: "pixelDensity"; type: "double"; isReadonly: true }
     }
+    Component {
+        name: "ItemDerived"
+        prototype: "QQuickItem"
+        exports: [
+            "Things/ItemDerived 1.0"
+        ]
+    }
 }
