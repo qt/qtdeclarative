@@ -658,14 +658,14 @@ bool QQmlMetaType::protectModule(const QString &uri, QTypeRevision version, bool
 {
     QQmlMetaTypeDataPtr data;
     if (version.hasMajorVersion()) {
-    if (QQmlTypeModule *module = data->findTypeModule(uri, version)) {
-        if (!protectAllVersions) {
-            module->lock();
-            return true;
+        if (QQmlTypeModule *module = data->findTypeModule(uri, version)) {
+            if (!protectAllVersions) {
+                module->lock();
+                return true;
+            }
+        } else {
+            return false;
         }
-    } else {
-        return false;
-    }
     }
 
     const auto range = std::equal_range(
