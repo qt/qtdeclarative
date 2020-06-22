@@ -1561,6 +1561,45 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     example to request a given OpenGL version or profile. Such applications can
     call the static function QSurfaceFormat::setDefaultFormat() at startup. The
     specified format will be used for all Quick windows created afterwards.
+
+    \section2 Vulkan Instance
+
+    When using Vulkan, a QQuickWindow is automatically associated with a
+    QVulkanInstance that is created and managed internally by the scene graph.
+    This way most applications do not need to worry about having a \c
+    VkInstance available since it all happens automatically. In advanced cases
+    an application may wish to create its own QVulkanInstance, in order to
+    configure it in a specific way. That is possible as well. Calling
+    \l{QWindow::setVulkanInstance()}{setVulkanInstance()} on the QQuickWindow
+    right after construction, before making it visible, leads to using the
+    application-supplied QVulkanInstance (and the underlying \c VkInstance).
+    When redirecting via QQuickRenderControl, there is no QVulkanInstance
+    provided automatically, but rather the application is expected to provide
+    its own and associate it with the QQuickWindow.
+
+    \section2 Graphics Contexts and Devices
+
+    When the scene graph is initialized, which typically happens when the
+    window becomes exposed or, in case of redirected rendering, initialization
+    is performed \l{QQuickRenderControl::initialize()}{via
+    QQuickRenderControl}, the context or device objects necessary for rendering
+    are created automatically. This includes OpenGL contexts, Direct3D devices
+    and device contexts, Vulkan and Metal devices. These are also queriable by
+    application code afterwards via
+    \l{QSGRendererInterface::getResource()}{QSGRendererInterface}. When using
+    the \c basic render loop, which performs all rendering on the gui thread,
+    the same context or device is used with all visible QQuickWindows. The \c
+    threaded render loop uses a dedicated context or device object for each
+    rendering thread, and so for each QQuickWindow. With some graphics APIs,
+    there is a degree of customizability provided via
+    setGraphicsConfiguration(). This makes it possible, for example, to specify
+    the list of Vulkan extensions to enable on the \c VkDevice. Alternatively,
+    it is also possible to provide a set of existing context or device objects
+    for use by the QQuickWindow, instead of letting it construct its own. This
+    is achieved through setGraphicsDevice().
+
+    \sa QQuickView, QQuickRenderControl, QQuickRenderTarget,
+    QQuickGraphicsDevice, QQuickGraphicsConfiguration, QSGRendererInterface
 */
 
 /*!
