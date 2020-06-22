@@ -152,7 +152,7 @@ private:
 
 tst_qquickwidget::tst_qquickwidget()
 {
-    QQuickWindow::setSceneGraphBackend(QSGRendererInterface::OpenGLRhi);
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGLRhi);
 }
 
 void tst_qquickwidget::showHide()

@@ -56,7 +56,7 @@ int main(int argc, char **argv)
     QGuiApplication app(argc, argv);
 
     // This example needs Vulkan. It will not run otherwise.
-    QQuickWindow::setSceneGraphBackend(QSGRendererInterface::VulkanRhi);
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::VulkanRhi);
 
     QQuickView view;
     view.setResizeMode(QQuickView::SizeRootObjectToView);

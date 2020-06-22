@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 {
     QGuiApplication app(argc, argv);
 
-    QQuickWindow::setSceneGraphBackend(QSGRendererInterface::MetalRhi);
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::MetalRhi);
 
     QQuickView view;
     view.setResizeMode(QQuickView::SizeRootObjectToView);

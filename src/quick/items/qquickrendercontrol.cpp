@@ -262,7 +262,7 @@ int QQuickRenderControl::samples() const
     QQuickRenderControl exists.
 
     To control what graphics API Qt Quick uses, call
-    QQuickWindow::setSceneGraphBackend() with one of the
+    QQuickWindow::setGraphicsApi() with one of the
     QSGRendererInterface:GraphicsApi constants. That must be done before
     calling this function.
 

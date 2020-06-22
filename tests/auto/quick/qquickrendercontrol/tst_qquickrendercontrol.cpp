@@ -147,7 +147,7 @@ void tst_RenderControl::renderAndReadBackWithRhi()
     // QQuickRenderControl, etc. instances are destroyed, before creating new
     // ones. That's why it is possible to have this test run with multiple QRhi
     // backends.
-    QQuickWindow::setSceneGraphBackend(api);
+    QQuickWindow::setGraphicsApi(api);
 
     QScopedPointer<QQuickRenderControl> renderControl(new QQuickRenderControl);
     QScopedPointer<QQuickWindow> quickWindow(new QQuickWindow(renderControl.data()));
@@ -316,7 +316,7 @@ void tst_RenderControl::renderAndReadBackWithVulkanNative()
     if (!vulkanInstance.isValid())
         QSKIP("Skipping native Vulkan test due to failing to create a VkInstance");
 
-    QQuickWindow::setSceneGraphBackend(QSGRendererInterface::VulkanRhi);
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::VulkanRhi);
 
     // We will create our own VkDevice and friends, which will then get used by
     // Qt Quick as well (instead of creating its own objects), so this is a test

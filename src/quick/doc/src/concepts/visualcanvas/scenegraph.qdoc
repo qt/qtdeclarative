@@ -1020,7 +1020,7 @@ with multiple windows.
   will fail otherwise);
 
   \badcode
-      QQuickWindow::setSceneGraphBackend(QSGRendererInterface::VulkanRhi);
+      QQuickWindow::setGraphicsApi(QSGRendererInterface::VulkanRhi);
   \endcode
 
   See QSGRendererInterface::GraphicsApi. The enum values ending in \c Rhi are

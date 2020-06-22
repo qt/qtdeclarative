@@ -3741,7 +3741,7 @@ void tst_qquickwindow::rendererInterfaceWithRenderControl()
         // QQuickRenderControl, etc. instances are destroyed, before creating new
         // ones. That's why it is possible to have this test run with multiple QRhi
         // backends.
-        QQuickWindow::setSceneGraphBackend(api);
+        QQuickWindow::setGraphicsApi(api);
 
         QScopedPointer<QQuickRenderControl> renderControl(new QQuickRenderControl);
         QScopedPointer<QQuickWindow> quickWindow(new QQuickWindow(renderControl.data()));
@@ -3911,7 +3911,7 @@ void tst_qquickwindow::rendererInterfaceWithRenderControl()
 
     // Now that everything is torn down, go back to the default unspecified-api
     // state, to prevent conflicting with tests that come afterwards.
-    QQuickWindow::setSceneGraphBackend(QSGRendererInterface::Unknown);
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::Unknown);
 }
 
 QTEST_MAIN(tst_qquickwindow)

@@ -59,7 +59,7 @@ is always built-in. As of Qt 6.0 it is always enabled. On platforms where
 multiple graphics APIs are available, the scenegraph makes a platform-specific
 choice. If this is not desired, applications can force a specified graphics API
 by setting the environment variable \c{QSG_RHI_BACKEND} or via \l
-QQuickWindow::setSceneGraphBackend() in combination with \l
+QQuickWindow::setGraphicsApi() in combination with \l
 QSGRendererInterface::GraphicsApi.
 
 Switching to a different adaptation can be achieved in two ways:
@@ -74,7 +74,7 @@ Switching to a different adaptation can be achieved in two ways:
 The following backends are supported:
 
 \list
-    \li Default - Request with the \c{""} string or a QSGRendererInterface::GraphicsApi enum value
+    \li Default - Request with the \c{"rhi"} string or a QSGRendererInterface::GraphicsApi enum value
         different than the ones listed below.
     \li Software - Request with the \c{"software"} string or the QSGRendererInterface::Software
         enum value.

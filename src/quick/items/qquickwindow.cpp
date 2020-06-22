@@ -4239,7 +4239,7 @@ bool QQuickWindow::isSceneGraphInitialized() const
 
     \since 6.0
 
-    \sa QQuickRenderControl, setGraphicsDevice(), setSceneGraphBackend()
+    \sa QQuickRenderControl, setGraphicsDevice(), setGraphicsApi()
  */
 void QQuickWindow::setRenderTarget(const QQuickRenderTarget &target)
 {
@@ -5567,39 +5567,74 @@ QSGRendererInterface *QQuickWindow::rendererInterface() const
 }
 
 /*!
-    Requests the specified scene graph or RHI \a backend. Backends can either be
-    built-in or be installed in form of dynamically loaded plugins. When the
-    built-in, default graphics adaptation is used, \a backend specifies which
-    graphics API (OpenGL, Vulkan, Metal, or Direct3D) the scene graph should use
-    to render. In addition, the \c software backend is built-in as well, and can
-    be requested by setting \a api to QSGRendererInterface::Software.
+    Requests the specified graphics \a api.
+
+    When the built-in, default graphics adaptation is used, \a api specifies
+    which graphics API (OpenGL, Vulkan, Metal, or Direct3D) the scene graph
+    should use to render. In addition, the \c software backend is built-in as
+    well, and can be requested by setting \a api to
+    QSGRendererInterface::Software.
+
+    Unlike setSceneGraphBackend(), which can only be used to request a given
+    backend (shipped either built-in or installed as dynamically loaded
+    plugins), this function works with the higher level concept of graphics
+    APIs. It covers the backends that ship with Qt Quick, and thus have
+    corresponding values in the QSGRendererInterface::GraphicsApi enum.
+
+    When this function is not called at all, and the equivalent environment
+    variable \c{QSG_RHI_BACKEND} is not set either, the scene graph will choose
+    the graphics API to use based on the platform.
+
+    This function becomes important in applications that are only prepared for
+    rendering with a given API. For example, if there is native OpenGL or
+    Vulkan rendering done by the application, it will want to ensure Qt Quick
+    is rendering using OpenGL or Vulkan too. Such applications are expected to
+    call this function early in their main() function.
 
     \note The call to the function must happen before constructing the first
     QQuickWindow in the application. The graphics API cannot be changed
-    afterwards. When used in combination with QQuickRenderControl, this rule is
+    afterwards.
+
+    \note When used in combination with QQuickRenderControl, this rule is
     relaxed: it is possible to change the graphics API, but only when all
     existing QQuickRenderControl and QQuickWindow instances have been
     destroyed.
 
+    To query what graphics API the scene graph is using to render,
+    QSGRendererInterface::graphicsApi() after the scene graph
+    \l{QQuickWindow::isSceneGraphInitialized()}{has initialized}, which
+    typically happens either when the window becomes visible for the first time, or
+    when QQuickRenderControl::initialize() is called.
+
+    To switch back to the default behavior, where the scene graph chooses a
+    graphics API based on the platform and other conditions, set \a api to
+    QSGRendererInterface::Unknown.
+
     \since 5.8
  */
-void QQuickWindow::setSceneGraphBackend(QSGRendererInterface::GraphicsApi api)
+void QQuickWindow::setGraphicsApi(QSGRendererInterface::GraphicsApi api)
 {
+    // Special cases: these are different scenegraph backends.
     switch (api) {
     case QSGRendererInterface::Software:
         setSceneGraphBackend(QStringLiteral("software"));
         break;
+    case QSGRendererInterface::OpenVG:
+        setSceneGraphBackend(QStringLiteral("openvg"));
+        break;
     default:
         break;
     }
+
+    // Standard case: tell the QRhi-based default adaptation what graphics api
+    // (QRhi backend) to use.
     if (QSGRendererInterface::isApiRhiBased(api) || api == QSGRendererInterface::Unknown)
         QSGRhiSupport::configure(api);
 }
 
 /*!
-    Requests a Qt Quick scenegraph backend for the specified graphics \a api.
-    Backends can either be built-in or be installed in form of dynamically
-    loaded plugins.
+    Requests a Qt Quick scenegraph \a backend. Backends can either be built-in
+    or be installed in form of dynamically loaded plugins.
 
     \overload
 
@@ -5626,6 +5661,9 @@ void QQuickWindow::setSceneGraphBackend(const QString &backend)
     \note The return value of this function may still be outdated by
     subsequent calls to setSceneGraphBackend() until the first QQuickWindow in the
     application has been constructed.
+
+    \note The value only reflects the request in the \c{QT_QUICK_BACKEND}
+    environment variable after a QQuickWindow has been constructed.
 
     \since 5.9
  */
@@ -5695,7 +5733,7 @@ QString QQuickWindow::sceneGraphBackend()
 
     \since 6.0
 
-    \sa QQuickRenderControl, setRenderTarget(), setSceneGraphBackend()
+    \sa QQuickRenderControl, setRenderTarget(), setGraphicsApi()
  */
 void QQuickWindow::setGraphicsDevice(const QQuickGraphicsDevice &device)
 {

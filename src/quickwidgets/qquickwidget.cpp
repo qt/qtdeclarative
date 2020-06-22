@@ -140,7 +140,7 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
     }
 
     if (QSGRhiSupport::instance()->rhiBackend() != QRhi::OpenGLES2)
-        qWarning("QQuickWidget is only supported on OpenGL. Use QQuickWindow::setSceneGraphBackend() to override the default.");
+        qWarning("QQuickWidget is only supported on OpenGL. Use QQuickWindow::setGraphicsApi() to override the default.");
 
     engine = e;
 

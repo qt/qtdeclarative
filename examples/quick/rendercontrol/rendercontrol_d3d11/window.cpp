@@ -358,7 +358,7 @@ void Window::updateQuick()
     m_quickDirty = false;
 
     if (!m_quickInitialized) {
-        // In addition to setSceneGraphBackend, we need a call to
+        // In addition to setGraphicsApi(), we need a call to
         // setGraphicsDevice to tell Qt Quick what ID3D11Device(Context) to use
         // (i.e. we want it to use ours, not to create new ones).
         m_quickWindow->setGraphicsDevice(QQuickGraphicsDevice::fromDeviceAndContext(m_engine->device(), m_engine->context()));

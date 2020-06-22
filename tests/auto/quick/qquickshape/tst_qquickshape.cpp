@@ -95,7 +95,7 @@ private:
 tst_QQuickShape::tst_QQuickShape()
 {
     // Force the software backend to get reliable rendering results regardless of the hw and drivers.
-    QQuickWindow::setSceneGraphBackend(QSGRendererInterface::Software);
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::Software);
 
     const char *uri = "tst_qquickpathitem";
     qmlRegisterType<QQuickShape>(uri, 1, 0, "Shape");

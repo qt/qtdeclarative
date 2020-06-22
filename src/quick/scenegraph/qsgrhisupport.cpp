@@ -120,7 +120,7 @@ void QSGRhiSupport::applySettings()
     m_settingsApplied = true;
 
     // This is also done when creating the renderloop but we may be before that
-    // in case we get here due to a setScenegraphBackend() -> configure() early
+    // in case we get here due to a setGraphicsApi() -> configure() early
     // on in main(). Avoid losing info logs since troubleshooting gets
     // confusing otherwise.
     QSGRhiSupport::checkEnvQSgInfo();

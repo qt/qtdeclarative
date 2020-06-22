@@ -154,7 +154,7 @@ private slots:
 void tst_QQuickFramebufferObject::initTestCase()
 {
     QQmlDataTest::initTestCase();
-    QQuickWindow::setSceneGraphBackend(QSGRendererInterface::OpenGLRhi);
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGLRhi);
 }
 
 void tst_QQuickFramebufferObject::testThatStuffWorks_data()
