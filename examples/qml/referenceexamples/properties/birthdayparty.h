@@ -51,7 +51,7 @@
 #define BIRTHDAYPARTY_H
 
 #include <QObject>
-#include <QVector>
+#include <QList>
 #include <QQmlListProperty>
 #include "person.h"
 
@@ -91,7 +91,7 @@ private:
     static void removeLastGuest(QQmlListProperty<Person>*);
 
     Person *m_host;
-    QVector<Person *> m_guests;
+    QList<Person *> m_guests;
 };
 // ![3]
 

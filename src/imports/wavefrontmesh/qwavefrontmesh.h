@@ -83,7 +83,7 @@ public:
     Error lastError() const;
     void setLastError(Error lastError);
 
-    bool validateAttributes(const QVector<QByteArray> &attributes, int *posIndex) override;
+    bool validateAttributes(const QList<QByteArray> &attributes, int *posIndex) override;
     QSGGeometry *updateGeometry(QSGGeometry *geometry, int attrCount, int posIndex,
                                 const QRectF &srcRect, const QRectF &rect) override;
     QString log() const override;

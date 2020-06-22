@@ -81,7 +81,7 @@ public:
     QVariant contextProperty(const QString &) const;
     void setContextProperty(const QString &, QObject *);
     void setContextProperty(const QString &, const QVariant &);
-    void setContextProperties(const QVector<PropertyPair> &properties);
+    void setContextProperties(const QList<PropertyPair> &properties);
 
     QString nameForObject(const QObject *) const;
 

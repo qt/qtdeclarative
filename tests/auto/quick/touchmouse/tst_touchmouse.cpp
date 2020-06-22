@@ -1348,7 +1348,7 @@ void tst_TouchMouse::touchGrabCausesMouseUngrab()
 
     rightItem->acceptTouch = true;
     {
-        QVector<int> ids;
+        QList<int> ids;
         ids.append(leftItem->point0);
         rightItem->grabTouchPoints(ids);
     }

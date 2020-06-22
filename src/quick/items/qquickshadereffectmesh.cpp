@@ -88,7 +88,7 @@ QQuickGridMesh::QQuickGridMesh(QObject *parent)
 {
 }
 
-bool QQuickGridMesh::validateAttributes(const QVector<QByteArray> &attributes, int *posIndex)
+bool QQuickGridMesh::validateAttributes(const QList<QByteArray> &attributes, int *posIndex)
 {
     const int attrCount = attributes.count();
     int positionIndex = attributes.indexOf(qtPositionAttributeName());
@@ -310,7 +310,7 @@ QQuickBorderImageMesh::QQuickBorderImageMesh(QObject *parent)
 {
 }
 
-bool QQuickBorderImageMesh::validateAttributes(const QVector<QByteArray> &attributes, int *posIndex)
+bool QQuickBorderImageMesh::validateAttributes(const QList<QByteArray> &attributes, int *posIndex)
 {
     Q_UNUSED(attributes);
     Q_UNUSED(posIndex);

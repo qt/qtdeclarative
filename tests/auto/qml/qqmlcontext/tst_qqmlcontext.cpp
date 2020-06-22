@@ -382,7 +382,7 @@ void tst_qqmlcontext::setContextProperties()
     TestObject obj2;
     obj2.setA(-19);
 
-    QVector<QQmlContext::PropertyPair> properties;
+    QList<QQmlContext::PropertyPair> properties;
 
     properties.append({QString("a"), QVariant(10)});
     properties.append({QString("b"), QVariant(19)});

@@ -559,7 +559,7 @@ void QQuickMultiPointTouchArea::grabGesture()
     grabMouse();
     setKeepMouseGrab(true);
 
-    QVector<int> ids;
+    QList<int> ids;
     ids.reserve(_touchPoints.size());
     for (auto it = _touchPoints.keyBegin(), end = _touchPoints.keyEnd(); it != end; ++it) {
         if (*it != -1) // -1 might be the mouse-point, but we already grabbed the mouse above.

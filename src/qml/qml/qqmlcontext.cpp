@@ -326,7 +326,7 @@ void QQmlContext::setContextProperty(const QString &name, QObject *value)
 
     \sa QQmlContext::setContextProperty()
 */
-void QQmlContext::setContextProperties(const QVector<PropertyPair> &properties)
+void QQmlContext::setContextProperties(const QList<PropertyPair> &properties)
 {
     Q_D(const QQmlContext);
 

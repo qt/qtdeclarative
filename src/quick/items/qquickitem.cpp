@@ -7702,7 +7702,7 @@ void QQuickItem::setKeepMouseGrab(bool keep)
 
     \sa ungrabTouchPoints(), setKeepTouchGrab()
 */
-void QQuickItem::grabTouchPoints(const QVector<int> &ids)
+void QQuickItem::grabTouchPoints(const QList<int> &ids)
 {
     Q_D(QQuickItem);
     if (!d->window)

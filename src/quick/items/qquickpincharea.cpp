@@ -552,7 +552,7 @@ void QQuickPinchArea::updatePinch()
                         if (win && win->mouseGrabberItem() != this)
                             grabMouse();
                         setKeepMouseGrab(true);
-                        grabTouchPoints(QVector<int>() << touchPoint1.id() << touchPoint2.id());
+                        grabTouchPoints(QList<int>() << touchPoint1.id() << touchPoint2.id());
                         d->inPinch = true;
                         d->stealMouse = true;
                         if (d->pinch && d->pinch->target()) {

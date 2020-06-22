@@ -104,7 +104,7 @@ protected:
             QVERIFY(!m_active);
             m_active = true;
             emit activeChanged();
-            grabTouchPoints(QVector<int>() << touchpoint.id());
+            grabTouchPoints(QList<int>() << touchpoint.id());
             break;
         case Qt::TouchPointMoved:
             ++touchUpdates;

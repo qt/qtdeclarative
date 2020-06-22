@@ -59,7 +59,6 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonValue>
-#include <QVector>
 #include <QPointer>
 
 QT_BEGIN_NAMESPACE

@@ -317,7 +317,7 @@ public:
     bool filtersChildMouseEvents() const;
     void setFiltersChildMouseEvents(bool filter);
 
-    void grabTouchPoints(const QVector<int> &ids);
+    void grabTouchPoints(const QList<int> &ids);
     void ungrabTouchPoints();
     bool keepTouchGrab() const;
     void setKeepTouchGrab(bool);

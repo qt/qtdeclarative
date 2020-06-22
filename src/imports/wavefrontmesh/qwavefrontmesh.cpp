@@ -454,7 +454,7 @@ QString QWavefrontMesh::log() const
     };
 }
 
-bool QWavefrontMesh::validateAttributes(const QVector<QByteArray> &attributes, int *posIndex)
+bool QWavefrontMesh::validateAttributes(const QList<QByteArray> &attributes, int *posIndex)
 {
     Q_D(QWavefrontMesh);
     const int attrCount = attributes.count();
