@@ -45,8 +45,12 @@
 #include <private/qquickwindow_p.h>
 #include <private/qguiapplication_p.h>
 #include <QRunnable>
-#include <QOpenGLFunctions>
 #include <QSGRendererInterface>
+#include <QQuickRenderControl>
+#include <functional>
+#if QT_CONFIG(opengl)
+#include <QOpenGLContext>
+#endif
 
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 
@@ -484,6 +488,8 @@ private slots:
 #if QT_CONFIG(shortcut)
     void testShortCut();
 #endif
+
+    void rendererInterface();
 
 private:
     QTouchDevice *touchDevice;
@@ -2493,29 +2499,6 @@ public:
     }
     static int deleted;
 };
-#if QT_CONFIG(opengl)
-class GlRenderJob : public QRunnable
-{
-public:
-    GlRenderJob(GLubyte *buf) : readPixel(buf), mutex(nullptr), condition(nullptr) {}
-    ~GlRenderJob() {}
-    void run() {
-        QOpenGLContext::currentContext()->functions()->glClearColor(1.0f, 0, 0, 1.0f);
-        QOpenGLContext::currentContext()->functions()->glClear(GL_COLOR_BUFFER_BIT);
-        QOpenGLContext::currentContext()->functions()->glReadPixels(0, 0, 1, 1, GL_RGBA,
-                                                                    GL_UNSIGNED_BYTE,
-                                                                    (void *)readPixel);
-        if (mutex) {
-            mutex->lock();
-            condition->wakeOne();
-            mutex->unlock();
-        }
-    }
-    GLubyte *readPixel;
-    QMutex *mutex;
-    QWaitCondition *condition;
-};
-#endif
 int RenderJob::deleted = 0;
 
 void tst_qquickwindow::testRenderJob()
@@ -2563,33 +2546,6 @@ void tst_qquickwindow::testRenderJob()
                                  QQuickWindow::NoStage);
         QTRY_COMPARE(RenderJob::deleted, 1);
         QCOMPARE(completedJobs.size(), 1);
-
-#if QT_CONFIG(opengl)
-        if (window.rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL) {
-            // Do a synchronized GL job.
-            GLubyte readPixel[4] = {0, 0, 0, 0};
-            GlRenderJob *glJob = new GlRenderJob(readPixel);
-            QOpenGLContext *ctx = static_cast<QOpenGLContext *>(window.rendererInterface()->getResource(
-                                                                    &window, QSGRendererInterface::OpenGLContextResource));
-            QVERIFY(ctx);
-            if (ctx->thread() != QThread::currentThread()) {
-                QMutex mutex;
-                QWaitCondition condition;
-                glJob->mutex = &mutex;
-                glJob->condition = &condition;
-                mutex.lock();
-                window.scheduleRenderJob(glJob, QQuickWindow::NoStage);
-                condition.wait(&mutex);
-                mutex.unlock();
-            } else {
-                window.scheduleRenderJob(glJob, QQuickWindow::NoStage);
-            }
-            QCOMPARE(int(readPixel[0]), 255);
-            QCOMPARE(int(readPixel[1]), 0);
-            QCOMPARE(int(readPixel[2]), 0);
-            QCOMPARE(int(readPixel[3]), 255);
-        }
-#endif
     }
 
     // Verify that jobs are deleted when window is not rendered at all
@@ -3635,6 +3591,109 @@ void tst_qquickwindow::testShortCut()
     QVERIFY(window->property("received").value<bool>());
 }
 #endif
+
+void tst_qquickwindow::rendererInterface()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("Headless.qml"));
+    QObject *created = component.create();
+    QScopedPointer<QObject> cleanup(created);
+
+    QQuickWindow *window = qobject_cast<QQuickWindow*>(created);
+    QVERIFY(window);
+    window->setTitle(QTest::currentTestFunction());
+    window->show();
+
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(window->isSceneGraphInitialized());
+    QVERIFY(window->rendererInterface());
+
+    QSGRendererInterface *rif = window->rendererInterface();
+    QVERIFY(rif->graphicsApi() != QSGRendererInterface::Unknown);
+
+    // Verify the essential integration points used by Quick3D.
+    if (QSGRendererInterface::isApiRhiBased(rif->graphicsApi())) {
+        QVERIFY(rif->getResource(window, QSGRendererInterface::RhiResource));
+        QVERIFY(rif->getResource(window, QSGRendererInterface::RhiSwapchainResource));
+        // the rendercontrol specific objects should not be present for an on-screen window
+        QVERIFY(!rif->getResource(window, QSGRendererInterface::RhiRedirectCommandBuffer));
+        QVERIFY(!rif->getResource(window, QSGRendererInterface::RhiRedirectRenderTarget));
+    }
+
+    // Now, depending on the graphics API, verify the native objects that are
+    // most common in applications that integrate native rendering code. Check
+    // only the globally available ones (that are available whenever the
+    // scenegraph is initialized, not just during recording a frame)
+    switch (rif->graphicsApi()) {
+    case QSGRendererInterface::OpenGLRhi:
+        QVERIFY(rif->getResource(window, QSGRendererInterface::OpenGLContextResource));
+#if QT_CONFIG(opengl)
+        {
+            QOpenGLContext *ctx = static_cast<QOpenGLContext *>(rif->getResource(window, QSGRendererInterface::OpenGLContextResource));
+            QVERIFY(ctx->isValid());
+        }
+#endif
+        break;
+    case QSGRendererInterface::Direct3D11Rhi:
+        QVERIFY(rif->getResource(window, QSGRendererInterface::DeviceResource));
+        QVERIFY(rif->getResource(window, QSGRendererInterface::DeviceContextResource));
+        break;
+    case QSGRendererInterface::VulkanRhi:
+        QVERIFY(rif->getResource(window, QSGRendererInterface::DeviceResource));
+        QVERIFY(rif->getResource(window, QSGRendererInterface::PhysicalDeviceResource));
+        QVERIFY(rif->getResource(window, QSGRendererInterface::VulkanInstanceResource));
+#if QT_CONFIG(vulkan)
+        QCOMPARE(rif->getResource(window, QSGRendererInterface::VulkanInstanceResource), window->vulkanInstance());
+#endif
+        QVERIFY(rif->getResource(window, QSGRendererInterface::CommandQueueResource));
+        break;
+    case QSGRendererInterface::MetalRhi:
+        QVERIFY(rif->getResource(window, QSGRendererInterface::DeviceResource));
+        QVERIFY(rif->getResource(window, QSGRendererInterface::CommandQueueResource));
+        break;
+    default:
+        break;
+    }
+
+    // Now the objects that are available only when preparing a frame.
+    if (QSGRendererInterface::isApiRhiBased(rif->graphicsApi())) {
+        bool ok[4] = { false, false, false, false };
+        auto f = [&ok, window](int idx) {
+            QSGRendererInterface *rif = window->rendererInterface();
+            if (rif) {
+                ok[idx] = true;
+                switch (rif->graphicsApi()) {
+                case QSGRendererInterface::VulkanRhi:
+                    if (!rif->getResource(window, QSGRendererInterface::CommandListResource))
+                        ok[idx] = false;
+                    if (!rif->getResource(window, QSGRendererInterface::RenderPassResource))
+                        ok[idx] = false;
+                    break;
+                case QSGRendererInterface::MetalRhi:
+                    if (!rif->getResource(window, QSGRendererInterface::CommandListResource))
+                        ok[idx] = false;
+                    if (!rif->getResource(window, QSGRendererInterface::CommandEncoderResource))
+                        ok[idx] = false;
+                    break;
+                default:
+                    break;
+                }
+            }
+        };
+        // Also tests if all 4 signals are emitted as expected.
+        QObject::connect(window, &QQuickWindow::beforeRendering, window, std::bind(f, 0), Qt::DirectConnection);
+        QObject::connect(window, &QQuickWindow::beforeRenderPassRecording, window, std::bind(f, 1), Qt::DirectConnection);
+        QObject::connect(window, &QQuickWindow::afterRenderPassRecording, window, std::bind(f, 2), Qt::DirectConnection);
+        QObject::connect(window, &QQuickWindow::afterRendering, window, std::bind(f, 3), Qt::DirectConnection);
+        window->grabWindow();
+        QVERIFY(ok[0]);
+        QVERIFY(ok[1]);
+        QVERIFY(ok[2]);
+        QVERIFY(ok[3]);
+    }
+
+}
 
 QTEST_MAIN(tst_qquickwindow)
 
