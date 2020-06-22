@@ -5,6 +5,7 @@
 #####################################################################
 
 qt_add_cmake_library(nestedPlugin
+    MODULE # special case
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/AutoTestQmlNestedPluginType"
     SOURCES
         nestedPlugin.cpp
