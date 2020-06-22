@@ -989,7 +989,11 @@ void QQuickWidget::createFramebufferObject()
         d->offscreenSurface->create();
     }
 
-    context->makeCurrent(d->offscreenSurface);
+    bool current = context->makeCurrent(d->offscreenSurface);
+    if (!current) {
+        qWarning("QQuickWidget: Failed to make context current when creating FBO");
+        return;
+    }
 
     int samples = d->requestedSamples;
     if (!QOpenGLExtensions(context).hasOpenGLExtension(QOpenGLExtensions::FramebufferMultisample))
