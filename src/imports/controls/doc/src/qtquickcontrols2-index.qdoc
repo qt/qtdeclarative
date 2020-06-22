@@ -41,7 +41,10 @@
     Qt Quick Controls comes with a selection customizable styles.
     See \l {Styling Qt Quick Controls} for more details.
 
-    \section1 Prerequisites
+
+    \section1 Using the Module
+
+    \section2 QML API
 
     The \l{Qt Quick Controls QML Types}{QML types} can be imported into your
     application using the following import statement in your \c {.qml} file:
@@ -50,21 +53,26 @@
     import QtQuick.Controls 2.\1
     \endqml
 
-    The \l{Qt Quick Controls C++ Classes}{C++ classes} can be included into
-    your application using the following include statement:
+    \section2 C++ API
 
-    \code
-    #include <QtQuickControls2>
-    \endcode
+    Using the \l{Qt Quick Controls C++ Classes}{C++ API} requires linking against the module library,
+    either directly or through other dependencies.
+    Several build tools have dedicated support for this, including CMake and qmake.
 
-    To link against the corresponding C++ libraries, add the following to your
-    qmake project file:
+    \section3 Building with CMake
+    Use the \c find_package() command to locate the needed module components in the Qt6 package:
+
+    \snippet qtquickcontrols2-overview.cmake 0
+
+    See also the \l{Build with CMake} overview.
+
+    \section3 Building with qmake
+    To configure the module for building with qmake,
+    add the module as a value of the QT variable in the project's .pro file:
 
     \code
     QT += quickcontrols2
     \endcode
-
-    For more details, see \l {Getting Started with Qt Quick Controls}.
 
     \section2 Building From Source
 
@@ -145,6 +153,7 @@
     \section1 Topics
 
     \list
+      \li \l{Getting Started with Qt Quick Controls}{Getting Started}
       \li \l{Qt Quick Controls Guidelines}{Guidelines}
       \li \l{Styling Qt Quick Controls}{Styling}
       \li \l{Icons in Qt Quick Controls}{Icons}
