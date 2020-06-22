@@ -31,18 +31,6 @@
 \qtvariable qml
 \brief The C++ API provided by the Qt QML module.
 
-To include the definitions of the module's classes, use the
-following directive:
-
-\snippet code/doc_src_qtqml.cpp 0
-
-\if !defined(qtforpython)
-To link against the module, add this line to your \l qmake \c
-.pro file:
-
-\snippet code/doc_src_qtqml.pro 0
-\endif
-
 For more information on the Qt QML module, see the
 \l{Qt QML} module documentation.
 */

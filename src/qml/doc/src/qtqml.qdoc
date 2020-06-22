@@ -1,6 +1,6 @@
 ﻿/****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -46,14 +46,9 @@ For those new to QML and Qt Quick, please see
 \l{QML Applications}
 for an introduction to writing QML applications.
 
-\section1 Getting Started
+\section1 Using the Module
 
-To include the definitions of the module's classes, use the
-following directive:
-
-\code
-#include <QtQml>
-\endcode
+\section2 QML API
 
 The QML types in Qt QML are available through the \c QtQml import. To use the
 types, add the following import statement to your .qml file:
@@ -62,13 +57,25 @@ types, add the following import statement to your .qml file:
 import QtQml 2.\1
 \endqml
 
+\section2 C++ API
 
-To link against the module, add this line to your \l qmake \c
-.pro file:
+Using the \l{Qt QML C++ Classes}{C++ API} requires linking against the module library,
+either directly or through other dependencies.
+Several build tools have dedicated support for this, including CMake and qmake.
 
-\code
-QT += qml
-\endcode
+\section3 Building with CMake
+
+Use the \c find_package() command to locate the needed module components in the Qt6 package:
+
+\snippet code/doc_src_qtqml.cmake 0
+
+See also the \l{Build with CMake} overview.
+
+\section3 Building with qmake
+
+To configure the module for building with qmake, add the module as a value of the QT variable in the project's .pro file:
+
+\snippet code/doc_src_qtqml.pro 0
 
 \section1 QML and QML Types
 
