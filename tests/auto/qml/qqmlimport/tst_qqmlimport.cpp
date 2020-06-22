@@ -370,23 +370,43 @@ void tst_QQmlImport::partialImportVersions()
 
 void tst_QQmlImport::registerModuleImport()
 {
-    qmlRegisterModuleImport("MyPluginSupported", 2, "QtQuick");
-    {
+    const auto isValid = [&]() {
         QQmlEngine engine;
         engine.addImportPath(directory());
         QQmlComponent component(&engine);
         component.setData("import MyPluginSupported; Item {}", QUrl());
-        QVERIFY(component.isReady());
+        if (!component.isReady())
+            return false;
         QScopedPointer<QObject> obj(component.create());
-        QVERIFY(!obj.isNull());
-    }
+        return !obj.isNull();
+    };
+
+    qmlRegisterModuleImport("MyPluginSupported", 2, "QtQuick");
+    QVERIFY(isValid());
     qmlUnregisterModuleImport("MyPluginSupported", 2, "QtQuick");
-    {
-        QQmlEngine engine;
-        QQmlComponent component(&engine);
-        component.setData("import MyPluginSupported; Item {}", QUrl());
-        QVERIFY(component.isError());
-    }
+    QVERIFY(!isValid());
+    qmlRegisterModuleImport("MyPluginSupported", 3, "QtQuick"); // won't match, 3 doesn't exist
+    QVERIFY(!isValid());
+    qmlRegisterModuleImport("MyPluginSupported", 1, "QtQuick"); // won't match, as we import latest
+    QVERIFY(!isValid());
+    qmlRegisterModuleImport("MyPluginSupported", QQmlModuleImportModuleAny, "QtQuick");
+    QVERIFY(isValid());
+    qmlUnregisterModuleImport("MyPluginSupported", QQmlModuleImportModuleAny, "QtQuick");
+    QVERIFY(!isValid());
+    qmlRegisterModuleImport("MyPluginSupported", QQmlModuleImportModuleAny, "QtQuick",
+                            QQmlModuleImportAuto); // matches, because both 2.0
+    QVERIFY(isValid());
+    qmlUnregisterModuleImport("MyPluginSupported", QQmlModuleImportModuleAny, "QtQuick",
+                              QQmlModuleImportAuto);
+    QVERIFY(!isValid());
+    qmlRegisterModuleImport("MyPluginSupported", 2, "QtQuick", 2, 15);
+    QVERIFY(isValid());
+    qmlUnregisterModuleImport("MyPluginSupported", 2, "QtQuick", 2, 15);
+    QVERIFY(!isValid());
+    qmlUnregisterModuleImport("MyPluginSupported", 3, "QtQuick");
+    QVERIFY(!isValid());
+    qmlUnregisterModuleImport("MyPluginSupported", 1, "QtQuick");
+    QVERIFY(!isValid());
 }
 
 void tst_QQmlImport::importDependenciesPrecedence()

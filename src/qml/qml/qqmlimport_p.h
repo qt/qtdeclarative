@@ -157,22 +157,23 @@ public:
                      QQmlType::RegistrationType registrationType
                      = QQmlType::AnyRegistrationType) const;
 
-    bool addImplicitImport(QQmlImportDatabase *importDb, QList<QQmlError> *errors);
+    QTypeRevision addImplicitImport(
+            QQmlImportDatabase *importDb, QList<QQmlError> *errors);
 
     bool addInlineComponentImport(QQmlImportInstance  *const importInstance, const QString &name, const QUrl importUrl, QQmlType containingType);
 
-    bool addFileImport(QQmlImportDatabase *,
-                       const QString& uri, const QString& prefix, QTypeRevision version,
-                       uint flags, QList<QQmlError> *errors);
+    QTypeRevision addFileImport(
+            QQmlImportDatabase *, const QString& uri, const QString& prefix, QTypeRevision version,
+            uint flags, QList<QQmlError> *errors);
 
-    bool addLibraryImport(QQmlImportDatabase *importDb,
-                          const QString &uri, const QString &prefix, QTypeRevision version,
-                          const QString &qmldirIdentifier, const QString &qmldirUrl, uint flags,
-                          QList<QQmlError> *errors);
+    QTypeRevision addLibraryImport(
+            QQmlImportDatabase *importDb, const QString &uri, const QString &prefix,
+            QTypeRevision version, const QString &qmldirIdentifier, const QString &qmldirUrl,
+            uint flags, QList<QQmlError> *errors);
 
-    bool updateQmldirContent(QQmlImportDatabase *importDb,
-                             const QString &uri, const QString &prefix,
-                             const QString &qmldirIdentifier, const QString &qmldirUrl, QList<QQmlError> *errors);
+    QTypeRevision updateQmldirContent(
+            QQmlImportDatabase *importDb, const QString &uri, const QString &prefix,
+            const QString &qmldirIdentifier, const QString &qmldirUrl, QList<QQmlError> *errors);
 
     enum LocalQmldirResult {
         QmldirFound,
@@ -228,9 +229,9 @@ public:
     QQmlImportDatabase(QQmlEngine *);
     ~QQmlImportDatabase();
 
-    bool importDynamicPlugin(const QString &filePath, const QString &uri,
-                             const QString &importNamespace, QTypeRevision version,
-                             bool isOptional, QList<QQmlError> *errors);
+    QTypeRevision importDynamicPlugin(
+            const QString &filePath, const QString &uri, const QString &importNamespace,
+            QTypeRevision version, bool isOptional, QList<QQmlError> *errors);
     bool removeDynamicPlugin(const QString &filePath);
     QStringList dynamicPlugins() const;
 
@@ -251,9 +252,9 @@ private:
                           const QString &qmldirPath, const QString &qmldirPluginPath,
                           const QString &baseName, const QStringList &suffixes,
                           const QString &prefix = QString()) const;
-    bool importStaticPlugin(QObject *instance, const QString &basePath, const QString &uri,
-                            const QString &typeNamespace, QTypeRevision version,
-                            QList<QQmlError> *errors);
+    QTypeRevision importStaticPlugin(
+            QObject *instance, const QString &basePath, const QString &uri,
+            const QString &typeNamespace, QTypeRevision version, QList<QQmlError> *errors);
     void clearDirCache();
     void finalizePlugin(QObject *instance, const QString &path, const QString &uri);
 

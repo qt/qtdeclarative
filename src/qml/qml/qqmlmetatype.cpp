@@ -920,13 +920,20 @@ QRecursiveMutex *QQmlMetaType::typeRegistrationLock()
 }
 
 /*
-    Returns true if a module \a uri of any version is installed.
+    Returns the latest version of \a uri installed, or an in valid QTypeRevision().
 */
-bool QQmlMetaType::isAnyModule(const QString &uri)
+QTypeRevision QQmlMetaType::latestModuleVersion(const QString &uri)
 {
     QQmlMetaTypeDataPtr data;
-    return std::binary_search(data->uriToModule.begin(), data->uriToModule.end(), uri,
-                              std::less<ModuleUri>());
+    auto upper = std::upper_bound(data->uriToModule.begin(), data->uriToModule.end(), uri,
+                                  std::less<ModuleUri>());
+    if (upper == data->uriToModule.begin())
+        return QTypeRevision();
+
+    const auto module = (--upper)->get();
+    return (module->module() == uri)
+            ? QTypeRevision::fromVersion(module->majorVersion(), module->maximumMinorVersion())
+            : QTypeRevision();
 }
 
 /*
@@ -942,27 +949,31 @@ bool QQmlMetaType::isLockedModule(const QString &uri, QTypeRevision version)
 }
 
 /*
-    Returns true if any type or API has been registered for the given \a module with at least
-    versionMajor.versionMinor, or if types have been registered for \a module with at most
-    versionMajor.versionMinor.
-
-    So if only 4.7 and 4.9 have been registered, 4.7,4.8, and 4.9 are valid, but not 4.6 nor 4.10.
+    Returns the best matching registered version for the given \a module. If \a version is
+    the does not have a major version, returns the latest registered version. Otherwise
+    chooses the same major version and checks if the minor version is within the range
+    of registered minor versions. If so, retuens the original version, otherwise returns
+    an invalid version. If \a version does not have a minor version, chooses the latest one.
 */
-bool QQmlMetaType::isModule(const QString &module, QTypeRevision version)
+QTypeRevision QQmlMetaType::matchingModuleVersion(const QString &module, QTypeRevision version)
 {
     if (!version.hasMajorVersion())
-        return isAnyModule(module);
+        return latestModuleVersion(module);
 
     QQmlMetaTypeDataPtr data;
 
     // first, check Types
     if (QQmlTypeModule *tm = data->findTypeModule(module, version)) {
-        return !version.hasMinorVersion()
-                || (tm->minimumMinorVersion() <= version.minorVersion()
-                    && tm->maximumMinorVersion() >= version.minorVersion());
+        if (!version.hasMinorVersion())
+            return QTypeRevision::fromVersion(version.majorVersion(), tm->maximumMinorVersion());
+
+        if (tm->minimumMinorVersion() <= version.minorVersion()
+                && tm->maximumMinorVersion() >= version.minorVersion()) {
+            return version;
+        }
     }
 
-    return false;
+    return QTypeRevision();
 }
 
 QQmlTypeModule *QQmlMetaType::typeModule(const QString &uri, QTypeRevision version)

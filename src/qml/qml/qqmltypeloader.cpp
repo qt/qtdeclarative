@@ -528,8 +528,15 @@ bool QQmlTypeLoader::Blob::updateQmldir(const QQmlRefPointer<QQmlQmldirData> &da
 
     typeLoader()->setQmldirContent(qmldirIdentifier, data->content());
 
-    if (!m_importCache.updateQmldirContent(typeLoader()->importDatabase(), import->uri, import->qualifier, qmldirIdentifier, qmldirUrl, errors))
+    const QTypeRevision version = m_importCache.updateQmldirContent(
+                typeLoader()->importDatabase(), import->uri, import->qualifier, qmldirIdentifier,
+                qmldirUrl, errors);
+    if (!version.isValid())
         return false;
+
+    // Use more specific version for dependencies if possible
+    if (version.hasMajorVersion())
+        import->version = version;
 
     if (!loadImportDependencies(import, qmldirIdentifier, errors))
         return false;
@@ -584,10 +591,15 @@ bool QQmlTypeLoader::Blob::addImport(QQmlTypeLoader::Blob::PendingImportPtr impo
                     &qmldirFilePath, &qmldirUrl);
         if (qmldirResult == QQmlImports::QmldirFound) {
             // This is a local library import
-            if (!m_importCache.addLibraryImport(
+            const QTypeRevision actualVersion = m_importCache.addLibraryImport(
                         importDatabase, import->uri, import->qualifier,
-                        import->version, qmldirFilePath, qmldirUrl, flags, errors))
+                        import->version, qmldirFilePath, qmldirUrl, flags, errors);
+            if (!actualVersion.isValid())
                 return false;
+
+            // Use more specific version for dependencies if possible
+            if (actualVersion.hasMajorVersion())
+                import->version = actualVersion;
 
             if (!loadImportDependencies(import, qmldirFilePath, errors))
                 return false;
@@ -616,11 +628,11 @@ bool QQmlTypeLoader::Blob::addImport(QQmlTypeLoader::Blob::PendingImportPtr impo
 
                 // Otherwise, there is no way to register any further types.
                 // Try with any module of that name.
-                || QQmlMetaType::isAnyModule(import->uri)) {
+                || QQmlMetaType::latestModuleVersion(import->uri).isValid()) {
 
             if (!m_importCache.addLibraryImport(
                         importDatabase, import->uri, import->qualifier, import->version,
-                        QString(), QString(), flags, errors)) {
+                        QString(), QString(), flags, errors).isValid()) {
                 return false;
             }
         } else {
@@ -638,10 +650,16 @@ bool QQmlTypeLoader::Blob::addImport(QQmlTypeLoader::Blob::PendingImportPtr impo
                                         : QQmlImportDatabase::Remote);
             if (!remotePathList.isEmpty()) {
                 // Add this library and request the possible locations for it
-                if (!m_importCache.addLibraryImport(
+                const QTypeRevision version = m_importCache.addLibraryImport(
                             importDatabase, import->uri, import->qualifier, import->version,
-                            QString(), QString(), flags | QQmlImports::ImportIncomplete, errors))
+                            QString(), QString(), flags | QQmlImports::ImportIncomplete, errors);
+
+                if (!version.isValid())
                     return false;
+
+                // Use more specific version for finding the qmldir if possible
+                if (version.hasMajorVersion())
+                    import->version = version;
 
                 // Probe for all possible locations
                 int priority = 0;
@@ -678,9 +696,15 @@ bool QQmlTypeLoader::Blob::addImport(QQmlTypeLoader::Blob::PendingImportPtr impo
             incomplete = true;
         }
 
-        if (!m_importCache.addFileImport(importDatabase, import->uri, import->qualifier,
-                                         import->version, incomplete, errors))
+        const QTypeRevision version = m_importCache.addFileImport(
+                    importDatabase, import->uri, import->qualifier, import->version, incomplete,
+                    errors);
+        if (!version.isValid())
             return false;
+
+        // Use more specific version for the qmldir if possible
+        if (version.hasMajorVersion())
+            import->version = version;
 
         if (incomplete) {
             if (!fetchQmldir(qmldirUrl, import, 1, errors))

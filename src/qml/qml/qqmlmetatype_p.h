@@ -162,9 +162,9 @@ public:
     static void registerCustomStringConverter(int, StringConverter);
     static StringConverter customStringConverter(int);
 
-    static bool isAnyModule(const QString &uri);
+    static QTypeRevision latestModuleVersion(const QString &uri);
     static bool isLockedModule(const QString &uri, QTypeRevision version);
-    static bool isModule(const QString &module, QTypeRevision version);
+    static QTypeRevision matchingModuleVersion(const QString &module, QTypeRevision version);
     static QQmlTypeModule *typeModule(const QString &uri, QTypeRevision version);
 
     static QList<QQmlPrivate::AutoParentFunction> parentFunctions();

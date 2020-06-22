@@ -2196,7 +2196,7 @@ bool QQmlEngine::importPlugin(const QString &filePath, const QString &uri, QList
 {
     Q_D(QQmlEngine);
     return d->importDatabase.importDynamicPlugin(filePath, uri, QString(), QTypeRevision(), false,
-                                                 errors);
+                                                 errors).isValid();
 }
 #endif
 
