@@ -44,12 +44,18 @@
 #include <QSignalSpy>
 #include <private/qquickwindow_p.h>
 #include <private/qguiapplication_p.h>
+#include <QtGui/qpa/qplatformintegration.h>
 #include <QRunnable>
 #include <QSGRendererInterface>
 #include <QQuickRenderControl>
+#include <QOperatingSystemVersion>
 #include <functional>
+#include <QtGui/private/qrhi_p.h>
 #if QT_CONFIG(opengl)
 #include <QOpenGLContext>
+#endif
+#if QT_CONFIG(vulkan)
+#include <QVulkanInstance>
 #endif
 
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
@@ -490,6 +496,9 @@ private slots:
 #endif
 
     void rendererInterface();
+
+    void rendererInterfaceWithRenderControl_data();
+    void rendererInterfaceWithRenderControl();
 
 private:
     QTouchDevice *touchDevice;
@@ -3692,7 +3701,217 @@ void tst_qquickwindow::rendererInterface()
         QVERIFY(ok[2]);
         QVERIFY(ok[3]);
     }
+}
 
+void tst_qquickwindow::rendererInterfaceWithRenderControl_data()
+{
+    QTest::addColumn<QSGRendererInterface::GraphicsApi>("api");
+
+#if QT_CONFIG(opengl)
+    QTest::newRow("OpenGL") << QSGRendererInterface::OpenGLRhi;
+#endif
+#if QT_CONFIG(vulkan)
+    QTest::newRow("Vulkan") << QSGRendererInterface::VulkanRhi;
+#endif
+#ifdef Q_OS_WIN
+    if (QOperatingSystemVersion::current() > QOperatingSystemVersion::Windows7)
+        QTest::newRow("D3D11") << QSGRendererInterface::Direct3D11Rhi;
+#endif
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+    QTest::newRow("Metal") << QSGRendererInterface::MetalRhi;
+#endif
+}
+
+void tst_qquickwindow::rendererInterfaceWithRenderControl()
+{
+    QFETCH(QSGRendererInterface::GraphicsApi, api);
+
+    // no automatic QVulkanInstance when used with rendercontrol, must create our own
+#if QT_CONFIG(vulkan)
+    QVulkanInstance inst;
+    if (api == QSGRendererInterface::VulkanRhi) {
+        if (!inst.create())
+            QSKIP("Skipping Vulkan-based test due to failing to create Vulkan instance");
+    }
+#endif
+
+    {
+        // Changing the graphics api is not possible once a QQuickWindow et al is
+        // created, however we do support changing it once all QQuickWindow,
+        // QQuickRenderControl, etc. instances are destroyed, before creating new
+        // ones. That's why it is possible to have this test run with multiple QRhi
+        // backends.
+        QQuickWindow::setSceneGraphBackend(api);
+
+        QScopedPointer<QQuickRenderControl> renderControl(new QQuickRenderControl);
+        QScopedPointer<QQuickWindow> quickWindow(new QQuickWindow(renderControl.data()));
+#if QT_CONFIG(vulkan)
+        if (api == QSGRendererInterface::VulkanRhi)
+            quickWindow->setVulkanInstance(&inst);
+#endif
+
+        QScopedPointer<QQmlEngine> qmlEngine(new QQmlEngine);
+        // Pick a scene that does not have a Window, as having a Window in there is
+        // incompatible with QQuickRenderControl-based redirection by definition.
+        QScopedPointer<QQmlComponent> qmlComponent(new QQmlComponent(qmlEngine.data(),
+                                                                     testFileUrl(QLatin1String("showHideAnimate.qml"))));
+        QVERIFY(!qmlComponent->isLoading());
+        if (qmlComponent->isError()) {
+            for (const QQmlError &error : qmlComponent->errors())
+                qWarning() << error.url() << error.line() << error;
+        }
+        QVERIFY(!qmlComponent->isError());
+
+        QObject *rootObject = qmlComponent->create();
+        if (qmlComponent->isError()) {
+            for (const QQmlError &error : qmlComponent->errors())
+                qWarning() << error.url() << error.line() << error;
+        }
+        QVERIFY(!qmlComponent->isError());
+
+        QQuickItem *rootItem = qobject_cast<QQuickItem *>(rootObject);
+        QVERIFY(rootItem);
+        rootItem->setSize(QSize(200, 200));
+
+        quickWindow->contentItem()->setSize(rootItem->size());
+        quickWindow->setGeometry(0, 0, rootItem->width(), rootItem->height());
+
+        rootItem->setParentItem(quickWindow->contentItem());
+
+        const bool initSuccess = renderControl->initialize();
+
+        // We cannot just test for initSuccess; it is highly likely that a
+        // number of configurations will simply fail in a CI environment
+        // (Vulkan, Metal, ...) So the only reasonable choice is to skip if
+        // initialize() failed. The exception for now is OpenGL - that should
+        // usually work (except software backend etc.).
+        if (!initSuccess) {
+#if QT_CONFIG(opengl)
+            if (api != QSGRendererInterface::OpenGLRhi
+                    || !QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::OpenGL))
+#endif
+            {
+                QSKIP("Could not initialize graphics, perhaps unsupported graphics API, skipping");
+            }
+        }
+
+        // Not strictly required for the CI (because platforms like offscreen
+        // skip already above), but play nice with running with
+        // QT_QUICK_BACKEND=software on a normal desktop platform.
+        if (QQuickWindow::sceneGraphBackend() == QLatin1String("software"))
+            QSKIP("Software backend was forced via env.var, skipping this test");
+
+        QVERIFY(initSuccess);
+
+        QQuickWindow *window = quickWindow.data();
+        QSGRendererInterface *rif = window->rendererInterface();
+        QVERIFY(rif);
+        QCOMPARE(rif->graphicsApi(), api);
+
+        QRhi *rhi = static_cast<QRhi *>(rif->getResource(window, QSGRendererInterface::RhiResource));
+        QVERIFY(rhi);
+
+        // not an on-screen window so no swapchain
+        QVERIFY(!rif->getResource(window, QSGRendererInterface::RhiSwapchainResource));
+
+        switch (rif->graphicsApi()) {
+        case QSGRendererInterface::OpenGLRhi:
+            QVERIFY(rif->getResource(window, QSGRendererInterface::OpenGLContextResource));
+#if QT_CONFIG(opengl)
+            {
+                QOpenGLContext *ctx = static_cast<QOpenGLContext *>(rif->getResource(window, QSGRendererInterface::OpenGLContextResource));
+                QVERIFY(ctx->isValid());
+            }
+#endif
+            break;
+        case QSGRendererInterface::Direct3D11Rhi:
+            QVERIFY(rif->getResource(window, QSGRendererInterface::DeviceResource));
+            QVERIFY(rif->getResource(window, QSGRendererInterface::DeviceContextResource));
+            break;
+        case QSGRendererInterface::VulkanRhi:
+            QVERIFY(rif->getResource(window, QSGRendererInterface::DeviceResource));
+            QVERIFY(rif->getResource(window, QSGRendererInterface::PhysicalDeviceResource));
+            QVERIFY(rif->getResource(window, QSGRendererInterface::VulkanInstanceResource));
+#if QT_CONFIG(vulkan)
+            QCOMPARE(rif->getResource(window, QSGRendererInterface::VulkanInstanceResource), window->vulkanInstance());
+            QCOMPARE(rif->getResource(window, QSGRendererInterface::VulkanInstanceResource), &inst);
+#endif
+            QVERIFY(rif->getResource(window, QSGRendererInterface::CommandQueueResource));
+            break;
+        case QSGRendererInterface::MetalRhi:
+            QVERIFY(rif->getResource(window, QSGRendererInterface::DeviceResource));
+            QVERIFY(rif->getResource(window, QSGRendererInterface::CommandQueueResource));
+            break;
+        default:
+            break;
+        }
+
+        const QSize size(1280, 720);
+        QScopedPointer<QRhiTexture> tex(rhi->newTexture(QRhiTexture::RGBA8, size, 1,
+                                                        QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource));
+        QVERIFY(tex->create());
+        QScopedPointer<QRhiRenderBuffer> ds(rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, size, 1));
+        QVERIFY(ds->create());
+        QRhiTextureRenderTargetDescription rtDesc(QRhiColorAttachment(tex.data()));
+        rtDesc.setDepthStencilBuffer(ds.data());
+        QScopedPointer<QRhiTextureRenderTarget> texRt(rhi->newTextureRenderTarget(rtDesc));
+        QScopedPointer<QRhiRenderPassDescriptor> rp(texRt->newCompatibleRenderPassDescriptor());
+        texRt->setRenderPassDescriptor(rp.data());
+        QVERIFY(texRt->create());
+
+        // redirect Qt Quick rendering into our texture
+        quickWindow->setRenderTarget(QQuickRenderTarget::fromRhiRenderTarget(texRt.data()));
+
+        bool ok[4] = { false, false, false, false };
+        auto f = [&ok, window](int idx) {
+            QSGRendererInterface *rif = window->rendererInterface();
+            if (rif) {
+                ok[idx] = true;
+                switch (rif->graphicsApi()) {
+                case QSGRendererInterface::VulkanRhi:
+                    if (!rif->getResource(window, QSGRendererInterface::CommandListResource))
+                        ok[idx] = false;
+                    if (!rif->getResource(window, QSGRendererInterface::RenderPassResource))
+                        ok[idx] = false;
+                    break;
+                case QSGRendererInterface::MetalRhi:
+                    if (!rif->getResource(window, QSGRendererInterface::CommandListResource))
+                        ok[idx] = false;
+                    if (!rif->getResource(window, QSGRendererInterface::CommandEncoderResource))
+                        ok[idx] = false;
+                    break;
+                default:
+                    break;
+                }
+            }
+        };
+        // we could just check this below like the RhiRedirect* ones, but this way we test the signals as well
+        QObject::connect(window, &QQuickWindow::beforeRendering, window, std::bind(f, 0), Qt::DirectConnection);
+        QObject::connect(window, &QQuickWindow::beforeRenderPassRecording, window, std::bind(f, 1), Qt::DirectConnection);
+        QObject::connect(window, &QQuickWindow::afterRenderPassRecording, window, std::bind(f, 2), Qt::DirectConnection);
+        QObject::connect(window, &QQuickWindow::afterRendering, window, std::bind(f, 3), Qt::DirectConnection);
+
+        renderControl->polishItems();
+        renderControl->beginFrame();
+
+        renderControl->sync(); // this is when the custom rendertarget request gets processed
+        // now check for the queries that are used by Quick3D f.ex.
+        QVERIFY(rif->getResource(window, QSGRendererInterface::RhiRedirectCommandBuffer));
+        QVERIFY(rif->getResource(window, QSGRendererInterface::RhiRedirectRenderTarget));
+        QCOMPARE(rif->getResource(window, QSGRendererInterface::RhiRedirectRenderTarget), texRt.data());
+
+        renderControl->render();
+        renderControl->endFrame();
+
+        QVERIFY(ok[0]);
+        QVERIFY(ok[1]);
+        QVERIFY(ok[2]);
+        QVERIFY(ok[3]);
+    }
+
+    // Now that everything is torn down, go back to the default unspecified-api
+    // state, to prevent conflicting with tests that come afterwards.
+    QQuickWindow::setSceneGraphBackend(QSGRendererInterface::Unknown);
 }
 
 QTEST_MAIN(tst_qquickwindow)

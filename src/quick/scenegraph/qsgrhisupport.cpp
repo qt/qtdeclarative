@@ -268,11 +268,18 @@ void QSGRhiSupport::checkEnvQSgInfo()
 
 void QSGRhiSupport::configure(QSGRendererInterface::GraphicsApi api)
 {
-    Q_ASSERT(QSGRendererInterface::isApiRhiBased(api));
-    QSGRhiSupport *inst = staticInst();
-    inst->m_requested.valid = true;
-    inst->m_requested.api = api;
-    inst->applySettings();
+    if (api == QSGRendererInterface::Unknown) {
+        // behave as if nothing was explicitly requested
+        QSGRhiSupport *inst = staticInst();
+        inst->m_requested.valid = false;
+        inst->applySettings();
+    } else {
+        Q_ASSERT(QSGRendererInterface::isApiRhiBased(api));
+        QSGRhiSupport *inst = staticInst();
+        inst->m_requested.valid = true;
+        inst->m_requested.api = api;
+        inst->applySettings();
+    }
 }
 
 QSGRhiSupport *QSGRhiSupport::instance()

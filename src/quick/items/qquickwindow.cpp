@@ -5592,7 +5592,7 @@ void QQuickWindow::setSceneGraphBackend(QSGRendererInterface::GraphicsApi api)
     default:
         break;
     }
-    if (QSGRendererInterface::isApiRhiBased(api))
+    if (QSGRendererInterface::isApiRhiBased(api) || api == QSGRendererInterface::Unknown)
         QSGRhiSupport::configure(api);
 }
 
