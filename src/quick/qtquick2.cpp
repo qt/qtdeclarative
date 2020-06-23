@@ -37,7 +37,6 @@
 **
 ****************************************************************************/
 
-#include "qtquick2_p.h"
 #include <private/qqmlengine_p.h>
 #include <private/qquickvaluetypes_p.h>
 #include <private/qquickitemsmodule_p.h>
@@ -60,11 +59,7 @@ Q_DECLARE_METATYPE(QKeySequence::StandardKey)
 
 QT_BEGIN_NAMESPACE
 
-#if !QT_CONFIG(qml_debug)
-
-class QQmlQtQuick2DebugStatesDelegate : public QQmlDebugStatesDelegate {};
-
-#else
+#if QT_CONFIG(qml_debug)
 
 class QQmlQtQuick2DebugStatesDelegate : public QQmlDebugStatesDelegate
 {
@@ -179,9 +174,14 @@ void QQmlQtQuick2DebugStatesDelegate::resetBindingForInvalidProperty(QObject *ob
     }
 }
 
+static QQmlDebugStatesDelegate *statesDelegateFactory()
+{
+    return new QQmlQtQuick2DebugStatesDelegate;
+}
+
 #endif // QT_CONFIG(qml_debug)
 
-void QQmlQtQuick2Module::defineModule()
+static void defineQtQuickModule()
 {
     QQuick_initializeProviders();
 
@@ -195,15 +195,12 @@ void QQmlQtQuick2Module::defineModule()
     QAccessible::installFactory(&qQuickAccessibleFactory);
 #endif
 
-    QQmlEngineDebugService *debugService = QQmlDebugConnector::service<QQmlEngineDebugService>();
-    if (debugService)
-        debugService->setStatesDelegate(new QQmlQtQuick2DebugStatesDelegate);
+#if QT_CONFIG(qml_debug)
+    QQmlEngineDebugService::setStatesDelegateFactory(statesDelegateFactory);
+#endif
 }
 
-void QQmlQtQuick2Module::undefineModule()
-{
-    QQuick_deinitializeProviders();
-}
+Q_CONSTRUCTOR_FUNCTION(defineQtQuickModule)
 
 QT_END_NAMESPACE
 

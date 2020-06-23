@@ -21,6 +21,7 @@ qt_add_qml_module(qmlplugin
     CLASSNAME QtQmlPlugin
     SKIP_TYPE_REGISTRATION
     IMPORTS ${module_dynamic_qml_imports}
+    PLUGIN_OPTIONAL
     SOURCES
         plugin.cpp
     PUBLIC_LIBRARIES
@@ -31,7 +32,7 @@ qt_add_qml_module(qmlplugin
 
 #### Keys ignored in scope 1:.:.:qtqml.pro:<TRUE>:
 # CXX_MODULE = "qml"
-# DYNAMIC_QMLDIR = "module QtQml" "plugin qmlplugin" "classname QtQmlPlugin" "typeinfo plugins.qmltypes" "designersupported" "import QtQml.Models"
+# DYNAMIC_QMLDIR = "module QtQml" "optional plugin qmlplugin" "classname QtQmlPlugin" "typeinfo plugins.qmltypes" "designersupported" "import QtQml.Models auto"
 # QML_IMPORT_VERSION = "$$QT_VERSION"
 # TARGETPATH = "QtQml"
 
@@ -39,4 +40,4 @@ qt_add_qml_module(qmlplugin
 #####################################################################
 
 #### Keys ignored in scope 2:.:.:qtqml.pro:QT_FEATURE_qml_worker_script:
-# DYNAMIC_QMLDIR = "import QtQml.WorkerScript"
+# DYNAMIC_QMLDIR = "import QtQml.WorkerScript auto"

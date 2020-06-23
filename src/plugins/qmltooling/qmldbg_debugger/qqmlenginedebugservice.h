@@ -99,7 +99,12 @@ public:
     void engineAboutToBeRemoved(QJSEngine *) override;
     void objectCreated(QJSEngine *, QObject *) override;
 
-    void setStatesDelegate(QQmlDebugStatesDelegate *) override;
+    QQmlDebugStatesDelegate *statesDelegate()
+    {
+        if (!m_statesDelegate)
+            m_statesDelegate = createStatesDelegate();
+        return m_statesDelegate;
+    }
 
 signals:
     void scheduleMessage(const QByteArray &);

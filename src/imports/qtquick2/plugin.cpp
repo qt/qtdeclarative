@@ -38,42 +38,21 @@
 ****************************************************************************/
 
 #include <QtQml/qqmlextensionplugin.h>
-#include <QtQml/QQmlEngine>
-
-#include <private/qtquick2_p.h>
+#include <private/qtquickglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
-//![class decl]
-class QtQuick2Plugin : public QQmlExtensionPlugin
+class QtQuick2Plugin : public QQmlEngineExtensionPlugin
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 public:
-    QtQuick2Plugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent)
+    QtQuick2Plugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent)
     {
         volatile auto registration = &qml_register_types_QtQuick;
         Q_UNUSED(registration);
     }
-
-    void registerTypes(const char *uri) override
-    {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("QtQuick"));
-        Q_UNUSED(uri);
-        moduleDefined = true;
-        QQmlQtQuick2Module::defineModule();
-    }
-
-    void unregisterTypes() override
-    {
-        if (moduleDefined)
-            QQmlQtQuick2Module::undefineModule();
-        moduleDefined = false;
-    }
-
-    bool moduleDefined = false;
 };
-//![class decl]
 
 QT_END_NAMESPACE
 

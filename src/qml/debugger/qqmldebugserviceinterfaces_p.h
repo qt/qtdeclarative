@@ -91,7 +91,7 @@ class QQmlEngineDebugService
 {
 public:
     void objectCreated(QJSEngine *, QObject *) {}
-    virtual void setStatesDelegate(QQmlDebugStatesDelegate *) {}
+    static void setStatesDelegateFactory(QQmlDebugStatesDelegate *(*)()) {}
 };
 
 class QQmlInspectorService {
@@ -158,7 +158,8 @@ public:
     static const QString s_key;
 
     virtual void objectCreated(QJSEngine *engine, QObject *object) = 0;
-    virtual void setStatesDelegate(QQmlDebugStatesDelegate *) = 0;
+    static void setStatesDelegateFactory(QQmlDebugStatesDelegate *(*factory)());
+    static QQmlDebugStatesDelegate *createStatesDelegate();
 
 protected:
     friend class QQmlDebugConnector;

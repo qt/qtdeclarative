@@ -432,8 +432,8 @@ void QQmlEngineDebugServiceImpl::buildObjectList(QDataStream &message,
 void QQmlEngineDebugServiceImpl::buildStatesList(bool cleanList,
                                              const QList<QPointer<QObject> > &instances)
 {
-    if (m_statesDelegate)
-        m_statesDelegate->buildStatesList(cleanList, instances);
+    if (auto delegate = statesDelegate())
+        delegate->buildStatesList(cleanList, instances);
 }
 
 QQmlEngineDebugServiceImpl::QQmlObjectData
@@ -681,8 +681,8 @@ bool QQmlEngineDebugServiceImpl::setBinding(int objectId,
         if (property.isValid()) {
 
             bool inBaseState = true;
-            if (m_statesDelegate) {
-                m_statesDelegate->updateBinding(context, property, expression, isLiteralValue,
+            if (auto delegate = statesDelegate()) {
+                delegate->updateBinding(context, property, expression, isLiteralValue,
                                                 filename, line, column, &inBaseState);
             }
 
@@ -707,8 +707,8 @@ bool QQmlEngineDebugServiceImpl::setBinding(int objectId,
 
         } else {
             // not a valid property
-            if (m_statesDelegate)
-                ok = m_statesDelegate->setBindingForInvalidProperty(object, propertyName, expression, isLiteralValue);
+            if (auto delegate = statesDelegate())
+                ok = delegate->setBindingForInvalidProperty(object, propertyName, expression, isLiteralValue);
             if (!ok)
                 qWarning() << "QQmlEngineDebugService::setBinding: unable to set property" << propertyName << "on object" << object;
         }
@@ -761,8 +761,8 @@ bool QQmlEngineDebugServiceImpl::resetBinding(int objectId, const QString &prope
             return true;
         }
 
-        if (m_statesDelegate) {
-            m_statesDelegate->resetBindingForInvalidProperty(object, propertyName);
+        if (auto delegate = statesDelegate()) {
+            delegate->resetBindingForInvalidProperty(object, propertyName);
             return true;
         }
 
@@ -856,11 +856,6 @@ void QQmlEngineDebugServiceImpl::objectCreated(QJSEngine *engine, QObject *objec
     //unique queryId -1
     rs << QByteArray("OBJECT_CREATED") << qint32(-1) << engineId << objectId << parentId;
     emit messageToClient(name(), rs.data());
-}
-
-void QQmlEngineDebugServiceImpl::setStatesDelegate(QQmlDebugStatesDelegate *delegate)
-{
-    m_statesDelegate = delegate;
 }
 
 QT_END_NAMESPACE

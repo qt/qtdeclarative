@@ -12,6 +12,7 @@ qt_add_qml_module(qtquick2plugin
     SKIP_TYPE_REGISTRATION
     IMPORTS
         QtQml/auto
+    PLUGIN_OPTIONAL
     SOURCES
         plugin.cpp
     PUBLIC_LIBRARIES

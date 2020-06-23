@@ -66,7 +66,6 @@ void Q_QUICK_PRIVATE_EXPORT qml_register_types_QtQuick();
 QT_BEGIN_NAMESPACE
 
 void QQuick_initializeProviders();
-void QQuick_deinitializeProviders();
 
 Q_DECLARE_LOGGING_CATEGORY(DBG_TOUCH)
 Q_DECLARE_LOGGING_CATEGORY(DBG_MOUSE)

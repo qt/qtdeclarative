@@ -89,7 +89,7 @@ qt_add_module(Quick
         items/qquickwindowattached.cpp items/qquickwindowattached_p.h
         items/qquickwindowmodule.cpp items/qquickwindowmodule_p.h
         items/qquickwindowmodule_p_p.h
-        qtquick2.cpp qtquick2_p.h
+        qtquick2.cpp
         qtquickglobal.h qtquickglobal_p.h
         scenegraph/adaptations/software/qsgabstractsoftwarerenderer.cpp scenegraph/adaptations/software/qsgabstractsoftwarerenderer_p.h
         scenegraph/adaptations/software/qsgsoftwareadaptation.cpp scenegraph/adaptations/software/qsgsoftwareadaptation_p.h

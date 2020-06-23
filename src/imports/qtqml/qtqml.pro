@@ -11,7 +11,7 @@ QT = qml-private qmlmodels-private
 
 DYNAMIC_QMLDIR = \
     "module QtQml" \
-    "plugin qmlplugin" \
+    "optional plugin qmlplugin" \
     "classname QtQmlPlugin" \
     "typeinfo plugins.qmltypes" \
     "designersupported" \

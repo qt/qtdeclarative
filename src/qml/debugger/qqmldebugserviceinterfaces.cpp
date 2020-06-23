@@ -50,6 +50,18 @@ const QString QQmlEngineControlService::s_key = QStringLiteral("EngineControl");
 const QString QQmlNativeDebugService::s_key = QStringLiteral("NativeQmlDebugger");
 const QString QQmlDebugTranslationService::s_key = QStringLiteral("DebugTranslation");
 
+static QQmlDebugStatesDelegate *(*statesDelegateFactory)() = nullptr;
+void QQmlEngineDebugService::setStatesDelegateFactory(QQmlDebugStatesDelegate *(*factory)())
+{
+    statesDelegateFactory = factory;
+}
+
+QQmlDebugStatesDelegate *QQmlEngineDebugService::createStatesDelegate()
+{
+    return statesDelegateFactory ? statesDelegateFactory() : nullptr;
+}
+
+
 QT_END_NAMESPACE
 
 #include "moc_qqmldebugserviceinterfaces_p.cpp"

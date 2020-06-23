@@ -44,8 +44,7 @@ qtConfig(accessibility) {
 
 HEADERS += \
     qtquickglobal.h \
-    qtquickglobal_p.h \
-    qtquick2_p.h
+    qtquickglobal_p.h
 
 SOURCES += qtquick2.cpp
 
