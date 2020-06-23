@@ -435,6 +435,8 @@ public:
     void handleComponentComplete();
     void handleItemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value);
     void maybeUpdateShaders();
+    bool updateUniformValue(const QByteArray &name, const QVariant &value,
+                            QSGShaderEffectNode *node);
 
 private slots:
     void propertyChanged(int mappedId);
@@ -458,6 +460,7 @@ private:
     void disconnectSignals(Shader shaderType);
     void clearMappers(Shader shaderType);
     bool sourceIsUnique(QQuickItem *source, Shader typeToSkip, int indexToSkip) const;
+    std::optional<int> findMappedShaderVariableId(const QByteArray &name) const;
 
     QQuickShaderEffect *m_item;
     const QMetaObject *m_itemMetaObject = nullptr;
@@ -747,12 +750,36 @@ QString QQuickShaderEffect::parseLog() // for OpenGL-based autotests
     return m_impl->parseLog();
 }
 
+bool QQuickShaderEffect::updateUniformValue(const QByteArray &name, const QVariant &value)
+{
+    auto node = static_cast<QSGShaderEffectNode *>(QQuickItemPrivate::get(this)->paintNode);
+    if (!node)
+        return false;
+
+    return m_impl->updateUniformValue(name, value, node);
+}
+
 void QQuickShaderEffectPrivate::updatePolish()
 {
     Q_Q(QQuickShaderEffect);
     if (!qmlEngine(q))
         return;
     q->m_impl->maybeUpdateShaders();
+}
+
+constexpr int indexToMappedId(const int shaderType, const int idx)
+{
+    return idx | (shaderType << 16);
+}
+
+constexpr int mappedIdToIndex(const int mappedId)
+{
+    return mappedId & 0xFFFF;
+}
+
+constexpr int mappedIdToShaderType(const int mappedId)
+{
+    return mappedId >> 16;
 }
 
 QQuickShaderEffectImpl::QQuickShaderEffectImpl(QQuickShaderEffect *item)
@@ -916,16 +943,10 @@ QQuickShaderEffect::Status QQuickShaderEffectImpl::status() const
 void QQuickShaderEffectImpl::handleEvent(QEvent *event)
 {
     if (event->type() == QEvent::DynamicPropertyChange) {
-        QDynamicPropertyChangeEvent *e = static_cast<QDynamicPropertyChangeEvent *>(event);
-        for (int shaderType = 0; shaderType < NShader; ++shaderType) {
-            const auto &vars(m_shaders[shaderType].shaderInfo.variables);
-            for (int idx = 0; idx < vars.count(); ++idx) {
-                if (vars[idx].name == e->propertyName()) {
-                    propertyChanged((shaderType << 16) | idx);
-                    break;
-                }
-            }
-        }
+        const auto propertyName = static_cast<QDynamicPropertyChangeEvent *>(event)->propertyName();
+        const auto mappedId = findMappedShaderVariableId(propertyName);
+        if (mappedId)
+            propertyChanged(*mappedId);
     }
 }
 
@@ -1024,6 +1045,40 @@ void QQuickShaderEffectImpl::maybeUpdateShaders()
         if (!m_item->window() || !m_item->window()->isSceneGraphInitialized())
             m_item->polish();
     }
+}
+
+bool QQuickShaderEffectImpl::updateUniformValue(const QByteArray &name, const QVariant &value,
+                                                QSGShaderEffectNode *node)
+{
+    const auto mappedId = findMappedShaderVariableId(name);
+    if (!mappedId)
+        return false;
+
+    const Shader type = Shader(mappedIdToShaderType(*mappedId));
+    const int idx = mappedIdToIndex(*mappedId);
+
+    // Update value
+    m_shaders[type].varData[idx].value = value;
+
+    // Insert dirty uniform
+    QSet<int> dirtyConstants[NShader];
+    dirtyConstants[type].insert(idx);
+
+    // Sync material change
+    QSGShaderEffectNode::SyncData sd;
+    sd.dirty = QSGShaderEffectNode::DirtyShaderConstant;
+    sd.cullMode = QSGShaderEffectNode::CullMode(m_cullMode);
+    sd.blending = m_blending;
+    sd.vertex.shader = &m_shaders[Vertex];
+    sd.vertex.dirtyConstants = &dirtyConstants[Vertex];
+    sd.vertex.dirtyTextures = {};
+    sd.fragment.shader = &m_shaders[Fragment];
+    sd.fragment.dirtyConstants = &dirtyConstants[Fragment];
+    sd.fragment.dirtyTextures = {};
+
+    node->syncMaterial(&sd);
+
+    return true;
 }
 
 void QQuickShaderEffectImpl::handleItemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
@@ -1290,7 +1345,7 @@ void QQuickShaderEffectImpl::updateShaderVars(Shader shaderType)
                 } else {
                     auto *&mapper = m_mappers[shaderType][i];
                     if (!mapper) {
-                        const int mappedId = i | (shaderType << 16);
+                        const int mappedId = indexToMappedId(shaderType, i);
                         mapper = new QtPrivate::EffectSlotMapper([this, mappedId](){
                             this->propertyChanged(mappedId);
                         });
@@ -1339,10 +1394,23 @@ bool QQuickShaderEffectImpl::sourceIsUnique(QQuickItem *source, Shader typeToSki
     return true;
 }
 
+std::optional<int> QQuickShaderEffectImpl::findMappedShaderVariableId(const QByteArray &name) const
+{
+    for (int shaderType = 0; shaderType < NShader; ++shaderType) {
+        const auto &vars = m_shaders[shaderType].shaderInfo.variables;
+        for (int idx = 0; idx < vars.count(); ++idx) {
+            if (vars[idx].name == name)
+                return indexToMappedId(shaderType, idx);
+        }
+    }
+
+    return {};
+}
+
 void QQuickShaderEffectImpl::propertyChanged(int mappedId)
 {
-    const Shader type = Shader(mappedId >> 16);
-    const int idx = mappedId & 0xFFFF;
+    const Shader type = Shader(mappedIdToShaderType(mappedId));
+    const int idx = mappedIdToIndex(mappedId);
     const auto &v(m_shaders[type].shaderInfo.variables[idx]);
     auto &vd(m_shaders[type].varData[idx]);
 

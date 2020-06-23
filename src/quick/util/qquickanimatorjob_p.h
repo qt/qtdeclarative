@@ -69,7 +69,6 @@ class QQuickAbstractAnimation;
 
 class QQuickAnimatorController;
 class QQuickAnimatorProxyJobPrivate;
-class QQuickShaderEffectNode;
 
 class QSGOpacityNode;
 
@@ -289,7 +288,9 @@ public:
 private:
     QSGOpacityNode *m_opacityNode;
 };
-#if 0 // QTBUG-83976
+
+class QQuickShaderEffect;
+
 class Q_QUICK_PRIVATE_EXPORT QQuickUniformAnimatorJob : public QQuickAnimatorJob
 {
 public:
@@ -300,21 +301,16 @@ public:
     void setUniform(const QByteArray &uniform) { m_uniform = uniform; }
     QByteArray uniform() const { return m_uniform; }
 
-    void postSync() override;
-
     void updateCurrentTime(int time) override;
     void writeBack() override;
+    void postSync() override;
 
     void invalidate() override;
 
 private:
     QByteArray m_uniform;
-    QQuickOpenGLShaderEffectNode *m_node;
-
-    int m_uniformIndex : 8;
-    int m_uniformType : 8;
+    QQuickShaderEffect *m_effect = nullptr;
 };
-#endif
 
 QT_END_NAMESPACE
 

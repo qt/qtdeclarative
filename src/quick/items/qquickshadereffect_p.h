@@ -119,6 +119,8 @@ public:
     bool isComponentComplete() const;
     QString parseLog();
 
+    bool updateUniformValue(const QByteArray &name, const QVariant &value);
+
 Q_SIGNALS:
     void fragmentShaderChanged();
     void vertexShaderChanged();

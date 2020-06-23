@@ -219,55 +219,39 @@ Rectangle {
     }
 }
 //! [opacity target]
-//![shaderon]
-// Uniform animators are not yet ported to Qt 6
-//ShaderEffect {
-//    width: 50
-//    height: 50
-//    property variant t;
-//    UniformAnimator on t {
-//        from: 0
-//        to: 1
-//        duration: 1000
-//    }
-//    fragmentShader:
-//    "
-//        uniform lowp float t;
-//        varying highp vec2 qt_TexCoord0;
-//        void main() {
-//            lowp float c = qt_TexCoord0.y;
-//            gl_FragColor = vec4(c * t, 0, 0, 1);
-//        }
-//    "
-//}
-//![shaderon]
-//![shader target]
-// Uniform animators are not yet ported to Qt 6
-//ShaderEffect {
-//    id: shader
-//    width: 50
-//    height: 50
-//    property variant t;
-//    UniformAnimator {
-//        target: shader
-//        uniform: "t"
-//        from: 0
-//        to: 1
-//        duration: 1000
-//        running: true
-//    }
-//    fragmentShader:
-//    "
-//        uniform lowp float t;
-//        varying highp vec2 qt_TexCoord0;
-//        void main() {
-//            lowp float c = qt_TexCoord0.y;
-//            gl_FragColor = vec4(0, 0, c * t, 1);
-//        }
-//    "
-//}
-//![shader target]
-//![mixed]
+//! [shaderon]
+ShaderEffect {
+    width: 50
+    height: 50
+    property variant t;
+    UniformAnimator on t {
+        from: 0
+        to: 1
+        duration: 1000
+    }
+    fragmentShader: "qrc:shader.frag.qsb"
+}
+
+//! [shaderon]
+//! [shader target]
+ShaderEffect {
+    id: shader
+    width: 50
+    height: 50
+    property variant t;
+    UniformAnimator {
+        target: shader
+        uniform: "t"
+        from: 0
+        to: 1
+        duration: 1000
+        running: true
+    }
+    fragmentShader: "qrc:shader.frag.qsb"
+}
+
+//! [shader target]
+//! [mixed]
 Rectangle {
     id: mixBox
     width: 50

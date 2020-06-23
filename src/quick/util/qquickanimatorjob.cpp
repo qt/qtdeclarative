@@ -43,12 +43,7 @@
 #include "qquickanimator_p.h"
 #include "qquickanimator_p_p.h"
 #include <private/qquickitem_p.h>
-#if 0 // QTBUG-83976
-# include <private/qquickopenglshadereffectnode_p.h>
-# include <private/qquickopenglshadereffect_p.h>
-# include <private/qquickshadereffect_p.h>
-# include <QOpenGLContext>
-#endif
+#include <private/qquickshadereffect_p.h>
 #include <private/qanimationgroupjob_p.h>
 
 #include <qcoreapplication.h>
@@ -595,28 +590,31 @@ void QQuickOpacityAnimatorJob::updateCurrentTime(int time)
     m_opacityNode->setOpacity(m_value);
 }
 
-
-#if 0 // QTBUG-83976
 QQuickUniformAnimatorJob::QQuickUniformAnimatorJob()
-    : m_node(nullptr)
-    , m_uniformIndex(-1)
-    , m_uniformType(-1)
 {
     m_isUniform = true;
 }
 
 void QQuickUniformAnimatorJob::setTarget(QQuickItem *target)
 {
-    QQuickShaderEffect* effect = qobject_cast<QQuickShaderEffect*>(target);
-    if (effect && effect->isOpenGLShaderEffect())
+    // Check target is of expected type
+    if (qobject_cast<QQuickShaderEffect *>(target) != nullptr)
         m_target = target;
 }
 
-void QQuickUniformAnimatorJob::invalidate()
+void QQuickUniformAnimatorJob::updateCurrentTime(int time)
 {
-    m_node = nullptr;
-    m_uniformIndex = -1;
-    m_uniformType = -1;
+    if (!m_effect)
+        return;
+
+    m_value = m_from + (m_to - m_from) * progress(time);
+    m_effect->updateUniformValue(m_uniform, m_value);
+}
+
+void QQuickUniformAnimatorJob::writeBack()
+{
+    if (m_target)
+        m_target->setProperty(m_uniform, value());
 }
 
 void QQuickUniformAnimatorJob::postSync()
@@ -626,52 +624,13 @@ void QQuickUniformAnimatorJob::postSync()
         return;
     }
 
-    m_node = static_cast<QQuickOpenGLShaderEffectNode *>(QQuickItemPrivate::get(m_target)->paintNode);
-
-    if (m_node && m_uniformIndex == -1 && m_uniformType == -1) {
-        QQuickOpenGLShaderEffectMaterial *material =
-                static_cast<QQuickOpenGLShaderEffectMaterial *>(m_node->material());
-        bool found = false;
-        for (int t=0; !found && t<QQuickOpenGLShaderEffectMaterialKey::ShaderTypeCount; ++t) {
-            const QVector<QQuickOpenGLShaderEffectMaterial::UniformData> &uniforms = material->uniforms[t];
-            for (int i=0; i<uniforms.size(); ++i) {
-                if (uniforms.at(i).name == m_uniform) {
-                    m_uniformIndex = i;
-                    m_uniformType = t;
-                    found = true;
-                    break;
-                }
-            }
-        }
-    }
-
+    m_effect = qobject_cast<QQuickShaderEffect *>(m_target);
 }
 
-void QQuickUniformAnimatorJob::updateCurrentTime(int time)
+void QQuickUniformAnimatorJob::invalidate()
 {
-    if (!m_controller)
-        return;
-
-    if (!m_node || m_uniformIndex == -1 || m_uniformType == -1)
-        return;
-
-    m_value = m_from + (m_to - m_from) * progress(time);
-
-    QQuickOpenGLShaderEffectMaterial *material =
-            static_cast<QQuickOpenGLShaderEffectMaterial *>(m_node->material());
-    material->uniforms[m_uniformType][m_uniformIndex].value = m_value;
-    // As we're not touching the nodes, we need to explicitly mark it dirty.
-    // Otherwise, the renderer will abort repainting if this was the only
-    // change in the graph currently rendering.
-    m_node->markDirty(QSGNode::DirtyMaterial);
+    m_effect = nullptr;
 }
-
-void QQuickUniformAnimatorJob::writeBack()
-{
-    if (m_target)
-        m_target->setProperty(m_uniform, value());
-}
-#endif
 
 QT_END_NAMESPACE
 

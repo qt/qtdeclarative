@@ -143,6 +143,10 @@ void TestQmlformat::initTestCase()
     m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/incrDecrSemicolon1.qml";
     m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/incrDecrSemicolon_error1.qml";
     m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/incrDecrSemicolon2.qml";
+
+    // QTBUG-85321
+    m_invalidFiles << "tests/manual/scenegraph_lancelot/data/shaders/propertyanimation/"
+                      "uniformanimator_stall.qml";
 }
 
 QStringList TestQmlformat::findFiles(const QDir &d)
