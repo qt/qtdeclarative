@@ -28,6 +28,7 @@
   \module QtQuick
   \title Qt Quick C++ Classes
   \ingroup modules
+  \qtcmakepackage Quick
   \qtvariable quick
 
   \brief The Qt Quick module provides classes for embedding Qt Quick

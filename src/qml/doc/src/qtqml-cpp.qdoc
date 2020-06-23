@@ -28,6 +28,7 @@
 \module QtQml
 \title Qt QML C++ Classes
 \ingroup modules
+\qtcmakepackage Qml
 \qtvariable qml
 \brief The C++ API provided by the Qt QML module.
 

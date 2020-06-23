@@ -436,6 +436,7 @@ QImage QQuickWidgetPrivate::grabFramebuffer()
     \title Qt Quick Widgets C++ Classes
     \ingroup modules
     \brief The C++ API provided by the Qt Quick Widgets module.
+    \qtcmakepackage QuickWidgets
     \qtvariable quickwidgets
 
     To link against the module, add this line to your \l qmake
