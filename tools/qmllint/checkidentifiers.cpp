@@ -203,24 +203,28 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
         if (scopeMethodIt != methods.end())
             return true; // Access to property of JS function
 
-        const auto enums = scope->enums();
-        for (const auto &enumerator : enums) {
-            if (enumerator.name() == access.m_name) {
-                detectedRestrictiveKind = QLatin1String("enum");
-                detectedRestrictiveName = access.m_name;
-                expectedNext.append(enumerator.keys());
-                break;
-            }
-            for (const QString &key : enumerator.keys()) {
-                if (access.m_name == key) {
+        auto checkEnums = [&](const ScopeTree::ConstPtr &scope) {
+            const auto enums = scope->enums();
+            for (const auto &enumerator : enums) {
+                if (enumerator.name() == access.m_name) {
                     detectedRestrictiveKind = QLatin1String("enum");
                     detectedRestrictiveName = access.m_name;
-                    break;
+                    expectedNext.append(enumerator.keys());
+                    return true;
+                }
+                for (const QString &key : enumerator.keys()) {
+                    if (access.m_name == key) {
+                        detectedRestrictiveKind = QLatin1String("enum");
+                        detectedRestrictiveName = access.m_name;
+                        return true;
+                    }
                 }
             }
-            if (!detectedRestrictiveName.isEmpty())
-                break;
-        }
+            return false;
+        };
+
+        checkEnums(scope);
+
         if (!detectedRestrictiveName.isEmpty())
             continue;
 
@@ -243,7 +247,8 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
                         detectedRestrictiveKind = QLatin1String("method");
                         return true;
                     }
-                    return false;
+
+                    return checkEnums(type);
                 });
         if (typeFound)
             continue;
