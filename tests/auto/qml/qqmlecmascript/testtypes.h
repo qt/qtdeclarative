@@ -761,6 +761,8 @@ struct NonRegisteredType
 
 };
 
+struct CompletelyUnknown;
+
 class MyInvokableObject : public MyInvokableBaseObject
 {
     Q_OBJECT
@@ -782,7 +784,7 @@ public:
     Q_INVOKABLE qreal method_NoArgs_real() { invoke(2); return 19.75; }
     Q_INVOKABLE QPointF method_NoArgs_QPointF() { invoke(3); return QPointF(123, 4.5); }
     Q_INVOKABLE QObject *method_NoArgs_QObject() { invoke(4); return this; }
-    Q_INVOKABLE MyInvokableObject *method_NoArgs_unknown() { invoke(5); return this; }
+    Q_INVOKABLE CompletelyUnknown *method_NoArgs_unknown() { invoke(5); return nullptr; }
     Q_INVOKABLE QJSValue method_NoArgs_QScriptValue() { invoke(6); return QJSValue("Hello world"); }
     Q_INVOKABLE QVariant method_NoArgs_QVariant() { invoke(7); return QVariant("QML rocks"); }
 
