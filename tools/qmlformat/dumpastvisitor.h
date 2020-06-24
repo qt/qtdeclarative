@@ -59,6 +59,9 @@ public:
 
     bool visit(FunctionDeclaration *node) override;
 
+    bool visit(UiInlineComponent *node) override;
+    void endVisit(UiInlineComponent *node) override;
+
     bool visit(UiObjectDefinition *node) override;
     void endVisit(UiObjectDefinition *node) override;
 

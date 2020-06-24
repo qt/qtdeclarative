@@ -54,6 +54,7 @@ private Q_SLOTS:
     void testStatesAndTransitions();
     void testLargeBindings();
     void testVerbatimStrings();
+    void testInlineComponents();
 
     void testQtbug85003();
 
@@ -238,6 +239,12 @@ void TestQmlformat::testVerbatimStrings()
 {
     QCOMPARE(runQmlformat(testFile("verbatimString.qml"), false, true),
              readTestFile("verbatimString.formatted.qml"));
+}
+
+void TestQmlformat::testInlineComponents()
+{
+    QCOMPARE(runQmlformat(testFile("inlineComponents.qml"), false, true),
+             readTestFile("inlineComponents.formatted.qml"));
 }
 
 void TestQmlformat::testNestedIf()
