@@ -68,13 +68,21 @@ public:
     enum class Type {
         Null,
         OpenGLContext,
+        Adapter,
         DeviceAndContext,
         DeviceAndCommandQueue,
+        PhysicalDevice,
         DeviceObjects
     };
 
     QAtomicInt ref;
     Type type = Type::Null;
+
+    struct Adapter {
+        quint32 luidLow;
+        qint32 luidHigh;
+        int featureLevel;
+    };
 
     struct DeviceAndContext {
         void *device;
@@ -86,16 +94,23 @@ public:
         void *cmdQueue;
     };
 
+    struct PhysicalDevice {
+        void *physicalDevice;
+    };
+
     struct DeviceObjects {
         void *physicalDevice;
         void *device;
         int queueFamilyIndex;
+        int queueIndex;
     };
 
     union {
         QOpenGLContext *context;
+        Adapter adapter;
         DeviceAndContext deviceAndContext;
         DeviceAndCommandQueue deviceAndCommandQueue;
+        PhysicalDevice physicalDevice;
         DeviceObjects deviceObjects;
     } u;
 };

@@ -605,8 +605,14 @@ QRhi *QSGRhiSupport::createRhi(QQuickWindow *window, QOffscreenSurface *offscree
             importDev.physDev = reinterpret_cast<VkPhysicalDevice>(customDevD->u.deviceObjects.physicalDevice);
             importDev.dev = reinterpret_cast<VkDevice>(customDevD->u.deviceObjects.device);
             importDev.gfxQueueFamilyIdx = customDevD->u.deviceObjects.queueFamilyIndex;
+            importDev.gfxQueueIdx = customDevD->u.deviceObjects.queueIndex;
             qCDebug(QSG_LOG_INFO, "Using existing native Vulkan physical device %p device %p graphics queue family index %d",
                     importDev.physDev, importDev.dev, importDev.gfxQueueFamilyIdx);
+            rhi = QRhi::create(backend, &rhiParams, flags, &importDev);
+        } else if (customDevD->type == QQuickGraphicsDevicePrivate::Type::PhysicalDevice) {
+            QRhiVulkanNativeHandles importDev;
+            importDev.physDev = reinterpret_cast<VkPhysicalDevice>(customDevD->u.physicalDevice.physicalDevice);
+            qCDebug(QSG_LOG_INFO, "Using existing native Vulkan physical device %p", importDev.physDev);
             rhi = QRhi::create(backend, &rhiParams, flags, &importDev);
         } else {
             rhi = QRhi::create(backend, &rhiParams, flags);
@@ -628,6 +634,14 @@ QRhi *QSGRhiSupport::createRhi(QQuickWindow *window, QOffscreenSurface *offscree
             qCDebug(QSG_LOG_INFO, "Using existing native D3D11 device %p and context %p",
                     importDev.dev, importDev.context);
             rhi = QRhi::create(backend, &rhiParams, flags, &importDev);
+        } else if (customDevD->type == QQuickGraphicsDevicePrivate::Type::Adapter) {
+            QRhiD3D11NativeHandles importDev;
+            importDev.adapterLuidLow = customDevD->u.adapter.luidLow;
+            importDev.adapterLuidHigh = customDevD->u.adapter.luidHigh;
+            importDev.featureLevel = customDevD->u.adapter.featureLevel;
+            qCDebug(QSG_LOG_INFO, "Using D3D11 adapter LUID %u, %d and feature level %d",
+                    importDev.adapterLuidLow, importDev.adapterLuidHigh, importDev.featureLevel);
+            rhi = QRhi::create(backend, &rhiParams, flags, &importDev);
         } else {
             rhi = QRhi::create(backend, &rhiParams, flags);
         }
@@ -638,8 +652,8 @@ QRhi *QSGRhiSupport::createRhi(QQuickWindow *window, QOffscreenSurface *offscree
         QRhiMetalInitParams rhiParams;
         if (customDevD->type == QQuickGraphicsDevicePrivate::Type::DeviceAndCommandQueue) {
             QRhiMetalNativeHandles importDev;
-            importDev.dev = customDevD->u.deviceAndCommandQueue.device;
-            importDev.cmdQueue = customDevD->u.deviceAndCommandQueue.cmdQueue;
+            importDev.dev = (MTLDevice *) customDevD->u.deviceAndCommandQueue.device;
+            importDev.cmdQueue = (MTLCommandQueue *) customDevD->u.deviceAndCommandQueue.cmdQueue;
             qCDebug(QSG_LOG_INFO, "Using existing native Metal device %p and command queue %p",
                     importDev.dev, importDev.cmdQueue);
             rhi = QRhi::create(backend, &rhiParams, flags, &importDev);

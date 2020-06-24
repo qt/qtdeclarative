@@ -42,6 +42,15 @@
 
 #include <QtQuick/qtquickglobal.h>
 
+#if QT_CONFIG(vulkan)
+#include <QtGui/QVulkanInstance>
+#endif
+
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+Q_FORWARD_DECLARE_OBJC_CLASS(MTLDevice);
+Q_FORWARD_DECLARE_OBJC_CLASS(MTLCommandQueue);
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QQuickGraphicsDevicePrivate;
@@ -57,10 +66,23 @@ public:
 
     bool isNull() const;
 
+#if QT_CONFIG(opengl) || defined(Q_CLANG_QDOC)
     static QQuickGraphicsDevice fromOpenGLContext(QOpenGLContext *context);
+#endif
+
+#if defined(Q_OS_WIN) || defined(Q_CLANG_QDOC)
+    static QQuickGraphicsDevice fromAdapter(quint32 adapterLuidLow, qint32 adapterLuidHigh, int featureLevel = 0);
     static QQuickGraphicsDevice fromDeviceAndContext(void *device, void *context);
-    static QQuickGraphicsDevice fromDeviceAndCommandQueue(void *device, void *cmdQueue);
-    static QQuickGraphicsDevice fromDeviceObjects(void *physicalDevice, void *device, int queueFamilyIndex);
+#endif
+
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_CLANG_QDOC)
+    static QQuickGraphicsDevice fromDeviceAndCommandQueue(MTLDevice *device, MTLCommandQueue *commandQueue);
+#endif
+
+#if QT_CONFIG(vulkan) || defined(Q_CLANG_QDOC)
+    static QQuickGraphicsDevice fromPhysicalDevice(VkPhysicalDevice physicalDevice);
+    static QQuickGraphicsDevice fromDeviceObjects(VkPhysicalDevice physicalDevice, VkDevice device, int queueFamilyIndex, int queueIndex = 0);
+#endif
 
 private:
     void detach();

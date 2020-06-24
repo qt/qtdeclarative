@@ -106,10 +106,11 @@ bool QQuickGraphicsDevice::isNull() const
 }
 
 /*!
-    \return a new QQuickGraphicsDevice referencing an existing QOpenGLContext.
+    \return a new QQuickGraphicsDevice referencing an existing OpenGL \a context.
 
     This factory function is suitable for OpenGL.
  */
+#if QT_CONFIG(opengl) || defined(Q_CLANG_QDOC)
 QQuickGraphicsDevice QQuickGraphicsDevice::fromOpenGLContext(QOpenGLContext *context)
 {
     QQuickGraphicsDevice dev;
@@ -118,25 +119,43 @@ QQuickGraphicsDevice QQuickGraphicsDevice::fromOpenGLContext(QOpenGLContext *con
     d->u.context = context;
     return dev;
 }
+#endif
+
+/*!
+    \return a new QQuickGraphicsDevice describing a DXGI adapter and D3D feature level.
+
+    This factory function is suitable for Direct3D 11, particularly in
+    combination with OpenXR. \a adapterLuidLow and \a adapterLuidHigh together
+    specify a LUID, while a featureLevel specifies a \c{D3D_FEATURE_LEVEL_}
+    value. \a featureLevel can be set to 0 if it is not intended to be
+    specified, in which case the scene graph's defaults will be used.
+ */
+#if defined(Q_OS_WIN) || defined(Q_CLANG_QDOC)
+QQuickGraphicsDevice QQuickGraphicsDevice::fromAdapter(quint32 adapterLuidLow,
+                                                       qint32 adapterLuidHigh,
+                                                       int featureLevel)
+{
+    QQuickGraphicsDevice dev;
+    QQuickGraphicsDevicePrivate *d = QQuickGraphicsDevicePrivate::get(&dev);
+    d->type = QQuickGraphicsDevicePrivate::Type::Adapter;
+    d->u.adapter = { adapterLuidLow, adapterLuidHigh, featureLevel };
+    return dev;
+}
+#endif
 
 /*!
     \return a new QQuickGraphicsDevice referencing a native device and context
     object.
 
-    This factory function is suitable for:
-
-    \list
-
-    \li Direct3D11 - \a device is expected to be a \c{ID3D11Device*}, \a
-    context is expected to be a \c{ID3D11DeviceContext*}.
-
-    \endlist
+    This factory function is suitable for Direct3D 11. \a device is expected to
+    be a \c{ID3D11Device*}, \a context is expected to be a
+    \c{ID3D11DeviceContext*}.
 
     \note the resulting QQuickGraphicsDevice does not own any native resources,
     it merely contains references. It is the caller's responsibility to ensure
     that the native resource exists as long as necessary.
-
  */
+#if defined(Q_OS_WIN) || defined(Q_CLANG_QDOC)
 QQuickGraphicsDevice QQuickGraphicsDevice::fromDeviceAndContext(void *device, void *context)
 {
     QQuickGraphicsDevice dev;
@@ -145,61 +164,76 @@ QQuickGraphicsDevice QQuickGraphicsDevice::fromDeviceAndContext(void *device, vo
     d->u.deviceAndContext = { device, context };
     return dev;
 }
+#endif
 
 /*!
-    \return a new QQuickGraphicsDevice referencing a native device and command
-    queue object.
+    \return a new QQuickGraphicsDevice referencing an existing \a device and
+    \a commandQueue object.
 
-    This factory function is suitable for:
-
-    \list
-
-    \li Metal - \a device is expected to be a \c{MTLDevice*}, \a cmdQueue is
-    expected to be a \c{MTLCommandQueue*}.
-
-    \endlist
+    This factory function is suitable for Metal.
 
     \note the resulting QQuickGraphicsDevice does not own any native resources,
     it merely contains references. It is the caller's responsibility to ensure
     that the native resource exists as long as necessary.
 
  */
-QQuickGraphicsDevice QQuickGraphicsDevice::fromDeviceAndCommandQueue(void *device, void *cmdQueue)
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_CLANG_QDOC)
+QQuickGraphicsDevice QQuickGraphicsDevice::fromDeviceAndCommandQueue(MTLDevice *device,
+                                                                     MTLCommandQueue *commandQueue)
 {
     QQuickGraphicsDevice dev;
     QQuickGraphicsDevicePrivate *d = QQuickGraphicsDevicePrivate::get(&dev);
     d->type = QQuickGraphicsDevicePrivate::Type::DeviceAndCommandQueue;
-    d->u.deviceAndCommandQueue = { device, cmdQueue };
+    d->u.deviceAndCommandQueue = { device, commandQueue };
     return dev;
 }
+#endif
 
 /*!
-    \return a new QQuickGraphicsDevice referencing a native device and related
-    objects.
+    \return a new QQuickGraphicsDevice referencing an existing \a physicalDevice.
 
-    This factory function is suitable for:
-
-    \list
-
-    \li Vulkan - \a physicalDevice is expected to be \c VkPhysicalDevice, \a
-    device is expected to be a \a VkDevice, while \a queueFamilyIndex is the
-    index of the graphics queue family on the device.
-
-    \endlist
+    This factory function is suitable for Vulkan, particularly in combination
+    with OpenXR.
 
     \note the resulting QQuickGraphicsDevice does not own any native resources,
     it merely contains references. It is the caller's responsibility to ensure
     that the native resource exists as long as necessary.
-
  */
-QQuickGraphicsDevice QQuickGraphicsDevice::fromDeviceObjects(void *physicalDevice, void *device, int queueFamilyIndex)
+#if QT_CONFIG(vulkan) || defined(Q_CLANG_QDOC)
+QQuickGraphicsDevice QQuickGraphicsDevice::fromPhysicalDevice(VkPhysicalDevice physicalDevice)
+{
+    QQuickGraphicsDevice dev;
+    QQuickGraphicsDevicePrivate *d = QQuickGraphicsDevicePrivate::get(&dev);
+    d->type = QQuickGraphicsDevicePrivate::Type::PhysicalDevice;
+    d->u.physicalDevice = { physicalDevice };
+    return dev;
+}
+#endif
+
+/*!
+    \return a new QQuickGraphicsDevice referencing an existing \a device object.
+
+    This factory function is suitable for Vulkan. \a physicalDevice, \a device
+    and \a queueFamilyIndex must always be provided. \a queueIndex is optional
+    since the default value of 0 is often suitable.
+
+    \note the resulting QQuickGraphicsDevice does not own any native resources,
+    it merely contains references. It is the caller's responsibility to ensure
+    that the native resource exists as long as necessary.
+ */
+#if QT_CONFIG(vulkan) || defined(Q_CLANG_QDOC)
+QQuickGraphicsDevice QQuickGraphicsDevice::fromDeviceObjects(VkPhysicalDevice physicalDevice,
+                                                             VkDevice device,
+                                                             int queueFamilyIndex,
+                                                             int queueIndex)
 {
     QQuickGraphicsDevice dev;
     QQuickGraphicsDevicePrivate *d = QQuickGraphicsDevicePrivate::get(&dev);
     d->type = QQuickGraphicsDevicePrivate::Type::DeviceObjects;
-    d->u.deviceObjects = { physicalDevice, device, queueFamilyIndex };
+    d->u.deviceObjects = { physicalDevice, device, queueFamilyIndex, queueIndex };
     return dev;
 }
+#endif
 
 QQuickGraphicsDevicePrivate::QQuickGraphicsDevicePrivate()
     : ref(1)
