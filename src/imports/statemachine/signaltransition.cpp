@@ -175,12 +175,15 @@ void SignalTransition::connectTriggered()
     int signalIndex = QMetaObjectPrivate::signalIndex(metaMethod);
 
     auto f = m_compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex];
-    QQmlBoundSignalExpression *expression =
-            ctxtdata ? new QQmlBoundSignalExpression(target, signalIndex, ctxtdata, this, f)
-                     : nullptr;
-    if (expression)
+    if (ctxtdata) {
+        QQmlRefPointer<QQmlBoundSignalExpression> expression(
+                new QQmlBoundSignalExpression(target, signalIndex, ctxtdata, this, f),
+                QQmlRefPointer<QQmlBoundSignalExpression>::Adopt);
         expression->setNotifyOnValueChanged(false);
-    m_signalExpression = expression;
+        m_signalExpression = expression;
+    } else {
+        m_signalExpression.adopt(nullptr);
+    }
 }
 
 void SignalTransitionParser::verifyBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QList<const QV4::CompiledData::Binding *> &props)
