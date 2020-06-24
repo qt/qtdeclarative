@@ -9285,7 +9285,7 @@ void tst_qqmlecmascript::bindingOnQProperty()
     QCOMPARE(test->property("changeHandlerCount").toInt(), 1);
 
     QVERIFY(qobject_cast<ClassWithQProperty*>(test.data()));
-    QProperty<int> &qprop = static_cast<ClassWithQProperty*>(test.data())->value;
+    QProperty<float> &qprop = static_cast<ClassWithQProperty*>(test.data())->value;
     QVERIFY(qprop.hasBinding());
 }
 

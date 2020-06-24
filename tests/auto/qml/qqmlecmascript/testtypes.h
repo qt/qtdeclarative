@@ -1727,9 +1727,9 @@ public:
 struct ClassWithQProperty : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(int value)
+    Q_PROPERTY(float value)
 public:
-    QProperty<int> value;
+    QProperty<float> value;
 };
 
 void registerTypes();

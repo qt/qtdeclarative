@@ -108,8 +108,10 @@ QUntypedPropertyBinding::BindingEvaluationResult QQmlPropertyBinding::evaluate(c
     }
 
     QVariant resultVariant(scope.engine->toVariant(result, metaType.id()));
-    QMetaType::destruct(metaType.id(), dataPtr);
-    QMetaType::construct(metaType.id(), dataPtr, resultVariant.constData());
+    auto metaTypeId= metaType.id();
+    resultVariant.convert(metaTypeId);
+    QMetaType::destruct(metaTypeId, dataPtr);
+    QMetaType::construct(metaTypeId, dataPtr, resultVariant.constData());
     return QPropertyBindingError::NoError;
 }
 
