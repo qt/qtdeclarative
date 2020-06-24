@@ -50,7 +50,6 @@
 #include <private/qjsvalue_p.h>
 #include <private/qv4scopedvalue_p.h>
 #include <private/qqmlcontext_p.h>
-#include <private/qqmlboundsignal_p.h>
 
 SignalTransition::SignalTransition(QState *parent)
     : QSignalTransition(this, SIGNAL(invokeYourself()), parent), m_complete(false), m_signalExpression(nullptr)

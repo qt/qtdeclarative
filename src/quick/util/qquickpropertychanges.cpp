@@ -146,17 +146,17 @@ public:
     EventType type() const override { return SignalHandler; }
 
     QQmlProperty property;
-    QQmlBoundSignalExpressionPointer expression;
-    QQmlBoundSignalExpressionPointer reverseExpression;
-    QQmlBoundSignalExpressionPointer rewindExpression;
+    QQmlRefPointer<QQmlBoundSignalExpression> expression;
+    QQmlRefPointer<QQmlBoundSignalExpression> reverseExpression;
+    QQmlRefPointer<QQmlBoundSignalExpression> rewindExpression;
 
     void execute() override {
-        QQmlPropertyPrivate::setSignalExpression(property, expression);
+        QQmlPropertyPrivate::setSignalExpression(property, expression.data());
     }
 
     bool isReversable() override { return true; }
     void reverse() override {
-        QQmlPropertyPrivate::setSignalExpression(property, reverseExpression);
+        QQmlPropertyPrivate::setSignalExpression(property, reverseExpression.data());
     }
 
     void saveOriginals() override {
@@ -175,7 +175,7 @@ public:
     }
 
     void rewind() override {
-        QQmlPropertyPrivate::setSignalExpression(property, rewindExpression);
+        QQmlPropertyPrivate::setSignalExpression(property, rewindExpression.data());
     }
     void saveCurrentValues() override {
         rewindExpression = QQmlPropertyPrivate::signalExpression(property);
@@ -292,8 +292,11 @@ void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, 
         if (prop.isSignalProperty()) {
             QQuickReplaceSignalHandler *handler = new QQuickReplaceSignalHandler;
             handler->property = prop;
-            handler->expression.take(new QQmlBoundSignalExpression(object, QQmlPropertyPrivate::get(prop)->signalIndex(),
-                                                                   QQmlContextData::get(qmlContext(q)), object, compilationUnit->runtimeFunctions.at(binding->value.compiledScriptIndex)));
+            handler->expression.adopt(
+                        new QQmlBoundSignalExpression(
+                            object, QQmlPropertyPrivate::get(prop)->signalIndex(),
+                            QQmlContextData::get(qmlContext(q)), object,
+                            compilationUnit->runtimeFunctions.at(binding->value.compiledScriptIndex)));
             signalReplacements << handler;
             return;
         }

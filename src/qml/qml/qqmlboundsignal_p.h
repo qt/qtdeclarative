@@ -54,7 +54,6 @@
 #include <QtCore/qmetaobject.h>
 
 #include <private/qqmljavascriptexpression_p.h>
-#include <private/qqmlboundsignalexpressionpointer_p.h>
 #include <private/qqmlnotifier_p.h>
 #include <private/qflagpointer_p.h>
 #include <private/qqmlrefcount_p.h>
@@ -123,7 +122,7 @@ private:
 
     bool m_enabled;
 
-    QQmlBoundSignalExpressionPointer m_expression;
+    QQmlRefPointer<QQmlBoundSignalExpression> m_expression;
 };
 
 class QQmlPropertyObserver : public QPropertyObserver
@@ -132,7 +131,7 @@ public:
     QQmlPropertyObserver(QQmlBoundSignalExpression *expr);
 
 private:
-    QQmlBoundSignalExpressionPointer expression;
+    QQmlRefPointer<QQmlBoundSignalExpression> expression;
 };
 
 QT_END_NAMESPACE

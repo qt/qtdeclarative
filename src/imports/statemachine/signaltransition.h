@@ -47,7 +47,8 @@
 #include <QtQml/qqmlscriptstring.h>
 #include <QtQml/qqmlparserstatus.h>
 #include <private/qqmlcustomparser_p.h>
-#include <private/qqmlboundsignalexpressionpointer_p.h>
+#include <private/qqmlrefcount_p.h>
+#include <private/qqmlboundsignal_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -93,7 +94,7 @@ private:
     bool m_complete;
     QQmlRefPointer<QV4::ExecutableCompilationUnit> m_compilationUnit;
     QList<const QV4::CompiledData::Binding *> m_bindings;
-    QQmlBoundSignalExpressionPointer m_signalExpression;
+    QQmlRefPointer<QQmlBoundSignalExpression> m_signalExpression;
 };
 
 class SignalTransitionParser : public QQmlCustomParser

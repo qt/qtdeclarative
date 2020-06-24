@@ -189,7 +189,6 @@ qt_add_module(Qml
         qml/qqmlapplicationengine.cpp qml/qqmlapplicationengine.h qml/qqmlapplicationengine_p.h
         qml/qqmlbinding.cpp qml/qqmlbinding_p.h
         qml/qqmlboundsignal.cpp qml/qqmlboundsignal_p.h
-        qml/qqmlboundsignalexpressionpointer_p.h
         qml/qqmlcleanup.cpp qml/qqmlcleanup_p.h
         qml/qqmlcomponent.cpp qml/qqmlcomponent.h qml/qqmlcomponent_p.h
         qml/qqmlcomponentattached_p.h
@@ -576,7 +575,7 @@ qt_extend_target(Qml CONDITION DEFINES___contains___WTF_USE_UDIS86=1
 # QMAKE_EXTRA_COMPILERS = "udis86"
 # QMAKE_EXTRA_TARGETS = "udis86_tab_cfile"
 # udis86.CONFIG = "no_link"
-# udis86.commands = "$QMAKE_PYTHON" "$$PWD/disassembler/udis86/itab.py" "${QMAKE_FILE_IN}"
+# udis86.commands = "$$QMAKE_PYTHON" "$$PWD/disassembler/udis86/itab.py" "${QMAKE_FILE_IN}"
 # udis86.input = "ITAB"
 # udis86.output = "udis86_itab.h"
 # udis86_tab_cfile.depends = "udis86_itab.h"

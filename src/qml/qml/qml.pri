@@ -93,7 +93,6 @@ HEADERS += \
     $$PWD/qqmlpropertyvaluesource.h \
     $$PWD/qqmlpropertyvalueinterceptor_p.h \
     $$PWD/qqmlboundsignal_p.h \
-    $$PWD/qqmlboundsignalexpressionpointer_p.h \
     $$PWD/qqmlparserstatus.h \
     $$PWD/qqmlproxymetaobject_p.h \
     $$PWD/qqmlvme_p.h \

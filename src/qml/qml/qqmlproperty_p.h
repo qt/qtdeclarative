@@ -58,7 +58,6 @@
 #include <private/qtqmlglobal_p.h>
 #include <private/qqmlrefcount_p.h>
 #include <private/qqmlcontextdata_p.h>
-#include <private/qqmlboundsignalexpressionpointer_p.h>
 #include <private/qqmlpropertydata_p.h>
 #include <private/qqmlpropertyindex_p.h>
 
@@ -69,6 +68,7 @@ class QQmlEnginePrivate;
 class QQmlJavaScriptExpression;
 class QQmlMetaObject;
 class QQmlAbstractBinding;
+class QQmlBoundSignalExpression;
 
 class Q_QML_PRIVATE_EXPORT QQmlPropertyPrivate : public QQmlRefCount
 {

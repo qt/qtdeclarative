@@ -299,13 +299,12 @@ void QQmlBoundSignal::removeFromObject()
     }
 }
 
-
 /*!
     Returns the signal expression.
 */
 QQmlBoundSignalExpression *QQmlBoundSignal::expression() const
 {
-    return m_expression;
+    return m_expression.data();
 }
 
 /*!
@@ -315,7 +314,7 @@ QQmlBoundSignalExpression *QQmlBoundSignal::expression() const
 */
 void QQmlBoundSignal::takeExpression(QQmlBoundSignalExpression *e)
 {
-    m_expression.take(e);
+    m_expression.adopt(e);
     if (m_expression)
         m_expression->setNotifyOnValueChanged(false);
 }
@@ -354,7 +353,8 @@ void QQmlBoundSignal_callback(QQmlNotifierEndpoint *e, void **a)
                       s->m_expression->function() ? s->m_expression->function()->name()->toQString() : QString(),
                       s->m_expression->sourceLocation().sourceFile, s->m_expression->sourceLocation().line,
                       s->m_expression->sourceLocation().column);
-        QQmlHandlingSignalProfiler prof(QQmlEnginePrivate::get(engine)->profiler, s->m_expression);
+        QQmlHandlingSignalProfiler prof(QQmlEnginePrivate::get(engine)->profiler,
+                                        s->m_expression.data());
         s->m_expression->evaluate(a);
         if (s->m_expression && s->m_expression->hasError()) {
             QQmlEnginePrivate::warning(engine, s->m_expression->error(engine));
@@ -364,57 +364,13 @@ void QQmlBoundSignal_callback(QQmlNotifierEndpoint *e, void **a)
 
 ////////////////////////////////////////////////////////////////////////
 
-QQmlBoundSignalExpressionPointer::QQmlBoundSignalExpressionPointer(QQmlBoundSignalExpression *o)
-: o(o)
-{
-    if (o) o->addref();
-}
-
-QQmlBoundSignalExpressionPointer::QQmlBoundSignalExpressionPointer(const QQmlBoundSignalExpressionPointer &other)
-: o(other.o)
-{
-    if (o) o->addref();
-}
-
-QQmlBoundSignalExpressionPointer::~QQmlBoundSignalExpressionPointer()
-{
-    if (o) o->release();
-}
-
-QQmlBoundSignalExpressionPointer &QQmlBoundSignalExpressionPointer::operator=(const QQmlBoundSignalExpressionPointer &other)
-{
-    if (other.o) other.o->addref();
-    if (o) o->release();
-    o = other.o;
-    return *this;
-}
-
-QQmlBoundSignalExpressionPointer &QQmlBoundSignalExpressionPointer::operator=(QQmlBoundSignalExpression *other)
-{
-    if (other) other->addref();
-    if (o) o->release();
-    o = other;
-    return *this;
-}
-
-/*!
-Takes ownership of \a other.  take() does *not* add a reference, as it assumes ownership
-of the callers reference of other.
-*/
-QQmlBoundSignalExpressionPointer &QQmlBoundSignalExpressionPointer::take(QQmlBoundSignalExpression *other)
-{
-    if (o) o->release();
-    o = other;
-    return *this;
-}
-
 QQmlPropertyObserver::QQmlPropertyObserver(QQmlBoundSignalExpression *expr)
     : QPropertyObserver([](QPropertyObserver *self, void *) {
                            auto This = static_cast<QQmlPropertyObserver*>(self);
                            This->expression->evaluate(QList<QVariant>());
                        })
 {
-    expression.take(expr);
+    expression.adopt(expr);
 }
 
 QT_END_NAMESPACE
