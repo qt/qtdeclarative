@@ -53,6 +53,7 @@ private Q_SLOTS:
     void testReadOnlyProps();
     void testVerbatimStrings();
     void testLargeBindings();
+    void testInlineComponents();
 
 #if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
     void testExample();
@@ -223,6 +224,12 @@ void TestQmlformat::testVerbatimStrings()
 {
     QCOMPARE(runQmlformat(testFile("verbatimString.qml"), false, true),
              readTestFile("verbatimString.formatted.qml"));
+}
+
+void TestQmlformat::testInlineComponents()
+{
+    QCOMPARE(runQmlformat(testFile("inlineComponents.qml"), false, true),
+             readTestFile("inlineComponents.formatted.qml"));
 }
 
 void TestQmlformat::testLargeBindings()
