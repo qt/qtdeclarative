@@ -415,7 +415,7 @@ bool QQmlPropertyCache::isAllowedInRevision(QQmlPropertyData *data) const
 
     Q_ASSERT(offset >= 0);
     Q_ASSERT(offset < allowedRevisionCache.length());
-    const QTypeRevision allowed = allowedRevisionCache[data->metaObjectOffset()];
+    const QTypeRevision allowed = allowedRevisionCache[offset];
 
     if (requested.hasMajorVersion()) {
         if (requested.majorVersion() > allowed.majorVersion())
