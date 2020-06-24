@@ -187,6 +187,8 @@ QT_BEGIN_NAMESPACE
 
     \note All classes with QSG prefix should be used solely on the scene graph's
     rendering thread. See \l {Scene Graph and Rendering} for more information.
+
+    \sa QSGMaterial, {Scene Graph - Custom Material}, {Scene Graph - Two Texture Providers}, {Scene Graph - Graph}
  */
 
 /*!

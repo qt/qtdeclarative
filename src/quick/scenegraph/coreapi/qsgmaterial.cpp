@@ -123,8 +123,14 @@ static void qt_print_material_count()
         };
     \endcode
 
+    See the \l{Scene Graph - Custom Material}{Custom Material example} for an introduction
+    on implementing a QQuickItem subclass backed by a QSGGeometryNode and a custom
+    material.
+
     \note All classes with QSG prefix should be used solely on the scene graph's
     rendering thread. See \l {Scene Graph and Rendering} for more information.
+
+    \sa QSGMaterialShader, {Scene Graph - Custom Material}, {Scene Graph - Two Texture Providers}, {Scene Graph - Graph}
  */
 
 /*!
