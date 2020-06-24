@@ -511,13 +511,8 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     break;
     case QMetaType::QDateTime: {
         bool ok = false;
-        QDateTime value = QQmlStringConverters::dateTimeFromString(compilationUnit->bindingValueAsString(binding), &ok);
-        // ### VME compatibility :(
-        {
-            const qint64 date = value.date().toJulianDay();
-            const int msecsSinceStartOfDay = value.time().msecsSinceStartOfDay();
-            value = QDateTime(QDate::fromJulianDay(date), QTime::fromMSecsSinceStartOfDay(msecsSinceStartOfDay));
-        }
+        QDateTime value = QQmlStringConverters::dateTimeFromString(
+                    compilationUnit->bindingValueAsString(binding), &ok);
         assertOrNull(ok);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }

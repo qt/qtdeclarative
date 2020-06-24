@@ -471,7 +471,7 @@ void tst_qqmlecmascript::assignBasicTypes()
     QCOMPARE(object->colorProperty(), QColor("red"));
     QCOMPARE(object->dateProperty(), QDate(1982, 11, 25));
     QCOMPARE(object->timeProperty(), QTime(11, 11, 32));
-    QCOMPARE(object->dateTimeProperty(), QDateTime(QDate(2009, 5, 12), QTime(13, 22, 1), Qt::UTC));
+    QCOMPARE(object->dateTimeProperty(), QDateTime(QDate(2009, 5, 12), QTime(13, 22, 1)));
     QCOMPARE(object->pointProperty(), QPoint(99,13));
     QCOMPARE(object->pointFProperty(), QPointF(-10.1, 12.3));
     QCOMPARE(object->sizeProperty(), QSize(99, 13));
@@ -500,7 +500,7 @@ void tst_qqmlecmascript::assignBasicTypes()
     QCOMPARE(object->colorProperty(), QColor("red"));
     QCOMPARE(object->dateProperty(), QDate(1982, 11, 25));
     QCOMPARE(object->timeProperty(), QTime(11, 11, 32));
-    QCOMPARE(object->dateTimeProperty(), QDateTime(QDate(2009, 5, 12), QTime(13, 22, 1), Qt::UTC));
+    QCOMPARE(object->dateTimeProperty(), QDateTime(QDate(2009, 5, 12), QTime(13, 22, 1)));
     QCOMPARE(object->pointProperty(), QPoint(99,13));
     QCOMPARE(object->pointFProperty(), QPointF(-10.1, 12.3));
     QCOMPARE(object->sizeProperty(), QSize(99, 13));

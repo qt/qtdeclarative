@@ -125,9 +125,6 @@ QDateTime QQmlStringConverters::dateTimeFromString(const QString &s, bool *ok)
 {
     QDateTime d = QDateTime::fromString(s, Qt::ISODate);
     if (ok) *ok =  d.isValid();
-    // V8 never parses a date string as local time.  For consistency do the same here.
-    if (d.timeSpec() == Qt::LocalTime)
-        d.setTimeSpec(Qt::UTC);
     return d;
 }
 #endif // datestring
