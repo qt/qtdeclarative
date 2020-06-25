@@ -40,8 +40,8 @@
 #include "../shared/visualtestutil.h"
 #include "../shared/qtest_quickcontrols.h"
 
+#include <QtGui/qpointingdevice.h>
 #include <QtGui/qstylehints.h>
-#include <QtGui/qtouchdevice.h>
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qpa/qwindowsysteminterface.h>
 #include <QtQuick/private/qquickwindow_p.h>
@@ -112,16 +112,7 @@ private slots:
     void topEdgeScreenEdge();
 
 private:
-    struct TouchDeviceDeleter
-    {
-        static inline void cleanup(QTouchDevice *device)
-        {
-            QWindowSystemInterface::unregisterTouchDevice(device);
-            delete device;
-        }
-    };
-
-    QScopedPointer<QTouchDevice, TouchDeviceDeleter> touchDevice;
+    QScopedPointer<QPointingDevice> touchDevice;
 };
 
 
@@ -130,9 +121,7 @@ void tst_QQuickDrawer::initTestCase()
     QQmlDataTest::initTestCase();
     qputenv("QML_NO_TOUCH_COMPRESSION", "1");
 
-    touchDevice.reset(new QTouchDevice);
-    touchDevice->setType(QTouchDevice::TouchScreen);
-    QWindowSystemInterface::registerTouchDevice(touchDevice.data());
+    touchDevice.reset(QTest::createTouchDevice());
 }
 
 void tst_QQuickDrawer::defaults()

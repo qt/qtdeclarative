@@ -303,18 +303,7 @@ void tst_QQuickPopup::overlay()
     QVERIFY(popup->isVisible());
     QVERIFY(overlay->isVisible());
 
-    struct TouchDeviceDeleter
-    {
-        static inline void cleanup(QTouchDevice *device)
-        {
-            QWindowSystemInterface::unregisterTouchDevice(device);
-            delete device;
-        }
-    };
-
-    QScopedPointer<QTouchDevice, TouchDeviceDeleter> device(new QTouchDevice);
-    device->setType(QTouchDevice::TouchScreen);
-    QWindowSystemInterface::registerTouchDevice(device.data());
+    QScopedPointer<QPointingDevice> device(QTest::createTouchDevice());
 
     QTest::touchEvent(window, device.data()).press(0, QPoint(1, 1));
     QCOMPARE(overlayPressedSignal.count(), ++overlayPressCount);
