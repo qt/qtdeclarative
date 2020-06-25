@@ -2029,7 +2029,7 @@ const QQuickSplitHandleAttachedPrivate *QQuickSplitHandleAttachedPrivate::get(co
 }
 
 QQuickSplitHandleAttached::QQuickSplitHandleAttached(QObject *parent)
-    : QObject(*(new QQuickSplitViewAttachedPrivate), parent)
+    : QObject(*(new QQuickSplitHandleAttachedPrivate), parent)
 {
 }
 
