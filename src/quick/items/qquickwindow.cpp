@@ -5688,6 +5688,44 @@ void QQuickWindow::setGraphicsApi(QSGRendererInterface::GraphicsApi api)
 }
 
 /*!
+    \return the graphics API that would be used by the scene graph if it was
+    initialized at this point in time.
+
+    The standard way to query the API used by the scene graph is to use
+    QSGRendererInterface::graphicsApi() once the scene graph has initialized,
+    for example when or after the sceneGraphInitialized() signal is emitted. In
+    that case one gets the true, real result, because then it is known that
+    everything was initialized correctly using that graphics API.
+
+    This is not always convenient. If the application needs to set up external
+    frameworks, or needs to work with setGraphicsDevice() in a manner that
+    depends on the scene graph's built in API selection logic, it is not always
+    feasiable to defer such operations until after the QQuickWindow has been
+    made visible or QQuickRenderControl::initialize() has been called.
+
+    Therefore, this static function is provided as a counterpart to
+    setGraphicsApi(): it can be called at any time, and the result reflects
+    what API the scene graph would choose if it was initialized at the point of
+    the call.
+
+    \note This static function is intended to be called on the main (gui)
+    thread only. For querying the API when rendering, use QSGRendererInterface
+    since that object lives on the render thread.
+
+    \note This function does not take scene graph backends into account.
+
+    \since 6.0
+ */
+QSGRendererInterface::GraphicsApi QQuickWindow::graphicsApi()
+{
+    // Note that this applies the settings e.g. from the env vars
+    // (QSG_RHI_BACKEND) if it was not done at least once already. Whereas if
+    // setGraphicsApi() was called before, or the scene graph is already
+    // initialized, then this is just a simple query.
+    return QSGRhiSupport::instance()->graphicsApi();
+}
+
+/*!
     Requests a Qt Quick scenegraph \a backend. Backends can either be built-in
     or be installed in form of dynamically loaded plugins.
 

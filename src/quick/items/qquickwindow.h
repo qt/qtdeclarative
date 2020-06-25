@@ -183,6 +183,7 @@ public:
     QSGRendererInterface *rendererInterface() const;
 
     static void setGraphicsApi(QSGRendererInterface::GraphicsApi api);
+    static QSGRendererInterface::GraphicsApi graphicsApi();
 
     static void setSceneGraphBackend(const QString &backend);
     static QString sceneGraphBackend();

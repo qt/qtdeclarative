@@ -117,6 +117,8 @@ QSGRhiSupport::QSGRhiSupport()
 
 void QSGRhiSupport::applySettings()
 {
+    // Multiple calls to this function are perfectly possible!
+    // Just store that it was called at least once.
     m_settingsApplied = true;
 
     // This is also done when creating the renderloop but we may be before that
