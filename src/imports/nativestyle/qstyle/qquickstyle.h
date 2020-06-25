@@ -543,6 +543,7 @@ public:
         CT_Menu,
         CT_TabBarTab,
         CT_Slider,
+        CT_Dial,
         CT_ScrollBar,
         CT_LineEdit,
         CT_SpinBox,

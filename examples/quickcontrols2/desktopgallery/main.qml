@@ -86,6 +86,7 @@ ApplicationWindow {
                 TextFields { }
                 TextAreas { }
                 ComboBoxes { }
+                Dials { }
                 Frames { }
                 ProgressBars { }
                 ScrollBars { }
@@ -112,6 +113,7 @@ ApplicationWindow {
                 CustomTextFields { }
                 CustomTextAreas { }
                 CustomComboBoxes { }
+                CustomDials { }
                 CustomFrames { }
                 CustomProgressBars { }
                 CustomScrollBars { }

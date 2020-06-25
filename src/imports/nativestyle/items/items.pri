@@ -14,6 +14,7 @@ HEADERS += \
     $$PWD/qquickstyleitemcombobox.h \
     $$PWD/qquickstyleitemscrollbar.h \
     $$PWD/qquickstyleitemprogressbar.h \
+    $$PWD/qquickstyleitemdial.h \
 
 SOURCES += \
     $$PWD/qquickstyleitem.cpp \
@@ -29,3 +30,4 @@ SOURCES += \
     $$PWD/qquickstyleitemcombobox.cpp \
     $$PWD/qquickstyleitemscrollbar.cpp \
     $$PWD/qquickstyleitemprogressbar.cpp \
+    $$PWD/qquickstyleitemdial.cpp \

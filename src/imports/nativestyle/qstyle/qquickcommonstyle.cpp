@@ -4666,6 +4666,8 @@ QSize QCommonStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt, c
         if (const QStyleOptionSlider *option = qstyleoption_cast<const QStyleOptionSlider *>(opt))
             sz = subControlRect(QStyle::CC_Slider, option, QStyle::SC_SliderHandle).size();
         break;
+    case CT_Dial:
+        sz = QSize(20, 20);
     case CT_Frame:
         if (const QStyleOptionFrame *option = qstyleoption_cast<const QStyleOptionFrame *>(opt)) {
             const int ninePatchSplit = 1;

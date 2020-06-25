@@ -30,6 +30,8 @@ QML_FILES = \
     CustomScrollBars.qml \
     ProgressBars.qml \
     CustomProgressBars.qml \
+    Dials.qml \
+    CustomDials.qml \
 
 OTHER_FILES += $$QML_FILES
 RESOURCES += $$QML_FILES

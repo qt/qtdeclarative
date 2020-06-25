@@ -11,3 +11,4 @@ QML_FILES += \
     $$PWD/ComboBox.qml \
     $$PWD/ScrollBar.qml \
     $$PWD/ProgressBar.qml \
+    $$PWD/Dial.qml \
