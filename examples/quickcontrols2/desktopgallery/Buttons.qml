@@ -91,5 +91,10 @@ ControlContainer {
             text: "Flat"
             flat: true
         }
+
+        Button {
+            text: "Checkable"
+            checkable: true
+        }
     }
 }

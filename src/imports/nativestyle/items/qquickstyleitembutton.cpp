@@ -80,7 +80,7 @@ void QQuickStyleItemButton::initStyleOption(QStyleOptionButton &styleOption)
         styleOption.state |= QStyle::State_Sunken;
     if (!button->isFlat() && !button->isDown())
         styleOption.state |= QStyle::State_Raised;
-    if (button->isHighlighted())
+    if (button->isHighlighted() || button->isChecked())
         styleOption.state |= QStyle::State_On;
     if (button->isFlat())
         styleOption.features |= QStyleOptionButton::Flat;
