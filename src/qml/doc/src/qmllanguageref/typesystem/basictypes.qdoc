@@ -261,6 +261,11 @@ property is only invoked when the property is reassigned to a different object v
     \l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
     converted into a \c url value, and vice-versa.
 
+    Alternatively you may convert your \c url to a \l{https://developer.mozilla.org/en-US/docs/Web/API/URL}{URL} object
+    in order to access and modify its components:
+    \qml
+    var urlObject = new URL(url);
+    \endqml
 
     \section1 Using the url Type
 
