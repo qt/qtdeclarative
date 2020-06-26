@@ -41,6 +41,7 @@
 #define QQUICKRENDERTARGET_H
 
 #include <QtQuick/qtquickglobal.h>
+#include <QtCore/qsize.h>
 
 #if QT_CONFIG(vulkan)
 #include <QtGui/QVulkanInstance>
