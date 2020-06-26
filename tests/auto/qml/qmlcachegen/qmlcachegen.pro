@@ -28,11 +28,12 @@ workerscripts_test.prefix = /workerscripts
 RESOURCES += \
     workerscripts_test \
     trickypaths.qrc \
-    data/retain.qrc
+    data/retain.qrc \
+    data/skip.qrc
 
 # QTBUG-46375
 !win32: RESOURCES += trickypaths_umlaut.qrc
 
-QTQUICK_COMPILER_RETAINED_RESOURCES += retain.qrc
+QTQUICK_COMPILER_SKIPPED_RESOURCES += data/skip.qrc
 
 QT += core-private qml-private testlib
