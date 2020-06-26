@@ -151,8 +151,8 @@ private:
 
 static QObject *test_module_api_factory(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
-   Q_UNUSED(engine)
-   Q_UNUSED(scriptEngine)
+   Q_UNUSED(engine);
+   Q_UNUSED(scriptEngine);
    TestModuleApi *api = new TestModuleApi;
    return api;
 }

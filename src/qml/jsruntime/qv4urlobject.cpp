@@ -62,7 +62,7 @@ void Heap::UrlCtor::init(QV4::ExecutionContext *scope)
 
 void UrlPrototype::init(ExecutionEngine *engine, Object *ctor)
 {
-    Q_UNUSED(ctor)
+    Q_UNUSED(ctor);
 
     Scope scope(engine);
     ScopedObject o(scope);
@@ -721,7 +721,7 @@ void Heap::UrlSearchParamsCtor::init(QV4::ExecutionContext *scope)
 
 void UrlSearchParamsPrototype::init(ExecutionEngine *engine, Object *ctor)
 {
-    Q_UNUSED(ctor)
+    Q_UNUSED(ctor);
 
     Scope scope(engine);
     ScopedObject o(scope);

@@ -2572,8 +2572,8 @@ bool QQml_isFileCaseCorrect(const QString &fileName, int lengthIn /* = -1 */)
             return false;
     }
 #else
-    Q_UNUSED(lengthIn)
-    Q_UNUSED(fileName)
+    Q_UNUSED(lengthIn);
+    Q_UNUSED(fileName);
 #endif
     return true;
 }

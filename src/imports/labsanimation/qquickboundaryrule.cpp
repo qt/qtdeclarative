@@ -117,7 +117,7 @@ void QQuickBoundaryReturnJob::updateCurrentTime(int t)
 
 void QQuickBoundaryReturnJob::updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState)
 {
-    Q_UNUSED(oldState)
+    Q_UNUSED(oldState);
     if (newState == QAbstractAnimationJob::Stopped) {
         qCDebug(lcBR) << "return animation done";
         boundaryRule->resetOvershoot();

@@ -136,7 +136,7 @@ void MyQmlObject::v8function(QQmlV4Function *function)
 
 static QJSValue script_api(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
-    Q_UNUSED(engine)
+    Q_UNUSED(engine);
 
     static int testProperty = 13;
     QJSValue v = scriptEngine->newObject();
@@ -146,7 +146,7 @@ static QJSValue script_api(QQmlEngine *engine, QJSEngine *scriptEngine)
 
 static QJSValue readonly_script_api(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
-    Q_UNUSED(engine)
+    Q_UNUSED(engine);
 
     static int testProperty = 42;
     QJSValue v = scriptEngine->newObject();
@@ -161,8 +161,8 @@ static QJSValue readonly_script_api(QQmlEngine *engine, QJSEngine *scriptEngine)
 
 static QObject *testImportOrder_api(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
-    Q_UNUSED(engine)
-    Q_UNUSED(scriptEngine)
+    Q_UNUSED(engine);
+    Q_UNUSED(scriptEngine);
 
     testImportOrderApi *o = new testImportOrderApi(37);
     return o;
@@ -170,8 +170,8 @@ static QObject *testImportOrder_api(QQmlEngine *engine, QJSEngine *scriptEngine)
 
 static QObject *testImportOrder_api1(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
-    Q_UNUSED(engine)
-    Q_UNUSED(scriptEngine)
+    Q_UNUSED(engine);
+    Q_UNUSED(scriptEngine);
 
     testImportOrderApi *o = new testImportOrderApi(1);
     return o;
@@ -179,8 +179,8 @@ static QObject *testImportOrder_api1(QQmlEngine *engine, QJSEngine *scriptEngine
 
 static QObject *testImportOrder_api2(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
-    Q_UNUSED(engine)
-    Q_UNUSED(scriptEngine)
+    Q_UNUSED(engine);
+    Q_UNUSED(scriptEngine);
 
     testImportOrderApi *o = new testImportOrderApi(2);
     return o;
@@ -188,8 +188,8 @@ static QObject *testImportOrder_api2(QQmlEngine *engine, QJSEngine *scriptEngine
 
 static QObject *qobject_api(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
-    Q_UNUSED(engine)
-    Q_UNUSED(scriptEngine)
+    Q_UNUSED(engine);
+    Q_UNUSED(scriptEngine);
 
     testQObjectApi *o = new testQObjectApi();
     o->setQObjectTestProperty(20);
@@ -200,8 +200,8 @@ static QObject *qobject_api(QQmlEngine *engine, QJSEngine *scriptEngine)
 
 static QObject *qobject_api_two(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
-    Q_UNUSED(engine)
-    Q_UNUSED(scriptEngine)
+    Q_UNUSED(engine);
+    Q_UNUSED(scriptEngine);
 
     testQObjectApiTwo *o = new testQObjectApiTwo;
     return o;
@@ -209,7 +209,7 @@ static QObject *qobject_api_two(QQmlEngine *engine, QJSEngine *scriptEngine)
 
 static QObject *qobject_api_engine_parent(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
-    Q_UNUSED(scriptEngine)
+    Q_UNUSED(scriptEngine);
 
     static int testProperty = 26;
     testQObjectApi *o = new testQObjectApi(engine);
@@ -219,16 +219,16 @@ static QObject *qobject_api_engine_parent(QQmlEngine *engine, QJSEngine *scriptE
 
 static QObject *fallback_bindings_object(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
-    Q_UNUSED(engine)
-    Q_UNUSED(scriptEngine)
+    Q_UNUSED(engine);
+    Q_UNUSED(scriptEngine);
 
     return new FallbackBindingsObject();
 }
 
 static QObject *fallback_bindings_derived(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
-    Q_UNUSED(engine)
-    Q_UNUSED(scriptEngine)
+    Q_UNUSED(engine);
+    Q_UNUSED(scriptEngine);
 
     return new FallbackBindingsDerived();
 }

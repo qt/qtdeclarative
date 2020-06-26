@@ -301,7 +301,7 @@ private:
     }
     void releaseView(QQuickView *view) {
         Q_ASSERT(view == m_view);
-        Q_UNUSED(view)
+        Q_UNUSED(view);
         m_view->setSource(QUrl());
     }
 #else

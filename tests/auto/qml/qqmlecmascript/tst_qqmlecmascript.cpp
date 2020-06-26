@@ -4296,7 +4296,7 @@ void tst_qqmlecmascript::verifyContextLifetime(const QQmlRefPointer<QQmlContextD
             {
                 QV4::Scope scope(v4);
                 QV4::ScopedContext temporaryScope(scope, QV4::QmlContext::create(scope.engine->rootContext(), scriptContext, nullptr));
-                Q_UNUSED(temporaryScope)
+                Q_UNUSED(temporaryScope);
             }
 
             ctxt->engine()->collectGarbage();

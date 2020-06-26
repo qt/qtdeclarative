@@ -159,7 +159,7 @@ QSGRenderContext *QSGOpenVGRenderLoop::createRenderContext(QSGContext *) const
 
 void QSGOpenVGRenderLoop::releaseResources(QQuickWindow *window)
 {
-    Q_UNUSED(window)
+    Q_UNUSED(window);
 }
 
 QSurface::SurfaceType QSGOpenVGRenderLoop::windowSurfaceType() const

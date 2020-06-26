@@ -229,7 +229,7 @@ public:
 public Q_SLOTS:
     void checkFinished(QObject *o, const QUrl &url)
     {
-        Q_UNUSED(url)
+        Q_UNUSED(url);
         if (o) {
             checkForWindow(o);
             if (conf && qae)
@@ -286,7 +286,7 @@ void LoadWatcher::checkForWindow(QObject *o)
     if (o->isWindowType() && o->inherits("QQuickWindow"))
         haveWindow = true;
 #else
-    Q_UNUSED(o)
+    Q_UNUSED(o);
 #endif // QT_GUI_LIB
 }
 
@@ -338,8 +338,8 @@ static void getAppFlags(int argc, char **argv)
         }
     }
 #else
-    Q_UNUSED(argc)
-    Q_UNUSED(argv)
+    Q_UNUSED(argc);
+    Q_UNUSED(argv);
 #endif // QT_GUI_LIB
 }
 

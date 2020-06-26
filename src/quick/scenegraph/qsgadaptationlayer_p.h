@@ -142,7 +142,7 @@ public:
     virtual void setGradientStops(const QGradientStops &stops) = 0;
     virtual void setGradientVertical(bool vertical) = 0;
     virtual void setRadius(qreal radius) = 0;
-    virtual void setAntialiasing(bool antialiasing) { Q_UNUSED(antialiasing) }
+    virtual void setAntialiasing(bool antialiasing) { Q_UNUSED(antialiasing); }
     virtual void setAligned(bool aligned) = 0;
 
     virtual void update() = 0;
@@ -162,7 +162,7 @@ public:
     // in the inner source rect maps to the upper-left corner of the inner target rect.
     virtual void setSubSourceRect(const QRectF &rect) = 0;
     virtual void setTexture(QSGTexture *texture) = 0;
-    virtual void setAntialiasing(bool antialiasing) { Q_UNUSED(antialiasing) }
+    virtual void setAntialiasing(bool antialiasing) { Q_UNUSED(antialiasing); }
     virtual void setMirror(bool mirror) = 0;
     virtual void setMipmapFiltering(QSGTexture::Filtering filtering) = 0;
     virtual void setFiltering(QSGTexture::Filtering filtering) = 0;

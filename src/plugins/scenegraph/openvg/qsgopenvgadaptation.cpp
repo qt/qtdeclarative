@@ -56,7 +56,7 @@ QStringList QSGOpenVGAdaptation::keys() const
 
 QSGContext *QSGOpenVGAdaptation::create(const QString &key) const
 {
-    Q_UNUSED(key)
+    Q_UNUSED(key);
     if (!instance)
         instance = new QSGOpenVGContext();
     return instance;
@@ -69,7 +69,7 @@ QSGRenderLoop *QSGOpenVGAdaptation::createWindowManager()
 
 QSGContextFactoryInterface::Flags QSGOpenVGAdaptation::flags(const QString &key) const
 {
-    Q_UNUSED(key)
+    Q_UNUSED(key);
     return 0;
 }
 

@@ -1222,7 +1222,7 @@ void tst_qquickimage::multiFrame()
 
     QFETCH(QString, qmlfile);
     QFETCH(bool, asynchronous);
-    Q_UNUSED(asynchronous)
+    Q_UNUSED(asynchronous);
 
     QQuickView view(testFileUrl(qmlfile));
     QQuickImage *image = qobject_cast<QQuickImage*>(view.rootObject());

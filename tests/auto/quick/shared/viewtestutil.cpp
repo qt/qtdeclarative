@@ -66,7 +66,7 @@ void QQuickViewTestUtil::moveMouseAway(QQuickView *window)
 #if QT_CONFIG(cursor) // Get the cursor out of the way.
     QCursor::setPos(window->geometry().topRight() + QPoint(100, 100));
 #else
-    Q_UNUSED(window)
+    Q_UNUSED(window);
 #endif
 }
 
@@ -489,7 +489,7 @@ namespace QQuickTest {
         if (moveMouseOut)
              QCursor::setPos(v.geometry().topRight() + QPoint(100, 100));
     #else
-        Q_UNUSED(moveMouseOut)
+        Q_UNUSED(moveMouseOut);
     #endif
         return true;
     }

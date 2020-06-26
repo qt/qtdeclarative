@@ -93,7 +93,7 @@ public:
     virtual void setWatchedRoles(const QList<QByteArray> &roles) = 0;
     virtual QQmlIncubator::Status incubationStatus(int index) = 0;
 
-    virtual void drainReusableItemsPool(int maxPoolTime) { Q_UNUSED(maxPoolTime) }
+    virtual void drainReusableItemsPool(int maxPoolTime) { Q_UNUSED(maxPoolTime); }
     virtual int poolSize() { return 0; }
 
     virtual int indexOf(QObject *object, QObject *objectContext) const = 0;

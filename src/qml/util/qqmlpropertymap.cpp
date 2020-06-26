@@ -337,7 +337,7 @@ QVariant QQmlPropertyMap::operator[](const QString &key) const
 */
 QVariant QQmlPropertyMap::updateValue(const QString &key, const QVariant &input)
 {
-    Q_UNUSED(key)
+    Q_UNUSED(key);
     return input;
 }
 

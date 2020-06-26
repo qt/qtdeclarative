@@ -120,7 +120,7 @@ QString QAccessibleQuickWindow::text(QAccessible::Text text) const
         return QString::fromLatin1(object()->metaObject()->className()) ;
     }
 #else
-    Q_UNUSED(text)
+    Q_UNUSED(text);
 #endif
     return window()->title();
 }

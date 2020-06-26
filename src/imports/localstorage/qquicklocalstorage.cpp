@@ -785,7 +785,7 @@ void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
 
     args->setReturnValue(db.asReturnedValue());
 #else
-    Q_UNUSED(args)
+    Q_UNUSED(args);
 #endif // settings
 }
 

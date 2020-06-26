@@ -185,12 +185,12 @@ void QSGOpenVGLayer::setRecursive(bool recursive)
 
 void QSGOpenVGLayer::setFormat(uint format)
 {
-    Q_UNUSED(format)
+    Q_UNUSED(format);
 }
 
 void QSGOpenVGLayer::setHasMipmaps(bool mipmap)
 {
-    Q_UNUSED(mipmap)
+    Q_UNUSED(mipmap);
 }
 
 void QSGOpenVGLayer::setDevicePixelRatio(qreal ratio)

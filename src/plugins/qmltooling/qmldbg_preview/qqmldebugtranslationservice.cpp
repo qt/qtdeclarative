@@ -48,13 +48,13 @@ QQmlDebugTranslationServiceImpl::QQmlDebugTranslationServiceImpl(QObject *parent
 
 void QQmlDebugTranslationServiceImpl::messageReceived(const QByteArray &message)
 {
-    Q_UNUSED(message)
+    Q_UNUSED(message);
 }
 
 QString QQmlDebugTranslationServiceImpl::foundElidedText(QObject *textObject, const QString &layoutText, const QString &elideText)
 {
-    Q_UNUSED(textObject)
-    Q_UNUSED(layoutText)
+    Q_UNUSED(textObject);
+    Q_UNUSED(layoutText);
     return elideText;
 }
 
@@ -62,9 +62,9 @@ void QQmlDebugTranslationServiceImpl::foundTranslationBinding(
         QQmlTranslationBinding *binding, QObject *scopeObject,
         const QQmlRefPointer<QQmlContextData> &contextData)
 {
-    Q_UNUSED(binding)
-    Q_UNUSED(scopeObject)
-    Q_UNUSED(contextData)
+    Q_UNUSED(binding);
+    Q_UNUSED(scopeObject);
+    Q_UNUSED(contextData);
 }
 
 QT_END_NAMESPACE

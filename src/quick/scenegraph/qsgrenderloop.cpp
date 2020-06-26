@@ -131,7 +131,7 @@ void QSGRenderLoop::postJob(QQuickWindow *window, QRunnable *job)
         cd->rhi->makeThreadLocalNativeContextCurrent();
     job->run();
 #else
-    Q_UNUSED(window)
+    Q_UNUSED(window);
     job->run();
 #endif
     delete job;

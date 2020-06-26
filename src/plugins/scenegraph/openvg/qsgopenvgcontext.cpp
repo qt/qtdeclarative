@@ -113,7 +113,7 @@ QSGRenderer *QSGOpenVGRenderContext::createRenderer(QSGRendererInterface::Render
 
 QSGOpenVGContext::QSGOpenVGContext(QObject *parent)
 {
-    Q_UNUSED(parent)
+    Q_UNUSED(parent);
 }
 
 QSGRenderContext *QSGOpenVGContext::createRenderContext()
@@ -133,13 +133,13 @@ QSGImageNode *QSGOpenVGContext::createImageNode()
 
 QSGPainterNode *QSGOpenVGContext::createPainterNode(QQuickPaintedItem *item)
 {
-    Q_UNUSED(item)
+    Q_UNUSED(item);
     return new QSGOpenVGPainterNode(item);
 }
 
 QSGGlyphNode *QSGOpenVGContext::createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode)
 {
-    Q_UNUSED(preferNativeGlyphNode)
+    Q_UNUSED(preferNativeGlyphNode);
     return new QSGOpenVGGlyphNode(rc);
 }
 

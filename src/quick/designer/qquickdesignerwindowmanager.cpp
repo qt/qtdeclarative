@@ -86,7 +86,7 @@ void QQuickDesignerWindowManager::makeOpenGLContext(QQuickWindow *window)
         m_openGlContext->makeCurrent(window);
     }
 #else
-    Q_UNUSED(window)
+    Q_UNUSED(window);
 #endif
 }
 

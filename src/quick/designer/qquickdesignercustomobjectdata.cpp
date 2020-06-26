@@ -291,8 +291,8 @@ void QQuickDesignerCustomObjectData::keepBindingFromGettingDeleted(QQmlContext *
                                                              const QQuickDesignerSupport::PropertyName &propertyName)
 {
     //Refcounting is taking care
-    Q_UNUSED(context)
-    Q_UNUSED(propertyName)
+    Q_UNUSED(context);
+    Q_UNUSED(propertyName);
 }
 
 void QQuickDesignerCustomObjectData::handleDestroyed()

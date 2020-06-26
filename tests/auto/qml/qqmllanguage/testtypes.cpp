@@ -31,15 +31,15 @@
 
 static QObject *myTypeObjectSingleton(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
-    Q_UNUSED(engine)
-    Q_UNUSED(scriptEngine)
+    Q_UNUSED(engine);
+    Q_UNUSED(scriptEngine);
 
     return new MyTypeObject();
 }
 
 static QJSValue myQJSValueQObjectSingleton(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
-    Q_UNUSED(engine)
+    Q_UNUSED(engine);
 
     QJSValue value = scriptEngine->newQObject(new MyTypeObject());
     return value;

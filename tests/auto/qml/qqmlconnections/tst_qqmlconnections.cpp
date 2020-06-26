@@ -335,8 +335,8 @@ private:
 
 static QObject *module_api_factory(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
-   Q_UNUSED(engine)
-   Q_UNUSED(scriptEngine)
+   Q_UNUSED(engine);
+   Q_UNUSED(scriptEngine);
    MyTestSingletonType *api = new MyTestSingletonType();
    return api;
 }

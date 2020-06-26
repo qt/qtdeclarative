@@ -274,7 +274,7 @@ void QQuickContents::updateRect()
 
 void QQuickContents::itemGeometryChanged(QQuickItem *changed, QQuickGeometryChange change, const QRectF &)
 {
-    Q_UNUSED(changed)
+    Q_UNUSED(changed);
     bool wChanged = false;
     bool hChanged = false;
     //### we can only pass changed if the left edge has moved left, or the right edge has moved right
@@ -3813,7 +3813,7 @@ void QQuickItem::geometryChange(const QRectF &newGeometry, const QRectF &oldGeom
 
 QSGNode *QQuickItem::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *updatePaintNodeData)
 {
-    Q_UNUSED(updatePaintNodeData)
+    Q_UNUSED(updatePaintNodeData);
     delete oldNode;
     return nullptr;
 }
@@ -8804,7 +8804,7 @@ void QQuickItemLayer::setName(const QByteArray &name) {
 
 void QQuickItemLayer::itemOpacityChanged(QQuickItem *item)
 {
-    Q_UNUSED(item)
+    Q_UNUSED(item);
     updateOpacity();
 }
 
@@ -8815,7 +8815,7 @@ void QQuickItemLayer::itemGeometryChanged(QQuickItem *, QQuickGeometryChange, co
 
 void QQuickItemLayer::itemParentChanged(QQuickItem *item, QQuickItem *parent)
 {
-    Q_UNUSED(item)
+    Q_UNUSED(item);
     Q_ASSERT(item == m_item);
     Q_ASSERT(parent != m_effectSource);
     Q_ASSERT(parent == nullptr || parent != m_effect);

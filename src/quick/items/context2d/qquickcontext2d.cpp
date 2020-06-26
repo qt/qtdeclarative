@@ -144,7 +144,7 @@ Q_QUICK_PRIVATE_EXPORT QColor qt_color_from_string(const QV4::Value &name)
         return QColor(p);
     else {
         bool isRgb(false), isHsl(false), hasAlpha(false);
-        Q_UNUSED(isHsl)
+        Q_UNUSED(isHsl);
 
         while (isspace(*p)) p++;
         if (strncmp(p, "rgb", 3) == 0)

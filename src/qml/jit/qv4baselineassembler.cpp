@@ -888,7 +888,7 @@ void BaselineAssembler::storeReg(int reg)
 void BaselineAssembler::loadLocal(int index, int level)
 {
     Heap::CallContext ctx;
-    Q_UNUSED(ctx)
+    Q_UNUSED(ctx);
     pasm()->loadPointerFromValue(regAddr(CallData::Context), PlatformAssembler::ScratchRegister);
     while (level) {
         pasm()->loadPtr(Address(PlatformAssembler::ScratchRegister, ctx.outer.offset), PlatformAssembler::ScratchRegister);
@@ -900,7 +900,7 @@ void BaselineAssembler::loadLocal(int index, int level)
 void BaselineAssembler::storeLocal(int index, int level)
 {
     Heap::CallContext ctx;
-    Q_UNUSED(ctx)
+    Q_UNUSED(ctx);
     pasm()->loadPtr(regAddr(CallData::Context), PlatformAssembler::ScratchRegister);
     while (level) {
         pasm()->loadPtr(Address(PlatformAssembler::ScratchRegister, ctx.outer.offset), PlatformAssembler::ScratchRegister);
@@ -1592,7 +1592,7 @@ void BaselineAssembler::pushCatchContext(int index, int name)
 void BaselineAssembler::popContext()
 {
     Heap::CallContext ctx;
-    Q_UNUSED(ctx)
+    Q_UNUSED(ctx);
     pasm()->loadPointerFromValue(regAddr(CallData::Context), PlatformAssembler::ScratchRegister);
     pasm()->loadPtr(Address(PlatformAssembler::ScratchRegister, ctx.outer.offset), PlatformAssembler::ScratchRegister);
     pasm()->storeHeapObject(PlatformAssembler::ScratchRegister, regAddr(CallData::Context));

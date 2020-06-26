@@ -2774,7 +2774,7 @@ public:
 
     bool childMouseEventFilter(QQuickItem *item, QEvent *event) override
     {
-        Q_UNUSED(item)
+        Q_UNUSED(item);
         if (event->type() == QEvent::MouseButtonPress && !contains(static_cast<QMouseEvent*>(event)->position().toPoint())) {
             // This is an evil hack: in case of items that are not rectangles, we never accept the event.
             // Instead the events are now delivered to QDeclarativeGeoMapItemBase which doesn't to anything with them.

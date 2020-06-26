@@ -71,7 +71,7 @@ public:
     void setGradientStops(const QGradientStops &stops) override;
     void setGradientVertical(bool vertical) override;
     void setRadius(qreal radius) override;
-    void setAntialiasing(bool antialiasing) override { Q_UNUSED(antialiasing) }
+    void setAntialiasing(bool antialiasing) override { Q_UNUSED(antialiasing); }
     void setAligned(bool aligned) override;
 
     void update() override;

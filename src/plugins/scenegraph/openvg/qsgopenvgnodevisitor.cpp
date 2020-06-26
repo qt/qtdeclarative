@@ -127,11 +127,11 @@ bool QSGOpenVGNodeVisitor::visit(QSGGeometryNode *node)
 {
     if (QSGSimpleRectNode *rectNode = dynamic_cast<QSGSimpleRectNode *>(node)) {
         // TODO: Try and render the QSGSimpleRectNode
-        Q_UNUSED(rectNode)
+        Q_UNUSED(rectNode);
         return false;
     } else if (QSGSimpleTextureNode *tn = dynamic_cast<QSGSimpleTextureNode *>(node)) {
         // TODO: Try and render the QSGSimpleTextureNode
-        Q_UNUSED(tn)
+        Q_UNUSED(tn);
         return false;
     } else if (QSGOpenVGNinePatchNode *nn = dynamic_cast<QSGOpenVGNinePatchNode *>(node)) {
         renderRenderableNode(nn);

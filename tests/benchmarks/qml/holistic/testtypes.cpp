@@ -30,8 +30,8 @@
 
 static QJSValue script_api(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
-    Q_UNUSED(engine)
-    Q_UNUSED(scriptEngine)
+    Q_UNUSED(engine);
+    Q_UNUSED(scriptEngine);
 
     static int testProperty = 13;
     QJSValue v = scriptEngine->newObject();
@@ -41,8 +41,8 @@ static QJSValue script_api(QQmlEngine *engine, QJSEngine *scriptEngine)
 
 static QObject *qobject_api(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
-    Q_UNUSED(engine)
-    Q_UNUSED(scriptEngine)
+    Q_UNUSED(engine);
+    Q_UNUSED(scriptEngine);
 
     testQObjectApi *o = new testQObjectApi;
     o->setQObjectTestProperty(20);
@@ -51,7 +51,7 @@ static QObject *qobject_api(QQmlEngine *engine, QJSEngine *scriptEngine)
 
 static QObject *qobject_api_engine_parent(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
-    Q_UNUSED(scriptEngine)
+    Q_UNUSED(scriptEngine);
 
     static int testProperty = 26;
     testQObjectApi *o = new testQObjectApi(engine);

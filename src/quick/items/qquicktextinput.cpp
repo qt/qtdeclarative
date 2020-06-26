@@ -3553,7 +3553,7 @@ bool QQuickTextInputPrivate::finishChange(int validateFromState, bool update, bo
 {
     Q_Q(QQuickTextInput);
 
-    Q_UNUSED(update)
+    Q_UNUSED(update);
 #if QT_CONFIG(im)
     bool inputMethodAttributesChanged = m_textDirty || m_selDirty;
 #endif
@@ -3666,7 +3666,7 @@ void QQuickTextInputPrivate::internalSetText(const QString &txt, int pos, bool e
 
     bool changed = finishChange(-1, true, edited);
 #if !QT_CONFIG(accessibility)
-    Q_UNUSED(changed)
+    Q_UNUSED(changed);
 #else
     Q_Q(QQuickTextInput);
     if (changed && QAccessible::isActive()) {

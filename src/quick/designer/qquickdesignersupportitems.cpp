@@ -214,7 +214,7 @@ QObject *QQuickDesignerSupportItems::createPrimitive(const QString &typeName, QT
 {
     ComponentCompleteDisabler disableComponentComplete;
 
-    Q_UNUSED(disableComponentComplete)
+    Q_UNUSED(disableComponentComplete);
 
     QObject *object = nullptr;
     QQmlType type = QQmlMetaType::qmlType(typeName, version);
@@ -260,7 +260,7 @@ QObject *QQuickDesignerSupportItems::createPrimitive(const QString &typeName, QT
 QObject *QQuickDesignerSupportItems::createComponent(const QUrl &componentUrl, QQmlContext *context)
 {
     ComponentCompleteDisabler disableComponentComplete;
-    Q_UNUSED(disableComponentComplete)
+    Q_UNUSED(disableComponentComplete);
 
     QQmlComponent component(context->engine(), componentUrl);
 

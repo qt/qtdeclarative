@@ -339,7 +339,7 @@ void QAccessibleQuickItem::doAction(const QString &actionName)
 
 QStringList QAccessibleQuickItem::keyBindingsForAction(const QString &actionName) const
 {
-    Q_UNUSED(actionName)
+    Q_UNUSED(actionName);
     return QStringList();
 }
 

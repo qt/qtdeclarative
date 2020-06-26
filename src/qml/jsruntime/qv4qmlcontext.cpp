@@ -501,7 +501,7 @@ ReturnedValue QQmlContextWrapper::resolveQmlContextPropertyLookupGetter(Lookup *
 
 ReturnedValue QQmlContextWrapper::lookupScript(Lookup *l, ExecutionEngine *engine, Value *base)
 {
-    Q_UNUSED(base)
+    Q_UNUSED(base);
     Scope scope(engine);
     Scoped<QmlContext> qmlContext(scope, engine->qmlContext());
     if (!qmlContext)
@@ -519,14 +519,14 @@ ReturnedValue QQmlContextWrapper::lookupScript(Lookup *l, ExecutionEngine *engin
 
 ReturnedValue QQmlContextWrapper::lookupSingleton(Lookup *l, ExecutionEngine *engine, Value *base)
 {
-    Q_UNUSED(engine)
-    Q_UNUSED(base)
+    Q_UNUSED(engine);
+    Q_UNUSED(base);
     return Value::fromHeapObject(l->qmlContextSingletonLookup.singleton).asReturnedValue();
 }
 
 ReturnedValue QQmlContextWrapper::lookupIdObject(Lookup *l, ExecutionEngine *engine, Value *base)
 {
-    Q_UNUSED(base)
+    Q_UNUSED(base);
     Scope scope(engine);
     Scoped<QmlContext> qmlContext(scope, engine->qmlContext());
     if (!qmlContext)

@@ -165,7 +165,7 @@ void QSGNodeUpdater::leaveGeometryNode(QSGGeometryNode *g)
 #ifdef QSG_UPDATER_DEBUG
     qDebug() << "leave geometry" << g;
 #else
-    Q_UNUSED(g)
+    Q_UNUSED(g);
 #endif
 }
 
@@ -186,7 +186,7 @@ void QSGNodeUpdater::leaveRenderNode(QSGRenderNode *r)
 #ifdef QSG_UPDATER_DEBUG
     qDebug() << "leave render" << r;
 #else
-    Q_UNUSED(r)
+    Q_UNUSED(r);
 #endif
 }
 

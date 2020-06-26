@@ -479,7 +479,7 @@ void QQuickWheelHandler::handleEventPoint(QQuickEventPoint *point)
 
 void QQuickWheelHandler::onTargetChanged(QQuickItem *oldTarget)
 {
-    Q_UNUSED(oldTarget)
+    Q_UNUSED(oldTarget);
     Q_D(QQuickWheelHandler);
     d->metaPropertyDirty = true;
 }

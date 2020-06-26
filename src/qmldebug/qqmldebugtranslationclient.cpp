@@ -69,8 +69,8 @@ void QQmlDebugTranslationClient::messageReceived(const QByteArray &data)
 
 void QQmlDebugTranslationClient::triggerLanguage(const QUrl &url, const QString &locale)
 {
-    Q_UNUSED(url)
-    Q_UNUSED(locale)
+    Q_UNUSED(url);
+    Q_UNUSED(locale);
 }
 
 QT_END_NAMESPACE

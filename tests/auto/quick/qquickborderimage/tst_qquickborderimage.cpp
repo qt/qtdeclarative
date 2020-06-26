@@ -623,7 +623,7 @@ void tst_qquickborderimage::multiFrame()
 
     QFETCH(QString, qmlfile);
     QFETCH(bool, asynchronous);
-    Q_UNUSED(asynchronous)
+    Q_UNUSED(asynchronous);
 
     QQuickView view(testFileUrl(qmlfile));
     QQuickBorderImage *image = qobject_cast<QQuickBorderImage*>(view.rootObject());

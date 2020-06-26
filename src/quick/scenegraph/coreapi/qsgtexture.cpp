@@ -196,7 +196,7 @@ static void qt_debug_remove_texture(QSGTexture* texture)
         }
     }
 #else
-    Q_UNUSED(texture)
+    Q_UNUSED(texture);
 #endif
 
     --qt_debug_texture_count;

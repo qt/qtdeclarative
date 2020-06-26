@@ -150,7 +150,7 @@ public:
 
     bool canFetchMore(const QModelIndex &parent) const override
     {
-        Q_UNUSED(parent)
+        Q_UNUSED(parent);
         return m_dataCanBeFetched;
     }
 
@@ -167,7 +167,7 @@ public:
 
     void fetchMore(const QModelIndex &parent) override
     {
-        Q_UNUSED(parent)
+        Q_UNUSED(parent);
         addRow(m_rows - 1);
     }
 

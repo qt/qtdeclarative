@@ -3224,7 +3224,7 @@ private:
     {
 #if 1
         Q_UNUSED(immediate);
-        Q_UNUSED(dest)
+        Q_UNUSED(dest);
 #else
         intptr_t currentRegisterContents;
         if (dest.value(currentRegisterContents)) {

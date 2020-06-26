@@ -605,7 +605,7 @@ void QQuickPointerHandler::handlePointerEvent(QQuickPointerEvent *event)
 bool QQuickPointerHandler::wantsPointerEvent(QQuickPointerEvent *event)
 {
     Q_D(const QQuickPointerHandler);
-    Q_UNUSED(event)
+    Q_UNUSED(event);
     return d->enabled;
 }
 

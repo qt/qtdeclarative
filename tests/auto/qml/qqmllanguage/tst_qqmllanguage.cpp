@@ -63,7 +63,7 @@
 DEFINE_BOOL_CONFIG_OPTION(qmlCheckTypes, QML_CHECK_TYPES)
 
 static inline bool isCaseSensitiveFileSystem(const QString &path) {
-    Q_UNUSED(path)
+    Q_UNUSED(path);
 #if defined(Q_OS_MAC)
     return pathconf(path.toLatin1().constData(), _PC_CASE_SENSITIVE);
 #elif defined(Q_OS_WIN)

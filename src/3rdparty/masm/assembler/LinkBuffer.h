@@ -93,7 +93,7 @@ public:
 #endif
     {
 #ifdef NDEBUG
-        UNUSED_PARAM(effort)
+        UNUSED_PARAM(effort);
 #endif
         // Simon: Moved this to the sub-classes linkCode(ownerUID, effort);
     }
@@ -327,8 +327,8 @@ inline typename LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::Code
 template <typename MacroAssembler, template <typename T> class ExecutableOffsetCalculator>
 inline void LinkBufferBase<MacroAssembler, ExecutableOffsetCalculator>::linkCode(void* ownerUID, JITCompilationEffort effort)
 {
-    UNUSED_PARAM(ownerUID)
-    UNUSED_PARAM(effort)
+    UNUSED_PARAM(ownerUID);
+    UNUSED_PARAM(effort);
     ASSERT(!m_code);
     m_executableMemory = m_assembler->m_assembler.executableCopy(*m_globalData, ownerUID, effort);
     if (!m_executableMemory)
@@ -435,8 +435,8 @@ inline void BranchCompactingLinkBuffer<MacroAssembler>::makeExecutable()
 template <typename MacroAssembler>
 inline void BranchCompactingLinkBuffer<MacroAssembler>::linkCode(void* ownerUID, JITCompilationEffort effort)
 {
-    UNUSED_PARAM(ownerUID)
-    UNUSED_PARAM(effort)
+    UNUSED_PARAM(ownerUID);
+    UNUSED_PARAM(effort);
     ASSERT(!m_code);
     m_initialSize = m_assembler->m_assembler.codeSize();
     m_executableMemory = m_globalData->executableAllocator.allocate(*m_globalData, m_initialSize, ownerUID, effort);

@@ -341,7 +341,7 @@ public:
     : QQuickImageProvider(Pixmap) {}
 
     virtual QPixmap requestPixmap(const QString &d, QSize *, const QSize &) {
-        Q_UNUSED(d)
+        Q_UNUSED(d);
         QPixmap pix(800, 600);
         pix.fill(fillColor);
         return pix;

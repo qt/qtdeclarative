@@ -1394,7 +1394,7 @@ public:
         errorString->clear();
         return true;
 #else
-        Q_UNUSED(outputFileName)
+        Q_UNUSED(outputFileName);
         *errorString = QStringLiteral("features.temporaryfile is disabled.");
         return false;
 #endif

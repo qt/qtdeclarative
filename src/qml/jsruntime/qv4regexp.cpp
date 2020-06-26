@@ -224,7 +224,7 @@ void Heap::RegExp::init(ExecutionEngine *engine, const QString &pattern, uint fl
         JSC::Yarr::jitCompile(yarrPattern, JSC::Yarr::Char16, vm, *jitCode);
     }
 #else
-    Q_UNUSED(engine)
+    Q_UNUSED(engine);
 #endif
     if (hasValidJITCode()) {
         valid = true;

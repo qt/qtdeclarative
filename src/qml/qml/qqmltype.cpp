@@ -792,7 +792,7 @@ int QQmlType::scopedEnumIndex(QQmlEnginePrivate *engine, const QString &name, bo
 
 int QQmlType::scopedEnumValue(QQmlEnginePrivate *engine, int index, const QV4::String *name, bool *ok) const
 {
-    Q_UNUSED(engine)
+    Q_UNUSED(engine);
     Q_ASSERT(ok);
     *ok = true;
 
@@ -809,7 +809,7 @@ int QQmlType::scopedEnumValue(QQmlEnginePrivate *engine, int index, const QV4::S
 
 int QQmlType::scopedEnumValue(QQmlEnginePrivate *engine, int index, const QString &name, bool *ok) const
 {
-    Q_UNUSED(engine)
+    Q_UNUSED(engine);
     Q_ASSERT(ok);
     *ok = true;
 

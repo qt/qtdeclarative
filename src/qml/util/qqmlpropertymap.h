@@ -82,7 +82,7 @@ protected:
     QQmlPropertyMap(DerivedType *derived, QObject *parentObj)
         : QQmlPropertyMap(&DerivedType::staticMetaObject, parentObj)
     {
-        Q_UNUSED(derived)
+        Q_UNUSED(derived);
     }
 
 private:

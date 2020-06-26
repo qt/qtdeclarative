@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
 
 QSGOpenVGTexture::QSGOpenVGTexture(const QImage &image, uint flags)
 {
-    Q_UNUSED(flags)
+    Q_UNUSED(flags);
 
     VGImageFormat format = QSGOpenVGHelpers::qImageFormatToVGImageFormat(image.format());
     m_image = vgCreateImage(format, image.width(), image.height(), VG_IMAGE_QUALITY_BETTER);

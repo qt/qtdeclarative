@@ -388,7 +388,7 @@ void qsg_dumpShadowRoots(Node *n)
 
     --indent;
 #else
-    Q_UNUSED(n)
+    Q_UNUSED(n);
 #endif
 }
 
