@@ -25,6 +25,13 @@ defineReplace(qmlCacheResourceFileOutputName) {
     return($${name})
 }
 
+defineTest(qtQuickSkippedResourceFile) {
+    for(skippedRes, QTQUICK_COMPILER_SKIPPED_RESOURCES) {
+        equals(1, $$skippedRes): return(true)
+    }
+    return(false)
+}
+
 # Flatten RESOURCES that may contain individual files or objects
 load(resources_functions)
 qtFlattenResources()
@@ -34,6 +41,11 @@ NEWRESOURCES =
 QMLCACHE_RESOURCE_FILES =
 
 for(res, RESOURCES) {
+    qtQuickSkippedResourceFile($$res) {
+        NEWRESOURCES += $$res
+        next()
+    }
+
     absRes = $$absolute_path($$res, $$_PRO_FILE_PWD_)
     rccContents = $$system($$QMAKE_RCC_DEP -list $$system_quote($$absRes),lines)
     contains(rccContents,.*\\.js$)|contains(rccContents,.*\\.qml$)|contains(rccContents,.*\\.mjs$) {

@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/not/">
+        <file alias="Skip.qml">Retain.qml</file>
+    </qresource>
+</RCC>

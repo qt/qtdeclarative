@@ -56,6 +56,7 @@ private slots:
     void functionExpressions();
     void versionChecksForAheadOfTimeUnits();
     void retainedResources();
+    void skippedResources();
 
     void workerScripts();
 
@@ -409,6 +410,19 @@ void tst_qmlcachegen::retainedResources()
     QFile file(":/Retain.qml");
     QVERIFY(file.open(QIODevice::ReadOnly));
     QVERIFY(file.readAll().startsWith("import QtQml 2.0"));
+}
+
+void tst_qmlcachegen::skippedResources()
+{
+    QFile file(":/not/Skip.qml");
+    QVERIFY(file.open(QIODevice::ReadOnly));
+    QVERIFY(file.readAll().startsWith("import QtQml 2.0"));
+
+    QQmlMetaType::CachedUnitLookupError error = QQmlMetaType::CachedUnitLookupError::NoError;
+    const QQmlPrivate::CachedQmlUnit *unit = QQmlMetaType::findCachedCompilationUnit(
+            QUrl("qrc:/not/Skip.qml"), &error);
+    QCOMPARE(unit, nullptr);
+    QCOMPARE(error, QQmlMetaType::CachedUnitLookupError::NoUnitFound);
 }
 
 void tst_qmlcachegen::workerScripts()
