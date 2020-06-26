@@ -123,15 +123,8 @@ bool QQuickRenderTarget::isNull() const
 }
 
 /*!
-    \return a new QQuickRenderTarget referencing a native texture or image
-    object.
-
-    \a nativeTexture references a native resource, for example, a \c VkImage,
-    \c ID3D11Texture2D*, c MTLTexture*, or \c GLuint. Where applicable, this
-    must be complemented by the current layout of the image.
-
-    \note the \c object field in \a nativeTexture must always be a pointer to
-    the native object, even if the type is already a pointer.
+    \return a new QQuickRenderTarget referencing an OpenGL texture object
+    specified by \a textureId.
 
     \a pixelSize specifies the size of the image, in pixels. Currently only 2D
     textures are supported.
@@ -147,15 +140,14 @@ bool QQuickRenderTarget::isNull() const
 
     \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
  */
-QQuickRenderTarget QQuickRenderTarget::fromNativeTexture(const QSGTexture::NativeTexture &nativeTexture,
-                                                         const QSize &pixelSize,
-                                                         int sampleCount)
+#if QT_CONFIG(opengl) || defined(Q_CLANG_QDOC)
+QQuickRenderTarget QQuickRenderTarget::fromOpenGLTexture(uint textureId, const QSize &pixelSize, int sampleCount)
 {
     QQuickRenderTarget rt;
     QQuickRenderTargetPrivate *d = QQuickRenderTargetPrivate::get(&rt);
 
-    if (!nativeTexture.object) {
-        qWarning("QQuickRenderTarget: nativeTexture.object is null");
+    if (!textureId) {
+        qWarning("QQuickRenderTarget: textureId is invalid");
         return rt;
     }
 
@@ -167,10 +159,141 @@ QQuickRenderTarget QQuickRenderTarget::fromNativeTexture(const QSGTexture::Nativ
     d->type = QQuickRenderTargetPrivate::Type::NativeTexture;
     d->pixelSize = pixelSize;
     d->sampleCount = qMax(1, sampleCount);
-    d->u.nativeTexture = nativeTexture;
+    d->u.nativeTexture = { textureId, 0 };
 
     return rt;
 }
+#endif
+
+/*!
+    \return a new QQuickRenderTarget referencing an D3D11 texture object
+    specified by \a texture.
+
+    \a pixelSize specifies the size of the image, in pixels. Currently only 2D
+    textures are supported.
+
+    \a sampleCount specific the number of samples. 0 or 1 means no
+    multisampling, while a value like 4 or 8 states that the native object is a
+    multisample texture.
+
+    \note the resulting QQuickRenderTarget does not own any native resources,
+    it merely contains references and the associated metadata of the size and
+    sample count. It is the caller's responsibility to ensure that the native
+    resource exists as long as necessary.
+
+    \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
+ */
+#if defined(Q_OS_WIN) || defined(Q_CLANG_QDOC)
+QQuickRenderTarget QQuickRenderTarget::fromD3D11Texture(void *texture, const QSize &pixelSize, int sampleCount)
+{
+    QQuickRenderTarget rt;
+    QQuickRenderTargetPrivate *d = QQuickRenderTargetPrivate::get(&rt);
+
+    if (!texture) {
+        qWarning("QQuickRenderTarget: texture is null");
+        return rt;
+    }
+
+    if (pixelSize.isEmpty()) {
+        qWarning("QQuickRenderTarget: Cannot create with empty size");
+        return rt;
+    }
+
+    d->type = QQuickRenderTargetPrivate::Type::NativeTexture;
+    d->pixelSize = pixelSize;
+    d->sampleCount = qMax(1, sampleCount);
+    d->u.nativeTexture = { quint64(texture), 0 };
+
+    return rt;
+}
+#endif
+
+/*!
+    \return a new QQuickRenderTarget referencing an Metal texture object
+    specified by \a texture.
+
+    \a pixelSize specifies the size of the image, in pixels. Currently only 2D
+    textures are supported.
+
+    \a sampleCount specific the number of samples. 0 or 1 means no
+    multisampling, while a value like 4 or 8 states that the native object is a
+    multisample texture.
+
+    \note the resulting QQuickRenderTarget does not own any native resources,
+    it merely contains references and the associated metadata of the size and
+    sample count. It is the caller's responsibility to ensure that the native
+    resource exists as long as necessary.
+
+    \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
+ */
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_CLANG_QDOC)
+QQuickRenderTarget QQuickRenderTarget::fromMetalTexture(MTLTexture *texture, const QSize &pixelSize, int sampleCount)
+{
+    QQuickRenderTarget rt;
+    QQuickRenderTargetPrivate *d = QQuickRenderTargetPrivate::get(&rt);
+
+    if (!texture) {
+        qWarning("QQuickRenderTarget: texture is null");
+        return rt;
+    }
+
+    if (pixelSize.isEmpty()) {
+        qWarning("QQuickRenderTarget: Cannot create with empty size");
+        return rt;
+    }
+
+    d->type = QQuickRenderTargetPrivate::Type::NativeTexture;
+    d->pixelSize = pixelSize;
+    d->sampleCount = qMax(1, sampleCount);
+    d->u.nativeTexture = { quint64(texture), 0 };
+
+    return rt;
+}
+#endif
+
+/*!
+    \return a new QQuickRenderTarget referencing an Vulkan image object
+    specified by \a image. The current \a layout of the image must be provided
+    as well.
+
+    \a pixelSize specifies the size of the image, in pixels. Currently only 2D
+    textures are supported.
+
+    \a sampleCount specific the number of samples. 0 or 1 means no
+    multisampling, while a value like 4 or 8 states that the native object is a
+    multisample texture.
+
+    \note the resulting QQuickRenderTarget does not own any native resources,
+    it merely contains references and the associated metadata of the size and
+    sample count. It is the caller's responsibility to ensure that the native
+    resource exists as long as necessary.
+
+    \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
+ */
+#if QT_CONFIG(vulkan) || defined(Q_CLANG_QDOC)
+QQuickRenderTarget QQuickRenderTarget::fromVulkanImage(VkImage image, VkImageLayout layout, const QSize &pixelSize, int sampleCount)
+{
+    QQuickRenderTarget rt;
+    QQuickRenderTargetPrivate *d = QQuickRenderTargetPrivate::get(&rt);
+
+    if (image == VK_NULL_HANDLE) {
+        qWarning("QQuickRenderTarget: image is invalid");
+        return rt;
+    }
+
+    if (pixelSize.isEmpty()) {
+        qWarning("QQuickRenderTarget: Cannot create with empty size");
+        return rt;
+    }
+
+    d->type = QQuickRenderTargetPrivate::Type::NativeTexture;
+    d->pixelSize = pixelSize;
+    d->sampleCount = qMax(1, sampleCount);
+    d->u.nativeTexture = { quint64(image), layout };
+
+    return rt;
+}
+#endif
 
 /*!
     \internal

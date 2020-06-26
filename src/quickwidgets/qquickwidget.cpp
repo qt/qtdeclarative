@@ -1077,7 +1077,7 @@ void QQuickWidget::createFramebufferObject()
 #endif
 
     GLuint textureId = d->fbo->texture();
-    d->offscreenWindow->setRenderTarget( QQuickRenderTarget::fromNativeTexture({ textureId, 0 }, fboSize, samples));
+    d->offscreenWindow->setRenderTarget( QQuickRenderTarget::fromOpenGLTexture(textureId, fboSize, samples));
 
     d->renderControl->setSamples(samples);
 

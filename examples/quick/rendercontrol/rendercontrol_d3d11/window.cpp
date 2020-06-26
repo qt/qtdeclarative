@@ -368,9 +368,9 @@ void Window::updateQuick()
             qWarning("Failed to initialize redirected Qt Quick rendering");
 
         // Redirect Qt Quick's output.
-        m_quickWindow->setRenderTarget(QQuickRenderTarget::fromNativeTexture({ quint64(m_res.texture), 0 },
-                                                                             QSize(QML_WIDTH, QML_HEIGHT),
-                                                                             SAMPLE_COUNT));
+        m_quickWindow->setRenderTarget(QQuickRenderTarget::fromD3D11Texture(m_res.texture,
+                                                                            QSize(QML_WIDTH, QML_HEIGHT),
+                                                                            SAMPLE_COUNT));
 
         m_quickInitialized = true;
     }

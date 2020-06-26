@@ -182,7 +182,7 @@ void WindowSingleThreaded::createTexture()
     f->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     f->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_textureSize.width(), m_textureSize.height(), 0,
                     GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-    m_quickWindow->setRenderTarget(QQuickRenderTarget::fromNativeTexture({ quint64(m_textureId), 0 }, m_textureSize));
+    m_quickWindow->setRenderTarget(QQuickRenderTarget::fromOpenGLTexture(m_textureId, m_textureSize));
 }
 
 void WindowSingleThreaded::destroyTexture()

@@ -79,8 +79,12 @@ public:
     Type type = Type::Null;
     QSize pixelSize;
     int sampleCount = 1;
+    struct NativeTexture {
+        quint64 object;
+        int layout;
+    };
     union {
-        QSGTexture::NativeTexture nativeTexture;
+        NativeTexture nativeTexture;
         QRhiRenderTarget *rhiRt;
     } u;
 };

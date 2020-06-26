@@ -41,7 +41,14 @@
 #define QQUICKRENDERTARGET_H
 
 #include <QtQuick/qtquickglobal.h>
-#include <QtQuick/qsgtexture.h>
+
+#if QT_CONFIG(vulkan)
+#include <QtGui/QVulkanInstance>
+#endif
+
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+Q_FORWARD_DECLARE_OBJC_CLASS(MTLTexture);
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -58,9 +65,21 @@ public:
 
     bool isNull() const;
 
-    static QQuickRenderTarget fromNativeTexture(const QSGTexture::NativeTexture &nativeTexture,
-                                                const QSize &pixelSize,
-                                                int sampleCount = 1);
+#if QT_CONFIG(opengl) || defined(Q_CLANG_QDOC)
+    static QQuickRenderTarget fromOpenGLTexture(uint textureId, const QSize &pixelSize, int sampleCount = 1);
+#endif
+
+#if defined(Q_OS_WIN) || defined(Q_CLANG_QDOC)
+    static QQuickRenderTarget fromD3D11Texture(void *texture, const QSize &pixelSize, int sampleCount = 1);
+#endif
+
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_CLANG_QDOC)
+    static QQuickRenderTarget fromMetalTexture(MTLTexture *texture, const QSize &pixelSize, int sampleCount = 1);
+#endif
+
+#if QT_CONFIG(vulkan) || defined(Q_CLANG_QDOC)
+    static QQuickRenderTarget fromVulkanImage(VkImage image, VkImageLayout layout, const QSize &pixelSize, int sampleCount = 1);
+#endif
 
     static QQuickRenderTarget fromRhiRenderTarget(QRhiRenderTarget *renderTarget);
 
