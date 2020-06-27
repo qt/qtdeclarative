@@ -1442,7 +1442,7 @@ void QQuickControl::setHoverEnabled(bool enabled)
 
     d->updateHoverEnabled(enabled, true); // explicit=true
 #else
-    Q_UNUSED(enabled)
+    Q_UNUSED(enabled);
 #endif
 }
 
@@ -2154,7 +2154,7 @@ void QQuickControl::maybeSetAccessibleName(const QString &name)
             accessibleAttached->setNameImplicitly(name);
     }
 #else
-    Q_UNUSED(name)
+    Q_UNUSED(name);
 #endif
 }
 
@@ -2164,7 +2164,7 @@ QVariant QQuickControl::accessibleProperty(const char *propertyName)
     if (QAccessible::isActive())
         return QQuickAccessibleAttached::property(this, propertyName);
 #endif
-    Q_UNUSED(propertyName)
+    Q_UNUSED(propertyName);
     return QVariant();
 }
 
@@ -2174,8 +2174,8 @@ bool QQuickControl::setAccessibleProperty(const char *propertyName, const QVaria
     if (QAccessible::isActive())
         return QQuickAccessibleAttached::setProperty(this, propertyName, value);
 #endif
-    Q_UNUSED(propertyName)
-    Q_UNUSED(value)
+    Q_UNUSED(propertyName);
+    Q_UNUSED(value);
     return false;
 }
 

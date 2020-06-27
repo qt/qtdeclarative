@@ -229,9 +229,9 @@ void QQuickApplicationWindowPrivate::relayout()
 
 void QQuickApplicationWindowPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff)
 {
-    Q_UNUSED(item)
-    Q_UNUSED(change)
-    Q_UNUSED(diff)
+    Q_UNUSED(item);
+    Q_UNUSED(change);
+    Q_UNUSED(diff);
     relayout();
 }
 

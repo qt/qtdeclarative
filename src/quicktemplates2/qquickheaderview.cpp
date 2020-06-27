@@ -360,7 +360,7 @@ QModelIndex QHeaderDataProxyModel::index(int row, int column, const QModelIndex 
 
 QModelIndex QHeaderDataProxyModel::parent(const QModelIndex &child) const
 {
-    Q_UNUSED(child)
+    Q_UNUSED(child);
     return QModelIndex();
 }
 
@@ -401,7 +401,7 @@ bool QHeaderDataProxyModel::setData(const QModelIndex &index, const QVariant &va
 
 bool QHeaderDataProxyModel::hasChildren(const QModelIndex &parent) const
 {
-    Q_UNUSED(parent)
+    Q_UNUSED(parent);
     return false;
 }
 

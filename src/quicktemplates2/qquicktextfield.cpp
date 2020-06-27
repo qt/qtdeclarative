@@ -309,7 +309,7 @@ void QQuickTextFieldPrivate::echoModeChanged(QQuickTextField::EchoMode echoMode)
     if (QQuickAccessibleAttached *accessibleAttached = QQuickControlPrivate::accessibleAttached(q_func()))
         accessibleAttached->set_passwordEdit((echoMode == QQuickTextField::Password || echoMode == QQuickTextField::PasswordEchoOnEdit) ? true : false);
 #else
-    Q_UNUSED(echoMode)
+    Q_UNUSED(echoMode);
 #endif
 }
 
