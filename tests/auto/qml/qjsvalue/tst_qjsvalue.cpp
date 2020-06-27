@@ -2727,7 +2727,7 @@ void tst_QJSValue::jsvalueArrayToSequenceType()
         QVERIFY(asVariant.canConvert<QVariantList>());
         auto asIterable = asVariant.value<QSequentialIterable>();
         for (auto it = asIterable.begin(); it != asIterable.end(); ++it) {
-            Q_UNUSED(*it)
+            Q_UNUSED(*it);
         }
         int i = 0;
         for (QVariant myVariant: asIterable) {
