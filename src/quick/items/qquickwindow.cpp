@@ -1495,9 +1495,10 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     QQuickWindow by calling rendererInterface(). The enablers for this
     integration are the beforeRendering(), beforeRenderPassRecording(),
     afterRenderPassRecording(), and related signals. These allow rendering
-    underlays or overlays. Alternatively, createTextureFromNativeObject() allows
-    wrapping an existing native texture or image object in a QSGTexture that can
-    then be used with the scene graph.
+    underlays or overlays. Alternatively, QPlatformInterface::QSGOpenGLTexture,
+    QPlatformInterface::QSGVulkanTexture, and other similar classes allow
+    wrapping an existing native texture or image object in a QSGTexture that
+    can then be used with the scene graph.
 
     \section2 Rendering without Acceleration
 
@@ -4805,80 +4806,22 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image, CreateText
     return d->context->createTexture(image, flags);
 }
 
-/*!
-    \enum QQuickWindow::NativeObjectType
-    \since 5.14
-
-    Specifies the type of the native object passed to functions such as
-    createTextureFromNativeObject().
-
-    \value NativeObjectTexture The native object is a 2D texture (OpenGL,
-    Direct3D 11, Metal) or image (Vulkan).
- */
-
-/*!
-    Creates a new QSGTexture object from an existing native object.
-
-    The native object is wrapped, but not owned, by the resulting QSGTexture.
-    The caller of the function is responsible for deleting the returned
-    QSGTexture, but that will not destroy the underlying native object.
-
-    \a type specifies the type of the object. In practice the type is
-    NativeObjectTexture, indicating that the native object is a texture or
-    image of the underlying graphics API. Other types may be introduced in the
-    future.
-
-    This function is currently suitable for 2D RGBA textures only.
-
-    \warning This function will return null if the scenegraph has not yet been
-    initialized.
-
-    Use \a options to customize the texture attributes. Only the
-    TextureHasAlphaChannel and TextureHasMipmaps are taken into account here.
-
-    \warning Unlike the now-removed createTextureFromId() in Qt 5, this function
-    never takes ownership of the native object, and the TextureOwnsGLTexture
-    flag is ignored.
-
-    \a size specifies the size in pixels.
-
-    \a nativeObjectHandle is a 64-bit container for the native object handle. With
-    OpenGL, the native handle is a GLuint value, so \a nativeObjectHandle then
-    contains a GLuint. With Vulkan, \a nativeObjectHandle contains a VkImage, and
-    with Direct3D 11 and Metal it contains a ID3D11Texture2D or MTLTexture pointer.
-
-    \a nativeLayout is only used for APIs like Vulkan. When applicable, it must
-    specify the current image layout, such as, a VkImageLayout value.
-
-    \sa sceneGraphInitialized(), QSGTexture, QSGTexture::nativeTexture(),
-    {Scene Graph - Metal Texture Import}, {Scene Graph - Vulkan Texture Import}
-
-    \since 5.14
- */
-QSGTexture *QQuickWindow::createTextureFromNativeObject(NativeObjectType type,
-                                                        quint64 nativeObjectHandle,
-                                                        int nativeLayout,
-                                                        const QSize &size,
-                                                        CreateTextureOptions options) const
+QSGTexture *QQuickWindowPrivate::createTextureFromNativeTexture(quint64 nativeObjectHandle,
+                                                                int nativeLayout,
+                                                                const QSize &size,
+                                                                QQuickWindow::CreateTextureOptions options) const
 {
-    if (type != NativeObjectTexture) {
-        qWarning("createTextureFromNativeObject: only textures are supported");
+    if (!rhi)
         return nullptr;
-    }
 
-    Q_D(const QQuickWindow);
-    if (d->rhi) {
-        QSGPlainTexture *texture = new QSGPlainTexture;
-        texture->setTextureFromNativeObject(d->rhi, type, nativeObjectHandle, nativeLayout,
-                                            size, options.testFlag(TextureHasMipmaps));
-        texture->setHasAlphaChannel(options & TextureHasAlphaChannel);
-        // note that the QRhiTexture does not (and cannot) own the native object
-        texture->setOwnsTexture(true); // texture meaning the QRhiTexture here, not the native object
-        texture->setTextureSize(size);
-        return texture;
-    }
-
-    return nullptr;
+    QSGPlainTexture *texture = new QSGPlainTexture;
+    texture->setTextureFromNativeTexture(rhi, nativeObjectHandle, nativeLayout,
+                                         size, options.testFlag(QQuickWindow::TextureHasMipmaps));
+    texture->setHasAlphaChannel(options & QQuickWindow::TextureHasAlphaChannel);
+    // note that the QRhiTexture does not (and cannot) own the native object
+    texture->setOwnsTexture(true); // texture meaning the QRhiTexture here, not the native object
+    texture->setTextureSize(size);
+    return texture;
 }
 
 /*!

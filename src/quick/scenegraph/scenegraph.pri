@@ -19,6 +19,7 @@ HEADERS += \
     $$PWD/coreapi/qsggeometry_p.h \
     $$PWD/coreapi/qsgtexture.h \
     $$PWD/coreapi/qsgtexture_p.h \
+    $$PWD/coreapi/qsgtexture_platform.h \
     $$PWD/coreapi/qsgbatchrenderer_p.h \
     $$PWD/coreapi/qsgrhivisualizer_p.h
 
@@ -36,6 +37,10 @@ SOURCES += \
     $$PWD/coreapi/qsgbatchrenderer.cpp \
     $$PWD/coreapi/qsgrhivisualizer.cpp
 
+macos|ios {
+    SOURCES += \
+        $$PWD/coreapi/qsgtexture_mac.mm
+}
 
 # Util API
 HEADERS += \

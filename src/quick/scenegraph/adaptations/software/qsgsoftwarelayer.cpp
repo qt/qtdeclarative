@@ -45,7 +45,7 @@
 QT_BEGIN_NAMESPACE
 
 QSGSoftwareLayer::QSGSoftwareLayer(QSGRenderContext *renderContext)
-    : QSGLayer(*(new QSGTexturePrivate))
+    : QSGLayer(*(new QSGTexturePrivate(this)))
     , m_item(nullptr)
     , m_context(renderContext)
     , m_renderer(nullptr)

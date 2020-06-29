@@ -113,11 +113,6 @@ public:
     };
     Q_ENUM(TextRenderType)
 
-    enum NativeObjectType {
-        NativeObjectTexture
-    };
-    Q_ENUM(NativeObjectType)
-
     explicit QQuickWindow(QWindow *parent = nullptr);
     explicit QQuickWindow(QQuickRenderControl *renderControl);
 
@@ -155,12 +150,6 @@ public:
     // Scene graph specific functions
     QSGTexture *createTextureFromImage(const QImage &image) const;
     QSGTexture *createTextureFromImage(const QImage &image, CreateTextureOptions options) const;
-
-    QSGTexture *createTextureFromNativeObject(NativeObjectType type,
-                                              quint64 nativeObjectHandle,
-                                              int nativeLayout,
-                                              const QSize &size,
-                                              CreateTextureOptions options = CreateTextureOption()) const;
 
     void setColor(const QColor &color);
     QColor color() const;

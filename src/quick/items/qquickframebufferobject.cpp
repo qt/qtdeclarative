@@ -346,10 +346,10 @@ QSGNode *QQuickFramebufferObject::updatePaintNode(QSGNode *node, UpdatePaintNode
             displayTexture = n->msDisplayFbo->texture();
         }
 
-        QSGTexture *wrapper = window()->createTextureFromNativeObject(QQuickWindow::NativeObjectTexture,
-                                                                      displayTexture, 0,
-                                                                      n->fbo->size(),
-                                                                      QQuickWindow::TextureHasAlphaChannel);
+        QSGTexture *wrapper = QPlatformInterface::QSGOpenGLTexture::fromNative(displayTexture,
+                                                                               window(),
+                                                                               n->fbo->size(),
+                                                                               QQuickWindow::TextureHasAlphaChannel);
         n->setTexture(wrapper);
     }
 

@@ -41,8 +41,9 @@
 #define QSGTEXTURE_H
 
 #include <QtQuick/qtquickglobal.h>
-#include <QtCore/QObject>
-#include <QtGui/QImage>
+#include <QtCore/qobject.h>
+#include <QtGui/qimage.h>
+#include <QtQuick/qsgtexture_platform.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -80,14 +81,8 @@ public:
         Anisotropy16x
     };
 
-    struct NativeTexture {
-        quint64 object;
-        int layout;
-    };
-
     virtual qint64 comparisonKey() const = 0;
     virtual QRhiTexture *rhiTexture() const;
-    NativeTexture nativeTexture() const;
     virtual QSize textureSize() const = 0;
     virtual bool hasAlphaChannel() const = 0;
     virtual bool hasMipmaps() const = 0;
@@ -116,6 +111,8 @@ public:
     QSGTexture::WrapMode verticalWrapMode() const;
 
     inline QRectF convertToNormalizedSourceRect(const QRectF &rect) const;
+
+    template<typename T> T *platformInterface();
 
 protected:
     QSGTexture(QSGTexturePrivate &dd);

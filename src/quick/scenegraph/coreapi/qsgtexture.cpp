@@ -38,8 +38,11 @@
 ****************************************************************************/
 
 #include "qsgtexture_p.h"
+#include "qsgtexture_platform.h"
 #include <private/qqmlglobal_p.h>
 #include <private/qsgmaterialshader_p.h>
+#include <private/qquickitem_p.h> // qquickwindow_p.h cannot be included on its own due to template nonsense
+#include <private/qquickwindow_p.h>
 #include <QtGui/private/qrhi_p.h>
 
 #if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID) && defined(__GLIBC__)
@@ -101,7 +104,7 @@ QSGSamplerDescription QSGSamplerDescription::fromTexture(QSGTexture *t)
     return s;
 }
 
-QSGTexturePrivate::QSGTexturePrivate()
+QSGTexturePrivate::QSGTexturePrivate(QSGTexture *t)
     : wrapChanged(false)
     , filteringChanged(false)
     , anisotropyChanged(false)
@@ -110,6 +113,18 @@ QSGTexturePrivate::QSGTexturePrivate()
     , mipmapMode(QSGTexture::None)
     , filterMode(QSGTexture::Nearest)
     , anisotropyLevel(QSGTexture::AnisotropyNone)
+#if QT_CONFIG(opengl)
+    , m_openglTextureAccessor(t)
+#endif
+#ifdef Q_OS_WIN
+    , m_d3d11TextureAccessor(t)
+#endif
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+    , m_metalTextureAccessor(t)
+#endif
+#if QT_CONFIG(vulkan)
+    , m_vulkanTextureAccessor(t)
+#endif
 {
 }
 
@@ -315,33 +330,10 @@ static void qt_debug_remove_texture(QSGTexture* texture)
 */
 
 /*!
-    \class QSGTexture::NativeTexture
-    \brief Contains information about the underlying native resources of a texture.
-    \since 5.15
- */
-
-/*!
-    \variable QSGTexture::NativeTexture::object
-    \brief a 64-bit container of the native object handle.
-
-    With OpenGL, the native handle is a GLuint value, so \c object then
-    contains a GLuint. With Vulkan, \c object contains a VkImage, and
-    with Direct3D 11 and Metal it contains a ID3D11Texture2D or MTLTexture
-    pointer.
- */
-
-/*!
-    \variable QSGTexture::NativeTexture::layout
-    \brief Specifies the current image layout for APIs like Vulkan.
-
-    For Vulkan, \c layout contains a \c VkImageLayout value.
- */
-
-/*!
     Constructs the QSGTexture base class.
  */
 QSGTexture::QSGTexture()
-    : QObject(*(new QSGTexturePrivate))
+    : QObject(*(new QSGTexturePrivate(this)))
 {
 #ifndef QT_NO_DEBUG
     if (qsg_leak_check)
@@ -651,24 +643,6 @@ void QSGTexture::commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch *res
     Q_UNUSED(resourceUpdates);
 }
 
-/*!
-    \return the platform-specific texture data for this texture.
-
-    Returns an empty result (\c object is null) if there is no available
-    underlying native texture.
-
-    \since 5.15
-    \sa QQuickWindow::createTextureFromNativeObject()
- */
-QSGTexture::NativeTexture QSGTexture::nativeTexture() const
-{
-    if (auto *tex = rhiTexture()) {
-        auto nativeTexture = tex->nativeTexture();
-        return {nativeTexture.object, nativeTexture.layout};
-    }
-    return {};
-}
-
 bool QSGTexturePrivate::hasDirtySamplerOptions() const
 {
     return wrapChanged || filteringChanged || anisotropyChanged;
@@ -713,6 +687,324 @@ QSGDynamicTexture::QSGDynamicTexture(QSGTexturePrivate &dd)
     : QSGTexture(dd)
 {
 }
+
+/*!
+    \fn template<typename T> T *QSGTexture::platformInterface<T>()
+
+    Returns a platform interface of type T for the texture.
+
+    This function provides access to platform specific functionality of
+    QSGTexture, as defined in the QPlatformInterface namespace. This allows
+    accessing the underlying native texture object, such as, the \c GLuint
+    texture ID with OpenGL, or the \c VkImage handle with Vulkan.
+
+    If the requested interface is not available a \nullptr is returned.
+ */
+
+/*!
+    \namespace QPlatformInterface
+    \inmodule QtQuick
+    \since 6.0
+
+    \brief The QPlatformInterface namespace contains graphics API specific
+    interfaces that allow accessing the underlying graphics resources and allow
+    creating QSGTexture instances that wrap an existing native resource.
+
+    The classes in this namespace can be passed to
+    QSGTexture::platformInterface() to gain access to the appropriate graphics
+    API specific interface, as long as the scene graph has been initialized with
+    the graphics API in question.
+
+    \sa QSGTexture::platformInterface()
+*/
+
+#if QT_CONFIG(opengl) || defined(Q_CLANG_QDOC)
+namespace QPlatformInterface {
+/*!
+    \class QPlatformInterface::QSGOpenGLTexture
+    \inmodule QtQuick
+    \brief Provides access to and enables adopting OpenGL texture objects.
+    \since 6.0
+*/
+
+/*!
+    \fn VkImage QPlatformInterface::QSGOpenGLTexture::nativeTexture() const
+    \return the OpenGL texture ID.
+ */
+
+/*!
+    \internal
+ */
+QSGOpenGLTexture::~QSGOpenGLTexture()
+{
+}
+
+/*!
+    Creates a new QSGTexture wrapping an existing OpenGL texture object.
+
+    The native object specified in \a textureId is wrapped, but not owned, by
+    the resulting QSGTexture. The caller of the function is responsible for
+    deleting the returned QSGTexture, but that will not destroy the underlying
+    native object.
+
+    This function is currently suitable for 2D RGBA textures only.
+
+    \warning This function will return null if the scenegraph has not yet been
+    initialized.
+
+    Use \a options to customize the texture attributes. Only the
+    TextureHasAlphaChannel and TextureHasMipmaps are taken into account here.
+
+    \a size specifies the size in pixels.
+
+    \note This function must be called on the scenegraph rendering thread.
+
+    \sa QQuickWindow::sceneGraphInitialized(), QSGTexture,
+    {Scene Graph - Metal Texture Import}, {Scene Graph - Vulkan Texture Import}
+
+    \since 6.0
+ */
+QSGTexture *QSGOpenGLTexture::fromNative(GLuint textureId,
+                                         QQuickWindow *window,
+                                         const QSize &size,
+                                         QQuickWindow::CreateTextureOptions options)
+{
+    return QQuickWindowPrivate::get(window)->createTextureFromNativeTexture(quint64(textureId), 0, size, options);
+}
+} // QPlatformInterface
+
+GLuint QSGTexturePlatformOpenGL::nativeTexture() const
+{
+    if (auto *tex = m_texture->rhiTexture())
+        return GLuint(tex->nativeTexture().object);
+    return 0;
+}
+
+template<> Q_QUICK_EXPORT
+QPlatformInterface::QSGOpenGLTexture *QSGTexture::platformInterface<QPlatformInterface::QSGOpenGLTexture>()
+{
+    Q_D(QSGTexture);
+    return &d->m_openglTextureAccessor;
+}
+#endif // opengl
+
+#if defined(Q_OS_WIN) || defined(Q_CLANG_QDOC)
+namespace QPlatformInterface {
+/*!
+    \class QPlatformInterface::QSGD3D11Texture
+    \inmodule QtQuick
+    \brief Provides access to and enables adopting Direct3D 11 texture objects.
+    \since 6.0
+*/
+
+/*!
+    \fn void *QPlatformInterface::QSGD3D11Texture::nativeTexture() const
+    \return the ID3D11Texture2D object.
+ */
+
+/*!
+    \internal
+ */
+QSGD3D11Texture::~QSGD3D11Texture()
+{
+}
+
+/*!
+    Creates a new QSGTexture wrapping an existing Direct 3D 11 \a texture object.
+
+    The native object is wrapped, but not owned, by the resulting QSGTexture.
+    The caller of the function is responsible for deleting the returned
+    QSGTexture, but that will not destroy the underlying native object.
+
+    This function is currently suitable for 2D RGBA textures only.
+
+    \warning This function will return null if the scene graph has not yet been
+    initialized.
+
+    Use \a options to customize the texture attributes. Only the
+    TextureHasAlphaChannel and TextureHasMipmaps are taken into account here.
+
+    \a size specifies the size in pixels.
+
+    \note This function must be called on the scene graph rendering thread.
+
+    \sa QQuickWindow::sceneGraphInitialized(), QSGTexture,
+    {Scene Graph - Metal Texture Import}, {Scene Graph - Vulkan Texture Import}
+
+    \since 6.0
+ */
+QSGTexture *QSGD3D11Texture::fromNative(void *texture,
+                                        QQuickWindow *window,
+                                        const QSize &size,
+                                        QQuickWindow::CreateTextureOptions options)
+{
+    return QQuickWindowPrivate::get(window)->createTextureFromNativeTexture(quint64(texture), 0, size, options);
+}
+} // QPlatformInterface
+
+void *QSGTexturePlatformD3D11::nativeTexture() const
+{
+    if (auto *tex = m_texture->rhiTexture())
+        return reinterpret_cast<void *>(quintptr(tex->nativeTexture().object));
+    return 0;
+}
+
+template<> Q_QUICK_EXPORT
+QPlatformInterface::QSGD3D11Texture *QSGTexture::platformInterface<QPlatformInterface::QSGD3D11Texture>()
+{
+    Q_D(QSGTexture);
+    return &d->m_d3d11TextureAccessor;
+}
+#endif // win
+
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_CLANG_QDOC)
+namespace QPlatformInterface {
+/*!
+    \class QPlatformInterface::QSGMetalTexture
+    \inmodule QtQuick
+    \brief Provides access to and enables adopting Metal texture objects.
+    \since 6.0
+*/
+
+/*!
+    \fn MTLTexture *QPlatformInterface::QSGMetalTexture::nativeTexture() const
+    \return the Metal texture object.
+ */
+
+/*!
+    \internal
+ */
+QSGMetalTexture::~QSGMetalTexture()
+{
+}
+
+/*!
+    \fn QSGTexture *QPlatformInterface::QSGMetalTexture::fromNative(MTLTexture *texture, QQuickWindow *window, const QSize &size, QQuickWindow::CreateTextureOptions options)
+
+    Creates a new QSGTexture wrapping an existing Metal \a texture object.
+
+    The native object is wrapped, but not owned, by the resulting QSGTexture.
+    The caller of the function is responsible for deleting the returned
+    QSGTexture, but that will not destroy the underlying native object.
+
+    This function is currently suitable for 2D RGBA textures only.
+
+    \warning This function will return null if the scene graph has not yet been
+    initialized.
+
+    Use \a options to customize the texture attributes. Only the
+    TextureHasAlphaChannel and TextureHasMipmaps are taken into account here.
+
+    \a size specifies the size in pixels.
+
+    \note This function must be called on the scene graph rendering thread.
+
+    \sa QQuickWindow::sceneGraphInitialized(), QSGTexture,
+    {Scene Graph - Metal Texture Import}, {Scene Graph - Vulkan Texture Import}
+
+    \since 6.0
+ */
+
+} // QPlatformInterface
+
+MTLTexture *QSGTexturePlatformMetal::nativeTexture() const
+{
+    if (auto *tex = m_texture->rhiTexture())
+        return (MTLTexture *) quintptr(tex->nativeTexture().object);
+    return 0;
+}
+
+template<> Q_QUICK_EXPORT
+QPlatformInterface::QSGMetalTexture *QSGTexture::platformInterface<QPlatformInterface::QSGMetalTexture>()
+{
+    Q_D(QSGTexture);
+    return &d->m_metalTextureAccessor;
+}
+#endif // win
+
+#if QT_CONFIG(vulkan) || defined(Q_CLANG_QDOC)
+namespace QPlatformInterface {
+/*!
+    \class QPlatformInterface::QSGVulkanTexture
+    \inmodule QtQuick
+    \brief Provides access to and enables adopting Vulkan image objects.
+    \since 6.0
+*/
+
+/*!
+    \fn VkImage QPlatformInterface::QSGVulkanTexture::nativeImage() const
+    \return the VkImage handle.
+ */
+
+/*!
+    \fn VkImageLayout QPlatformInterface::QSGVulkanTexture::nativeImageLayout() const
+    \return the image layout.
+ */
+
+/*!
+    \internal
+ */
+QSGVulkanTexture::~QSGVulkanTexture()
+{
+}
+
+/*!
+    Creates a new QSGTexture wrapping an existing Vulkan \a image object.
+
+    The native object is wrapped, but not owned, by the resulting QSGTexture.
+    The caller of the function is responsible for deleting the returned
+    QSGTexture, but that will not destroy the underlying native object.
+
+    This function is currently suitable for 2D RGBA textures only.
+
+    \warning This function will return null if the scene graph has not yet been
+    initialized.
+
+    \a layout must specify the current layout of the image.
+
+    Use \a options to customize the texture attributes. Only the
+    TextureHasAlphaChannel and TextureHasMipmaps are taken into account here.
+
+    \a size specifies the size in pixels.
+
+    \note This function must be called on the scene graph rendering thread.
+
+    \sa QQuickWindow::sceneGraphInitialized(), QSGTexture,
+    {Scene Graph - Metal Texture Import}, {Scene Graph - Vulkan Texture Import}
+
+    \since 6.0
+ */
+QSGTexture *QSGVulkanTexture::fromNative(VkImage image,
+                                         VkImageLayout layout,
+                                         QQuickWindow *window,
+                                         const QSize &size,
+                                         QQuickWindow::CreateTextureOptions options)
+{
+    return QQuickWindowPrivate::get(window)->createTextureFromNativeTexture(quint64(image), layout, size, options);
+}
+} // QPlatformInterface
+
+VkImage QSGTexturePlatformVulkan::nativeImage() const
+{
+    if (auto *tex = m_texture->rhiTexture())
+        return VkImage(tex->nativeTexture().object);
+    return VK_NULL_HANDLE;
+}
+
+VkImageLayout QSGTexturePlatformVulkan::nativeImageLayout() const
+{
+    if (auto *tex = m_texture->rhiTexture())
+        return VkImageLayout(tex->nativeTexture().layout);
+    return VK_IMAGE_LAYOUT_UNDEFINED;
+}
+
+template<> Q_QUICK_EXPORT
+QPlatformInterface::QSGVulkanTexture *QSGTexture::platformInterface<QPlatformInterface::QSGVulkanTexture>()
+{
+    Q_D(QSGTexture);
+    return &d->m_vulkanTextureAccessor;
+}
+#endif // vulkan
 
 QT_END_NAMESPACE
 

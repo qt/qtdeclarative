@@ -123,6 +123,7 @@ qt_add_module(Quick
         scenegraph/coreapi/qsgrendernode.cpp scenegraph/coreapi/qsgrendernode.h scenegraph/coreapi/qsgrendernode_p.h
         scenegraph/coreapi/qsgrhivisualizer.cpp scenegraph/coreapi/qsgrhivisualizer_p.h
         scenegraph/coreapi/qsgtexture.cpp scenegraph/coreapi/qsgtexture.h scenegraph/coreapi/qsgtexture_p.h
+        scenegraph/coreapi/qsgtexture_platform.h
         scenegraph/qsgadaptationlayer.cpp scenegraph/qsgadaptationlayer_p.h
         scenegraph/qsgbasicglyphnode.cpp scenegraph/qsgbasicglyphnode_p.h
         scenegraph/qsgbasicinternalimagenode.cpp scenegraph/qsgbasicinternalimagenode_p.h
@@ -396,6 +397,11 @@ qt_extend_target(Quick CONDITION QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT
     SOURCES
         items/qquickframebufferobject.cpp items/qquickframebufferobject.h
         util/qquickopenglutils.cpp util/qquickopenglutils.h
+)
+
+qt_extend_target(Quick CONDITION IOS OR MACOS
+    SOURCES
+        scenegraph/coreapi/qsgtexture_mac.mm
 )
 
 qt_extend_target(Quick CONDITION QT_FEATURE_thread

@@ -51,7 +51,7 @@
 QT_BEGIN_NAMESPACE
 
 QSGPlainTexture::QSGPlainTexture()
-    : QSGTexture(*(new QSGPlainTexturePrivate))
+    : QSGTexture(*(new QSGPlainTexturePrivate(this)))
     , m_texture(nullptr)
     , m_has_alpha(false)
     , m_dirty_texture(false)
@@ -100,12 +100,10 @@ void QSGPlainTexture::setTexture(QRhiTexture *texture) // RHI only
     m_mipmaps_generated = false;
 }
 
-void QSGPlainTexture::setTextureFromNativeObject(QRhi *rhi, QQuickWindow::NativeObjectType type,
-                                                 quint64 nativeObjectHandle, int nativeLayout,
-                                                 const QSize &size, bool mipmap)
+void QSGPlainTexture::setTextureFromNativeTexture(QRhi *rhi,
+                                                  quint64 nativeObjectHandle, int nativeLayout,
+                                                  const QSize &size, bool mipmap)
 {
-    Q_UNUSED(type);
-
     QRhiTexture::Flags flags;
     if (mipmap)
         flags |= QRhiTexture::MipMapped | QRhiTexture::UsedWithGenerateMips;

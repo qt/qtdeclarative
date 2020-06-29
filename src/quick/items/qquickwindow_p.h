@@ -242,6 +242,11 @@ public:
 
     bool emitError(QQuickWindow::SceneGraphError error, const QString &msg);
 
+    QSGTexture *createTextureFromNativeTexture(quint64 nativeObjectHandle,
+                                               int nativeLayout,
+                                               const QSize &size,
+                                               QQuickWindow::CreateTextureOptions options) const;
+
     QQuickItem::UpdatePaintNodeData updatePaintNodeData;
 
     QQuickItem *dirtyItemList;

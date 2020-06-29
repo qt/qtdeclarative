@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
 #define QT_MINIMUM_DYNAMIC_FBO_SIZE 64U
 
 QSGPainterTexture::QSGPainterTexture()
-    : QSGPlainTexture(*(new QSGPlainTexturePrivate))
+    : QSGPlainTexture(*(new QSGPlainTexturePrivate(this)))
 {
     m_retain_image = true;
 }

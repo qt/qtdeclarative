@@ -44,7 +44,7 @@
 #include <private/qsgdefaultrendercontext_p.h>
 
 QSGRhiLayer::QSGRhiLayer(QSGRenderContext *context)
-    : QSGLayer(*(new QSGTexturePrivate))
+    : QSGLayer(*(new QSGTexturePrivate(this)))
     , m_mipmap(false)
     , m_live(true)
     , m_recursive(false)

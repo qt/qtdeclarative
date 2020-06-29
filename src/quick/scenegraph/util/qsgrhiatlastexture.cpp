@@ -338,7 +338,7 @@ void Atlas::enqueueTextureUpload(TextureBase *t, QRhiResourceUpdateBatch *resour
 }
 
 TextureBase::TextureBase(AtlasBase *atlas, const QRect &textureRect)
-    : QSGTexture(*(new QSGTexturePrivate))
+    : QSGTexture(*(new QSGTexturePrivate(this)))
     , m_allocated_rect(textureRect)
     , m_atlas(atlas)
 {

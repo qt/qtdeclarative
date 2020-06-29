@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
 Q_LOGGING_CATEGORY(QSG_LOG_TEXTUREIO, "qt.scenegraph.textureio");
 
 QSGCompressedTexture::QSGCompressedTexture(const QTextureFileData &texData)
-    : QSGTexture(*(new QSGTexturePrivate)),
+    : QSGTexture(*(new QSGTexturePrivate(this))),
       m_textureData(texData)
 {
     m_size = m_textureData.size();

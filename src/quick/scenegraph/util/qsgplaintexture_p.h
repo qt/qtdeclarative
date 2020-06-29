@@ -87,9 +87,9 @@ public:
     void commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch *resourceUpdates) override;
 
     void setTexture(QRhiTexture *texture);
-    void setTextureFromNativeObject(QRhi *rhi, QQuickWindow::NativeObjectType type,
-                                    quint64 nativeObjectHandle, int nativeLayout,
-                                    const QSize &size, bool mipmap);
+    void setTextureFromNativeTexture(QRhi *rhi,
+                                     quint64 nativeObjectHandle, int nativeLayout,
+                                     const QSize &size, bool mipmap);
 
     static QSGPlainTexture *fromImage(const QImage &image) {
         QSGPlainTexture *t = new QSGPlainTexture();
@@ -119,6 +119,7 @@ class QSGPlainTexturePrivate : public QSGTexturePrivate
 {
     Q_DECLARE_PUBLIC(QSGPlainTexture)
 public:
+    QSGPlainTexturePrivate(QSGTexture *t) : QSGTexturePrivate(t) { }
     QSGTexture::Filtering m_last_mipmap_filter = QSGTexture::None;
 };
 
