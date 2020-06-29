@@ -73,10 +73,10 @@ Component {
     Text {
         id: label
         font.pixelSize: 24
-        text: if (index == 0)
-            label.text = type + " (default)"
-        else
-            text: type
+        text: index === 0 ? type + " (default)" : type
+
+        required property int index
+        required property string type
     }
 }
 //! [delegate]
