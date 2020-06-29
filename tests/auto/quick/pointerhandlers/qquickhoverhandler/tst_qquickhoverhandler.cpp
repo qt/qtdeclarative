@@ -61,6 +61,7 @@ private slots:
     void mouseAreaAndUnderlyingHoverHandler();
     void hoverHandlerAndUnderlyingMouseArea();
     void movingItemWithHoverHandler();
+    void margin();
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
@@ -310,6 +311,56 @@ void tst_HoverHandler::movingItemWithHoverHandler()
 
     paddle->setX(540);
     QTRY_COMPARE(paddleHH->isHovered(), false);
+}
+
+void tst_HoverHandler::margin() // QTBUG-85303
+{
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "hoverMargin.qml");
+    QQuickView * window = windowPtr.data();
+    QQuickItem * item = window->rootObject()->findChild<QQuickItem *>();
+    QVERIFY(item);
+    QQuickHoverHandler *hh = item->findChild<QQuickHoverHandler *>();
+    QVERIFY(hh);
+
+    QPoint itemCenter(item->mapToScene(QPointF(item->width() / 2, item->height() / 2)).toPoint());
+    QPoint leftMargin = itemCenter - QPoint(35, 35);
+    QSignalSpy hoveredSpy(hh, SIGNAL(hoveredChanged()));
+
+    QTest::mouseMove(window, {10, 10});
+    QCOMPARE(hh->isHovered(), false);
+    QCOMPARE(hoveredSpy.count(), 0);
+#if QT_CONFIG(cursor)
+    QCOMPARE(window->cursor().shape(), Qt::ArrowCursor);
+#endif
+
+    QTest::mouseMove(window, leftMargin);
+    QCOMPARE(hh->isHovered(), true);
+    QCOMPARE(hoveredSpy.count(), 1);
+#if QT_CONFIG(cursor)
+    QCOMPARE(window->cursor().shape(), Qt::OpenHandCursor);
+#endif
+
+    QTest::mouseMove(window, itemCenter);
+    QCOMPARE(hh->isHovered(), true);
+    QCOMPARE(hoveredSpy.count(), 1);
+#if QT_CONFIG(cursor)
+    QCOMPARE(window->cursor().shape(), Qt::OpenHandCursor);
+#endif
+
+    QTest::mouseMove(window, leftMargin);
+    QCOMPARE(hh->isHovered(), true);
+//    QCOMPARE(hoveredSpy.count(), 1);
+#if QT_CONFIG(cursor)
+    QCOMPARE(window->cursor().shape(), Qt::OpenHandCursor);
+#endif
+
+    QTest::mouseMove(window, {10, 10});
+    QCOMPARE(hh->isHovered(), false);
+//    QCOMPARE(hoveredSpy.count(), 2);
+#if QT_CONFIG(cursor)
+    QCOMPARE(window->cursor().shape(), Qt::ArrowCursor);
+#endif
 }
 
 QTEST_MAIN(tst_HoverHandler)

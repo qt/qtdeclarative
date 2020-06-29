@@ -3138,15 +3138,19 @@ QPair<QQuickItem*, QQuickPointerHandler*> QQuickWindowPrivate::findCursorItemAnd
             if (ret.first)
                 return ret;
         }
-        if (itemPrivate->hasCursor || itemPrivate->hasCursorHandler) {
-            QPointF p = item->mapFromScene(scenePos);
-            if (!item->contains(p))
-                return {nullptr, nullptr};
-            if (itemPrivate->hasCursorHandler) {
-                if (auto handler = itemPrivate->effectiveCursorHandler())
+        if (itemPrivate->hasCursorHandler) {
+            if (auto handler = itemPrivate->effectiveCursorHandler()) {
+                QQuickPointerEvent *pointerEvent = pointerEventInstance(QQuickPointerDevice::genericMouseDevice(), QEvent::MouseMove);
+                pointerEvent->point(0)->reset(Qt::TouchPointMoved, scenePos, quint64(1) << 24 /* mouse has device ID 1 */, 0);
+                pointerEvent->point(0)->setAccepted(true);
+                pointerEvent->localize(item);
+                if (handler->parentContains(pointerEvent->point(0)))
                     return {item, handler};
             }
-            if (itemPrivate->hasCursor)
+        }
+        if (itemPrivate->hasCursor) {
+            QPointF p = item->mapFromScene(scenePos);
+            if (item->contains(p))
                 return {item, nullptr};
         }
     }
