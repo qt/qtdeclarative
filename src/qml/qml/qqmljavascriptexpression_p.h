@@ -184,22 +184,28 @@ protected:
 
     QForwardFieldList<QQmlJavaScriptExpressionGuard, &QQmlJavaScriptExpressionGuard::next, GuardTag> activeGuards;
 
-    void setTranslationsCaptured(bool captured) { if (captured) m_error.setTag(TranslationsCaptured); else m_error.setTag(NoTag); }
-    bool translationsCaptured() const { return m_error.tag() == TranslationsCaptured; }
+    void setTranslationsCaptured(bool captured) {
+        Tag newTag = captured ? TranslationsCaptured : NoTag;
+        if (m_error.tag() & InEvaluationLoop)
+            newTag = Tag(newTag | InEvaluationLoop);
+        m_error.setTag(newTag);
+    }
+    bool translationsCaptured() const { return m_error.tag() & TranslationsCaptured; }
+
+    enum Tag {
+        NoTag,
+        TranslationsCaptured,
+        InEvaluationLoop
+    };
+
+    // m_error:flag1 translationsCapturedDuringEvaluation
+    QTaggedPointer<QQmlDelayedError> m_error;
 
 private:
     friend class QQmlContextData;
     friend class QQmlPropertyCapture;
     friend void QQmlJavaScriptExpressionGuard_callback(QQmlNotifierEndpoint *, void **);
     friend class QQmlTranslationBinding;
-
-    enum Tag {
-        NoTag,
-        TranslationsCaptured
-    };
-
-    // m_error:flag1 translationsCapturedDuringEvaluation
-    QTaggedPointer<QQmlDelayedError> m_error;
 
     // Not refcounted as the context will clear the expressions when destructed.
     QQmlContextData *m_context;

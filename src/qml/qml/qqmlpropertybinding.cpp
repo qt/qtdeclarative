@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qqmlpropertybinding_p.h"
+#include <qqmlinfo.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -72,7 +73,20 @@ QUntypedPropertyBinding QQmlPropertyBinding::create(const QQmlPropertyData *pd, 
 
 void QQmlPropertyBinding::expressionChanged()
 {
+    const auto currentTag = m_error.tag();
+    if (currentTag & InEvaluationLoop) {
+        QQmlError err;
+        auto location = QQmlJavaScriptExpression::sourceLocation();
+        err.setUrl(QUrl{location.sourceFile});
+        err.setLine(location.line);
+        err.setColumn(location.column);
+        err.setDescription(QString::fromLatin1("Binding loop detected"));
+        QtQml::qmlWarning(this->scopeObject(), err);
+        return;
+    }
+    m_error.setTag(currentTag | InEvaluationLoop);
     markDirtyAndNotifyObservers();
+    m_error.setTag(currentTag);
 }
 
 QQmlPropertyBinding::QQmlPropertyBinding(const QMetaType &mt)
