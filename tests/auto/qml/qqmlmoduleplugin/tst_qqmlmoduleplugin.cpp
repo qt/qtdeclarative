@@ -150,7 +150,7 @@ void registerStaticPlugin(const char *uri)
     md.insert(QStringLiteral("uri"), uris);
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-    PluginType::metaData.append(QLatin1String("QTMETADATA !"));
+    PluginType::metaData.append(QByteArrayLiteral("QTMETADATA !"));
     PluginType::metaData.append(char(0)); // current version
     PluginType::metaData.append(char(QT_VERSION_MAJOR));
     PluginType::metaData.append(char(QT_VERSION_MINOR));
