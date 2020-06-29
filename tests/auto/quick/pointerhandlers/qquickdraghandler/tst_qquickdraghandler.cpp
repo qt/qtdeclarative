@@ -407,6 +407,9 @@ void tst_DragHandler::dragFromMargin() // QTBUG-74966
     QVERIFY(!dragHandler->active());
     QCOMPARE(dragHandler->centroid().scenePosition(), scenePressPos);
     QCOMPARE(dragHandler->centroid().scenePressPosition(), scenePressPos);
+#if QT_CONFIG(cursor)
+    QCOMPARE(window->cursor().shape(), Qt::ArrowCursor);
+#endif
     p1 += QPoint(dragThreshold * 2, 0);
     QTest::mouseMove(window, p1);
     QTRY_VERIFY(dragHandler->active());
@@ -415,9 +418,18 @@ void tst_DragHandler::dragFromMargin() // QTBUG-74966
     QCOMPARE(dragHandler->translation().x(), 0.0); // hmm that's odd
     QCOMPARE(dragHandler->translation().y(), 0.0);
     QCOMPARE(draggableItem->position(), originalPos + QPointF(dragThreshold * 2, 0));
+#if QT_CONFIG(cursor)
+    // The cursor doesn't change until the next event after the handler becomes active.
+    p1 += QPoint(1, 0);
+    QTest::mouseMove(window, p1);
+    QTRY_COMPARE(window->cursor().shape(), Qt::ClosedHandCursor);
+#endif
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
     QTRY_VERIFY(!dragHandler->active());
     QCOMPARE(dragHandler->centroid().pressedButtons(), Qt::NoButton);
+#if QT_CONFIG(cursor)
+    QTRY_COMPARE(window->cursor().shape(), Qt::ArrowCursor);
+#endif
 }
 
 void tst_DragHandler::snapMode_data()
