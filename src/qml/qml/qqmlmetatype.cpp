@@ -1225,7 +1225,8 @@ QQmlType QQmlMetaType::qmlType(const QHashedStringRef &name, const QHashedString
 {
     const QQmlMetaTypeDataPtr data;
 
-    QQmlMetaTypeData::Names::ConstIterator it = data->nameToType.constFind(name);
+    const QHashedString key(QString::fromRawData(name.constData(), name.length()), name.hash());
+    QQmlMetaTypeData::Names::ConstIterator it = data->nameToType.constFind(key);
     while (it != data->nameToType.cend() && it.key() == name) {
         QQmlType t(*it);
         if (module.isEmpty() || t.availableInVersion(module, version))

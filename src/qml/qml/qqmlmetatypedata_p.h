@@ -70,8 +70,10 @@ struct QQmlMetaTypeData
     QSet<QQmlType> undeletableTypes;
     typedef QHash<int, QQmlTypePrivate *> Ids;
     Ids idToType;
-    typedef QMultiHash<QHashedStringRef, QQmlTypePrivate *> Names;
+
+    using Names = QMultiHash<QHashedString, QQmlTypePrivate *>;
     Names nameToType;
+
     typedef QHash<QUrl, QQmlTypePrivate *> Files; //For file imported composite types only
     Files urlToType;
     Files urlToNonFileImportType; // For non-file imported composite and composite
