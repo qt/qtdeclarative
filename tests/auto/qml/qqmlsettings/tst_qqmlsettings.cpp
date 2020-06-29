@@ -494,7 +494,7 @@ void tst_QQmlSettings::noApplicationIdentifiersSet()
 
     QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*QML Settings: Failed to initialize QSettings instance. Status code is: 1"));
     // Can't set an empty applicationName because QCoreApplication won't allow it, which is why it's not listed here.
-    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*QML Settings: The following application identifiers have not been set: QVector\\(\"organizationName\", \"organizationDomain\"\\)"));
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*QML Settings: The following application identifiers have not been set: QList\\(\"organizationName\", \"organizationDomain\"\\)"));
 
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("basic.qml"));
