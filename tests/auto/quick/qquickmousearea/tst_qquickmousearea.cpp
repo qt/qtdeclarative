@@ -106,6 +106,7 @@ private slots:
     void resetDrag();
     void dragging_data() { acceptedButton_data(); }
     void dragging();
+    void selfDrag();
     void dragSmoothed();
     void dragThreshold_data();
     void dragThreshold();
@@ -401,15 +402,80 @@ void tst_QQuickMouseArea::dragging()
     for (int i = 0; i < 20; i++) {
         p += QPoint(1, 1);
         QTest::mouseMove(&window, p);
+        QTRY_COMPARE(mouseRegion->mouseX(), relativeX);
+        QCOMPARE(mouseRegion->mouseY(), relativeY);
     }
-    QTRY_VERIFY(drag->active());
-    QTRY_COMPARE(mouseRegion->mouseX(), relativeX);
-    QCOMPARE(mouseRegion->mouseY(), relativeY);
+    QVERIFY(drag->active());
 
     QTest::mouseRelease(&window, button, Qt::NoModifier, p);
     QTRY_VERIFY(!drag->active());
     QTRY_COMPARE(blackRect->x(), 81.0);
     QCOMPARE(blackRect->y(), 81.0);
+}
+
+void tst_QQuickMouseArea::selfDrag() // QTBUG-85111
+{
+    QQuickView window;
+    QByteArray errorMessage;
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("selfDrag.qml"), true, &errorMessage), errorMessage.constData());
+
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QVERIFY(window.rootObject() != nullptr);
+
+    QQuickMouseArea *ma = window.rootObject()->findChild<QQuickMouseArea*>("ma");
+    QVERIFY(ma != nullptr);
+    QQuickDrag *drag = ma->drag();
+    QVERIFY(drag != nullptr);
+    QCOMPARE(ma, drag->target());
+
+    QQuickItem *fillRect = window.rootObject()->findChild<QQuickItem*>("fill");
+    QVERIFY(fillRect != nullptr);
+
+    QVERIFY(!drag->active());
+
+    QPoint p = QPoint(100,100);
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, p);
+
+    QVERIFY(!drag->active());
+    QCOMPARE(ma->x(), 0);
+    QCOMPARE(ma->y(), 0);
+
+    int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
+
+    // First move event triggers drag, second is acted upon.
+    // move the minimum distance to activate drag
+    p += QPoint(dragThreshold + 1, dragThreshold + 1);
+    QTest::mouseMove(&window, p);
+    QVERIFY(!drag->active());
+
+    // from here on move the item
+    p += QPoint(1, 1);
+    QTest::mouseMove(&window, p);
+    QTRY_VERIFY(drag->active());
+    QTRY_COMPARE(ma->x(), 1);
+    QCOMPARE(ma->y(), 1);
+
+    p += QPoint(10, 10);
+    QTest::mouseMove(&window, p);
+    QTRY_VERIFY(drag->active());
+    QTRY_COMPARE(ma->x(), 11);
+    QCOMPARE(ma->y(), 11);
+
+    qreal relativeX = ma->mouseX();
+    qreal relativeY = ma->mouseY();
+    for (int i = 0; i < 20; i++) {
+        p += QPoint(1, 1);
+        QTest::mouseMove(&window, p);
+        QVERIFY(drag->active());
+        QTRY_COMPARE(ma->mouseX(), relativeX);
+        QCOMPARE(ma->mouseY(), relativeY);
+    }
+
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, p);
+    QTRY_VERIFY(!drag->active());
+    QTRY_COMPARE(ma->x(), 31);
+    QCOMPARE(ma->y(), 31);
 }
 
 void tst_QQuickMouseArea::dragSmoothed()

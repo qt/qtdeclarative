@@ -749,7 +749,7 @@ void QQuickMouseArea::mouseMoveEvent(QMouseEvent *event)
 
         if (d->drag->active()) {
             d->drag->target()->setPosition(boundedDragPos);
-            d->lastPos = d->lastScenePos - mapToScene(position());
+            d->lastPos = mapFromScene(d->lastScenePos);
         }
 
         bool dragOverThresholdX = QQuickWindowPrivate::dragOverThreshold(dragPos.x() - startPos.x(),
