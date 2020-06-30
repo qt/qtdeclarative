@@ -1,0 +1,169 @@
+/****************************************************************************
+**
+** Copyright (C) 2020 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the test suite of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:GPL-EXCEPT$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 as published by the Free Software
+** Foundation with exceptions as appearing in the file LICENSE.GPL3-EXCEPT
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#include <QtTest/QtTest>
+#include <QProcess>
+#include <QString>
+
+#include <util.h>
+
+class TestQmlimportscanner: public QQmlDataTest
+{
+    Q_OBJECT
+
+private Q_SLOTS:
+    void initTestCase() override;
+
+    void cleanQmlCode_data();
+    void cleanQmlCode();
+    void rootPath();
+    void modules_data();
+    void modules();
+
+private:
+    void runQmlimportscanner(const QString &mode, const QString &fileToScan,
+                             const QString &resultFile);
+
+    QString m_qmlimportscannerPath;
+};
+
+void TestQmlimportscanner::initTestCase()
+{
+    QQmlDataTest::initTestCase();
+    m_qmlimportscannerPath = QLibraryInfo::location(QLibraryInfo::BinariesPath) + QLatin1String("/qmlimportscanner");
+#ifdef Q_OS_WIN
+    m_qmlimportscannerPath += QLatin1String(".exe");
+#endif
+    if (!QFileInfo(m_qmlimportscannerPath).exists()) {
+        QString message = QStringLiteral("qmlimportscanner executable not found (looked for %0)").arg(m_qmlimportscannerPath);
+        QFAIL(qPrintable(message));
+    }
+}
+
+void TestQmlimportscanner::cleanQmlCode_data()
+{
+    QTest::addColumn<QString>("filename");
+    QTest::newRow("Simple_QML")                << QStringLiteral("Simple.qml");
+    QTest::newRow("QML_importing_JS")          << QStringLiteral("importing_js.qml");
+    QTest::newRow("JS_with_pragma_and_import") << QStringLiteral("QTBUG-45916.js");
+    QTest::newRow("qtQmlOnly")                 << QStringLiteral("qtQmlOnly.qml");
+    QTest::newRow("directoryImportWithPrefix") << QStringLiteral("ImportWithPrefix.qml");
+    QTest::newRow("localImport")               << QStringLiteral("localImport.qml");
+    QTest::newRow("methodsInJavascript")       << QStringLiteral("javascriptMethods.qml");
+    QTest::newRow("moduleImportWithPrefix")    << QStringLiteral("Drawer.qml");
+    QTest::newRow("localAndModuleImport")      << QStringLiteral("ListProperty.qml");
+    QTest::newRow("versionLessLocalImport")    << QStringLiteral("qmldirImportAndDepend.qml");
+    QTest::newRow("versionLessModuleImport")   << QStringLiteral("parentEnum.qml");
+}
+
+void TestQmlimportscanner::cleanQmlCode()
+{
+    QFETCH(QString, filename);
+    runQmlimportscanner("-qmlFiles", testFile(filename), testFile(filename + ".json"));
+}
+
+void TestQmlimportscanner::rootPath()
+{
+    runQmlimportscanner("-rootPath", dataDirectory(), testFile("rootPath.json"));
+}
+
+void TestQmlimportscanner::modules_data()
+{
+    QTest::addColumn<QString>("name");
+    QTest::newRow("CompositeSingleton")        << QStringLiteral("CompositeSingleton");
+    QTest::newRow("CompositeWithEnum")         << QStringLiteral("CompositeWithEnum");
+    QTest::newRow("CompositeWithinSingleton")  << QStringLiteral("CompositeWithinSingleton");
+    QTest::newRow("Imports")                   << QStringLiteral("Imports");
+    QTest::newRow("Singleton")                 << QStringLiteral("Singleton");
+    QTest::newRow("Things")                    << QStringLiteral("Things");
+}
+
+void TestQmlimportscanner::modules()
+{
+    QFETCH(QString, name);
+
+    QTemporaryFile qmlFile(QDir::tempPath() + "/tst_qmlimportscanner_XXXXXX.qml");
+    QVERIFY(qmlFile.open());
+
+    qmlFile.write("import " + name.toUtf8() + "\nQtObject {}");
+    qmlFile.close();
+    runQmlimportscanner("-qmlFiles", qmlFile.fileName(), testFile(name + ".json"));
+}
+
+void TestQmlimportscanner::runQmlimportscanner(const QString &mode, const QString &pathToScan,
+                                               const QString &resultFile)
+{
+    const QString file(pathToScan);
+    QStringList args {
+        mode, file,
+        "-importPath", QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath), dataDirectory()
+    };
+    QString errors;
+    QProcess process;
+    process.start(m_qmlimportscannerPath, args);
+    QVERIFY(process.waitForFinished());
+    QCOMPARE(process.exitStatus(), QProcess::NormalExit);
+    QCOMPARE(process.exitCode(), 0);
+    QVERIFY(process.readAllStandardError().isEmpty());
+
+    QJsonParseError error;
+    const QJsonDocument generated = QJsonDocument::fromJson(process.readAllStandardOutput(),
+                                                            &error);
+    QCOMPARE(error.error, QJsonParseError::NoError);
+    QVERIFY(generated.isArray());
+
+    QFile imports(resultFile);
+    imports.open(QIODevice::ReadOnly);
+    QJsonDocument expected = QJsonDocument::fromJson(imports.readAll(), &error);
+    QCOMPARE(error.error, QJsonParseError::NoError);
+    QVERIFY(expected.isArray());
+
+    const QJsonArray generatedArray = generated.array();
+    QJsonArray expectedArray = expected.array();
+    for (const QJsonValue &value : generatedArray) {
+        QVERIFY(value.isObject());
+        QJsonObject object = value.toObject();
+
+        // Path is omitted because it's an absolute path, dependent on host system.
+        object["path"] = QJsonValue::Undefined;
+
+        bool found = false;
+        for (auto it = expectedArray.begin(), end = expectedArray.end(); it != end; ++it) {
+            if (*it == object) {
+                expectedArray.erase(it);
+                found = true;
+                break;
+            }
+        }
+        QVERIFY(found);
+    }
+    QVERIFY(expectedArray.isEmpty());
+}
+
+QTEST_MAIN(TestQmlimportscanner)
+#include "tst_qmlimportscanner.moc"

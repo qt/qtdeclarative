@@ -1,0 +1,37 @@
+[
+    {
+        "name": "Things",
+        "plugin": "doesNotExistPlugin",
+        "relativePath": "Things",
+        "type": "module"
+    },
+    {
+        "classname": "QtQuick2Plugin",
+        "name": "QtQuick",
+        "plugin": "qtquick2plugin",
+        "relativePath": "QtQuick",
+        "type": "module"
+    },
+    {
+        "classname": "QtQmlPlugin",
+        "name": "QtQml",
+        "plugin": "qmlplugin",
+        "relativePath": "QtQml",
+        "type": "module"
+    },
+    {
+        "classname": "QtQmlModelsPlugin",
+        "name": "QtQml.Models",
+        "plugin": "modelsplugin",
+        "relativePath": "QtQml/Models",
+        "type": "module"
+    },
+    {
+        "classname": "QtQmlWorkerScriptPlugin",
+        "name": "QtQml.WorkerScript",
+        "plugin": "workerscriptplugin",
+        "relativePath": "QtQml/WorkerScript",
+        "type": "module"
+    }
+]
+

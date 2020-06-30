@@ -90,7 +90,11 @@ SUBDIRS += $$METATYPETESTS
 qtConfig(process) {
     qtConfig(qml-debug): SUBDIRS += debugger
     !boot2qt {
-        SUBDIRS += qmlformat qmllint qmlplugindump
+        SUBDIRS += \
+            qmlformat \
+            qmlimportscanner \
+            qmllint \
+            qmlplugindump
     }
 }
 

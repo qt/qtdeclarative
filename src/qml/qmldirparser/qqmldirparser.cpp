@@ -84,7 +84,7 @@ void QQmlDirParser::clear()
     _plugins.clear();
     _designerSupported = false;
     _typeInfos.clear();
-    _className.clear();
+    _classNames.clear();
 }
 
 inline static void scanSpace(const QChar *&ch) {
@@ -212,7 +212,7 @@ bool QQmlDirParser::parse(const QString &source)
                 continue;
             }
 
-            _className = sections[1];
+            _classNames.append(sections[1]);
 
         } else if (sections[0] == QLatin1String("internal")) {
             if (sectionCount != 3) {
@@ -410,9 +410,9 @@ bool QQmlDirParser::designerSupported() const
     return _designerSupported;
 }
 
-QString QQmlDirParser::className() const
+QStringList QQmlDirParser::classNames() const
 {
-    return _className;
+    return _classNames;
 }
 
 QDebug &operator<< (QDebug &debug, const QQmlDirParser::Component &component)

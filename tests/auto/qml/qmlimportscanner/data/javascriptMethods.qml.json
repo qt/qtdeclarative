@@ -1,0 +1,27 @@
+[
+    {
+        "classname": "QtQmlPlugin",
+        "name": "QtQml",
+        "plugin": "qmlplugin",
+        "relativePath": "QtQml",
+        "type": "module"
+    },
+    {
+        "name": "Methods.js",
+        "type": "javascript"
+    },
+    {
+        "classname": "QtQmlModelsPlugin",
+        "name": "QtQml.Models",
+        "plugin": "modelsplugin",
+        "relativePath": "QtQml/Models",
+        "type": "module"
+    },
+    {
+        "classname": "QtQmlWorkerScriptPlugin",
+        "name": "QtQml.WorkerScript",
+        "plugin": "workerscriptplugin",
+        "relativePath": "QtQml/WorkerScript",
+        "type": "module"
+    }
+]

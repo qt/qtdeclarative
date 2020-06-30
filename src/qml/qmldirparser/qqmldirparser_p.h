@@ -161,7 +161,7 @@ public:
 
     QList<TypeInfo> typeInfos() const;
 
-    QString className() const;
+    QStringList classNames() const;
 
 private:
     bool maybeAddComponent(const QString &typeName, const QString &fileName, const QString &version, QHash<QString,Component> &hash, int lineNumber = -1, bool multi = true);
@@ -177,7 +177,7 @@ private:
     QList<Plugin> _plugins;
     bool _designerSupported = false;
     QList<TypeInfo> _typeInfos;
-    QString _className;
+    QStringList _classNames;
 };
 
 using QQmlDirComponents = QMultiHash<QString,QQmlDirParser::Component>;

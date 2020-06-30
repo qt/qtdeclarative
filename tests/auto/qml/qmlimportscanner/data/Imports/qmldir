@@ -1,0 +1,3 @@
+module Imports
+CompositeImports 1.0 CompositeImports.qml
+singleton Derived 1.0 Derived.qml
