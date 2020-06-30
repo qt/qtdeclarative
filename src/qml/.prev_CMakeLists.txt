@@ -8,9 +8,24 @@ qt_add_module(Qml
     GENERATE_METATYPES
     PLUGIN_TYPES qmltooling
     SOURCES
-        ../3rdparty/masm/assembler/*.h
-        ../3rdparty/masm/assembler/ARMv7Assembler.cpp
-        ../3rdparty/masm/assembler/LinkBuffer.cpp
+        ../3rdparty/masm/assembler/ARM64Assembler.h
+        ../3rdparty/masm/assembler/ARMv7Assembler.cpp ../3rdparty/masm/assembler/ARMv7Assembler.h
+        ../3rdparty/masm/assembler/AbstractMacroAssembler.h
+        ../3rdparty/masm/assembler/AssemblerBuffer.h
+        ../3rdparty/masm/assembler/AssemblerBufferWithConstantPool.h
+        ../3rdparty/masm/assembler/CodeLocation.h
+        ../3rdparty/masm/assembler/LinkBuffer.cpp ../3rdparty/masm/assembler/LinkBuffer.h
+        ../3rdparty/masm/assembler/MIPSAssembler.h
+        ../3rdparty/masm/assembler/MacroAssembler.h
+        ../3rdparty/masm/assembler/MacroAssemblerARM64.h
+        ../3rdparty/masm/assembler/MacroAssemblerARMv7.h
+        ../3rdparty/masm/assembler/MacroAssemblerCodeRef.h
+        ../3rdparty/masm/assembler/MacroAssemblerMIPS.h
+        ../3rdparty/masm/assembler/MacroAssemblerX86.h
+        ../3rdparty/masm/assembler/MacroAssemblerX86Common.h
+        ../3rdparty/masm/assembler/MacroAssemblerX86_64.h
+        ../3rdparty/masm/assembler/RepatchBuffer.h
+        ../3rdparty/masm/assembler/X86Assembler.h
         ../3rdparty/masm/disassembler/ARM64/A64DOpcode.cpp ../3rdparty/masm/disassembler/ARM64/A64DOpcode.h
         ../3rdparty/masm/disassembler/ARM64Disassembler.cpp
         ../3rdparty/masm/disassembler/ARMv7/ARMv7DOpcode.cpp ../3rdparty/masm/disassembler/ARMv7/ARMv7DOpcode.h
@@ -33,15 +48,34 @@ qt_add_module(Qml
         ../3rdparty/masm/stubs/wtf/UnusedParam.h
         ../3rdparty/masm/stubs/wtf/Vector.h
         ../3rdparty/masm/stubs/yarr/YarrUnicodeProperties.cpp
-        ../3rdparty/masm/wtf/*.h
+        ../3rdparty/masm/wtf/ASCIICType.h
+        ../3rdparty/masm/wtf/Assertions.h
+        ../3rdparty/masm/wtf/Atomics.h
+        ../3rdparty/masm/wtf/BumpPointerAllocator.h
+        ../3rdparty/masm/wtf/CheckedArithmetic.h
+        ../3rdparty/masm/wtf/Compiler.h
+        ../3rdparty/masm/wtf/CryptographicallyRandomNumber.h
+        ../3rdparty/masm/wtf/DataLog.h
+        ../3rdparty/masm/wtf/DynamicAnnotations.h
+        ../3rdparty/masm/wtf/EnumClass.h
+        ../3rdparty/masm/wtf/FeatureDefines.h
         ../3rdparty/masm/wtf/FilePrintStream.cpp ../3rdparty/masm/wtf/FilePrintStream.h
+        ../3rdparty/masm/wtf/Locker.h
+        ../3rdparty/masm/wtf/MathExtras.h
+        ../3rdparty/masm/wtf/NotFound.h
+        ../3rdparty/masm/wtf/NullPtr.h
         ../3rdparty/masm/wtf/OSAllocator.h
         ../3rdparty/masm/wtf/PageAllocation.h
         ../3rdparty/masm/wtf/PageAllocationAligned.cpp ../3rdparty/masm/wtf/PageAllocationAligned.h
         ../3rdparty/masm/wtf/PageBlock.cpp ../3rdparty/masm/wtf/PageBlock.h
         ../3rdparty/masm/wtf/PageReservation.h
+        ../3rdparty/masm/wtf/Platform.h
+        ../3rdparty/masm/wtf/PossiblyNull.h
         ../3rdparty/masm/wtf/PrintStream.cpp ../3rdparty/masm/wtf/PrintStream.h
         ../3rdparty/masm/wtf/RawPointer.h
+        ../3rdparty/masm/wtf/SegmentedVector.h
+        ../3rdparty/masm/wtf/StdLibExtras.h
+        ../3rdparty/masm/wtf/VMTags.h
         ../3rdparty/masm/yarr/Yarr.h
         ../3rdparty/masm/yarr/YarrCanonicalizeUCS2.cpp ../3rdparty/masm/yarr/YarrCanonicalizeUCS2.h
         ../3rdparty/masm/yarr/YarrCanonicalizeUnicode.cpp

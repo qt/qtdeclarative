@@ -1,29 +1,62 @@
-HEADERS += $$PWD/assembler/*.h
-SOURCES += $$PWD/assembler/ARMv7Assembler.cpp
-SOURCES += $$PWD/assembler/LinkBuffer.cpp
+HEADERS += $$PWD/assembler/AbstractMacroAssembler.h \
+    $$PWD/assembler/ARM64Assembler.h \
+    $$PWD/assembler/ARMv7Assembler.h \
+    $$PWD/assembler/AssemblerBuffer.h \
+    $$PWD/assembler/AssemblerBufferWithConstantPool.h \
+    $$PWD/assembler/CodeLocation.h \
+    $$PWD/assembler/LinkBuffer.h \
+    $$PWD/assembler/MacroAssemblerARM64.h \
+    $$PWD/assembler/MacroAssemblerARMv7.h \
+    $$PWD/assembler/MacroAssemblerCodeRef.h \
+    $$PWD/assembler/MacroAssembler.h \
+    $$PWD/assembler/MacroAssemblerMIPS.h \
+    $$PWD/assembler/MacroAssemblerX86_64.h \
+    $$PWD/assembler/MacroAssemblerX86Common.h \
+    $$PWD/assembler/MacroAssemblerX86.h \
+    $$PWD/assembler/MIPSAssembler.h \
+    $$PWD/assembler/RepatchBuffer.h \
+    $$PWD/assembler/X86Assembler.h
 
-HEADERS += $$PWD/wtf/*.h
-SOURCES += $$PWD/wtf/PrintStream.cpp
-HEADERS += $$PWD/wtf/PrintStream.h
+SOURCES += $$PWD/assembler/ARMv7Assembler.cpp \
+    $$PWD/assembler/LinkBuffer.cpp
 
-SOURCES += $$PWD/wtf/FilePrintStream.cpp
-HEADERS += $$PWD/wtf/FilePrintStream.h
+HEADERS += $$PWD/wtf/ASCIICType.h \
+    $$PWD/wtf/Assertions.h \
+    $$PWD/wtf/Atomics.h \
+    $$PWD/wtf/BumpPointerAllocator.h \
+    $$PWD/wtf/CheckedArithmetic.h \
+    $$PWD/wtf/Compiler.h \
+    $$PWD/wtf/CryptographicallyRandomNumber.h \
+    $$PWD/wtf/DataLog.h \
+    $$PWD/wtf/DynamicAnnotations.h \
+    $$PWD/wtf/EnumClass.h \
+    $$PWD/wtf/FeatureDefines.h \
+    $$PWD/wtf/FilePrintStream.h \
+    $$PWD/wtf/Locker.h \
+    $$PWD/wtf/MathExtras.h \
+    $$PWD/wtf/NotFound.h \
+    $$PWD/wtf/NullPtr.h \
+    $$PWD/wtf/OSAllocator.h \
+    $$PWD/wtf/PageAllocationAligned.h \
+    $$PWD/wtf/PageAllocation.h \
+    $$PWD/wtf/PageBlock.h \
+    $$PWD/wtf/PageReservation.h \
+    $$PWD/wtf/Platform.h \
+    $$PWD/wtf/PossiblyNull.h \
+    $$PWD/wtf/PrintStream.h \
+    $$PWD/wtf/RawPointer.h \
+    $$PWD/wtf/SegmentedVector.h \
+    $$PWD/wtf/StdLibExtras.h \
+    $$PWD/wtf/VMTags.h
 
-HEADERS += $$PWD/wtf/RawPointer.h
+SOURCES += $$PWD/wtf/PrintStream.cpp \
+  $$PWD/wtf/FilePrintStream.cpp \
+  $$PWD/wtf/PageAllocationAligned.cpp \
+  $$PWD/wtf/PageBlock.cpp
 
 win32: SOURCES += $$PWD/wtf/OSAllocatorWin.cpp
 else:integrity: SOURCES += $$PWD/wtf/OSAllocatorIntegrity.cpp
 else: SOURCES += $$PWD/wtf/OSAllocatorPosix.cpp
-HEADERS += $$PWD/wtf/OSAllocator.h
-
-SOURCES += $$PWD/wtf/PageAllocationAligned.cpp
-HEADERS += $$PWD/wtf/PageAllocationAligned.h
-HEADERS += $$PWD/wtf/PageAllocation.h
-
-SOURCES += $$PWD/wtf/PageBlock.cpp
-HEADERS += $$PWD/wtf/PageBlock.h
-
-HEADERS += $$PWD/wtf/PageReservation.h
 
 SOURCES += $$PWD/stubs/WTFStubs.cpp
 HEADERS += $$PWD/stubs/WTFStubs.h
