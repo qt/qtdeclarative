@@ -78,7 +78,7 @@ struct QPointingDeviceForeign
     Q_GADGET
     QML_FOREIGN(QPointingDevice)
     QML_NAMED_ELEMENT(PointerDevice)
-    QML_ADDED_IN_VERSION(6, 0)
+    QML_ADDED_IN_VERSION(2, 12)
     QML_UNCREATABLE("PointerDevice is only available via read-only properties.")
 };
 
