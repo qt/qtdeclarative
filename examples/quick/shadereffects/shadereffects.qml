@@ -128,7 +128,7 @@ Rectangle {
             property real time: 0
             NumberAnimation on time { loops: Animation.Infinite; from: 0; to: Math.PI * 2; duration: 600 }
             //! [fragment]
-            fragmentShader: "qrc:shadereffects/content/shaders/wobble.frag"
+            fragmentShader: "content/shaders/wobble.frag"
             //! [fragment]
             Slider {
                 id: wobbleSlider
@@ -153,10 +153,10 @@ Rectangle {
                             height: theItem.height
                             property variant delta: Qt.size(1.0 / width, 0.0)
                             property variant source: theSource
-                            fragmentShader: "qrc:shadereffects/content/shaders/blur.frag"
+                            fragmentShader: "content/shaders/blur.frag"
                         }
                     }
-                    fragmentShader: "qrc:shadereffects/content/shaders/blur.frag"
+                    fragmentShader: "content/shaders/blur.frag"
                 }
             }
             property real angle: 0
@@ -164,7 +164,7 @@ Rectangle {
             NumberAnimation on angle { loops: Animation.Infinite; from: 0; to: Math.PI * 2; duration: 6000 }
             property variant delta: Qt.size(offset.x / width, offset.y / height)
             property real darkness: shadowSlider.value
-            fragmentShader: "qrc:shadereffects/content/shaders/shadow.frag"
+            fragmentShader: "content/shaders/shadow.frag"
             Slider {
                 id: shadowSlider
                 anchors.left: parent.left
@@ -178,14 +178,14 @@ Rectangle {
             height: 160
             property variant source: theSource
             property variant delta: Qt.size(0.5 / width, 0.5 / height)
-            fragmentShader: "qrc:shadereffects/content/shaders/outline.frag"
+            fragmentShader: "content/shaders/outline.frag"
         }
         ShaderEffect {
             width: 160
             height: 160
             property variant source: theSource
             property color tint: root.sliderToColor(colorizeSlider.value)
-            fragmentShader: "qrc:shadereffects/content/shaders/colorize.frag"
+            fragmentShader: "content/shaders/colorize.frag"
             Slider {
                 id: colorizeSlider
                 anchors.left: parent.left
@@ -220,7 +220,7 @@ Rectangle {
             //! [properties]
             //! [vertex]
             mesh: Qt.size(10, 10)
-            vertexShader: "qrc:shadereffects/content/shaders/genie.vert"
+            vertexShader: "content/shaders/genie.vert"
             //! [vertex]
             Slider {
                 id: genieSlider
