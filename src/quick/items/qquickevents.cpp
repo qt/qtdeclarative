@@ -1356,7 +1356,7 @@ QQuickPointerEvent *QQuickPointerNativeGestureEvent::reset(QEvent *event)
     default:
         break;
     }
-    quint64 deviceId = QInputDevicePrivate::get(ev->device())->id;
+    quint64 deviceId = ev->device()->id();
     m_point->reset(state, ev->scenePosition(), deviceId << 24, ev->timestamp());
     return this;
 }
