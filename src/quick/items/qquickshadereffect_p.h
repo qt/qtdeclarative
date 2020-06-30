@@ -96,10 +96,10 @@ public:
     ~QQuickShaderEffect() override;
 
     QUrl fragmentShader() const;
-    void setFragmentShader(const QUrl &code);
+    void setFragmentShader(const QUrl &fileUrl);
 
     QUrl vertexShader() const;
-    void setVertexShader(const QUrl &code);
+    void setVertexShader(const QUrl &fileUrl);
 
     bool blending() const;
     void setBlending(bool enable);
