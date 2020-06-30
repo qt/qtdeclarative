@@ -383,6 +383,7 @@ private slots:
     void semicolonAfterProperty();
     void hugeStack();
     void bindingOnQProperty();
+    void bindingOnQPropertyContextProperty();
     void urlConstruction();
     void urlPropertyInvalid();
     void urlPropertySet();
@@ -9279,15 +9280,26 @@ void tst_qqmlecmascript::bindingOnQProperty()
     QScopedPointer<QObject> test(component.create());
     test->setProperty("externalValue", 42);
     QCOMPARE(test->property("value").toInt(), 42);
-    // Value hasn't changed yet...
-    QCOMPARE(test->property("changeHandlerCount").toInt(), 0);
+    QCOMPARE(test->property("changeHandlerCount").toInt(), 1);
     test->setProperty("externalValue", 100);
     QCOMPARE(test->property("value").toInt(), 100);
-    QCOMPARE(test->property("changeHandlerCount").toInt(), 1);
+    QCOMPARE(test->property("changeHandlerCount").toInt(), 2);
 
     QVERIFY(qobject_cast<ClassWithQProperty*>(test.data()));
     QProperty<float> &qprop = static_cast<ClassWithQProperty*>(test.data())->value;
     QVERIFY(qprop.hasBinding());
+}
+
+void tst_qqmlecmascript::bindingOnQPropertyContextProperty()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("bindingOnQPropertyContextProperty.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> test(component.create());
+    QVERIFY(!test.isNull());
+    auto classWithQProperty = test->property("testee").value<ClassWithQProperty2 *>();
+    QVERIFY(classWithQProperty);
+    QCOMPARE(classWithQProperty->value.value(), 2);
 }
 
 void tst_qqmlecmascript::urlConstruction()

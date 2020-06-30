@@ -456,6 +456,11 @@ void FloatingQObject::componentComplete()
     Q_ASSERT(!parent());
 }
 
+void ClassWithQProperty2::callback()
+{
+    Q_UNUSED(this->value.value()); // force evaluation
+}
+
 void registerTypes()
 {
     qmlRegisterType<MyQmlObject>("Qt.test", 1,0, "MyQmlObjectAlias");
@@ -550,6 +555,7 @@ void registerTypes()
     qmlRegisterType<ClashingNames>("Qt.test", 1, 0, "ClashingNames");
 
     qmlRegisterType<ClassWithQProperty>("Qt.test", 1, 0, "ClassWithQProperty");
+    qmlRegisterType<ClassWithQProperty2>("Qt.test", 1, 0, "ClassWithQProperty2");
 }
 
 #include "testtypes.moc"

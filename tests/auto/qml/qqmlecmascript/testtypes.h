@@ -1746,6 +1746,15 @@ public slots:
     void selection(const QItemSelection &is, int n = 0) { funcCalled = QLatin1String("QItemSelection"); }
 };
 
+struct ClassWithQProperty2 : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(float value)
+public:
+    void callback();
+    QNotifiedProperty<float, &ClassWithQProperty2::callback> value;
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H

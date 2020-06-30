@@ -102,6 +102,7 @@ struct QQmlObjectCreatorSharedState : public QSharedData
     QQmlVmeProfiler profiler;
     QRecursionNode recursionNode;
     RequiredProperties requiredProperties;
+    QList<std::tuple<QObject *, int, QUntypedPropertyBinding>> allQPropertyBindings;
     bool hadRequiredProperties;
 };
 

@@ -917,8 +917,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
                 QV4::Function *runtimeFunction = compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex];
                 qmlBinding = QQmlPropertyBinding::create(bindingProperty, runtimeFunction, _scopeObject, context, currentQmlContext());
             }
-            void *argv[] = { &qmlBinding };
-            _bindingTarget->qt_metacall(QMetaObject::SetQPropertyBinding, bindingProperty->coreIndex(), argv);
+            sharedState.data()->allQPropertyBindings.emplaceBack(_bindingTarget, bindingProperty->coreIndex(), qmlBinding);
         } else {
             // When writing bindings to grouped properties implemented as value types,
             // such as point.x: { someExpression; }, then the binding is installed on
@@ -1415,6 +1414,15 @@ bool QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
             }
         }
 
+        if (watcher.hasRecursed() || interrupt.shouldInterrupt())
+            return false;
+    }
+
+    while (!sharedState->allQPropertyBindings.isEmpty()) {
+        auto& [target, index, qmlBinding] = sharedState->allQPropertyBindings.last();
+        void *argv[] = { &qmlBinding };
+        target->qt_metacall(QMetaObject::SetQPropertyBinding, index, argv);
+        sharedState->allQPropertyBindings.pop_back();
         if (watcher.hasRecursed() || interrupt.shouldInterrupt())
             return false;
     }
