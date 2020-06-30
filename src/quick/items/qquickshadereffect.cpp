@@ -45,7 +45,6 @@
 #include <private/qquickwindow_p.h>
 #include <private/qquickitem_p.h>
 #include "qquickshadereffectmesh_p.h"
-#include <QQmlAbstractUrlInterceptor>
 
 QT_BEGIN_NAMESPACE
 
@@ -1209,9 +1208,8 @@ bool QQuickShaderEffectImpl::updateShader(Shader shaderType, const QUrl &src)
             const QSGGuiThreadShaderEffectManager::ShaderInfo::Type typeHint =
                     shaderType == Vertex ? QSGGuiThreadShaderEffectManager::ShaderInfo::TypeVertex
                                          : QSGGuiThreadShaderEffectManager::ShaderInfo::TypeFragment;
-            QUrl loadUrl = src;
-            if (const QQmlEngine *engine = qmlEngine(m_item))
-                loadUrl = engine->interceptUrl(loadUrl, QQmlAbstractUrlInterceptor::UrlString);
+            const QQmlContext *context = qmlContext(m_item);
+            const QUrl loadUrl = context ? context->resolvedUrl(src) : src;
             // Figure out what input parameters and variables are used in the
             // shader. This is where the data is pulled in from the file.
             // (however, if there is compilation involved, that happens at a
