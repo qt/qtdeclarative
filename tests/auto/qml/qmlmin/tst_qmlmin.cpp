@@ -137,6 +137,9 @@ void tst_qmlmin::initTestCase()
     invalidFiles << "tests/auto/qml/qqmllanguage/data/requiredProperties.2.qml";
     // generatorFunction.qml is not invalid per se, but the minifier cannot handle yield statements
     invalidFiles << "tests/auto/qml/qqmlecmascript/data/generatorFunction.qml";
+    // minifer can't handle template strings properly
+    invalidFiles << "tests/auto/qml/qmlformat/data/verbatimString.qml";
+    invalidFiles << "tests/auto/qml/qmlformat/data/verbatimString.formatted.qml";
 #endif
 }
 
