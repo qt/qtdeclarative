@@ -418,6 +418,12 @@ QString DumpAstVisitor::parseExpression(ExpressionNode *expression)
         return "--"+parseExpression(cast<PreDecrementExpression *>(expression)->expression);
     case Node::Kind_NumericLiteral:
         return QString::number(cast<NumericLiteral *>(expression)->value);
+    case Node::Kind_TemplateLiteral: {
+        auto firstSrcLoc = cast<TemplateLiteral *>(expression)->firstSourceLocation();
+        auto lastSrcLoc = cast<TemplateLiteral *>(expression)->lastSourceLocation();
+        return m_engine->code().mid(static_cast<int>(firstSrcLoc.begin()),
+                                    static_cast<int>(lastSrcLoc.end() - firstSrcLoc.begin()));
+    }
     case Node::Kind_StringLiteral: {
         auto srcLoc = cast<StringLiteral *>(expression)->firstSourceLocation();
         return m_engine->code().mid(static_cast<int>(srcLoc.begin()),
