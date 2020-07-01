@@ -8,4 +8,5 @@ QtObject
 
     small1: 3
     small2: foo
+    smallButNeedsBraces: if (foo) { bar(); }
 }

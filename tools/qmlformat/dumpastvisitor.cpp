@@ -1162,7 +1162,19 @@ bool DumpAstVisitor::visit(UiScriptBinding *node) {
 
     addLine(getComment(node, Comment::Location::Front));
 
+    bool multiline = !needsSemicolon(node->statement->kind);
+
+    if (multiline) {
+        m_indentLevel++;
+    }
+
     QString statement = parseStatement(node->statement);
+
+    if (multiline) {
+        statement = "{\n" + formatLine(statement);
+        m_indentLevel--;
+        statement += formatLine("}", false);
+    }
 
     QString result = parseUiQualifiedId(node->qualifiedId) + ":";
 
