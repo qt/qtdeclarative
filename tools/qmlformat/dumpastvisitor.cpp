@@ -597,7 +597,8 @@ bool needsSemicolon(int kind)
 
 QString DumpAstVisitor::parseBlock(Block *block, bool hasNext, bool allowBraceless)
 {
-    bool hasOneLine = (block->statements == nullptr || block->statements->next == nullptr) && allowBraceless;
+    bool hasOneLine =
+            (block->statements != nullptr && block->statements->next == nullptr) && allowBraceless;
 
     QString result = hasOneLine ? "\n" : "{\n";
     m_indentLevel++;
@@ -613,6 +614,8 @@ QString DumpAstVisitor::parseBlock(Block *block, bool hasNext, bool allowBracele
     if (block->statements) {
         m_blockNeededBraces |= !needsSemicolon(block->statements->statement->kind)
                 || (block->statements->next != nullptr);
+    } else {
+        m_blockNeededBraces = true;
     }
 
     return result;
@@ -857,6 +860,9 @@ QString DumpAstVisitor::parseStatement(Statement *statement, bool blockHasNext,
 QString DumpAstVisitor::parseStatementList(StatementList *list)
 {
     QString result = "";
+
+    if (list == nullptr)
+        return "";
 
     result += getOrphanedComments(list);
 
