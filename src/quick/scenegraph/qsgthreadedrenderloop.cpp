@@ -665,8 +665,6 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
     if (!grabRequested)
         pendingUpdate = 0;
 
-    emit window->beforeFrameBegin();
-
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
     // Begin the frame before syncing -> sync is where we may invoke
     // updatePaintNode() on the items and they may want to do resource updates.
@@ -702,6 +700,8 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
                 qCDebug(QSG_LOG_RENDERLOOP) << "rhi swapchain size" << cd->swapchain->currentPixelSize();
         }
 
+        emit window->beforeFrameBegin();
+
         Q_ASSERT(rhi == cd->rhi);
         // ### the flag should only be set when the app requests it, but there's no way to do that right now
         QRhi::BeginFrameFlags frameFlags = QRhi::ExternalContentsInPass;
@@ -724,6 +724,7 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
                 waitCondition.wakeOne();
                 mutex.unlock();
             }
+            emit window->afterFrameEnd();
             return;
         }
     }

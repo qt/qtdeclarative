@@ -596,8 +596,6 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
 
     emit window->afterAnimating();
 
-    emit window->beforeFrameBegin();
-
     // Begin the frame before syncing -> sync is where we may invoke
     // updatePaintNode() on the items and they may want to do resource updates.
     // Also relevant for applications that connect to the before/afterSynchronizing
@@ -629,6 +627,8 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
             }
         }
 
+        emit window->beforeFrameBegin();
+
         Q_ASSERT(rhi == cd->rhi);
         // ### the flag should only be set when the app requests it, but there's no way to do that right now
         QRhi::BeginFrameFlags frameFlags = QRhi::ExternalContentsInPass;
@@ -639,6 +639,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
             else if (frameResult == QRhi::FrameOpError)
                 qWarning("Failed to start frame");
             // out of date is not worth warning about - it may happen even during resizing on some platforms
+            emit window->afterFrameEnd();
             return;
         }
     }
