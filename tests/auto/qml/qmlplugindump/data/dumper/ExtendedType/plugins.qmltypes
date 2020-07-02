@@ -7,7 +7,6 @@ import QtQuick.tooling 1.2
 // 'qmlplugindump -nonrelocatable -noforceqtquick dumper.ExtendedType 1.1 .'
 
 Module {
-    dependencies: []
     Component {
         name: "DerivedType1"
         prototype: "Type"

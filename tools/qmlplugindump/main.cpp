@@ -818,8 +818,7 @@ static bool readDependenciesData(QString dependenciesFile, const QByteArray &fil
     }
     if (doc.isArray()) {
         const QStringList requiredKeys = QStringList() << QStringLiteral("name")
-                                                       << QStringLiteral("type")
-                                                       << QStringLiteral("version");
+                                                       << QStringLiteral("type");
         const auto deps = doc.array();
         for (const QJsonValue &dep : deps) {
             if (dep.isObject()) {
@@ -831,7 +830,7 @@ static bool readDependenciesData(QString dependenciesFile, const QByteArray &fil
                     continue;
                 QString name = obj.value((QStringLiteral("name"))).toString();
                 QString version = obj.value(QStringLiteral("version")).toString();
-                if (name.isEmpty() || urisToSkip.contains(name) || version.isEmpty())
+                if (name.isEmpty() || urisToSkip.contains(name))
                     continue;
                 if (name.contains(QLatin1String("Private"), Qt::CaseInsensitive)) {
                     if (verbose)
@@ -842,7 +841,8 @@ static bool readDependenciesData(QString dependenciesFile, const QByteArray &fil
                 if (verbose)
                     std::cerr << "appending dependency "
                               << qPrintable( name ) << " "  << qPrintable(version) << std::endl;
-                dependencies->append(name + QLatin1Char(' ')+version);
+                dependencies->append(version.isEmpty() ? name
+                                                       : (name + QLatin1Char(' ') + version));
             }
         }
     } else {
@@ -933,54 +933,68 @@ static bool getDependencies(const QQmlEngine &engine, const QString &pluginImpor
     return true;
 }
 
-bool compactDependencies(QStringList *dependencies)
+bool dependencyBetter(const QString &lhs, const QString &rhs)
 {
-    if (dependencies->isEmpty())
+    QStringList leftSegments = lhs.split(QLatin1Char(' '), Qt::SkipEmptyParts);
+    QStringList rightSegments = rhs.split(QLatin1Char(' '), Qt::SkipEmptyParts);
+
+    if (leftSegments.isEmpty())
         return false;
-    dependencies->sort();
-    QStringList oldDep = dependencies->constFirst().split(QLatin1Char(' '));
-    Q_ASSERT(oldDep.size() == 2);
-    int oldPos = 0;
-    for (int idep = 1; idep < dependencies->size(); ++idep) {
-        QString depStr = dependencies->at(idep);
-        const QStringList newDep = depStr.split(QLatin1Char(' '));
-        Q_ASSERT(newDep.size() == 2);
-        if (newDep.constFirst() != oldDep.constFirst()) {
-            if (++oldPos != idep)
-                dependencies->replace(oldPos, depStr);
-            oldDep = newDep;
+    if (rightSegments.isEmpty())
+        return true;
+
+    const QString leftModule = leftSegments.first();
+    const QString rightModule = rightSegments.first();
+
+    if (leftModule < rightModule)
+        return true;
+    if (leftModule > rightModule)
+        return false;
+
+    if (leftSegments.length() == 1)
+        return false;
+    if (rightSegments.length() == 1)
+        return true;
+
+    const QStringList leftVersion = leftSegments.at(1).split(QLatin1Char('.'));
+    const QStringList rightVersion = rightSegments.at(1).split(QLatin1Char('.'));
+
+    auto compareSegment = [&](int segmentIndex) {
+        if (leftVersion.length() <= segmentIndex)
+            return rightVersion.length() > segmentIndex ? 1 : 0;
+        if (rightVersion.length() <= segmentIndex)
+            return -1;
+
+        bool leftOk = false;
+        bool rightOk = false;
+        const int leftSegment = leftSegments[segmentIndex].toUShort(&leftOk);
+        const int rightSegment = rightSegments[segmentIndex].toUShort(&rightOk);
+
+        if (!leftOk)
+            return rightOk ? 1 : 0;
+        if (!rightOk)
+            return -1;
+
+        return rightSegment - leftSegment;
+    };
+
+    const int major = compareSegment(0);
+    return (major == 0) ? compareSegment(1) < 0 : major < 0;
+}
+
+void compactDependencies(QStringList *dependencies)
+{
+    std::sort(dependencies->begin(), dependencies->end(), dependencyBetter);
+    QString currentModule;
+    for (auto it = dependencies->begin(); it != dependencies->end();) {
+        QStringList segments = it->split(QLatin1Char(' '), Qt::SkipEmptyParts);
+        if (segments.isEmpty() || segments.first() == currentModule) {
+            it = dependencies->erase(it);
         } else {
-            const QStringList v1 = oldDep.constLast().split(QLatin1Char('.'));
-            const QStringList v2 = newDep.constLast().split(QLatin1Char('.'));
-            Q_ASSERT(v1.size() == 2);
-            Q_ASSERT(v2.size() == 2);
-            bool ok;
-            int major1 = v1.first().toInt(&ok);
-            Q_ASSERT(ok);
-            int major2 = v2.first().toInt(&ok);
-            Q_ASSERT(ok);
-            if (major1 != major2) {
-                std::cerr << "Found a dependency on " << qPrintable(oldDep.constFirst())
-                          << " with two major versions:" << qPrintable(oldDep.constLast())
-                          << " and " << qPrintable(newDep.constLast())
-                          << " which is unsupported, discarding smaller version" << std::endl;
-                if (major1 < major2)
-                    dependencies->replace(oldPos, depStr);
-            } else {
-                int minor1 = v1.last().toInt(&ok);
-                Q_ASSERT(ok);
-                int minor2 = v2.last().toInt(&ok);
-                Q_ASSERT(ok);
-                if (minor1 < minor2)
-                    dependencies->replace(oldPos, depStr);
-            }
+            currentModule = segments.first();
+            ++it;
         }
     }
-    if (++oldPos < dependencies->size()) {
-        *dependencies = dependencies->mid(0, oldPos);
-        return true;
-    }
-    return false;
 }
 
 inline std::wostream &operator<<(std::wostream &str, const QString &s)
@@ -1344,17 +1358,6 @@ int main(int argc, char *argv[])
               "// '%1 %2'\n"
               "\n").arg(QFileInfo(args.at(0)).baseName(), args.mid(1).join(QLatin1Char(' '))));
     qml.writeStartObject("Module");
-
-    // Insert merge dependencies.
-    if (!mergeDependencies.isEmpty()) {
-        dependencies << mergeDependencies;
-    }
-    compactDependencies(&dependencies);
-
-    QStringList quotedDependencies;
-    for (const QString &dep : qAsConst(dependencies))
-        quotedDependencies << enquote(dep);
-    qml.writeArrayBinding("dependencies", quotedDependencies);
 
     // put the metaobjects into a map so they are always dumped in the same order
     QMap<QString, const QMetaObject *> nameToMeta;
