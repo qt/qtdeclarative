@@ -26,6 +26,23 @@ plugins. Library plugins should limit themselves to registering types, as
 any manipulation of the engine's root context may cause conflicts or other
 issues in the library user's code.
 
+The linker might erroneously remove the generated type registration
+function as an optimization. You can prevent that by declaring a synthetic
+volatile pointer to the function somewhere in your code. If your module is
+called "my.module", you would add the forward declaration in global scope:
+
+\code
+void qml_register_types_my_module();
+\code
+
+Then add the following snippet of code in the implementation of any function
+that's part of the same binary as the registration:
+
+\code
+volatile auto registration = &qml_register_types_my_module;
+Q_UNUSED(registration);
+\code
+
 \section1 TimeExample QML extension plugin
 
 Suppose there is a new \c TimeModel C++ class that should be made available
