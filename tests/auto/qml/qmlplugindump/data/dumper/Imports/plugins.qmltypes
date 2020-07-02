@@ -7,7 +7,12 @@ import QtQuick.tooling 1.2
 // 'qmlplugindump -nonrelocatable -noforceqtquick dumper.Imports 1.0 .'
 
 Module {
-    dependencies: ["QtQuick 2.0"]
+    dependencies: [
+        "QtQml 2.15",
+        "QtQml.Models 2.15",
+        "QtQml.WorkerScript 2.15",
+        "QtQuick 2.0"
+    ]
     Component {
         name: "Imports"
         prototype: "QObject"
