@@ -49,6 +49,7 @@ but not all the files it references.
         set(new_resource_file ${CMAKE_CURRENT_BINARY_DIR}/${resource_base}_qmlcache.qrc)
 
         get_filename_component(input_resource ${_resource} ABSOLUTE)
+        set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${input_resource}")
 
         execute_process(COMMAND ${compiler_path} --filter-resource-file ${input_resource} -o ${new_resource_file} OUTPUT_VARIABLE remaining_files)
         list(APPEND filtered_rcc_files ${new_resource_file})
