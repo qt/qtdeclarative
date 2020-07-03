@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qqmljavascriptexpression_p.h"
+#include "qqmljavascriptexpression_p.h"
 
 #include <private/qqmlexpression_p.h>
 #include <private/qv4context_p.h>
@@ -51,6 +52,9 @@
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qqmlbuiltinfunctions_p.h>
 #include <private/qqmlsourcecoordinate_p.h>
+#include <private/qqmlabstractbinding_p.h>
+#include <private/qqmlpropertybinding_p.h>
+#include <private/qproperty_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -107,6 +111,12 @@ QQmlJavaScriptExpression::~QQmlJavaScriptExpression()
         *m_prevExpression = m_nextExpression;
         if (m_nextExpression)
             m_nextExpression->m_prevExpression = m_prevExpression;
+    }
+
+    while (qpropertyChangeTriggers) {
+        auto current = qpropertyChangeTriggers;
+        qpropertyChangeTriggers = current->next;
+        QRecyclePool<TriggerList>::Delete(current);
     }
 
     clearActiveGuards();
@@ -289,7 +299,33 @@ void QQmlPropertyCapture::captureProperty(QObject *o, int c, int n, bool doNotif
         return;
 
     Q_ASSERT(expression);
+    const QQmlData *ddata = QQmlData::get(o, /*create=*/false);
+    bool isBindable = false;
+    if (auto const propCache = ddata ? ddata->propertyCache : nullptr; propCache) {
+        Q_ASSERT(propCache->property(c));
+        isBindable = propCache->property(c)->isBindable();
+    } else {
+        auto metaProp = o->staticMetaObject.property(c);
+        isBindable = metaProp.isBindable();
+    }
+    if (isBindable) {
+        // if the property is a QPropery, and we're binding to a QProperty
+        // the automatic capturing process already takes care of everything
+        if (typeid(QQmlPropertyBinding) == typeid(*expression))
+            return;
+        for (auto trigger = expression->qpropertyChangeTriggers; trigger; trigger = trigger->next) {
+            if (trigger->target == o && trigger->propertyIndex == c)
+                return; // already installed
+        }
+        auto trigger = expression->allocatePropertyChangeTrigger(o, c);
+        QUntypedBindable bindable;
+        void *argv[] = { &bindable };
+        o->qt_metacall(QMetaObject::BindableProperty, c, argv);
+        bindable.observe(trigger);
+        return;
+    }
     if (n == -1) {
+
         if (!errorString) {
             errorString = new QStringList;
             QString preamble = QLatin1String("QQmlExpression: Expression ") +
@@ -298,11 +334,9 @@ void QQmlPropertyCapture::captureProperty(QObject *o, int c, int n, bool doNotif
             errorString->append(preamble);
         }
 
-        const QMetaObject *metaObj = o->metaObject();
-        QMetaProperty metaProp = metaObj->property(c);
-
+        const QMetaProperty metaProp = o->metaObject()->property(c);
         QString error = QLatin1String("    ") +
-                QString::fromUtf8(metaObj->className()) +
+                QString::fromUtf8(o->metaObject()->className()) +
                 QLatin1String("::") +
                 QString::fromUtf8(metaProp.name());
         errorString->append(error);
@@ -411,6 +445,21 @@ void QQmlJavaScriptExpression::setupFunction(QV4::ExecutionContext *qmlContext, 
 void QQmlJavaScriptExpression::setCompilationUnit(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit)
 {
     m_compilationUnit = compilationUnit;
+}
+
+void QPropertyChangeTrigger::operator()() {
+    m_expression->expressionChanged();
+}
+
+QPropertyChangeHandler<QPropertyChangeTrigger> *QQmlJavaScriptExpression::allocatePropertyChangeTrigger(QObject *target, int propertyIndex)
+{
+    auto trigger = QQmlEnginePrivate::get(engine())->qPropertyTriggerPool.New(QPropertyChangeTrigger { this });
+    trigger->target = target;
+    trigger->propertyIndex = propertyIndex;
+    auto oldHead = qpropertyChangeTriggers;
+    trigger->next = oldHead;
+    qpropertyChangeTriggers = trigger;
+    return trigger;
 }
 
 void QQmlJavaScriptExpression::clearActiveGuards()

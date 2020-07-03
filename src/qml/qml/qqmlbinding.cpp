@@ -670,7 +670,7 @@ QVector<QQmlProperty> QQmlBinding::dependencies() const
 
 bool QQmlBinding::hasDependencies() const
 {
-    return !activeGuards.isEmpty() || translationsCaptured();
+    return !activeGuards.isEmpty() || translationsCaptured() || qpropertyChangeTriggers;
 }
 
 class QObjectPointerBinding: public QQmlNonbindingBinding

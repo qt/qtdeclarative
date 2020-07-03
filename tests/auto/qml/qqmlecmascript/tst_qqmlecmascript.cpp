@@ -383,6 +383,7 @@ private slots:
     void hugeStack();
     void bindingOnQProperty();
     void bindingOnQPropertyContextProperty();
+    void bindingContainingQProperty();
     void urlConstruction();
     void urlPropertyInvalid();
     void urlPropertySet();
@@ -9187,6 +9188,17 @@ void tst_qqmlecmascript::bindingOnQPropertyContextProperty()
     // auto classWithQProperty = test->property("testee").value<ClassWithQProperty2 *>();
     // QVERIFY(classWithQProperty);
     // QCOMPARE(classWithQProperty->value.value(), 2);
+}
+
+void tst_qqmlecmascript::bindingContainingQProperty()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("bindingContainingQProperty.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> test(component.create());
+    QVERIFY(!test.isNull());
+    test->setProperty("value", 42.0);
+    QCOMPARE(test->property("expected"), 42.0);
 }
 
 void tst_qqmlecmascript::urlConstruction()

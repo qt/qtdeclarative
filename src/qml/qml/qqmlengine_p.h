@@ -81,6 +81,8 @@
 #include <private/qjsengine_p.h>
 #include <private/qqmldirparser_p.h>
 
+#include <qproperty.h>
+
 QT_BEGIN_NAMESPACE
 
 class QQmlContext;
@@ -125,6 +127,18 @@ public:
     QQmlJavaScriptExpressionGuard *next;
 };
 
+struct QPropertyChangeTrigger {
+    QQmlJavaScriptExpression * m_expression;
+    void operator()();
+};
+
+struct TriggerList : QPropertyChangeHandler<QPropertyChangeTrigger> {
+    TriggerList(QPropertyChangeTrigger trigger) : QPropertyChangeHandler<QPropertyChangeTrigger>(trigger) {};
+    TriggerList *next = nullptr;
+    QObject *target = nullptr;
+    int propertyIndex = 0;
+};
+
 class Q_QML_PRIVATE_EXPORT QQmlEnginePrivate : public QJSEnginePrivate
 {
     Q_DECLARE_PUBLIC(QQmlEngine)
@@ -140,6 +154,7 @@ public:
     QQmlPropertyCapture *propertyCapture;
 
     QRecyclePool<QQmlJavaScriptExpressionGuard> jsExpressionGuardPool;
+    QRecyclePool<TriggerList> qPropertyTriggerPool;
 
     QQmlContext *rootContext;
 

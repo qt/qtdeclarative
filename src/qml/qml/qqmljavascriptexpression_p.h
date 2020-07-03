@@ -164,6 +164,7 @@ public:
 
     QQmlEngine *engine() const { return m_context ? m_context->engine() : nullptr; }
     bool hasUnresolvedNames() const { return m_context && m_context->hasUnresolvedNames(); }
+    QPropertyChangeHandler<QPropertyChangeTrigger>* allocatePropertyChangeTrigger(QObject *target, int propertyIndex);
 
 protected:
     void createQmlBinding(const QQmlRefPointer<QQmlContextData> &ctxt, QObject *scope,
@@ -216,6 +217,9 @@ private:
     QV4::PersistentValue m_qmlScope;
     QQmlRefPointer<QV4::ExecutableCompilationUnit> m_compilationUnit;
     QV4::Function *m_v4Function;
+
+protected:
+    TriggerList *qpropertyChangeTriggers = nullptr;
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlPropertyCapture
