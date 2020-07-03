@@ -1,0 +1,4 @@
+function(QTQUICK_COMPILER_ADD_RESOURCES)
+    message(WARNING "Use qt6_add_resources instead of qtquick_compiler_add_resources."
+                    "QML and JavaScript files are automatically compiled then.")
+endfunction()
