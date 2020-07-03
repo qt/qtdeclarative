@@ -335,6 +335,9 @@ private slots:
     void qualifiedScopeInCustomParser();
 
     void checkUncreatableNoReason();
+
+    void checkURLtoURLObject();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -5927,6 +5930,16 @@ void tst_qqmllanguage::checkUncreatableNoReason()
     c.setData(qml.toUtf8(), QUrl::fromLocalFile(QDir::currentPath()));
     QCOMPARE(c.errors().count(), 1);
     QCOMPARE(c.errors().first().description(), QString("Type cannot be created in QML."));
+}
+
+void tst_qqmllanguage::checkURLtoURLObject()
+{
+    QQmlEngine engine;
+    QString qml = QString("import QtQuick 2.0\nItem { property url source: 'file:///foo/bar/'; "
+                          "Component.onCompleted: { new URL(parent.source); } }");
+    QQmlComponent c(&engine);
+    c.setData(qml.toUtf8(), QUrl::fromLocalFile(QDir::currentPath()));
+    QCOMPARE(c.errors().count(), 0);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

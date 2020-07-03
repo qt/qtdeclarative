@@ -659,12 +659,8 @@ ReturnedValue UrlCtor::virtualCallAsConstructor(const FunctionObject *that, cons
     Scope scope(v4);
 
     ScopedValue arg1(scope, argv[0]);
-    String *arg1StringValue = arg1->stringValue();
 
-    if (arg1StringValue == nullptr)
-        return v4->throwTypeError(QLatin1String("Invalid parameter provided"));
-
-    QString arg1String = arg1StringValue->toQString();
+    QString arg1String = arg1->toQString();
     QString urlString;
 
     if (argc == 2) {
