@@ -48,6 +48,9 @@
 #include <QtQml/qjsvalue.h>
 #include <QtQml/qqmlscriptstring.h>
 #include <QtQml/qqmlcomponent.h>
+#include <QtCore/QModelIndex>
+#include <QtCore/QPersistentModelIndex>
+#include <QtCore/QItemSelection>
 
 #include <private/qqmlengine_p.h>
 #include <private/qv4qobjectwrapper_p.h>
@@ -1730,6 +1733,17 @@ struct ClassWithQProperty : public QObject
     Q_PROPERTY(float value)
 public:
     QProperty<float> value;
+};
+
+class VariantConvertObject : public QObject
+{
+    Q_OBJECT
+public:
+    QString funcCalled;
+public slots:
+    QPersistentModelIndex getIndex() const { return QPersistentModelIndex(QModelIndex()); }
+    void selection(const QModelIndex &mi, int n = 0) { funcCalled = QLatin1String("QModelIndex"); }
+    void selection(const QItemSelection &is, int n = 0) { funcCalled = QLatin1String("QItemSelection"); }
 };
 
 void registerTypes();

@@ -388,6 +388,7 @@ private slots:
     void urlPropertySet();
     void urlSearchParamsConstruction();
     void urlSearchParamsMethods();
+    void variantConversionMethod();
 
     void gcCrashRegressionTest();
 
@@ -9531,6 +9532,19 @@ void tst_qqmlecmascript::urlSearchParamsMethods()
 
     // Verify the end result
     QVERIFY(EVALUATE_VALUE("this.usp.toString()", QV4::ScopedValue(scope, scope.engine->newString("a=10&c=foo"))));
+}
+
+void tst_qqmlecmascript::variantConversionMethod()
+{
+    QQmlEngine qmlengine;
+
+    VariantConvertObject obj;
+    qmlengine.rootContext()->setContextProperty("variantObject", &obj);
+
+    QQmlComponent component(&qmlengine, testFileUrl("variantConvert.qml"));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(o != nullptr);
+    QCOMPARE(obj.funcCalled, QLatin1String("QModelIndex"));
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
