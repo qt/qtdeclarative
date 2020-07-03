@@ -381,6 +381,7 @@ private slots:
     void getThisObject();
     void semicolonAfterProperty();
     void hugeStack();
+    void variantConversionMethod();
 
     void gcCrashRegressionTest();
 
@@ -9290,6 +9291,19 @@ void tst_qqmlecmascript::gcCrashRegressionTest()
     QVERIFY(pid != 0);
     QVERIFY(process.waitForFinished());
     QCOMPARE(process.exitCode(), 0);
+}
+
+void tst_qqmlecmascript::variantConversionMethod()
+{
+    QQmlEngine qmlengine;
+
+    VariantConvertObject obj;
+    qmlengine.rootContext()->setContextProperty("variantObject", &obj);
+
+    QQmlComponent component(&qmlengine, testFileUrl("variantConvert.qml"));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(o != nullptr);
+    QCOMPARE(obj.funcCalled, QLatin1String("QModelIndex"));
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

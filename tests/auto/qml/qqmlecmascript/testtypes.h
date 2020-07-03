@@ -47,6 +47,9 @@
 #include <QtQml/qjsvalue.h>
 #include <QtQml/qqmlscriptstring.h>
 #include <QtQml/qqmlcomponent.h>
+#include <QtCore/QModelIndex>
+#include <QtCore/QPersistentModelIndex>
+#include <QtCore/QItemSelection>
 
 #include <private/qqmlengine_p.h>
 #include <private/qv4qobjectwrapper_p.h>
@@ -1724,6 +1727,17 @@ class ClashingNames : public QObject
     Q_PROPERTY(bool clashes READ clashes CONSTANT)
 public:
     Q_INVOKABLE bool clashes() const { return true; }
+};
+
+class VariantConvertObject : public QObject
+{
+    Q_OBJECT
+public:
+    QString funcCalled;
+public slots:
+    QPersistentModelIndex getIndex() const { return QPersistentModelIndex(QModelIndex()); }
+    void selection(const QModelIndex &mi, int n = 0) { funcCalled = QLatin1String("QModelIndex"); }
+    void selection(const QItemSelection &is, int n = 0) { funcCalled = QLatin1String("QItemSelection"); }
 };
 
 void registerTypes();
