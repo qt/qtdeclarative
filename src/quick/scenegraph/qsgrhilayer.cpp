@@ -236,7 +236,7 @@ void QSGRhiLayer::releaseResources()
 
 void QSGRhiLayer::grab()
 {
-    if (!m_item || m_size.isNull()) {
+    if (!m_item || m_size.isEmpty()) {
         releaseResources();
         m_dirtyTexture = false;
         return;
