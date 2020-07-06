@@ -489,7 +489,7 @@ QRectF QSGTexture::normalizedTextureSubRect() const
 
 
 /*!
-    Sets the mipmap sampling mode to be used for the upcoming bind() call to \a filter.
+    Sets the mipmap sampling mode to \a filter.
 
     Setting the mipmap filtering has no effect it the texture does not have mipmaps.
 
@@ -514,7 +514,7 @@ QSGTexture::Filtering QSGTexture::mipmapFiltering() const
 
 
 /*!
-    Sets the sampling mode to be used for the upcoming bind() call to \a filter.
+    Sets the sampling mode to \a filter.
  */
 void QSGTexture::setFiltering(QSGTexture::Filtering filter)
 {
@@ -534,9 +534,9 @@ QSGTexture::Filtering QSGTexture::filtering() const
 }
 
 /*!
-    Sets the level of anisotropic filtering to be used for the upcoming bind()
-    call to \a level. The default value is QSGTexture::AnisotropyNone, which
-    means no anisotropic filtering is enabled.
+    Sets the level of anisotropic filtering to \a level. The default value is
+    QSGTexture::AnisotropyNone, which means no anisotropic filtering is
+    enabled.
 
     \note The request may be ignored depending on the graphics API in use.
     There is no guarantee anisotropic filtering is supported at run time.
@@ -565,7 +565,7 @@ QSGTexture::AnisotropyLevel QSGTexture::anisotropyLevel() const
 
 
 /*!
-    Sets the horizontal wrap mode to be used for the upcoming bind() call to \a hwrap
+    Sets the horizontal wrap mode to \a hwrap
  */
 
 void QSGTexture::setHorizontalWrapMode(WrapMode hwrap)
@@ -588,7 +588,7 @@ QSGTexture::WrapMode QSGTexture::horizontalWrapMode() const
 
 
 /*!
-    Sets the vertical wrap mode to be used for the upcoming bind() call to \a vwrap
+    Sets the vertical wrap mode to \a vwrap
  */
 void QSGTexture::setVerticalWrapMode(WrapMode vwrap)
 {
@@ -685,8 +685,7 @@ void QSGTexturePrivate::resetDirtySamplerOptions()
     such as content that is rendered to FBO's.
     \inmodule QtQuick
 
-    To update the content of the texture, call updateTexture() explicitly. Simply calling bind()
-    will not update the texture.
+    To update the content of the texture, call updateTexture() explicitly.
 
     \note All classes with QSG prefix should be used solely on the scene graph's
     rendering thread. See \l {Scene Graph and Rendering} for more information.
