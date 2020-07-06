@@ -71,6 +71,22 @@ qt_add_resource(tst_qmlcachegen "retain"
     FILES
         ${retain_resource_files}
 )
+set_source_files_properties("data/SkipQmlCacheGen.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "Skip.qml"
+    QT_SKIP_QUICKCOMPILER 1
+)
+set(skip_resource_files
+    "SkipQmlCacheGen.qml"
+)
+
+qt_add_resource(tst_qmlcachegen "skip"
+    PREFIX
+        "/not/"
+    BASE
+        "data"
+    FILES
+        ${skip_resource_files}
+)
 set(qmake_immediate_resource_files
     "data/Enums.qml"
     "data/componentInItem.qml"
