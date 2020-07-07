@@ -569,6 +569,8 @@ struct QQmlMetaTypeInterface : QtPrivate::QMetaTypeInterface
             /*.dtor=*/ [](const QMetaTypeInterface *, void *addr) {
                 reinterpret_cast<T *>(addr)->~T();
             },
+            /*.equals*/ nullptr,
+            /*.lessThan*/ nullptr,
             /*.legacyRegisterOp=*/ nullptr
         }
         , name(name) { }
