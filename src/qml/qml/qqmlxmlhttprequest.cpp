@@ -702,7 +702,7 @@ ReturnedValue CharacterData::method_length(const FunctionObject *b, const Value 
     if (!r)
         RETURN_UNDEFINED();
 
-    return Encode(r->d()->d->data.length());
+    return Encode(int(r->d()->d->data.length()));
 }
 
 ReturnedValue CharacterData::prototype(ExecutionEngine *v4)

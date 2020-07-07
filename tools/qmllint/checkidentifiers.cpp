@@ -37,7 +37,7 @@ class IssueLocationWithContext
 {
 public:
     IssueLocationWithContext(const QString &code, const QQmlJS::SourceLocation &location) {
-        int before = std::max(0,code.lastIndexOf(QLatin1Char('\n'), location.offset));
+        int before = qMax(0,code.lastIndexOf(QLatin1Char('\n'), location.offset));
         m_beforeText = QStringView{code}.mid(before + 1, int(location.offset - (before + 1)));
         m_issueText = QStringView{code}.mid(location.offset, location.length);
         int after = code.indexOf(QLatin1Char('\n'), int(location.offset + location.length));

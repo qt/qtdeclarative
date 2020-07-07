@@ -135,7 +135,7 @@ void Heap::SharedArrayBuffer::init(size_t length)
         internalClass->engine->throwRangeError(QStringLiteral("ArrayBuffer: out of memory"));
         return;
     }
-    auto data = new (&d) QArrayDataPointer<char>{ pair.first, pair.second, uint(length) };
+    auto data = new (&d) QArrayDataPointer<char>{ pair.first, pair.second, qsizetype(length) };
 
     // can't use appendInitialize() because we want to set the terminating '\0'
     memset(data->data(), 0, length + 1);
@@ -187,7 +187,7 @@ ReturnedValue SharedArrayBufferPrototype::method_get_byteLength(const FunctionOb
     if (!a || a->isDetachedBuffer() || !a->isSharedArrayBuffer())
         return b->engine()->throwTypeError();
 
-    return Encode(a->d()->data()->size);
+    return Encode(int(a->d()->data()->size));
 }
 
 ReturnedValue SharedArrayBufferPrototype::method_slice(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
@@ -252,7 +252,7 @@ ReturnedValue ArrayBufferPrototype::method_get_byteLength(const FunctionObject *
     if (!a || a->isDetachedBuffer() || a->isSharedArrayBuffer())
         return f->engine()->throwTypeError();
 
-    return Encode(a->d()->data()->size);
+    return Encode(int(a->d()->data()->size));
 }
 
 ReturnedValue ArrayBufferPrototype::method_slice(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)

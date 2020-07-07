@@ -282,7 +282,7 @@ void tst_qquickanimatedsprite::test_largeAnimation()
     sprite->setRunning(true);
     QTRY_VERIFY_WITH_TIMEOUT(!sprite->running(), 100000 /* make sure we wait until its done*/ );
     if (frameSync)
-        QVERIFY(isWithinRange(3*40, frameChangedSpy.count(), 3*40 + 1));
+        QVERIFY(isWithinRange(3*40, int(frameChangedSpy.count()), 3*40 + 1));
     int prevFrame = -1;
     int loopCounter = 0;
     int maxFrame = 0;

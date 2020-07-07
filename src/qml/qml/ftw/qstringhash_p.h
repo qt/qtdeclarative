@@ -78,7 +78,8 @@ public:
     , arrayData(mutableStringData(key).d_ptr())
     , strData(mutableStringData(key).data())
     {
-        arrayData->ref();
+        if (arrayData)
+            arrayData->ref();
         setQString(true);
     }
 
@@ -93,7 +94,8 @@ public:
         setQString(o.isQString());
         if (isQString()) {
             strData = o.strData;
-            arrayData->ref();
+            if (arrayData)
+                arrayData->ref();
         } else {
             ckey = o.ckey;
         }
@@ -101,7 +103,7 @@ public:
 
     ~QStringHashNode()
     {
-        if (isQString() && !arrayData->deref())
+        if (isQString() && arrayData && !arrayData->deref())
             QTypedArrayData<char16_t>::deallocate(arrayData);
     }
 
@@ -125,7 +127,8 @@ public:
     inline QHashedString key() const
     {
         if (isQString()) {
-            arrayData->ref();
+            if (arrayData)
+                arrayData->ref();
             return QHashedString(QString(QStringPrivate(arrayData, strData, length)), hash);
         }
 
@@ -528,7 +531,8 @@ void QStringHash<T>::initializeNode(Node *node, const QHashedString &key)
     node->hash = key.hash();
     node->arrayData = mutableStringData(key).d_ptr();
     node->strData = mutableStringData(key).data();
-    node->arrayData->ref();
+    if (node->arrayData)
+        node->arrayData->ref();
     node->setQString(true);
 }
 
@@ -568,7 +572,8 @@ typename QStringHash<T>::Node *QStringHash<T>::takeNode(const Node &o)
         if (o.isQString()) {
             rv->strData = o.strData;
             rv->setQString(true);
-            rv->arrayData->ref();
+            if (rv->arrayData)
+                rv->arrayData->ref();
         } else {
             rv->ckey = o.ckey;
         }

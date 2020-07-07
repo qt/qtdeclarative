@@ -284,7 +284,8 @@ void StringOrTranslation::setString(const QString &s)
     arrayData = dataPointer->d_ptr();
     stringData = dataPointer->data();
     stringSize = mutableString.length();
-    arrayData->ref();
+    if (arrayData)
+        arrayData->ref();
 }
 
 void StringOrTranslation::setTranslation(const QV4::CompiledData::Binding *binding)

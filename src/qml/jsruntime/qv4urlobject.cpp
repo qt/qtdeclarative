@@ -1270,7 +1270,7 @@ ReturnedValue UrlSearchParamsPrototype::method_set(const FunctionObject *b, cons
 
     bool matched = false;
 
-    for (auto *it = params.begin(); it != params.end();) {
+    for (auto it = params.begin(); it != params.end();) {
         QStringList &param = *it;
         if (param[0] == name) {
             if (!matched) {

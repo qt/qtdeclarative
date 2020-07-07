@@ -107,7 +107,7 @@ QPointF QQuickMaskExtruder::extrude(const QRectF &r)
     ensureInitialized(r);
     if (!m_mask.count() || m_img.isNull())
         return r.topLeft();
-    const QPointF p = m_mask[QRandomGenerator::global()->bounded(m_mask.count())];
+    const QPointF p = m_mask[QRandomGenerator::global()->bounded(int(m_mask.count()))];
     //### Should random sub-pixel positioning be added?
     return p + r.topLeft();
 }
