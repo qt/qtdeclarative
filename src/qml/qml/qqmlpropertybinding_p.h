@@ -52,7 +52,7 @@
 //
 
 #include <QtCore/qproperty.h>
-#include <private/qpropertybinding_p.h>
+#include <QtCore/private/qproperty_p.h>
 
 #include "qqmlpropertydata_p.h"
 #include "qqmljavascriptexpression_p.h"
@@ -74,7 +74,7 @@ public:
 private:
     QQmlPropertyBinding(const QMetaType &metaType);
 
-    QUntypedPropertyBinding::BindingEvaluationResult evaluate(const QMetaType &metaType, void *dataPtr);
+    bool evaluate(const QMetaType &metaType, void *dataPtr);
 };
 
 class QQmlTranslationPropertyBinding

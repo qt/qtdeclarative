@@ -39,8 +39,6 @@
 
 #include "qqmlpropertybinding_p.h"
 
-#include <private/qpropertybinding_p.h>
-
 QT_BEGIN_NAMESPACE
 
 QUntypedPropertyBinding QQmlPropertyBinding::create(const QQmlPropertyData *pd, QV4::Function *function,
@@ -54,10 +52,12 @@ QUntypedPropertyBinding QQmlPropertyBinding::create(const QQmlPropertyData *pd, 
                 unit = QQmlRefPointer<QV4::ExecutableCompilationUnit>(function->executableCompilationUnit()),
                 scopeObject = QPointer<QObject>(obj),
                 context = ctxt
-            ](const QMetaType &, void *dataPtr) -> QUntypedPropertyBinding::BindingEvaluationResult {
+            ](const QMetaType &, void *dataPtr) -> bool {
                 Q_UNUSED(unit); // to keep refcount
                 aotFunction->functionPtr(context->asQQmlContext(), scopeObject.data(), dataPtr);
-                return QPropertyBindingError::NoError;
+                // ### Fixme: The aotFunction should do the check whether old and new value are the same and
+                // return false in that case
+                return true;
             },
             QPropertyBindingSourceLocation());
     }
@@ -77,19 +77,20 @@ void QQmlPropertyBinding::expressionChanged()
 
 QQmlPropertyBinding::QQmlPropertyBinding(const QMetaType &mt)
     : QPropertyBindingPrivate(mt,
-                              [this](const QMetaType &metaType, void *dataPtr) -> QUntypedPropertyBinding::BindingEvaluationResult {
+                              [this](const QMetaType &metaType, void *dataPtr) -> bool {
                                   return evaluate(metaType, dataPtr);
                               }, QPropertyBindingSourceLocation())
 {
 }
 
-QUntypedPropertyBinding::BindingEvaluationResult QQmlPropertyBinding::evaluate(const QMetaType &metaType, void *dataPtr)
+bool QQmlPropertyBinding::evaluate(const QMetaType &metaType, void *dataPtr)
 {
     const auto ctxt = context();
     QQmlEngine *engine = ctxt ? ctxt->engine() : nullptr;
     if (!engine) {
         QPropertyBindingError error(QPropertyBindingError::EvaluationError);
-        return error;
+        QPropertyBindingPrivate::currentlyEvaluatingBinding()->setError(std::move(error));
+        return false;
     }
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
     ep->referenceScarceResources();
@@ -102,22 +103,23 @@ QUntypedPropertyBinding::BindingEvaluationResult QQmlPropertyBinding::evaluate(c
     ep->dereferenceScarceResources();
 
     if (hasError()) {
-        QPropertyBindingError error(QPropertyBindingError::UnknownError);
-        error.setDescription(delayedError()->error().description());
-        return error;
+        QPropertyBindingError error(QPropertyBindingError::UnknownError, delayedError()->error().description());
+        QPropertyBindingPrivate::currentlyEvaluatingBinding()->setError(std::move(error));
+        return false;
     }
 
     QVariant resultVariant(scope.engine->toVariant(result, metaType.id()));
-    auto metaTypeId= metaType.id();
+    auto metaTypeId = metaType.id();
     resultVariant.convert(metaTypeId);
     QMetaType::destruct(metaTypeId, dataPtr);
     QMetaType::construct(metaTypeId, dataPtr, resultVariant.constData());
-    return QPropertyBindingError::NoError;
+    // ### Fixme: Compare old and new values as soon as QMetaType has support for it
+    return true;
 }
 
 QUntypedPropertyBinding QQmlTranslationPropertyBinding::create(const QQmlPropertyData *pd, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding)
 {
-    auto translationBinding = [compilationUnit, binding](const QMetaType &metaType, void *dataPtr) -> QUntypedPropertyBinding::BindingEvaluationResult {
+    auto translationBinding = [compilationUnit, binding](const QMetaType &metaType, void *dataPtr) -> bool {
         // Create a dependency to the uiLanguage
         QJSEnginePrivate::get(compilationUnit->engine)->uiLanguage.value();
 
@@ -127,7 +129,8 @@ QUntypedPropertyBinding QQmlTranslationPropertyBinding::create(const QQmlPropert
 
         QMetaType::destruct(metaType.id(), dataPtr);
         QMetaType::construct(metaType.id(), dataPtr, resultVariant.constData());
-        return QPropertyBindingError::NoError;
+        // ### Fixme: Compare old and new values as soon as QMetaType has support for it
+        return true;
     };
 
     return QUntypedPropertyBinding(QMetaType(pd->propType()), translationBinding, QPropertyBindingSourceLocation());
