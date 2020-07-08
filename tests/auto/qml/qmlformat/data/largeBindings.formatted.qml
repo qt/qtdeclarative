@@ -1,3 +1,6 @@
+import QtQml
+import QtQuick 2
+
 QtObject {
     small1: 3
     small2: foo

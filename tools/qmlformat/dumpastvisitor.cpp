@@ -1343,8 +1343,14 @@ bool DumpAstVisitor::visit(UiImport *node) {
         result += parseUiQualifiedId(node->importUri);
 
     if (node->version) {
-        result += " " + QString::number(node->version->version.majorVersion()) + "."
-                + QString::number(node->version->version.minorVersion());
+        const auto version = node->version->version;
+
+        if (version.hasMajorVersion()) {
+            result += " " + QString::number(version.majorVersion());
+
+            if (version.hasMinorVersion())
+                result += "." + QString::number(version.minorVersion());
+        }
     }
 
     if (node->asToken.isValid()) {

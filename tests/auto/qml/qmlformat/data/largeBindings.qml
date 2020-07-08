@@ -1,3 +1,6 @@
+import QtQml
+import QtQuick 2
+
 QtObject
 {
     // THIS NEEDS TO BE LAST
