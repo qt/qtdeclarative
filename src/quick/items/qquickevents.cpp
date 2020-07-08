@@ -1246,7 +1246,7 @@ QQuickPointerEvent *QQuickPointerMouseEvent::reset(QEvent *event)
         break;
     }
     // for now, reuse the device ID as the point ID; TODO use ev->point(0).id when it becomes possible
-    m_point->reset(state, ev->scenePosition(), int(ev->device()->id()), ev->timestamp());
+    m_point->reset(state, ev->scenePosition(), int(ev->device()->systemId()), ev->timestamp());
     return this;
 }
 
@@ -1356,7 +1356,7 @@ QQuickPointerEvent *QQuickPointerNativeGestureEvent::reset(QEvent *event)
     default:
         break;
     }
-    quint64 deviceId = ev->device()->id();
+    quint64 deviceId = ev->device()->systemId();
     m_point->reset(state, ev->scenePosition(), deviceId << 24, ev->timestamp());
     return this;
 }

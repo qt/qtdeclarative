@@ -1924,7 +1924,7 @@ bool QQuickWindowPrivate::clearHover(ulong timestamp)
             pos = q->mapFromGlobal(QCursor::pos());
             const auto dev = QPointingDevice::primaryPointingDevice();
             QQuickPointerEvent *pointerEvent = pointerEventInstance(dev, QEvent::MouseMove);
-            pointerEvent->point(0)->reset(Qt::TouchPointMoved, pos, int(dev->id()), timestamp, QVector2D());
+            pointerEvent->point(0)->reset(Qt::TouchPointMoved, pos, int(dev->systemId()), timestamp, QVector2D());
             pointerEvent->point(0)->setAccepted(true);
             pointerEvent->localize(item);
             for (QQuickPointerHandler *h : itemPrivate->extra->pointerHandlers)
@@ -2273,7 +2273,7 @@ bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
     if (itemPrivate->hasPointerHandlers()) {
         const auto dev = QPointingDevice::primaryPointingDevice();
         QQuickPointerEvent *pointerEvent = pointerEventInstance(dev, QEvent::MouseMove);
-        pointerEvent->point(0)->reset(Qt::TouchPointMoved, scenePos, dev->id(), timestamp, QVector2D());
+        pointerEvent->point(0)->reset(Qt::TouchPointMoved, scenePos, dev->systemId(), timestamp, QVector2D());
         pointerEvent->point(0)->setAccepted(true);
         pointerEvent->localize(item);
         for (QQuickPointerHandler *h : itemPrivate->extra->pointerHandlers)
