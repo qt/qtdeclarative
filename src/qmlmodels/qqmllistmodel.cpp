@@ -296,8 +296,9 @@ void StringOrTranslation::setTranslation(const QV4::CompiledData::Binding *bindi
 
 QString StringOrTranslation::toString(const QQmlListModel *owner) const
 {
-    if (arrayData) {
-        arrayData->ref();
+    if (stringSize) {
+        if (arrayData)
+            arrayData->ref();
         return QString(QStringPrivate(arrayData, stringData, stringSize));
     }
     if (!owner)
