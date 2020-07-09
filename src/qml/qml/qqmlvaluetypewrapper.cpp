@@ -362,10 +362,11 @@ ReturnedValue QQmlValueTypeWrapper::method_toString(const FunctionObject *b, con
 
     QString result;
     // Prepare a buffer to pass to QMetaType::convert()
-    QString convertResult;
-    convertResult.~QString();
+    alignas(alignof(QString)) unsigned char convertResult[sizeof(QString)];
     if (QMetaType::convert(w->d()->gadgetPtr(), w->d()->valueType()->metaType.id(), &convertResult, QMetaType::QString)) {
-        result = convertResult;
+        QString &string = reinterpret_cast<QString &>(convertResult);
+        result = string;
+        string.~QString();
     } else {
         result += QString::fromUtf8(QMetaType::typeName(w->d()->valueType()->metaType.id()))
                 + QLatin1Char('(');
