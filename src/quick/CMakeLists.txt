@@ -392,6 +392,12 @@ qt_extend_target(Quick CONDITION QT_FEATURE_quick_path
         util/qquickpathinterpolator.cpp util/qquickpathinterpolator_p.h
 )
 
+qt_extend_target(Quick CONDITION QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT_FEATURE_opengles3
+    SOURCES
+        items/qquickframebufferobject.cpp items/qquickframebufferobject.h
+        util/qquickopenglutils.cpp util/qquickopenglutils.h
+)
+
 qt_extend_target(Quick CONDITION QT_FEATURE_thread
     SOURCES
         scenegraph/adaptations/software/qsgsoftwarethreadedrenderloop.cpp scenegraph/adaptations/software/qsgsoftwarethreadedrenderloop_p.h
@@ -479,12 +485,6 @@ qt_extend_target(Quick CONDITION QT_FEATURE_quick_shadereffect
         items/qquickshadereffect.cpp items/qquickshadereffect_p.h
         items/qquickshadereffectmesh.cpp items/qquickshadereffectmesh_p.h
         items/qquickshadereffectsource.cpp items/qquickshadereffectsource_p.h
-)
-
-qt_extend_target(Quick CONDITION QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT_FEATURE_opengles3
-    SOURCES
-        items/qquickframebufferobject.cpp items/qquickframebufferobject.h
-        util/qquickopenglutils.cpp util/qquickopenglutils.h
 )
 
 qt_extend_target(Quick CONDITION QT_FEATURE_quick_canvas

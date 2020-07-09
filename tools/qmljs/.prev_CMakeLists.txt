@@ -4,7 +4,8 @@
 ## qmljs Tool:
 #####################################################################
 
-qt_add_tool(qmljs
+qt_get_tool_target_name(target_name qmljs)
+qt_add_tool(${target_name}
     TARGET_DESCRIPTION "QML JavaScript Tool"
     SOURCES
         qmljs.cpp
@@ -44,42 +45,42 @@ qt_add_tool(qmljs
 ## Scopes:
 #####################################################################
 
-qt_extend_target(qmljs CONDITION WIN32
+qt_extend_target(${target_name} CONDITION WIN32
     DEFINES
         NOMINMAX
 )
 
-qt_extend_target(qmljs CONDITION disassembler AND ((TEST_architecture_arch STREQUAL "i386") OR (TEST_architecture_arch STREQUAL "x86_64"))
+qt_extend_target(${target_name} CONDITION disassembler AND ((TEST_architecture_arch STREQUAL "i386") OR (TEST_architecture_arch STREQUAL "x86_64"))
     DEFINES
         WTF_USE_UDIS86=1
 )
 
-qt_extend_target(qmljs CONDITION (TEST_architecture_arch STREQUAL "arm") AND disassembler
+qt_extend_target(${target_name} CONDITION (TEST_architecture_arch STREQUAL "arm") AND disassembler
     DEFINES
         WTF_USE_ARMV7_DISASSEMBLER=1
 )
 
-qt_extend_target(qmljs CONDITION (TEST_architecture_arch STREQUAL "arm64") AND disassembler
+qt_extend_target(${target_name} CONDITION (TEST_architecture_arch STREQUAL "arm64") AND disassembler
     DEFINES
         WTF_USE_ARM64_DISASSEMBLER=1
 )
 
-qt_extend_target(qmljs CONDITION (TEST_architecture_arch STREQUAL "mips") AND disassembler
+qt_extend_target(${target_name} CONDITION (TEST_architecture_arch STREQUAL "mips") AND disassembler
     DEFINES
         WTF_USE_MIPS32_DISASSEMBLER=1
 )
 
-qt_extend_target(qmljs CONDITION NOT disassembler
+qt_extend_target(${target_name} CONDITION NOT disassembler
     DEFINES
         WTF_USE_UDIS86=0
 )
 
-qt_extend_target(qmljs CONDITION CMAKE_BUILD_TYPE STREQUAL Release
+qt_extend_target(${target_name} CONDITION CMAKE_BUILD_TYPE STREQUAL Release
     DEFINES
         NDEBUG
 )
 
-qt_extend_target(qmljs CONDITION GCC AND QT_COMPILER_VERSION_MAJOR STRGREATER 6 AND NOT CLANG AND NOT ICC
+qt_extend_target(${target_name} CONDITION GCC AND QT_COMPILER_VERSION_MAJOR STRGREATER 6 AND NOT CLANG AND NOT ICC
     COMPILE_OPTIONS
         -Wno-expansion-to-defined
 )

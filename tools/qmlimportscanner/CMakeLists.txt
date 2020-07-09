@@ -4,7 +4,8 @@
 ## qmlimportscanner Tool:
 #####################################################################
 
-qt_add_tool(qmlimportscanner
+qt_get_tool_target_name(target_name qmlimportscanner)
+qt_add_tool(${target_name}
     TARGET_DESCRIPTION "QML Import Scanner"
     TOOLS_TARGET Qml # special case
     SOURCES

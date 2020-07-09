@@ -4,7 +4,8 @@
 ## qmlprofiler Tool:
 #####################################################################
 
-qt_add_tool(qmlprofiler
+qt_get_tool_target_name(target_name qmlprofiler)
+qt_add_tool(${target_name}
     TARGET_DESCRIPTION "QML Profiler"
     TOOLS_TARGET Qml # special case
     SOURCES

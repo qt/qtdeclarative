@@ -4,7 +4,8 @@
 ## qmllint Tool:
 #####################################################################
 
-qt_add_tool(qmllint
+qt_get_tool_target_name(target_name qmllint)
+qt_add_tool(${target_name}
     TARGET_DESCRIPTION "QML Syntax Verifier"
     SOURCES
         ../shared/componentversion.cpp ../shared/componentversion.h

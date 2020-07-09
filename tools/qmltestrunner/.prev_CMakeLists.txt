@@ -4,7 +4,8 @@
 ## qmltestrunner Tool:
 #####################################################################
 
-qt_add_tool(qmltestrunner
+qt_get_tool_target_name(target_name qmltestrunner)
+qt_add_tool(${target_name}
     TARGET_DESCRIPTION "QML Test Runner"
     SOURCES
         main.cpp

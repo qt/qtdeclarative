@@ -4,7 +4,8 @@
 ## qmlformat Tool:
 #####################################################################
 
-qt_add_tool(qmlformat
+qt_get_tool_target_name(target_name qmlformat)
+qt_add_tool(${target_name}
     TARGET_DESCRIPTION "QML Formatter"
     TOOLS_TARGET Qml # special case
     SOURCES
