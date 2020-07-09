@@ -40,9 +40,9 @@
 #include <QObject>
 #include <QElapsedTimer>
 #include <QEvent>
+#include <QList>
 #include <QPoint>
 #include <QSet>
-#include <QVector>
 
 #include "capturedevent.h"
 
@@ -72,7 +72,7 @@ public:
     QSet<QEvent::Type> capturedEventTypes();
     void setCapturedEventTypes(QSet<QEvent::Type> types);
 
-    QVector<CapturedEvent> capturedEvents() const;
+    QList<CapturedEvent> capturedEvents() const;
 protected:
     bool eventFilter(QObject *object, QEvent *event) override;
 
@@ -87,7 +87,7 @@ private:
     Qt::Key mStopCaptureKey;
     MoveEventTrimFlags mMoveEventTrimFlags;
     QElapsedTimer mDelayTimer;
-    QVector<CapturedEvent> mEvents;
+    QList<CapturedEvent> mEvents;
     int mDuration;
     int mLastCaptureTime;
 };

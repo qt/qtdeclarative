@@ -109,7 +109,7 @@ public:
 
     Qt::Orientation m_orientation = Qt::Horizontal;
     QQmlComponent *m_handle = nullptr;
-    QVector<QQuickItem*> m_handleItems;
+    QList<QQuickItem*> m_handleItems;
     int m_hoveredHandleIndex = -1;
     int m_pressedHandleIndex = -1;
     int m_nextVisibleIndexAfterPressedHandle = -1;

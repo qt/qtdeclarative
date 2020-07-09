@@ -622,7 +622,7 @@ static QStringList extractExtensions(QStringView filter)
     const int to = filter.lastIndexOf(QLatin1Char(')')) - 1;
     if (from >= 0 && from < to) {
         const QStringView ref = filter.mid(from + 1, to - from);
-        const QVector<QStringView> exts = ref.split(QLatin1Char(' '), Qt::SkipEmptyParts);
+        const QList<QStringView> exts = ref.split(QLatin1Char(' '), Qt::SkipEmptyParts);
         for (const QStringView &ref : exts)
             extensions += extractExtension(ref);
     }
