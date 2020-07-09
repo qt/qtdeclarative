@@ -353,7 +353,7 @@ void QQmlEngineDebugServiceImpl::buildObjectDump(QDataStream &message,
         }
     }
 
-    message << propertyIndexes.size() + fakeProperties.count();
+    message << int(propertyIndexes.size() + fakeProperties.count());
 
     for (int ii = 0; ii < propertyIndexes.size(); ++ii)
         message << propertyData(object, propertyIndexes.at(ii));
@@ -500,7 +500,7 @@ void QQmlEngineDebugServiceImpl::processMessage(const QByteArray &message)
 
     if (type == "LIST_ENGINES") {
         rs << QByteArray("LIST_ENGINES_R");
-        rs << queryId << m_engines.count();
+        rs << queryId << int(m_engines.count());
 
         for (int ii = 0; ii < m_engines.count(); ++ii) {
             QJSEngine *engine = m_engines.at(ii);
@@ -558,7 +558,7 @@ void QQmlEngineDebugServiceImpl::processMessage(const QByteArray &message)
         const QList<QObject*> objects = objectForLocationInfo(file, lineNumber, columnNumber);
 
         rs << QByteArray("FETCH_OBJECTS_FOR_LOCATION_R") << queryId
-           << objects.count();
+           << int(objects.count());
 
         for (QObject *object : objects) {
             if (recurse)
