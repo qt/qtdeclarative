@@ -275,7 +275,6 @@ void tst_qqmlvaluetypeproviders::userType()
     Q_ASSERT(qMetaTypeId<TestValue>() >= QMetaType::User);
 
     qRegisterMetaType<TestValue>();
-    QMetaType::registerComparators<TestValue>();
     qmlRegisterTypesAndRevisions<TestValueExporter>("Test", 1);
 
     TestValueExporter exporter;
