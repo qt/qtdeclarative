@@ -640,6 +640,8 @@ function(qt6_qml_type_registration target)
     set(additional_source_files_properties "")
     if(MINGW)
         set(additional_source_files_properties "COMPILE_OPTIONS" "-Wa,-mbig-obj")
+    elseif(MSVC)
+        set(additional_source_files_properties "COMPILE_OPTIONS" "/bigobj")
     endif()
     set_source_files_properties(${type_registration_cpp_file} PROPERTIES
         SKIP_AUTOGEN ON
