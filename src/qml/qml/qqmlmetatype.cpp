@@ -549,16 +549,12 @@ struct QQmlMetaTypeInterface : QtPrivate::QMetaTypeInterface
     QQmlMetaTypeInterface(const QByteArray &name)
         : QMetaTypeInterface {
             /*.revision=*/ 0,
-            /*.size=*/ sizeof(T),
             /*.alignment=*/ alignof(T),
+            /*.size=*/ sizeof(T),
             /*.flags=*/ QtPrivate::QMetaTypeTypeFlags<T>::Flags,
-            /*.metaObject=*/ nullptr,
-            /*.name=*/ name.constData(),
             /*.typeId=*/ 0,
-            /*.ref=*/ { Q_BASIC_ATOMIC_INITIALIZER(0) },
-            /*.deleteSelf=*/ [](QMetaTypeInterface *self) {
-                    delete static_cast<QQmlMetaTypeInterface *>(self);
-                },
+            /*.metaObject=*/ nullptr,//QtPrivate::MetaObjectForType<T>::value(),
+            /*.name=*/ name.constData(),
             /*.defaultCtr=*/ [](const QMetaTypeInterface *, void *addr) { new (addr) T(); },
             /*.copyCtr=*/ [](const QMetaTypeInterface *, void *addr, const void *other) {
                     new (addr) T(*reinterpret_cast<const T *>(other));
@@ -571,6 +567,9 @@ struct QQmlMetaTypeInterface : QtPrivate::QMetaTypeInterface
             },
             /*.equals*/ nullptr,
             /*.lessThan*/ nullptr,
+            /*.debugStream=*/ nullptr,
+            /*.dataStreamOut=*/ nullptr,
+            /*.dataStreamIn=*/ nullptr,
             /*.legacyRegisterOp=*/ nullptr
         }
         , name(name) { }

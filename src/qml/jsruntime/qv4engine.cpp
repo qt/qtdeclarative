@@ -157,70 +157,6 @@ ReturnType convertJSValueToVariantType(const QJSValue &value)
     return value.toVariant().value<ReturnType>();
 }
 
-static void saveJSValue(QDataStream &stream, const void *data)
-{
-    const QJSValue *jsv = reinterpret_cast<const QJSValue *>(data);
-    quint32 isNullOrUndefined = 0;
-    if (jsv->isNull())
-        isNullOrUndefined |= 0x1;
-    if (jsv->isUndefined())
-        isNullOrUndefined |= 0x2;
-    stream << isNullOrUndefined;
-    if (!isNullOrUndefined) {
-        const QVariant v = reinterpret_cast<const QJSValue*>(data)->toVariant();
-        switch (v.userType()) {
-        case QMetaType::Bool:
-        case QMetaType::Double:
-        case QMetaType::Int:
-        case QMetaType::QString:
-            v.save(stream);
-            break;
-        default:
-            qWarning() << "QDataStream::operator<< was to save a non-trivial QJSValue."
-                       << "This is not supported anymore, please stream a QVariant instead.";
-            QVariant().save(stream);
-            break;
-        }
-
-    }
-}
-
-static void restoreJSValue(QDataStream &stream, void *data)
-{
-    QJSValue *jsv = reinterpret_cast<QJSValue*>(data);
-
-    quint32 isNullOrUndefined;
-    stream >> isNullOrUndefined;
-
-    if (isNullOrUndefined & 0x1) {
-        *jsv = QJSValue(QJSValue::NullValue);
-    } else if (isNullOrUndefined & 0x2) {
-        *jsv = QJSValue();
-    } else {
-        QVariant v;
-        v.load(stream);
-
-        switch (v.userType()) {
-        case QMetaType::Bool:
-            *jsv = QJSValue(v.toBool());
-            break;
-        case QMetaType::Double:
-            *jsv = QJSValue(v.toDouble());
-            break;
-        case QMetaType::Int:
-            *jsv = QJSValue(v.toInt());
-            break;
-        case QMetaType::QString:
-            *jsv = QJSValue(v.toString());
-            break;
-        default:
-            qWarning() << "QDataStream::operator>> to restore a non-trivial QJSValue."
-                       << "This is not supported anymore, please stream a QVariant instead.";
-            break;
-        }
-    }
-}
-
 struct JSArrayIterator {
     QJSValue const* data;
     quint32 index;
@@ -241,9 +177,10 @@ static QtMetaTypePrivate::QSequentialIterableImpl jsvalueToSequence (const QJSVa
         // set up some functions so that non-array QSequentialIterables do not crash
         // but instead appear as an empty sequence
         iterator._size = [](const void *) {return 0;};
-        iterator._moveToBegin = [](const void *, void **) {};
-        iterator._moveToEnd = [](const void *, void **) {};
+        iterator._at = [](const void *, int, void *) {};
+        iterator._moveTo = [](const void *, void **, QSequentialIterableImpl::Position) {};
         iterator._advance = [](void **, int) {};
+        iterator._get = [](void * const *, void *) {};
         iterator._equalIter = [](void * const *, void * const *){return true; /*all iterators are nullptr*/};
         iterator._destroyIter = [](void **){};
         return iterator;
@@ -251,8 +188,7 @@ static QtMetaTypePrivate::QSequentialIterableImpl jsvalueToSequence (const QJSVa
 
     iterator._iterable = &value;
     iterator._iterator = nullptr;
-    iterator._metaType_id = qMetaTypeId<QVariant>();
-    iterator._metaType_flags = QVariantConstructionFlags::ShouldDeleteVariantData;
+    iterator._metaType = QMetaType::fromType<QVariant>();
     iterator._iteratorCapabilities = RandomAccessCapability | BiDirectionalCapability | ForwardCapability;
     iterator._size = [](const void *p) -> int {
         return static_cast<QJSValue const *>(p)->property(QString::fromLatin1("length")).toInt();
@@ -263,32 +199,28 @@ static QtMetaTypePrivate::QSequentialIterableImpl jsvalueToSequence (const QJSVa
      * and QSequentialIterable::operator*() will free that memory
     */
 
-    iterator._at = [](const void *iterable, int index) -> void const * {
-        auto const value = static_cast<QJSValue const *>(iterable)->property(quint32(index)).toVariant();
-        return QMetaType::create(qMetaTypeId<QVariant>(), &value);
+    iterator._at = [](const void *iterable, int index, void *dataPtr) -> void {
+        auto *data = static_cast<QVariant *>(dataPtr);
+        *data = static_cast<QJSValue const *>(iterable)->property(quint32(index)).toVariant();
     };
-    iterator._moveToBegin = [](const void *iterable, void **iterator) {
+    iterator._moveTo = [](const void *iterable, void **iterator, QSequentialIterableImpl::Position pos) {
         createNewIteratorIfNonExisting(iterator);
         auto jsArrayIterator = static_cast<JSArrayIterator *>(*iterator);
         jsArrayIterator->index = 0;
         jsArrayIterator->data = reinterpret_cast<QJSValue const*>(iterable);
-    };
-    iterator._moveToEnd = [](const void *iterable, void **iterator) {
-        createNewIteratorIfNonExisting(iterator);
-        auto jsArrayIterator = static_cast<JSArrayIterator *>(*iterator);
-        auto length = static_cast<QJSValue const *>(iterable)->property(QString::fromLatin1("length")).toInt();
-        jsArrayIterator->data = reinterpret_cast<QJSValue const*>(iterable);
-        jsArrayIterator->index = quint32(length);
+        if (pos == QSequentialIterableImpl::ToEnd) {
+            auto length = static_cast<QJSValue const *>(iterable)->property(QString::fromLatin1("length")).toInt();
+            jsArrayIterator->index = quint32(length);
+        }
     };
     iterator._advance = [](void **iterator, int advanceBy) {
         static_cast<JSArrayIterator *>(*iterator)->index += quint32(advanceBy);
     };
-    iterator._get = []( void * const *iterator, int metaTypeId, uint flags) ->  VariantData {
+    iterator._get = []( void * const *iterator, void *dataPtr) -> void {
         auto const * const arrayIterator = static_cast<const JSArrayIterator *>(*iterator);
         QJSValue const * const jsArray = arrayIterator->data;
-        auto const value = jsArray->property(arrayIterator->index).toVariant();
-        Q_ASSERT(flags & QVariantConstructionFlags::ShouldDeleteVariantData);
-        return {metaTypeId, QMetaType::create(qMetaTypeId<QVariant>(), &value), flags};
+        auto *data = static_cast<QVariant *>(dataPtr);
+        *data = jsArray->property(arrayIterator->index).toVariant();
     };
     iterator._destroyIter = [](void **iterator) {
         delete static_cast<JSArrayIterator *>(*iterator);
@@ -848,7 +780,6 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
         QMetaType::registerConverter<QJSValue, QStringList>(convertJSValueToVariantType<QStringList>);
     if (!QMetaType::hasRegisteredConverterFunction<QJSValue, QtMetaTypePrivate::QSequentialIterableImpl>())
         QMetaType::registerConverter<QJSValue, QtMetaTypePrivate::QSequentialIterableImpl>(jsvalueToSequence);
-    QMetaType::registerStreamOperators(qMetaTypeId<QJSValue>(), saveJSValue, restoreJSValue);
 
     QV4::QObjectWrapper::initializeBindings(this);
 
@@ -1565,11 +1496,8 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
             return retn;
 #endif
         if (typeHint != -1) {
-            // the QVariant constructor will create a copy, so we have manually
-            // destroy the value returned by QMetaType::create
-            auto temp = QMetaType::create(typeHint);
-            retn = QVariant(QMetaType(typeHint), temp);
-            QMetaType::destroy(typeHint, temp);
+            auto metaType = QMetaType(typeHint);
+            retn = QVariant(metaType, nullptr);
             auto retnAsIterable = retn.value<QtMetaTypePrivate::QSequentialIterableImpl>();
             if (retnAsIterable.containerCapabilities() & QtMetaTypePrivate::ContainerIsAppendable) {
                 auto const length = a->getLength();
@@ -1577,26 +1505,26 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
                 for (qint64 i = 0; i < length; ++i) {
                     arrayValue = a->get(i);
                     QVariant asVariant;
-                    if (QMetaType::hasRegisteredConverterFunction(qMetaTypeId<QJSValue>(), retnAsIterable._metaType_id)) {
+                    if (QMetaType::hasRegisteredConverterFunction(qMetaTypeId<QJSValue>(), retnAsIterable._metaType.id())) {
                         // before attempting a conversion from the concrete types,
                         // check if there exists a conversion from QJSValue -> out type
                         // prefer that one for compatibility reasons
                         asVariant = QVariant::fromValue(QJSValuePrivate::fromReturnedValue(arrayValue->asReturnedValue()));
-                        if (asVariant.convert(retnAsIterable._metaType_id)) {
+                        if (asVariant.convert(retnAsIterable._metaType.id())) {
                             retnAsIterable.append(asVariant.constData());
                             continue;
                         }
                     }
-                    asVariant = toVariant(e, arrayValue, retnAsIterable._metaType_id, false, visitedObjects);
+                    asVariant = toVariant(e, arrayValue, retnAsIterable._metaType.id(), false, visitedObjects);
                     auto originalType = asVariant.userType();
-                    bool couldConvert = asVariant.convert(retnAsIterable._metaType_id);
+                    bool couldConvert = asVariant.convert(retnAsIterable._metaType.id());
                     if (!couldConvert) {
                         qWarning() << QLatin1String("Could not convert array value at position %1 from %2 to %3")
                                                     .arg(QString::number(i),
                                                          QString::fromUtf8(QMetaType::typeName(originalType)),
-                                                         QString::fromUtf8(QMetaType::typeName(retnAsIterable._metaType_id)));
+                                                         QString::fromUtf8(QMetaType::typeName(retnAsIterable._metaType.id())));
                         // create default constructed value
-                        asVariant = QVariant(QMetaType(retnAsIterable._metaType_id), nullptr);
+                        asVariant = QVariant(retnAsIterable._metaType, nullptr);
                     }
                     retnAsIterable.append(asVariant.constData());
                 }

@@ -767,23 +767,23 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
                                                              parameterTypes.count() + 1));
 
         void **args = ev->args();
-        int *types = ev->types();
+        QMetaType *types = ev->types();
 
         for (int ii = 0; ii < parameterTypes.count(); ++ii) {
             const QByteArray &typeName = parameterTypes.at(ii);
             if (typeName.endsWith('*'))
-                types[ii + 1] = QMetaType::VoidStar;
+                types[ii + 1] = QMetaType(QMetaType::VoidStar);
             else
-                types[ii + 1] = QMetaType::type(typeName);
+                types[ii + 1] = QMetaType::fromName(typeName);
 
-            if (!types[ii + 1]) {
+            if (!types[ii + 1].isValid()) {
                 qWarning("QObject::connect: Cannot queue arguments of type '%s'\n"
                          "(Make sure '%s' is registered using qRegisterMetaType().)",
                          typeName.constData(), typeName.constData());
                 return;
             }
 
-            args[ii + 1] = QMetaType::create(types[ii + 1], a[ii + 1]);
+            args[ii + 1] = types[ii + 1].create(a[ii + 1]);
         }
 
         QQmlThreadNotifierProxyObject *mpo = new QQmlThreadNotifierProxyObject;

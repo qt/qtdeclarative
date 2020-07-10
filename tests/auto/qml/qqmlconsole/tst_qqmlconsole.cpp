@@ -98,7 +98,6 @@ void tst_qqmlconsole::logging()
     QStringList stringList; stringList << QStringLiteral("Hello") << QStringLiteral("World");
 
     CustomObject customObject;
-    QVERIFY(QMetaType::registerDebugStreamOperator<CustomObject>());
 
     QQmlComponent component(&engine, testUrl);
     QScopedPointer<QObject> object(component.createWithInitialProperties({

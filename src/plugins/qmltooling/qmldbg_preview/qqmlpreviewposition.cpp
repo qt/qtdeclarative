@@ -39,6 +39,7 @@
 
 #include "qqmlpreviewposition.h"
 
+#include <QtCore/qiodevice.h>
 #include <QtGui/qwindow.h>
 #include <QtGui/qscreen.h>
 #include <QtGui/qguiapplication.h>

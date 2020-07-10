@@ -158,6 +158,11 @@ private:
     quint64 d;
 };
 
+#ifndef QT_NO_DATASTREAM
+Q_QML_EXPORT QDataStream &operator<<(QDataStream &, const QJSValue &);
+Q_QML_EXPORT QDataStream &operator>>(QDataStream &, QJSValue &);
+#endif
+
 QT_END_NAMESPACE
 
 Q_DECLARE_METATYPE(QJSValue)

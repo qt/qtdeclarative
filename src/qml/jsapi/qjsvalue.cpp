@@ -1277,4 +1277,69 @@ bool QJSValue::isQMetaObject() const
     return QJSValuePrivate::asManagedType<QV4::QMetaObjectWrapper>(this);
 }
 
+#ifndef QT_NO_DATASTREAM
+QDataStream &operator<<(QDataStream &stream, const QJSValue &jsv)
+{
+    quint32 isNullOrUndefined = 0;
+    if (jsv.isNull())
+        isNullOrUndefined |= 0x1;
+    if (jsv.isUndefined())
+        isNullOrUndefined |= 0x2;
+    stream << isNullOrUndefined;
+    if (!isNullOrUndefined) {
+        const QVariant v = jsv.toVariant();
+        switch (v.userType()) {
+        case QMetaType::Bool:
+        case QMetaType::Double:
+        case QMetaType::Int:
+        case QMetaType::QString:
+            v.save(stream);
+            break;
+        default:
+            qWarning() << "QDataStream::operator<< was to save a non-trivial QJSValue."
+                       << "This is not supported anymore, please stream a QVariant instead.";
+            QVariant().save(stream);
+            break;
+        }
+
+    }
+    return stream;
+}
+
+QDataStream &operator>>(QDataStream &stream, QJSValue &jsv)
+{
+    quint32 isNullOrUndefined;
+    stream >> isNullOrUndefined;
+
+    if (isNullOrUndefined & 0x1) {
+        jsv = QJSValue(QJSValue::NullValue);
+    } else if (isNullOrUndefined & 0x2) {
+        jsv = QJSValue();
+    } else {
+        QVariant v;
+        v.load(stream);
+
+        switch (v.userType()) {
+        case QMetaType::Bool:
+            jsv = QJSValue(v.toBool());
+            break;
+        case QMetaType::Double:
+            jsv = QJSValue(v.toDouble());
+            break;
+        case QMetaType::Int:
+            jsv = QJSValue(v.toInt());
+            break;
+        case QMetaType::QString:
+            jsv = QJSValue(v.toString());
+            break;
+        default:
+            qWarning() << "QDataStream::operator>> to restore a non-trivial QJSValue."
+                       << "This is not supported anymore, please stream a QVariant instead.";
+            break;
+        }
+    }
+    return stream;
+}
+#endif
+
 QT_END_NAMESPACE

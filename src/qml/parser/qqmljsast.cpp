@@ -41,6 +41,7 @@
 #include "qqmljsast_p.h"
 
 #include "qqmljsastvisitor_p.h"
+#include <qlocale.h>
 
 QT_BEGIN_NAMESPACE
 

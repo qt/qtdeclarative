@@ -563,7 +563,7 @@ void tst_QJSEngine::toScriptValue()
     if (input.metaType().id() == QMetaType::QChar) {
         if (!input.convert(QMetaType::QString))
             QFAIL("cannot convert to the original value");
-    } else if (!output.convert(input.metaType().id()))
+    } else if (!output.convert(input.metaType().id()) && input.isValid())
         QFAIL("cannot convert to the original value");
     QCOMPARE(input, output);
 }
