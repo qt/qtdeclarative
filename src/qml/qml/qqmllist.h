@@ -227,6 +227,7 @@ public:
     int count() const;
     bool replace(int, QObject *) const;
     bool removeLast() const;
+    bool operator==(const QQmlListReference &other) const {return d == other.d;}
 
 private:
     friend class QQmlListReferencePrivate;

@@ -568,4 +568,14 @@ Synonym for \c {void (*)(QQmlListProperty<T> *property)}.
 Remove the last element from the list \a property.
 */
 
+/*!
+\fn bool QQmlListReference::operator==(const QQmlListReference &other) const
+
+Compares two QQmlListReferences. They are only considered equal if one was
+created from the other via copy assignment or copy construction.
+
+\note Independently created references to the same object are not considered
+to be equal.
+*/
+
 QT_END_NAMESPACE
