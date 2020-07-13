@@ -854,7 +854,7 @@ QQmlListProperty<QObject> QQuickWindowPrivate::data()
                                      QQuickWindowPrivate::data_removeLast);
 }
 
-static QMouseEvent *touchToMouseEvent(QEvent::Type type, const QTouchEvent::TouchPoint &p, QTouchEvent *event, QQuickItem *item, bool transformNeeded = true)
+static QMouseEvent *touchToMouseEvent(QEvent::Type type, const QEventPoint &p, QTouchEvent *event, QQuickItem *item, bool transformNeeded = true)
 {
     Q_ASSERT(QCoreApplication::testAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents));
     // The touch point local position and velocity are not yet transformed.
@@ -928,9 +928,9 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
     // Any of the fingers can become the mouse one.
     // This can happen because a mouse area might not accept an event at some point but another.
     for (int i = 0; i < event->touchPoints().count(); ++i) {
-        const QTouchEvent::TouchPoint &p = event->touchPoints().at(i);
+        const QEventPoint &p = event->touchPoints().at(i);
         // A new touch point
-        if (touchMouseId == -1 && p.state() & Qt::TouchPointPressed) {
+        if (touchMouseId == -1 && p.state() & QEventPoint::State::Pressed) {
             QPointF pos = item->mapFromScene(p.scenePosition());
 
             // probably redundant, we check bounds in the calling function (matchingNewPoints)
@@ -967,7 +967,7 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
 
         // Touch point was there before and moved
         } else if (touchMouseDevice == device && p.id() == touchMouseId) {
-            if (p.state() & Qt::TouchPointMoved) {
+            if (p.state() & QEventPoint::State::Updated) {
                 if (touchMousePressTimestamp != 0) {
                     const int doubleTapDistance = QGuiApplicationPrivate::platformTheme()->themeHint(QPlatformTheme::TouchDoubleTapDistance).toInt();
                     const QPoint moveDelta = p.globalPosition().toPoint() - touchMousePressPos;
@@ -1001,7 +1001,7 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
                     me->setAccepted(accepted);
                     break;
                 }
-            } else if (p.state() & Qt::TouchPointReleased) {
+            } else if (p.state() & QEventPoint::State::Released) {
                 // currently handled point was released
                 if (QQuickItem *mouseGrabberItem = q->mouseGrabberItem()) {
                     QScopedPointer<QMouseEvent> me(touchToMouseEvent(QEvent::MouseButtonRelease, p, event.data(), mouseGrabberItem, false));
@@ -1136,9 +1136,9 @@ Translates the data in \a touchEvent to this window.  This method leaves the ite
 */
 void QQuickWindowPrivate::translateTouchEvent(QTouchEvent *touchEvent)
 {
-    QList<QTouchEvent::TouchPoint> touchPoints = touchEvent->touchPoints();
+    QList<QEventPoint> touchPoints = touchEvent->touchPoints();
     for (int i = 0; i < touchPoints.count(); ++i) {
-        QTouchEvent::TouchPoint &touchPoint = touchPoints[i];
+        QEventPoint &touchPoint = touchPoints[i];
         touchPoint.setScenePos(touchPoint.position());
         touchPoint.setStartScenePos(touchPoint.pressPosition());
         touchPoint.setLastScenePos(touchPoint.lastPos());
@@ -1924,7 +1924,7 @@ bool QQuickWindowPrivate::clearHover(ulong timestamp)
             pos = q->mapFromGlobal(QCursor::pos());
             const auto dev = QPointingDevice::primaryPointingDevice();
             QQuickPointerEvent *pointerEvent = pointerEventInstance(dev, QEvent::MouseMove);
-            pointerEvent->point(0)->reset(Qt::TouchPointMoved, pos, int(dev->systemId()), timestamp, QVector2D());
+            pointerEvent->point(0)->reset(QEventPoint::State::Updated, pos, int(dev->systemId()), timestamp, QVector2D());
             pointerEvent->point(0)->setAccepted(true);
             pointerEvent->localize(item);
             for (QQuickPointerHandler *h : itemPrivate->extra->pointerHandlers)
@@ -2273,7 +2273,7 @@ bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
     if (itemPrivate->hasPointerHandlers()) {
         const auto dev = QPointingDevice::primaryPointingDevice();
         QQuickPointerEvent *pointerEvent = pointerEventInstance(dev, QEvent::MouseMove);
-        pointerEvent->point(0)->reset(Qt::TouchPointMoved, scenePos, dev->systemId(), timestamp, QVector2D());
+        pointerEvent->point(0)->reset(QEventPoint::State::Updated, scenePos, dev->systemId(), timestamp, QVector2D());
         pointerEvent->point(0)->setAccepted(true);
         pointerEvent->localize(item);
         for (QQuickPointerHandler *h : itemPrivate->extra->pointerHandlers)
@@ -2446,9 +2446,9 @@ void QQuickWindowPrivate::deliverDelayedTouchEvent()
 bool QQuickWindowPrivate::compressTouchEvent(QTouchEvent *event)
 {
     Q_Q(QQuickWindow);
-    Qt::TouchPointStates states = event->touchPointStates();
-    if (((states & (Qt::TouchPointMoved | Qt::TouchPointStationary)) == 0)
-        || ((states & (Qt::TouchPointPressed | Qt::TouchPointReleased)) != 0)) {
+    QEventPoint::States states = event->touchPointStates();
+    if (((states & (QEventPoint::State::Updated | QEventPoint::State::Stationary)) == 0)
+        || ((states & (QEventPoint::State::Pressed | QEventPoint::State::Released)) != 0)) {
         // we can only compress something that isn't a press or release
         return false;
     }
@@ -2472,18 +2472,18 @@ bool QQuickWindowPrivate::compressTouchEvent(QTouchEvent *event)
         // possible match.. is it really the same?
         bool mismatch = false;
 
-        QList<QTouchEvent::TouchPoint> tpts = event->touchPoints();
-        Qt::TouchPointStates states;
+        QList<QEventPoint> tpts = event->touchPoints();
+        QEventPoint::States states;
         for (int i = 0; i < event->touchPoints().count(); ++i) {
-            const QTouchEvent::TouchPoint &tp = tpts.at(i);
-            const QTouchEvent::TouchPoint &tpDelayed = delayedTouch->touchPoints().at(i);
+            const QEventPoint &tp = tpts.at(i);
+            const QEventPoint &tpDelayed = delayedTouch->touchPoints().at(i);
             if (tp.id() != tpDelayed.id()) {
                 mismatch = true;
                 break;
             }
 
-            if (tpDelayed.state() == Qt::TouchPointMoved && tp.state() == Qt::TouchPointStationary)
-                tpts[i].setState(Qt::TouchPointMoved);
+            if (tpDelayed.state() == QEventPoint::State::Updated && tp.state() == QEventPoint::State::Stationary)
+                tpts[i].setState(QEventPoint::State::Updated);
             tpts[i].setLastPos(tpDelayed.lastPos());
             tpts[i].setLastScenePos(tpDelayed.lastScenePos());
             tpts[i].setLastScreenPos(tpDelayed.lastScreenPos());
@@ -2517,7 +2517,7 @@ void QQuickWindowPrivate::handleTouchEvent(QTouchEvent *event)
     translateTouchEvent(event);
     if (event->touchPoints().size()) {
         auto point = event->touchPoints().at(0);
-        if (point.state() == Qt::TouchPointReleased) {
+        if (point.state() == QEventPoint::State::Released) {
             lastMousePosition = QPointF();
         } else {
             lastMousePosition = point.position();
@@ -3106,7 +3106,7 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
         // But if the event was not accepted then we know this item
         // will not be interested in further updates for those touchpoint IDs either.
         for (const auto &point: qAsConst(touchEvent->touchPoints())) {
-            if (point.state() == Qt::TouchPointPressed) {
+            if (point.state() == QEventPoint::State::Pressed) {
                 if (auto *tp = ptEvent->pointById(point.id())) {
                     if (tp->exclusiveGrabber() == item) {
                         qCDebug(DBG_TOUCH_TARGET) << "TP" << Qt::hex << point.id() << "disassociated";
@@ -3321,7 +3321,7 @@ QPair<QQuickItem*, QQuickPointerHandler*> QQuickWindowPrivate::findCursorItemAnd
         if (itemPrivate->hasCursorHandler) {
             if (auto handler = itemPrivate->effectiveCursorHandler()) {
                 QQuickPointerEvent *pointerEvent = pointerEventInstance(QPointingDevice::primaryPointingDevice(), QEvent::MouseMove);
-                pointerEvent->point(0)->reset(Qt::TouchPointMoved, scenePos, quint64(1) << 24 /* mouse has device ID 1 */, 0);
+                pointerEvent->point(0)->reset(QEventPoint::State::Updated, scenePos, quint64(1) << 24 /* mouse has device ID 1 */, 0);
                 pointerEvent->point(0)->setAccepted(true);
                 pointerEvent->localize(item);
                 if (handler->parentContains(pointerEvent->point(0)))
@@ -3404,17 +3404,17 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QQuickPointerEvent *event
                     } else if (Q_LIKELY(QCoreApplication::testAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents))) {
                         // filteringParent didn't filter the touch event.  Give it a chance to filter a synthetic mouse event.
                         for (int i = 0; i < filteringParentTouchEvent->touchPoints().size(); ++i) {
-                            const QTouchEvent::TouchPoint &tp = filteringParentTouchEvent->touchPoints().at(i);
+                            const QEventPoint &tp = filteringParentTouchEvent->touchPoints().at(i);
 
                             QEvent::Type t;
                             switch (tp.state()) {
-                            case Qt::TouchPointPressed:
+                            case QEventPoint::State::Pressed:
                                 t = QEvent::MouseButtonPress;
                                 break;
-                            case Qt::TouchPointReleased:
+                            case QEventPoint::State::Released:
                                 t = QEvent::MouseButtonRelease;
                                 break;
-                            case Qt::TouchPointStationary:
+                            case QEventPoint::State::Stationary:
                                 continue;
                             default:
                                 t = QEvent::MouseMove;
@@ -3500,7 +3500,7 @@ bool QQuickWindowPrivate::dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent 
     return overThreshold;
 }
 
-bool QQuickWindowPrivate::dragOverThreshold(qreal d, Qt::Axis axis, const QTouchEvent::TouchPoint *tp, int startDragThreshold)
+bool QQuickWindowPrivate::dragOverThreshold(qreal d, Qt::Axis axis, const QEventPoint *tp, int startDragThreshold)
 {
     QStyleHints *styleHints = qApp->styleHints();
     bool overThreshold = qAbs(d) > (startDragThreshold >= 0 ? startDragThreshold : styleHints->startDragDistance());

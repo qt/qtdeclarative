@@ -1373,10 +1373,10 @@ void tst_QQuickMultiPointTouchArea::stationaryTouchWithChangingPressure() // QTB
     QCOMPARE(point1->pressed(), false);
 
     QPoint p1(20,100);
-    QTouchEvent::TouchPoint tp1(1);
+    QEventPoint tp1(1);
 
     tp1.setScreenPos(window->mapToGlobal(p1));
-    tp1.setState(Qt::TouchPointPressed);
+    tp1.setState(QEventPoint::State::Pressed);
     tp1.setPressure(0.5);
     qt_handleTouchEvent(window.data(), device, {tp1});
     QQuickTouchUtils::flush(window.data());
@@ -1384,14 +1384,14 @@ void tst_QQuickMultiPointTouchArea::stationaryTouchWithChangingPressure() // QTB
     QCOMPARE(point1->pressed(), true);
     QCOMPARE(point1->pressure(), 0.5);
 
-    tp1.setState(Qt::TouchPointStationary);
+    tp1.setState(QEventPoint::State::Stationary);
     tp1.setPressure(0.6);
     qt_handleTouchEvent(window.data(), device, {tp1});
     QQuickTouchUtils::flush(window.data());
 
     QCOMPARE(point1->pressure(), 0.6);
 
-    tp1.setState(Qt::TouchPointReleased);
+    tp1.setState(QEventPoint::State::Released);
     tp1.setPressure(0);
     qt_handleTouchEvent(window.data(), device, {tp1});
     QQuickTouchUtils::flush(window.data());

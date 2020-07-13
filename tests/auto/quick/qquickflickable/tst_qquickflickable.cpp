@@ -92,7 +92,7 @@ public:
     int touchUpdates;
     int touchReleases;
     int ungrabs;
-    QVector<Qt::TouchPointState> touchPointStates;
+    QVector<QEventPoint::State> touchPointStates;
 
 protected:
     void touchEvent(QTouchEvent *ev) override
@@ -100,21 +100,21 @@ protected:
         QCOMPARE(ev->touchPoints().count(), 1);
         auto touchpoint = ev->touchPoints().first();
         switch (touchpoint.state()) {
-        case Qt::TouchPointPressed:
+        case QEventPoint::State::Pressed:
             QVERIFY(!m_active);
             m_active = true;
             emit activeChanged();
             grabTouchPoints(QList<int>() << touchpoint.id());
             break;
-        case Qt::TouchPointMoved:
+        case QEventPoint::State::Updated:
             ++touchUpdates;
             break;
-        case Qt::TouchPointReleased:
+        case QEventPoint::State::Released:
             QVERIFY(m_active);
             m_active = false;
             ++touchReleases;
             emit activeChanged();
-        case Qt::TouchPointStationary:
+        case QEventPoint::State::Stationary:
             break;
         }
         touchPointStates << touchpoint.state();
@@ -2068,7 +2068,7 @@ void tst_qquickflickable::nestedSliderUsingTouch()
     QCOMPARE(tda->active(), !ungrabs);
     QTest::touchEvent(window, touchDevice).release(0, p0, window);
     QQuickTouchUtils::flush(window);
-    QTRY_COMPARE(tda->touchPointStates.first(), Qt::TouchPointPressed);
+    QTRY_COMPARE(tda->touchPointStates.first(), QEventPoint::State::Pressed);
     QTRY_VERIFY(tda->touchUpdates >= minUpdates);
     QTRY_COMPARE(tda->touchReleases, releases);
     QTRY_COMPARE(tda->ungrabs, ungrabs);

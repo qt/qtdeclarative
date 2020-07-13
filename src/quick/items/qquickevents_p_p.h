@@ -288,10 +288,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickEventPoint : public QObject
 
 public:
     enum State {
-        Pressed     = Qt::TouchPointPressed,
-        Updated     = Qt::TouchPointMoved,
-        Stationary  = Qt::TouchPointStationary,
-        Released    = Qt::TouchPointReleased
+        Pressed     = QEventPoint::State::Pressed,
+        Updated     = QEventPoint::State::Updated,
+        Stationary  = QEventPoint::State::Stationary,
+        Released    = QEventPoint::State::Released
     };
     Q_DECLARE_FLAGS(States, State)
     Q_FLAG(States)
@@ -309,7 +309,7 @@ public:
 
     QQuickEventPoint(QQuickPointerEvent *parent);
 
-    void reset(Qt::TouchPointState state, const QPointF &scenePosition, int pointId, ulong timestamp, const QVector2D &velocity = QVector2D());
+    void reset(QEventPoint::State state, const QPointF &scenePosition, int pointId, ulong timestamp, const QVector2D &velocity = QVector2D());
     void localizePosition(QQuickItem *target);
 
     QQuickPointerEvent *pointerEvent() const;
@@ -384,7 +384,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickEventTouchPoint : public QQuickEventPoint
 public:
     QQuickEventTouchPoint(QQuickPointerTouchEvent *parent);
 
-    void reset(const QTouchEvent::TouchPoint &tp, ulong timestamp);
+    void reset(const QEventPoint &tp, ulong timestamp);
 
     qreal rotation() const { return m_rotation; }
     qreal pressure() const { return m_pressure; }
@@ -551,7 +551,7 @@ public:
     int pointCount() const override { return m_pointCount; }
     QQuickEventPoint *point(int i) const override;
     QQuickEventPoint *pointById(int pointId) const override;
-    const QTouchEvent::TouchPoint *touchPointById(int pointId) const;
+    const QEventPoint *touchPointById(int pointId) const;
     bool allPointsAccepted() const override;
     bool allUpdatedPointsAccepted() const override;
     bool allPointsGrabbed() const override;
@@ -565,7 +565,7 @@ public:
     QTouchEvent *asTouchEvent() const;
 
 private:
-    Qt::TouchPointStates touchPointStates() const;
+    QEventPoint::States touchPointStates() const;
 
     int m_pointCount = 0;
     QVector<QQuickEventTouchPoint *> m_touchPoints;

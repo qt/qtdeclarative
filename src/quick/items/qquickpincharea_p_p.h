@@ -103,7 +103,7 @@ public:
     QPointF pinchStartCenter;
     QPointF sceneLastCenter;
     QPointF pinchStartPos;
-    QList<QTouchEvent::TouchPoint> touchPoints;
+    QList<QEventPoint> touchPoints;
     int id1;
 };
 

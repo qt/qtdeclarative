@@ -195,7 +195,7 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
     sequential. Such an assumption is often false due to the way the underlying
     drivers work.
 
-    \sa QTouchEvent::TouchPoint::id
+    \sa QEventPoint::id
 */
 
 /*!
@@ -294,7 +294,7 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
     nonzero when this point is in motion. It holds the average recent velocity:
     how fast and in which direction the event point has been moving recently.
 
-    \sa QtQuick::EventPoint::velocity, QtQuick::TouchPoint::velocity, QTouchEvent::TouchPoint::velocity
+    \sa QtQuick::EventPoint::velocity, QtQuick::TouchPoint::velocity, QEventPoint::velocity
 */
 
 /*!
@@ -344,7 +344,7 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
     If the contact patch is unknown, or the device is not a touchscreen,
     these values will be zero.
 
-    \sa QtQuick::EventTouchPoint::ellipseDiameters, QtQuick::TouchPoint::ellipseDiameters, QTouchEvent::TouchPoint::ellipseDiameters
+    \sa QtQuick::EventTouchPoint::ellipseDiameters, QtQuick::TouchPoint::ellipseDiameters, QEventPoint::ellipseDiameters
 */
 
 QT_END_NAMESPACE

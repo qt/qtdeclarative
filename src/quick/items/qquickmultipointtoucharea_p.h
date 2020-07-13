@@ -271,11 +271,11 @@ protected:
     void touchUngrabEvent() override;
 
     void addTouchPrototype(QQuickTouchPoint* prototype);
-    void addTouchPoint(const QTouchEvent::TouchPoint *p);
+    void addTouchPoint(const QEventPoint *p);
     void addTouchPoint(const QMouseEvent *e);
     void clearTouchLists();
 
-    void updateTouchPoint(QQuickTouchPoint*, const QTouchEvent::TouchPoint*);
+    void updateTouchPoint(QQuickTouchPoint*, const QEventPoint*);
     void updateTouchPoint(QQuickTouchPoint *dtp, const QMouseEvent *e);
     void updateTouchData(QEvent*);
 
@@ -300,7 +300,7 @@ private:
     int _maximumTouchPoints;
     QVector<int> _lastFilterableTouchPointIds;
     QPointer<QQuickTouchPoint> _mouseTouchPoint; // exists when mouse button is down and _mouseEnabled is true; null otherwise
-    QTouchEvent::TouchPoint _mouseQpaTouchPoint; // synthetic QPA touch point to hold state and position of the mouse
+    QEventPoint _mouseQpaTouchPoint; // synthetic QPA touch point to hold state and position of the mouse
     const QPointingDevice *_touchMouseDevice;
     QPointF _mousePos;
     bool _stealMouse;

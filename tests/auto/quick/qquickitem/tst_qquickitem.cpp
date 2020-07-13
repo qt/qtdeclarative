@@ -1341,16 +1341,16 @@ void tst_qquickitem::touchEventAcceptIgnore()
 
     // Send Begin, Update & End touch sequence
     {
-        QTouchEvent::TouchPoint point;
+        QEventPoint point;
         point.setId(1);
         point.setPos(QPointF(50, 50));
         point.setScreenPos(point.position());
-        point.setState(Qt::TouchPointPressed);
+        point.setState(QEventPoint::State::Pressed);
 
         QTouchEvent event(QEvent::TouchBegin, device,
                           Qt::NoModifier,
-                          Qt::TouchPointPressed,
-                          QList<QTouchEvent::TouchPoint>() << point);
+                          QEventPoint::State::Pressed,
+                          QList<QEventPoint>() << point);
         event.setAccepted(true);
 
         item->touchEventReached = false;
@@ -1365,16 +1365,16 @@ void tst_qquickitem::touchEventAcceptIgnore()
         QCOMPARE(accepted && event.isAccepted(), true);
     }
     {
-        QTouchEvent::TouchPoint point;
+        QEventPoint point;
         point.setId(1);
         point.setPos(QPointF(60, 60));
         point.setScreenPos(point.position());
-        point.setState(Qt::TouchPointMoved);
+        point.setState(QEventPoint::State::Updated);
 
         QTouchEvent event(QEvent::TouchUpdate, device,
                           Qt::NoModifier,
-                          Qt::TouchPointMoved,
-                          QList<QTouchEvent::TouchPoint>() << point);
+                          QEventPoint::State::Updated,
+                          QList<QEventPoint>() << point);
         event.setAccepted(true);
 
         item->touchEventReached = false;
@@ -1389,16 +1389,16 @@ void tst_qquickitem::touchEventAcceptIgnore()
         QCOMPARE(accepted && event.isAccepted(), true);
     }
     {
-        QTouchEvent::TouchPoint point;
+        QEventPoint point;
         point.setId(1);
         point.setPos(QPointF(60, 60));
         point.setScreenPos(point.position());
-        point.setState(Qt::TouchPointReleased);
+        point.setState(QEventPoint::State::Released);
 
         QTouchEvent event(QEvent::TouchEnd, device,
                           Qt::NoModifier,
-                          Qt::TouchPointReleased,
-                          QList<QTouchEvent::TouchPoint>() << point);
+                          QEventPoint::State::Released,
+                          QList<QEventPoint>() << point);
         event.setAccepted(true);
 
         item->touchEventReached = false;

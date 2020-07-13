@@ -56,14 +56,14 @@ struct Event
         :type(t), mousePos(mouse), mousePosGlobal(global)
     {}
 
-    Event(QEvent::Type t, QList<QTouchEvent::TouchPoint> touch)
+    Event(QEvent::Type t, QList<QEventPoint> touch)
         :type(t), points(touch)
     {}
 
     QEvent::Type type;
     QPoint mousePos;
     QPoint mousePosGlobal;
-    QList<QTouchEvent::TouchPoint> points;
+    QList<QEventPoint> points;
 };
 
 #ifndef QT_NO_DEBUG_STREAM
@@ -101,7 +101,7 @@ public:
     void touchEvent(QTouchEvent *event)
     {
         eventList.append(Event(event->type(), event->touchPoints()));
-        QList<QTouchEvent::TouchPoint> tps = event->touchPoints();
+        QList<QEventPoint> tps = event->touchPoints();
         Q_ASSERT(!tps.isEmpty());
         point0 = tps.first().id();
         event->setAccepted(acceptTouch);
@@ -156,7 +156,7 @@ public:
                 event->type() == QEvent::TouchEnd) {
             QTouchEvent *touch = static_cast<QTouchEvent*>(event);
             eventList.append(Event(event->type(), touch->touchPoints()));
-            QList<QTouchEvent::TouchPoint> tps = touch->touchPoints();
+            QList<QEventPoint> tps = touch->touchPoints();
             Q_ASSERT(!tps.isEmpty());
             point0 = tps.first().id();
             if (filterTouch)

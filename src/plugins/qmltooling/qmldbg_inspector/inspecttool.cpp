@@ -118,11 +118,11 @@ void InspectTool::hoverMoveEvent(QMouseEvent *event)
 
 void InspectTool::touchEvent(QTouchEvent *event)
 {
-    QList<QTouchEvent::TouchPoint> touchPoints = event->touchPoints();
+    QList<QEventPoint> touchPoints = event->touchPoints();
 
     switch (event->type()) {
     case QEvent::TouchBegin:
-        if (touchPoints.count() == 1 && (event->touchPointStates() & Qt::TouchPointPressed)) {
+        if (touchPoints.count() == 1 && (event->touchPointStates() & QEventPoint::State::Pressed)) {
             m_mousePosition = touchPoints.first().position();
             m_tapEvent = true;
         } else {
@@ -132,7 +132,7 @@ void InspectTool::touchEvent(QTouchEvent *event)
     case QEvent::TouchUpdate: {
         if (touchPoints.count() > 1)
             m_tapEvent = false;
-        else if ((touchPoints.count() == 1) && (event->touchPointStates() & Qt::TouchPointMoved))
+        else if ((touchPoints.count() == 1) && (event->touchPointStates() & QEventPoint::State::Updated))
             m_mousePosition = touchPoints.first().position();
         break;
     }

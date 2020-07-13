@@ -708,14 +708,14 @@ static const QString pointDeviceName(const QQuickEventPoint *point)
     animation to show progress toward activation of the "long press" action.
 */
 
-void QQuickEventPoint::reset(Qt::TouchPointState state, const QPointF &scenePos, int pointId, ulong timestamp, const QVector2D &velocity)
+void QQuickEventPoint::reset(QEventPoint::State state, const QPointF &scenePos, int pointId, ulong timestamp, const QVector2D &velocity)
 {
     m_scenePos = scenePos;
     m_pointId = pointId;
     m_accept = false;
     m_state = static_cast<QQuickEventPoint::State>(state);
     m_timestamp = timestamp;
-    if (state == Qt::TouchPointPressed) {
+    if (state == QEventPoint::State::Pressed) {
         m_pressTimestamp = timestamp;
         m_scenePressPos = scenePos;
     }
@@ -1054,7 +1054,7 @@ QQuickEventTouchPoint::QQuickEventTouchPoint(QQuickPointerTouchEvent *parent)
     : QQuickEventPoint(parent), m_rotation(0), m_pressure(0)
 {}
 
-void QQuickEventTouchPoint::reset(const QTouchEvent::TouchPoint &tp, ulong timestamp)
+void QQuickEventTouchPoint::reset(const QEventPoint &tp, ulong timestamp)
 {
     QQuickEventPoint::reset(tp.state(), tp.scenePosition(), tp.id(), timestamp, tp.velocity());
     m_exclusiveGrabber.clear();
@@ -1228,19 +1228,19 @@ QQuickPointerEvent *QQuickPointerMouseEvent::reset(QEvent *event)
     QQuickPointerHandlerPrivate::deviceDeliveryTargets(ev->device()).clear();
     m_button = ev->button();
     m_pressedButtons = ev->buttons();
-    Qt::TouchPointState state = Qt::TouchPointStationary;
+    QEventPoint::State state = QEventPoint::State::Stationary;
     switch (ev->type()) {
     case QEvent::MouseButtonPress:
         m_point->clearPassiveGrabbers();
         Q_FALLTHROUGH();
     case QEvent::MouseButtonDblClick:
-        state = Qt::TouchPointPressed;
+        state = QEventPoint::State::Pressed;
         break;
     case QEvent::MouseButtonRelease:
-        state = Qt::TouchPointReleased;
+        state = QEventPoint::State::Released;
         break;
     case QEvent::MouseMove:
-        state = Qt::TouchPointMoved;
+        state = QEventPoint::State::Updated;
         break;
     default:
         break;
@@ -1266,7 +1266,7 @@ QQuickPointerEvent *QQuickPointerTouchEvent::reset(QEvent *event)
     m_button = Qt::NoButton;
     m_pressedButtons = Qt::NoButton;
 
-    const QList<QTouchEvent::TouchPoint> &tps = ev->touchPoints();
+    const QList<QEventPoint> &tps = ev->touchPoints();
     int newPointCount = tps.count();
     m_touchPoints.reserve(newPointCount);
 
@@ -1345,13 +1345,13 @@ QQuickPointerEvent *QQuickPointerNativeGestureEvent::reset(QEvent *event)
         return this;
 
     QQuickPointerHandlerPrivate::deviceDeliveryTargets(ev->device()).clear();
-    Qt::TouchPointState state = Qt::TouchPointMoved;
+    QEventPoint::State state = QEventPoint::State::Updated;
     switch (type()) {
     case Qt::BeginNativeGesture:
-        state = Qt::TouchPointPressed;
+        state = QEventPoint::State::Pressed;
         break;
     case Qt::EndNativeGesture:
-        state = Qt::TouchPointReleased;
+        state = QEventPoint::State::Released;
         break;
     default:
         break;
@@ -1521,7 +1521,7 @@ QQuickPointerEvent *QQuickPointerScrollEvent::reset(QEvent *event)
         m_synthSource = ev->source();
         m_inverted = ev->inverted();
 
-        m_point->reset(Qt::TouchPointMoved, ev->position(), quint64(1) << 24, ev->timestamp()); // mouse has device ID 1
+        m_point->reset(QEventPoint::State::Updated, ev->position(), quint64(1) << 24, ev->timestamp()); // mouse has device ID 1
     }
 #endif
     // TODO else if (event->type() == QEvent::Scroll) ...
@@ -1692,11 +1692,11 @@ void QQuickPointerTouchEvent::clearGrabbers() const
     }
 }
 
-Qt::TouchPointStates QQuickPointerTouchEvent::touchPointStates() const
+QEventPoint::States QQuickPointerTouchEvent::touchPointStates() const
 {
     return m_event
         ? static_cast<QTouchEvent*>(m_event)->touchPointStates()
-        : Qt::TouchPointStates();
+        : QEventPoint::States();
 }
 
 /*!
@@ -1713,17 +1713,17 @@ bool QQuickPointerTouchEvent::hasExclusiveGrabber(const QQuickPointerHandler *ha
 
 bool QQuickPointerTouchEvent::isPressEvent() const
 {
-    return touchPointStates() & Qt::TouchPointPressed;
+    return touchPointStates() & QEventPoint::State::Pressed;
 }
 
 bool QQuickPointerTouchEvent::isUpdateEvent() const
 {
-    return touchPointStates() & (Qt::TouchPointMoved | Qt::TouchPointStationary);
+    return touchPointStates() & (QEventPoint::State::Updated | QEventPoint::State::Stationary);
 }
 
 bool QQuickPointerTouchEvent::isReleaseEvent() const
 {
-    return touchPointStates() & Qt::TouchPointReleased;
+    return touchPointStates() & QEventPoint::State::Released;
 }
 
 QVector<QPointF> QQuickPointerEvent::unacceptedPressedPointScenePositions() const
@@ -1745,20 +1745,20 @@ QVector<QPointF> QQuickPointerEvent::unacceptedPressedPointScenePositions() cons
 */
 QMouseEvent *QQuickPointerTouchEvent::syntheticMouseEvent(int pointID, QQuickItem *relativeTo) const
 {
-    const QTouchEvent::TouchPoint *p = touchPointById(pointID);
+    const QEventPoint *p = touchPointById(pointID);
     if (!p)
         return nullptr;
     QEvent::Type type;
     Qt::MouseButton buttons = Qt::LeftButton;
     switch (p->state()) {
-    case Qt::TouchPointPressed:
+    case QEventPoint::State::Pressed:
         type = QEvent::MouseButtonPress;
         break;
-    case Qt::TouchPointMoved:
-    case Qt::TouchPointStationary:
+    case QEventPoint::State::Updated:
+    case QEventPoint::State::Stationary:
         type = QEvent::MouseMove;
         break;
-    case Qt::TouchPointReleased:
+    case QEventPoint::State::Released:
         type = QEvent::MouseButtonRelease;
         buttons = Qt::NoButton;
         break;
@@ -1807,17 +1807,17 @@ QQuickEventTabletPoint::QQuickEventTabletPoint(QQuickPointerTabletEvent *parent)
 
 void QQuickEventTabletPoint::reset(const QTabletEvent *ev)
 {
-    Qt::TouchPointState state = Qt::TouchPointStationary;
+    QEventPoint::State state = QEventPoint::State::Stationary;
     switch (ev->type()) {
     case QEvent::TabletPress:
-        state = Qt::TouchPointPressed;
+        state = QEventPoint::State::Pressed;
         clearPassiveGrabbers();
         break;
     case QEvent::TabletRelease:
-        state = Qt::TouchPointReleased;
+        state = QEventPoint::State::Released;
         break;
     case QEvent::TabletMove:
-        state = Qt::TouchPointMoved;
+        state = QEventPoint::State::Updated;
         break;
     default:
         break;
@@ -1946,17 +1946,17 @@ QQuickEventPoint *QQuickPointerTouchEvent::pointById(int pointId) const
 /*!
     \internal
     Returns a pointer to the original TouchPoint which has the same
-    \l {QTouchEvent::TouchPoint::id}{id} as \a pointId, if the original event is a
+    \l {QEventPoint::id}{id} as \a pointId, if the original event is a
     QTouchEvent, and if that point is found. Otherwise, returns nullptr.
 */
-const QTouchEvent::TouchPoint *QQuickPointerTouchEvent::touchPointById(int pointId) const
+const QEventPoint *QQuickPointerTouchEvent::touchPointById(int pointId) const
 {
     const QTouchEvent *ev = asTouchEvent();
     if (!ev)
         return nullptr;
-    const QList<QTouchEvent::TouchPoint> &tps = ev->touchPoints();
+    const QList<QEventPoint> &tps = ev->touchPoints();
     auto it = std::find_if(tps.constBegin(), tps.constEnd(),
-        [pointId](QTouchEvent::TouchPoint const& tp) { return tp.id() == pointId; } );
+        [pointId](QEventPoint const& tp) { return tp.id() == pointId; } );
     // return the pointer to the actual TP in QTouchEvent::_touchPoints
     return (it == tps.constEnd() ? nullptr : &*it);
 }
@@ -1974,8 +1974,8 @@ const QTouchEvent::TouchPoint *QQuickPointerTouchEvent::touchPointById(int point
 */
 QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(QQuickItem *item, bool isFiltering) const
 {
-    QList<QTouchEvent::TouchPoint> touchPoints;
-    Qt::TouchPointStates eventStates;
+    QList<QEventPoint> touchPoints;
+    QEventPoint::States eventStates;
     // TODO maybe add QQuickItem::mapVector2DFromScene(QVector2D) to avoid needing QQuickItemPrivate here
     // Or else just document that velocity is always scene-relative and is not scaled and rotated with the item
     // but that would require changing tst_qquickwindow::touchEvent_velocity(): it expects transformed velocity
@@ -2012,12 +2012,12 @@ QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(QQuickItem *item, bool i
             continue;
         if ((p->state() == QQuickEventPoint::Pressed || p->state() == QQuickEventPoint::Released) && isInside)
             anyPressOrReleaseInside = true;
-        const QTouchEvent::TouchPoint *tp = touchPointById(p->pointId());
+        const QEventPoint *tp = touchPointById(p->pointId());
         if (tp) {
             if (isInside && tp->d->stationaryWithModifiedProperty)
                 anyStationaryWithModifiedPropertyInside = true;
             eventStates |= tp->state();
-            QTouchEvent::TouchPoint tpCopy = *tp;
+            QEventPoint tpCopy = *tp;
             tpCopy.setPos(item->mapFromScene(tpCopy.scenePosition()));
             tpCopy.setLastPos(item->mapFromScene(tpCopy.lastScenePos()));
             tpCopy.setStartPos(item->mapFromScene(tpCopy.scenePressPosition()));
@@ -2029,7 +2029,7 @@ QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(QQuickItem *item, bool i
 
     // Now touchPoints will have only points which are inside the item.
     // But if none of them were just pressed inside, and the item has no other reason to care, ignore them anyway.
-    if ((eventStates == Qt::TouchPointStationary && !anyStationaryWithModifiedPropertyInside) ||
+    if ((eventStates == QEventPoint::State::Stationary && !anyStationaryWithModifiedPropertyInside) ||
             touchPoints.isEmpty() || (!anyPressOrReleaseInside && !anyGrabber && !isFiltering))
         return nullptr;
 
@@ -2037,10 +2037,10 @@ QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(QQuickItem *item, bool i
     const QTouchEvent &event = *asTouchEvent();
     QEvent::Type eventType = event.type();
     switch (eventStates) {
-    case Qt::TouchPointPressed:
+    case QEventPoint::State::Pressed:
         eventType = QEvent::TouchBegin;
         break;
-    case Qt::TouchPointReleased:
+    case QEventPoint::State::Released:
         eventType = QEvent::TouchEnd;
         break;
     default:

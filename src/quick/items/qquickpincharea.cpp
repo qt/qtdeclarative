@@ -336,7 +336,7 @@ void QQuickPinchArea::touchEvent(QTouchEvent *event)
     case QEvent::TouchUpdate:
         d->touchPoints.clear();
         for (int i = 0; i < event->touchPoints().count(); ++i) {
-            if (!(event->touchPoints().at(i).state() & Qt::TouchPointReleased)) {
+            if (!(event->touchPoints().at(i).state() & QEventPoint::State::Released)) {
                 d->touchPoints << event->touchPoints().at(i);
             }
         }
@@ -465,13 +465,13 @@ void QQuickPinchArea::updatePinch()
         return;
     }
 
-    QTouchEvent::TouchPoint touchPoint1 = d->touchPoints.at(0);
-    QTouchEvent::TouchPoint touchPoint2 = d->touchPoints.at(d->touchPoints. count() >= 2 ? 1 : 0);
+    QEventPoint touchPoint1 = d->touchPoints.at(0);
+    QEventPoint touchPoint2 = d->touchPoints.at(d->touchPoints. count() >= 2 ? 1 : 0);
 
-    if (touchPoint1.state() == Qt::TouchPointPressed)
+    if (touchPoint1.state() == QEventPoint::State::Pressed)
         d->sceneStartPoint1 = touchPoint1.scenePosition();
 
-    if (touchPoint2.state() == Qt::TouchPointPressed)
+    if (touchPoint2.state() == QEventPoint::State::Pressed)
         d->sceneStartPoint2 = touchPoint2.scenePosition();
 
     QRectF bounds = clipRect();
@@ -479,7 +479,7 @@ void QQuickPinchArea::updatePinch()
     // AND one or more of the points has just now been pressed (wasn't pressed already)
     // AND both points are inside the bounds.
     if (d->touchPoints.count() == 2
-            && (touchPoint1.state() & Qt::TouchPointPressed || touchPoint2.state() & Qt::TouchPointPressed) &&
+            && (touchPoint1.state() & QEventPoint::State::Pressed || touchPoint2.state() & QEventPoint::State::Pressed) &&
             bounds.contains(touchPoint1.position()) && bounds.contains(touchPoint2.position())) {
         d->id1 = touchPoint1.id();
         d->pinchActivated = true;
@@ -642,7 +642,7 @@ bool QQuickPinchArea::childMouseEventFilter(QQuickItem *i, QEvent *e)
              QTouchEvent *touch = static_cast<QTouchEvent*>(e);
             d->touchPoints.clear();
             for (int i = 0; i < touch->touchPoints().count(); ++i)
-                if (!(touch->touchPoints().at(i).state() & Qt::TouchPointReleased))
+                if (!(touch->touchPoints().at(i).state() & QEventPoint::State::Released))
                     d->touchPoints << touch->touchPoints().at(i);
             updatePinch();
         }

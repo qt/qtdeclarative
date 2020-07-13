@@ -186,9 +186,9 @@ void tst_QQuickPinchHandler::pinchProperties()
     QCOMPARE(rotMaxSpy.count(),1);
 }
 
-QTouchEvent::TouchPoint makeTouchPoint(int id, QPoint p, QQuickView *v, QQuickItem *i)
+QEventPoint makeTouchPoint(int id, QPoint p, QQuickView *v, QQuickItem *i)
 {
-    QTouchEvent::TouchPoint touchPoint(id);
+    QEventPoint touchPoint(id);
     touchPoint.setPos(i->mapFromScene(p));
     touchPoint.setScreenPos(v->mapToGlobal(p));
     touchPoint.setScenePos(p);
