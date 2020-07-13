@@ -86,6 +86,12 @@ public:
     QtMsgType type = QtWarningMsg;
     int line = -1;
     int column = -1;
+
+    friend bool operator==(const QQmlErrorPrivate &a, const QQmlErrorPrivate &b)
+    {
+        return a.url == b.url && a.object == b.object && a.message == b.message
+                && a.type == b.type && a.line == b.line && a.column == b.column;
+    }
 };
 
 /*!
@@ -296,6 +302,11 @@ QString QQmlError::toString() const
     rv += QLatin1String(": ") + description();
 
     return rv;
+}
+
+bool operator==(const QQmlError &a, const QQmlError &b)
+{
+    return a.d == b.d || (a.d && b.d && *a.d == *b.d);
 }
 
 /*!

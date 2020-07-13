@@ -76,6 +76,7 @@ public:
     void setMessageType(QtMsgType messageType);
 
     QString toString() const;
+    friend bool Q_QML_EXPORT operator==(const QQmlError &a, const QQmlError &b);
 private:
     QQmlErrorPrivate *d;
 };
