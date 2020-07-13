@@ -65,7 +65,7 @@ T.ComboBox {
     delegate: MenuItem {
         width: ListView.view.width
         text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
-        Material.foreground: control.currentIndex === index ? parent.Material.accent : parent.Material.foreground
+        Material.foreground: control.currentIndex === index ? ListView.view.contentItem.Material.accent : ListView.view.contentItem.Material.foreground
         highlighted: control.highlightedIndex === index
         hoverEnabled: control.hoverEnabled
     }
