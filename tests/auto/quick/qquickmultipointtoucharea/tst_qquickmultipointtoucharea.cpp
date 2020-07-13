@@ -35,6 +35,7 @@
 #include <qpa/qwindowsysteminterface.h>
 #include <QtQuick/qquickview.h>
 #include <QtGui/QScreen>
+#include <QtGui/private/qevent_p.h>
 #include "../../shared/util.h"
 #include "../shared/viewtestutil.h"
 
@@ -1373,9 +1374,9 @@ void tst_QQuickMultiPointTouchArea::stationaryTouchWithChangingPressure() // QTB
     QCOMPARE(point1->pressed(), false);
 
     QPoint p1(20,100);
-    QEventPoint tp1(1);
+    QMutableEventPoint tp1(1);
 
-    tp1.setScreenPos(window->mapToGlobal(p1));
+    tp1.setGlobalPosition(window->mapToGlobal(p1));
     tp1.setState(QEventPoint::State::Pressed);
     tp1.setPressure(0.5);
     qt_handleTouchEvent(window.data(), device, {tp1});

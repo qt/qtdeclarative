@@ -1245,8 +1245,7 @@ QQuickPointerEvent *QQuickPointerMouseEvent::reset(QEvent *event)
     default:
         break;
     }
-    // for now, reuse the device ID as the point ID; TODO use ev->point(0).id when it becomes possible
-    m_point->reset(state, ev->scenePosition(), int(ev->device()->systemId()), ev->timestamp());
+    m_point->reset(state, ev->scenePosition(), ev->point(0).id(), ev->timestamp());
     return this;
 }
 
@@ -1356,8 +1355,7 @@ QQuickPointerEvent *QQuickPointerNativeGestureEvent::reset(QEvent *event)
     default:
         break;
     }
-    quint64 deviceId = ev->device()->systemId();
-    m_point->reset(state, ev->scenePosition(), deviceId << 24, ev->timestamp());
+    m_point->reset(state, ev->scenePosition(), ev->point(0).id(), ev->timestamp());
     return this;
 }
 #endif // QT_CONFIG(gestures)
@@ -1520,8 +1518,7 @@ QQuickPointerEvent *QQuickPointerScrollEvent::reset(QEvent *event)
         m_phase = ev->phase();
         m_synthSource = ev->source();
         m_inverted = ev->inverted();
-
-        m_point->reset(QEventPoint::State::Updated, ev->position(), quint64(1) << 24, ev->timestamp()); // mouse has device ID 1
+        m_point->reset(QEventPoint::State::Updated, ev->position(), ev->point(0).id(), ev->timestamp());
     }
 #endif
     // TODO else if (event->type() == QEvent::Scroll) ...
@@ -1571,9 +1568,8 @@ QMouseEvent *QQuickPointerMouseEvent::asMouseEvent(const QPointF &localPos) cons
 {
     if (!m_event)
         return nullptr;
-    auto event = static_cast<QMouseEvent *>(m_event);
-    event->setLocalPos(localPos);
-    return event;
+    static_cast<QMutableSinglePointEvent *>(m_event)->mutablePoint().setPosition(localPos);
+    return static_cast<QMouseEvent *>(m_event);
 }
 
 /*!
@@ -1767,15 +1763,16 @@ QMouseEvent *QQuickPointerTouchEvent::syntheticMouseEvent(int pointID, QQuickIte
         return nullptr;
     }
     m_synthMouseEvent = QMouseEvent(type, relativeTo->mapFromScene(p->scenePosition()),
-        p->scenePosition(), p->globalPosition(), Qt::LeftButton, buttons, m_event->modifiers());
+        p->scenePosition(), p->globalPosition(), Qt::LeftButton, buttons, m_event->modifiers(),
+        Qt::MouseEventSynthesizedByQt, device());
     m_synthMouseEvent.setAccepted(true);
     m_synthMouseEvent.setTimestamp(m_event->timestamp());
     // ### Qt 6: try to always have valid velocity in every QEventPoint (either from the platform, or synthesized in QtGui).
     // QQuickFlickablePrivate::handleMouseMoveEvent() checks for QInputDevice::Capability::Velocity
-    // and if it is set, then it does not need to do its own velocity calculations. So we keep faking it this way for now.
-    if (device())
-        QGuiApplicationPrivate::setMouseEventCapsAndVelocity(&m_synthMouseEvent, device()->capabilities(), p->velocity());
-    QGuiApplicationPrivate::setMouseEventSource(&m_synthMouseEvent, Qt::MouseEventSynthesizedByQt);
+    // and if it is set, then it does not need to do its own velocity calculations.
+    // But because m_synthMouseEvent gets the same device() where the (usually) touch event came from,
+    // the capability won't be set, in practice, until we have the velocity in place.
+    QMutableSinglePointEvent::from(m_synthMouseEvent).mutablePoint().setVelocity(p->velocity());
     return &m_synthMouseEvent;
 }
 
@@ -1975,7 +1972,7 @@ const QEventPoint *QQuickPointerTouchEvent::touchPointById(int pointId) const
 QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(QQuickItem *item, bool isFiltering) const
 {
     QList<QEventPoint> touchPoints;
-    QEventPoint::States eventStates;
+    QEventPoint::States eventStates; // TODO maybe avoid accumulating this, since the touchevent ctor doesn't need it
     // TODO maybe add QQuickItem::mapVector2DFromScene(QVector2D) to avoid needing QQuickItemPrivate here
     // Or else just document that velocity is always scene-relative and is not scaled and rotated with the item
     // but that would require changing tst_qquickwindow::touchEvent_velocity(): it expects transformed velocity
@@ -2012,16 +2009,14 @@ QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(QQuickItem *item, bool i
             continue;
         if ((p->state() == QQuickEventPoint::Pressed || p->state() == QQuickEventPoint::Released) && isInside)
             anyPressOrReleaseInside = true;
-        const QEventPoint *tp = touchPointById(p->pointId());
+        // we don't use QMutableEventPoint::from() because it's fine to have const here
+        const QMutableEventPoint *tp = static_cast<const QMutableEventPoint *>(touchPointById(p->pointId()));
         if (tp) {
-            if (isInside && tp->d->stationaryWithModifiedProperty)
+            if (isInside && tp->stationaryWithModifiedProperty())
                 anyStationaryWithModifiedPropertyInside = true;
             eventStates |= tp->state();
-            QEventPoint tpCopy = *tp;
-            tpCopy.setPos(item->mapFromScene(tpCopy.scenePosition()));
-            tpCopy.setLastPos(item->mapFromScene(tpCopy.lastScenePos()));
-            tpCopy.setStartPos(item->mapFromScene(tpCopy.scenePressPosition()));
-            tpCopy.setEllipseDiameters(tpCopy.ellipseDiameters());
+            QMutableEventPoint tpCopy(*tp);
+            tpCopy.setPosition(item->mapFromScene(tp->scenePosition()));
             tpCopy.setVelocity(transformMatrix.mapVector(tpCopy.velocity()).toVector2D());
             touchPoints << tpCopy;
         }
@@ -2048,9 +2043,8 @@ QTouchEvent *QQuickPointerTouchEvent::touchEventForItem(QQuickItem *item, bool i
         break;
     }
 
-    QTouchEvent *touchEvent = new QTouchEvent(eventType, event.pointingDevice(),
-                                              event.modifiers(), eventStates, touchPoints);
-    touchEvent->setWindow(event.window());
+    QMutableTouchEvent *touchEvent = new QMutableTouchEvent(eventType, event.pointingDevice(),
+                                                            event.modifiers(), touchPoints);
     touchEvent->setTarget(item);
     touchEvent->setTimestamp(event.timestamp());
     touchEvent->accept();

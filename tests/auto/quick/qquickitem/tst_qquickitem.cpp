@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -33,6 +33,7 @@
 #include <QtQuick/qquickview.h>
 #include "private/qquickfocusscope_p.h"
 #include "private/qquickitem_p.h"
+#include <QtGui/private/qevent_p.h>
 #include <qpa/qwindowsysteminterface.h>
 #ifdef Q_OS_WIN
 #include <QOpenGLContext>
@@ -1341,15 +1342,12 @@ void tst_qquickitem::touchEventAcceptIgnore()
 
     // Send Begin, Update & End touch sequence
     {
-        QEventPoint point;
-        point.setId(1);
-        point.setPos(QPointF(50, 50));
-        point.setScreenPos(point.position());
-        point.setState(QEventPoint::State::Pressed);
+        QMutableEventPoint point(1, QEventPoint::State::Pressed);
+        point.setPosition(QPointF(50, 50));
+        point.setGlobalPosition(point.position());
 
         QTouchEvent event(QEvent::TouchBegin, device,
                           Qt::NoModifier,
-                          QEventPoint::State::Pressed,
                           QList<QEventPoint>() << point);
         event.setAccepted(true);
 
@@ -1365,15 +1363,12 @@ void tst_qquickitem::touchEventAcceptIgnore()
         QCOMPARE(accepted && event.isAccepted(), true);
     }
     {
-        QEventPoint point;
-        point.setId(1);
-        point.setPos(QPointF(60, 60));
-        point.setScreenPos(point.position());
-        point.setState(QEventPoint::State::Updated);
+        QMutableEventPoint point(1, QEventPoint::State::Updated);
+        point.setPosition(QPointF(60, 60));
+        point.setGlobalPosition(point.position());
 
         QTouchEvent event(QEvent::TouchUpdate, device,
                           Qt::NoModifier,
-                          QEventPoint::State::Updated,
                           QList<QEventPoint>() << point);
         event.setAccepted(true);
 
@@ -1389,15 +1384,12 @@ void tst_qquickitem::touchEventAcceptIgnore()
         QCOMPARE(accepted && event.isAccepted(), true);
     }
     {
-        QEventPoint point;
-        point.setId(1);
-        point.setPos(QPointF(60, 60));
-        point.setScreenPos(point.position());
-        point.setState(QEventPoint::State::Released);
+        QMutableEventPoint point(1, QEventPoint::State::Released);
+        point.setPosition(QPointF(60, 60));
+        point.setGlobalPosition(point.position());
 
         QTouchEvent event(QEvent::TouchEnd, device,
                           Qt::NoModifier,
-                          QEventPoint::State::Released,
                           QList<QEventPoint>() << point);
         event.setAccepted(true);
 
@@ -1620,7 +1612,7 @@ void tst_qquickitem::hoverEvent_data()
 // ### For some unknown reason QTest::mouseMove() isn't working correctly.
 static void sendMouseMove(QObject *object, const QPoint &position)
 {
-    QMouseEvent moveEvent(QEvent::MouseMove, position, Qt::NoButton, Qt::NoButton, nullptr);
+    QMouseEvent moveEvent(QEvent::MouseMove, position, Qt::NoButton, Qt::NoButton, Qt::NoModifier);
     QGuiApplication::sendEvent(object, &moveEvent);
 }
 

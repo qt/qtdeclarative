@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2018 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -29,6 +29,7 @@
 #include <QtTest/QtTest>
 #include <QtTest/QSignalSpy>
 #include <QtGui/QStyleHints>
+#include <QtGui/private/qevent_p.h>
 #include <qpa/qwindowsysteminterface.h>
 #include <private/qquickpincharea_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
@@ -175,12 +176,12 @@ void tst_QQuickPinchArea::pinchProperties()
     QCOMPARE(rotMaxSpy.count(),1);
 }
 
-QEventPoint makeTouchPoint(int id, QPoint p, QQuickView *v, QQuickItem *i)
+QMutableEventPoint makeTouchPoint(int id, QPoint p, QQuickView *v, QQuickItem *i)
 {
-    QEventPoint touchPoint(id);
-    touchPoint.setPos(i->mapFromScene(p));
-    touchPoint.setScreenPos(v->mapToGlobal(p));
-    touchPoint.setScenePos(p);
+    QMutableEventPoint touchPoint(id);
+    touchPoint.setPosition(i->mapFromScene(p));
+    touchPoint.setGlobalPosition(v->mapToGlobal(p));
+    touchPoint.setScenePosition(p);
     return touchPoint;
 }
 

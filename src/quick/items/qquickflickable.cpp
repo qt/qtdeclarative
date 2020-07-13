@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -1320,10 +1320,9 @@ void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
     qint64 currentTimestamp = computeCurrentTime(event);
     QVector2D deltas = QVector2D(event->position() - pressPos);
     bool overThreshold = false;
-    QVector2D velocity = QGuiApplicationPrivate::mouseEventVelocity(event);
+    QVector2D velocity = event->point(0).velocity();
     // TODO guarantee that events always have velocity so that it never needs to be computed here
-    // TODO use event->device->caps()
-    if (!(QGuiApplicationPrivate::mouseEventCaps(event) & int(QInputDevice::Capability::Velocity))) {
+    if (!event->device()->capabilities().testFlag(QInputDevice::Capability::Velocity)) {
         qint64 lastTimestamp = (lastPos.isNull() ? lastPressTime : lastPosTime);
         if (currentTimestamp == lastTimestamp)
             return; // events are too close together: velocity would be infinite
@@ -1363,8 +1362,8 @@ void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
 
     qreal vVelocity = 0;
     if (elapsed < 100 && vData.velocity != 0.) {
-        vVelocity = (QGuiApplicationPrivate::mouseEventCaps(event) & int(QInputDevice::Capability::Velocity))
-                ? QGuiApplicationPrivate::mouseEventVelocity(event).y() : vData.velocity;
+        vVelocity = (event->device()->capabilities().testFlag(QInputDevice::Capability::Velocity)
+                ? event->point(0).velocity().y() : vData.velocity);
     }
     if ((vData.atBeginning && vVelocity > 0.) || (vData.atEnd && vVelocity < 0.)) {
         vVelocity /= 2;
@@ -1378,8 +1377,8 @@ void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
 
     qreal hVelocity = 0;
     if (elapsed < 100 && hData.velocity != 0.) {
-        hVelocity = (QGuiApplicationPrivate::mouseEventCaps(event) & int(QInputDevice::Capability::Velocity))
-                ? QGuiApplicationPrivate::mouseEventVelocity(event).x() : hData.velocity;
+        hVelocity = (event->device()->capabilities().testFlag(QInputDevice::Capability::Velocity)
+                     ? event->point(0).velocity().x() : hData.velocity);
     }
     if ((hData.atBeginning && hVelocity > 0.) || (hData.atEnd && hVelocity < 0.)) {
         hVelocity /= 2;

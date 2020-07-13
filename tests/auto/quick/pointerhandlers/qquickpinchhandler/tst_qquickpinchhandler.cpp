@@ -29,8 +29,9 @@
 #include <QtTest/QtTest>
 #include <QtTest/QSignalSpy>
 #include <QtGui/QStyleHints>
+#include <QtGui/private/qevent_p.h>
 #include <qpa/qwindowsysteminterface.h>
-#include <private/qquickpinchhandler_p.h>
+#include <QtQuick/private/qquickpinchhandler_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/qquickview.h>
 #include <QtQml/qqmlcontext.h>
@@ -186,12 +187,12 @@ void tst_QQuickPinchHandler::pinchProperties()
     QCOMPARE(rotMaxSpy.count(),1);
 }
 
-QEventPoint makeTouchPoint(int id, QPoint p, QQuickView *v, QQuickItem *i)
+QMutableEventPoint makeTouchPoint(int id, QPoint p, QQuickView *v, QQuickItem *i)
 {
-    QEventPoint touchPoint(id);
-    touchPoint.setPos(i->mapFromScene(p));
-    touchPoint.setScreenPos(v->mapToGlobal(p));
-    touchPoint.setScenePos(p);
+    QMutableEventPoint touchPoint(id);
+    touchPoint.setPosition(i->mapFromScene(p));
+    touchPoint.setGlobalPosition(v->mapToGlobal(p));
+    touchPoint.setScenePosition(p);
     return touchPoint;
 }
 

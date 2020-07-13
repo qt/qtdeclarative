@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -44,6 +44,7 @@
 #include <private/qquickitem_p.h>
 #include <private/qquickwindow_p.h>
 #include <private/qguiapplication_p.h>
+#include <QtGui/private/qevent_p.h>
 #include <QEvent>
 #include <QMouseEvent>
 #include <QDebug>
@@ -592,20 +593,10 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
     case QEvent::MouseMove:
     case QEvent::MouseButtonRelease: {
         QMouseEvent *me = static_cast<QMouseEvent*>(event);
-        _mouseQpaTouchPoint.setPos(me->position());
-        _mouseQpaTouchPoint.setScenePos(me->scenePosition());
-        _mouseQpaTouchPoint.setScreenPos(me->globalPosition());
-        if (event->type() == QEvent::MouseMove)
-            _mouseQpaTouchPoint.setState(QEventPoint::State::Updated);
-        else if (event->type() == QEvent::MouseButtonRelease)
-            _mouseQpaTouchPoint.setState(QEventPoint::State::Released);
-        else { // QEvent::MouseButtonPress
+        _mouseQpaTouchPoint = me->point(0);
+        if (event->type() == QEvent::MouseButtonPress) {
             addTouchPoint(me);
             started = true;
-            _mouseQpaTouchPoint.setStartPos(me->position());
-            _mouseQpaTouchPoint.setStartScenePos(me->scenePosition());
-            _mouseQpaTouchPoint.setStartScreenPos(me->globalPosition());
-            _mouseQpaTouchPoint.setState(QEventPoint::State::Pressed);
         }
         touchPoints << _mouseQpaTouchPoint;
         break;
@@ -641,7 +632,8 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
                 // (we may have just obtained enough points to start tracking them -- in that case moved or stationary count as newly pressed)
                 addTouchPoint(&p);
                 started = true;
-            } else if ((touchPointState & QEventPoint::State::Updated) || p.d->stationaryWithModifiedProperty) {
+            } else if ((touchPointState & QEventPoint::State::Updated) ||
+                       QMutableEventPoint::from(const_cast<QEventPoint &>(p)).stationaryWithModifiedProperty()) {
                 // React to a stationary point with a property change (velocity, pressure) as if the point moved. (QTBUG-77142)
                 QQuickTouchPoint* dtp = static_cast<QQuickTouchPoint*>(_touchPoints.value(id));
                 Q_ASSERT(dtp);
@@ -741,7 +733,7 @@ void QQuickMultiPointTouchArea::addTouchPoint(const QMouseEvent *e)
         dtp = new QQuickTouchPoint(false);
     updateTouchPoint(dtp, e);
     dtp->setPressed(true);
-    _touchPoints.insert(_touchMouseDevice && _mouseQpaTouchPoint.id() > 0 ? _mouseQpaTouchPoint.id() : -1, dtp);
+    _touchPoints.insert(_mouseQpaTouchPoint.id(), dtp);
     _pressedTouchPoints.append(dtp);
     _mouseTouchPoint = dtp;
 }
@@ -794,8 +786,8 @@ void QQuickMultiPointTouchArea::updateTouchPoint(QQuickTouchPoint *dtp, const QE
     dtp->setArea(area);
     dtp->setStartX(p->pressPosition().x());
     dtp->setStartY(p->pressPosition().y());
-    dtp->setPreviousX(p->lastPos().x());
-    dtp->setPreviousY(p->lastPos().y());
+    dtp->setPreviousX(p->lastPosition().x());
+    dtp->setPreviousY(p->lastPosition().y());
     dtp->setSceneX(p->scenePosition().x());
     dtp->setSceneY(p->scenePosition().y());
 }
@@ -911,13 +903,11 @@ bool QQuickMultiPointTouchArea::sendMouseEvent(QMouseEvent *event)
     QQuickItem *grabber = c ? c->mouseGrabberItem() : nullptr;
     bool stealThisEvent = _stealMouse;
     if ((stealThisEvent || contains(localPos)) && (!grabber || !grabber->keepMouseGrab())) {
-        QMouseEvent mouseEvent(event->type(), localPos, event->scenePosition(), event->globalPosition(),
-                               event->button(), event->buttons(), event->modifiers());
+        QMouseEvent mouseEvent = *event;
+        auto mut = QMutableSinglePointEvent::from(&mouseEvent);
+        mut->mutablePoint().setPosition(localPos);
+        mut->setSource(Qt::MouseEventSynthesizedByQt);
         mouseEvent.setAccepted(false);
-        QGuiApplicationPrivate::setMouseEventCapsAndVelocity(&mouseEvent,
-                                                             QGuiApplicationPrivate::mouseEventCaps(event),
-                                                             QGuiApplicationPrivate::mouseEventVelocity(event));
-        QGuiApplicationPrivate::setMouseEventSource(&mouseEvent, Qt::MouseEventSynthesizedByQt);
 
         switch (mouseEvent.type()) {
         case QEvent::MouseMove:

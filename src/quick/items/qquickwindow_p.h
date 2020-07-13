@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -65,6 +65,7 @@
 #include <QtCore/qwaitcondition.h>
 #include <QtCore/qrunnable.h>
 
+#include <QtGui/private/qevent_p.h>
 #include <QtGui/private/qwindow_p.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qstylehints.h>
@@ -185,6 +186,7 @@ public:
     QQuickPointerEvent *pointerEventInstance(const QPointingDevice *device, QEvent::Type eventType = QEvent::None) const;
 
     // delivery of pointer events:
+    QMouseEvent *touchToMouseEvent(QEvent::Type type, const QEventPoint &p, QTouchEvent *event, QQuickItem *item, bool transformNeeded = true);
     QQuickPointerEvent *pointerEventInstance(QEvent *ev) const;
     void deliverPointerEvent(QQuickPointerEvent *);
     void deliverTouchEvent(QQuickPointerTouchEvent *);
@@ -269,7 +271,7 @@ public:
     QSGRenderLoop *windowManager;
     QQuickRenderControl *renderControl;
     QScopedPointer<QQuickAnimatorController> animationController;
-    QScopedPointer<QTouchEvent> delayedTouch;
+    QScopedPointer<QMutableTouchEvent> delayedTouch;
 
     int pointerEventRecursionGuard;
 
