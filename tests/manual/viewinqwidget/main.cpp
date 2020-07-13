@@ -38,9 +38,9 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QDebug>
-#include <QDesktopWidget>
 #include <QDir>
 #include <QGroupBox>
+#include <QScreen>
 #include <QQmlApplicationEngine>
 #include <QQmlError>
 #include <QQuickView>
@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
     vLayout->addWidget(container);
     hLayout->addWidget(groupBox);
 
-    const QRect availableGeometry = QApplication::desktop()->availableGeometry(&widget);
+    const QRect availableGeometry = widget.screen()->availableGeometry();
     widget.move(availableGeometry.center() - QPoint(widget.sizeHint().width() / 2, widget.sizeHint().height() / 2));
 
     widget.show();
