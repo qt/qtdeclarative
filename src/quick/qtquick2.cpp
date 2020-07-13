@@ -53,10 +53,6 @@
 #include <qqmlproperty.h>
 #include <QtCore/QPointer>
 
-#if QT_CONFIG(shortcut)
-Q_DECLARE_METATYPE(QKeySequence::StandardKey)
-#endif
-
 QT_BEGIN_NAMESPACE
 
 #if QT_CONFIG(qml_debug)
@@ -184,11 +180,6 @@ static QQmlDebugStatesDelegate *statesDelegateFactory()
 static void defineQtQuickModule()
 {
     QQuick_initializeProviders();
-
-#if QT_CONFIG(shortcut)
-    qRegisterMetaType<QKeySequence::StandardKey>();
-#endif
-
     QQuickItemsModule::defineModule();
 
 #if QT_CONFIG(accessibility)
