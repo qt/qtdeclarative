@@ -1396,6 +1396,12 @@ void tst_QQuickMenu::subMenuDisabledKeyboard()
     QVERIFY(!subMenu->isVisible());
 }
 
+/*
+    QCOMPARE() compares doubles with 1-in-1e12 precision, which is too fine for these tests.
+    Casting to floats, compared with 1-in-1e5 precision, gives more robust results.
+*/
+#define FLOAT_EQ(u, v) QCOMPARE(float(u), float(v))
+
 void tst_QQuickMenu::subMenuPosition_data()
 {
     QTest::addColumn<bool>("cascade");
@@ -1496,19 +1502,20 @@ void tst_QQuickMenu::subMenuPosition()
     if (cascade) {
         QCOMPARE(subMenu1->parentItem(), subMenu1Item);
         // vertically aligned to the parent menu item
-        QCOMPARE(subMenu1->popupItem()->y(), mainMenu->popupItem()->y() + subMenu1Item->y());
+        // We cast to float here because we want to use its larger tolerance for equality (because it has less precision than double).
+        FLOAT_EQ(subMenu1->popupItem()->y(), mainMenu->popupItem()->y() + subMenu1Item->y());
         if (mirrored) {
             // on the left of the parent menu
-            QCOMPARE(subMenu1->popupItem()->x(), mainMenu->popupItem()->x() - subMenu1->width() + overlap);
+            FLOAT_EQ(subMenu1->popupItem()->x(), mainMenu->popupItem()->x() - subMenu1->width() + overlap);
         } else {
             // on the right of the parent menu
-            QCOMPARE(subMenu1->popupItem()->x(), mainMenu->popupItem()->x() + mainMenu->width() - overlap);
+            FLOAT_EQ(subMenu1->popupItem()->x(), mainMenu->popupItem()->x() + mainMenu->width() - overlap);
         }
     } else {
         QCOMPARE(subMenu1->parentItem(), mainMenu->parentItem());
         // centered over the parent menu
-        QCOMPARE(subMenu1->popupItem()->x(), mainMenu->popupItem()->x() + (mainMenu->width() - subMenu1->width()) / 2);
-        QCOMPARE(subMenu1->popupItem()->y(), mainMenu->popupItem()->y() + (mainMenu->height() - subMenu1->height()) / 2);
+        FLOAT_EQ(subMenu1->popupItem()->x(), mainMenu->popupItem()->x() + (mainMenu->width() - subMenu1->width()) / 2);
+        FLOAT_EQ(subMenu1->popupItem()->y(), mainMenu->popupItem()->y() + (mainMenu->height() - subMenu1->height()) / 2);
     }
 
     // open the sub-sub-menu (can flip)
@@ -1525,21 +1532,23 @@ void tst_QQuickMenu::subMenuPosition()
     if (cascade) {
         QCOMPARE(subSubMenu1->parentItem(), subSubMenu1Item);
         // vertically aligned to the parent menu item
-        QCOMPARE(subSubMenu1->popupItem()->y(), subMenu1->popupItem()->y() + subSubMenu1Item->y());
+        FLOAT_EQ(subSubMenu1->popupItem()->y(), subMenu1->popupItem()->y() + subSubMenu1Item->y());
         if (mirrored != flip) {
             // on the left of the parent menu
-            QCOMPARE(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() - subSubMenu1->width() + overlap);
+            FLOAT_EQ(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() - subSubMenu1->width() + overlap);
         } else {
             // on the right of the parent menu
-            QCOMPARE(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() + subMenu1->width() - overlap);
+            FLOAT_EQ(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() + subMenu1->width() - overlap);
         }
     } else {
         QCOMPARE(subSubMenu1->parentItem(), subMenu1->parentItem());
         // centered over the parent menu
-        QCOMPARE(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() + (subMenu1->width() - subSubMenu1->width()) / 2);
-        QCOMPARE(subSubMenu1->popupItem()->y(), subMenu1->popupItem()->y() + (subMenu1->height() - subSubMenu1->height()) / 2);
+        FLOAT_EQ(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() + (subMenu1->width() - subSubMenu1->width()) / 2);
+        FLOAT_EQ(subSubMenu1->popupItem()->y(), subMenu1->popupItem()->y() + (subMenu1->height() - subSubMenu1->height()) / 2);
     }
 }
+
+#undef FLOAT_EQ
 
 void tst_QQuickMenu::addRemoveSubMenus()
 {
