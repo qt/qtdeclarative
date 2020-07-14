@@ -240,7 +240,7 @@ void QQuickDragAttachedPrivate::deliverEvent(QQuickWindow *window, QEvent *event
 {
     Q_ASSERT(!inEvent);
     inEvent = true;
-    QQuickWindowPrivate::get(window)->deliverDragEvent(&dragGrabber, event);
+    QQuickWindowPrivate::get(window)->deliveryAgentPrivate()->deliverDragEvent(&dragGrabber, event);
     inEvent = false;
 }
 

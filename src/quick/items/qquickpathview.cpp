@@ -1705,7 +1705,8 @@ void QQuickPathViewPrivate::handleMouseMoveEvent(QMouseEvent *event)
     QPointF pathPoint = pointNear(event->position(), &newPc);
     if (!stealMouse) {
         QPointF posDelta = event->position() - startPos;
-        if (QQuickWindowPrivate::dragOverThreshold(posDelta.y(), Qt::YAxis, event) || QQuickWindowPrivate::dragOverThreshold(posDelta.x(), Qt::XAxis, event)) {
+        if (QQuickDeliveryAgentPrivate::dragOverThreshold(posDelta.y(), Qt::YAxis, event) ||
+                QQuickDeliveryAgentPrivate::dragOverThreshold(posDelta.x(), Qt::XAxis, event)) {
             // The touch has exceeded the threshold. If the movement along the path is close to the drag threshold
             // then we'll assume that this gesture targets the PathView. This ensures PathView gesture grabbing
             // is in sync with other items.

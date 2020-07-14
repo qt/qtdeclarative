@@ -247,7 +247,7 @@ void QQuickDragHandler::handlePointerEventImpl(QPointerEvent *event)
                     m_pressedInsideTarget &= target()->contains(localPressPos);
                     m_pressTargetPos = targetCentroidPosition();
                 }
-                // QQuickWindowPrivate::deliverToPassiveGrabbers() skips subsequent delivery if the event is filtered.
+                // QQuickDeliveryAgentPrivate::deliverToPassiveGrabbers() skips subsequent delivery if the event is filtered.
                 // (That affects behavior for mouse but not for touch, because Flickable only handles mouse.)
                 // So we have to compensate by accepting the event here to avoid any parent Flickable from
                 // getting the event via direct delivery and grabbing too soon.

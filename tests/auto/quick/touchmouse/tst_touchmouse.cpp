@@ -194,7 +194,7 @@ public:
         switch (transition) {
         case QPointingDevice::GrabTransition::GrabExclusive:
             exclusiveGrabber = grabber;
-            fromMouseEvent = event && QQuickWindowPrivate::isMouseEvent(event);
+            fromMouseEvent = event && QQuickDeliveryAgentPrivate::isMouseEvent(event);
             canceled = false;
             break;
         case QPointingDevice::GrabTransition::UngrabExclusive:
@@ -641,7 +641,7 @@ void tst_TouchMouse::buttonOnFlickable()
     QCOMPARE(eventItem1->eventList.at(0).type, QEvent::MouseButtonPress);
 
     QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(&window);
-    QVERIFY(windowPriv->touchMouseId != -1);
+    QVERIFY(windowPriv->deliveryAgentPrivate()->touchMouseId != -1);
     auto devPriv = QPointingDevicePrivate::get(device);
     QCOMPARE(devPriv->pointById(0)->exclusiveGrabber, eventItem1);
     QCOMPARE(grabMonitor.exclusiveGrabber, eventItem1);
@@ -662,7 +662,7 @@ void tst_TouchMouse::buttonOnFlickable()
     QCOMPARE(eventItem1->eventList.at(3).type, QEvent::UngrabMouse);
 
     QCOMPARE(grabMonitor.exclusiveGrabber, flickable);
-    QVERIFY(windowPriv->touchMouseId != -1);
+    QVERIFY(windowPriv->deliveryAgentPrivate()->touchMouseId != -1);
     QCOMPARE(devPriv->pointById(0)->exclusiveGrabber, flickable);
 
     QTest::touchEvent(&window, device).release(0, p1, &window);
@@ -696,7 +696,7 @@ void tst_TouchMouse::touchButtonOnFlickable()
     QCOMPARE(eventItem2->eventList.at(0).type, QEvent::TouchBegin);
 
     QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(&window);
-    QVERIFY(windowPriv->touchMouseId == -1);
+    QVERIFY(windowPriv->deliveryAgentPrivate()->touchMouseId == -1);
     auto devPriv = QPointingDevicePrivate::get(device);
     QCOMPARE(devPriv->pointById(0)->exclusiveGrabber, eventItem2);
     QCOMPARE(grabMonitor.exclusiveGrabber, eventItem2);
@@ -720,7 +720,7 @@ void tst_TouchMouse::touchButtonOnFlickable()
     QCOMPARE(eventItem2->eventList.at(1).type, QEvent::TouchUpdate);
     QCOMPARE(grabMonitor.exclusiveGrabber, flickable);
     // both EventItem and Flickable handled the actual touch, so synth-mouse doesn't happen
-    QCOMPARE(windowPriv->touchMouseId, -1);
+    QCOMPARE(windowPriv->deliveryAgentPrivate()->touchMouseId, -1);
     QCOMPARE(devPriv->pointById(0)->exclusiveGrabber, flickable);
     QVERIFY(flickable->isMovingVertically());
 
@@ -783,7 +783,7 @@ void tst_TouchMouse::buttonOnDelayedPressFlickable()
     // wait to avoid getting a double click event
     QTest::qWait(qApp->styleHints()->mouseDoubleClickInterval() + 10);
     QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(&window);
-    QCOMPARE(windowPriv->touchMouseId, -1); // no grabber
+    QCOMPARE(windowPriv->deliveryAgentPrivate()->touchMouseId, -1); // no grabber
 
     // touch press
     QPoint p1 = QPoint(10, 110);
@@ -1535,7 +1535,7 @@ void tst_TouchMouse::implicitUngrab()
     QVERIFY(!eventItem->eventList.isEmpty());
     QCOMPARE(eventItem->eventList.at(0).type, QEvent::UngrabMouse);
     QTest::touchEvent(&window, device).release(0, p1);   // clean up potential state
-    QCOMPARE(windowPriv->touchMouseId, -1);
+    QCOMPARE(windowPriv->deliveryAgentPrivate()->touchMouseId, -1);
 
     eventItem->setEnabled(true);
     QTest::touchEvent(&window, device).press(0, p1);

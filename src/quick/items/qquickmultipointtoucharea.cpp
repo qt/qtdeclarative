@@ -578,7 +578,6 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
 
     clearTouchLists();
     QList<QEventPoint> touchPoints;
-    QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window());
     QPointingDevice *dev = nullptr;
 
     switch (event->type()) {
@@ -590,10 +589,12 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
         dev = const_cast<QPointingDevice *>(te->pointingDevice());
         break;
     }
-    case QEvent::MouseButtonPress:
-        _mouseQpaTouchPoint = QEventPoint(windowPriv->touchMouseId);
-        _touchMouseDevice = windowPriv->touchMouseDevice;
+    case QEvent::MouseButtonPress: {
+        auto da = QQuickItemPrivate::get(this)->deliveryAgentPrivate();
+        _mouseQpaTouchPoint = QEventPoint(da->touchMouseId);
+        _touchMouseDevice = da->touchMouseDevice;
         Q_FALLTHROUGH();
+    }
     case QEvent::MouseMove:
     case QEvent::MouseButtonRelease: {
         QMouseEvent *me = static_cast<QMouseEvent*>(event);
@@ -950,11 +951,11 @@ bool QQuickMultiPointTouchArea::childMouseEventFilter(QQuickItem *receiver, QEve
         return QQuickItem::childMouseEventFilter(receiver, event);
     switch (event->type()) {
     case QEvent::MouseButtonPress: {
-        QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window());
+        auto da = QQuickItemPrivate::get(this)->deliveryAgentPrivate();
         // If we already got a chance to filter the touchpoint that generated this synth-mouse-press,
         // and chose not to filter it, ignore it now, too.
         if (static_cast<QMouseEvent *>(event)->source() == Qt::MouseEventSynthesizedByQt &&
-                _lastFilterableTouchPointIds.contains(windowPriv->touchMouseId))
+                _lastFilterableTouchPointIds.contains(da->touchMouseId))
             return false;
         } Q_FALLTHROUGH();
     case QEvent::MouseMove:

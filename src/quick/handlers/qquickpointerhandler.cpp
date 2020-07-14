@@ -40,6 +40,8 @@
 #include "qquickpointerhandler_p.h"
 #include "qquickpointerhandler_p_p.h"
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtQuick/private/qquickhandlerpoint_p.h>
+#include <QtQuick/private/qquickdeliveryagent_p_p.h>
 #include <QtGui/private/qinputdevice_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -361,8 +363,9 @@ bool QQuickPointerHandler::approveGrabTransition(QPointerEvent *event, const QEv
                     // Flickable's wishes in that case, because then it would never have a chance.
                     if (existingItemGrabber->keepMouseGrab() &&
                             !(existingItemGrabber->filtersChildMouseEvents() && existingItemGrabber->isAncestorOf(parentItem()))) {
-                        QQuickWindowPrivate *winPriv = QQuickWindowPrivate::get(parentItem()->window());
-                        if (winPriv->isDeliveringTouchAsMouse() && point.id() == winPriv->touchMouseId) {
+                        auto da = QQuickItemPrivate::get(parentItem())->deliveryAgentPrivate();
+                        Q_ASSERT(da);
+                        if (da->isDeliveringTouchAsMouse() && point.id() == da->touchMouseId) {
                             qCDebug(lcPointerHandlerGrab) << this << "wants to grab touchpoint" << point.id()
                                 << "but declines to steal grab from touch-mouse grabber with keepMouseGrab=true" << existingItemGrabber;
                             allowed = false;
@@ -752,13 +755,7 @@ bool QQuickPointerHandlerPrivate::dragOverThreshold(const QEventPoint &point) co
 
 QVector<QObject *> &QQuickPointerHandlerPrivate::deviceDeliveryTargets(const QInputDevice *device)
 {
-    QInputDevicePrivate *devPriv = QInputDevicePrivate::get(const_cast<QInputDevice *>(device));
-    if (devPriv->qqExtra)
-        return *static_cast<QVector<QObject *>*>(devPriv->qqExtra);
-    auto targets = new QVector<QObject *>;
-    devPriv->qqExtra = targets;
-    QObject::connect(device, &QObject::destroyed, [targets]() { delete targets; });
-    return *targets;
+    return QQuickDeliveryAgentPrivate::deviceExtra(device)->deliveryTargets;
 }
 
 QT_END_NAMESPACE

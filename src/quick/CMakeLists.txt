@@ -169,7 +169,7 @@ qt_internal_add_module(Quick
         util/qquickanimatorjob.cpp util/qquickanimatorjob_p.h
         util/qquickapplication.cpp util/qquickapplication_p.h
         util/qquickbehavior.cpp util/qquickbehavior_p.h
-        util/qquickdeliveryagent.cpp
+        util/qquickdeliveryagent.cpp util/qquickdeliveryagent_p.h util/qquickdeliveryagent_p_p.h
         util/qquickfontloader.cpp util/qquickfontloader_p.h
         util/qquickfontmetrics.cpp util/qquickfontmetrics_p.h
         util/qquickforeignutils_p.h
