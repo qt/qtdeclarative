@@ -167,6 +167,7 @@ protected:
     bool parentContains(const QEventPoint &point) const;
     bool parentContains(const QPointF &scenePosition) const;
 
+    friend class QQuickDeliveryAgentPrivate;
     friend class QQuickItemPrivate;
     friend class QQuickWindowPrivate;
 

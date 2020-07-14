@@ -850,9 +850,15 @@ void QQuickWidgetPrivate::updateSize()
 
     if (resizeMode == QQuickWidget::SizeViewToRootObject) {
         QSize newSize = QSize(root->width(), root->height());
-        if (newSize.isValid() && newSize != q->size()) {
-            q->resize(newSize);
-            q->updateGeometry();
+        if (newSize.isValid()) {
+            if (newSize != q->size()) {
+                q->resize(newSize);
+                q->updateGeometry();
+            } else if (offscreenWindow->size().isEmpty()) {
+                // QQuickDeliveryAgentPrivate::deliverHoverEvent() ignores events that
+                // occur outside of QQuickRootItem's geometry, so we need it to match root's size.
+                offscreenWindow->contentItem()->setSize(newSize);
+            }
         }
     } else if (resizeMode == QQuickWidget::SizeRootObjectToView) {
         const bool needToUpdateWidth = !qFuzzyCompare(q->width(), root->width());

@@ -752,10 +752,10 @@ void QQuickMouseArea::mouseMoveEvent(QMouseEvent *event)
             d->lastPos = mapFromScene(d->lastScenePos);
         }
 
-        bool dragOverThresholdX = QQuickWindowPrivate::dragOverThreshold(dragPos.x() - startPos.x(),
-                                                                         Qt::XAxis, event, d->drag->threshold());
-        bool dragOverThresholdY = QQuickWindowPrivate::dragOverThreshold(dragPos.y() - startPos.y(),
-                                                                         Qt::YAxis, event, d->drag->threshold());
+        bool dragOverThresholdX = QQuickDeliveryAgentPrivate::dragOverThreshold(dragPos.x() - startPos.x(),
+                                                                                Qt::XAxis, event, d->drag->threshold());
+        bool dragOverThresholdY = QQuickDeliveryAgentPrivate::dragOverThreshold(dragPos.y() - startPos.y(),
+                                                                                Qt::YAxis, event, d->drag->threshold());
 
         if (!d->overThreshold && (((targetPos.x() != boundedDragPos.x()) && dragOverThresholdX) ||
                                   ((targetPos.y() != boundedDragPos.y()) && dragOverThresholdY)))

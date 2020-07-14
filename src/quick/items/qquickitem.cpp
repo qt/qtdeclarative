@@ -91,6 +91,7 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(lcMouseTarget)
 Q_DECLARE_LOGGING_CATEGORY(lcHoverTrace)
+Q_DECLARE_LOGGING_CATEGORY(lcPtr)
 Q_DECLARE_LOGGING_CATEGORY(lcTransient)
 Q_LOGGING_CATEGORY(lcHandlerParent, "qt.quick.handler.parent")
 
@@ -2684,8 +2685,9 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
             while (!scopeItem->isFocusScope() && scopeItem->parentItem())
                 scopeItem = scopeItem->parentItem();
             if (d->window) {
-                QQuickWindowPrivate::get(d->window)->clearFocusInScope(scopeItem, scopeFocusedItem, Qt::OtherFocusReason,
-                                                                QQuickWindowPrivate::DontChangeFocusProperty);
+                d->deliveryAgentPrivate()->
+                        clearFocusInScope(scopeItem, scopeFocusedItem, Qt::OtherFocusReason,
+                                          QQuickDeliveryAgentPrivate::DontChangeFocusProperty);
                 if (scopeFocusedItem != this)
                     QQuickItemPrivate::get(scopeFocusedItem)->updateSubFocusItem(this, true);
             } else {
@@ -2760,8 +2762,9 @@ void QQuickItem::setParentItem(QQuickItem *parentItem)
                 emit scopeFocusedItem->focusChanged(false);
             } else {
                 if (d->window) {
-                    QQuickWindowPrivate::get(d->window)->setFocusInScope(scopeItem, scopeFocusedItem, Qt::OtherFocusReason,
-                                                                  QQuickWindowPrivate::DontChangeFocusProperty);
+                    d->deliveryAgentPrivate()->
+                            setFocusInScope(scopeItem, scopeFocusedItem, Qt::OtherFocusReason,
+                                            QQuickDeliveryAgentPrivate::DontChangeFocusProperty);
                 } else {
                     QQuickItemPrivate::get(scopeFocusedItem)->updateSubFocusItem(scopeItem, true);
                 }
@@ -3037,7 +3040,6 @@ void QQuickItemPrivate::derefWindow()
         window->unsetCursor();
     }
 #endif
-    c->hoverItems.removeAll(q);
     if (itemNodeInstance)
         c->cleanup(itemNodeInstance);
     if (!parentItem)
@@ -3194,6 +3196,7 @@ QQuickItemPrivate::QQuickItemPrivate()
     , replayingPressEvent(false)
     , touchEnabled(false)
     , hasCursorHandler(false)
+    , hasSubsceneDeliveryAgent(false)
     , dirtyAttributes(0)
     , nextDirtyItem(nullptr)
     , prevDirtyItem(nullptr)
@@ -5195,6 +5198,57 @@ QPointF QQuickItemPrivate::adjustedPosForTransform(const QPointF &centroidParent
     return pos;
 }
 
+/*! \internal
+    Returns the delivery agent for the narrowest subscene containing this item,
+    but falls back to QQuickWindowPrivate::deliveryAgent if there are no subscenes.
+
+    \note When a Qt Quick scene is shown in the usual way in its own window,
+    subscenes are ignored, and QQuickWindowPrivate::deliveryAgent is used.
+    Subscene delivery agents are used only in QtQuick 3D so far.
+*/
+QQuickDeliveryAgent *QQuickItemPrivate::deliveryAgent()
+{
+    // optimization: don't go up the parent hierarchy if this item is not aware of being in a subscene
+    if (hasSubsceneDeliveryAgent) {
+        QQuickItemPrivate *p = this;
+        do {
+            if (p->extra.isAllocated()) {
+                if (auto da = p->extra->subsceneDeliveryAgent)
+                    return da;
+                p = p->parentItem ? QQuickItemPrivate::get(p->parentItem) : nullptr;
+            }
+        } while (p);
+    }
+    if (window)
+        return QQuickWindowPrivate::get(window)->deliveryAgent;
+    return nullptr;
+}
+
+QQuickDeliveryAgentPrivate *QQuickItemPrivate::deliveryAgentPrivate()
+{
+    auto da = deliveryAgent();
+    return da ? static_cast<QQuickDeliveryAgentPrivate *>(QQuickDeliveryAgentPrivate::get(da)) : nullptr;
+}
+
+/*! \internal
+    Ensures that this item, presumably the root of a sub-scene (e.g. because it
+    is mapped onto a 3D object in Qt Quick 3D), has a delivery agent to be used
+    when delivering events to the subscene: i.e. when the viewport delivers an
+    event to the subscene, or when the outer delivery agent delivers an update
+    to an item that grabbed during a previous subscene delivery.  Creates a new
+    agent if it was not already created, and returns a pointer to the instance.
+*/
+QQuickDeliveryAgent *QQuickItemPrivate::ensureSubsceneDeliveryAgent()
+{
+    Q_Q(QQuickItem);
+    hasSubsceneDeliveryAgent = true;
+    if (extra.isAllocated() && extra->subsceneDeliveryAgent)
+        return extra->subsceneDeliveryAgent;
+    extra.value().subsceneDeliveryAgent = new QQuickDeliveryAgent(q);
+    qCDebug(lcPtr) << "created new" << extra->subsceneDeliveryAgent;
+    return extra->subsceneDeliveryAgent;
+}
+
 bool QQuickItemPrivate::filterKeyEvent(QKeyEvent *e, bool post)
 {
     if (!extra.isAllocated() || !extra->keyHandler)
@@ -6089,12 +6143,10 @@ bool QQuickItemPrivate::setEffectiveVisibleRecur(bool newEffectiveVisible)
 
     effectiveVisible = newEffectiveVisible;
     dirty(Visible);
-    if (parentItem) QQuickItemPrivate::get(parentItem)->dirty(ChildrenStackingChanged);
-
-    if (window) {
-        QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window);
-        windowPriv->removeGrabber(q, true, true, true);
-    }
+    if (parentItem)
+        QQuickItemPrivate::get(parentItem)->dirty(ChildrenStackingChanged);
+    if (window)
+        deliveryAgentPrivate()->removeGrabber(q, true, true, true);
 
     bool childVisibilityChanged = false;
     for (int ii = 0; ii < childItems.count(); ++ii)
@@ -6138,12 +6190,13 @@ void QQuickItemPrivate::setEffectiveEnableRecur(QQuickItem *scope, bool newEffec
 
     effectiveEnable = newEffectiveEnable;
 
-    if (window) {
-        QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window);
-        windowPriv->removeGrabber(q, true, true, true);
+    QQuickDeliveryAgentPrivate *da = deliveryAgentPrivate();
+    if (da) {
+        da->removeGrabber(q, true, true, true);
         if (scope && !effectiveEnable && activeFocus) {
-            windowPriv->clearFocusInScope(
-                    scope, q, Qt::OtherFocusReason, QQuickWindowPrivate::DontChangeFocusProperty | QQuickWindowPrivate::DontChangeSubFocusItem);
+            da->clearFocusInScope(scope, q, Qt::OtherFocusReason,
+                                  QQuickDeliveryAgentPrivate::DontChangeFocusProperty |
+                                  QQuickDeliveryAgentPrivate::DontChangeSubFocusItem);
         }
     }
 
@@ -6152,9 +6205,10 @@ void QQuickItemPrivate::setEffectiveEnableRecur(QQuickItem *scope, bool newEffec
                 (flags & QQuickItem::ItemIsFocusScope) && scope ? q : scope, newEffectiveEnable);
     }
 
-    if (window && scope && effectiveEnable && focus) {
-        QQuickWindowPrivate::get(window)->setFocusInScope(
-                scope, q, Qt::OtherFocusReason, QQuickWindowPrivate::DontChangeFocusProperty | QQuickWindowPrivate::DontChangeSubFocusItem);
+    if (scope && effectiveEnable && focus && da) {
+        da->setFocusInScope(scope, q, Qt::OtherFocusReason,
+                            QQuickDeliveryAgentPrivate::DontChangeFocusProperty |
+                            QQuickDeliveryAgentPrivate::DontChangeSubFocusItem);
     }
 
     itemChange(QQuickItem::ItemEnabledHasChanged, effectiveEnable);
@@ -7252,10 +7306,12 @@ void QQuickItem::setFocus(bool focus, Qt::FocusReason reason)
             scope = scope->parentItem();
         if (d->window) {
             if (reason != Qt::PopupFocusReason) {
+                auto da = d->deliveryAgentPrivate();
+                Q_ASSERT(da);
                 if (focus)
-                    QQuickWindowPrivate::get(d->window)->setFocusInScope(scope, this, reason);
+                    da->setFocusInScope(scope, this, reason);
                 else
-                    QQuickWindowPrivate::get(d->window)->clearFocusInScope(scope, this, reason);
+                    da->clearFocusInScope(scope, this, reason);
             }
         } else {
             // do the focus changes from setFocusInScope/clearFocusInScope that are
@@ -7276,7 +7332,7 @@ void QQuickItem::setFocus(bool focus, Qt::FocusReason reason)
             changed << this;
             emit focusChanged(focus);
 
-            QQuickWindowPrivate::notifyFocusChangesRecur(changed.data(), changed.count() - 1);
+            QQuickDeliveryAgentPrivate::notifyFocusChangesRecur(changed.data(), changed.count() - 1);
         }
     } else {
         QVarLengthArray<QQuickItem *, 20> changed;
@@ -7291,7 +7347,7 @@ void QQuickItem::setFocus(bool focus, Qt::FocusReason reason)
         changed << this;
         emit focusChanged(focus);
 
-        QQuickWindowPrivate::notifyFocusChangesRecur(changed.data(), changed.count() - 1);
+        QQuickDeliveryAgentPrivate::notifyFocusChangesRecur(changed.data(), changed.count() - 1);
     }
 }
 
@@ -7418,7 +7474,7 @@ bool QQuickItem::isUnderMouse() const
     // QQuickWindow handles QEvent::Leave to reset the lastMousePosition
     // FIXME: Using QPointF() as the reset value means an item will not be
     // under the mouse if the mouse is at 0,0 of the window.
-    if (QQuickWindowPrivate::get(d->window)->lastMousePosition == QPointF())
+    if (const_cast<QQuickItemPrivate *>(d)->deliveryAgentPrivate()->lastMousePosition == QPointF())
         return false;
 
     QPointF cursorPos = QGuiApplicationPrivate::lastCursorPosition;
@@ -7703,13 +7759,14 @@ void QQuickItem::grabMouse()
     Q_D(QQuickItem);
     if (!d->window)
         return;
-    QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(d->window);
-    auto eventInDelivery = windowPriv->eventInDelivery();
+    auto da = d->deliveryAgentPrivate();
+    Q_ASSERT(da);
+    auto eventInDelivery = da->eventInDelivery();
     if (!eventInDelivery) {
         qWarning() << "cannot grab mouse: no event is currently being delivered";
         return;
     }
-    auto epd = windowPriv->mousePointData();
+    auto epd = da->mousePointData();
     eventInDelivery->setExclusiveGrabber(epd->eventPoint, this);
 }
 
@@ -7729,14 +7786,15 @@ void QQuickItem::ungrabMouse()
     Q_D(QQuickItem);
     if (!d->window)
         return;
-    QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(d->window);
-    auto eventInDelivery = windowPriv->eventInDelivery();
+    auto da = d->deliveryAgentPrivate();
+    Q_ASSERT(da);
+    auto eventInDelivery = da->eventInDelivery();
     if (!eventInDelivery) {
         // do it the expensive way
-        windowPriv->removeGrabber(this);
+        da->removeGrabber(this);
         return;
     }
-    const auto &eventPoint = windowPriv->mousePointData()->eventPoint;
+    const auto &eventPoint = da->mousePointData()->eventPoint;
     if (eventInDelivery->exclusiveGrabber(eventPoint) == this)
         eventInDelivery->setExclusiveGrabber(eventPoint, nullptr);
 }
@@ -7785,8 +7843,8 @@ void QQuickItem::setKeepMouseGrab(bool keep)
 */
 void QQuickItem::grabTouchPoints(const QList<int> &ids)
 {
-    QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window());
-    auto event = windowPriv->eventInDelivery();
+    Q_D(QQuickItem);
+    auto event = d->deliveryAgentPrivate()->eventInDelivery();
     if (Q_UNLIKELY(!event)) {
         qWarning() << "cannot grab: no event is currently being delivered";
         return;
@@ -7806,8 +7864,7 @@ void QQuickItem::ungrabTouchPoints()
     Q_D(QQuickItem);
     if (!d->window)
         return;
-    QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(d->window);
-    windowPriv->removeGrabber(this, false, true);
+    d->deliveryAgentPrivate()->removeGrabber(this, false, true);
 }
 
 /*!

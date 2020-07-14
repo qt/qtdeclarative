@@ -35,8 +35,9 @@
 
 #include <QtTest/QTest>
 
-#include <private/qquickwindow_p.h>
-#include <private/qquickitemview_p_p.h>
+#include <QtQuick/private/qquickdeliveryagent_p_p.h>
+#include <QtQuick/private/qquickitemview_p_p.h>
+#include <QtQuick/private/qquickwindow_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -460,10 +461,10 @@ namespace QQuickTouchUtils {
     void flush(QQuickWindow *window) {
         if (!window)
             return;
-        QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
-        if (!wd || !wd->delayedTouch)
+        QQuickDeliveryAgentPrivate *da = QQuickWindowPrivate::get(window)->deliveryAgentPrivate();
+        if (!da || !da->delayedTouch)
             return;
-        wd->deliverDelayedTouchEvent();
+        da->deliverDelayedTouchEvent();
     }
 
 }

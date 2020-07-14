@@ -388,6 +388,8 @@ public:
         QSGOpacityNode *opacityNode;
         QQuickDefaultClipNode *clipNode;
         QSGRootNode *rootNode;
+        // subsceneDeliveryAgent is set only if this item is the root of a subscene, not on all items within.
+        QQuickDeliveryAgent *subsceneDeliveryAgent = nullptr;
 
         // Mask contains() method
         QMetaMethod maskContains;
@@ -480,6 +482,8 @@ public:
     bool replayingPressEvent:1;
     bool touchEnabled:1;
     bool hasCursorHandler:1;
+    // set true when this item expects events via a subscene delivery agent; false otherwise
+    bool hasSubsceneDeliveryAgent:1;
 
     enum DirtyType {
         TransformOrigin         = 0x00000001,
@@ -606,6 +610,10 @@ public:
                                     const QPointF &startPos, const QVector2D &activeTranslatation,
                                     qreal startScale, qreal activeScale,
                                     qreal startRotation, qreal activeRotation);
+
+    QQuickDeliveryAgent *deliveryAgent();
+    QQuickDeliveryAgentPrivate *deliveryAgentPrivate();
+    QQuickDeliveryAgent *ensureSubsceneDeliveryAgent();
 
     void deliverKeyEvent(QKeyEvent *);
     bool filterKeyEvent(QKeyEvent *, bool post);

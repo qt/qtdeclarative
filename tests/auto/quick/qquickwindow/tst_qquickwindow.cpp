@@ -1137,7 +1137,7 @@ void tst_qquickwindow::mergeTouchPointLists()
     for (const auto &item : list2)
         b.append(item.get());
 
-    auto targetList = windowPrivate->mergePointerTargets(a, b);
+    auto targetList = windowPrivate->deliveryAgentPrivate()->mergePointerTargets(a, b);
     QCOMPARE(targetList, expected);
 }
 
@@ -1760,13 +1760,13 @@ void tst_qquickwindow::focusReason()
     secondItem->setParentItem(window->contentItem());
 
     firstItem->forceActiveFocus(Qt::OtherFocusReason);
-    QCOMPARE(QQuickWindowPrivate::get(window)->lastFocusReason, Qt::OtherFocusReason);
+    QCOMPARE(QQuickWindowPrivate::get(window)->deliveryAgentPrivate()->lastFocusReason, Qt::OtherFocusReason);
 
     secondItem->forceActiveFocus(Qt::TabFocusReason);
-    QCOMPARE(QQuickWindowPrivate::get(window)->lastFocusReason, Qt::TabFocusReason);
+    QCOMPARE(QQuickWindowPrivate::get(window)->deliveryAgentPrivate()->lastFocusReason, Qt::TabFocusReason);
 
     firstItem->forceActiveFocus(Qt::BacktabFocusReason);
-    QCOMPARE(QQuickWindowPrivate::get(window)->lastFocusReason, Qt::BacktabFocusReason);
+    QCOMPARE(QQuickWindowPrivate::get(window)->deliveryAgentPrivate()->lastFocusReason, Qt::BacktabFocusReason);
 
 }
 

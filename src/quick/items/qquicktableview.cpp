@@ -1295,7 +1295,7 @@ void QQuickTableViewPrivate::releaseItem(FxTableItem *fxTableItem, QQmlTableInst
                     const bool hasFocus = item == focusItem || item->isAncestorOf(focusItem);
                     if (hasFocus) {
                         const auto focusChild = QQuickItemPrivate::get(q)->subFocusItem;
-                        QQuickWindowPrivate::get(window)->clearFocusInScope(q, focusChild, Qt::OtherFocusReason);
+                        deliveryAgentPrivate()->clearFocusInScope(q, focusChild, Qt::OtherFocusReason);
                     }
                 }
             }

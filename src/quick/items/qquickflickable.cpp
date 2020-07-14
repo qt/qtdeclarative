@@ -1341,9 +1341,9 @@ void QQuickFlickablePrivate::handleMoveEvent(QPointerEvent *event)
     QVector2D velocity = event->point(0).velocity();
 
     if (q->yflick())
-        overThreshold |= QQuickWindowPrivate::dragOverThreshold(deltas.y(), Qt::YAxis, firstPoint);
+        overThreshold |= QQuickDeliveryAgentPrivate::dragOverThreshold(deltas.y(), Qt::YAxis, firstPoint);
     if (q->xflick())
-        overThreshold |= QQuickWindowPrivate::dragOverThreshold(deltas.x(), Qt::XAxis, firstPoint);
+        overThreshold |= QQuickDeliveryAgentPrivate::dragOverThreshold(deltas.x(), Qt::XAxis, firstPoint);
 
     drag(currentTimestamp, event->type(), pos, deltas, overThreshold, false, false, velocity);
 }
@@ -1518,7 +1518,7 @@ void QQuickFlickable::touchEvent(QTouchEvent *event)
                 auto &firstPoint = event->point(0);
                 if (auto grabber = qmlobject_cast<QQuickItem *>(event->exclusiveGrabber(firstPoint))) {
                     const auto localPos = grabber->mapFromScene(firstPoint.scenePosition());
-                    QScopedPointer<QPointerEvent> localizedEvent(QQuickWindowPrivate::clonePointerEvent(event, localPos));
+                    QScopedPointer<QPointerEvent> localizedEvent(QQuickDeliveryAgentPrivate::clonePointerEvent(event, localPos));
                     QCoreApplication::sendEvent(window(), localizedEvent.data());
                 }
 
@@ -1762,7 +1762,7 @@ void QQuickFlickablePrivate::captureDelayedPress(QQuickItem *item, QPointerEvent
     if (!isInnermostPressDelay(item))
         return;
 
-    delayedPressEvent = QQuickWindowPrivate::clonePointerEvent(event);
+    delayedPressEvent = QQuickDeliveryAgentPrivate::clonePointerEvent(event);
     delayedPressEvent->setAccepted(false);
     delayedPressTimer.start(pressDelay, q);
     qCDebug(lcReplay) << "begin press delay" << pressDelay << "ms with" << delayedPressEvent;
@@ -1789,8 +1789,8 @@ void QQuickFlickablePrivate::replayDelayedPress()
 
         // If we have the grab, release before delivering the event
         if (QQuickWindow *window = q->window()) {
-            QQuickWindowPrivate *wpriv = QQuickWindowPrivate::get(window);
-            wpriv->allowChildEventFiltering = false; // don't allow re-filtering during replay
+            auto da = deliveryAgentPrivate();
+            da->allowChildEventFiltering = false; // don't allow re-filtering during replay
             replayingPressEvent = true;
             auto &firstPoint = event->point(0);
             // At first glance, it's weird for delayedPressEvent to already have a grabber;
@@ -1813,7 +1813,7 @@ void QQuickFlickablePrivate::replayDelayedPress()
 
             // We're done with replay, go back to normal delivery behavior
             replayingPressEvent = false;
-            wpriv->allowChildEventFiltering = true;
+            da->allowChildEventFiltering = true;
         }
     }
 }
@@ -2577,7 +2577,7 @@ bool QQuickFlickable::filterPointerEvent(QQuickItem *receiver, QPointerEvent *ev
     bool stealThisEvent = d->stealMouse;
     bool receiverKeepsGrab = receiver && (receiver->keepMouseGrab() || receiver->keepTouchGrab());
     if ((stealThisEvent || contains(localPos)) && (!receiver || !receiverKeepsGrab || receiverDisabled)) {
-        QScopedPointer<QPointerEvent> localizedEvent(QQuickWindowPrivate::clonePointerEvent(event, localPos));
+        QScopedPointer<QPointerEvent> localizedEvent(QQuickDeliveryAgentPrivate::clonePointerEvent(event, localPos));
         localizedEvent->setAccepted(false);
         switch (firstPoint.state()) {
         case QEventPoint::State::Updated:

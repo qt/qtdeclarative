@@ -232,6 +232,9 @@ protected:
     void focusOutEvent(QFocusEvent *) override;
 
     bool event(QEvent *) override;
+
+    // These overrides are no longer normal entry points for
+    // input events, but kept in case legacy code calls them.
     void keyPressEvent(QKeyEvent *) override;
     void keyReleaseEvent(QKeyEvent *) override;
     void mousePressEvent(QMouseEvent *) override;
@@ -267,6 +270,7 @@ private:
     friend class QQuickRenderControl;
     friend class QQuickAnimatorController;
     friend class QQuickWidgetPrivate;
+    friend class QQuickDeliveryAgentPrivate;
     Q_DISABLE_COPY(QQuickWindow)
 };
 
