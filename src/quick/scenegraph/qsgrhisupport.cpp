@@ -543,6 +543,26 @@ QOffscreenSurface *QSGRhiSupport::maybeCreateOffscreenSurface(QWindow *window)
     return offscreenSurface;
 }
 
+void QSGRhiSupport::prepareWindowForRhi(QQuickWindow *window)
+{
+#if QT_CONFIG(vulkan)
+    if (rhiBackend() == QRhi::Vulkan) {
+        QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
+        // QQuickWindows must get a QVulkanInstance automatically (it is
+        // created when the first window is constructed and is destroyed only
+        // on exit), unless the application decided to set its own. With
+        // QQuickRenderControl, no QVulkanInstance is created, because it must
+        // always be under the application's control then (since the default
+        // instance we could create here would not be configurable by the
+        // application in any way, and that is often not acceptable).
+        if (!window->vulkanInstance() && !wd->renderControl)
+            window->setVulkanInstance(QSGRhiSupport::defaultVulkanInstance());
+    }
+#else
+    Q_UNUSED(window);
+#endif
+}
+
 // must be called on the render thread
 QRhi *QSGRhiSupport::createRhi(QQuickWindow *window, QOffscreenSurface *offscreenSurface)
 {
@@ -558,7 +578,7 @@ QRhi *QSGRhiSupport::createRhi(QQuickWindow *window, QOffscreenSurface *offscree
     if (isSoftwareRendererRequested())
         flags |= QRhi::PreferSoftwareRenderer;
 
-    QRhi::Implementation backend = rhiBackend();
+    const QRhi::Implementation backend = rhiBackend();
     if (backend == QRhi::Null) {
         QRhiNullInitParams rhiParams;
         rhi = QRhi::create(backend, &rhiParams, flags);
@@ -585,15 +605,7 @@ QRhi *QSGRhiSupport::createRhi(QQuickWindow *window, QOffscreenSurface *offscree
 #if QT_CONFIG(vulkan)
     if (backend == QRhi::Vulkan) {
         QRhiVulkanInitParams rhiParams;
-        // QQuickWindows must get a QVulkanInstance automatically (it is
-        // created when the first window is constructed and is destroyed only
-        // on exit), unless the application decided to set its own. With
-        // QQuickRenderControl, no QVulkanInstance is created, because it must
-        // always be under the application's control then (since the default
-        // instance we could create here would not be configurable by the
-        // application in any way, and that is often not acceptable).
-        if (!window->vulkanInstance() && !wd->renderControl)
-            window->setVulkanInstance(QSGRhiSupport::defaultVulkanInstance());
+        prepareWindowForRhi(window); // sets a vulkanInstance if not yet present
         rhiParams.inst = window->vulkanInstance();
         if (!rhiParams.inst)
             qWarning("No QVulkanInstance set for QQuickWindow, this is wrong.");

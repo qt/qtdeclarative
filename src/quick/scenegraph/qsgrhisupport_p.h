@@ -127,6 +127,7 @@ public:
 
     QOffscreenSurface *maybeCreateOffscreenSurface(QWindow *window);
     QRhi *createRhi(QQuickWindow *window, QOffscreenSurface *offscreenSurface);
+    void prepareWindowForRhi(QQuickWindow *window);
 
     QImage grabAndBlockInCurrentFrame(QRhi *rhi, QRhiCommandBuffer *cb, QRhiTexture *src = nullptr);
 

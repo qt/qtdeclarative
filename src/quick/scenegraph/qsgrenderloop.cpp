@@ -517,6 +517,11 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         // QQuickWindowPrivate, do it now
         cd->rhi = rhi;
 
+        // Unlike the threaded render loop, we use the same rhi for all windows
+        // and so createRhi() is called only once. Certain initialization may
+        // need to be done on a per window basis still, so make sure it is done.
+        rhiSupport->prepareWindowForRhi(window);
+
         QRhiSwapChain::Flags flags = QRhiSwapChain::UsedAsTransferSource; // may be used in a grab
 
         // QQ is always premul alpha. Decide based on alphaBufferSize in
