@@ -350,6 +350,8 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
         for (QTypeRevision revision : revisions) {
             if (revision < added)
                 continue;
+            if (revision.hasMajorVersion() && revision.majorVersion() > type.version.majorVersion())
+                break;
 
             // When removed, we still add revisions, but anonymous ones
             if (removed.isValid() && !(revision < removed)) {
@@ -397,6 +399,8 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
         for (QTypeRevision revision : qAsConst(revisions)) {
             if (revision < added)
                 continue;
+            if (revision.hasMajorVersion() && revision.majorVersion() > type.version.majorVersion())
+                break;
 
             // When removed, we still add revisions, but anonymous ones
             if (removed.isValid() && !(revision < removed)) {

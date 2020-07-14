@@ -76,6 +76,8 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
             continue;
         if (collector.removedInRevision.isValid() && !(revision < collector.removedInRevision))
             break;
+        if (revision.hasMajorVersion() && revision.majorVersion() > m_version.majorVersion())
+            break;
 
         exports.append(enquote(QString::fromLatin1("%1/%2 %3.%4")
                                .arg(m_module).arg(collector.elementName)
@@ -227,14 +229,35 @@ void QmlTypesCreator::writeEnums(const QJsonArray &enums)
     }
 }
 
-static QJsonArray members(const QJsonObject *classDef, const QJsonObject *origClassDef, const QString &key)
+static bool isAllowedInMajorVersion(const QJsonValue &member, QTypeRevision maxMajorVersion)
 {
-    QJsonArray classDefMembers = classDef->value(key).toArray();
+    const auto memberObject = member.toObject();
+    const auto it = memberObject.find(QLatin1String("revision"));
+    if (it == memberObject.end())
+        return true;
+
+    const QTypeRevision memberRevision = QTypeRevision::fromEncodedVersion(it->toInt());
+    return !memberRevision.hasMajorVersion()
+            || memberRevision.majorVersion() <= maxMajorVersion.majorVersion();
+}
+
+static QJsonArray members(const QJsonObject *classDef, const QJsonObject *origClassDef,
+                          const QString &key, QTypeRevision maxMajorVersion)
+{
+    QJsonArray classDefMembers;
+
+    const QJsonArray candidates = classDef->value(key).toArray();
+    for (const auto &member : candidates) {
+        if (isAllowedInMajorVersion(member, maxMajorVersion))
+            classDefMembers.append(member);
+    }
 
     if (classDef != origClassDef) {
         const QJsonArray origClassDefMembers = origClassDef->value(key).toArray();
-        for (const auto &member : origClassDefMembers)
-            classDefMembers.append(member);
+        for (const auto &member : origClassDefMembers) {
+            if (isAllowedInMajorVersion(member, maxMajorVersion))
+                classDefMembers.append(member);
+        }
     }
 
     return classDefMembers;
@@ -275,15 +298,15 @@ void QmlTypesCreator::writeComponents()
         writeClassProperties(collector);
 
         const QJsonObject *classDef = collector.resolvedClass;
-        writeEnums(members(classDef, &component, enumsKey));
+        writeEnums(members(classDef, &component, enumsKey, m_version));
 
         QSet<QString> notifySignals;
-        writeProperties(members(classDef, &component, propertiesKey), notifySignals);
+        writeProperties(members(classDef, &component, propertiesKey, m_version), notifySignals);
 
         if (collector.isRootClass) {
 
             // Hide destroyed() signals
-            QJsonArray componentSignals = members(classDef, &component, signalsKey);
+            QJsonArray componentSignals = members(classDef, &component, signalsKey, m_version);
             for (auto it = componentSignals.begin(); it != componentSignals.end();) {
                 if (it->toObject().value(nameKey).toString() == destroyedName)
                     it = componentSignals.erase(it);
@@ -293,8 +316,8 @@ void QmlTypesCreator::writeComponents()
             writeMethods(componentSignals, signalElement, notifySignals);
 
             // Hide deleteLater() methods
-            QJsonArray componentMethods = members(classDef, &component, methodsKey);
-            const QJsonArray componentSlots = members(classDef, &component, slotsKey);
+            QJsonArray componentMethods = members(classDef, &component, methodsKey, m_version);
+            const QJsonArray componentSlots = members(classDef, &component, slotsKey, m_version);
             for (const QJsonValue &componentSlot : componentSlots)
                 componentMethods.append(componentSlot);
             for (auto it = componentMethods.begin(); it != componentMethods.end();) {
@@ -330,9 +353,10 @@ void QmlTypesCreator::writeComponents()
 
             writeMethods(componentMethods, methodElement);
         } else {
-            writeMethods(members(classDef, &component, signalsKey), signalElement, notifySignals);
-            writeMethods(members(classDef, &component, slotsKey), methodElement);
-            writeMethods(members(classDef, &component, methodsKey), methodElement);
+            writeMethods(members(classDef, &component, signalsKey, m_version), signalElement,
+                         notifySignals);
+            writeMethods(members(classDef, &component, slotsKey, m_version), methodElement);
+            writeMethods(members(classDef, &component, methodsKey, m_version), methodElement);
         }
         m_qml.writeEndObject();
     }

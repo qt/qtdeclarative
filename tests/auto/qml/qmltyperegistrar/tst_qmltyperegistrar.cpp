@@ -92,4 +92,11 @@ void tst_qmltyperegistrar::isQProperty()
     QVERIFY(qmltypesData.contains("Property { name: \"someProperty\"; isQProperty: true; type: \"int\" }"));
 }
 
+void tst_qmltyperegistrar::restrictToImportVersion()
+{
+    QVERIFY(qmltypesData.contains("ExcessiveVersion"));
+    QVERIFY(!qmltypesData.contains("1536"));           // Q_REVISION(6, 0)
+    QVERIFY(!qmltypesData.contains("paletteChanged")); // Added in version 6.0
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

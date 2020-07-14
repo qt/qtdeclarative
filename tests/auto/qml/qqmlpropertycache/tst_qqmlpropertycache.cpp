@@ -57,6 +57,7 @@ private slots:
     void metaObjectChecksum();
     void metaObjectsForRootElements();
     void derivedGadgetMethod();
+    void restrictRegistrationVersion();
 
 private:
     QQmlEngine engine;
@@ -126,21 +127,38 @@ private:
 class BaseObject : public QObject
 {
     Q_OBJECT
+    QML_ELEMENT
     Q_PROPERTY(int propertyA READ propertyA NOTIFY propertyAChanged)
     Q_PROPERTY(QString propertyB READ propertyB NOTIFY propertyBChanged)
+    Q_PROPERTY(int highVersion READ highVersion WRITE setHighVersion NOTIFY highVersionChanged REVISION(4, 0))
+
 public:
     BaseObject(QObject *parent = nullptr) : QObject(parent) {}
 
     int propertyA() const { return 0; }
     QString propertyB() const { return QString(); }
+    int highVersion() const { return m_highVersion; }
 
 public Q_SLOTS:
     void slotA() {}
+
+    void setHighVersion(int highVersion)
+    {
+        if (m_highVersion == highVersion)
+            return;
+
+        m_highVersion = highVersion;
+        emit highVersionChanged();
+    }
 
 Q_SIGNALS:
     void propertyAChanged();
     void propertyBChanged();
     void signalA();
+    void highVersionChanged();
+
+private:
+    int m_highVersion = 0;
 };
 
 class DerivedObject : public BaseObject
@@ -646,6 +664,14 @@ void tst_qqmlpropertycache::derivedGadgetMethod()
     QVERIFY(gadgetUser);
     QCOMPARE(gadgetUser->baseString(), QString::fromLatin1("base"));
     QCOMPARE(gadgetUser->derivedString(), QString::fromLatin1("derived"));
+}
+
+void tst_qqmlpropertycache::restrictRegistrationVersion()
+{
+    qmlRegisterTypesAndRevisions<BaseObject>("Test.PropertyCache", 3);
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("highVersion.qml"));
+    QVERIFY(c.isError());
 }
 
 QTEST_MAIN(tst_qqmlpropertycache)

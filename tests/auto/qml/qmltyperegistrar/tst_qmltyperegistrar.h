@@ -34,6 +34,32 @@
 #include <QtQml/qqml.h>
 #include <QtCore/qproperty.h>
 
+class ExcessiveVersion : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(int palette READ palette WRITE setPalette NOTIFY paletteChanged REVISION(6, 0))
+
+public:
+    int palette() const { return m_palette; }
+
+
+    void setPalette(int palette)
+    {
+        if (m_palette == palette)
+        return;
+
+        m_palette = palette;
+        emit paletteChanged();
+    }
+
+signals:
+    Q_REVISION(6, 0) void paletteChanged();
+
+private:
+    int m_palette = 0;
+};
+
 class SizeEnums
 {
     Q_GADGET
@@ -94,6 +120,7 @@ private slots:
     void superAndForeignTypes();
     void accessSemantics();
     void isQProperty();
+    void restrictToImportVersion();
 
 private:
     QByteArray qmltypesData;
