@@ -44,6 +44,7 @@
         \li \c icon.width
         \li \c icon.height
         \li \c icon.color
+        \li \c icon.cache
     \endlist
 
     Theme icons are referenced by a name, and regular icons by a source URL. Both

@@ -387,6 +387,7 @@ void QQuickAction::setText(const QString &text)
     \qmlproperty int QtQuick.Controls::Action::icon.width
     \qmlproperty int QtQuick.Controls::Action::icon.height
     \qmlproperty color QtQuick.Controls::Action::icon.color
+    \qmlproperty bool QtQuick.Controls::Action::icon.cache
 
     \include qquickicon.qdocinc grouped-properties
 */

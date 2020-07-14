@@ -740,6 +740,7 @@ void QQuickAbstractButton::setIndicator(QQuickItem *indicator)
     \qmlproperty int QtQuick.Controls::AbstractButton::icon.width
     \qmlproperty int QtQuick.Controls::AbstractButton::icon.height
     \qmlproperty color QtQuick.Controls::AbstractButton::icon.color
+    \qmlproperty bool QtQuick.Controls::AbstractButton::icon.cache
 
     This property group was added in QtQuick.Controls 2.3.
 

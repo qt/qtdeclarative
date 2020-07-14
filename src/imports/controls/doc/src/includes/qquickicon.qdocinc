@@ -44,5 +44,7 @@
     \li This property specifies whether the icon should be cached.
 
         The default value is true.
+
+        This property was introduced in QtQuick.Controls 2.13.
 \endtable
 //! [grouped-properties]
