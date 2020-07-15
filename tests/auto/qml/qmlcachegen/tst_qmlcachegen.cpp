@@ -76,6 +76,7 @@ private slots:
     void reproducibleCache();
 
     void parameterAdjustment();
+    void inlineComponent();
 };
 
 // A wrapper around QQmlComponent to ensure the temporary reference counts
@@ -129,6 +130,7 @@ void tst_qmlcachegen::initTestCase()
     if (!cacheDir.isEmpty())
         //QDir(cacheDir).removeRecursively();
         qDebug() << cacheDir;
+    QQmlDataTest::initTestCase();
 }
 
 void tst_qmlcachegen::loadGeneratedFile()
@@ -685,6 +687,18 @@ void tst_qmlcachegen::parameterAdjustment()
     CleanlyLoadingComponent component(&engine, QUrl("qrc:///data/parameterAdjustment.qml"));
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull()); // Doesn't crash
+}
+
+
+void tst_qmlcachegen::inlineComponent()
+{
+    bool ok = generateCache(testFile("inlineComponentWithId.qml"));
+    QVERIFY(ok);
+    QQmlEngine engine;
+    CleanlyLoadingComponent component(&engine, testFileUrl("inlineComponentWithId.qml"));
+    QTest::ignoreMessage(QtMsgType::QtInfoMsg, "42");
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
 }
 
 QTEST_GUILESS_MAIN(tst_qmlcachegen)
