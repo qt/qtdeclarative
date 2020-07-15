@@ -1,6 +1,6 @@
 TARGET = qtquicktemplates2plugin
 TARGETPATH = QtQuick/Templates
-IMPORT_VERSION = 2.15
+QML_IMPORT_VERSION = $$QT_VERSION
 
 QT += qml quick
 QT_PRIVATE += core-private gui-private qml-private quick-private quicktemplates2-private

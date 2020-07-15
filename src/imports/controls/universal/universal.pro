@@ -2,7 +2,7 @@ TARGET = qtquickcontrols2universalstyleplugin
 TARGETPATH = QtQuick/Controls/Universal
 
 QML_IMPORT_NAME = QtQuick.Controls.Universal
-QML_IMPORT_VERSION = 2.$$QT_MINOR_VERSION
+QML_IMPORT_VERSION = $$QT_VERSION
 
 QT += qml quick
 QT_PRIVATE += core-private gui-private qml-private quick-private quicktemplates2-private quickcontrols2-private quickcontrols2impl-private
