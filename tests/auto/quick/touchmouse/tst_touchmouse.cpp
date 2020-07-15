@@ -818,6 +818,7 @@ void tst_TouchMouse::buttonOnDelayedPressFlickable()
         // when the touchpoint was released, the child saw the delayed press and the release in sequence
         qCDebug(lcTests) << "expected delivered events: press, release, ungrab" << eventItem1->eventList;
         qCDebug(lcTests) << "expected filtered events: delayed press, release" << filteredEventList;
+        QSKIP("QTBUG-85607");
         QTRY_COMPARE(eventItem1->eventList.size(), 3);
         QCOMPARE(eventItem1->eventList.at(0).type, QEvent::MouseButtonPress);
         QCOMPARE(eventItem1->eventList.at(1).type, QEvent::MouseButtonRelease);
