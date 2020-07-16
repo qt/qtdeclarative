@@ -3,5 +3,5 @@ dependencies:
     ref: b7ccc80526ee7768d59b8467ef72f93f36819ff4
     required: true
   ../qtsvg:
-    ref: 5fe6ec35f82b478829ba16f5279406d68e1c566f
+    ref: 12ed3450e607daae76c519b5bcb1f7e7bfee583d
     required: false
