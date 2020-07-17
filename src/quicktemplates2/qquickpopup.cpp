@@ -313,7 +313,7 @@ bool QQuickPopupPrivate::acceptTouch(const QTouchEvent::TouchPoint &point)
     if (point.id() == touchId)
         return true;
 
-    if (touchId == -1 && point.state() != Qt::TouchPointReleased) {
+    if (touchId == -1 && point.state() != QEventPoint::Released) {
         touchId = point.id();
         return true;
     }
@@ -395,11 +395,11 @@ bool QQuickPopupPrivate::handleTouchEvent(QQuickItem *item, QTouchEvent *event)
                 return blockInput(item, point.position());
 
             switch (point.state()) {
-            case Qt::TouchPointPressed:
+            case QEventPoint::Pressed:
                 return handlePress(item, item->mapToScene(point.position()), event->timestamp());
-            case Qt::TouchPointMoved:
+            case QEventPoint::Updated:
                 return handleMove(item, item->mapToScene(point.position()), event->timestamp());
-            case Qt::TouchPointReleased:
+            case QEventPoint::Released:
                 return handleRelease(item, item->mapToScene(point.position()), event->timestamp());
             default:
                 break;

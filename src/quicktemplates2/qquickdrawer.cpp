@@ -305,7 +305,7 @@ bool QQuickDrawerPrivate::startDrag(QEvent *event)
 
     switch (event->type()) {
     case QEvent::MouseButtonPress:
-        if (isWithinDragMargin(q, static_cast<QMouseEvent *>(event)->windowPos())) {
+        if (isWithinDragMargin(q, static_cast<QMouseEvent *>(event)->scenePosition())) {
             prepareEnterTransition();
             reposition();
             return handleMouseEvent(window->contentItem(), static_cast<QMouseEvent *>(event));
@@ -316,7 +316,7 @@ bool QQuickDrawerPrivate::startDrag(QEvent *event)
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
         for (const QTouchEvent::TouchPoint &point : static_cast<QTouchEvent *>(event)->touchPoints()) {
-            if (point.state() == Qt::TouchPointPressed && isWithinDragMargin(q, point.scenePos())) {
+            if (point.state() == QEventPoint::Pressed && isWithinDragMargin(q, point.scenePosition())) {
                 prepareEnterTransition();
                 reposition();
                 return handleTouchEvent(window->contentItem(), static_cast<QTouchEvent *>(event));
@@ -345,7 +345,7 @@ bool QQuickDrawerPrivate::grabMouse(QQuickItem *item, QMouseEvent *event)
     if (!window || !interactive || keepGrab(popupItem) || keepGrab(item))
         return false;
 
-    const QPointF movePoint = event->windowPos();
+    const QPointF movePoint = event->scenePosition();
 
     // Flickable uses a hard-coded threshold of 15 for flicking, and
     // QStyleHints::startDragDistance for dragging. Drawer uses a bit
@@ -384,15 +384,15 @@ bool QQuickDrawerPrivate::grabTouch(QQuickItem *item, QTouchEvent *event)
     Q_Q(QQuickDrawer);
     bool handled = handleTouchEvent(item, event);
 
-    if (!window || !interactive || keepGrab(popupItem) || keepGrab(item) || !event->touchPointStates().testFlag(Qt::TouchPointMoved))
+    if (!window || !interactive || keepGrab(popupItem) || keepGrab(item) || !event->touchPointStates().testFlag(QEventPoint::Updated))
         return handled;
 
     bool overThreshold = false;
     for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
-        if (!acceptTouch(point) || point.state() != Qt::TouchPointMoved)
+        if (!acceptTouch(point) || point.state() != QEventPoint::Updated)
             continue;
 
-        const QPointF movePoint = point.scenePos();
+        const QPointF movePoint = point.scenePosition();
 
         // Flickable uses a hard-coded threshold of 15 for flicking, and
         // QStyleHints::startDragDistance for dragging. Drawer uses a bit

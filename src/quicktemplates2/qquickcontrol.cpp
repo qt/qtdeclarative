@@ -176,15 +176,15 @@ bool QQuickControlPrivate::acceptTouch(const QTouchEvent::TouchPoint &point)
     if (point.id() == touchId)
         return true;
 
-    if (touchId == -1 && point.state() == Qt::TouchPointPressed) {
+    if (touchId == -1 && point.state() == QEventPoint::Pressed) {
         touchId = point.id();
         return true;
     }
 
     // If the control is on a Flickable that has a pressDelay, then the press is never
     // sent as a touch event, therefore we need to check for this case.
-    if (touchId == -1 && pressWasTouch && point.state() == Qt::TouchPointReleased &&
-        point.pos() == previousPressPos) {
+    if (touchId == -1 && pressWasTouch && point.state() == QEventPoint::Released &&
+        point.position() == previousPressPos) {
         return true;
     }
     return false;
@@ -1953,7 +1953,7 @@ void QQuickControl::hoverEnterEvent(QHoverEvent *event)
 void QQuickControl::hoverMoveEvent(QHoverEvent *event)
 {
     Q_D(QQuickControl);
-    setHovered(d->hoverEnabled && contains(event->pos()));
+    setHovered(d->hoverEnabled && contains(event->position()));
     event->setAccepted(d->hoverEnabled);
 }
 
@@ -1968,10 +1968,10 @@ void QQuickControl::hoverLeaveEvent(QHoverEvent *event)
 void QQuickControl::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickControl);
-    d->handlePress(event->localPos());
+    d->handlePress(event->position());
     if (event->source() == Qt::MouseEventSynthesizedByQt) {
         d->pressWasTouch = true;
-        d->previousPressPos = event->localPos();
+        d->previousPressPos = event->position();
     }
     event->accept();
 }
@@ -1979,14 +1979,14 @@ void QQuickControl::mousePressEvent(QMouseEvent *event)
 void QQuickControl::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickControl);
-    d->handleMove(event->localPos());
+    d->handleMove(event->position());
     event->accept();
 }
 
 void QQuickControl::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickControl);
-    d->handleRelease(event->localPos());
+    d->handleRelease(event->position());
     event->accept();
 }
 
@@ -2009,14 +2009,14 @@ void QQuickControl::touchEvent(QTouchEvent *event)
                 continue;
 
             switch (point.state()) {
-            case Qt::TouchPointPressed:
-                d->handlePress(point.pos());
+            case QEventPoint::Pressed:
+                d->handlePress(point.position());
                 break;
-            case Qt::TouchPointMoved:
-                d->handleMove(point.pos());
+            case QEventPoint::Updated:
+                d->handleMove(point.position());
                 break;
-            case Qt::TouchPointReleased:
-                d->handleRelease(point.pos());
+            case QEventPoint::Released:
+                d->handleRelease(point.position());
                 break;
             default:
                 break;
