@@ -177,8 +177,8 @@ void tst_accessibility::a11y()
     QCOMPARE(attached->role(), role);
     QCOMPARE(attached->name(), text);
 #else
-    Q_UNUSED(role)
-    Q_UNUSED(text)
+    Q_UNUSED(role);
+    Q_UNUSED(text);
 #endif
 }
 
@@ -264,8 +264,8 @@ void tst_accessibility::override()
     QCOMPARE(attached->role(), role);
     QCOMPARE(attached->name(), name + "Override");
 #else
-    Q_UNUSED(role)
-    Q_UNUSED(text)
+    Q_UNUSED(role);
+    Q_UNUSED(text);
 #endif
 }
 

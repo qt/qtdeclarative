@@ -54,6 +54,7 @@ private slots:
 void tst_qquickuniversalstyleconf::conf()
 {
     QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
 
     QFont customFont;
     customFont.setFamily("Courier");

@@ -125,7 +125,7 @@ public:
     QKeySequence keySequence;
     QVariant vshortcut;
     ShortcutEntry *defaultShortcutEntry = nullptr;
-    QVector<ShortcutEntry *> shortcutEntries;
+    QList<ShortcutEntry *> shortcutEntries;
 #endif
     QQuickActionGroup *group = nullptr;
 };

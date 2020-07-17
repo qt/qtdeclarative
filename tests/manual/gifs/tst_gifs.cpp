@@ -609,19 +609,19 @@ void tst_Gifs::swipeDelegateBehind()
 void tst_Gifs::delegates_data()
 {
     QTest::addColumn<QString>("name");
-    QTest::addColumn<QVector<int> >("pressIndices");
+    QTest::addColumn<QList<int> >("pressIndices");
     QTest::addColumn<int>("duration");
 
-    QTest::newRow("ItemDelegate") << "itemdelegate" << (QVector<int>() << 0 << 1 << 2) << 5;
-    QTest::newRow("CheckDelegate") << "checkdelegate" << (QVector<int>() << 0 << 0) << 5;
-    QTest::newRow("RadioDelegate") << "radiodelegate" << (QVector<int>() << 1 << 0) << 5;
-    QTest::newRow("SwitchDelegate") << "switchdelegate" << (QVector<int>() << 0 << 0) << 5;
+    QTest::newRow("ItemDelegate") << "itemdelegate" << (QList<int> { 0, 1, 2 }) << 5;
+    QTest::newRow("CheckDelegate") << "checkdelegate" << (QList<int> { 0, 0 }) << 5;
+    QTest::newRow("RadioDelegate") << "radiodelegate" << (QList<int> { 1, 0 }) << 5;
+    QTest::newRow("SwitchDelegate") << "switchdelegate" << (QList<int> { 0, 0 }) << 5;
 }
 
 void tst_Gifs::delegates()
 {
     QFETCH(QString, name);
-    QFETCH(QVector<int>, pressIndices);
+    QFETCH(QList<int>, pressIndices);
     QFETCH(int, duration);
 
     GifRecorder gifRecorder;
@@ -710,16 +710,16 @@ void tst_Gifs::dial()
 void tst_Gifs::checkables_data()
 {
     QTest::addColumn<QString>("name");
-    QTest::addColumn<QVector<int> >("pressIndices");
+    QTest::addColumn<QList<int> >("pressIndices");
 
-    QTest::newRow("checkbox") << "checkbox" << (QVector<int>() << 1 << 2 << 2 << 1);
-    QTest::newRow("radiobutton") << "radiobutton" << (QVector<int>() << 1 << 2 << 1 << 0);
+    QTest::newRow("checkbox") << "checkbox" << (QList<int> { 1, 2, 2, 1 });
+    QTest::newRow("radiobutton") << "radiobutton" << (QList<int> { 1, 2, 1, 0 });
 }
 
 void tst_Gifs::checkables()
 {
     QFETCH(QString, name);
-    QFETCH(QVector<int>, pressIndices);
+    QFETCH(QList<int>, pressIndices);
 
     GifRecorder gifRecorder;
     gifRecorder.setDataDirPath(dataDirPath);

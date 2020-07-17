@@ -106,6 +106,7 @@ private slots:
 void tst_QQuickMenu::defaults()
 {
     QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickMenu *emptyMenu = helper.appWindow->property("emptyMenu").value<QQuickMenu*>();
     QCOMPARE(emptyMenu->isVisible(), false);
@@ -117,6 +118,7 @@ void tst_QQuickMenu::defaults()
 void tst_QQuickMenu::count()
 {
     QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickMenu *menu = helper.window->property("emptyMenu").value<QQuickMenu*>();
     QVERIFY(menu);
@@ -149,6 +151,7 @@ void tst_QQuickMenu::mouse()
         QSKIP("Mouse hovering not functional on offscreen/minimal platforms");
 
     QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickApplicationWindow *window = helper.appWindow;
     centerOnScreen(window);
@@ -157,9 +160,12 @@ void tst_QQuickMenu::mouse()
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
+    QVERIFY(menu);
     menu->open();
     QVERIFY(menu->isVisible());
-    QVERIFY(window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
+    QQuickOverlay *overlay = window->property("overlay").value<QQuickOverlay*>();
+    QVERIFY(overlay);
+    QVERIFY(overlay->childItems().contains(menu->contentItem()->parentItem()));
     QTRY_VERIFY(menu->isOpened());
 
     QQuickItem *firstItem = menu->itemAt(0);
@@ -182,14 +188,14 @@ void tst_QQuickMenu::mouse()
     QCOMPARE(triggeredSpy.count(), 1);
     QTRY_COMPARE(visibleSpy.count(), 1);
     QVERIFY(!menu->isVisible());
-    QVERIFY(!window->overlay()->childItems().contains(menu->contentItem()));
+    QVERIFY(!overlay->childItems().contains(menu->contentItem()));
     QCOMPARE(menu->currentIndex(), -1);
     QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 
     menu->open();
     QCOMPARE(visibleSpy.count(), 2);
     QVERIFY(menu->isVisible());
-    QVERIFY(window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
+    QVERIFY(overlay->childItems().contains(menu->contentItem()->parentItem()));
     QTRY_VERIFY(menu->isOpened());
 
     // Ensure that we have enough space to click outside of the menu.
@@ -199,12 +205,12 @@ void tst_QQuickMenu::mouse()
         QPoint(menu->contentItem()->width() + 1, menu->contentItem()->height() + 1));
     QTRY_COMPARE(visibleSpy.count(), 3);
     QVERIFY(!menu->isVisible());
-    QVERIFY(!window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
+    QVERIFY(!overlay->childItems().contains(menu->contentItem()->parentItem()));
 
     menu->open();
     QCOMPARE(visibleSpy.count(), 4);
     QVERIFY(menu->isVisible());
-    QVERIFY(window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
+    QVERIFY(overlay->childItems().contains(menu->contentItem()->parentItem()));
     QTRY_VERIFY(menu->isOpened());
 
     // Hover-highlight through the menu items one by one
@@ -237,13 +243,14 @@ void tst_QQuickMenu::mouse()
 //    QCOMPARE(triggeredSpy.count(), 1);
 //    QCOMPARE(visibleSpy.count(), 5);
 //    QVERIFY(!menu->isVisible());
-//    QVERIFY(!window->overlay()->childItems().contains(menu->contentItem()));
+//    QVERIFY(!overlay->childItems().contains(menu->contentItem()));
 //    QCOMPARE(menu->contentItem()->property("currentIndex"), QVariant(-1));
 }
 
 void tst_QQuickMenu::pressAndHold()
 {
     QQuickApplicationHelper helper(this, QLatin1String("pressAndHold.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickWindow *window = helper.window;
     window->show();
@@ -268,6 +275,7 @@ void tst_QQuickMenu::contextMenuKeyboard()
         QSKIP("This platform only allows tab focus for text controls");
 
     QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickApplicationWindow *window = helper.appWindow;
     centerOnScreen(window);
@@ -289,7 +297,9 @@ void tst_QQuickMenu::contextMenuKeyboard()
     menu->open();
     QCOMPARE(visibleSpy.count(), 1);
     QVERIFY(menu->isVisible());
-    QVERIFY(window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
+    QQuickOverlay *overlay = window->property("overlay").value<QQuickOverlay*>();
+    QVERIFY(overlay);
+    QVERIFY(overlay->childItems().contains(menu->contentItem()->parentItem()));
     QTRY_VERIFY(menu->isOpened());
     QVERIFY(!firstItem->hasActiveFocus());
     QVERIFY(!firstItem->property("highlighted").toBool());
@@ -322,7 +332,7 @@ void tst_QQuickMenu::contextMenuKeyboard()
     QCOMPARE(secondTriggeredSpy.count(), 1);
     QTRY_COMPARE(visibleSpy.count(), 2);
     QVERIFY(!menu->isVisible());
-    QVERIFY(!window->overlay()->childItems().contains(menu->contentItem()));
+    QVERIFY(!overlay->childItems().contains(menu->contentItem()));
     QVERIFY(!firstItem->hasActiveFocus());
     QVERIFY(!firstItem->hasVisualFocus());
     QVERIFY(!firstItem->isHighlighted());
@@ -352,7 +362,7 @@ void tst_QQuickMenu::contextMenuKeyboard()
     QCOMPARE(firstTriggeredSpy.count(), 1);
     QTRY_COMPARE(visibleSpy.count(), 4);
     QVERIFY(!menu->isVisible());
-    QVERIFY(!window->overlay()->childItems().contains(menu->contentItem()));
+    QVERIFY(!overlay->childItems().contains(menu->contentItem()));
     QVERIFY(!firstItem->hasActiveFocus());
     QVERIFY(!firstItem->hasVisualFocus());
     QVERIFY(!firstItem->isHighlighted());
@@ -365,7 +375,7 @@ void tst_QQuickMenu::contextMenuKeyboard()
     menu->open();
     QCOMPARE(visibleSpy.count(), 5);
     QVERIFY(menu->isVisible());
-    QVERIFY(window->overlay()->childItems().contains(menu->contentItem()->parentItem()));
+    QVERIFY(overlay->childItems().contains(menu->contentItem()->parentItem()));
     QTRY_VERIFY(menu->isOpened());
     QVERIFY(!firstItem->hasActiveFocus());
     QVERIFY(!firstItem->hasVisualFocus());
@@ -451,6 +461,7 @@ void tst_QQuickMenu::disabledMenuItemKeyNavigation()
         QSKIP("This platform only allows tab focus for text controls");
 
     QQuickApplicationHelper helper(this, QLatin1String("disabledMenuItemKeyNavigation.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickApplicationWindow *window = helper.appWindow;
     centerOnScreen(window);
@@ -515,6 +526,7 @@ void tst_QQuickMenu::mnemonics()
 #endif
 
     QQuickApplicationHelper helper(this, QLatin1String("mnemonics.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickWindow *window = helper.window;
     window->show();
@@ -562,6 +574,7 @@ void tst_QQuickMenu::menuButton()
         QSKIP("This platform only allows tab focus for text controls");
 
     QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
@@ -588,6 +601,7 @@ void tst_QQuickMenu::menuButton()
 void tst_QQuickMenu::addItem()
 {
     QQuickApplicationHelper helper(this, QLatin1String("addItem.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
@@ -609,6 +623,7 @@ void tst_QQuickMenu::addItem()
 void tst_QQuickMenu::menuSeparator()
 {
     QQuickApplicationHelper helper(this, QLatin1String("menuSeparator.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     centerOnScreen(window);
     moveMouseAway(window);
@@ -686,6 +701,7 @@ void tst_QQuickMenu::menuSeparator()
 void tst_QQuickMenu::repeater()
 {
     QQuickApplicationHelper helper(this, QLatin1String("repeater.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
@@ -730,6 +746,7 @@ void tst_QQuickMenu::repeater()
 void tst_QQuickMenu::order()
 {
     QQuickApplicationHelper helper(this, QLatin1String("order.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
@@ -751,6 +768,7 @@ void tst_QQuickMenu::order()
 void tst_QQuickMenu::popup()
 {
     QQuickApplicationHelper helper(this, QLatin1String("popup.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
     centerOnScreen(window);
     moveMouseAway(window);
@@ -907,6 +925,7 @@ void tst_QQuickMenu::popup()
 void tst_QQuickMenu::actions()
 {
     QQuickApplicationHelper helper(this, QLatin1String("actions.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
@@ -975,6 +994,7 @@ void tst_QQuickMenu::actions()
 void tst_QQuickMenu::removeTakeItem()
 {
     QQuickApplicationHelper helper(this, QLatin1String("removeTakeItem.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
@@ -1032,6 +1052,7 @@ void tst_QQuickMenu::subMenuMouse()
     QFETCH(bool, cascade);
 
     QQuickApplicationHelper helper(this, QLatin1String("subMenus.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
     centerOnScreen(window);
     moveMouseAway(window);
@@ -1138,6 +1159,7 @@ void tst_QQuickMenu::subMenuDisabledMouse()
     QFETCH(bool, cascade);
 
     QQuickApplicationHelper helper(this, QLatin1String("subMenuDisabled.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
     centerOnScreen(window);
     moveMouseAway(window);
@@ -1200,6 +1222,7 @@ void tst_QQuickMenu::subMenuKeyboard()
     QFETCH(bool, mirrored);
 
     QQuickApplicationHelper helper(this, QLatin1String("subMenus.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
     centerOnScreen(window);
     moveMouseAway(window);
@@ -1322,6 +1345,7 @@ void tst_QQuickMenu::subMenuDisabledKeyboard()
     QFETCH(bool, mirrored);
 
     QQuickApplicationHelper helper(this, QLatin1String("subMenuDisabled.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
     centerOnScreen(window);
     moveMouseAway(window);
@@ -1372,6 +1396,12 @@ void tst_QQuickMenu::subMenuDisabledKeyboard()
     QVERIFY(!subMenu->isVisible());
 }
 
+/*
+    QCOMPARE() compares doubles with 1-in-1e12 precision, which is too fine for these tests.
+    Casting to floats, compared with 1-in-1e5 precision, gives more robust results.
+*/
+#define FLOAT_EQ(u, v) QCOMPARE(float(u), float(v))
+
 void tst_QQuickMenu::subMenuPosition_data()
 {
     QTest::addColumn<bool>("cascade");
@@ -1398,6 +1428,7 @@ void tst_QQuickMenu::subMenuPosition()
     QFETCH(qreal, overlap);
 
     QQuickApplicationHelper helper(this, QLatin1String("subMenus.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
 
     // Ensure that the default size of the window fits three menus side by side.
@@ -1471,19 +1502,20 @@ void tst_QQuickMenu::subMenuPosition()
     if (cascade) {
         QCOMPARE(subMenu1->parentItem(), subMenu1Item);
         // vertically aligned to the parent menu item
-        QCOMPARE(subMenu1->popupItem()->y(), mainMenu->popupItem()->y() + subMenu1Item->y());
+        // We cast to float here because we want to use its larger tolerance for equality (because it has less precision than double).
+        FLOAT_EQ(subMenu1->popupItem()->y(), mainMenu->popupItem()->y() + subMenu1Item->y());
         if (mirrored) {
             // on the left of the parent menu
-            QCOMPARE(subMenu1->popupItem()->x(), mainMenu->popupItem()->x() - subMenu1->width() + overlap);
+            FLOAT_EQ(subMenu1->popupItem()->x(), mainMenu->popupItem()->x() - subMenu1->width() + overlap);
         } else {
             // on the right of the parent menu
-            QCOMPARE(subMenu1->popupItem()->x(), mainMenu->popupItem()->x() + mainMenu->width() - overlap);
+            FLOAT_EQ(subMenu1->popupItem()->x(), mainMenu->popupItem()->x() + mainMenu->width() - overlap);
         }
     } else {
         QCOMPARE(subMenu1->parentItem(), mainMenu->parentItem());
         // centered over the parent menu
-        QCOMPARE(subMenu1->popupItem()->x(), mainMenu->popupItem()->x() + (mainMenu->width() - subMenu1->width()) / 2);
-        QCOMPARE(subMenu1->popupItem()->y(), mainMenu->popupItem()->y() + (mainMenu->height() - subMenu1->height()) / 2);
+        FLOAT_EQ(subMenu1->popupItem()->x(), mainMenu->popupItem()->x() + (mainMenu->width() - subMenu1->width()) / 2);
+        FLOAT_EQ(subMenu1->popupItem()->y(), mainMenu->popupItem()->y() + (mainMenu->height() - subMenu1->height()) / 2);
     }
 
     // open the sub-sub-menu (can flip)
@@ -1500,25 +1532,28 @@ void tst_QQuickMenu::subMenuPosition()
     if (cascade) {
         QCOMPARE(subSubMenu1->parentItem(), subSubMenu1Item);
         // vertically aligned to the parent menu item
-        QCOMPARE(subSubMenu1->popupItem()->y(), subMenu1->popupItem()->y() + subSubMenu1Item->y());
+        FLOAT_EQ(subSubMenu1->popupItem()->y(), subMenu1->popupItem()->y() + subSubMenu1Item->y());
         if (mirrored != flip) {
             // on the left of the parent menu
-            QCOMPARE(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() - subSubMenu1->width() + overlap);
+            FLOAT_EQ(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() - subSubMenu1->width() + overlap);
         } else {
             // on the right of the parent menu
-            QCOMPARE(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() + subMenu1->width() - overlap);
+            FLOAT_EQ(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() + subMenu1->width() - overlap);
         }
     } else {
         QCOMPARE(subSubMenu1->parentItem(), subMenu1->parentItem());
         // centered over the parent menu
-        QCOMPARE(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() + (subMenu1->width() - subSubMenu1->width()) / 2);
-        QCOMPARE(subSubMenu1->popupItem()->y(), subMenu1->popupItem()->y() + (subMenu1->height() - subSubMenu1->height()) / 2);
+        FLOAT_EQ(subSubMenu1->popupItem()->x(), subMenu1->popupItem()->x() + (subMenu1->width() - subSubMenu1->width()) / 2);
+        FLOAT_EQ(subSubMenu1->popupItem()->y(), subMenu1->popupItem()->y() + (subMenu1->height() - subSubMenu1->height()) / 2);
     }
 }
+
+#undef FLOAT_EQ
 
 void tst_QQuickMenu::addRemoveSubMenus()
 {
     QQuickApplicationHelper helper(this, QLatin1String("subMenus.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
@@ -1590,6 +1625,7 @@ void tst_QQuickMenu::scrollable()
     QFETCH(QString, qmlFilePath);
 
     QQuickApplicationHelper helper(this, qmlFilePath);
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
@@ -1629,6 +1665,7 @@ void tst_QQuickMenu::disableWhenTriggered()
     QFETCH(int, subMenuItemIndex);
 
     QQuickApplicationHelper helper(this, QLatin1String("disableWhenTriggered.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
@@ -1684,6 +1721,7 @@ void tst_QQuickMenu::menuItemWidth()
     QFETCH(bool, mirrored);
 
     QQuickApplicationHelper helper(this, QLatin1String("menuItemWidths.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
@@ -1712,6 +1750,7 @@ void tst_QQuickMenu::menuItemWidthAfterMenuWidthChanged()
     QFETCH(bool, mirrored);
 
     QQuickApplicationHelper helper(this, QLatin1String("menuItemWidths.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
@@ -1756,6 +1795,7 @@ void tst_QQuickMenu::menuItemWidthAfterImplicitWidthChanged()
     QFETCH(bool, mirrored);
 
     QQuickApplicationHelper helper(this, QLatin1String("menuItemWidths.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
@@ -1786,6 +1826,7 @@ void tst_QQuickMenu::menuItemWidthAfterImplicitWidthChanged()
 void tst_QQuickMenu::menuItemWidthAfterRetranslate()
 {
     QQuickApplicationHelper helper(this, QLatin1String("menuItemWidths.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));

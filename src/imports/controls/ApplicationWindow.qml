@@ -44,12 +44,4 @@ T.ApplicationWindow {
     id: window
 
     color: window.palette.window
-
-    overlay.modal: Rectangle {
-        color: Color.transparent(window.palette.shadow, 0.5)
-    }
-
-    overlay.modeless: Rectangle {
-        color: Color.transparent(window.palette.shadow, 0.12)
-    }
 }

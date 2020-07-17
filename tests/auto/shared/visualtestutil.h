@@ -122,19 +122,44 @@ namespace QQuickVisualTestUtil
             component.loadUrl(testCase->testFileUrl(testFilePath));
             QObject *rootObject = component.create();
             cleanup.reset(rootObject);
-            QVERIFY2(rootObject, qPrintable(QString::fromLatin1("Failed to create window: %1").arg(component.errorString())));
+            if (!rootObject) {
+                errorMessage = QString::fromUtf8("Failed to create window: %1").arg(component.errorString()).toUtf8();
+                return;
+            }
 
             window = qobject_cast<QQuickWindow*>(rootObject);
             appWindow = qobject_cast<QQuickApplicationWindow*>(rootObject);
-            QVERIFY(window);
-            QVERIFY(!window->isVisible());
+            if (!window) {
+                errorMessage = QString::fromUtf8("Root object %1 must be a QQuickWindow subclass").arg(QDebug::toString(window)).toUtf8();
+                return;
+            }
+
+            if (window->isVisible()) {
+                errorMessage = QString::fromUtf8("Expected window not to be visible, but it is").toUtf8();
+                return;
+            }
+
+            ready = true;
+        }
+
+        // Return a C-style string instead of QString because that's what QTest uses for error messages,
+        // so it saves code at the calling site.
+        inline const char *failureMessage() const
+        {
+            return errorMessage.constData();
         }
 
         QQmlEngine engine;
         QQmlComponent component;
         QScopedPointer<QObject> cleanup;
-        QQuickApplicationWindow *appWindow;
-        QQuickWindow *window;
+        QQuickApplicationWindow *appWindow = nullptr;
+        QQuickWindow *window = nullptr;
+
+        bool ready = false;
+        // Store as a byte array so that we can return its raw data safely;
+        // using qPrintable() in failureMessage() will construct a throwaway QByteArray
+        // that is destroyed before the function returns.
+        QByteArray errorMessage;
     };
 
     void addTestRowForEachControl(QQmlEngine *engine, const QString &sourcePath, const QString &targetPath, const QStringList &skiplist = QStringList());

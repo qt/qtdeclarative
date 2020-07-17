@@ -65,7 +65,6 @@ ApplicationWindow {
         property Item attached_activeFocusControl: ApplicationWindow.activeFocusControl
         property Item attached_header: ApplicationWindow.header
         property Item attached_footer: ApplicationWindow.footer
-        property Item attached_overlay: ApplicationWindow.overlay
     }
 
     Item {
@@ -76,7 +75,6 @@ ApplicationWindow {
         property Item attached_activeFocusControl: ApplicationWindow.activeFocusControl
         property Item attached_header: ApplicationWindow.header
         property Item attached_footer: ApplicationWindow.footer
-        property Item attached_overlay: ApplicationWindow.overlay
     }
 
     QtObject {
@@ -87,7 +85,6 @@ ApplicationWindow {
         property Item attached_activeFocusControl: ApplicationWindow.activeFocusControl
         property Item attached_header: ApplicationWindow.header
         property Item attached_footer: ApplicationWindow.footer
-        property Item attached_overlay: ApplicationWindow.overlay
     }
 
     property alias childWindow: childWindow
@@ -103,7 +100,6 @@ ApplicationWindow {
         property Item attached_activeFocusControl: ApplicationWindow.activeFocusControl
         property Item attached_header: ApplicationWindow.header
         property Item attached_footer: ApplicationWindow.footer
-        property Item attached_overlay: ApplicationWindow.overlay
 
         Control {
             id: childWindowControl
@@ -113,7 +109,6 @@ ApplicationWindow {
             property Item attached_activeFocusControl: ApplicationWindow.activeFocusControl
             property Item attached_header: ApplicationWindow.header
             property Item attached_footer: ApplicationWindow.footer
-            property Item attached_overlay: ApplicationWindow.overlay
         }
 
         Item {
@@ -124,7 +119,6 @@ ApplicationWindow {
             property Item attached_activeFocusControl: ApplicationWindow.activeFocusControl
             property Item attached_header: ApplicationWindow.header
             property Item attached_footer: ApplicationWindow.footer
-            property Item attached_overlay: ApplicationWindow.overlay
         }
 
         QtObject {
@@ -135,7 +129,6 @@ ApplicationWindow {
             property Item attached_activeFocusControl: ApplicationWindow.activeFocusControl
             property Item attached_header: ApplicationWindow.header
             property Item attached_footer: ApplicationWindow.footer
-            property Item attached_overlay: ApplicationWindow.overlay
         }
     }
 
@@ -152,7 +145,6 @@ ApplicationWindow {
         property Item attached_activeFocusControl: ApplicationWindow.activeFocusControl
         property Item attached_header: ApplicationWindow.header
         property Item attached_footer: ApplicationWindow.footer
-        property Item attached_overlay: ApplicationWindow.overlay
 
         Control {
             id: childAppWindowControl
@@ -162,7 +154,6 @@ ApplicationWindow {
             property Item attached_activeFocusControl: ApplicationWindow.activeFocusControl
             property Item attached_header: ApplicationWindow.header
             property Item attached_footer: ApplicationWindow.footer
-            property Item attached_overlay: ApplicationWindow.overlay
         }
 
         Item {
@@ -173,7 +164,6 @@ ApplicationWindow {
             property Item attached_activeFocusControl: ApplicationWindow.activeFocusControl
             property Item attached_header: ApplicationWindow.header
             property Item attached_footer: ApplicationWindow.footer
-            property Item attached_overlay: ApplicationWindow.overlay
         }
 
         QtObject {
@@ -184,7 +174,6 @@ ApplicationWindow {
             property Item attached_activeFocusControl: ApplicationWindow.activeFocusControl
             property Item attached_header: ApplicationWindow.header
             property Item attached_footer: ApplicationWindow.footer
-            property Item attached_overlay: ApplicationWindow.overlay
         }
     }
 }

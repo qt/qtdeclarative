@@ -48,10 +48,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
-import QtQuick.Window 2.2
-import QtTest 1.0
-import QtQuick.Controls 2.12
+import QtQuick 2.15
+import QtQuick.Window 2.15
+import QtTest 1.15
+import QtQuick.Controls 2.15
 
 TestCase {
     id: testCase
@@ -1969,5 +1969,183 @@ TestCase {
         compare(comboBox1.editText, "nope")
         compare(comboBox1.currentIndex, 9)
         compare(currentIndexSpy.count, 1)
+    }
+
+    Component {
+        id: appFontTextFieldComponent
+        TextField {
+            objectName: "appFontTextField"
+            font: Qt.application.font
+            // We don't want the background's implicit width to interfere with our tests,
+            // which are about implicit width of the contentItem of ComboBox, which is by default TextField.
+            background: null
+        }
+    }
+
+    Component {
+        id: appFontContentItemComboBoxComponent
+        ComboBox {
+            // Override the contentItem so that the font doesn't vary between styles.
+            contentItem: TextField {
+                objectName: "appFontContentItemTextField"
+                // We do this just to be extra sure that the font never comes from the control,
+                // as we want it to match that of the TextField in the appFontTextFieldComponent.
+                font: Qt.application.font
+                background: null
+            }
+        }
+    }
+
+    Component {
+        id: twoItemListModelComponent
+
+        ListModel {
+            ListElement { display: "Short" }
+            ListElement { display: "Kinda long" }
+        }
+    }
+
+    function appendedToModel(model, item) {
+        if (Array.isArray(model)) {
+            let newModel = model
+            newModel.push(item)
+            return newModel
+        }
+
+        if (model.hasOwnProperty("append")) {
+            model.append({ display: item })
+            // To account for the fact that changes to a JS array are not seen by the QML engine,
+            // we need to reassign the entire model and hence return it. For simplicity in the
+            // calling code, we do it for the ListModel code path too. It should be a no-op.
+            return model
+        }
+
+        console.warn("appendedToModel: unrecognised model")
+        return undefined
+    }
+
+    function removedFromModel(model, index, count) {
+        if (Array.isArray(model)) {
+            let newModel = model
+            newModel.splice(index, count)
+            return newModel
+        }
+
+        if (model.hasOwnProperty("remove")) {
+            model.remove(index, count)
+            return model
+        }
+
+        console.warn("removedFromModel: unrecognised model")
+        return undefined
+    }
+
+    // We don't use a data-driven test for the policy  because the checks vary a lot based on which enum we're testing.
+    function test_implicitContentWidthPolicy_ContentItemImplicitWidth() {
+        // Set ContentItemImplicitWidth and ensure that implicitContentWidth is as wide as the current item
+        // by comparing it against the implicitWidth of an identical TextField
+        let control = createTemporaryObject(appFontContentItemComboBoxComponent, testCase, {
+            model: ["Short", "Kinda long"],
+            implicitContentWidthPolicy: ComboBox.ContentItemImplicitWidth
+        })
+        verify(control)
+        compare(control.implicitContentWidthPolicy, ComboBox.ContentItemImplicitWidth)
+
+        let textField = createTemporaryObject(appFontTextFieldComponent, testCase)
+        verify(textField)
+        // Don't set any text on textField because we're not accounting for the widest
+        // text here, so we want to compare it against an empty TextField.
+        compare(control.implicitContentWidth, textField.implicitWidth)
+
+        textField.font.pixelSize *= 2
+        control.font.pixelSize *= 2
+        compare(control.implicitContentWidth, textField.implicitWidth)
+    }
+
+    function test_implicitContentWidthPolicy_WidestText_data() {
+        return [
+            { tag: "Array", model: ["Short", "Kinda long"] },
+            { tag: "ListModel", model: twoItemListModelComponent.createObject(testCase) },
+        ]
+    }
+
+    function test_implicitContentWidthPolicy_WidestText(data) {
+        let control = createTemporaryObject(appFontContentItemComboBoxComponent, testCase, {
+            model: data.model,
+            implicitContentWidthPolicy: ComboBox.WidestText
+        })
+        verify(control)
+        compare(control.implicitContentWidthPolicy, ComboBox.WidestText)
+
+        let textField = createTemporaryObject(appFontTextFieldComponent, testCase)
+        verify(textField)
+        textField.text = "Kinda long"
+        // Note that we don't need to change the current index here, as the implicitContentWidth
+        // is set to the implicitWidth of the TextField within the ComboBox as if it had the largest
+        // text from the model set on it.
+        // We use Math.ceil because TextInput uses qCeil internally, whereas the implicitWidth
+        // binding for TextField does not.
+        compare(Math.ceil(control.implicitContentWidth), Math.ceil(textField.implicitWidth))
+
+        // Add a longer item; it should affect the implicit content width.
+        let modifiedModel = appendedToModel(data.model, "Moderately long")
+        control.model = modifiedModel
+        textField.text = "Moderately long"
+        compare(Math.ceil(control.implicitContentWidth), Math.ceil(textField.implicitWidth))
+
+        // Remove the last two items; it should use the only remaining item's width.
+        modifiedModel = removedFromModel(data.model, 1, 2)
+        control.model = modifiedModel
+        compare(control.count, 1)
+        compare(control.currentText, "Short")
+        textField.text = "Short"
+        compare(Math.ceil(control.implicitContentWidth), Math.ceil(textField.implicitWidth))
+
+        // Changes in font should result in the implicitContentWidth being updated.
+        textField.font.pixelSize *= 2
+        // We have to change the contentItem's font size manually since we break the
+        // style's binding to the control's font when we set Qt.application.font to it.
+        control.contentItem.font.pixelSize *= 2
+        control.font.pixelSize *= 2
+        compare(Math.ceil(control.implicitContentWidth), Math.ceil(textField.implicitWidth))
+    }
+
+    function test_implicitContentWidthPolicy_WidestTextWhenCompleted_data() {
+        return test_implicitContentWidthPolicy_WidestText_data()
+    }
+
+    function test_implicitContentWidthPolicy_WidestTextWhenCompleted(data) {
+        let control = createTemporaryObject(appFontContentItemComboBoxComponent, testCase, {
+            model: data.model,
+            implicitContentWidthPolicy: ComboBox.WidestTextWhenCompleted
+        })
+        verify(control)
+        compare(control.implicitContentWidthPolicy, ComboBox.WidestTextWhenCompleted)
+
+        let textField = createTemporaryObject(appFontTextFieldComponent, testCase)
+        verify(textField)
+        textField.text = "Kinda long"
+        compare(Math.ceil(control.implicitContentWidth), Math.ceil(textField.implicitWidth))
+
+        // Add a longer item; it should not affect the implicit content width
+        // since we've already accounted for it once.
+        let modifiedModel = appendedToModel(data.model, "Moderately long")
+        control.model = modifiedModel
+        compare(Math.ceil(control.implicitContentWidth), Math.ceil(textField.implicitWidth))
+
+        // Remove the last two items; it should still not affect the implicit content width.
+        modifiedModel = removedFromModel(data.model, 1, 2)
+        control.model = modifiedModel
+        compare(control.count, 1)
+        compare(control.currentText, "Short")
+        compare(Math.ceil(control.implicitContentWidth), Math.ceil(textField.implicitWidth))
+
+        // Changes in font should not result in the implicitContentWidth being updated.
+        let oldTextFieldImplicitWidth = textField.implicitWidth
+        // Changes in font should result in the implicitContentWidth being updated.
+        textField.font.pixelSize *= 2
+        control.contentItem.font.pixelSize *= 2
+        control.font.pixelSize *= 2
+        compare(Math.ceil(control.implicitContentWidth), Math.ceil(oldTextFieldImplicitWidth))
     }
 }

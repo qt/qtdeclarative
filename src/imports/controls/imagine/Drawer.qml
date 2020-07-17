@@ -42,7 +42,7 @@ import QtQuick.Controls.Imagine.impl 2.12
 T.Drawer {
     id: control
 
-    parent: T.ApplicationWindow.overlay
+    parent: T.Overlay.overlay
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             contentWidth + leftPadding + rightPadding)

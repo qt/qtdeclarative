@@ -36,7 +36,7 @@
 
 #include "qquickplatformfiledialog_p.h"
 
-#include <QtCore/qvector.h>
+#include <QtCore/qlist.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -86,7 +86,6 @@ QT_BEGIN_NAMESPACE
     \li Linux (when running with the GTK+ platform theme)
     \li macOS
     \li Windows
-    \li WinRT
     \endlist
 
     \input includes/widgets.qdocinc 1
@@ -611,21 +610,21 @@ static QString extractName(const QString &filter)
     return filter.left(filter.indexOf(QLatin1Char('(')) - 1);
 }
 
-static QString extractExtension(const QString &filter)
+static QString extractExtension(QStringView filter)
 {
-    return filter.mid(filter.indexOf(QLatin1Char('.')) + 1);
+    return filter.mid(filter.indexOf(QLatin1Char('.')) + 1).toString();
 }
 
-static QStringList extractExtensions(const QString &filter)
+static QStringList extractExtensions(QStringView filter)
 {
     QStringList extensions;
     const int from = filter.indexOf(QLatin1Char('('));
     const int to = filter.lastIndexOf(QLatin1Char(')')) - 1;
     if (from >= 0 && from < to) {
-        const QStringRef ref = filter.midRef(from + 1, to - from);
-        const QVector<QStringRef> exts = ref.split(QLatin1Char(' '), Qt::SkipEmptyParts);
-        for (const QStringRef &ref : exts)
-            extensions += extractExtension(ref.toString());
+        const QStringView ref = filter.mid(from + 1, to - from);
+        const QList<QStringView> exts = ref.split(QLatin1Char(' '), Qt::SkipEmptyParts);
+        for (const QStringView &ref : exts)
+            extensions += extractExtension(ref);
     }
 
     return extensions;

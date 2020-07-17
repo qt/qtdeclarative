@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -48,42 +48,33 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Controls 2.12
-import Qt.labs.platform 1.0
+import QtQuick 2.15
+import QtQuick.Controls 2.15
 
 ApplicationWindow {
-    id: window
+    width: 400
+    height: 400
 
-    visible: true
-    title: "Qt Quick Controls 2 - System Tray Icon"
+    property Popup popup: stackView.currentItem.popup
 
-    MenuBar {
-        id: menuBar
+    StackView {
+        id: stackView
+        objectName: "stackView"
+        anchors.fill: parent
 
-        Menu {
-            id: fileMenu
-            title: qsTr("File")
+        initialItem: Rectangle {
+            objectName: "rectangle"
 
-            MenuItem {
-                id : quitItem
-                text : "Quit"
-                onTriggered: Qt.quit()
+            property alias popup: popup
+
+            Popup {
+                id: popup
+                objectName: "popup"
+                width: 100
+                height: 100
+                visible: true
+                anchors.centerIn: Overlay.overlay
             }
         }
-    }
-
-    SystemTrayIcon {
-        visible: true
-        icon.source: "qrc:/files/images/qt_logo_green_256.png"
-
-        menu: Menu {
-            MenuItem {
-                text: qsTr("Quit")
-                onTriggered: Qt.quit()
-            }
-        }
-
-        onActivated: console.log("Activated")
     }
 }

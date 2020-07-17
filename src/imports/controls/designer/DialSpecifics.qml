@@ -112,7 +112,7 @@ Column {
             }
             SecondColumnLayout {
                 ComboBox {
-                    backendValue: backendValues.orientation
+                    backendValue: backendValues.snapMode
                     model: [ "NoSnap", "SnapOnRelease", "SnapAlways" ]
                     scope: "Dial"
                     Layout.fillWidth: true
@@ -140,6 +140,18 @@ Column {
                     backendValue: backendValues.inputMode
                     model: [ "Circular", "Horizontal", "Vertical" ]
                     scope: "Dial"
+                    Layout.fillWidth: true
+                }
+            }
+
+            Label {
+                text: qsTr("Wrap")
+                tooltip: qsTr("Whether the dial wraps when dragged.")
+            }
+            SecondColumnLayout {
+                CheckBox {
+                    text: backendValues.wrap.valueToString
+                    backendValue: backendValues.wrap
                     Layout.fillWidth: true
                 }
             }

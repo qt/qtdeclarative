@@ -43,26 +43,6 @@ import QtQuick.Controls.Imagine.impl 2.12
 T.ApplicationWindow {
     id: window
 
-    // ### remove?
-    overlay.modal: NinePatchImage {
-        source: Imagine.url + "applicationwindow-overlay"
-        NinePatchImageSelector on source {
-            states: [
-                {"modal": true}
-            ]
-        }
-    }
-
-    // ### remove?
-    overlay.modeless: NinePatchImage {
-        source: Imagine.url + "applicationwindow-overlay"
-        NinePatchImageSelector on source {
-            states: [
-                {"modal": false}
-            ]
-        }
-    }
-
     background: NinePatchImage {
         width: window.width
         height: window.height

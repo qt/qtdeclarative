@@ -68,7 +68,7 @@ ApplicationWindow {
 
         z: 1
         width: parent.width
-        parent: window.overlay
+        parent: Overlay.overlay
 
         Label {
             id: label

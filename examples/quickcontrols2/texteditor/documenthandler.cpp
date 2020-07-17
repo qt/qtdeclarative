@@ -57,7 +57,7 @@
 #include <QQmlFileSelector>
 #include <QQuickTextDocument>
 #include <QTextCharFormat>
-#include <QTextCodec>
+#include <QStringDecoder>
 #include <QTextDocument>
 #include <QDebug>
 
@@ -295,12 +295,19 @@ void DocumentHandler::load(const QUrl &fileUrl)
     if (QFile::exists(fileName)) {
         QFile file(fileName);
         if (file.open(QFile::ReadOnly)) {
-            QByteArray data = file.readAll();
-            QTextCodec *codec = QTextCodec::codecForHtml(data);
             if (QTextDocument *doc = textDocument())
                 doc->setModified(false);
 
-            emit loaded(codec->toUnicode(data));
+            QByteArray data = file.readAll();
+            auto encoding = QStringConverter::encodingForHtml(data.constData(), data.size());
+            if (encoding) {
+                QStringDecoder decoder(*encoding);
+                emit loaded(decoder(data));
+            } else {
+                // fall back to utf8
+                emit loaded(QString::fromUtf8(data));
+            }
+
             reset();
         }
     }

@@ -891,14 +891,14 @@ void QQuickSpinBox::hoverEnterEvent(QHoverEvent *event)
 {
     Q_D(QQuickSpinBox);
     QQuickControl::hoverEnterEvent(event);
-    d->updateHover(event->posF());
+    d->updateHover(event->position());
 }
 
 void QQuickSpinBox::hoverMoveEvent(QHoverEvent *event)
 {
     Q_D(QQuickSpinBox);
     QQuickControl::hoverMoveEvent(event);
-    d->updateHover(event->posF());
+    d->updateHover(event->position());
 }
 
 void QQuickSpinBox::hoverLeaveEvent(QHoverEvent *event)

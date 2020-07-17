@@ -156,7 +156,7 @@ public:
     bool enabled = true;
     bool exclusive = true;
     QPointer<QQuickAction> checkedAction;
-    QVector<QQuickAction*> actions;
+    QList<QQuickAction*> actions;
 };
 
 void QQuickActionGroupPrivate::clear()

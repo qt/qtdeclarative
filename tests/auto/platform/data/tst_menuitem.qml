@@ -68,8 +68,9 @@ TestCase {
         }
     }
 
-    SignalSpy {
-        id: spy
+    Component {
+        id: signalSpyComponent
+        SignalSpy {}
     }
 
     function test_properties_data() {
@@ -81,30 +82,32 @@ TestCase {
             {tag: "checked", signal: "checkedChanged", init: false, value: true},
             {tag: "role", signal: "roleChanged", init: MenuItem.TextHeuristicRole, value: MenuItem.AboutRole},
             {tag: "text", signal: "textChanged", init: "", value: "text"},
-            {tag: "iconSource", signal: "iconSourceChanged", init: "", value: "qrc:/undo.png"},
-            {tag: "iconName", signal: "iconNameChanged", init: "", value: "edit-undo"},
+            {tag: "icon.source", signal: "iconChanged", init: "", value: "qrc:/undo.png"},
+            {tag: "icon.name", signal: "iconChanged", init: "", value: "edit-undo"},
             {tag: "shortcut", signal: "shortcutChanged", init: undefined, value: StandardKey.Undo}
         ]
     }
 
     function test_properties(data) {
-        var item = menuItem.createObject(testCase)
+        let item = createTemporaryObject(menuItem, testCase)
         verify(item)
 
-        spy.target = item
-        spy.signalName = data.signal
+        let groupedProperty = data.tag.indexOf(".") !== -1
+        let spy = createTemporaryObject(signalSpyComponent, testCase, {
+            target: item, signalName: data.signal
+        })
+        verify(spy)
         verify(spy.valid)
 
-        compare(item[data.tag], data.init)
-        item[data.tag] = data.value
+        let propertyName = groupedProperty ? data.tag.split('.')[1] : data.tag
+        let object = !groupedProperty ? item : item.icon
+        compare(object[propertyName], data.init)
+        object[propertyName] = data.value
         compare(spy.count, 1)
-        compare(item[data.tag], data.value)
+        compare(object[propertyName], data.value)
 
-        item[data.tag] = data.value
+        object[propertyName] = data.value
         compare(spy.count, 1)
-
-        spy.clear()
-        item.destroy()
     }
 
     function test_role() {

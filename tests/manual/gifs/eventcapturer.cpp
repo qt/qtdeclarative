@@ -124,7 +124,7 @@ void EventCapturer::setCapturedEventTypes(QSet<QEvent::Type> types)
     mCapturedEventTypes = types;
 }
 
-QVector<CapturedEvent> EventCapturer::capturedEvents() const
+QList<CapturedEvent> EventCapturer::capturedEvents() const
 {
     if (mMoveEventTrimFlags == TrimNone || mEvents.isEmpty())
         return mEvents;
@@ -167,7 +167,7 @@ QVector<CapturedEvent> EventCapturer::capturedEvents() const
     // the indices are still valid - we could be removing from the middle of
     // the commands next. Also, the function is const, so we can't remove from
     // mEvents anyway. :)
-    QVector<CapturedEvent> events = mEvents.mid(firstEventIndex, (lastEventIndex - firstEventIndex) + 1);
+    QList<CapturedEvent> events = mEvents.mid(firstEventIndex, (lastEventIndex - firstEventIndex) + 1);
 
     if (mMoveEventTrimFlags.testFlag(TrimAfterReleases)) {
         bool lastNonMoveEventWasRelease = false;

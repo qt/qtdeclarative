@@ -53,16 +53,7 @@ private slots:
     void flickable();
 
 private:
-    struct TouchDeviceDeleter
-    {
-        static inline void cleanup(QTouchDevice *device)
-        {
-            QWindowSystemInterface::unregisterTouchDevice(device);
-            delete device;
-        }
-    };
-
-    QScopedPointer<QTouchDevice, TouchDeviceDeleter> touchDevice;
+    QScopedPointer<QPointingDevice> touchDevice;
 };
 
 
@@ -71,9 +62,7 @@ void tst_QQuickControl::initTestCase()
     QQmlDataTest::initTestCase();
     qputenv("QML_NO_TOUCH_COMPRESSION", "1");
 
-    touchDevice.reset(new QTouchDevice);
-    touchDevice->setType(QTouchDevice::TouchScreen);
-    QWindowSystemInterface::registerTouchDevice(touchDevice.data());
+    touchDevice.reset(QTest::createTouchDevice());
 }
 
 void tst_QQuickControl::flickable()

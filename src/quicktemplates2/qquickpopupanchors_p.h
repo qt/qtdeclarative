@@ -50,6 +50,7 @@
 
 #include <QtCore/qobject.h>
 #include <QtQml/qqml.h>
+#include <QtQuick/private/qquickitem_p.h>
 #include <QtQuickTemplates2/private/qtquicktemplates2global_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -58,13 +59,14 @@ class QQuickItem;
 class QQuickPopupAnchorsPrivate;
 class QQuickPopup;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopupAnchors : public QObject
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopupAnchors : public QObject, public QQuickItemChangeListener
 {
     Q_OBJECT
     Q_PROPERTY(QQuickItem *centerIn READ centerIn WRITE setCenterIn RESET resetCenterIn NOTIFY centerInChanged)
 
 public:
     explicit QQuickPopupAnchors(QQuickPopup *popup);
+    ~QQuickPopupAnchors();
 
     QQuickItem *centerIn() const;
     void setCenterIn(QQuickItem *item);
@@ -74,6 +76,8 @@ Q_SIGNALS:
     void centerInChanged();
 
 private:
+    void itemDestroyed(QQuickItem *item) override;
+
     Q_DISABLE_COPY(QQuickPopupAnchors)
     Q_DECLARE_PRIVATE(QQuickPopupAnchors)
 };

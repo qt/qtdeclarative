@@ -99,7 +99,6 @@ QT_BEGIN_NAMESPACE
     \list
     \li iOS
     \li Android
-    \li WinRT
     \endlist
 
     \input includes/widgets.qdocinc 1

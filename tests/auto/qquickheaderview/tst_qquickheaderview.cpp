@@ -203,7 +203,7 @@ public:
     }
 
 private:
-    QVector<QVariant> hData, vData;
+    QList<QVariant> hData, vData;
 };
 
 class tst_QQuickHeaderView : public QQmlDataTest {

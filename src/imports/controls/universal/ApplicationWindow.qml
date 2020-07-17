@@ -45,14 +45,6 @@ T.ApplicationWindow {
 
     color: Universal.background
 
-    overlay.modal: Rectangle {
-        color: window.Universal.baseLowColor
-    }
-
-    overlay.modeless: Rectangle {
-        color: window.Universal.baseLowColor
-    }
-
     FocusRectangle {
         parent: window.activeFocusControl
         width: parent ? parent.width : 0

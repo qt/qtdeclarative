@@ -61,7 +61,7 @@ QT_BEGIN_NAMESPACE
 
     \image qtlabsplatform-menu.png
 
-    A menu item consists of an \l {iconSource}{icon}, \l text, and \l shortcut.
+    A menu item consists of an \l icon, \l text, and \l shortcut.
 
     \code
     Menu {
@@ -455,46 +455,6 @@ void QQuickPlatformMenuItem::setText(const QString &text)
     m_text = text;
     sync();
     emit textChanged();
-}
-
-/*!
-    \qmlproperty url Qt.labs.platform::MenuItem::iconSource
-    \deprecated Use icon.source instead
-*/
-QUrl QQuickPlatformMenuItem::iconSource() const
-{
-    return icon().source();
-}
-
-void QQuickPlatformMenuItem::setIconSource(const QUrl& source)
-{
-    QQuickPlatformIcon newIcon = icon();
-    if (source == newIcon.source())
-        return;
-
-    newIcon.setSource(source);
-    iconLoader()->setIcon(newIcon);
-    emit iconSourceChanged();
-}
-
-/*!
-    \qmlproperty string Qt.labs.platform::MenuItem::iconName
-    \deprecated Use icon.name instead
-*/
-QString QQuickPlatformMenuItem::iconName() const
-{
-    return icon().name();
-}
-
-void QQuickPlatformMenuItem::setIconName(const QString& name)
-{
-    QQuickPlatformIcon newIcon = icon();
-    if (name == newIcon.name())
-        return;
-
-    newIcon.setName(name);
-    iconLoader()->setIcon(newIcon);
-    emit iconNameChanged();
 }
 
 /*!

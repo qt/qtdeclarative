@@ -43,8 +43,8 @@
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
 #include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qpointingdevice.h>
 #include <QtGui/qstylehints.h>
-#include <QtGui/qtouchdevice.h>
 #include "../shared/util.h"
 #include "../shared/visualtestutil.h"
 
@@ -159,18 +159,7 @@ void tst_focus::policy()
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
-    struct TouchDeviceDeleter
-    {
-        static inline void cleanup(QTouchDevice *device)
-        {
-            QWindowSystemInterface::unregisterTouchDevice(device);
-            delete device;
-        }
-    };
-
-    QScopedPointer<QTouchDevice, TouchDeviceDeleter> device(new QTouchDevice);
-    device->setType(QTouchDevice::TouchScreen);
-    QWindowSystemInterface::registerTouchDevice(device.data());
+    QScopedPointer<QPointingDevice> device(QTest::createTouchDevice());
 
     control->setFocusPolicy(Qt::NoFocus);
     QCOMPARE(control->focusPolicy(), Qt::NoFocus);
@@ -366,18 +355,7 @@ void tst_focus::scope()
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
-    struct TouchDeviceDeleter
-    {
-        static inline void cleanup(QTouchDevice *device)
-        {
-            QWindowSystemInterface::unregisterTouchDevice(device);
-            delete device;
-        }
-    };
-
-    QScopedPointer<QTouchDevice, TouchDeviceDeleter> device(new QTouchDevice);
-    device->setType(QTouchDevice::TouchScreen);
-    QWindowSystemInterface::registerTouchDevice(device.data());
+    QScopedPointer<QPointingDevice> device(QTest::createTouchDevice());
 
     child->forceActiveFocus();
     QVERIFY(child->hasActiveFocus());

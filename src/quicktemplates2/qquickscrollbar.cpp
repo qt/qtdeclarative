@@ -710,7 +710,7 @@ void QQuickScrollBar::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickScrollBar);
     QQuickControl::mousePressEvent(event);
-    d->handleMove(event->localPos());
+    d->handleMove(event->position());
 }
 
 #if QT_CONFIG(quicktemplates2_hover)

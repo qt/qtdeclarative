@@ -1151,14 +1151,14 @@ void QQuickRangeSlider::hoverEnterEvent(QHoverEvent *event)
 {
     Q_D(QQuickRangeSlider);
     QQuickControl::hoverEnterEvent(event);
-    d->updateHover(event->posF());
+    d->updateHover(event->position());
 }
 
 void QQuickRangeSlider::hoverMoveEvent(QHoverEvent *event)
 {
     Q_D(QQuickRangeSlider);
     QQuickControl::hoverMoveEvent(event);
-    d->updateHover(event->posF());
+    d->updateHover(event->position());
 }
 
 void QQuickRangeSlider::hoverLeaveEvent(QHoverEvent *event)
@@ -1181,7 +1181,7 @@ void QQuickRangeSlider::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickRangeSlider);
     QQuickControl::mousePressEvent(event);
-    d->handleMove(event->localPos());
+    d->handleMove(event->position());
     setKeepMouseGrab(true);
 }
 
@@ -1197,20 +1197,20 @@ void QQuickRangeSlider::touchEvent(QTouchEvent *event)
 
             switch (point.state()) {
             case Qt::TouchPointPressed:
-                d->handlePress(point.pos());
+                d->handlePress(point.position());
                 break;
             case Qt::TouchPointMoved:
                 if (!keepTouchGrab()) {
                     if (d->orientation == Qt::Horizontal)
-                        setKeepTouchGrab(QQuickWindowPrivate::dragOverThreshold(point.pos().x() - point.startPos().x(), Qt::XAxis, &point, qRound(d->touchDragThreshold)));
+                        setKeepTouchGrab(QQuickWindowPrivate::dragOverThreshold(point.position().x() - point.pressPosition().x(), Qt::XAxis, &point, qRound(d->touchDragThreshold)));
                     else
-                        setKeepTouchGrab(QQuickWindowPrivate::dragOverThreshold(point.pos().y() - point.startPos().y(), Qt::YAxis, &point, qRound(d->touchDragThreshold)));
+                        setKeepTouchGrab(QQuickWindowPrivate::dragOverThreshold(point.position().y() - point.pressPosition().y(), Qt::YAxis, &point, qRound(d->touchDragThreshold)));
                 }
                 if (keepTouchGrab())
-                    d->handleMove(point.pos());
+                    d->handleMove(point.position());
                 break;
             case Qt::TouchPointReleased:
-                d->handleRelease(point.pos());
+                d->handleRelease(point.position());
                 break;
             default:
                 break;

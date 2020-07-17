@@ -63,7 +63,7 @@ QString QQuickStylePlugin::name() const
 
 void QQuickStylePlugin::initializeTheme(QQuickTheme *theme)
 {
-    Q_UNUSED(theme)
+    Q_UNUSED(theme);
 }
 
 void QQuickStylePlugin::unregisterTypes()

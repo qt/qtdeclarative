@@ -92,7 +92,7 @@ void QQuickMnemonicLabel::updateMnemonic()
     int idx = 0;
     int pos = 0;
     int len = m_fullText.length();
-    QVector<QTextLayout::FormatRange> formats;
+    QList<QTextLayout::FormatRange> formats;
     while (len) {
         if (m_fullText.at(pos) == QLatin1Char('&') && (len == 1 || m_fullText.at(pos + 1) != QLatin1Char('&'))) {
             if (m_mnemonicVisible && (pos == 0 || m_fullText.at(pos - 1) != QLatin1Char('&')))

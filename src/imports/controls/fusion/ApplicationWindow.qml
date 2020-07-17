@@ -44,12 +44,4 @@ T.ApplicationWindow {
     id: window
 
     color: window.palette.window
-
-    overlay.modal: Rectangle {
-        color: Fusion.topShadow
-    }
-
-    overlay.modeless: Rectangle {
-        color: Fusion.topShadow
-    }
 }

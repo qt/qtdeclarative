@@ -49,10 +49,10 @@ QT_BEGIN_NAMESPACE
 void QQuickPressHandler::mousePressEvent(QMouseEvent *event)
 {
     longPress = false;
-    pressPos = event->localPos();
+    pressPos = event->position();
     if (Qt::LeftButton == (event->buttons() & Qt::LeftButton)) {
         timer.start(QGuiApplication::styleHints()->mousePressAndHoldInterval(), control);
-        delayedMousePressEvent = new QMouseEvent(event->type(), event->pos(), event->button(), event->buttons(), event->modifiers());
+        delayedMousePressEvent = new QMouseEvent(event->type(), event->position().toPoint(), event->button(), event->buttons(), event->modifiers());
     } else {
         timer.stop();
     }
@@ -60,7 +60,7 @@ void QQuickPressHandler::mousePressEvent(QMouseEvent *event)
     if (isSignalConnected(control, "pressed(QQuickMouseEvent*)", pressedSignalIndex)) {
         QQuickMouseEvent mev;
         mev.reset(pressPos.x(), pressPos.y(), event->button(), event->buttons(),
-                  QGuiApplication::keyboardModifiers(), false/*isClick*/, false/*wasHeld*/);
+                  event->modifiers(), false/*isClick*/, false/*wasHeld*/);
         mev.setAccepted(true);
         QQuickMouseEvent *mevPtr = &mev;
         void *args[] = { nullptr, &mevPtr };
@@ -71,7 +71,7 @@ void QQuickPressHandler::mousePressEvent(QMouseEvent *event)
 
 void QQuickPressHandler::mouseMoveEvent(QMouseEvent *event)
 {
-    if (qAbs(int(event->localPos().x() - pressPos.x())) > QGuiApplication::styleHints()->startDragDistance())
+    if (qAbs(int(event->position().x() - pressPos.x())) > QGuiApplication::styleHints()->startDragDistance())
         timer.stop();
 }
 
@@ -83,7 +83,7 @@ void QQuickPressHandler::mouseReleaseEvent(QMouseEvent *event)
         if (isSignalConnected(control, "released(QQuickMouseEvent*)", releasedSignalIndex)) {
             QQuickMouseEvent mev;
             mev.reset(pressPos.x(), pressPos.y(), event->button(), event->buttons(),
-                      QGuiApplication::keyboardModifiers(), false/*isClick*/, false/*wasHeld*/);
+                      event->modifiers(), false/*isClick*/, false/*wasHeld*/);
             mev.setAccepted(true);
             QQuickMouseEvent *mevPtr = &mev;
             void *args[] = { nullptr, &mevPtr };
@@ -101,8 +101,11 @@ void QQuickPressHandler::timerEvent(QTimerEvent *)
     longPress = isSignalConnected(control, "pressAndHold(QQuickMouseEvent*)", pressAndHoldSignalIndex);
     if (longPress) {
         QQuickMouseEvent mev;
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_DEPRECATED
         mev.reset(pressPos.x(), pressPos.y(), Qt::LeftButton, Qt::LeftButton,
                   QGuiApplication::keyboardModifiers(), false/*isClick*/, true/*wasHeld*/);
+QT_WARNING_POP
         mev.setAccepted(true);
         // Use fast signal invocation since we already got its index
         QQuickMouseEvent *mevPtr = &mev;

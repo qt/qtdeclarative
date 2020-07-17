@@ -1389,7 +1389,7 @@ void QQuickSplitView::hoverMoveEvent(QHoverEvent *event)
     Q_D(QQuickSplitView);
     QQuickContainer::hoverMoveEvent(event);
 
-    QQuickItem *hoveredItem = childAt(event->pos().x(), event->pos().y());
+    QQuickItem *hoveredItem = childAt(event->position().toPoint().x(), event->position().toPoint().y());
     d->updateHoveredHandle(hoveredItem);
 }
 
@@ -2029,7 +2029,7 @@ const QQuickSplitHandleAttachedPrivate *QQuickSplitHandleAttachedPrivate::get(co
 }
 
 QQuickSplitHandleAttached::QQuickSplitHandleAttached(QObject *parent)
-    : QObject(*(new QQuickSplitViewAttachedPrivate), parent)
+    : QObject(*(new QQuickSplitHandleAttachedPrivate), parent)
 {
 }
 

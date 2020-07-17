@@ -111,8 +111,8 @@ namespace QWidgetPlatform
         if (available)
             return new T(parent);
 #else
-        Q_UNUSED(parent)
-        Q_UNUSED(available)
+        Q_UNUSED(parent);
+        Q_UNUSED(available);
 #endif
         return nullptr;
     }

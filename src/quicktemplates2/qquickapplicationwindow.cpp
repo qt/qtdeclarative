@@ -36,7 +36,6 @@
 
 #include "qquickapplicationwindow_p.h"
 #include "qquickcontentitem_p.h"
-#include "qquickoverlay_p.h"
 #include "qquickpopup_p_p.h"
 #include "qquickcontrol_p_p.h"
 #include "qquicktextarea_p.h"
@@ -178,7 +177,6 @@ public:
     QQuickItem *menuBar = nullptr;
     QQuickItem *header = nullptr;
     QQuickItem *footer = nullptr;
-    QQuickOverlay *overlay = nullptr;
     QFont font;
     QLocale locale;
     QQuickItem *activeFocusControl = nullptr;
@@ -231,9 +229,9 @@ void QQuickApplicationWindowPrivate::relayout()
 
 void QQuickApplicationWindowPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff)
 {
-    Q_UNUSED(item)
-    Q_UNUSED(change)
-    Q_UNUSED(diff)
+    Q_UNUSED(item);
+    Q_UNUSED(change);
+    Q_UNUSED(diff);
     relayout();
 }
 
@@ -589,57 +587,6 @@ QQuickItem *QQuickApplicationWindow::activeFocusControl() const
 }
 
 /*!
-    \deprecated
-    \qmlpropertygroup QtQuick.Controls::ApplicationWindow::overlay
-    \qmlproperty Item QtQuick.Controls::ApplicationWindow::overlay
-    \qmlproperty Component QtQuick.Controls::ApplicationWindow::overlay.modal
-    \qmlproperty Component QtQuick.Controls::ApplicationWindow::overlay.modeless
-
-    Use the \l Overlay attached properties and signals instead.
-
-    This property holds the window overlay item. Popups are automatically
-    reparented to the overlay.
-
-    \table
-    \header
-        \li Property
-        \li Description
-    \row
-        \li overlay.modal
-        \li This property holds a component to use as a visual item that implements
-            background dimming for modal popups. It is created for and stacked below
-            visible modal popups.
-    \row
-        \li overlay.modeless
-        \li This property holds a component to use as a visual item that implements
-            background dimming for modeless popups. It is created for and stacked below
-            visible dimming popups.
-    \row
-        \li overlay.pressed()
-        \li This signal is emitted when the overlay is pressed by the user while
-            a popup is visible.
-    \row
-        \li overlay.released()
-        \li This signal is emitted when the overlay is released by the user while
-            a modal popup is visible.
-    \endtable
-
-    \sa Popup::modal, Popup::dim
-*/
-QQuickOverlay *QQuickApplicationWindow::overlay() const
-{
-    QQuickApplicationWindowPrivate *d = const_cast<QQuickApplicationWindowPrivate *>(d_func());
-    if (!d) // being deleted
-        return nullptr;
-
-    if (!d->overlay) {
-        d->overlay = new QQuickOverlay(QQuickWindow::contentItem());
-        d->overlay->stackAfter(QQuickApplicationWindow::contentItem());
-    }
-    return d->overlay;
-}
-
-/*!
     \qmlproperty font QtQuick.Controls::ApplicationWindow::font
 
     This property holds the font currently set for the window.
@@ -852,7 +799,6 @@ void QQuickApplicationWindowAttachedPrivate::windowChange(QQuickWindow *wnd)
     window = wnd;
     emit q->windowChanged();
     emit q->contentItemChanged();
-    emit q->overlayChanged();
 
     activeFocusChange();
     if ((oldWindow && oldWindow->menuBar()) || (newWindow && newWindow->menuBar()))
@@ -983,24 +929,6 @@ QQuickItem *QQuickApplicationWindowAttached::footer() const
     if (QQuickApplicationWindow *window = qobject_cast<QQuickApplicationWindow *>(d->window))
         return window->footer();
     return nullptr;
-}
-
-/*!
-    \deprecated
-    \qmlattachedproperty Item QtQuick.Controls::ApplicationWindow::overlay
-    \readonly
-
-    Use the \l Overlay::overlay attached property instead.
-
-    This attached property holds the window overlay item. The property can be attached
-    to any item. The value is \c null if the item is not in an ApplicationWindow.
-
-    \sa {Attached ApplicationWindow Properties}
-*/
-QQuickOverlay *QQuickApplicationWindowAttached::overlay() const
-{
-    Q_D(const QQuickApplicationWindowAttached);
-    return QQuickOverlay::overlay(d->window);
 }
 
 /*!

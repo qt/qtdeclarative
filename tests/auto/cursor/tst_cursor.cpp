@@ -182,6 +182,7 @@ void tst_cursor::scrollBar()
     // Ensure that the mouse cursor has the correct shape when over a scrollbar
     // which is itself over a text area with IBeamCursor.
     QQuickApplicationHelper helper(this, QStringLiteral("scrollbar.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));

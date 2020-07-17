@@ -83,7 +83,6 @@ QT_BEGIN_NAMESPACE
     \li Linux (when running with the GTK+ platform theme)
     \li macOS
     \li Windows
-    \li WinRT
     \endlist
 
     \input includes/widgets.qdocinc 1

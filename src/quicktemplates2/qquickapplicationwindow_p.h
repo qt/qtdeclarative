@@ -56,7 +56,6 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickOverlay;
 class QQuickApplicationWindowPrivate;
 class QQuickApplicationWindowAttached;
 class QQuickApplicationWindowAttachedPrivate;
@@ -70,7 +69,6 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickApplicationWindow : public QQuickWi
     Q_PROPERTY(QQuickItem *activeFocusControl READ activeFocusControl NOTIFY activeFocusControlChanged FINAL)
     Q_PROPERTY(QQuickItem *header READ header WRITE setHeader NOTIFY headerChanged FINAL)
     Q_PROPERTY(QQuickItem *footer READ footer WRITE setFooter NOTIFY footerChanged FINAL)
-    Q_PROPERTY(QQuickOverlay *overlay READ overlay CONSTANT FINAL)
     Q_PROPERTY(QFont font READ font WRITE setFont RESET resetFont NOTIFY fontChanged FINAL)
     Q_PROPERTY(QLocale locale READ locale WRITE setLocale RESET resetLocale NOTIFY localeChanged FINAL)
     // 2.3 (Qt 5.10)
@@ -98,8 +96,6 @@ public:
 
     QQuickItem *footer() const;
     void setFooter(QQuickItem *footer);
-
-    QQuickOverlay *overlay() const;
 
     QFont font() const;
     void setFont(const QFont &font);
@@ -141,7 +137,6 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickApplicationWindowAttached : public 
     Q_PROPERTY(QQuickItem *activeFocusControl READ activeFocusControl NOTIFY activeFocusControlChanged FINAL)
     Q_PROPERTY(QQuickItem *header READ header NOTIFY headerChanged FINAL)
     Q_PROPERTY(QQuickItem *footer READ footer NOTIFY footerChanged FINAL)
-    Q_PROPERTY(QQuickOverlay *overlay READ overlay NOTIFY overlayChanged FINAL)
     Q_PROPERTY(QQuickItem *menuBar READ menuBar NOTIFY menuBarChanged FINAL) // REVISION 3
 
 public:
@@ -152,7 +147,6 @@ public:
     QQuickItem *activeFocusControl() const;
     QQuickItem *header() const;
     QQuickItem *footer() const;
-    QQuickOverlay *overlay() const;
     QQuickItem *menuBar() const;
 
 Q_SIGNALS:
@@ -161,7 +155,6 @@ Q_SIGNALS:
     void activeFocusControlChanged();
     void headerChanged();
     void footerChanged();
-    void overlayChanged();
     // 2.3 (Qt 5.10)
     /*Q_REVISION(3)*/ void menuBarChanged();
 

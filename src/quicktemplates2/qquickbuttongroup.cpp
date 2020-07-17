@@ -170,7 +170,7 @@ public:
     bool settingCheckState = false;
     Qt::CheckState checkState = Qt::Unchecked;
     QPointer<QQuickAbstractButton> checkedButton;
-    QVector<QQuickAbstractButton*> buttons;
+    QList<QQuickAbstractButton*> buttons;
 };
 
 void QQuickButtonGroupPrivate::clear()

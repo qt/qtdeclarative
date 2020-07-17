@@ -101,7 +101,7 @@ void tst_Designer::test_controls()
                    "Item {\n");
 
     QByteArray source = before;
-    source.append(type);
+    source.append(type.toUtf8());
 
     const QByteArray after(" {"
                         "}\n"

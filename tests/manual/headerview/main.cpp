@@ -199,7 +199,7 @@ public:
     }
 
 private:
-    QVector<QVariant> hData, vData;
+    QList<QVariant> hData, vData;
 };
 
 int main(int argc, char *argv[])

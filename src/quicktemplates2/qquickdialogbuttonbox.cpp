@@ -258,7 +258,7 @@ void QQuickDialogButtonBoxPrivate::updateLayout()
     const int halign = alignment & Qt::AlignHorizontal_Mask;
     const int valign = alignment & Qt::AlignVertical_Mask;
 
-    QVector<QQuickAbstractButton *> buttons;
+    QList<QQuickAbstractButton *> buttons;
     const qreal cw = (alignment & Qt::AlignHorizontal_Mask) == 0 ? q->availableWidth() : contentWidth;
     const qreal itemWidth = (cw - qMax(0, count - 1) * spacing) / count;
 

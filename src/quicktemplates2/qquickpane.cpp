@@ -410,8 +410,8 @@ void QQuickPane::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
 
 void QQuickPane::contentSizeChange(const QSizeF &newSize, const QSizeF &oldSize)
 {
-    Q_UNUSED(newSize)
-    Q_UNUSED(oldSize)
+    Q_UNUSED(newSize);
+    Q_UNUSED(oldSize);
 }
 
 #if QT_CONFIG(accessibility)

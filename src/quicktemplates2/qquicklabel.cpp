@@ -213,7 +213,7 @@ void QQuickLabelPrivate::textChanged(const QString &text)
 #if QT_CONFIG(accessibility)
     maybeSetAccessibleName(text);
 #else
-    Q_UNUSED(text)
+    Q_UNUSED(text);
 #endif
 }
 

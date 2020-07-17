@@ -94,6 +94,9 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickComboBox : public QQuickControl
     Q_PROPERTY(QString valueRole READ valueRole WRITE setValueRole NOTIFY valueRoleChanged FINAL REVISION 14)
     // 2.15 (Qt 5.15)
     Q_PROPERTY(bool selectTextByMouse READ selectTextByMouse WRITE setSelectTextByMouse NOTIFY selectTextByMouseChanged FINAL REVISION 15)
+    // TODO: 6.0 (Qt 6.0) - QTBUG-84190
+    Q_PROPERTY(ImplicitContentWidthPolicy implicitContentWidthPolicy READ implicitContentWidthPolicy
+        WRITE setImplicitContentWidthPolicy NOTIFY implicitContentWidthPolicyChanged FINAL REVISION 15)
 
 public:
     explicit QQuickComboBox(QQuickItem *parent = nullptr);
@@ -175,6 +178,17 @@ public:
     bool selectTextByMouse() const;
     void setSelectTextByMouse(bool canSelect);
 
+    // 6.0 (Qt 6.0)
+    enum ImplicitContentWidthPolicy {
+        ContentItemImplicitWidth,
+        WidestText,
+        WidestTextWhenCompleted
+    };
+    Q_ENUM(ImplicitContentWidthPolicy)
+
+    ImplicitContentWidthPolicy implicitContentWidthPolicy() const;
+    void setImplicitContentWidthPolicy(ImplicitContentWidthPolicy policy);
+
 public Q_SLOTS:
     void incrementCurrentIndex();
     void decrementCurrentIndex();
@@ -214,6 +228,8 @@ Q_SIGNALS:
     Q_REVISION(14) void currentValueChanged();
     // 2.15 (Qt 5.15)
     Q_REVISION(15) void selectTextByMouseChanged();
+    // 6.0 (Qt 6.0)
+    Q_REVISION(6, 0) void implicitContentWidthPolicyChanged();
 
 protected:
     bool eventFilter(QObject *object, QEvent *event) override;
@@ -231,6 +247,7 @@ protected:
 
     void componentComplete() override;
     void itemChange(ItemChange change, const ItemChangeData &value) override;
+    void fontChange(const QFont &newFont, const QFont &oldFont) override;
     void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
     void localeChange(const QLocale &newLocale, const QLocale &oldLocale) override;
 

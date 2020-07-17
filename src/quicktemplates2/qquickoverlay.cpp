@@ -69,11 +69,11 @@ QT_BEGIN_NAMESPACE
     \sa ApplicationWindow
 */
 
-QVector<QQuickPopup *> QQuickOverlayPrivate::stackingOrderPopups() const
+QList<QQuickPopup *> QQuickOverlayPrivate::stackingOrderPopups() const
 {
     const QList<QQuickItem *> children = paintOrderChildItems();
 
-    QVector<QQuickPopup *> popups;
+    QList<QQuickPopup *> popups;
     popups.reserve(children.count());
 
     for (auto it = children.crbegin(), end = children.crend(); it != end; ++it) {
@@ -85,9 +85,9 @@ QVector<QQuickPopup *> QQuickOverlayPrivate::stackingOrderPopups() const
     return popups;
 }
 
-QVector<QQuickDrawer *> QQuickOverlayPrivate::stackingOrderDrawers() const
+QList<QQuickDrawer *> QQuickOverlayPrivate::stackingOrderDrawers() const
 {
-    QVector<QQuickDrawer *> sorted(allDrawers);
+    QList<QQuickDrawer *> sorted(allDrawers);
     std::sort(sorted.begin(), sorted.end(), [](const QQuickDrawer *one, const QQuickDrawer *another) {
         return one->z() > another->z();
     });
@@ -116,7 +116,7 @@ bool QQuickOverlayPrivate::startDrag(QEvent *event, const QPointF &pos)
         }
     }
 
-    const QVector<QQuickDrawer *> drawers = stackingOrderDrawers();
+    const QList<QQuickDrawer *> drawers = stackingOrderDrawers();
     for (QQuickDrawer *drawer : drawers) {
         QQuickDrawerPrivate *p = QQuickDrawerPrivate::get(drawer);
         if (p->startDrag(event)) {
@@ -194,7 +194,7 @@ bool QQuickOverlayPrivate::handleMouseEvent(QQuickItem *source, QMouseEvent *eve
 {
     switch (event->type()) {
     case QEvent::MouseButtonPress:
-        if (!target && startDrag(event, event->windowPos()))
+        if (!target && startDrag(event, event->scenePosition()))
             return true;
         return handlePress(source, event, target);
     case QEvent::MouseMove:
@@ -218,7 +218,7 @@ bool QQuickOverlayPrivate::handleTouchEvent(QQuickItem *source, QTouchEvent *eve
         for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
             switch (point.state()) {
             case Qt::TouchPointPressed:
-                if (!target && startDrag(event, point.scenePos()))
+                if (!target && startDrag(event, point.scenePosition()))
                     handled = true;
                 else
                     handled |= handlePress(source, event, target);
@@ -367,10 +367,6 @@ QQuickOverlay *QQuickOverlay::overlay(QQuickWindow *window)
 {
     if (!window)
         return nullptr;
-
-    QQuickApplicationWindow *applicationWindow = qobject_cast<QQuickApplicationWindow *>(window);
-    if (applicationWindow)
-        return applicationWindow->overlay();
 
     const char *name = "_q_QQuickOverlay";
     QQuickOverlay *overlay = window->property(name).value<QQuickOverlay *>();

@@ -720,7 +720,7 @@ bool QQuickSwipeDelegatePrivate::handleMousePressEvent(QQuickItem *item, QMouseE
         // The press point could be incorrect if the press happened over a child item,
         // so we correct it after calling the base class' mousePressEvent(), rather
         // than having to duplicate its code just so we can set the pressPoint.
-        setPressPoint(item->mapToItem(q, event->pos()));
+        setPressPoint(item->mapToItem(q, event->position().toPoint()));
         return true;
     }
 
@@ -728,8 +728,8 @@ bool QQuickSwipeDelegatePrivate::handleMousePressEvent(QQuickItem *item, QMouseE
     // (the control can be clicked to e.g. close the swipe). Either way, we must begin measuring
     // mouse movement in case it turns into a swipe, in which case we grab the mouse.
     swipePrivate->positionBeforePress = swipePrivate->position;
-    swipePrivate->velocityCalculator.startMeasuring(event->pos(), event->timestamp());
-    setPressPoint(item->mapToItem(q, event->pos()));
+    swipePrivate->velocityCalculator.startMeasuring(event->position().toPoint(), event->timestamp());
+    setPressPoint(item->mapToItem(q, event->position().toPoint()));
 
     // When a delegate uses the attached properties and signals, it declares that it wants mouse events.
     Attached *attached = attachedObject(item);
@@ -748,7 +748,7 @@ bool QQuickSwipeDelegatePrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEv
     Q_Q(QQuickSwipeDelegate);
 
     if (holdTimer > 0) {
-        if (QLineF(pressPoint, event->localPos()).length() > QGuiApplication::styleHints()->startDragDistance())
+        if (QLineF(pressPoint, event->position()).length() > QGuiApplication::styleHints()->startDragDistance())
             stopPressAndHold();
     }
 
@@ -770,7 +770,7 @@ bool QQuickSwipeDelegatePrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEv
     if (item == q && !pressed)
         return false;
 
-    const QPointF mappedEventPos = item->mapToItem(q, event->pos());
+    const QPointF mappedEventPos = item->mapToItem(q, event->position().toPoint());
     const qreal distance = (mappedEventPos - pressPoint).x();
     if (!q->keepMouseGrab()) {
         // Taken from QQuickDrawerPrivate::grabMouse; see comments there.
@@ -840,7 +840,7 @@ bool QQuickSwipeDelegatePrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEv
         }
     } else {
         // The swipe wasn't initiated.
-        if (event->pos().y() < 0 || event->pos().y() > height) {
+        if (event->position().toPoint().y() < 0 || event->position().toPoint().y() > height) {
             // The mouse went outside the vertical bounds of the control, so
             // we should no longer consider it pressed.
             q->setPressed(false);
@@ -858,7 +858,7 @@ bool QQuickSwipeDelegatePrivate::handleMouseReleaseEvent(QQuickItem *item, QMous
 {
     Q_Q(QQuickSwipeDelegate);
     QQuickSwipePrivate *swipePrivate = QQuickSwipePrivate::get(&swipe);
-    swipePrivate->velocityCalculator.stopMeasuring(event->pos(), event->timestamp());
+    swipePrivate->velocityCalculator.stopMeasuring(event->position().toPoint(), event->timestamp());
 
     const bool hadGrabbedMouse = q->keepMouseGrab();
     q->setKeepMouseGrab(false);
@@ -1180,7 +1180,7 @@ void QQuickSwipeDelegate::mousePressEvent(QMouseEvent *event)
         return;
 
     swipePrivate->positionBeforePress = swipePrivate->position;
-    swipePrivate->velocityCalculator.startMeasuring(event->pos(), event->timestamp());
+    swipePrivate->velocityCalculator.startMeasuring(event->position().toPoint(), event->timestamp());
 }
 
 void QQuickSwipeDelegate::mouseMoveEvent(QMouseEvent *event)
