@@ -117,14 +117,14 @@ private:
 class QQuickDropEventEx : public QDropEvent
 {
 public:
-    void setProposedAction(Qt::DropAction action) { default_action = action; drop_action = action; }
+    void setProposedAction(Qt::DropAction action) { m_defaultAction = action; m_dropAction = action; }
 
     static void setProposedAction(QDropEvent *event, Qt::DropAction action) {
         static_cast<QQuickDropEventEx *>(event)->setProposedAction(action);
     }
 
     void copyActions(const QDropEvent &from) {
-        default_action = from.proposedAction(); drop_action = from.dropAction(); }
+        m_defaultAction = from.proposedAction(); m_dropAction = from.dropAction(); }
 
     static void copyActions(QDropEvent *to, const QDropEvent &from) {
         static_cast<QQuickDropEventEx *>(to)->copyActions(from);
