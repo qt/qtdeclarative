@@ -904,6 +904,12 @@ void tst_qquickimage::sourceClipRect_data()
                                 << (QList<QPoint>() << QPoint(54, 54) << QPoint(15, 59));
 }
 
+static QImage toUnscaledImage(const QImage &image)
+{
+    auto dpr = image.devicePixelRatio();
+    return image.scaled(image.width() / dpr, image.height() / dpr);
+}
+
 void tst_qquickimage::sourceClipRect()
 {
     QFETCH(QRectF, sourceClipRect);
@@ -931,7 +937,7 @@ void tst_qquickimage::sourceClipRect()
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
         QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
-    QImage contents = window->grabWindow();
+    QImage contents = toUnscaledImage(window->grabWindow());
     if (contents.width() < sourceClipRect.width())
         QSKIP("Skipping due to grabWindow not functional");
 #ifdef DEBUG_WRITE_OUTPUT
@@ -1167,7 +1173,7 @@ void tst_qquickimage::hugeImages()
     view.show();
     QVERIFY(QTest::qWaitForWindowExposed(&view));
 
-    QImage contents = view.grabWindow();
+    QImage contents = toUnscaledImage(view.grabWindow());
 
     QCOMPARE(contents.pixel(0, 0), qRgba(255, 0, 0, 255));
     QCOMPARE(contents.pixel(99, 99), qRgba(255, 0, 0, 255));
@@ -1240,7 +1246,7 @@ void tst_qquickimage::multiFrame()
     view.show();
     QVERIFY(QTest::qWaitForWindowExposed(&view));
 
-    QImage contents = view.grabWindow();
+    QImage contents = toUnscaledImage(view.grabWindow());
     if (contents.width() < 40)
         QSKIP("Skipping due to grabWindow not functional");
     // The first frame is a blue ball, approximately qRgba(0x33, 0x6d, 0xcc, 0xff)
@@ -1253,7 +1259,7 @@ void tst_qquickimage::multiFrame()
     QTRY_COMPARE(image->status(), QQuickImageBase::Ready);
     QCOMPARE(currentSpy.count(), 1);
     QCOMPARE(image->currentFrame(), 1);
-    contents = view.grabWindow();
+    contents = toUnscaledImage(view.grabWindow());
     // The second frame is a green ball, approximately qRgba(0x27, 0xc8, 0x22, 0xff)
     color = contents.pixel(16, 16);
     QVERIFY(qRed(color) < 0xc0);
