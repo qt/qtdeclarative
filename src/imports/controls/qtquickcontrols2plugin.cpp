@@ -271,7 +271,7 @@ QList<QQuickStylePlugin *> QtQuickControls2Plugin::loadStylePlugins()
                 const auto plugins = QPluginLoader::staticInstances();
                 for (QObject *instance : plugins) {
                     QQuickStylePlugin *stylePlugin = qobject_cast<QQuickStylePlugin *>(instance);
-                    if (!stylePlugin || parser.className() != QLatin1String(instance->metaObject()->className()))
+                    if (!stylePlugin || !parser.classNames().contains(QLatin1String(instance->metaObject()->className())))
                         continue;
                     stylePlugins += stylePlugin;
                 }
