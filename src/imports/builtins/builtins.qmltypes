@@ -54,7 +54,7 @@ Module {
                 "NoButton": 0,
                 "LeftButton": 1,
                 "RightButton": 2,
-                "MidButton": 4,
+                "MidButton": 4, // For backwards compatibility
                 "MiddleButton": 4,
                 "BackButton": 8,
                 "XButton1": 8,

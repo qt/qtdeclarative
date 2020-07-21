@@ -1629,7 +1629,7 @@ void QQuickTextInput::mouseReleaseEvent(QMouseEvent *event)
     if (QGuiApplication::clipboard()->supportsSelection()) {
         if (event->button() == Qt::LeftButton) {
             d->copy(QClipboard::Selection);
-        } else if (!d->m_readOnly && event->button() == Qt::MidButton) {
+        } else if (!d->m_readOnly && event->button() == Qt::MiddleButton) {
             d->deselect();
             d->insert(QGuiApplication::clipboard()->text(QClipboard::Selection));
         }
