@@ -81,7 +81,7 @@ Rectangle {
                     buttonID = 'LeftButton'
                 else if (mouse.button == Qt.RightButton)
                     buttonID = 'RightButton'
-                else if (mouse.button == Qt.MidButton)
+                else if (mouse.button == Qt.MiddleButton)
                     buttonID = 'MiddleButton'
                 else if (mouse.button == Qt.BackButton)
                     buttonID = 'BackButton'

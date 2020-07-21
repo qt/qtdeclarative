@@ -126,7 +126,7 @@ Rectangle {
             }
             Image {
                 source: "resources/mouse_middle.png"
-                visible: buttons & Qt.MidButton
+                visible: buttons & Qt.MiddleButton
             }
             Image {
                 source: "resources/mouse_right.png"
