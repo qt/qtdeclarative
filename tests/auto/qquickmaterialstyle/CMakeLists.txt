@@ -17,6 +17,7 @@ qt_add_test(tst_qquickmaterialstyle
         tst_qquickmaterialstyle.cpp
     PUBLIC_LIBRARIES
         Qt::Gui
+        Qt::Qml
     TESTDATA ${test_data}
 )
 

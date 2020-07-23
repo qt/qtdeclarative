@@ -55,6 +55,8 @@ import QtQuick.Templates as T
 import QtQuick.Controls
 import QtQuick.Controls.Material
 
+import org.qtproject.Test 1.0
+
 TestCase {
     id: testCase
     width: 200
@@ -523,11 +525,11 @@ TestCase {
         compare(control.Material[prop], "#80808080")
 
         // unknown
-        ignoreWarning(Qt.resolvedUrl("tst_material.qml") + ":68:9: QML Button: unknown Material." + prop + " value: 123")
+        ignoreWarning(new RegExp("QML Button: unknown Material." + prop + " value: 123"))
         control.Material[prop] = 123
-        ignoreWarning(Qt.resolvedUrl("tst_material.qml") + ":68:9: QML Button: unknown Material." + prop + " value: foo")
+        ignoreWarning(new RegExp("QML Button: unknown Material." + prop + " value: foo"))
         control.Material[prop] = "foo"
-        ignoreWarning(Qt.resolvedUrl("tst_material.qml") + ":68:9: QML Button: unknown Material." + prop + " value: #1")
+        ignoreWarning(new RegExp("QML Button: unknown Material." + prop + " value: #1"))
         control.Material[prop] = "#1"
 
         control.destroy()
@@ -714,5 +716,76 @@ TestCase {
         compare(control.contentItem.color.toString(), Material.color(Material.Pink, Material.Shade200))
 
         control.destroy()
+    }
+
+    // We can't declare components with JS syntax (when creating a data row),
+    // so we use introspection to get the list of all components we should test.
+    QtObject {
+        id: bindingLoopComponents
+
+        property Component row_foregroundToPrimaryTextColor: Item { Material.foreground: Material.primaryTextColor }
+        // Not all properties can be bound without binding loops. For example, it's not possible to bind
+        // foreground to primaryHighlightedTextColor, because primaryHighlightedTextColor() depends on
+        // m_explicitForeground, which is modified when the foreground is set.
+        // So, we use background instead.
+        property Component row_backgroundToPrimaryHighlightedTextColor: Item { Material.background: Material.primaryHighlightedTextColor }
+        property Component row_foregroundToSecondaryTextColor: Item { Material.foreground: Material.secondaryTextColor }
+        property Component row_foregroundToSecondaryTextColorWithTheme: Item {
+            Material.foreground: Material.theme === Material.Dark ? Material.secondaryTextColor : Material.Red
+        }
+        property Component row_foregroundToHintTextColor: Item { Material.foreground: Material.secondaryTextColor }
+        property Component row_foregroundToTextSelectionColor: Item { Material.foreground: Material.textSelectionColor }
+        property Component row_foregroundToDropShadowColor: Item { Material.foreground: Material.dropShadowColor }
+        property Component row_foregroundToDividerColor: Item { Material.foreground: Material.dividerColor }
+        property Component row_foregroundToIconColor: Item { Material.foreground: Material.iconColor }
+        property Component row_foregroundToIconDisabledColor: Item { Material.foreground: Material.iconDisabledColor }
+        property Component row_foregroundToButtonColor: Item { Material.foreground: Material.buttonColor }
+        property Component row_foregroundToButtonDisabledColor: Item { Material.foreground: Material.buttonDisabledColor }
+        property Component row_foregroundToHighlightedButtonColor: Item { Material.foreground: Material.highlightedButtonColor }
+        property Component row_foregroundToFrameColor: Item { Material.foreground: Material.frameColor }
+        property Component row_foregroundToRippleColor: Item { Material.foreground: Material.rippleColor }
+        property Component row_foregroundToHighlightedRippleColor: Item { Material.foreground: Material.highlightedRippleColor }
+        property Component row_foregroundToSwitchUncheckedTrackColor: Item { Material.foreground: Material.switchUncheckedTrackColor }
+        property Component row_foregroundToSwitchCheckedTrackColor: Item { Material.foreground: Material.switchCheckedTrackColor }
+        property Component row_foregroundToSwitchUncheckedHandleColor: Item { Material.foreground: Material.switchUncheckedHandleColor }
+        property Component row_foregroundToSwitchCheckedHandleColor: Item { Material.foreground: Material.switchCheckedHandleColor }
+        property Component row_foregroundToSwitchDisabledTrackColor: Item { Material.foreground: Material.switchDisabledTrackColor }
+        property Component row_foregroundToSwitchDisabledHandleColor: Item { Material.foreground: Material.switchDisabledHandleColor }
+        property Component row_foregroundToScrollBarColor: Item { Material.foreground: Material.scrollBarColor }
+        property Component row_foregroundToScrollBarHoveredColor: Item { Material.foreground: Material.scrollBarHoveredColor }
+        property Component row_foregroundToScrollBarPressedColor: Item { Material.foreground: Material.scrollBarPressedColor }
+        property Component row_foregroundToDialogColor: Item { Material.foreground: Material.dialogColor }
+        property Component row_foregroundToBackgroundDimColor: Item { Material.foreground: Material.backgroundDimColor }
+        property Component row_foregroundToListHighlightColor: Item { Material.foreground: Material.listHighlightColor }
+        property Component row_foregroundToTooltipColor: Item { Material.foreground: Material.tooltipColor }
+        property Component row_foregroundToToolBarColor: Item { Material.foreground: Material.toolBarColor }
+        property Component row_backgroundToToolTextColor: Item { Material.background: Material.toolTextColor }
+        property Component row_foregroundToSpinBoxDisabledIconColor: Item { Material.foreground: Material.spinBoxDisabledIconColor }
+        property Component row_foregroundToSliderDisableColor: Item { Material.foreground: Material.sliderDisableColor }
+    }
+
+    function test_propertyBindingLoop_data() {
+        let data = []
+        for (let propertyName in bindingLoopComponents) {
+            if (!propertyName.startsWith("row_") || propertyName.endsWith("Changed"))
+                continue
+
+            let row = {}
+            row.tag = propertyName.substr(4)
+            row.component = bindingLoopComponents[propertyName]
+            data.push(row)
+        }
+        return data
+    }
+
+    /*
+        Test that binding attached Material properties to other (private, non-settable)
+        Material properties does not result in a binding loop.
+    */
+    function test_propertyBindingLoop(data) {
+        let item = createTemporaryObject(data.component, testCase)
+        verify(item)
+        verify(!BindingLoopDetector.bindingLoopDetected, "Detected binding loop")
+        BindingLoopDetector.reset()
     }
 }

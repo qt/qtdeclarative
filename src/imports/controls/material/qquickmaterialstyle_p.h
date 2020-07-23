@@ -66,38 +66,38 @@ class QQuickMaterialStyle : public QQuickAttachedObject
     Q_PROPERTY(QColor primaryColor READ primaryColor NOTIFY primaryChanged FINAL) // TODO: remove?
     Q_PROPERTY(QColor accentColor READ accentColor NOTIFY accentChanged FINAL) // TODO: remove?
     Q_PROPERTY(QColor backgroundColor READ backgroundColor NOTIFY backgroundChanged FINAL)
-    Q_PROPERTY(QColor primaryTextColor READ primaryTextColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor primaryHighlightedTextColor READ primaryHighlightedTextColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor secondaryTextColor READ secondaryTextColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor hintTextColor READ hintTextColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor textSelectionColor READ textSelectionColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor dropShadowColor READ dropShadowColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor dividerColor READ dividerColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor iconColor READ iconColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor iconDisabledColor READ iconDisabledColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor buttonColor READ buttonColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor buttonDisabledColor READ buttonDisabledColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor highlightedButtonColor READ highlightedButtonColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor frameColor READ frameColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor rippleColor READ rippleColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor highlightedRippleColor READ highlightedRippleColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor switchUncheckedTrackColor READ switchUncheckedTrackColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor switchCheckedTrackColor READ switchCheckedTrackColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor switchUncheckedHandleColor READ switchUncheckedHandleColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor switchCheckedHandleColor READ switchCheckedHandleColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor switchDisabledTrackColor READ switchDisabledTrackColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor switchDisabledHandleColor READ switchDisabledHandleColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor scrollBarColor READ scrollBarColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor scrollBarHoveredColor READ scrollBarHoveredColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor scrollBarPressedColor READ scrollBarPressedColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor dialogColor READ dialogColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor backgroundDimColor READ backgroundDimColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor listHighlightColor READ listHighlightColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor tooltipColor READ tooltipColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor toolBarColor READ toolBarColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor toolTextColor READ toolTextColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor spinBoxDisabledIconColor READ spinBoxDisabledIconColor NOTIFY paletteChanged FINAL)
-    Q_PROPERTY(QColor sliderDisabledColor READ sliderDisabledColor NOTIFY paletteChanged FINAL REVISION 15)
+    Q_PROPERTY(QColor primaryTextColor READ primaryTextColor NOTIFY themeChanged FINAL)
+    Q_PROPERTY(QColor primaryHighlightedTextColor READ primaryHighlightedTextColor NOTIFY primaryHighlightedTextColorChanged FINAL)
+    Q_PROPERTY(QColor secondaryTextColor READ secondaryTextColor NOTIFY themeChanged FINAL)
+    Q_PROPERTY(QColor hintTextColor READ hintTextColor NOTIFY themeChanged FINAL)
+    Q_PROPERTY(QColor textSelectionColor READ textSelectionColor NOTIFY themeOrAccentChanged FINAL)
+    Q_PROPERTY(QColor dropShadowColor READ dropShadowColor CONSTANT FINAL)
+    Q_PROPERTY(QColor dividerColor READ dividerColor NOTIFY themeChanged FINAL)
+    Q_PROPERTY(QColor iconColor READ iconColor NOTIFY themeChanged FINAL)
+    Q_PROPERTY(QColor iconDisabledColor READ iconDisabledColor NOTIFY themeChanged FINAL)
+    Q_PROPERTY(QColor buttonColor READ buttonColor NOTIFY buttonColorChanged FINAL)
+    Q_PROPERTY(QColor buttonDisabledColor READ buttonDisabledColor NOTIFY buttonDisabledColorChanged FINAL)
+    Q_PROPERTY(QColor highlightedButtonColor READ highlightedButtonColor NOTIFY buttonColorChanged FINAL)
+    Q_PROPERTY(QColor frameColor READ frameColor NOTIFY themeChanged FINAL)
+    Q_PROPERTY(QColor rippleColor READ rippleColor NOTIFY themeChanged FINAL)
+    Q_PROPERTY(QColor highlightedRippleColor READ highlightedRippleColor NOTIFY themeOrAccentChanged FINAL)
+    Q_PROPERTY(QColor switchUncheckedTrackColor READ switchUncheckedTrackColor NOTIFY themeChanged FINAL)
+    Q_PROPERTY(QColor switchCheckedTrackColor READ switchCheckedTrackColor NOTIFY themeOrAccentChanged FINAL)
+    Q_PROPERTY(QColor switchUncheckedHandleColor READ switchUncheckedHandleColor NOTIFY themeChanged FINAL)
+    Q_PROPERTY(QColor switchCheckedHandleColor READ switchCheckedHandleColor NOTIFY themeOrAccentChanged FINAL)
+    Q_PROPERTY(QColor switchDisabledTrackColor READ switchDisabledTrackColor NOTIFY themeChanged FINAL)
+    Q_PROPERTY(QColor switchDisabledHandleColor READ switchDisabledHandleColor NOTIFY themeChanged FINAL)
+    Q_PROPERTY(QColor scrollBarColor READ scrollBarColor NOTIFY themeChanged FINAL)
+    Q_PROPERTY(QColor scrollBarHoveredColor READ scrollBarHoveredColor NOTIFY themeChanged FINAL)
+    Q_PROPERTY(QColor scrollBarPressedColor READ scrollBarPressedColor NOTIFY themeChanged FINAL)
+    Q_PROPERTY(QColor dialogColor READ dialogColor NOTIFY dialogColorChanged FINAL)
+    Q_PROPERTY(QColor backgroundDimColor READ backgroundDimColor NOTIFY themeChanged FINAL)
+    Q_PROPERTY(QColor listHighlightColor READ listHighlightColor NOTIFY themeChanged FINAL)
+    Q_PROPERTY(QColor tooltipColor READ tooltipColor NOTIFY tooltipColorChanged FINAL)
+    Q_PROPERTY(QColor toolBarColor READ toolBarColor NOTIFY toolBarColorChanged FINAL)
+    Q_PROPERTY(QColor toolTextColor READ toolTextColor NOTIFY toolTextColorChanged FINAL)
+    Q_PROPERTY(QColor spinBoxDisabledIconColor READ spinBoxDisabledIconColor NOTIFY themeChanged FINAL)
+    Q_PROPERTY(QColor sliderDisabledColor READ sliderDisabledColor NOTIFY themeChanged FINAL REVISION 15)
 
     Q_PROPERTY(int touchTarget READ touchTarget CONSTANT FINAL)
     Q_PROPERTY(int buttonHeight READ buttonHeight CONSTANT FINAL)
@@ -179,34 +179,40 @@ public:
     void inheritTheme(Theme theme);
     void propagateTheme();
     void resetTheme();
+    void themeChange();
 
     QVariant primary() const;
     void setPrimary(const QVariant &accent);
     void inheritPrimary(uint primary, bool custom);
     void propagatePrimary();
     void resetPrimary();
+    void primaryChange();
 
     QVariant accent() const;
     void setAccent(const QVariant &accent);
     void inheritAccent(uint accent, bool custom);
     void propagateAccent();
     void resetAccent();
+    void accentChange();
 
     QVariant foreground() const;
     void setForeground(const QVariant &foreground);
     void inheritForeground(uint foreground, bool custom, bool has);
     void propagateForeground();
     void resetForeground();
+    void foregroundChange();
 
     QVariant background() const;
     void setBackground(const QVariant &background);
     void inheritBackground(uint background, bool custom, bool has);
     void propagateBackground();
     void resetBackground();
+    void backgroundChange();
 
     int elevation() const;
     void setElevation(int elevation);
     void resetElevation();
+    void elevationChange();
 
     QColor primaryColor() const;
     QColor accentColor() const;
@@ -270,7 +276,15 @@ Q_SIGNALS:
     void backgroundChanged();
     void elevationChanged();
 
-    void paletteChanged();
+    void themeOrAccentChanged();
+
+    void primaryHighlightedTextColorChanged();
+    void buttonColorChanged();
+    void buttonDisabledColorChanged();
+    void dialogColorChanged();
+    void tooltipColorChanged();
+    void toolBarColorChanged();
+    void toolTextColorChanged();
 
 protected:
     void attachedParentChange(QQuickAttachedObject *newParent, QQuickAttachedObject *oldParent) override;

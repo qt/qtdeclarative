@@ -1,6 +1,7 @@
 TEMPLATE = app
 TARGET = tst_qquickmaterialstyle
 CONFIG += qmltestcase
+QT += qml
 
 SOURCES += \
     $$PWD/tst_qquickmaterialstyle.cpp

@@ -469,14 +469,13 @@ void QQuickMaterialStyle::setTheme(Theme theme)
 
     m_theme = theme;
     propagateTheme();
-    emit themeChanged();
-    emit paletteChanged();
+    themeChange();
     if (!m_customAccent)
-        emit accentChanged();
+        accentChange();
     if (!m_hasBackground)
-        emit backgroundChanged();
+        backgroundChange();
     if (!m_hasForeground)
-        emit foregroundChanged();
+        foregroundChange();
 }
 
 void QQuickMaterialStyle::inheritTheme(Theme theme)
@@ -486,14 +485,13 @@ void QQuickMaterialStyle::inheritTheme(Theme theme)
 
     m_theme = theme;
     propagateTheme();
-    emit themeChanged();
-    emit paletteChanged();
+    themeChange();
     if (!m_customAccent)
-        emit accentChanged();
+        accentChange();
     if (!m_hasBackground)
-        emit backgroundChanged();
+        backgroundChange();
     if (!m_hasForeground)
-        emit foregroundChanged();
+        foregroundChange();
 }
 
 void QQuickMaterialStyle::propagateTheme()
@@ -516,6 +514,19 @@ void QQuickMaterialStyle::resetTheme()
     inheritTheme(material ? material->theme() : globalTheme);
 }
 
+void QQuickMaterialStyle::themeChange()
+{
+    emit themeChanged();
+    emit themeOrAccentChanged();
+    emit primaryHighlightedTextColor();
+    emit buttonColorChanged();
+    emit buttonDisabledColorChanged();
+    emit dialogColorChanged();
+    emit tooltipColorChanged();
+    emit toolBarColorChanged();
+    emit toolTextColorChanged();
+}
+
 QVariant QQuickMaterialStyle::primary() const
 {
     return primaryColor();
@@ -535,8 +546,7 @@ void QQuickMaterialStyle::setPrimary(const QVariant &var)
     m_customPrimary = custom;
     m_primary = primary;
     propagatePrimary();
-    emit primaryChanged();
-    emit paletteChanged();
+    primaryChange();
 }
 
 void QQuickMaterialStyle::inheritPrimary(uint primary, bool custom)
@@ -547,8 +557,7 @@ void QQuickMaterialStyle::inheritPrimary(uint primary, bool custom)
     m_customPrimary = custom;
     m_primary = primary;
     propagatePrimary();
-    emit primaryChanged();
-    emit paletteChanged();
+    primaryChange();
 }
 
 void QQuickMaterialStyle::propagatePrimary()
@@ -575,6 +584,13 @@ void QQuickMaterialStyle::resetPrimary()
         inheritPrimary(globalPrimary, false);
 }
 
+void QQuickMaterialStyle::primaryChange()
+{
+    emit primaryChanged();
+    emit toolBarColorChanged();
+    emit toolTextColorChanged();
+}
+
 QVariant QQuickMaterialStyle::accent() const
 {
     return accentColor();
@@ -594,8 +610,7 @@ void QQuickMaterialStyle::setAccent(const QVariant &var)
     m_customAccent = custom;
     m_accent = accent;
     propagateAccent();
-    emit accentChanged();
-    emit paletteChanged();
+    accentChange();
 }
 
 void QQuickMaterialStyle::inheritAccent(uint accent, bool custom)
@@ -606,8 +621,7 @@ void QQuickMaterialStyle::inheritAccent(uint accent, bool custom)
     m_customAccent = custom;
     m_accent = accent;
     propagateAccent();
-    emit accentChanged();
-    emit paletteChanged();
+    accentChange();
 }
 
 void QQuickMaterialStyle::propagateAccent()
@@ -632,6 +646,13 @@ void QQuickMaterialStyle::resetAccent()
         inheritAccent(material->m_accent, material->m_customAccent);
     else
         inheritAccent(globalAccent, false);
+}
+
+void QQuickMaterialStyle::accentChange()
+{
+    emit accentChanged();
+    emit themeOrAccentChanged();
+    emit buttonColorChanged();
 }
 
 QVariant QQuickMaterialStyle::foreground() const
@@ -660,8 +681,7 @@ void QQuickMaterialStyle::setForeground(const QVariant &var)
     m_customForeground = custom;
     m_foreground = foreground;
     propagateForeground();
-    emit foregroundChanged();
-    emit paletteChanged();
+    foregroundChange();
 }
 
 void QQuickMaterialStyle::inheritForeground(uint foreground, bool custom, bool has)
@@ -673,7 +693,7 @@ void QQuickMaterialStyle::inheritForeground(uint foreground, bool custom, bool h
     m_customForeground = custom;
     m_foreground = foreground;
     propagateForeground();
-    emit foregroundChanged();
+    foregroundChange();
 }
 
 void QQuickMaterialStyle::propagateForeground()
@@ -698,6 +718,14 @@ void QQuickMaterialStyle::resetForeground()
     inheritForeground(material ? material->m_foreground : globalForeground, true, material ? material->m_hasForeground : false);
 }
 
+void QQuickMaterialStyle::foregroundChange()
+{
+    emit foregroundChanged();
+    emit primaryHighlightedTextColorChanged();
+    // TODO: This causes a binding loop: see QTBUG-85699 and the comments on its fix
+//    emit toolTextColorChanged();
+}
+
 QVariant QQuickMaterialStyle::background() const
 {
     return backgroundColor();
@@ -718,8 +746,7 @@ void QQuickMaterialStyle::setBackground(const QVariant &var)
     m_customBackground = custom;
     m_background = background;
     propagateBackground();
-    emit backgroundChanged();
-    emit paletteChanged();
+    backgroundChange();
 }
 
 void QQuickMaterialStyle::inheritBackground(uint background, bool custom, bool has)
@@ -731,8 +758,7 @@ void QQuickMaterialStyle::inheritBackground(uint background, bool custom, bool h
     m_customBackground = custom;
     m_background = background;
     propagateBackground();
-    emit backgroundChanged();
-    emit paletteChanged();
+    backgroundChange();
 }
 
 void QQuickMaterialStyle::propagateBackground()
@@ -757,6 +783,15 @@ void QQuickMaterialStyle::resetBackground()
     inheritBackground(material ? material->m_background : globalBackground, true, material ? material->m_hasBackground : false);
 }
 
+void QQuickMaterialStyle::backgroundChange()
+{
+    emit backgroundChanged();
+    emit buttonColorChanged();
+    emit dialogColorChanged();
+    emit tooltipColorChanged();
+    emit toolBarColorChanged();
+}
+
 int QQuickMaterialStyle::elevation() const
 {
     return m_elevation;
@@ -768,12 +803,18 @@ void QQuickMaterialStyle::setElevation(int elevation)
         return;
 
     m_elevation = elevation;
-    emit elevationChanged();
+    elevationChange();
 }
 
 void QQuickMaterialStyle::resetElevation()
 {
     setElevation(0);
+}
+
+void QQuickMaterialStyle::elevationChange()
+{
+    emit elevationChanged();
+    emit buttonDisabledColorChanged();
 }
 
 QColor QQuickMaterialStyle::primaryColor() const
