@@ -53,7 +53,7 @@ Item {
                 borderBlink.blinkColor = "red"
                 borderBlink.start()
             }
-            onTapped: { // 'eventPoint' is a signal parameter of type QQuickEventPoint*
+            onTapped: { // 'eventPoint' is a signal parameter of type QEventPoint*
                 console.log("tapped button " + eventPoint.event.button + " @ " + eventPoint.scenePosition +
                             " on device '" + eventPoint.event.device.name + "' " + (tapCount > 1 ? (tapCount + " times") : "for the first time"))
                 if (tapCount > 1) {

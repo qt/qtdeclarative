@@ -1606,19 +1606,7 @@ void QQuickFlickablePrivate::captureDelayedPress(QQuickItem *item, QMouseEvent *
     if (!isInnermostPressDelay(item))
         return;
 
-    // delayedPressEvent = QQuickWindowPrivate::cloneMouseEvent(event); // TODO make it OK to tell the truth about the device
-
-    // temporary hack to keep the Qt 5 solution for QTBUG-78818 working the same for now:
-    // when QQuickWindowPrivate::pointerEventInstance() is called, it has to look like a mouse event from a mouse,
-    // not a mouse event that actually comes from a touchscreen (which is what it actually is).
-    // Otherwise a nested MultiPointTouchArea will receive a delayed touch
-    // (which is what we actually want, later on; but the code isn't ready for that yet).
-    delayedPressEvent = new QMouseEvent(QEvent::MouseButtonPress, event->position(),
-                                        event->scenePosition(), event->globalPosition(), event->button(), event->buttons(),
-                                        event->modifiers(), Qt::MouseEventSynthesizedByQt);
-    QMutableSinglePointEvent::from(delayedPressEvent)->setTimestamp(event->timestamp());
-    // end of hack
-
+    delayedPressEvent = QQuickWindowPrivate::cloneMouseEvent(event);
     delayedPressEvent->setAccepted(false);
     delayedPressTimer.start(pressDelay, q);
 }

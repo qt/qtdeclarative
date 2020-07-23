@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2018 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the manual tests of the Qt Toolkit.
@@ -27,9 +27,9 @@
 ****************************************************************************/
 
 #include "inputinspector.h"
-#include <QtQuick/QQuickWindow>
 #include <QtQuick/QQuickItem>
 #include <QtQuick/private/qquickpointerhandler_p.h>
+#include <QtGui/private/qpointingdevice_p.h>
 #include <QtCore/QSet>
 
 static const int timerInterval = 100;
@@ -139,23 +139,13 @@ const QPointingDevice *InputInspector::pointerDevice() const
 QVector<QObject*> InputInspector::passiveGrabbers_helper(int pointId /*= 0*/) const
 {
     QVector<QObject*> result;
-    QSet<QObject*> visited;
     const QPointingDevice *device = pointerDevice();
     if (device && source()) {
-        QQuickWindowPrivate *winPriv = QQuickWindowPrivate::get(source());
-        QQuickPointerEvent *pointerEvent = winPriv->pointerEventInstance(device);
-        if (pointerEvent) {
-            for (int i = 0; i < pointerEvent->pointCount(); ++i) {
-                QQuickEventPoint *eventPoint = pointerEvent->point(i);
-                QVector<QPointer <QQuickPointerHandler> > passives = eventPoint->passiveGrabbers();
-                if (!pointId || eventPoint->pointId() == pointId) {
-                    for (auto it = passives.constBegin(); it != passives.constEnd(); ++it) {
-                        QObject *handler = it->data();
-                        if (!visited.contains(handler)) {
-                            result << it->data();
-                            visited << handler;
-                        }
-                    }
+        for (auto eventPoint : QPointingDevicePrivate::get(device)->activePoints) {
+            if (!pointId || eventPoint.id() == pointId) {
+                for (auto pg : eventPoint.passiveGrabbers()) {
+                    if (!result.contains(pg))
+                        result << pg;
                 }
             }
         }
@@ -166,21 +156,13 @@ QVector<QObject*> InputInspector::passiveGrabbers_helper(int pointId /*= 0*/) co
 QVector<QObject*> InputInspector::exclusiveGrabbers_helper(int pointId /*= 0*/) const
 {
     QVector<QObject*> result;
-    QSet<QObject*> visited;
     const QPointingDevice *device = pointerDevice();
     if (device && source()) {
-        QQuickWindowPrivate *winPriv = QQuickWindowPrivate::get(source());
-        QQuickPointerEvent *pointerEvent = winPriv->pointerEventInstance(device);
-        if (pointerEvent) {
-            for (int i = 0; i < pointerEvent->pointCount(); ++i) {
-                QQuickEventPoint *eventPoint = pointerEvent->point(i);
-                if (!pointId || eventPoint->pointId() == pointId) {
-                    if (QObject *exclusiveGrabber = eventPoint->exclusiveGrabber()) {
-                        if (!visited.contains(exclusiveGrabber)) {
-                            result << exclusiveGrabber;
-                            visited << exclusiveGrabber;
-                        }
-                    }
+        for (auto eventPoint : QPointingDevicePrivate::get(device)->activePoints) {
+            if (!pointId || eventPoint.id() == pointId) {
+                if (auto g = eventPoint.exclusiveGrabber()) {
+                    if (!result.contains(g))
+                        result << g;
                 }
             }
         }

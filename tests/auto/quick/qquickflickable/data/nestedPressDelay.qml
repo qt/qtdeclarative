@@ -1,6 +1,7 @@
 import QtQuick 2.0
 
 Flickable {
+    objectName: "outerFlickable"
     property bool pressed: ma.pressed
     width: 240
     height: 320

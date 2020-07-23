@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2018 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the manual tests of the Qt Toolkit.
@@ -30,7 +30,7 @@
 #define INPUTINSPECTOR_H
 
 #include <QObject>
-class QQuickWindow;
+#include <QtQuick/QQuickWindow>
 class QQuickPointerHandler;
 class QPointingDevice;
 

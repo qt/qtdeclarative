@@ -685,8 +685,8 @@ void tst_TapHandler::componentUserBehavioralOverride()
     QQuickTapHandler *userTapHandler = button->findChild<QQuickTapHandler*>("override");
     QVERIFY(userTapHandler);
     QSignalSpy tappedSpy(button, SIGNAL(tapped()));
-    QSignalSpy innerGrabChangedSpy(innerTapHandler, SIGNAL(grabChanged(QQuickEventPoint::GrabTransition, QQuickEventPoint *)));
-    QSignalSpy userGrabChangedSpy(userTapHandler, SIGNAL(grabChanged(QQuickEventPoint::GrabTransition, QQuickEventPoint *)));
+    QSignalSpy innerGrabChangedSpy(innerTapHandler, SIGNAL(grabChanged(QPointingDevice::GrabTransition, QEventPoint *)));
+    QSignalSpy userGrabChangedSpy(userTapHandler, SIGNAL(grabChanged(QPointingDevice::GrabTransition, QEventPoint *)));
     QSignalSpy innerPressedChangedSpy(innerTapHandler, SIGNAL(pressedChanged()));
     QSignalSpy userPressedChangedSpy(userTapHandler, SIGNAL(pressedChanged()));
 
@@ -715,7 +715,7 @@ void tst_TapHandler::rightLongPressIgnoreWheel()
 
     QQuickTapHandler *tap = window->rootObject()->findChild<QQuickTapHandler*>();
     QVERIFY(tap);
-    QSignalSpy tappedSpy(tap, SIGNAL(tapped(QQuickEventPoint *)));
+    QSignalSpy tappedSpy(tap, SIGNAL(tapped(QEventPoint *)));
     QSignalSpy longPressedSpy(tap, SIGNAL(longPressed()));
     QPoint p1(100, 100);
 

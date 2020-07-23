@@ -64,8 +64,10 @@
 #include <QtCore/qmutex.h>
 #include <QtCore/qwaitcondition.h>
 #include <QtCore/qrunnable.h>
+#include <QtCore/qstack.h>
 
 #include <QtGui/private/qevent_p.h>
+#include <QtGui/private/qpointingdevice_p.h>
 #include <QtGui/private/qwindow_p.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qstylehints.h>
@@ -150,28 +152,33 @@ public:
 #if QT_CONFIG(quick_draganddrop)
     QQuickDragGrabber *dragGrabber;
 #endif
-    int touchMouseId;
+    QStack<QPointerEvent *> eventsInDelivery;
+
+    int touchMouseId; // only for obsolete stuff like QQuickItem::grabMouse()
+    // TODO get rid of these
     const QPointingDevice *touchMouseDevice;
-    bool checkIfDoubleTapped(ulong newPressEventTimestamp, QPoint newPressPos);
     ulong touchMousePressTimestamp;
     QPoint touchMousePressPos;      // in screen coordiantes
+    bool isDeliveringTouchAsMouse() const { return touchMouseId != -1 && touchMouseDevice; }
     void cancelTouchMouseSynthesis();
+
+    bool checkIfDoubleTapped(ulong newPressEventTimestamp, QPoint newPressPos);
+    QPointingDevicePrivate::EventPointData *mousePointData();
+    QPointerEvent *eventInDelivery() const;
 
     // Mouse positions are saved in widget coordinates
     QPointF lastMousePosition;
-    bool deliverTouchAsMouse(QQuickItem *item, QQuickPointerEvent *pointerEvent);
-    bool isDeliveringTouchAsMouse() const { return touchMouseId != -1 && touchMouseDevice; }
+    bool deliverTouchAsMouse(QQuickItem *item, QTouchEvent *pointerEvent);
     void translateTouchEvent(QTouchEvent *touchEvent);
-    void grabTouchPoints(QObject *grabber, const QVector<int> &ids);
     void removeGrabber(QQuickItem *grabber, bool mouse = true, bool touch = true);
     void sendUngrabEvent(QQuickItem *grabber, bool touch);
+    void onGrabChanged(QObject *grabber, QPointingDevice::GrabTransition transition, const QPointerEvent *event, const QEventPoint &point);
     static QMouseEvent *cloneMouseEvent(QMouseEvent *event, QPointF *transformedLocalPos = nullptr);
-    void deliverToPassiveGrabbers(const QVector<QPointer <QQuickPointerHandler> > &passiveGrabbers, QQuickPointerEvent *pointerEvent);
-    void deliverMouseEvent(QQuickPointerMouseEvent *pointerEvent);
+    void deliverToPassiveGrabbers(const QVector<QPointer<QObject> > &passiveGrabbers, QPointerEvent *pointerEvent);
     bool sendFilteredMouseEvent(QEvent *event, QQuickItem *receiver, QQuickItem *filteringParent);
-    bool sendFilteredPointerEvent(QQuickPointerEvent *event, QQuickItem *receiver, QQuickItem *filteringParent = nullptr);
-    bool sendFilteredPointerEventImpl(QQuickPointerEvent *event, QQuickItem *receiver, QQuickItem *filteringParent);
-    bool deliverSinglePointEventUntilAccepted(QQuickPointerEvent *);
+    bool sendFilteredPointerEvent(QPointerEvent *event, QQuickItem *receiver, QQuickItem *filteringParent = nullptr);
+    bool sendFilteredPointerEventImpl(QPointerEvent *event, QQuickItem *receiver, QQuickItem *filteringParent);
+    bool deliverSinglePointEventUntilAccepted(QPointerEvent *);
 
     // entry point of events to the window
     void handleTouchEvent(QTouchEvent *);
@@ -180,22 +187,25 @@ public:
     void flushFrameSynchronousEvents();
     void deliverDelayedTouchEvent();
 
-    // the device-specific event instances which are reused during event delivery
-    mutable QVector<QQuickPointerEvent *> pointerEventInstances;
-    QQuickPointerEvent *queryPointerEventInstance(const QPointingDevice *device, QEvent::Type eventType = QEvent::None) const;
-    QQuickPointerEvent *pointerEventInstance(const QPointingDevice *device, QEvent::Type eventType = QEvent::None) const;
+    // utility functions that used to be in QQuickPointerEvent et al.
+    bool allUpdatedPointsAccepted(const QPointerEvent *ev);
+    void localizePointerEvent(QPointerEvent *ev, const QQuickItem *dest);
+    QList<QObject *> exclusiveGrabbers(QPointerEvent *ev);
+    static bool isMouseEvent(const QPointerEvent *ev);
+    static bool isTouchEvent(const QPointerEvent *ev);
+    static bool isTabletEvent(const QPointerEvent *ev);
 
     // delivery of pointer events:
-    QMouseEvent *touchToMouseEvent(QEvent::Type type, const QEventPoint &p, QTouchEvent *event, QQuickItem *item, bool transformNeeded = true);
-    QQuickPointerEvent *pointerEventInstance(QEvent *ev) const;
-    void deliverPointerEvent(QQuickPointerEvent *);
-    void deliverTouchEvent(QQuickPointerTouchEvent *);
+    QMouseEvent touchToMouseEvent(QEvent::Type type, const QEventPoint &p, QTouchEvent *event, QQuickItem *item);
+    void ensureDeviceConnected(const QPointingDevice *dev);
+    void deliverPointerEvent(QPointerEvent *);
     bool deliverTouchCancelEvent(QTouchEvent *);
-    bool deliverPressOrReleaseEvent(QQuickPointerEvent *, bool handlersOnly = false);
-    void deliverUpdatedTouchPoints(QQuickPointerTouchEvent *event);
-    void deliverMatchingPointsToItem(QQuickItem *item, QQuickPointerEvent *pointerEvent, bool handlersOnly = false);
+    bool deliverPressOrReleaseEvent(QPointerEvent *, bool handlersOnly = false);
+    void deliverUpdatedPoints(QPointerEvent *event);
+    void deliverMatchingPointsToItem(QQuickItem *item, bool isGrabber, QPointerEvent *pointerEvent, bool handlersOnly = false);
 
-    QVector<QQuickItem *> pointerTargets(QQuickItem *, QQuickEventPoint *point, bool checkMouseButtons, bool checkAcceptsTouch) const;
+    QVector<QQuickItem *> pointerTargets(QQuickItem *, const QPointerEvent *event, const QEventPoint &point,
+                                         bool checkMouseButtons, bool checkAcceptsTouch) const;
     QVector<QQuickItem *> mergePointerTargets(const QVector<QQuickItem *> &list1, const QVector<QQuickItem *> &list2) const;
 
     // hover delivery
@@ -277,6 +287,7 @@ public:
     QQuickRenderControl *renderControl;
     QScopedPointer<QQuickAnimatorController> animationController;
     QScopedPointer<QMutableTouchEvent> delayedTouch;
+    QList<const QPointingDevice *> knownPointingDevices;
 
     int pointerEventRecursionGuard;
 

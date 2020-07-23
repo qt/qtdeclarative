@@ -97,19 +97,20 @@ Q_SIGNALS:
     void timeHeldChanged();
     void longPressThresholdChanged();
     void gesturePolicyChanged();
-    void tapped(QQuickEventPoint *eventPoint);
-    void singleTapped(QQuickEventPoint *eventPoint);
-    void doubleTapped(QQuickEventPoint *eventPoint);
+    void tapped(QEventPoint eventPoint);
+    void singleTapped(QEventPoint eventPoint);
+    void doubleTapped(QEventPoint eventPoint);
     void longPressed();
 
 protected:
-    void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabTransition transition, QQuickEventPoint *point) override;
+    void onGrabChanged(QQuickPointerHandler *grabber, QPointingDevice::GrabTransition transition,
+                       QPointerEvent *ev, QEventPoint &point) override;
     void timerEvent(QTimerEvent *event) override;
-    bool wantsEventPoint(QQuickEventPoint *point) override;
-    void handleEventPoint(QQuickEventPoint *point) override;
+    bool wantsEventPoint(const QPointerEvent *event, const QEventPoint &point) override;
+    void handleEventPoint(QPointerEvent *event, QEventPoint &point) override;
 
 private:
-    void setPressed(bool press, bool cancel, QQuickEventPoint *point);
+    void setPressed(bool press, bool cancel, QPointerEvent *event, QEventPoint &point);
     int longPressThresholdMilliseconds() const;
     void connectPreRenderSignal(bool conn = true);
     void updateTimeHeld();

@@ -91,22 +91,22 @@ protected:
         qreal angle;
     };
 
-    bool wantsPointerEvent(QQuickPointerEvent *event) override;
-    void handlePointerEventImpl(QQuickPointerEvent *event) override;
+    bool wantsPointerEvent(QPointerEvent *event) override;
+    void handlePointerEventImpl(QPointerEvent *event) override;
     void onActiveChanged() override;
-    void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabTransition transition, QQuickEventPoint *point) override;
-    QVector<QQuickHandlerPoint> &currentPoints();
+    void onGrabChanged(QQuickPointerHandler *grabber, QPointingDevice::GrabTransition transition, QPointerEvent *event, QEventPoint &point) override;
+    QList<QQuickHandlerPoint> &currentPoints();
     QQuickHandlerPoint &mutableCentroid();
-    bool hasCurrentPoints(QQuickPointerEvent *event);
-    QVector<QQuickEventPoint *> eligiblePoints(QQuickPointerEvent *event);
+    bool hasCurrentPoints(QPointerEvent *event);
+    QVector<QEventPoint> eligiblePoints(QPointerEvent *event);
     qreal averageTouchPointDistance(const QPointF &ref);
     qreal averageStartingDistance(const QPointF &ref);
     qreal averageTouchPointAngle(const QPointF &ref);
     qreal averageStartingAngle(const QPointF &ref);
     QVector<PointData> angles(const QPointF &ref) const;
     static qreal averageAngleDelta(const QVector<PointData> &old, const QVector<PointData> &newAngles);
-    void acceptPoints(const QVector<QQuickEventPoint *> &points);
-    bool grabPoints(const QVector<QQuickEventPoint *> &points);
+    void acceptPoints(const QVector<QEventPoint> &points);
+    bool grabPoints(QPointerEvent *event, const QVector<QEventPoint> &points);
     void moveTarget(QPointF pos);
 
     Q_DECLARE_PRIVATE(QQuickMultiPointHandler)

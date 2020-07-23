@@ -335,10 +335,9 @@ void QQuickPinchArea::touchEvent(QTouchEvent *event)
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
         d->touchPoints.clear();
-        for (int i = 0; i < event->touchPoints().count(); ++i) {
-            if (!(event->touchPoints().at(i).state() & QEventPoint::State::Released)) {
-                d->touchPoints << event->touchPoints().at(i);
-            }
+        for (auto &tp : event->points()) {
+            if (!(tp.state() & QEventPoint::State::Released))
+                d->touchPoints << tp;
         }
         updatePinch();
         break;
@@ -639,11 +638,12 @@ bool QQuickPinchArea::childMouseEventFilter(QQuickItem *i, QEvent *e)
         clearPinch();
         Q_FALLTHROUGH();
     case QEvent::TouchUpdate: {
-             QTouchEvent *touch = static_cast<QTouchEvent*>(e);
+            const auto &points = static_cast<QTouchEvent*>(e)->points();
             d->touchPoints.clear();
-            for (int i = 0; i < touch->touchPoints().count(); ++i)
-                if (!(touch->touchPoints().at(i).state() & QEventPoint::State::Released))
-                    d->touchPoints << touch->touchPoints().at(i);
+            for (auto &tp : points) {
+                if (!(tp.state() & QEventPoint::State::Released))
+                    d->touchPoints << tp;
+            }
             updatePinch();
         }
         e->setAccepted(d->inPinch);

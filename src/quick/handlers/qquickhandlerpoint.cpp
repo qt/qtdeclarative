@@ -49,7 +49,7 @@ Q_DECLARE_LOGGING_CATEGORY(DBG_TOUCH_TARGET)
     \inqmlmodule QtQuick
     \brief An event point.
 
-    A QML representation of a QQuickEventPoint.
+    A QML representation of a QEventPoint.
 
     It's possible to make bindings to properties of a handler's current
     \l {SinglePointHandler::point}{point} or
@@ -98,46 +98,44 @@ void QQuickHandlerPoint::reset()
     m_pressedModifiers = Qt::NoModifier;
 }
 
-void QQuickHandlerPoint::reset(const QQuickEventPoint *point)
+void QQuickHandlerPoint::reset(const QPointerEvent *event, const QEventPoint &point)
 {
-    m_id = point->pointId();
-    m_device = point->pointerEvent()->device();
-    const QQuickPointerEvent *event = point->pointerEvent();
-    switch (point->state()) {
-    case QQuickEventPoint::Pressed:
-        m_pressPosition = point->position();
-        m_scenePressPosition = point->scenePosition();
-        m_pressedButtons = event->buttons();
+    m_id = point.id();
+    m_device = event->pointingDevice();
+    switch (point.state()) {
+    case QEventPoint::Pressed:
+        m_pressPosition = point.position();
+        m_scenePressPosition = point.scenePosition();
         break;
     default:
         break;
     }
-    m_scenePressPosition = point->scenePressPosition();
-    m_pressedButtons = event->buttons();
+    const bool isTouch = QQuickWindowPrivate::isTouchEvent(event);
+    if (!isTouch)
+        m_pressedButtons = static_cast<const QSinglePointEvent *>(event)->buttons();
     m_pressedModifiers = event->modifiers();
-    if (event->asPointerTouchEvent()) {
-        const QQuickEventTouchPoint *tp = static_cast<const QQuickEventTouchPoint *>(point);
-        m_uniqueId = tp->uniqueId();
-        m_rotation = tp->rotation();
-        m_pressure = tp->pressure();
-        m_ellipseDiameters = tp->ellipseDiameters();
+    if (isTouch) {
+        m_uniqueId = point.uniqueId();
+        m_rotation = point.rotation();
+        m_pressure = point.pressure();
+        m_ellipseDiameters = point.ellipseDiameters();
 #if QT_CONFIG(tabletevent)
-    } else if (event->asPointerTabletEvent()) {
-        m_uniqueId = event->device()->uniqueId();
-        m_rotation = static_cast<const QQuickEventTabletPoint *>(point)->rotation();
-        m_pressure = static_cast<const QQuickEventTabletPoint *>(point)->pressure();
+    } else if (QQuickWindowPrivate::isTabletEvent(event)) {
+        m_uniqueId = event->pointingDevice()->uniqueId();
+        m_rotation = point.rotation();
+        m_pressure = point.pressure();
         m_ellipseDiameters = QSizeF();
 #endif
     } else {
-        m_uniqueId = event->device()->uniqueId();
+        m_uniqueId = event->pointingDevice()->uniqueId();
         m_rotation = 0;
-        m_pressure = event->buttons() ? 1 : 0;
+        m_pressure = m_pressedButtons ? 1 : 0;
         m_ellipseDiameters = QSizeF();
     }
-    m_position = point->position();
-    m_scenePosition = point->scenePosition();
-    if (point->state() == QQuickEventPoint::Updated)
-        m_velocity = point->velocity();
+    m_position = point.position();
+    m_scenePosition = point.scenePosition();
+    if (point.state() == QEventPoint::Updated)
+        m_velocity = point.velocity();
 }
 
 void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)

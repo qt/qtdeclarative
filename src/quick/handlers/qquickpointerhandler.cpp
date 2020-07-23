@@ -247,31 +247,32 @@ bool QQuickPointerHandler::isCursorShapeExplicitlySet() const
     call its parent class's implementation in addition to (usually after)
     whatever custom behavior it implements.
 */
-void QQuickPointerHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabTransition transition, QQuickEventPoint *point)
+void QQuickPointerHandler::onGrabChanged(QQuickPointerHandler *grabber, QPointingDevice::GrabTransition transition,
+                                         QPointerEvent *event, QEventPoint &point)
 {
+    Q_UNUSED(event);
     qCDebug(lcPointerHandlerGrab) << point << transition << grabber;
-    Q_ASSERT(point);
     if (grabber == this) {
         bool wasCanceled = false;
         switch (transition) {
-        case QQuickEventPoint::GrabPassive:
-        case QQuickEventPoint::GrabExclusive:
+        case QPointingDevice::GrabPassive:
+        case QPointingDevice::GrabExclusive:
             break;
-        case QQuickEventPoint::CancelGrabPassive:
-        case QQuickEventPoint::CancelGrabExclusive:
+        case QPointingDevice::CancelGrabPassive:
+        case QPointingDevice::CancelGrabExclusive:
             wasCanceled = true; // the grab was stolen by something else
             Q_FALLTHROUGH();
-        case QQuickEventPoint::UngrabPassive:
-        case QQuickEventPoint::UngrabExclusive:
+        case QPointingDevice::UngrabPassive:
+        case QPointingDevice::UngrabExclusive:
             setActive(false);
-            point->setAccepted(false);
+            point.setAccepted(false);
             if (auto par = parentItem()) {
                 Q_D(const QQuickPointerHandler);
                 par->setKeepMouseGrab(d->hadKeepMouseGrab);
                 par->setKeepTouchGrab(d->hadKeepTouchGrab);
             }
             break;
-        case QQuickEventPoint::OverrideGrabPassive:
+        case QPointingDevice::OverrideGrabPassive:
             // Passive grab is still there, but we won't receive point updates right now.
             // No need to notify about this.
             return;
@@ -297,13 +298,13 @@ void QQuickPointerHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEv
     grab, or it may acquire an exclusive grab if the gesture clearly must not
     be interpreted in another way by another handler.
 */
-void QQuickPointerHandler::setPassiveGrab(QQuickEventPoint *point, bool grab)
+void QQuickPointerHandler::setPassiveGrab(QPointerEvent *event, const QEventPoint &point, bool grab)
 {
     qCDebug(lcPointerHandlerGrab) << point << grab;
     if (grab) {
-        point->setGrabberPointerHandler(this, false);
+        event->addPassiveGrabber(point, this);
     } else {
-        point->removePassiveGrabber(this);
+        event->removePassiveGrabber(point, this);
     }
 }
 
@@ -318,11 +319,11 @@ void QQuickPointerHandler::setPassiveGrab(QQuickEventPoint *point, bool grab)
     also calls approveGrabTransition() on the handler which is about to lose
     its grab. Either one can deny the takeover.
 */
-bool QQuickPointerHandler::canGrab(QQuickEventPoint *point)
+bool QQuickPointerHandler::canGrab(QPointerEvent *event, const QEventPoint &point)
 {
-    QQuickPointerHandler *existingPhGrabber = point->grabberPointerHandler();
-    return approveGrabTransition(point, this) &&
-        (existingPhGrabber ? existingPhGrabber->approveGrabTransition(point, this) : true);
+    QQuickPointerHandler *existingPhGrabber = qobject_cast<QQuickPointerHandler *>(event->exclusiveGrabber(point));
+    return approveGrabTransition(event, point, this) &&
+        (existingPhGrabber ? existingPhGrabber->approveGrabTransition(event, point, this) : true);
 }
 
 /*!
@@ -331,15 +332,15 @@ bool QQuickPointerHandler::canGrab(QQuickEventPoint *point)
     will take the grab, and once on the instance which would thereby lose its grab,
     in case of a takeover scenario.
 */
-bool QQuickPointerHandler::approveGrabTransition(QQuickEventPoint *point, QObject *proposedGrabber)
+bool QQuickPointerHandler::approveGrabTransition(QPointerEvent *event, const QEventPoint &point, QObject *proposedGrabber)
 {
     Q_D(const QQuickPointerHandler);
     bool allowed = false;
     if (proposedGrabber == this) {
-        QObject* existingGrabber = point->exclusiveGrabber();
+        QObject* existingGrabber = event->exclusiveGrabber(point);
         allowed = (existingGrabber == nullptr) || ((d->grabPermissions & CanTakeOverFromAnything) == CanTakeOverFromAnything);
         if (existingGrabber) {
-            if (QQuickPointerHandler *existingPhGrabber = point->grabberPointerHandler()) {
+            if (QQuickPointerHandler *existingPhGrabber = qobject_cast<QQuickPointerHandler *>(event->exclusiveGrabber(point))) {
                 if (!allowed && (d->grabPermissions & CanTakeOverFromHandlersOfDifferentType) &&
                         existingPhGrabber->metaObject()->className() != metaObject()->className())
                     allowed = true;
@@ -347,9 +348,9 @@ bool QQuickPointerHandler::approveGrabTransition(QQuickEventPoint *point, QObjec
                         existingPhGrabber->metaObject()->className() == metaObject()->className())
                     allowed = true;
             } else if ((d->grabPermissions & CanTakeOverFromItems)) {
-                QQuickItem * existingItemGrabber = point->grabberItem();
-                if (existingItemGrabber && !((existingItemGrabber->keepMouseGrab() && point->pointerEvent()->asPointerMouseEvent()) ||
-                                             (existingItemGrabber->keepTouchGrab() && point->pointerEvent()->asPointerTouchEvent()))) {
+                QQuickItem * existingItemGrabber = qobject_cast<QQuickItem *>(event->exclusiveGrabber(point));
+                if (existingItemGrabber && !((existingItemGrabber->keepMouseGrab() && QQuickWindowPrivate::isMouseEvent(event)) ||
+                                             (existingItemGrabber->keepTouchGrab() && QQuickWindowPrivate::isTouchEvent(event)))) {
                     allowed = true;
                     // If the handler wants to steal the exclusive grab from an Item, the Item can usually veto
                     // by having its keepMouseGrab flag set.  But an exception is if that Item is a parent that
@@ -361,8 +362,8 @@ bool QQuickPointerHandler::approveGrabTransition(QQuickEventPoint *point, QObjec
                     if (existingItemGrabber->keepMouseGrab() &&
                             !(existingItemGrabber->filtersChildMouseEvents() && existingItemGrabber->isAncestorOf(parentItem()))) {
                         QQuickWindowPrivate *winPriv = QQuickWindowPrivate::get(parentItem()->window());
-                        if (winPriv->isDeliveringTouchAsMouse() && point->pointId() == winPriv->touchMouseId) {
-                            qCDebug(lcPointerHandlerGrab) << this << "wants to grab touchpoint" << point->pointId()
+                        if (winPriv->isDeliveringTouchAsMouse() && point.id() == winPriv->touchMouseId) {
+                            qCDebug(lcPointerHandlerGrab) << this << "wants to grab touchpoint" << point.id()
                                 << "but declines to steal grab from touch-mouse grabber with keepMouseGrab=true" << existingItemGrabber;
                             allowed = false;
                         }
@@ -388,7 +389,7 @@ bool QQuickPointerHandler::approveGrabTransition(QQuickEventPoint *point, QObjec
                 allowed = true;
         }
     }
-    qCDebug(lcPointerHandlerGrab) << "point" << Qt::hex << point->pointId() << "permission" <<
+    qCDebug(lcPointerHandlerGrab) << "point" << Qt::hex << point.id() << "permission" <<
             QMetaEnum::fromType<GrabPermissions>().valueToKeys(grabPermissions()) <<
             ':' << this << (allowed ? "approved to" : "denied to") << proposedGrabber;
     return allowed;
@@ -449,7 +450,7 @@ void QQuickPointerHandler::componentComplete()
 {
 }
 
-QQuickPointerEvent *QQuickPointerHandler::currentEvent()
+QPointerEvent *QQuickPointerHandler::currentEvent()
 {
     Q_D(const QQuickPointerHandler);
     return d->currentEvent;
@@ -463,52 +464,60 @@ QQuickPointerEvent *QQuickPointerHandler::currentEvent()
     specified. Returns false if permission is denied either by this handler or
     by the handler or item from which this handler would take over
 */
-bool QQuickPointerHandler::setExclusiveGrab(QQuickEventPoint *point, bool grab)
+bool QQuickPointerHandler::setExclusiveGrab(QPointerEvent *ev, const QEventPoint &point, bool grab)
 {
-    if ((grab && point->exclusiveGrabber() == this) || (!grab && point->exclusiveGrabber() != this))
+    if ((grab && ev->exclusiveGrabber(point) == this) || (!grab && ev->exclusiveGrabber(point) != this))
         return true;
     // TODO m_hadKeepMouseGrab m_hadKeepTouchGrab
     bool allowed = true;
     if (grab) {
-        allowed = canGrab(point);
+        allowed = canGrab(ev, point);
     } else {
-        QQuickPointerHandler *existingPhGrabber = point->grabberPointerHandler();
+        QQuickPointerHandler *existingPhGrabber = qobject_cast<QQuickPointerHandler *>(ev->exclusiveGrabber(point));
         // Ask before allowing one handler to cancel another's grab
-        if (existingPhGrabber && existingPhGrabber != this && !existingPhGrabber->approveGrabTransition(point, nullptr))
+        if (existingPhGrabber && existingPhGrabber != this && !existingPhGrabber->approveGrabTransition(ev, point, nullptr))
             allowed = false;
     }
     qCDebug(lcPointerHandlerGrab) << point << (grab ? "grab" : "ungrab") << (allowed ? "allowed" : "forbidden") <<
-        point->exclusiveGrabber() << "->" << (grab ? this : nullptr);
+        ev->exclusiveGrabber(point) << "->" << (grab ? this : nullptr);
     if (allowed)
-        point->setGrabberPointerHandler(grab ? this : nullptr, true);
+        ev->setExclusiveGrabber(point, grab ? this : nullptr);
     return allowed;
 }
 
 /*!
     Cancel any existing grab of the given \a point.
 */
-void QQuickPointerHandler::cancelAllGrabs(QQuickEventPoint *point)
+void QQuickPointerHandler::cancelAllGrabs(QPointerEvent *event, QEventPoint &point)
 {
     qCDebug(lcPointerHandlerGrab) << point;
-    point->cancelAllGrabs(this);
+    if (event->exclusiveGrabber(point) == this) {
+        event->setExclusiveGrabber(point, nullptr);
+        onGrabChanged(this, QPointingDevice::CancelGrabExclusive, event, point);
+    }
+    if (event->removePassiveGrabber(point, this))
+        onGrabChanged(this, QPointingDevice::CancelGrabPassive, event, point);
 }
 
-QPointF QQuickPointerHandler::eventPos(const QQuickEventPoint *point) const
+QPointF QQuickPointerHandler::eventPos(const QEventPoint &point) const
 {
-    return (target() ? target()->mapFromScene(point->scenePosition()) : point->scenePosition());
+    return (target() ? target()->mapFromScene(point.scenePosition()) : point.scenePosition());
 }
 
-bool QQuickPointerHandler::parentContains(const QQuickEventPoint *point) const
+bool QQuickPointerHandler::parentContains(const QEventPoint &point) const
 {
-    if (!point)
-        return false;
+    return parentContains(point.scenePosition());
+}
+
+bool QQuickPointerHandler::parentContains(const QPointF &scenePosition) const
+{
     if (QQuickItem *par = parentItem()) {
         if (par->window()) {
-            QPoint screenPosition = par->window()->mapToGlobal(point->scenePosition().toPoint());
+            QPoint screenPosition = par->window()->mapToGlobal(scenePosition.toPoint());
             if (!par->window()->geometry().contains(screenPosition))
                 return false;
         }
-        QPointF p = par->mapFromScene(point->scenePosition());
+        QPointF p = par->mapFromScene(scenePosition);
         qreal m = margin();
         if (m > 0)
             return p.x() >= -m && p.y() >= -m && p.x() <= par->width() + m && p.y() <= par->height() + m;
@@ -582,7 +591,29 @@ QQuickItem *QQuickPointerHandler::target() const
     return d->target;
 }
 
-void QQuickPointerHandler::handlePointerEvent(QQuickPointerEvent *event)
+/*! \internal
+    Pointer Handlers do most of their work in implementations of virtual functions
+    that are called directly from QQuickItem, not by direct event handling.
+    But it's convenient to deliver TouchCancel events via QCoreApplication::sendEvent().
+    Perhaps it will turn out that more events could be delivered this way.
+*/
+bool QQuickPointerHandler::event(QEvent *e)
+{
+    switch (e->type()) {
+    case QEvent::TouchCancel: {
+        auto te = static_cast<QTouchEvent *>(e);
+        for (int i = 0; i < te->pointCount(); ++i)
+            onGrabChanged(this, QPointingDevice::CancelGrabExclusive, te, te->point(i));
+        return true;
+        break;
+    }
+    default:
+        return QObject::event(e);
+        break;
+    }
+}
+
+void QQuickPointerHandler::handlePointerEvent(QPointerEvent *event)
 {
     bool wants = wantsPointerEvent(event);
     qCDebug(lcPointerHandlerDispatch) << metaObject()->className() << objectName()
@@ -592,27 +623,30 @@ void QQuickPointerHandler::handlePointerEvent(QQuickPointerEvent *event)
         handlePointerEventImpl(event);
     } else {
         setActive(false);
-        int pCount = event->pointCount();
-        for (int i = 0; i < pCount; ++i) {
-            QQuickEventPoint *pt = event->point(i);
-            if (pt->grabberPointerHandler() == this && pt->state() != QQuickEventPoint::Stationary)
-                pt->cancelExclusiveGrab();
+        for (int i = 0; i < event->pointCount(); ++i) {
+            auto &pt = event->point(i);
+            if (event->exclusiveGrabber(pt) == this && pt.state() != QEventPoint::Stationary) {
+                event->setExclusiveGrabber(pt, nullptr);
+                onGrabChanged(this, QPointingDevice::CancelGrabExclusive, event, pt);
+            }
         }
     }
     QQuickPointerHandlerPrivate::deviceDeliveryTargets(event->device()).append(this);
 }
 
-bool QQuickPointerHandler::wantsPointerEvent(QQuickPointerEvent *event)
+bool QQuickPointerHandler::wantsPointerEvent(QPointerEvent *event)
 {
     Q_D(const QQuickPointerHandler);
     Q_UNUSED(event);
     return d->enabled;
 }
 
-bool QQuickPointerHandler::wantsEventPoint(QQuickEventPoint *point)
+bool QQuickPointerHandler::wantsEventPoint(const QPointerEvent *event, const QEventPoint &point)
 {
-    bool ret = point->exclusiveGrabber() == this || point->passiveGrabbers().contains(this) || parentContains(point);
-    qCDebug(lcPointerHandlerDispatch) << Qt::hex << point->pointId() << "@" << point->scenePosition()
+    Q_UNUSED(event);
+    bool ret = event->exclusiveGrabber(point) == this ||
+            event->passiveGrabbers(point).contains(this) || parentContains(point);
+    qCDebug(lcPointerHandlerDispatch) << Qt::hex << point.id() << "@" << point.scenePosition()
                                       << metaObject()->className() << objectName() << ret;
     return ret;
 }
@@ -638,7 +672,7 @@ void QQuickPointerHandler::setActive(bool active)
     }
 }
 
-void QQuickPointerHandler::handlePointerEventImpl(QQuickPointerEvent *event)
+void QQuickPointerHandler::handlePointerEventImpl(QPointerEvent *event)
 {
     Q_D(QQuickPointerHandler);
     d->currentEvent = event;
@@ -689,14 +723,14 @@ QQuickPointerHandlerPrivate::QQuickPointerHandlerPrivate()
 }
 
 template <typename TEventPoint>
-bool QQuickPointerHandlerPrivate::dragOverThreshold(qreal d, Qt::Axis axis, const TEventPoint *p) const
+bool QQuickPointerHandlerPrivate::dragOverThreshold(qreal d, Qt::Axis axis, const TEventPoint &p) const
 {
     Q_Q(const QQuickPointerHandler);
     QStyleHints *styleHints = qApp->styleHints();
     bool overThreshold = qAbs(d) > q->dragThreshold();
     const bool dragVelocityLimitAvailable = (styleHints->startDragVelocity() > 0);
     if (!overThreshold && dragVelocityLimitAvailable) {
-        qreal velocity = qreal(axis == Qt::XAxis ? p->velocity().x() : p->velocity().y());
+        qreal velocity = qreal(axis == Qt::XAxis ? p.velocity().x() : p.velocity().y());
         overThreshold |= qAbs(velocity) > styleHints->startDragVelocity();
     }
     return overThreshold;
@@ -709,9 +743,9 @@ bool QQuickPointerHandlerPrivate::dragOverThreshold(QVector2D delta) const
     return qAbs(delta.x()) > threshold || qAbs(delta.y()) > threshold;
 }
 
-bool QQuickPointerHandlerPrivate::dragOverThreshold(const QQuickEventPoint *point) const
+bool QQuickPointerHandlerPrivate::dragOverThreshold(const QEventPoint &point) const
 {
-    QPointF delta = point->scenePosition() - point->scenePressPosition();
+    QPointF delta = point.scenePosition() - point.scenePressPosition();
     return (dragOverThreshold(delta.x(), Qt::XAxis, point) ||
             dragOverThreshold(delta.y(), Qt::YAxis, point));
 }

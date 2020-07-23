@@ -65,11 +65,7 @@ public:
         , ungrabs(0)
         , m_active(false)
     {
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
         setAcceptTouchEvents(true);
-#else
-        setAcceptedMouseButtons(Qt::LeftButton); // not really, but we want touch events
-#endif
     }
 
     QPointF pos() const { return m_pos; }
@@ -97,8 +93,8 @@ public:
 protected:
     void touchEvent(QTouchEvent *ev) override
     {
-        QCOMPARE(ev->touchPoints().count(), 1);
-        auto touchpoint = ev->touchPoints().first();
+        QCOMPARE(ev->points().count(), 1);
+        auto touchpoint = ev->points().first();
         switch (touchpoint.state()) {
         case QEventPoint::State::Pressed:
             QVERIFY(!m_active);
@@ -115,6 +111,7 @@ protected:
             ++touchReleases;
             emit activeChanged();
         case QEventPoint::State::Stationary:
+        case QEventPoint::State::Unknown:
             break;
         }
         touchPointStates << touchpoint.state();
@@ -1566,6 +1563,8 @@ void tst_qquickflickable::cancelOnHide()
 
 void tst_qquickflickable::cancelOnMouseGrab()
 {
+    QSKIP("need a realistic test scenario: can no longer grab mouse between events");
+
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("cancel.qml"));
     QTRY_COMPARE(window->status(), QQuickView::Ready);

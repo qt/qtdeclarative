@@ -64,18 +64,18 @@ QQuickMultiPointHandler::QQuickMultiPointHandler(QQuickItem *parent, int minimum
 {
 }
 
-bool QQuickMultiPointHandler::wantsPointerEvent(QQuickPointerEvent *event)
+bool QQuickMultiPointHandler::wantsPointerEvent(QPointerEvent *event)
 {
     Q_D(QQuickMultiPointHandler);
     if (!QQuickPointerDeviceHandler::wantsPointerEvent(event))
         return false;
 
-    if (event->asPointerScrollEvent())
+    if (event->type() == QEvent::Wheel)
         return false;
 
     bool ret = false;
 #if QT_CONFIG(gestures)
-    if (event->asPointerNativeGestureEvent() && event->point(0)->state() != QQuickEventPoint::Released)
+    if (event->type() == QEvent::NativeGesture && event->point(0).state() != QEventPoint::Released)
         ret = true;
 #endif
 
@@ -86,7 +86,7 @@ bool QQuickMultiPointHandler::wantsPointerEvent(QQuickPointerEvent *event)
     // are all still there in the event, we're good to go (do not reset
     // currentPoints, because we don't want to lose the pressPosition, and do
     // not want to reshuffle the order either).
-    const QVector<QQuickEventPoint *> candidatePoints = eligiblePoints(event);
+    const auto candidatePoints = eligiblePoints(event);
     if (candidatePoints.count() != d->currentPoints.count()) {
         d->currentPoints.clear();
         if (active()) {
@@ -103,7 +103,7 @@ bool QQuickMultiPointHandler::wantsPointerEvent(QQuickPointerEvent *event)
         const int c = candidatePoints.count();
         d->currentPoints.resize(c);
         for (int i = 0; i < c; ++i) {
-            d->currentPoints[i].reset(candidatePoints[i]);
+            d->currentPoints[i].reset(event, candidatePoints[i]);
             d->currentPoints[i].localize(parentItem());
         }
     } else {
@@ -112,7 +112,7 @@ bool QQuickMultiPointHandler::wantsPointerEvent(QQuickPointerEvent *event)
     return ret;
 }
 
-void QQuickMultiPointHandler::handlePointerEventImpl(QQuickPointerEvent *event)
+void QQuickMultiPointHandler::handlePointerEventImpl(QPointerEvent *event)
 {
     Q_D(QQuickMultiPointHandler);
     QQuickPointerHandler::handlePointerEventImpl(event);
@@ -120,9 +120,8 @@ void QQuickMultiPointHandler::handlePointerEventImpl(QQuickPointerEvent *event)
     // is _not_ a shallow copy of the QQuickPointerTouchEvent::m_touchPoints vector.
     // So we have to update our currentPoints instances based on the given event.
     for (QQuickHandlerPoint &p : d->currentPoints) {
-        const QQuickEventPoint *ep = event->pointById(p.id());
-        if (ep)
-            p.reset(ep);
+        if (const QEventPoint *ep = event->pointById(p.id()))
+            p.reset(event, *ep);
     }
     QPointF sceneGrabPos = d->centroid.sceneGrabPosition();
     d->centroid.reset(d->currentPoints);
@@ -146,36 +145,35 @@ void QQuickMultiPointHandler::onActiveChanged()
     }
 }
 
-void QQuickMultiPointHandler::onGrabChanged(QQuickPointerHandler *, QQuickEventPoint::GrabTransition transition, QQuickEventPoint *)
+void QQuickMultiPointHandler::onGrabChanged(QQuickPointerHandler *, QPointingDevice::GrabTransition transition, QPointerEvent *, QEventPoint &)
 {
     Q_D(QQuickMultiPointHandler);
     // If another handler or item takes over this set of points, assume it has
     // decided that it's the better fit for them. Don't immediately re-grab
     // at the next opportunity. This should help to avoid grab cycles
     // (e.g. between DragHandler and PinchHandler).
-    if (transition == QQuickEventPoint::UngrabExclusive || transition == QQuickEventPoint::CancelGrabExclusive)
+    if (transition == QPointingDevice::UngrabExclusive || transition == QPointingDevice::CancelGrabExclusive)
         d->currentPoints.clear();
 }
 
-QVector<QQuickEventPoint *> QQuickMultiPointHandler::eligiblePoints(QQuickPointerEvent *event)
+QVector<QEventPoint> QQuickMultiPointHandler::eligiblePoints(QPointerEvent *event)
 {
-    QVector<QQuickEventPoint *> ret;
-    int c = event->pointCount();
+    QVector<QEventPoint> ret;
     // If one or more points are newly pressed or released, all non-released points are candidates for this handler.
     // In other cases however, check whether it would be OK to steal the grab if the handler chooses to do that.
-    bool stealingAllowed = event->isPressEvent() || event->isReleaseEvent();
-    for (int i = 0; i < c; ++i) {
-        QQuickEventPoint *p = event->point(i);
-        if (QQuickPointerMouseEvent *me = event->asPointerMouseEvent()) {
-            if (me->buttons() == Qt::NoButton)
+    bool stealingAllowed = event->isBeginEvent() || event->isEndEvent();
+    for (int i = 0; i < event->pointCount(); ++i) {
+        auto &p = QMutableEventPoint::from(event->point(i));
+        if (QQuickWindowPrivate::isMouseEvent(event)) {
+            if (static_cast<QMouseEvent *>(event)->buttons() == Qt::NoButton)
                 continue;
         }
         if (!stealingAllowed) {
-            QObject *exclusiveGrabber = p->exclusiveGrabber();
-            if (exclusiveGrabber && exclusiveGrabber != this && !canGrab(p))
+            QObject *exclusiveGrabber = event->exclusiveGrabber(p);
+            if (exclusiveGrabber && exclusiveGrabber != this && !canGrab(event, p))
                 continue;
         }
-        if (p->state() != QQuickEventPoint::Released && wantsEventPoint(p))
+        if (p.state() != QEventPoint::Released && wantsEventPoint(event, p))
             ret << p;
     }
     return ret;
@@ -274,7 +272,7 @@ QVector<QQuickHandlerPoint> &QQuickMultiPointHandler::currentPoints()
     return d->currentPoints;
 }
 
-bool QQuickMultiPointHandler::hasCurrentPoints(QQuickPointerEvent *event)
+bool QQuickMultiPointHandler::hasCurrentPoints(QPointerEvent *event)
 {
     Q_D(const QQuickMultiPointHandler);
     if (event->pointCount() < d->currentPoints.size() || d->currentPoints.size() == 0)
@@ -282,10 +280,10 @@ bool QQuickMultiPointHandler::hasCurrentPoints(QQuickPointerEvent *event)
     // TODO optimize: either ensure the points are sorted,
     // or use std::equal with a predicate
     for (const QQuickHandlerPoint &p : qAsConst(d->currentPoints)) {
-        const QQuickEventPoint *ep = event->pointById(p.id());
+        const QEventPoint *ep = event->pointById(p.id());
         if (!ep)
             return false;
-        if (ep->state() == QQuickEventPoint::Released)
+        if (ep->state() == QEventPoint::Released)
             return false;
     }
     return true;
@@ -358,26 +356,28 @@ qreal QQuickMultiPointHandler::averageAngleDelta(const QVector<PointData> &old, 
     return avgAngleDelta;
 }
 
-void QQuickMultiPointHandler::acceptPoints(const QVector<QQuickEventPoint *> &points)
+void QQuickMultiPointHandler::acceptPoints(const QVector<QEventPoint> &points)
 {
-    for (QQuickEventPoint* point : points)
-        point->setAccepted();
+    // "auto point" is a copy, but it's OK because
+    // setAccepted() changes QEventPointPrivate::accept via the shared d-pointer
+    for (auto point : points)
+        point.setAccepted();
 }
 
-bool QQuickMultiPointHandler::grabPoints(const QVector<QQuickEventPoint *> &points)
+bool QQuickMultiPointHandler::grabPoints(QPointerEvent *event, const QVector<QEventPoint> &points)
 {
     if (points.isEmpty())
         return false;
     bool allowed = true;
-    for (QQuickEventPoint* point : points) {
-        if (point->exclusiveGrabber() != this && !canGrab(point)) {
+    for (auto &point : points) {
+        if (event->exclusiveGrabber(point) != this && !canGrab(event, point)) {
             allowed = false;
             break;
         }
     }
     if (allowed) {
-        for (QQuickEventPoint* point : points)
-            setExclusiveGrab(point);
+        for (auto point : points)
+            setExclusiveGrab(event, point);
     }
     return allowed;
 }

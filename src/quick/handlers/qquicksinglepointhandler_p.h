@@ -74,16 +74,16 @@ Q_SIGNALS:
 protected:
     QQuickSinglePointHandler(QQuickSinglePointHandlerPrivate &dd, QQuickItem *parent);
 
-    bool wantsPointerEvent(QQuickPointerEvent *event) override;
-    void handlePointerEventImpl(QQuickPointerEvent *event) override;
-    virtual void handleEventPoint(QQuickEventPoint *point) = 0;
+    bool wantsPointerEvent(QPointerEvent *event) override;
+    void handlePointerEventImpl(QPointerEvent *event) override;
+    virtual void handleEventPoint(QPointerEvent *event, QEventPoint &point) = 0;
 
-    QQuickEventPoint *currentPoint(QQuickPointerEvent *ev);
-    void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabTransition transition, QQuickEventPoint *point) override;
+    QEventPoint &currentPoint(QPointerEvent *ev);
+    void onGrabChanged(QQuickPointerHandler *grabber, QPointingDevice::GrabTransition transition, QPointerEvent *event, QEventPoint &point) override;
 
     void setIgnoreAdditionalPoints(bool v = true);
 
-    void moveTarget(QPointF pos, QQuickEventPoint *point);
+    void moveTarget(QPointF pos, QEventPoint &point);
 
     void setPointId(int id);
 

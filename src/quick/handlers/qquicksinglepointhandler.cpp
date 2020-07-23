@@ -69,7 +69,7 @@ QQuickSinglePointHandler::QQuickSinglePointHandler(QQuickSinglePointHandlerPriva
 {
 }
 
-bool QQuickSinglePointHandler::wantsPointerEvent(QQuickPointerEvent *event)
+bool QQuickSinglePointHandler::wantsPointerEvent(QPointerEvent *event)
 {
     Q_D(QQuickSinglePointHandler);
     if (!QQuickPointerDeviceHandler::wantsPointerEvent(event))
@@ -81,17 +81,16 @@ bool QQuickSinglePointHandler::wantsPointerEvent(QQuickPointerEvent *event)
         // If we no longer want it, cancel the grab.
         int candidatePointCount = 0;
         bool missing = true;
-        QQuickEventPoint *point = nullptr;
-        int c = event->pointCount();
-        for (int i = 0; i < c; ++i) {
-            QQuickEventPoint *p = event->point(i);
-            const bool found = (p->pointId() == d->pointInfo.id());
+        QEventPoint *point = nullptr;
+        for (int i = 0; i < event->pointCount(); ++i) {
+            auto &p = event->point(i);
+            const bool found = (p.id() == d->pointInfo.id());
             if (found)
                 missing = false;
-            if (wantsEventPoint(p)) {
+            if (wantsEventPoint(event, p)) {
                 ++candidatePointCount;
                 if (found)
-                    point = p;
+                    point = &p;
             }
         }
         if (missing)
@@ -102,7 +101,7 @@ bool QQuickSinglePointHandler::wantsPointerEvent(QQuickPointerEvent *event)
                 point->setAccepted();
                 return true;
             } else {
-                point->cancelAllGrabs(this);
+                cancelAllGrabs(event, *point);
             }
         } else {
             return false;
@@ -110,62 +109,63 @@ bool QQuickSinglePointHandler::wantsPointerEvent(QQuickPointerEvent *event)
     } else {
         // We have not yet chosen a point; choose the first one for which wantsEventPoint() returns true.
         int candidatePointCount = 0;
-        int c = event->pointCount();
-        QQuickEventPoint *chosen = nullptr;
-        for (int i = 0; i < c && !chosen; ++i) {
-            QQuickEventPoint *p = event->point(i);
-            if (!p->exclusiveGrabber() && wantsEventPoint(p)) {
-                if (!chosen)
-                    chosen = p;
+        QEventPoint *chosen = nullptr;
+        for (int i = 0; i < event->pointCount(); ++i) {
+            auto &p = event->point(i);
+            if (!event->exclusiveGrabber(p) && wantsEventPoint(event, p)) {
                 ++candidatePointCount;
+                if (!chosen) {
+                    chosen = &p;
+                    break;
+                }
             }
         }
         if (chosen && candidatePointCount == 1) {
-            setPointId(chosen->pointId());
+            setPointId(chosen->id());
             chosen->setAccepted();
         }
     }
     return d->pointInfo.id() != -1;
 }
 
-void QQuickSinglePointHandler::handlePointerEventImpl(QQuickPointerEvent *event)
+void QQuickSinglePointHandler::handlePointerEventImpl(QPointerEvent *event)
 {
     Q_D(QQuickSinglePointHandler);
     QQuickPointerDeviceHandler::handlePointerEventImpl(event);
-    QQuickEventPoint *currentPoint = event->pointById(d->pointInfo.id());
+    QEventPoint *currentPoint = const_cast<QEventPoint *>(event->pointById(d->pointInfo.id()));
     Q_ASSERT(currentPoint);
-    d->pointInfo.reset(currentPoint);
-    handleEventPoint(currentPoint);
-    if (currentPoint->state() == QQuickEventPoint::Released && (event->buttons() & acceptedButtons()) == Qt::NoButton) {
-        setExclusiveGrab(currentPoint, false);
+    d->pointInfo.reset(event, *currentPoint);
+    handleEventPoint(event, *currentPoint);
+    if (currentPoint->state() == QEventPoint::Released && (static_cast<QSinglePointEvent *>(event)->buttons() & acceptedButtons()) == Qt::NoButton) {
+        setExclusiveGrab(event, *currentPoint, false);
         d->reset();
     }
     emit pointChanged();
 }
 
-void QQuickSinglePointHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabTransition transition, QQuickEventPoint *point)
+void QQuickSinglePointHandler::onGrabChanged(QQuickPointerHandler *grabber, QPointingDevice::GrabTransition transition, QPointerEvent *event, QEventPoint &point)
 {
     Q_D(QQuickSinglePointHandler);
     if (grabber != this)
         return;
     switch (transition) {
-    case QQuickEventPoint::GrabExclusive:
-        d->pointInfo.m_sceneGrabPosition = point->sceneGrabPosition();
+    case QPointingDevice::GrabExclusive:
+        d->pointInfo.m_sceneGrabPosition = point.sceneGrabPosition();
         setActive(true);
-        QQuickPointerHandler::onGrabChanged(grabber, transition, point);
+        QQuickPointerHandler::onGrabChanged(grabber, transition, event, point);
         break;
-    case QQuickEventPoint::GrabPassive:
-        d->pointInfo.m_sceneGrabPosition = point->sceneGrabPosition();
-        QQuickPointerHandler::onGrabChanged(grabber, transition, point);
+    case QPointingDevice::GrabPassive:
+        d->pointInfo.m_sceneGrabPosition = point.sceneGrabPosition();
+        QQuickPointerHandler::onGrabChanged(grabber, transition, event, point);
         break;
-    case QQuickEventPoint::OverrideGrabPassive:
+    case QPointingDevice::OverrideGrabPassive:
         return; // don't emit
-    case QQuickEventPoint::UngrabPassive:
-    case QQuickEventPoint::UngrabExclusive:
-    case QQuickEventPoint::CancelGrabPassive:
-    case QQuickEventPoint::CancelGrabExclusive:
+    case QPointingDevice::UngrabPassive:
+    case QPointingDevice::UngrabExclusive:
+    case QPointingDevice::CancelGrabPassive:
+    case QPointingDevice::CancelGrabExclusive:
         // the grab is lost or relinquished, so the point is no longer relevant
-        QQuickPointerHandler::onGrabChanged(grabber, transition, point);
+        QQuickPointerHandler::onGrabChanged(grabber, transition, event, point);
         d->reset();
         break;
     }
@@ -177,11 +177,11 @@ void QQuickSinglePointHandler::setIgnoreAdditionalPoints(bool v)
     d->ignoreAdditionalPoints = v;
 }
 
-void QQuickSinglePointHandler::moveTarget(QPointF pos, QQuickEventPoint *point)
+void QQuickSinglePointHandler::moveTarget(QPointF pos, QEventPoint &point)
 {
     Q_D(QQuickSinglePointHandler);
     target()->setPosition(pos);
-    d->pointInfo.m_scenePosition = point->scenePosition();
+    d->pointInfo.m_scenePosition = point.scenePosition();
     d->pointInfo.m_position = target()->mapFromScene(d->pointInfo.m_scenePosition);
 }
 

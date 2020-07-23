@@ -360,60 +360,62 @@ void QQuickWheelHandler::setTargetTransformAroundCursor(bool ttac)
     emit targetTransformAroundCursorChanged();
 }
 
-bool QQuickWheelHandler::wantsPointerEvent(QQuickPointerEvent *event)
+bool QQuickWheelHandler::wantsPointerEvent(QPointerEvent *event)
 {
     if (!event)
         return false;
-    QQuickPointerScrollEvent *scroll = event->asPointerScrollEvent();
-    if (!scroll)
+    if (event->type() != QEvent::Wheel)
         return false;
+    QWheelEvent *we = static_cast<QWheelEvent *>(event);
     if (!acceptedDevices().testFlag(QPointingDevice::DeviceType::TouchPad)
-            && scroll->synthSource() != Qt::MouseEventNotSynthesized)
+            && we->source() != Qt::MouseEventNotSynthesized)
         return false;
     if (!active()) {
         switch (orientation()) {
         case Qt::Horizontal:
-            if (qFuzzyIsNull(scroll->angleDelta().x()) && qFuzzyIsNull(scroll->pixelDelta().x()))
+            if (!(we->angleDelta().x()) && !(we->pixelDelta().x()))
                 return false;
             break;
         case Qt::Vertical:
-            if (qFuzzyIsNull(scroll->angleDelta().y()) && qFuzzyIsNull(scroll->pixelDelta().y()))
+            if (!(we->angleDelta().y()) && !(we->pixelDelta().y()))
                 return false;
             break;
         }
     }
-    QQuickEventPoint *point = event->point(0);
-    if (QQuickPointerDeviceHandler::wantsPointerEvent(event) && wantsEventPoint(point) && parentContains(point)) {
-        setPointId(point->pointId());
+    auto &point = event->point(0);
+    if (QQuickPointerDeviceHandler::wantsPointerEvent(event) && wantsEventPoint(event, point) && parentContains(point)) {
+        setPointId(point.id());
         return true;
     }
     return false;
 }
 
-void QQuickWheelHandler::handleEventPoint(QQuickEventPoint *point)
+void QQuickWheelHandler::handleEventPoint(QPointerEvent *ev, QEventPoint &point)
 {
     Q_D(QQuickWheelHandler);
-    QQuickPointerScrollEvent *event = point->pointerEvent()->asPointerScrollEvent();
+    if (ev->type() != QEvent::Wheel)
+        return;
+    const QWheelEvent *event = static_cast<const QWheelEvent *>(ev);
     setActive(true); // ScrollEnd will not happen unless it was already active (see setActive(false) below)
-    point->setAccepted();
+    point.setAccepted();
     qreal inversion = !d->invertible && event->isInverted() ? -1 : 1;
     qreal angleDelta = inversion * qreal(orientation() == Qt::Horizontal ? event->angleDelta().x() :
                                                                            event->angleDelta().y()) / 8;
     d->rotation += angleDelta;
     emit rotationChanged();
-    emit wheel(event);
+    emit wheel(*event);
     if (!d->propertyName.isEmpty() && target()) {
         QQuickItem *t = target();
         // writing target()'s property is done via QMetaProperty::write() so that any registered interceptors can react.
         if (d->propertyName == QLatin1String("scale")) {
             qreal multiplier = qPow(d->targetScaleMultiplier, angleDelta * d->rotationScale / 15); // wheel "clicks"
-            const QPointF centroidParentPos = t->parentItem()->mapFromScene(point->scenePosition());
+            const QPointF centroidParentPos = t->parentItem()->mapFromScene(point.scenePosition());
             const QPointF positionWas = t->position();
             const qreal scaleWas = t->scale();
             const qreal activePropertyValue = scaleWas * multiplier;
             qCDebug(lcWheelHandler) << objectName() << "angle delta" << event->angleDelta() << "pixel delta" << event->pixelDelta()
-                                    << "@" << point->position() << "in parent" << centroidParentPos
-                                    << "in scene" << point->scenePosition()
+                                    << "@" << point.position() << "in parent" << centroidParentPos
+                                    << "in scene" << point.scenePosition()
                                     << "multiplier" << multiplier << "scale" << scaleWas
                                     << "->" << activePropertyValue;
             d->targetMetaProperty().write(t, activePropertyValue);
@@ -429,10 +431,10 @@ void QQuickWheelHandler::handleEventPoint(QQuickEventPoint *point)
             const QPointF positionWas = t->position();
             const qreal rotationWas = t->rotation();
             const qreal activePropertyValue = rotationWas + angleDelta * d->rotationScale;
-            const QPointF centroidParentPos = t->parentItem()->mapFromScene(point->scenePosition());
+            const QPointF centroidParentPos = t->parentItem()->mapFromScene(point.scenePosition());
             qCDebug(lcWheelHandler) << objectName() << "angle delta" << event->angleDelta() << "pixel delta" << event->pixelDelta()
-                                    << "@" << point->position() << "in parent" << centroidParentPos
-                                    << "in scene" << point->scenePosition() << "rotation" << t->rotation()
+                                    << "@" << point.position() << "in parent" << centroidParentPos
+                                    << "in scene" << point.scenePosition() << "rotation" << t->rotation()
                                     << "->" << activePropertyValue;
             d->targetMetaProperty().write(t, activePropertyValue);
             if (d->targetTransformAroundCursor) {
@@ -444,8 +446,9 @@ void QQuickWheelHandler::handleEventPoint(QQuickEventPoint *point)
                 t->setPosition(adjPos);
             }
         } else {
-            qCDebug(lcWheelHandler) << objectName() << "angle delta" << event->angleDelta() << "scaled" << angleDelta << "total" << d->rotation << "pixel delta" << event->pixelDelta()
-                                    << "@" << point->position() << "in scene" << point->scenePosition() << "rotation" << t->rotation();
+            qCDebug(lcWheelHandler) << objectName() << "angle delta" << event->angleDelta() << "scaled" << angleDelta
+                                    << "total" << d->rotation << "pixel delta" << event->pixelDelta()
+                                    << "@" << point.position() << "in scene" << point.scenePosition() << "rotation" << t->rotation();
             qreal delta = 0;
             if (event->hasPixelDelta()) {
                 delta = inversion * d->rotationScale * qreal(orientation() == Qt::Horizontal ? event->pixelDelta().x() : event->pixelDelta().y());

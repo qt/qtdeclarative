@@ -290,7 +290,7 @@ void QQuickPointerDeviceHandler::setAcceptedModifiers(Qt::KeyboardModifiers acce
     emit acceptedModifiersChanged();
 }
 
-bool QQuickPointerDeviceHandler::wantsPointerEvent(QQuickPointerEvent *event)
+bool QQuickPointerDeviceHandler::wantsPointerEvent(QPointerEvent *event)
 {
     Q_D(QQuickPointerDeviceHandler);
     if (!QQuickPointerHandler::wantsPointerEvent(event))
@@ -301,14 +301,15 @@ bool QQuickPointerDeviceHandler::wantsPointerEvent(QQuickPointerEvent *event)
         << "modifiers" << d->acceptedModifiers;
     if (!d->acceptedDevices.testFlag(event->device()->type()))
         return false;
-    if (!d->acceptedPointerTypes.testFlag(event->device()->pointerType()))
+    if (!d->acceptedPointerTypes.testFlag(event->pointingDevice()->pointerType()))
         return false;
     if (d->acceptedModifiers != Qt::KeyboardModifierMask && event->modifiers() != d->acceptedModifiers)
         return false;
     // HoverHandler sets acceptedButtons to Qt::NoButton to indicate that button state is irrelevant.
-    if (event->device()->pointerType() != QPointingDevice::PointerType::Finger && acceptedButtons() != Qt::NoButton &&
-            (event->buttons() & acceptedButtons()) == 0 && (event->button() & acceptedButtons()) == 0
-            && !event->asPointerScrollEvent())
+    if (event->pointingDevice()->pointerType() != QPointingDevice::PointerType::Finger &&
+            acceptedButtons() != Qt::NoButton && event->type() != QEvent::Wheel &&
+            (static_cast<QSinglePointEvent *>(event)->buttons() & acceptedButtons()) == 0 &&
+            (static_cast<QSinglePointEvent *>(event)->button() & acceptedButtons()) == 0)
         return false;
     return true;
 }

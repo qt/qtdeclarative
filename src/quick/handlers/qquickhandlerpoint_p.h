@@ -96,7 +96,7 @@ public:
     void localize(QQuickItem *item);
 
     void reset();
-    void reset(const QQuickEventPoint *point);
+    void reset(const QPointerEvent *event, const QEventPoint &point);
     void reset(const QVector<QQuickHandlerPoint> &points);
 
 private:

@@ -106,9 +106,9 @@ signals:
     void updated();
 
 protected:
-    bool wantsPointerEvent(QQuickPointerEvent *event) override;
+    bool wantsPointerEvent(QPointerEvent *event) override;
     void onActiveChanged() override;
-    void handlePointerEventImpl(QQuickPointerEvent *event) override;
+    void handlePointerEventImpl(QPointerEvent *event) override;
 
 private:
     // properties

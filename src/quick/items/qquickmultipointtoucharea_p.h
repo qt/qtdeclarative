@@ -281,7 +281,7 @@ protected:
 
     bool sendMouseEvent(QMouseEvent *event);
     bool shouldFilter(QEvent *event);
-    void grabGesture();
+    void grabGesture(QPointingDevice *dev);
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
 #ifdef Q_OS_OSX
     void hoverEnterEvent(QHoverEvent *event) override;

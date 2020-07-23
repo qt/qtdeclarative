@@ -77,7 +77,7 @@ public:
 
     explicit QQuickDragHandler(QQuickItem *parent = nullptr);
 
-    void handlePointerEventImpl(QQuickPointerEvent *event) override;
+    void handlePointerEventImpl(QPointerEvent *event) override;
 
     QQuickDragAxis *xAxis() { return &m_xAxis; }
     QQuickDragAxis *yAxis() { return &m_yAxis; }
@@ -95,7 +95,7 @@ Q_SIGNALS:
 
 protected:
     void onActiveChanged() override;
-    void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabTransition transition, QQuickEventPoint *point) override;
+    void onGrabChanged(QQuickPointerHandler *grabber, QPointingDevice::GrabTransition transition, QPointerEvent *event, QEventPoint &point) override;
 
 private:
     void ungrab();

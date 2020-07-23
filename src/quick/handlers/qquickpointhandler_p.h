@@ -71,8 +71,8 @@ Q_SIGNALS:
     void translationChanged();
 
 protected:
-    bool wantsEventPoint(QQuickEventPoint *pt) override;
-    void handleEventPoint(QQuickEventPoint *point) override;
+    bool wantsEventPoint(const QPointerEvent *event, const QEventPoint &point) override;
+    void handleEventPoint(QPointerEvent *event, QEventPoint &point) override;
 };
 
 QT_END_NAMESPACE

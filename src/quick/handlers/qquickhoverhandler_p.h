@@ -76,8 +76,8 @@ Q_SIGNALS:
 
 protected:
     void componentComplete() override;
-    bool wantsPointerEvent(QQuickPointerEvent *event) override;
-    void handleEventPoint(QQuickEventPoint *point) override;
+    bool wantsPointerEvent(QPointerEvent *event) override;
+    void handleEventPoint(QPointerEvent *ev, QEventPoint &point) override;
 
 private:
     void setHovered(bool hovered);

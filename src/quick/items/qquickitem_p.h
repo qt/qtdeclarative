@@ -281,6 +281,7 @@ public:
 
     QQuickItemLayer *layer() const;
 
+    QTouchEvent localizedTouchEvent(const QTouchEvent *event, bool isFiltering);
     bool hasPointerHandlers() const;
     bool hasHoverHandlers() const;
     virtual void addPointerHandler(QQuickPointerHandler *h);
@@ -613,8 +614,8 @@ public:
 #endif
     void deliverShortcutOverrideEvent(QKeyEvent *);
 
-    bool anyPointerHandlerWants(QQuickEventPoint *point) const;
-    virtual bool handlePointerEvent(QQuickPointerEvent *, bool avoidExclusiveGrabber = false);
+    bool anyPointerHandlerWants(const QPointerEvent *event, const QEventPoint &point) const;
+    virtual bool handlePointerEvent(QPointerEvent *, bool avoidExclusiveGrabber = false);
 
     virtual void setVisible(bool visible);
 

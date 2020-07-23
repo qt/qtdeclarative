@@ -103,7 +103,7 @@ public:
     void setTargetTransformAroundCursor(bool ttac);
 
 Q_SIGNALS:
-    void wheel(QQuickPointerScrollEvent *event);
+    void wheel(QWheelEvent event);
 
     void orientationChanged();
     void invertibleChanged();
@@ -115,8 +115,8 @@ Q_SIGNALS:
     void targetTransformAroundCursorChanged();
 
 protected:
-    bool wantsPointerEvent(QQuickPointerEvent *event) override;
-    void handleEventPoint(QQuickEventPoint *point) override;
+    bool wantsPointerEvent(QPointerEvent *event) override;
+    void handleEventPoint(QPointerEvent *event, QEventPoint &point) override;
     void onTargetChanged(QQuickItem *oldTarget) override;
     void onActiveChanged() override;
     void timerEvent(QTimerEvent *event) override;

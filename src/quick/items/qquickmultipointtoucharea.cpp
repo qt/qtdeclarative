@@ -45,6 +45,7 @@
 #include <private/qquickwindow_p.h>
 #include <private/qguiapplication_p.h>
 #include <QtGui/private/qevent_p.h>
+#include <QtGui/private/qpointingdevice_p.h>
 #include <QEvent>
 #include <QMouseEvent>
 #include <QDebug>
@@ -553,20 +554,19 @@ void QQuickMultiPointTouchArea::touchEvent(QTouchEvent *event)
     }
 }
 
-void QQuickMultiPointTouchArea::grabGesture()
+void QQuickMultiPointTouchArea::grabGesture(QPointingDevice *dev)
 {
     _stealMouse = true;
 
     grabMouse();
     setKeepMouseGrab(true);
 
-    QList<int> ids;
-    ids.reserve(_touchPoints.size());
+    QPointingDevicePrivate *devPriv = QPointingDevicePrivate::get(dev);
     for (auto it = _touchPoints.keyBegin(), end = _touchPoints.keyEnd(); it != end; ++it) {
         if (*it != -1) // -1 might be the mouse-point, but we already grabbed the mouse above.
-            ids.append(*it);
+            if (auto pt = devPriv->queryPointById(*it))
+                pt->exclusiveGrabber = this;
     }
-    grabTouchPoints(ids);
     setKeepTouchGrab(true);
 }
 
@@ -579,13 +579,17 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
     clearTouchLists();
     QList<QEventPoint> touchPoints;
     QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window());
+    QPointingDevice *dev = nullptr;
 
     switch (event->type()) {
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
-    case QEvent::TouchEnd:
-        touchPoints = static_cast<QTouchEvent*>(event)->touchPoints();
+    case QEvent::TouchEnd: {
+        QTouchEvent* te = static_cast<QTouchEvent*>(event);
+        touchPoints = te->points();
+        dev = const_cast<QPointingDevice *>(te->pointingDevice());
         break;
+    }
     case QEvent::MouseButtonPress:
         _mouseQpaTouchPoint = QEventPoint(windowPriv->touchMouseId);
         _touchMouseDevice = windowPriv->touchMouseDevice;
@@ -593,7 +597,8 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
     case QEvent::MouseMove:
     case QEvent::MouseButtonRelease: {
         QMouseEvent *me = static_cast<QMouseEvent*>(event);
-        _mouseQpaTouchPoint = me->point(0);
+        _mouseQpaTouchPoint = me->points().first();
+        dev = const_cast<QPointingDevice *>(me->pointingDevice());
         if (event->type() == QEvent::MouseButtonPress) {
             addTouchPoint(me);
             started = true;
@@ -623,7 +628,7 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
         }
     }
     if (numTouchPoints >= _minimumTouchPoints && numTouchPoints <= _maximumTouchPoints) {
-        for (const QEventPoint &p : qAsConst(touchPoints)) {
+        for (QEventPoint &p : touchPoints) {
             QEventPoint::State touchPointState = p.state();
             int id = p.id();
             if (touchPointState & QEventPoint::State::Released) {
@@ -633,7 +638,7 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
                 addTouchPoint(&p);
                 started = true;
             } else if ((touchPointState & QEventPoint::State::Updated) ||
-                       QMutableEventPoint::from(const_cast<QEventPoint &>(p)).stationaryWithModifiedProperty()) {
+                       QMutableEventPoint::from(p).stationaryWithModifiedProperty()) {
                 // React to a stationary point with a property change (velocity, pressure) as if the point moved. (QTBUG-77142)
                 QQuickTouchPoint* dtp = static_cast<QQuickTouchPoint*>(_touchPoints.value(id));
                 Q_ASSERT(dtp);
@@ -668,8 +673,8 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
                 QQuickGrabGestureEvent event;
                 event._touchPoints = _touchPoints.values();
                 emit gestureStarted(&event);
-                if (event.wantsGrab())
-                    grabGesture();
+                if (event.wantsGrab() && dev)
+                    grabGesture(dev);
             }
         }
 
@@ -957,7 +962,7 @@ bool QQuickMultiPointTouchArea::childMouseEventFilter(QQuickItem *receiver, QEve
         _lastFilterableTouchPointIds.clear();
         Q_FALLTHROUGH();
     case QEvent::TouchUpdate:
-        for (auto tp : static_cast<QTouchEvent*>(event)->touchPoints()) {
+        for (const auto &tp : static_cast<QTouchEvent*>(event)->points()) {
             if (tp.state() == QEventPoint::State::Pressed)
                 _lastFilterableTouchPointIds << tp.id();
         }
@@ -998,7 +1003,7 @@ bool QQuickMultiPointTouchArea::shouldFilter(QEvent *event)
         case QEvent::TouchUpdate:
         case QEvent::TouchEnd: {
                 QTouchEvent *te = static_cast<QTouchEvent*>(event);
-                for (const QEventPoint &point : te->touchPoints()) {
+                for (const QEventPoint &point : te->points()) {
                     if (contains(mapFromScene(point.scenePosition()))) {
                         containsPoint = true;
                         break;

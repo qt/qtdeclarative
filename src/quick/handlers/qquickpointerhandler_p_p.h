@@ -69,14 +69,14 @@ public:
     QQuickPointerHandlerPrivate();
 
     template<typename TEventPoint>
-    bool dragOverThreshold(qreal d, Qt::Axis axis, const TEventPoint *p) const;
+    bool dragOverThreshold(qreal d, Qt::Axis axis, const TEventPoint &p) const;
 
     bool dragOverThreshold(QVector2D delta) const;
-    bool dragOverThreshold(const QQuickEventPoint *point) const;
+    bool dragOverThreshold(const QEventPoint &point) const;
 
     static QVector<QObject *> &deviceDeliveryTargets(const QInputDevice *device);
 
-    QQuickPointerEvent *currentEvent = nullptr;
+    QPointerEvent *currentEvent = nullptr;
     QQuickItem *target = nullptr;
     qreal m_margin = 0;
     qint16 dragThreshold = -1;   // -1 means use the platform default

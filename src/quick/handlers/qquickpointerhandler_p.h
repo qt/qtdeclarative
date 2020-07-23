@@ -110,7 +110,7 @@ public:
 
     QQuickItem * parentItem() const;
 
-    void handlePointerEvent(QQuickPointerEvent *event);
+    void handlePointerEvent(QPointerEvent *event);
 
     GrabPermissions grabPermissions() const;
     void setGrabPermissions(GrabPermissions grabPermissions);
@@ -135,9 +135,9 @@ Q_SIGNALS:
     void targetChanged();
     void marginChanged();
     Q_REVISION(2, 15) void dragThresholdChanged();
-    void grabChanged(QQuickEventPoint::GrabTransition transition, QQuickEventPoint *point);
+    void grabChanged(QPointingDevice::GrabTransition transition, QEventPoint point);
     void grabPermissionChanged();
-    void canceled(QQuickEventPoint *point);
+    void canceled(QEventPoint point);
 #if QT_CONFIG(cursor)
     Q_REVISION(2, 15) void cursorShapeChanged();
 #endif
@@ -147,24 +147,26 @@ protected:
 
     void classBegin() override;
     void componentComplete() override;
+    bool event(QEvent *) override;
 
-    QQuickPointerEvent *currentEvent();
-    virtual bool wantsPointerEvent(QQuickPointerEvent *event);
-    virtual bool wantsEventPoint(QQuickEventPoint *point);
-    virtual void handlePointerEventImpl(QQuickPointerEvent *event);
+    QPointerEvent *currentEvent();
+    virtual bool wantsPointerEvent(QPointerEvent *event);
+    virtual bool wantsEventPoint(const QPointerEvent *event, const QEventPoint &point);
+    virtual void handlePointerEventImpl(QPointerEvent *event);
     void setActive(bool active);
     virtual void onTargetChanged(QQuickItem *oldTarget) { Q_UNUSED(oldTarget); }
     virtual void onActiveChanged() { }
-    virtual void onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabTransition transition, QQuickEventPoint *point);
-    virtual bool canGrab(QQuickEventPoint *point);
-    virtual bool approveGrabTransition(QQuickEventPoint *point, QObject *proposedGrabber);
-    void setPassiveGrab(QQuickEventPoint *point, bool grab = true);
-    bool setExclusiveGrab(QQuickEventPoint *point, bool grab = true);
-    void cancelAllGrabs(QQuickEventPoint *point);
-    QPointF eventPos(const QQuickEventPoint *point) const;
-    bool parentContains(const QQuickEventPoint *point) const;
+    virtual void onGrabChanged(QQuickPointerHandler *grabber, QPointingDevice::GrabTransition transition,
+                               QPointerEvent *event, QEventPoint &point);
+    virtual bool canGrab(QPointerEvent *event, const QEventPoint &point);
+    virtual bool approveGrabTransition(QPointerEvent *event, const QEventPoint &point, QObject *proposedGrabber);
+    void setPassiveGrab(QPointerEvent *event, const QEventPoint &point, bool grab = true);
+    bool setExclusiveGrab(QPointerEvent *ev, const QEventPoint &point, bool grab = true);
+    void cancelAllGrabs(QPointerEvent *event, QEventPoint &point);
+    QPointF eventPos(const QEventPoint &point) const;
+    bool parentContains(const QEventPoint &point) const;
+    bool parentContains(const QPointF &scenePosition) const;
 
-    friend class QQuickEventPoint;
     friend class QQuickItemPrivate;
     friend class QQuickWindowPrivate;
 

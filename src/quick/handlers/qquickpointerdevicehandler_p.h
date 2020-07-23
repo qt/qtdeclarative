@@ -87,7 +87,7 @@ Q_SIGNALS:
 protected:
     QQuickPointerDeviceHandler(QQuickPointerDeviceHandlerPrivate &dd, QQuickItem *parent = nullptr);
 
-    bool wantsPointerEvent(QQuickPointerEvent *event) override;
+    bool wantsPointerEvent(QPointerEvent *event) override;
 
     Q_DECLARE_PRIVATE(QQuickPointerDeviceHandler)
 };

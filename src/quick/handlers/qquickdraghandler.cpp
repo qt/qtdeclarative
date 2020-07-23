@@ -110,10 +110,10 @@ QPointF QQuickDragHandler::targetCentroidPosition()
     return pos;
 }
 
-void QQuickDragHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabTransition transition, QQuickEventPoint *point)
+void QQuickDragHandler::onGrabChanged(QQuickPointerHandler *grabber, QPointingDevice::GrabTransition transition, QPointerEvent *event, QEventPoint &point)
 {
-    QQuickMultiPointHandler::onGrabChanged(grabber, transition, point);
-    if (grabber == this && transition == QQuickEventPoint::GrabExclusive && target()) {
+    QQuickMultiPointHandler::onGrabChanged(grabber, transition, event, point);
+    if (grabber == this && transition == QPointingDevice::GrabExclusive && target()) {
         // In case the grab got handed over from another grabber, we might not get the Press.
 
         auto isDescendant = [](QQuickItem *parent, QQuickItem *target) {
@@ -162,7 +162,7 @@ void QQuickDragHandler::onActiveChanged()
     QQuickMultiPointHandler::onActiveChanged();
     if (active()) {
         if (auto parent = parentItem()) {
-            if (currentEvent()->asPointerTouchEvent())
+            if (QQuickWindowPrivate::isTouchEvent(currentEvent()))
                 parent->setKeepTouchGrab(true);
             // tablet and mouse are treated the same by Item's legacy event handling, and
             // touch becomes synth-mouse for Flickable, so we need to prevent stealing
@@ -179,7 +179,7 @@ void QQuickDragHandler::onActiveChanged()
     }
 }
 
-void QQuickDragHandler::handlePointerEventImpl(QQuickPointerEvent *event)
+void QQuickDragHandler::handlePointerEventImpl(QPointerEvent *event)
 {
     QQuickMultiPointHandler::handlePointerEventImpl(event);
     event->setAccepted(true);
@@ -199,18 +199,19 @@ void QQuickDragHandler::handlePointerEventImpl(QQuickPointerEvent *event)
         // and in approximately the same direction
         qreal minAngle =  361;
         qreal maxAngle = -361;
-        bool allOverThreshold = !event->isReleaseEvent();
-        QVector <QQuickEventPoint *> chosenPoints;
+        bool allOverThreshold = !event->isEndEvent();
+        QVector<QEventPoint> chosenPoints;
 
-        if (event->isPressEvent())
+        if (event->isBeginEvent())
             m_pressedInsideTarget = target() && currentPoints().count() > 0;
 
         for (const QQuickHandlerPoint &p : currentPoints()) {
             if (!allOverThreshold)
                 break;
-            QQuickEventPoint *point = event->pointById(p.id());
-            chosenPoints << point;
-            setPassiveGrab(point);
+            auto point = event->pointById(p.id());
+            Q_ASSERT(point);
+            chosenPoints << *point;
+            setPassiveGrab(event, *point);
             // Calculate drag delta, taking into account the axis enabled constraint
             // i.e. if xAxis is not enabled, then ignore the horizontal component of the actual movement
             QVector2D accumulatedDragDelta = QVector2D(point->scenePosition() - point->scenePressPosition());
@@ -237,7 +238,7 @@ void QQuickDragHandler::handlePointerEventImpl(QQuickPointerEvent *event)
             if (allOverThreshold && !overThreshold)
                 allOverThreshold = false;
 
-            if (event->isPressEvent()) {
+            if (event->isBeginEvent()) {
                 // m_pressedInsideTarget should stay true iff ALL points in which DragHandler is interested
                 // have been pressed inside the target() Item.  (E.g. in a Slider the parent might be the
                 // whole control while the target is just the knob.)
@@ -250,7 +251,7 @@ void QQuickDragHandler::handlePointerEventImpl(QQuickPointerEvent *event)
                 // (That affects behavior for mouse but not for touch, because Flickable only handles mouse.)
                 // So we have to compensate by accepting the event here to avoid any parent Flickable from
                 // getting the event via direct delivery and grabbing too soon.
-                point->setAccepted(event->asPointerMouseEvent()); // stop propagation iff it's a mouse event
+                point->setAccepted(QQuickWindowPrivate::isMouseEvent(event)); // stop propagation iff it's a mouse event
             }
         }
         if (allOverThreshold) {
@@ -258,7 +259,7 @@ void QQuickDragHandler::handlePointerEventImpl(QQuickPointerEvent *event)
             if (angleDiff > 180)
                 angleDiff = 360 - angleDiff;
             qCDebug(lcDragHandler) << "angle min" << minAngle << "max" << maxAngle << "range" << angleDiff;
-            if (angleDiff < DragAngleToleranceDegrees && grabPoints(chosenPoints))
+            if (angleDiff < DragAngleToleranceDegrees && grabPoints(event, chosenPoints))
                 setActive(true);
         }
     }

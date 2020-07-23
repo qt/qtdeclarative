@@ -32,6 +32,7 @@
 
 #include <QtGui/qstylehints.h>
 #include <private/qdebug_p.h>
+#include <QtGui/private/qpointingdevice_p.h>
 
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
@@ -56,9 +57,12 @@ struct Event
         :type(t), mousePos(mouse), mousePosGlobal(global)
     {}
 
-    Event(QEvent::Type t, QList<QEventPoint> touch)
-        :type(t), points(touch)
-    {}
+    Event(QEvent::Type t, const QList<QEventPoint> &touch)
+        :type(t)
+    {
+        for (auto &tp : touch)
+            points << tp;
+    }
 
     QEvent::Type type;
     QPoint mousePos;
@@ -93,48 +97,57 @@ public:
         : QQuickItem(parent)
     {
         setAcceptedMouseButtons(Qt::LeftButton);
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
         setAcceptTouchEvents(true);
-#endif
     }
 
     void touchEvent(QTouchEvent *event)
     {
-        eventList.append(Event(event->type(), event->touchPoints()));
-        QList<QEventPoint> tps = event->touchPoints();
-        Q_ASSERT(!tps.isEmpty());
-        point0 = tps.first().id();
+        qCDebug(lcTests) << event << "accepting?" << acceptTouch;
+        eventList.append(Event(event->type(), event->points()));
+        Q_ASSERT(event->pointCount() > 0);
+        point0 = event->point(0).id();
         event->setAccepted(acceptTouch);
         emit onTouchEvent(this);
     }
     void mousePressEvent(QMouseEvent *event)
     {
+        qCDebug(lcTests) << event << "accepting?" << acceptMouse;
         eventList.append(Event(event->type(), event->position().toPoint(), event->globalPosition().toPoint()));
+        mouseGrabber = event->exclusiveGrabber(event->points().first());
         event->setAccepted(acceptMouse);
     }
     void mouseMoveEvent(QMouseEvent *event)
     {
+        qCDebug(lcTests) << event << "accepting?" << acceptMouse;
         eventList.append(Event(event->type(), event->position().toPoint(), event->globalPosition().toPoint()));
+        mouseGrabber = event->exclusiveGrabber(event->points().first());
         event->setAccepted(acceptMouse);
     }
     void mouseReleaseEvent(QMouseEvent *event)
     {
+        qCDebug(lcTests) << event << "accepting?" << acceptMouse;
         eventList.append(Event(event->type(), event->position().toPoint(), event->globalPosition().toPoint()));
+        mouseGrabber = event->exclusiveGrabber(event->points().first());
         event->setAccepted(acceptMouse);
     }
     void mouseDoubleClickEvent(QMouseEvent *event)
     {
+        qCDebug(lcTests) << event << "accepting?" << acceptMouse;
         eventList.append(Event(event->type(), event->position().toPoint(), event->globalPosition().toPoint()));
+        mouseGrabber = event->exclusiveGrabber(event->points().first());
         event->setAccepted(acceptMouse);
     }
 
     void mouseUngrabEvent()
     {
+        qCDebug(lcTests);
         eventList.append(Event(QEvent::UngrabMouse, QPoint(0,0), QPoint(0,0)));
+        mouseGrabber = nullptr;
     }
 
     void touchUngrabEvent()
     {
+        qCDebug(lcTests);
         ++touchUngrabCount;
     }
 
@@ -143,6 +156,7 @@ public:
     }
 
     QList<Event> eventList;
+    QObject *mouseGrabber = nullptr;
     int touchUngrabCount = 0;
     bool acceptMouse = false;
     bool acceptTouch = false;
@@ -154,11 +168,11 @@ public:
                 event->type() == QEvent::TouchUpdate ||
                 event->type() == QEvent::TouchCancel ||
                 event->type() == QEvent::TouchEnd) {
+            qCDebug(lcTests) << event;
             QTouchEvent *touch = static_cast<QTouchEvent*>(event);
-            eventList.append(Event(event->type(), touch->touchPoints()));
-            QList<QEventPoint> tps = touch->touchPoints();
-            Q_ASSERT(!tps.isEmpty());
-            point0 = tps.first().id();
+            eventList.append(Event(event->type(), touch->points()));
+            Q_ASSERT(touch->pointCount() > 0);
+            point0 = touch->point(0).id();
             if (filterTouch)
                 event->accept();
             return true;
@@ -166,6 +180,37 @@ public:
         return false;
     }
     int point0 = -1;
+};
+
+class GrabMonitor : public QObject
+{
+public:
+    QObject *exclusiveGrabber = nullptr;
+    bool fromMouseEvent = false;
+    bool canceled = false;
+
+    void onGrabChanged(QObject *grabber, QPointingDevice::GrabTransition transition, const QPointerEvent *event, const QEventPoint &point)
+    {
+        qCDebug(lcTests) << grabber << transition << event << point << point.device();
+        switch (transition) {
+        case QPointingDevice::GrabTransition::GrabExclusive:
+            exclusiveGrabber = grabber;
+            fromMouseEvent = event && QQuickWindowPrivate::isMouseEvent(event);
+            canceled = false;
+            break;
+        case QPointingDevice::GrabTransition::UngrabExclusive:
+            exclusiveGrabber = nullptr;
+            canceled = false;
+            break;
+        case QPointingDevice::GrabTransition::CancelGrabExclusive:
+            exclusiveGrabber = nullptr;
+            canceled = true;
+            break;
+        default:
+            // ignore the passive grabs since this test doesn't involve pointer handlers
+            break;
+        }
+    }
 };
 
 class tst_TouchMouse : public QQmlDataTest
@@ -219,6 +264,7 @@ private:
     QQuickView *createView();
     QPointingDevice *device = QTest::createTouchDevice();
     QList<Event> filteredEventList;
+    GrabMonitor grabMonitor;
 };
 
 QQuickView *tst_TouchMouse::createView()
@@ -231,6 +277,7 @@ void tst_TouchMouse::initTestCase()
 {
     QQmlDataTest::initTestCase();
     qmlRegisterType<EventItem>("Qt.test", 1, 0, "EventItem");
+    connect(device, &QPointingDevice::grabChanged, &grabMonitor, &GrabMonitor::onGrabChanged);
 }
 
 void tst_TouchMouse::simpleTouchEvent_data()
@@ -254,6 +301,7 @@ void tst_TouchMouse::simpleTouchEvent()
 
     EventItem *eventItem1 = window->rootObject()->findChild<EventItem*>("eventItem1");
     QVERIFY(eventItem1);
+    auto devPriv = QPointingDevicePrivate::get(device);
 
     // Do not accept touch or mouse
     QPoint p1;
@@ -302,7 +350,7 @@ void tst_TouchMouse::simpleTouchEvent()
     QCOMPARE(eventItem1->eventList.at(0).type, QEvent::TouchBegin);
     if (synthMouse)
         QCOMPARE(eventItem1->eventList.at(1).type, QEvent::MouseButtonPress);
-    QCOMPARE(window->mouseGrabberItem(), synthMouse ? eventItem1 : nullptr);
+    QCOMPARE(devPriv->firstPointExclusiveGrabber(), synthMouse ? eventItem1 : nullptr);
 
     QPoint localPos = eventItem1->mapFromScene(p1).toPoint();
     QPoint globalPos = window->mapToGlobal(p1);
@@ -612,9 +660,9 @@ void tst_TouchMouse::buttonOnFlickable()
 
     QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window.data());
     QVERIFY(windowPriv->touchMouseId != -1);
-    auto pointerEvent = windowPriv->pointerEventInstance(device);
-    QCOMPARE(pointerEvent->point(0)->exclusiveGrabber(), eventItem1);
-    QCOMPARE(window->mouseGrabberItem(), eventItem1);
+    auto devPriv = QPointingDevicePrivate::get(device);
+    QCOMPARE(devPriv->pointById(0)->exclusiveGrabber, eventItem1);
+    QCOMPARE(grabMonitor.exclusiveGrabber, eventItem1);
 
     int dragDelta = -qApp->styleHints()->startDragDistance();
     p1 += QPoint(0, dragDelta);
@@ -628,15 +676,14 @@ void tst_TouchMouse::buttonOnFlickable()
     QTest::touchEvent(window.data(), device).move(0, p3, window.data());
     QQuickTouchUtils::flush(window.data());
 
-    // we cannot really know when the events get grabbed away
     QVERIFY(eventItem1->eventList.size() >= 4);
     QCOMPARE(eventItem1->eventList.at(2).type, QEvent::TouchUpdate);
     QCOMPARE(eventItem1->eventList.at(3).type, QEvent::MouseMove);
 
-    QCOMPARE(window->mouseGrabberItem(), flickable);
+    QCOMPARE(grabMonitor.exclusiveGrabber, flickable);
     QVERIFY(windowPriv->touchMouseId != -1);
-    QCOMPARE(pointerEvent->point(0)->exclusiveGrabber(), flickable);
-    QVERIFY(flickable->isMovingVertically());
+    QCOMPARE(devPriv->pointById(0)->exclusiveGrabber, flickable);
+//    QVERIFY(flickable->isMovingVertically()); // it will move after a couple more mouse moves
 
     QTest::touchEvent(window.data(), device).release(0, p3, window.data());
     QQuickTouchUtils::flush(window.data());
@@ -673,9 +720,9 @@ void tst_TouchMouse::touchButtonOnFlickable()
 
     QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window.data());
     QVERIFY(windowPriv->touchMouseId == -1);
-    auto pointerEvent = windowPriv->pointerEventInstance(device);
-    QCOMPARE(pointerEvent->point(0)->grabberItem(), eventItem2);
-    QCOMPARE(window->mouseGrabberItem(), nullptr);
+    auto devPriv = QPointingDevicePrivate::get(device);
+    QCOMPARE(devPriv->pointById(0)->exclusiveGrabber, eventItem2);
+    QCOMPARE(grabMonitor.exclusiveGrabber, eventItem2);
 
     int dragDelta = qApp->styleHints()->startDragDistance() * -0.7;
     p1 += QPoint(0, dragDelta);
@@ -693,9 +740,9 @@ void tst_TouchMouse::touchButtonOnFlickable()
     QTRY_COMPARE(eventItem2->touchUngrabCount, 1);
     QVERIFY(eventItem2->eventList.size() > 2);
     QCOMPARE(eventItem2->eventList.at(1).type, QEvent::TouchUpdate);
-    QCOMPARE(window->mouseGrabberItem(), flickable);
+    QCOMPARE(grabMonitor.exclusiveGrabber, flickable);
     QVERIFY(windowPriv->touchMouseId != -1);
-    QCOMPARE(pointerEvent->point(0)->grabberItem(), flickable);
+    QCOMPARE(devPriv->pointById(0)->exclusiveGrabber, flickable);
     QVERIFY(flickable->isMovingVertically());
 
     QTest::touchEvent(window.data(), device).release(0, p3, window.data());
@@ -809,10 +856,10 @@ void tst_TouchMouse::buttonOnDelayedPressFlickable()
 
         // flickable should have the mouse grab, and have moved the itemForTouchPointId
         // for the touchMouseId to the new grabber.
-        QCOMPARE(window->mouseGrabberItem(), flickable);
+        QCOMPARE(grabMonitor.exclusiveGrabber, flickable);
         QVERIFY(windowPriv->touchMouseId != -1);
-        auto pointerEvent = windowPriv->pointerEventInstance(device);
-        QCOMPARE(pointerEvent->point(0)->grabberItem(), flickable);
+        auto devPriv = QPointingDevicePrivate::get(device);
+        QCOMPARE(devPriv->pointById(0)->exclusiveGrabber, flickable);
     }
 
     QTest::touchEvent(window.data(), device).release(0, pEnd, window.data());
@@ -1243,8 +1290,6 @@ void tst_TouchMouse::mouseOnFlickableOnPinch()
     pinchSequence.move(0, p, window.data()).commit();
     QQuickTouchUtils::flush(window.data());
 
-    QCOMPARE(window->mouseGrabberItem(), flickable);
-
     // Add a second finger, this should lead to stealing
     p1 = QPoint(40, 100);
     p2 = QPoint(60, 100);
@@ -1348,21 +1393,20 @@ void tst_TouchMouse::touchGrabCausesMouseUngrab()
     QCOMPARE(leftItem->eventList.size(), 2);
     QCOMPARE(leftItem->eventList.at(0).type, QEvent::TouchBegin);
     QCOMPARE(leftItem->eventList.at(1).type, QEvent::MouseButtonPress);
-    QCOMPARE(window->mouseGrabberItem(), leftItem);
+    QCOMPARE(grabMonitor.exclusiveGrabber, leftItem);
     leftItem->eventList.clear();
 
     rightItem->acceptTouch = true;
-    {
-        QList<int> ids;
-        ids.append(leftItem->point0);
-        rightItem->grabTouchPoints(ids);
-    }
+    auto devPriv = QPointingDevicePrivate::get(device);
+    auto epd = devPriv->queryPointById(0);
+    QVERIFY(epd);
+    devPriv->setExclusiveGrabber(nullptr, epd->eventPoint, rightItem);
 
     // leftItem should have lost the mouse as the touch point that was being used to emulate it
     // has been grabbed by another item.
     QCOMPARE(leftItem->eventList.size(), 1);
     QCOMPARE(leftItem->eventList.at(0).type, QEvent::UngrabMouse);
-    QCOMPARE(window->mouseGrabberItem(), (QQuickItem*)nullptr);
+    QCOMPARE(grabMonitor.exclusiveGrabber, rightItem);
 }
 
 void tst_TouchMouse::touchPointDeliveryOrder()
@@ -1556,6 +1600,7 @@ void tst_TouchMouse::implicitUngrab()
     QQuickViewTestUtil::centerOnScreen(window.data());
     QQuickViewTestUtil::moveMouseAway(window.data());
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
+    QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window.data());
 
     QQuickItem *root = window->rootObject();
     QVERIFY(root != nullptr);
@@ -1564,12 +1609,13 @@ void tst_TouchMouse::implicitUngrab()
     QPoint p1(20, 20);
     QTest::touchEvent(window.data(), device).press(0, p1);
 
-    QCOMPARE(window->mouseGrabberItem(), eventItem);
+    QCOMPARE(grabMonitor.exclusiveGrabber, eventItem);
     eventItem->eventList.clear();
     eventItem->setEnabled(false);
     QVERIFY(!eventItem->eventList.isEmpty());
     QCOMPARE(eventItem->eventList.at(0).type, QEvent::UngrabMouse);
     QTest::touchEvent(window.data(), device).release(0, p1);   // clean up potential state
+    QCOMPARE(windowPriv->touchMouseId, -1);
 
     eventItem->setEnabled(true);
     QTest::touchEvent(window.data(), device).press(0, p1);

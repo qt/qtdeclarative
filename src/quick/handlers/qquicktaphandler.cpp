@@ -97,11 +97,10 @@ QQuickTapHandler::QQuickTapHandler(QQuickItem *parent)
     }
 }
 
-bool QQuickTapHandler::wantsEventPoint(QQuickEventPoint *point)
+bool QQuickTapHandler::wantsEventPoint(const QPointerEvent *event, const QEventPoint &point)
 {
-    if (!point->pointerEvent()->asPointerMouseEvent() &&
-            !point->pointerEvent()->asPointerTouchEvent() &&
-            !point->pointerEvent()->asPointerTabletEvent() )
+    if (!QQuickWindowPrivate::isMouseEvent(event) && !QQuickWindowPrivate::isTouchEvent(event) &&
+            !QQuickWindowPrivate::isTabletEvent(event))
         return false;
     // If the user has not violated any constraint, it could be a tap.
     // Otherwise we want to give up the grab so that a competing handler
@@ -113,12 +112,12 @@ bool QQuickTapHandler::wantsEventPoint(QQuickEventPoint *point)
         m_longPressTimer.stop();
         m_holdTimer.invalidate();
     }
-    switch (point->state()) {
-    case QQuickEventPoint::Pressed:
-    case QQuickEventPoint::Released:
+    switch (point.state()) {
+    case QEventPoint::Pressed:
+    case QEventPoint::Released:
         ret = parentContains(point);
         break;
-    case QQuickEventPoint::Updated:
+    case QEventPoint::Updated:
         switch (m_gesturePolicy) {
         case DragThreshold:
             ret = !overThreshold && parentContains(point);
@@ -127,35 +126,39 @@ bool QQuickTapHandler::wantsEventPoint(QQuickEventPoint *point)
             ret = parentContains(point);
             break;
         case ReleaseWithinBounds:
-            ret = point->pointId() == this->point().id();
+            ret = point.id() == this->point().id();
             break;
         }
         break;
-    case QQuickEventPoint::Stationary:
+    case QEventPoint::Stationary:
         // If the point hasn't moved since last time, the return value should be the same as last time.
         // If we return false here, QQuickPointerHandler::handlePointerEvent() will call setActive(false).
-        ret = point->pointId() == this->point().id();
+        ret = point.id() == this->point().id();
+        break;
+    case QEventPoint::Unknown:
         break;
     }
     // If this is the grabber, returning false from this function will cancel the grab,
     // so onGrabChanged(this, CancelGrabExclusive, point) and setPressed(false) will be called.
     // But when m_gesturePolicy is DragThreshold, we don't get an exclusive grab, but
     // we still don't want to be pressed anymore.
-    if (!ret && point->pointId() == this->point().id())
-        setPressed(false, true, point);
+    if (!ret && point.id() == this->point().id())
+        setPressed(false, true, const_cast<QPointerEvent *>(event), const_cast<QEventPoint &>(point));
     return ret;
 }
 
-void QQuickTapHandler::handleEventPoint(QQuickEventPoint *point)
+void QQuickTapHandler::handleEventPoint(QPointerEvent *event, QEventPoint &point)
 {
-    switch (point->state()) {
-    case QQuickEventPoint::Pressed:
-        setPressed(true, false, point);
+    switch (point.state()) {
+    case QEventPoint::Pressed:
+        setPressed(true, false, event, point);
         break;
-    case QQuickEventPoint::Released:
-        if ((point->pointerEvent()->buttons() & acceptedButtons()) == Qt::NoButton)
-            setPressed(false, false, point);
+    case QEventPoint::Released: {
+        if (QQuickWindowPrivate::isTouchEvent(event) ||
+                (static_cast<const QSinglePointEvent *>(event)->buttons() & acceptedButtons()) == Qt::NoButton)
+            setPressed(false, false, event, point);
         break;
+    }
     default:
         break;
     }
@@ -253,7 +256,7 @@ void QQuickTapHandler::setGesturePolicy(QQuickTapHandler::GesturePolicy gestureP
     \l gesturePolicy. When the event point is released or the policy is
     violated, \e pressed will change to false.
 */
-void QQuickTapHandler::setPressed(bool press, bool cancel, QQuickEventPoint *point)
+void QQuickTapHandler::setPressed(bool press, bool cancel, QPointerEvent *event, QEventPoint &point)
 {
     if (m_pressed != press) {
         qCDebug(lcTapHandler) << objectName() << "pressed" << m_pressed << "->" << press << (cancel ? "CANCEL" : "") << point;
@@ -270,17 +273,17 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QQuickEventPoint *poi
         if (press) {
             // on press, grab before emitting changed signals
             if (m_gesturePolicy == DragThreshold)
-                setPassiveGrab(point, press);
+                setPassiveGrab(event, point, press);
             else
-                setExclusiveGrab(point, press);
+                setExclusiveGrab(event, point, press);
         }
         if (!cancel && !press && parentContains(point)) {
-            if (point->timeHeld() < longPressThreshold()) {
+            if (point.timeHeld() < longPressThreshold()) {
                 // Assuming here that pointerEvent()->timestamp() is in ms.
-                qreal ts = point->pointerEvent()->timestamp() / 1000.0;
+                qreal ts = event->timestamp() / 1000.0;
                 if (ts - m_lastTapTimestamp < m_multiTapInterval &&
-                        QVector2D(point->scenePosition() - m_lastTapPos).lengthSquared() <
-                        (point->pointerEvent()->device()->type() == QInputDevice::DeviceType::Mouse ?
+                        QVector2D(point.scenePosition() - m_lastTapPos).lengthSquared() <
+                        (event->device()->type() == QInputDevice::DeviceType::Mouse ?
                          m_mouseMultiClickDistanceSquared : m_touchMultiTapDistanceSquared))
                     ++m_tapCount;
                 else
@@ -293,19 +296,19 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QQuickEventPoint *poi
                 else if (m_tapCount == 2)
                     emit doubleTapped(point);
                 m_lastTapTimestamp = ts;
-                m_lastTapPos = point->scenePosition();
+                m_lastTapPos = point.scenePosition();
             } else {
-                qCDebug(lcTapHandler) << objectName() << "tap threshold" << longPressThreshold() << "exceeded:" << point->timeHeld();
+                qCDebug(lcTapHandler) << objectName() << "tap threshold" << longPressThreshold() << "exceeded:" << point.timeHeld();
             }
         }
         emit pressedChanged();
         if (!press && m_gesturePolicy != DragThreshold) {
             // on release, ungrab after emitting changed signals
-            setExclusiveGrab(point, press);
+            setExclusiveGrab(event, point, press);
         }
         if (cancel) {
             emit canceled(point);
-            setExclusiveGrab(point, false);
+            setExclusiveGrab(event, point, false);
             // In case there is a filtering parent (Flickable), we should not give up the passive grab,
             // so that it can continue to filter future events.
             d_func()->reset();
@@ -314,12 +317,13 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QQuickEventPoint *poi
     }
 }
 
-void QQuickTapHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabTransition transition, QQuickEventPoint *point)
+void QQuickTapHandler::onGrabChanged(QQuickPointerHandler *grabber, QPointingDevice::GrabTransition transition,
+                                     QPointerEvent *ev, QEventPoint &point)
 {
-    QQuickSinglePointHandler::onGrabChanged(grabber, transition, point);
-    bool isCanceled = transition == QQuickEventPoint::CancelGrabExclusive || transition == QQuickEventPoint::CancelGrabPassive;
-    if (grabber == this && (isCanceled || point->state() == QQuickEventPoint::Released))
-        setPressed(false, isCanceled, point);
+    QQuickSinglePointHandler::onGrabChanged(grabber, transition, ev, point);
+    bool isCanceled = transition == QPointingDevice::CancelGrabExclusive || transition == QPointingDevice::CancelGrabPassive;
+    if (grabber == this && (isCanceled || point.state() == QEventPoint::Released))
+        setPressed(false, isCanceled, ev, point);
 }
 
 void QQuickTapHandler::connectPreRenderSignal(bool conn)

@@ -140,7 +140,7 @@ Rectangle {
         id: pointHandler
         target: null
         acceptedButtons: Qt.AllButtons
-        onGrabChanged: if (active) {    // 'point' is an implicit parameter referencing to a QQuickEventPoint instance
+        onGrabChanged: if (active) {    // 'point' is an implicit parameter referencing to a QEventPoint instance
             console.log("grabbed " + point.pointId + " @ " + point.sceneGrabPos)
             grabbingLocationIndicator.createObject(root, {"x": point.sceneGrabPosition.x, "y": point.sceneGrabPosition.y - 16})
         }

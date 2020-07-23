@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -36,6 +36,7 @@
 #include <QtQuick/qquickview.h>
 #include <QtGui/QScreen>
 #include <QtGui/private/qevent_p.h>
+#include <QtGui/private/qpointingdevice_p.h>
 #include "../../shared/util.h"
 #include "../shared/viewtestutil.h"
 
@@ -814,7 +815,6 @@ void tst_QQuickMultiPointTouchArea::inFlickableWithPressDelay() // QTBUG-78818
     const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
     QScopedPointer<QQuickView> window(createAndShowView("inFlickable.qml"));
     QVERIFY(window->rootObject() != nullptr);
-    QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window.data());
 
     QQuickFlickable *flickable = qobject_cast<QQuickFlickable *>(window->rootObject());
     QVERIFY(flickable != nullptr);
@@ -831,8 +831,8 @@ void tst_QQuickMultiPointTouchArea::inFlickableWithPressDelay() // QTBUG-78818
     QTest::touchEvent(window.data(), device).press(0, p1);
     QQuickTouchUtils::flush(window.data());
     QTRY_COMPARE(point11->pressed(), true);
-    auto pointerEvent = windowPriv->pointerEventInstance(device);
-    QCOMPARE(pointerEvent->point(0)->exclusiveGrabber(), mpta);
+    auto devPriv = QPointingDevicePrivate::get(device);
+    QCOMPARE(devPriv->pointById(0)->exclusiveGrabber, mpta);
 
     // release: MPTA receives TouchEnd (which is asymmetric with mouse press); does NOT emit canceled.
     QTest::touchEvent(window.data(), device).release(0, p1);
@@ -843,18 +843,18 @@ void tst_QQuickMultiPointTouchArea::inFlickableWithPressDelay() // QTBUG-78818
     QTest::touchEvent(window.data(), device).press(0, p1);
     QQuickTouchUtils::flush(window.data());
     QTRY_COMPARE(point11->pressed(), true); // wait until pressDelay exceeded
-    QCOMPARE(pointerEvent->point(0)->exclusiveGrabber(), mpta);
+    QCOMPARE(devPriv->pointById(0)->exclusiveGrabber, mpta);
 
     // drag past the threshold: Flickable takes over the grab, MPTA gets touchUngrab and is no longer pressed
     int i = 0;
-    for (; i < 10 && window->mouseGrabberItem() != flickable; ++i) {
+    for (; i < 10 && devPriv->firstPointExclusiveGrabber() != flickable; ++i) {
         p1 += QPoint(0,dragThreshold);
         QTest::touchEvent(window.data(), device).move(0, p1);
         QQuickTouchUtils::flush(window.data());
     }
-    QCOMPARE(window->mouseGrabberItem(), flickable);
+    QCOMPARE(devPriv->firstPointExclusiveGrabber(), flickable);
     qCDebug(lcTests, "Flickable stole grab from MPTA after %d moves", i);
-    QCOMPARE(pointerEvent->point(0)->exclusiveGrabber(), flickable);
+    QCOMPARE(devPriv->pointById(0)->exclusiveGrabber, flickable);
     QCOMPARE(point11->pressed(), false);
     QVERIFY(flickable->property("cancelCount").toInt() > 0); // actually 2 because 2 touchPoints are declared... but only one was really cancelled
 
