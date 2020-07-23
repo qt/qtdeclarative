@@ -212,11 +212,24 @@ QQmlInfo::~QQmlInfo()
             QObject *object = const_cast<QObject *>(d->object);
 
             if (object) {
-                engine = qmlEngine(d->object);
+                // Some objects (e.g. like attached objects created in C++) won't have an associated engine,
+                // but we can still try to look for a parent object that does.
+                QObject *objectWithEngine = object;
+                while (objectWithEngine) {
+                    engine = qmlEngine(objectWithEngine);
+                    if (engine)
+                        break;
+                    objectWithEngine = objectWithEngine->parent();
+                }
 
-                d->buffer.prepend(QLatin1String("QML ") + QQmlMetaType::prettyTypeName(object) + QLatin1String(": "));
+                if (!objectWithEngine || objectWithEngine == object) {
+                    d->buffer.prepend(QLatin1String("QML ") + QQmlMetaType::prettyTypeName(object) + QLatin1String(": "));
+                } else {
+                    d->buffer.prepend(QLatin1String("QML ") + QQmlMetaType::prettyTypeName(objectWithEngine)
+                        + QLatin1String(" (parent or ancestor of ") + QQmlMetaType::prettyTypeName(object) + QLatin1String("): "));
+                }
 
-                QQmlData *ddata = QQmlData::get(object, false);
+                QQmlData *ddata = QQmlData::get(objectWithEngine ? objectWithEngine : object, false);
                 if (ddata && ddata->outerContext) {
                     error.setUrl(ddata->outerContext->url());
                     error.setLine(qmlConvertSourceCoordinate<quint16, int>(ddata->lineNumber));

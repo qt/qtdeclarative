@@ -27,12 +27,15 @@
 ****************************************************************************/
 
 #include <qtest.h>
+#include <QtTest/qsignalspy.h>
 #include <QQmlEngine>
 #include <QQmlComponent>
 #include <QTimer>
 #include <QQmlContext>
 #include <qqmlinfo.h>
 #include "../../shared/util.h"
+
+#include "attached.h"
 
 class tst_qqmlinfo : public QQmlDataTest
 {
@@ -51,6 +54,7 @@ private slots:
     void chaining();
     void messageTypes();
     void component();
+    void attachedObject();
 
 private:
     QQmlEngine engine;
@@ -228,6 +232,38 @@ void tst_qqmlinfo::component()
     QString message = component.url().toString() + ":4:34: QML Component: Delegate error";
     QTest::ignoreMessage(QtInfoMsg, qPrintable(message));
     qmlInfo(delegate) << "Delegate error";
+}
+
+Q_DECLARE_METATYPE(QList<QQmlError>)
+
+void tst_qqmlinfo::attachedObject()
+{
+    qRegisterMetaType<QList<QQmlError>>();
+
+    QQmlComponent component(&engine, testFileUrl("AttachedObject.qml"));
+
+    QSignalSpy warningSpy(&engine, SIGNAL(warnings(const QList<QQmlError> &)));
+    QVERIFY(warningSpy.isValid());
+
+    const QString qmlBindingLoopMessage = "QML Rectangle: Binding loop detected for property \"width\"";
+    const QString qmlBindingLoopMessageFull = component.url().toString() + ":7:5: " + qmlBindingLoopMessage;
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(qmlBindingLoopMessageFull));
+
+    const QString cppBindingLoopMessage = "QML AttachedObject (parent or ancestor of Attached): Binding loop detected for property \"a\"";
+    const QString cppBindingLoopMessageFull = component.url().toString() + ":4:1: " + cppBindingLoopMessage;
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(cppBindingLoopMessageFull));
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY2(object != nullptr, qPrintable(component.errorString()));
+    QCOMPARE(warningSpy.count(), 2);
+
+    // The Attached C++ type has no QML engine since it was created in C++, so we should see its parent instead.
+    const auto cppWarnings = warningSpy.at(0).first().value<QList<QQmlError>>();
+    QCOMPARE(cppWarnings.first().description(), cppBindingLoopMessage);
+
+    // The QML type has a QML engine, so we should see the normal message.
+    const auto qmlWarnings = warningSpy.at(1).first().value<QList<QQmlError>>();
+    QCOMPARE(qmlWarnings.first().description(), qmlBindingLoopMessage);
 }
 
 QTEST_MAIN(tst_qqmlinfo)

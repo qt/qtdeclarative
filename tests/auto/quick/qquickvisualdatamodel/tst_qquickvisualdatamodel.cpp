@@ -30,6 +30,7 @@
 #include "../shared/viewtestutil.h"
 
 #include <qtest.h>
+#include <QtCore/qregularexpression.h>
 #include <QtTest/QSignalSpy>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
@@ -1460,22 +1461,22 @@ void tst_qquickvisualdatamodel::remove()
             QCOMPARE(delegate->property("test3").toInt(), iIndex[i]);
         }
     } {
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML DelegateModelGroup: remove: index out of range");
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*remove: index out of range"));
         evaluate<void>(visualModel, "items.remove(-8, 4)");
         QCOMPARE(listview->count(), 7);
         QCOMPARE(visualModel->items()->count(), 7);
     } {
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML DelegateModelGroup: remove: index out of range");
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*remove: index out of range"));
         evaluate<void>(visualModel, "items.remove(12, 2)");
         QCOMPARE(listview->count(), 7);
         QCOMPARE(visualModel->items()->count(), 7);
     } {
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML DelegateModelGroup: remove: invalid count");
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*remove: invalid count"));
         evaluate<void>(visualModel, "items.remove(5, 3)");
         QCOMPARE(listview->count(), 7);
         QCOMPARE(visualModel->items()->count(), 7);
     } {
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML DelegateModelGroup: remove: invalid count");
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*remove: invalid count"));
         evaluate<void>(visualModel, "items.remove(5, -2)");
         QCOMPARE(listview->count(), 7);
         QCOMPARE(visualModel->items()->count(), 7);
@@ -1597,37 +1598,37 @@ void tst_qquickvisualdatamodel::move()
             QCOMPARE(delegate->property("test3").toInt(), iIndex[i]);
         }
     } {
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML DelegateModelGroup: move: invalid count");
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*move: invalid count"));
         evaluate<void>(visualModel, "items.move(5, 2, -2)");
         QCOMPARE(listview->count(), 12);
         QCOMPARE(visualModel->items()->count(), 12);
     } {
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML DelegateModelGroup: move: from index out of range");
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*move: from index out of range"));
         evaluate<void>(visualModel, "items.move(-6, 2, 1)");
         QCOMPARE(listview->count(), 12);
         QCOMPARE(visualModel->items()->count(), 12);
     } {
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML DelegateModelGroup: move: from index out of range");
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*move: from index out of range"));
         evaluate<void>(visualModel, "items.move(15, 2, 1)");
         QCOMPARE(listview->count(), 12);
         QCOMPARE(visualModel->items()->count(), 12);
     } {
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML DelegateModelGroup: move: from index out of range");
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*move: from index out of range"));
         evaluate<void>(visualModel, "items.move(11, 1, 3)");
         QCOMPARE(listview->count(), 12);
         QCOMPARE(visualModel->items()->count(), 12);
     } {
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML DelegateModelGroup: move: to index out of range");
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*move: to index out of range"));
         evaluate<void>(visualModel, "items.move(2, -5, 1)");
         QCOMPARE(listview->count(), 12);
         QCOMPARE(visualModel->items()->count(), 12);
     } {
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML DelegateModelGroup: move: to index out of range");
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*move: to index out of range"));
         evaluate<void>(visualModel, "items.move(2, 14, 1)");
         QCOMPARE(listview->count(), 12);
         QCOMPARE(visualModel->items()->count(), 12);
     } {
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML DelegateModelGroup: move: to index out of range");
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*move: to index out of range"));
         evaluate<void>(visualModel, "items.move(2, 11, 4)");
         QCOMPARE(listview->count(), 12);
         QCOMPARE(visualModel->items()->count(), 12);
@@ -1790,82 +1791,82 @@ void tst_qquickvisualdatamodel::groups()
         static const bool sMember[] = { f, f, f, f, f, f, f, f, t, t, f, f };
         VERIFY_GROUPS;
     } {
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML DelegateModelGroup: addGroups: invalid count");
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*addGroups: invalid count"));
         evaluate<void>(visualModel, "items.addGroups(11, -4, \"items\")");
         QCOMPARE(listview->count(), 12);
         QCOMPARE(visualModel->items()->count(), 12);
         QCOMPARE(visibleItems->count(), 9);
         QCOMPARE(selectedItems->count(), 2);
     } {
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML DelegateModelGroup: addGroups: index out of range");
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*addGroups: index out of range"));
         evaluate<void>(visualModel, "items.addGroups(-1, 3, \"items\")");
         QCOMPARE(listview->count(), 12);
         QCOMPARE(visualModel->items()->count(), 12);
         QCOMPARE(visibleItems->count(), 9);
         QCOMPARE(selectedItems->count(), 2);
     } {
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML DelegateModelGroup: addGroups: index out of range");
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*addGroups: index out of range"));
         evaluate<void>(visualModel, "items.addGroups(14, 3, \"items\")");
         QCOMPARE(listview->count(), 12);
         QCOMPARE(visualModel->items()->count(), 12);
         QCOMPARE(visibleItems->count(), 9);
         QCOMPARE(selectedItems->count(), 2);
     } {
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML DelegateModelGroup: addGroups: invalid count");
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*addGroups: invalid count"));
         evaluate<void>(visualModel, "items.addGroups(11, 5, \"items\")");
         QCOMPARE(listview->count(), 12);
         QCOMPARE(visualModel->items()->count(), 12);
         QCOMPARE(visibleItems->count(), 9);
         QCOMPARE(selectedItems->count(), 2);
     } {
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML DelegateModelGroup: setGroups: invalid count");
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*setGroups: invalid count"));
         evaluate<void>(visualModel, "items.setGroups(11, -4, \"items\")");
         QCOMPARE(listview->count(), 12);
         QCOMPARE(visualModel->items()->count(), 12);
         QCOMPARE(visibleItems->count(), 9);
         QCOMPARE(selectedItems->count(), 2);
     } {
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML DelegateModelGroup: setGroups: index out of range");
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*setGroups: index out of range"));
         evaluate<void>(visualModel, "items.setGroups(-1, 3, \"items\")");
         QCOMPARE(listview->count(), 12);
         QCOMPARE(visualModel->items()->count(), 12);
         QCOMPARE(visibleItems->count(), 9);
         QCOMPARE(selectedItems->count(), 2);
     } {
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML DelegateModelGroup: setGroups: index out of range");
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*setGroups: index out of range"));
         evaluate<void>(visualModel, "items.setGroups(14, 3, \"items\")");
         QCOMPARE(listview->count(), 12);
         QCOMPARE(visualModel->items()->count(), 12);
         QCOMPARE(visibleItems->count(), 9);
         QCOMPARE(selectedItems->count(), 2);
     } {
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML DelegateModelGroup: setGroups: invalid count");
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*setGroups: invalid count"));
         evaluate<void>(visualModel, "items.setGroups(11, 5, \"items\")");
         QCOMPARE(listview->count(), 12);
         QCOMPARE(visualModel->items()->count(), 12);
         QCOMPARE(visibleItems->count(), 9);
         QCOMPARE(selectedItems->count(), 2);
     } {
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML DelegateModelGroup: removeGroups: invalid count");
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*removeGroups: invalid count"));
         evaluate<void>(visualModel, "items.removeGroups(11, -4, \"items\")");
         QCOMPARE(listview->count(), 12);
         QCOMPARE(visualModel->items()->count(), 12);
     } {
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML DelegateModelGroup: removeGroups: index out of range");
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*removeGroups: index out of range"));
         evaluate<void>(visualModel, "items.removeGroups(-1, 3, \"items\")");
         QCOMPARE(listview->count(), 12);
         QCOMPARE(visualModel->items()->count(), 12);
         QCOMPARE(visibleItems->count(), 9);
         QCOMPARE(selectedItems->count(), 2);
     } {
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML DelegateModelGroup: removeGroups: index out of range");
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*removeGroups: index out of range"));
         evaluate<void>(visualModel, "items.removeGroups(14, 3, \"items\")");
         QCOMPARE(listview->count(), 12);
         QCOMPARE(visualModel->items()->count(), 12);
         QCOMPARE(visibleItems->count(), 9);
         QCOMPARE(selectedItems->count(), 2);
     } {
-        QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML DelegateModelGroup: removeGroups: invalid count");
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*removeGroups: invalid count"));
         evaluate<void>(visualModel, "items.removeGroups(11, 5, \"items\")");
         QCOMPARE(listview->count(), 12);
         QCOMPARE(visualModel->items()->count(), 12);
@@ -2466,7 +2467,7 @@ void tst_qquickvisualdatamodel::incompleteModel()
     QCOMPARE(itemsSpy.count(), 0);
     QCOMPARE(persistedItemsSpy.count(), 0);
 
-    QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML DelegateModelGroup: get: index out of range");
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*get: index out of range"));
     QVERIFY(evaluate<bool>(model, "items.get(0) === undefined"));
 
     component.completeCreate();
@@ -3660,73 +3661,73 @@ void tst_qquickvisualdatamodel::warnings_data()
 {
     QTest::addColumn<QUrl>("source");
     QTest::addColumn<QString>("expression");
-    QTest::addColumn<QString>("warning");
+    QTest::addColumn<QRegularExpression>("warning");
     QTest::addColumn<int>("count");
 
     QTest::newRow("insert < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.insert(-2, {\"number\": \"eight\"})")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("insert: index out of range"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("insert: index out of range"))
             << 4;
 
     QTest::newRow("insert > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.insert(8, {\"number\": \"eight\"})")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("insert: index out of range"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("insert: index out of range"))
             << 4;
 
     QTest::newRow("create < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.create(-2, {\"number\": \"eight\"})")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("create: index out of range"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("create: index out of range"))
             << 4;
 
     QTest::newRow("create > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.create(8, {\"number\": \"eight\"})")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("create: index out of range"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("create: index out of range"))
             << 4;
 
     QTest::newRow("resolve from < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.resolve(-2, 3)")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("resolve: from index out of range"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("resolve: from index out of range"))
             << 4;
 
     QTest::newRow("resolve from > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.resolve(8, 3)")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("resolve: from index out of range"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("resolve: from index out of range"))
             << 4;
 
     QTest::newRow("resolve to < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.resolve(3, -2)")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("resolve: to index out of range"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("resolve: to index out of range"))
             << 4;
 
     QTest::newRow("resolve to > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.resolve(3, 8)")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("resolve: to index out of range"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("resolve: to index out of range"))
             << 4;
 
     QTest::newRow("resolve from invalid index")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.resolve(\"two\", 3)")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("resolve: from index invalid"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("resolve: from index invalid"))
             << 4;
 
     QTest::newRow("resolve to invalid index")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.resolve(3, \"two\")")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("resolve: to index invalid"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("resolve: to index invalid"))
             << 4;
 
     QTest::newRow("resolve already resolved item")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.resolve(3, 2)")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("resolve: from is not an unresolved item"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("resolve: from is not an unresolved item"))
             << 4;
 
     QTest::newRow("resolve already resolved item")
@@ -3734,193 +3735,193 @@ void tst_qquickvisualdatamodel::warnings_data()
             << QString("{ items.insert(0, {\"number\": \"eight\"});"
                        "items.insert(1, {\"number\": \"seven\"});"
                        "items.resolve(0, 1)}")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("resolve: to is not a model item"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("resolve: to is not a model item"))
             << 6;
 
     QTest::newRow("remove index < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.remove(-2, 1)")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("remove: index out of range"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("remove: index out of range"))
             << 4;
 
     QTest::newRow("remove index == length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.remove(4, 1)")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("remove: index out of range"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("remove: index out of range"))
             << 4;
 
     QTest::newRow("remove index > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.remove(9, 1)")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("remove: index out of range"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("remove: index out of range"))
             << 4;
 
     QTest::newRow("remove invalid index")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.remove(\"nine\", 1)")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("remove: invalid index"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("remove: invalid index"))
             << 4;
 
     QTest::newRow("remove count < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.remove(1, -2)")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("remove: invalid count"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("remove: invalid count"))
             << 4;
 
     QTest::newRow("remove index + count > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.remove(2, 4, \"selected\")")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("remove: invalid count"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("remove: invalid count"))
             << 4;
 
     QTest::newRow("addGroups index < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.addGroups(-2, 1, \"selected\")")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("addGroups: index out of range"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("addGroups: index out of range"))
             << 4;
 
     QTest::newRow("addGroups index == length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.addGroups(4, 1, \"selected\")")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("addGroups: index out of range"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("addGroups: index out of range"))
             << 4;
 
     QTest::newRow("addGroups index > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.addGroups(9, 1, \"selected\")")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("addGroups: index out of range"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("addGroups: index out of range"))
             << 4;
 
     QTest::newRow("addGroups count < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.addGroups(1, -2, \"selected\")")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("addGroups: invalid count"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("addGroups: invalid count"))
             << 4;
 
     QTest::newRow("addGroups index + count > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.addGroups(2, 4, \"selected\")")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("addGroups: invalid count"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("addGroups: invalid count"))
             << 4;
 
     QTest::newRow("removeGroups index < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.removeGroups(-2, 1, \"selected\")")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("removeGroups: index out of range"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("removeGroups: index out of range"))
             << 4;
 
     QTest::newRow("removeGroups index == length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.removeGroups(4, 1, \"selected\")")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("removeGroups: index out of range"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("removeGroups: index out of range"))
             << 4;
 
     QTest::newRow("removeGroups index > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.removeGroups(9, 1, \"selected\")")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("removeGroups: index out of range"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("removeGroups: index out of range"))
             << 4;
 
     QTest::newRow("removeGroups count < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.removeGroups(1, -2, \"selected\")")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("removeGroups: invalid count"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("removeGroups: invalid count"))
             << 4;
 
     QTest::newRow("removeGroups index + count > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.removeGroups(2, 4, \"selected\")")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("removeGroups: invalid count"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("removeGroups: invalid count"))
             << 4;
 
     QTest::newRow("setGroups index < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.setGroups(-2, 1, \"selected\")")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("setGroups: index out of range"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("setGroups: index out of range"))
             << 4;
 
     QTest::newRow("setGroups index == length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.setGroups(4, 1, \"selected\")")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("setGroups: index out of range"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("setGroups: index out of range"))
             << 4;
 
     QTest::newRow("setGroups index > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.setGroups(9, 1, \"selected\")")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("setGroups: index out of range"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("setGroups: index out of range"))
             << 4;
 
     QTest::newRow("setGroups count < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.setGroups(1, -2, \"selected\")")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("setGroups: invalid count"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("setGroups: invalid count"))
             << 4;
 
     QTest::newRow("setGroups index + count > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.setGroups(2, 4, \"selected\")")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("setGroups: invalid count"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("setGroups: invalid count"))
             << 4;
 
     QTest::newRow("move from < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.move(-2, 1, 1)")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("move: from index out of range"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("move: from index out of range"))
             << 4;
 
     QTest::newRow("move from == length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.move(4, 1, 1)")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("move: from index out of range"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("move: from index out of range"))
             << 4;
 
     QTest::newRow("move from > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.move(9, 1, 1)")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("move: from index out of range"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("move: from index out of range"))
             << 4;
 
     QTest::newRow("move invalid from")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.move(\"nine\", 1, 1)")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("move: invalid from index"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("move: invalid from index"))
             << 4;
 
     QTest::newRow("move to < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.move(1, -2, 1)")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("move: to index out of range"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("move: to index out of range"))
             << 4;
 
     QTest::newRow("move to == length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.move(1, 4, 1)")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("move: to index out of range"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("move: to index out of range"))
             << 4;
 
     QTest::newRow("move to > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.move(1, 9, 1)")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("move: to index out of range"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("move: to index out of range"))
             << 4;
 
     QTest::newRow("move invalid to")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.move(1, \"nine\", 1)")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("move: invalid to index"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("move: invalid to index"))
             << 4;
 
     QTest::newRow("move count < 0")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.move(1, 1, -2)")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("move: invalid count"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("move: invalid count"))
             << 4;
 
     QTest::newRow("move from + count > length")
             << testFileUrl("listmodelproperties.qml")
             << QString("items.move(2, 1, 4)")
-            << ("<Unknown File>: QML DelegateModelGroup: " + QQmlDelegateModelGroup::tr("move: from index out of range"))
+            << QRegularExpression(".*" + QQmlDelegateModelGroup::tr("move: from index out of range"))
             << 4;
 }
 
@@ -3928,7 +3929,7 @@ void tst_qquickvisualdatamodel::warnings()
 {
     QFETCH(QUrl, source);
     QFETCH(QString, expression);
-    QFETCH(QString, warning);
+    QFETCH(QRegularExpression, warning);
     QFETCH(int, count);
 
     QQuickWindow window;
@@ -3946,7 +3947,7 @@ void tst_qquickvisualdatamodel::warnings()
     QObject *visualModel = evaluate<QObject *>(listView, "model");
     QVERIFY(visualModel);
 
-    QTest::ignoreMessage(QtWarningMsg, warning.toUtf8());
+    QTest::ignoreMessage(QtWarningMsg, warning);
 
     evaluate<void>(visualModel, expression);
     QCOMPARE(evaluate<int>(listView, "count"), count);
