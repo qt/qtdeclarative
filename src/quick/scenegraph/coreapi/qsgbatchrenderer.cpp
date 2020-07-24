@@ -2484,24 +2484,26 @@ ClipState::ClipType Renderer::updateStencilClip(const QSGClipNode *clip)
                     m_clipMatrixId = m_clipProgram.uniformLocation("matrix");
                 }
                 const QSGClipNode *clipNext = clip->clipList();
-                QMatrix4x4 mNext = m_current_projection_matrix;
-                if (clipNext->matrix())
-                    mNext *= *clipNext->matrix();
+                if (clipNext) {
+                    QMatrix4x4 mNext = m_current_projection_matrix;
+                    if (clipNext->matrix())
+                        mNext *= *clipNext->matrix();
 
-                auto rect = scissorRect(clipNext->clipRect(), mNext);
+                    auto rect = scissorRect(clipNext->clipRect(), mNext);
 
-                ClipState::ClipType clipTypeNext = clipType ;
-                clipTypeNext |= ClipState::StencilClip;
-                QRect m_next_scissor_rect = m_currentScissorRect;
-                if (!(clipTypeNext & ClipState::ScissorClip)) {
-                    m_next_scissor_rect = rect;
-                    glEnable(GL_SCISSOR_TEST);
-                } else {
-                    m_next_scissor_rect =
-                       m_currentScissorRect & rect;
+                    ClipState::ClipType clipTypeNext = clipType ;
+                    clipTypeNext |= ClipState::StencilClip;
+                    QRect m_next_scissor_rect = m_currentScissorRect;
+                    if (!(clipTypeNext & ClipState::ScissorClip)) {
+                        m_next_scissor_rect = rect;
+                        glEnable(GL_SCISSOR_TEST);
+                    } else {
+                        m_next_scissor_rect =
+                           m_currentScissorRect & rect;
+                    }
+                    glScissor(m_next_scissor_rect.x(), m_next_scissor_rect.y(),
+                              m_next_scissor_rect.width(), m_next_scissor_rect.height());
                 }
-                glScissor(m_next_scissor_rect.x(), m_next_scissor_rect.y(),
-                          m_next_scissor_rect.width(), m_next_scissor_rect.height());
 
                 glClearStencil(0);
                 glClear(GL_STENCIL_BUFFER_BIT);
