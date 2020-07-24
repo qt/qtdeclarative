@@ -1729,6 +1729,12 @@ void tst_qqmllanguage::requiredProperty()
         QVERIFY(!component.errors().empty());
         QVERIFY(component.errorString().contains("Property blub was marked as required but does not exist"));
     }
+    {
+        QQmlComponent component(&engine, testFileUrl("RequiredListPropertiesUser.qml"));
+        VERIFY_ERRORS(0);
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(object);
+    }
 }
 
 class MyClassWithRequiredProperty : public QObject
