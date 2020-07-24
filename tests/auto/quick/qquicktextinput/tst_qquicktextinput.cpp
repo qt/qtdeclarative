@@ -3490,8 +3490,8 @@ void tst_qquicktextinput::passwordEchoDelay()
 
 void tst_qquicktextinput::simulateKey(QWindow *view, int key)
 {
-    QKeyEvent press(QKeyEvent::KeyPress, key, nullptr);
-    QKeyEvent release(QKeyEvent::KeyRelease, key, nullptr);
+    QKeyEvent press(QKeyEvent::KeyPress, key, {});
+    QKeyEvent release(QKeyEvent::KeyRelease, key, {});
 
     QGuiApplication::sendEvent(view, &press);
     QGuiApplication::sendEvent(view, &release);
@@ -3608,7 +3608,7 @@ void tst_qquicktextinput::focusOnPressOnlyOneItem()
     //
     // this is a contrived example to be sure, but at the end of this, the
     // important thing is that only one thing should have activeFocus.
-    Qt::KeyboardModifiers noModifiers = nullptr;
+    Qt::KeyboardModifiers noModifiers = {};
     QTest::mousePress(&window, Qt::LeftButton, noModifiers, QPoint(10, 10));
 
     // make sure the press is processed.
@@ -3643,7 +3643,7 @@ void tst_qquicktextinput::openInputPanel()
     QCOMPARE(qApp->inputMethod()->isVisible(), false);
 
     // input panel should open on focus
-    Qt::KeyboardModifiers noModifiers = nullptr;
+    Qt::KeyboardModifiers noModifiers = {};
     QTest::mousePress(&view, Qt::LeftButton, noModifiers);
     QGuiApplication::processEvents();
     QVERIFY(input->hasActiveFocus());
