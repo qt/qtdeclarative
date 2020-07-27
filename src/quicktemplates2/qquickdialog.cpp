@@ -481,7 +481,7 @@ qreal QQuickDialog::implicitFooterHeight() const
 /*!
     \qmlmethod void QtQuick.Controls::Dialog::accept()
 
-    Closes the dialog and emits the \l accepted() signal.
+    Emits the \l accepted() signal and closes the dialog.
 
     \sa reject(), done()
 */
@@ -493,7 +493,7 @@ void QQuickDialog::accept()
 /*!
     \qmlmethod void QtQuick.Controls::Dialog::reject()
 
-    Closes the dialog and emits the \l rejected() signal.
+    Emits the \l rejected() signal and closes the dialog.
 
     \sa accept(), done()
 */
@@ -506,21 +506,26 @@ void QQuickDialog::reject()
     \since QtQuick.Controls 2.3 (Qt 5.10)
     \qmlmethod void QtQuick.Controls::Dialog::done(int result)
 
-    Closes the dialog, sets the \a result, and emits \l accepted() or
-    \l rejected() depending on whether the result is \c Dialog.Accepted
-    or \c Dialog.Rejected, respectively.
+    \list 1
+    \li Sets the \a result.
+    \li Emits \l accepted() or \l rejected() depending on
+    whether the result is \c Dialog.Accepted or \c Dialog.Rejected,
+    respectively.
+    \li Emits \l closed().
+    \endlist
 
     \sa accept(), reject(), result
 */
 void QQuickDialog::done(int result)
 {
-    close();
     setResult(result);
 
     if (result == Accepted)
         emit accepted();
     else if (result == Rejected)
         emit rejected();
+
+    close();
 }
 
 #if QT_CONFIG(accessibility)

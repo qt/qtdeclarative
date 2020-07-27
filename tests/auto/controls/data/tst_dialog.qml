@@ -49,6 +49,7 @@
 ****************************************************************************/
 
 import QtQuick
+import QtQuick.Window
 import QtTest
 import QtQuick.Controls
 import QtQuick.Templates as T
@@ -84,6 +85,10 @@ TestCase {
         SignalSpy { }
     }
 
+    function init() {
+        tryCompare(testCase.Window.window, "active", true)
+    }
+
     function test_defaults() {
         var control = createTemporaryObject(dialog, testCase)
         verify(control)
@@ -105,16 +110,20 @@ TestCase {
 
         var acceptedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "accepted"})
         verify(acceptedSpy.valid)
+
+        var closedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "closed"})
+        verify(closedSpy.valid)
+
         control.accept()
         compare(acceptedSpy.count, 1)
         compare(control.result, Dialog.Accepted)
 
         tryCompare(control, "visible", false)
+        compare(acceptedSpy.count, 1)
+        compare(closedSpy.count, 1)
     }
 
     function test_reject() {
-        skip("QTBUG-62549, QTBUG-62628")
-
         var control = createTemporaryObject(dialog, testCase)
 
         var openedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "opened"})
@@ -127,11 +136,17 @@ TestCase {
 
         var rejectedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "rejected"})
         verify(rejectedSpy.valid)
+
+        var closedSpy = createTemporaryObject(signalSpy, testCase, {target: control, signalName: "closed"})
+        verify(closedSpy.valid)
+
         control.reject()
         compare(rejectedSpy.count, 1)
         compare(control.result, Dialog.Rejected)
 
         tryCompare(control, "visible", false)
+        compare(rejectedSpy.count, 1)
+        compare(closedSpy.count, 1)
 
         // Check that rejected() is emitted when CloseOnEscape is triggered.
         control.x = 10
@@ -145,9 +160,12 @@ TestCase {
         keyPress(Qt.Key_Escape)
         compare(rejectedSpy.count, 2)
         tryCompare(control, "visible", false)
+        compare(rejectedSpy.count, 2)
+        compare(closedSpy.count, 2)
 
         keyRelease(Qt.Key_Escape)
         compare(rejectedSpy.count, 2)
+        compare(closedSpy.count, 2)
 
         // Check that rejected() is emitted when CloseOnPressOutside is triggered.
         control.closePolicy = Popup.CloseOnPressOutside
@@ -157,9 +175,12 @@ TestCase {
         mousePress(testCase, 1, 1)
         compare(rejectedSpy.count, 3)
         tryCompare(control, "visible", false)
+        compare(rejectedSpy.count, 3)
+        compare(closedSpy.count, 3)
 
         mouseRelease(testCase, 1, 1)
         compare(rejectedSpy.count, 3)
+        compare(closedSpy.count, 3)
 
         // Check that rejected() is emitted when CloseOnReleaseOutside is triggered.
         // For this, we need to make the dialog modal, because the overlay won't accept
@@ -176,6 +197,8 @@ TestCase {
         mouseRelease(testCase, 1, 1)
         compare(rejectedSpy.count, 4)
         tryCompare(control, "visible", false)
+        compare(rejectedSpy.count, 4)
+        compare(closedSpy.count, 4)
     }
 
     function test_buttonBox_data() {
