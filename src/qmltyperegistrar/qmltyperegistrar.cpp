@@ -469,8 +469,9 @@ int main(int argc, char **argv)
                     continue;
                 }
 
-                const QString include = metaObject[QLatin1String("inputFile")].toString();
-                const QJsonArray classes = metaObject[QLatin1String("classes")].toArray();
+                auto const asObject = metaObject.toObject();
+                const QString include = asObject[QLatin1String("inputFile")].toString();
+                const QJsonArray classes = asObject[QLatin1String("classes")].toArray();
                 for (const auto &cls : classes) {
                     QJsonObject classDef = cls.toObject();
                     classDef.insert(QLatin1String("inputFile"), include);
