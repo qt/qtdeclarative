@@ -136,6 +136,8 @@ public:
     virtual void finalizeEnterTransition();
     virtual void finalizeExitTransition();
 
+    virtual void opened();
+
     QMarginsF getMargins() const;
 
     void setTopMargin(qreal value, bool reset = false);

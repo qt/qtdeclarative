@@ -130,6 +130,8 @@ public:
     void startTimeout();
     void stopTimeout();
 
+    void opened() override;
+
     QPalette defaultPalette() const override { return QQuickTheme::palette(QQuickTheme::ToolTip); }
 
     int delay = 0;
@@ -161,6 +163,12 @@ void QQuickToolTipPrivate::startTimeout()
 void QQuickToolTipPrivate::stopTimeout()
 {
     timeoutTimer.stop();
+}
+
+void QQuickToolTipPrivate::opened()
+{
+    QQuickPopupPrivate::opened();
+    startTimeout();
 }
 
 QQuickToolTip::QQuickToolTip(QQuickItem *parent)
@@ -244,7 +252,7 @@ void QQuickToolTip::setTimeout(int timeout)
 
     if (timeout <= 0)
         d->stopTimeout();
-    else if (isVisible())
+    else if (isOpened())
         d->startTimeout();
 
     emit timeoutChanged();
@@ -260,12 +268,6 @@ void QQuickToolTip::setVisible(bool visible)
                 d->startDelay();
                 return;
             }
-        } else {
-            // We are being made visible, even though we already were.
-            // We've probably been re-opened before our exit transition could finish.
-            // In that case, we need to manually start the timeout, as that is usually
-            // done in itemChange(), which won't be called in this situation.
-            d->startTimeout();
         }
     } else {
         d->stopDelay();
@@ -318,9 +320,7 @@ void QQuickToolTip::itemChange(QQuickItem::ItemChange change, const QQuickItem::
     Q_D(QQuickToolTip);
     QQuickPopup::itemChange(change, data);
     if (change == QQuickItem::ItemVisibleHasChanged) {
-        if (data.boolValue)
-            d->startTimeout();
-        else
+        if (!data.boolValue)
             d->stopTimeout();
 
         QQuickToolTipAttached *attached = qobject_cast<QQuickToolTipAttached *>(qmlAttachedPropertiesObject<QQuickToolTip>(d->parentItem, false));

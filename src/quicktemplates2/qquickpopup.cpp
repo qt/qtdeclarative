@@ -473,7 +473,7 @@ void QQuickPopupPrivate::finalizeEnterTransition()
     transitionState = NoTransition;
     getPositioner()->reposition();
     emit q->openedChanged();
-    emit q->opened();
+    opened();
 }
 
 void QQuickPopupPrivate::finalizeExitTransition()
@@ -512,6 +512,12 @@ void QQuickPopupPrivate::finalizeExitTransition()
     hadActiveFocusBeforeExitTransition = false;
     emit q->visibleChanged();
     emit q->closed();
+}
+
+void QQuickPopupPrivate::opened()
+{
+    Q_Q(QQuickPopup);
+    emit q->opened();
 }
 
 QMarginsF QQuickPopupPrivate::getMargins() const

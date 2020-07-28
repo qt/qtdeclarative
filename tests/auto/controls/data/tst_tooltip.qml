@@ -445,4 +445,15 @@ TestCase {
         compare(item.ToolTip.toolTip.contentItem.wrapMode, Text.Wrap)
         verify(item.ToolTip.toolTip.contentItem.width < item.ToolTip.toolTip.contentItem.implicitWidth)
     }
+
+    function test_timeoutAfterOpened() {
+        let control = createTemporaryObject(toolTipWithExitTransition, testCase, { timeout: 1, exit: null })
+        verify(control)
+
+        let openedSpy = createTemporaryObject(signalSpy, testCase, { target: control, signalName: "opened" })
+        verify(openedSpy.valid)
+
+        control.show("Test")
+        tryCompare(openedSpy, "count", 1)
+    }
 }
