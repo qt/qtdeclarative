@@ -556,7 +556,7 @@ public:
     {
         command = runner->command;
     }
-    void run();
+    void run() override;
 
     void runExternalTest();
 
