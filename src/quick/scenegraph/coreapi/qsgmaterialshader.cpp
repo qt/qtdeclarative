@@ -236,7 +236,7 @@ void QSGMaterialShaderPrivate::prepare(QShader::Variant vertexShaderVariant)
     ubufBinding = -1;
     ubufSize = 0;
     ubufStages = { };
-    memset(combinedImageSamplerBindings, 0, sizeof(combinedImageSamplerBindings));
+    memset(static_cast<void *>(combinedImageSamplerBindings), 0, sizeof(combinedImageSamplerBindings));
     vertexShader = fragmentShader = nullptr;
     masterUniformData.clear();
 
