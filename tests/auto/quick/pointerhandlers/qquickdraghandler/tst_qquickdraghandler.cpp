@@ -356,19 +356,20 @@ void tst_DragHandler::mouseDragThreshold()
     QCOMPARE(dragHandler->centroid().scenePressPosition(), scenePressPos);
     QCOMPARE(dragHandler->centroid().velocity(), QVector2D());
     QCOMPARE(centroidChangedSpy.count(), 1);
-    p1 += QPoint(dragThreshold, 0);
+    p1 += QPoint(qMax(1, dragThreshold), 0); // QTBUG-85431: zero-distance mouse moves are not delivered
     QTest::mouseMove(window, p1);
     if (dragThreshold > 0)
         QTRY_VERIFY(dragHandler->centroid().velocity().x() > 0);
     QCOMPARE(centroidChangedSpy.count(), 2);
-    QVERIFY(!dragHandler->active());
+    // the handler is not yet active, unless the drag threshold was already exceeded
+    QCOMPARE(dragHandler->active(), dragThreshold == 0);
     p1 += QPoint(1, 0);
     QTest::mouseMove(window, p1);
     QTRY_VERIFY(dragHandler->active());
-    QCOMPARE(translationChangedSpy.count(), 0);
+    QCOMPARE(translationChangedSpy.count(), dragThreshold ? 0 : 1);
     QCOMPARE(centroidChangedSpy.count(), 3);
-    QCOMPARE(dragHandler->translation().x(), 0.0);
-    QPointF sceneGrabPos = p1;
+    QCOMPARE(dragHandler->translation().x(), dragThreshold ? 0 : 2);
+    QPointF sceneGrabPos = dragThreshold ? p1 : p1 - QPoint(1, 0);
     QCOMPARE(dragHandler->centroid().sceneGrabPosition(), sceneGrabPos);
     p1 += QPoint(19, 0);
     QTest::mouseMove(window, p1);
@@ -378,7 +379,7 @@ void tst_DragHandler::mouseDragThreshold()
     QCOMPARE(dragHandler->centroid().scenePosition(), ball->mapToScene(ballCenter));
     QCOMPARE(dragHandler->centroid().scenePressPosition(), scenePressPos);
     QCOMPARE(dragHandler->centroid().sceneGrabPosition(), sceneGrabPos);
-    QCOMPARE(dragHandler->translation().x(), dragThreshold + 20.0);
+    QCOMPARE(dragHandler->translation().x(), dragThreshold + (dragThreshold ? 20 : 21));
     QCOMPARE(dragHandler->translation().y(), 0.0);
     QVERIFY(dragHandler->centroid().velocity().x() > 0);
     QCOMPARE(centroidChangedSpy.count(), 4);
@@ -386,7 +387,7 @@ void tst_DragHandler::mouseDragThreshold()
     QTRY_VERIFY(!dragHandler->active());
     QCOMPARE(dragHandler->centroid().pressedButtons(), Qt::NoButton);
     QCOMPARE(ball->mapToScene(ballCenter).toPoint(), p1);
-    QCOMPARE(translationChangedSpy.count(), 1);
+    QCOMPARE(translationChangedSpy.count(), dragThreshold ? 1 : 2);
     QCOMPARE(centroidChangedSpy.count(), 5);
 }
 
