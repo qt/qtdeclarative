@@ -6,3 +6,7 @@ borderimages/SimpleNoBorder.qml
 
 # This will not stabilize before the timeout
 text/text_2500_chinese_characters.qml
+
+# Depending on the system load etc. it can vary slightly at which
+# frame the animation gets frozen.
+shaders/propertyanimation/uniformanimator_stall.qml
