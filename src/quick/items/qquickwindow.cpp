@@ -2429,8 +2429,6 @@ void QQuickWindow::tabletEvent(QTabletEvent *event)
 {
     Q_D(QQuickWindow);
     qCDebug(lcTablet) << event;
-    const int deviceIndex = QInputDevice::devices().indexOf(event->device());
-    QMutableSinglePointEvent::from(event)->mutablePoint().setId((deviceIndex << 24) + event->point(0).id());
     // TODO Qt 6: make sure TabletEnterProximity and TabletLeaveProximity are delivered here
     d->deliverPointerEvent(d->pointerEventInstance(event));
 }
@@ -2588,8 +2586,6 @@ void QQuickWindowPrivate::handleMouseEvent(QMouseEvent *event)
         return;
     }
     qCDebug(DBG_MOUSE) << event;
-    const int deviceIndex = QInputDevice::devices().indexOf(event->device());
-    QMutableSinglePointEvent::from(event)->mutablePoint().setId((deviceIndex << 24) + event->point(0).id());
 
     switch (event->type()) {
     case QEvent::MouseButtonPress:
