@@ -1361,7 +1361,7 @@ void QQuickWidget::mouseMoveEvent(QMouseEvent *e)
 {
     Q_D(QQuickWidget);
     Q_QUICK_INPUT_PROFILE(QQuickProfiler::Mouse, QQuickProfiler::InputMouseMove, e->position().x(),
-                          e->localPos().y());
+                          e->position().y());
 
     // Put localPos into the event's localPos and windowPos, and screenPos into the
     // event's screenPos. This way the windowPos in e is ignored and is replaced by
@@ -1603,8 +1603,8 @@ bool QQuickWidget::event(QEvent *e)
 
     case QEvent::Enter: {
         QEnterEvent *enterEvent = static_cast<QEnterEvent *>(e);
-        QEnterEvent mappedEvent(enterEvent->localPos(), enterEvent->windowPos(),
-                                enterEvent->screenPos());
+        QEnterEvent mappedEvent(enterEvent->position(), enterEvent->scenePosition(),
+                                enterEvent->globalPosition());
         const bool ret = QCoreApplication::sendEvent(d->offscreenWindow, &mappedEvent);
         e->setAccepted(mappedEvent.isAccepted());
         return ret;
