@@ -1132,19 +1132,14 @@ void QQuickWindowPrivate::sendUngrabEvent(QQuickItem *grabber, bool touch)
 }
 
 /*! \internal
-    Translates QEventPoint::scenePosition() in \a touchEvent to this window,
-    and modifies QEventPoint::id() to be globally unique.
+    Translates QEventPoint::scenePosition() in \a touchEvent to this window.
 
     The item-local QEventPoint::position() is updated later, not here.
 */
 void QQuickWindowPrivate::translateTouchEvent(QTouchEvent *touchEvent)
 {
-    const int deviceMask = QInputDevice::devices().indexOf(touchEvent->device()) << 24;
-    for (QEventPoint &touchPoint : QMutableTouchEvent::from(touchEvent)->touchPoints()) {
-        QMutableEventPoint &mut = QMutableEventPoint::from(touchPoint);
-        mut.setScenePosition(touchPoint.position());
-        mut.setId(deviceMask + touchPoint.id());
-    }
+    for (QEventPoint &touchPoint : QMutableTouchEvent::from(touchEvent)->touchPoints())
+        QMutableEventPoint::from(touchPoint).setScenePosition(touchPoint.position());
 }
 
 
