@@ -117,7 +117,7 @@ signals:
     void intListPropertyChanged(const QVariantList &arg);
     void stringListPropertyChanged(const QVariantList &arg);
     void objectListPropertyChanged(const QVariantList &arg);
-    void datePropertyChanged(const QDate &arg);
+    void datePropertyChanged(QDate arg);
     void sizePropertyChanged(const QSizeF &arg);
     void pointPropertyChanged(const QPointF &arg);
     void rectPropertyChanged(const QRectF &arg);

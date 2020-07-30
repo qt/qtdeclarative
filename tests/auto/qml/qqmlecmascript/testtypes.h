@@ -608,7 +608,7 @@ public:
     QDate dateProperty() const {
        return datePropertyValue;
     }
-    void setDateProperty(const QDate &v) {
+    void setDateProperty(QDate v) {
         datePropertyValue = v;
     }
 
@@ -616,7 +616,7 @@ public:
     QTime timeProperty() const {
        return timePropertyValue;
     }
-    void setTimeProperty(const QTime &v) {
+    void setTimeProperty(QTime v) {
         timePropertyValue = v;
     }
 

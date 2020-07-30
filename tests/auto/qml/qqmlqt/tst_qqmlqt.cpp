@@ -1288,12 +1288,12 @@ class TimeProvider: public QObject
     Q_PROPERTY(QTime time READ time WRITE setTime NOTIFY timeChanged)
 
 public:
-    TimeProvider(const QTime &t)
+    TimeProvider(QTime t)
         : m_getTime(t)
     {}
 
     QTime time() const { return m_getTime; }
-    void setTime(const QTime &t) { m_putTime = t; emit timeChanged(); }
+    void setTime(QTime t) { m_putTime = t; emit timeChanged(); }
 
 signals:
     void timeChanged();
