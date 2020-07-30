@@ -21,7 +21,7 @@ Item {
             sourceItem: foo
             live: false
             smooth: true
-            rotation: 45
+            rotation: 37
             recursive: true
         }
     }
