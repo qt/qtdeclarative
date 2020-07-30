@@ -64,7 +64,7 @@ public:
     BirthdayPartyAttached(QObject *object);
 
     QDate rsvp() const;
-    void setRsvp(const QDate &);
+    void setRsvp(QDate);
 
 private:
     QDate m_rsvp;
@@ -93,7 +93,7 @@ public:
     void startParty();
 // ![0]
 signals:
-    void partyStarted(const QTime &time);
+    void partyStarted(QTime time);
 // ![0]
 
 private:

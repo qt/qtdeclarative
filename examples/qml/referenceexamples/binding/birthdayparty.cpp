@@ -59,7 +59,7 @@ QDate BirthdayPartyAttached::rsvp() const
     return m_rsvp;
 }
 
-void BirthdayPartyAttached::setRsvp(const QDate &d)
+void BirthdayPartyAttached::setRsvp(QDate d)
 {
     if (d != m_rsvp) {
         m_rsvp = d;
