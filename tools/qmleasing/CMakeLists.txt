@@ -1,11 +1,10 @@
 # Generated from qmleasing.pro.
 
 #####################################################################
-## qmleasing Binary:
+## qmleasing App:
 #####################################################################
 
-qt_add_executable(qmleasing
-    GUI
+qt_internal_add_app(qmleasing
     SOURCES
         import.ui
         main.cpp
@@ -36,6 +35,6 @@ qt_add_resource(qmleasing "resources"
         ${resources_resource_files}
 )
 
-
-#### Keys ignored in scope 1:.:.:qmleasing.pro:<TRUE>:
-# QMAKE_TARGET_DESCRIPTION = "QML" "Easing" "Curve" "Editor"
+set_target_properties(qmleasing PROPERTIES
+    QT_TARGET_DESCRIPTION "QML Easing Curve Editor"
+)
