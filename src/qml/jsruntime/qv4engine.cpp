@@ -968,7 +968,7 @@ Heap::DateObject *ExecutionEngine::newDateObject(const QDateTime &dt)
     return object->d();
 }
 
-Heap::DateObject *ExecutionEngine::newDateObjectFromTime(const QTime &t)
+Heap::DateObject *ExecutionEngine::newDateObjectFromTime(QTime t)
 {
     Scope scope(this);
     Scoped<DateObject> object(scope, memoryManager->allocate<DateObject>(t));

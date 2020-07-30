@@ -747,7 +747,7 @@ void Heap::DateObject::init(const QDateTime &date)
     this->date = date.isValid() ? TimeClip(date.toMSecsSinceEpoch()) : qt_qnan();
 }
 
-void Heap::DateObject::init(const QTime &time)
+void Heap::DateObject::init(QTime time)
 {
     Object::init();
     if (!time.isValid()) {

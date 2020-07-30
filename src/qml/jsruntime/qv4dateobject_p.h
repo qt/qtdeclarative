@@ -75,7 +75,7 @@ struct DateObject : Object {
         this->date = date.toNumber();
     }
     void init(const QDateTime &date);
-    void init(const QTime &time);
+    void init(QTime time);
 
     double date;
 };
