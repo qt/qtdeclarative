@@ -46,7 +46,7 @@
 #include <QtGui/QVulkanInstance>
 #endif
 
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_CLANG_QDOC)
 Q_FORWARD_DECLARE_OBJC_CLASS(MTLDevice);
 Q_FORWARD_DECLARE_OBJC_CLASS(MTLCommandQueue);
 #endif
