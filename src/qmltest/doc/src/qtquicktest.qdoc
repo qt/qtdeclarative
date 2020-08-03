@@ -27,6 +27,7 @@
 
 /*!
    \namespace QQuickTest
+   \inheaderfile QtQuickTest
    \inmodule QtQuickTest
 
    \brief The QQuickTest namespace contains all the functions and
