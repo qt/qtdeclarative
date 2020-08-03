@@ -68,6 +68,7 @@
 #include <private/qv4functionobject_p.h>
 #include <private/qv4objectproto_p.h>
 #include <private/qv4scopedvalue_p.h>
+#include <private/qlocale_tools_p.h>
 
 #include <QtCore/qmath.h>
 #include <QtCore/qvector.h>
@@ -123,8 +124,6 @@ QT_BEGIN_NAMESPACE
 */
 
 
-
-Q_CORE_EXPORT double qstrtod(const char *s00, char const **se, bool *ok);
 
 #define CHECK_CONTEXT(r)     if (!r || !r->d()->context() || !r->d()->context()->bufferValid()) \
                                 THROW_GENERIC_ERROR("Not a Context2D object");

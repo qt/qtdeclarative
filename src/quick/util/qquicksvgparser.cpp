@@ -43,10 +43,10 @@
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qstring.h>
 
+#include <private/qlocale_tools_p.h>
+
 QT_BEGIN_NAMESPACE
 
-//copied from Qt SVG (qsvghandler.cpp).
-Q_CORE_EXPORT double qstrtod(const char *s00, char const **se, bool *ok);
 // '0' is 0x30 and '9' is 0x39
 static inline bool isDigit(ushort ch)
 {

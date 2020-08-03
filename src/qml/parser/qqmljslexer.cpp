@@ -43,15 +43,13 @@
 
 #include <private/qqmljsdiagnosticmessage_p.h>
 #include <private/qqmljsmemorypool_p.h>
+#include <private/qlocale_tools_p.h>
+
 
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/QScopedValueRollback>
-
-QT_BEGIN_NAMESPACE
-Q_CORE_EXPORT double qstrtod(const char *s00, char const **se, bool *ok);
-QT_END_NAMESPACE
 
 using namespace QQmlJS;
 
