@@ -10,7 +10,12 @@ file(GLOB_RECURSE test_data_glob
     script/*)
 list(APPEND test_data ${test_data_glob})
 
-qt_find_package(Threads PROVIDED_TARGETS Threads::Threads) # special case
+# special case begin
+# TODO: Prepare for removal, once Platform brings in Threads.
+if(NOT TARGET Threads::Threads)
+    qt_find_package(Threads PROVIDED_TARGETS Threads::Threads)
+endif()
+# special case end
 
 qt_add_test(tst_qjsengine
     SOURCES
