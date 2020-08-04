@@ -17,5 +17,5 @@ void main()
                                      texture2D(_qt_texture, sCoordRight).a,
                                      0.0, 1.0) - glyph,
                                0.0, 1.0);
-    gl_FragColor = outline * styleColor;
+    gl_FragColor = outline * styleColor + step(1.0 - glyph, 1.0) * glyph * color;
 }
