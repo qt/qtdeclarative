@@ -110,9 +110,9 @@ public:
     bool isLargeChange(const QPointF &eventPos, qreal proposedPosition) const;
     bool isHorizontalOrVertical() const;
 
-    void handlePress(const QPointF &point) override;
-    void handleMove(const QPointF &point) override;
-    void handleRelease(const QPointF &point) override;
+    void handlePress(const QPointF &point, ulong timestamp) override;
+    void handleMove(const QPointF &point, ulong timestamp) override;
+    void handleRelease(const QPointF &point, ulong timestamp) override;
     void handleUngrab() override;
 
     void cancelHandle();
@@ -241,19 +241,19 @@ bool QQuickDialPrivate::isHorizontalOrVertical() const
     return inputMode == QQuickDial::Horizontal || inputMode == QQuickDial::Vertical;
 }
 
-void QQuickDialPrivate::handlePress(const QPointF &point)
+void QQuickDialPrivate::handlePress(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickDial);
-    QQuickControlPrivate::handlePress(point);
+    QQuickControlPrivate::handlePress(point, timestamp);
     pressPoint = point;
     positionBeforePress = position;
     q->setPressed(true);
 }
 
-void QQuickDialPrivate::handleMove(const QPointF &point)
+void QQuickDialPrivate::handleMove(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickDial);
-    QQuickControlPrivate::handleMove(point);
+    QQuickControlPrivate::handleMove(point, timestamp);
     const qreal oldPos = position;
     qreal pos = positionAt(point);
     if (snapMode == QQuickDial::SnapAlways)
@@ -269,10 +269,10 @@ void QQuickDialPrivate::handleMove(const QPointF &point)
     }
 }
 
-void QQuickDialPrivate::handleRelease(const QPointF &point)
+void QQuickDialPrivate::handleRelease(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickDial);
-    QQuickControlPrivate::handleRelease(point);
+    QQuickControlPrivate::handleRelease(point, timestamp);
     if (q->keepMouseGrab() || q->keepTouchGrab()) {
         const qreal oldPos = position;
         qreal pos = positionAt(point);
@@ -766,7 +766,7 @@ void QQuickDial::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickDial);
     QQuickControl::mousePressEvent(event);
-    d->handleMove(event->position());
+    d->handleMove(event->position(), event->timestamp());
     setKeepMouseGrab(true);
 }
 
@@ -792,7 +792,7 @@ void QQuickDial::touchEvent(QTouchEvent *event)
                     }
                 }
                 if (keepTouchGrab())
-                    d->handleMove(point.position());
+                    d->handleMove(point.position(), event->timestamp());
                 break;
 
             default:

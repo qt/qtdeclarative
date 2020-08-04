@@ -134,10 +134,10 @@ void QQuickAbstractButtonPrivate::setMovePoint(const QPointF &point)
         emit q->pressYChanged();
 }
 
-void QQuickAbstractButtonPrivate::handlePress(const QPointF &point)
+void QQuickAbstractButtonPrivate::handlePress(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickAbstractButton);
-    QQuickControlPrivate::handlePress(point);
+    QQuickControlPrivate::handlePress(point, timestamp);
     setPressPoint(point);
     q->setPressed(true);
 
@@ -151,10 +151,10 @@ void QQuickAbstractButtonPrivate::handlePress(const QPointF &point)
         stopPressAndHold();
 }
 
-void QQuickAbstractButtonPrivate::handleMove(const QPointF &point)
+void QQuickAbstractButtonPrivate::handleMove(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickAbstractButton);
-    QQuickControlPrivate::handleMove(point);
+    QQuickControlPrivate::handleMove(point, timestamp);
     setMovePoint(point);
     q->setPressed(keepPressed || q->contains(point));
 
@@ -164,14 +164,20 @@ void QQuickAbstractButtonPrivate::handleMove(const QPointF &point)
         stopPressAndHold();
 }
 
-void QQuickAbstractButtonPrivate::handleRelease(const QPointF &point)
+void QQuickAbstractButtonPrivate::handleRelease(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickAbstractButton);
-    QQuickControlPrivate::handleRelease(point);
+    // Store this here since the base class' handleRelease clears it.
+    const int pressTouchId = touchId;
+
+    QQuickControlPrivate::handleRelease(point, timestamp);
     bool wasPressed = pressed;
     setPressPoint(point);
     q->setPressed(false);
     pressButtons = Qt::NoButton;
+
+    const bool touchDoubleClick = pressTouchId != -1 && lastTouchReleaseTimestamp != 0
+        && timestamp - lastTouchReleaseTimestamp < qApp->styleHints()->mouseDoubleClickInterval();
 
     if (!wasHeld && (keepPressed || q->contains(point)))
         q->nextCheckState();
@@ -179,7 +185,7 @@ void QQuickAbstractButtonPrivate::handleRelease(const QPointF &point)
     if (wasPressed) {
         emit q->released();
         if (!wasHeld && !wasDoubleClick)
-            trigger();
+            trigger(touchDoubleClick);
     } else {
         emit q->canceled();
     }
@@ -188,6 +194,21 @@ void QQuickAbstractButtonPrivate::handleRelease(const QPointF &point)
         stopPressRepeat();
     else
         stopPressAndHold();
+
+    if (!touchDoubleClick) {
+        // This is not a double click yet, but it is potentially the
+        // first release before a double click.
+        if (pressTouchId != -1) {
+            // The corresponding press for this release was a touch press.
+            // Keep track of the timestamp of the release so that we can
+            // emit doubleClicked() if another one comes afterwards.
+            lastTouchReleaseTimestamp = timestamp;
+        }
+    } else {
+        // We just did a double click, so clear the release timestamp
+        // to prepare for any possible future double clicks.
+        lastTouchReleaseTimestamp = 0;
+    }
 
     wasDoubleClick = false;
 }
@@ -204,6 +225,7 @@ void QQuickAbstractButtonPrivate::handleUngrab()
     stopPressRepeat();
     stopPressAndHold();
     wasDoubleClick = false;
+    lastTouchReleaseTimestamp = 0;
     emit q->canceled();
 }
 
@@ -332,14 +354,18 @@ void QQuickAbstractButtonPrivate::click()
         emit q->clicked();
 }
 
-void QQuickAbstractButtonPrivate::trigger()
+void QQuickAbstractButtonPrivate::trigger(bool doubleClick)
 {
     Q_Q(QQuickAbstractButton);
     const bool wasEnabled = effectiveEnable;
     if (action && action->isEnabled())
         QQuickActionPrivate::get(action)->trigger(q, false);
-    if (wasEnabled && (!action || !action->isEnabled()))
-        emit q->clicked();
+    if (wasEnabled && (!action || !action->isEnabled())) {
+        if (!doubleClick)
+            emit q->clicked();
+        else
+            emit q->doubleClicked();
+    }
 }
 
 void QQuickAbstractButtonPrivate::toggle(bool value)

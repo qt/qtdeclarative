@@ -909,6 +909,35 @@ TestCase {
         compare(releasedSpy.count, 2)
         compare(clickedSpy.count, 1)
         compare(doubleClickedSpy.count, 1)
+
+        let touch = touchEvent(control)
+        touch.press(0, control)
+        touch.commit()
+        compare(pressedSpy.count, 3)
+        compare(releasedSpy.count, 2)
+        compare(clickedSpy.count, 1)
+        compare(doubleClickedSpy.count, 1)
+
+        touch.release(0, control)
+        touch.commit()
+        compare(pressedSpy.count, 3)
+        compare(releasedSpy.count, 3)
+        compare(clickedSpy.count, 2)
+        compare(doubleClickedSpy.count, 1)
+
+        touch.press(0, control)
+        touch.commit()
+        compare(pressedSpy.count, 4)
+        compare(releasedSpy.count, 3)
+        compare(clickedSpy.count, 2)
+        compare(doubleClickedSpy.count, 1)
+
+        touch.release(0, control)
+        touch.commit()
+        compare(pressedSpy.count, 4)
+        compare(releasedSpy.count, 4)
+        compare(clickedSpy.count, 2)
+        compare(doubleClickedSpy.count, 2)
     }
 
     function test_checkedShouldNotSetCheckable() {

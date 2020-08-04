@@ -85,8 +85,8 @@ public:
     qreal positionAt(const QPointF &point) const;
 
     bool canDrag(const QPointF &movePoint) const;
-    void handleMove(const QPointF &point) override;
-    void handleRelease(const QPointF &point) override;
+    void handleMove(const QPointF &point, ulong timestamp) override;
+    void handleRelease(const QPointF &point, ulong timestamp) override;
 
     QPalette defaultPalette() const override { return QQuickTheme::palette(QQuickTheme::Switch); }
 
@@ -114,18 +114,18 @@ bool QQuickSwitchPrivate::canDrag(const QPointF &movePoint) const
     return (pressPos >= 0.0 && pressPos <= 1.0) || (movePos >= 0.0 && movePos <= 1.0);
 }
 
-void QQuickSwitchPrivate::handleMove(const QPointF &point)
+void QQuickSwitchPrivate::handleMove(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickSwitch);
-    QQuickAbstractButtonPrivate::handleMove(point);
+    QQuickAbstractButtonPrivate::handleMove(point, timestamp);
     if (q->keepMouseGrab() || q->keepTouchGrab())
         q->setPosition(positionAt(point));
 }
 
-void QQuickSwitchPrivate::handleRelease(const QPointF &point)
+void QQuickSwitchPrivate::handleRelease(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickSwitch);
-    QQuickAbstractButtonPrivate::handleRelease(point);
+    QQuickAbstractButtonPrivate::handleRelease(point, timestamp);
     q->setKeepMouseGrab(false);
     q->setKeepTouchGrab(false);
 }

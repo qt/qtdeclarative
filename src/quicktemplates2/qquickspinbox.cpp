@@ -131,9 +131,9 @@ public:
     void startPressRepeat();
     void stopPressRepeat();
 
-    void handlePress(const QPointF &point) override;
-    void handleMove(const QPointF &point) override;
-    void handleRelease(const QPointF &point) override;
+    void handlePress(const QPointF &point, ulong timestamp) override;
+    void handleMove(const QPointF &point, ulong timestamp) override;
+    void handleRelease(const QPointF &point, ulong timestamp) override;
     void handleUngrab() override;
 
     void itemImplicitWidthChanged(QQuickItem *item) override;
@@ -337,10 +337,10 @@ void QQuickSpinBoxPrivate::stopPressRepeat()
     }
 }
 
-void QQuickSpinBoxPrivate::handlePress(const QPointF &point)
+void QQuickSpinBoxPrivate::handlePress(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickSpinBox);
-    QQuickControlPrivate::handlePress(point);
+    QQuickControlPrivate::handlePress(point, timestamp);
     QQuickItem *ui = up->indicator();
     QQuickItem *di = down->indicator();
     up->setPressed(ui && ui->isEnabled() && ui->contains(ui->mapFromItem(q, point)));
@@ -352,10 +352,10 @@ void QQuickSpinBoxPrivate::handlePress(const QPointF &point)
         startRepeatDelay();
 }
 
-void QQuickSpinBoxPrivate::handleMove(const QPointF &point)
+void QQuickSpinBoxPrivate::handleMove(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickSpinBox);
-    QQuickControlPrivate::handleMove(point);
+    QQuickControlPrivate::handleMove(point, timestamp);
     QQuickItem *ui = up->indicator();
     QQuickItem *di = down->indicator();
     up->setHovered(ui && ui->isEnabled() && ui->contains(ui->mapFromItem(q, point)));
@@ -369,10 +369,10 @@ void QQuickSpinBoxPrivate::handleMove(const QPointF &point)
         stopPressRepeat();
 }
 
-void QQuickSpinBoxPrivate::handleRelease(const QPointF &point)
+void QQuickSpinBoxPrivate::handleRelease(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickSpinBox);
-    QQuickControlPrivate::handleRelease(point);
+    QQuickControlPrivate::handleRelease(point, timestamp);
     QQuickItem *ui = up->indicator();
     QQuickItem *di = down->indicator();
 

@@ -95,9 +95,9 @@ public:
     int handleIndexForSplitIndex(int splitIndex) const;
 
     QQuickItem *getContentItem() override;
-    void handlePress(const QPointF &point) override;
-    void handleMove(const QPointF &point) override;
-    void handleRelease(const QPointF &point) override;
+    void handlePress(const QPointF &point, ulong timestamp) override;
+    void handleMove(const QPointF &point, ulong timestamp) override;
+    void handleRelease(const QPointF &point, ulong timestamp) override;
 
     void itemVisibilityChanged(QQuickItem *item) override;
     void itemImplicitWidthChanged(QQuickItem *item) override;

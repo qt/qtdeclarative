@@ -976,10 +976,10 @@ QQuickItem *QQuickSplitViewPrivate::getContentItem()
     return new QQuickContentItem(q);
 }
 
-void QQuickSplitViewPrivate::handlePress(const QPointF &point)
+void QQuickSplitViewPrivate::handlePress(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickSplitView);
-    QQuickContainerPrivate::handlePress(point);
+    QQuickContainerPrivate::handlePress(point, timestamp);
 
     QQuickItem *pressedItem = q->childAt(point.x(), point.y());
     const int pressedHandleIndex = m_handleItems.indexOf(pressedItem);
@@ -1029,9 +1029,9 @@ void QQuickSplitViewPrivate::handlePress(const QPointF &point)
     }
 }
 
-void QQuickSplitViewPrivate::handleMove(const QPointF &point)
+void QQuickSplitViewPrivate::handleMove(const QPointF &point, ulong timestamp)
 {
-    QQuickContainerPrivate::handleMove(point);
+    QQuickContainerPrivate::handleMove(point, timestamp);
 
     if (m_pressedHandleIndex != -1) {
         m_mousePos = point;
@@ -1041,10 +1041,10 @@ void QQuickSplitViewPrivate::handleMove(const QPointF &point)
     }
 }
 
-void QQuickSplitViewPrivate::handleRelease(const QPointF &point)
+void QQuickSplitViewPrivate::handleRelease(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickSplitView);
-    QQuickContainerPrivate::handleRelease(point);
+    QQuickContainerPrivate::handleRelease(point, timestamp);
 
     if (m_pressedHandleIndex != -1) {
         QQuickItem *pressedHandle = m_handleItems.at(m_pressedHandleIndex);

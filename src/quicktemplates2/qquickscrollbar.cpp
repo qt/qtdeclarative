@@ -282,10 +282,10 @@ void QQuickScrollBarPrivate::itemImplicitHeightChanged(QQuickItem *item)
         emit indicatorButton->implicitIndicatorHeightChanged();
 }
 
-void QQuickScrollBarPrivate::handlePress(const QPointF &point)
+void QQuickScrollBarPrivate::handlePress(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickScrollBar);
-    QQuickControlPrivate::handlePress(point);
+    QQuickControlPrivate::handlePress(point, timestamp);
     if (QQuickIndicatorButton *indicatorButton = q->decreaseVisual()) {
         QQuickItem *decreaseArrow = indicatorButton->indicator();
         if (decreaseArrow && decreaseArrow->contains(q->mapToItem(decreaseArrow, point + QPointF(0.5, 0.5)))) {
@@ -311,10 +311,10 @@ void QQuickScrollBarPrivate::handlePress(const QPointF &point)
     q->setPressed(true);
 }
 
-void QQuickScrollBarPrivate::handleMove(const QPointF &point)
+void QQuickScrollBarPrivate::handleMove(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickScrollBar);
-    QQuickControlPrivate::handleMove(point);
+    QQuickControlPrivate::handleMove(point, timestamp);
 
     /*
      * handleMove() will be called as soon as you hold the mouse button down *anywhere* on the
@@ -325,16 +325,17 @@ void QQuickScrollBarPrivate::handleMove(const QPointF &point)
      */
     if (!pressed)
         return;
+
     qreal pos = qBound<qreal>(0.0, positionAt(point) - offset, 1.0 - size);
     if (snapMode == QQuickScrollBar::SnapAlways)
         pos = snapPosition(pos);
     q->setPosition(pos);
 }
 
-void QQuickScrollBarPrivate::handleRelease(const QPointF &point)
+void QQuickScrollBarPrivate::handleRelease(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickScrollBar);
-    QQuickControlPrivate::handleRelease(point);
+    QQuickControlPrivate::handleRelease(point, timestamp);
 
     if (orientation == Qt::Vertical) {
         if (point.y() < q->topPadding() || point.y() >= (q->height() - q->bottomPadding()))
@@ -343,6 +344,7 @@ void QQuickScrollBarPrivate::handleRelease(const QPointF &point)
         if (point.x() < q->leftPadding() || point.x() >= (q->width() - q->rightPadding()))
             return;
     }
+
     qreal pos = qBound<qreal>(0.0, positionAt(point) - offset, 1.0 - size);
     if (snapMode != QQuickScrollBar::NoSnap)
         pos = snapPosition(pos);
@@ -821,7 +823,7 @@ void QQuickScrollBar::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickScrollBar);
     QQuickControl::mousePressEvent(event);
-    d->handleMove(event->position());
+    d->handleMove(event->position(), event->timestamp());
 }
 
 #if QT_CONFIG(quicktemplates2_hover)

@@ -88,9 +88,9 @@ class QQuickPageIndicatorPrivate : public QQuickControlPrivate
     Q_DECLARE_PUBLIC(QQuickPageIndicator)
 
 public:
-    void handlePress(const QPointF &point) override;
-    void handleMove(const QPointF &point) override;
-    void handleRelease(const QPointF &point) override;
+    void handlePress(const QPointF &point, ulong timestamp) override;
+    void handleMove(const QPointF &point, ulong timestamp) override;
+    void handleRelease(const QPointF &point, ulong timestamp) override;
     void handleUngrab() override;
 
     QQuickItem *itemAt(const QPointF &pos) const;
@@ -106,24 +106,24 @@ public:
     QQuickItem *pressedItem = nullptr;
 };
 
-void QQuickPageIndicatorPrivate::handlePress(const QPointF &point)
+void QQuickPageIndicatorPrivate::handlePress(const QPointF &point, ulong timestamp)
 {
-    QQuickControlPrivate::handlePress(point);
+    QQuickControlPrivate::handlePress(point, timestamp);
     if (interactive)
         updatePressed(true, point);
 }
 
-void QQuickPageIndicatorPrivate::handleMove(const QPointF &point)
+void QQuickPageIndicatorPrivate::handleMove(const QPointF &point, ulong timestamp)
 {
-    QQuickControlPrivate::handleMove(point);
+    QQuickControlPrivate::handleMove(point, timestamp);
     if (interactive)
         updatePressed(true, point);
 }
 
-void QQuickPageIndicatorPrivate::handleRelease(const QPointF &point)
+void QQuickPageIndicatorPrivate::handleRelease(const QPointF &point, ulong timestamp)
 {
     Q_Q(QQuickPageIndicator);
-    QQuickControlPrivate::handleRelease(point);
+    QQuickControlPrivate::handleRelease(point, timestamp);
     if (interactive) {
         if (pressedItem && contentItem)
             q->setCurrentIndex(contentItem->childItems().indexOf(pressedItem));

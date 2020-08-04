@@ -197,14 +197,14 @@ static void setActiveFocus(QQuickControl *control, Qt::FocusReason reason)
     control->forceActiveFocus(reason);
 }
 
-void QQuickControlPrivate::handlePress(const QPointF &)
+void QQuickControlPrivate::handlePress(const QPointF &, ulong)
 {
     Q_Q(QQuickControl);
     if ((focusPolicy & Qt::ClickFocus) == Qt::ClickFocus && !QGuiApplication::styleHints()->setFocusOnTouchRelease())
         setActiveFocus(q, Qt::MouseFocusReason);
 }
 
-void QQuickControlPrivate::handleMove(const QPointF &point)
+void QQuickControlPrivate::handleMove(const QPointF &point, ulong)
 {
 #if QT_CONFIG(quicktemplates2_hover)
     Q_Q(QQuickControl);
@@ -214,7 +214,7 @@ void QQuickControlPrivate::handleMove(const QPointF &point)
 #endif
 }
 
-void QQuickControlPrivate::handleRelease(const QPointF &)
+void QQuickControlPrivate::handleRelease(const QPointF &, ulong)
 {
     Q_Q(QQuickControl);
     if ((focusPolicy & Qt::ClickFocus) == Qt::ClickFocus && QGuiApplication::styleHints()->setFocusOnTouchRelease())
@@ -1960,7 +1960,7 @@ void QQuickControl::hoverLeaveEvent(QHoverEvent *event)
 void QQuickControl::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickControl);
-    d->handlePress(event->position());
+    d->handlePress(event->position(), event->timestamp());
     if (event->source() == Qt::MouseEventSynthesizedByQt) {
         d->pressWasTouch = true;
         d->previousPressPos = event->position();
@@ -1971,14 +1971,14 @@ void QQuickControl::mousePressEvent(QMouseEvent *event)
 void QQuickControl::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickControl);
-    d->handleMove(event->position());
+    d->handleMove(event->position(), event->timestamp());
     event->accept();
 }
 
 void QQuickControl::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickControl);
-    d->handleRelease(event->position());
+    d->handleRelease(event->position(), event->timestamp());
     event->accept();
 }
 
@@ -2002,13 +2002,13 @@ void QQuickControl::touchEvent(QTouchEvent *event)
 
             switch (point.state()) {
             case QEventPoint::Pressed:
-                d->handlePress(point.position());
+                d->handlePress(point.position(), event->timestamp());
                 break;
             case QEventPoint::Updated:
-                d->handleMove(point.position());
+                d->handleMove(point.position(), event->timestamp());
                 break;
             case QEventPoint::Released:
-                d->handleRelease(point.position());
+                d->handleRelease(point.position(), event->timestamp());
                 break;
             default:
                 break;
