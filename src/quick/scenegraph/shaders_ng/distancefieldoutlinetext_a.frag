@@ -21,5 +21,6 @@ void main()
 {
     float d = texture(_qt_texture, sampleCoord).a;
     float a = smoothstep(ubuf.alphaMin, ubuf.alphaMax, d);
-    fragColor = (1.0 - a) * ubuf.styleColor * smoothstep(ubuf.outlineAlphaMax0, ubuf.outlineAlphaMax1, d);
+    fragColor = step(1.0 - a, 1.0) * mix(ubuf.styleColor, ubuf.color, a)
+            * smoothstep(ubuf.outlineAlphaMax0, ubuf.outlineAlphaMax1, d);
 }
