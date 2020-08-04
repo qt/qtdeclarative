@@ -263,7 +263,7 @@ void CustomTextureNode::sync()
         m_texture = [m_device newTextureWithDescriptor: desc];
         [desc release];
 
-        QSGTexture *wrapper = QPlatformInterface::QSGMetalTexture::fromNative((MTLTexture *) m_texture, m_window, m_size);
+        QSGTexture *wrapper = QPlatformInterface::QSGMetalTexture::fromNative(m_texture, m_window, m_size);
 
         qDebug() << "Got QSGTexture wrapper" << wrapper << "for an MTLTexture of size" << m_size;
 

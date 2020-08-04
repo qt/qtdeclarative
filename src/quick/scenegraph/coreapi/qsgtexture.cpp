@@ -119,7 +119,7 @@ QSGTexturePrivate::QSGTexturePrivate(QSGTexture *t)
 #ifdef Q_OS_WIN
     , m_d3d11TextureAccessor(t)
 #endif
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#if defined(__OBJC__)
     , m_metalTextureAccessor(t)
 #endif
 #if QT_CONFIG(vulkan)
@@ -857,7 +857,7 @@ QPlatformInterface::QSGD3D11Texture *QSGTexture::platformInterface<QPlatformInte
 }
 #endif // win
 
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_CLANG_QDOC)
+#if defined(__OBJC__) || defined(Q_CLANG_QDOC)
 namespace QPlatformInterface {
 /*!
     \class QPlatformInterface::QSGMetalTexture
@@ -867,19 +867,12 @@ namespace QPlatformInterface {
 */
 
 /*!
-    \fn MTLTexture *QPlatformInterface::QSGMetalTexture::nativeTexture() const
+    \fn id<MTLTexture> QPlatformInterface::QSGMetalTexture::nativeTexture() const
     \return the Metal texture object.
  */
 
 /*!
-    \internal
- */
-QSGMetalTexture::~QSGMetalTexture()
-{
-}
-
-/*!
-    \fn QSGTexture *QPlatformInterface::QSGMetalTexture::fromNative(MTLTexture *texture, QQuickWindow *window, const QSize &size, QQuickWindow::CreateTextureOptions options)
+    \fn QSGTexture *QPlatformInterface::QSGMetalTexture::fromNative(id<MTLTexture> texture, QQuickWindow *window, const QSize &size, QQuickWindow::CreateTextureOptions options)
 
     Creates a new QSGTexture wrapping an existing Metal \a texture object.
 
@@ -906,13 +899,6 @@ QSGMetalTexture::~QSGMetalTexture()
  */
 
 } // QPlatformInterface
-
-MTLTexture *QSGTexturePlatformMetal::nativeTexture() const
-{
-    if (auto *tex = m_texture->rhiTexture())
-        return (MTLTexture *) quintptr(tex->nativeTexture().object);
-    return 0;
-}
 
 template<> Q_QUICK_EXPORT
 QPlatformInterface::QSGMetalTexture *QSGTexture::platformInterface<QPlatformInterface::QSGMetalTexture>()

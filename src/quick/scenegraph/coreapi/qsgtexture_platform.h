@@ -50,8 +50,8 @@
 #include <QtGui/qvulkaninstance.h>
 #endif
 
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_CLANG_QDOC)
-Q_FORWARD_DECLARE_OBJC_CLASS(MTLTexture);
+#if defined(__OBJC__) || defined(Q_CLANG_QDOC)
+@protocol MTLTexture;
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -84,13 +84,13 @@ public:
 };
 #endif
 
-#if defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_CLANG_QDOC)
+#if defined(__OBJC__) || defined(Q_CLANG_QDOC)
 class Q_QUICK_EXPORT QSGMetalTexture
 {
 public:
     virtual ~QSGMetalTexture();
-    virtual MTLTexture *nativeTexture() const = 0;
-    static QSGTexture *fromNative(MTLTexture *texture,
+    virtual id<MTLTexture> nativeTexture() const = 0;
+    static QSGTexture *fromNative(id<MTLTexture> texture,
                                   QQuickWindow *window,
                                   const QSize &size,
                                   QQuickWindow::CreateTextureOptions options = {});

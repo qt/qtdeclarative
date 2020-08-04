@@ -41,12 +41,27 @@
 #include "qsgtexture_platform.h"
 #include <private/qquickitem_p.h>
 #include <private/qquickwindow_p.h>
+#include <QtGui/private/qrhi_p.h>
 
 QT_BEGIN_NAMESPACE
 
+id<MTLTexture> QSGTexturePlatformMetal::nativeTexture() const
+{
+    if (auto *tex = m_texture->rhiTexture())
+        return (id<MTLTexture>) quintptr(tex->nativeTexture().object);
+    return 0;
+}
+
 namespace QPlatformInterface {
 
-QSGTexture *QSGMetalTexture::fromNative(MTLTexture *texture,
+/*!
+    \internal
+ */
+QSGMetalTexture::~QSGMetalTexture()
+{
+}
+
+QSGTexture *QSGMetalTexture::fromNative(id<MTLTexture> texture,
                                         QQuickWindow *window,
                                         const QSize &size,
                                         QQuickWindow::CreateTextureOptions options)
