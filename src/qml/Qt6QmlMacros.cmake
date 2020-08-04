@@ -164,6 +164,7 @@ function(qt6_add_qml_module target)
                 set_property(TARGET "${target}" PROPERTY PREFIX "")
             endif()
         endif()
+        _qt_internal_apply_strict_cpp("${target}")
     endif()
 
     if (NOT arg_TARGET_PATH)
