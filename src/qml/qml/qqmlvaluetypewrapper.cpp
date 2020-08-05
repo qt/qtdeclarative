@@ -361,14 +361,8 @@ ReturnedValue QQmlValueTypeWrapper::method_toString(const FunctionObject *b, con
             RETURN_UNDEFINED();
 
     QString result;
-    // Prepare a buffer to pass to QMetaType::convert()
-    alignas(alignof(QString)) unsigned char convertResult[sizeof(QString)];
-    if (QMetaType::convert(w->d()->gadgetPtr(), w->d()->valueType()->metaType.id(), &convertResult, QMetaType::QString)) {
-        QString &string = reinterpret_cast<QString &>(convertResult);
-        result = string;
-        string.~QString();
-    } else {
-        result += QString::fromUtf8(QMetaType::typeName(w->d()->valueType()->metaType.id()))
+    if (!QMetaType::convert(w->d()->gadgetPtr(), w->d()->valueType()->metaType.id(), &result, QMetaType::QString)) {
+        result = QString::fromUtf8(QMetaType::typeName(w->d()->valueType()->metaType.id()))
                 + QLatin1Char('(');
         const QMetaObject *mo = w->d()->propertyCache()->metaObject();
         const int propCount = mo->propertyCount();
