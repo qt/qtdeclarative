@@ -411,4 +411,40 @@ TestCase {
         button.clicked()
         compare(buttonSpy.count, 1)
     }
+
+    Component {
+        id: qtbug85884
+        ApplicationWindow {
+            property alias focusItemActiveFocus: item.activeFocus
+            property alias focusDialogVisible: dialog.visible
+            visible: true
+            Item {
+                id: item
+                focus: true
+            }
+            Dialog {
+                id: dialog
+                focus: true
+                visible: false
+                onActiveFocusChanged: {
+                    if (!activeFocus)
+                        visible = false
+                }
+            }
+        }
+    }
+
+    function test_focusLeavingDialog(data) {
+        var window = createTemporaryObject(qtbug85884, testCase)
+        verify(window)
+        tryCompare(window, "focusItemActiveFocus", true)
+
+        window.focusDialogVisible = true
+        tryCompare(window, "focusDialogVisible", true)
+        tryCompare(window, "focusItemActiveFocus", false)
+
+        window.focusDialogVisible = false
+        tryCompare(window, "focusDialogVisible", false)
+        tryCompare(window, "focusItemActiveFocus", true)
+    }
 }
