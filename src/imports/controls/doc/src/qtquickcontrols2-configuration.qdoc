@@ -138,12 +138,11 @@
                                   \c OldEnglish, \c Decorative, \c Monospace, \c Fantasy, \c Cursive.
         \row
             \li \c Weight
-            \li The \l {QFont::}{weight}. Qt uses a weighting scale from \c 0 to \c 99 similar to,
-                but not the same as, the scales used in Windows or CSS. A weight of \c 0 will be thin,
-                whilst \c 99 will be extremely black.
-                Available pre-defined weights: \c Thin (0), \c ExtraLight (12), \c Light (25), \c Normal (50),
-                                               \c Medium (57), \c DemiBold (63), \c Bold (75), \c ExtraBold (81),
-                                               \c Black (87).
+            \li The \l {QFont::}{weight}. Qt uses a weighting scale from \c 1 to \c 1000 compatible with OpenType. A weight of \c 1 will be thin,
+                whilst \c 1000 will be extremely black.
+                Available pre-defined weights: \c Thin (100), \c ExtraLight (200), \c Light (300), \c Normal (400),
+                                               \c Medium (500), \c DemiBold (600), \c Bold (700), \c ExtraBold (800),
+                                               \c Black (900).
         \row
             \li \c Style
             \li The \l {QFont::}{style}.
