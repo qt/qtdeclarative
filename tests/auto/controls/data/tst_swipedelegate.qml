@@ -196,7 +196,8 @@ TestCase {
         mousePress(control, control.width / 2, control.height / 2, Qt.LeftButton);
         mouseMove(control, control.width / 2 + distance, control.height / 2);
         mouseRelease(control, control.width / 2 + distance, control.height / 2, Qt.LeftButton);
-        compare(control.swipe.position, to);
+        compare(control.swipe.position, to, "Expected swipe.position to be " + to
+            + " after swiping from " + from + ", but it's " + control.swipe.position);
 
         if (control.swipe.position === -1.0) {
             if (control.swipe.right)
@@ -1108,6 +1109,24 @@ TestCase {
 
         // Swiping after closing should work as normal.
         swipe(control, 0.0, -1.0);
+    }
+
+    function test_callCloseWhenAlreadyClosed() {
+        let control = createTemporaryObject(swipeDelegateComponent, testCase)
+        verify(control)
+
+        let closedSpy = signalSpyComponent.createObject(control, { target: control.swipe, signalName: "closed" })
+        verify(closedSpy)
+        verify(closedSpy.valid)
+
+        // Calling close() when it's already closed should have no effect.
+        control.swipe.close()
+        compare(closedSpy.count, 0)
+
+        // The game goes for calling close() in response to a click.
+        control.clicked.connect(function() { control.swipe.close() })
+        mouseClick(control)
+        compare(closedSpy.count, 0)
     }
 
     Component {

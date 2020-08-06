@@ -889,7 +889,11 @@ bool QQuickSwipeDelegatePrivate::handleMouseReleaseEvent(QQuickItem *item, QMous
         swipePrivate->beginTransition(-1.0);
         swipePrivate->wasComplete = true;
     } else if (!swipePrivate->isTransitioning()) {
-        swipePrivate->beginTransition(0.0);
+        // The position is either <= 0.5 or >= -0.5, so the position should go to 0.
+        // However, if the position was already 0 or close to it, we were just clicked,
+        // and we don't need to start a transition.
+        if (!qFuzzyIsNull(swipePrivate->position))
+            swipePrivate->beginTransition(0.0);
         swipePrivate->wasComplete = false;
     }
 
