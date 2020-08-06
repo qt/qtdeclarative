@@ -225,6 +225,10 @@ function(qt6_add_qml_module target)
         target_sources(${target} PRIVATE ${arg_SOURCES})
     endif()
 
+    # Insert the plugins URI into its meta data to enable usage
+    # of static plugins in QtDeclarative (like in mkspecs/features/qml_plugin.prf).
+    set_property(TARGET "${target}" APPEND PROPERTY AUTOMOC_MOC_OPTIONS "-Muri=${arg_URI}")
+
     # Tracker so we can generate unique resource names for multiple
     # target_qml_files() calls.
     set_target_properties(${target} PROPERTIES QT6_QML_MODULE_ADD_QML_FILES_COUNT 1)
