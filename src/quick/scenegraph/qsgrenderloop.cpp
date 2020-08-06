@@ -870,10 +870,18 @@ QImage QSGGuiThreadRenderLoop::grab(QQuickWindow *window)
 void QSGGuiThreadRenderLoop::maybeUpdate(QQuickWindow *window)
 {
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
-    if (!cd->isRenderable() || !m_windows.contains(window))
+    if (!m_windows.contains(window))
         return;
 
+    // Even if the window is not renderable,
+    // renderWindow() called on different window
+    // should not delete QSGTexture's
+    // from this unrenderable window.
     m_windows[window].updatePending = true;
+
+    if (!cd->isRenderable())
+        return;
+
     window->requestUpdate();
 }
 
