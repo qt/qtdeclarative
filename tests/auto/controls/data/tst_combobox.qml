@@ -911,6 +911,28 @@ TestCase {
         compare(control.popup.visible, true)
         verify(control.popup.contentItem.y < control.y)
 
+
+        // Account for when a transition of a scale from 0.9-1.0 that it is placed above right away and not below
+        // first just because there is room at the 0.9 scale
+        if (control.popup.enter !== null) {
+            // hide
+            mouseClick(control)
+            compare(control.pressed, false)
+            tryCompare(control.popup, "visible", false)
+            control.y = control.Window.height - (control.popup.contentItem.height * 0.99)
+            var popupYSpy = createTemporaryObject(signalSpy, testCase, {target: control.popup, signalName: "yChanged"})
+            verify(popupYSpy.valid)
+            mousePress(control)
+            compare(control.pressed, true)
+            compare(control.popup.visible, false)
+            mouseRelease(control)
+            compare(control.pressed, false)
+            compare(control.popup.visible, true)
+            tryCompare(control.popup.enter, "running", false)
+            verify(control.popup.contentItem.y < control.y)
+            verify(popupYSpy.count === 1)
+        }
+
         // follow the control outside the horizontal window bounds
         control.x = -control.width / 2
         compare(control.x, -control.width / 2)

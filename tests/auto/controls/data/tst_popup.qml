@@ -1275,6 +1275,9 @@ TestCase {
             { visible: true, width: 100, height: 100 })
         verify(control)
         verify(control.visible)
+        // If there is a transition then make sure it is finished
+        if (control.enter !== null)
+            tryCompare(control.enter, "running", false)
         compare(control.parent, control.Overlay.overlay)
         compare(control.x, 0)
         compare(control.y, 0)
