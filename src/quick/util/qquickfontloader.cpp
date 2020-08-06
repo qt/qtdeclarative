@@ -309,7 +309,7 @@ void QQuickFontLoader::updateFontInfo(int id)
                 const QFontDatabasePrivate::ApplicationFont::Properties &properties = applicationFont.properties.at(0);
                 font.setFamily(properties.familyName);
                 font.setStyleName(properties.styleName);
-                font.setWeight(properties.weight);
+                font.setWeight(QFont::Weight(properties.weight));
                 font.setStyle(properties.style);
                 font.setStretch(properties.stretch);
             }

@@ -654,7 +654,7 @@ int QQuickFontValueType::weight() const
 
 void QQuickFontValueType::setWeight(int w)
 {
-    v.setWeight(qBound(0, w, 99));
+    v.setWeight(QFont::Weight(w));
 }
 
 bool QQuickFontValueType::italic() const

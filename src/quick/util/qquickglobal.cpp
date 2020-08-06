@@ -528,7 +528,7 @@ public:
             if (ok) *ok = true;
         }
         if (vweight->isInt32()) {
-            retn.setWeight(vweight->integerValue());
+            retn.setWeight(QFont::Weight(vweight->integerValue()));
             if (ok) *ok = true;
         }
         if (vwspac->isNumber()) {

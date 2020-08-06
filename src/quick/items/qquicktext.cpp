@@ -1474,7 +1474,7 @@ QQuickText::~QQuickText()
     \qmlproperty int QtQuick::Text::font.weight
 
     The requested weight of the font. The weight requested must be an integer
-    between 0 and 99, or one of the predefined values:
+    between 1 and 1000, or one of the predefined values:
     \list
     \li Font.Thin
     \li Font.Light

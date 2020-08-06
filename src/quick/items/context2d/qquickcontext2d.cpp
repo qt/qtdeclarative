@@ -452,18 +452,14 @@ static QFont qt_font_from_string(const QString& fontString, const QFont &current
             bool conversionOk = false;
             int weight = token.toInt(&conversionOk);
             if (conversionOk) {
-                if (weight >= 0 && weight <= 99) {
-                    Q_TRY_SET_TOKEN(FontWeight, "<font-weight>", newFont.setWeight(weight))
-                    continue;
-                } else {
-                    qWarning().nospace() << "Context2D: Invalid font weight " << weight << " found in font string; "
-                        << "must be between 0 and 99, inclusive.";
-                    return currentFont;
-                }
+                Q_TRY_SET_TOKEN(FontWeight, "<font-weight>",
+                                newFont.setWeight(QFont::Weight(weight)))
+            } else {
+                // The token is invalid or in the wrong place/order in the font string.
+                qWarning().nospace() << "Context2D: Invalid or misplaced token " << token
+                                     << " found in font string.";
+                return currentFont;
             }
-            // The token is invalid or in the wrong place/order in the font string.
-            qWarning().nospace() << "Context2D: Invalid or misplaced token " << token << " found in font string.";
-            return currentFont;
         }
     }
     return newFont;
@@ -2793,7 +2789,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_caretBlinkRate(const QV4::
         \li font-style (optional):
         normal | italic | oblique
         \li font-variant (optional): normal | small-caps
-        \li font-weight (optional): normal | bold | 0 ... 99
+        \li font-weight (optional): normal | bold | 1 ... 1000
         \li font-size: Npx | Npt (where N is a positive number)
         \li font-family: See \l {http://www.w3.org/TR/CSS2/fonts.html#propdef-font-family}
     \endlist
