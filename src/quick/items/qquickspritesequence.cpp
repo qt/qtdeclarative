@@ -229,7 +229,7 @@ QSGSpriteNode *QQuickSpriteSequence::initNode()
 
     QSGSpriteNode *node = d->sceneGraphContext()->createSpriteNode();
 
-    d->m_sheetSize = QSize(image.size() / image.devicePixelRatioF());
+    d->m_sheetSize = QSize(image.size() / image.devicePixelRatio());
     node->setTexture(window()->createTextureFromImage(image));
     d->m_spriteEngine->start(0);
     node->setTime(0.0f);

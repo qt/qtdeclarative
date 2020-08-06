@@ -380,8 +380,8 @@ void tst_qquickwidget::readback()
 
     QImage img = view->grabFramebuffer();
     QVERIFY(!img.isNull());
-    QCOMPARE(img.width(), qCeil(view->width() * view->devicePixelRatioF()));
-    QCOMPARE(img.height(), qCeil(view->height() * view->devicePixelRatioF()));
+    QCOMPARE(img.width(), qCeil(view->width() * view->devicePixelRatio()));
+    QCOMPARE(img.height(), qCeil(view->height() * view->devicePixelRatio()));
 
     QRgb pix = img.pixel(5, 5);
     QCOMPARE(pix, qRgb(255, 0, 0));

@@ -108,9 +108,9 @@ void QSGSoftwareRenderer::render()
 
     setBackgroundColor(clearColor());
     setBackgroundRect(QRect(0, 0,
-                            m_paintDevice->width() / m_paintDevice->devicePixelRatioF(),
-                            m_paintDevice->height() / m_paintDevice->devicePixelRatioF()),
-                     m_paintDevice->devicePixelRatioF());
+                            m_paintDevice->width() / m_paintDevice->devicePixelRatio(),
+                            m_paintDevice->height() / m_paintDevice->devicePixelRatio()),
+                     m_paintDevice->devicePixelRatio());
 
     // Build Renderlist
     // The renderlist is created by visiting each node in the tree and when a

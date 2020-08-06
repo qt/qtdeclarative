@@ -68,7 +68,7 @@ void qDrawBorderPixmap(QPainter *painter, const QRect &targetRect, const QMargin
     QMargins sourceMargins = normalizedMargins(sourceMarginsIn);
     QMargins targetMargins = normalizedMargins(targetMarginsIn);
 
-    const qreal sourceDpr = pixmap.devicePixelRatioF();
+    const qreal sourceDpr = pixmap.devicePixelRatio();
     sourceMargins *= sourceDpr;
 
     // source center

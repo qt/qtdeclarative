@@ -454,12 +454,12 @@ QImage QQuickSpriteEngine::assembledImage(int maxSize)
         QImage img(state->m_pix.image());
         const int frameWidth = state->m_frameWidth;
         const int frameHeight = state->m_frameHeight;
-        const int imgHeight = img.height() / img.devicePixelRatioF();
-        const int imgWidth = img.width() / img.devicePixelRatioF();
+        const int imgHeight = img.height() / img.devicePixelRatio();
+        const int imgWidth = img.width() / img.devicePixelRatio();
         if (imgHeight == frameHeight && imgWidth <  maxSize){ //Simple case
             p.drawImage(QRect(0, y, state->m_frames * frameWidth, frameHeight),
                         img,
-                        QRect(state->m_frameX * img.devicePixelRatioF(), 0, state->m_frames * frameWidth * img.devicePixelRatioF(), frameHeight * img.devicePixelRatioF()));
+                        QRect(state->m_frameX * img.devicePixelRatio(), 0, state->m_frames * frameWidth * img.devicePixelRatio(), frameHeight * img.devicePixelRatio()));
             state->m_rowStartX = 0;
             state->m_rowY = y;
             y += frameHeight;
@@ -476,7 +476,7 @@ QImage QQuickSpriteEngine::assembledImage(int maxSize)
                     framesLeft -= copied/frameWidth;
                     p.drawImage(QRect(x, y, copied, frameHeight),
                                 img,
-                                QRect(curX * img.devicePixelRatioF(), curY * img.devicePixelRatioF(), copied * img.devicePixelRatioF(), frameHeight * img.devicePixelRatioF()));
+                                QRect(curX * img.devicePixelRatio(), curY * img.devicePixelRatio(), copied * img.devicePixelRatio(), frameHeight * img.devicePixelRatio()));
                     y += frameHeight;
                     curX += copied;
                     x = 0;
@@ -489,7 +489,7 @@ QImage QQuickSpriteEngine::assembledImage(int maxSize)
                     framesLeft -= copied/frameWidth;
                     p.drawImage(QRect(x, y, copied, frameHeight),
                                 img,
-                                QRect(curX * img.devicePixelRatioF(), curY * img.devicePixelRatioF(), copied * img.devicePixelRatioF(), frameHeight * img.devicePixelRatioF()));
+                                QRect(curX * img.devicePixelRatio(), curY * img.devicePixelRatio(), copied * img.devicePixelRatio(), frameHeight * img.devicePixelRatio()));
                     curY += frameHeight;
                     x += copied;
                     curX = 0;

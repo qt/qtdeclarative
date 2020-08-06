@@ -1304,7 +1304,7 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
         ImageMaterialData *state = getState(m_material);
         if (imageLoaded)
             state->texture = QSGPlainTexture::fromImage(image);
-        state->animSheetSize = QSizeF(image.size() / image.devicePixelRatioF());
+        state->animSheetSize = QSizeF(image.size() / image.devicePixelRatio());
         if (m_spriteEngine)
             m_spriteEngine->setCount(m_count);
     }

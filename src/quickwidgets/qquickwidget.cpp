@@ -1009,9 +1009,9 @@ void QQuickWidget::createFramebufferObject()
     d->offscreenWindow->setGeometry(globalPos.x(), globalPos.y(), width(), height());
 
     if (d->useSoftwareRenderer) {
-        const QSize imageSize = size() * devicePixelRatioF();
+        const QSize imageSize = size() * devicePixelRatio();
         d->softwareImage = QImage(imageSize, QImage::Format_ARGB32_Premultiplied);
-        d->softwareImage.setDevicePixelRatio(devicePixelRatioF());
+        d->softwareImage.setDevicePixelRatio(devicePixelRatio());
         d->forceFullUpdate = true;
         return;
     }
@@ -1060,7 +1060,7 @@ void QQuickWidget::createFramebufferObject()
     }
 #endif
 
-    const QSize fboSize = size() * devicePixelRatioF();
+    const QSize fboSize = size() * devicePixelRatio();
 
     // Could be a simple hide - show, in which case the previous fbo is just fine.
     if (!d->fbo || d->fbo->size() != fboSize) {
@@ -1291,7 +1291,7 @@ void QQuickWidget::resizeEvent(QResizeEvent *e)
     // Software Renderer
     if (d->useSoftwareRenderer) {
         needsSync = true;
-        if (d->softwareImage.size() != size() * devicePixelRatioF()) {
+        if (d->softwareImage.size() != size() * devicePixelRatio()) {
             createFramebufferObject();
         }
     } else {
@@ -1301,7 +1301,7 @@ void QQuickWidget::resizeEvent(QResizeEvent *e)
             // during hide - resize - show sequences and also during application exit.
             if (!d->fbo && !d->offscreenWindow->isSceneGraphInitialized())
                 return;
-            if (!d->fbo || d->fbo->size() != size() * devicePixelRatioF()) {
+            if (!d->fbo || d->fbo->size() != size() * devicePixelRatio()) {
                 needsSync = true;
                 createFramebufferObject();
             }
@@ -1787,7 +1787,7 @@ void QQuickWidget::paintEvent(QPaintEvent *event)
             painter.drawImage(rect(), d->softwareImage);
         } else {
             QTransform transform;
-            transform.scale(devicePixelRatioF(), devicePixelRatioF());
+            transform.scale(devicePixelRatio(), devicePixelRatio());
             //Paint only the updated areas
             QRegion targetRegion;
             d->updateRegion.swap(targetRegion);

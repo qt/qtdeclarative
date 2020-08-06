@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
         std::cout << " OpenGL \"" << glFunctions->glGetString(GL_RENDERER)
             << "\" \"" << glFunctions->glGetString(GL_VERSION) << '"';
     }
-    const qreal devicePixelRatio = w.devicePixelRatioF();
+    const qreal devicePixelRatio = w.devicePixelRatio();
     if (!qFuzzyCompare(devicePixelRatio, qreal(1)))
         std::cout << ", DPR=" << devicePixelRatio;
     std::cout << '\n';

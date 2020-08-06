@@ -237,8 +237,8 @@ void QSGSoftwareInternalRectangleNode::paint(QPainter *painter)
 {
     //We can only check for a device pixel ratio change when we know what
     //paint device is being used.
-    if (!qFuzzyCompare(painter->device()->devicePixelRatioF(), m_devicePixelRatio)) {
-        m_devicePixelRatio = painter->device()->devicePixelRatioF();
+    if (!qFuzzyCompare(painter->device()->devicePixelRatio(), m_devicePixelRatio)) {
+        m_devicePixelRatio = painter->device()->devicePixelRatio();
         generateCornerPixmap();
     }
 

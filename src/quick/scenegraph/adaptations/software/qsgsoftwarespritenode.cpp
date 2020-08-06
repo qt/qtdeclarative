@@ -128,7 +128,7 @@ void QSGSoftwareSpriteNode::paint(QPainter *painter)
     // XXX try to do some kind of interpolation between sourceA and sourceB using time
     painter->drawPixmap(QRectF(0, 0, m_size.width(), m_size.height()),
                         pixmap,
-                        QRectF(m_sourceA * pixmap.devicePixelRatioF(), m_spriteSize * pixmap.devicePixelRatioF()));
+                        QRectF(m_sourceA * pixmap.devicePixelRatio(), m_spriteSize * pixmap.devicePixelRatio()));
 }
 
 bool QSGSoftwareSpriteNode::isOpaque() const

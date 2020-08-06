@@ -132,8 +132,8 @@ void QSGSoftwareGlyphNode::paint(QPainter *painter)
     QPointF pos = m_position - QPointF(0, m_glyphRun.rawFont().ascent());
 
     qreal offset = 1.0;
-    if (painter->device()->devicePixelRatioF() > 0.0)
-        offset = 1.0 / painter->device()->devicePixelRatioF();
+    if (painter->device()->devicePixelRatio() > 0.0)
+        offset = 1.0 / painter->device()->devicePixelRatio();
 
     switch (m_style) {
     case QQuickText::Normal: break;
