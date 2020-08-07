@@ -122,7 +122,7 @@ public:
     void setRightInset(qreal value, bool reset = false);
     void setBottomInset(qreal value, bool reset = false);
 
-    void resizeBackground();
+    virtual void resizeBackground();
     virtual void resizeContent();
 
     virtual QQuickItem *getContentItem();

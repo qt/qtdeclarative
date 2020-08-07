@@ -67,6 +67,7 @@ public:
     bool handleMouseReleaseEvent(QQuickItem *item, QMouseEvent *event);
 
     void resizeContent() override;
+    void resizeBackground() override;
 
     QPalette defaultPalette() const override;
 

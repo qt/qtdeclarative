@@ -1713,4 +1713,39 @@ TestCase {
             break;
         }
     }
+
+    function test_resizeParent() {
+        let container = createTemporaryObject(itemComponent, testCase, { objectName: "container", width: 100, height: 200 })
+        verify(container)
+
+        let control = swipeDelegateComponent.createObject(container, { width: Qt.binding(function() { return container.width }) })
+        verify(control)
+
+        // Resize while closed.
+        container.width = 200
+        compare(container.width, 200)
+        compare(control.width, 200)
+        compare(control.background.width, 200)
+        compare(control.contentItem.width, 200 - control.leftPadding - control.rightPadding)
+
+        // Return to original size.
+        container.width = 100
+        compare(control.width, 100)
+        compare(control.background.width, 100)
+        compare(control.contentItem.width, 100 - control.leftPadding - control.rightPadding)
+
+        // Swipe to the left to open.
+        swipe(control, 0, -1.0)
+        // Nothing should have changed except positions.
+        compare(control.width, 100)
+        compare(control.background.width, 100)
+        compare(control.contentItem.width, 100 - control.leftPadding - control.rightPadding)
+
+        // Resize while open.
+        container.width = 200
+        // The items should fill the width as usual.
+        compare(control.width, 200)
+        compare(control.background.width, 200)
+        compare(control.contentItem.width, 200 - control.leftPadding - control.rightPadding)
+    }
 }

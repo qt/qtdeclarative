@@ -713,6 +713,29 @@ QQuickSwipeDelegatePrivate::QQuickSwipeDelegatePrivate(QQuickSwipeDelegate *cont
 {
 }
 
+void QQuickSwipeDelegatePrivate::resizeBackground()
+{
+    if (!background)
+        return;
+
+    resizingBackground = true;
+
+    QQuickItemPrivate *p = QQuickItemPrivate::get(background);
+    const bool extraAllocated = extra.isAllocated();
+    // Don't check for or set the x here since it will just be overwritten by reposition().
+    if (((!p->widthValid || !extraAllocated || !extra->hasBackgroundWidth))
+            || (extraAllocated && (extra->hasLeftInset || extra->hasRightInset))) {
+        background->setWidth(width - getLeftInset() - getRightInset());
+    }
+    if (((!p->heightValid || !extraAllocated || !extra->hasBackgroundHeight) && qFuzzyIsNull(background->y()))
+            || (extraAllocated && (extra->hasTopInset || extra->hasBottomInset))) {
+        background->setY(getTopInset());
+        background->setHeight(height - getTopInset() - getBottomInset());
+    }
+
+    resizingBackground = false;
+}
+
 bool QQuickSwipeDelegatePrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *event)
 {
     Q_Q(QQuickSwipeDelegate);
@@ -935,13 +958,15 @@ void QQuickSwipeDelegatePrivate::resizeContent()
     // If the background and contentItem are repositioned due to a swipe,
     // we don't want to call QQuickControlPrivate's implementation of this function,
     // as it repositions the contentItem to be visible.
-    // However, we still want to resize the control vertically.
+    // However, we still want to position the contentItem vertically
+    // and resize it (in case the control was resized while open).
     QQuickSwipePrivate *swipePrivate = QQuickSwipePrivate::get(&swipe);
     if (!swipePrivate->complete) {
         QQuickItemDelegatePrivate::resizeContent();
     } else if (contentItem) {
         Q_Q(QQuickSwipeDelegate);
         contentItem->setY(q->topPadding());
+        contentItem->setWidth(q->availableWidth());
         contentItem->setHeight(q->availableHeight());
     }
 }
