@@ -697,6 +697,11 @@ void QQuickSwipe::close()
     if (qFuzzyIsNull(d->position))
         return;
 
+    if (d->control->isPressed()) {
+        // We don't support closing when we're pressed; release() or clicked() should be used instead.
+        return;
+    }
+
     d->beginTransition(0.0);
     d->wasComplete = false;
     d->positionBeforePress = 0.0;
