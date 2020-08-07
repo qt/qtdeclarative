@@ -457,7 +457,7 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
     }
 #endif
 
-#if defined(Q_OS_ANDROID) || defined(Q_OS_WINRT)
+#if defined(Q_OS_WINRT)
     if (testPath.isEmpty())
         testPath = QLatin1String(":/");
 #endif
@@ -468,6 +468,12 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
         if (QFile::exists(s))
             testPath = s;
     }
+
+#if defined(Q_OS_ANDROID)
+            if (testPath.isEmpty())
+                    testPath = QLatin1String(":/");
+#endif
+
     if (testPath.isEmpty()) {
         QDir current = QDir::current();
 #ifdef Q_OS_WIN
