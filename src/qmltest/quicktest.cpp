@@ -457,17 +457,18 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
     }
 #endif
 
-#if defined(Q_OS_ANDROID)
-    if (testPath.isEmpty())
-        testPath = QLatin1String(":/");
-#endif
-
     // Determine where to look for the test data.
     if (testPath.isEmpty() && sourceDir) {
         const QString s = QString::fromLocal8Bit(sourceDir);
         if (QFile::exists(s))
             testPath = s;
     }
+
+#if defined(Q_OS_ANDROID)
+            if (testPath.isEmpty())
+                    testPath = QLatin1String(":/");
+#endif
+
     if (testPath.isEmpty()) {
         QDir current = QDir::current();
 #ifdef Q_OS_WIN
