@@ -107,20 +107,17 @@ void tst_Scenegraph::initTestCase()
     const QString backend = qEnvironmentVariable(backendVarName, QString::fromLatin1("default"));
     QBaselineTest::addClientProperty(QString::fromLatin1(backendVarName), backend);
 
+    QString stack = backend;
+    if (stack != QLatin1String("software")) {
 #if defined(Q_OS_WIN)
-    const char *defaultRhiBackend = "d3d11";
+        const char *defaultRhiBackend = "d3d11";
 #elif defined(Q_OS_DARWIN)
-    const char *defaultRhiBackend = "metal";
+        const char *defaultRhiBackend = "metal";
 #else
-    const char *defaultRhiBackend = "opengl";
+        const char *defaultRhiBackend = "opengl";
 #endif
-    usingRhi = !qEnvironmentVariableIsSet("QSG_NO_RHI");
-    QString stack;
-    if (usingRhi) {
         const QString rhiBackend = qEnvironmentVariable("QSG_RHI_BACKEND", QString::fromLatin1(defaultRhiBackend));
         stack = QString::fromLatin1("RHI_%1").arg(rhiBackend);
-    } else {
-        stack = qEnvironmentVariable("QT_QUICK_BACKEND", QString::fromLatin1("DirectGL"));
     }
     QBaselineTest::addClientProperty(QString::fromLatin1("GraphicsStack"), stack);
 
