@@ -1,0 +1,5 @@
+# The functionality that was provided in the Qt5 package was moved to the Qml package.
+# Defers to that package and it macros.
+include(CMakeFindDependencyMacro)
+include("${CMAKE_CURRENT_LIST_DIR}/@INSTALL_CMAKE_NAMESPACE@@target@Dependencies.cmake")
+set("@INSTALL_CMAKE_NAMESPACE@@target@_FOUND" TRUE)

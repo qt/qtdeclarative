@@ -658,3 +658,14 @@ set_target_properties(Qml PROPERTIES
 qt6_qml_type_registration(Qml)
 
 include(Qt6QmlBuildInternals.cmake) # special case
+
+# special case begin
+# Install Qml import scanner template cpp file.
+set(target "Qml")
+set(path_suffix "${INSTALL_CMAKE_NAMESPACE}${target}")
+qt_path_join(config_install_dir ${QT_CONFIG_INSTALL_DIR} ${path_suffix})
+qt_copy_or_install(FILES
+    "${CMAKE_CURRENT_LIST_DIR}/${INSTALL_CMAKE_NAMESPACE}${target}ImportScannerTemplate.cpp.in"
+    DESTINATION "${config_install_dir}"
+)
+# special case end

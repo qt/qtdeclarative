@@ -47,15 +47,16 @@ qtConfig(debug_and_release) {
     CMAKE_DEBUG_AND_RELEASE = FALSE
 }
 
-equals(QMAKE_HOST.os, Windows): CMAKE_BIN_SUFFIX = ".exe"
-cmake_config_file.input = $$PWD/Qt5QmlImportScannerConfig.cmake.in
-cmake_config_file.output = $$MODULE_BASE_OUTDIR/lib/cmake/Qt5QmlImportScanner/Qt5QmlImportScannerConfig.cmake
-QMAKE_SUBSTITUTES += cmake_config_file
+# The qml import scanner CMake files are now only created by the Qt 6 CMake build.
+#equals(QMAKE_HOST.os, Windows): CMAKE_BIN_SUFFIX = ".exe"
+#cmake_config_file.input = $$PWD/Qt5QmlImportScannerConfig.cmake.in
+#cmake_config_file.output = $$MODULE_BASE_OUTDIR/lib/cmake/Qt5QmlImportScanner/Qt5QmlImportScannerConfig.cmake
+#QMAKE_SUBSTITUTES += cmake_config_file
 
-cmake_build_integration.files = $$cmake_config_file.output $$PWD/Qt5QmlImportScannerTemplate.cpp.in
-cmake_build_integration.path = $$[QT_INSTALL_LIBS]/cmake/Qt5QmlImportScanner
-prefix_build: INSTALLS += cmake_build_integration
-else: COPIES += cmake_build_integration
+#cmake_build_integration.files = $$cmake_config_file.output $$PWD/Qt5QmlImportScannerTemplate.cpp.in
+#cmake_build_integration.path = $$[QT_INSTALL_LIBS]/cmake/Qt5QmlImportScanner
+#prefix_build: INSTALLS += cmake_build_integration
+#else: COPIES += cmake_build_integration
 
 QMAKE_TARGET_DESCRIPTION = QML Import Scanner
 

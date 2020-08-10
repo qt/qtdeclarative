@@ -20,6 +20,51 @@ qt_add_tool(${target_name}
         Qt::QmlDevToolsPrivate
 )
 
+# special case begin
+# Create a dummy package that will just find Qml package, for backwards compatibility reasons.
+set(target "QmlImportScanner")
+set(path_suffix "${INSTALL_CMAKE_NAMESPACE}${target}")
+qt_path_join(config_build_dir ${QT_CONFIG_BUILD_DIR} ${path_suffix})
+qt_path_join(config_install_dir ${QT_CONFIG_INSTALL_DIR} ${path_suffix})
+
+# Configure and install Config and version file.
+configure_package_config_file(
+    "${CMAKE_CURRENT_LIST_DIR}/Qt6QmlImportScannerConfig.cmake.in"
+    "${config_build_dir}/${INSTALL_CMAKE_NAMESPACE}${target}Config.cmake"
+    INSTALL_DESTINATION "${config_install_dir}"
+)
+
+write_basic_package_version_file(
+    "${config_build_dir}/${INSTALL_CMAKE_NAMESPACE}${target}ConfigVersion.cmake"
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY AnyNewerVersion
+)
+qt_install(FILES
+    "${config_build_dir}/${INSTALL_CMAKE_NAMESPACE}${target}Config.cmake"
+    "${config_build_dir}/${INSTALL_CMAKE_NAMESPACE}${target}ConfigVersion.cmake"
+    DESTINATION "${config_install_dir}"
+    COMPONENT Devel
+)
+
+# Configure and install ModuleDependencies file.
+set(third_party_deps "")
+set(main_module_tool_deps "")
+set(target_deps "${INSTALL_CMAKE_NAMESPACE}Qml\;${PROJECT_VERSION}")
+set(qt_module_dependencies "Qml")
+configure_file(
+    "${QT_CMAKE_DIR}/QtModuleDependencies.cmake.in"
+    "${config_build_dir}/${INSTALL_CMAKE_NAMESPACE}${target}Dependencies.cmake"
+    @ONLY
+)
+
+qt_install(FILES
+    "${config_build_dir}/${INSTALL_CMAKE_NAMESPACE}${target}Dependencies.cmake"
+    DESTINATION "${config_install_dir}"
+    COMPONENT Devel
+)
+
+# special case end
+
 #### Keys ignored in scope 1:.:.:qmlimportscanner.pro:<TRUE>:
 # CMAKE_BIN_DIR = "$$cmakeRelativePath($$[QT_HOST_BINS], $$[QT_INSTALL_PREFIX])"
 # CMAKE_DEBUG_TYPE = <EMPTY>

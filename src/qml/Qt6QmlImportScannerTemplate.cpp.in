@@ -2,4 +2,4 @@
 // static plugins used by QML imports.
 #include <QtPlugin>
 
-@qt5_qml_import_cpp_file_content@
+@qt_qml_import_cpp_file_content@
