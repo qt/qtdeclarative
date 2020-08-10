@@ -173,7 +173,7 @@ ApplicationWindow {
         id: openDialog
         fileMode: FileDialog.OpenFile
         selectedNameFilter.index: 1
-        nameFilters: ["Text files (*.txt)", "HTML files (*.html *.htm)"]
+        nameFilters: ["Text files (*.txt)", "HTML files (*.html *.htm)", "Markdown files (*.md *.markdown)"]
         folder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
         onAccepted: document.load(file)
     }
@@ -383,8 +383,14 @@ ApplicationWindow {
         selectionStart: textArea.selectionStart
         selectionEnd: textArea.selectionEnd
         textColor: colorDialog.color
-        Component.onCompleted: document.load("qrc:/texteditor.html")
+        Component.onCompleted: {
+            if (Qt.application.arguments.length === 2)
+                document.load("file:" + Qt.application.arguments[1]);
+            else
+                document.load("qrc:/texteditor.html")
+        }
         onLoaded: {
+            textArea.textFormat = format
             textArea.text = text
         }
         onError: {

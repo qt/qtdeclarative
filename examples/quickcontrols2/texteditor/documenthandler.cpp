@@ -53,6 +53,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QFileSelector>
+#include <QMimeDatabase>
 #include <QQmlFile>
 #include <QQmlFileSelector>
 #include <QQuickTextDocument>
@@ -293,19 +294,25 @@ void DocumentHandler::load(const QUrl &fileUrl)
     const QUrl path = QQmlFileSelector::get(engine)->selector()->select(fileUrl);
     const QString fileName = QQmlFile::urlToLocalFileOrQrc(path);
     if (QFile::exists(fileName)) {
+        QMimeType mime = QMimeDatabase().mimeTypeForFile(fileName);
         QFile file(fileName);
         if (file.open(QFile::ReadOnly)) {
-            if (QTextDocument *doc = textDocument())
-                doc->setModified(false);
-
             QByteArray data = file.readAll();
-            auto encoding = QStringConverter::encodingForHtml(data.constData(), data.size());
-            if (encoding) {
-                QStringDecoder decoder(*encoding);
-                emit loaded(decoder(data));
-            } else {
-                // fall back to utf8
-                emit loaded(QString::fromUtf8(data));
+            if (QTextDocument *doc = textDocument()) {
+                doc->setBaseUrl(path.adjusted(QUrl::RemoveFilename));
+                doc->setModified(false);
+                if (mime.inherits("text/markdown")) {
+                    emit loaded(QString::fromUtf8(data), Qt::MarkdownText);
+                } else {
+                    auto encoding = QStringConverter::encodingForHtml(data.constData(), data.size());
+                    if (encoding) {
+                        QStringDecoder decoder(*encoding);
+                        emit loaded(decoder(data), Qt::AutoText);
+                    } else {
+                        // fall back to utf8
+                        emit loaded(QString::fromUtf8(data), Qt::AutoText);
+                    }
+                }
             }
 
             reset();
