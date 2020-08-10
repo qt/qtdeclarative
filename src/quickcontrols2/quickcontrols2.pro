@@ -8,6 +8,7 @@ DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
 
 HEADERS += \
     $$PWD/qtquickcontrols2global.h \
+    $$PWD/qquickdummyregistration_p.h \
     $$PWD/qquickstyle.h \
     $$PWD/qquickstyle_p.h \
     $$PWD/qquickstyleplugin_p.h
