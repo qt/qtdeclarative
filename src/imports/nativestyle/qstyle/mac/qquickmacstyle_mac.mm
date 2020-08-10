@@ -5908,7 +5908,7 @@ QSize QMacStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt, cons
     case CT_SpinBox:
         if (const QStyleOptionSpinBox *vopt = qstyleoption_cast<const QStyleOptionSpinBox *>(opt)) {
             if (vopt->subControls == SC_SpinBoxFrame) {
-                const QSize minimumSize(10, 10);
+                const QSize minimumSize(20, 24);
                 if (sz.width() < minimumSize.width())
                     sz.setWidth(minimumSize.width());
                 if (sz.height() < minimumSize.height())
