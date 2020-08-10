@@ -40,56 +40,59 @@
 :: For HLSL we invoke fxc.exe (-c argument) and store the resulting intermediate format
 :: instead of HLSL source, so this needs to be run on Windows from a developer command prompt.
 
-qsb -b --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o vertexcolor.vert.qsb vertexcolor.vert
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o vertexcolor.frag.qsb vertexcolor.frag
-qsb -b --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o flatcolor.vert.qsb flatcolor.vert
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o flatcolor.frag.qsb flatcolor.frag
-qsb -b --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o smoothcolor.vert.qsb smoothcolor.vert
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o smoothcolor.frag.qsb smoothcolor.frag
-qsb -b --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o stencilclip.vert.qsb stencilclip.vert
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o stencilclip.frag.qsb stencilclip.frag
-qsb -b --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o texture.vert.qsb texture.vert
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o texture.frag.qsb texture.frag
-qsb -b --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o opaquetexture.vert.qsb opaquetexture.vert
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o opaquetexture.frag.qsb opaquetexture.frag
-qsb -b --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o smoothtexture.vert.qsb smoothtexture.vert
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o smoothtexture.frag.qsb smoothtexture.frag
-qsb -b --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o textmask.vert.qsb textmask.vert
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o textmask.frag.qsb textmask.frag
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o 8bittextmask.frag.qsb 8bittextmask.frag
+:: For SPIR-V the optimizer is requested (-O argument) which means spirv-opt must be
+:: invokable (e.g. because it's in the PATH from the Vulkan SDK)
+
+qsb -b --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o vertexcolor.vert.qsb vertexcolor.vert
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o vertexcolor.frag.qsb vertexcolor.frag
+qsb -b --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o flatcolor.vert.qsb flatcolor.vert
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o flatcolor.frag.qsb flatcolor.frag
+qsb -b --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o smoothcolor.vert.qsb smoothcolor.vert
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o smoothcolor.frag.qsb smoothcolor.frag
+qsb -b --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o stencilclip.vert.qsb stencilclip.vert
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o stencilclip.frag.qsb stencilclip.frag
+qsb -b --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o texture.vert.qsb texture.vert
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o texture.frag.qsb texture.frag
+qsb -b --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o opaquetexture.vert.qsb opaquetexture.vert
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o opaquetexture.frag.qsb opaquetexture.frag
+qsb -b --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o smoothtexture.vert.qsb smoothtexture.vert
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o smoothtexture.frag.qsb smoothtexture.frag
+qsb -b --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o textmask.vert.qsb textmask.vert
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o textmask.frag.qsb textmask.frag
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o 8bittextmask.frag.qsb 8bittextmask.frag
 qsb --glsl "150,120,100 es" -o 8bittextmask_a.frag.qsb 8bittextmask_a.frag
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o 24bittextmask.frag.qsb 24bittextmask.frag
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o 32bitcolortext.frag.qsb 32bitcolortext.frag
-qsb -b --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o outlinedtext.vert.qsb outlinedtext.vert
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o outlinedtext.frag.qsb outlinedtext.frag
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o 24bittextmask.frag.qsb 24bittextmask.frag
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o 32bitcolortext.frag.qsb 32bitcolortext.frag
+qsb -b --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o outlinedtext.vert.qsb outlinedtext.vert
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o outlinedtext.frag.qsb outlinedtext.frag
 qsb --glsl "150,120,100 es" -o outlinedtext_a.frag.qsb outlinedtext_a.frag
-qsb -b --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o styledtext.vert.qsb styledtext.vert
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o styledtext.frag.qsb styledtext.frag
+qsb -b --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o styledtext.vert.qsb styledtext.vert
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o styledtext.frag.qsb styledtext.frag
 qsb --glsl "150,120,100 es" -o styledtext_a.frag.qsb styledtext_a.frag
-qsb -b --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldtext.vert.qsb distancefieldtext.vert
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldtext.frag.qsb distancefieldtext.frag
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldtext_fwidth.frag.qsb distancefieldtext_fwidth.frag
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldtext_a.frag.qsb distancefieldtext_a.frag
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldtext_a_fwidth.frag.qsb distancefieldtext_a_fwidth.frag
-qsb -b --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldshiftedtext.vert.qsb distancefieldshiftedtext.vert
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldshiftedtext.frag.qsb distancefieldshiftedtext.frag
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldshiftedtext_fwidth.frag.qsb distancefieldshiftedtext_fwidth.frag
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldshiftedtext_a.frag.qsb distancefieldshiftedtext_a.frag
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldshiftedtext_a_fwidth.frag.qsb distancefieldshiftedtext_a_fwidth.frag
-qsb -b --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldoutlinetext.vert.qsb distancefieldoutlinetext.vert
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldoutlinetext.frag.qsb distancefieldoutlinetext.frag
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldoutlinetext_fwidth.frag.qsb distancefieldoutlinetext_fwidth.frag
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldoutlinetext_a.frag.qsb distancefieldoutlinetext_a.frag
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o distancefieldoutlinetext_a_fwidth.frag.qsb distancefieldoutlinetext_a_fwidth.frag
-qsb -b --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o hiqsubpixeldistancefieldtext.vert.qsb hiqsubpixeldistancefieldtext.vert
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o hiqsubpixeldistancefieldtext.frag.qsb hiqsubpixeldistancefieldtext.frag
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o hiqsubpixeldistancefieldtext_a.frag.qsb hiqsubpixeldistancefieldtext_a.frag
-qsb -b --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o loqsubpixeldistancefieldtext.vert.qsb loqsubpixeldistancefieldtext.vert
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o loqsubpixeldistancefieldtext.frag.qsb loqsubpixeldistancefieldtext.frag
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o loqsubpixeldistancefieldtext_a.frag.qsb loqsubpixeldistancefieldtext_a.frag
-qsb -b --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o shadereffect.vert.qsb shadereffect.vert
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o shadereffect.frag.qsb shadereffect.frag
-qsb -b --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o sprite.vert.qsb sprite.vert
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o sprite.frag.qsb sprite.frag
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o visualization.vert.qsb visualization.vert
-qsb --glsl "150,120,100 es" --hlsl 50 -c --msl 12 -o visualization.frag.qsb visualization.frag
+qsb -b --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o distancefieldtext.vert.qsb distancefieldtext.vert
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o distancefieldtext.frag.qsb distancefieldtext.frag
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o distancefieldtext_fwidth.frag.qsb distancefieldtext_fwidth.frag
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o distancefieldtext_a.frag.qsb distancefieldtext_a.frag
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o distancefieldtext_a_fwidth.frag.qsb distancefieldtext_a_fwidth.frag
+qsb -b --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o distancefieldshiftedtext.vert.qsb distancefieldshiftedtext.vert
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o distancefieldshiftedtext.frag.qsb distancefieldshiftedtext.frag
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o distancefieldshiftedtext_fwidth.frag.qsb distancefieldshiftedtext_fwidth.frag
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o distancefieldshiftedtext_a.frag.qsb distancefieldshiftedtext_a.frag
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o distancefieldshiftedtext_a_fwidth.frag.qsb distancefieldshiftedtext_a_fwidth.frag
+qsb -b --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o distancefieldoutlinetext.vert.qsb distancefieldoutlinetext.vert
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o distancefieldoutlinetext.frag.qsb distancefieldoutlinetext.frag
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o distancefieldoutlinetext_fwidth.frag.qsb distancefieldoutlinetext_fwidth.frag
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o distancefieldoutlinetext_a.frag.qsb distancefieldoutlinetext_a.frag
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o distancefieldoutlinetext_a_fwidth.frag.qsb distancefieldoutlinetext_a_fwidth.frag
+qsb -b --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o hiqsubpixeldistancefieldtext.vert.qsb hiqsubpixeldistancefieldtext.vert
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o hiqsubpixeldistancefieldtext.frag.qsb hiqsubpixeldistancefieldtext.frag
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o hiqsubpixeldistancefieldtext_a.frag.qsb hiqsubpixeldistancefieldtext_a.frag
+qsb -b --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o loqsubpixeldistancefieldtext.vert.qsb loqsubpixeldistancefieldtext.vert
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o loqsubpixeldistancefieldtext.frag.qsb loqsubpixeldistancefieldtext.frag
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o loqsubpixeldistancefieldtext_a.frag.qsb loqsubpixeldistancefieldtext_a.frag
+qsb -b --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o shadereffect.vert.qsb shadereffect.vert
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o shadereffect.frag.qsb shadereffect.frag
+qsb -b --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o sprite.vert.qsb sprite.vert
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o sprite.frag.qsb sprite.frag
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o visualization.vert.qsb visualization.vert
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -O -c -o visualization.frag.qsb visualization.frag
