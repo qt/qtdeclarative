@@ -6044,9 +6044,9 @@ QSize QMacStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt, cons
     case CT_LineEdit:
         if (const QStyleOptionFrame *f = qstyleoption_cast<const QStyleOptionFrame *>(opt)) {
             if (sz.isEmpty()) {
-                // Minimum size (10, 10)
-                sz.rwidth() += 2;
-                sz.rheight() += 6;
+                // Minimum size (with padding: 18x24)
+                sz.rwidth() = 10;
+                sz.rheight() = 20;
             }
             // From using pixelTool with XCode/NSTextTextField
             int leftPadding = 4;
