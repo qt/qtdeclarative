@@ -1188,15 +1188,13 @@ int Lexer::scanNumber(QChar ch)
         }
     }
 
-    chars.append(u'\0');
-
     const char *begin = chars.constData();
     const char *end = nullptr;
     bool ok = false;
 
-    _tokenValue = qstrtod(begin, &end, &ok);
+    _tokenValue = qstrntod(begin, chars.size(), &end, &ok);
 
-    if (end - begin != chars.size() - 1) {
+    if (end - begin != chars.size()) {
         _errorCode = IllegalExponentIndicator;
         _errorMessage = QCoreApplication::translate("QQmlParser", "Illegal syntax for exponential number");
         return T_ERROR;
