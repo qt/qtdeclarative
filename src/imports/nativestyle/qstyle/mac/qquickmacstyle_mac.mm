@@ -1903,6 +1903,7 @@ NSCell *QMacStylePrivate::cocoaCell(CocoaControl cocoaControl) const
 
 void QMacStylePrivate::drawNSViewInRect(NSView *view, const QRectF &rect, QPainter *p, DrawRectBlock drawRectBlock) const
 {
+    QMacAutoReleasePool pool;
     QMacCGContext ctx(p);
     setupNSGraphicsContext(ctx, YES);
 
@@ -2857,6 +2858,7 @@ void QMacStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, QPai
 //            if (QTabWidget *tabWidget = qobject_cast<QTabWidget *>(opt->styleObject))
 //                clipTabBarFrame(opt, this, ctx);
 //#endif
+            QMacAutoReleasePool pool;
             CGContextTranslateCTM(ctx, 0, rect.origin.y + rect.size.height);
             CGContextScaleCTM(ctx, 1, -1);
             if (QOperatingSystemVersion::current() < QOperatingSystemVersion::MacOSMojave
@@ -3026,6 +3028,7 @@ void QMacStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, QPai
             return cs == QStyleHelper::SizeSmall ? 0.5 : 0.0;
         } ();
         d->drawNSViewInRect(tb, opt->rect, p, ^(CGContextRef ctx, const CGRect &rect) {
+            QMacAutoReleasePool pool;
             CGContextTranslateCTM(ctx, 0, vOffset);
             [tb.cell drawInteriorWithFrame:rect inView:tb];
         });
@@ -3080,6 +3083,7 @@ void QMacStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, QPai
                 static_cast<NSTextFieldCell *>(tf.cell).bezelStyle = isRounded ? NSTextFieldRoundedBezel : NSTextFieldSquareBezel;
                 tf.frame = opt->rect.toCGRect();
                 d->drawNSViewInRect(tf, opt->rect, p, ^(CGContextRef, const CGRect &rect) {
+                    QMacAutoReleasePool pool;
                     if (!qt_mac_applicationIsInDarkMode()) {
                         // In 'Dark' mode controls are transparent, so we do not
                         // over-paint the (potentially custom) color in the background.
@@ -3444,6 +3448,7 @@ void QMacStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter
             [pb highlight:isPressed];
             pb.state = isHighlighted && !isPressed ? NSOnState : NSOffState;
             d->drawNSViewInRect(pb, frameRect, p, ^(CGContextRef, const CGRect &r) {
+                QMacAutoReleasePool pool;
                 [pb.cell drawBezelWithFrame:r inView:pb.superview];
             });
             [pb highlight:NO];
@@ -3658,6 +3663,7 @@ void QMacStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter
             pb.state = (isActive && isSelected && !isPressed) ? NSOnState : NSOffState;
 
             const auto drawBezelBlock = ^(CGContextRef ctx, const CGRect &r) {
+                QMacAutoReleasePool pool;
                 CGContextClipToRect(ctx, opt->rect.toCGRect());
                 if (!isSelected || needsInactiveHack) {
                     // Final stage of the pressed state hack: flip NSPopupButton rendering
@@ -3711,6 +3717,7 @@ void QMacStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter
                 tabPixmap.fill(Qt::transparent);
                 QPainter tabPainter(&tabPixmap);
                 d->drawNSViewInRect(pb, frameRect, &tabPainter, ^(CGContextRef ctx, const CGRect &r) {
+                    QMacAutoReleasePool pool;
                     CGContextTranslateCTM(ctx, -opt->rect.left(), -opt->rect.top());
                     drawBezelBlock(ctx, r);
                 });
@@ -4150,6 +4157,7 @@ void QMacStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter
                 const auto cw = QMacStylePrivate::CocoaControl(QMacStylePrivate::ProgressIndicator_Determinate, aquaSize);
                 auto *pi = static_cast<NSProgressIndicator *>(d->cocoaControl(cw));
                 d->drawNSViewInRect(pi, rect, p, ^(CGContextRef ctx, const CGRect &rect) {
+                    QMacAutoReleasePool pool;
                     d->setupVerticalInvertedXform(ctx, reverse, false, rect);
                     pi.minValue = pb->minimum;
                     pi.maxValue = pb->maximum;
@@ -4200,6 +4208,7 @@ void QMacStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter
             auto *sv = static_cast<NSSplitView *>(d->cocoaControl(cw));
             sv.frame = opt->rect.toCGRect();
             d->drawNSViewInRect(sv, opt->rect, p, ^(CGContextRef, const CGRect &rect) {
+                QMacAutoReleasePool pool;
                 [sv drawDividerInRect:rect];
             });
         } else {
@@ -5058,6 +5067,7 @@ void QMacStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComplex 
             }
 
             d->drawNSViewInRect(slider, opt->rect, p, ^(CGContextRef ctx, const CGRect &rect) {
+                QMacAutoReleasePool pool;
 
                 // Since the GC is flipped, upsideDown means *not* inverted when vertical.
                 const bool verticalFlip = !isHorizontal && !sl->upsideDown; // FIXME: && !isSierraOrLater
@@ -5224,6 +5234,7 @@ void QMacStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComplex 
                 pb.frame = frameRect.toCGRect();
                 [pb highlight:isPressed];
                 d->drawNSViewInRect(pb, frameRect, p, ^(CGContextRef, const CGRect &r) {
+                    QMacAutoReleasePool pool;
                     [pb.cell drawBezelWithFrame:r inView:pb.superview];
                 });
             } else if (cw.type == QMacStylePrivate::ComboBox) {
@@ -5241,6 +5252,7 @@ void QMacStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComplex 
 
                 d->drawNSViewInRect(cb, frameRect, p, ^(CGContextRef, const CGRect &r) {
                     // FIXME This is usually drawn in the control's superview, but we wouldn't get inactive look in this case
+                    QMacAutoReleasePool pool;
                     [cb.cell drawWithFrame:r inView:cb];
                 });
             }
@@ -5311,6 +5323,7 @@ void QMacStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComplex 
 
                     const auto buttonRect = proxy()->subControlRect(CC_TitleBar, titlebar, sc);
                     d->drawNSViewInRect(wb, buttonRect, p, ^(CGContextRef, const CGRect &rect) {
+                        QMacAutoReleasePool pool;
                         auto *wbCell = static_cast<NSButtonCell *>(wb.cell);
                         [wbCell drawWithFrame:rect inView:wb];
                     });
@@ -5417,6 +5430,7 @@ void QMacStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComplex 
                         pb.state = isHighlighted && !isPressed ? NSOnState : NSOffState;
                         const auto buttonRect = proxy()->subControlRect(cc, tb, SC_ToolButton);
                         d->drawNSViewInRect(pb, buttonRect, p, ^(CGContextRef, const CGRect &rect) {
+                            QMacAutoReleasePool pool;
                             [pb.cell drawBezelWithFrame:rect inView:pb];
                         });
                     }
