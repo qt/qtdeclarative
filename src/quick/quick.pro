@@ -46,8 +46,6 @@ HEADERS += \
     qtquickglobal.h \
     qtquickglobal_p.h
 
-SOURCES += qtquick2.cpp
-
 # To make #include "qquickcontext2d_jsclass.cpp" work
 INCLUDEPATH += $$PWD
 

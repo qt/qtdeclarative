@@ -50,7 +50,9 @@ public:
     QtQuick2Plugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent)
     {
         volatile auto registration = &qml_register_types_QtQuick;
+        volatile auto initialization = &QQuick_initializeModule;
         Q_UNUSED(registration);
+        Q_UNUSED(initialization);
     }
 };
 
