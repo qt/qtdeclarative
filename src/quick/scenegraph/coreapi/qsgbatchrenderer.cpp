@@ -1480,6 +1480,11 @@ void Renderer::nodeChanged(QSGNode *node, QSGNode::DirtyState state)
     // to avoid that any of the others are processed twice.
     if (state & QSGNode::DirtySubtreeBlocked) {
         Node *sn = m_nodes.value(node);
+
+        // Force a batch rebuild if this includes an opacity change
+        if (state & QSGNode::DirtyOpacity)
+            m_rebuild |= FullRebuild;
+
         bool blocked = node->isSubtreeBlocked();
         if (blocked && sn) {
             nodeChanged(node, QSGNode::DirtyNodeRemoved);
