@@ -41,10 +41,22 @@ qt_feature("quickcontrols2-universal" PRIVATE
     PURPOSE "Provides a style based on the Universal Design guidelines."
     CONDITION QT_FEATURE_quickcontrols2_default
 )
+qt_feature("quickcontrols2-macos" PRIVATE
+    SECTION "Quick Controls 2"
+    LABEL "macOS"
+    PURPOSE "Provides a native macOS desktop style."
+    CONDITION QT_FEATURE_quickcontrols2_default
+)
+qt_feature("quickcontrols2-windows" PRIVATE
+    SECTION "Quick Controls 2"
+    LABEL "Windows"
+    PURPOSE "Provides a native Windows desktop style."
+    CONDITION QT_FEATURE_quickcontrols2_default
+)
 qt_configure_add_summary_section(NAME "Qt Quick Controls 2")
 qt_configure_add_summary_entry(
     TYPE "featureList"
-    ARGS "quickcontrols2-default quickcontrols2-fusion quickcontrols2-imagine quickcontrols2-material quickcontrols2-universal"
+    ARGS "quickcontrols2-default quickcontrols2-fusion quickcontrols2-imagine quickcontrols2-material quickcontrols2-universal quickcontrols2-macos quickcontrols2-windows"
     MESSAGE "Styles"
 )
 qt_configure_end_summary_section() # end of "Qt Quick Controls 2" section

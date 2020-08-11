@@ -39,6 +39,7 @@ qt_add_qml_module(qtquickcontrols2macosstyleplugin
 # QML_IMPORT_MAJOR_VERSION = "2"
 # QML_IMPORT_NAME = "QtQuick.Controls.macOS"
 # TARGETPATH = "QtQuick/Controls.2/macOS"
+# _REQUIREMENTS = "qtConfig(quickcontrols2-macos)"
 
 set(qml_files
     "Button.qml"

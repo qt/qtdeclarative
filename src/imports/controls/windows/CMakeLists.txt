@@ -39,6 +39,7 @@ qt_add_qml_module(qtquickcontrols2windowsstyleplugin
 # QML_IMPORT_MAJOR_VERSION = "6"
 # QML_IMPORT_NAME = "QtQuick.Controls.Windows"
 # TARGETPATH = "QtQuick/Controls.2/Windows"
+# _REQUIREMENTS = "qtConfig(quickcontrols2-windows)"
 
 set(qml_files
     "Button.qml"

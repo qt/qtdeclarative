@@ -25,7 +25,6 @@ CONFIG += qmltypes install_qmltypes
 
 load(qml_plugin)
 
-# TODO: add config flag
-#requires(qtConfig(quickcontrols2-nativestyle))
+requires(qtConfig(quickcontrols2-macos)|qtConfig(quickcontrols2-windows))
 
 HEADERS +=

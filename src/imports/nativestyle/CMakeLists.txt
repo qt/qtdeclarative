@@ -61,6 +61,7 @@ qt_add_qml_module(qtquickcontrols2nativestyleplugin
 # QML_IMPORT_MAJOR_VERSION = "6"
 # QML_IMPORT_NAME = "QtQuick.NativeStyle"
 # TARGETPATH = "QtQuick/NativeStyle"
+# _REQUIREMENTS = "qtConfig(quickcontrols2-macos)|qtConfig(quickcontrols2-windows)"
 
 ## Scopes:
 #####################################################################
