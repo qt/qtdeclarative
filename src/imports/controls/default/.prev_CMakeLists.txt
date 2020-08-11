@@ -1,20 +1,20 @@
-# Generated from material.pro.
+# Generated from default.pro.
 
 #####################################################################
-## qtquickcontrols2materialstyleplugin Plugin:
+## qtquickcontrols2defaultstyleplugin Plugin:
 #####################################################################
 
-qt_add_qml_module(qtquickcontrols2materialstyleplugin
-    URI "QtQuick.Controls.Material"
+qt_add_qml_module(qtquickcontrols2defaultstyleplugin
+    URI "QtQuick.Controls.Default"
     VERSION "${CMAKE_PROJECT_VERSION}"
-    CLASSNAME QtQuickControls2MaterialStylePlugin
-    IMPORTS
-        QtQuick.Controls.Default/auto
+    CLASSNAME QtQuickControls2DefaultStylePlugin
+    DEPENDENCIES
+        QtQuick.Controls/2.5
     GENERATE_QMLTYPES
     SOURCES
-        qquickmaterialstyle.cpp qquickmaterialstyle_p.h
-        qquickmaterialtheme.cpp qquickmaterialtheme_p.h
-        qtquickcontrols2materialstyleplugin.cpp
+        qquickdefaultstyle.cpp qquickdefaultstyle_p.h
+        qquickdefaulttheme.cpp qquickdefaulttheme_p.h
+        qtquickcontrols2defaultstyleplugin.cpp
     DEFINES
         QT_NO_CAST_FROM_ASCII
         QT_NO_CAST_TO_ASCII
@@ -22,7 +22,6 @@ qt_add_qml_module(qtquickcontrols2materialstyleplugin
         Qt::CorePrivate
         Qt::GuiPrivate
         Qt::QmlPrivate
-        Qt::QuickControls2ImplPrivate
         Qt::QuickControls2Private
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
@@ -34,7 +33,7 @@ qt_add_qml_module(qtquickcontrols2materialstyleplugin
 )
 
 # Resources:
-set(qtquickcontrols2materialstyleplugin_resource_files
+set(qtquickcontrols2defaultstyleplugin_resource_files
     "images/arrow-indicator.png"
     "images/arrow-indicator@2x.png"
     "images/arrow-indicator@3x.png"
@@ -43,38 +42,48 @@ set(qtquickcontrols2materialstyleplugin_resource_files
     "images/check@2x.png"
     "images/check@3x.png"
     "images/check@4x.png"
+    "images/dial-indicator.png"
+    "images/dial-indicator@2x.png"
+    "images/dial-indicator@3x.png"
+    "images/dial-indicator@4x.png"
+    "images/double-arrow.png"
+    "images/double-arrow@2x.png"
+    "images/double-arrow@3x.png"
+    "images/double-arrow@4x.png"
     "images/drop-indicator.png"
     "images/drop-indicator@2x.png"
     "images/drop-indicator@3x.png"
     "images/drop-indicator@4x.png"
-    "shaders/+glslcore/RectangularGlow.frag"
-    "shaders/+hlsl/RectangularGlow.frag"
-    "shaders/+qsb/RectangularGlow.frag"
-    "shaders/RectangularGlow.frag"
 )
 
-qt_add_resource(qtquickcontrols2materialstyleplugin "qtquickcontrols2materialstyleplugin"
+qt_add_resource(qtquickcontrols2defaultstyleplugin "qtquickcontrols2defaultstyleplugin"
     PREFIX
-        "/qt-project.org/imports/QtQuick/Controls/Material"
+        "/qt-project.org/imports/QtQuick/Controls/Default"
     FILES
-        ${qtquickcontrols2materialstyleplugin_resource_files}
+        ${qtquickcontrols2defaultstyleplugin_resource_files}
 )
 
 
-#### Keys ignored in scope 1:.:.:material.pro:<TRUE>:
+#### Keys ignored in scope 1:.:.:default.pro:<TRUE>:
 # OTHER_FILES = "qmldir" "$$QML_FILES"
-# QML_IMPORT_NAME = "QtQuick.Controls.Material"
+# QML_IMPORT_NAME = "QtQuick.Controls.Default"
 # QML_IMPORT_VERSION = "$$QT_VERSION"
-# TARGETPATH = "QtQuick/Controls/Material"
-# _REQUIREMENTS = "qtConfig(quickcontrols2-material)"
+# TARGETPATH = "QtQuick/Controls/Default"
+# _REQUIREMENTS = "qtConfig(quickcontrols2-default)"
 
 set(qml_files
+    "AbstractButton.qml"
+    "Action.qml"
+    "ActionGroup.qml"
     "ApplicationWindow.qml"
     "BusyIndicator.qml"
     "Button.qml"
+    "ButtonGroup.qml"
     "CheckBox.qml"
     "CheckDelegate.qml"
     "ComboBox.qml"
+    "Container.qml"
+    "Control.qml"
     "DelayButton.qml"
     "Dial.qml"
     "Dialog.qml"
@@ -101,14 +110,15 @@ set(qml_files
     "RoundButton.qml"
     "ScrollBar.qml"
     "ScrollIndicator.qml"
+    "ScrollView.qml"
     "Slider.qml"
     "SpinBox.qml"
     "SplitView.qml"
     "StackView.qml"
     "SwipeDelegate.qml"
-    "SwipeView.qml"
     "Switch.qml"
     "SwitchDelegate.qml"
+    "SwipeView.qml"
     "TabBar.qml"
     "TabButton.qml"
     "TextArea.qml"
@@ -120,6 +130,15 @@ set(qml_files
     "Tumbler.qml"
     "VerticalHeaderView.qml"
 )
+set_source_files_properties(AbstractButton.qml PROPERTIES
+    QT_QML_SOURCE_VERSION "2.0;6.0"
+)
+set_source_files_properties(Action.qml PROPERTIES
+    QT_QML_SOURCE_VERSION "2.3;6.0"
+)
+set_source_files_properties(ActionGroup.qml PROPERTIES
+    QT_QML_SOURCE_VERSION "2.3;6.0"
+)
 set_source_files_properties(ApplicationWindow.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.0;6.0"
 )
@@ -129,6 +148,9 @@ set_source_files_properties(BusyIndicator.qml PROPERTIES
 set_source_files_properties(Button.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.0;6.0"
 )
+set_source_files_properties(ButtonGroup.qml PROPERTIES
+    QT_QML_SOURCE_VERSION "2.0;6.0"
+)
 set_source_files_properties(CheckBox.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.0;6.0"
 )
@@ -136,6 +158,12 @@ set_source_files_properties(CheckDelegate.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(ComboBox.qml PROPERTIES
+    QT_QML_SOURCE_VERSION "2.0;6.0"
+)
+set_source_files_properties(Container.qml PROPERTIES
+    QT_QML_SOURCE_VERSION "2.0;6.0"
+)
+set_source_files_properties(Control.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(DelayButton.qml PROPERTIES
@@ -216,6 +244,9 @@ set_source_files_properties(ScrollBar.qml PROPERTIES
 set_source_files_properties(ScrollIndicator.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.0;6.0"
 )
+set_source_files_properties(ScrollView.qml PROPERTIES
+    QT_QML_SOURCE_VERSION "2.2;6.0"
+)
 set_source_files_properties(Slider.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.0;6.0"
 )
@@ -231,13 +262,13 @@ set_source_files_properties(StackView.qml PROPERTIES
 set_source_files_properties(SwipeDelegate.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.0;6.0"
 )
-set_source_files_properties(SwipeView.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
 set_source_files_properties(Switch.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(SwitchDelegate.qml PROPERTIES
+    QT_QML_SOURCE_VERSION "2.0;6.0"
+)
+set_source_files_properties(SwipeView.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(TabBar.qml PROPERTIES
@@ -271,7 +302,7 @@ set_source_files_properties(VerticalHeaderView.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.15;6.0"
 )
 
-qt6_target_qml_files(qtquickcontrols2materialstyleplugin
+qt6_target_qml_files(qtquickcontrols2defaultstyleplugin
     FILES
         ${qml_files}
 )

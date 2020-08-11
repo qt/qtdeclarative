@@ -24,6 +24,7 @@ qt_add_test(tst_qquickdrawer
         Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::QuickControls2
+        Qt::QuickControls2Private
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
         Qt::TestPrivate

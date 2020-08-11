@@ -1,21 +1,18 @@
-# Generated from controls.pro.
+# Generated from controlsimpl.pro.
 
 #####################################################################
-## qtquickcontrols2plugin Plugin:
+## qtquickcontrols2implplugin Plugin:
 #####################################################################
 
-qt_add_qml_module(qtquickcontrols2plugin
-    URI "QtQuick.Controls"
+qt_add_qml_module(qtquickcontrols2implplugin
+    URI "QtQuick.Controls.impl"
     VERSION "${CMAKE_PROJECT_VERSION}"
-    DESIGNER_SUPPORTED
-    CLASSNAME QtQuickControls2Plugin
+    CLASSNAME QtQuickControls2ImplPlugin
     DEPENDENCIES
         QtQuick.Templates/2.5
     SKIP_TYPE_REGISTRATION
-    IMPORTS
-        QtQuick.Controls.impl/auto
     SOURCES
-        qtquickcontrols2plugin.cpp
+        qtquickcontrols2implplugin.cpp
     DEFINES
         QT_NO_CAST_FROM_ASCII
         QT_NO_CAST_TO_ASCII
@@ -34,14 +31,7 @@ qt_add_qml_module(qtquickcontrols2plugin
         Qt::Quick
 )
 
-#### Keys ignored in scope 1:.:.:controls.pro:<TRUE>:
-# OTHER_FILES = "qmldir" "$$PWD/snippets/*.qml" "$$PWD/src/*.qdoc" "$$PWD/src/templates/*.qdoc"
+#### Keys ignored in scope 1:.:.:controlsimpl.pro:<TRUE>:
+# OTHER_FILES = "qmldir"
 # QML_IMPORT_VERSION = "$$QT_VERSION"
-# TARGETPATH = "QtQuick/Controls"
-
-## Scopes:
-#####################################################################
-qt_add_docs(qtquickcontrols2plugin
-    doc/qtquickcontrols.qdocconf
-)
-
+# TARGETPATH = "QtQuick/Controls/impl"

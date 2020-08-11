@@ -7,15 +7,12 @@
 qt_add_qml_module(qtquickcontrols2universalstyleplugin
     TARGET_PATH "QtQuick/Controls/Universal"
     URI "QtQuick.Controls.Universal"
-    VERSION "2.${CMAKE_PROJECT_VERSION_MINOR}"
+    VERSION "6.0" # special case
     CLASSNAME QtQuickControls2UniversalStylePlugin
-    DEPENDENCIES
-        QtQuick.Controls/2.5
-    SKIP_TYPE_REGISTRATION
+    IMPORTS
+        QtQuick.Controls.Default/auto
+    GENERATE_QMLTYPES
     SOURCES
-        qquickuniversalbusyindicator.cpp qquickuniversalbusyindicator_p.h
-        qquickuniversalfocusrectangle.cpp qquickuniversalfocusrectangle_p.h
-        qquickuniversalprogressbar.cpp qquickuniversalprogressbar_p.h
         qquickuniversalstyle.cpp qquickuniversalstyle_p.h
         qquickuniversaltheme.cpp qquickuniversaltheme_p.h
         qtquickcontrols2universalstyleplugin.cpp
@@ -26,6 +23,7 @@ qt_add_qml_module(qtquickcontrols2universalstyleplugin
         Qt::CorePrivate
         Qt::GuiPrivate
         Qt::QmlPrivate
+        Qt::QuickControls2ImplPrivate
         Qt::QuickControls2Private
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
@@ -65,9 +63,9 @@ qt_add_resource(qtquickcontrols2universalstyleplugin "qtquickcontrols2universals
 
 
 #### Keys ignored in scope 1:.:.:universal.pro:<TRUE>:
-# IMPORT_NAME = "QtQuick.Controls.Universal"
-# IMPORT_VERSION = "2.$$QT_MINOR_VERSION"
 # OTHER_FILES = "qmldir" "$$QML_FILES"
+# QML_IMPORT_NAME = "QtQuick.Controls.Universal"
+# QML_IMPORT_VERSION = "$$QT_VERSION"
 # TARGETPATH = "QtQuick/Controls/Universal"
 # _REQUIREMENTS = "qtConfig(quickcontrols2-universal)"
 
@@ -77,7 +75,6 @@ set(qml_files
     "Button.qml"
     "CheckBox.qml"
     "CheckDelegate.qml"
-    "CheckIndicator.qml"
     "ComboBox.qml"
     "DelayButton.qml"
     "Dial.qml"
@@ -101,7 +98,6 @@ set(qml_files
     "ProgressBar.qml"
     "RadioButton.qml"
     "RadioDelegate.qml"
-    "RadioIndicator.qml"
     "RangeSlider.qml"
     "RoundButton.qml"
     "ScrollBar.qml"
@@ -112,7 +108,6 @@ set(qml_files
     "StackView.qml"
     "SwipeDelegate.qml"
     "SwitchDelegate.qml"
-    "SwitchIndicator.qml"
     "Switch.qml"
     "TabBar.qml"
     "TabButton.qml"
@@ -126,160 +121,151 @@ set(qml_files
     "VerticalHeaderView.qml"
 )
 set_source_files_properties(ApplicationWindow.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(BusyIndicator.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(Button.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(CheckBox.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(CheckDelegate.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
-)
-set_source_files_properties(CheckIndicator.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(ComboBox.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(DelayButton.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.2;6.0"
 )
 set_source_files_properties(Dial.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(Dialog.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.1;6.0"
 )
 set_source_files_properties(DialogButtonBox.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.1;6.0"
 )
 set_source_files_properties(Drawer.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(Frame.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(GroupBox.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(HorizontalHeaderView.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.15;6.0"
 )
 set_source_files_properties(ItemDelegate.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(Label.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(Menu.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(MenuBar.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.3;6.0"
 )
 set_source_files_properties(MenuBarItem.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.3;6.0"
 )
 set_source_files_properties(MenuItem.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(MenuSeparator.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.1;6.0"
 )
 set_source_files_properties(Page.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(PageIndicator.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(Pane.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(Popup.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(ProgressBar.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(RadioButton.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(RadioDelegate.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
-)
-set_source_files_properties(RadioIndicator.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(RangeSlider.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(RoundButton.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.1;6.0"
 )
 set_source_files_properties(ScrollBar.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(ScrollIndicator.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(Slider.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(SpinBox.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(SplitView.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.13;6.0"
 )
 set_source_files_properties(StackView.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(SwipeDelegate.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(SwitchDelegate.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
-)
-set_source_files_properties(SwitchIndicator.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(Switch.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(TabBar.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(TabButton.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(TextArea.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(TextField.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(ToolBar.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(ToolButton.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(ToolSeparator.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.1;6.0"
 )
 set_source_files_properties(ToolTip.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(Tumbler.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(VerticalHeaderView.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "2.15;6.0"
 )
 
 qt6_target_qml_files(qtquickcontrols2universalstyleplugin

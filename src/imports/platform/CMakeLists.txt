@@ -6,7 +6,7 @@
 
 qt_add_qml_module(qtlabsplatformplugin
     URI "Qt.labs.platform"
-    VERSION "1.0"
+    VERSION "1.1"
     CLASSNAME QtLabsPlatformPlugin
     SKIP_TYPE_REGISTRATION
     SOURCES
@@ -42,7 +42,7 @@ qt_add_qml_module(qtlabsplatformplugin
 )
 
 #### Keys ignored in scope 1:.:.:platform.pro:<TRUE>:
-# IMPORT_VERSION = "1.0"
+# IMPORT_VERSION = "1.1"
 # OTHER_FILES = "qmldir"
 # TARGETPATH = "Qt/labs/platform"
 
