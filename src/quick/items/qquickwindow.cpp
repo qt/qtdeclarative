@@ -4252,7 +4252,7 @@ bool QQuickWindow::isSceneGraphInitialized() const
     however.
 
     \badcode
-        QQuickRenderTarget rt = QQuickRenderTarget::fromNativeTexture({ vulkanImage, VK_IMAGE_LAYOUT_PREINITIALIZED }, pixelSize);
+        QQuickRenderTarget rt = QQuickRenderTarget::fromVulkanImage(vulkanImage, VK_IMAGE_LAYOUT_PREINITIALIZED, pixelSize);
         quickWindow->setRenderTarget(rt);
     \endcode
 
@@ -5745,7 +5745,7 @@ QString QQuickWindow::sceneGraphBackend()
         ...
         window->setGraphicsDevice(QQuickGraphicsDevice::fromDeviceAndContext(device, context));
         renderControl->initialize();
-        window->setRenderTarget(QQuickRenderTarget::fromNativeTexture({ quint64(texture), 0 }, textureSize);
+        window->setRenderTarget(QQuickRenderTarget::fromD3D11Texture(texture, textureSize);
         ...
     \endcode
 
