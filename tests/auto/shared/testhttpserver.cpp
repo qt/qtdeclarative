@@ -182,9 +182,11 @@ bool TestHTTPServer::wait(const QUrl &expect, const QUrl &reply, const QUrl &bod
         }
         if (headers_done) {
             m_waitData.body.append(line);
+        } else if (line.endsWith("{{Ignore}}\n")) {
+            m_waitData.headerPrefixes.append(line.left(line.length() - strlen("{{Ignore}}\n")));
         } else {
             line.replace("{{ServerHostUrl}}", serverHostUrl);
-            m_waitData.headers.append(line);
+            m_waitData.headerExactMatches.append(line);
         }
     }
     /*
@@ -257,7 +259,7 @@ void TestHTTPServer::readyRead()
         return;
     }
 
-    if (m_state == Failed || (m_waitData.body.isEmpty() && m_waitData.headers.count() == 0)) {
+    if (m_state == Failed || (m_waitData.body.isEmpty() && m_waitData.headerExactMatches.count() == 0)) {
         qWarning() << "TestHTTPServer: Unexpected data" << socket->readAll();
         return;
     }
@@ -271,9 +273,18 @@ void TestHTTPServer::readyRead()
                 m_data += socket->readAll();
                 break;
             } else {
-                if (!m_waitData.headers.contains(line)) {
+                bool prefixFound = false;
+                for (const QByteArray &prefix : m_waitData.headerPrefixes) {
+                    if (line.startsWith(prefix)) {
+                        prefixFound = true;
+                        break;
+                    }
+                }
+
+                if (!prefixFound && !m_waitData.headerExactMatches.contains(line)) {
                     qWarning() << "TestHTTPServer: Unexpected header:" << line
-                        << "\nExpected headers: " << m_waitData.headers;
+                        << "\nExpected exact headers: " << m_waitData.headerExactMatches
+                        << "\nExpected header prefixes: " << m_waitData.headerPrefixes;
                     m_state = Failed;
                     socket->disconnectFromHost();
                     return;

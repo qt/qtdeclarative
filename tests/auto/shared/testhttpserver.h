@@ -85,7 +85,8 @@ private:
     QSet<QString> m_contentSubstitutedFileNames;
 
     struct WaitData {
-        QList <QByteArray>headers;
+        QList<QByteArray> headerExactMatches;
+        QList<QByteArray> headerPrefixes;
         QByteArray body;
     } m_waitData;
     QByteArray m_replyData;
