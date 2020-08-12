@@ -10,7 +10,7 @@ project(QtQuickControls2
     LANGUAGES CXX C
 )
 
-find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core Gui Widgets Network Qml Quick QmlTools # special case
+find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core Gui Widgets Network Qml Quick # special case
                                            OPTIONAL_COMPONENTS QuickTest # special case
 )
 if(NOT TARGET Qt::Quick)
