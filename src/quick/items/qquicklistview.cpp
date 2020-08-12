@@ -1967,8 +1967,30 @@ QQuickItemViewAttached *QQuickListViewPrivate::getAttachedObject(const QObject *
     The list view itself is a focus scope (see \l{Keyboard Focus in Qt Quick} for more details).
 
     Delegates are instantiated as needed and may be destroyed at any time.
-    They are parented to ListView's \l {Flickable::contentItem}{contentItem}, not to the view itself.
-    State should \e never be stored in a delegate.
+    As such, state should \e never be stored in a delegate.
+    Delegates are usually parented to ListView's \l {Flickable::contentItem}{contentItem}, but
+    typically depending on whether it's visible in the view or not, the \l parent
+    can change, and sometimes be \c null. Because of that, binding to
+    the parent's properties from within the delegate is \i not recommended. If you
+    want the delegate to fill out the width of the ListView, consider
+    using one of the following approaches instead:
+
+    \code
+    ListView {
+        id: listView
+        // ...
+
+        delegate: Item {
+            // Incorrect.
+            width: parent.width
+
+            // Correct.
+            width: listView.width
+            width: ListView.view.width
+            // ...
+        }
+    }
+    \endcode
 
     ListView attaches a number of properties to the root item of the delegate, for example
     \c ListView.isCurrentItem.  In the following example, the root delegate item can access
