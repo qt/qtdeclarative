@@ -136,7 +136,7 @@ bool ImportedMembersVisitor::visit(UiSourceElement *sourceElement)
         // nothing to do
     } else {
         const auto loc = sourceElement->firstSourceLocation();
-        m_colorOut->writeUncolored(
+        m_errors.append(
                     "unsupportedd sourceElement at "
                     + QString::fromLatin1("%1:%2: ").arg(loc.startLine).arg(loc.startColumn)
                     + QString::number(sourceElement->sourceElement->kind));
@@ -165,6 +165,5 @@ bool ImportedMembersVisitor::visit(QQmlJS::AST::UiEnumDeclaration *uied)
 
 void ImportedMembersVisitor::throwRecursionDepthError()
 {
-    m_colorOut->write(QStringLiteral("Error"), Error);
-    m_colorOut->write(QStringLiteral("Maximum statement or expression depth exceeded"), Error);
+    m_errors.append(QStringLiteral("Maximum statement or expression depth exceeded"));
 }

@@ -10,12 +10,13 @@ qt_add_tool(${target_name}
     TOOLS_TARGET Qml # special case
     SOURCES
         ../shared/componentversion.cpp ../shared/componentversion.h
+        ../shared/importedmembersvisitor.cpp ../shared/importedmembersvisitor.h
         ../shared/metatypes.h
+        ../shared/qmljstypereader.cpp ../shared/qmljstypereader.h
         ../shared/scopetree.cpp ../shared/scopetree.h
         ../shared/typedescriptionreader.cpp ../shared/typedescriptionreader.h
         checkidentifiers.cpp checkidentifiers.h
         findwarnings.cpp findwarnings.h
-        importedmembersvisitor.cpp importedmembersvisitor.h
         main.cpp
         qcoloroutput.cpp qcoloroutput.h
     INCLUDE_DIRECTORIES

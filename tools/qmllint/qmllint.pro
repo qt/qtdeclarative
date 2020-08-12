@@ -9,7 +9,6 @@ SOURCES += \
     checkidentifiers.cpp \
     main.cpp \
     findwarnings.cpp \
-    importedmembersvisitor.cpp \
     qcoloroutput.cpp
 
 QMAKE_TARGET_DESCRIPTION = QML Syntax Verifier
@@ -20,5 +19,4 @@ HEADERS += \
     $$METATYPEREADER_HEADERS \
     checkidentifiers.h \
     findwarnings.h \
-    importedmembersvisitor.h \
     qcoloroutput.h

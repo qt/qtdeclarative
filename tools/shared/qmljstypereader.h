@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the tools applications of the Qt Toolkit.
@@ -26,8 +26,8 @@
 **
 ****************************************************************************/
 
-#ifndef IMPORTEDMEMBERSVISITOR_H
-#define IMPORTEDMEMBERSVISITOR_H
+#ifndef QMLJSTYPERADER_H
+#define QMLJSTYPERADER_H
 
 //
 //  W A R N I N G
@@ -40,35 +40,31 @@
 // We mean it.
 
 #include "scopetree.h"
-#include "qcoloroutput.h"
 
-#include <private/qqmljsast_p.h>
+#include <QtQml/private/qqmljsastfwd_p.h>
 
-class ImportedMembersVisitor : public QQmlJS::AST::Visitor
+#include <QtCore/qpair.h>
+#include <QtCore/qset.h>
+
+class QmlJSTypeReader
 {
 public:
-    ImportedMembersVisitor(ColorOutput *colorOut) :
-        m_colorOut(colorOut)
-    {}
+    struct Import {
+        QString path;
+        QTypeRevision version;
+        QString prefix;
+    };
 
-    ScopeTree::Ptr result(const QString &scopeName) const;
+    QmlJSTypeReader(const QString &file) : m_file(file) {}
+
+    ScopeTree::Ptr operator()();
+    QList<Import> imports() const { return m_imports; }
+    QStringList errors() const { return m_errors; }
 
 private:
-    bool visit(QQmlJS::AST::UiObjectDefinition *) override;
-    void endVisit(QQmlJS::AST::UiObjectDefinition *) override;
-    bool visit(QQmlJS::AST::UiPublicMember *) override;
-    bool visit(QQmlJS::AST::UiSourceElement *) override;
-    bool visit(QQmlJS::AST::UiScriptBinding *) override;
-    bool visit(QQmlJS::AST::UiEnumDeclaration *uied) override;
-    void throwRecursionDepthError() override;
-
-    ScopeTree::Ptr currentObject() const { return m_currentObjects.back(); }
-
-    QVector<ScopeTree::Ptr> m_currentObjects;
-    ScopeTree::ConstPtr m_rootObject;
-    QHash<QString, ScopeTree::Ptr> m_objects;
-
-    ColorOutput *m_colorOut = nullptr;
+    QString m_file;
+    QList<Import> m_imports;
+    QStringList m_errors;
 };
 
-#endif // IMPORTEDMEMBERSVISITOR_H
+#endif // QMLJSTYPEREADER_H

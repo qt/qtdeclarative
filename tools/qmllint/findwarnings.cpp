@@ -31,6 +31,7 @@
 #include "scopetree.h"
 #include "typedescriptionreader.h"
 #include "checkidentifiers.h"
+#include "qmljstypereader.h"
 
 #include <QtQml/private/qqmljsast_p.h>
 #include <QtQml/private/qqmljslexer_p.h>
@@ -65,47 +66,6 @@ void FindWarningVisitor::enterEnvironment(ScopeType type, const QString &name)
 void FindWarningVisitor::leaveEnvironment()
 {
     m_currentScope = m_currentScope->parentScope();
-}
-
-void FindWarningVisitor::parseHeaders(QQmlJS::AST::UiHeaderItemList *header)
-{
-    using namespace QQmlJS::AST;
-
-    while (header) {
-        if (auto import = cast<UiImport *>(header->headerItem)) {
-            if (import->version) {
-                QString path;
-                auto uri = import->importUri;
-                while (uri) {
-                    path.append(uri->name);
-                    path.append("/");
-                    uri = uri->next;
-                }
-                path.chop(1);
-                importHelper(path,
-                             import->asToken.isValid() ? import->importId.toString() : QString(),
-                             import->version->version);
-            }
-        }
-        header = header->next;
-    }
-}
-
-ScopeTree::Ptr FindWarningVisitor::parseProgram(QQmlJS::AST::Program *program,
-                                                      const QString &name)
-{
-    using namespace QQmlJS::AST;
-    ScopeTree::Ptr result = ScopeTree::create(ScopeType::JSLexicalScope, name);
-    for (auto *statement = program->statements; statement; statement = statement->next) {
-        if (auto *function = cast<FunctionDeclaration *>(statement->statement)) {
-            MetaMethod method(function->name.toString());
-            method.setMethodType(MetaMethod::Method);
-            for (auto *parameters = function->formals; parameters; parameters = parameters->next)
-                method.addParameter(parameters->element->bindingIdentifier.toString(), "");
-            result->addMethod(method);
-        }
-    }
-    return result;
 }
 
 static const QLatin1String SlashQmldir             = QLatin1String("/qmldir");
@@ -258,48 +218,18 @@ void FindWarningVisitor::importHelper(const QString &module, const QString &pref
 
 ScopeTree::Ptr FindWarningVisitor::localFile2ScopeTree(const QString &filePath)
 {
-    using namespace QQmlJS::AST;
-    const QFileInfo info { filePath };
-    QString baseName = info.baseName();
-    const QString scopeName = baseName.endsWith(".ui") ? baseName.chopped(3) : baseName;
+    QmlJSTypeReader typeReader(filePath);
+    ScopeTree::Ptr result = typeReader();
 
-    QQmlJS::Engine engine;
-    QQmlJS::Lexer lexer(&engine);
+    const QStringList errors = typeReader.errors();
+    for (const QString &error : errors)
+        m_colorOut.write(error, Error);
 
-    const QString lowerSuffix = info.suffix().toLower();
-    const bool isESModule = lowerSuffix == QLatin1String("mjs");
-    const bool isJavaScript = isESModule || lowerSuffix == QLatin1String("js");
+    const auto imports = typeReader.imports();
+    for (const auto &import : imports)
+        importHelper(import.path, import.prefix, import.version);
 
-    QFile file(filePath);
-    if (!file.open(QFile::ReadOnly)) {
-        return ScopeTree::create(isJavaScript ? ScopeType::JSLexicalScope : ScopeType::QMLScope,
-                                 scopeName);
-    }
-
-    QString code = file.readAll();
-    file.close();
-
-    lexer.setCode(code, /*line = */ 1, /*qmlMode=*/ !isJavaScript);
-    QQmlJS::Parser parser(&engine);
-
-    const bool success = isJavaScript ? (isESModule ? parser.parseModule()
-                                                    : parser.parseProgram())
-                                      : parser.parse();
-    if (!success) {
-        return ScopeTree::create(isJavaScript ? ScopeType::JSLexicalScope : ScopeType::QMLScope,
-                                 scopeName);
-    }
-
-    if (!isJavaScript) {
-        QQmlJS::AST::UiProgram *program = parser.ast();
-        parseHeaders(program->headers);
-        ImportedMembersVisitor membersVisitor(&m_colorOut);
-        program->members->accept(&membersVisitor);
-        return membersVisitor.result(scopeName);
-    }
-
-    // TODO: Anything special to do with ES modules here?
-    return parseProgram(QQmlJS::AST::cast<QQmlJS::AST::Program *>(parser.rootNode()), scopeName);
+    return result;
 }
 
 void FindWarningVisitor::importFileOrDirectory(const QString &fileOrDirectory,
