@@ -189,10 +189,6 @@ bool TestHTTPServer::wait(const QUrl &expect, const QUrl &reply, const QUrl &bod
             m_waitData.headerExactMatches.append(line);
         }
     }
-    /*
-    while (waitData.endsWith('\n'))
-        waitData = waitData.left(waitData.count() - 1);
-        */
 
     m_replyData = replyFile.readAll();
 
