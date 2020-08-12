@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
 class Q_QUICK_PRIVATE_EXPORT QSGRhiDistanceFieldGlyphCache : public QSGDistanceFieldGlyphCache
 {
 public:
-    QSGRhiDistanceFieldGlyphCache(QRhi *rhi, const QRawFont &font);
+    QSGRhiDistanceFieldGlyphCache(QRhi *rhi, const QRawFont &font, int renderTypeQuality);
     virtual ~QSGRhiDistanceFieldGlyphCache();
 
     void requestGlyphs(const QSet<glyph_t> &glyphs) override;

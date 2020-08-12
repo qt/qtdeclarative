@@ -127,7 +127,7 @@ public:
     virtual QSGInternalRectangleNode *createInternalRectangleNode() = 0;
     virtual QSGInternalImageNode *createInternalImageNode(QSGRenderContext *renderContext) = 0;
     virtual QSGPainterNode *createPainterNode(QQuickPaintedItem *item) = 0;
-    virtual QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode) = 0;
+    virtual QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode, int renderTypeQuality) = 0;
     virtual QSGLayer *createLayer(QSGRenderContext *renderContext) = 0;
     virtual QSGGuiThreadShaderEffectManager *createGuiThreadShaderEffectManager();
     virtual QSGShaderEffectNode *createShaderEffectNode(QSGRenderContext *renderContext);
@@ -197,7 +197,7 @@ public:
     virtual void endSync();
 
     virtual void preprocess();
-    virtual QSGDistanceFieldGlyphCache *distanceFieldGlyphCache(const QRawFont &font);
+    virtual QSGDistanceFieldGlyphCache *distanceFieldGlyphCache(const QRawFont &font, int renderTypeQuality);
     QSGTexture *textureForFactory(QQuickTextureFactory *factory, QQuickWindow *window);
 
     virtual QSGTexture *createTexture(const QImage &image, uint flags = CreateTexture_Alpha) const = 0;

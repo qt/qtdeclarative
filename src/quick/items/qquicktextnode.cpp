@@ -78,7 +78,7 @@ namespace {
   Creates an empty QQuickTextNode
 */
 QQuickTextNode::QQuickTextNode(QQuickItem *ownerElement)
-    : m_cursorNode(nullptr), m_ownerElement(ownerElement), m_useNativeRenderer(false)
+    : m_cursorNode(nullptr), m_ownerElement(ownerElement), m_useNativeRenderer(false), m_renderTypeQuality(-1)
 {
 #ifdef QSG_RUNTIME_DESCRIPTION
     qsgnode_set_description(this, QLatin1String("text"));
@@ -107,7 +107,7 @@ QSGGlyphNode *QQuickTextNode::addGlyphs(const QPointF &position, const QGlyphRun
         }
     }
 
-    QSGGlyphNode *node = sg->sceneGraphContext()->createGlyphNode(sg, preferNativeGlyphNode);
+    QSGGlyphNode *node = sg->sceneGraphContext()->createGlyphNode(sg, preferNativeGlyphNode, m_renderTypeQuality);
 
     node->setOwnerElement(m_ownerElement);
     node->setGlyphs(position + QPointF(0, glyphs.rawFont().ascent()), glyphs);
@@ -130,7 +130,7 @@ QSGGlyphNode *QQuickTextNode::addGlyphs(const QPointF &position, const QGlyphRun
     parentNode->appendChildNode(node);
 
     if (style == QQuickText::Outline && color.alpha() > 0 && styleColor != color) {
-        QSGGlyphNode *fillNode = sg->sceneGraphContext()->createGlyphNode(sg, preferNativeGlyphNode);
+        QSGGlyphNode *fillNode = sg->sceneGraphContext()->createGlyphNode(sg, preferNativeGlyphNode, m_renderTypeQuality);
         fillNode->setOwnerElement(m_ownerElement);
         fillNode->setGlyphs(position + QPointF(0, glyphs.rawFont().ascent()), glyphs);
         fillNode->setStyle(QQuickText::Normal);

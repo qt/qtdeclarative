@@ -52,6 +52,7 @@ QSGDistanceFieldGlyphNode::QSGDistanceFieldGlyphNode(QSGRenderContext *context)
     , m_style(QQuickText::Normal)
     , m_antialiasingMode(GrayAntialiasing)
     , m_texture(nullptr)
+    , m_renderTypeQuality(-1)
     , m_dirtyGeometry(false)
     , m_dirtyMaterial(false)
 {
@@ -87,6 +88,14 @@ void QSGDistanceFieldGlyphNode::setColor(const QColor &color)
     }
 }
 
+void QSGDistanceFieldGlyphNode::setRenderTypeQuality(int renderTypeQuality)
+{
+    if (renderTypeQuality == m_renderTypeQuality)
+        return;
+
+    m_renderTypeQuality = renderTypeQuality;
+}
+
 void QSGDistanceFieldGlyphNode::setPreferredAntialiasingMode(AntialiasingMode mode)
 {
     if (mode == m_antialiasingMode)
@@ -107,7 +116,7 @@ void QSGDistanceFieldGlyphNode::setGlyphs(const QPointF &position, const QGlyphR
     setFlag(UsePreprocess);
 
     QSGDistanceFieldGlyphCache *oldCache = m_glyph_cache;
-    m_glyph_cache = m_context->distanceFieldGlyphCache(m_glyphs.rawFont());
+    m_glyph_cache = m_context->distanceFieldGlyphCache(m_glyphs.rawFont(), m_renderTypeQuality);
 
     if (m_glyphNodeType == SubGlyphNode)
         return;

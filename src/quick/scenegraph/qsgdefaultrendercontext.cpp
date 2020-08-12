@@ -257,23 +257,24 @@ QSGTexture *QSGDefaultRenderContext::compressedTextureForFactory(const QSGCompre
     return nullptr;
 }
 
-QString QSGDefaultRenderContext::fontKey(const QRawFont &font)
+QString QSGDefaultRenderContext::fontKey(const QRawFont &font, int renderTypeQuality)
 {
     QFontEngine *fe = QRawFontPrivate::get(font)->fontEngine;
     if (!fe->faceId().filename.isEmpty()) {
-        QByteArray keyName = fe->faceId().filename + ' ' + QByteArray::number(fe->faceId().index);
-        if (font.style() != QFont::StyleNormal)
-            keyName += QByteArray(" I");
-        if (font.weight() != QFont::Normal)
-            keyName += ' ' + QByteArray::number(font.weight());
-        keyName += QByteArray(" DF");
+        QByteArray keyName =
+                fe->faceId().filename + ' ' + QByteArray::number(fe->faceId().index)
+                + (font.style() != QFont::StyleNormal ? QByteArray(" I") : QByteArray())
+                + (font.weight() != QFont::Normal ? ' ' + QByteArray::number(font.weight()) : QByteArray())
+                + ' ' + QByteArray::number(renderTypeQuality)
+                + QByteArray(" DF");
         return QString::fromUtf8(keyName);
     } else {
-        return QString::fromLatin1("%1_%2_%3_%4")
+        return QString::fromLatin1("%1_%2_%3_%4_%5")
             .arg(font.familyName())
             .arg(font.styleName())
             .arg(font.weight())
-            .arg(font.style());
+            .arg(font.style())
+            .arg(renderTypeQuality);
     }
 }
 
@@ -290,12 +291,12 @@ void QSGDefaultRenderContext::preprocess()
     }
 }
 
-QSGDistanceFieldGlyphCache *QSGDefaultRenderContext::distanceFieldGlyphCache(const QRawFont &font)
+QSGDistanceFieldGlyphCache *QSGDefaultRenderContext::distanceFieldGlyphCache(const QRawFont &font, int renderTypeQuality)
 {
-    QString key = fontKey(font);
+    QString key = fontKey(font, renderTypeQuality);
     QSGDistanceFieldGlyphCache *cache = m_glyphCaches.value(key, 0);
     if (!cache) {
-        cache = new QSGRhiDistanceFieldGlyphCache(m_rhi, font);
+        cache = new QSGRhiDistanceFieldGlyphCache(m_rhi, font, renderTypeQuality);
         m_glyphCaches.insert(key, cache);
     }
 

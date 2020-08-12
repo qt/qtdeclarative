@@ -54,8 +54,10 @@ DEFINE_BOOL_CONFIG_OPTION(qsgPreferFullSizeGlyphCacheTextures, QSG_PREFER_FULLSI
 #  define QSG_RHI_DISTANCEFIELD_GLYPH_CACHE_PADDING 2
 #endif
 
-QSGRhiDistanceFieldGlyphCache::QSGRhiDistanceFieldGlyphCache(QRhi *rhi, const QRawFont &font)
-    : QSGDistanceFieldGlyphCache(font)
+QSGRhiDistanceFieldGlyphCache::QSGRhiDistanceFieldGlyphCache(QRhi *rhi,
+                                                             const QRawFont &font,
+                                                             int renderTypeQuality)
+    : QSGDistanceFieldGlyphCache(font, renderTypeQuality)
     , m_rhi(rhi)
 {
     // Load a pregenerated cache if the font contains one

@@ -113,6 +113,7 @@ public:
         int minimumPointSize;
         int nbActiveDownloads;
         int maximumLineCount;
+        int renderTypeQuality;
         bool lineHeightValid : 1;
         QQuickText::LineHeightMode lineHeightMode;
         QQuickText::FontSizeMode fontSizeMode;
@@ -203,6 +204,7 @@ public:
 
     inline qreal lineHeight() const { return extra.isAllocated() ? extra->lineHeight : 1.0; }
     inline int maximumLineCount() const { return extra.isAllocated() ? extra->maximumLineCount : INT_MAX; }
+    inline int renderTypeQuality() const { return extra.isAllocated() ? extra->renderTypeQuality : QQuickText::DefaultRenderTypeQuality; }
     inline QQuickText::LineHeightMode lineHeightMode() const { return extra.isAllocated() ? extra->lineHeightMode : QQuickText::ProportionalHeight; }
     inline QQuickText::FontSizeMode fontSizeMode() const { return extra.isAllocated() ? extra->fontSizeMode : QQuickText::FixedSize; }
     inline int minimumPixelSize() const { return extra.isAllocated() ? extra->minimumPixelSize : 12; }

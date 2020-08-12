@@ -112,6 +112,7 @@ QQuickTextPrivate::ExtraData::ExtraData()
     , minimumPointSize(12)
     , nbActiveDownloads(0)
     , maximumLineCount(INT_MAX)
+    , renderTypeQuality(QQuickText::DefaultRenderTypeQuality)
     , lineHeightValid(false)
     , lineHeightMode(QQuickText::ProportionalHeight)
     , fontSizeMode(QQuickText::FixedSize)
@@ -2476,6 +2477,7 @@ QSGNode *QQuickText::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data
         node = static_cast<QQuickTextNode *>(oldNode);
 
     node->setUseNativeRenderer(d->renderType == NativeRendering);
+    node->setRenderTypeQuality(d->renderTypeQuality());
     node->deleteContent();
     node->setMatrix(QMatrix4x4());
 
@@ -2931,6 +2933,50 @@ void QQuickText::hoverLeaveEvent(QHoverEvent *event)
 {
     Q_D(QQuickText);
     d->processHoverEvent(event);
+}
+
+/*!
+    \qmlproperty int QtQuick::Text::renderTypeQuality
+
+    Override the default rendering type quality for this component. This is a low-level
+    customization which can be ignored in most cases. It currently only has an effect
+    when \l renderType is \c Text.QtRendering.
+
+    The rasterization algorithm used by Text.QtRendering may give artifacts at
+    large text sizes, such as sharp corners looking rounder than they should. If
+    this is an issue for specific text items, increase the \c renderTypeQuality to
+    improve rendering quality, at the expense of memory consumption.
+
+    The \c renderTypeQuality may be any integer over 0, or one of the following
+    predefined values
+
+    \list
+    \li Text.DefaultRenderTypeQuality (default) = -1
+    \li Text.LowRenderTypeQuality = 26
+    \li Text.NormalRenderTypeQuality = 52
+    \li Text.HighRenderTypeQuality = 104
+    \li Text.VeryHighRenderTypeQuality = 208
+    \endlist
+*/
+int QQuickText::renderTypeQuality() const
+{
+    Q_D(const QQuickText);
+    return d->renderTypeQuality();
+}
+
+void QQuickText::setRenderTypeQuality(int renderTypeQuality)
+{
+    Q_D(QQuickText);
+    if (renderTypeQuality == d->renderTypeQuality())
+        return;
+    d->extra.value().renderTypeQuality = renderTypeQuality;
+
+    if (isComponentComplete()) {
+        d->updateType = QQuickTextPrivate::UpdatePaintNode;
+        update();
+    }
+
+    emit renderTypeQualityChanged();
 }
 
 /*!

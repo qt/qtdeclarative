@@ -72,6 +72,7 @@ public:
     void setColor(const QColor &color) override;
 
     void setPreferredAntialiasingMode(AntialiasingMode mode) override;
+    void setRenderTypeQuality(int renderTypeQuality) override;
 
     void setStyle(QQuickText::TextStyle style) override;
     void setStyleColor(const QColor &color) override;
@@ -107,6 +108,7 @@ private:
     AntialiasingMode m_antialiasingMode;
     QRectF m_boundingRect;
     const QSGDistanceFieldGlyphCache::Texture *m_texture;
+    int m_renderTypeQuality;
 
     struct GlyphInfo {
         QVector<quint32> indexes;

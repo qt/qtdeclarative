@@ -91,6 +91,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickText : public QQuickImplicitSizeItem
     Q_PROPERTY(FontSizeMode fontSizeMode READ fontSizeMode WRITE setFontSizeMode NOTIFY fontSizeModeChanged)
     Q_PROPERTY(RenderType renderType READ renderType WRITE setRenderType NOTIFY renderTypeChanged)
     Q_PROPERTY(QString hoveredLink READ hoveredLink NOTIFY linkHovered REVISION(2, 2))
+    Q_PROPERTY(int renderTypeQuality READ renderTypeQuality WRITE setRenderTypeQuality NOTIFY renderTypeQualityChanged REVISION(6, 0))
 
     Q_PROPERTY(qreal padding READ padding WRITE setPadding RESET resetPadding NOTIFY paddingChanged REVISION(2, 6))
     Q_PROPERTY(qreal topPadding READ topPadding WRITE setTopPadding RESET resetTopPadding NOTIFY topPaddingChanged REVISION(2, 6))
@@ -145,6 +146,14 @@ public:
                       NativeRendering
                     };
     Q_ENUM(RenderType)
+
+    enum RenderTypeQuality { DefaultRenderTypeQuality = -1,
+                             LowRenderTypeQuality = 26,
+                             NormalRenderTypeQuality = 52,
+                             HighRenderTypeQuality = 104,
+                             VeryHighRenderTypeQuality = 208
+                           };
+    Q_ENUM(RenderTypeQuality)
 
     enum LineHeightMode { ProportionalHeight, FixedHeight };
     Q_ENUM(LineHeightMode)
@@ -235,6 +244,9 @@ public:
     RenderType renderType() const;
     void setRenderType(RenderType renderType);
 
+    int renderTypeQuality() const;
+    void setRenderTypeQuality(int renderTypeQuality);
+
     QString hoveredLink() const;
 
     Q_REVISION(2, 3) Q_INVOKABLE QString linkAt(qreal x, qreal y) const;
@@ -299,6 +311,7 @@ Q_SIGNALS:
     Q_REVISION(2, 6) void rightPaddingChanged();
     Q_REVISION(2, 6) void bottomPaddingChanged();
     Q_REVISION(2, 9) void fontInfoChanged();
+    Q_REVISION(6, 0) void renderTypeQualityChanged();
 
 protected:
     QQuickText(QQuickTextPrivate &dd, QQuickItem *parent = nullptr);

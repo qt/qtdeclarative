@@ -181,13 +181,16 @@ QSGPainterNode *QSGDefaultContext::createPainterNode(QQuickPaintedItem *item)
     return new QSGDefaultPainterNode(item);
 }
 
-QSGGlyphNode *QSGDefaultContext::createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode)
+QSGGlyphNode *QSGDefaultContext::createGlyphNode(QSGRenderContext *rc,
+                                                 bool preferNativeGlyphNode,
+                                                 int renderTypeQuality)
 {
     if (m_distanceFieldDisabled || preferNativeGlyphNode) {
         return new QSGDefaultGlyphNode(rc);
     } else {
         QSGDistanceFieldGlyphNode *node = new QSGDistanceFieldGlyphNode(rc);
         node->setPreferredAntialiasingMode(m_distanceFieldAntialiasing);
+        node->setRenderTypeQuality(renderTypeQuality);
         return node;
     }
 }

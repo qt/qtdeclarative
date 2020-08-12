@@ -69,7 +69,7 @@ public:
     QSGInternalRectangleNode *createInternalRectangleNode() override;
     QSGInternalImageNode *createInternalImageNode(QSGRenderContext *renderContext) override;
     QSGPainterNode *createPainterNode(QQuickPaintedItem *item) override;
-    QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode) override;
+    QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode, int renderTypeQuality) override;
     QSGLayer *createLayer(QSGRenderContext *renderContext) override;
     QSurfaceFormat defaultSurfaceFormat() const override;
     QSGRendererInterface *rendererInterface(QSGRenderContext *renderContext) override;

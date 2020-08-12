@@ -108,11 +108,15 @@ public:
     bool useNativeRenderer() const { return m_useNativeRenderer; }
     void setUseNativeRenderer(bool on) { m_useNativeRenderer = on; }
 
+    void setRenderTypeQuality(int renderTypeQuality) { m_renderTypeQuality = renderTypeQuality; }
+    int renderTypeQuality() const { return m_renderTypeQuality; }
+
 private:
     QSGInternalRectangleNode *m_cursorNode;
     QList<QSGTexture *> m_textures;
     QQuickItem *m_ownerElement;
     bool m_useNativeRenderer;
+    int m_renderTypeQuality;
 
     friend class QQuickTextEdit;
     friend class QQuickTextEditPrivate;

@@ -110,7 +110,7 @@ public:
     void endNextRhiFrame(QSGRenderer *renderer) override;
 
     void preprocess() override;
-    QSGDistanceFieldGlyphCache *distanceFieldGlyphCache(const QRawFont &font) override;
+    QSGDistanceFieldGlyphCache *distanceFieldGlyphCache(const QRawFont &font, int renderTypeQuality) override;
 
     QSGTexture *createTexture(const QImage &image, uint flags) const override;
     QSGRenderer *createRenderer(QSGRendererInterface::RenderMode renderMode = QSGRendererInterface::RenderMode2D) override;
@@ -144,7 +144,7 @@ public:
     }
 
 protected:
-    static QString fontKey(const QRawFont &font);
+    static QString fontKey(const QRawFont &font, int renderTypeQuality);
 
     InitParams m_initParams;
     QRhi *m_rhi;

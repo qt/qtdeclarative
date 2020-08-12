@@ -396,6 +396,7 @@ public:
     virtual void setBoundingRect(const QRectF &bounds) { m_bounding_rect = bounds; }
 
     virtual void setPreferredAntialiasingMode(AntialiasingMode) = 0;
+    virtual void setRenderTypeQuality(int renderTypeQuality) { Q_UNUSED(renderTypeQuality) }
 
     virtual void update() = 0;
 
@@ -421,7 +422,8 @@ typedef QIntrusiveList<QSGDistanceFieldGlyphConsumer, &QSGDistanceFieldGlyphCons
 class Q_QUICK_PRIVATE_EXPORT QSGDistanceFieldGlyphCache
 {
 public:
-    QSGDistanceFieldGlyphCache(const QRawFont &font);
+    QSGDistanceFieldGlyphCache(const QRawFont &font,
+                               int renderTypeQuality);
     virtual ~QSGDistanceFieldGlyphCache();
 
     struct Metrics {
@@ -460,7 +462,7 @@ public:
 
     qreal fontScale(qreal pixelSize) const
     {
-        return pixelSize / QT_DISTANCEFIELD_BASEFONTSIZE(m_doubleGlyphResolution);
+        return pixelSize / baseFontSize();
     }
     int distanceFieldRadius() const
     {
@@ -468,6 +470,7 @@ public:
     }
     int glyphCount() const { return m_glyphCount; }
     bool doubleGlyphResolution() const { return m_doubleGlyphResolution; }
+    int renderTypeQuality() const { return m_renderTypeQuality; }
 
     Metrics glyphMetrics(glyph_t glyph, qreal pixelSize);
     inline TexCoord glyphTexCoord(glyph_t glyph);
@@ -521,11 +524,14 @@ protected:
     GlyphData &glyphData(glyph_t glyph);
     GlyphData &emptyData(glyph_t glyph);
 
+    int baseFontSize() const;
+
 #if defined(QSG_DISTANCEFIELD_CACHE_DEBUG)
     virtual void saveTexture(QRhiTexture *texture, const QString &nameBase) const = 0;
 #endif
 
     bool m_doubleGlyphResolution;
+    int m_renderTypeQuality;
 
 protected:
     QRawFont m_referenceFont;

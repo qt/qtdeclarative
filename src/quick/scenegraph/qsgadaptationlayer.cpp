@@ -58,8 +58,9 @@ static QElapsedTimer qsg_render_timer;
 
 QSGDistanceFieldGlyphCache::Texture QSGDistanceFieldGlyphCache::s_emptyTexture;
 
-QSGDistanceFieldGlyphCache::QSGDistanceFieldGlyphCache(const QRawFont &font)
-    : m_pendingGlyphs(64)
+QSGDistanceFieldGlyphCache::QSGDistanceFieldGlyphCache(const QRawFont &font, int renderTypeQuality)
+    : m_renderTypeQuality(renderTypeQuality)
+    , m_pendingGlyphs(64)
 {
     Q_ASSERT(font.isValid());
 
@@ -71,12 +72,17 @@ QSGDistanceFieldGlyphCache::QSGDistanceFieldGlyphCache(const QRawFont &font)
     m_referenceFont = font;
     // we set the same pixel size as used by the distance field internally.
     // this allows us to call pathForGlyph once and reuse the result.
-    m_referenceFont.setPixelSize(QT_DISTANCEFIELD_BASEFONTSIZE(m_doubleGlyphResolution) * QT_DISTANCEFIELD_SCALE(m_doubleGlyphResolution));
+    m_referenceFont.setPixelSize(baseFontSize() * QT_DISTANCEFIELD_SCALE(m_doubleGlyphResolution));
     Q_ASSERT(m_referenceFont.isValid());
 }
 
 QSGDistanceFieldGlyphCache::~QSGDistanceFieldGlyphCache()
 {
+}
+
+int QSGDistanceFieldGlyphCache::baseFontSize() const
+{
+    return m_renderTypeQuality > 0 ? m_renderTypeQuality : QT_DISTANCEFIELD_BASEFONTSIZE(m_doubleGlyphResolution);
 }
 
 QSGDistanceFieldGlyphCache::GlyphData &QSGDistanceFieldGlyphCache::emptyData(glyph_t glyph)
