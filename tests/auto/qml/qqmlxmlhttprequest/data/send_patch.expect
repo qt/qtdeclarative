@@ -4,7 +4,7 @@ If-Match: "ETagNumber"
 Content-Type: application/example
 Content-Length: 247
 Connection: Keep-Alive
-Accept-Encoding: gzip, deflate
+Accept-Encoding: {{Ignore}}
 User-Agent: Mozilla/5.0
 Host: {{ServerHostUrl}}
 

@@ -2,7 +2,7 @@ PROPFIND /container/ HTTP/1.1
 Depth: 1
 Content-Length: 95
 Connection: Keep-Alive
-Accept-Encoding: gzip, deflate
+Accept-Encoding: {{Ignore}}
 Accept-Language: en-US,*
 Content-type:i application/xml; charset="utf-8"
 User-Agent: Mozilla/5.0

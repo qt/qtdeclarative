@@ -2,6 +2,6 @@ GET /gml_logo.png HTTP/1.1
 Accept-Language: en-US,*
 Content-Type: image/png
 Connection: Keep-Alive
-Accept-Encoding: gzip, deflate
+Accept-Encoding: {{Ignore}}
 User-Agent: Mozilla/5.0
 Host: {{ServerHostUrl}}
