@@ -190,7 +190,7 @@ void QQuickSwitchDelegate::touchEvent(QTouchEvent *event)
     Q_D(QQuickSwitchDelegate);
     if (!keepTouchGrab() && event->type() == QEvent::TouchUpdate) {
         for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
-            if (point.id() != d->touchId || point.state() != Qt::TouchPointMoved)
+            if (point.id() != d->touchId || point.state() != QEventPoint::Updated)
                 continue;
             if (d->canDrag(point.position()))
                 setKeepTouchGrab(QQuickWindowPrivate::dragOverThreshold(point.position().x() - d->pressPoint.x(), Qt::XAxis, &point));

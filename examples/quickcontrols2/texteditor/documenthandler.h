@@ -152,7 +152,7 @@ Q_SIGNALS:
     void textChanged();
     void fileUrlChanged();
 
-    void loaded(const QString &text);
+    void loaded(const QString &text, int format);
     void error(const QString &message);
 
     void modifiedChanged();

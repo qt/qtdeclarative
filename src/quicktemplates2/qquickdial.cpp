@@ -735,7 +735,7 @@ void QQuickDial::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickDial);
     QQuickControl::mousePressEvent(event);
-    d->handleMove(event->localPos());
+    d->handleMove(event->position());
     setKeepMouseGrab(true);
 }
 
@@ -750,18 +750,18 @@ void QQuickDial::touchEvent(QTouchEvent *event)
                 continue;
 
             switch (point.state()) {
-            case Qt::TouchPointMoved:
+            case QEventPoint::Updated:
                 if (!keepTouchGrab()) {
-                    bool overXDragThreshold = QQuickWindowPrivate::dragOverThreshold(point.pos().x() - d->pressPoint.x(), Qt::XAxis, &point);
+                    bool overXDragThreshold = QQuickWindowPrivate::dragOverThreshold(point.position().x() - d->pressPoint.x(), Qt::XAxis, &point);
                     setKeepTouchGrab(overXDragThreshold);
 
                     if (!overXDragThreshold) {
-                        bool overYDragThreshold = QQuickWindowPrivate::dragOverThreshold(point.pos().y() - d->pressPoint.y(), Qt::YAxis, &point);
+                        bool overYDragThreshold = QQuickWindowPrivate::dragOverThreshold(point.position().y() - d->pressPoint.y(), Qt::YAxis, &point);
                         setKeepTouchGrab(overYDragThreshold);
                     }
                 }
                 if (keepTouchGrab())
-                    d->handleMove(point.pos());
+                    d->handleMove(point.position());
                 break;
 
             default:

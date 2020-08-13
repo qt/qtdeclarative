@@ -217,16 +217,16 @@ bool QQuickOverlayPrivate::handleTouchEvent(QQuickItem *source, QTouchEvent *eve
     case QEvent::TouchEnd:
         for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
             switch (point.state()) {
-            case Qt::TouchPointPressed:
+            case QEventPoint::Pressed:
                 if (!target && startDrag(event, point.scenePosition()))
                     handled = true;
                 else
                     handled |= handlePress(source, event, target);
                 break;
-            case Qt::TouchPointMoved:
+            case QEventPoint::Updated:
                 handled |= handleMove(source, event, target ? target : mouseGrabberPopup.data());
                 break;
-            case Qt::TouchPointReleased:
+            case QEventPoint::Released:
                 handled |= handleRelease(source, event, target ? target : mouseGrabberPopup.data());
                 break;
             default:
@@ -496,15 +496,15 @@ bool QQuickOverlay::eventFilter(QObject *object, QEvent *event)
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
     case QEvent::TouchEnd:
-        if (static_cast<QTouchEvent *>(event)->touchPointStates() & Qt::TouchPointPressed)
+        if (static_cast<QTouchEvent *>(event)->touchPointStates() & QEventPoint::Pressed)
             emit pressed();
-        if (static_cast<QTouchEvent *>(event)->touchPointStates() & Qt::TouchPointReleased)
+        if (static_cast<QTouchEvent *>(event)->touchPointStates() & QEventPoint::Released)
             emit released();
 
         // allow non-modal popups to close on touch release outside
         if (!d->mouseGrabberPopup) {
             for (const QTouchEvent::TouchPoint &point : static_cast<QTouchEvent *>(event)->touchPoints()) {
-                if (point.state() == Qt::TouchPointReleased) {
+                if (point.state() == QEventPoint::Released) {
                     if (d->handleRelease(d->window->contentItem(), event, nullptr))
                         break;
                 }
