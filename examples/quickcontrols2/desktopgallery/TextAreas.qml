@@ -49,6 +49,7 @@ ControlContainer {
             id: defaultTextArea
             width: 200
             wrapMode: TextEdit.WordWrap
+            selectByMouse: true
             text: "Default - Lorem ipsum dolor sit amet, consectetur adipiscing elit, "
                   + "sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
         }
@@ -57,6 +58,7 @@ ControlContainer {
             enabled: false
             width: 200
             wrapMode: TextEdit.WordWrap
+            selectByMouse: true
             text: "Disabled - Lorem ipsum dolor sit amet, consectetur adipiscing elit, "
                   + "sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
         }
@@ -75,6 +77,7 @@ ControlContainer {
                 + "sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt "
                 + "mollit anim id est laborum."
                 wrapMode: TextEdit.WordWrap
+                selectByMouse: true
             }
 
             ScrollBar.vertical: ScrollBar { policy: ScrollBar.AlwaysOn }
@@ -87,6 +90,7 @@ ControlContainer {
         TextArea {
             width: 200
             wrapMode: TextEdit.WordWrap
+            selectByMouse: true
             text: "Small - Lorem ipsum dolor sit amet, consectetur adipiscing elit, "
                   + "sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
             property bool qqc2_style_small
@@ -95,6 +99,7 @@ ControlContainer {
         TextArea {
             width: 200
             wrapMode: TextEdit.WordWrap
+            selectByMouse: true
             text: "Mini - Lorem ipsum dolor sit amet, consectetur adipiscing elit, "
                   + "sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
             property bool qqc2_style_mini
@@ -102,6 +107,7 @@ ControlContainer {
 
         TextArea {
             placeholderText: "Placeholder text"
+            selectByMouse: true
         }
     }
 }
