@@ -36,6 +36,7 @@
 
 #include <QtQml/qqml.h>
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
+#include <QtGui/qguiapplication.h>
 
 #include "qquicknativestyle.h"
 #include "qquickcommonstyle.h"
@@ -63,8 +64,28 @@ public:
     QString name() const override;
 };
 
+static void deleteQStyle()
+{
+    // When we delete QStyle, it will free up it's own internal resources. Especially
+    // on macOS, this means releasing a lot of NSViews and NSCells from the QMacStyle
+    // destructor. If we did this from ~QtQuickControls2NativeStylePlugin, it would
+    // happen when the plugin was unloaded from a Q_DESTRUCTOR_FUNCTION in QLibrary,
+    // which is very late in the tear-down process, and after qGuiApp has been set to
+    // nullptr, NSApplication has stopped running, and perhaps also other static platform
+    // variables (e.g in AppKit?) has been deleted. And to our best guess, this is also why
+    // we see a crash in AppKit from the destructor in QMacStyle. So for this reason, we
+    // delete QStyle from a post routine rather than from the destructor.
+    QQuickNativeStyle::setStyle(nullptr);
+}
+
 QtQuickControls2NativeStylePlugin::~QtQuickControls2NativeStylePlugin()
 {
+    if (!qGuiApp)
+        return;
+
+    // QGuiApplication is still running, so we need to remove the post
+    // routine to not be called after we have been unloaded.
+    qRemovePostRoutine(deleteQStyle);
     QQuickNativeStyle::setStyle(nullptr);
 }
 
@@ -106,6 +127,8 @@ void QtQuickControls2NativeStylePlugin::initializeEngine(QQmlEngine *engine, con
 #endif
         }
     }
+
+    qAddPostRoutine(deleteQStyle);
     QQuickNativeStyle::setStyle(style);
 }
 
