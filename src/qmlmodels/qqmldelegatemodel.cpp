@@ -2588,9 +2588,10 @@ bool QQmlDelegateModelAttached::isUnresolved() const
 }
 
 /*!
-    \qmlattachedproperty int QtQml.Models::DelegateModel::inItems
+    \qmlattachedproperty bool QtQml.Models::DelegateModel::inItems
 
-    This attached property holds whether the item belongs to the default \l items DelegateModelGroup.
+    This attached property holds whether the item belongs to the default \l items
+    DelegateModelGroup.
 
     Changing this property will add or remove the item from the items group.
 
@@ -2606,9 +2607,10 @@ bool QQmlDelegateModelAttached::isUnresolved() const
 */
 
 /*!
-    \qmlattachedproperty int QtQml.Models::DelegateModel::inPersistedItems
+    \qmlattachedproperty bool QtQml.Models::DelegateModel::inPersistedItems
 
-    This attached property holds whether the item belongs to the \l persistedItems DelegateModelGroup.
+    This attached property holds whether the item belongs to the \l persistedItems
+    DelegateModelGroup.
 
     Changing this property will add or remove the item from the items group.  Change with caution
     as removing an item from the persistedItems group will destroy the current instance if it is
