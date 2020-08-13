@@ -136,9 +136,7 @@ QQuickDesignerSupport::PropertyNameList QQuickDesignerSupportProperties::propert
 
     if (inspectedObjects == nullptr)
         inspectedObjects = &localObjectList;
-
-
-    if (inspectedObjects->contains(object))
+    else if (inspectedObjects->contains(object))
         return propertyNameList;
 
     inspectedObjects->append(object);
