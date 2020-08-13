@@ -117,9 +117,7 @@ public:
     {
     public:
         inline iterator();
-        inline iterator(const iterator &it);
         inline iterator(Range *range, int offset, Group group, int groupCount);
-        inline ~iterator() {}
 
         bool operator ==(const iterator &it) const { return range == it.range && offset == it.offset; }
         bool operator !=(const iterator &it) const { return range != it.range || offset != it.offset; }
@@ -309,16 +307,6 @@ Q_DECLARE_TYPEINFO(QQmlListCompositor::Remove, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(QQmlListCompositor::Insert, Q_PRIMITIVE_TYPE);
 
 inline QQmlListCompositor::iterator::iterator() {}
-inline QQmlListCompositor::iterator::iterator(const iterator &it)
-    : range(it.range)
-    , offset(it.offset)
-    , group(it.group)
-    , groupFlag(it.groupFlag)
-    , groupCount(it.groupCount)
-{
-    for (int i = 0; i < groupCount; ++i)
-        index[i] = it.index[i];
-}
 
 inline QQmlListCompositor::iterator::iterator(
         Range *range, int offset, Group group, int groupCount)
