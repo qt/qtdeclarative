@@ -201,13 +201,12 @@ void FindWarningVisitor::importBareQmlTypes()
 void FindWarningVisitor::importHelper(const QString &module, const QString &prefix,
                                       QTypeRevision version)
 {
-    const QString id = QString(module).replace(QLatin1Char('/'), QLatin1Char('.'));
-    QPair<QString, QString> importId { id, prefix };
+    const QPair<QString, QString> importId { module, prefix };
     if (m_alreadySeenImports.contains(importId))
         return;
     m_alreadySeenImports.insert(importId);
 
-    const auto qmltypesPaths = qQmlResolveImportPaths(id, m_qmltypesDirs, version);
+    const auto qmltypesPaths = qQmlResolveImportPaths(module, m_qmltypesDirs, version);
     for (auto const &qmltypesPath : qmltypesPaths) {
         if (QFile::exists(qmltypesPath + SlashQmldir)) {
             processImport(prefix, readQmldir(qmltypesPath), version);
@@ -227,7 +226,7 @@ ScopeTree::Ptr FindWarningVisitor::localFile2ScopeTree(const QString &filePath)
 
     const auto imports = typeReader.imports();
     for (const auto &import : imports)
-        importHelper(import.path, import.prefix, import.version);
+        importHelper(import.module, import.prefix, import.version);
 
     return result;
 }

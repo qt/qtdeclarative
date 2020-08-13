@@ -50,7 +50,7 @@ class QmlJSTypeReader
 {
 public:
     struct Import {
-        QString path;
+        QString module;
         QTypeRevision version;
         QString prefix;
     };

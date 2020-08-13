@@ -63,7 +63,7 @@ bool ImportedMembersVisitor::visit(UiObjectDefinition *definition)
     QString superType;
     for (auto segment = definition->qualifiedTypeNameId; segment; segment = segment->next) {
         if (!superType.isEmpty())
-            superType.append('.');
+            superType.append(u'.');
         superType.append(segment->name.toString());
     }
     scope->setSuperclassName(superType);
@@ -125,12 +125,12 @@ bool ImportedMembersVisitor::visit(UiSourceElement *sourceElement)
         method.setMethodType(MetaMethod::Method);
         FormalParameterList *parameters = fexpr->formals;
         while (parameters) {
-            method.addParameter(parameters->element->bindingIdentifier.toString(), "");
+            method.addParameter(parameters->element->bindingIdentifier.toString(), QString());
             parameters = parameters->next;
         }
         currentObject()->addMethod(method);
     } else if (ClassExpression *clexpr = sourceElement->sourceElement->asClassDefinition()) {
-        MetaProperty prop { clexpr->name.toString(), "", false, false, false, false, 1 };
+        MetaProperty prop { clexpr->name.toString(), QString(), false, false, false, false, 1 };
         currentObject()->addProperty(prop);
     } else if (cast<VariableStatement *>(sourceElement->sourceElement)) {
         // nothing to do

@@ -52,7 +52,7 @@ static QList<QmlJSTypeReader::Import> parseHeaders(QQmlJS::AST::UiHeaderItemList
         auto uri = import->importUri;
         while (uri) {
             path.append(uri->name);
-            path.append(QLatin1Char('/'));
+            path.append(u'.');
             uri = uri->next;
         }
         path.chop(1);
