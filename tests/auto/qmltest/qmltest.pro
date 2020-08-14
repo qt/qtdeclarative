@@ -23,7 +23,6 @@ SUBDIRS += \
     selftests \
     shadersource \
     stability \
-    statemachine \
     text \
     textedit \
     textinput \

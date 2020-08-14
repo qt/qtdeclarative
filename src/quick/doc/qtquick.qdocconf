@@ -72,8 +72,7 @@ sourcedirs += ../../plugins
 excludedirs += ../../imports/models \
                ../../imports/labsmodels \
                ../../imports/testlib \
-               ../../imports/workerscript \
-               ../../imports/statemachine
+               ../../imports/workerscript
 
 excludefiles += ../util/qquickpropertychanges_p.h
 examples.fileextensions        += "*.qm"

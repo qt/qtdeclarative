@@ -30,7 +30,6 @@ PUBLICTESTS += \
     qquickfolderlistmodel \
     qqmlapplicationengine \
     qqmlsettings \
-    qqmlstatemachine \
     qmldiskcache
 
 PRIVATETESTS += \

@@ -11,7 +11,6 @@ qtConfig(qml-itemmodel): SUBDIRS += folderlistmodel
 qtConfig(qml-worker-script): SUBDIRS += workerscript
 qtHaveModule(sql): SUBDIRS += localstorage
 qtConfig(settings): SUBDIRS += settings
-qtConfig(statemachine): SUBDIRS += statemachine
 
 qtHaveModule(quick) {
     QT_FOR_CONFIG += quick-private

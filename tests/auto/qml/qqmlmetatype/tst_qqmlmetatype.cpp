@@ -570,27 +570,6 @@ void tst_qqmlmetatype::unregisterAttachedProperties()
         QScopedPointer<QObject> obj(c.create());
         QVERIFY(obj);
     }
-
-    qmlClearTypeRegistrations();
-    {
-        QQmlEngine e;
-        QQmlComponent c(&e);
-
-        // The extra import shuffles the type IDs around, so that we
-        // get a different ID for the attached properties. If the attached
-        // properties aren't properly cleared, this will crash.
-        c.setData("import QtQml.StateMachine 1.0 \n"
-                  "import QtQuick 2.2 \n"
-                  "Item { KeyNavigation.up: null }", dummy);
-
-        const QQmlType attachedType = QQmlMetaType::qmlType("QtQuick/KeyNavigation",
-                                                            QTypeRevision::fromVersion(2, 2));
-        QCOMPARE(attachedType.attachedPropertiesType(QQmlEnginePrivate::get(&e)),
-                 attachedType.metaObject());
-
-        QScopedPointer<QObject> obj(c.create());
-        QVERIFY(obj);
-    }
 }
 
 class Grouped : public QObject
