@@ -81,9 +81,7 @@ T.TextArea {
         renderType: control.renderType
     }
 
-    background: NativeStyle.TextArea {
-        control: control
-        contentWidth: Math.max(control.contentWidth, placeholder.implicitWidth)
-        contentHeight: control.contentHeight
+    background: Rectangle {
+        color: control.palette.light
     }
 }

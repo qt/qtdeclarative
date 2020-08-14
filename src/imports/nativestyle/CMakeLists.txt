@@ -24,7 +24,6 @@ qt_add_qml_module(qtquickcontrols2nativestyleplugin
         items/qquickstyleitemscrollbar.cpp items/qquickstyleitemscrollbar.h
         items/qquickstyleitemslider.cpp items/qquickstyleitemslider.h
         items/qquickstyleitemspinbox.cpp items/qquickstyleitemspinbox.h
-        items/qquickstyleitemtextarea.cpp items/qquickstyleitemtextarea.h
         items/qquickstyleitemtextfield.cpp items/qquickstyleitemtextfield.h
         qstyle/qquickcommonstyle.cpp qstyle/qquickcommonstyle.h qstyle/qquickcommonstyle_p.h
         qstyle/qquickcommonstylepixmaps_p.h
