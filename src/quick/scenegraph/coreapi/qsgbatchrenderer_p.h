@@ -956,6 +956,12 @@ int Renderer::mergedIndexElemSize() const
     return m_uint32IndexForRhi ? sizeof(quint32) : sizeof(quint16);
 }
 
+// "use" here means that both depth test and write is wanted (the latter for
+// opaque batches only). Therefore neither RenderMode2DNoDepthBuffer nor
+// RenderMode3D must result in true. So while RenderMode3D requires a depth
+// buffer, this here must say false. In addition, m_forceNoDepthBuffer is a
+// dynamic override relevant with QSGRenderNode.
+//
 bool Renderer::useDepthBuffer() const
 {
     return !m_forceNoDepthBuffer && m_renderMode == QSGRendererInterface::RenderMode2D;

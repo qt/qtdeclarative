@@ -172,6 +172,17 @@ void QQuickGraphicsConfiguration::setDeviceExtensions(const QByteArrayList &exte
     can cause unexpected results, because the way the scene graph renderer
     handles depth values is not necessarily compatible with how a 3D scene
     works. In that case, \a enable can be set to false.
+
+    \note This flag is not fully identical to setting the
+    \c{QSG_NO_DEPTH_BUFFER} environment variable. This flag does not control the
+    depth-stencil buffers' presence. It is rather relevant for the rendering
+    pipeline. To force not having depth/stencil attachments at all, set
+    \c{QSG_NO_DEPTH_BUFFER} and \c{QSG_NO_STENCIL_BUFFER}. Be aware however
+    that such a QQuickWindow, and any Item layers in it, may then become
+    incompatible with items, such as View3D with certain operating modes,
+    because 3D content requires a depth buffer. Calling this function is always
+    safe, but can mean that resources, such as depth buffers, are created even
+    though they are not actively used.
  */
 void QQuickGraphicsConfiguration::setDepthBufferFor2D(bool enable)
 {

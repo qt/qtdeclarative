@@ -932,12 +932,15 @@ void QSGRenderThread::ensureRhi()
         if (alpha)
             flags |= QRhiSwapChain::SurfaceHasPreMulAlpha;
         cd->swapchain = rhi->newSwapChain();
-        cd->depthStencilForSwapchain = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil,
-                                                            QSize(),
-                                                            rhiSampleCount,
-                                                            QRhiRenderBuffer::UsedWithSwapChainOnly);
+        static bool depthBufferEnabled = qEnvironmentVariableIsEmpty("QSG_NO_DEPTH_BUFFER");
+        if (depthBufferEnabled) {
+            cd->depthStencilForSwapchain = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil,
+                                                                QSize(),
+                                                                rhiSampleCount,
+                                                                QRhiRenderBuffer::UsedWithSwapChainOnly);
+            cd->swapchain->setDepthStencil(cd->depthStencilForSwapchain);
+        }
         cd->swapchain->setWindow(window);
-        cd->swapchain->setDepthStencil(cd->depthStencilForSwapchain);
         qCDebug(QSG_LOG_INFO, "MSAA sample count for the swapchain is %d. Alpha channel requested = %s.",
                 rhiSampleCount, alpha ? "yes" : "no");
         cd->swapchain->setSampleCount(rhiSampleCount);

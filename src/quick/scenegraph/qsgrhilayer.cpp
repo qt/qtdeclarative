@@ -264,6 +264,15 @@ void QSGRhiLayer::grab()
         if (m_mipmap)
             textureFlags |= QRhiTexture::MipMapped | QRhiTexture::UsedWithGenerateMips;
 
+        // Not the same as m_context->useDepthBufferFor2D(), only the env.var
+        // is to be checked here. Consider a layer with a non-offscreen View3D
+        // in it. That still needs a depth buffer, even when the 2D content
+        // renders without relying on it (i.e. RenderMode2DNoDepthBuffer does
+        // not imply not having a depth/stencil attachment for the render
+        // target! The env.var serves as a hard switch, on the other hand, and
+        // that will likely break 3D for instance but that's fine)
+        static bool depthBufferEnabled = qEnvironmentVariableIsEmpty("QSG_NO_DEPTH_BUFFER");
+
         if (m_multisampling) {
             releaseResources();
             m_msaaColorBuffer = m_rhi->newRenderBuffer(QRhiRenderBuffer::Color, m_size, effectiveSamples);
@@ -279,17 +288,20 @@ void QSGRhiLayer::grab()
                 releaseResources();
                 return;
             }
-            m_ds = m_rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, m_size, effectiveSamples);
-            if (!m_ds->create()) {
-                qWarning("Failed to build depth-stencil buffer for layer");
-                releaseResources();
-                return;
+            if (depthBufferEnabled) {
+                m_ds = m_rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, m_size, effectiveSamples);
+                if (!m_ds->create()) {
+                    qWarning("Failed to build depth-stencil buffer for layer");
+                    releaseResources();
+                    return;
+                }
             }
             QRhiTextureRenderTargetDescription desc;
             QRhiColorAttachment color0(m_msaaColorBuffer);
             color0.setResolveTexture(m_texture);
             desc.setColorAttachments({ color0 });
-            desc.setDepthStencilBuffer(m_ds);
+            if (depthBufferEnabled)
+                desc.setDepthStencilBuffer(m_ds);
             m_rt = m_rhi->newTextureRenderTarget(desc);
             m_rtRp = m_rt->newCompatibleRenderPassDescriptor();
             if (!m_rtRp) {
@@ -311,11 +323,13 @@ void QSGRhiLayer::grab()
                 releaseResources();
                 return;
             }
-            m_ds = m_rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, m_size);
-            if (!m_ds->create()) {
-                qWarning("Failed to build depth-stencil buffer for layer");
-                releaseResources();
-                return;
+            if (depthBufferEnabled) {
+                m_ds = m_rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, m_size);
+                if (!m_ds->create()) {
+                    qWarning("Failed to build depth-stencil buffer for layer");
+                    releaseResources();
+                    return;
+                }
             }
             QRhiColorAttachment color0(m_texture);
             if (m_recursive) {
@@ -329,7 +343,10 @@ void QSGRhiLayer::grab()
                 }
                 color0.setTexture(m_secondaryTexture);
             }
-            m_rt = m_rhi->newTextureRenderTarget({ color0, m_ds });
+            if (depthBufferEnabled)
+                m_rt = m_rhi->newTextureRenderTarget({ color0, m_ds });
+            else
+                m_rt = m_rhi->newTextureRenderTarget({ color0 });
             m_rtRp = m_rt->newCompatibleRenderPassDescriptor();
             if (!m_rtRp) {
                 qWarning("Failed to build render pass descriptor for layer");

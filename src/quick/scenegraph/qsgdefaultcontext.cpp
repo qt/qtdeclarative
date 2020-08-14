@@ -200,6 +200,8 @@ QSGLayer *QSGDefaultContext::createLayer(QSGRenderContext *renderContext)
 QSurfaceFormat QSGDefaultContext::defaultSurfaceFormat() const
 {
     QSurfaceFormat format = QSurfaceFormat::defaultFormat();
+    // These depend solely on the env.vars., not QQuickGraphicsConfiguration
+    // since that does not have a flag that maps 100% to QSG_NO_xx_BUFFER.
     static bool useDepth = qEnvironmentVariableIsEmpty("QSG_NO_DEPTH_BUFFER");
     static bool useStencil = qEnvironmentVariableIsEmpty("QSG_NO_STENCIL_BUFFER");
     static bool enableDebug = qEnvironmentVariableIsSet("QSG_OPENGL_DEBUG");
