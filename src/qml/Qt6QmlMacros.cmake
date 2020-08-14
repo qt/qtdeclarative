@@ -838,7 +838,7 @@ endfunction()
 include(CMakeParseArguments)
 
 function(qt6_import_qml_plugins target)
-    if(${QT_CMAKE_EXPORT_NAMESPACE}_IS_SHARED_LIBS_BUILD)
+    if(QT6_IS_SHARED_LIBS_BUILD)
         return()
     endif()
     set(options)
