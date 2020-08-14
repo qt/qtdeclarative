@@ -170,6 +170,26 @@ function(qt6_add_qml_module target)
         string(REPLACE "." "/" arg_TARGET_PATH ${arg_URI})
     endif()
 
+    if (ANDROID)
+        # Adjust Qml plugin names on Android similar to qml_plugin.prf which calls
+        # $$qt5LibraryTarget($$TARGET, "qml/$$TARGETPATH/").
+        # Example plugin names:
+        # qtdeclarative
+        #   TARGET_PATH: QtQml/Models
+        #   file name:   libqml_QtQml_Models_modelsplugin_arm64-v8a.so
+        # qtquickcontrols2
+        #   TARGET_PATH: QtQuick/Controls.2/Material
+        #   file name:
+        #     libqml_QtQuick_Controls.2_Material_qtquickcontrols2materialstyleplugin_arm64-v8a.so
+        string(REPLACE "/" "_" android_plugin_name_infix_name "${arg_TARGET_PATH}")
+
+        set(final_android_qml_plugin_name "qml_${android_plugin_name_infix_name}_${target}")
+        set_target_properties(${target}
+            PROPERTIES
+            LIBRARY_OUTPUT_NAME "${final_android_qml_plugin_name}"
+        )
+    endif()
+
     if (NOT arg_RESOURCE_PREFIX)
         set(arg_RESOURCE_PREFIX "/org.qt-project/imports")
     endif()
