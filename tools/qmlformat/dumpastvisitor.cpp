@@ -252,7 +252,7 @@ QString DumpAstVisitor::parsePatternElement(PatternElement *element, bool scope)
     }
 }
 
-QString escapeString(QString string)
+static QString escapeString(QString string)
 {
     // Handle escape sequences
     string = string.replace("\r", "\\r").replace("\n", "\\n").replace("\t", "\\t")
@@ -584,7 +584,7 @@ QString DumpAstVisitor::parseExportsList(ExportsList *list)
     return result;
 }
 
-bool needsSemicolon(int kind)
+static bool needsSemicolon(int kind)
 {
     switch (kind) {
     case Node::Kind_ForStatement:
@@ -625,6 +625,11 @@ QString DumpAstVisitor::parseBlock(Block *block, bool hasNext, bool allowBracele
     }
 
     return result;
+}
+
+static bool endsWithSemicolon(const QStringView s)
+{
+    return s.trimmed().endsWith(';');
 }
 
 QString DumpAstVisitor::parseStatement(Statement *statement, bool blockHasNext,
@@ -674,10 +679,11 @@ QString DumpAstVisitor::parseStatement(Statement *statement, bool blockHasNext,
             ifTrue = parseStatement(ifStatement->ok, !ifFalse.isEmpty(), false);
         }
 
-        if (ifStatement->ok->kind != Node::Kind_Block)
+        if (ifStatement->ok->kind != Node::Kind_Block && !endsWithSemicolon(ifTrue))
             ifTrue += ";";
 
-        if (ifStatement->ko && ifStatement->ko->kind != Node::Kind_Block && ifStatement->ko->kind != Node::Kind_IfStatement)
+        if (ifStatement->ko && ifStatement->ko->kind != Node::Kind_Block
+            && ifStatement->ko->kind != Node::Kind_IfStatement && !endsWithSemicolon(ifFalse))
             ifFalse += ";";
 
         QString result = "if (" + parseExpression(ifStatement->expression) + ")";
@@ -709,7 +715,7 @@ QString DumpAstVisitor::parseStatement(Statement *statement, bool blockHasNext,
         } else {
             result += "\n";
             m_indentLevel++;
-            result += formatLine(ifTrue);
+            result += formatPartlyFormatedLines(ifTrue);
             m_indentLevel--;
         }
 
@@ -729,7 +735,7 @@ QString DumpAstVisitor::parseStatement(Statement *statement, bool blockHasNext,
             } else {
                 result += "\n";
                 m_indentLevel++;
-                result += formatLine(ifFalse, false);
+                result += formatPartlyFormatedLines(ifFalse, false);
                 m_indentLevel--;
             }
         }
@@ -963,18 +969,39 @@ bool DumpAstVisitor::visit(UiPublicMember *node) {
     return true;
 }
 
-QString DumpAstVisitor::generateIndent() const {
+static QString generateIndent(int indentLevel)
+{
     constexpr int IDENT_WIDTH = 4;
 
-    QString indent = "";
-    for (int i = 0; i < IDENT_WIDTH*m_indentLevel; i++)
-        indent += " ";
-
-    return indent;
+    return QString(IDENT_WIDTH * indentLevel, ' ');
 }
 
-QString DumpAstVisitor::formatLine(QString line, bool newline) const {
-    QString result = generateIndent() + line;
+QString DumpAstVisitor::formatLine(QString line, bool newline) const
+{
+    QString result = generateIndent(m_indentLevel) + line;
+    if (newline)
+        result += "\n";
+
+    return result;
+}
+
+QString DumpAstVisitor::formatPartlyFormatedLines(QString line, bool newline) const
+{
+    QString result;
+
+    const auto lines = line.splitRef('\n');
+    auto it = lines.cbegin();
+    const auto endi = lines.cend();
+    if (it != endi) {
+        result += generateIndent(m_indentLevel) + *it;
+        ++it;
+        const QString addonIdent = generateIndent(1);
+        for (; it != endi; ++it) {
+            result += '\n';
+            result += addonIdent + *it;
+        }
+    }
+
     if (newline)
         result += "\n";
 

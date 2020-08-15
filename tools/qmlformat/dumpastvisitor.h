@@ -95,8 +95,8 @@ private:
         QHash<QString, UiObjectMember*> m_bindings;
     };
 
-    QString generateIndent() const;
     QString formatLine(QString line, bool newline = true) const;
+    QString formatPartlyFormatedLines(QString line, bool newline = true) const;
 
     QString formatComment(const Comment &comment) const;
 
