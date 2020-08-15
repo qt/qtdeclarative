@@ -130,6 +130,8 @@ private slots:
     void sourceURLKeepComponent();
 
     void statusChangeOnlyEmittedOnce();
+
+    void setSourceAndCheckStatus();
 };
 
 Q_DECLARE_METATYPE(QList<QQmlError>)
@@ -1468,6 +1470,22 @@ void tst_QQuickLoader::statusChangeOnlyEmittedOnce()
     QVERIFY(root);
     QTRY_COMPARE(QQuickLoader::Status(root->property("status").toInt()), QQuickLoader::Ready);
     QCOMPARE(root->property("statusChangedCounter").toInt(), 2); // 1xLoading + 1xReady*/
+}
+
+void tst_QQuickLoader::setSourceAndCheckStatus()
+{
+    QQmlApplicationEngine engine;
+    auto url = testFileUrl("setSourceAndCheckStatus.qml");
+    engine.load(url);
+    auto root = engine.rootObjects().at(0);
+    QVERIFY(root);
+
+    QQuickLoader *loader = root->findChild<QQuickLoader *>();
+    QMetaObject::invokeMethod(loader, "load", Q_ARG(QVariant, QVariant::fromValue(QStringLiteral("./RedRect.qml"))));
+    QCOMPARE(loader->status(), QQuickLoader::Ready);
+
+    QMetaObject::invokeMethod(loader, "load", Q_ARG(QVariant, QVariant::fromValue(QStringLiteral(""))));
+    QCOMPARE(loader->status(), QQuickLoader::Null);
 }
 
 QTEST_MAIN(tst_QQuickLoader)
