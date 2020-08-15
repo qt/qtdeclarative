@@ -1486,6 +1486,9 @@ void tst_QQuickLoader::setSourceAndCheckStatus()
 
     QMetaObject::invokeMethod(loader, "load", Q_ARG(QVariant, QVariant::fromValue(QStringLiteral(""))));
     QCOMPARE(loader->status(), QQuickLoader::Null);
+
+    QMetaObject::invokeMethod(loader, "load", Q_ARG(QVariant, QVariant()));
+    QCOMPARE(loader->status(), QQuickLoader::Null);
 }
 
 QTEST_MAIN(tst_QQuickLoader)
