@@ -588,8 +588,15 @@ void QQuickLoader::setSource(QQmlV4Function *args)
     if (ipvError)
         return;
 
+    // 1. If setSource is called with a valid url, clear the old component and its corresponding url
+    // 2. If setSource is called with an invalid url(e.g. empty url), clear the old component but
+    // hold the url for old one.(we will compare it with new url later and may update status of loader to Loader.Null)
+    QUrl oldUrl = d->source;
     d->clear();
     QUrl sourceUrl = d->resolveSourceUrl(args);
+    if (!sourceUrl.isValid())
+        d->source = oldUrl;
+
     d->disposeInitialPropertyValues();
     if (!ipv->isUndefined()) {
         d->initialPropertyValues.set(args->v4engine(), ipv);
