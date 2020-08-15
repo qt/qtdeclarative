@@ -963,6 +963,8 @@ QUrl QQuickLoaderPrivate::resolveSourceUrl(QQmlV4Function *args)
 {
     QV4::Scope scope(args->v4engine());
     QV4::ScopedValue v(scope, (*args)[0]);
+    if (v->isUndefined())
+        return QUrl();
     QString arg = v->toQString();
     return arg.isEmpty() ? QUrl() : scope.engine->callingQmlContext()->resolvedUrl(QUrl(arg));
 }
