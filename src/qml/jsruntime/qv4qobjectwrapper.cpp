@@ -200,7 +200,7 @@ static QV4::ReturnedValue loadProperty(QV4::ExecutionEngine *v4, QObject *object
                  "'%s::%s'", p.typeName(), object->metaObject()->className(), p.name());
         return QV4::Encode::undefined();
     } else {
-        QVariant v(property.propType(), (void *)nullptr);
+        QVariant v(QMetaType(property.propType()), (void *)nullptr);
         property.readProperty(object, v.data());
         return scope.engine->fromVariant(v);
     }
@@ -956,7 +956,7 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
                 if (type == qMetaTypeId<QVariant>()) {
                     jsCallData->args[ii] = v4->fromVariant(*((QVariant *)metaArgs[ii + 1]));
                 } else {
-                    jsCallData->args[ii] = v4->fromVariant(QVariant(type, metaArgs[ii + 1]));
+                    jsCallData->args[ii] = v4->fromVariant(QVariant(QMetaType(type), metaArgs[ii + 1]));
                 }
             }
 
@@ -1775,7 +1775,7 @@ void CallArgument::initAsType(int callType)
         jsonValuePtr = new (&allocData) QJsonValue();
     } else {
         type = -1;
-        qvariantPtr = new (&allocData) QVariant(callType, (void *)nullptr);
+        qvariantPtr = new (&allocData) QVariant(QMetaType(callType), (void *)nullptr);
     }
 }
 
@@ -1916,7 +1916,7 @@ bool CallArgument::fromValue(int callType, QV4::ExecutionEngine *engine, const Q
                & (QMetaType::PointerToQObject | QMetaType::PointerToGadget)) {
         // You can assign null or undefined to any pointer. The result is a nullptr.
         if (value.isNull() || value.isUndefined()) {
-            qvariantPtr = new (&allocData) QVariant(callType, nullptr);
+            qvariantPtr = new (&allocData) QVariant(QMetaType(callType), nullptr);
             type = callType;
         } else {
             queryEngine = true;
@@ -1943,15 +1943,15 @@ bool CallArgument::fromValue(int callType, QV4::ExecutionEngine *engine, const Q
                 QObject *obj = ep->toQObject(v);
 
                 if (obj != nullptr && !QQmlMetaObject::canConvert(obj, mo)) {
-                    *qvariantPtr = QVariant(callType, nullptr);
+                    *qvariantPtr = QVariant(QMetaType(callType), nullptr);
                     return false;
                 }
 
-                *qvariantPtr = QVariant(callType, &obj);
+                *qvariantPtr = QVariant(QMetaType(callType), &obj);
                 return true;
             }
 
-            *qvariantPtr = QVariant(callType, (void *)nullptr);
+            *qvariantPtr = QVariant(QMetaType(callType), (void *)nullptr);
             return false;
         }
     }

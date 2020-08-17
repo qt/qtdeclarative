@@ -1088,12 +1088,12 @@ QVariant QQmlPropertyPrivate::readValueProperty()
         if (core.propType() == QMetaType::QVariant) {
             args[0] = &value;
         } else {
-            value = QVariant(core.propType(), (void*)nullptr);
+            value = QVariant(QMetaType(core.propType()), (void*)nullptr);
             args[0] = value.data();
         }
         core.readPropertyWithArgs(object, args);
         if (core.propType() != QMetaType::QVariant && args[0] != value.data())
-            return QVariant((QVariant::Type)core.propType(), args[0]);
+            return QVariant(QMetaType(core.propType()), args[0]);
 
         return value;
     }
@@ -1244,7 +1244,7 @@ bool QQmlPropertyPrivate::write(
             // This reflects the fact that you can assign a nullptr to a QObject pointer
             // Without the change to QObjectStar, rawMetaObjectForType would not give us a QQmlMetaObject
             varType = QMetaType::QObjectStar;
-            val = QVariant(QMetaType::QObjectStar, nullptr);
+            val = QVariant(QMetaType::fromType<QObject *>(), nullptr);
         }
         QQmlMetaObject valMo = rawMetaObjectForType(enginePriv, varType);
         if (valMo.isNull())

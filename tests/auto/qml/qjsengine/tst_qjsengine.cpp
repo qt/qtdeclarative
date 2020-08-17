@@ -514,8 +514,8 @@ void tst_QJSEngine::toScriptValue_data()
 {
     QTest::addColumn<QVariant>("input");
 
-    QTest::newRow("UnknownType") << QVariant(int(QMetaType::UnknownType), nullptr);
-    QTest::newRow("Nullptr") << QVariant(int(QMetaType::Nullptr), nullptr);
+    QTest::newRow("UnknownType") << QVariant(QMetaType(QMetaType::UnknownType), nullptr);
+    QTest::newRow("Nullptr") << QVariant(QMetaType(QMetaType::Nullptr), nullptr);
     QTest::newRow("true") << QVariant(true);
     QTest::newRow("false") << QVariant(false);
     QTest::newRow("int") << QVariant(int(42));
@@ -577,7 +577,7 @@ void tst_QJSEngine::toScriptValuenotroundtripped_data()
     QTest::newRow("QObjectList") << QVariant::fromValue(QObjectList() << this) << QVariant(QVariantList() << QVariant::fromValue<QObject *>(this));
     QTest::newRow("QList<QPoint>") << QVariant::fromValue(QList<QPointF>() << QPointF(42.24, 24.42) << QPointF(42.24, 24.42)) << QVariant(QVariantList() << QPointF(42.24, 24.42) << QPointF(42.24, 24.42));
     QTest::newRow("QVector<QPoint>") << QVariant::fromValue(QVector<QPointF>() << QPointF(42.24, 24.42) << QPointF(42.24, 24.42)) << QVariant(QVariantList() << QPointF(42.24, 24.42) << QPointF(42.24, 24.42));
-    QTest::newRow("VoidStar") << QVariant(int(QMetaType::VoidStar), nullptr) << QVariant(int(QMetaType::Nullptr), nullptr);
+    QTest::newRow("VoidStar") << QVariant(QMetaType(QMetaType::VoidStar), nullptr) << QVariant(QMetaType(QMetaType::Nullptr), nullptr);
 }
 
 // This is almost the same as toScriptValue, but the inputs don't roundtrip to
@@ -1568,7 +1568,7 @@ void tst_QJSEngine::valueConversion_QVariant()
     // Checking nested QVariants
     {
         QVariant tmp1;
-        QVariant tmp2(QMetaType::QVariant, &tmp1);
+        QVariant tmp2(QMetaType::fromType<QVariant>(), &tmp1);
         QCOMPARE(QMetaType::Type(tmp2.userType()), QMetaType::QVariant);
 
         QJSValue val1 = eng.toScriptValue(tmp1);
@@ -1582,8 +1582,8 @@ void tst_QJSEngine::valueConversion_QVariant()
     }
     {
         QVariant tmp1(123);
-        QVariant tmp2(QMetaType::QVariant, &tmp1);
-        QVariant tmp3(QMetaType::QVariant, &tmp2);
+        QVariant tmp2(QMetaType::fromType<QVariant>(), &tmp1);
+        QVariant tmp3(QMetaType::fromType<QVariant>(), &tmp2);
         QCOMPARE(QMetaType::Type(tmp1.userType()), QMetaType::Int);
         QCOMPARE(QMetaType::Type(tmp2.userType()), QMetaType::QVariant);
         QCOMPARE(QMetaType::Type(tmp3.userType()), QMetaType::QVariant);
@@ -1639,7 +1639,7 @@ void tst_QJSEngine::valueConversion_QVariant()
 
     QCOMPARE(qjsvalue_cast<QVariant>(QJSValue(123)), QVariant(123));
 
-    QVERIFY(eng.toScriptValue(QVariant(QMetaType::VoidStar, nullptr)).isNull());
+    QVERIFY(eng.toScriptValue(QVariant(QMetaType::fromType<void *>(), nullptr)).isNull());
     QVERIFY(eng.toScriptValue(QVariant::fromValue(nullptr)).isNull());
 
     {

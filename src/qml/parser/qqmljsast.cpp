@@ -37,6 +37,7 @@
 **
 ****************************************************************************/
 
+#include <QLocale>
 #include "qqmljsast_p.h"
 
 #include "qqmljsastvisitor_p.h"

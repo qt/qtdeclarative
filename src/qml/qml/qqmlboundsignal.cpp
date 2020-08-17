@@ -214,7 +214,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
             else
                 jsCall->args[ii] = QV4::QObjectWrapper::wrap(v4, *reinterpret_cast<QObject* const *>(a[ii + 1]));
         } else {
-            jsCall->args[ii] = scope.engine->fromVariant(QVariant(type, a[ii + 1]));
+            jsCall->args[ii] = scope.engine->fromVariant(QVariant(QMetaType(type), a[ii + 1]));
         }
     }
 

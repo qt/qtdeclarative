@@ -463,7 +463,7 @@ ReturnedValue VME::exec(CppStackFrame *frame, ExecutionEngine *engine)
         Scope scope(engine);
         Scoped<QmlContext> qmlContext(scope, engine->qmlContext());
 
-        QVariant resultVariant(function->aotFunction->returnType.id(), nullptr);
+        QVariant resultVariant(function->aotFunction->returnType, nullptr);
         function->aotFunction->functionPtr(qmlContext->qmlContext()->asQQmlContext(), qmlContext->qmlScope(), resultVariant.data());
         result = engine->fromVariant(resultVariant);
     } else {

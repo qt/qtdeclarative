@@ -361,7 +361,7 @@ bool QQmlInterceptorMetaObject::intercept(QMetaObject::Call c, int id, void **a)
                     //
 
                     QMetaProperty valueProp = valueType->property(valueIndex);
-                    QVariant newValue(type, a[0]);
+                    QVariant newValue(QMetaType(type), a[0]);
 
                     valueType->read(object, id);
                     QVariant prevComponentValue = valueProp.read(valueType);
@@ -382,7 +382,7 @@ bool QQmlInterceptorMetaObject::intercept(QMetaObject::Call c, int id, void **a)
                     if (updated)
                         return true;
                 } else {
-                    vi->write(QVariant(type, a[0]));
+                    vi->write(QVariant(QMetaType(type), a[0]));
                     return true;
                 }
             }

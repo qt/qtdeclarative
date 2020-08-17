@@ -1568,7 +1568,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
             // the QVariant constructor will create a copy, so we have manually
             // destroy the value returned by QMetaType::create
             auto temp = QMetaType::create(typeHint);
-            retn = QVariant(typeHint, temp);
+            retn = QVariant(QMetaType(typeHint), temp);
             QMetaType::destroy(typeHint, temp);
             auto retnAsIterable = retn.value<QtMetaTypePrivate::QSequentialIterableImpl>();
             if (retnAsIterable.containerCapabilities() & QtMetaTypePrivate::ContainerIsAppendable) {
@@ -1596,7 +1596,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
                                                          QString::fromUtf8(QMetaType::typeName(originalType)),
                                                          QString::fromUtf8(QMetaType::typeName(retnAsIterable._metaType_id)));
                         // create default constructed value
-                        asVariant = QVariant(retnAsIterable._metaType_id, nullptr);
+                        asVariant = QVariant(QMetaType(retnAsIterable._metaType_id), nullptr);
                     }
                     retnAsIterable.append(asVariant.constData());
                 }
@@ -1913,7 +1913,7 @@ QV4::ReturnedValue ExecutionEngine::metaTypeToJS(int type, const void *data)
 {
     Q_ASSERT(data != nullptr);
 
-    QVariant variant(type, data);
+    QVariant variant(QMetaType(type), data);
     if (QMetaType::Type(variant.userType()) == QMetaType::QVariant) {
         // unwrap it: this is tested in QJSEngine, and makes the most sense for
         // end-user code too.

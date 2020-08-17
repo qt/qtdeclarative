@@ -579,7 +579,7 @@ QVariant QJSValue::toVariant() const
     if (val.isUndefined())
         return QVariant();
     if (val.isNull())
-        return QVariant(QMetaType::Nullptr, nullptr);
+        return QVariant(QMetaType::fromType<std::nullptr_t>(), nullptr);
     if (val.isBoolean())
         return QVariant(val.booleanValue());
     if (val.isInt32()) // Includes doubles that can be losslessly casted to int

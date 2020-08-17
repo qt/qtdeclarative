@@ -122,7 +122,7 @@ void Heap::QQmlValueTypeWrapper::setValue(const QVariant &value) const
 QVariant Heap::QQmlValueTypeWrapper::toVariant() const
 {
     Q_ASSERT(gadgetPtr());
-    return QVariant(valueType()->metaType.id(), gadgetPtr());
+    return QVariant(valueType()->metaType, gadgetPtr());
 }
 
 
@@ -460,7 +460,7 @@ Q_ALWAYS_INLINE static ReturnedValue getGadgetProperty(ExecutionEngine *engine,
     if (property->propType() == QMetaType::QVariant) {
         args[0] = &v;
     } else {
-        v = QVariant(property->propType(), static_cast<void *>(nullptr));
+        v = QVariant(QMetaType(property->propType()), static_cast<void *>(nullptr));
         args[0] = v.data();
     }
     metaObject->d.static_metacall(reinterpret_cast<QObject*>(valueTypeWrapper->gadgetPtr()), QMetaObject::ReadProperty,

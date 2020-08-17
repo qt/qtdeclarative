@@ -42,6 +42,7 @@
 #include <QtGui/qwindow.h>
 #include <QtGui/qscreen.h>
 #include <QtGui/qguiapplication.h>
+#include <QtCore/QIODevice>
 #include <private/qhighdpiscaling_p.h>
 
 QT_BEGIN_NAMESPACE

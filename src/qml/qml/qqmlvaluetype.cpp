@@ -265,7 +265,7 @@ void QQmlGadgetPtrWrapper::write(QObject *obj, int idx, QQmlPropertyData::WriteF
 QVariant QQmlGadgetPtrWrapper::value()
 {
     Q_ASSERT(m_gadgetPtr);
-    return QVariant(metaTypeId(), m_gadgetPtr);
+    return QVariant(QMetaType(metaTypeId()), m_gadgetPtr);
 }
 
 void QQmlGadgetPtrWrapper::setValue(const QVariant &value)
