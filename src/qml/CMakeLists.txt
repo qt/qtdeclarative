@@ -540,7 +540,7 @@ qt_extend_target(Qml CONDITION QT_FEATURE_qml_locale
 
 qt_extend_target(Qml CONDITION ANDROID
     DEFINES
-        LIBS_SUFFIX="_${CMAKE_SYSTEM_PROCESSOR}.so"
+        LIBS_SUFFIX="_${ANDROID_ABI}.so" # special case
 )
 
 qt_extend_target(Qml CONDITION hpux-_x_ OR solaris-_x_ OR (QT_FEATURE_clock_gettime AND linux-_x_)
