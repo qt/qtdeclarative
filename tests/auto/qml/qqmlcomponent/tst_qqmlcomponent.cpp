@@ -802,7 +802,7 @@ void tst_qqmlcomponent::testSetInitialProperties()
         COMPARE(myurl);
         COMPARE(myfont);
         COMPARE(mydate);
-        COMPARE(mypoint);
+        QCOMPARE(obj->property("mypoint"), QPointF(mypoint));
         COMPARE(mysize);
         COMPARE(matrix);
         COMPARE(quat);
