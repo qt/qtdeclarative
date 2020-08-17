@@ -47,6 +47,7 @@ QString blockify(const QByteArray& s)
     return block;
 }
 
+//#define TEXTLESS_TEST
 
 class tst_Scenegraph : public QObject
 {
@@ -58,8 +59,10 @@ public:
 private Q_SLOTS:
     void initTestCase();
     void cleanup();
+#ifdef TEXTLESS_TEST
     void testNoTextRendering_data();
     void testNoTextRendering();
+#endif
     void testRendering_data();
     void testRendering();
 
@@ -134,6 +137,7 @@ void tst_Scenegraph::cleanup()
         QTest::qWait(20);
 }
 
+#ifdef TEXTLESS_TEST
 void tst_Scenegraph::testNoTextRendering_data()
 {
     setupTestSuite("text/");
@@ -146,7 +150,7 @@ void tst_Scenegraph::testNoTextRendering()
 {
     runTest(QStringList() << "-notext");
 }
-
+#endif
 
 void tst_Scenegraph::testRendering_data()
 {
