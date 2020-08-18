@@ -178,7 +178,6 @@ static void qt_quickitems_defineModule()
     QQmlPrivate::qmlregister(QQmlPrivate::AutoParentRegistration, &autoparent);
 
     qRegisterMetaType<QQuickAnchorLine>("QQuickAnchorLine");
-    qRegisterMetaType<QPointingDeviceUniqueId>("QPointingDeviceUniqueId");
     qRegisterMetaType<QQuickHandlerPoint>();
 }
 
