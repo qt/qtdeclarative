@@ -2642,8 +2642,8 @@ bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms,
     QRhiGraphicsPipeline::TargetBlend blend;
     blend.colorWrite = m_gstate.colorWrite;
     blend.enable = m_gstate.blending;
-    blend.srcColor = m_gstate.srcColor;
-    blend.dstColor = m_gstate.dstColor;
+    blend.srcColor = blend.srcAlpha = m_gstate.srcColor;
+    blend.dstColor = blend.dstAlpha = m_gstate.dstColor;
     ps->setTargetBlends({ blend });
 
     ps->setDepthTest(m_gstate.depthTest);
