@@ -537,7 +537,7 @@ void tst_QJSEngine::toScriptValue_data()
     QTest::newRow("qpointf") << QVariant(QPointF(42, 24));
     QTest::newRow("qvariantlist") << QVariant(QVariantList() << 42.24 << 5 << "hello");
     QTest::newRow("qvariantlist_point") << QVariant(QVariantList() << 42.24 << QPointF(42.24, 24.42) << QPointF(24.42, 42.24));
-    QVariantMap vm; vm.insert("test", 55); vm.insert("abc", 42.42);;
+    QVariantMap vm; vm.insert("test", 55); vm.insert("abc", 42.42);
     QTest::newRow("qvariantmap") << QVariant(vm);
     vm.clear(); vm.insert("point1", QPointF(42.24, 24.42)); vm.insert("point2", QPointF(42.24, 24.42));
     QTest::newRow("qvariantmap_point") << QVariant(vm);
@@ -560,6 +560,11 @@ void tst_QJSEngine::toScriptValue()
     QJSValue outputJS = engine.toScriptValue(input);
     QVariant output = engine.fromScriptValue<QVariant>(outputJS);
 
+    if (input.metaType().id() == QMetaType::QChar) {
+        if (!input.convert(QMetaType::QString))
+            QFAIL("cannot convert to the original value");
+    } else if (!output.convert(input.metaType().id()))
+        QFAIL("cannot convert to the original value");
     QCOMPARE(input, output);
 }
 
@@ -568,8 +573,8 @@ void tst_QJSEngine::toScriptValuenotroundtripped_data()
     QTest::addColumn<QVariant>("input");
     QTest::addColumn<QVariant>("output");
 
-    QTest::newRow("QList<QObject*>") << QVariant::fromValue(QList<QObject*>() << this) << QVariant(QVariantList() << QVariant::fromValue(this));
-    QTest::newRow("QObjectList") << QVariant::fromValue(QObjectList() << this) << QVariant(QVariantList() << QVariant::fromValue(this));
+    QTest::newRow("QList<QObject*>") << QVariant::fromValue(QList<QObject*>() << this) << QVariant(QVariantList() << QVariant::fromValue<QObject *>(this));
+    QTest::newRow("QObjectList") << QVariant::fromValue(QObjectList() << this) << QVariant(QVariantList() << QVariant::fromValue<QObject *>(this));
     QTest::newRow("QList<QPoint>") << QVariant::fromValue(QList<QPointF>() << QPointF(42.24, 24.42) << QPointF(42.24, 24.42)) << QVariant(QVariantList() << QPointF(42.24, 24.42) << QPointF(42.24, 24.42));
     QTest::newRow("QVector<QPoint>") << QVariant::fromValue(QVector<QPointF>() << QPointF(42.24, 24.42) << QPointF(42.24, 24.42)) << QVariant(QVariantList() << QPointF(42.24, 24.42) << QPointF(42.24, 24.42));
     QTest::newRow("VoidStar") << QVariant(int(QMetaType::VoidStar), nullptr) << QVariant(int(QMetaType::Nullptr), nullptr);
