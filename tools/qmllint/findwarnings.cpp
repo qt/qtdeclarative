@@ -496,19 +496,28 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
 
 bool FindWarningVisitor::visit(QQmlJS::AST::UiPublicMember *uipm)
 {
-    // property bool inactive: !active
-    // extract name inactive
-    MetaProperty property(
+    if (uipm->type == QQmlJS::AST::UiPublicMember::Signal) {
+        MetaMethod method;
+        method.setMethodType(MetaMethod::Signal);
+        method.setMethodName(uipm->name.toString());
+        QQmlJS::AST::UiParameterList *param = uipm->parameters;
+        while (param) {
+            method.addParameter(param->name.toString(), param->type->name.toString());
+            param = param->next;
+        }
+        m_currentScope->addMethod(method);
+    } else {
+        // property bool inactive: !active
+        // extract name inactive
+        MetaProperty property(
                 uipm->name.toString(),
-                // TODO: signals, complex types etc.
+                // TODO: complex types etc.
                 uipm->memberType ? uipm->memberType->name.toString() : QString(),
-                uipm->typeModifier == QLatin1String("list"),
-                !uipm->isReadonlyMember,
-                false,
-                uipm->memberType ? (uipm->memberType->name == QLatin1String("alias")) : false,
-                0);
-    property.setType(m_exportedName2Scope.value(property.typeName()));
-    m_currentScope->insertPropertyIdentifier(property);
+                uipm->typeModifier == QLatin1String("list"), !uipm->isReadonlyMember, false,
+                uipm->memberType ? (uipm->memberType->name == QLatin1String("alias")) : false, 0);
+        property.setType(m_exportedName2Scope.value(property.typeName()));
+        m_currentScope->insertPropertyIdentifier(property);
+    }
     return true;
 }
 

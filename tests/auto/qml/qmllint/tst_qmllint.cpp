@@ -230,6 +230,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("AttachedType") << QStringLiteral("AttachedType.qml");
     QTest::newRow("qmldirImportAndDepend") << QStringLiteral("qmldirImportAndDepend/good.qml");
     QTest::newRow("ParentEnum") << QStringLiteral("parentEnum.qml");
+    QTest::newRow("Signals") << QStringLiteral("Signal.qml");
 }
 
 void TestQmllint::cleanQmlCode()
