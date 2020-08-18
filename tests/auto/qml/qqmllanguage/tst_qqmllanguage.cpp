@@ -1473,7 +1473,10 @@ void tst_qqmllanguage::dynamicProperties()
     QCOMPARE(object->property("stringProperty"), QVariant("Hello World!"));
     QCOMPARE(object->property("urlProperty"), QVariant(QUrl("main.qml")));
     QCOMPARE(object->property("colorProperty"), QVariant(QColor("red")));
-    QCOMPARE(object->property("dateProperty"), QVariant(QDate(1945, 9, 2)));
+    QVariant date = object->property("dateProperty");
+    if (!date.convert(QMetaType::QDate))
+        QFAIL("could not convert to date");
+    QCOMPARE(date, QVariant(QDate(1945, 9, 2)));
     QCOMPARE(object->property("varProperty"), QVariant("Hello World!"));
 }
 
