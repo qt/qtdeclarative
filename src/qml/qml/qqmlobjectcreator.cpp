@@ -1589,7 +1589,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
         if (!target)
             continue;
         QQmlData *targetDData = QQmlData::get(target, /*create*/false);
-        if (!targetDData)
+        if (targetDData == nullptr || targetDData->propertyCache == nullptr)
             continue;
         int coreIndex = QQmlPropertyIndex::fromEncoded(alias->encodedMetaPropertyIndex).coreIndex();
         QQmlPropertyData *const targetProperty = targetDData->propertyCache->property(coreIndex);

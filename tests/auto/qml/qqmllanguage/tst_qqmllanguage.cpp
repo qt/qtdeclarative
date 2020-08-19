@@ -333,6 +333,7 @@ private slots:
 
     void arrayToContainer();
     void qualifiedScopeInCustomParser();
+    void accessNullPointerPropertyCache();
 
     void checkUncreatableNoReason();
 
@@ -5949,6 +5950,15 @@ void tst_qqmllanguage::checkURLtoURLObject()
     QQmlComponent c(&engine);
     c.setData(qml.toUtf8(), QUrl::fromLocalFile(QDir::currentPath()));
     QCOMPARE(c.errors().count(), 0);
+}
+
+void tst_qqmllanguage::accessNullPointerPropertyCache()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("NullPointerPropertyCache.qml"));
+    QVERIFY(c.isReady());
+    QScopedPointer<QObject> obj(c.create());
+    QVERIFY(!obj.isNull());
 }
 
 QTEST_MAIN(tst_qqmllanguage)
