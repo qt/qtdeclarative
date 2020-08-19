@@ -329,6 +329,7 @@ private slots:
 
     void arrayToContainer();
     void qualifiedScopeInCustomParser();
+    void accessNullPointerPropertyCache();
 
 private:
     QQmlEngine engine;
@@ -5782,6 +5783,15 @@ void tst_qqmllanguage::qualifiedScopeInCustomParser()
                       "}\n", QUrl());
     QVERIFY(component.isReady());
     QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+}
+
+void tst_qqmllanguage::accessNullPointerPropertyCache()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("NullPointerPropertyCache.qml"));
+    QVERIFY(c.isReady());
+    QScopedPointer<QObject> obj(c.create());
     QVERIFY(!obj.isNull());
 }
 
