@@ -57,7 +57,15 @@ StyleItemGeometry QQuickStyleItemProgressBar::calculateGeometry()
 
     StyleItemGeometry geometry;
     geometry.minimumSize = style()->sizeFromContents(QStyle::CT_ProgressBar, &styleOption, QSize(0, 0));
-    geometry.implicitSize = geometry.minimumSize;
+
+    // From qprogressbar.cpp in qtbase:
+    const int cw = style()->pixelMetric(QStyle::PM_ProgressBarChunkWidth, &styleOption);
+    QFontMetrics fm(control<QQuickProgressBar>()->font());
+    QSize size = QSize(qMax(9, cw) * 7 + fm.horizontalAdvance(QLatin1Char('0')) * 4, fm.height() + 8);
+    if (!(styleOption.state & QStyle::State_Horizontal))
+        size = size.transposed();
+
+    geometry.implicitSize =  style()->sizeFromContents(QStyle::CT_ProgressBar, &styleOption, size);
     styleOption.rect = QRect(QPoint(0, 0), geometry.implicitSize);
     geometry.contentRect = style()->subElementRect(QStyle::SE_ProgressBarContents, &styleOption);
     geometry.layoutRect = style()->subElementRect(QStyle::SE_ProgressBarLayoutItem, &styleOption);
@@ -74,6 +82,10 @@ void QQuickStyleItemProgressBar::paintEvent(QPainter *painter)
         styleOption.rect = style()->subElementRect(QStyle::SE_ProgressBarGroove, &styleOption);
         style()->drawControl(QStyle::CE_ProgressBarGroove, &styleOption, painter);
     } else {
+        const QRect r = styleOption.rect;
+        styleOption.rect = style()->subElementRect(QStyle::SE_ProgressBarGroove, &styleOption);
+        style()->drawControl(QStyle::CE_ProgressBarGroove, &styleOption, painter);
+        styleOption.rect = r;
         styleOption.rect = style()->subElementRect(QStyle::SE_ProgressBarContents, &styleOption);
         style()->drawControl(QStyle::CE_ProgressBarContents, &styleOption, painter);
     }

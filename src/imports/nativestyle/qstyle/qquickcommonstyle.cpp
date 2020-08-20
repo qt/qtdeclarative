@@ -1446,11 +1446,9 @@ void QCommonStyle::drawControl(ControlElement element, const QStyleOption *opt, 
                 pbBits.palette = pal2;
                 int myY = pbBits.rect.y();
                 int myHeight = pbBits.rect.height();
-                pbBits.state = State_None;
-                QMatrix4x4 m;
+                pbBits.state = State_Horizontal;
                 for (int i = 0; i < nu; ++i) {
                     pbBits.rect.setRect(x0 + x, myY, unit_width, myHeight);
-                    pbBits.rect = m.mapRect(QRectF(pbBits.rect)).toRect();
                     proxy()->drawPrimitive(PE_IndicatorProgressChunk, &pbBits, p);
                     x += reverse ? -unit_width : unit_width;
                 }
@@ -1461,7 +1459,6 @@ void QCommonStyle::drawControl(ControlElement element, const QStyleOption *opt, 
                     int pixels_left = w - (nu * unit_width);
                     int offset = reverse ? x0 + x + unit_width-pixels_left : x0 + x;
                     pbBits.rect.setRect(offset, myY, pixels_left, myHeight);
-                    pbBits.rect = m.mapRect(QRectF(pbBits.rect)).toRect();
                     proxy()->drawPrimitive(PE_IndicatorProgressChunk, &pbBits, p);
                 }
             }

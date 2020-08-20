@@ -4,6 +4,7 @@ QML_FILES += \
     $$PWD/ComboBox.qml \
     $$PWD/Frame.qml \
     $$PWD/GroupBox.qml \
+    $$PWD/ProgressBar.qml \
     $$PWD/RadioButton.qml \
     $$PWD/Slider.qml \
     $$PWD/SpinBox.qml \
