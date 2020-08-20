@@ -405,7 +405,7 @@ endfunction()
 # qml files to the qmldir file of the module. Two source file properties can
 # be used to control the generated qmldir entry.
 #
-# QT_QML_SOURCE_VERSION: Version for this qml file. If not present the module
+# QT_QML_SOURCE_VERSION: Version(s) for this qml file. If not present the module
 #   version will be used.
 # QT_QML_SOURCE_TYPENAME: Override the file's type name. If not present the
 #   type name will be deduced using the file's basename.
@@ -420,7 +420,7 @@ endfunction()
 #   e.g.:
 #       set_source_files_properties(my_qml_file.qml
 #           PROPERTIES
-#               QT_QML_SOURCE_VERSION 2.0
+#               QT_QML_SOURCE_VERSION "2.0;6.0"
 #               QT_QML_SOURCE_TYPENAME MyQmlFile
 #
 #       qt6_target_qml_files(my_qml_module
@@ -494,14 +494,15 @@ function(qt6_target_qml_files target)
             continue()
         endif()
 
-        get_source_file_property(qml_file_version ${qml_file} QT_QML_SOURCE_VERSION)
+        # TODO: rename to QT_QML_SOURCE_VERSIONS
+        get_source_file_property(qml_file_versions ${qml_file} QT_QML_SOURCE_VERSION)
         get_source_file_property(qml_file_typename ${qml_file} QT_QML_SOURCE_TYPENAME)
         get_source_file_property(qml_file_singleton ${qml_file} QT_QML_SINGLETON_TYPE)
         get_source_file_property(qml_file_internal ${qml_file} QT_QML_INTERNAL_TYPE)
         get_target_property(qml_module_version ${target} QT_QML_MODULE_VERSION)
 
-        if (NOT qml_file_version)
-            set(qml_file_version ${qml_module_version})
+        if (NOT qml_file_versions)
+            set(qml_file_versions ${qml_module_version})
         endif()
 
         if (NOT qml_file_typename)
@@ -512,7 +513,9 @@ function(qt6_target_qml_files target)
             string(APPEND file_contents "[singleton] ")
         endif()
 
-        string(APPEND file_contents "${qml_file_typename} ${qml_file_version} ${qml_file}\n")
+        foreach(qml_file_version IN LISTS qml_file_versions)
+            string(APPEND file_contents "${qml_file_typename} ${qml_file_version} ${qml_file}\n")
+        endforeach()
 
         if (qml_file_internal)
             string(APPEND file_contents "internal ${qml_file_typename} ${qml_file}\n")
