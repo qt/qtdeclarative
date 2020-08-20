@@ -1217,6 +1217,7 @@ void QQmlXMLHttpRequest::requestFromUrl(const QUrl &url)
         }
     }
 
+    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::ManualRedirectPolicy);
     request.setUrl(url);
     if(m_method == QLatin1String("POST") ||
        m_method == QLatin1String("PUT")) {
