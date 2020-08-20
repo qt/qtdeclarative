@@ -1427,9 +1427,9 @@ void tst_qqmlproperty::write()
 
         QCOMPARE(qcharProperty.write(QString("foo")), false);
         QCOMPARE(qcharProperty.write('Q'), true);
-        QCOMPARE(qcharProperty.read(), QVariant('Q'));
+        QCOMPARE(qcharProperty.read(), QChar('Q'));
         QCOMPARE(qcharProperty.write(QChar(black_circle)), true);
-        QCOMPARE(qcharProperty.read(), QVariant(QChar(black_circle)));
+        QCOMPARE(qcharProperty.read(), QChar(black_circle));
 
         QCOMPARE(o.stringProperty(), QString("foo")); // Default value
         QCOMPARE(stringProperty.write(QString("bar")), true);
@@ -1439,7 +1439,7 @@ void tst_qqmlproperty::write()
         QCOMPARE(stringProperty.write('A'), true);
         QCOMPARE(stringProperty.read().toString(), QString::number('A'));
         QCOMPARE(stringProperty.write(QChar(black_circle)), true);
-        QCOMPARE(stringProperty.read(), QVariant(QChar(black_circle)));
+        QCOMPARE(stringProperty.read(), QString(black_circle));
 
         { // QChar -> QString
             QQmlComponent component(&engine);
