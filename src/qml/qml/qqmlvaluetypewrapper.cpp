@@ -54,6 +54,10 @@
 #include <private/qv4identifiertable_p.h>
 #include <private/qv4lookup_p.h>
 #include <QtCore/qloggingcategory.h>
+#include <QtCore/QLine>
+#include <QtCore/QLineF>
+#include <QtCore/QSize>
+#include <QtCore/QSizeF>
 
 QT_BEGIN_NAMESPACE
 
@@ -312,7 +316,49 @@ bool QQmlValueTypeWrapper::isEqual(const QVariant& value) const
     if (const QQmlValueTypeReference *ref = as<const QQmlValueTypeReference>())
         if (!ref->readReferenceValue())
             return false;
-    return (value == d()->toVariant());
+    int id1 = value.metaType().id();
+    QVariant v = d()->toVariant();
+    int id2 = v.metaType().id();
+    if (id1 != id2) {
+        // conversions for weak comparison
+        switch (id1) {
+        case QMetaType::QPoint:
+            if (id2 == QMetaType::QPointF)
+                return value.value<QPointF>() == v.value<QPointF>();
+            break;
+        case QMetaType::QPointF:
+            if (id2 == QMetaType::QPoint)
+                return value.value<QPointF>() == v.value<QPointF>();
+            break;
+        case QMetaType::QRect:
+            if (id2 == QMetaType::QRectF)
+                return value.value<QRectF>() == v.value<QRectF>();
+            break;
+        case QMetaType::QRectF:
+            if (id2 == QMetaType::QRect)
+                return value.value<QRectF>() == v.value<QRectF>();
+            break;
+        case QMetaType::QLine:
+            if (id2 == QMetaType::QLineF)
+                return value.value<QLineF>() == v.value<QLineF>();
+            break;
+        case QMetaType::QLineF:
+            if (id2 == QMetaType::QLine)
+                return value.value<QLineF>() == v.value<QLineF>();
+            break;
+        case QMetaType::QSize:
+            if (id2 == QMetaType::QSizeF)
+                return value.value<QSizeF>() == v.value<QSizeF>();
+            break;
+        case QMetaType::QSizeF:
+            if (id2 == QMetaType::QSize)
+                return value.value<QSizeF>() == v.value<QSizeF>();
+            break;
+        default:
+            break;
+        }
+    }
+    return (value == v);
 }
 
 int QQmlValueTypeWrapper::typeId() const
