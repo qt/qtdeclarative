@@ -989,7 +989,7 @@ QString DumpAstVisitor::formatPartlyFormatedLines(QString line, bool newline) co
 {
     QString result;
 
-    const auto lines = line.splitRef('\n');
+    const auto lines = QStringView { line }.split('\n');
     auto it = lines.cbegin();
     const auto endi = lines.cend();
     if (it != endi) {
