@@ -187,6 +187,9 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("qmldirImportAndDepend/bad.qml")
             << QString("warning: Item was not found. Did you add all import paths?")
             << QString();
+    QTest::newRow("javascriptMethodsInModule")
+            << QStringLiteral("javascriptMethodsInModuleBad.qml")
+            << QString("Warning: Property \"unknownFunc\" not found on type \"Foo\"") << QString();
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -231,6 +234,8 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("qmldirImportAndDepend") << QStringLiteral("qmldirImportAndDepend/good.qml");
     QTest::newRow("ParentEnum") << QStringLiteral("parentEnum.qml");
     QTest::newRow("Signals") << QStringLiteral("Signal.qml");
+    QTest::newRow("javascriptMethodsInModule")
+            << QStringLiteral("javascriptMethodsInModuleGood.qml");
 }
 
 void TestQmllint::cleanQmlCode()

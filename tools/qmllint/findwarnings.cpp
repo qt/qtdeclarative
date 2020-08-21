@@ -129,6 +129,12 @@ FindWarningVisitor::Import FindWarningVisitor::readQmldir(const QString &path)
     if (!reader.plugins().isEmpty() && QFile::exists(path + SlashPluginsDotQmltypes))
         readQmltypes(path + SlashPluginsDotQmltypes, &result.objects);
 
+    const auto scripts = reader.scripts();
+    for (const auto &script : scripts) {
+        const QString filePath = path + QLatin1Char('/') + script.fileName;
+        result.scripts.push_back(
+                { script.nameSpace, ScopeTree::ConstPtr(localFile2ScopeTree(filePath)) });
+    }
     return result;
 }
 
@@ -144,6 +150,10 @@ void FindWarningVisitor::processImport(
     for (auto const &import : qAsConst(import.imports)) {
         importHelper(import.module, prefix,
                      import.isAutoImport ? version : import.version);
+    }
+
+    for (const auto &it : qAsConst(import.scripts)) {
+        m_exportedName2Scope.insert(it.first, it.second);
     }
 
     // add objects

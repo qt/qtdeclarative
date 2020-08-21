@@ -64,6 +64,7 @@ private:
         QHash<QString, ScopeTree::ConstPtr> objects;
         QList<QQmlDirParser::Import> imports;
         QList<QQmlDirParser::Component> dependencies;
+        QList<QPair<QString, ScopeTree::ConstPtr>> scripts;
     };
 
     ScopeTree::Ptr m_rootScope;
