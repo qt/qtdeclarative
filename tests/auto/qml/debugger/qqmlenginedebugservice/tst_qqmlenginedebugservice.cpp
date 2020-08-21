@@ -282,7 +282,11 @@ void tst_QQmlEngineDebugService::recursiveObjectTest(
             }
         } else if (pmeta.userType() < QMetaType::User && pmeta.userType() != QMetaType::QVariant) {
             const QVariant expected = pmeta.read(o);
-            QVERIFY2(p.value == expected, QString::fromLatin1("%1 != %2. Details: %3/%4/%5/%6")
+            QVariant value = p.value;
+            auto expectedType = expected.metaType().id();
+            if (value != expected && p.value.canConvert(expectedType))
+               value.convert(expectedType);
+            QVERIFY2(value == expected, QString::fromLatin1("%1 != %2. Details: %3/%4/%5/%6")
                      .arg(QTest::toString(p.value)).arg(QTest::toString(expected)).arg(p.name)
                      .arg(p.valueTypeName).arg(pmeta.userType()).arg(pmeta.userType()).toUtf8());
         }
@@ -774,9 +778,9 @@ void tst_QQmlEngineDebugService::queryObject()
         // test specific property values
         QCOMPARE(findProperty(rect.properties, "width").value, QVariant::fromValue(500));
         QCOMPARE(findProperty(rect.properties, "height").value, QVariant::fromValue(600));
-        QCOMPARE(findProperty(rect.properties, "color").value, QVariant::fromValue(QColor("blue")));
-
-        QCOMPARE(findProperty(text.properties, "color").value, QVariant::fromValue(QColor("blue")));
+        auto expected = findProperty(rect.properties, "color").value;
+        expected.convert(QMetaType::fromType<QColor>().id());
+        QCOMPARE(expected , QVariant::fromValue(QColor("blue")));
     } else {
         foreach (const QQmlEngineDebugObjectReference &child, obj.children) {
             QVERIFY(!child.className.isEmpty());
@@ -853,9 +857,11 @@ void tst_QQmlEngineDebugService::queryObjectsForLocation()
         // test specific property values
         QCOMPARE(findProperty(rect.properties, "width").value, QVariant::fromValue(500));
         QCOMPARE(findProperty(rect.properties, "height").value, QVariant::fromValue(600));
-        QCOMPARE(findProperty(rect.properties, "color").value, QVariant::fromValue(QColor("blue")));
-
-        QCOMPARE(findProperty(text.properties, "color").value, QVariant::fromValue(QColor("blue")));
+        auto expected = findProperty(rect.properties, "color").value;
+        auto colorMetatype = QMetaType::fromType<QColor>().id();
+        QVERIFY(expected.canConvert(colorMetatype));
+        expected.convert(colorMetatype);
+        QCOMPARE(expected , QVariant::fromValue(QColor("blue")));
     } else {
         foreach (const QQmlEngineDebugObjectReference &child, obj.children) {
             QVERIFY(!child.className.isEmpty());
