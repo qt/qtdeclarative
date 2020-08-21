@@ -40,6 +40,7 @@
 #ifndef QQUICKRENDERCONTROL_H
 #define QQUICKRENDERCONTROL_H
 
+#include <QtCore/qobject.h>
 #include <QtQuick/qtquickglobal.h>
 #include <QtGui/qimage.h>
 #include <QObject>
