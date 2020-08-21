@@ -393,6 +393,19 @@ public:
     }
 };
 
+class ManualRedirectNetworkAccessManagerFactory : public QQmlNetworkAccessManagerFactory
+{
+public:
+    QStringList loadedFiles;
+
+    QNetworkAccessManager *create(QObject *parent) override
+    {
+        NetworkAccessManager *manager = new NetworkAccessManager(parent);
+        manager->setRedirectPolicy(QNetworkRequest::ManualRedirectPolicy);
+        return manager;
+    }
+};
+
 class UrlInterceptor : public QQmlAbstractUrlInterceptor
 {
 public:
@@ -455,7 +468,9 @@ void tst_QQMLTypeLoader::redirect()
     QVERIFY(server.serveDirectory(dataDirectory()));
     server.addRedirect("Base.qml", server.urlString("/redirected/Redirected.qml"));
 
+    ManualRedirectNetworkAccessManagerFactory factory;
     QQmlEngine engine;
+    engine.setNetworkAccessManagerFactory(&factory);
     QQmlComponent component(&engine);
     component.loadUrl(server.urlString("/Load.qml"), QQmlComponent::Asynchronous);
     QTRY_VERIFY2(component.isReady(), qPrintable(component.errorString()));
