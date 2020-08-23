@@ -206,9 +206,11 @@ void tst_QQuickAccessible::quickAttachedProperties()
             QCOMPARE(p.isNull(), false);
             QCOMPARE(p.toInt(), int(QAccessible::PushButton));
             p = attachedObject->property("name");
-            QCOMPARE(p.isNull(), true);
+            QCOMPARE(p.type(), QMetaType::QString);
+            QVERIFY2(p.value<QString>().isEmpty(), QTest::toString(p));
             p = attachedObject->property("description");
-            QCOMPARE(p.isNull(), true);
+            QCOMPARE(p.type(), QMetaType::QString);
+            QVERIFY2(p.value<QString>().isEmpty(), QTest::toString(p));
             QCOMPARE(attachedObject->wasNameExplicitlySet(), false);
         }
         delete object;
