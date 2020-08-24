@@ -1,7 +1,7 @@
 # Generated from customgeometry.pro.
 
 cmake_minimum_required(VERSION 3.14)
-project(customgeometry_declarative LANGUAGES CXX) # special case
+project(customgeometry LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -19,11 +19,11 @@ find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 
-add_qt_gui_executable(customgeometry_declarative # special case
+add_qt_gui_executable(customgeometry
     beziercurve.cpp beziercurve.h
     main.cpp
 )
-target_link_libraries(customgeometry_declarative PUBLIC # special case
+target_link_libraries(customgeometry PUBLIC
     Qt::Core
     Qt::Gui
     Qt::Quick
@@ -35,22 +35,22 @@ set(customgeometry_resource_files
     "main.qml"
 )
 
-qt6_add_resources(customgeometry_declarative "customgeometry" # special case
+qt6_add_resources(customgeometry "customgeometry"
     PREFIX
         "/scenegraph/customgeometry"
     FILES
         ${customgeometry_resource_files}
 )
 
-install(TARGETS customgeometry_declarative # special case
+install(TARGETS customgeometry
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
 
-set_target_properties(customgeometry_declarative PROPERTIES # special case
+set_target_properties(customgeometry PROPERTIES
     QT_QML_MODULE_VERSION 1.0
     QT_QML_MODULE_URI CustomGeometry
 )
 
-qt6_qml_type_registration(customgeometry_declarative) # special case
+qt6_qml_type_registration(customgeometry)
