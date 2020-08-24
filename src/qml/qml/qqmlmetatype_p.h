@@ -66,6 +66,52 @@ namespace QV4 { class ExecutableCompilationUnit; }
 
 struct CompositeMetaTypeIds
 {
+private:
+    int *refCount = nullptr;
+    void deref();
+    void ref()
+    {
+        Q_ASSERT(refCount);
+        ++*refCount;
+    }
+public:
+    CompositeMetaTypeIds() = default;
+    CompositeMetaTypeIds(QMetaType id, QMetaType listId) : id(id), listId(listId) {}
+    CompositeMetaTypeIds(const CompositeMetaTypeIds &other)
+        : refCount(other.refCount), id(other.id), listId(other.listId)
+    {
+        if (refCount)
+            ref();
+    }
+    CompositeMetaTypeIds(CompositeMetaTypeIds &&other)
+        : refCount(other.refCount), id(other.id), listId(other.listId)
+    {
+        other.refCount = nullptr;
+    }
+    CompositeMetaTypeIds &operator=(const CompositeMetaTypeIds &other)
+    {
+        if (refCount)
+            deref();
+        refCount = other.refCount;
+        id = other.id;
+        listId = other.listId;
+        if (refCount)
+            ref();
+        return *this;
+    }
+    CompositeMetaTypeIds &operator=(CompositeMetaTypeIds &&other)
+    {
+        if (refCount)
+            deref();
+        refCount = other.refCount;
+        id = other.id;
+        listId = other.listId;
+        other.refCount = nullptr;
+        return *this;
+    }
+    ~CompositeMetaTypeIds();
+    static CompositeMetaTypeIds fromCompositeName(const QByteArray &name);
+public:
     QMetaType id;
     QMetaType listId;
     bool isValid() const { return id.isValid() && listId.isValid(); }
@@ -73,6 +119,10 @@ struct CompositeMetaTypeIds
 
 class Q_QML_PRIVATE_EXPORT QQmlMetaType
 {
+    friend struct CompositeMetaTypeIds;
+    static CompositeMetaTypeIds registerInternalCompositeType(const QByteArray &className);
+    static void unregisterInternalCompositeType(const CompositeMetaTypeIds &typeIds);
+
 public:
     enum class RegistrationResult {
         Success,
@@ -94,8 +144,6 @@ public:
 
     static void unregisterType(int type);
 
-    static CompositeMetaTypeIds registerInternalCompositeType(const QByteArray &className);
-    static void unregisterInternalCompositeType(const CompositeMetaTypeIds &typeIds);
     static void registerModule(const char *uri, QTypeRevision version);
     static bool protectModule(const QString &uri, QTypeRevision version,
                               bool protectAllVersions = false);

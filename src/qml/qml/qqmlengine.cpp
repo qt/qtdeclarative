@@ -649,10 +649,8 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
 
     QQmlMetaType::freeUnusedTypesAndCaches();
 
-    for (auto iter = m_compositeTypes.cbegin(), end = m_compositeTypes.cend(); iter != end; ++iter) {
+    for (auto iter = m_compositeTypes.cbegin(), end = m_compositeTypes.cend(); iter != end; ++iter)
         iter.value()->isRegisteredWithEngine = false;
-        QQmlMetaType::unregisterInternalCompositeType(iter.value()->typeIds);
-    }
 #if QT_CONFIG(qml_debug)
     delete profiler;
 #endif

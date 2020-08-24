@@ -286,7 +286,7 @@ void setupICs(const ObjectContainer &container, QHash<int, InlineComponentData> 
             auto url = finalUrl;
             url.setFragment(QString::number(it->objectIndex));
             const QByteArray &className = QQmlPropertyCacheCreatorBase::createClassNameTypeByUrl(url);
-            InlineComponentData icDatum(QQmlMetaType::registerInternalCompositeType(className), int(it->objectIndex), int(it->nameIndex), 0, 0, 0);
+            InlineComponentData icDatum(CompositeMetaTypeIds::fromCompositeName(className), int(it->objectIndex), int(it->nameIndex), 0, 0, 0);
             icData->insert(it->objectIndex, icDatum);
         }
     }
@@ -402,21 +402,13 @@ void QQmlTypeData::done()
 
     m_typeClassName = QQmlPropertyCacheCreatorBase::createClassNameTypeByUrl(finalUrl());
     if (!m_typeClassName.isEmpty())
-        m_typeIds = QQmlMetaType::registerInternalCompositeType(m_typeClassName);
+        m_typeIds = CompositeMetaTypeIds::fromCompositeName(m_typeClassName);
 
     if (m_document) {
         setupICs(m_document, &m_inlineComponentData, finalUrl());
     } else {
         setupICs(m_compiledData, &m_inlineComponentData, finalUrl());
     }
-    auto typeCleanupGuard = qScopeGuard([&]() {
-        if (isError() && m_typeIds.isValid()) {
-            QQmlMetaType::unregisterInternalCompositeType(m_typeIds);
-            for (auto&& icData: qAsConst(m_inlineComponentData)) {
-                QQmlMetaType::unregisterInternalCompositeType(icData.typeIds);
-            }
-        }
-    });
 
     QV4::ResolvedTypeReferenceMap resolvedTypeCache;
     QQmlRefPointer<QQmlTypeNameCache> typeNameCache;

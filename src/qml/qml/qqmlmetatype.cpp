@@ -54,6 +54,32 @@ Q_DECLARE_LOGGING_CATEGORY(DBG_DISK_CACHE)
 
 QT_BEGIN_NAMESPACE
 
+CompositeMetaTypeIds CompositeMetaTypeIds::fromCompositeName(const QByteArray &name)
+{
+    auto ids = QQmlMetaType::registerInternalCompositeType(name);
+    ids.refCount = new int;
+    *ids.refCount = 1;
+    return ids;
+}
+
+void CompositeMetaTypeIds::deref()
+{
+    Q_ASSERT(refCount);
+    --*refCount;
+    if (!*refCount) {
+        delete refCount;
+        QQmlMetaType::unregisterInternalCompositeType(*this);
+        refCount = nullptr;
+    }
+}
+
+CompositeMetaTypeIds::~CompositeMetaTypeIds()
+{
+    if (refCount)
+        deref();
+}
+
+
 struct LockedData : private QQmlMetaTypeData
 {
     friend class QQmlMetaTypeDataPtr;
@@ -542,11 +568,11 @@ QQmlType QQmlMetaType::registerCompositeType(const QQmlPrivate::RegisterComposit
 
 
 
-template <typename T>
 struct QQmlMetaTypeInterface : QtPrivate::QMetaTypeInterface
 {
     const QByteArray name;
-    QQmlMetaTypeInterface(const QByteArray &name)
+    template <typename T>
+    QQmlMetaTypeInterface(const QByteArray &name, T *)
         : QMetaTypeInterface {
             /*.revision=*/ 0,
             /*.alignment=*/ alignof(T),
@@ -580,8 +606,8 @@ CompositeMetaTypeIds QQmlMetaType::registerInternalCompositeType(const QByteArra
     QByteArray ptr = className + '*';
     QByteArray lst = "QQmlListProperty<" + className + '>';
 
-    QMetaType ptr_type(new QQmlMetaTypeInterface<QObject*>(ptr));
-    QMetaType lst_type(new QQmlMetaTypeInterface<QQmlListProperty<QObject>>(lst));
+    QMetaType ptr_type(new QQmlMetaTypeInterface(ptr, (QObject **)nullptr));
+    QMetaType lst_type(new QQmlMetaTypeInterface(lst, (QQmlListProperty<QObject> *)nullptr));
 
     QQmlMetaTypeDataPtr data;
     data->qmlLists.insert(lst_type.id(), ptr_type.id());
@@ -593,6 +619,8 @@ void QQmlMetaType::unregisterInternalCompositeType(const CompositeMetaTypeIds &t
 {
     QQmlMetaTypeDataPtr data;
     data->qmlLists.remove(typeIds.listId.id());
+    delete static_cast<QQmlMetaTypeInterface *>(QMetaType(typeIds.id).iface());
+    delete static_cast<QQmlMetaTypeInterface *>(QMetaType(typeIds.listId).iface());
 }
 
 int QQmlMetaType::registerUnitCacheHook(

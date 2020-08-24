@@ -303,7 +303,6 @@ void ExecutableCompilationUnit::unlink()
         if (qmlEngine)
             qmlEngine->unregisterInternalCompositeType(this);
         isRegisteredWithEngine = false;
-        QQmlMetaType::unregisterInternalCompositeType(typeIds);
     }
 
     propertyCaches.clear();
@@ -410,7 +409,7 @@ void ExecutableCompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngi
     if (propertyCaches.needsVMEMetaObject(/*root object*/0)) {
         // typeIds is only valid for types that have references to themselves.
         if (!types.isValid())
-            types = QQmlMetaType::registerInternalCompositeType(rootPropertyCache()->className());
+            types = CompositeMetaTypeIds::fromCompositeName(rootPropertyCache()->className());
         typeIds = types;
         qmlEngine->registerInternalCompositeType(this);
 
