@@ -85,6 +85,7 @@ QSGDefaultPainterNode::QSGDefaultPainterNode(QQuickPaintedItem *item)
     , m_dirtyRenderTarget(false)
     , m_dirtyTexture(false)
 {
+    Q_UNUSED(m_multisamplingSupported);
     m_context = static_cast<QSGDefaultRenderContext *>(static_cast<QQuickPaintedItemPrivate *>(QObjectPrivate::get(item))->sceneGraphRenderContext());
 
     setMaterial(&m_materialO);

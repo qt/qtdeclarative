@@ -166,7 +166,7 @@ QVariantMap pluginsForModulePath(const QString &modulePath, const QString &versi
     parser.parse(QString::fromUtf8(qmldirFile.readAll()));
     if (parser.hasError()) {
         qWarning() << "qmldir file malformed at" << modulePath;
-        for (const auto error : parser.errors(QLatin1String("qmldir")))
+        for (const auto &error : parser.errors(QLatin1String("qmldir")))
             qWarning() << error.message;
         return QVariantMap();
     }
@@ -175,7 +175,7 @@ QVariantMap pluginsForModulePath(const QString &modulePath, const QString &versi
 
     QStringList pluginNameList;
     const auto plugins = parser.plugins();
-    for (const auto plugin : plugins)
+    for (const auto &plugin : plugins)
         pluginNameList.append(plugin.name);
     pluginInfo[pluginsLiteral()] = pluginNameList.join(QLatin1Char(' '));
 
@@ -201,12 +201,12 @@ QVariantMap pluginsForModulePath(const QString &modulePath, const QString &versi
 
     QVariantList importsFromFiles;
     const auto components = parser.components();
-    for (const auto component : components) {
+    for (const auto &component : components) {
         importsFromFiles
                 += findQmlImportsInQmlFile(modulePath + QLatin1Char('/') + component.fileName);
     }
     const auto scripts = parser.scripts();
-    for (const auto script : scripts) {
+    for (const auto &script : scripts) {
         importsFromFiles
                 += findQmlImportsInJavascriptFile(modulePath + QLatin1Char('/') + script.fileName);
     }

@@ -80,8 +80,6 @@ DECLARE_DEBUG_VAR(noopaque)
 DECLARE_DEBUG_VAR(noclip)
 #undef DECLARE_DEBUG_VAR
 
-static QElapsedTimer qsg_renderer_timer;
-
 #define QSGNODE_TRAVERSE(NODE) for (QSGNode *child = NODE->firstChild(); child; child = child->nextSibling())
 #define SHADOWNODE_TRAVERSE(NODE) for (Node *child = NODE->firstChild(); child; child = child->sibling())
 

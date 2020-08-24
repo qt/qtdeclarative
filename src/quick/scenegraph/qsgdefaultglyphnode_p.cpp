@@ -67,6 +67,7 @@ static inline QVector4D qsg_premultiply(const QVector4D &c, float globalOpacity)
     return QVector4D(c.x() * o, c.y() * o, c.z() * o, o);
 }
 
+#if 0
 static inline qreal qt_sRGB_to_linear_RGB(qreal f)
 {
     return f > 0.04045 ? qPow((f + 0.055) / 1.055, 2.4) : f / 12.92;
@@ -85,6 +86,7 @@ static inline qreal fontSmoothingGamma()
     static qreal fontSmoothingGamma = QGuiApplicationPrivate::platformIntegration()->styleHint(QPlatformIntegration::FontSmoothingGamma).toReal();
     return fontSmoothingGamma;
 }
+#endif
 
 class QSGTextMaskRhiShader : public QSGMaterialShader
 {
