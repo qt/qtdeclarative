@@ -649,7 +649,7 @@ inline int QQmlPropertyCacheCreator<ObjectContainer>::metaTypeForParameter(const
 
     auto compilationUnit = tdata->compilationUnit();
 
-    return compilationUnit->metaTypeId.id();
+    return compilationUnit->typeIds.id.id();
 }
 
 template <typename ObjectContainer>
@@ -834,7 +834,7 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
         if (referencedType.isValid())
             *type = referencedType.typeId().id();
         else
-            *type = typeRef->compilationUnit()->metaTypeId.id();
+            *type = typeRef->compilationUnit()->typeIds.id.id();
 
         *version = typeRef->version();
 

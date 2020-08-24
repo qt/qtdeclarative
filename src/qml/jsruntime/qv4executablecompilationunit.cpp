@@ -302,8 +302,8 @@ void ExecutableCompilationUnit::unlink()
         Q_ASSERT(data && propertyCaches.count() > 0 && propertyCaches.at(/*root object*/0));
         if (qmlEngine)
             qmlEngine->unregisterInternalCompositeType(this);
-        QQmlMetaType::unregisterInternalCompositeType({metaTypeId, listMetaTypeId});
         isRegisteredWithEngine = false;
+        QQmlMetaType::unregisterInternalCompositeType(typeIds);
     }
 
     propertyCaches.clear();
@@ -402,17 +402,16 @@ IdentifierHash ExecutableCompilationUnit::createNamedObjectsPerComponent(int com
     return *namedObjectsPerComponentCache.insert(componentObjectIndex, namedObjectCache);
 }
 
-void ExecutableCompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngine, CompositeMetaTypeIds typeIds)
+void ExecutableCompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngine, CompositeMetaTypeIds types)
 {
     this->qmlEngine = qmlEngine;
 
     // Add to type registry of composites
     if (propertyCaches.needsVMEMetaObject(/*root object*/0)) {
         // typeIds is only valid for types that have references to themselves.
-        if (!typeIds.isValid())
-            typeIds = QQmlMetaType::registerInternalCompositeType(rootPropertyCache()->className());
-        metaTypeId = typeIds.id;
-        listMetaTypeId = typeIds.listId;
+        if (!types.isValid())
+            types = QQmlMetaType::registerInternalCompositeType(rootPropertyCache()->className());
+        typeIds = types;
         qmlEngine->registerInternalCompositeType(this);
 
     } else {
@@ -420,12 +419,10 @@ void ExecutableCompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngi
         auto *typeRef = resolvedTypes.value(obj->inheritedTypeNameIndex);
         Q_ASSERT(typeRef);
         if (const auto compilationUnit = typeRef->compilationUnit()) {
-            metaTypeId = compilationUnit->metaTypeId;
-            listMetaTypeId = compilationUnit->listMetaTypeId;
+            typeIds = compilationUnit->typeIds;
         } else {
             const auto type = typeRef->type();
-            metaTypeId = type.typeId();
-            listMetaTypeId = type.qListTypeId();
+            typeIds = CompositeMetaTypeIds{ type.typeId(), type.qListTypeId() };
         }
     }
 
@@ -549,7 +546,7 @@ bool ExecutableCompilationUnit::verifyChecksum(const CompiledData::DependentType
 CompositeMetaTypeIds ExecutableCompilationUnit::typeIdsForComponent(int objectid) const
 {
     if (objectid == 0)
-        return {metaTypeId, listMetaTypeId};
+        return typeIds;
     return inlineComponentData[objectid].typeIds;
 }
 

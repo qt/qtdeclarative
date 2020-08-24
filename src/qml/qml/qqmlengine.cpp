@@ -651,7 +651,7 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
 
     for (auto iter = m_compositeTypes.cbegin(), end = m_compositeTypes.cend(); iter != end; ++iter) {
         iter.value()->isRegisteredWithEngine = false;
-        QQmlMetaType::unregisterInternalCompositeType({iter.value()->metaTypeId, iter.value()->listMetaTypeId});
+        QQmlMetaType::unregisterInternalCompositeType(iter.value()->typeIds);
     }
 #if QT_CONFIG(qml_debug)
     delete profiler;
@@ -2248,7 +2248,7 @@ int QQmlEnginePrivate::listType(int t) const
 
 
 static QQmlPropertyCache *propertyCacheForPotentialInlineComponentType(int t, const QHash<int, QV4::ExecutableCompilationUnit *>::const_iterator &iter) {
-    if (t != (*iter)->metaTypeId.id()) {
+    if (t != (*iter)->typeIds.id.id()) {
         // this is an inline component, and what we have in the iterator is currently the parent compilation unit
         for (auto &&icDatum: (*iter)->inlineComponentData)
             if (icDatum.typeIds.id.id() == t)
@@ -2351,7 +2351,7 @@ void QQmlEnginePrivate::registerInternalCompositeType(QV4::ExecutableCompilation
     Locker locker(this);
     // The QQmlCompiledData is not referenced here, but it is removed from this
     // hash in the QQmlCompiledData destructor
-    m_compositeTypes.insert(compilationUnit->metaTypeId.id(), compilationUnit);
+    m_compositeTypes.insert(compilationUnit->typeIds.id.id(), compilationUnit);
     for (auto &&data: compilationUnit->inlineComponentData)
         m_compositeTypes.insert(data.typeIds.id.id(), compilationUnit);
 }
@@ -2361,7 +2361,7 @@ void QQmlEnginePrivate::unregisterInternalCompositeType(QV4::ExecutableCompilati
     compilationUnit->isRegisteredWithEngine = false;
 
     Locker locker(this);
-    m_compositeTypes.remove(compilationUnit->metaTypeId.id());
+    m_compositeTypes.remove(compilationUnit->typeIds.id.id());
     for (auto&& icDatum: compilationUnit->inlineComponentData)
         m_compositeTypes.remove(icDatum.typeIds.id.id());
 }
