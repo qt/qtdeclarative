@@ -1,0 +1,159 @@
+Qt 5.15.1 is a bug-fix release. It maintains both forward and backward
+compatibility (source and binary) with Qt 5.15.0.
+
+For more details, refer to the online documentation included in this
+distribution. The documentation is also available online:
+
+  https://doc.qt.io/qt-5.15/index.html
+
+The Qt version 5.15 series is binary compatible with the 5.14.x series.
+Applications compiled for 5.14 will continue to run with 5.15.
+
+Some of the changes listed in this file include issue tracking numbers
+corresponding to tasks in the Qt Bug Tracker:
+
+  https://bugreports.qt.io/
+
+Each of these identifiers can be entered in the bug tracker to obtain more
+information about a particular change.
+
+****************************************************************************
+*                                  QtQml                                   *
+****************************************************************************
+ - [QTBUG-83384] Fixed various failing assertions in the JIT compiler.
+ - [QTBUG-85605] QQmlObjectCreator: fixed member func call with this == nullptr
+ - [QTBUG-84104] Fixed a regression in QMetaType::registerConverter()
+   with converting JS arrays to sequence<T> types.
+ - [QTBUG-84447] Invokable methods of Q_GADGET objects are now fully accessible.
+ - [QTBUG-84095] Fixed an invalid memory read in QQmlContextData::emitDestruction()
+ - [QTBUG-84692] Fixed a race condition in QQmlData::createPropertyCache
+ - [QTBUG-84237] Fixed a bug which prevented inline components from accessing
+   inner objects in some cases.
+ - [QTBUG-83121] QQmlEngine::baseUrl() no longer returns an empty url
+   if the current path is the root directory.
+ - [QTBUG-83214] Fixed a memory leak in a StateMachine with signal handler.
+ - [QTBUG-84474] On all platforms other than Windows, QTimeZone::systemTimeZone()
+   is now used when converting from times such as QTime(0, 0, 0), to avoid
+   incorrect daylight-saving accounting in the BST timezone.
+ - [QTBUG-83352] Fixed a crash caused by QQmlDelegateModel items being
+   deleted while being removed from the cache.
+ - [QTBUG-83354] We now warn about circular dependencies between QML types while loading.
+
+ - qmlformat tool:
+   * [QTBUG-85321] Fixed handling of empty blocks.
+   * [QTBUG-85035] Nested functions no longer get moved to the top level.
+   * [QTBUG-85077] Braces are no longer removed from nested if's.
+   * [QTBUG-85003] Fixed the trailing newline in if blocks so that the
+     formatting is stable during repeated runs.
+   * [QTBUG-85189] Inline components are now formatted correctly.
+   * [QTBUG-85289] Bindings that take up multiple lines are now formatted correctly.
+   * [QTBUG-84599] String literals are not reformatted: thus unicode
+     escape sequences are now preserved.
+
+ - Qt Quick Compiler:
+   * [QTBUG-85243] Revived QTQUICK_COMPILER_SKIPPED_RESOURCES for cases when
+     some resources should not be compiled with qmlcachegen.
+   * [QTBUG-84901] Fixed compilation from a different drive on Windows
+     by converting the colon after the drive letter to an underscore.
+
+****************************************************************************
+*                                 QtQuick                                  *
+****************************************************************************
+
+ - Accessibility:
+   * [QTBUG-83738] Fixed a crash when the Accessible attached property was
+     accessed on ApplicationWindow or another non-Item object.
+   * [QTBUG-82433] Screen readers (such as Windows Narrator) no longer
+     spell out the characters in TextInput { echoMode: TextInput.Password }
+
+ - AnimatedSprite:
+   * [QTBUG-63942] AnimatedSprite now resumes playback when it becomes
+     visible again, if it was playing when it was hidden.
+
+ - Event Handlers:
+   * [QTBUG-85303] In a HoverHandler with a margin and a cursorShape, the
+     cursor now changes within the margin area.
+
+ - Flickable:
+   * [QTBUG-31905] With AutoFlickDirection and AutoFlickIfNeeded,
+     we now take margins into account to avoid unnecessary scrolling.
+
+ - Item:
+   * [QTBUG-55879] grabToImage() now works with QQuickRenderControl.
+   * [QTBUG-40220] If polish() is called within updatePolish(), or a polish
+     loop occurs for some other reason, the detection is now more correct, and
+     the warning occurs after 1000 such loops.  The loop is broken after
+     100,000 times, to avoid the application becoming unresponsive.
+
+ - Item views:
+   * [QTBUG-82989] Since the parent of a delegate can end up being null during
+     its lifetime, developers are now advised against using it in bindings.
+   * [QTBUG-83956] TableView now allows negative spacing, which is useful
+     to cause delegates with borders to overlap and make a single-pixel grid.
+   * [QTBUG-84046] During layout, TableView now sets item width before height.
+     This works better with text items like TextEdit which calculate implicit
+     height based on the assigned width, (because of word-wrap.
+   * [QTBUG-84604] Fixed a culling regression when using ListView with ObjectModel.
+
+ - Layouts:
+   * [QTBUG-71839] Performance improvements to Qt Quick Layouts. This has the
+     small side-effect that size hint (implicitWidth/implicithHeight etc)
+     changes are not immediately emitted after a layout has been modified.
+
+ - MouseArea:
+   * [QTBUG-82382] Dragging can no longer be started with non-accepted mouse buttons.
+   * [QTBUG-85111] Fixed a regression in mouseX/mouseY calculations during
+     dragging of a MouseArea whose position is not 0,0.
+
+ - Rectangle:
+   * [QTBUG-84069] Named preset gradients are working again.
+
+ - Repeater:
+   * [QTBUG-83356] keyboard.left/keyboard.right navigation now works when
+     setting up navigation to Repeater-created siblings.
+
+ - RHI / scene graph:
+   * [QTBUG-85965] If the first node in a batch becomes invisible due to opacity
+     change, it now triggers rebuilding the batch.
+   * [QTBUG-85996] Fixed a crash in QSGBatchRenderer::Renderer::updateStencilClip()
+     due to clipNext being null.
+   * [QTBUG-65170] Fixed a crash when QSGTexture is deleted in rc->endSync()
+   * [QTBUG-83319] Fixed a crash in QQuickWidget when failing to make the OpenGL
+     context current in createFramebufferObject() during resizing.
+
+ - Shapes:
+   * [QTBUG-82371] Fixed a crash on eglfs.
+
+ - Window:
+   * Pass input method events on to the focus item.
+   * [QTBUG-82815] A transient Window declared in an Item which is shown via
+     QQuickWidget now becomes visible even though the parent window is offscreen.
+
+ - Text:
+   * [QTBUG-69301] Fixed Outline style on connected glyphs, especially visible
+     in e.g. Arabic and Indic writing systems.
+   * [QTBUG-85514] Fixed a regression in antialiasing on outlined text.
+   * [QTBUG-81810] Fixed a bug where we would sometimes resolve the wrong fonts
+     inside .ttc font collections.
+   * [QTBUG-49646][QTBUG-84021] Fixed kerning with horizontalAlignment: center.
+   * [QTBUG-84454] Fixed an offset on text position when combining
+     NativeRendering with high-dpi scaling.
+   * [QTBUG-80180] Fixed a clipping bug in software-rendered text.
+   * [QTBUG-83819] If the selection color is transparent, it is not
+     rendered, to avoid problems with blending.
+   * [QTBUG-84981] Fixed the vertical alignment of images in a text document
+     to align with the HTML standard as much as possible: AlignMiddle
+     is between AlignTop and AlignBottom.
+   * [QTBUG-84351] Optimized text glyph geometry updating by doing it
+     only when necesssary rather than in scene graph preprocessing.
+
+****************************************************************************
+*                      Platform Specific Changes                           *
+****************************************************************************
+
+ - [QTBUG-84497] Fixed build issue on Windows when using nmake
+   (RegExpJitTables.h was not generated correctly).
+ - [QTBUG-83115] On webOS, Images with the same source are now shared even if
+   the cache property is false.
+ - [QTBUG-83119] On webOS, synthetic hover events are no longer sent on
+   frame update.
