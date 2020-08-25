@@ -149,9 +149,6 @@ public:
     QJSValue callAsConstructor(const QJSValueList &args = QJSValueList()) const;
 
     ErrorType errorType() const;
-#ifdef QT_DEPRECATED
-    QT_DEPRECATED QJSEngine *engine() const;
-#endif
 
 private:
     friend class QJSValuePrivate;

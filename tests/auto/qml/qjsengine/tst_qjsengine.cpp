@@ -4331,9 +4331,6 @@ void tst_QJSEngine::engineForObject()
         QJSValue wrapper = engine.newQObject(&object);
         QQmlEngine::setObjectOwnership(&object, QQmlEngine::CppOwnership);
         QVERIFY(qjsEngine(&object));
-#ifdef QT_DEPRECATED
-        QCOMPARE(qjsEngine(&object), wrapper.engine());
-#endif
     }
     QVERIFY(!qjsEngine(&object));
 }

@@ -742,25 +742,6 @@ QJSValue QJSValue::callAsConstructor(const QJSValueList &args) const
     return QJSValuePrivate::fromReturnedValue(result->asReturnedValue());
 }
 
-#ifdef QT_DEPRECATED
-
-/*!
-  \obsolete
-
-  Returns the QJSEngine that created this QJSValue,
-  or 0 if this QJSValue is invalid or the value is not
-  associated with a particular engine.
-*/
-QJSEngine* QJSValue::engine() const
-{
-    QV4::ExecutionEngine *engine = QJSValuePrivate::engine(this);
-    if (engine)
-        return engine->jsEngine();
-    return nullptr;
-}
-
-#endif // QT_DEPRECATED
-
 /*!
   If this QJSValue is an object, returns the internal prototype
   (\c{__proto__} property) of this object; otherwise returns an
