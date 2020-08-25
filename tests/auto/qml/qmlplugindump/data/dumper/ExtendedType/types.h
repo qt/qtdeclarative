@@ -55,7 +55,7 @@ class ExtendedType : public QObject
 public:
     ExtendedType(QObject *parent = nullptr)
         : QObject(parent) {}
-    QQmlListProperty<QObject> data() { return QQmlListProperty<QObject>(this, m_data); }
+    QQmlListProperty<QObject> data() { return QQmlListProperty<QObject>(this, &m_data); }
 
 private:
     QList<QObject *> m_data;

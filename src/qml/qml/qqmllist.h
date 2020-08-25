@@ -68,14 +68,6 @@ public:
 
     QQmlListProperty() = default;
 
-#if QT_DEPRECATED_SINCE(5,15)
-    QT_DEPRECATED_X("Use constructor taking QList pointer, and gain improved performance")
-    QQmlListProperty(QObject *o, QList<T *> &list)
-        : object(o), data(&list), append(qlist_append), count(qlist_count), at(qlist_at),
-          clear(qlist_clear), replace(qslow_replace), removeLast(qslow_removeLast)
-    {}
-#endif
-
     QQmlListProperty(QObject *o, QList<T *> *list)
         : object(o), data(list), append(qlist_append), count(qlist_count), at(qlist_at),
           clear(qlist_clear), replace(qlist_replace), removeLast(qlist_removeLast)

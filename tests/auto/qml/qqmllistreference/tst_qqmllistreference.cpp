@@ -92,7 +92,6 @@ public:
         SyntheticClearAndReplace,
         SyntheticRemoveLast,
         SyntheticRemoveLastAndReplace,
-        AutomaticReference,
         AutomaticPointer
     };
 
@@ -115,7 +114,7 @@ public:
         return reinterpret_cast<QList<TestType *> *>(p->data)->removeLast();
     }
 
-    TestType(Mode mode = AutomaticReference)
+    TestType(Mode mode = AutomaticPointer)
     {
         switch (mode) {
         case SyntheticClear:
@@ -138,9 +137,6 @@ public:
             property = QQmlListProperty<TestType>(this, &data, append, count, at, clear,
                                                   nullptr, nullptr);
             break;
-        case AutomaticReference:
-            property = QQmlListProperty<TestType>(this, data);
-            break;
         case AutomaticPointer:
             property = QQmlListProperty<TestType>(this, &data);
             break;
@@ -159,7 +155,6 @@ Q_DECLARE_METATYPE(TestType::Mode)
 void tst_qqmllistreference::modeData()
 {
     QTest::addColumn<TestType::Mode>("mode");
-    QTest::addRow("AutomaticReference") << TestType::AutomaticReference;
     QTest::addRow("AutomaticPointer") << TestType::AutomaticPointer;
     QTest::addRow("SyntheticClear") << TestType::SyntheticClear;
     QTest::addRow("SyntheticReplace") << TestType::SyntheticReplace;

@@ -149,7 +149,7 @@ public:
         emit objectChanged();
     }
 
-    QQmlListProperty<QObject> objectListProperty() { return QQmlListProperty<QObject>(this, m_objectQList); }
+    QQmlListProperty<QObject> objectListProperty() { return QQmlListProperty<QObject>(this, &m_objectQList); }
 
     bool methodCalled() const { return m_methodCalled; }
     bool methodIntCalled() const { return m_methodIntCalled; }
@@ -320,7 +320,7 @@ class MyQmlContainer : public QObject
 public:
     MyQmlContainer() {}
 
-    QQmlListProperty<MyQmlObject> children() { return QQmlListProperty<MyQmlObject>(this, m_children); }
+    QQmlListProperty<MyQmlObject> children() { return QQmlListProperty<MyQmlObject>(this, &m_children); }
 
 private:
     QList<MyQmlObject*> m_children;

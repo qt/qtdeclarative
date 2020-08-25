@@ -654,10 +654,10 @@ class MyContainer : public QObject
 public:
     MyContainer() {}
 
-    QQmlListProperty<QObject> children() { return QQmlListProperty<QObject>(this, m_children); }
-    QQmlListProperty<MyContainer> containerChildren() { return QQmlListProperty<MyContainer>(this, m_containerChildren); }
+    QQmlListProperty<QObject> children() { return QQmlListProperty<QObject>(this, &m_children); }
+    QQmlListProperty<MyContainer> containerChildren() { return QQmlListProperty<MyContainer>(this, &m_containerChildren); }
     QList<QObject *> *getChildren() { return &m_children; }
-    QQmlListProperty<MyInterface> qlistInterfaces() { return QQmlListProperty<MyInterface>(this, m_interfaces); }
+    QQmlListProperty<MyInterface> qlistInterfaces() { return QQmlListProperty<MyInterface>(this, &m_interfaces); }
     QList<MyInterface *> *getQListInterfaces() { return &m_interfaces; }
 
     QList<MyContainer*> m_containerChildren;
@@ -820,7 +820,7 @@ namespace MyNamespace {
         Q_OBJECT
         Q_PROPERTY(QQmlListProperty<MyNamespace::MyNamespacedType> list READ list)
     public:
-        QQmlListProperty<MyNamespacedType> list() { return QQmlListProperty<MyNamespacedType>(this, m_list); }
+        QQmlListProperty<MyNamespacedType> list() { return QQmlListProperty<MyNamespacedType>(this, &m_list); }
 
     private:
         QList<MyNamespacedType *> m_list;
@@ -1431,7 +1431,7 @@ class DeferredProperties : public QObject
     Q_CLASSINFO("DeferredPropertyNames", "groupProperty,listProperty")
     Q_CLASSINFO("DefaultProperty", "listProperty")
 public:
-    QQmlListProperty<QObject> listProperty() { return QQmlListProperty<QObject>(this, m_list); }
+    QQmlListProperty<QObject> listProperty() { return QQmlListProperty<QObject>(this, &m_list); }
 
 private:
     QObject *m_group = 0;

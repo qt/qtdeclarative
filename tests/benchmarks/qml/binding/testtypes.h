@@ -48,7 +48,7 @@ public:
     int value() const { return m_value; }
     void setValue(int v) { m_value = v; emit valueChanged(); }
 
-    QQmlListProperty<QObject> data() { return QQmlListProperty<QObject>(this, m_data); }
+    QQmlListProperty<QObject> data() { return QQmlListProperty<QObject>(this, &m_data); }
 
     MyQmlObject *object() const { return m_object; }
     void setObject(MyQmlObject *o) { m_object = o; emit objectChanged(); }
