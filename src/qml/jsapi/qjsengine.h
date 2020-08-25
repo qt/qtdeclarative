@@ -104,10 +104,6 @@ public:
     static void setObjectOwnership(QObject *, ObjectOwnership);
     static ObjectOwnership objectOwnership(QObject *);
 
-#if QT_DEPRECATED_SINCE(5, 6)
-    QT_DEPRECATED void installTranslatorFunctions(const QJSValue &object = QJSValue());
-#endif
-
     enum Extension {
         TranslationExtension = 0x1,
         ConsoleExtension = 0x2,

@@ -391,40 +391,6 @@ void QJSEngine::collectGarbage()
     m_v4Engine->memoryManager->runGC();
 }
 
-#if QT_DEPRECATED_SINCE(5, 6)
-
-/*!
-  \since 5.4
-  \obsolete
-
-  Installs translator functions on the given \a object, or on the Global
-  Object if no object is specified.
-
-  The relation between script translator functions and C++ translator
-  functions is described in the following table:
-
-    \table
-    \header \li Script Function \li Corresponding C++ Function
-    \row    \li qsTr()       \li QObject::tr()
-    \row    \li QT_TR_NOOP() \li QT_TR_NOOP()
-    \row    \li qsTranslate() \li QCoreApplication::translate()
-    \row    \li QT_TRANSLATE_NOOP() \li QT_TRANSLATE_NOOP()
-    \row    \li qsTrId() \li qtTrId()
-    \row    \li QT_TRID_NOOP() \li QT_TRID_NOOP()
-    \endtable
-
-  It also adds an arg() method to the string prototype.
-
-  \sa {Internationalization with Qt}
-*/
-void QJSEngine::installTranslatorFunctions(const QJSValue &object)
-{
-    installExtensions(TranslationExtension, object);
-}
-
-#endif // QT_DEPRECATED_SINCE(5, 6)
-
-
 /*!
     \since 5.6
 
