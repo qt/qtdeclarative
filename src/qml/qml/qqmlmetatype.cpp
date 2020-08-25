@@ -1034,30 +1034,6 @@ int QQmlMetaType::listType(int id)
         return 0;
 }
 
-#if QT_DEPRECATED_SINCE(5, 14)
-int QQmlMetaType::attachedPropertiesFuncId(QQmlEnginePrivate *engine, const QMetaObject *mo)
-{
-    QQmlMetaTypeDataPtr data;
-
-    for (auto it = data->metaObjectToType.constFind(mo), end = data->metaObjectToType.constEnd();
-         it != end && it.key() == mo; ++it) {
-        if (const QQmlTypePrivate *type = it.value()) {
-            if (const QQmlTypePrivate *base = type->attachedPropertiesBase(engine))
-                return base->index;
-        }
-    }
-    return -1;
-}
-
-QQmlAttachedPropertiesFunc QQmlMetaType::attachedPropertiesFuncById(QQmlEnginePrivate *engine, int id)
-{
-    if (id < 0)
-        return nullptr;
-    QQmlMetaTypeDataPtr data;
-    return data->types.at(id).attachedPropertiesFunction(engine);
-}
-#endif
-
 QQmlAttachedPropertiesFunc QQmlMetaType::attachedPropertiesFunc(QQmlEnginePrivate *engine,
                                                                 const QMetaObject *mo)
 {

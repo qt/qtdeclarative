@@ -635,20 +635,6 @@ const QMetaObject *QQmlType::attachedPropertiesType(QQmlEnginePrivate *engine) c
     return nullptr;
 }
 
-#if QT_DEPRECATED_SINCE(5, 14)
-/*
-This is the id passed to qmlAttachedPropertiesById().  This is different from the index
-for the case that a single class is registered under two or more names (eg. Item in
-Qt 4.7 and QtQuick 1.0).
-*/
-int QQmlType::attachedPropertiesId(QQmlEnginePrivate *engine) const
-{
-    if (const QQmlTypePrivate *base = d->attachedPropertiesBase(engine))
-        return base->index;
-    return -1;
-}
-#endif
-
 int QQmlType::parserStatusCast() const
 {
     if (!d || d->regType != CppType)

@@ -1542,43 +1542,6 @@ static QObject *resolveAttachedProperties(QQmlAttachedPropertiesFunc pf, QQmlDat
     return rv;
 }
 
-#if QT_DEPRECATED_SINCE(5, 14)
-QT_WARNING_PUSH
-QT_WARNING_DISABLE_DEPRECATED
-
-QObject *qmlAttachedPropertiesObjectById(int id, const QObject *object, bool create)
-{
-    QQmlData *data = QQmlData::get(object, create);
-
-    // Attached properties are only on objects created by QML,
-    // unless explicitly requested (create==true)
-    if (!data)
-        return nullptr;
-
-    QQmlEnginePrivate *engine = QQmlEnginePrivate::get(data->context);
-
-    const QQmlType type = QQmlMetaType::qmlType(id, QQmlMetaType::TypeIdCategory::QmlType);
-    return resolveAttachedProperties(type.attachedPropertiesFunction(engine), data,
-                                     const_cast<QObject *>(object), create);
-}
-
-QObject *qmlAttachedPropertiesObject(int *idCache, const QObject *object,
-                                     const QMetaObject *attachedMetaObject, bool create)
-{
-    if (*idCache == -1) {
-        QQmlEngine *engine = object ? qmlEngine(object) : nullptr;
-        *idCache = QQmlMetaType::attachedPropertiesFuncId(engine ? QQmlEnginePrivate::get(engine) : nullptr, attachedMetaObject);
-    }
-
-    if (*idCache == -1 || !object)
-        return nullptr;
-
-    return qmlAttachedPropertiesObjectById(*idCache, object, create);
-}
-
-QT_WARNING_POP
-#endif
-
 QQmlAttachedPropertiesFunc qmlAttachedPropertiesFunction(QObject *object,
                                                          const QMetaObject *attachedMetaObject)
 {
@@ -1623,18 +1586,6 @@ Q_QML_EXPORT QQmlContext *qmlContext(const QObject *obj)
 Q_QML_EXPORT QQmlEngine *qmlEngine(const QObject *obj)
 {
     return QtQml::qmlEngine(obj);
-}
-
-Q_QML_EXPORT QObject *qmlAttachedPropertiesObjectById(int id, const QObject *obj, bool create)
-{
-    return QtQml::qmlAttachedPropertiesObjectById(id, obj, create);
-}
-
-Q_QML_EXPORT QObject *qmlAttachedPropertiesObject(int *idCache, const QObject *object,
-                                                  const QMetaObject *attachedMetaObject,
-                                                  bool create)
-{
-    return QtQml::qmlAttachedPropertiesObject(idCache, object, attachedMetaObject, create);
 }
 
 QT_WARNING_POP

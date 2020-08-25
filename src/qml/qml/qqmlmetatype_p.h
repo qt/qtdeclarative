@@ -142,12 +142,6 @@ public:
     static QObject *toQObject(const QVariant &, bool *ok = nullptr);
 
     static int listType(int);
-#if QT_DEPRECATED_SINCE(5, 14)
-    static QT_DEPRECATED int attachedPropertiesFuncId(QQmlEnginePrivate *engine,
-                                                      const QMetaObject *);
-    static QT_DEPRECATED QQmlAttachedPropertiesFunc attachedPropertiesFuncById(QQmlEnginePrivate *,
-                                                                               int);
-#endif
     static QQmlAttachedPropertiesFunc attachedPropertiesFunc(QQmlEnginePrivate *,
                                                              const QMetaObject *);
 
