@@ -190,14 +190,6 @@ int qmlRegisterAnonymousType(const char *uri, int versionMajor)
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
 }
 
-#if QT_DEPRECATED_SINCE(5, 14)
-template<typename T>
-QT_DEPRECATED_VERSION_X_5_14("Use qmlRegisterAnonymousType instead") int qmlRegisterType()
-{
-    return qmlRegisterAnonymousType<T>("", 1);
-}
-#endif
-
 int Q_QML_EXPORT qmlRegisterTypeNotAvailable(const char *uri, int versionMajor, int versionMinor,
                                              const char *qmlName, const QString& message);
 
@@ -451,15 +443,6 @@ int qmlRegisterExtendedType(const char *uri, int versionMajor)
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
 }
 
-#if QT_DEPRECATED_SINCE(5, 15)
-template<typename T, typename E>
-QT_DEPRECATED_VERSION_X_5_15("Use qmlRegisterExtendedType(uri, versionMajor) instead")
-int qmlRegisterExtendedType()
-{
-    return qmlRegisterExtendedType<T, E>("", 0);
-}
-#endif
-
 template<typename T, typename E>
 int qmlRegisterExtendedType(const char *uri, int versionMajor, int versionMinor,
                             const char *qmlName)
@@ -495,31 +478,6 @@ int qmlRegisterExtendedType(const char *uri, int versionMajor, int versionMinor,
 
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
 }
-
-#if QT_DEPRECATED_SINCE(5, 15)
-template<typename T>
-QT_DEPRECATED_VERSION_X_5_15("Use qmlRegisterInterface(uri, versionMajor) instead")
-int qmlRegisterInterface(const char *typeName)
-{
-    QByteArray name(typeName);
-
-    QByteArray pointerName(name + '*');
-    QByteArray listName("QQmlListProperty<" + name + '>');
-
-    QQmlPrivate::RegisterInterface qmlInterface = {
-        0,
-
-        QMetaType::fromType<T *>(),
-        QMetaType::fromType<QQmlListProperty<T> >(),
-
-        qobject_interface_iid<T *>(),
-        "",
-        QTypeRevision::zero()
-    };
-
-    return QQmlPrivate::qmlregister(QQmlPrivate::InterfaceRegistration, &qmlInterface);
-}
-#endif
 
 template<typename T>
 int qmlRegisterInterface(const char *uri, int versionMajor)

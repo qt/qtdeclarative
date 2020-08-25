@@ -47,7 +47,7 @@ static QJSValue myQJSValueQObjectSingleton(QQmlEngine *engine, QJSEngine *script
 
 void registerTypes()
 {
-    qmlRegisterInterface<MyInterface>("MyInterface");
+    qmlRegisterInterface<MyInterface>("MyInterface", 1);
     qmlRegisterType<MyQmlObject>("Test",1,0,"MyQmlObject");
     qmlRegisterType<MyTypeObject>("Test",1,0,"MyTypeObject");
     qmlRegisterType<MyContainer>("Test",1,0,"MyContainer");

@@ -2146,7 +2146,7 @@ void tst_qqmlproperty::nullPropertyBinding()
 
 void tst_qqmlproperty::interfaceBinding()
 {
-    qmlRegisterInterface<Interface>("Interface");
+    qmlRegisterInterface<Interface>("Interface", 1);
     qmlRegisterType<A>("io.qt.bugreports", 1, 0, "A");
     qmlRegisterType<B>("io.qt.bugreports", 1, 0, "B");
     qmlRegisterType<C>("io.qt.bugreports", 1, 0, "C");
