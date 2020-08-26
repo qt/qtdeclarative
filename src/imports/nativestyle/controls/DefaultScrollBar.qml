@@ -62,6 +62,5 @@ T.ScrollBar {
     contentItem: NativeStyle.ScrollBar {
         control: control
         subControl: NativeStyle.ScrollBar.Handle
-        width: control.width
     }
 }
