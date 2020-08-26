@@ -58,6 +58,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickRoundButton : public QQuickButton
 {
     Q_OBJECT
     Q_PROPERTY(qreal radius READ radius WRITE setRadius RESET resetRadius NOTIFY radiusChanged FINAL)
+    QML_NAMED_ELEMENT(RoundButton)
+    QML_ADDED_IN_VERSION(2, 1)
 
 public:
     explicit QQuickRoundButton(QQuickItem *parent = nullptr);

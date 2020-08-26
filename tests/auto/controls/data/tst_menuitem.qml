@@ -48,9 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtTest 1.0
-import QtQuick.Controls 2.12
+import QtQuick
+import QtTest
+import QtQuick.Controls
 
 TestCase {
     id: testCase
@@ -119,11 +119,11 @@ TestCase {
         var control = createTemporaryObject(menuItem, testCase, {
             text: "MenuItem",
             display: data.display,
-            "icon.source": "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png",
+            "icon.source": "qrc:/qt-project.org/imports/QtQuick/Controls/Default/images/check.png",
             "LayoutMirroring.enabled": !!data.mirrored
         })
         verify(control)
-        compare(control.icon.source, "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png")
+        compare(control.icon.source, "qrc:/qt-project.org/imports/QtQuick/Controls/Default/images/check.png")
 
         var padding = data.mirrored ? control.contentItem.rightPadding : control.contentItem.leftPadding
         var iconImage = findChild(control.contentItem, "image")

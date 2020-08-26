@@ -34,13 +34,13 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.15
-import QtQuick.Window 2.15
-import QtQuick.Templates 2.15 as T
-import QtQuick.Controls 2.15
-import QtQuick.Controls.impl 2.15
-import QtQuick.Controls.Fusion 2.15
-import QtQuick.Controls.Fusion.impl 2.15
+import QtQuick
+import QtQuick.Window
+import QtQuick.Templates as T
+import QtQuick.Controls
+import QtQuick.Controls.impl
+import QtQuick.Controls.Fusion
+import QtQuick.Controls.Fusion.impl
 
 T.ComboBox {
     id: control
@@ -66,7 +66,7 @@ T.ComboBox {
         x: control.mirrored ? control.padding : control.width - width - control.padding
         y: control.topPadding + (control.availableHeight - height) / 2
         color: control.editable ? control.palette.text : control.palette.buttonText
-        source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Fusion/images/arrow.png"
+        source: "qrc:/qt-project.org/imports/QtQuick/Controls/Fusion/images/arrow.png"
         width: 20
         fillMode: Image.Pad
     }

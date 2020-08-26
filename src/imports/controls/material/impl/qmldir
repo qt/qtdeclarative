@@ -1,0 +1,12 @@
+module QtQuick.Controls.Material.impl
+plugin qtquickcontrols2materialstyleimplplugin
+classname QtQuickControls2MaterialStyleImplPlugin
+
+BoxShadow 2.0 BoxShadow.qml
+CheckIndicator 2.0 CheckIndicator.qml
+CursorDelegate 2.0 CursorDelegate.qml
+ElevationEffect 2.0 ElevationEffect.qml
+RadioIndicator 2.0 RadioIndicator.qml
+RectangularGlow 2.0 RectangularGlow.qml
+SliderHandle 2.0 SliderHandle.qml
+SwitchIndicator 2.0 SwitchIndicator.qml

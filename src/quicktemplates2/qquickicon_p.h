@@ -54,6 +54,7 @@
 #include <QtCore/qshareddata.h>
 #include <QtQuickTemplates2/private/qtquicktemplates2global_p.h>
 #include <QtGui/qcolor.h>
+#include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -68,6 +69,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickIcon
     Q_PROPERTY(int height READ height WRITE setHeight RESET resetHeight FINAL)
     Q_PROPERTY(QColor color READ color WRITE setColor RESET resetColor FINAL)
     Q_PROPERTY(bool cache READ cache WRITE setCache RESET resetCache FINAL)
+    QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 3)
 
 public:
     QQuickIcon();

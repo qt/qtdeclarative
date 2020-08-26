@@ -12,3 +12,9 @@ HEADERS += \
 
 include(quicktemplates2.pri)
 load(qt_module)
+
+QMLTYPES_FILENAME = plugins.qmltypes
+QMLTYPES_INSTALL_DIR = $$[QT_INSTALL_QML]/QtQuick/Templates
+QML_IMPORT_NAME = QtQuick.Templates
+QML_IMPORT_VERSION = $$QT_VERSION
+CONFIG += qmltypes install_qmltypes install_metatypes

@@ -5,6 +5,7 @@
 #####################################################################
 
 qt_add_module(QuickTemplates2
+    GENERATE_METATYPES
     SOURCES
         qquickabstractbutton.cpp qquickabstractbutton_p.h
         qquickabstractbutton_p_p.h
@@ -129,6 +130,10 @@ qt_add_module(QuickTemplates2
 
 #### Keys ignored in scope 1:.:.:quicktemplates2.pro:<TRUE>:
 # MODULE = "quicktemplates2"
+# QMLTYPES_FILENAME = "plugins.qmltypes"
+# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQuick/Templates"
+# QML_IMPORT_NAME = "QtQuick.Templates"
+# QML_IMPORT_VERSION = "$$QT_VERSION"
 
 ## Scopes:
 #####################################################################
@@ -147,3 +152,13 @@ qt_extend_target(QuickTemplates2 CONDITION QT_FEATURE_quick_listview AND QT_FEAT
         qquicktumbler.cpp qquicktumbler_p.h
         qquicktumbler_p_p.h
 )
+
+set_target_properties(QuickTemplates2 PROPERTIES
+    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
+    QT_QML_MODULE_VERSION ${CMAKE_PROJECT_VERSION}
+    QT_QML_MODULE_URI QtQuick.Templates
+    QT_QMLTYPES_FILENAME plugins.qmltypes
+    QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQuick/Templates"
+)
+
+qt6_qml_type_registration(QuickTemplates2)

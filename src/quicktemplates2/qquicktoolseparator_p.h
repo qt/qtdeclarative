@@ -60,6 +60,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickToolSeparator : public QQuickContro
     Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)
     Q_PROPERTY(bool horizontal READ isHorizontal NOTIFY orientationChanged FINAL)
     Q_PROPERTY(bool vertical READ isVertical NOTIFY orientationChanged FINAL)
+    QML_NAMED_ELEMENT(ToolSeparator)
+    QML_ADDED_IN_VERSION(2, 1)
 
 public:
     explicit QQuickToolSeparator(QQuickItem *parent = nullptr);

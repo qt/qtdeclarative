@@ -95,7 +95,7 @@ void QQuickVisualTestUtil::centerOnScreen(QQuickWindow *window)
     window->setFramePosition(screenGeometry.center() - offset);
 }
 
-void QQuickVisualTestUtil::addTestRowForEachControl(QQmlEngine *engine, const QString &sourcePath, const QString &targetPath, const QStringList &skiplist)
+void QQuickVisualTestUtil::forEachControl(QQmlEngine *engine, const QString &sourcePath, const QString &targetPath, const QStringList &skipList, QQuickVisualTestUtil::ForEachCallback callback)
 {
     // We cannot use QQmlComponent to load QML files directly from the source tree.
     // For styles that use internal QML types (eg. material/Ripple.qml), the source
@@ -111,7 +111,7 @@ void QQuickVisualTestUtil::addTestRowForEachControl(QQmlEngine *engine, const QS
     const QFileInfoList entries = QDir(QQC2_IMPORT_PATH "/" + sourcePath).entryInfoList(QStringList("*.qml"), QDir::Files);
     for (const QFileInfo &entry : entries) {
         QString name = entry.baseName();
-        if (!skiplist.contains(name)) {
+        if (!skipList.contains(name)) {
             const auto importPathList = engine->importPathList();
             for (const QString &importPath : importPathList) {
                 QString name = entry.dir().dirName() + "/" + entry.fileName();
@@ -119,17 +119,24 @@ void QQuickVisualTestUtil::addTestRowForEachControl(QQmlEngine *engine, const QS
                 if (filePath.startsWith(":"))
                     filePath.prepend("qrc");
                 if (QFile::exists(filePath)) {
-                    QTest::newRow(qPrintable(name)) << QUrl::fromLocalFile(filePath);
+                    callback(name, QUrl::fromLocalFile(filePath));
                     break;
                 } else {
                     QUrl url(filePath);
                     filePath = QQmlFile::urlToLocalFileOrQrc(filePath);
                     if (!filePath.isEmpty() && QFile::exists(filePath)) {
-                        QTest::newRow(qPrintable(name)) << url;
+                        callback(name, url);
                         break;
                     }
                 }
             }
         }
     }
+}
+
+void QQuickVisualTestUtil::addTestRowForEachControl(QQmlEngine *engine, const QString &sourcePath, const QString &targetPath, const QStringList &skipList)
+{
+    forEachControl(engine, sourcePath, targetPath, skipList, [&](const QString &relativePath, const QUrl &absoluteUrl) {
+        QTest::newRow(qPrintable(relativePath)) << absoluteUrl;
+    });
 }

@@ -64,12 +64,15 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickScrollIndicator : public QQuickCont
     Q_PROPERTY(bool active READ isActive WRITE setActive NOTIFY activeChanged FINAL)
     Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)
     // 2.3 (Qt 5.10)
-    Q_PROPERTY(bool horizontal READ isHorizontal NOTIFY orientationChanged FINAL REVISION 3)
-    Q_PROPERTY(bool vertical READ isVertical NOTIFY orientationChanged FINAL REVISION 3)
+    Q_PROPERTY(bool horizontal READ isHorizontal NOTIFY orientationChanged FINAL REVISION(2, 3))
+    Q_PROPERTY(bool vertical READ isVertical NOTIFY orientationChanged FINAL REVISION(2, 3))
     // 2.4 (Qt 5.11)
-    Q_PROPERTY(qreal minimumSize READ minimumSize WRITE setMinimumSize NOTIFY minimumSizeChanged FINAL REVISION 4)
-    Q_PROPERTY(qreal visualSize READ visualSize NOTIFY visualSizeChanged FINAL REVISION 4)
-    Q_PROPERTY(qreal visualPosition READ visualPosition NOTIFY visualPositionChanged FINAL REVISION 4)
+    Q_PROPERTY(qreal minimumSize READ minimumSize WRITE setMinimumSize NOTIFY minimumSizeChanged FINAL REVISION(2, 4))
+    Q_PROPERTY(qreal visualSize READ visualSize NOTIFY visualSizeChanged FINAL REVISION(2, 4))
+    Q_PROPERTY(qreal visualPosition READ visualPosition NOTIFY visualPositionChanged FINAL REVISION(2, 4))
+    QML_NAMED_ELEMENT(ScrollIndicator)
+    QML_ATTACHED(QQuickScrollIndicatorAttached)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickScrollIndicator(QQuickItem *parent = nullptr);
@@ -106,9 +109,9 @@ Q_SIGNALS:
     void activeChanged();
     void orientationChanged();
     // 2.4 (Qt 5.11)
-    Q_REVISION(4) void minimumSizeChanged();
-    Q_REVISION(4) void visualSizeChanged();
-    Q_REVISION(4) void visualPositionChanged();
+    Q_REVISION(2, 4) void minimumSizeChanged();
+    Q_REVISION(2, 4) void visualSizeChanged();
+    Q_REVISION(2, 4) void visualPositionChanged();
 
 protected:
 #if QT_CONFIG(quicktemplates2_multitouch)

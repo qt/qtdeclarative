@@ -48,10 +48,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.15
-import QtQuick.Window 2.15
-import QtQuick.Controls 2.15
-import TestTableModel 0.1
+import QtQuick
+import QtQuick.Window
+import QtQuick.Controls
+import TestTableModel
 
 Window {
     objectName: "window"

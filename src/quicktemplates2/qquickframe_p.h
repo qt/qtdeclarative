@@ -57,6 +57,8 @@ class QQuickFramePrivate;
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickFrame : public QQuickPane
 {
     Q_OBJECT
+    QML_NAMED_ELEMENT(Frame)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickFrame(QQuickItem *parent = nullptr);

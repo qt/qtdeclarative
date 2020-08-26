@@ -63,6 +63,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickProgressBar : public QQuickControl
     Q_PROPERTY(qreal position READ position NOTIFY positionChanged FINAL)
     Q_PROPERTY(qreal visualPosition READ visualPosition NOTIFY visualPositionChanged FINAL)
     Q_PROPERTY(bool indeterminate READ isIndeterminate WRITE setIndeterminate NOTIFY indeterminateChanged FINAL)
+    QML_NAMED_ELEMENT(ProgressBar)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickProgressBar(QQuickItem *parent = nullptr);

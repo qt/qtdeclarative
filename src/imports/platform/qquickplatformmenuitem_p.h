@@ -80,7 +80,7 @@ class QQuickPlatformMenuItem : public QObject, public QQmlParserStatus
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged FINAL)
     Q_PROPERTY(QVariant shortcut READ shortcut WRITE setShortcut NOTIFY shortcutChanged FINAL)
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged FINAL)
-    Q_PROPERTY(QQuickPlatformIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION 1)
+    Q_PROPERTY(QQuickPlatformIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION(1, 1))
     Q_ENUMS(QPlatformMenuItem::MenuRole)
 
 public:
@@ -149,7 +149,7 @@ Q_SIGNALS:
     void textChanged();
     void shortcutChanged();
     void fontChanged();
-    Q_REVISION(1) void iconChanged();
+    Q_REVISION(2, 1) void iconChanged();
 
 protected:
     void classBegin() override;

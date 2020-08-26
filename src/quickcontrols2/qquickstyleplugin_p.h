@@ -49,14 +49,13 @@
 //
 
 #include <QtQml/qqmlextensionplugin.h>
-#include <QtQuickControls2/private/qtquickcontrols2global_p.h>
+#include <QtQuickControls2/qtquickcontrols2global.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickTheme;
-class QQuickStylePluginPrivate;
 
-class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickStylePlugin : public QQmlExtensionPlugin
+class Q_QUICKCONTROLS2_EXPORT QQuickStylePlugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
 
@@ -65,15 +64,12 @@ public:
     ~QQuickStylePlugin();
 
     virtual QString name() const;
-    virtual void initializeTheme(QQuickTheme *theme);
-    virtual void unregisterTypes() override;
 
-    QUrl resolvedUrl(const QString &fileName) const;
+    void registerTypes(const char *uri) override;
+    void unregisterTypes() override;
 
 private:
     Q_DISABLE_COPY(QQuickStylePlugin)
-    Q_DECLARE_PRIVATE(QQuickStylePlugin)
-    QScopedPointer<QQuickStylePluginPrivate> d_ptr;
 };
 
 QT_END_NAMESPACE

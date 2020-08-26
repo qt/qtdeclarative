@@ -57,6 +57,8 @@ class QQuickToolButtonPrivate;
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickToolButton : public QQuickButton
 {
     Q_OBJECT
+    QML_NAMED_ELEMENT(ToolButton)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickToolButton(QQuickItem *parent = nullptr);

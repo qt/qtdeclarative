@@ -58,7 +58,7 @@
     \c Button.qml. This file can be found in the following path in your Qt
     installation:
 
-    \c {$QTDIR/qml/QtQuick/Controls.2/Button.qml}
+    \c {$QTDIR/qml/QtQuick/Controls/Default/Button.qml}
 
     After doing that, we'll simply add the following line:
 
@@ -112,7 +112,7 @@
     \section2 Definition of a Style
 
     In Qt Quick Controls, a style is essentially an interchangeable set of
-    QML files within a single directory. There are three requirements for a style
+    QML files within a single directory. There are four requirements for a style
     to be \l {Using Styles in Qt Quick Controls}{usable}:
 
     \list
@@ -125,21 +125,37 @@
         If we instead used the corresponding type from the \l {Qt Quick Controls}
         {QtQuick.Controls} import as we did in the previous section, it would not work:
         the control we were defining would try to derive from itself.
-    \li The files must be in a directory in the filesystem or in the
-        \l {The Qt Resource System}{resource system}.
+    \li A \l {Module Definition qmldir Files}{qmldir} file must exist alongside
+        the QML file(s). Below is an example of a simple \c qmldir file for a style that
+        provides a button:
 
-        For example, these are all valid paths to a style:
+        \badcode
+        module MyStyle
+        Button 2.15 Button.qml
+        \endcode
+
+        The directory structure for such a style looks like this:
+
+        \badcode
+        MyStyle
+        ├─── Button.qml
+        └─── qmldir
+        \endcode
+    \li The files must be in a directory that is findable via the \l {QML Import Path}.
+
+        For example, if the path to \e MyStyle directory mentioned above was
+        \c /home/user/MyApp/MyStyle, then \c /home/user/MyApp must be added to
+        the QML import path.
+
+        To \l {Using Styles in Qt Quick Controls}{use} \e MyStyle in \e MyApp,
+        refer to it by name:
 
         \list
-        \li \c {./myapp -style /home/absolute/path/to/my/style}
-        \li \c {./myapp -style :/mystyle}
-        \li \c {./myapp -style relative/path/to/my/style}
-        \li \c {./myapp -style MyStyle}
+        \li \c {./MyApp -style MyStyle}
         \endlist
 
-        The third and fourth paths will be looked up within the QML engine's import path
-        list. This is the same as what happens when you pass \c Material as the style,
-        for example.
+        The style name must match the casing of the style directory; passing
+        \e mystyle or \e MYSTYLE is not supported.
     \endlist
 
     By default, the styling system uses the Default style as a fallback for
@@ -302,7 +318,7 @@
     style will illustrate the elevation with a drop shadow; the higher the
     elevation, the larger the shadow.
 
-    The first step is to \l {Qt Creator: Creating Qt Quick Projects}{create a new Qt Quick
+    The first step is to \l {Creating Qt Quick Projects}{create a new Qt Quick
     Controls 2 application} in Qt Creator. After that, we
     \l {Qt Creator: Creating C++ Classes}{add a C++ type} that stores the elevation. Since
     the type will be used for every control supported by our style, and because
@@ -390,6 +406,8 @@
         qmlRegisterUncreatableType<MyStyle>("MyStyle", 1, 0, "MyStyle", "MyStyle is an attached property");
 
         QQmlApplicationEngine engine;
+        // Make the directory containing our style known to the QML engine.
+        engine.addImportPath(":/");
         engine.load(QUrl(QLatin1String("qrc:/main.qml")));
 
         return app.exec();
@@ -397,7 +415,7 @@
     \endcode
 
     We then copy \c Button.qml from the Default style in
-    \c {$QTDIR/qml/QtQuick/Controls.2/} into a new \c myproject folder in our
+    \c {$QTDIR/qml/QtQuick/Controls/Default/} into a new \c myproject folder in our
     project directory. Add the newly copied \c Button.qml to \c qml.qrc, which is
     the resource file that contains our QML files.
 
@@ -465,7 +483,7 @@
     One button has no elevation, and the other has an elevation of \c 10.
 
     With that in place, we can run our example. To tell the application to
-    use our new style, we pass \c {-style :/mystyle} as an application
+    use our new style, we pass \c {-style MyStyle} as an application
     argument, but there are \l {Using Styles in Qt Quick Controls}{many
     ways} to specify the style to use.
 

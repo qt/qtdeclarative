@@ -37,39 +37,23 @@
 #include <QtCore/qdir.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qfileinfo.h>
+#include <QtCore/qloggingcategory.h>
 #include <QtCore/qpluginloader.h>
 #include <QtCore/private/qfileselector_p.h>
 #include <QtQml/qqmlfile.h>
+#include <QtQml/qqmlextensionplugin.h>
+#include <QtQml/qqmlengine.h>
 #include <QtQml/private/qqmldirparser_p.h>
 #include <QtQuickControls2/qquickstyle.h>
-#include <QtQuickControls2/private/qquickchecklabel_p.h>
-#include <QtQuickControls2/private/qquickcolor_p.h>
-#include <QtQuickControls2/private/qquickcolorimage_p.h>
-#include <QtQuickControls2/private/qquickiconimage_p.h>
-#include <QtQuickControls2/private/qquickmnemoniclabel_p.h>
-#include <QtQuickControls2/private/qquickpaddedrectangle_p.h>
-#include <QtQuickControls2/private/qquickplaceholdertext_p.h>
-#include <QtQuickControls2/private/qquickiconlabel_p.h>
 #include <QtQuickControls2/private/qquickstyle_p.h>
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
-#if QT_CONFIG(quick_listview) && QT_CONFIG(quick_pathview)
-#include <QtQuickControls2/private/qquicktumblerview_p.h>
-#endif
-#include <QtQuickTemplates2/private/qquickoverlay_p.h>
-#include <QtQuickTemplates2/private/qquicksplitview_p.h>
-#include <QtQuickControls2/private/qquickclippedtext_p.h>
-#include <QtQuickControls2/private/qquickitemgroup_p.h>
 #include <QtQuickTemplates2/private/qquicktheme_p_p.h>
-
-#include "qquickdefaultbusyindicator_p.h"
-#include "qquickdefaultdial_p.h"
-#include "qquickdefaultprogressbar_p.h"
-#include "qquickdefaultstyle_p.h"
-#include "qquickdefaulttheme_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QtQuickControls2Plugin: public QQuickStylePlugin
+Q_LOGGING_CATEGORY(lcQtQuickControlsStylePlugin, "qt.quick.controls.qtquickcontrols2plugin")
+
+class QtQuickControls2Plugin : public QQmlExtensionPlugin
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
@@ -81,15 +65,39 @@ public:
     void registerTypes(const char *uri) override;
     void unregisterTypes() override;
 
-    QString name() const override;
-    void initializeTheme(QQuickTheme *theme) override;
-
 private:
-    QList<QQuickStylePlugin *> loadStylePlugins();
     QQuickTheme *createTheme(const QString &name);
+
+    bool registeredFallbackImport = false;
 };
 
-QtQuickControls2Plugin::QtQuickControls2Plugin(QObject *parent) : QQuickStylePlugin(parent)
+static const char *qtQuickControlsUri = "QtQuick.Controls";
+
+QString styleUri()
+{
+    const QString style = QQuickStyle::name();
+    if (!QQuickStylePrivate::isCustomStyle()) {
+        // The style set is a built-in style.
+        const QString styleName = QQuickStylePrivate::effectiveStyleName(style);
+        return QString::fromLatin1("QtQuick.Controls.%1").arg(styleName);
+    }
+
+    // This is a custom style, so just use the name as the import uri.
+    QString styleName = style;
+    if (styleName.startsWith(QLatin1String(":/")))
+        styleName.remove(0, 2);
+    return styleName;
+}
+
+QString fallbackStyleUri()
+{
+    // The fallback style must be a built-in style, so we don't need to check for custom styles here.
+    const QString fallbackStyle = QQuickStylePrivate::fallbackStyle();
+    const QString fallbackStyleName = QQuickStylePrivate::effectiveStyleName(fallbackStyle);
+    return QString::fromLatin1("QtQuick.Controls.%1").arg(fallbackStyleName);
+}
+
+QtQuickControls2Plugin::QtQuickControls2Plugin(QObject *parent) : QQmlExtensionPlugin(parent)
 {
 }
 
@@ -99,213 +107,83 @@ QtQuickControls2Plugin::~QtQuickControls2Plugin()
     // initialization and cleanup, as plugins are not unloaded on macOS.
 }
 
-static bool isDefaultStyle(const QString &style)
-{
-    return style.isEmpty() || style.compare(QStringLiteral("Default"), Qt::CaseInsensitive) == 0;
-}
-
 void QtQuickControls2Plugin::registerTypes(const char *uri)
 {
-    QQuickStylePrivate::init(baseUrl());
+    qCDebug(lcQtQuickControlsStylePlugin) << "registerTypes() called with uri" << uri;
+
+    // It's OK that the style is resolved more than once; some accessors like name() cause it to be called, for example.
+    QQuickStylePrivate::init();
+
+    const QString styleName = QQuickStylePrivate::effectiveStyleName(QQuickStyle::name());
+    const QString fallbackStyleName = QQuickStylePrivate::effectiveStyleName(QQuickStylePrivate::fallbackStyle());
+    qCDebug(lcQtQuickControlsStylePlugin) << "style:" << QQuickStyle::name() << "effective style:" << styleName
+        << "fallback style:" << QQuickStylePrivate::fallbackStyle() << "effective fallback style:" << fallbackStyleName;
+
+    createTheme(styleName);
+
+    // If the style is Default, we don't need to register the fallback because the Default style
+    // provides all controls. Also, if we didn't return early here, we can get an infinite import loop
+    // when the style is set to Default.
+    if (styleName != fallbackStyleName && styleName != QLatin1String("Default")) {
+        const QString fallbackstyleUri = ::fallbackStyleUri();
+        qCDebug(lcQtQuickControlsStylePlugin) << "calling qmlRegisterModuleImport() to register fallback style with"
+            << "uri \"" << qtQuickControlsUri << "\" moduleMajor" << QQmlModuleImportModuleAny << "import" << fallbackstyleUri
+            << "importMajor" << QQmlModuleImportAuto;
+        // The fallback style must be a built-in style, so we match the version number.
+        qmlRegisterModuleImport(qtQuickControlsUri, QQmlModuleImportModuleAny, fallbackstyleUri.toUtf8().constData(),
+            QQmlModuleImportAuto, QQmlModuleImportAuto);
+        registeredFallbackImport = true;
+    }
+
+    const QString styleUri = ::styleUri();
+    // If the user imports QtQuick.Controls 2.15, and they're using the Material style, we should import version 2.15.
+    // However, if they import QtQuick.Controls 2.15, but are using a custom style, we want to use the latest version
+    // number of their style.
+    const int importMajor = !QQuickStylePrivate::isCustomStyle() ? QQmlModuleImportAuto : QQmlModuleImportLatest;
+    qCDebug(lcQtQuickControlsStylePlugin).nospace() << "calling qmlRegisterModuleImport() to register primary style with"
+        << " uri \"" << qtQuickControlsUri << "\" moduleMajor " << importMajor << " import " << styleUri
+        << " importMajor " << importMajor;
+    qmlRegisterModuleImport(qtQuickControlsUri, QQmlModuleImportModuleAny, styleUri.toUtf8().constData(), importMajor);
 
     const QString style = QQuickStyle::name();
     if (!style.isEmpty())
-        QFileSelectorPrivate::addStatics(QStringList() << style.toLower());
-
-    QQuickTheme *theme = createTheme(style.isEmpty() ? name() : style);
-    if (isDefaultStyle(style))
-        initializeTheme(theme);
-
-    // load the style's plugins to get access to its resources and initialize the theme
-    QList<QQuickStylePlugin *> stylePlugins = loadStylePlugins();
-    for (QQuickStylePlugin *stylePlugin : stylePlugins)
-        stylePlugin->initializeTheme(theme);
-    qDeleteAll(stylePlugins);
-
-    // The minor version used to be the current Qt 5 minor. For compatibility it is the last
-    // Qt 5 release.
-    qmlRegisterModule(uri, 2, 15);
-
-    // QtQuick.Controls 2.0 (originally introduced in Qt 5.7)
-    qmlRegisterType(resolvedUrl(QStringLiteral("AbstractButton.qml")), uri, 2, 0, "AbstractButton");
-    qmlRegisterType(resolvedUrl(QStringLiteral("ApplicationWindow.qml")), uri, 2, 0, "ApplicationWindow");
-    qmlRegisterType(resolvedUrl(QStringLiteral("BusyIndicator.qml")), uri, 2, 0, "BusyIndicator");
-    qmlRegisterType(resolvedUrl(QStringLiteral("Button.qml")), uri, 2, 0, "Button");
-    qmlRegisterType(resolvedUrl(QStringLiteral("ButtonGroup.qml")), uri, 2, 0, "ButtonGroup");
-    qmlRegisterType(resolvedUrl(QStringLiteral("CheckBox.qml")), uri, 2, 0, "CheckBox");
-    qmlRegisterType(resolvedUrl(QStringLiteral("CheckDelegate.qml")), uri, 2, 0, "CheckDelegate");
-    qmlRegisterType(resolvedUrl(QStringLiteral("ComboBox.qml")), uri, 2, 0, "ComboBox");
-    qmlRegisterType(resolvedUrl(QStringLiteral("Container.qml")), uri, 2, 0, "Container");
-    qmlRegisterType(resolvedUrl(QStringLiteral("Control.qml")), uri, 2, 0, "Control");
-    qmlRegisterType(resolvedUrl(QStringLiteral("Dial.qml")), uri, 2, 0, "Dial");
-    qmlRegisterType(resolvedUrl(QStringLiteral("Drawer.qml")), uri, 2, 0, "Drawer");
-    qmlRegisterType(resolvedUrl(QStringLiteral("Frame.qml")), uri, 2, 0, "Frame");
-    qmlRegisterType(resolvedUrl(QStringLiteral("GroupBox.qml")), uri, 2, 0, "GroupBox");
-    qmlRegisterType(resolvedUrl(QStringLiteral("ItemDelegate.qml")), uri, 2, 0, "ItemDelegate");
-    qmlRegisterType(resolvedUrl(QStringLiteral("Label.qml")), uri, 2, 0, "Label");
-    qmlRegisterType(resolvedUrl(QStringLiteral("Menu.qml")), uri, 2, 0, "Menu");
-    qmlRegisterType(resolvedUrl(QStringLiteral("MenuItem.qml")), uri, 2, 0, "MenuItem");
-    qmlRegisterType(resolvedUrl(QStringLiteral("Page.qml")), uri, 2, 0, "Page");
-    qmlRegisterType(resolvedUrl(QStringLiteral("PageIndicator.qml")), uri, 2, 0, "PageIndicator");
-    qmlRegisterType(resolvedUrl(QStringLiteral("Pane.qml")), uri, 2, 0, "Pane");
-    qmlRegisterType(resolvedUrl(QStringLiteral("Popup.qml")), uri, 2, 0, "Popup");
-    qmlRegisterType(resolvedUrl(QStringLiteral("ProgressBar.qml")), uri, 2, 0, "ProgressBar");
-    qmlRegisterType(resolvedUrl(QStringLiteral("RadioButton.qml")), uri, 2, 0, "RadioButton");
-    qmlRegisterType(resolvedUrl(QStringLiteral("RadioDelegate.qml")), uri, 2, 0, "RadioDelegate");
-    qmlRegisterType(resolvedUrl(QStringLiteral("RangeSlider.qml")), uri, 2, 0, "RangeSlider");
-    qmlRegisterType(resolvedUrl(QStringLiteral("ScrollBar.qml")), uri, 2, 0, "ScrollBar");
-    qmlRegisterType(resolvedUrl(QStringLiteral("ScrollIndicator.qml")), uri, 2, 0, "ScrollIndicator");
-    qmlRegisterType(resolvedUrl(QStringLiteral("Slider.qml")), uri, 2, 0, "Slider");
-    qmlRegisterType(resolvedUrl(QStringLiteral("SpinBox.qml")), uri, 2, 0, "SpinBox");
-    qmlRegisterType(resolvedUrl(QStringLiteral("StackView.qml")), uri, 2, 0, "StackView");
-    qmlRegisterType(resolvedUrl(QStringLiteral("SwipeDelegate.qml")), uri, 2, 0, "SwipeDelegate");
-    qmlRegisterType(resolvedUrl(QStringLiteral("SwipeView.qml")), uri, 2, 0, "SwipeView");
-    qmlRegisterType(resolvedUrl(QStringLiteral("Switch.qml")), uri, 2, 0, "Switch");
-    qmlRegisterType(resolvedUrl(QStringLiteral("SwitchDelegate.qml")), uri, 2, 0, "SwitchDelegate");
-    qmlRegisterType(resolvedUrl(QStringLiteral("TabBar.qml")), uri, 2, 0, "TabBar");
-    qmlRegisterType(resolvedUrl(QStringLiteral("TabButton.qml")), uri, 2, 0, "TabButton");
-    qmlRegisterType(resolvedUrl(QStringLiteral("TextArea.qml")), uri, 2, 0, "TextArea");
-    qmlRegisterType(resolvedUrl(QStringLiteral("TextField.qml")), uri, 2, 0, "TextField");
-    qmlRegisterType(resolvedUrl(QStringLiteral("ToolBar.qml")), uri, 2, 0, "ToolBar");
-    qmlRegisterType(resolvedUrl(QStringLiteral("ToolButton.qml")), uri, 2, 0, "ToolButton");
-    qmlRegisterType(resolvedUrl(QStringLiteral("ToolTip.qml")), uri, 2, 0, "ToolTip");
-#if QT_CONFIG(quick_listview) && QT_CONFIG(quick_pathview)
-    qmlRegisterType(resolvedUrl(QStringLiteral("Tumbler.qml")), uri, 2, 0, "Tumbler");
-#endif
-
-    // QtQuick.Controls 2.1 (new types in Qt 5.8)
-    qmlRegisterType(resolvedUrl(QStringLiteral("Dialog.qml")), uri, 2, 1, "Dialog");
-    qmlRegisterType(resolvedUrl(QStringLiteral("DialogButtonBox.qml")), uri, 2, 1, "DialogButtonBox");
-    qmlRegisterType(resolvedUrl(QStringLiteral("MenuSeparator.qml")), uri, 2, 1, "MenuSeparator");
-    qmlRegisterType(resolvedUrl(QStringLiteral("RoundButton.qml")), uri, 2, 1, "RoundButton");
-    qmlRegisterType(resolvedUrl(QStringLiteral("ToolSeparator.qml")), uri, 2, 1, "ToolSeparator");
-
-    // QtQuick.Controls 2.2 (new types in Qt 5.9)
-    qmlRegisterType(resolvedUrl(QStringLiteral("DelayButton.qml")), uri, 2, 2, "DelayButton");
-    qmlRegisterType(resolvedUrl(QStringLiteral("ScrollView.qml")), uri, 2, 2, "ScrollView");
-
-    // QtQuick.Controls 2.3 (new types in Qt 5.10)
-    qmlRegisterType(resolvedUrl(QStringLiteral("Action.qml")), uri, 2, 3, "Action");
-    qmlRegisterType(resolvedUrl(QStringLiteral("ActionGroup.qml")), uri, 2, 3, "ActionGroup");
-    qmlRegisterType(resolvedUrl(QStringLiteral("MenuBar.qml")), uri, 2, 3, "MenuBar");
-    qmlRegisterType(resolvedUrl(QStringLiteral("MenuBarItem.qml")), uri, 2, 3, "MenuBarItem");
-    qmlRegisterUncreatableType<QQuickOverlay>(uri, 2, 3, "Overlay", QStringLiteral("Overlay is only available as an attached property."));
-
-    // QtQuick.Controls 2.13 (new types in Qt 5.13)
-    qmlRegisterType(resolvedUrl(QStringLiteral("SplitView.qml")), uri, 2, 13, "SplitView");
-    qmlRegisterUncreatableType<QQuickSplitHandleAttached>(uri, 2, 13, "SplitHandle",
-        QStringLiteral("SplitHandle is only available as an attached property."));
-
-    // QtQuick.Controls 2.15 (new types in Qt 5.15)
-    qmlRegisterType(resolvedUrl(QStringLiteral("HorizontalHeaderView.qml")), uri, 2, 15, "HorizontalHeaderView");
-    qmlRegisterType(resolvedUrl(QStringLiteral("VerticalHeaderView.qml")), uri, 2, 15, "VerticalHeaderView");
-
-    // The minor version used to be the current Qt 5 minor. For compatibility it is the last
-    // Qt 5 release.
-    const QByteArray import = QByteArray(uri) + ".impl";
-    qmlRegisterModule(import, 2, 15);
-
-    // QtQuick.Controls.impl 2.0 (Qt 5.7)
-    qmlRegisterType<QQuickDefaultBusyIndicator>(import, 2, 0, "BusyIndicatorImpl");
-    qmlRegisterType<QQuickDefaultDial>(import, 2, 0, "DialImpl");
-    qmlRegisterType<QQuickPaddedRectangle>(import, 2, 0, "PaddedRectangle");
-    qmlRegisterType<QQuickDefaultProgressBar>(import, 2, 0, "ProgressBarImpl");
-
-    // QtQuick.Controls.impl 2.1 (Qt 5.8)
-#if QT_CONFIG(quick_listview) && QT_CONFIG(quick_pathview)
-    qmlRegisterType<QQuickTumblerView>(import, 2, 1, "TumblerView");
-#endif
-    qmlRegisterSingletonType<QQuickDefaultStyle>(import, 2, 1, "Default", [](QQmlEngine *engine, QJSEngine *scriptEngine) -> QObject* {
-            Q_UNUSED(engine);
-            Q_UNUSED(scriptEngine);
-            return new QQuickDefaultStyle;
-    });
-
-    // QtQuick.Controls.impl 2.2 (Qt 5.9)
-    qmlRegisterType<QQuickClippedText>(import, 2, 2, "ClippedText");
-    qmlRegisterType<QQuickItemGroup>(import, 2, 2, "ItemGroup");
-    qmlRegisterType<QQuickPlaceholderText>(import, 2, 2, "PlaceholderText");
-
-    // QtQuick.Controls.impl 2.3 (Qt 5.10)
-    qmlRegisterType<QQuickColorImage>(import, 2, 3, "ColorImage");
-    qmlRegisterType<QQuickIconImage>(import, 2, 3, "IconImage");
-    qmlRegisterSingletonType<QQuickColor>(import, 2, 3, "Color", [](QQmlEngine *engine, QJSEngine *scriptEngine) -> QObject* {
-            Q_UNUSED(engine);
-            Q_UNUSED(scriptEngine);
-            return new QQuickColor;
-    });
-    qmlRegisterType<QQuickIconLabel>(import, 2, 3, "IconLabel");
-    qmlRegisterType<QQuickCheckLabel>(import, 2, 3, "CheckLabel");
-    qmlRegisterType<QQuickMnemonicLabel>(import, 2, 3, "MnemonicLabel");
-    qmlRegisterRevision<QQuickText, 6>(import, 2, 3);
+        QFileSelectorPrivate::addStatics(QStringList() << style);
 }
 
 void QtQuickControls2Plugin::unregisterTypes()
 {
-    QQuickStylePlugin::unregisterTypes();
+    qCDebug(lcQtQuickControlsStylePlugin) << "unregisterTypes() called";
+
+    if (registeredFallbackImport) {
+        const QString fallbackStyleUri = ::fallbackStyleUri();
+        qmlUnregisterModuleImport(qtQuickControlsUri, QQmlModuleImportModuleAny, fallbackStyleUri.toUtf8().constData(),
+            QQmlModuleImportAuto, QQmlModuleImportAuto);
+    }
+
+    const QString primary = QQuickStylePrivate::effectiveStyleName(QQuickStyle::name());
+    const QString styleUri = ::styleUri();
+    const int importMajor = !QQuickStylePrivate::isCustomStyle() ? QQmlModuleImportAuto : QQmlModuleImportLatest;
+    qmlUnregisterModuleImport(qtQuickControlsUri, QQmlModuleImportModuleAny, styleUri.toUtf8().constData(), importMajor);
+
     QQuickStylePrivate::reset();
 }
 
-QString QtQuickControls2Plugin::name() const
-{
-    return QStringLiteral("Default");
-}
+/*!
+    \internal
 
-void QtQuickControls2Plugin::initializeTheme(QQuickTheme *theme)
-{
-    QQuickDefaultTheme::initialize(theme);
-}
+    Responsible for setting the font and palette settings that were specified in the
+    qtquickcontrols2.conf file.
 
-QList<QQuickStylePlugin *> QtQuickControls2Plugin::loadStylePlugins()
-{
-    QList<QQuickStylePlugin *> stylePlugins;
+    Style-specific settings (e.g. Variant=Dense) are read in the constructor of the
+    appropriate style plugin (e.g. QtQuickControls2MaterialStylePlugin).
 
-    QFileInfo fileInfo = QQmlFile::urlToLocalFileOrQrc(resolvedUrl(QStringLiteral("qmldir")));
-    if (fileInfo.exists() && fileInfo.path() != QQmlFile::urlToLocalFileOrQrc(baseUrl())) {
-        QFile file(fileInfo.filePath());
-        if (file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            QQmlDirParser parser;
-            parser.parse(QString::fromUtf8(file.readAll()));
-            if (!parser.hasError()) {
-#ifdef QT_STATIC
-                const auto plugins = QPluginLoader::staticInstances();
-                for (QObject *instance : plugins) {
-                    QQuickStylePlugin *stylePlugin = qobject_cast<QQuickStylePlugin *>(instance);
-                    if (!stylePlugin || !parser.classNames().contains(QLatin1String(instance->metaObject()->className())))
-                        continue;
-                    stylePlugins += stylePlugin;
-                }
-#elif QT_CONFIG(library)
-                QPluginLoader loader;
-                const auto plugins = parser.plugins();
-                for (const QQmlDirParser::Plugin &plugin : plugins) {
-                    QDir dir = fileInfo.dir();
-                    if (!plugin.path.isEmpty() && !dir.cd(plugin.path))
-                        continue;
-                    QString filePath = dir.filePath(plugin.name);
-#if defined(Q_OS_MACOS) && defined(QT_DEBUG)
-                    // Avoid mismatching plugins on macOS so that we don't end up loading both debug and
-                    // release versions of the same Qt libraries (due to the plugin's dependencies).
-                    filePath += QStringLiteral("_debug");
-#endif // Q_OS_MACOS && QT_DEBUG
-#if defined(Q_OS_WIN) && defined(QT_DEBUG)
-                    // Debug versions of plugins have a "d" prefix on Windows.
-                    filePath += QLatin1Char('d');
-#endif // Q_OS_WIN && QT_DEBUG
-                    loader.setFileName(filePath);
-                    QQuickStylePlugin *stylePlugin = qobject_cast<QQuickStylePlugin *>(loader.instance());
-                    if (stylePlugin)
-                        stylePlugins += stylePlugin;
-                }
-#endif
-            }
-        }
-    }
-    return stylePlugins;
-}
-
+    Implicit style-specific font and palette values are assigned in the relevant theme
+    (e.g. QQuickMaterialTheme).
+*/
 QQuickTheme *QtQuickControls2Plugin::createTheme(const QString &name)
 {
+    qCDebug(lcQtQuickControlsStylePlugin) << "creating QQuickTheme instance to be initialized by style-specific theme of" << name;
+
     QQuickTheme *theme = new QQuickTheme;
 #if QT_CONFIG(settings)
     QQuickThemePrivate *p = QQuickThemePrivate::get(theme);

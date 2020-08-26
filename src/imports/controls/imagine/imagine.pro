@@ -1,11 +1,11 @@
 TARGET = qtquickcontrols2imaginestyleplugin
-TARGETPATH = QtQuick/Controls.2/Imagine
+TARGETPATH = QtQuick/Controls/Imagine
 
-IMPORT_NAME = QtQuick.Controls.Imagine
-IMPORT_VERSION = 2.$$QT_MINOR_VERSION
+QML_IMPORT_NAME = QtQuick.Controls.Imagine
+QML_IMPORT_VERSION = $$QT_VERSION
 
 QT += qml quick
-QT_PRIVATE += core-private gui-private qml-private quick-private quicktemplates2-private quickcontrols2-private
+QT_PRIVATE += core-private gui-private qml-private quick-private quicktemplates2-private quickcontrols2-private quickcontrols2impl-private
 
 DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
 
@@ -18,16 +18,13 @@ OTHER_FILES += \
 SOURCES += \
     $$PWD/qtquickcontrols2imaginestyleplugin.cpp
 
-qtquickcontrols2imaginestyle.prefix = qt-project.org/imports/QtQuick/Controls.2/Imagine
+qtquickcontrols2imaginestyle.prefix = qt-project.org/imports/QtQuick/Controls/Imagine
 qtquickcontrols2imaginestyle.files += \
     $$files($$PWD/images/*.png) \
-    $$files($$PWD/images/*.webp) \
-    $$files($$PWD/shaders/OpacityMask.frag) \
-    $$files($$PWD/shaders/+glslcore/OpacityMask.frag) \
-    $$files($$PWD/shaders/+qsb/OpacityMask.frag)
+    $$files($$PWD/images/*.webp)
 RESOURCES += qtquickcontrols2imaginestyle
 
-CONFIG += no_cxx_module install_qml_files builtin_resources qtquickcompiler
+CONFIG += qmltypes no_cxx_module install_qml_files builtin_resources qtquickcompiler
 load(qml_plugin)
 
 requires(qtConfig(quickcontrols2-imagine))

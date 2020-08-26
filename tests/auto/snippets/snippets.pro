@@ -1,7 +1,7 @@
 TEMPLATE = app
 TARGET = tst_snippets
 
-QT += quick quickcontrols2 testlib
+QT += quick quickcontrols2 quickcontrols2-private testlib
 CONFIG += testcase
 macos:CONFIG -= app_bundle
 

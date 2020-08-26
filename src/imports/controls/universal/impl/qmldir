@@ -1,0 +1,7 @@
+module QtQuick.Controls.Universal.impl
+plugin qtquickcontrols2universalstyleimplplugin
+classname QtQuickControls2UniversalStyleImplPlugin
+
+CheckIndicator 2.0 CheckIndicator.qml
+RadioIndicator 2.0 RadioIndicator.qml
+SwitchIndicator 2.0 SwitchIndicator.qml

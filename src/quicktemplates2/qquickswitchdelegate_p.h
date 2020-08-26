@@ -59,6 +59,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwitchDelegate : public QQuickItemD
     Q_OBJECT
     Q_PROPERTY(qreal position READ position WRITE setPosition NOTIFY positionChanged FINAL)
     Q_PROPERTY(qreal visualPosition READ visualPosition NOTIFY visualPositionChanged FINAL)
+    QML_NAMED_ELEMENT(SwitchDelegate)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickSwitchDelegate(QQuickItem *parent = nullptr);

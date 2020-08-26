@@ -48,12 +48,12 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Controls 2.12
-import QtQuick.Window 2.0
-import Qt.labs.platform 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Window
+import Qt.labs.platform
 
-import io.qt.examples.texteditor 1.0
+import io.qt.examples.texteditor
 
 // TODO:
 // - make designer-friendly

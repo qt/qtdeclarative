@@ -34,10 +34,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Templates 2.12 as T
-import QtQuick.Controls.Universal 2.12
-import QtQuick.Controls.Universal.impl 2.12
+import QtQuick
+import QtQuick.Templates as T
+import QtQuick.Controls.Universal
+import QtQuick.Controls.Universal.impl
 
 T.Switch {
     id: control

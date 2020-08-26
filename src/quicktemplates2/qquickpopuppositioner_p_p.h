@@ -79,6 +79,7 @@ protected:
     bool m_positioning = false;
     QQuickItem *m_parentItem = nullptr;
     QQuickPopup *m_popup = nullptr;
+    qreal m_popupScale = 1.0;
 };
 
 QT_END_NAMESPACE

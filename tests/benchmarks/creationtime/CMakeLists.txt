@@ -19,6 +19,7 @@ qt_add_test(tst_creationtime
         Qt::Qml
         Qt::QmlPrivate
         Qt::QuickControls2
+        Qt::QuickControls2Private
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
         Qt::TestPrivate

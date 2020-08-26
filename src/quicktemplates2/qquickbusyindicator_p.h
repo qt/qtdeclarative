@@ -58,6 +58,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickBusyIndicator : public QQuickContro
 {
     Q_OBJECT
     Q_PROPERTY(bool running READ isRunning WRITE setRunning NOTIFY runningChanged FINAL)
+    QML_NAMED_ELEMENT(BusyIndicator)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickBusyIndicator(QQuickItem *parent = nullptr);

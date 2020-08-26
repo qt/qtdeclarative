@@ -34,13 +34,13 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.15
-import QtQuick.Window 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Controls.impl 2.15
-import QtQuick.Templates 2.15 as T
-import QtQuick.Controls.Material 2.15
-import QtQuick.Controls.Material.impl 2.15
+import QtQuick
+import QtQuick.Window
+import QtQuick.Controls
+import QtQuick.Controls.impl
+import QtQuick.Templates as T
+import QtQuick.Controls.Material
+import QtQuick.Controls.Material.impl
 
 T.ComboBox {
     id: control
@@ -74,7 +74,7 @@ T.ComboBox {
         x: control.mirrored ? control.padding : control.width - width - control.padding
         y: control.topPadding + (control.availableHeight - height) / 2
         color: control.enabled ? control.Material.foreground : control.Material.hintTextColor
-        source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Material/images/drop-indicator.png"
+        source: "qrc:/qt-project.org/imports/QtQuick/Controls/Material/images/drop-indicator.png"
     }
 
     contentItem: T.TextField {

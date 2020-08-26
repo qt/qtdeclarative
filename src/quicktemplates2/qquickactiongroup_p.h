@@ -67,6 +67,9 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickActionGroup : public QObject
     Q_PROPERTY(bool exclusive READ isExclusive WRITE setExclusive NOTIFY exclusiveChanged FINAL)
     Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged FINAL)
     Q_CLASSINFO("DefaultProperty", "actions")
+    QML_NAMED_ELEMENT(ActionGroup)
+    QML_ATTACHED(QQuickActionGroupAttached)
+    QML_ADDED_IN_VERSION(2, 3)
 
 public:
     explicit QQuickActionGroup(QObject *parent = nullptr);

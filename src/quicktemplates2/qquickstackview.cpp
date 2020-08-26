@@ -635,6 +635,9 @@ void QQuickStackView::push(QQmlV4Function *args)
     items down to (but not including) the first item is popped.
     If not specified, only the current item is popped.
 
+    \note A pop() operation on a stack with depth 1 or 0 does nothing. In such
+    cases, the stack can be emptied using the \l clear() method.
+
     \include qquickstackview.qdocinc pop-ownership
 
     An \a operation can be optionally specified as the last argument. Supported

@@ -63,6 +63,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopupAnchors : public QObject, publ
 {
     Q_OBJECT
     Q_PROPERTY(QQuickItem *centerIn READ centerIn WRITE setCenterIn RESET resetCenterIn NOTIFY centerInChanged)
+    QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 5)
 
 public:
     explicit QQuickPopupAnchors(QQuickPopup *popup);

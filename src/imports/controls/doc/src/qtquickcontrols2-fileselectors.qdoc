@@ -40,8 +40,7 @@
     can assume the context, that is, a specific style. This typically leads
     to some code duplication, but on the other hand, cuts the aforementioned
     hard dependency to the style, and leads to simpler and more efficient
-    QML code. The same technique is used to implement the \l {Styling Qt
-    Quick Controls}{Qt Quick Controls styles}.
+    QML code.
 
     The following example demonstrates a custom rounded button that has a
     styled drop shadow in the \l {Material Style}{Material style}, and looks

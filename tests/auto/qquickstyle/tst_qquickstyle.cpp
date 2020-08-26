@@ -57,11 +57,6 @@ private slots:
     void configurationFile();
     void commandLineArgument();
     void environmentVariables();
-    void availableStyles();
-    void qrcStylePaths_data();
-    void qrcStylePaths();
-    void qrcInQtQuickControlsStylePathEnvVar_data();
-    void qrcInQtQuickControlsStylePathEnvVar();
 
 private:
     void loadControls();
@@ -74,7 +69,6 @@ void tst_QQuickStyle::cleanup()
 
     QGuiApplicationPrivate::styleOverride.clear();
     qunsetenv("QT_QUICK_CONTROLS_STYLE");
-    qunsetenv("QT_QUICK_CONTROLS_STYLE_PATH");
     qunsetenv("QT_QUICK_CONTROLS_FALLBACK_STYLE");
     qunsetenv("QT_QUICK_CONTROLS_CONF");
 }
@@ -82,6 +76,7 @@ void tst_QQuickStyle::cleanup()
 void tst_QQuickStyle::loadControls()
 {
     QQmlEngine engine;
+    engine.addImportPath(dataDirectory());
     QQmlComponent component(&engine);
     component.setData("import QtQuick 2.0; import QtQuick.Controls 2.1; Control { }", QUrl());
 
@@ -97,11 +92,9 @@ void tst_QQuickStyle::unloadControls()
 void tst_QQuickStyle::lookup()
 {
     QVERIFY(QQuickStyle::name().isEmpty());
-    QVERIFY(!QQuickStyle::path().isEmpty());
 
-    QQuickStyle::setStyle("material");
+    QQuickStyle::setStyle("Material");
     QCOMPARE(QQuickStyle::name(), QString("Material"));
-    QVERIFY(!QQuickStyle::path().isEmpty());
 
     loadControls();
 
@@ -110,7 +103,6 @@ void tst_QQuickStyle::lookup()
     QCOMPARE(QQuickTheme::instance()->font(QQuickTheme::TextArea).pixelSize(), 16);
 
     QCOMPARE(QQuickStyle::name(), QString("Material"));
-    QVERIFY(!QQuickStyle::path().isEmpty());
 }
 
 void tst_QQuickStyle::configurationFile_data()
@@ -137,6 +129,7 @@ void tst_QQuickStyle::configurationFile()
 
     // Load a control. The import causes the configuration file to be read.
     QQmlEngine engine;
+    engine.addImportPath(":/data");
     QQmlComponent labelComponent(&engine);
     labelComponent.setData("import QtQuick 2.0; import QtQuick.Controls 2.12; Label {}", QUrl());
 
@@ -144,8 +137,6 @@ void tst_QQuickStyle::configurationFile()
     QVERIFY2(!object.isNull(), qPrintable(labelComponent.errorString()));
 
     QCOMPARE(QQuickStyle::name(), expectedStyle);
-    if (!expectedPath.isEmpty())
-        QCOMPARE(QQuickStyle::path(), expectedPath);
 
     // Test that fonts and palettes specified in configuration files are respected.
     QQuickLabel *label = qobject_cast<QQuickLabel *>(object.data());
@@ -169,179 +160,10 @@ void tst_QQuickStyle::environmentVariables()
 {
     qputenv("QT_QUICK_CONTROLS_STYLE", "EnvVarStyle");
     qputenv("QT_QUICK_CONTROLS_FALLBACK_STYLE", "EnvVarFallbackStyle");
+    QTest::ignoreMessage(QtWarningMsg, "QT_QUICK_CONTROLS_FALLBACK_STYLE: the specified fallback style" \
+        " \"EnvVarFallbackStyle\" is not one of the built-in Qt Quick Controls 2 styles");
     QCOMPARE(QQuickStyle::name(), QString("EnvVarStyle"));
-    QCOMPARE(QQuickStylePrivate::fallbackStyle(), QString("EnvVarFallbackStyle"));
-}
-
-void tst_QQuickStyle::availableStyles()
-{
-    QString path = QFINDTESTDATA("data");
-    QVERIFY(!path.isEmpty());
-
-    QQuickStyle::addStylePath(path);
-    QStringList paths = QQuickStylePrivate::stylePaths();
-#ifndef Q_OS_WIN
-    QVERIFY(paths.contains(path));
-#else
-    QVERIFY(paths.contains(path, Qt::CaseInsensitive));
-#endif
-
-    const QStringList styles = QQuickStyle::availableStyles();
-    QVERIFY(!styles.isEmpty());
-    QCOMPARE(styles.first(), QString("Default"));
-    QVERIFY(!styles.contains("designer"));
-
-    // QTBUG-60973
-    for (const QString &style : styles) {
-        QVERIFY2(!style.endsWith(".dSYM"), qPrintable(style));
-    }
-}
-
-void tst_QQuickStyle::qrcStylePaths_data()
-{
-    QTest::addColumn<QString>("stylePath");
-    QTest::addColumn<QString>("expectedStyleName");
-
-    QTest::addRow("qrc:/qrcStyles1") << QString::fromLatin1("qrc:/qrcStyles1") << QString::fromLatin1("QrcStyle1");
-    QTest::addRow(":/qrcStyles2") << QString::fromLatin1(":/qrcStyles2") << QString::fromLatin1("QrcStyle2");
-}
-
-void tst_QQuickStyle::qrcStylePaths()
-{
-    QFETCH(QString, stylePath);
-    QFETCH(QString, expectedStyleName);
-
-    QQuickStyle::addStylePath(stylePath);
-
-    const QStringList paths = QQuickStylePrivate::stylePaths();
-    QString expectedStylePath = stylePath;
-    if (expectedStylePath.startsWith(QLatin1String("qrc")))
-        expectedStylePath.remove(0, 3);
-    if (!paths.contains(expectedStylePath)) {
-        QString message;
-        QDebug stream(&message);
-        stream.nospace() << "QQuickStylePrivate::stylePaths() doesn't contain " << expectedStylePath << ":\n" << paths;
-        QFAIL(qPrintable(message));
-    }
-
-    const QStringList styles = QQuickStyle::availableStyles();
-    QVERIFY(!styles.isEmpty());
-    if (!styles.contains(expectedStyleName)) {
-        QString message;
-        QDebug stream(&message);
-        stream.nospace() << "QQuickStyle::availableStyles() doesn't contain " << expectedStyleName << ":\n" << styles;
-        QFAIL(qPrintable(message));
-    }
-}
-
-void tst_QQuickStyle::qrcInQtQuickControlsStylePathEnvVar_data()
-{
-    QTest::addColumn<QString>("environmentVariable");
-    QTest::addColumn<QStringList>("expectedAvailableStyles");
-
-    const QChar listSeparator = QDir::listSeparator();
-    const QStringList defaultAvailableStyles = QQuickStyle::availableStyles();
-
-    {
-        QString environmentVariable;
-        QDebug stream(&environmentVariable);
-        // We use qrcStyles3 and qrcStyles4 in order to not conflict with
-        // qrcStylePaths(), since we currently have no way of clearing customStylePaths.
-        stream.noquote().nospace() << "/some/bogus/path/" << listSeparator
-            << ":/qrcStyles3";
-
-        QStringList expectedAvailableStyles = defaultAvailableStyles;
-        // We need to keep the Default style at the start of the list,
-        // as that's what availableStyles() does.
-        expectedAvailableStyles.insert(1, QLatin1String("QrcStyle3"));
-
-        QTest::addRow("%s", qPrintable(environmentVariable))
-            << environmentVariable << expectedAvailableStyles;
-    }
-
-    {
-        QString environmentVariable;
-        QDebug stream(&environmentVariable);
-        stream.noquote().nospace() << ":/qrcStyles4" << listSeparator
-            << "/some/bogus/path";
-
-        QStringList expectedAvailableStyles = defaultAvailableStyles;
-        expectedAvailableStyles.insert(1, QLatin1String("QrcStyle4"));
-
-        QTest::addRow("%s", qPrintable(environmentVariable))
-            << environmentVariable << expectedAvailableStyles;
-    }
-
-    {
-        QString environmentVariable;
-        QDebug stream(&environmentVariable);
-        stream.noquote().nospace() << ":/qrcStyles3" << listSeparator
-            << ":/qrcStyles4" << listSeparator
-            << QFINDTESTDATA("data/dummyStyles");
-
-        QStringList expectedAvailableStyles = defaultAvailableStyles;
-        expectedAvailableStyles.insert(1, QLatin1String("DummyStyle"));
-        expectedAvailableStyles.insert(1, QLatin1String("QrcStyle4"));
-        expectedAvailableStyles.insert(1, QLatin1String("QrcStyle3"));
-
-        QTest::addRow("%s", qPrintable(environmentVariable))
-            << environmentVariable << expectedAvailableStyles;
-    }
-
-    {
-        QString environmentVariable;
-        QDebug stream(&environmentVariable);
-        stream.noquote().nospace() << QFINDTESTDATA("data/dummyStyles") << listSeparator
-            << ":/qrcStyles3" << listSeparator
-            << ":/qrcStyles4";
-
-        QStringList expectedAvailableStyles = defaultAvailableStyles;
-        expectedAvailableStyles.insert(1, QLatin1String("QrcStyle4"));
-        expectedAvailableStyles.insert(1, QLatin1String("QrcStyle3"));
-        expectedAvailableStyles.insert(1, QLatin1String("DummyStyle"));
-
-        QTest::addRow("%s", qPrintable(environmentVariable))
-            << environmentVariable << expectedAvailableStyles;
-    }
-
-    {
-        QString environmentVariable;
-        QDebug stream(&environmentVariable);
-        // Same as the last row, except it adds a superfluous separator
-        // to ensure that it handles it gracefully rather than failing an assertion.
-        stream.noquote().nospace() << QFINDTESTDATA("data/dummyStyles") << listSeparator
-            << ":/qrcStyles3" << listSeparator
-            << ":/qrcStyles4" << listSeparator;
-
-        QStringList expectedAvailableStyles = defaultAvailableStyles;
-        expectedAvailableStyles.insert(1, QLatin1String("QrcStyle4"));
-        expectedAvailableStyles.insert(1, QLatin1String("QrcStyle3"));
-        expectedAvailableStyles.insert(1, QLatin1String("DummyStyle"));
-
-        QTest::addRow("%s", qPrintable(environmentVariable))
-            << environmentVariable << expectedAvailableStyles;
-    }
-}
-
-/*
-    Tests that qrc paths work with QT_QUICK_CONTROLS_STYLE_PATH.
-*/
-void tst_QQuickStyle::qrcInQtQuickControlsStylePathEnvVar()
-{
-    QFETCH(QString, environmentVariable);
-    QFETCH(QStringList, expectedAvailableStyles);
-
-    qputenv("QT_QUICK_CONTROLS_STYLE_PATH", environmentVariable.toLocal8Bit());
-
-    const QStringList availableStyles = QQuickStyle::availableStyles();
-    if (availableStyles != expectedAvailableStyles) {
-        QString failureMessage;
-        QDebug stream(&failureMessage);
-        stream << "Mismatch in actual vs expected available styles:"
-               << "\n   Expected:" << expectedAvailableStyles
-               << "\n   Actual:" << availableStyles;
-        QFAIL(qPrintable(failureMessage));
-    }
+    QCOMPARE(QQuickStylePrivate::fallbackStyle(), QString());
 }
 
 QTEST_MAIN(tst_QQuickStyle)

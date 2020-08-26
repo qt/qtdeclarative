@@ -41,17 +41,11 @@
             \li \c QT_QUICK_CONTROLS_STYLE
             \li Specifies the default \l {Styling Qt Quick Controls}{Qt Quick Controls style}.
                 The value can be either one of the built-in styles, for example \c "Material",
-                or the path to a custom style such as \c ":/mystyle".
+                or a custom style such as \c "MyStyle".
         \row
             \li \c QT_QUICK_CONTROLS_FALLBACK_STYLE
             \li Specifies a fallback style for \l {Creating a Custom Style}{custom styles}.
                 The value can be one of the built-in styles, for example \c "Material",
-        \row
-            \li \c QT_QUICK_CONTROLS_STYLE_PATH
-            \li Specifies a list of additional paths that are used to lookup \l {Styling Qt Quick Controls}
-                {Qt Quick Controls styles}. Multiple path entries must be \l {QDir::listSeparator}{separated}
-                by \c ':' under Unix and \c ';' under Windows. By default, styles are looked up from
-                \c $QML2_IMPORT_PATH/QtQuick/Controls.2.
         \row
             \li \c QT_QUICK_CONTROLS_CONF
             \li Specifies the location of the \l {Qt Quick Controls configuration file}.

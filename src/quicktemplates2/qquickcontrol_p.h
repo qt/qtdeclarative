@@ -81,17 +81,19 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickControl : public QQuickItem
     Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
     Q_PROPERTY(qreal baselineOffset READ baselineOffset WRITE setBaselineOffset RESET resetBaselineOffset NOTIFY baselineOffsetChanged FINAL)
     // 2.5 (Qt 5.12)
-    Q_PROPERTY(qreal horizontalPadding READ horizontalPadding WRITE setHorizontalPadding RESET resetHorizontalPadding NOTIFY horizontalPaddingChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal verticalPadding READ verticalPadding WRITE setVerticalPadding RESET resetVerticalPadding NOTIFY verticalPaddingChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal implicitContentWidth READ implicitContentWidth NOTIFY implicitContentWidthChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal implicitContentHeight READ implicitContentHeight NOTIFY implicitContentHeightChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal implicitBackgroundWidth READ implicitBackgroundWidth NOTIFY implicitBackgroundWidthChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal implicitBackgroundHeight READ implicitBackgroundHeight NOTIFY implicitBackgroundHeightChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal topInset READ topInset WRITE setTopInset RESET resetTopInset NOTIFY topInsetChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal leftInset READ leftInset WRITE setLeftInset RESET resetLeftInset NOTIFY leftInsetChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal rightInset READ rightInset WRITE setRightInset RESET resetRightInset NOTIFY rightInsetChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal bottomInset READ bottomInset WRITE setBottomInset RESET resetBottomInset NOTIFY bottomInsetChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal horizontalPadding READ horizontalPadding WRITE setHorizontalPadding RESET resetHorizontalPadding NOTIFY horizontalPaddingChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal verticalPadding READ verticalPadding WRITE setVerticalPadding RESET resetVerticalPadding NOTIFY verticalPaddingChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal implicitContentWidth READ implicitContentWidth NOTIFY implicitContentWidthChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal implicitContentHeight READ implicitContentHeight NOTIFY implicitContentHeightChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal implicitBackgroundWidth READ implicitBackgroundWidth NOTIFY implicitBackgroundWidthChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal implicitBackgroundHeight READ implicitBackgroundHeight NOTIFY implicitBackgroundHeightChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal topInset READ topInset WRITE setTopInset RESET resetTopInset NOTIFY topInsetChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal leftInset READ leftInset WRITE setLeftInset RESET resetLeftInset NOTIFY leftInsetChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal rightInset READ rightInset WRITE setRightInset RESET resetRightInset NOTIFY rightInsetChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal bottomInset READ bottomInset WRITE setBottomInset RESET resetBottomInset NOTIFY bottomInsetChanged FINAL REVISION(2, 5))
     Q_CLASSINFO("DeferredPropertyNames", "background,contentItem")
+    QML_NAMED_ELEMENT(Control)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickControl(QQuickItem *parent = nullptr);
@@ -215,16 +217,16 @@ Q_SIGNALS:
     void contentItemChanged();
     void baselineOffsetChanged();
     // 2.5 (Qt 5.12)
-    Q_REVISION(5) void horizontalPaddingChanged();
-    Q_REVISION(5) void verticalPaddingChanged();
-    Q_REVISION(5) void implicitContentWidthChanged();
-    Q_REVISION(5) void implicitContentHeightChanged();
-    Q_REVISION(5) void implicitBackgroundWidthChanged();
-    Q_REVISION(5) void implicitBackgroundHeightChanged();
-    Q_REVISION(5) void topInsetChanged();
-    Q_REVISION(5) void leftInsetChanged();
-    Q_REVISION(5) void rightInsetChanged();
-    Q_REVISION(5) void bottomInsetChanged();
+    Q_REVISION(2, 5) void horizontalPaddingChanged();
+    Q_REVISION(2, 5) void verticalPaddingChanged();
+    Q_REVISION(2, 5) void implicitContentWidthChanged();
+    Q_REVISION(2, 5) void implicitContentHeightChanged();
+    Q_REVISION(2, 5) void implicitBackgroundWidthChanged();
+    Q_REVISION(2, 5) void implicitBackgroundHeightChanged();
+    Q_REVISION(2, 5) void topInsetChanged();
+    Q_REVISION(2, 5) void leftInsetChanged();
+    Q_REVISION(2, 5) void rightInsetChanged();
+    Q_REVISION(2, 5) void bottomInsetChanged();
 
 protected:
     virtual QFont defaultFont() const;
@@ -284,6 +286,21 @@ protected:
 private:
     Q_DISABLE_COPY(QQuickControl)
     Q_DECLARE_PRIVATE(QQuickControl)
+};
+
+struct QQuickItemForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN(QQuickItem)
+    QML_ADDED_IN_VERSION(2, 3)
+};
+
+struct QQuickPaletteForeign
+{
+    Q_GADGET
+    QML_NAMED_ELEMENT(Palette)
+    QML_ADDED_IN_VERSION(6, 0)
 };
 
 QT_END_NAMESPACE

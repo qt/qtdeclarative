@@ -72,8 +72,8 @@ class QQuickPlatformSystemTrayIcon : public QObject, public QQmlParserStatus
     Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged FINAL)
     Q_PROPERTY(QString tooltip READ tooltip WRITE setTooltip NOTIFY tooltipChanged FINAL)
     Q_PROPERTY(QQuickPlatformMenu *menu READ menu WRITE setMenu NOTIFY menuChanged FINAL)
-    Q_PROPERTY(QRect geometry READ geometry NOTIFY geometryChanged FINAL REVISION 1)
-    Q_PROPERTY(QQuickPlatformIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION 1)
+    Q_PROPERTY(QRect geometry READ geometry NOTIFY geometryChanged FINAL REVISION(1, 1))
+    Q_PROPERTY(QQuickPlatformIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION(1, 1))
     Q_ENUMS(QPlatformSystemTrayIcon::ActivationReason QPlatformSystemTrayIcon::MessageIcon)
 
 public:
@@ -112,8 +112,8 @@ Q_SIGNALS:
     void visibleChanged();
     void tooltipChanged();
     void menuChanged();
-    Q_REVISION(1) void geometryChanged();
-    Q_REVISION(1) void iconChanged();
+    Q_REVISION(2, 1) void geometryChanged();
+    Q_REVISION(2, 1) void iconChanged();
 
 protected:
     void init();

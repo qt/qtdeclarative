@@ -451,7 +451,7 @@ bool QQuickPopupPrivate::prepareExitTransition()
     if (transitionState == ExitTransition && transitionManager.isRunning())
         return false;
 
-    if (transitionState != ExitTransition) {
+    if (transitionState != ExitTransition && !hadActiveFocusBeforeExitTransition) {
         // The setFocus(false) call below removes any active focus before we're
         // able to check it in finalizeExitTransition.
         hadActiveFocusBeforeExitTransition = popupItem->hasActiveFocus();

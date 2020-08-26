@@ -5,26 +5,12 @@
 #####################################################################
 
 qt_add_module(QuickControls2
+    GENERATE_METATYPES
     SOURCES
-        qquickanimatednode.cpp qquickanimatednode_p.h
-        qquickattachedobject.cpp qquickattachedobject_p.h
-        qquickchecklabel.cpp qquickchecklabel_p.h
-        qquickclippedtext.cpp qquickclippedtext_p.h
-        qquickcolor.cpp qquickcolor_p.h
-        qquickcolorimage.cpp qquickcolorimage_p.h
-        qquickiconimage.cpp qquickiconimage_p.h
-        qquickiconimage_p_p.h
-        qquickiconlabel.cpp qquickiconlabel_p.h
-        qquickiconlabel_p_p.h
-        qquickitemgroup.cpp qquickitemgroup_p.h
-        qquickmnemoniclabel.cpp qquickmnemoniclabel_p.h
-        qquickpaddedrectangle.cpp qquickpaddedrectangle_p.h
-        qquickplaceholdertext.cpp qquickplaceholdertext_p.h
+        qquickdummyregistration_p.h
         qquickstyle.cpp qquickstyle.h qquickstyle_p.h
         qquickstyleplugin.cpp qquickstyleplugin_p.h
-        qquickstyleselector.cpp qquickstyleselector_p.h
-        qquickstyleselector_p_p.h
-        qtquickcontrols2global.h qtquickcontrols2global_p.h
+        qtquickcontrols2global.h
     DEFINES
         QT_NO_CAST_FROM_ASCII
         QT_NO_CAST_TO_ASCII
@@ -42,11 +28,17 @@ qt_add_module(QuickControls2
 
 #### Keys ignored in scope 1:.:.:quickcontrols2.pro:<TRUE>:
 # MODULE = "quickcontrols2"
+# QMLTYPES_FILENAME = "plugins.qmltypes"
+# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQuick/Controls"
+# QML_IMPORT_NAME = "QtQuick.Controls"
+# QML_IMPORT_VERSION = "$$QT_VERSION"
 
-## Scopes:
-#####################################################################
-
-qt_extend_target(QuickControls2 CONDITION QT_FEATURE_quick_listview AND QT_FEATURE_quick_pathview
-    SOURCES
-        qquicktumblerview.cpp qquicktumblerview_p.h
+set_target_properties(QuickControls2 PROPERTIES
+    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
+    QT_QML_MODULE_VERSION ${CMAKE_PROJECT_VERSION}
+    QT_QML_MODULE_URI QtQuick.Controls
+    QT_QMLTYPES_FILENAME plugins.qmltypes
+    QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQuick/Controls"
 )
+
+qt6_qml_type_registration(QuickControls2)

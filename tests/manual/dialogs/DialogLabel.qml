@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick.Controls 2.12
+import QtQuick.Controls
 
 Label {
     x: dialog.x + (dialog.width - width) / 2

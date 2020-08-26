@@ -11,18 +11,16 @@ include (../shared/util.pri)
 
 TESTDATA = $$PWD/data/*
 
-qrcStyles1.files = $$files(qrcStyles1/QrcStyle1/*.qml)
-qrcStyles1.prefix = /
-RESOURCES += qrcStyles1
+OTHER_FILES += \
+    data/CmdLineArgStyle/Control.qml \
+    data/CmdLineArgStyle/qmldir \
+    data/EnvVarStyle/Control.qml \
+    data/EnvVarStyle/qmldir \
+    data/EnvVarFallbackStyle/Control.qml \
+    data/EnvVarFallbackStyle/qmldir
 
-qrcStyles2.files = $$files(qrcStyles2/QrcStyle2/*.qml)
-qrcStyles2.prefix = /
-RESOURCES += qrcStyles2
-
-qrcStyles3.files = $$files(qrcStyles3/QrcStyle3/*.qml)
-qrcStyles3.prefix = /
-RESOURCES += qrcStyles3
-
-qrcStyles4.files = $$files(qrcStyles4/QrcStyle4/*.qml)
-qrcStyles4.prefix = /
-RESOURCES += qrcStyles4
+custom.files = \
+    data/Custom/Label.qml \
+    data/Custom/qmldir
+custom.prefix = /
+RESOURCES += custom

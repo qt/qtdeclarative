@@ -48,15 +48,15 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Window 2.12
-import QtQuick.Layouts 1.12
-import QtQuick.Controls 2.12
-import QtQuick.Controls.Imagine 2.12
-import Qt.labs.folderlistmodel 2.2
-import Qt.labs.settings 1.0
+import QtQuick
+import QtQuick.Window
+import QtQuick.Layouts
+import QtQuick.Controls
+import QtQuick.Controls.Imagine
+import Qt.labs.folderlistmodel
+import Qt.labs.settings
 
-import App 1.0
+import App
 
 ApplicationWindow {
     id: window
@@ -70,7 +70,7 @@ ApplicationWindow {
     readonly property bool usingImagineStyle: settings.style.toLowerCase() === "imagine"
     // Some controls should be visible regardless of whether or not custom assets are lacking for it,
     // so we use the default assets in some cases.
-    readonly property string defaultImaginePath: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Imagine/images/"
+    readonly property string defaultImaginePath: "qrc:/qt-project.org/imports/QtQuick/Controls/Imagine/images/"
     property bool settingsLoaded: false
     readonly property string imagineTitleText: " - " + (settings.useCustomImaginePath ? settings.imaginePath : "Default Assets")
 

@@ -59,6 +59,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickButton : public QQuickAbstractButto
     Q_OBJECT
     Q_PROPERTY(bool highlighted READ isHighlighted WRITE setHighlighted NOTIFY highlightedChanged FINAL)
     Q_PROPERTY(bool flat READ isFlat WRITE setFlat NOTIFY flatChanged FINAL)
+    QML_NAMED_ELEMENT(Button)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickButton(QQuickItem *parent = nullptr);

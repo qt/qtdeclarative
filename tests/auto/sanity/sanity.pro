@@ -1,7 +1,7 @@
 TEMPLATE = app
 TARGET = tst_sanity
 
-QT += qml testlib core-private qml-private
+QT += qml testlib core-private qml-private quickcontrols2
 CONFIG += testcase
 macos:CONFIG -= app_bundle
 

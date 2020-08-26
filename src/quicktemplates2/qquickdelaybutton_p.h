@@ -61,6 +61,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDelayButton : public QQuickAbstract
     Q_PROPERTY(int delay READ delay WRITE setDelay NOTIFY delayChanged FINAL)
     Q_PROPERTY(qreal progress READ progress WRITE setProgress NOTIFY progressChanged FINAL)
     Q_PROPERTY(QQuickTransition *transition READ transition WRITE setTransition NOTIFY transitionChanged FINAL)
+    QML_NAMED_ELEMENT(DelayButton)
+    QML_ADDED_IN_VERSION(2, 2)
 
 public:
     explicit QQuickDelayButton(QQuickItem *parent = nullptr);

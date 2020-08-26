@@ -48,9 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtTest 1.0
-import QtQuick.Controls 2.12
+import QtQuick
+import QtTest
+import QtQuick.Controls
 
 TestCase {
     id: testCase
@@ -406,7 +406,7 @@ TestCase {
 
         // unsupported type
         ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: push: QtObject is not supported. Must be Item or Component.")
-        control.push(Qt.createQmlObject('import QtQml 2.0; QtObject { }', control))
+        control.push(Qt.createQmlObject('import QtQml; QtObject { }', control))
 
         // push(item)
         var item1 = component.createObject(control, {objectName:"1"})
@@ -506,7 +506,7 @@ TestCase {
 
         // unsupported type
         ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: replace: QtObject is not supported. Must be Item or Component.")
-        compare(control.replace(Qt.createQmlObject('import QtQml 2.0; QtObject { }', control)), null)
+        compare(control.replace(Qt.createQmlObject('import QtQml; QtObject { }', control)), null)
 
         // replace(item)
         var item1 = component.createObject(control, {objectName:"1"})

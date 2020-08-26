@@ -36,7 +36,8 @@
 
 #include <QtTest>
 #include <QtQuick>
-#include <QtQuickControls2>
+#include <QtQuickControls2/qquickstyle.h>
+#include <QtQuickControls2/private/qquickstyle_p.h>
 
 typedef QPair<QString, QString> QStringPair;
 
@@ -114,14 +115,14 @@ void tst_Snippets::verify()
     if (takeScreenshots) {
         const QString currentDataTag = QLatin1String(QTest::currentDataTag());
         static const QString applicationStyle = QQuickStyle::name().isEmpty() ? "Default" : QQuickStyle::name();
-        static const QStringList availableStyles = QQuickStyle::availableStyles();
+        static const QStringList builtInStyles = QQuickStylePrivate::builtInStyles();
 
         bool isStyledSnippet = false;
         const QString snippetStyle = currentDataTag.section("-", 1, 1);
-        for (const QString &availableStyle : availableStyles) {
-            if (!snippetStyle.compare(availableStyle, Qt::CaseInsensitive)) {
-                if (applicationStyle != availableStyle)
-                    QSKIP(qPrintable(QString("%1 style specific snippet. Running with the %2 style.").arg(availableStyle, applicationStyle)));
+        for (const QString &style : builtInStyles) {
+            if (!snippetStyle.compare(style, Qt::CaseInsensitive)) {
+                if (applicationStyle != style)
+                    QSKIP(qPrintable(QString("%1 style specific snippet. Running with the %2 style.").arg(style, applicationStyle)));
                 isStyledSnippet = true;
             }
         }

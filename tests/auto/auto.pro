@@ -24,10 +24,10 @@ SUBDIRS += \
     qquickninepatchimage \
     qquickpopup \
     qquickstyle \
-    qquickstyleselector \
     qquickuniversalstyle \
     qquickuniversalstyleconf \
     revisions \
     sanity \
     snippets \
+    styleimports \
     translation

@@ -1,7 +1,7 @@
 TEMPLATE = app
 TARGET = tst_creationtime
 
-QT += qml testlib
+QT += qml testlib quickcontrols2
 CONFIG += testcase
 macos:CONFIG -= app_bundle
 

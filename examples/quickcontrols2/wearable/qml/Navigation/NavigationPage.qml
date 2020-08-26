@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
+import QtQuick
 import "../Style"
 import "navigation.js" as NavigationData
 

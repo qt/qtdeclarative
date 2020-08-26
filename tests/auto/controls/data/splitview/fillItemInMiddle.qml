@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.13
-import QtQuick.Controls 2.13
+import QtQuick
+import QtQuick.Controls
 
 SplitView {
     anchors.fill: parent

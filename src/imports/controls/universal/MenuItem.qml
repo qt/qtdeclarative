@@ -34,11 +34,11 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Templates 2.12 as T
-import QtQuick.Controls 2.12
-import QtQuick.Controls.impl 2.12
-import QtQuick.Controls.Universal 2.12
+import QtQuick
+import QtQuick.Templates as T
+import QtQuick.Controls
+import QtQuick.Controls.impl
+import QtQuick.Controls.Universal
 
 T.MenuItem {
     id: control
@@ -82,7 +82,7 @@ T.MenuItem {
         visible: control.subMenu
         mirror: control.mirrored
         color: !enabled ? control.Universal.baseLowColor : control.Universal.baseHighColor
-        source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Universal/images/rightarrow.png"
+        source: "qrc:/qt-project.org/imports/QtQuick/Controls/Universal/images/rightarrow.png"
     }
 
     indicator: ColorImage {
@@ -91,7 +91,7 @@ T.MenuItem {
 
         visible: control.checked
         color: !control.enabled ? control.Universal.baseLowColor : control.down ? control.Universal.baseHighColor : control.Universal.baseMediumHighColor
-        source: !control.checkable ? "" : "qrc:/qt-project.org/imports/QtQuick/Controls.2/Universal/images/checkmark.png"
+        source: !control.checkable ? "" : "qrc:/qt-project.org/imports/QtQuick/Controls/Universal/images/checkmark.png"
     }
 
     background: Rectangle {

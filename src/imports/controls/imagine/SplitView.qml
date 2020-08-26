@@ -34,10 +34,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.13
-import QtQuick.Templates 2.13 as T
-import QtQuick.Controls.Imagine 2.13
-import QtQuick.Controls.Imagine.impl 2.13
+import QtQuick
+import QtQuick.Templates as T
+import QtQuick.Controls.Imagine
+import QtQuick.Controls.Imagine.impl
 
 T.SplitView {
     id: control

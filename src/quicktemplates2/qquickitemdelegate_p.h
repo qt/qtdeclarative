@@ -58,6 +58,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickItemDelegate : public QQuickAbstrac
 {
     Q_OBJECT
     Q_PROPERTY(bool highlighted READ isHighlighted WRITE setHighlighted NOTIFY highlightedChanged FINAL)
+    QML_NAMED_ELEMENT(ItemDelegate)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickItemDelegate(QQuickItem *parent = nullptr);

@@ -116,26 +116,28 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopup : public QObject, public QQml
     Q_PROPERTY(QQuickTransition *enter READ enter WRITE setEnter NOTIFY enterChanged FINAL)
     Q_PROPERTY(QQuickTransition *exit READ exit WRITE setExit NOTIFY exitChanged FINAL)
     // 2.1 (Qt 5.8)
-    Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing RESET resetSpacing NOTIFY spacingChanged FINAL REVISION 1)
+    Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing RESET resetSpacing NOTIFY spacingChanged FINAL REVISION(2, 1))
     // 2.3 (Qt 5.10)
-    Q_PROPERTY(bool opened READ isOpened NOTIFY openedChanged FINAL REVISION 3)
-    Q_PROPERTY(bool mirrored READ isMirrored NOTIFY mirroredChanged FINAL REVISION 3)
-    Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged FINAL REVISION 3)
-    Q_PRIVATE_PROPERTY(QQuickPopup::d_func(), QQuickPalette *palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged REVISION 3)
+    Q_PROPERTY(bool opened READ isOpened NOTIFY openedChanged FINAL REVISION(2, 3))
+    Q_PROPERTY(bool mirrored READ isMirrored NOTIFY mirroredChanged FINAL REVISION(2, 3))
+    Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged FINAL REVISION(2, 3))
+    Q_PRIVATE_PROPERTY(QQuickPopup::d_func(), QQuickPalette *palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged REVISION(2, 3))
     // 2.5 (Qt 5.12)
     Q_PROPERTY(qreal horizontalPadding READ horizontalPadding WRITE setHorizontalPadding RESET resetHorizontalPadding NOTIFY horizontalPaddingChanged FINAL)
     Q_PROPERTY(qreal verticalPadding READ verticalPadding WRITE setVerticalPadding RESET resetVerticalPadding NOTIFY verticalPaddingChanged FINAL)
-    Q_PRIVATE_PROPERTY(QQuickPopup::d_func(), QQuickPopupAnchors *anchors READ getAnchors DESIGNABLE false CONSTANT FINAL REVISION 5)
-    Q_PROPERTY(qreal implicitContentWidth READ implicitContentWidth NOTIFY implicitContentWidthChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal implicitContentHeight READ implicitContentHeight NOTIFY implicitContentHeightChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal implicitBackgroundWidth READ implicitBackgroundWidth NOTIFY implicitBackgroundWidthChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal implicitBackgroundHeight READ implicitBackgroundHeight NOTIFY implicitBackgroundHeightChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal topInset READ topInset WRITE setTopInset RESET resetTopInset NOTIFY topInsetChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal leftInset READ leftInset WRITE setLeftInset RESET resetLeftInset NOTIFY leftInsetChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal rightInset READ rightInset WRITE setRightInset RESET resetRightInset NOTIFY rightInsetChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal bottomInset READ bottomInset WRITE setBottomInset RESET resetBottomInset NOTIFY bottomInsetChanged FINAL REVISION 5)
+    Q_PRIVATE_PROPERTY(QQuickPopup::d_func(), QQuickPopupAnchors *anchors READ getAnchors DESIGNABLE false CONSTANT FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal implicitContentWidth READ implicitContentWidth NOTIFY implicitContentWidthChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal implicitContentHeight READ implicitContentHeight NOTIFY implicitContentHeightChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal implicitBackgroundWidth READ implicitBackgroundWidth NOTIFY implicitBackgroundWidthChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal implicitBackgroundHeight READ implicitBackgroundHeight NOTIFY implicitBackgroundHeightChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal topInset READ topInset WRITE setTopInset RESET resetTopInset NOTIFY topInsetChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal leftInset READ leftInset WRITE setLeftInset RESET resetLeftInset NOTIFY leftInsetChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal rightInset READ rightInset WRITE setRightInset RESET resetRightInset NOTIFY rightInsetChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal bottomInset READ bottomInset WRITE setBottomInset RESET resetBottomInset NOTIFY bottomInsetChanged FINAL REVISION(2, 5))
     Q_CLASSINFO("DeferredPropertyNames", "background,contentItem")
     Q_CLASSINFO("DefaultProperty", "contentData")
+    QML_NAMED_ELEMENT(Popup)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickPopup(QObject *parent = nullptr);
@@ -390,24 +392,24 @@ Q_SIGNALS:
     void exitChanged();
     void windowChanged(QQuickWindow *window);
     // 2.1 (Qt 5.8)
-    Q_REVISION(1) void spacingChanged();
+    Q_REVISION(2, 1) void spacingChanged();
     // 2.3 (Qt 5.10)
-    Q_REVISION(3) void openedChanged();
-    Q_REVISION(3) void mirroredChanged();
-    Q_REVISION(3) void enabledChanged();
-    Q_REVISION(3) void paletteChanged();
-    Q_REVISION(3) void paletteCreated();
+    Q_REVISION(2, 3) void openedChanged();
+    Q_REVISION(2, 3) void mirroredChanged();
+    Q_REVISION(2, 3) void enabledChanged();
+    Q_REVISION(2, 3) void paletteChanged();
+    Q_REVISION(2, 3) void paletteCreated();
     // 2.5 (Qt 5.12)
-    Q_REVISION(5) void horizontalPaddingChanged();
-    Q_REVISION(5) void verticalPaddingChanged();
-    Q_REVISION(5) void implicitContentWidthChanged();
-    Q_REVISION(5) void implicitContentHeightChanged();
-    Q_REVISION(5) void implicitBackgroundWidthChanged();
-    Q_REVISION(5) void implicitBackgroundHeightChanged();
-    Q_REVISION(5) void topInsetChanged();
-    Q_REVISION(5) void leftInsetChanged();
-    Q_REVISION(5) void rightInsetChanged();
-    Q_REVISION(5) void bottomInsetChanged();
+    Q_REVISION(2, 5) void horizontalPaddingChanged();
+    Q_REVISION(2, 5) void verticalPaddingChanged();
+    Q_REVISION(2, 5) void implicitContentWidthChanged();
+    Q_REVISION(2, 5) void implicitContentHeightChanged();
+    Q_REVISION(2, 5) void implicitBackgroundWidthChanged();
+    Q_REVISION(2, 5) void implicitBackgroundHeightChanged();
+    Q_REVISION(2, 5) void topInsetChanged();
+    Q_REVISION(2, 5) void leftInsetChanged();
+    Q_REVISION(2, 5) void rightInsetChanged();
+    Q_REVISION(2, 5) void bottomInsetChanged();
 
 protected:
     QQuickPopup(QQuickPopupPrivate &dd, QObject *parent);

@@ -48,12 +48,12 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.15
-import QtQuick.Window 2.15
-import QtQuick.Controls 2.15
-import TestTableModel 0.1
-import TestTableModelWithHeader 0.1
-import HeaderDataProxyModel 0.1
+import QtQuick
+import QtQuick.Window
+import QtQuick.Controls
+import TestTableModel
+import TestTableModelWithHeader
+import HeaderDataProxyModel
 
 Window {
     objectName: "window"

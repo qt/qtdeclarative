@@ -1,0 +1,5 @@
+module QtQuick.Controls.Default.impl
+plugin qtquickcontrols2defaultstyleimplplugin
+classname QtQuickControls2DefaultStyleImplPlugin
+depends QtQuick.Templates 6.0
+depends QtQuick.Controls 6.0

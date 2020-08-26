@@ -49,7 +49,7 @@
 //
 
 #include <QtGui/qcolor.h>
-#include <QtQuickControls2/private/qquickattachedobject_p.h>
+#include <QtQuickControls2Impl/private/qquickattachedobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -87,6 +87,11 @@ class QQuickUniversalStyle : public QQuickAttachedObject
     Q_PROPERTY(QColor chromeWhiteColor READ chromeWhiteColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor listLowColor READ listLowColor NOTIFY paletteChanged FINAL)
     Q_PROPERTY(QColor listMediumColor READ listMediumColor NOTIFY paletteChanged FINAL)
+
+    QML_NAMED_ELEMENT(Universal)
+    QML_ATTACHED(QQuickUniversalStyle)
+    QML_UNCREATABLE("")
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickUniversalStyle(QObject *parent = nullptr);

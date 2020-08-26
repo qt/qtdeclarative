@@ -37,11 +37,12 @@
 #ifndef QQUICKVISUALTESTUTIL_H
 #define QQUICKVISUALTESTUTIL_H
 
+#include <functional>
+
 #include <QtQuick/QQuickItem>
 #include <QtQml/QQmlExpression>
-
 #include <QtQuick/private/qquickitem_p.h>
-
+#include <QtQuickControls2/qquickstyle.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 
 #include "util.h"
@@ -162,7 +163,33 @@ namespace QQuickVisualTestUtil
         QByteArray errorMessage;
     };
 
-    void addTestRowForEachControl(QQmlEngine *engine, const QString &sourcePath, const QString &targetPath, const QStringList &skiplist = QStringList());
+    struct QQuickStyleHelper
+    {
+        bool updateStyle(const QString &style)
+        {
+            // If it's not the first time a style has been set and the new style is not different, do nothing.
+            if (!currentStyle.isEmpty() && style == currentStyle)
+                return false;
+
+            engine.reset(new QQmlEngine);
+            currentStyle = style;
+            qmlClearTypeRegistrations();
+            QQuickStyle::setStyle(style);
+
+            QQmlComponent component(engine.data());
+            component.setData(QString("import QtQuick\nimport QtQuick.Controls\n Control { }").toUtf8(), QUrl());
+
+            return true;
+        }
+
+        QString currentStyle;
+        QScopedPointer<QQmlEngine> engine;
+    };
+
+    typedef std::function<void(const QString &/*relativePath*/, const QUrl &/*absoluteUrl*/)> ForEachCallback;
+
+    void forEachControl(QQmlEngine *engine, const QString &sourcePath, const QString &targetPath, const QStringList &skipList, ForEachCallback callback);
+    void addTestRowForEachControl(QQmlEngine *engine, const QString &sourcePath, const QString &targetPath, const QStringList &skipList = QStringList());
 }
 
 #define QQUICK_VERIFY_POLISH(item) \

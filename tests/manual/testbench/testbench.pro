@@ -1,6 +1,6 @@
 TEMPLATE = app
 
-QT += qml quick quickcontrols2
+QT += qml quick quickcontrols2 quickcontrols2-private
 CONFIG += c++11
 
 HEADERS += \

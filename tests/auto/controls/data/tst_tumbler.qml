@@ -48,9 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtTest 1.0
-import QtQuick.Controls 2.12
+import QtQuick
+import QtTest
+import QtQuick.Controls
 
 TestCase {
     id: testCase
@@ -383,7 +383,7 @@ TestCase {
         verify(tumbler);
 
         var mouseArea = createTemporaryQmlObject(
-            "import QtQuick 2.2; TextInput { activeFocusOnTab: true; width: 50; height: 50 }", testCase, "");
+            "import QtQuick; TextInput { activeFocusOnTab: true; width: 50; height: 50 }", testCase, "");
 
         tumbler.forceActiveFocus();
         verify(tumbler.activeFocus);

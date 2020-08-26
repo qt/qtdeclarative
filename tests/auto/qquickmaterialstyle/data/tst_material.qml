@@ -48,12 +48,12 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Window 2.2
-import QtTest 1.0
-import QtQuick.Templates 2.12 as T
-import QtQuick.Controls 2.12
-import QtQuick.Controls.Material 2.12
+import QtQuick
+import QtQuick.Window
+import QtTest
+import QtQuick.Templates as T
+import QtQuick.Controls
+import QtQuick.Controls.Material
 
 TestCase {
     id: testCase
@@ -606,7 +606,7 @@ TestCase {
         verify(window)
         verify(window.pane)
 
-        var control = Qt.createQmlObject("import QtQuick.Controls 2.1; " + data.type + " { }", window.pane)
+        var control = Qt.createQmlObject("import QtQuick.Controls; " + data.type + " { }", window.pane)
         verify(control)
 
         compare(control.font[data.attribute], data.value)

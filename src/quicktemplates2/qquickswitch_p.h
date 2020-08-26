@@ -59,6 +59,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwitch : public QQuickAbstractButto
     Q_OBJECT
     Q_PROPERTY(qreal position READ position WRITE setPosition NOTIFY positionChanged FINAL)
     Q_PROPERTY(qreal visualPosition READ visualPosition NOTIFY visualPositionChanged FINAL)
+    QML_NAMED_ELEMENT(Switch)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickSwitch(QQuickItem *parent = nullptr);

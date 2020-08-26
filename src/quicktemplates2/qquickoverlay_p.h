@@ -63,6 +63,10 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickOverlay : public QQuickItem
     Q_OBJECT
     Q_PROPERTY(QQmlComponent *modal READ modal WRITE setModal NOTIFY modalChanged FINAL)
     Q_PROPERTY(QQmlComponent *modeless READ modeless WRITE setModeless NOTIFY modelessChanged FINAL)
+    QML_NAMED_ELEMENT(Overlay)
+    QML_ATTACHED(QQuickOverlayAttached)
+    QML_UNCREATABLE("")
+    QML_ADDED_IN_VERSION(2, 3)
 
 public:
     explicit QQuickOverlay(QQuickItem *parent = nullptr);

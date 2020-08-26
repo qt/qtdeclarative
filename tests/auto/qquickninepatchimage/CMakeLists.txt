@@ -34,6 +34,7 @@ qt_add_test(tst_qquickninepatchimage
         Qt::QmlPrivate
         Qt::Quick
         Qt::QuickControls2
+        Qt::QuickControls2Private
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
         Qt::TestPrivate
