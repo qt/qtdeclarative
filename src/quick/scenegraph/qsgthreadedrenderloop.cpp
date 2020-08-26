@@ -128,12 +128,6 @@ static inline int qsgrl_animation_interval() {
     return int(1000 / refreshRate);
 }
 
-
-static QElapsedTimer threadTimer;
-static qint64 syncTime;
-static qint64 renderTime;
-static qint64 sinceLastTime;
-
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
 
 // RL: Render Loop
@@ -642,10 +636,10 @@ void QSGRenderThread::handleDeviceLoss()
 void QSGRenderThread::syncAndRender(QImage *grabImage)
 {
     bool profileFrames = QSG_LOG_TIME_RENDERLOOP().isDebugEnabled();
-    if (profileFrames) {
-        sinceLastTime = threadTimer.nsecsElapsed();
+    QElapsedTimer threadTimer;
+    qint64 syncTime = 0, renderTime = 0;
+    if (profileFrames)
         threadTimer.start();
-    }
     Q_TRACE_SCOPE(QSG_syncAndRender);
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphRenderLoopFrame);
     Q_TRACE(QSG_sync_entry);
@@ -849,7 +843,7 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
             int(threadTimer.elapsed()),
             int((syncTime/1000000)),
             int((renderTime - syncTime) / 1000000),
-            int(threadTimer.elapsed() - renderTime / 1000000));
+            int((threadTimer.nsecsElapsed() - renderTime) / 1000000));
 
     Q_TRACE(QSG_swap_exit);
     Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphRenderLoopFrame,

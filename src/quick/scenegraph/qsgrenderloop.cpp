@@ -714,7 +714,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
                 int(polishTime / 1000000),
                 int((syncTime - polishTime) / 1000000),
                 int((renderTime - syncTime) / 1000000),
-                int((swapTime - renderTime) / 10000000),
+                int((swapTime - renderTime) / 1000000),
                 int(lastFrameTime.msecsTo(QTime::currentTime())));
         lastFrameTime = QTime::currentTime();
     }
