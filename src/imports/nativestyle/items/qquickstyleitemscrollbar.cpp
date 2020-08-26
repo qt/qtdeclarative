@@ -83,6 +83,17 @@ void QQuickStyleItemScrollBar::initStyleOption(QStyleOptionSlider &styleOption)
     if (scrollBar->isPressed())
         styleOption.state |= QStyle::State_Sunken;
 
+#ifdef Q_OS_MACOS
+    if (m_overrideState != None) {
+        // In ScrollBar.qml we fade between two versions of
+        // the handle, depending on if it's hovered or not
+        if (m_overrideState & AlwaysHovered)
+            styleOption.state |= QStyle::State_Sunken;
+        else if (m_overrideState & NeverHovered)
+            styleOption.state &= ~QStyle::State_Sunken;
+    }
+#endif
+
     // The following values will let the handle fill 100% of the
     // groove / imageSize. But when the handle is resized by
     // QQuickScrollBar, it will end up with the correct size visually.

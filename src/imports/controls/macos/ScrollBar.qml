@@ -40,4 +40,24 @@ import QtQuick.Controls.impl 2.12
 import QtQuick.NativeStyle 6.0 as NativeStyle
 
 NativeStyle.DefaultScrollBar {
+    id: controlRoot
+
+    contentItem: NativeStyle.ScrollBar {
+        control: controlRoot
+        subControl: NativeStyle.ScrollBar.Handle
+        overrideState: NativeStyle.ScrollBar.NeverHovered
+    }
+
+    NativeStyle.ScrollBar {
+        // Fade a hovered-looking version of the handle
+        // on top of the default handle when hovering it
+        anchors.fill: contentItem
+        control: controlRoot
+        subControl: NativeStyle.ScrollBar.Handle
+        overrideState: NativeStyle.ScrollBar.AlwaysHovered
+        opacity: controlRoot.hovered || control.pressed ? 1 : 0
+        visible: contentItem instanceof NativeStyle.StyleItem
+        Behavior on opacity { NumberAnimation { duration: 150 } }
+    }
+
 }
