@@ -94,9 +94,9 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickComboBox : public QQuickControl
     Q_PROPERTY(QString valueRole READ valueRole WRITE setValueRole NOTIFY valueRoleChanged FINAL REVISION(2, 14))
     // 2.15 (Qt 5.15)
     Q_PROPERTY(bool selectTextByMouse READ selectTextByMouse WRITE setSelectTextByMouse NOTIFY selectTextByMouseChanged FINAL REVISION(2, 15))
-    // TODO: 6.0 (Qt 6.0) - QTBUG-84190
+    // 6.0 (Qt 6.0)
     Q_PROPERTY(ImplicitContentWidthPolicy implicitContentWidthPolicy READ implicitContentWidthPolicy
-        WRITE setImplicitContentWidthPolicy NOTIFY implicitContentWidthPolicyChanged FINAL REVISION 15)
+        WRITE setImplicitContentWidthPolicy NOTIFY implicitContentWidthPolicyChanged FINAL REVISION(6, 0))
     QML_NAMED_ELEMENT(ComboBox)
     QML_ADDED_IN_VERSION(2, 0)
 
