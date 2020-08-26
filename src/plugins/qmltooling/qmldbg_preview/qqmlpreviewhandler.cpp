@@ -126,7 +126,7 @@ void QQmlPreviewHandler::removeEngine(QQmlEngine *qmlEngine)
     const bool found = m_engines.removeOne(qmlEngine);
     Q_ASSERT(found);
     for (QObject *obj : m_createdObjects)
-    if (obj && QtQml::qmlEngine(obj) == qmlEngine)
+    if (obj && ::qmlEngine(obj) == qmlEngine)
       delete obj;
     m_createdObjects.removeAll(nullptr);
 }

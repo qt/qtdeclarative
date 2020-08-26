@@ -1490,8 +1490,6 @@ void QQmlEnginePrivate::doDeleteInEngineThread()
         delete d;
 }
 
-namespace QtQml {
-
 void qmlExecuteDeferred(QObject *object)
 {
     QQmlData *data = QQmlData::get(object);
@@ -1562,32 +1560,6 @@ QObject *qmlAttachedPropertiesObject(QObject *object, QQmlAttachedPropertiesFunc
 
     return resolveAttachedProperties(func, data, object, create);
 }
-
-} // namespace QtQml
-
-#if QT_DEPRECATED_SINCE(5, 1)
-QT_WARNING_PUSH
-QT_WARNING_DISABLE_DEPRECATED
-
-// Also define symbols outside namespace to keep binary compatibility with Qt 5.0
-
-Q_QML_EXPORT void qmlExecuteDeferred(QObject *obj)
-{
-    QtQml::qmlExecuteDeferred(obj);
-}
-
-Q_QML_EXPORT QQmlContext *qmlContext(const QObject *obj)
-{
-    return QtQml::qmlContext(obj);
-}
-
-Q_QML_EXPORT QQmlEngine *qmlEngine(const QObject *obj)
-{
-    return QtQml::qmlEngine(obj);
-}
-
-QT_WARNING_POP
-#endif // QT_DEPRECATED_SINCE(5, 1)
 
 class QQmlDataExtended {
 public:

@@ -594,29 +594,13 @@ class QQmlEngine;
 class QJSValue;
 class QJSEngine;
 
-#ifndef Q_QDOC
-namespace QtQml {
-#endif
-    // declared in namespace to avoid symbol conflicts with QtDeclarative
-    Q_QML_EXPORT void qmlExecuteDeferred(QObject *);
-    Q_QML_EXPORT QQmlContext *qmlContext(const QObject *);
-    Q_QML_EXPORT QQmlEngine *qmlEngine(const QObject *);
-    Q_QML_EXPORT QQmlAttachedPropertiesFunc qmlAttachedPropertiesFunction(QObject *,
-                                                                          const QMetaObject *);
-    Q_QML_EXPORT QObject *qmlAttachedPropertiesObject(QObject *, QQmlAttachedPropertiesFunc func,
-                                                      bool create = true);
-#ifndef Q_QDOC
-}
-
-QT_WARNING_PUSH
-QT_WARNING_DISABLE_CLANG("-Wheader-hygiene")
-
-// This is necessary to allow for QtQuick1 and QtQuick2 scenes in a single application.
-using namespace QtQml;
-
-QT_WARNING_POP
-
-#endif // Q_QDOC
+Q_QML_EXPORT void qmlExecuteDeferred(QObject *);
+Q_QML_EXPORT QQmlContext *qmlContext(const QObject *);
+Q_QML_EXPORT QQmlEngine *qmlEngine(const QObject *);
+Q_QML_EXPORT QQmlAttachedPropertiesFunc qmlAttachedPropertiesFunction(QObject *,
+                                                                      const QMetaObject *);
+Q_QML_EXPORT QObject *qmlAttachedPropertiesObject(QObject *, QQmlAttachedPropertiesFunc func,
+                                                  bool create = true);
 
 //The C++ version of protected namespaces in qmldir
 Q_QML_EXPORT bool qmlProtectModule(const char* uri, int majVersion);
