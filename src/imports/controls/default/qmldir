@@ -1,7 +1,6 @@
 module QtQuick.Controls.Default
 plugin qtquickcontrols2defaultstyleplugin
 classname QtQuickControls2DefaultStylePlugin
-depends QtQuick.Controls 2.5
 
 # QtQuick.Controls 2.0 (originally introduced in Qt 5.7)
 AbstractButton 2.0 AbstractButton.qml
