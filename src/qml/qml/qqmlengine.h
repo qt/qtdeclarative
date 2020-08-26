@@ -53,13 +53,12 @@ QT_BEGIN_NAMESPACE
 class Q_QML_EXPORT QQmlImageProviderBase
 {
 public:
-    enum ImageType {
+    enum ImageType : int {
+        Invalid = 0,
         Image,
         Pixmap,
         Texture,
-        Invalid,
-        ImageResponse
-        // ### Qt6: reorder these, and give Invalid a fixed large value
+        ImageResponse,
     };
 
     enum Flag {
