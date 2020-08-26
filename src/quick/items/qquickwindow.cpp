@@ -3600,62 +3600,6 @@ void QQuickWindowPrivate::rhiCreationFailureMessage(const QString &backendName,
     *untranslatedMessage = QString::fromLatin1(msg).arg(backendName);
 }
 
-#if QT_DEPRECATED_SINCE(5, 8)
-
-// ### Qt6: remove
-/*!
-    Propagates an event \a e to a QQuickItem \a item on the window.
-
-    Use \l QCoreApplication::sendEvent() directly instead.
-
-    The return value is currently not used.
-
-    \deprecated
-*/
-bool QQuickWindow::sendEvent(QQuickItem *item, QEvent *e)
-{
-    Q_D(QQuickWindow);
-
-    if (!item) {
-        qWarning("QQuickWindow::sendEvent: Cannot send event to a null item");
-        return false;
-    }
-
-    Q_ASSERT(e);
-
-    switch (e->type()) {
-    case QEvent::KeyPress:
-    case QEvent::KeyRelease:
-        e->accept();
-        QCoreApplication::sendEvent(item, e);
-        while (!e->isAccepted() && (item = item->parentItem())) {
-            e->accept();
-            QCoreApplication::sendEvent(item, e);
-        }
-        break;
-    case QEvent::MouseButtonPress:
-    case QEvent::MouseButtonRelease:
-    case QEvent::MouseButtonDblClick:
-    case QEvent::MouseMove: {
-            // XXX todo - should sendEvent be doing this?  how does it relate to forwarded events?
-            d->hasFiltered.clear();
-            if (!d->sendFilteredMouseEvent(e, item, item->parentItem())) {
-                // accept because qml items by default accept and have to explicitly opt out of accepting
-                e->accept();
-                QCoreApplication::sendEvent(item, e);
-            }
-        }
-        break;
-    default:
-        QCoreApplication::sendEvent(item, e);
-        break;
-    }
-
-    return false;
-}
-
-#endif
-
 void QQuickWindowPrivate::cleanupNodes()
 {
     for (int ii = 0; ii < cleanupNodeList.count(); ++ii)

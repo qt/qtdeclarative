@@ -125,10 +125,6 @@ public:
 
     QQuickItem *mouseGrabberItem() const;
 
-#if QT_DEPRECATED_SINCE(5, 8)
-    QT_DEPRECATED bool sendEvent(QQuickItem *, QEvent *);
-#endif
-
     QImage grabWindow();
 
     void setRenderTarget(const QQuickRenderTarget &target);
