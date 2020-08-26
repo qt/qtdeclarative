@@ -12,5 +12,4 @@ QtObject {
     property variant testColor1: Qt.rgba(1, 0.8, 0.3).darker()
     property variant testColor3: Qt.rgba(1, 0.8, 0.3).darker(2.8)
     property variant testColor4: Qt.color("red").darker();
-    property variant testColor7: Qt.rgba(1, 0.8, 0.3).darker(2.8, 10);
 }
