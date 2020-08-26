@@ -97,6 +97,7 @@ class QQuickImageProviderOptions;
 class Q_QUICK_EXPORT QQuickImageProvider : public QQmlImageProviderBase
 {
     friend class QQuickImageProviderWithOptions;
+    Q_OBJECT
 public:
     QQuickImageProvider(ImageType type, Flags flags = Flags());
     ~QQuickImageProvider() override;

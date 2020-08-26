@@ -1341,7 +1341,7 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
 
         QQuickImageProvider::ImageType imageType = QQuickImageProvider::Invalid;
         QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
-        QSharedPointer<QQuickImageProvider> provider = enginePrivate->imageProvider(imageProviderId(url)).dynamicCast<QQuickImageProvider>();
+        QSharedPointer<QQuickImageProvider> provider = enginePrivate->imageProvider(imageProviderId(url)).objectCast<QQuickImageProvider>();
         // it is safe to use get() as providerV2 does not escape and is outlived by provider
         QQuickImageProviderWithOptions *providerV2 = QQuickImageProviderWithOptions::checkedCast(provider.get());
         if (provider)

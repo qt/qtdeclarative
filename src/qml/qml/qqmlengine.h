@@ -50,8 +50,9 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_EXPORT QQmlImageProviderBase
+class Q_QML_EXPORT QQmlImageProviderBase : public QObject
 {
+    Q_OBJECT
 public:
     enum ImageType : int {
         Invalid = 0,
