@@ -251,8 +251,27 @@
 
   This is useful for registering types that cannot be amended to add the macros,
   for example because they belong to 3rdparty libraries.
+  To register a namespace, see \l QML_FOREIGN_NAMESPACE().
 
-  \sa QML_ELEMENT, QML_NAMED_ELEMENT()
+  \sa QML_ELEMENT, QML_NAMED_ELEMENT(), QML_FOREIGN_NAMESPACE()
+*/
+
+/*!
+  \macro QML_FOREIGN_NAMESPACE(FOREIGN_NAMESPACE)
+  \relates QQmlEngine
+
+  Declares that any \l QML_ELEMENT, \l QML_NAMED_ELEMENT(), \l QML_ANONYMOUS,
+  \l QML_INTERFACE, \l QML_UNCREATABLE(), \l QML_SINGLETON,
+  \l QML_ADDED_IN_MINOR_VERSION(), or \l QML_REMOVED_IN_MINOR_VERSION()
+  macros in the enclosing C++ namespace do not apply to the enclosing type but
+  instead to \a FOREIGN_NAMESPACE. The enclosing namespace still needs to be
+  registered with the \l {The Meta-Object System}{meta object system} using a
+  \l Q_NAMESPACE macro.
+
+  This is useful for registering namespaces that cannot be amended to add the macros,
+  for example because they belong to 3rdparty libraries.
+
+  \sa QML_ELEMENT, QML_NAMED_ELEMENT(), QML_FOREIGN()
 */
 
 /*!
