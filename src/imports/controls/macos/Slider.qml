@@ -36,7 +36,6 @@
 
 import QtQuick 2.12
 import QtQuick.Controls 2.12
-import QtQuick.Controls.impl 2.12
 import QtQuick.NativeStyle 6.0 as NativeStyle
 
 NativeStyle.DefaultSlider {
