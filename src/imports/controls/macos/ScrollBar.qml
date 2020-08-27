@@ -34,9 +34,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Controls 2.12
-import QtQuick.NativeStyle 6.0 as NativeStyle
+import QtQuick
+import QtQuick.Controls
+import QtQuick.NativeStyle as NativeStyle
 
 NativeStyle.DefaultScrollBar {
     id: controlRoot

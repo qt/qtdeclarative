@@ -34,10 +34,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Controls.Default.impl 2.12
-import QtQuick.Layouts 2.15
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Controls.Default.impl
+import QtQuick.Layouts
 
 ControlContainer {
     id: container

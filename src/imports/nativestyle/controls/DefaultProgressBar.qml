@@ -34,10 +34,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Templates 2.12 as T
-import QtQuick.Controls 2.12
-import QtQuick.NativeStyle 6.0 as NativeStyle
+import QtQuick
+import QtQuick.Templates as T
+import QtQuick.Controls
+import QtQuick.NativeStyle as NativeStyle
 
 T.ProgressBar {
     id: control
