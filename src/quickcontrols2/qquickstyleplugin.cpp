@@ -65,6 +65,9 @@ QString QQuickStylePlugin::name() const
 void QQuickStylePlugin::registerTypes(const char *uri)
 {
     qCDebug(lcStylePlugin).nospace() << "registerTypes called with uri " << uri << "; plugin name is " << name();
+
+    if (!QQuickTheme::instance())
+        qWarning() << "QtQuick.Controls must be imported before importing" << baseUrl().toString();
 }
 
 void QQuickStylePlugin::unregisterTypes()

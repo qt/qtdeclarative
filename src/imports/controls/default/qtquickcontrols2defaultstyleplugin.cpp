@@ -70,6 +70,9 @@ void QtQuickControls2DefaultStylePlugin::registerTypes(const char *uri)
 {
     QQuickStylePlugin::registerTypes(uri);
 
+    if (!QQuickTheme::instance())
+        return;
+
     theme.initialize(QQuickTheme::instance());
 }
 

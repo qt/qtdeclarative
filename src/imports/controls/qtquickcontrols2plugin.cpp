@@ -165,6 +165,8 @@ void QtQuickControls2Plugin::unregisterTypes()
     const int importMajor = !QQuickStylePrivate::isCustomStyle() ? QQmlModuleImportAuto : QQmlModuleImportLatest;
     qmlUnregisterModuleImport(qtQuickControlsUri, QQmlModuleImportModuleAny, styleUri.toUtf8().constData(), importMajor);
 
+    QQuickThemePrivate::instance.reset();
+
     QQuickStylePrivate::reset();
 }
 

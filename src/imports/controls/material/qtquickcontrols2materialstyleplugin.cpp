@@ -71,6 +71,9 @@ void QtQuickControls2MaterialStylePlugin::registerTypes(const char *uri)
 {
     QQuickStylePlugin::registerTypes(uri);
 
+    if (!QQuickTheme::instance())
+        return;
+
     QQuickMaterialStyle::initGlobals();
     theme.initialize(QQuickTheme::instance());
 }
