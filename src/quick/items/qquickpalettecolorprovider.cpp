@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
 
 static bool notEq(const QPalette &p1, const QPalette &p2)
 {
-    return p1.resolve() != p2.resolve() || p1 != p2;
+    return p1.resolveMask() != p2.resolveMask() || p1 != p2;
 }
 
 static QPalette::ColorGroup adjustCg(QPalette::ColorGroup group)
@@ -134,7 +134,7 @@ bool QQuickPaletteColorProvider::reset()
 bool QQuickPaletteColorProvider::inheritPalette(const QPalette &p)
 {
     QPalette parentPalette = m_requestedPalette.isAllocated() ? m_requestedPalette->resolve(p) : p;
-    parentPalette.resolve(m_requestedPalette.isAllocated() ? m_requestedPalette->resolve() | p.resolve() : p.resolve());
+    parentPalette.setResolveMask(m_requestedPalette.isAllocated() ? m_requestedPalette->resolveMask() | p.resolveMask() : p.resolveMask());
 
     auto tmpResolvedPalette = parentPalette.resolve(paletteProvider()->defaultPalette());
 

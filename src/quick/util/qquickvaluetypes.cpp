@@ -707,7 +707,7 @@ qreal QQuickFontValueType::pointSize() const
 
 void QQuickFontValueType::setPointSize(qreal size)
 {
-    if ((v.resolve() & QFont::SizeResolved) && v.pixelSize() != -1) {
+    if ((v.resolveMask() & QFont::SizeResolved) && v.pixelSize() != -1) {
         qWarning() << "Both point size and pixel size set. Using pixel size.";
         return;
     }
@@ -728,7 +728,7 @@ int QQuickFontValueType::pixelSize() const
 void QQuickFontValueType::setPixelSize(int size)
 {
     if (size >0) {
-        if ((v.resolve() & QFont::SizeResolved) && v.pointSizeF() != -1)
+        if ((v.resolveMask() & QFont::SizeResolved) && v.pointSizeF() != -1)
             qWarning() << "Both point size and pixel size set. Using pixel size.";
         v.setPixelSize(size);
     }

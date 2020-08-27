@@ -418,7 +418,7 @@ QFont QQuickFontLoader::font() const
 QString QQuickFontLoader::name() const
 {
     Q_D(const QQuickFontLoader);
-    return d->font.resolve() == 0 ? QString() : d->font.family();
+    return d->font.resolveMask() == 0 ? QString() : d->font.family();
 }
 
 /*!
