@@ -8,9 +8,8 @@ qt_add_qml_module(qtquickcontrols2windowsstyleplugin
     URI "QtQuick.Controls.Windows"
     VERSION "6.0" # special case
     CLASSNAME QtQuickControls2WindowsStylePlugin
-    DEPENDENCIES
-        QtQuick.Controls/2.5
-    SKIP_TYPE_REGISTRATION
+    IMPORTS
+        QtQuick.Controls.Fusion/auto
     GENERATE_QMLTYPES
     SOURCES
         qtquickcontrols2windowsstyleplugin.cpp
@@ -53,34 +52,34 @@ set(qml_files
     "TextField.qml"
 )
 set_source_files_properties(Button.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "6.0"
 )
 set_source_files_properties(CheckBox.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "6.0"
 )
 set_source_files_properties(ComboBox.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "6.0"
 )
 set_source_files_properties(Frame.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "6.0"
 )
 set_source_files_properties(GroupBox.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "6.0"
 )
 set_source_files_properties(RadioButton.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "6.0"
 )
 set_source_files_properties(Slider.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "6.0"
 )
 set_source_files_properties(SpinBox.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "6.0"
 )
 set_source_files_properties(TextArea.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "6.0"
 )
 set_source_files_properties(TextField.qml PROPERTIES
-    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+    QT_QML_SOURCE_VERSION "6.0"
 )
 
 qt6_target_qml_files(qtquickcontrols2windowsstyleplugin
