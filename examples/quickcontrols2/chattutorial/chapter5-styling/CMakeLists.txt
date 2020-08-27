@@ -37,7 +37,7 @@ target_link_libraries(chapter5-styling PUBLIC
 
 # Resources:
 set(qml_resource_files
-    "+material/ChatToolBar.qml"
+    "+Material/ChatToolBar.qml"
     "ChatToolBar.qml"
     "ContactPage.qml"
     "ConversationPage.qml"

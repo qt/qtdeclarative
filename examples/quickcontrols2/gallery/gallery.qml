@@ -51,9 +51,9 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
-import QtQuick.Controls.Material
-import QtQuick.Controls.Universal
 import Qt.labs.settings
+
+import "." as App
 
 ApplicationWindow {
     id: window
@@ -113,9 +113,7 @@ ApplicationWindow {
         onTriggered: optionsMenu.open()
     }
 
-    header: ToolBar {
-        Material.foreground: "white"
-
+    header: App.ToolBar {
         RowLayout {
             spacing: 20
             anchors.fill: parent

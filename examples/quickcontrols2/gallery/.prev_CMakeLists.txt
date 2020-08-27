@@ -33,6 +33,8 @@ target_link_libraries(gallery PUBLIC
 
 # Resources:
 set(qmake_immediate_resource_files
+    "+Material/ToolBar.qml"
+    "ToolBar.qml"
     "gallery.qml"
     "icons/gallery/20x20/back.png"
     "icons/gallery/20x20/drawer.png"
@@ -86,6 +88,7 @@ set(qmake_immediate_resource_files
     "pages/TextFieldPage.qml"
     "pages/ToolTipPage.qml"
     "pages/TumblerPage.qml"
+    "qmldir"
     "qtquickcontrols2.conf"
 )
 

@@ -37,6 +37,7 @@ set(qmake_immediate_resource_files
     "images/qt-logo@2x.png"
     "images/qt-logo@3x.png"
     "images/qt-logo@4x.png"
+    "qtquickcontrols2.conf"
     "sidepanel.qml"
 )
 

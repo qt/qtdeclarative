@@ -50,7 +50,6 @@
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Material
 import QtQuick.Layouts
 import QtQuick.Window
 
@@ -77,8 +76,6 @@ ApplicationWindow {
                 text: "\uE80A" // icon-ok
                 opacity: !textArea.readOnly ? 1 : 0
                 onClicked: textArea.readOnly = true
-
-                Material.foreground: Material.accent
             }
 
             Label {

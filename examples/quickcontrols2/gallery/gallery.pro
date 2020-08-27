@@ -34,6 +34,7 @@ RESOURCES += \
     pages/TextFieldPage.qml \
     pages/ToolTipPage.qml \
     pages/TumblerPage.qml \
+    qmldir \
     qtquickcontrols2.conf \
     icons/gallery/index.theme \
     icons/gallery/20x20/back.png \
@@ -59,7 +60,9 @@ RESOURCES += \
     images/qt-logo.png \
     images/qt-logo@2x.png \
     images/qt-logo@3x.png \
-    images/qt-logo@4x.png
+    images/qt-logo@4x.png \
+    ToolBar.qml \
+    +Material/ToolBar.qml
 
 target.path = $$[QT_INSTALL_EXAMPLES]/quickcontrols2/gallery
 INSTALLS += target

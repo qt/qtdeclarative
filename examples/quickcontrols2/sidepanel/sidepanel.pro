@@ -12,6 +12,7 @@ RESOURCES += \
     images/qt-logo@3x.png \
     images/qt-logo@4x.png \
     images/qt-logo.png \
+    qtquickcontrols2.conf \
     sidepanel.qml
 
 target.path = $$[QT_INSTALL_EXAMPLES]/quickcontrols2/sidepanel
