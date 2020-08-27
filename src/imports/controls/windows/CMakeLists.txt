@@ -5,9 +5,8 @@
 #####################################################################
 
 qt_add_qml_module(qtquickcontrols2windowsstyleplugin
-    TARGET_PATH "QtQuick/Controls.2/Windows"
     URI "QtQuick.Controls.Windows"
-    VERSION "6.0"
+    VERSION "6.0" # special case
     CLASSNAME QtQuickControls2WindowsStylePlugin
     DEPENDENCIES
         QtQuick.Controls/2.5
@@ -36,9 +35,9 @@ qt_add_qml_module(qtquickcontrols2windowsstyleplugin
 
 #### Keys ignored in scope 1:.:.:windows.pro:<TRUE>:
 # OTHER_FILES = "qmldir" "$$QML_FILES"
-# QML_IMPORT_MAJOR_VERSION = "6"
 # QML_IMPORT_NAME = "QtQuick.Controls.Windows"
-# TARGETPATH = "QtQuick/Controls.2/Windows"
+# QML_IMPORT_VERSION = "$$QT_VERSION"
+# TARGETPATH = "QtQuick/Controls/Windows"
 # _REQUIREMENTS = "qtConfig(quickcontrols2-windows)"
 
 set(qml_files

@@ -5,9 +5,8 @@
 #####################################################################
 
 qt_add_qml_module(qtquickcontrols2macosstyleplugin
-    TARGET_PATH "QtQuick/Controls.2/macOS"
     URI "QtQuick.Controls.macOS"
-    VERSION "2.0"
+    VERSION "6.0" # special case
     CLASSNAME QtQuickControls2MacOSStylePlugin
     DEPENDENCIES
         QtQuick.Controls/2.5
@@ -36,9 +35,9 @@ qt_add_qml_module(qtquickcontrols2macosstyleplugin
 
 #### Keys ignored in scope 1:.:.:macos.pro:<TRUE>:
 # OTHER_FILES = "qmldir" "$$QML_FILES"
-# QML_IMPORT_MAJOR_VERSION = "2"
 # QML_IMPORT_NAME = "QtQuick.Controls.macOS"
-# TARGETPATH = "QtQuick/Controls.2/macOS"
+# QML_IMPORT_VERSION = "$$QT_VERSION"
+# TARGETPATH = "QtQuick/Controls/macOS"
 # _REQUIREMENTS = "qtConfig(quickcontrols2-macos)"
 
 set(qml_files

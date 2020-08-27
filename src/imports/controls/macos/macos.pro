@@ -1,8 +1,8 @@
 TARGET = qtquickcontrols2macosstyleplugin
-TARGETPATH = QtQuick/Controls.2/macOS
+TARGETPATH = QtQuick/Controls/macOS
 
 QML_IMPORT_NAME = QtQuick.Controls.macOS
-QML_IMPORT_MAJOR_VERSION = 2
+QML_IMPORT_VERSION = $$QT_VERSION
 
 QT += qml quick quickcontrols2 quicktemplates2
 QT_PRIVATE += core-private gui-private qml-private quick-private quicktemplates2-private quickcontrols2-private
