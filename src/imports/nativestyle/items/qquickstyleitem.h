@@ -154,7 +154,7 @@ class QQuickStyleItem : public QQuickItem
     Q_OBJECT
 
     // Input
-    Q_PROPERTY(QQuickItem *control MEMBER m_control)
+    Q_PROPERTY(QQuickItem *control MEMBER m_control NOTIFY controlChanged)
     Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth)
     Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight)
     Q_PROPERTY(bool useNinePatchImage MEMBER m_useNinePatchImage)
@@ -208,6 +208,7 @@ public:
     void markImageDirty();
 
 signals:
+    void controlChanged();
     void contentPaddingChanged();
     void layoutMarginsChanged();
     void fontChanged();
