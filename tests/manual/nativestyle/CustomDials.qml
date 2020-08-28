@@ -68,7 +68,7 @@ ControlContainer {
                 width: 14
                 height: 10
                 color: "green"
-                source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/dial-indicator.png"
+                source: "qrc:/qt-project.org/imports/QtQuick/Controls/Default/images/dial-indicator.png"
                 antialiasing: true
                 opacity: dial1.enabled ? 1 : 0.3
                 transform: [

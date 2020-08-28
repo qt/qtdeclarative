@@ -61,7 +61,7 @@ ControlContainer {
                 y: control.topPadding + (control.availableHeight - height) / 2
                 color: control.palette.dark
                 defaultColor: "#353637"
-                source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/double-arrow.png"
+                source: "qrc:/qt-project.org/imports/QtQuick/Controls/Default/images/double-arrow.png"
                 opacity: enabled ? 1 : 0.3
             }
         }
@@ -100,7 +100,7 @@ ControlContainer {
                 y: control2.topPadding + (control2.availableHeight - height) / 2
                 color: control2.palette.dark
                 defaultColor: "#353637"
-                source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/double-arrow.png"
+                source: "qrc:/qt-project.org/imports/QtQuick/Controls/Default/images/double-arrow.png"
                 opacity: enabled ? 1 : 0.3
             }
         }

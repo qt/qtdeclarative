@@ -76,7 +76,7 @@ ControlContainer {
                     defaultColor: "#353637"
                     scale: 0.5
                     color: "green"
-                    source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png"
+                    source: "qrc:/qt-project.org/imports/QtQuick/Controls/Default/images/check.png"
                     visible: customIndicator.checkState === Qt.Checked
                 }
 
@@ -119,7 +119,7 @@ ControlContainer {
                     defaultColor: "#353637"
                     scale: 0.5
                     color: "green"
-                    source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png"
+                    source: "qrc:/qt-project.org/imports/QtQuick/Controls/Default/images/check.png"
                     visible: allCustom.checkState === Qt.Checked
                 }
 
