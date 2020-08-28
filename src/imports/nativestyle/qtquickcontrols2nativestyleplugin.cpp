@@ -62,7 +62,7 @@ public:
     ~QtQuickControls2NativeStylePlugin() override;
 
     void initializeEngine(QQmlEngine *engine, const char *uri) override;
-    void registerTypes(const char *uri) override;
+    void initializeTheme(QQuickTheme *theme) override;
     QString name() const override;
 };
 
@@ -136,14 +136,8 @@ void QtQuickControls2NativeStylePlugin::initializeEngine(QQmlEngine *engine, con
     QQuickNativeStyle::setStyle(style);
 }
 
-void QtQuickControls2NativeStylePlugin::registerTypes(const char *uri)
+void QtQuickControls2NativeStylePlugin::initializeTheme(QQuickTheme */*theme*/)
 {
-    Q_UNUSED(uri);
-    if (!QQuickTheme::instance())
-        return;
-
-    QQuickTheme::instance()->setPalette(QQuickTheme::System, QPalette());
-    QQuickTheme::instance()->setFont(QQuickTheme::System, QFont());
 }
 
 QT_END_NAMESPACE

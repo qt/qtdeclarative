@@ -41,7 +41,6 @@
 #include <QtCore/qloggingcategory.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlfile.h>
-
 #include <QtQuickTemplates2/private/qquicktheme_p_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -57,17 +56,24 @@ QQuickStylePlugin::~QQuickStylePlugin()
 {
 }
 
-QString QQuickStylePlugin::name() const
-{
-    return QString();
-}
-
 void QQuickStylePlugin::registerTypes(const char *uri)
 {
     qCDebug(lcStylePlugin).nospace() << "registerTypes called with uri " << uri << "; plugin name is " << name();
 
-    if (!QQuickTheme::instance())
+    auto theme = QQuickTheme::instance();
+    if (!theme) {
         qWarning() << "QtQuick.Controls must be imported before importing" << baseUrl().toString();
+        return;
+    }
+
+    if (name() != QQuickStyle::name()) {
+        qCDebug(lcStylePlugin).nospace() << "theme does not belong to current style ("
+            << QQuickStyle::name() << "); not calling initializeTheme()";
+        return;
+    }
+
+    qCDebug(lcStylePlugin) << "theme has not been initialized; calling initializeTheme()";
+    initializeTheme(theme);
 }
 
 void QQuickStylePlugin::unregisterTypes()

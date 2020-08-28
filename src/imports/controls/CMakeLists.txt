@@ -10,8 +10,6 @@ qt_add_qml_module(qtquickcontrols2plugin
     VERSION "6.0" # special case
     DESIGNER_SUPPORTED
     CLASSNAME QtQuickControls2Plugin
-    DEPENDENCIES
-        QtQuick.Templates/2.5
     SKIP_TYPE_REGISTRATION
     IMPORTS
         QtQuick.Controls.impl/auto

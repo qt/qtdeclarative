@@ -53,8 +53,7 @@ public:
     QtQuickControls2ImagineStylePlugin(QObject *parent = nullptr);
 
     QString name() const override;
-
-    void registerTypes(const char *uri) override;
+    void initializeTheme(QQuickTheme *theme) override;
 
     QQuickImagineTheme theme;
 };
@@ -68,14 +67,9 @@ QString QtQuickControls2ImagineStylePlugin::name() const
     return QStringLiteral("Imagine");
 }
 
-void QtQuickControls2ImagineStylePlugin::registerTypes(const char *uri)
+void QtQuickControls2ImagineStylePlugin::initializeTheme(QQuickTheme *theme)
 {
-    QQuickStylePlugin::registerTypes(uri);
-
-    if (!QQuickTheme::instance())
-        return;
-
-    theme.initialize(QQuickTheme::instance());
+    this->theme.initialize(theme);
 }
 
 QT_END_NAMESPACE

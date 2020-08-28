@@ -4,14 +4,15 @@ SOURCES += tst_styleimports.cpp
 
 macos:CONFIG -= app_bundle
 
-QT += core-private gui-private qml-private quick-private quickcontrols2-private testlib
+QT += core-private gui-private qml-private quick-private quickcontrols2-private quickcontrols2impl-private testlib
 
 include (../shared/util.pri)
 
 resourcestyle.prefix = /
+resourcestyle.base = resources
 resourcestyle.files += \
-    $$PWD/ResourceStyle/Button.qml \
-    $$PWD/ResourceStyle/qmldir
+    $$PWD/resources/ResourceStyle/Button.qml \
+    $$PWD/resources/ResourceStyle/qmldir
 RESOURCES += resourcestyle
 
 TESTDATA = data/*

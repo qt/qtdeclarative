@@ -8,8 +8,6 @@ qt_add_qml_module(qtquickcontrols2defaultstyleplugin
     URI "QtQuick.Controls.Default"
     VERSION "6.0" # special case
     CLASSNAME QtQuickControls2DefaultStylePlugin
-    DEPENDENCIES
-        QtQuick.Controls/2.5
     GENERATE_QMLTYPES
     SOURCES
         qquickdefaultstyle.cpp qquickdefaultstyle_p.h

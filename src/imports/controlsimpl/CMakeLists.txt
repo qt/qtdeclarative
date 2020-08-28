@@ -8,8 +8,6 @@ qt_add_qml_module(qtquickcontrols2implplugin
     URI "QtQuick.Controls.impl"
     VERSION "6.0" # special case
     CLASSNAME QtQuickControls2ImplPlugin
-    DEPENDENCIES
-        QtQuick.Templates/2.5
     SKIP_TYPE_REGISTRATION
     SOURCES
         qtquickcontrols2implplugin.cpp

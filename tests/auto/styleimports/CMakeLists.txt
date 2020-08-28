@@ -24,6 +24,7 @@ qt_add_test(tst_styleimports
         Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::QuickControls2
+        Qt::QuickControls2ImplPrivate
         Qt::QuickControls2Private
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
@@ -33,13 +34,19 @@ qt_add_test(tst_styleimports
 
 # Resources:
 set(qmake_resourcestyle_resource_files
-    "ResourceStyle/Button.qml"
-    "ResourceStyle/qmldir"
+    "resources/ResourceStyle/Button.qml"
+    "resources/ResourceStyle/qmldir"
+)
+set(qmake_resourcestyle_resource_files
+    "ResourceStyle/Button.qml" # special case: QTBUG-86726
+    "ResourceStyle/qmldir" # special case
 )
 
 qt_add_resource(tst_styleimports "qmake_resourcestyle"
     PREFIX
         "/"
+    BASE
+        "resources"
     FILES
         ${qmake_resourcestyle_resource_files}
 )

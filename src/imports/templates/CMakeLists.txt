@@ -8,8 +8,6 @@ qt_add_qml_module(qtquicktemplates2plugin
     URI "QtQuick.Templates"
     VERSION "6.0" # special case
     CLASSNAME QtQuickTemplates2Plugin
-    DEPENDENCIES
-        QtQuick.Window/2.2
     SKIP_TYPE_REGISTRATION
     SOURCES
         qtquicktemplates2plugin.cpp

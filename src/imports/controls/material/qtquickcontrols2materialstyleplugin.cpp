@@ -52,8 +52,7 @@ public:
     QtQuickControls2MaterialStylePlugin(QObject *parent = nullptr);
 
     QString name() const override;
-
-    void registerTypes(const char *uri) override;
+    void initializeTheme(QQuickTheme *theme) override;
 
     QQuickMaterialTheme theme;
 };
@@ -67,15 +66,10 @@ QString QtQuickControls2MaterialStylePlugin::name() const
     return QStringLiteral("Material");
 }
 
-void QtQuickControls2MaterialStylePlugin::registerTypes(const char *uri)
+void QtQuickControls2MaterialStylePlugin::initializeTheme(QQuickTheme *theme)
 {
-    QQuickStylePlugin::registerTypes(uri);
-
-    if (!QQuickTheme::instance())
-        return;
-
     QQuickMaterialStyle::initGlobals();
-    theme.initialize(QQuickTheme::instance());
+    this->theme.initialize(theme);
 }
 
 QT_END_NAMESPACE

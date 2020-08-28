@@ -142,6 +142,9 @@ struct QQuickStyleSpec
 
     void setFallbackStyle(const QString &fallback, const QByteArray &method)
     {
+        if (!fallback.isEmpty())
+            qCDebug(lcQtQuickControlsStyle) << "fallback style" << fallback << "set on QQuickStyleSpec via" << method;
+
         fallbackStyle = fallback;
         fallbackMethod = method;
     }

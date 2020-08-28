@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 #elif defined(Q_OS_WINDOWS)
         QQuickStyle::setStyle("Windows");
 #else
-        QQuickStyle::setStyle("FusionDesktop");
+        QQuickStyle::setStyle("Fusion");
 #endif
 
     QQmlApplicationEngine engine;

@@ -34,20 +34,14 @@
 **
 ****************************************************************************/
 
-#include <QtCore/qdir.h>
-#include <QtCore/qfile.h>
-#include <QtCore/qfileinfo.h>
-#include <QtCore/qloggingcategory.h>
-#include <QtCore/qpluginloader.h>
 #include <QtCore/private/qfileselector_p.h>
-#include <QtQml/qqmlfile.h>
-#include <QtQml/qqmlextensionplugin.h>
+#include <QtCore/qloggingcategory.h>
 #include <QtQml/qqmlengine.h>
-#include <QtQml/private/qqmldirparser_p.h>
-#include <QtQuickControls2/qquickstyle.h>
+#include <QtQml/qqmlextensionplugin.h>
+#include <QtQuickTemplates2/private/qquicktheme_p_p.h>
 #include <QtQuickControls2/private/qquickstyle_p.h>
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
-#include <QtQuickTemplates2/private/qquicktheme_p_p.h>
+#include <QtQuickControls2/qquickstyle.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -134,7 +128,7 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     if (styleName != fallbackStyleName && styleName != QLatin1String("Default")) {
         registeredFallbackStyleUri = ::fallbackStyleUri();
         qCDebug(lcQtQuickControlsStylePlugin) << "calling qmlRegisterModuleImport() to register fallback style with"
-            << "uri \"" << qtQuickControlsUri << "\" moduleMajor" << QQmlModuleImportModuleAny
+            << " uri \"" << qtQuickControlsUri << "\" moduleMajor" << QQmlModuleImportModuleAny
             << "import" << registeredFallbackStyleUri << "importMajor" << QQmlModuleImportAuto;
         // The fallback style must be a built-in style, so we match the version number.
         qmlRegisterModuleImport(qtQuickControlsUri, QQmlModuleImportModuleAny, registeredFallbackStyleUri.toUtf8().constData(),
@@ -174,7 +168,6 @@ void QtQuickControls2Plugin::unregisterTypes()
     registeredStyleUri.clear();
 
     QQuickThemePrivate::instance.reset();
-
     QQuickStylePrivate::reset();
 }
 

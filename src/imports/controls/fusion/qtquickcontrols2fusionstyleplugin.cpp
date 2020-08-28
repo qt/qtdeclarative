@@ -52,8 +52,7 @@ public:
     QtQuickControls2FusionStylePlugin(QObject *parent = nullptr);
 
     QString name() const override;
-
-    void registerTypes(const char *uri) override;
+    void initializeTheme(QQuickTheme *theme) override;
 
     QQuickFusionTheme theme;
 };
@@ -67,14 +66,9 @@ QString QtQuickControls2FusionStylePlugin::name() const
     return QStringLiteral("Fusion");
 }
 
-void QtQuickControls2FusionStylePlugin::registerTypes(const char *uri)
+void QtQuickControls2FusionStylePlugin::initializeTheme(QQuickTheme *theme)
 {
-    QQuickStylePlugin::registerTypes(uri);
-
-    if (!QQuickTheme::instance())
-        return;
-
-    theme.initialize(QQuickTheme::instance());
+    this->theme.initialize(theme);
 }
 
 QT_END_NAMESPACE

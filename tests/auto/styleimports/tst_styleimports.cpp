@@ -43,6 +43,7 @@
 #include <QtQuick/qquickwindow.h>
 #include <QtQuickControls2/qquickstyle.h>
 #include <QtQuickControls2/private/qquickstyle_p.h>
+#include <QtQuickControls2Impl/private/qquickiconlabel_p.h>
 
 #include "../shared/util.h"
 
@@ -62,6 +63,9 @@ private slots:
 
     void importStyleWithoutControls_data();
     void importStyleWithoutControls();
+
+    void fallbackStyleShouldNotOverwriteTheme_data();
+    void fallbackStyleShouldNotOverwriteTheme();
 };
 
 void tst_StyleImports::initTestCase()
@@ -151,6 +155,7 @@ void tst_StyleImports::select()
     QQuickStyle::setFallbackStyle(fallback);
 
     QQmlEngine engine;
+    engine.addImportPath(QLatin1String(":/"));
     engine.addImportPath(directory());
     engine.addImportPath(dataDirectory());
     QQmlComponent component(&engine);
@@ -185,7 +190,7 @@ void tst_StyleImports::platformSelectors()
 
     QQmlApplicationEngine engine;
     engine.addImportPath(dataDirectory());
-    engine.load(testFileUrl("platformSelectors.qml"));
+    engine.load(testFileUrl("applicationWindowWithButton.qml"));
     QQuickWindow *window = qobject_cast<QQuickWindow*>(engine.rootObjects().first());
     QVERIFY(window);
 
@@ -239,6 +244,46 @@ void tst_StyleImports::importStyleWithoutControls()
     engine.load(url);
     // It should load, but with warnings.
     QTRY_VERIFY(success);
+}
+
+void tst_StyleImports::fallbackStyleShouldNotOverwriteTheme_data()
+{
+    QTest::addColumn<QString>("style");
+    QTest::addColumn<QString>("fallbackStyle");
+    QTest::addColumn<QColor>("expectedContentItemColor");
+
+    QTest::addRow("style=Fusion,fallbackStyle=Material")
+        << QString::fromLatin1("Fusion") << QString::fromLatin1("Material") << QColor::fromRgb(0x252525);
+    QTest::addRow("style=ResourceStyle,fallbackStyle=Material")
+        << QString::fromLatin1("ResourceStyle") << QString::fromLatin1("Material") << QColor("salmon");
+}
+
+void tst_StyleImports::fallbackStyleShouldNotOverwriteTheme()
+{
+    QFETCH(QString, style);
+    QFETCH(QString, fallbackStyle);
+    QFETCH(QColor, expectedContentItemColor);
+
+    QQuickStyle::setStyle(style);
+    QQuickStyle::setFallbackStyle(fallbackStyle);
+
+    QQmlApplicationEngine engine;
+    engine.addImportPath(QLatin1String(":/"));
+    engine.addImportPath(dataDirectory());
+    engine.load(testFileUrl("applicationWindowWithButton.qml"));
+    QVERIFY(!engine.rootObjects().isEmpty());
+    QQuickWindow *window = qobject_cast<QQuickWindow*>(engine.rootObjects().first());
+    QVERIFY(window);
+
+    QObject *button = window->property("button").value<QObject*>();
+    QVERIFY(button);
+
+    QQuickIconLabel *contentItem = button->property("contentItem").value<QQuickIconLabel*>();
+    QVERIFY(contentItem);
+
+    // For example: the Fusion style provides Button.qml, so the Button's text color
+    // should be that of QPalette::ButtonText from QQuickFusionTheme.
+    QCOMPARE(contentItem->color(), expectedContentItemColor);
 }
 
 QTEST_MAIN(tst_StyleImports)

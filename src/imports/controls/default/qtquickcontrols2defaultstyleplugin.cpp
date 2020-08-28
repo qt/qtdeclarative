@@ -51,8 +51,7 @@ public:
     QtQuickControls2DefaultStylePlugin(QObject *parent = nullptr);
 
     QString name() const override;
-
-    void registerTypes(const char *uri) override;
+    void initializeTheme(QQuickTheme *theme) override;
 
     QQuickDefaultTheme theme;
 };
@@ -66,14 +65,9 @@ QString QtQuickControls2DefaultStylePlugin::name() const
     return QStringLiteral("Default");
 }
 
-void QtQuickControls2DefaultStylePlugin::registerTypes(const char *uri)
+void QtQuickControls2DefaultStylePlugin::initializeTheme(QQuickTheme *theme)
 {
-    QQuickStylePlugin::registerTypes(uri);
-
-    if (!QQuickTheme::instance())
-        return;
-
-    theme.initialize(QQuickTheme::instance());
+    this->theme.initialize(theme);
 }
 
 QT_END_NAMESPACE

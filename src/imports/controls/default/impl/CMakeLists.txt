@@ -8,9 +8,6 @@ qt_add_qml_module(qtquickcontrols2defaultstyleimplplugin
     URI "QtQuick.Controls.Default.impl"
     VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QtQuickControls2DefaultStyleImplPlugin
-    DEPENDENCIES
-        QtQuick.Templates/6.0
-        QtQuick.Controls/6.0
     SKIP_TYPE_REGISTRATION
     GENERATE_QMLTYPES
     SOURCES

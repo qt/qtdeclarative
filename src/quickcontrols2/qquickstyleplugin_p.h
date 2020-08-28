@@ -63,7 +63,8 @@ public:
     explicit QQuickStylePlugin(QObject *parent = nullptr);
     ~QQuickStylePlugin();
 
-    virtual QString name() const;
+    virtual QString name() const = 0;
+    virtual void initializeTheme(QQuickTheme *theme) = 0;
 
     void registerTypes(const char *uri) override;
     void unregisterTypes() override;

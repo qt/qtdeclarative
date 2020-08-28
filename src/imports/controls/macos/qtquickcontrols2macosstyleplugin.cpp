@@ -46,8 +46,8 @@ class QtQuickControls2MacOSStylePlugin : public QQuickStylePlugin
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 
 public:
-    void registerTypes(const char *uri) override;
     QString name() const override;
+    void initializeTheme(QQuickTheme *theme) override;
 };
 
 QString QtQuickControls2MacOSStylePlugin::name() const
@@ -55,9 +55,8 @@ QString QtQuickControls2MacOSStylePlugin::name() const
     return QStringLiteral("macOS");
 }
 
-void QtQuickControls2MacOSStylePlugin::registerTypes(const char *uri)
+void QtQuickControls2MacOSStylePlugin::initializeTheme(QQuickTheme */*theme*/)
 {
-    QQuickStylePlugin::registerTypes(uri);
 }
 
 QT_END_NAMESPACE
