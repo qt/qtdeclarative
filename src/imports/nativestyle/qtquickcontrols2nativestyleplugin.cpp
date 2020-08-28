@@ -38,6 +38,8 @@
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
 #include <QtGui/qguiapplication.h>
 
+#include <QtQuickTemplates2/private/qquicktheme_p.h>
+
 #include "qquicknativestyle.h"
 #include "qquickcommonstyle.h"
 
@@ -135,6 +137,8 @@ void QtQuickControls2NativeStylePlugin::initializeEngine(QQmlEngine *engine, con
 void QtQuickControls2NativeStylePlugin::registerTypes(const char *uri)
 {
     Q_UNUSED(uri);
+    QQuickTheme::instance()->setPalette(QQuickTheme::System, QPalette());
+    QQuickTheme::instance()->setFont(QQuickTheme::System, QFont());
 }
 
 QT_END_NAMESPACE
