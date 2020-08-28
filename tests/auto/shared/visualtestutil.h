@@ -39,6 +39,7 @@
 
 #include <functional>
 
+#include <QtCore/QPointer>
 #include <QtQuick/QQuickItem>
 #include <QtQml/QQmlExpression>
 #include <QtQuick/private/qquickitem_p.h>
@@ -190,6 +191,22 @@ namespace QQuickVisualTestUtil
 
     void forEachControl(QQmlEngine *engine, const QString &sourcePath, const QString &targetPath, const QStringList &skipList, ForEachCallback callback);
     void addTestRowForEachControl(QQmlEngine *engine, const QString &sourcePath, const QString &targetPath, const QStringList &skipList = QStringList());
+
+    // Helper to simulate Alt itself and Alt+<key> events.
+    class MnemonicKeySimulator
+    {
+        Q_DISABLE_COPY(MnemonicKeySimulator)
+    public:
+        explicit MnemonicKeySimulator(QWindow *window);
+
+        void press(Qt::Key key);
+        void release(Qt::Key key);
+        void click(Qt::Key key);
+
+    private:
+        QPointer<QWindow> m_window;
+        Qt::KeyboardModifiers m_modifiers;
+    };
 }
 
 #define QQUICK_VERIFY_POLISH(item) \

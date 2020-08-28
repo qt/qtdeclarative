@@ -140,3 +140,30 @@ void QQuickVisualTestUtil::addTestRowForEachControl(QQmlEngine *engine, const QS
         QTest::newRow(qPrintable(relativePath)) << absoluteUrl;
     });
 }
+
+QQuickVisualTestUtil::MnemonicKeySimulator::MnemonicKeySimulator(QWindow *window)
+    : m_window(window), m_modifiers(Qt::NoModifier)
+{
+}
+
+void QQuickVisualTestUtil::MnemonicKeySimulator::press(Qt::Key key)
+{
+    // QTest::keyPress() but not generating the press event for the modifier key.
+    if (key == Qt::Key_Alt)
+        m_modifiers |= Qt::AltModifier;
+    QTest::simulateEvent(m_window, true, key, m_modifiers, QString(), false);
+}
+
+void QQuickVisualTestUtil::MnemonicKeySimulator::release(Qt::Key key)
+{
+    // QTest::keyRelease() but not generating the release event for the modifier key.
+    if (key == Qt::Key_Alt)
+        m_modifiers &= ~Qt::AltModifier;
+    QTest::simulateEvent(m_window, false, key, m_modifiers, QString(), false);
+}
+
+void QQuickVisualTestUtil::MnemonicKeySimulator::click(Qt::Key key)
+{
+    press(key);
+    release(key);
+}

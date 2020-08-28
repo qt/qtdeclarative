@@ -418,6 +418,8 @@ void tst_qquickmenubar::mnemonics()
     moveMouseAway(window.data());
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
+    MnemonicKeySimulator keySim(window.data());
+
     QQuickMenuBar *menuBar = window->property("header").value<QQuickMenuBar *>();
     QVERIFY(menuBar);
 
@@ -434,30 +436,35 @@ void tst_qquickmenubar::mnemonics()
     QVERIFY(fileMenuBarItem && editMenuBarItem && viewMenuBarItem && helpMenuBarItem);
 
     // trigger a menubar item to open a menu
-    QTest::keyClick(window.data(), Qt::Key_E, Qt::AltModifier); // "&Edit"
+    keySim.press(Qt::Key_Alt);
+    keySim.click(Qt::Key_E); // "&Edit"
+    keySim.release(Qt::Key_Alt);
     QVERIFY(editMenuBarItem->isHighlighted());
     QVERIFY(!editMenuBarItem->hasActiveFocus());
     QVERIFY(editMenuBarMenu->isVisible());
     QTRY_VERIFY(editMenuBarMenu->isOpened());
     QVERIFY(editMenuBarMenu->hasActiveFocus());
 
-    // re-trigger a menubar item to hide the menu
-    QTest::keyClick(window.data(), Qt::Key_E, Qt::AltModifier); // "&Edit"
-    QVERIFY(editMenuBarItem->isHighlighted());
-    QVERIFY(editMenuBarItem->hasActiveFocus());
+    // press Alt to hide the menu
+    keySim.click(Qt::Key_Alt);
+    QVERIFY(!editMenuBarItem->isHighlighted());
+    QVERIFY(!editMenuBarItem->hasActiveFocus());
     QVERIFY(!editMenuBarMenu->hasActiveFocus());
     QTRY_VERIFY(!editMenuBarMenu->isVisible());
 
     // re-trigger a menubar item to show the menu again
-    QTest::keyClick(window.data(), Qt::Key_E, Qt::AltModifier); // "&Edit"
+    keySim.press(Qt::Key_Alt);
+    keySim.click(Qt::Key_E); // "&Edit"
+    keySim.release(Qt::Key_Alt);
     QVERIFY(editMenuBarItem->isHighlighted());
     QVERIFY(editMenuBarMenu->isVisible());
     QTRY_VERIFY(editMenuBarMenu->isOpened());
     QVERIFY(editMenuBarMenu->hasActiveFocus());
     QVERIFY(!editMenuBarItem->hasActiveFocus());
 
-    // trigger another menubar item to open another menu
-    QTest::keyClick(window.data(), Qt::Key_H, Qt::AltModifier); // "&Help"
+    // trigger another menubar item to open another menu, leave Alt pressed
+    keySim.press(Qt::Key_Alt);
+    keySim.click(Qt::Key_H); // "&Help"
     QVERIFY(!editMenuBarItem->isHighlighted());
     QVERIFY(helpMenuBarItem->isHighlighted());
     QVERIFY(!viewMenuBarMenu->isVisible());
@@ -465,40 +472,43 @@ void tst_qquickmenubar::mnemonics()
     QTRY_VERIFY(helpMenuBarMenu->isOpened());
 
     // trigger a menu item to close the menu
-    QTest::keyClick(window.data(), Qt::Key_A, Qt::AltModifier); // "&About"
+    keySim.click(Qt::Key_A); // "&About"
+    keySim.release(Qt::Key_Alt);
     QVERIFY(!helpMenuBarItem->isHighlighted());
     QTRY_VERIFY(!helpMenuBarMenu->isVisible());
 
-    // trigger a menubar item to open a menu
-    QTest::keyClick(window.data(), Qt::Key_V, Qt::AltModifier); // "&View"
+    // trigger a menubar item to open a menu, leave Alt pressed
+    keySim.press(Qt::Key_Alt);
+    keySim.click(Qt::Key_V); // "&View"
     QVERIFY(!editMenuBarItem->isHighlighted());
     QVERIFY(viewMenuBarItem->isHighlighted());
     QVERIFY(viewMenuBarMenu->isVisible());
     QTRY_VERIFY(viewMenuBarMenu->isOpened());
 
-    // trigger a menu item to open a sub-menu
+    // trigger a menu item to open a sub-menu, leave Alt pressed
     QQuickMenuItem *alignmentSubMenuItem = qobject_cast<QQuickMenuItem *>(viewMenuBarMenu->itemAt(0));
     QVERIFY(alignmentSubMenuItem);
     QQuickMenu *alignmentSubMenu = alignmentSubMenuItem->subMenu();
     QVERIFY(alignmentSubMenu);
-    QTest::keyClick(window.data(), Qt::Key_A, Qt::AltModifier); // "&Alignment"
+    keySim.click(Qt::Key_A); // "&Alignment"
     QVERIFY(viewMenuBarMenu->isVisible());
     QVERIFY(alignmentSubMenu->isVisible());
     QTRY_VERIFY(alignmentSubMenu->isOpened());
 
-    // trigger a menu item to open a sub-sub-menu
+    // trigger a menu item to open a sub-sub-menu, leave Alt pressed
     QQuickMenuItem *verticalSubMenuItem = qobject_cast<QQuickMenuItem *>(alignmentSubMenu->itemAt(1));
     QVERIFY(verticalSubMenuItem);
     QQuickMenu *verticalSubMenu = verticalSubMenuItem->subMenu();
     QVERIFY(verticalSubMenu);
-    QTest::keyClick(window.data(), Qt::Key_V, Qt::AltModifier); // "&Vertical"
+    keySim.click(Qt::Key_V); // "&Vertical"
     QVERIFY(viewMenuBarMenu->isVisible());
     QVERIFY(alignmentSubMenu->isVisible());
     QVERIFY(verticalSubMenu->isVisible());
     QTRY_VERIFY(verticalSubMenu->isOpened());
 
     // trigger a menu item to close the whole chain of menus
-    QTest::keyClick(window.data(), Qt::Key_C, Qt::AltModifier); // "&Center"
+    keySim.click(Qt::Key_C); // "&Center"
+    keySim.release(Qt::Key_Alt);
     QVERIFY(!viewMenuBarItem->isHighlighted());
     QTRY_VERIFY(!viewMenuBarMenu->isVisible());
     QTRY_VERIFY(!alignmentSubMenu->isVisible());

@@ -45,6 +45,7 @@
 
 #include <QtGui/qevent.h>
 #include <QtGui/qcursor.h>
+#include <QtGui/qkeysequence.h>
 #include <QtGui/qpa/qplatformintegration.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQml/qqmlcontext.h>
@@ -1470,6 +1471,13 @@ void QQuickMenu::keyPressEvent(QKeyEvent *event)
         }
         if (!event->isAccepted())
             d->propagateKeyEvent(event);
+        break;
+
+    case Qt::Key_Alt:
+        // If &mnemonic shortcut is enabled, go back to (possibly) the parent
+        // menu bar so the shortcut key will be processed by the menu bar.
+        if (!QKeySequence::mnemonic(QStringLiteral("&A")).isEmpty())
+            close();
         break;
 
     default:

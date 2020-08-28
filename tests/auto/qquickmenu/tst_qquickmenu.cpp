@@ -533,6 +533,8 @@ void tst_QQuickMenu::mnemonics()
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
+    MnemonicKeySimulator keySim(window);
+
     QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
     QQuickAction *action = window->property("action").value<QQuickAction *>();
     QQuickMenuItem *menuItem = window->property("menuItem").value<QQuickMenuItem *>();
@@ -540,12 +542,13 @@ void tst_QQuickMenu::mnemonics()
     QQuickMenuItem *subMenuItem = window->property("subMenuItem").value<QQuickMenuItem *>();
     QVERIFY(menu && action && menuItem && subMenu && subMenuItem);
 
+    keySim.press(Qt::Key_Alt);
     menu->open();
     QTRY_VERIFY(menu->isOpened());
 
     QSignalSpy actionSpy(action, &QQuickAction::triggered);
     QVERIFY(actionSpy.isValid());
-    QTest::keyClick(window, Qt::Key_A, Qt::AltModifier); // "&Action"
+    keySim.click(Qt::Key_A); // "&Action"
     QCOMPARE(actionSpy.count(), 1);
 
     menu->open();
@@ -553,18 +556,21 @@ void tst_QQuickMenu::mnemonics()
 
     QSignalSpy menuItemSpy(menuItem, &QQuickMenuItem::triggered);
     QVERIFY(menuItemSpy.isValid());
-    QTest::keyClick(window, Qt::Key_I, Qt::AltModifier); // "Menu &Item"
+    keySim.click(Qt::Key_I); // "Menu &Item"
+    keySim.release(Qt::Key_Alt);
     QCOMPARE(menuItemSpy.count(), 1);
 
+    keySim.press(Qt::Key_Alt);
     menu->open();
     QTRY_VERIFY(menu->isOpened());
 
-    QTest::keyClick(window, Qt::Key_M, Qt::AltModifier); // "Sub &Menu"
+    keySim.click(Qt::Key_M); // "Sub &Menu"
     QTRY_VERIFY(subMenu->isOpened());
 
     QSignalSpy subMenuItemSpy(subMenuItem, &QQuickMenuItem::triggered);
     QVERIFY(subMenuItemSpy.isValid());
-    QTest::keyClick(window, Qt::Key_S, Qt::AltModifier); // "&Sub Menu Item"
+    keySim.click(Qt::Key_S); // "&Sub Menu Item"
+    keySim.release(Qt::Key_Alt);
     QCOMPARE(subMenuItemSpy.count(), 1);
 }
 
