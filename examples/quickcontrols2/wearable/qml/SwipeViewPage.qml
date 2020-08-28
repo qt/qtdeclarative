@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Controls 2.12
+import QtQuick
+import QtQuick.Controls
 
 Item {
     // Don't show the item when the StackView that contains us

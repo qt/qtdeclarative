@@ -700,7 +700,7 @@ QJSValue QQuickSpinBox::valueFromText() const
     if (!d->valueFromText.isCallable()) {
         QQmlEngine *engine = qmlEngine(this);
         if (engine)
-            d->valueFromText = engine->evaluate(QStringLiteral("function(text, locale) { return Number.fromLocaleString(locale, text); }"));
+            d->valueFromText = engine->evaluate(QStringLiteral("(function(text, locale) { return Number.fromLocaleString(locale, text); })"));
     }
     return d->valueFromText;
 }

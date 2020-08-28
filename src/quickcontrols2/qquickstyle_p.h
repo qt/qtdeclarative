@@ -48,27 +48,29 @@
 // We mean it.
 //
 
-#include <QtCore/qurl.h>
 #include <QtCore/qsharedpointer.h>
-#include <QtQuickControls2/private/qtquickcontrols2global_p.h>
+#include <QtQuickControls2/qtquickcontrols2global.h>
 
 QT_BEGIN_NAMESPACE
 
 class QSettings;
 
-class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickStylePrivate
+class Q_QUICKCONTROLS2_EXPORT QQuickStylePrivate
 {
 public:
-    static QStringList stylePaths(bool resolve = false);
+    static QString effectiveStyleName(const QString &styleName);
     static QString fallbackStyle();
     static bool isCustomStyle();
-    static void init(const QUrl &baseUrl);
+    static bool isResolved();
+    static bool exists();
+    static void init();
     static void reset();
     static QString configFilePath();
     static QSharedPointer<QSettings> settings(const QString &group = QString());
     static const QFont *readFont(const QSharedPointer<QSettings> &settings);
     static const QPalette *readPalette(const QSharedPointer<QSettings> &settings);
     static bool isDarkSystemTheme();
+    static QStringList builtInStyles();
 };
 
 QT_END_NAMESPACE

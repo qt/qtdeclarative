@@ -1,11 +1,11 @@
 TARGET = qtquickcontrols2materialstyleplugin
-TARGETPATH = QtQuick/Controls.2/Material
+TARGETPATH = QtQuick/Controls/Material
 
-IMPORT_NAME = QtQuick.Controls.Material
-IMPORT_VERSION = 2.$$QT_MINOR_VERSION
+QML_IMPORT_NAME = QtQuick.Controls.Material
+QML_IMPORT_VERSION = $$QT_VERSION
 
 QT += qml quick
-QT_PRIVATE += core-private gui-private qml-private quick-private quicktemplates2-private quickcontrols2-private
+QT_PRIVATE += core-private gui-private qml-private quick-private quicktemplates2-private quickcontrols2-private quickcontrols2impl-private
 
 DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
 
@@ -21,7 +21,7 @@ SOURCES += \
 RESOURCES += \
     $$PWD/qtquickcontrols2materialstyleplugin.qrc
 
-CONFIG += no_cxx_module install_qml_files builtin_resources qtquickcompiler
+CONFIG += qmltypes no_cxx_module install_qml_files builtin_resources qtquickcompiler
 load(qml_plugin)
 
 requires(qtConfig(quickcontrols2-material))

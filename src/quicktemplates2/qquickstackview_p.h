@@ -73,7 +73,10 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickStackView : public QQuickControl
     Q_PROPERTY(QQuickTransition *replaceEnter READ replaceEnter WRITE setReplaceEnter NOTIFY replaceEnterChanged FINAL)
     Q_PROPERTY(QQuickTransition *replaceExit READ replaceExit WRITE setReplaceExit NOTIFY replaceExitChanged FINAL)
     // 2.3 (Qt 5.10)
-    Q_PROPERTY(bool empty READ isEmpty NOTIFY emptyChanged FINAL REVISION 3)
+    Q_PROPERTY(bool empty READ isEmpty NOTIFY emptyChanged FINAL REVISION(2, 3))
+    QML_NAMED_ELEMENT(StackView)
+    QML_ATTACHED(QQuickStackViewAttached)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickStackView(QQuickItem *parent = nullptr);
@@ -153,7 +156,7 @@ Q_SIGNALS:
     void replaceEnterChanged();
     void replaceExitChanged();
     // 2.3 (Qt 5.10)
-    Q_REVISION(3) void emptyChanged();
+    Q_REVISION(2, 3) void emptyChanged();
 
 protected:
     void componentComplete() override;
@@ -180,7 +183,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickStackViewAttached : public QObject
     Q_PROPERTY(QQuickStackView *view READ view NOTIFY viewChanged FINAL)
     Q_PROPERTY(QQuickStackView::Status status READ status NOTIFY statusChanged FINAL)
     // 2.2 (Qt 5.9)
-    Q_PROPERTY(bool visible READ isVisible WRITE setVisible RESET resetVisible NOTIFY visibleChanged FINAL) // REVISION 2
+    Q_PROPERTY(bool visible READ isVisible WRITE setVisible RESET resetVisible NOTIFY visibleChanged FINAL) // REVISION(2, 2)
 
 public:
     explicit QQuickStackViewAttached(QObject *parent = nullptr);
@@ -200,13 +203,13 @@ Q_SIGNALS:
     void viewChanged();
     void statusChanged();
     // 2.1 (Qt 5.8)
-    /*Q_REVISION(1)*/ void activated();
-    /*Q_REVISION(1)*/ void activating();
-    /*Q_REVISION(1)*/ void deactivated();
-    /*Q_REVISION(1)*/ void deactivating();
-    /*Q_REVISION(1)*/ void removed();
+    /*Q_REVISION(2, 1)*/ void activated();
+    /*Q_REVISION(2, 1)*/ void activating();
+    /*Q_REVISION(2, 1)*/ void deactivated();
+    /*Q_REVISION(2, 1)*/ void deactivating();
+    /*Q_REVISION(2, 1)*/ void removed();
     // 2.2 (Qt 5.9)
-    /*Q_REVISION(2)*/ void visibleChanged();
+    /*Q_REVISION(2, 2)*/ void visibleChanged();
 
 private:
     Q_DISABLE_COPY(QQuickStackViewAttached)

@@ -65,6 +65,9 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSplitView : public QQuickContainer
     Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)
     Q_PROPERTY(bool resizing READ isResizing NOTIFY resizingChanged)
     Q_PROPERTY(QQmlComponent *handle READ handle WRITE setHandle NOTIFY handleChanged FINAL)
+    QML_NAMED_ELEMENT(SplitView)
+    QML_ATTACHED(QQuickSplitViewAttached)
+    QML_ADDED_IN_VERSION(2, 13)
 
 public:
     explicit QQuickSplitView(QQuickItem *parent = nullptr);
@@ -190,6 +193,10 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSplitHandleAttached : public QObjec
     Q_OBJECT
     Q_PROPERTY(bool hovered READ isHovered NOTIFY hoveredChanged FINAL)
     Q_PROPERTY(bool pressed READ isPressed NOTIFY pressedChanged FINAL)
+    QML_NAMED_ELEMENT(SplitHandle)
+    QML_ATTACHED(QQuickSplitHandleAttached)
+    QML_UNCREATABLE("")
+    QML_ADDED_IN_VERSION(2, 13)
 
 public:
     explicit QQuickSplitHandleAttached(QObject *parent = nullptr);

@@ -1,10 +1,16 @@
 # Generated from imports.pro.
 
 add_subdirectory(controls)
-add_subdirectory(calendar)
+add_subdirectory(controlsimpl)
 add_subdirectory(platform)
 add_subdirectory(templates)
+add_subdirectory(controls/default)
+add_subdirectory(controls/default/impl)
 add_subdirectory(controls/fusion)
+add_subdirectory(controls/fusion/impl)
 add_subdirectory(controls/imagine)
+add_subdirectory(controls/imagine/impl)
 add_subdirectory(controls/material)
+add_subdirectory(controls/material/impl)
 add_subdirectory(controls/universal)
+add_subdirectory(controls/universal/impl)

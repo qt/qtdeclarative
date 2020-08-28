@@ -48,10 +48,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Controls 2.12
-import Qt.labs.platform 1.0
-import Theme 1.0
+import QtQuick
+import QtQuick.Controls
+import Qt.labs.platform
+import Theme
 
 ApplicationWindow {
     id: window

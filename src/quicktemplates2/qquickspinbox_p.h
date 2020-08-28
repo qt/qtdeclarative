@@ -72,12 +72,14 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSpinBox : public QQuickControl
     Q_PROPERTY(QQuickSpinButton *up READ up CONSTANT FINAL)
     Q_PROPERTY(QQuickSpinButton *down READ down CONSTANT FINAL)
     // 2.2 (Qt 5.9)
-    Q_PROPERTY(Qt::InputMethodHints inputMethodHints READ inputMethodHints WRITE setInputMethodHints NOTIFY inputMethodHintsChanged FINAL REVISION 2)
-    Q_PROPERTY(bool inputMethodComposing READ isInputMethodComposing NOTIFY inputMethodComposingChanged FINAL REVISION 2)
+    Q_PROPERTY(Qt::InputMethodHints inputMethodHints READ inputMethodHints WRITE setInputMethodHints NOTIFY inputMethodHintsChanged FINAL REVISION(2, 2))
+    Q_PROPERTY(bool inputMethodComposing READ isInputMethodComposing NOTIFY inputMethodComposingChanged FINAL REVISION(2, 2))
     // 2.3 (Qt 5.10)
-    Q_PROPERTY(bool wrap READ wrap WRITE setWrap NOTIFY wrapChanged FINAL REVISION 3)
+    Q_PROPERTY(bool wrap READ wrap WRITE setWrap NOTIFY wrapChanged FINAL REVISION(2, 3))
     // 2.4 (Qt 5.11)
-    Q_PROPERTY(QString displayText READ displayText NOTIFY displayTextChanged FINAL REVISION 4)
+    Q_PROPERTY(QString displayText READ displayText NOTIFY displayTextChanged FINAL REVISION(2, 4))
+    QML_NAMED_ELEMENT(SpinBox)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickSpinBox(QQuickItem *parent = nullptr);
@@ -137,13 +139,13 @@ Q_SIGNALS:
     void textFromValueChanged();
     void valueFromTextChanged();
     // 2.2 (Qt 5.9)
-    Q_REVISION(2) void valueModified();
-    Q_REVISION(2) void inputMethodHintsChanged();
-    Q_REVISION(2) void inputMethodComposingChanged();
+    Q_REVISION(2, 2) void valueModified();
+    Q_REVISION(2, 2) void inputMethodHintsChanged();
+    Q_REVISION(2, 2) void inputMethodComposingChanged();
     // 2.3 (Qt 5.10)
-    Q_REVISION(3) void wrapChanged();
+    Q_REVISION(2, 3) void wrapChanged();
     // 2.4 (Qt 5.11)
-    Q_REVISION(4) void displayTextChanged();
+    Q_REVISION(2, 4) void displayTextChanged();
 
 protected:
     void focusInEvent(QFocusEvent *event) override;
@@ -181,11 +183,13 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSpinButton : public QObject
     Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
     Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
     // 2.1 (Qt 5.8)
-    Q_PROPERTY(bool hovered READ isHovered WRITE setHovered NOTIFY hoveredChanged FINAL REVISION 1)
+    Q_PROPERTY(bool hovered READ isHovered WRITE setHovered NOTIFY hoveredChanged FINAL REVISION(2, 1))
     // 2.5 (Qt 5.12)
-    Q_PROPERTY(qreal implicitIndicatorWidth READ implicitIndicatorWidth NOTIFY implicitIndicatorWidthChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal implicitIndicatorHeight READ implicitIndicatorHeight NOTIFY implicitIndicatorHeightChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal implicitIndicatorWidth READ implicitIndicatorWidth NOTIFY implicitIndicatorWidthChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal implicitIndicatorHeight READ implicitIndicatorHeight NOTIFY implicitIndicatorHeightChanged FINAL REVISION(2, 5))
     Q_CLASSINFO("DeferredPropertyNames", "indicator")
+    QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickSpinButton(QQuickSpinBox *parent);
@@ -208,10 +212,10 @@ Q_SIGNALS:
     void pressedChanged();
     void indicatorChanged();
     // 2.1 (Qt 5.8)
-    Q_REVISION(1) void hoveredChanged();
+    Q_REVISION(2, 1) void hoveredChanged();
     // 2.5 (Qt 5.12)
-    Q_REVISION(5) void implicitIndicatorWidthChanged();
-    Q_REVISION(5) void implicitIndicatorHeightChanged();
+    Q_REVISION(2, 5) void implicitIndicatorWidthChanged();
+    Q_REVISION(2, 5) void implicitIndicatorHeightChanged();
 
 private:
     Q_DISABLE_COPY(QQuickSpinButton)

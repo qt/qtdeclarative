@@ -1307,6 +1307,8 @@ void tst_QQuickPopup::setOverlayParentToNull()
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickWindow *window = helper.window;
+    centerOnScreen(window);
+    moveMouseAway(window);
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
 

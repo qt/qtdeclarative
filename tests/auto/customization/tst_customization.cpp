@@ -42,6 +42,7 @@
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickwindow.h>
 #include <QtQuickControls2/qquickstyle.h>
+#include <QtQuickControls2/private/qquickstyle_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
 #include "../shared/visualtestutil.h"
 
@@ -227,6 +228,7 @@ void tst_customization::cleanupTestCase()
 void tst_customization::init()
 {
     engine = new QQmlEngine(this);
+    engine->addImportPath(testFile("styles"));
 
     qtHookData[QHooks::AddQObject] = reinterpret_cast<quintptr>(&qt_addQObject);
     qtHookData[QHooks::RemoveQObject] = reinterpret_cast<quintptr>(&qt_removeQObject);
@@ -256,7 +258,7 @@ void tst_customization::reset()
 QObject* tst_customization::createControl(const QString &name, const QString &qml, QString *error)
 {
     QQmlComponent component(engine);
-    component.setData("import QtQuick 2.10; import QtQuick.Window 2.2; import QtQuick.Controls 2.3; " + name.toUtf8() + " { " + qml.toUtf8() + " }", QUrl());
+    component.setData("import QtQuick; import QtQuick.Window; import QtQuick.Controls; " + name.toUtf8() + " { " + qml.toUtf8() + " }", QUrl());
     QObject *obj = component.create();
     if (!obj)
         *error = component.errorString();
@@ -296,7 +298,7 @@ void tst_customization::creation()
     QFETCH(QString, type);
     QFETCH(QStringList, delegates);
 
-    QQuickStyle::setStyle(testFile("styles/" + style));
+    QQuickStyle::setStyle(style);
 
     QString error;
     QScopedPointer<QObject> control(createControl(type, "", &error));
@@ -363,7 +365,7 @@ void tst_customization::override_data()
 #ifndef Q_OS_MACOS // QTBUG-65671
 
     // test that the built-in styles don't have undesired IDs in their delegates
-    const QStringList styles = QStringList() << "Default" << "Fusion" << "Material" << "Universal"; // ### TODO: QQuickStyle::availableStyles();
+    const QStringList styles = QQuickStylePrivate::builtInStyles();
     for (const QString &style : styles) {
         for (const ControlInfo &control : ControlInfos)
             QTest::newRow(qPrintable(style + ":" + control.type)) << style << control.type << control.delegates << "" << false;
@@ -380,11 +382,7 @@ void tst_customization::override()
     QFETCH(QString, nonDeferred);
     QFETCH(bool, identify);
 
-    const QString testStyle = testFile("styles/" + style);
-    if (QDir(testStyle).exists())
-        QQuickStyle::setStyle(testStyle);
-    else
-        QQuickStyle::setStyle(style);
+    QQuickStyle::setStyle(style);
 
     QString qml;
     qml += QString("objectName: '%1-%2-override'; ").arg(type.toLower()).arg(style);
@@ -478,12 +476,12 @@ void tst_customization::override()
 
 void tst_customization::comboPopup()
 {
-    QQuickStyle::setStyle(testFile("styles/simple"));
+    QQuickStyle::setStyle("simple");
 
     {
         // test that ComboBox::popup is created when accessed
         QQmlComponent component(engine);
-        component.setData("import QtQuick.Controls 2.2; ComboBox { }", QUrl());
+        component.setData("import QtQuick.Controls; ComboBox { }", QUrl());
         QScopedPointer<QQuickItem> comboBox(qobject_cast<QQuickItem *>(component.create()));
         QVERIFY(comboBox);
 
@@ -505,7 +503,7 @@ void tst_customization::comboPopup()
         QVERIFY(QTest::qWaitForWindowActive(&window));
 
         QQmlComponent component(engine);
-        component.setData("import QtQuick.Controls 2.2; ComboBox { }", QUrl());
+        component.setData("import QtQuick.Controls; ComboBox { }", QUrl());
         QScopedPointer<QQuickItem> comboBox(qobject_cast<QQuickItem *>(component.create()));
         QVERIFY(comboBox);
 
@@ -521,7 +519,7 @@ void tst_customization::comboPopup()
     {
         // test that ComboBox::popup is completed upon component completion (if appropriate)
         QQmlComponent component(engine);
-        component.setData("import QtQuick 2.9; import QtQuick.Controls 2.2; ComboBox { id: control; contentItem: Item { visible: !control.popup.visible } popup: Popup { property bool wasCompleted: false; Component.onCompleted: wasCompleted = true } }", QUrl());
+        component.setData("import QtQuick; import QtQuick.Controls; ComboBox { id: control; contentItem: Item { visible: !control.popup.visible } popup: Popup { property bool wasCompleted: false; Component.onCompleted: wasCompleted = true } }", QUrl());
         QScopedPointer<QQuickItem> comboBox(qobject_cast<QQuickItem *>(component.create()));
         QVERIFY(comboBox);
 

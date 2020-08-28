@@ -60,9 +60,11 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickGroupBox : public QQuickFrame
     Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged FINAL)
     Q_PROPERTY(QQuickItem *label READ label WRITE setLabel NOTIFY labelChanged FINAL)
     // 2.5 (Qt 5.12)
-    Q_PROPERTY(qreal implicitLabelWidth READ implicitLabelWidth NOTIFY implicitLabelWidthChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal implicitLabelHeight READ implicitLabelHeight NOTIFY implicitLabelHeightChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal implicitLabelWidth READ implicitLabelWidth NOTIFY implicitLabelWidthChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal implicitLabelHeight READ implicitLabelHeight NOTIFY implicitLabelHeightChanged FINAL REVISION(2, 5))
     Q_CLASSINFO("DeferredPropertyNames", "background,contentItem,label")
+    QML_NAMED_ELEMENT(GroupBox)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickGroupBox(QQuickItem *parent = nullptr);
@@ -82,8 +84,8 @@ Q_SIGNALS:
     void titleChanged();
     void labelChanged();
     // 2.5 (Qt 5.12)
-    Q_REVISION(5) void implicitLabelWidthChanged();
-    Q_REVISION(5) void implicitLabelHeightChanged();
+    Q_REVISION(2, 5) void implicitLabelWidthChanged();
+    Q_REVISION(2, 5) void implicitLabelHeightChanged();
 
 protected:
     void componentComplete() override;

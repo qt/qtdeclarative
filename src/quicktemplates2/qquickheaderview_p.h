@@ -88,6 +88,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickHorizontalHeaderView : public QQuic
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickHorizontalHeaderView)
+    QML_NAMED_ELEMENT(HorizontalHeaderView)
+    QML_ADDED_IN_VERSION(2, 15)
 
 public:
     QQuickHorizontalHeaderView(QQuickItem *parent = nullptr);
@@ -105,6 +107,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickVerticalHeaderView : public QQuickH
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickVerticalHeaderView)
+    QML_NAMED_ELEMENT(VerticalHeaderView)
+    QML_ADDED_IN_VERSION(2, 15)
 
 public:
     QQuickVerticalHeaderView(QQuickItem *parent = nullptr);
@@ -115,6 +119,14 @@ protected:
 
 private:
     Q_DISABLE_COPY(QQuickVerticalHeaderView)
+};
+
+struct QQuickTableViewForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN(QQuickTableView)
+    QML_ADDED_IN_VERSION(2, 14)
 };
 
 QT_END_NAMESPACE

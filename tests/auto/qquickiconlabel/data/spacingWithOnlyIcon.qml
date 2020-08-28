@@ -48,15 +48,15 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Controls 2.12
-import QtQuick.Controls.impl 2.12
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Controls.impl
 
 AbstractButton {
     id: button
     width: 200
     height: 200
-    icon.source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png"
+    icon.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Default/images/check.png"
 
     IconLabel {
         spacing: 10

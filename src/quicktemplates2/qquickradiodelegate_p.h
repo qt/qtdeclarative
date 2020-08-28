@@ -57,6 +57,8 @@ class QQuickRadioDelegatePrivate;
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickRadioDelegate : public QQuickItemDelegate
 {
     Q_OBJECT
+    QML_NAMED_ELEMENT(RadioDelegate)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickRadioDelegate(QQuickItem *parent = nullptr);

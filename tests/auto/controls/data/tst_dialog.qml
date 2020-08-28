@@ -48,10 +48,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtTest 1.0
-import QtQuick.Controls 2.12
-import QtQuick.Templates 2.12 as T
+import QtQuick
+import QtTest
+import QtQuick.Controls
+import QtQuick.Templates as T
 
 TestCase {
     id: testCase
@@ -410,5 +410,41 @@ TestCase {
 
         button.clicked()
         compare(buttonSpy.count, 1)
+    }
+
+    Component {
+        id: qtbug85884
+        ApplicationWindow {
+            property alias focusItemActiveFocus: item.activeFocus
+            property alias focusDialogVisible: dialog.visible
+            visible: true
+            Item {
+                id: item
+                focus: true
+            }
+            Dialog {
+                id: dialog
+                focus: true
+                visible: false
+                onActiveFocusChanged: {
+                    if (!activeFocus)
+                        visible = false
+                }
+            }
+        }
+    }
+
+    function test_focusLeavingDialog(data) {
+        var window = createTemporaryObject(qtbug85884, testCase)
+        verify(window)
+        tryCompare(window, "focusItemActiveFocus", true)
+
+        window.focusDialogVisible = true
+        tryCompare(window, "focusDialogVisible", true)
+        tryCompare(window, "focusItemActiveFocus", false)
+
+        window.focusDialogVisible = false
+        tryCompare(window, "focusDialogVisible", false)
+        tryCompare(window, "focusItemActiveFocus", true)
     }
 }

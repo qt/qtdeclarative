@@ -48,9 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Controls 2.12
-import QtQuick.Window 2.11
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Window
 
 Window {
     title: "Test Window"

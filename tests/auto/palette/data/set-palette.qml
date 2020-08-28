@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 6.0
-import QtQuick.Controls 2.14
+import QtQuick
+import QtQuick.Controls
 
 Control {
     palette {

@@ -48,10 +48,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Controls 2.12
+import QtQuick
+import QtQuick.Controls
 
-import io.qt.examples.chattutorial 1.0
+import io.qt.examples.chattutorial
 
 Page {
     id: root

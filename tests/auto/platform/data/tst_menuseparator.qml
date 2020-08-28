@@ -48,9 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtTest 1.0
-import Qt.labs.platform 1.0
+import QtQuick
+import QtTest
+import Qt.labs.platform
 
 TestCase {
     id: testCase

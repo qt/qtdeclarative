@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Controls 2.12
+import QtQuick
+import QtQuick.Controls
 
 // TODO: restore and finish https://codereview.qt-project.org/#/c/123948/
 ApplicationWindow {

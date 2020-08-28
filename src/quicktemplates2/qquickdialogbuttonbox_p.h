@@ -67,8 +67,11 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDialogButtonBox : public QQuickCont
     Q_PROPERTY(QPlatformDialogHelper::StandardButtons standardButtons READ standardButtons WRITE setStandardButtons NOTIFY standardButtonsChanged FINAL)
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
     // 2.5 (Qt 5.12)
-    Q_PROPERTY(QPlatformDialogHelper::ButtonLayout buttonLayout READ buttonLayout WRITE setButtonLayout RESET resetButtonLayout NOTIFY buttonLayoutChanged FINAL REVISION 5)
+    Q_PROPERTY(QPlatformDialogHelper::ButtonLayout buttonLayout READ buttonLayout WRITE setButtonLayout RESET resetButtonLayout NOTIFY buttonLayoutChanged FINAL REVISION(2, 5))
     Q_FLAGS(QPlatformDialogHelper::StandardButtons)
+    QML_NAMED_ELEMENT(DialogButtonBox)
+    QML_ATTACHED(QQuickDialogButtonBoxAttached)
+    QML_ADDED_IN_VERSION(2, 1)
 
 public:
     explicit QQuickDialogButtonBox(QQuickItem *parent = nullptr);
@@ -113,11 +116,11 @@ Q_SIGNALS:
     void standardButtonsChanged();
     void delegateChanged();
     // 2.3 (Qt 5.10)
-    Q_REVISION(3) void applied();
-    Q_REVISION(3) void reset();
-    Q_REVISION(3) void discarded();
+    Q_REVISION(2, 3) void applied();
+    Q_REVISION(2, 3) void reset();
+    Q_REVISION(2, 3) void discarded();
     // 2.5 (Qt 5.12)
-    Q_REVISION(5) void buttonLayoutChanged();
+    Q_REVISION(2, 5) void buttonLayoutChanged();
 
 protected:
     void updatePolish() override;

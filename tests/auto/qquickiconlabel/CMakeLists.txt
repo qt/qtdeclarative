@@ -19,7 +19,7 @@ qt_add_test(tst_qquickiconlabel
     DEFINES
         QQC2_IMPORT_PATH=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../../src/imports\\\"
     LIBRARIES
-        Qt::QuickControls2Private
+        Qt::QuickControls2ImplPrivate
         Qt::QuickPrivate
     PUBLIC_LIBRARIES
         Qt::CorePrivate
@@ -29,6 +29,7 @@ qt_add_test(tst_qquickiconlabel
         Qt::QmlPrivate
         Qt::Quick
         Qt::QuickControls2
+        Qt::QuickControls2Private
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
         Qt::TestPrivate

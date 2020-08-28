@@ -1,3 +1,11 @@
+HEADERS += \
+    $$PWD/qquickimaginestyle_p.h \
+    $$PWD/qquickimaginetheme_p.h
+
+SOURCES += \
+    $$PWD/qquickimaginestyle.cpp \
+    $$PWD/qquickimaginetheme.cpp
+
 QML_FILES += \
     $$PWD/ApplicationWindow.qml \
     $$PWD/BusyIndicator.qml \
@@ -18,7 +26,6 @@ QML_FILES += \
     $$PWD/Menu.qml \
     $$PWD/MenuItem.qml \
     $$PWD/MenuSeparator.qml \
-    $$PWD/OpacityMask.qml \
     $$PWD/PageIndicator.qml \
     $$PWD/Page.qml \
     $$PWD/Pane.qml \
@@ -48,15 +55,3 @@ QML_FILES += \
     $$PWD/ToolTip.qml \
     $$PWD/Tumbler.qml \
     $$PWD/VerticalHeaderView.qml
-
-HEADERS += \
-    $$PWD/qquickimageselector_p.h \
-    $$PWD/qquickimaginestyle_p.h \
-    $$PWD/qquickimaginetheme_p.h \
-    $$PWD/qquickninepatchimage_p.h
-
-SOURCES += \
-    $$PWD/qquickimageselector.cpp \
-    $$PWD/qquickimaginestyle.cpp \
-    $$PWD/qquickimaginetheme.cpp \
-    $$PWD/qquickninepatchimage.cpp

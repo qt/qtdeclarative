@@ -71,10 +71,12 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDial : public QQuickControl
     Q_PROPERTY(bool pressed READ isPressed NOTIFY pressedChanged FINAL)
     Q_PROPERTY(QQuickItem *handle READ handle WRITE setHandle NOTIFY handleChanged FINAL)
     // 2.2 (Qt 5.9)
-    Q_PROPERTY(bool live READ live WRITE setLive NOTIFY liveChanged FINAL REVISION 2)
+    Q_PROPERTY(bool live READ live WRITE setLive NOTIFY liveChanged FINAL REVISION(2, 2))
     // 2.5 (Qt 5.12)
-    Q_PROPERTY(InputMode inputMode READ inputMode WRITE setInputMode NOTIFY inputModeChanged FINAL REVISION 5)
+    Q_PROPERTY(InputMode inputMode READ inputMode WRITE setInputMode NOTIFY inputModeChanged FINAL REVISION(2, 5))
     Q_CLASSINFO("DeferredPropertyNames", "background,handle")
+    QML_NAMED_ELEMENT(Dial)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickDial(QQuickItem *parent = nullptr);
@@ -145,10 +147,10 @@ Q_SIGNALS:
     void pressedChanged();
     void handleChanged();
     // 2.2 (Qt 5.9)
-    Q_REVISION(2) void moved();
-    Q_REVISION(2) void liveChanged();
+    Q_REVISION(2, 2) void moved();
+    Q_REVISION(2, 2) void liveChanged();
     // 2.5 (Qt 5.12)
-    Q_REVISION(5) void inputModeChanged();
+    Q_REVISION(2, 5) void inputModeChanged();
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;

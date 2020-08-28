@@ -34,20 +34,17 @@
 **
 ****************************************************************************/
 
-#include <QtQuickControls2/private/qquickstyleplugin_p.h>
-#include <QtCore/qloggingcategory.h>
-#include <QtQml/qqml.h>
-
-#include "qquickimageselector_p.h"
 #include "qquickimaginestyle_p.h"
 #include "qquickimaginetheme_p.h"
-#include "qquickninepatchimage_p.h"
+
+#include <QtCore/qloggingcategory.h>
+#include <QtQml/qqml.h>
+#include <QtQuickControls2/private/qquickstyleplugin_p.h>
+#include <QtQuickTemplates2/private/qquicktheme_p.h>
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcQtQuickControlsImagine, "qt.quick.controls.imagine")
-
-class QtQuickControls2ImagineStylePlugin: public QQuickStylePlugin
+class QtQuickControls2ImagineStylePlugin : public QQuickStylePlugin
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
@@ -55,31 +52,15 @@ class QtQuickControls2ImagineStylePlugin: public QQuickStylePlugin
 public:
     QtQuickControls2ImagineStylePlugin(QObject *parent = nullptr);
 
+    QString name() const override;
+
     void registerTypes(const char *uri) override;
 
-    QString name() const override;
-    void initializeTheme(QQuickTheme *theme) override;
+    QQuickImagineTheme theme;
 };
 
 QtQuickControls2ImagineStylePlugin::QtQuickControls2ImagineStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
 {
-}
-
-void QtQuickControls2ImagineStylePlugin::registerTypes(const char *uri)
-{
-    qmlRegisterModule(uri, 2, 15); // Qt 5.12->2.12, 5.13->2.13...
-    qmlRegisterUncreatableType<QQuickImagineStyle>(uri, 2, 3, "Imagine", tr("Imagine is an attached property"));
-
-    QByteArray import = QByteArray(uri) + ".impl";
-    qmlRegisterModule(import, 2, 15); // Qt 5.12->2.12, 5.13->2.13...
-
-    qmlRegisterType<QQuickAnimatedImageSelector>(import, 2, 3, "AnimatedImageSelector");
-    qmlRegisterType<QQuickImageSelector>(import, 2, 3, "ImageSelector");
-    qmlRegisterType<QQuickNinePatchImage>(import, 2, 3, "NinePatchImage");
-    qmlRegisterType<QQuickNinePatchImageSelector>(import, 2, 3, "NinePatchImageSelector");
-
-    // Qt 6.0, import version may need to be updated.
-    qmlRegisterType(resolvedUrl(QStringLiteral("OpacityMask.qml")), import, 2, 0, "OpacityMask");
 }
 
 QString QtQuickControls2ImagineStylePlugin::name() const
@@ -87,9 +68,11 @@ QString QtQuickControls2ImagineStylePlugin::name() const
     return QStringLiteral("Imagine");
 }
 
-void QtQuickControls2ImagineStylePlugin::initializeTheme(QQuickTheme *theme)
+void QtQuickControls2ImagineStylePlugin::registerTypes(const char *uri)
 {
-    QQuickImagineTheme::initialize(theme);
+    QQuickStylePlugin::registerTypes(uri);
+
+    theme.initialize(QQuickTheme::instance());
 }
 
 QT_END_NAMESPACE

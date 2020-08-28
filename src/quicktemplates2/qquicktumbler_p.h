@@ -67,9 +67,12 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTumbler : public QQuickControl
     Q_PROPERTY(QQmlComponent *delegate READ delegate WRITE setDelegate NOTIFY delegateChanged FINAL)
     Q_PROPERTY(int visibleItemCount READ visibleItemCount WRITE setVisibleItemCount NOTIFY visibleItemCountChanged FINAL)
     // 2.1 (Qt 5.8)
-    Q_PROPERTY(bool wrap READ wrap WRITE setWrap RESET resetWrap NOTIFY wrapChanged FINAL REVISION 1)
+    Q_PROPERTY(bool wrap READ wrap WRITE setWrap RESET resetWrap NOTIFY wrapChanged FINAL REVISION(2, 1))
     // 2.2 (Qt 5.9)
-    Q_PROPERTY(bool moving READ isMoving NOTIFY movingChanged FINAL REVISION 2)
+    Q_PROPERTY(bool moving READ isMoving NOTIFY movingChanged FINAL REVISION(2, 2))
+    QML_NAMED_ELEMENT(Tumbler)
+    QML_ATTACHED(QQuickTumblerAttached)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickTumbler(QQuickItem *parent = nullptr);
@@ -111,7 +114,7 @@ public:
     Q_ENUM(PositionMode)
 
     // 2.5 (Qt 5.12)
-    Q_REVISION(5) Q_INVOKABLE void positionViewAtIndex(int index, PositionMode mode);
+    Q_REVISION(2, 5) Q_INVOKABLE void positionViewAtIndex(int index, PositionMode mode);
 
 Q_SIGNALS:
     void modelChanged();
@@ -121,9 +124,9 @@ Q_SIGNALS:
     void delegateChanged();
     void visibleItemCountChanged();
     // 2.1 (Qt 5.8)
-    Q_REVISION(1) void wrapChanged();
+    Q_REVISION(2, 1) void wrapChanged();
     // 2.2 (Qt 5.9)
-    Q_REVISION(2) void movingChanged();
+    Q_REVISION(2, 2) void movingChanged();
 
 protected:
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;

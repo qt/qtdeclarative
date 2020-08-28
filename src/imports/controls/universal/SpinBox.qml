@@ -34,11 +34,11 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Templates 2.12 as T
-import QtQuick.Controls 2.12
-import QtQuick.Controls.impl 2.12
-import QtQuick.Controls.Universal 2.12
+import QtQuick
+import QtQuick.Templates as T
+import QtQuick.Controls
+import QtQuick.Controls.impl
+import QtQuick.Controls.Universal
 
 T.SpinBox {
     id: control
@@ -105,7 +105,7 @@ T.SpinBox {
             y: (parent.height - height) / 2
             color: !enabled ? control.Universal.chromeDisabledLowColor :
                               control.activeFocus ? control.Universal.chromeBlackHighColor : control.Universal.baseHighColor
-            source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Universal/images/" + (control.mirrored ? "left" : "right") + "arrow.png"
+            source: "qrc:/qt-project.org/imports/QtQuick/Controls/Universal/images/" + (control.mirrored ? "left" : "right") + "arrow.png"
         }
     }
 
@@ -131,7 +131,7 @@ T.SpinBox {
             y: (parent.height - height) / 2
             color: !enabled ? control.Universal.chromeDisabledLowColor :
                               control.activeFocus ? control.Universal.chromeBlackHighColor : control.Universal.baseHighColor
-            source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Universal/images/" + (control.mirrored ? "right" : "left") + "arrow.png"
+            source: "qrc:/qt-project.org/imports/QtQuick/Controls/Universal/images/" + (control.mirrored ? "right" : "left") + "arrow.png"
         }
     }
 

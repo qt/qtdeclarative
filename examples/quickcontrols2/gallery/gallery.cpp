@@ -73,7 +73,11 @@ int main(int argc, char *argv[])
         QQuickStyle::setStyle(settings.value("style").toString());
 
     QQmlApplicationEngine engine;
-    engine.rootContext()->setContextProperty("availableStyles", QQuickStyle::availableStyles());
+
+    const QStringList builtInStyles = { QLatin1String("Default"), QLatin1String("Fusion"),
+        QLatin1String("Imagine"), QLatin1String("Material"), QLatin1String("Universal") };
+    engine.rootContext()->setContextProperty("builtInStyles", builtInStyles);
+
     engine.load(QUrl("qrc:/gallery.qml"));
     if (engine.rootObjects().isEmpty())
         return -1;

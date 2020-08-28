@@ -48,10 +48,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
-import QtTest 1.0
-import QtQuick.Controls 2.12
-import QtQuick.Window 2.12
+import QtQuick
+import QtTest
+import QtQuick.Controls
+import QtQuick.Window
 
 TestCase {
     id: testCase
@@ -549,6 +549,12 @@ TestCase {
         compare(valueFromTextCalls, data.editable ? 3 : 0)
     }
 
+    function test_callDefaultValueFromText() {
+        var control = createTemporaryObject(spinBox, testCase)
+        verify(control)
+        compare(control.valueFromText("123", control.locale), 123)
+    }
+
     function test_autoRepeat() {
         var control = createTemporaryObject(spinBox, testCase)
         verify(control)
@@ -657,6 +663,12 @@ TestCase {
             compare(control.value, data.values[i])
             compare(control.displayText, data.displayTexts[i])
         }
+    }
+
+    function test_callDefaultTextFromValue() {
+        var control = createTemporaryObject(spinBox, testCase)
+        verify(control)
+        compare(control.textFromValue(123, control.locale), "123")
     }
 
     Component {

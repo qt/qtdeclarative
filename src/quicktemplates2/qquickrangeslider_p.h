@@ -66,12 +66,14 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickRangeSlider : public QQuickControl
     Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged FINAL)
     Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)
     // 2.2 (Qt 5.9)
-    Q_PROPERTY(bool live READ live WRITE setLive NOTIFY liveChanged FINAL REVISION 2)
-    Q_PROPERTY(bool horizontal READ isHorizontal NOTIFY orientationChanged FINAL REVISION 3)
+    Q_PROPERTY(bool live READ live WRITE setLive NOTIFY liveChanged FINAL REVISION(2, 2))
+    Q_PROPERTY(bool horizontal READ isHorizontal NOTIFY orientationChanged FINAL REVISION(2, 3))
     // 2.3 (Qt 5.10)
-    Q_PROPERTY(bool vertical READ isVertical NOTIFY orientationChanged FINAL REVISION 3)
+    Q_PROPERTY(bool vertical READ isVertical NOTIFY orientationChanged FINAL REVISION(2, 3))
     // 2.5 (Qt 5.12)
-    Q_PROPERTY(qreal touchDragThreshold READ touchDragThreshold WRITE setTouchDragThreshold RESET resetTouchDragThreshold NOTIFY touchDragThresholdChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal touchDragThreshold READ touchDragThreshold WRITE setTouchDragThreshold RESET resetTouchDragThreshold NOTIFY touchDragThresholdChanged FINAL REVISION(2, 5))
+    QML_NAMED_ELEMENT(RangeSlider)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickRangeSlider(QQuickItem *parent = nullptr);
@@ -116,7 +118,7 @@ public:
     qreal touchDragThreshold() const;
     void setTouchDragThreshold(qreal touchDragThreshold);
     void resetTouchDragThreshold();
-    Q_REVISION(5) Q_INVOKABLE qreal valueAt(qreal position) const;
+    Q_REVISION(2, 5) Q_INVOKABLE qreal valueAt(qreal position) const;
 
 Q_SIGNALS:
     void fromChanged();
@@ -125,9 +127,9 @@ Q_SIGNALS:
     void snapModeChanged();
     void orientationChanged();
     // 2.2 (Qt 5.9)
-    Q_REVISION(2) void liveChanged();
+    Q_REVISION(2, 2) void liveChanged();
     // 2.5 (Qt 5.12)
-    Q_REVISION(5) void touchDragThresholdChanged();
+    Q_REVISION(2, 5) void touchDragThresholdChanged();
 
 protected:
     void focusInEvent(QFocusEvent *event) override;
@@ -166,11 +168,13 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickRangeSliderNode : public QObject
     Q_PROPERTY(QQuickItem *handle READ handle WRITE setHandle NOTIFY handleChanged FINAL)
     Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
     // 2.1 (Qt 5.8)
-    Q_PROPERTY(bool hovered READ isHovered WRITE setHovered NOTIFY hoveredChanged FINAL REVISION 1)
+    Q_PROPERTY(bool hovered READ isHovered WRITE setHovered NOTIFY hoveredChanged FINAL REVISION(2, 1))
     // 2.5 (Qt 5.12)
-    Q_PROPERTY(qreal implicitHandleWidth READ implicitHandleWidth NOTIFY implicitHandleWidthChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal implicitHandleHeight READ implicitHandleHeight NOTIFY implicitHandleHeightChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal implicitHandleWidth READ implicitHandleWidth NOTIFY implicitHandleWidthChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal implicitHandleHeight READ implicitHandleHeight NOTIFY implicitHandleHeightChanged FINAL REVISION(2, 5))
     Q_CLASSINFO("DeferredPropertyNames", "handle")
+    QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickRangeSliderNode(qreal value, QQuickRangeSlider *slider);
@@ -207,11 +211,11 @@ Q_SIGNALS:
     void handleChanged();
     void pressedChanged();
     // 2.1 (Qt 5.8)
-    Q_REVISION(1) void hoveredChanged();
+    Q_REVISION(2, 1) void hoveredChanged();
     // 2.5 (Qt 5.12)
-    /*Q_REVISION(5)*/ void moved();
-    /*Q_REVISION(5)*/ void implicitHandleWidthChanged();
-    /*Q_REVISION(5)*/ void implicitHandleHeightChanged();
+    /*Q_REVISION(2, 5)*/ void moved();
+    /*Q_REVISION(2, 5)*/ void implicitHandleWidthChanged();
+    /*Q_REVISION(2, 5)*/ void implicitHandleHeightChanged();
 
 private:
     Q_DISABLE_COPY(QQuickRangeSliderNode)

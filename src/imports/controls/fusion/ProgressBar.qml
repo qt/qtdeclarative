@@ -34,12 +34,12 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Templates 2.12 as T
-import QtQuick.Controls 2.12
-import QtQuick.Controls.impl 2.12
-import QtQuick.Controls.Fusion 2.12
-import QtQuick.Controls.Fusion.impl 2.12
+import QtQuick
+import QtQuick.Templates as T
+import QtQuick.Controls
+import QtQuick.Controls.impl
+import QtQuick.Controls.Fusion
+import QtQuick.Controls.Fusion.impl
 
 T.ProgressBar {
     id: control
@@ -85,7 +85,7 @@ T.ProgressBar {
 
                 mirror: control.mirrored
                 fillMode: Image.TileHorizontally
-                source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Fusion/images/progressmask.png"
+                source: "qrc:/qt-project.org/imports/QtQuick/Controls/Fusion/images/progressmask.png"
                 color: Color.transparent(Qt.lighter(Fusion.highlight(control.palette), 1.2), 160 / 255)
 
                 visible: control.indeterminate

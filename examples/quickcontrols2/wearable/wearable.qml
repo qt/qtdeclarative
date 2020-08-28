@@ -48,9 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Controls 2.3 as QQC2
-import Qt.labs.settings 1.0
+import QtQuick
+import QtQuick.Controls as QQC2
+import Qt.labs.settings
 import "qml"
 import "qml/Style"
 

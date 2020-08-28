@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick.Controls 2.12
+import QtQuick.Controls
 
 Dialog {
     id: root

@@ -65,16 +65,19 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickScrollBar : public QQuickControl
     Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
     Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL)
     // 2.2 (Qt 5.9)
-    Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged FINAL REVISION 2)
-    Q_PROPERTY(bool interactive READ isInteractive WRITE setInteractive RESET resetInteractive NOTIFY interactiveChanged FINAL REVISION 2)
-    Q_PROPERTY(Policy policy READ policy WRITE setPolicy NOTIFY policyChanged FINAL REVISION 2)
+    Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged FINAL REVISION(2, 2))
+    Q_PROPERTY(bool interactive READ isInteractive WRITE setInteractive RESET resetInteractive NOTIFY interactiveChanged FINAL REVISION(2, 2))
+    Q_PROPERTY(Policy policy READ policy WRITE setPolicy NOTIFY policyChanged FINAL REVISION(2, 2))
     // 2.3 (Qt 5.10)
-    Q_PROPERTY(bool horizontal READ isHorizontal NOTIFY orientationChanged FINAL REVISION 3)
-    Q_PROPERTY(bool vertical READ isVertical NOTIFY orientationChanged FINAL REVISION 3)
+    Q_PROPERTY(bool horizontal READ isHorizontal NOTIFY orientationChanged FINAL REVISION(2, 3))
+    Q_PROPERTY(bool vertical READ isVertical NOTIFY orientationChanged FINAL REVISION(2, 3))
     // 2.4 (Qt 5.11)
-    Q_PROPERTY(qreal minimumSize READ minimumSize WRITE setMinimumSize NOTIFY minimumSizeChanged FINAL REVISION 4)
-    Q_PROPERTY(qreal visualSize READ visualSize NOTIFY visualSizeChanged FINAL REVISION 4)
-    Q_PROPERTY(qreal visualPosition READ visualPosition NOTIFY visualPositionChanged FINAL REVISION 4)
+    Q_PROPERTY(qreal minimumSize READ minimumSize WRITE setMinimumSize NOTIFY minimumSizeChanged FINAL REVISION(2, 4))
+    Q_PROPERTY(qreal visualSize READ visualSize NOTIFY visualSizeChanged FINAL REVISION(2, 4))
+    Q_PROPERTY(qreal visualPosition READ visualPosition NOTIFY visualPositionChanged FINAL REVISION(2, 4))
+    QML_NAMED_ELEMENT(ScrollBar)
+    QML_ATTACHED(QQuickScrollBarAttached)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickScrollBar(QQuickItem *parent = nullptr);
@@ -146,13 +149,13 @@ Q_SIGNALS:
     void pressedChanged();
     void orientationChanged();
     // 2.2 (Qt 5.9)
-    Q_REVISION(2) void snapModeChanged();
-    Q_REVISION(2) void interactiveChanged();
-    Q_REVISION(2) void policyChanged();
+    Q_REVISION(2, 2) void snapModeChanged();
+    Q_REVISION(2, 2) void interactiveChanged();
+    Q_REVISION(2, 2) void policyChanged();
     // 2.4 (Qt 5.11)
-    Q_REVISION(4) void minimumSizeChanged();
-    Q_REVISION(4) void visualSizeChanged();
-    Q_REVISION(4) void visualPositionChanged();
+    Q_REVISION(2, 4) void minimumSizeChanged();
+    Q_REVISION(2, 4) void visualSizeChanged();
+    Q_REVISION(2, 4) void visualPositionChanged();
 
 protected:
     void mousePressEvent(QMouseEvent *event) override;

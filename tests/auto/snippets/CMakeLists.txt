@@ -19,6 +19,7 @@ qt_add_test(tst_snippets
         Qt::Gui
         Qt::Quick
         Qt::QuickControls2
+        Qt::QuickControls2Private
     TESTDATA ${test_data}
 )
 

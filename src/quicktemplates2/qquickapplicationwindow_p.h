@@ -72,11 +72,13 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickApplicationWindow : public QQuickWi
     Q_PROPERTY(QFont font READ font WRITE setFont RESET resetFont NOTIFY fontChanged FINAL)
     Q_PROPERTY(QLocale locale READ locale WRITE setLocale RESET resetLocale NOTIFY localeChanged FINAL)
     // 2.3 (Qt 5.10)
-    Q_PROPERTY(QQuickItem *menuBar READ menuBar WRITE setMenuBar NOTIFY menuBarChanged FINAL REVISION 3)
+    Q_PROPERTY(QQuickItem *menuBar READ menuBar WRITE setMenuBar NOTIFY menuBarChanged FINAL REVISION(2, 3))
     // 2.14 (Qt 6)
-    Q_PRIVATE_PROPERTY(QQuickApplicationWindow::d_func(), QQuickPalette *palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged REVISION 3)
+    Q_PRIVATE_PROPERTY(QQuickApplicationWindow::d_func(), QQuickPalette *palette READ palette WRITE setPalette RESET resetPalette NOTIFY paletteChanged REVISION(2, 3))
     Q_CLASSINFO("DeferredPropertyNames", "background")
     Q_CLASSINFO("DefaultProperty", "contentData")
+    QML_NAMED_ELEMENT(ApplicationWindow)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickApplicationWindow(QWindow *parent = nullptr);
@@ -115,7 +117,7 @@ Q_SIGNALS:
     void footerChanged();
     void fontChanged();
     void localeChanged();
-    Q_REVISION(3) void menuBarChanged();
+    Q_REVISION(2, 3) void menuBarChanged();
 
 protected:
     bool isComponentComplete() const;
@@ -137,7 +139,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickApplicationWindowAttached : public 
     Q_PROPERTY(QQuickItem *activeFocusControl READ activeFocusControl NOTIFY activeFocusControlChanged FINAL)
     Q_PROPERTY(QQuickItem *header READ header NOTIFY headerChanged FINAL)
     Q_PROPERTY(QQuickItem *footer READ footer NOTIFY footerChanged FINAL)
-    Q_PROPERTY(QQuickItem *menuBar READ menuBar NOTIFY menuBarChanged FINAL) // REVISION 3
+    Q_PROPERTY(QQuickItem *menuBar READ menuBar NOTIFY menuBarChanged FINAL) // REVISION(2, 3)
 
 public:
     explicit QQuickApplicationWindowAttached(QObject *parent = nullptr);
@@ -156,11 +158,35 @@ Q_SIGNALS:
     void headerChanged();
     void footerChanged();
     // 2.3 (Qt 5.10)
-    /*Q_REVISION(3)*/ void menuBarChanged();
+    /*Q_REVISION(2, 3)*/ void menuBarChanged();
 
 private:
     Q_DISABLE_COPY(QQuickApplicationWindowAttached)
     Q_DECLARE_PRIVATE(QQuickApplicationWindowAttached)
+};
+
+struct QWindowForeign2
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN(QWindow)
+    QML_ADDED_IN_VERSION(2, 0)
+};
+
+struct QQuickWindowForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN(QQuickWindow)
+    QML_ADDED_IN_VERSION(2, 0)
+};
+
+struct QQuickWindowQmlImplForeign
+{
+    Q_GADGET
+    QML_ANONYMOUS
+    QML_FOREIGN(QQuickWindowQmlImpl)
+    QML_ADDED_IN_VERSION(2, 2)
 };
 
 QT_END_NAMESPACE

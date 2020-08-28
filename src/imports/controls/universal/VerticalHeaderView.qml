@@ -34,12 +34,12 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.15
-import QtQuick.Controls 2.15
-import QtQuick.Controls.impl 2.15
-import QtQuick.Templates 2.15 as T
-import QtQuick.Controls.Universal 2.15
-import QtQuick.Controls.Universal.impl 2.15
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Controls.impl
+import QtQuick.Templates as T
+import QtQuick.Controls.Universal
+import QtQuick.Controls.Universal.impl
 
 T.VerticalHeaderView {
     id: control

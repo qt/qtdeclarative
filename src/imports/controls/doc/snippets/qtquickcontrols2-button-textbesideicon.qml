@@ -25,11 +25,11 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Controls 2.12
+import QtQuick
+import QtQuick.Controls
 
 Button {
     text: "Button"
-    icon.source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png"
+    icon.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Default/images/check.png"
     display: Button.TextBesideIcon
 }

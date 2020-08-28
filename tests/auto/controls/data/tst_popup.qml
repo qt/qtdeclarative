@@ -48,10 +48,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtTest 1.0
-import QtQuick.Controls 2.12
-import QtQuick.Templates 2.12 as T
+import QtQuick
+import QtTest
+import QtQuick.Controls
+import QtQuick.Templates as T
 
 TestCase {
     id: testCase
@@ -1275,6 +1275,9 @@ TestCase {
             { visible: true, width: 100, height: 100 })
         verify(control)
         verify(control.visible)
+        // If there is a transition then make sure it is finished
+        if (control.enter !== null)
+            tryCompare(control.enter, "running", false)
         compare(control.parent, control.Overlay.overlay)
         compare(control.x, 0)
         compare(control.y, 0)

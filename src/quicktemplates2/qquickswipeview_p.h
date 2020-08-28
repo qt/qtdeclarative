@@ -59,12 +59,15 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipeView : public QQuickContainer
 {
     Q_OBJECT
     // 2.1 (Qt 5.8)
-    Q_PROPERTY(bool interactive READ isInteractive WRITE setInteractive NOTIFY interactiveChanged FINAL REVISION 1)
+    Q_PROPERTY(bool interactive READ isInteractive WRITE setInteractive NOTIFY interactiveChanged FINAL REVISION(2, 1))
     // 2.2 (Qt 5.9)
-    Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL REVISION 2)
+    Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation NOTIFY orientationChanged FINAL REVISION(2, 2))
     // 2.3 (Qt 5.10)
-    Q_PROPERTY(bool horizontal READ isHorizontal NOTIFY orientationChanged FINAL REVISION 3)
-    Q_PROPERTY(bool vertical READ isVertical NOTIFY orientationChanged FINAL REVISION 3)
+    Q_PROPERTY(bool horizontal READ isHorizontal NOTIFY orientationChanged FINAL REVISION(2, 3))
+    Q_PROPERTY(bool vertical READ isVertical NOTIFY orientationChanged FINAL REVISION(2, 3))
+    QML_NAMED_ELEMENT(SwipeView)
+    QML_ATTACHED(QQuickSwipeViewAttached)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickSwipeView(QQuickItem *parent = nullptr);
@@ -85,9 +88,9 @@ public:
 
 Q_SIGNALS:
     // 2.1 (Qt 5.8)
-    Q_REVISION(1) void interactiveChanged();
+    Q_REVISION(2, 1) void interactiveChanged();
     // 2.2 (Qt 5.9)
-    Q_REVISION(2) void orientationChanged();
+    Q_REVISION(2, 2) void orientationChanged();
 
 protected:
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
@@ -113,8 +116,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSwipeViewAttached : public QObject
     Q_PROPERTY(bool isCurrentItem READ isCurrentItem NOTIFY isCurrentItemChanged FINAL)
     Q_PROPERTY(QQuickSwipeView *view READ view NOTIFY viewChanged FINAL)
     // 2.1 (Qt 5.8)
-    Q_PROPERTY(bool isNextItem READ isNextItem NOTIFY isNextItemChanged FINAL REVISION 1)
-    Q_PROPERTY(bool isPreviousItem READ isPreviousItem NOTIFY isPreviousItemChanged FINAL REVISION 1)
+    Q_PROPERTY(bool isNextItem READ isNextItem NOTIFY isNextItemChanged FINAL REVISION(2, 1))
+    Q_PROPERTY(bool isPreviousItem READ isPreviousItem NOTIFY isPreviousItemChanged FINAL REVISION(2, 1))
 
 public:
     explicit QQuickSwipeViewAttached(QObject *parent = nullptr);
@@ -132,8 +135,8 @@ Q_SIGNALS:
     void isCurrentItemChanged();
     void viewChanged();
     // 2.1 (Qt 5.8)
-    /*Q_REVISION(1)*/ void isNextItemChanged();
-    /*Q_REVISION(1)*/ void isPreviousItemChanged();
+    /*Q_REVISION(2, 1)*/ void isNextItemChanged();
+    /*Q_REVISION(2, 1)*/ void isPreviousItemChanged();
 
 private:
     Q_DISABLE_COPY(QQuickSwipeViewAttached)

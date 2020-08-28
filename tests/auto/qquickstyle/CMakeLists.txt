@@ -28,74 +28,29 @@ qt_add_test(tst_qquickstyle
         Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::QuickControls2
+        Qt::QuickControls2Private
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
         Qt::TestPrivate
     TESTDATA ${test_data}
 )
 
-file(GLOB resource_glob_0 RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "qrcStyles1/QrcStyle1/*.qml")
-foreach(file IN LISTS resource_glob_0)
-    set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/${file}" PROPERTIES QT_RESOURCE_ALIAS "${file}")
-endforeach()
-
-file(GLOB resource_glob_1 RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "qrcStyles2/QrcStyle2/*.qml")
-foreach(file IN LISTS resource_glob_1)
-    set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/${file}" PROPERTIES QT_RESOURCE_ALIAS "${file}")
-endforeach()
-
-file(GLOB resource_glob_2 RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "qrcStyles3/QrcStyle3/*.qml")
-foreach(file IN LISTS resource_glob_2)
-    set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/${file}" PROPERTIES QT_RESOURCE_ALIAS "${file}")
-endforeach()
-
-file(GLOB resource_glob_3 RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "qrcStyles4/QrcStyle4/*.qml")
-foreach(file IN LISTS resource_glob_3)
-    set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/${file}" PROPERTIES QT_RESOURCE_ALIAS "${file}")
-endforeach()
-
 # Resources:
-set(qmake_qrcStyles1_resource_files
-    ${resource_glob_0}
+set(qmake_custom_resource_files
+    "data/Custom/Label.qml"
+    "data/Custom/qmldir"
 )
 
-qt_add_resource(tst_qquickstyle "qmake_qrcStyles1"
+qt_add_resource(tst_qquickstyle "qmake_custom"
     PREFIX
         "/"
     FILES
-        ${qmake_qrcStyles1_resource_files}
-)
-set(qmake_qrcStyles2_resource_files
-    ${resource_glob_1}
+        ${qmake_custom_resource_files}
 )
 
-qt_add_resource(tst_qquickstyle "qmake_qrcStyles2"
-    PREFIX
-        "/"
-    FILES
-        ${qmake_qrcStyles2_resource_files}
-)
-set(qmake_qrcStyles3_resource_files
-    ${resource_glob_2}
-)
 
-qt_add_resource(tst_qquickstyle "qmake_qrcStyles3"
-    PREFIX
-        "/"
-    FILES
-        ${qmake_qrcStyles3_resource_files}
-)
-set(qmake_qrcStyles4_resource_files
-    ${resource_glob_3}
-)
-
-qt_add_resource(tst_qquickstyle "qmake_qrcStyles4"
-    PREFIX
-        "/"
-    FILES
-        ${qmake_qrcStyles4_resource_files}
-)
-
+#### Keys ignored in scope 1:.:.:qquickstyle.pro:<TRUE>:
+# OTHER_FILES = "data/CmdLineArgStyle/Control.qml" "data/CmdLineArgStyle/qmldir" "data/EnvVarStyle/Control.qml" "data/EnvVarStyle/qmldir" "data/EnvVarFallbackStyle/Control.qml" "data/EnvVarFallbackStyle/qmldir"
 
 ## Scopes:
 #####################################################################

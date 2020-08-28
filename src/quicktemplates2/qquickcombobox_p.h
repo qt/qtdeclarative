@@ -76,27 +76,29 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickComboBox : public QQuickControl
     Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
     Q_PROPERTY(QQuickPopup *popup READ popup WRITE setPopup NOTIFY popupChanged FINAL)
     // 2.1 (Qt 5.8)
-    Q_PROPERTY(bool flat READ isFlat WRITE setFlat NOTIFY flatChanged FINAL REVISION 1)
+    Q_PROPERTY(bool flat READ isFlat WRITE setFlat NOTIFY flatChanged FINAL REVISION(2, 1))
     // 2.2 (Qt 5.9)
-    Q_PROPERTY(bool down READ isDown WRITE setDown RESET resetDown NOTIFY downChanged FINAL REVISION 2)
-    Q_PROPERTY(bool editable READ isEditable WRITE setEditable NOTIFY editableChanged FINAL REVISION 2)
-    Q_PROPERTY(QString editText READ editText WRITE setEditText RESET resetEditText NOTIFY editTextChanged FINAL REVISION 2)
-    Q_PROPERTY(QValidator *validator READ validator WRITE setValidator NOTIFY validatorChanged FINAL REVISION 2)
-    Q_PROPERTY(Qt::InputMethodHints inputMethodHints READ inputMethodHints WRITE setInputMethodHints NOTIFY inputMethodHintsChanged FINAL REVISION 2)
-    Q_PROPERTY(bool inputMethodComposing READ isInputMethodComposing NOTIFY inputMethodComposingChanged FINAL REVISION 2)
-    Q_PROPERTY(bool acceptableInput READ hasAcceptableInput NOTIFY acceptableInputChanged FINAL REVISION 2)
+    Q_PROPERTY(bool down READ isDown WRITE setDown RESET resetDown NOTIFY downChanged FINAL REVISION(2, 2))
+    Q_PROPERTY(bool editable READ isEditable WRITE setEditable NOTIFY editableChanged FINAL REVISION(2, 2))
+    Q_PROPERTY(QString editText READ editText WRITE setEditText RESET resetEditText NOTIFY editTextChanged FINAL REVISION(2, 2))
+    Q_PROPERTY(QValidator *validator READ validator WRITE setValidator NOTIFY validatorChanged FINAL REVISION(2, 2))
+    Q_PROPERTY(Qt::InputMethodHints inputMethodHints READ inputMethodHints WRITE setInputMethodHints NOTIFY inputMethodHintsChanged FINAL REVISION(2, 2))
+    Q_PROPERTY(bool inputMethodComposing READ isInputMethodComposing NOTIFY inputMethodComposingChanged FINAL REVISION(2, 2))
+    Q_PROPERTY(bool acceptableInput READ hasAcceptableInput NOTIFY acceptableInputChanged FINAL REVISION(2, 2))
     // 2.5 (Qt 5.12)
-    Q_PROPERTY(qreal implicitIndicatorWidth READ implicitIndicatorWidth NOTIFY implicitIndicatorWidthChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal implicitIndicatorHeight READ implicitIndicatorHeight NOTIFY implicitIndicatorHeightChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal implicitIndicatorWidth READ implicitIndicatorWidth NOTIFY implicitIndicatorWidthChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal implicitIndicatorHeight READ implicitIndicatorHeight NOTIFY implicitIndicatorHeightChanged FINAL REVISION(2, 5))
     Q_CLASSINFO("DeferredPropertyNames", "background,contentItem,indicator,popup")
     // 2.14 (Qt 5.14)
-    Q_PROPERTY(QVariant currentValue READ currentValue NOTIFY currentValueChanged FINAL REVISION 14)
-    Q_PROPERTY(QString valueRole READ valueRole WRITE setValueRole NOTIFY valueRoleChanged FINAL REVISION 14)
+    Q_PROPERTY(QVariant currentValue READ currentValue NOTIFY currentValueChanged FINAL REVISION(2, 14))
+    Q_PROPERTY(QString valueRole READ valueRole WRITE setValueRole NOTIFY valueRoleChanged FINAL REVISION(2, 14))
     // 2.15 (Qt 5.15)
-    Q_PROPERTY(bool selectTextByMouse READ selectTextByMouse WRITE setSelectTextByMouse NOTIFY selectTextByMouseChanged FINAL REVISION 15)
+    Q_PROPERTY(bool selectTextByMouse READ selectTextByMouse WRITE setSelectTextByMouse NOTIFY selectTextByMouseChanged FINAL REVISION(2, 15))
     // TODO: 6.0 (Qt 6.0) - QTBUG-84190
     Q_PROPERTY(ImplicitContentWidthPolicy implicitContentWidthPolicy READ implicitContentWidthPolicy
         WRITE setImplicitContentWidthPolicy NOTIFY implicitContentWidthPolicyChanged FINAL REVISION 15)
+    QML_NAMED_ELEMENT(ComboBox)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickComboBox(QQuickItem *parent = nullptr);
@@ -171,8 +173,8 @@ public:
 
     // 2.14 (Qt 5.14)
     QVariant currentValue() const;
-    Q_REVISION(14) Q_INVOKABLE QVariant valueAt(int index) const;
-    Q_REVISION(14) Q_INVOKABLE int indexOfValue(const QVariant &value) const;
+    Q_REVISION(2, 14) Q_INVOKABLE QVariant valueAt(int index) const;
+    Q_REVISION(2, 14) Q_INVOKABLE int indexOfValue(const QVariant &value) const;
 
     // 2.15 (Qt 5.15)
     bool selectTextByMouse() const;
@@ -192,7 +194,7 @@ public:
 public Q_SLOTS:
     void incrementCurrentIndex();
     void decrementCurrentIndex();
-    Q_REVISION(2) void selectAll();
+    Q_REVISION(2, 2) void selectAll();
 
 Q_SIGNALS:
     void activated(int index);
@@ -210,24 +212,24 @@ Q_SIGNALS:
     void indicatorChanged();
     void popupChanged();
     // 2.1 (Qt 5.8)
-    Q_REVISION(1) void flatChanged();
+    Q_REVISION(2, 1) void flatChanged();
     // 2.2 (Qt 5.9)
-    Q_REVISION(2) void accepted();
-    Q_REVISION(2) void downChanged();
-    Q_REVISION(2) void editableChanged();
-    Q_REVISION(2) void editTextChanged();
-    Q_REVISION(2) void validatorChanged();
-    Q_REVISION(2) void inputMethodHintsChanged();
-    Q_REVISION(2) void inputMethodComposingChanged();
-    Q_REVISION(2) void acceptableInputChanged();
+    Q_REVISION(2, 2) void accepted();
+    Q_REVISION(2, 2) void downChanged();
+    Q_REVISION(2, 2) void editableChanged();
+    Q_REVISION(2, 2) void editTextChanged();
+    Q_REVISION(2, 2) void validatorChanged();
+    Q_REVISION(2, 2) void inputMethodHintsChanged();
+    Q_REVISION(2, 2) void inputMethodComposingChanged();
+    Q_REVISION(2, 2) void acceptableInputChanged();
     // 2.5 (Qt 5.12)
-    Q_REVISION(5) void implicitIndicatorWidthChanged();
-    Q_REVISION(5) void implicitIndicatorHeightChanged();
+    Q_REVISION(2, 5) void implicitIndicatorWidthChanged();
+    Q_REVISION(2, 5) void implicitIndicatorHeightChanged();
     // 2.14 (Qt 5.14)
-    Q_REVISION(14) void valueRoleChanged();
-    Q_REVISION(14) void currentValueChanged();
+    Q_REVISION(2, 14) void valueRoleChanged();
+    Q_REVISION(2, 14) void currentValueChanged();
     // 2.15 (Qt 5.15)
-    Q_REVISION(15) void selectTextByMouseChanged();
+    Q_REVISION(2, 15) void selectTextByMouseChanged();
     // 6.0 (Qt 6.0)
     Q_REVISION(6, 0) void implicitContentWidthPolicyChanged();
 

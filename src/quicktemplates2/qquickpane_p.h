@@ -63,6 +63,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPane : public QQuickControl
     Q_PRIVATE_PROPERTY(QQuickPane::d_func(), QQmlListProperty<QObject> contentData READ contentData FINAL)
     Q_PRIVATE_PROPERTY(QQuickPane::d_func(), QQmlListProperty<QQuickItem> contentChildren READ contentChildren NOTIFY contentChildrenChanged FINAL)
     Q_CLASSINFO("DefaultProperty", "contentData")
+    QML_NAMED_ELEMENT(Pane)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickPane(QQuickItem *parent = nullptr);

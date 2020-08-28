@@ -48,9 +48,9 @@
 // We mean it.
 //
 
-#include <QtQuickControls2/private/qquickattachedobject_p.h>
 #include <QtCore/qvariant.h>
 #include <QtQml/qqml.h>
+#include <QtQuickControls2Impl/private/qquickattachedobject_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -59,6 +59,10 @@ class QQuickImagineStyle : public QQuickAttachedObject
     Q_OBJECT
     Q_PROPERTY(QString path READ path WRITE setPath RESET resetPath NOTIFY pathChanged FINAL)
     Q_PROPERTY(QUrl url READ url NOTIFY pathChanged FINAL)
+    QML_NAMED_ELEMENT(Imagine)
+    QML_ATTACHED(QQuickImagineStyle)
+    QML_UNCREATABLE("")
+    QML_ADDED_IN_VERSION(2, 3)
 
 public:
     explicit QQuickImagineStyle(QObject *parent = nullptr);

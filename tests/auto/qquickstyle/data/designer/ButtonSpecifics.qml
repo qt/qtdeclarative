@@ -1,3 +1,3 @@
-import HelperWidgets 2.0
+import HelperWidgets
 
 ButtonSection { }

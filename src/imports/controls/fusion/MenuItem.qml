@@ -34,12 +34,12 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Templates 2.12 as T
-import QtQuick.Controls 2.12
-import QtQuick.Controls.impl 2.12
-import QtQuick.Controls.Fusion 2.12
-import QtQuick.Controls.Fusion.impl 2.12
+import QtQuick
+import QtQuick.Templates as T
+import QtQuick.Controls
+import QtQuick.Controls.impl
+import QtQuick.Controls.Fusion
+import QtQuick.Controls.Fusion.impl
 
 T.MenuItem {
     id: control
@@ -81,7 +81,7 @@ T.MenuItem {
         visible: control.subMenu
         rotation: control.mirrored ? 90 : -90
         color: control.down || control.hovered || control.highlighted ? Fusion.highlightedText(control.palette) : control.palette.text
-        source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Fusion/images/arrow.png"
+        source: "qrc:/qt-project.org/imports/QtQuick/Controls/Fusion/images/arrow.png"
         fillMode: Image.Pad
     }
 

@@ -48,10 +48,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 6.0
-import QtQuick.Window 2.14
-import QtQuick.Controls 2.14
-import QtQuick.Layouts 1.13
+import QtQuick
+import QtQuick.Window
+import QtQuick.Controls
+import QtQuick.Layouts
 
 ApplicationWindow {
     id: window

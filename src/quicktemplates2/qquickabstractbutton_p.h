@@ -68,18 +68,20 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickAbstractButton : public QQuickContr
     Q_PROPERTY(bool autoRepeat READ autoRepeat WRITE setAutoRepeat NOTIFY autoRepeatChanged FINAL)
     Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
     // 2.3 (Qt 5.10)
-    Q_PROPERTY(QQuickIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION 3)
-    Q_PROPERTY(Display display READ display WRITE setDisplay NOTIFY displayChanged FINAL REVISION 3)
-    Q_PROPERTY(QQuickAction *action READ action WRITE setAction NOTIFY actionChanged FINAL REVISION 3)
+    Q_PROPERTY(QQuickIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION(2, 3))
+    Q_PROPERTY(Display display READ display WRITE setDisplay NOTIFY displayChanged FINAL REVISION(2, 3))
+    Q_PROPERTY(QQuickAction *action READ action WRITE setAction NOTIFY actionChanged FINAL REVISION(2, 3))
     // 2.4 (Qt 5.11)
-    Q_PROPERTY(int autoRepeatDelay READ autoRepeatDelay WRITE setAutoRepeatDelay NOTIFY autoRepeatDelayChanged FINAL REVISION 4)
-    Q_PROPERTY(int autoRepeatInterval READ autoRepeatInterval WRITE setAutoRepeatInterval NOTIFY autoRepeatIntervalChanged FINAL REVISION 4)
-    Q_PROPERTY(qreal pressX READ pressX NOTIFY pressXChanged FINAL REVISION 4)
-    Q_PROPERTY(qreal pressY READ pressY NOTIFY pressYChanged FINAL REVISION 4)
+    Q_PROPERTY(int autoRepeatDelay READ autoRepeatDelay WRITE setAutoRepeatDelay NOTIFY autoRepeatDelayChanged FINAL REVISION(2, 4))
+    Q_PROPERTY(int autoRepeatInterval READ autoRepeatInterval WRITE setAutoRepeatInterval NOTIFY autoRepeatIntervalChanged FINAL REVISION(2, 4))
+    Q_PROPERTY(qreal pressX READ pressX NOTIFY pressXChanged FINAL REVISION(2, 4))
+    Q_PROPERTY(qreal pressY READ pressY NOTIFY pressYChanged FINAL REVISION(2, 4))
     // 2.5 (Qt 5.12)
-    Q_PROPERTY(qreal implicitIndicatorWidth READ implicitIndicatorWidth NOTIFY implicitIndicatorWidthChanged FINAL REVISION 5)
-    Q_PROPERTY(qreal implicitIndicatorHeight READ implicitIndicatorHeight NOTIFY implicitIndicatorHeightChanged FINAL REVISION 5)
+    Q_PROPERTY(qreal implicitIndicatorWidth READ implicitIndicatorWidth NOTIFY implicitIndicatorWidthChanged FINAL REVISION(2, 5))
+    Q_PROPERTY(qreal implicitIndicatorHeight READ implicitIndicatorHeight NOTIFY implicitIndicatorHeightChanged FINAL REVISION(2, 5))
     Q_CLASSINFO("DeferredPropertyNames", "background,contentItem,indicator")
+    QML_NAMED_ELEMENT(AbstractButton)
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQuickAbstractButton(QQuickItem *parent = nullptr);
@@ -167,19 +169,19 @@ Q_SIGNALS:
     void autoRepeatChanged();
     void indicatorChanged();
     // 2.2 (Qt 5.9)
-    Q_REVISION(2) void toggled();
+    Q_REVISION(2, 2) void toggled();
     // 2.3 (Qt 5.10)
-    Q_REVISION(3) void iconChanged();
-    Q_REVISION(3) void displayChanged();
-    Q_REVISION(3) void actionChanged();
+    Q_REVISION(2, 3) void iconChanged();
+    Q_REVISION(2, 3) void displayChanged();
+    Q_REVISION(2, 3) void actionChanged();
     // 2.4 (Qt 5.11)
-    Q_REVISION(4) void autoRepeatDelayChanged();
-    Q_REVISION(4) void autoRepeatIntervalChanged();
-    Q_REVISION(4) void pressXChanged();
-    Q_REVISION(4) void pressYChanged();
+    Q_REVISION(2, 4) void autoRepeatDelayChanged();
+    Q_REVISION(2, 4) void autoRepeatIntervalChanged();
+    Q_REVISION(2, 4) void pressXChanged();
+    Q_REVISION(2, 4) void pressYChanged();
     // 2.5 (Qt 5.12)
-    Q_REVISION(5) void implicitIndicatorWidthChanged();
-    Q_REVISION(5) void implicitIndicatorHeightChanged();
+    Q_REVISION(2, 5) void implicitIndicatorWidthChanged();
+    Q_REVISION(2, 5) void implicitIndicatorHeightChanged();
 
 protected:
     QQuickAbstractButton(QQuickAbstractButtonPrivate &dd, QQuickItem *parent);
