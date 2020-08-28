@@ -52,6 +52,8 @@ import QtQuick
 import QtQuick.Controls
 
 ApplicationWindow {
+    readonly property Button oopsButton: oopsButton
+
     width: 400
     height: 400
     visible: true
@@ -102,5 +104,10 @@ ApplicationWindow {
                 MenuItem { text: "&About" }
             }
         }
+    }
+
+    Button {
+        id: oopsButton
+        text: "&Oops"
     }
 }

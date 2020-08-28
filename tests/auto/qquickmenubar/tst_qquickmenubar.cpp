@@ -41,6 +41,7 @@
 #include "../shared/qtest_quickcontrols.h"
 
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
+#include <QtQuickTemplates2/private/qquickbutton_p.h>
 #include <QtQuickTemplates2/private/qquickmenu_p.h>
 #include <QtQuickTemplates2/private/qquickmenubar_p.h>
 #include <QtQuickTemplates2/private/qquickmenubaritem_p.h>
@@ -435,6 +436,11 @@ void tst_qquickmenubar::mnemonics()
     QQuickMenuBarItem *helpMenuBarItem = qobject_cast<QQuickMenuBarItem *>(helpMenuBarMenu->parentItem());
     QVERIFY(fileMenuBarItem && editMenuBarItem && viewMenuBarItem && helpMenuBarItem);
 
+    QQuickButton *oopsButton = window->property("oopsButton").value<QQuickButton *>();
+    QVERIFY(oopsButton);
+    QSignalSpy oopsButtonSpy(oopsButton, &QQuickButton::clicked);
+    QVERIFY(oopsButtonSpy.isValid());
+
     // trigger a menubar item to open a menu
     keySim.press(Qt::Key_Alt);
     keySim.click(Qt::Key_E); // "&Edit"
@@ -514,6 +520,30 @@ void tst_qquickmenubar::mnemonics()
     QTRY_VERIFY(!viewMenuBarMenu->isVisible());
     QTRY_VERIFY(!alignmentSubMenu->isVisible());
     QTRY_VERIFY(!verticalSubMenu->isVisible());
+
+    // trigger a menubar item to open a menu, leave Alt pressed
+    keySim.press(Qt::Key_Alt);
+    keySim.click(Qt::Key_F); // "&File"
+    QVERIFY(fileMenuBarItem->isHighlighted());
+    QVERIFY(fileMenuBarMenu->isVisible());
+    QTRY_VERIFY(fileMenuBarMenu->isOpened());
+    QVERIFY(fileMenuBarMenu->hasActiveFocus());
+
+    // trigger a menu item to close the menu, which shouldn't trigger a button
+    // action behind the menu (QTBUG-86276)
+    QCOMPARE(oopsButtonSpy.count(), 0);
+    keySim.click(Qt::Key_O); // "&Open..."
+    keySim.release(Qt::Key_Alt);
+    QVERIFY(!fileMenuBarItem->isHighlighted());
+    QVERIFY(!fileMenuBarMenu->isOpened());
+    QTRY_VERIFY(!fileMenuBarMenu->isVisible());
+    QCOMPARE(oopsButtonSpy.count(), 0);
+
+    // trigger a button action while menu is closed
+    keySim.press(Qt::Key_Alt);
+    keySim.click(Qt::Key_O); // "&Oops"
+    keySim.release(Qt::Key_Alt);
+    QCOMPARE(oopsButtonSpy.count(), 1);
 }
 
 void tst_qquickmenubar::addRemove()
