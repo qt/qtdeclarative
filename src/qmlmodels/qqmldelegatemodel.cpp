@@ -3305,7 +3305,8 @@ void QQmlDelegateModelGroup::removeGroups(QQmlV4Function *args)
 /*!
     \qmlmethod QtQml.Models::DelegateModelGroup::setGroups(int index, int count, stringlist groups)
 
-    Sets the \a groups \a count items starting at \a index belong to.
+    Changes the group membership of \a count items starting at \a index. The items are removed from
+    their existing groups and added to \a groups.
 */
 
 void QQmlDelegateModelGroup::setGroups(QQmlV4Function *args)
@@ -3331,12 +3332,6 @@ void QQmlDelegateModelGroup::setGroups(QQmlV4Function *args)
         }
     }
 }
-
-/*!
-    \qmlmethod QtQml.Models::DelegateModelGroup::setGroups(int index, int count, stringlist groups)
-
-    Sets the \a groups \a count items starting at \a index belong to.
-*/
 
 /*!
     \qmlmethod QtQml.Models::DelegateModelGroup::move(var from, var to, int count)
