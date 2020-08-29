@@ -485,12 +485,21 @@ static QUrl urlForFileName(const QString &fileName)
     the file name is accessible through the "fileName" property if it is
     provided with this function.
 
+    \a stackTrace is used to report whether an uncaught exception was
+    thrown. If you pass a non-null pointer to a boolean to it, it will set
+    it to list of "stackframe messages" if the script threw an unhandled
+    exception, or an empty list otherwise. A stackframe message has the format
+    function name:line number:column:file name
+    \note In some cases, e.g. for native functions, function name and file name
+    can be empty and line number and column can be -1.
+
     \note If an exception was thrown and the exception value is not an
     Error instance (i.e., QJSValue::isError() returns \c false), the
-    exception value will still be returned, but there is currently no
-    API for detecting that an exception did occur in this case.
+    exception value will still be returned. Use \a stackTrace to
+    distinguish whether the value was a normal or an exceptional return
+    value.
 */
-QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, int lineNumber)
+QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, int lineNumber, QStringList *exceptionStackTrace)
 {
     QV4::ExecutionEngine *v4 = m_v4Engine;
     QV4::Scope scope(v4);
@@ -506,8 +515,21 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
     script.parse();
     if (!scope.engine->hasException)
         result = script.run();
-    if (scope.engine->hasException)
-        result = v4->catchException();
+    if (exceptionStackTrace)
+        exceptionStackTrace->clear();
+    if (scope.engine->hasException) {
+        QV4::StackTrace trace;
+        result = v4->catchException(&trace);
+        if (exceptionStackTrace) {
+            for (auto &&frame: trace)
+                exceptionStackTrace->push_back(QString::fromLatin1("%1:%2:%3:%4").arg(
+                                          frame.function,
+                                          QString::number(frame.line),
+                                          QString::number(frame.column),
+                                          frame.source)
+                                      );
+        }
+    }
     if (v4->isInterrupted.loadAcquire())
         result = v4->newErrorObject(QStringLiteral("Interrupted"));
 

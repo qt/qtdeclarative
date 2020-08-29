@@ -193,6 +193,8 @@ private slots:
     void asserts();
     void exceptions();
 
+    void exceptionReporting();
+
     void installGarbageCollectionFunctions();
 
     void installAllExtensions();
@@ -4258,6 +4260,25 @@ void tst_QJSEngine::exceptions()
 
     QTest::ignoreMessage(QtCriticalMsg, "Exception 1\n%entry (:1)");
     engine.evaluate("console.exception('Exception 1')");
+}
+
+void tst_QJSEngine::exceptionReporting()
+{
+    QJSEngine engine;
+    QStringList stackTrace;
+    QJSValue result = engine.evaluate(R"(
+    function f() {throw 'an exception'}
+    function g() {f()}
+    g() )", QString("tesfile.js"), 1, &stackTrace);
+    QVERIFY2(!result.isError(), qPrintable(result.toString()));
+    QCOMPARE(stackTrace.count(), 3);
+    QCOMPARE(stackTrace.at(0), "f:2:-1:file:tesfile.js");
+    QCOMPARE(stackTrace.at(1), "g:3:-1:file:tesfile.js");
+    QCOMPARE(stackTrace.at(2), "%entry:4:-1:file:tesfile.js");
+
+    result = engine.evaluate("42", QString(), 1, &stackTrace);
+    QVERIFY2(!result.isError(), qPrintable(result.toString()));
+    QVERIFY(stackTrace.isEmpty());
 }
 
 void tst_QJSEngine::installGarbageCollectionFunctions()

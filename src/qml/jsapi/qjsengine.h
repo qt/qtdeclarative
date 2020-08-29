@@ -68,7 +68,7 @@ public:
 
     QJSValue globalObject() const;
 
-    QJSValue evaluate(const QString &program, const QString &fileName = QString(), int lineNumber = 1);
+    QJSValue evaluate(const QString &program, const QString &fileName = QString(), int lineNumber = 1, QStringList *exceptionStackTrace = nullptr);
 
     QJSValue importModule(const QString &fileName);
 
