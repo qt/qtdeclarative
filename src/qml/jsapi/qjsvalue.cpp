@@ -473,7 +473,7 @@ bool QJSValue::isObject() const
 }
 
 /*!
-  Returns true if this QJSValue can be called a function, otherwise
+  Returns true if this QJSValue is a function, otherwise
   returns false.
 
   \sa call()
