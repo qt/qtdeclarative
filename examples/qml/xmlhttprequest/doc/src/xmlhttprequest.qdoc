@@ -31,7 +31,7 @@
     \image qml-xmlhttprequest-example.png
 
     \e XMLHttpRequest contains a small QML example demonstrating \l{Qt QML}'s
-    XMLHTTPRequest functionality. For more information, visit the section about
+    XMLHttpRequest functionality. For more information, visit the section about
     \l{QML Global Object#XMLHttpRequest}{XMLHttpRequest}.
 
     \include examples-run.qdocinc

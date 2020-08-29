@@ -205,7 +205,7 @@
     \qmlproperty int QtQuick::TableView::columns
     \readonly
 
-    This property holds the number of rows in the table.
+    This property holds the number of columns in the table.
 
     \note \a columns is usually equal to the number of columns in the model, but
     can temporarily differ until all pending model changes have been processed.
