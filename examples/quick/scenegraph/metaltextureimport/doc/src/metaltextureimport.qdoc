@@ -66,7 +66,7 @@
     \snippet scenegraph/metaltextureimport/metaltextureimport.mm 2
 
     The updatePaintNode() function of the item is called on the render thread
-    (if there is one), with the main (gui) thread blocked. Here we create a new
+    (if there is one), with the main (GUI) thread blocked. Here we create a new
     node if there has not yet been one, and update it. Accessing Qt objects
     living on the main thread is safe here, so sync() will calculate and copy
     the values it needs from QQuickItem or QQuickWindow.

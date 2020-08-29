@@ -1590,7 +1590,7 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     and device contexts, Vulkan and Metal devices. These are also queriable by
     application code afterwards via
     \l{QSGRendererInterface::getResource()}{QSGRendererInterface}. When using
-    the \c basic render loop, which performs all rendering on the gui thread,
+    the \c basic render loop, which performs all rendering on the GUI thread,
     the same context or device is used with all visible QQuickWindows. The \c
     threaded render loop uses a dedicated context or device object for each
     rendering thread, and so for each QQuickWindow. With some graphics APIs,
@@ -4099,7 +4099,7 @@ bool QQuickWindow::isSceneGraphInitialized() const
     connected to the signal, the behavior will be different: Quick will print
     the \a message, or show a message box, and terminate the application.
 
-    This signal will be emitted from the gui thread.
+    This signal will be emitted from the GUI thread.
 
     \since 5.3
  */
@@ -4635,10 +4635,10 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 /*!
     \fn void QQuickWindow::afterAnimating()
 
-    This signal is emitted on the gui thread before requesting the render thread to
+    This signal is emitted on the GUI thread before requesting the render thread to
     perform the synchronization of the scene graph.
 
-    Unlike the other similar signals, this one is emitted on the gui thread
+    Unlike the other similar signals, this one is emitted on the GUI thread
     instead of the render thread. It can be used to synchronize external
     animation systems with the QML content. At the same time this means that
     this signal is not suitable for triggering graphics operations.
@@ -4649,7 +4649,7 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 /*!
     \qmlsignal QtQuick.Window::Window::afterAnimating()
 
-    This signal is emitted on the gui thread before requesting the render thread to
+    This signal is emitted on the GUI thread before requesting the render thread to
     perform the synchronization of the scene graph.
 
     You can implement onAfterAnimating to do additional processing after each animation step.
@@ -5593,7 +5593,7 @@ void QQuickWindow::setGraphicsApi(QSGRendererInterface::GraphicsApi api)
     what API the scene graph would choose if it was initialized at the point of
     the call.
 
-    \note This static function is intended to be called on the main (gui)
+    \note This static function is intended to be called on the main (GUI)
     thread only. For querying the API when rendering, use QSGRendererInterface
     since that object lives on the render thread.
 

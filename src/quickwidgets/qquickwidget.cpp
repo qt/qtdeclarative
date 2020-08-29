@@ -734,7 +734,7 @@ QQmlContext* QQuickWidget::rootContext() const
     connected to the signal, the behavior will be different: Quick will print
     the \a message, or show a message box, and terminate the application.
 
-    This signal will be emitted from the gui thread.
+    This signal will be emitted from the GUI thread.
 
     \sa QQuickWindow::sceneGraphError()
  */
