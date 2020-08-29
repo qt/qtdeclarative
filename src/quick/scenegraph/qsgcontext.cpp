@@ -271,8 +271,8 @@ QSGInternalRectangleNode *QSGContext::createInternalRectangleNode(const QRectF &
 
 /*!
     Creates a new shader effect helper instance. This function is called on the
-    gui thread, unlike the others. This is necessary in order to provide
-    adaptable, backend-specific shader effect functionality to the gui thread too.
+    GUI thread, unlike the others. This is necessary in order to provide
+    adaptable, backend-specific shader effect functionality to the GUI thread too.
  */
 QSGGuiThreadShaderEffectManager *QSGContext::createGuiThreadShaderEffectManager()
 {
@@ -305,7 +305,7 @@ QSize QSGContext::minimumFBOSize() const
 /*!
     Returns a pointer to the (presumably) global renderer interface.
 
-    \note This function may be called on the gui thread in order to get access
+    \note This function may be called on the GUI thread in order to get access
     to QSGRendererInterface::graphicsApi() and other getters.
 
     \note it is expected that the simple queries (graphicsApi, shaderType,

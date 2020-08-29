@@ -200,7 +200,7 @@ void QQuickRenderControlPrivate::windowDestroyed()
 }
 
 /*!
-  Prepares rendering the Qt Quick scene outside the gui thread.
+  Prepares rendering the Qt Quick scene outside the GUI thread.
 
   \a targetThread specifies the thread on which synchronization and
   rendering will happen. There is no need to call this function in a

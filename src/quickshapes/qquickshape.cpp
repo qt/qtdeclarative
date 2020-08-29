@@ -723,7 +723,7 @@ QQuickShape::RendererType QQuickShape::rendererType() const
     set this property to \c true.
 
     When enabled, making a Shape visible will not wait for the content to
-    become available. Instead, the gui/main thread is not blocked and the
+    become available. Instead, the GUI/main thread is not blocked and the
     results of the path rendering are shown only when all the asynchronous
     work has been finished.
 
