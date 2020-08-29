@@ -538,8 +538,8 @@ bool QSGRhiDistanceFieldGlyphCache::loadPregeneratedCache(const QRawFont &font)
         quint64 now = timer.elapsed();
         qCDebug(QSG_LOG_TIME_GLYPH,
                 "distancefield: %d pre-generated glyphs loaded in %dms",
-                m_unusedGlyphs.size(),
-                (int) now);
+                int(m_unusedGlyphs.size()),
+                int(now));
     }
 
     return true;
