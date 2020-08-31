@@ -117,6 +117,7 @@ void QQuickWidgetPrivate::initOffscreenWindow()
 
     QWidget::connect(offscreenWindow, SIGNAL(sceneGraphInitialized()), q, SLOT(createFramebufferObject()));
     QWidget::connect(offscreenWindow, SIGNAL(sceneGraphInvalidated()), q, SLOT(destroyFramebufferObject()));
+    QWidget::connect(offscreenWindow, SIGNAL(focusObjectChanged()), q, SLOT(setFocus()));
 }
 
 void QQuickWidgetPrivate::init(QQmlEngine* e)
