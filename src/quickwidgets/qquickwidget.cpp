@@ -65,6 +65,7 @@
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLContext>
 #include <QOpenGLFunctions>
+#include <QtOpenGL/qpa/qplatformbackingstoreopenglsupport.h>
 #endif
 #include <QtGui/QPainter>
 
@@ -1793,6 +1794,10 @@ void QQuickWidget::paintEvent(QPaintEvent *event)
         }
     }
 }
+
+#if QT_CONFIG(opengl)
+Q_CONSTRUCTOR_FUNCTION(qt_registerDefaultPlatformBackingStoreOpenGLSupport);
+#endif
 
 QT_END_NAMESPACE
 

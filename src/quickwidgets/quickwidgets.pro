@@ -2,6 +2,8 @@ TARGET = QtQuickWidgets
 
 QT = core-private gui-private qml-private quick-private widgets-private
 
+qtConfig(opengl): QT_PRIVATE += opengl-private
+
 DEFINES   += QT_NO_URL_CAST_FROM_STRING QT_NO_INTEGER_EVENT_COORDINATES QT_NO_FOREACH
 
 HEADERS += \

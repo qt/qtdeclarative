@@ -31,3 +31,11 @@ qt_add_module(QuickWidgets
         Qt::QuickPrivate
         Qt::WidgetsPrivate
 )
+
+## Scopes:
+#####################################################################
+
+qt_extend_target(QuickWidgets CONDITION QT_FEATURE_opengl
+    LIBRARIES
+        Qt::OpenGLPrivate
+)
