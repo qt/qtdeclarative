@@ -47,6 +47,8 @@
 // We mean it.
 //
 
+QT_BEGIN_NAMESPACE
+
 namespace QQC2 {
 
 static const char * const check_list_controller_xpm[] = {
@@ -524,5 +526,7 @@ static const char *const question_xpm[] = {
 "...................**..........."};
 
 } // namespace QQC2
+
+QT_END_NAMESPACE
 
 #endif //QT_NO_IMAGEFORMAT_XPM

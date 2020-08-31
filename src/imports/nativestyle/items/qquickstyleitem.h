@@ -267,8 +267,8 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickStyleItem::DirtyFlags)
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickStyleItem::DebugFlags)
 #endif
 
-QML_DECLARE_TYPE(QQuickStyleItem)
-
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickStyleItem)
 
 #endif // QQUICKSTYLEITEM_H
