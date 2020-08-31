@@ -384,10 +384,14 @@ QStringList QQuickStylePrivate::builtInStyles()
         QLatin1String("Default"),
         QLatin1String("Fusion"),
         QLatin1String("Imagine"),
+#ifdef Q_OS_MACOS
         QLatin1String("macOS"),
+#endif
         QLatin1String("Material"),
         QLatin1String("Universal"),
+#ifdef Q_OS_WINDOWS
         QLatin1String("Windows")
+#endif
     };
 }
 
