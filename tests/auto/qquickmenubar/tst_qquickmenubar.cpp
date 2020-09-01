@@ -464,6 +464,7 @@ void tst_qquickmenubar::mnemonics()
 
     // trigger another menubar item to open another menu, leave Alt pressed
     keySim.press(Qt::Key_Alt);
+    QTRY_VERIFY(!editMenuBarMenu->isVisible());
     keySim.click(Qt::Key_H); // "&Help"
     QVERIFY(!editMenuBarItem->isHighlighted());
     QVERIFY(helpMenuBarItem->isHighlighted());
