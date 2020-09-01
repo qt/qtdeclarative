@@ -59,10 +59,9 @@ T.GroupBox {
                                   : Qt.point(0,0)
         x: labelPos.x + background.x
         y: labelPos.y + background.y - groupBoxPadding.top
-        width: txt.implicitWidth
-        height: txt.implicitHeight
+        width: children[0].implicitWidth
+        height: children[0].implicitHeight
         Text {
-            id: txt
             width: parent.width
             height: parent.height
             text: control.title

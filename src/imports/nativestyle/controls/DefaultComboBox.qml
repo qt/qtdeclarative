@@ -65,10 +65,8 @@ T.ComboBox {
     rightInset: nativeBackground ? background.insets.right : 0
 
     contentItem: T.TextField {
-        id: textField
-
-        implicitWidth: textField.contentWidth
-        implicitHeight: textField.contentHeight
+        implicitWidth: contentWidth
+        implicitHeight: contentHeight
         text: control.editable ? control.editText : control.displayText
 
         enabled: control.editable
