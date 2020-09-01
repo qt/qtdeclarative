@@ -50,7 +50,10 @@ NativeStyle.DefaultScrollBar {
     NativeStyle.ScrollBar {
         // Fade a hovered-looking version of the handle
         // on top of the default handle when hovering it
-        anchors.fill: contentItem
+        x: contentItem.x
+        y: contentItem.y
+        width: contentItem.width
+        height: contentItem.height
         control: controlRoot
         subControl: NativeStyle.ScrollBar.Handle
         overrideState: NativeStyle.ScrollBar.AlwaysHovered
