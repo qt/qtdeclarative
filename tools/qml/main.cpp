@@ -331,10 +331,6 @@ static void getAppFlags(int argc, char **argv)
             QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
         } else if (!strcmp(argv[i], "-software") || !strcmp(argv[i], "--software")) {
             QCoreApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
-        } else if (!strcmp(argv[i], "-scaling") || !strcmp(argv[i], "--scaling")) {
-            QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-        } else if (!strcmp(argv[i], "-no-scaling") || !strcmp(argv[i], "--no-scaling")) {
-            QCoreApplication::setAttribute(Qt::AA_DisableHighDpiScaling);
         }
     }
 #else
@@ -459,12 +455,6 @@ int main(int argc, char *argv[])
     QCommandLineOption glSoftwareOption(QStringLiteral("software"),
         QCoreApplication::translate("main", "Force use of software rendering (AA_UseSoftwareOpenGL)."));
     parser.addOption(glSoftwareOption); // Just for the help text... we've already handled this argument above
-    QCommandLineOption scalingOption(QStringLiteral("scaling"),
-        QCoreApplication::translate("main", "Enable High DPI scaling (AA_EnableHighDpiScaling)."));
-    parser.addOption(scalingOption); // Just for the help text... we've already handled this argument above
-    QCommandLineOption noScalingOption(QStringLiteral("no-scaling"),
-        QCoreApplication::translate("main", "Disable High DPI scaling (AA_DisableHighDpiScaling)."));
-    parser.addOption(noScalingOption); // Just for the help text... we've already handled this argument above
 #endif // QT_GUI_LIB
     // Debugging and verbosity options
     QCommandLineOption quietOption(QStringLiteral("quiet"),

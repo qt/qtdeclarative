@@ -33,7 +33,6 @@
 
 int main(int argc, char *argv[])
 {
-    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QGuiApplication app(argc, argv);
     qmlRegisterType<InputInspector>("org.qtproject.Test", 1, 0, "InputInspector");
 

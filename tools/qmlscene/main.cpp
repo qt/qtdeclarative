@@ -360,8 +360,6 @@ static void usage()
     puts("  --desktop......................... Force use of desktop GL (AA_UseDesktopOpenGL)");
     puts("  --gles............................ Force use of GLES (AA_UseOpenGLES)");
     puts("  --software........................ Force use of software rendering (AA_UseOpenGLES)");
-    puts("  --scaling......................... Enable High DPI scaling (AA_EnableHighDpiScaling)");
-    puts("  --no-scaling...................... Disable High DPI scaling (AA_DisableHighDpiScaling)");
     puts("  --verbose......................... Print version and graphical diagnostics for the run-time");
 #ifdef QT_WIDGETS_LIB
     puts("  --apptype [gui|widgets] .......... Select which application class to use. Default is widgets.");
@@ -444,10 +442,6 @@ int main(int argc, char ** argv)
             options.applicationAttributes.append(Qt::AA_UseSoftwareOpenGL);
         } else if (!qstrcmp(arg, "--desktop")) {
             options.applicationAttributes.append(Qt::AA_UseDesktopOpenGL);
-        } else if (!qstrcmp(arg, "--scaling")) {
-            options.applicationAttributes.append(Qt::AA_EnableHighDpiScaling);
-        } else if (!qstrcmp(arg, "--no-scaling")) {
-            options.applicationAttributes.append(Qt::AA_DisableHighDpiScaling);
         } else if (!qstrcmp(arg, "--transparent")) {
             options.transparent = true;
         } else if (!qstrcmp(arg, "--multisample")) {
