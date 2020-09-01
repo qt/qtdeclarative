@@ -1,6 +1,6 @@
 TEMPLATE = subdirs
 SUBDIRS += \
-    default \
+    basic \
     fusion \
     imagine \
     material \

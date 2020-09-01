@@ -37,7 +37,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Controls.Default.impl
+import QtQuick.Controls.Basic.impl
 
 ControlContainer {
     id: container

@@ -10,7 +10,7 @@ qt_add_qml_module(qtquickcontrols2universalstyleplugin
     VERSION "6.0" # special case
     CLASSNAME QtQuickControls2UniversalStylePlugin
     IMPORTS
-        QtQuick.Controls.Default/auto
+        QtQuick.Controls.Basic/auto
     GENERATE_QMLTYPES
     SOURCES
         qquickuniversalstyle.cpp qquickuniversalstyle_p.h

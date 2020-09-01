@@ -748,10 +748,10 @@ text field to make way for future input.
 
 Styles in Qt Quick Controls are designed to work on any platform. In this
 chapter, we'll do some minor visual tweaks to make sure our application
-looks good when run with the \l {Default Style}{Default},
+looks good when run with the \l {Basic Style}{Basic},
 \l {Material Style}{Material}, and \l {Universal Style}{Universal} styles.
 
-So far, we've just been testing the application with the Default style. If we
+So far, we've just been testing the application with the Basic style. If we
 run it with the \l {Material Style}, for example, we'll immediately see some issues.
 Here is the Contacts page:
 
@@ -788,7 +788,8 @@ Instead, it is better to rely on Qt Quick Controls's built-in support for
 \l {Using File Selectors with Qt Quick Controls}{style-based file selectors}.
 To do this, we must move the ToolBar out into its own file. We'll call it
 \c ChatToolBar.qml. This will be the \e "default" version of the file, which
-means that it will be used when the \l {Default Style}{Default style} is in
+means that it will be used when the \l {Basic Style}{Basic style} (which is the
+style that is used when none is specified) is in
 use. Here's the new file:
 
 \quotefromfile chattutorial/chapter5-styling/ChatToolBar.qml
@@ -841,7 +842,7 @@ Let's try out the Universal style:
 No issues there. For a relatively simple application such as this one, there
 should be very few adjustments necessary when switching styles.
 
-Now let's try each style's dark theme. The Default style has no dark theme, as
+Now let's try each style's dark theme. The Basic style has no dark theme, as
 it would add a slight overhead to a style that is designed to be as performant
 as possible. We'll test out the Material style first, so add an entry to
 \c qtquickcontrols2.conf that tells it to use its dark theme:

@@ -51,8 +51,8 @@ private slots:
     void initTestCase();
     void init();
 
-    void defaultStyle();
-    void defaultStyle_data();
+    void basicStyle();
+    void basicStyle_data();
 
     void fusion();
     void fusion_data();
@@ -102,16 +102,16 @@ static void doBenchmark(QQuickStyleHelper &styleHelper, const QUrl &url)
     qDeleteAll(objects);
 }
 
-void tst_CreationTime::defaultStyle()
+void tst_CreationTime::basicStyle()
 {
     QFETCH(QUrl, url);
     doBenchmark(styleHelper, url);
 }
 
-void tst_CreationTime::defaultStyle_data()
+void tst_CreationTime::basicStyle_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRowForEachControl(styleHelper.engine.data(), "controls/default", "QtQuick/Controls/Default", QStringList() << "ApplicationWindow");
+    addTestRowForEachControl(styleHelper.engine.data(), "controls/basic", "QtQuick/Controls/Basic", QStringList() << "ApplicationWindow");
 }
 
 void tst_CreationTime::fusion()

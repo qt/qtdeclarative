@@ -10,7 +10,7 @@ qt_add_qml_module(qtquickcontrols2materialstyleplugin
     VERSION "6.0" # special case
     CLASSNAME QtQuickControls2MaterialStylePlugin
     IMPORTS
-        QtQuick.Controls.Default/auto
+        QtQuick.Controls.Basic/auto
     GENERATE_QMLTYPES
     SOURCES
         qquickmaterialstyle.cpp qquickmaterialstyle_p.h

@@ -33,10 +33,10 @@
 
     Qt Quick Controls comes with a selection of styles.
 
-    \section2 Default Style
+    \section2 Basic Style
 
-    \image qtquickcontrols2-default-thumbnail.png
-    The \l {Default Style} is a simple and light-weight all-round style that offers
+    \image qtquickcontrols2-basic-thumbnail.png
+    The \l {Basic Style} is a simple and light-weight all-round style that offers
     the maximum performance for Qt Quick Controls.
 
     \section2 Fusion Style
@@ -58,14 +58,14 @@
     The \l {Material Style} offers an appealing design based on the
     \l {https://www.google.com/design/spec/material-design/introduction.html}
     {Google Material Design Guidelines}, but requires more system resources than
-    the Default style.
+    the Basic style.
 
     \section2 Universal Style
 
     \image qtquickcontrols2-universal-thumbnail.png
     The \l {Universal Style} offers an appealing design based on the
     \l {https://dev.windows.com/design}{Microsoft Universal Design Guidelines},
-    but requires more system resources than the Default style.
+    but requires more system resources than the Basic style.
 
     \section1 Using Styles in Qt Quick Controls
 
@@ -141,7 +141,7 @@
 
     \section1 Related Information
     \list
-    \li \l {Default Style}
+    \li \l {Basic Style}
     \li \l {Fusion Style}
     \li \l {Imagine Style}
     \li \l {Material Style}

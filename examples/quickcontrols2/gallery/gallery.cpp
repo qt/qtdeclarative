@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 
     QQmlApplicationEngine engine;
 
-    const QStringList builtInStyles = { QLatin1String("Default"), QLatin1String("Fusion"),
+    const QStringList builtInStyles = { QLatin1String("Basic"), QLatin1String("Fusion"),
         QLatin1String("Imagine"), QLatin1String("Material"), QLatin1String("Universal") };
     engine.rootContext()->setContextProperty("builtInStyles", builtInStyles);
 

@@ -114,7 +114,7 @@ void tst_Snippets::verify()
 
     if (takeScreenshots) {
         const QString currentDataTag = QLatin1String(QTest::currentDataTag());
-        static const QString applicationStyle = QQuickStyle::name().isEmpty() ? "Default" : QQuickStyle::name();
+        static const QString applicationStyle = QQuickStyle::name().isEmpty() ? "Basic" : QQuickStyle::name();
         static const QStringList builtInStyles = QQuickStylePrivate::builtInStyles();
 
         bool isStyledSnippet = false;

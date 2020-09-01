@@ -1,7 +1,7 @@
 module QtQuick.Controls.Universal
 plugin qtquickcontrols2universalstyleplugin
 classname QtQuickControls2UniversalStylePlugin
-import QtQuick.Controls.Default auto
+import QtQuick.Controls.Basic auto
 
 # QtQuick.Controls 2.0 (originally introduced in Qt 5.7)
 ApplicationWindow 2.0 ApplicationWindow.qml

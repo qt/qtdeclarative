@@ -13,50 +13,50 @@
     },
 
     "features": {
-        "quickcontrols2-default": {
-            "label": "Default",
+        "quickcontrols2-basic": {
+            "label": "Basic",
             "output": [ "privateFeature" ]
         },
         "quickcontrols2-fusion": {
             "label": "Fusion",
             "purpose": "Provides the platform agnostic desktop-oriented Fusion style.",
             "section": "Quick Controls 2",
-            "condition": "features.quickcontrols2-default",
+            "condition": "features.quickcontrols2-basic",
             "output": [ "privateFeature" ]
         },
         "quickcontrols2-imagine": {
             "label": "Imagine",
             "purpose": "Provides a style based on configurable image assets.",
             "section": "Quick Controls 2",
-            "condition": "features.quickcontrols2-default",
+            "condition": "features.quickcontrols2-basic",
             "output": [ "privateFeature" ]
         },
         "quickcontrols2-material": {
             "label": "Material",
             "purpose": "Provides a style based on the Material Design guidelines.",
             "section": "Quick Controls 2",
-            "condition": "features.quickcontrols2-default",
+            "condition": "features.quickcontrols2-basic",
             "output": [ "privateFeature" ]
         },
         "quickcontrols2-universal": {
             "label": "Universal",
             "purpose": "Provides a style based on the Universal Design guidelines.",
             "section": "Quick Controls 2",
-            "condition": "features.quickcontrols2-default",
+            "condition": "features.quickcontrols2-basic",
             "output": [ "privateFeature" ]
         },
         "quickcontrols2-macos": {
             "label": "macOS",
             "purpose": "Provides a native macOS desktop style.",
             "section": "Quick Controls 2",
-            "condition": "features.quickcontrols2-default",
+            "condition": "features.quickcontrols2-basic",
             "output": [ "privateFeature" ]
         },
         "quickcontrols2-windows": {
             "label": "Windows",
             "purpose": "Provides a native Windows desktop style.",
             "section": "Quick Controls 2",
-            "condition": "features.quickcontrols2-default",
+            "condition": "features.quickcontrols2-basic",
             "output": [ "privateFeature" ]
         }
     },
@@ -68,7 +68,7 @@
                 {
                     "message": "Styles",
                     "type": "featureList",
-                    "args": "quickcontrols2-default quickcontrols2-fusion quickcontrols2-imagine quickcontrols2-material quickcontrols2-universal quickcontrols2-macos quickcontrols2-windows"
+                    "args": "quickcontrols2-basic quickcontrols2-fusion quickcontrols2-imagine quickcontrols2-material quickcontrols2-universal quickcontrols2-macos quickcontrols2-windows"
                 }
             ]
         }

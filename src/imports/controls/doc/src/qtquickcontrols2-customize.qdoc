@@ -44,7 +44,7 @@
 
     The first way to create this button is to simply define it in-place,
     wherever it is needed. For example, perhaps you're not satisfied with the
-    default style's Button having square corners. To make them rounded, you
+    Basic style's Button having square corners. To make them rounded, you
     can override the \l {Control::}{background} item and set the radius
     property of Rectangle:
 
@@ -54,11 +54,11 @@
     button in several places. It involves moving the code into its own QML file
     within your project.
 
-    For this approach, we'll copy the background code from the default style's
+    For this approach, we'll copy the background code from the Basic style's
     \c Button.qml. This file can be found in the following path in your Qt
     installation:
 
-    \c {$QTDIR/qml/QtQuick/Controls/Default/Button.qml}
+    \c {$QTDIR/qml/QtQuick/Controls/Basic/Button.qml}
 
     After doing that, we'll simply add the following line:
 
@@ -158,7 +158,7 @@
         \e mystyle or \e MYSTYLE is not supported.
     \endlist
 
-    By default, the styling system uses the Default style as a fallback for
+    By default, the styling system uses the Basic style as a fallback for
     controls that aren't implemented. To customize or extend any other built-in
     style, it is possible to specify a different fallback style using
     \l[QtQuickControls2]{QQuickStyle}.
@@ -413,8 +413,8 @@
     }
     \endcode
 
-    We then copy \c Button.qml from the Default style in
-    \c {$QTDIR/qml/QtQuick/Controls/Default/} into a new \c myproject folder in our
+    We then copy \c Button.qml from the Basic style in
+    \c {$QTDIR/qml/QtQuick/Controls/Basic/} into a new \c myproject folder in our
     project directory. Add the newly copied \c Button.qml to \c qml.qrc, which is
     the resource file that contains our QML files.
 
@@ -497,7 +497,7 @@
 
     \section1 Customization Reference
 
-    The following snippets present examples where the default style's controls
+    The following snippets present examples where the Basic style's controls
     have been customized using the same approach as the
     \l {Customizing a Control} section. The code can be used as a starting
     point to implement a custom look and feel.

@@ -7,8 +7,8 @@ SUBDIRS += \
     nativestyle
 
 SUBDIRS += \
-    controls/default/default.pro \
-    controls/default/impl/default-impl.pro \
+    controls/basic/basic.pro \
+    controls/basic/impl/basic-impl.pro \
     controls/fusion/fusion.pro \
     controls/fusion/impl/fusion-impl.pro \
     controls/imagine/imagine.pro \

@@ -29,6 +29,6 @@ import QtQuick
 import QtQuick.Controls
 
 Button {
-    icon.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Default/images/check.png"
+    icon.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png"
     display: Button.IconOnly
 }

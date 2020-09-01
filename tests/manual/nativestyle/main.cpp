@@ -42,10 +42,8 @@ int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
 
-    // Todo: rename the "default" style to e.g "simple"
-    // and use "default" as a phony style name instad
-    // to mean "get me the default style on the current
-    // platform".
+    // TODO: when no style is specified, default to the appropriate native
+    // platform style if available, otherwise use Basic: QTBUG-86403
     const QString style = qEnvironmentVariable("DESKTOPGALLERY_STYLE");
     if (!style.isEmpty())
         QQuickStyle::setStyle(style);

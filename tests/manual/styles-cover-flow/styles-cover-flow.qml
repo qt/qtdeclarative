@@ -74,7 +74,7 @@ Window {
         anchors.leftMargin: 130
         anchors.rightMargin: 130
         model: ListModel {
-            ListElement { source: "qtquickcontrols2-default.png"; dark: false }
+            ListElement { source: "qtquickcontrols2-basic.png"; dark: false }
             ListElement { source: "qtquickcontrols2-fusion.png"; dark: false }
             ListElement { source: "qtquickcontrols2-universal-light.png"; dark: false }
             ListElement { source: "qtquickcontrols2-universal-dark.png"; dark: true }

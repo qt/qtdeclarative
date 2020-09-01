@@ -1,3 +1,0 @@
-module QtQuick.Controls.Default.impl
-plugin qtquickcontrols2defaultstyleimplplugin
-classname QtQuickControls2DefaultStyleImplPlugin

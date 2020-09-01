@@ -298,7 +298,7 @@ TestCase {
 
     Component {
         id: dialogComponent
-        // Based on the Default style, where a single button fills
+        // Based on the Basic style, where a single button fills
         // half the dialog's width and is aligned to the right.
         Dialog {
             id: control

@@ -9,7 +9,7 @@ qt_add_qml_module(qtquickcontrols2universalstyleplugin
     VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QtQuickControls2UniversalStylePlugin
     IMPORTS
-        QtQuick.Controls.Default/auto
+        QtQuick.Controls.Basic/auto
     GENERATE_QMLTYPES
     SOURCES
         qquickuniversalstyle.cpp qquickuniversalstyle_p.h

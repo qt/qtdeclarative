@@ -122,10 +122,10 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
 
     createTheme(styleName);
 
-    // If the style is Default, we don't need to register the fallback because the Default style
+    // If the style is Basic, we don't need to register the fallback because the Basic style
     // provides all controls. Also, if we didn't return early here, we can get an infinite import loop
-    // when the style is set to Default.
-    if (styleName != fallbackStyleName && styleName != QLatin1String("Default")) {
+    // when the style is set to Basic.
+    if (styleName != fallbackStyleName && styleName != QLatin1String("Basic")) {
         registeredFallbackStyleUri = ::fallbackStyleUri();
         qCDebug(lcQtQuickControlsStylePlugin) << "calling qmlRegisterModuleImport() to register fallback style with"
             << " uri \"" << qtQuickControlsUri << "\" moduleMajor" << QQmlModuleImportModuleAny

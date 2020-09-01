@@ -75,7 +75,7 @@ ApplicationWindow {
 
     Settings {
         id: settings
-        property string style: "Default"
+        property string style: "Basic"
     }
 
     Shortcut {

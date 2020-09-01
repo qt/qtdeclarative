@@ -93,7 +93,7 @@ Q_LOGGING_CATEGORY(lcQtQuickControlsStyle, "qt.quick.controls.style")
 
     To create your own custom style, see \l {Creating a Custom Style}. Custom
     styles do not need to implement all controls. By default, the styling
-    system uses the \l {Default style} as a fallback for controls that a custom
+    system uses the \l {Basic style} as a fallback for controls that a custom
     style does not provide. It is possible to specify a different fallback
     style to customize or extend one of the built-in styles.
 
@@ -238,7 +238,7 @@ Q_GLOBAL_STATIC(QQuickStyleSpec, styleSpec)
 
 QString QQuickStylePrivate::effectiveStyleName(const QString &styleName)
 {
-    return !styleName.isEmpty() ? styleName : QLatin1String("Default");
+    return !styleName.isEmpty() ? styleName : QLatin1String("Basic");
 }
 
 QString QQuickStylePrivate::fallbackStyle()
@@ -383,7 +383,7 @@ bool QQuickStylePrivate::isDarkSystemTheme()
 QStringList QQuickStylePrivate::builtInStyles()
 {
     return {
-        QLatin1String("Default"),
+        QLatin1String("Basic"),
         QLatin1String("Fusion"),
         QLatin1String("Imagine"),
 #ifdef Q_OS_MACOS

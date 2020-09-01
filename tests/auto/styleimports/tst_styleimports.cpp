@@ -85,56 +85,56 @@ void tst_StyleImports::select_data()
     QTest::addColumn<QString>("fallback");
     QTest::addColumn<QString>("expected");
 
-    // Action.qml exists in the "data" style and the Default style.
-    QTest::newRow("control=Action,style=empty,fallback=empty") << "Action.qml" << "" << "" << "Default";
-    QTest::newRow("control=Action,style=fs,fallback=empty") << "Action.qml" << "FileSystemStyle" << "" << "Default";
-    QTest::newRow("control=Action,style=qrc,fallback=empty") << "Action.qml" << "ResourceStyle" << "" << "Default";
-    QTest::newRow("control=Action,style=nosuch,fallback=empty") << "Action.qml" << "NoSuchStyle" << "" << "Default";
+    // Action.qml exists in the "data" style and the Basic style.
+    QTest::newRow("control=Action,style=empty,fallback=empty") << "Action.qml" << "" << "" << "Basic";
+    QTest::newRow("control=Action,style=fs,fallback=empty") << "Action.qml" << "FileSystemStyle" << "" << "Basic";
+    QTest::newRow("control=Action,style=qrc,fallback=empty") << "Action.qml" << "ResourceStyle" << "" << "Basic";
+    QTest::newRow("control=Action,style=nosuch,fallback=empty") << "Action.qml" << "NoSuchStyle" << "" << "Basic";
     QTest::newRow("control=Action,style=data,fallback=empty") << "Action.qml" << "data" << "" << "data";
 
     QTest::newRow("control=Action,style=empty,fallback=mat") << "Action.qml" << "" << "Material" << "";
-    QTest::newRow("control=Action,style=fs,fallback=mat") << "Action.qml" << "FileSystemStyle" << "Material" << "Default";
-    QTest::newRow("control=Action,style=qrc,fallback=mat") << "Action.qml" << "ResourceStyle" << "Material" << "Default";
-    QTest::newRow("control=Action,style=nosuch,fallback=mat") << "Action.qml" << "NoSuchStyle" << "Material" << "Default";
+    QTest::newRow("control=Action,style=fs,fallback=mat") << "Action.qml" << "FileSystemStyle" << "Material" << "Basic";
+    QTest::newRow("control=Action,style=qrc,fallback=mat") << "Action.qml" << "ResourceStyle" << "Material" << "Basic";
+    QTest::newRow("control=Action,style=nosuch,fallback=mat") << "Action.qml" << "NoSuchStyle" << "Material" << "Basic";
     QTest::newRow("control=Action,style=data,fallback=mat") << "Action.qml" << "data" << "Material" << "data";
 
-    // ScrollView.qml only exists in the Default style.
-    QTest::newRow("control=ScrollView,style=empty,fallback=empty") << "ScrollView.qml" << "" << "" << "Default";
-    QTest::newRow("control=ScrollView,style=fs,fallback=empty") << "ScrollView.qml" << "FileSystemStyle" << "" << "Default";
-    QTest::newRow("control=ScrollView,style=qrc,fallback=empty") << "ScrollView.qml" << "ResourceStyle" << "" << "Default";
-    QTest::newRow("control=ScrollView,style=nosuch,fallback=empty") << "ScrollView.qml" << "NoSuchStyle" << "" << "Default";
-    QTest::newRow("control=ScrollView,style=data,fallback=empty") << "ScrollView.qml" << "data" << "" << "Default";
+    // ScrollView.qml only exists in the Basic style.
+    QTest::newRow("control=ScrollView,style=empty,fallback=empty") << "ScrollView.qml" << "" << "" << "Basic";
+    QTest::newRow("control=ScrollView,style=fs,fallback=empty") << "ScrollView.qml" << "FileSystemStyle" << "" << "Basic";
+    QTest::newRow("control=ScrollView,style=qrc,fallback=empty") << "ScrollView.qml" << "ResourceStyle" << "" << "Basic";
+    QTest::newRow("control=ScrollView,style=nosuch,fallback=empty") << "ScrollView.qml" << "NoSuchStyle" << "" << "Basic";
+    QTest::newRow("control=ScrollView,style=data,fallback=empty") << "ScrollView.qml" << "data" << "" << "Basic";
 
-    QTest::newRow("control=ScrollView,style=empty,fallback=mat") << "ScrollView.qml" << "" << "Material" << "Default";
-    QTest::newRow("control=ScrollView,style=fs,fallback=mat") << "ScrollView.qml" << "FileSystemStyle" << "Material" << "Default";
-    QTest::newRow("control=ScrollView,style=qrc,fallback=mat") << "ScrollView.qml" << "ResourceStyle" << "Material" << "Default";
-    QTest::newRow("control=ScrollView,style=nosuch,fallback=mat") << "ScrollView.qml" << "NoSuchStyle" << "Material" << "Default";
-    QTest::newRow("control=ScrollView,style=data,fallback=mat") << "ScrollView.qml" << "data" << "Material" << "Default";
+    QTest::newRow("control=ScrollView,style=empty,fallback=mat") << "ScrollView.qml" << "" << "Material" << "Basic";
+    QTest::newRow("control=ScrollView,style=fs,fallback=mat") << "ScrollView.qml" << "FileSystemStyle" << "Material" << "Basic";
+    QTest::newRow("control=ScrollView,style=qrc,fallback=mat") << "ScrollView.qml" << "ResourceStyle" << "Material" << "Basic";
+    QTest::newRow("control=ScrollView,style=nosuch,fallback=mat") << "ScrollView.qml" << "NoSuchStyle" << "Material" << "Basic";
+    QTest::newRow("control=ScrollView,style=data,fallback=mat") << "ScrollView.qml" << "data" << "Material" << "Basic";
 
-    // Label.qml exists in the "data", Default and Material styles.
-    QTest::newRow("control=Label,style=none,fallback=none") << "Label.qml" << "" << "" << "Default";
-    QTest::newRow("control=Label,style=fs,fallback=none") << "Label.qml" << "FileSystemStyle" << "" << "Default";
-    QTest::newRow("control=Label,style=qrc,fallback=none") << "Label.qml" << "ResourceStyle" << "" << "Default";
-    QTest::newRow("control=Label,style=nosuch,fallback=none") << "Label.qml" << "NoSuchStyle" << "" << "Default";
+    // Label.qml exists in the "data", Basic and Material styles.
+    QTest::newRow("control=Label,style=none,fallback=none") << "Label.qml" << "" << "" << "Basic";
+    QTest::newRow("control=Label,style=fs,fallback=none") << "Label.qml" << "FileSystemStyle" << "" << "Basic";
+    QTest::newRow("control=Label,style=qrc,fallback=none") << "Label.qml" << "ResourceStyle" << "" << "Basic";
+    QTest::newRow("control=Label,style=nosuch,fallback=none") << "Label.qml" << "NoSuchStyle" << "" << "Basic";
     QTest::newRow("control=Label,style=data,fallback=none") << "Label.qml" << "data" << "" << "data";
 
-    QTest::newRow("control=Label,style=none,fallback=mat") << "Label.qml" << "" << "Material" << "Default";
-    QTest::newRow("control=Label,style=fs,fallback=mat") << "Label.qml" << "FileSystemStyle" << "Material" << "Default";
-    QTest::newRow("control=Label,style=qrc,fallback=mat") << "Label.qml" << "ResourceStyle" << "Material" << "Default";
-    QTest::newRow("control=Label,style=nosuch,fallback=mat") << "Label.qml" << "NoSuchStyle" << "Material" << "Default";
+    QTest::newRow("control=Label,style=none,fallback=mat") << "Label.qml" << "" << "Material" << "Basic";
+    QTest::newRow("control=Label,style=fs,fallback=mat") << "Label.qml" << "FileSystemStyle" << "Material" << "Basic";
+    QTest::newRow("control=Label,style=qrc,fallback=mat") << "Label.qml" << "ResourceStyle" << "Material" << "Basic";
+    QTest::newRow("control=Label,style=nosuch,fallback=mat") << "Label.qml" << "NoSuchStyle" << "Material" << "Basic";
     QTest::newRow("control=Label,style=data,fallback=mat") << "Label.qml" << "data" << "Material" << "data";
 
     // Button.qml exists in all styles including the fs and qrc styles
-    QTest::newRow("control=Button,style=none,fallback=none") << "Button.qml" << "" << "" << "Default";
+    QTest::newRow("control=Button,style=none,fallback=none") << "Button.qml" << "" << "" << "Basic";
     QTest::newRow("control=Button,style=fs,fallback=none") << "Button.qml" << "FileSystemStyle" << "" << "FileSystemStyle";
     QTest::newRow("control=Button,style=qrc,fallback=none") << "Button.qml" << "ResourceStyle" << "" << "ResourceStyle";
-    QTest::newRow("control=Button,style=nosuch,fallback=none") << "Button.qml" << "NoSuchStyle" << "" << "Default";
+    QTest::newRow("control=Button,style=nosuch,fallback=none") << "Button.qml" << "NoSuchStyle" << "" << "Basic";
     QTest::newRow("control=Button,style=data,fallback=none") << "Button.qml" << "data" << "" << "data";
 
-    QTest::newRow("control=Button,style=none,fallback=mat") << "Button.qml" << "" << "Material" << "Default";
+    QTest::newRow("control=Button,style=none,fallback=mat") << "Button.qml" << "" << "Material" << "Basic";
     QTest::newRow("control=Button,style=fs,fallback=mat") << "Button.qml" << "FileSystemStyle" << "Material" << "FileSystemStyle";
     QTest::newRow("control=Button,style=qrc,fallback=mat") << "Button.qml" << "ResourceStyle" << "Material" << "ResourceStyle";
-    QTest::newRow("control=Button,style=nosuch,fallback=mat") << "Button.qml" << "NoSuchStyle" << "Material" << "Default";
+    QTest::newRow("control=Button,style=nosuch,fallback=mat") << "Button.qml" << "NoSuchStyle" << "Material" << "Basic";
     QTest::newRow("control=Button,style=data,fallback=mat") << "Button.qml" << "data" << "Material" << "data";
 }
 
@@ -227,12 +227,12 @@ void tst_StyleImports::importStyleWithoutControls()
     bool success = false;
 
     // Account for extra warnings for fallback styles.
-    QTest::ignoreMessage(QtWarningMsg, QRegularExpression("QtQuick.Controls must be imported before importing.*Default"));
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression("QtQuick.Controls must be imported before importing.*Basic"));
     if (style == QLatin1String("macOS"))
         QTest::ignoreMessage(QtWarningMsg, QRegularExpression("QtQuick.Controls must be imported before importing.*Fusion"));
 
     // Account for the warning for the current style.
-    if (style != QLatin1String("Default"))
+    if (style != QLatin1String("Basic"))
         QTest::ignoreMessage(QtWarningMsg, QRegularExpression("QtQuick.Controls must be imported before importing.*" + style));
 
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,

@@ -199,11 +199,11 @@ TestCase {
         var control = createTemporaryObject(toolButton, testCase, {
             text: "ToolButton",
             display: data.display,
-            "icon.source": "qrc:/qt-project.org/imports/QtQuick/Controls/Default/images/check.png",
+            "icon.source": "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png",
             "LayoutMirroring.enabled": !!data.mirrored
         })
         verify(control)
-        compare(control.icon.source, "qrc:/qt-project.org/imports/QtQuick/Controls/Default/images/check.png")
+        compare(control.icon.source, "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png")
 
         var iconImage = findChild(control.contentItem, "image")
         var textLabel = findChild(control.contentItem, "label")

@@ -2,9 +2,9 @@
 *
 [attachedObjects:material/SwitchDelegate.qml]
 *
-[ids:default/HorizontalHeaderView.qml]
+[ids:basic/HorizontalHeaderView.qml]
 *
-[ids:default/VerticalHeaderView.qml]
+[ids:basic/VerticalHeaderView.qml]
 *
 [ids:fusion/HorizontalHeaderView.qml]
 *

@@ -175,12 +175,12 @@ void tst_Sanity::initTestCase()
 
     // Then, collect the files from each installed style directory.
     const QVector<QPair<QString, QString>> styleRelativePaths = {
-        { "controls/default", "QtQuick/Controls/Default" },
+        { "controls/basic", "QtQuick/Controls/Basic" },
         { "controls/fusion", "QtQuick/Controls/Fusion" },
         { "controls/material", "QtQuick/Controls/Material" },
         { "controls/universal", "QtQuick/Controls/Universal" },
     };
-    for (const auto stylePathPair : styleRelativePaths) {
+    for (const auto &stylePathPair : styleRelativePaths) {
         forEachControl(&engine, stylePathPair.first, stylePathPair.second, QStringList(),
                 [&](const QString &relativePath, const QUrl &absoluteUrl) {
              installedQmlFiles.insert(relativePath, absoluteUrl.toLocalFile());
@@ -377,7 +377,6 @@ void tst_Sanity::attachedObjects()
     if (styleHelper.updateStyle(style))
         qt_qobjects->clear();
 
-    // Turn e.g. "Default/Button.qml" into "default/Button.qml".
     QString styleRelativePath = tagStr;
     styleRelativePath[0] = styleRelativePath.at(0).toLower();
     // Get the absolute path to the installed file.
@@ -438,67 +437,67 @@ void tst_Sanity::attachedObjects_data()
     // such as DialogButtonBox, which is loaded by Dialog.
     // So now we list all controls and the attached types we expect them to use.
 
-    QTest::newRow("Default/AbstractButton.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/Action.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/ActionGroup.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/ApplicationWindow.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/BusyIndicator.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/Button.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/ButtonGroup.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/CheckBox.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/CheckDelegate.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/ComboBox.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/Container.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/Control.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/DelayButton.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/Dial.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/Dialog.qml") << ignoredNames << StringPairSet {{ "QQuickOverlayAttached", "Dialog_QMLTYPE" }};
-    QTest::newRow("Default/DialogButtonBox.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/Drawer.qml") << ignoredNames << StringPairSet {{ "QQuickOverlayAttached", "Drawer_QMLTYPE" }};
-    QTest::newRow("Default/Frame.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/GroupBox.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/HorizontalHeaderView.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/ItemDelegate.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/Label.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/Menu.qml") << ignoredNames << StringPairSet {
+    QTest::newRow("Basic/AbstractButton.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/Action.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/ActionGroup.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/ApplicationWindow.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/BusyIndicator.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/Button.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/ButtonGroup.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/CheckBox.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/CheckDelegate.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/ComboBox.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/Container.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/Control.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/DelayButton.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/Dial.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/Dialog.qml") << ignoredNames << StringPairSet {{ "QQuickOverlayAttached", "Dialog_QMLTYPE" }};
+    QTest::newRow("Basic/DialogButtonBox.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/Drawer.qml") << ignoredNames << StringPairSet {{ "QQuickOverlayAttached", "Drawer_QMLTYPE" }};
+    QTest::newRow("Basic/Frame.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/GroupBox.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/HorizontalHeaderView.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/ItemDelegate.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/Label.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/Menu.qml") << ignoredNames << StringPairSet {
         { "QQuickOverlayAttached", "Menu_QMLTYPE" },
         { "QQuickScrollIndicatorAttached", "QQuickListView" },
         { "QQuickWindowAttached", "QQuickListView" }
     };
-    QTest::newRow("Default/MenuBar.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/MenuBarItem.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/MenuItem.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/MenuSeparator.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/Page.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/PageIndicator.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/Pane.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/Popup.qml") << ignoredNames << StringPairSet {{ "QQuickOverlayAttached", "Popup_QMLTYPE" }};
-    QTest::newRow("Default/ProgressBar.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/RadioButton.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/RadioDelegate.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/RangeSlider.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/RoundButton.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/ScrollBar.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/ScrollIndicator.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/ScrollView.qml") << ignoredNames << StringPairSet {{ "QQuickScrollBarAttached", "ScrollView_QMLTYPE" }};
-    QTest::newRow("Default/Slider.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/SpinBox.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/SplitView.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/StackView.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/SwipeDelegate.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/SwipeView.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/Switch.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/SwitchDelegate.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/TabBar.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/TabButton.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/TextArea.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/TextField.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/ToolBar.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/ToolButton.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/ToolSeparator.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/ToolTip.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/Tumbler.qml") << ignoredNames << StringPairSet {};
-    QTest::newRow("Default/VerticalHeaderView.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/MenuBar.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/MenuBarItem.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/MenuItem.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/MenuSeparator.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/Page.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/PageIndicator.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/Pane.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/Popup.qml") << ignoredNames << StringPairSet {{ "QQuickOverlayAttached", "Popup_QMLTYPE" }};
+    QTest::newRow("Basic/ProgressBar.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/RadioButton.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/RadioDelegate.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/RangeSlider.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/RoundButton.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/ScrollBar.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/ScrollIndicator.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/ScrollView.qml") << ignoredNames << StringPairSet {{ "QQuickScrollBarAttached", "ScrollView_QMLTYPE" }};
+    QTest::newRow("Basic/Slider.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/SpinBox.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/SplitView.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/StackView.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/SwipeDelegate.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/SwipeView.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/Switch.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/SwitchDelegate.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/TabBar.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/TabButton.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/TextArea.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/TextField.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/ToolBar.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/ToolButton.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/ToolSeparator.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/ToolTip.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/Tumbler.qml") << ignoredNames << StringPairSet {};
+    QTest::newRow("Basic/VerticalHeaderView.qml") << ignoredNames << StringPairSet {};
     QTest::newRow("Fusion/ApplicationWindow.qml") << ignoredNames << StringPairSet {};
     QTest::newRow("Fusion/BusyIndicator.qml") << ignoredNames << StringPairSet {};
     QTest::newRow("Fusion/Button.qml") << ignoredNames << StringPairSet {};

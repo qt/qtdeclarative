@@ -30,7 +30,7 @@
 
 /tests/auto/accessibility/tst_accessibility
 /tests/auto/calendar/tst_calendar
-/tests/auto/controls/default/tst_default
+/tests/auto/controls/basic/tst_basic
 /tests/auto/controls/fusion/tst_fusion
 /tests/auto/controls/imagine/tst_imagine
 /tests/auto/controls/material/tst_material

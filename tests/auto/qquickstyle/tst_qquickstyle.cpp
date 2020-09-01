@@ -109,21 +109,19 @@ void tst_QQuickStyle::configurationFile_data()
 {
     QTest::addColumn<QString>("fileName");
     QTest::addColumn<QString>("expectedStyle");
-    QTest::addColumn<QString>("expectedPath");
 
-    QTest::newRow("Default") << "default.conf" << "Default" << "";
-    QTest::newRow("Fusion") << "fusion.conf" << "Fusion" << "";
-    QTest::newRow("Imagine") << "imagine.conf" << "Imagine" << "";
-    QTest::newRow("Material") << "material.conf" << "Material" << "";
-    QTest::newRow("Universal") << "universal.conf" << "Universal" << "";
-    QTest::newRow("Custom") << "custom.conf" << "Custom" << ":/";
+    QTest::newRow("Basic") << "basic.conf" << "Basic";
+    QTest::newRow("Fusion") << "fusion.conf" << "Fusion";
+    QTest::newRow("Imagine") << "imagine.conf" << "Imagine";
+    QTest::newRow("Material") << "material.conf" << "Material";
+    QTest::newRow("Universal") << "universal.conf" << "Universal";
+    QTest::newRow("Custom") << "custom.conf" << "Custom";
 }
 
 void tst_QQuickStyle::configurationFile()
 {
     QFETCH(QString, fileName);
     QFETCH(QString, expectedStyle);
-    QFETCH(QString, expectedPath);
 
     qputenv("QT_QUICK_CONTROLS_CONF", testFile(fileName).toLocal8Bit());
 

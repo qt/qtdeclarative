@@ -77,7 +77,7 @@
             \li \c FallbackStyle
             \li Specifies the style to use for controls that are not implemented.
                 The style must be one of the \l {Available Styles}{built-in styles}.
-                By default, the \l {Default Style}{Default} style is used.
+                By default, the \l {Basic Style}{Basic} style is used.
     \endtable
 
     \section1 Imagine Section
@@ -108,7 +108,7 @@
     be defined in two alternative ways:
 
     \code
-    [Default]
+    [Basic]
     Font\Family=Open Sans
     Font\PixelSize=20
 

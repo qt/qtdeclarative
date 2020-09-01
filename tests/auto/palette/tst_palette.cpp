@@ -294,7 +294,7 @@ void tst_palette::defaultPalette()
     QQmlComponent component(&engine);
     component.setData(QString("import QtQuick.Controls; %1 { }").arg(control).toUtf8(), QUrl());
 
-    // The call to setData() above causes QQuickDefaultTheme to be set as the current theme,
+    // The call to setData() above causes QQuickBasicTheme to be set as the current theme,
     // so we must make sure we only set our theme afterwards.
     std::unique_ptr<QQuickTheme> oldTheme(QQuickThemePrivate::instance.take());
     QQuickThemePrivate::instance.reset(new TestTheme);

@@ -172,7 +172,7 @@
     \value Universal.Mauve \stylecolor {#76608A} {}
     \value Universal.Taupe \stylecolor {#87794E} {}
 
-    \b {See also} \l {Default Style}, \l {Material Style}
+    \b {See also} \l {Basic Style}, \l {Material Style}
 
     \section1 Attached Property Documentation
 

@@ -56,7 +56,7 @@ AbstractButton {
     id: button
     width: 200
     height: 200
-    icon.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Default/images/check.png"
+    icon.source: "qrc:/qt-project.org/imports/QtQuick/Controls/Basic/images/check.png"
     icon.color: enabled ? "transparent" : "red"
 
     IconLabel {
