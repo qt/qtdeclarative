@@ -44,14 +44,8 @@ T.SpinBox {
     id: control
 
     property bool nativeBackground: background instanceof NativeStyle.StyleItem
-    property bool nativeIndicators: true
-
-    Component.onCompleted: {
-        // Work-around: up.indicator will not emit changed, so we
-        // need to evaluate nativeIndicators after completed instead.
-        nativeIndicators = up.indicator.hasOwnProperty("_qt_default")
+    property bool nativeIndicators: up.indicator.hasOwnProperty("_qt_default")
                 && down.indicator.hasOwnProperty("_qt_default")
-    }
 
     font.pixelSize: nativeBackground ? background.styleFont(control).pixelSize : undefined
 
