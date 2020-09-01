@@ -13,5 +13,3 @@ TextField 6.0 TextField.qml
 Frame 6.0 Frame.qml
 TextArea 6.0 TextArea.qml
 ComboBox 6.0 ComboBox.qml
-ScrollBar 6.0 ScrollBar.qml
-Dial 6.0 Dial.qml
