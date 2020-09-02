@@ -486,7 +486,7 @@ static QUrl urlForFileName(const QString &fileName)
     provided with this function.
 
     \a stackTrace is used to report whether an uncaught exception was
-    thrown. If you pass a non-null pointer to a boolean to it, it will set
+    thrown. If you pass a non-null pointer to a QStringList to it, it will set
     it to list of "stackframe messages" if the script threw an unhandled
     exception, or an empty list otherwise. A stackframe message has the format
     function name:line number:column:file name
@@ -495,7 +495,7 @@ static QUrl urlForFileName(const QString &fileName)
 
     \note If an exception was thrown and the exception value is not an
     Error instance (i.e., QJSValue::isError() returns \c false), the
-    exception value will still be returned. Use \a stackTrace to
+    exception value will still be returned. Use \a stackTrace->isEmpty() to
     distinguish whether the value was a normal or an exceptional return
     value.
 */
