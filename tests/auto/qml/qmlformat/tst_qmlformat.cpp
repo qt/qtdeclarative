@@ -43,24 +43,9 @@ private Q_SLOTS:
     void initTestCase() override;
 
     void testFormat();
-    void testFormatNoSort();
-    void testAnnotations();
-    void testAnnotationsNoSort();
+    void testFormat_data();
+
     void testLineEndings();
-    void testFrontInline();
-    void testIfBlocks();
-
-    void testReadOnlyProps();
-    void testStatesAndTransitions();
-    void testLargeBindings();
-    void testVerbatimStrings();
-    void testInlineComponents();
-
-    void testQtbug85003();
-    void testNestedFunctions();
-
-    void testNestedIf();
-
 #if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
     void testExample();
     void testExample_data();
@@ -191,69 +176,6 @@ QString TestQmlformat::readTestFile(const QString &path)
     return QString::fromUtf8(file.readAll());
 }
 
-void TestQmlformat::testFormat()
-{
-    QCOMPARE(runQmlformat(testFile("Example1.qml"), true, true), readTestFile("Example1.formatted.qml"));
-}
-
-void TestQmlformat::testFormatNoSort()
-{
-    QCOMPARE(runQmlformat(testFile("Example1.qml"), false, true), readTestFile("Example1.formatted.nosort.qml"));
-}
-
-void TestQmlformat::testAnnotations()
-{
-    QCOMPARE(runQmlformat(testFile("Annotations.qml"), true, true), readTestFile("Annotations.formatted.qml"));
-}
-
-void TestQmlformat::testAnnotationsNoSort()
-{
-    QCOMPARE(runQmlformat(testFile("Annotations.qml"), false, true), readTestFile("Annotations.formatted.nosort.qml"));
-}
-
-void TestQmlformat::testFrontInline()
-{
-    QCOMPARE(runQmlformat(testFile("FrontInline.qml"), false, true), readTestFile("FrontInline.formatted.qml"));
-}
-
-void TestQmlformat::testIfBlocks()
-{
-    QCOMPARE(runQmlformat(testFile("IfBlocks.qml"), false, true), readTestFile("IfBlocks.formatted.qml"));
-}
-
-void TestQmlformat::testReadOnlyProps()
-{
-    QCOMPARE(runQmlformat(testFile("readOnlyProps.qml"), false, true), readTestFile("readOnlyProps.formatted.qml"));
-}
-
-void TestQmlformat::testStatesAndTransitions()
-{
-    QCOMPARE(runQmlformat(testFile("statesAndTransitions.qml"), false, true), readTestFile("statesAndTransitions.formatted.qml"));
-}
-
-void TestQmlformat::testLargeBindings()
-{
-    QCOMPARE(runQmlformat(testFile("largeBindings.qml"), false, true), readTestFile("largeBindings.formatted.qml"));
-}
-
-void TestQmlformat::testVerbatimStrings()
-{
-    QCOMPARE(runQmlformat(testFile("verbatimString.qml"), false, true),
-             readTestFile("verbatimString.formatted.qml"));
-}
-
-void TestQmlformat::testInlineComponents()
-{
-    QCOMPARE(runQmlformat(testFile("inlineComponents.qml"), false, true),
-             readTestFile("inlineComponents.formatted.qml"));
-}
-
-void TestQmlformat::testNestedIf()
-{
-    QCOMPARE(runQmlformat(testFile("nestedIf.qml"), false, true),
-             readTestFile("nestedIf.formatted.qml"));
-}
-
 void TestQmlformat::testLineEndings()
 {
     // macos
@@ -271,16 +193,52 @@ void TestQmlformat::testLineEndings()
     QVERIFY(!unixContents.contains("\r"));
 }
 
-void TestQmlformat::testQtbug85003()
+void TestQmlformat::testFormat_data()
 {
-    QCOMPARE(runQmlformat(testFile("QtBug85003.qml"), false, true),
-             readTestFile("QtBug85003.formatted.qml"));
+    QTest::addColumn<QString>("file");
+    QTest::addColumn<QString>("fileFormatted");
+    QTest::addColumn<bool>("sortImports");
+    QTest::addColumn<bool>("shouldSucceed");
+
+    QTest::newRow("example1 (sorted)") << "Example1.qml"
+                                       << "Example1.formatted.qml" << true << true;
+    QTest::newRow("example1 (not sorted)") << "Example1.qml"
+                                           << "Example1.formatted.nosort.qml" << false << true;
+    QTest::newRow("annotation (sorted)") << "Annotations.qml"
+                                         << "Annotations.formatted.qml" << true << true;
+    QTest::newRow("annotation (not sorted)") << "Annotations.qml"
+                                             << "Annotations.formatted.nosort.qml" << false << true;
+    QTest::newRow("front inline") << "FrontInline.qml"
+                                  << "FrontInline.formatted.qml" << false << true;
+    QTest::newRow("if blocks") << "IfBlocks.qml"
+                               << "IfBlocks.formatted.qml" << false << true;
+    QTest::newRow("read-only properties") << "readOnlyProps.qml"
+                                          << "readOnlyProps.formatted.qml" << false << true;
+    QTest::newRow("states and transitions")
+            << "statesAndTransitions.qml"
+            << "statesAndTransitions.formatted.qml" << false << true;
+    QTest::newRow("large bindings") << "largeBindings.qml"
+                                    << "largeBindings.formatted.qml" << false << true;
+    QTest::newRow("verbatim strings") << "verbatimString.qml"
+                                      << "verbatimString.formatted.qml" << false << true;
+    QTest::newRow("inline components") << "inlineComponents.qml"
+                                       << "inlineComponents.formatted.qml" << false << true;
+    QTest::newRow("nested ifs") << "nestedIf.qml"
+                                << "nestedIf.formatted.qml" << false << true;
+    QTest::newRow("QTBUG-85003") << "QtBug85003.qml"
+                                 << "QtBug85003.formatted.qml" << false << true;
+    QTest::newRow("nested functions") << "nestedFunctions.qml"
+                                      << "nestedFunctions.formatted.qml" << false << true;
 }
 
-void TestQmlformat::testNestedFunctions()
+void TestQmlformat::testFormat()
 {
-    QCOMPARE(runQmlformat(testFile("nestedFunctions.qml"), false, true),
-             readTestFile("nestedFunctions.formatted.qml"));
+    QFETCH(QString, file);
+    QFETCH(QString, fileFormatted);
+    QFETCH(bool, sortImports);
+    QFETCH(bool, shouldSucceed);
+
+    QCOMPARE(runQmlformat(testFile(file), sortImports, shouldSucceed), readTestFile(fileFormatted));
 }
 
 #if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
