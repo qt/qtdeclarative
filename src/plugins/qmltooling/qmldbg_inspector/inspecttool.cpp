@@ -71,7 +71,7 @@ InspectTool::InspectTool(QQuickWindowInspector *inspector, QQuickWindow *view) :
     connect(&m_nameDisplayTimer, &QTimer::timeout, this, &InspectTool::showItemName);
 }
 
-void InspectTool::enterEvent(QEvent *)
+void InspectTool::enterEvent(QEnterEvent *)
 {
     m_hoverHighlight->setVisible(true);
 }

@@ -51,6 +51,7 @@ class QQuickItem;
 class QMouseEvent;
 class QKeyEvent;
 class QTouchEvent;
+class QEnterEvent;
 
 namespace QmlJSDebugger {
 
@@ -64,7 +65,7 @@ class InspectTool : public QObject
 public:
     InspectTool(QQuickWindowInspector *inspector, QQuickWindow *view);
 
-    void enterEvent(QEvent *);
+    void enterEvent(QEnterEvent *);
     void leaveEvent(QEvent *);
     void mousePressEvent(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent *);

@@ -132,7 +132,7 @@ bool QQuickWindowInspector::eventFilter(QObject *obj, QEvent *event)
 
     switch (event->type()) {
     case QEvent::Enter:
-        m_tool->enterEvent(event);
+        m_tool->enterEvent(static_cast<QEnterEvent*>(event));
         return true;
     case QEvent::Leave:
         m_tool->leaveEvent(event);
