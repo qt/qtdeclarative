@@ -135,6 +135,7 @@ void QQuickWidgetPrivate::init(QQmlEngine* e)
 
     QWidget::connect(offscreenWindow, SIGNAL(sceneGraphInitialized()), q, SLOT(createFramebufferObject()));
     QWidget::connect(offscreenWindow, SIGNAL(sceneGraphInvalidated()), q, SLOT(destroyFramebufferObject()));
+    QWidget::connect(offscreenWindow, &QQuickWindow::focusObjectChanged, q, &QQuickWidget::propagateFocusObjectChanged);
     QObject::connect(renderControl, SIGNAL(renderRequested()), q, SLOT(triggerUpdate()));
     QObject::connect(renderControl, SIGNAL(sceneChanged()), q, SLOT(triggerUpdate()));
 }
@@ -1499,6 +1500,9 @@ bool QQuickWidget::event(QEvent *e)
         // Touch events only have local and global positions, no need to map.
         return QCoreApplication::sendEvent(d->offscreenWindow, e);
 
+    case QEvent::FocusAboutToChange:
+        return QCoreApplication::sendEvent(d->offscreenWindow, e);
+
     case QEvent::InputMethod:
         return QCoreApplication::sendEvent(d->offscreenWindow->focusObject(), e);
     case QEvent::InputMethodQuery:
@@ -1740,6 +1744,15 @@ void QQuickWidget::paintEvent(QPaintEvent *event)
             }
         }
     }
+}
+
+void QQuickWidget::propagateFocusObjectChanged(QObject *focusObject)
+{
+    Q_D(QQuickWidget);
+    if (QApplication::focusObject() != this)
+        return;
+    if (QWindow *window = d->windowHandle(QWidgetPrivate::WindowHandleMode::TopLevel))
+        emit window->focusObjectChanged(focusObject);
 }
 
 QT_END_NAMESPACE
