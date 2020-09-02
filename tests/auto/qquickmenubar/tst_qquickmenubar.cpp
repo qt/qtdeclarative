@@ -554,7 +554,7 @@ void tst_qquickmenubar::addRemove()
     QVERIFY(menuBar);
 
     QQmlComponent component(&engine);
-    component.setData("import QtQuick.Controls 2.0; Menu { }", QUrl());
+    component.setData("import QtQuick.Controls; Menu { }", QUrl());
 
     QPointer<QQuickMenu> menu1(qobject_cast<QQuickMenu *>(component.create()));
     QVERIFY(!menu1.isNull());
