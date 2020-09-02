@@ -44,7 +44,8 @@
 #include "dumpastvisitor.h"
 #include "restructureastvisitor.h"
 
-bool parseFile(const QString& filename, bool inplace, bool verbose, bool sortImports, bool force, const QString& newline)
+bool parseFile(const QString &filename, bool inplace, bool verbose, bool sortImports, bool force,
+               int indentWidth, bool tabs, const QString &newline)
 {
     QFile file(filename);
 
@@ -100,7 +101,9 @@ bool parseFile(const QString& filename, bool inplace, bool verbose, bool sortImp
     if (verbose)
         qWarning().noquote() << "Dumping" << filename;
 
-    DumpAstVisitor dump(&engine, parser.rootNode(), &comment);
+    DumpAstVisitor dump(&engine, parser.rootNode(), &comment, tabs ? 1 : indentWidth,
+                        tabs ? DumpAstVisitor::Indentation::Tabs
+                             : DumpAstVisitor::Indentation::Spaces);
 
     QString dumpCode = dump.toString();
 
@@ -191,6 +194,13 @@ int main(int argc, char *argv[])
     parser.addOption(QCommandLineOption({"f", "force"},
                      QStringLiteral("Continue even if an error has occurred.")));
 
+    parser.addOption(
+            QCommandLineOption({ "t", "tabs" }, QStringLiteral("Use tabs instead of spaces.")));
+
+    parser.addOption(QCommandLineOption({ "w", "indent-width" },
+                                        QStringLiteral("How many spaces are used when indenting."),
+                                        "width", "4"));
+
     parser.addOption(QCommandLineOption(
             { "F", "files" }, QStringLiteral("Format all files listed in file, in-place"), "file"));
 
@@ -212,6 +222,19 @@ int main(int argc, char *argv[])
         return -1;
     }
 
+    if (parser.isSet("indent-width") && parser.isSet("tabs")) {
+        qWarning() << "Error: Cannot use --indent-width with --tabs";
+        return -1;
+    }
+
+    bool indentWidthOkay = false;
+    int indentWidth = parser.value("indent-width").toInt(&indentWidthOkay);
+
+    if (!indentWidthOkay) {
+        qWarning() << "Error: Invalid value passed to -w";
+        return -1;
+    }
+
     if (parser.isSet("files")) {
         if (!positionalArguments.isEmpty())
             qWarning() << "Warning: Positional arguments are ignored when -F is used";
@@ -226,14 +249,15 @@ int main(int argc, char *argv[])
                 continue;
 
             if (!parseFile(file, true, parser.isSet("verbose"), !parser.isSet("no-sort"),
-                           parser.isSet("force"), parser.value("newline")))
+                           parser.isSet("force"), indentWidth, parser.isSet("tabs"),
+                           parser.value("newline")))
                 success = false;
         }
     } else {
         for (const QString &file : parser.positionalArguments()) {
             if (!parseFile(file, parser.isSet("inplace"), parser.isSet("verbose"),
-                           !parser.isSet("no-sort"), parser.isSet("force"),
-                           parser.value("newline")))
+                           !parser.isSet("no-sort"), parser.isSet("force"), indentWidth,
+                           parser.isSet("tabs"), parser.value("newline")))
                 success = false;
         }
     }

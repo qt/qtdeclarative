@@ -43,7 +43,10 @@ using namespace QQmlJS;
 class DumpAstVisitor : protected Visitor
 {
 public:
-    DumpAstVisitor(QQmlJS::Engine *engine, Node *rootNode, CommentAstVisitor *comment);
+    enum Indentation { Tabs, Spaces };
+
+    DumpAstVisitor(QQmlJS::Engine *engine, Node *rootNode, CommentAstVisitor *comment,
+                   int indentWidth, Indentation indentation);
 
     QString toString() const { return m_result; }
 
@@ -94,6 +97,7 @@ private:
         QHash<QString, UiObjectMember*> m_bindings;
     };
 
+    QString generateIndent(int indentLevel) const;
     QString formatLine(QString line, bool newline = true) const;
     QString formatPartlyFormatedLines(QString line, bool newline = true) const;
 
@@ -150,6 +154,8 @@ private:
     QString m_component_name = "";
     QQmlJS::Engine *m_engine;
     CommentAstVisitor *m_comment;
+    int m_indentWidth;
+    Indentation m_indentation;
 };
 
 #endif // DUMPAST_H

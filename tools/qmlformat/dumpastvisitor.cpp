@@ -30,8 +30,9 @@
 
 #include <QtQml/private/qqmljslexer_p.h>
 
-DumpAstVisitor::DumpAstVisitor(QQmlJS::Engine *engine, Node *rootNode, CommentAstVisitor *comment)
-    : m_engine(engine), m_comment(comment)
+DumpAstVisitor::DumpAstVisitor(QQmlJS::Engine *engine, Node *rootNode, CommentAstVisitor *comment,
+                               int indentWidth, DumpAstVisitor::Indentation indentation)
+    : m_engine(engine), m_comment(comment), m_indentWidth(indentWidth), m_indentation(indentation)
 {
     // Add all completely orphaned comments
     m_result += getOrphanedComments(nullptr);
@@ -992,11 +993,9 @@ bool DumpAstVisitor::visit(UiPublicMember *node) {
     return true;
 }
 
-static QString generateIndent(int indentLevel)
+QString DumpAstVisitor::generateIndent(int indentLevel) const
 {
-    constexpr int IDENT_WIDTH = 4;
-
-    return QString(IDENT_WIDTH * indentLevel, ' ');
+    return QString(m_indentWidth * indentLevel, m_indentation == Indentation::Tabs ? '\t' : ' ');
 }
 
 QString DumpAstVisitor::formatLine(QString line, bool newline) const
