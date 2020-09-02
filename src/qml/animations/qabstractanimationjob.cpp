@@ -86,7 +86,7 @@ void QQmlAnimationTimer::ensureTimerUpdate()
 {
     QUnifiedTimer *instU = QUnifiedTimer::instance(false);
     if (instU && isPaused)
-        instU->updateAnimationTimers(-1);
+        instU->updateAnimationTimers();
 }
 
 void QQmlAnimationTimer::updateAnimationsTime(qint64 delta)
