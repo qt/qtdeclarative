@@ -389,9 +389,10 @@ QStringList QQuickStylePrivate::builtInStyles()
 #endif
         QLatin1String("Material"),
         QLatin1String("Universal"),
-#ifdef Q_OS_WINDOWS
-        QLatin1String("Windows")
-#endif
+// #ifdef Q_OS_WINDOWS
+// Enable this section when the windows style is complete
+//         QLatin1String("Windows")
+// #endif
     };
 }
 
