@@ -1194,7 +1194,7 @@ void tst_QQuickMenu::subMenuDisabledMouse()
     // as e.g. Material style menus have transitions and don't close immediately.
     QTRY_COMPARE(mainMenu->isVisible(), cascade);
     QVERIFY(subMenu->isVisible());
-    QVERIFY(menuItem1->isHighlighted());
+    QTRY_VERIFY(menuItem1->isHighlighted());
     // Now the sub-menu is open. The current behavior is that the first menu item
     // in the new menu is highlighted; make sure that we choose the next item if
     // the first is disabled.
