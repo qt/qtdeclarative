@@ -109,6 +109,7 @@ Column {
             Label {
                 text: qsTr("Snap Mode")
                 tooltip: qsTr("The snap mode of the slider.")
+                disabledState: !backendValues.snapMode.isAvailable
             }
             SecondColumnLayout {
                 ComboBox {
@@ -116,6 +117,7 @@ Column {
                     model: [ "NoSnap", "SnapOnRelease", "SnapAlways" ]
                     scope: "Slider"
                     Layout.fillWidth: true
+                    enabled: backendValue.isAvailable
                 }
             }
 
@@ -135,18 +137,21 @@ Column {
             Label {
                 text: qsTr("Live")
                 tooltip: qsTr("Whether the slider provides live value updates.")
+                disabledState: !backendValues.live.isAvailable
             }
             SecondColumnLayout {
                 CheckBox {
                     text: backendValues.live.valueToString
                     backendValue: backendValues.live
                     Layout.fillWidth: true
+                    enabled: backendValue.isAvailable
                 }
             }
 
             Label {
                 text: qsTr("Touch drag threshold")
                 tooltip: qsTr("The threshold (in logical pixels) at which a touch drag event will be initiated.")
+                disabledState: !backendValues.touchDragThreshold.isAvailable
             }
             SecondColumnLayout {
                 SpinBox {
@@ -155,6 +160,7 @@ Column {
                     decimals: 0
                     backendValue: backendValues.touchDragThreshold
                     Layout.fillWidth: true
+                    enabled: backendValue.isAvailable
                 }
             }
         }

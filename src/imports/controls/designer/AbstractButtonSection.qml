@@ -56,6 +56,7 @@ Section {
          Label {
             text: qsTr("Display")
             tooltip: qsTr("Determines how the icon and text are displayed within the button.")
+            disabledState: !backendValues.display.isAvailable
         }
         SecondColumnLayout {
             ComboBox {
@@ -63,6 +64,7 @@ Section {
                 model: [ "IconOnly", "TextOnly", "TextBesideIcon" ]
                 scope: "AbstractButton"
                 Layout.fillWidth: true
+                enabled: backendValue.isAvailable
             }
         }
 
@@ -94,12 +96,14 @@ Section {
         Label {
             text: qsTr("Exclusive")
             tooltip: qsTr("Whether the button is exclusive.")
+            disabledState: !backendValues.autoExclusive.isAvailable
         }
         SecondColumnLayout {
             CheckBox {
                 text: backendValues.autoExclusive.valueToString
                 backendValue: backendValues.autoExclusive
                 Layout.fillWidth: true
+                enabled: backendValue.isAvailable
             }
         }
 

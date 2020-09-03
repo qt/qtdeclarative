@@ -57,23 +57,27 @@ Section {
         Label {
             text: qsTr("Flat")
             tooltip: qsTr("Whether the button is flat.")
+            disabledState: !backendValues.flat.isAvailable
         }
         SecondColumnLayout {
             CheckBox {
                 text: backendValues.flat.valueToString
                 backendValue: backendValues.flat
                 Layout.fillWidth: true
+                enabled: backendValue.isAvailable
             }
         }
         Label {
             text: qsTr("Highlighted")
             tooltip: qsTr("Whether the button is highlighted.")
+            disabledState: !backendValues.highlighted.isAvailable
         }
         SecondColumnLayout {
             CheckBox {
                 text: backendValues.highlighted.valueToString
                 backendValue: backendValues.highlighted
                 Layout.fillWidth: true
+                enabled: backendValue.isAvailable
             }
         }
     }

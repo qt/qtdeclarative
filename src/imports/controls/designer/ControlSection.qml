@@ -57,6 +57,7 @@ Section {
         Label {
             text: qsTr("Focus Policy")
             tooltip: qsTr("Focus policy of the control.")
+            disabledState: !backendValues.focusPolicy.isAvailable
         }
         SecondColumnLayout {
             ComboBox {
@@ -64,18 +65,21 @@ Section {
                 model: [ "TabFocus", "ClickFocus", "StrongFocus", "WheelFocus", "NoFocus" ]
                 scope: "Qt"
                 Layout.fillWidth: true
+                enabled: backendValue.isAvailable
             }
         }
 
         Label {
             text: qsTr("Hover")
             tooltip: qsTr("Whether control accepts hover events.")
+            disabledState: !backendValues.hoverEnabled.isAvailable
         }
         SecondColumnLayout {
             CheckBox {
                 text: backendValues.hoverEnabled.valueToString
                 backendValue: backendValues.hoverEnabled
                 Layout.fillWidth: true
+                enabled: backendValue.isAvailable
             }
         }
 
@@ -96,12 +100,14 @@ Section {
         Label {
             text: qsTr("Wheel")
             tooltip: qsTr("Whether control accepts wheel events.")
+            disabledState: !backendValues.wheelEnabled.isAvailable
         }
         SecondColumnLayout {
             CheckBox {
                 text: backendValues.wheelEnabled.valueToString
                 backendValue: backendValues.wheelEnabled
                 Layout.fillWidth: true
+                enabled: backendValue.isAvailable
             }
         }
     }

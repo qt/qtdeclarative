@@ -49,12 +49,14 @@ Column {
             Label {
                 text: qsTr("Indeterminate")
                 tooltip: qsTr("Whether the progress is indeterminate.")
+                disabledState: !backendValues.indeterminate.isAvailable
             }
             SecondColumnLayout {
                 CheckBox {
                     text: backendValues.indeterminate.valueToString
                     backendValue: backendValues.indeterminate
                     Layout.fillWidth: true
+                    enabled: backendValue.isAvailable
                 }
             }
 
