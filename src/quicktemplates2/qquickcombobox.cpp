@@ -849,6 +849,8 @@ qreal QQuickComboBoxPrivate::calculateWidestTextWidth() const
 }
 
 /*!
+    \internal
+
     If the user requested it (and we haven't already done it, depending on the policy),
     update the implicit content width to the largest text in the model.
 */

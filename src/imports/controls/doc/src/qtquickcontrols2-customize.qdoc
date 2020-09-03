@@ -711,8 +711,8 @@
         \image qtquickcontrols2-popup-custom.png
 
         \quotefromfile qtquickcontrols2-popup-custom.qml
-        \skipto import QtQuick 2.12
-        \printuntil import QtQuick.Controls 2.12
+        \skipto import QtQuick
+        \printuntil import QtQuick.Controls
         \codeline
         \skipto Popup
         \printuntil {

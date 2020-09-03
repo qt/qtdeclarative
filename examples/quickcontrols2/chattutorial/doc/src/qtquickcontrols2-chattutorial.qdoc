@@ -98,7 +98,7 @@ Let's modify the default QML code to suit our needs.
 
 \quotefromfile chattutorial/chapter1-settingup/main.qml
 \skipto import
-\printuntil import QtQuick.Controls 2.12
+\printuntil import QtQuick.Controls
 
 First, import the \l {Qt Quick} module. This gives us
 access to graphical primitives such as \l Item, \l Rectangle, \l Text, and so
@@ -667,8 +667,8 @@ changes to be done to \c ContactPage.qml. To be able to use the types,
 we must first import them using the URI we set in \c main.cpp:
 
 \quotefromfile chattutorial/chapter4-models/ContactPage.qml
-\skipto import io.qt.examples.chattutorial 1.0
-\printline import io.qt.examples.chattutorial 1.0
+\skipto import io.qt.examples.chattutorial
+\printline import io.qt.examples.chattutorial
 
 We then replace the dummy model with the proper one:
 
