@@ -75,7 +75,7 @@ bool QQuickSinglePointHandler::wantsPointerEvent(QQuickPointerEvent *event)
     if (!QQuickPointerDeviceHandler::wantsPointerEvent(event))
         return false;
 
-    if (d->pointInfo.id()) {
+    if (d->pointInfo.id() != -1) {
         // We already know which one we want, so check whether it's there.
         // It's expected to be an update or a release.
         // If we no longer want it, cancel the grab.
@@ -125,7 +125,7 @@ bool QQuickSinglePointHandler::wantsPointerEvent(QQuickPointerEvent *event)
             chosen->setAccepted();
         }
     }
-    return d->pointInfo.id();
+    return d->pointInfo.id() != -1;
 }
 
 void QQuickSinglePointHandler::handlePointerEventImpl(QQuickPointerEvent *event)

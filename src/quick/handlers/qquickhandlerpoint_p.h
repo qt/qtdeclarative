@@ -100,7 +100,7 @@ public:
     void reset(const QVector<QQuickHandlerPoint> &points);
 
 private:
-    int m_id = 0;
+    int m_id = -1;
     const QPointingDevice *m_device = QPointingDevice::primaryPointingDevice();
     QPointingDeviceUniqueId m_uniqueId;
     Qt::MouseButtons m_pressedButtons = Qt::NoButton;
