@@ -259,7 +259,7 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
             if (!pd)
                 return;
 
-            if (pd->notifyIndex() != -1)
+            if (pd->notifyIndex() != -1 && ctxt->engine())
                 connect(target, pd->notifyIndex(), ctxt->engine());
         }
 
