@@ -458,7 +458,7 @@ void FloatingQObject::componentComplete()
 
 void ClassWithQProperty2::callback()
 {
-    Q_UNUSED(this->value.value()); // force evaluation
+    // Q_UNUSED(this->value.value()); // force evaluation
 }
 
 void registerTypes()

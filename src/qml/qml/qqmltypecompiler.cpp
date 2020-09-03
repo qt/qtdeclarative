@@ -399,7 +399,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
                 }
                 parameters += param;
             }
-        } else if (!signalPropertyData && qPropertyData && qPropertyData->isQProperty()) {
+        } else if (!signalPropertyData && qPropertyData && qPropertyData->isBindable()) {
             finalSignalHandlerPropertyName = qPropertyName;
             flags = QV4::CompiledData::Binding::IsPropertyObserver;
         } else {

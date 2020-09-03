@@ -164,8 +164,9 @@ void QmlTypesCreator::writeProperties(const QJsonArray &properties, QSet<QString
         const auto it = obj.find(QLatin1String("revision"));
         if (it != obj.end())
             m_qml.writeScriptBinding(QLatin1String("revision"), QString::number(it.value().toInt()));
-        const bool isQProperty = obj[QLatin1String("isQProperty")].toBool();
-        m_qml.writeBooleanBinding(QLatin1String("isQProperty"), isQProperty);
+        const auto bindable = obj.constFind(QLatin1String("bindable"));
+        if (bindable != obj.constEnd())
+            m_qml.writeScriptBinding(QLatin1String("bindable"), enquote(bindable->toString()));
         writeType(obj, QLatin1String("type"), !obj.contains(QLatin1String("write")), true);
         m_qml.writeEndObject();
 

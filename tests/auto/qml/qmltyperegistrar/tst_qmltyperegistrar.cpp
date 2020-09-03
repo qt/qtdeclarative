@@ -76,8 +76,8 @@ void tst_qmltyperegistrar::superAndForeignTypes()
     QVERIFY(qmltypesData.contains("values: [\"Pixel\", \"Centimeter\", \"Inch\", \"Point\"]"));
     QVERIFY(qmltypesData.contains("name: \"SizeGadget\""));
     QVERIFY(qmltypesData.contains("prototype: \"SizeEnums\""));
-    QVERIFY(qmltypesData.contains("Property { name: \"height\"; isQProperty: false; type: \"int\" }"));
-    QVERIFY(qmltypesData.contains("Property { name: \"width\"; isQProperty: false; type: \"int\" }"));
+    QVERIFY(qmltypesData.contains("Property { name: \"height\"; type: \"int\" }"));
+    QVERIFY(qmltypesData.contains("Property { name: \"width\"; type: \"int\" }"));
     QVERIFY(qmltypesData.contains("Method { name: \"sizeToString\"; type: \"string\" }"));
 }
 
@@ -87,9 +87,10 @@ void tst_qmltyperegistrar::accessSemantics()
     QVERIFY(qmltypesData.contains("accessSemantics: \"value\""));
 }
 
-void tst_qmltyperegistrar::isQProperty()
+void tst_qmltyperegistrar::isBindable()
 {
-    QVERIFY(qmltypesData.contains("Property { name: \"someProperty\"; isQProperty: true; type: \"int\" }"));
+    // TODO: readonly?
+    QVERIFY(qmltypesData.contains(R"(Property { name: "someProperty"; bindable: "bindableSomeProperty"; type: "int"; isReadonly: true)"));
 }
 
 void tst_qmltyperegistrar::restrictToImportVersion()

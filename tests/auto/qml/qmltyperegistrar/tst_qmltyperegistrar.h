@@ -93,7 +93,7 @@ class Local : public Foreign
 {
     Q_OBJECT
     QML_ELEMENT
-    Q_PROPERTY(int someProperty)
+    Q_PROPERTY(int someProperty MEMBER someProperty BINDABLE bindableSomeProperty)
 public:
     enum Flag {
         Flag1 = 0x1,
@@ -103,6 +103,8 @@ public:
     };
     Q_DECLARE_FLAGS(Flags, Flag)
     Q_FLAG(Flags)
+
+    QBindable<int> bindableSomeProperty() {return QBindable<int>(&someProperty);}
 
     QProperty<int> someProperty;
 };
@@ -119,7 +121,7 @@ private slots:
     void qmltypesHasFlags();
     void superAndForeignTypes();
     void accessSemantics();
-    void isQProperty();
+    void isBindable();
     void restrictToImportVersion();
 
 private:

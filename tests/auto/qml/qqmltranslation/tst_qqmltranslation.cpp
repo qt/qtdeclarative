@@ -170,7 +170,10 @@ class CppTranslationBase : public QQuickItem
 {
     Q_OBJECT
     QML_ELEMENT
-    Q_PROPERTY(QString qProperty)
+public:
+    Q_PROPERTY(QString qProperty MEMBER qProperty BINDABLE bindableQProperty)
+    QBindable<QString> bindableQProperty() {return QBindable<QString>(&qProperty); }
+private:
 
     QProperty<QString> qProperty;
 };
@@ -207,7 +210,7 @@ void tst_qqmltranslation::translationChange()
 
     QQmlComponent component(&engine, testFileUrl("translationChange.qml"));
     QScopedPointer<QObject> object(component.create());
-    QVERIFY(!object.isNull());
+    QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
 
     QCOMPARE(object->property("baseProperty").toString(), QString::fromUtf8("do not translate"));
     QCOMPARE(object->property("text1").toString(), QString::fromUtf8("translate me"));

@@ -1730,9 +1730,10 @@ public:
 struct ClassWithQProperty : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(float value)
+    Q_PROPERTY(float value MEMBER value BINDABLE bindableValue)
 public:
     QProperty<float> value;
+    QBindable<float> bindableValue() { return QBindable<float>(&value); }
 };
 
 class VariantConvertObject : public QObject
@@ -1749,10 +1750,10 @@ public slots:
 struct ClassWithQProperty2 : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(float value)
+    // Q_PROPERTY(float value)
 public:
     void callback();
-    QNotifiedProperty<float, &ClassWithQProperty2::callback> value;
+    // QNotifiedProperty<float, &ClassWithQProperty2::callback> value;
 };
 
 void registerTypes();

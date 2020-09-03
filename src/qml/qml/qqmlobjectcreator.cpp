@@ -928,15 +928,17 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
                         _bindingTarget, signalIndex, context,
                         _scopeObject, runtimeFunction, currentQmlContext());
 
-            if (bindingProperty->isQProperty()) {
+            if (bindingProperty->isBindable()) {
                 auto &observer = QQmlData::get(_scopeObject)->propertyObservers.emplace_back(expr);
-                void *argv[] = { &observer };
-                _bindingTarget->qt_metacall(QMetaObject::RegisterQPropertyObserver, bindingProperty->coreIndex(), argv);
+                QUntypedBindable bindable;
+                void *argv[] = { &bindable };
+                _bindingTarget->qt_metacall(QMetaObject::BindableProperty, bindingProperty->coreIndex(), argv);
+                bindable.observe(&observer);
             } else {
                 QQmlBoundSignal *bs = new QQmlBoundSignal(_bindingTarget, signalIndex, _scopeObject, engine);
                 bs->takeExpression(expr);
             }
-        } else if (bindingProperty->isQProperty()) {
+        } else if (bindingProperty->isBindable()) {
             QUntypedPropertyBinding qmlBinding;
             if (binding->isTranslationBinding()) {
                 qmlBinding = QQmlTranslationPropertyBinding::create(bindingProperty, compilationUnit, binding);
@@ -1447,8 +1449,10 @@ bool QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
 
     while (!sharedState->allQPropertyBindings.isEmpty()) {
         auto& [target, index, qmlBinding] = sharedState->allQPropertyBindings.last();
-        void *argv[] = { &qmlBinding };
-        target->qt_metacall(QMetaObject::SetQPropertyBinding, index, argv);
+        QUntypedBindable bindable;
+        void *argv[] = { &bindable };
+        target->qt_metacall(QMetaObject::BindableProperty, index, argv);
+        bindable.setBinding(qmlBinding);
         sharedState->allQPropertyBindings.pop_back();
         if (watcher.hasRecursed() || interrupt.shouldInterrupt())
             return false;

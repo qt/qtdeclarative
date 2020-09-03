@@ -365,7 +365,7 @@ void QQmlBoundSignal_callback(QQmlNotifierEndpoint *e, void **a)
 ////////////////////////////////////////////////////////////////////////
 
 QQmlPropertyObserver::QQmlPropertyObserver(QQmlBoundSignalExpression *expr)
-    : QPropertyObserver([](QPropertyObserver *self, void *) {
+    : QPropertyObserver([](QPropertyObserver *self, QUntypedPropertyData *) {
                            auto This = static_cast<QQmlPropertyObserver*>(self);
                            This->expression->evaluate(QList<QVariant>());
                        })
