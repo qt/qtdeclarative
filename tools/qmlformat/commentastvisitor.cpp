@@ -68,7 +68,8 @@ QList<SourceLocation> CommentAstVisitor::findCommentsInLine(quint32 line, bool i
         return results;
 
     for (const auto &location : m_engine->comments()) {
-        if (location.startLine != line)
+        Comment comment(m_engine, Comment::Location::Front, { location });
+        if (line < location.startLine || line > comment.endLine())
             continue;
 
         if (isCommentAttached(location))
@@ -78,7 +79,7 @@ QList<SourceLocation> CommentAstVisitor::findCommentsInLine(quint32 line, bool i
 
         if (includePrevious) {
             // See if we can find any more comments above this one
-            auto previous = findCommentsInLine(line - 1, true);
+            auto previous = findCommentsInLine(location.startLine - 1, true);
 
             // Iterate it in reverse to restore the correct order
             for (auto it = previous.rbegin(); it != previous.rend(); it++) {

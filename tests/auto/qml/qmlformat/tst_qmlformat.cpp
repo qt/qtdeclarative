@@ -229,6 +229,8 @@ void TestQmlformat::testFormat_data()
                                  << "QtBug85003.formatted.qml" << false << true;
     QTest::newRow("nested functions") << "nestedFunctions.qml"
                                       << "nestedFunctions.formatted.qml" << false << true;
+    QTest::newRow("multiline comments") << "multilineComment.qml"
+                                        << "multilineComment.formatted.qml" << false << true;
 }
 
 void TestQmlformat::testFormat()
