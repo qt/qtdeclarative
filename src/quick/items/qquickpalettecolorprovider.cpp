@@ -133,10 +133,12 @@ bool QQuickPaletteColorProvider::reset()
 
 bool QQuickPaletteColorProvider::inheritPalette(const QPalette &p)
 {
+    auto inheritedMask = m_requestedPalette.isAllocated() ? m_requestedPalette->resolveMask() | p.resolveMask() : p.resolveMask();
     QPalette parentPalette = m_requestedPalette.isAllocated() ? m_requestedPalette->resolve(p) : p;
-    parentPalette.setResolveMask(m_requestedPalette.isAllocated() ? m_requestedPalette->resolveMask() | p.resolveMask() : p.resolveMask());
+    parentPalette.setResolveMask(inheritedMask);
 
     auto tmpResolvedPalette = parentPalette.resolve(paletteProvider()->defaultPalette());
+    tmpResolvedPalette.setResolveMask(tmpResolvedPalette.resolveMask() | inheritedMask);
 
     bool changed = notEq(tmpResolvedPalette, m_resolvedPalette);
     if (changed) {
