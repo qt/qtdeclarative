@@ -4668,6 +4668,7 @@ QSize QCommonStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt, c
         break;
     case CT_Dial:
         sz = QSize(20, 20);
+        break;
     case CT_Frame:
         if (const QStyleOptionFrame *option = qstyleoption_cast<const QStyleOptionFrame *>(opt)) {
             const int ninePatchSplit = 1;
@@ -4701,7 +4702,7 @@ QFont QCommonStyle::font(QStyle::ControlElement element, const QStyle::State sta
     return QGuiApplication::font();
 }
 
-QMargins QCommonStyle::ninePatchMargins(QStyle::ControlElement ce, const QStyleOption *opt, const QSize &imageSize) const
+QMargins QCommonStyle::ninePatchMargins(QStyle::ControlElement /*ce*/, const QStyleOption */*opt*/, const QSize &imageSize) const
 {
     // By default, we just divide the image at the center
     int w = imageSize.width() / 2;
@@ -4709,7 +4710,7 @@ QMargins QCommonStyle::ninePatchMargins(QStyle::ControlElement ce, const QStyleO
     return QMargins(w, h, w, h);
 }
 
-QMargins QCommonStyle::ninePatchMargins(QStyle::ComplexControl cc, const QStyleOptionComplex *opt, const QSize &imageSize) const
+QMargins QCommonStyle::ninePatchMargins(QStyle::ComplexControl /*cc*/, const QStyleOptionComplex */*opt*/, const QSize &imageSize) const
 {
     // By default, we just divide the image at the center
     int w = imageSize.width() / 2;
