@@ -1394,6 +1394,9 @@ void tst_QQuickPopup::invisibleToolTipOpen()
     QObject *loader = qvariant_cast<QObject *>(window->property("loader"));
     QVERIFY(loader);
 
+    // Send an extra move event, otherwise the test fails on subsequent runs for different styles for some reason...
+    // As an added bonus, this is also slightly more realistic. :D
+    QTest::mouseMove(window, QPoint(mouseArea->width() / 2 - 1, mouseArea->height() / 2 - 1));
     QTest::mouseMove(window, QPoint(mouseArea->width() / 2, mouseArea->height() / 2));
     QTRY_VERIFY(mouseArea->property("isToolTipVisible").toBool());
 
