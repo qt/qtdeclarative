@@ -436,7 +436,11 @@ QQuickAbstractButton::QQuickAbstractButton(QQuickItem *parent)
     : QQuickControl(*(new QQuickAbstractButtonPrivate), parent)
 {
     setActiveFocusOnTab(true);
+#ifdef Q_OS_MACOS
+    setFocusPolicy(Qt::TabFocus);
+#else
     setFocusPolicy(Qt::StrongFocus);
+#endif
     setAcceptedMouseButtons(Qt::LeftButton);
 #if QT_CONFIG(cursor)
     setCursor(Qt::ArrowCursor);
@@ -447,7 +451,11 @@ QQuickAbstractButton::QQuickAbstractButton(QQuickAbstractButtonPrivate &dd, QQui
     : QQuickControl(dd, parent)
 {
     setActiveFocusOnTab(true);
+#ifdef Q_OS_MACOS
+    setFocusPolicy(Qt::TabFocus);
+#else
     setFocusPolicy(Qt::StrongFocus);
+#endif
     setAcceptedMouseButtons(Qt::LeftButton);
 #if QT_CONFIG(cursor)
     setCursor(Qt::ArrowCursor);

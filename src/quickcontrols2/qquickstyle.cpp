@@ -380,8 +380,15 @@ bool QQuickStylePrivate::isDarkSystemTheme()
 
 QStringList QQuickStylePrivate::builtInStyles()
 {
-    return { QLatin1String("Default"), QLatin1String("Fusion"),
-        QLatin1String("Imagine"), QLatin1String("Material"), QLatin1String("Universal") };
+    return {
+        QLatin1String("Default"),
+        QLatin1String("Fusion"),
+        QLatin1String("Imagine"),
+        QLatin1String("macOS"),
+        QLatin1String("Material"),
+        QLatin1String("Universal"),
+        QLatin1String("Windows")
+    };
 }
 
 /*!

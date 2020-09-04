@@ -1,0 +1,18 @@
+module QtQuick.Controls.macOS
+plugin qtquickcontrols2macosstyleplugin
+classname QtQuickControls2MacOSStylePlugin
+import QtQuick.Controls.Fusion auto
+
+Button 6.0 Button.qml
+CheckBox 6.0 CheckBox.qml
+RadioButton 6.0 RadioButton.qml
+Slider 6.0 Slider.qml
+GroupBox 6.0 GroupBox.qml
+SpinBox 6.0 SpinBox.qml
+TextField 6.0 TextField.qml
+Frame 6.0 Frame.qml
+TextArea 6.0 TextArea.qml
+ComboBox 6.0 ComboBox.qml
+ScrollBar 6.0 ScrollBar.qml
+ProgressBar 6.0 ProgressBar.qml
+Dial 6.0 Dial.qml

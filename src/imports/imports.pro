@@ -3,7 +3,8 @@ SUBDIRS += \
     controls \
     controlsimpl \
     platform \
-    templates
+    templates \
+    nativestyle
 
 SUBDIRS += \
     controls/default/default.pro \
@@ -16,3 +17,6 @@ SUBDIRS += \
     controls/material/impl/material-impl.pro \
     controls/universal/universal.pro \
     controls/universal/impl/universal-impl.pro
+
+macos: SUBDIRS += controls/macos/macos.pro
+win32: SUBDIRS += controls/windows/windows.pro
