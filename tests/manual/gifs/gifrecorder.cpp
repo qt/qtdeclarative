@@ -252,7 +252,7 @@ void GifRecorder::waitForFinish()
     if (mHighQuality) {
         // Indicate the end of recording and the beginning of conversion.
         QQmlComponent busyComponent(&mEngine);
-        busyComponent.setData("import QtQuick 2.6; import QtQuick.Controls 2.1; Rectangle { anchors.fill: parent; " \
+        busyComponent.setData("import QtQuick; import QtQuick.Controls; Rectangle { anchors.fill: parent; " \
             "BusyIndicator { width: 32; height: 32; anchors.centerIn: parent } }", QUrl());
         QCOMPARE(busyComponent.status(), QQmlComponent::Ready);
         QQuickItem *busyRect = qobject_cast<QQuickItem*>(busyComponent.create());

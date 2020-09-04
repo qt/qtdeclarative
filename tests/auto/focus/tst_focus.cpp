@@ -144,7 +144,7 @@ void tst_focus::policy()
 
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData(QString("import QtQuick.Controls 2.1; ApplicationWindow { width: 100; height: 100; %1 { anchors.fill: parent } }").arg(name).toUtf8(), QUrl());
+    component.setData(QString("import QtQuick.Controls; ApplicationWindow { width: 100; height: 100; %1 { anchors.fill: parent } }").arg(name).toUtf8(), QUrl());
 
     QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(component.create()));
     QVERIFY(window);
@@ -253,7 +253,7 @@ void tst_focus::reason()
 
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData(QString("import QtQuick.Controls 2.1; ApplicationWindow { width: 100; height: 100; %1 { anchors.fill: parent } }").arg(name).toUtf8(), QUrl());
+    component.setData(QString("import QtQuick.Controls; ApplicationWindow { width: 100; height: 100; %1 { anchors.fill: parent } }").arg(name).toUtf8(), QUrl());
 
     QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(component.create()));
     QVERIFY(window.data());
@@ -337,7 +337,7 @@ void tst_focus::scope()
 
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData(QString("import QtQuick 2.9; import QtQuick.Controls 2.2; ApplicationWindow { property alias child: child; width: 100; height: 100; %1 { anchors.fill: parent; Item { id: child; width: 10; height: 10 } } }").arg(name).toUtf8(), QUrl());
+    component.setData(QString("import QtQuick; import QtQuick.Controls; ApplicationWindow { property alias child: child; width: 100; height: 100; %1 { anchors.fill: parent; Item { id: child; width: 10; height: 10 } } }").arg(name).toUtf8(), QUrl());
 
     QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(component.create()));
     QVERIFY2(window, qPrintable(component.errorString()));

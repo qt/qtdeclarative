@@ -73,7 +73,7 @@ static QFont testFont()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData("import QtQuick 2.0; import QtQuick.Controls 2.0; Text { }", QUrl());
+    component.setData("import QtQuick; import QtQuick.Controls; Text { }", QUrl());
 
     QScopedPointer<QObject> object(component.create());
     Q_ASSERT_X(!object.isNull(), "testFont", qPrintable(component.errorString()));
@@ -298,7 +298,7 @@ void tst_font::defaultFont()
 
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData(QString("import QtQuick.Controls 2.2; %1 { }").arg(control).toUtf8(), QUrl());
+    component.setData(QString("import QtQuick.Controls; %1 { }").arg(control).toUtf8(), QUrl());
 
     // The call to setData() above causes QQuickDefaultTheme to be set as the current theme,
     // so we must make sure we only set our theme afterwards.

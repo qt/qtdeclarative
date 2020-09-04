@@ -1,4 +1,4 @@
-import QtQuick.Templates 2.15 as T
+import QtQuick.Templates as T
 T.Button {
     objectName: "PlatformStyle/+windows"
 }

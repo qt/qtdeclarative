@@ -1007,7 +1007,7 @@ void tst_QQuickPopup::componentComplete()
 
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData("import QtQuick.Controls 2.2; Popup { }", QUrl());
+    component.setData("import QtQuick.Controls; Popup { }", QUrl());
 
     FriendlyPopup *qmlPopup = static_cast<FriendlyPopup *>(component.beginCreate(engine.rootContext()));
     QVERIFY(qmlPopup);
@@ -1279,7 +1279,7 @@ void tst_QQuickPopup::toolTipCrashOnClose()
 {
     if (QOperatingSystemVersion::current() <= QOperatingSystemVersion::Windows7)
         QSKIP("Test requires a version of Windows newer than 7: QTBUG-84443");
-    if (!canImportModule("import QtGraphicalEffects 1.15; DropShadow {}"))
+    if (!canImportModule("import QtGraphicalEffects; DropShadow {}"))
         QSKIP("Test requires QtGraphicalEffects");
 
     QQuickApplicationHelper helper(this, "toolTipCrashOnClose.qml");
@@ -1300,7 +1300,7 @@ void tst_QQuickPopup::setOverlayParentToNull()
 {
     if (QOperatingSystemVersion::current() <= QOperatingSystemVersion::Windows7)
         QSKIP("Test requires a version of Windows newer than 7: QTBUG-84443");
-    if (!canImportModule("import QtGraphicalEffects 1.15; DropShadow {}"))
+    if (!canImportModule("import QtGraphicalEffects; DropShadow {}"))
         QSKIP("Test requires QtGraphicalEffects");
 
     QQuickApplicationHelper helper(this, "toolTipCrashOnClose.qml");

@@ -548,7 +548,7 @@ void tst_QQuickApplicationWindow::defaultFont()
 
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData("import QtQuick.Controls 2.1; ApplicationWindow { }", QUrl());
+    component.setData("import QtQuick.Controls; ApplicationWindow { }", QUrl());
 
     QScopedPointer<QQuickApplicationWindow> window;
     window.reset(static_cast<QQuickApplicationWindow *>(component.create()));
@@ -748,7 +748,7 @@ void tst_QQuickApplicationWindow::clearFocusOnDestruction()
 {
     if (QOperatingSystemVersion::current() <= QOperatingSystemVersion::Windows7)
         QSKIP("Test requires a version of Windows newer than 7: QTBUG-84443");
-    if (!canImportModule("import QtGraphicalEffects 1.15; DropShadow {}"))
+    if (!canImportModule("import QtGraphicalEffects; DropShadow {}"))
         QSKIP("Test requires QtGraphicalEffects");
 
     QQmlEngine engine;
@@ -862,7 +862,7 @@ void tst_QQuickApplicationWindow::componentComplete()
 
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData("import QtQuick.Controls 2.2; ApplicationWindow { }", QUrl());
+    component.setData("import QtQuick.Controls; ApplicationWindow { }", QUrl());
 
     FriendlyApplicationWindow *qmlWindow = static_cast<FriendlyApplicationWindow *>(component.beginCreate(engine.rootContext()));
     QVERIFY(qmlWindow);

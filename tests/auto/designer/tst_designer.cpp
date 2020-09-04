@@ -96,8 +96,8 @@ void tst_Designer::test_controls()
 {
     QFETCH(QString, type);
 
-    const QByteArray before("import QtQuick 2.10\n"
-                   "import QtQuick.Controls 2.3\n"
+    const QByteArray before("import QtQuick\n"
+                   "import QtQuick.Controls\n"
                    "Item {\n");
 
     QByteArray source = before;

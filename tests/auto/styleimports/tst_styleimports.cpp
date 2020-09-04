@@ -155,7 +155,7 @@ void tst_StyleImports::select()
     engine.addImportPath(dataDirectory());
     QQmlComponent component(&engine);
     const QString controlName = file.mid(0, file.indexOf(QLatin1Char('.')));
-    component.setData(QString::fromLatin1("import QtQuick 2.15; import QtQuick.Controls 2.15; %1 { }").arg(controlName).toUtf8(), QUrl());
+    component.setData(QString::fromLatin1("import QtQuick; import QtQuick.Controls; %1 { }").arg(controlName).toUtf8(), QUrl());
 
     const bool nonExistentStyle = style == QLatin1String("NoSuchStyle");
     if (nonExistentStyle)

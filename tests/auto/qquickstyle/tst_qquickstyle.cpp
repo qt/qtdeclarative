@@ -78,7 +78,7 @@ void tst_QQuickStyle::loadControls()
     QQmlEngine engine;
     engine.addImportPath(dataDirectory());
     QQmlComponent component(&engine);
-    component.setData("import QtQuick 2.0; import QtQuick.Controls 2.1; Control { }", QUrl());
+    component.setData("import QtQuick; import QtQuick.Controls; Control { }", QUrl());
 
     QScopedPointer<QObject> object(component.create());
     QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
@@ -131,7 +131,7 @@ void tst_QQuickStyle::configurationFile()
     QQmlEngine engine;
     engine.addImportPath(":/data");
     QQmlComponent labelComponent(&engine);
-    labelComponent.setData("import QtQuick 2.0; import QtQuick.Controls 2.12; Label {}", QUrl());
+    labelComponent.setData("import QtQuick; import QtQuick.Controls; Label {}", QUrl());
 
     QScopedPointer<QObject> object(labelComponent.create());
     QVERIFY2(!object.isNull(), qPrintable(labelComponent.errorString()));

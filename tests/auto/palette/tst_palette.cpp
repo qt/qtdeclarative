@@ -85,7 +85,7 @@ void tst_palette::initTestCase()
     // style's theme instead of the platform's theme.
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData("import QtQuick.Controls 2.3; Control { }", QUrl());
+    component.setData("import QtQuick.Controls; Control { }", QUrl());
     delete component.create();
 }
 
@@ -292,7 +292,7 @@ void tst_palette::defaultPalette()
 
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData(QString("import QtQuick.Controls 2.3; %1 { }").arg(control).toUtf8(), QUrl());
+    component.setData(QString("import QtQuick.Controls; %1 { }").arg(control).toUtf8(), QUrl());
 
     // The call to setData() above causes QQuickDefaultTheme to be set as the current theme,
     // so we must make sure we only set our theme afterwards.

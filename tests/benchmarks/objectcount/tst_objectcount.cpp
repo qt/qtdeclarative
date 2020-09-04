@@ -81,7 +81,7 @@ void tst_ObjectCount::init()
 
     // warmup
     QQmlComponent component(&engine);
-    component.setData("import QtQuick 2.0; import QtQuick.Controls 2.1; Item { Button {} }", QUrl());
+    component.setData("import QtQuick; import QtQuick.Controls; Item { Button {} }", QUrl());
     delete component.create();
 }
 

@@ -67,10 +67,10 @@ void tst_PressAndHold::pressAndHold_data()
     QTest::addColumn<QByteArray>("data");
     QTest::addColumn<QByteArray>("signal");
 
-    QTest::newRow("Button") << QByteArray("import QtQuick.Controls 2.1; Button { text: 'Button' }") << QByteArray(SIGNAL(pressAndHold()));
-    QTest::newRow("SwipeDelegate") << QByteArray("import QtQuick.Controls 2.1; SwipeDelegate { text: 'SwipeDelegate' }") << QByteArray(SIGNAL(pressAndHold()));
-    QTest::newRow("TextField") << QByteArray("import QtQuick.Controls 2.1; TextField { text: 'TextField' }") << QByteArray(SIGNAL(pressAndHold(QQuickMouseEvent*)));
-    QTest::newRow("TextArea") << QByteArray("import QtQuick.Controls 2.1; TextArea { text: 'TextArea' }") << QByteArray(SIGNAL(pressAndHold(QQuickMouseEvent*)));
+    QTest::newRow("Button") << QByteArray("import QtQuick.Controls; Button { text: 'Button' }") << QByteArray(SIGNAL(pressAndHold()));
+    QTest::newRow("SwipeDelegate") << QByteArray("import QtQuick.Controls; SwipeDelegate { text: 'SwipeDelegate' }") << QByteArray(SIGNAL(pressAndHold()));
+    QTest::newRow("TextField") << QByteArray("import QtQuick.Controls; TextField { text: 'TextField' }") << QByteArray(SIGNAL(pressAndHold(QQuickMouseEvent*)));
+    QTest::newRow("TextArea") << QByteArray("import QtQuick.Controls; TextArea { text: 'TextArea' }") << QByteArray(SIGNAL(pressAndHold(QQuickMouseEvent*)));
 }
 
 void tst_PressAndHold::pressAndHold()
@@ -144,8 +144,8 @@ void tst_PressAndHold::keepSelection_data()
 {
     QTest::addColumn<QByteArray>("data");
 
-    QTest::newRow("TextField") << QByteArray("import QtQuick.Controls 2.1; TextField { text: 'TextField' }");
-    QTest::newRow("TextArea") << QByteArray("import QtQuick.Controls 2.1; TextArea { text: 'TextArea' }");
+    QTest::newRow("TextField") << QByteArray("import QtQuick.Controls; TextField { text: 'TextField' }");
+    QTest::newRow("TextArea") << QByteArray("import QtQuick.Controls; TextArea { text: 'TextArea' }");
 }
 
 void tst_PressAndHold::keepSelection()

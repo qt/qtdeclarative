@@ -66,7 +66,7 @@ void tst_revisions::revisions()
 
     QQmlEngine engine;
     QQmlComponent component(&engine);
-    component.setData(QString("import QtQuick 2.0; \
+    component.setData(QString("import QtQuick; \
                                import QtQuick.Templates 2.%1 as T; \
                                import QtQuick.Controls 2.%1; \
                                import QtQuick.Controls.impl 2.%1; \

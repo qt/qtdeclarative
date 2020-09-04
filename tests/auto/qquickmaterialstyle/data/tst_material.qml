@@ -55,7 +55,7 @@ import QtQuick.Templates as T
 import QtQuick.Controls
 import QtQuick.Controls.Material
 
-import org.qtproject.Test 1.0
+import org.qtproject.Test
 
 TestCase {
     id: testCase
