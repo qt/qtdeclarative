@@ -78,6 +78,14 @@ struct Comment
         return false;
     }
 
+    quint32 endLine() const
+    {
+        if (isSyntheticMultiline() || !isValid())
+            return 0;
+
+        return m_srcLocations[0].startLine + m_text.count(QLatin1Char('\n'));
+    }
+
     QString m_text;
 };
 
