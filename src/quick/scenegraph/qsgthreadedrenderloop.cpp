@@ -325,7 +325,7 @@ public slots:
     }
 
 public:
-    enum UpdateRequest {
+    enum {
         SyncRequest         = 0x01,
         RepaintRequest      = 0x02,
         ExposeRequest       = 0x04 | RepaintRequest | SyncRequest
@@ -764,6 +764,7 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
     if (!grabRequested)
         pendingUpdate = 0;
 
+    // Advance render thread animations (from the QQuickAnimator subclasses).
     if (animatorDriver->isRunning() && !grabRequested) {
         d->animationController->lock();
         animatorDriver->advance();
@@ -1027,7 +1028,7 @@ QSGRenderContext *QSGThreadedRenderLoop::createRenderContext(QSGContext *sg) con
     return context;
 }
 
-void QSGThreadedRenderLoop::maybePostPolishRequest(Window *w)
+void QSGThreadedRenderLoop::postUpdateRequest(Window *w)
 {
     w->window->requestUpdate();
 }
@@ -1063,7 +1064,7 @@ void QSGThreadedRenderLoop::animationStarted()
     startOrStopAnimationTimer();
 
     for (int i=0; i<m_windows.size(); ++i)
-        maybePostPolishRequest(const_cast<Window *>(&m_windows.at(i)));
+        postUpdateRequest(const_cast<Window *>(&m_windows.at(i)));
 }
 
 void QSGThreadedRenderLoop::animationStopped()
@@ -1085,15 +1086,28 @@ void QSGThreadedRenderLoop::startOrStopAnimationTimer()
         }
     }
 
+    // Best case: with 1 exposed windows we can advance regular animations in
+    // polishAndSync() and rely on being throttled to vsync. (no normal system
+    // timer needed)
+    //
+    // Special case: with no windows exposed (e.g. on Windows: all of them are
+    // minimized) run a normal system timer to make non-visual animation
+    // functional still.
+    //
+    // Not so ideal case: with more than one window exposed we have to use the
+    // same path as the no-windows case since polishAndSync() is now called
+    // potentially for multiple windows over time so it cannot take care of
+    // advancing the animation driver anymore.
+
     if (m_animation_timer != 0 && (exposedWindows == 1 || !m_animation_driver->isRunning())) {
-        qCDebug(QSG_LOG_RENDERLOOP, "*** Stopping animation timer");
+        qCDebug(QSG_LOG_RENDERLOOP, "*** Stopping non-render thread animation timer");
         killTimer(m_animation_timer);
         m_animation_timer = 0;
         // If animations are running, make sure we keep on animating
         if (m_animation_driver->isRunning())
-            maybePostPolishRequest(const_cast<Window *>(theOne));
+            postUpdateRequest(const_cast<Window *>(theOne));
     } else if (m_animation_timer == 0 && exposedWindows != 1 && m_animation_driver->isRunning()) {
-        qCDebug(QSG_LOG_RENDERLOOP, "*** Starting animation timer");
+        qCDebug(QSG_LOG_RENDERLOOP, "*** Starting non-render thread animation timer");
         m_animation_timer = startTimer(qsgrl_animation_interval());
     }
 }
@@ -1344,7 +1358,7 @@ bool QSGThreadedRenderLoop::eventFilter(QObject *watched, QEvent *event)
 
 void QSGThreadedRenderLoop::handleUpdateRequest(QQuickWindow *window)
 {
-    qCDebug(QSG_LOG_RENDERLOOP, "- polish and sync update request");
+    qCDebug(QSG_LOG_RENDERLOOP) <<  "- update request" << window;
     Window *w = windowFor(m_windows, window);
     if (w)
         polishAndSync(w);
@@ -1387,7 +1401,7 @@ void QSGThreadedRenderLoop::maybeUpdate(Window *w)
         return;
     }
 
-    maybePostPolishRequest(w);
+    postUpdateRequest(w);
 }
 
 /*
@@ -1532,15 +1546,32 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
                               QQuickProfiler::SceneGraphPolishAndSyncSync);
     Q_TRACE(QSG_animations_entry);
 
+    // Now is the time to advance the regular animations (as we are throttled to
+    // vsync due to the wait above), but this is only relevant when there is one
+    // single window. With multiple windows m_animation_timer is active, and
+    // advance() happens instead in response to a good old timer event, not here.
     if (m_animation_timer == 0 && m_animation_driver->isRunning()) {
         qCDebug(QSG_LOG_RENDERLOOP, "- advancing animations");
         m_animation_driver->advance();
         qCDebug(QSG_LOG_RENDERLOOP, "- animations done..");
-        // We need to trigger another sync to keep animations running...
-        maybePostPolishRequest(w);
+
+        // We need to trigger another update round to keep all animations
+        // running correctly. For animations that lead to a visual change (a
+        // property change in some item leading to dirtying the item and so
+        // ending up in maybeUpdate()) this would not be needed, but other
+        // animations would then stop functioning since there is nothing
+        // advancing the animation system if we do not call postUpdateRequest()
+        // here and nothing else leads to it either. This has an unfortunate
+        // side effect in multi window cases: one can end up in a situation
+        // where a non-animating window gets updates continuously because there
+        // is an animation running in some other window that is non-exposed or
+        // even closed already (if it was exposed we would not hit this branch,
+        // however). Sadly, there is nothing that can be done about it.
+        postUpdateRequest(w);
+
         emit timeToIncubate();
     } else if (w->updateDuringSync) {
-        maybePostPolishRequest(w);
+        postUpdateRequest(w);
     }
 
     qCDebug(QSG_LOG_TIME_RENDERLOOP()).nospace()
@@ -1563,7 +1594,7 @@ bool QSGThreadedRenderLoop::event(QEvent *e)
     case QEvent::Timer: {
         QTimerEvent *te = static_cast<QTimerEvent *>(e);
         if (te->timerId() == m_animation_timer) {
-            qCDebug(QSG_LOG_RENDERLOOP, "- ticking non-visual timer");
+            qCDebug(QSG_LOG_RENDERLOOP, "- ticking non-render thread timer");
             m_animation_driver->advance();
             emit timeToIncubate();
             return true;
