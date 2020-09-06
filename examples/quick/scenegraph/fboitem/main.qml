@@ -67,7 +67,7 @@ Item {
 
         property size pixelSize: Qt.size(width / tileSize, height / tileSize);
 
-        fragmentShader: "qrc:/scenegraph/fboitem/shaders/checker.frag"
+        fragmentShader: "qrc:/scenegraph/fboitem/shaders/checker.frag.qsb"
     }
 
     Renderer {
