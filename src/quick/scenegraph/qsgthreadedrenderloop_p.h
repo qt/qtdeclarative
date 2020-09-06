@@ -134,6 +134,7 @@ private:
     int m_animation_timer;
 
     bool m_lockedForSync;
+    bool m_inPolish = false;
 };
 
 QT_END_NAMESPACE

@@ -1401,6 +1401,13 @@ void QSGThreadedRenderLoop::maybeUpdate(Window *w)
         return;
     }
 
+    // An updatePolish() implementation may call update() to get the QQuickItem
+    // dirtied. That's fine but it also leads to calling this function.
+    // Requesting another update is a waste then since the updatePolish() call
+    // will be followed up with a round of sync and render.
+    if (m_inPolish)
+        return;
+
     postUpdateRequest(w);
 }
 
@@ -1507,7 +1514,9 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
     Q_TRACE(QSG_polishItems_entry);
 
     QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
+    m_inPolish = true;
     d->polishItems();
+    m_inPolish = false;
 
     if (profileFrames)
         polishTime = timer.nsecsElapsed();

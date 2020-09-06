@@ -191,6 +191,7 @@ public:
     QSGRenderContext *rc;
 
     QImage grabContent;
+    bool m_inPolish = false;
 };
 #endif
 
@@ -591,7 +592,9 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     Q_TRACE(QSG_polishItems_entry);
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphPolishFrame);
 
+    m_inPolish = true;
     cd->polishItems();
+    m_inPolish = false;
 
     if (profileFrames)
         polishTime = renderTimer.nsecsElapsed();
@@ -780,6 +783,13 @@ void QSGGuiThreadRenderLoop::maybeUpdate(QQuickWindow *window)
     m_windows[window].updatePending = true;
 
     if (!cd->isRenderable())
+        return;
+
+    // An updatePolish() implementation may call update() to get the QQuickItem
+    // dirtied. That's fine but it also leads to calling this function.
+    // Requesting another update is a waste then since the updatePolish() call
+    // will be followed up with a round of sync and render.
+    if (m_inPolish)
         return;
 
     window->requestUpdate();
