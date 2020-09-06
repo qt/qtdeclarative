@@ -735,23 +735,16 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
     Q_QUICK_SG_PROFILE_RECORD(QQuickProfiler::SceneGraphRenderLoopFrame,
                               QQuickProfiler::SceneGraphRenderLoopSync);
 
-    if (!syncResultedInChanges
-            && !repaintRequested
-            && !(pendingUpdate & RepaintRequest) // may have been set in sync()
-            && sgrc->isValid()
-            && !grabRequested
-            && rhi)
-    {
-        qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- no changes, render aborted");
-        if (rhi && rhi->isRecordingFrame())
-            rhi->endFrame(cd->swapchain, QRhi::SkipPresent);
-
-        int waitTime = vsyncDelta - (int) waitTimer.elapsed();
-        if (waitTime > 0)
-            msleep(waitTime);
-
-        return;
-    }
+    // Qt 6 no longer aborts when !syncResultedInChanges && !RepaintRequest,
+    // meaning this function always completes and presents a frame. This is
+    // more compatible with what the basic render loop (or a custom loop with
+    // QQuickRenderControl) would do, is more accurate due to not having to do
+    // an msleep() with an inaccurate interval, and avoids misunderstandings
+    // for signals like frameSwapped(). (in Qt 5 a continuously "updating"
+    // window is continuously presenting frames with the basic loop, but not
+    // with threaded due to aborting when sync() finds there are no relevant
+    // visual changes in the scene graph; this system proved to be simply too
+    // confusing in practice)
 
     qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- rendering started");
 
