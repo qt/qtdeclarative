@@ -72,7 +72,7 @@ public:
         DirtyList = 0x10
     };
 
-    void beginSync(int totalCount) override;
+    void beginSync(int totalCount, bool *countChanged) override;
     void setPath(int index, const QQuickPath *path) override;
     void setStrokeColor(int index, const QColor &color) override;
     void setStrokeWidth(int index, qreal w) override;

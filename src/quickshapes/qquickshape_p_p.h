@@ -86,7 +86,7 @@ public:
     virtual ~QQuickAbstractPathRenderer() { }
 
     // Gui thread
-    virtual void beginSync(int totalCount) = 0;
+    virtual void beginSync(int totalCount, bool *countChanged) = 0;
     virtual void endSync(bool async) = 0;
     virtual void setAsyncCallback(void (*)(void *), void *) { }
     virtual Flags flags() const { return {}; }

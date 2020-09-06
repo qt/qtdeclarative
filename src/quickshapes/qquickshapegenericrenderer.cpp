@@ -122,11 +122,14 @@ QQuickShapeGenericRenderer::~QQuickShapeGenericRenderer()
 // sync, and so triangulation too, happens on the gui thread
 //    - except when async is set, in which case triangulation is moved to worker threads
 
-void QQuickShapeGenericRenderer::beginSync(int totalCount)
+void QQuickShapeGenericRenderer::beginSync(int totalCount, bool *countChanged)
 {
     if (m_sp.count() != totalCount) {
         m_sp.resize(totalCount);
         m_accDirty |= DirtyList;
+        *countChanged = true;
+    } else {
+        *countChanged = false;
     }
     for (ShapePathData &d : m_sp)
         d.syncDirty = 0;

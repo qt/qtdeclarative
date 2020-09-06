@@ -938,8 +938,6 @@ void QQuickShape::updatePolish()
     // when the item is visible.
     if (isVisible() || d->effectRefCount > 0)
         d->sync();
-
-    update();
 }
 
 void QQuickShape::itemChange(ItemChange change, const ItemChangeData &data)
@@ -1038,7 +1036,7 @@ void QQuickShapePrivate::asyncShapeReady(void *data)
 
 void QQuickShapePrivate::sync()
 {
-    syncTimingTotalDirty = 0;
+    int totalDirty = 0;
     syncTimingActive = QQSHAPE_LOG_TIME_DIRTY_SYNC().isDebugEnabled();
     if (syncTimingActive)
         syncTimer.start();
@@ -1050,12 +1048,13 @@ void QQuickShapePrivate::sync()
     }
 
     const int count = sp.count();
-    renderer->beginSync(count);
+    bool countChanged = false;
+    renderer->beginSync(count, &countChanged);
 
     for (int i = 0; i < count; ++i) {
         QQuickShapePath *p = sp[i];
         int &dirty(QQuickShapePathPrivate::get(p)->dirty);
-        syncTimingTotalDirty |= dirty;
+        totalDirty |= dirty;
 
         if (dirty & QQuickShapePathPrivate::DirtyPath)
             renderer->setPath(i, p);
@@ -1079,6 +1078,7 @@ void QQuickShapePrivate::sync()
         dirty = 0;
     }
 
+    syncTimingTotalDirty = totalDirty;
     if (syncTimingTotalDirty)
         ++syncTimeCounter;
     else
@@ -1092,6 +1092,12 @@ void QQuickShapePrivate::sync()
             qDebug("[Shape %p] [%d] [dirty=0x%x] update took %lld ms",
                    q_func(), syncTimeCounter, syncTimingTotalDirty, syncTimer.elapsed());
     }
+
+    // Must dirty the QQuickItem if something got changed, nothing
+    // else does this for us.
+    Q_Q(QQuickShape);
+    if (totalDirty || countChanged)
+        q->update();
 }
 
 // ***** gradient support *****

@@ -42,11 +42,14 @@
 
 QT_BEGIN_NAMESPACE
 
-void QQuickShapeSoftwareRenderer::beginSync(int totalCount)
+void QQuickShapeSoftwareRenderer::beginSync(int totalCount, bool *countChanged)
 {
     if (m_sp.count() != totalCount) {
         m_sp.resize(totalCount);
         m_accDirty |= DirtyList;
+        *countChanged = true;
+    } else {
+        *countChanged = false;
     }
 }
 
