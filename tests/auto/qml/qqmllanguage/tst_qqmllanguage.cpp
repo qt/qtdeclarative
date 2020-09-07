@@ -29,6 +29,7 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlincubator.h>
+#include <QtCore/qiterable.h>
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qfile.h>
 #include <QtCore/qdebug.h>
@@ -5863,6 +5864,7 @@ void tst_qqmllanguage::arrayToContainer()
     QCOMPARE(root->m_points.at(0), QPointF (2.0, 3.0) );
     QVERIFY(root->m_barrays.contains("hello"));
     QVERIFY(root->m_barrays.contains("world"));
+    QCOMPARE(root->m_convertibles.size(), 2);
     QCOMPARE(root->m_convertibles.at(0).msg, QLatin1String("hello"));
     QCOMPARE(root->m_convertibles.at(1).msg, QLatin1String("world"));
 }

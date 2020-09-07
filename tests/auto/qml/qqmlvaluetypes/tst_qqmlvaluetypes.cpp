@@ -31,6 +31,7 @@
 #include <QQmlComponent>
 #include <QDebug>
 #include <QJSValueIterator>
+#include <QtCore/qiterable.h>
 #include <private/qquickvaluetypes_p.h>
 #include <private/qqmlglobal_p.h>
 #include <private/qv4engine_p.h>

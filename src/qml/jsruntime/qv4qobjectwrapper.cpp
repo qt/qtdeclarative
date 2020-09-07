@@ -1912,7 +1912,7 @@ bool CallArgument::fromValue(int callType, QV4::ExecutionEngine *engine, const Q
 #endif
         }
 #endif
-    } else if (QMetaType::typeFlags(callType)
+    } else if (QMetaType(callType).flags()
                & (QMetaType::PointerToQObject | QMetaType::PointerToGadget)) {
         // You can assign null or undefined to any pointer. The result is a nullptr.
         if (value.isNull() || value.isUndefined()) {
@@ -1932,11 +1932,12 @@ bool CallArgument::fromValue(int callType, QV4::ExecutionEngine *engine, const Q
         QQmlEnginePrivate *ep = engine->qmlEngine() ? QQmlEnginePrivate::get(engine->qmlEngine()) : nullptr;
         QVariant v = scope.engine->toVariant(value, callType);
 
-        if (v.userType() == callType) {
+        const QMetaType callMetaType(callType);
+        if (v.metaType() == callMetaType) {
             *qvariantPtr = v;
-        } else if (v.canConvert(callType)) {
+        } else if (v.canConvert(callMetaType)) {
             *qvariantPtr = v;
-            qvariantPtr->convert(callType);
+            qvariantPtr->convert(callMetaType);
         } else {
             QQmlMetaObject mo = ep ? ep->rawMetaObjectForType(callType) : QQmlMetaObject();
             if (!mo.isNull()) {

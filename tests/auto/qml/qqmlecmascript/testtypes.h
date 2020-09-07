@@ -28,6 +28,7 @@
 #ifndef TESTTYPES_H
 #define TESTTYPES_H
 
+#include <QtCore/qiterable.h>
 #include <QtCore/qobject.h>
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlexpression.h>

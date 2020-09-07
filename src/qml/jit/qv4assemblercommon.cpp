@@ -110,7 +110,8 @@ static void printDisassembledOutputWithCalls(QByteArray processedOutput,
                 break;
             const char *functionName = it.value();
             processedOutput = processedOutput.insert(
-                    idx, padding + QByteArray(functionName ? functionName : symbols[it.key()]));
+                    idx, QByteArray(padding + QByteArray(
+                                        functionName ? functionName : symbols[it.key()])));
         }
     }
 
