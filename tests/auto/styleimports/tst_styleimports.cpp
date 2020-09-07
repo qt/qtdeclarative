@@ -221,10 +221,14 @@ void tst_StyleImports::importStyleWithoutControls()
     const QUrl url(testFileUrl(QString::fromLatin1("import%1StyleWithoutControls.qml").arg(style)));
     bool success = false;
 
-    // Two warnings, because Default is used as the fallback.
+    // Account for extra warnings for fallback styles.
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression("QtQuick.Controls must be imported before importing.*Default"));
+    if (style == QLatin1String("macOS"))
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression("QtQuick.Controls must be imported before importing.*Fusion"));
+
+    // Account for the warning for the current style.
     if (style != QLatin1String("Default"))
         QTest::ignoreMessage(QtWarningMsg, QRegularExpression("QtQuick.Controls must be imported before importing.*" + style));
-    QTest::ignoreMessage(QtWarningMsg, QRegularExpression("QtQuick.Controls must be imported before importing.*Default"));
 
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
                      this, [url, &success](QObject *obj, const QUrl &objUrl) {

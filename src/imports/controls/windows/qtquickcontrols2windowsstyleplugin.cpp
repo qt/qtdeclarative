@@ -57,7 +57,7 @@ QString QtQuickControls2WindowsStylePlugin::name() const
 
 void QtQuickControls2WindowsStylePlugin::registerTypes(const char *uri)
 {
-    Q_UNUSED(uri);
+    QQuickStylePlugin::registerTypes(uri);
 }
 
 QT_END_NAMESPACE

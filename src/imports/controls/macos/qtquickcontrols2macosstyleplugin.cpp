@@ -57,7 +57,7 @@ QString QtQuickControls2MacOSStylePlugin::name() const
 
 void QtQuickControls2MacOSStylePlugin::registerTypes(const char *uri)
 {
-    Q_UNUSED(uri);
+    QQuickStylePlugin::registerTypes(uri);
 }
 
 QT_END_NAMESPACE
