@@ -1,12 +1,13 @@
 # Generated from scenegraph.pro.
 
 add_subdirectory(customgeometry)
+add_subdirectory(custommaterial)
+add_subdirectory(graph)
 add_subdirectory(threadedanimation)
+add_subdirectory(twotextureproviders)
 if(QT_FEATURE_opengl OR QT_FEATURE_opengles2 OR QT_FEATURE_opengles3)
-    add_subdirectory(graph)
     add_subdirectory(fboitem)
     add_subdirectory(openglunderqml)
-    add_subdirectory(twotextureproviders)
 endif()
 if(IOS OR MACOS)
     add_subdirectory(metalunderqml)
