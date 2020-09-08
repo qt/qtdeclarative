@@ -652,7 +652,6 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
     syncResultedInChanges = false;
     QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
 
-    const bool repaintRequested = (pendingUpdate & RepaintRequest) || grabImage;
     const bool syncRequested = (pendingUpdate & SyncRequest) || grabImage;
     const bool exposeRequested = (pendingUpdate & ExposeRequest) == ExposeRequest;
     const bool grabRequested = grabImage != nullptr;
