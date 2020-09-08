@@ -108,14 +108,14 @@ void QtQuickControls2NativeStylePlugin::initializeEngine(QQmlEngine *engine, con
     } else {
         const QString envStyle = qEnvironmentVariable("QQC2_STYLE");
         if (!envStyle.isNull()) {
-            if (envStyle.compare(QLatin1String("common")))
+            if (envStyle == QLatin1String("common"))
                 style = new QCommonStyle;
 #if defined(Q_OS_MACOS)
-            else if (envStyle.compare(QLatin1String("mac")))
+            else if (envStyle == QLatin1String("mac"))
                 style = new QMacStyle;
 #endif
 #if defined(Q_OS_WINDOWS)
-            else if (envStyle.compare(QLatin1String("windows")))
+            else if (envStyle == QLatin1String("windows"))
                 style = new QWindowsStyle;
 #endif
         }
