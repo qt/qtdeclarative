@@ -19,6 +19,7 @@ qt_add_test(tst_basic
         TST_CONTROLS_DATA=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../../../tests/auto/controls/data\\\"
     PUBLIC_LIBRARIES
         Qt::Gui
+        Qt::QuickControls2
     TESTDATA ${test_data}
 )
 

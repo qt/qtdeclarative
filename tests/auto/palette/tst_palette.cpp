@@ -52,6 +52,12 @@
 
 using namespace QQuickVisualTestUtil;
 
+// Need a more descriptive failure message: QTBUG-87039
+#define COMPARE_PALETTES(actualPalette, expectedPalette) \
+    QVERIFY2(actualPalette == expectedPalette, \
+        qPrintable(QString::fromLatin1("\n   Actual:    %1\n   Expected:  %2") \
+            .arg(QDebug::toString(actualPalette)).arg(QDebug::toString(expectedPalette))));
+
 class tst_palette : public QQmlDataTest
 {
     Q_OBJECT
@@ -79,6 +85,8 @@ private slots:
 void tst_palette::initTestCase()
 {
     QQmlDataTest::initTestCase();
+
+    QQuickStyle::setStyle("Basic");
 
     // Import QtQuick.Controls to initialize styles and themes so that
     // QQuickControlPrivate::themePalette() returns a palette from the
@@ -143,7 +151,7 @@ void tst_palette::palette()
     QVariant var = object->property("palette");
     QVERIFY(var.isValid());
 
-    QCOMPARE(var.value<QQuickPalette*>()->toQPalette(), expectedPalette);
+    COMPARE_PALETTES(var.value<QQuickPalette*>()->toQPalette(), expectedPalette);
 }
 
 void tst_palette::inheritance_data()

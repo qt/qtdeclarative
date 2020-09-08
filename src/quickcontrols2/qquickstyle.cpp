@@ -184,6 +184,27 @@ struct QQuickStyleSpec
         // Find the config file.
         resolveConfigFilePath();
 
+        if (style.isEmpty()) {
+            qCDebug(lcQtQuickControlsStyle) << "no style was specified; checking if we have an appropriate style for this platform";
+#if defined(Q_OS_MACOS)
+            style = QLatin1String("macOS");
+// TODO: Enable this section when the windows style is complete: QTBUG-86399
+//#elif defined(Q_OS_WINDOWS)
+//            style = QLatin1String("Windows");
+#elif defined(Q_OS_ANDROID)
+            style = QLatin1String("Material");
+#elif defined(QT_OS_LINUX)
+            style = QLatin1String("Fusion");
+#endif
+            if (!style.isEmpty())
+                qCDebug(lcQtQuickControlsStyle) << "using" << style << "as a default";
+            else
+                qCDebug(lcQtQuickControlsStyle) << "no appropriate style found; using Basic as a default";
+        }
+
+        // If it's still empty by this point, then it means we have no native style available for this platform,
+        // as is the case on e.g. embedded. In that case, we want to default to the Basic style,
+        // which is what effectiveStyleName() returns when "style" is empty.
         custom = !builtInStyleList.contains(QQuickStylePrivate::effectiveStyleName(style));
 
         resolved = true;

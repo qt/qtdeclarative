@@ -91,7 +91,7 @@ void tst_QQuickStyle::unloadControls()
 
 void tst_QQuickStyle::lookup()
 {
-    QVERIFY(QQuickStyle::name().isEmpty());
+    QCOMPARE(QQuickStyle::name(), QString());
 
     QQuickStyle::setStyle("Material");
     QCOMPARE(QQuickStyle::name(), QString("Material"));

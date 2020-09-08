@@ -1,6 +1,7 @@
 TEMPLATE = app
 TARGET = tst_basic
 CONFIG += qmltestcase
+QT += quickcontrols2
 
 DEFINES += TST_CONTROLS_DATA=\\\"$$QQC2_SOURCE_TREE/tests/auto/controls/data\\\"
 
