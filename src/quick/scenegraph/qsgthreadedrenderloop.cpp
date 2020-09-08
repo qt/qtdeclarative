@@ -352,7 +352,7 @@ public:
     QMutex mutex;
     QWaitCondition waitCondition;
 
-    QElapsedTimer m_timer;
+    QElapsedTimer m_threadTimeBetweenRenders;
 
     QQuickWindow *window; // Will be 0 when window is not exposed
     QSize windowSize;
@@ -635,7 +635,7 @@ void QSGRenderThread::handleDeviceLoss()
 
 void QSGRenderThread::syncAndRender(QImage *grabImage)
 {
-    bool profileFrames = QSG_LOG_TIME_RENDERLOOP().isDebugEnabled();
+    const bool profileFrames = QSG_LOG_TIME_RENDERLOOP().isDebugEnabled();
     QElapsedTimer threadTimer;
     qint64 syncTime = 0, renderTime = 0;
     if (profileFrames)
@@ -648,6 +648,14 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
     waitTimer.start();
 
     qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "syncAndRender()");
+
+    if (profileFrames) {
+        const qint64 elapsedSinceLastMs = m_threadTimeBetweenRenders.restart();
+        qCDebug(QSG_LOG_TIME_RENDERLOOP, "[window %p][render thread %p] syncAndRender: start, elapsed since last call: %d ms",
+                window,
+                QThread::currentThread(),
+                int(elapsedSinceLastMs));
+    }
 
     syncResultedInChanges = false;
     QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
@@ -831,12 +839,23 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
         mutex.unlock();
     }
 
-    qCDebug(QSG_LOG_TIME_RENDERLOOP,
-            "Frame rendered with 'threaded' renderloop in %dms, sync=%d, render=%d, swap=%d - (on render thread)",
-            int(threadTimer.elapsed()),
-            int((syncTime/1000000)),
-            int((renderTime - syncTime) / 1000000),
-            int((threadTimer.nsecsElapsed() - renderTime) / 1000000));
+    if (profileFrames) {
+        // Beware that there is no guarantee the graphics stack always
+        // blocks for a full vsync in beginFrame() or endFrame(). (because
+        // e.g. there is no guarantee that OpenGL blocks in swapBuffers(),
+        // it may block elsewhere; also strategies may change once there
+        // are multiple windows) So process the results printed here with
+        // caution and pay attention to the elapsed-since-last-call time
+        // printed at the beginning of the function too.
+        qCDebug(QSG_LOG_TIME_RENDERLOOP,
+                "[window %p][render thread %p] syncAndRender: frame rendered in %dms, sync=%d, render=%d, swap=%d",
+                window,
+                QThread::currentThread(),
+                int(threadTimer.elapsed()),
+                int((syncTime/1000000)),
+                int((renderTime - syncTime) / 1000000),
+                int((threadTimer.nsecsElapsed() - renderTime) / 1000000));
+    }
 
     Q_TRACE(QSG_swap_exit);
     Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphRenderLoopFrame,
@@ -944,6 +963,8 @@ void QSGRenderThread::run()
     animatorDriver->install();
     if (QQmlDebugConnector::service<QQmlProfilerService>())
         QQuickProfiler::registerAnimationCallback();
+
+    m_threadTimeBetweenRenders.start();
 
     while (active) {
 #ifdef Q_OS_DARWIN
@@ -1246,6 +1267,7 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
         win.thread = new QSGRenderThread(this, renderContext);
         win.updateDuringSync = false;
         win.forceRenderPass = true; // also covered by polishAndSync(inExpose=true), but doesn't hurt
+        win.timeBetweenPolishAndSyncs.start();
         m_windows << win;
         w = &m_windows.last();
     }
@@ -1499,9 +1521,14 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
     qint64 polishTime = 0;
     qint64 waitTime = 0;
     qint64 syncTime = 0;
-    bool profileFrames = QSG_LOG_TIME_RENDERLOOP().isDebugEnabled();
-    if (profileFrames)
+    const bool profileFrames = QSG_LOG_TIME_RENDERLOOP().isDebugEnabled();
+    if (profileFrames) {
         timer.start();
+        const qint64 elapsedSinceLastMs = w->timeBetweenPolishAndSyncs.restart();
+        qCDebug(QSG_LOG_TIME_RENDERLOOP, "[window %p][gui thread] polishAndSync: start, elapsed since last call: %d ms",
+                window,
+                int(elapsedSinceLastMs));
+    }
     Q_QUICK_SG_PROFILE_START(QQuickProfiler::SceneGraphPolishAndSync);
     Q_TRACE(QSG_polishItems_entry);
 
@@ -1575,13 +1602,14 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
         postUpdateRequest(w);
     }
 
-    qCDebug(QSG_LOG_TIME_RENDERLOOP()).nospace()
-            << "Frame prepared with 'threaded' renderloop"
-            << ", polish=" << (polishTime / 1000000)
-            << ", lock=" << (waitTime - polishTime) / 1000000
-            << ", blockedForSync=" << (syncTime - waitTime) / 1000000
-            << ", animations=" << (timer.nsecsElapsed() - syncTime) / 1000000
-            << " - (on Gui thread) " << window;
+    if (profileFrames) {
+        qCDebug(QSG_LOG_TIME_RENDERLOOP, "[window %p][gui thread] Frame prepared, polish=%d ms, lock=%d ms, blockedForSync=%d ms, animations=%d ms",
+                window,
+                int(polishTime / 1000000),
+                int((waitTime - polishTime) / 1000000),
+                int((syncTime - waitTime) / 1000000),
+                int((timer.nsecsElapsed() - syncTime) / 1000000));
+    }
 
     Q_TRACE(QSG_animations_exit);
     Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphPolishAndSync,

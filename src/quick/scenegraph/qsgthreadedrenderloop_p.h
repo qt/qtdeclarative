@@ -52,6 +52,7 @@
 //
 
 #include <QtCore/QThread>
+#include <QtCore/QElapsedTimer>
 #include <private/qsgcontext_p.h>
 
 #include "qsgrenderloop_p.h"
@@ -100,6 +101,7 @@ private:
         QQuickWindow *window;
         QSGRenderThread *thread;
         QSurfaceFormat actualWindowFormat;
+        QElapsedTimer timeBetweenPolishAndSyncs;
         uint updateDuringSync : 1;
         uint forceRenderPass : 1;
     };

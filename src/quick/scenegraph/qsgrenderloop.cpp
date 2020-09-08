@@ -43,7 +43,7 @@
 #include <private/qquickanimatorcontroller_p.h>
 
 #include <QtCore/QCoreApplication>
-#include <QtCore/QTime>
+#include <QtCore/QElapsedTimer>
 #include <QtCore/QLibraryInfo>
 #include <QtCore/private/qabstractanimation_p.h>
 
@@ -177,6 +177,7 @@ public:
               rhiDeviceLost(false),
               rhiDoomed(false)
         { }
+        QElapsedTimer timeBetweenRenders;
         bool updatePending : 1;
         bool grabOnly : 1;
         bool rhiDeviceLost : 1;
@@ -329,6 +330,7 @@ QSGGuiThreadRenderLoop::~QSGGuiThreadRenderLoop()
 void QSGGuiThreadRenderLoop::show(QQuickWindow *window)
 {
     m_windows[window] = WindowData();
+    m_windows[window].timeBetweenRenders.start();
 
     maybeUpdate(window);
 }
@@ -586,7 +588,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     Q_TRACE_SCOPE(QSG_renderWindow);
     QElapsedTimer renderTimer;
     qint64 renderTime = 0, syncTime = 0, polishTime = 0;
-    bool profileFrames = QSG_LOG_TIME_RENDERLOOP().isDebugEnabled();
+    const bool profileFrames = QSG_LOG_TIME_RENDERLOOP().isDebugEnabled();
     if (profileFrames)
         renderTimer.start();
     Q_TRACE(QSG_polishItems_entry);
@@ -709,17 +711,16 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
     Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphRenderLoopFrame,
                            QQuickProfiler::SceneGraphRenderLoopSwap);
 
-    if (QSG_LOG_TIME_RENDERLOOP().isDebugEnabled()) {
-        static QTime lastFrameTime = QTime::currentTime();
+    if (profileFrames) {
         qCDebug(QSG_LOG_TIME_RENDERLOOP,
-                "Frame rendered with 'basic' renderloop in %dms, polish=%d, sync=%d, render=%d, swap=%d, frameDelta=%d",
+                "[window %p][gui thread] syncAndRender: frame rendered in %dms, polish=%d, sync=%d, render=%d, swap=%d, perWindowFrameDelta=%d",
+                window,
                 int(swapTime / 1000000),
                 int(polishTime / 1000000),
                 int((syncTime - polishTime) / 1000000),
                 int((renderTime - syncTime) / 1000000),
                 int((swapTime - renderTime) / 1000000),
-                int(lastFrameTime.msecsTo(QTime::currentTime())));
-        lastFrameTime = QTime::currentTime();
+                int(data.timeBetweenRenders.restart()));
     }
 
     QSGRhiProfileConnection::instance()->send(rhi);
