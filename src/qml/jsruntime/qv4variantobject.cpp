@@ -139,7 +139,7 @@ ReturnedValue VariantPrototype::method_toString(const FunctionObject *b, const V
         RETURN_UNDEFINED();
     const QVariant variant = o->d()->data();
     QString result = variant.toString();
-    if (result.isEmpty() && !variant.canConvert(QMetaType::QString)) {
+    if (result.isEmpty() && !variant.canConvert(QMetaType(QMetaType::QString))) {
         QDebug dbg(&result);
         dbg << variant;
         // QDebug appends a space, we're not interested in continuing the stream so we chop it off.
@@ -167,7 +167,7 @@ ReturnedValue VariantPrototype::method_valueOf(const FunctionObject *b, const Va
         case QMetaType::Bool:
             return Encode(v.toBool());
         default:
-            if (QMetaType::typeFlags(v.userType()) & QMetaType::IsEnumeration)
+            if (QMetaType(v.metaType()).flags() & QMetaType::IsEnumeration)
                 RETURN_RESULT(Encode(v.toInt()));
             break;
         }

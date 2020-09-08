@@ -501,8 +501,10 @@ bool QuickTestResult::verify
 bool QuickTestResult::fuzzyCompare(const QVariant &actual, const QVariant &expected, qreal delta)
 {
     if (actual.userType() == QMetaType::QColor || expected.userType() == QMetaType::QColor) {
-        if (!actual.canConvert(QMetaType::QColor) || !expected.canConvert(QMetaType::QColor))
+        if (!actual.canConvert(QMetaType(QMetaType::QColor))
+                || !expected.canConvert(QMetaType(QMetaType::QColor))) {
             return false;
+        }
 
         //fuzzy color comparison
         QColor act;

@@ -311,7 +311,7 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
                                     binding->location,
                                     tr("Invalid grouped property access: Property \"%1\" with primitive type \"%2\".")
                                         .arg(name)
-                                        .arg(QString::fromLatin1(QMetaType::typeName(typeId)))
+                                        .arg(QString::fromLatin1(QMetaType(typeId).name()))
                                     );
                     }
 
@@ -319,7 +319,7 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
                         return recordError(binding->location,
                                            tr("Invalid grouped property access: Property \"%1\" with type \"%2\", which is not a value type")
                                            .arg(name)
-                                           .arg(QString::fromLatin1(QMetaType::typeName(typeId)))
+                                           .arg(QString::fromLatin1(QMetaType(typeId).name()))
                                           );
                     }
                 }
@@ -642,7 +642,7 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *prope
         // otherwise, try a custom type assignment
         QQmlMetaType::StringConverter converter = QQmlMetaType::customStringConverter(property->propType());
         if (!converter) {
-            return warnOrError(tr("Invalid property assignment: unsupported type \"%1\"").arg(QString::fromLatin1(QMetaType::typeName(property->propType()))));
+            return warnOrError(tr("Invalid property assignment: unsupported type \"%1\"").arg(QString::fromLatin1(QMetaType(property->propType()).name())));
         }
     }
     break;
@@ -737,7 +737,7 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *propert
     } else if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject && property->isFunction()) {
         return noError;
     } else if (isPrimitiveType(propType)) {
-        auto typeName = QString::fromUtf8(QMetaType::typeName(propType));
+        auto typeName = QString::fromUtf8(QMetaType(propType).name());
         return qQmlCompileError(binding->location, tr("Cannot assign value of type \"%1\" to property \"%2\", expecting \"%3\"")
                                                       .arg(rhsType())
                                                       .arg(propertyName)
@@ -766,11 +766,11 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *propert
 
             if (!isAssignable) {
                 return qQmlCompileError(binding->valueLocation, tr("Cannot assign object of type \"%1\" to property of type \"%2\" as the former is neither the same as the latter nor a sub-class of it.")
-                        .arg(rhsType()).arg(QLatin1String(QMetaType::typeName(propType))));
+                        .arg(rhsType()).arg(QLatin1String(QMetaType(propType).name())));
             }
         } else {
             return qQmlCompileError(binding->valueLocation, tr("Cannot assign to property of unknown type \"%1\".")
-                        .arg(QLatin1String(QMetaType::typeName(propType))));
+                        .arg(QLatin1String(QMetaType(propType).name())));
         }
 
     }

@@ -191,7 +191,7 @@ public:
         bool valueSet = false;
 
         QVariant value() const {
-            if (QMetaType::typeFlags(m_value.userType()) & QMetaType::PointerToQObject
+            if (m_value.metaType().flags() & QMetaType::PointerToQObject
                 && qobjectTracker.isNull())
                 return QVariant::fromValue<QObject*>(nullptr);
             return m_value;
@@ -200,7 +200,7 @@ public:
         void setValue(const QVariant &v) {
             m_value = v;
             valueSet = true;
-            if (QMetaType::typeFlags(v.userType()) & QMetaType::PointerToQObject)
+            if (v.metaType().flags() & QMetaType::PointerToQObject)
                 qobjectTracker = m_value.value<QObject*>();
         }
     };

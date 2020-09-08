@@ -1529,7 +1529,7 @@ QString QQmlMetaType::prettyTypeName(const QObject *object)
         marker = typeName.indexOf(QLatin1String("_QML_"));
         if (marker != -1) {
             typeName = QStringView{typeName}.left(marker) + QLatin1Char('*');
-            type = QQmlMetaType::qmlType(QMetaType::type(typeName.toLatin1()));
+            type = QQmlMetaType::qmlType(QMetaType::fromName(typeName.toLatin1()).id());
             if (type.isValid()) {
                 QString qmlTypeName = type.qmlTypeName();
                 const int lastSlash = qmlTypeName.lastIndexOf(QLatin1Char('/'));

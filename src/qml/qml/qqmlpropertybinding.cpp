@@ -123,11 +123,10 @@ bool QQmlPropertyBinding::evaluate(const QMetaType &metaType, void *dataPtr)
     }
 
     QVariant resultVariant(scope.engine->toVariant(result, metaType.id()));
-    auto metaTypeId = metaType.id();
-    resultVariant.convert(metaTypeId);
+    resultVariant.convert(metaType);
     const bool hasChanged = !metaType.equals(resultVariant.constData(), dataPtr);
-    QMetaType::destruct(metaTypeId, dataPtr);
-    QMetaType::construct(metaTypeId, dataPtr, resultVariant.constData());
+    metaType.destruct(dataPtr);
+    metaType.construct(dataPtr, resultVariant.constData());
     return hasChanged;
 }
 
@@ -139,11 +138,11 @@ QUntypedPropertyBinding QQmlTranslationPropertyBinding::create(const QQmlPropert
 
         QVariant resultVariant(compilationUnit->bindingValueAsString(binding));
         if (metaType.id() != QMetaType::QString)
-            resultVariant.convert(metaType.id());
+            resultVariant.convert(metaType);
 
         const bool hasChanged = !metaType.equals(resultVariant.constData(), dataPtr);
-        QMetaType::destruct(metaType.id(), dataPtr);
-        QMetaType::construct(metaType.id(), dataPtr, resultVariant.constData());
+        metaType.destruct(dataPtr);
+        metaType.construct(dataPtr, resultVariant.constData());
         return hasChanged;
     };
 

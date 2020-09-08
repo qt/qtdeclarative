@@ -199,8 +199,8 @@ int QQmlMetaObject::methodReturnType(const QQmlPropertyData &data, QByteArray *u
         propTypeName = m.typeName();
     }
 
-    if (QMetaType::sizeOf(type) <= int(sizeof(int))) {
-        if (QMetaType::typeFlags(type) & QMetaType::IsEnumeration)
+    if (QMetaType(type).sizeOf() <= qsizetype(sizeof(int))) {
+        if (QMetaType(type).flags() & QMetaType::IsEnumeration)
             return QMetaType::Int;
 
         if (isNamedEnumerator(metaObject(), propTypeName))
@@ -250,10 +250,10 @@ int *QQmlMetaObject::methodParameterTypes(int index, ArgTypeStorage *argStorage,
         for (int ii = 0; ii < argc; ++ii) {
             int type = m.parameterType(ii);
 
-            if (QMetaType::sizeOf(type) > int(sizeof(int))) {
+            if (QMetaType(type).sizeOf() > qsizetype(sizeof(int))) {
                 // Cannot be passed as int
                 // We know that it's a known type, as sizeOf(UnknownType) == 0
-            } else if (QMetaType::typeFlags(type) & QMetaType::IsEnumeration) {
+            } else if (QMetaType(type).flags() & QMetaType::IsEnumeration) {
                 type = QMetaType::Int;
             } else {
                 if (argTypeNames.isEmpty())
@@ -291,10 +291,10 @@ int *QQmlMetaObject::methodParameterTypes(const QMetaMethod &m, ArgTypeStorage *
 
     for (int ii = 0; ii < argc; ++ii) {
         int type = m.parameterType(ii);
-        if (QMetaType::sizeOf(type) > int(sizeof(int))) {
+        if (QMetaType(type).sizeOf() > qsizetype(sizeof(int))) {
             // Cannot be passed as int
             // We know that it's a known type, as sizeOf(UnknownType) == 0
-        } else if (QMetaType::typeFlags(type) & QMetaType::IsEnumeration) {
+        } else if (QMetaType(type).flags() & QMetaType::IsEnumeration) {
             type = QMetaType::Int;
         } else {
             if (argTypeNames.isEmpty())

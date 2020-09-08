@@ -464,10 +464,10 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlP
             if (!property->isVarProperty() && property->propType() != qMetaTypeId<QJSValue>()) {
                 // assigning a JS function to a non var or QJSValue property or is not allowed.
                 QString error = QLatin1String("Cannot assign JavaScript function to ");
-                if (!QMetaType::typeName(property->propType()))
+                if (!QMetaType(property->propType()).name())
                     error += QLatin1String("[unknown property type]");
                 else
-                    error += QLatin1String(QMetaType::typeName(property->propType()));
+                    error += QLatin1String(QMetaType(property->propType()).name());
                 scope.engine->throwError(error);
                 return;
             }
@@ -533,10 +533,10 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlP
         PROPERTY_STORE(QJSValue, QJSValuePrivate::fromReturnedValue(value.asReturnedValue()));
     } else if (value.isUndefined() && property->propType() != qMetaTypeId<QQmlScriptString>()) {
         QString error = QLatin1String("Cannot assign [undefined] to ");
-        if (!QMetaType::typeName(property->propType()))
+        if (!QMetaType(property->propType()).name())
             error += QLatin1String("[unknown property type]");
         else
-            error += QLatin1String(QMetaType::typeName(property->propType()));
+            error += QLatin1String(QMetaType(property->propType()).name());
         scope.engine->throwError(error);
         return;
     } else if (value.as<FunctionObject>()) {
@@ -576,9 +576,9 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlP
         if (!QQmlPropertyPrivate::write(object, *property, v, callingQmlContext)) {
             const char *valueType = (v.userType() == QMetaType::UnknownType)
                     ? "an unknown type"
-                    : QMetaType::typeName(v.userType());
+                    : QMetaType(v.userType()).name();
 
-            const char *targetTypeName = QMetaType::typeName(property->propType());
+            const char *targetTypeName = QMetaType(property->propType()).name();
             if (!targetTypeName)
                 targetTypeName = "an unregistered type";
 
@@ -1441,7 +1441,7 @@ static int MatchScore(const QV4::Value &actual, int conversionType)
         case QMetaType::QJsonValue:
             return 0;
         default: {
-            const char *typeName = QMetaType::typeName(conversionType);
+            const char *typeName = QMetaType(conversionType).name();
             if (typeName && typeName[strlen(typeName) - 1] == '*')
                 return 0;
             else
@@ -1471,7 +1471,7 @@ static int MatchScore(const QV4::Value &actual, int conversionType)
             const QVariant v = obj->engine()->toVariant(actual, -1);
             if (v.userType() == conversionType)
                 return 0;
-            else if (v.canConvert(conversionType))
+            else if (v.canConvert(QMetaType(conversionType)))
                 return 5;
             return 10;
         } else if (conversionType == QMetaType::QJsonObject) {

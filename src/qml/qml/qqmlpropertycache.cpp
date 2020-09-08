@@ -657,7 +657,7 @@ void QQmlPropertyCache::resolve(QQmlPropertyData *data) const
         const char *retTy = metaMethod.typeName();
         if (!retTy)
             retTy = "\0";
-        data->setPropType(QMetaType::type(retTy));
+        data->setPropType(QMetaType::fromName(retTy).id());
     } else {
         auto metaProperty = mo->property(data->coreIndex());
         data->setPropType(metaProperty.metaType().id());
@@ -1141,7 +1141,7 @@ void QQmlPropertyCache::toMetaObjectBuilder(QMetaObjectBuilder &builder)
             notifierId = data->notifyIndex() - signalHandlerIndexCacheStart;
 
         QMetaPropertyBuilder property = builder.addProperty(properties.at(ii).first.toUtf8(),
-                                                            QMetaType::typeName(data->propType()),
+                                                            QMetaType(data->propType()).name(),
                                                             notifierId);
 
         property.setReadable(true);
@@ -1154,7 +1154,7 @@ void QQmlPropertyCache::toMetaObjectBuilder(QMetaObjectBuilder &builder)
 
         QByteArray returnType;
         if (data->propType() != 0)
-            returnType = QMetaType::typeName(data->propType());
+            returnType = QMetaType(data->propType()).name();
 
         QByteArray signature;
         // '+=' reserves extra capacity. Follow-up appending will be probably free.
@@ -1166,7 +1166,7 @@ void QQmlPropertyCache::toMetaObjectBuilder(QMetaObjectBuilder &builder)
             Q_ASSERT(arguments->argumentsValid);
             for (int ii = 0; ii < arguments->arguments[0]; ++ii) {
                 if (ii != 0) signature.append(',');
-                signature.append(QMetaType::typeName(arguments->arguments[1 + ii]));
+                signature.append(QMetaType(arguments->arguments[1 + ii]).name());
             }
         }
 

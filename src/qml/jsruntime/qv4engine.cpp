@@ -1830,7 +1830,7 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
                 a->arrayPut(ii, (v = QV4::QObjectWrapper::wrap(this, list.at(ii))));
             a->setArrayLengthUnchecked(list.count());
             return a.asReturnedValue();
-        } else if (QMetaType::typeFlags(type) & QMetaType::PointerToQObject) {
+        } else if (QMetaType(type).flags() & QMetaType::PointerToQObject) {
             return QV4::QObjectWrapper::wrap(this, *reinterpret_cast<QObject* const *>(ptr));
         }
 
@@ -2338,11 +2338,11 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, int type, void *data)
 
     // Try to use magic; for compatibility with qjsvalue_cast.
 
-    QByteArray name = QMetaType::typeName(type);
+    QByteArray name = QMetaType(type).name();
     if (convertToNativeQObject(value, name, reinterpret_cast<void* *>(data)))
         return true;
     if (value.as<QV4::VariantObject>() && name.endsWith('*')) {
-        int valueType = QMetaType::type(name.left(name.size()-1));
+        int valueType = QMetaType::fromName(name.left(name.size()-1)).id();
         QVariant &var = value.as<QV4::VariantObject>()->d()->data();
         if (valueType == var.userType()) {
             // We have T t, T* is requested, so return &t.
@@ -2365,7 +2365,7 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, int type, void *data)
                         canCast = qobject->qt_metacast(className) != nullptr;
                 }
                 if (canCast) {
-                    QByteArray varTypeName = QMetaType::typeName(var.userType());
+                    QByteArray varTypeName = QMetaType(var.userType()).name();
                     if (varTypeName.endsWith('*'))
                         *reinterpret_cast<void* *>(data) = *reinterpret_cast<void* *>(var.data());
                     else

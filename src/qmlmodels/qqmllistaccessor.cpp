@@ -82,7 +82,7 @@ void QQmlListAccessor::setList(const QVariant &v, QQmlEngine *engine)
         m_type = VariantList;
     } else if (d.userType() == qMetaTypeId<QList<QObject *>>()) {
         m_type = ObjectList;
-    } else if (d.canConvert(QMetaType::Int)) {
+    } else if (d.canConvert(QMetaType(QMetaType::Int))) {
         // Here we have to check for an upper limit, because down the line code might (well, will)
         // allocate memory depending on the number of elements. The upper limit cannot be INT_MAX:
         //      QVector<QPointer<QQuickItem>> something;

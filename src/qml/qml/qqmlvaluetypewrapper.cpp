@@ -238,8 +238,8 @@ bool QQmlValueTypeWrapper::toGadget(void *data) const
         if (!ref->readReferenceValue())
             return false;
     const int typeId = d()->valueType()->metaType.id();
-    QMetaType::destruct(typeId, data);
-    QMetaType::construct(typeId, data, d()->gadgetPtr());
+    QMetaType(typeId).destruct(data);
+    QMetaType(typeId).construct(data, d()->gadgetPtr());
     return true;
 }
 
@@ -407,9 +407,9 @@ ReturnedValue QQmlValueTypeWrapper::method_toString(const FunctionObject *b, con
             RETURN_UNDEFINED();
 
     QString result;
-    if (!QMetaType::convert(w->d()->gadgetPtr(), w->d()->valueType()->metaType.id(), &result, QMetaType::QString)) {
-        result = QString::fromUtf8(QMetaType::typeName(w->d()->valueType()->metaType.id()))
-                + QLatin1Char('(');
+    if (!QMetaType::convert(w->d()->valueType()->metaType, w->d()->gadgetPtr(),
+                            QMetaType(QMetaType::QString), &result)) {
+        result = QString::fromUtf8(w->d()->valueType()->metaType.name()) + QLatin1Char('(');
         const QMetaObject *mo = w->d()->propertyCache()->metaObject();
         const int propCount = mo->propertyCount();
         for (int i = 0; i < propCount; ++i) {

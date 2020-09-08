@@ -461,9 +461,8 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
                     QVariant::fromValue(QJSValuePrivate::fromReturnedValue(result.asReturnedValue())),
                     context(), flags);
     } else if (isUndefined) {
-        const QLatin1String typeName(QMetaType::typeName(type)
-                                     ? QMetaType::typeName(type)
-                                     : "[unknown property type]");
+        const char *name = QMetaType(type).name();
+        const QLatin1String typeName(name ? name : "[unknown property type]");
         delayedError()->setErrorDescription(QLatin1String("Unable to assign [undefined] to ")
                                             + typeName);
         return false;
@@ -494,13 +493,13 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
             if (userType == QMetaType::Nullptr || userType == QMetaType::VoidStar)
                 valueType = "null";
             else
-                valueType = QMetaType::typeName(userType);
+                valueType = QMetaType(userType).name();
         }
 
         if (!valueType)
             valueType = "undefined";
         if (!propertyType)
-            propertyType = QMetaType::typeName(type);
+            propertyType = QMetaType(type).name();
         if (!propertyType)
             propertyType = "[unknown property type]";
 

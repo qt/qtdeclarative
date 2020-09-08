@@ -1965,7 +1965,7 @@ QAbstractAnimationJob* QQuickParallelAnimation::transition(QQuickStateActions &a
 void QQuickPropertyAnimationPrivate::convertVariant(QVariant &variant, int type)
 {
     if (variant.userType() != QMetaType::QString) {
-        variant.convert(type);
+        variant.convert(QMetaType(type));
         return;
     }
 
@@ -1985,7 +1985,7 @@ void QQuickPropertyAnimationPrivate::convertVariant(QVariant &variant, int type)
         break;
     default:
         if (QQmlValueTypeFactory::isValueType((uint)type)) {
-            variant.convert(type);
+            variant.convert(QMetaType(type));
         } else {
             QQmlMetaType::StringConverter converter = QQmlMetaType::customStringConverter(type);
             if (converter)

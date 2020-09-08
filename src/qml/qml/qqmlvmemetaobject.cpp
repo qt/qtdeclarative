@@ -1014,8 +1014,8 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                     if (error.isValid())
                         ep->warning(error);
                     if (a[0]) {
-                        QMetaType::destruct(returnType, a[0]);
-                        QMetaType::construct(returnType, a[0], nullptr);
+                        QMetaType(returnType).destruct(a[0]);
+                        QMetaType(returnType).construct(a[0], nullptr);
                     }
                 } else {
                     if (a[0]) {

@@ -863,14 +863,14 @@ bool QQmlTableModel::setData(const QModelIndex &index, const QVariant &value, in
     const ColumnRoleMetadata roleData = columnMetadata.roles.value(roleName);
     QVariant effectiveValue = value;
     if (value.userType() != roleData.type) {
-        if (!value.canConvert(int(roleData.type))) {
+        if (!value.canConvert(QMetaType(roleData.type))) {
             qmlWarning(this).nospace() << "setData(): the value " << value
                 << " set at row " << row << " column " << column << " with role " << roleName
                 << " cannot be converted to " << roleData.typeName;
             return false;
         }
 
-        if (!effectiveValue.convert(int(roleData.type))) {
+        if (!effectiveValue.convert(QMetaType(roleData.type))) {
             qmlWarning(this).nospace() << "setData(): failed converting value " << value
                 << " set at row " << row << " column " << column << " with role " << roleName
                 << " to " << roleData.typeName;
@@ -1045,7 +1045,7 @@ bool QQmlTableModel::validateNewRow(const char *functionName, const QVariant &ro
             const QVariant rolePropertyValue = rowAsMap.value(roleData.name);
 
             if (rolePropertyValue.userType() != roleData.type) {
-                if (!rolePropertyValue.canConvert(int(roleData.type))) {
+                if (!rolePropertyValue.canConvert(QMetaType(roleData.type))) {
                     qmlWarning(this).quote() << functionName << ": expected the property named "
                         << roleData.name << " to be of type " << roleData.typeName
                         << ", but got " << QString::fromLatin1(rolePropertyValue.typeName())
@@ -1054,7 +1054,7 @@ bool QQmlTableModel::validateNewRow(const char *functionName, const QVariant &ro
                 }
 
                 QVariant effectiveValue = rolePropertyValue;
-                if (!effectiveValue.convert(int(roleData.type))) {
+                if (!effectiveValue.convert(QMetaType(roleData.type))) {
                     qmlWarning(this).nospace() << functionName << ": failed converting value "
                         << rolePropertyValue << " set at column " << columnIndex << " with role "
                         << QString::fromLatin1(rolePropertyValue.typeName()) << " to "

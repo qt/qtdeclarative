@@ -313,9 +313,9 @@ QQmlComponent *QQmlDelegateChooser::delegate(QQmlAdaptorModel *adaptorModel, int
         v = value(adaptorModel, row, column, QStringLiteral("modelData"));
 
         if (v.isValid()) {
-            if (v.canConvert(QMetaType::QVariantMap))
+            if (v.canConvert(QMetaType(QMetaType::QVariantMap)))
                 v = v.toMap().value(m_role);
-            else if (v.canConvert(QMetaType::QObjectStar))
+            else if (v.canConvert(QMetaType(QMetaType::QObjectStar)))
                 v = v.value<QObject*>()->property(m_role.toUtf8());
         }
     }

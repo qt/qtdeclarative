@@ -1150,12 +1150,13 @@ bool QQmlPropertyPrivate::writeEnumProperty(const QMetaProperty &prop, int idx, 
             if (!ok)
                 return false;
         } else if (v.userType() != QMetaType::Int && v.userType() != QMetaType::UInt) {
-            int enumMetaTypeId = QMetaType::type(QByteArray(menum.scope() + QByteArray("::") + menum.name()));
+            int enumMetaTypeId = QMetaType::fromName(
+                        QByteArray(menum.scope() + QByteArray("::") + menum.name())).id();
             if ((enumMetaTypeId == QMetaType::UnknownType) || (v.userType() != enumMetaTypeId) || !v.constData())
                 return false;
             v = QVariant(*reinterpret_cast<const int *>(v.constData()));
         }
-        v.convert(QMetaType::Int);
+        v.convert(QMetaType(QMetaType::Int));
     }
 
     // the status variable is changed by qt_metacall to indicate what it did
@@ -1226,7 +1227,7 @@ bool QQmlPropertyPrivate::write(
             double integral;
             double fractional = std::modf(value.toDouble(), &integral);
             if (qFuzzyIsNull(fractional))
-                v.convert(QMetaType::Int);
+                v.convert(QMetaType(QMetaType::Int));
         }
         return writeEnumProperty(prop, property.coreIndex(), object, v, flags);
     }
@@ -1265,7 +1266,9 @@ bool QQmlPropertyPrivate::write(
         } else {
             return false;
         }
-    } else if (value.canConvert(propertyType) && !isUrl && variantType != QMetaType::QString && propertyType != qMetaTypeId<QList<QUrl>>() && !property.isQList()) {
+    } else if (value.canConvert(QMetaType(propertyType))
+               && !isUrl && variantType != QMetaType::QString
+               && propertyType != qMetaTypeId<QList<QUrl>>() && !property.isQList()) {
         // common cases:
         switch (propertyType) {
         case QMetaType::Bool: {
@@ -1290,7 +1293,7 @@ bool QQmlPropertyPrivate::write(
         }
         default: { // "fallback":
             QVariant v = value;
-            v.convert(propertyType);
+            v.convert(QMetaType(propertyType));
             return property.writeProperty(object, const_cast<void *>(v.constData()), flags);
         }
         }
@@ -1367,7 +1370,7 @@ bool QQmlPropertyPrivate::write(
 
         if (!ok) {
             v = value;
-            if (v.convert(propertyType)) {
+            if (v.convert(QMetaType(propertyType))) {
                 ok = true;
             } else if (v.isValid() && value.isNull()) {
                 // For historical reasons converting a null QVariant to another type will do the trick

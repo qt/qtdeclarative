@@ -335,7 +335,8 @@ void QQmlSettingsPrivate::load()
         const QVariant currentValue = instance()->value(property.name(), previousValue);
 
         if (!currentValue.isNull() && (!previousValue.isValid()
-                || (currentValue.canConvert(previousValue.userType()) && previousValue != currentValue))) {
+                || (currentValue.canConvert(previousValue.metaType())
+                    && previousValue != currentValue))) {
             property.write(q, currentValue);
             qCDebug(lcSettings) << "QQmlSettings: load" << property.name() << "setting:" << currentValue << "default:" << previousValue;
         }

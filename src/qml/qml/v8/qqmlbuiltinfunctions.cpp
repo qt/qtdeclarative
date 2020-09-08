@@ -824,7 +824,7 @@ ReturnedValue formatDateTimeObject(const T &formatThis, const QV4::Scope &scope,
             auto enginePriv = QQmlEnginePrivate::get(scope.engine->qmlEngine());
             auto localeMetaTypeId = qMetaTypeId<QLocale>();
             QVariant locale = enginePriv->v4engine()->toVariant(argv[1], localeMetaTypeId);
-            if (!locale.canConvert(localeMetaTypeId))
+            if (!locale.canConvert(QMetaType(localeMetaTypeId)))
                 scope.engine->throwError(QLatin1String("%1(): Bad second argument (must be either string, number or locale)").arg(functionName));
             formatted = locale.value<QLocale>().toString(formatThis, formatOptions);
         }

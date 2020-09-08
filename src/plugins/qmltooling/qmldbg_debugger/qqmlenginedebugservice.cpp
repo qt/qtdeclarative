@@ -99,7 +99,7 @@ static bool isSaveable(const QVariant &value)
         return false;
     NullDevice nullDevice;
     QDataStream fakeStream(&nullDevice);
-    return QMetaType::save(fakeStream, valType, value.constData());
+    return QMetaType(valType).save(fakeStream, value.constData());
 }
 
 QQmlEngineDebugServiceImpl::QQmlEngineDebugServiceImpl(QObject *parent) :
