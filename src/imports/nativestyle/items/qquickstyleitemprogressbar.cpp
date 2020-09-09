@@ -78,17 +78,17 @@ void QQuickStyleItemProgressBar::paintEvent(QPainter *painter)
 {
     QStyleOptionProgressBar styleOption;
     initStyleOption(styleOption);
-    if (m_subControl == Groove) {
-        styleOption.rect = style()->subElementRect(QStyle::SE_ProgressBarGroove, &styleOption);
-        style()->drawControl(QStyle::CE_ProgressBarGroove, &styleOption, painter);
-    } else {
-        const QRect r = styleOption.rect;
-        styleOption.rect = style()->subElementRect(QStyle::SE_ProgressBarGroove, &styleOption);
-        style()->drawControl(QStyle::CE_ProgressBarGroove, &styleOption, painter);
-        styleOption.rect = r;
-        styleOption.rect = style()->subElementRect(QStyle::SE_ProgressBarContents, &styleOption);
-        style()->drawControl(QStyle::CE_ProgressBarContents, &styleOption, painter);
-    }
+#ifndef Q_OS_MACOS
+    const QRect r = styleOption.rect;
+#endif
+    // Note: on macOS, the groove will paint both the background and the contents
+    styleOption.rect = style()->subElementRect(QStyle::SE_ProgressBarGroove, &styleOption);
+    style()->drawControl(QStyle::CE_ProgressBarGroove, &styleOption, painter);
+#ifndef Q_OS_MACOS
+    styleOption.rect = r;
+    styleOption.rect = style()->subElementRect(QStyle::SE_ProgressBarContents, &styleOption);
+    style()->drawControl(QStyle::CE_ProgressBarContents, &styleOption, painter);
+#endif
 }
 
 void QQuickStyleItemProgressBar::initStyleOption(QStyleOptionProgressBar &styleOption)

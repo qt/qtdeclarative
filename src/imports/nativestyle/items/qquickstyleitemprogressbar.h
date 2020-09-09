@@ -44,17 +44,9 @@ class QQuickStyleItemProgressBar : public QQuickStyleItem
 {
     Q_OBJECT
 
-    Q_PROPERTY(SubControl subControl MEMBER m_subControl)
-
     QML_NAMED_ELEMENT(ProgressBar)
 
 public:
-    enum SubControl {
-        Groove = 1,
-        Contents,
-    };
-    Q_ENUM(SubControl)
-
     QFont styleFont(QQuickItem *control) override;
 
 protected:
@@ -64,9 +56,6 @@ protected:
 
 private:
     void initStyleOption(QStyleOptionProgressBar &styleOption);
-
-private:
-   SubControl m_subControl = Groove;
 };
 
 #endif // QQUICKSTYLEITEMPROGRESSBAR_H

@@ -53,12 +53,6 @@ T.ProgressBar {
 
     background: NativeStyle.ProgressBar {
         control: control
-        subControl: NativeStyle.ProgressBar.Groove
-    }
-
-    contentItem: NativeStyle.ProgressBar {
-        control: control
-        subControl: NativeStyle.ProgressBar.Contents
         useNinePatchImage: false
     }
 }

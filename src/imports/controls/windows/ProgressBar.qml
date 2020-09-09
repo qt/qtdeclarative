@@ -36,24 +36,7 @@
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Templates as T
 import QtQuick.NativeStyle as NativeStyle
 
-T.ProgressBar {
-    id: control
-
-    implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
-                            implicitContentWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
-                             implicitContentHeight + topPadding + bottomPadding)
-
-    font.pixelSize: nativeIndicator ? indicator.styleFont(control).pixelSize : undefined
-
-    background: NativeStyle.ProgressBar {
-        control: control
-        // Note: Paint both the background and the contents
-        subControl: NativeStyle.ProgressBar.Contents
-        useNinePatchImage: false
-    }
-
+NativeStyle.DefaultProgressBar {
 }
