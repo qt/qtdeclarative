@@ -1981,7 +1981,15 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     It is possible to apply an effect on a layer at runtime using
     layer.effect:
 
-    \snippet qml/layerwitheffect.qml 1
+    \qml
+    Item {
+        id: layerRoot
+        layer.enabled = true
+        layer.effect: ShaderEffect {
+            fragmentShader: "effect.frag.qsb"
+        }
+    }
+    \endqml
 
     In this example, we implement the shader effect manually. The \l
     {Qt Graphical Effects} module contains a suite of ready-made

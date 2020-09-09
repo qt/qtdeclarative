@@ -470,7 +470,7 @@
 /*!
     \qmlmethod Item QtQuick::TableView::itemAtCell(int column, int row)
 
-    Convenience for calling \code itemAtCell(Qt.point(column, row)) \endcode
+    Convenience for calling \c{itemAtCell(Qt.point(column, row))}.
 */
 
 /*!
@@ -489,7 +489,7 @@
 /*!
     \qmlmethod Point QtQuick::TableView::cellAtPos(real x, real y, bool includeSpacing)
 
-    Convenience for calling \code cellAtPos(Qt.point(x, y), includeSpacing) \endcode
+    Convenience for calling \c{cellAtPos(Qt.point(x, y), includeSpacing)}.
 */
 
 /*!

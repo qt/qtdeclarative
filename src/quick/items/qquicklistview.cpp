@@ -1971,7 +1971,7 @@ QQuickItemViewAttached *QQuickListViewPrivate::getAttachedObject(const QObject *
     Delegates are usually parented to ListView's \l {Flickable::contentItem}{contentItem}, but
     typically depending on whether it's visible in the view or not, the \l parent
     can change, and sometimes be \c null. Because of that, binding to
-    the parent's properties from within the delegate is \i not recommended. If you
+    the parent's properties from within the delegate is \e not recommended. If you
     want the delegate to fill out the width of the ListView, consider
     using one of the following approaches instead:
 
@@ -2119,7 +2119,7 @@ QQuickItemViewAttached *QQuickListViewPrivate::getAttachedObject(const QObject *
     The following example shows a delegate that animates a spinning rectangle. When
     it is pooled, the animation is temporarily paused:
 
-    \snippet qml/listview/reusabledelegate.qml 0
+    \snippet qml/listview/ReusableDelegate.qml 0
 
     \sa {QML Data Models}, GridView, PathView, {Qt Quick Examples - Views}
 */
