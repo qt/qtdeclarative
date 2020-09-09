@@ -1344,6 +1344,8 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
                 QQuickWindowPrivate::get(w->window)->fireOpenGLContextCreated(w->thread->gl);
 
                 w->thread->gl->moveToThread(w->thread);
+                if (!w->thread->gl->shareContext())
+                    w->thread->gl->shareGroup()->moveToThread(w->thread);
                 qCDebug(QSG_LOG_RENDERLOOP, "- OpenGL context created");
 
                 w->thread->offscreenSurface = new QOffscreenSurface();
