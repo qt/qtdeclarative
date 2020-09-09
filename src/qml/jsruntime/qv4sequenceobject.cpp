@@ -243,7 +243,7 @@ struct QV4Sequence : Object {
     }
 
     mutable Container *container;
-    QQmlQPointer<QObject> object;
+    QV4QPointer<QObject> object;
     int propertyIndex;
     bool isReference : 1;
     bool isReadOnly : 1;

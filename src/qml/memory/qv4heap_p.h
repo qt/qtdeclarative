@@ -204,11 +204,11 @@ Base *Pointer<T, o>::base() {
 
 #ifdef QT_NO_QOBJECT
 template <class T>
-struct QQmlQPointer {
+struct QV4QPointer {
 };
 #else
 template <class T>
-struct QQmlQPointer {
+struct QV4QPointer {
     void init()
     {
         d = nullptr;
@@ -238,7 +238,7 @@ struct QQmlQPointer {
     }
     operator T*() const { return data(); }
     inline T* operator->() const { return data(); }
-    QQmlQPointer &operator=(T *o)
+    QV4QPointer &operator=(T *o)
     {
         if (d)
             destroy();
@@ -254,7 +254,7 @@ private:
     QtSharedPointer::ExternalRefCountData *d;
     QObject *qObject;
 };
-Q_STATIC_ASSERT(std::is_trivial< QQmlQPointer<QObject> >::value);
+Q_STATIC_ASSERT(std::is_trivial< QV4QPointer<QObject> >::value);
 #endif
 
 }

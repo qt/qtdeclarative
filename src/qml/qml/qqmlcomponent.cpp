@@ -1237,7 +1237,7 @@ namespace Heap {
     Member(class, HeapValue, HeapValue, statusChanged) \
     Member(class, Pointer, QmlContext *, qmlContext) \
     Member(class, NoMark, QQmlComponentIncubator *, incubator) \
-    Member(class, NoMark, QQmlQPointer<QObject>, parent)
+    Member(class, NoMark, QV4QPointer<QObject>, parent)
 
 DECLARE_HEAP_OBJECT(QmlIncubatorObject, Object) {
     DECLARE_MARKOBJECTS(QmlIncubatorObject);

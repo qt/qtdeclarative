@@ -77,7 +77,7 @@ DECLARE_HEAP_OBJECT(QQmlContextWrapper, Object) {
 
     // This has to be a plain pointer because object needs to be a POD type.
     QQmlContextData *context;
-    QQmlQPointer<QObject> scopeObject;
+    QV4QPointer<QObject> scopeObject;
 };
 
 #define QmlContextMembers(class, Member)

@@ -77,7 +77,7 @@ struct QQmlTypeWrapper : Object {
     void init();
     void destroy();
     TypeNameMode mode;
-    QQmlQPointer<QObject> object;
+    QV4QPointer<QObject> object;
 
     QQmlType type() const;
 

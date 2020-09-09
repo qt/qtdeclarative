@@ -78,7 +78,7 @@ struct QQmlValueTypeReference : QQmlValueTypeWrapper
         object.destroy();
         QQmlValueTypeWrapper::destroy();
     }
-    QQmlQPointer<QObject> object;
+    QV4QPointer<QObject> object;
     int property;
 };
 
@@ -598,7 +598,7 @@ bool QQmlValueTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &v
 
     if (reference) {
         QV4::ScopedFunctionObject f(scope, value);
-        const QQmlQPointer<QObject> &referenceObject = reference->d()->object;
+        const QV4QPointer<QObject> &referenceObject = reference->d()->object;
         const int referencePropertyIndex = reference->d()->property;
 
         if (f) {

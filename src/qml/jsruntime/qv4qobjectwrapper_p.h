@@ -92,12 +92,12 @@ struct Q_QML_EXPORT QObjectWrapper : Object {
     static void markObjects(Heap::Base *that, MarkStack *markStack);
 
 private:
-    QQmlQPointer<QObject> qObj;
+    QV4QPointer<QObject> qObj;
 };
 
 #define QObjectMethodMembers(class, Member) \
     Member(class, Pointer, QQmlValueTypeWrapper *, valueTypeWrapper) \
-    Member(class, NoMark, QQmlQPointer<QObject>, qObj) \
+    Member(class, NoMark, QV4QPointer<QObject>, qObj) \
     Member(class, NoMark, QQmlPropertyCache *, _propertyCache) \
     Member(class, NoMark, int, index)
 
@@ -149,7 +149,7 @@ struct QmlSignalHandler : Object {
     void setObject(QObject *o) { qObj = o; }
 
 private:
-    QQmlQPointer<QObject> qObj;
+    QV4QPointer<QObject> qObj;
 };
 
 }
