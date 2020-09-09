@@ -156,7 +156,7 @@ public:
         Type_ForInIterator,
         Type_RegExp,
 
-        Type_QmlSequence
+        Type_V4Sequence
     };
     Q_MANAGED_TYPE(Invalid)
 
@@ -164,7 +164,7 @@ public:
     const VTable *vtable() const { return d()->internalClass->vtable; }
     inline ExecutionEngine *engine() const { return internalClass()->engine; }
 
-    bool isListType() const { return d()->internalClass->vtable->type == Type_QmlSequence; }
+    bool isListType() const { return d()->internalClass->vtable->type == Type_V4Sequence; }
     bool isArrayLike() const { return isArrayObject() || isListType(); }
 
     bool isArrayObject() const { return d()->internalClass->vtable->type == Type_ArrayObject; }

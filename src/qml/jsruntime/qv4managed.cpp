@@ -137,8 +137,8 @@ QString Managed::className() const
         s = "__RegExp";
         break;
 
-    case Type_QmlSequence:
-        s = "QmlSequence";
+    case Type_V4Sequence:
+        s = "V4Sequence";
         break;
     }
     return QString::fromLatin1(s);

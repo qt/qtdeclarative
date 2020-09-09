@@ -78,15 +78,15 @@ static void generateWarning(QV4::ExecutionEngine *v4, const QString& description
 
 //  F(elementType, elementTypeName, sequenceType, defaultValue)
 #if QT_CONFIG(qml_itemmodel)
-#define FOREACH_QML_SEQUENCE_TYPE_FOR_ITEMMODEL(F) \
+#define FOREACH_QV4_SEQUENCE_TYPE_FOR_ITEMMODEL(F) \
     F(QModelIndex, QModelIndex, QModelIndexList, QModelIndex()) \
     F(QModelIndex, QModelIndexStdVector, std::vector<QModelIndex>, QModelIndex()) \
     F(QItemSelectionRange, QItemSelectionRange, QItemSelection, QItemSelectionRange())
 #else
-#define FOREACH_QML_SEQUENCE_TYPE_FOR_ITEMMODEL(F)
+#define FOREACH_QV4_SEQUENCE_TYPE_FOR_ITEMMODEL(F)
 #endif
 
-#define FOREACH_QML_SEQUENCE_TYPE(F) \
+#define FOREACH_QV4_SEQUENCE_TYPE(F) \
     F(int, IntStdVector, std::vector<int>, 0) \
     F(qreal, RealStdVector, std::vector<qreal>, 0.0) \
     F(bool, BoolStdVector, std::vector<bool>, false) \
@@ -97,7 +97,7 @@ static void generateWarning(QV4::ExecutionEngine *v4, const QString& description
     F(QString, StringStdVector, std::vector<QString>, QString()) \
     F(QUrl, Url, QList<QUrl>, QUrl()) \
     F(QUrl, UrlStdVector, std::vector<QUrl>, QUrl()) \
-    FOREACH_QML_SEQUENCE_TYPE_FOR_ITEMMODEL(F)
+    FOREACH_QV4_SEQUENCE_TYPE_FOR_ITEMMODEL(F)
 
 static QV4::ReturnedValue convertElementToValue(QV4::ExecutionEngine *engine, const QString &element)
 {
@@ -228,12 +228,12 @@ template <> bool convertValueToElement(const Value &value)
 
 namespace QV4 {
 
-template <typename Container> struct QQmlSequence;
+template <typename Container> struct QV4Sequence;
 
 namespace Heap {
 
 template <typename Container>
-struct QQmlSequence : Object {
+struct QV4Sequence : Object {
     void init(const Container &container);
     void init(QObject *object, int propertyIndex, bool readOnly);
     void destroy() {
@@ -252,10 +252,10 @@ struct QQmlSequence : Object {
 }
 
 template <typename Container>
-struct QQmlSequence : public QV4::Object
+struct QV4Sequence : public QV4::Object
 {
-    V4_OBJECT2(QQmlSequence<Container>, QV4::Object)
-    Q_MANAGED_TYPE(QmlSequence)
+    V4_OBJECT2(QV4Sequence<Container>, QV4::Object)
+    Q_MANAGED_TYPE(V4Sequence)
     V4_PROTOTYPE(sequencePrototype)
     V4_NEEDS_DESTROY
 public:
@@ -357,7 +357,7 @@ public:
         ~OwnPropertyKeyIterator() override = default;
         PropertyKey next(const Object *o, Property *pd = nullptr, PropertyAttributes *attrs = nullptr) override
         {
-            const QQmlSequence *s = static_cast<const QQmlSequence *>(o);
+            const QV4Sequence *s = static_cast<const QV4Sequence *>(o);
 
             if (s->d()->isReference) {
                 if (!s->d()->object)
@@ -415,7 +415,7 @@ public:
     {
         if (!other)
             return false;
-        QQmlSequence<Container> *otherSequence = other->as<QQmlSequence<Container> >();
+        QV4Sequence<Container> *otherSequence = other->as<QV4Sequence<Container> >();
         if (!otherSequence)
             return false;
         if (d()->isReference && otherSequence->d()->isReference) {
@@ -487,7 +487,7 @@ public:
     static QV4::ReturnedValue method_get_length(const FunctionObject *b, const Value *thisObject, const Value *, int)
     {
         QV4::Scope scope(b);
-        QV4::Scoped<QQmlSequence<Container>> This(scope, thisObject->as<QQmlSequence<Container> >());
+        QV4::Scoped<QV4Sequence<Container>> This(scope, thisObject->as<QV4Sequence<Container> >());
         if (!This)
             THROW_TYPE_ERROR();
 
@@ -502,7 +502,7 @@ public:
     static QV4::ReturnedValue method_set_length(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
     {
         QV4::Scope scope(f);
-        QV4::Scoped<QQmlSequence<Container>> This(scope, thisObject->as<QQmlSequence<Container> >());
+        QV4::Scoped<QV4Sequence<Container>> This(scope, thisObject->as<QV4Sequence<Container> >());
         if (!This)
             THROW_TYPE_ERROR();
 
@@ -589,34 +589,34 @@ public:
     {
         if (!id.isArrayIndex())
             return Object::virtualGet(that, id, receiver, hasProperty);
-        return static_cast<const QQmlSequence<Container> *>(that)->containerGetIndexed(id.asArrayIndex(), hasProperty);
+        return static_cast<const QV4Sequence<Container> *>(that)->containerGetIndexed(id.asArrayIndex(), hasProperty);
     }
     static bool virtualPut(Managed *that, PropertyKey id, const QV4::Value &value, Value *receiver)
     {
         if (id.isArrayIndex())
-            return static_cast<QQmlSequence<Container> *>(that)->containerPutIndexed(id.asArrayIndex(), value);
+            return static_cast<QV4Sequence<Container> *>(that)->containerPutIndexed(id.asArrayIndex(), value);
         return Object::virtualPut(that, id, value, receiver);
     }
     static QV4::PropertyAttributes queryIndexed(const QV4::Managed *that, uint index)
-    { return static_cast<const QQmlSequence<Container> *>(that)->containerQueryIndexed(index); }
+    { return static_cast<const QV4Sequence<Container> *>(that)->containerQueryIndexed(index); }
     static bool virtualDeleteProperty(QV4::Managed *that, PropertyKey id)
     {
         if (id.isArrayIndex()) {
             uint index = id.asArrayIndex();
-            return static_cast<QQmlSequence<Container> *>(that)->containerDeleteIndexedProperty(index);
+            return static_cast<QV4Sequence<Container> *>(that)->containerDeleteIndexedProperty(index);
         }
         return Object::virtualDeleteProperty(that, id);
     }
     static bool virtualIsEqualTo(Managed *that, Managed *other)
-    { return static_cast<QQmlSequence<Container> *>(that)->containerIsEqualTo(other); }
+    { return static_cast<QV4Sequence<Container> *>(that)->containerIsEqualTo(other); }
     static QV4::OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target)
-    { return static_cast<const QQmlSequence<Container> *>(m)->containerOwnPropertyKeys(m, target);}
+    { return static_cast<const QV4Sequence<Container> *>(m)->containerOwnPropertyKeys(m, target);}
 
 };
 
 
 template <typename Container>
-void Heap::QQmlSequence<Container>::init(const Container &container)
+void Heap::QV4Sequence<Container>::init(const Container &container)
 {
     Object::init();
     this->container = new Container(container);
@@ -626,13 +626,13 @@ void Heap::QQmlSequence<Container>::init(const Container &container)
     object.init();
 
     QV4::Scope scope(internalClass->engine);
-    QV4::Scoped<QV4::QQmlSequence<Container> > o(scope, this);
+    QV4::Scoped<QV4::QV4Sequence<Container> > o(scope, this);
     o->setArrayType(Heap::ArrayData::Custom);
     o->init();
 }
 
 template <typename Container>
-void Heap::QQmlSequence<Container>::init(QObject *object, int propertyIndex, bool readOnly)
+void Heap::QV4Sequence<Container>::init(QObject *object, int propertyIndex, bool readOnly)
 {
     Object::init();
     this->container = new Container;
@@ -641,7 +641,7 @@ void Heap::QQmlSequence<Container>::init(QObject *object, int propertyIndex, boo
     this->isReadOnly = readOnly;
     this->object.init(object);
     QV4::Scope scope(internalClass->engine);
-    QV4::Scoped<QV4::QQmlSequence<Container> > o(scope, this);
+    QV4::Scoped<QV4::QV4Sequence<Container> > o(scope, this);
     o->setArrayType(Heap::ArrayData::Custom);
     o->loadReference();
     o->init();
@@ -651,45 +651,45 @@ void Heap::QQmlSequence<Container>::init(QObject *object, int propertyIndex, boo
 
 namespace QV4 {
 
-typedef QQmlSequence<std::vector<int> > QQmlIntStdVectorList;
-DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlIntStdVectorList);
-typedef QQmlSequence<std::vector<qreal> > QQmlRealStdVectorList;
-DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlRealStdVectorList);
-typedef QQmlSequence<std::vector<bool> > QQmlBoolStdVectorList;
-DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlBoolStdVectorList);
-typedef QQmlSequence<QStringList> QQmlQStringList;
-DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlQStringList);
-typedef QQmlSequence<std::vector<QString> > QQmlStringStdVectorList;
-typedef QQmlSequence<QList<int> > QQmlIntList;
-DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlIntList);
-DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlStringStdVectorList);
-typedef QQmlSequence<QList<QUrl> > QQmlUrlList;
-DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlUrlList);
-typedef QQmlSequence<std::vector<QUrl> > QQmlUrlStdVectorList;
-DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlUrlStdVectorList);
+typedef QV4Sequence<std::vector<int> > QV4IntStdVectorList;
+DEFINE_OBJECT_TEMPLATE_VTABLE(QV4IntStdVectorList);
+typedef QV4Sequence<std::vector<qreal> > QV4RealStdVectorList;
+DEFINE_OBJECT_TEMPLATE_VTABLE(QV4RealStdVectorList);
+typedef QV4Sequence<std::vector<bool> > QV4BoolStdVectorList;
+DEFINE_OBJECT_TEMPLATE_VTABLE(QV4BoolStdVectorList);
+typedef QV4Sequence<QStringList> QV4QStringList;
+DEFINE_OBJECT_TEMPLATE_VTABLE(QV4QStringList);
+typedef QV4Sequence<std::vector<QString> > QV4StringStdVectorList;
+DEFINE_OBJECT_TEMPLATE_VTABLE(QV4StringStdVectorList);
+typedef QV4Sequence<QList<int> > QV4IntList;
+DEFINE_OBJECT_TEMPLATE_VTABLE(QV4IntList);
+typedef QV4Sequence<QList<QUrl> > QV4UrlList;
+DEFINE_OBJECT_TEMPLATE_VTABLE(QV4UrlList);
+typedef QV4Sequence<std::vector<QUrl> > QV4UrlStdVectorList;
+DEFINE_OBJECT_TEMPLATE_VTABLE(QV4UrlStdVectorList);
 #if QT_CONFIG(qml_itemmodel)
-typedef QQmlSequence<QModelIndexList> QQmlQModelIndexList;
-DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlQModelIndexList);
-typedef QQmlSequence<std::vector<QModelIndex> > QQmlQModelIndexStdVectorList;
-DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlQModelIndexStdVectorList);
-typedef QQmlSequence<QItemSelection> QQmlQItemSelectionRangeList;
-DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlQItemSelectionRangeList);
+typedef QV4Sequence<QModelIndexList> QV4QModelIndexList;
+DEFINE_OBJECT_TEMPLATE_VTABLE(QV4QModelIndexList);
+typedef QV4Sequence<std::vector<QModelIndex> > QV4QModelIndexStdVectorList;
+DEFINE_OBJECT_TEMPLATE_VTABLE(QV4QModelIndexStdVectorList);
+typedef QV4Sequence<QItemSelection> QV4QItemSelectionRangeList;
+DEFINE_OBJECT_TEMPLATE_VTABLE(QV4QItemSelectionRangeList);
 #endif
-typedef QQmlSequence<QList<bool> > QQmlBoolList;
-DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlBoolList);
-typedef QQmlSequence<QList<qreal> > QQmlRealList;
-DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlRealList);
+typedef QV4Sequence<QList<bool> > QV4BoolList;
+DEFINE_OBJECT_TEMPLATE_VTABLE(QV4BoolList);
+typedef QV4Sequence<QList<qreal> > QV4RealList;
+DEFINE_OBJECT_TEMPLATE_VTABLE(QV4RealList);
 
 }
 
-#define REGISTER_QML_SEQUENCE_METATYPE(unused, unused2, SequenceType, unused3) qRegisterMetaType<SequenceType>(#SequenceType);
+#define REGISTER_QV4_SEQUENCE_METATYPE(unused, unused2, SequenceType, unused3) qRegisterMetaType<SequenceType>(#SequenceType);
 void SequencePrototype::init()
 {
-    FOREACH_QML_SEQUENCE_TYPE(REGISTER_QML_SEQUENCE_METATYPE)
+    FOREACH_QV4_SEQUENCE_TYPE(REGISTER_QV4_SEQUENCE_METATYPE)
     defineDefaultProperty(QStringLiteral("sort"), method_sort, 1);
     defineDefaultProperty(engine()->id_valueOf(), method_valueOf, 0);
 }
-#undef REGISTER_QML_SEQUENCE_METATYPE
+#undef REGISTER_QV4_SEQUENCE_METATYPE
 
 ReturnedValue SequencePrototype::method_valueOf(const FunctionObject *f, const Value *thisObject, const Value *, int)
 {
@@ -707,12 +707,12 @@ ReturnedValue SequencePrototype::method_sort(const FunctionObject *b, const Valu
         return o.asReturnedValue();
 
 #define CALL_SORT(SequenceElementType, SequenceElementTypeName, SequenceType, DefaultValue) \
-        if (QQml##SequenceElementTypeName##List *s = o->as<QQml##SequenceElementTypeName##List>()) { \
+        if (QV4##SequenceElementTypeName##List *s = o->as<QV4##SequenceElementTypeName##List>()) { \
             if (!s->sort(b, thisObject, argv, argc)) \
                 THROW_TYPE_ERROR(); \
         } else
 
-        FOREACH_QML_SEQUENCE_TYPE(CALL_SORT)
+        FOREACH_QV4_SEQUENCE_TYPE(CALL_SORT)
 
 #undef CALL_SORT
         {}
@@ -726,13 +726,13 @@ ReturnedValue SequencePrototype::method_sort(const FunctionObject *b, const Valu
 
 bool SequencePrototype::isSequenceType(int sequenceTypeId)
 {
-    FOREACH_QML_SEQUENCE_TYPE(IS_SEQUENCE) { /* else */ return false; }
+    FOREACH_QV4_SEQUENCE_TYPE(IS_SEQUENCE) { /* else */ return false; }
 }
 #undef IS_SEQUENCE
 
 #define NEW_REFERENCE_SEQUENCE(ElementType, ElementTypeName, SequenceType, unused) \
     if (sequenceType == qMetaTypeId<SequenceType>()) { \
-        QV4::ScopedObject obj(scope, engine->memoryManager->allocate<QQml##ElementTypeName##List>(object, propertyIndex, readOnly)); \
+        QV4::ScopedObject obj(scope, engine->memoryManager->allocate<QV4##ElementTypeName##List>(object, propertyIndex, readOnly)); \
         return obj.asReturnedValue(); \
     } else
 
@@ -744,13 +744,13 @@ ReturnedValue SequencePrototype::newSequence(QV4::ExecutionEngine *engine, int s
     // (as well as object ptr + property index for updated-read and write-back)
     // and so access/mutate avoids variant conversion.
     *succeeded = true;
-    FOREACH_QML_SEQUENCE_TYPE(NEW_REFERENCE_SEQUENCE) { /* else */ *succeeded = false; return QV4::Encode::undefined(); }
+    FOREACH_QV4_SEQUENCE_TYPE(NEW_REFERENCE_SEQUENCE) { /* else */ *succeeded = false; return QV4::Encode::undefined(); }
 }
 #undef NEW_REFERENCE_SEQUENCE
 
 #define NEW_COPY_SEQUENCE(ElementType, ElementTypeName, SequenceType, unused) \
     if (sequenceType == qMetaTypeId<SequenceType>()) { \
-        QV4::ScopedObject obj(scope, engine->memoryManager->allocate<QQml##ElementTypeName##List>(v.value<SequenceType >())); \
+        QV4::ScopedObject obj(scope, engine->memoryManager->allocate<QV4##ElementTypeName##List>(v.value<SequenceType >())); \
         return obj.asReturnedValue(); \
     } else
 
@@ -763,25 +763,25 @@ ReturnedValue SequencePrototype::fromVariant(QV4::ExecutionEngine *engine, const
     // QObject property.
     int sequenceType = v.userType();
     *succeeded = true;
-    FOREACH_QML_SEQUENCE_TYPE(NEW_COPY_SEQUENCE) { /* else */ *succeeded = false; return QV4::Encode::undefined(); }
+    FOREACH_QV4_SEQUENCE_TYPE(NEW_COPY_SEQUENCE) { /* else */ *succeeded = false; return QV4::Encode::undefined(); }
 }
 #undef NEW_COPY_SEQUENCE
 
 #define SEQUENCE_TO_VARIANT(ElementType, ElementTypeName, SequenceType, unused) \
-    if (QQml##ElementTypeName##List *list = object->as<QQml##ElementTypeName##List>()) \
+    if (QV4##ElementTypeName##List *list = object->as<QV4##ElementTypeName##List>()) \
         return list->toVariant(); \
     else
 
 QVariant SequencePrototype::toVariant(Object *object)
 {
     Q_ASSERT(object->isListType());
-    FOREACH_QML_SEQUENCE_TYPE(SEQUENCE_TO_VARIANT) { /* else */ return QVariant(); }
+    FOREACH_QV4_SEQUENCE_TYPE(SEQUENCE_TO_VARIANT) { /* else */ return QVariant(); }
 }
 
 #undef SEQUENCE_TO_VARIANT
 #define SEQUENCE_TO_VARIANT(ElementType, ElementTypeName, SequenceType, unused) \
     if (typeHint == qMetaTypeId<SequenceType>()) { \
-        return QQml##ElementTypeName##List::toVariant(a); \
+        return QV4##ElementTypeName##List::toVariant(a); \
     } else
 
 QVariant SequencePrototype::toVariant(const QV4::Value &array, int typeHint, bool *succeeded)
@@ -795,32 +795,32 @@ QVariant SequencePrototype::toVariant(const QV4::Value &array, int typeHint, boo
     QV4::Scope scope(array.as<Object>()->engine());
     QV4::ScopedArrayObject a(scope, array);
 
-    FOREACH_QML_SEQUENCE_TYPE(SEQUENCE_TO_VARIANT) { /* else */ *succeeded = false; return QVariant(); }
+    FOREACH_QV4_SEQUENCE_TYPE(SEQUENCE_TO_VARIANT) { /* else */ *succeeded = false; return QVariant(); }
 }
 
 #undef SEQUENCE_TO_VARIANT
 
 #define SEQUENCE_GET_RAWCONTAINERPTR(ElementType, ElementTypeName, SequenceType, unused) \
-    if (const QQml##ElementTypeName##List *list = [&]() -> const QQml##ElementTypeName##List* \
-        { if (typeHint == qMetaTypeId<SequenceType>()) return object->as<QQml##ElementTypeName##List>(); return nullptr;}()) \
+    if (const QV4##ElementTypeName##List *list = [&]() -> const QV4##ElementTypeName##List* \
+        { if (typeHint == qMetaTypeId<SequenceType>()) return object->as<QV4##ElementTypeName##List>(); return nullptr;}()) \
         return list->getRawContainerPtr(); \
     else
 
 void* SequencePrototype::getRawContainerPtr(const Object *object, int typeHint)
 {
-    FOREACH_QML_SEQUENCE_TYPE(SEQUENCE_GET_RAWCONTAINERPTR) { /* else */ return nullptr; }
+    FOREACH_QV4_SEQUENCE_TYPE(SEQUENCE_GET_RAWCONTAINERPTR) { /* else */ return nullptr; }
 }
 
 #undef SEQUENCE_GET_RAWCONTAINERPTR
 
 #define MAP_META_TYPE(ElementType, ElementTypeName, SequenceType, unused) \
-    if (object->as<QQml##ElementTypeName##List>()) { \
+    if (object->as<QV4##ElementTypeName##List>()) { \
         return qMetaTypeId<SequenceType>(); \
     } else
 
 int SequencePrototype::metaTypeForSequence(const QV4::Object *object)
 {
-    FOREACH_QML_SEQUENCE_TYPE(MAP_META_TYPE)
+    FOREACH_QV4_SEQUENCE_TYPE(MAP_META_TYPE)
     /*else*/ {
         return -1;
     }
