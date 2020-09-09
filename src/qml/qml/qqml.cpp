@@ -433,6 +433,9 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
     case CompositeSingletonRegistration:
         dtype = QQmlMetaType::registerCompositeSingletonType(*reinterpret_cast<RegisterCompositeSingletonType *>(data));
         break;
+    case SequentialContainerRegistration:
+        dtype = QQmlMetaType::registerSequentialContainer(*reinterpret_cast<RegisterSequentialContainer *>(data));
+        break;
     default:
         return -1;
     }
@@ -453,6 +456,9 @@ void QQmlPrivate::qmlunregister(RegistrationType type, quintptr data)
     case QmlUnitCacheHookRegistration:
         QQmlMetaType::removeCachedUnitLookupFunction(
                 reinterpret_cast<QmlUnitCacheLookupFunction>(data));
+        break;
+    case SequentialContainerRegistration:
+        QQmlMetaType::unregisterSequentialContainer(data);
         break;
     case TypeRegistration:
     case InterfaceRegistration:

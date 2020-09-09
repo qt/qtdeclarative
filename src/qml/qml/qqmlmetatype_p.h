@@ -242,6 +242,10 @@ public:
     static int registerAutoParentFunction(const QQmlPrivate::RegisterAutoParent &autoparent);
     static void unregisterAutoParentFunction(const QQmlPrivate::AutoParentFunction &function);
 
+    static QQmlType registerSequentialContainer(
+            const QQmlPrivate::RegisterSequentialContainer &sequenceRegistration);
+    static void unregisterSequentialContainer(int id);
+
     static int registerUnitCacheHook(const QQmlPrivate::RegisterQmlUnitCacheHook &hookRegistration);
     static void clearTypeRegistrations();
 

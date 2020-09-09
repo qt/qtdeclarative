@@ -45,6 +45,7 @@
 
 #include <QtCore/qbytearray.h>
 #include <QtCore/qmetaobject.h>
+#include <QtCore/qmetacontainer.h>
 #include <QtCore/qversionnumber.h>
 
 #define QML_VERSION     0x020000
@@ -756,6 +757,21 @@ inline int qmlRegisterType(const QUrl &url, const char *uri, int versionMajor, i
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::CompositeRegistration, &type);
+}
+
+template<typename Container>
+inline int qmlRegisterAnonymousSequentialContainer(const char *uri, int versionMajor)
+{
+    QQmlPrivate::RegisterSequentialContainer type = {
+        0,
+        uri,
+        QTypeRevision::fromMajorVersion(versionMajor),
+        nullptr,
+        QMetaType::fromType<Container>(),
+        QMetaSequence::fromContainer<Container>()
+    };
+
+    return QQmlPrivate::qmlregister(QQmlPrivate::SequentialContainerRegistration, &type);
 }
 
 template<class T, class Resolved, class Extended, bool Singleton, bool Interface>

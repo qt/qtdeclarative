@@ -66,6 +66,7 @@
 #include <QtCore/qversionnumber.h>
 
 #include <QtCore/qmetaobject.h>
+#include <QtCore/qmetacontainer.h>
 #include <QtCore/qdebug.h>
 
 QT_BEGIN_NAMESPACE
@@ -460,6 +461,15 @@ namespace QQmlPrivate
         const char *typeName;
     };
 
+    struct RegisterSequentialContainer {
+        int structVersion;
+        const char *uri;
+        QTypeRevision version;
+        const char *typeName;
+        QMetaType typeId;
+        QMetaSequence metaSequence;
+    };
+
     struct AOTCompiledFunction {
         int index;
         QMetaType returnType;
@@ -487,7 +497,8 @@ namespace QQmlPrivate
         CompositeSingletonRegistration = 5,
         QmlUnitCacheHookRegistration = 6,
         TypeAndRevisionsRegistration = 7,
-        SingletonAndRevisionsRegistration = 8
+        SingletonAndRevisionsRegistration = 8,
+        SequentialContainerRegistration = 9,
     };
 
     int Q_QML_EXPORT qmlregister(RegistrationType, void *);

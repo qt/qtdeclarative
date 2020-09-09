@@ -149,11 +149,14 @@ public:
         int objectId = -1;
     };
 
+    using QQmlSequenceTypeData = QMetaSequence;
+
     union extraData {
         QQmlCppTypeData* cd;
         QQmlSingletonTypeData* sd;
         QQmlCompositeTypeData* fd;
         QQmlInlineTypeData* id;
+        QQmlSequenceTypeData* ld;
     } extraData;
 
     const char *iid;

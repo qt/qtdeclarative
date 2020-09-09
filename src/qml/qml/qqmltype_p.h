@@ -125,6 +125,7 @@ public:
     bool isCompositeSingleton() const;
     bool isQObjectSingleton() const;
     bool isQJSValueSingleton() const;
+    bool isSequentialContainer() const;
 
     QMetaType typeId() const;
     QMetaType qListTypeId() const;
@@ -184,6 +185,7 @@ public:
         CompositeType = 3,
         CompositeSingletonType = 4,
         InlineComponentType = 5,
+        SequentialContainerType = 6,
         AnyRegistrationType = 255
     };
 

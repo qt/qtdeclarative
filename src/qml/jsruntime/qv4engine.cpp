@@ -709,6 +709,8 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     static_cast<VariantPrototype *>(variantPrototype())->init();
 
 #if QT_CONFIG(qml_sequence_object)
+    static const bool registered = QV4::SequencePrototype::registerDefaultTypes();
+    Q_UNUSED(registered);
     sequencePrototype()->cast<SequencePrototype>()->init();
 #endif
 

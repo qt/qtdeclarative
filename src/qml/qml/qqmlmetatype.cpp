@@ -389,6 +389,8 @@ QString registrationTypeString(QQmlType::RegistrationType typeType)
         typeStr = QStringLiteral("singleton type");
     else if (typeType == QQmlType::CompositeSingletonType)
         typeStr = QStringLiteral("composite singleton type");
+    else if (typeType == QQmlType::SequentialContainerType)
+        typeStr = QStringLiteral("sequential container type");
     else
         typeStr = QStringLiteral("type");
     return typeStr;
@@ -464,8 +466,10 @@ void addTypeToData(QQmlTypePrivate *type, QQmlMetaTypeData *data)
 
     if (type->typeId.isValid()) {
         data->idToType.insert(type->typeId.id(), type);
-        if (type->typeId.flags() & QMetaType::PointerToQObject)
+        if (type->typeId.flags() & QMetaType::PointerToQObject
+                && type->regType != QQmlType::RegistrationType::SequentialContainerType) {
             data->objects.insert(type->typeId.id());
+        }
     }
 
     if (type->listId.isValid()) {
@@ -646,6 +650,39 @@ int QQmlMetaType::registerUnitCacheHook(
     QQmlMetaTypeDataPtr data;
     data->lookupCachedQmlUnit << hookRegistration.lookupCachedQmlUnit;
     return 0;
+}
+
+QQmlType QQmlMetaType::registerSequentialContainer(
+        const QQmlPrivate::RegisterSequentialContainer &container)
+{
+    if (container.structVersion > 0)
+        qFatal("qmlRegisterSequenceContainer(): Cannot mix incompatible QML versions.");
+
+    QQmlMetaTypeDataPtr data;
+
+    if (!checkRegistration(QQmlType::SequentialContainerType, data, container.uri, QString(),
+                           container.version, {})) {
+        return QQmlType();
+    }
+
+    QQmlTypePrivate *priv = new QQmlTypePrivate(QQmlType::SequentialContainerType);
+
+    data->registerType(priv);
+    priv->setName(QString::fromUtf8(container.uri), QString());
+    priv->version = container.version;
+    priv->typeId = container.typeId;
+    *priv->extraData.ld = container.metaSequence;
+
+    addTypeToData(priv, data);
+    if (!container.typeId.isValid())
+        data->idToType.insert(priv->typeId.id(), priv);
+
+    return QQmlType(priv);
+}
+
+void QQmlMetaType::unregisterSequentialContainer(int id)
+{
+    unregisterType(id);
 }
 
 bool QQmlMetaType::protectModule(const QString &uri, QTypeRevision version, bool protectAllVersions)

@@ -89,6 +89,10 @@
 #include <private/qqmlplatform_p.h>
 #include <private/qqmlloggingcategory_p.h>
 
+#if QT_CONFIG(qml_sequence_object)
+#include <private/qv4sequenceobject_p.h>
+#endif
+
 #ifdef Q_OS_WIN // for %APPDATA%
 #  include <qt_windows.h>
 #  include <shlobj.h>

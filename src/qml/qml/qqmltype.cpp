@@ -87,6 +87,9 @@ QQmlTypePrivate::QQmlTypePrivate(QQmlType::RegistrationType type)
     case QQmlType::InlineComponentType:
         extraData.id = new QQmlInlineTypeData;
         break;
+    case QQmlType::SequentialContainerType:
+        extraData.ld = new QQmlSequenceTypeData;
+        break;
     default: qFatal("QQmlTypePrivate Internal Error.");
     }
 }
@@ -111,6 +114,9 @@ QQmlTypePrivate::~QQmlTypePrivate()
         break;
     case QQmlType::InlineComponentType:
         delete  extraData.id;
+        break;
+    case QQmlType::SequentialContainerType:
+        delete extraData.ld;
         break;
     default: //Also InterfaceType, because it has no extra data
         break;
@@ -584,6 +590,11 @@ bool QQmlType::isQObjectSingleton() const
 bool QQmlType::isQJSValueSingleton() const
 {
     return d && d->regType == SingletonType && d->extraData.sd->singletonInstanceInfo->scriptCallback;
+}
+
+bool QQmlType::isSequentialContainer() const
+{
+    return d && d->regType == SequentialContainerType;
 }
 
 QMetaType QQmlType::typeId() const
