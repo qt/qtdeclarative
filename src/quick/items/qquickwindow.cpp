@@ -4395,6 +4395,12 @@ QQmlIncubationController *QQuickWindow::incubationController() const
 
     This signal is emitted before the scene graph is synchronized with the QML state.
 
+    Even though the signal is emitted from the scene graph rendering thread,
+    the GUI thread is guaranteed to be blocked, like it is in
+    QQuickItem::updatePaintNode(). Therefore, it is safe to access GUI thread
+    thread data in a slot or lambda that is connected with
+    Qt::DirectConnection.
+
     This signal can be used to do any preparation required before calls to
     QQuickItem::updatePaintNode().
 
