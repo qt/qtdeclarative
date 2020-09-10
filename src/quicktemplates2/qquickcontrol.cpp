@@ -159,9 +159,6 @@ QQuickControlPrivate::QQuickControlPrivate()
 
 QQuickControlPrivate::~QQuickControlPrivate()
 {
-#if QT_CONFIG(accessibility)
-    QAccessible::removeActivationObserver(this);
-#endif
 }
 
 void QQuickControlPrivate::init()
@@ -883,6 +880,9 @@ QQuickControl::~QQuickControl()
     Q_D(QQuickControl);
     d->removeImplicitSizeListener(d->background, QQuickControlPrivate::ImplicitSizeChanges | QQuickItemPrivate::Geometry);
     d->removeImplicitSizeListener(d->contentItem);
+#if QT_CONFIG(accessibility)
+    QAccessible::removeActivationObserver(d);
+#endif
 }
 
 void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &value)
