@@ -52,6 +52,7 @@
 #define D3D11SQUIRCLE_H
 
 #include <QtQuick/QQuickItem>
+#include <QtQuick/QQuickWindow>
 
 class SquircleRenderer;
 

@@ -52,6 +52,7 @@
 #define METALSQUIRCLE_H
 
 #include <QtQuick/QQuickItem>
+#include <QtQuick/QQuickWindow>
 
 class SquircleRenderer;
 
