@@ -147,7 +147,7 @@ public:
 
     void updateFont(const QFont &f);
     inline void setFont_helper(const QFont &f) {
-        if (font.resolve() == f.resolve() && font == f)
+        if (font.resolveMask() == f.resolveMask() && font == f)
             return;
         updateFont(f);
     }
@@ -611,7 +611,7 @@ QFont QQuickApplicationWindow::font() const
 void QQuickApplicationWindow::setFont(const QFont &font)
 {
     Q_D(QQuickApplicationWindow);
-    if (d->font.resolve() == font.resolve() && d->font == font)
+    if (d->font.resolveMask() == font.resolveMask() && d->font == font)
         return;
 
     QFont resolvedFont = font.resolve(QQuickTheme::font(QQuickTheme::System));

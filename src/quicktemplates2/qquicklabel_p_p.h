@@ -93,7 +93,7 @@ public:
     void inheritFont(const QFont &font);
     void updateFont(const QFont &font);
     inline void setFont_helper(const QFont &font) {
-        if (sourceFont.resolve() == font.resolve() && sourceFont == font)
+        if (sourceFont.resolveMask() == font.resolveMask() && sourceFont == font)
             return;
         updateFont(font);
     }

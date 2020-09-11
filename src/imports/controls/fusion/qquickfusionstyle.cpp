@@ -149,3 +149,5 @@ QColor QQuickFusionStyle::grooveColor(QQuickPalette *palette)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickfusionstyle_p.cpp"

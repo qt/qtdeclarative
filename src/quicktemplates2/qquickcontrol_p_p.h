@@ -139,7 +139,7 @@ public:
     void updateFont(const QFont &font);
     static void updateFontRecur(QQuickItem *item, const QFont &font);
     inline void setFont_helper(const QFont &font) {
-        if (resolvedFont.resolve() == font.resolve() && resolvedFont == font)
+        if (resolvedFont.resolveMask() == font.resolveMask() && resolvedFont == font)
             return;
         updateFont(font);
     }

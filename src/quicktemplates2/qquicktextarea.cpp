@@ -260,7 +260,7 @@ void QQuickTextAreaPrivate::resolveFont()
 void QQuickTextAreaPrivate::inheritFont(const QFont &font)
 {
     QFont parentFont = extra.isAllocated() ? extra->requestedFont.resolve(font) : font;
-    parentFont.resolve(extra.isAllocated() ? extra->requestedFont.resolve() | font.resolve() : font.resolve());
+    parentFont.setResolveMask(extra.isAllocated() ? extra->requestedFont.resolveMask() | font.resolveMask() : font.resolveMask());
 
     const QFont defaultFont = QQuickTheme::font(QQuickTheme::TextArea);
     QFont resolvedFont = parentFont.resolve(defaultFont);
@@ -569,7 +569,7 @@ QFont QQuickTextArea::font() const
 void QQuickTextArea::setFont(const QFont &font)
 {
     Q_D(QQuickTextArea);
-    if (d->extra.value().requestedFont.resolve() == font.resolve() && d->extra.value().requestedFont == font)
+    if (d->extra.value().requestedFont.resolveMask() == font.resolveMask() && d->extra.value().requestedFont == font)
         return;
 
     d->extra.value().requestedFont = font;

@@ -131,7 +131,7 @@ QFont QQuickTheme::font(Scope scope)
     if (font) {
         QFont f = *font;
         if (scope == System)
-            f.resolve(0);
+            f.setResolveMask(0);
         return f;
     }
 
@@ -152,7 +152,7 @@ QPalette QQuickTheme::palette(Scope scope)
     if (palette) {
         QPalette f = *palette;
         if (scope == System)
-            f.resolve(0);
+            f.setResolveMask(0);
         return f;
     }
 
