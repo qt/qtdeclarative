@@ -135,7 +135,7 @@ public:
 
 #if QT_CONFIG(quick_shadereffect)
 
-class QQuickItemLayer : public QObject, public QQuickItemChangeListener
+class Q_QUICK_PRIVATE_EXPORT QQuickItemLayer : public QObject, public QQuickItemChangeListener
 {
     Q_OBJECT
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
