@@ -3,7 +3,9 @@ Accept-Language: en-US
 If-Match: "ETagNumber"
 Content-Type: application/example
 Content-Length: 247
-Connection: Keep-Alive
+Connection: Keep-Alive, Upgrade, HTTP2-Settings
+Upgrade: h2c
+HTTP2-Settings: {{Ignore}}
 Accept-Encoding: {{Ignore}}
 User-Agent: Mozilla/5.0
 Host: {{ServerHostUrl}}

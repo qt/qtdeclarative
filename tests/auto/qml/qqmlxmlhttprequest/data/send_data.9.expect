@@ -1,6 +1,8 @@
 OPTIONS /testdocument.html HTTP/1.1
 Content-Length: 0
-Connection: Keep-Alive
+Connection: Keep-Alive, Upgrade, HTTP2-Settings
+Upgrade: h2c
+HTTP2-Settings: {{Ignore}}
 Accept-Encoding: {{Ignore}}
 Accept-Language: en-US,*
 User-Agent: Mozilla/5.0

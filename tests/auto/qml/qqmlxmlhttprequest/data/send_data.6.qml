@@ -17,6 +17,6 @@ QtObject {
             }
         }
 
-        x.send("My Sent Data");
+        x.send("My Sent Data\n");
     }
 }

@@ -17,7 +17,7 @@ QtObject {
             }
         }
 
-        var data = new Uint8Array([1, 2, 3, 0, 3, 2, 1])
+        var data = new Uint8Array([1, 2, 3, 0, 3, 2, 1, 10])
         x.send(data.buffer);
     }
 }

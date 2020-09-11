@@ -1280,9 +1280,15 @@ void tst_qqmlxmlhttprequest::sendPropfind_data()
     QTest::addColumn<QString>("replyHeader");
     QTest::addColumn<QString>("replyBody");
 
-    QTest::newRow("Send PROPFIND for file (bigbox, author, DingALing, Random properties). Get response with responseXML.") << "sendPropfind.responseXML.qml" << "/file" << "propfind.file.expect" << "propfind.file.reply.header" << "propfind.file.reply.body";
-    QTest::newRow("Send PROPFIND for file (bigbox, author, DingALing, Random properties). Get response with response.") << "sendPropfind.response.qml" << "/file" << "propfind.file.expect" << "propfind.file.reply.header" << "propfind.file.reply.body";
-    QTest::newRow("Send PROPFIND \"allprop\" request for collection.") << "sendPropfind.collection.allprop.qml" << "/container/" << "propfind.collection.allprop.expect" << "propfind.file.reply.header" << "propfind.collection.allprop.reply.body";
+    QTest::newRow("Send PROPFIND for file (bigbox, author, DingALing, Random properties). Get response with responseXML.")
+            << "sendPropfind.responseXML.qml" << "/file" << "propfind.file.expect"
+            << "propfind.file.reply.header" << "propfind.file.reply.body";
+    QTest::newRow("Send PROPFIND for file (bigbox, author, DingALing, Random properties). Get response with response.")
+            << "sendPropfind.response.qml" << "/file" << "propfind.file.expect"
+            << "propfind.file.reply.header" << "propfind.file.reply.body";
+    QTest::newRow("Send PROPFIND \"allprop\" request for collection.")
+            << "sendPropfind.collection.allprop.qml" << "/container/" << "propfind.collection.allprop.expect"
+            << "propfind.file.reply.header" << "propfind.collection.allprop.reply.body";
 }
 
 // Test that calling hte XMLHttpRequest methods on a non-XMLHttpRequest object

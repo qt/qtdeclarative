@@ -1,8 +1,10 @@
 PUT /testdocument.html HTTP/1.1
 Accept-Language: en-US
 Content-Type: text/plain;charset=UTF-8
-Content-Length: 12
-Connection: Keep-Alive
+Content-Length: 13
+Connection: Keep-Alive, Upgrade, HTTP2-Settings
+Upgrade: h2c
+HTTP2-Settings: {{Ignore}}
 Accept-Encoding: {{Ignore}}
 User-Agent: Mozilla/5.0
 Host: {{ServerHostUrl}}

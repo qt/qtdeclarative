@@ -37,7 +37,7 @@ QtObject {
         }
         x.open("PUT", url);
         x.setRequestHeader("Accept-Language", "en-US");
-        x.send("Test Data");
+        x.send("Test Data\n");
     }
 }
 
