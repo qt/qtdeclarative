@@ -118,9 +118,14 @@ namespace QQuickVisualTestUtil
     class QQuickApplicationHelper
     {
     public:
-        QQuickApplicationHelper(QQmlDataTest *testCase, const QString &testFilePath) :
-            component(&engine)
+        QQuickApplicationHelper(QQmlDataTest *testCase, const QString &testFilePath,
+                const QStringList &qmlImportPaths = QStringList())
         {
+            for (const auto &path : qmlImportPaths)
+                engine.addImportPath(path);
+
+            QQmlComponent component(&engine);
+
             component.loadUrl(testCase->testFileUrl(testFilePath));
             QObject *rootObject = component.create();
             cleanup.reset(rootObject);
@@ -152,7 +157,6 @@ namespace QQuickVisualTestUtil
         }
 
         QQmlEngine engine;
-        QQmlComponent component;
         QScopedPointer<QObject> cleanup;
         QQuickApplicationWindow *appWindow = nullptr;
         QQuickWindow *window = nullptr;

@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,47 +34,44 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKSTYLEPLUGIN_P_H
-#define QQUICKSTYLEPLUGIN_P_H
+#include <QtCore/qregularexpression.h>
+#include <QtTest/qtest.h>
+#include <QtQml/qqmlcomponent.h>
+#include <QtQml/qqmlcontext.h>
+#include <QtQml/qqmlapplicationengine.h>
+#include <QtQml/qqmlengine.h>
+#include <QtQml/private/qqmlmetatype_p.h>
+#include <QtQuick/qquickwindow.h>
+#include <QtQuickControls2/qquickstyle.h>
+#include <QtQuickControls2/private/qquickstyle_p.h>
+#include <QtQuickTemplates2/private/qquickbutton_p.h>
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#include "../shared/util.h"
+#include "../shared/visualtestutil.h"
 
-#include <QtQml/qqmlextensionplugin.h>
-#include <QtQuickControls2/qtquickcontrols2global.h>
+using namespace QQuickVisualTestUtil;
 
-QT_BEGIN_NAMESPACE
-
-class QQuickTheme;
-
-class Q_QUICKCONTROLS2_EXPORT QQuickStylePlugin : public QQmlExtensionPlugin
+class tst_StyleImportsCompileTimeMaterial : public QQmlDataTest
 {
     Q_OBJECT
 
-public:
-    explicit QQuickStylePlugin(QObject *parent = nullptr);
-    ~QQuickStylePlugin();
-
-    virtual QString name() const = 0;
-    virtual void initializeTheme(QQuickTheme *theme) = 0;
-
-    void registerTypes(const char *uri) override;
-    void unregisterTypes() override;
-
-private:
-    QQuickTheme *createTheme(const QString &name);
-
-    Q_DISABLE_COPY(QQuickStylePlugin)
+private slots:
+    void importMaterialStyleWithoutControls();
 };
 
-QT_END_NAMESPACE
+void tst_StyleImportsCompileTimeMaterial::importMaterialStyleWithoutControls()
+{
+    QQuickApplicationHelper helper(this, QLatin1String("importMaterialStyleWithoutControls.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
 
-#endif // QQUICKSTYLEPLUGIN_P_H
+    auto button = helper.window->property("button").value<QQuickButton*>();
+    QVERIFY(button);
+    // The Material style sets a size 14 font for Button.
+    QCOMPARE(button->font().pixelSize(), 14);
+    const QTypeRevision latestControlsRevision = QQmlMetaType::latestModuleVersion(QLatin1String("QtQuick.Controls"));
+    QVERIFY2(!latestControlsRevision.isValid(), "QtQuick.Controls should not be imported when using compile-time style selection");
+}
+
+QTEST_MAIN(tst_StyleImportsCompileTimeMaterial)
+
+#include "tst_styleimportscompiletimematerial.moc"

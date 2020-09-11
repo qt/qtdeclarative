@@ -30,4 +30,6 @@ SUBDIRS += \
     sanity \
     snippets \
     styleimports \
+    styleimportscompiletimematerial \
+    styleimportscompiletimeqmlonly \
     translation

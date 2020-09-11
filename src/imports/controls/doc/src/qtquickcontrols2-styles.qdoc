@@ -69,23 +69,62 @@
 
     \section1 Using Styles in Qt Quick Controls
 
-    In order to run an application with a specific style, either configure the
-    style using \l[CPP]{QQuickStyle} in C++, pass a command line argument, or set an
-    environment variable. Alternatively, the preferred style and style-specific
-    attributes can be specified in a configuration file.
+    There are two ways of using styles in Qt Quick Controls:
+    run-time style selection and compile-time style selection.
 
-    The priority of these approaches follows the order they are listed below,
+    \section2 Compile-Time Style Selection
+
+    Compile-time style selection involves using QML imports to specify the
+    style. For example, to import the Material style:
+
+    \qml
+    import QtQuick.Controls.Material
+
+    ApplicationWindow {
+        // ...
+    }
+    \endqml
+
+    Notice that QtQuick.Controls (which is responsible for run-time style
+    selection) is not imported. The fallback style is specified by the qmldir
+    of the style:
+
+    \badcode
+    module QtQuick.Controls.Material
+    # ...
+    import QtQuick.Controls.Basic auto
+    \endcode
+
+    The benefit of compile-time style selection is that the QtQuick.Controls plugin
+    is not used and therefore does not need to be deployed with the application.
+
+    \section2 Run-Time Style Selection
+
+    Run-time style selection involves importing \c QtQuick.Controls:
+
+    \qml
+    import QtQuick.Controls
+    \endqml
+
+    The QtQuick.Controls plugin will import the style and fallback
+    style that were set at runtime via one of the following approaches:
+
+    \list
+    \li \l[CPP]{QQuickStyle::setStyle()}
+    \li The \c -style command line argument
+    \li The \c QT_QUICK_CONTROLS_STYLE environment variable
+    \li The \c qtquickcontrols2.conf configuration file
+    \endlist
+
+    The priority of these approaches follows the order they are listed,
     from highest to lowest. That is, using \c QQuickStyle to set the style will
     always take priority over using the command line argument, for example.
 
-    \warning When resolving a given style name to an absolute path, \c QQuickStyle
-    may search the root resource directory (\c {:}). Consequently, make sure
-    that your resource directories are named differently than the names of the
-    styles that your application supports. Otherwise, the styles may not load.
-    For example, avoid naming a resource directory \c :/material
-    (or \c {:/Material}) if the application supports the Material style.
+    The benefit of run-time style selection is that a single application binary
+    can support multiple styles, meaning that the end user can choose which
+    style to run the application with.
 
-    \section2 Using QQuickStyle in C++
+    \section3 Using QQuickStyle in C++
 
     \l[CPP]{QQuickStyle} provides C++ API for configuring a specific
     style. The following example runs a Qt Quick Controls application
@@ -98,7 +137,7 @@
     See the detailed description of \l[CPP]{QQuickStyle} for more
     details.
 
-    \section2 Command line argument
+    \section3 Command line argument
 
     Passing a \c -style command line argument is the convenient way to test different
     styles. It takes precedence over the other methods listed below. The following
@@ -108,7 +147,7 @@
     ./app -style material
     \endcode
 
-    \section2 Environment variable
+    \section3 Environment variable
 
     Setting the \c QT_QUICK_CONTROLS_STYLE environment variable can be used to set
     a system-wide style preference. It takes precedence over the configuration file
@@ -122,7 +161,7 @@
     See \l {Supported Environment Variables in Qt Quick Controls} for the full list
     of supported environment variables.
 
-    \section2 Configuration file
+    \section3 Configuration file
 
     Qt Quick Controls support a special configuration file, \c :/qtquickcontrols2.conf,
     that is built into an application's resources.

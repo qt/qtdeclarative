@@ -91,6 +91,9 @@ Q_LOGGING_CATEGORY(lcQtQuickControlsStyle, "qt.quick.controls.style")
     Qt Quick Controls. It is not possible to change the style after the QML
     types have been registered.
 
+    \note QQuickStyle is not supported when using
+    \l {Compile-Time Style Selection}{compile-time style selection}.
+
     To create your own custom style, see \l {Creating a Custom Style}. Custom
     styles do not need to implement all controls. By default, the styling
     system uses the \l {Basic style} as a fallback for controls that a custom

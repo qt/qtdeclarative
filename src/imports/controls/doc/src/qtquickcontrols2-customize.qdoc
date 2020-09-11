@@ -111,9 +111,9 @@
 
     \section2 Definition of a Style
 
-    In Qt Quick Controls, a style is essentially an interchangeable set of
-    QML files within a single directory. There are four requirements for a style
-    to be \l {Using Styles in Qt Quick Controls}{usable}:
+    In Qt Quick Controls, a style is essentially a set of QML files within a
+    single directory. There are four requirements for a style to be
+    \l {Using Styles in Qt Quick Controls}{usable}:
 
     \list
     \li At least one QML file whose name matches a control (for example,
@@ -133,6 +133,17 @@
         module MyStyle
         Button 2.15 Button.qml
         \endcode
+
+        If you're using \l {Compile-Time Style Selection}{compile-time style
+        selection}, the qmldir should also import the fallback style:
+
+        \badcode
+        # ...
+        import QtQuick.Controls.Basic auto
+        \endcode
+
+        This can also be done for \l {Run-Time Style Selection}{run-time style selection}
+        instead of using, for example, \l QQuickStyle::setFallbackStyle().
 
         The directory structure for such a style looks like this:
 

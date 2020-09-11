@@ -61,9 +61,6 @@ private slots:
 
     void platformSelectors();
 
-    void importStyleWithoutControls_data();
-    void importStyleWithoutControls();
-
     void fallbackStyleShouldNotOverwriteTheme_data();
     void fallbackStyleShouldNotOverwriteTheme();
 };
@@ -206,44 +203,6 @@ void tst_StyleImports::platformSelectors()
 #else
     QCOMPARE(button->objectName(), "PlatformStyle/Button.qml");
 #endif
-}
-
-void tst_StyleImports::importStyleWithoutControls_data()
-{
-    QTest::addColumn<QString>("style");
-
-    const auto builtInStyles = QQuickStylePrivate::builtInStyles();
-    for (const auto &styleName : builtInStyles)
-        QTest::addRow(qPrintable(styleName)) << styleName;
-}
-
-// Tests that warnings are printed when trying to import a specific style without first importing QtQuick.Controls.
-void tst_StyleImports::importStyleWithoutControls()
-{
-    QFETCH(QString, style);
-
-    QQmlApplicationEngine engine;
-    const QUrl url(testFileUrl(QString::fromLatin1("import%1StyleWithoutControls.qml").arg(style)));
-    bool success = false;
-
-    // Account for extra warnings for fallback styles.
-    QTest::ignoreMessage(QtWarningMsg, QRegularExpression("QtQuick.Controls must be imported before importing.*Basic"));
-    if (style == QLatin1String("macOS"))
-        QTest::ignoreMessage(QtWarningMsg, QRegularExpression("QtQuick.Controls must be imported before importing.*Fusion"));
-
-    // Account for the warning for the current style.
-    if (style != QLatin1String("Basic"))
-        QTest::ignoreMessage(QtWarningMsg, QRegularExpression("QtQuick.Controls must be imported before importing.*" + style));
-
-    QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
-                     this, [url, &success](QObject *obj, const QUrl &objUrl) {
-        if (url == objUrl)
-            success = obj;
-    }, Qt::QueuedConnection);
-
-    engine.load(url);
-    // It should load, but with warnings.
-    QTRY_VERIFY(success);
 }
 
 void tst_StyleImports::fallbackStyleShouldNotOverwriteTheme_data()

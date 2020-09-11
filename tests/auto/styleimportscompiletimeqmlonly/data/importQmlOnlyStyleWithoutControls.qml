@@ -48,10 +48,17 @@
 **
 ****************************************************************************/
 
-import QtQuick.Controls.Basic
+import QmlOnly
 
 ApplicationWindow {
     title: "Test Application Window"
     width: 400
     height: 400
+
+    property alias button: button
+
+    Button {
+        id: button
+        text: "QmlOnly Button"
+    }
 }

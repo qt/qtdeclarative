@@ -48,10 +48,17 @@
 **
 ****************************************************************************/
 
-import QtQuick.Controls.Windows
+import QtQuick.Controls.Material
 
 ApplicationWindow {
     title: "Test Application Window"
     width: 400
     height: 400
+
+    property alias button: button
+
+    Button {
+        id: button
+        text: "Material Button"
+    }
 }
