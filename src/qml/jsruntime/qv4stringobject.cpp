@@ -208,7 +208,6 @@ ReturnedValue StringCtor::method_fromCharCode(const FunctionObject *b, const Val
         *ch = QChar(argv[i].toUInt16());
         ++ch;
     }
-    *ch = 0;
     return Encode(b->engine()->newString(str));
 }
 
@@ -235,7 +234,6 @@ ReturnedValue StringCtor::method_fromCodePoint(const FunctionObject *f, const Va
         }
         ++ch;
     }
-    *ch = 0;
     result.truncate(ch - result.constData());
     return e->newString(result)->asReturnedValue();
 }
