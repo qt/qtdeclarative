@@ -265,9 +265,7 @@ public:
     int propType() const { Q_ASSERT(isFullyResolved()); return m_propType; }
     void setPropType(int pt)
     {
-        Q_ASSERT(pt >= 0);
-        Q_ASSERT(pt <= std::numeric_limits<qint16>::max());
-        m_propType = quint16(pt);
+        m_propType = pt;
     }
 
     int notifyIndex() const { return m_notifyIndex; }
@@ -403,8 +401,8 @@ private:
     bool notFullyResolved() const { return m_flags.notFullyResolved; }
 
     Flags m_flags;
+    int m_propType = 0;
     qint16 m_coreIndex = -1;
-    quint16 m_propType = 0;
 
     // The notify index is in the range returned by QObjectPrivate::signalIndex().
     // This is different from QMetaMethod::methodIndex().
@@ -412,7 +410,6 @@ private:
     qint16 m_overrideIndex = -1;
 
     qint16 m_metaObjectOffset = -1;
-    quint16 m_reserved = 0;
 
     QTypeRevision m_revision = QTypeRevision::zero();
     QTypeRevision m_typeVersion = QTypeRevision::zero();
@@ -429,7 +426,6 @@ private:
 
 bool QQmlPropertyData::operator==(const QQmlPropertyData &other) const
 {
-    Q_UNUSED(m_reserved);
     return flags() == other.flags() &&
             propType() == other.propType() &&
             coreIndex() == other.coreIndex() &&
