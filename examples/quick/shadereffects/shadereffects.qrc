@@ -4,17 +4,11 @@
         <file>content/face-smile.png</file>
         <file>content/qt-logo.png</file>
         <file>content/Slider.qml</file>
-        <file>content/shaders/wobble.frag</file>
-        <file>content/shaders/+qsb/wobble.frag</file>
-        <file>content/shaders/blur.frag</file>
-        <file>content/shaders/+qsb/blur.frag</file>
-        <file>content/shaders/shadow.frag</file>
-        <file>content/shaders/+qsb/shadow.frag</file>
-        <file>content/shaders/outline.frag</file>
-        <file>content/shaders/+qsb/outline.frag</file>
-        <file>content/shaders/colorize.frag</file>
-        <file>content/shaders/+qsb/colorize.frag</file>
-        <file>content/shaders/genie.vert</file>
-        <file>content/shaders/+qsb/genie.vert</file>
+        <file>content/shaders/wobble.frag.qsb</file>
+        <file>content/shaders/blur.frag.qsb</file>
+        <file>content/shaders/shadow.frag.qsb</file>
+        <file>content/shaders/outline.frag.qsb</file>
+        <file>content/shaders/colorize.frag.qsb</file>
+        <file>content/shaders/genie.vert.qsb</file>
     </qresource>
 </RCC>

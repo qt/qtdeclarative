@@ -48,9 +48,9 @@
 ::
 :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -o ../+qsb/blur.frag blur.frag
-qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -o ../+qsb/colorize.frag colorize.frag
-qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -o ../+qsb/outline.frag outline.frag
-qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -o ../+qsb/shadow.frag shadow.frag
-qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -o ../+qsb/wobble.frag wobble.frag
-qsb -b --glsl "150,120,100 es" --hlsl 50 --msl 12 -o ../+qsb/genie.vert genie.vert
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -c -O -o blur.frag.qsb blur.frag
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -c -O -o colorize.frag.qsb colorize.frag
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -c -O -o outline.frag.qsb outline.frag
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -c -O -o shadow.frag.qsb shadow.frag
+qsb --glsl "150,120,100 es" --hlsl 50 --msl 12 -c -O -o wobble.frag.qsb wobble.frag
+qsb -b --glsl "150,120,100 es" --hlsl 50 --msl 12 -c -O -o genie.vert.qsb genie.vert
