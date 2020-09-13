@@ -93,7 +93,6 @@ static void generateWarning(QV4::ExecutionEngine *v4, const QString& description
     F(int, Int, QList<int>, 0) \
     F(qreal, Real, QList<qreal>, 0.0) \
     F(bool, Bool, QList<bool>, false) \
-    F(QString, String, QList<QString>, QString()) \
     F(QString, QString, QStringList, QString()) \
     F(QString, StringStdVector, std::vector<QString>, QString()) \
     F(QUrl, Url, QList<QUrl>, QUrl()) \
@@ -660,8 +659,6 @@ typedef QQmlSequence<std::vector<bool> > QQmlBoolStdVectorList;
 DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlBoolStdVectorList);
 typedef QQmlSequence<QStringList> QQmlQStringList;
 DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlQStringList);
-typedef QQmlSequence<QList<QString> > QQmlStringList;
-DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlStringList);
 typedef QQmlSequence<std::vector<QString> > QQmlStringStdVectorList;
 typedef QQmlSequence<QList<int> > QQmlIntList;
 DEFINE_OBJECT_TEMPLATE_VTABLE(QQmlIntList);
