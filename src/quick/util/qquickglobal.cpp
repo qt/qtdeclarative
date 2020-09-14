@@ -57,6 +57,8 @@
 #include <QtQml/private/qv4engine_p.h>
 #include <QtQml/private/qv4object_p.h>
 
+#include <QtCore/qiterable.h>
+
 #ifdef Q_CC_MSVC
 // MSVC2010 warns about 'unused variable t', even if it's used in t->~T()
 #  pragma warning( disable : 4189 )
@@ -1050,6 +1052,9 @@ static QQuickGuiProvider *getGuiProvider()
 
 void QQuick_initializeModule()
 {
+    // This is used by QQuickPath, and on macOS it fails to automatically register.
+    qRegisterMetaType<QVector<QVector<QPointF>>>();
+
     QQml_addValueTypeProvider(getValueTypeProvider());
     QQml_setColorProvider(getColorProvider());
     QQml_setGuiProvider(getGuiProvider());
