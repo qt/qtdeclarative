@@ -440,6 +440,11 @@ TestCase {
         ApplicationWindow {
             property alias focusItemActiveFocus: item.activeFocus
             property alias focusDialogVisible: dialog.visible
+            function closeAndOpen() {
+                dialog.close()
+                dialog.open()
+                dialog.close()
+            }
             visible: true
             Item {
                 id: item
@@ -452,6 +457,12 @@ TestCase {
                 onActiveFocusChanged: {
                     if (!activeFocus)
                         visible = false
+                }
+                enter: Transition {
+                    NumberAnimation { property: "opacity"; from: 0.0; to: 1.0; duration: 10 }
+                }
+                exit: Transition {
+                    NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; duration: 10 }
                 }
             }
         }
@@ -467,6 +478,13 @@ TestCase {
         tryCompare(window, "focusItemActiveFocus", false)
 
         window.focusDialogVisible = false
+        tryCompare(window, "focusDialogVisible", false)
+        tryCompare(window, "focusItemActiveFocus", true)
+
+        window.focusDialogVisible = true
+        tryCompare(window, "focusDialogVisible", true)
+        tryCompare(window, "focusItemActiveFocus", false)
+        window.closeAndOpen()
         tryCompare(window, "focusDialogVisible", false)
         tryCompare(window, "focusItemActiveFocus", true)
     }
