@@ -54,7 +54,6 @@
 
 int main(int argc, char *argv[])
 {
-    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QGuiApplication app(argc, argv);
 
     QFontDatabase::addApplicationFont(":/fonts/fontello.ttf");

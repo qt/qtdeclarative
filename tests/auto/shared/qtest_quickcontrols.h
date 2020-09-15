@@ -77,7 +77,6 @@ static int runTests(QObject *testObject, int argc, char *argv[])
 int main(int argc, char *argv[]) \
 { \
     qputenv("QML_NO_TOUCH_COMPRESSION", "1"); \
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling); \
     QGuiApplication app(argc, argv); \
     TestCase tc; \
     QTEST_SET_MAIN_SOURCE_PATH \
