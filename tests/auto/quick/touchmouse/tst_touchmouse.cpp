@@ -727,6 +727,10 @@ void tst_TouchMouse::buttonOnDelayedPressFlickable()
     QFETCH(bool, scrollBeforeDelayIsOver);
     QFETCH(bool, releaseBeforeDelayIsOver);
 
+#ifdef Q_OS_MACOS
+    QSKIP("Deadlocks or crashes due to events changes in qtbase");
+#endif
+
     qApp->setAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents, true);
     filteredEventList.clear();
 
