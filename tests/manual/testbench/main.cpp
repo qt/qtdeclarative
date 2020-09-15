@@ -65,7 +65,6 @@ int main(int argc, char *argv[])
 {
     QGuiApplication::setApplicationName("testbench");
     QGuiApplication::setOrganizationName("QtProject");
-    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
     QGuiApplication app(argc, argv);
 

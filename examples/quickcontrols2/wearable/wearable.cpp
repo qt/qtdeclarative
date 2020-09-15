@@ -55,7 +55,6 @@
 
 int main(int argc, char *argv[])
 {
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QCoreApplication::setApplicationName("Wearable");
     QCoreApplication::setOrganizationName("QtProject");
 

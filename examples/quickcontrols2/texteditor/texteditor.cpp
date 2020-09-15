@@ -66,7 +66,6 @@ int main(int argc, char *argv[])
 {
     QGuiApplication::setApplicationName("Text Editor");
     QGuiApplication::setOrganizationName("QtProject");
-    QGuiApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
 #ifdef QT_WIDGETS_LIB
     QApplication app(argc, argv);

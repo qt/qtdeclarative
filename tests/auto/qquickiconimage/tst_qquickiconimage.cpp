@@ -561,7 +561,6 @@ void tst_qquickiconimage::translucentColors()
 
 int main(int argc, char *argv[])
 {
-    QGuiApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
     QGuiApplication app(argc, argv);
     Q_UNUSED(app);
     tst_qquickiconimage test;
