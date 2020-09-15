@@ -50,6 +50,7 @@
 
 #include <QtGui/qpalette.h>
 #include <QtQuick/private/qquicktextedit_p.h>
+#include <QtQuick/private/qquickevents_p_p.h>
 #include <QtQuickTemplates2/private/qtquicktemplates2global_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -57,7 +58,6 @@ QT_BEGIN_NAMESPACE
 class QQuickText;
 class QQuickTextAreaPrivate;
 class QQuickTextAreaAttached;
-class QQuickMouseEvent;
 
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTextArea : public QQuickTextEdit
 {

@@ -51,10 +51,9 @@
 #include <QtCore/qobject.h>
 #include <QtGui/qcolor.h>
 #include <QtQml/qqml.h>
+#include <QtQuick/private/qquickpalette_p.h>
 
 QT_BEGIN_NAMESPACE
-
-class QQuickPalette;
 
 class QQuickFusionStyle : public QObject
 {

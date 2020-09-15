@@ -4724,7 +4724,7 @@ int QCommonStyle::styleHint(StyleHint sh, const QStyleOption *opt, QStyleHintRet
         ret = false;
         break;
     case SH_Slider_AbsoluteSetButtons:
-        ret = Qt::MidButton;
+        ret = Qt::MiddleButton;
         break;
     case SH_Slider_PageSetButtons:
         ret = Qt::LeftButton;

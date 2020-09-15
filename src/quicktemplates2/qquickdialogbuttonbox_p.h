@@ -48,13 +48,13 @@
 // We mean it.
 //
 
+#include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
 #include <QtQuickTemplates2/private/qquickcontainer_p.h>
 #include <QtGui/qpa/qplatformdialoghelper.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQmlComponent;
-class QQuickAbstractButton;
 class QQuickDialogButtonBoxPrivate;
 class QQuickDialogButtonBoxAttached;
 class QQuickDialogButtonBoxAttachedPrivate;

@@ -54,7 +54,6 @@ QT_BEGIN_NAMESPACE
 // We mean it.
 //
 
-class QStringList;
 class QTextOption;
 
 namespace QQC2 {
