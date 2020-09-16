@@ -8382,7 +8382,6 @@ QTouchEvent QQuickItemPrivate::localizedTouchEvent(const QTouchEvent *event, boo
     QEventPoint::States eventStates;
 
     bool anyPressOrReleaseInside = false;
-    bool anyStationaryWithModifiedPropertyInside = false;
     bool anyGrabber = false;
     for (auto &p : event->points()) {
         if (p.isAccepted())
@@ -8415,8 +8414,6 @@ QTouchEvent QQuickItemPrivate::localizedTouchEvent(const QTouchEvent *event, boo
             anyPressOrReleaseInside = true;
         QEventPoint pCopy(p);
         QMutableEventPoint mut = QMutableEventPoint::from(pCopy);
-        if (isInside && mut.stationaryWithModifiedProperty())
-            anyStationaryWithModifiedPropertyInside = true;
         eventStates |= p.state();
         mut.setPosition(localPos);
         touchPoints << mut;
@@ -8424,8 +8421,7 @@ QTouchEvent QQuickItemPrivate::localizedTouchEvent(const QTouchEvent *event, boo
 
     // Now touchPoints will have only points which are inside the item.
     // But if none of them were just pressed inside, and the item has no other reason to care, ignore them anyway.
-    if ((eventStates == QEventPoint::State::Stationary && !anyStationaryWithModifiedPropertyInside) ||
-            touchPoints.isEmpty() || (!anyPressOrReleaseInside && !anyGrabber && !isFiltering))
+    if (touchPoints.isEmpty() || (!anyPressOrReleaseInside && !anyGrabber && !isFiltering))
         return QTouchEvent(QEvent::None);
 
     // if all points have the same state, set the event type accordingly

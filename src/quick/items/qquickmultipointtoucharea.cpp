@@ -638,8 +638,8 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
                 addTouchPoint(&p);
                 started = true;
             } else if ((touchPointState & QEventPoint::State::Updated) ||
-                       QMutableEventPoint::from(p).stationaryWithModifiedProperty()) {
-                // React to a stationary point with a property change (velocity, pressure) as if the point moved. (QTBUG-77142)
+                       (touchPointState & QEventPoint::State::Stationary)) {
+                // React to a stationary point as if the point moved. (QTBUG-77142)
                 QQuickTouchPoint* dtp = static_cast<QQuickTouchPoint*>(_touchPoints.value(id));
                 Q_ASSERT(dtp);
                 _movedTouchPoints.append(dtp);

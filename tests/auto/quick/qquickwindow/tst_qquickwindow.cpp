@@ -705,10 +705,10 @@ void tst_qquickwindow::touchEvent_basic()
     touchSeq.stationary(0)
             .press(1, bottomItem->mapToScene(pos).toPoint(), window).commit();
     QQuickTouchUtils::flush(window);
-    QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);    // received press only, not stationary
+    QCOMPARE(topItem->lastEvent.touchPoints.count(), 1);    // received press and then stationary
     QVERIFY(middleItem->lastEvent.touchPoints.isEmpty());
     QCOMPARE(bottomItem->lastEvent.touchPoints.count(), 1);
-    COMPARE_TOUCH_DATA(topItem->lastEvent, makeTouchData(QEvent::TouchBegin, window, QEventPoint::State::Pressed, makeTouchPoint(topItem, pos)));
+    COMPARE_TOUCH_DATA(topItem->lastEvent, makeTouchData(QEvent::TouchUpdate, window, QEventPoint::State::Stationary, makeTouchPoint(topItem, pos)));
     COMPARE_TOUCH_DATA(bottomItem->lastEvent, makeTouchData(QEvent::TouchBegin, window, QEventPoint::State::Pressed, makeTouchPoint(bottomItem, pos)));
     topItem->reset();
     bottomItem->reset();
@@ -729,10 +729,10 @@ void tst_qquickwindow::touchEvent_basic()
     topItem->reset();
 
     // release while another point is pressed
-    touchSeq.press(0, topItem->mapToScene(pos).toPoint(),window)
-            .press(1, bottomItem->mapToScene(pos).toPoint(), window).commit();
+    touchSeq.press(0, topItem->mapToScene(pos).toPoint(),window)                // seen and grabbed by topItem
+            .press(1, bottomItem->mapToScene(pos).toPoint(), window).commit();  // seen and grabbed by bottomItem
     QQuickTouchUtils::flush(window);
-    touchSeq.move(0, bottomItem->mapToScene(pos).toPoint(), window).commit();
+    touchSeq.move(0, bottomItem->mapToScene(pos).toPoint(), window).stationary(1).commit();
     QQuickTouchUtils::flush(window);
     touchSeq.release(0, bottomItem->mapToScene(pos).toPoint(), window)
                              .stationary(1).commit();
@@ -745,7 +745,8 @@ void tst_qquickwindow::touchEvent_basic()
     // it's the last position that was actually different.
     COMPARE_TOUCH_DATA(topItem->lastEvent, makeTouchData(QEvent::TouchEnd, window, QEventPoint::State::Released,
             makeTouchPoint(topItem, topItem->mapFromItem(bottomItem, pos), pos)));
-    COMPARE_TOUCH_DATA(bottomItem->lastEvent, makeTouchData(QEvent::TouchBegin, window, QEventPoint::State::Pressed, makeTouchPoint(bottomItem, pos)));
+    COMPARE_TOUCH_DATA(bottomItem->lastEvent, makeTouchData(QEvent::TouchUpdate, window, QEventPoint::State::Stationary,
+            makeTouchPoint(bottomItem, pos)));
     topItem->reset();
     bottomItem->reset();
 
