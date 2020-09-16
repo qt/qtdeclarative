@@ -76,7 +76,7 @@ void QQmlApplicationEnginePrivate::init()
     q->connect(q, SIGNAL(uiLanguageChanged()), q_func(), SLOT(_q_loadTranslations()));
 #if QT_CONFIG(translation)
     QTranslator* qtTranslator = new QTranslator(q);
-    if (qtTranslator->load(QLocale(), QLatin1String("qt"), QLatin1String("_"), QLibraryInfo::location(QLibraryInfo::TranslationsPath), QLatin1String(".qm")))
+    if (qtTranslator->load(QLocale(), QLatin1String("qt"), QLatin1String("_"), QLibraryInfo::path(QLibraryInfo::TranslationsPath), QLatin1String(".qm")))
         QCoreApplication::installTranslator(qtTranslator);
     else
         delete qtTranslator;

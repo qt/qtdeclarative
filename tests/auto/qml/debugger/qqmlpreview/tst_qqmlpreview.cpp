@@ -74,7 +74,7 @@ private slots:
 
 QQmlDebugTest::ConnectResult tst_QQmlPreview::startQmlProcess(const QString &qmlFile)
 {
-    return QQmlDebugTest::connectTo(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qml",
+    return QQmlDebugTest::connectTo(QLibraryInfo::path(QLibraryInfo::BinariesPath) + "/qml",
                                   QStringLiteral("QmlPreview"), testFile(qmlFile), true);
 }
 
@@ -245,18 +245,18 @@ void tst_QQmlPreview::blacklist()
     blacklist2.blacklist(":/qt-project.org");
     blacklist2.blacklist(":/QtQuick/Controls/Styles");
     blacklist2.blacklist(":/ExtrasImports/QtQuick/Controls/Styles");
-    blacklist2.blacklist(QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath));
+    blacklist2.blacklist(QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath));
     blacklist2.blacklist("/home/ulf/.local/share/QtProject/Qml Runtime/configuration.qml");
     blacklist2.blacklist("/usr/share");
     blacklist2.blacklist("/usr/share/QtProject/Qml Runtime/configuration.qml");
-    QVERIFY(blacklist2.isBlacklisted(QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath)));
+    QVERIFY(blacklist2.isBlacklisted(QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath)));
     blacklist2.blacklist("/usr/local/share/QtProject/Qml Runtime/configuration.qml");
     blacklist2.blacklist("qml");
     blacklist2.blacklist(""); // This should not remove all other paths.
 
-    QVERIFY(blacklist2.isBlacklisted(QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath) +
+    QVERIFY(blacklist2.isBlacklisted(QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath) +
                                      "/QtQuick/Window.2.0"));
-    QVERIFY(blacklist2.isBlacklisted(QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath)));
+    QVERIFY(blacklist2.isBlacklisted(QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath)));
     QVERIFY(blacklist2.isBlacklisted("/usr/share/QtProject/Qml Runtime/configuration.qml"));
     QVERIFY(blacklist2.isBlacklisted("/usr/share/stuff"));
     QVERIFY(blacklist2.isBlacklisted(""));

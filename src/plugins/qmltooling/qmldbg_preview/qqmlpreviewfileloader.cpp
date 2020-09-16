@@ -59,10 +59,10 @@ QQmlPreviewFileLoader::QQmlPreviewFileLoader(QQmlPreviewServiceImpl *service) : 
     m_blacklist.blacklist("/etc");
 
     for (int loc = QLibraryInfo::PrefixPath; loc < QLibraryInfo::TestsPath; ++loc) {
-        m_blacklist.blacklist(QLibraryInfo::location(
+        m_blacklist.blacklist(QLibraryInfo::path(
                                   static_cast<QLibraryInfo::LibraryLocation>(loc)));
     }
-    m_blacklist.blacklist(QLibraryInfo::location(QLibraryInfo::SettingsPath));
+    m_blacklist.blacklist(QLibraryInfo::path(QLibraryInfo::SettingsPath));
 
     static const QStandardPaths::StandardLocation blackListLocations[] = {
         QStandardPaths::DataLocation,
@@ -81,7 +81,7 @@ QQmlPreviewFileLoader::QQmlPreviewFileLoader(QQmlPreviewServiceImpl *service) : 
             m_blacklist.blacklist(location);
     }
 
-    m_blacklist.whitelist(QLibraryInfo::location(QLibraryInfo::TestsPath));
+    m_blacklist.whitelist(QLibraryInfo::path(QLibraryInfo::TestsPath));
 
     connect(this, &QQmlPreviewFileLoader::request, service, &QQmlPreviewServiceImpl::forwardRequest,
             Qt::DirectConnection);

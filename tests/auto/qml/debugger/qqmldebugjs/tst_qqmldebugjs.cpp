@@ -178,7 +178,7 @@ QQmlDebugTest::ConnectResult tst_QQmlDebugJS::init(bool qmlscene, const QString 
                                                    bool blockMode, bool restrictServices)
 {
     const QString executable = qmlscene
-            ? QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene"
+            ? QLibraryInfo::path(QLibraryInfo::BinariesPath) + "/qmlscene"
             : debugJsServerPath("qqmldebugjs");
     return QQmlDebugTest::connectTo(
                 executable, restrictServices ? QStringLiteral("V8Debugger") : QString(),
@@ -471,7 +471,7 @@ void tst_QQmlDebugJS::setBreakpointInJavaScript()
 
     if (seedCache) { // Make sure there is a qmlc file that the engine should _not_ laod.
         QProcess process;
-        process.start(QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene",
+        process.start(QLibraryInfo::path(QLibraryInfo::BinariesPath) + "/qmlscene",
                       { testFile(QUITINJS_QMLFILE) });
         QTRY_COMPARE(process.state(), QProcess::NotRunning);
     }
@@ -854,7 +854,7 @@ void tst_QQmlDebugJS::evaluateInContext()
 {
     m_connection = new QQmlDebugConnection();
     m_process = new QQmlDebugProcess(
-                QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene", this);
+                QLibraryInfo::path(QLibraryInfo::BinariesPath) + "/qmlscene", this);
     m_client = new QV4DebugClient(m_connection);
     QScopedPointer<QQmlEngineDebugClient> engineClient(new QQmlEngineDebugClient(m_connection));
     m_process->start(QStringList() << QLatin1String(BLOCKMODE) << testFile(ONCOMPLETED_QMLFILE));

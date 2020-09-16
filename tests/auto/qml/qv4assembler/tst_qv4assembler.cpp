@@ -62,7 +62,7 @@ void tst_QV4Assembler::perfMapFile()
 #if !defined(Q_OS_LINUX) || defined(Q_OS_ANDROID)
     QSKIP("perf map files are only generated on linux");
 #else
-    const QString qmljs = QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmljs";
+    const QString qmljs = QLibraryInfo::path(QLibraryInfo::BinariesPath) + "/qmljs";
     QProcess process;
 
     QTemporaryFile infile;

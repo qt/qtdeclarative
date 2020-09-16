@@ -103,7 +103,7 @@ void tst_QQmlDebuggingEnabler::qmlscene()
     QFETCH(QStringList, services);
 
     m_process = new QQmlDebugProcess(
-                QLibraryInfo::location(QLibraryInfo::BinariesPath) + "/qmlscene", this);
+                QLibraryInfo::path(QLibraryInfo::BinariesPath) + "/qmlscene", this);
     m_process->setMaximumBindErrors(1);
     m_process->start(QStringList()
                      << QString::fromLatin1("-qmljsdebugger=connector:%1%2%3%4")

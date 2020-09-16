@@ -166,11 +166,11 @@ void tst_QQmlImport::uiFormatLoading()
 void tst_QQmlImport::importPathOrder()
 {
 #ifdef Q_OS_ANDROID
-    QSKIP("QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath) returns bogus path on Android, but its nevertheless unusable.");
+    QSKIP("QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath) returns bogus path on Android, but its nevertheless unusable.");
 #endif
     QStringList expectedImportPaths;
     QString appDirPath = QCoreApplication::applicationDirPath();
-    QString qml2Imports = QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
+    QString qml2Imports = QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath);
 #ifdef Q_OS_WIN
     // The drive letter has a different case as QQmlImport will
     // cause it to be converted after passing through QUrl

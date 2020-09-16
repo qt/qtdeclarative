@@ -175,13 +175,13 @@ void Window::exposeEvent(QExposeEvent *)
 
 void Window::mousePressEvent(QMouseEvent *e)
 {
-    QMouseEvent mappedEvent(e->type(), e->localPos(), e->screenPos(), e->button(), e->buttons(), e->modifiers());
+    QMouseEvent mappedEvent(e->type(), e->position(), e->globalPosition(), e->button(), e->buttons(), e->modifiers());
     QCoreApplication::sendEvent(m_quickWindow, &mappedEvent);
 }
 
 void Window::mouseReleaseEvent(QMouseEvent *e)
 {
-    QMouseEvent mappedEvent(e->type(), e->localPos(), e->screenPos(), e->button(), e->buttons(), e->modifiers());
+    QMouseEvent mappedEvent(e->type(), e->position(), e->globalPosition(), e->button(), e->buttons(), e->modifiers());
     QCoreApplication::sendEvent(m_quickWindow, &mappedEvent);
 }
 

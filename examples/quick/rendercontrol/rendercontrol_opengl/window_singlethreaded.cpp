@@ -318,9 +318,9 @@ void WindowSingleThreaded::handleScreenChange()
 
 void WindowSingleThreaded::mousePressEvent(QMouseEvent *e)
 {
-    // Use the constructor taking localPos and screenPos. That puts localPos into the
-    // event's localPos and windowPos, and screenPos into the event's screenPos. This way
-    // the windowPos in e is ignored and is replaced by localPos. This is necessary
+    // Use the constructor taking position and globalPosition. That puts position into the
+    // event's position and scenePosition, and globalPosition into the event's globalPosition. This way
+    // the scenePosition in e is ignored and is replaced by position. This is necessary
     // because QQuickWindow thinks of itself as a top-level window always.
     QMouseEvent mappedEvent(e->type(), e->position(), e->globalPosition(), e->button(), e->buttons(), e->modifiers());
     QCoreApplication::sendEvent(m_quickWindow, &mappedEvent);

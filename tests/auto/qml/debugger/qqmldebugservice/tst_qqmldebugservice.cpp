@@ -106,7 +106,7 @@ void tst_QQmlDebugService::checkPortRange()
 {
     QScopedPointer<QQmlDebugConnection> connection1(new QQmlDebugConnection());
     QScopedPointer<QQmlDebugProcess> process1(
-                new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath)
+                new QQmlDebugProcess(QLibraryInfo::path(QLibraryInfo::BinariesPath)
                                      + "/qmlscene", this));
 
     process1->start(QStringList() << QLatin1String("-qmljsdebugger=port:3782,3792")
@@ -123,7 +123,7 @@ void tst_QQmlDebugService::checkPortRange()
     // Second instance
     QScopedPointer<QQmlDebugConnection> connection2(new QQmlDebugConnection());
     QScopedPointer<QQmlDebugProcess> process2(
-                new QQmlDebugProcess(QLibraryInfo::location(QLibraryInfo::BinariesPath)
+                new QQmlDebugProcess(QLibraryInfo::path(QLibraryInfo::BinariesPath)
                                      + "/qmlscene", this));
 
     process2->start(QStringList() << QLatin1String("-qmljsdebugger=port:3782,3792")

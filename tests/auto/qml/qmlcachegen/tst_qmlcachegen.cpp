@@ -106,7 +106,7 @@ static bool generateCache(const QString &qmlFileName, QByteArray *capturedStderr
     QProcess proc;
     if (capturedStderr == nullptr)
         proc.setProcessChannelMode(QProcess::ForwardedChannels);
-    proc.setProgram(QLibraryInfo::location(QLibraryInfo::BinariesPath) + QDir::separator() + QLatin1String("qmlcachegen"));
+    proc.setProgram(QLibraryInfo::path(QLibraryInfo::BinariesPath) + QDir::separator() + QLatin1String("qmlcachegen"));
     proc.setArguments(QStringList() << qmlFileName);
     proc.start();
     if (!proc.waitForFinished())
