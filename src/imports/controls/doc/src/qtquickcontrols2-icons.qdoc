@@ -163,9 +163,4 @@
 
     The \l {Qt Quick Controls - Gallery}{Gallery example} and \l {Qt Quick Controls 2 - Wearable Demo}
     {Wearable Demo} provide complete runnable applications with a bundled icon theme.
-
-    \section1 Related Information
-    \list
-        \li \l {High-DPI Support in Qt Quick Controls}
-    \endlist
 */
