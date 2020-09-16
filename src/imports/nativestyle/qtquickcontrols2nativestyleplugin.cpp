@@ -46,7 +46,7 @@
 #if defined(Q_OS_MACOS)
 #include "qquickmacstyle_mac_p.h"
 #elif defined(Q_OS_WINDOWS)
-# include "qquickwindowsstyle_p.h"
+# include "qquickwindowsxpstyle_p.h"
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -117,13 +117,15 @@ void QtQuickControls2NativeStylePlugin::initializeEngine(QQmlEngine *engine, con
 #if defined(Q_OS_WINDOWS)
             else if (envStyle == QLatin1String("windows"))
                 style = new QWindowsStyle;
+            else if (envStyle == QLatin1String("windowsxp"))
+                style = new QWindowsXPStyle;
 #endif
         }
         if (!style) {
 #if defined(Q_OS_MACOS)
             style = new QMacStyle;
 #elif defined(Q_OS_WINDOWS)
-            style = new QWindowsStyle;
+            style = new QWindowsXPStyle;
 #else
             style = new QCommonStyle;
 #endif

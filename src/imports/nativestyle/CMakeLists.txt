@@ -79,6 +79,8 @@ qt_extend_target(qtquickcontrols2nativestyleplugin CONDITION WIN32
     SOURCES
         qstyle/windows/qquickwindowsstyle.cpp qstyle/windows/qquickwindowsstyle_p.h
         qstyle/windows/qquickwindowsstyle_p_p.h
+        qstyle/windows/qquickwindowsxpstyle.cpp
+        qstyle/windows/qquickwindowsxpstyle_p.h qstyle/windows/qquickwindowsxpstyle_p_p.h
     INCLUDE_DIRECTORIES
         qstyle/windows
     LIBRARIES

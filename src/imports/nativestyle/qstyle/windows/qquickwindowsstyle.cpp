@@ -391,8 +391,14 @@ static QScreen *screenOf(const QWindow *w)
 // and account for secondary screens with differing logical DPI.
 qreal QWindowsStylePrivate::nativeMetricScaleFactor(const QStyleOption *opt)
 {
-    QWindow *win = opt->window;
-    qreal result = qreal(1) / QWindowsStylePrivate::devicePixelRatio(opt);
+    Q_ASSERT(opt);
+    const QWindow *win = opt->window;
+    return nativeMetricScaleFactor(win);
+}
+
+qreal QWindowsStylePrivate::nativeMetricScaleFactor(const QWindow *win)
+{
+    qreal result = qreal(1) / QWindowsStylePrivate::devicePixelRatio(win);
     if (QGuiApplicationPrivate::screen_list.size() > 1) {
         const QScreen *primaryScreen = QGuiApplication::primaryScreen();
         const QScreen *screen = screenOf(win);

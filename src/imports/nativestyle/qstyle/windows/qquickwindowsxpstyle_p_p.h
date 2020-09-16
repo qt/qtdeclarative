@@ -37,24 +37,24 @@
 **
 ****************************************************************************/
 
-#ifndef QWINDOWSXPSTYLE_P_P_H
-#define QWINDOWSXPSTYLE_P_P_H
+#ifndef QQUICKWINDOWSXPSTYLE_P_P_H
+#define QQUICKWINDOWSXPSTYLE_P_P_H
 
 //
 //  W A R N I N G
 //  -------------
 //
-// This file is not part of the Qt API.  It exists for the convenience
-// of qapplication_*.cpp, qwidget*.cpp and qfiledialog.cpp.  This header
-// file may change from version to version without notice, or even be removed.
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
 //
 // We mean it.
 //
 
-#include <QtWidgets/private/qtwidgetsglobal_p.h>
+//#include <QtWidgets/private/qtwidgetsglobal_p.h>
 #include "qquickwindowsxpstyle_p.h"
-#include <QtWidgets/private/qwindowsstyle_p_p.h>
-#include <qmap.h>
+#include "qquickwindowsstyle_p_p.h"
+#include <QtCore/qmap.h>
 #include <qt_windows.h>
 
 #include <uxtheme.h>
@@ -65,6 +65,8 @@
 QT_BEGIN_NAMESPACE
 
 class QDebug;
+
+namespace QQC2 {
 
 // TMT_TEXTSHADOWCOLOR is wrongly defined in mingw
 #if TMT_TEXTSHADOWCOLOR != 3818
@@ -100,14 +102,13 @@ class QDebug;
 class XPThemeData
 {
 public:
-    explicit XPThemeData(const QWidget *w = nullptr, QPainter *p = nullptr, int themeIn = -1,
+    explicit XPThemeData(const QWindow *w = nullptr, QPainter *p = nullptr, int themeIn = -1,
                          int part = 0, int state = 0, const QRect &r = QRect())
-        : widget(w), painter(p), theme(themeIn), partId(part), stateId(state),
+        : window(w), painter(p), theme(themeIn), partId(part), stateId(state),
           mirrorHorizontally(false), mirrorVertically(false), noBorder(false),
           noContent(false), rect(r)
     {}
 
-    HRGN mask(QWidget *widget);
     HTHEME handle();
 
     static RECT toRECT(const QRect &qr);
@@ -117,13 +118,13 @@ public:
     QMarginsF margins(const QRect &rect, int propId = TMT_CONTENTMARGINS);
     QMarginsF margins(int propId = TMT_CONTENTMARGINS);
 
-    static QSizeF themeSize(const QWidget *w = nullptr, QPainter *p = nullptr, int themeIn = -1, int part = 0, int state = 0);
-    static QMarginsF themeMargins(const QRect &rect, const QWidget *w = nullptr, QPainter *p = nullptr, int themeIn = -1,
+    static QSizeF themeSize(const QWindow *w = nullptr, QPainter *p = nullptr, int themeIn = -1, int part = 0, int state = 0);
+    static QMarginsF themeMargins(const QRect &rect, const QWindow *w = nullptr, QPainter *p = nullptr, int themeIn = -1,
                                   int part = 0, int state = 0, int propId = TMT_CONTENTMARGINS);
-    static QMarginsF themeMargins(const QWidget *w = nullptr, QPainter *p = nullptr, int themeIn = -1,
+    static QMarginsF themeMargins(const QWindow *w = nullptr, QPainter *p = nullptr, int themeIn = -1,
                                   int part = 0, int state = 0, int propId = TMT_CONTENTMARGINS);
 
-    const QWidget *widget;
+    const QWindow *window;
     QPainter *painter;
 
     int theme;
@@ -222,10 +223,10 @@ public:
     ~QWindowsXPStylePrivate()
     { cleanup(); }
 
-    static int pixelMetricFromSystemDp(QStyle::PixelMetric pm, const QStyleOption *option = nullptr, const QWidget *widget = nullptr);
+    static int pixelMetricFromSystemDp(QStyle::PixelMetric pm, const QStyleOption *option = nullptr);
     static int fixedPixelMetric(QStyle::PixelMetric pm, const QStyleOption *option = nullptr, const QWidget *widget = nullptr);
 
-    static HWND winId(const QWidget *widget);
+    static HWND winId(const QWindow *window);
 
     void init(bool force = false);
     void cleanup(bool force = false);
@@ -236,7 +237,7 @@ public:
     { return bufferDC;}
 
     static bool useXP(bool update = false);
-    static QRect scrollBarGripperBounds(QStyle::State flags, const QWidget *widget, XPThemeData *theme);
+    static QRect scrollBarGripperBounds(QStyle::State flags, XPThemeData *theme);
 
     bool isTransparent(XPThemeData &themeData);
     QRegion region(XPThemeData &themeData);
@@ -320,26 +321,28 @@ inline QMarginsF XPThemeData::margins(int propId)
     return result;
 }
 
-inline QSizeF XPThemeData::themeSize(const QWidget *w, QPainter *p, int themeIn, int part, int state)
+inline QSizeF XPThemeData::themeSize(const QWindow *w, QPainter *p, int themeIn, int part, int state)
 {
     XPThemeData theme(w, p, themeIn, part, state);
     return theme.size();
 }
 
-inline QMarginsF XPThemeData::themeMargins(const QRect &rect, const QWidget *w, QPainter *p, int themeIn,
+inline QMarginsF XPThemeData::themeMargins(const QRect &rect, const QWindow *w, QPainter *p, int themeIn,
                                            int part, int state, int propId)
 {
     XPThemeData theme(w, p, themeIn, part, state);
     return theme.margins(rect, propId);
 }
 
-inline QMarginsF XPThemeData::themeMargins(const QWidget *w, QPainter *p, int themeIn,
+inline QMarginsF XPThemeData::themeMargins(const QWindow *w, QPainter *p, int themeIn,
                                            int part, int state, int propId)
 {
     XPThemeData theme(w, p, themeIn, part, state);
     return theme.margins(propId);
 }
 
+} //namespace QQC2
+
 QT_END_NAMESPACE
 
-#endif //QWINDOWSXPSTYLE_P_P_H
+#endif //QQUICKWINDOWSXPSTYLE_P_P_H

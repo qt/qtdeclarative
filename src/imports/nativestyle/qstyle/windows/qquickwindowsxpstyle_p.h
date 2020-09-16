@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QWINDOWSXPSTYLE_P_H
-#define QWINDOWSXPSTYLE_P_H
+#ifndef QQUICKWINDOWSXPSTYLE_P_H
+#define QQUICKWINDOWSXPSTYLE_P_H
 
 //
 //  W A R N I N G
@@ -51,8 +51,7 @@
 // We mean it.
 //
 
-#include <QtWidgets/private/qtwidgetsglobal_p.h>
-#include <QtWidgets/private/qwindowsstyle_p.h>
+#include "qquickwindowsstyle_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -67,35 +66,26 @@ public:
     QWindowsXPStyle(QWindowsXPStylePrivate &dd);
     ~QWindowsXPStyle() override;
 
-    void unpolish(QApplication*) override;
+/*
     void polish(QApplication*) override;
+    void unpolish(QApplication*) override;
     void polish(QWidget*) override;
-    void polish(QPalette&) override;
     void unpolish(QWidget*) override;
-
-    void drawPrimitive(PrimitiveElement pe, const QStyleOption *option, QPainter *p,
-                       const QWidget *widget = nullptr) const override;
-    void drawControl(ControlElement element, const QStyleOption *option, QPainter *p,
-                     const QWidget *wwidget = nullptr) const override;
-    QRect subElementRect(SubElement r, const QStyleOption *option,
-                         const QWidget *widget = nullptr) const override;
-    QRect subControlRect(ComplexControl cc, const QStyleOptionComplex *option, SubControl sc,
-                         const QWidget *widget = nullptr) const override;
-    void drawComplexControl(ComplexControl cc, const QStyleOptionComplex *option, QPainter *p,
-                            const QWidget *widget = nullptr) const override;
-    QSize sizeFromContents(ContentsType ct, const QStyleOption *option, const QSize &contentsSize,
-                           const QWidget *widget = nullptr) const override;
-    int pixelMetric(PixelMetric pm, const QStyleOption *option = nullptr,
-                    const QWidget *widget = nullptr) const override;
+    void polish(QPalette&) override;
+*/
+    void drawPrimitive(PrimitiveElement pe, const QStyleOption *option, QPainter *p) const override;
+    void drawControl(ControlElement element, const QStyleOption *option, QPainter *p) const override;
+    QRect subElementRect(SubElement r, const QStyleOption *option) const override;
+    QRect subControlRect(ComplexControl cc, const QStyleOptionComplex *option, SubControl sc) const override;
+    void drawComplexControl(ComplexControl cc, const QStyleOptionComplex *option, QPainter *p) const override;
+    QSize sizeFromContents(ContentsType ct, const QStyleOption *option, const QSize &contentsSize) const override;
+    int pixelMetric(PixelMetric pm, const QStyleOption *option = nullptr) const override;
     int styleHint(StyleHint hint, const QStyleOption *option = nullptr,
-                  const QWidget *widget = nullptr,
                   QStyleHintReturn *returnData = nullptr) const override;
 
     QPalette standardPalette() const override;
-    QPixmap standardPixmap(StandardPixmap standardIcon, const QStyleOption *option,
-                           const QWidget *widget = nullptr) const override;
-    QIcon standardIcon(StandardPixmap standardIcon, const QStyleOption *option = nullptr,
-                       const QWidget *widget = nullptr) const override;
+    QPixmap standardPixmap(StandardPixmap standardIcon, const QStyleOption *option) const override;
+    QIcon standardIcon(StandardPixmap standardIcon, const QStyleOption *option = nullptr) const override;
 
 private:
     Q_DISABLE_COPY_MOVE(QWindowsXPStyle)
@@ -103,6 +93,8 @@ private:
     friend class QStyleFactory;
 };
 
+} // namespace QQC2
+
 QT_END_NAMESPACE
 
-#endif // QWINDOWSXPSTYLE_P_H
+#endif // QQUICKWINDOWSXPSTYLE_P_H
