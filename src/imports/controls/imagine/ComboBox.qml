@@ -37,7 +37,6 @@
 import QtQuick
 import QtQuick.Window
 import QtQuick.Templates as T
-import QtQuick.Controls
 import QtQuick.Controls.Imagine
 import QtQuick.Controls.Imagine.impl
 

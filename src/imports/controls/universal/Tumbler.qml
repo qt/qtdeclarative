@@ -37,7 +37,6 @@
 import QtQuick
 import QtQuick.Templates as T
 import QtQuick.Controls.Universal
-import QtQuick.Controls
 import QtQuick.Controls.impl
 
 T.Tumbler {
