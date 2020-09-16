@@ -45,9 +45,11 @@ T.Slider {
     readonly property bool nativeBackground: background instanceof NativeStyle.StyleItem
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
-                            implicitHandleWidth + leftPadding + rightPadding)
+                            implicitHandleWidth + leftPadding + rightPadding,
+                            control.horizontal ? 90 : 0 /* minimum */ )
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
-                             implicitHandleHeight + topPadding + bottomPadding)
+                             implicitHandleHeight + topPadding + bottomPadding,
+                            control.vertical ? 90 : 0 /* minimum */ )
 
     font.pixelSize: nativeBackground ? background.styleFont(control).pixelSize : undefined
 

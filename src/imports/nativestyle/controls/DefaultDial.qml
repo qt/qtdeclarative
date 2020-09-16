@@ -45,9 +45,11 @@ T.Dial {
     readonly property bool nativeBackground: background instanceof NativeStyle.StyleItem
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
-                            implicitContentWidth + leftPadding + rightPadding)
+                            implicitContentWidth + leftPadding + rightPadding,
+                            80 /* minimum */ )
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
-                             implicitContentHeight + topPadding + bottomPadding)
+                             implicitContentHeight + topPadding + bottomPadding,
+                            80 /* minimum */ )
 
     font.pixelSize: nativeBackground ? background.styleFont(control).pixelSize : undefined
 

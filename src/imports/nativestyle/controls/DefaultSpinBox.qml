@@ -44,8 +44,9 @@ T.SpinBox {
 
     readonly property bool nativeBackground: background instanceof NativeStyle.StyleItem
 
-    implicitWidth: implicitBackgroundWidth + spacing + up.implicitIndicatorWidth
-                   + leftInset + rightInset
+    implicitWidth: Math.max(implicitBackgroundWidth + spacing + up.implicitIndicatorWidth
+                            + leftInset + rightInset,
+                            90 /* minimum */ )
     implicitHeight: Math.max(implicitBackgroundHeight, up.implicitIndicatorHeight + down.implicitIndicatorHeight
                     + (spacing * 3)) + topInset + bottomInset
 

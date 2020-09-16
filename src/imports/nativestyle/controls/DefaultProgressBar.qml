@@ -45,9 +45,11 @@ T.ProgressBar {
     readonly property bool nativeBackground: background instanceof NativeStyle.StyleItem
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
-                            implicitContentWidth + leftPadding + rightPadding)
+                            implicitContentWidth + leftPadding + rightPadding,
+                            control.horizontal ? 90 : 0 /* minimum */ )
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
-                             implicitContentHeight + topPadding + bottomPadding)
+                             implicitContentHeight + topPadding + bottomPadding,
+                            control.vertical ? 90 : 0 /* minimum */ )
 
     font.pixelSize: nativeIndicator ? indicator.styleFont(control).pixelSize : undefined
 
