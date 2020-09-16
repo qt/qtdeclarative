@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include <private/qqmlglobal_p.h>
+#include <QtQml/private/qqmlmetatype_p.h>
 
 #include <QtQml/qqmlengine.h>
 #include <QtCore/qvariant.h>
@@ -55,17 +56,6 @@ QQmlValueTypeProvider::QQmlValueTypeProvider()
 QQmlValueTypeProvider::~QQmlValueTypeProvider()
 {
     QQml_removeValueTypeProvider(this);
-}
-
-const QMetaObject *QQmlValueTypeProvider::metaObjectForMetaType(int type)
-{
-    QQmlValueTypeProvider *p = this;
-    do {
-        if (const QMetaObject *mo = p->getMetaObjectForMetaType(type))
-            return mo;
-    } while ((p = p->next));
-
-    return nullptr;
 }
 
 bool QQmlValueTypeProvider::initValueType(int type, QVariant& dst)
@@ -179,7 +169,6 @@ bool QQmlValueTypeProvider::writeValueType(int type, const void *src, QVariant& 
     return true;
 }
 
-const QMetaObject *QQmlValueTypeProvider::getMetaObjectForMetaType(int) { return nullptr; }
 bool QQmlValueTypeProvider::create(int, int, const void *[], QVariant *) { return false; }
 bool QQmlValueTypeProvider::createFromString(int, const QString &, void *, size_t) { return false; }
 bool QQmlValueTypeProvider::variantFromString(int, const QString &, QVariant *) { return false; }

@@ -149,14 +149,30 @@ const QMetaObject *QQmlValueTypeFactoryImpl::metaObjectForMetaType(int t)
 #endif
         if (t == qMetaTypeId<QQmlProperty>())
             return &QQmlPropertyValueType::staticMetaObject;
-        if (const QMetaObject *mo = QQml_valueTypeProvider()->metaObjectForMetaType(t))
-            return mo;
         break;
     }
 
-    QMetaType metaType(t);
+    const QMetaType metaType(t);
+
+    // It doesn't have to be a gadget for a QML type to exist, but we don't want to
+    // call QObject pointers value types. Explicitly registered types also override
+    // the implicit use of gadgets.
+    if (!(metaType.flags() & QMetaType::PointerToQObject)) {
+        const QQmlType qmlType = QQmlMetaType::qmlType(t, QQmlMetaType::TypeIdCategory::MetaType);
+
+        // Prefer the extension meta object.
+        // Extensions allow registration of non-gadget value types.
+        if (const QMetaObject *extensionMetaObject = qmlType.extensionMetaObject())
+            return extensionMetaObject;
+
+        if (const QMetaObject *qmlTypeMetaObject = qmlType.metaObject())
+            return qmlTypeMetaObject;
+    }
+
+    // If it _is_ a gadget, we can just use it.
     if (metaType.flags() & QMetaType::IsGadget)
         return metaType.metaObject();
+
     return nullptr;
 }
 
@@ -525,9 +541,9 @@ int QQmlRectValueType::bottom() const
 }
 
 #if QT_CONFIG(easingcurve)
-QQmlEasingValueType::Type QQmlEasingValueType::type() const
+QQmlEasingEnums::Type QQmlEasingValueType::type() const
 {
-    return (QQmlEasingValueType::Type)v.type();
+    return (QQmlEasingEnums::Type)v.type();
 }
 
 qreal QQmlEasingValueType::amplitude() const
@@ -545,7 +561,7 @@ qreal QQmlEasingValueType::period() const
     return v.period();
 }
 
-void QQmlEasingValueType::setType(QQmlEasingValueType::Type type)
+void QQmlEasingValueType::setType(QQmlEasingEnums::Type type)
 {
     v.setType((QEasingCurve::Type)type);
 }

@@ -823,14 +823,6 @@ V4_DEFINE_EXTENSION(QV4LocaleDataDeletable, localeV4Data);
     \sa Date, Number
 */
 
-QQmlLocale::QQmlLocale()
-{
-}
-
-QQmlLocale::~QQmlLocale()
-{
-}
-
 QV4::ReturnedValue QQmlLocale::locale(ExecutionEngine *engine, const QString &localeName)
 {
     QLocale qlocale;

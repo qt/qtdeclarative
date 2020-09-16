@@ -734,12 +734,12 @@ void QQuickFontValueType::setPixelSize(int size)
     }
 }
 
-QQuickFontValueType::Capitalization QQuickFontValueType::capitalization() const
+QQuickFontEnums::Capitalization QQuickFontValueType::capitalization() const
 {
-    return (QQuickFontValueType::Capitalization)v.capitalization();
+    return (QQuickFontEnums::Capitalization)v.capitalization();
 }
 
-void QQuickFontValueType::setCapitalization(QQuickFontValueType::Capitalization c)
+void QQuickFontValueType::setCapitalization(QQuickFontEnums::Capitalization c)
 {
     v.setCapitalization((QFont::Capitalization)c);
 }
@@ -764,12 +764,12 @@ void QQuickFontValueType::setWordSpacing(qreal size)
     v.setWordSpacing(size);
 }
 
-QQuickFontValueType::HintingPreference QQuickFontValueType::hintingPreference() const
+QQuickFontEnums::HintingPreference QQuickFontValueType::hintingPreference() const
 {
-    return QQuickFontValueType::HintingPreference(v.hintingPreference());
+    return QQuickFontEnums::HintingPreference(v.hintingPreference());
 }
 
-void QQuickFontValueType::setHintingPreference(QQuickFontValueType::HintingPreference hintingPreference)
+void QQuickFontValueType::setHintingPreference(QQuickFontEnums::HintingPreference hintingPreference)
 {
     v.setHintingPreference(QFont::HintingPreference(hintingPreference));
 }
@@ -797,33 +797,33 @@ void QQuickFontValueType::setPreferShaping(bool enable)
         v.setStyleStrategy(static_cast<QFont::StyleStrategy>(v.styleStrategy() | QFont::PreferNoShaping));
 }
 
-QQuickColorSpaceValueType::NamedColorSpace QQuickColorSpaceValueType::namedColorSpace() const noexcept
+QQuickColorSpaceEnums::NamedColorSpace QQuickColorSpaceValueType::namedColorSpace() const noexcept
 {
     if (const auto *p = QColorSpacePrivate::get(v))
-        return (QQuickColorSpaceValueType::NamedColorSpace)p->namedColorSpace;
-    return QQuickColorSpaceValueType::Unknown;
+        return (QQuickColorSpaceEnums::NamedColorSpace)p->namedColorSpace;
+    return QQuickColorSpaceEnums::Unknown;
 }
-void QQuickColorSpaceValueType::setNamedColorSpace(QQuickColorSpaceValueType::NamedColorSpace namedColorSpace)
+void QQuickColorSpaceValueType::setNamedColorSpace(QQuickColorSpaceEnums::NamedColorSpace namedColorSpace)
 {
     v = { (QColorSpace::NamedColorSpace)namedColorSpace };
 }
 
-QQuickColorSpaceValueType::Primaries QQuickColorSpaceValueType::primaries() const noexcept
+QQuickColorSpaceEnums::Primaries QQuickColorSpaceValueType::primaries() const noexcept
 {
-    return (QQuickColorSpaceValueType::Primaries)v.primaries();
+    return (QQuickColorSpaceEnums::Primaries)v.primaries();
 }
 
-void QQuickColorSpaceValueType::setPrimaries(QQuickColorSpaceValueType::Primaries primariesId)
+void QQuickColorSpaceValueType::setPrimaries(QQuickColorSpaceEnums::Primaries primariesId)
 {
     v.setPrimaries((QColorSpace::Primaries)primariesId);
 }
 
-QQuickColorSpaceValueType::TransferFunction QQuickColorSpaceValueType::transferFunction() const noexcept
+QQuickColorSpaceEnums::TransferFunction QQuickColorSpaceValueType::transferFunction() const noexcept
 {
-    return (QQuickColorSpaceValueType::TransferFunction)v.transferFunction();
+    return (QQuickColorSpaceEnums::TransferFunction)v.transferFunction();
 }
 
-void QQuickColorSpaceValueType::setTransferFunction(QQuickColorSpaceValueType::TransferFunction transferFunction)
+void QQuickColorSpaceValueType::setTransferFunction(QQuickColorSpaceEnums::TransferFunction transferFunction)
 {
     v.setTransferFunction((QColorSpace::TransferFunction)transferFunction, v.gamma());
 }

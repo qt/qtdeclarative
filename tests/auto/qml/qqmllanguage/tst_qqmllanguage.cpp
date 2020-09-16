@@ -338,6 +338,7 @@ private slots:
     void checkUncreatableNoReason();
 
     void checkURLtoURLObject();
+    void registerValueTypes();
 
 private:
     QQmlEngine engine;
@@ -5921,6 +5922,83 @@ void tst_qqmllanguage::checkURLtoURLObject()
     QQmlComponent c(&engine);
     c.setData(qml.toUtf8(), QUrl::fromLocalFile(QDir::currentPath()));
     QCOMPARE(c.errors().count(), 0);
+}
+
+struct TestValueType
+{
+    Q_GADGET
+    Q_PROPERTY(int foo MEMBER foo)
+public:
+    int foo = 12;
+
+    friend bool operator==(const TestValueType &a, const TestValueType &b)
+    {
+        return a.foo == b.foo;
+    }
+
+    friend bool operator!=(const TestValueType &a, const TestValueType &b)
+    {
+        return a.foo != b.foo;
+    }
+};
+
+struct TestExtendedValueType
+{
+    Q_GADGET
+    Q_PROPERTY(int bar READ bar WRITE setBar)
+public:
+    TestValueType wrapped;
+
+    int bar() const { return wrapped.foo; }
+    void setBar(int bar) { wrapped.foo = bar; }
+};
+
+class TestObjectType : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(TestValueType test MEMBER test)
+public:
+    TestValueType test;
+};
+
+void tst_qqmllanguage::registerValueTypes()
+{
+    QTest::ignoreMessage(QtWarningMsg, "Invalid QML element name \"UpperCase\"; value type names must begin with a lowercase letter");
+    QCOMPARE(qmlRegisterType<TestValueType>("DoesNotWork", 1, 0, "UpperCase"), -1);
+    QVERIFY(qmlRegisterType<TestObjectType>("DoesWork", 1, 0, "TestObject") >= 0);
+
+    {
+        QQmlEngine engine;
+        QQmlComponent c(&engine);
+        c.setData("import QtQml\nimport DoesWork\nTestObject { Component.onCompleted: test.foo = 14 }", QUrl());
+        QVERIFY(c.isReady());
+        QScopedPointer<QObject> obj(c.create());
+        QCOMPARE(obj->property("test").value<TestValueType>().foo, 14);
+
+        QQmlComponent c2(&engine);
+        c2.setData("import QtQml\nimport DoesWork\n TestObject { Component.onCompleted: test.bar = 14 }", QUrl());
+        QVERIFY(c2.isReady());
+        QScopedPointer<QObject> obj2(c2.create());
+        QCOMPARE(obj2->property("test").value<TestValueType>().foo, 12);
+    }
+
+    QVERIFY((qmlRegisterExtendedType<TestValueType, TestExtendedValueType>("DoesWork", 1, 0, "lowerCase")) >= 0);
+
+    {
+        QQmlEngine engine;
+        QQmlComponent c(&engine);
+        c.setData("import QtQml\nimport DoesWork\nTestObject { Component.onCompleted: test.foo = 14 }", QUrl());
+        QVERIFY(c.isReady());
+        QScopedPointer<QObject> obj(c.create());
+        // The foo property is hidden now.
+        QCOMPARE(obj->property("test").value<TestValueType>().foo, 12);
+
+        QQmlComponent c2(&engine);
+        c2.setData("import QtQml\nimport DoesWork\n TestObject { Component.onCompleted: test.bar = 14 }", QUrl());
+        QVERIFY(c2.isReady());
+        QScopedPointer<QObject> obj2(c2.create());
+        QCOMPARE(obj2->property("test").value<TestValueType>().foo, 14);
+    }
 }
 
 void tst_qqmllanguage::accessNullPointerPropertyCache()

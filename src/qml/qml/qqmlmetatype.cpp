@@ -400,12 +400,21 @@ bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *da
                        QMetaType::TypeFlags flags)
 {
     if (!typeName.isEmpty()) {
-        if (typeName.at(0).isLower()
-                && !(flags & (QMetaType::PointerToGadget | QMetaType::IsGadget))) {
+        if (typeName.at(0).isLower() && (flags & QMetaType::PointerToQObject)) {
             QString failure(QCoreApplication::translate("qmlRegisterType", "Invalid QML %1 name \"%2\"; type names must begin with an uppercase letter"));
             data->recordTypeRegFailure(failure.arg(registrationTypeString(typeType)).arg(typeName));
             return false;
         }
+
+        if (typeName.at(0).isUpper()
+                && (flags & (QMetaType::IsGadget | QMetaType::PointerToGadget))) {
+            QString failure(QCoreApplication::translate("qmlRegisterType", "Invalid QML %1 name \"%2\"; value type names must begin with a lowercase letter"));
+            data->recordTypeRegFailure(failure.arg(registrationTypeString(typeType)).arg(typeName));
+            return false;
+        }
+
+        // There can also be types that aren't even gadgets, and there can be types for namespaces.
+        // We cannot check those, but namespaces should be uppercase.
 
         int typeNameLen = typeName.length();
         for (int ii = 0; ii < typeNameLen; ++ii) {
@@ -455,7 +464,8 @@ void addTypeToData(QQmlTypePrivate *type, QQmlMetaTypeData *data)
 
     if (type->typeId.isValid()) {
         data->idToType.insert(type->typeId.id(), type);
-        data->objects.insert(type->typeId.id());
+        if (type->typeId.flags() & QMetaType::PointerToQObject)
+            data->objects.insert(type->typeId.id());
     }
 
     if (type->listId.isValid()) {

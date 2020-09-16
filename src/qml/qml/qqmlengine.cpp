@@ -2300,9 +2300,13 @@ QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(int t, QTypeRevisi
     if (!type.isValid())
         return nullptr;
 
-    return type.containsRevisionedAttributes()
-            ? QQmlMetaType::propertyCache(type, version)
-            : cache(type.metaObject(), version);
+    if (type.containsRevisionedAttributes())
+        return QQmlMetaType::propertyCache(type, version);
+
+    if (const QMetaObject *metaObject = type.metaObject())
+        return cache(metaObject, version);
+
+    return nullptr;
 }
 
 QQmlPropertyCache *QQmlEnginePrivate::findPropertyCacheInCompositeTypes(int t) const

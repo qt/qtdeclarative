@@ -182,23 +182,32 @@ namespace QQmlPrivate
         static constexpr CreateSingletonFunction createSingletonInstance = nullptr;
     };
 
-    template<typename T, bool IsVoid = std::is_void<T>::value>
+    template<typename T,
+             bool IsObject = std::is_base_of<QObject, T>::value,
+             bool IsGadget = QtPrivate::IsGadgetHelper<T>::IsRealGadget>
     struct ExtendedType;
 
-    // void means "not an extended type"
     template<typename T>
-    struct ExtendedType<T, true>
+    struct ExtendedType<T, false, false>
     {
         static constexpr const CreateParentFunction createParent = nullptr;
-        static constexpr const QMetaObject *staticMetaObject = nullptr;
+        static const QMetaObject *staticMetaObject() { return nullptr; }
     };
 
-    // If it's not void, we actually want an error if the ctor or the metaobject is missing.
+    // If it's a QObject, we actually want an error if the ctor or the metaobject is missing.
     template<typename T>
-    struct ExtendedType<T, false>
+    struct ExtendedType<T, true, false>
     {
         static constexpr const CreateParentFunction createParent = QQmlPrivate::createParent<T>;
-        static constexpr const QMetaObject *staticMetaObject = &T::staticMetaObject;
+        static const QMetaObject *staticMetaObject() { return &T::staticMetaObject; }
+    };
+
+    // If it's a Q_GADGET, we don't want the ctor.
+    template<typename T>
+    struct ExtendedType<T, false, true>
+    {
+        static constexpr const CreateParentFunction createParent = nullptr;
+        static const QMetaObject *staticMetaObject() { return &T::staticMetaObject; }
     };
 
     template<class From, class To, int N>
@@ -561,7 +570,7 @@ namespace QQmlPrivate
     };
 
     template<class T>
-    struct QmlResolved<T, std::void_t<decltype(T::QmlForeignType::staticMetaObject)>>
+    struct QmlResolved<T, std::void_t<typename T::QmlForeignType>>
     {
         using Type = typename T::QmlForeignType;
     };
@@ -590,6 +599,38 @@ namespace QQmlPrivate
         static constexpr bool Value = bool(T::QmlIsInterface::yes);
     };
 
+    template<class T, typename = std::void_t<>>
+    struct StaticMetaObject
+    {
+        static const QMetaObject *staticMetaObject() { return nullptr; }
+    };
+
+    template<class T>
+    struct StaticMetaObject<T, std::void_t<decltype(T::staticMetaObject)>>
+    {
+        static const QMetaObject *staticMetaObject() { return &T::staticMetaObject; }
+    };
+
+    template<class T>
+    struct QmlMetaType
+    {
+        static QMetaType self()
+        {
+            if constexpr (std::is_base_of_v<QObject, T>)
+                return QMetaType::fromType<T*>();
+            else
+                return QMetaType::fromType<T>();
+        }
+
+        static QMetaType list()
+        {
+            if constexpr (std::is_base_of_v<QObject, T>)
+                return QMetaType::fromType<QQmlListProperty<T>>();
+            else
+                return QMetaType();
+        }
+    };
+
     template<typename T>
     void qmlRegisterSingletonAndRevisions(const char *uri, int versionMajor,
                                           const QMetaObject *classInfoMetaObject,
@@ -603,10 +644,10 @@ namespace QQmlPrivate
 
             Constructors<T>::createSingletonInstance,
 
-            &T::staticMetaObject,
+            StaticMetaObject<T>::staticMetaObject(),
             classInfoMetaObject,
 
-            QMetaType::fromType<T *>(),
+            QmlMetaType<T>::self(),
             qmlTypeIds
         };
 
@@ -620,15 +661,15 @@ namespace QQmlPrivate
     {
         RegisterTypeAndRevisions type = {
             0,
-            QMetaType::fromType<T*>(),
-            QMetaType::fromType<QQmlListProperty<T>>(),
+            QmlMetaType<T>::self(),
+            QmlMetaType<T>::list(),
             int(sizeof(T)),
             Constructors<T>::createInto, nullptr,
 
             uri,
             QTypeRevision::fromMajorVersion(versionMajor),
 
-            &T::staticMetaObject,
+            StaticMetaObject<T>::staticMetaObject(),
             classInfoMetaObject,
 
             attachedPropertiesFunc<T>(),
@@ -639,7 +680,7 @@ namespace QQmlPrivate
             StaticCastSelector<T, QQmlPropertyValueInterceptor>::cast(),
 
             ExtendedType<E>::createParent,
-            ExtendedType<E>::staticMetaObject,
+            ExtendedType<E>::staticMetaObject(),
 
             &qmlCreateCustomParser<T>,
             qmlTypeIds

@@ -222,8 +222,6 @@ public:
     QQmlValueTypeProvider();
     virtual ~QQmlValueTypeProvider();
 
-    const QMetaObject *metaObjectForMetaType(int);
-
     bool initValueType(int, QVariant&);
 
     QVariant createValueType(int, int, const void *[]);
@@ -238,8 +236,6 @@ public:
     bool writeValueType(int, const void *, QVariant&);
 
 private:
-    virtual const QMetaObject *getMetaObjectForMetaType(int);
-
     virtual bool create(int, int, const void *[], QVariant *);
     virtual bool createFromString(int, const QString &, void *, size_t);
 

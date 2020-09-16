@@ -115,6 +115,7 @@ public:
     bool isCreatable() const;
     typedef QObject *(*ExtensionFunc)(QObject *);
     ExtensionFunc extensionFunction() const;
+    const QMetaObject *extensionMetaObject() const;
     bool isExtendedType() const;
     QString noCreationReason() const;
 

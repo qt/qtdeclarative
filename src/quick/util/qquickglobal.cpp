@@ -581,32 +581,6 @@ public:
         return QMatrix4x4(matVals);
     }
 
-    const QMetaObject *getMetaObjectForMetaType(int type) override
-    {
-        switch (type) {
-        case QMetaType::QColor:
-            return &QQuickColorValueType::staticMetaObject;
-        case QMetaType::QColorSpace:
-            return &QQuickColorSpaceValueType::staticMetaObject;
-        case QMetaType::QFont:
-            return &QQuickFontValueType::staticMetaObject;
-        case QMetaType::QVector2D:
-            return &QQuickVector2DValueType::staticMetaObject;
-        case QMetaType::QVector3D:
-            return &QQuickVector3DValueType::staticMetaObject;
-        case QMetaType::QVector4D:
-            return &QQuickVector4DValueType::staticMetaObject;
-        case QMetaType::QQuaternion:
-            return &QQuickQuaternionValueType::staticMetaObject;
-        case QMetaType::QMatrix4x4:
-            return &QQuickMatrix4x4ValueType::staticMetaObject;
-        default:
-            break;
-        }
-
-        return nullptr;
-    }
-
     bool create(int type, int argc, const void *argv[], QVariant *v) override
     {
         switch (type) {

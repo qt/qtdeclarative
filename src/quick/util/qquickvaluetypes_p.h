@@ -84,6 +84,7 @@ class QQuickColorValueType
     QML_ADDED_IN_VERSION(2, 0)
     QML_FOREIGN(QColor)
     QML_VALUE_TYPE(color)
+    QML_EXTENDED(QQuickColorValueType)
 
 public:
     Q_INVOKABLE QString toString() const;
@@ -125,6 +126,7 @@ class QQuickVector2DValueType
     QML_ADDED_IN_VERSION(2, 0)
     QML_FOREIGN(QVector2D)
     QML_VALUE_TYPE(vector2d)
+    QML_EXTENDED(QQuickVector2DValueType)
 
 public:
     Q_INVOKABLE QString toString() const;
@@ -157,6 +159,7 @@ class QQuickVector3DValueType
     QML_ADDED_IN_VERSION(2, 0)
     QML_FOREIGN(QVector3D)
     QML_VALUE_TYPE(vector3d)
+    QML_EXTENDED(QQuickVector3DValueType)
 
 public:
     Q_INVOKABLE QString toString() const;
@@ -194,6 +197,7 @@ class QQuickVector4DValueType
     QML_ADDED_IN_VERSION(2, 0)
     QML_FOREIGN(QVector4D)
     QML_VALUE_TYPE(vector4d)
+    QML_EXTENDED(QQuickVector4DValueType)
 
 public:
     Q_INVOKABLE QString toString() const;
@@ -232,6 +236,7 @@ class QQuickQuaternionValueType
     QML_ADDED_IN_VERSION(2, 0)
     QML_FOREIGN(QQuaternion)
     QML_VALUE_TYPE(quaternion)
+    QML_EXTENDED(QQuickQuaternionValueType)
 
 public:
     Q_INVOKABLE QString toString() const;
@@ -269,6 +274,7 @@ class QQuickMatrix4x4ValueType
     QML_ADDED_IN_VERSION(2, 0)
     QML_FOREIGN(QMatrix4x4)
     QML_VALUE_TYPE(matrix4x4)
+    QML_EXTENDED(QQuickMatrix4x4ValueType)
 
 public:
     qreal m11() const { return v(0, 0); }
@@ -330,42 +336,40 @@ public:
     Q_INVOKABLE bool fuzzyEquals(const QMatrix4x4 &m) const;
 };
 
-class QQuickFontEnums
+namespace QQuickFontEnums
 {
-    Q_GADGET
+Q_NAMESPACE
 
-    QML_NAMED_ELEMENT(Font)
-    QML_ADDED_IN_VERSION(2, 0)
-    QML_UNCREATABLE("Element is not creatable.")
+QML_NAMED_ELEMENT(Font)
+QML_ADDED_IN_VERSION(2, 0)
 
-public:
-    enum FontWeight { Thin = QFont::Thin,
-                      ExtraLight = QFont::ExtraLight,
-                      Light = QFont::Light,
-                      Normal = QFont::Normal,
-                      Medium = QFont::Medium,
-                      DemiBold = QFont::DemiBold,
-                      Bold = QFont::Bold,
-                      ExtraBold = QFont::ExtraBold,
-                      Black = QFont::Black };
-    Q_ENUM(FontWeight)
-    enum Capitalization { MixedCase = QFont::MixedCase,
-                           AllUppercase = QFont::AllUppercase,
-                           AllLowercase = QFont::AllLowercase,
-                           SmallCaps = QFont::SmallCaps,
-                           Capitalize = QFont::Capitalize };
-    Q_ENUM(Capitalization)
+enum FontWeight { Thin = QFont::Thin,
+                  ExtraLight = QFont::ExtraLight,
+                  Light = QFont::Light,
+                  Normal = QFont::Normal,
+                  Medium = QFont::Medium,
+                  DemiBold = QFont::DemiBold,
+                  Bold = QFont::Bold,
+                  ExtraBold = QFont::ExtraBold,
+                  Black = QFont::Black };
+Q_ENUM_NS(FontWeight)
+enum Capitalization { MixedCase = QFont::MixedCase,
+                       AllUppercase = QFont::AllUppercase,
+                       AllLowercase = QFont::AllLowercase,
+                       SmallCaps = QFont::SmallCaps,
+                       Capitalize = QFont::Capitalize };
+Q_ENUM_NS(Capitalization)
 
-    enum HintingPreference {
-        PreferDefaultHinting = QFont::PreferDefaultHinting,
-        PreferNoHinting = QFont::PreferNoHinting,
-        PreferVerticalHinting = QFont::PreferVerticalHinting,
-        PreferFullHinting = QFont::PreferFullHinting
-    };
-    Q_ENUM(HintingPreference)
+enum HintingPreference {
+    PreferDefaultHinting = QFont::PreferDefaultHinting,
+    PreferNoHinting = QFont::PreferNoHinting,
+    PreferVerticalHinting = QFont::PreferVerticalHinting,
+    PreferFullHinting = QFont::PreferFullHinting
+};
+Q_ENUM_NS(HintingPreference)
 };
 
-class QQuickFontValueType : public QQuickFontEnums
+class QQuickFontValueType
 {
     QFont v;
     Q_GADGET
@@ -380,16 +384,17 @@ class QQuickFontValueType : public QQuickFontEnums
     Q_PROPERTY(bool strikeout READ strikeout WRITE setStrikeout FINAL)
     Q_PROPERTY(qreal pointSize READ pointSize WRITE setPointSize FINAL)
     Q_PROPERTY(int pixelSize READ pixelSize WRITE setPixelSize FINAL)
-    Q_PROPERTY(Capitalization capitalization READ capitalization WRITE setCapitalization FINAL)
+    Q_PROPERTY(QQuickFontEnums::Capitalization capitalization READ capitalization WRITE setCapitalization FINAL)
     Q_PROPERTY(qreal letterSpacing READ letterSpacing WRITE setLetterSpacing FINAL)
     Q_PROPERTY(qreal wordSpacing READ wordSpacing WRITE setWordSpacing FINAL)
-    Q_PROPERTY(HintingPreference hintingPreference READ hintingPreference WRITE setHintingPreference FINAL)
+    Q_PROPERTY(QQuickFontEnums::HintingPreference hintingPreference READ hintingPreference WRITE setHintingPreference FINAL)
     Q_PROPERTY(bool kerning READ kerning WRITE setKerning FINAL)
     Q_PROPERTY(bool preferShaping READ preferShaping WRITE setPreferShaping FINAL)
 
     QML_VALUE_TYPE(font)
     QML_FOREIGN(QFont)
     QML_ADDED_IN_VERSION(2, 0)
+    QML_EXTENDED(QQuickFontValueType)
 
 public:
     Q_INVOKABLE QString toString() const;
@@ -424,8 +429,8 @@ public:
     int pixelSize() const;
     void setPixelSize(int size);
 
-    Capitalization capitalization() const;
-    void setCapitalization(Capitalization);
+    QQuickFontEnums::Capitalization capitalization() const;
+    void setCapitalization(QQuickFontEnums::Capitalization);
 
     qreal letterSpacing() const;
     void setLetterSpacing(qreal spacing);
@@ -433,8 +438,8 @@ public:
     qreal wordSpacing() const;
     void setWordSpacing(qreal spacing);
 
-    HintingPreference hintingPreference() const;
-    void setHintingPreference(HintingPreference);
+    QQuickFontEnums::HintingPreference hintingPreference() const;
+    void setHintingPreference(QQuickFontEnums::HintingPreference);
 
     bool kerning() const;
     void setKerning(bool b);
@@ -443,54 +448,63 @@ public:
     void setPreferShaping(bool b);
 };
 
+namespace QQuickColorSpaceEnums
+{
+Q_NAMESPACE
+QML_NAMED_ELEMENT(ColorSpace)
+QML_ADDED_IN_VERSION(2, 15)
+Q_CLASSINFO("RegisterEnumClassesUnscoped", "false")
+
+enum NamedColorSpace {
+    Unknown = 0,
+    SRgb,
+    SRgbLinear,
+    AdobeRgb,
+    DisplayP3,
+    ProPhotoRgb
+};
+Q_ENUM_NS(NamedColorSpace)
+
+enum class Primaries {
+    Custom = 0,
+    SRgb,
+    AdobeRgb,
+    DciP3D65,
+    ProPhotoRgb
+};
+Q_ENUM_NS(Primaries)
+enum class TransferFunction {
+    Custom = 0,
+    Linear,
+    Gamma,
+    SRgb,
+    ProPhotoRgb
+};
+Q_ENUM_NS(TransferFunction)
+}
+
 class QQuickColorSpaceValueType
 {
     QColorSpace v;
     Q_GADGET
 
-    Q_PROPERTY(NamedColorSpace namedColorSpace READ namedColorSpace WRITE setNamedColorSpace FINAL)
-    Q_PROPERTY(Primaries primaries READ primaries WRITE setPrimaries FINAL)
-    Q_PROPERTY(TransferFunction transferFunction READ transferFunction WRITE setTransferFunction FINAL)
+    Q_PROPERTY(QQuickColorSpaceEnums::NamedColorSpace namedColorSpace READ namedColorSpace WRITE setNamedColorSpace FINAL)
+    Q_PROPERTY(QQuickColorSpaceEnums::Primaries primaries READ primaries WRITE setPrimaries FINAL)
+    Q_PROPERTY(QQuickColorSpaceEnums::TransferFunction transferFunction READ transferFunction WRITE setTransferFunction FINAL)
     Q_PROPERTY(float gamma READ gamma WRITE setGamma FINAL)
 
-    QML_NAMED_ELEMENT(ColorSpace)
+    QML_ANONYMOUS
+    QML_FOREIGN(QColorSpace)
     QML_ADDED_IN_VERSION(2, 15)
-    Q_CLASSINFO("RegisterEnumClassesUnscoped", "false")
+    QML_EXTENDED(QQuickColorSpaceValueType)
 
 public:
-    enum NamedColorSpace {
-        Unknown = 0,
-        SRgb,
-        SRgbLinear,
-        AdobeRgb,
-        DisplayP3,
-        ProPhotoRgb
-    };
-    Q_ENUM(NamedColorSpace)
-
-    enum class Primaries {
-        Custom = 0,
-        SRgb,
-        AdobeRgb,
-        DciP3D65,
-        ProPhotoRgb
-    };
-    Q_ENUM(Primaries)
-    enum class TransferFunction {
-        Custom = 0,
-        Linear,
-        Gamma,
-        SRgb,
-        ProPhotoRgb
-    };
-    Q_ENUM(TransferFunction)
-
-    NamedColorSpace namedColorSpace() const noexcept;
-    void setNamedColorSpace(NamedColorSpace namedColorSpace);
-    Primaries primaries() const noexcept;
-    void setPrimaries(Primaries primariesId);
-    TransferFunction transferFunction() const noexcept;
-    void setTransferFunction(TransferFunction transferFunction);
+    QQuickColorSpaceEnums::NamedColorSpace namedColorSpace() const noexcept;
+    void setNamedColorSpace(QQuickColorSpaceEnums::NamedColorSpace namedColorSpace);
+    QQuickColorSpaceEnums::Primaries primaries() const noexcept;
+    void setPrimaries(QQuickColorSpaceEnums::Primaries primariesId);
+    QQuickColorSpaceEnums::TransferFunction transferFunction() const noexcept;
+    void setTransferFunction(QQuickColorSpaceEnums::TransferFunction transferFunction);
     float gamma() const noexcept;
     void setGamma(float gamma);
 };

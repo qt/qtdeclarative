@@ -1501,7 +1501,7 @@ void tst_qquicktext::weight()
         QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
 
         QVERIFY(textObject != nullptr);
-        QCOMPARE((int)textObject->font().weight(), (int)QQuickFontValueType::Normal);
+        QCOMPARE((int)textObject->font().weight(), int(QQuickFontEnums::Normal));
 
         delete textObject;
     }
@@ -1512,7 +1512,7 @@ void tst_qquicktext::weight()
         QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
 
         QVERIFY(textObject != nullptr);
-        QCOMPARE((int)textObject->font().weight(), (int)QQuickFontValueType::Bold);
+        QCOMPARE((int)textObject->font().weight(), int(QQuickFontEnums::Bold));
 
         delete textObject;
     }
@@ -1566,7 +1566,7 @@ void tst_qquicktext::capitalization()
         QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
 
         QVERIFY(textObject != nullptr);
-        QCOMPARE((int)textObject->font().capitalization(), (int)QQuickFontValueType::MixedCase);
+        QCOMPARE((int)textObject->font().capitalization(), int(QQuickFontEnums::MixedCase));
 
         delete textObject;
     }
@@ -1577,7 +1577,7 @@ void tst_qquicktext::capitalization()
         QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
 
         QVERIFY(textObject != nullptr);
-        QCOMPARE((int)textObject->font().capitalization(), (int)QQuickFontValueType::AllUppercase);
+        QCOMPARE((int)textObject->font().capitalization(), int(QQuickFontEnums::AllUppercase));
 
         delete textObject;
     }
@@ -1588,7 +1588,7 @@ void tst_qquicktext::capitalization()
         QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
 
         QVERIFY(textObject != nullptr);
-        QCOMPARE((int)textObject->font().capitalization(), (int)QQuickFontValueType::AllLowercase);
+        QCOMPARE((int)textObject->font().capitalization(), int(QQuickFontEnums::AllLowercase));
 
         delete textObject;
     }
@@ -1599,7 +1599,7 @@ void tst_qquicktext::capitalization()
         QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
 
         QVERIFY(textObject != nullptr);
-        QCOMPARE((int)textObject->font().capitalization(), (int)QQuickFontValueType::SmallCaps);
+        QCOMPARE((int)textObject->font().capitalization(), int(QQuickFontEnums::SmallCaps));
 
         delete textObject;
     }
@@ -1610,7 +1610,7 @@ void tst_qquicktext::capitalization()
         QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
 
         QVERIFY(textObject != nullptr);
-        QCOMPARE((int)textObject->font().capitalization(), (int)QQuickFontValueType::Capitalize);
+        QCOMPARE((int)textObject->font().capitalization(), int(QQuickFontEnums::Capitalize));
 
         delete textObject;
     }

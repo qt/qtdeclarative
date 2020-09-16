@@ -536,6 +536,13 @@ QQmlType::ExtensionFunc QQmlType::extensionFunction() const
     return d->extraData.cd->extFunc;
 }
 
+const QMetaObject *QQmlType::extensionMetaObject() const
+{
+    if (!d || d->regType != CppType)
+        return nullptr;
+    return d->extraData.cd->extMetaObject;
+}
+
 bool QQmlType::isExtendedType() const
 {
     if (!d)
