@@ -105,34 +105,6 @@ bool QQmlValueTypeProvider::createValueFromString(int type, const QString &s, vo
     return false;
 }
 
-bool QQmlValueTypeProvider::createStringFromValue(int type, const void *data, QString *s)
-{
-    Q_ASSERT(data);
-    Q_ASSERT(s);
-
-    QQmlValueTypeProvider *p = this;
-    do {
-        if (p->createStringFrom(type, data, s))
-            return true;
-    } while ((p = p->next));
-
-    return false;
-}
-
-QVariant QQmlValueTypeProvider::createVariantFromString(const QString &s)
-{
-    QVariant v;
-
-    QQmlValueTypeProvider *p = this;
-    do {
-        if (p->variantFromString(s, &v))
-            return v;
-    } while ((p = p->next));
-
-    // Return a variant containing the string itself
-    return QVariant(s);
-}
-
 QVariant QQmlValueTypeProvider::createVariantFromString(int type, const QString &s, bool *ok)
 {
     QVariant v;
@@ -223,8 +195,6 @@ const QMetaObject *QQmlValueTypeProvider::getMetaObjectForMetaType(int) { return
 bool QQmlValueTypeProvider::init(int, QVariant&) { return false; }
 bool QQmlValueTypeProvider::create(int, int, const void *[], QVariant *) { return false; }
 bool QQmlValueTypeProvider::createFromString(int, const QString &, void *, size_t) { return false; }
-bool QQmlValueTypeProvider::createStringFrom(int, const void *, QString *) { return false; }
-bool QQmlValueTypeProvider::variantFromString(const QString &, QVariant *) { return false; }
 bool QQmlValueTypeProvider::variantFromString(int, const QString &, QVariant *) { return false; }
 bool QQmlValueTypeProvider::variantFromJsObject(int, const QV4::Value &, QV4::ExecutionEngine *, QVariant *) { return false; }
 bool QQmlValueTypeProvider::equal(int, const void *, const QVariant&) { return false; }

@@ -730,60 +730,6 @@ public:
         return false;
     }
 
-    bool createStringFrom(int type, const void *data, QString *s) override
-    {
-        if (type == QMetaType::QColor) {
-            const QColor *color = reinterpret_cast<const QColor *>(data);
-            new (s) QString(QVariant(*color).toString());
-            return true;
-        }
-
-        return false;
-    }
-
-    bool variantFromString(const QString &s, QVariant *v) override
-    {
-        QColor c(s);
-        if (c.isValid()) {
-            *v = QVariant::fromValue(c);
-            return true;
-        }
-
-        bool ok = false;
-
-        QVector2D v2 = vector2DFromString(s, &ok);
-        if (ok) {
-            *v = QVariant::fromValue(v2);
-            return true;
-        }
-
-        QVector3D v3 = vector3DFromString(s, &ok);
-        if (ok) {
-            *v = QVariant::fromValue(v3);
-            return true;
-        }
-
-        QVector4D v4 = vector4DFromString(s, &ok);
-        if (ok) {
-            *v = QVariant::fromValue(v4);
-            return true;
-        }
-
-        QQuaternion q = quaternionFromString(s, &ok);
-        if (ok) {
-            *v = QVariant::fromValue(q);
-            return true;
-        }
-
-        QMatrix4x4 m = matrix4x4FromString(s, &ok);
-        if (ok) {
-            *v = QVariant::fromValue(m);
-            return true;
-        }
-
-        return false;
-    }
-
     bool variantFromString(int type, const QString &s, QVariant *v) override
     {
         bool ok = false;
