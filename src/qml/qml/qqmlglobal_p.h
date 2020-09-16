@@ -239,7 +239,6 @@ public:
 
 private:
     virtual const QMetaObject *getMetaObjectForMetaType(int);
-    virtual bool init(int, QVariant&);
 
     virtual bool create(int, int, const void *[], QVariant *);
     virtual bool createFromString(int, const QString &, void *, size_t);
@@ -247,10 +246,7 @@ private:
     virtual bool variantFromString(int, const QString &, QVariant *);
     virtual bool variantFromJsObject(int, const QV4::Value &, QV4::ExecutionEngine *, QVariant *);
 
-    virtual bool equal(int, const void *, const QVariant&);
     virtual bool store(int, const void *, void *, size_t);
-    virtual bool read(const QVariant&, void *, int);
-    virtual bool write(int, const void *, QVariant&);
 
     friend Q_QML_PRIVATE_EXPORT void QQml_addValueTypeProvider(QQmlValueTypeProvider *);
     friend Q_QML_PRIVATE_EXPORT void QQml_removeValueTypeProvider(QQmlValueTypeProvider *);
