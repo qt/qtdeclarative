@@ -101,6 +101,11 @@ void QQuickStyleItemProgressBar::initStyleOption(QStyleOptionProgressBar &styleO
     if (progressBar->isIndeterminate()) {
         styleOption.minimum = 0;
         styleOption.maximum = 0;
+    } else if (progressBar->to() - progressBar->from() < 100) {
+        // Add some range to support float numbers
+        styleOption.minimum = 0;
+        styleOption.maximum = (progressBar->to() - progressBar->from()) * 100;
+        styleOption.progress = (progressBar->value() - progressBar->from()) * 100;
     } else {
         styleOption.minimum = progressBar->from();
         styleOption.maximum = progressBar->to();
