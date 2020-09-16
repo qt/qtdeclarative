@@ -54,7 +54,6 @@
 #include <QQuickView> //Not using QQmlApplicationEngine because many examples don't have a Window{}
 #define DECLARATIVE_EXAMPLE_MAIN(NAME) int main(int argc, char* argv[]) \
 {\
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);\
     QGuiApplication app(argc,argv);\
     app.setOrganizationName("QtProject");\
     app.setOrganizationDomain("qt-project.org");\

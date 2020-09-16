@@ -245,7 +245,7 @@ void QQmlPreviewHandler::language(const QUrl &context, const QLocale &locale)
 
     m_qtTranslator.reset(new QTranslator(this));
     if (m_qtTranslator->load(locale, QLatin1String("qt"), QLatin1String("_"),
-                           QLibraryInfo::location(QLibraryInfo::TranslationsPath))) {
+                           QLibraryInfo::path(QLibraryInfo::TranslationsPath))) {
         QCoreApplication::installTranslator(m_qtTranslator.get());
     }
 

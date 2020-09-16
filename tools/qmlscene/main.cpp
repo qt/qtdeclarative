@@ -539,10 +539,10 @@ int main(int argc, char ** argv)
 #if QT_CONFIG(translation)
     QLocale locale;
     QTranslator qtTranslator;
-    if (qtTranslator.load(locale, QLatin1String("qt"), QLatin1String("_"), QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
+    if (qtTranslator.load(locale, QLatin1String("qt"), QLatin1String("_"), QLibraryInfo::path(QLibraryInfo::TranslationsPath)))
         QCoreApplication::installTranslator(&qtTranslator);
     QTranslator translator;
-    if (translator.load(locale, QLatin1String("qmlscene"), QLatin1String("_"), QLibraryInfo::location(QLibraryInfo::TranslationsPath)))
+    if (translator.load(locale, QLatin1String("qmlscene"), QLatin1String("_"), QLibraryInfo::path(QLibraryInfo::TranslationsPath)))
         QCoreApplication::installTranslator(&translator);
 
     QTranslator qmlTranslator;

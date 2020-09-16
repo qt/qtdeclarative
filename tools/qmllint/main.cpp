@@ -155,7 +155,7 @@ int main(int argv, char *argc[])
     QStringList qmltypeDirs = parser.isSet(qmltypesDirsOption)
             ? parser.values(qmltypesDirsOption)
 #   ifndef QT_BOOTSTRAPPED
-            : QStringList { QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath) };
+            : QStringList { QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath) };
 #   else
             : QStringList {};
 #   endif

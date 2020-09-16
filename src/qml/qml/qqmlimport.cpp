@@ -1933,7 +1933,7 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
     filePluginPath << QLatin1String(".");
     // Search order is applicationDirPath(), qrc:/qt-project.org/imports, $QML2_IMPORT_PATH, QLibraryInfo::Qml2ImportsPath
 
-    QString installImportsPath = QLibraryInfo::location(QLibraryInfo::Qml2ImportsPath);
+    QString installImportsPath = QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath);
     addImportPath(installImportsPath);
 
     // env import paths
