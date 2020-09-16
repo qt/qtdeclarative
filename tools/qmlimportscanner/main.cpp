@@ -120,6 +120,10 @@ QVariantList findImportsInAst(QQmlJS::AST::UiHeaderItemList *headerItemList, con
                 uri = uri->next;
             }
             name.chop(1); // remove trailing "."
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+            if (name.startsWith(QLatin1String("QtQuick.Controls")) && name.endsWith(QLatin1String("impl")))
+                continue;
+#endif
             if (!name.isEmpty())
                 import[nameLiteral()] = name;
             import[typeLiteral()] = moduleLiteral();
