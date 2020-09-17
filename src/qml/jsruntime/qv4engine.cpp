@@ -122,6 +122,7 @@
 #include <private/qv4sqlerrors_p.h>
 #include <qqmlfile.h>
 #include <qmetatype.h>
+#include <qsequentialiterable.h>
 
 #if USE(PTHREADS)
 #  include <pthread.h>
@@ -1581,22 +1582,21 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
             auto metaType = QMetaType(typeHint);
             retn = QVariant(metaType, nullptr);
             auto retnAsIterable = retn.value<QSequentialIterable>();
-            if (retnAsIterable.metaSequence().canAddValue()) {
-                QMetaType valueMetaType = retnAsIterable.metaSequence().valueMetaType();
+            if (retnAsIterable.metaContainer().canAddValue()) {
+                QMetaType valueMetaType = retnAsIterable.metaContainer().valueMetaType();
                 auto const length = a->getLength();
                 QV4::ScopedValue arrayValue(scope);
                 for (qint64 i = 0; i < length; ++i) {
                     arrayValue = a->get(i);
                     QVariant asVariant;
-                    if (QMetaType::hasRegisteredConverterFunction(
-                                qMetaTypeId<QJSValue>(), valueMetaType.id())) {
+                    if (QMetaType::canConvert(QMetaType::fromType<QJSValue>(), valueMetaType)) {
                         // before attempting a conversion from the concrete types,
                         // check if there exists a conversion from QJSValue -> out type
                         // prefer that one for compatibility reasons
                         asVariant = QVariant::fromValue(QJSValuePrivate::fromReturnedValue(
                                                             arrayValue->asReturnedValue()));
                         if (asVariant.convert(valueMetaType)) {
-                            retnAsIterable.metaSequence().addValue(retn.data(), asVariant.constData());
+                            retnAsIterable.metaContainer().addValue(retn.data(), asVariant.constData());
                             continue;
                         }
                     }
@@ -1614,7 +1614,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, int 
                             asVariant = QVariant(valueMetaType, nullptr);
                         }
                     }
-                    retnAsIterable.metaSequence().addValue(retn.data(), asVariant.constData());
+                    retnAsIterable.metaContainer().addValue(retn.data(), asVariant.constData());
                 }
                 return retn;
             }
@@ -1846,7 +1846,7 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
             return retn->asReturnedValue();
 #endif
 
-        if (QMetaType::hasRegisteredConverterFunction(type, qMetaTypeId<QSequentialIterable>())) {
+        if (QMetaType::canConvert(variant.metaType(), QMetaType::fromType<QSequentialIterable>())) {
             QSequentialIterable lst = variant.value<QSequentialIterable>();
             return sequentialIterableToJS(this, lst);
         }
