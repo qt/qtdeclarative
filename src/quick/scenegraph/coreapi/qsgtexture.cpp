@@ -84,7 +84,7 @@ bool operator!=(const QSGSamplerDescription &a, const QSGSamplerDescription &b) 
     return !(a == b);
 }
 
-size_t qHash(const QSGSamplerDescription &s, uint seed) Q_DECL_NOTHROW
+size_t qHash(const QSGSamplerDescription &s, size_t seed) Q_DECL_NOTHROW
 {
     const int f = s.filtering;
     const int m = s.mipmapFiltering;

@@ -644,7 +644,7 @@ struct GraphicsState
 
 bool operator==(const GraphicsState &a, const GraphicsState &b) Q_DECL_NOTHROW;
 bool operator!=(const GraphicsState &a, const GraphicsState &b) Q_DECL_NOTHROW;
-size_t qHash(const GraphicsState &s, uint seed = 0) Q_DECL_NOTHROW;
+size_t qHash(const GraphicsState &s, size_t seed = 0) Q_DECL_NOTHROW;
 
 struct ShaderManagerShader;
 
@@ -658,7 +658,7 @@ struct GraphicsPipelineStateKey
 
 bool operator==(const GraphicsPipelineStateKey &a, const GraphicsPipelineStateKey &b) Q_DECL_NOTHROW;
 bool operator!=(const GraphicsPipelineStateKey &a, const GraphicsPipelineStateKey &b) Q_DECL_NOTHROW;
-size_t qHash(const GraphicsPipelineStateKey &k, uint seed = 0) Q_DECL_NOTHROW;
+size_t qHash(const GraphicsPipelineStateKey &k, size_t seed = 0) Q_DECL_NOTHROW;
 
 struct ShaderManagerShader
 {

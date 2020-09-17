@@ -52,7 +52,7 @@ QV4Debugger::BreakPoint::BreakPoint(const QString &fileName, int line)
     : fileName(fileName), lineNumber(line)
 {}
 
-inline size_t qHash(const QV4Debugger::BreakPoint &b, uint seed = 0) Q_DECL_NOTHROW
+inline size_t qHash(const QV4Debugger::BreakPoint &b, size_t seed = 0) Q_DECL_NOTHROW
 {
     return qHash(b.fileName, seed) ^ b.lineNumber;
 }

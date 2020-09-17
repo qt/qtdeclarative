@@ -93,7 +93,7 @@ typedef void (*IRLoaderFunction)(Document *, const QQmlPrivate::CachedQmlUnit *)
 
 using QQmlAttachedPropertiesFunc = QQmlPrivate::QQmlAttachedPropertiesFunc<QObject>;
 
-inline size_t qHash(QQmlAttachedPropertiesFunc func, uint seed = 0)
+inline size_t qHash(QQmlAttachedPropertiesFunc func, size_t seed = 0)
 {
     return qHash(quintptr(func), seed);
 }

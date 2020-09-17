@@ -72,7 +72,7 @@ Q_DECLARE_TYPEINFO(QSGSamplerDescription, Q_MOVABLE_TYPE);
 
 bool operator==(const QSGSamplerDescription &a, const QSGSamplerDescription &b) Q_DECL_NOTHROW;
 bool operator!=(const QSGSamplerDescription &a, const QSGSamplerDescription &b) Q_DECL_NOTHROW;
-size_t qHash(const QSGSamplerDescription &s, uint seed = 0) Q_DECL_NOTHROW;
+size_t qHash(const QSGSamplerDescription &s, size_t seed = 0) Q_DECL_NOTHROW;
 
 #if QT_CONFIG(opengl)
 class Q_QUICK_PRIVATE_EXPORT QSGTexturePlatformOpenGL : public QPlatformInterface::QSGOpenGLTexture

@@ -164,7 +164,7 @@ inline RegExpCacheKey::RegExpCacheKey(const RegExp::Data *re)
     , flags(re->flags)
 {}
 
-inline size_t qHash(const RegExpCacheKey& key, uint seed = 0) Q_DECL_NOTHROW
+inline size_t qHash(const RegExpCacheKey& key, size_t seed = 0) Q_DECL_NOTHROW
 { return qHash(key.pattern, seed); }
 
 class RegExpCache : public QHash<RegExpCacheKey, WeakValue>

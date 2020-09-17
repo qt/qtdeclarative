@@ -3904,7 +3904,7 @@ bool operator!=(const GraphicsState &a, const GraphicsState &b) Q_DECL_NOTHROW
     return !(a == b);
 }
 
-size_t qHash(const GraphicsState &s, uint seed) Q_DECL_NOTHROW
+size_t qHash(const GraphicsState &s, size_t seed) Q_DECL_NOTHROW
 {
     // do not bother with all fields
     return seed
@@ -3932,7 +3932,7 @@ bool operator!=(const GraphicsPipelineStateKey &a, const GraphicsPipelineStateKe
     return !(a == b);
 }
 
-size_t qHash(const GraphicsPipelineStateKey &k, uint seed) Q_DECL_NOTHROW
+size_t qHash(const GraphicsPipelineStateKey &k, size_t seed) Q_DECL_NOTHROW
 {
     // no srb and rp included due to their special comparison semantics and lack of hash keys
     return qHash(k.state, seed) + qHash(k.sms->programRhi.program, seed);

@@ -188,7 +188,7 @@ struct QSGRhiShaderMaterialTypeCache
     QHash<Key, QSGMaterialType *> m_types;
 };
 
-size_t qHash(const QSGRhiShaderMaterialTypeCache::Key &key, uint seed = 0)
+size_t qHash(const QSGRhiShaderMaterialTypeCache::Key &key, size_t seed = 0)
 {
     size_t hash = seed;
     for (int i = 0; i < 2; ++i)
