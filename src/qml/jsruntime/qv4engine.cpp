@@ -196,7 +196,7 @@ static QtMetaContainerPrivate::QMetaSequenceInterface sequenceInterface()
 {
     using namespace QtMetaContainerPrivate;
     QMetaSequenceInterface iface;
-    iface.valueMetaType = QMetaType(QtPrivate::qMetaTypeInterfaceForType<QVariant>());
+    iface.valueMetaType = QtPrivate::qMetaTypeInterfaceForType<QVariant>();
     iface.iteratorCapabilities = RandomAccessCapability | BiDirectionalCapability | ForwardCapability;
     iface.addRemoveCapabilities = CanAddAtEnd;
     iface.sizeFn = [](const void *p) -> qsizetype {
