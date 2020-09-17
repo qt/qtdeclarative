@@ -928,8 +928,7 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QQuickPointerEve
     // For each point, check if it is accepted, if not, try the next point.
     // Any of the fingers can become the mouse one.
     // This can happen because a mouse area might not accept an event at some point but another.
-    for (int i = 0; i < event->touchPoints().count(); ++i) {
-        const QEventPoint &p = event->touchPoints().at(i);
+    for (auto &p : event->points()) {
         // A new touch point
         if (touchMouseId == -1 && p.state() & QEventPoint::State::Pressed) {
             QPointF pos = item->mapFromScene(p.scenePosition());
@@ -1138,8 +1137,10 @@ void QQuickWindowPrivate::sendUngrabEvent(QQuickItem *grabber, bool touch)
 */
 void QQuickWindowPrivate::translateTouchEvent(QTouchEvent *touchEvent)
 {
-    for (QEventPoint &touchPoint : QMutableTouchEvent::from(touchEvent)->touchPoints())
-        QMutableEventPoint::from(touchPoint).setScenePosition(touchPoint.position());
+    for (qsizetype i = 0; i != touchEvent->pointCount(); ++i) {
+        auto &pt = QMutableEventPoint::from(touchEvent->point(i));
+        pt.setScenePosition(pt.position());
+    }
 }
 
 
@@ -2474,7 +2475,7 @@ bool QQuickWindowPrivate::compressTouchEvent(QTouchEvent *event)
     }
 
     if (!delayedTouch) {
-        delayedTouch.reset(new QMutableTouchEvent(event->type(), event->pointingDevice(), event->modifiers(), event->touchPoints()));
+        delayedTouch.reset(new QMutableTouchEvent(event->type(), event->pointingDevice(), event->modifiers(), event->points()));
         delayedTouch->setTimestamp(event->timestamp());
         if (renderControl)
             QQuickRenderControlPrivate::get(renderControl)->maybeUpdate();
@@ -2487,15 +2488,15 @@ bool QQuickWindowPrivate::compressTouchEvent(QTouchEvent *event)
     if (delayedTouch->type() == event->type() &&
             delayedTouch->device() == event->device() &&
             delayedTouch->modifiers() == event->modifiers() &&
-            delayedTouch->touchPoints().count() == event->touchPoints().count())
+            delayedTouch->pointCount() == event->pointCount())
     {
         // possible match.. is it really the same?
         bool mismatch = false;
 
-        QList<QEventPoint> tpts = event->touchPoints();
-        for (int i = 0; i < event->touchPoints().count(); ++i) {
-            const QEventPoint &tp = tpts.at(i);
-            const QEventPoint &tpDelayed = delayedTouch->touchPoints().at(i);
+        auto tpts = event->points();
+        for (qsizetype i = 0; i < event->pointCount(); ++i) {
+            const auto &tp = tpts.at(i);
+            const auto &tpDelayed = delayedTouch->point(i);
             if (tp.id() != tpDelayed.id()) {
                 mismatch = true;
                 break;
@@ -2518,7 +2519,7 @@ bool QQuickWindowPrivate::compressTouchEvent(QTouchEvent *event)
     // merging wasn't possible, so deliver the delayed event first, and then delay this one
     deliverDelayedTouchEvent();
     delayedTouch.reset(new QMutableTouchEvent(event->type(), event->pointingDevice(),
-                                       event->modifiers(), event->touchPoints()));
+                                       event->modifiers(), event->points()));
     delayedTouch->setTimestamp(event->timestamp());
     return true;
 }
@@ -2530,8 +2531,8 @@ bool QQuickWindowPrivate::compressTouchEvent(QTouchEvent *event)
 void QQuickWindowPrivate::handleTouchEvent(QTouchEvent *event)
 {
     translateTouchEvent(event);
-    if (event->touchPoints().size()) {
-        auto point = event->touchPoints().at(0);
+    if (event->pointCount()) {
+        auto &point = event->point(0);
         if (point.state() == QEventPoint::State::Released) {
             lastMousePosition = QPointF();
         } else {
@@ -2586,7 +2587,7 @@ void QQuickWindowPrivate::handleMouseEvent(QMouseEvent *event)
         event->accept();
         return;
     }
-    qCDebug(DBG_MOUSE) << "QQuickWindow::handleMouseEvent()" << event->type() << event->position() << event->button() << event->buttons();
+    qCDebug(DBG_MOUSE) << event;
     const int deviceIndex = QInputDevice::devices().indexOf(event->device());
     QMutableSinglePointEvent::from(event)->mutablePoint().setId((deviceIndex << 24) + event->point(0).id());
 
@@ -3120,7 +3121,7 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
         // If the touch was accepted (regardless by whom or in what form),
         // update accepted new points.
         bool isPressOrRelease = pointerEvent->isPressEvent() || pointerEvent->isReleaseEvent();
-        for (const auto &point: qAsConst(touchEvent->touchPoints())) {
+        for (const auto &point: touchEvent->points()) {
             if (auto pointerEventPoint = ptEvent->pointById(point.id())) {
                 pointerEventPoint->setAccepted();
                 if (isPressOrRelease)
@@ -3130,7 +3131,7 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, QQuickPo
     } else {
         // But if the event was not accepted then we know this item
         // will not be interested in further updates for those touchpoint IDs either.
-        for (const auto &point: qAsConst(touchEvent->touchPoints())) {
+        for (const auto &point: touchEvent->points()) {
             if (point.state() == QEventPoint::State::Pressed) {
                 if (auto *tp = ptEvent->pointById(point.id())) {
                     if (tp->exclusiveGrabber() == item) {
@@ -3420,7 +3421,7 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QQuickPointerEvent *event
                     if (filteringParent->childMouseEventFilter(receiver, filteringParentTouchEvent.data())) {
                         qCDebug(DBG_TOUCH) << "touch event intercepted by childMouseEventFilter of " << filteringParent;
                         skipDelivery.append(filteringParent);
-                        for (const auto &point: qAsConst(filteringParentTouchEvent->touchPoints())) {
+                        for (const auto &point: filteringParentTouchEvent->points()) {
                             QQuickEventPoint *pt = event->pointById(point.id());
                             pt->setAccepted();
                             pt->setGrabberItem(filteringParent);
@@ -3428,8 +3429,7 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QQuickPointerEvent *event
                         return true;
                     } else if (Q_LIKELY(QCoreApplication::testAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents))) {
                         // filteringParent didn't filter the touch event.  Give it a chance to filter a synthetic mouse event.
-                        for (int i = 0; i < filteringParentTouchEvent->touchPoints().size(); ++i) {
-                            const QEventPoint &tp = filteringParentTouchEvent->touchPoints().at(i);
+                        for (auto &tp : filteringParentTouchEvent->points()) {
 
                             QEvent::Type t;
                             switch (tp.state()) {

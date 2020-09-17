@@ -118,7 +118,7 @@ void InspectTool::hoverMoveEvent(QMouseEvent *event)
 
 void InspectTool::touchEvent(QTouchEvent *event)
 {
-    QList<QEventPoint> touchPoints = event->touchPoints();
+    const auto &touchPoints = event->points();
 
     switch (event->type()) {
     case QEvent::TouchBegin:
