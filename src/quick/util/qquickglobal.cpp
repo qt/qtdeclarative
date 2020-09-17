@@ -581,55 +581,66 @@ public:
         return QMatrix4x4(matVals);
     }
 
-    bool create(int type, int argc, const void *argv[], QVariant *v) override
+    bool create(int type, const QJSValue &params, QVariant *v) override
     {
         switch (type) {
         case QMetaType::QFont: // must specify via js-object.
             break;
         case QMetaType::QVector2D:
-            if (argc == 1) {
-                const float *xy = reinterpret_cast<const float*>(argv[0]);
-                QVector2D v2(xy[0], xy[1]);
-                *v = QVariant(v2);
+            if (params.isArray()) {
+                *v = QVariant(QVector2D(params.property(0).toNumber(),
+                                        params.property(1).toNumber()));
                 return true;
             }
             break;
         case QMetaType::QVector3D:
-            if (argc == 1) {
-                const float *xyz = reinterpret_cast<const float*>(argv[0]);
-                QVector3D v3(xyz[0], xyz[1], xyz[2]);
-                *v = QVariant(v3);
+            if (params.isArray()) {
+                *v = QVariant(QVector3D(params.property(0).toNumber(),
+                                        params.property(1).toNumber(),
+                                        params.property(2).toNumber()));
                 return true;
             }
             break;
         case QMetaType::QVector4D:
-            if (argc == 1) {
-                const float *xyzw = reinterpret_cast<const float*>(argv[0]);
-                QVector4D v4(xyzw[0], xyzw[1], xyzw[2], xyzw[3]);
-                *v = QVariant(v4);
+            if (params.isArray()) {
+                *v = QVariant(QVector4D(params.property(0).toNumber(),
+                                        params.property(1).toNumber(),
+                                        params.property(2).toNumber(),
+                                        params.property(3).toNumber()));
                 return true;
             }
             break;
         case QMetaType::QQuaternion:
-            if (argc == 1) {
-                const qreal *sxyz = reinterpret_cast<const qreal*>(argv[0]);
-                QQuaternion q(sxyz[0], sxyz[1], sxyz[2], sxyz[3]);
-                *v = QVariant(q);
+            if (params.isArray()) {
+                *v = QVariant(QQuaternion(params.property(0).toNumber(),
+                                          params.property(1).toNumber(),
+                                          params.property(2).toNumber(),
+                                          params.property(3).toNumber()));
                 return true;
             }
             break;
         case QMetaType::QMatrix4x4:
-            if (argc == 0) {
+            if (params.isNull() || params.isUndefined()) {
                 QMatrix4x4 m;
                 *v = QVariant(m);
                 return true;
-            } else if (argc == 1) {
-                const qreal *vals = reinterpret_cast<const qreal*>(argv[0]);
-                QMatrix4x4 m(vals[0], vals[1], vals[2], vals[3],
-                             vals[4], vals[5], vals[6], vals[7],
-                             vals[8], vals[9], vals[10], vals[11],
-                             vals[12], vals[13], vals[14], vals[15]);
-                *v = QVariant(m);
+            } else if (params.isArray()) {
+                *v = QVariant(QMatrix4x4(params.property(0).toNumber(),
+                                         params.property(1).toNumber(),
+                                         params.property(2).toNumber(),
+                                         params.property(3).toNumber(),
+                                         params.property(4).toNumber(),
+                                         params.property(5).toNumber(),
+                                         params.property(6).toNumber(),
+                                         params.property(7).toNumber(),
+                                         params.property(8).toNumber(),
+                                         params.property(9).toNumber(),
+                                         params.property(10).toNumber(),
+                                         params.property(11).toNumber(),
+                                         params.property(12).toNumber(),
+                                         params.property(13).toNumber(),
+                                         params.property(14).toNumber(),
+                                         params.property(15).toNumber()));
                 return true;
             }
             break;

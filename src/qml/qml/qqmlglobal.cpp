@@ -67,13 +67,13 @@ bool QQmlValueTypeProvider::initValueType(int type, QVariant& dst)
     return true;
 }
 
-QVariant QQmlValueTypeProvider::createValueType(int type, int argc, const void *argv[])
+QVariant QQmlValueTypeProvider::createValueType(int type, const QJSValue &params)
 {
     QVariant v;
 
     QQmlValueTypeProvider *p = this;
     do {
-        if (p->create(type, argc, argv, &v))
+        if (p->create(type, params, &v))
             return v;
     } while ((p = p->next));
 
@@ -169,7 +169,7 @@ bool QQmlValueTypeProvider::writeValueType(int type, const void *src, QVariant& 
     return true;
 }
 
-bool QQmlValueTypeProvider::create(int, int, const void *[], QVariant *) { return false; }
+bool QQmlValueTypeProvider::create(int, const QJSValue &, QVariant *) { return false; }
 bool QQmlValueTypeProvider::createFromString(int, const QString &, void *, size_t) { return false; }
 bool QQmlValueTypeProvider::variantFromString(int, const QString &, QVariant *) { return false; }
 bool QQmlValueTypeProvider::variantFromJsObject(int, const QV4::Value &, QV4::ExecutionEngine *, QVariant *) { return false; }

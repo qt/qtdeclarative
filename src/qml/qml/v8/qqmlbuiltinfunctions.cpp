@@ -468,7 +468,21 @@ ReturnedValue QtObject::method_font(const FunctionObject *b, const Value *, cons
     return scope.engine->fromVariant(v);
 }
 
+static ReturnedValue createValueType(const FunctionObject *b, const Value *argv, int argc,
+                                     int parameters, QMetaType::Type type, const char *method)
+{
+    QV4::Scope scope(b);
+    if (argc != parameters) {
+        return scope.engine->throwError(QString::fromUtf8("Qt.%1(): Invalid arguments")
+                                        .arg(QString::fromUtf8(method)));
+    }
 
+    QJSValue params = scope.engine->jsEngine()->newArray(parameters);
+    for (int i = 0; i < parameters; ++i)
+        params.setProperty(i, QJSValuePrivate::fromReturnedValue(argv[i].asReturnedValue()));
+
+    return scope.engine->fromVariant(QQml_valueTypeProvider()->createValueType(type, params));
+}
 
 /*!
     \qmlmethod vector2d Qt::vector2d(real x, real y)
@@ -477,16 +491,7 @@ ReturnedValue QtObject::method_font(const FunctionObject *b, const Value *, cons
 */
 ReturnedValue QtObject::method_vector2d(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
-    QV4::Scope scope(b);
-    if (argc != 2)
-        THROW_GENERIC_ERROR("Qt.vector2d(): Invalid arguments");
-
-    float xy[3]; // qvector2d uses float internally
-    xy[0] = argv[0].toNumber();
-    xy[1] = argv[1].toNumber();
-
-    const void *params[] = { xy };
-    return scope.engine->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QVector2D, 1, params));
+    return createValueType(b, argv, argc, 2, QMetaType::QVector2D, "vector2d");
 }
 
 /*!
@@ -496,17 +501,7 @@ ReturnedValue QtObject::method_vector2d(const FunctionObject *b, const Value *, 
 */
 ReturnedValue QtObject::method_vector3d(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
-    QV4::Scope scope(b);
-    if (argc != 3)
-        THROW_GENERIC_ERROR("Qt.vector3d(): Invalid arguments");
-
-    float xyz[3]; // qvector3d uses float internally
-    xyz[0] = argv[0].toNumber();
-    xyz[1] = argv[1].toNumber();
-    xyz[2] = argv[2].toNumber();
-
-    const void *params[] = { xyz };
-    return scope.engine->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QVector3D, 1, params));
+    return createValueType(b, argv, argc, 3, QMetaType::QVector3D, "vector3d");
 }
 
 /*!
@@ -516,18 +511,7 @@ ReturnedValue QtObject::method_vector3d(const FunctionObject *b, const Value *, 
 */
 ReturnedValue QtObject::method_vector4d(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
-    QV4::Scope scope(b);
-    if (argc != 4)
-        THROW_GENERIC_ERROR("Qt.vector4d(): Invalid arguments");
-
-    float xyzw[4]; // qvector4d uses float internally
-    xyzw[0] = argv[0].toNumber();
-    xyzw[1] = argv[1].toNumber();
-    xyzw[2] = argv[2].toNumber();
-    xyzw[3] = argv[3].toNumber();
-
-    const void *params[] = { xyzw };
-    return scope.engine->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QVector4D, 1, params));
+    return createValueType(b, argv, argc, 4, QMetaType::QVector4D, "vector4d");
 }
 
 /*!
@@ -537,18 +521,7 @@ ReturnedValue QtObject::method_vector4d(const FunctionObject *b, const Value *, 
 */
 ReturnedValue QtObject::method_quaternion(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
-    QV4::Scope scope(b);
-    if (argc != 4)
-        THROW_GENERIC_ERROR("Qt.quaternion(): Invalid arguments");
-
-    qreal sxyz[4]; // qquaternion uses qreal internally
-    sxyz[0] = argv[0].toNumber();
-    sxyz[1] = argv[1].toNumber();
-    sxyz[2] = argv[2].toNumber();
-    sxyz[3] = argv[3].toNumber();
-
-    const void *params[] = { sxyz };
-    return scope.engine->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QQuaternion, 1, params));
+    return createValueType(b, argv, argc, 4, QMetaType::QQuaternion, "quaternion");
 }
 
 /*!
@@ -577,7 +550,8 @@ ReturnedValue QtObject::method_matrix4x4(const FunctionObject *b, const Value *,
     QV4::Scope scope(b);
 
     if (argc == 0) {
-        return scope.engine->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QMatrix4x4, 0, nullptr));
+        return scope.engine->fromVariant(QQml_valueTypeProvider()->createValueType(
+                                             QMetaType::QMatrix4x4, QJSValue()));
     }
 
     if (argc == 1 && argv[0].isObject()) {
@@ -588,29 +562,7 @@ ReturnedValue QtObject::method_matrix4x4(const FunctionObject *b, const Value *,
         return scope.engine->fromVariant(v);
     }
 
-    if (argc != 16)
-        THROW_GENERIC_ERROR("Qt.matrix4x4(): Invalid arguments");
-
-    qreal vals[16]; // qmatrix4x4 uses qreal internally
-    vals[0] = argv[0].toNumber();
-    vals[1] = argv[1].toNumber();
-    vals[2] = argv[2].toNumber();
-    vals[3] = argv[3].toNumber();
-    vals[4] = argv[4].toNumber();
-    vals[5] = argv[5].toNumber();
-    vals[6] = argv[6].toNumber();
-    vals[7] = argv[7].toNumber();
-    vals[8] = argv[8].toNumber();
-    vals[9] = argv[9].toNumber();
-    vals[10] = argv[10].toNumber();
-    vals[11] = argv[11].toNumber();
-    vals[12] = argv[12].toNumber();
-    vals[13] = argv[13].toNumber();
-    vals[14] = argv[14].toNumber();
-    vals[15] = argv[15].toNumber();
-
-    const void *params[] = { vals };
-    return scope.engine->fromVariant(QQml_valueTypeProvider()->createValueType(QMetaType::QMatrix4x4, 1, params));
+    return createValueType(b, argv, argc, 16, QMetaType::QMatrix4x4, "matrix4x4");
 }
 
 /*!

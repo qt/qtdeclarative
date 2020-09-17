@@ -224,7 +224,7 @@ public:
 
     bool initValueType(int, QVariant&);
 
-    QVariant createValueType(int, int, const void *[]);
+    QVariant createValueType(int, const QJSValue &params);
     bool createValueFromString(int, const QString &, void *, size_t);
 
     QVariant createVariantFromString(int, const QString &, bool *);
@@ -236,7 +236,7 @@ public:
     bool writeValueType(int, const void *, QVariant&);
 
 private:
-    virtual bool create(int, int, const void *[], QVariant *);
+    virtual bool create(int, const QJSValue &params, QVariant *);
     virtual bool createFromString(int, const QString &, void *, size_t);
 
     virtual bool variantFromString(int, const QString &, QVariant *);
