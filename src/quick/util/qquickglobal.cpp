@@ -411,142 +411,129 @@ public:
         return QMatrix4x4();
     }
 
-    static QColorSpace colorSpaceFromObject(const QV4::Value &object, QV4::ExecutionEngine *v4, bool *ok)
+    static QColorSpace colorSpaceFromObject(const QJSValue &object, bool *ok)
     {
         if (ok)
             *ok = false;
+
         QColorSpace retn;
-        QV4::Scope scope(v4);
-        QV4::ScopedObject obj(scope, object);
-        if (!obj) {
-            if (ok)
-                *ok = false;
+        if (!object.isObject())
             return retn;
-        }
 
-        QV4::ScopedString s(scope);
-
-        QV4::ScopedValue vName(scope, obj->get((s = v4->newString(QStringLiteral("namedColorSpace")))));
-        if (vName->isInt32()) {
+        const QJSValue vName = object.property(QStringLiteral("namedColorSpace"));
+        if (vName.isNumber()) {
             if (ok)
                 *ok = true;
-            return QColorSpace((QColorSpace::NamedColorSpace)vName->toInt32());
+            return QColorSpace((QColorSpace::NamedColorSpace)vName.toInt());
         }
 
-        QV4::ScopedValue vPri(scope, obj->get((s = v4->newString(QStringLiteral("primaries")))));
-        QV4::ScopedValue vTra(scope, obj->get((s = v4->newString(QStringLiteral("transferFunction")))));
-        if (!vPri->isInt32() || !vTra->isInt32()) {
-            if (ok)
-                *ok = false;
+        const QJSValue vPri = object.property(QStringLiteral("primaries"));
+        const QJSValue vTra = object.property(QStringLiteral("transferFunction"));
+        if (!vPri.isNumber() || !vTra.isNumber())
             return retn;
-        }
 
-        QColorSpace::Primaries pri = static_cast<QColorSpace::Primaries>(vPri->integerValue());
-        QColorSpace::TransferFunction tra = static_cast<QColorSpace::TransferFunction>(vTra->integerValue());
+        QColorSpace::Primaries pri = static_cast<QColorSpace::Primaries>(vPri.toInt());
+        QColorSpace::TransferFunction tra = static_cast<QColorSpace::TransferFunction>(vTra.toInt());
         float gamma = 0.0f;
         if (tra == QColorSpace::TransferFunction::Gamma) {
-            QV4::ScopedValue vGam(scope, obj->get((s = v4->newString(QStringLiteral("gamma")))));
-            if (!vGam->isNumber()) {
-                if (ok)
-                    *ok = false;
+            const QJSValue vGam = object.property(QStringLiteral("gamma"));
+            if (!vGam.isNumber())
                 return retn;
-            }
-            gamma = vGam->toNumber();
+            gamma = vGam.toNumber();
         }
-        if (ok) *ok = true;
+
+        if (ok)
+            *ok = true;
         return QColorSpace(pri, tra, gamma);
     }
 
-    static QFont fontFromObject(const QV4::Value &object, QV4::ExecutionEngine *v4, bool *ok)
+    static QFont fontFromObject(const QJSValue &object, bool *ok)
     {
         if (ok)
             *ok = false;
         QFont retn;
-        QV4::Scope scope(v4);
-        QV4::ScopedObject obj(scope, object);
-        if (!obj) {
+
+        if (!object.isObject()) {
             if (ok)
                 *ok = false;
             return retn;
         }
 
-        QV4::ScopedString s(scope);
-
-        QV4::ScopedValue vbold(scope, obj->get((s = v4->newString(QStringLiteral("bold")))));
-        QV4::ScopedValue vcap(scope, obj->get((s = v4->newString(QStringLiteral("capitalization")))));
-        QV4::ScopedValue vfam(scope, obj->get((s = v4->newString(QStringLiteral("family")))));
-        QV4::ScopedValue vstyle(scope, obj->get((s = v4->newString(QStringLiteral("styleName")))));
-        QV4::ScopedValue vital(scope, obj->get((s = v4->newString(QStringLiteral("italic")))));
-        QV4::ScopedValue vlspac(scope, obj->get((s = v4->newString(QStringLiteral("letterSpacing")))));
-        QV4::ScopedValue vpixsz(scope, obj->get((s = v4->newString(QStringLiteral("pixelSize")))));
-        QV4::ScopedValue vpntsz(scope, obj->get((s = v4->newString(QStringLiteral("pointSize")))));
-        QV4::ScopedValue vstrk(scope, obj->get((s = v4->newString(QStringLiteral("strikeout")))));
-        QV4::ScopedValue vundl(scope, obj->get((s = v4->newString(QStringLiteral("underline")))));
-        QV4::ScopedValue vweight(scope, obj->get((s = v4->newString(QStringLiteral("weight")))));
-        QV4::ScopedValue vwspac(scope, obj->get((s = v4->newString(QStringLiteral("wordSpacing")))));
-        QV4::ScopedValue vhint(scope, obj->get((s = v4->newString(QStringLiteral("hintingPreference")))));
-        QV4::ScopedValue vkerning(scope, obj->get((s = v4->newString(QStringLiteral("kerning")))));
-        QV4::ScopedValue vshaping(scope, obj->get((s = v4->newString(QStringLiteral("preferShaping")))));
+        const QJSValue vbold = object.property(QStringLiteral("bold"));
+        const QJSValue vcap = object.property(QStringLiteral("capitalization"));
+        const QJSValue vfam = object.property(QStringLiteral("family"));
+        const QJSValue vstyle = object.property(QStringLiteral("styleName"));
+        const QJSValue vital = object.property(QStringLiteral("italic"));
+        const QJSValue vlspac = object.property(QStringLiteral("letterSpacing"));
+        const QJSValue vpixsz = object.property(QStringLiteral("pixelSize"));
+        const QJSValue vpntsz = object.property(QStringLiteral("pointSize"));
+        const QJSValue vstrk = object.property(QStringLiteral("strikeout"));
+        const QJSValue vundl = object.property(QStringLiteral("underline"));
+        const QJSValue vweight = object.property(QStringLiteral("weight"));
+        const QJSValue vwspac = object.property(QStringLiteral("wordSpacing"));
+        const QJSValue vhint = object.property(QStringLiteral("hintingPreference"));
+        const QJSValue vkerning = object.property(QStringLiteral("kerning"));
+        const QJSValue vshaping = object.property(QStringLiteral("preferShaping"));
 
         // pull out the values, set ok to true if at least one valid field is given.
-        if (vbold->isBoolean()) {
-            retn.setBold(vbold->booleanValue());
+        if (vbold.isBool()) {
+            retn.setBold(vbold.toBool());
             if (ok) *ok = true;
         }
-        if (vcap->isInt32()) {
-            retn.setCapitalization(static_cast<QFont::Capitalization>(vcap->integerValue()));
+        if (vcap.isNumber()) {
+            retn.setCapitalization(static_cast<QFont::Capitalization>(vcap.toInt()));
             if (ok) *ok = true;
         }
-        if (vfam->isString()) {
-            retn.setFamily(vfam->toQString());
+        if (vfam.isString()) {
+            retn.setFamily(vfam.toString());
             if (ok) *ok = true;
         }
-        if (vstyle->isString()) {
-            retn.setStyleName(vstyle->toQString());
+        if (vstyle.isString()) {
+            retn.setStyleName(vstyle.toString());
             if (ok) *ok = true;
         }
-        if (vital->isBoolean()) {
-            retn.setItalic(vital->booleanValue());
+        if (vital.isBool()) {
+            retn.setItalic(vital.toBool());
             if (ok) *ok = true;
         }
-        if (vlspac->isNumber()) {
-            retn.setLetterSpacing(QFont::AbsoluteSpacing, vlspac->asDouble());
+        if (vlspac.isNumber()) {
+            retn.setLetterSpacing(QFont::AbsoluteSpacing, vlspac.toNumber());
             if (ok) *ok = true;
         }
-        if (vpixsz->isInt32()) {
-            retn.setPixelSize(vpixsz->integerValue());
+        if (vpixsz.isNumber()) {
+            retn.setPixelSize(vpixsz.toInt());
             if (ok) *ok = true;
         }
-        if (vpntsz->isNumber()) {
-            retn.setPointSize(vpntsz->asDouble());
+        if (vpntsz.isNumber()) {
+            retn.setPointSize(vpntsz.toNumber());
             if (ok) *ok = true;
         }
-        if (vstrk->isBoolean()) {
-            retn.setStrikeOut(vstrk->booleanValue());
+        if (vstrk.isBool()) {
+            retn.setStrikeOut(vstrk.toBool());
             if (ok) *ok = true;
         }
-        if (vundl->isBoolean()) {
-            retn.setUnderline(vundl->booleanValue());
+        if (vundl.isBool()) {
+            retn.setUnderline(vundl.toBool());
             if (ok) *ok = true;
         }
-        if (vweight->isInt32()) {
-            retn.setWeight(QFont::Weight(vweight->integerValue()));
+        if (vweight.isNumber()) {
+            retn.setWeight(QFont::Weight(vweight.toInt()));
             if (ok) *ok = true;
         }
-        if (vwspac->isNumber()) {
-            retn.setWordSpacing(vwspac->asDouble());
+        if (vwspac.isNumber()) {
+            retn.setWordSpacing(vwspac.toNumber());
             if (ok) *ok = true;
         }
-        if (vhint->isInt32()) {
-            retn.setHintingPreference(static_cast<QFont::HintingPreference>(vhint->integerValue()));
+        if (vhint.isNumber()) {
+            retn.setHintingPreference(static_cast<QFont::HintingPreference>(vhint.toInt()));
             if (ok) *ok = true;
         }
-        if (vkerning->isBoolean()) {
-            retn.setKerning(vkerning->booleanValue());
+        if (vkerning.isBool()) {
+            retn.setKerning(vkerning.toBool());
             if (ok) *ok = true;
         }
-        if (vshaping->isBoolean()) {
-            bool enable = vshaping->booleanValue();
+        if (vshaping.isBool()) {
+            bool enable = vshaping.toBool();
             if (enable)
                 retn.setStyleStrategy(static_cast<QFont::StyleStrategy>(retn.styleStrategy() & ~QFont::PreferNoShaping));
             else
@@ -556,36 +543,27 @@ public:
         return retn;
     }
 
-    static QMatrix4x4 matrix4x4FromObject(const QV4::Value &object, QV4::ExecutionEngine *v4, bool *ok)
-    {
-        if (ok)
-            *ok = false;
-        QV4::Scope scope(v4);
-        QV4::ScopedArrayObject array(scope, object);
-        if (!array)
-            return QMatrix4x4();
-
-        if (array->getLength() != 16)
-            return QMatrix4x4();
-
-        float matVals[16];
-        QV4::ScopedValue v(scope);
-        for (quint32 i = 0; i < 16; ++i) {
-            v = array->get(i);
-            if (!v->isNumber())
-                return QMatrix4x4();
-            matVals[i] = v->asDouble();
-        }
-
-        if (ok) *ok = true;
-        return QMatrix4x4(matVals);
-    }
-
     bool create(int type, const QJSValue &params, QVariant *v) override
     {
         switch (type) {
-        case QMetaType::QFont: // must specify via js-object.
+        case QMetaType::QColorSpace: {
+            bool ok = false;
+            auto val = colorSpaceFromObject(params, &ok);
+            if (ok) {
+                *v = QVariant::fromValue(val);
+                return true;
+            }
             break;
+        }
+        case QMetaType::QFont: {
+            bool ok = false;
+            auto val = fontFromObject(params, &ok);
+            if (ok) {
+                *v = QVariant::fromValue(val);
+                return true;
+            }
+            break;
+        }
         case QMetaType::QVector2D:
             if (params.isArray()) {
                 *v = QVariant(QVector2D(params.property(0).toNumber(),
@@ -624,7 +602,8 @@ public:
                 QMatrix4x4 m;
                 *v = QVariant(m);
                 return true;
-            } else if (params.isArray()) {
+            } else if (params.isArray()
+                       && params.property(QStringLiteral("length")).toInt() == 16) {
                 *v = QVariant(QMatrix4x4(params.property(0).toNumber(),
                                          params.property(1).toNumber(),
                                          params.property(2).toNumber(),
@@ -723,29 +702,6 @@ public:
         }
 
         return false;
-    }
-
-    bool variantFromJsObject(int type, const QV4::Value &object, QV4::ExecutionEngine *v4, QVariant *v) override
-    {
-        QV4::Scope scope(v4);
-#ifndef QT_NO_DEBUG
-        QV4::ScopedObject obj(scope, object);
-        Q_ASSERT(obj);
-#endif
-        bool ok = false;
-        switch (type) {
-        case QMetaType::QColorSpace:
-            *v = QVariant::fromValue(colorSpaceFromObject(object, v4, &ok));
-            break;
-        case QMetaType::QFont:
-            *v = QVariant::fromValue(fontFromObject(object, v4, &ok));
-            break;
-        case QMetaType::QMatrix4x4:
-            *v = QVariant::fromValue(matrix4x4FromObject(object, v4, &ok));
-        default: break;
-        }
-
-        return ok;
     }
 
     template<typename T>
