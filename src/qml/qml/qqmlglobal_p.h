@@ -226,8 +226,6 @@ public:
 
     QVariant createValueType(int, const QJSValue &params);
     bool createValueFromString(int, const QJSValue &, QVariant *);
-
-    QVariant createVariantFromString(int, const QString &, bool *);
     QVariant createVariantFromJsObject(int, const QJSValue &, bool *);
 
     bool equalValueType(int, const void *, const QVariant&);
@@ -237,9 +235,6 @@ public:
 
 private:
     virtual bool create(int, const QJSValue &params, QVariant *);
-
-    virtual bool variantFromString(int, const QString &, QVariant *);
-
     virtual bool store(int, const void *, void *, size_t);
 
     friend Q_QML_PRIVATE_EXPORT void QQml_addValueTypeProvider(QQmlValueTypeProvider *);

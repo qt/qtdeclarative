@@ -671,58 +671,6 @@ public:
     }
 
     template<typename T>
-    bool createFromStringTyped(void *data, size_t dataSize, T initValue)
-    {
-        ASSERT_VALID_SIZE(dataSize, sizeof(T));
-        T *t = reinterpret_cast<T *>(data);
-        new (t) T(initValue);
-        return true;
-    }
-
-    bool variantFromString(int type, const QString &s, QVariant *v) override
-    {
-        bool ok = false;
-
-        switch (type) {
-        case QMetaType::QColor:
-            {
-            QColor c(s);
-            *v = QVariant::fromValue(c);
-            return true;
-            }
-        case QMetaType::QVector2D:
-            {
-            *v = QVariant::fromValue(vector2DFromString(s, &ok));
-            return true;
-            }
-        case QMetaType::QVector3D:
-            {
-            *v = QVariant::fromValue(vector3DFromString(s, &ok));
-            return true;
-            }
-        case QMetaType::QVector4D:
-            {
-            *v = QVariant::fromValue(vector4DFromString(s, &ok));
-            return true;
-            }
-        case QMetaType::QQuaternion:
-            {
-            *v = QVariant::fromValue(quaternionFromString(s, &ok));
-            return true;
-            }
-        case QMetaType::QMatrix4x4:
-            {
-            *v = QVariant::fromValue(matrix4x4FromString(s, &ok));
-            return true;
-            }
-        default:
-            break;
-        }
-
-        return false;
-    }
-
-    template<typename T>
     bool typedStore(const void *src, void *dst, size_t dstSize)
     {
         ASSERT_VALID_SIZE(dstSize, sizeof(T));

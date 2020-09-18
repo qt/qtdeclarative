@@ -76,7 +76,7 @@ QVariant QQmlStringConverters::variantFromString(const QString &s, int preferred
     case QMetaType::QRect:
         return QVariant::fromValue(rectFFromString(s, ok).toRect());
     default:
-        return QQml_valueTypeProvider()->createVariantFromString(preferredType, s, ok);
+        return QQml_valueTypeProvider()->createVariantFromJsObject(preferredType, QJSValue(s), ok);
     }
 }
 

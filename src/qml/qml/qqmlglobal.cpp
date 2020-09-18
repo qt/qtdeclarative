@@ -93,22 +93,6 @@ bool QQmlValueTypeProvider::createValueFromString(int type, const QJSValue &s, Q
     return false;
 }
 
-QVariant QQmlValueTypeProvider::createVariantFromString(int type, const QString &s, bool *ok)
-{
-    QVariant v;
-
-    QQmlValueTypeProvider *p = this;
-    do {
-        if (p->variantFromString(type, s, &v)) {
-            if (ok) *ok = true;
-            return v;
-        }
-    } while ((p = p->next));
-
-    if (ok) *ok = false;
-    return QVariant();
-}
-
 QVariant QQmlValueTypeProvider::createVariantFromJsObject(int type, const QJSValue &obj, bool *ok)
 {
     QVariant v;
@@ -169,7 +153,6 @@ bool QQmlValueTypeProvider::writeValueType(int type, const void *src, QVariant& 
 }
 
 bool QQmlValueTypeProvider::create(int, const QJSValue &, QVariant *) { return false; }
-bool QQmlValueTypeProvider::variantFromString(int, const QString &, QVariant *) { return false; }
 bool QQmlValueTypeProvider::store(int, const void *, void *, size_t) { return false; }
 
 struct ValueTypeProviderList {
