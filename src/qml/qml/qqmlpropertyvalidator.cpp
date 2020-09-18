@@ -565,7 +565,7 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *prope
             }
         };
         QVariant result;
-        if (!QQml_valueTypeProvider()->createValueFromString(
+        if (!QQml_valueTypeProvider()->createValueType(
                     property->propType(),
                     compilationUnit->bindingValueAsString(binding), &result)) {
             return warnOrError(tr("Invalid property assignment: %1 expected")

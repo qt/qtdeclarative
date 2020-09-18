@@ -67,20 +67,7 @@ bool QQmlValueTypeProvider::initValueType(int type, QVariant& dst)
     return true;
 }
 
-QVariant QQmlValueTypeProvider::createValueType(int type, const QJSValue &params)
-{
-    QVariant v;
-
-    QQmlValueTypeProvider *p = this;
-    do {
-        if (p->create(type, params, &v))
-            return v;
-    } while ((p = p->next));
-
-    return QVariant();
-}
-
-bool QQmlValueTypeProvider::createValueFromString(int type, const QJSValue &s, QVariant *data)
+bool QQmlValueTypeProvider::createValueType(int type, const QJSValue &s, QVariant *data)
 {
     Q_ASSERT(data);
 
@@ -91,22 +78,6 @@ bool QQmlValueTypeProvider::createValueFromString(int type, const QJSValue &s, Q
     } while ((p = p->next));
 
     return false;
-}
-
-QVariant QQmlValueTypeProvider::createVariantFromJsObject(int type, const QJSValue &obj, bool *ok)
-{
-    QVariant v;
-
-    QQmlValueTypeProvider *p = this;
-    do {
-        if (p->create(type, obj, &v)) {
-            if (ok) *ok = true;
-            return v;
-        }
-    } while ((p = p->next));
-
-    if (ok) *ok = false;
-    return QVariant();
 }
 
 bool QQmlValueTypeProvider::equalValueType(int type, const void *lhs, const QVariant& rhs)

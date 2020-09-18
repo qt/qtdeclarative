@@ -223,11 +223,7 @@ public:
     virtual ~QQmlValueTypeProvider();
 
     bool initValueType(int, QVariant&);
-
-    QVariant createValueType(int, const QJSValue &params);
-    bool createValueFromString(int, const QJSValue &, QVariant *);
-    QVariant createVariantFromJsObject(int, const QJSValue &, bool *);
-
+    bool createValueType(int, const QJSValue &, QVariant *);
     bool equalValueType(int, const void *, const QVariant&);
     bool readValueType(const QVariant&, void *, int);
     bool writeValueType(int, const void *, QVariant&);
