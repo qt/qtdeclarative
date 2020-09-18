@@ -201,7 +201,7 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
 
 /*!
     \readonly
-    \qmlproperty PointingDeviceUniqueId QtQuick::HandlerPoint::uniqueId
+    \qmlproperty pointingDeviceUniqueId QtQuick::HandlerPoint::uniqueId
     \brief The unique ID of the point, if any
 
     This is normally empty, because touchscreens cannot uniquely identify fingers.

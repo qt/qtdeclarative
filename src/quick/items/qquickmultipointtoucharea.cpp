@@ -269,7 +269,7 @@ void QQuickTouchPoint::setSceneY(qreal sceneY)
 }
 
 /*!
-    \qmlproperty PointingDeviceUniqueId QtQuick::TouchPoint::uniqueId
+    \qmlproperty pointingDeviceUniqueId QtQuick::TouchPoint::uniqueId
     \since 5.9
 
     This property holds the unique ID of the touch point or token.

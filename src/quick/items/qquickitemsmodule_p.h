@@ -86,9 +86,8 @@ struct QPointingDeviceUniqueIdForeign
 {
     Q_GADGET
     QML_FOREIGN(QPointingDeviceUniqueId)
-    QML_NAMED_ELEMENT(PointingDeviceUniqueId)
+    QML_VALUE_TYPE(pointingDeviceUniqueId)
     QML_ADDED_IN_VERSION(2, 9)
-    QML_UNCREATABLE("PointingDeviceUniqueId is only available via read-only properties.")
 };
 
 #if !QT_CONFIG(quick_animatedimage)
