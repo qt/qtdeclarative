@@ -482,6 +482,8 @@ bool QQuickDrawerPrivate::handleMove(QQuickItem *item, const QPointF &point, ulo
 
 bool QQuickDrawerPrivate::handleRelease(QQuickItem *item, const QPointF &point, ulong timestamp)
 {
+    if (pressPoint.isNull())
+        return false;
     if (!popupItem->keepMouseGrab() && !popupItem->keepTouchGrab()) {
         velocityCalculator.reset();
         return QQuickPopupPrivate::handleRelease(item, point, timestamp);
