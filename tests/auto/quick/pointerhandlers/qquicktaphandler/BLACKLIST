@@ -1,10 +1,2 @@
-[mouseGesturePolicyDragThreshold] # QTBUG-86729
-*
-[touchGesturePolicyDragThreshold]
-* # QTBUG-86729
-[touchMouseGesturePolicyDragThreshold]
-* # QTBUG-86729
-[buttonsMultiTouch]
-* # QTBUG-86729
 [componentUserBehavioralOverride]
 * # QTBUG-86729

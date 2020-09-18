@@ -6058,7 +6058,7 @@ bool QQuickItemPrivate::setEffectiveVisibleRecur(bool newEffectiveVisible)
 
     if (window) {
         QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window);
-        windowPriv->removeGrabber(q);
+        windowPriv->removeGrabber(q, true, true, true);
     }
 
     bool childVisibilityChanged = false;
@@ -6105,7 +6105,7 @@ void QQuickItemPrivate::setEffectiveEnableRecur(QQuickItem *scope, bool newEffec
 
     if (window) {
         QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window);
-        windowPriv->removeGrabber(q);
+        windowPriv->removeGrabber(q, true, true, true);
         if (scope && !effectiveEnable && activeFocus) {
             windowPriv->clearFocusInScope(
                     scope, q, Qt::OtherFocusReason, QQuickWindowPrivate::DontChangeFocusProperty | QQuickWindowPrivate::DontChangeSubFocusItem);

@@ -123,7 +123,6 @@ protected:
     void touchUngrabEvent() override
     {
         ++ungrabs;
-        QVERIFY(m_active);
         emit ungrabbed();
         m_active = false;
         emit activeChanged();
@@ -2022,9 +2021,9 @@ void tst_qquickflickable::nestedSliderUsingTouch_data()
     QTest::addColumn<int>("releases");
     QTest::addColumn<int>("ungrabs");
 
-    QTest::newRow("keepBoth") << true << true << 8 << 1 << 0;
-    QTest::newRow("keepMouse") << true << false << 8 << 1 << 0;
-    QTest::newRow("keepTouch") << false << true << 8 << 1 << 0;
+    QTest::newRow("keepBoth") << true << true << 8 << 1 << 1;
+    QTest::newRow("keepMouse") << true << false << 8 << 1 << 1;
+    QTest::newRow("keepTouch") << false << true << 8 << 1 << 1;
     QTest::newRow("keepNeither") << false << false << 5 << 0 << 1;
 }
 
@@ -2064,7 +2063,7 @@ void tst_qquickflickable::nestedSliderUsingTouch()
         QTest::touchEvent(window, touchDevice).move(0, p0, window);
         QQuickTouchUtils::flush(window);
     }
-    QCOMPARE(tda->active(), !ungrabs);
+    QCOMPARE(tda->active(), keepMouseGrab | keepTouchGrab);
     QTest::touchEvent(window, touchDevice).release(0, p0, window);
     QQuickTouchUtils::flush(window);
     QTRY_COMPARE(tda->touchPointStates.first(), QEventPoint::State::Pressed);

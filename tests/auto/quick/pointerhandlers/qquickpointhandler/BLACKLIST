@@ -1,6 +1,2 @@
 [pressedMultipleButtons] # QTBUG-86729
 *
-[singleTouch]
-* # QTBUG-86729
-[simultaneousMultiTouch]
-* # QTBUG-86729

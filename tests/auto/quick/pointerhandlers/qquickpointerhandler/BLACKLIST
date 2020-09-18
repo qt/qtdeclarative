@@ -1,6 +1,4 @@
-[touchReleaseOutside]
-* # QTBUG-86729
 [mouseEventDelivery]
-* # QTBUG-86729
+macos # QTBUG-86729
 [touchEventDelivery]
-* # QTBUG-86729
+macos # QTBUG-86729

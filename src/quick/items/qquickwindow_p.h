@@ -170,8 +170,7 @@ public:
     QPointF lastMousePosition;
     bool deliverTouchAsMouse(QQuickItem *item, QTouchEvent *pointerEvent);
     void translateTouchEvent(QTouchEvent *touchEvent);
-    void removeGrabber(QQuickItem *grabber, bool mouse = true, bool touch = true);
-    void sendUngrabEvent(QQuickItem *grabber, bool touch);
+    void removeGrabber(QQuickItem *grabber, bool mouse = true, bool touch = true, bool cancel = false);
     void onGrabChanged(QObject *grabber, QPointingDevice::GrabTransition transition, const QPointerEvent *event, const QEventPoint &point);
     static QMouseEvent *cloneMouseEvent(QMouseEvent *event, QPointF *transformedLocalPos = nullptr);
     void deliverToPassiveGrabbers(const QVector<QPointer<QObject> > &passiveGrabbers, QPointerEvent *pointerEvent);
