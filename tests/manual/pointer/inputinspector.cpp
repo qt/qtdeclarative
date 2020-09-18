@@ -141,9 +141,9 @@ QVector<QObject*> InputInspector::passiveGrabbers_helper(int pointId /*= 0*/) co
     QVector<QObject*> result;
     const QPointingDevice *device = pointerDevice();
     if (device && source()) {
-        for (auto eventPoint : QPointingDevicePrivate::get(device)->activePoints) {
-            if (!pointId || eventPoint.id() == pointId) {
-                for (auto pg : eventPoint.passiveGrabbers()) {
+        for (auto &epd : QPointingDevicePrivate::get(device)->activePoints.values()) {
+            if (!pointId || epd.eventPoint.id() == pointId) {
+                for (auto pg : epd.passiveGrabbers) {
                     if (!result.contains(pg))
                         result << pg;
                 }
@@ -158,9 +158,9 @@ QVector<QObject*> InputInspector::exclusiveGrabbers_helper(int pointId /*= 0*/) 
     QVector<QObject*> result;
     const QPointingDevice *device = pointerDevice();
     if (device && source()) {
-        for (auto eventPoint : QPointingDevicePrivate::get(device)->activePoints) {
-            if (!pointId || eventPoint.id() == pointId) {
-                if (auto g = eventPoint.exclusiveGrabber()) {
+        for (auto &epd : QPointingDevicePrivate::get(device)->activePoints.values()) {
+            if (!pointId || epd.eventPoint.id() == pointId) {
+                if (auto g = epd.exclusiveGrabber.data()) {
                     if (!result.contains(g))
                         result << g;
                 }
