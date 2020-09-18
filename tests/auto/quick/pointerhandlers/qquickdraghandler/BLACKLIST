@@ -1,0 +1,8 @@
+[mouseClickButton] # QTBUG-86729
+*
+[touchPassiveGrabbers]
+* # QTBUG-86729
+[touchDragMultiSliders]
+* # QTBUG-86729
+[snapMode]
+* # QTBUG-86729

@@ -3,3 +3,5 @@ opensuse-42.3
 opensuse-leap
 [enterLeave]
 macos
+[synthMouseFromTouch] # QTBUG-86729
+*

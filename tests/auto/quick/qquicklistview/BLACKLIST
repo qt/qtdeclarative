@@ -12,3 +12,7 @@ macos
 macos
 opensuse-leap
 ubuntu-18.04
+[touchCancel]
+* # QTBUG-86729
+[parentBinding]
+* # QTBUG-86729

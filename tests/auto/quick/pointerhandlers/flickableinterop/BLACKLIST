@@ -1,7 +1,14 @@
 [touchAndDragHandlerOnFlickable]
 windows gcc
 opensuse-leap
+* # QTBUG-86729
 [touchDragFlickableBehindSlider]
 windows gcc
 [touchDragFlickableBehindButton]
 windows gcc
+[dragHandlerInSiblingStealingGrabFromMouseAreaViaTouch]
+* # QTBUG-86729
+[mouseDragFlickableBehindButton]
+* # QTBUG-86729
+[touchDragFlickableBehindButton]
+* # QTBUG-86729

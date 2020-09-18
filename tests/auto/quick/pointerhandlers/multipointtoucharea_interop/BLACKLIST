@@ -1,0 +1,6 @@
+[dragHandlerInParentStealingGrabFromItem]
+* # QTBUG-86729
+[touchesThenPinch]
+* # QTBUG-86729
+[touchDrag]
+* # QTBUG-86729
