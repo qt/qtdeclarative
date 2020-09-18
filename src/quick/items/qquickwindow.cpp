@@ -2364,18 +2364,6 @@ bool QQuickWindowPrivate::isTabletEvent(const QPointerEvent *ev)
     }
 }
 
-/*! \internal
-    Add the given \a point.
-*/
-void QMutableTouchEvent::addPoint(const QEventPoint &point)
-{
-    m_points.append(point);
-    auto &added = m_points.last();
-    if (!added.device())
-        QMutableEventPoint::from(added).setDevice(pointingDevice());
-    m_touchPointStates |= point.state();
-}
-
 bool QQuickWindowPrivate::compressTouchEvent(QTouchEvent *event)
 {
     Q_Q(QQuickWindow);
