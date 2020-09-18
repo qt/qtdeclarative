@@ -115,20 +115,6 @@ bool QQmlValueTypeProvider::equalValueType(int type, const void *lhs, const QVar
     return QMetaType(type).equals(lhs, rhs.constData());
 }
 
-bool QQmlValueTypeProvider::storeValueType(int type, const void *src, void *dst, size_t dstSize)
-{
-    Q_ASSERT(src);
-    Q_ASSERT(dst);
-
-    QQmlValueTypeProvider *p = this;
-    do {
-        if (p->store(type, src, dst, dstSize))
-            return true;
-    } while ((p = p->next));
-
-    return false;
-}
-
 bool QQmlValueTypeProvider::readValueType(const QVariant& src, void *dst, int type)
 {
     Q_ASSERT(dst);
@@ -153,7 +139,6 @@ bool QQmlValueTypeProvider::writeValueType(int type, const void *src, QVariant& 
 }
 
 bool QQmlValueTypeProvider::create(int, const QJSValue &, QVariant *) { return false; }
-bool QQmlValueTypeProvider::store(int, const void *, void *, size_t) { return false; }
 
 struct ValueTypeProviderList {
     QQmlValueTypeProvider nullProvider;

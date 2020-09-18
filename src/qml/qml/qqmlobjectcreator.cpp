@@ -483,12 +483,10 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     }
     break;
     case QMetaType::QColor: {
-        bool ok = false;
-        uint colorValue = QQmlStringConverters::rgbaFromString(compilationUnit->bindingValueAsString(binding), &ok);
-        assertOrNull(ok);
-        struct { void *data[4]; } buffer;
-        if (QQml_valueTypeProvider()->storeValueType(property->propType(), &colorValue, &buffer, sizeof(buffer))) {
-            property->writeProperty(_qobject, &buffer, propertyWriteFlags);
+        QVariant data;
+        if (QQml_valueTypeProvider()->createValueFromString(
+                    QMetaType::QColor, compilationUnit->bindingValueAsString(binding), &data)) {
+            property->writeProperty(_qobject, data.data(), propertyWriteFlags);
         }
     }
     break;

@@ -229,13 +229,11 @@ public:
     QVariant createVariantFromJsObject(int, const QJSValue &, bool *);
 
     bool equalValueType(int, const void *, const QVariant&);
-    bool storeValueType(int, const void *, void *, size_t);
     bool readValueType(const QVariant&, void *, int);
     bool writeValueType(int, const void *, QVariant&);
 
 private:
     virtual bool create(int, const QJSValue &params, QVariant *);
-    virtual bool store(int, const void *, void *, size_t);
 
     friend Q_QML_PRIVATE_EXPORT void QQml_addValueTypeProvider(QQmlValueTypeProvider *);
     friend Q_QML_PRIVATE_EXPORT void QQml_removeValueTypeProvider(QQmlValueTypeProvider *);

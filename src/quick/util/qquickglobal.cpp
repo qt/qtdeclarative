@@ -670,34 +670,6 @@ public:
         return false;
     }
 
-    template<typename T>
-    bool typedStore(const void *src, void *dst, size_t dstSize)
-    {
-        ASSERT_VALID_SIZE(dstSize, sizeof(T));
-        const T *srcT = reinterpret_cast<const T *>(src);
-        T *dstT = reinterpret_cast<T *>(dst);
-        new (dstT) T(*srcT);
-        return true;
-    }
-
-    bool store(int type, const void *src, void *dst, size_t dstSize) override
-    {
-        Q_UNUSED(dstSize);
-        switch (type) {
-        case QMetaType::QColor:
-            {
-            Q_ASSERT(dstSize >= sizeof(QColor));
-            const QRgb *rgb = reinterpret_cast<const QRgb *>(src);
-            QColor *color = reinterpret_cast<QColor *>(dst);
-            new (color) QColor(QColor::fromRgba(*rgb));
-            return true;
-            }
-            default: break;
-        }
-
-        return false;
-    }
-
 #undef ASSERT_VALID_SIZE
 };
 
