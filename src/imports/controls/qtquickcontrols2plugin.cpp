@@ -68,7 +68,14 @@ public:
 private:
     QQuickTheme *createTheme(const QString &name);
 
-    bool registeredFallbackImport = false;
+    // We store these because the style plugins can be unregistered before
+    // QtQuickControls2Plugin, and since QQuickStylePlugin calls QQuickStylePrivate::reset(),
+    // the style information can be lost when it comes time to call qmlUnregisterModuleImport().
+    // It also avoids unnecessarily resolving the style after resetting it just to get the style
+    // name in unregisterTypes().
+    bool customStyle = false;
+    QString registeredStyleUri;
+    QString registeredFallbackStyleUri;
 };
 
 static const char *qtQuickControlsUri = "QtQuick.Controls";
@@ -125,25 +132,25 @@ void QtQuickControls2Plugin::registerTypes(const char *uri)
     // provides all controls. Also, if we didn't return early here, we can get an infinite import loop
     // when the style is set to Default.
     if (styleName != fallbackStyleName && styleName != QLatin1String("Default")) {
-        const QString fallbackstyleUri = ::fallbackStyleUri();
+        registeredFallbackStyleUri = ::fallbackStyleUri();
         qCDebug(lcQtQuickControlsStylePlugin) << "calling qmlRegisterModuleImport() to register fallback style with"
-            << "uri \"" << qtQuickControlsUri << "\" moduleMajor" << QQmlModuleImportModuleAny << "import" << fallbackstyleUri
-            << "importMajor" << QQmlModuleImportAuto;
+            << "uri \"" << qtQuickControlsUri << "\" moduleMajor" << QQmlModuleImportModuleAny
+            << "import" << registeredFallbackStyleUri << "importMajor" << QQmlModuleImportAuto;
         // The fallback style must be a built-in style, so we match the version number.
-        qmlRegisterModuleImport(qtQuickControlsUri, QQmlModuleImportModuleAny, fallbackstyleUri.toUtf8().constData(),
+        qmlRegisterModuleImport(qtQuickControlsUri, QQmlModuleImportModuleAny, registeredFallbackStyleUri.toUtf8().constData(),
             QQmlModuleImportAuto, QQmlModuleImportAuto);
-        registeredFallbackImport = true;
     }
 
-    const QString styleUri = ::styleUri();
     // If the user imports QtQuick.Controls 2.15, and they're using the Material style, we should import version 2.15.
     // However, if they import QtQuick.Controls 2.15, but are using a custom style, we want to use the latest version
     // number of their style.
-    const int importMajor = !QQuickStylePrivate::isCustomStyle() ? QQmlModuleImportAuto : QQmlModuleImportLatest;
+    customStyle = QQuickStylePrivate::isCustomStyle();
+    registeredStyleUri = ::styleUri();
+    const int importMajor = !customStyle ? QQmlModuleImportAuto : QQmlModuleImportLatest;
     qCDebug(lcQtQuickControlsStylePlugin).nospace() << "calling qmlRegisterModuleImport() to register primary style with"
-        << " uri \"" << qtQuickControlsUri << "\" moduleMajor " << importMajor << " import " << styleUri
-        << " importMajor " << importMajor;
-    qmlRegisterModuleImport(qtQuickControlsUri, QQmlModuleImportModuleAny, styleUri.toUtf8().constData(), importMajor);
+        << " uri \"" << qtQuickControlsUri << "\" moduleMajor " << importMajor
+        << " import " << registeredStyleUri << " importMajor " << importMajor;
+    qmlRegisterModuleImport(qtQuickControlsUri, QQmlModuleImportModuleAny, registeredStyleUri.toUtf8().constData(), importMajor);
 
     const QString style = QQuickStyle::name();
     if (!style.isEmpty())
@@ -154,16 +161,17 @@ void QtQuickControls2Plugin::unregisterTypes()
 {
     qCDebug(lcQtQuickControlsStylePlugin) << "unregisterTypes() called";
 
-    if (registeredFallbackImport) {
-        const QString fallbackStyleUri = ::fallbackStyleUri();
-        qmlUnregisterModuleImport(qtQuickControlsUri, QQmlModuleImportModuleAny, fallbackStyleUri.toUtf8().constData(),
+    if (!registeredFallbackStyleUri.isEmpty()) {
+        // We registered a fallback style, so now we need to unregister it.
+        qmlUnregisterModuleImport(qtQuickControlsUri, QQmlModuleImportModuleAny, registeredFallbackStyleUri.toUtf8().constData(),
             QQmlModuleImportAuto, QQmlModuleImportAuto);
+        registeredFallbackStyleUri.clear();
     }
 
-    const QString primary = QQuickStylePrivate::effectiveStyleName(QQuickStyle::name());
-    const QString styleUri = ::styleUri();
-    const int importMajor = !QQuickStylePrivate::isCustomStyle() ? QQmlModuleImportAuto : QQmlModuleImportLatest;
-    qmlUnregisterModuleImport(qtQuickControlsUri, QQmlModuleImportModuleAny, styleUri.toUtf8().constData(), importMajor);
+    const int importMajor = !customStyle ? QQmlModuleImportAuto : QQmlModuleImportLatest;
+    qmlUnregisterModuleImport(qtQuickControlsUri, QQmlModuleImportModuleAny, registeredStyleUri.toUtf8().constData(), importMajor);
+    customStyle = false;
+    registeredStyleUri.clear();
 
     QQuickThemePrivate::instance.reset();
 
