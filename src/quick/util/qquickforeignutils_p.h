@@ -100,13 +100,12 @@ struct QInputMethodForeign
 #endif // QT_CONFIG(im)
 
 #if QT_CONFIG(shortcut)
-struct QKeySequenceForeign
+namespace QKeySequenceForeign
 {
-    Q_GADGET
-    QML_FOREIGN(QKeySequence)
+    Q_NAMESPACE
+    QML_FOREIGN_NAMESPACE(QKeySequence)
     QML_NAMED_ELEMENT(StandardKey)
     QML_ADDED_IN_VERSION(2, 2)
-    QML_UNCREATABLE("Cannot create an instance of StandardKey.")
 };
 #endif // QT_CONFIG(shortcut)
 
