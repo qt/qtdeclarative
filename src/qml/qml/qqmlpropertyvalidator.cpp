@@ -551,48 +551,25 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *prope
         }
     }
     break;
-    case QMetaType::QVector2D: {
-        struct {
-            float xp;
-            float yp;
-        } vec;
-        if (!QQmlStringConverters::createFromString(QMetaType::QVector2D, compilationUnit->bindingValueAsString(binding), &vec, sizeof(vec))) {
-            return warnOrError(tr("Invalid property assignment: 2D vector expected"));
-        }
-    }
-    break;
-    case QMetaType::QVector3D: {
-        struct {
-            float xp;
-            float yp;
-            float zy;
-        } vec;
-        if (!QQmlStringConverters::createFromString(QMetaType::QVector3D, compilationUnit->bindingValueAsString(binding), &vec, sizeof(vec))) {
-            return warnOrError(tr("Invalid property assignment: 3D vector expected"));
-        }
-    }
-    break;
-    case QMetaType::QVector4D: {
-        struct {
-            float xp;
-            float yp;
-            float zy;
-            float wp;
-        } vec;
-        if (!QQmlStringConverters::createFromString(QMetaType::QVector4D, compilationUnit->bindingValueAsString(binding), &vec, sizeof(vec))) {
-            return warnOrError(tr("Invalid property assignment: 4D vector expected"));
-        }
-    }
-    break;
+    case QMetaType::QVector2D:
+    case QMetaType::QVector3D:
+    case QMetaType::QVector4D:
     case QMetaType::QQuaternion: {
-        struct {
-            float wp;
-            float xp;
-            float yp;
-            float zp;
-        } vec;
-        if (!QQmlStringConverters::createFromString(QMetaType::QQuaternion, compilationUnit->bindingValueAsString(binding), &vec, sizeof(vec))) {
-            return warnOrError(tr("Invalid property assignment: quaternion expected"));
+        auto typeName = [&]() {
+            switch (property->propType()) {
+            case QMetaType::QVector2D: return QStringLiteral("2D vector");
+            case QMetaType::QVector3D: return QStringLiteral("3D vector");
+            case QMetaType::QVector4D: return QStringLiteral("4D vector");
+            case QMetaType::QQuaternion: return QStringLiteral("quaternion");
+            default: return QString();
+            }
+        };
+        QVariant result;
+        if (!QQml_valueTypeProvider()->createValueFromString(
+                    property->propType(),
+                    compilationUnit->bindingValueAsString(binding), &result)) {
+            return warnOrError(tr("Invalid property assignment: %1 expected")
+                               .arg(typeName()));
         }
     }
     break;

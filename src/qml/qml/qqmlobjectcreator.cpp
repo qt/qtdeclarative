@@ -564,55 +564,18 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
-    case QMetaType::QVector2D: {
-        struct {
-            float xp;
-            float yp;
-        } vec;
-        bool ok = QQmlStringConverters::createFromString(QMetaType::QVector2D, compilationUnit->bindingValueAsString(binding), &vec, sizeof(vec));
-        assertOrNull(ok);
-        Q_UNUSED(ok);
-        property->writeProperty(_qobject, &vec, propertyWriteFlags);
-    }
-    break;
-    case QMetaType::QVector3D: {
-        struct {
-            float xp;
-            float yp;
-            float zy;
-        } vec;
-        bool ok = QQmlStringConverters::createFromString(QMetaType::QVector3D, compilationUnit->bindingValueAsString(binding), &vec, sizeof(vec));
-        assertOrNull(ok);
-        Q_UNUSED(ok);
-        property->writeProperty(_qobject, &vec, propertyWriteFlags);
-    }
-    break;
-    case QMetaType::QVector4D: {
-        struct {
-            float xp;
-            float yp;
-            float zy;
-            float wp;
-        } vec;
-        bool ok = QQmlStringConverters::createFromString(QMetaType::QVector4D, compilationUnit->bindingValueAsString(binding), &vec, sizeof(vec));
-        assertOrNull(ok);
-        Q_UNUSED(ok);
-        property->writeProperty(_qobject, &vec, propertyWriteFlags);
-    }
-    break;
+    case QMetaType::QVector2D:
+    case QMetaType::QVector3D:
+    case QMetaType::QVector4D:
     case QMetaType::QQuaternion: {
-        struct {
-            float wp;
-            float xp;
-            float yp;
-            float zp;
-        } vec;
-        bool ok = QQmlStringConverters::createFromString(QMetaType::QQuaternion, compilationUnit->bindingValueAsString(binding), &vec, sizeof(vec));
+        QVariant result;
+        bool ok = QQml_valueTypeProvider()->createValueFromString(
+                    propertyType, compilationUnit->bindingValueAsString(binding), &result);
         assertOrNull(ok);
         Q_UNUSED(ok);
-        property->writeProperty(_qobject, &vec, propertyWriteFlags);
+        property->writeProperty(_qobject, result.data(), propertyWriteFlags);
+        break;
     }
-    break;
     default: {
         // generate single literal value assignment to a list property if required
         if (property->propType() == qMetaTypeId<QList<qreal> >()) {

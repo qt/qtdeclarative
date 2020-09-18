@@ -79,8 +79,6 @@ namespace QQmlStringConverters
     Q_QML_PRIVATE_EXPORT QPointF pointFFromString(const QString &, bool *ok = nullptr);
     Q_QML_PRIVATE_EXPORT QSizeF sizeFFromString(const QString &, bool *ok = nullptr);
     Q_QML_PRIVATE_EXPORT QRectF rectFFromString(const QString &, bool *ok = nullptr);
-
-    Q_QML_PRIVATE_EXPORT bool createFromString(int, const QString &, void *, size_t);
 }
 
 QT_END_NAMESPACE

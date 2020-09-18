@@ -80,13 +80,13 @@ QVariant QQmlValueTypeProvider::createValueType(int type, const QJSValue &params
     return QVariant();
 }
 
-bool QQmlValueTypeProvider::createValueFromString(int type, const QString &s, void *data, size_t n)
+bool QQmlValueTypeProvider::createValueFromString(int type, const QJSValue &s, QVariant *data)
 {
     Q_ASSERT(data);
 
     QQmlValueTypeProvider *p = this;
     do {
-        if (p->createFromString(type, s, data, n))
+        if (p->create(type, s, data))
             return true;
     } while ((p = p->next));
 
@@ -169,7 +169,6 @@ bool QQmlValueTypeProvider::writeValueType(int type, const void *src, QVariant& 
 }
 
 bool QQmlValueTypeProvider::create(int, const QJSValue &, QVariant *) { return false; }
-bool QQmlValueTypeProvider::createFromString(int, const QString &, void *, size_t) { return false; }
 bool QQmlValueTypeProvider::variantFromString(int, const QString &, QVariant *) { return false; }
 bool QQmlValueTypeProvider::store(int, const void *, void *, size_t) { return false; }
 

@@ -289,7 +289,7 @@ public:
 // Note: The functions in this class provide handling only for the types
 // that the QML engine will currently actually call them for, so many
 // appear incompletely implemented.  For some functions, the implementation
-// would be obvious, but for others (particularly create and createFromString)
+// would be obvious, but for others (particularly create)
 // the exact semantics are unknown.  For this reason unused functionality
 // has been omitted.
 
@@ -546,6 +546,12 @@ public:
     bool create(int type, const QJSValue &params, QVariant *v) override
     {
         switch (type) {
+        case QMetaType::QColor:
+            if (params.isString()) {
+                *v = QVariant(QColor(params.toString()));
+                return true;
+            }
+            break;
         case QMetaType::QColorSpace: {
             bool ok = false;
             auto val = colorSpaceFromObject(params, &ok);
@@ -569,6 +575,13 @@ public:
                 *v = QVariant(QVector2D(params.property(0).toNumber(),
                                         params.property(1).toNumber()));
                 return true;
+            } else if (params.isString()) {
+                bool ok = false;
+                auto vector = vector2DFromString(params.toString(), &ok);
+                if (ok) {
+                    *v = QVariant(vector);
+                    return true;
+                }
             }
             break;
         case QMetaType::QVector3D:
@@ -577,6 +590,13 @@ public:
                                         params.property(1).toNumber(),
                                         params.property(2).toNumber()));
                 return true;
+            } else if (params.isString()) {
+                bool ok = false;
+                auto vector = vector3DFromString(params.toString(), &ok);
+                if (ok) {
+                    *v = QVariant(vector);
+                    return true;
+                }
             }
             break;
         case QMetaType::QVector4D:
@@ -586,6 +606,13 @@ public:
                                         params.property(2).toNumber(),
                                         params.property(3).toNumber()));
                 return true;
+            } else if (params.isString()) {
+                bool ok = false;
+                auto vector = vector4DFromString(params.toString(), &ok);
+                if (ok) {
+                    *v = QVariant(vector);
+                    return true;
+                }
             }
             break;
         case QMetaType::QQuaternion:
@@ -595,6 +622,13 @@ public:
                                           params.property(2).toNumber(),
                                           params.property(3).toNumber()));
                 return true;
+            } else if (params.isString()) {
+                bool ok = false;
+                auto vector = quaternionFromString(params.toString(), &ok);
+                if (ok) {
+                    *v = QVariant(vector);
+                    return true;
+                }
             }
             break;
         case QMetaType::QMatrix4x4:
@@ -621,6 +655,13 @@ public:
                                          params.property(14).toNumber(),
                                          params.property(15).toNumber()));
                 return true;
+            } else if (params.isString()) {
+                bool ok = false;
+                auto vector = matrix4x4FromString(params.toString(), &ok);
+                if (ok) {
+                    *v = QVariant(vector);
+                    return true;
+                }
             }
             break;
         default: break;
@@ -636,29 +677,6 @@ public:
         T *t = reinterpret_cast<T *>(data);
         new (t) T(initValue);
         return true;
-    }
-
-    bool createFromString(int type, const QString &s, void *data, size_t dataSize) override
-    {
-        bool ok = false;
-
-        switch (type) {
-        case QMetaType::QColor:
-            return createFromStringTyped<QColor>(data, dataSize, QColor(s));
-        case QMetaType::QVector2D:
-            return createFromStringTyped<QVector2D>(data, dataSize, vector2DFromString(s, &ok));
-        case QMetaType::QVector3D:
-            return createFromStringTyped<QVector3D>(data, dataSize, vector3DFromString(s, &ok));
-        case QMetaType::QVector4D:
-            return createFromStringTyped<QVector4D>(data, dataSize, vector4DFromString(s, &ok));
-        case QMetaType::QQuaternion:
-            return createFromStringTyped<QQuaternion>(data, dataSize, quaternionFromString(s, &ok));
-        case QMetaType::QMatrix4x4:
-            return createFromStringTyped<QMatrix4x4>(data, dataSize, matrix4x4FromString(s, &ok));
-        default: break;
-        }
-
-        return false;
     }
 
     bool variantFromString(int type, const QString &s, QVariant *v) override

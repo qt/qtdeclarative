@@ -189,10 +189,4 @@ QRectF QQmlStringConverters::rectFFromString(const QString &s, bool *ok)
     return QRectF(x, y, width, height);
 }
 
-bool QQmlStringConverters::createFromString(int type, const QString &s, void *data, size_t n)
-{
-    Q_ASSERT(data);
-    return QQml_valueTypeProvider()->createValueFromString(type, s, data, n);
-}
-
 QT_END_NAMESPACE
