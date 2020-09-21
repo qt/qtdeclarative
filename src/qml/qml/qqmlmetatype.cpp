@@ -170,6 +170,7 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
     d->extraData.cd->userdata = type.userdata;
     d->extraData.cd->newFunc = type.create;
     d->extraData.cd->noCreationReason = type.noCreationReason;
+    d->extraData.cd->createValueTypeFunc = type.createValueType;
     d->baseMetaObject = type.metaObject;
     d->extraData.cd->attachedPropertiesFunc = type.attachedPropertiesFunction;
     d->extraData.cd->attachedPropertiesType = type.attachedPropertiesMetaObject;

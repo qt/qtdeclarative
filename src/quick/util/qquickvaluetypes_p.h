@@ -87,6 +87,8 @@ class QQuickColorValueType
     QML_EXTENDED(QQuickColorValueType)
 
 public:
+    static QVariant create(const QJSValue &params);
+
     Q_INVOKABLE QString toString() const;
 
     Q_INVOKABLE QVariant alpha(qreal value) const;
@@ -129,6 +131,8 @@ class QQuickVector2DValueType
     QML_EXTENDED(QQuickVector2DValueType)
 
 public:
+    static QVariant create(const QJSValue &params);
+
     Q_INVOKABLE QString toString() const;
 
     qreal x() const;
@@ -162,6 +166,8 @@ class QQuickVector3DValueType
     QML_EXTENDED(QQuickVector3DValueType)
 
 public:
+    static QVariant create(const QJSValue &params);
+
     Q_INVOKABLE QString toString() const;
 
     qreal x() const;
@@ -200,6 +206,8 @@ class QQuickVector4DValueType
     QML_EXTENDED(QQuickVector4DValueType)
 
 public:
+    static QVariant create(const QJSValue &params);
+
     Q_INVOKABLE QString toString() const;
 
     qreal x() const;
@@ -239,6 +247,8 @@ class QQuickQuaternionValueType
     QML_EXTENDED(QQuickQuaternionValueType)
 
 public:
+    static QVariant create(const QJSValue &params);
+
     Q_INVOKABLE QString toString() const;
 
     qreal scalar() const;
@@ -277,6 +287,8 @@ class QQuickMatrix4x4ValueType
     QML_EXTENDED(QQuickMatrix4x4ValueType)
 
 public:
+    static QVariant create(const QJSValue &params);
+
     qreal m11() const { return v(0, 0); }
     qreal m12() const { return v(0, 1); }
     qreal m13() const { return v(0, 2); }
@@ -397,6 +409,8 @@ class QQuickFontValueType
     QML_EXTENDED(QQuickFontValueType)
 
 public:
+    static QVariant create(const QJSValue &value);
+
     Q_INVOKABLE QString toString() const;
 
     QString family() const;
@@ -499,6 +513,8 @@ class QQuickColorSpaceValueType
     QML_EXTENDED(QQuickColorSpaceValueType)
 
 public:
+    static QVariant create(const QJSValue &params);
+
     QQuickColorSpaceEnums::NamedColorSpace namedColorSpace() const noexcept;
     void setNamedColorSpace(QQuickColorSpaceEnums::NamedColorSpace namedColorSpace);
     QQuickColorSpaceEnums::Primaries primaries() const noexcept;

@@ -219,27 +219,14 @@ inline void QQml_setParent_noEvent(QObject *object, QObject *parent)
 class Q_QML_PRIVATE_EXPORT QQmlValueTypeProvider
 {
 public:
-    QQmlValueTypeProvider();
-    virtual ~QQmlValueTypeProvider();
-
     bool initValueType(int, QVariant&);
-    bool createValueType(int, const QJSValue &, QVariant *);
+    bool createValueType(int, const QJSValue &, QVariant &);
     bool equalValueType(int, const void *, const QVariant&);
     bool readValueType(const QVariant&, void *, int);
     bool writeValueType(int, const void *, QVariant&);
-
-private:
-    virtual bool create(int, const QJSValue &params, QVariant *);
-
-    friend Q_QML_PRIVATE_EXPORT void QQml_addValueTypeProvider(QQmlValueTypeProvider *);
-    friend Q_QML_PRIVATE_EXPORT void QQml_removeValueTypeProvider(QQmlValueTypeProvider *);
-
-    QQmlValueTypeProvider *next;
 };
 
-Q_QML_PRIVATE_EXPORT void QQml_addValueTypeProvider(QQmlValueTypeProvider *);
 Q_AUTOTEST_EXPORT QQmlValueTypeProvider *QQml_valueTypeProvider();
-
 
 class Q_QML_PRIVATE_EXPORT QQmlColorProvider
 {

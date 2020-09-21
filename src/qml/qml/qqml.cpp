@@ -321,6 +321,7 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
             nullptr,
             nullptr,
             noCreateReason,
+            type.createValueType,
             type.uri,
             type.version,
             nullptr,
@@ -491,6 +492,7 @@ namespace QQmlPrivate {
             QMetaType::fromType<T *>(),
             QMetaType::fromType<QQmlListProperty<T>>(),
             0,
+            nullptr,
             nullptr,
             nullptr,
 

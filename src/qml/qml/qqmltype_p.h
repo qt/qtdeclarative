@@ -104,6 +104,9 @@ public:
     bool availableInVersion(QTypeRevision version) const;
     bool availableInVersion(const QHashedStringRef &module, QTypeRevision version) const;
 
+    typedef QVariant (*CreateValueTypeFunc)(const QJSValue &);
+    CreateValueTypeFunc createValueTypeFunction() const;
+
     QObject *create() const;
     void create(QObject **, void **, size_t) const;
 

@@ -58,6 +58,7 @@
 #include <QtQml/qqmlparserstatus.h>
 #include <QtQml/qqmllist.h>
 #include <QtQml/qqmlpropertyvaluesource.h>
+#include <QtQml/qjsvalue.h>
 
 #include <QtCore/qglobal.h>
 #include <QtCore/qvariant.h>
@@ -109,7 +110,6 @@ public:
 };
 
 
-class QJSValue;
 class QJSEngine;
 class QQmlEngine;
 class QQmlCustomParser;
@@ -163,6 +163,7 @@ namespace QQmlPrivate
     using CreateIntoFunction = void (*)(void *, void *);
     using CreateSingletonFunction = QObject *(*)(QQmlEngine *, QJSEngine *);
     using CreateParentFunction = QObject *(*)(QObject *);
+    using CreateValueTypeFunction = QVariant (*)(const QJSValue &);
 
     template<typename T, bool Constructible = isConstructible<T>()>
     struct Constructors;
@@ -209,6 +210,51 @@ namespace QQmlPrivate
     {
         static constexpr const CreateParentFunction createParent = nullptr;
         static const QMetaObject *staticMetaObject() { return &T::staticMetaObject; }
+    };
+
+    template<typename F, typename Result = void>
+    struct ValueTypeFactory
+    {
+        static constexpr const Result (*create)(const QJSValue &) = nullptr;
+    };
+
+    template<typename F>
+    struct ValueTypeFactory<F, std::void_t<decltype(F::create(QJSValue()))>>
+    {
+        static decltype(F::create(QJSValue())) create(const QJSValue &params)
+        {
+            return F::create(params);
+        }
+    };
+
+    template<typename T, typename F,
+             bool HasCtor = std::is_constructible_v<T, QJSValue>,
+             bool HasFactory = std::is_constructible_v<
+                 QVariant, decltype(ValueTypeFactory<F>::create(QJSValue()))>>
+    struct ValueType;
+
+    template<typename T, typename F>
+    struct ValueType<T, F, false, false>
+    {
+        static constexpr const CreateValueTypeFunction create = nullptr;
+    };
+
+    template<typename T, typename F, bool HasCtor>
+    struct ValueType<T, F, HasCtor, true>
+    {
+        static QVariant create(const QJSValue &params)
+        {
+            return F::create(params);
+        }
+    };
+
+    template<typename T, typename F>
+    struct ValueType<T, F, true, false>
+    {
+        static QVariant create(const QJSValue &params)
+        {
+            return QVariant::fromValue(T(params));
+        }
     };
 
     template<class From, class To, int N>
@@ -348,6 +394,8 @@ namespace QQmlPrivate
         void *userdata;
         QString noCreationReason;
 
+        QVariant (*createValueType)(const QJSValue &);
+
         const char *uri;
         QTypeRevision version;
         const char *elementName;
@@ -377,6 +425,8 @@ namespace QQmlPrivate
         int objectSize;
         void (*create)(void *, void *);
         void *userdata;
+
+        QVariant (*createValueType)(const QJSValue &);
 
         const char *uri;
         QTypeRevision version;
@@ -676,6 +726,7 @@ namespace QQmlPrivate
             QmlMetaType<T>::list(),
             int(sizeof(T)),
             Constructors<T>::createInto, nullptr,
+            ValueType<T, E>::create,
 
             uri,
             QTypeRevision::fromMajorVersion(versionMajor),

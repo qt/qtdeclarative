@@ -118,6 +118,7 @@ int qmlRegisterUncreatableMetaObject(const QMetaObject &staticMetaObject,
         nullptr,
         nullptr,
         reason,
+        nullptr,
 
         uri, QTypeRevision::fromVersion(versionMajor, versionMinor), qmlName, &staticMetaObject,
 

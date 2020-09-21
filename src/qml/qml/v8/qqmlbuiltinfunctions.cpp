@@ -463,7 +463,7 @@ ReturnedValue QtObject::method_font(const FunctionObject *b, const Value *, cons
     QVariant v;
     if (!QQml_valueTypeProvider()->createValueType(
                 QMetaType::QFont, QJSValuePrivate::fromReturnedValue(argv[0].asReturnedValue()),
-                &v)) {
+                v)) {
         THROW_GENERIC_ERROR("Qt.font(): Invalid argument: no valid font subproperties specified");
     }
     return scope.engine->fromVariant(v);
@@ -483,7 +483,7 @@ static ReturnedValue createValueType(const FunctionObject *b, const Value *argv,
         params.setProperty(i, QJSValuePrivate::fromReturnedValue(argv[i].asReturnedValue()));
 
     QVariant variant;
-    QQml_valueTypeProvider()->createValueType(type, params, &variant);
+    QQml_valueTypeProvider()->createValueType(type, params, variant);
     return scope.engine->fromVariant(variant);
 }
 
@@ -554,7 +554,7 @@ ReturnedValue QtObject::method_matrix4x4(const FunctionObject *b, const Value *,
 
     if (argc == 0) {
         QVariant variant;
-        QQml_valueTypeProvider()->createValueType(QMetaType::QMatrix4x4, QJSValue(), &variant);
+        QQml_valueTypeProvider()->createValueType(QMetaType::QMatrix4x4, QJSValue(), variant);
         return scope.engine->fromVariant(variant);
     }
 
@@ -562,7 +562,7 @@ ReturnedValue QtObject::method_matrix4x4(const FunctionObject *b, const Value *,
         QVariant v;
         if (!QQml_valueTypeProvider()->createValueType(
                     QMetaType::QMatrix4x4,
-                    QJSValuePrivate::fromReturnedValue(argv[0].asReturnedValue()), &v)) {
+                    QJSValuePrivate::fromReturnedValue(argv[0].asReturnedValue()), v)) {
             THROW_GENERIC_ERROR("Qt.matrix4x4(): Invalid argument: not a valid matrix4x4 values array");
         }
         return scope.engine->fromVariant(v);

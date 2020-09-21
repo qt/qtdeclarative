@@ -63,6 +63,7 @@ QQmlTypePrivate::QQmlTypePrivate(QQmlType::RegistrationType type)
         extraData.cd = new QQmlCppTypeData;
         extraData.cd->allocationSize = 0;
         extraData.cd->newFunc = nullptr;
+        extraData.cd->createValueTypeFunc = nullptr;
         extraData.cd->parserStatusCast = -1;
         extraData.cd->extFunc = nullptr;
         extraData.cd->extMetaObject = nullptr;
@@ -514,6 +515,13 @@ QQmlCustomParser *QQmlType::customParser() const
     if (d->regType != CppType)
         return nullptr;
     return d->extraData.cd->customParser;
+}
+
+QQmlType::CreateValueTypeFunc QQmlType::createValueTypeFunction() const
+{
+    if (!d || d->regType != CppType)
+        return nullptr;
+    return d->extraData.cd->createValueTypeFunc;
 }
 
 QQmlType::CreateFunc QQmlType::createFunction() const

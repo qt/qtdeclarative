@@ -116,6 +116,7 @@ public:
         void (*newFunc)(void *, void *);
         void *userdata = nullptr;
         QString noCreationReason;
+        QVariant (*createValueTypeFunc)(const QJSValue &);
         int parserStatusCast;
         QObject *(*extFunc)(QObject *);
         const QMetaObject *extMetaObject;
