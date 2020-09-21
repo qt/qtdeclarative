@@ -228,9 +228,6 @@ namespace QQmlPrivate
         }
     };
 
-    template<typename...>
-    using QmlVoidT = void;
-
     // You can prevent subclasses from using the same attached type by specialzing this.
     // This is reserved for internal types, though.
     template<class T, class A>
@@ -239,7 +236,7 @@ namespace QQmlPrivate
         using Type = A;
     };
 
-    template<class T, class = QmlVoidT<>, bool OldStyle = QQmlTypeInfo<T>::hasAttachedProperties>
+    template<class T, class = std::void_t<>, bool OldStyle = QQmlTypeInfo<T>::hasAttachedProperties>
     struct QmlAttached
     {
         using Type = void;
@@ -250,7 +247,7 @@ namespace QQmlPrivate
 
     // Defined inline via QML_ATTACHED
     template<class T>
-    struct QmlAttached<T, QmlVoidT<typename OverridableAttachedType<T, typename T::QmlAttachedType>::Type>, false>
+    struct QmlAttached<T, std::void_t<typename OverridableAttachedType<T, typename T::QmlAttachedType>::Type>, false>
     {
         // Normal attached properties
         template <typename Parent, typename Attached>
@@ -286,7 +283,7 @@ namespace QQmlPrivate
 
     // Separately defined via QQmlTypeInfo
     template<class T>
-    struct QmlAttached<T, QmlVoidT<decltype(T::qmlAttachedProperties)>, true>
+    struct QmlAttached<T, std::void_t<decltype(T::qmlAttachedProperties)>, true>
     {
         using Type = typename std::remove_pointer<decltype(T::qmlAttachedProperties(nullptr))>::type;
         using Func = QQmlAttachedPropertiesFunc<Type>;
@@ -545,50 +542,50 @@ namespace QQmlPrivate
         return elementName;
     }
 
-    template<class T, class = QmlVoidT<>>
+    template<class T, class = std::void_t<>>
     struct QmlExtended
     {
         using Type = void;
     };
 
     template<class T>
-    struct QmlExtended<T, QmlVoidT<typename T::QmlExtendedType>>
+    struct QmlExtended<T, std::void_t<typename T::QmlExtendedType>>
     {
         using Type = typename T::QmlExtendedType;
     };
 
-    template<class T, class = QmlVoidT<>>
+    template<class T, class = std::void_t<>>
     struct QmlResolved
     {
         using Type = T;
     };
 
     template<class T>
-    struct QmlResolved<T, QmlVoidT<decltype(T::QmlForeignType::staticMetaObject)>>
+    struct QmlResolved<T, std::void_t<decltype(T::QmlForeignType::staticMetaObject)>>
     {
         using Type = typename T::QmlForeignType;
     };
 
-    template<class T, class = QmlVoidT<>>
+    template<class T, class = std::void_t<>>
     struct QmlSingleton
     {
         static constexpr bool Value = false;
     };
 
     template<class T>
-    struct QmlSingleton<T, QmlVoidT<typename T::QmlIsSingleton>>
+    struct QmlSingleton<T, std::void_t<typename T::QmlIsSingleton>>
     {
         static constexpr bool Value = bool(T::QmlIsSingleton::yes);
     };
 
-    template<class T, class = QmlVoidT<>>
+    template<class T, class = std::void_t<>>
     struct QmlInterface
     {
         static constexpr bool Value = false;
     };
 
     template<class T>
-    struct QmlInterface<T, QmlVoidT<typename T::QmlIsInterface>>
+    struct QmlInterface<T, std::void_t<typename T::QmlIsInterface>>
     {
         static constexpr bool Value = bool(T::QmlIsInterface::yes);
     };
