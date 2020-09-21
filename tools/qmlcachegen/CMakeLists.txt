@@ -49,3 +49,15 @@ qt_add_tool(${target_name}
 
 #### Keys ignored in scope 5:.:.:qmlcachegen.pro:QMAKE_HOST.os___equals___Windows:
 # CMAKE_BIN_SUFFIX = ".exe"
+
+# special case begin
+# Install public prf files.
+set(qmlcachegen_mkspecs
+    "${CMAKE_CURRENT_SOURCE_DIR}/qmlcache.prf"
+    "${CMAKE_CURRENT_SOURCE_DIR}/qtquickcompiler.prf"
+    )
+set(mkspecs_install_dir "${INSTALL_MKSPECSDIR}")
+qt_path_join(mkspecs_install_dir "${QT_INSTALL_DIR}" "${mkspecs_install_dir}" "features")
+qt_copy_or_install(FILES "${qmlcachegen_mkspecs}"
+                   DESTINATION ${mkspecs_install_dir})
+# special case end
