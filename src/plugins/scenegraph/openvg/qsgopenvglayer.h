@@ -62,11 +62,10 @@ public:
 
     // QSGTexture interface
 public:
-    int textureId() const override;
     QSize textureSize() const override;
     bool hasAlphaChannel() const override;
     bool hasMipmaps() const override;
-    void bind() override;
+    qint64 comparisonKey() const override;
 
     // QSGDynamicTexture interface
 public:
@@ -110,13 +109,6 @@ private:
 
     QOpenVGOffscreenSurface *m_offscreenSurface;
     QOpenVGOffscreenSurface *m_secondaryOffscreenSurface;
-};
-
-class QSGOpenVGLayerPrivate : public QSGTexturePrivate
-{
-    Q_DECLARE_PUBLIC(QSGOpenVGLayer)
-public:
-    qint64 comparisonKey() const override;
 };
 
 QT_END_NAMESPACE

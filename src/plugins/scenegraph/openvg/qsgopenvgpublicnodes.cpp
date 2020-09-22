@@ -242,6 +242,15 @@ QSGTexture::Filtering QSGOpenVGImageNode::mipmapFiltering() const
     return QSGTexture::None;
 }
 
+void QSGOpenVGImageNode::setAnisotropyLevel(QSGTexture::AnisotropyLevel)
+{
+}
+
+QSGTexture::AnisotropyLevel QSGOpenVGImageNode::anisotropyLevel() const
+{
+    return QSGTexture::AnisotropyNone;
+}
+
 void QSGOpenVGImageNode::setTextureCoordinatesTransform(QSGImageNode::TextureCoordinatesTransformMode transformNode)
 {
     if (m_transformMode == transformNode)
@@ -284,7 +293,7 @@ void QSGOpenVGImageNode::render()
     vgSeti(VG_MATRIX_MODE, VG_MATRIX_IMAGE_USER_TO_SURFACE);
     vgLoadMatrix(transform().constData());
 
-    VGImage image = static_cast<VGImage>(m_texture->textureId());
+    VGImage image = static_cast<VGImage>(m_texture->comparisonKey());
 
     //Apply the TextureCoordinateTransform Flag
     if (m_transformMode != QSGImageNode::NoTransform) {
@@ -390,7 +399,7 @@ void QSGOpenVGNinePatchNode::render()
     vgSeti(VG_MATRIX_MODE, VG_MATRIX_IMAGE_USER_TO_SURFACE);
     vgLoadMatrix(transform().constData());
 
-    VGImage image = static_cast<VGImage>(m_texture->textureId());
+    VGImage image = static_cast<VGImage>(m_texture->comparisonKey());
 
     //Draw borderImage
     QSGOpenVGHelpers::qDrawBorderImage(image, m_texture->textureSize(), m_bounds, m_bounds.marginsRemoved(m_margins), QRectF(0, 0, 1, 1));

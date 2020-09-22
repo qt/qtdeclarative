@@ -44,7 +44,7 @@
 QT_BEGIN_NAMESPACE
 
 QSGOpenVGLayer::QSGOpenVGLayer(QSGRenderContext *renderContext)
-    : QSGLayer(*(new QSGOpenVGLayerPrivate))
+    : QSGLayer(*(new QSGTexturePrivate(this)))
     , m_item(nullptr)
     , m_renderer(nullptr)
     , m_device_pixel_ratio(1)
@@ -65,7 +65,7 @@ QSGOpenVGLayer::~QSGOpenVGLayer()
     invalidated();
 }
 
-int QSGOpenVGLayer::textureId() const
+qint64 QSGOpenVGLayer::comparisonKey() const
 {
     if (m_offscreenSurface)
         return static_cast<int>(m_offscreenSurface->image());
@@ -90,10 +90,6 @@ bool QSGOpenVGLayer::hasAlphaChannel() const
 bool QSGOpenVGLayer::hasMipmaps() const
 {
     return false;
-}
-
-void QSGOpenVGLayer::bind()
-{
 }
 
 bool QSGOpenVGLayer::updateTexture()
@@ -311,11 +307,6 @@ void QSGOpenVGLayer::grab()
 
     if (m_recursive)
         markDirtyTexture(); // Continuously update if 'live' and 'recursive'.
-}
-
-qint64 QSGOpenVGLayerPrivate::comparisonKey() const
-{
-    return 0;
 }
 
 QT_END_NAMESPACE

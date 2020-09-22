@@ -122,7 +122,7 @@ void QSGOpenVGSpriteNode::render()
     if (!m_texture)
         return;
 
-    VGImage image = static_cast<VGImage>(m_texture->textureId());
+    VGImage image = static_cast<VGImage>(m_texture->comparisonKey());
 
     QRectF sourceRect(m_sourceA, m_spriteSize);
     QRectF targetRect(0, 0, m_size.width(), m_size.height());

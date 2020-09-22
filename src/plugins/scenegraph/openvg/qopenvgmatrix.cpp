@@ -344,11 +344,11 @@ QDebug operator<<(QDebug dbg, const QOpenVGMatrix &m)
 {
     QDebugStateSaver saver(dbg);
     // Output in row-major order because it is more human-readable.
-    dbg.nospace() << "QOpenVGMatrix:(" << endl
+    dbg.nospace() << "QOpenVGMatrix:(" << Qt::endl
                   << qSetFieldWidth(10)
-                  << m(0, 0) << m(0, 1) << m(0, 2) << endl
-                  << m(1, 0) << m(1, 1) << m(1, 2) << endl
-                  << m(2, 0) << m(2, 1) << m(2, 2) << endl
+                  << m(0, 0) << m(0, 1) << m(0, 2) << Qt::endl
+                  << m(1, 0) << m(1, 1) << m(1, 2) << Qt::endl
+                  << m(2, 0) << m(2, 1) << m(2, 2) << Qt::endl
                   << qSetFieldWidth(0) << ')';
     return dbg;
 }

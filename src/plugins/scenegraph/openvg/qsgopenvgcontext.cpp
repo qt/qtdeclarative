@@ -88,9 +88,9 @@ void QSGOpenVGRenderContext::invalidate()
     emit invalidated();
 }
 
-void QSGOpenVGRenderContext::renderNextFrame(QSGRenderer *renderer, uint fboId)
+void QSGOpenVGRenderContext::renderNextFrame(QSGRenderer *renderer)
 {
-    renderer->renderScene(fboId);
+    renderer->renderScene();
 }
 
 QSGTexture *QSGOpenVGRenderContext::createTexture(const QImage &image, uint flags) const
@@ -137,9 +137,10 @@ QSGPainterNode *QSGOpenVGContext::createPainterNode(QQuickPaintedItem *item)
     return new QSGOpenVGPainterNode(item);
 }
 
-QSGGlyphNode *QSGOpenVGContext::createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode)
+QSGGlyphNode *QSGOpenVGContext::createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode, int renderTypeQuality)
 {
     Q_UNUSED(preferNativeGlyphNode);
+    Q_UNUSED(renderTypeQuality);
     return new QSGOpenVGGlyphNode(rc);
 }
 

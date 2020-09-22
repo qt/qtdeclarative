@@ -100,6 +100,9 @@ public:
     void setTextureCoordinatesTransform(TextureCoordinatesTransformMode transformNode) override;
     TextureCoordinatesTransformMode textureCoordinatesTransform() const override;
 
+    void setAnisotropyLevel(QSGTexture::AnisotropyLevel level) override;
+    QSGTexture::AnisotropyLevel anisotropyLevel() const override;
+
     void setOwnsTexture(bool owns) override;
     bool ownsTexture() const override;
 

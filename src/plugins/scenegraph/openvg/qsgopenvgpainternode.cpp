@@ -198,7 +198,7 @@ void QSGOpenVGPainterNode::render()
     vgSeti(VG_MATRIX_MODE, VG_MATRIX_IMAGE_USER_TO_SURFACE);
     vgLoadMatrix(transform().constData());
 
-    vgDrawImage(static_cast<VGImage>(m_texture->textureId()));
+    vgDrawImage(static_cast<VGImage>(m_texture->comparisonKey()));
 }
 
 void QSGOpenVGPainterNode::paint()

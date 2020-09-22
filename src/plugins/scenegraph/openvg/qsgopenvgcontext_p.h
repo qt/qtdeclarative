@@ -65,7 +65,7 @@ public:
 
     void initialize(const QSGRenderContext::InitParams *params) override;
     void invalidate() override;
-    void renderNextFrame(QSGRenderer *renderer, uint fboId) override;
+    void renderNextFrame(QSGRenderer *renderer) override;
     QSGTexture *createTexture(const QImage &image, uint flags) const override;
     QSGRenderer *createRenderer(QSGRendererInterface::RenderMode renderMode = QSGRendererInterface::RenderMode2D) override;
     int maxTextureSize() const override;
@@ -95,7 +95,7 @@ public:
     QSGRectangleNode *createRectangleNode() override;
     QSGImageNode *createImageNode() override;
     QSGPainterNode *createPainterNode(QQuickPaintedItem *item) override;
-    QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode) override;
+    QSGGlyphNode *createGlyphNode(QSGRenderContext *rc, bool preferNativeGlyphNode, int renderTypeQuality) override;
     QSGNinePatchNode *createNinePatchNode() override;
     QSGLayer *createLayer(QSGRenderContext *renderContext) override;
     QSurfaceFormat defaultSurfaceFormat() const override;
