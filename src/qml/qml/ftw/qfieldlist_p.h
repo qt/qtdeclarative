@@ -66,6 +66,8 @@ public:
     inline N *takeFirst();
 
     inline void prepend(N *);
+    template <typename OtherTag>
+    inline void copyAndClearPrepend(QForwardFieldList<N, nextMember, OtherTag> &);
 
     inline bool isEmpty() const;
     inline bool isOne() const;
@@ -148,6 +150,14 @@ void QForwardFieldList<N, nextMember, Tag>::prepend(N *v)
     Q_ASSERT(v->*nextMember == nullptr);
     v->*nextMember = _first.data();
     _first = v;
+}
+
+template<class N, N *N::*nextMember, typename Tag>
+template <typename OtherTag>
+void QForwardFieldList<N, nextMember, Tag>::copyAndClearPrepend(QForwardFieldList<N, nextMember, OtherTag> &o)
+{
+    _first = nullptr;
+    while (N *n = o.takeFirst()) prepend(n);
 }
 
 template<class N, N *N::*nextMember, typename Tag>

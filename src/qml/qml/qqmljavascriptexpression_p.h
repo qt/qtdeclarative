@@ -240,7 +240,7 @@ public:
     QQmlEngine *engine;
     QQmlJavaScriptExpression *expression;
     QQmlJavaScriptExpression::DeleteWatcher *watcher;
-    QFieldList<QQmlJavaScriptExpressionGuard, &QQmlJavaScriptExpressionGuard::next> guards;
+    QForwardFieldList<QQmlJavaScriptExpressionGuard, &QQmlJavaScriptExpressionGuard::next> guards;
     QStringList *errorString;
     bool translationCaptured = false;
 };
