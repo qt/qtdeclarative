@@ -205,7 +205,7 @@ public:
     QStringList formats() const override;
 
 protected:
-    QVariant retrieveData(const QString &mimeType, QVariant::Type type) const override;
+    QVariant retrieveData(const QString &mimeType, QMetaType type) const override;
 
 private:
     void setup() const;

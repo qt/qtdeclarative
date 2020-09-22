@@ -1872,7 +1872,7 @@ QStringList QQuickTextEditMimeData::formats() const
         return QMimeData::formats();
 }
 
-QVariant QQuickTextEditMimeData::retrieveData(const QString &mimeType, QVariant::Type type) const
+QVariant QQuickTextEditMimeData::retrieveData(const QString &mimeType, QMetaType type) const
 {
     if (!fragment.isEmpty())
         setup();
