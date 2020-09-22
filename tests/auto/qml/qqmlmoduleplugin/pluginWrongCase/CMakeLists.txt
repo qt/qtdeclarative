@@ -4,7 +4,7 @@
 ## Plugin Generic Library:
 #####################################################################
 
-qt_add_cmake_library(Plugin
+qt_internal_add_cmake_library(Plugin
     MODULE
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/WrongCase"
     SOURCES

@@ -4,7 +4,7 @@
 ## shortcut Test:
 #####################################################################
 
-qt_add_test(shortcut
+qt_internal_add_test(shortcut
     GUI
     QMLTEST
     PUBLIC_LIBRARIES

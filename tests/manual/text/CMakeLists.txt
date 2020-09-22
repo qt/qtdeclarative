@@ -4,7 +4,7 @@
 ## text Binary:
 #####################################################################
 
-qt_add_manual_test(text
+qt_internal_add_manual_test(text
     GUI
     SOURCES
         main.cpp
@@ -21,7 +21,7 @@ set(qml_resource_files
     "textInputPropertiesAndSignals.qml"
 )
 
-qt_add_resource(text "qml"
+qt_internal_add_resource(text "qml"
     PREFIX
         "/"
     FILES
@@ -74,7 +74,7 @@ set(quick_shared_resource_files
     "images/slider_handle.png"
 )
 
-qt_add_resource(text "quick_shared"
+qt_internal_add_resource(text "quick_shared"
     PREFIX
         "/quick/shared"
     BASE

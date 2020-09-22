@@ -4,7 +4,7 @@
 ## qquicklayoutsplugin Plugin:
 #####################################################################
 
-qt_add_qml_module(qquicklayoutsplugin
+qt_internal_add_qml_module(qquicklayoutsplugin
     URI "QtQuick.Layouts"
     VERSION "${CMAKE_PROJECT_VERSION}"
     DESIGNER_SUPPORTED

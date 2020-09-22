@@ -4,7 +4,7 @@
 ## tst_qquickdrag Test:
 #####################################################################
 
-qt_add_test(tst_qquickdrag
+qt_internal_add_test(tst_qquickdrag
     SOURCES
         tst_qquickdrag.cpp
     PUBLIC_LIBRARIES

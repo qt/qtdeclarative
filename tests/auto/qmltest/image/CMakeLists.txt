@@ -4,7 +4,7 @@
 ## image Test:
 #####################################################################
 
-qt_add_test(image
+qt_internal_add_test(image
     GUI
     QMLTEST
     PUBLIC_LIBRARIES

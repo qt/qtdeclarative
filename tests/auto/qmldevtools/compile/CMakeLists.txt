@@ -4,7 +4,7 @@
 ## tst_compile Binary:
 #####################################################################
 
-qt_add_executable(tst_compile
+qt_internal_add_executable(tst_compile
     GUI
     SOURCES
         tst_compile.cpp
@@ -19,12 +19,12 @@ qt_add_executable(tst_compile
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_compile CONDITION force_bootstrap
+qt_internal_extend_target(tst_compile CONDITION force_bootstrap
     PUBLIC_LIBRARIES
         Qt::BootstrapPrivate
 )
 
-qt_extend_target(tst_compile CONDITION NOT force_bootstrap
+qt_internal_extend_target(tst_compile CONDITION NOT force_bootstrap
     PUBLIC_LIBRARIES
         Qt::Core
 )

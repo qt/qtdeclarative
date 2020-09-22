@@ -4,7 +4,7 @@
 ## tst_qevents Binary:
 #####################################################################
 
-qt_add_benchmark(tst_qevents
+qt_internal_add_benchmark(tst_qevents
     SOURCES
         ../../../auto/quick/shared/geometrytestutil.cpp ../../../auto/quick/shared/geometrytestutil.h
         ../../../auto/quick/shared/viewtestutil.cpp ../../../auto/quick/shared/viewtestutil.h
@@ -32,12 +32,12 @@ qt_add_benchmark(tst_qevents
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_qevents CONDITION ANDROID OR IOS
+qt_internal_extend_target(tst_qevents CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-qt_extend_target(tst_qevents CONDITION NOT ANDROID AND NOT IOS
+qt_internal_extend_target(tst_qevents CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

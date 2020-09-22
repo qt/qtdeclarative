@@ -4,7 +4,7 @@
 ## Qml Module:
 #####################################################################
 
-qt_add_module(Qml
+qt_internal_add_module(Qml
     GENERATE_METATYPES
     PLUGIN_TYPES qmltooling
     SOURCES
@@ -380,24 +380,24 @@ qt_declarative_generate_reg_exp_jit_tables(Qml)
 ## Scopes:
 #####################################################################
 
-qt_extend_target(Qml CONDITION QT_FEATURE_qml_network
+qt_internal_extend_target(Qml CONDITION QT_FEATURE_qml_network
     SOURCES
         qml/qqmltypeloadernetworkreplyproxy.cpp qml/qqmltypeloadernetworkreplyproxy_p.h
     PUBLIC_LIBRARIES
         Qt::Network
 )
 
-qt_extend_target(Qml CONDITION MSVC AND (TEST_architecture_arch STREQUAL "i386")
+qt_internal_extend_target(Qml CONDITION MSVC AND (TEST_architecture_arch STREQUAL "i386")
     LINK_OPTIONS
         "/BASE:0x66000000"
 )
 
-qt_extend_target(Qml CONDITION MSVC
+qt_internal_extend_target(Qml CONDITION MSVC
     DEFINES
         _CRT_SECURE_NO_WARNINGS
 )
 
-qt_extend_target(Qml CONDITION WIN32
+qt_internal_extend_target(Qml CONDITION WIN32
     SOURCES
         ../3rdparty/masm/wtf/OSAllocatorWin.cpp
         jsruntime/qv4compilationunitmapper_win.cpp
@@ -410,12 +410,12 @@ qt_extend_target(Qml CONDITION WIN32
 #### Keys ignored in scope 7:.:.:qml.pro:solaris-cc_x_:
 # QMAKE_CXXFLAGS_RELEASE = "--O2"
 
-qt_extend_target(Qml CONDITION GCC AND (TEST_architecture_arch STREQUAL "mips")
+qt_internal_extend_target(Qml CONDITION GCC AND (TEST_architecture_arch STREQUAL "mips")
     COMPILE_OPTIONS
         -fno-reorder-blocks
 )
 
-qt_extend_target(Qml CONDITION EXISTS "qqml_enable_gcov"
+qt_internal_extend_target(Qml CONDITION EXISTS "qqml_enable_gcov"
     LIBRARIES
         gcov
     COMPILE_OPTIONS
@@ -424,7 +424,7 @@ qt_extend_target(Qml CONDITION EXISTS "qqml_enable_gcov"
         -ftest-coverage
 )
 
-qt_extend_target(Qml CONDITION release AND MSVC AND (QT_CL_MAJOR_VERSION EQUAL 19) AND (QT_CL_MINOR_VERSION EQUAL 00) AND (QT_CL_PATCH_VERSION GREATER 24212)
+qt_internal_extend_target(Qml CONDITION release AND MSVC AND (QT_CL_MAJOR_VERSION EQUAL 19) AND (QT_CL_MINOR_VERSION EQUAL 00) AND (QT_CL_PATCH_VERSION GREATER 24212)
     COMPILE_OPTIONS
         -d2SSAOptimizer-
 )
@@ -435,7 +435,7 @@ qt_extend_target(Qml CONDITION release AND MSVC AND (QT_CL_MAJOR_VERSION EQUAL 1
 #### Keys ignored in scope 12:.:.:qml.pro:(QT_CLANG_MAJOR_VERSION GREATER 3) OR (QT_CLANG_MINOR_VERSION GREATER 3) OR (QT_APPLE_CLANG_MAJOR_VERSION GREATER 5) OR ( (QT_APPLE_CLANG_MAJOR_VERSION EQUAL 5) AND (QT_APPLE_CLANG_MINOR_VERSION GREATER 0) ):
 # WERROR = "-Wno-error=unused-const-variable"
 
-qt_extend_target(Qml CONDITION QT_FEATURE_qml_jit
+qt_internal_extend_target(Qml CONDITION QT_FEATURE_qml_jit
     SOURCES
         jit/qv4assemblercommon.cpp jit/qv4assemblercommon_p.h
         jit/qv4baselineassembler.cpp jit/qv4baselineassembler_p.h
@@ -445,7 +445,7 @@ qt_extend_target(Qml CONDITION QT_FEATURE_qml_jit
         jit
 )
 
-qt_extend_target(Qml CONDITION QT_FEATURE_qml_animation
+qt_internal_extend_target(Qml CONDITION QT_FEATURE_qml_animation
     SOURCES
         animations/qabstractanimationjob.cpp animations/qabstractanimationjob_p.h
         animations/qanimationgroupjob.cpp animations/qanimationgroupjob_p.h
@@ -475,12 +475,12 @@ qt_extend_target(Qml CONDITION QT_FEATURE_qml_animation
 # QML_COMPILE_HASH = "$$commit"
 # commit = "$$system(git rev-parse HEAD)"
 
-qt_extend_target(Qml CONDITION GCC AND QT_COMPILER_VERSION_MAJOR STREQUAL 5
+qt_internal_extend_target(Qml CONDITION GCC AND QT_COMPILER_VERSION_MAJOR STREQUAL 5
     COMPILE_OPTIONS
         -fno-strict-aliasing
 )
 
-qt_extend_target(Qml CONDITION QT_FEATURE_qml_debug
+qt_internal_extend_target(Qml CONDITION QT_FEATURE_qml_debug
     SOURCES
         debugger/qqmlabstractprofileradapter.cpp debugger/qqmlabstractprofileradapter_p.h
         debugger/qqmlconfigurabledebugservice_p.h
@@ -497,93 +497,93 @@ qt_extend_target(Qml CONDITION QT_FEATURE_qml_debug
         jsruntime/qv4profiling.cpp
 )
 
-qt_extend_target(Qml CONDITION QT_FEATURE_qml_sequence_object
+qt_internal_extend_target(Qml CONDITION QT_FEATURE_qml_sequence_object
     SOURCES
         jsruntime/qv4sequenceobject.cpp jsruntime/qv4sequenceobject_p.h
 )
 
-qt_extend_target(Qml CONDITION UNIX
+qt_internal_extend_target(Qml CONDITION UNIX
     SOURCES
         jsruntime/qv4compilationunitmapper_unix.cpp
         jsruntime/qv4functiontable_unix.cpp
 )
 
-qt_extend_target(Qml CONDITION (TEST_architecture_arch STREQUAL "x86_64") AND WIN32
+qt_internal_extend_target(Qml CONDITION (TEST_architecture_arch STREQUAL "x86_64") AND WIN32
     SOURCES
         jsruntime/qv4functiontable_win64.cpp
 )
 
-qt_extend_target(Qml CONDITION WIN32 AND NOT (TEST_architecture_arch STREQUAL "x86_64")
+qt_internal_extend_target(Qml CONDITION WIN32 AND NOT (TEST_architecture_arch STREQUAL "x86_64")
     SOURCES
         jsruntime/qv4functiontable_noop.cpp
 )
 
-qt_extend_target(Qml CONDITION valgrind
+qt_internal_extend_target(Qml CONDITION valgrind
     DEFINES
         V4_USE_VALGRIND
 )
 
-qt_extend_target(Qml CONDITION heaptrack
+qt_internal_extend_target(Qml CONDITION heaptrack
     DEFINES
         V4_USE_HEAPTRACK
 )
 
-qt_extend_target(Qml CONDITION QT_FEATURE_qml_xml_http_request
+qt_internal_extend_target(Qml CONDITION QT_FEATURE_qml_xml_http_request
     SOURCES
         qml/qqmlxmlhttprequest.cpp qml/qqmlxmlhttprequest_p.h
 )
 
-qt_extend_target(Qml CONDITION QT_FEATURE_qml_locale
+qt_internal_extend_target(Qml CONDITION QT_FEATURE_qml_locale
     SOURCES
         qml/qqmllocale.cpp qml/qqmllocale_p.h
 )
 
-qt_extend_target(Qml CONDITION ANDROID
+qt_internal_extend_target(Qml CONDITION ANDROID
     DEFINES
         LIBS_SUFFIX="_${ANDROID_ABI}.so" # special case
 )
 
-qt_extend_target(Qml CONDITION hpux-_x_ OR solaris-_x_ OR (QT_FEATURE_clock_gettime AND linux-_x_)
+qt_internal_extend_target(Qml CONDITION hpux-_x_ OR solaris-_x_ OR (QT_FEATURE_clock_gettime AND linux-_x_)
     LIBRARIES
         rt
 )
 
-qt_extend_target(Qml CONDITION QT_FEATURE_qml_itemmodel
+qt_internal_extend_target(Qml CONDITION QT_FEATURE_qml_itemmodel
     SOURCES
         types/qqmlmodelindexvaluetype.cpp types/qqmlmodelindexvaluetype_p.h
 )
 
-qt_extend_target(Qml CONDITION disassembler AND ((TEST_architecture_arch STREQUAL "i386") OR (TEST_architecture_arch STREQUAL "x86_64"))
+qt_internal_extend_target(Qml CONDITION disassembler AND ((TEST_architecture_arch STREQUAL "i386") OR (TEST_architecture_arch STREQUAL "x86_64"))
     DEFINES
         WTF_USE_UDIS86=1
 )
 
-qt_extend_target(Qml CONDITION (TEST_architecture_arch STREQUAL "arm") AND disassembler
+qt_internal_extend_target(Qml CONDITION (TEST_architecture_arch STREQUAL "arm") AND disassembler
     DEFINES
         WTF_USE_ARMV7_DISASSEMBLER=1
 )
 
-qt_extend_target(Qml CONDITION (TEST_architecture_arch STREQUAL "arm64") AND disassembler
+qt_internal_extend_target(Qml CONDITION (TEST_architecture_arch STREQUAL "arm64") AND disassembler
     DEFINES
         WTF_USE_ARM64_DISASSEMBLER=1
 )
 
-qt_extend_target(Qml CONDITION (TEST_architecture_arch STREQUAL "mips") AND disassembler
+qt_internal_extend_target(Qml CONDITION (TEST_architecture_arch STREQUAL "mips") AND disassembler
     DEFINES
         WTF_USE_MIPS32_DISASSEMBLER=1
 )
 
-qt_extend_target(Qml CONDITION NOT disassembler
+qt_internal_extend_target(Qml CONDITION NOT disassembler
     DEFINES
         WTF_USE_UDIS86=0
 )
 
-qt_extend_target(Qml CONDITION CMAKE_BUILD_TYPE STREQUAL Release
+qt_internal_extend_target(Qml CONDITION CMAKE_BUILD_TYPE STREQUAL Release
     DEFINES
         NDEBUG
 )
 
-qt_extend_target(Qml CONDITION GCC AND QT_COMPILER_VERSION_MAJOR STRGREATER 6 AND NOT CLANG AND NOT ICC
+qt_internal_extend_target(Qml CONDITION GCC AND QT_COMPILER_VERSION_MAJOR STRGREATER 6 AND NOT CLANG AND NOT ICC
     COMPILE_OPTIONS
         -Wno-expansion-to-defined
 )
@@ -591,17 +591,17 @@ qt_extend_target(Qml CONDITION GCC AND QT_COMPILER_VERSION_MAJOR STRGREATER 6 AN
 #### Keys ignored in scope 66:.:../3rdparty/masm:../3rdparty/masm/masm-defs.pri:(QT_COMPILER_VERSION_MAJOR STRGREATER 6):
 # QMAKE_CXXFLAGS_WARN_ON = "-Wno-expansion-to-defined"
 
-qt_extend_target(Qml CONDITION INTEGRITY
+qt_internal_extend_target(Qml CONDITION INTEGRITY
     SOURCES
         ../3rdparty/masm/wtf/OSAllocatorIntegrity.cpp
 )
 
-qt_extend_target(Qml CONDITION UNIX AND NOT INTEGRITY
+qt_internal_extend_target(Qml CONDITION UNIX AND NOT INTEGRITY
     SOURCES
         ../3rdparty/masm/wtf/OSAllocatorPosix.cpp
 )
 
-qt_extend_target(Qml CONDITION DEFINES___contains___WTF_USE_UDIS86=1
+qt_internal_extend_target(Qml CONDITION DEFINES___contains___WTF_USE_UDIS86=1
     SOURCES
         ../3rdparty/masm/disassembler/udis86/udis86.c
         ../3rdparty/masm/disassembler/udis86/udis86_decode.c
@@ -629,20 +629,20 @@ qt_extend_target(Qml CONDITION DEFINES___contains___WTF_USE_UDIS86=1
 #### Keys ignored in scope 75:.:../3rdparty/masm:../3rdparty/masm/masm.pri:else:
 # GENERATEDDIR = "$$GENERATEDDIR/release"
 
-qt_extend_target(Qml CONDITION (NOT c++11 AND NOT ICC) AND (CLANG)
+qt_internal_extend_target(Qml CONDITION (NOT c++11 AND NOT ICC) AND (CLANG)
     COMPILE_OPTIONS
         -Wno-c++0x-extensions
         -Wno-c++11-extensions
 )
 
-qt_extend_target(Qml CONDITION (((NOT c++11 AND NOT ICC) AND (NOT (CLANG))) AND (GCC)) AND ((QT_COMPILER_VERSION_MAJOR STRGREATER 4) OR (QT_COMPILER_VERSION_MINOR STRGREATER 5))
+qt_internal_extend_target(Qml CONDITION (((NOT c++11 AND NOT ICC) AND (NOT (CLANG))) AND (GCC)) AND ((QT_COMPILER_VERSION_MAJOR STRGREATER 4) OR (QT_COMPILER_VERSION_MINOR STRGREATER 5))
     COMPILE_OPTIONS
         -Wno-c++0x-compat
 )
 
 
-qt_create_tracepoints(Qml qtqml.tracepoints)
-qt_add_docs(Qml
+qt_internal_create_tracepoints(Qml qtqml.tracepoints)
+qt_internal_add_docs(Qml
     doc/qtqml.qdocconf
 )
 

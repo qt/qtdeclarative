@@ -4,7 +4,7 @@
 ## animations Test:
 #####################################################################
 
-qt_add_test(animations
+qt_internal_add_test(animations
     GUI
     QMLTEST
     PUBLIC_LIBRARIES

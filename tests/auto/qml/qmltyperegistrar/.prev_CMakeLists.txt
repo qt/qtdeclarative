@@ -4,7 +4,7 @@
 ## tst_qmltyperegistrar Test:
 #####################################################################
 
-qt_add_test(tst_qmltyperegistrar
+qt_internal_add_test(tst_qmltyperegistrar
     SOURCES
         hppheader.hpp
         noextheader

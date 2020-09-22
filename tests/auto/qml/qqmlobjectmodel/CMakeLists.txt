@@ -4,7 +4,7 @@
 ## tst_qqmlobjectmodel Test:
 #####################################################################
 
-qt_add_test(tst_qqmlobjectmodel
+qt_internal_add_test(tst_qqmlobjectmodel
     SOURCES
         tst_qqmlobjectmodel.cpp
     PUBLIC_LIBRARIES

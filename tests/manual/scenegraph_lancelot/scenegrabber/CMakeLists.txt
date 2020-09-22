@@ -4,7 +4,7 @@
 ## qmlscenegrabber Binary:
 #####################################################################
 
-qt_add_manual_test(qmlscenegrabber
+qt_internal_add_manual_test(qmlscenegrabber
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/.." # special case
     SOURCES
         main.cpp
@@ -153,7 +153,7 @@ set(shared_resource_files
     "shaders/wave.vert"
 )
 
-qt_add_resource(qmlscenegrabber "shared"
+qt_internal_add_resource(qmlscenegrabber "shared"
     PREFIX
         "/"
     BASE

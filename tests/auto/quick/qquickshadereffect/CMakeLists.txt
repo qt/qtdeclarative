@@ -4,7 +4,7 @@
 ## tst_qquickshadereffect Test:
 #####################################################################
 
-qt_add_test(tst_qquickshadereffect
+qt_internal_add_test(tst_qquickshadereffect
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         tst_qquickshadereffect.cpp
@@ -34,7 +34,7 @@ set(resources_resource_files
     "data/twoImagesOneShaderEffect.qml"
 )
 
-qt_add_resource(tst_qquickshadereffect "resources"
+qt_internal_add_resource(tst_qquickshadereffect "resources"
     PREFIX
         "/"
     FILES
@@ -45,12 +45,12 @@ qt_add_resource(tst_qquickshadereffect "resources"
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_qquickshadereffect CONDITION ANDROID OR IOS
+qt_internal_extend_target(tst_qquickshadereffect CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-qt_extend_target(tst_qquickshadereffect CONDITION NOT ANDROID AND NOT IOS
+qt_internal_extend_target(tst_qquickshadereffect CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

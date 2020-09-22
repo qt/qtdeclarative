@@ -4,7 +4,7 @@
 ## testplugin Generic Library:
 #####################################################################
 
-qt_add_cmake_library(testplugin
+qt_internal_add_cmake_library(testplugin
     MODULE
     SOURCES
         plugin.cpp

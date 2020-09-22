@@ -4,7 +4,7 @@
 ## httpserver Binary:
 #####################################################################
 
-qt_add_manual_test(httpserver
+qt_internal_add_manual_test(httpserver
     SOURCES
         ../../auto/shared/testhttpserver.cpp ../../auto/shared/testhttpserver.h
         main.cpp

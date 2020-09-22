@@ -4,7 +4,7 @@
 ## gradient Test:
 #####################################################################
 
-qt_add_test(gradient
+qt_internal_add_test(gradient
     GUI
     QMLTEST
     PUBLIC_LIBRARIES

@@ -4,7 +4,7 @@
 ## tst_qquickcolorgroup Test:
 #####################################################################
 
-qt_add_test(tst_qquickcolorgroup
+qt_internal_add_test(tst_qquickcolorgroup
     SOURCES
         tst_qquickcolorgroup.cpp
     PUBLIC_LIBRARIES

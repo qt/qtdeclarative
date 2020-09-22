@@ -4,7 +4,7 @@
 ## PacketProtocol Module:
 #####################################################################
 
-qt_add_module(PacketProtocol
+qt_internal_add_module(PacketProtocol
     STATIC
     INTERNAL_MODULE
     SOURCES

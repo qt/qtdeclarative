@@ -4,7 +4,7 @@
 ## createbenchmark Test:
 #####################################################################
 
-qt_add_test(createbenchmark
+qt_internal_add_test(createbenchmark
     GUI
     QMLTEST
     PUBLIC_LIBRARIES

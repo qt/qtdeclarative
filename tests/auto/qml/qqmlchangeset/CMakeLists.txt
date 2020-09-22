@@ -4,7 +4,7 @@
 ## tst_qqmlhangeset Test:
 #####################################################################
 
-qt_add_test(tst_qqmlhangeset
+qt_internal_add_test(tst_qqmlhangeset
     SOURCES
         tst_qqmlchangeset.cpp
     PUBLIC_LIBRARIES

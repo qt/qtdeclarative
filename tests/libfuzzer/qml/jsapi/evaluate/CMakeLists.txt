@@ -4,7 +4,7 @@
 ## evaluate Binary:
 #####################################################################
 
-qt_add_executable(evaluate
+qt_internal_add_executable(evaluate
     SOURCES
         main.cpp
     PUBLIC_LIBRARIES
@@ -17,12 +17,12 @@ qt_add_executable(evaluate
 ## Scopes:
 #####################################################################
 
-qt_extend_target(evaluate CONDITION FUZZ_ENGINE_ISEMPTY
+qt_internal_extend_target(evaluate CONDITION FUZZ_ENGINE_ISEMPTY
     LINK_OPTIONS
         "-fsanitize=fuzzer"
 )
 
-qt_extend_target(evaluate CONDITION NOT FUZZ_ENGINE_ISEMPTY
+qt_internal_extend_target(evaluate CONDITION NOT FUZZ_ENGINE_ISEMPTY
     PUBLIC_LIBRARIES
         $ENV{LIB_FUZZING_ENGINE}
 )

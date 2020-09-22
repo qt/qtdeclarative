@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     data/*)
 list(APPEND test_data ${test_data_glob})
 
-qt_add_test(tst_qqmlparser
+qt_internal_add_test(tst_qqmlparser
     SOURCES
         ../../shared/qqmljsastdumper.cpp ../../shared/qqmljsastdumper.h
         ../../shared/util.cpp ../../shared/util.h
@@ -28,17 +28,17 @@ qt_add_test(tst_qqmlparser
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_qqmlparser CONDITION CMAKE_CROSSCOMPILING
+qt_internal_extend_target(tst_qqmlparser CONDITION CMAKE_CROSSCOMPILING
     DEFINES
         QTEST_CROSS_COMPILED
 )
 
-qt_extend_target(tst_qqmlparser CONDITION ANDROID OR IOS
+qt_internal_extend_target(tst_qqmlparser CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-qt_extend_target(tst_qqmlparser CONDITION NOT ANDROID AND NOT IOS
+qt_internal_extend_target(tst_qqmlparser CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

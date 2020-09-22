@@ -4,7 +4,7 @@
 ## tst_compilation Binary:
 #####################################################################
 
-qt_add_benchmark(tst_compilation
+qt_internal_add_benchmark(tst_compilation
     SOURCES
         tst_compilation.cpp
     DEFINES

@@ -4,7 +4,7 @@
 ## particlesplugin Plugin:
 #####################################################################
 
-qt_add_qml_module(particlesplugin
+qt_internal_add_qml_module(particlesplugin
     URI "QtQuick.Particles"
     VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QtQuick2ParticlesPlugin

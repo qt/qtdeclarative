@@ -4,7 +4,7 @@
 ## ExtendedType Generic Library:
 #####################################################################
 
-qt_add_cmake_library(ExtendedType
+qt_internal_add_cmake_library(ExtendedType
     MODULE
     SOURCES
         plugin.cpp plugin.h

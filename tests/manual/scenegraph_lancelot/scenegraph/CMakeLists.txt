@@ -7,7 +7,7 @@
 # Collect test data
 list(APPEND test_data "../data")
 
-qt_add_test(tst_scenegraph
+qt_internal_add_test(tst_scenegraph
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/.." # special case
     SOURCES
         ../../../../../qtbase/tests/baselineserver/shared/baselineprotocol.cpp ../../../../../qtbase/tests/baselineserver/shared/baselineprotocol.h

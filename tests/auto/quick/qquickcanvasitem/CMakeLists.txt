@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     data/*)
 list(APPEND test_data ${test_data_glob})
 
-qt_add_test(tst_qquickcanvasitem
+qt_internal_add_test(tst_qquickcanvasitem
     GUI
     QMLTEST
     SOURCES
@@ -30,7 +30,7 @@ qt_add_test(tst_qquickcanvasitem
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_qquickcanvasitem CONDITION EXISTS _ss_[QT_INSTALL_PLUGINS]/imageformats
+qt_internal_extend_target(tst_qquickcanvasitem CONDITION EXISTS _ss_[QT_INSTALL_PLUGINS]/imageformats
     DEFINES
         HAS_IMAGE_FORMATS
 )

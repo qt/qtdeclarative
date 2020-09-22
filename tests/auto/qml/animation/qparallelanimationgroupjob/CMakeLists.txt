@@ -4,7 +4,7 @@
 ## tst_qparallelanimationgroupjob Test:
 #####################################################################
 
-qt_add_test(tst_qparallelanimationgroupjob
+qt_internal_add_test(tst_qparallelanimationgroupjob
     SOURCES
         tst_qparallelanimationgroupjob.cpp
     PUBLIC_LIBRARIES

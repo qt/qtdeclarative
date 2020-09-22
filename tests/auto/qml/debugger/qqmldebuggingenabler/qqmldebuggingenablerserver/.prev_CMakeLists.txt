@@ -4,7 +4,7 @@
 ## qqmldebuggingenablerserver Binary:
 #####################################################################
 
-qt_add_executable(qqmldebuggingenablerserver
+qt_internal_add_executable(qqmldebuggingenablerserver
     INSTALL_DIRECTORY "${INSTALL_TESTSDIR}/tst_qqmldebuggingenabler"
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../qqmldebuggingenabler"
     SOURCES

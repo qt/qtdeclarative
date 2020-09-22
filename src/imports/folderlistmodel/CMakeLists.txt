@@ -4,7 +4,7 @@
 ## qmlfolderlistmodelplugin Plugin:
 #####################################################################
 
-qt_add_qml_module(qmlfolderlistmodelplugin
+qt_internal_add_qml_module(qmlfolderlistmodelplugin
     URI "Qt.labs.folderlistmodel"
     VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QmlFolderListModelPlugin

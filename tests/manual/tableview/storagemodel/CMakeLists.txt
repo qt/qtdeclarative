@@ -4,7 +4,7 @@
 ## tableview_storage Binary:
 #####################################################################
 
-qt_add_manual_test(tableview_storage
+qt_internal_add_manual_test(tableview_storage
     GUI
     SOURCES
         main.cpp
@@ -20,7 +20,7 @@ set(qmake_immediate_resource_files
     "main.qml"
 )
 
-qt_add_resource(tableview_storage "qmake_immediate"
+qt_internal_add_resource(tableview_storage "qmake_immediate"
     PREFIX
         "/"
     FILES

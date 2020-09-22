@@ -4,7 +4,7 @@
 ## tst_qqmlcomponent Binary:
 #####################################################################
 
-qt_add_benchmark(tst_qqmlcomponent
+qt_internal_add_benchmark(tst_qqmlcomponent
     SOURCES
         testtypes.cpp testtypes.h
         tst_qqmlcomponent.cpp

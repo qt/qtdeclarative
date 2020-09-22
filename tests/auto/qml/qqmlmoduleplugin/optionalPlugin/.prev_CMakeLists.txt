@@ -4,7 +4,7 @@
 ## optionalPlugin Generic Library:
 #####################################################################
 
-qt_add_cmake_library(optionalPlugin
+qt_internal_add_cmake_library(optionalPlugin
     MODULE
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../imports/QtQuick/Shapes"
     SOURCES

@@ -28,7 +28,7 @@ set(resources_resource_files
     "preview.qml"
 )
 
-qt_add_resource(qmleasing "resources"
+qt_internal_add_resource(qmleasing "resources"
     PREFIX
         "/"
     FILES

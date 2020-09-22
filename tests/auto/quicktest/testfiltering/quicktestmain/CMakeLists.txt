@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     ${CMAKE_CURRENT_SOURCE_DIR}/*.qml)
 list(APPEND test_data ${test_data_glob})
 
-qt_add_test(quicktestmain
+qt_internal_add_test(quicktestmain
     GUI
     QMLTEST
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/"

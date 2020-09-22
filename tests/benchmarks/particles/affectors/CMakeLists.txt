@@ -4,7 +4,7 @@
 ## tst_affectors Binary:
 #####################################################################
 
-qt_add_benchmark(tst_affectors
+qt_internal_add_benchmark(tst_affectors
     SOURCES
         tst_affectors.cpp
     DEFINES

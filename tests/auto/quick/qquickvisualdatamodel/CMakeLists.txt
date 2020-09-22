@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     data/*)
 list(APPEND test_data ${test_data_glob})
 
-qt_add_test(tst_qquickvisualdatamodel
+qt_internal_add_test(tst_qquickvisualdatamodel
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         ../shared/geometrytestutil.cpp ../shared/geometrytestutil.h
@@ -34,17 +34,17 @@ qt_add_test(tst_qquickvisualdatamodel
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_qquickvisualdatamodel CONDITION TARGET Qt::Widgets
+qt_internal_extend_target(tst_qquickvisualdatamodel CONDITION TARGET Qt::Widgets
     PUBLIC_LIBRARIES
         Qt::Widgets
 )
 
-qt_extend_target(tst_qquickvisualdatamodel CONDITION ANDROID OR IOS
+qt_internal_extend_target(tst_qquickvisualdatamodel CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-qt_extend_target(tst_qquickvisualdatamodel CONDITION NOT ANDROID AND NOT IOS
+qt_internal_extend_target(tst_qquickvisualdatamodel CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

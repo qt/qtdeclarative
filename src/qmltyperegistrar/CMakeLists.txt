@@ -5,7 +5,7 @@
 #####################################################################
 
 qt_get_tool_target_name(target_name qmltyperegistrar)
-qt_add_tool(${target_name}
+qt_internal_add_tool(${target_name}
     TARGET_DESCRIPTION "QML Types Registrar"
     TOOLS_TARGET Qml # special case
     SOURCES

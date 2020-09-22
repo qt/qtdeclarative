@@ -4,7 +4,7 @@
 ## QmlModels Module:
 #####################################################################
 
-qt_add_module(QmlModels
+qt_internal_add_module(QmlModels
     GENERATE_METATYPES
     SOURCES
         qqmlchangeset.cpp qqmlchangeset_p.h
@@ -34,26 +34,26 @@ qt_add_module(QmlModels
 ## Scopes:
 #####################################################################
 
-qt_extend_target(QmlModels CONDITION QT_FEATURE_qml_object_model
+qt_internal_extend_target(QmlModels CONDITION QT_FEATURE_qml_object_model
     SOURCES
         qqmlinstantiator.cpp qqmlinstantiator_p.h
         qqmlinstantiator_p_p.h
         qqmlobjectmodel.cpp qqmlobjectmodel_p.h
 )
 
-qt_extend_target(QmlModels CONDITION QT_FEATURE_qml_table_model
+qt_internal_extend_target(QmlModels CONDITION QT_FEATURE_qml_table_model
     SOURCES
         qqmltableinstancemodel.cpp qqmltableinstancemodel_p.h
 )
 
-qt_extend_target(QmlModels CONDITION QT_FEATURE_qml_list_model
+qt_internal_extend_target(QmlModels CONDITION QT_FEATURE_qml_list_model
     SOURCES
         qqmllistmodel.cpp qqmllistmodel_p.h
         qqmllistmodel_p_p.h
         qqmllistmodelworkeragent.cpp qqmllistmodelworkeragent_p.h
 )
 
-qt_extend_target(QmlModels CONDITION QT_FEATURE_qml_delegate_model
+qt_internal_extend_target(QmlModels CONDITION QT_FEATURE_qml_delegate_model
     SOURCES
         qqmlabstractdelegatecomponent.cpp qqmlabstractdelegatecomponent_p.h
         qqmladaptormodel.cpp qqmladaptormodel_p.h
@@ -63,7 +63,7 @@ qt_extend_target(QmlModels CONDITION QT_FEATURE_qml_delegate_model
         qqmllistcompositor.cpp qqmllistcompositor_p.h
         qquickpackage.cpp qquickpackage_p.h
 )
-qt_add_docs(QmlModels
+qt_internal_add_docs(QmlModels
     doc/qtqmlmodels.qdocconf
 )
 

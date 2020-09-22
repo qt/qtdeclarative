@@ -4,7 +4,7 @@
 ## qmlshapesplugin Plugin:
 #####################################################################
 
-qt_add_qml_module(qmlshapesplugin
+qt_internal_add_qml_module(qmlshapesplugin
     URI "QtQuick.Shapes"
     VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QmlShapesPlugin

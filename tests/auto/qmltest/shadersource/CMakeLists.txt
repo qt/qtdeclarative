@@ -4,7 +4,7 @@
 ## shadersource Test:
 #####################################################################
 
-qt_add_test(shadersource
+qt_internal_add_test(shadersource
     GUI
     QMLTEST
     PUBLIC_LIBRARIES

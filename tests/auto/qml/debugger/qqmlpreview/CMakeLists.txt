@@ -13,7 +13,7 @@ list(APPEND test_data "data/broken.qml")
 list(APPEND test_data "data/zoom.qml")
 list(APPEND test_data "data/i18n/qml_fr_FR.qm")
 
-qt_add_test(tst_qqmlpreview
+qt_internal_add_test(tst_qqmlpreview
     SOURCES
         ../../../../../src/plugins/qmltooling/qmldbg_preview/qqmlpreviewblacklist.cpp ../../../../../src/plugins/qmltooling/qmldbg_preview/qqmlpreviewblacklist.h
         ../../../shared/util.cpp ../../../shared/util.h
@@ -34,12 +34,12 @@ qt_add_test(tst_qqmlpreview
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_qqmlpreview CONDITION ANDROID OR IOS
+qt_internal_extend_target(tst_qqmlpreview CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-qt_extend_target(tst_qqmlpreview CONDITION NOT ANDROID AND NOT IOS
+qt_internal_extend_target(tst_qqmlpreview CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

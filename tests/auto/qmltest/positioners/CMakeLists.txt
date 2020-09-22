@@ -4,7 +4,7 @@
 ## positioners Test:
 #####################################################################
 
-qt_add_test(positioners
+qt_internal_add_test(positioners
     GUI
     QMLTEST
     PUBLIC_LIBRARIES

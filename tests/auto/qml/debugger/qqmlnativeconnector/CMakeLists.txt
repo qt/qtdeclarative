@@ -4,7 +4,7 @@
 ## tst_qqmlnativeconnector Test:
 #####################################################################
 
-qt_add_test(tst_qqmlnativeconnector
+qt_internal_add_test(tst_qqmlnativeconnector
     SOURCES
         tst_qqmlnativeconnector.cpp
     DEFINES

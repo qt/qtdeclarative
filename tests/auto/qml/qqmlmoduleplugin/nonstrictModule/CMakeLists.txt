@@ -4,7 +4,7 @@
 ## nonstrictModule Generic Library:
 #####################################################################
 
-qt_add_cmake_library(nonstrictModule
+qt_internal_add_cmake_library(nonstrictModule
     MODULE
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/NonstrictModule"
     SOURCES

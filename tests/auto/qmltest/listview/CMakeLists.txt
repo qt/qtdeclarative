@@ -4,7 +4,7 @@
 ## listview Test:
 #####################################################################
 
-qt_add_test(listview
+qt_internal_add_test(listview
     GUI
     QMLTEST
     PUBLIC_LIBRARIES

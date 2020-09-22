@@ -4,7 +4,7 @@
 ## childplugin Generic Library:
 #####################################################################
 
-qt_add_cmake_library(childplugin.2 # special case
+qt_internal_add_cmake_library(childplugin.2 # special case
     MODULE # special case
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../../imports/org/qtproject/AutoTestQmlPluginType.2/ChildPlugin"
     SOURCES

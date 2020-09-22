@@ -4,7 +4,7 @@
 ## QmlDebug Module:
 #####################################################################
 
-qt_add_module(QmlDebug
+qt_internal_add_module(QmlDebug
     STATIC
     INTERNAL_MODULE
     SOURCES

@@ -4,7 +4,7 @@
 ## tst_qv4debugger Test:
 #####################################################################
 
-qt_add_test(tst_qv4debugger
+qt_internal_add_test(tst_qv4debugger
     SOURCES
         ../../../../../src/plugins/qmltooling/qmldbg_debugger/qv4datacollector.cpp ../../../../../src/plugins/qmltooling/qmldbg_debugger/qv4datacollector.h
         ../../../../../src/plugins/qmltooling/qmldbg_debugger/qv4debugger.cpp ../../../../../src/plugins/qmltooling/qmldbg_debugger/qv4debugger.h

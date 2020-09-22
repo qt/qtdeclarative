@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     data/*)
 list(APPEND test_data ${test_data_glob})
 
-qt_add_test(tst_qqmlengine
+qt_internal_add_test(tst_qqmlengine
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         tst_qqmlengine.cpp
@@ -31,7 +31,7 @@ set(qmake_immediate_resource_files
     "data/qrcurls.qml"
 )
 
-qt_add_resource(tst_qqmlengine "qmake_immediate"
+qt_internal_add_resource(tst_qqmlengine "qmake_immediate"
     PREFIX
         "/"
     FILES
@@ -42,17 +42,17 @@ qt_add_resource(tst_qqmlengine "qmake_immediate"
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_qqmlengine CONDITION boot2qt
+qt_internal_extend_target(tst_qqmlengine CONDITION boot2qt
     DEFINES
         SKIP_GCCORRUPTION_TEST
 )
 
-qt_extend_target(tst_qqmlengine CONDITION ANDROID OR IOS
+qt_internal_extend_target(tst_qqmlengine CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-qt_extend_target(tst_qqmlengine CONDITION NOT ANDROID AND NOT IOS
+qt_internal_extend_target(tst_qqmlengine CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

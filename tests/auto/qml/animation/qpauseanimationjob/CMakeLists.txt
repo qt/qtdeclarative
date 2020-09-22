@@ -4,7 +4,7 @@
 ## tst_qpauseanimationjob Test:
 #####################################################################
 
-qt_add_test(tst_qpauseanimationjob
+qt_internal_add_test(tst_qpauseanimationjob
     SOURCES
         tst_qpauseanimationjob.cpp
     PUBLIC_LIBRARIES

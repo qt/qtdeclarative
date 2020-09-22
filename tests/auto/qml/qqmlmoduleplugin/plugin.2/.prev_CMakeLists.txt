@@ -4,7 +4,7 @@
 ## plugin.2 Generic Library:
 #####################################################################
 
-qt_add_cmake_library(plugin.2
+qt_internal_add_cmake_library(plugin.2
     MODULE
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/AutoTestQmlPluginType.2"
     SOURCES

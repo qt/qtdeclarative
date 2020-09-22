@@ -4,7 +4,7 @@
 ## QmlCompiler Module:
 #####################################################################
 
-qt_add_module(QmlCompiler
+qt_internal_add_module(QmlCompiler
     STATIC
     INTERNAL_MODULE
     SOURCES

@@ -4,7 +4,7 @@
 ## tst_examples Test:
 #####################################################################
 
-qt_add_test(tst_examples
+qt_internal_add_test(tst_examples
     SOURCES
         tst_examples.cpp
     DEFINES

@@ -4,7 +4,7 @@
 ## QuickWidgets Module:
 #####################################################################
 
-qt_add_module(QuickWidgets
+qt_internal_add_module(QuickWidgets
     SOURCES
         qquickwidget.cpp qquickwidget.h qquickwidget_p.h
         qtquickwidgetsglobal.h
@@ -35,7 +35,7 @@ qt_add_module(QuickWidgets
 ## Scopes:
 #####################################################################
 
-qt_extend_target(QuickWidgets CONDITION QT_FEATURE_opengl
+qt_internal_extend_target(QuickWidgets CONDITION QT_FEATURE_opengl
     LIBRARIES
         Qt::OpenGLPrivate
 )

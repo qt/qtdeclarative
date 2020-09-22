@@ -5,7 +5,7 @@
 #####################################################################
 
 qt_get_tool_target_name(target_name qmlscene)
-qt_add_tool(${target_name}
+qt_internal_add_tool(${target_name}
     TARGET_DESCRIPTION "QML Scene Viewer"
     SOURCES
         main.cpp
@@ -26,12 +26,12 @@ qt_add_tool(${target_name}
 ## Scopes:
 #####################################################################
 
-qt_extend_target(${target_name} CONDITION TARGET Qt::Widgets
+qt_internal_extend_target(${target_name} CONDITION TARGET Qt::Widgets
     PUBLIC_LIBRARIES
         Qt::Widgets
 )
 
-qt_extend_target(${target_name} CONDITION QT_FEATURE_qml_debug
+qt_internal_extend_target(${target_name} CONDITION QT_FEATURE_qml_debug
     DEFINES
         QT_QML_DEBUG_NO_WARNING
 )

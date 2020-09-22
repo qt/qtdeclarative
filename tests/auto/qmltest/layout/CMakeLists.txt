@@ -4,7 +4,7 @@
 ## layout Test:
 #####################################################################
 
-qt_add_test(layout
+qt_internal_add_test(layout
     GUI
     QMLTEST
     PUBLIC_LIBRARIES

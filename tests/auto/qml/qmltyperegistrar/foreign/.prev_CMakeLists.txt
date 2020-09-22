@@ -4,7 +4,7 @@
 ## foreign Generic Library:
 #####################################################################
 
-qt_add_cmake_library(foreign
+qt_internal_add_cmake_library(foreign
     STATIC
     SOURCES
         foreign.cpp foreign.h

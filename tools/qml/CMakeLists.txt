@@ -5,7 +5,7 @@
 #####################################################################
 
 qt_get_tool_target_name(target_name qml)
-qt_add_tool(${target_name}
+qt_internal_add_tool(${target_name}
     TARGET_DESCRIPTION "QML Runtime"
     TOOLS_TARGET Qml # special case
     SOURCES
@@ -41,7 +41,7 @@ set(qml_resource_files
     "resources/qml-64.png"
 )
 
-qt_add_resource(${target_name} "qml"
+qt_internal_add_resource(${target_name} "qml"
     PREFIX
         "/qt-project.org/QmlRuntime"
     FILES
@@ -58,12 +58,12 @@ qt_add_resource(${target_name} "qml"
 ## Scopes:
 #####################################################################
 
-qt_extend_target(${target_name} CONDITION TARGET Qt::Gui
+qt_internal_extend_target(${target_name} CONDITION TARGET Qt::Gui
     PUBLIC_LIBRARIES
         Qt::Gui
 )
 
-qt_extend_target(${target_name} CONDITION TARGET Qt::Widgets
+qt_internal_extend_target(${target_name} CONDITION TARGET Qt::Widgets
     PUBLIC_LIBRARIES
         Qt::Widgets
 )
@@ -76,7 +76,7 @@ qt_extend_target(${target_name} CONDITION TARGET Qt::Widgets
 # OTHER_FILES = "resources/Info.plist"
 # QMAKE_INFO_PLIST = "resources/Info.plist"
 
-qt_extend_target(${target_name} CONDITION QT_FEATURE_qml_debug
+qt_internal_extend_target(${target_name} CONDITION QT_FEATURE_qml_debug
     DEFINES
         QT_QML_DEBUG_NO_WARNING
 )

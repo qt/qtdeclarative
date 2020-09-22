@@ -4,7 +4,7 @@
 ## tst_ecmascripttests Test:
 #####################################################################
 
-qt_add_test(tst_ecmascripttests
+qt_internal_add_test(tst_ecmascripttests
     SOURCES
         qjstest/test262runner.cpp qjstest/test262runner.h
         tst_ecmascripttests.cpp

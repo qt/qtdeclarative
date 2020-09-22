@@ -4,7 +4,7 @@
 ## tst_animation Binary:
 #####################################################################
 
-qt_add_benchmark(tst_animation
+qt_internal_add_benchmark(tst_animation
     SOURCES
         tst_animation.cpp
     DEFINES

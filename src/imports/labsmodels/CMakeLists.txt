@@ -4,7 +4,7 @@
 ## labsmodelsplugin Plugin:
 #####################################################################
 
-qt_add_qml_module(labsmodelsplugin
+qt_internal_add_qml_module(labsmodelsplugin
     URI "Qt.labs.qmlmodels"
     VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QtQmlLabsModelsPlugin
@@ -25,13 +25,13 @@ qt_add_qml_module(labsmodelsplugin
 ## Scopes:
 #####################################################################
 
-qt_extend_target(labsmodelsplugin CONDITION QT_FEATURE_qml_table_model
+qt_internal_extend_target(labsmodelsplugin CONDITION QT_FEATURE_qml_table_model
     SOURCES
         qqmltablemodel.cpp qqmltablemodel_p.h
         qqmltablemodelcolumn.cpp qqmltablemodelcolumn_p.h
 )
 
-qt_extend_target(labsmodelsplugin CONDITION QT_FEATURE_qml_delegate_model
+qt_internal_extend_target(labsmodelsplugin CONDITION QT_FEATURE_qml_delegate_model
     SOURCES
         qqmldelegatecomponent.cpp qqmldelegatecomponent_p.h
 )

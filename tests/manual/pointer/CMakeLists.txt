@@ -4,7 +4,7 @@
 ## pointer Binary:
 #####################################################################
 
-qt_add_manual_test(pointer
+qt_internal_add_manual_test(pointer
     GUI
     SOURCES
         inputinspector.cpp inputinspector.h
@@ -69,7 +69,7 @@ set(qml_resource_files
     "tapHandler.qml"
 )
 
-qt_add_resource(pointer "qml"
+qt_internal_add_resource(pointer "qml"
     PREFIX
         "/"
     FILES
@@ -122,7 +122,7 @@ set(quick_shared_resource_files
     "images/slider_handle.png"
 )
 
-qt_add_resource(pointer "quick_shared"
+qt_internal_add_resource(pointer "quick_shared"
     PREFIX
         "/quick/shared"
     BASE

@@ -4,7 +4,7 @@
 ## tst_qqmlextensionplugin Test:
 #####################################################################
 
-qt_add_test(tst_qqmlextensionplugin
+qt_internal_add_test(tst_qqmlextensionplugin
     SOURCES
         tst_qqmlextensionplugin.cpp
     PUBLIC_LIBRARIES

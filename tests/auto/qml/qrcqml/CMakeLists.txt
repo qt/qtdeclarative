@@ -4,7 +4,7 @@
 ## tst_qrcqml Test:
 #####################################################################
 
-qt_add_test(tst_qrcqml
+qt_internal_add_test(tst_qrcqml
     SOURCES
         tst_qrcqml.cpp
     PUBLIC_LIBRARIES
@@ -31,7 +31,7 @@ set(qrcqml_resource_files
     "data/main2.qml"
 )
 
-qt_add_resource(tst_qrcqml "qrcqml"
+qt_internal_add_resource(tst_qrcqml "qrcqml"
     PREFIX
         "/"
     FILES
@@ -48,7 +48,7 @@ set(qrcqml1_resource_files
     "data/main3.qml"
 )
 
-qt_add_resource(tst_qrcqml "qrcqml1"
+qt_internal_add_resource(tst_qrcqml "qrcqml1"
     PREFIX
         "/search"
     FILES
@@ -61,7 +61,7 @@ set(qrcqml2_resource_files
     "data/SubDir.qml"
 )
 
-qt_add_resource(tst_qrcqml "qrcqml2"
+qt_internal_add_resource(tst_qrcqml "qrcqml2"
     PREFIX
         "/search/data"
     FILES
@@ -78,7 +78,7 @@ set(qrcqml3_resource_files
     "data/imports/QrcImport/qmldir"
 )
 
-qt_add_resource(tst_qrcqml "qrcqml3"
+qt_internal_add_resource(tst_qrcqml "qrcqml3"
     PREFIX
         "/imports"
     FILES

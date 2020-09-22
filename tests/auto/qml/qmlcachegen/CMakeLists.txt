@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     data/*)
 list(APPEND test_data ${test_data_glob})
 
-qt_add_test(tst_qmlcachegen
+qt_internal_add_test(tst_qmlcachegen
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         tst_qmlcachegen.cpp
@@ -29,7 +29,7 @@ set(qmake_workerscripts_test_resource_files
     "data/worker.qml"
 )
 
-qt_add_resource(tst_qmlcachegen "qmake_workerscripts_test"
+qt_internal_add_resource(tst_qmlcachegen "qmake_workerscripts_test"
     PREFIX
         "/workerscripts"
     FILES
@@ -50,7 +50,7 @@ set(trickypaths_resource_files
     "data/versionStyleSuffix-1.2-more.qml"
 )
 
-qt_add_resource(tst_qmlcachegen "trickypaths"
+qt_internal_add_resource(tst_qmlcachegen "trickypaths"
     PREFIX
         "/directory with spaces"
     FILES
@@ -63,7 +63,7 @@ set(retain_resource_files
     "Retain.qml"
 )
 
-qt_add_resource(tst_qmlcachegen "retain"
+qt_internal_add_resource(tst_qmlcachegen "retain"
     PREFIX
         "/"
     BASE
@@ -79,7 +79,7 @@ set(skip_resource_files
     "SkipQmlCacheGen.qml"
 )
 
-qt_add_resource(tst_qmlcachegen "skip"
+qt_internal_add_resource(tst_qmlcachegen "skip"
     PREFIX
         "/not/"
     BASE
@@ -101,7 +101,7 @@ set(qmake_immediate_resource_files
     "data/versionchecks.qml"
 )
 
-qt_add_resource(tst_qmlcachegen "qmake_immediate"
+qt_internal_add_resource(tst_qmlcachegen "qmake_immediate"
     PREFIX
         "/"
     FILES
@@ -121,7 +121,7 @@ if(UNIX)
         "data/umlaut.qml"
     )
 
-    qt_add_resource(tst_qmlcachegen "trickypaths_umlaut"
+    qt_internal_add_resource(tst_qmlcachegen "trickypaths_umlaut"
         PREFIX
             "/"
         FILES
@@ -129,12 +129,12 @@ if(UNIX)
     )
 endif()
 
-qt_extend_target(tst_qmlcachegen CONDITION ANDROID OR IOS
+qt_internal_extend_target(tst_qmlcachegen CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-qt_extend_target(tst_qmlcachegen CONDITION NOT ANDROID AND NOT IOS
+qt_internal_extend_target(tst_qmlcachegen CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

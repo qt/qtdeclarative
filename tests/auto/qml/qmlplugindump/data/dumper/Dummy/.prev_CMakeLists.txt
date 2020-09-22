@@ -4,7 +4,7 @@
 ## Dummy Generic Library:
 #####################################################################
 
-qt_add_cmake_library(Dummy
+qt_internal_add_cmake_library(Dummy
     MODULE
     SOURCES
         dummy.cpp dummy.h

@@ -4,7 +4,7 @@
 ## tst_executableallocator Binary:
 #####################################################################
 
-qt_add_manual_test(tst_executableallocator
+qt_internal_add_manual_test(tst_executableallocator
     SOURCES
         tst_executableallocator.cpp
     PUBLIC_LIBRARIES

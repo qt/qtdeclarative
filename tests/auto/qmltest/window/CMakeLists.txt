@@ -4,7 +4,7 @@
 ## window Test:
 #####################################################################
 
-qt_add_test(window
+qt_internal_add_test(window
     GUI
     QMLTEST
     PUBLIC_LIBRARIES

@@ -4,7 +4,7 @@
 ## qqmldebugjsserver Binary:
 #####################################################################
 
-qt_add_executable(qqmldebugjsserver
+qt_internal_add_executable(qqmldebugjsserver
     # special case begin
     OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     # INSTALL_DIRECTORY "${INSTALL_TESTSDIR}/qqmldebugjsserver"

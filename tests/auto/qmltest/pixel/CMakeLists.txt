@@ -4,7 +4,7 @@
 ## pixel Test:
 #####################################################################
 
-qt_add_test(pixel
+qt_internal_add_test(pixel
     GUI
     QMLTEST
     PUBLIC_LIBRARIES

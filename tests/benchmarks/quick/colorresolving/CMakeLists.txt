@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     ${CMAKE_CURRENT_SOURCE_DIR}/data/tst_*)
 list(APPEND test_data ${test_data_glob})
 
-qt_add_test(tst_colorresolving
+qt_internal_add_test(tst_colorresolving
     GUI
     QMLTEST
     SOURCES

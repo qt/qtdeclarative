@@ -4,7 +4,7 @@
 ## tst_qqmlcpputils Test:
 #####################################################################
 
-qt_add_test(tst_qqmlcpputils
+qt_internal_add_test(tst_qqmlcpputils
     SOURCES
         tst_qqmlcpputils.cpp
     PUBLIC_LIBRARIES

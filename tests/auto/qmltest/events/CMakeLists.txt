@@ -4,7 +4,7 @@
 ## events Test:
 #####################################################################
 
-qt_add_test(events
+qt_internal_add_test(events
     GUI
     QMLTEST
     PUBLIC_LIBRARIES

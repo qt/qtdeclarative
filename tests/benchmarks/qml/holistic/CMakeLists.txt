@@ -4,7 +4,7 @@
 ## tst_holistic Binary:
 #####################################################################
 
-qt_add_benchmark(tst_holistic
+qt_internal_add_benchmark(tst_holistic
     SOURCES
         testtypes.cpp testtypes.h
         tst_holistic.cpp

@@ -14,7 +14,7 @@ endif()
 ## qmlplugin Plugin:
 #####################################################################
 
-qt_add_qml_module(qmlplugin
+qt_internal_add_qml_module(qmlplugin
     URI "QtQml"
     VERSION "${CMAKE_PROJECT_VERSION}"
     DESIGNER_SUPPORTED

@@ -4,7 +4,7 @@
 ## tst_qqmllistcompositor Test:
 #####################################################################
 
-qt_add_test(tst_qqmllistcompositor
+qt_internal_add_test(tst_qqmllistcompositor
     SOURCES
         tst_qqmllistcompositor.cpp
     PUBLIC_LIBRARIES

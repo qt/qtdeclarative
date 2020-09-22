@@ -4,7 +4,7 @@
 ## Versions Generic Library:
 #####################################################################
 
-qt_add_cmake_library(Versions
+qt_internal_add_cmake_library(Versions
     MODULE
     SOURCES
         versions.cpp versions.h

@@ -4,7 +4,7 @@
 ## tst_creation Binary:
 #####################################################################
 
-qt_add_benchmark(tst_creation
+qt_internal_add_benchmark(tst_creation
     SOURCES
         tst_creation.cpp
     DEFINES

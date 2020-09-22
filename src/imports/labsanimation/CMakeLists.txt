@@ -4,7 +4,7 @@
 ## labsanimationplugin Plugin:
 #####################################################################
 
-qt_add_qml_module(labsanimationplugin
+qt_internal_add_qml_module(labsanimationplugin
     URI "Qt.labs.animation"
     VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QtLabsAnimationPlugin

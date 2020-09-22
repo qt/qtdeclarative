@@ -4,7 +4,7 @@
 ## moduleWithQmlSingleton Generic Library:
 #####################################################################
 
-qt_add_cmake_library(moduleWithQmlSingleton
+qt_internal_add_cmake_library(moduleWithQmlSingleton
     MODULE
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/ModuleWithQmlSingleton"
     SOURCES

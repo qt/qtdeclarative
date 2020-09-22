@@ -4,7 +4,7 @@
 ## workerscriptplugin Plugin:
 #####################################################################
 
-qt_add_qml_module(workerscriptplugin
+qt_internal_add_qml_module(workerscriptplugin
     URI "QtQml.WorkerScript"
     VERSION "${CMAKE_PROJECT_VERSION}"
     DESIGNER_SUPPORTED

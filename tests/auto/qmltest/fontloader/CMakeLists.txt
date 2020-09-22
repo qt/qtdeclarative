@@ -4,7 +4,7 @@
 ## fontloader Test:
 #####################################################################
 
-qt_add_test(fontloader
+qt_internal_add_test(fontloader
     GUI
     QMLTEST
     PUBLIC_LIBRARIES

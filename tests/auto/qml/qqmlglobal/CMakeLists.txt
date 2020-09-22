@@ -4,7 +4,7 @@
 ## tst_qqmlglobal Test:
 #####################################################################
 
-qt_add_test(tst_qqmlglobal
+qt_internal_add_test(tst_qqmlglobal
     SOURCES
         tst_qqmlglobal.cpp
     PUBLIC_LIBRARIES

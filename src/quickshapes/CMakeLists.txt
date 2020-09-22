@@ -4,7 +4,7 @@
 ## QuickShapes Module:
 #####################################################################
 
-qt_add_module(QuickShapes
+qt_internal_add_module(QuickShapes
     INTERNAL_MODULE
     GENERATE_METATYPES
     SOURCES
@@ -30,7 +30,7 @@ set(qtquickshapes_resource_files
     "shaders_ng/radialgradient.vert.qsb"
 )
 
-qt_add_resource(QuickShapes "qtquickshapes"
+qt_internal_add_resource(QuickShapes "qtquickshapes"
     PREFIX
         "/qt-project.org/shapes"
     FILES

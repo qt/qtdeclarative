@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     data/*)
 list(APPEND test_data ${test_data_glob})
 
-qt_add_test(tst_qqmlcomponent
+qt_internal_add_test(tst_qqmlcomponent
     SOURCES
         ../../shared/testhttpserver.cpp ../../shared/testhttpserver.h
         ../../shared/util.cpp ../../shared/util.h
@@ -32,7 +32,7 @@ set(qmake_immediate_resource_files
     "data/QtObjectComponent.qml"
 )
 
-qt_add_resource(tst_qqmlcomponent "qmake_immediate"
+qt_internal_add_resource(tst_qqmlcomponent "qmake_immediate"
     PREFIX
         "/"
     FILES
@@ -43,12 +43,12 @@ qt_add_resource(tst_qqmlcomponent "qmake_immediate"
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_qqmlcomponent CONDITION ANDROID OR IOS
+qt_internal_extend_target(tst_qqmlcomponent CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-qt_extend_target(tst_qqmlcomponent CONDITION NOT ANDROID AND NOT IOS
+qt_internal_extend_target(tst_qqmlcomponent CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

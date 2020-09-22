@@ -4,7 +4,7 @@
 ## QmlDevTools Module:
 #####################################################################
 
-qt_add_module(QmlDevTools
+qt_internal_add_module(QmlDevTools
     STATIC
     INTERNAL_MODULE
     NO_SYNC_QT
@@ -132,7 +132,7 @@ add_dependencies(QmlDevTools Qml)
 # QML_COMPILE_HASH = "$$commit"
 # commit = "$$system(git rev-parse HEAD)"
 
-qt_extend_target(QmlDevTools CONDITION GCC AND QT_COMPILER_VERSION_MAJOR STREQUAL 5
+qt_internal_extend_target(QmlDevTools CONDITION GCC AND QT_COMPILER_VERSION_MAJOR STREQUAL 5
     COMPILE_OPTIONS
         -fno-strict-aliasing
 )

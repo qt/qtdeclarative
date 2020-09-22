@@ -4,7 +4,7 @@
 ## tst_qquickimageprovider Test:
 #####################################################################
 
-qt_add_test(tst_qquickimageprovider
+qt_internal_add_test(tst_qquickimageprovider
     SOURCES
         tst_qquickimageprovider.cpp
     PUBLIC_LIBRARIES

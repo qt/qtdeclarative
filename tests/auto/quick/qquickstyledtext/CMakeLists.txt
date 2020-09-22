@@ -4,7 +4,7 @@
 ## tst_qquickstyledtext Test:
 #####################################################################
 
-qt_add_test(tst_qquickstyledtext
+qt_internal_add_test(tst_qquickstyledtext
     SOURCES
         tst_qquickstyledtext.cpp
     PUBLIC_LIBRARIES

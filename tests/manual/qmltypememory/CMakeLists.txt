@@ -4,7 +4,7 @@
 ## qmltypememory Binary:
 #####################################################################
 
-qt_add_manual_test(qmltypememory
+qt_internal_add_manual_test(qmltypememory
     GUI
     SOURCES
         main.cpp

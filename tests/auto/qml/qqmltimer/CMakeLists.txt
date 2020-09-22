@@ -4,7 +4,7 @@
 ## tst_qqmltimer Test:
 #####################################################################
 
-qt_add_test(tst_qqmltimer
+qt_internal_add_test(tst_qqmltimer
     SOURCES
         tst_qqmltimer.cpp
     PUBLIC_LIBRARIES

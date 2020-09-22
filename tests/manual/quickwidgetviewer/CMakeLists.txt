@@ -4,7 +4,7 @@
 ## quickwidgetviewer Binary:
 #####################################################################
 
-qt_add_manual_test(quickwidgetviewer
+qt_internal_add_manual_test(quickwidgetviewer
     SOURCES
         main.cpp
     PUBLIC_LIBRARIES

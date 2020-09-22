@@ -4,7 +4,7 @@
 ## nestedPlugin Generic Library:
 #####################################################################
 
-qt_add_cmake_library(nestedPlugin
+qt_internal_add_cmake_library(nestedPlugin
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/AutoTestQmlNestedPluginType"
     SOURCES
         nestedPlugin.cpp

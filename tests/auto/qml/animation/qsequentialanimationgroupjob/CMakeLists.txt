@@ -4,7 +4,7 @@
 ## tst_qsequentialanimationgroupjob Test:
 #####################################################################
 
-qt_add_test(tst_qsequentialanimationgroupjob
+qt_internal_add_test(tst_qsequentialanimationgroupjob
     SOURCES
         tst_qsequentialanimationgroupjob.cpp
     PUBLIC_LIBRARIES

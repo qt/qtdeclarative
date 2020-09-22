@@ -4,7 +4,7 @@
 ## QuickParticles Module:
 #####################################################################
 
-qt_add_module(QuickParticles
+qt_internal_add_module(QuickParticles
     INTERNAL_MODULE
     GENERATE_METATYPES
     SOURCES
@@ -57,7 +57,7 @@ set(particles_resource_files
     "particleresources/star.png"
 )
 
-qt_add_resource(QuickParticles "particles"
+qt_internal_add_resource(QuickParticles "particles"
     PREFIX
         "/"
     FILES
@@ -76,7 +76,7 @@ set(particles1_resource_files
     "shaders_ng/imageparticle_tabled.vert.qsb"
 )
 
-qt_add_resource(QuickParticles "particles1"
+qt_internal_add_resource(QuickParticles "particles1"
     PREFIX
         "/particles"
     FILES
@@ -94,7 +94,7 @@ qt_add_resource(QuickParticles "particles1"
 ## Scopes:
 #####################################################################
 
-qt_extend_target(QuickParticles CONDITION MSVC
+qt_internal_extend_target(QuickParticles CONDITION MSVC
     DEFINES
         _CRT_SECURE_NO_WARNINGS
 )
@@ -102,7 +102,7 @@ qt_extend_target(QuickParticles CONDITION MSVC
 #### Keys ignored in scope 3:.:.:particles.pro:solaris-cc_x_:
 # QMAKE_CXXFLAGS_RELEASE = "--O2"
 
-qt_extend_target(QuickParticles CONDITION EXISTS "qqml_enable_gcov"
+qt_internal_extend_target(QuickParticles CONDITION EXISTS "qqml_enable_gcov"
     LIBRARIES
         gcov
     COMPILE_OPTIONS

@@ -4,7 +4,7 @@
 ## tst_qmlplugindump Test:
 #####################################################################
 
-qt_add_test(tst_qmlplugindump
+qt_internal_add_test(tst_qmlplugindump
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         tst_qmlplugindump.cpp
@@ -20,12 +20,12 @@ qt_add_test(tst_qmlplugindump
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_qmlplugindump CONDITION ANDROID OR IOS
+qt_internal_extend_target(tst_qmlplugindump CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-qt_extend_target(tst_qmlplugindump CONDITION NOT ANDROID AND NOT IOS
+qt_internal_extend_target(tst_qmlplugindump CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

@@ -4,7 +4,7 @@
 ## pluginMixed Generic Library:
 #####################################################################
 
-qt_add_cmake_library(pluginMixed
+qt_internal_add_cmake_library(pluginMixed
     MODULE
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../imports/org/qtproject/AutoTestQmlMixedPluginType"
     SOURCES

@@ -17,7 +17,7 @@ if(NOT TARGET Threads::Threads)
 endif()
 # special case end
 
-qt_add_test(tst_qjsengine
+qt_internal_add_test(tst_qjsengine
     SOURCES
         tst_qjsengine.cpp
     PUBLIC_LIBRARIES
@@ -39,7 +39,7 @@ set(qjsengine_resource_files
     "translations/translatable_la.qm"
 )
 
-qt_add_resource(tst_qjsengine "qjsengine"
+qt_internal_add_resource(tst_qjsengine "qjsengine"
     PREFIX
         "/"
     FILES
@@ -52,7 +52,7 @@ set(qmake_immediate_resource_files
     "testmodule.mjs"
 )
 
-qt_add_resource(tst_qjsengine "qmake_immediate"
+qt_internal_add_resource(tst_qjsengine "qmake_immediate"
     PREFIX
         "/"
     FILES

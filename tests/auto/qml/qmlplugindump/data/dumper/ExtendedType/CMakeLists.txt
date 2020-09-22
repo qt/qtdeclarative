@@ -4,7 +4,7 @@
 ## ExtendedType Generic Library:
 #####################################################################
 
-qt_add_cmake_library(ExtendedType
+qt_internal_add_cmake_library(ExtendedType
     MODULE
     OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} # special case
     SOURCES

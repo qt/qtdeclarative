@@ -5,7 +5,7 @@
 #####################################################################
 
 qt_manual_moc(moc_files OUTPUT_MOC_JSON_FILES json_list noextheader) # special case
-qt_add_test(tst_qmltyperegistrar
+qt_internal_add_test(tst_qmltyperegistrar
     SOURCES
         hppheader.hpp
         # noextheader special case

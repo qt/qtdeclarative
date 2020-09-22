@@ -4,7 +4,7 @@
 ## textinput Test:
 #####################################################################
 
-qt_add_test(textinput
+qt_internal_add_test(textinput
     GUI
     QMLTEST
     PUBLIC_LIBRARIES
