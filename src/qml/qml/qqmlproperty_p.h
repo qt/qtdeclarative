@@ -71,7 +71,7 @@ class QQmlMetaObject;
 class Q_QML_PRIVATE_EXPORT QQmlPropertyPrivate : public QQmlRefCount
 {
 public:
-    QQmlContextData *context;
+    QQmlGuardedContextData context;
     QPointer<QQmlEngine> engine;
     QPointer<QObject> object;
 
