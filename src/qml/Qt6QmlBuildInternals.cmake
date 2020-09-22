@@ -19,7 +19,7 @@ include_guard(GLOBAL)
 #  c++ plugin code.
 #  PLUGIN_OPTIONAL: Any plugins are optional
 #
-function(qt_add_qml_module target)
+function(qt_internal_add_qml_module target)
 
     set(qml_module_optional_args
         GENERATE_QMLTYPES
@@ -172,7 +172,13 @@ function(qt_add_qml_module target)
     endforeach()
 endfunction()
 
-function(add_qml_module)
-    qt_add_qml_module(${ARGV})
-endfunction()
+if(NOT QT_NO_INTERNAL_COMPATIBILITY_FUNCTIONS)
+    # Compatibility functions that should be removed once all their usages are removed.
+    function(add_qml_module)
+        qt_add_qml_module(${ARGV})
+    endfunction()
 
+    function(qt_add_qml_module)
+        qt_internal_add_qml_module(${ARGV})
+    endfunction()
+endif()
