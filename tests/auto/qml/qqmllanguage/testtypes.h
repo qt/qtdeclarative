@@ -1438,15 +1438,15 @@ private:
     QObjectList m_list;
 };
 
-class ScopedEnumsWithNameClash
+namespace ScopedEnumsWithNameClash
 {
-    Q_GADGET
-    Q_ENUMS(ScopedEnum)
-    Q_ENUMS(OtherScopedEnum)
+Q_NAMESPACE
 
-public:
-    enum class ScopedEnum : int { ScopedVal1, ScopedVal2, ScopedVal3, OtherScopedEnum };
-    enum class OtherScopedEnum : int { ScopedVal1 = 10, ScopedVal2 = 11, ScopedVal3 = 12 };
+enum class ScopedEnum : int { ScopedVal1, ScopedVal2, ScopedVal3, OtherScopedEnum };
+Q_ENUM_NS(ScopedEnum)
+
+enum class OtherScopedEnum : int { ScopedVal1 = 10, ScopedVal2 = 11, ScopedVal3 = 12 };
+Q_ENUM_NS(OtherScopedEnum)
 };
 
 class ScopedEnumsWithResolvedNameClash
