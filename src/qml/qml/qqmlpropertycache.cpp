@@ -1147,6 +1147,7 @@ void QQmlPropertyCache::toMetaObjectBuilder(QMetaObjectBuilder &builder)
         property.setReadable(true);
         property.setWritable(data->isWritable());
         property.setResettable(data->isResettable());
+        property.setBindable(data->isBindable());
     }
 
     for (int ii = 0; ii < methods.count(); ++ii) {

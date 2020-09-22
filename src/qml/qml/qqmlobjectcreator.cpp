@@ -890,10 +890,24 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
                         _scopeObject, runtimeFunction, currentQmlContext());
 
             if (bindingProperty->isBindable()) {
+                auto target = _bindingTarget;
+                if (bindingProperty->isAlias()) {
+                    // If the property is an alias, we cannot obtain the bindable interface directly with qt_metacall
+                    // so instead, we resolve the alias to obtain the actual target
+                    // This should be faster than doing a detour through the metaobject of the target, and relying on
+                    // QMetaObject::metacall doing the correct resolution
+                    QQmlPropertyIndex originalIndex(bindingProperty->coreIndex(), _valueTypeProperty ? _valueTypeProperty->coreIndex() : -1);
+                    QQmlPropertyIndex propIndex;
+                    QQmlPropertyPrivate::findAliasTarget(target, originalIndex, &target, &propIndex);
+                    QQmlData *data = QQmlData::get(target);
+                    Q_ASSERT(data && data->propertyCache);
+                    bindingProperty = data->propertyCache->property(propIndex.coreIndex());
+                }
                 auto &observer = QQmlData::get(_scopeObject)->propertyObservers.emplace_back(expr);
                 QUntypedBindable bindable;
                 void *argv[] = { &bindable };
-                _bindingTarget->qt_metacall(QMetaObject::BindableProperty, bindingProperty->coreIndex(), argv);
+                target->qt_metacall(QMetaObject::BindableProperty, bindingProperty->coreIndex(), argv);
+                Q_ASSERT(bindable.isValid());
                 bindable.observe(&observer);
             } else {
                 QQmlBoundSignal *bs = new QQmlBoundSignal(_bindingTarget, signalIndex, _scopeObject, engine);

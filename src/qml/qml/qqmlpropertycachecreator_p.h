@@ -785,6 +785,7 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
     *type = 0;
     bool writable = false;
     bool resettable = false;
+    bool bindable = false;
 
     propertyFlags->setIsAlias(true);
 
@@ -861,13 +862,14 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
             *type = targetProperty->propType();
             writable = targetProperty->isWritable();
             resettable = targetProperty->isResettable();
-
+            bindable = targetProperty->isBindable();
         } else {
             // value type or primitive type or enum
             *type = targetProperty->propType();
 
             writable = targetProperty->isWritable();
             resettable = targetProperty->isResettable();
+            bindable = targetProperty->isBindable();
 
             if (valueTypeIndex != -1) {
                 const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(*type);
@@ -891,6 +893,7 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
 
     propertyFlags->setIsWritable(!(alias.flags & QV4::CompiledData::Alias::IsReadOnly) && writable);
     propertyFlags->setIsResettable(resettable);
+    propertyFlags->setIsBindable(bindable);
     return QQmlError();
 }
 

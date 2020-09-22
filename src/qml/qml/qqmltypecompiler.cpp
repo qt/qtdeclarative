@@ -382,7 +382,8 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
         QString finalSignalHandlerPropertyName = signalNameCandidate;
         uint flags = QV4::CompiledData::Binding::IsSignalHandlerExpression;
 
-        if (signal) {
+        const bool isPropertyObserver = !signalPropertyData && qPropertyData && qPropertyData->isBindable();
+        if (signal && !(qPropertyData && qPropertyData->isAlias() && isPropertyObserver)) {
             int sigIndex = propertyCache->methodIndexToSignalIndex(signal->coreIndex());
             sigIndex = propertyCache->originalClone(sigIndex);
 
@@ -400,7 +401,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
                 }
                 parameters += param;
             }
-        } else if (!signalPropertyData && qPropertyData && qPropertyData->isBindable()) {
+        } else if (isPropertyObserver) {
             finalSignalHandlerPropertyName = qPropertyName;
             flags = QV4::CompiledData::Binding::IsPropertyObserver;
         } else {

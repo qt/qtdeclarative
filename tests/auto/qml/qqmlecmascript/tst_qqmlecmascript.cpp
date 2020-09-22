@@ -382,6 +382,7 @@ private slots:
     void semicolonAfterProperty();
     void hugeStack();
     void bindingOnQProperty();
+    void aliasOfQProperty();
     void bindingOnQPropertyContextProperty();
     void bindingContainingQProperty();
     void urlConstruction();
@@ -9175,6 +9176,42 @@ void tst_qqmlecmascript::bindingOnQProperty()
     QVERIFY(qobject_cast<ClassWithQProperty*>(test.data()));
     QProperty<float> &qprop = static_cast<ClassWithQProperty*>(test.data())->value;
     QVERIFY(qprop.hasBinding());
+}
+
+void tst_qqmlecmascript::aliasOfQProperty() {
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("aliasOfQProperty.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> root(component.create());
+    QProperty<float> &qprop = static_cast<ClassWithQProperty*>(root.data())->value;
+    QProperty<float> otherProperty;
+
+
+    qprop.setBinding([&](){return otherProperty.value();});
+    // changing the target properties value triggers the alias property's change handler exactly
+    // once, and doesn't require reading the value (binding is no longer lazy)
+    otherProperty.setValue(42.0);
+    QCOMPARE(root->property("changeCounter").toInt(), 1);
+    // reading the value afterwards doesn't trigger the observer again
+    QCOMPARE(root->property("myAlias").toFloat(), 42.0);
+    QCOMPARE(root->property("changeCounter").toInt(), 1);
+
+    // writing to the alias breaks the binding
+    root->setProperty("myAlias", 12.0);
+    QCOMPARE(qprop.value(), 12.0);
+    QVERIFY(!qprop.hasBinding());
+
+    // it is possible to obtain the bindable interface of the target from the bindable property
+    QUntypedBindable bindable;
+    void *argv[] = { &bindable };
+    int myaliasPropertyIndex = root->metaObject()->indexOfProperty("myAlias");
+    root->metaObject()->metacall(root.get(), QMetaObject::BindableProperty, myaliasPropertyIndex, argv);
+    QVERIFY(bindable.isValid());
+
+    bool ok = bindable.setBinding(Qt::makePropertyBinding([&]() -> float {return 13.0; }  ));
+    QVERIFY(ok);
+    QVERIFY(qprop.hasBinding());
+    QCOMPARE(qprop.value(), 13.0);
 }
 
 void tst_qqmlecmascript::bindingOnQPropertyContextProperty()

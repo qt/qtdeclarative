@@ -687,7 +687,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
     const int signalCount = compiledObject ? int(compiledObject->nSignals) : 0;
     const int methodCount = compiledObject ? int(compiledObject->nFunctions) : 0;
 
-    if (c == QMetaObject::ReadProperty || c == QMetaObject::WriteProperty || c == QMetaObject::ResetProperty) {
+    if (c == QMetaObject::ReadProperty || c == QMetaObject::WriteProperty || c == QMetaObject::ResetProperty || c == QMetaObject::BindableProperty) {
         if (id >= propOffset()) {
             id -= propOffset();
 
