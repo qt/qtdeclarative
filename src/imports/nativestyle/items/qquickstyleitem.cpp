@@ -196,6 +196,15 @@ void QQuickStyleItem::initStyleOptionBase(QStyleOption &styleOption)
         styleOption.state |= QStyle::State_KeyboardFocusChange;
     }
 
+    if (m_overrideState != None) {
+        // In Button.qml we fade between two versions of
+        // the handle, depending on if it's hovered or not
+        if (m_overrideState & AlwaysHovered)
+            styleOption.state |= QStyle::State_MouseOver;
+        else if (m_overrideState & NeverHovered)
+            styleOption.state &= ~QStyle::State_MouseOver;
+    }
+
     qqc2Debug() << styleOption;
 }
 

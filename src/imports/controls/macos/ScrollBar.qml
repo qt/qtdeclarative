@@ -55,10 +55,10 @@ NativeStyle.DefaultScrollBar {
         height: contentItem.height
         control: controlRoot
         subControl: NativeStyle.ScrollBar.Handle
-        overrideState: NativeStyle.ScrollBar.AlwaysHovered
+        overrideState: NativeStyle.StyleItem.AlwaysHovered
         opacity: controlRoot.hovered || control.pressed ? 1 : 0
         visible: contentItem instanceof NativeStyle.StyleItem
-        Behavior on opacity { NumberAnimation { duration: 150 } }
+        Behavior on opacity { NumberAnimation { duration: parent.transitionDuration } }
     }
 
 }

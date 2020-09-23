@@ -160,6 +160,9 @@ class QQuickStyleItem : public QQuickItem
     Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight)
     Q_PROPERTY(bool useNinePatchImage MEMBER m_useNinePatchImage)
 
+    Q_PROPERTY(OverrideState overrideState MEMBER m_overrideState)
+    Q_PROPERTY(int transitionDuration MEMBER m_transitionDuration)
+
     // Output
     Q_PROPERTY(QQuickStyleMargins contentPadding READ contentPadding() NOTIFY contentPaddingChanged)
     Q_PROPERTY(QQuickStyleMargins layoutMargins READ layoutMargins() NOTIFY layoutMarginsChanged)
@@ -175,6 +178,14 @@ public:
         Everything = 255
     };
     Q_DECLARE_FLAGS(DirtyFlags, DirtyFlag)
+
+    enum OverrideState {
+        None = 0,
+        AlwaysHovered,
+        NeverHovered,
+    };
+    Q_ENUM(OverrideState)
+
 
 #ifdef QT_DEBUG
     enum DebugFlag {
@@ -244,6 +255,7 @@ protected:
 #ifdef QT_DEBUG
     DebugFlags m_debugFlags = NoDebug;
 #endif
+    OverrideState m_overrideState = None;
 
 private:
     inline void updateGeometry();
@@ -258,6 +270,12 @@ private:
     DirtyFlags m_dirty = Everything;
     bool m_useNinePatchImage = true;
     bool m_polishing = false;
+
+#ifdef Q_OS_MACOS
+    int m_transitionDuration = 150;
+#else
+    int m_transitionDuration = 400;
+#endif
 
 private:
     friend class QtQuickControls2MacOSStylePlugin;

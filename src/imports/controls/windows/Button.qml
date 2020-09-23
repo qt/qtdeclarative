@@ -62,7 +62,19 @@ T.Button {
         contentWidth: contentItem.implicitWidth
         contentHeight: contentItem.implicitHeight
         useNinePatchImage: false
+        overrideState: NativeStyle.StyleItem.NeverHovered
+    }
 
+    NativeStyle.Button {
+        control: control
+        x: background.x
+        y: background.y
+        width: background.width
+        height: background.height
+        useNinePatchImage: false
+        overrideState: NativeStyle.StyleItem.AlwaysHovered
+        opacity: control.hovered ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: parent.transitionDuration } }
     }
 
     icon.width: 24

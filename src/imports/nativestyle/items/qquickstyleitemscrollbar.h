@@ -46,10 +46,6 @@ class QQuickStyleItemScrollBar : public QQuickStyleItem
 
     Q_PROPERTY(SubControl subControl MEMBER m_subControl)
 
-#ifdef Q_OS_MACOS
-    Q_PROPERTY(OverrideState overrideState MEMBER m_overrideState)
-#endif
-
     QML_NAMED_ELEMENT(ScrollBar)
 
 public:
@@ -58,15 +54,6 @@ public:
         Handle,
     };
     Q_ENUM(SubControl)
-
-#ifdef Q_OS_MACOS
-    enum OverrideState {
-        None = 0,
-        AlwaysHovered,
-        NeverHovered,
-    };
-    Q_ENUM(OverrideState)
-#endif
 
     QFont styleFont(QQuickItem *control) override;
 
@@ -80,10 +67,6 @@ private:
 
 private:
    SubControl m_subControl = Groove;
-
-#ifdef Q_OS_MACOS
-    OverrideState m_overrideState = None;
-#endif
 };
 
 #endif // QQUICKSTYLEITEMSCROLLBAR_H
