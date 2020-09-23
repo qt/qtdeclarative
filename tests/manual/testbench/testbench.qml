@@ -438,7 +438,7 @@ ApplicationWindow {
             model: controlFolderListModel
             delegate: ColumnLayout {
                 id: rootDelegate
-                width: parent.width
+                width: listView.width
 
                 MenuSeparator {
                     Layout.fillWidth: true
