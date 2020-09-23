@@ -1,7 +1,7 @@
-# Generated from styleimports.pro.
+# Generated from styleimportscompiletimematerial.pro.
 
 #####################################################################
-## tst_styleimports Test:
+## tst_styleimportscompiletimematerial Test:
 #####################################################################
 
 # Collect test data
@@ -10,12 +10,12 @@ file(GLOB_RECURSE test_data_glob
     data/*)
 list(APPEND test_data ${test_data_glob})
 
-qt_add_test(tst_styleimports
+qt_add_test(tst_styleimportscompiletimematerial
     SOURCES
         ../shared/qtest_quickcontrols.h
         ../shared/util.cpp ../shared/util.h
         ../shared/visualtestutil.cpp ../shared/visualtestutil.h
-        tst_styleimports.cpp
+        tst_styleimportscompiletimematerial.cpp
     DEFINES
         QQC2_IMPORT_PATH=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../../src/imports\\\"
     PUBLIC_LIBRARIES
@@ -31,32 +31,18 @@ qt_add_test(tst_styleimports
     TESTDATA ${test_data}
 )
 
-# Resources:
-set(qmake_resourcestyle_resource_files
-    "ResourceStyle/Button.qml"
-    "ResourceStyle/qmldir"
-)
-
-qt_add_resource(tst_styleimports "qmake_resourcestyle"
-    PREFIX
-        "/"
-    FILES
-        ${qmake_resourcestyle_resource_files}
-)
-
-
-#### Keys ignored in scope 1:.:.:styleimports.pro:<TRUE>:
-# OTHER_FILES = "data/*.qml" "data/qmldir" "data/FileSystemStyle/*.qml" "data/FileSystemStyle/qmldir" "data/PlatformStyle/*.qml" "data/PlatformStyle/+linux/*.qml" "data/PlatformStyle/+macos/*.qml" "data/PlatformStyle/+windows/*.qml" "data/PlatformStyle/qmldir"
+#### Keys ignored in scope 1:.:.:styleimportscompiletimematerial.pro:<TRUE>:
+# OTHER_FILES = "data/*.qml"
 
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_styleimports CONDITION ANDROID OR IOS
+qt_extend_target(tst_styleimportscompiletimematerial CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-qt_extend_target(tst_styleimports CONDITION NOT ANDROID AND NOT IOS
+qt_extend_target(tst_styleimportscompiletimematerial CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

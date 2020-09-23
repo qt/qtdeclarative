@@ -1,4 +1,8 @@
 # Generated from desktopgallery.pro.
+# special case skip regeneration
+# Remove the skip, after somebody figures out if this is supposed
+# to be a manual test, or a full-blown project like it is now
+# because it was copied over from an example.
 
 cmake_minimum_required(VERSION 3.14)
 project(desktopgallery LANGUAGES CXX)

@@ -5,7 +5,6 @@
 #####################################################################
 
 qt_add_qml_module(qtquickcontrols2fusionstyleplugin
-    TARGET_PATH "QtQuick/Controls/Fusion"
     URI "QtQuick.Controls.Fusion"
     VERSION "6.0" # special case
     CLASSNAME QtQuickControls2FusionStylePlugin

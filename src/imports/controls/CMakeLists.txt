@@ -5,7 +5,6 @@
 #####################################################################
 
 qt_add_qml_module(qtquickcontrols2plugin
-    TARGET_PATH "QtQuick/Controls"
     URI "QtQuick.Controls"
     VERSION "6.0" # special case
     DESIGNER_SUPPORTED

@@ -5,7 +5,6 @@
 #####################################################################
 
 qt_add_qml_module(qtquickcontrols2universalstyleplugin
-    TARGET_PATH "QtQuick/Controls/Universal"
     URI "QtQuick.Controls.Universal"
     VERSION "6.0" # special case
     CLASSNAME QtQuickControls2UniversalStylePlugin

@@ -5,7 +5,6 @@
 #####################################################################
 
 qt_add_qml_module(qtquickcontrols2materialstyleplugin
-    TARGET_PATH "QtQuick/Controls/Material"
     URI "QtQuick.Controls.Material"
     VERSION "6.0" # special case
     CLASSNAME QtQuickControls2MaterialStylePlugin
