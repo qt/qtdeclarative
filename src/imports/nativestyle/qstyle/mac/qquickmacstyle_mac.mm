@@ -1135,128 +1135,6 @@ static QStyleHelper::WidgetSizePolicy qt_aqua_guess_size(
 }
 #endif
 
-void QMacStylePrivate::drawFocusRing(QPainter *p, const QRectF &targetRect, int hMargin, int vMargin, const CocoaControl &cw) const
-{
-    QPainterPath focusRingPath;
-    focusRingPath.setFillRule(Qt::OddEvenFill);
-
-    qreal hOffset = 0.0;
-    qreal vOffset = 0.0;
-    switch (cw.type) {
-    case Box:
-    case Button_SquareButton:
-    case SegmentedControl_Middle:
-    case TextField: {
-        auto innerRect = targetRect;
-        if (cw.type == TextField)
-            innerRect = innerRect.adjusted(hMargin, vMargin, -hMargin, -vMargin).adjusted(0.5, 0.5, -0.5, -0.5);
-        const auto outerRect = innerRect.adjusted(-focusRingWidth, -focusRingWidth, focusRingWidth, focusRingWidth);
-        const auto outerRadius = focusRingWidth;
-        focusRingPath.addRect(innerRect);
-        focusRingPath.addRoundedRect(outerRect, outerRadius, outerRadius);
-        break;
-    }
-    case Button_CheckBox: {
-        const auto cbInnerRadius = (cw.size == QStyleHelper::SizeMini ? 2.0 : 3.0);
-        const auto cbSize = cw.size == QStyleHelper::SizeLarge ? 13 :
-                            cw.size == QStyleHelper::SizeSmall ? 11 : 9; // As measured
-        hOffset = hMargin + (cw.size == QStyleHelper::SizeLarge ? 2.5 :
-                             cw.size == QStyleHelper::SizeSmall ? 2.0 : 1.0); // As measured
-        vOffset = 0.5 * qreal(targetRect.height() - cbSize);
-        const auto cbInnerRect = QRectF(0, 0, cbSize, cbSize);
-        const auto cbOuterRadius = cbInnerRadius + focusRingWidth;
-        const auto cbOuterRect = cbInnerRect.adjusted(-focusRingWidth, -focusRingWidth, focusRingWidth, focusRingWidth);
-        focusRingPath.addRoundedRect(cbOuterRect, cbOuterRadius, cbOuterRadius);
-        focusRingPath.addRoundedRect(cbInnerRect, cbInnerRadius, cbInnerRadius);
-        break;
-    }
-    case Button_RadioButton: {
-        const auto rbSize = cw.size == QStyleHelper::SizeLarge ? 15 :
-                            cw.size == QStyleHelper::SizeSmall ? 13 : 9; // As measured
-        hOffset = hMargin + (cw.size == QStyleHelper::SizeLarge ? 1.5 :
-                             cw.size == QStyleHelper::SizeSmall ? 1.0 : 1.0); // As measured
-        vOffset = 0.5 * qreal(targetRect.height() - rbSize);
-        const auto rbInnerRect = QRectF(0, 0, rbSize, rbSize);
-        const auto rbOuterRect = rbInnerRect.adjusted(-focusRingWidth, -focusRingWidth, focusRingWidth, focusRingWidth);
-        focusRingPath.addEllipse(rbInnerRect);
-        focusRingPath.addEllipse(rbOuterRect);
-        break;
-    }
-    case Button_PopupButton:
-    case Button_PullDown:
-    case Button_PushButton:
-    case SegmentedControl_Single: {
-        const qreal innerRadius = cw.type == Button_PushButton ? 3 : 4;
-        const qreal outerRadius = innerRadius + focusRingWidth;
-        hOffset = targetRect.left();
-        vOffset = targetRect.top();
-        const auto innerRect = targetRect.translated(-targetRect.topLeft());
-        const auto outerRect = innerRect.adjusted(-hMargin, -vMargin, hMargin, vMargin);
-        focusRingPath.addRoundedRect(innerRect, innerRadius, innerRadius);
-        focusRingPath.addRoundedRect(outerRect, outerRadius, outerRadius);
-        break;
-    }
-    case ComboBox:
-    case SegmentedControl_First:
-    case SegmentedControl_Last: {
-        hOffset = targetRect.left();
-        vOffset = targetRect.top();
-        const qreal innerRadius = 8;
-        const qreal outerRadius = innerRadius + focusRingWidth;
-        const auto innerRect = targetRect.translated(-targetRect.topLeft());
-        const auto outerRect = innerRect.adjusted(-hMargin, -vMargin, hMargin, vMargin);
-
-        const auto cbFocusFramePath = [](const QRectF &rect, qreal tRadius, qreal bRadius) {
-            QPainterPath path;
-
-            if (tRadius > 0) {
-                const auto topLeftCorner = QRectF(rect.topLeft(), QSizeF(tRadius, tRadius));
-                path.arcMoveTo(topLeftCorner, 180);
-                path.arcTo(topLeftCorner, 180, -90);
-            } else {
-                path.moveTo(rect.topLeft());
-            }
-            const auto rightEdge = rect.right() - bRadius;
-            path.arcTo(rightEdge, rect.top(), bRadius, bRadius, 90, -90);
-            path.arcTo(rightEdge, rect.bottom() - bRadius, bRadius, bRadius, 0, -90);
-            if (tRadius > 0)
-                path.arcTo(rect.left(), rect.bottom() - tRadius, tRadius, tRadius, 270, -90);
-            else
-                path.lineTo(rect.bottomLeft());
-            path.closeSubpath();
-
-            return path;
-        };
-
-        const auto innerPath = cbFocusFramePath(innerRect, 0, innerRadius);
-        focusRingPath.addPath(innerPath);
-        const auto outerPath = cbFocusFramePath(outerRect, 2 * focusRingWidth, outerRadius);
-        focusRingPath.addPath(outerPath);
-        break;
-    }
-    default:
-        Q_UNREACHABLE();
-    }
-
-    auto focusRingColor = qt_mac_toQColor(NSColor.keyboardFocusIndicatorColor.CGColor);
-    if (!qt_mac_applicationIsInDarkMode()) {
-        // This color already has alpha ~ 0.25, this value is too small - the ring is
-        // very pale and nothing like the native one. 0.39 makes it better (not ideal
-        // anyway). The color seems to be correct in dark more without any modification.
-        focusRingColor.setAlphaF(0.39);
-    }
-
-    p->save();
-    p->setRenderHint(QPainter::Antialiasing);
-
-    if (cw.type == SegmentedControl_First) {
-        // TODO Flip left-right
-    }
-    p->translate(hOffset, vOffset);
-    p->fillPath(focusRingPath, focusRingColor);
-    p->restore();
-}
-
 QPainterPath QMacStylePrivate::windowPanelPath(const QRectF &r) const
 {
     static const qreal CornerPointOffset = 5.5;
@@ -3465,24 +3343,6 @@ void QMacStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter
                 arrowOpt.rect = ar;
                 proxy()->drawPrimitive(PE_IndicatorArrowDown, &arrowOpt, p);
             }
-
-
-            if (btn->state & State_HasFocus) {
-                // TODO Remove and use QFocusFrame instead.
-                const int hMargin = proxy()->pixelMetric(QStyle::PM_FocusFrameHMargin, btn);
-                const int vMargin = proxy()->pixelMetric(QStyle::PM_FocusFrameVMargin, btn);
-                QRectF focusRect;
-                if (cw.type == QMacStylePrivate::Button_SquareButton) {
-                    focusRect = frameRect;
-                } else {
-                    focusRect = QRectF::fromCGRect([pb alignmentRectForFrame:pb.frame]);
-                    if (cw.type == QMacStylePrivate::Button_PushButton)
-                        focusRect -= pushButtonShadowMargins[cw.size];
-                    else if (cw.type == QMacStylePrivate::Button_PullDown)
-                        focusRect -= pullDownButtonShadowMargins[cw.size];
-                }
-                d->drawFocusRing(p, focusRect, hMargin, vMargin, cw);
-            }
         }
         break;
     case CE_PushButtonLabel:
@@ -5255,24 +5115,6 @@ void QMacStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComplex 
                     QMacAutoReleasePool pool;
                     [cb.cell drawWithFrame:r inView:cb];
                 });
-            }
-
-            if (combo->state & State_HasFocus) {
-                // TODO Remove and use QFocusFrame instead.
-                const int hMargin = proxy()->pixelMetric(QStyle::PM_FocusFrameHMargin, combo);
-                const int vMargin = proxy()->pixelMetric(QStyle::PM_FocusFrameVMargin, combo);
-                QRectF focusRect;
-                if (cw.type == QMacStylePrivate::Button_PopupButton) {
-                    focusRect = QRectF::fromCGRect([cc alignmentRectForFrame:cc.frame]);
-                    focusRect -= pullDownButtonShadowMargins[cw.size];
-                    if (cw.size == QStyleHelper::SizeSmall)
-                        focusRect = focusRect.translated(0, 1);
-                    else if (cw.size == QStyleHelper::SizeMini)
-                        focusRect = focusRect.translated(2, -1);
-                } else if (cw.type == QMacStylePrivate::ComboBox) {
-                    focusRect = frameRect - comboBoxFocusRingMargins[cw.size];
-                }
-                d->drawFocusRing(p, focusRect, hMargin, vMargin, cw);
             }
         }
         break;
