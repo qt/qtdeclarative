@@ -94,6 +94,18 @@ QQmlRefPointer<QV4::ExecutableCompilationUnit> QQmlTypeCompiler::compile()
         merger.mergeDefaultProperties();
     }
 
+
+    // Resolve component boundaries and aliases
+
+    {
+        // Scan for components, determine their scopes and resolve aliases within the scope.
+        QQmlComponentAndAliasResolver resolver(this);
+        if (!resolver.resolve())
+            return nullptr;
+
+        pendingGroupPropertyBindings.resolveMissingPropertyCaches(engine, &m_propertyCaches);
+    }
+
     {
         SignalHandlerConverter converter(this);
         if (!converter.convertSignalHandlerExpressionsToFunctionDeclarations())
@@ -114,17 +126,6 @@ QQmlRefPointer<QV4::ExecutableCompilationUnit> QQmlTypeCompiler::compile()
     {
         QQmlAliasAnnotator annotator(this);
         annotator.annotateBindingsToAliases();
-    }
-
-    // Resolve component boundaries and aliases
-
-    {
-        // Scan for components, determine their scopes and resolve aliases within the scope.
-        QQmlComponentAndAliasResolver resolver(this);
-        if (!resolver.resolve())
-            return nullptr;
-
-        pendingGroupPropertyBindings.resolveMissingPropertyCaches(engine, &m_propertyCaches);
     }
 
     {
