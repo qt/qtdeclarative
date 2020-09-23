@@ -126,7 +126,7 @@ private:
     Q_DECLARE_PRIVATE(QQuickLabel)
 };
 
-struct QQuickTextForeign
+struct QQuickTemplatesTextForeign
 {
     Q_GADGET
     QML_ANONYMOUS
