@@ -722,6 +722,9 @@ static bool qt_macWindowMainWindow(const QWindow *window)
     return false;
 }
 
+#define LargeSmallMini(option, large, small, mini) \
+    (option->state & QStyle::State_Small) ? small : ((option->state & QStyle::State_Mini) ? mini : large)
+
 /*****************************************************************************
   QMacCGStyle globals
  *****************************************************************************/
@@ -4420,11 +4423,11 @@ QRect QMacStyle::subElementRect(SubElement sr, const QStyleOption *opt) const
     case SE_CheckBoxLayoutItem:
         rect = opt->rect;
         if (controlSize == QStyleHelper::SizeLarge) {
-            setLayoutItemMargins(+2, +3, -9, -4, &rect, opt->direction);
+            setLayoutItemMargins(+2, +2, -3, -2, &rect, opt->direction);
         } else if (controlSize == QStyleHelper::SizeSmall) {
-            setLayoutItemMargins(+1, +5, 0 /* fix */, -6, &rect, opt->direction);
+            setLayoutItemMargins(+1, +2, -2, -1, &rect, opt->direction);
         } else {
-            setLayoutItemMargins(0, +7, 0 /* fix */, -6, &rect, opt->direction);
+            setLayoutItemMargins(-0, +0, -1, -0, &rect, opt->direction);
         }
         break;
     case SE_ComboBoxLayoutItem:
@@ -4437,20 +4440,16 @@ QRect QMacStyle::subElementRect(SubElement sr, const QStyleOption *opt) const
             //            // all the hassle.
             //        } else
             //#endif
-            rect = opt->rect;
-            if (controlSize == QStyleHelper::SizeLarge) {
-                rect.adjust(5, 6, -6, -7);
-            } else if (controlSize == QStyleHelper::SizeSmall) {
-                if (combo->editable)
-                    rect.adjust(4, 4, -5, -7);
-                else
-                    rect.adjust(6, 6, -6, -4);
-            } else {
-                if (combo->editable)
-                    rect.adjust(5, 4, -4, -6);
-                else
-                    rect.adjust(8, 4, -4, -6);
-            }
+            if (combo->editable)
+                rect = LargeSmallMini(opt,
+                                        opt->rect.adjusted(5, 6, -6, -7),
+                                        opt->rect.adjusted(4, 4, -5, -7),
+                                        opt->rect.adjusted(5, 4, -4, -6));
+            else
+                rect = LargeSmallMini(opt,
+                                        opt->rect.adjusted(6, 4, -7, -7),
+                                        opt->rect.adjusted(6, 7, -6, -5),
+                                        opt->rect.adjusted(9, 5, -5, -7));
         }
         break;
     case SE_LabelLayoutItem:
@@ -4470,57 +4469,37 @@ QRect QMacStyle::subElementRect(SubElement sr, const QStyleOption *opt) const
         }
         break;
     case SE_PushButtonLayoutItem:
-        if (const QStyleOptionButton *buttonOpt
-                = qstyleoption_cast<const QStyleOptionButton *>(opt)) {
-            if ((buttonOpt->features & QStyleOptionButton::Flat))
-                break;  // leave rect alone
-        }
         rect = opt->rect;
-        if (controlSize == QStyleHelper::SizeLarge) {
-            rect.adjust(+6, +4, -6, -8);
-        } else if (controlSize == QStyleHelper::SizeSmall) {
-            rect.adjust(+5, +4, -5, -6);
-        } else {
-            rect.adjust(+1, 0, -1, -2);
+        if (const QStyleOptionButton *buttonOpt = qstyleoption_cast<const QStyleOptionButton *>(opt)) {
+            if ((buttonOpt->features & QStyleOptionButton::Flat))
+                break;
         }
+        rect = LargeSmallMini(opt,
+                                opt->rect.adjusted(7, 5, -7, -7),
+                                opt->rect.adjusted(6, 6, -6, -6),
+                                opt->rect.adjusted(6, 5, -6, -6));
+        break;
+    case SE_SpinBoxLayoutItem:
+        rect = LargeSmallMini(opt,
+                                opt->rect.adjusted(2, 3, -2, -2),
+                                opt->rect.adjusted(2, 3, -2, -2),
+                                opt->rect.adjusted(2, 3, -2, -2));
         break;
     case SE_RadioButtonLayoutItem:
-        rect = opt->rect;
-        if (controlSize == QStyleHelper::SizeLarge) {
-            setLayoutItemMargins(+2, +2 /* SHOULD BE +3, done for alignment */,
-                                 0, -4 /* SHOULD BE -3, done for alignment */, &rect, opt->direction);
-        } else if (controlSize == QStyleHelper::SizeSmall) {
-            rect.adjust(0, +6, 0 /* fix */, -5);
-        } else {
-            rect.adjust(0, +6, 0 /* fix */, -7);
-        }
+        rect = LargeSmallMini(opt,
+                                opt->rect.adjusted(2, 2, -3, -2),
+                                opt->rect.adjusted(2, 2, -3, -2),
+                                opt->rect.adjusted(1, 2, -3, -2));
         break;
     case SE_SliderLayoutItem:
         if (const QStyleOptionSlider *sliderOpt
                 = qstyleoption_cast<const QStyleOptionSlider *>(opt)) {
             rect = opt->rect;
-            if (sliderOpt->tickPosition == QStyleOptionSlider::NoTicks) {
-                int above = SIZE(3, 0, 2);
-                int below = SIZE(4, 3, 0);
-                if (sliderOpt->orientation == Qt::Horizontal) {
-                    rect.adjust(0, +above, 0, -below);
-                } else {
-                    rect.adjust(+above, 0, -below, 0);  //### Seems that QSlider flip the position of the ticks in reverse mode.
-                }
-            } else if (sliderOpt->tickPosition == QStyleOptionSlider::TicksAbove) {
-                int below = SIZE(3, 2, 0);
-                if (sliderOpt->orientation == Qt::Horizontal) {
-                    rect.setHeight(rect.height() - below);
-                } else {
-                    rect.setWidth(rect.width() - below);
-                }
-            } else if (sliderOpt->tickPosition == QStyleOptionSlider::TicksBelow) {
-                int above = SIZE(3, 2, 0);
-                if (sliderOpt->orientation == Qt::Horizontal) {
-                    rect.setTop(rect.top() + above);
-                } else {
-                    rect.setLeft(rect.left() + above);
-                }
+            if (sliderOpt->subControls & QStyle::SC_SliderHandle) {
+                if (sliderOpt->tickPosition == QStyleOptionSlider::NoTicks)
+                    rect.adjust(3, 3, -3, -3);
+            } else {
+                rect.adjust(3, 0, -3, 0);
             }
         }
         break;
