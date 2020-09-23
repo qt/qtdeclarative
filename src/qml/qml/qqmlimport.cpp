@@ -1264,6 +1264,7 @@ QTypeRevision QQmlImportsPrivate::importExtension(
                                         instance, basePath, uri, typeNamespace, version, errors);
                             if (!version.isValid()){
                                 if (errors) {
+                                    Q_ASSERT(!errors->isEmpty());
                                     QQmlError poppedError = errors->takeFirst();
                                     QQmlError error;
                                     error.setDescription(QQmlImportDatabase::tr("static plugin for module \"%1\" with name \"%2\" cannot be loaded: %3")
@@ -2220,8 +2221,11 @@ void QQmlImportDatabase::setImportPathList(const QStringList &paths)
 static QTypeRevision lockModule(const QString &uri, const QString &typeNamespace,
                                 QTypeRevision version, QList<QQmlError> *errors)
 {
-    if (!version.hasMajorVersion())
+    if (!version.hasMajorVersion()) {
         version = QQmlMetaType::latestModuleVersion(uri);
+        if (!version.isValid())
+            errors->prepend(moduleNotFoundError(uri, version));
+    }
     if (version.hasMajorVersion() && !typeNamespace.isEmpty()
             && !QQmlMetaType::protectModule(uri, version, true)) {
         // Not being able to protect the module means there are not types registered for it,
