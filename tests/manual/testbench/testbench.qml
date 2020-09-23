@@ -52,22 +52,20 @@ import QtQuick
 import QtQuick.Window
 import QtQuick.Layouts
 import QtQuick.Controls
-import QtQuick.Controls.Imagine
 import Qt.labs.folderlistmodel
 import Qt.labs.settings
 
-import App
+import Backend
+import "." as Ui
 
-ApplicationWindow {
+Ui.ApplicationWindow {
     id: window
     visible: true
     width: 1000
     height: 750
     title: "Style Testbench - " + settings.style + " Style" + (usingImagineStyle ? imagineTitleText : "")
 
-    Imagine.path: defaultImaginePath
-
-    readonly property bool usingImagineStyle: settings.style.toLowerCase() === "imagine"
+    readonly property bool usingImagineStyle: settings.style === "Imagine"
     // Some controls should be visible regardless of whether or not custom assets are lacking for it,
     // so we use the default assets in some cases.
     readonly property string defaultImaginePath: "qrc:/qt-project.org/imports/QtQuick/Controls/Imagine/images/"
@@ -162,11 +160,7 @@ ApplicationWindow {
         property string link
     }
 
-    header: ToolBar {
-        // Seems to be necessary to get the default assets to be used here,
-        // though it should inherit the window's path
-        Imagine.path: defaultImaginePath
-
+    header: Ui.ToolBar {
         RowLayout {
             anchors.fill: parent
 
@@ -198,14 +192,12 @@ ApplicationWindow {
 
                 onClicked: optionsMenu.open()
 
-                Menu {
+                Ui.Menu {
                     id: optionsMenu
                     x: 1
                     y: 1 + parent.height
                     visible: optionsMenuButton.checked
                     closePolicy: Popup.CloseOnPressOutsideParent
-
-                    Imagine.path: defaultImaginePath
 
                     MenuItem {
                         text: qsTr("Open Asset Directory")
@@ -246,8 +238,6 @@ ApplicationWindow {
 
     SettingsDialog {
         id: settingsDialog
-
-        Imagine.path: defaultImaginePath
     }
 
     Drawer {
@@ -384,11 +374,9 @@ ApplicationWindow {
         return props;
     }
 
-    Pane {
+    Ui.ContentPane {
         id: contentPane
         anchors.fill: parent
-
-        Imagine.path: settings.useCustomImaginePath && settings.imaginePath.length > 0 ? settings.imaginePath : undefined
 
         palette.window: effectiveColor(paletteSettings.window)
         palette.windowText: effectiveColor(paletteSettings.windowText)

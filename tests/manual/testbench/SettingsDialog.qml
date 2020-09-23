@@ -50,20 +50,18 @@
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.Imagine
 import QtQuick.Layouts
 
-import App
+import Backend
+import "." as Ui
 
-Dialog {
+Ui.Dialog {
     id: settingsDialog
     title: "Settings"
     width: 500
     height: 400
     x: (parent.width - width) / 2
     y: (parent.height - height) / 2
-
-    Imagine.path: defaultImaginePath
 
     property alias imaginePathTextField: imaginePathTextField
     property alias customImagineStyleCheckBox: customImagineStyleCheckBox
@@ -242,8 +240,6 @@ Dialog {
                             visible: imaginePathTextField.hovered
                             delay: 500
                             parent: imaginePathTextField
-
-                            Imagine.path: defaultImaginePath
                         }
                     }
 
@@ -274,8 +270,6 @@ Dialog {
                             visible: autoFixImagineAssetsCheckBox.hovered
                             delay: 500
                             parent: imaginePathTextField
-
-                            Imagine.path: defaultImaginePath
                         }
                     }
                 }

@@ -41,5 +41,15 @@
         <file>testbench.qml</file>
         <file>controls/MenuBar.qml</file>
         <file>controls/SplitView.qml</file>
+        <file>+Imagine/ApplicationWindow.qml</file>
+        <file>ApplicationWindow.qml</file>
+        <file>+Imagine/ToolBar.qml</file>
+        <file>ToolBar.qml</file>
+        <file>+Imagine/Menu.qml</file>
+        <file>Menu.qml</file>
+        <file>+Imagine/Dialog.qml</file>
+        <file>Dialog.qml</file>
+        <file>ContentPane.qml</file>
+        <file>+Imagine/ContentPane.qml</file>
     </qresource>
 </RCC>
