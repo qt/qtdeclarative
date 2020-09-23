@@ -4,7 +4,7 @@
 ## tst_pressandhold Test:
 #####################################################################
 
-qt_add_test(tst_pressandhold
+qt_internal_add_test(tst_pressandhold
     SOURCES
         tst_pressandhold.cpp
     PUBLIC_LIBRARIES

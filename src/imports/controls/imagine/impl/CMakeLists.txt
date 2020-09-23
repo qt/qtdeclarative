@@ -4,7 +4,7 @@
 ## qtquickcontrols2imaginestyleimplplugin Plugin:
 #####################################################################
 
-qt_add_qml_module(qtquickcontrols2imaginestyleimplplugin
+qt_internal_add_qml_module(qtquickcontrols2imaginestyleimplplugin
     URI "QtQuick.Controls.Imagine.impl"
     VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QtQuickControls2ImagineStyleImplPlugin
@@ -37,7 +37,7 @@ set(qmake_qtquickcontrols2imaginestyleimpl_resource_files
     "shaders/OpacityMask.frag"
 )
 
-qt_add_resource(qtquickcontrols2imaginestyleimplplugin "qmake_qtquickcontrols2imaginestyleimpl"
+qt_internal_add_resource(qtquickcontrols2imaginestyleimplplugin "qmake_qtquickcontrols2imaginestyleimpl"
     PREFIX
         "qt-project.org/imports/QtQuick/Controls/Imagine/impl"
     FILES

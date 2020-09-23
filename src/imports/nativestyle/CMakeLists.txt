@@ -4,7 +4,7 @@
 ## qtquickcontrols2nativestyleplugin Plugin:
 #####################################################################
 
-qt_add_qml_module(qtquickcontrols2nativestyleplugin
+qt_internal_add_qml_module(qtquickcontrols2nativestyleplugin
     URI "QtQuick.NativeStyle"
     VERSION "6.0"
     CLASSNAME QtQuickControls2NativeStylePlugin
@@ -66,7 +66,7 @@ qt_add_qml_module(qtquickcontrols2nativestyleplugin
 ## Scopes:
 #####################################################################
 
-qt_extend_target(qtquickcontrols2nativestyleplugin CONDITION MACOS
+qt_internal_extend_target(qtquickcontrols2nativestyleplugin CONDITION MACOS
     SOURCES
         qstyle/mac/qquickmacstyle_mac.mm qstyle/mac/qquickmacstyle_mac_p.h
         qstyle/mac/qquickmacstyle_mac_p_p.h
@@ -83,7 +83,7 @@ if(MACOS)
         "util/FocusFrame.qml"
     )
 
-    qt_add_resource(qtquickcontrols2nativestyleplugin "qmake_immediate"
+    qt_internal_add_resource(qtquickcontrols2nativestyleplugin "qmake_immediate"
         PREFIX
             "/"
         FILES
@@ -91,7 +91,7 @@ if(MACOS)
     )
 endif()
 
-qt_extend_target(qtquickcontrols2nativestyleplugin CONDITION WIN32
+qt_internal_extend_target(qtquickcontrols2nativestyleplugin CONDITION WIN32
     SOURCES
         qstyle/windows/qquickwindowsstyle.cpp qstyle/windows/qquickwindowsstyle_p.h
         qstyle/windows/qquickwindowsstyle_p_p.h

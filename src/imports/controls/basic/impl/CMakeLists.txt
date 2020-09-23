@@ -4,7 +4,7 @@
 ## qtquickcontrols2basicstyleimplplugin Plugin:
 #####################################################################
 
-qt_add_qml_module(qtquickcontrols2basicstyleimplplugin
+qt_internal_add_qml_module(qtquickcontrols2basicstyleimplplugin
     URI "QtQuick.Controls.Basic.impl"
     VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QtQuickControls2BasicStyleImplPlugin

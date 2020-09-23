@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     ${CMAKE_CURRENT_SOURCE_DIR}/data/tst_*)
 list(APPEND test_data ${test_data_glob})
 
-qt_add_test(tst_qquickimaginestyle
+qt_internal_add_test(tst_qquickimaginestyle
     GUI
     QMLTEST
     SOURCES
@@ -28,7 +28,7 @@ set(qmake_immediate_resource_files
     "test-assets/button-background-2.png"
 )
 
-qt_add_resource(tst_qquickimaginestyle "qmake_immediate"
+qt_internal_add_resource(tst_qquickimaginestyle "qmake_immediate"
     PREFIX
         "/"
     FILES

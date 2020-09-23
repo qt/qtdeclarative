@@ -4,7 +4,7 @@
 ## qtquickcontrols2fusionstyleimplplugin Plugin:
 #####################################################################
 
-qt_add_qml_module(qtquickcontrols2fusionstyleimplplugin
+qt_internal_add_qml_module(qtquickcontrols2fusionstyleimplplugin
     URI "QtQuick.Controls.Fusion.impl"
     VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QtQuickControls2FusionStyleImpPlugin

@@ -4,7 +4,7 @@
 ## qtquickcontrols2universalstyleplugin Plugin:
 #####################################################################
 
-qt_add_qml_module(qtquickcontrols2universalstyleplugin
+qt_internal_add_qml_module(qtquickcontrols2universalstyleplugin
     URI "QtQuick.Controls.Universal"
     VERSION "6.0" # special case
     CLASSNAME QtQuickControls2UniversalStylePlugin
@@ -53,7 +53,7 @@ set(qtquickcontrols2universalstyleplugin_resource_files
     "images/rightarrow@4x.png"
 )
 
-qt_add_resource(qtquickcontrols2universalstyleplugin "qtquickcontrols2universalstyleplugin"
+qt_internal_add_resource(qtquickcontrols2universalstyleplugin "qtquickcontrols2universalstyleplugin"
     PREFIX
         "/qt-project.org/imports/QtQuick/Controls/Universal"
     FILES
@@ -209,6 +209,9 @@ set_source_files_properties(RangeSlider.qml PROPERTIES
 )
 set_source_files_properties(RoundButton.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.1;6.0"
+)
+set_source_files_properties(ScrollView.qml PROPERTIES
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(ScrollBar.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.0;6.0"

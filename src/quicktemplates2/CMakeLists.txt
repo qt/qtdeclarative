@@ -4,7 +4,7 @@
 ## QuickTemplates2 Module:
 #####################################################################
 
-qt_add_module(QuickTemplates2
+qt_internal_add_module(QuickTemplates2
     GENERATE_METATYPES
     SOURCES
         qquickabstractbutton.cpp qquickabstractbutton_p.h
@@ -138,7 +138,7 @@ qt_add_module(QuickTemplates2
 ## Scopes:
 #####################################################################
 
-qt_extend_target(QuickTemplates2 CONDITION TARGET Qt::QmlModels
+qt_internal_extend_target(QuickTemplates2 CONDITION TARGET Qt::QmlModels
     LIBRARIES
         Qt::QmlModelsPrivate
     PUBLIC_LIBRARIES
@@ -147,7 +147,7 @@ qt_extend_target(QuickTemplates2 CONDITION TARGET Qt::QmlModels
         Qt::QmlModelsPrivate
 )
 
-qt_extend_target(QuickTemplates2 CONDITION QT_FEATURE_quick_listview AND QT_FEATURE_quick_pathview
+qt_internal_extend_target(QuickTemplates2 CONDITION QT_FEATURE_quick_listview AND QT_FEATURE_quick_pathview
     SOURCES
         qquicktumbler.cpp qquicktumbler_p.h
         qquicktumbler_p_p.h

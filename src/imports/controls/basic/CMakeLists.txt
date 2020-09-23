@@ -4,7 +4,7 @@
 ## qtquickcontrols2basicstyleplugin Plugin:
 #####################################################################
 
-qt_add_qml_module(qtquickcontrols2basicstyleplugin
+qt_internal_add_qml_module(qtquickcontrols2basicstyleplugin
     URI "QtQuick.Controls.Basic"
     VERSION "6.0" # special case
     CLASSNAME QtQuickControls2BasicStylePlugin
@@ -54,7 +54,7 @@ set(qtquickcontrols2basicstyleplugin_resource_files
     "images/drop-indicator@4x.png"
 )
 
-qt_add_resource(qtquickcontrols2basicstyleplugin "qtquickcontrols2basicstyleplugin"
+qt_internal_add_resource(qtquickcontrols2basicstyleplugin "qtquickcontrols2basicstyleplugin"
     PREFIX
         "/qt-project.org/imports/QtQuick/Controls/Basic"
     FILES

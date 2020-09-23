@@ -4,7 +4,7 @@
 ## qtquickcontrols2materialstyleimplplugin Plugin:
 #####################################################################
 
-qt_add_qml_module(qtquickcontrols2materialstyleimplplugin
+qt_internal_add_qml_module(qtquickcontrols2materialstyleimplplugin
     URI "QtQuick.Controls.Material.impl"
     VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QtQuickControls2MaterialStyleImplPlugin

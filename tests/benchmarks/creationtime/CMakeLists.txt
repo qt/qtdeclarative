@@ -4,7 +4,7 @@
 ## tst_creationtime Test:
 #####################################################################
 
-qt_add_test(tst_creationtime
+qt_internal_add_test(tst_creationtime
     SOURCES
         ../../auto/shared/qtest_quickcontrols.h
         ../../auto/shared/util.cpp ../../auto/shared/util.h
@@ -31,12 +31,12 @@ qt_add_test(tst_creationtime
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_creationtime CONDITION ANDROID OR IOS
+qt_internal_extend_target(tst_creationtime CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-qt_extend_target(tst_creationtime CONDITION NOT ANDROID AND NOT IOS
+qt_internal_extend_target(tst_creationtime CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

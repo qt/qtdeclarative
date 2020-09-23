@@ -4,7 +4,7 @@
 ## qtquickcontrols2fusionstyleplugin Plugin:
 #####################################################################
 
-qt_add_qml_module(qtquickcontrols2fusionstyleplugin
+qt_internal_add_qml_module(qtquickcontrols2fusionstyleplugin
     URI "QtQuick.Controls.Fusion"
     VERSION "6.0" # special case
     CLASSNAME QtQuickControls2FusionStylePlugin
@@ -48,7 +48,7 @@ set(qtquickcontrols2fusionstyle_resource_files
     "images/progressmask@4x.png"
 )
 
-qt_add_resource(qtquickcontrols2fusionstyleplugin "qtquickcontrols2fusionstyle"
+qt_internal_add_resource(qtquickcontrols2fusionstyleplugin "qtquickcontrols2fusionstyle"
     PREFIX
         "/qt-project.org/imports/QtQuick/Controls/Fusion"
     FILES
@@ -94,8 +94,8 @@ set(qml_files
     "RadioDelegate.qml"
     "RangeSlider.qml"
     "RoundButton.qml"
-    "ScrollView.qml"
     "ScrollBar.qml"
+    "ScrollView.qml"
     "ScrollIndicator.qml"
     "Slider.qml"
     "SpinBox.qml"
@@ -205,6 +205,9 @@ set_source_files_properties(RoundButton.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.1;6.0"
 )
 set_source_files_properties(ScrollBar.qml PROPERTIES
+    QT_QML_SOURCE_VERSION "2.0;6.0"
+)
+set_source_files_properties(ScrollView.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(ScrollIndicator.qml PROPERTIES

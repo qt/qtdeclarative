@@ -4,7 +4,7 @@
 ## qtlabsplatformplugin Plugin:
 #####################################################################
 
-qt_add_qml_module(qtlabsplatformplugin
+qt_internal_add_qml_module(qtlabsplatformplugin
     URI "Qt.labs.platform"
     VERSION "1.1"
     CLASSNAME QtLabsPlatformPlugin
@@ -49,54 +49,54 @@ qt_add_qml_module(qtlabsplatformplugin
 ## Scopes:
 #####################################################################
 
-qt_extend_target(qtlabsplatformplugin CONDITION TARGET Qt::Widgets
+qt_internal_extend_target(qtlabsplatformplugin CONDITION TARGET Qt::Widgets
     SOURCES
         widgets/qwidgetplatform_p.h
     PUBLIC_LIBRARIES
         Qt::Widgets
 )
 
-qt_extend_target(qtlabsplatformplugin CONDITION QT_FEATURE_systemtrayicon AND TARGET Qt::Widgets
+qt_internal_extend_target(qtlabsplatformplugin CONDITION QT_FEATURE_systemtrayicon AND TARGET Qt::Widgets
     SOURCES
         widgets/qwidgetplatformsystemtrayicon.cpp widgets/qwidgetplatformsystemtrayicon_p.h
 )
 
-qt_extend_target(qtlabsplatformplugin CONDITION TARGET Qt::Widgets AND (QT_FEATURE_colordialog OR QT_FEATURE_filedialog OR QT_FEATURE_fontdialog OR QT_FEATURE_messagebox)
+qt_internal_extend_target(qtlabsplatformplugin CONDITION TARGET Qt::Widgets AND (QT_FEATURE_colordialog OR QT_FEATURE_filedialog OR QT_FEATURE_fontdialog OR QT_FEATURE_messagebox)
     SOURCES
         widgets/qwidgetplatformdialog.cpp widgets/qwidgetplatformdialog_p.h
 )
 
-qt_extend_target(qtlabsplatformplugin CONDITION QT_FEATURE_colordialog AND TARGET Qt::Widgets
+qt_internal_extend_target(qtlabsplatformplugin CONDITION QT_FEATURE_colordialog AND TARGET Qt::Widgets
     SOURCES
         widgets/qwidgetplatformcolordialog.cpp widgets/qwidgetplatformcolordialog_p.h
 )
 
-qt_extend_target(qtlabsplatformplugin CONDITION QT_FEATURE_filedialog AND TARGET Qt::Widgets
+qt_internal_extend_target(qtlabsplatformplugin CONDITION QT_FEATURE_filedialog AND TARGET Qt::Widgets
     SOURCES
         widgets/qwidgetplatformfiledialog.cpp widgets/qwidgetplatformfiledialog_p.h
 )
 
-qt_extend_target(qtlabsplatformplugin CONDITION QT_FEATURE_fontdialog AND TARGET Qt::Widgets
+qt_internal_extend_target(qtlabsplatformplugin CONDITION QT_FEATURE_fontdialog AND TARGET Qt::Widgets
     SOURCES
         widgets/qwidgetplatformfontdialog.cpp widgets/qwidgetplatformfontdialog_p.h
 )
 
-qt_extend_target(qtlabsplatformplugin CONDITION QT_FEATURE_menu AND TARGET Qt::Widgets
+qt_internal_extend_target(qtlabsplatformplugin CONDITION QT_FEATURE_menu AND TARGET Qt::Widgets
     SOURCES
         widgets/qwidgetplatformmenu.cpp widgets/qwidgetplatformmenu_p.h
         widgets/qwidgetplatformmenuitem.cpp widgets/qwidgetplatformmenuitem_p.h
 )
 
-qt_extend_target(qtlabsplatformplugin CONDITION QT_FEATURE_messagebox AND TARGET Qt::Widgets
+qt_internal_extend_target(qtlabsplatformplugin CONDITION QT_FEATURE_messagebox AND TARGET Qt::Widgets
     SOURCES
         widgets/qwidgetplatformmessagedialog.cpp widgets/qwidgetplatformmessagedialog_p.h
 )
 
-qt_extend_target(qtlabsplatformplugin CONDITION QT_FEATURE_systemtrayicon
+qt_internal_extend_target(qtlabsplatformplugin CONDITION QT_FEATURE_systemtrayicon
     SOURCES
         qquickplatformsystemtrayicon.cpp qquickplatformsystemtrayicon_p.h
 )
-qt_add_docs(qtlabsplatformplugin
+qt_internal_add_docs(qtlabsplatformplugin
     doc/qtlabsplatform.qdocconf
 )
 

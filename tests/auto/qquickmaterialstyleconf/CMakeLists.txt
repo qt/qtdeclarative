@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     data/*)
 list(APPEND test_data ${test_data_glob})
 
-qt_add_test(tst_qquickmaterialstyleconf
+qt_internal_add_test(tst_qquickmaterialstyleconf
     SOURCES
         ../shared/qtest_quickcontrols.h
         ../shared/util.cpp ../shared/util.h
@@ -38,7 +38,7 @@ set(qquickmaterialstyleconf_resource_files
     "variant-normal.conf"
 )
 
-qt_add_resource(tst_qquickmaterialstyleconf "qquickmaterialstyleconf"
+qt_internal_add_resource(tst_qquickmaterialstyleconf "qquickmaterialstyleconf"
     PREFIX
         "/"
     FILES
@@ -52,12 +52,12 @@ qt_add_resource(tst_qquickmaterialstyleconf "qquickmaterialstyleconf"
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_qquickmaterialstyleconf CONDITION ANDROID OR IOS
+qt_internal_extend_target(tst_qquickmaterialstyleconf CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-qt_extend_target(tst_qquickmaterialstyleconf CONDITION NOT ANDROID AND NOT IOS
+qt_internal_extend_target(tst_qquickmaterialstyleconf CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

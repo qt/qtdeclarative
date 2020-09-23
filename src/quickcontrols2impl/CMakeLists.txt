@@ -4,7 +4,7 @@
 ## QuickControls2Impl Module:
 #####################################################################
 
-qt_add_module(QuickControls2Impl
+qt_internal_add_module(QuickControls2Impl
     GENERATE_METATYPES
     SOURCES
         qquickanimatednode.cpp qquickanimatednode_p.h
@@ -48,7 +48,7 @@ qt_add_module(QuickControls2Impl
 ## Scopes:
 #####################################################################
 
-qt_extend_target(QuickControls2Impl CONDITION QT_FEATURE_quick_listview AND QT_FEATURE_quick_pathview
+qt_internal_extend_target(QuickControls2Impl CONDITION QT_FEATURE_quick_listview AND QT_FEATURE_quick_pathview
     SOURCES
         qquicktumblerview.cpp qquicktumblerview_p.h
 )

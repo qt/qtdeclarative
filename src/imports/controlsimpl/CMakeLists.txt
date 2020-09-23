@@ -4,7 +4,7 @@
 ## qtquickcontrols2implplugin Plugin:
 #####################################################################
 
-qt_add_qml_module(qtquickcontrols2implplugin
+qt_internal_add_qml_module(qtquickcontrols2implplugin
     URI "QtQuick.Controls.impl"
     VERSION "6.0" # special case
     CLASSNAME QtQuickControls2ImplPlugin

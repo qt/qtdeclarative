@@ -4,7 +4,7 @@
 ## qtquickcontrols2windowsstyleplugin Plugin:
 #####################################################################
 
-qt_add_qml_module(qtquickcontrols2windowsstyleplugin
+qt_internal_add_qml_module(qtquickcontrols2windowsstyleplugin
     URI "QtQuick.Controls.Windows"
     VERSION "6.0" # special case
     CLASSNAME QtQuickControls2WindowsStylePlugin
@@ -84,6 +84,9 @@ set_source_files_properties(TextArea.qml PROPERTIES
     QT_QML_SOURCE_VERSION "6.0"
 )
 set_source_files_properties(TextField.qml PROPERTIES
+    QT_QML_SOURCE_VERSION "6.0"
+)
+set_source_files_properties(ScrollView.qml PROPERTIES
     QT_QML_SOURCE_VERSION "6.0"
 )
 

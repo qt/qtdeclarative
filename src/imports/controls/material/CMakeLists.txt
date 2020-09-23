@@ -4,7 +4,7 @@
 ## qtquickcontrols2materialstyleplugin Plugin:
 #####################################################################
 
-qt_add_qml_module(qtquickcontrols2materialstyleplugin
+qt_internal_add_qml_module(qtquickcontrols2materialstyleplugin
     URI "QtQuick.Controls.Material"
     VERSION "6.0" # special case
     CLASSNAME QtQuickControls2MaterialStylePlugin
@@ -53,7 +53,7 @@ set(qtquickcontrols2materialstyleplugin_resource_files
     "shaders/RectangularGlow.frag"
 )
 
-qt_add_resource(qtquickcontrols2materialstyleplugin "qtquickcontrols2materialstyleplugin"
+qt_internal_add_resource(qtquickcontrols2materialstyleplugin "qtquickcontrols2materialstyleplugin"
     PREFIX
         "/qt-project.org/imports/QtQuick/Controls/Material"
     FILES
@@ -210,6 +210,9 @@ set_source_files_properties(RangeSlider.qml PROPERTIES
 )
 set_source_files_properties(RoundButton.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.1;6.0"
+)
+set_source_files_properties(ScrollView.qml PROPERTIES
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(ScrollBar.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.0;6.0"

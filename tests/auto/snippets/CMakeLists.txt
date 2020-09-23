@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     ${CMAKE_CURRENT_SOURCE_DIR}/data/*)
 list(APPEND test_data ${test_data_glob})
 
-qt_add_test(tst_snippets
+qt_internal_add_test(tst_snippets
     SOURCES
         tst_snippets.cpp
     DEFINES
@@ -28,7 +28,7 @@ set(qmake_immediate_resource_files
     "qtquickcontrols2.conf"
 )
 
-qt_add_resource(tst_snippets "qmake_immediate"
+qt_internal_add_resource(tst_snippets "qmake_immediate"
     PREFIX
         "/"
     FILES

@@ -4,7 +4,7 @@
 ## qtquickcontrols2macosstyleplugin Plugin:
 #####################################################################
 
-qt_add_qml_module(qtquickcontrols2macosstyleplugin
+qt_internal_add_qml_module(qtquickcontrols2macosstyleplugin
     URI "QtQuick.Controls.macOS"
     VERSION "6.0" # special case
     CLASSNAME QtQuickControls2MacOSStylePlugin
@@ -83,6 +83,9 @@ set_source_files_properties(TextArea.qml PROPERTIES
     QT_QML_SOURCE_VERSION "6.0"
 )
 set_source_files_properties(ComboBox.qml PROPERTIES
+    QT_QML_SOURCE_VERSION "6.0"
+)
+set_source_files_properties(ScrollView.qml PROPERTIES
     QT_QML_SOURCE_VERSION "6.0"
 )
 set_source_files_properties(ScrollBar.qml PROPERTIES

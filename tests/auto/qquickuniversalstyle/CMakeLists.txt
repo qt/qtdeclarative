@@ -10,7 +10,7 @@ file(GLOB_RECURSE test_data_glob
     ${CMAKE_CURRENT_SOURCE_DIR}/data/tst_*)
 list(APPEND test_data ${test_data_glob})
 
-qt_add_test(tst_qquickuniversalstyle
+qt_internal_add_test(tst_qquickuniversalstyle
     GUI
     QMLTEST
     SOURCES
@@ -25,7 +25,7 @@ set(qmake_immediate_resource_files
     "qtquickcontrols2.conf"
 )
 
-qt_add_resource(tst_qquickuniversalstyle "qmake_immediate"
+qt_internal_add_resource(tst_qquickuniversalstyle "qmake_immediate"
     PREFIX
         "/"
     FILES

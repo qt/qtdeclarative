@@ -4,7 +4,7 @@
 ## qtquickcontrols2universalstyleimplplugin Plugin:
 #####################################################################
 
-qt_add_qml_module(qtquickcontrols2universalstyleimplplugin
+qt_internal_add_qml_module(qtquickcontrols2universalstyleimplplugin
     URI "QtQuick.Controls.Universal.impl"
     VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QtQuickControls2UniversalStyleImplPlugin

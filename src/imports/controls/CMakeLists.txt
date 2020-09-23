@@ -4,7 +4,7 @@
 ## qtquickcontrols2plugin Plugin:
 #####################################################################
 
-qt_add_qml_module(qtquickcontrols2plugin
+qt_internal_add_qml_module(qtquickcontrols2plugin
     URI "QtQuick.Controls"
     VERSION "6.0" # special case
     DESIGNER_SUPPORTED
@@ -39,7 +39,7 @@ qt_add_qml_module(qtquickcontrols2plugin
 
 ## Scopes:
 #####################################################################
-qt_add_docs(qtquickcontrols2plugin
+qt_internal_add_docs(qtquickcontrols2plugin
     doc/qtquickcontrols.qdocconf
 )
 

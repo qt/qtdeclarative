@@ -14,7 +14,7 @@ file(GLOB_RECURSE test_data_glob
     ${CMAKE_CURRENT_SOURCE_DIR}/data/icons/*)
 list(APPEND test_data ${test_data_glob})
 
-qt_add_test(tst_qquickiconimage
+qt_internal_add_test(tst_qquickiconimage
     SOURCES
         ../shared/qtest_quickcontrols.h
         ../shared/util.cpp ../shared/util.h
@@ -57,7 +57,7 @@ set(resources_resource_files
     "icons/testtheme/index.theme"
 )
 
-qt_add_resource(tst_qquickiconimage "resources"
+qt_internal_add_resource(tst_qquickiconimage "resources"
     PREFIX
         "/"
     FILES
@@ -68,17 +68,17 @@ qt_add_resource(tst_qquickiconimage "resources"
 ## Scopes:
 #####################################################################
 
-qt_extend_target(tst_qquickiconimage CONDITION TARGET Qt::Svg
+qt_internal_extend_target(tst_qquickiconimage CONDITION TARGET Qt::Svg
     PUBLIC_LIBRARIES
         Qt::Svg
 )
 
-qt_extend_target(tst_qquickiconimage CONDITION ANDROID OR IOS
+qt_internal_extend_target(tst_qquickiconimage CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
 )
 
-qt_extend_target(tst_qquickiconimage CONDITION NOT ANDROID AND NOT IOS
+qt_internal_extend_target(tst_qquickiconimage CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )

@@ -4,7 +4,7 @@
 ## tst_designer Test:
 #####################################################################
 
-qt_add_test(tst_designer
+qt_internal_add_test(tst_designer
     SOURCES
         tst_designer.cpp
     PUBLIC_LIBRARIES
