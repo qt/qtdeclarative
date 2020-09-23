@@ -181,8 +181,6 @@ public:
 
     static QQuickListViewAttached *qmlAttachedProperties(QObject *);
 
-    bool contains(const QPointF &point) const override;
-
 public Q_SLOTS:
     void incrementCurrentIndex();
     void decrementCurrentIndex();
