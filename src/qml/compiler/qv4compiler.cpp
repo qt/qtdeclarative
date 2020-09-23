@@ -352,11 +352,13 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
         *lookupsToWrite++ = l;
 
     CompiledData::RegExp *regexpTable = reinterpret_cast<CompiledData::RegExp *>(dataPtr + unit->offsetToRegexpTable);
-    memcpy(regexpTable, regexps.constData(), regexps.size() * sizeof(*regexpTable));
+    if (regexps.size())
+        memcpy(regexpTable, regexps.constData(), regexps.size() * sizeof(*regexpTable));
 
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
     ReturnedValue *constantTable = reinterpret_cast<ReturnedValue *>(dataPtr + unit->offsetToConstantTable);
-    memcpy(constantTable, constants.constData(), constants.size() * sizeof(ReturnedValue));
+    if (constants.size())
+        memcpy(constantTable, constants.constData(), constants.size() * sizeof(ReturnedValue));
 #else
     quint64_le *constantTable = reinterpret_cast<quint64_le *>(dataPtr + unit->offsetToConstantTable);
     for (int i = 0; i < constants.count(); ++i)
@@ -364,7 +366,8 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
 #endif
 
     {
-        memcpy(dataPtr + jsClassDataOffset, jsClassData.constData(), jsClassData.size());
+        if (jsClassData.size())
+            memcpy(dataPtr + jsClassDataOffset, jsClassData.constData(), jsClassData.size());
 
         // write js classes and js class lookup table
         quint32_le *jsClassOffsetTable = reinterpret_cast<quint32_le *>(dataPtr + unit->offsetToJSClassTable);
@@ -372,8 +375,9 @@ QV4::CompiledData::Unit *QV4::Compiler::JSUnitGenerator::generateUnit(GeneratorO
             jsClassOffsetTable[i] = jsClassDataOffset + jsClassOffsets.at(i);
     }
 
-
-    memcpy(dataPtr + unit->offsetToTranslationTable, translations.constData(), translations.count() * sizeof(CompiledData::TranslationData));
+    if (translations.count()) {
+        memcpy(dataPtr + unit->offsetToTranslationTable, translations.constData(), translations.count() * sizeof(CompiledData::TranslationData));
+    }
 
     {
         const auto populateExportEntryTable = [this, dataPtr](const QVector<Compiler::ExportEntry> &table, quint32_le offset) {
