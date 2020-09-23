@@ -58,6 +58,7 @@ StyleItemGeometry QQuickStyleItemTextField::calculateGeometry()
     geometry.minimumSize = style()->sizeFromContents(QStyle::CT_LineEdit, &styleOption, QSize(0, 0));
     geometry.implicitSize = style()->sizeFromContents(QStyle::CT_LineEdit, &styleOption, contentSize());
     styleOption.rect = QRect(QPoint(0, 0), geometry.implicitSize);
+    geometry.layoutRect = styleOption.rect;
     geometry.contentRect = style()->subElementRect(QStyle::SE_LineEditContents, &styleOption);
     geometry.ninePatchMargins = style()->ninePatchMargins(QStyle::CE_ShapedFrame, &styleOption, geometry.minimumSize);
 
