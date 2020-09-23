@@ -930,13 +930,21 @@ void QSGRenderThread::ensureRhi()
     if (rhi && !cd->swapchain) {
         cd->rhi = rhi;
         QRhiSwapChain::Flags flags = QRhiSwapChain::UsedAsTransferSource; // may be used in a grab
+        const QSurfaceFormat requestedFormat = window->requestedFormat();
+
         // QQ is always premul alpha. Decide based on alphaBufferSize in
         // requestedFormat(). (the platform plugin can override format() but
         // what matters here is what the application wanted, hence using the
         // requested one)
-        const bool alpha = window->requestedFormat().alphaBufferSize() > 0;
+        const bool alpha = requestedFormat.alphaBufferSize() > 0;
         if (alpha)
             flags |= QRhiSwapChain::SurfaceHasPreMulAlpha;
+
+        // Request NoVSync if swap interval was set to 0. What this means in
+        // practice is another question, but at least we tried.
+        if (requestedFormat.swapInterval() == 0)
+            flags |= QRhiSwapChain::NoVSync;
+
         cd->swapchain = rhi->newSwapChain();
         static bool depthBufferEnabled = qEnvironmentVariableIsEmpty("QSG_NO_DEPTH_BUFFER");
         if (depthBufferEnabled) {
