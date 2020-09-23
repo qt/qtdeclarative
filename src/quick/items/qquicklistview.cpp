@@ -58,6 +58,8 @@ QT_BEGIN_NAMESPACE
 #define QML_FLICK_SNAPONETHRESHOLD 30
 #endif
 
+Q_LOGGING_CATEGORY(lcEvents, "qt.quick.listview.events")
+
 class FxListItemSG;
 
 class QQuickListViewPrivate : public QQuickItemViewPrivate
@@ -143,6 +145,9 @@ public:
 
     void fixupHeader();
     void fixupHeaderCompleted();
+
+    bool wantsPointerEvent(const QEvent *event) override;
+
     QQuickListView::Orientation orient;
     qreal visiblePos;
     qreal averageSize;
@@ -179,6 +184,7 @@ public:
 
     bool correctFlick : 1;
     bool inFlickCorrection : 1;
+    bool wantedMousePress : 1;
 
     QQuickListViewPrivate()
         : orient(QQuickListView::Vertical)
@@ -192,7 +198,7 @@ public:
         , sectionCriteria(nullptr), currentSectionItem(nullptr), nextSectionItem(nullptr)
         , overshootDist(0.0), desiredViewportPosition(0.0), fixupHeaderPosition(0.0)
         , headerNeedsSeparateFixup(false), desiredHeaderVisible(false)
-        , correctFlick(false), inFlickCorrection(false)
+        , correctFlick(false), inFlickCorrection(false), wantedMousePress(false)
     {
         highlightMoveDuration = -1; //override default value set in base class
     }
@@ -3819,20 +3825,52 @@ QQuickListViewAttached *QQuickListView::qmlAttachedProperties(QObject *obj)
     return new QQuickListViewAttached(obj);
 }
 
-bool QQuickListView::contains(const QPointF &point) const
+/*! \internal
+    Prevents clicking or dragging through floating headers (QTBUG-74046).
+*/
+bool QQuickListViewPrivate::wantsPointerEvent(const QEvent *event)
 {
-    bool ret = QQuickItemView::contains(point);
-    // QTBUG-74046: if a mouse press "falls through" a floating header or footer, don't allow dragging the list from there
-    if (ret) {
-        if (auto header = headerItem()) {
-            if (headerPositioning() != QQuickListView::InlineHeader && header->contains(mapToItem(header, point)))
+    Q_Q(const QQuickListView);
+    bool ret = true;
+
+    QPointF pos;
+    // TODO switch not needed in Qt 6: use points().first().position()
+    switch (event->type()) {
+    case QEvent::Wheel:
+        pos = static_cast<const QWheelEvent *>(event)->position();
+        break;
+    case QEvent::MouseButtonPress:
+        pos = static_cast<const QMouseEvent *>(event)->localPos();
+        break;
+    default:
+        break;
+    }
+
+    if (!pos.isNull()) {
+        if (auto header = q->headerItem()) {
+            if (q->headerPositioning() != QQuickListView::InlineHeader &&
+                    header->contains(q->mapToItem(header, pos)))
                 ret = false;
         }
-        if (auto footer = footerItem()) {
-            if (footerPositioning() != QQuickListView::InlineFooter && footer->contains(mapToItem(footer, point)))
+        if (auto footer = q->footerItem()) {
+            if (q->footerPositioning() != QQuickListView::InlineFooter &&
+                    footer->contains(q->mapToItem(footer, pos)))
                 ret = false;
         }
     }
+
+    switch (event->type()) {
+    case QEvent::MouseButtonPress:
+        wantedMousePress = ret;
+        break;
+    case QEvent::MouseMove:
+        ret = wantedMousePress;
+        break;
+    default:
+        break;
+    }
+
+    qCDebug(lcEvents) << q << (ret ? "WANTS" : "DOESN'T want") << event;
     return ret;
 }
 

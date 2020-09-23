@@ -297,6 +297,7 @@ private slots:
     void objectModelCulling();
 
     void requiredObjectListModel();
+    void clickHeaderAndFooterWhenClip();
 
 private:
     template <class T> void items(const QUrl &source);
@@ -10065,6 +10066,32 @@ void tst_QQuickListView::requiredObjectListModel()
         QCOMPARE(rect->color(), QColor(data->color()));
         QCOMPARE(rect->property("name").toString(), data->name());
     }
+}
+
+void tst_QQuickListView::clickHeaderAndFooterWhenClip() // QTBUG-85302
+{
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("clickHeaderAndFooterWhenClip.qml"));
+    window->resize(640, 480);
+    window->show();
+
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+    auto *root = window->rootObject();
+    QVERIFY(root);
+
+    auto *header = root->findChild<QQuickItem *>("header");
+    QVERIFY(header);
+
+    auto *footer = root->findChild<QQuickItem *>("footer");
+    QVERIFY(footer);
+
+    QVERIFY(root->property("headerPressed").isValid() && root->property("headerPressed").canConvert<bool>() && !root->property("headerPressed").toBool());
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, header->mapToItem(root, QPoint(header->width() / 2, header->height() / 2)).toPoint());
+    QVERIFY(root->property("headerPressed").toBool());
+
+    QVERIFY(root->property("footerPressed").isValid() && root->property("footerPressed").canConvert<bool>() && !root->property("footerPressed").toBool());
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, footer->mapToItem(root, QPoint(footer->width() / 2, footer->height() / 2)).toPoint());
+    QVERIFY(root->property("footerPressed").toBool());
 }
 
 QTEST_MAIN(tst_QQuickListView)

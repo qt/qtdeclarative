@@ -1424,7 +1424,7 @@ void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
 void QQuickFlickable::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickFlickable);
-    if (d->interactive) {
+    if (d->interactive && d->wantsPointerEvent(event)) {
         if (!d->pressed)
             d->handleMousePressEvent(event);
         event->accept();
@@ -1436,7 +1436,7 @@ void QQuickFlickable::mousePressEvent(QMouseEvent *event)
 void QQuickFlickable::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickFlickable);
-    if (d->interactive) {
+    if (d->interactive && d->wantsPointerEvent(event)) {
         d->handleMouseMoveEvent(event);
         event->accept();
     } else {
@@ -1447,7 +1447,7 @@ void QQuickFlickable::mouseMoveEvent(QMouseEvent *event)
 void QQuickFlickable::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickFlickable);
-    if (d->interactive) {
+    if (d->interactive && d->wantsPointerEvent(event)) {
         if (d->delayedPressEvent) {
             d->replayDelayedPress();
 
@@ -1475,7 +1475,7 @@ void QQuickFlickable::mouseReleaseEvent(QMouseEvent *event)
 void QQuickFlickable::wheelEvent(QWheelEvent *event)
 {
     Q_D(QQuickFlickable);
-    if (!d->interactive) {
+    if (!d->interactive || !d->wantsPointerEvent(event)) {
         QQuickItem::wheelEvent(event);
         return;
     }
@@ -2445,7 +2445,7 @@ bool QQuickFlickable::filterMouseEvent(QQuickItem *receiver, QMouseEvent *event)
 bool QQuickFlickable::childMouseEventFilter(QQuickItem *i, QEvent *e)
 {
     Q_D(QQuickFlickable);
-    if (!isVisible() || !isEnabled() || !isInteractive()) {
+    if (!isVisible() || !isEnabled() || !isInteractive() || !d->wantsPointerEvent(e)) {
         d->cancelInteraction();
         return QQuickItem::childMouseEventFilter(i, e);
     }
