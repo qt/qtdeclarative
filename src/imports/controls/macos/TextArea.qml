@@ -38,4 +38,21 @@ import QtQuick
 import QtQuick.NativeStyle as NativeStyle
 
 NativeStyle.DefaultTextArea {
+    id: control
+
+    // If you place a TextArea inside a Frame or Flickable (/ScrollView), and
+    // the TextArea is the only child of the content item, we place the focus
+    // frame around the Flickable/Frame instead.
+    readonly property Item __focusFrameTarget:
+        (parent.parent instanceof Frame || parent.parent instanceof Flickable)
+        && parent.children.length === 1
+        ? parent.parent : control
+
+    background: Rectangle {
+        color: control.palette.light
+        // Since this delegate is a plain Rectangle, we need to tag it to know
+        // that it's still the default one, and not some custom item set by the
+        // application. Only in the former case do we wan't to show a focus frame.
+        readonly property bool __isDefaultDelegate: true
+    }
 }

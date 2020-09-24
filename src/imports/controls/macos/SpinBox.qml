@@ -62,6 +62,8 @@ T.SpinBox {
     rightPadding: (__nativeBackground ? background.contentPadding.right : 0) + rightInset
     bottomPadding: __nativeBackground ? background.contentPadding.bottom: 0
 
+    readonly property Item __focusFrameTarget: contentItem
+
     validator: IntValidator {
         locale: control.locale.name
         bottom: Math.min(control.from, control.to)
@@ -85,6 +87,8 @@ T.SpinBox {
         readOnly: !control.editable
         validator: control.validator
         inputMethodHints: control.inputMethodHints
+
+        readonly property Item __focusFrameControl: control
     }
 
     NativeStyle.SpinBox {

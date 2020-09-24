@@ -35,7 +35,31 @@
 ****************************************************************************/
 
 import QtQuick
+import QtQuick.Templates as T
 import QtQuick.NativeStyle as NativeStyle
 
 NativeStyle.DefaultComboBox {
+    id: control
+    readonly property Item __focusFrameTarget: control
+
+    contentItem: T.TextField {
+        implicitWidth: contentWidth
+        implicitHeight: contentHeight
+        text: control.editable ? control.editText : control.displayText
+
+        enabled: control.editable
+        autoScroll: control.editable
+        readOnly: control.down
+        inputMethodHints: control.inputMethodHints
+        validator: control.validator
+        selectByMouse: control.selectTextByMouse
+
+        font: control.font
+        color: control.editable ? control.palette.text : control.palette.buttonText
+        selectionColor: control.palette.highlight
+        selectedTextColor: control.palette.highlightedText
+        verticalAlignment: Text.AlignVCenter
+
+        readonly property Item __focusFrameControl: control
+    }
 }

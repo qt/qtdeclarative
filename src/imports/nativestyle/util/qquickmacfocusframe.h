@@ -34,10 +34,40 @@
 **
 ****************************************************************************/
 
-import QtQuick
-import QtQuick.NativeStyle as NativeStyle
+#ifndef QQUICKMACFOCUSFRAME_H
+#define QQUICKMACFOCUSFRAME_H
 
-NativeStyle.DefaultCheckBox {
-    readonly property Item __focusFrameTarget: indicator
-    readonly property Item __focusFrameStyleItem: indicator
-}
+#include <QtQuick/qquickitem.h>
+#include <QtQuick/private/qquicktextedit_p.h>
+#include "qquickstyleitem.h"
+
+QT_BEGIN_NAMESPACE
+
+Q_DECLARE_LOGGING_CATEGORY(lcFocusFrame)
+
+struct QQuickFocusFrameDescription {
+    QQuickItem *target;
+    QQuickStyleMargins margins;
+    const qreal radius = 3;
+    bool isValid() const { return target != nullptr; }
+    static QQuickFocusFrameDescription Invalid;
+};
+
+class QQuickMacFocusFrame : public  QObject
+{
+    Q_OBJECT
+
+public:
+    QQuickMacFocusFrame();
+
+private:
+    static QScopedPointer<QQuickItem> m_focusFrame;
+
+    void createFocusFrame(QQmlContext *context);
+    void moveToItem(QQuickItem *item);
+    QQuickFocusFrameDescription getDescriptionForItem(QQuickItem *focusItem) const;
+};
+
+QT_END_NAMESPACE
+
+#endif // QQUICKMACFOCUSFRAME_H

@@ -38,4 +38,6 @@ import QtQuick
 import QtQuick.NativeStyle as NativeStyle
 
 NativeStyle.DefaultRadioButton {
+    readonly property Item __focusFrameTarget: indicator
+    readonly property Item __focusFrameStyleItem: indicator
 }

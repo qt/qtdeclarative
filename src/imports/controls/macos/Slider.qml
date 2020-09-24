@@ -38,4 +38,6 @@ import QtQuick
 import QtQuick.NativeStyle as NativeStyle
 
 NativeStyle.DefaultSlider {
+    readonly property Item __focusFrameTarget: handle
+    readonly property Item __focusFrameStyleItem: handle
 }

@@ -39,6 +39,7 @@ qt_add_qml_module(qtquickcontrols2nativestyleplugin
     INCLUDE_DIRECTORIES
         items
         qstyle
+        util
     LIBRARIES
         Qt::CorePrivate
         Qt::GuiPrivate
@@ -69,11 +70,26 @@ qt_extend_target(qtquickcontrols2nativestyleplugin CONDITION MACOS
     SOURCES
         qstyle/mac/qquickmacstyle_mac.mm qstyle/mac/qquickmacstyle_mac_p.h
         qstyle/mac/qquickmacstyle_mac_p_p.h
+        util/qquickmacfocusframe.h util/qquickmacfocusframe.mm
     INCLUDE_DIRECTORIES
         qstyle/mac
     LIBRARIES
         ${FWAppKit}
 )
+
+if(MACOS)
+    # Resources:
+    set(qmake_immediate_resource_files
+        "util/FocusFrame.qml"
+    )
+
+    qt_add_resource(qtquickcontrols2nativestyleplugin "qmake_immediate"
+        PREFIX
+            "/"
+        FILES
+            ${qmake_immediate_resource_files}
+    )
+endif()
 
 qt_extend_target(qtquickcontrols2nativestyleplugin CONDITION WIN32
     SOURCES
