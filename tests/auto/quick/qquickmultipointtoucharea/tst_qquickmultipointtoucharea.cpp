@@ -28,6 +28,7 @@
 
 #include <QtTest/QtTest>
 #include <QtTest/QSignalSpy>
+#include <private/qquickitem_p.h>
 #include <private/qquickmultipointtoucharea_p.h>
 #include <private/qquickflickable_p.h>
 #include <private/qquickmousearea_p.h>
@@ -1051,10 +1052,13 @@ void tst_QQuickMultiPointTouchArea::mouseAsTouchpoint()
         QPoint touch1(10,10);
         QPoint touch2(100,10);
 
-        touch1rect->setX(10);
-        touch1rect->setY(10);
-        touch2rect->setX(20);
-        touch2rect->setY(10);
+        // do not break the QML bindings
+        auto t1priv = QQuickItemPrivate::get(touch1rect);
+        auto t2priv = QQuickItemPrivate::get(touch2rect);
+        t1priv->x.setValueBypassingBindings(10);
+        t1priv->y.setValueBypassingBindings(10);
+        t2priv->x.setValueBypassingBindings(20);
+        t2priv->y.setValueBypassingBindings(10);
 
         // Start with mouse, move it, touch a point, move it, touch another.
         // Mouse is ignored, both touch points are heeded.

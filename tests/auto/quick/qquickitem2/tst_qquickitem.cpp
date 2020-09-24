@@ -42,6 +42,7 @@
 #include "../../shared/util.h"
 #include "../shared/visualtestutil.h"
 #include "../../shared/platforminputcontext.h"
+#include <QtTest/private/qpropertytesthelper_p.h>
 
 using namespace QQuickVisualTestUtil;
 
@@ -117,6 +118,8 @@ private slots:
 
     void childrenProperty();
     void resourcesProperty();
+    void bindableProperties_data();
+    void bindableProperties();
 
     void changeListener();
     void transformCrash();
@@ -2843,6 +2846,30 @@ void tst_QQuickItem::resourcesProperty()
     delete object;
 }
 
+void tst_QQuickItem::bindableProperties_data()
+{
+    QTest::addColumn<qreal>("initialValue");
+    QTest::addColumn<qreal>("newValue");
+    QTest::addColumn<QString>("property");
+
+    // can't simply use 3. or 3.0 for the numbers as qreal might
+    // be float instead of double...
+    QTest::addRow("x") << qreal(3) << qreal(14) << "x";
+    QTest::addRow("y") << qreal(10) << qreal(20) << "y";
+    QTest::addRow("width") << qreal(100) << qreal(200) << "width";
+    QTest::addRow("height") << qreal(50) << qreal(40) << "height";
+}
+
+void tst_QQuickItem::bindableProperties()
+{
+    QQuickItem item;
+    QFETCH(qreal, initialValue);
+    QFETCH(qreal, newValue);
+    QFETCH(QString, property);
+
+    QTestPrivate::testReadWritePropertyBasics(item, initialValue, newValue, property.toUtf8().constData());
+}
+
 void tst_QQuickItem::propertyChanges()
 {
     QQuickView *window = new QQuickView(nullptr);
@@ -2967,7 +2994,7 @@ void tst_QQuickItem::childrenRectBug()
 {
     QQuickView *window = new QQuickView(nullptr);
 
-    QString warning = testFileUrl("childrenRectBug.qml").toString() + ":7:5: QML Item: Binding loop detected for property \"height\"";
+    QString warning = testFileUrl("childrenRectBug.qml").toString() + ":11:9: QML Item: Binding loop detected for property \"height\"";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
 
@@ -2988,11 +3015,11 @@ void tst_QQuickItem::childrenRectBug2()
 {
     QQuickView *window = new QQuickView(nullptr);
 
-    QString warning1 = testFileUrl("childrenRectBug2.qml").toString() + ":7:5: QML Item: Binding loop detected for property \"width\"";
+    QString warning1 = testFileUrl("childrenRectBug2.qml").toString() + ":10:9: QML Item: Binding loop detected for property \"width\"";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
 
-    QString warning2 = testFileUrl("childrenRectBug2.qml").toString() + ":7:5: QML Item: Binding loop detected for property \"height\"";
+    QString warning2 = testFileUrl("childrenRectBug2.qml").toString() + ":11:9: QML Item: Binding loop detected for property \"height\"";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));

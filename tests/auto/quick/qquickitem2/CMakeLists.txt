@@ -22,6 +22,8 @@ qt_internal_add_test(tst_qquickitem2
         Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::QuickPrivate
+    LIBRARIES
+        Qt::TestPrivate
     TESTDATA ${test_data}
 )
 

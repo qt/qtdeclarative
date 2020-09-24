@@ -242,7 +242,7 @@ void tst_qqmlinfo::attachedObject()
     QVERIFY(warningSpy.isValid());
 
     const QString qmlBindingLoopMessage = "QML Rectangle: Binding loop detected for property \"width\"";
-    const QString qmlBindingLoopMessageFull = component.url().toString() + ":7:5: " + qmlBindingLoopMessage;
+    const QString qmlBindingLoopMessageFull = component.url().toString() + ":8:9: " + qmlBindingLoopMessage;
     QTest::ignoreMessage(QtWarningMsg, qPrintable(qmlBindingLoopMessageFull));
 
     const QString cppBindingLoopMessage = "QML AttachedObject (parent or ancestor of Attached): Binding loop detected for property \"a\"";

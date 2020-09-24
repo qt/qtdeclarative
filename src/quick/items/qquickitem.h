@@ -46,6 +46,7 @@
 
 #include <QtCore/QObject>
 #include <QtCore/QList>
+#include <QtCore/qproperty.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qfont.h>
 #include <QtGui/qaccessible.h>
@@ -105,11 +106,11 @@ class Q_QUICK_EXPORT QQuickItem : public QObject, public QQmlParserStatus
     Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QQmlListProperty<QObject> resources READ resources DESIGNABLE false)
     Q_PRIVATE_PROPERTY(QQuickItem::d_func(), QQmlListProperty<QQuickItem> children READ children NOTIFY childrenChanged DESIGNABLE false)
 
-    Q_PROPERTY(qreal x READ x WRITE setX NOTIFY xChanged FINAL)
-    Q_PROPERTY(qreal y READ y WRITE setY NOTIFY yChanged FINAL)
+    Q_PROPERTY(qreal x READ x WRITE setX NOTIFY xChanged BINDABLE bindableX FINAL)
+    Q_PROPERTY(qreal y READ y WRITE setY NOTIFY yChanged BINDABLE bindableY FINAL)
     Q_PROPERTY(qreal z READ z WRITE setZ NOTIFY zChanged FINAL)
-    Q_PROPERTY(qreal width READ width WRITE setWidth NOTIFY widthChanged RESET resetWidth FINAL)
-    Q_PROPERTY(qreal height READ height WRITE setHeight NOTIFY heightChanged RESET resetHeight FINAL)
+    Q_PROPERTY(qreal width READ width WRITE setWidth NOTIFY widthChanged RESET resetWidth BINDABLE bindableWidth FINAL)
+    Q_PROPERTY(qreal height READ height WRITE setHeight NOTIFY heightChanged RESET resetHeight BINDABLE bindableHeight FINAL)
 
     Q_PROPERTY(qreal opacity READ opacity WRITE setOpacity NOTIFY opacityChanged FINAL)
     Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged)
@@ -233,18 +234,22 @@ public:
     void setX(qreal);
     void setY(qreal);
     void setPosition(const QPointF &);
+    QBindable<qreal> bindableX();
+    QBindable<qreal> bindableY();
 
     qreal width() const;
     void setWidth(qreal);
     void resetWidth();
     void setImplicitWidth(qreal);
     qreal implicitWidth() const;
+    QBindable<qreal> bindableWidth();
 
     qreal height() const;
     void setHeight(qreal);
     void resetHeight();
     void setImplicitHeight(qreal);
     qreal implicitHeight() const;
+    QBindable<qreal> bindableHeight();
 
     QSizeF size() const;
     void setSize(const QSizeF &size);
