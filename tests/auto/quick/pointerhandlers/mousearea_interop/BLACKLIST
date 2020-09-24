@@ -1,2 +1,4 @@
 [dragHandlerInSiblingStealingGrabFromMouseAreaViaTouch]
 * # QTBUG-86729
+[dragHandlerInSiblingStealingGrabFromMouseAreaViaMouse]
+* # QTBUG-86729
