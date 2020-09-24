@@ -45,6 +45,7 @@
 #include <QtQmlModels/private/qqmlobjectmodel_p.h>
 #include <QtQmlModels/private/qqmllistmodel_p.h>
 #include <QtQmlModels/private/qqmldelegatemodel_p.h>
+#include <qpa/qwindowsysteminterface.h>
 #include "../../shared/util.h"
 #include "../shared/viewtestutil.h"
 #include "../shared/visualtestutil.h"
@@ -8068,6 +8069,13 @@ void tst_QQuickListView::destroyItemOnCreation()
 
 void tst_QQuickListView::parentBinding()
 {
+    // Ensure there's at least one mouse on every platform, to avoid the messageHandler seeing "no mouse-like devices registered"
+    QScopedPointer<QPointingDevice> fallbackMouse(
+            new QPointingDevice("test mouse", 1000, QInputDevice::DeviceType::Mouse, QPointingDevice::PointerType::Generic,
+                                QInputDevice::Capability::Position | QInputDevice::Capability::Hover | QInputDevice::Capability::Scroll,
+                                1, 5, QString(), QPointingDeviceUniqueId(), this));
+    QWindowSystemInterface::registerInputDevice(fallbackMouse.data());
+
     QScopedPointer<QQuickView> window(createView());
     QQmlTestMessageHandler messageHandler;
 
