@@ -43,8 +43,6 @@ import QtQuick.NativeStyle as NativeStyle
 T.TextArea {
     id: control
 
-    readonly property bool nativeBackground: background instanceof NativeStyle.StyleItem
-
     implicitWidth: Math.max(contentWidth + leftPadding + rightPadding,
                             implicitBackgroundWidth + leftInset + rightInset,
                             placeholder.implicitWidth + leftPadding + rightPadding)
@@ -52,12 +50,10 @@ T.TextArea {
                              implicitBackgroundHeight + topInset + bottomInset,
                              placeholder.implicitHeight + topPadding + bottomPadding)
 
-    font.pixelSize: nativeBackground ? background.styleFont(control).pixelSize : undefined
-
-    leftPadding: nativeBackground ? background.contentPadding.left : 7
-    rightPadding: nativeBackground ? background.contentPadding.right : 7
-    topPadding: nativeBackground ? background.contentPadding.top : 3
-    bottomPadding: nativeBackground ? background.contentPadding.bottom + 5: 3
+    leftPadding: 7
+    rightPadding: 7
+    topPadding: 3
+    bottomPadding: 3
 
     color: control.palette.text
     selectionColor: control.palette.highlight

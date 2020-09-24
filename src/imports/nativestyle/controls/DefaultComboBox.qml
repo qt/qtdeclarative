@@ -44,7 +44,7 @@ import QtQuick.NativeStyle as NativeStyle
 T.ComboBox {
     id: control
 
-    readonly property bool nativeBackground: background instanceof NativeStyle.StyleItem
+    readonly property bool __nativeBackground: background instanceof NativeStyle.StyleItem
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             implicitContentWidth + leftPadding + rightPadding,
@@ -53,17 +53,17 @@ T.ComboBox {
                              implicitContentHeight + topPadding + bottomPadding,
                              implicitIndicatorHeight + topPadding + bottomPadding)
 
-    font.pixelSize: nativeBackground ? background.styleFont(control).pixelSize : undefined
+    font.pixelSize: __nativeBackground ? background.styleFont(control).pixelSize : undefined
 
-    leftPadding: nativeBackground ? background.contentPadding.left : 5
-    rightPadding: nativeBackground ? background.contentPadding.right : 5
-    topPadding: nativeBackground ? background.contentPadding.top : 5
-    bottomPadding: nativeBackground ? background.contentPadding.bottom : 5
+    leftPadding: __nativeBackground ? background.contentPadding.left : 5
+    rightPadding: __nativeBackground ? background.contentPadding.right : 5
+    topPadding: __nativeBackground ? background.contentPadding.top : 5
+    bottomPadding: __nativeBackground ? background.contentPadding.bottom : 5
 
-    topInset: nativeBackground ? background.insets.top : 0
-    bottomInset: nativeBackground ? background.insets.bottom : 0
-    leftInset: nativeBackground ? background.insets.left : 0
-    rightInset: nativeBackground ? background.insets.right : 0
+    topInset: __nativeBackground ? background.insets.top : 0
+    bottomInset: __nativeBackground ? background.insets.bottom : 0
+    leftInset: __nativeBackground ? background.insets.left : 0
+    rightInset: __nativeBackground ? background.insets.right : 0
 
     contentItem: T.TextField {
         implicitWidth: contentWidth
@@ -101,7 +101,7 @@ T.ComboBox {
     }
 
     popup: T.Popup {
-        readonly property var layoutMargins: control.nativeBackground ? control.background.layoutMargins : null
+        readonly property var layoutMargins: control.__nativeBackground ? control.background.layoutMargins : null
         x: layoutMargins ? layoutMargins.left : 0
         y: control.height - (layoutMargins ? layoutMargins.bottom : 0)
         width: control.width - (layoutMargins ? layoutMargins.left + layoutMargins.right : 0)

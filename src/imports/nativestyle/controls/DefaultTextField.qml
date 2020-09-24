@@ -43,7 +43,7 @@ import QtQuick.NativeStyle as NativeStyle
 T.TextField {
     id: control
 
-    readonly property bool nativeBackground: background instanceof NativeStyle.StyleItem
+    readonly property bool __nativeBackground: background instanceof NativeStyle.StyleItem
 
     implicitWidth: Math.max(Math.max(contentWidth, placeholder.implicitWidth) + leftPadding + rightPadding,
                             implicitBackgroundWidth + leftInset + rightInset,
@@ -52,12 +52,12 @@ T.TextField {
                              contentHeight + topPadding + bottomPadding,
                              placeholder.implicitHeight + topPadding + bottomPadding)
 
-    font.pixelSize: nativeBackground ? background.styleFont(control).pixelSize : undefined
+    font.pixelSize: __nativeBackground ? background.styleFont(control).pixelSize : undefined
 
-    leftPadding: nativeBackground ? background.contentPadding.left: 7
-    rightPadding: nativeBackground ? background.contentPadding.right: 7
-    topPadding: nativeBackground ? background.contentPadding.top: 3
-    bottomPadding: nativeBackground ? background.contentPadding.bottom: 3
+    leftPadding: __nativeBackground ? background.contentPadding.left: 7
+    rightPadding: __nativeBackground ? background.contentPadding.right: 7
+    topPadding: __nativeBackground ? background.contentPadding.top: 3
+    bottomPadding: __nativeBackground ? background.contentPadding.bottom: 3
 
     color: control.palette.text
     selectionColor: control.palette.highlight

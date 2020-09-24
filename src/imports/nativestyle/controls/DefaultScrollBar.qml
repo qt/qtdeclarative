@@ -42,14 +42,14 @@ import QtQuick.NativeStyle as NativeStyle
 T.ScrollBar {
     id: control
 
-    readonly property bool nativeBackground: background instanceof NativeStyle.StyleItem
+    readonly property bool __nativeBackground: background instanceof NativeStyle.StyleItem
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             implicitContentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              implicitContentHeight + topPadding + bottomPadding)
 
-    font.pixelSize: nativeBackground ? background.styleFont(control).pixelSize : undefined
+    font.pixelSize: __nativeBackground ? background.styleFont(control).pixelSize : undefined
 
     visible: policy === T.ScrollBar.AlwaysOn || (active && size < 1.0)
 

@@ -42,7 +42,7 @@ import QtQuick.NativeStyle as NativeStyle
 T.Dial {
     id: control
 
-    readonly property bool nativeBackground: background instanceof NativeStyle.StyleItem
+    readonly property bool __nativeBackground: background instanceof NativeStyle.StyleItem
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             implicitContentWidth + leftPadding + rightPadding,
@@ -51,7 +51,7 @@ T.Dial {
                              implicitContentHeight + topPadding + bottomPadding,
                             80 /* minimum */ )
 
-    font.pixelSize: nativeBackground ? background.styleFont(control).pixelSize : undefined
+    font.pixelSize: __nativeBackground ? background.styleFont(control).pixelSize : undefined
 
     background: NativeStyle.Dial {
         control: control

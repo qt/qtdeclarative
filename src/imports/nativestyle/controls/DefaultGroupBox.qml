@@ -42,7 +42,7 @@ import QtQuick.NativeStyle as NativeStyle
 T.GroupBox {
     id: control
 
-    readonly property bool nativeBackground: background instanceof NativeStyle.StyleItem
+    readonly property bool __nativeBackground: background instanceof NativeStyle.StyleItem
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             contentWidth + leftPadding + rightPadding,
@@ -50,11 +50,11 @@ T.GroupBox {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              contentHeight + topPadding + bottomPadding)
 
-    font.pixelSize: nativeBackground ? background.styleFont(control).pixelSize : undefined
+    font.pixelSize: __nativeBackground ? background.styleFont(control).pixelSize : undefined
 
     label: Rectangle {
         color: control.palette.window
-        property point labelPos : control.nativeBackground
+        property point labelPos : control.__nativeBackground
                                   ? background.labelPos
                                   : Qt.point(0,0)
         x: labelPos.x + background.x
@@ -72,10 +72,10 @@ T.GroupBox {
         }
     }
 
-    leftPadding: nativeBackground ? background.contentPadding.left : 0
-    rightPadding: nativeBackground ? background.contentPadding.right : 0
-    topPadding: nativeBackground ? background.contentPadding.top : 0
-    bottomPadding: nativeBackground ? background.contentPadding.bottom : 0
+    leftPadding: __nativeBackground ? background.contentPadding.left : 0
+    rightPadding: __nativeBackground ? background.contentPadding.right : 0
+    topPadding: __nativeBackground ? background.contentPadding.top : 0
+    bottomPadding: __nativeBackground ? background.contentPadding.bottom : 0
 
     background: NativeStyle.GroupBox {
         control: control

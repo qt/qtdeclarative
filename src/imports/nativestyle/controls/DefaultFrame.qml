@@ -42,17 +42,17 @@ import QtQuick.NativeStyle as NativeStyle
 T.Frame {
     id: control
 
-    readonly property bool nativeBackground: background instanceof NativeStyle.StyleItem
+    readonly property bool __nativeBackground: background instanceof NativeStyle.StyleItem
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             contentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              contentHeight + topPadding + bottomPadding)
 
-    leftPadding: nativeBackground ? background.contentPadding.left : 12
-    rightPadding: nativeBackground ? background.contentPadding.right : 12
-    topPadding: nativeBackground ? background.contentPadding.top : 12
-    bottomPadding: nativeBackground ? background.contentPadding.bottom : 12
+    leftPadding: __nativeBackground ? background.contentPadding.left : 12
+    rightPadding: __nativeBackground ? background.contentPadding.right : 12
+    topPadding: __nativeBackground ? background.contentPadding.top : 12
+    bottomPadding: __nativeBackground ? background.contentPadding.bottom : 12
 
     background: NativeStyle.Frame {
         control: control

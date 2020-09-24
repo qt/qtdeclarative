@@ -41,11 +41,11 @@ import QtQuick.NativeStyle as NativeStyle
 T.SpinBox {
     id: control
 
-    property bool nativeBackground: background instanceof NativeStyle.StyleItem
+    property bool __nativeBackground: background instanceof NativeStyle.StyleItem
     property bool nativeIndicators: up.indicator.hasOwnProperty("_qt_default")
                                     && down.indicator.hasOwnProperty("_qt_default")
 
-    font.pixelSize: nativeBackground ? background.styleFont(control).pixelSize : undefined
+    font.pixelSize: __nativeBackground ? background.styleFont(control).pixelSize : undefined
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             90 /* minimum */ )
@@ -57,10 +57,10 @@ T.SpinBox {
     // Push the background right to make room for the indicators
     rightInset: nativeIndicators ? up.implicitIndicatorWidth + spacing : 0
 
-    leftPadding: nativeBackground ? background.contentPadding.left: 0
-    topPadding: nativeBackground ? background.contentPadding.top: 0
-    rightPadding: (nativeBackground ? background.contentPadding.right : 0) + rightInset
-    bottomPadding: nativeBackground ? background.contentPadding.bottom: 0
+    leftPadding: __nativeBackground ? background.contentPadding.left: 0
+    topPadding: __nativeBackground ? background.contentPadding.top: 0
+    rightPadding: (__nativeBackground ? background.contentPadding.right : 0) + rightInset
+    bottomPadding: __nativeBackground ? background.contentPadding.bottom: 0
 
     validator: IntValidator {
         locale: control.locale.name

@@ -42,7 +42,7 @@ import QtQuick.NativeStyle as NativeStyle
 T.Button {
     id: control
 
-    readonly property bool nativeBackground: background instanceof NativeStyle.StyleItem
+    readonly property bool __nativeBackground: background instanceof NativeStyle.StyleItem
 
     // Since QQuickControl will subtract the insets from the control size to
     // figure out the background size, we need to reverse that here, otherwise
@@ -50,12 +50,12 @@ T.Button {
     implicitWidth: implicitBackgroundWidth + leftInset + rightInset
     implicitHeight: implicitBackgroundHeight + topInset + bottomInset
 
-    font.pixelSize: nativeBackground ? background.styleFont(control).pixelSize : undefined
+    font.pixelSize: __nativeBackground ? background.styleFont(control).pixelSize : undefined
 
-    leftPadding: nativeBackground ? background.contentPadding.left : 5
-    rightPadding: nativeBackground ? background.contentPadding.right : 5
-    topPadding: nativeBackground ? background.contentPadding.top : 5
-    bottomPadding: nativeBackground ? background.contentPadding.bottom : 5
+    leftPadding: __nativeBackground ? background.contentPadding.left : 5
+    rightPadding: __nativeBackground ? background.contentPadding.right : 5
+    topPadding: __nativeBackground ? background.contentPadding.top : 5
+    bottomPadding: __nativeBackground ? background.contentPadding.bottom : 5
 
     background: NativeStyle.Button {
         control: control
