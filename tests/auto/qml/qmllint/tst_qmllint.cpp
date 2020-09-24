@@ -189,7 +189,12 @@ void TestQmllint::dirtyQmlCode_data()
             << QString();
     QTest::newRow("javascriptMethodsInModule")
             << QStringLiteral("javascriptMethodsInModuleBad.qml")
-            << QString("Warning: Property \"unknownFunc\" not found on type \"Foo\"") << QString();
+            << QString("Warning: Property \"unknownFunc\" not found on type \"Foo\"")
+            << QString();
+    QTest::newRow("badEnumFromQtQml")
+            << QStringLiteral("badEnumFromQtQml.qml")
+            << QString("Warning: Property \"Linear123\" not found on type \"QQmlEasingEnums\"")
+            << QString();
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -236,6 +241,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("Signals") << QStringLiteral("Signal.qml");
     QTest::newRow("javascriptMethodsInModule")
             << QStringLiteral("javascriptMethodsInModuleGood.qml");
+    QTest::newRow("enumFromQtQml") << QStringLiteral("enumFromQtQml.qml");
 }
 
 void TestQmllint::cleanQmlCode()

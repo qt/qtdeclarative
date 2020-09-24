@@ -164,10 +164,6 @@ void FindWarningVisitor::processImport(
         const auto exports = val->exports();
         for (const auto &valExport : exports)
             m_exportedName2Scope.insert(prefixedName(prefix, valExport.type()), val);
-
-        const auto enums = val->enums();
-        for (const auto &valEnum : enums)
-            m_currentScope->addEnum(valEnum);
     }
 }
 
