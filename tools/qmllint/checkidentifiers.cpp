@@ -84,7 +84,7 @@ void CheckIdentifiers::printContext(const QQmlJS::SourceLocation &location) cons
 }
 
 static bool walkViaParentAndAttachedScopes(ScopeTree::ConstPtr rootType,
-                                           const QHash<QString, ScopeTree::ConstPtr> &allTypes,
+                                           const QHash<QString, ScopeTree::Ptr> &allTypes,
                                            std::function<bool(ScopeTree::ConstPtr)> visit)
 {
     if (rootType == nullptr)

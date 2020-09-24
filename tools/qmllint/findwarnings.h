@@ -60,16 +60,28 @@ public:
     bool check();
 
 private:
+    struct ImportedTypes
+    {
+        // C++ names used in qmltypes files for non-composite types
+        QHash<QString, ScopeTree::Ptr> cppNames;
+
+        // Names a component intends to export, without prefix
+        QHash<QString, ScopeTree::Ptr> exportedQmlNames;
+
+        // Names the importing component sees, possibly adding a prefix
+        QHash<QString, ScopeTree::Ptr> importedQmlNames;
+    };
+
     class Importer
     {
     public:
         Importer(const QString &currentDir, const QStringList &importPaths) :
             m_currentDir(currentDir), m_importPaths(importPaths) {}
 
-        QHash<QString, ScopeTree::ConstPtr> importBareQmlTypes(const QStringList &qmltypesFiles);
-        QHash<QString, ScopeTree::ConstPtr> importFileOrDirectory(
-                const QString &fileOrDirectory, const QString &prefix);
-        QHash<QString, ScopeTree::ConstPtr> importModule(
+        ImportedTypes importBareQmlTypes(const QStringList &qmltypesFiles);
+        ImportedTypes importFileOrDirectory(
+                const QString &fileOrDirectory, const QString &prefix = QString());
+        ImportedTypes importModule(
                 const QString &module, const QString &prefix = QString(),
                 QTypeRevision version = QTypeRevision());
 
@@ -100,10 +112,10 @@ private:
         QSet<QPair<QString, QString>> m_seenImports;
         QStringList m_warnings;
 
-        QHash<QString, ScopeTree::ConstPtr> m_exportedName2Scope;
+        ImportedTypes m_exportedName2Scope;
     };
 
-    QHash<QString, ScopeTree::ConstPtr> m_rootScopeImports;
+    ImportedTypes m_rootScopeImports;
 
     ScopeTree::Ptr m_rootScope;
     ScopeTree::Ptr m_currentScope;
