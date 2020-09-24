@@ -34,6 +34,7 @@ using namespace QQmlJS::AST;
 ScopeTree::Ptr ImportedMembersVisitor::result(const QString &scopeName) const
 {
     ScopeTree::Ptr result = ScopeTree::create();
+    result->setIsComposite(true);
     result->setClassName(scopeName);
     result->setSuperclassName(m_rootObject->superclassName());
     const auto properties = m_rootObject->properties();
