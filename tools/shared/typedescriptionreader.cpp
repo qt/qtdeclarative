@@ -289,7 +289,7 @@ void TypeDescriptionReader::readSignalOrMethod(UiObjectDefinition *ast, bool isM
             if (name == QLatin1String("name")) {
                 metaMethod.setMethodName(readStringBinding(script));
             } else if (name == QLatin1String("type")) {
-                metaMethod.setReturnType(readStringBinding(script));
+                metaMethod.setReturnTypeName(readStringBinding(script));
             } else if (name == QLatin1String("revision")) {
                 metaMethod.setRevision(readIntBinding(script));
             } else {
