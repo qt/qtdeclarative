@@ -71,8 +71,8 @@ void FindWarningVisitor::leaveEnvironment()
 static const QLatin1String SlashQmldir             = QLatin1String("/qmldir");
 static const QLatin1String SlashPluginsDotQmltypes = QLatin1String("/plugins.qmltypes");
 
-void FindWarningVisitor::Importer::readQmltypes(const QString &filename,
-                                      QHash<QString, ScopeTree::ConstPtr> *objects)
+void FindWarningVisitor::Importer::readQmltypes(
+        const QString &filename, QHash<QString, ScopeTree::Ptr> *objects)
 {
     const QFileInfo fileInfo(filename);
     if (!fileInfo.exists()) {
@@ -121,7 +121,7 @@ FindWarningVisitor::Importer::Import FindWarningVisitor::Importer::readQmldir(co
                     ComponentVersion(it->version));
     }
     for (auto it = qmlComponents.begin(), end = qmlComponents.end(); it != end; ++it)
-        result.objects.insert( it.key(), ScopeTree::ConstPtr(it.value()));
+        result.objects.insert(it.key(), it.value());
 
     if (!reader.plugins().isEmpty() && QFile::exists(path + SlashPluginsDotQmltypes))
         readQmltypes(path + SlashPluginsDotQmltypes, &result.objects);
@@ -129,8 +129,7 @@ FindWarningVisitor::Importer::Import FindWarningVisitor::Importer::readQmldir(co
     const auto scripts = reader.scripts();
     for (const auto &script : scripts) {
         const QString filePath = path + QLatin1Char('/') + script.fileName;
-        result.scripts.push_back(
-                { script.nameSpace, ScopeTree::ConstPtr(localFile2ScopeTree(filePath)) });
+        result.scripts.push_back({ script.nameSpace, localFile2ScopeTree(filePath) });
     }
     return result;
 }
@@ -264,14 +263,15 @@ QHash<QString, ScopeTree::ConstPtr> FindWarningVisitor::Importer::importFileOrDi
         name = QDir(m_currentDir).filePath(name);
 
     if (QFileInfo(name).isFile()) {
-        m_exportedName2Scope.insert(prefix, ScopeTree::ConstPtr(localFile2ScopeTree(name)));
+        ScopeTree::Ptr scope(localFile2ScopeTree(name));
+        m_exportedName2Scope.insert(prefix, scope);
         result.swap(m_exportedName2Scope);
         return result;
     }
 
     QDirIterator it { name, QStringList() << QLatin1String("*.qml"), QDir::NoFilter };
     while (it.hasNext()) {
-        ScopeTree::ConstPtr scope(localFile2ScopeTree(it.next()));
+        ScopeTree::Ptr scope(localFile2ScopeTree(it.next()));
         if (!scope->className().isEmpty())
             m_exportedName2Scope.insert(prefixedName(prefix, scope->className()), scope);
     }

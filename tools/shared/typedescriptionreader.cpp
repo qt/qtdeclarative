@@ -52,7 +52,7 @@ QString toString(const UiQualifiedId *qualifiedId, QChar delimiter = QLatin1Char
 }
 
 bool TypeDescriptionReader::operator()(
-        QHash<QString, ScopeTree::ConstPtr> *objects,
+        QHash<QString, ScopeTree::Ptr> *objects,
         QStringList *dependencies)
 {
     Engine engine;

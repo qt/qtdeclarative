@@ -82,16 +82,16 @@ private:
 
     private:
         struct Import {
-            QHash<QString, ScopeTree::ConstPtr> objects;
+            QHash<QString, ScopeTree::Ptr> objects;
             QList<QQmlDirParser::Import> imports;
             QList<QQmlDirParser::Component> dependencies;
-            QList<QPair<QString, ScopeTree::ConstPtr>> scripts;
+            QList<QPair<QString, ScopeTree::Ptr>> scripts;
         };
 
         void importHelper(const QString &module, const QString &prefix = QString(),
                           QTypeRevision version = QTypeRevision());
         void processImport(const QString &prefix, const Import &import, QTypeRevision version);
-        void readQmltypes(const QString &filename, QHash<QString, ScopeTree::ConstPtr> *objects);
+        void readQmltypes(const QString &filename, QHash<QString, ScopeTree::Ptr> *objects);
         Import readQmldir(const QString &dirname);
         ScopeTree::Ptr localFile2ScopeTree(const QString &filePath);
 
