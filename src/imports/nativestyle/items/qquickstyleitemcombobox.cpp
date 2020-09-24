@@ -60,6 +60,7 @@ StyleItemGeometry QQuickStyleItemComboBox::calculateGeometry()
     geometry.contentRect = style()->subControlRect(QStyle::CC_ComboBox, &styleOption, QStyle::SC_ComboBoxEditField);
     geometry.layoutRect = style()->subElementRect(QStyle::SE_ComboBoxLayoutItem, &styleOption);
     geometry.ninePatchMargins = style()->ninePatchMargins(QStyle::CC_ComboBox, &styleOption, geometry.minimumSize);
+    geometry.focusFrameRadius = style()->pixelMetric(QStyle::PM_ComboBoxFocusFrameRadius, &styleOption);
 
     return geometry;
 }

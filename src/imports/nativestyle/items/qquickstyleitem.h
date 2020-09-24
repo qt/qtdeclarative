@@ -145,6 +145,7 @@ struct StyleItemGeometry
     QRect contentRect;
     QRect layoutRect;
     QMargins ninePatchMargins;
+    qreal focusFrameRadius;
 };
 
 QDebug operator<<(QDebug debug, const StyleItemGeometry &cg);
@@ -201,6 +202,7 @@ public:
 
     QQuickStyleMargins contentPadding() const;
     QQuickStyleMargins layoutMargins() const;
+    qreal focusFrameRadius() const;
 
     Q_INVOKABLE virtual QFont styleFont(QQuickItem *control);
 

@@ -63,6 +63,7 @@ StyleItemGeometry QQuickStyleItemSpinBox::calculateGeometry()
         geometry.contentRect = style()->subControlRect(QStyle::CC_SpinBox, &styleOption, QStyle::SC_SpinBoxEditField);
         geometry.layoutRect = style()->subElementRect(QStyle::SE_SpinBoxLayoutItem, &styleOption);
         geometry.ninePatchMargins = style()->ninePatchMargins(QStyle::CC_SpinBox, &styleOption, geometry.minimumSize);
+        geometry.focusFrameRadius = style()->pixelMetric(QStyle::PM_SpinBoxFocusFrameRadius, &styleOption);
     } else {
         geometry.implicitSize = geometry.minimumSize;
     }

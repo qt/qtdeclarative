@@ -62,8 +62,10 @@ StyleItemGeometry QQuickStyleItemSlider::calculateGeometry()
     StyleItemGeometry geometry;
     geometry.minimumSize = style()->sizeFromContents(QStyle::CT_Slider, &styleOption, QSize(0, 0));
     geometry.implicitSize = geometry.minimumSize;
+    styleOption.rect = QRect(QPoint(0, 0), geometry.implicitSize);
     geometry.layoutRect = style()->subElementRect(QStyle::SE_SliderLayoutItem, &styleOption);
     geometry.ninePatchMargins = style()->ninePatchMargins(QStyle::CC_Slider, &styleOption, geometry.minimumSize);
+    geometry.focusFrameRadius = style()->pixelMetric(QStyle::PM_SliderFocusFrameRadius, &styleOption);
 
     return geometry;
 }

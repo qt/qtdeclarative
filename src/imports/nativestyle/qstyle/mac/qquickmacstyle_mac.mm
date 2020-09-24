@@ -2223,6 +2223,28 @@ int QMacStyle::pixelMetric(PixelMetric metric, const QStyleOption *opt) const
         ret = [NSScroller preferredScrollerStyle] == NSScrollerStyleOverlay ?
                pixelMetric(PM_ScrollBarExtent, opt) : 0;
         break;
+    case PM_PushButtonFocusFrameRadius:
+        ret = LargeSmallMini(opt, 8, 7, 5);
+        break;
+    case PM_CheckBoxFocusFrameRadius:
+        ret = LargeSmallMini(opt, 6, 5, 4);
+        break;
+    case PM_ComboBoxFocusFrameRadius:
+        ret = LargeSmallMini(opt, 8, 7, 4);
+        break;
+    case PM_RadioButtonFocusFrameRadius:
+        ret = 10;
+        break;
+    case PM_SliderFocusFrameRadius:
+        if (const QStyleOptionSlider *sliderOpt = qstyleoption_cast<const QStyleOptionSlider *>(opt))
+            ret = sliderOpt->tickPosition == QStyleOptionSlider::NoTicks ? 10 : 3;
+        break;
+    case PM_DialFocusFrameRadius:
+    case PM_SpinBoxFocusFrameRadius:
+    case PM_TextAreaFocusFrameRadius:
+    case PM_TextFieldFocusFrameRadius:
+        ret = 3;
+        break;
     default:
         ret = QCommonStyle::pixelMetric(metric, opt);
         break;

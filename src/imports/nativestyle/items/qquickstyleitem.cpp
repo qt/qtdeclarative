@@ -412,6 +412,11 @@ QQuickStyleMargins QQuickStyleItem::layoutMargins() const
     return QQuickStyleMargins(outerRect, m_styleItemGeometry.layoutRect);
 }
 
+qreal QQuickStyleItem::focusFrameRadius() const
+{
+    return m_styleItemGeometry.focusFrameRadius;
+}
+
 QFont QQuickStyleItem::styleFont(QQuickItem *control)
 {
     Q_ASSERT(control);

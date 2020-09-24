@@ -524,6 +524,16 @@ public:
         PM_TitleBarButtonIconSize,
         PM_TitleBarButtonSize,
 
+        PM_PushButtonFocusFrameRadius,
+        PM_CheckBoxFocusFrameRadius,
+        PM_ComboBoxFocusFrameRadius,
+        PM_DialFocusFrameRadius,
+        PM_RadioButtonFocusFrameRadius,
+        PM_SliderFocusFrameRadius,
+        PM_SpinBoxFocusFrameRadius,
+        PM_TextAreaFocusFrameRadius,
+        PM_TextFieldFocusFrameRadius,
+
         // do not add any values below/greater than this
         PM_CustomBase = 0xf0000000
     };

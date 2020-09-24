@@ -60,6 +60,7 @@ StyleItemGeometry QQuickStyleItemButton::calculateGeometry()
     geometry.contentRect = style()->subElementRect(QStyle::SE_PushButtonContents, &styleOption);
     geometry.layoutRect = style()->subElementRect(QStyle::SE_PushButtonLayoutItem, &styleOption);
     geometry.ninePatchMargins = style()->ninePatchMargins(QStyle::CE_PushButtonBevel, &styleOption, geometry.minimumSize);
+    geometry.focusFrameRadius = style()->pixelMetric(QStyle::PM_PushButtonFocusFrameRadius, &styleOption);
 
     return geometry;
 }

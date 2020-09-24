@@ -61,6 +61,7 @@ StyleItemGeometry QQuickStyleItemTextField::calculateGeometry()
     geometry.layoutRect = styleOption.rect;
     geometry.contentRect = style()->subElementRect(QStyle::SE_LineEditContents, &styleOption);
     geometry.ninePatchMargins = style()->ninePatchMargins(QStyle::CE_ShapedFrame, &styleOption, geometry.minimumSize);
+    geometry.focusFrameRadius = style()->pixelMetric(QStyle::PM_TextFieldFocusFrameRadius, &styleOption);
 
     return geometry;
 }

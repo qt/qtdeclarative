@@ -63,6 +63,7 @@ StyleItemGeometry QQuickStyleItemDial::calculateGeometry()
     geometry.implicitSize = geometry.minimumSize;
     geometry.layoutRect = style()->subElementRect(QStyle::SE_SliderLayoutItem, &styleOption);
     geometry.ninePatchMargins = style()->ninePatchMargins(QStyle::CC_Dial, &styleOption, geometry.minimumSize);
+    geometry.focusFrameRadius = style()->pixelMetric(QStyle::PM_DialFocusFrameRadius, &styleOption);
 
     return geometry;
 }
