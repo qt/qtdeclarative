@@ -60,24 +60,59 @@ public:
     bool check();
 
 private:
-    struct Import {
-        QHash<QString, ScopeTree::ConstPtr> objects;
-        QList<QQmlDirParser::Import> imports;
-        QList<QQmlDirParser::Component> dependencies;
-        QList<QPair<QString, ScopeTree::ConstPtr>> scripts;
+    class Importer
+    {
+    public:
+        Importer(const QString &currentDir, const QStringList &importPaths) :
+            m_currentDir(currentDir), m_importPaths(importPaths) {}
+
+        QHash<QString, ScopeTree::ConstPtr> importBareQmlTypes(const QStringList &qmltypesFiles);
+        QHash<QString, ScopeTree::ConstPtr> importFileOrDirectory(
+                const QString &fileOrDirectory, const QString &prefix);
+        QHash<QString, ScopeTree::ConstPtr> importModule(
+                const QString &module, const QString &prefix = QString(),
+                QTypeRevision version = QTypeRevision());
+
+        QStringList takeWarnings()
+        {
+            QStringList result = std::move(m_warnings);
+            m_warnings.clear();
+            return result;
+        }
+
+    private:
+        struct Import {
+            QHash<QString, ScopeTree::ConstPtr> objects;
+            QList<QQmlDirParser::Import> imports;
+            QList<QQmlDirParser::Component> dependencies;
+            QList<QPair<QString, ScopeTree::ConstPtr>> scripts;
+        };
+
+        void importHelper(const QString &module, const QString &prefix = QString(),
+                          QTypeRevision version = QTypeRevision());
+        void processImport(const QString &prefix, const Import &import, QTypeRevision version);
+        void readQmltypes(const QString &filename, QHash<QString, ScopeTree::ConstPtr> *objects);
+        Import readQmldir(const QString &dirname);
+        ScopeTree::Ptr localFile2ScopeTree(const QString &filePath);
+
+        QString m_currentDir;
+        QStringList m_importPaths;
+        QSet<QPair<QString, QString>> m_seenImports;
+        QStringList m_warnings;
+
+        QHash<QString, ScopeTree::ConstPtr> m_exportedName2Scope;
     };
+
+    QHash<QString, ScopeTree::ConstPtr> m_rootScopeImports;
 
     ScopeTree::Ptr m_rootScope;
     ScopeTree::Ptr m_currentScope;
     QQmlJS::AST::ExpressionNode *m_fieldMemberBase = nullptr;
-    QHash<QString, ScopeTree::ConstPtr> m_exportedName2Scope;
-    QStringList m_qmltypesDirs;
     QStringList m_qmltypesFiles;
     QString m_code;
     QHash<QString, ScopeTree::ConstPtr> m_qmlid2scope;
     QString m_rootId;
     QString m_filePath;
-    QSet<QPair<QString, QString>> m_alreadySeenImports;
     QSet<QString> m_unknownImports;
     ColorOutput m_colorOut;
     bool m_visitFailed = false;
@@ -95,20 +130,11 @@ private:
 
     QVarLengthArray<OutstandingConnection, 3> m_outstandingConnections; // Connections whose target we have not encountered
 
+    Importer m_importer;
+
     void enterEnvironment(ScopeType type, const QString &name);
     void leaveEnvironment();
 
-    void importBareQmlTypes();
-    void importHelper(const QString &module, const QString &prefix = QString(),
-                      QTypeRevision version = QTypeRevision());
-
-    void readQmltypes(const QString &filename, QHash<QString, ScopeTree::ConstPtr> *objects);
-    Import readQmldir(const QString &dirname);
-    void processImport(const QString &prefix, const Import &import, QTypeRevision version);
-
-    ScopeTree::Ptr localFile2ScopeTree(const QString &filePath);
-
-    void importFileOrDirectory(const QString &directory, const QString &prefix);
     void importExportedNames(QStringView prefix, QString name);
 
     void parseHeaders(QQmlJS::AST::UiHeaderItemList *headers);

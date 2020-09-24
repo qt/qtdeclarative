@@ -71,19 +71,17 @@ void FindWarningVisitor::leaveEnvironment()
 static const QLatin1String SlashQmldir             = QLatin1String("/qmldir");
 static const QLatin1String SlashPluginsDotQmltypes = QLatin1String("/plugins.qmltypes");
 
-void FindWarningVisitor::readQmltypes(const QString &filename,
+void FindWarningVisitor::Importer::readQmltypes(const QString &filename,
                                       QHash<QString, ScopeTree::ConstPtr> *objects)
 {
     const QFileInfo fileInfo(filename);
     if (!fileInfo.exists()) {
-        m_colorOut.write(QLatin1String("warning: "), Warning);
-        m_colorOut.writeUncolored(QLatin1String("QML types file does not exist: ") + filename);
+        m_warnings.append(QLatin1String("QML types file does not exist: ") + filename);
         return;
     }
 
     if (fileInfo.isDir()) {
-        m_colorOut.write(QLatin1String("warning: "), Warning);
-        m_colorOut.writeUncolored(QLatin1String("QML types file cannot be a directory: ") + filename);
+        m_warnings.append(QLatin1String("QML types file cannot be a directory: ") + filename);
         return;
     }
 
@@ -93,10 +91,10 @@ void FindWarningVisitor::readQmltypes(const QString &filename,
     QStringList dependencies;
     auto succ = reader(objects, &dependencies);
     if (!succ)
-        m_colorOut.writeUncolored(reader.errorMessage());
+        m_warnings.append(reader.errorMessage());
 }
 
-FindWarningVisitor::Import FindWarningVisitor::readQmldir(const QString &path)
+FindWarningVisitor::Importer::Import FindWarningVisitor::Importer::readQmldir(const QString &path)
 {
     Import result;
     auto reader = createQmldirParserForFile(path + SlashQmldir);
@@ -108,10 +106,9 @@ FindWarningVisitor::Import FindWarningVisitor::readQmldir(const QString &path)
     for (auto it = components.begin(), end = components.end(); it != end; ++it) {
         const QString filePath = path + QLatin1Char('/') + it->fileName;
         if (!QFile::exists(filePath)) {
-            m_colorOut.write(QLatin1String("warning: "), Warning);
-            m_colorOut.write(it->fileName + QLatin1String(" is listed as component in ")
-                             + path + SlashQmldir
-                             + QLatin1String(" but does not exist.\n"));
+            m_warnings.append(it->fileName + QLatin1String(" is listed as component in ")
+                              + path + SlashQmldir
+                              + QLatin1String(" but does not exist.\n"));
             continue;
         }
 
@@ -138,8 +135,9 @@ FindWarningVisitor::Import FindWarningVisitor::readQmldir(const QString &path)
     return result;
 }
 
-void FindWarningVisitor::processImport(
-        const QString &prefix, const FindWarningVisitor::Import &import, QTypeRevision version)
+void FindWarningVisitor::Importer::processImport(
+        const QString &prefix, const FindWarningVisitor::Importer::Import &import,
+        QTypeRevision version)
 {
     // Import the dependencies with an invalid prefix. The prefix will never be matched by actual
     // QML code but the C++ types will be visible.
@@ -167,9 +165,13 @@ void FindWarningVisitor::processImport(
     }
 }
 
-void FindWarningVisitor::importBareQmlTypes()
+QHash<QString, ScopeTree::ConstPtr> FindWarningVisitor::Importer::importBareQmlTypes(
+        const QStringList &qmltypesFiles)
 {
-    for (auto const &dir : m_qmltypesDirs) {
+    QHash<QString, ScopeTree::ConstPtr> result;
+    result.swap(m_exportedName2Scope);
+
+    for (auto const &dir : m_importPaths) {
         Import result;
         QDirIterator it { dir, QStringList() << QLatin1String("builtins.qmltypes"), QDir::NoFilter,
                           QDirIterator::Subdirectories };
@@ -178,8 +180,8 @@ void FindWarningVisitor::importBareQmlTypes()
         processImport("", result, QTypeRevision());
     }
 
-    if (m_qmltypesFiles.isEmpty()) {
-        for (auto const &qmltypesPath : m_qmltypesDirs) {
+    if (qmltypesFiles.isEmpty()) {
+        for (auto const &qmltypesPath : m_importPaths) {
             if (QFile::exists(qmltypesPath + SlashQmldir))
                 continue;
             Import result;
@@ -197,22 +199,35 @@ void FindWarningVisitor::importBareQmlTypes()
     } else {
         Import result;
 
-        for (const auto &qmltypeFile : m_qmltypesFiles)
+        for (const auto &qmltypeFile : qmltypesFiles)
             readQmltypes(qmltypeFile, &result.objects);
 
         processImport("", result, QTypeRevision());
     }
+
+    result.swap(m_exportedName2Scope);
+    return result;
 }
 
-void FindWarningVisitor::importHelper(const QString &module, const QString &prefix,
-                                      QTypeRevision version)
+QHash<QString, ScopeTree::ConstPtr> FindWarningVisitor::Importer::importModule(
+        const QString &module, const QString &prefix, QTypeRevision version)
+{
+    QHash<QString, ScopeTree::ConstPtr> result;
+    result.swap(m_exportedName2Scope);
+    importHelper(module, prefix, version);
+    result.swap(m_exportedName2Scope);
+    return result;
+}
+
+void FindWarningVisitor::Importer::importHelper(
+        const QString &module, const QString &prefix, QTypeRevision version)
 {
     const QPair<QString, QString> importId { module, prefix };
-    if (m_alreadySeenImports.contains(importId))
+    if (m_seenImports.contains(importId))
         return;
-    m_alreadySeenImports.insert(importId);
+    m_seenImports.insert(importId);
 
-    const auto qmltypesPaths = qQmlResolveImportPaths(module, m_qmltypesDirs, version);
+    const auto qmltypesPaths = qQmlResolveImportPaths(module, m_importPaths, version);
     for (auto const &qmltypesPath : qmltypesPaths) {
         if (QFile::exists(qmltypesPath + SlashQmldir)) {
             processImport(prefix, readQmldir(qmltypesPath), version);
@@ -221,14 +236,14 @@ void FindWarningVisitor::importHelper(const QString &module, const QString &pref
     }
 }
 
-ScopeTree::Ptr FindWarningVisitor::localFile2ScopeTree(const QString &filePath)
+ScopeTree::Ptr FindWarningVisitor::Importer::localFile2ScopeTree(const QString &filePath)
 {
     QmlJSTypeReader typeReader(filePath);
     ScopeTree::Ptr result = typeReader();
 
     const QStringList errors = typeReader.errors();
     for (const QString &error : errors)
-        m_colorOut.write(error, Error);
+        m_warnings.append(error);
 
     const auto imports = typeReader.imports();
     for (const auto &import : imports)
@@ -237,17 +252,21 @@ ScopeTree::Ptr FindWarningVisitor::localFile2ScopeTree(const QString &filePath)
     return result;
 }
 
-void FindWarningVisitor::importFileOrDirectory(const QString &fileOrDirectory,
-                                                     const QString &prefix)
+QHash<QString, ScopeTree::ConstPtr> FindWarningVisitor::Importer::importFileOrDirectory(
+        const QString &fileOrDirectory, const QString &prefix)
 {
+    QHash<QString, ScopeTree::ConstPtr> result;
+    result.swap(m_exportedName2Scope);
+
     QString name = fileOrDirectory;
 
     if (QFileInfo(name).isRelative())
-        name = QDir(QFileInfo { m_filePath }.path()).filePath(name);
+        name = QDir(m_currentDir).filePath(name);
 
     if (QFileInfo(name).isFile()) {
         m_exportedName2Scope.insert(prefix, ScopeTree::ConstPtr(localFile2ScopeTree(name)));
-        return;
+        result.swap(m_exportedName2Scope);
+        return result;
     }
 
     QDirIterator it { name, QStringList() << QLatin1String("*.qml"), QDir::NoFilter };
@@ -256,15 +275,17 @@ void FindWarningVisitor::importFileOrDirectory(const QString &fileOrDirectory,
         if (!scope->className().isEmpty())
             m_exportedName2Scope.insert(prefixedName(prefix, scope->className()), scope);
     }
+
+    result.swap(m_exportedName2Scope);
+    return result;
 }
 
 void FindWarningVisitor::importExportedNames(QStringView prefix, QString name)
 {
     QList<ScopeTree::ConstPtr> scopes;
     for (;;) {
-        ScopeTree::ConstPtr scope = m_exportedName2Scope.value(m_exportedName2Scope.contains(name)
-                                                               ? name
-                                                               : prefix + QLatin1Char('.') + name);
+        ScopeTree::ConstPtr scope = m_rootScopeImports.value(
+                    m_rootScopeImports.contains(name) ? name : prefix + QLatin1Char('.') + name);
         if (scope) {
             if (scopes.contains(scope)) {
                 QString inheritenceCycle = name;
@@ -288,7 +309,7 @@ void FindWarningVisitor::importExportedNames(QStringView prefix, QString name)
             scopes.append(scope);
             const auto properties = scope->properties();
             for (auto property : properties) {
-                property.setType(m_exportedName2Scope.value(property.typeName()));
+                property.setType(m_rootScopeImports.value(property.typeName()));
                 m_currentScope->insertPropertyIdentifier(property);
             }
 
@@ -317,13 +338,19 @@ void FindWarningVisitor::throwRecursionDepthError()
 bool FindWarningVisitor::visit(QQmlJS::AST::UiProgram *)
 {
     enterEnvironment(ScopeType::QMLScope, "program");
-    importBareQmlTypes();
+    m_rootScopeImports = m_importer.importBareQmlTypes(m_qmltypesFiles);
 
     // add "self" (as we only ever check the first part of a qualified identifier, we get away with
     // using an empty ScopeTree
-    m_exportedName2Scope.insert(QFileInfo { m_filePath }.baseName(), {});
+    m_rootScopeImports.insert(QFileInfo { m_filePath }.baseName(), {});
+    m_rootScopeImports.insert(m_importer.importFileOrDirectory(".", QString()));
 
-    importFileOrDirectory(".", QString());
+    const QStringList warnings = m_importer.takeWarnings();
+    for (const QString &warning : warnings) {
+        m_colorOut.write(QStringLiteral("warning: "), Warning);
+        m_colorOut.writeUncolored(warning);
+    }
+
     return true;
 }
 
@@ -520,7 +547,7 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiPublicMember *uipm)
                 uipm->memberType ? uipm->memberType->name.toString() : QString(),
                 uipm->typeModifier == QLatin1String("list"), !uipm->isReadonlyMember, false,
                 uipm->memberType ? (uipm->memberType->name == QLatin1String("alias")) : false, 0);
-        property.setType(m_exportedName2Scope.value(property.typeName()));
+        property.setType(m_rootScopeImports.value(property.typeName()));
         m_currentScope->insertPropertyIdentifier(property);
     }
     return true;
@@ -538,7 +565,6 @@ FindWarningVisitor::FindWarningVisitor(
         QStringList qmltypeDirs, QStringList qmltypesFiles, QString code, QString fileName,
         bool silent, bool warnUnqualified, bool warnWithStatement, bool warnInheritanceCycle)
     : m_rootScope(ScopeTree::create(ScopeType::JSFunctionScope, "global")),
-      m_qmltypesDirs(std::move(qmltypeDirs)),
       m_qmltypesFiles(std::move(qmltypesFiles)),
       m_code(std::move(code)),
       m_rootId(QLatin1String("<id>")),
@@ -546,7 +572,8 @@ FindWarningVisitor::FindWarningVisitor(
       m_colorOut(silent),
       m_warnUnqualified(warnUnqualified),
       m_warnWithStatement(warnWithStatement),
-      m_warnInheritanceCycle(warnInheritanceCycle)
+      m_warnInheritanceCycle(warnInheritanceCycle),
+      m_importer(QFileInfo(m_filePath).path(), qmltypeDirs)
 {
     m_currentScope = m_rootScope;
 
@@ -595,7 +622,7 @@ bool FindWarningVisitor::check()
     if (!m_warnUnqualified)
         return true;
 
-    CheckIdentifiers check(&m_colorOut, m_code, m_exportedName2Scope, m_filePath);
+    CheckIdentifiers check(&m_colorOut, m_code, m_rootScopeImports, m_filePath);
     return check(m_qmlid2scope, m_rootScope, m_rootId);
 }
 
@@ -665,13 +692,13 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiImport *import)
     }
     auto dirname = import->fileName.toString();
     if (!dirname.isEmpty())
-        importFileOrDirectory(dirname, prefix);
+        m_rootScopeImports.insert(m_importer.importFileOrDirectory(dirname, prefix));
 
     QString path {};
     if (!import->importId.isEmpty()) {
         // TODO: do not put imported ids into the same space as qml IDs
         const QString importId = import->importId.toString();
-        m_qmlid2scope.insert(importId, m_exportedName2Scope.value(importId));
+        m_qmlid2scope.insert(importId, m_rootScopeImports.value(importId));
     }
     auto uri = import->importUri;
     while (uri) {
@@ -681,7 +708,16 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiImport *import)
     }
     path.chop(1);
 
-    importHelper(path, prefix, import->version ? import->version->version : QTypeRevision());
+    m_rootScopeImports.insert(
+                m_importer.importModule(
+                    path, prefix, import->version ? import->version->version : QTypeRevision()));
+
+    const QStringList warnings = m_importer.takeWarnings();
+    for (const QString &warning : warnings) {
+        m_colorOut.write(QStringLiteral("warning: "), Warning);
+        m_colorOut.writeUncolored(warning);
+    }
+
     return true;
 }
 
@@ -709,7 +745,7 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
 
     MetaProperty prop(uiob->qualifiedId->name.toString(), name, false, true, true,
                       name == QLatin1String("alias"), 0);
-    prop.setType(m_exportedName2Scope.value(uiob->qualifiedTypeNameId->name.toString()));
+    prop.setType(m_rootScopeImports.value(uiob->qualifiedTypeNameId->name.toString()));
     m_currentScope->addProperty(prop);
 
     enterEnvironment(ScopeType::QMLScope, name);
@@ -774,7 +810,7 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
             do {
                 scope = scope->parentScope(); // TODO: rename method
             } while (scope->scopeType() != ScopeType::QMLScope);
-            targetScope = m_exportedName2Scope.value(scope->name());
+            targetScope = m_rootScopeImports.value(scope->name());
         } else {
             // there was a target, check if we already can find it
             auto scopeIt =  m_qmlid2scope.find(target);
