@@ -61,7 +61,8 @@ static QQmlDirParser createQmldirParserForFile(const QString &filename)
 void FindWarningVisitor::enterEnvironment(ScopeType type, const QString &name)
 {
     m_currentScope = ScopeTree::create(type, m_currentScope);
-    m_currentScope->setInternalName(name);
+    m_currentScope->setBaseTypeName(name);
+    m_currentScope->setIsComposite(true);
 }
 
 void FindWarningVisitor::leaveEnvironment()
@@ -641,7 +642,7 @@ bool FindWarningVisitor::check()
     if (!m_warnUnqualified)
         return true;
 
-    CheckIdentifiers check(&m_colorOut, m_code, m_rootScopeImports.importedQmlNames, m_filePath);
+    CheckIdentifiers check(&m_colorOut, m_code, m_rootScopeImports, m_filePath);
     return check(m_qmlid2scope, m_rootScope, m_rootId);
 }
 
@@ -834,7 +835,7 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
             do {
                 scope = scope->parentScope(); // TODO: rename method
             } while (scope->scopeType() != ScopeType::QMLScope);
-            targetScope = m_rootScopeImports.importedQmlNames.value(scope->internalName());
+            targetScope = m_rootScopeImports.importedQmlNames.value(scope->baseTypeName());
         } else {
             // there was a target, check if we already can find it
             auto scopeIt =  m_qmlid2scope.find(target);

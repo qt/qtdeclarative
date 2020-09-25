@@ -30,14 +30,15 @@
 #define CHECKIDENTIFIERS_H
 
 #include "scopetree.h"
+#include "findwarnings.h"
 
 class ColorOutput;
 
 class CheckIdentifiers
 {
 public:
-    CheckIdentifiers(ColorOutput *colorOut, const QString &code, const QHash<QString,
-                     ScopeTree::Ptr> &types, const QString &fileName) :
+    CheckIdentifiers(ColorOutput *colorOut, const QString &code,
+                     const FindWarningVisitor::ImportedTypes &types, const QString &fileName) :
         m_colorOut(colorOut), m_code(code), m_types(types), m_fileName(fileName)
     {}
 
@@ -52,7 +53,7 @@ private:
 
     ColorOutput *m_colorOut = nullptr;
     QString m_code;
-    QHash<QString, ScopeTree::Ptr> m_types;
+    FindWarningVisitor::ImportedTypes m_types;
     QString m_fileName;
 };
 

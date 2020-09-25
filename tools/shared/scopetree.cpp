@@ -167,7 +167,7 @@ void ScopeTree::updateParentProperty(const ScopeTree::ConstPtr &scope)
 {
     auto it = m_properties.find(QLatin1String("parent"));
     if (it != m_properties.end()
-            && scope->internalName() != QLatin1String("Component")
+            && scope->baseTypeName() != QLatin1String("Component")
             && scope->internalName() != QLatin1String("program"))
         it->setType(scope);
 }

@@ -257,8 +257,6 @@ void TypeDescriptionReader::readComponent(UiObjectDefinition *ast)
         return;
     }
 
-    // ### add implicit export into the package of c++ types
-    scope->addExport(scope->internalName(), QStringLiteral("<cpp>"), ComponentVersion());
     m_objects->insert(scope->internalName(), scope);
 }
 

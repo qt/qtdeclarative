@@ -4,6 +4,7 @@ Module {
     Component {
         name: "SomethingEntirelyStrange"
         prototype: "QObject"
+        exports: ["Things/SomethingEntirelyStrange 1.0"]
         Enum {
             name: "AnEnum"
             values: {
