@@ -155,6 +155,7 @@ public:
     // relevant base class (in the hierarchy starting from QObject) of a C++ type.
     void setBaseTypeName(const QString &baseTypeName) { m_baseTypeName = baseTypeName; }
     QString baseTypeName() const { return m_baseTypeName; }
+    ScopeTree::ConstPtr baseType() const { return m_baseType; }
 
     void addProperty(const MetaProperty &prop) { m_properties.insert(prop.propertyName(), prop); }
     QHash<QString, MetaProperty> properties() const { return m_properties; }
@@ -207,6 +208,8 @@ public:
         return m_injectedSignalIdentifiers;
     }
 
+    void resolveTypes(const QHash<QString, ScopeTree::Ptr> &contextualTypes);
+
 private:
     ScopeTree(ScopeType type, const ScopeTree::Ptr &parentScope = ScopeTree::Ptr());
 
@@ -226,6 +229,7 @@ private:
     QString m_fileName;
     QString m_internalName;
     QString m_baseTypeName;
+    ScopeTree::WeakPtr m_baseType;
 
     ScopeType m_scopeType = ScopeType::QMLScope;
     QList<Export> m_exports;

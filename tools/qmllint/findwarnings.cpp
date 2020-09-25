@@ -136,44 +136,55 @@ FindWarningVisitor::Importer::Import FindWarningVisitor::Importer::readQmldir(co
     return result;
 }
 
-void FindWarningVisitor::Importer::processImport(
-        const QString &prefix, const FindWarningVisitor::Importer::Import &import,
-        QTypeRevision version)
+void FindWarningVisitor::Importer::importDependencies(
+        const FindWarningVisitor::Importer::Import &import,
+        FindWarningVisitor::ImportedTypes *types, const QString &prefix, QTypeRevision version)
 {
     // Import the dependencies with an invalid prefix. The prefix will never be matched by actual
     // QML code but the C++ types will be visible.
     const QString invalidPrefix = QString::fromLatin1("$dependency$");
     for (auto const &dependency : qAsConst(import.dependencies))
-        importHelper(dependency.module, invalidPrefix, dependency.version);
+        importHelper(dependency.module, types, invalidPrefix, dependency.version);
 
     for (auto const &import : qAsConst(import.imports)) {
-        importHelper(import.module, prefix,
+        importHelper(import.module, types, prefix,
                      import.isAutoImport ? version : import.version);
     }
+}
 
+void FindWarningVisitor::Importer::processImport(
+        const FindWarningVisitor::Importer::Import &import,
+        FindWarningVisitor::ImportedTypes *types,
+        const QString &prefix)
+{
     for (auto it = import.scripts.begin(); it != import.scripts.end(); ++it) {
-        m_exportedName2Scope.importedQmlNames.insert(prefixedName(prefix, it.key()), it.value());
-        m_exportedName2Scope.exportedQmlNames.insert(it.key(), it.value());
+        types->importedQmlNames.insert(prefixedName(prefix, it.key()), it.value());
+        types->exportedQmlNames.insert(it.key(), it.value());
     }
 
     // add objects
     for (auto it = import.objects.begin(); it != import.objects.end(); ++it) {
         const auto &val = it.value();
-        m_exportedName2Scope.cppNames.insert(val->internalName(), val);
+        types->cppNames.insert(val->internalName(), val);
 
         const auto exports = val->exports();
         for (const auto &valExport : exports) {
-            m_exportedName2Scope.importedQmlNames.insert(prefixedName(prefix, valExport.type()), val);
-            m_exportedName2Scope.exportedQmlNames.insert(valExport.type(), val);
+            types->importedQmlNames.insert(prefixedName(prefix, valExport.type()), val);
+            types->exportedQmlNames.insert(valExport.type(), val);
         }
+    }
+
+    for (auto it = import.objects.begin(); it != import.objects.end(); ++it) {
+        const auto &val = it.value();
+        if (!val->isComposite()) // Otherwise we have already done it in localFile2ScopeTree()
+            val->resolveTypes(types->cppNames);
     }
 }
 
 FindWarningVisitor::ImportedTypes FindWarningVisitor::Importer::importBareQmlTypes(
         const QStringList &qmltypesFiles)
 {
-    ImportedTypes result;
-    qSwap(result, m_exportedName2Scope);
+    ImportedTypes types;
 
     for (auto const &dir : m_importPaths) {
         Import result;
@@ -181,7 +192,8 @@ FindWarningVisitor::ImportedTypes FindWarningVisitor::Importer::importBareQmlTyp
                           QDirIterator::Subdirectories };
         while (it.hasNext())
             readQmltypes(it.next(), &result.objects);
-        processImport("", result, QTypeRevision());
+        importDependencies(result, &types);
+        processImport(result, &types);
     }
 
     if (qmltypesFiles.isEmpty()) {
@@ -198,7 +210,8 @@ FindWarningVisitor::ImportedTypes FindWarningVisitor::Importer::importBareQmlTyp
                     readQmltypes(name, &result.objects);
             }
 
-            processImport("", result, QTypeRevision());
+            importDependencies(result, &types);
+            processImport(result, &types);
         }
     } else {
         Import result;
@@ -206,53 +219,80 @@ FindWarningVisitor::ImportedTypes FindWarningVisitor::Importer::importBareQmlTyp
         for (const auto &qmltypeFile : qmltypesFiles)
             readQmltypes(qmltypeFile, &result.objects);
 
-        processImport("", result, QTypeRevision());
+        importDependencies(result, &types);
+        processImport(result, &types);
     }
 
-    qSwap(result, m_exportedName2Scope);
-    return result;
+    return types;
 }
 
 FindWarningVisitor::ImportedTypes FindWarningVisitor::Importer::importModule(
         const QString &module, const QString &prefix, QTypeRevision version)
 {
     ImportedTypes result;
-    qSwap(result, m_exportedName2Scope);
-    importHelper(module, prefix, version);
-    qSwap(result, m_exportedName2Scope);
+    importHelper(module, &result, prefix, version);
     return result;
 }
 
-void FindWarningVisitor::Importer::importHelper(
-        const QString &module, const QString &prefix, QTypeRevision version)
+void FindWarningVisitor::Importer::importHelper(const QString &module, ImportedTypes *types,
+                                                const QString &prefix, QTypeRevision version)
 {
-    const QPair<QString, QString> importId { module, prefix };
-    if (m_seenImports.contains(importId))
+
+    const QPair<QString, QTypeRevision> importId { module, version };
+    const auto it = m_seenImports.find(importId);
+    if (it != m_seenImports.end()) {
+        importDependencies(*it, types, prefix, version);
+        processImport(*it, types, prefix);
         return;
-    m_seenImports.insert(importId);
+    }
 
     const auto qmltypesPaths = qQmlResolveImportPaths(module, m_importPaths, version);
     for (auto const &qmltypesPath : qmltypesPaths) {
-        if (QFile::exists(qmltypesPath + SlashQmldir)) {
-            processImport(prefix, readQmldir(qmltypesPath), version);
-            break;
+        const QFileInfo file(qmltypesPath + SlashQmldir);
+        if (file.exists()) {
+            const auto import = readQmldir(file.canonicalPath());
+            m_seenImports.insert(importId, import);
+            importDependencies(import, types, prefix, version);
+            processImport(import, types, prefix);
+            return;
         }
     }
+
+    m_seenImports.insert(importId, {});
 }
 
 ScopeTree::Ptr FindWarningVisitor::Importer::localFile2ScopeTree(const QString &filePath)
 {
+    const auto seen = m_importedFiles.find(filePath);
+    if (seen != m_importedFiles.end())
+        return *seen;
+
     QmlJSTypeReader typeReader(filePath);
     ScopeTree::Ptr result = typeReader();
+    m_importedFiles.insert(filePath, result);
 
     const QStringList errors = typeReader.errors();
     for (const QString &error : errors)
         m_warnings.append(error);
 
+    ImportedTypes types;
+
+    QDirIterator it {
+        QFileInfo(filePath).canonicalPath(),
+        QStringList() << QLatin1String("*.qml"),
+        QDir::NoFilter
+    };
+    while (it.hasNext()) {
+        ScopeTree::Ptr scope(localFile2ScopeTree(it.next()));
+        if (!scope->internalName().isEmpty())
+            types.importedQmlNames.insert(scope->internalName(), scope);
+    }
+
     const auto imports = typeReader.imports();
     for (const auto &import : imports)
-        importHelper(import.module, import.prefix, import.version);
+        importHelper(import.module, &types, import.prefix, import.version);
 
+    result->resolveTypes(types.importedQmlNames);
     return result;
 }
 
@@ -260,85 +300,78 @@ FindWarningVisitor::ImportedTypes FindWarningVisitor::Importer::importFileOrDire
         const QString &fileOrDirectory, const QString &prefix)
 {
     ImportedTypes result;
-    qSwap(result, m_exportedName2Scope);
 
     QString name = fileOrDirectory;
 
     if (QFileInfo(name).isRelative())
         name = QDir(m_currentDir).filePath(name);
 
-    if (QFileInfo(name).isFile()) {
-        ScopeTree::Ptr scope(localFile2ScopeTree(name));
-        m_exportedName2Scope.importedQmlNames.insert(
-                    prefix.isEmpty() ? scope->internalName() : prefix, scope);
-        m_exportedName2Scope.exportedQmlNames.insert(scope->internalName(), scope);
-        qSwap(result, m_exportedName2Scope);
+    QFileInfo fileInfo(name);
+    if (fileInfo.isFile()) {
+        ScopeTree::Ptr scope(localFile2ScopeTree(fileInfo.canonicalFilePath()));
+        result.importedQmlNames.insert(prefix.isEmpty() ? scope->internalName() : prefix, scope);
+        result.exportedQmlNames.insert(scope->internalName(), scope);
         return result;
     }
 
-    QDirIterator it { name, QStringList() << QLatin1String("*.qml"), QDir::NoFilter };
+    QDirIterator it {
+        fileInfo.canonicalFilePath(),
+        QStringList() << QLatin1String("*.qml"),
+        QDir::NoFilter
+    };
     while (it.hasNext()) {
         ScopeTree::Ptr scope(localFile2ScopeTree(it.next()));
         if (!scope->internalName().isEmpty()) {
-            m_exportedName2Scope.importedQmlNames.insert(prefixedName(prefix, scope->internalName()), scope);
-            m_exportedName2Scope.exportedQmlNames.insert(scope->internalName(), scope);
+            result.importedQmlNames.insert(prefixedName(prefix, scope->internalName()), scope);
+            result.exportedQmlNames.insert(scope->internalName(), scope);
         }
     }
 
-    qSwap(result, m_exportedName2Scope);
     return result;
 }
 
-void FindWarningVisitor::importExportedNames(QStringView prefix, QString name)
+void FindWarningVisitor::importExportedNames(ScopeTree::ConstPtr scope)
 {
     QList<ScopeTree::ConstPtr> scopes;
-    ScopeTree::ConstPtr scope = m_rootScopeImports.importedQmlNames.value(
-                m_rootScopeImports.importedQmlNames.contains(name)
-                    ? name
-                    : prefix + QLatin1Char('.') + name);
-    for (;;) {
-        if (scope) {
-            if (scopes.contains(scope)) {
-                QString inheritenceCycle = name;
-                for (const auto &seen: qAsConst(scopes)) {
+    while (!scope.isNull()) {
+        if (scopes.contains(scope)) {
+            QString inheritenceCycle;
+            for (const auto &seen: qAsConst(scopes)) {
+                if (!inheritenceCycle.isEmpty())
                     inheritenceCycle.append(QLatin1String(" -> "));
-                    inheritenceCycle.append(seen->baseTypeName());
-                }
-
-
-                if (m_warnInheritanceCycle) {
-                    m_colorOut.write(QLatin1String("Warning: "), Warning);
-                    m_colorOut.write(QString::fromLatin1("%1 is part of an inheritance cycle: %2\n")
-                                     .arg(name)
-                                     .arg(inheritenceCycle));
-                }
-
-                m_unknownImports.insert(name);
-                m_visitFailed = true;
-                break;
-            }
-            scopes.append(scope);
-            const auto properties = scope->properties();
-            for (auto property : properties) {
-                property.setType(scope->isComposite()
-                                 ? m_rootScopeImports.importedQmlNames.value(property.typeName())
-                                 : m_rootScopeImports.cppNames.value(property.typeName()));
-                m_currentScope->insertPropertyIdentifier(property);
+                inheritenceCycle.append(seen->baseTypeName());
             }
 
-            m_currentScope->addMethods(scope->methods());
-            name = scope->baseTypeName();
-            if (name.isEmpty() || name == QLatin1String("QObject"))
-                break;
+            if (m_warnInheritanceCycle) {
+                m_colorOut.write(QLatin1String("Warning: "), Warning);
+                m_colorOut.write(QString::fromLatin1("%1 is part of an inheritance cycle: %2\n")
+                                 .arg(scope->internalName())
+                                 .arg(inheritenceCycle));
+            }
 
-            scope = scope->isComposite()
-                    ? m_rootScopeImports.importedQmlNames.value(name)
-                    : m_rootScopeImports.cppNames.value(name);
+            m_unknownImports.insert(scope->internalName());
+            m_visitFailed = true;
+            break;
+        }
+
+        scopes.append(scope);
+
+        const auto properties = scope->properties();
+        for (auto property : properties)
+            m_currentScope->insertPropertyIdentifier(property);
+
+        m_currentScope->addMethods(scope->methods());
+
+        if (scope->baseTypeName().isEmpty()) {
+            break;
+        } else if (auto newScope = scope->baseType()) {
+            scope = newScope;
         } else {
             m_colorOut.write(QLatin1String("warning: "), Warning);
-            m_colorOut.write(name + QLatin1String(" was not found."
-                                                  " Did you add all import paths?\n"));
-            m_unknownImports.insert(name);
+            m_colorOut.write(scope->baseTypeName()
+                             + QLatin1String(" was not found."
+                                             " Did you add all import paths?\n"));
+            m_unknownImports.insert(scope->baseTypeName());
             m_visitFailed = true;
             break;
         }
@@ -759,13 +792,10 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
 {
     // property QtObject __styleData: QtObject {...}
 
-    QString name {};
-    auto id = uiob->qualifiedTypeNameId;
-    QStringView prefix = uiob->qualifiedTypeNameId->name;
-    while (id) {
+    QString name;
+    for (auto id = uiob->qualifiedTypeNameId; id; id = id->next)
         name += id->name.toString() + QLatin1Char('.');
-        id = id->next;
-    }
+
     name.chop(1);
 
     MetaProperty prop(uiob->qualifiedId->name.toString(), name, false, true, true,
@@ -774,7 +804,8 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
     m_currentScope->addProperty(prop);
 
     enterEnvironment(ScopeType::QMLScope, name);
-    importExportedNames(prefix, name);
+    m_currentScope->resolveTypes(m_rootScopeImports.importedQmlNames);
+    importExportedNames(m_currentScope);
     return true;
 }
 
@@ -795,19 +826,19 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
 {
     using namespace QQmlJS::AST;
 
-    QString name {};
-    auto id = uiod->qualifiedTypeNameId;
-    QStringView prefix = uiod->qualifiedTypeNameId->name;
-    while (id) {
+    QString name;
+    for (auto id = uiod->qualifiedTypeNameId; id; id = id->next)
         name += id->name.toString() + QLatin1Char('.');
-        id = id->next;
-    }
+
     name.chop(1);
+
     enterEnvironment(ScopeType::QMLScope, name);
+    m_currentScope->resolveTypes(m_rootScopeImports.importedQmlNames);
+    importExportedNames(m_currentScope);
+
     if (name.isLower())
         return false; // Ignore grouped properties for now
 
-    importExportedNames(prefix, name);
     if (name.endsWith("Connections")) {
         QString target;
         auto member = uiod->initializer->members;

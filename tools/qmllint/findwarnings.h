@@ -100,19 +100,25 @@ private:
             QList<QQmlDirParser::Import> dependencies;
         };
 
-        void importHelper(const QString &module, const QString &prefix = QString(),
+        void importHelper(const QString &module, ImportedTypes *types,
+                          const QString &prefix = QString(),
                           QTypeRevision version = QTypeRevision());
-        void processImport(const QString &prefix, const Import &import, QTypeRevision version);
+        void processImport(const Import &import, ImportedTypes *types,
+                           const QString &prefix = QString());
+        void importDependencies(const FindWarningVisitor::Importer::Import &import,
+                                FindWarningVisitor::ImportedTypes *types,
+                                const QString &prefix = QString(),
+                                QTypeRevision version = QTypeRevision());
         void readQmltypes(const QString &filename, QHash<QString, ScopeTree::Ptr> *objects);
         Import readQmldir(const QString &dirname);
         ScopeTree::Ptr localFile2ScopeTree(const QString &filePath);
 
         QString m_currentDir;
         QStringList m_importPaths;
-        QSet<QPair<QString, QString>> m_seenImports;
+        QHash<QPair<QString, QTypeRevision>, Import> m_seenImports;
+        QHash<QString, ScopeTree::Ptr> m_importedFiles;
         QStringList m_warnings;
 
-        ImportedTypes m_exportedName2Scope;
     };
 
     ImportedTypes m_rootScopeImports;
@@ -147,7 +153,7 @@ private:
     void enterEnvironment(ScopeType type, const QString &name);
     void leaveEnvironment();
 
-    void importExportedNames(QStringView prefix, QString name);
+    void importExportedNames(ScopeTree::ConstPtr scope);
 
     void parseHeaders(QQmlJS::AST::UiHeaderItemList *headers);
     ScopeTree::Ptr parseProgram(QQmlJS::AST::Program *program, const QString &name);

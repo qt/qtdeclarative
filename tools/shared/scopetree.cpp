@@ -144,6 +144,33 @@ bool ScopeTree::isIdInjectedFromSignal(const QString &id) const
     return findCurrentQMLScope(parentScope())->m_injectedSignalIdentifiers.contains(id);
 }
 
+void ScopeTree::resolveTypes(const QHash<QString, ScopeTree::Ptr> &contextualTypes)
+{
+    auto findType = [&](const QString &name) {
+        auto type = contextualTypes.constFind(name);
+        if (type != contextualTypes.constEnd())
+            return *type;
+
+        return ScopeTree::Ptr();
+    };
+
+    m_baseType = findType(m_baseTypeName);
+
+    for (auto it = m_properties.begin(), end = m_properties.end(); it != end; ++it)
+        it->setType(findType(it->typeName()));
+
+    for (auto it = m_methods.begin(), end = m_methods.end(); it != end; ++it) {
+        it->setReturnType(findType(it->returnTypeName()));
+        const auto paramNames = it->parameterTypeNames();
+        QList<ScopeTree::ConstPtr> paramTypes;
+
+        for (const QString &paramName: paramNames)
+            paramTypes.append(findType(paramName));
+
+        it->setParameterTypes(paramTypes);
+    }
+}
+
 ScopeTree::ConstPtr ScopeTree::findCurrentQMLScope(const ScopeTree::ConstPtr &scope)
 {
     auto qmlScope = scope;
