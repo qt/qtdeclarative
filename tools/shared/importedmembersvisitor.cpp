@@ -35,8 +35,8 @@ ScopeTree::Ptr ImportedMembersVisitor::result(const QString &scopeName) const
 {
     ScopeTree::Ptr result = ScopeTree::create();
     result->setIsComposite(true);
-    result->setClassName(scopeName);
-    result->setSuperclassName(m_rootObject->superclassName());
+    result->setInternalName(scopeName);
+    result->setBaseTypeName(m_rootObject->baseTypeName());
     const auto properties = m_rootObject->properties();
     for (auto property : properties) {
         if (property.isAlias()) {
@@ -67,7 +67,7 @@ bool ImportedMembersVisitor::visit(UiObjectDefinition *definition)
             superType.append(u'.');
         superType.append(segment->name.toString());
     }
-    scope->setSuperclassName(superType);
+    scope->setBaseTypeName(superType);
     if (!m_rootObject)
         m_rootObject = scope;
     m_currentObjects.append(scope);

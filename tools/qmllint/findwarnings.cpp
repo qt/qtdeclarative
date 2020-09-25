@@ -156,7 +156,7 @@ void FindWarningVisitor::Importer::processImport(
     // add objects
     for (auto it = import.objects.begin(); it != import.objects.end(); ++it) {
         const auto &val = it.value();
-        m_exportedName2Scope.insert(val->className(), val);
+        m_exportedName2Scope.insert(val->internalName(), val);
 
         const auto exports = val->exports();
         for (const auto &valExport : exports)
@@ -272,8 +272,8 @@ QHash<QString, ScopeTree::ConstPtr> FindWarningVisitor::Importer::importFileOrDi
     QDirIterator it { name, QStringList() << QLatin1String("*.qml"), QDir::NoFilter };
     while (it.hasNext()) {
         ScopeTree::Ptr scope(localFile2ScopeTree(it.next()));
-        if (!scope->className().isEmpty())
-            m_exportedName2Scope.insert(prefixedName(prefix, scope->className()), scope);
+        if (!scope->internalName().isEmpty())
+            m_exportedName2Scope.insert(prefixedName(prefix, scope->internalName()), scope);
     }
 
     result.swap(m_exportedName2Scope);
@@ -291,7 +291,7 @@ void FindWarningVisitor::importExportedNames(QStringView prefix, QString name)
                 QString inheritenceCycle = name;
                 for (const auto &seen: qAsConst(scopes)) {
                     inheritenceCycle.append(QLatin1String(" -> "));
-                    inheritenceCycle.append(seen->superclassName());
+                    inheritenceCycle.append(seen->baseTypeName());
                 }
 
 
@@ -314,7 +314,7 @@ void FindWarningVisitor::importExportedNames(QStringView prefix, QString name)
             }
 
             m_currentScope->addMethods(scope->methods());
-            name = scope->superclassName();
+            name = scope->baseTypeName();
             if (name.isEmpty() || name == QLatin1String("QObject"))
                 break;
         } else {

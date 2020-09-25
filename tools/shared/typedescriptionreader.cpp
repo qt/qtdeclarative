@@ -211,9 +211,9 @@ void TypeDescriptionReader::readComponent(UiObjectDefinition *ast)
             if (name == QLatin1String("file")) {
                 scope->setFileName(readStringBinding(script));
             } else if (name == QLatin1String("name")) {
-                scope->setClassName(readStringBinding(script));
+                scope->setInternalName(readStringBinding(script));
             } else if (name == QLatin1String("prototype")) {
-                scope->setSuperclassName(readStringBinding(script));
+                scope->setBaseTypeName(readStringBinding(script));
             } else if (name == QLatin1String("defaultProperty")) {
                 scope->setDefaultPropertyName(readStringBinding(script));
             } else if (name == QLatin1String("exports")) {
@@ -252,14 +252,14 @@ void TypeDescriptionReader::readComponent(UiObjectDefinition *ast)
         }
     }
 
-    if (scope->className().isEmpty()) {
+    if (scope->internalName().isEmpty()) {
         addError(ast->firstSourceLocation(), tr("Component definition is missing a name binding."));
         return;
     }
 
     // ### add implicit export into the package of c++ types
-    scope->addExport(scope->className(), QStringLiteral("<cpp>"), ComponentVersion());
-    m_objects->insert(scope->className(), scope);
+    scope->addExport(scope->internalName(), QStringLiteral("<cpp>"), ComponentVersion());
+    m_objects->insert(scope->internalName(), scope);
 }
 
 void TypeDescriptionReader::readSignalOrMethod(UiObjectDefinition *ast, bool isMethod,

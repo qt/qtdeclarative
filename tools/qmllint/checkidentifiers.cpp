@@ -98,7 +98,7 @@ static bool walkViaParentAndAttachedScopes(ScopeTree::ConstPtr rootType,
         if (visit(type))
             return true;
 
-        if (auto superType = allTypes.value(type->superclassName()))
+        if (auto superType = allTypes.value(type->baseTypeName()))
             stack.push(superType);
 
         if (auto attachedType = allTypes.value(type->attachedTypeName()))
@@ -137,7 +137,7 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
             return false;
         }
 
-        const QString scopeName = scope->name().isEmpty() ? scope->className() : scope->name();
+        const QString scopeName = scope->name().isEmpty() ? scope->internalName() : scope->name();
 
         if (!detectedRestrictiveKind.isEmpty()) {
             if (expectedNext.contains(access.m_name)) {

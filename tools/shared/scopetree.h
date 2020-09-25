@@ -143,15 +143,19 @@ public:
     QString fileName() const { return m_fileName; }
     void setFileName(const QString &file) { m_fileName = file; }
 
-    QString className() const { return m_className; }
-    void setClassName(const QString &name) { m_className = name; }
+    // The name the type uses to refer to itself. Either C++ class name or base name of
+    // QML file. isComposite tells us if this is a C++ or a QML name.
+    QString internalName() const { return m_internalName; }
+    void setInternalName(const QString &internalName) { m_internalName = internalName; }
 
     void addExport(const QString &name, const QString &package, const ComponentVersion &version);
     void setExportMetaObjectRevision(int exportIndex, int metaObjectRevision);
     QList<Export> exports() const { return m_exports; }
 
-    void setSuperclassName(const QString &superclass) { m_superName = superclass; }
-    QString superclassName() const { return m_superName; }
+    // If isComposite(), this is the QML/JS name of the prototype. Otherwise it's the
+    // relevant base class (in the hierarchy starting from QObject) of a C++ type.
+    void setBaseTypeName(const QString &baseTypeName) { m_baseTypeName = baseTypeName; }
+    QString baseTypeName() const { return m_baseTypeName; }
 
     void addProperty(const MetaProperty &prop) { m_properties.insert(prop.propertyName(), prop); }
     QHash<QString, MetaProperty> properties() const { return m_properties; }
@@ -223,8 +227,8 @@ private:
 
     QString m_fileName;
     QString m_name;
-    QString m_className;
-    QString m_superName;
+    QString m_internalName;
+    QString m_baseTypeName;
 
     ScopeType m_scopeType = ScopeType::QMLScope;
     QList<Export> m_exports;
