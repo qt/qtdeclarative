@@ -8395,6 +8395,18 @@ QTouchEvent QQuickItemPrivate::localizedTouchEvent(const QTouchEvent *event, boo
         const auto localPos = q->mapFromScene(p.scenePosition());
         bool isInside = q->contains(localPos);
         bool hasAnotherGrabber = pointGrabber && pointGrabber != q;
+        // if there's no exclusive grabber, look for passive grabbers during filtering
+        if (isFiltering && !pointGrabber) {
+            auto pg = event->passiveGrabbers(p);
+            if (!pg.isEmpty()) {
+                // It seems unlikely to have multiple passive grabbers of one eventpoint with different grandparents.
+                // So hopefully if we start from one passive grabber and go up the parent chain from there,
+                // we will find any filtering parent items that exist.
+                auto handler = qmlobject_cast<QQuickPointerHandler *>(pg.first());
+                Q_ASSERT(handler);
+                pointGrabber = handler->parentItem();
+            }
+        }
 
         // filtering: (childMouseEventFilter) include points that are grabbed by children of the target item
         bool grabberIsChild = false;
