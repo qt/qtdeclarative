@@ -100,7 +100,7 @@ FindWarningVisitor::Importer::Import FindWarningVisitor::Importer::readQmldir(co
     Import result;
     auto reader = createQmldirParserForFile(path + SlashQmldir);
     result.imports.append(reader.imports());
-    result.dependencies.append(reader.dependencies().values());
+    result.dependencies.append(reader.dependencies());
 
     QHash<QString, ScopeTree::Ptr> qmlComponents;
     const auto components = reader.components();
@@ -143,7 +143,7 @@ void FindWarningVisitor::Importer::processImport(
     // QML code but the C++ types will be visible.
     const QString invalidPrefix = QString::fromLatin1("$dependency$");
     for (auto const &dependency : qAsConst(import.dependencies))
-        importHelper(dependency.typeName, invalidPrefix, dependency.version);
+        importHelper(dependency.module, invalidPrefix, dependency.version);
 
     for (auto const &import : qAsConst(import.imports)) {
         importHelper(import.module, prefix,

@@ -99,11 +99,30 @@ namespace {
             + QLatin1Char('|') + (c.internal ? "true" : "false");
     }
 
+    QString toString(const QQmlDirParser::Import &i)
+    {
+        return i.module + QLatin1String("||")
+            + QString::number(i.version.majorVersion()) + QLatin1Char('|')
+            + QString::number(i.version.minorVersion())
+            + QLatin1String("|true");
+    }
+
     QStringList toStringList(const QQmlDirComponents &components)
     {
         QStringList rv;
 
         foreach (const QQmlDirParser::Component &c, components.values())
+            rv.append(toString(c));
+
+        std::sort(rv.begin(), rv.end());
+        return rv;
+    }
+
+    QStringList toStringList(const QQmlDirImports &components)
+    {
+        QStringList rv;
+
+        foreach (const QQmlDirParser::Import &c, components)
             rv.append(toString(c));
 
         std::sort(rv.begin(), rv.end());

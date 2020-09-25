@@ -84,7 +84,7 @@ private:
         struct Import {
             QHash<QString, ScopeTree::Ptr> objects;
             QList<QQmlDirParser::Import> imports;
-            QList<QQmlDirParser::Component> dependencies;
+            QList<QQmlDirParser::Import> dependencies;
             QList<QPair<QString, ScopeTree::Ptr>> scripts;
         };
 

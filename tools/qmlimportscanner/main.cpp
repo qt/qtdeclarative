@@ -188,7 +188,7 @@ QVariantMap pluginsForModulePath(const QString &modulePath, const QString &versi
     QStringList importsAndDependencies;
     const auto dependencies = parser.dependencies();
     for (const auto &dependency : dependencies)
-        importsAndDependencies.append(dependency.typeName + versionSuffix(dependency.version));
+        importsAndDependencies.append(dependency.module + versionSuffix(dependency.version));
 
     const auto imports = parser.imports();
     for (const auto &import : imports) {

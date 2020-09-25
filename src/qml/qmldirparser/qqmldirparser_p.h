@@ -144,7 +144,7 @@ public:
     };
 
     QMultiHash<QString,Component> components() const;
-    QHash<QString,Component> dependencies() const;
+    QList<Import> dependencies() const;
     QList<Import> imports() const;
     QList<Script> scripts() const;
     QList<Plugin> plugins() const;
@@ -171,7 +171,7 @@ private:
     QList<QQmlJS::DiagnosticMessage> _errors;
     QString _typeNamespace;
     QMultiHash<QString,Component> _components;
-    QHash<QString,Component> _dependencies;
+    QList<Import> _dependencies;
     QList<Import> _imports;
     QList<Script> _scripts;
     QList<Plugin> _plugins;
