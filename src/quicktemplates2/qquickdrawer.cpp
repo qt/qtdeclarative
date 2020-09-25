@@ -315,7 +315,7 @@ bool QQuickDrawerPrivate::startDrag(QEvent *event)
 #if QT_CONFIG(quicktemplates2_multitouch)
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
-        for (const QTouchEvent::TouchPoint &point : static_cast<QTouchEvent *>(event)->touchPoints()) {
+        for (const QTouchEvent::TouchPoint &point : static_cast<QTouchEvent *>(event)->points()) {
             if (point.state() == QEventPoint::Pressed && isWithinDragMargin(q, point.scenePosition())) {
                 prepareEnterTransition();
                 reposition();
@@ -388,7 +388,7 @@ bool QQuickDrawerPrivate::grabTouch(QQuickItem *item, QTouchEvent *event)
         return handled;
 
     bool overThreshold = false;
-    for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
+    for (const QTouchEvent::TouchPoint &point : event->points()) {
         if (!acceptTouch(point) || point.state() != QEventPoint::Updated)
             continue;
 

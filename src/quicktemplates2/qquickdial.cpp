@@ -748,7 +748,7 @@ void QQuickDial::touchEvent(QTouchEvent *event)
     Q_D(QQuickDial);
     switch (event->type()) {
     case QEvent::TouchUpdate:
-        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
+        for (const QTouchEvent::TouchPoint &point : event->points()) {
             if (!d->acceptTouch(point))
                 continue;
 

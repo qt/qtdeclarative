@@ -189,7 +189,7 @@ void QQuickSwitchDelegate::touchEvent(QTouchEvent *event)
 {
     Q_D(QQuickSwitchDelegate);
     if (!keepTouchGrab() && event->type() == QEvent::TouchUpdate) {
-        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
+        for (const QTouchEvent::TouchPoint &point : event->points()) {
             if (point.id() != d->touchId || point.state() != QEventPoint::Updated)
                 continue;
             if (d->canDrag(point.position()))

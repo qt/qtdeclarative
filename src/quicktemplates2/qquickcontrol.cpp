@@ -2004,7 +2004,7 @@ void QQuickControl::touchEvent(QTouchEvent *event)
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
     case QEvent::TouchEnd:
-        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
+        for (const QTouchEvent::TouchPoint &point : event->points()) {
             if (!d->acceptTouch(point))
                 continue;
 

@@ -803,7 +803,7 @@ void QQuickSlider::touchEvent(QTouchEvent *event)
     Q_D(QQuickSlider);
     switch (event->type()) {
     case QEvent::TouchUpdate:
-        for (const QTouchEvent::TouchPoint &point : event->touchPoints()) {
+        for (const QTouchEvent::TouchPoint &point : event->points()) {
             if (!d->acceptTouch(point))
                 continue;
 
