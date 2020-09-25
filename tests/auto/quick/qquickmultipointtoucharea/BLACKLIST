@@ -17,6 +17,10 @@ sles
 * # QTBUG-86729
 [inFlickable]
 * # QTBUG-86729
+[inFlickable2]
+* # QTBUG-86729
+[inFlickableWithPressDelay]
+* # QTBUG-86729
 [reuse]
 * # QTBUG-86729
 [signalTest]

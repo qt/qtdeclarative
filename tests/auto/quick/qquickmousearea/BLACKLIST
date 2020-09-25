@@ -4,6 +4,10 @@ macos ci
 # QTBUG-78153
 [nestedStopAtBounds]
 opensuse-leap
+* # QTBUG-86729
+
+[nestedFlickableStopAtBounds]
+* # QTBUG-86729
 
 # QTBUG-82282
 [pressOneAndTapAnother]
@@ -19,4 +23,7 @@ opensuse-leap
 * # QTBUG-86729
 
 [onMousePressRejected]
+* # QTBUG-86729
+
+[preventStealing]
 * # QTBUG-86729

@@ -8,3 +8,7 @@ windows gcc developer-build
 # QTBUG-74517
 [touchButtonOnFlickable]
 windows gcc developer-build
+* # QTBUG-86729
+
+[touchGrabCausesMouseUngrab]
+* # QTBUG-86729
