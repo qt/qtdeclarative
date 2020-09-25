@@ -53,4 +53,6 @@ QT_BEGIN_NAMESPACE
 
 QT_END_NAMESPACE
 
+Q_QUICKCONTROLS2_EXPORT void qml_register_types_QtQuick_Controls();
+
 #endif // QTQUICKCONTROLS2GLOBAL_H

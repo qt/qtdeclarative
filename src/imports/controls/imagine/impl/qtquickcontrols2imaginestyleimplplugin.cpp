@@ -36,6 +36,8 @@
 
 #include <QtQml/qqmlextensionplugin.h>
 
+extern void qml_register_types_QtQuick_Controls_Imagine_impl();
+
 QT_BEGIN_NAMESPACE
 
 class QtQuickControls2ImagineStyleImplPlugin : public QQmlEngineExtensionPlugin
@@ -50,6 +52,8 @@ public:
 QtQuickControls2ImagineStyleImplPlugin::QtQuickControls2ImagineStyleImplPlugin(QObject *parent)
     : QQmlEngineExtensionPlugin(parent)
 {
+    volatile auto registration = &qml_register_types_QtQuick_Controls_Imagine_impl;
+    Q_UNUSED(registration);
 }
 
 QT_END_NAMESPACE

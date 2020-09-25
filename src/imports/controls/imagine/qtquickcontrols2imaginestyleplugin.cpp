@@ -42,6 +42,8 @@
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
 #include <QtQuickTemplates2/private/qquicktheme_p.h>
 
+extern void qml_register_types_QtQuick_Controls_Imagine();
+
 QT_BEGIN_NAMESPACE
 
 class QtQuickControls2ImagineStylePlugin : public QQuickStylePlugin
@@ -60,6 +62,8 @@ public:
 
 QtQuickControls2ImagineStylePlugin::QtQuickControls2ImagineStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
 {
+    volatile auto registration = &qml_register_types_QtQuick_Controls_Imagine;
+    Q_UNUSED(registration);
 }
 
 QString QtQuickControls2ImagineStylePlugin::name() const

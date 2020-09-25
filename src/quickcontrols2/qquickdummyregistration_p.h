@@ -49,6 +49,10 @@
 //
 
 #include <QtQml/qqml.h>
+// Ensure that the generated qmltyperegistrations .cpp file includes this header
+// by including it here. Otherwise, the qtquickcontrols2plugin will fail to load
+// due to the type registration function's symbol being undefined.
+#include <QtQuickControls2/qtquickcontrols2global.h>
 
 QT_BEGIN_NAMESPACE
 

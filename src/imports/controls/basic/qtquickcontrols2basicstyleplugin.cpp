@@ -40,6 +40,8 @@
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
 #include <QtQuickTemplates2/private/qquicktheme_p.h>
 
+extern void qml_register_types_QtQuick_Controls_Basic();
+
 QT_BEGIN_NAMESPACE
 
 class QtQuickControls2BasicStylePlugin: public QQuickStylePlugin
@@ -58,6 +60,8 @@ public:
 
 QtQuickControls2BasicStylePlugin::QtQuickControls2BasicStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
 {
+    volatile auto registration = &qml_register_types_QtQuick_Controls_Basic;
+    Q_UNUSED(registration);
 }
 
 QString QtQuickControls2BasicStylePlugin::name() const

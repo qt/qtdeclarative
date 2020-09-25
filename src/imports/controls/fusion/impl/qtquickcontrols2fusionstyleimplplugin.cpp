@@ -36,6 +36,8 @@
 
 #include <QtQml/qqmlextensionplugin.h>
 
+extern void qml_register_types_QtQuick_Controls_Fusion_impl();
+
 QT_BEGIN_NAMESPACE
 
 class QtQuickControls2FusionStyleImplPlugin : public QQmlEngineExtensionPlugin
@@ -50,6 +52,8 @@ public:
 QtQuickControls2FusionStyleImplPlugin::QtQuickControls2FusionStyleImplPlugin(QObject *parent)
     : QQmlEngineExtensionPlugin(parent)
 {
+    volatile auto registration = &qml_register_types_QtQuick_Controls_Fusion_impl;
+    Q_UNUSED(registration);
 }
 
 QT_END_NAMESPACE

@@ -2,7 +2,7 @@ TARGET = qtquickcontrols2plugin
 TARGETPATH = QtQuick/Controls
 QML_IMPORT_VERSION = $$QT_VERSION
 
-QT += qml quick
+QT += qml quick quickcontrols2
 QT_PRIVATE += core-private gui-private qml-private quick-private quicktemplates2-private quickcontrols2-private quickcontrols2impl-private
 
 DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII

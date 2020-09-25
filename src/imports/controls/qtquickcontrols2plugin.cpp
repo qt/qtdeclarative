@@ -41,6 +41,7 @@
 #include <QtQuickControls2/private/qquickstyle_p.h>
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
 #include <QtQuickControls2/qquickstyle.h>
+#include <QtQuickControls2/qtquickcontrols2global.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -97,6 +98,8 @@ QString fallbackStyleUri()
 
 QtQuickControls2Plugin::QtQuickControls2Plugin(QObject *parent) : QQmlExtensionPlugin(parent)
 {
+    volatile auto registration = &qml_register_types_QtQuick_Controls;
+    Q_UNUSED(registration);
 }
 
 QtQuickControls2Plugin::~QtQuickControls2Plugin()

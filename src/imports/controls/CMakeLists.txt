@@ -30,6 +30,7 @@ qt_internal_add_qml_module(qtquickcontrols2plugin
         Qt::Gui
         Qt::Qml
         Qt::Quick
+        Qt::QuickControls2
 )
 
 #### Keys ignored in scope 1:.:.:controls.pro:<TRUE>:
