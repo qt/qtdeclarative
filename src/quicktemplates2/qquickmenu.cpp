@@ -735,6 +735,16 @@ QQuickMenu::QQuickMenu(QObject *parent)
     connect(d->contentModel, &QQmlObjectModel::countChanged, this, &QQuickMenu::countChanged);
 }
 
+QQuickMenu::~QQuickMenu()
+{
+    Q_D(QQuickMenu);
+    // We have to do this to ensure that the change listeners are removed.
+    // It's too late to do this in ~QQuickMenuPrivate, as contentModel has already
+    // been destroyed before that is called.
+    while (d->contentModel->count() > 0)
+        d->removeItem(0, d->itemAt(0));
+}
+
 /*!
     \qmlmethod Item QtQuick.Controls::Menu::itemAt(int index)
 
