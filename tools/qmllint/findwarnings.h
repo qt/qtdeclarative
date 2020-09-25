@@ -95,9 +95,9 @@ private:
     private:
         struct Import {
             QHash<QString, ScopeTree::Ptr> objects;
+            QHash<QString, ScopeTree::Ptr> scripts;
             QList<QQmlDirParser::Import> imports;
             QList<QQmlDirParser::Import> dependencies;
-            QList<QPair<QString, ScopeTree::Ptr>> scripts;
         };
 
         void importHelper(const QString &module, const QString &prefix = QString(),
