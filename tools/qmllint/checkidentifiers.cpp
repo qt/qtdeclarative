@@ -137,7 +137,7 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
             return false;
         }
 
-        const QString scopeName = scope->name().isEmpty() ? scope->internalName() : scope->name();
+        const QString scopeName = scope->internalName();
 
         if (!detectedRestrictiveKind.isEmpty()) {
             if (expectedNext.contains(access.m_name)) {

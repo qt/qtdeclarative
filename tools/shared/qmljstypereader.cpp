@@ -69,7 +69,8 @@ static QList<QmlJSTypeReader::Import> parseHeaders(QQmlJS::AST::UiHeaderItemList
 static ScopeTree::Ptr parseProgram(QQmlJS::AST::Program *program, const QString &name)
 {
     using namespace QQmlJS::AST;
-    ScopeTree::Ptr result = ScopeTree::create(ScopeType::JSLexicalScope, name);
+    ScopeTree::Ptr result = ScopeTree::create(ScopeType::JSLexicalScope);
+    result->setInternalName(name);
     for (auto *statement = program->statements; statement; statement = statement->next) {
         if (auto *function = cast<FunctionDeclaration *>(statement->statement)) {
             MetaMethod method(function->name.toString());
@@ -99,8 +100,10 @@ ScopeTree::Ptr QmlJSTypeReader::operator()()
 
     QFile file(m_file);
     if (!file.open(QFile::ReadOnly)) {
-        return ScopeTree::create(isJavaScript ? ScopeType::JSLexicalScope : ScopeType::QMLScope,
-                                 scopeName);
+        ScopeTree::Ptr result = ScopeTree::create(
+                    isJavaScript ? ScopeType::JSLexicalScope : ScopeType::QMLScope);
+        result->setInternalName(scopeName);
+        return result;
     }
 
     QString code = QString::fromUtf8(file.readAll());
@@ -113,8 +116,10 @@ ScopeTree::Ptr QmlJSTypeReader::operator()()
                                                     : parser.parseProgram())
                                       : parser.parse();
     if (!success) {
-        return ScopeTree::create(isJavaScript ? ScopeType::JSLexicalScope : ScopeType::QMLScope,
-                                 scopeName);
+        ScopeTree::Ptr result = ScopeTree::create(
+                    isJavaScript ? ScopeType::JSLexicalScope : ScopeType::QMLScope);
+        result->setInternalName(scopeName);
+        return result;
     }
 
     if (!isJavaScript) {

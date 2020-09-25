@@ -33,18 +33,17 @@
 
 #include <algorithm>
 
-ScopeTree::ScopeTree(ScopeType type, const QString &name, const ScopeTree::Ptr &parentScope)
-    : m_parentScope(parentScope), m_name(name), m_scopeType(type) {}
+ScopeTree::ScopeTree(ScopeType type, const ScopeTree::Ptr &parentScope)
+    : m_parentScope(parentScope), m_scopeType(type) {}
 
-ScopeTree::Ptr ScopeTree::create(ScopeType type, const QString &name,
-                                 const ScopeTree::Ptr &parentScope)
+ScopeTree::Ptr ScopeTree::create(ScopeType type, const ScopeTree::Ptr &parentScope)
 {
-    ScopeTree::Ptr childScope(new ScopeTree{type, name, parentScope});
+    ScopeTree::Ptr childScope(new ScopeTree{type, parentScope});
     if (parentScope) {
         Q_ASSERT(type != ScopeType::QMLScope
                 || !parentScope->m_parentScope
                 || parentScope->parentScope()->m_scopeType == ScopeType::QMLScope
-                || parentScope->parentScope()->m_name == QLatin1String("global"));
+                || parentScope->parentScope()->m_internalName == QLatin1String("global"));
         parentScope->m_childScopes.push_back(childScope);
     }
     return childScope;
@@ -168,8 +167,8 @@ void ScopeTree::updateParentProperty(const ScopeTree::ConstPtr &scope)
 {
     auto it = m_properties.find(QLatin1String("parent"));
     if (it != m_properties.end()
-            && scope->name() != QLatin1String("Component")
-            && scope->name() != QLatin1String("program"))
+            && scope->internalName() != QLatin1String("Component")
+            && scope->internalName() != QLatin1String("program"))
         it->setType(scope);
 }
 

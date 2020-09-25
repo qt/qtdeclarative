@@ -60,7 +60,8 @@ static QQmlDirParser createQmldirParserForFile(const QString &filename)
 
 void FindWarningVisitor::enterEnvironment(ScopeType type, const QString &name)
 {
-    m_currentScope = ScopeTree::create(type, name, m_currentScope);
+    m_currentScope = ScopeTree::create(type, m_currentScope);
+    m_currentScope->setInternalName(name);
 }
 
 void FindWarningVisitor::leaveEnvironment()
@@ -484,7 +485,6 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
         // found id
         auto expstat = cast<ExpressionStatement *>(uisb->statement);
         auto identexp = cast<IdentifierExpression *>(expstat->expression);
-        QString elementName = m_currentScope->name();
         m_qmlid2scope.insert(identexp->name.toString(), m_currentScope);
         if (m_currentScope->isVisualRootScope())
             m_rootId = identexp->name.toString();
@@ -564,7 +564,7 @@ bool FindWarningVisitor::visit(QQmlJS::AST::IdentifierExpression *idexp)
 FindWarningVisitor::FindWarningVisitor(
         QStringList qmltypeDirs, QStringList qmltypesFiles, QString code, QString fileName,
         bool silent, bool warnUnqualified, bool warnWithStatement, bool warnInheritanceCycle)
-    : m_rootScope(ScopeTree::create(ScopeType::JSFunctionScope, "global")),
+    : m_rootScope(ScopeTree::create(ScopeType::JSFunctionScope)),
       m_qmltypesFiles(std::move(qmltypesFiles)),
       m_code(std::move(code)),
       m_rootId(QLatin1String("<id>")),
@@ -575,6 +575,7 @@ FindWarningVisitor::FindWarningVisitor(
       m_warnInheritanceCycle(warnInheritanceCycle),
       m_importer(QFileInfo(m_filePath).path(), qmltypeDirs)
 {
+    m_rootScope->setInternalName("global");
     m_currentScope = m_rootScope;
 
     // setup color output
@@ -810,7 +811,7 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
             do {
                 scope = scope->parentScope(); // TODO: rename method
             } while (scope->scopeType() != ScopeType::QMLScope);
-            targetScope = m_rootScopeImports.value(scope->name());
+            targetScope = m_rootScopeImports.value(scope->internalName());
         } else {
             // there was a target, check if we already can find it
             auto scopeIt =  m_qmlid2scope.find(target);

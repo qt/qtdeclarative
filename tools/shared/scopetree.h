@@ -109,7 +109,7 @@ public:
         int m_metaObjectRevision = 0;
     };
 
-    static ScopeTree::Ptr create(ScopeType type = ScopeType::QMLScope, const QString &name = QString(),
+    static ScopeTree::Ptr create(ScopeType type = ScopeType::QMLScope,
                                  const ScopeTree::Ptr &parentScope = ScopeTree::Ptr());
     static ScopeTree::ConstPtr findCurrentQMLScope(const ScopeTree::ConstPtr &scope);
 
@@ -129,7 +129,6 @@ public:
                       const QQmlJS::SourceLocation &location);
 
     bool isVisualRootScope() const;
-    QString name() const { return m_name; }
 
     ScopeType scopeType() const { return m_scopeType; }
 
@@ -209,8 +208,7 @@ public:
     }
 
 private:
-    ScopeTree(ScopeType type, const QString &name = QString(),
-              const ScopeTree::Ptr &parentScope = ScopeTree::Ptr());
+    ScopeTree(ScopeType type, const ScopeTree::Ptr &parentScope = ScopeTree::Ptr());
 
     QSet<QString> m_jsIdentifiers;
     QMultiHash<QString, MethodUsage> m_injectedSignalIdentifiers;
@@ -226,7 +224,6 @@ private:
     ScopeTree::WeakPtr m_parentScope;
 
     QString m_fileName;
-    QString m_name;
     QString m_internalName;
     QString m_baseTypeName;
 
