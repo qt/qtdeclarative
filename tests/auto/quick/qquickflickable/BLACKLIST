@@ -1,5 +1,7 @@
 [nestedPressDelay]
 macos # QTBUG-86729
+[stopAtBounds]
+macos # QTBUG-86729
 [nestedStopAtBounds]
 macos # QTBUG-86729
 [nestedSliderUsingTouch]

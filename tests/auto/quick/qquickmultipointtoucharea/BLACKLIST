@@ -21,3 +21,7 @@ sles
 * # QTBUG-86729
 [reuse]
 * # QTBUG-86729
+[signalTest]
+macos # QTBUG-86729
+[cancel]
+macos # QTBUG-86729
