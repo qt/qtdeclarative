@@ -299,7 +299,8 @@ struct QQuickItemForeign
 struct QQuickPaletteForeign
 {
     Q_GADGET
-    QML_NAMED_ELEMENT(Palette)
+    QML_ANONYMOUS
+    QML_FOREIGN(QQuickPalette)
     QML_ADDED_IN_VERSION(6, 0)
 };
 
