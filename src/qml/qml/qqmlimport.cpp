@@ -989,8 +989,8 @@ bool QQmlImportNamespace::resolveType(QQmlTypeLoader *typeLoader, const QHashedS
         typeRecursionDetected = &localTypeRecursionDetected;
 
     if (needsSorting()) {
-        std::stable_sort(imports.begin(), imports.end(), [](QQmlImportInstance *left, QQmlImportInstance *) {
-            return left->isInlineComponent;
+        std::stable_partition(imports.begin(), imports.end(), [](QQmlImportInstance *import) {
+            return import->isInlineComponent;
         });
         setNeedsSorting(false);
     }

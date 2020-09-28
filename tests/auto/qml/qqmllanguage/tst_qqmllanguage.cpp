@@ -5557,6 +5557,7 @@ void tst_qqmllanguage::inlineComponent()
     QFETCH(QUrl, componentUrl);
     QFETCH(QColor, color);
     QFETCH(int, width);
+    QFETCH(bool, checkProperties);
     QQmlEngine engine;
     QQmlComponent component(&engine, componentUrl);
     QScopedPointer<QObject> o(component.create());
@@ -5564,10 +5565,12 @@ void tst_qqmllanguage::inlineComponent()
         qDebug() << component.errorString();
     }
     QVERIFY(!o.isNull());
-    auto icInstance = o->findChild<QObject *>("icInstance");
-    QVERIFY(icInstance);
-    QCOMPARE(icInstance->property("color").value<QColor>(),color);
-    QCOMPARE(icInstance->property("width").value<qreal>(), width);
+    if (checkProperties) {
+        auto icInstance = o->findChild<QObject *>("icInstance");
+        QVERIFY(icInstance);
+        QCOMPARE(icInstance->property("color").value<QColor>(),color);
+        QCOMPARE(icInstance->property("width").value<qreal>(), width);
+    }
 }
 
 void tst_qqmllanguage::inlineComponent_data()
@@ -5575,18 +5578,21 @@ void tst_qqmllanguage::inlineComponent_data()
     QTest::addColumn<QUrl>("componentUrl");
     QTest::addColumn<QColor>("color");
     QTest::addColumn<int>("width");
+    QTest::addColumn<bool>("checkProperties");
 
-    QTest::newRow("Usage from other component") << testFileUrl("inlineComponentUser1.qml") << QColorConstants::Blue << 24;
-    QTest::newRow("Reexport")                   << testFileUrl("inlineComponentUser2.qml") << QColorConstants::Svg::green << 24;
-    QTest::newRow("Usage in same component")    << testFileUrl("inlineComponentUser3.qml") << QColorConstants::Blue << 24;
+    QTest::newRow("Usage from other component") << testFileUrl("inlineComponentUser1.qml") << QColorConstants::Blue << 24 << true;
+    QTest::newRow("Reexport")                   << testFileUrl("inlineComponentUser2.qml") << QColorConstants::Svg::green << 24 << true;
+    QTest::newRow("Usage in same component")    << testFileUrl("inlineComponentUser3.qml") << QColorConstants::Blue << 24 << true;
 
-    QTest::newRow("Resolution happens at instantiation") << testFileUrl("inlineComponentUser4.qml") << QColorConstants::Blue << 24;
-    QTest::newRow("Non-toplevel IC is found") << testFileUrl("inlineComponentUser5.qml") << QColorConstants::Svg::red << 24;
+    QTest::newRow("Resolution happens at instantiation") << testFileUrl("inlineComponentUser4.qml") << QColorConstants::Blue << 24 << true;
+    QTest::newRow("Non-toplevel IC is found") << testFileUrl("inlineComponentUser5.qml") << QColorConstants::Svg::red << 24 << true;
 
-    QTest::newRow("Resolved in correct order") << testFileUrl("inlineComponentOrder.qml") << QColorConstants::Blue << 200;
+    QTest::newRow("Resolved in correct order") << testFileUrl("inlineComponentOrder.qml") << QColorConstants::Blue << 200 << true;
 
-    QTest::newRow("ID resolves correctly") << testFileUrl("inlineComponentWithId.qml") << QColorConstants::Svg::red << 42;
-    QTest::newRow("Alias resolves correctly") << testFileUrl("inlineComponentWithAlias.qml") << QColorConstants::Svg::lime << 42;
+    QTest::newRow("ID resolves correctly") << testFileUrl("inlineComponentWithId.qml") << QColorConstants::Svg::red << 42 << true;
+    QTest::newRow("Alias resolves correctly") << testFileUrl("inlineComponentWithAlias.qml") << QColorConstants::Svg::lime << 42 << true;
+
+    QTest::newRow("Two inline components in same do not crash (QTBUG-86989)") << testFileUrl("twoInlineComponents.qml") << QColor() << 0 << false;
 }
 
 void tst_qqmllanguage::inlineComponentReferenceCycle_data()
