@@ -72,7 +72,7 @@ ApplicationWindow {
         placeholderText: qsTr("User name")
         anchors.centerIn: parent
 
-        onTextChanged: backend.userName = text
+        onEditingFinished: backend.userName = text
     }
 //![username_input]
 }
