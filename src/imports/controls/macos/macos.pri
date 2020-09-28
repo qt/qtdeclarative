@@ -9,6 +9,7 @@ QML_FILES += \
     $$PWD/Frame.qml \
     $$PWD/TextArea.qml \
     $$PWD/ComboBox.qml \
+    $$PWD/ScrollView.qml \
     $$PWD/ScrollBar.qml \
     $$PWD/ProgressBar.qml \
     $$PWD/Dial.qml \

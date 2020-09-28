@@ -38,6 +38,7 @@ QML_FILES += \
     $$PWD/RangeSlider.qml \
     $$PWD/RoundButton.qml \
     $$PWD/ScrollBar.qml \
+    $$PWD/ScrollView.qml \
     $$PWD/ScrollIndicator.qml \
     $$PWD/Slider.qml \
     $$PWD/SpinBox.qml \

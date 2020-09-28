@@ -50,6 +50,7 @@ set(qml_files
     "Frame.qml"
     "TextArea.qml"
     "ComboBox.qml"
+    "ScrollView.qml"
     "ScrollBar.qml"
     "ProgressBar.qml"
     "Dial.qml"

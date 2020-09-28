@@ -14,3 +14,4 @@ Frame 6.0 Frame.qml
 TextArea 6.0 TextArea.qml
 ComboBox 6.0 ComboBox.qml
 ProgressBar 6.0 ProgressBar.qml
+ScrollView 6.0 ScrollView.qml

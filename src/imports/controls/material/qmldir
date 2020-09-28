@@ -26,6 +26,7 @@ ProgressBar 2.0 ProgressBar.qml
 RadioButton 2.0 RadioButton.qml
 RadioDelegate 2.0 RadioDelegate.qml
 RangeSlider 2.0 RangeSlider.qml
+ScrollView 2.0 ScrollView.qml
 ScrollBar 2.0 ScrollBar.qml
 ScrollIndicator 2.0 ScrollIndicator.qml
 Slider 2.0 Slider.qml
@@ -96,6 +97,7 @@ RadioButton 6.0 RadioButton.qml
 RadioDelegate 6.0 RadioDelegate.qml
 RangeSlider 6.0 RangeSlider.qml
 RoundButton 6.0 RoundButton.qml
+ScrollView 6.0 ScrollView.qml
 ScrollBar 6.0 ScrollBar.qml
 ScrollIndicator 6.0 ScrollIndicator.qml
 Slider 6.0 Slider.qml

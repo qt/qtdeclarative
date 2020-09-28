@@ -94,6 +94,7 @@ set(qml_files
     "RadioDelegate.qml"
     "RangeSlider.qml"
     "RoundButton.qml"
+    "ScrollView.qml"
     "ScrollBar.qml"
     "ScrollIndicator.qml"
     "Slider.qml"
