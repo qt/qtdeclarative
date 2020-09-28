@@ -229,7 +229,6 @@ protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *) override;
-    bool sendMouseEvent(QMouseEvent *event);
     bool childMouseEventFilter(QQuickItem *, QEvent *) override;
     void mouseUngrabEvent() override;
     void componentComplete() override;
