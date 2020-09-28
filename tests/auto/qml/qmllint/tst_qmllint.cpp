@@ -117,7 +117,7 @@ void TestQmllint::testUnknownCausesFail()
 {
     const QString unknownNotFound = runQmllint("unknownElement.qml", false);
     QVERIFY(unknownNotFound.contains(
-                QStringLiteral("warning: Unknown was not found. Did you add all import paths?")));
+                QStringLiteral("Warning: Unknown was not found. Did you add all import paths?")));
 }
 
 void TestQmllint::directoryPassedAsQmlTypesFile()
@@ -185,7 +185,7 @@ void TestQmllint::dirtyQmlCode_data()
             << QString();
     QTest::newRow("badQmldirImportAndDepend")
             << QStringLiteral("qmldirImportAndDepend/bad.qml")
-            << QString("warning: Item was not found. Did you add all import paths?")
+            << QString("Warning: Item was not found. Did you add all import paths?")
             << QString();
     QTest::newRow("javascriptMethodsInModule")
             << QStringLiteral("javascriptMethodsInModuleBad.qml")

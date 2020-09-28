@@ -367,7 +367,7 @@ void FindWarningVisitor::importExportedNames(ScopeTree::ConstPtr scope)
         } else if (auto newScope = scope->baseType()) {
             scope = newScope;
         } else {
-            m_colorOut.write(QLatin1String("warning: "), Warning);
+            m_colorOut.write(QLatin1String("Warning: "), Warning);
             m_colorOut.write(scope->baseTypeName()
                              + QLatin1String(" was not found."
                                              " Did you add all import paths?\n"));
