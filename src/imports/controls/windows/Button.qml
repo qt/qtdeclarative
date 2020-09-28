@@ -90,7 +90,6 @@ T.Button {
         icon: control.icon
         text: control.text
         font: control.font
-        color: control.checked || control.highlighted ? control.palette.brightText :
-                                                        control.flat && !control.down ? (control.visualFocus ? control.palette.highlight : control.palette.windowText) : control.palette.buttonText
+        color: control.flat && !control.down ? (control.visualFocus ? control.palette.highlight : control.palette.windowText) : control.palette.buttonText
     }
 }
