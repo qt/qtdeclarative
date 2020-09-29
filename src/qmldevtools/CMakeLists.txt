@@ -60,7 +60,7 @@ qt_process_qlalr(QmlDevTools "${CMAKE_CURRENT_SOURCE_DIR}/../qml/parser/qqmljs.g
 qt_internal_module_info(qml_module "Qml")
 if(QT_FEATURE_framework)
     get_target_property(_qml_fw_headers_dir Qt::Qml LIBRARY_OUTPUT_DIRECTORY)
-    string(APPEND _qml_fw_headers_dir /${qml_module}.framework/Versions/${PROJECT_VERSION_MAJOR}/Headers)
+    string(APPEND _qml_fw_headers_dir /${qml_module}.framework/Versions/A/Headers)
     set(_qml_dev_tools_private_includes
         $<BUILD_INTERFACE:${_qml_fw_headers_dir}>
         $<BUILD_INTERFACE:${_qml_fw_headers_dir}/${PROJECT_VERSION}>
