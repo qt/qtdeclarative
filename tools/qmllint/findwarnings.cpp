@@ -113,7 +113,13 @@ void FindWarningVisitor::throwRecursionDepthError()
 bool FindWarningVisitor::visit(QQmlJS::AST::UiProgram *)
 {
     enterEnvironment(ScopeType::QMLScope, "program");
-    m_rootScopeImports = m_importer.importBaseQmlTypes(m_qmltypesFiles);
+    m_rootScopeImports = m_importer.importBuiltins();
+
+    if (!m_qmltypesFiles.isEmpty()) {
+        const auto baseTypes = m_importer.importQmltypes(m_qmltypesFiles);
+        m_rootScopeImports.importedQmlNames.insert(baseTypes.importedQmlNames);
+        m_rootScopeImports.cppNames.insert(baseTypes.cppNames);
+    }
 
     // add "self" (as we only ever check the first part of a qualified identifier, we get away with
     // using an empty ScopeTree
@@ -339,7 +345,7 @@ bool FindWarningVisitor::visit(QQmlJS::AST::IdentifierExpression *idexp)
 }
 
 FindWarningVisitor::FindWarningVisitor(
-        QStringList qmltypeDirs, QStringList qmltypesFiles, QString code, QString fileName,
+        QStringList qmlImportPaths, QStringList qmltypesFiles, QString code, QString fileName,
         bool silent, bool warnUnqualified, bool warnWithStatement, bool warnInheritanceCycle)
     : m_rootScope(ScopeTree::create(ScopeType::JSFunctionScope)),
       m_qmltypesFiles(std::move(qmltypesFiles)),
@@ -350,7 +356,7 @@ FindWarningVisitor::FindWarningVisitor(
       m_warnUnqualified(warnUnqualified),
       m_warnWithStatement(warnWithStatement),
       m_warnInheritanceCycle(warnInheritanceCycle),
-      m_importer(qmltypeDirs)
+      m_importer(qmlImportPaths)
 {
     m_rootScope->setInternalName("global");
     m_currentScope = m_rootScope;

@@ -162,11 +162,9 @@ void QmlJSImporter::processImport(
 }
 
 /*!
- * Imports builtins.qmltypes and the given \a qmltypesFiles. If \a qmltypesFiles
- * is empty, imports any .qmltypes files without accompanying qmldir found in
- * any of the import base paths.
+ * Imports builtins.qmltypes found in any of the import paths.
  */
-QmlJSImporter::ImportedTypes QmlJSImporter::importBaseQmlTypes(const QStringList &qmltypesFiles)
+QmlJSImporter::ImportedTypes QmlJSImporter::importBuiltins()
 {
     ImportedTypes types;
 
@@ -180,32 +178,22 @@ QmlJSImporter::ImportedTypes QmlJSImporter::importBaseQmlTypes(const QStringList
         processImport(result, &types);
     }
 
-    if (qmltypesFiles.isEmpty()) {
-        for (auto const &qmltypesPath : m_importPaths) {
-            if (QFile::exists(qmltypesPath + SlashQmldir))
-                continue;
-            Import result;
-            QDirIterator it {
-                qmltypesPath, QStringList { QLatin1String("*.qmltypes") }, QDir::Files };
+    return types;
+}
 
-            while (it.hasNext()) {
-                const QString name = it.next();
-                if (!name.endsWith(QLatin1String("/builtins.qmltypes")))
-                    readQmltypes(name, &result.objects);
-            }
+/*!
+ * Imports types from the specified \a qmltypesFiles.
+ */
+QmlJSImporter::ImportedTypes QmlJSImporter::importQmltypes(const QStringList &qmltypesFiles)
+{
+    ImportedTypes types;
+    Import result;
 
-            importDependencies(result, &types);
-            processImport(result, &types);
-        }
-    } else {
-        Import result;
+    for (const auto &qmltypeFile : qmltypesFiles)
+        readQmltypes(qmltypeFile, &result.objects);
 
-        for (const auto &qmltypeFile : qmltypesFiles)
-            readQmltypes(qmltypeFile, &result.objects);
-
-        importDependencies(result, &types);
-        processImport(result, &types);
-    }
+    importDependencies(result, &types);
+    processImport(result, &types);
 
     return types;
 }

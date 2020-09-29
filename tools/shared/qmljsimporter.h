@@ -59,7 +59,8 @@ public:
 
     QmlJSImporter(const QStringList &importPaths) : m_importPaths(importPaths) {}
 
-    ImportedTypes importBaseQmlTypes(const QStringList &qmltypesFiles);
+    ImportedTypes importBuiltins();
+    ImportedTypes importQmltypes(const QStringList &qmltypesFiles);
     ImportedTypes importFileOrDirectory(
             const QString &fileOrDirectory, const QString &prefix = QString());
     ImportedTypes importModule(

@@ -38,6 +38,7 @@
 #include <QtCore/qfile.h>
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qcoreapplication.h>
+#include <QtCore/qdiriterator.h>
 
 #if QT_CONFIG(commandlineparser)
 #include <QtCore/qcommandlineparser.h>
@@ -49,7 +50,7 @@
 
 static bool lint_file(const QString &filename, const bool silent, const bool warnUnqualified,
                       const bool warnWithStatement, const bool warnInheritanceCycle,
-                      const QStringList &qmltypeDirs, const QStringList &qmltypeFiles)
+                      const QStringList &qmlImportPaths, const QStringList &qmltypesFiles)
 {
     QFile file(filename);
     if (!file.open(QFile::ReadOnly)) {
@@ -85,7 +86,7 @@ static bool lint_file(const QString &filename, const bool silent, const bool war
 
     if (success && !isJavaScript) {
         auto root = parser.rootNode();
-        FindWarningVisitor v { qmltypeDirs, qmltypeFiles, code, filename, silent,
+        FindWarningVisitor v { qmlImportPaths, qmltypesFiles, code, filename, silent,
                                warnUnqualified, warnWithStatement, warnInheritanceCycle };
         root->accept(&v);
         success = v.check();
@@ -122,17 +123,20 @@ int main(int argv, char *argc[])
 
     parser.addOption(disableCheckInheritanceCycle);
 
-    QCommandLineOption qmltypesDirsOption(
+    QCommandLineOption qmlImportPathsOption(
             QStringList() << "I"
                           << "qmldirs",
-            QLatin1String("Look for qmltypes files in specified directory"),
+            QLatin1String("Look for QML modules in specified directory"),
             QLatin1String("directory"));
-    parser.addOption(qmltypesDirsOption);
+    parser.addOption(qmlImportPathsOption);
 
     QCommandLineOption qmltypesFilesOption(
             QStringList() << "i"
                           << "qmltypes",
-            QLatin1String("Include the specified qmltypes files"),
+            QLatin1String("Include the specified qmltypes files. By default, all qmltypes files "
+                          "found in the current directory are used. When this option is set, you "
+                          "have to explicitly add files from the current directory if you want "
+                          "them to be used."),
             QLatin1String("qmltypes"));
     parser.addOption(qmltypesFilesOption);
 
@@ -152,25 +156,31 @@ int main(int argv, char *argc[])
     bool warnInheritanceCycle = !parser.isSet(disableCheckInheritanceCycle);
 
     // use host qml import path as a sane default if nothing else has been provided
-    QStringList qmltypeDirs = parser.isSet(qmltypesDirsOption)
-            ? parser.values(qmltypesDirsOption)
+    QStringList qmlImportPaths = parser.isSet(qmlImportPathsOption)
+            ? parser.values(qmlImportPathsOption)
 #   ifndef QT_BOOTSTRAPPED
-            : QStringList { QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath) };
+            : QStringList { QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath), QDir::currentPath() };
 #   else
-            : QStringList {};
+            : QStringList { QDir::currentPath() };
 #   endif
 
-    if (!parser.isSet(qmltypesFilesOption))
-        qmltypeDirs << ".";
+    QStringList qmltypesFiles;
+    if (parser.isSet(qmltypesFilesOption)) {
+        qmltypesFiles = parser.values(qmltypesFilesOption);
+    } else {
+        // If none are given explicitly, use the qmltypes files from the current directory.
+        QDirIterator it(".", {"*.qmltypes"}, QDir::Files);
+        while (it.hasNext())
+            qmltypesFiles.append(it.fileInfo().absoluteFilePath());
+    }
 
-    QStringList qmltypeFiles = parser.isSet(qmltypesFilesOption) ? parser.values(qmltypesFilesOption) : QStringList {};
 #else
     bool silent = false;
     bool warnUnqualified = true;
     bool warnWithStatement = true;
     bool warnInheritanceCycle = true;
-    QStringList qmltypeDirs {};
-    QStringList qmltypeFiles {};
+    QStringList qmlImportPahs {};
+    QStringList qmltypesFiles {};
 #endif
     bool success = true;
 #if QT_CONFIG(commandlineparser)
@@ -179,7 +189,8 @@ int main(int argv, char *argc[])
     const auto arguments = app.arguments();
     for (const QString &filename : arguments)
 #endif
-        success &= lint_file(filename, silent, warnUnqualified, warnWithStatement, warnInheritanceCycle, qmltypeDirs, qmltypeFiles);
+        success &= lint_file(filename, silent, warnUnqualified, warnWithStatement,
+                             warnInheritanceCycle, qmlImportPaths, qmltypesFiles);
 
     return success ? 0 : -1;
 }
