@@ -12,6 +12,7 @@ RESOURCEFILEMAPPER_HEADERS = \
 METATYPEREADER_SOURCES = \
     $$PWD/componentversion.cpp \
     $$PWD/importedmembersvisitor.cpp \
+    $$PWD/qmljsimporter.cpp \
     $$PWD/qmljstypereader.cpp \
     $$PWD/scopetree.cpp \
     $$PWD/typedescriptionreader.cpp
@@ -19,6 +20,7 @@ METATYPEREADER_SOURCES = \
 METATYPEREADER_HEADERS = \
     $$PWD/componentversion.h \
     $$PWD/importedmembersvisitor.h \
+    $$PWD/qmljsimporter.h \
     $$PWD/qmljstypereader.h \
     $$PWD/metatypes.h \
     $$PWD/scopetree.h \

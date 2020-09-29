@@ -84,7 +84,7 @@ void CheckIdentifiers::printContext(const QQmlJS::SourceLocation &location) cons
 }
 
 static bool walkViaParentAndAttachedScopes(ScopeTree::ConstPtr rootType,
-                                           const FindWarningVisitor::ImportedTypes &allTypes,
+                                           const QmlJSImporter::ImportedTypes &allTypes,
                                            std::function<bool(ScopeTree::ConstPtr)> visit)
 {
     if (rootType == nullptr)

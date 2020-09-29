@@ -38,7 +38,7 @@ class CheckIdentifiers
 {
 public:
     CheckIdentifiers(ColorOutput *colorOut, const QString &code,
-                     const FindWarningVisitor::ImportedTypes &types, const QString &fileName) :
+                     const QmlJSImporter::ImportedTypes &types, const QString &fileName) :
         m_colorOut(colorOut), m_code(code), m_types(types), m_fileName(fileName)
     {}
 
@@ -53,7 +53,7 @@ private:
 
     ColorOutput *m_colorOut = nullptr;
     QString m_code;
-    FindWarningVisitor::ImportedTypes m_types;
+    QmlJSImporter::ImportedTypes m_types;
     QString m_fileName;
 };
 

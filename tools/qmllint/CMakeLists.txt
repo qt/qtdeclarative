@@ -12,6 +12,7 @@ qt_add_tool(${target_name}
         ../shared/componentversion.cpp ../shared/componentversion.h
         ../shared/importedmembersvisitor.cpp ../shared/importedmembersvisitor.h
         ../shared/metatypes.h
+        ../shared/qmljsimporter.cpp ../shared/qmljsimporter.h
         ../shared/qmljstypereader.cpp ../shared/qmljstypereader.h
         ../shared/scopetree.cpp ../shared/scopetree.h
         ../shared/typedescriptionreader.cpp ../shared/typedescriptionreader.h

@@ -42,6 +42,7 @@
 #include "typedescriptionreader.h"
 #include "scopetree.h"
 #include "qcoloroutput.h"
+#include "qmljsimporter.h"
 
 #include <QtQml/private/qqmldirparser_p.h>
 #include <QtQml/private/qqmljsastvisitor_p.h>
@@ -53,18 +54,6 @@ class FindWarningVisitor : public QQmlJS::AST::Visitor
 {
     Q_DISABLE_COPY_MOVE(FindWarningVisitor)
 public:
-    struct ImportedTypes
-    {
-        // C++ names used in qmltypes files for non-composite types
-        QHash<QString, ScopeTree::Ptr> cppNames;
-
-        // Names a component intends to export, without prefix
-        QHash<QString, ScopeTree::Ptr> exportedQmlNames;
-
-        // Names the importing component sees, possibly adding a prefix
-        QHash<QString, ScopeTree::Ptr> importedQmlNames;
-    };
-
     explicit FindWarningVisitor(
             QStringList qmltypeDirs, QStringList qmltypesFiles, QString code, QString fileName,
             bool silent, bool warnUnqualified, bool warnWithStatement, bool warnInheritanceCycle);
@@ -72,56 +61,7 @@ public:
     bool check();
 
 private:
-    class Importer
-    {
-    public:
-        Importer(const QString &currentDir, const QStringList &importPaths) :
-            m_currentDir(currentDir), m_importPaths(importPaths) {}
-
-        ImportedTypes importBareQmlTypes(const QStringList &qmltypesFiles);
-        ImportedTypes importFileOrDirectory(
-                const QString &fileOrDirectory, const QString &prefix = QString());
-        ImportedTypes importModule(
-                const QString &module, const QString &prefix = QString(),
-                QTypeRevision version = QTypeRevision());
-
-        QStringList takeWarnings()
-        {
-            QStringList result = std::move(m_warnings);
-            m_warnings.clear();
-            return result;
-        }
-
-    private:
-        struct Import {
-            QHash<QString, ScopeTree::Ptr> objects;
-            QHash<QString, ScopeTree::Ptr> scripts;
-            QList<QQmlDirParser::Import> imports;
-            QList<QQmlDirParser::Import> dependencies;
-        };
-
-        void importHelper(const QString &module, ImportedTypes *types,
-                          const QString &prefix = QString(),
-                          QTypeRevision version = QTypeRevision());
-        void processImport(const Import &import, ImportedTypes *types,
-                           const QString &prefix = QString());
-        void importDependencies(const FindWarningVisitor::Importer::Import &import,
-                                FindWarningVisitor::ImportedTypes *types,
-                                const QString &prefix = QString(),
-                                QTypeRevision version = QTypeRevision());
-        void readQmltypes(const QString &filename, QHash<QString, ScopeTree::Ptr> *objects);
-        Import readQmldir(const QString &dirname);
-        ScopeTree::Ptr localFile2ScopeTree(const QString &filePath);
-
-        QString m_currentDir;
-        QStringList m_importPaths;
-        QHash<QPair<QString, QTypeRevision>, Import> m_seenImports;
-        QHash<QString, ScopeTree::Ptr> m_importedFiles;
-        QStringList m_warnings;
-
-    };
-
-    ImportedTypes m_rootScopeImports;
+    QmlJSImporter::ImportedTypes m_rootScopeImports;
 
     ScopeTree::Ptr m_rootScope;
     ScopeTree::Ptr m_currentScope;
@@ -148,7 +88,7 @@ private:
 
     QVarLengthArray<OutstandingConnection, 3> m_outstandingConnections; // Connections whose target we have not encountered
 
-    Importer m_importer;
+    QmlJSImporter m_importer;
 
     void enterEnvironment(ScopeType type, const QString &name);
     void leaveEnvironment();
