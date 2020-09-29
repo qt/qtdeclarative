@@ -50,11 +50,8 @@ public:
         // C++ names used in qmltypes files for non-composite types
         QHash<QString, ScopeTree::Ptr> cppNames;
 
-        // Names a component intends to export, without prefix
-        QHash<QString, ScopeTree::Ptr> exportedQmlNames;
-
-        // Names the importing component sees, possibly adding a prefix
-        QHash<QString, ScopeTree::Ptr> importedQmlNames;
+        // Names the importing component sees, including any prefixes
+        QHash<QString, ScopeTree::Ptr> qmlNames;
     };
 
     QmlJSImporter(const QStringList &importPaths) : m_importPaths(importPaths) {}

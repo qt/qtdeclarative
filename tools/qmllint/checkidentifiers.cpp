@@ -99,7 +99,7 @@ static bool walkViaParentAndAttachedScopes(ScopeTree::ConstPtr rootType,
             return true;
 
         if (type->isComposite()) {
-            if (auto superType = allTypes.importedQmlNames.value(type->baseTypeName()))
+            if (auto superType = allTypes.qmlNames.value(type->baseTypeName()))
                 stack.push(superType);
         } else {
             if (auto superType = allTypes.cppNames.value(type->baseTypeName()))
@@ -204,7 +204,7 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
             if (access.m_parentType.isEmpty() && scope->isComposite())
                 findNextScope(m_types.cppNames);
             else
-                findNextScope(m_types.importedQmlNames);
+                findNextScope(m_types.qmlNames);
             continue;
         }
 
@@ -240,7 +240,7 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
 
         ScopeTree::ConstPtr rootType;
         if (!access.m_parentType.isEmpty())
-            rootType = m_types.importedQmlNames.value(access.m_parentType);
+            rootType = m_types.qmlNames.value(access.m_parentType);
         else
             rootType = scope;
 
@@ -253,7 +253,7 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
                         if (propType)
                             scope = propType;
                         else if (scope->isComposite())
-                            scope = m_types.importedQmlNames.value(typeIt->typeName());
+                            scope = m_types.qmlNames.value(typeIt->typeName());
                         else
                             scope = m_types.cppNames.value(typeIt->typeName());
                         return true;
@@ -274,8 +274,8 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
 
         if (access.m_name.front().isUpper() && scope->scopeType() == ScopeType::QMLScope) {
             // may be an attached type
-            const auto it = m_types.importedQmlNames.find(access.m_name);
-            if (it != m_types.importedQmlNames.end() && !(*it)->attachedTypeName().isEmpty()) {
+            const auto it = m_types.qmlNames.find(access.m_name);
+            if (it != m_types.qmlNames.end() && !(*it)->attachedTypeName().isEmpty()) {
                 const auto attached = m_types.cppNames.find((*it)->attachedTypeName());
                 if (attached != m_types.cppNames.end()) {
                     scope = *attached;
@@ -341,8 +341,8 @@ bool CheckIdentifiers::operator()(const QHash<QString, ScopeTree::ConstPtr> &qml
                     if (scopedName.front().isUpper()) {
                         const QString qualified = memberAccessBase.m_name + QLatin1Char('.')
                                 + scopedName;
-                        const auto typeIt = m_types.importedQmlNames.find(qualified);
-                        if (typeIt != m_types.importedQmlNames.end()) {
+                        const auto typeIt = m_types.qmlNames.find(qualified);
+                        if (typeIt != m_types.qmlNames.end()) {
                             memberAccessChain.takeFirst();
                             if (!checkMemberAccess(memberAccessChain, *typeIt))
                                 noUnqualifiedIdentifier = false;
@@ -385,8 +385,8 @@ bool CheckIdentifiers::operator()(const QHash<QString, ScopeTree::ConstPtr> &qml
             if (memberAccessBase.m_name == QLatin1String("Qt"))
                 continue;
 
-            const auto typeIt = m_types.importedQmlNames.find(memberAccessBase.m_name);
-            if (typeIt != m_types.importedQmlNames.end()) {
+            const auto typeIt = m_types.qmlNames.find(memberAccessBase.m_name);
+            if (typeIt != m_types.qmlNames.end()) {
                 if (!checkMemberAccess(memberAccessChain, *typeIt))
                     noUnqualifiedIdentifier = false;
                 continue;
