@@ -144,14 +144,14 @@ bool ScopeTree::isIdInjectedFromSignal(const QString &id) const
     return findCurrentQMLScope(parentScope())->m_injectedSignalIdentifiers.contains(id);
 }
 
-void ScopeTree::resolveTypes(const QHash<QString, ScopeTree::Ptr> &contextualTypes)
+void ScopeTree::resolveTypes(const QHash<QString, ScopeTree::ConstPtr> &contextualTypes)
 {
     auto findType = [&](const QString &name) {
         auto type = contextualTypes.constFind(name);
         if (type != contextualTypes.constEnd())
             return *type;
 
-        return ScopeTree::Ptr();
+        return ScopeTree::ConstPtr();
     };
 
     m_baseType = findType(m_baseTypeName);

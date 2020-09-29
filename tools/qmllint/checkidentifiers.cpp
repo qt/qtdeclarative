@@ -188,8 +188,8 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
             if (unknownBuiltins.contains(typeName))
                 return true;
 
-            const auto it = m_types.qmlNames.find(typeName);
-            if (it == m_types.qmlNames.end()) {
+            const auto it = m_types.find(typeName);
+            if (it == m_types.end()) {
                 detectedRestrictiveKind = typeName;
                 detectedRestrictiveName = access.m_name;
                 scope = nullptr;
@@ -232,7 +232,7 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
 
         ScopeTree::ConstPtr rootType;
         if (!access.m_parentType.isEmpty())
-            rootType = m_types.qmlNames.value(access.m_parentType);
+            rootType = m_types.value(access.m_parentType);
         else
             rootType = scope;
 
@@ -260,8 +260,8 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
 
         if (access.m_name.front().isUpper() && scope->scopeType() == ScopeType::QMLScope) {
             // may be an attached type
-            const auto it = m_types.qmlNames.find(access.m_name);
-            if (it != m_types.qmlNames.end() && !(*it)->attachedTypeName().isEmpty()) {
+            const auto it = m_types.find(access.m_name);
+            if (it != m_types.end() && !(*it)->attachedTypeName().isEmpty()) {
                 if (const auto attached = (*it)->attachedType()) {
                     scope = attached;
                     continue;
@@ -326,8 +326,8 @@ bool CheckIdentifiers::operator()(const QHash<QString, ScopeTree::ConstPtr> &qml
                     if (scopedName.front().isUpper()) {
                         const QString qualified = memberAccessBase.m_name + QLatin1Char('.')
                                 + scopedName;
-                        const auto typeIt = m_types.qmlNames.find(qualified);
-                        if (typeIt != m_types.qmlNames.end()) {
+                        const auto typeIt = m_types.find(qualified);
+                        if (typeIt != m_types.end()) {
                             memberAccessChain.takeFirst();
                             if (!checkMemberAccess(memberAccessChain, *typeIt))
                                 noUnqualifiedIdentifier = false;
@@ -370,8 +370,8 @@ bool CheckIdentifiers::operator()(const QHash<QString, ScopeTree::ConstPtr> &qml
             if (memberAccessBase.m_name == QLatin1String("Qt"))
                 continue;
 
-            const auto typeIt = m_types.qmlNames.find(memberAccessBase.m_name);
-            if (typeIt != m_types.qmlNames.end()) {
+            const auto typeIt = m_types.find(memberAccessBase.m_name);
+            if (typeIt != m_types.end()) {
                 if (!checkMemberAccess(memberAccessChain, *typeIt))
                     noUnqualifiedIdentifier = false;
                 continue;

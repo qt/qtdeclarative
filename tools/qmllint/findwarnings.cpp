@@ -117,15 +117,15 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiProgram *)
 
     if (!m_qmltypesFiles.isEmpty()) {
         const auto baseTypes = m_importer.importQmltypes(m_qmltypesFiles);
-        m_rootScopeImports.qmlNames.insert(baseTypes.qmlNames);
+        m_rootScopeImports.insert(baseTypes);
     }
 
     // add "self" (as we only ever check the first part of a qualified identifier, we get away with
     // using an empty ScopeTree
-    m_rootScopeImports.qmlNames.insert(QFileInfo { m_filePath }.baseName(), {});
+    m_rootScopeImports.insert(QFileInfo { m_filePath }.baseName(), {});
 
     const auto imported = m_importer.importFileOrDirectory(QFileInfo(m_filePath).path());
-    m_rootScopeImports.qmlNames.insert(imported.qmlNames);
+    m_rootScopeImports.insert(imported);
 
     const QStringList warnings = m_importer.takeWarnings();
     for (const QString &warning : warnings) {
@@ -328,7 +328,7 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiPublicMember *uipm)
                 uipm->memberType ? uipm->memberType->name.toString() : QString(),
                 uipm->typeModifier == QLatin1String("list"), !uipm->isReadonlyMember, false,
                 uipm->memberType ? (uipm->memberType->name == QLatin1String("alias")) : false, 0);
-        property.setType(m_rootScopeImports.qmlNames.value(property.typeName()));
+        property.setType(m_rootScopeImports.value(property.typeName()));
         m_currentScope->insertPropertyIdentifier(property);
     }
     return true;
@@ -478,14 +478,14 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiImport *import)
         const auto imported = m_importer.importFileOrDirectory(
                     file.isRelative() ? QFileInfo(m_filePath).dir().filePath(filename) : filename,
                     prefix);
-        m_rootScopeImports.qmlNames.insert(imported.qmlNames);
+        m_rootScopeImports.insert(imported);
     }
 
     QString path {};
     if (!import->importId.isEmpty()) {
         // TODO: do not put imported ids into the same space as qml IDs
         const QString importId = import->importId.toString();
-        m_qmlid2scope.insert(importId, m_rootScopeImports.qmlNames.value(importId));
+        m_qmlid2scope.insert(importId, m_rootScopeImports.value(importId));
     }
     auto uri = import->importUri;
     while (uri) {
@@ -498,7 +498,7 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiImport *import)
     const auto imported = m_importer.importModule(
                 path, prefix, import->version ? import->version->version : QTypeRevision());
 
-    m_rootScopeImports.qmlNames.insert(imported.qmlNames);
+    m_rootScopeImports.insert(imported);
 
     const QStringList warnings = m_importer.takeWarnings();
     for (const QString &warning : warnings) {
@@ -530,11 +530,11 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
 
     MetaProperty prop(uiob->qualifiedId->name.toString(), name, false, true, true,
                       name == QLatin1String("alias"), 0);
-    prop.setType(m_rootScopeImports.qmlNames.value(uiob->qualifiedTypeNameId->name.toString()));
+    prop.setType(m_rootScopeImports.value(uiob->qualifiedTypeNameId->name.toString()));
     m_currentScope->addProperty(prop);
 
     enterEnvironment(ScopeType::QMLScope, name);
-    m_currentScope->resolveTypes(m_rootScopeImports.qmlNames);
+    m_currentScope->resolveTypes(m_rootScopeImports);
     importExportedNames(m_currentScope);
     return true;
 }
@@ -565,7 +565,7 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
     if (name.isLower())
         return false; // Ignore grouped properties for now
 
-    m_currentScope->resolveTypes(m_rootScopeImports.qmlNames);
+    m_currentScope->resolveTypes(m_rootScopeImports);
     importExportedNames(m_currentScope);
 
     if (name.endsWith("Connections")) {
@@ -595,7 +595,7 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
             do {
                 scope = scope->parentScope(); // TODO: rename method
             } while (scope->scopeType() != ScopeType::QMLScope);
-            targetScope = m_rootScopeImports.qmlNames.value(scope->baseTypeName());
+            targetScope = m_rootScopeImports.value(scope->baseTypeName());
         } else {
             // there was a target, check if we already can find it
             auto scopeIt =  m_qmlid2scope.find(target);

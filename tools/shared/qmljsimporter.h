@@ -45,14 +45,7 @@
 class QmlJSImporter
 {
 public:
-    struct ImportedTypes
-    {
-        // C++ names used in qmltypes files for non-composite types
-        QHash<QString, ScopeTree::Ptr> cppNames;
-
-        // Names the importing component sees, including any prefixes
-        QHash<QString, ScopeTree::Ptr> qmlNames;
-    };
+    using ImportedTypes = QHash<QString, ScopeTree::ConstPtr>;
 
     QmlJSImporter(const QStringList &importPaths) : m_importPaths(importPaths) {}
 
@@ -72,6 +65,15 @@ public:
     }
 
 private:
+    struct AvailableTypes
+    {
+        // C++ names used in qmltypes files for non-composite types
+        QHash<QString, ScopeTree::ConstPtr> cppNames;
+
+        // Names the importing component sees, including any prefixes
+        QHash<QString, ScopeTree::ConstPtr> qmlNames;
+    };
+
     struct Import {
         QHash<QString, ScopeTree::Ptr> objects;
         QHash<QString, ScopeTree::Ptr> scripts;
@@ -79,13 +81,13 @@ private:
         QList<QQmlDirParser::Import> dependencies;
     };
 
-    void importHelper(const QString &module, ImportedTypes *types,
+    void importHelper(const QString &module, AvailableTypes *types,
                       const QString &prefix = QString(),
                       QTypeRevision version = QTypeRevision());
-    void processImport(const Import &import, ImportedTypes *types,
+    void processImport(const Import &import, AvailableTypes *types,
                        const QString &prefix = QString());
     void importDependencies(const QmlJSImporter::Import &import,
-                            ImportedTypes *types,
+                            AvailableTypes *types,
                             const QString &prefix = QString(),
                             QTypeRevision version = QTypeRevision());
     void readQmltypes(const QString &filename, QHash<QString, ScopeTree::Ptr> *objects);

@@ -118,7 +118,7 @@ QmlJSImporter::Import QmlJSImporter::readQmldir(const QString &path)
 
 void QmlJSImporter::importDependencies(
         const QmlJSImporter::Import &import,
-        QmlJSImporter::ImportedTypes *types, const QString &prefix, QTypeRevision version)
+        QmlJSImporter::AvailableTypes *types, const QString &prefix, QTypeRevision version)
 {
     // Import the dependencies with an invalid prefix. The prefix will never be matched by actual
     // QML code but the C++ types will be visible.
@@ -134,7 +134,7 @@ void QmlJSImporter::importDependencies(
 
 void QmlJSImporter::processImport(
         const QmlJSImporter::Import &import,
-        QmlJSImporter::ImportedTypes *types,
+        QmlJSImporter::AvailableTypes *types,
         const QString &prefix)
 {
     for (auto it = import.scripts.begin(); it != import.scripts.end(); ++it)
@@ -162,7 +162,7 @@ void QmlJSImporter::processImport(
  */
 QmlJSImporter::ImportedTypes QmlJSImporter::importBuiltins()
 {
-    ImportedTypes types;
+    AvailableTypes types;
 
     for (auto const &dir : m_importPaths) {
         Import result;
@@ -174,7 +174,7 @@ QmlJSImporter::ImportedTypes QmlJSImporter::importBuiltins()
         processImport(result, &types);
     }
 
-    return types;
+    return types.qmlNames;
 }
 
 /*!
@@ -182,7 +182,7 @@ QmlJSImporter::ImportedTypes QmlJSImporter::importBuiltins()
  */
 QmlJSImporter::ImportedTypes QmlJSImporter::importQmltypes(const QStringList &qmltypesFiles)
 {
-    ImportedTypes types;
+    AvailableTypes types;
     Import result;
 
     for (const auto &qmltypeFile : qmltypesFiles)
@@ -191,18 +191,18 @@ QmlJSImporter::ImportedTypes QmlJSImporter::importQmltypes(const QStringList &qm
     importDependencies(result, &types);
     processImport(result, &types);
 
-    return types;
+    return types.qmlNames;
 }
 
 QmlJSImporter::ImportedTypes QmlJSImporter::importModule(
         const QString &module, const QString &prefix, QTypeRevision version)
 {
-    ImportedTypes result;
+    AvailableTypes result;
     importHelper(module, &result, prefix, version);
-    return result;
+    return result.qmlNames;
 }
 
-void QmlJSImporter::importHelper(const QString &module, ImportedTypes *types,
+void QmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
                                                 const QString &prefix, QTypeRevision version)
 {
 
@@ -243,7 +243,7 @@ ScopeTree::Ptr QmlJSImporter::localFile2ScopeTree(const QString &filePath)
     for (const QString &error : errors)
         m_warnings.append(error);
 
-    ImportedTypes types;
+    AvailableTypes types;
 
     QDirIterator it {
         QFileInfo(filePath).canonicalPath(),
@@ -267,7 +267,7 @@ ScopeTree::Ptr QmlJSImporter::localFile2ScopeTree(const QString &filePath)
 QmlJSImporter::ImportedTypes QmlJSImporter::importFileOrDirectory(
         const QString &fileOrDirectory, const QString &prefix)
 {
-    ImportedTypes result;
+    AvailableTypes result;
 
     QString name = fileOrDirectory;
 
@@ -275,7 +275,7 @@ QmlJSImporter::ImportedTypes QmlJSImporter::importFileOrDirectory(
     if (fileInfo.isFile()) {
         ScopeTree::Ptr scope(localFile2ScopeTree(fileInfo.canonicalFilePath()));
         result.qmlNames.insert(prefix.isEmpty() ? scope->internalName() : prefix, scope);
-        return result;
+        return result.qmlNames;
     }
 
     QDirIterator it {
@@ -289,5 +289,5 @@ QmlJSImporter::ImportedTypes QmlJSImporter::importFileOrDirectory(
             result.qmlNames.insert(prefixedName(prefix, scope->internalName()), scope);
     }
 
-    return result;
+    return result.qmlNames;
 }

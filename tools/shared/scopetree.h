@@ -208,7 +208,7 @@ public:
         return m_injectedSignalIdentifiers;
     }
 
-    void resolveTypes(const QHash<QString, ScopeTree::Ptr> &contextualTypes);
+    void resolveTypes(const QHash<QString, ConstPtr> &contextualTypes);
 
 private:
     ScopeTree(ScopeType type, const ScopeTree::Ptr &parentScope = ScopeTree::Ptr());
@@ -229,14 +229,14 @@ private:
     QString m_fileName;
     QString m_internalName;
     QString m_baseTypeName;
-    ScopeTree::WeakPtr m_baseType;
+    ScopeTree::WeakConstPtr m_baseType;
 
     ScopeType m_scopeType = ScopeType::QMLScope;
     QList<Export> m_exports;
 
     QString m_defaultPropertyName;
     QString m_attachedTypeName;
-    ScopeTree::WeakPtr m_attachedType;
+    ScopeTree::WeakConstPtr m_attachedType;
 
     Flags m_flags;
     AccessSemantics m_semantics = AccessSemantics::Reference;
