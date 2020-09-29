@@ -287,9 +287,6 @@ QmlJSImporter::ImportedTypes QmlJSImporter::importFileOrDirectory(
 
     QString name = fileOrDirectory;
 
-    if (QFileInfo(name).isRelative())
-        name = QDir(m_currentDir).filePath(name);
-
     QFileInfo fileInfo(name);
     if (fileInfo.isFile()) {
         ScopeTree::Ptr scope(localFile2ScopeTree(fileInfo.canonicalFilePath()));

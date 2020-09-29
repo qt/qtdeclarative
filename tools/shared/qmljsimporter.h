@@ -57,8 +57,7 @@ public:
         QHash<QString, ScopeTree::Ptr> importedQmlNames;
     };
 
-    QmlJSImporter(const QString &currentDir, const QStringList &importPaths) :
-        m_currentDir(currentDir), m_importPaths(importPaths) {}
+    QmlJSImporter(const QStringList &importPaths) : m_importPaths(importPaths) {}
 
     ImportedTypes importBaseQmlTypes(const QStringList &qmltypesFiles);
     ImportedTypes importFileOrDirectory(
@@ -95,7 +94,6 @@ private:
     Import readQmldir(const QString &dirname);
     ScopeTree::Ptr localFile2ScopeTree(const QString &filePath);
 
-    QString m_currentDir;
     QStringList m_importPaths;
     QHash<QPair<QString, QTypeRevision>, Import> m_seenImports;
     QHash<QString, ScopeTree::Ptr> m_importedFiles;

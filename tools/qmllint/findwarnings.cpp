@@ -119,7 +119,7 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiProgram *)
     // using an empty ScopeTree
     m_rootScopeImports.importedQmlNames.insert(QFileInfo { m_filePath }.baseName(), {});
 
-    const auto imported = m_importer.importFileOrDirectory(".");
+    const auto imported = m_importer.importFileOrDirectory(QFileInfo(m_filePath).path());
     m_rootScopeImports.importedQmlNames.insert(imported.importedQmlNames);
     m_rootScopeImports.cppNames.insert(imported.cppNames);
 
@@ -350,7 +350,7 @@ FindWarningVisitor::FindWarningVisitor(
       m_warnUnqualified(warnUnqualified),
       m_warnWithStatement(warnWithStatement),
       m_warnInheritanceCycle(warnInheritanceCycle),
-      m_importer(QFileInfo(m_filePath).path(), qmltypeDirs)
+      m_importer(qmltypeDirs)
 {
     m_rootScope->setInternalName("global");
     m_currentScope = m_rootScope;
@@ -468,9 +468,12 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiImport *import)
     if (import->asToken.isValid()) {
         prefix += import->importId;
     }
-    auto dirname = import->fileName.toString();
-    if (!dirname.isEmpty()) {
-        const auto imported = m_importer.importFileOrDirectory(dirname, prefix);
+    auto filename = import->fileName.toString();
+    if (!filename.isEmpty()) {
+        const QFileInfo file(filename);
+        const auto imported = m_importer.importFileOrDirectory(
+                    file.isRelative() ? QFileInfo(m_filePath).dir().filePath(filename) : filename,
+                    prefix);
         m_rootScopeImports.importedQmlNames.insert(imported.importedQmlNames);
         m_rootScopeImports.cppNames.insert(imported.cppNames);
     }
