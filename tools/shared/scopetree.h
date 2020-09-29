@@ -165,6 +165,7 @@ public:
 
     QString attachedTypeName() const { return m_attachedTypeName; }
     void setAttachedTypeName(const QString &name) { m_attachedTypeName = name; }
+    ScopeTree::ConstPtr attachedType() const { return m_attachedType; }
 
     bool isSingleton() const { return m_flags & Singleton; }
     bool isCreatable() const { return m_flags & Creatable; }
@@ -235,6 +236,8 @@ private:
 
     QString m_defaultPropertyName;
     QString m_attachedTypeName;
+    ScopeTree::WeakPtr m_attachedType;
+
     Flags m_flags;
     AccessSemantics m_semantics = AccessSemantics::Reference;
 };

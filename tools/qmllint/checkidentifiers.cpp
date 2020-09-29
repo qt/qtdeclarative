@@ -84,7 +84,6 @@ void CheckIdentifiers::printContext(const QQmlJS::SourceLocation &location) cons
 }
 
 static bool walkViaParentAndAttachedScopes(ScopeTree::ConstPtr rootType,
-                                           const QmlJSImporter::ImportedTypes &allTypes,
                                            std::function<bool(ScopeTree::ConstPtr)> visit)
 {
     if (rootType == nullptr)
@@ -98,15 +97,10 @@ static bool walkViaParentAndAttachedScopes(ScopeTree::ConstPtr rootType,
         if (visit(type))
             return true;
 
-        if (type->isComposite()) {
-            if (auto superType = allTypes.qmlNames.value(type->baseTypeName()))
-                stack.push(superType);
-        } else {
-            if (auto superType = allTypes.cppNames.value(type->baseTypeName()))
-                stack.push(superType);
-        }
+        if (auto superType = type->baseType())
+            stack.push(superType);
 
-        if (auto attachedType = allTypes.cppNames.value(type->attachedTypeName()))
+        if (auto attachedType = type->attachedType())
             stack.push(attachedType);
     }
     return false;
@@ -180,31 +174,29 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
                 continue;
             }
 
-            if (const ScopeTree::ConstPtr type = scopeIt->type()) {
-                if (access.m_parentType.isEmpty()) {
-                    scope = type;
-                    continue;
+            if (access.m_parentType.isEmpty()) {
+                scope = scopeIt->type();
+                if (scope.isNull()) {
+                    // Properties should always have a type. Otherwise something
+                    // was missing from the import already.
+                    detectedRestrictiveKind = typeName;
+                    detectedRestrictiveName = access.m_name;
                 }
+                continue;
             }
 
             if (unknownBuiltins.contains(typeName))
                 return true;
 
-            auto findNextScope = [&](const QHash<QString, ScopeTree::Ptr> &types) {
-                const auto it = types.find(typeName);
-                if (it == types.end()) {
-                    detectedRestrictiveKind = typeName;
-                    detectedRestrictiveName = access.m_name;
-                    scope = nullptr;
-                } else {
-                    scope = *it;
-                }
-            };
+            const auto it = m_types.qmlNames.find(typeName);
+            if (it == m_types.qmlNames.end()) {
+                detectedRestrictiveKind = typeName;
+                detectedRestrictiveName = access.m_name;
+                scope = nullptr;
+            } else {
+                scope = *it;
+            }
 
-            if (access.m_parentType.isEmpty() && scope->isComposite())
-                findNextScope(m_types.cppNames);
-            else
-                findNextScope(m_types.qmlNames);
             continue;
         }
 
@@ -245,17 +237,11 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
             rootType = scope;
 
         bool typeFound =
-                walkViaParentAndAttachedScopes(rootType, m_types, [&](ScopeTree::ConstPtr type) {
+                walkViaParentAndAttachedScopes(rootType, [&](ScopeTree::ConstPtr type) {
                     const auto typeProperties = type->properties();
                     const auto typeIt = typeProperties.find(access.m_name);
                     if (typeIt != typeProperties.end()) {
-                        const ScopeTree::ConstPtr propType = typeIt->type();
-                        if (propType)
-                            scope = propType;
-                        else if (scope->isComposite())
-                            scope = m_types.qmlNames.value(typeIt->typeName());
-                        else
-                            scope = m_types.cppNames.value(typeIt->typeName());
+                        scope = typeIt->type();
                         return true;
                     }
 
@@ -276,9 +262,8 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
             // may be an attached type
             const auto it = m_types.qmlNames.find(access.m_name);
             if (it != m_types.qmlNames.end() && !(*it)->attachedTypeName().isEmpty()) {
-                const auto attached = m_types.cppNames.find((*it)->attachedTypeName());
-                if (attached != m_types.cppNames.end()) {
-                    scope = *attached;
+                if (const auto attached = (*it)->attachedType()) {
+                    scope = attached;
                     continue;
                 }
             }

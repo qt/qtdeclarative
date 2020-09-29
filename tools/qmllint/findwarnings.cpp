@@ -118,7 +118,6 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiProgram *)
     if (!m_qmltypesFiles.isEmpty()) {
         const auto baseTypes = m_importer.importQmltypes(m_qmltypesFiles);
         m_rootScopeImports.qmlNames.insert(baseTypes.qmlNames);
-        m_rootScopeImports.cppNames.insert(baseTypes.cppNames);
     }
 
     // add "self" (as we only ever check the first part of a qualified identifier, we get away with
@@ -127,7 +126,6 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiProgram *)
 
     const auto imported = m_importer.importFileOrDirectory(QFileInfo(m_filePath).path());
     m_rootScopeImports.qmlNames.insert(imported.qmlNames);
-    m_rootScopeImports.cppNames.insert(imported.cppNames);
 
     const QStringList warnings = m_importer.takeWarnings();
     for (const QString &warning : warnings) {
@@ -481,7 +479,6 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiImport *import)
                     file.isRelative() ? QFileInfo(m_filePath).dir().filePath(filename) : filename,
                     prefix);
         m_rootScopeImports.qmlNames.insert(imported.qmlNames);
-        m_rootScopeImports.cppNames.insert(imported.cppNames);
     }
 
     QString path {};
@@ -502,7 +499,6 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiImport *import)
                 path, prefix, import->version ? import->version->version : QTypeRevision());
 
     m_rootScopeImports.qmlNames.insert(imported.qmlNames);
-    m_rootScopeImports.cppNames.insert(imported.cppNames);
 
     const QStringList warnings = m_importer.takeWarnings();
     for (const QString &warning : warnings) {
