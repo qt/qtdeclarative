@@ -9,7 +9,6 @@ qt_add_tool(${target_name}
     TARGET_DESCRIPTION "QML Syntax Verifier"
     TOOLS_TARGET Qml # special case
     SOURCES
-        ../shared/componentversion.cpp ../shared/componentversion.h
         ../shared/importedmembersvisitor.cpp ../shared/importedmembersvisitor.h
         ../shared/metatypes.h
         ../shared/qmljsimporter.cpp ../shared/qmljsimporter.h

@@ -40,13 +40,13 @@
 // We mean it.
 
 #include "metatypes.h"
-#include "componentversion.h"
 
 #include <QtQml/private/qqmljssourcelocation_p.h>
 
 #include <QtCore/qset.h>
 #include <QtCore/qhash.h>
 #include <QtCore/qstring.h>
+#include <QtCore/qversionnumber.h>
 
 enum class ScopeType
 {
@@ -88,7 +88,7 @@ public:
     class Export {
     public:
         Export() = default;
-        Export(QString package, QString type, const ComponentVersion &version,
+        Export(QString package, QString type, const QTypeRevision &version,
                int metaObjectRevision);
 
         bool isValid() const;
@@ -105,7 +105,7 @@ public:
     private:
         QString m_package;
         QString m_type;
-        ComponentVersion m_version;
+        QTypeRevision m_version;
         int m_metaObjectRevision = 0;
     };
 
@@ -145,7 +145,7 @@ public:
     QString internalName() const { return m_internalName; }
     void setInternalName(const QString &internalName) { m_internalName = internalName; }
 
-    void addExport(const QString &name, const QString &package, const ComponentVersion &version);
+    void addExport(const QString &name, const QString &package, const QTypeRevision &version);
     void setExportMetaObjectRevision(int exportIndex, int metaObjectRevision);
     QList<Export> exports() const { return m_exports; }
 

@@ -75,7 +75,7 @@ private:
     QString readStringBinding(QQmlJS::AST::UiScriptBinding *ast);
     bool readBoolBinding(QQmlJS::AST::UiScriptBinding *ast);
     double readNumericBinding(QQmlJS::AST::UiScriptBinding *ast);
-    ComponentVersion readNumericVersionBinding(QQmlJS::AST::UiScriptBinding *ast);
+    QTypeRevision readNumericVersionBinding(QQmlJS::AST::UiScriptBinding *ast);
     int readIntBinding(QQmlJS::AST::UiScriptBinding *ast);
     void readExports(QQmlJS::AST::UiScriptBinding *ast, const ScopeTree::Ptr &scope);
     void readMetaObjectRevisions(QQmlJS::AST::UiScriptBinding *ast, const ScopeTree::Ptr &scope);

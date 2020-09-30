@@ -98,9 +98,7 @@ QmlJSImporter::Import QmlJSImporter::readQmldir(const QString &path)
         if (mo == qmlComponents.end())
             mo = qmlComponents.insert(it.key(), localFile2ScopeTree(filePath));
 
-        (*mo)->addExport(
-                    it.key(), reader.typeNamespace(),
-                    ComponentVersion(it->version));
+        (*mo)->addExport(it.key(), reader.typeNamespace(), it->version);
     }
     for (auto it = qmlComponents.begin(), end = qmlComponents.end(); it != end; ++it)
         result.objects.insert(it.key(), it.value());

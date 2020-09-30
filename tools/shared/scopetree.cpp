@@ -168,8 +168,7 @@ ScopeTree::ConstPtr ScopeTree::findCurrentQMLScope(const ScopeTree::ConstPtr &sc
     return qmlScope;
 }
 
-void ScopeTree::addExport(const QString &name, const QString &package,
-                          const ComponentVersion &version)
+void ScopeTree::addExport(const QString &name, const QString &package, const QTypeRevision &version)
 {
     m_exports.append(Export(package, name, version, 0));
 }
@@ -179,7 +178,7 @@ void ScopeTree::setExportMetaObjectRevision(int exportIndex, int metaObjectRevis
     m_exports[exportIndex].setMetaObjectRevision(metaObjectRevision);
 }
 
-ScopeTree::Export::Export(QString package, QString type, const ComponentVersion &version,
+ScopeTree::Export::Export(QString package, QString type, const QTypeRevision &version,
                           int metaObjectRevision) :
     m_package(std::move(package)),
     m_type(std::move(type)),

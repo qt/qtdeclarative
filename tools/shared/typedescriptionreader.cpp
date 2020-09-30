@@ -492,9 +492,24 @@ double TypeDescriptionReader::readNumericBinding(UiScriptBinding *ast)
     return numericLit->value;
 }
 
-ComponentVersion TypeDescriptionReader::readNumericVersionBinding(UiScriptBinding *ast)
+static QTypeRevision parseVersion(const QString &versionString)
 {
-    ComponentVersion invalidVersion;
+    const int dotIdx = versionString.indexOf(QLatin1Char('.'));
+    if (dotIdx == -1)
+        return QTypeRevision();
+    bool ok = false;
+    const int maybeMajor = QStringView{versionString}.left(dotIdx).toInt(&ok);
+    if (!ok)
+        return QTypeRevision();
+    const int maybeMinor = QStringView{versionString}.mid(dotIdx + 1).toInt(&ok);
+    if (!ok)
+        return QTypeRevision();
+    return QTypeRevision::fromVersion(maybeMajor, maybeMinor);
+}
+
+QTypeRevision TypeDescriptionReader::readNumericVersionBinding(UiScriptBinding *ast)
+{
+    QTypeRevision invalidVersion;
 
     if (!ast || !ast->statement) {
         addError((ast ? ast->colonToken : SourceLocation()),
@@ -515,8 +530,8 @@ ComponentVersion TypeDescriptionReader::readNumericVersionBinding(UiScriptBindin
         return invalidVersion;
     }
 
-    return ComponentVersion(m_source.mid(numericLit->literalToken.begin(),
-                                         numericLit->literalToken.length));
+    return parseVersion(m_source.mid(numericLit->literalToken.begin(),
+                                     numericLit->literalToken.length));
 }
 
 int TypeDescriptionReader::readIntBinding(UiScriptBinding *ast)
@@ -564,7 +579,7 @@ void TypeDescriptionReader::readExports(UiScriptBinding *ast, const ScopeTree::P
         QString exp = stringLit->value.toString();
         int slashIdx = exp.indexOf(QLatin1Char('/'));
         int spaceIdx = exp.indexOf(QLatin1Char(' '));
-        ComponentVersion version(exp.mid(spaceIdx + 1));
+        const QTypeRevision version = parseVersion(exp.mid(spaceIdx + 1));
 
         if (spaceIdx == -1 || !version.isValid()) {
             addError(stringLit->firstSourceLocation(),
