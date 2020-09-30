@@ -350,16 +350,14 @@ class MouseRecordingItem : public QQuickItem
 public:
     MouseRecordingItem(bool acceptTouch, QQuickItem *parent = nullptr)
         : QQuickItem(parent)
-        , m_acceptTouch(acceptTouch)
     {
         setSize(QSizeF(300, 300));
         setAcceptedMouseButtons(Qt::LeftButton);
-        setAcceptTouchEvents(true);
+        setAcceptTouchEvents(acceptTouch);
     }
 
 protected:
     void touchEvent(QTouchEvent* event) override {
-        event->setAccepted(m_acceptTouch);
         m_touchEvents << event->type();
         qCDebug(lcTests) << "accepted?" << event->isAccepted() << event;
     }
@@ -389,9 +387,6 @@ public:
     };
     QList<MouseEvent> m_mouseEvents;
     QList<QEvent::Type> m_touchEvents;
-
-private:
-    bool m_acceptTouch;
 };
 
 class tst_qquickwindow : public QQmlDataTest
@@ -954,7 +949,7 @@ void tst_qquickwindow::touchEvent_cancelClearsMouseGrab()
     item->setPosition(QPointF(50, 50));
     item->setSize(QSizeF(150, 150));
     item->acceptMouseEvents = true;
-    item->acceptTouchEvents = false;
+    item->setAcceptTouchEvents(false);
 
     QPointF pos(50, 50);
     QTest::touchEvent(window, touchDevice).press(0, item->mapToScene(pos).toPoint(), window);
@@ -1148,10 +1143,6 @@ void tst_qquickwindow::mergeTouchPointLists()
 
 void tst_qquickwindow::mouseFromTouch_basic()
 {
-    // Turn off accepting touch events with acceptTouchEvents. This
-    // should result in sending mouse events generated from the touch
-    // with the new event propagation system.
-
     TestTouchItem::clearMouseEventCounters();
     QQuickWindow *window = new QQuickWindow;
     QScopedPointer<QQuickWindow> cleanup(window);
@@ -1165,7 +1156,9 @@ void tst_qquickwindow::mouseFromTouch_basic()
     TestTouchItem *item = new TestTouchItem(window->contentItem());
     item->setPosition(QPointF(50, 50));
     item->setSize(QSizeF(150, 150));
-    item->acceptTouchEvents = false;
+    // If it doesn't accept touch, but does accept LeftButton mouse events, then
+    // the first point in each touch event should generate a synth-mouse event.
+    item->setAcceptTouchEvents(false);
 
     QList<QMutableEventPoint> points;
     QMutableEventPoint tp(1, QEventPoint::State::Pressed);
@@ -1265,7 +1258,7 @@ void tst_qquickwindow::synthMouseFromTouch()
     QTest::touchEvent(window.data(), touchDevice).release(0, p2, window.data());
     QQuickTouchUtils::flush(window.data());
 
-    QCOMPARE(item->m_touchEvents.count(), !synthMouse && !acceptTouch ? 1 : 3);
+    QCOMPARE(item->m_touchEvents.count(), acceptTouch ? 3 : 0);
     QCOMPARE(item->m_mouseEvents.count(), (acceptTouch || !synthMouse) ? 0 : 3);
     QCOMPARE(window->m_mouseEvents.count(), 0);
     for (const auto &ev : item->m_mouseEvents)

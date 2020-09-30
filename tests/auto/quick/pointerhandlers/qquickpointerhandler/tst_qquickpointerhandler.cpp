@@ -328,20 +328,18 @@ void tst_PointerHandlers::touchEventDelivery()
     QTest::touchEvent(window, touchDevice).press(0, p1, window);
     QQuickTouchUtils::flush(window);
     qCDebug(lcPointerTests) << "events from touch press" << eventItem1->eventList;
-    QTRY_COMPARE(eventItem1->eventList.size(), synthMouse ? 3 : 2);
+    QTRY_COMPARE(eventItem1->eventList.size(), 2);
     QCOMPARE_EVENT(0, Event::HandlerDestination, QEvent::Pointer, QEventPoint::State::Pressed, NoGrab);
     QCOMPARE_EVENT(1, Event::TouchDestination, QEvent::TouchBegin, QEventPoint::State::Pressed, NoGrab);
-    if (synthMouse)
-        QCOMPARE_EVENT(2, Event::MouseDestination, QEvent::MouseButtonPress, QEventPoint::State::Pressed, NoGrab);
     p1 += QPoint(10, 0);
     QTest::touchEvent(window, touchDevice).move(0, p1, window);
     QQuickTouchUtils::flush(window);
     qCDebug(lcPointerTests) << "events after touch move" << eventItem1->eventList;
-    QCOMPARE(eventItem1->eventList.size(), synthMouse ? 3 : 2); // no grabs -> no updates
+    QCOMPARE(eventItem1->eventList.size(), 2); // no grabs -> no updates
     QTest::touchEvent(window, touchDevice).release(0, p1, window);
     QQuickTouchUtils::flush(window);
     qCDebug(lcPointerTests) << "events after touch release" << eventItem1->eventList;
-    QCOMPARE(eventItem1->eventList.size(), synthMouse ? 4 : 3);
+    QCOMPARE(eventItem1->eventList.size(), 3);
     QCOMPARE_EVENT(eventItem1->eventList.size() - 1, Event::HandlerDestination, QEvent::Pointer, QEventPoint::State::Released, NoGrab);
     eventItem1->eventList.clear();
 
@@ -378,44 +376,26 @@ void tst_PointerHandlers::touchEventDelivery()
     QTest::touchEvent(window, touchDevice).press(0, p1, window);
     QQuickTouchUtils::flush(window);
     qCDebug(lcPointerTests) << "events after touch press" << eventItem1->eventList;
-    QCOMPARE(eventItem1->eventList.size(), synthMouse ? 3 : 2);
+    QCOMPARE(eventItem1->eventList.size(), 2);
     QCOMPARE_EVENT(0, Event::HandlerDestination, QEvent::Pointer, QEventPoint::State::Pressed, NoGrab);
     QCOMPARE_EVENT(1, Event::TouchDestination, QEvent::TouchBegin, QEventPoint::State::Pressed, NoGrab);
-    if (synthMouse)
-        QCOMPARE_EVENT(2, Event::MouseDestination, QEvent::MouseButtonPress, QEventPoint::State::Pressed, QPointingDevice::GrabExclusive);
-    QCOMPARE(devPriv->pointById(0)->exclusiveGrabber, synthMouse ? eventItem1 : nullptr);
+    QCOMPARE(devPriv->pointById(0)->exclusiveGrabber, nullptr);
 
     QPointF localPos = eventItem1->mapFromScene(p1);
     QPointF scenePos = p1; // item is at 0,0
     QCOMPARE(eventItem1->eventList.at(1).posWrtItem, localPos);
     QCOMPARE(eventItem1->eventList.at(1).posWrtScene, scenePos);
-    if (synthMouse) {
-        QCOMPARE(eventItem1->eventList.at(2).posWrtItem, localPos);
-        QCOMPARE(eventItem1->eventList.at(2).posWrtScene, scenePos);
-    }
 
     p1 += QPoint(10, 0);
     QTest::touchEvent(window, touchDevice).move(0, p1, window);
     QQuickTouchUtils::flush(window);
     qCDebug(lcPointerTests) << "events after touch move" << eventItem1->eventList;
-    QCOMPARE(eventItem1->eventList.size(), synthMouse ? 6 : 2);
-    if (synthMouse) {
-        QCOMPARE_EVENT(3, Event::HandlerDestination, QEvent::Pointer, QEventPoint::State::Updated, NoGrab);
-        QCOMPARE_EVENT(4, Event::TouchDestination, QEvent::TouchUpdate, QEventPoint::State::Updated, NoGrab);
-        QCOMPARE_EVENT(5, Event::MouseDestination, QEvent::MouseMove, QEventPoint::State::Updated, QPointingDevice::GrabExclusive);
-    }
+    QCOMPARE(eventItem1->eventList.size(), 2);
     QTest::touchEvent(window, touchDevice).release(0, p1, window);
     QQuickTouchUtils::flush(window);
     qCDebug(lcPointerTests) << "events after touch release" << eventItem1->eventList;
-    QCOMPARE(eventItem1->eventList.size(), synthMouse ? 10 : 3);
-    if (synthMouse) {
-        QCOMPARE_EVENT(6, Event::HandlerDestination, QEvent::Pointer, QEventPoint::State::Released, NoGrab);
-        QCOMPARE_EVENT(7, Event::TouchDestination, QEvent::TouchEnd, QEventPoint::State::Released, NoGrab);
-        QCOMPARE_EVENT(8, Event::MouseDestination, QEvent::MouseButtonRelease, QEventPoint::State::Released, NoGrab);
-        QCOMPARE_EVENT(9, Event::MouseDestination, QEvent::UngrabMouse, QEventPoint::State::Released, QPointingDevice::UngrabExclusive);
-    } else {
-        QCOMPARE_EVENT(2, Event::HandlerDestination, QEvent::Pointer, QEventPoint::State::Released, NoGrab);
-    }
+    QCOMPARE(eventItem1->eventList.size(), 3);
+    QCOMPARE_EVENT(2, Event::HandlerDestination, QEvent::Pointer, QEventPoint::State::Released, NoGrab);
     eventItem1->eventList.clear();
 
     // wait to avoid getting a double click event
@@ -429,21 +409,19 @@ void tst_PointerHandlers::touchEventDelivery()
     QTest::touchEvent(window, touchDevice).press(0, p1, window);
     QQuickTouchUtils::flush(window);
     qCDebug(lcPointerTests) << "events after touch press" << eventItem1->eventList;
-    QCOMPARE(eventItem1->eventList.size(), synthMouse ? 3 : 2);
+    QCOMPARE(eventItem1->eventList.size(), 2);
     QCOMPARE_EVENT(0, Event::HandlerDestination, QEvent::Pointer, QEventPoint::State::Pressed, NoGrab);
     QCOMPARE_EVENT(1, Event::TouchDestination, QEvent::TouchBegin, QEventPoint::State::Pressed, NoGrab);
-    if (synthMouse)
-        QCOMPARE_EVENT(2, Event::MouseDestination, QEvent::MouseButtonPress, QEventPoint::State::Pressed, NoGrab);
     QCOMPARE(devPriv->pointById(0)->exclusiveGrabber, nullptr);
     p1 += QPoint(10, 0);
     QTest::touchEvent(window, touchDevice).move(0, p1, window);
     QQuickTouchUtils::flush(window);
     qCDebug(lcPointerTests) << "events after touch move" << eventItem1->eventList;
-    QCOMPARE(eventItem1->eventList.size(), synthMouse ? 3 : 2);
+    QCOMPARE(eventItem1->eventList.size(), 2);
     QTest::touchEvent(window, touchDevice).release(0, p1, window);
     QQuickTouchUtils::flush(window);
     qCDebug(lcPointerTests) << "events after touch release" << eventItem1->eventList;
-    QCOMPARE(eventItem1->eventList.size(), synthMouse ? 4 : 3);
+    QCOMPARE(eventItem1->eventList.size(), 3);
     eventItem1->eventList.clear();
 
     // wait to avoid getting a double click event

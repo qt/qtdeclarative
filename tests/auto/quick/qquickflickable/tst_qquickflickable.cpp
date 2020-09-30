@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -2021,7 +2021,7 @@ void tst_qquickflickable::nestedSliderUsingTouch_data()
     QTest::newRow("keepBoth") << true << true << 8 << 1 << 1;
     QTest::newRow("keepMouse") << true << false << 8 << 1 << 1;
     QTest::newRow("keepTouch") << false << true << 8 << 1 << 1;
-    QTest::newRow("keepNeither") << false << false << 5 << 0 << 1;
+    QTest::newRow("keepNeither") << false << false << 4 << 0 << 1;
 }
 
 void tst_qquickflickable::nestedSliderUsingTouch()

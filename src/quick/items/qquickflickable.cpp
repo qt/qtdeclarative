@@ -2455,13 +2455,16 @@ void QQuickFlickablePrivate::addPointerHandler(QQuickPointerHandler *h)
 */
 bool QQuickFlickable::filterPointerEvent(QQuickItem *receiver, QPointerEvent *event)
 {
-    if (!(QQuickWindowPrivate::isMouseEvent(event) ||
-          QQuickWindowPrivate::isTouchEvent(event) ||
+    const bool isTouch = QQuickWindowPrivate::isTouchEvent(event);
+    if (!(QQuickWindowPrivate::isMouseEvent(event) || isTouch ||
           QQuickWindowPrivate::isTabletEvent(event)))
         return false; // don't filter hover events or wheel events, for example
     Q_ASSERT_X(receiver != this, "", "Flickable received a filter event for itself");
     qCDebug(lcFilter) << objectName() << "filtering" << event << "for" << receiver;
     Q_D(QQuickFlickable);
+    // If a touch event contains a new press point, don't steal right away: watch the movements for a while
+    if (isTouch && static_cast<QTouchEvent *>(event)->touchPointStates().testFlag(QEventPoint::State::Pressed))
+        d->stealMouse = false;
     const auto &firstPoint = event->points().first();
     QPointF localPos = mapFromScene(firstPoint.scenePosition());
     bool receiverDisabled = receiver && !receiver->isEnabled();

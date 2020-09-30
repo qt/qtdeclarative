@@ -2775,6 +2775,7 @@ void QQuickWindowPrivate::deliverUpdatedPoints(QPointerEvent *event)
             break;
         // If the grabber is an item or the grabbing handler didn't handle it,
         // then deliver the event to the item (which may have multiple handlers).
+        hasFiltered.clear();
         deliverMatchingPointsToItem(receiver, true, event);
     }
 
@@ -2900,6 +2901,10 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, bool isG
             && !exclusiveGrabbers(pointerEvent).contains(item))
         return;
 
+    // If any parent filters the event, we're done.
+    if (sendFilteredPointerEvent(pointerEvent, item))
+        return;
+
     // TODO: unite this mouse point delivery with the synthetic mouse event below
     if (isMouse) {
         auto button = static_cast<QSinglePointEvent *>(pointerEvent)->button();
@@ -2917,7 +2922,7 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, bool isG
                 auto mouseGrabber = pointerEvent->exclusiveGrabber(point);
                 if (mouseGrabber && mouseGrabber != item && mouseGrabber != oldMouseGrabber) {
                     // we don't need item->mouseUngrabEvent() because QQuickWindowPrivate::onGrabChanged does it
-                } else if (item->isEnabled() && item->isVisible()) {
+                } else if (item->isEnabled() && item->isVisible() && point.state() != QEventPoint::State::Released) {
                     pointerEvent->setExclusiveGrabber(point, item);
                 }
                 point.setAccepted(true);
@@ -2946,10 +2951,8 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, bool isG
         qCDebug(DBG_TOUCH) << "actually delivering" << &touchEvent << " to " << item;
         QCoreApplication::sendEvent(item, &touchEvent);
         eventAccepted = touchEvent.isAccepted();
-    }
-
-    // If the touch event wasn't accepted, synthesize a mouse event and see if the item wants it.
-    if (Q_LIKELY(QCoreApplication::testAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents))) {
+    } else if (Q_LIKELY(QCoreApplication::testAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents))) {
+        // If the touch event wasn't accepted, synthesize a mouse event and see if the item wants it.
         if (!eventAccepted && (itemPrivate->acceptedMouseButtons() & Qt::LeftButton)) {
             //  send mouse event
             if (deliverTouchAsMouse(item, &touchEvent))
@@ -3211,6 +3214,7 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QPointerEvent *event, QQu
     if (!filteringParent)
         return false;
     bool filtered = false;
+    const bool hasHandlers = QQuickItemPrivate::get(receiver)->hasPointerHandlers();
     if (filteringParent->filtersChildMouseEvents() && !hasFiltered.contains(filteringParent)) {
         hasFiltered.append(filteringParent);
         if (isMouseEvent(event)) {
@@ -3239,7 +3243,7 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QPointerEvent *event, QQu
                 }
             }
         } else if (isTouchEvent(event)) {
-            bool acceptsTouchEvents = receiver->acceptTouchEvents();
+            const bool acceptsTouchEvents = receiver->acceptTouchEvents() || hasHandlers;
             auto device = event->device();
             if (device->type() == QInputDevice::DeviceType::TouchPad &&
                     device->capabilities().testFlag(QInputDevice::Capability::MouseEmulation)) {
@@ -3257,8 +3261,8 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QPointerEvent *event, QQu
                         for (auto point : filteringParentTouchEvent.points())
                             event->setExclusiveGrabber(point, filteringParent);
                         return true;
-                    } else if (Q_LIKELY(QCoreApplication::testAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents) &&
-                                        (!acceptsTouchEvents || !filteringParent->acceptTouchEvents()))) {
+                    } else if (Q_LIKELY(QCoreApplication::testAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents)) &&
+                               !filteringParent->acceptTouchEvents()) {
                         qCDebug(DBG_TOUCH) << "touch event NOT intercepted by childMouseEventFilter of " << filteringParent
                                            << "; accepts touch?" << filteringParent->acceptTouchEvents()
                                            << "receiver accepts touch?" << acceptsTouchEvents
@@ -3303,12 +3307,11 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QPointerEvent *event, QQu
                                     }
                                     filtered = true;
                                 }
-                                if (touchMouseUnset) {
+                                if (touchMouseUnset)
                                     // Now that we're done sending a synth mouse event, and it wasn't grabbed,
                                     // the touchpoint is no longer acting as a synthetic mouse.  Restore previous state.
                                     cancelTouchMouseSynthesis();
-                                    mouseEvent.point(0).setAccepted(false); // because touchToMouseEvent() set it true
-                                }
+                                mouseEvent.point(0).setAccepted(false); // because touchToMouseEvent() set it true
                                 // Only one touchpoint can be treated as a synthetic mouse, so after childMouseEventFilter
                                 // has been called once, we're done with this loop over the touchpoints.
                                 break;
