@@ -42,20 +42,6 @@ int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
 
-    // TODO: when no style is specified, default to the appropriate native
-    // platform style if available, otherwise use Basic: QTBUG-86403
-    const QString style = qEnvironmentVariable("DESKTOPGALLERY_STYLE");
-    if (!style.isEmpty())
-        QQuickStyle::setStyle(style);
-    else
-#if defined(Q_OS_MACOS)
-        QQuickStyle::setStyle("macOS");
-#elif defined(Q_OS_WINDOWS)
-        QQuickStyle::setStyle("Windows");
-#else
-        QQuickStyle::setStyle("Fusion");
-#endif
-
     QQmlApplicationEngine engine;
     const QUrl url(QStringLiteral("qrc:/main.qml"));
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
