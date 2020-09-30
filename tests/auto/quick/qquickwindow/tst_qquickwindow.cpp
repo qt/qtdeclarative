@@ -411,7 +411,6 @@ private slots:
     void mouseFiltering();
     void headless();
     void destroyShowWithoutHide();
-    void noUpdateWhenNothingChanges();
 
     void touchEvent_basic();
     void touchEvent_propagation();
@@ -1674,33 +1673,6 @@ void tst_qquickwindow::destroyShowWithoutHide()
     QString errorMessage;
     QVERIFY2(QQuickVisualTestUtil::compareImages(newContent, originalContent, &errorMessage),
              qPrintable(errorMessage));
-}
-
-void tst_qquickwindow::noUpdateWhenNothingChanges()
-{
-    QQuickWindow window;
-    window.setTitle(QTest::currentTestFunction());
-    window.setGeometry(100, 100, 300, 200);
-
-    QQuickRectangle rect(window.contentItem());
-
-    window.showNormal();
-    QVERIFY(QTest::qWaitForWindowExposed(&window));
-    // Many platforms are broken in the sense that that they follow up
-    // the initial expose with a second expose or more. Let these go
-    // through before we let the test continue.
-    QTest::qWait(100);
-    if (QQuickWindowPrivate::get(&window)->context->thread() == QGuiApplication::instance()->thread()) {
-        QSKIP("Only threaded renderloop implements this feature");
-        return;
-    }
-
-    QSignalSpy spy(&window, SIGNAL(frameSwapped()));
-    rect.update();
-    // Wait a while and verify that no more frameSwapped come our way.
-    QTest::qWait(100);
-
-    QCOMPARE(spy.size(), 0);
 }
 
 void tst_qquickwindow::focusObject()
