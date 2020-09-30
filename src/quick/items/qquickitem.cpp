@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the QtQuick module of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.fset
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -1883,7 +1883,23 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     \endqml
 
 
-    \section2 Key Handling
+    \section2 Event Handling
+
+    All Item-based visual types can use \l {Qt Quick Input Handlers}{Input Handlers}
+    to handle incoming input events (subclasses of QInputEvent), such as mouse,
+    touch and key events. This is the preferred declarative way to handle events.
+
+    An alternative way to handle touch events is to subclass QQuickItem, call
+    setAcceptTouchEvents() in the constructor, and override touchEvent().
+    \l {QEvent::setAccepted()}{Accept} the entire event to stop delivery to
+    items underneath, and to exclusively grab all the event's touch points.
+
+    Likewise, a QQuickItem subclass can call setAcceptedMouseButtons()
+    to register to receive mouse button events, setAcceptHoverEvents()
+    to receive hover events (mouse movements while no button is pressed),
+    and override the virtual functions mousePressEvent(), mouseMoveEvent(), and
+    mouseReleaseEvent(). Those can also accept the event to prevent further
+    delivery and get an implicit grab at the same time.
 
     Key handling is available to all Item-based visual types via the \l Keys
     attached property.  The \e Keys attached property provides basic signals
@@ -7301,7 +7317,9 @@ bool QQuickItem::isAncestorOf(const QQuickItem *child) const
     If an item does not accept the mouse button for a particular mouse event,
     the mouse event will not be delivered to the item and will be delivered
     to the next item in the item hierarchy instead.
-  */
+
+    \sa acceptTouchEvents()
+*/
 Qt::MouseButtons QQuickItem::acceptedMouseButtons() const
 {
     Q_D(const QQuickItem);
@@ -7310,7 +7328,13 @@ Qt::MouseButtons QQuickItem::acceptedMouseButtons() const
 
 /*!
     Sets the mouse buttons accepted by this item to \a buttons.
-  */
+
+    \note In Qt 5, calling setAcceptedMouseButtons() implicitly caused
+    an item to receive touch events as well as mouse events; but it was
+    recommended to call setAcceptTouchEvents() to subscribe for them.
+    In Qt 6, it is necessary to call setAcceptTouchEvents() to continue
+    to receive them.
+*/
 void QQuickItem::setAcceptedMouseButtons(Qt::MouseButtons buttons)
 {
     Q_D(QQuickItem);
