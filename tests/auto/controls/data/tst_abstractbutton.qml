@@ -210,7 +210,7 @@ TestCase {
         if (data.touch)
             touch.move(0, control, control.width + 1, control.height + 1).commit()
         else
-            mousePress(control, control.width + 1, control.height + 1)
+            mouseMove(control, control.width + 1, control.height + 1)
         compare(control.pressX, control.width + 1)
         compare(control.pressY, control.height + 1)
         compare(pressXSpy.count, ++pressXChanges)
