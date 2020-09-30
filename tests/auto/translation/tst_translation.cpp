@@ -46,6 +46,7 @@
 #include <QtQuickTemplates2/private/qquickdialog_p.h>
 #include <QtQuickTemplates2/private/qquickdialogbuttonbox_p.h>
 #include <QtQuickTemplates2/private/qquicktextfield_p.h>
+#include <QtQuickControls2/qquickstyle.h>
 
 using namespace QQuickVisualTestUtil;
 
@@ -53,11 +54,19 @@ class tst_translation : public QQmlDataTest
 {
     Q_OBJECT
 
+public:
+    tst_translation();
+
 private slots:
     void dialogButtonBox();
     void dialogButtonBoxWithCustomButtons();
     void comboBox();
 };
+
+tst_translation::tst_translation()
+{
+    QQuickStyle::setStyle("Basic");
+}
 
 void tst_translation::dialogButtonBox()
 {

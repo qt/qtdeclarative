@@ -260,6 +260,11 @@ struct QQuickStyleSpec
 
 Q_GLOBAL_STATIC(QQuickStyleSpec, styleSpec)
 
+QString QQuickStylePrivate::style()
+{
+    return styleSpec()->style;
+}
+
 QString QQuickStylePrivate::effectiveStyleName(const QString &styleName)
 {
     return !styleName.isEmpty() ? styleName : QLatin1String("Basic");

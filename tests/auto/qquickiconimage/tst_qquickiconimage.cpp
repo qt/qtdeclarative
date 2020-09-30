@@ -95,6 +95,7 @@ tst_qquickiconimage::tst_qquickiconimage() :
     dpr(qGuiApp->devicePixelRatio()),
     integerDpr(qCeil(dpr))
 {
+    QQuickStyle::setStyle("Basic");
 }
 
 void tst_qquickiconimage::initTestCase()

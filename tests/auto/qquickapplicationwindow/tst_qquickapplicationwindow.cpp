@@ -60,7 +60,9 @@ using namespace QQuickVisualTestUtil;
 class tst_QQuickApplicationWindow : public QQmlDataTest
 {
     Q_OBJECT
+
 public:
+    tst_QQuickApplicationWindow();
 
 private slots:
     void qmlCreation();
@@ -80,6 +82,11 @@ private slots:
     void componentComplete();
     void opacity();
 };
+
+tst_QQuickApplicationWindow::tst_QQuickApplicationWindow()
+{
+    QQuickStyle::setStyle("Basic");
+}
 
 void tst_QQuickApplicationWindow::qmlCreation()
 {

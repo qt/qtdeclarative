@@ -38,10 +38,14 @@
 #include <QtTest/qsignalspy.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
+#include <QtQuickControls2/qquickstyle.h>
 
 class tst_revisions : public QObject
 {
     Q_OBJECT
+
+public:
+    tst_revisions();
 
 private slots:
     void revisions_data();
@@ -50,6 +54,11 @@ private slots:
     void window_data();
     void window();
 };
+
+tst_revisions::tst_revisions()
+{
+    QQuickStyle::setStyle("Basic");
+}
 
 void tst_revisions::revisions_data()
 {

@@ -74,6 +74,7 @@ private slots:
 
 void tst_focus::initTestCase()
 {
+    QQuickStyle::setStyle("Basic");
     QQmlDataTest::initTestCase();
 }
 

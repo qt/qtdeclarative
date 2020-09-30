@@ -53,6 +53,9 @@ class tst_font : public QQmlDataTest
 {
     Q_OBJECT
 
+public:
+    tst_font();
+
 private slots:
     void systemFont();
 
@@ -81,6 +84,11 @@ static QFont testFont()
     QVariant var = object->property("font");
     Q_ASSERT_X(var.isValid(), "testFont", var.typeName());
     return var.value<QFont>();
+}
+
+tst_font::tst_font()
+{
+    QQuickStyle::setStyle("Basic");
 }
 
 void tst_font::systemFont()

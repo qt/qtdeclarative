@@ -4,4 +4,4 @@ SOURCES += tst_revisions.cpp
 
 macos:CONFIG -= app_bundle
 
-QT += qml testlib
+QT += qml testlib quickcontrols2

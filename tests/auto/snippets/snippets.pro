@@ -13,5 +13,8 @@ SOURCES += \
 OTHER_FILES += \
     $$PWD/data/*.qml
 
+RESOURCES += \
+    qtquickcontrols2.conf
+
 TESTDATA += \
     $$PWD/data/*

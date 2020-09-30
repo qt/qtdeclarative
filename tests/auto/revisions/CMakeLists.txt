@@ -10,6 +10,7 @@ qt_add_test(tst_revisions
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::Qml
+        Qt::QuickControls2
 )
 
 ## Scopes:

@@ -43,6 +43,7 @@
 #include <QtQuickTemplates2/private/qquickpageindicator_p.h>
 #include <QtQuickTemplates2/private/qquickscrollbar_p.h>
 #include <QtQuickTemplates2/private/qquicktextarea_p.h>
+#include <QtQuickControls2/qquickstyle.h>
 
 #if QT_CONFIG(cursor)
 #  include <QtGui/qscreen.h>
@@ -55,6 +56,9 @@ class tst_cursor : public QQmlDataTest
 {
     Q_OBJECT
 
+public:
+    tst_cursor();
+
 private slots:
     void init();
     void controls_data();
@@ -63,6 +67,11 @@ private slots:
     void pageIndicator();
     void scrollBar();
 };
+
+tst_cursor::tst_cursor()
+{
+    QQuickStyle::setStyle("Basic");
+}
 
 void tst_cursor::init()
 {

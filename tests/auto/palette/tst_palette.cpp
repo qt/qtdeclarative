@@ -84,9 +84,9 @@ private slots:
 
 void tst_palette::initTestCase()
 {
-    QQmlDataTest::initTestCase();
-
     QQuickStyle::setStyle("Basic");
+
+    QQmlDataTest::initTestCase();
 
     // Import QtQuick.Controls to initialize styles and themes so that
     // QQuickControlPrivate::themePalette() returns a palette from the

@@ -57,6 +57,7 @@ private slots:
 
 void tst_Designer::initTestCase()
 {
+    QQuickStyle::setStyle("Basic");
 }
 
 void doComponentCompleteRecursive(QObject *object)

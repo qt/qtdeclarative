@@ -10,6 +10,7 @@ qt_add_test(tst_pressandhold
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::Quick
+        Qt::QuickControls2
 )
 
 #### Keys ignored in scope 1:.:.:pressandhold.pro:<TRUE>:

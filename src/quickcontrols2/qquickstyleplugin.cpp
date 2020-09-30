@@ -63,7 +63,9 @@ void QQuickStylePlugin::registerTypes(const char *uri)
     qCDebug(lcStylePlugin).nospace() << "registerTypes called with uri " << uri << "; plugin name is " << name();
 
     const QTypeRevision latestControlsRevision = QQmlMetaType::latestModuleVersion(QLatin1String("QtQuick.Controls"));
-    QString styleName = QQuickStyle::name();
+    // Use the private function because we don't want to cause resolve() to be called,
+    // as the logic that assigns a default style if one wasn't set would interfere with compile-time style selection.
+    QString styleName = QQuickStylePrivate::style();
     if (!latestControlsRevision.isValid() && styleName.isEmpty()) {
         // The user hasn't imported QtQuick.Controls, nor set a style via the runtime methods.
         qCDebug(lcStylePlugin).nospace() << uri << " imported before QtQuick.Controls; using compile-time style selection";

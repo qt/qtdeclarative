@@ -23,6 +23,19 @@ qt_add_test(tst_snippets
     TESTDATA ${test_data}
 )
 
+# Resources:
+set(qmake_immediate_resource_files
+    "qtquickcontrols2.conf"
+)
+
+qt_add_resource(tst_snippets "qmake_immediate"
+    PREFIX
+        "/"
+    FILES
+        ${qmake_immediate_resource_files}
+)
+
+
 #### Keys ignored in scope 1:.:.:snippets.pro:<TRUE>:
 # OTHER_FILES = "$$PWD/data/*.qml"
 # TEMPLATE = "app"

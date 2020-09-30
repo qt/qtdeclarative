@@ -58,6 +58,7 @@ class QSettings;
 class Q_QUICKCONTROLS2_EXPORT QQuickStylePrivate
 {
 public:
+    static QString style();
     static QString effectiveStyleName(const QString &styleName);
     static QString fallbackStyle();
     static bool isCustomStyle();

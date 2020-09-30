@@ -36,10 +36,14 @@
 
 #include <QtTest>
 #include <QtQuick>
+#include <QtQuickControls2/qquickstyle.h>
 
 class tst_PressAndHold : public QObject
 {
     Q_OBJECT
+
+public:
+    tst_PressAndHold();
 
 private slots:
     void initTestCase();
@@ -51,6 +55,11 @@ private slots:
     void keepSelection_data();
     void keepSelection();
 };
+
+tst_PressAndHold::tst_PressAndHold()
+{
+    QQuickStyle::setStyle("Basic");
+}
 
 void tst_PressAndHold::initTestCase()
 {
