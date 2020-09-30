@@ -41,6 +41,7 @@
 #define QQMLJSSOURCELOCATION_P_H
 
 #include <QtCore/qglobal.h>
+#include <QtCore/qhashfunctions.h>
 
 //
 //  W A R N I N G
@@ -76,6 +77,18 @@ public:
     quint32 length;
     quint32 startLine;
     quint32 startColumn;
+
+    friend size_t qHash(const SourceLocation &location, size_t seed = 0)
+    {
+        return qHashMulti(seed, location.offset, location.length,
+                          location.startLine, location.startColumn);
+    }
+
+    friend bool operator==(const SourceLocation &a, const SourceLocation &b)
+    {
+        return a.offset == b.offset && a.length == b.length
+                && a.startLine == b.startLine && a.startColumn == b.startColumn;
+    }
 };
 
 } // namespace QQmlJS

@@ -30,9 +30,14 @@
 #define CHECKIDENTIFIERS_H
 
 #include "scopetree.h"
-#include "findwarnings.h"
+#include "qmljsimporter.h"
 
 class ColorOutput;
+
+struct SignalHandler {
+    MetaMethod signal;
+    bool isMultiline;
+};
 
 class CheckIdentifiers
 {
@@ -43,6 +48,7 @@ public:
     {}
 
     bool operator ()(const QHash<QString, ScopeTree::ConstPtr> &qmlIDs,
+                     const QHash<QQmlJS::SourceLocation, SignalHandler> &signalHandlers,
                      const ScopeTree::ConstPtr &root, const QString &rootId) const;
 
 private:

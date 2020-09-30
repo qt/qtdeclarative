@@ -285,8 +285,10 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
     return true;
 }
 
-bool CheckIdentifiers::operator()(const QHash<QString, ScopeTree::ConstPtr> &qmlIDs,
-                                  const ScopeTree::ConstPtr &root, const QString &rootId) const
+bool CheckIdentifiers::operator()(
+        const QHash<QString, ScopeTree::ConstPtr> &qmlIDs,
+        const QHash<QQmlJS::SourceLocation, SignalHandler> &signalHandlers,
+        const ScopeTree::ConstPtr &root, const QString &rootId) const
 {
     bool noUnqualifiedIdentifier = true;
 
@@ -311,7 +313,8 @@ bool CheckIdentifiers::operator()(const QHash<QString, ScopeTree::ConstPtr> &qml
                 continue;
 
             const auto memberAccessBase = memberAccessChain.takeFirst();
-            if (currentScope->isIdInCurrentJSScopes(memberAccessBase.m_name))
+            const auto jsId = currentScope->findJSIdentifier(memberAccessBase.m_name);
+            if (jsId.has_value() && jsId->kind != JavaScriptIdentifier::Injected)
                 continue;
 
             auto it = qmlIDs.find(memberAccessBase.m_name);
@@ -404,49 +407,30 @@ bool CheckIdentifiers::operator()(const QHash<QString, ScopeTree::ConstPtr> &qml
                 m_colorOut->write(rootId + QLatin1Char('.'), Hint);
                 m_colorOut->write(issueLocationWithContext.issueText().toString(), Normal);
                 m_colorOut->write(issueLocationWithContext.afterText() + QLatin1Char('\n'), Normal);
-            } else if (currentScope->isIdInjectedFromSignal(memberAccessBase.m_name)) {
-                auto methodUsages = ScopeTree::findCurrentQMLScope(currentScope)
-                        ->injectedSignalIdentifiers().values(memberAccessBase.m_name);
-                auto location = memberAccessBase.m_location;
-                // sort the list of signal handlers by their occurrence in the source code
-                // then, we select the first one whose location is after the unqualified id
-                // and go one step backwards to get the one which we actually need
-                std::sort(methodUsages.begin(), methodUsages.end(),
-                          [](const MethodUsage &m1, const MethodUsage &m2) {
-                    return m1.loc.startLine < m2.loc.startLine
-                            || (m1.loc.startLine == m2.loc.startLine
-                                && m1.loc.startColumn < m2.loc.startColumn);
-                });
-                auto oneBehindIt = std::find_if(methodUsages.begin(), methodUsages.end(),
-                                                [&location](const MethodUsage &methodUsage) {
-                    return location.startLine < methodUsage.loc.startLine
-                            || (location.startLine == methodUsage.loc.startLine
-                                && location.startColumn < methodUsage.loc.startColumn);
-                });
-                auto methodUsage = *(--oneBehindIt);
+            } else if (jsId.has_value() && jsId->kind == JavaScriptIdentifier::Injected) {
+                const JavaScriptIdentifier id = jsId.value();
                 m_colorOut->write(QLatin1String("Note: "), Info);
                 m_colorOut->write(
                             memberAccessBase.m_name + QString::fromLatin1(
                                 " is accessible in this scope because "
                                 "you are handling a signal at %1:%2:%3\n")
                             .arg(m_fileName)
-                            .arg(methodUsage.loc.startLine).arg(methodUsage.loc.startColumn),
+                            .arg(id.location.startLine).arg(id.location.startColumn),
                             Normal);
                 m_colorOut->write(QLatin1String("Consider using a function instead\n"), Normal);
-                IssueLocationWithContext context {m_code, methodUsage.loc};
+                IssueLocationWithContext context {m_code, id.location};
                 m_colorOut->write(context.beforeText() + QLatin1Char(' '));
-                m_colorOut->write(QLatin1String(methodUsage.hasMultilineHandlerBody
-                                             ? "function("
-                                             : "("),
-                               Hint);
-                const auto parameters = methodUsage.method.parameterNames();
+
+                const auto handler = signalHandlers[id.location];
+
+                m_colorOut->write(QLatin1String(handler.isMultiline ? "function(" : "("), Hint);
+                const auto parameters = handler.signal.parameterNames();
                 for (int numParams = parameters.size(); numParams > 0; --numParams) {
                     m_colorOut->write(parameters.at(parameters.size() - numParams), Hint);
                     if (numParams > 1)
                         m_colorOut->write(QLatin1String(", "), Hint);
                 }
-                m_colorOut->write(QLatin1String(methodUsage.hasMultilineHandlerBody ? ")" : ") => "),
-                               Hint);
+                m_colorOut->write(QLatin1String(handler.isMultiline ? ")" : ") => "), Hint);
                 m_colorOut->write(QLatin1String(" {..."), Normal);
             }
             m_colorOut->write(QLatin1String("\n\n\n"), Normal);

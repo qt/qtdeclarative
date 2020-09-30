@@ -103,6 +103,16 @@ void FindWarningVisitor::importExportedNames(ScopeTree::ConstPtr scope)
     }
 }
 
+void FindWarningVisitor::flushPendingSignalParameters()
+{
+    const SignalHandler handler = m_signalHandlers[m_pendingSingalHandler];
+    for (const QString &parameter : handler.signal.parameterNames()) {
+        m_currentScope->insertJSIdentifier(
+                    parameter, { JavaScriptIdentifier::Injected, m_pendingSingalHandler});
+    }
+    m_pendingSingalHandler = QQmlJS::SourceLocation();
+}
+
 void FindWarningVisitor::throwRecursionDepthError()
 {
     m_colorOut.write(QStringLiteral("Error"), Error);
@@ -185,9 +195,28 @@ void FindWarningVisitor::endVisit(QQmlJS::AST::ForEachStatement *)
     leaveEnvironment();
 }
 
+bool FindWarningVisitor::visit(QQmlJS::AST::ExpressionStatement *)
+{
+    if (m_pendingSingalHandler.isValid()) {
+        enterEnvironment(ScopeType::JSFunctionScope, "signalhandler");
+        flushPendingSignalParameters();
+    }
+    return true;
+}
+
+void FindWarningVisitor::endVisit(QQmlJS::AST::ExpressionStatement *)
+{
+    if (m_currentScope->scopeType() == ScopeType::JSFunctionScope
+            && m_currentScope->baseTypeName() == "signalhandler") {
+        leaveEnvironment();
+    }
+}
+
 bool FindWarningVisitor::visit(QQmlJS::AST::Block *)
 {
     enterEnvironment(ScopeType::JSLexicalScope, "block");
+    if (m_pendingSingalHandler.isValid())
+        flushPendingSignalParameters();
     return true;
 }
 
@@ -210,8 +239,11 @@ void FindWarningVisitor::endVisit(QQmlJS::AST::CaseBlock *)
 bool FindWarningVisitor::visit(QQmlJS::AST::Catch *catchStatement)
 {
     enterEnvironment(ScopeType::JSLexicalScope, "catch");
-    m_currentScope->insertJSIdentifier(catchStatement->patternElement->bindingIdentifier.toString(),
-                                       ScopeType::JSLexicalScope);
+    m_currentScope->insertJSIdentifier(
+                catchStatement->patternElement->bindingIdentifier.toString(), {
+                    JavaScriptIdentifier::LexicalScoped,
+                    catchStatement->patternElement->firstSourceLocation()
+                });
     return true;
 }
 
@@ -300,13 +332,13 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
         for (auto method = methodsRange.first; method != methodsRange.second; ++method) {
             if (method->methodType() != MetaMethod::Signal)
                 continue;
-            for (auto const &param : method->parameterNames()) {
-                const auto firstSourceLocation = statement->firstSourceLocation();
-                bool hasMultilineStatementBody
-                        = statement->lastSourceLocation().startLine > firstSourceLocation.startLine;
-                m_currentScope->insertSignalIdentifier(param, *method, firstSourceLocation,
-                                                       hasMultilineStatementBody);
-            }
+
+            const auto firstSourceLocation = statement->firstSourceLocation();
+            bool hasMultilineStatementBody
+                    = statement->lastSourceLocation().startLine > firstSourceLocation.startLine;
+            m_pendingSingalHandler = firstSourceLocation;
+            m_signalHandlers.insert(firstSourceLocation, {*method, hasMultilineStatementBody});
+            break; // If there are multiple candidates for the signal, it's a mess anyway.
         }
         return true;
     }
@@ -383,14 +415,18 @@ FindWarningVisitor::FindWarningVisitor(
         // XMLHttpRequest
         QLatin1String("XMLHttpRequest")
     };
+
+    JavaScriptIdentifier globalJavaScript = {
+        JavaScriptIdentifier::LexicalScoped,
+        QQmlJS::SourceLocation()
+    };
     for (const char **globalName = QV4::Compiler::Codegen::s_globalNames;
          *globalName != nullptr;
          ++globalName) {
-        m_currentScope->insertJSIdentifier(QString::fromLatin1(*globalName),
-                                           ScopeType::JSLexicalScope);
+        m_currentScope->insertJSIdentifier(QString::fromLatin1(*globalName), globalJavaScript);
     }
     for (const auto& jsGlobVar: jsGlobVars)
-        m_currentScope->insertJSIdentifier(jsGlobVar, ScopeType::JSLexicalScope);
+        m_currentScope->insertJSIdentifier(jsGlobVar, globalJavaScript);
 }
 
 bool FindWarningVisitor::check()
@@ -411,7 +447,7 @@ bool FindWarningVisitor::check()
         return true;
 
     CheckIdentifiers check(&m_colorOut, m_code, m_rootScopeImports, m_filePath);
-    return check(m_qmlid2scope, m_rootScope, m_rootId);
+    return check(m_qmlid2scope, m_signalHandlers, m_rootScope, m_rootId);
 }
 
 bool FindWarningVisitor::visit(QQmlJS::AST::VariableDeclarationList *vdl)
@@ -419,9 +455,12 @@ bool FindWarningVisitor::visit(QQmlJS::AST::VariableDeclarationList *vdl)
     while (vdl) {
         m_currentScope->insertJSIdentifier(
                     vdl->declaration->bindingIdentifier.toString(),
-                    (vdl->declaration->scope == QQmlJS::AST::VariableScope::Var)
-                        ? ScopeType::JSFunctionScope
-                        : ScopeType::JSLexicalScope);
+                    {
+                        (vdl->declaration->scope == QQmlJS::AST::VariableScope::Var)
+                            ? JavaScriptIdentifier::FunctionScoped
+                            : JavaScriptIdentifier::LexicalScoped,
+                        vdl->declaration->firstSourceLocation()
+                    });
         vdl = vdl->next;
     }
     return true;
@@ -432,10 +471,13 @@ void FindWarningVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExpr
     using namespace QQmlJS::AST;
     auto name = fexpr->name.toString();
     if (!name.isEmpty()) {
-        if (m_currentScope->scopeType() == ScopeType::QMLScope)
+        if (m_currentScope->scopeType() == ScopeType::QMLScope) {
             m_currentScope->addMethod(MetaMethod(name, QLatin1String("void")));
-        else
-            m_currentScope->insertJSIdentifier(name, ScopeType::JSLexicalScope);
+        } else {
+            m_currentScope->insertJSIdentifier(
+                        name,
+                        { JavaScriptIdentifier::LexicalScoped, fexpr->firstSourceLocation() });
+        }
         enterEnvironment(ScopeType::JSFunctionScope, name);
     } else {
         enterEnvironment(ScopeType::JSFunctionScope, QLatin1String("<anon>"));
@@ -466,8 +508,11 @@ void FindWarningVisitor::endVisit(QQmlJS::AST::FunctionDeclaration *)
 
 bool FindWarningVisitor::visit(QQmlJS::AST::FormalParameterList *fpl)
 {
-    for (auto const &boundName : fpl->boundNames())
-        m_currentScope->insertJSIdentifier(boundName.id, ScopeType::JSLexicalScope);
+    for (auto const &boundName : fpl->boundNames()) {
+        m_currentScope->insertJSIdentifier(
+                    boundName.id,
+                    {JavaScriptIdentifier::Parameter, fpl->firstSourceLocation() });
+    }
     return true;
 }
 
@@ -625,9 +670,12 @@ bool FindWarningVisitor::visit(QQmlJS::AST::PatternElement *element)
         element->boundNames(&names);
         for (const auto &name : names) {
             m_currentScope->insertJSIdentifier(
-                        name.id, (element->scope == QQmlJS::AST::VariableScope::Var)
-                            ? ScopeType::JSFunctionScope
-                            : ScopeType::JSLexicalScope);
+                        name.id, {
+                            (element->scope == QQmlJS::AST::VariableScope::Var)
+                                ? JavaScriptIdentifier::FunctionScoped
+                                : JavaScriptIdentifier::LexicalScoped,
+                            element->firstSourceLocation()
+                        });
         }
     }
 

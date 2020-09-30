@@ -43,6 +43,7 @@
 #include "scopetree.h"
 #include "qcoloroutput.h"
 #include "qmljsimporter.h"
+#include "checkidentifiers.h"
 
 #include <QtQml/private/qqmldirparser_p.h>
 #include <QtQml/private/qqmljsastvisitor_p.h>
@@ -62,6 +63,9 @@ public:
 
 private:
     QmlJSImporter::ImportedTypes m_rootScopeImports;
+
+    QHash<QQmlJS::SourceLocation, SignalHandler> m_signalHandlers;
+    QQmlJS::SourceLocation m_pendingSingalHandler;
 
     ScopeTree::Ptr m_rootScope;
     ScopeTree::Ptr m_currentScope;
@@ -97,6 +101,7 @@ private:
 
     void parseHeaders(QQmlJS::AST::UiHeaderItemList *headers);
     ScopeTree::Ptr parseProgram(QQmlJS::AST::Program *program, const QString &name);
+    void flushPendingSignalParameters();
 
     void throwRecursionDepthError() override;
 
@@ -115,6 +120,9 @@ private:
 
     bool visit(QQmlJS::AST::ForEachStatement *ast) override;
     void endVisit(QQmlJS::AST::ForEachStatement *ast) override;
+
+    bool visit(QQmlJS::AST::ExpressionStatement *ast) override;
+    void endVisit(QQmlJS::AST::ExpressionStatement *ast) override;
 
     bool visit(QQmlJS::AST::Block *ast) override;
     void endVisit(QQmlJS::AST::Block *ast) override;

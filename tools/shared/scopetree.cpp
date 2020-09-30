@@ -49,26 +49,19 @@ ScopeTree::Ptr ScopeTree::create(ScopeType type, const ScopeTree::Ptr &parentSco
     return childScope;
 }
 
-void ScopeTree::insertJSIdentifier(const QString &id, ScopeType scope)
+void ScopeTree::insertJSIdentifier(const QString &name, const JavaScriptIdentifier &identifier)
 {
     Q_ASSERT(m_scopeType != ScopeType::QMLScope);
-    Q_ASSERT(scope != ScopeType::QMLScope);
-    if (scope != ScopeType::JSFunctionScope || m_scopeType == ScopeType::JSFunctionScope) {
-        m_jsIdentifiers.insert(id);
+    if (identifier.kind == JavaScriptIdentifier::LexicalScoped
+            || identifier.kind == JavaScriptIdentifier::Injected
+            || m_scopeType == ScopeType::JSFunctionScope) {
+        m_jsIdentifiers.insert(name, identifier);
     } else {
         auto targetScope = parentScope();
         while (targetScope->m_scopeType != ScopeType::JSFunctionScope)
             targetScope = targetScope->parentScope();
-        targetScope->m_jsIdentifiers.insert(id);
+        targetScope->m_jsIdentifiers.insert(name, identifier);
     }
-}
-
-void ScopeTree::insertSignalIdentifier(const QString &id, const MetaMethod &method,
-                                       const QQmlJS::SourceLocation &loc,
-                                       bool hasMultilineHandlerBody)
-{
-    Q_ASSERT(m_scopeType == ScopeType::QMLScope);
-    m_injectedSignalIdentifiers.insert(id, {method, loc, hasMultilineHandlerBody});
 }
 
 void ScopeTree::insertPropertyIdentifier(const MetaProperty &property)
@@ -127,9 +120,22 @@ bool ScopeTree::isIdInCurrentJSScopes(const QString &id) const
 
 bool ScopeTree::isIdInjectedFromSignal(const QString &id) const
 {
-    if (m_scopeType == ScopeType::QMLScope)
-        return m_injectedSignalIdentifiers.contains(id);
-    return findCurrentQMLScope(parentScope())->m_injectedSignalIdentifiers.contains(id);
+    const auto found = findJSIdentifier(id);
+    return found.has_value() && found->kind == JavaScriptIdentifier::Injected;
+}
+
+std::optional<JavaScriptIdentifier> ScopeTree::findJSIdentifier(const QString &id) const
+{
+    for (const auto *scope = this; scope; scope = scope->parentScope().data()) {
+        if (scope->m_scopeType == ScopeType::JSFunctionScope
+                || scope->m_scopeType == ScopeType::JSLexicalScope) {
+            auto it = scope->m_jsIdentifiers.find(id);
+            if (it != scope->m_jsIdentifiers.end())
+                return *it;
+        }
+    }
+
+    return std::optional<JavaScriptIdentifier>{};
 }
 
 void ScopeTree::resolveTypes(const QHash<QString, ScopeTree::ConstPtr> &contextualTypes)

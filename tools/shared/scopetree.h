@@ -48,6 +48,8 @@
 #include <QtCore/qstring.h>
 #include <QtCore/qversionnumber.h>
 
+#include <optional>
+
 enum class ScopeType
 {
     JSFunctionScope,
@@ -55,11 +57,17 @@ enum class ScopeType
     QMLScope
 };
 
-struct MethodUsage
+struct JavaScriptIdentifier
 {
-    MetaMethod method;
-    QQmlJS::SourceLocation loc;
-    bool hasMultilineHandlerBody;
+    enum Kind {
+        Parameter,
+        FunctionScoped,
+        LexicalScoped,
+        Injected
+    };
+
+    Kind kind = FunctionScoped;
+    QQmlJS::SourceLocation location;
 };
 
 class ScopeTree
@@ -115,9 +123,8 @@ public:
 
     ScopeTree::Ptr parentScope() const { return m_parentScope.toStrongRef(); }
 
-    void insertJSIdentifier(const QString &id, ScopeType scope);
-    void insertSignalIdentifier(const QString &id, const MetaMethod &method,
-                                const QQmlJS::SourceLocation &loc, bool hasMultilineHandlerBody);
+    void insertJSIdentifier(const QString &name, const JavaScriptIdentifier &identifier);
+
     // inserts property as qml identifier as well as the corresponding
     void insertPropertyIdentifier(const MetaProperty &prop);
     void addUnmatchedSignalHandler(const QString &handler,
@@ -196,14 +203,11 @@ public:
     bool isIdInCurrentJSScopes(const QString &id) const;
     bool isIdInjectedFromSignal(const QString &id) const;
 
+    std::optional<JavaScriptIdentifier> findJSIdentifier(const QString &id) const;
+
     QVector<ScopeTree::Ptr> childScopes() const
     {
         return m_childScopes;
-    }
-
-    QMultiHash<QString, MethodUsage> injectedSignalIdentifiers() const
-    {
-        return m_injectedSignalIdentifiers;
     }
 
     void resolveTypes(const QHash<QString, ConstPtr> &contextualTypes);
@@ -211,8 +215,7 @@ public:
 private:
     ScopeTree(ScopeType type, const ScopeTree::Ptr &parentScope = ScopeTree::Ptr());
 
-    QSet<QString> m_jsIdentifiers;
-    QMultiHash<QString, MethodUsage> m_injectedSignalIdentifiers;
+    QHash<QString, JavaScriptIdentifier> m_jsIdentifiers;
 
     QMultiHash<QString, MetaMethod> m_methods;
     QHash<QString, MetaProperty> m_properties;
