@@ -51,7 +51,7 @@ T.ScrollBar {
 
     font.pixelSize: __nativeBackground ? background.styleFont(control).pixelSize : undefined
 
-    visible: policy === T.ScrollBar.AlwaysOn || (active && size < 1.0)
+    visible: policy === T.ScrollBar.AlwaysOn || size < 1.0
 
     background: NativeStyle.ScrollBar {
         control: control

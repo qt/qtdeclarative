@@ -72,7 +72,6 @@ ApplicationWindow {
         ScrollView {
             contentWidth: width
             clip: true
-            ScrollBar.vertical.policy: ScrollBar.AlwaysOn
 
             Column {
                 anchors.left: parent.left
@@ -99,7 +98,6 @@ ApplicationWindow {
         ScrollView {
             contentWidth: width
             clip: true
-            ScrollBar.vertical.policy: ScrollBar.AlwaysOn
 
             Column {
                 anchors.left: parent.left

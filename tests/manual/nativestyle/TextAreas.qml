@@ -67,7 +67,6 @@ ControlContainer {
             id: scrollView
             width: 200
             height: defaultTextArea.height
-            ScrollBar.vertical.policy: ScrollBar.AlwaysOn
 
             TextArea {
                 text: "Inside ScrollView - Lorem ipsum dolor sit amet, consectetur adipiscing elit, "
@@ -104,7 +103,6 @@ ControlContainer {
             ScrollView {
                 id: scrollView2
                 anchors.fill: parent
-                ScrollBar.vertical.policy: ScrollBar.AlwaysOn
 
                 TextArea {
                     id: area2
