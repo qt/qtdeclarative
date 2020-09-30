@@ -67,6 +67,8 @@ private:
     QHash<QQmlJS::SourceLocation, SignalHandler> m_signalHandlers;
     QQmlJS::SourceLocation m_pendingSingalHandler;
 
+    MemberAccessChains m_memberAccessChains;
+
     ScopeTree::Ptr m_rootScope;
     ScopeTree::Ptr m_currentScope;
     QQmlJS::AST::ExpressionNode *m_fieldMemberBase = nullptr;

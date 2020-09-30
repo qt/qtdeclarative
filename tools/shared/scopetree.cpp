@@ -76,18 +76,6 @@ bool ScopeTree::isIdInCurrentScope(const QString &id) const
     return isIdInCurrentQMlScopes(id) || isIdInCurrentJSScopes(id);
 }
 
-void ScopeTree::addIdToAccessed(const QString &id, const QQmlJS::SourceLocation &location) {
-    m_memberAccessChains.append(QVector<FieldMember>());
-    m_memberAccessChains.last().append(FieldMember {id, QString(), location});
-}
-
-void ScopeTree::accessMember(const QString &name, const QString &parentType,
-                             const QQmlJS::SourceLocation &location)
-{
-    Q_ASSERT(!m_memberAccessChains.last().isEmpty());
-    m_memberAccessChains.last().append(FieldMember {name, parentType, location });
-}
-
 bool ScopeTree::isIdInCurrentQMlScopes(const QString &id) const
 {
     if (m_scopeType == ScopeType::QMLScope)

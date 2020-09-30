@@ -107,7 +107,7 @@ static bool walkViaParentAndAttachedScopes(ScopeTree::ConstPtr rootType,
     return false;
 }
 
-bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &members,
+bool CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
                                          const ScopeTree::ConstPtr &outerScope,
                                          const MetaProperty *prop) const
 {
@@ -122,7 +122,7 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
     }
 
     ScopeTree::ConstPtr scope = outerScope;
-    for (const ScopeTree::FieldMember &access : members) {
+    for (const FieldMember &access : members) {
         if (scope.isNull()) {
             writeWarning(m_colorOut);
             m_colorOut->write(
@@ -289,6 +289,7 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
 bool CheckIdentifiers::operator()(
         const QHash<QString, ScopeTree::ConstPtr> &qmlIDs,
         const QHash<QQmlJS::SourceLocation, SignalHandler> &signalHandlers,
+        const MemberAccessChains &memberAccessChains,
         const ScopeTree::ConstPtr &root, const QString &rootId) const
 {
     bool noUnqualifiedIdentifier = true;
@@ -299,8 +300,8 @@ bool CheckIdentifiers::operator()(
     while (!workQueue.empty()) {
         const ScopeTree::ConstPtr currentScope = workQueue.dequeue();
 
-        const auto memberAccessChains = currentScope->memberAccessChains();
-        for (auto memberAccessChain : memberAccessChains) {
+        const auto scopeMemberAccessChains = memberAccessChains[currentScope];
+        for (auto memberAccessChain : scopeMemberAccessChains) {
             if (memberAccessChain.isEmpty())
                 continue;
 

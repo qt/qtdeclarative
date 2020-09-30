@@ -129,9 +129,6 @@ public:
     void insertPropertyIdentifier(const MetaProperty &prop);
 
     bool isIdInCurrentScope(const QString &id) const;
-    void addIdToAccessed(const QString &id, const QQmlJS::SourceLocation &location);
-    void accessMember(const QString &name, const QString &parentType,
-                      const QQmlJS::SourceLocation &location);
 
     ScopeType scopeType() const { return m_scopeType; }
 
@@ -180,18 +177,6 @@ public:
     void setAccessSemantics(AccessSemantics semantics) { m_semantics = semantics; }
     AccessSemantics accessSemantics() const { return m_semantics; }
 
-    struct FieldMember
-    {
-        QString m_name;
-        QString m_parentType;
-        QQmlJS::SourceLocation m_location;
-    };
-
-    QVector<QVector<FieldMember>> memberAccessChains() const
-    {
-        return m_memberAccessChains;
-    }
-
     bool isIdInCurrentQMlScopes(const QString &id) const;
     bool isIdInCurrentJSScopes(const QString &id) const;
     bool isIdInjectedFromSignal(const QString &id) const;
@@ -213,8 +198,6 @@ private:
     QMultiHash<QString, MetaMethod> m_methods;
     QHash<QString, MetaProperty> m_properties;
     QHash<QString, MetaEnum> m_enums;
-
-    QVector<QVector<FieldMember>> m_memberAccessChains;
 
     QVector<ScopeTree::Ptr> m_childScopes;
     ScopeTree::WeakPtr m_parentScope;

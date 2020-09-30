@@ -380,8 +380,8 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiPublicMember *uipm)
 
 bool FindWarningVisitor::visit(QQmlJS::AST::IdentifierExpression *idexp)
 {
-    auto name = idexp->name;
-    m_currentScope->addIdToAccessed(name.toString(), idexp->firstSourceLocation());
+    m_memberAccessChains[m_currentScope].append(
+                {{idexp->name.toString(), QString(), idexp->firstSourceLocation()}});
     m_fieldMemberBase = idexp;
     return true;
 }
@@ -453,7 +453,7 @@ bool FindWarningVisitor::check()
         return true;
 
     CheckIdentifiers check(&m_colorOut, m_code, m_rootScopeImports, m_filePath);
-    return check(m_qmlid2scope, m_signalHandlers, m_rootScope, m_rootId);
+    return check(m_qmlid2scope, m_signalHandlers, m_memberAccessChains, m_rootScope, m_rootId);
 }
 
 bool FindWarningVisitor::visit(QQmlJS::AST::VariableDeclarationList *vdl)
@@ -727,9 +727,13 @@ void FindWarningVisitor::endVisit(QQmlJS::AST::FieldMemberExpression *fieldMembe
                     type = right->m_type->toString();
             }
         }
-        m_currentScope->accessMember(fieldMember->name.toString(),
-                                     type,
-                                     fieldMember->identifierToken);
+
+
+        auto &chain = m_memberAccessChains[m_currentScope];
+        Q_ASSERT(!chain.last().isEmpty());
+        chain.last().append(FieldMember {
+                                fieldMember->name.toString(), type, fieldMember->identifierToken
+                            });
         m_fieldMemberBase = fieldMember;
     } else {
         m_fieldMemberBase = nullptr;
