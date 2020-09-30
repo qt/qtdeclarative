@@ -602,7 +602,7 @@ void QQuickRenderControl::beginFrame()
 
     emit d->window->beforeFrameBegin();
 
-    d->rhi->beginOffscreenFrame(&d->cb, QRhi::ExternalContentsInPass); // must specify ExternalContents since we do not know in advance
+    d->rhi->beginOffscreenFrame(&d->cb);
 }
 
 /*!

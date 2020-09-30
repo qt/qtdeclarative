@@ -704,9 +704,7 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
         emit window->beforeFrameBegin();
 
         Q_ASSERT(rhi == cd->rhi);
-        // ### the flag should only be set when the app requests it, but there's no way to do that right now
-        QRhi::BeginFrameFlags frameFlags = QRhi::ExternalContentsInPass;
-        QRhi::FrameOpResult frameResult = rhi->beginFrame(cd->swapchain, frameFlags);
+        QRhi::FrameOpResult frameResult = rhi->beginFrame(cd->swapchain);
         if (frameResult != QRhi::FrameOpSuccess) {
             if (frameResult == QRhi::FrameOpDeviceLost)
                 handleDeviceLoss();

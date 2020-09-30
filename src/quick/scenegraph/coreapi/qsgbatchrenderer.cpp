@@ -3644,7 +3644,14 @@ void Renderer::prepareRenderPass(RenderPassContext *ctx)
 
 void Renderer::beginRenderPass(RenderPassContext *)
 {
-    commandBuffer()->beginPass(renderTarget(), m_pstate.clearColor, m_pstate.dsClear);
+    commandBuffer()->beginPass(renderTarget(), m_pstate.clearColor, m_pstate.dsClear, nullptr,
+                               // we cannot tell if the application will have
+                               // native rendering thrown in to this pass
+                               // (QQuickWindow::beginExternalCommands()), so
+                               // we have no choice but to set the flag always
+                               // (thus triggering using secondary command
+                               // buffers with Vulkan)
+                               QRhiCommandBuffer::ExternalContent);
 
     if (m_renderPassRecordingCallbacks.start)
         m_renderPassRecordingCallbacks.start(m_renderPassRecordingCallbacks.userData);
