@@ -825,7 +825,10 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
 
     qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- rendering done");
 
-    emit window->afterFrameEnd();
+    // beforeFrameBegin - afterFrameEnd must always come in pairs; if there was
+    // no before due to 0 size then there shouldn't be an after either
+   if (current)
+        emit window->afterFrameEnd();
 
     // Though it would be more correct to put this block directly after
     // fireFrameSwapped in the if (current) branch above, we don't do
