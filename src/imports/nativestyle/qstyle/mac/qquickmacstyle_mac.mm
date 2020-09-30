@@ -6116,7 +6116,7 @@ QMargins QMacStyle::ninePatchMargins(QStyle::ComplexControl cc, const QStyleOpti
     switch (cc) {
     case CC_ComboBox: {
         const QRect arrow = subControlRect(CC_ComboBox, opt, SC_ComboBoxArrow);
-        margins = QMargins(10, 0, arrow.width(), -1);
+        margins = QMargins(10, 0, arrow.width() + 1, -1);
         break; }
     default:
         margins = QCommonStyle::ninePatchMargins(cc, opt, imageSize);
