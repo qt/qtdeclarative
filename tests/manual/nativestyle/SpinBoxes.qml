@@ -48,6 +48,7 @@ ControlContainer {
         SpinBox {
             value: 500
             to: 2000
+            editable: true
         }
 
         SpinBox {

@@ -3406,14 +3406,6 @@ QSize QWindowsXPStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt
             }
         }
         break;
-    case CT_SpinBox:
-        {
-            //Spinbox adds frame twice
-            sz = QWindowsStyle::sizeFromContents(ct, option, contentsSize);
-            int border = proxy()->pixelMetric(PM_SpinBoxFrameWidth, option);
-            sz -= QSize(2*border, 2*border);
-        }
-        break;
     case CT_TabWidget:
         sz += QSize(6, 6);
         break;

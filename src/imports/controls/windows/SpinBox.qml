@@ -35,7 +35,6 @@
 ****************************************************************************/
 
 import QtQuick
-import QtQuick.Controls.impl
 import QtQuick.Templates as T
 import QtQuick.NativeStyle as NativeStyle
 
@@ -44,18 +43,16 @@ T.SpinBox {
 
     property bool __nativeBackground: background instanceof NativeStyle.StyleItem
     property bool nativeIndicators: up.indicator.hasOwnProperty("_qt_default")
-                && down.indicator.hasOwnProperty("_qt_default")
+                                    && down.indicator.hasOwnProperty("_qt_default")
 
     font.pixelSize: __nativeBackground ? background.styleFont(control).pixelSize : undefined
 
-    implicitWidth: implicitBackgroundWidth + leftInset + rightInset
-    implicitHeight: Math.max(implicitBackgroundHeight, up.implicitIndicatorHeight + down.implicitIndicatorHeight)
+    implicitWidth: Math.max(contentItem.implicitWidth + leftInset + rightInset,
+                            90 /* minimum */ )
+    implicitHeight: Math.max(contentItem.implicitHeight, up.implicitIndicatorHeight + down.implicitIndicatorHeight)
                     + topInset + bottomInset
 
     spacing: 2
-
-    // Push the background right to make room for the indicators
-    rightInset: nativeIndicators ? up.implicitIndicatorWidth + spacing : 0
 
     leftPadding: __nativeBackground ? background.contentPadding.left: 0
     topPadding: __nativeBackground ? background.contentPadding.top: 0
@@ -68,7 +65,7 @@ T.SpinBox {
         top: Math.max(control.from, control.to)
     }
 
-    contentItem: TextInput {
+    contentItem: TextField {
         text: control.displayText
         font: control.font
         color: control.palette.text
@@ -77,14 +74,19 @@ T.SpinBox {
         horizontalAlignment: Qt.AlignLeft
         verticalAlignment: Qt.AlignVCenter
 
-        topPadding: 2
-        bottomPadding: 2
+        topPadding: 0
+        bottomPadding: 0
         leftPadding: 10
         rightPadding: 10
 
         readOnly: !control.editable
         validator: control.validator
         inputMethodHints: control.inputMethodHints
+
+        // Since the indicators are embedded inside the TextField we need to avoid that
+        // the TextField consumes mouse events for that area.
+        // We achieve that by setting a containmentMask
+        containmentMask: Item { height: contentItem.height; width: contentItem.width - upAndDown.width }
     }
 
     NativeStyle.SpinBox {
@@ -94,29 +96,29 @@ T.SpinBox {
         visible: nativeIndicators
         x: up.indicator.x
         y: up.indicator.y
+        //implicitHeight: contentItem.implicitHeight-2
+        height: parent.height-2
         useNinePatchImage: false
+        z:99
     }
 
     up.indicator: Item {
-        x: parent.width - width
-        y: (parent.height / 2) - height
-        implicitWidth: upAndDown.width
-        implicitHeight: upAndDown.height / 2
+        x: parent.width - width - 2
+        y: 1
+        height: upAndDown.height >> 1
+        implicitWidth: upAndDown.implicitWidth
+        implicitHeight: (upAndDown.implicitHeight >> 1)
         property bool _qt_default
     }
 
     down.indicator: Item {
-        x: parent.width - width
-        y: up.indicator.y + upAndDown.height / 2
-        implicitWidth: upAndDown.width
-        implicitHeight: upAndDown.height / 2
+        x: parent.width - width - 2
+        y: up.indicator.y + (upAndDown.height >> 1)
+        height: upAndDown.height - up.indicator.height
+        implicitWidth: upAndDown.implicitWidth
+        implicitHeight: upAndDown.implicitHeight >> 1
         property bool _qt_default
     }
 
-    background: NativeStyle.SpinBox {
-        control: control
-        subControl: NativeStyle.SpinBox.Frame
-        contentWidth: contentItem.implicitWidth
-        contentHeight: contentItem.implicitHeight
-    }
+    background: Item {} // No background, the TextField will cover the whole control
 }

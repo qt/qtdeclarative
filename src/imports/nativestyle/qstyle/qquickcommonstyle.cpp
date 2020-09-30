@@ -4652,11 +4652,17 @@ QSize QCommonStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt, c
     case CT_SpinBox:
         if (const QStyleOptionSpinBox *vopt = qstyleoption_cast<const QStyleOptionSpinBox *>(opt)) {
             // Add button + frame widths
-            const qreal dpi = QStyleHelper::dpi(opt);
-            const bool hasButtons = (vopt->buttonSymbols != QStyleOptionSpinBox::NoButtons);
-            const int buttonWidth = hasButtons ? qRound(QStyleHelper::dpiScaled(16, dpi)) : 0;
-            const int fw = vopt->frame ? proxy()->pixelMetric(PM_SpinBoxFrameWidth, vopt) : 0;
-            sz += QSize(buttonWidth + 2*fw, 2*fw);
+            if (vopt->subControls == SC_SpinBoxFrame) {
+                const qreal dpi = QStyleHelper::dpi(opt);
+                const bool hasButtons = (vopt->buttonSymbols != QStyleOptionSpinBox::NoButtons);
+                const int buttonWidth = hasButtons ? qRound(QStyleHelper::dpiScaled(16, dpi)) : 0;
+                const int fw = vopt->frame ? proxy()->pixelMetric(PM_SpinBoxFrameWidth, vopt) : 0;
+                sz += QSize(buttonWidth + 2*fw, 1 + 2*fw);
+            } else {
+                const QSize buttonSize = proxy()->subControlRect(CC_SpinBox, vopt, SC_SpinBoxUp).size();
+                const int upAndDownTogetherHeight = buttonSize.height() * 2;
+                sz += QSize(buttonSize.width(), upAndDownTogetherHeight);
+            }
         }
         break;
     case CT_Slider:

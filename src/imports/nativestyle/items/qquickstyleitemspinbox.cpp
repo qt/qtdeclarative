@@ -89,7 +89,7 @@ void QQuickStyleItemSpinBox::initStyleOption(QStyleOptionSpinBox &styleOption)
         styleOption.frame = true;
         break;
     case Up:
-        styleOption.subControls = QStyle::SC_SpinBoxUp;
+        styleOption.subControls = (QStyle::SC_SpinBoxUp | QStyle::SC_SpinBoxDown);
         break;
     case Down:
         styleOption.subControls = QStyle::SC_SpinBoxDown;
