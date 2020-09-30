@@ -312,8 +312,14 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
         if (signal.isEmpty())
             return true;
 
-        if (!m_currentScope->methods().contains(signal)) {
-            m_currentScope->addUnmatchedSignalHandler(name.toString(), uisb->firstSourceLocation());
+        if (!m_currentScope->methods().contains(signal) && m_warnUnqualified) {
+            const auto location = uisb->firstSourceLocation();
+            m_colorOut.write(QLatin1String("Warning: "), Warning);
+            m_colorOut.write(QString::fromLatin1(
+                                   "no matching signal found for handler \"%1\" at %2:%3:%4\n")
+                                   .arg(name.toString()).arg(m_filePath).arg(location.startLine)
+                                   .arg(location.startColumn), Normal);
+            CheckIdentifiers::printContext(m_code, &m_colorOut, location);
             return true;
         }
 

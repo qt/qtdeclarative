@@ -127,8 +127,6 @@ public:
 
     // inserts property as qml identifier as well as the corresponding
     void insertPropertyIdentifier(const MetaProperty &prop);
-    void addUnmatchedSignalHandler(const QString &handler,
-                                   const QQmlJS::SourceLocation &location);
 
     bool isIdInCurrentScope(const QString &id) const;
     void addIdToAccessed(const QString &id, const QQmlJS::SourceLocation &location);
@@ -189,11 +187,6 @@ public:
         QQmlJS::SourceLocation m_location;
     };
 
-    QVector<QPair<QString, QQmlJS::SourceLocation>> unmatchedSignalHandlers() const
-    {
-        return m_unmatchedSignalHandlers;
-    }
-
     QVector<QVector<FieldMember>> memberAccessChains() const
     {
         return m_memberAccessChains;
@@ -222,7 +215,6 @@ private:
     QHash<QString, MetaEnum> m_enums;
 
     QVector<QVector<FieldMember>> m_memberAccessChains;
-    QVector<QPair<QString, QQmlJS::SourceLocation>> m_unmatchedSignalHandlers;
 
     QVector<ScopeTree::Ptr> m_childScopes;
     ScopeTree::WeakPtr m_parentScope;

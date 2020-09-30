@@ -69,14 +69,15 @@ static const QStringList unknownBuiltins = {
     QStringLiteral("variant"),  // Same for generic variants
 };
 
-void CheckIdentifiers::printContext(const QQmlJS::SourceLocation &location) const
+void CheckIdentifiers::printContext(
+        const QString &code, ColorOutput *output, const QQmlJS::SourceLocation &location)
 {
-    IssueLocationWithContext issueLocationWithContext {m_code, location};
-    m_colorOut->write(issueLocationWithContext.beforeText().toString(), Normal);
-    m_colorOut->write(issueLocationWithContext.issueText().toString(), Error);
-    m_colorOut->write(issueLocationWithContext.afterText().toString() + QLatin1Char('\n'), Normal);
+    IssueLocationWithContext issueLocationWithContext { code, location };
+    output->write(issueLocationWithContext.beforeText().toString(), Normal);
+    output->write(issueLocationWithContext.issueText().toString(), Error);
+    output->write(issueLocationWithContext.afterText().toString() + QLatin1Char('\n'), Normal);
     int tabCount = issueLocationWithContext.beforeText().count(QLatin1Char('\t'));
-    m_colorOut->write(QString::fromLatin1(" ").repeated(
+    output->write(QString::fromLatin1(" ").repeated(
                        issueLocationWithContext.beforeText().length() - tabCount)
                            + QString::fromLatin1("\t").repeated(tabCount)
                            + QString::fromLatin1("^").repeated(location.length)
@@ -132,7 +133,7 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
                         .arg(m_fileName)
                         .arg(access.m_location.startLine)
                         .arg(access.m_location.startColumn), Normal);
-            printContext(access.m_location);
+            printContext(m_code, m_colorOut, access.m_location);
             return false;
         }
 
@@ -151,7 +152,7 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
                                    .arg(m_fileName)
                                    .arg(access.m_location.startLine)
                                    .arg(access.m_location.startColumn), Normal);
-            printContext(access.m_location);
+            printContext(m_code, m_colorOut, access.m_location);
             return false;
         }
 
@@ -278,7 +279,7 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<ScopeTree::FieldMember> &
                                .arg(m_fileName)
                                .arg(access.m_location.startLine)
                                .arg(access.m_location.startColumn), Normal);
-        printContext(access.m_location);
+        printContext(m_code, m_colorOut, access.m_location);
         return false;
     }
 
@@ -297,15 +298,6 @@ bool CheckIdentifiers::operator()(
     workQueue.enqueue(root);
     while (!workQueue.empty()) {
         const ScopeTree::ConstPtr currentScope = workQueue.dequeue();
-        const auto unmatchedSignalHandlers = currentScope->unmatchedSignalHandlers();
-        for (const auto &handler : unmatchedSignalHandlers) {
-            writeWarning(m_colorOut);
-            m_colorOut->write(QString::fromLatin1(
-                                   "no matching signal found for handler \"%1\" at %2:%3:%4\n")
-                                   .arg(handler.first).arg(m_fileName).arg(handler.second.startLine)
-                                   .arg(handler.second.startColumn), Normal);
-            printContext(handler.second);
-        }
 
         const auto memberAccessChains = currentScope->memberAccessChains();
         for (auto memberAccessChain : memberAccessChains) {
@@ -360,7 +352,7 @@ bool CheckIdentifiers::operator()(
                                            .arg(m_fileName)
                                            .arg(memberAccessBase.m_location.startLine)
                                            .arg(memberAccessBase.m_location.startColumn), Normal);
-                    printContext(memberAccessBase.m_location);
+                    printContext(m_code, m_colorOut, memberAccessBase.m_location);
                     noUnqualifiedIdentifier = false;
                 } else if (!checkMemberAccess(memberAccessChain, qmlIt->type(), &*qmlIt)) {
                     noUnqualifiedIdentifier = false;
@@ -388,7 +380,7 @@ bool CheckIdentifiers::operator()(
                            .arg(location.startLine).arg(location.startColumn),
                            Normal);
 
-            printContext(location);
+            printContext(m_code, m_colorOut, location);
 
             // root(JS) --> program(qml) --> (first element)
             const auto firstElement = root->childScopes()[0]->childScopes()[0];

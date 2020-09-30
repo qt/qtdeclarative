@@ -71,12 +71,6 @@ void ScopeTree::insertPropertyIdentifier(const MetaProperty &property)
     addMethod(method);
 }
 
-void ScopeTree::addUnmatchedSignalHandler(const QString &handler,
-                                          const QQmlJS::SourceLocation &location)
-{
-    m_unmatchedSignalHandlers.append(qMakePair(handler, location));
-}
-
 bool ScopeTree::isIdInCurrentScope(const QString &id) const
 {
     return isIdInCurrentQMlScopes(id) || isIdInCurrentJSScopes(id);

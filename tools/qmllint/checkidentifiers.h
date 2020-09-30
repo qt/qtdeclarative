@@ -51,11 +51,13 @@ public:
                      const QHash<QQmlJS::SourceLocation, SignalHandler> &signalHandlers,
                      const ScopeTree::ConstPtr &root, const QString &rootId) const;
 
+    static void printContext(const QString &code, ColorOutput *output,
+                             const QQmlJS::SourceLocation &location);
+
 private:
     bool checkMemberAccess(const QVector<ScopeTree::FieldMember> &members,
                            const ScopeTree::ConstPtr &outerScope,
                            const MetaProperty *prop = nullptr) const;
-    void printContext(const QQmlJS::SourceLocation &location) const;
 
     ColorOutput *m_colorOut = nullptr;
     QString m_code;
