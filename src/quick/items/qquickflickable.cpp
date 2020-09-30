@@ -62,6 +62,8 @@
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(lcHandlerParent)
+Q_LOGGING_CATEGORY(lcFilter, "qt.quick.flickable.filter")
+Q_LOGGING_CATEGORY(lcReplay, "qt.quick.flickable.replay")
 
 // FlickThreshold determines how far the "mouse" must have moved
 // before we perform a flick.
@@ -281,7 +283,7 @@ void QQuickFlickablePrivate::init()
     qmlobject_connect(&velocityTimeline, QQuickTimeLine, SIGNAL(completed()),
                       q, QQuickFlickable, SLOT(velocityTimelineCompleted()));
     q->setAcceptedMouseButtons(Qt::LeftButton);
-    q->setAcceptTouchEvents(false); // rely on mouse events synthesized from touch
+    q->setAcceptTouchEvents(true);
     q->setFiltersChildMouseEvents(true);
     QQuickItemPrivate *viewportPrivate = QQuickItemPrivate::get(contentItem);
     viewportPrivate->addItemChangeListener(this, QQuickItemPrivate::Geometry);
@@ -1032,7 +1034,7 @@ qreal QQuickFlickablePrivate::devicePixelRatio() const
     return (window ? window->effectiveDevicePixelRatio() : qApp->devicePixelRatio());
 }
 
-void QQuickFlickablePrivate::handleMousePressEvent(QMouseEvent *event)
+void QQuickFlickablePrivate::handlePressEvent(QPointerEvent *event)
 {
     Q_Q(QQuickFlickable);
     timer.start();
@@ -1060,7 +1062,7 @@ void QQuickFlickablePrivate::handleMousePressEvent(QMouseEvent *event)
     }
     q->setKeepMouseGrab(stealMouse);
 
-    maybeBeginDrag(computeCurrentTime(event), event->position());
+    maybeBeginDrag(computeCurrentTime(event), event->points().first().position());
 }
 
 void QQuickFlickablePrivate::maybeBeginDrag(qint64 currentTimestamp, const QPointF &pressPosn)
@@ -1311,34 +1313,29 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
     lastPos = localPos;
 }
 
-void QQuickFlickablePrivate::handleMouseMoveEvent(QMouseEvent *event)
+void QQuickFlickablePrivate::handleMoveEvent(QPointerEvent *event)
 {
     Q_Q(QQuickFlickable);
-    if (!interactive || lastPosTime == -1 || event->buttons() == Qt::NoButton)
+    if (!interactive || lastPosTime == -1 ||
+            (event->isSinglePointEvent() && static_cast<QSinglePointEvent *>(event)->buttons() == Qt::NoButton))
         return;
 
     qint64 currentTimestamp = computeCurrentTime(event);
-    QVector2D deltas = QVector2D(event->position() - pressPos);
+    const auto &firstPoint = event->points().first();
+    const auto &pos = firstPoint.position();
+    QVector2D deltas = QVector2D(pos - q->mapFromGlobal(firstPoint.globalPressPosition()));
     bool overThreshold = false;
     QVector2D velocity = event->point(0).velocity();
-    // TODO guarantee that events always have velocity so that it never needs to be computed here
-    if (!event->device()->capabilities().testFlag(QInputDevice::Capability::Velocity)) {
-        qint64 lastTimestamp = (lastPos.isNull() ? lastPressTime : lastPosTime);
-        if (currentTimestamp == lastTimestamp)
-            return; // events are too close together: velocity would be infinite
-        qreal elapsed = qreal(currentTimestamp - lastTimestamp) / 1000.;
-        velocity = QVector2D(event->position() - (lastPos.isNull() ? pressPos : lastPos)) / elapsed;
-    }
 
     if (q->yflick())
-        overThreshold |= QQuickWindowPrivate::dragOverThreshold(deltas.y(), Qt::YAxis, event);
+        overThreshold |= QQuickWindowPrivate::dragOverThreshold(deltas.y(), Qt::YAxis, firstPoint);
     if (q->xflick())
-        overThreshold |= QQuickWindowPrivate::dragOverThreshold(deltas.x(), Qt::XAxis, event);
+        overThreshold |= QQuickWindowPrivate::dragOverThreshold(deltas.x(), Qt::XAxis, firstPoint);
 
-    drag(currentTimestamp, event->type(), event->position(), deltas, overThreshold, false, false, velocity);
+    drag(currentTimestamp, event->type(), pos, deltas, overThreshold, false, false, velocity);
 }
 
-void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
+void QQuickFlickablePrivate::handleReleaseEvent(QPointerEvent *event)
 {
     Q_Q(QQuickFlickable);
     stealMouse = false;
@@ -1359,6 +1356,8 @@ void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
     hData.vTime = vData.vTime = timeline.time();
 
     bool canBoost = false;
+    const auto pos = event->points().first().position();
+    const auto pressPos = event->points().first().pressPosition();
 
     qreal vVelocity = 0;
     if (elapsed < 100 && vData.velocity != 0.) {
@@ -1394,7 +1393,7 @@ void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
 
     bool flickedVertically = false;
     vVelocity *= flickBoost;
-    bool isVerticalFlickAllowed = q->yflick() && qAbs(vVelocity) > MinimumFlickVelocity && qAbs(event->position().y() - pressPos.y()) > FlickThreshold;
+    bool isVerticalFlickAllowed = q->yflick() && qAbs(vVelocity) > MinimumFlickVelocity && qAbs(pos.y() - pressPos.y()) > FlickThreshold;
     if (isVerticalFlickAllowed) {
         velocityTimeline.reset(vData.smoothVelocity);
         vData.smoothVelocity.setValue(-vVelocity);
@@ -1403,7 +1402,7 @@ void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
 
     bool flickedHorizontally = false;
     hVelocity *= flickBoost;
-    bool isHorizontalFlickAllowed = q->xflick() && qAbs(hVelocity) > MinimumFlickVelocity && qAbs(event->position().x() - pressPos.x()) > FlickThreshold;
+    bool isHorizontalFlickAllowed = q->xflick() && qAbs(hVelocity) > MinimumFlickVelocity && qAbs(pos.x() - pressPos.x()) > FlickThreshold;
     if (isHorizontalFlickAllowed) {
         velocityTimeline.reset(hData.smoothVelocity);
         hData.smoothVelocity.setValue(-hVelocity);
@@ -1424,9 +1423,9 @@ void QQuickFlickablePrivate::handleMouseReleaseEvent(QMouseEvent *event)
 void QQuickFlickable::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickFlickable);
-    if (d->interactive && d->wantsPointerEvent(event)) {
+    if (d->interactive && !d->replayingPressEvent && d->wantsPointerEvent(event)) {
         if (!d->pressed)
-            d->handleMousePressEvent(event);
+            d->handlePressEvent(event);
         event->accept();
     } else {
         QQuickItem::mousePressEvent(event);
@@ -1437,7 +1436,7 @@ void QQuickFlickable::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickFlickable);
     if (d->interactive && d->wantsPointerEvent(event)) {
-        d->handleMouseMoveEvent(event);
+        d->handleMoveEvent(event);
         event->accept();
     } else {
         QQuickItem::mouseMoveEvent(event);
@@ -1452,10 +1451,11 @@ void QQuickFlickable::mouseReleaseEvent(QMouseEvent *event)
             d->replayDelayedPress();
 
             // Now send the release
-            if (window() && window()->mouseGrabberItem()) {
-                QPointF localPos = window()->mouseGrabberItem()->mapFromScene(event->scenePosition());
-                QScopedPointer<QMouseEvent> mouseEvent(QQuickWindowPrivate::cloneMouseEvent(event, &localPos));
-                QCoreApplication::sendEvent(window(), mouseEvent.data());
+            auto &firstPoint = event->point(0);
+            if (auto grabber = qmlobject_cast<QQuickItem *>(event->exclusiveGrabber(firstPoint))) {
+                QMouseEvent localized(*event);
+                QMutableEventPoint::from(firstPoint).setPosition(grabber->mapFromScene(event->scenePosition()));
+                QCoreApplication::sendEvent(window(), &localized);
             }
 
             // And the event has been consumed
@@ -1464,11 +1464,67 @@ void QQuickFlickable::mouseReleaseEvent(QMouseEvent *event)
             return;
         }
 
-        d->handleMouseReleaseEvent(event);
+        d->handleReleaseEvent(event);
         event->accept();
     } else {
         QQuickItem::mouseReleaseEvent(event);
     }
+}
+
+void QQuickFlickable::touchEvent(QTouchEvent *event)
+{
+    Q_D(QQuickFlickable);
+    bool unhandled = false;
+    const auto &firstPoint = event->points().first();
+    switch (firstPoint.state()) {
+    case QEventPoint::State::Pressed:
+        if (d->interactive && !d->replayingPressEvent && d->wantsPointerEvent(event)) {
+            if (!d->pressed)
+                d->handlePressEvent(event);
+            event->accept();
+        } else {
+            unhandled = true;
+        }
+        break;
+    case QEventPoint::State::Updated:
+        if (d->interactive && d->wantsPointerEvent(event)) {
+            d->handleMoveEvent(event);
+            event->accept();
+        } else {
+            unhandled = true;
+        }
+        break;
+    case QEventPoint::State::Released:
+        if (d->interactive && d->wantsPointerEvent(event)) {
+            if (d->delayedPressEvent) {
+                d->replayDelayedPress();
+
+                // Now send the release
+                auto &firstPoint = event->point(0);
+                if (auto grabber = qmlobject_cast<QQuickItem *>(event->exclusiveGrabber(firstPoint))) {
+                    const auto localPos = grabber->mapFromScene(firstPoint.scenePosition());
+                    QScopedPointer<QPointerEvent> localizedEvent(QQuickWindowPrivate::clonePointerEvent(event, localPos));
+                    QCoreApplication::sendEvent(window(), localizedEvent.data());
+                }
+
+                // And the event has been consumed
+                d->stealMouse = false;
+                d->pressed = false;
+                return;
+            }
+
+            d->handleReleaseEvent(event);
+            event->accept();
+        } else {
+            unhandled = true;
+        }
+        break;
+    case QEventPoint::State::Stationary:
+    case QEventPoint::State::Unknown:
+        break;
+    }
+    if (unhandled)
+        QQuickItem::touchEvent(event);
 }
 
 #if QT_CONFIG(wheelevent)
@@ -1595,7 +1651,7 @@ bool QQuickFlickablePrivate::isInnermostPressDelay(QQuickItem *i) const
     return false;
 }
 
-void QQuickFlickablePrivate::captureDelayedPress(QQuickItem *item, QMouseEvent *event)
+void QQuickFlickablePrivate::captureDelayedPress(QQuickItem *item, QPointerEvent *event)
 {
     Q_Q(QQuickFlickable);
     if (!q->window() || pressDelay <= 0)
@@ -1606,15 +1662,17 @@ void QQuickFlickablePrivate::captureDelayedPress(QQuickItem *item, QMouseEvent *
     if (!isInnermostPressDelay(item))
         return;
 
-    delayedPressEvent = QQuickWindowPrivate::cloneMouseEvent(event);
+    delayedPressEvent = QQuickWindowPrivate::clonePointerEvent(event);
     delayedPressEvent->setAccepted(false);
     delayedPressTimer.start(pressDelay, q);
+    qCDebug(lcReplay) << "begin press delay" << pressDelay << "ms with" << delayedPressEvent;
 }
 
 void QQuickFlickablePrivate::clearDelayedPress()
 {
     if (delayedPressEvent) {
         delayedPressTimer.stop();
+        qCDebug(lcReplay) << "clear delayed press" << delayedPressEvent;
         delete delayedPressEvent;
         delayedPressEvent = nullptr;
     }
@@ -1625,20 +1683,35 @@ void QQuickFlickablePrivate::replayDelayedPress()
     Q_Q(QQuickFlickable);
     if (delayedPressEvent) {
         // Losing the grab will clear the delayed press event; take control of it here
-        QScopedPointer<QMouseEvent> mouseEvent(delayedPressEvent);
+        QScopedPointer<QPointerEvent> event(delayedPressEvent);
         delayedPressEvent = nullptr;
         delayedPressTimer.stop();
 
         // If we have the grab, release before delivering the event
-        if (QQuickWindow *w = q->window()) {
-            QQuickWindowPrivate *wpriv = QQuickWindowPrivate::get(w);
+        if (QQuickWindow *window = q->window()) {
+            QQuickWindowPrivate *wpriv = QQuickWindowPrivate::get(window);
             wpriv->allowChildEventFiltering = false; // don't allow re-filtering during replay
             replayingPressEvent = true;
-            if (w->mouseGrabberItem() == q)
-                q->ungrabMouse();
+            auto &firstPoint = event->point(0);
+            // At first glance, it's weird for delayedPressEvent to already have a grabber;
+            // but on press, filterMouseEvent() took the exclusive grab, and that's stored
+            // in the device-specific EventPointData instance in QPointingDevicePrivate::activePoints,
+            // not in the event itself.  If this Flickable is still the grabber of that point on that device,
+            // that's the reason; but now it doesn't need that grab anymore.
+            if (event->exclusiveGrabber(firstPoint) == q)
+                event->setExclusiveGrabber(firstPoint, nullptr);
 
-            // Use the event handler that will take care of finding the proper item to propagate the event
-            QCoreApplication::sendEvent(w, mouseEvent.data());
+            qCDebug(lcReplay) << "replaying" << event.data();
+            // Put scenePosition into position, for the sake of QQuickWindowPrivate::translateTouchEvent()
+            // TODO remove this if we remove QQuickWindowPrivate::translateTouchEvent()
+            QMutableEventPoint::from(firstPoint).setPosition(firstPoint.scenePosition());
+            // Send it through like a fresh press event, and let QQuickWindow
+            // (more specifically, QQuickWindowPrivate::deliverPressOrReleaseEvent)
+            // find the item or handler that should receive it, as usual.
+            QCoreApplication::sendEvent(window, event.data());
+            qCDebug(lcReplay) << "replay done";
+
+            // We're done with replay, go back to normal delivery behavior
             replayingPressEvent = false;
             wpriv->allowChildEventFiltering = true;
         }
@@ -2372,47 +2445,53 @@ void QQuickFlickablePrivate::addPointerHandler(QQuickPointerHandler *h)
     QQuickItemPrivate::get(contentItem)->addPointerHandler(h);
 }
 
-/*!
-    QQuickFlickable::filterMouseEvent checks filtered mouse events and potentially steals them.
+/*! \internal
+    QQuickFlickable::filterPointerEvent filters pointer events intercepted on the way
+    to the child \a receiver, and potentially steals the exclusive grab.
 
-    This is how flickable takes over events from other items (\a receiver) that are on top of it.
-    It filters their events and may take over (grab) the \a event.
-    Return true if the mouse event will be stolen.
-    \internal
+    This is how flickable takes over the handling of events from child items.
+
+    Returns true if the event will be stolen and should <em>not</em> be delivered to the \a receiver.
 */
-bool QQuickFlickable::filterMouseEvent(QQuickItem *receiver, QMouseEvent *event)
+bool QQuickFlickable::filterPointerEvent(QQuickItem *receiver, QPointerEvent *event)
 {
+    if (!(QQuickWindowPrivate::isMouseEvent(event) ||
+          QQuickWindowPrivate::isTouchEvent(event) ||
+          QQuickWindowPrivate::isTabletEvent(event)))
+        return false; // don't filter hover events or wheel events, for example
     Q_ASSERT_X(receiver != this, "", "Flickable received a filter event for itself");
+    qCDebug(lcFilter) << objectName() << "filtering" << event << "for" << receiver;
     Q_D(QQuickFlickable);
-    QPointF localPos = mapFromScene(event->scenePosition());
+    const auto &firstPoint = event->points().first();
+    QPointF localPos = mapFromScene(firstPoint.scenePosition());
     bool receiverDisabled = receiver && !receiver->isEnabled();
     bool stealThisEvent = d->stealMouse;
     bool receiverKeepsGrab = receiver && (receiver->keepMouseGrab() || receiver->keepTouchGrab());
     if ((stealThisEvent || contains(localPos)) && (!receiver || !receiverKeepsGrab || receiverDisabled)) {
-        QScopedPointer<QMouseEvent> mouseEvent(QQuickWindowPrivate::cloneMouseEvent(event, &localPos));
-        mouseEvent->setAccepted(false);
-
-        switch (mouseEvent->type()) {
-        case QEvent::MouseMove:
-            d->handleMouseMoveEvent(mouseEvent.data());
+        QScopedPointer<QPointerEvent> localizedEvent(QQuickWindowPrivate::clonePointerEvent(event, localPos));
+        localizedEvent->setAccepted(false);
+        switch (firstPoint.state()) {
+        case QEventPoint::State::Updated:
+            d->handleMoveEvent(localizedEvent.data());
             break;
-        case QEvent::MouseButtonPress:
-            d->handleMousePressEvent(mouseEvent.data());
+        case QEventPoint::State::Pressed:
+            d->handlePressEvent(localizedEvent.data());
             d->captureDelayedPress(receiver, event);
             stealThisEvent = d->stealMouse;   // Update stealThisEvent in case changed by function call above
             break;
-        case QEvent::MouseButtonRelease:
-            d->handleMouseReleaseEvent(mouseEvent.data());
+        case QEventPoint::State::Released:
+            d->handleReleaseEvent(localizedEvent.data());
             stealThisEvent = d->stealMouse;
             break;
-        default:
+        case QEventPoint::State::Stationary:
+        case QEventPoint::State::Unknown:
             break;
         }
         if ((receiver && stealThisEvent && !receiverKeepsGrab && receiver != this) || receiverDisabled) {
             d->clearDelayedPress();
-            grabMouse();
+            event->setExclusiveGrabber(firstPoint, this);
         } else if (d->delayedPressEvent) {
-            grabMouse();
+            event->setExclusiveGrabber(firstPoint, this);
         }
 
         const bool filtered = stealThisEvent || d->delayedPressEvent || receiverDisabled;
@@ -2424,7 +2503,7 @@ bool QQuickFlickable::filterMouseEvent(QQuickItem *receiver, QMouseEvent *event)
         d->lastPosTime = -1;
         returnToBounds();
     }
-    if (event->type() == QEvent::MouseButtonRelease || (receiverKeepsGrab && !receiverDisabled)) {
+    if (firstPoint.state() == QEventPoint::State::Released || (receiverKeepsGrab && !receiverDisabled)) {
         // mouse released, or another item has claimed the grab
         d->lastPosTime = -1;
         d->clearDelayedPress();
@@ -2434,7 +2513,10 @@ bool QQuickFlickable::filterMouseEvent(QQuickItem *receiver, QMouseEvent *event)
     return false;
 }
 
-
+/*! \internal
+    Despite the name, this function filters all pointer events on their way to any child within.
+    Returns true if the event will be stolen and should <em>not</em> be delivered to the \a receiver.
+*/
 bool QQuickFlickable::childMouseEventFilter(QQuickItem *i, QEvent *e)
 {
     Q_D(QQuickFlickable);
@@ -2444,19 +2526,12 @@ bool QQuickFlickable::childMouseEventFilter(QQuickItem *i, QEvent *e)
         return QQuickItem::childMouseEventFilter(i, e);
     }
 
-    switch (e->type()) {
-    case QEvent::MouseButtonPress:
-    case QEvent::MouseMove:
-    case QEvent::MouseButtonRelease:
-        return filterMouseEvent(i, static_cast<QMouseEvent *>(e));
-    case QEvent::UngrabMouse:
-        if (d->window && d->window->mouseGrabberItem() && d->window->mouseGrabberItem() != this) {
-            // The grab has been taken away from a child and given to some other item.
-            mouseUngrabEvent();
-        }
-        break;
-    default:
-        break;
+    if (e->isPointerEvent()) {
+        return filterPointerEvent(i, static_cast<QPointerEvent *>(e));
+    } else if (e->type() == QEvent::UngrabMouse && d->window &&
+               d->window->mouseGrabberItem() && d->window->mouseGrabberItem() != this) {
+        // The grab has been taken away from a child and given to some other item.
+        mouseUngrabEvent();
     }
 
     return QQuickItem::childMouseEventFilter(i, e);

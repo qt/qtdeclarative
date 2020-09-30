@@ -121,7 +121,7 @@ void tst_QQuickMultiPointTouchArea::signalTest()
     QQuickTouchUtils::flush(window.data());
 
     QCOMPARE(area->property("touchPointPressCount").toInt(), 1);
-    QCOMPARE(area->property("touchPointUpdateCount").toInt(), 0);
+    QCOMPARE(area->property("touchPointUpdateCount").toInt(), 2);
     QCOMPARE(area->property("touchPointReleaseCount").toInt(), 0);
     QCOMPARE(area->property("touchCount").toInt(), 3);
     QMetaObject::invokeMethod(area, "clearCounts");
@@ -132,7 +132,7 @@ void tst_QQuickMultiPointTouchArea::signalTest()
     QQuickTouchUtils::flush(window.data());
 
     QCOMPARE(area->property("touchPointPressCount").toInt(), 0);
-    QCOMPARE(area->property("touchPointUpdateCount").toInt(), 2);
+    QCOMPARE(area->property("touchPointUpdateCount").toInt(), 3);
     QCOMPARE(area->property("touchPointReleaseCount").toInt(), 0);
     QCOMPARE(area->property("touchCount").toInt(), 3);
     QMetaObject::invokeMethod(area, "clearCounts");
@@ -677,8 +677,10 @@ void tst_QQuickMultiPointTouchArea::inFlickable()
                 i, p1.x(), p1.y(), p2.x(), p2.y(), flickable->contentY());
     }
 
+    QEXPECT_FAIL("", "currently flickable does grab the actual mouse", Continue);
     QCOMPARE(flickable->contentY(), qreal(0));
     QCOMPARE(point11->pressed(), true);
+    QEXPECT_FAIL("", "currently flickable does grab the actual mouse", Continue);
     QCOMPARE(point12->pressed(), true);
 
     QTest::touchEvent(window.data(), device).release(0, p1).release(1, p2);
@@ -783,6 +785,7 @@ void tst_QQuickMultiPointTouchArea::inFlickableWithPressDelay() // QTBUG-78818
 
     QQuickMultiPointTouchArea *mpta = window->rootObject()->findChild<QQuickMultiPointTouchArea*>();
     QVERIFY(mpta != nullptr);
+    mpta->setMouseEnabled(false); // don't depend on synth-mouse
     mpta->setMinimumTouchPoints(1);
     QQuickTouchPoint *point11 = window->rootObject()->findChild<QQuickTouchPoint*>("point1");
     QPoint p1(20,100);

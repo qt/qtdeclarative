@@ -62,7 +62,7 @@ ListView {
         }
         DragHandler {
             id: delegateDrag
-            objectName: "delegateDrag"
+            objectName: "delegateDrag " + index
         }
     }
 

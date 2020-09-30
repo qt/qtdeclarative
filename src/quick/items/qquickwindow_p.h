@@ -172,7 +172,7 @@ public:
     void translateTouchEvent(QTouchEvent *touchEvent);
     void removeGrabber(QQuickItem *grabber, bool mouse = true, bool touch = true, bool cancel = false);
     void onGrabChanged(QObject *grabber, QPointingDevice::GrabTransition transition, const QPointerEvent *event, const QEventPoint &point);
-    static QMouseEvent *cloneMouseEvent(QMouseEvent *event, QPointF *transformedLocalPos = nullptr);
+    static QPointerEvent *clonePointerEvent(QPointerEvent *event, std::optional<QPointF> transformedLocalPos = std::nullopt);
     void deliverToPassiveGrabbers(const QVector<QPointer<QObject> > &passiveGrabbers, QPointerEvent *pointerEvent);
     bool sendFilteredMouseEvent(QEvent *event, QQuickItem *receiver, QQuickItem *filteringParent);
     bool sendFilteredPointerEvent(QPointerEvent *event, QQuickItem *receiver, QQuickItem *filteringParent = nullptr);
@@ -188,7 +188,7 @@ public:
 
     // utility functions that used to be in QQuickPointerEvent et al.
     bool allUpdatedPointsAccepted(const QPointerEvent *ev);
-    void localizePointerEvent(QPointerEvent *ev, const QQuickItem *dest);
+    static void localizePointerEvent(QPointerEvent *ev, const QQuickItem *dest);
     QList<QObject *> exclusiveGrabbers(QPointerEvent *ev);
     static bool isMouseEvent(const QPointerEvent *ev);
     static bool isTouchEvent(const QPointerEvent *ev);
@@ -324,7 +324,11 @@ public:
 
     static bool dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event, int startDragThreshold = -1);
 
-    static bool dragOverThreshold(qreal d, Qt::Axis axis, const QEventPoint *tp, int startDragThreshold = -1);
+    static bool dragOverThreshold(qreal d, Qt::Axis axis, const QEventPoint &tp, int startDragThreshold = -1);
+
+    // currently in use in Controls 2; TODO remove
+    static bool dragOverThreshold(qreal d, Qt::Axis axis, const QEventPoint *tp, int startDragThreshold = -1)
+    { return dragOverThreshold(d, axis, *tp, startDragThreshold); }
 
     static bool dragOverThreshold(QVector2D delta);
 

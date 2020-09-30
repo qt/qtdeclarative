@@ -10,6 +10,7 @@ Flickable {
     contentWidth: 500
     contentHeight: 500
     flickableDirection: inner.flickableDirection
+    Text { x: 100; y: 80; text: "dragging: outer " + outer.dragging + " inner " + inner.dragging }
 
     // faster rebound to speed up test runs
     rebound: Transition {
@@ -28,6 +29,10 @@ Flickable {
 
         color: "yellow"
         objectName: "yellowRect"
+        Text {
+            text: "...."
+            y: 250
+        }
 
         Flickable {
             id: inner

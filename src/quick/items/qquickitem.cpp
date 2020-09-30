@@ -4198,13 +4198,28 @@ void QQuickItem::dropEvent(QDropEvent *event)
 #endif // quick_draganddrop
 
 /*!
-    Reimplement this method to filter the mouse events that are received by
+    Reimplement this method to filter the pointer events that are received by
     this item's children.
 
-    This method will only be called if filtersChildMouseEvents() is true.
+    This method will only be called if filtersChildMouseEvents() is \c true.
 
-    Return true if the specified \a event should not be passed onto the
-    specified child \a item, and false otherwise.
+    Return \c true if the specified \a event should not be passed on to the
+    specified child \a item, and \c false otherwise.
+
+    \note Despite the name, this function filters all QPointerEvent instances
+    during delivery to all children (typically mouse, touch, and tablet
+    events). When overriding this function in a subclass, we suggest writing
+    generic event-handling code using only the accessors found in
+    QPointerEvent. Alternatively you can switch on \c event->type() and/or
+    \c event->device()->type() to handle different event types in different ways.
+
+    \note Filtering is just one way to share responsibility in case of gestural
+    ambiguity (for example on press, you don't know whether the user will tap
+    or drag). Another way is to call QPointerEvent::addPassiveGrabber() on
+    press, so as to non-exclusively monitor the progress of the QEventPoint.
+    In either case, the item or pointer handler that is monitoring can steal
+    the exclusive grab later on, when it becomes clear that the gesture fits
+    the pattern that it is expecting.
 
     \sa setFiltersChildMouseEvents()
   */
@@ -7331,8 +7346,13 @@ void QQuickItem::setAcceptedMouseButtons(Qt::MouseButtons buttons)
 }
 
 /*!
-    Returns whether mouse and touch events of this item's children should be filtered
-    through this item.
+    Returns whether pointer events intended for this item's children should be
+    filtered through this item.
+
+    If both this item and a child item have acceptTouchEvents() \c true, then
+    when a touch interaction occurs, this item will filter the touch event.
+    But if either this item or the child cannot handle touch events,
+    childMouseEventFilter() will be called with a synthesized mouse event.
 
     \sa setFiltersChildMouseEvents(), childMouseEventFilter()
   */
@@ -7343,11 +7363,11 @@ bool QQuickItem::filtersChildMouseEvents() const
 }
 
 /*!
-    Sets whether mouse and touch events of this item's children should be filtered
-    through this item.
+    Sets whether pointer events intended for this item's children should be
+    filtered through this item.
 
     If \a filter is true, childMouseEventFilter() will be called when
-    a mouse event is triggered for a child item.
+    a pointer event is triggered for a child item.
 
     \sa filtersChildMouseEvents()
   */
@@ -7400,9 +7420,9 @@ void QQuickItem::setAcceptHoverEvents(bool enabled)
 /*!
     Returns whether touch events are accepted by this item.
 
-    The default value is false.
+    The default value is \c false.
 
-    If this is false, then the item will not receive any touch events through
+    If this is \c false, then the item will not receive any touch events through
     the touchEvent() function.
 
     \since 5.10

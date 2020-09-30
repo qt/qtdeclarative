@@ -2038,17 +2038,30 @@ void QQuickWindowPrivate::deliverKeyEvent(QKeyEvent *e)
     }
 }
 
-// TODO can we return by value to avoid heap allocation?
-// QQuickFlickablePrivate::delayedPressEvent is a ptr so that it can be null;
-// but QMouseEvent::isValid() would be an alternative if we can write it
-QMouseEvent *QQuickWindowPrivate::cloneMouseEvent(QMouseEvent *event, QPointF *transformedLocalPos)
+/*! \internal
+    Make a copy of any type of QPointerEvent, and optionally localize it
+    by setting its first point's local position() if \a transformedLocalPos is given.
+
+    \note some subclasses of QSinglePointEvent, such as QWheelEvent, add extra storage.
+    This function doesn't yet support cloning all of those; it can be extended if needed.
+*/
+QPointerEvent *QQuickWindowPrivate::clonePointerEvent(QPointerEvent *event, std::optional<QPointF> transformedLocalPos)
 {
-    QMouseEvent *me = new QMouseEvent(*event);
-    QMutableEventPoint &point = QMutableEventPoint::from(me->point(0));
+    QPointerEvent *ret = nullptr;
+    if (isMouseEvent(event)) {
+        ret = new QMouseEvent(*(static_cast<QMouseEvent *>(event)));
+    } else if (isTouchEvent(event)) {
+        ret = new QTouchEvent(*(static_cast<QTouchEvent *>(event)));
+    } else if (isTabletEvent(event)) {
+        ret = new QTabletEvent(*(static_cast<QTabletEvent *>(event)));
+    }
+    QMutableEventPoint &point = QMutableEventPoint::from(ret->point(0));
     point.detach();
     point.setTimestamp(event->timestamp());
-    point.setPosition(transformedLocalPos ? *transformedLocalPos : event->position());
-    return me;
+    if (transformedLocalPos)
+        point.setPosition(*transformedLocalPos);
+
+    return ret;
 }
 
 void QQuickWindowPrivate::deliverToPassiveGrabbers(const QVector<QPointer <QObject> > &passiveGrabbers,
@@ -2581,15 +2594,17 @@ void QQuickWindowPrivate::onGrabChanged(QObject *grabber, QPointingDevice::GrabT
                     if (!filtered)
                         item->mouseUngrabEvent();
                 }
-                if (point.device()->type() == QInputDevice::DeviceType::TouchScreen && event) {
-                    bool allReleased = true;
-                    for (const auto &pt : event->points()) {
-                        if (pt.state() != QEventPoint::State::Released) {
-                            allReleased = false;
-                            break;
+                if (point.device()->type() == QInputDevice::DeviceType::TouchScreen) {
+                    bool allReleasedOrCancelled = true;
+                    if (transition == QPointingDevice::UngrabExclusive && event) {
+                        for (const auto &pt : event->points()) {
+                            if (pt.state() != QEventPoint::State::Released) {
+                                allReleasedOrCancelled = false;
+                                break;
+                            }
                         }
                     }
-                    if (allReleased)
+                    if (allReleasedOrCancelled)
                         item->touchUngrabEvent();
                 }
             }
@@ -2834,6 +2849,12 @@ bool QQuickWindowPrivate::deliverPressOrReleaseEvent(QPointerEvent *event, bool 
         // nor to any item which already had a chance to filter.
         if (skipDelivery.contains(item))
             continue;
+
+        // sendFilteredPointerEvent() changed the QEventPoint::accepted() state,
+        // but per-point acceptance is opt-in during normal delivery to items.
+        for (int i = 0; i < event->pointCount(); ++i)
+            event->point(i).setAccepted(false);
+
         deliverMatchingPointsToItem(item, false, event, handlersOnly);
         if (event->allPointsAccepted())
             handlersOnly = true;
@@ -2935,6 +2956,8 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, bool isG
         bool isPressOrRelease = pointerEvent->isBeginEvent() || pointerEvent->isEndEvent();
         for (int i = 0; i < touchEvent.pointCount(); ++i) {
             auto &point = QMutableEventPoint::from(touchEvent.point(i));
+            // legacy-style delivery: if the item doesn't reject the event, that means it handled ALL the points
+            point.setAccepted();
             if (isPressOrRelease)
                 pointerEvent->setExclusiveGrabber(point, item);
         }
@@ -3220,14 +3243,19 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QPointerEvent *event, QQu
                 QTouchEvent filteringParentTouchEvent =
                         QQuickItemPrivate::get(receiver)->localizedTouchEvent(static_cast<QTouchEvent *>(event), true);
                 if (filteringParentTouchEvent.type() != QEvent::None) {
+                    qCDebug(DBG_TOUCH) << "letting parent" << filteringParent << "filter for" << receiver << &filteringParentTouchEvent;
                     if (filteringParent->childMouseEventFilter(receiver, &filteringParentTouchEvent)) {
                         qCDebug(DBG_TOUCH) << "touch event intercepted by childMouseEventFilter of " << filteringParent;
                         skipDelivery.append(filteringParent);
                         for (auto point : filteringParentTouchEvent.points())
                             event->setExclusiveGrabber(point, filteringParent);
                         return true;
-                    }
-                    else if (Q_LIKELY(QCoreApplication::testAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents))) {
+                    } else if (Q_LIKELY(QCoreApplication::testAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents) &&
+                                        (!acceptsTouchEvents || !filteringParent->acceptTouchEvents()))) {
+                        qCDebug(DBG_TOUCH) << "touch event NOT intercepted by childMouseEventFilter of " << filteringParent
+                                           << "; accepts touch?" << filteringParent->acceptTouchEvents()
+                                           << "receiver accepts touch?" << acceptsTouchEvents
+                                           << "so, letting parent filter a synth-mouse event";
                         // filteringParent didn't filter the touch event.  Give it a chance to filter a synthetic mouse event.
                         for (auto &tp : filteringParentTouchEvent.points()) {
                             QEvent::Type t;
@@ -3323,13 +3351,13 @@ bool QQuickWindowPrivate::dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent 
     return overThreshold;
 }
 
-bool QQuickWindowPrivate::dragOverThreshold(qreal d, Qt::Axis axis, const QEventPoint *tp, int startDragThreshold)
+bool QQuickWindowPrivate::dragOverThreshold(qreal d, Qt::Axis axis, const QEventPoint &tp, int startDragThreshold)
 {
     QStyleHints *styleHints = qApp->styleHints();
     bool overThreshold = qAbs(d) > (startDragThreshold >= 0 ? startDragThreshold : styleHints->startDragDistance());
     const bool dragVelocityLimitAvailable = (styleHints->startDragVelocity() > 0);
     if (!overThreshold && dragVelocityLimitAvailable) {
-        qreal velocity = axis == Qt::XAxis ? tp->velocity().x() : tp->velocity().y();
+        qreal velocity = axis == Qt::XAxis ? tp.velocity().x() : tp.velocity().y();
         overThreshold |= qAbs(velocity) > styleHints->startDragVelocity();
     }
     return overThreshold;

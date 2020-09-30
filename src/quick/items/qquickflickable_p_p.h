@@ -188,7 +188,7 @@ public:
     void updateBeginningEnd();
 
     bool isInnermostPressDelay(QQuickItem *item) const;
-    void captureDelayedPress(QQuickItem *item, QMouseEvent *event);
+    void captureDelayedPress(QQuickItem *item, QPointerEvent *event);
     void clearDelayedPress();
     void replayDelayedPress();
 
@@ -235,7 +235,7 @@ public:
     qreal deceleration;
     qreal maxVelocity;
     qreal reportedVelocitySmoothing;
-    QMouseEvent *delayedPressEvent;
+    QPointerEvent *delayedPressEvent;
     QBasicTimer delayedPressTimer;
     int pressDelay;
     int fixupDuration;
@@ -259,9 +259,9 @@ public:
     void viewportAxisMoved(AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
                        QQuickTimeLineCallback::Callback fixupCallback);
 
-    void handleMousePressEvent(QMouseEvent *);
-    void handleMouseMoveEvent(QMouseEvent *);
-    void handleMouseReleaseEvent(QMouseEvent *);
+    void handlePressEvent(QPointerEvent *);
+    void handleMoveEvent(QPointerEvent *);
+    void handleReleaseEvent(QPointerEvent *);
 
     void maybeBeginDrag(qint64 currentTimestamp, const QPointF &pressPosn);
     void drag(qint64 currentTimestamp, QEvent::Type eventType, const QPointF &localPos,

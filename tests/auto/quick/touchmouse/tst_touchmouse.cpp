@@ -251,11 +251,12 @@ private slots:
 protected:
     bool eventFilter(QObject *, QEvent *event)
     {
-        if (event->type() == QEvent::MouseButtonPress ||
-                event->type() == QEvent::MouseMove ||
-                event->type() == QEvent::MouseButtonRelease) {
-            QMouseEvent *me = static_cast<QMouseEvent*>(event);
-            filteredEventList.append(Event(me->type(), me->position().toPoint(), me->globalPosition().toPoint()));
+        if (event->isPointerEvent()) {
+            qCDebug(lcTests) << "window filtering" << event;
+            QPointerEvent *pe = static_cast<QPointerEvent*>(event);
+            filteredEventList.append(Event(pe->type(),
+                                           pe->points().first().position().toPoint(),
+                                           pe->points().first().globalPosition().toPoint()));
         }
         return false;
     }
@@ -773,10 +774,7 @@ void tst_TouchMouse::buttonOnDelayedPressFlickable()
     //   - eventItem2 y: 300, height 100
     QFETCH(bool, scrollBeforeDelayIsOver);
     QFETCH(bool, releaseBeforeDelayIsOver);
-
-#ifdef Q_OS_MACOS
-    QSKIP("Deadlocks or crashes due to events changes in qtbase");
-#endif
+    const int threshold = qApp->styleHints()->startDragDistance();
 
     qApp->setAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents, true);
     filteredEventList.clear();
@@ -799,6 +797,7 @@ void tst_TouchMouse::buttonOnDelayedPressFlickable()
     // should a mouse area button be clickable on top of flickable? yes :)
     EventItem *eventItem1 = window->rootObject()->findChild<EventItem*>("eventItem1");
     QVERIFY(eventItem1);
+    eventItem1->setAcceptTouchEvents(true); // because it was that way by default in Qt 5
     eventItem1->setAcceptedMouseButtons(Qt::LeftButton);
     eventItem1->acceptMouse = true;
 
@@ -815,7 +814,6 @@ void tst_TouchMouse::buttonOnDelayedPressFlickable()
 
     // touch press
     QPoint p1 = QPoint(10, 110);
-    QPoint pEnd = p1;
     QTest::touchEvent(window.data(), device).press(0, p1, window.data());
     QQuickTouchUtils::flush(window.data());
 
@@ -824,68 +822,66 @@ void tst_TouchMouse::buttonOnDelayedPressFlickable()
         QCOMPARE(eventItem1->eventList.size(), 0);
     } else {
         // wait until the button sees the press
-        QTRY_COMPARE(eventItem1->eventList.size(), 1);
-        QCOMPARE(eventItem1->eventList.at(0).type, QEvent::MouseButtonPress);
-        QCOMPARE(filteredEventList.count(), 1);
+        qCDebug(lcTests) << "expected delivered events: press(touch), press(mouse)" << eventItem1->eventList;
+        QTRY_COMPARE(eventItem1->eventList.size(), 2);
+        QCOMPARE(eventItem1->eventList.at(0).type, QEvent::TouchBegin);
+        QCOMPARE(eventItem1->eventList.at(1).type, QEvent::MouseButtonPress);
+        QCOMPARE(filteredEventList.count(), 2); // actual touch begin and replayed touch begin
     }
 
     if (!releaseBeforeDelayIsOver) {
         // move the touchpoint: try to flick
-        p1 += QPoint(0, -10);
-        QPoint p2 = p1 + QPoint(0, -10);
-        pEnd = p2 + QPoint(0, -10);
-        QQuickTouchUtils::flush(window.data());
-        QTest::touchEvent(window.data(), device).move(0, p1, window.data());
-        QQuickTouchUtils::flush(window.data());
-        QTest::touchEvent(window.data(), device).move(0, p2, window.data());
-        QQuickTouchUtils::flush(window.data());
-        QTest::touchEvent(window.data(), device).move(0, pEnd, window.data());
-        QQuickTouchUtils::flush(window.data());
+        for (int i = 0; i < 3; ++i) {
+            p1 += QPoint(0, -threshold);
+            QTest::touchEvent(window.data(), device).move(0, p1, window.data());
+            QQuickTouchUtils::flush(window.data());
+        }
         QTRY_VERIFY(flickable->isMovingVertically());
 
         if (scrollBeforeDelayIsOver) {
             QCOMPARE(eventItem1->eventList.size(), 0);
-            QCOMPARE(filteredEventList.count(), 0);
+            qCDebug(lcTests) << "expected filtered events: 1 TouchBegin and 3 TouchUpdate" << filteredEventList;
+            QCOMPARE(filteredEventList.count(), 4);
         } else {
             // see at least press, move and ungrab
             QTRY_VERIFY(eventItem1->eventList.size() > 2);
-            QCOMPARE(eventItem1->eventList.at(0).type, QEvent::MouseButtonPress);
+            QCOMPARE(eventItem1->eventList.at(0).type, QEvent::TouchBegin);
             QCOMPARE(eventItem1->eventList.last().type, QEvent::UngrabMouse);
-            QCOMPARE(filteredEventList.count(), 1);
+            qCDebug(lcTests) << "expected filtered events: 2 TouchBegin and 3 TouchUpdate" << filteredEventList;
+            QCOMPARE(filteredEventList.count(), 5);
         }
 
-        // flickable should have the mouse grab, and have moved the itemForTouchPointId
-        // for the touchMouseId to the new grabber.
+        // flickable should have the touchpoint grab: it no longer relies on synth-mouse
         QCOMPARE(grabMonitor.exclusiveGrabber, flickable);
-        QVERIFY(windowPriv->touchMouseId != -1);
         auto devPriv = QPointingDevicePrivate::get(device);
         QCOMPARE(devPriv->pointById(0)->exclusiveGrabber, flickable);
     }
 
-    QTest::touchEvent(window.data(), device).release(0, pEnd, window.data());
+    QTest::touchEvent(window.data(), device).release(0, p1, window.data());
     QQuickTouchUtils::flush(window.data());
 
     if (releaseBeforeDelayIsOver) {
         // when the touchpoint was released, the child saw the delayed press and the release in sequence
-        qCDebug(lcTests) << "expected delivered events: press, release, ungrab" << eventItem1->eventList;
-        qCDebug(lcTests) << "expected filtered events: delayed press, release" << filteredEventList;
-        QSKIP("QTBUG-85607");
-        QTRY_COMPARE(eventItem1->eventList.size(), 3);
-        QCOMPARE(eventItem1->eventList.at(0).type, QEvent::MouseButtonPress);
-        QCOMPARE(eventItem1->eventList.at(1).type, QEvent::MouseButtonRelease);
+        qCDebug(lcTests) << "expected delivered events: press(touch), press(mouse), release(touch), release(mouse), ungrab" << eventItem1->eventList;
+        qCDebug(lcTests) << "expected filtered events: delayed press, release (touch)" << filteredEventList;
+        QTRY_COMPARE(eventItem1->eventList.size(), 5);
+        QCOMPARE(eventItem1->eventList.at(1).type, QEvent::MouseButtonPress);
+        QCOMPARE(eventItem1->eventList.at(3).type, QEvent::MouseButtonRelease);
         QCOMPARE(eventItem1->eventList.last().type, QEvent::UngrabMouse);
         // QQuickWindow filters the delayed press and release
-        QCOMPARE(filteredEventList.count(), 2);
-        QCOMPARE(filteredEventList.at(0).type, QEvent::MouseButtonPress);
-        QCOMPARE(filteredEventList.at(1).type, QEvent::MouseButtonRelease);
+        QCOMPARE(filteredEventList.count(), 4);
+        QCOMPARE(filteredEventList.at(filteredEventList.count() - 2).type, QEvent::TouchBegin);
+        QCOMPARE(filteredEventList.last().type, QEvent::TouchEnd);
     } else {
-        // QQuickWindow filters the delayed press if there was one; otherwise nothing
+        // QQuickWindow filters the delayed press if there was one
         if (scrollBeforeDelayIsOver) {
-            QCOMPARE(filteredEventList.count(), 0);
+            qCDebug(lcTests) << "expected filtered events: 1 TouchBegin, 3 TouchUpdate, 1 TouchEnd" << filteredEventList;
+            QCOMPARE(filteredEventList.count(), 5);
         } else {
-            qCDebug(lcTests) << "expected filtered event: delayed press" << filteredEventList;
-            QCOMPARE(filteredEventList.count(), 1);
-            QCOMPARE(filteredEventList.at(0).type, QEvent::MouseButtonPress);
+            qCDebug(lcTests) << "expected filtered events: 2 TouchBegin, 3 TouchUpdate, 1 TouchEnd" << filteredEventList;
+            QCOMPARE(filteredEventList.count(), 6);
+            QCOMPARE(filteredEventList.at(0).type, QEvent::TouchBegin);
+            QCOMPARE(filteredEventList.last().type, QEvent::TouchEnd);
         }
     }
 }

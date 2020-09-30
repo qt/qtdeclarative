@@ -280,6 +280,7 @@ protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
+    void touchEvent(QTouchEvent *event) override;
 #if QT_CONFIG(wheelevent)
     void wheelEvent(QWheelEvent *event) override;
 #endif
@@ -305,7 +306,7 @@ protected:
     virtual void viewportMoved(Qt::Orientations orient);
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void mouseUngrabEvent() override;
-    bool filterMouseEvent(QQuickItem *receiver, QMouseEvent *event);
+    bool filterPointerEvent(QQuickItem *receiver, QPointerEvent *event);
 
     bool xflick() const;
     bool yflick() const;

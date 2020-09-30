@@ -160,7 +160,7 @@ MultiPointTouchArea {
             sequence.stationary(first, null, 0, 0);
             sequence.press(second, null, 1, 0);
             sequence.commit();
-            compare(touchUpdatedSpy.count, 3);
+            compare(touchUpdatedSpy.count, 2);
             touchPoints = touchUpdatedSpy.signalArguments[1][0];
             compare(touchPoints.length, 2);
             verify(comparePoint(touchPoints[0], first, 0, 0));
@@ -169,15 +169,15 @@ MultiPointTouchArea {
             sequence.release(first, null, 0, 0);
             sequence.move(second, null, 1, 1);
             sequence.commit();
-            compare(touchUpdatedSpy.count, 4);
-            touchPoints = touchUpdatedSpy.signalArguments[3][0];
+            compare(touchUpdatedSpy.count, 3);
+            touchPoints = touchUpdatedSpy.signalArguments[2][0];
             compare(touchPoints.length, 1);
             verify(comparePoint(touchPoints[0], second, 1, 1));
 
             sequence.release(second, null, 0, 1);
             sequence.commit();
-            compare(touchUpdatedSpy.count, 5);
-            touchPoints = touchUpdatedSpy.signalArguments[4][0];
+            compare(touchUpdatedSpy.count, 4);
+            touchPoints = touchUpdatedSpy.signalArguments[3][0];
             compare(touchPoints.length, 0);
         }
 
