@@ -267,8 +267,14 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
         auto expstat = cast<ExpressionStatement *>(uisb->statement);
         auto identexp = cast<IdentifierExpression *>(expstat->expression);
         m_qmlid2scope.insert(identexp->name.toString(), m_currentScope);
-        if (m_currentScope->isVisualRootScope())
-            m_rootId = identexp->name.toString();
+
+        // Figure out whether the current scope is the root scope.
+        if (auto parentScope = m_currentScope->parentScope()) {
+            if (auto grandParentScope = parentScope->parentScope()) {
+                if (!grandParentScope->parentScope())
+                    m_rootId = identexp->name.toString();
+            }
+        }
     } else {
         const QString signal = signalName(name);
         if (signal.isEmpty())

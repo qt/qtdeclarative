@@ -128,8 +128,6 @@ public:
     void accessMember(const QString &name, const QString &parentType,
                       const QQmlJS::SourceLocation &location);
 
-    bool isVisualRootScope() const;
-
     ScopeType scopeType() const { return m_scopeType; }
 
     void addMethods(const QMultiHash<QString, MetaMethod> &methods) { m_methods.unite(methods); }

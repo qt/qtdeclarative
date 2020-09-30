@@ -101,18 +101,6 @@ void ScopeTree::accessMember(const QString &name, const QString &parentType,
     m_memberAccessChains.last().append(FieldMember {name, parentType, location });
 }
 
-bool ScopeTree::isVisualRootScope() const
-{
-    if (!m_parentScope)
-        return false;
-
-    const auto grandParent = parentScope()->m_parentScope.toStrongRef();
-    if (!grandParent)
-        return false;
-
-    return grandParent->m_parentScope == nullptr;
-}
-
 bool ScopeTree::isIdInCurrentQMlScopes(const QString &id) const
 {
     if (m_scopeType == ScopeType::QMLScope)
