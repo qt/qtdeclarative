@@ -126,34 +126,34 @@ void tst_Designer::test_controls_data()
 {
     QTest::addColumn<QString>("type");
 
-    QTest::newRow("type") << "SpinBox";
-    QTest::newRow("type") << "Switch";
-    QTest::newRow("type") << "ComboBox";
-    QTest::newRow("type") << "CheckBox";
-    QTest::newRow("type") << "Button";
-    QTest::newRow("type") << "DelayButton";
-    QTest::newRow("type") << "Dial";
-    QTest::newRow("type") << "Frame";
-    QTest::newRow("type") << "GroupBox";
-    QTest::newRow("type") << "Label";
-    QTest::newRow("type") << "Page";
-    QTest::newRow("type") << "Pane";
-    QTest::newRow("type") << "ProgressBar";
-    QTest::newRow("type") << "RadioButton";
-    QTest::newRow("type") << "RangeSlider";
-    QTest::newRow("type") << "RoundButton";
-    QTest::newRow("type") << "ScrollView";
-    QTest::newRow("type") << "Slider";
-    QTest::newRow("type") << "StackView";
-    QTest::newRow("type") << "SwipeView";
-    QTest::newRow("type") << "Switch";
-    QTest::newRow("type") << "TabBar";
-    QTest::newRow("type") << "TabButton";
-    QTest::newRow("type") << "TextArea";
-    QTest::newRow("type") << "TextField";
-    QTest::newRow("type") << "ToolBar";
-    QTest::newRow("type") << "ToolButton";
-    QTest::newRow("type") << "Tumbler";
+    QTest::newRow("Button") << "Button";
+    QTest::newRow("CheckBox") << "CheckBox";
+    QTest::newRow("ComboBox") << "ComboBox";
+    QTest::newRow("DelayButton") << "DelayButton";
+    QTest::newRow("Dial") << "Dial";
+    QTest::newRow("Frame") << "Frame";
+    QTest::newRow("GroupBox") << "GroupBox";
+    QTest::newRow("Label") << "Label";
+    QTest::newRow("Page") << "Page";
+    QTest::newRow("Pane") << "Pane";
+    QTest::newRow("ProgressBar") << "ProgressBar";
+    QTest::newRow("RadioButton") << "RadioButton";
+    QTest::newRow("RangeSlider") << "RangeSlider";
+    QTest::newRow("RoundButton") << "RoundButton";
+    QTest::newRow("ScrollView") << "ScrollView";
+    QTest::newRow("Slider") << "Slider";
+    QTest::newRow("SpinBox") << "SpinBox";
+    QTest::newRow("StackView") << "StackView";
+    QTest::newRow("SwipeView") << "SwipeView";
+    QTest::newRow("Switch") << "Switch";
+    QTest::newRow("Switch") << "Switch";
+    QTest::newRow("TabBar") << "TabBar";
+    QTest::newRow("TabButton") << "TabButton";
+    QTest::newRow("TextArea") << "TextArea";
+    QTest::newRow("TextField") << "TextField";
+    QTest::newRow("ToolBar") << "ToolBar";
+    QTest::newRow("ToolButton") << "ToolButton";
+    QTest::newRow("Tumbler") << "Tumbler";
 }
 
 QTEST_MAIN(tst_Designer)
