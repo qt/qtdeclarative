@@ -261,6 +261,10 @@ private:
     inline void updateGeometry();
     inline void paintControlToImage();
 
+#ifdef QT_DEBUG
+    void addDebugInfo();
+#endif
+
 private:
     QPointer<QQuickItem> m_control;
     QImage m_paintedImage;

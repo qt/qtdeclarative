@@ -328,48 +328,64 @@ void QQuickStyleItem::updatePolish()
         paintControlToImage();
 }
 
+#ifdef QT_DEBUG
+void QQuickStyleItem::addDebugInfo()
+{
+    // Example debug strings:
+    // "QQC2_NATIVESTYLE_DEBUG="myButton output contentRect"
+    // "QQC2_NATIVESTYLE_DEBUG="ComboBox ninepatchmargins"
+    // "QQC2_NATIVESTYLE_DEBUG="All layoutrect"
+
+    static const auto debugString = qEnvironmentVariable("QQC2_NATIVESTYLE_DEBUG");
+    static const auto matchAll = debugString.startsWith(QLatin1String("All "));
+    static const auto prefix = QStringLiteral("QQuickStyleItem");
+    if (debugString.isEmpty())
+        return;
+
+    const auto objectName = m_control->objectName();
+    const auto typeName = QString::fromUtf8(metaObject()->className()).remove(prefix);
+    const bool matchName = !objectName.isEmpty() && debugString.startsWith(objectName);
+    const bool matchType = debugString.startsWith(typeName);
+
+    if (!(matchAll || matchName || matchType))
+        return;
+
+#define QQC2_DEBUG_FLAG(FLAG) \
+    if (debugString.contains(QLatin1String(#FLAG), Qt::CaseInsensitive)) m_debugFlags |= FLAG
+
+    QQC2_DEBUG_FLAG(Output);
+    QQC2_DEBUG_FLAG(ImageRect);
+    QQC2_DEBUG_FLAG(ContentRect);
+    QQC2_DEBUG_FLAG(LayoutRect);
+    QQC2_DEBUG_FLAG(InputContentSize);
+    QQC2_DEBUG_FLAG(DontUseNinePatchImage);
+    QQC2_DEBUG_FLAG(NinePatchMargins);
+    QQC2_DEBUG_FLAG(Unscaled);
+
+    if (m_debugFlags & (DontUseNinePatchImage
+                        | InputContentSize
+                        | ContentRect
+                        | LayoutRect
+                        | NinePatchMargins)) {
+        // Some rects will not fit inside the drawn image unless
+        // we switch off (nine patch) image scaling.
+        m_debugFlags |= DontUseNinePatchImage;
+        m_useNinePatchImage = false;
+    }
+
+    if (m_debugFlags != NoDebug)
+        qDebug() << "debug options set for" << typeName << "(" << objectName << "):" << m_debugFlags;
+    else
+        qDebug() << "available debug options:" << DebugFlags(0xFFFF);
+}
+#endif
+
 void QQuickStyleItem::componentComplete()
 {
     Q_ASSERT_X(m_control, Q_FUNC_INFO, "You need to assign a value to property 'control'");
-
 #ifdef QT_DEBUG
-    if (!qEnvironmentVariable("QQC2_NATIVESTYLE_DEBUG").isEmpty()) {
-        // Set objectName to "debug" pluss one or more options separated
-        // by space to show extra information about this item.
-
-#define QQC2_DEBUG_FLAG(FLAG) \
-    if (name.contains(QString(QLatin1String(#FLAG)).toLower())) m_debugFlags |= FLAG
-
-        const QString name = m_control->objectName().toLower();
-        if (name.startsWith(QString(QLatin1String("debug")).toLower())) {
-            QQC2_DEBUG_FLAG(Output);
-            QQC2_DEBUG_FLAG(ImageRect);
-            QQC2_DEBUG_FLAG(ContentRect);
-            QQC2_DEBUG_FLAG(LayoutRect);
-            QQC2_DEBUG_FLAG(InputContentSize);
-            QQC2_DEBUG_FLAG(DontUseNinePatchImage);
-            QQC2_DEBUG_FLAG(NinePatchMargins);
-            QQC2_DEBUG_FLAG(Unscaled);
-
-            if (m_debugFlags & (DontUseNinePatchImage
-                                | InputContentSize
-                                | ContentRect
-                                | LayoutRect
-                                | NinePatchMargins)) {
-                // Some rects will not fit inside the drawn image unless
-                // we switch off (nine patch) image scaling.
-                m_debugFlags |= DontUseNinePatchImage;
-                m_useNinePatchImage = false;
-            }
-
-            if (m_debugFlags != NoDebug)
-                qDebug() << "debug options set:" << m_debugFlags;
-            else
-                qDebug() << "available debug options:" << DebugFlags(0xFFFF);
-        }
-    }
+    addDebugInfo();
 #endif
-
     QQuickItem::componentComplete();
     connectToControl();
     polish();
