@@ -410,6 +410,11 @@ function(qt6_add_qml_module target)
     endif()
 endfunction()
 
+if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
+    function(qt_add_qml_module)
+        qt6_add_qml_module(${ARGV})
+    endfunction()
+endif()
 
 #
 # Add Qml files (.qml,.js,.mjs) to a Qml module. This will also append the
@@ -535,6 +540,12 @@ function(qt6_target_qml_files target)
     endforeach()
     file(APPEND ${qmldir_file} ${file_contents})
 endfunction()
+
+if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
+    function(qt_target_qml_files)
+        qt6_target_qml_files(${ARGV})
+    endfunction()
+endif()
 
 # QT_QMLTYPES_FILENAME: If the target has the target property QT_QMLTPYES_FILENAME set, it will be
 # used for the name of the generated file. Otherwise, the file will be named plugins.qmltypes if the
@@ -741,6 +752,12 @@ function(qt6_qml_type_registration target)
         $<TARGET_PROPERTY:Qt::QmlPrivate,INTERFACE_INCLUDE_DIRECTORIES>
     )
 endfunction()
+
+if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
+    function(qt_qml_type_registration)
+        qt6_qml_type_registration(${ARGV})
+    endfunction()
+endif()
 
 
 # Enable the qt6_quick_compiler_process_resources function in qt6_add_resource()
