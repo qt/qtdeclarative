@@ -1044,43 +1044,8 @@ QHash<QString, UiObjectMember*> findBindings(UiObjectMemberList *list) {
 
 bool DumpAstVisitor::visit(UiInlineComponent *node)
 {
-    if (scope().m_firstObject) {
-        if (scope().m_firstOfAll)
-            scope().m_firstOfAll = false;
-        else
-            addNewLine();
-
-        scope().m_firstObject = false;
-    }
-
-    addLine(getComment(node, Comment::Location::Front));
-    addLine(getComment(node, Comment::Location::Front_Inline));
-    addLine("component " + node->name + ": "
-            + parseUiQualifiedId(node->component->qualifiedTypeNameId) + " {");
-
-    m_indentLevel++;
-
-    ScopeProperties props;
-    props.m_bindings = findBindings(node->component->initializer->members);
-    m_scope_properties.push(props);
-
-    m_result += getOrphanedComments(node);
-
+    m_component_name = node->name.toString();
     return true;
-}
-
-void DumpAstVisitor::endVisit(UiInlineComponent *node)
-{
-    m_indentLevel--;
-
-    m_scope_properties.pop();
-
-    bool need_comma = scope().m_inArrayBinding && scope().m_lastInArrayBinding != node;
-
-    addLine(need_comma ? "}," : "}");
-    addLine(getComment(node, Comment::Location::Back));
-    if (!scope().m_inArrayBinding)
-        addNewLine();
 }
 
 bool DumpAstVisitor::visit(UiObjectDefinition *node) {
@@ -1095,7 +1060,15 @@ bool DumpAstVisitor::visit(UiObjectDefinition *node) {
 
     addLine(getComment(node, Comment::Location::Front));
     addLine(getComment(node, Comment::Location::Front_Inline));
-    addLine(parseUiQualifiedId(node->qualifiedTypeNameId) + " {");
+
+    QString component = "";
+
+    if (!m_component_name.isEmpty()) {
+        component = "component "+m_component_name+": ";
+        m_component_name = "";
+    }
+
+    addLine(component + parseUiQualifiedId(node->qualifiedTypeNameId) + " {");
 
     m_indentLevel++;
 

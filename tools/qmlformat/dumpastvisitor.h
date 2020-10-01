@@ -61,7 +61,6 @@ public:
     void endVisit(FunctionDeclaration *node) override;
 
     bool visit(UiInlineComponent *node) override;
-    void endVisit(UiInlineComponent *node) override;
 
     bool visit(UiObjectDefinition *node) override;
     void endVisit(UiObjectDefinition *node) override;
@@ -148,6 +147,7 @@ private:
     QStack<ScopeProperties> m_scope_properties;
 
     QString m_result = "";
+    QString m_component_name = "";
     QQmlJS::Engine *m_engine;
     CommentAstVisitor *m_comment;
 };
