@@ -27,13 +27,12 @@
 ****************************************************************************/
 
 #include "importedmembersvisitor_p.h"
-#include "scopetree_p.h"
 
 using namespace QQmlJS::AST;
 
-ScopeTree::Ptr ImportedMembersVisitor::result(const QString &scopeName) const
+QQmlJSScope::Ptr ImportedMembersVisitor::result(const QString &scopeName) const
 {
-    ScopeTree::Ptr result = ScopeTree::create();
+    QQmlJSScope::Ptr result = QQmlJSScope::create();
     result->setIsComposite(true);
     result->setInternalName(scopeName);
     result->setBaseTypeName(m_rootObject->baseTypeName());
@@ -60,7 +59,7 @@ ScopeTree::Ptr ImportedMembersVisitor::result(const QString &scopeName) const
 
 bool ImportedMembersVisitor::visit(UiObjectDefinition *definition)
 {
-    ScopeTree::Ptr scope = ScopeTree::create();
+    QQmlJSScope::Ptr scope = QQmlJSScope::create();
     QString superType;
     for (auto segment = definition->qualifiedTypeNameId; segment; segment = segment->next) {
         if (!superType.isEmpty())

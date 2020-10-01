@@ -39,7 +39,7 @@
 //
 // We mean it.
 
-#include "scopetree_p.h"
+#include "qqmljsscope_p.h"
 
 #include <QtQml/private/qqmljsastfwd_p.h>
 
@@ -55,7 +55,7 @@ public:
         : m_fileName(std::move(fileName)), m_source(std::move(data)) {}
 
     bool operator()(
-            QHash<QString, ScopeTree::Ptr> *objects,
+            QHash<QString, QQmlJSScope::Ptr> *objects,
             QStringList *dependencies);
 
     QString errorMessage() const { return m_errorMessage; }
@@ -67,9 +67,9 @@ private:
     void readDependencies(QQmlJS::AST::UiScriptBinding *ast);
     void readComponent(QQmlJS::AST::UiObjectDefinition *ast);
     void readSignalOrMethod(QQmlJS::AST::UiObjectDefinition *ast, bool isMethod,
-                            const ScopeTree::Ptr &scope);
-    void readProperty(QQmlJS::AST::UiObjectDefinition *ast, const ScopeTree::Ptr &scope);
-    void readEnum(QQmlJS::AST::UiObjectDefinition *ast, const ScopeTree::Ptr &scope);
+                            const QQmlJSScope::Ptr &scope);
+    void readProperty(QQmlJS::AST::UiObjectDefinition *ast, const QQmlJSScope::Ptr &scope);
+    void readEnum(QQmlJS::AST::UiObjectDefinition *ast, const QQmlJSScope::Ptr &scope);
     void readParameter(QQmlJS::AST::UiObjectDefinition *ast, MetaMethod *metaMethod);
 
     QString readStringBinding(QQmlJS::AST::UiScriptBinding *ast);
@@ -77,8 +77,8 @@ private:
     double readNumericBinding(QQmlJS::AST::UiScriptBinding *ast);
     QTypeRevision readNumericVersionBinding(QQmlJS::AST::UiScriptBinding *ast);
     int readIntBinding(QQmlJS::AST::UiScriptBinding *ast);
-    void readExports(QQmlJS::AST::UiScriptBinding *ast, const ScopeTree::Ptr &scope);
-    void readMetaObjectRevisions(QQmlJS::AST::UiScriptBinding *ast, const ScopeTree::Ptr &scope);
+    void readExports(QQmlJS::AST::UiScriptBinding *ast, const QQmlJSScope::Ptr &scope);
+    void readMetaObjectRevisions(QQmlJS::AST::UiScriptBinding *ast, const QQmlJSScope::Ptr &scope);
     void readEnumValues(QQmlJS::AST::UiScriptBinding *ast, MetaEnum *metaEnum);
 
     void addError(const QQmlJS::SourceLocation &loc, const QString &message);
@@ -88,7 +88,7 @@ private:
     QString m_source;
     QString m_errorMessage;
     QString m_warningMessage;
-    QHash<QString, ScopeTree::Ptr> *m_objects = nullptr;
+    QHash<QString, QQmlJSScope::Ptr> *m_objects = nullptr;
     QStringList *m_dependencies = nullptr;
 };
 

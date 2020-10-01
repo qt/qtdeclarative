@@ -52,7 +52,7 @@ QString toString(const UiQualifiedId *qualifiedId, QChar delimiter = QLatin1Char
 }
 
 bool TypeDescriptionReader::operator()(
-        QHash<QString, ScopeTree::Ptr> *objects,
+        QHash<QString, QQmlJSScope::Ptr> *objects,
         QStringList *dependencies)
 {
     Engine engine;
@@ -188,7 +188,7 @@ void TypeDescriptionReader::readDependencies(UiScriptBinding *ast)
 
 void TypeDescriptionReader::readComponent(UiObjectDefinition *ast)
 {
-    ScopeTree::Ptr scope = ScopeTree::create();
+    QQmlJSScope::Ptr scope = QQmlJSScope::create();
 
     for (UiObjectMemberList *it = ast->initializer->members; it; it = it->next) {
         UiObjectMember *member = it->member;
@@ -231,11 +231,11 @@ void TypeDescriptionReader::readComponent(UiObjectDefinition *ast)
             } else if (name == QLatin1String("accessSemantics")) {
                 const QString semantics = readStringBinding(script);
                 if (semantics == QLatin1String("reference")) {
-                    scope->setAccessSemantics(ScopeTree::AccessSemantics::Reference);
+                    scope->setAccessSemantics(QQmlJSScope::AccessSemantics::Reference);
                 } else if (semantics == QLatin1String("value")) {
-                    scope->setAccessSemantics(ScopeTree::AccessSemantics::Value);
+                    scope->setAccessSemantics(QQmlJSScope::AccessSemantics::Value);
                 } else if (semantics == QLatin1String("none")) {
-                    scope->setAccessSemantics(ScopeTree::AccessSemantics::None);
+                    scope->setAccessSemantics(QQmlJSScope::AccessSemantics::None);
                 } else {
                     addWarning(script->firstSourceLocation(),
                                tr("Unknown access semantics \"%1\".").arg(semantics));
@@ -261,7 +261,7 @@ void TypeDescriptionReader::readComponent(UiObjectDefinition *ast)
 }
 
 void TypeDescriptionReader::readSignalOrMethod(UiObjectDefinition *ast, bool isMethod,
-                                               const ScopeTree::Ptr &scope)
+                                               const QQmlJSScope::Ptr &scope)
 {
     MetaMethod metaMethod;
     // ### confusion between Method and Slot. Method should be removed.
@@ -309,7 +309,7 @@ void TypeDescriptionReader::readSignalOrMethod(UiObjectDefinition *ast, bool isM
     scope->addMethod(metaMethod);
 }
 
-void TypeDescriptionReader::readProperty(UiObjectDefinition *ast, const ScopeTree::Ptr &scope)
+void TypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQmlJSScope::Ptr &scope)
 {
     QString name;
     QString type;
@@ -355,7 +355,7 @@ void TypeDescriptionReader::readProperty(UiObjectDefinition *ast, const ScopeTre
     scope->addProperty(MetaProperty(name, type, isList, !isReadonly, isPointer, false, revision));
 }
 
-void TypeDescriptionReader::readEnum(UiObjectDefinition *ast, const ScopeTree::Ptr &scope)
+void TypeDescriptionReader::readEnum(UiObjectDefinition *ast, const QQmlJSScope::Ptr &scope)
 {
     MetaEnum metaEnum;
 
@@ -547,7 +547,7 @@ int TypeDescriptionReader::readIntBinding(UiScriptBinding *ast)
     return i;
 }
 
-void TypeDescriptionReader::readExports(UiScriptBinding *ast, const ScopeTree::Ptr &scope)
+void TypeDescriptionReader::readExports(UiScriptBinding *ast, const QQmlJSScope::Ptr &scope)
 {
     Q_ASSERT(ast);
 
@@ -598,7 +598,7 @@ void TypeDescriptionReader::readExports(UiScriptBinding *ast, const ScopeTree::P
 }
 
 void TypeDescriptionReader::readMetaObjectRevisions(UiScriptBinding *ast,
-                                                    const ScopeTree::Ptr &scope)
+                                                    const QQmlJSScope::Ptr &scope)
 {
     Q_ASSERT(ast);
 

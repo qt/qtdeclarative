@@ -26,8 +26,8 @@
 **
 ****************************************************************************/
 
-#ifndef SCOPETREE_H
-#define SCOPETREE_H
+#ifndef QQMLJSSCOPE_P_H
+#define QQMLJSSCOPE_P_H
 
 //
 //  W A R N I N G
@@ -70,14 +70,14 @@ struct JavaScriptIdentifier
     QQmlJS::SourceLocation location;
 };
 
-class ScopeTree
+class QQmlJSScope
 {
-    Q_DISABLE_COPY_MOVE(ScopeTree)
+    Q_DISABLE_COPY_MOVE(QQmlJSScope)
 public:
-    using Ptr = QSharedPointer<ScopeTree>;
-    using WeakPtr = QWeakPointer<ScopeTree>;
-    using ConstPtr = QSharedPointer<const ScopeTree>;
-    using WeakConstPtr = QWeakPointer<const ScopeTree>;
+    using Ptr = QSharedPointer<QQmlJSScope>;
+    using WeakPtr = QWeakPointer<QQmlJSScope>;
+    using ConstPtr = QSharedPointer<const QQmlJSScope>;
+    using WeakConstPtr = QWeakPointer<const QQmlJSScope>;
 
     enum class AccessSemantics {
         Reference,
@@ -117,11 +117,11 @@ public:
         int m_metaObjectRevision = 0;
     };
 
-    static ScopeTree::Ptr create(ScopeType type = ScopeType::QMLScope,
-                                 const ScopeTree::Ptr &parentScope = ScopeTree::Ptr());
-    static ScopeTree::ConstPtr findCurrentQMLScope(const ScopeTree::ConstPtr &scope);
+    static QQmlJSScope::Ptr create(ScopeType type = ScopeType::QMLScope,
+                                 const QQmlJSScope::Ptr &parentScope = QQmlJSScope::Ptr());
+    static QQmlJSScope::ConstPtr findCurrentQMLScope(const QQmlJSScope::ConstPtr &scope);
 
-    ScopeTree::Ptr parentScope() const { return m_parentScope.toStrongRef(); }
+    QQmlJSScope::Ptr parentScope() const { return m_parentScope.toStrongRef(); }
 
     void insertJSIdentifier(const QString &name, const JavaScriptIdentifier &identifier);
 
@@ -155,7 +155,7 @@ public:
     // relevant base class (in the hierarchy starting from QObject) of a C++ type.
     void setBaseTypeName(const QString &baseTypeName) { m_baseTypeName = baseTypeName; }
     QString baseTypeName() const { return m_baseTypeName; }
-    ScopeTree::ConstPtr baseType() const { return m_baseType; }
+    QQmlJSScope::ConstPtr baseType() const { return m_baseType; }
 
     void addProperty(const MetaProperty &prop) { m_properties.insert(prop.propertyName(), prop); }
     QHash<QString, MetaProperty> properties() const { return m_properties; }
@@ -165,7 +165,7 @@ public:
 
     QString attachedTypeName() const { return m_attachedTypeName; }
     void setAttachedTypeName(const QString &name) { m_attachedTypeName = name; }
-    ScopeTree::ConstPtr attachedType() const { return m_attachedType; }
+    QQmlJSScope::ConstPtr attachedType() const { return m_attachedType; }
 
     bool isSingleton() const { return m_flags & Singleton; }
     bool isCreatable() const { return m_flags & Creatable; }
@@ -183,7 +183,7 @@ public:
 
     std::optional<JavaScriptIdentifier> findJSIdentifier(const QString &id) const;
 
-    QVector<ScopeTree::Ptr> childScopes() const
+    QVector<QQmlJSScope::Ptr> childScopes() const
     {
         return m_childScopes;
     }
@@ -191,7 +191,7 @@ public:
     void resolveTypes(const QHash<QString, ConstPtr> &contextualTypes);
 
 private:
-    ScopeTree(ScopeType type, const ScopeTree::Ptr &parentScope = ScopeTree::Ptr());
+    QQmlJSScope(ScopeType type, const QQmlJSScope::Ptr &parentScope = QQmlJSScope::Ptr());
 
     QHash<QString, JavaScriptIdentifier> m_jsIdentifiers;
 
@@ -199,23 +199,23 @@ private:
     QHash<QString, MetaProperty> m_properties;
     QHash<QString, MetaEnum> m_enums;
 
-    QVector<ScopeTree::Ptr> m_childScopes;
-    ScopeTree::WeakPtr m_parentScope;
+    QVector<QQmlJSScope::Ptr> m_childScopes;
+    QQmlJSScope::WeakPtr m_parentScope;
 
     QString m_fileName;
     QString m_internalName;
     QString m_baseTypeName;
-    ScopeTree::WeakConstPtr m_baseType;
+    QQmlJSScope::WeakConstPtr m_baseType;
 
     ScopeType m_scopeType = ScopeType::QMLScope;
     QList<Export> m_exports;
 
     QString m_defaultPropertyName;
     QString m_attachedTypeName;
-    ScopeTree::WeakConstPtr m_attachedType;
+    QQmlJSScope::WeakConstPtr m_attachedType;
 
     Flags m_flags;
     AccessSemantics m_semantics = AccessSemantics::Reference;
 };
 
-#endif // SCOPETREE_H
+#endif // QQMLJSSCOPE_P_H

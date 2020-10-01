@@ -43,7 +43,7 @@
 #include "checkidentifiers.h"
 
 #include <QtQmlCompiler/private/typedescriptionreader_p.h>
-#include <QtQmlCompiler/private/scopetree_p.h>
+#include <QtQmlCompiler/private/qqmljsscope_p.h>
 #include <QtQmlCompiler/private/qmljsimporter_p.h>
 
 #include <QtQml/private/qqmldirparser_p.h>
@@ -70,12 +70,12 @@ private:
 
     MemberAccessChains m_memberAccessChains;
 
-    ScopeTree::Ptr m_rootScope;
-    ScopeTree::Ptr m_currentScope;
+    QQmlJSScope::Ptr m_rootScope;
+    QQmlJSScope::Ptr m_currentScope;
     QQmlJS::AST::ExpressionNode *m_fieldMemberBase = nullptr;
     QStringList m_qmltypesFiles;
     QString m_code;
-    QHash<QString, ScopeTree::ConstPtr> m_qmlid2scope;
+    QHash<QString, QQmlJSScope::ConstPtr> m_qmlid2scope;
     QString m_rootId;
     QString m_filePath;
     QSet<QString> m_unknownImports;
@@ -89,7 +89,7 @@ private:
     struct OutstandingConnection
     {
         QString targetName;
-        ScopeTree::Ptr scope;
+        QQmlJSScope::Ptr scope;
         QQmlJS::AST::UiObjectDefinition *uiod;
     };
 
@@ -100,10 +100,10 @@ private:
     void enterEnvironment(ScopeType type, const QString &name);
     void leaveEnvironment();
 
-    void importExportedNames(ScopeTree::ConstPtr scope);
+    void importExportedNames(QQmlJSScope::ConstPtr scope);
 
     void parseHeaders(QQmlJS::AST::UiHeaderItemList *headers);
-    ScopeTree::Ptr parseProgram(QQmlJS::AST::Program *program, const QString &name);
+    QQmlJSScope::Ptr parseProgram(QQmlJS::AST::Program *program, const QString &name);
     void flushPendingSignalParameters();
 
     void throwRecursionDepthError() override;

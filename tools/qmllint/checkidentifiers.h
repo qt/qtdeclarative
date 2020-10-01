@@ -29,7 +29,7 @@
 #ifndef CHECKIDENTIFIERS_H
 #define CHECKIDENTIFIERS_H
 
-#include <QtQmlCompiler/private/scopetree_p.h>
+#include <QtQmlCompiler/private/qqmljsscope_p.h>
 #include <QtQmlCompiler/private/qmljsimporter_p.h>
 
 class ColorOutput;
@@ -46,7 +46,7 @@ struct FieldMember
     QQmlJS::SourceLocation m_location;
 };
 
-using MemberAccessChains = QHash<ScopeTree::ConstPtr, QVector<QVector<FieldMember>>>;
+using MemberAccessChains = QHash<QQmlJSScope::ConstPtr, QVector<QVector<FieldMember>>>;
 
 class CheckIdentifiers
 {
@@ -56,17 +56,17 @@ public:
         m_colorOut(colorOut), m_code(code), m_types(types), m_fileName(fileName)
     {}
 
-    bool operator ()(const QHash<QString, ScopeTree::ConstPtr> &qmlIDs,
+    bool operator ()(const QHash<QString, QQmlJSScope::ConstPtr> &qmlIDs,
                      const QHash<QQmlJS::SourceLocation, SignalHandler> &signalHandlers,
                      const MemberAccessChains &memberAccessChains,
-                     const ScopeTree::ConstPtr &root, const QString &rootId) const;
+                     const QQmlJSScope::ConstPtr &root, const QString &rootId) const;
 
     static void printContext(const QString &code, ColorOutput *output,
                              const QQmlJS::SourceLocation &location);
 
 private:
     bool checkMemberAccess(const QVector<FieldMember> &members,
-                           const ScopeTree::ConstPtr &outerScope,
+                           const QQmlJSScope::ConstPtr &outerScope,
                            const MetaProperty *prop = nullptr) const;
 
     ColorOutput *m_colorOut = nullptr;

@@ -26,19 +26,19 @@
 **
 ****************************************************************************/
 
-#include "scopetree_p.h"
+#include "qqmljsscope_p.h"
 
 #include <QtCore/qqueue.h>
 #include <QtCore/qsharedpointer.h>
 
 #include <algorithm>
 
-ScopeTree::ScopeTree(ScopeType type, const ScopeTree::Ptr &parentScope)
+QQmlJSScope::QQmlJSScope(ScopeType type, const QQmlJSScope::Ptr &parentScope)
     : m_parentScope(parentScope), m_scopeType(type) {}
 
-ScopeTree::Ptr ScopeTree::create(ScopeType type, const ScopeTree::Ptr &parentScope)
+QQmlJSScope::Ptr QQmlJSScope::create(ScopeType type, const QQmlJSScope::Ptr &parentScope)
 {
-    ScopeTree::Ptr childScope(new ScopeTree{type, parentScope});
+    QQmlJSScope::Ptr childScope(new QQmlJSScope{type, parentScope});
     if (parentScope) {
         Q_ASSERT(type != ScopeType::QMLScope
                 || !parentScope->m_parentScope
@@ -49,7 +49,7 @@ ScopeTree::Ptr ScopeTree::create(ScopeType type, const ScopeTree::Ptr &parentSco
     return childScope;
 }
 
-void ScopeTree::insertJSIdentifier(const QString &name, const JavaScriptIdentifier &identifier)
+void QQmlJSScope::insertJSIdentifier(const QString &name, const JavaScriptIdentifier &identifier)
 {
     Q_ASSERT(m_scopeType != ScopeType::QMLScope);
     if (identifier.kind == JavaScriptIdentifier::LexicalScoped
@@ -64,19 +64,19 @@ void ScopeTree::insertJSIdentifier(const QString &name, const JavaScriptIdentifi
     }
 }
 
-void ScopeTree::insertPropertyIdentifier(const MetaProperty &property)
+void QQmlJSScope::insertPropertyIdentifier(const MetaProperty &property)
 {
     addProperty(property);
     MetaMethod method(property.propertyName() + QLatin1String("Changed"), QLatin1String("void"));
     addMethod(method);
 }
 
-bool ScopeTree::isIdInCurrentScope(const QString &id) const
+bool QQmlJSScope::isIdInCurrentScope(const QString &id) const
 {
     return isIdInCurrentQMlScopes(id) || isIdInCurrentJSScopes(id);
 }
 
-bool ScopeTree::isIdInCurrentQMlScopes(const QString &id) const
+bool QQmlJSScope::isIdInCurrentQMlScopes(const QString &id) const
 {
     if (m_scopeType == ScopeType::QMLScope)
         return m_properties.contains(id) || m_methods.contains(id) || m_enums.contains(id);
@@ -87,7 +87,7 @@ bool ScopeTree::isIdInCurrentQMlScopes(const QString &id) const
             || qmlScope->m_enums.contains(id);
 }
 
-bool ScopeTree::isIdInCurrentJSScopes(const QString &id) const
+bool QQmlJSScope::isIdInCurrentJSScopes(const QString &id) const
 {
     if (m_scopeType != ScopeType::QMLScope && m_jsIdentifiers.contains(id))
         return true;
@@ -100,13 +100,13 @@ bool ScopeTree::isIdInCurrentJSScopes(const QString &id) const
     return false;
 }
 
-bool ScopeTree::isIdInjectedFromSignal(const QString &id) const
+bool QQmlJSScope::isIdInjectedFromSignal(const QString &id) const
 {
     const auto found = findJSIdentifier(id);
     return found.has_value() && found->kind == JavaScriptIdentifier::Injected;
 }
 
-std::optional<JavaScriptIdentifier> ScopeTree::findJSIdentifier(const QString &id) const
+std::optional<JavaScriptIdentifier> QQmlJSScope::findJSIdentifier(const QString &id) const
 {
     for (const auto *scope = this; scope; scope = scope->parentScope().data()) {
         if (scope->m_scopeType == ScopeType::JSFunctionScope
@@ -120,14 +120,14 @@ std::optional<JavaScriptIdentifier> ScopeTree::findJSIdentifier(const QString &i
     return std::optional<JavaScriptIdentifier>{};
 }
 
-void ScopeTree::resolveTypes(const QHash<QString, ScopeTree::ConstPtr> &contextualTypes)
+void QQmlJSScope::resolveTypes(const QHash<QString, QQmlJSScope::ConstPtr> &contextualTypes)
 {
     auto findType = [&](const QString &name) {
         auto type = contextualTypes.constFind(name);
         if (type != contextualTypes.constEnd())
             return *type;
 
-        return ScopeTree::ConstPtr();
+        return QQmlJSScope::ConstPtr();
     };
 
     m_baseType = findType(m_baseTypeName);
@@ -139,7 +139,7 @@ void ScopeTree::resolveTypes(const QHash<QString, ScopeTree::ConstPtr> &contextu
     for (auto it = m_methods.begin(), end = m_methods.end(); it != end; ++it) {
         it->setReturnType(findType(it->returnTypeName()));
         const auto paramNames = it->parameterTypeNames();
-        QList<ScopeTree::ConstPtr> paramTypes;
+        QList<QQmlJSScope::ConstPtr> paramTypes;
 
         for (const QString &paramName: paramNames)
             paramTypes.append(findType(paramName));
@@ -148,7 +148,7 @@ void ScopeTree::resolveTypes(const QHash<QString, ScopeTree::ConstPtr> &contextu
     }
 }
 
-ScopeTree::ConstPtr ScopeTree::findCurrentQMLScope(const ScopeTree::ConstPtr &scope)
+QQmlJSScope::ConstPtr QQmlJSScope::findCurrentQMLScope(const QQmlJSScope::ConstPtr &scope)
 {
     auto qmlScope = scope;
     while (qmlScope && qmlScope->m_scopeType != ScopeType::QMLScope)
@@ -156,17 +156,17 @@ ScopeTree::ConstPtr ScopeTree::findCurrentQMLScope(const ScopeTree::ConstPtr &sc
     return qmlScope;
 }
 
-void ScopeTree::addExport(const QString &name, const QString &package, const QTypeRevision &version)
+void QQmlJSScope::addExport(const QString &name, const QString &package, const QTypeRevision &version)
 {
     m_exports.append(Export(package, name, version, 0));
 }
 
-void ScopeTree::setExportMetaObjectRevision(int exportIndex, int metaObjectRevision)
+void QQmlJSScope::setExportMetaObjectRevision(int exportIndex, int metaObjectRevision)
 {
     m_exports[exportIndex].setMetaObjectRevision(metaObjectRevision);
 }
 
-ScopeTree::Export::Export(QString package, QString type, const QTypeRevision &version,
+QQmlJSScope::Export::Export(QString package, QString type, const QTypeRevision &version,
                           int metaObjectRevision) :
     m_package(std::move(package)),
     m_type(std::move(type)),
@@ -175,7 +175,7 @@ ScopeTree::Export::Export(QString package, QString type, const QTypeRevision &ve
 {
 }
 
-bool ScopeTree::Export::isValid() const
+bool QQmlJSScope::Export::isValid() const
 {
     return m_version.isValid() || !m_package.isEmpty() || !m_type.isEmpty();
 }

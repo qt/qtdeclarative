@@ -8,7 +8,7 @@ SOURCES = \
     importedmembersvisitor.cpp \
     qmljsimporter.cpp \
     qmljstypereader.cpp \
-    scopetree.cpp \
+    qqmljsscope.cpp \
     typedescriptionreader.cpp \
     qmlstreamwriter.cpp
 
@@ -18,7 +18,7 @@ HEADERS = \
     qmljsimporter_p.h \
     qmljstypereader_p.h \
     metatypes_p.h \
-    scopetree_p.h \
+    qqmljsscope_p.h \
     typedescriptionreader_p.h \
     qmlstreamwriter_p.h
 

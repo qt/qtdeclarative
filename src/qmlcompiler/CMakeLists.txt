@@ -13,8 +13,8 @@ qt_add_module(QmlCompiler
         qmljsimporter.cpp qmljsimporter_p.h
         qmljstypereader.cpp qmljstypereader_p.h
         qmlstreamwriter.cpp qmlstreamwriter_p.h
+        qqmljsscope.cpp qqmljsscope_p.h
         resourcefilemapper.cpp resourcefilemapper_p.h
-        scopetree.cpp scopetree_p.h
         typedescriptionreader.cpp typedescriptionreader_p.h
     PUBLIC_LIBRARIES
         Qt::CorePrivate

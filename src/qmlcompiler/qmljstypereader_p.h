@@ -39,7 +39,7 @@
 //
 // We mean it.
 
-#include "scopetree_p.h"
+#include "qqmljsscope_p.h"
 
 #include <QtQml/private/qqmljsastfwd_p.h>
 
@@ -57,7 +57,7 @@ public:
 
     QmlJSTypeReader(const QString &file) : m_file(file) {}
 
-    ScopeTree::Ptr operator()();
+    QQmlJSScope::Ptr operator()();
     QList<Import> imports() const { return m_imports; }
     QStringList errors() const { return m_errors; }
 

@@ -39,13 +39,13 @@
 //
 // We mean it.
 
-#include "scopetree_p.h"
+#include "qqmljsscope_p.h"
 #include <QtQml/private/qqmldirparser_p.h>
 
 class QmlJSImporter
 {
 public:
-    using ImportedTypes = QHash<QString, ScopeTree::ConstPtr>;
+    using ImportedTypes = QHash<QString, QQmlJSScope::ConstPtr>;
 
     QmlJSImporter(const QStringList &importPaths) : m_importPaths(importPaths) {}
 
@@ -68,15 +68,15 @@ private:
     struct AvailableTypes
     {
         // C++ names used in qmltypes files for non-composite types
-        QHash<QString, ScopeTree::ConstPtr> cppNames;
+        QHash<QString, QQmlJSScope::ConstPtr> cppNames;
 
         // Names the importing component sees, including any prefixes
-        QHash<QString, ScopeTree::ConstPtr> qmlNames;
+        QHash<QString, QQmlJSScope::ConstPtr> qmlNames;
     };
 
     struct Import {
-        QHash<QString, ScopeTree::Ptr> objects;
-        QHash<QString, ScopeTree::Ptr> scripts;
+        QHash<QString, QQmlJSScope::Ptr> objects;
+        QHash<QString, QQmlJSScope::Ptr> scripts;
         QList<QQmlDirParser::Import> imports;
         QList<QQmlDirParser::Import> dependencies;
     };
@@ -90,13 +90,13 @@ private:
                             AvailableTypes *types,
                             const QString &prefix = QString(),
                             QTypeRevision version = QTypeRevision());
-    void readQmltypes(const QString &filename, QHash<QString, ScopeTree::Ptr> *objects);
+    void readQmltypes(const QString &filename, QHash<QString, QQmlJSScope::Ptr> *objects);
     Import readQmldir(const QString &dirname);
-    ScopeTree::Ptr localFile2ScopeTree(const QString &filePath);
+    QQmlJSScope::Ptr localFile2ScopeTree(const QString &filePath);
 
     QStringList m_importPaths;
     QHash<QPair<QString, QTypeRevision>, Import> m_seenImports;
-    QHash<QString, ScopeTree::Ptr> m_importedFiles;
+    QHash<QString, QQmlJSScope::Ptr> m_importedFiles;
     QStringList m_warnings;
 };
 

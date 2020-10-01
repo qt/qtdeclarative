@@ -84,12 +84,12 @@ void CheckIdentifiers::printContext(
                            + QLatin1Char('\n'), Normal);
 }
 
-static bool walkViaParentAndAttachedScopes(ScopeTree::ConstPtr rootType,
-                                           std::function<bool(ScopeTree::ConstPtr)> visit)
+static bool walkViaParentAndAttachedScopes(QQmlJSScope::ConstPtr rootType,
+                                           std::function<bool(QQmlJSScope::ConstPtr)> visit)
 {
     if (rootType == nullptr)
         return false;
-    std::stack<ScopeTree::ConstPtr> stack;
+    std::stack<QQmlJSScope::ConstPtr> stack;
     stack.push(rootType);
     while (!stack.empty()) {
         const auto type = stack.top();
@@ -108,7 +108,7 @@ static bool walkViaParentAndAttachedScopes(ScopeTree::ConstPtr rootType,
 }
 
 bool CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
-                                         const ScopeTree::ConstPtr &outerScope,
+                                         const QQmlJSScope::ConstPtr &outerScope,
                                          const MetaProperty *prop) const
 {
 
@@ -121,7 +121,7 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
         expectedNext.append(QLatin1String("length"));
     }
 
-    ScopeTree::ConstPtr scope = outerScope;
+    QQmlJSScope::ConstPtr scope = outerScope;
     for (const FieldMember &access : members) {
         if (scope.isNull()) {
             writeWarning(m_colorOut);
@@ -206,7 +206,7 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
         if (scopeMethodIt != methods.end())
             return true; // Access to property of JS function
 
-        auto checkEnums = [&](const ScopeTree::ConstPtr &scope) {
+        auto checkEnums = [&](const QQmlJSScope::ConstPtr &scope) {
             const auto enums = scope->enums();
             for (const auto &enumerator : enums) {
                 if (enumerator.name() == access.m_name) {
@@ -231,14 +231,14 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
         if (!detectedRestrictiveName.isEmpty())
             continue;
 
-        ScopeTree::ConstPtr rootType;
+        QQmlJSScope::ConstPtr rootType;
         if (!access.m_parentType.isEmpty())
             rootType = m_types.value(access.m_parentType);
         else
             rootType = scope;
 
         bool typeFound =
-                walkViaParentAndAttachedScopes(rootType, [&](ScopeTree::ConstPtr type) {
+                walkViaParentAndAttachedScopes(rootType, [&](QQmlJSScope::ConstPtr type) {
                     const auto typeProperties = type->properties();
                     const auto typeIt = typeProperties.find(access.m_name);
                     if (typeIt != typeProperties.end()) {
@@ -287,18 +287,18 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
 }
 
 bool CheckIdentifiers::operator()(
-        const QHash<QString, ScopeTree::ConstPtr> &qmlIDs,
+        const QHash<QString, QQmlJSScope::ConstPtr> &qmlIDs,
         const QHash<QQmlJS::SourceLocation, SignalHandler> &signalHandlers,
         const MemberAccessChains &memberAccessChains,
-        const ScopeTree::ConstPtr &root, const QString &rootId) const
+        const QQmlJSScope::ConstPtr &root, const QString &rootId) const
 {
     bool noUnqualifiedIdentifier = true;
 
     // revisit all scopes
-    QQueue<ScopeTree::ConstPtr> workQueue;
+    QQueue<QQmlJSScope::ConstPtr> workQueue;
     workQueue.enqueue(root);
     while (!workQueue.empty()) {
-        const ScopeTree::ConstPtr currentScope = workQueue.dequeue();
+        const QQmlJSScope::ConstPtr currentScope = workQueue.dequeue();
 
         const auto scopeMemberAccessChains = memberAccessChains[currentScope];
         for (auto memberAccessChain : scopeMemberAccessChains) {
@@ -333,7 +333,7 @@ bool CheckIdentifiers::operator()(
                 }
             }
 
-            auto qmlScope = ScopeTree::findCurrentQMLScope(currentScope);
+            auto qmlScope = QQmlJSScope::findCurrentQMLScope(currentScope);
             if (qmlScope->methods().contains(memberAccessBase.m_name)) {
                 // a property of a JavaScript function
                 continue;

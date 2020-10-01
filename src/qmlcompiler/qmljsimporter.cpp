@@ -54,7 +54,7 @@ static QQmlDirParser createQmldirParserForFile(const QString &filename)
 }
 
 void QmlJSImporter::readQmltypes(
-        const QString &filename, QHash<QString, ScopeTree::Ptr> *objects)
+        const QString &filename, QHash<QString, QQmlJSScope::Ptr> *objects)
 {
     const QFileInfo fileInfo(filename);
     if (!fileInfo.exists()) {
@@ -83,7 +83,7 @@ QmlJSImporter::Import QmlJSImporter::readQmldir(const QString &path)
     result.imports.append(reader.imports());
     result.dependencies.append(reader.dependencies());
 
-    QHash<QString, ScopeTree::Ptr> qmlComponents;
+    QHash<QString, QQmlJSScope::Ptr> qmlComponents;
     const auto components = reader.components();
     for (auto it = components.begin(), end = components.end(); it != end; ++it) {
         const QString filePath = path + QLatin1Char('/') + it->fileName;
@@ -227,14 +227,14 @@ void QmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
     m_seenImports.insert(importId, {});
 }
 
-ScopeTree::Ptr QmlJSImporter::localFile2ScopeTree(const QString &filePath)
+QQmlJSScope::Ptr QmlJSImporter::localFile2ScopeTree(const QString &filePath)
 {
     const auto seen = m_importedFiles.find(filePath);
     if (seen != m_importedFiles.end())
         return *seen;
 
     QmlJSTypeReader typeReader(filePath);
-    ScopeTree::Ptr result = typeReader();
+    QQmlJSScope::Ptr result = typeReader();
     m_importedFiles.insert(filePath, result);
 
     const QStringList errors = typeReader.errors();
@@ -249,7 +249,7 @@ ScopeTree::Ptr QmlJSImporter::localFile2ScopeTree(const QString &filePath)
         QDir::NoFilter
     };
     while (it.hasNext()) {
-        ScopeTree::Ptr scope(localFile2ScopeTree(it.next()));
+        QQmlJSScope::Ptr scope(localFile2ScopeTree(it.next()));
         if (!scope->internalName().isEmpty())
             types.qmlNames.insert(scope->internalName(), scope);
     }
@@ -271,7 +271,7 @@ QmlJSImporter::ImportedTypes QmlJSImporter::importFileOrDirectory(
 
     QFileInfo fileInfo(name);
     if (fileInfo.isFile()) {
-        ScopeTree::Ptr scope(localFile2ScopeTree(fileInfo.canonicalFilePath()));
+        QQmlJSScope::Ptr scope(localFile2ScopeTree(fileInfo.canonicalFilePath()));
         result.qmlNames.insert(prefix.isEmpty() ? scope->internalName() : prefix, scope);
         return result.qmlNames;
     }
@@ -282,7 +282,7 @@ QmlJSImporter::ImportedTypes QmlJSImporter::importFileOrDirectory(
         QDir::NoFilter
     };
     while (it.hasNext()) {
-        ScopeTree::Ptr scope(localFile2ScopeTree(it.next()));
+        QQmlJSScope::Ptr scope(localFile2ScopeTree(it.next()));
         if (!scope->internalName().isEmpty())
             result.qmlNames.insert(prefixedName(prefix, scope->internalName()), scope);
     }

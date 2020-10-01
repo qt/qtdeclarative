@@ -39,14 +39,14 @@
 //
 // We mean it.
 
-#include "scopetree_p.h"
+#include "qqmljsscope_p.h"
 
 #include <private/qqmljsast_p.h>
 
 class ImportedMembersVisitor : public QQmlJS::AST::Visitor
 {
 public:
-    ScopeTree::Ptr result(const QString &scopeName) const;
+    QQmlJSScope::Ptr result(const QString &scopeName) const;
     QStringList errors() const { return m_errors; }
 
 private:
@@ -58,11 +58,11 @@ private:
     bool visit(QQmlJS::AST::UiEnumDeclaration *uied) override;
     void throwRecursionDepthError() override;
 
-    ScopeTree::Ptr currentObject() const { return m_currentObjects.back(); }
+    QQmlJSScope::Ptr currentObject() const { return m_currentObjects.back(); }
 
-    QVector<ScopeTree::Ptr> m_currentObjects;
-    ScopeTree::ConstPtr m_rootObject;
-    QHash<QString, ScopeTree::Ptr> m_objects;
+    QVector<QQmlJSScope::Ptr> m_currentObjects;
+    QQmlJSScope::ConstPtr m_rootObject;
+    QHash<QString, QQmlJSScope::Ptr> m_objects;
 
     QStringList m_errors;
 };

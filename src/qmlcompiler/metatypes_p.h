@@ -43,7 +43,7 @@
 #include <QtCore/qstringlist.h>
 #include <QtCore/qsharedpointer.h>
 
-// MetaMethod and MetaProperty have both type names and actual ScopeTree types.
+// MetaMethod and MetaProperty have both type names and actual QQmlJSScope types.
 // When parsing the information from the relevant QML or qmltypes files, we only
 // see the names and don't have a complete picture of the types, yet. In a second
 // pass we typically fill in the types. The types may have multiple exported names
@@ -53,7 +53,7 @@
 // The parent of an Item, for example, is typically not just a QtObject, but rather
 // some other Item with custom properties.
 
-class ScopeTree;
+class QQmlJSScope;
 class MetaEnum
 {
     QStringList m_keys;
@@ -107,23 +107,23 @@ public:
     void setMethodName(const QString &name) { m_name = name; }
 
     QString returnTypeName() const { return m_returnTypeName; }
-    QSharedPointer<const ScopeTree> returnType() const { return m_returnType.toStrongRef(); }
+    QSharedPointer<const QQmlJSScope> returnType() const { return m_returnType.toStrongRef(); }
     void setReturnTypeName(const QString &type) { m_returnTypeName = type; }
-    void setReturnType(const QSharedPointer<const ScopeTree> &type)
+    void setReturnType(const QSharedPointer<const QQmlJSScope> &type)
     {
         m_returnType = type;
     }
 
     QStringList parameterNames() const { return m_paramNames; }
     QStringList parameterTypeNames() const { return m_paramTypeNames; }
-    QList<QSharedPointer<const ScopeTree>> parameterTypes() const
+    QList<QSharedPointer<const QQmlJSScope>> parameterTypes() const
     {
-        QList<QSharedPointer<const ScopeTree>> result;
+        QList<QSharedPointer<const QQmlJSScope>> result;
         for (const auto &type : m_paramTypes)
             result.append(type.toStrongRef());
         return result;
     }
-    void setParameterTypes(const QList<QSharedPointer<const ScopeTree>> &types)
+    void setParameterTypes(const QList<QSharedPointer<const QQmlJSScope>> &types)
     {
         Q_ASSERT(types.length() == m_paramNames.length());
         m_paramTypes.clear();
@@ -131,7 +131,7 @@ public:
             m_paramTypes.append(type);
     }
     void addParameter(const QString &name, const QString &typeName,
-                      const QSharedPointer<const ScopeTree> &type = {})
+                      const QSharedPointer<const QQmlJSScope> &type = {})
     {
         m_paramNames.append(name);
         m_paramTypeNames.append(typeName);
@@ -149,11 +149,11 @@ public:
 private:
     QString m_name;
     QString m_returnTypeName;
-    QWeakPointer<const ScopeTree> m_returnType;
+    QWeakPointer<const QQmlJSScope> m_returnType;
 
     QStringList m_paramNames;
     QStringList m_paramTypeNames;
-    QList<QWeakPointer<const ScopeTree>> m_paramTypes;
+    QList<QWeakPointer<const QQmlJSScope>> m_paramTypes;
 
     Type m_methodType = Signal;
     Access m_methodAccess = Private;
@@ -164,7 +164,7 @@ class MetaProperty
 {
     QString m_propertyName;
     QString m_typeName;
-    QWeakPointer<const ScopeTree> m_type;
+    QWeakPointer<const QQmlJSScope> m_type;
     bool m_isList;
     bool m_isWritable;
     bool m_isPointer;
@@ -187,8 +187,8 @@ public:
     QString propertyName() const { return m_propertyName; }
     QString typeName() const { return m_typeName; }
 
-    void setType(const QSharedPointer<const ScopeTree> &type) { m_type = type; }
-    QSharedPointer<const ScopeTree> type() const { return m_type.toStrongRef(); }
+    void setType(const QSharedPointer<const QQmlJSScope> &type) { m_type = type; }
+    QSharedPointer<const QQmlJSScope> type() const { return m_type.toStrongRef(); }
 
     bool isList() const { return m_isList; }
     bool isWritable() const { return m_isWritable; }

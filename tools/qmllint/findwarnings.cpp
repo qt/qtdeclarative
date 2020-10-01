@@ -30,7 +30,7 @@
 #include "checkidentifiers.h"
 
 #include <QtQmlCompiler/private/importedmembersvisitor_p.h>
-#include <QtQmlCompiler/private/scopetree_p.h>
+#include <QtQmlCompiler/private/qqmljsscope_p.h>
 #include <QtQmlCompiler/private/typedescriptionreader_p.h>
 #include <QtQmlCompiler/private/qmljstypereader_p.h>
 
@@ -46,7 +46,7 @@
 
 void FindWarningVisitor::enterEnvironment(ScopeType type, const QString &name)
 {
-    m_currentScope = ScopeTree::create(type, m_currentScope);
+    m_currentScope = QQmlJSScope::create(type, m_currentScope);
     m_currentScope->setBaseTypeName(name);
     m_currentScope->setIsComposite(true);
 }
@@ -56,9 +56,9 @@ void FindWarningVisitor::leaveEnvironment()
     m_currentScope = m_currentScope->parentScope();
 }
 
-void FindWarningVisitor::importExportedNames(ScopeTree::ConstPtr scope)
+void FindWarningVisitor::importExportedNames(QQmlJSScope::ConstPtr scope)
 {
-    QList<ScopeTree::ConstPtr> scopes;
+    QList<QQmlJSScope::ConstPtr> scopes;
     while (!scope.isNull()) {
         if (scopes.contains(scope)) {
             QString inheritenceCycle;
@@ -132,7 +132,7 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiProgram *)
     }
 
     // add "self" (as we only ever check the first part of a qualified identifier, we get away with
-    // using an empty ScopeTree
+    // using an empty QQmlJSScope
     m_rootScopeImports.insert(QFileInfo { m_filePath }.baseName(), {});
 
     const auto imported = m_importer.importFileOrDirectory(QFileInfo(m_filePath).path());
@@ -390,7 +390,7 @@ bool FindWarningVisitor::visit(QQmlJS::AST::IdentifierExpression *idexp)
 FindWarningVisitor::FindWarningVisitor(
         QStringList qmlImportPaths, QStringList qmltypesFiles, QString code, QString fileName,
         bool silent, bool warnUnqualified, bool warnWithStatement, bool warnInheritanceCycle)
-    : m_rootScope(ScopeTree::create(ScopeType::JSFunctionScope)),
+    : m_rootScope(QQmlJSScope::create(ScopeType::JSFunctionScope)),
       m_qmltypesFiles(std::move(qmltypesFiles)),
       m_code(std::move(code)),
       m_rootId(QLatin1String("<id>")),
@@ -446,7 +446,7 @@ bool FindWarningVisitor::check()
         auto targetScope = m_qmlid2scope[outstandingConnection.targetName];
         if (outstandingConnection.scope && targetScope != nullptr)
             outstandingConnection.scope->addMethods(targetScope->methods());
-        QScopedValueRollback<ScopeTree::Ptr> rollback(m_currentScope, outstandingConnection.scope);
+        QScopedValueRollback<QQmlJSScope::Ptr> rollback(m_currentScope, outstandingConnection.scope);
         outstandingConnection.uiod->initializer->accept(this);
     }
 
@@ -646,10 +646,10 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
             }
             member = member->next;
         }
-        ScopeTree::ConstPtr targetScope;
+        QQmlJSScope::ConstPtr targetScope;
         if (target.isEmpty()) {
             // no target set, connection comes from parentF
-            ScopeTree::Ptr scope = m_currentScope;
+            QQmlJSScope::Ptr scope = m_currentScope;
             do {
                 scope = scope->parentScope(); // TODO: rename method
             } while (scope->scopeType() != ScopeType::QMLScope);
