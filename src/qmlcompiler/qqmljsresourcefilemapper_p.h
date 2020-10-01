@@ -25,8 +25,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef RESOURCEFILEMAPPER_H
-#define RESOURCEFILEMAPPER_H
+#ifndef QQMLJSRESOURCEFILEMAPPER_P_H
+#define QQMLJSRESOURCEFILEMAPPER_P_H
 
 //
 //  W A R N I N G
@@ -42,13 +42,13 @@
 #include <QHash>
 #include <QFile>
 
-struct ResourceFileMapper
+struct QQmlJSResourceFileMapper
 {
     enum class FileOutput {
         RelativeFilePath,
         AbsoluteFilePath
     };
-    ResourceFileMapper(const QStringList &resourceFiles);
+    QQmlJSResourceFileMapper(const QStringList &resourceFiles);
 
     bool isEmpty() const;
 
@@ -61,4 +61,4 @@ private:
     QHash<QString, QString> qrcPathToFileSystemPath;
 };
 
-#endif // RESOURCEFILEMAPPER_H
+#endif // QMLJSRESOURCEFILEMAPPER_P_H

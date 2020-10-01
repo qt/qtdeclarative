@@ -4,7 +4,7 @@ QT         = core-private qmldevtools-private
 CONFIG    += internal_module
 
 SOURCES = \
-    resourcefilemapper.cpp \
+    qqmljsresourcefilemapper.cpp \
     qqmljsimportedmembersvisitor.cpp \
     qmljsimporter.cpp \
     qmljstypereader.cpp \
@@ -13,7 +13,7 @@ SOURCES = \
     qmlstreamwriter.cpp
 
 HEADERS = \
-    resourcefilemapper_p.h \
+    qqmljsresourcefilemapper_p.h \
     qqmljsimportedmembersvisitor_p.h \
     qmljsimporter_p.h \
     qmljstypereader_p.h \

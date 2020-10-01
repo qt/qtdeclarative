@@ -26,13 +26,13 @@
 **
 ****************************************************************************/
 
-#include "resourcefilemapper_p.h"
+#include "qqmljsresourcefilemapper_p.h"
 
 #include <QFileInfo>
 #include <QDir>
 #include <QXmlStreamReader>
 
-ResourceFileMapper::ResourceFileMapper(const QStringList &resourceFiles)
+QQmlJSResourceFileMapper::QQmlJSResourceFileMapper(const QStringList &resourceFiles)
 {
     for (const QString &fileName: resourceFiles) {
         QFile f(fileName);
@@ -42,12 +42,12 @@ ResourceFileMapper::ResourceFileMapper(const QStringList &resourceFiles)
     }
 }
 
-bool ResourceFileMapper::isEmpty() const
+bool QQmlJSResourceFileMapper::isEmpty() const
 {
     return qrcPathToFileSystemPath.isEmpty();
 }
 
-QStringList ResourceFileMapper::resourcePaths(const QString &fileName)
+QStringList QQmlJSResourceFileMapper::resourcePaths(const QString &fileName)
 {
     const QString absPath = QDir::cleanPath(QDir::current().absoluteFilePath(fileName));
     QStringList resourcePaths;
@@ -58,7 +58,7 @@ QStringList ResourceFileMapper::resourcePaths(const QString &fileName)
     return resourcePaths;
 }
 
-QStringList ResourceFileMapper::qmlCompilerFiles(FileOutput fo) const
+QStringList QQmlJSResourceFileMapper::qmlCompilerFiles(FileOutput fo) const
 {
     QStringList files;
     for (auto it = qrcPathToFileSystemPath.constBegin(), end = qrcPathToFileSystemPath.constEnd();
@@ -75,7 +75,7 @@ QStringList ResourceFileMapper::qmlCompilerFiles(FileOutput fo) const
     return files;
 }
 
-void ResourceFileMapper::populateFromQrcFile(QFile &file)
+void QQmlJSResourceFileMapper::populateFromQrcFile(QFile &file)
 {
     enum State {
         InitialState,

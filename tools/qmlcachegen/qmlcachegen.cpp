@@ -40,7 +40,7 @@
 #include <private/qqmlirbuilder_p.h>
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljslexer_p.h>
-#include <private/resourcefilemapper_p.h>
+#include <private/qqmljsresourcefilemapper_p.h>
 
 #include <algorithm>
 
@@ -512,7 +512,7 @@ int main(int argc, char **argv)
     }
 
     if (target == GenerateLoader) {
-        ResourceFileMapper mapper(sources);
+        QQmlJSResourceFileMapper mapper(sources);
 
         Error error;
         if (!generateLoader(mapper.qmlCompilerFiles(), outputFileName,
@@ -536,7 +536,7 @@ int main(int argc, char **argv)
 
     SaveFunction saveFunction;
     if (target == GenerateCpp) {
-        ResourceFileMapper fileMapper(parser.values(resourceOption));
+        QQmlJSResourceFileMapper fileMapper(parser.values(resourceOption));
         QString inputResourcePath = parser.value(resourcePathOption);
 
         if (!inputResourcePath.isEmpty() && !fileMapper.isEmpty()) {

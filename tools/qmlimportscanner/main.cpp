@@ -34,7 +34,7 @@
 #include <private/qqmlirbuilder_p.h>
 #include <private/qqmljsdiagnosticmessage_p.h>
 #include <private/qqmldirparser_p.h>
-#include <private/resourcefilemapper_p.h>
+#include <private/qqmljsresourcefilemapper_p.h>
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QDir>
@@ -632,7 +632,7 @@ int main(int argc, char *argv[])
     }
 
     if (!qrcFiles.isEmpty())
-        scanFiles << ResourceFileMapper(qrcFiles).qmlCompilerFiles(ResourceFileMapper::FileOutput::AbsoluteFilePath);
+        scanFiles << QQmlJSResourceFileMapper(qrcFiles).qmlCompilerFiles(QQmlJSResourceFileMapper::FileOutput::AbsoluteFilePath);
 
     g_qmlImportPaths = qmlImportPaths;
 
