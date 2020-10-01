@@ -1,0 +1,35 @@
+# See qtbase/src/testlib/qtestblacklist.cpp for format
+
+# https://bugreports.qt.io/browse/QTBUG-87018
+[DelayButton::test_mouse]
+*
+
+[ScrollBar::test_hover:enabled]
+*
+
+[ScrollBar::test_hover:non-interactive]
+*
+
+[SwipeDelegate::test_close]
+*
+
+[SwipeDelegate::test_dragSideAction]
+*
+
+[SwipeDelegate::test_eventsToLeftAndRight]
+*
+
+[SwipeDelegate::test_mouseButtons]
+*
+
+[SwipeDelegate::test_multipleClickableActions]
+*
+
+[SwipeDelegate::test_removableDelegates]
+*
+
+[TextArea::test_hover]
+*
+
+[TextField::test_hover]
+*
