@@ -130,6 +130,9 @@ QQuickPopupItem::QQuickPopupItem(QQuickPopup *popup)
     setParent(popup);
     setFlag(ItemIsFocusScope);
     setAcceptedMouseButtons(Qt::AllButtons);
+#if QT_CONFIG(quicktemplates2_multitouch)
+    setAcceptTouchEvents(true);
+#endif
 #if QT_CONFIG(cursor)
     setCursor(Qt::ArrowCursor);
 #endif

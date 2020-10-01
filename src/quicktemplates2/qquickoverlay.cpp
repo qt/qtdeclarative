@@ -311,6 +311,9 @@ QQuickOverlay::QQuickOverlay(QQuickItem *parent)
     Q_D(QQuickOverlay);
     setZ(1000001); // DefaultWindowDecoration+1
     setAcceptedMouseButtons(Qt::AllButtons);
+#if QT_CONFIG(quicktemplates2_multitouch)
+    setAcceptTouchEvents(true);
+#endif
     setFiltersChildMouseEvents(true);
     setVisible(false);
 

@@ -205,11 +205,17 @@ void QQuickScrollBarPrivate::setInteractive(bool enabled)
     interactive = enabled;
     if (interactive) {
         q->setAcceptedMouseButtons(Qt::LeftButton);
+#if QT_CONFIG(quicktemplates2_multitouch)
+        q->setAcceptTouchEvents(true);
+#endif
 #if QT_CONFIG(cursor)
         q->setCursor(Qt::ArrowCursor);
 #endif
     } else {
         q->setAcceptedMouseButtons(Qt::NoButton);
+#if QT_CONFIG(quicktemplates2_multitouch)
+        q->setAcceptTouchEvents(false);
+#endif
 #if QT_CONFIG(cursor)
         q->unsetCursor();
 #endif
@@ -303,6 +309,9 @@ QQuickScrollBar::QQuickScrollBar(QQuickItem *parent)
 {
     setKeepMouseGrab(true);
     setAcceptedMouseButtons(Qt::LeftButton);
+#if QT_CONFIG(quicktemplates2_multitouch)
+    setAcceptTouchEvents(true);
+#endif
 #if QT_CONFIG(cursor)
     setCursor(Qt::ArrowCursor);
 #endif
