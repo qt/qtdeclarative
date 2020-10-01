@@ -76,7 +76,8 @@ class QQuickStyleMargins
     Q_PROPERTY(int right READ right())
     Q_PROPERTY(int bottom READ bottom())
 
-    QML_NAMED_ELEMENT(StyleMargins)
+    QML_NAMED_ELEMENT(stylemargins)
+    QML_UNCREATABLE("")
 
 public:
     QQuickStyleMargins() {}
