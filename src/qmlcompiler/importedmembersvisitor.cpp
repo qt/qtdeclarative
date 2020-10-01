@@ -83,8 +83,8 @@ bool ImportedMembersVisitor::visit(UiPublicMember *publicMember)
     switch (publicMember->type) {
     case UiPublicMember::Signal: {
         UiParameterList *param = publicMember->parameters;
-        MetaMethod method;
-        method.setMethodType(MetaMethod::Signal);
+        QQmlJSMetaMethod method;
+        method.setMethodType(QQmlJSMetaMethod::Signal);
         method.setMethodName(publicMember->name.toString());
         while (param) {
             method.addParameter(param->name.toString(), param->type->name.toString());
@@ -101,7 +101,7 @@ bool ImportedMembersVisitor::visit(UiPublicMember *publicMember)
             if (const auto idExpression = cast<IdentifierExpression *>(expression->expression))
                 typeName = idExpression->name;
         }
-        MetaProperty prop {
+        QQmlJSMetaProperty prop {
             publicMember->name.toString(),
             typeName.toString(),
             false,
@@ -120,9 +120,9 @@ bool ImportedMembersVisitor::visit(UiPublicMember *publicMember)
 bool ImportedMembersVisitor::visit(UiSourceElement *sourceElement)
 {
     if (FunctionExpression *fexpr = sourceElement->sourceElement->asFunctionDefinition()) {
-        MetaMethod method;
+        QQmlJSMetaMethod method;
         method.setMethodName(fexpr->name.toString());
-        method.setMethodType(MetaMethod::Method);
+        method.setMethodType(QQmlJSMetaMethod::Method);
         FormalParameterList *parameters = fexpr->formals;
         while (parameters) {
             method.addParameter(parameters->element->bindingIdentifier.toString(), QString());
@@ -130,7 +130,7 @@ bool ImportedMembersVisitor::visit(UiSourceElement *sourceElement)
         }
         currentObject()->addMethod(method);
     } else if (ClassExpression *clexpr = sourceElement->sourceElement->asClassDefinition()) {
-        MetaProperty prop { clexpr->name.toString(), QString(), false, false, false, false, 1 };
+        QQmlJSMetaProperty prop { clexpr->name.toString(), QString(), false, false, false, false, 1 };
         currentObject()->addProperty(prop);
     } else if (cast<VariableStatement *>(sourceElement->sourceElement)) {
         // nothing to do
@@ -156,7 +156,7 @@ bool ImportedMembersVisitor::visit(UiScriptBinding *scriptBinding)
 
 bool ImportedMembersVisitor::visit(QQmlJS::AST::UiEnumDeclaration *uied)
 {
-    MetaEnum qmlEnum(uied->name.toString());
+    QQmlJSMetaEnum qmlEnum(uied->name.toString());
     for (const auto *member = uied->members; member; member = member->next)
         qmlEnum.addKey(member->member.toString());
     currentObject()->addEnum(qmlEnum);

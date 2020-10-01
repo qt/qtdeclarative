@@ -35,7 +35,7 @@
 class ColorOutput;
 
 struct SignalHandler {
-    MetaMethod signal;
+    QQmlJSMetaMethod signal;
     bool isMultiline;
 };
 
@@ -67,7 +67,7 @@ public:
 private:
     bool checkMemberAccess(const QVector<FieldMember> &members,
                            const QQmlJSScope::ConstPtr &outerScope,
-                           const MetaProperty *prop = nullptr) const;
+                           const QQmlJSMetaProperty *prop = nullptr) const;
 
     ColorOutput *m_colorOut = nullptr;
     QString m_code;

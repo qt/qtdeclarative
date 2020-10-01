@@ -109,7 +109,7 @@ static bool walkViaParentAndAttachedScopes(QQmlJSScope::ConstPtr rootType,
 
 bool CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
                                          const QQmlJSScope::ConstPtr &outerScope,
-                                         const MetaProperty *prop) const
+                                         const QQmlJSMetaProperty *prop) const
 {
 
     QStringList expectedNext;

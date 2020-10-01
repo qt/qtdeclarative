@@ -70,7 +70,7 @@ private:
                             const QQmlJSScope::Ptr &scope);
     void readProperty(QQmlJS::AST::UiObjectDefinition *ast, const QQmlJSScope::Ptr &scope);
     void readEnum(QQmlJS::AST::UiObjectDefinition *ast, const QQmlJSScope::Ptr &scope);
-    void readParameter(QQmlJS::AST::UiObjectDefinition *ast, MetaMethod *metaMethod);
+    void readParameter(QQmlJS::AST::UiObjectDefinition *ast, QQmlJSMetaMethod *metaMethod);
 
     QString readStringBinding(QQmlJS::AST::UiScriptBinding *ast);
     bool readBoolBinding(QQmlJS::AST::UiScriptBinding *ast);
@@ -79,7 +79,7 @@ private:
     int readIntBinding(QQmlJS::AST::UiScriptBinding *ast);
     void readExports(QQmlJS::AST::UiScriptBinding *ast, const QQmlJSScope::Ptr &scope);
     void readMetaObjectRevisions(QQmlJS::AST::UiScriptBinding *ast, const QQmlJSScope::Ptr &scope);
-    void readEnumValues(QQmlJS::AST::UiScriptBinding *ast, MetaEnum *metaEnum);
+    void readEnumValues(QQmlJS::AST::UiScriptBinding *ast, QQmlJSMetaEnum *metaEnum);
 
     void addError(const QQmlJS::SourceLocation &loc, const QString &message);
     void addWarning(const QQmlJS::SourceLocation &loc, const QString &message);

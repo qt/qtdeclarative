@@ -26,8 +26,8 @@
 **
 ****************************************************************************/
 
-#ifndef METATYPES_H
-#define METATYPES_H
+#ifndef QQMLJSMETATYPES_P_H
+#define QQMLJSMETATYPES_P_H
 
 //
 //  W A R N I N G
@@ -54,7 +54,7 @@
 // some other Item with custom properties.
 
 class QQmlJSScope;
-class MetaEnum
+class QQmlJSMetaEnum
 {
     QStringList m_keys;
     QString m_name;
@@ -62,8 +62,8 @@ class MetaEnum
     bool m_isFlag = false;
 
 public:
-    MetaEnum() = default;
-    explicit MetaEnum(QString name) : m_name(std::move(name)) {}
+    QQmlJSMetaEnum() = default;
+    explicit QQmlJSMetaEnum(QString name) : m_name(std::move(name)) {}
 
     bool isValid() const { return !m_name.isEmpty(); }
 
@@ -80,7 +80,7 @@ public:
     QStringList keys() const { return m_keys; }
 };
 
-class MetaMethod
+class QQmlJSMetaMethod
 {
 public:
     enum Type {
@@ -95,8 +95,8 @@ public:
         Public
     };
 
-    MetaMethod() = default;
-    explicit MetaMethod(QString name, QString returnType = QString())
+    QQmlJSMetaMethod() = default;
+    explicit QQmlJSMetaMethod(QString name, QString returnType = QString())
         : m_name(std::move(name))
         , m_returnTypeName(std::move(returnType))
         , m_methodType(Method)
@@ -160,7 +160,7 @@ private:
     int m_revision = 0;
 };
 
-class MetaProperty
+class QQmlJSMetaProperty
 {
     QString m_propertyName;
     QString m_typeName;
@@ -172,7 +172,7 @@ class MetaProperty
     int m_revision;
 
 public:
-    MetaProperty(QString propertyName, QString typeName,
+    QQmlJSMetaProperty(QString propertyName, QString typeName,
                  bool isList, bool isWritable, bool isPointer, bool isAlias,
                  int revision)
         : m_propertyName(std::move(propertyName))
@@ -197,4 +197,4 @@ public:
     int revision() const { return m_revision; }
 };
 
-#endif // METATYPES_H
+#endif // QQMLJSMETATYPES_P_H

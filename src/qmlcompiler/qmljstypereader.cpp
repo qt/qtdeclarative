@@ -73,8 +73,8 @@ static QQmlJSScope::Ptr parseProgram(QQmlJS::AST::Program *program, const QStrin
     result->setInternalName(name);
     for (auto *statement = program->statements; statement; statement = statement->next) {
         if (auto *function = cast<FunctionDeclaration *>(statement->statement)) {
-            MetaMethod method(function->name.toString());
-            method.setMethodType(MetaMethod::Method);
+            QQmlJSMetaMethod method(function->name.toString());
+            method.setMethodType(QQmlJSMetaMethod::Method);
             for (auto *parameters = function->formals; parameters; parameters = parameters->next)
                 method.addParameter(parameters->element->bindingIdentifier.toString(), QString());
             result->addMethod(method);

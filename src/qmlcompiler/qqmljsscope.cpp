@@ -64,10 +64,10 @@ void QQmlJSScope::insertJSIdentifier(const QString &name, const JavaScriptIdenti
     }
 }
 
-void QQmlJSScope::insertPropertyIdentifier(const MetaProperty &property)
+void QQmlJSScope::insertPropertyIdentifier(const QQmlJSMetaProperty &property)
 {
     addProperty(property);
-    MetaMethod method(property.propertyName() + QLatin1String("Changed"), QLatin1String("void"));
+    QQmlJSMetaMethod method(property.propertyName() + QLatin1String("Changed"), QLatin1String("void"));
     addMethod(method);
 }
 

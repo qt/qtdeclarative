@@ -263,12 +263,12 @@ void TypeDescriptionReader::readComponent(UiObjectDefinition *ast)
 void TypeDescriptionReader::readSignalOrMethod(UiObjectDefinition *ast, bool isMethod,
                                                const QQmlJSScope::Ptr &scope)
 {
-    MetaMethod metaMethod;
+    QQmlJSMetaMethod metaMethod;
     // ### confusion between Method and Slot. Method should be removed.
     if (isMethod)
-        metaMethod.setMethodType(MetaMethod::Slot);
+        metaMethod.setMethodType(QQmlJSMetaMethod::Slot);
     else
-        metaMethod.setMethodType(MetaMethod::Signal);
+        metaMethod.setMethodType(QQmlJSMetaMethod::Signal);
 
     for (UiObjectMemberList *it = ast->initializer->members; it; it = it->next) {
         UiObjectMember *member = it->member;
@@ -352,12 +352,12 @@ void TypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQmlJSSc
         return;
     }
 
-    scope->addProperty(MetaProperty(name, type, isList, !isReadonly, isPointer, false, revision));
+    scope->addProperty(QQmlJSMetaProperty(name, type, isList, !isReadonly, isPointer, false, revision));
 }
 
 void TypeDescriptionReader::readEnum(UiObjectDefinition *ast, const QQmlJSScope::Ptr &scope)
 {
-    MetaEnum metaEnum;
+    QQmlJSMetaEnum metaEnum;
 
     for (UiObjectMemberList *it = ast->initializer->members; it; it = it->next) {
         UiObjectMember *member = it->member;
@@ -385,7 +385,7 @@ void TypeDescriptionReader::readEnum(UiObjectDefinition *ast, const QQmlJSScope:
     scope->addEnum(metaEnum);
 }
 
-void TypeDescriptionReader::readParameter(UiObjectDefinition *ast, MetaMethod *metaMethod)
+void TypeDescriptionReader::readParameter(UiObjectDefinition *ast, QQmlJSMetaMethod *metaMethod)
 {
     QString name;
     QString type;
@@ -647,7 +647,7 @@ void TypeDescriptionReader::readMetaObjectRevisions(UiScriptBinding *ast,
     }
 }
 
-void TypeDescriptionReader::readEnumValues(UiScriptBinding *ast, MetaEnum *metaEnum)
+void TypeDescriptionReader::readEnumValues(UiScriptBinding *ast, QQmlJSMetaEnum *metaEnum)
 {
     if (!ast)
         return;

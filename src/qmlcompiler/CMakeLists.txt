@@ -9,10 +9,10 @@ qt_add_module(QmlCompiler
     INTERNAL_MODULE
     SOURCES
         importedmembersvisitor.cpp importedmembersvisitor_p.h
-        metatypes_p.h
         qmljsimporter.cpp qmljsimporter_p.h
         qmljstypereader.cpp qmljstypereader_p.h
         qmlstreamwriter.cpp qmlstreamwriter_p.h
+        qqmljsmetatypes_p.h
         qqmljsscope.cpp qqmljsscope_p.h
         resourcefilemapper.cpp resourcefilemapper_p.h
         typedescriptionreader.cpp typedescriptionreader_p.h

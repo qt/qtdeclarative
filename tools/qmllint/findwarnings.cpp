@@ -337,7 +337,7 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
         const auto methods = m_currentScope->methods();
         const auto methodsRange = methods.equal_range(signal);
         for (auto method = methodsRange.first; method != methodsRange.second; ++method) {
-            if (method->methodType() != MetaMethod::Signal)
+            if (method->methodType() != QQmlJSMetaMethod::Signal)
                 continue;
 
             const auto firstSourceLocation = statement->firstSourceLocation();
@@ -355,8 +355,8 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
 bool FindWarningVisitor::visit(QQmlJS::AST::UiPublicMember *uipm)
 {
     if (uipm->type == QQmlJS::AST::UiPublicMember::Signal) {
-        MetaMethod method;
-        method.setMethodType(MetaMethod::Signal);
+        QQmlJSMetaMethod method;
+        method.setMethodType(QQmlJSMetaMethod::Signal);
         method.setMethodName(uipm->name.toString());
         QQmlJS::AST::UiParameterList *param = uipm->parameters;
         while (param) {
@@ -367,7 +367,7 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiPublicMember *uipm)
     } else {
         // property bool inactive: !active
         // extract name inactive
-        MetaProperty property(
+        QQmlJSMetaProperty property(
                 uipm->name.toString(),
                 // TODO: complex types etc.
                 uipm->memberType ? uipm->memberType->name.toString() : QString(),
@@ -479,7 +479,7 @@ void FindWarningVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExpr
     auto name = fexpr->name.toString();
     if (!name.isEmpty()) {
         if (m_currentScope->scopeType() == ScopeType::QMLScope) {
-            m_currentScope->addMethod(MetaMethod(name, QLatin1String("void")));
+            m_currentScope->addMethod(QQmlJSMetaMethod(name, QLatin1String("void")));
         } else {
             m_currentScope->insertJSIdentifier(
                         name,
@@ -569,7 +569,7 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiImport *import)
 
 bool FindWarningVisitor::visit(QQmlJS::AST::UiEnumDeclaration *uied)
 {
-    MetaEnum qmlEnum(uied->name.toString());
+    QQmlJSMetaEnum qmlEnum(uied->name.toString());
     for (const auto *member = uied->members; member; member = member->next)
         qmlEnum.addKey(member->member.toString());
     m_currentScope->addEnum(qmlEnum);
@@ -586,7 +586,7 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
 
     name.chop(1);
 
-    MetaProperty prop(uiob->qualifiedId->name.toString(), name, false, true, true,
+    QQmlJSMetaProperty prop(uiob->qualifiedId->name.toString(), name, false, true, true,
                       name == QLatin1String("alias"), 0);
     prop.setType(m_rootScopeImports.value(uiob->qualifiedTypeNameId->name.toString()));
     m_currentScope->addProperty(prop);
@@ -601,7 +601,7 @@ void FindWarningVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
 {
     const auto childScope = m_currentScope;
     leaveEnvironment();
-    MetaProperty property(uiob->qualifiedId->name.toString(),
+    QQmlJSMetaProperty property(uiob->qualifiedId->name.toString(),
                           uiob->qualifiedTypeNameId->name.toString(),
                           false, true, true,
                           uiob->qualifiedTypeNameId->name == QLatin1String("alias"),

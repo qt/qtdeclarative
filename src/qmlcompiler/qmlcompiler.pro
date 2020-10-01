@@ -17,7 +17,7 @@ HEADERS = \
     importedmembersvisitor_p.h \
     qmljsimporter_p.h \
     qmljstypereader_p.h \
-    metatypes_p.h \
+    qqmljsmetatypes_p.h \
     qqmljsscope_p.h \
     typedescriptionreader_p.h \
     qmlstreamwriter_p.h

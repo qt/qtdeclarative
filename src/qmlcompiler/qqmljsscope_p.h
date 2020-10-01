@@ -39,7 +39,7 @@
 //
 // We mean it.
 
-#include "metatypes_p.h"
+#include "qqmljsmetatypes_p.h"
 
 #include <QtQml/private/qqmljssourcelocation_p.h>
 
@@ -126,18 +126,18 @@ public:
     void insertJSIdentifier(const QString &name, const JavaScriptIdentifier &identifier);
 
     // inserts property as qml identifier as well as the corresponding
-    void insertPropertyIdentifier(const MetaProperty &prop);
+    void insertPropertyIdentifier(const QQmlJSMetaProperty &prop);
 
     bool isIdInCurrentScope(const QString &id) const;
 
     ScopeType scopeType() const { return m_scopeType; }
 
-    void addMethods(const QMultiHash<QString, MetaMethod> &methods) { m_methods.unite(methods); }
-    void addMethod(const MetaMethod &method) { m_methods.insert(method.methodName(), method); }
-    QMultiHash<QString, MetaMethod> methods() const { return m_methods; }
+    void addMethods(const QMultiHash<QString, QQmlJSMetaMethod> &methods) { m_methods.unite(methods); }
+    void addMethod(const QQmlJSMetaMethod &method) { m_methods.insert(method.methodName(), method); }
+    QMultiHash<QString, QQmlJSMetaMethod> methods() const { return m_methods; }
 
-    void addEnum(const MetaEnum &fakeEnum) { m_enums.insert(fakeEnum.name(), fakeEnum); }
-    QHash<QString, MetaEnum> enums() const { return m_enums; }
+    void addEnum(const QQmlJSMetaEnum &fakeEnum) { m_enums.insert(fakeEnum.name(), fakeEnum); }
+    QHash<QString, QQmlJSMetaEnum> enums() const { return m_enums; }
 
     QString fileName() const { return m_fileName; }
     void setFileName(const QString &file) { m_fileName = file; }
@@ -157,8 +157,8 @@ public:
     QString baseTypeName() const { return m_baseTypeName; }
     QQmlJSScope::ConstPtr baseType() const { return m_baseType; }
 
-    void addProperty(const MetaProperty &prop) { m_properties.insert(prop.propertyName(), prop); }
-    QHash<QString, MetaProperty> properties() const { return m_properties; }
+    void addProperty(const QQmlJSMetaProperty &prop) { m_properties.insert(prop.propertyName(), prop); }
+    QHash<QString, QQmlJSMetaProperty> properties() const { return m_properties; }
 
     QString defaultPropertyName() const { return m_defaultPropertyName; }
     void setDefaultPropertyName(const QString &name) { m_defaultPropertyName = name; }
@@ -195,9 +195,9 @@ private:
 
     QHash<QString, JavaScriptIdentifier> m_jsIdentifiers;
 
-    QMultiHash<QString, MetaMethod> m_methods;
-    QHash<QString, MetaProperty> m_properties;
-    QHash<QString, MetaEnum> m_enums;
+    QMultiHash<QString, QQmlJSMetaMethod> m_methods;
+    QHash<QString, QQmlJSMetaProperty> m_properties;
+    QHash<QString, QQmlJSMetaEnum> m_enums;
 
     QVector<QQmlJSScope::Ptr> m_childScopes;
     QQmlJSScope::WeakPtr m_parentScope;
