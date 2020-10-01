@@ -231,6 +231,8 @@ void TestQmlformat::testFormat_data()
                                       << "nestedFunctions.formatted.qml" << false << true;
     QTest::newRow("multiline comments") << "multilineComment.qml"
                                         << "multilineComment.formatted.qml" << false << true;
+    QTest::newRow("for of") << "forOf.qml"
+                            << "forOf.formatted.qml" << false << true;
 }
 
 void TestQmlformat::testFormat()
