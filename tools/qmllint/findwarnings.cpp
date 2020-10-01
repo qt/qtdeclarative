@@ -29,7 +29,6 @@
 #include "findwarnings.h"
 #include "checkidentifiers.h"
 
-#include <QtQmlCompiler/private/importedmembersvisitor_p.h>
 #include <QtQmlCompiler/private/qqmljsscope_p.h>
 #include <QtQmlCompiler/private/typedescriptionreader_p.h>
 #include <QtQmlCompiler/private/qmljstypereader_p.h>

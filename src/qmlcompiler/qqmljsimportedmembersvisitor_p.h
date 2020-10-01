@@ -26,8 +26,8 @@
 **
 ****************************************************************************/
 
-#ifndef IMPORTEDMEMBERSVISITOR_H
-#define IMPORTEDMEMBERSVISITOR_H
+#ifndef QQMLJSIMPORTEDMEMBERSVISITOR_P_H
+#define QQMLJSIMPORTEDMEMBERSVISITOR_P_H
 
 //
 //  W A R N I N G
@@ -43,7 +43,7 @@
 
 #include <private/qqmljsast_p.h>
 
-class ImportedMembersVisitor : public QQmlJS::AST::Visitor
+class QQmlJSImportedMembersVisitor : public QQmlJS::AST::Visitor
 {
 public:
     QQmlJSScope::Ptr result(const QString &scopeName) const;
@@ -67,4 +67,4 @@ private:
     QStringList m_errors;
 };
 
-#endif // IMPORTEDMEMBERSVISITOR_H
+#endif // QQMLJSIMPORTEDMEMBERSVISITOR_P_H

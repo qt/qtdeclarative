@@ -8,10 +8,10 @@ qt_add_module(QmlCompiler
     STATIC
     INTERNAL_MODULE
     SOURCES
-        importedmembersvisitor.cpp importedmembersvisitor_p.h
         qmljsimporter.cpp qmljsimporter_p.h
         qmljstypereader.cpp qmljstypereader_p.h
         qmlstreamwriter.cpp qmlstreamwriter_p.h
+        qqmljsimportedmembersvisitor.cpp qqmljsimportedmembersvisitor_p.h
         qqmljsmetatypes_p.h
         qqmljsscope.cpp qqmljsscope_p.h
         resourcefilemapper.cpp resourcefilemapper_p.h
