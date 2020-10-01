@@ -785,14 +785,14 @@ if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
 endif()
 
 
-# Enable the qt6_quick_compiler_process_resources function in qt6_add_resource()
+# Enable the _qt_internal_quick_compiler_process_resources function in qt6_add_resource()
 set(QT6_ADD_RESOURCE_DECLARATIVE_EXTENSIONS TRUE)
 
 # Inspect all files passed to a call to qt_add_resource. If there are any
 # files present, invoke the quick compiler and return the remaining resource
 # files that have not been processed in OUTPUT_REMAINING_RESOURCES as well as the new
 # name for the resource in OUTPUT_RESOURCE_NAME.
-function(qt6_quick_compiler_process_resources target resource_name)
+function(_qt_internal_quick_compiler_process_resources target resource_name)
 
     cmake_parse_arguments(arg
         "" "PREFIX;OUTPUT_REMAINING_RESOURCES;OUTPUT_RESOURCE_NAME;OUTPUT_GENERATED_TARGET" "FILES" ${ARGN}
