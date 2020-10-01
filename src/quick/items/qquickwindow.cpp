@@ -869,7 +869,7 @@ QMouseEvent QQuickWindowPrivate::touchToMouseEvent(QEvent::Type type, const QEve
     ret.setAccepted(true);
     ret.setTimestamp(event->timestamp());
     static_assert(sizeof(QMutableSinglePointEvent) == sizeof(QMouseEvent));
-    return *reinterpret_cast<QMouseEvent*>(&ret);
+    return *static_cast<QMouseEvent*>(static_cast<QSinglePointEvent*>(&ret));
 }
 
 bool QQuickWindowPrivate::checkIfDoubleTapped(ulong newPressEventTimestamp, QPoint newPressPos)
