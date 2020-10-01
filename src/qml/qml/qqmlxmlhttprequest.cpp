@@ -1855,7 +1855,6 @@ ReturnedValue QQmlXMLHttpRequestCtor::method_setRequestHeader(const FunctionObje
         nameUpper == QLatin1String("TRAILER") ||
         nameUpper == QLatin1String("TRANSFER-ENCODING") ||
         nameUpper == QLatin1String("UPGRADE") ||
-        nameUpper == QLatin1String("USER-AGENT") ||
         nameUpper == QLatin1String("VIA") ||
         nameUpper.startsWith(QLatin1String("PROXY-")) ||
         nameUpper.startsWith(QLatin1String("SEC-")))

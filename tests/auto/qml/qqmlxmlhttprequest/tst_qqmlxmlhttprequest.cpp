@@ -455,7 +455,6 @@ void tst_qqmlxmlhttprequest::setRequestHeader_illegalName_data()
     QTest::newRow("Trailer") << "TraILEr";
     QTest::newRow("Transfer-Encoding") << "tRANsfer-Encoding";
     QTest::newRow("Upgrade") << "UpgrADe";
-    QTest::newRow("User-Agent") << "uSEr-Agent";
     QTest::newRow("Via") << "vIa";
     QTest::newRow("Proxy-") << "ProXy-";
     QTest::newRow("Sec-") << "SeC-";
