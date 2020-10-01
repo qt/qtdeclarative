@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the tools applications of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:GPL-EXCEPT$
 ** Commercial License Usage
@@ -25,9 +25,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
-#ifndef IMPORTEDMEMBERSVISITOR_H
-#define IMPORTEDMEMBERSVISITOR_H
+#ifndef RESOURCEFILEMAPPER_H
+#define RESOURCEFILEMAPPER_H
 
 //
 //  W A R N I N G
@@ -39,33 +38,27 @@
 //
 // We mean it.
 
-#include "scopetree.h"
-#include "qcoloroutput.h"
+#include <QStringList>
+#include <QHash>
+#include <QFile>
 
-#include <private/qqmljsast_p.h>
-
-class ImportedMembersVisitor : public QQmlJS::AST::Visitor
+struct ResourceFileMapper
 {
-public:
-    ScopeTree::Ptr result(const QString &scopeName) const;
-    QStringList errors() const { return m_errors; }
+    enum class FileOutput {
+        RelativeFilePath,
+        AbsoluteFilePath
+    };
+    ResourceFileMapper(const QStringList &resourceFiles);
+
+    bool isEmpty() const;
+
+    QStringList resourcePaths(const QString &fileName);
+    QStringList qmlCompilerFiles(FileOutput fo = FileOutput::RelativeFilePath) const;
 
 private:
-    bool visit(QQmlJS::AST::UiObjectDefinition *) override;
-    void endVisit(QQmlJS::AST::UiObjectDefinition *) override;
-    bool visit(QQmlJS::AST::UiPublicMember *) override;
-    bool visit(QQmlJS::AST::UiSourceElement *) override;
-    bool visit(QQmlJS::AST::UiScriptBinding *) override;
-    bool visit(QQmlJS::AST::UiEnumDeclaration *uied) override;
-    void throwRecursionDepthError() override;
+    void populateFromQrcFile(QFile &file);
 
-    ScopeTree::Ptr currentObject() const { return m_currentObjects.back(); }
-
-    QVector<ScopeTree::Ptr> m_currentObjects;
-    ScopeTree::ConstPtr m_rootObject;
-    QHash<QString, ScopeTree::Ptr> m_objects;
-
-    QStringList m_errors;
+    QHash<QString, QString> qrcPathToFileSystemPath;
 };
 
-#endif // IMPORTEDMEMBERSVISITOR_H
+#endif // RESOURCEFILEMAPPER_H

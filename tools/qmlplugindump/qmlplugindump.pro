@@ -5,15 +5,18 @@ CONFIG += no_import_scan
 
 QTPLUGIN.platforms = qminimal
 
-include(../shared/shared.pri)
+# We cannot use libQmlCompiler as that is built for the host
+# and qmlplugindump needs to be built for the target.
+
+INCLUDEPATH += $$PWD/../../src/qmlcompiler
 
 SOURCES += \
-    $$QMLSTREAMWRITER_SOURCES \
+    ../../src/qmlcompiler/qmlstreamwriter.cpp \
     main.cpp \
     qmltypereader.cpp
 
 HEADERS += \
-    $$QMLSTREAMWRITER_HEADERS \
+    ../../src/qmlcompiler/qmlstreamwriter_p.h \
     qmltypereader.h
 
 macx {

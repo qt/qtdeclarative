@@ -26,9 +26,9 @@
 **
 ****************************************************************************/
 
-#include "qmljsimporter.h"
-#include "typedescriptionreader.h"
-#include "qmljstypereader.h"
+#include "qmljsimporter_p.h"
+#include "typedescriptionreader_p.h"
+#include "qmljstypereader_p.h"
 
 #include <QtQml/private/qqmlimportresolver_p.h>
 
@@ -40,7 +40,7 @@ static const QLatin1String SlashPluginsDotQmltypes = QLatin1String("/plugins.qml
 
 static const QString prefixedName(const QString &prefix, const QString &name)
 {
-    Q_ASSERT(!prefix.endsWith('.'));
+    Q_ASSERT(!prefix.endsWith(u'.'));
     return prefix.isEmpty() ? name : (prefix  + QLatin1Char('.') + name);
 }
 
@@ -49,7 +49,7 @@ static QQmlDirParser createQmldirParserForFile(const QString &filename)
     QFile f(filename);
     f.open(QFile::ReadOnly);
     QQmlDirParser parser;
-    parser.parse(f.readAll());
+    parser.parse(QString::fromUtf8(f.readAll()));
     return parser;
 }
 
@@ -69,7 +69,7 @@ void QmlJSImporter::readQmltypes(
 
     QFile file(filename);
     file.open(QFile::ReadOnly);
-    TypeDescriptionReader reader { filename, file.readAll() };
+    TypeDescriptionReader reader { filename, QString::fromUtf8(file.readAll()) };
     QStringList dependencies;
     auto succ = reader(objects, &dependencies);
     if (!succ)

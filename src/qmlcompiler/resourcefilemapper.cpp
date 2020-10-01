@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 
-#include "resourcefilemapper.h"
+#include "resourcefilemapper_p.h"
 
 #include <QFileInfo>
 #include <QDir>

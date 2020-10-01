@@ -9,7 +9,7 @@ qt_add_tool(${target_name}
     TARGET_DESCRIPTION "QML Types Registrar"
     TOOLS_TARGET Qml # special case
     SOURCES
-        ../../tools/shared/qmlstreamwriter.cpp ../../tools/shared/qmlstreamwriter.h
+        ../qmlcompiler/qmlstreamwriter.cpp ../qmlcompiler/qmlstreamwriter_p.h
         qmltyperegistrar.cpp
         qmltypesclassdescription.cpp qmltypesclassdescription.h
         qmltypescreator.cpp qmltypescreator.h
@@ -17,7 +17,7 @@ qt_add_tool(${target_name}
         QT_NO_CAST_FROM_ASCII
         QT_NO_CAST_TO_ASCII
     INCLUDE_DIRECTORIES
-        ../../tools/shared
+        ../qmlcompiler
     PUBLIC_LIBRARIES
         Qt::CorePrivate
 )

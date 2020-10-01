@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 
-#include "qmlstreamwriter.h"
+#include "qmlstreamwriter_p.h"
 
 #include <QtCore/QBuffer>
 #include <QtCore/QStringList>

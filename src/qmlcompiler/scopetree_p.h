@@ -39,7 +39,7 @@
 //
 // We mean it.
 
-#include "metatypes.h"
+#include "metatypes_p.h"
 
 #include <QtQml/private/qqmljssourcelocation_p.h>
 

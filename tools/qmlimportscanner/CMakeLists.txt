@@ -9,14 +9,12 @@ qt_add_tool(${target_name}
     TARGET_DESCRIPTION "QML Import Scanner"
     TOOLS_TARGET Qml # special case
     SOURCES
-        ../shared/resourcefilemapper.cpp ../shared/resourcefilemapper.h
         main.cpp
     DEFINES
         QT_NO_CAST_FROM_ASCII
         QT_NO_CAST_TO_ASCII
-    INCLUDE_DIRECTORIES
-        ../shared
     PUBLIC_LIBRARIES
+        Qt::QmlCompilerPrivate
         Qt::QmlDevToolsPrivate
 )
 

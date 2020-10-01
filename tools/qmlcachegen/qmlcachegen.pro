@@ -1,18 +1,12 @@
 option(host_build)
 
-QT = qmldevtools-private
+QT = qmldevtools-private qmlcompiler-private
 DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
 
-include(../shared/shared.pri)
-
 SOURCES = \
-    $$RESOURCEFILEMAPPER_SOURCES \
     qmlcachegen.cpp \
     resourcefilter.cpp \
     generateloader.cpp
-
-HEADERS = \
-    $$RESOURCEFILEMAPPER_HEADERS
 
 TARGET = qmlcachegen
 

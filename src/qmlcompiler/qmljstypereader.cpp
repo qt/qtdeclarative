@@ -26,8 +26,8 @@
 **
 ****************************************************************************/
 
-#include "qmljstypereader.h"
-#include "importedmembersvisitor.h"
+#include "qmljstypereader_p.h"
+#include "importedmembersvisitor_p.h"
 
 #include <QtQml/private/qqmljsast_p.h>
 #include <QtQml/private/qqmljsengine_p.h>

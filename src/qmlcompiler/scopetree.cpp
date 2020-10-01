@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 
-#include "scopetree.h"
+#include "scopetree_p.h"
 
 #include <QtCore/qqueue.h>
 #include <QtCore/qsharedpointer.h>

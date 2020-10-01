@@ -9,11 +9,11 @@ qt_add_tool(${target_name}
     TARGET_DESCRIPTION "QML Plugin Metadata Dumper"
     TOOLS_TARGET Qml # special case
     SOURCES
-        ../shared/qmlstreamwriter.cpp ../shared/qmlstreamwriter.h
+        ../../src/qmlcompiler/qmlstreamwriter.cpp ../../src/qmlcompiler/qmlstreamwriter_p.h
         main.cpp
         qmltypereader.cpp qmltypereader.h
     INCLUDE_DIRECTORIES
-        ../shared
+        ../../src/qmlcompiler
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::Gui

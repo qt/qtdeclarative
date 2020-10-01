@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the QtQml module of the Qt Toolkit.
+** This file is part of the tools applications of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:GPL-EXCEPT$
 ** Commercial License Usage
@@ -25,30 +25,46 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#ifndef RESOURCEFILEMAPPER_H
-#define RESOURCEFILEMAPPER_H
 
-#include <QStringList>
-#include <QHash>
-#include <QFile>
+#ifndef QMLJSTYPERADER_H
+#define QMLJSTYPERADER_H
 
-struct ResourceFileMapper
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+
+#include "scopetree_p.h"
+
+#include <QtQml/private/qqmljsastfwd_p.h>
+
+#include <QtCore/qpair.h>
+#include <QtCore/qset.h>
+
+class QmlJSTypeReader
 {
-    enum class FileOutput {
-        RelativeFilePath,
-        AbsoluteFilePath
+public:
+    struct Import {
+        QString module;
+        QTypeRevision version;
+        QString prefix;
     };
-    ResourceFileMapper(const QStringList &resourceFiles);
 
-    bool isEmpty() const;
+    QmlJSTypeReader(const QString &file) : m_file(file) {}
 
-    QStringList resourcePaths(const QString &fileName);
-    QStringList qmlCompilerFiles(FileOutput fo = FileOutput::RelativeFilePath) const;
+    ScopeTree::Ptr operator()();
+    QList<Import> imports() const { return m_imports; }
+    QStringList errors() const { return m_errors; }
 
 private:
-    void populateFromQrcFile(QFile &file);
-
-    QHash<QString, QString> qrcPathToFileSystemPath;
+    QString m_file;
+    QList<Import> m_imports;
+    QStringList m_errors;
 };
 
-#endif // RESOURCEFILEMAPPER_H
+#endif // QMLJSTYPEREADER_H

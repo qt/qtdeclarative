@@ -39,7 +39,7 @@
 //
 // We mean it.
 
-#include "scopetree.h"
+#include "scopetree_p.h"
 #include <QtQml/private/qqmldirparser_p.h>
 
 class QmlJSImporter

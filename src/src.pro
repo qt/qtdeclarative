@@ -38,9 +38,15 @@ SUBDIRS += \
     plugins \
     imports
 
-qtConfig(qml-devtools): SUBDIRS += qmldevtools
+qtConfig(qml-devtools) {
+    SUBDIRS += \
+        qmldevtools \
+        qmlcompiler
 
-qmldevtools.depends = qml
+    qmldevtools.depends = qml
+    qmlcompiler.depends = qmldevtools
+}
+
 
 qtConfig(qml-network) {
     QT_FOR_CONFIG += network

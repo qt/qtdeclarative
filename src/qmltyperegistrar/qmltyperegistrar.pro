@@ -5,16 +5,19 @@ DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
 
 QMAKE_TARGET_DESCRIPTION = QML Types Registrar
 
-include(../../tools/shared/shared.pri)
+# We cannot link against libQmlCompiler as qmltyperegistrar
+# has to be built before libQmlCompiler.
+
+INCLUDEPATH += $$PWD/../qmlcompiler
 
 SOURCES += \
-    $$QMLSTREAMWRITER_SOURCES \
+    ../qmlcompiler/qmlstreamwriter.cpp \
     qmltyperegistrar.cpp \
     qmltypesclassdescription.cpp \
     qmltypescreator.cpp
 
 HEADERS += \
-    $$QMLSTREAMWRITER_HEADERS \
+    ../qmlcompiler/qmlstreamwriter_p.h \
     qmltypesclassdescription.h \
     qmltypescreator.h
 

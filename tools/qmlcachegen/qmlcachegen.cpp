@@ -40,8 +40,7 @@
 #include <private/qqmlirbuilder_p.h>
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljslexer_p.h>
-
-#include "resourcefilemapper.h"
+#include <private/resourcefilemapper_p.h>
 
 #include <algorithm>
 

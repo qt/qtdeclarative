@@ -26,8 +26,8 @@
 **
 ****************************************************************************/
 
-#include "importedmembersvisitor.h"
-#include "scopetree.h"
+#include "importedmembersvisitor_p.h"
+#include "scopetree_p.h"
 
 using namespace QQmlJS::AST;
 
@@ -138,7 +138,7 @@ bool ImportedMembersVisitor::visit(UiSourceElement *sourceElement)
     } else {
         const auto loc = sourceElement->firstSourceLocation();
         m_errors.append(
-                    "unsupportedd sourceElement at "
+                    QStringLiteral("unsupportedd sourceElement at ")
                     + QString::fromLatin1("%1:%2: ").arg(loc.startLine).arg(loc.startColumn)
                     + QString::number(sourceElement->sourceElement->kind));
     }

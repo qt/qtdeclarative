@@ -1,0 +1,1 @@
+// We need this because qmake insists on including it and QtBootstrap doesn't ship it.

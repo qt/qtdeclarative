@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 
-#include "typedescriptionreader.h"
+#include "typedescriptionreader_p.h"
 
 #include <QtQml/private/qqmljsparser_p.h>
 #include <QtQml/private/qqmljslexer_p.h>

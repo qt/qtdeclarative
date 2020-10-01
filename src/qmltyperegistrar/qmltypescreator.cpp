@@ -27,7 +27,6 @@
 ****************************************************************************/
 
 #include "qmltypescreator.h"
-#include "qmlstreamwriter.h"
 #include "qmltypesclassdescription.h"
 
 #include <QtCore/qset.h>

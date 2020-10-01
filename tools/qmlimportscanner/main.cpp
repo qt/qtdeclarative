@@ -34,6 +34,7 @@
 #include <private/qqmlirbuilder_p.h>
 #include <private/qqmljsdiagnosticmessage_p.h>
 #include <private/qqmldirparser_p.h>
+#include <private/resourcefilemapper_p.h>
 
 #include <QtCore/QCoreApplication>
 #include <QtCore/QDir>
@@ -49,8 +50,6 @@
 #include <QtCore/QJsonArray>
 #include <QtCore/QJsonDocument>
 #include <QtCore/QLibraryInfo>
-
-#include <resourcefilemapper.h>
 
 #include <iostream>
 #include <algorithm>

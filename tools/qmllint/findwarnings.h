@@ -39,11 +39,12 @@
 //
 // We mean it.
 
-#include "typedescriptionreader.h"
-#include "scopetree.h"
 #include "qcoloroutput.h"
-#include "qmljsimporter.h"
 #include "checkidentifiers.h"
+
+#include <QtQmlCompiler/private/typedescriptionreader_p.h>
+#include <QtQmlCompiler/private/scopetree_p.h>
+#include <QtQmlCompiler/private/qmljsimporter_p.h>
 
 #include <QtQml/private/qqmldirparser_p.h>
 #include <QtQml/private/qqmljsastvisitor_p.h>

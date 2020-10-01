@@ -60,7 +60,7 @@
 #include <algorithm>
 
 #include "qmltypereader.h"
-#include "qmlstreamwriter.h"
+#include "qmlstreamwriter_p.h"
 
 #ifdef QT_SIMULATOR
 #include <QtGui/private/qsimulatorconnection_p.h>

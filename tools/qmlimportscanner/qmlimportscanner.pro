@@ -1,16 +1,10 @@
 option(host_build)
 
-QT = core qmldevtools-private
+QT = core qmldevtools-private qmlcompiler-private
 DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
 
-include(../shared/shared.pri)
-
 SOURCES += \
-    $$RESOURCEFILEMAPPER_SOURCES \
     main.cpp
-
-HEADERS += \
-    $$RESOURCEFILEMAPPER_HEADERS
 
 load(cmake_functions)
 

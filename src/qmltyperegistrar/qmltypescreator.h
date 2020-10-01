@@ -29,8 +29,8 @@
 #ifndef QMLTYPESCREATOR_H
 #define QMLTYPESCREATOR_H
 
-#include "qmlstreamwriter.h"
 #include "qmltypesclassdescription.h"
+#include "qmlstreamwriter_p.h"
 
 #include <QtCore/qstring.h>
 #include <QtCore/qset.h>

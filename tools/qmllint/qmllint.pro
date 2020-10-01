@@ -1,11 +1,8 @@
 option(host_build)
 
-QT = core-private qmldevtools-private
-
-include(../shared/shared.pri)
+QT = core-private qmldevtools-private qmlcompiler-private
 
 SOURCES += \
-    $$METATYPEREADER_SOURCES \
     checkidentifiers.cpp \
     main.cpp \
     findwarnings.cpp \
@@ -16,7 +13,6 @@ QMAKE_TARGET_DESCRIPTION = QML Syntax Verifier
 load(qt_tool)
 
 HEADERS += \
-    $$METATYPEREADER_HEADERS \
     checkidentifiers.h \
     findwarnings.h \
     qcoloroutput.h

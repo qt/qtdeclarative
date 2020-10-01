@@ -29,8 +29,8 @@
 #ifndef CHECKIDENTIFIERS_H
 #define CHECKIDENTIFIERS_H
 
-#include "scopetree.h"
-#include "qmljsimporter.h"
+#include <QtQmlCompiler/private/scopetree_p.h>
+#include <QtQmlCompiler/private/qmljsimporter_p.h>
 
 class ColorOutput;
 

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the tools applications of the Qt Toolkit.
@@ -26,8 +26,8 @@
 **
 ****************************************************************************/
 
-#ifndef QMLJSTYPERADER_H
-#define QMLJSTYPERADER_H
+#ifndef QMLSTREAMWRITER_H
+#define QMLSTREAMWRITER_H
 
 //
 //  W A R N I N G
@@ -39,32 +39,39 @@
 //
 // We mean it.
 
-#include "scopetree.h"
+#include <QtCore/QIODevice>
+#include <QtCore/QList>
+#include <QtCore/QString>
+#include <QtCore/QScopedPointer>
+#include <QtCore/QPair>
 
-#include <QtQml/private/qqmljsastfwd_p.h>
-
-#include <QtCore/qpair.h>
-#include <QtCore/qset.h>
-
-class QmlJSTypeReader
+class QmlStreamWriter
 {
 public:
-    struct Import {
-        QString module;
-        QTypeRevision version;
-        QString prefix;
-    };
+    QmlStreamWriter(QByteArray *array);
 
-    QmlJSTypeReader(const QString &file) : m_file(file) {}
-
-    ScopeTree::Ptr operator()();
-    QList<Import> imports() const { return m_imports; }
-    QStringList errors() const { return m_errors; }
+    void writeStartDocument();
+    void writeEndDocument();
+    void writeLibraryImport(const QString &uri, int majorVersion, int minorVersion, const QString &as = QString());
+    //void writeFilesystemImport(const QString &file, const QString &as = QString());
+    void writeStartObject(const QString &component);
+    void writeEndObject();
+    void writeScriptBinding(const QString &name, const QString &rhs);
+    void writeScriptObjectLiteralBinding(const QString &name, const QList<QPair<QString, QString> > &keyValue);
+    void writeArrayBinding(const QString &name, const QStringList &elements);
+    void write(const QString &data);
+    void writeBooleanBinding(const QString &name, bool value);
 
 private:
-    QString m_file;
-    QList<Import> m_imports;
-    QStringList m_errors;
+    void writeIndent();
+    void writePotentialLine(const QByteArray &line);
+    void flushPotentialLinesWithNewlines();
+
+    int m_indentDepth;
+    QList<QByteArray> m_pendingLines;
+    int m_pendingLineLength;
+    bool m_maybeOneline;
+    QScopedPointer<QIODevice> m_stream;
 };
 
-#endif // QMLJSTYPEREADER_H
+#endif // QMLSTREAMWRITER_H

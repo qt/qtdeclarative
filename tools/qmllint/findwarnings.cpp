@@ -27,11 +27,12 @@
 ****************************************************************************/
 
 #include "findwarnings.h"
-#include "importedmembersvisitor.h"
-#include "scopetree.h"
-#include "typedescriptionreader.h"
 #include "checkidentifiers.h"
-#include "qmljstypereader.h"
+
+#include <QtQmlCompiler/private/importedmembersvisitor_p.h>
+#include <QtQmlCompiler/private/scopetree_p.h>
+#include <QtQmlCompiler/private/typedescriptionreader_p.h>
+#include <QtQmlCompiler/private/qmljstypereader_p.h>
 
 #include <QtQml/private/qqmljsast_p.h>
 #include <QtQml/private/qqmljslexer_p.h>
