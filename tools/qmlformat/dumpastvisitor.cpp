@@ -236,7 +236,10 @@ QString DumpAstVisitor::parsePatternElement(PatternElement *element, bool scope)
             }
         }
 
-        result += element->bindingIdentifier.toString();
+        if (element->bindingIdentifier.isEmpty())
+            result += parseExpression(element->bindingTarget);
+        else
+            result += element->bindingIdentifier.toString();
 
         if (element->typeAnnotation != nullptr)
             result += ": " + parseType(element->typeAnnotation->type);

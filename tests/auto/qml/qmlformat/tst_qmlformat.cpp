@@ -61,6 +61,7 @@ private Q_SLOTS:
     void testNestedIf();
 
     void testNestedFunctions();
+    void testForOf();
 
 #if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
     void testExample();
@@ -284,6 +285,12 @@ void TestQmlformat::testNestedFunctions()
 {
     QCOMPARE(runQmlformat(testFile("nestedFunctions.qml"), false, true),
              readTestFile("nestedFunctions.formatted.qml"));
+}
+
+void TestQmlformat::testForOf()
+{
+    QCOMPARE(runQmlformat(testFile("forOf.qml"), false, true),
+             readTestFile("forOf.formatted.qml"));
 }
 
 #if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
