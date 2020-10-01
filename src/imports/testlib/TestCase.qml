@@ -1550,11 +1550,14 @@ Item {
     }
 
     /*!
-        \qmlmethod TestCase::mouseMove(item, x, y, delay = -1)
+        \qmlmethod TestCase::mouseMove(item, x = item.width / 2, y = item.height / 2, delay = -1, buttons = Qt.NoButton)
 
         Moves the mouse pointer to the position given by \a x and \a y within
-        \a item.  If a \a delay (in milliseconds) is given, the test will wait
-        before moving the mouse pointer.
+        \a item, while holding \a buttons if given. Since Qt 6.0, if \a x and
+        \a y are not defined, the position will be the center of \a item.
+
+        If a \a delay (in milliseconds) is given, the test will wait before
+        moving the mouse pointer.
 
         The position given by \a x and \a y is transformed from the co-ordinate
         system of \a item into window co-ordinates and then delivered.
@@ -1571,6 +1574,10 @@ Item {
             delay = -1
         if (buttons == undefined)
             buttons = Qt.NoButton
+        if (x === undefined)
+            x = item.width / 2
+        if (y === undefined)
+            y = item.height / 2
         if (!qtest_events.mouseMove(item, x, y, delay, buttons))
             qtest_fail("window not shown", 2)
     }
