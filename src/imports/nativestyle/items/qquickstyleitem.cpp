@@ -226,6 +226,7 @@ void QQuickStyleItem::updateGeometry()
 
     const QQuickStyleMargins oldContentPadding = contentPadding();
     const QQuickStyleMargins oldLayoutMargins = layoutMargins();
+    const QSize oldMinimumSize = minimumSize();
 
     m_styleItemGeometry = calculateGeometry();
 
@@ -245,6 +246,8 @@ void QQuickStyleItem::updateGeometry()
         emit contentPaddingChanged();
     if (layoutMargins() != oldLayoutMargins)
         emit layoutMarginsChanged();
+    if (minimumSize() != oldMinimumSize)
+        emit minimumSizeChanged();
 
     setImplicitSize(m_styleItemGeometry.implicitSize.width(), m_styleItemGeometry.implicitSize.height());
 
@@ -435,6 +438,13 @@ QQuickStyleMargins QQuickStyleItem::layoutMargins() const
     // layoutRect will then inform where the frame of the control is.
     const QRect outerRect(QPoint(0, 0), m_styleItemGeometry.implicitSize);
     return QQuickStyleMargins(outerRect, m_styleItemGeometry.layoutRect);
+}
+
+QSize QQuickStyleItem::minimumSize()
+{
+    // The style item should not be scaled below this size.
+    // Otherwise the image will be truncated.
+    return m_styleItemGeometry.minimumSize;
 }
 
 qreal QQuickStyleItem::focusFrameRadius() const
