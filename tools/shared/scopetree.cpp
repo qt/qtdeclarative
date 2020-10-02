@@ -190,15 +190,6 @@ void ScopeTree::setExportMetaObjectRevision(int exportIndex, int metaObjectRevis
     m_exports[exportIndex].setMetaObjectRevision(metaObjectRevision);
 }
 
-void ScopeTree::updateParentProperty(const ScopeTree::ConstPtr &scope)
-{
-    auto it = m_properties.find(QLatin1String("parent"));
-    if (it != m_properties.end()
-            && scope->baseTypeName() != QLatin1String("Component")
-            && scope->internalName() != QLatin1String("program"))
-        it->setType(scope);
-}
-
 ScopeTree::Export::Export(QString package, QString type, const ComponentVersion &version,
                           int metaObjectRevision) :
     m_package(std::move(package)),

@@ -902,7 +902,19 @@ void FindWarningVisitor::endVisit(QQmlJS::AST::UiObjectDefinition *)
 {
     auto childScope = m_currentScope;
     leaveEnvironment();
-    childScope->updateParentProperty(m_currentScope);
+
+    if (m_currentScope->baseTypeName() == QStringLiteral("Component")
+            || m_currentScope->baseTypeName() == QStringLiteral("program")) {
+        return;
+    }
+
+    const auto properties = childScope->properties();
+    const auto it = properties.find(QStringLiteral("parent"));
+    if (it != properties.end()) {
+        auto property = *it;
+        property.setType(m_currentScope);
+        childScope->addProperty(property);
+    }
 }
 
 bool FindWarningVisitor::visit(QQmlJS::AST::FieldMemberExpression *)

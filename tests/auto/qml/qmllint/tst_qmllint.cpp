@@ -203,6 +203,10 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("nanchors1.qml")
             << QString()
             << QString();
+    QTest::newRow("nanchors2")
+            << QStringLiteral("nanchors2.qml")
+            << QString()
+            << QString();
     QTest::newRow("nanchors3")
             << QStringLiteral("nanchors3.qml")
             << QString()
@@ -221,6 +225,7 @@ void TestQmllint::dirtyQmlCode()
         QVERIFY(process.waitForFinished());
         QCOMPARE(process.exitStatus(), QProcess::NormalExit);
         QEXPECT_FAIL("nanchors1", "Invalid grouped properties are not detected", Abort);
+        QEXPECT_FAIL("nanchors2", "Invalid grouped properties are not detected", Abort);
         QEXPECT_FAIL("nanchors3", "Invalid grouped properties are not detected", Abort);
         QVERIFY(process.exitCode() != 0);
     });
@@ -262,6 +267,7 @@ void TestQmllint::cleanQmlCode_data()
             << QStringLiteral("javascriptMethodsInModuleGood.qml");
     QTest::newRow("enumFromQtQml") << QStringLiteral("enumFromQtQml.qml");
     QTest::newRow("anchors1") << QStringLiteral("anchors1.qml");
+    QTest::newRow("anchors2") << QStringLiteral("anchors2.qml");
     QTest::newRow("anchors3") << QStringLiteral("anchors3.qml");
 }
 
