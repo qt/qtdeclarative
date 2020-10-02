@@ -125,7 +125,7 @@ QQuickFocusFrameDescription QQuickMacFocusFrame::getDescriptionForItem(QQuickIte
     // editable ComboBox). In that case, resolve the actual control first.
     const auto proxy = focusItem->property("__focusFrameControl").value<QQuickItem *>();
     const auto control = proxy ? proxy : focusItem;
-    const auto target = control->property("__focusFrameTarget").value<QQuickItem *>();
+    auto target = control->property("__focusFrameTarget").value<QQuickItem *>();
     qCDebug(lcFocusFrame) << "target:" << target;
     qCDebug(lcFocusFrame) << "control:" << control;
 
@@ -144,6 +144,27 @@ QQuickFocusFrameDescription QQuickMacFocusFrame::getDescriptionForItem(QQuickIte
         // way for custom controls to get a native focus frame is for us to offer
         // a FocusFrame control (QTBUG-86818).
         return QQuickFocusFrameDescription::Invalid;
+    }
+
+    if (qobject_cast<QQuickTextArea *>(target)) {
+        // Special case: if the target is a TextArea, we check if it's the only
+        // child inside a ScrollArea, Flickable, or Frame. If that is the case, we
+        // redirect the focus frame to be around the container instead.
+        const auto parent1 = target->parentItem();
+        if (parent1 && parent1->childItems().count() == 1) {
+            const auto parent2 = parent1->parentItem();
+            const auto parent3 = parent2 ? parent2->parentItem() : nullptr;
+            if (qobject_cast<QQuickScrollView *>(parent3)) {
+                target = parent3;
+                qCDebug(lcFocusFrame) << "redirecting target to ScrollView:" << target;
+            } else if (qobject_cast<QQuickFlickable *>(parent2)) {
+                target = parent2;
+                qCDebug(lcFocusFrame) << "redirecting target to Flickable:" << target;
+            } else if (qobject_cast<QQuickFrame *>(parent2)) {
+                target = parent2;
+                qCDebug(lcFocusFrame) << "redirecting target to Frame:" << target;
+            }
+        }
     }
 
     // If the control gives us a QQuickStyleItem, we use that to configure the focus frame.
