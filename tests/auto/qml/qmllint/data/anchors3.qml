@@ -1,6 +1,6 @@
 import QtQuick 2.15
 
-Rectangle {   
+Rectangle {
     anchors.horizontalCenter: parent
     anchors.verticalCenter: parent
 }

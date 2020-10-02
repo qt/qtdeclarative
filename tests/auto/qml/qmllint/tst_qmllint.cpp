@@ -199,6 +199,10 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("badEnumFromQtQml.qml")
             << QString("Warning: Property \"Linear123\" not found on type \"QQmlEasingEnums\"")
             << QString();
+    QTest::newRow("anchors3")
+            << QStringLiteral("anchors3.qml")
+            << QString()
+            << QString();
     QTest::newRow("nanchors1")
             << QStringLiteral("nanchors1.qml")
             << QString()
@@ -224,6 +228,7 @@ void TestQmllint::dirtyQmlCode()
     const QString output = runQmllint(filename, [&](QProcess &process) {
         QVERIFY(process.waitForFinished());
         QCOMPARE(process.exitStatus(), QProcess::NormalExit);
+        QEXPECT_FAIL("anchors3", "We don't see that QQuickItem cannot be assigned to QQuickAnchorLine", Abort);
         QEXPECT_FAIL("nanchors1", "Invalid grouped properties are not detected", Abort);
         QEXPECT_FAIL("nanchors2", "Invalid grouped properties are not detected", Abort);
         QEXPECT_FAIL("nanchors3", "Invalid grouped properties are not detected", Abort);
@@ -268,7 +273,6 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("enumFromQtQml") << QStringLiteral("enumFromQtQml.qml");
     QTest::newRow("anchors1") << QStringLiteral("anchors1.qml");
     QTest::newRow("anchors2") << QStringLiteral("anchors2.qml");
-    QTest::newRow("anchors3") << QStringLiteral("anchors3.qml");
 }
 
 void TestQmllint::cleanQmlCode()
