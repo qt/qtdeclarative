@@ -26,8 +26,8 @@
 **
 ****************************************************************************/
 
-#ifndef TYPEDESCRIPTIONREADER_H
-#define TYPEDESCRIPTIONREADER_H
+#ifndef QQMLJSTYPEDESCRIPTIONREADER_P_H
+#define QQMLJSTYPEDESCRIPTIONREADER_P_H
 
 //
 //  W A R N I N G
@@ -46,12 +46,12 @@
 // for Q_DECLARE_TR_FUNCTIONS
 #include <QtCore/qcoreapplication.h>
 
-class TypeDescriptionReader
+class QQmlJSTypeDescriptionReader
 {
-    Q_DECLARE_TR_FUNCTIONS(TypeDescriptionReader)
+    Q_DECLARE_TR_FUNCTIONS(QQmlJSTypeDescriptionReader)
 public:
-    TypeDescriptionReader() = default;
-    explicit TypeDescriptionReader(QString fileName, QString data)
+    QQmlJSTypeDescriptionReader() = default;
+    explicit QQmlJSTypeDescriptionReader(QString fileName, QString data)
         : m_fileName(std::move(fileName)), m_source(std::move(data)) {}
 
     bool operator()(
@@ -92,4 +92,4 @@ private:
     QStringList *m_dependencies = nullptr;
 };
 
-#endif // TYPEDESCRIPTIONREADER_H
+#endif // QQMLJSTYPEDESCRIPTIONREADER_P_H

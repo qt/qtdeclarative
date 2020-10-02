@@ -27,7 +27,7 @@
 ****************************************************************************/
 
 #include "qqmljsimporter_p.h"
-#include "typedescriptionreader_p.h"
+#include "qqmljstypedescriptionreader_p.h"
 #include "qqmljstypereader_p.h"
 
 #include <QtQml/private/qqmlimportresolver_p.h>
@@ -69,7 +69,7 @@ void QQmlJSImporter::readQmltypes(
 
     QFile file(filename);
     file.open(QFile::ReadOnly);
-    TypeDescriptionReader reader { filename, QString::fromUtf8(file.readAll()) };
+    QQmlJSTypeDescriptionReader reader { filename, QString::fromUtf8(file.readAll()) };
     QStringList dependencies;
     auto succ = reader(objects, &dependencies);
     if (!succ)

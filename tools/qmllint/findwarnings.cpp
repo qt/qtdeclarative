@@ -30,7 +30,7 @@
 #include "checkidentifiers.h"
 
 #include <QtQmlCompiler/private/qqmljsscope_p.h>
-#include <QtQmlCompiler/private/typedescriptionreader_p.h>
+#include <QtQmlCompiler/private/qqmljstypedescriptionreader_p.h>
 #include <QtQmlCompiler/private/qqmljstypereader_p.h>
 
 #include <QtQml/private/qqmljsast_p.h>

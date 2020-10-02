@@ -9,7 +9,7 @@ SOURCES = \
     qqmljsimporter.cpp \
     qqmljstypereader.cpp \
     qqmljsscope.cpp \
-    typedescriptionreader.cpp \
+    qqmljstypedescriptionreader.cpp \
     qqmljsstreamwriter.cpp
 
 HEADERS = \
@@ -19,7 +19,7 @@ HEADERS = \
     qqmljstypereader_p.h \
     qqmljsmetatypes_p.h \
     qqmljsscope_p.h \
-    typedescriptionreader_p.h \
+    qqmljstypedescriptionreader_p.h \
     qqmljsstreamwriter_p.h
 
 load(qt_module)

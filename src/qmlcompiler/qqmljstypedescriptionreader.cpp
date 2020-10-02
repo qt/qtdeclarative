@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 
-#include "typedescriptionreader_p.h"
+#include "qqmljstypedescriptionreader_p.h"
 
 #include <QtQml/private/qqmljsparser_p.h>
 #include <QtQml/private/qqmljslexer_p.h>
@@ -51,7 +51,7 @@ QString toString(const UiQualifiedId *qualifiedId, QChar delimiter = QLatin1Char
     return result;
 }
 
-bool TypeDescriptionReader::operator()(
+bool QQmlJSTypeDescriptionReader::operator()(
         QHash<QString, QQmlJSScope::Ptr> *objects,
         QStringList *dependencies)
 {
@@ -77,7 +77,7 @@ bool TypeDescriptionReader::operator()(
     return m_errorMessage.isEmpty();
 }
 
-void TypeDescriptionReader::readDocument(UiProgram *ast)
+void QQmlJSTypeDescriptionReader::readDocument(UiProgram *ast)
 {
     if (!ast) {
         addError(SourceLocation(), tr("Could not parse document."));
@@ -125,7 +125,7 @@ void TypeDescriptionReader::readDocument(UiProgram *ast)
     readModule(module);
 }
 
-void TypeDescriptionReader::readModule(UiObjectDefinition *ast)
+void QQmlJSTypeDescriptionReader::readModule(UiObjectDefinition *ast)
 {
     for (UiObjectMemberList *it = ast->initializer->members; it; it = it->next) {
         UiObjectMember *member = it->member;
@@ -150,7 +150,7 @@ void TypeDescriptionReader::readModule(UiObjectDefinition *ast)
     }
 }
 
-void TypeDescriptionReader::addError(const SourceLocation &loc, const QString &message)
+void QQmlJSTypeDescriptionReader::addError(const SourceLocation &loc, const QString &message)
 {
     m_errorMessage += QString::fromLatin1("%1:%2:%3: %4\n").arg(
                 QDir::toNativeSeparators(m_fileName),
@@ -159,7 +159,7 @@ void TypeDescriptionReader::addError(const SourceLocation &loc, const QString &m
                 message);
 }
 
-void TypeDescriptionReader::addWarning(const SourceLocation &loc, const QString &message)
+void QQmlJSTypeDescriptionReader::addWarning(const SourceLocation &loc, const QString &message)
 {
     m_warningMessage += QString::fromLatin1("%1:%2:%3: %4\n").arg(
                 QDir::toNativeSeparators(m_fileName),
@@ -168,7 +168,7 @@ void TypeDescriptionReader::addWarning(const SourceLocation &loc, const QString 
                 message);
 }
 
-void TypeDescriptionReader::readDependencies(UiScriptBinding *ast)
+void QQmlJSTypeDescriptionReader::readDependencies(UiScriptBinding *ast)
 {
     auto *stmt = cast<ExpressionStatement*>(ast->statement);
     if (!stmt) {
@@ -186,7 +186,7 @@ void TypeDescriptionReader::readDependencies(UiScriptBinding *ast)
     }
 }
 
-void TypeDescriptionReader::readComponent(UiObjectDefinition *ast)
+void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
 {
     QQmlJSScope::Ptr scope = QQmlJSScope::create();
 
@@ -260,7 +260,7 @@ void TypeDescriptionReader::readComponent(UiObjectDefinition *ast)
     m_objects->insert(scope->internalName(), scope);
 }
 
-void TypeDescriptionReader::readSignalOrMethod(UiObjectDefinition *ast, bool isMethod,
+void QQmlJSTypeDescriptionReader::readSignalOrMethod(UiObjectDefinition *ast, bool isMethod,
                                                const QQmlJSScope::Ptr &scope)
 {
     QQmlJSMetaMethod metaMethod;
@@ -309,7 +309,7 @@ void TypeDescriptionReader::readSignalOrMethod(UiObjectDefinition *ast, bool isM
     scope->addMethod(metaMethod);
 }
 
-void TypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQmlJSScope::Ptr &scope)
+void QQmlJSTypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQmlJSScope::Ptr &scope)
 {
     QString name;
     QString type;
@@ -355,7 +355,7 @@ void TypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQmlJSSc
     scope->addProperty(QQmlJSMetaProperty(name, type, isList, !isReadonly, isPointer, false, revision));
 }
 
-void TypeDescriptionReader::readEnum(UiObjectDefinition *ast, const QQmlJSScope::Ptr &scope)
+void QQmlJSTypeDescriptionReader::readEnum(UiObjectDefinition *ast, const QQmlJSScope::Ptr &scope)
 {
     QQmlJSMetaEnum metaEnum;
 
@@ -385,7 +385,7 @@ void TypeDescriptionReader::readEnum(UiObjectDefinition *ast, const QQmlJSScope:
     scope->addEnum(metaEnum);
 }
 
-void TypeDescriptionReader::readParameter(UiObjectDefinition *ast, QQmlJSMetaMethod *metaMethod)
+void QQmlJSTypeDescriptionReader::readParameter(UiObjectDefinition *ast, QQmlJSMetaMethod *metaMethod)
 {
     QString name;
     QString type;
@@ -418,7 +418,7 @@ void TypeDescriptionReader::readParameter(UiObjectDefinition *ast, QQmlJSMetaMet
     metaMethod->addParameter(name, type);
 }
 
-QString TypeDescriptionReader::readStringBinding(UiScriptBinding *ast)
+QString QQmlJSTypeDescriptionReader::readStringBinding(UiScriptBinding *ast)
 {
     Q_ASSERT(ast);
 
@@ -442,7 +442,7 @@ QString TypeDescriptionReader::readStringBinding(UiScriptBinding *ast)
     return stringLit->value.toString();
 }
 
-bool TypeDescriptionReader::readBoolBinding(UiScriptBinding *ast)
+bool QQmlJSTypeDescriptionReader::readBoolBinding(UiScriptBinding *ast)
 {
     Q_ASSERT(ast);
 
@@ -467,7 +467,7 @@ bool TypeDescriptionReader::readBoolBinding(UiScriptBinding *ast)
     return trueLit;
 }
 
-double TypeDescriptionReader::readNumericBinding(UiScriptBinding *ast)
+double QQmlJSTypeDescriptionReader::readNumericBinding(UiScriptBinding *ast)
 {
     Q_ASSERT(ast);
 
@@ -507,7 +507,7 @@ static QTypeRevision parseVersion(const QString &versionString)
     return QTypeRevision::fromVersion(maybeMajor, maybeMinor);
 }
 
-QTypeRevision TypeDescriptionReader::readNumericVersionBinding(UiScriptBinding *ast)
+QTypeRevision QQmlJSTypeDescriptionReader::readNumericVersionBinding(UiScriptBinding *ast)
 {
     QTypeRevision invalidVersion;
 
@@ -534,7 +534,7 @@ QTypeRevision TypeDescriptionReader::readNumericVersionBinding(UiScriptBinding *
                                      numericLit->literalToken.length));
 }
 
-int TypeDescriptionReader::readIntBinding(UiScriptBinding *ast)
+int QQmlJSTypeDescriptionReader::readIntBinding(UiScriptBinding *ast)
 {
     double v = readNumericBinding(ast);
     int i = static_cast<int>(v);
@@ -547,7 +547,7 @@ int TypeDescriptionReader::readIntBinding(UiScriptBinding *ast)
     return i;
 }
 
-void TypeDescriptionReader::readExports(UiScriptBinding *ast, const QQmlJSScope::Ptr &scope)
+void QQmlJSTypeDescriptionReader::readExports(UiScriptBinding *ast, const QQmlJSScope::Ptr &scope)
 {
     Q_ASSERT(ast);
 
@@ -597,7 +597,7 @@ void TypeDescriptionReader::readExports(UiScriptBinding *ast, const QQmlJSScope:
     }
 }
 
-void TypeDescriptionReader::readMetaObjectRevisions(UiScriptBinding *ast,
+void QQmlJSTypeDescriptionReader::readMetaObjectRevisions(UiScriptBinding *ast,
                                                     const QQmlJSScope::Ptr &scope)
 {
     Q_ASSERT(ast);
@@ -647,7 +647,7 @@ void TypeDescriptionReader::readMetaObjectRevisions(UiScriptBinding *ast,
     }
 }
 
-void TypeDescriptionReader::readEnumValues(UiScriptBinding *ast, QQmlJSMetaEnum *metaEnum)
+void QQmlJSTypeDescriptionReader::readEnumValues(UiScriptBinding *ast, QQmlJSMetaEnum *metaEnum)
 {
     if (!ast)
         return;
