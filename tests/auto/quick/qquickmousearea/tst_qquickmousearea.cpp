@@ -2389,6 +2389,9 @@ void tst_QQuickMouseArea::mask()
 
 void tst_QQuickMouseArea::nestedEventDelivery() // QTBUG-70898
 {
+#ifdef Q_OS_MACOS
+    QSKIP("this test currently crashes on MacOS 10.14 in CI. See QTBUG-86729");
+#endif
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("nestedSendEvent.qml"));
     QScopedPointer<QQuickWindow> window(qmlobject_cast<QQuickWindow *>(c.create()));
