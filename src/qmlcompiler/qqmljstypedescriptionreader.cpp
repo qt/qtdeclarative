@@ -34,6 +34,8 @@
 
 #include <QtCore/qdir.h>
 
+QT_BEGIN_NAMESPACE
+
 using namespace QQmlJS;
 using namespace QQmlJS::AST;
 
@@ -687,3 +689,5 @@ void QQmlJSTypeDescriptionReader::readEnumValues(UiScriptBinding *ast, QQmlJSMet
                  tr("Expected either array or object literal as enum definition."));
     }
 }
+
+QT_END_NAMESPACE

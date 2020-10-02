@@ -46,6 +46,8 @@
 #include <QtCore/qpair.h>
 #include <QtCore/qset.h>
 
+QT_BEGIN_NAMESPACE
+
 class QQmlJSTypeReader
 {
 public:
@@ -66,5 +68,7 @@ private:
     QList<Import> m_imports;
     QStringList m_errors;
 };
+
+QT_END_NAMESPACE
 
 #endif // QQMLJSTYPEREADER_P_H

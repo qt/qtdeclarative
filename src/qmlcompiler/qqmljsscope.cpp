@@ -33,6 +33,8 @@
 
 #include <algorithm>
 
+QT_BEGIN_NAMESPACE
+
 QQmlJSScope::QQmlJSScope(ScopeType type, const QQmlJSScope::Ptr &parentScope)
     : m_parentScope(parentScope), m_scopeType(type) {}
 
@@ -179,3 +181,5 @@ bool QQmlJSScope::Export::isValid() const
 {
     return m_version.isValid() || !m_package.isEmpty() || !m_type.isEmpty();
 }
+
+QT_END_NAMESPACE

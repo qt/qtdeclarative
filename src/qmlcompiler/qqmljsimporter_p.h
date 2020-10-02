@@ -42,6 +42,8 @@
 #include "qqmljsscope_p.h"
 #include <QtQml/private/qqmldirparser_p.h>
 
+QT_BEGIN_NAMESPACE
+
 class QQmlJSImporter
 {
 public:
@@ -99,5 +101,7 @@ private:
     QHash<QString, QQmlJSScope::Ptr> m_importedFiles;
     QStringList m_warnings;
 };
+
+QT_END_NAMESPACE
 
 #endif // QQMLJSIMPORTER_P_H

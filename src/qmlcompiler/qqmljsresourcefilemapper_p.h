@@ -42,6 +42,8 @@
 #include <QHash>
 #include <QFile>
 
+QT_BEGIN_NAMESPACE
+
 struct QQmlJSResourceFileMapper
 {
     enum class FileOutput {
@@ -60,5 +62,7 @@ private:
 
     QHash<QString, QString> qrcPathToFileSystemPath;
 };
+
+QT_END_NAMESPACE
 
 #endif // QMLJSRESOURCEFILEMAPPER_P_H

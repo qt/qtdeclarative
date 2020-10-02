@@ -50,6 +50,8 @@
 
 #include <optional>
 
+QT_BEGIN_NAMESPACE
+
 enum class ScopeType
 {
     JSFunctionScope,
@@ -217,5 +219,7 @@ private:
     Flags m_flags;
     AccessSemantics m_semantics = AccessSemantics::Reference;
 };
+
+QT_END_NAMESPACE
 
 #endif // QQMLJSSCOPE_P_H

@@ -53,6 +53,8 @@
 // The parent of an Item, for example, is typically not just a QtObject, but rather
 // some other Item with custom properties.
 
+QT_BEGIN_NAMESPACE
+
 class QQmlJSScope;
 class QQmlJSMetaEnum
 {
@@ -196,5 +198,7 @@ public:
     bool isAlias() const { return m_isAlias; }
     int revision() const { return m_revision; }
 };
+
+QT_END_NAMESPACE
 
 #endif // QQMLJSMETATYPES_P_H

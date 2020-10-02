@@ -45,6 +45,8 @@
 #include <QtCore/QScopedPointer>
 #include <QtCore/QPair>
 
+QT_BEGIN_NAMESPACE
+
 class QQmlJSStreamWriter
 {
 public:
@@ -73,5 +75,7 @@ private:
     bool m_maybeOneline;
     QScopedPointer<QIODevice> m_stream;
 };
+
+QT_END_NAMESPACE
 
 #endif // QQMLJSSTREAMWRITER_P_H

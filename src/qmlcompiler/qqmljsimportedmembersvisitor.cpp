@@ -28,6 +28,8 @@
 
 #include "qqmljsimportedmembersvisitor_p.h"
 
+QT_BEGIN_NAMESPACE
+
 using namespace QQmlJS::AST;
 
 QQmlJSScope::Ptr QQmlJSImportedMembersVisitor::result(const QString &scopeName) const
@@ -167,3 +169,5 @@ void QQmlJSImportedMembersVisitor::throwRecursionDepthError()
 {
     m_errors.append(QStringLiteral("Maximum statement or expression depth exceeded"));
 }
+
+QT_END_NAMESPACE

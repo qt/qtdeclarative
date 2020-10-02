@@ -31,6 +31,8 @@
 #include <QtCore/QBuffer>
 #include <QtCore/QStringList>
 
+QT_BEGIN_NAMESPACE
+
 QQmlJSStreamWriter::QQmlJSStreamWriter(QByteArray *array)
     : m_indentDepth(0)
     , m_pendingLineLength(0)
@@ -188,3 +190,5 @@ void QQmlJSStreamWriter::flushPotentialLinesWithNewlines()
     m_pendingLineLength = 0;
     m_maybeOneline = false;
 }
+
+QT_END_NAMESPACE

@@ -38,6 +38,8 @@
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qdebug.h>
 
+QT_BEGIN_NAMESPACE
+
 static QList<QQmlJSTypeReader::Import> parseHeaders(QQmlJS::AST::UiHeaderItemList *header)
 {
     using namespace QQmlJS::AST;
@@ -134,3 +136,5 @@ QQmlJSScope::Ptr QQmlJSTypeReader::operator()()
     // TODO: Anything special to do with ES modules here?
     return parseProgram(QQmlJS::AST::cast<QQmlJS::AST::Program *>(parser.rootNode()), scopeName);
 }
+
+QT_END_NAMESPACE

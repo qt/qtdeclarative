@@ -35,6 +35,8 @@
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qdiriterator.h>
 
+QT_BEGIN_NAMESPACE
+
 static const QLatin1String SlashQmldir             = QLatin1String("/qmldir");
 static const QLatin1String SlashPluginsDotQmltypes = QLatin1String("/plugins.qmltypes");
 
@@ -289,3 +291,5 @@ QQmlJSImporter::ImportedTypes QQmlJSImporter::importFileOrDirectory(
 
     return result.qmlNames;
 }
+
+QT_END_NAMESPACE

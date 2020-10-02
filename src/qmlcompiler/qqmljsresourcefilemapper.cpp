@@ -32,6 +32,8 @@
 #include <QDir>
 #include <QXmlStreamReader>
 
+QT_BEGIN_NAMESPACE
+
 QQmlJSResourceFileMapper::QQmlJSResourceFileMapper(const QStringList &resourceFiles)
 {
     for (const QString &fileName: resourceFiles) {
@@ -168,3 +170,5 @@ void QQmlJSResourceFileMapper::populateFromQrcFile(QFile &file)
     }
     }
 }
+
+QT_END_NAMESPACE

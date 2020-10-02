@@ -46,6 +46,8 @@
 // for Q_DECLARE_TR_FUNCTIONS
 #include <QtCore/qcoreapplication.h>
 
+QT_BEGIN_NAMESPACE
+
 class QQmlJSTypeDescriptionReader
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlJSTypeDescriptionReader)
@@ -91,5 +93,7 @@ private:
     QHash<QString, QQmlJSScope::Ptr> *m_objects = nullptr;
     QStringList *m_dependencies = nullptr;
 };
+
+QT_END_NAMESPACE
 
 #endif // QQMLJSTYPEDESCRIPTIONREADER_P_H

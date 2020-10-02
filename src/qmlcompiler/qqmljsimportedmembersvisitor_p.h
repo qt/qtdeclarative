@@ -43,6 +43,8 @@
 
 #include <private/qqmljsast_p.h>
 
+QT_BEGIN_NAMESPACE
+
 class QQmlJSImportedMembersVisitor : public QQmlJS::AST::Visitor
 {
 public:
@@ -66,5 +68,7 @@ private:
 
     QStringList m_errors;
 };
+
+QT_END_NAMESPACE
 
 #endif // QQMLJSIMPORTEDMEMBERSVISITOR_P_H
