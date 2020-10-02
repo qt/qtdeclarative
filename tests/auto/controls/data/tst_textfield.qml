@@ -269,7 +269,7 @@ TestCase {
 
         compare(control.hovered, false)
 
-        mouseMove(control)
+        mouseMove(control, control.width / 2, control.height / 2)
         compare(control.hovered, data.hoverEnabled)
 
         mouseMove(control, -1, -1)
