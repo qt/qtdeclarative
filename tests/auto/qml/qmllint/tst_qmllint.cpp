@@ -53,7 +53,11 @@ private Q_SLOTS:
     void directoryPassedAsQmlTypesFile();
 
 private:
-    QString runQmllint(const QString &fileToLint, bool shouldSucceed, const QStringList &extraArgs = QStringList());
+    QString runQmllint(const QString &fileToLint,
+                       std::function<void(QProcess &)> handleResult,
+                       const QStringList &extraArgs = QStringList());
+    QString runQmllint(const QString &fileToLint, bool shouldSucceed,
+                       const QStringList &extraArgs = QStringList());
 
     QString m_qmllintPath;
 };
@@ -195,6 +199,14 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("badEnumFromQtQml.qml")
             << QString("Warning: Property \"Linear123\" not found on type \"QQmlEasingEnums\"")
             << QString();
+    QTest::newRow("nanchors1")
+            << QStringLiteral("nanchors1.qml")
+            << QString()
+            << QString();
+    QTest::newRow("nanchors3")
+            << QStringLiteral("nanchors3.qml")
+            << QString()
+            << QString();
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -205,7 +217,14 @@ void TestQmllint::dirtyQmlCode()
     if (warningMessage.contains(QLatin1String("%1")))
         warningMessage = warningMessage.arg(testFile(filename));
 
-    const QString output = runQmllint(filename, false);
+    const QString output = runQmllint(filename, [&](QProcess &process) {
+        QVERIFY(process.waitForFinished());
+        QCOMPARE(process.exitStatus(), QProcess::NormalExit);
+        QEXPECT_FAIL("nanchors1", "Invalid grouped properties are not detected", Abort);
+        QEXPECT_FAIL("nanchors3", "Invalid grouped properties are not detected", Abort);
+        QVERIFY(process.exitCode() != 0);
+    });
+
     QVERIFY(output.contains(warningMessage));
     if (!notContained.isEmpty())
         QVERIFY(!output.contains(notContained));
@@ -242,6 +261,8 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("javascriptMethodsInModule")
             << QStringLiteral("javascriptMethodsInModuleGood.qml");
     QTest::newRow("enumFromQtQml") << QStringLiteral("enumFromQtQml.qml");
+    QTest::newRow("anchors1") << QStringLiteral("anchors1.qml");
+    QTest::newRow("anchors3") << QStringLiteral("anchors3.qml");
 }
 
 void TestQmllint::cleanQmlCode()
@@ -251,7 +272,9 @@ void TestQmllint::cleanQmlCode()
     QVERIFY(warnings.isEmpty());
 }
 
-QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed, const QStringList &extraArgs)
+QString TestQmllint::runQmllint(const QString &fileToLint,
+                                std::function<void(QProcess &)> handleResult,
+                                const QStringList &extraArgs)
 {
     auto qmlImportDir = QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath);
     QStringList args;
@@ -264,12 +287,7 @@ QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed, c
     auto verify = [&](bool isSilent) {
         QProcess process;
         process.start(m_qmllintPath, args);
-        QVERIFY(process.waitForFinished());
-        QCOMPARE(process.exitStatus(), QProcess::NormalExit);
-        if (shouldSucceed)
-            QCOMPARE(process.exitCode(), 0);
-        else
-            QVERIFY(process.exitCode() != 0);
+        handleResult(process);
         errors = process.readAllStandardError();
 
         if (isSilent)
@@ -279,6 +297,18 @@ QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed, c
     args.removeLast();
     verify(false);
     return errors;
+}
+
+QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed, const QStringList &extraArgs)
+{
+    return runQmllint(fileToLint, [&](QProcess &process) {
+        QVERIFY(process.waitForFinished());
+        QCOMPARE(process.exitStatus(), QProcess::NormalExit);
+        if (shouldSucceed)
+            QCOMPARE(process.exitCode(), 0);
+        else
+            QVERIFY(process.exitCode() != 0);
+    }, extraArgs);
 }
 
 QTEST_MAIN(TestQmllint)

@@ -831,13 +831,12 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
         name += id->name.toString() + QLatin1Char('.');
 
     name.chop(1);
-
     enterEnvironment(ScopeType::QMLScope, name);
-    m_currentScope->resolveTypes(m_rootScopeImports.importedQmlNames);
-    importExportedNames(m_currentScope);
-
     if (name.isLower())
         return false; // Ignore grouped properties for now
+
+    m_currentScope->resolveTypes(m_rootScopeImports.importedQmlNames);
+    importExportedNames(m_currentScope);
 
     if (name.endsWith("Connections")) {
         QString target;
