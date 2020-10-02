@@ -4,12 +4,6 @@
 [DelayButton::test_mouse]
 *
 
-[ScrollBar::test_hover:enabled]
-*
-
-[ScrollBar::test_hover:non-interactive]
-*
-
 [SwipeDelegate::test_close]
 *
 
@@ -26,10 +20,4 @@
 *
 
 [SwipeDelegate::test_removableDelegates]
-*
-
-[TextArea::test_hover]
-*
-
-[TextField::test_hover]
 *
