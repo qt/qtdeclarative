@@ -70,7 +70,7 @@ ApplicationWindow {
         anchors.margins: 20
 
         ScrollView {
-            contentWidth: width
+            contentWidth: width - ScrollBar.vertical.width
             clip: true
 
             Column {
@@ -96,7 +96,7 @@ ApplicationWindow {
         }
 
         ScrollView {
-            contentWidth: width
+            contentWidth: width - ScrollBar.vertical.width
             clip: true
 
             Column {

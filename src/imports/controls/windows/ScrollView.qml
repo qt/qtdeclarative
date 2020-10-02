@@ -46,6 +46,9 @@ T.ScrollView {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              contentHeight + topPadding + bottomPadding)
 
+    rightPadding: ScrollBar.vertical.visible ? ScrollBar.vertical.width : 0
+    bottomPadding: ScrollBar.horizontal.visible ? ScrollBar.horizontal.height : 0
+
     ScrollBar.vertical: ScrollBar {
         parent: control
         x: control.mirrored ? 0 : control.width - width

@@ -51,6 +51,9 @@ T.ScrollView {
     // (doesn't float on top), and in that case, the contents will show through them.
     contentItem.clip: clip && (ScrollBar.vertical.visible || ScrollBar.horizontal.visible)
 
+    rightPadding: ScrollBar.vertical.visible ? ScrollBar.vertical.width : 0
+    bottomPadding: ScrollBar.horizontal.visible ? ScrollBar.horizontal.height : 0
+
     ScrollBar.vertical: ScrollBar {
         parent: control
         x: control.mirrored ? 0 : control.width - width

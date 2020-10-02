@@ -78,7 +78,6 @@ ControlContainer {
                 + "mollit anim id est laborum."
                 wrapMode: TextEdit.WordWrap
                 selectByMouse: true
-                rightPadding: scrollView.ScrollBar.vertical.width
             }
         }
     }
@@ -115,7 +114,6 @@ ControlContainer {
                           + "mollit anim id est laborum."
                     wrapMode: TextEdit.WordWrap
                     selectByMouse: true
-                    rightPadding: scrollView2.ScrollBar.vertical.width
                 }
             }
         }

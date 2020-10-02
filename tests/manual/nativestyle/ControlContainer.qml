@@ -41,7 +41,7 @@ import QtQuick.Layouts
 Item {
     anchors.left: parent.left
     anchors.right: parent.right
-    anchors.rightMargin: 20 // make room for scrollbar
+    anchors.rightMargin: 7
     implicitHeight: groupBox.height
 
     property alias title: groupBox.title
