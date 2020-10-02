@@ -42,9 +42,9 @@ QQmlJSScope::Ptr QQmlJSScope::create(ScopeType type, const QQmlJSScope::Ptr &par
 {
     QQmlJSScope::Ptr childScope(new QQmlJSScope{type, parentScope});
     if (parentScope) {
-        Q_ASSERT(type != ScopeType::QMLScope
+        Q_ASSERT(type != QQmlJSScope::QMLScope
                 || !parentScope->m_parentScope
-                || parentScope->parentScope()->m_scopeType == ScopeType::QMLScope
+                || parentScope->parentScope()->m_scopeType == QQmlJSScope::QMLScope
                 || parentScope->parentScope()->m_internalName == QLatin1String("global"));
         parentScope->m_childScopes.push_back(childScope);
     }
@@ -53,14 +53,14 @@ QQmlJSScope::Ptr QQmlJSScope::create(ScopeType type, const QQmlJSScope::Ptr &par
 
 void QQmlJSScope::insertJSIdentifier(const QString &name, const JavaScriptIdentifier &identifier)
 {
-    Q_ASSERT(m_scopeType != ScopeType::QMLScope);
+    Q_ASSERT(m_scopeType != QQmlJSScope::QMLScope);
     if (identifier.kind == JavaScriptIdentifier::LexicalScoped
             || identifier.kind == JavaScriptIdentifier::Injected
-            || m_scopeType == ScopeType::JSFunctionScope) {
+            || m_scopeType == QQmlJSScope::JSFunctionScope) {
         m_jsIdentifiers.insert(name, identifier);
     } else {
         auto targetScope = parentScope();
-        while (targetScope->m_scopeType != ScopeType::JSFunctionScope)
+        while (targetScope->m_scopeType != QQmlJSScope::JSFunctionScope)
             targetScope = targetScope->parentScope();
         targetScope->m_jsIdentifiers.insert(name, identifier);
     }
@@ -80,7 +80,7 @@ bool QQmlJSScope::isIdInCurrentScope(const QString &id) const
 
 bool QQmlJSScope::isIdInCurrentQMlScopes(const QString &id) const
 {
-    if (m_scopeType == ScopeType::QMLScope)
+    if (m_scopeType == QQmlJSScope::QMLScope)
         return m_properties.contains(id) || m_methods.contains(id) || m_enums.contains(id);
 
     const auto qmlScope = findCurrentQMLScope(parentScope());
@@ -91,11 +91,11 @@ bool QQmlJSScope::isIdInCurrentQMlScopes(const QString &id) const
 
 bool QQmlJSScope::isIdInCurrentJSScopes(const QString &id) const
 {
-    if (m_scopeType != ScopeType::QMLScope && m_jsIdentifiers.contains(id))
+    if (m_scopeType != QQmlJSScope::QMLScope && m_jsIdentifiers.contains(id))
         return true;
 
     for (auto jsScope = parentScope(); jsScope; jsScope = jsScope->parentScope()) {
-        if (jsScope->m_scopeType != ScopeType::QMLScope && jsScope->m_jsIdentifiers.contains(id))
+        if (jsScope->m_scopeType != QQmlJSScope::QMLScope && jsScope->m_jsIdentifiers.contains(id))
             return true;
     }
 
@@ -108,11 +108,12 @@ bool QQmlJSScope::isIdInjectedFromSignal(const QString &id) const
     return found.has_value() && found->kind == JavaScriptIdentifier::Injected;
 }
 
-std::optional<JavaScriptIdentifier> QQmlJSScope::findJSIdentifier(const QString &id) const
+std::optional<QQmlJSScope::JavaScriptIdentifier>
+QQmlJSScope::findJSIdentifier(const QString &id) const
 {
     for (const auto *scope = this; scope; scope = scope->parentScope().data()) {
-        if (scope->m_scopeType == ScopeType::JSFunctionScope
-                || scope->m_scopeType == ScopeType::JSLexicalScope) {
+        if (scope->m_scopeType == QQmlJSScope::JSFunctionScope
+                || scope->m_scopeType == QQmlJSScope::JSLexicalScope) {
             auto it = scope->m_jsIdentifiers.find(id);
             if (it != scope->m_jsIdentifiers.end())
                 return *it;
@@ -153,7 +154,7 @@ void QQmlJSScope::resolveTypes(const QHash<QString, QQmlJSScope::ConstPtr> &cont
 QQmlJSScope::ConstPtr QQmlJSScope::findCurrentQMLScope(const QQmlJSScope::ConstPtr &scope)
 {
     auto qmlScope = scope;
-    while (qmlScope && qmlScope->m_scopeType != ScopeType::QMLScope)
+    while (qmlScope && qmlScope->m_scopeType != QQmlJSScope::QMLScope)
         qmlScope = qmlScope->parentScope();
     return qmlScope;
 }

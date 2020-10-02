@@ -97,7 +97,7 @@ private:
 
     QQmlJSImporter m_importer;
 
-    void enterEnvironment(ScopeType type, const QString &name);
+    void enterEnvironment(QQmlJSScope::ScopeType type, const QString &name);
     void leaveEnvironment();
 
     void importExportedNames(QQmlJSScope::ConstPtr scope);

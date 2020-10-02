@@ -259,7 +259,7 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
         if (typeFound)
             continue;
 
-        if (access.m_name.front().isUpper() && scope->scopeType() == ScopeType::QMLScope) {
+        if (access.m_name.front().isUpper() && scope->scopeType() == QQmlJSScope::QMLScope) {
             // may be an attached type
             const auto it = m_types.find(access.m_name);
             if (it != m_types.end() && !(*it)->attachedTypeName().isEmpty()) {
@@ -307,7 +307,7 @@ bool CheckIdentifiers::operator()(
 
             const auto memberAccessBase = memberAccessChain.takeFirst();
             const auto jsId = currentScope->findJSIdentifier(memberAccessBase.m_name);
-            if (jsId.has_value() && jsId->kind != JavaScriptIdentifier::Injected)
+            if (jsId.has_value() && jsId->kind != QQmlJSScope::JavaScriptIdentifier::Injected)
                 continue;
 
             auto it = qmlIDs.find(memberAccessBase.m_name);
@@ -400,8 +400,9 @@ bool CheckIdentifiers::operator()(
                 m_colorOut->write(rootId + QLatin1Char('.'), Hint);
                 m_colorOut->write(issueLocationWithContext.issueText().toString(), Normal);
                 m_colorOut->write(issueLocationWithContext.afterText() + QLatin1Char('\n'), Normal);
-            } else if (jsId.has_value() && jsId->kind == JavaScriptIdentifier::Injected) {
-                const JavaScriptIdentifier id = jsId.value();
+            } else if (jsId.has_value()
+                       && jsId->kind == QQmlJSScope::JavaScriptIdentifier::Injected) {
+                const QQmlJSScope::JavaScriptIdentifier id = jsId.value();
                 m_colorOut->write(QLatin1String("Note: "), Info);
                 m_colorOut->write(
                             memberAccessBase.m_name + QString::fromLatin1(

@@ -52,25 +52,6 @@
 
 QT_BEGIN_NAMESPACE
 
-enum class ScopeType
-{
-    JSFunctionScope,
-    JSLexicalScope,
-    QMLScope
-};
-
-struct JavaScriptIdentifier
-{
-    enum Kind {
-        Parameter,
-        FunctionScoped,
-        LexicalScoped,
-        Injected
-    };
-
-    Kind kind = FunctionScoped;
-    QQmlJS::SourceLocation location;
-};
 
 class QQmlJSScope
 {
@@ -80,6 +61,13 @@ public:
     using WeakPtr = QWeakPointer<QQmlJSScope>;
     using ConstPtr = QSharedPointer<const QQmlJSScope>;
     using WeakConstPtr = QWeakPointer<const QQmlJSScope>;
+
+    enum ScopeType
+    {
+        JSFunctionScope,
+        JSLexicalScope,
+        QMLScope
+    };
 
     enum class AccessSemantics {
         Reference,
@@ -119,7 +107,20 @@ public:
         int m_metaObjectRevision = 0;
     };
 
-    static QQmlJSScope::Ptr create(ScopeType type = ScopeType::QMLScope,
+    struct JavaScriptIdentifier
+    {
+        enum Kind {
+            Parameter,
+            FunctionScoped,
+            LexicalScoped,
+            Injected
+        };
+
+        Kind kind = FunctionScoped;
+        QQmlJS::SourceLocation location;
+    };
+
+    static QQmlJSScope::Ptr create(ScopeType type = QQmlJSScope::QMLScope,
                                  const QQmlJSScope::Ptr &parentScope = QQmlJSScope::Ptr());
     static QQmlJSScope::ConstPtr findCurrentQMLScope(const QQmlJSScope::ConstPtr &scope);
 
@@ -209,7 +210,7 @@ private:
     QString m_baseTypeName;
     QQmlJSScope::WeakConstPtr m_baseType;
 
-    ScopeType m_scopeType = ScopeType::QMLScope;
+    ScopeType m_scopeType = QMLScope;
     QList<Export> m_exports;
 
     QString m_defaultPropertyName;
