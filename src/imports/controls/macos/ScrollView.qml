@@ -46,6 +46,11 @@ T.ScrollView {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              contentHeight + topPadding + bottomPadding)
 
+    // If ScrollView has clip set, we need to clip the contentItem as well.
+    // This because the scrollbars are semi-transparent and non-transient
+    // (doesn't float on top), and in that case, the contents will show through them.
+    contentItem.clip: clip && (ScrollBar.vertical.visible || ScrollBar.horizontal.visible)
+
     ScrollBar.vertical: ScrollBar {
         parent: control
         x: control.mirrored ? 0 : control.width - width
