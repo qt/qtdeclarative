@@ -8,9 +8,9 @@ qt_add_module(QmlCompiler
     STATIC
     INTERNAL_MODULE
     SOURCES
-        qmljsimporter.cpp qmljsimporter_p.h
         qmljstypereader.cpp qmljstypereader_p.h
         qqmljsimportedmembersvisitor.cpp qqmljsimportedmembersvisitor_p.h
+        qqmljsimporter.cpp qqmljsimporter_p.h
         qqmljsmetatypes_p.h
         qqmljsresourcefilemapper.cpp qqmljsresourcefilemapper_p.h
         qqmljsscope.cpp qqmljsscope_p.h

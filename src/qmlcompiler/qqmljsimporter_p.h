@@ -26,8 +26,8 @@
 **
 ****************************************************************************/
 
-#ifndef QMLJSIMPORTER_H
-#define QMLJSIMPORTER_H
+#ifndef QQMLJSIMPORTER_P_H
+#define QQMLJSIMPORTER_P_H
 
 //
 //  W A R N I N G
@@ -42,12 +42,12 @@
 #include "qqmljsscope_p.h"
 #include <QtQml/private/qqmldirparser_p.h>
 
-class QmlJSImporter
+class QQmlJSImporter
 {
 public:
     using ImportedTypes = QHash<QString, QQmlJSScope::ConstPtr>;
 
-    QmlJSImporter(const QStringList &importPaths) : m_importPaths(importPaths) {}
+    QQmlJSImporter(const QStringList &importPaths) : m_importPaths(importPaths) {}
 
     ImportedTypes importBuiltins();
     ImportedTypes importQmltypes(const QStringList &qmltypesFiles);
@@ -86,7 +86,7 @@ private:
                       QTypeRevision version = QTypeRevision());
     void processImport(const Import &import, AvailableTypes *types,
                        const QString &prefix = QString());
-    void importDependencies(const QmlJSImporter::Import &import,
+    void importDependencies(const QQmlJSImporter::Import &import,
                             AvailableTypes *types,
                             const QString &prefix = QString(),
                             QTypeRevision version = QTypeRevision());
@@ -100,4 +100,4 @@ private:
     QStringList m_warnings;
 };
 
-#endif // QMLJSIMPORTER_H
+#endif // QQMLJSIMPORTER_P_H

@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 
-#include "qmljsimporter_p.h"
+#include "qqmljsimporter_p.h"
 #include "typedescriptionreader_p.h"
 #include "qmljstypereader_p.h"
 
@@ -53,7 +53,7 @@ static QQmlDirParser createQmldirParserForFile(const QString &filename)
     return parser;
 }
 
-void QmlJSImporter::readQmltypes(
+void QQmlJSImporter::readQmltypes(
         const QString &filename, QHash<QString, QQmlJSScope::Ptr> *objects)
 {
     const QFileInfo fileInfo(filename);
@@ -76,7 +76,7 @@ void QmlJSImporter::readQmltypes(
         m_warnings.append(reader.errorMessage());
 }
 
-QmlJSImporter::Import QmlJSImporter::readQmldir(const QString &path)
+QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &path)
 {
     Import result;
     auto reader = createQmldirParserForFile(path + SlashQmldir);
@@ -114,9 +114,9 @@ QmlJSImporter::Import QmlJSImporter::readQmldir(const QString &path)
     return result;
 }
 
-void QmlJSImporter::importDependencies(
-        const QmlJSImporter::Import &import,
-        QmlJSImporter::AvailableTypes *types, const QString &prefix, QTypeRevision version)
+void QQmlJSImporter::importDependencies(
+        const QQmlJSImporter::Import &import,
+        QQmlJSImporter::AvailableTypes *types, const QString &prefix, QTypeRevision version)
 {
     // Import the dependencies with an invalid prefix. The prefix will never be matched by actual
     // QML code but the C++ types will be visible.
@@ -130,9 +130,9 @@ void QmlJSImporter::importDependencies(
     }
 }
 
-void QmlJSImporter::processImport(
-        const QmlJSImporter::Import &import,
-        QmlJSImporter::AvailableTypes *types,
+void QQmlJSImporter::processImport(
+        const QQmlJSImporter::Import &import,
+        QQmlJSImporter::AvailableTypes *types,
         const QString &prefix)
 {
     for (auto it = import.scripts.begin(); it != import.scripts.end(); ++it)
@@ -158,7 +158,7 @@ void QmlJSImporter::processImport(
 /*!
  * Imports builtins.qmltypes found in any of the import paths.
  */
-QmlJSImporter::ImportedTypes QmlJSImporter::importBuiltins()
+QQmlJSImporter::ImportedTypes QQmlJSImporter::importBuiltins()
 {
     AvailableTypes types;
 
@@ -178,7 +178,7 @@ QmlJSImporter::ImportedTypes QmlJSImporter::importBuiltins()
 /*!
  * Imports types from the specified \a qmltypesFiles.
  */
-QmlJSImporter::ImportedTypes QmlJSImporter::importQmltypes(const QStringList &qmltypesFiles)
+QQmlJSImporter::ImportedTypes QQmlJSImporter::importQmltypes(const QStringList &qmltypesFiles)
 {
     AvailableTypes types;
     Import result;
@@ -192,7 +192,7 @@ QmlJSImporter::ImportedTypes QmlJSImporter::importQmltypes(const QStringList &qm
     return types.qmlNames;
 }
 
-QmlJSImporter::ImportedTypes QmlJSImporter::importModule(
+QQmlJSImporter::ImportedTypes QQmlJSImporter::importModule(
         const QString &module, const QString &prefix, QTypeRevision version)
 {
     AvailableTypes result;
@@ -200,7 +200,7 @@ QmlJSImporter::ImportedTypes QmlJSImporter::importModule(
     return result.qmlNames;
 }
 
-void QmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
+void QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
                                                 const QString &prefix, QTypeRevision version)
 {
 
@@ -227,7 +227,7 @@ void QmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
     m_seenImports.insert(importId, {});
 }
 
-QQmlJSScope::Ptr QmlJSImporter::localFile2ScopeTree(const QString &filePath)
+QQmlJSScope::Ptr QQmlJSImporter::localFile2ScopeTree(const QString &filePath)
 {
     const auto seen = m_importedFiles.find(filePath);
     if (seen != m_importedFiles.end())
@@ -262,7 +262,7 @@ QQmlJSScope::Ptr QmlJSImporter::localFile2ScopeTree(const QString &filePath)
     return result;
 }
 
-QmlJSImporter::ImportedTypes QmlJSImporter::importFileOrDirectory(
+QQmlJSImporter::ImportedTypes QQmlJSImporter::importFileOrDirectory(
         const QString &fileOrDirectory, const QString &prefix)
 {
     AvailableTypes result;

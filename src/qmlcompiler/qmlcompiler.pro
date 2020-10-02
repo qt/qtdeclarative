@@ -6,7 +6,7 @@ CONFIG    += internal_module
 SOURCES = \
     qqmljsresourcefilemapper.cpp \
     qqmljsimportedmembersvisitor.cpp \
-    qmljsimporter.cpp \
+    qqmljsimporter.cpp \
     qmljstypereader.cpp \
     qqmljsscope.cpp \
     typedescriptionreader.cpp \
@@ -15,7 +15,7 @@ SOURCES = \
 HEADERS = \
     qqmljsresourcefilemapper_p.h \
     qqmljsimportedmembersvisitor_p.h \
-    qmljsimporter_p.h \
+    qqmljsimporter_p.h \
     qmljstypereader_p.h \
     qqmljsmetatypes_p.h \
     qqmljsscope_p.h \

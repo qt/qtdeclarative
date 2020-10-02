@@ -30,7 +30,7 @@
 #define CHECKIDENTIFIERS_H
 
 #include <QtQmlCompiler/private/qqmljsscope_p.h>
-#include <QtQmlCompiler/private/qmljsimporter_p.h>
+#include <QtQmlCompiler/private/qqmljsimporter_p.h>
 
 class ColorOutput;
 
@@ -52,7 +52,7 @@ class CheckIdentifiers
 {
 public:
     CheckIdentifiers(ColorOutput *colorOut, const QString &code,
-                     const QmlJSImporter::ImportedTypes &types, const QString &fileName) :
+                     const QQmlJSImporter::ImportedTypes &types, const QString &fileName) :
         m_colorOut(colorOut), m_code(code), m_types(types), m_fileName(fileName)
     {}
 
@@ -71,7 +71,7 @@ private:
 
     ColorOutput *m_colorOut = nullptr;
     QString m_code;
-    QmlJSImporter::ImportedTypes m_types;
+    QQmlJSImporter::ImportedTypes m_types;
     QString m_fileName;
 };
 

@@ -44,7 +44,7 @@
 
 #include <QtQmlCompiler/private/typedescriptionreader_p.h>
 #include <QtQmlCompiler/private/qqmljsscope_p.h>
-#include <QtQmlCompiler/private/qmljsimporter_p.h>
+#include <QtQmlCompiler/private/qqmljsimporter_p.h>
 
 #include <QtQml/private/qqmldirparser_p.h>
 #include <QtQml/private/qqmljsastvisitor_p.h>
@@ -63,7 +63,7 @@ public:
     bool check();
 
 private:
-    QmlJSImporter::ImportedTypes m_rootScopeImports;
+    QQmlJSImporter::ImportedTypes m_rootScopeImports;
 
     QHash<QQmlJS::SourceLocation, SignalHandler> m_signalHandlers;
     QQmlJS::SourceLocation m_pendingSingalHandler;
@@ -95,7 +95,7 @@ private:
 
     QVarLengthArray<OutstandingConnection, 3> m_outstandingConnections; // Connections whose target we have not encountered
 
-    QmlJSImporter m_importer;
+    QQmlJSImporter m_importer;
 
     void enterEnvironment(ScopeType type, const QString &name);
     void leaveEnvironment();
