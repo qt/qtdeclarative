@@ -60,7 +60,7 @@
 #include <algorithm>
 
 #include "qmltypereader.h"
-#include "qmlstreamwriter_p.h"
+#include "qqmljsstreamwriter_p.h"
 
 #ifdef QT_SIMULATOR
 #include <QtGui/private/qsimulatorconnection_p.h>
@@ -360,11 +360,11 @@ public:
 
 class Dumper
 {
-    QmlStreamWriter *qml;
+    QQmlJSStreamWriter *qml;
     QString relocatableModuleUri;
 
 public:
-    Dumper(QmlStreamWriter *qml) : qml(qml) {}
+    Dumper(QQmlJSStreamWriter *qml) : qml(qml) {}
 
     void setRelocatableModuleUri(const QString &uri)
     {
@@ -1346,7 +1346,7 @@ int main(int argc, char *argv[])
 
     // start dumping data
     QByteArray bytes;
-    QmlStreamWriter qml(&bytes);
+    QQmlJSStreamWriter qml(&bytes);
 
     qml.writeStartDocument();
     qml.writeLibraryImport(QLatin1String("QtQuick.tooling"), 1, 2);

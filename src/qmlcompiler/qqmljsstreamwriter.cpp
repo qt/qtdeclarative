@@ -26,12 +26,12 @@
 **
 ****************************************************************************/
 
-#include "qmlstreamwriter_p.h"
+#include "qqmljsstreamwriter_p.h"
 
 #include <QtCore/QBuffer>
 #include <QtCore/QStringList>
 
-QmlStreamWriter::QmlStreamWriter(QByteArray *array)
+QQmlJSStreamWriter::QQmlJSStreamWriter(QByteArray *array)
     : m_indentDepth(0)
     , m_pendingLineLength(0)
     , m_maybeOneline(false)
@@ -40,15 +40,15 @@ QmlStreamWriter::QmlStreamWriter(QByteArray *array)
     m_stream->open(QIODevice::WriteOnly);
 }
 
-void QmlStreamWriter::writeStartDocument()
+void QQmlJSStreamWriter::writeStartDocument()
 {
 }
 
-void QmlStreamWriter::writeEndDocument()
+void QQmlJSStreamWriter::writeEndDocument()
 {
 }
 
-void QmlStreamWriter::writeLibraryImport(const QString &uri, int majorVersion, int minorVersion, const QString &as)
+void QQmlJSStreamWriter::writeLibraryImport(const QString &uri, int majorVersion, int minorVersion, const QString &as)
 {
     m_stream->write(QString::fromLatin1("import %1 %2.%3").arg(uri, QString::number(majorVersion), QString::number(minorVersion)).toUtf8());
     if (!as.isEmpty())
@@ -56,7 +56,7 @@ void QmlStreamWriter::writeLibraryImport(const QString &uri, int majorVersion, i
     m_stream->write("\n");
 }
 
-void QmlStreamWriter::writeStartObject(const QString &component)
+void QQmlJSStreamWriter::writeStartObject(const QString &component)
 {
     flushPotentialLinesWithNewlines();
     writeIndent();
@@ -65,7 +65,7 @@ void QmlStreamWriter::writeStartObject(const QString &component)
     m_maybeOneline = true;
 }
 
-void QmlStreamWriter::writeEndObject()
+void QQmlJSStreamWriter::writeEndObject()
 {
     if (m_maybeOneline && !m_pendingLines.isEmpty()) {
         --m_indentDepth;
@@ -87,17 +87,17 @@ void QmlStreamWriter::writeEndObject()
     }
 }
 
-void QmlStreamWriter::writeScriptBinding(const QString &name, const QString &rhs)
+void QQmlJSStreamWriter::writeScriptBinding(const QString &name, const QString &rhs)
 {
     writePotentialLine(QString::fromLatin1("%1: %2").arg(name, rhs).toUtf8());
 }
 
-void QmlStreamWriter::writeBooleanBinding(const QString &name, bool value)
+void QQmlJSStreamWriter::writeBooleanBinding(const QString &name, bool value)
 {
     writeScriptBinding(name, value ? QLatin1String("true") : QLatin1String("false"));
 }
 
-void QmlStreamWriter::writeArrayBinding(const QString &name, const QStringList &elements)
+void QQmlJSStreamWriter::writeArrayBinding(const QString &name, const QStringList &elements)
 {
     flushPotentialLinesWithNewlines();
     writeIndent();
@@ -133,13 +133,13 @@ void QmlStreamWriter::writeArrayBinding(const QString &name, const QStringList &
     m_stream->write("]\n");
 }
 
-void QmlStreamWriter::write(const QString &data)
+void QQmlJSStreamWriter::write(const QString &data)
 {
     flushPotentialLinesWithNewlines();
     m_stream->write(data.toUtf8());
 }
 
-void QmlStreamWriter::writeScriptObjectLiteralBinding(const QString &name, const QList<QPair<QString, QString> > &keyValue)
+void QQmlJSStreamWriter::writeScriptObjectLiteralBinding(const QString &name, const QList<QPair<QString, QString> > &keyValue)
 {
     flushPotentialLinesWithNewlines();
     writeIndent();
@@ -161,12 +161,12 @@ void QmlStreamWriter::writeScriptObjectLiteralBinding(const QString &name, const
     m_stream->write("}\n");
 }
 
-void QmlStreamWriter::writeIndent()
+void QQmlJSStreamWriter::writeIndent()
 {
     m_stream->write(QByteArray(m_indentDepth * 4, ' '));
 }
 
-void QmlStreamWriter::writePotentialLine(const QByteArray &line)
+void QQmlJSStreamWriter::writePotentialLine(const QByteArray &line)
 {
     m_pendingLines.append(line);
     m_pendingLineLength += line.size();
@@ -175,7 +175,7 @@ void QmlStreamWriter::writePotentialLine(const QByteArray &line)
     }
 }
 
-void QmlStreamWriter::flushPotentialLinesWithNewlines()
+void QQmlJSStreamWriter::flushPotentialLinesWithNewlines()
 {
     if (m_maybeOneline)
         m_stream->write("\n");

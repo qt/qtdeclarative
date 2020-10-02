@@ -8,7 +8,7 @@ qt_get_tool_target_name(target_name qmlplugindump)
 qt_add_tool(${target_name}
     TARGET_DESCRIPTION "QML Plugin Metadata Dumper"
     SOURCES
-        ../../src/qmlcompiler/qmlstreamwriter.cpp ../../src/qmlcompiler/qmlstreamwriter_p.h
+        ../../src/qmlcompiler/qqmljsstreamwriter.cpp ../../src/qmlcompiler/qqmljsstreamwriter_p.h
         main.cpp
         qmltypereader.cpp qmltypereader.h
     INCLUDE_DIRECTORIES

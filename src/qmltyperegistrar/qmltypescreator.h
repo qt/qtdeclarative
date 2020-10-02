@@ -30,7 +30,7 @@
 #define QMLTYPESCREATOR_H
 
 #include "qmltypesclassdescription.h"
-#include "qmlstreamwriter_p.h"
+#include "qqmljsstreamwriter_p.h"
 
 #include <QtCore/qstring.h>
 #include <QtCore/qset.h>
@@ -58,7 +58,7 @@ private:
     void writeComponents();
 
     QByteArray m_output;
-    QmlStreamWriter m_qml;
+    QQmlJSStreamWriter m_qml;
     QVector<QJsonObject> m_ownTypes;
     QVector<QJsonObject> m_foreignTypes;
     QString m_module;

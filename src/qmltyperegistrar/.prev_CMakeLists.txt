@@ -8,7 +8,7 @@ qt_get_tool_target_name(target_name qmltyperegistrar)
 qt_add_tool(${target_name}
     TARGET_DESCRIPTION "QML Types Registrar"
     SOURCES
-        ../qmlcompiler/qmlstreamwriter.cpp ../qmlcompiler/qmlstreamwriter_p.h
+        ../qmlcompiler/qqmljsstreamwriter.cpp ../qmlcompiler/qqmljsstreamwriter_p.h
         qmltyperegistrar.cpp
         qmltypesclassdescription.cpp qmltypesclassdescription.h
         qmltypescreator.cpp qmltypescreator.h

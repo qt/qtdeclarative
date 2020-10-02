@@ -11,13 +11,13 @@ QMAKE_TARGET_DESCRIPTION = QML Types Registrar
 INCLUDEPATH += $$PWD/../qmlcompiler
 
 SOURCES += \
-    ../qmlcompiler/qmlstreamwriter.cpp \
+    ../qmlcompiler/qqmljsstreamwriter.cpp \
     qmltyperegistrar.cpp \
     qmltypesclassdescription.cpp \
     qmltypescreator.cpp
 
 HEADERS += \
-    ../qmlcompiler/qmlstreamwriter_p.h \
+    ../qmlcompiler/qqmljsstreamwriter_p.h \
     qmltypesclassdescription.h \
     qmltypescreator.h
 

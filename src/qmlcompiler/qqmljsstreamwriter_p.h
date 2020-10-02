@@ -26,8 +26,8 @@
 **
 ****************************************************************************/
 
-#ifndef QMLSTREAMWRITER_H
-#define QMLSTREAMWRITER_H
+#ifndef QQMLJSSTREAMWRITER_P_H
+#define QQMLJSSTREAMWRITER_P_H
 
 //
 //  W A R N I N G
@@ -45,10 +45,10 @@
 #include <QtCore/QScopedPointer>
 #include <QtCore/QPair>
 
-class QmlStreamWriter
+class QQmlJSStreamWriter
 {
 public:
-    QmlStreamWriter(QByteArray *array);
+    QQmlJSStreamWriter(QByteArray *array);
 
     void writeStartDocument();
     void writeEndDocument();
@@ -74,4 +74,4 @@ private:
     QScopedPointer<QIODevice> m_stream;
 };
 
-#endif // QMLSTREAMWRITER_H
+#endif // QQMLJSSTREAMWRITER_P_H

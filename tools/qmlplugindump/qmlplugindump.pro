@@ -11,12 +11,12 @@ QTPLUGIN.platforms = qminimal
 INCLUDEPATH += $$PWD/../../src/qmlcompiler
 
 SOURCES += \
-    ../../src/qmlcompiler/qmlstreamwriter.cpp \
+    ../../src/qmlcompiler/qqmljsstreamwriter.cpp \
     main.cpp \
     qmltypereader.cpp
 
 HEADERS += \
-    ../../src/qmlcompiler/qmlstreamwriter_p.h \
+    ../../src/qmlcompiler/qqmljsstreamwriter_p.h \
     qmltypereader.h
 
 macx {
