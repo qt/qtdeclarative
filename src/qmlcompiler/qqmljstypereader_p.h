@@ -26,8 +26,8 @@
 **
 ****************************************************************************/
 
-#ifndef QMLJSTYPERADER_H
-#define QMLJSTYPERADER_H
+#ifndef QQMLJSTYPEREADER_P_H
+#define QQMLJSTYPEREADER_P_H
 
 //
 //  W A R N I N G
@@ -46,7 +46,7 @@
 #include <QtCore/qpair.h>
 #include <QtCore/qset.h>
 
-class QmlJSTypeReader
+class QQmlJSTypeReader
 {
 public:
     struct Import {
@@ -55,7 +55,7 @@ public:
         QString prefix;
     };
 
-    QmlJSTypeReader(const QString &file) : m_file(file) {}
+    QQmlJSTypeReader(const QString &file) : m_file(file) {}
 
     QQmlJSScope::Ptr operator()();
     QList<Import> imports() const { return m_imports; }
@@ -67,4 +67,4 @@ private:
     QStringList m_errors;
 };
 
-#endif // QMLJSTYPEREADER_H
+#endif // QQMLJSTYPEREADER_P_H

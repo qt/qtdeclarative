@@ -8,13 +8,13 @@ qt_add_module(QmlCompiler
     STATIC
     INTERNAL_MODULE
     SOURCES
-        qmljstypereader.cpp qmljstypereader_p.h
         qqmljsimportedmembersvisitor.cpp qqmljsimportedmembersvisitor_p.h
         qqmljsimporter.cpp qqmljsimporter_p.h
         qqmljsmetatypes_p.h
         qqmljsresourcefilemapper.cpp qqmljsresourcefilemapper_p.h
         qqmljsscope.cpp qqmljsscope_p.h
         qqmljsstreamwriter.cpp qqmljsstreamwriter_p.h
+        qqmljstypereader.cpp qqmljstypereader_p.h
         typedescriptionreader.cpp typedescriptionreader_p.h
     PUBLIC_LIBRARIES
         Qt::CorePrivate

@@ -28,7 +28,7 @@
 
 #include "qqmljsimporter_p.h"
 #include "typedescriptionreader_p.h"
-#include "qmljstypereader_p.h"
+#include "qqmljstypereader_p.h"
 
 #include <QtQml/private/qqmlimportresolver_p.h>
 
@@ -233,7 +233,7 @@ QQmlJSScope::Ptr QQmlJSImporter::localFile2ScopeTree(const QString &filePath)
     if (seen != m_importedFiles.end())
         return *seen;
 
-    QmlJSTypeReader typeReader(filePath);
+    QQmlJSTypeReader typeReader(filePath);
     QQmlJSScope::Ptr result = typeReader();
     m_importedFiles.insert(filePath, result);
 

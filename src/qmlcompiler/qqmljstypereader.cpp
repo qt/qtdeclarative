@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 
-#include "qmljstypereader_p.h"
+#include "qqmljstypereader_p.h"
 #include "qqmljsimportedmembersvisitor_p.h"
 
 #include <QtQml/private/qqmljsast_p.h>
@@ -38,10 +38,10 @@
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qdebug.h>
 
-static QList<QmlJSTypeReader::Import> parseHeaders(QQmlJS::AST::UiHeaderItemList *header)
+static QList<QQmlJSTypeReader::Import> parseHeaders(QQmlJS::AST::UiHeaderItemList *header)
 {
     using namespace QQmlJS::AST;
-    QList<QmlJSTypeReader::Import> imports;
+    QList<QQmlJSTypeReader::Import> imports;
 
     for (; header; header = header->next) {
         auto import = cast<UiImport *>(header->headerItem);
@@ -83,7 +83,7 @@ static QQmlJSScope::Ptr parseProgram(QQmlJS::AST::Program *program, const QStrin
     return result;
 }
 
-QQmlJSScope::Ptr QmlJSTypeReader::operator()()
+QQmlJSScope::Ptr QQmlJSTypeReader::operator()()
 {
     using namespace QQmlJS::AST;
     const QFileInfo info { m_file };

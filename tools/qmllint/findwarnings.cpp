@@ -31,7 +31,7 @@
 
 #include <QtQmlCompiler/private/qqmljsscope_p.h>
 #include <QtQmlCompiler/private/typedescriptionreader_p.h>
-#include <QtQmlCompiler/private/qmljstypereader_p.h>
+#include <QtQmlCompiler/private/qqmljstypereader_p.h>
 
 #include <QtQml/private/qqmljsast_p.h>
 #include <QtQml/private/qqmljslexer_p.h>
