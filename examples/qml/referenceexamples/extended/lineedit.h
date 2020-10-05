@@ -86,7 +86,7 @@ struct QLineEditForeign
 {
     Q_GADGET
     QML_FOREIGN(QLineEdit)
-    QML_ELEMENT
+    QML_NAMED_ELEMENT(QLineEdit)
     QML_EXTENDED(LineEditExtension)
 };
 // ![0]
