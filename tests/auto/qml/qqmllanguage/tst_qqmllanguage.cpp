@@ -5969,8 +5969,8 @@ public:
 
 void tst_qqmllanguage::registerValueTypes()
 {
-    QTest::ignoreMessage(QtWarningMsg, "Invalid QML element name \"UpperCase\"; value type names must begin with a lowercase letter");
-    QCOMPARE(qmlRegisterType<TestValueType>("DoesNotWork", 1, 0, "UpperCase"), -1);
+    QTest::ignoreMessage(QtWarningMsg, "Invalid QML element name \"UpperCase\"; value type names should begin with a lowercase letter");
+    QVERIFY(qmlRegisterType<TestValueType>("DoesNotWork", 1, 0, "UpperCase") >= 0);
     QVERIFY(qmlRegisterType<TestObjectType>("DoesWork", 1, 0, "TestObject") >= 0);
 
     {

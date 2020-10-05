@@ -51,6 +51,7 @@
 #include <QtCore/qloggingcategory.h>
 
 Q_DECLARE_LOGGING_CATEGORY(DBG_DISK_CACHE)
+Q_LOGGING_CATEGORY(lcTypeRegistration, "qt.qml.typeregistration")
 
 QT_BEGIN_NAMESPACE
 
@@ -411,9 +412,12 @@ bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *da
 
         if (typeName.at(0).isUpper()
                 && (flags & (QMetaType::IsGadget | QMetaType::PointerToGadget))) {
-            QString failure(QCoreApplication::translate("qmlRegisterType", "Invalid QML %1 name \"%2\"; value type names must begin with a lowercase letter"));
-            data->recordTypeRegFailure(failure.arg(registrationTypeString(typeType)).arg(typeName));
-            return false;
+            qCWarning(lcTypeRegistration).noquote()
+                    << QCoreApplication::translate(
+                           "qmlRegisterType",
+                           "Invalid QML %1 name \"%2\"; "
+                           "value type names should begin with a lowercase letter")
+                       .arg(registrationTypeString(typeType)).arg(typeName);
         }
 
         // There can also be types that aren't even gadgets, and there can be types for namespaces.
