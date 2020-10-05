@@ -152,8 +152,8 @@ protected:
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QStyleOptionFrame::FrameFeatures)
 
-typedef Q_DECL_DEPRECATED QStyleOptionFrame QStyleOptionFrameV2;
-typedef Q_DECL_DEPRECATED QStyleOptionFrame QStyleOptionFrameV3;
+Q_DECL_DEPRECATED typedef QStyleOptionFrame QStyleOptionFrameV2;
+Q_DECL_DEPRECATED typedef QStyleOptionFrame QStyleOptionFrameV3;
 
 class QStyleOptionTab : public QStyleOption
 {
@@ -217,7 +217,7 @@ protected:
     QStyleOptionTabWidgetFrame(int version);
 };
 
-typedef Q_DECL_DEPRECATED QStyleOptionTabWidgetFrame QStyleOptionTabWidgetFrameV2;
+Q_DECL_DEPRECATED typedef QStyleOptionTabWidgetFrame QStyleOptionTabWidgetFrameV2;
 
 
 class QStyleOptionTabBarBase : public QStyleOption
@@ -304,8 +304,8 @@ public:
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QStyleOptionTab::CornerWidgets)
 
-typedef Q_DECL_DEPRECATED QStyleOptionTab QStyleOptionTabV2;
-typedef Q_DECL_DEPRECATED QStyleOptionTab QStyleOptionTabV3;
+Q_DECL_DEPRECATED typedef QStyleOptionTab QStyleOptionTabV2;
+Q_DECL_DEPRECATED typedef QStyleOptionTab QStyleOptionTabV3;
 
 
 class QStyleOptionToolBar : public QStyleOption
@@ -406,7 +406,7 @@ protected:
     QStyleOptionDockWidget(int version);
 };
 
-typedef Q_DECL_DEPRECATED QStyleOptionDockWidget QStyleOptionDockWidgetV2;
+Q_DECL_DEPRECATED typedef QStyleOptionDockWidget QStyleOptionDockWidgetV2;
 
 class QStyleOptionViewItem : public QStyleOption
 {
@@ -458,9 +458,9 @@ protected:
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QStyleOptionViewItem::ViewItemFeatures)
 
-typedef Q_DECL_DEPRECATED QStyleOptionViewItem QStyleOptionViewItemV2;
-typedef Q_DECL_DEPRECATED QStyleOptionViewItem QStyleOptionViewItemV3;
-typedef Q_DECL_DEPRECATED QStyleOptionViewItem QStyleOptionViewItemV4;
+Q_DECL_DEPRECATED typedef QStyleOptionViewItem QStyleOptionViewItemV2;
+Q_DECL_DEPRECATED typedef QStyleOptionViewItem QStyleOptionViewItemV3;
+Q_DECL_DEPRECATED typedef QStyleOptionViewItem QStyleOptionViewItemV4;
 
 class QStyleOptionToolBox : public QStyleOption
 {
@@ -485,7 +485,7 @@ protected:
     QStyleOptionToolBox(int version);
 };
 
-typedef Q_DECL_DEPRECATED QStyleOptionToolBox QStyleOptionToolBoxV2;
+Q_DECL_DEPRECATED typedef QStyleOptionToolBox QStyleOptionToolBoxV2;
 
 class QStyleOptionRubberBand : public QStyleOption
 {
