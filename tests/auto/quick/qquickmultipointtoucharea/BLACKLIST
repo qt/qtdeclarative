@@ -11,16 +11,8 @@ opensuse-42.3
 opensuse-leap
 sles
 * # QTBUG-86729
-[stationaryTouchWithChangingPressure] # QTBUG-86729
-*
 [inFlickable]
-* # QTBUG-86729
-[inFlickable2]
-* # QTBUG-86729
-[inFlickableWithPressDelay]
-* # QTBUG-86729
-[reuse]
-* # QTBUG-86729
+macos # QTBUG-86729
 [signalTest]
 macos # QTBUG-86729
 [cancel]
