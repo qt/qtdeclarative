@@ -2811,7 +2811,7 @@ bool QQuickWindowPrivate::deliverPressOrReleaseEvent(QPointerEvent *event, bool 
     }
     for (int i = 0; i < event->pointCount(); ++i) {
         auto &point = event->point(i);
-        if (point.state() == QEventPoint::Pressed && event->type() != QEvent::MouseButtonDblClick)
+        if (point.state() == QEventPoint::Pressed)
             event->clearPassiveGrabbers(point);
         QVector<QQuickItem *> targetItemsForPoint = pointerTargets(contentItem, event, point, !isTouch, isTouch);
         if (targetItems.count()) {
