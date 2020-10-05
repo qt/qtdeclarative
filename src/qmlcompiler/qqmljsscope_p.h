@@ -193,6 +193,16 @@ public:
 
     void resolveTypes(const QHash<QString, ConstPtr> &contextualTypes);
 
+    void setSourceLocation(const QQmlJS::SourceLocation &sourceLocation)
+    {
+        m_sourceLocation = sourceLocation;
+    }
+
+    QQmlJS::SourceLocation sourceLocation() const
+    {
+        return m_sourceLocation;
+    }
+
 private:
     QQmlJSScope(ScopeType type, const QQmlJSScope::Ptr &parentScope = QQmlJSScope::Ptr());
 
@@ -219,6 +229,8 @@ private:
 
     Flags m_flags;
     AccessSemantics m_semantics = AccessSemantics::Reference;
+
+    QQmlJS::SourceLocation m_sourceLocation;
 };
 
 QT_END_NAMESPACE
