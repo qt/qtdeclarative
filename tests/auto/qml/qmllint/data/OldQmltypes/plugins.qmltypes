@@ -6,5 +6,6 @@ Module {
         prototype: "QQuickItem"
         exports: ["OldQmltypes/Frame 1.0"]
         exportMetaObjectRevisions: [0]
+        isComposite: true
     }
 }

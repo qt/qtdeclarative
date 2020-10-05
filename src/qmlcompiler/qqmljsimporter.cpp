@@ -198,7 +198,7 @@ void QQmlJSImporter::processImport(
 
     for (auto it = import.objects.begin(); it != import.objects.end(); ++it) {
         const auto &val = it.value();
-        if (!val->isComposite()) // Otherwise we have already done it in localFile2ScopeTree()
+        if (val->baseType().isNull()) // Otherwise we have already done it in localFile2ScopeTree()
             val->resolveTypes(types->cppNames);
     }
 }
