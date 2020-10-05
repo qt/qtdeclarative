@@ -115,11 +115,6 @@ Rectangle {
             compare(doubleClickSpy.signalArguments[3][0], "pressed")
             compare(doubleClickSpy.signalArguments[4][0], "doubleClick")
             compare(doubleClickSpy.signalArguments[5][0], "released")
-
-            doubleClickSpy.clear()
-            mouseDoubleClick(top, 25, 30)
-            compare(doubleClickSpy.count, 1)
-            compare(doubleClickSpy.signalArguments[0][0], "doubleClick")
         }
     }
 }
