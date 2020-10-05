@@ -264,22 +264,18 @@ QQmlJSScope::Ptr QQmlJSImporter::localFile2ScopeTree(const QString &filePath)
     return result;
 }
 
-QQmlJSImporter::ImportedTypes QQmlJSImporter::importFileOrDirectory(
-        const QString &fileOrDirectory, const QString &prefix)
+QQmlJSScope::Ptr QQmlJSImporter::importFile(const QString &file)
+{
+    return localFile2ScopeTree(file);
+}
+
+QQmlJSImporter::ImportedTypes QQmlJSImporter::importDirectory(
+        const QString &directory, const QString &prefix)
 {
     AvailableTypes result;
 
-    QString name = fileOrDirectory;
-
-    QFileInfo fileInfo(name);
-    if (fileInfo.isFile()) {
-        QQmlJSScope::Ptr scope(localFile2ScopeTree(fileInfo.canonicalFilePath()));
-        result.qmlNames.insert(prefix.isEmpty() ? scope->internalName() : prefix, scope);
-        return result.qmlNames;
-    }
-
     QDirIterator it {
-        fileInfo.canonicalFilePath(),
+        directory,
         QStringList() << QLatin1String("*.qml"),
         QDir::NoFilter
     };

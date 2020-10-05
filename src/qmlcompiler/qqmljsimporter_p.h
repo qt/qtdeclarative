@@ -53,8 +53,10 @@ public:
 
     ImportedTypes importBuiltins();
     ImportedTypes importQmltypes(const QStringList &qmltypesFiles);
-    ImportedTypes importFileOrDirectory(
-            const QString &fileOrDirectory, const QString &prefix = QString());
+
+    QQmlJSScope::Ptr importFile(const QString &file);
+    ImportedTypes importDirectory(const QString &directory, const QString &prefix = QString());
+
     ImportedTypes importModule(
             const QString &module, const QString &prefix = QString(),
             QTypeRevision version = QTypeRevision());

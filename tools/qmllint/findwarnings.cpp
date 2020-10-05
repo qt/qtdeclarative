@@ -137,7 +137,7 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiProgram *)
     // using an empty QQmlJSScope
     m_rootScopeImports.insert(QFileInfo { m_filePath }.baseName(), {});
 
-    const auto imported = m_importer.importFileOrDirectory(QFileInfo(m_filePath).path());
+    const auto imported = m_importer.importDirectory(QFileInfo(m_filePath).canonicalPath());
     m_rootScopeImports.insert(imported);
 
     const QStringList warnings = m_importer.takeWarnings();
@@ -539,10 +539,15 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiImport *import)
     auto filename = import->fileName.toString();
     if (!filename.isEmpty()) {
         const QFileInfo file(filename);
-        const auto imported = m_importer.importFileOrDirectory(
-                    file.isRelative() ? QFileInfo(m_filePath).dir().filePath(filename) : filename,
-                    prefix);
-        m_rootScopeImports.insert(imported);
+        const QFileInfo path(file.isRelative() ? QFileInfo(m_filePath).dir().filePath(filename)
+                                               : filename);
+        if (path.isDir()) {
+            m_rootScopeImports.insert(m_importer.importDirectory(path.canonicalFilePath(), prefix));
+        } else if (path.isFile()) {
+            const auto scope = m_importer.importFile(path.canonicalFilePath());
+            m_rootScopeImports.insert(prefix.isEmpty() ? scope->internalName() : prefix, scope);
+        }
+
     }
 
     QString path {};
