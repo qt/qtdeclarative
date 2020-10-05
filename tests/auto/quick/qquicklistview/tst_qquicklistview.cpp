@@ -298,6 +298,7 @@ private slots:
 
     void requiredObjectListModel();
     void clickHeaderAndFooterWhenClip();
+    void animatedDelegate();
 
 private:
     template <class T> void items(const QUrl &source);
@@ -10092,6 +10093,20 @@ void tst_QQuickListView::clickHeaderAndFooterWhenClip() // QTBUG-85302
     QVERIFY(root->property("footerPressed").isValid() && root->property("footerPressed").canConvert<bool>() && !root->property("footerPressed").toBool());
     QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, footer->mapToItem(root, QPoint(footer->width() / 2, footer->height() / 2)).toPoint());
     QVERIFY(root->property("footerPressed").toBool());
+}
+
+void tst_QQuickListView::animatedDelegate()
+{
+    // QTBUG-86567: Should not crash
+    QScopedPointer<QQuickView> window(createView());
+    window->setSource(testFileUrl("animatedDelegate.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    for (int i = 0; i < 100; ++i) {
+        QMetaObject::invokeMethod(window->rootObject(), "refreshModel");
+        QTest::qWait(10);
+    }
 }
 
 QTEST_MAIN(tst_QQuickListView)
