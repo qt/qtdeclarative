@@ -1,5 +1,5 @@
 module Things
 Something 1.0 SomethingElse.qml
-plugin doesNotExistPlugin
+typeinfo plugins.qmltypes
 depends QtQuick 2.0
 import QtQml

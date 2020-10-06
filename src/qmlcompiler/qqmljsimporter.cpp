@@ -105,8 +105,21 @@ QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &path)
     for (auto it = qmlComponents.begin(), end = qmlComponents.end(); it != end; ++it)
         result.objects.insert(it.key(), it.value());
 
-    if (!reader.plugins().isEmpty() && QFile::exists(path + SlashPluginsDotQmltypes))
-        readQmltypes(path + SlashPluginsDotQmltypes, &result.objects);
+    const auto typeInfos = reader.typeInfos();
+    for (const auto &typeInfo : typeInfos) {
+        const QString typeInfoPath = QFileInfo(typeInfo).isRelative()
+                ? path + u'/' + typeInfo : typeInfo;
+        readQmltypes(typeInfoPath, &result.objects);
+    }
+
+    if (typeInfos.isEmpty() && !reader.plugins().isEmpty()) {
+        const QString defaultTypeInfoPath = path + SlashPluginsDotQmltypes;
+        if (QFile::exists(defaultTypeInfoPath)) {
+            m_warnings.append(QStringLiteral("typeinfo not declared in qmldir file: ")
+                              + defaultTypeInfoPath);
+            readQmltypes(defaultTypeInfoPath, &result.objects);
+        }
+    }
 
     const auto scripts = reader.scripts();
     for (const auto &script : scripts) {

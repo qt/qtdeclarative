@@ -1,3 +1,4 @@
 module Qt.labs.sharedimage
 plugin sharedimageplugin
+typeinfo plugins.qmltypes
 classname QtQuickSharedImagePlugin

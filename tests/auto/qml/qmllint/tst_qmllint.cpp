@@ -51,6 +51,7 @@ private Q_SLOTS:
     void testUnknownCausesFail();
 
     void directoryPassedAsQmlTypesFile();
+    void oldQmltypes();
 
 private:
     QString runQmllint(const QString &fileToLint,
@@ -131,6 +132,12 @@ void TestQmllint::directoryPassedAsQmlTypesFile()
     const QString expectedError = QStringLiteral("Warning: QML types file cannot be a directory: ") + dataDirectory();
     QVERIFY2(errorMessages.contains(expectedError), qPrintable(QString::fromLatin1(
         "Expected error to contain \"%1\", but it didn't: %2").arg(expectedError, errorMessages)));
+}
+
+void TestQmllint::oldQmltypes()
+{
+    const QString errors = runQmllint("oldQmltypes.qml", true);
+    QVERIFY(errors.contains(QStringLiteral("Warning: typeinfo not declared in qmldir file")));
 }
 
 void TestQmllint::dirtyQmlCode_data()

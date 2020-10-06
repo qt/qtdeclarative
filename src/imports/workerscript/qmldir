@@ -1,4 +1,5 @@
 module QtQml.WorkerScript
 optional plugin workerscriptplugin
 classname QtQmlWorkerScriptPlugin
+typeinfo plugins.qmltypes
 designersupported
