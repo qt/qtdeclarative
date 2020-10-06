@@ -41,6 +41,7 @@
 
 #include <QtCore/qglobal.h>
 #include <QtCore/qscopedpointer.h>
+#include <QtCore/qstring.h>
 
 class ColorOutputPrivate;
 
@@ -104,6 +105,8 @@ public:
 
     void writeUncolored(const QString &message);
     void write(const QString &message, int color = -1);
+    void writePrefixedMessage(const QString &message, MessageColors type,
+                              const QString &prefix = QString());
     QString colorify(const QString &message, int color = -1) const;
 
 private:

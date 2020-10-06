@@ -68,10 +68,10 @@ void FindWarningVisitor::importExportedNames(QQmlJSScope::ConstPtr scope)
             }
 
             if (m_warnInheritanceCycle) {
-                m_colorOut.write(QLatin1String("Warning: "), Warning);
-                m_colorOut.write(QString::fromLatin1("%1 is part of an inheritance cycle: %2\n")
-                                 .arg(scope->internalName())
-                                 .arg(inheritenceCycle));
+                m_colorOut.writePrefixedMessage(
+                            QString::fromLatin1("%1 is part of an inheritance cycle: %2\n")
+                            .arg(scope->internalName())
+                            .arg(inheritenceCycle), Warning);
             }
 
             m_unknownImports.insert(scope->internalName());
@@ -92,10 +92,10 @@ void FindWarningVisitor::importExportedNames(QQmlJSScope::ConstPtr scope)
         } else if (auto newScope = scope->baseType()) {
             scope = newScope;
         } else {
-            m_colorOut.write(QLatin1String("Warning: "), Warning);
-            m_colorOut.write(scope->baseTypeName()
-                             + QLatin1String(" was not found."
-                                             " Did you add all import paths?\n"));
+            m_colorOut.writePrefixedMessage(
+                        scope->baseTypeName()
+                        + QLatin1String(" was not found. Did you add all import paths?\n"),
+                        Warning);
             m_unknownImports.insert(scope->baseTypeName());
             m_visitFailed = true;
             break;
@@ -118,8 +118,8 @@ void FindWarningVisitor::flushPendingSignalParameters()
 
 void FindWarningVisitor::throwRecursionDepthError()
 {
-    m_colorOut.write(QStringLiteral("Error"), Error);
-    m_colorOut.write(QStringLiteral("Maximum statement or expression depth exceeded"), Error);
+    m_colorOut.writePrefixedMessage(
+                QStringLiteral("Maximum statement or expression depth exceeded"), Error);
     m_visitFailed = true;
 }
 
@@ -141,10 +141,8 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiProgram *)
     m_rootScopeImports.insert(imported);
 
     const QStringList warnings = m_importer.takeWarnings();
-    for (const QString &warning : warnings) {
-        m_colorOut.write(QStringLiteral("warning: "), Warning);
-        m_colorOut.writeUncolored(warning);
-    }
+    for (const QString &warning : warnings)
+        m_colorOut.writePrefixedMessage(warning, Warning);
 
     return true;
 }
@@ -258,13 +256,12 @@ void FindWarningVisitor::endVisit(QQmlJS::AST::Catch *)
 bool FindWarningVisitor::visit(QQmlJS::AST::WithStatement *withStatement)
 {
     if (m_warnWithStatement) {
-        m_colorOut.write(QString::fromLatin1("Warning: "), Warning);
-        m_colorOut.write(QString::fromLatin1(
+        m_colorOut.writePrefixedMessage(QString::fromLatin1(
                              "%1:%2: with statements are strongly discouraged in QML "
                              "and might cause false positives when analysing unqalified identifiers\n")
                          .arg(withStatement->firstSourceLocation().startLine)
                          .arg(withStatement->firstSourceLocation().startColumn),
-                         Normal);
+                         Warning);
     }
 
     enterEnvironment(QQmlJSScope::JSLexicalScope, "with");
@@ -317,11 +314,10 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
 
         if (!m_currentScope->methods().contains(signal) && m_warnUnqualified) {
             const auto location = uisb->firstSourceLocation();
-            m_colorOut.write(QLatin1String("Warning: "), Warning);
-            m_colorOut.write(QString::fromLatin1(
+            m_colorOut.writePrefixedMessage(QString::fromLatin1(
                                    "no matching signal found for handler \"%1\" at %2:%3:%4\n")
                                    .arg(name.toString()).arg(m_filePath).arg(location.startLine)
-                                   .arg(location.startColumn), Normal);
+                                   .arg(location.startColumn), Warning);
             CheckIdentifiers::printContext(m_code, &m_colorOut, location);
             return true;
         }
@@ -570,10 +566,8 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiImport *import)
     m_rootScopeImports.insert(imported);
 
     const QStringList warnings = m_importer.takeWarnings();
-    for (const QString &warning : warnings) {
-        m_colorOut.write(QStringLiteral("warning: "), Warning);
-        m_colorOut.writeUncolored(warning);
-    }
+    for (const QString &warning : warnings)
+        m_colorOut.writePrefixedMessage(warning, Warning);
 
     return true;
 }

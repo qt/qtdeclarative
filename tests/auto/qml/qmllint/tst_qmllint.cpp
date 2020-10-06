@@ -128,7 +128,7 @@ void TestQmllint::directoryPassedAsQmlTypesFile()
 {
     const QStringList iArg = QStringList() << QStringLiteral("-i") << dataDirectory();
     const QString errorMessages = runQmllint("unknownElement.qml", false, iArg);
-    const QString expectedError = QStringLiteral("warning: QML types file cannot be a directory: ") + dataDirectory();
+    const QString expectedError = QStringLiteral("Warning: QML types file cannot be a directory: ") + dataDirectory();
     QVERIFY2(errorMessages.contains(expectedError), qPrintable(QString::fromLatin1(
         "Expected error to contain \"%1\", but it didn't: %2").arg(expectedError, errorMessages)));
 }

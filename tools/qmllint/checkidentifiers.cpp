@@ -55,11 +55,6 @@ private:
     QStringView m_afterText;
 };
 
-static void writeWarning(ColorOutput *out)
-{
-    out->write(QLatin1String("Warning: "), Warning);
-}
-
 static const QStringList unknownBuiltins = {
     // TODO: "string" should be added to builtins.qmltypes, and the special handling below removed
     QStringLiteral("alias"),    // TODO: we cannot properly resolve aliases, yet
@@ -124,15 +119,14 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
     QQmlJSScope::ConstPtr scope = outerScope;
     for (const FieldMember &access : members) {
         if (scope.isNull()) {
-            writeWarning(m_colorOut);
-            m_colorOut->write(
+            m_colorOut->writePrefixedMessage(
                         QString::fromLatin1("Type \"%1\" of base \"%2\" not found when accessing member \"%3\" at %4:%5:%6.\n")
                         .arg(detectedRestrictiveKind)
                         .arg(detectedRestrictiveName)
                         .arg(access.m_name)
                         .arg(m_fileName)
                         .arg(access.m_location.startLine)
-                        .arg(access.m_location.startColumn), Normal);
+                        .arg(access.m_location.startColumn), Warning);
             printContext(m_code, m_colorOut, access.m_location);
             return false;
         }
@@ -143,15 +137,14 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
                 continue;
             }
 
-            writeWarning(m_colorOut);
-            m_colorOut->write(QString::fromLatin1(
+            m_colorOut->writePrefixedMessage(QString::fromLatin1(
                                    "\"%1\" is a %2. You cannot access \"%3\" on it at %4:%5:%6\n")
                                    .arg(detectedRestrictiveName)
                                    .arg(detectedRestrictiveKind)
                                    .arg(access.m_name)
                                    .arg(m_fileName)
                                    .arg(access.m_location.startLine)
-                                   .arg(access.m_location.startColumn), Normal);
+                                   .arg(access.m_location.startColumn), Warning);
             printContext(m_code, m_colorOut, access.m_location);
             return false;
         }
@@ -270,15 +263,14 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
             }
         }
 
-        writeWarning(m_colorOut);
-        m_colorOut->write(QString::fromLatin1(
+        m_colorOut->writePrefixedMessage(QString::fromLatin1(
                                "Property \"%1\" not found on type \"%2\" at %3:%4:%5\n")
                                .arg(access.m_name)
                                .arg(scope->internalName().isEmpty()
                                     ? scope->baseTypeName() : scope->internalName())
                                .arg(m_fileName)
                                .arg(access.m_location.startLine)
-                               .arg(access.m_location.startColumn), Normal);
+                               .arg(access.m_location.startColumn), Warning);
         printContext(m_code, m_colorOut, access.m_location);
         return false;
     }
@@ -346,13 +338,12 @@ bool CheckIdentifiers::operator()(
                     continue;
 
                 if (!qmlIt->type()) {
-                    writeWarning(m_colorOut);
-                    m_colorOut->write(QString::fromLatin1(
+                    m_colorOut->writePrefixedMessage(QString::fromLatin1(
                                            "Type of property \"%2\" not found at %3:%4:%5\n")
                                            .arg(memberAccessBase.m_name)
                                            .arg(m_fileName)
                                            .arg(memberAccessBase.m_location.startLine)
-                                           .arg(memberAccessBase.m_location.startColumn), Normal);
+                                           .arg(memberAccessBase.m_location.startColumn), Warning);
                     printContext(m_code, m_colorOut, memberAccessBase.m_location);
                     noUnqualifiedIdentifier = false;
                 } else if (!checkMemberAccess(memberAccessChain, qmlIt->type(), &*qmlIt)) {
@@ -374,12 +365,11 @@ bool CheckIdentifiers::operator()(
             }
 
             noUnqualifiedIdentifier = false;
-            writeWarning(m_colorOut);
             const auto location = memberAccessBase.m_location;
-            m_colorOut->write(QString::fromLatin1("unqualified access at %1:%2:%3\n")
+            m_colorOut->writePrefixedMessage(QString::fromLatin1("unqualified access at %1:%2:%3\n")
                            .arg(m_fileName)
                            .arg(location.startLine).arg(location.startColumn),
-                           Normal);
+                           Warning);
 
             printContext(m_code, m_colorOut, location);
 
@@ -388,12 +378,16 @@ bool CheckIdentifiers::operator()(
             if (firstElement->properties().contains(memberAccessBase.m_name)
                     || firstElement->methods().contains(memberAccessBase.m_name)
                     || firstElement->enums().contains(memberAccessBase.m_name)) {
-                m_colorOut->write(QLatin1String("Note: "), Info);
-                m_colorOut->write(memberAccessBase.m_name + QLatin1String(" is a member of the root element\n"), Normal );
-                m_colorOut->write(QLatin1String("      You can qualify the access with its id to avoid this warning:\n"), Normal);
+                m_colorOut->writePrefixedMessage(
+                            memberAccessBase.m_name
+                            + QLatin1String(" is a member of the root element\n")
+                            + QLatin1String("      You can qualify the access with its id "
+                                            "to avoid this warning:\n"),
+                            Info, QStringLiteral("Note"));
                 if (rootId == QLatin1String("<id>")) {
-                    m_colorOut->write(QLatin1String("Note: "), Warning);
-                    m_colorOut->write(QLatin1String("You first have to give the root element an id\n"));
+                    m_colorOut->writePrefixedMessage(
+                                QLatin1String("You first have to give the root element an id\n"),
+                                Warning, QStringLiteral("Note"));
                 }
                 IssueLocationWithContext issueLocationWithContext {m_code, location};
                 m_colorOut->write(issueLocationWithContext.beforeText().toString(), Normal);
@@ -403,14 +397,13 @@ bool CheckIdentifiers::operator()(
             } else if (jsId.has_value()
                        && jsId->kind == QQmlJSScope::JavaScriptIdentifier::Injected) {
                 const QQmlJSScope::JavaScriptIdentifier id = jsId.value();
-                m_colorOut->write(QLatin1String("Note: "), Info);
-                m_colorOut->write(
+                m_colorOut->writePrefixedMessage(
                             memberAccessBase.m_name + QString::fromLatin1(
                                 " is accessible in this scope because "
                                 "you are handling a signal at %1:%2:%3\n")
                             .arg(m_fileName)
                             .arg(id.location.startLine).arg(id.location.startColumn),
-                            Normal);
+                            Info, QStringLiteral("Note"));
                 m_colorOut->write(QLatin1String("Consider using a function instead\n"), Normal);
                 IssueLocationWithContext context {m_code, id.location};
                 m_colorOut->write(context.beforeText() + QLatin1Char(' '));

@@ -242,6 +242,23 @@ void ColorOutput::write(const QString &message, int colorID)
         d->write(colorify(message, colorID));
 }
 
+void ColorOutput::writePrefixedMessage(const QString &message, MessageColors type,
+                                       const QString &prefix)
+{
+    static const QStringList prefixes = {
+        QStringLiteral("Error"),
+        QStringLiteral("Warning"),
+        QStringLiteral("Info"),
+        QStringLiteral("Normal"),
+        QStringLiteral("Hint"),
+    };
+
+    Q_ASSERT(prefixes.length() > qsizetype(type));
+    Q_ASSERT(prefix.isEmpty() || prefix.front().isUpper());
+    write((prefix.isEmpty() ? prefixes[type] : prefix) + QStringLiteral(": "), type);
+    writeUncolored(message);
+}
+
 /*!
  Writes \a message to \c stderr as if for instance
  QTextStream would have been used, and adds a line ending at the end.
