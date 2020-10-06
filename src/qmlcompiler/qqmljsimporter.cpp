@@ -244,17 +244,7 @@ QQmlJSScope::Ptr QQmlJSImporter::localFile2ScopeTree(const QString &filePath)
         m_warnings.append(error);
 
     AvailableTypes types;
-
-    QDirIterator it {
-        QFileInfo(filePath).canonicalPath(),
-        QStringList() << QLatin1String("*.qml"),
-        QDir::NoFilter
-    };
-    while (it.hasNext()) {
-        QQmlJSScope::Ptr scope(localFile2ScopeTree(it.next()));
-        if (!scope->internalName().isEmpty())
-            types.qmlNames.insert(scope->internalName(), scope);
-    }
+    types.qmlNames.insert(importDirectory(QFileInfo(filePath).canonicalPath()));
 
     const auto imports = typeReader.imports();
     for (const auto &import : imports)
@@ -272,7 +262,7 @@ QQmlJSScope::Ptr QQmlJSImporter::importFile(const QString &file)
 QQmlJSImporter::ImportedTypes QQmlJSImporter::importDirectory(
         const QString &directory, const QString &prefix)
 {
-    AvailableTypes result;
+    QHash<QString, QQmlJSScope::ConstPtr> qmlNames;
 
     QDirIterator it {
         directory,
@@ -280,12 +270,15 @@ QQmlJSImporter::ImportedTypes QQmlJSImporter::importDirectory(
         QDir::NoFilter
     };
     while (it.hasNext()) {
-        QQmlJSScope::Ptr scope(localFile2ScopeTree(it.next()));
+        it.next();
+        if (!it.fileName().front().isUpper())
+            continue; // Non-uppercase names cannot be imported anyway.
+        QQmlJSScope::Ptr scope(localFile2ScopeTree(it.filePath()));
         if (!scope->internalName().isEmpty())
-            result.qmlNames.insert(prefixedName(prefix, scope->internalName()), scope);
+            qmlNames.insert(prefixedName(prefix, scope->internalName()), scope);
     }
 
-    return result.qmlNames;
+    return qmlNames;
 }
 
 QT_END_NAMESPACE
