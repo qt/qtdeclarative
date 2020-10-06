@@ -75,12 +75,12 @@ void qmlRegisterModule(const char *uri, int versionMajor, int versionMinor)
 static QQmlDirParser::Import resolveImport(const QString &uri, int importMajor, int importMinor)
 {
     if (importMajor == QQmlModuleImportAuto)
-        return QQmlDirParser::Import(uri, QTypeRevision(), true);
+        return QQmlDirParser::Import(uri, QTypeRevision(), QQmlDirParser::Import::Auto);
     else if (importMajor == QQmlModuleImportLatest)
-        return QQmlDirParser::Import(uri, QTypeRevision(), false);
+        return QQmlDirParser::Import(uri, QTypeRevision(), QQmlDirParser::Import::Default);
     else if (importMinor == QQmlModuleImportLatest)
-        return QQmlDirParser::Import(uri, QTypeRevision::fromMajorVersion(importMajor), false);
-    return QQmlDirParser::Import(uri, QTypeRevision::fromVersion(importMajor, importMinor), false);
+        return QQmlDirParser::Import(uri, QTypeRevision::fromMajorVersion(importMajor), QQmlDirParser::Import::Default);
+    return QQmlDirParser::Import(uri, QTypeRevision::fromVersion(importMajor, importMinor), QQmlDirParser::Import::Default);
 }
 
 static QTypeRevision resolveModuleVersion(int moduleMajor)

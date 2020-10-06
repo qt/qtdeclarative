@@ -89,14 +89,15 @@ void QQmlJSImporter::readQmltypes(
     for (const QString &dependency : qAsConst(dependencyStrings)) {
         const auto blank = dependency.indexOf(u' ');
         if (blank < 0) {
-            dependencies->append(QQmlDirParser::Import(dependency, {}, false));
+            dependencies->append(QQmlDirParser::Import(dependency, {},
+                                                       QQmlDirParser::Import::Default));
             continue;
         }
 
         const QString module = dependency.left(blank);
         const QString versionString = dependency.mid(blank + 1).trimmed();
         if (versionString == QStringLiteral("auto")) {
-            dependencies->append(QQmlDirParser::Import(module, {}, true));
+            dependencies->append(QQmlDirParser::Import(module, {}, QQmlDirParser::Import::Auto));
             continue;
         }
 
@@ -107,7 +108,8 @@ void QQmlJSImporter::readQmltypes(
                 : QTypeRevision::fromVersion(versionString.left(dot).toUShort(),
                                              versionString.mid(dot + 1).toUShort());
 
-        dependencies->append(QQmlDirParser::Import(module, version, false));
+        dependencies->append(QQmlDirParser::Import(module, version,
+                                                   QQmlDirParser::Import::Default));
     }
 }
 
@@ -174,7 +176,7 @@ void QQmlJSImporter::importDependencies(
 
     for (auto const &import : qAsConst(import.imports)) {
         importHelper(import.module, types, prefix,
-                     import.isAutoImport ? version : import.version);
+                     (import.flags & QQmlDirParser::Import::Auto) ? version : import.version);
     }
 }
 

@@ -191,7 +191,7 @@ QVariantMap pluginsForModulePath(const QString &modulePath, const QString &versi
 
     const auto imports = parser.imports();
     for (const auto &import : imports) {
-        if (import.isAutoImport) {
+        if (import.flags & QQmlDirParser::Import::Auto) {
             importsAndDependencies.append(
                         import.module + QLatin1Char(' ')
                         + (version.isEmpty() ? QString::fromLatin1("auto") : version));

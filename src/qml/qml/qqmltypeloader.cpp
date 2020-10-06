@@ -742,11 +742,13 @@ bool QQmlTypeLoader::Blob::loadImportDependencies(PendingImportPtr currentImport
             = QQmlMetaType::moduleImports(currentImport->uri, currentImport->version)
             + qmldir.imports();
     for (const auto &implicitImport : implicitImports) {
+        if (implicitImport.flags & QQmlDirParser::Import::Optional)
+            continue;
         auto dependencyImport = std::make_shared<PendingImport>();
         dependencyImport->uri = implicitImport.module;
         dependencyImport->qualifier = currentImport->qualifier;
-        dependencyImport->version = implicitImport.isAutoImport ? currentImport->version
-                                                                : implicitImport.version;
+        dependencyImport->version = (implicitImport.flags & QQmlDirParser::Import::Auto)
+                ? currentImport->version : implicitImport.version;
         if (!addImport(dependencyImport, QQmlImports::ImportLowPrecedence, errors)) {
             QQmlError error;
             error.setDescription(

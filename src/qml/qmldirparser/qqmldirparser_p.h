@@ -134,13 +134,22 @@ public:
 
     struct Import
     {
+        enum Flag {
+            Default  = 0x0,
+            Auto     = 0x1, // forward the version of the importing module
+            Optional = 0x2  // is not automatically imported but only a tooling hint
+        };
+        Q_DECLARE_FLAGS(Flags, Flag)
+
         Import() = default;
-        Import(QString module, QTypeRevision version, bool isAutoImport)
-            : module(module), version(version), isAutoImport(isAutoImport) {}
+        Import(QString module, QTypeRevision version, Flags flags)
+            : module(module), version(version), flags(flags)
+        {
+        }
 
         QString module;
-        QTypeRevision version;     // default: lastest version
-        bool isAutoImport = false; // if set: forward the version of the importing module
+        QTypeRevision version;     // invalid version is latest version, unless Flag::Auto
+        Flags flags;
     };
 
     QMultiHash<QString,Component> components() const;

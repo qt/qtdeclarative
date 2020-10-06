@@ -39,6 +39,7 @@ function(qt_internal_add_qml_module target)
 
     set(qml_module_multi_args
         IMPORTS
+        OPTIONAL_IMPORTS
         TYPEINFO
         DEPENDENCIES
     )
@@ -134,6 +135,7 @@ function(qt_internal_add_qml_module target)
         VERSION ${arg_VERSION}
         QML_FILES ${arg_QML_FILES}
         IMPORTS "${arg_IMPORTS}"
+        OPTIONAL_IMPORTS "${arg_OPTIONAL_IMPORTS}"
         TYPEINFO "${arg_TYPEINFO}"
         DO_NOT_INSTALL_METADATA
         DO_NOT_CREATE_TARGET

@@ -724,7 +724,7 @@ void QQmlMetaType::registerModuleImport(const QString &uri, QTypeRevision module
 
 static bool operator==(const QQmlDirParser::Import &a, const QQmlDirParser::Import &b)
 {
-    return a.module == b.module && a.version == b.version && a.isAutoImport == b.isAutoImport;
+    return a.module == b.module && a.version == b.version && a.flags == b.flags;
 }
 
 void QQmlMetaType::unregisterModuleImport(const QString &uri, QTypeRevision moduleVersion,

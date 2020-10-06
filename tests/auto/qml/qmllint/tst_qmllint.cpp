@@ -282,6 +282,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("enumFromQtQml") << QStringLiteral("enumFromQtQml.qml");
     QTest::newRow("anchors1") << QStringLiteral("anchors1.qml");
     QTest::newRow("anchors2") << QStringLiteral("anchors2.qml");
+    QTest::newRow("optionalImport") << QStringLiteral("optionalImport.qml");
 }
 
 void TestQmllint::cleanQmlCode()

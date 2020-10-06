@@ -63,6 +63,11 @@
 #   as version to forward the version the current module is being imported with,
 #   e.g. QtQuick/auto. (OPTIONAL)
 #
+# OPTIONAL_IMPORTS: List of other Qml Modules that this module may import at
+#   run-time. Those are not automatically imported by the QML engine when
+#   importing the current module, but rather serve as hints to tools like
+#   qmllint. Versions can be specified in the same as for IMPORT. (OPTIONAL)
+#
 # RESOURCE_EXPORT: In static builds, when Qml files are processed via the Qt
 #   Quick Compiler generate a separate static library that will be linked in
 #   as an Interface. Supply an output variable to perform any custom actions
@@ -109,6 +114,7 @@ function(qt6_add_qml_module target)
        SOURCES
        QML_FILES
        IMPORTS
+       OPTIONAL_IMPORTS
        DEPENDENCIES
     )
 
@@ -283,23 +289,29 @@ function(qt6_add_qml_module target)
         # plugins.qmltypes is actually generated.
         string(APPEND qmldir_file_contents "typeinfo plugins.qmltypes\n")
     endif()
-    foreach(import IN LISTS arg_IMPORTS)
-        string(FIND ${import} "/" slash_position REVERSE)
-        if (slash_position EQUAL -1)
-            string(APPEND qmldir_file_contents "import ${import}\n")
-        else()
-            string(SUBSTRING ${import} 0 ${slash_position} import_module)
-            math(EXPR slash_position "${slash_position} + 1")
-            string(SUBSTRING ${import} ${slash_position} -1 import_version)
-            if (import_version MATCHES "[0-9]+\\.[0-9]+" OR import_version MATCHES "[0-9]+")
-                string(APPEND qmldir_file_contents "import ${import_module} ${import_version}\n")
-            elseif (import_version MATCHES "auto")
-                string(APPEND qmldir_file_contents "import ${import_module} auto\n")
+
+    macro(_add_imports imports import_string)
+        foreach(import IN LISTS ${imports})
+            string(FIND ${import} "/" slash_position REVERSE)
+            if (slash_position EQUAL -1)
+                string(APPEND qmldir_file_contents "${import_string} ${import}\n")
             else()
-                message(FATAL_ERROR "Invalid module import version number. Expected 'VersionMajor', 'VersionMajor.VersionMinor' or 'auto'.")
+                string(SUBSTRING ${import} 0 ${slash_position} import_module)
+                math(EXPR slash_position "${slash_position} + 1")
+                string(SUBSTRING ${import} ${slash_position} -1 import_version)
+                if (import_version MATCHES "[0-9]+\\.[0-9]+" OR import_version MATCHES "[0-9]+")
+                    string(APPEND qmldir_file_contents "${import_string} ${import_module} ${import_version}\n")
+                elseif (import_version MATCHES "auto")
+                    string(APPEND qmldir_file_contents "${import_string} ${import_module} auto\n")
+                else()
+                    message(FATAL_ERROR "Invalid module ${import_string} version number. Expected 'VersionMajor', 'VersionMajor.VersionMinor' or 'auto'.")
+                endif()
             endif()
-        endif()
-    endforeach()
+        endforeach()
+    endmacro()
+
+    _add_imports(arg_IMPORTS "import")
+    _add_imports(arg_OPTIONAL_IMPORTS "optional import")
 
     foreach(dependency IN LISTS arg_DEPENDENCIES)
         string(FIND ${dependency} "/" slash_position REVERSE)
