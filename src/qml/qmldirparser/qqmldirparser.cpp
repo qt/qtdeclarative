@@ -253,8 +253,7 @@ bool QQmlDirParser::parse(const QString &source)
                             QStringLiteral("typeinfo requires 1 argument, but %1 were provided").arg(sectionCount - 1));
                 continue;
             }
-            TypeInfo typeInfo(sections[1]);
-            _typeInfos.append(typeInfo);
+            _typeInfos.append(sections[1]);
         } else if (sections[0] == QLatin1String("designersupported")) {
             if (sectionCount != 1)
                 reportError(lineNumber, 0, QStringLiteral("designersupported does not expect any argument"));
@@ -391,7 +390,7 @@ QList<QQmlDirParser::Script> QQmlDirParser::scripts() const
     return _scripts;
 }
 
-QList<QQmlDirParser::TypeInfo> QQmlDirParser::typeInfos() const
+QStringList QQmlDirParser::typeInfos() const
 {
     return _typeInfos;
 }

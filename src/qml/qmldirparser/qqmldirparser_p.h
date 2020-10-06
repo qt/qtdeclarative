@@ -150,17 +150,7 @@ public:
     QList<Plugin> plugins() const;
     bool designerSupported() const;
 
-    struct TypeInfo
-    {
-        TypeInfo() = default;
-        TypeInfo(const QString &fileName)
-            : fileName(fileName) {}
-
-        QString fileName;
-    };
-
-    QList<TypeInfo> typeInfos() const;
-
+    QStringList typeInfos() const;
     QStringList classNames() const;
 
 private:
@@ -176,7 +166,7 @@ private:
     QList<Script> _scripts;
     QList<Plugin> _plugins;
     bool _designerSupported = false;
-    QList<TypeInfo> _typeInfos;
+    QStringList _typeInfos;
     QStringList _classNames;
 };
 
