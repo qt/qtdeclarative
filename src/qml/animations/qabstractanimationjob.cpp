@@ -416,7 +416,10 @@ void QAbstractAnimationJob::setDirection(Direction direction)
 
 void QAbstractAnimationJob::setLoopCount(int loopCount)
 {
+    if (m_loopCount == loopCount)
+        return;
     m_loopCount = loopCount;
+    updateLoopCount(loopCount);
 }
 
 int QAbstractAnimationJob::totalDuration() const
