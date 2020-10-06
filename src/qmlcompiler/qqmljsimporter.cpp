@@ -56,7 +56,8 @@ static QQmlDirParser createQmldirParserForFile(const QString &filename)
 }
 
 void QQmlJSImporter::readQmltypes(
-        const QString &filename, QHash<QString, QQmlJSScope::Ptr> *objects)
+        const QString &filename, QHash<QString, QQmlJSScope::Ptr> *objects,
+        QList<QQmlDirParser::Import> *dependencies)
 {
     const QFileInfo fileInfo(filename);
     if (!fileInfo.exists()) {
@@ -72,10 +73,42 @@ void QQmlJSImporter::readQmltypes(
     QFile file(filename);
     file.open(QFile::ReadOnly);
     QQmlJSTypeDescriptionReader reader { filename, QString::fromUtf8(file.readAll()) };
-    QStringList dependencies;
-    auto succ = reader(objects, &dependencies);
+    QStringList dependencyStrings;
+    auto succ = reader(objects, &dependencyStrings);
     if (!succ)
         m_warnings.append(reader.errorMessage());
+
+    if (dependencyStrings.isEmpty())
+        return;
+
+    m_warnings.append(QStringLiteral("Found deprecated dependency specifications in %1."
+                                     "Specify dependencies in qmldir and use qmltyperegistrar to "
+                                     "generate qmltypes files without dependencies.")
+                      .arg(filename));
+
+    for (const QString &dependency : qAsConst(dependencyStrings)) {
+        const auto blank = dependency.indexOf(u' ');
+        if (blank < 0) {
+            dependencies->append(QQmlDirParser::Import(dependency, {}, false));
+            continue;
+        }
+
+        const QString module = dependency.left(blank);
+        const QString versionString = dependency.mid(blank + 1).trimmed();
+        if (versionString == QStringLiteral("auto")) {
+            dependencies->append(QQmlDirParser::Import(module, {}, true));
+            continue;
+        }
+
+        const auto dot = versionString.indexOf(u'.');
+
+        const QTypeRevision version = dot < 0
+                ? QTypeRevision::fromMajorVersion(versionString.toUShort())
+                : QTypeRevision::fromVersion(versionString.left(dot).toUShort(),
+                                             versionString.mid(dot + 1).toUShort());
+
+        dependencies->append(QQmlDirParser::Import(module, version, false));
+    }
 }
 
 QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &path)
@@ -109,7 +142,7 @@ QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &path)
     for (const auto &typeInfo : typeInfos) {
         const QString typeInfoPath = QFileInfo(typeInfo).isRelative()
                 ? path + u'/' + typeInfo : typeInfo;
-        readQmltypes(typeInfoPath, &result.objects);
+        readQmltypes(typeInfoPath, &result.objects, &result.dependencies);
     }
 
     if (typeInfos.isEmpty() && !reader.plugins().isEmpty()) {
@@ -117,7 +150,7 @@ QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &path)
         if (QFile::exists(defaultTypeInfoPath)) {
             m_warnings.append(QStringLiteral("typeinfo not declared in qmldir file: ")
                               + defaultTypeInfoPath);
-            readQmltypes(defaultTypeInfoPath, &result.objects);
+            readQmltypes(defaultTypeInfoPath, &result.objects, &result.dependencies);
         }
     }
 
@@ -182,7 +215,7 @@ QQmlJSImporter::ImportedTypes QQmlJSImporter::importBuiltins()
         QDirIterator it { dir, QStringList() << QLatin1String("builtins.qmltypes"), QDir::NoFilter,
                           QDirIterator::Subdirectories };
         while (it.hasNext())
-            readQmltypes(it.next(), &result.objects);
+            readQmltypes(it.next(), &result.objects, &result.dependencies);
         importDependencies(result, &types);
         processImport(result, &types);
     }
@@ -199,7 +232,7 @@ QQmlJSImporter::ImportedTypes QQmlJSImporter::importQmltypes(const QStringList &
     Import result;
 
     for (const auto &qmltypeFile : qmltypesFiles)
-        readQmltypes(qmltypeFile, &result.objects);
+        readQmltypes(qmltypeFile, &result.objects, &result.dependencies);
 
     importDependencies(result, &types);
     processImport(result, &types);

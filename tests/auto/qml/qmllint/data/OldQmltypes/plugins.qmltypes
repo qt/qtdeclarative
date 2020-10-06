@@ -1,7 +1,9 @@
 import QtQuick.tooling 1.2
 Module {
+    dependencies: [ "QtQuick 2.15" ]
     Component {
         name: "Frame"
+        prototype: "QQuickItem"
         exports: ["OldQmltypes/Frame 1.0"]
         exportMetaObjectRevisions: [0]
     }

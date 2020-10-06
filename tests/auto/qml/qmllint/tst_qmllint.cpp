@@ -138,6 +138,8 @@ void TestQmllint::oldQmltypes()
 {
     const QString errors = runQmllint("oldQmltypes.qml", true);
     QVERIFY(errors.contains(QStringLiteral("Warning: typeinfo not declared in qmldir file")));
+    QVERIFY(!errors.contains(QStringLiteral("Warning: QQuickItem was not found. Did you add all import paths?")));
+    QVERIFY(errors.contains(QStringLiteral("Warning: Found deprecated dependency specifications")));
 }
 
 void TestQmllint::dirtyQmlCode_data()

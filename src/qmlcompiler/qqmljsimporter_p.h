@@ -94,7 +94,8 @@ private:
                             AvailableTypes *types,
                             const QString &prefix = QString(),
                             QTypeRevision version = QTypeRevision());
-    void readQmltypes(const QString &filename, QHash<QString, QQmlJSScope::Ptr> *objects);
+    void readQmltypes(const QString &filename, QHash<QString, QQmlJSScope::Ptr> *objects,
+                      QList<QQmlDirParser::Import> *dependencies);
     Import readQmldir(const QString &dirname);
     QQmlJSScope::Ptr localFile2ScopeTree(const QString &filePath);
 
