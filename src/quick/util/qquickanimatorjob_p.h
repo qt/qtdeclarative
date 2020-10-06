@@ -87,6 +87,7 @@ public:
 
 protected:
     void updateCurrentTime(int) override;
+    void updateLoopCount(int) override;
     void updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState) override;
     void debugAnimation(QDebug d) const override;
 

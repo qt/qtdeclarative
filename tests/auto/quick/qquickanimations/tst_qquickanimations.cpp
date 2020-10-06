@@ -115,6 +115,7 @@ private slots:
     void animationJobSelfDestruction();
     void fastFlickingBug();
     void opacityAnimationFromZero();
+    void alwaysRunToEndInSequentialAnimationBug();
 };
 
 #define QTIMED_COMPARE(lhs, rhs) do { \
@@ -1893,6 +1894,108 @@ void tst_qquickanimations::opacityAnimationFromZero()
             QSKIP("Skipping due to grabWindow not functional");
     });
     QTRY_VERIFY(!img.isNull() && img.pixel(100, 100) > qRgb(10, 10, 10));
+}
+
+void tst_qquickanimations::alwaysRunToEndInSequentialAnimationBug()
+{
+    QQuickView view(QUrl::fromLocalFile("data/alwaysRunToEndInSequentialAnimationBug.qml"));
+    view.show();
+
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+    QVERIFY(view.rootObject());
+    QObject *root = view.rootObject();
+    QQuickAbstractAnimation* seqAnim = root->property("seqAnim").value<QQuickAbstractAnimation *>();
+    QObject *whiteRect = root->findChild<QObject*>("whiteRect");
+
+    //
+    // Tesing the SequentialAnimation with alwaysRunToEnd = true
+    //
+
+    //
+    // Stopping in the first loop
+
+    QVERIFY(whiteRect->property("opacity").value<qreal>() == 1.0);
+    seqAnim->start();
+    QTRY_VERIFY(seqAnim->isRunning() == true);
+
+    seqAnim->stop();
+    QTRY_VERIFY(seqAnim->isRunning() == false);
+    QTRY_VERIFY(!root->property("onStoppedCalled").value<bool>());
+    QTRY_VERIFY(!root->property("onFinishedCalled").value<bool>());
+
+    //The animation should still be running
+    QTest::qWait(500);
+    QTRY_VERIFY(whiteRect->property("opacity").value<qreal>() != 1.0);
+
+    QTest::qWait(500);
+
+    //The animation should now be stopped - after reaching its cycle end
+    QTRY_COMPARE(whiteRect->property("opacity").value<qreal>(), 1.0);
+    QTRY_VERIFY(root->property("onStoppedCalled").value<bool>());
+    QTRY_VERIFY(root->property("onFinishedCalled").value<bool>());
+
+    //
+    // Stopping in the second loop
+
+    QVERIFY(whiteRect->property("opacity").value<qreal>() == 1.0);
+    seqAnim->start();
+    QTRY_VERIFY(seqAnim->isRunning() == true);
+
+    QTRY_COMPARE(root->property("loopsMade").value<int>(), 1); // Wait for cycle no 2 to start
+
+    seqAnim->stop();
+    QTRY_VERIFY(seqAnim->isRunning() == false);
+    QTRY_VERIFY(!root->property("onStoppedCalled").value<bool>());
+    QTRY_VERIFY(!root->property("onFinishedCalled").value<bool>());
+
+    //The animation should still be running
+    QTest::qWait(500);
+    QTRY_VERIFY(whiteRect->property("opacity").value<qreal>() != 1.0);
+
+    QTest::qWait(500);
+
+    //The animation should now be stopped - after reaching its cycle end
+    QTRY_COMPARE(whiteRect->property("opacity").value<qreal>(), 1.0);
+    QTRY_VERIFY(root->property("onStoppedCalled").value<bool>());
+    QTRY_VERIFY(root->property("onFinishedCalled").value<bool>());
+
+
+    //
+    // Tesing the SequentialAnimation with alwaysRunToEnd = false
+    //
+
+    //
+    // Stopping in the first loop
+
+    seqAnim->setProperty("alwaysRunToEnd", false);
+    QVERIFY(whiteRect->property("opacity").value<qreal>() == 1.0);
+
+    seqAnim->start();
+    QTRY_VERIFY(seqAnim->isRunning() == true);
+
+    QTest::qWait(50);
+    seqAnim->stop();
+    //The animation should be stopped immediately
+    QVERIFY(seqAnim->isRunning() == false);
+    QVERIFY(root->property("onStoppedCalled").value<bool>());
+    QVERIFY(root->property("onFinishedCalled").value<bool>());
+    QCOMPARE(whiteRect->property("opacity").value<qreal>(), 1.0);
+
+    //
+    // Stopping in the second loop
+    QVERIFY(whiteRect->property("opacity").value<qreal>() == 1.0);
+    seqAnim->start();
+    QTRY_VERIFY(seqAnim->isRunning() == true);
+
+    QTRY_COMPARE(root->property("loopsMade").value<int>(), 1); // Wait for cycle no 2 to start
+
+    QTest::qWait(50);
+    seqAnim->stop();
+    //The animation should be stopped immediately
+    QVERIFY(seqAnim->isRunning() == false);
+    QVERIFY(root->property("onStoppedCalled").value<bool>());
+    QVERIFY(root->property("onFinishedCalled").value<bool>());
+    QCOMPARE(whiteRect->property("opacity").value<qreal>(),1.0);
 }
 
 QTEST_MAIN(tst_qquickanimations)

@@ -123,6 +123,11 @@ QQuickAnimatorProxyJob::QQuickAnimatorProxyJob(QAbstractAnimationJob *job, QObje
     }
 }
 
+void QQuickAnimatorProxyJob::updateLoopCount(int loopCount)
+{
+    m_job->setLoopCount(loopCount);
+}
+
 QQuickAnimatorProxyJob::~QQuickAnimatorProxyJob()
 {
     if (m_job && m_controller)
@@ -142,6 +147,10 @@ void QQuickAnimatorProxyJob::updateCurrentTime(int)
 {
     if (m_internalState != State_Running)
         return;
+
+    // Copy current loop number from the job
+    // we could make currentLoop() virtual but it would be less efficient
+    m_currentLoop = m_job->currentLoop();
 
     // A proxy which is being ticked should be associated with a window, (see
     // setWindow() below). If we get here when there is no more controller we

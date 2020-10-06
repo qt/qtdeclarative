@@ -134,6 +134,7 @@ public:
     SelfDeletable m_selfDeletable;
 protected:
     virtual void updateCurrentTime(int) {}
+    virtual void updateLoopCount(int) {}
     virtual void updateState(QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState);
     virtual void updateDirection(QAbstractAnimationJob::Direction direction);
     virtual void topLevelAnimationLoopChanged() {}
