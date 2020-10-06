@@ -1546,13 +1546,13 @@ QStringDecoder QQmlXMLHttpRequest::findTextDecoder() const
     }
 
     if (!decoder.isValid() && m_mime == "text/html") {
-        auto encoding = QStringConverter::encodingForHtml(m_responseEntityBody.constData(), m_responseEntityBody.size());
+        auto encoding = QStringConverter::encodingForHtml(m_responseEntityBody);
         if (encoding)
             decoder = QStringDecoder(*encoding);
     }
 
     if (!decoder.isValid()) {
-        auto encoding = QStringConverter::encodingForData(m_responseEntityBody.constData(), m_responseEntityBody.size());
+        auto encoding = QStringConverter::encodingForData(m_responseEntityBody);
         if (encoding)
             decoder = QStringDecoder(*encoding);
     }
