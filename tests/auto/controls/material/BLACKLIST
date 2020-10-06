@@ -1,9 +1,6 @@
 # See qtbase/src/testlib/qtestblacklist.cpp for format
 
 # https://bugreports.qt.io/browse/QTBUG-87018
-[DelayButton::test_mouse]
-*
-
 [SwipeDelegate::test_close]
 *
 
