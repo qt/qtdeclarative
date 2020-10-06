@@ -1,3 +1,4 @@
 module QtQuick.Templates
 plugin qtquicktemplates2plugin
 classname QtQuickTemplates2Plugin
+depends QtQuick auto
