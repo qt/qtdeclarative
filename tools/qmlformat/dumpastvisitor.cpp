@@ -298,7 +298,11 @@ QString DumpAstVisitor::parsePatternProperty(PatternProperty *property)
     case PatternElement::Setter:
         return "set "+parseFunctionExpression(cast<FunctionExpression *>(property->initializer), true);
     default:
-        return escapeString(property->name->asString())+": "+parsePatternElement(property, false);
+        if (property->name->kind == Node::Kind_ComputedPropertyName) {
+            return "["+parseExpression(cast<ComputedPropertyName *>(property->name)->expression)+"]: "+parsePatternElement(property, false);
+        } else {
+            return escapeString(property->name->asString())+": "+parsePatternElement(property, false);
+        }
     }
 }
 

@@ -62,6 +62,7 @@ private Q_SLOTS:
 
     void testNestedFunctions();
     void testForOf();
+    void testPropertyNames();
 
 #if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
     void testExample();
@@ -291,6 +292,12 @@ void TestQmlformat::testForOf()
 {
     QCOMPARE(runQmlformat(testFile("forOf.qml"), false, true),
              readTestFile("forOf.formatted.qml"));
+}
+
+void TestQmlformat::testPropertyNames()
+{
+    QCOMPARE(runQmlformat(testFile("propertyNames.qml"), false, true),
+             readTestFile("propertyNames.formatted.qml"));
 }
 
 #if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
