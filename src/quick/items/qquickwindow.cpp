@@ -2044,7 +2044,8 @@ void QQuickWindowPrivate::deliverKeyEvent(QKeyEvent *e)
 QMouseEvent *QQuickWindowPrivate::cloneMouseEvent(QMouseEvent *event, QPointF *transformedLocalPos)
 {
     QMouseEvent *me = new QMouseEvent(*event);
-    QMutableEventPoint &point = QMutableEventPoint::from(event->point(0));
+    QMutableEventPoint &point = QMutableEventPoint::from(me->point(0));
+    point.detach();
     point.setTimestamp(event->timestamp());
     point.setPosition(transformedLocalPos ? *transformedLocalPos : event->position());
     return me;
@@ -2902,7 +2903,7 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, bool isG
 
         // If any parent filters the event, we're done.
         hasFiltered.clear();
-        if (sendFilteredPointerEvent(pointerEvent, item))
+        if (sendFilteredPointerEvent(&touchEvent, item))
             return;
 
         // Deliver the touch event to the given item
