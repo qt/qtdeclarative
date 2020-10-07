@@ -208,8 +208,7 @@ public:
 
     void addPointerHandler(QQuickPointerHandler *h) override;
 
-    // TODO Qt 6: QPointerEvent
-    virtual bool wantsPointerEvent(const QEvent *) { return true; }
+    virtual bool wantsPointerEvent(const QPointerEvent *) { return true; }
 
 public:
     QQuickItem *contentItem;

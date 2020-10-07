@@ -146,7 +146,7 @@ public:
     void fixupHeader();
     void fixupHeaderCompleted();
 
-    bool wantsPointerEvent(const QEvent *event) override;
+    bool wantsPointerEvent(const QPointerEvent *event) override;
 
     QQuickListView::Orientation orient;
     qreal visiblePos;
@@ -3828,24 +3828,12 @@ QQuickListViewAttached *QQuickListView::qmlAttachedProperties(QObject *obj)
 /*! \internal
     Prevents clicking or dragging through floating headers (QTBUG-74046).
 */
-bool QQuickListViewPrivate::wantsPointerEvent(const QEvent *event)
+bool QQuickListViewPrivate::wantsPointerEvent(const QPointerEvent *event)
 {
     Q_Q(const QQuickListView);
     bool ret = true;
 
-    QPointF pos;
-    // TODO switch not needed in Qt 6: use points().first().position()
-    switch (event->type()) {
-    case QEvent::Wheel:
-        pos = static_cast<const QWheelEvent *>(event)->position();
-        break;
-    case QEvent::MouseButtonPress:
-        pos = static_cast<const QMouseEvent *>(event)->position();
-        break;
-    default:
-        break;
-    }
-
+    QPointF pos = event->points().first().position();
     if (!pos.isNull()) {
         if (auto header = q->headerItem()) {
             if (q->headerPositioning() != QQuickListView::InlineHeader &&
