@@ -98,6 +98,9 @@
     The benefit of compile-time style selection is that the QtQuick.Controls plugin
     is not used and therefore does not need to be deployed with the application.
 
+    Explicit imports are also necessary if your application is built
+    \l {Static Builds}{statically}.
+
     \section2 Run-Time Style Selection
 
     Run-time style selection involves importing \c QtQuick.Controls:
