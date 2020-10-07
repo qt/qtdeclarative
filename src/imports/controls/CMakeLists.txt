@@ -12,6 +12,14 @@ qt_internal_add_qml_module(qtquickcontrols2plugin
     SKIP_TYPE_REGISTRATION
     IMPORTS
         QtQuick.Controls.impl/auto
+    OPTIONAL_IMPORTS
+        QtQuick.Controls.Basic/auto
+        QtQuick.Controls.Fusion/auto
+        QtQuick.Controls.Material/auto
+        QtQuick.Controls.Imagine/auto
+        QtQuick.Controls.Universal/auto
+        QtQuick.Controls.Windows/auto
+        QtQuick.Controls.macOS/auto
     SOURCES
         qtquickcontrols2plugin.cpp
     DEFINES

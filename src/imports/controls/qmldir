@@ -2,4 +2,11 @@ module QtQuick.Controls
 plugin qtquickcontrols2plugin
 classname QtQuickControls2Plugin
 import QtQuick.Controls.impl auto
+optional import QtQuick.Controls.Basic auto
+optional import QtQuick.Controls.Fusion auto
+optional import QtQuick.Controls.Material auto
+optional import QtQuick.Controls.Imagine auto
+optional import QtQuick.Controls.Universal auto
+optional import QtQuick.Controls.Windows auto
+optional import QtQuick.Controls.macOS auto
 designersupported
