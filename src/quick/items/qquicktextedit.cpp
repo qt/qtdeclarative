@@ -2530,8 +2530,9 @@ void QQuickTextEdit::updateSize()
             if (d->inLayout)    // probably the result of a binding loop, but by letting it
                 return;         // get this far we'll get a warning to that effect.
         }
-        if (d->document->textWidth() != width()) {
-            d->document->setTextWidth(width() - leftPadding() - rightPadding());
+        const qreal newTextWidth = width() - leftPadding() - rightPadding();
+        if (d->document->textWidth() != newTextWidth) {
+            d->document->setTextWidth(newTextWidth);
             newWidth = d->document->idealWidth();
         }
         //### need to confirm cost of always setting these

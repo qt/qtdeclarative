@@ -217,6 +217,7 @@ private slots:
     void doubleSelect_QTBUG_38704();
 
     void padding();
+    void paddingAndWrap();
     void QTBUG_51115_readOnlyResetsSelection();
     void keys_shortcutoverride();
 
@@ -5768,6 +5769,30 @@ void tst_qquicktextedit::padding()
     QCOMPARE(obj->bottomPadding(), 0.0);
 
     delete root;
+}
+
+void tst_qquicktextedit::paddingAndWrap()
+{
+    // Check that the document ends up with the correct width if
+    // we set left and right padding after component completed.
+    QScopedPointer<QQuickView> window(new QQuickView);
+    window->setSource(testFileUrl("wordwrap.qml"));
+    QTRY_COMPARE(window->status(), QQuickView::Ready);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+    QQuickItem *root = window->rootObject();
+    QVERIFY(root);
+    QQuickTextEdit *obj = qobject_cast<QQuickTextEdit *>(root);
+    QVERIFY(obj != nullptr);
+    QTextDocument *doc = QQuickTextEditPrivate::get(obj)->document;
+
+    QCOMPARE(doc->textWidth(), obj->width());
+    obj->setLeftPadding(10);
+    obj->setRightPadding(10);
+    QCOMPARE(doc->textWidth(), obj->width() - obj->leftPadding() - obj->rightPadding());
+    obj->setLeftPadding(0);
+    obj->setRightPadding(0);
+    QCOMPARE(doc->textWidth(), obj->width());
 }
 
 void tst_qquicktextedit::QTBUG_51115_readOnlyResetsSelection()
