@@ -235,6 +235,8 @@ void TestQmlformat::testFormat_data()
                             << "forOf.formatted.qml" << false << true;
     QTest::newRow("property names") << "propertyNames.qml"
                                     << "propertyNames.formatted.qml" << false << true;
+    QTest::newRow("empty object") << "emptyObject.qml"
+                                  << "emptyObject.formatted.qml" << false << true;
 }
 
 void TestQmlformat::testFormat()

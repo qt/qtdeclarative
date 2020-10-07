@@ -493,6 +493,10 @@ QString DumpAstVisitor::parseExpression(ExpressionNode *expression)
     }
     case Node::Kind_ObjectPattern: {
         auto *objectPattern = cast<ObjectPattern*>(expression);
+
+        if (objectPattern->properties == nullptr)
+            return "{}";
+
         QString result = "{\n";
 
         m_indentLevel++;

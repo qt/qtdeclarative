@@ -1,0 +1,5 @@
+Item {
+    binding: {
+        var emptyObject = {};
+    }
+}
