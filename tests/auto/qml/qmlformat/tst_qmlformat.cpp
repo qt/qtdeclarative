@@ -233,6 +233,8 @@ void TestQmlformat::testFormat_data()
                                         << "multilineComment.formatted.qml" << false << true;
     QTest::newRow("for of") << "forOf.qml"
                             << "forOf.formatted.qml" << false << true;
+    QTest::newRow("property names") << "propertyNames.qml"
+                                    << "propertyNames.formatted.qml" << false << true;
 }
 
 void TestQmlformat::testFormat()
