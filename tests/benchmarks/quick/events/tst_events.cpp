@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -70,10 +70,10 @@ void tst_events::mousePressRelease()
     QCOMPARE(mouseArea->pressed(), false);
 
     QBENCHMARK {
-        QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
+        QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, {});
         window.handleEvent(&pressEvent);
         QCOMPARE(mouseArea->pressed(), true);
-        QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
+        QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, {});
         window.handleEvent(&releaseEvent);
     }
     QCOMPARE(mouseArea->pressed(), false);
@@ -84,17 +84,17 @@ void tst_events::mouseMove()
     QQuickMouseArea *mouseArea = window.rootObject()->findChild<QQuickMouseArea *>("mouseArea");
     QCOMPARE(mouseArea->pressed(), false);
 
-    QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
+    QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, {});
     window.handleEvent(&pressEvent);
     QCOMPARE(mouseArea->pressed(), true);
-    QMouseEvent moveEvent1(QEvent::MouseMove, QPoint(101, 100), Qt::LeftButton, Qt::LeftButton, 0);
-    QMouseEvent moveEvent2(QEvent::MouseMove, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
+    QMouseEvent moveEvent1(QEvent::MouseMove, QPoint(101, 100), Qt::LeftButton, Qt::LeftButton, {});
+    QMouseEvent moveEvent2(QEvent::MouseMove, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, {});
     QBENCHMARK {
         window.handleEvent(&moveEvent1);
         window.handleEvent(&moveEvent2);
     }
     QCOMPARE(mouseArea->pressed(), true);
-    QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, 0);
+    QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, {});
     window.handleEvent(&releaseEvent);
     QCOMPARE(mouseArea->pressed(), false);
 }
