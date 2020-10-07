@@ -689,12 +689,12 @@ QSGDynamicTexture::QSGDynamicTexture(QSGTexturePrivate &dd)
 }
 
 /*!
-    \fn template<typename T> T *QSGTexture::platformInterface<T>()
+    \fn template <typename NativeInterface> NativeInterface *QSGTexture::nativeInterface() const
 
-    Returns a platform interface of type T for the texture.
+    Returns a native interface of type T for the texture.
 
     This function provides access to platform specific functionality of
-    QSGTexture, as defined in the QPlatformInterface namespace. This allows
+    QSGTexture, as defined in the QNativeInterface namespace. This allows
     accessing the underlying native texture object, such as, the \c GLuint
     texture ID with OpenGL, or the \c VkImage handle with Vulkan.
 
@@ -702,33 +702,33 @@ QSGDynamicTexture::QSGDynamicTexture(QSGTexturePrivate &dd)
  */
 
 /*!
-    \namespace QPlatformInterface
+    \namespace QNativeInterface
     \inmodule QtQuick
     \since 6.0
 
-    \brief The QPlatformInterface namespace contains graphics API specific
+    \brief The QNativeInterface namespace contains graphics API specific
     interfaces that allow accessing the underlying graphics resources and allow
     creating QSGTexture instances that wrap an existing native resource.
 
     The classes in this namespace can be passed to
-    QSGTexture::platformInterface() to gain access to the appropriate graphics
+    QSGTexture::nativeInterface() to gain access to the appropriate graphics
     API specific interface, as long as the scene graph has been initialized with
     the graphics API in question.
 
-    \sa QSGTexture::platformInterface()
+    \sa QSGTexture::nativeInterface()
 */
 
 #if QT_CONFIG(opengl) || defined(Q_CLANG_QDOC)
-namespace QPlatformInterface {
+namespace QNativeInterface {
 /*!
-    \class QPlatformInterface::QSGOpenGLTexture
+    \class QNativeInterface::QSGOpenGLTexture
     \inmodule QtQuick
     \brief Provides access to and enables adopting OpenGL texture objects.
     \since 6.0
 */
 
 /*!
-    \fn VkImage QPlatformInterface::QSGOpenGLTexture::nativeTexture() const
+    \fn VkImage QNativeInterface::QSGOpenGLTexture::nativeTexture() const
     \return the OpenGL texture ID.
  */
 
@@ -771,7 +771,7 @@ QSGTexture *QSGOpenGLTexture::fromNative(GLuint textureId,
 {
     return QQuickWindowPrivate::get(window)->createTextureFromNativeTexture(quint64(textureId), 0, size, options);
 }
-} // QPlatformInterface
+} // QNativeInterface
 
 GLuint QSGTexturePlatformOpenGL::nativeTexture() const
 {
@@ -781,24 +781,24 @@ GLuint QSGTexturePlatformOpenGL::nativeTexture() const
 }
 
 template<> Q_QUICK_EXPORT
-QPlatformInterface::QSGOpenGLTexture *QSGTexture::platformInterface<QPlatformInterface::QSGOpenGLTexture>()
+QNativeInterface::QSGOpenGLTexture *QSGTexture::nativeInterface<QNativeInterface::QSGOpenGLTexture>() const
 {
-    Q_D(QSGTexture);
-    return &d->m_openglTextureAccessor;
+    Q_D(const QSGTexture);
+    return &const_cast<QSGTexturePrivate*>(d)->m_openglTextureAccessor;
 }
 #endif // opengl
 
 #if defined(Q_OS_WIN) || defined(Q_CLANG_QDOC)
-namespace QPlatformInterface {
+namespace QNativeInterface {
 /*!
-    \class QPlatformInterface::QSGD3D11Texture
+    \class QNativeInterface::QSGD3D11Texture
     \inmodule QtQuick
     \brief Provides access to and enables adopting Direct3D 11 texture objects.
     \since 6.0
 */
 
 /*!
-    \fn void *QPlatformInterface::QSGD3D11Texture::nativeTexture() const
+    \fn void *QNativeInterface::QSGD3D11Texture::nativeTexture() const
     \return the ID3D11Texture2D object.
  */
 
@@ -840,7 +840,7 @@ QSGTexture *QSGD3D11Texture::fromNative(void *texture,
 {
     return QQuickWindowPrivate::get(window)->createTextureFromNativeTexture(quint64(texture), 0, size, options);
 }
-} // QPlatformInterface
+} // QNativeInterface
 
 void *QSGTexturePlatformD3D11::nativeTexture() const
 {
@@ -850,29 +850,29 @@ void *QSGTexturePlatformD3D11::nativeTexture() const
 }
 
 template<> Q_QUICK_EXPORT
-QPlatformInterface::QSGD3D11Texture *QSGTexture::platformInterface<QPlatformInterface::QSGD3D11Texture>()
+QNativeInterface::QSGD3D11Texture *QSGTexture::nativeInterface<QNativeInterface::QSGD3D11Texture>() const
 {
-    Q_D(QSGTexture);
-    return &d->m_d3d11TextureAccessor;
+    Q_D(const QSGTexture);
+    return &const_cast<QSGTexturePrivate*>(d)->m_d3d11TextureAccessor;
 }
 #endif // win
 
 #if defined(__OBJC__) || defined(Q_CLANG_QDOC)
-namespace QPlatformInterface {
+namespace QNativeInterface {
 /*!
-    \class QPlatformInterface::QSGMetalTexture
+    \class QNativeInterface::QSGMetalTexture
     \inmodule QtQuick
     \brief Provides access to and enables adopting Metal texture objects.
     \since 6.0
 */
 
 /*!
-    \fn id<MTLTexture> QPlatformInterface::QSGMetalTexture::nativeTexture() const
+    \fn id<MTLTexture> QNativeInterface::QSGMetalTexture::nativeTexture() const
     \return the Metal texture object.
  */
 
 /*!
-    \fn QSGTexture *QPlatformInterface::QSGMetalTexture::fromNative(id<MTLTexture> texture, QQuickWindow *window, const QSize &size, QQuickWindow::CreateTextureOptions options)
+    \fn QSGTexture *QNativeInterface::QSGMetalTexture::fromNative(id<MTLTexture> texture, QQuickWindow *window, const QSize &size, QQuickWindow::CreateTextureOptions options)
 
     Creates a new QSGTexture wrapping an existing Metal \a texture object.
 
@@ -898,32 +898,32 @@ namespace QPlatformInterface {
     \since 6.0
  */
 
-} // QPlatformInterface
+} // QNativeInterface
 
 template<> Q_QUICK_EXPORT
-QPlatformInterface::QSGMetalTexture *QSGTexture::platformInterface<QPlatformInterface::QSGMetalTexture>()
+QNativeInterface::QSGMetalTexture *QSGTexture::nativeInterface<QNativeInterface::QSGMetalTexture>() const
 {
-    Q_D(QSGTexture);
-    return &d->m_metalTextureAccessor;
+    Q_D(const QSGTexture);
+    return &const_cast<QSGTexturePrivate*>(d)->m_metalTextureAccessor;
 }
 #endif // win
 
 #if QT_CONFIG(vulkan) || defined(Q_CLANG_QDOC)
-namespace QPlatformInterface {
+namespace QNativeInterface {
 /*!
-    \class QPlatformInterface::QSGVulkanTexture
+    \class QNativeInterface::QSGVulkanTexture
     \inmodule QtQuick
     \brief Provides access to and enables adopting Vulkan image objects.
     \since 6.0
 */
 
 /*!
-    \fn VkImage QPlatformInterface::QSGVulkanTexture::nativeImage() const
+    \fn VkImage QNativeInterface::QSGVulkanTexture::nativeImage() const
     \return the VkImage handle.
  */
 
 /*!
-    \fn VkImageLayout QPlatformInterface::QSGVulkanTexture::nativeImageLayout() const
+    \fn VkImageLayout QNativeInterface::QSGVulkanTexture::nativeImageLayout() const
     \return the image layout.
  */
 
@@ -968,7 +968,7 @@ QSGTexture *QSGVulkanTexture::fromNative(VkImage image,
 {
     return QQuickWindowPrivate::get(window)->createTextureFromNativeTexture(quint64(image), layout, size, options);
 }
-} // QPlatformInterface
+} // QNativeInterface
 
 VkImage QSGTexturePlatformVulkan::nativeImage() const
 {
@@ -985,10 +985,10 @@ VkImageLayout QSGTexturePlatformVulkan::nativeImageLayout() const
 }
 
 template<> Q_QUICK_EXPORT
-QPlatformInterface::QSGVulkanTexture *QSGTexture::platformInterface<QPlatformInterface::QSGVulkanTexture>()
+QNativeInterface::QSGVulkanTexture *QSGTexture::nativeInterface<QNativeInterface::QSGVulkanTexture>() const
 {
-    Q_D(QSGTexture);
-    return &d->m_vulkanTextureAccessor;
+    Q_D(const QSGTexture);
+    return &const_cast<QSGTexturePrivate*>(d)->m_vulkanTextureAccessor;
 }
 #endif // vulkan
 

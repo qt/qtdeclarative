@@ -56,7 +56,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QPlatformInterface {
+namespace QNativeInterface {
 
 #if QT_CONFIG(opengl) || defined(Q_CLANG_QDOC)
 class Q_QUICK_EXPORT QSGOpenGLTexture
@@ -112,7 +112,7 @@ public:
 };
 #endif
 
-} // QPlatformInterface
+} // QNativeInterface
 
 QT_END_NAMESPACE
 

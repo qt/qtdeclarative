@@ -1474,8 +1474,8 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     QQuickWindow by calling rendererInterface(). The enablers for this
     integration are the beforeRendering(), beforeRenderPassRecording(),
     afterRenderPassRecording(), and related signals. These allow rendering
-    underlays or overlays. Alternatively, QPlatformInterface::QSGOpenGLTexture,
-    QPlatformInterface::QSGVulkanTexture, and other similar classes allow
+    underlays or overlays. Alternatively, QNativeInterface::QSGOpenGLTexture,
+    QNativeInterface::QSGVulkanTexture, and other similar classes allow
     wrapping an existing native texture or image object in a QSGTexture that
     can then be used with the scene graph.
 

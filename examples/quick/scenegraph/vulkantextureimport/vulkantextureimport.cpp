@@ -716,12 +716,12 @@ void CustomTextureNode::sync()
         delete texture();
         freeTexture();
         buildTexture(m_size);
-        QSGTexture *wrapper = QPlatformInterface::QSGVulkanTexture::fromNative(m_texture,
+        QSGTexture *wrapper = QNativeInterface::QSGVulkanTexture::fromNative(m_texture,
                                                                                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
                                                                                m_window,
                                                                                m_size);
         setTexture(wrapper);
-        Q_ASSERT(wrapper->platformInterface<QPlatformInterface::QSGVulkanTexture>()->nativeImage() == m_texture);
+        Q_ASSERT(wrapper->nativeInterface<QNativeInterface::QSGVulkanTexture>()->nativeImage() == m_texture);
     }
 
     m_t = float(static_cast<CustomTextureItem *>(m_item)->t());

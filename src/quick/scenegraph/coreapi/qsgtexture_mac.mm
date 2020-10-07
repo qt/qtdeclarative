@@ -52,7 +52,7 @@ id<MTLTexture> QSGTexturePlatformMetal::nativeTexture() const
     return 0;
 }
 
-namespace QPlatformInterface {
+namespace QNativeInterface {
 
 /*!
     \internal
@@ -69,6 +69,6 @@ QSGTexture *QSGMetalTexture::fromNative(id<MTLTexture> texture,
     return QQuickWindowPrivate::get(window)->createTextureFromNativeTexture(quint64(texture), 0, size, options);
 }
 
-} // QPlatformInterface
+} // QNativeInterface
 
 QT_END_NAMESPACE

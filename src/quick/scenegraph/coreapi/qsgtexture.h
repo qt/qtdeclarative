@@ -112,7 +112,7 @@ public:
 
     inline QRectF convertToNormalizedSourceRect(const QRectF &rect) const;
 
-    template<typename T> T *platformInterface();
+    QT_DECLARE_NATIVE_INTERFACE_ACCESSOR
 
 protected:
     QSGTexture(QSGTexturePrivate &dd);

@@ -75,7 +75,7 @@ bool operator!=(const QSGSamplerDescription &a, const QSGSamplerDescription &b) 
 size_t qHash(const QSGSamplerDescription &s, size_t seed = 0) Q_DECL_NOTHROW;
 
 #if QT_CONFIG(opengl)
-class Q_QUICK_PRIVATE_EXPORT QSGTexturePlatformOpenGL : public QPlatformInterface::QSGOpenGLTexture
+class Q_QUICK_PRIVATE_EXPORT QSGTexturePlatformOpenGL : public QNativeInterface::QSGOpenGLTexture
 {
 public:
     QSGTexturePlatformOpenGL(QSGTexture *t) : m_texture(t) { }
@@ -86,7 +86,7 @@ public:
 #endif
 
 #ifdef Q_OS_WIN
-class Q_QUICK_PRIVATE_EXPORT QSGTexturePlatformD3D11 : public QPlatformInterface::QSGD3D11Texture
+class Q_QUICK_PRIVATE_EXPORT QSGTexturePlatformD3D11 : public QNativeInterface::QSGD3D11Texture
 {
 public:
     QSGTexturePlatformD3D11(QSGTexture *t) : m_texture(t) { }
@@ -97,7 +97,7 @@ public:
 #endif
 
 #if defined(__OBJC__)
-class Q_QUICK_PRIVATE_EXPORT QSGTexturePlatformMetal : public QPlatformInterface::QSGMetalTexture
+class Q_QUICK_PRIVATE_EXPORT QSGTexturePlatformMetal : public QNativeInterface::QSGMetalTexture
 {
 public:
     QSGTexturePlatformMetal(QSGTexture *t) : m_texture(t) { }
@@ -108,7 +108,7 @@ public:
 #endif
 
 #if QT_CONFIG(vulkan)
-class Q_QUICK_PRIVATE_EXPORT QSGTexturePlatformVulkan : public QPlatformInterface::QSGVulkanTexture
+class Q_QUICK_PRIVATE_EXPORT QSGTexturePlatformVulkan : public QNativeInterface::QSGVulkanTexture
 {
 public:
     QSGTexturePlatformVulkan(QSGTexture *t) : m_texture(t) { }
