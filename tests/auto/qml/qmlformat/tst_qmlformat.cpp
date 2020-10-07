@@ -237,6 +237,8 @@ void TestQmlformat::testFormat_data()
                                     << "propertyNames.formatted.qml" << false << true;
     QTest::newRow("empty object") << "emptyObject.qml"
                                   << "emptyObject.formatted.qml" << false << true;
+    QTest::newRow("arrow functions") << "arrowFunctions.qml"
+                                     << "arrowFunctions.formatted.qml" << false << true;
 }
 
 void TestQmlformat::testFormat()

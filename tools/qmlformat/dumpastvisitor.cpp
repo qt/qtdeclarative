@@ -321,6 +321,7 @@ QString DumpAstVisitor::parseFunctionExpression(FunctionExpression *functExpr, b
 {
     m_indentLevel++;
     QString result;
+    bool hasBraces = true;
 
     if (!functExpr->isArrowFunction) {
         result += omitFunction ? "" : "function";
@@ -343,12 +344,23 @@ QString DumpAstVisitor::parseFunctionExpression(FunctionExpression *functExpr, b
          if (functExpr->typeAnnotation != nullptr)
              result += " : " + parseType(functExpr->typeAnnotation->type);
 
-         result += " => {\n" + parseStatementList(functExpr->body);
+         result += " => ";
+
+         if (functExpr->body == nullptr) {
+             result += "{}";
+         } else if (functExpr->body->next == nullptr && functExpr->body->statement->kind == Node::Kind_ReturnStatement) {
+             m_indentLevel--;
+             result += parseExpression(cast<ReturnStatement *>(functExpr->body->statement)->expression);
+             hasBraces = false;
+         } else {
+             result += "{\n" + parseStatementList(functExpr->body);
+         }
     }
 
-    m_indentLevel--;
-
-    result += formatLine("}", false);
+    if (hasBraces) {
+        m_indentLevel--;
+        result += formatLine("}", false);
+    }
 
     return result;
 
