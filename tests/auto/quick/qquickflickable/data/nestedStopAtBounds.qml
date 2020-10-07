@@ -11,6 +11,15 @@ Flickable {
     contentHeight: 500
     flickableDirection: inner.flickableDirection
 
+    // faster rebound to speed up test runs
+    rebound: Transition {
+        NumberAnimation {
+            properties: "x,y"
+            duration: 30
+            easing.type: Easing.OutBounce
+        }
+    }
+
     Rectangle {
         x: 100
         y: 100
@@ -29,6 +38,16 @@ Flickable {
             contentWidth: 400
             contentHeight: 400
             boundsBehavior: Flickable.StopAtBounds
+
+            // faster rebound to speed up test runs
+            rebound: Transition {
+                NumberAnimation {
+                    properties: "x,y"
+                    duration: 30
+                    easing.type: Easing.OutBounce
+                }
+            }
+
             Rectangle {
                 anchors.fill: parent
                 anchors.margins: 100

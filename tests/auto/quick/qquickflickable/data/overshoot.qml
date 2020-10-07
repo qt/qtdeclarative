@@ -32,6 +32,15 @@ Flickable {
     width: 200; height: 200
     contentWidth: rect.width; contentHeight: rect.height
 
+    // faster rebound to speed up test runs
+    rebound: Transition {
+        NumberAnimation {
+            properties: "x,y"
+            duration: 30
+            easing.type: Easing.OutBounce
+        }
+    }
+
     property real minContentY: 0
     property real maxContentY: 0
     onContentYChanged: {

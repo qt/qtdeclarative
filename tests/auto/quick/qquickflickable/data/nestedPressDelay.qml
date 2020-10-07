@@ -9,6 +9,16 @@ Flickable {
     contentHeight: 320
     flickableDirection: Flickable.HorizontalFlick
     pressDelay: 10000
+
+    // faster rebound to speed up test runs
+    rebound: Transition {
+        NumberAnimation {
+            properties: "x,y"
+            duration: 30
+            easing.type: Easing.OutBounce
+        }
+    }
+
     MouseArea {
         objectName: "filteringMouseArea"
         x: 20
@@ -28,6 +38,16 @@ Flickable {
             contentWidth: 1480
             contentHeight: 400
             pressDelay: 50
+
+            // faster rebound to speed up test runs
+            rebound: Transition {
+                NumberAnimation {
+                    properties: "x,y"
+                    duration: 30
+                    easing.type: Easing.OutBounce
+                }
+            }
+
             Rectangle {
                 y: 100
                 x: 80

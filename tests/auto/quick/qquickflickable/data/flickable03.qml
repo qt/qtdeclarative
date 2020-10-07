@@ -18,6 +18,9 @@ Flickable {
         draggingInContentY = draggingInContentY && draggingVertically
     }
 
+    // speed up test runs
+    flickDeceleration: 5000
+
     Column {
         id: column
         Repeater {

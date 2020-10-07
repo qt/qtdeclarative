@@ -1798,7 +1798,6 @@ void tst_qquickflickable::nestedStopAtBounds()
 
     // drag away from the aligned boundary.  Inner flickable dragged.
     moveAndPress(&view, position);
-    QTest::qWait(10);
     axis += invert ? -threshold * 2 : threshold * 2;
     QTest::mouseMove(&view, position);
     axis += invert ? -threshold : threshold;
@@ -1822,7 +1821,6 @@ void tst_qquickflickable::nestedStopAtBounds()
 
     // Drag inner with equal size and contentSize
     moveAndPress(&view, position);
-    QTest::qWait(10);
     axis += invert ? -threshold * 2 : threshold * 2;
     QTest::mouseMove(&view, position);
     axis += invert ? -threshold : threshold;
@@ -1846,7 +1844,6 @@ void tst_qquickflickable::nestedStopAtBounds()
 
     // Drag inner with size greater than contentSize
     moveAndPress(&view, position);
-    QTest::qWait(10);
     axis += invert ? -threshold * 2 : threshold * 2;
     QTest::mouseMove(&view, position);
     axis += invert ? -threshold : threshold;
