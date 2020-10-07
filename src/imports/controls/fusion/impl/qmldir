@@ -1,6 +1,6 @@
 module QtQuick.Controls.Fusion.impl
 plugin qtquickcontrols2fusionstyleimplplugin
-classname QtQuickControls2FusionStyleImpPlugin
+classname QtQuickControls2FusionStyleImplPlugin
 
 ButtonPanel 2.3 ButtonPanel.qml
 CheckIndicator 2.3 CheckIndicator.qml
