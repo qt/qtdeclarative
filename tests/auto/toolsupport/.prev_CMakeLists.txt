@@ -4,9 +4,7 @@
 ## tst_toolsupport Test:
 #####################################################################
 
-# special case begin
-qt_internal_add_test(tst_qml_toolsupport
-# special case end
+qt_internal_add_test(tst_toolsupport
     SOURCES
         tst_toolsupport.cpp
     PUBLIC_LIBRARIES
