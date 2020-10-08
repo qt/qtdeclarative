@@ -2444,8 +2444,8 @@ bool QQuickFlickable::filterMouseEvent(QQuickItem *receiver, QMouseEvent *event)
 bool QQuickFlickable::childMouseEventFilter(QQuickItem *i, QEvent *e)
 {
     Q_D(QQuickFlickable);
-    Q_ASSERT(e->isPointerEvent());
-    if (!isVisible() || !isEnabled() || !isInteractive() || !d->wantsPointerEvent(static_cast<QPointerEvent *>(e))) {
+    if (!isVisible() || !isEnabled() || !isInteractive() ||
+            (e->isPointerEvent() && !d->wantsPointerEvent(static_cast<QPointerEvent *>(e)))) {
         d->cancelInteraction();
         return QQuickItem::childMouseEventFilter(i, e);
     }
