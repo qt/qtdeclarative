@@ -11,6 +11,7 @@ qt_internal_add_qml_module(qquicklayoutsplugin
     CLASSNAME QtQuickLayoutsPlugin
     SKIP_TYPE_REGISTRATION
     GENERATE_QMLTYPES
+    INSTALL_QMLTYPES
     SOURCES
         plugin.cpp
         qquickgridlayoutengine.cpp qquickgridlayoutengine_p.h

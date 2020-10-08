@@ -81,6 +81,7 @@ function(qt6_add_qml_module target)
 
     set(args_optional
         GENERATE_QMLTYPES
+        INSTALL_QMLTYPES
         DESIGNER_SUPPORTED
         DO_NOT_INSTALL_METADATA
         SKIP_TYPE_REGISTRATION
@@ -402,6 +403,18 @@ function(qt6_add_qml_module target)
                 ${arg_TYPEINFO}
                 ${target_output_dir}
         )
+    endif()
+
+    if (arg_INSTALL_QMLTYPES)
+        set_target_properties(${target} PROPERTIES QT_QML_MODULE_INSTALL_QMLTYPES TRUE)
+        if (arg_INSTALL_LOCATION)
+            get_target_property(qml_module_install_dir ${target} QT_QML_MODULE_INSTALL_DIR)
+            if (NOT qml_module_install_dir)
+                set_target_properties(${target}
+                    PROPERTIES QT_QML_MODULE_INSTALL_DIR "${arg_INSTALL_LOCATION}"
+                )
+            endif()
+        endif()
     endif()
 
     # Generate meta types data

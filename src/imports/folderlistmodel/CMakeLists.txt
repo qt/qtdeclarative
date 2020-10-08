@@ -10,6 +10,7 @@ qt_internal_add_qml_module(qmlfolderlistmodelplugin
     CLASSNAME QmlFolderListModelPlugin
     SKIP_TYPE_REGISTRATION
     GENERATE_QMLTYPES
+    INSTALL_QMLTYPES
     SOURCES
         fileinfothread.cpp fileinfothread_p.h
         fileproperty_p.h

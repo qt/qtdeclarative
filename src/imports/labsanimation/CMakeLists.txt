@@ -10,6 +10,7 @@ qt_internal_add_qml_module(labsanimationplugin
     CLASSNAME QtLabsAnimationPlugin
     SKIP_TYPE_REGISTRATION
     GENERATE_QMLTYPES
+    INSTALL_QMLTYPES
     SOURCES
         plugin.cpp
         qquickboundaryrule.cpp qquickboundaryrule_p.h

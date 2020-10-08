@@ -10,6 +10,7 @@ qt_internal_add_qml_module(labsmodelsplugin
     CLASSNAME QtQmlLabsModelsPlugin
     SKIP_TYPE_REGISTRATION
     GENERATE_QMLTYPES
+    INSTALL_QMLTYPES
     SOURCES
         plugin.cpp
     PUBLIC_LIBRARIES

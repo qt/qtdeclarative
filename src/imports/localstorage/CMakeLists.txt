@@ -10,6 +10,7 @@ qt_internal_add_qml_module(qmllocalstorageplugin
     CLASSNAME QQmlLocalStoragePlugin
     SKIP_TYPE_REGISTRATION
     GENERATE_QMLTYPES
+    INSTALL_QMLTYPES
     SOURCES
         plugin.cpp
         qquicklocalstorage.cpp qquicklocalstorage_p.h

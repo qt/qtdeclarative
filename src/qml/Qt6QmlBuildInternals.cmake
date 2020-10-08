@@ -23,6 +23,7 @@ function(qt_internal_add_qml_module target)
 
     set(qml_module_optional_args
         GENERATE_QMLTYPES
+        INSTALL_QMLTYPES
         DESIGNER_SUPPORTED
         DO_NOT_INSTALL
         SKIP_TYPE_REGISTRATION
@@ -113,6 +114,10 @@ function(qt_internal_add_qml_module target)
         set(generate_qmltypes_arg GENERATE_QMLTYPES)
     endif()
 
+    if (arg_INSTALL_QMLTYPES)
+        set(install_qmltypes_arg INSTALL_QMLTYPES)
+    endif()
+
     qt_path_join(qml_module_install_dir ${QT_INSTALL_DIR} "${INSTALL_QMLDIR}/${arg_TARGET_PATH}")
 
     qt6_add_qml_module(${target}
@@ -122,6 +127,7 @@ function(qt_internal_add_qml_module target)
         ${plugin_optional_arg}
         ${classname_arg}
         ${generate_qmltypes_arg}
+        ${install_qmltypes_arg}
         RESOURCE_PREFIX "/qt-project.org/imports"
         TARGET_PATH ${arg_TARGET_PATH}
         URI ${arg_URI}

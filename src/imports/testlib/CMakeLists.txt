@@ -11,6 +11,7 @@ qt_internal_add_qml_module(qmltestplugin
     DEPENDENCIES
         QtQuick.Window/2.0
     GENERATE_QMLTYPES
+    INSTALL_QMLTYPES
     SOURCES
         main.cpp
         quicktestevent.cpp quicktestevent_p.h
