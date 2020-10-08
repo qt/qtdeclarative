@@ -406,6 +406,12 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *prope
         return qQmlCompileError(binding->valueLocation, error);
     };
 
+    const auto isStringBinding = [&]() -> bool {
+        // validateLiteralBinding is not supposed to be used on scripts
+        Q_ASSERT(binding->type != QV4::CompiledData::Binding::Type_Script);
+        return  binding->type == QV4::CompiledData::Binding::Type_String;
+    };
+
     switch (property->propType()) {
     case QMetaType::QVariant:
     break;
@@ -465,7 +471,8 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *prope
     break;
     case QMetaType::QColor: {
         bool ok = false;
-        QQmlStringConverters::rgbaFromString(compilationUnit->bindingValueAsString(binding), &ok);
+        if (isStringBinding())
+            QQmlStringConverters::rgbaFromString(compilationUnit->bindingValueAsString(binding), &ok);
         if (!ok) {
             return warnOrError(tr("Invalid property assignment: color expected"));
         }
@@ -474,7 +481,8 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *prope
 #if QT_CONFIG(datestring)
     case QMetaType::QDate: {
         bool ok = false;
-        QQmlStringConverters::dateFromString(compilationUnit->bindingValueAsString(binding), &ok);
+        if (isStringBinding())
+            QQmlStringConverters::dateFromString(compilationUnit->bindingValueAsString(binding), &ok);
         if (!ok) {
             return warnOrError(tr("Invalid property assignment: date expected"));
         }
@@ -482,7 +490,8 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *prope
     break;
     case QMetaType::QTime: {
         bool ok = false;
-        QQmlStringConverters::timeFromString(compilationUnit->bindingValueAsString(binding), &ok);
+        if (isStringBinding())
+            QQmlStringConverters::timeFromString(compilationUnit->bindingValueAsString(binding), &ok);
         if (!ok) {
             return warnOrError(tr("Invalid property assignment: time expected"));
         }
@@ -490,7 +499,8 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *prope
     break;
     case QMetaType::QDateTime: {
         bool ok = false;
-        QQmlStringConverters::dateTimeFromString(compilationUnit->bindingValueAsString(binding), &ok);
+        if (isStringBinding())
+            QQmlStringConverters::dateTimeFromString(compilationUnit->bindingValueAsString(binding), &ok);
         if (!ok) {
             return warnOrError(tr("Invalid property assignment: datetime expected"));
         }
@@ -499,7 +509,8 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *prope
 #endif // datestring
     case QMetaType::QPoint: {
         bool ok = false;
-        QQmlStringConverters::pointFFromString(compilationUnit->bindingValueAsString(binding), &ok);
+        if (isStringBinding())
+            QQmlStringConverters::pointFFromString(compilationUnit->bindingValueAsString(binding), &ok);
         if (!ok) {
             return warnOrError(tr("Invalid property assignment: point expected"));
         }
@@ -507,7 +518,8 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *prope
     break;
     case QMetaType::QPointF: {
         bool ok = false;
-        QQmlStringConverters::pointFFromString(compilationUnit->bindingValueAsString(binding), &ok);
+        if (isStringBinding())
+            QQmlStringConverters::pointFFromString(compilationUnit->bindingValueAsString(binding), &ok);
         if (!ok) {
             return warnOrError(tr("Invalid property assignment: point expected"));
         }
@@ -515,7 +527,8 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *prope
     break;
     case QMetaType::QSize: {
         bool ok = false;
-        QQmlStringConverters::sizeFFromString(compilationUnit->bindingValueAsString(binding), &ok);
+        if (isStringBinding())
+            QQmlStringConverters::sizeFFromString(compilationUnit->bindingValueAsString(binding), &ok);
         if (!ok) {
             return warnOrError(tr("Invalid property assignment: size expected"));
         }
@@ -523,7 +536,8 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *prope
     break;
     case QMetaType::QSizeF: {
         bool ok = false;
-        QQmlStringConverters::sizeFFromString(compilationUnit->bindingValueAsString(binding), &ok);
+        if (isStringBinding())
+            QQmlStringConverters::sizeFFromString(compilationUnit->bindingValueAsString(binding), &ok);
         if (!ok) {
             return warnOrError(tr("Invalid property assignment: size expected"));
         }
@@ -531,7 +545,8 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *prope
     break;
     case QMetaType::QRect: {
         bool ok = false;
-        QQmlStringConverters::rectFFromString(compilationUnit->bindingValueAsString(binding), &ok);
+        if (isStringBinding())
+            QQmlStringConverters::rectFFromString(compilationUnit->bindingValueAsString(binding), &ok);
         if (!ok) {
             return warnOrError(tr("Invalid property assignment: rect expected"));
         }
@@ -539,7 +554,8 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *prope
     break;
     case QMetaType::QRectF: {
         bool ok = false;
-        QQmlStringConverters::rectFFromString(compilationUnit->bindingValueAsString(binding), &ok);
+        if (isStringBinding())
+            QQmlStringConverters::rectFFromString(compilationUnit->bindingValueAsString(binding), &ok);
         if (!ok) {
             return warnOrError(tr("Invalid property assignment: point expected"));
         }
