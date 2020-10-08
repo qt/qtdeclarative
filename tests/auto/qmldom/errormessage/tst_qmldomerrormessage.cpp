@@ -35,78 +35,62 @@
 **
 ** $QT_END_LICENSE$
 **/
-#ifndef QQMLDOMCONSTANTS_P_H
-#define QQMLDOMCONSTANTS_P_H
+#include <QtQmlDom/private/qqmldomerrormessage_p.h>
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#include <QtTest/QtTest>
+#include <QTextStream>
+#include <QDebug>
 
-#include "qqmldom_global.h"
+#include <limits>
 
-#include <QtCore/QObject>
-#include <QtCore/QMetaObject>
 
 QT_BEGIN_NAMESPACE
-
-namespace QQmlJS{
+namespace QQmlJS {
 namespace Dom {
 
-Q_NAMESPACE_EXPORT(QMLDOM_EXPORT)
+static ErrorGroups myErrors(){
+    static ErrorGroups res = {{NewErrorGroup("StaticAnalysis"), NewErrorGroup("FancyDetector")}};
+    return res;
+}
 
-enum class PathRoot {
-    Other,
-    Modules,
-    Cpp,
-    Libs,
-    Top,
-    Env,
-    Universe
+constexpr const char *myError0 = "my.company.error0";
+
+void registerMyError() {
+    ErrorMessage::msg(myError0, myErrors().warning(u"Error number 0"));
+}
+
+static auto myError1 = ErrorMessage::msg("my.company.error1", myErrors().warning(u"Error number 1"));
+static auto myError2 = ErrorMessage::msg("my.company.error2", myErrors().error(u"Error number 2 on %1"));
+
+class TestErrorMessage: public QObject
+{
+    Q_OBJECT
+private slots:
+    void testError()
+    {
+        registerMyError();
+        auto err0 = ErrorMessage::load(myError0);
+        QCOMPARE(err0.errorId, QLatin1String(myError0));
+        QCOMPARE(err0.message, dumperToString(u"Error number 0"));
+        QCOMPARE(err0.level, ErrorLevel::Warning);
+        auto err1 = ErrorMessage::load(QLatin1String("my.company.error1"));
+        QCOMPARE(err1.errorId, myError1);
+        QCOMPARE(err1.message, dumperToString(u"Error number 1"));
+        QCOMPARE(err1.level, ErrorLevel::Warning);
+        auto err1bis = ErrorMessage::load("my.company.error1");
+        QCOMPARE(err1bis.errorId, myError1);
+        QCOMPARE(err1bis.message, dumperToString(u"Error number 1"));
+        QCOMPARE(err1bis.level, ErrorLevel::Warning);
+        auto err2 = ErrorMessage::load(myError2, QLatin1String("extra info"));
+        QCOMPARE(err2.errorId, myError2);
+        QCOMPARE(err2.message, dumperToString(u"Error number 2 on extra info"));
+        QCOMPARE(err2.level, ErrorLevel::Error);
+    }
 };
-Q_ENUM_NS(PathRoot)
 
-enum class PathCurrent {
-    Other,
-    Obj,
-    ObjChain,
-    ScopeChain,
-    Component,
-    Module,
-    Ids,
-    Types,
-    LookupStrict,
-    LookupDynamic,
-    Lookup
-};
-Q_ENUM_NS(PathCurrent)
-enum class EscapeOptions{
-    OuterQuotes,
-    NoOuterQuotes
-};
-Q_ENUM_NS(EscapeOptions)
-
-enum class ErrorLevel{
-    Debug,
-    Info,
-    Hint,         // cosmetic or convention
-    MaybeWarning, // possibly a warning, insufficient information
-    Warning,
-    MaybeError,
-    Error,
-    Fatal
-};
-Q_ENUM_NS(ErrorLevel)
-
-} // end namespace Dom
-} // end namespace QQmlJS
-
+}
+}
 QT_END_NAMESPACE
 
-#endif // QQMLDOMCONSTANTS_P_H
+QTEST_MAIN(QQmlJS::Dom::TestErrorMessage)
+#include "tst_qmldomerrormessage.moc"

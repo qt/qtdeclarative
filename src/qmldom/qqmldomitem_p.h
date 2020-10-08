@@ -35,8 +35,8 @@
 **
 ** $QT_END_LICENSE$
 **/
-#ifndef QQMLDOMCONSTANTS_P_H
-#define QQMLDOMCONSTANTS_P_H
+#ifndef QQMLDOMITEM_P_H
+#define QQMLDOMITEM_P_H
 
 //
 //  W A R N I N G
@@ -51,62 +51,27 @@
 
 #include "qqmldom_global.h"
 
-#include <QtCore/QObject>
-#include <QtCore/QMetaObject>
+#include <QtQml/private/qqmljsast_p.h>
+
 
 QT_BEGIN_NAMESPACE
 
-namespace QQmlJS{
+namespace QQmlJS {
+// we didn't have enough 'O's to properly name everything...
 namespace Dom {
+class Path;
 
-Q_NAMESPACE_EXPORT(QMLDOM_EXPORT)
+class DomItem {
+public:
+    Path canonicalPath() const;
+    QString canonicalFilePath() const;
+    SourceLocation location() const;
 
-enum class PathRoot {
-    Other,
-    Modules,
-    Cpp,
-    Libs,
-    Top,
-    Env,
-    Universe
+    DomItem();
 };
-Q_ENUM_NS(PathRoot)
 
-enum class PathCurrent {
-    Other,
-    Obj,
-    ObjChain,
-    ScopeChain,
-    Component,
-    Module,
-    Ids,
-    Types,
-    LookupStrict,
-    LookupDynamic,
-    Lookup
-};
-Q_ENUM_NS(PathCurrent)
-enum class EscapeOptions{
-    OuterQuotes,
-    NoOuterQuotes
-};
-Q_ENUM_NS(EscapeOptions)
-
-enum class ErrorLevel{
-    Debug,
-    Info,
-    Hint,         // cosmetic or convention
-    MaybeWarning, // possibly a warning, insufficient information
-    Warning,
-    MaybeError,
-    Error,
-    Fatal
-};
-Q_ENUM_NS(ErrorLevel)
-
-} // end namespace Dom
-} // end namespace QQmlJS
-
+}
+}
 QT_END_NAMESPACE
 
-#endif // QQMLDOMCONSTANTS_P_H
+#endif // QQMLDOMITEM_P_H

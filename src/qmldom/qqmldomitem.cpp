@@ -35,78 +35,32 @@
 **
 ** $QT_END_LICENSE$
 **/
-#ifndef QQMLDOMCONSTANTS_P_H
-#define QQMLDOMCONSTANTS_P_H
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include "qqmldom_global.h"
-
-#include <QtCore/QObject>
-#include <QtCore/QMetaObject>
+#include "qqmldomitem_p.h"
+#include "qqmldompath_p.h"
 
 QT_BEGIN_NAMESPACE
-
-namespace QQmlJS{
+namespace QQmlJS {
 namespace Dom {
 
-Q_NAMESPACE_EXPORT(QMLDOM_EXPORT)
+Path DomItem::canonicalPath() const
+{
+    return Path();
+}
 
-enum class PathRoot {
-    Other,
-    Modules,
-    Cpp,
-    Libs,
-    Top,
-    Env,
-    Universe
-};
-Q_ENUM_NS(PathRoot)
+QString DomItem::canonicalFilePath() const
+{
+    return QString();
+}
 
-enum class PathCurrent {
-    Other,
-    Obj,
-    ObjChain,
-    ScopeChain,
-    Component,
-    Module,
-    Ids,
-    Types,
-    LookupStrict,
-    LookupDynamic,
-    Lookup
-};
-Q_ENUM_NS(PathCurrent)
-enum class EscapeOptions{
-    OuterQuotes,
-    NoOuterQuotes
-};
-Q_ENUM_NS(EscapeOptions)
+SourceLocation DomItem::location() const
+{
+    return SourceLocation();
+}
 
-enum class ErrorLevel{
-    Debug,
-    Info,
-    Hint,         // cosmetic or convention
-    MaybeWarning, // possibly a warning, insufficient information
-    Warning,
-    MaybeError,
-    Error,
-    Fatal
-};
-Q_ENUM_NS(ErrorLevel)
+DomItem::DomItem()
+{
+}
 
-} // end namespace Dom
-} // end namespace QQmlJS
-
+} // namespace Dom
+} // namespace QQmlJS
 QT_END_NAMESPACE
-
-#endif // QQMLDOMCONSTANTS_P_H
