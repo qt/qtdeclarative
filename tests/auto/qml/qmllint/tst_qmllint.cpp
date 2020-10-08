@@ -288,7 +288,7 @@ void TestQmllint::cleanQmlCode()
 {
     QFETCH(QString, filename);
     const QString warnings = runQmllint(filename, true);
-    QVERIFY(warnings.isEmpty());
+    QVERIFY2(warnings.isEmpty(), qPrintable(warnings));
 }
 
 QString TestQmllint::runQmllint(const QString &fileToLint,
