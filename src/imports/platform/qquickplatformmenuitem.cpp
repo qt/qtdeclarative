@@ -518,8 +518,12 @@ void QQuickPlatformMenuItem::setShortcut(const QVariant& shortcut)
         sequence = QKeySequence(static_cast<QKeySequence::StandardKey>(m_shortcut.toInt()));
     else
         sequence = QKeySequence::fromString(m_shortcut.toString());
-    m_shortcutId = QGuiApplicationPrivate::instance()->shortcutMap.addShortcut(this, sequence,
-        Qt::WindowShortcut, QQuickShortcutContext::matcher);
+    if (!sequence.isEmpty()) {
+        m_shortcutId = QGuiApplicationPrivate::instance()->shortcutMap.addShortcut(this, sequence,
+            Qt::WindowShortcut, QQuickShortcutContext::matcher);
+    } else {
+        m_shortcutId = -1;
+    }
 #endif
     emit shortcutChanged();
 }
