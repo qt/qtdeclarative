@@ -26,13 +26,13 @@
 **
 ****************************************************************************/
 
-#include "qqmljsimportedmembersvisitor_p.h"
+#include "qqmljsimportvisitor_p.h"
 
 QT_BEGIN_NAMESPACE
 
 using namespace QQmlJS::AST;
 
-QQmlJSScope::Ptr QQmlJSImportedMembersVisitor::result(const QString &scopeName) const
+QQmlJSScope::Ptr QQmlJSImportVisitor::result(const QString &scopeName) const
 {
     QQmlJSScope::Ptr result = QQmlJSScope::create();
     result->setIsComposite(true);
@@ -59,7 +59,7 @@ QQmlJSScope::Ptr QQmlJSImportedMembersVisitor::result(const QString &scopeName) 
     return result;
 }
 
-bool QQmlJSImportedMembersVisitor::visit(UiObjectDefinition *definition)
+bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
 {
     QQmlJSScope::Ptr scope = QQmlJSScope::create();
     QString superType;
@@ -75,12 +75,12 @@ bool QQmlJSImportedMembersVisitor::visit(UiObjectDefinition *definition)
     return true;
 }
 
-void QQmlJSImportedMembersVisitor::endVisit(UiObjectDefinition *)
+void QQmlJSImportVisitor::endVisit(UiObjectDefinition *)
 {
     m_currentObjects.pop_back();
 }
 
-bool QQmlJSImportedMembersVisitor::visit(UiPublicMember *publicMember)
+bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
 {
     switch (publicMember->type) {
     case UiPublicMember::Signal: {
@@ -119,7 +119,7 @@ bool QQmlJSImportedMembersVisitor::visit(UiPublicMember *publicMember)
     return true;
 }
 
-bool QQmlJSImportedMembersVisitor::visit(UiSourceElement *sourceElement)
+bool QQmlJSImportVisitor::visit(UiSourceElement *sourceElement)
 {
     if (FunctionExpression *fexpr = sourceElement->sourceElement->asFunctionDefinition()) {
         QQmlJSMetaMethod method;
@@ -146,7 +146,7 @@ bool QQmlJSImportedMembersVisitor::visit(UiSourceElement *sourceElement)
     return true;
 }
 
-bool QQmlJSImportedMembersVisitor::visit(UiScriptBinding *scriptBinding)
+bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
 {
     if (scriptBinding->qualifiedId->name == QLatin1String("id")) {
         const auto *statement = cast<ExpressionStatement *>(scriptBinding->statement);
@@ -156,7 +156,7 @@ bool QQmlJSImportedMembersVisitor::visit(UiScriptBinding *scriptBinding)
     return true;
 }
 
-bool QQmlJSImportedMembersVisitor::visit(QQmlJS::AST::UiEnumDeclaration *uied)
+bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiEnumDeclaration *uied)
 {
     QQmlJSMetaEnum qmlEnum(uied->name.toString());
     for (const auto *member = uied->members; member; member = member->next)
@@ -165,7 +165,7 @@ bool QQmlJSImportedMembersVisitor::visit(QQmlJS::AST::UiEnumDeclaration *uied)
     return true;
 }
 
-void QQmlJSImportedMembersVisitor::throwRecursionDepthError()
+void QQmlJSImportVisitor::throwRecursionDepthError()
 {
     m_errors.append(QStringLiteral("Maximum statement or expression depth exceeded"));
 }

@@ -27,7 +27,7 @@
 ****************************************************************************/
 
 #include "qqmljstypereader_p.h"
-#include "qqmljsimportedmembersvisitor_p.h"
+#include "qqmljsimportvisitor_p.h"
 
 #include <QtQml/private/qqmljsast_p.h>
 #include <QtQml/private/qqmljsengine_p.h>
@@ -127,7 +127,7 @@ QQmlJSScope::Ptr QQmlJSTypeReader::operator()()
     if (!isJavaScript) {
         QQmlJS::AST::UiProgram *program = parser.ast();
         m_imports = parseHeaders(program->headers);
-        QQmlJSImportedMembersVisitor membersVisitor;
+        QQmlJSImportVisitor membersVisitor;
         program->members->accept(&membersVisitor);
         m_errors = membersVisitor.errors();
         return membersVisitor.result(scopeName);

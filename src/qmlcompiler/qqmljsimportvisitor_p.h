@@ -45,7 +45,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlJSImportedMembersVisitor : public QQmlJS::AST::Visitor
+class QQmlJSImportVisitor : public QQmlJS::AST::Visitor
 {
 public:
     QQmlJSScope::Ptr result(const QString &scopeName) const;
