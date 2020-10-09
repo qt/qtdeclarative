@@ -3695,6 +3695,9 @@ QList<QQuickItem *> QQuickItem::childItems() const
   as the painting of its children, to its bounding rectangle. If you set
   clipping during an item's paint operation, remember to re-set it to
   prevent clipping the rest of your scene.
+
+  \note Clipping can affect rendering performance. See \l {Clipping} for more
+  information.
 */
 bool QQuickItem::clip() const
 {
