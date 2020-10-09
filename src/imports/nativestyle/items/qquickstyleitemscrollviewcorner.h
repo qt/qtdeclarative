@@ -34,47 +34,23 @@
 **
 ****************************************************************************/
 
-import QtQuick
-import QtQuick.Controls.impl
-import QtQuick.Templates as T
-import QtQuick.NativeStyle as NativeStyle
+#ifndef QQUICKSTYLEITEMSCROLLVIEWCORNER_H
+#define QQUICKSTYLEITEMSCROLLVIEWCORNER_H
 
-T.ScrollView {
-    id: control
+#include "qquickstyleitem.h"
+#include <QtQuickTemplates2/private/qquickscrollbar_p.h>
 
-    implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
-                            contentWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
-                             contentHeight + topPadding + bottomPadding)
+class QQuickStyleItemScrollViewCorner : public QQuickStyleItem
+{
+    Q_OBJECT
+    QML_NAMED_ELEMENT(ScrollViewCorner)
 
-    // If ScrollView has clip set, we need to clip the contentItem as well.
-    // This because the scrollbars are semi-transparent and non-transient
-    // (doesn't float on top), and in that case, the contents will show through them.
-    contentItem.clip: clip && (ScrollBar.vertical.visible || ScrollBar.horizontal.visible)
+protected:
+    void paintEvent(QPainter *painter) override;
+    StyleItemGeometry calculateGeometry() override;
 
-    rightPadding: ScrollBar.vertical.visible ? ScrollBar.vertical.width : 0
-    bottomPadding: ScrollBar.horizontal.visible ? ScrollBar.horizontal.height : 0
+private:
+    void initStyleOption(QStyleOptionSlider &styleOption);
+};
 
-    ScrollBar.vertical: ScrollBar {
-        parent: control
-        x: control.mirrored ? 0 : control.width - width
-        y: control.topPadding
-        height: control.availableHeight
-        active: control.ScrollBar.horizontal.active
-
-        NativeStyle.ScrollViewCorner {
-            y: parent.height
-            control: control
-            visible: control.ScrollBar.horizontal.visible
-            useNinePatchImage: false
-        }
-    }
-
-    ScrollBar.horizontal: ScrollBar {
-        parent: control
-        x: control.leftPadding
-        y: control.height - height
-        width: control.availableWidth
-        active: control.ScrollBar.vertical.active
-    }
-}
+#endif // QQUICKSTYLEITEMSCROLLVIEWCORNER_H

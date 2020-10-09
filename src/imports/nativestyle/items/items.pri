@@ -29,3 +29,8 @@ SOURCES += \
     $$PWD/qquickstyleitemscrollbar.cpp \
     $$PWD/qquickstyleitemprogressbar.cpp \
     $$PWD/qquickstyleitemdial.cpp \
+
+macos {
+    HEADERS += $$PWD/qquickstyleitemscrollviewcorner.h
+    SOURCES += $$PWD/qquickstyleitemscrollviewcorner.cpp
+}
