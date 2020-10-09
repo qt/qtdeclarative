@@ -215,7 +215,8 @@ public:
 
     QQuickStyleMargins contentPadding() const;
     QQuickStyleMargins layoutMargins() const;
-    QSize minimumSize();
+    QSize minimumSize() const;
+    QSize imageSize() const;
     qreal focusFrameRadius() const;
 
     Q_INVOKABLE virtual QFont styleFont(QQuickItem *control);

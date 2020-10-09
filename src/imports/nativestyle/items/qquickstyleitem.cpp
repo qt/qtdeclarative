@@ -133,7 +133,7 @@ QSGNode *QQuickStyleItem::updatePaintNode(QSGNode *oldNode, QQuickItem::UpdatePa
         bounds.setWidth(ninePatchImageSize.width());
         padding.setLeft(0);
         padding.setRight(0);
-    } else if (boundingRect().width() < m_styleItemGeometry.minimumSize.width()) {
+    } else if (boundingRect().width() < imageSize().width()) {
         // If the item size is smaller that the image, using nine-patch scaling
         // ends up wrapping it. In that case we scale the whole image instead.
         padding.setLeft(0);
@@ -143,7 +143,7 @@ QSGNode *QQuickStyleItem::updatePaintNode(QSGNode *oldNode, QQuickItem::UpdatePa
         bounds.setHeight(ninePatchImageSize.height());
         padding.setTop(0);
         padding.setBottom(0);
-    } else if (boundingRect().height() < m_styleItemGeometry.minimumSize.height()) {
+    } else if (boundingRect().height() < imageSize().height()) {
         padding.setTop(0);
         padding.setBottom(0);
     }
@@ -174,7 +174,7 @@ void QQuickStyleItem::initStyleOptionBase(QStyleOption &styleOption)
     styleOption.control = const_cast<QQuickItem *>(control<QQuickItem>());
     styleOption.window = window();
     styleOption.palette = QQuickItemPrivate::get(m_control)->palette()->toQPalette();
-    styleOption.rect = QRect(QPoint(0, 0), m_styleItemGeometry.minimumSize);
+    styleOption.rect = QRect(QPoint(0, 0), imageSize());
 
     styleOption.state = QStyle::State_None;
     styleOption.state |= controlSize(styleOption.control);
@@ -251,9 +251,6 @@ void QQuickStyleItem::updateGeometry()
 
     setImplicitSize(m_styleItemGeometry.implicitSize.width(), m_styleItemGeometry.implicitSize.height());
 
-    if (!m_useNinePatchImage)
-        m_styleItemGeometry.minimumSize = size().toSize();
-
     qqc2Debug() << m_styleItemGeometry
                 << "bounding rect:" << boundingRect()
                 << "layout margins:" << layoutMargins()
@@ -269,7 +266,7 @@ void QQuickStyleItem::paintControlToImage()
 
     m_dirty.setFlag(DirtyFlag::Image, false);
     const qreal scale = window()->devicePixelRatio();
-    m_paintedImage = QImage(m_styleItemGeometry.minimumSize * scale, QImage::Format_ARGB32_Premultiplied);
+    m_paintedImage = QImage(imageSize() * scale, QImage::Format_ARGB32_Premultiplied);
     m_paintedImage.setDevicePixelRatio(scale);
     m_paintedImage.fill(Qt::transparent);
 
@@ -440,11 +437,18 @@ QQuickStyleMargins QQuickStyleItem::layoutMargins() const
     return QQuickStyleMargins(outerRect, m_styleItemGeometry.layoutRect);
 }
 
-QSize QQuickStyleItem::minimumSize()
+QSize QQuickStyleItem::minimumSize() const
 {
     // The style item should not be scaled below this size.
     // Otherwise the image will be truncated.
     return m_styleItemGeometry.minimumSize;
+}
+
+QSize QQuickStyleItem::imageSize() const
+{
+    // Returns the size of the QImage (unscaled) that
+    // is used to draw the control from QStyle.
+    return m_useNinePatchImage ? m_styleItemGeometry.minimumSize : size().toSize();
 }
 
 qreal QQuickStyleItem::focusFrameRadius() const
