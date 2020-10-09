@@ -44,13 +44,8 @@ QQmlJSScope::QQmlJSScope(ScopeType type, const QQmlJSScope::Ptr &parentScope)
 QQmlJSScope::Ptr QQmlJSScope::create(ScopeType type, const QQmlJSScope::Ptr &parentScope)
 {
     QSharedPointer<QQmlJSScope> childScope(new QQmlJSScope{type, parentScope});
-    if (parentScope) {
-        Q_ASSERT(type != QQmlJSScope::QMLScope
-                || !parentScope->m_parentScope
-                || parentScope->parentScope()->m_scopeType == QQmlJSScope::QMLScope
-                || parentScope->parentScope()->m_internalName == QLatin1String("global"));
+    if (parentScope)
         parentScope->m_childScopes.push_back(childScope);
-    }
     return childScope;
 }
 
@@ -188,19 +183,10 @@ bool QQmlJSScope::Export::isValid() const
 
 QQmlJSScope QDeferredFactory<QQmlJSScope>::create() const
 {
-    QQmlJSTypeReader typeReader(m_filePath);
+    QQmlJSTypeReader typeReader(m_importer, m_filePath);
     QQmlJSScope::Ptr result = typeReader();
-
     m_importer->m_warnings.append(typeReader.errors());
-
-    QQmlJSImporter::AvailableTypes types;
-    types.qmlNames.insert(m_importer->importDirectory(QFileInfo(m_filePath).canonicalPath()));
-
-    const auto imports = typeReader.imports();
-    for (const auto &import : imports)
-        m_importer->importHelper(import.module, &types, import.prefix, import.version);
-
-    result->resolveTypes(types.qmlNames);
+    result->setInternalName(QFileInfo(m_filePath).baseName());
     return std::move(*result);
 }
 

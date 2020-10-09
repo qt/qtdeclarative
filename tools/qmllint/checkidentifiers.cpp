@@ -373,8 +373,8 @@ bool CheckIdentifiers::operator()(
 
             printContext(m_code, m_colorOut, location);
 
-            // root(JS) --> program(qml) --> (first element)
-            const auto firstElement = root->childScopes()[0]->childScopes()[0];
+            // root(JS) --> (first element)
+            const auto firstElement = root->childScopes()[0];
             if (firstElement->properties().contains(memberAccessBase.m_name)
                     || firstElement->methods().contains(memberAccessBase.m_name)
                     || firstElement->enums().contains(memberAccessBase.m_name)) {

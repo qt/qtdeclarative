@@ -40,34 +40,6 @@
 
 QT_BEGIN_NAMESPACE
 
-static QList<QQmlJSTypeReader::Import> parseHeaders(QQmlJS::AST::UiHeaderItemList *header)
-{
-    using namespace QQmlJS::AST;
-    QList<QQmlJSTypeReader::Import> imports;
-
-    for (; header; header = header->next) {
-        auto import = cast<UiImport *>(header->headerItem);
-        if (!import)
-            continue;
-
-        QString path;
-        auto uri = import->importUri;
-        while (uri) {
-            path.append(uri->name);
-            path.append(u'.');
-            uri = uri->next;
-        }
-        path.chop(1);
-        imports.append({
-                path,
-                import->version ? import->version->version : QTypeRevision(),
-                import->asToken.isValid() ? import->importId.toString() : QString()
-        });
-    }
-
-    return imports;
-}
-
 static QQmlJSScope::Ptr parseProgram(QQmlJS::AST::Program *program, const QString &name)
 {
     using namespace QQmlJS::AST;
@@ -126,11 +98,11 @@ QQmlJSScope::Ptr QQmlJSTypeReader::operator()()
 
     if (!isJavaScript) {
         QQmlJS::AST::UiProgram *program = parser.ast();
-        m_imports = parseHeaders(program->headers);
-        QQmlJSImportVisitor membersVisitor;
-        program->members->accept(&membersVisitor);
+        QQmlJSImportVisitor membersVisitor(m_importer, QFileInfo(m_file).canonicalPath(),
+                                           m_qmltypesFiles);
+        program->accept(&membersVisitor);
         m_errors = membersVisitor.errors();
-        return membersVisitor.result(scopeName);
+        return membersVisitor.result();
     }
 
     // TODO: Anything special to do with ES modules here?

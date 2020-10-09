@@ -43,31 +43,51 @@
 
 #include <private/qqmljsast_p.h>
 #include <private/qqmljsdiagnosticmessage_p.h>
+#include <private/qqmljsimporter_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQmlJSImportVisitor : public QQmlJS::AST::Visitor
 {
 public:
-    QQmlJSScope::Ptr result(const QString &scopeName) const;
+    QQmlJSImportVisitor(QQmlJSImporter *importer, const QString &implicitImportDirectory,
+                        const QStringList &qmltypesFiles = QStringList());
+
+    QQmlJSScope::Ptr result() const;
     QList<QQmlJS::DiagnosticMessage> errors() const { return m_errors; }
 
-private:
+protected:
+    bool visit(QQmlJS::AST::UiProgram *) override;
     bool visit(QQmlJS::AST::UiObjectDefinition *) override;
     void endVisit(QQmlJS::AST::UiObjectDefinition *) override;
     bool visit(QQmlJS::AST::UiPublicMember *) override;
-    bool visit(QQmlJS::AST::UiSourceElement *) override;
     bool visit(QQmlJS::AST::UiScriptBinding *) override;
     bool visit(QQmlJS::AST::UiEnumDeclaration *uied) override;
+    bool visit(QQmlJS::AST::FunctionExpression *fexpr) override;
+    void endVisit(QQmlJS::AST::FunctionExpression *) override;
+    bool visit(QQmlJS::AST::FunctionDeclaration *fdecl) override;
+    void endVisit(QQmlJS::AST::FunctionDeclaration *) override;
+    bool visit(QQmlJS::AST::ClassExpression *ast) override;
+    void endVisit(QQmlJS::AST::ClassExpression *) override;
+    bool visit(QQmlJS::AST::UiImport *import) override;
     void throwRecursionDepthError() override;
 
-    QQmlJSScope::Ptr currentObject() const { return m_currentObjects.back(); }
-
-    QVector<QQmlJSScope::Ptr> m_currentObjects;
-    QQmlJSScope::ConstPtr m_rootObject;
-    QHash<QString, QQmlJSScope::Ptr> m_objects;
+    QString m_implicitImportDirectory;
+    QStringList m_qmltypesFiles;
+    QQmlJSScope::Ptr m_currentScope;
+    QQmlJSScope::ConstPtr m_qmlRootScope;
+    QQmlJSScope::ConstPtr m_globalScope;
+    QHash<QString, QQmlJSScope::ConstPtr> m_scopesById;
+    QHash<QString, QQmlJSScope::ConstPtr> m_rootScopeImports;
+    QQmlJSImporter *m_importer;
 
     QList<QQmlJS::DiagnosticMessage> m_errors;
+
+    void enterEnvironment(QQmlJSScope::ScopeType type, const QString &name);
+    void leaveEnvironment();
+
+private:
+    void visitFunctionExpressionHelper(QQmlJS::AST::FunctionExpression *fexpr);
 };
 
 QT_END_NAMESPACE

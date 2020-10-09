@@ -28,21 +28,46 @@
 
 #include "qqmljsimportvisitor_p.h"
 
+#include <QtCore/qfileinfo.h>
+#include <QtCore/qdir.h>
+
 QT_BEGIN_NAMESPACE
 
 using namespace QQmlJS::AST;
 
-QQmlJSScope::Ptr QQmlJSImportVisitor::result(const QString &scopeName) const
+QQmlJSImportVisitor::QQmlJSImportVisitor(
+        QQmlJSImporter *importer, const QString &implicitImportDirectory,
+        const QStringList &qmltypesFiles)
+    : m_implicitImportDirectory(implicitImportDirectory)
+    , m_qmltypesFiles(qmltypesFiles)
+    , m_currentScope(QQmlJSScope::create(QQmlJSScope::JSFunctionScope))
+    , m_importer(importer)
+{
+    m_globalScope = m_currentScope;
+}
+
+void QQmlJSImportVisitor::enterEnvironment(QQmlJSScope::ScopeType type, const QString &name)
+{
+    m_currentScope = QQmlJSScope::create(type, m_currentScope);
+    m_currentScope->setBaseTypeName(name);
+    m_currentScope->setIsComposite(true);
+}
+
+void QQmlJSImportVisitor::leaveEnvironment()
+{
+    m_currentScope = m_currentScope->parentScope();
+}
+
+QQmlJSScope::Ptr QQmlJSImportVisitor::result() const
 {
     QQmlJSScope::Ptr result = QQmlJSScope::create();
     result->setIsComposite(true);
-    result->setInternalName(scopeName);
-    result->setBaseTypeName(m_rootObject->baseTypeName());
-    const auto properties = m_rootObject->properties();
+    result->setBaseTypeName(m_qmlRootScope->baseTypeName());
+    const auto properties = m_qmlRootScope->properties();
     for (auto property : properties) {
         if (property.isAlias()) {
-            const auto it = m_objects.find(property.typeName());
-            if (it != m_objects.end())
+            const auto it = m_scopesById.find(property.typeName());
+            if (it != m_scopesById.end())
                 property.setType(QQmlJSScope::ConstPtr(*it));
             result->addProperty(property);
         } else {
@@ -50,34 +75,47 @@ QQmlJSScope::Ptr QQmlJSImportVisitor::result(const QString &scopeName) const
         }
     }
 
-    for (const auto &method : m_rootObject->methods())
+    for (const auto &method : m_qmlRootScope->methods())
         result->addMethod(method);
 
-    for (const auto &enumerator : m_rootObject->enums())
+    for (const auto &enumerator : m_qmlRootScope->enums())
         result->addEnum(enumerator);
 
+    result->resolveTypes(m_rootScopeImports);
     return result;
+}
+
+bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiProgram *)
+{
+    m_rootScopeImports = m_importer->importBuiltins();
+
+    if (!m_qmltypesFiles.isEmpty())
+        m_rootScopeImports.insert(m_importer->importQmltypes(m_qmltypesFiles));
+
+    m_rootScopeImports.insert(m_importer->importDirectory(m_implicitImportDirectory));
+
+    m_errors.append(m_importer->takeWarnings());
+    return true;
 }
 
 bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
 {
-    QQmlJSScope::Ptr scope = QQmlJSScope::create();
     QString superType;
     for (auto segment = definition->qualifiedTypeNameId; segment; segment = segment->next) {
         if (!superType.isEmpty())
             superType.append(u'.');
         superType.append(segment->name.toString());
     }
-    scope->setBaseTypeName(superType);
-    if (!m_rootObject)
-        m_rootObject = scope;
-    m_currentObjects.append(scope);
+    enterEnvironment(QQmlJSScope::QMLScope, superType);
+    if (!m_qmlRootScope)
+        m_qmlRootScope = m_currentScope;
+
     return true;
 }
 
 void QQmlJSImportVisitor::endVisit(UiObjectDefinition *)
 {
-    m_currentObjects.pop_back();
+    leaveEnvironment();
 }
 
 bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
@@ -92,7 +130,7 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
             method.addParameter(param->name.toString(), param->type->name.toString());
             param = param->next;
         }
-        currentObject()->addMethod(method);
+        m_currentScope->addMethod(method);
         break;
     }
     case UiPublicMember::Property: {
@@ -112,40 +150,73 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
             isAlias,
             0
         };
-        currentObject()->addProperty(prop);
+        m_currentScope->addProperty(prop);
         break;
     }
     }
     return true;
 }
 
-bool QQmlJSImportVisitor::visit(UiSourceElement *sourceElement)
+void QQmlJSImportVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExpression *fexpr)
 {
-    if (FunctionExpression *fexpr = sourceElement->sourceElement->asFunctionDefinition()) {
-        QQmlJSMetaMethod method;
-        method.setMethodName(fexpr->name.toString());
-        method.setMethodType(QQmlJSMetaMethod::Method);
-        FormalParameterList *parameters = fexpr->formals;
-        while (parameters) {
-            method.addParameter(parameters->element->bindingIdentifier.toString(), QString());
-            parameters = parameters->next;
-        }
-        currentObject()->addMethod(method);
-    } else if (ClassExpression *clexpr = sourceElement->sourceElement->asClassDefinition()) {
-        QQmlJSMetaProperty prop { clexpr->name.toString(), QString(), false, false, false, false, 1 };
-        currentObject()->addProperty(prop);
-    } else if (cast<VariableStatement *>(sourceElement->sourceElement)) {
-        // nothing to do
-    } else {
-        const auto loc = sourceElement->firstSourceLocation();
-        m_errors.append({
-                            QStringLiteral("unsupportedd sourceElement %1")
-                                    .arg(sourceElement->sourceElement->kind),
-                            QtWarningMsg,
-                            loc
+    using namespace QQmlJS::AST;
+    auto name = fexpr->name.toString();
+    if (!name.isEmpty()) {
+        if (m_currentScope->scopeType() == QQmlJSScope::QMLScope) {
+            QQmlJSMetaMethod method(name, QStringLiteral("void"));
+            method.setMethodType(QQmlJSMetaMethod::Method);
+            FormalParameterList *parameters = fexpr->formals;
+            while (parameters) {
+                method.addParameter(parameters->element->bindingIdentifier.toString(), QString());
+                parameters = parameters->next;
+            }
+            m_currentScope->addMethod(method);
+        } else {
+            m_currentScope->insertJSIdentifier(
+                        name, {
+                            QQmlJSScope::JavaScriptIdentifier::LexicalScoped,
+                            fexpr->firstSourceLocation()
                         });
+        }
+        enterEnvironment(QQmlJSScope::JSFunctionScope, name);
+    } else {
+        enterEnvironment(QQmlJSScope::JSFunctionScope, QStringLiteral("<anon>"));
     }
+}
+
+bool QQmlJSImportVisitor::visit(QQmlJS::AST::FunctionExpression *fexpr)
+{
+    visitFunctionExpressionHelper(fexpr);
     return true;
+}
+
+void QQmlJSImportVisitor::endVisit(QQmlJS::AST::FunctionExpression *)
+{
+    leaveEnvironment();
+}
+
+bool QQmlJSImportVisitor::visit(QQmlJS::AST::FunctionDeclaration *fdecl)
+{
+    visitFunctionExpressionHelper(fdecl);
+    return true;
+}
+
+void QQmlJSImportVisitor::endVisit(QQmlJS::AST::FunctionDeclaration *)
+{
+    leaveEnvironment();
+}
+
+bool QQmlJSImportVisitor::visit(QQmlJS::AST::ClassExpression *ast)
+{
+    QQmlJSMetaProperty prop { ast->name.toString(), QString(), false, false, false, false, 1 };
+    m_currentScope->addProperty(prop);
+    enterEnvironment(QQmlJSScope::JSFunctionScope, ast->name.toString());
+    return true;
+}
+
+void QQmlJSImportVisitor::endVisit(QQmlJS::AST::ClassExpression *)
+{
+    leaveEnvironment();
 }
 
 bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
@@ -153,7 +224,7 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
     if (scriptBinding->qualifiedId->name == QLatin1String("id")) {
         const auto *statement = cast<ExpressionStatement *>(scriptBinding->statement);
         const auto *idExprension = cast<IdentifierExpression *>(statement->expression);
-        m_objects.insert(idExprension->name.toString(), currentObject());
+        m_scopesById.insert(idExprension->name.toString(), m_currentScope);
     }
     return true;
 }
@@ -163,7 +234,51 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiEnumDeclaration *uied)
     QQmlJSMetaEnum qmlEnum(uied->name.toString());
     for (const auto *member = uied->members; member; member = member->next)
         qmlEnum.addKey(member->member.toString());
-    currentObject()->addEnum(qmlEnum);
+    m_currentScope->addEnum(qmlEnum);
+    return true;
+}
+
+bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
+{
+    // construct path
+    QString prefix = QLatin1String("");
+    if (import->asToken.isValid()) {
+        prefix += import->importId;
+    }
+    auto filename = import->fileName.toString();
+    if (!filename.isEmpty()) {
+        const QFileInfo file(filename);
+        const QFileInfo path(file.isRelative() ? QDir(m_implicitImportDirectory).filePath(filename)
+                                               : filename);
+        if (path.isDir()) {
+            m_rootScopeImports.insert(m_importer->importDirectory(path.canonicalFilePath(), prefix));
+        } else if (path.isFile()) {
+            const auto scope = m_importer->importFile(path.canonicalFilePath());
+            m_rootScopeImports.insert(prefix.isEmpty() ? scope->internalName() : prefix, scope);
+        }
+
+    }
+
+    QString path {};
+    if (!import->importId.isEmpty()) {
+        // TODO: do not put imported ids into the same space as qml IDs
+        const QString importId = import->importId.toString();
+        m_scopesById.insert(importId, m_rootScopeImports.value(importId));
+    }
+    auto uri = import->importUri;
+    while (uri) {
+        path.append(uri->name);
+        path.append(u'/');
+        uri = uri->next;
+    }
+    path.chop(1);
+
+    const auto imported = m_importer->importModule(
+                path, prefix, import->version ? import->version->version : QTypeRevision());
+
+    m_rootScopeImports.insert(imported);
+
+    m_errors.append(m_importer->takeWarnings());
     return true;
 }
 

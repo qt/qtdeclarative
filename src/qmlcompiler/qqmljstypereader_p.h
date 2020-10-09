@@ -40,6 +40,7 @@
 // We mean it.
 
 #include "qqmljsscope_p.h"
+#include "qqmljsimporter_p.h"
 
 #include <QtQml/private/qqmljsastfwd_p.h>
 #include <QtQml/private/qqmljsdiagnosticmessage_p.h>
@@ -52,21 +53,20 @@ QT_BEGIN_NAMESPACE
 class QQmlJSTypeReader
 {
 public:
-    struct Import {
-        QString module;
-        QTypeRevision version;
-        QString prefix;
-    };
-
-    QQmlJSTypeReader(const QString &file) : m_file(file) {}
+    QQmlJSTypeReader(QQmlJSImporter *importer, const QString &file,
+                     const QStringList &qmltypesFiles = QStringList())
+        : m_importer(importer)
+        , m_file(file)
+        , m_qmltypesFiles(qmltypesFiles)
+    {}
 
     QQmlJSScope::Ptr operator()();
-    QList<Import> imports() const { return m_imports; }
     QList<QQmlJS::DiagnosticMessage> errors() const { return m_errors; }
 
 private:
+    QQmlJSImporter *m_importer;
     QString m_file;
-    QList<Import> m_imports;
+    QStringList m_qmltypesFiles;
     QList<QQmlJS::DiagnosticMessage> m_errors;
 };
 

@@ -86,7 +86,8 @@ static bool lint_file(const QString &filename, const bool silent, const bool war
 
     if (success && !isJavaScript) {
         auto root = parser.rootNode();
-        FindWarningVisitor v { qmlImportPaths, qmltypesFiles, code, filename, silent,
+        QQmlJSImporter importer(qmlImportPaths);
+        FindWarningVisitor v { &importer, qmltypesFiles, code, filename, silent,
                                warnUnqualified, warnWithStatement, warnInheritanceCycle };
         root->accept(&v);
         success = v.check();

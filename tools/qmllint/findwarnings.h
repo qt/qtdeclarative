@@ -45,6 +45,7 @@
 #include <QtQmlCompiler/private/qqmljstypedescriptionreader_p.h>
 #include <QtQmlCompiler/private/qqmljsscope_p.h>
 #include <QtQmlCompiler/private/qqmljsimporter_p.h>
+#include <QtQmlCompiler/private/qqmljsimportvisitor_p.h>
 
 #include <QtQml/private/qqmldirparser_p.h>
 #include <QtQml/private/qqmljsastvisitor_p.h>
@@ -52,34 +53,27 @@
 
 #include <QtCore/qscopedpointer.h>
 
-class FindWarningVisitor : public QQmlJS::AST::Visitor
+class FindWarningVisitor : public QQmlJSImportVisitor
 {
     Q_DISABLE_COPY_MOVE(FindWarningVisitor)
 public:
     explicit FindWarningVisitor(
-            QStringList qmlImportPaths, QStringList qmltypesFiles, QString code, QString fileName,
+            QQmlJSImporter *importer, QStringList qmltypesFiles, QString code, QString fileName,
             bool silent, bool warnUnqualified, bool warnWithStatement, bool warnInheritanceCycle);
     ~FindWarningVisitor() override = default;
     bool check();
 
 private:
-    QQmlJSImporter::ImportedTypes m_rootScopeImports;
-
     QHash<QQmlJS::SourceLocation, SignalHandler> m_signalHandlers;
     QQmlJS::SourceLocation m_pendingSingalHandler;
 
     MemberAccessChains m_memberAccessChains;
 
-    QQmlJSScope::Ptr m_rootScope;
-    QQmlJSScope::Ptr m_currentScope;
     QQmlJS::AST::ExpressionNode *m_fieldMemberBase = nullptr;
-    QStringList m_qmltypesFiles;
     QString m_code;
-    QHash<QString, QQmlJSScope::ConstPtr> m_qmlid2scope;
     QString m_rootId;
     QString m_filePath;
     QSet<QString> m_unknownImports;
-    QList<QQmlJS::DiagnosticMessage> m_errors;
     ColorOutput m_colorOut;
     bool m_visitFailed = false;
 
@@ -96,11 +90,6 @@ private:
 
     QVarLengthArray<OutstandingConnection, 3> m_outstandingConnections; // Connections whose target we have not encountered
 
-    QQmlJSImporter m_importer;
-
-    void enterEnvironment(QQmlJSScope::ScopeType type, const QString &name);
-    void leaveEnvironment();
-
     void importExportedNames(QQmlJSScope::ConstPtr scope);
 
     void parseHeaders(QQmlJS::AST::UiHeaderItemList *headers);
@@ -110,12 +99,6 @@ private:
     void throwRecursionDepthError() override;
 
     // start block/scope handling
-    bool visit(QQmlJS::AST::UiProgram *ast) override;
-    void endVisit(QQmlJS::AST::UiProgram *ast) override;
-
-    bool visit(QQmlJS::AST::ClassExpression *ast) override;
-    void endVisit(QQmlJS::AST::ClassExpression *ast) override;
-
     bool visit(QQmlJS::AST::ClassDeclaration *ast) override;
     void endVisit(QQmlJS::AST::ClassDeclaration *ast) override;
 
@@ -140,18 +123,11 @@ private:
     bool visit(QQmlJS::AST::WithStatement *withStatement) override;
     void endVisit(QQmlJS::AST::WithStatement *ast) override;
 
-    void visitFunctionExpressionHelper(QQmlJS::AST::FunctionExpression *fexpr);
-    bool visit(QQmlJS::AST::FunctionExpression *fexpr) override;
-    void endVisit(QQmlJS::AST::FunctionExpression *fexpr) override;
-
-    bool visit(QQmlJS::AST::FunctionDeclaration *fdecl) override;
-    void endVisit(QQmlJS::AST::FunctionDeclaration *fdecl) override;
     /* --- end block handling --- */
 
     bool visit(QQmlJS::AST::VariableDeclarationList *vdl) override;
     bool visit(QQmlJS::AST::FormalParameterList *fpl) override;
 
-    bool visit(QQmlJS::AST::UiImport *import) override;
     bool visit(QQmlJS::AST::UiEnumDeclaration *uied) override;
     bool visit(QQmlJS::AST::UiObjectBinding *uiob) override;
     void endVisit(QQmlJS::AST::UiObjectBinding *uiob) override;
