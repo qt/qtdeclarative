@@ -2971,6 +2971,7 @@ void QMacStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, QPai
         p->drawRect(opt->rect);
         p->setPen(oldPen);
         break; }
+    case PE_PanelLineEdit:
     case PE_FrameLineEdit:
         if (const QStyleOptionFrame *frame = qstyleoption_cast<const QStyleOptionFrame *>(opt)) {
             if (frame->state & State_Sunken) {
@@ -3014,36 +3015,6 @@ void QMacStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, QPai
                 });
             } else {
                 QCommonStyle::drawPrimitive(pe, opt, p);
-            }
-        }
-        break;
-    case PE_PanelLineEdit:
-        {
-            const QStyleOptionFrame *panel = qstyleoption_cast<const QStyleOptionFrame *>(opt);
-            if (qt_mac_applicationIsInDarkMode() || (panel && panel->lineWidth <= 0)) {
-                // QCommonStyle::drawPrimitive(PE_PanelLineEdit) fill the background with
-                // a proper color, defined in opt->palette and then, if lineWidth > 0, it
-                // calls QMacStyle::drawPrimitive(PE_FrameLineEdit). We use NSTextFieldCell
-                // to handle PE_FrameLineEdit, which will use system-default background.
-                // In 'Dark' mode it's transparent and thus it's not over-painted.
-                QCommonStyle::drawPrimitive(pe, opt, p);
-            } else {
-                // In 'Light' mode, if panel->lineWidth > 0, we have to use the correct
-                // background color when drawing PE_FrameLineEdit, so let's call it
-                // directly and set the proper color there.
-                drawPrimitive(PE_FrameLineEdit, opt, p);
-            }
-
-            // Draw the focus frame for widgets other than QLineEdit (e.g. for line edits in Webkit).
-            // Focus frame is drawn outside the rectangle passed in the option-rect.
-            if (panel) {
-//                if ((opt->state & State_HasFocus) && !qobject_cast<const QLineEdit*>(w)) {
-//                    int vmargin = pixelMetric(QStyle::PM_FocusFrameVMargin);
-//                    int hmargin = pixelMetric(QStyle::PM_FocusFrameHMargin);
-//                    QStyleOptionFrame focusFrame = *panel;
-//                    focusFrame.rect = panel->rect.adjusted(-hmargin, -vmargin, hmargin, vmargin);
-//                    drawControl(CE_FocusFrame, &focusFrame, p);
-//                }
             }
         }
         break;
