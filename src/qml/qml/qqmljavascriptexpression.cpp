@@ -447,13 +447,14 @@ void QQmlJavaScriptExpression::setCompilationUnit(const QQmlRefPointer<QV4::Exec
     m_compilationUnit = compilationUnit;
 }
 
-void QPropertyChangeTrigger::operator()() {
-    m_expression->expressionChanged();
+void QPropertyChangeTrigger::trigger(QPropertyObserver *observer, QUntypedPropertyData *) {
+    auto This = static_cast<QPropertyChangeTrigger *>(observer);
+    This->m_expression->expressionChanged();
 }
 
-QPropertyChangeHandler<QPropertyChangeTrigger> *QQmlJavaScriptExpression::allocatePropertyChangeTrigger(QObject *target, int propertyIndex)
+QPropertyChangeTrigger *QQmlJavaScriptExpression::allocatePropertyChangeTrigger(QObject *target, int propertyIndex)
 {
-    auto trigger = QQmlEnginePrivate::get(engine())->qPropertyTriggerPool.New(QPropertyChangeTrigger { this });
+    auto trigger = QQmlEnginePrivate::get(engine())->qPropertyTriggerPool.New( this );
     trigger->target = target;
     trigger->propertyIndex = propertyIndex;
     auto oldHead = qpropertyChangeTriggers;

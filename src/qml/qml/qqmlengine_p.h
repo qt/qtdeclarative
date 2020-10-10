@@ -127,16 +127,19 @@ public:
     QQmlJavaScriptExpressionGuard *next;
 };
 
-struct QPropertyChangeTrigger {
+struct QPropertyChangeTrigger : QPropertyObserver {
+    QPropertyChangeTrigger(QQmlJavaScriptExpression *expression) : QPropertyObserver(&QPropertyChangeTrigger::trigger), m_expression(expression) {}
     QQmlJavaScriptExpression * m_expression;
-    void operator()();
-};
-
-struct TriggerList : QPropertyChangeHandler<QPropertyChangeTrigger> {
-    TriggerList(QPropertyChangeTrigger trigger) : QPropertyChangeHandler<QPropertyChangeTrigger>(trigger) {};
-    TriggerList *next = nullptr;
     QObject *target = nullptr;
     int propertyIndex = 0;
+    static void trigger(QPropertyObserver *, QUntypedPropertyData *);
+};
+
+struct TriggerList : QPropertyChangeTrigger {
+    TriggerList(QQmlJavaScriptExpression *expression)
+        : QPropertyChangeTrigger(expression)
+    {}
+    TriggerList *next = nullptr;
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlEnginePrivate : public QJSEnginePrivate
