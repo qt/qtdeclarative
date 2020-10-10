@@ -86,6 +86,108 @@ enum class PathCurrent {
     Lookup
 };
 Q_ENUM_NS(PathCurrent)
+enum class ResolveOption{
+    None=0,
+    TraceVisit=0x1 // call the function along all elements of the path, not just for the target (the function might be called even if the target is never reached)
+};
+Q_ENUM_NS(ResolveOption)
+Q_DECLARE_FLAGS(ResolveOptions, ResolveOption)
+Q_DECLARE_OPERATORS_FOR_FLAGS(ResolveOptions)
+
+enum class VisitOption{
+    None=0,
+    VisitAdopted=0x1, // Visit adopted types (but never recurses)
+    Recurse=0x2, // recurse non adopted types
+    NoPath=0x4 // does not generate path consistent with visit
+};
+Q_ENUM_NS(VisitOption)
+Q_DECLARE_FLAGS(VisitOptions, VisitOption)
+Q_DECLARE_OPERATORS_FOR_FLAGS(VisitOptions)
+
+enum class DomKind {
+    Empty,
+    Object,
+    List,
+    Map,
+    Value
+};
+Q_ENUM_NS(DomKind)
+
+enum class DomType {
+    Empty,
+
+    ExternalItemInfo,
+    ExternalItemPair,
+    // ExternalOwningItems refer to an external path and can be shared between environments
+    QmlDirectory, // dir
+    QmldirFile, // qmldir
+    JsFile, // file
+    QmlFile, // file
+    QmltypesFile, // qmltypes
+    GlobalScope, // language dependent
+    EnumItem,
+
+    // types
+    EnumDecl,
+    JsResource,
+    QmltypesComponent,
+    QmlComponent,
+    GlobalComponent,
+
+    ModuleAutoExport, // dependent imports to automatically load when a module is imported
+    ModuleIndex, // index for all the imports of a major version
+    ModuleScope, // a specific import with full version
+    Export, // An exported type
+
+    // header stuff
+    Import, // wrapped
+    Pragma,
+
+    // qml elements
+    Id,
+    QmlObject,
+    ConstantData,
+    SimpleObjectWrap,
+    ScriptExpression,
+    Reference,
+    Binding,
+    PropertyDefinition,
+    RequiredProperty,
+    MethodParameter,
+    MethodInfo,
+    Version, // wrapped
+
+    // generic objects, mainly for debug support
+    GenericObject,
+    GenericOwner,
+
+    // containers
+    Map,
+    List,
+
+    // supporting objects
+    LoadInfo, // owning
+    ErrorMessage, // wrapped
+
+    // Dom top level
+    DomEnvironment,
+    DomUniverse
+};
+Q_ENUM_NS(DomType)
+
+enum class ListOptions {
+    Normal,
+    Reverse
+};
+Q_ENUM_NS(ListOptions)
+
+enum class LoadOption {
+    DefaultLoad = 0x0,
+    ForceLoad = 0x1,
+};
+Q_ENUM_NS(LoadOption)
+Q_DECLARE_FLAGS(LoadOptions, LoadOption);
+
 enum class EscapeOptions{
     OuterQuotes,
     NoOuterQuotes
