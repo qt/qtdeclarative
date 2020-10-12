@@ -642,8 +642,8 @@ void QQmlMetaType::unregisterInternalCompositeType(const CompositeMetaTypeIds &t
     QMetaType::unregisterMetaType(metaType);
     QMetaType listMetaType(typeIds.listId);
     QMetaType::unregisterMetaType(listMetaType);
-    delete static_cast<QQmlMetaTypeInterface *>(metaType.iface());
-    delete static_cast<QQmlMetaTypeInterface *>(listMetaType.iface());
+    delete static_cast<const QQmlMetaTypeInterface *>(metaType.iface());
+    delete static_cast<const QQmlMetaTypeInterface *>(listMetaType.iface());
 }
 
 int QQmlMetaType::registerUnitCacheHook(
