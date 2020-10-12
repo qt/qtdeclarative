@@ -54,6 +54,7 @@
 #include <QtQml/qqml.h>
 
 #if QT_CONFIG(itemmodel)
+#include <QtCore/qabstractitemmodel.h>
 #include <QtCore/qitemselectionmodel.h>
 #endif
 
@@ -68,6 +69,14 @@ struct QItemSelectionModelForeign
     QML_FOREIGN(QItemSelectionModel)
     QML_NAMED_ELEMENT(ItemSelectionModel)
     QML_ADDED_IN_VERSION(2, 2)
+};
+
+struct QAbstractItemModelForeign
+{
+    Q_GADGET
+    QML_FOREIGN(QAbstractItemModel)
+    QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 15)
 };
 #endif
 
