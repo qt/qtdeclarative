@@ -79,6 +79,7 @@ private:
     QString m_rootId;
     QString m_filePath;
     QSet<QString> m_unknownImports;
+    QList<QQmlJS::DiagnosticMessage> m_errors;
     ColorOutput m_colorOut;
     bool m_visitFailed = false;
 

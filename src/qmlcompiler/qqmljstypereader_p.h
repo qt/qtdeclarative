@@ -42,6 +42,7 @@
 #include "qqmljsscope_p.h"
 
 #include <QtQml/private/qqmljsastfwd_p.h>
+#include <QtQml/private/qqmljsdiagnosticmessage_p.h>
 
 #include <QtCore/qpair.h>
 #include <QtCore/qset.h>
@@ -61,12 +62,12 @@ public:
 
     QQmlJSScope::Ptr operator()();
     QList<Import> imports() const { return m_imports; }
-    QStringList errors() const { return m_errors; }
+    QList<QQmlJS::DiagnosticMessage> errors() const { return m_errors; }
 
 private:
     QString m_file;
     QList<Import> m_imports;
-    QStringList m_errors;
+    QList<QQmlJS::DiagnosticMessage> m_errors;
 };
 
 QT_END_NAMESPACE

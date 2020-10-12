@@ -42,6 +42,7 @@
 #include "qqmljsscope_p.h"
 
 #include <private/qqmljsast_p.h>
+#include <private/qqmljsdiagnosticmessage_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -49,7 +50,7 @@ class QQmlJSImportVisitor : public QQmlJS::AST::Visitor
 {
 public:
     QQmlJSScope::Ptr result(const QString &scopeName) const;
-    QStringList errors() const { return m_errors; }
+    QList<QQmlJS::DiagnosticMessage> errors() const { return m_errors; }
 
 private:
     bool visit(QQmlJS::AST::UiObjectDefinition *) override;
@@ -66,7 +67,7 @@ private:
     QQmlJSScope::ConstPtr m_rootObject;
     QHash<QString, QQmlJSScope::Ptr> m_objects;
 
-    QStringList m_errors;
+    QList<QQmlJS::DiagnosticMessage> m_errors;
 };
 
 QT_END_NAMESPACE

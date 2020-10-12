@@ -61,12 +61,20 @@ void QQmlJSImporter::readQmltypes(
 {
     const QFileInfo fileInfo(filename);
     if (!fileInfo.exists()) {
-        m_warnings.append(QLatin1String("QML types file does not exist: ") + filename);
+        m_warnings.append({
+                              QStringLiteral("QML types file does not exist: ") + filename,
+                              QtWarningMsg,
+                              QQmlJS::SourceLocation()
+                          });
         return;
     }
 
     if (fileInfo.isDir()) {
-        m_warnings.append(QLatin1String("QML types file cannot be a directory: ") + filename);
+        m_warnings.append({
+                              QStringLiteral("QML types file cannot be a directory: ") + filename,
+                              QtWarningMsg,
+                              QQmlJS::SourceLocation()
+                          });
         return;
     }
 
@@ -76,15 +84,19 @@ void QQmlJSImporter::readQmltypes(
     QStringList dependencyStrings;
     auto succ = reader(objects, &dependencyStrings);
     if (!succ)
-        m_warnings.append(reader.errorMessage());
+        m_warnings.append({ reader.errorMessage(), QtCriticalMsg, QQmlJS::SourceLocation() });
 
     if (dependencyStrings.isEmpty())
         return;
 
-    m_warnings.append(QStringLiteral("Found deprecated dependency specifications in %1."
-                                     "Specify dependencies in qmldir and use qmltyperegistrar to "
-                                     "generate qmltypes files without dependencies.")
-                      .arg(filename));
+    m_warnings.append({
+                          QStringLiteral("Found deprecated dependency specifications in %1."
+                                         "Specify dependencies in qmldir and use qmltyperegistrar "
+                                         "to generate qmltypes files without dependencies.")
+                                .arg(filename),
+                          QtWarningMsg,
+                          QQmlJS::SourceLocation()
+                      });
 
     for (const QString &dependency : qAsConst(dependencyStrings)) {
         const auto blank = dependency.indexOf(u' ');
@@ -125,9 +137,13 @@ QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &path)
     for (auto it = components.begin(), end = components.end(); it != end; ++it) {
         const QString filePath = path + QLatin1Char('/') + it->fileName;
         if (!QFile::exists(filePath)) {
-            m_warnings.append(it->fileName + QLatin1String(" is listed as component in ")
-                              + path + SlashQmldir
-                              + QLatin1String(" but does not exist.\n"));
+            m_warnings.append({
+                                  it->fileName + QStringLiteral(" is listed as component in ")
+                                        + path + SlashQmldir
+                                        + QStringLiteral(" but does not exist.\n"),
+                                  QtWarningMsg,
+                                  QQmlJS::SourceLocation()
+                              });
             continue;
         }
 
@@ -150,8 +166,12 @@ QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &path)
     if (typeInfos.isEmpty() && !reader.plugins().isEmpty()) {
         const QString defaultTypeInfoPath = path + SlashPluginsDotQmltypes;
         if (QFile::exists(defaultTypeInfoPath)) {
-            m_warnings.append(QStringLiteral("typeinfo not declared in qmldir file: ")
-                              + defaultTypeInfoPath);
+            m_warnings.append({
+                                  QStringLiteral("typeinfo not declared in qmldir file: ")
+                                    + defaultTypeInfoPath,
+                                  QtWarningMsg,
+                                  QQmlJS::SourceLocation()
+                              });
             readQmltypes(defaultTypeInfoPath, &result.objects, &result.dependencies);
         }
     }
@@ -287,9 +307,7 @@ QQmlJSScope::Ptr QQmlJSImporter::localFile2ScopeTree(const QString &filePath)
     QQmlJSScope::Ptr result = typeReader();
     m_importedFiles.insert(filePath, result);
 
-    const QStringList errors = typeReader.errors();
-    for (const QString &error : errors)
-        m_warnings.append(error);
+    m_warnings.append(typeReader.errors());
 
     AvailableTypes types;
     types.qmlNames.insert(importDirectory(QFileInfo(filePath).canonicalPath()));

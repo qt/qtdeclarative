@@ -61,9 +61,9 @@ public:
             const QString &module, const QString &prefix = QString(),
             QTypeRevision version = QTypeRevision());
 
-    QStringList takeWarnings()
+    QList<QQmlJS::DiagnosticMessage> takeWarnings()
     {
-        QStringList result = std::move(m_warnings);
+        const auto result = std::move(m_warnings);
         m_warnings.clear();
         return result;
     }
@@ -102,7 +102,7 @@ private:
     QStringList m_importPaths;
     QHash<QPair<QString, QTypeRevision>, Import> m_seenImports;
     QHash<QString, QQmlJSScope::Ptr> m_importedFiles;
-    QStringList m_warnings;
+    QList<QQmlJS::DiagnosticMessage> m_warnings;
 };
 
 QT_END_NAMESPACE

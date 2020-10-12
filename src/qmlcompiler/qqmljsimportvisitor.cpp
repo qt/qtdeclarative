@@ -138,10 +138,12 @@ bool QQmlJSImportVisitor::visit(UiSourceElement *sourceElement)
         // nothing to do
     } else {
         const auto loc = sourceElement->firstSourceLocation();
-        m_errors.append(
-                    QStringLiteral("unsupportedd sourceElement at ")
-                    + QString::fromLatin1("%1:%2: ").arg(loc.startLine).arg(loc.startColumn)
-                    + QString::number(sourceElement->sourceElement->kind));
+        m_errors.append({
+                            QStringLiteral("unsupportedd sourceElement %1")
+                                    .arg(sourceElement->sourceElement->kind),
+                            QtWarningMsg,
+                            loc
+                        });
     }
     return true;
 }
@@ -167,7 +169,11 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiEnumDeclaration *uied)
 
 void QQmlJSImportVisitor::throwRecursionDepthError()
 {
-    m_errors.append(QStringLiteral("Maximum statement or expression depth exceeded"));
+    m_errors.append({
+                        QStringLiteral("Maximum statement or expression depth exceeded"),
+                        QtCriticalMsg,
+                        QQmlJS::SourceLocation()
+                    });
 }
 
 QT_END_NAMESPACE
