@@ -133,10 +133,6 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiProgram *)
         m_rootScopeImports.insert(baseTypes);
     }
 
-    // add "self" (as we only ever check the first part of a qualified identifier, we get away with
-    // using an empty QQmlJSScope
-    m_rootScopeImports.insert(QFileInfo { m_filePath }.baseName(), {});
-
     const auto imported = m_importer.importDirectory(QFileInfo(m_filePath).canonicalPath());
     m_rootScopeImports.insert(imported);
 
