@@ -81,7 +81,7 @@ function(qt_internal_add_qml_module target)
     # If we have no sources, but qml files, create a custom target so the
     # qml file will be visibile in an IDE.
     if (arg_SOURCES)
-        qt_add_plugin(${target}
+        qt_internal_add_plugin(${target}
             TYPE
                 qml_plugin
             QML_TARGET_PATH
