@@ -61,14 +61,15 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtquickcontrols2-scrollview.qml file
 
-    \note ScrollView does not automatically clip its contents. If it is not used as
-    a full-screen item, you should consider setting the \l {Item::}{clip} property
-    to \c true, as shown above.
-
     The second example illustrates using an existing \l Flickable, that is,
     a \l ListView.
 
     \snippet qtquickcontrols2-scrollview-listview.qml file
+
+    \note As of Qt-6.0, ScrollView automatically clips its contents if you
+    don't use a Flickable as a child. If this is not wanted, you can
+    set your own Flickable as a child, and control the \l {Item::}{clip}
+    property on the Flickable explicitly.
 
     \section2 Sizing
 
@@ -180,7 +181,15 @@ QQuickFlickable *QQuickScrollViewPrivate::ensureFlickable(bool content)
     if (!flickable) {
         flickableHasExplicitContentWidth = false;
         flickableHasExplicitContentHeight = false;
-        setFlickable(new QQuickFlickable(q), content);
+        auto flickable = new QQuickFlickable(q);
+        // We almost always want to clip the flickable so that flickable
+        // contents doesn't show up outside the scrollview. The only time
+        // this is not really needed, is when the scrollview covers the whole
+        // window and the scrollbars are transient. But for that corner case, if this
+        // optimization is needed, the user can simply create his own flickable
+        // child inside the scrollview, and control clipping on it explicit.
+        flickable->setClip(true);
+        setFlickable(flickable, content);
     }
     return flickable;
 }

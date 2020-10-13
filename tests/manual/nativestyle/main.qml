@@ -71,7 +71,6 @@ ApplicationWindow {
 
         ScrollView {
             contentWidth: width - ScrollBar.vertical.width
-            clip: true
 
             Column {
                 anchors.left: parent.left
@@ -97,7 +96,6 @@ ApplicationWindow {
 
         ScrollView {
             contentWidth: width - ScrollBar.vertical.width
-            clip: true
 
             Column {
                 anchors.left: parent.left

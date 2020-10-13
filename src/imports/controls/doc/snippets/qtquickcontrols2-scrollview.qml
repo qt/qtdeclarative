@@ -50,7 +50,6 @@ Rectangle {
 ScrollView {
     width: 200
     height: 200
-    clip: true
 
     Label {
         text: "ABC"
