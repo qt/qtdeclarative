@@ -52,13 +52,18 @@ public:
     enum GraphicsApi {
         Unknown,
         Software,
-        OpenGL,
         OpenVG,
-        OpenGLRhi,
-        Direct3D11Rhi,
-        VulkanRhi,
-        MetalRhi,
-        NullRhi,
+        OpenGL,
+        Direct3D11,
+        Vulkan,
+        Metal,
+        Null,
+
+        OpenGLRhi = OpenGL,
+        Direct3D11Rhi = Direct3D11,
+        VulkanRhi = Vulkan,
+        MetalRhi = Metal,
+        NullRhi = Null
     };
 
     enum Resource {

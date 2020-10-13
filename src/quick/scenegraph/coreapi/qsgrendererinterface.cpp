@@ -75,13 +75,17 @@ QT_BEGIN_NAMESPACE
     \enum QSGRendererInterface::GraphicsApi
     \value Unknown An unknown graphics API is in use
     \value Software The Qt Quick 2D Renderer is in use
-    \value OpenGL OpenGL ES 2.0 or higher
     \value OpenVG OpenVG via EGL
-    \value OpenGLRhi OpenGL ES 2.0 or higher via a graphics abstraction layer. This value was introduced in Qt 5.14.
-    \value Direct3D11Rhi Direct3D 11 via a graphics abstraction layer. This value was introduced in Qt 5.14.
-    \value VulkanRhi Vulkan 1.0 via a graphics abstraction layer. This value was introduced in Qt 5.14.
-    \value MetalRhi Metal via a graphics abstraction layer. This value was introduced in Qt 5.14.
-    \value NullRhi Null (no output) via a graphics abstraction layer. This value was introduced in Qt 5.14.
+    \value OpenGL OpenGL ES 2.0 or higher via a graphics abstraction layer. This value was introduced in Qt 5.14.
+    \value Direct3D11 Direct3D 11 via a graphics abstraction layer. This value was introduced in Qt 5.14.
+    \value Vulkan Vulkan 1.0 via a graphics abstraction layer. This value was introduced in Qt 5.14.
+    \value Metal Metal via a graphics abstraction layer. This value was introduced in Qt 5.14.
+    \value Null Null (no output) via a graphics abstraction layer. This value was introduced in Qt 5.14.
+    \omitvalue OpenGLRhi
+    \omitvalue Direct3D11Rhi
+    \omitvalue VulkanRhi
+    \omitvalue MetalRhi
+    \omitvalue NullRhi
   */
 
 /*!
