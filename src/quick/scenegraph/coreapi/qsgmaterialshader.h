@@ -164,6 +164,7 @@ public:
 
     Flags flags() const;
     void setFlag(Flags flags, bool on = true);
+    void setFlags(Flags flags);
 
 protected:
     Q_DECLARE_PRIVATE(QSGMaterialShader)

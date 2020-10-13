@@ -408,6 +408,15 @@ void QSGMaterialShader::setFlag(Flags flags, bool on)
 }
 
 /*!
+    Sets the \a flags for this material shader.
+ */
+void QSGMaterialShader::setFlags(Flags flags)
+{
+    Q_D(QSGMaterialShader);
+    d->flags = flags;
+}
+
+/*!
     This function is called by the scene graph to get the contents of the
     shader program's uniform buffer updated. The implementation is not expected
     to perform any real graphics operations, it is merely responsible for
