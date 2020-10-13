@@ -76,9 +76,13 @@ void QQuickStyleItemScrollBar::initStyleOption(QStyleOptionSlider &styleOption)
     initStyleOptionBase(styleOption);
     auto scrollBar = control<QQuickScrollBar>();
 
-    styleOption.subControls = m_subControl == Groove ? QStyle::SC_ScrollBarGroove : QStyle::SC_ScrollBarSlider;
+    styleOption.subControls = m_subControl == Groove
+                            ? QStyle::SC_ScrollBarGroove | QStyle::SC_ScrollBarAddLine | QStyle::SC_ScrollBarSubLine
+                            : QStyle::SC_ScrollBarSlider;
     styleOption.activeSubControls = QStyle::SC_None;
     styleOption.orientation = scrollBar->orientation();
+    if (styleOption.orientation == Qt::Horizontal)
+        styleOption.state |= QStyle::State_Horizontal;
 
     if (scrollBar->isPressed())
         styleOption.state |= QStyle::State_Sunken;
@@ -86,10 +90,13 @@ void QQuickStyleItemScrollBar::initStyleOption(QStyleOptionSlider &styleOption)
     if (m_overrideState != None) {
         // In ScrollBar.qml we fade between two versions of
         // the handle, depending on if it's hovered or not
-        if (m_overrideState & AlwaysHovered)
+        if (m_overrideState & AlwaysHovered) {
             styleOption.state |= QStyle::State_Sunken;
-        else if (m_overrideState & NeverHovered)
+            styleOption.activeSubControls = (styleOption.subControls & (QStyle::SC_ScrollBarSlider | QStyle::SC_ScrollBarGroove));
+        } else if (m_overrideState & NeverHovered) {
             styleOption.state &= ~QStyle::State_Sunken;
+            styleOption.activeSubControls &= ~(styleOption.subControls & (QStyle::SC_ScrollBarSlider | QStyle::SC_ScrollBarGroove));
+        }
     }
 
     // The following values will let the handle fill 100% of the

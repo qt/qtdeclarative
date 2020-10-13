@@ -2567,7 +2567,27 @@ void QWindowsXPStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCo
                     d->drawBackground(theme);
                 }
                 if (sub & SC_ScrollBarSlider) {
-                    theme.rect = proxy()->subControlRect(CC_ScrollBar, option, SC_ScrollBarSlider);
+                    QRect rect = proxy()->subControlRect(CC_ScrollBar, option, SC_ScrollBarSlider);
+                    // The style paint the slider handle so that it is surrounded by transparent areas
+                    // on each side. These areas have the same size as the Left/Right (or Top/Left) buttons.
+                    // This is probaly done in order for the handle to travel all along the geometry
+                    // of the slider, while the handle still not occluding the buttons.
+                    // We do not want those transparent areas, so we clip them off here.
+                    const QSize handleSize = proxy()->subControlRect(QStyle::CC_ScrollBar, scrollbar, QStyle::SC_ScrollBarAddLine).size();
+
+                    if (scrollbar->orientation == Qt::Vertical) {
+                        const int handleHeight = handleSize.height();
+                        rect.setBottom(rect.bottom() + 2 * handleHeight);
+                        p->setClipRect(r.adjusted(0, 0, 0, handleHeight));
+                        p->translate(0, -handleHeight);
+                    } else {
+                        const int handleWidth = handleSize.width();
+                        rect.setRight(rect.right() + 2 * handleWidth);
+                        p->setClipRect(r.adjusted(0, 0, handleWidth, 0));
+                        p->translate(-handleWidth, 0);
+                    }
+
+                    theme.rect = rect;
                     if (!(flags & State_Enabled))
                         stateId = SCRBS_DISABLED;
                     else if (scrollbar->activeSubControls & SC_ScrollBarSlider && (scrollbar->state & State_Sunken))
@@ -3467,6 +3487,19 @@ QSize QWindowsXPStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt
             if (sub & SC_SliderHandle) {
                 const QSize s = proxy()->subControlRect(CC_Slider, slider, SC_SliderHandle).size();
                 sz = sz.expandedTo(s);
+            }
+        }
+        break;
+    case CT_ScrollBar :
+        // Make sure that the scroll bar is large enough to display the thumb indicator.
+        if (const QStyleOptionSlider *slider = qstyleoption_cast<const QStyleOptionSlider *>(option)) {
+            const int scrollBarHeight = proxy()->pixelMetric(QStyle::PM_ScrollBarExtent, slider);
+            const int scrollBarSliderMin = proxy()->pixelMetric(QStyle::PM_ScrollBarSliderMin, slider);
+            int &szw = slider->orientation == Qt::Horizontal ? sz.rwidth() : sz.rheight();
+            int &szh = slider->orientation == Qt::Horizontal ? sz.rheight() : sz.rwidth();
+            if (slider->subControls & (SC_ScrollBarSlider | SC_ScrollBarGroove)) {
+                szw = qMax(szw, scrollBarSliderMin + 2 * scrollBarHeight);
+                szh = scrollBarHeight;
             }
         }
         break;

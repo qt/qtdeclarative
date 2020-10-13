@@ -10,4 +10,5 @@ QML_FILES += \
     $$PWD/SpinBox.qml \
     $$PWD/TextArea.qml \
     $$PWD/TextField.qml \
+    $$PWD/ScrollBar.qml \
     $$PWD/ScrollView.qml \

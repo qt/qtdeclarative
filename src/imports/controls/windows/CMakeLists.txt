@@ -51,6 +51,7 @@ set(qml_files
     "SpinBox.qml"
     "TextArea.qml"
     "TextField.qml"
+    "ScrollBar.qml"
     "ScrollView.qml"
 )
 set_source_files_properties(Button.qml PROPERTIES
