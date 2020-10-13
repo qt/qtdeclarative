@@ -43,7 +43,7 @@
 #include <QtQuick/qtquickglobal.h>
 
 #if QT_CONFIG(vulkan)
-#include <QtGui/QVulkanInstance>
+#include <QtGui/qvulkaninstance.h>
 #endif
 
 #if defined(Q_OS_MACOS) || defined(Q_OS_IOS) || defined(Q_CLANG_QDOC)
