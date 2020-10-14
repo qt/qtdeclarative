@@ -40,6 +40,7 @@
 // We mean it.
 
 #include "qqmljsmetatypes_p.h"
+#include "qdeferredpointer_p.h"
 
 #include <QtQml/private/qqmljssourcelocation_p.h>
 
@@ -52,15 +53,45 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQmlJSImporter;
+class QQmlJSScope;
+
+template<>
+class QDeferredFactory<QQmlJSScope>
+{
+public:
+    QDeferredFactory(QQmlJSImporter *importer, const QString &filePath) :
+        m_filePath(filePath), m_importer(importer)
+    {}
+
+    QQmlJSScope create() const;
+
+    bool isValid() const
+    {
+        return !m_filePath.isEmpty() && m_importer != nullptr;
+    }
+
+    void clear() {
+        m_filePath.clear();
+        m_importer = nullptr;
+    }
+
+private:
+    QString m_filePath;
+    QQmlJSImporter *m_importer = nullptr;
+};
 
 class QQmlJSScope
 {
-    Q_DISABLE_COPY_MOVE(QQmlJSScope)
+    Q_DISABLE_COPY(QQmlJSScope)
 public:
-    using Ptr = QSharedPointer<QQmlJSScope>;
-    using WeakPtr = QWeakPointer<QQmlJSScope>;
-    using ConstPtr = QSharedPointer<const QQmlJSScope>;
-    using WeakConstPtr = QWeakPointer<const QQmlJSScope>;
+    QQmlJSScope(QQmlJSScope &&) = default;
+    QQmlJSScope &operator=(QQmlJSScope &&) = default;
+
+    using Ptr = QDeferredSharedPointer<QQmlJSScope>;
+    using WeakPtr = QDeferredWeakPointer<QQmlJSScope>;
+    using ConstPtr = QDeferredSharedPointer<const QQmlJSScope>;
+    using WeakConstPtr = QDeferredWeakPointer<const QQmlJSScope>;
 
     enum ScopeType
     {

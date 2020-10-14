@@ -27,9 +27,12 @@
 ****************************************************************************/
 
 #include "qqmljsscope_p.h"
+#include "qqmljstypereader_p.h"
+#include "qqmljsimporter_p.h"
 
 #include <QtCore/qqueue.h>
 #include <QtCore/qsharedpointer.h>
+#include <QtCore/qfileinfo.h>
 
 #include <algorithm>
 
@@ -40,7 +43,7 @@ QQmlJSScope::QQmlJSScope(ScopeType type, const QQmlJSScope::Ptr &parentScope)
 
 QQmlJSScope::Ptr QQmlJSScope::create(ScopeType type, const QQmlJSScope::Ptr &parentScope)
 {
-    QQmlJSScope::Ptr childScope(new QQmlJSScope{type, parentScope});
+    QSharedPointer<QQmlJSScope> childScope(new QQmlJSScope{type, parentScope});
     if (parentScope) {
         Q_ASSERT(type != QQmlJSScope::QMLScope
                 || !parentScope->m_parentScope
@@ -142,7 +145,7 @@ void QQmlJSScope::resolveTypes(const QHash<QString, QQmlJSScope::ConstPtr> &cont
     for (auto it = m_methods.begin(), end = m_methods.end(); it != end; ++it) {
         it->setReturnType(findType(it->returnTypeName()));
         const auto paramNames = it->parameterTypeNames();
-        QList<QQmlJSScope::ConstPtr> paramTypes;
+        QList<QSharedPointer<const QQmlJSScope>> paramTypes;
 
         for (const QString &paramName: paramNames)
             paramTypes.append(findType(paramName));
@@ -181,6 +184,24 @@ QQmlJSScope::Export::Export(QString package, QString type, const QTypeRevision &
 bool QQmlJSScope::Export::isValid() const
 {
     return m_version.isValid() || !m_package.isEmpty() || !m_type.isEmpty();
+}
+
+QQmlJSScope QDeferredFactory<QQmlJSScope>::create() const
+{
+    QQmlJSTypeReader typeReader(m_filePath);
+    QQmlJSScope::Ptr result = typeReader();
+
+    m_importer->m_warnings.append(typeReader.errors());
+
+    QQmlJSImporter::AvailableTypes types;
+    types.qmlNames.insert(m_importer->importDirectory(QFileInfo(m_filePath).canonicalPath()));
+
+    const auto imports = typeReader.imports();
+    for (const auto &import : imports)
+        m_importer->importHelper(import.module, &types, import.prefix, import.version);
+
+    result->resolveTypes(types.qmlNames);
+    return std::move(*result);
 }
 
 QT_END_NAMESPACE

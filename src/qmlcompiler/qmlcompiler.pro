@@ -13,6 +13,7 @@ SOURCES = \
     qqmljsstreamwriter.cpp
 
 HEADERS = \
+    qdeferredpointer_p.h \
     qqmljsresourcefilemapper_p.h \
     qqmljsimportvisitor_p.h \
     qqmljsimporter_p.h \

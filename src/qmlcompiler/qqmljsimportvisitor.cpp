@@ -43,7 +43,7 @@ QQmlJSScope::Ptr QQmlJSImportVisitor::result(const QString &scopeName) const
         if (property.isAlias()) {
             const auto it = m_objects.find(property.typeName());
             if (it != m_objects.end())
-                property.setType(*it);
+                property.setType(QQmlJSScope::ConstPtr(*it));
             result->addProperty(property);
         } else {
             result->addProperty(property);

@@ -82,7 +82,7 @@ void CheckIdentifiers::printContext(
 static bool walkViaParentAndAttachedScopes(QQmlJSScope::ConstPtr rootType,
                                            std::function<bool(QQmlJSScope::ConstPtr)> visit)
 {
-    if (rootType == nullptr)
+    if (rootType.isNull())
         return false;
     std::stack<QQmlJSScope::ConstPtr> stack;
     stack.push(rootType);
@@ -186,7 +186,7 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
             if (it == m_types.end()) {
                 detectedRestrictiveKind = typeName;
                 detectedRestrictiveName = access.m_name;
-                scope = nullptr;
+                scope = QQmlJSScope::ConstPtr();
             } else {
                 scope = *it;
             }
@@ -304,7 +304,7 @@ bool CheckIdentifiers::operator()(
 
             auto it = qmlIDs.find(memberAccessBase.m_name);
             if (it != qmlIDs.end()) {
-                if (*it != nullptr) {
+                if (!it->isNull()) {
                     if (!checkMemberAccess(memberAccessChain, *it))
                         noUnqualifiedIdentifier = false;
                     continue;

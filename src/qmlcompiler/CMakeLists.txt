@@ -8,6 +8,7 @@ qt_internal_add_module(QmlCompiler
     STATIC
     INTERNAL_MODULE
     SOURCES
+        qdeferredpointer_p.h
         qqmljsimporter.cpp qqmljsimporter_p.h
         qqmljsimportvisitor.cpp qqmljsimportvisitor_p.h
         qqmljsmetatypes_p.h

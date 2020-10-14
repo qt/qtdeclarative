@@ -473,7 +473,7 @@ bool FindWarningVisitor::check()
     // now that all ids are known, revisit any Connections whose target were perviously unknown
     for (auto const &outstandingConnection: m_outstandingConnections) {
         auto targetScope = m_qmlid2scope[outstandingConnection.targetName];
-        if (outstandingConnection.scope && targetScope != nullptr)
+        if (outstandingConnection.scope && !targetScope.isNull())
             outstandingConnection.scope->addMethods(targetScope->methods());
         QScopedValueRollback<QQmlJSScope::Ptr> rollback(m_currentScope, outstandingConnection.scope);
         outstandingConnection.uiod->initializer->accept(this);
@@ -632,7 +632,7 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
 
 void FindWarningVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
 {
-    const auto childScope = m_currentScope;
+    const QQmlJSScope::ConstPtr childScope = m_currentScope;
     leaveEnvironment();
     QQmlJSMetaProperty property(uiob->qualifiedId->name.toString(),
                           uiob->qualifiedTypeNameId->name.toString(),
@@ -736,7 +736,7 @@ void FindWarningVisitor::endVisit(QQmlJS::AST::UiObjectDefinition *)
     const auto it = properties.find(QStringLiteral("parent"));
     if (it != properties.end()) {
         auto property = *it;
-        property.setType(m_currentScope);
+        property.setType(QQmlJSScope::ConstPtr(m_currentScope));
         childScope->addProperty(property);
     }
 }

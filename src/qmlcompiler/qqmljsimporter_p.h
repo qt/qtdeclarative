@@ -69,6 +69,8 @@ public:
     }
 
 private:
+    friend class QDeferredFactory<QQmlJSScope>;
+
     struct AvailableTypes
     {
         // C++ names used in qmltypes files for non-composite types

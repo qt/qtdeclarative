@@ -303,21 +303,11 @@ QQmlJSScope::Ptr QQmlJSImporter::localFile2ScopeTree(const QString &filePath)
     if (seen != m_importedFiles.end())
         return *seen;
 
-    QQmlJSTypeReader typeReader(filePath);
-    QQmlJSScope::Ptr result = typeReader();
-    m_importedFiles.insert(filePath, result);
-
-    m_warnings.append(typeReader.errors());
-
-    AvailableTypes types;
-    types.qmlNames.insert(importDirectory(QFileInfo(filePath).canonicalPath()));
-
-    const auto imports = typeReader.imports();
-    for (const auto &import : imports)
-        importHelper(import.module, &types, import.prefix, import.version);
-
-    result->resolveTypes(types.qmlNames);
-    return result;
+    return *m_importedFiles.insert(filePath, {
+                                       QQmlJSScope::create(),
+                                       QSharedPointer<QDeferredFactory<QQmlJSScope>>(
+                                            new QDeferredFactory<QQmlJSScope>(this, filePath))
+                                   });
 }
 
 QQmlJSScope::Ptr QQmlJSImporter::importFile(const QString &file)
@@ -339,9 +329,9 @@ QQmlJSImporter::ImportedTypes QQmlJSImporter::importDirectory(
         it.next();
         if (!it.fileName().front().isUpper())
             continue; // Non-uppercase names cannot be imported anyway.
-        QQmlJSScope::Ptr scope(localFile2ScopeTree(it.filePath()));
-        if (!scope->internalName().isEmpty())
-            qmlNames.insert(prefixedName(prefix, scope->internalName()), scope);
+
+        qmlNames.insert(prefixedName(prefix, QFileInfo(it.filePath()).baseName()),
+                        localFile2ScopeTree(it.filePath()));
     }
 
     return qmlNames;
