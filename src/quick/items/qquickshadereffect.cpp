@@ -735,7 +735,11 @@ void QQuickShaderEffect::componentComplete()
 
 void QQuickShaderEffect::itemChange(ItemChange change, const ItemChangeData &value)
 {
-    m_impl->handleItemChange(change, value);
+    // It's possible for itemChange to be called during destruction when deleting
+    // the QQuickShaderEffectImpl. We nullify m_impl before deleting it via another pointer
+    // to it, so we must check that it's not null before trying to use it here.
+    if (m_impl)
+        m_impl->handleItemChange(change, value);
     QQuickItem::itemChange(change, value);
 }
 

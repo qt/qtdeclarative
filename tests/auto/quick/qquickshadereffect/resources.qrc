@@ -12,5 +12,7 @@
         <file>data/+qsb/test.vert</file>
         <file>data/+qsb/test.frag</file>
         <file>data/+qsb/red.frag</file>
+        <file>data/hideParent.qml</file>
+        <file>data/opacity-mask.frag.qsb</file>
     </qresource>
 </RCC>

@@ -27,6 +27,8 @@ set(resources_resource_files
     "data/connections.qml"
     "data/deleteShaderEffectSource.qml"
     "data/deleteSourceItem.qml"
+    "data/hideParent.qml"
+    "data/opacity-mask.frag.qsb"
     "data/red.frag"
     "data/star.png"
     "data/test.frag"
