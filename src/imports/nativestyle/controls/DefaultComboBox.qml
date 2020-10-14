@@ -60,11 +60,6 @@ T.ComboBox {
     topPadding: __nativeBackground ? background.contentPadding.top : 5
     bottomPadding: __nativeBackground ? background.contentPadding.bottom : 5
 
-    topInset: __nativeBackground ? background.insets.top : 0
-    bottomInset: __nativeBackground ? background.insets.bottom : 0
-    leftInset: __nativeBackground ? background.insets.left : 0
-    rightInset: __nativeBackground ? background.insets.right : 0
-
     contentItem: T.TextField {
         implicitWidth: contentWidth
         implicitHeight: contentHeight
