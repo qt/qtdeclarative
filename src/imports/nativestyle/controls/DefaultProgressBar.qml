@@ -51,7 +51,7 @@ T.ProgressBar {
                              implicitContentHeight + topPadding + bottomPadding,
                             control.vertical ? 90 : 0 /* minimum */ )
 
-    font.pixelSize: nativeIndicator ? indicator.styleFont(control).pixelSize : undefined
+    font.pixelSize: __nativeBackground ? background.styleFont(control).pixelSize : undefined
 
     background: NativeStyle.ProgressBar {
         control: control
