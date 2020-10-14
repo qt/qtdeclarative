@@ -303,8 +303,8 @@ public:
     bool event(QEvent *) override;
     void run() override;
 
-    void syncAndRender(QImage *grabImage = nullptr);
-    void sync(bool inExpose, bool inGrab);
+    void syncAndRender();
+    void sync(bool inExpose);
 
     void requestRepaint()
     {
@@ -443,8 +443,17 @@ bool QSGRenderThread::event(QEvent *e)
         mutex.lock();
         if (ce->window) {
             if (rhi) {
-                rhi->makeThreadLocalNativeContextCurrent();
-                syncAndRender(ce->image);
+                QQuickWindowPrivate *cd = QQuickWindowPrivate::get(ce->window);
+                cd->rhi->makeThreadLocalNativeContextCurrent();
+                // The assumption is that the swapchain is usable, because on
+                // expose the thread starts up and renders a frame so one cannot
+                // get here without having done at least one on-screen frame.
+                cd->rhi->beginFrame(cd->swapchain);
+                cd->syncSceneGraph();
+                sgrc->endSync();
+                cd->renderSceneGraph(ce->window->size());
+                *ce->image = QSGRhiSupport::instance()->grabAndBlockInCurrentFrame(rhi, cd->swapchain->currentFrameCommandBuffer());
+                cd->rhi->endFrame(cd->swapchain, QRhi::SkipPresent);
             }
             ce->image->setDevicePixelRatio(ce->window->effectiveDevicePixelRatio());
         }
@@ -559,11 +568,10 @@ void QSGRenderThread::invalidateGraphics(QQuickWindow *window, bool inDestructor
     Enters the mutex lock to make sure GUI is blocking and performs
     sync, then wakes GUI.
  */
-void QSGRenderThread::sync(bool inExpose, bool inGrab)
+void QSGRenderThread::sync(bool inExpose)
 {
     qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "sync()");
-    if (!inGrab)
-        mutex.lock();
+    mutex.lock();
 
     Q_ASSERT_X(wm->m_lockedForSync, "QSGRenderThread::sync()", "sync triggered on bad terms as gui is not already locked...");
 
@@ -612,7 +620,7 @@ void QSGRenderThread::sync(bool inExpose, bool inGrab)
     // the frame is rendered (submitted), so in that case waking happens later
     // in syncAndRender(). Otherwise, wake now and let the main thread go on
     // while we render.
-    if (!inExpose && !inGrab) {
+    if (!inExpose) {
         qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- sync complete, waking Gui");
         waitCondition.wakeOne();
         mutex.unlock();
@@ -633,7 +641,7 @@ void QSGRenderThread::handleDeviceLoss()
     rhi = nullptr;
 }
 
-void QSGRenderThread::syncAndRender(QImage *grabImage)
+void QSGRenderThread::syncAndRender()
 {
     const bool profileFrames = QSG_LOG_TIME_RENDERLOOP().isDebugEnabled();
     QElapsedTimer threadTimer;
@@ -660,11 +668,9 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
     syncResultedInChanges = false;
     QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
 
-    const bool syncRequested = (pendingUpdate & SyncRequest) || grabImage;
+    const bool syncRequested = (pendingUpdate & SyncRequest);
     const bool exposeRequested = (pendingUpdate & ExposeRequest) == ExposeRequest;
-    const bool grabRequested = grabImage != nullptr;
-    if (!grabRequested)
-        pendingUpdate = 0;
+    pendingUpdate = 0;
 
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
     // Begin the frame before syncing -> sync is where we may invoke
@@ -715,7 +721,7 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
                 QCoreApplication::postEvent(window, new QEvent(QEvent::Type(QQuickWindowPrivate::FullUpdateRequest)));
             // Before returning we need to ensure the same wake up logic that
             // would have happened if beginFrame() had suceeded.
-            if (syncRequested && !grabRequested) {
+            if (syncRequested) {
                 // Lock like sync() would do. Note that exposeRequested always includes syncRequested.
                 qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- bailing out due to failed beginFrame, wake Gui");
                 mutex.lock();
@@ -730,7 +736,7 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
 
     if (syncRequested) {
         qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- updatePending, doing sync");
-        sync(exposeRequested, grabRequested);
+        sync(exposeRequested);
     }
 #ifndef QSG_NO_RENDER_TIMING
     if (profileFrames)
@@ -759,11 +765,10 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
     // updatePaintNode() invoked from sync(). We are about to do a repaint
     // right now, so reset the flag. (bits other than RepaintRequest cannot
     // be set in pendingUpdate at this point)
-    if (!grabRequested)
-        pendingUpdate = 0;
+    pendingUpdate = 0;
 
     // Advance render thread animations (from the QQuickAnimator subclasses).
-    if (animatorDriver->isRunning() && !grabRequested) {
+    if (animatorDriver->isRunning()) {
         d->animationController->lock();
         animatorDriver->advance();
         d->animationController->unlock();
@@ -787,20 +792,8 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
                                   QQuickProfiler::SceneGraphRenderLoopRender);
         Q_TRACE(QSG_swap_entry);
 
-        // With the rhi grabs can only be done by adding a readback and then
-        // blocking in a real frame. The legacy GL path never gets here with
-        // grabs as it rather invokes sync/render directly without going
-        // through syncAndRender().
-        if (grabRequested) {
-            Q_ASSERT(rhi && cd->swapchain);
-            *grabImage = QSGRhiSupport::instance()->grabAndBlockInCurrentFrame(rhi, cd->swapchain->currentFrameCommandBuffer());
-        }
-
         if (cd->swapchain) {
-            QRhi::EndFrameFlags flags;
-            if (grabRequested)
-                flags |= QRhi::SkipPresent;
-            QRhi::FrameOpResult frameResult = rhi->endFrame(cd->swapchain, flags);
+            QRhi::FrameOpResult frameResult = rhi->endFrame(cd->swapchain);
             if (frameResult != QRhi::FrameOpSuccess) {
                 if (frameResult == QRhi::FrameOpDeviceLost)
                     handleDeviceLoss();
@@ -810,9 +803,7 @@ void QSGRenderThread::syncAndRender(QImage *grabImage)
                     QCoreApplication::postEvent(window, new QEvent(QEvent::Type(QQuickWindowPrivate::FullUpdateRequest)));
             }
         }
-
-        if (!grabRequested)
-            d->fireFrameSwapped();
+        d->fireFrameSwapped();
     } else {
         Q_TRACE(QSG_render_exit);
         Q_QUICK_SG_PROFILE_SKIP(QQuickProfiler::SceneGraphRenderLoopFrame,
@@ -1673,7 +1664,9 @@ QImage QSGThreadedRenderLoop::grab(QQuickWindow *window)
 
     qCDebug(QSG_LOG_RENDERLOOP, "- polishing items");
     QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
+    m_inPolish = true;
     d->polishItems();
+    m_inPolish = false;
 
     QImage result;
     w->thread->mutex.lock();

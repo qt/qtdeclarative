@@ -172,17 +172,19 @@ public:
 
     struct WindowData {
         WindowData()
-            : updatePending(false),
-              grabOnly(false),
+            : sampleCount(1),
+              updatePending(false),
               rhiDeviceLost(false),
               rhiDoomed(false)
         { }
         QElapsedTimer timeBetweenRenders;
+        int sampleCount;
         bool updatePending : 1;
-        bool grabOnly : 1;
         bool rhiDeviceLost : 1;
         bool rhiDoomed : 1;
     };
+
+    bool ensureRhi(QQuickWindow *window, WindowData &data);
 
     QHash<QQuickWindow *, WindowData> m_windows;
 
@@ -191,7 +193,6 @@ public:
     QSGContext *sg;
     QSGRenderContext *rc;
 
-    QImage grabContent;
     bool m_inPolish = false;
 };
 #endif
@@ -447,22 +448,11 @@ bool QSGGuiThreadRenderLoop::eventFilter(QObject *watched, QEvent *event)
     return QObject::eventFilter(watched, event);
 }
 
-void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
+bool QSGGuiThreadRenderLoop::ensureRhi(QQuickWindow *window, WindowData &data)
 {
-    if (!m_windows.contains(window))
-        return;
-
-    WindowData &data = const_cast<WindowData &>(m_windows[window]);
-    bool alsoSwap = data.updatePending;
-    data.updatePending = false;
-
     QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
-    if (!cd->isRenderable())
-        return;
-
-    bool current = false;
     QSGRhiSupport *rhiSupport = QSGRhiSupport::instance();
-    int rhiSampleCount = 1;
+    bool current = false;
 
     if (!rhi) {
         // This block below handles both the initial QRhi initialization and
@@ -470,7 +460,7 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         // (reset) situation.
 
         if (data.rhiDoomed) // no repeated attempts if the initial attempt failed
-            return;
+            return false;
 
         if (!offscreenSurface)
             offscreenSurface = rhiSupport->maybeCreateOffscreenSurface(window);
@@ -488,13 +478,13 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
 
             // The sample count cannot vary between windows as we use the same
             // rendercontext for all of them. Decide it here and now.
-            rhiSampleCount = rhiSupport->chooseSampleCountForWindowWithRhi(window, rhi);
+            data.sampleCount = rhiSupport->chooseSampleCountForWindowWithRhi(window, rhi);
 
             cd->rhi = rhi; // set this early in case something hooked up to rc initialized() accesses it
 
             QSGDefaultRenderContext::InitParams rcParams;
             rcParams.rhi = rhi;
-            rcParams.sampleCount = rhiSampleCount;
+            rcParams.sampleCount = data.sampleCount;
             rcParams.initialSurfacePixelSize = window->size() * window->effectiveDevicePixelRatio();
             rcParams.maybeSurface = window;
             cd->context->initialize(&rcParams);
@@ -546,20 +536,39 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         if (depthBufferEnabled) {
             cd->depthStencilForSwapchain = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil,
                                                                 QSize(),
-                                                                rhiSampleCount,
+                                                                data.sampleCount,
                                                                 QRhiRenderBuffer::UsedWithSwapChainOnly);
             cd->swapchain->setDepthStencil(cd->depthStencilForSwapchain);
         }
         cd->swapchain->setWindow(window);
         qCDebug(QSG_LOG_INFO, "MSAA sample count for the swapchain is %d. Alpha channel requested = %s",
-                rhiSampleCount, alpha ? "yes" : "no");
-        cd->swapchain->setSampleCount(rhiSampleCount);
+                data.sampleCount, alpha ? "yes" : "no");
+        cd->swapchain->setSampleCount(data.sampleCount);
         cd->swapchain->setFlags(flags);
         cd->rpDescForSwapchain = cd->swapchain->newCompatibleRenderPassDescriptor();
         cd->swapchain->setRenderPassDescriptor(cd->rpDescForSwapchain);
 
         window->installEventFilter(this);
     }
+
+    return current;
+}
+
+void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
+{
+    if (!m_windows.contains(window))
+        return;
+
+    WindowData &data = const_cast<WindowData &>(m_windows[window]);
+    bool alsoSwap = data.updatePending;
+    data.updatePending = false;
+
+    QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
+    if (!cd->isRenderable())
+        return;
+
+    if (!ensureRhi(window, data))
+        return;
 
     bool lastDirtyWindow = true;
     auto i = m_windows.constBegin();
@@ -571,15 +580,10 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         i++;
     }
 
-    if (!current)
+    cd->flushFrameSynchronousEvents();
+    // Event delivery/processing triggered the window to be deleted or stop rendering.
+    if (!m_windows.contains(window))
         return;
-
-    if (!data.grabOnly) {
-        cd->flushFrameSynchronousEvents();
-        // Event delivery/processing triggered the window to be deleted or stop rendering.
-        if (!m_windows.contains(window))
-            return;
-    }
 
     QSize effectiveOutputSize; // always prefer what the surface tells us, not the QWindow
     if (cd->swapchain) {
@@ -682,13 +686,6 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
                               QQuickProfiler::SceneGraphRenderLoopRender);
     Q_TRACE(QSG_swap_entry);
 
-    if (data.grabOnly) {
-        if (cd->swapchain)
-            grabContent = rhiSupport->grabAndBlockInCurrentFrame(rhi, cd->swapchain->currentFrameCommandBuffer());
-        grabContent.setDevicePixelRatio(window->effectiveDevicePixelRatio());
-        data.grabOnly = false;
-    }
-
     const bool needsPresent = alsoSwap && window->isVisible();
     if (cd->swapchain) {
         QRhi::EndFrameFlags flags;
@@ -766,13 +763,25 @@ QImage QSGGuiThreadRenderLoop::grab(QQuickWindow *window)
     if (!m_windows.contains(window))
         return QImage();
 
-    m_windows[window].grabOnly = true;
+    if (!ensureRhi(window, m_windows[window]))
+        return QImage();
 
-    renderWindow(window);
+    QQuickWindowPrivate *cd = QQuickWindowPrivate::get(window);
+    m_inPolish = true;
+    cd->polishItems();
+    m_inPolish = false;
 
-    QImage grabbed = grabContent;
-    grabContent = QImage();
-    return grabbed;
+    // The assumption is that the swapchain is usable since on expose we do a
+    // renderWindow() so one cannot get to grab() without having done at least
+    // one on-screen frame.
+    cd->rhi->beginFrame(cd->swapchain);
+    cd->syncSceneGraph();
+    cd->renderSceneGraph(window->size());
+    QImage image = QSGRhiSupport::instance()->grabAndBlockInCurrentFrame(rhi, cd->swapchain->currentFrameCommandBuffer());
+    cd->rhi->endFrame(cd->swapchain, QRhi::SkipPresent);
+
+    image.setDevicePixelRatio(window->effectiveDevicePixelRatio());
+    return image;
 }
 
 void QSGGuiThreadRenderLoop::maybeUpdate(QQuickWindow *window)

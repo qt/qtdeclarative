@@ -1528,6 +1528,34 @@ void tst_qquickwindow::grab()
     } else {
         QCOMPARE((uint) content.convertToFormat(QImage::Format_RGB32).pixel(0, 0), (uint) 0xffff0000);
     }
+
+    if (visible) {
+        // Now hide() and regrab to exercise the case of a window that is
+        // renderable and then becomes non-exposed (non-renderable). This is not
+        // the same as the visible==false case which starts with a window that
+        // never was renderable before grabbing.
+        window.hide();
+        QImage content = window.grabWindow();
+        QCOMPARE(content.width(), int(window.width() * window.devicePixelRatio()));
+        QCOMPARE(content.height(), int(window.height() * window.devicePixelRatio()));
+        if (alpha) {
+            QCOMPARE((uint) content.convertToFormat(QImage::Format_ARGB32_Premultiplied).pixel(0, 0), (uint) 0x00000000);
+        } else {
+            QCOMPARE((uint) content.convertToFormat(QImage::Format_RGB32).pixel(0, 0), (uint) 0xffff0000);
+        }
+
+        // now make it visible and exercise the main grab path again to see if it still works
+        window.show();
+        QVERIFY(QTest::qWaitForWindowExposed(&window));
+        content = window.grabWindow();
+        QCOMPARE(content.width(), int(window.width() * window.devicePixelRatio()));
+        QCOMPARE(content.height(), int(window.height() * window.devicePixelRatio()));
+        if (alpha) {
+            QCOMPARE((uint) content.convertToFormat(QImage::Format_ARGB32_Premultiplied).pixel(0, 0), (uint) 0x00000000);
+        } else {
+            QCOMPARE((uint) content.convertToFormat(QImage::Format_RGB32).pixel(0, 0), (uint) 0xffff0000);
+        }
+    }
 }
 
 void tst_qquickwindow::multipleWindows()
