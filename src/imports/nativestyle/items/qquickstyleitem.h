@@ -160,14 +160,13 @@ class QQuickStyleItem : public QQuickItem
     Q_PROPERTY(qreal contentWidth READ contentWidth WRITE setContentWidth)
     Q_PROPERTY(qreal contentHeight READ contentHeight WRITE setContentHeight)
     Q_PROPERTY(bool useNinePatchImage MEMBER m_useNinePatchImage)
-
     Q_PROPERTY(OverrideState overrideState MEMBER m_overrideState)
-    Q_PROPERTY(int transitionDuration MEMBER m_transitionDuration)
 
     // Output
     Q_PROPERTY(QQuickStyleMargins contentPadding READ contentPadding() NOTIFY contentPaddingChanged)
     Q_PROPERTY(QQuickStyleMargins layoutMargins READ layoutMargins() NOTIFY layoutMarginsChanged)
     Q_PROPERTY(QSize minimumSize READ minimumSize() NOTIFY minimumSizeChanged)
+    Q_PROPERTY(int transitionDuration MEMBER m_transitionDuration CONSTANT)
 
     QML_NAMED_ELEMENT(StyleItem)
     QML_UNCREATABLE("StyleItem is an abstract base class.")
