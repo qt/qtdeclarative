@@ -81,7 +81,8 @@
 #   type registration functions are already available by other means, typically
 #   by linking a library proxied by the plugin, it won't be loaded.
 #
-
+# This function is currently in Technical Preview.
+# It's signature and behavior might change.
 function(qt6_add_qml_module target)
 
     set(args_optional
@@ -474,6 +475,8 @@ endif()
 #   MyQmlFile 2.0 my_qml_file.qml
 #
 #
+# This function is currently in Technical Preview.
+# It's signature and behavior might change.
 function(qt6_target_qml_files target)
 
     cmake_parse_arguments(arg "" "" "FILES" ${ARGN})
@@ -575,6 +578,8 @@ endif()
 # QT_QMLTYPES_FILENAME: If the target has the target property QT_QMLTPYES_FILENAME set, it will be
 # used for the name of the generated file. Otherwise, the file will be named plugins.qmltypes if the
 # target is a plugin, or ${target}.qmltypes in all other cases
+# This function is currently in Technical Preview.
+# It's signature and behavior might change.
 function(qt6_qml_type_registration target)
 
     get_target_property(import_name ${target} QT_QML_MODULE_URI)
