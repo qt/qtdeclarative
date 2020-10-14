@@ -131,6 +131,7 @@ qt_internal_add_resource(pointer "quick_shared"
         ${quick_shared_resource_files}
 )
 
+qt_import_qml_plugins(pointer) # special case
 
 #### Keys ignored in scope 1:.:.:pointer.pro:<TRUE>:
 # TEMPLATE = "app"

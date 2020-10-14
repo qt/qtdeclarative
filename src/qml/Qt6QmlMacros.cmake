@@ -972,10 +972,16 @@ but this file does not exist.  Possible reasons include:
     set(qml_imports_file_path
         "${CMAKE_CURRENT_BINARY_DIR}/Qt6_QmlPlugins_Imports_${target}.cmake")
 
-    # TODO: QTBUG-85994 Figure out how to handle resources like in fix for QTBUG-82873.
+    get_target_property(qrc_files ${target} _qt_generated_qrc_files)
+    if (qrc_files)
+        list(APPEND qrcFilesArguments "-qrcFiles")
+        list(APPEND qrcFilesArguments ${qrc_files})
+    endif()
+
     message(STATUS "Running qmlimportscanner to find used QML plugins. ")
     execute_process(COMMAND
                     "${tool_path}" "${arg_PATH_TO_SCAN}" -importPath "${qml_path}"
+                    ${qrcFilesArguments}
                     -cmake-output
                     OUTPUT_FILE "${qml_imports_file_path}")
 
