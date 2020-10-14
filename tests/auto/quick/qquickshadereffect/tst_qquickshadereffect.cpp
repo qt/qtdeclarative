@@ -79,6 +79,8 @@ private slots:
     void deleteShaderEffectSource();
     void twoImagesOneShaderEffect();
 
+    void hideParent();
+
 private:
     enum PresenceFlags {
         VertexPresent = 0x01,
@@ -318,6 +320,18 @@ void tst_qquickshadereffect::twoImagesOneShaderEffect()
     QObject *obj = view->rootObject();
     QVERIFY(obj);
     delete view;
+}
+
+// QTBUG-86402: hiding the parent of an item that uses an effect should not cause a crash.
+void tst_qquickshadereffect::hideParent()
+{
+    QScopedPointer<QQuickView> view(new QQuickView);
+    view->setSource(testFileUrl("hideParent.qml"));
+    QCOMPARE(view->status(), QQuickView::Ready);
+    view->show();
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+    // Should finish without crashing.
+    QTRY_VERIFY(view->rootObject()->property("finished").toBool());
 }
 
 QTEST_MAIN(tst_qquickshadereffect)
