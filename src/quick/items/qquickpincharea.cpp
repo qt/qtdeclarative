@@ -335,9 +335,12 @@ void QQuickPinchArea::touchEvent(QTouchEvent *event)
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
         d->touchPoints.clear();
-        for (auto &tp : event->points()) {
-            if (!(tp.state() & QEventPoint::State::Released))
+        for (int i = 0; i < event->pointCount(); ++i) {
+            auto &tp = event->point(i);
+            if (!(tp.state() & QEventPoint::State::Released)) {
                 d->touchPoints << tp;
+                tp.setAccepted();
+            }
         }
         updatePinch();
         break;
