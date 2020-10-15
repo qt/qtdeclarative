@@ -694,8 +694,11 @@ QSGDynamicTexture::QSGDynamicTexture(QSGTexturePrivate &dd)
     Returns a native interface of the given type for the texture.
 
     This function provides access to platform specific functionality of
-    QSGTexture, as defined in the QNativeInterface namespace. This allows
-    accessing the underlying native texture object, such as, the \c GLuint
+    QSGTexture, as declared in the QNativeInterface namespace:
+
+    \annotatedlist native-interfaces-qsgtexture
+
+    This allows accessing the underlying native texture object, such as, the \c GLuint
     texture ID with OpenGL, or the \c VkImage handle with Vulkan.
 
     If the requested interface is not available a \nullptr is returned.
@@ -707,6 +710,8 @@ namespace QNativeInterface {
 /*!
     \class QNativeInterface::QSGOpenGLTexture
     \inmodule QtQuick
+    \ingroup native-interfaces
+    \ingroup native-interfaces-qsgtexture
     \brief Provides access to and enables adopting OpenGL texture objects.
     \since 6.0
 */
@@ -772,6 +777,8 @@ namespace QNativeInterface {
 /*!
     \class QNativeInterface::QSGD3D11Texture
     \inmodule QtQuick
+    \ingroup native-interfaces
+    \ingroup native-interfaces-qsgtexture
     \brief Provides access to and enables adopting Direct3D 11 texture objects.
     \since 6.0
 */
@@ -836,6 +843,8 @@ namespace QNativeInterface {
 /*!
     \class QNativeInterface::QSGMetalTexture
     \inmodule QtQuick
+    \ingroup native-interfaces
+    \ingroup native-interfaces-qsgtexture
     \brief Provides access to and enables adopting Metal texture objects.
     \since 6.0
 */
@@ -887,6 +896,8 @@ namespace QNativeInterface {
 /*!
     \class QNativeInterface::QSGVulkanTexture
     \inmodule QtQuick
+    \ingroup native-interfaces
+    \ingroup native-interfaces-qsgtexture
     \brief Provides access to and enables adopting Vulkan image objects.
     \since 6.0
 */
