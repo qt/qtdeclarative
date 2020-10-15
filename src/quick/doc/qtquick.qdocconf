@@ -38,7 +38,7 @@ qhp.QtQuick.subprojects.examples.selectors = fake:example
 
 tagfile                 = ../../../doc/qtquick/qtquick.tags
 
-depends += qtcore qtqml qtqmlmodels qtqmltest qtgui qtlinguist qtquickcontrols qtdoc qtquickdialogs qtwidgets qmake qtsql
+depends += qtcore qtqml qtqmlmodels qtqmltest qtgui qtlinguist qtquickcontrols qtdoc qtplatformintegration qtquickdialogs qtwidgets qmake qtsql
 
 headerdirs  += ..\
                ../../quick \

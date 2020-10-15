@@ -701,22 +701,6 @@ QSGDynamicTexture::QSGDynamicTexture(QSGTexturePrivate &dd)
     If the requested interface is not available a \nullptr is returned.
  */
 
-/*!
-    \namespace QNativeInterface
-    \inmodule QtQuick
-    \since 6.0
-
-    \brief The QNativeInterface namespace contains graphics API specific
-    interfaces that allow accessing the underlying graphics resources and allow
-    creating QSGTexture instances that wrap an existing native resource.
-
-    The classes in this namespace can be passed to
-    QSGTexture::nativeInterface() to gain access to the appropriate graphics
-    API specific interface, as long as the scene graph has been initialized with
-    the graphics API in question.
-
-    \sa QSGTexture::nativeInterface()
-*/
 
 #if QT_CONFIG(opengl) || defined(Q_CLANG_QDOC)
 namespace QNativeInterface {
