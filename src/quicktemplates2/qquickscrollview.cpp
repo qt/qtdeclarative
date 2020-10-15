@@ -83,7 +83,13 @@ QT_BEGIN_NAMESPACE
             \l {QtQuick.Controls::Pane::}{contentHeight} properties must
             be set to the combined size of its contained items.
         \li If the content size is less than or equal to the size of the ScrollView,
-            it will not be flickable.
+            it will not be scrollable.
+        \li If you want the ScrollView to only scroll vertically, you can bind
+            \l {QtQuick.Controls::Pane::}{contentWidth} to
+            \l {QtQuick.Controls::Control::}{availableWidth}
+            (and vice versa for contentHeight). This will let the contents fill
+            out all the available space horizontally inside the ScrollView, taking
+            any padding or scroll bars into account.
     \endlist
 
     \section2 Scroll Bars
