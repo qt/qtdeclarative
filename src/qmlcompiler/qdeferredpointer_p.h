@@ -106,6 +106,11 @@ public:
         return a.m_factory == b.m_factory && a.m_data == b.m_data;
     }
 
+    friend bool operator!=(const QDeferredSharedPointer &a, const QDeferredSharedPointer &b)
+    {
+        return !(a == b);
+    }
+
 private:
     friend class QDeferredWeakPointer<T>;
 
@@ -170,6 +175,11 @@ public:
     friend bool operator==(const QDeferredWeakPointer &a, const QDeferredWeakPointer &b)
     {
         return a.m_factory == b.m_factory && a.m_data == b.m_data;
+    }
+
+    friend bool operator!=(const QDeferredWeakPointer &a, const QDeferredWeakPointer &b)
+    {
+        return !(a == b);
     }
 
 private:
