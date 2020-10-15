@@ -59,10 +59,9 @@ QT_BEGIN_NAMESPACE
 namespace QNativeInterface {
 
 #if QT_CONFIG(opengl) || defined(Q_CLANG_QDOC)
-class Q_QUICK_EXPORT QSGOpenGLTexture
+struct Q_QUICK_EXPORT QSGOpenGLTexture
 {
-public:
-    virtual ~QSGOpenGLTexture();
+    QT_DECLARE_NATIVE_INTERFACE(QSGOpenGLTexture)
     virtual GLuint nativeTexture() const = 0;
     static QSGTexture *fromNative(GLuint textureId,
                                   QQuickWindow *window,
@@ -72,10 +71,9 @@ public:
 #endif
 
 #if defined(Q_OS_WIN) || defined(Q_CLANG_QDOC)
-class Q_QUICK_EXPORT QSGD3D11Texture
+struct Q_QUICK_EXPORT QSGD3D11Texture
 {
-public:
-    virtual ~QSGD3D11Texture();
+    QT_DECLARE_NATIVE_INTERFACE(QSGD3D11Texture)
     virtual void *nativeTexture() const = 0;
     static QSGTexture *fromNative(void *texture,
                                   QQuickWindow *window,
@@ -85,10 +83,9 @@ public:
 #endif
 
 #if defined(__OBJC__) || defined(Q_CLANG_QDOC)
-class Q_QUICK_EXPORT QSGMetalTexture
+struct Q_QUICK_EXPORT QSGMetalTexture
 {
-public:
-    virtual ~QSGMetalTexture();
+    QT_DECLARE_NATIVE_INTERFACE(QSGMetalTexture)
     virtual id<MTLTexture> nativeTexture() const = 0;
     static QSGTexture *fromNative(id<MTLTexture> texture,
                                   QQuickWindow *window,
@@ -98,10 +95,9 @@ public:
 #endif
 
 #if QT_CONFIG(vulkan) || defined(Q_CLANG_QDOC)
-class Q_QUICK_EXPORT QSGVulkanTexture
+struct Q_QUICK_EXPORT QSGVulkanTexture
 {
-public:
-    virtual ~QSGVulkanTexture();
+    QT_DECLARE_NATIVE_INTERFACE(QSGVulkanTexture)
     virtual VkImage nativeImage() const = 0;
     virtual VkImageLayout nativeImageLayout() const = 0;
     static QSGTexture *fromNative(VkImage image,

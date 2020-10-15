@@ -732,12 +732,7 @@ namespace QNativeInterface {
     \return the OpenGL texture ID.
  */
 
-/*!
-    \internal
- */
-QSGOpenGLTexture::~QSGOpenGLTexture()
-{
-}
+QT_DEFINE_NATIVE_INTERFACE(QSGOpenGLTexture);
 
 /*!
     Creates a new QSGTexture wrapping an existing OpenGL texture object.
@@ -802,12 +797,7 @@ namespace QNativeInterface {
     \return the ID3D11Texture2D object.
  */
 
-/*!
-    \internal
- */
-QSGD3D11Texture::~QSGD3D11Texture()
-{
-}
+QT_DEFINE_NATIVE_INTERFACE(QSGD3D11Texture);
 
 /*!
     Creates a new QSGTexture wrapping an existing Direct 3D 11 \a texture object.
@@ -927,12 +917,7 @@ namespace QNativeInterface {
     \return the image layout.
  */
 
-/*!
-    \internal
- */
-QSGVulkanTexture::~QSGVulkanTexture()
-{
-}
+QT_DEFINE_NATIVE_INTERFACE(QSGVulkanTexture);
 
 /*!
     Creates a new QSGTexture wrapping an existing Vulkan \a image object.

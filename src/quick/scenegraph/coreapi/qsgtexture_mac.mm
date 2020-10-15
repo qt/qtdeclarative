@@ -54,12 +54,7 @@ id<MTLTexture> QSGTexturePlatformMetal::nativeTexture() const
 
 namespace QNativeInterface {
 
-/*!
-    \internal
- */
-QSGMetalTexture::~QSGMetalTexture()
-{
-}
+QT_DEFINE_NATIVE_INTERFACE(QSGMetalTexture);
 
 QSGTexture *QSGMetalTexture::fromNative(id<MTLTexture> texture,
                                         QQuickWindow *window,
