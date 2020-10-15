@@ -167,13 +167,14 @@ class QQmlJSMetaProperty
     QString m_propertyName;
     QString m_typeName;
     QWeakPointer<const QQmlJSScope> m_type;
-    bool m_isList;
-    bool m_isWritable;
-    bool m_isPointer;
-    bool m_isAlias;
-    int m_revision;
+    bool m_isList = false;
+    bool m_isWritable = false;
+    bool m_isPointer = false;
+    bool m_isAlias = false;
+    int m_revision = 0;
 
 public:
+    QQmlJSMetaProperty() = default;
     QQmlJSMetaProperty(QString propertyName, QString typeName,
                  bool isList, bool isWritable, bool isPointer, bool isAlias,
                  int revision)
