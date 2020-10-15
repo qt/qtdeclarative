@@ -53,8 +53,8 @@ T.ScrollView {
     ScrollBar.vertical: ScrollBar {
         parent: control
         x: control.mirrored ? 0 : control.width - width
-        y: control.topPadding
-        height: control.availableHeight
+        y: 0
+        height: control.height - (control.ScrollBar.horizontal.visible ? control.ScrollBar.horizontal.height : 0)
         active: control.ScrollBar.horizontal.active
 
         NativeStyle.ScrollViewCorner {
@@ -67,9 +67,9 @@ T.ScrollView {
 
     ScrollBar.horizontal: ScrollBar {
         parent: control
-        x: control.leftPadding
+        x: 0
         y: control.height - height
-        width: control.availableWidth
+        width: control.width - (control.ScrollBar.vertical.visible ? control.ScrollBar.vertical.width : 0)
         active: control.ScrollBar.vertical.active
     }
 }
