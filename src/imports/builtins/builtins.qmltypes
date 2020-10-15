@@ -1,7 +1,12 @@
 import QtQuick.tooling 1.2
 Module {
-    dependencies: [
-    ]
+    dependencies: []
+
+    Component {
+        name: "undefined"
+        exports: ["QML/undefined 1.0"]
+        exportMetaObjectRevisions: [256]
+    }
     Component {
         name: "var"
         exports: ["QML/var 1.0", "QML/variant 1.0"]
