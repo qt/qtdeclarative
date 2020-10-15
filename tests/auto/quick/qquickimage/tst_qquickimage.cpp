@@ -169,7 +169,7 @@ void tst_qquickimage::imageSource_data()
         QTest::newRow("remote svg") << "/heart.svg" << 595.0 << 841.0 << true << false << false << "";
     if (QImageReader::supportedImageFormats().contains("svgz"))
         QTest::newRow("remote svgz") << "/heart.svgz" << 595.0 << 841.0 << true << false << false << "";
-    if (graphicsApi == QSGRendererInterface::OpenGL) {
+    if (graphicsApi == QSGRendererInterface::OpenGLRhi) {
         QTest::newRow("texturefile pkm format") << testFileUrl("logo.pkm").toString() << 256.0 << 256.0 << false << false << true << "";
         QTest::newRow("texturefile ktx format") << testFileUrl("car.ktx").toString() << 146.0 << 80.0 << false << false << true << "";
         QTest::newRow("texturefile async") << testFileUrl("logo.pkm").toString() << 256.0 << 256.0 << false << true << true << "";

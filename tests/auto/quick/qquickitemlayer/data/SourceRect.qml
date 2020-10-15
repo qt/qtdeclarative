@@ -17,17 +17,7 @@ Item
 
         // A shader that pads the transparent pixels with blue.
         layer.effect: ShaderEffect {
-            fragmentShader: "
-            uniform lowp sampler2D source;
-            uniform lowp float qt_Opacity;
-            varying highp vec2 qt_TexCoord0;
-            void main() {
-                mediump vec4 c = texture2D(source, qt_TexCoord0);
-                if (c.a == 0.0)
-                    c = vec4(0, 0, 1, 1);
-                gl_FragColor = c * qt_Opacity;
-            }
-            "
+            fragmentShader: "sourceRect.frag.qsb"
         }
     }
 }

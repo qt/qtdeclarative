@@ -57,13 +57,7 @@ Item
         layer.samplerName: "source"
         layer.effect: ShaderEffect {
             property variant source: layeredEffectBox
-            fragmentShader: "
-                uniform lowp sampler2D source;
-                varying highp vec2 qt_TexCoord0;
-                void main() {
-                    gl_FragColor = texture2D(source, qt_TexCoord0);
-                }"
-
+            fragmentShader: "textureMirroring.frag.qsb"
         }
 
         Rectangle {
@@ -149,11 +143,6 @@ Item
         width: 50
         height: 50
         property variant source: theSource
-        fragmentShader: "
-            uniform lowp sampler2D source;
-            varying highp vec2 qt_TexCoord0;
-            void main() {
-                gl_FragColor = texture2D(source, qt_TexCoord0);
-            }"
+        fragmentShader: "textureMirroring.frag.qsb"
     }
 }

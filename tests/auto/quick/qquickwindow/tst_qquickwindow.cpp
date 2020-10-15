@@ -1606,8 +1606,6 @@ void tst_qquickwindow::headless()
     // Verify that the window is alive and kicking
     QVERIFY(window->isSceneGraphInitialized());
 
-    const bool isGL = window->rendererInterface()->graphicsApi() == QSGRendererInterface::OpenGL;
-
     // Store the visual result
     QImage originalContent = window->grabWindow();
 
@@ -1617,8 +1615,6 @@ void tst_qquickwindow::headless()
 
     if (threaded) {
         QTRY_VERIFY(invalidated.size() >= 1);
-        if (isGL)
-            QVERIFY(!window->isSceneGraphInitialized());
     }
     // Destroy the native windowing system buffers
     window->destroy();

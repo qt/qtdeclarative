@@ -6,13 +6,7 @@ Rectangle {
     color: "blue"
     layer.enabled: true
     layer.effect: ShaderEffect {
-        fragmentShader: "
-            uniform sampler2D foo;
-            uniform lowp float qt_Opacity;
-            varying highp vec2 qt_TexCoord0;
-            void main() {
-                gl_FragColor = texture2D(foo, qt_TexCoord0) * qt_Opacity;
-            }"
+        fragmentShader: "samplerNameChange.frag.qsb"
     }
     Component.onCompleted: layer.samplerName = "foo"
 }
