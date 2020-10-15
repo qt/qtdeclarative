@@ -104,12 +104,13 @@ protected:
 
     QList<QQmlJS::DiagnosticMessage> m_errors;
 
-    void enterEnvironment(QQmlJSScope::ScopeType type, const QString &name);
+    void enterEnvironment(QQmlJSScope::ScopeType type, const QString &name,
+                          const QQmlJS::SourceLocation &location);
     void leaveEnvironment();
-    void importExportedNames(QQmlJSScope::ConstPtr scope);
 
 private:
     void visitFunctionExpressionHelper(QQmlJS::AST::FunctionExpression *fexpr);
+    void importExportedNames(QQmlJSScope::ConstPtr scope);
 };
 
 QT_END_NAMESPACE

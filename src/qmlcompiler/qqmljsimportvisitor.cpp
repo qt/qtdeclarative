@@ -46,11 +46,13 @@ QQmlJSImportVisitor::QQmlJSImportVisitor(
     m_globalScope = m_currentScope;
 }
 
-void QQmlJSImportVisitor::enterEnvironment(QQmlJSScope::ScopeType type, const QString &name)
+void QQmlJSImportVisitor::enterEnvironment(QQmlJSScope::ScopeType type, const QString &name,
+                                           const QQmlJS::SourceLocation &location)
 {
     m_currentScope = QQmlJSScope::create(type, m_currentScope);
     m_currentScope->setBaseTypeName(name);
     m_currentScope->setIsComposite(true);
+    m_currentScope->setSourceLocation(location);
 }
 
 void QQmlJSImportVisitor::leaveEnvironment()
@@ -131,7 +133,7 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
             superType.append(u'.');
         superType.append(segment->name.toString());
     }
-    enterEnvironment(QQmlJSScope::QMLScope, superType);
+    enterEnvironment(QQmlJSScope::QMLScope, superType, definition->firstSourceLocation());
     if (!m_qmlRootScope)
         m_qmlRootScope = m_currentScope;
 
@@ -209,9 +211,10 @@ void QQmlJSImportVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExp
                             fexpr->firstSourceLocation()
                         });
         }
-        enterEnvironment(QQmlJSScope::JSFunctionScope, name);
+        enterEnvironment(QQmlJSScope::JSFunctionScope, name, fexpr->firstSourceLocation());
     } else {
-        enterEnvironment(QQmlJSScope::JSFunctionScope, QStringLiteral("<anon>"));
+        enterEnvironment(QQmlJSScope::JSFunctionScope, QStringLiteral("<anon>"),
+                         fexpr->firstSourceLocation());
     }
 }
 
@@ -241,7 +244,8 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::ClassExpression *ast)
 {
     QQmlJSMetaProperty prop { ast->name.toString(), QString(), false, false, false, false, 1 };
     m_currentScope->addProperty(prop);
-    enterEnvironment(QQmlJSScope::JSFunctionScope, ast->name.toString());
+    enterEnvironment(QQmlJSScope::JSFunctionScope, ast->name.toString(),
+                     ast->firstSourceLocation());
     return true;
 }
 
@@ -324,7 +328,8 @@ void QQmlJSImportVisitor::throwRecursionDepthError()
 
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::ClassDeclaration *ast)
 {
-    enterEnvironment(QQmlJSScope::JSFunctionScope, ast->name.toString());
+    enterEnvironment(QQmlJSScope::JSFunctionScope, ast->name.toString(),
+                     ast->firstSourceLocation());
     return true;
 }
 
@@ -333,9 +338,10 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::ClassDeclaration *)
     leaveEnvironment();
 }
 
-bool QQmlJSImportVisitor::visit(QQmlJS::AST::ForStatement *)
+bool QQmlJSImportVisitor::visit(QQmlJS::AST::ForStatement *ast)
 {
-    enterEnvironment(QQmlJSScope::JSLexicalScope, QStringLiteral("forloop"));
+    enterEnvironment(QQmlJSScope::JSLexicalScope, QStringLiteral("forloop"),
+                     ast->firstSourceLocation());
     return true;
 }
 
@@ -344,9 +350,10 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::ForStatement *)
     leaveEnvironment();
 }
 
-bool QQmlJSImportVisitor::visit(QQmlJS::AST::ForEachStatement *)
+bool QQmlJSImportVisitor::visit(QQmlJS::AST::ForEachStatement *ast)
 {
-    enterEnvironment(QQmlJSScope::JSLexicalScope, QStringLiteral("foreachloop"));
+    enterEnvironment(QQmlJSScope::JSLexicalScope, QStringLiteral("foreachloop"),
+                     ast->firstSourceLocation());
     return true;
 }
 
@@ -355,9 +362,10 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::ForEachStatement *)
     leaveEnvironment();
 }
 
-bool QQmlJSImportVisitor::visit(QQmlJS::AST::Block *)
+bool QQmlJSImportVisitor::visit(QQmlJS::AST::Block *ast)
 {
-    enterEnvironment(QQmlJSScope::JSLexicalScope, QStringLiteral("block"));
+    enterEnvironment(QQmlJSScope::JSLexicalScope, QStringLiteral("block"),
+                     ast->firstSourceLocation());
     return true;
 }
 
@@ -366,9 +374,10 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::Block *)
     leaveEnvironment();
 }
 
-bool QQmlJSImportVisitor::visit(QQmlJS::AST::CaseBlock *)
+bool QQmlJSImportVisitor::visit(QQmlJS::AST::CaseBlock *ast)
 {
-    enterEnvironment(QQmlJSScope::JSLexicalScope, QStringLiteral("case"));
+    enterEnvironment(QQmlJSScope::JSLexicalScope, QStringLiteral("case"),
+                     ast->firstSourceLocation());
     return true;
 }
 
@@ -379,7 +388,8 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::CaseBlock *)
 
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::Catch *catchStatement)
 {
-    enterEnvironment(QQmlJSScope::JSLexicalScope, QStringLiteral("catch"));
+    enterEnvironment(QQmlJSScope::JSLexicalScope, QStringLiteral("catch"),
+                     catchStatement->firstSourceLocation());
     m_currentScope->insertJSIdentifier(
                 catchStatement->patternElement->bindingIdentifier.toString(), {
                     QQmlJSScope::JavaScriptIdentifier::LexicalScoped,
@@ -393,9 +403,10 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::Catch *)
     leaveEnvironment();
 }
 
-bool QQmlJSImportVisitor::visit(QQmlJS::AST::WithStatement *)
+bool QQmlJSImportVisitor::visit(QQmlJS::AST::WithStatement *ast)
 {
-    enterEnvironment(QQmlJSScope::JSLexicalScope, QStringLiteral("with"));
+    enterEnvironment(QQmlJSScope::JSLexicalScope, QStringLiteral("with"),
+                     ast->firstSourceLocation());
     return true;
 }
 
@@ -447,7 +458,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
     prop.setType(m_rootScopeImports.value(uiob->qualifiedTypeNameId->name.toString()));
     m_currentScope->addProperty(prop);
 
-    enterEnvironment(QQmlJSScope::QMLScope, name);
+    enterEnvironment(QQmlJSScope::QMLScope, name, uiob->firstSourceLocation());
     m_currentScope->resolveTypes(m_rootScopeImports);
     importExportedNames(m_currentScope);
     return true;

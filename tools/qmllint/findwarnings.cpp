@@ -109,10 +109,10 @@ void FindWarningVisitor::throwRecursionDepthError()
     m_visitFailed = true;
 }
 
-bool FindWarningVisitor::visit(QQmlJS::AST::ExpressionStatement *)
+bool FindWarningVisitor::visit(QQmlJS::AST::ExpressionStatement *ast)
 {
     if (m_pendingSingalHandler.isValid()) {
-        enterEnvironment(QQmlJSScope::JSFunctionScope, "signalhandler");
+        enterEnvironment(QQmlJSScope::JSFunctionScope, "signalhandler", ast->firstSourceLocation());
         flushPendingSignalParameters();
     }
     return true;
