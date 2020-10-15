@@ -85,6 +85,31 @@ QQmlJSScope::Ptr QQmlJSImportVisitor::result() const
     return result;
 }
 
+void QQmlJSImportVisitor::importExportedNames(QQmlJSScope::ConstPtr scope)
+{
+    QList<QQmlJSScope::ConstPtr> scopes;
+    while (!scope.isNull()) {
+        if (scopes.contains(scope))
+            break;
+
+        scopes.append(scope);
+
+        const auto properties = scope->properties();
+        for (auto property : properties)
+            m_currentScope->insertPropertyIdentifier(property);
+
+        m_currentScope->addMethods(scope->methods());
+
+        if (scope->baseTypeName().isEmpty())
+            break;
+
+        if (auto newScope = scope->baseType())
+            scope = newScope;
+        else
+            break;
+    }
+}
+
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiProgram *)
 {
     m_rootScopeImports = m_importer->importBuiltins();
@@ -110,6 +135,9 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
     if (!m_qmlRootScope)
         m_qmlRootScope = m_currentScope;
 
+    m_currentScope->resolveTypes(m_rootScopeImports);
+    importExportedNames(m_currentScope);
+
     return true;
 }
 
@@ -134,7 +162,9 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         break;
     }
     case UiPublicMember::Property: {
-        auto typeName = publicMember->memberType->name;
+        auto typeName = publicMember->memberType
+                ? publicMember->memberType->name
+                : QStringView();
         const bool isAlias = (typeName == QLatin1String("alias"));
         if (isAlias) {
             const auto expression = cast<ExpressionStatement *>(publicMember->statement);
@@ -144,13 +174,14 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         QQmlJSMetaProperty prop {
             publicMember->name.toString(),
             typeName.toString(),
-            false,
-            false,
+            publicMember->typeModifier == QLatin1String("list"),
+            !publicMember->isReadonlyMember,
             false,
             isAlias,
             0
         };
-        m_currentScope->addProperty(prop);
+        prop.setType(m_rootScopeImports.value(prop.typeName()));
+        m_currentScope->insertPropertyIdentifier(prop);
         break;
     }
     }
@@ -289,6 +320,150 @@ void QQmlJSImportVisitor::throwRecursionDepthError()
                         QtCriticalMsg,
                         QQmlJS::SourceLocation()
                     });
+}
+
+bool QQmlJSImportVisitor::visit(QQmlJS::AST::ClassDeclaration *ast)
+{
+    enterEnvironment(QQmlJSScope::JSFunctionScope, ast->name.toString());
+    return true;
+}
+
+void QQmlJSImportVisitor::endVisit(QQmlJS::AST::ClassDeclaration *)
+{
+    leaveEnvironment();
+}
+
+bool QQmlJSImportVisitor::visit(QQmlJS::AST::ForStatement *)
+{
+    enterEnvironment(QQmlJSScope::JSLexicalScope, QStringLiteral("forloop"));
+    return true;
+}
+
+void QQmlJSImportVisitor::endVisit(QQmlJS::AST::ForStatement *)
+{
+    leaveEnvironment();
+}
+
+bool QQmlJSImportVisitor::visit(QQmlJS::AST::ForEachStatement *)
+{
+    enterEnvironment(QQmlJSScope::JSLexicalScope, QStringLiteral("foreachloop"));
+    return true;
+}
+
+void QQmlJSImportVisitor::endVisit(QQmlJS::AST::ForEachStatement *)
+{
+    leaveEnvironment();
+}
+
+bool QQmlJSImportVisitor::visit(QQmlJS::AST::Block *)
+{
+    enterEnvironment(QQmlJSScope::JSLexicalScope, QStringLiteral("block"));
+    return true;
+}
+
+void QQmlJSImportVisitor::endVisit(QQmlJS::AST::Block *)
+{
+    leaveEnvironment();
+}
+
+bool QQmlJSImportVisitor::visit(QQmlJS::AST::CaseBlock *)
+{
+    enterEnvironment(QQmlJSScope::JSLexicalScope, QStringLiteral("case"));
+    return true;
+}
+
+void QQmlJSImportVisitor::endVisit(QQmlJS::AST::CaseBlock *)
+{
+    leaveEnvironment();
+}
+
+bool QQmlJSImportVisitor::visit(QQmlJS::AST::Catch *catchStatement)
+{
+    enterEnvironment(QQmlJSScope::JSLexicalScope, QStringLiteral("catch"));
+    m_currentScope->insertJSIdentifier(
+                catchStatement->patternElement->bindingIdentifier.toString(), {
+                    QQmlJSScope::JavaScriptIdentifier::LexicalScoped,
+                    catchStatement->patternElement->firstSourceLocation()
+                });
+    return true;
+}
+
+void QQmlJSImportVisitor::endVisit(QQmlJS::AST::Catch *)
+{
+    leaveEnvironment();
+}
+
+bool QQmlJSImportVisitor::visit(QQmlJS::AST::WithStatement *)
+{
+    enterEnvironment(QQmlJSScope::JSLexicalScope, QStringLiteral("with"));
+    return true;
+}
+
+void QQmlJSImportVisitor::endVisit(QQmlJS::AST::WithStatement *)
+{
+    leaveEnvironment();
+}
+
+bool QQmlJSImportVisitor::visit(QQmlJS::AST::VariableDeclarationList *vdl)
+{
+    while (vdl) {
+        m_currentScope->insertJSIdentifier(
+                    vdl->declaration->bindingIdentifier.toString(),
+                    {
+                        (vdl->declaration->scope == QQmlJS::AST::VariableScope::Var)
+                            ? QQmlJSScope::JavaScriptIdentifier::FunctionScoped
+                            : QQmlJSScope::JavaScriptIdentifier::LexicalScoped,
+                        vdl->declaration->firstSourceLocation()
+                    });
+        vdl = vdl->next;
+    }
+    return true;
+}
+
+bool QQmlJSImportVisitor::visit(QQmlJS::AST::FormalParameterList *fpl)
+{
+    for (auto const &boundName : fpl->boundNames()) {
+        m_currentScope->insertJSIdentifier(
+                    boundName.id, {
+                        QQmlJSScope::JavaScriptIdentifier::Parameter,
+                        fpl->firstSourceLocation()
+                    });
+    }
+    return true;
+}
+
+bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
+{
+    // property QtObject __styleData: QtObject {...}
+
+    QString name;
+    for (auto id = uiob->qualifiedTypeNameId; id; id = id->next)
+        name += id->name.toString() + QLatin1Char('.');
+
+    name.chop(1);
+
+    QQmlJSMetaProperty prop(uiob->qualifiedId->name.toString(), name, false, true, true,
+                      name == QLatin1String("alias"), 0);
+    prop.setType(m_rootScopeImports.value(uiob->qualifiedTypeNameId->name.toString()));
+    m_currentScope->addProperty(prop);
+
+    enterEnvironment(QQmlJSScope::QMLScope, name);
+    m_currentScope->resolveTypes(m_rootScopeImports);
+    importExportedNames(m_currentScope);
+    return true;
+}
+
+void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
+{
+    const QQmlJSScope::ConstPtr childScope = m_currentScope;
+    leaveEnvironment();
+    QQmlJSMetaProperty property(uiob->qualifiedId->name.toString(),
+                          uiob->qualifiedTypeNameId->name.toString(),
+                          false, true, true,
+                          uiob->qualifiedTypeNameId->name == QLatin1String("alias"),
+                          0);
+    property.setType(childScope);
+    m_currentScope->addProperty(property);
 }
 
 QT_END_NAMESPACE

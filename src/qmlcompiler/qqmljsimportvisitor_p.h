@@ -70,6 +70,27 @@ protected:
     bool visit(QQmlJS::AST::ClassExpression *ast) override;
     void endVisit(QQmlJS::AST::ClassExpression *) override;
     bool visit(QQmlJS::AST::UiImport *import) override;
+    bool visit(QQmlJS::AST::ClassDeclaration *ast) override;
+    void endVisit(QQmlJS::AST::ClassDeclaration *ast) override;
+    bool visit(QQmlJS::AST::ForStatement *ast) override;
+    void endVisit(QQmlJS::AST::ForStatement *ast) override;
+    bool visit(QQmlJS::AST::ForEachStatement *ast) override;
+    void endVisit(QQmlJS::AST::ForEachStatement *ast) override;
+    bool visit(QQmlJS::AST::Block *ast) override;
+    void endVisit(QQmlJS::AST::Block *ast) override;
+    bool visit(QQmlJS::AST::CaseBlock *ast) override;
+    void endVisit(QQmlJS::AST::CaseBlock *ast) override;
+    bool visit(QQmlJS::AST::Catch *ast) override;
+    void endVisit(QQmlJS::AST::Catch *ast) override;
+    bool visit(QQmlJS::AST::WithStatement *withStatement) override;
+    void endVisit(QQmlJS::AST::WithStatement *ast) override;
+
+    bool visit(QQmlJS::AST::VariableDeclarationList *vdl) override;
+    bool visit(QQmlJS::AST::FormalParameterList *fpl) override;
+
+    bool visit(QQmlJS::AST::UiObjectBinding *uiob) override;
+    void endVisit(QQmlJS::AST::UiObjectBinding *uiob) override;
+
     void throwRecursionDepthError() override;
 
     QString m_implicitImportDirectory;
@@ -85,6 +106,7 @@ protected:
 
     void enterEnvironment(QQmlJSScope::ScopeType type, const QString &name);
     void leaveEnvironment();
+    void importExportedNames(QQmlJSScope::ConstPtr scope);
 
 private:
     void visitFunctionExpressionHelper(QQmlJS::AST::FunctionExpression *fexpr);
