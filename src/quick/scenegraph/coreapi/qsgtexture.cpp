@@ -689,9 +689,9 @@ QSGDynamicTexture::QSGDynamicTexture(QSGTexturePrivate &dd)
 }
 
 /*!
-    \fn template <typename NativeInterface> NativeInterface *QSGTexture::nativeInterface() const
+    \fn template <typename QNativeInterface> NativeInterface *QSGTexture::nativeInterface() const
 
-    Returns a native interface of type T for the texture.
+    Returns a native interface of the given type for the texture.
 
     This function provides access to platform specific functionality of
     QSGTexture, as defined in the QNativeInterface namespace. This allows
