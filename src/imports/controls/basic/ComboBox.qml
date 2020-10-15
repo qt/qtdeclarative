@@ -35,7 +35,6 @@
 ****************************************************************************/
 
 import QtQuick
-import QtQuick.Window
 import QtQuick.Controls.impl
 import QtQuick.Templates as T
 

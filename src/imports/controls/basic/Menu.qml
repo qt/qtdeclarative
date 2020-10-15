@@ -37,7 +37,6 @@
 import QtQuick
 import QtQuick.Controls.impl
 import QtQuick.Templates as T
-import QtQuick.Window
 
 T.Menu {
     id: control
