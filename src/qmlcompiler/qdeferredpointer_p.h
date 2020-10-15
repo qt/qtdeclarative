@@ -50,7 +50,6 @@ class QDeferredFactory
 public:
     T create() const;
     bool isValid() const;
-    void clear();
 };
 
 template<typename T>
@@ -79,8 +78,9 @@ public:
     operator QSharedPointer<T>() const
     {
         if (m_factory && m_factory->isValid()) {
-            const_cast<std::remove_const_t<T> &>(*m_data) = m_factory->create();
-            m_factory->clear();
+            Factory localFactory;
+            std::swap(localFactory, *m_factory); // Swap before executing, to avoid recursion
+            const_cast<std::remove_const_t<T> &>(*m_data) = localFactory.create();
         }
         return m_data;
     }
@@ -135,8 +135,10 @@ public:
         if (m_factory) {
             auto factory = m_factory.toStrongRef();
             if (factory->isValid()) {
-                const_cast<std::remove_const_t<T> &>(*(m_data.toStrongRef())) = factory->create();
-                factory->clear();
+                Factory localFactory;
+                std::swap(localFactory, *factory); // Swap before executing, to avoid recursion
+                const_cast<std::remove_const_t<T> &>(*(m_data.toStrongRef()))
+                        = localFactory.create();
             }
         }
         return m_data;

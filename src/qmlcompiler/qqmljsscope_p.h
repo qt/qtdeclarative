@@ -60,6 +60,8 @@ template<>
 class QDeferredFactory<QQmlJSScope>
 {
 public:
+    QDeferredFactory() = default;
+
     QDeferredFactory(QQmlJSImporter *importer, const QString &filePath) :
         m_filePath(filePath), m_importer(importer)
     {}
@@ -69,11 +71,6 @@ public:
     bool isValid() const
     {
         return !m_filePath.isEmpty() && m_importer != nullptr;
-    }
-
-    void clear() {
-        m_filePath.clear();
-        m_importer = nullptr;
     }
 
 private:
