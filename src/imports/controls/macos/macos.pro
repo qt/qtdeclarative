@@ -3,6 +3,7 @@ TARGETPATH = QtQuick/Controls/macOS
 
 QML_IMPORT_NAME = QtQuick.Controls.macOS
 QML_IMPORT_VERSION = $$QT_VERSION
+QML_PAST_MAJOR_VERSIONS = 2
 
 QT += qml quick quickcontrols2 quicktemplates2
 QT_PRIVATE += core-private gui-private qml-private quick-private quicktemplates2-private quickcontrols2-private

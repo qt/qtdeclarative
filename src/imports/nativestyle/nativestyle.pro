@@ -3,6 +3,7 @@ TARGETPATH = QtQuick/NativeStyle
 
 QML_IMPORT_NAME = QtQuick.NativeStyle
 QML_IMPORT_MAJOR_VERSION = 6
+QML_PAST_MAJOR_VERSIONS = 2
 
 QT += qml quick quickcontrols2 quicktemplates2
 QT_PRIVATE += core-private gui-private qml-private quick-private quicktemplates2-private quickcontrols2-private

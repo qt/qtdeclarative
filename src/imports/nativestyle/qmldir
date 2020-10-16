@@ -3,16 +3,29 @@ plugin qtquickcontrols2nativestyleplugin
 classname QtQuickControls2NativeStylePlugin
 depends QtQuick.Controls 2.5
 
+DefaultButton 2.0 controls/DefaultButton.qml
 DefaultButton 6.0 controls/DefaultButton.qml
+DefaultCheckBox 2.0 controls/DefaultCheckBox.qml
 DefaultCheckBox 6.0 controls/DefaultCheckBox.qml
+DefaultRadioButton 2.0 controls/DefaultRadioButton.qml
 DefaultRadioButton 6.0 controls/DefaultRadioButton.qml
+DefaultSlider 2.0 controls/DefaultSlider.qml
 DefaultSlider 6.0 controls/DefaultSlider.qml
+DefaultGroupBox 2.0 controls/DefaultGroupBox.qml
 DefaultGroupBox 6.0 controls/DefaultGroupBox.qml
+DefaultSpinBox 2.0 controls/DefaultSpinBox.qml
 DefaultSpinBox 6.0 controls/DefaultSpinBox.qml
+DefaultTextField 2.0 controls/DefaultTextField.qml
 DefaultTextField 6.0 controls/DefaultTextField.qml
+DefaultFrame 2.0 controls/DefaultFrame.qml
 DefaultFrame 6.0 controls/DefaultFrame.qml
+DefaultTextArea 2.0 controls/DefaultTextArea.qml
 DefaultTextArea 6.0 controls/DefaultTextArea.qml
+DefaultComboBox 2.0 controls/DefaultComboBox.qml
 DefaultComboBox 6.0 controls/DefaultComboBox.qml
+DefaultScrollBar 2.0 controls/DefaultScrollBar.qml
 DefaultScrollBar 6.0 controls/DefaultScrollBar.qml
+DefaultProgressBar 2.0 controls/DefaultProgressBar.qml
 DefaultProgressBar 6.0 controls/DefaultProgressBar.qml
+DefaultDial 2.0 controls/DefaultDial.qml
 DefaultDial 6.0 controls/DefaultDial.qml

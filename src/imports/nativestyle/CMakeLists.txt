@@ -10,6 +10,7 @@ qt_internal_add_qml_module(qtquickcontrols2nativestyleplugin
     CLASSNAME QtQuickControls2NativeStylePlugin
     DEPENDENCIES
         QtQuick.Controls/2.5
+    PAST_MAJOR_VERSIONS 2
     GENERATE_QMLTYPES
     INSTALL_QMLTYPES
     SOURCES
@@ -61,6 +62,7 @@ qt_internal_add_qml_module(qtquickcontrols2nativestyleplugin
 # OTHER_FILES = "qmldir" "$$QML_FILES"
 # QML_IMPORT_MAJOR_VERSION = "6"
 # QML_IMPORT_NAME = "QtQuick.NativeStyle"
+# QML_PAST_MAJOR_VERSIONS = "2"
 # TARGETPATH = "QtQuick/NativeStyle"
 # _REQUIREMENTS = "qtConfig(quickcontrols2-macos)|qtConfig(quickcontrols2-windows)"
 
@@ -122,43 +124,43 @@ set(qml_files
     "controls/DefaultDial.qml"
 )
 set_source_files_properties(controls/DefaultButton.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "6.0"
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(controls/DefaultSlider.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "6.0"
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(controls/DefaultGroupBox.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "6.0"
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(controls/DefaultCheckBox.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "6.0"
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(controls/DefaultRadioButton.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "6.0"
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(controls/DefaultSpinBox.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "6.0"
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(controls/DefaultTextField.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "6.0"
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(controls/DefaultFrame.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "6.0"
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(controls/DefaultTextArea.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "6.0"
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(controls/DefaultComboBox.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "6.0"
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(controls/DefaultScrollBar.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "6.0"
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(controls/DefaultProgressBar.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "6.0"
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(controls/DefaultDial.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "6.0"
+    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 
 qt6_target_qml_files(qtquickcontrols2nativestyleplugin
