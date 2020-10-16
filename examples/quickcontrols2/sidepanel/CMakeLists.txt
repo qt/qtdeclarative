@@ -19,7 +19,7 @@ find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 
-add_qt_gui_executable(sidepanel
+qt_add_executable(sidepanel
     sidepanel.cpp
 )
 target_link_libraries(sidepanel PUBLIC

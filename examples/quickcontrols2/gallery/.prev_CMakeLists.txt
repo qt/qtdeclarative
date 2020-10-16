@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS QuickControls2)
 
-add_qt_gui_executable(gallery
+qt_add_executable(gallery
     gallery.cpp
 )
 target_link_libraries(gallery PUBLIC

@@ -21,7 +21,7 @@ find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS QuickControls2)
 find_package(Qt6 COMPONENTS Widgets)
 
-add_qt_gui_executable(flatstyle
+qt_add_executable(flatstyle
     main.cpp
 )
 target_link_libraries(flatstyle PUBLIC

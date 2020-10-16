@@ -19,7 +19,7 @@ find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 
-add_qt_gui_executable(contactlist
+qt_add_executable(contactlist
     contactmodel.cpp contactmodel.h
     main.cpp
 )

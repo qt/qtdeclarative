@@ -21,7 +21,7 @@ find_package(Qt6 COMPONENTS Qml)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Sql)
 
-add_qt_gui_executable(chapter4-models
+qt_add_executable(chapter4-models
     main.cpp
     sqlcontactmodel.cpp sqlcontactmodel.h
     sqlconversationmodel.cpp sqlconversationmodel.h

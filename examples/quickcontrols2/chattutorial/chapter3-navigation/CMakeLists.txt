@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Qml)
 find_package(Qt6 COMPONENTS Quick)
 
-add_qt_gui_executable(chapter3-navigation
+qt_add_executable(chapter3-navigation
     main.cpp
 )
 target_link_libraries(chapter3-navigation PUBLIC

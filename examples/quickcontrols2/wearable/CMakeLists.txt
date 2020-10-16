@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS QuickControls2)
 
-add_qt_gui_executable(wearable
+qt_add_executable(wearable
     wearable.cpp
 )
 target_link_libraries(wearable PUBLIC

@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS QuickControls2)
 
-add_qt_gui_executable(automotive
+qt_add_executable(automotive
     automotive.cpp
 )
 target_link_libraries(automotive PUBLIC
