@@ -67,7 +67,7 @@ TestCase {
         compare(StandardPaths.PicturesLocation, 6)
         compare(StandardPaths.TempLocation, 7)
         compare(StandardPaths.HomeLocation, 8)
-        compare(StandardPaths.DataLocation, 9)
+        compare(StandardPaths.AppLocalDataLocation, 9)
         compare(StandardPaths.CacheLocation, 10)
         compare(StandardPaths.GenericDataLocation, 11)
         compare(StandardPaths.RuntimeLocation, 12)
@@ -77,7 +77,6 @@ TestCase {
         compare(StandardPaths.GenericConfigLocation, 16)
         compare(StandardPaths.AppDataLocation, 17)
         compare(StandardPaths.AppConfigLocation, 18)
-        compare(StandardPaths.AppLocalDataLocation, StandardPaths.DataLocation)
     }
 
     function test_locateOptions() {
