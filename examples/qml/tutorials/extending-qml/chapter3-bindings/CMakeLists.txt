@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Qml)
 find_package(Qt6 COMPONENTS Quick)
 
-add_qt_gui_executable(chapter3-bindings
+qt_add_executable(chapter3-bindings
     main.cpp
     piechart.cpp piechart.h
 )

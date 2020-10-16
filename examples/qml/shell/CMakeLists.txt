@@ -18,7 +18,7 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/qml/shell")
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Qml)
 
-add_qt_gui_executable(shell
+qt_add_executable(shell
     main.cpp
 )
 target_link_libraries(shell PUBLIC

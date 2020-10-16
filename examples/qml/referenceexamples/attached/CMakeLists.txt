@@ -19,7 +19,7 @@ find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Qml)
 
-add_qt_gui_executable(attached
+qt_add_executable(attached
     birthdayparty.cpp birthdayparty.h
     main.cpp
     person.cpp person.h

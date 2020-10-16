@@ -21,7 +21,7 @@ find_package(Qt6 COMPONENTS Qml)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Network)
 
-add_qt_gui_executable(networkaccessmanagerfactory
+qt_add_executable(networkaccessmanagerfactory
     main.cpp
 )
 target_link_libraries(networkaccessmanagerfactory PUBLIC

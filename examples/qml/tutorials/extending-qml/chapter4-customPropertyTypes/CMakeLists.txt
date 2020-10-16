@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Qml)
 find_package(Qt6 COMPONENTS Quick)
 
-add_qt_gui_executable(chapter4-customPropertyTypes
+qt_add_executable(chapter4-customPropertyTypes
     main.cpp
     piechart.cpp piechart.h
     pieslice.cpp pieslice.h

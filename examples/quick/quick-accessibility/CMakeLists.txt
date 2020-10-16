@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Qml)
 
-add_qt_gui_executable(quick-accessibility
+qt_add_executable(quick-accessibility
     main.cpp
 )
 target_link_libraries(quick-accessibility PUBLIC

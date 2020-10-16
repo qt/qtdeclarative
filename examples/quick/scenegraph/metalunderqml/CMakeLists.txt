@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Qml)
 find_package(Qt6 COMPONENTS Quick)
 
-add_qt_gui_executable(metalunderqml
+qt_add_executable(metalunderqml
     main.cpp
     metalsquircle.h metalsquircle.mm
 )

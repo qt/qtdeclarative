@@ -19,7 +19,7 @@ find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 
-add_qt_gui_executable(graph
+qt_add_executable(graph
     graph.cpp graph.h
     gridnode.cpp gridnode.h
     linenode.cpp linenode.h

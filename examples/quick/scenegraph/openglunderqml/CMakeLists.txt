@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Qml)
 find_package(Qt6 COMPONENTS Quick)
 
-add_qt_gui_executable(openglunderqml
+qt_add_executable(openglunderqml
     main.cpp
     squircle.cpp squircle.h
 )

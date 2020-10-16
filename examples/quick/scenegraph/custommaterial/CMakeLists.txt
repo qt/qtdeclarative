@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Qml)
 find_package(Qt6 COMPONENTS Quick)
 
-add_qt_gui_executable(custommaterial_declarative # special case
+qt_add_executable(custommaterial_declarative # special case
     customitem.cpp customitem.h
     main.cpp
 )

@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Qml)
 find_package(Qt6 COMPONENTS Quick)
 
-add_qt_gui_executable(fboitem
+qt_add_executable(fboitem
     ../shared/logorenderer.cpp ../shared/logorenderer.h
     fboinsgrenderer.cpp fboinsgrenderer.h
     main.cpp

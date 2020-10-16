@@ -18,7 +18,7 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/qml/tutorials/extending-qml/chapt
 find_package(Qt6 COMPONENTS Qml)
 find_package(Qt6 COMPONENTS Quick)
 
-add_qt_gui_executable(chapter6-plugins
+qt_add_executable(chapter6-plugins
     main.cpp
 )
 target_link_libraries(chapter6-plugins PUBLIC

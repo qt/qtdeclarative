@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Qml)
 
-add_qt_gui_executable(canvas
+qt_add_executable(canvas
     main.cpp
 )
 target_link_libraries(canvas PUBLIC

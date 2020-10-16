@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Qml)
 
-add_qt_gui_executable(righttoleft
+qt_add_executable(righttoleft
     main.cpp
 )
 target_link_libraries(righttoleft PUBLIC

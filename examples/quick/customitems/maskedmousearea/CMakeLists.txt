@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Qml)
 
-add_qt_gui_executable(maskedmousearea
+qt_add_executable(maskedmousearea
     main.cpp
     maskedmousearea.cpp maskedmousearea.h
 )

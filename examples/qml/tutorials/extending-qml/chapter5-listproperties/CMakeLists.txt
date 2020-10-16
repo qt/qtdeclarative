@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Qml)
 find_package(Qt6 COMPONENTS Quick)
 
-add_qt_gui_executable(chapter5-listproperties
+qt_add_executable(chapter5-listproperties
     main.cpp
     piechart.cpp piechart.h
     pieslice.cpp pieslice.h

@@ -18,7 +18,7 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/qml/referenceexamples/properties"
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Qml)
 
-add_qt_gui_executable(properties
+qt_add_executable(properties
     birthdayparty.cpp birthdayparty.h
     main.cpp
     person.cpp person.h

@@ -19,7 +19,7 @@ find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 
-add_qt_gui_executable(customgeometry_declarative # special case
+qt_add_executable(customgeometry_declarative # special case
     beziercurve.cpp beziercurve.h
     main.cpp
 )

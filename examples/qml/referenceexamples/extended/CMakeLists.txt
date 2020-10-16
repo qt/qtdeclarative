@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Qml)
 find_package(Qt6 COMPONENTS Widgets)
 
-add_qt_gui_executable(extended
+qt_add_executable(extended
     lineedit.cpp lineedit.h
     main.cpp
 )

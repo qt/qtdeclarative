@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Qml)
 
-add_qt_gui_executable(itemparticle
+qt_add_executable(itemparticle
     main.cpp
 )
 target_link_libraries(itemparticle PUBLIC

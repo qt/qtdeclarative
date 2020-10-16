@@ -21,7 +21,7 @@ find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Qml)
 find_package(Qt6 COMPONENTS OpenGL)
 
-add_qt_gui_executable(rendercontrol_opengl
+qt_add_executable(rendercontrol_opengl
     cuberenderer.cpp cuberenderer.h
     main.cpp
     window_singlethreaded.cpp window_singlethreaded.h

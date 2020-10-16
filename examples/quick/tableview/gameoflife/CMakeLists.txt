@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Qml)
 
-add_qt_gui_executable(gameoflife
+qt_add_executable(gameoflife
     gameoflifemodel.cpp gameoflifemodel.h
     main.cpp
 )

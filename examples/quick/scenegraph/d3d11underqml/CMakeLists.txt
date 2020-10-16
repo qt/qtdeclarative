@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Qml)
 find_package(Qt6 COMPONENTS Quick)
 
-add_qt_gui_executable(d3d11underqml
+qt_add_executable(d3d11underqml
     d3d11squircle.cpp d3d11squircle.h
     main.cpp
 )

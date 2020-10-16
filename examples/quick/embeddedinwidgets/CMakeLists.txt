@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Widgets)
 find_package(Qt6 COMPONENTS Quick)
 
-add_qt_gui_executable(embeddedinwidgets
+qt_add_executable(embeddedinwidgets
     main.cpp
 )
 target_link_libraries(embeddedinwidgets PUBLIC

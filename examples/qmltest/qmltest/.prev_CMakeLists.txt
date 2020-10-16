@@ -18,7 +18,7 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}")
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
 
-add_qt_gui_executable(tst_qmltestexample
+qt_add_executable(tst_qmltestexample
     tst_qmltest.cpp
 )
 target_link_libraries(tst_qmltestexample PUBLIC

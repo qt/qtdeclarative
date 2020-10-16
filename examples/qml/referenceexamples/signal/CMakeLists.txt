@@ -19,7 +19,7 @@ find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Qml)
 
-add_qt_gui_executable(signal
+qt_add_executable(signal
     birthdayparty.cpp birthdayparty.h
     main.cpp
     person.cpp person.h

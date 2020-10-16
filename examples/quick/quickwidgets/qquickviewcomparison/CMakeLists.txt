@@ -21,7 +21,7 @@ find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Widgets)
 find_package(Qt6 COMPONENTS QuickWidgets)
 
-add_qt_gui_executable(qquickviewcomparison
+qt_add_executable(qquickviewcomparison
     fbitem.cpp fbitem.h
     logo.cpp logo.h
     main.cpp

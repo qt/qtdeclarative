@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Qml)
 
-add_qt_gui_executable(rendercontrol_d3d11
+qt_add_executable(rendercontrol_d3d11
     engine.cpp engine.h
     main.cpp
     window.cpp window.h

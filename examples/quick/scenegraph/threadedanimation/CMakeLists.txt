@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Qml)
 find_package(Qt6 COMPONENTS Quick)
 
-add_qt_gui_executable(threadedanimation
+qt_add_executable(threadedanimation
     main.cpp
     spinner.cpp spinner.h
 )

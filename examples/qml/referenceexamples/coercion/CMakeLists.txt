@@ -18,7 +18,7 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/qml/referenceexamples/coercion")
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Qml)
 
-add_qt_gui_executable(coercion
+qt_add_executable(coercion
     birthdayparty.cpp birthdayparty.h
     main.cpp
     person.cpp person.h

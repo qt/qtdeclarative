@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Qml)
 find_package(Qt6 COMPONENTS Quick)
 
-add_qt_gui_executable(abstractitemmodel
+qt_add_executable(abstractitemmodel
     main.cpp
     model.cpp model.h
 )

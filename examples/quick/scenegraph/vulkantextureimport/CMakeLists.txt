@@ -20,7 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Qml)
 find_package(Qt6 COMPONENTS Quick)
 
-add_qt_gui_executable(vulkantextureimport
+qt_add_executable(vulkantextureimport
     main.cpp
     vulkantextureimport.cpp vulkantextureimport.h
 )

@@ -21,7 +21,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS QuickTest)
 #special case end
 
-add_qt_gui_executable(tst_qmltestexample
+qt_add_executable(tst_qmltestexample
     tst_qmltest.cpp
 )
 target_link_libraries(tst_qmltestexample PUBLIC

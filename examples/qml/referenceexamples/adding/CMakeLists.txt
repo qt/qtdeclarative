@@ -18,7 +18,7 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/qml/referenceexamples/adding")
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Qml)
 
-add_qt_gui_executable(adding
+qt_add_executable(adding
     main.cpp
     person.cpp person.h
 )
