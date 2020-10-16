@@ -12,7 +12,7 @@ Module {
         // is a singleton, but its constructor can construct NumberPrototype objects...
         isSingleton: true
         prototype: "NumberPrototype"
-        Property{ name:"EPSILON"; type: "NumberPrototype"; isReadOnly: true }
+        Property{ name:"EPSILON"; type: "NumberPrototype"; isReadonly: true }
         Method{
             name: "isFinite"
             type: "bool"
@@ -33,12 +33,12 @@ Module {
             type: "bool"
             Parameter { name: "number"; type: "NumberPrototype" }
         }
-        Property{ name:"MAX_SAFE_INTEGER" ; type: "NumberPrototype"; isReadOnly: true; isReadOnly: true }
-        Property{ name:"MAX_VALUE" ; type: "NumberPrototype"; isReadOnly: true }
-        Property{ name:"MIN_SAFE_INTEGER" ; type: "NumberPrototype"; isReadOnly: true }
-        Property{ name:"MIN_VALUE" ; type: "NumberPrototype"; isReadOnly: true }
-        Property{ name:"NaN" ; type: "NumberPrototype"; isReadOnly: true }
-        Property{ name:"NEGATIVE_INFINITY" ; type: "NumberPrototype"; isReadOnly: true }
+        Property{ name:"MAX_SAFE_INTEGER" ; type: "NumberPrototype"; isReadonly: true; isReadonly: true }
+        Property{ name:"MAX_VALUE" ; type: "NumberPrototype"; isReadonly: true }
+        Property{ name:"MIN_SAFE_INTEGER" ; type: "NumberPrototype"; isReadonly: true }
+        Property{ name:"MIN_VALUE" ; type: "NumberPrototype"; isReadonly: true }
+        Property{ name:"NaN" ; type: "NumberPrototype"; isReadonly: true }
+        Property{ name:"NEGATIVE_INFINITY" ; type: "NumberPrototype"; isReadonly: true }
         Method{
             name: "parseFloat"
             type: "real"
@@ -50,7 +50,7 @@ Module {
             Parameter { name: "string"; type: "string" }
             Parameter { name: "radix"; type: "int" }
         }
-        Property{ name:"POSITIVE_INFINITY" ; type: "NumberPrototype"; isReadOnly: true }
+        Property{ name:"POSITIVE_INFINITY" ; type: "NumberPrototype"; isReadonly: true }
     }
     Component {
         name: "NumberPrototype"
@@ -90,14 +90,14 @@ Module {
         isSingleton: true
         exports: ["QML/Math 1.0"]
         exportMetaObjectRevisions: [256]
-        Property{ name:"E" ; type: "real"; isReadOnly: true }
-        Property{ name:"LN10" ; type: "real"; isReadOnly: true }
-        Property{ name:"LN2" ; type: "real"; isReadOnly: true }
-        Property{ name:"LOG10E" ; type: "real"; isReadOnly: true }
-        Property{ name:"LOG2E" ; type: "real"; isReadOnly: true }
-        Property{ name:"PI" ; type: "real"; isReadOnly: true }
-        Property{ name:"SQRT1_2" ; type: "real"; isReadOnly: true }
-        Property{ name:"SQRT2" ; type: "real"; isReadOnly: true }
+        Property{ name:"E" ; type: "real"; isReadonly: true }
+        Property{ name:"LN10" ; type: "real"; isReadonly: true }
+        Property{ name:"LN2" ; type: "real"; isReadonly: true }
+        Property{ name:"LOG10E" ; type: "real"; isReadonly: true }
+        Property{ name:"LOG2E" ; type: "real"; isReadonly: true }
+        Property{ name:"PI" ; type: "real"; isReadonly: true }
+        Property{ name:"SQRT1_2" ; type: "real"; isReadonly: true }
+        Property{ name:"SQRT2" ; type: "real"; isReadonly: true }
         Method{
             name: "abs"
             type: "real"
