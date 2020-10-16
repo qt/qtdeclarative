@@ -13,7 +13,7 @@ qt_internal_add_cmake_library(foreign
 )
 # special case begin
 qt_enable_autogen_tool(foreign "moc" ON)
-qt6_generate_meta_types_json_file(foreign)
+qt6_extract_metatypes(foreign)
 # special case end
 
 #### Keys ignored in scope 1:.:.:foreign.pro:<TRUE>:

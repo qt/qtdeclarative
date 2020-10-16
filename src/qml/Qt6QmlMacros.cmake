@@ -608,7 +608,7 @@ function(qt6_qml_type_registration target)
         set(meta_types_json_args "INSTALL_DIR" "${qml_install_dir}/lib/metatypes")
     endif()
 
-    qt6_generate_meta_types_json_file(${target} ${meta_types_json_args})
+    qt6_extract_metatypes(${target} ${meta_types_json_args})
 
     get_target_property(import_version ${target} QT_QML_MODULE_VERSION)
     get_target_property(target_source_dir ${target} SOURCE_DIR)
