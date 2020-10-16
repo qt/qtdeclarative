@@ -313,12 +313,7 @@ void QQmlJSTypeDescriptionReader::readSignalOrMethod(UiObjectDefinition *ast, bo
 
 void QQmlJSTypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQmlJSScope::Ptr &scope)
 {
-    QString name;
-    QString type;
-    bool isPointer = false;
-    bool isReadonly = false;
-    bool isList = false;
-    int revision = 0;
+    QQmlJSMetaProperty property;
 
     for (UiObjectMemberList *it = ast->initializer->members; it; it = it->next) {
         UiObjectMember *member = it->member;
@@ -330,31 +325,33 @@ void QQmlJSTypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQ
 
         QString id = toString(script->qualifiedId);
         if (id == QLatin1String("name")) {
-            name = readStringBinding(script);
+            property.setPropertyName(readStringBinding(script));
         } else if (id == QLatin1String("type")) {
-            type = readStringBinding(script);
+            property.setTypeName(readStringBinding(script));
         } else if (id == QLatin1String("isPointer")) {
-            isPointer = readBoolBinding(script);
+            property.setIsPointer(readBoolBinding(script));
         } else if (id == QLatin1String("isReadonly")) {
-            isReadonly = readBoolBinding(script);
+            property.setIsWritable(!readBoolBinding(script));
         } else if (id == QLatin1String("isList")) {
-            isList = readBoolBinding(script);
+            property.setIsList(readBoolBinding(script));
         } else if (id == QLatin1String("revision")) {
-            revision = readIntBinding(script);
+            property.setRevision(readIntBinding(script));
+        } else if (id == QLatin1String("bindable")) {
+            property.setBindable(readStringBinding(script));
         } else {
             addWarning(script->firstSourceLocation(),
-                       tr("Expected only type, name, revision, isPointer, isReadonly and"
+                       tr("Expected only type, name, revision, isPointer, isReadonly, bindable, and"
                           " isList script bindings."));
         }
     }
 
-    if (name.isEmpty() || type.isEmpty()) {
+    if (property.propertyName().isEmpty() || property.typeName().isEmpty()) {
         addError(ast->firstSourceLocation(),
                  tr("Property object is missing a name or type script binding."));
         return;
     }
 
-    scope->addProperty(QQmlJSMetaProperty(name, type, isList, !isReadonly, isPointer, false, revision));
+    scope->addProperty(property);
 }
 
 void QQmlJSTypeDescriptionReader::readEnum(UiObjectDefinition *ast, const QQmlJSScope::Ptr &scope)

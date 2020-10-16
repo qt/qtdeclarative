@@ -166,6 +166,7 @@ class QQmlJSMetaProperty
 {
     QString m_propertyName;
     QString m_typeName;
+    QString m_bindable;
     QWeakPointer<const QQmlJSScope> m_type;
     bool m_isList = false;
     bool m_isWritable = false;
@@ -175,28 +176,32 @@ class QQmlJSMetaProperty
 
 public:
     QQmlJSMetaProperty() = default;
-    QQmlJSMetaProperty(QString propertyName, QString typeName,
-                 bool isList, bool isWritable, bool isPointer, bool isAlias,
-                 int revision)
-        : m_propertyName(std::move(propertyName))
-        , m_typeName(std::move(typeName))
-        , m_isList(isList)
-        , m_isWritable(isWritable)
-        , m_isPointer(isPointer)
-        , m_isAlias(isAlias)
-        , m_revision(revision)
-    {}
 
+    void setPropertyName(const QString &propertyName) { m_propertyName = propertyName; }
     QString propertyName() const { return m_propertyName; }
+
+    void setTypeName(const QString &typeName) { m_typeName = typeName; }
     QString typeName() const { return m_typeName; }
+
+    void setBindable(const QString &bindable) { m_bindable = bindable; }
+    QString bindable() const { return m_bindable; }
 
     void setType(const QSharedPointer<const QQmlJSScope> &type) { m_type = type; }
     QSharedPointer<const QQmlJSScope> type() const { return m_type.toStrongRef(); }
 
+    void setIsList(bool isList) { m_isList = isList; }
     bool isList() const { return m_isList; }
+
+    void setIsWritable(bool isWritable) { m_isWritable = isWritable; }
     bool isWritable() const { return m_isWritable; }
+
+    void setIsPointer(bool isPointer) { m_isPointer = isPointer; }
     bool isPointer() const { return m_isPointer; }
+
+    void setIsAlias(bool isAlias) { m_isAlias = isAlias; }
     bool isAlias() const { return m_isAlias; }
+
+    void setRevision(int revision) { m_revision = revision; }
     int revision() const { return m_revision; }
 };
 
