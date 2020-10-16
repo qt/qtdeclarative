@@ -2168,7 +2168,7 @@ QString QQmlEngine::offlineStoragePath() const
     Q_D(const QQmlEngine);
 
     if (d->offlineStoragePath.isEmpty()) {
-        QString dataLocation = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+        QString dataLocation = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
         QQmlEnginePrivate *e = const_cast<QQmlEnginePrivate *>(d);
         if (!dataLocation.isEmpty())
             e->offlineStoragePath = dataLocation.replace(QLatin1Char('/'), QDir::separator())

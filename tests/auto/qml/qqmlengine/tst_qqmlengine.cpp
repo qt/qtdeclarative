@@ -272,7 +272,7 @@ void tst_qqmlengine::offlineStoragePath()
 
     QQmlEngine engine;
 
-    QString dataLocation = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+    QString dataLocation = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
 
     QCOMPARE(dataLocation.isEmpty(), engine.offlineStoragePath().isEmpty());
 
@@ -297,7 +297,7 @@ void tst_qqmlengine::offlineDatabaseStoragePath()
     qApp->setOrganizationDomain("www.qt-project.org");
 
     QQmlEngine engine;
-    QString dataLocation = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+    QString dataLocation = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     const QString databaseName = QLatin1String("foo");
     QString databaseLocation = engine.offlineStorageDatabaseFilePath(databaseName);
     QCOMPARE(dataLocation.isEmpty(), databaseLocation.isEmpty());

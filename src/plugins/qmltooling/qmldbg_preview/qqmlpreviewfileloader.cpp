@@ -65,7 +65,6 @@ QQmlPreviewFileLoader::QQmlPreviewFileLoader(QQmlPreviewServiceImpl *service) : 
     m_blacklist.blacklist(QLibraryInfo::path(QLibraryInfo::SettingsPath));
 
     static const QStandardPaths::StandardLocation blackListLocations[] = {
-        QStandardPaths::DataLocation,
         QStandardPaths::CacheLocation,
         QStandardPaths::GenericDataLocation,
         QStandardPaths::ConfigLocation,
