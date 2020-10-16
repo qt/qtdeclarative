@@ -19,13 +19,13 @@ Module {
         name: "Frame"
         prototype: "MyPane"
         exports: ["Things.Templates/Frame 1.0"]
-        exportMetaObjectRevisions: [0]
+        exportMetaObjectRevisions: [256]
     }
     Component {
         name: "MyPane"
         prototype: "QObject"
         exports: ["Things.Templates/Pane 1.0"]
-        exportMetaObjectRevisions: [0]
+        exportMetaObjectRevisions: [256]
         Property { name: "contentWidth"; type: "double" }
         Property { name: "contentHeight"; type: "double" }
         Property { name: "contentData"; type: "QObject"; isList: true; isReadonly: true }

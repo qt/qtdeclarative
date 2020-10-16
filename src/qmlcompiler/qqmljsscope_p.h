@@ -114,25 +114,18 @@ public:
     class Export {
     public:
         Export() = default;
-        Export(QString package, QString type, const QTypeRevision &version,
-               int metaObjectRevision);
+        Export(QString package, QString type, const QTypeRevision &version);
 
         bool isValid() const;
 
-        int metaObjectRevision() const { return m_metaObjectRevision; }
-        void setMetaObjectRevision(int metaObjectRevision)
-        {
-            m_metaObjectRevision = metaObjectRevision;
-        }
-
         QString package() const { return m_package; }
         QString type() const { return m_type; }
+        QTypeRevision version() const { return m_version; }
 
     private:
         QString m_package;
         QString m_type;
         QTypeRevision m_version;
-        int m_metaObjectRevision = 0;
     };
 
     struct JavaScriptIdentifier
@@ -181,7 +174,6 @@ public:
     void setInternalName(const QString &internalName) { m_internalName = internalName; }
 
     void addExport(const QString &name, const QString &package, const QTypeRevision &version);
-    void setExportMetaObjectRevision(int exportIndex, int metaObjectRevision);
     QList<Export> exports() const { return m_exports; }
 
     // If isComposite(), this is the QML/JS name of the prototype. Otherwise it's the

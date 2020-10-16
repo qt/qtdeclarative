@@ -642,7 +642,17 @@ void QQmlJSTypeDescriptionReader::readMetaObjectRevisions(UiScriptBinding *ast,
             return;
         }
 
-        scope->setExportMetaObjectRevision(exportIndex, metaObjectRevision);
+        const QTypeRevision metaObjectVersion
+                = QTypeRevision::fromEncodedVersion(metaObjectRevision);
+        const QTypeRevision exportVersion = scope->exports()[exportIndex].version();
+        if (metaObjectVersion != exportVersion) {
+            addWarning(numberLit->firstSourceLocation(),
+                       tr("Meta object revision and export version differ, ignoring the revision.\n"
+                          "Revision %1 corresponds to version %2.%3; it should be %4.%5.")
+                       .arg(metaObjectRevision)
+                       .arg(metaObjectVersion.majorVersion()).arg(metaObjectVersion.minorVersion())
+                       .arg(exportVersion.majorVersion()).arg(exportVersion.minorVersion()));
+        }
     }
 }
 

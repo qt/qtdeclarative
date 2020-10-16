@@ -157,22 +157,16 @@ QQmlJSScope::ConstPtr QQmlJSScope::findCurrentQMLScope(const QQmlJSScope::ConstP
     return qmlScope;
 }
 
-void QQmlJSScope::addExport(const QString &name, const QString &package, const QTypeRevision &version)
+void QQmlJSScope::addExport(const QString &name, const QString &package,
+                            const QTypeRevision &version)
 {
-    m_exports.append(Export(package, name, version, 0));
+    m_exports.append(Export(package, name, version));
 }
 
-void QQmlJSScope::setExportMetaObjectRevision(int exportIndex, int metaObjectRevision)
-{
-    m_exports[exportIndex].setMetaObjectRevision(metaObjectRevision);
-}
-
-QQmlJSScope::Export::Export(QString package, QString type, const QTypeRevision &version,
-                          int metaObjectRevision) :
+QQmlJSScope::Export::Export(QString package, QString type, const QTypeRevision &version) :
     m_package(std::move(package)),
     m_type(std::move(type)),
-    m_version(version),
-    m_metaObjectRevision(metaObjectRevision)
+    m_version(version)
 {
 }
 

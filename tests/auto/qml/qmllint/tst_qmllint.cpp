@@ -140,6 +140,10 @@ void TestQmllint::oldQmltypes()
     QVERIFY(errors.contains(QStringLiteral("Warning: typeinfo not declared in qmldir file")));
     QVERIFY(!errors.contains(QStringLiteral("Warning: QQuickItem was not found. Did you add all import paths?")));
     QVERIFY(errors.contains(QStringLiteral("Warning: Found deprecated dependency specifications")));
+
+    // Checking for both lines separately so that we don't have to mess with the line endings.b
+    QVERIFY(errors.contains(QStringLiteral("Meta object revision and export version differ, ignoring the revision.")));
+    QVERIFY(errors.contains(QStringLiteral("Revision 0 corresponds to version 0.0; it should be 1.0.")));
 }
 
 void TestQmllint::dirtyQmlCode_data()
