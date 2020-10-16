@@ -741,7 +741,14 @@ QImage QSGRhiSupport::grabOffscreen(QQuickWindow *window)
         qWarning("Failed to build texture for offscreen readback");
         return QImage();
     }
-    QScopedPointer<QRhiTextureRenderTarget> rt(rhi->newTextureRenderTarget({ texture.data() }));
+    QScopedPointer<QRhiRenderBuffer> depthStencil(rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, pixelSize, 1));
+    if (!depthStencil->create()) {
+        qWarning("Failed to create depth/stencil buffer for offscreen readback");
+        return QImage();
+    }
+    QRhiTextureRenderTargetDescription rtDesc(texture.data());
+    rtDesc.setDepthStencilBuffer(depthStencil.data());
+    QScopedPointer<QRhiTextureRenderTarget> rt(rhi->newTextureRenderTarget(rtDesc));
     QScopedPointer<QRhiRenderPassDescriptor> rpDesc(rt->newCompatibleRenderPassDescriptor());
     rt->setRenderPassDescriptor(rpDesc.data());
     if (!rt->create()) {
