@@ -86,6 +86,10 @@ void QQmlJSImporter::readQmltypes(
     if (!succ)
         m_warnings.append({ reader.errorMessage(), QtCriticalMsg, QQmlJS::SourceLocation() });
 
+    const QString warningMessage = reader.warningMessage();
+    if (!warningMessage.isEmpty())
+        m_warnings.append({ warningMessage, QtWarningMsg, QQmlJS::SourceLocation() });
+
     if (dependencyStrings.isEmpty())
         return;
 
