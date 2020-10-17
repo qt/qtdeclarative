@@ -113,7 +113,7 @@ public:
     bool isValid() const { return data != nullptr; }
 
 private:
-    QMutexLocker locker;
+    QMutexLocker<QRecursiveMutex> locker;
     LockedData *data = nullptr;
 };
 

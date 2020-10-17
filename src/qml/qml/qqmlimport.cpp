@@ -197,7 +197,7 @@ public:
 
 private:
     PathPluginMap *map;
-    QMutexLocker locker;
+    QMutexLocker<QBasicMutex> locker;
 };
 
 Q_GLOBAL_STATIC(PathPluginMap, qmlPluginsByPath); // stores the uri and the PluginLoaders
