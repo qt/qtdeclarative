@@ -63,19 +63,54 @@ QT_BEGIN_NAMESPACE
 
 class QQmlPropertyBinding : public QQmlJavaScriptExpression,
                             public QPropertyBindingPrivate
+
 {
 public:
+    static constexpr auto propertyBindingOffset() {
+        QT_WARNING_PUSH QT_WARNING_DISABLE_INVALID_OFFSETOF
+        return offsetof(QQmlPropertyBinding, ref);
+        QT_WARNING_POP
+    }
+
     static QUntypedPropertyBinding create(const QQmlPropertyData *pd, QV4::Function *function,
                                           QObject *obj, const QQmlRefPointer<QQmlContextData> &ctxt,
                                           QV4::ExecutionContext *scope);
 
     void expressionChanged() override;
 
-private:
-    QQmlPropertyBinding(const QMetaType &metaType);
 
-    bool evaluate(const QMetaType &metaType, void *dataPtr);
+    static bool doEvaluate(QMetaType metaType, QUntypedPropertyData *dataPtr, void *f) {
+        auto address = static_cast<std::byte*>(f);
+        address -= sizeof (QPropertyBindingPrivate); // f now points to QPropertyBindingPrivate suboject
+        address -= QQmlPropertyBinding::propertyBindingOffset(); //  f now points to QQmlPropertyBinding
+        return reinterpret_cast<QQmlPropertyBinding *>(address)->evaluate(metaType, dataPtr);
+    }
+
+private:
+    QQmlPropertyBinding(QMetaType metaType);
+
+    bool evaluate(QMetaType metaType, void *dataPtr);
+
+
 };
+
+template <auto I>
+struct Print {};
+
+namespace QtPrivate {
+template<>
+inline constexpr BindingFunctionVTable bindingFunctionVTable<QQmlPropertyBinding> = {
+    &QQmlPropertyBinding::doEvaluate,
+    [](void *qpropertyBinding){
+        auto address = static_cast<std::byte*>(qpropertyBinding);
+        address -= QQmlPropertyBinding::propertyBindingOffset(); //  f now points to QQmlPropertyBinding
+        reinterpret_cast<QQmlPropertyBinding *>(address)->~QQmlPropertyBinding();
+        delete[] address;
+    },
+    [](void *, void *){},
+    0
+};
+}
 
 class QQmlTranslationPropertyBinding
 {

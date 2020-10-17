@@ -63,12 +63,13 @@ QUntypedPropertyBinding QQmlPropertyBinding::create(const QQmlPropertyData *pd, 
             QPropertyBindingSourceLocation());
     }
 
-    auto binding = new QQmlPropertyBinding(QMetaType(pd->propType()));
+    auto buffer = new std::byte[sizeof(QQmlPropertyBinding)]; // QQmlPropertyBinding uses delete[]
+    auto binding = new (buffer) QQmlPropertyBinding(QMetaType(pd->propType()));
     binding->setNotifyOnValueChanged(true);
     binding->setContext(ctxt);
     binding->setScopeObject(obj);
     binding->setupFunction(scope, function);
-    return QUntypedPropertyBinding(QPropertyBindingPrivatePtr(binding).data());
+    return QUntypedPropertyBinding(static_cast<QPropertyBindingPrivate *>(QPropertyBindingPrivatePtr(binding).data()));
 }
 
 void QQmlPropertyBinding::expressionChanged()
@@ -89,15 +90,14 @@ void QQmlPropertyBinding::expressionChanged()
     m_error.setTag(currentTag);
 }
 
-QQmlPropertyBinding::QQmlPropertyBinding(const QMetaType &mt)
+QQmlPropertyBinding::QQmlPropertyBinding(QMetaType mt)
     : QPropertyBindingPrivate(mt,
-                              [this](const QMetaType &metaType, void *dataPtr) -> bool {
-                                  return evaluate(metaType, dataPtr);
-                              }, QPropertyBindingSourceLocation())
+                              &QtPrivate::bindingFunctionVTable<QQmlPropertyBinding>,
+                              QPropertyBindingSourceLocation())
 {
 }
 
-bool QQmlPropertyBinding::evaluate(const QMetaType &metaType, void *dataPtr)
+bool QQmlPropertyBinding::evaluate(QMetaType metaType, void *dataPtr)
 {
     const auto ctxt = context();
     QQmlEngine *engine = ctxt ? ctxt->engine() : nullptr;
