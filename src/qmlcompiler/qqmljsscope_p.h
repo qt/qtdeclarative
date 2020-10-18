@@ -167,6 +167,7 @@ public:
     void addMethod(const QQmlJSMetaMethod &method) { m_methods.insert(method.methodName(), method); }
     QMultiHash<QString, QQmlJSMetaMethod> methods() const { return m_methods; }
     QQmlJSMetaMethod method(const QString &name) const { return m_methods.value(name); }
+    bool hasMethod(const QString &name) const { return m_methods.contains(name); }
 
     void addEnum(const QQmlJSMetaEnum &fakeEnum) { m_enums.insert(fakeEnum.name(), fakeEnum); }
     QHash<QString, QQmlJSMetaEnum> enums() const { return m_enums; }
@@ -192,6 +193,7 @@ public:
     void addProperty(const QQmlJSMetaProperty &prop) { m_properties.insert(prop.propertyName(), prop); }
     QHash<QString, QQmlJSMetaProperty> properties() const { return m_properties; }
     QQmlJSMetaProperty property(const QString &name) const { return m_properties.value(name); }
+    bool hasProperty(const QString &name) const { return m_properties.contains(name); }
 
     QString defaultPropertyName() const { return m_defaultPropertyName; }
     void setDefaultPropertyName(const QString &name) { m_defaultPropertyName = name; }
