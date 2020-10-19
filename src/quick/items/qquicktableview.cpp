@@ -2096,6 +2096,8 @@ void QQuickTableViewPrivate::loadInitialTable()
     if (!syncVertically && rebuildOptions & RebuildOption::PositionViewAtRow)
         setLocalViewportY(topLeftPos.y());
 
+    syncViewportRect();
+
     if (!model) {
         qCDebug(lcTableViewDelegateLifecycle()) << "no model found, leaving table empty";
         return;
@@ -2180,6 +2182,8 @@ void QQuickTableViewPrivate::adjustViewportXAccordingToAlignment()
         Q_TABLEVIEW_UNREACHABLE("options are checked in setter");
         break;
     }
+
+    syncViewportRect();
 }
 
 void QQuickTableViewPrivate::adjustViewportYAccordingToAlignment()
@@ -2213,6 +2217,8 @@ void QQuickTableViewPrivate::adjustViewportYAccordingToAlignment()
         Q_TABLEVIEW_UNREACHABLE("options are checked in setter");
         break;
     }
+
+    syncViewportRect();
 }
 
 void QQuickTableViewPrivate::unloadEdge(Qt::Edge edge)
@@ -2559,9 +2565,8 @@ void QQuickTableViewPrivate::syncWithPendingChanges()
     // we're e.g in the middle of e.g loading a new row. Since this will lead to
     // unpredicted behavior, and possibly a crash, we need to postpone taking
     // such assignments into effect until we're in a state that allows it.
-    Q_Q(QQuickTableView);
-    viewportRect = QRectF(q->contentX(), q->contentY(), q->width(), q->height());
 
+    syncViewportRect();
     syncModel();
     syncDelegate();
     syncSyncView();
@@ -2907,10 +2912,6 @@ void QQuickTableViewPrivate::setLocalViewportX(qreal contentX)
         return;
 
     q->setContentX(contentX);
-
-    // Keep our own viewportRect in sync
-    viewportRect.moveLeft(contentX);
-    qCDebug(lcTableViewDelegateLifecycle) << "viewportRect adjusted to:" << viewportRect;
 }
 
 void QQuickTableViewPrivate::setLocalViewportY(qreal contentY)
@@ -2925,10 +2926,14 @@ void QQuickTableViewPrivate::setLocalViewportY(qreal contentY)
         return;
 
     q->setContentY(contentY);
+}
 
-    // Keep our own viewportRect in sync
-    viewportRect.moveTop(contentY);
-    qCDebug(lcTableViewDelegateLifecycle) << "viewportRect adjusted to:" << viewportRect;
+void QQuickTableViewPrivate::syncViewportRect()
+{
+    // Sync viewportRect so that it contains the actual geometry of the viewport
+    Q_Q(QQuickTableView);
+    viewportRect = QRectF(q->contentX(), q->contentY(), q->width(), q->height());
+    qCDebug(lcTableViewDelegateLifecycle) << viewportRect;
 }
 
 void QQuickTableViewPrivate::syncViewportPosRecursive()
