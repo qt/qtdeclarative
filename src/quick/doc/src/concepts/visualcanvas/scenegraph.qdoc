@@ -1017,15 +1017,15 @@ with multiple windows.
   Applications wishing to always run with a single given graphics API, can
   request this via C++ as well. For example, the following call made early in
   main(), before constructing any QQuickWindow, forces the use of Vulkan (and
-  will fail otherwise);
+  will fail otherwise):
 
   \badcode
-      QQuickWindow::setGraphicsApi(QSGRendererInterface::VulkanRhi);
+      QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
   \endcode
 
-  See QSGRendererInterface::GraphicsApi. The enum values ending in \c Rhi are
-  equivalent in effect to running with both \c QSG_RHI and \c QSG_RHI_BACKEND
-  set.
+  See QSGRendererInterface::GraphicsApi. The enum values \c OpenGL, \c Vulkan,
+  \c Metal, \c Direct3D11 are equivalent in effect to running with \c
+  QSG_RHI_BACKEND set to the equivalent string key.
 
   All QRhi backends will choose the system default GPU adapter or physical
   device, unless overridden by \c{QSG_RHI_PREFER_SOFTWARE_RENDERER} or a
