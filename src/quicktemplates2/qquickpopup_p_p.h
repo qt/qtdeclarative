@@ -205,6 +205,8 @@ public:
     QList<QQuickStateAction> exitActions;
     QQuickPopupTransitionManager transitionManager;
     QQuickPopupAnchors *anchors = nullptr;
+    qreal prevOpacity = 0;
+    qreal prevScale = 0;
 
     friend class QQuickPopupTransitionManager;
 };

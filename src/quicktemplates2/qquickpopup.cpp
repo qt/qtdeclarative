@@ -215,6 +215,19 @@ QT_BEGIN_NAMESPACE
     To ensure that the popup is positioned within the bounds of the enclosing
     window, the \l margins property can be set to a non-negative value.
 
+    \section1 Popup Transitions
+
+    Since Qt 5.15.3 the following properties are restored to their original values from before
+    the enter transition after the exit transition is completed.
+
+    \list
+    \li \l opacity
+    \li \l scale
+    \endlist
+
+    This allows the built-in styles to animate on these properties without losing any explicitly
+    defined value.
+
     \sa {Popup Controls}, {Customizing Popup}, ApplicationWindow
 */
 
@@ -451,6 +464,11 @@ bool QQuickPopupPrivate::prepareExitTransition()
     if (transitionState == ExitTransition && transitionManager.isRunning())
         return false;
 
+    // We need to cache the original scale and opacity values so we can reset it after
+    // the exit transition is done so they have the original values again
+    prevScale = popupItem->scale();
+    prevOpacity = popupItem->opacity();
+
     if (transitionState != ExitTransition) {
         // The setFocus(false) call below removes any active focus before we're
         // able to check it in finalizeExitTransition.
@@ -513,6 +531,8 @@ void QQuickPopupPrivate::finalizeExitTransition()
     hadActiveFocusBeforeExitTransition = false;
     emit q->visibleChanged();
     emit q->closed();
+    popupItem->setScale(prevScale);
+    popupItem->setOpacity(prevOpacity);
 }
 
 void QQuickPopupPrivate::opened()

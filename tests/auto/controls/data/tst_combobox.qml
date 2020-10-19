@@ -948,6 +948,56 @@ TestCase {
         tryCompare(control.popup, "visible", false)
     }
 
+    Component {
+        id: reopenCombo
+        Window {
+            property alias innerCombo: innerCombo
+            visible: true
+            width: 300
+            height: 300
+            ComboBox {
+                id: innerCombo
+                model: 10
+                anchors.verticalCenter: parent.verticalCenter
+            }
+        }
+    }
+
+    // This test checks that when reopening the combobox that it is still appears at the same y position as
+    // previously
+    function test_reopen_popup() {
+        var control = createTemporaryObject(reopenCombo, testCase)
+        verify(control)
+        var y = 0;
+        for (var i = 0; i < 2; ++i) {
+            tryCompare(control.innerCombo.popup, "visible", false)
+            control.innerCombo.y = control.height - (control.innerCombo.popup.contentItem.height * 0.99)
+            var popupYSpy = createTemporaryObject(signalSpy, testCase, {target: control.innerCombo.popup, signalName: "yChanged"})
+            verify(popupYSpy.valid)
+            mousePress(control.innerCombo)
+            compare(control.innerCombo.pressed, true)
+            compare(control.innerCombo.popup.visible, false)
+            mouseRelease(control.innerCombo)
+            compare(control.innerCombo.pressed, false)
+            compare(control.innerCombo.popup.visible, true)
+            if (control.innerCombo.popup.enter)
+                tryCompare(control.innerCombo.popup.enter, "running", false)
+            // Check on the second opening that it has the same y position as before
+            if (i !== 0) {
+                // y should not have changed again
+                verify(popupYSpy.count === 0)
+                verify(y === control.innerCombo.popup.y)
+            } else {
+                // In some cases on the initial show, y changes more than once
+                verify(popupYSpy.count >= 1)
+                y = control.innerCombo.popup.y
+                mouseClick(control.innerCombo)
+                compare(control.innerCombo.pressed, false)
+                tryCompare(control.innerCombo.popup, "visible", false)
+            }
+        }
+    }
+
     function test_mouse() {
         var control = createTemporaryObject(comboBox, testCase, {model: 3, hoverEnabled: false})
         verify(control)
