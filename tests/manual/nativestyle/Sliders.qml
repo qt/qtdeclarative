@@ -84,6 +84,17 @@ ControlContainer {
 
                 property int qqc2_style_tickPosition: 2
             }
+
+            Slider {
+                // Should show 9 tickmarks
+                width: sliderWidth
+                from: 3.3
+                to: 3.7
+                stepSize: 0.05
+                value: 3.5
+                property int qqc2_style_tickPosition: 2
+            }
+
         }
 
         Row {

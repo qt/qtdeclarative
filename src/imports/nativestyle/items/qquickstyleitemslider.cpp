@@ -85,14 +85,13 @@ void QQuickStyleItemSlider::initStyleOption(QStyleOptionSlider &styleOption)
     styleOption.subControls = m_subControl == Groove ? QStyle::SC_SliderGroove : QStyle::SC_SliderHandle;
     styleOption.activeSubControls = QStyle::SC_None;
     styleOption.orientation = slider->orientation();
-    styleOption.tickInterval = int(slider->stepSize());
 
     if (slider->isPressed())
         styleOption.state |= QStyle::State_Sunken;
 
 
     qreal min = 0;
-    qreal max = 10000;
+    qreal max = 1;
     if (!qFuzzyIsNull(slider->stepSize())) {
         min = slider->from();
         max = slider->to();
@@ -106,8 +105,16 @@ void QQuickStyleItemSlider::initStyleOption(QStyleOptionSlider &styleOption)
                 styleOption.subControls |= QStyle::SC_SliderTickmarks;
         }
     }
-    styleOption.minimum = int(min);
-    styleOption.maximum = int(max);
-    styleOption.sliderValue = int(slider->value());
-    styleOption.sliderPosition = int(slider->position() * (max - min));
+
+    // Since the [from, to] interval in QQuickSlider is floating point, users can
+    // specify very small ranges and step sizes, (e.g. [0.., 0.25], step size 0.05).
+    // Since the style operates on ints, we cannot pass these values directly to the style,
+    // so we normalize all values to the range [0, 10000]
+    static const qreal Scale = 10000;
+    const qreal normalizeMultiplier = Scale/(max - min);
+    styleOption.tickInterval = int(slider->stepSize() * normalizeMultiplier);
+    styleOption.minimum = 0;
+    styleOption.maximum = int(Scale);
+    styleOption.sliderValue = int((slider->value() - min) * normalizeMultiplier);
+    styleOption.sliderPosition = int((slider->position() - min) * normalizeMultiplier);
 }
