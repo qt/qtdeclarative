@@ -433,6 +433,7 @@ public:
     void scheduleRebuildIfFastFlick();
     void setLocalViewportX(qreal contentX);
     void setLocalViewportY(qreal contentY);
+    void syncViewportRect();
     void syncViewportPosRecursive();
 
     void fetchMoreData();

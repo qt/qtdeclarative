@@ -1886,6 +1886,8 @@ void QQuickTableViewPrivate::beginRebuildTable()
         viewportRect.moveTop(syncView->d_func()->viewportRect.top());
     }
 
+    syncViewportRect();
+
     if (!model) {
         qCDebug(lcTableViewDelegateLifecycle()) << "no model found, leaving table empty";
         return;
@@ -2252,9 +2254,8 @@ void QQuickTableViewPrivate::syncWithPendingChanges()
     // we're e.g in the middle of e.g loading a new row. Since this will lead to
     // unpredicted behavior, and possibly a crash, we need to postpone taking
     // such assignments into effect until we're in a state that allows it.
-    Q_Q(QQuickTableView);
-    viewportRect = QRectF(q->contentX(), q->contentY(), q->width(), q->height());
 
+    syncViewportRect();
     syncModel();
     syncDelegate();
     syncSyncView();
@@ -2597,6 +2598,14 @@ void QQuickTableViewPrivate::setLocalViewportY(qreal contentY)
         return;
 
     q->setContentY(contentY);
+}
+
+void QQuickTableViewPrivate::syncViewportRect()
+{
+    // Sync viewportRect so that it contains the actual geometry of the viewport
+    Q_Q(QQuickTableView);
+    viewportRect = QRectF(q->contentX(), q->contentY(), q->width(), q->height());
+    qCDebug(lcTableViewDelegateLifecycle) << viewportRect;
 }
 
 void QQuickTableViewPrivate::syncViewportPosRecursive()

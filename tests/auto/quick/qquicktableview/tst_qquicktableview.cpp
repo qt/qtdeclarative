@@ -175,6 +175,7 @@ private slots:
     void checkSyncView_differentSizedModels();
     void checkSyncView_connect_late_data();
     void checkSyncView_connect_late();
+    void checkSyncView_pageFlicking();
     void delegateWithRequiredProperties();
     void checkThatFetchMoreIsCalledWhenScrolledToTheEndOfTable();
     void replaceModel();
@@ -2692,6 +2693,42 @@ void tst_QQuickTableView::checkSyncView_connect_late()
     QCOMPARE(tableViewVPrivate->loadedTableOuterRect.left(), 0);
 
     QCOMPARE(tableViewHVPrivate->loadedTableOuterRect, tableViewPrivate->loadedTableOuterRect);
+}
+
+void tst_QQuickTableView::checkSyncView_pageFlicking()
+{
+    // Check that we rebuild the syncView (instead of refilling
+    // edges), if the sync child moves more than a page (the size of TableView).
+    // The point is that it shouldn't matter if you fast-flick the
+    // sync view itself, or a sync child. Either way, the sync view
+    // needs to rebuild. This, in turn, will eventually rebuild the
+    // sync children as well when they sync up later.
+    LOAD_TABLEVIEW("syncviewsimple.qml");
+    GET_QML_TABLEVIEW(tableViewH);
+    GET_QML_TABLEVIEW(tableViewV);
+    GET_QML_TABLEVIEW(tableViewHV);
+    QQuickTableView *views[] = {tableViewH, tableViewV, tableViewHV};
+
+    auto model = TestModelAsVariant(100, 100);
+
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    // Move the viewport more than a "page"
+    tableViewHV->setContentX(tableViewHV->width() * 2);
+
+    QVERIFY(tableViewPrivate->scheduledRebuildOptions & QQuickTableViewPrivate::RebuildOption::ViewportOnly);
+    QVERIFY(tableViewPrivate->scheduledRebuildOptions & QQuickTableViewPrivate::RebuildOption::CalculateNewTopLeftColumn);
+    QVERIFY(!(tableViewPrivate->scheduledRebuildOptions & QQuickTableViewPrivate::RebuildOption::CalculateNewTopLeftRow));
+
+    WAIT_UNTIL_POLISHED;
+
+    tableViewHV->setContentY(tableViewHV->height() * 2);
+
+    QVERIFY(tableViewPrivate->scheduledRebuildOptions & QQuickTableViewPrivate::RebuildOption::ViewportOnly);
+    QVERIFY(!(tableViewPrivate->scheduledRebuildOptions & QQuickTableViewPrivate::RebuildOption::CalculateNewTopLeftColumn));
+    QVERIFY(tableViewPrivate->scheduledRebuildOptions & QQuickTableViewPrivate::RebuildOption::CalculateNewTopLeftRow);
 }
 
 void tst_QQuickTableView::checkThatFetchMoreIsCalledWhenScrolledToTheEndOfTable()
