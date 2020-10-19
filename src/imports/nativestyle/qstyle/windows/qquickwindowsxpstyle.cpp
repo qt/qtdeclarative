@@ -2722,7 +2722,7 @@ void QWindowsXPStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCo
                 theme.stateId = stateId;
                 d->drawBackground(theme);
             }
-            if (slider->state & State_HasFocus) {
+            if (sub & SC_SliderGroove && slider->state & State_HasFocus) {
                 QStyleOptionFocusRect fropt;
                 fropt.QStyleOption::operator=(*slider);
                 fropt.rect = subElementRect(SE_SliderFocusRect, slider);
@@ -3446,6 +3446,30 @@ QSize QWindowsXPStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt
     }
         break;
 
+    case CT_Slider:
+        if (const QStyleOptionSlider *slider = qstyleoption_cast<const QStyleOptionSlider *>(option)) {
+            QStyle::SubControls sub = slider->subControls;
+            const int TickSpace = 5;
+            int thick = proxy()->pixelMetric(QStyle::PM_SliderThickness, slider);
+
+            if (slider->tickPosition & QStyleOptionSlider::TicksAbove)
+                thick += TickSpace;
+            if (slider->tickPosition & QStyleOptionSlider::TicksBelow)
+                thick += TickSpace;
+            sz.setWidth(thick);
+
+            if (sub & SC_SliderGroove) {
+                const int SliderLength = 84;
+                sz.setHeight(SliderLength);
+            }
+            if (slider->orientation == Qt::Horizontal)
+                sz.transpose();
+            if (sub & SC_SliderHandle) {
+                const QSize s = proxy()->subControlRect(CC_Slider, slider, SC_SliderHandle).size();
+                sz = sz.expandedTo(s);
+            }
+        }
+        break;
     default:
         sz = QWindowsStyle::sizeFromContents(ct, option, sz);
         break;

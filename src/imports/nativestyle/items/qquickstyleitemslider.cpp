@@ -85,19 +85,17 @@ void QQuickStyleItemSlider::initStyleOption(QStyleOptionSlider &styleOption)
     styleOption.subControls = m_subControl == Groove ? QStyle::SC_SliderGroove : QStyle::SC_SliderHandle;
     styleOption.activeSubControls = QStyle::SC_None;
     styleOption.orientation = slider->orientation();
-    styleOption.tickInterval = slider->stepSize();
+    styleOption.tickInterval = int(slider->stepSize());
 
     if (slider->isPressed())
         styleOption.state |= QStyle::State_Sunken;
 
-    if (slider->stepSize() == 0) {
-        styleOption.minimum = 0;
-        styleOption.maximum = 10000;
-        styleOption.sliderPosition = slider->position() * styleOption.maximum;
-    } else {
-        styleOption.minimum = slider->from();
-        styleOption.maximum = slider->to();
-        styleOption.sliderPosition = slider->value();
+
+    qreal min = 0;
+    qreal max = 10000;
+    if (!qFuzzyIsNull(slider->stepSize())) {
+        min = slider->from();
+        max = slider->to();
 
         // TODO: add proper API for tickmarks
         const int index = slider->metaObject()->indexOfProperty("qqc2_style_tickPosition");
@@ -108,4 +106,8 @@ void QQuickStyleItemSlider::initStyleOption(QStyleOptionSlider &styleOption)
                 styleOption.subControls |= QStyle::SC_SliderTickmarks;
         }
     }
+    styleOption.minimum = int(min);
+    styleOption.maximum = int(max);
+    styleOption.sliderValue = int(slider->value());
+    styleOption.sliderPosition = int(slider->position() * (max - min));
 }

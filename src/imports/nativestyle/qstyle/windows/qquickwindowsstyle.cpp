@@ -348,10 +348,8 @@ int QWindowsStylePrivate::fixedPixelMetric(QStyle::PixelMetric pm)
         return 2;
 #endif
 
-#if 0 && QT_CONFIG(slider)
     case QStyle::PM_SliderLength:
         return 11;
-#endif // QT_CONFIG(slider)
 
 #if 0 && QT_CONFIG(menu)
     case QStyle::PM_MenuBarHMargin:
@@ -434,7 +432,6 @@ int QWindowsStyle::pixelMetric(PixelMetric pm, const QStyleOption *opt) const
             ret = 60;
         break;
 
-#if 0 && QT_CONFIG(slider)
         // Returns the number of pixels to use for the business part of the
         // slider (i.e., the non-tickmark portion). The remaining space is shared
         // equally between the tickmark regions.
@@ -443,9 +440,9 @@ int QWindowsStyle::pixelMetric(PixelMetric pm, const QStyleOption *opt) const
             int space = (sl->orientation == Qt::Horizontal) ? sl->rect.height() : sl->rect.width();
             int ticks = sl->tickPosition;
             int n = 0;
-            if (ticks & QSlider::TicksAbove)
+            if (ticks & QStyleOptionSlider::TicksAbove)
                 ++n;
-            if (ticks & QSlider::TicksBelow)
+            if (ticks & QStyleOptionSlider::TicksBelow)
                 ++n;
             if (!n) {
                 ret = space;
@@ -453,8 +450,8 @@ int QWindowsStyle::pixelMetric(PixelMetric pm, const QStyleOption *opt) const
             }
 
             int thick = 6;        // Magic constant to get 5 + 16 + 5
-            if (ticks != QSlider::TicksBothSides && ticks != QSlider::NoTicks)
-                thick += proxy()->pixelMetric(PM_SliderLength, sl, widget) / 4;
+            if (ticks != QStyleOptionSlider::TicksBothSides && ticks != QStyleOptionSlider::NoTicks)
+                thick += proxy()->pixelMetric(PM_SliderLength, sl) / 4;
 
             space -= thick;
             if (space > 0)
@@ -462,7 +459,6 @@ int QWindowsStyle::pixelMetric(PixelMetric pm, const QStyleOption *opt) const
             ret = thick;
         }
         break;
-#endif // QT_CONFIG(slider)
 
     case PM_IconViewIconSize:
         ret = proxy()->pixelMetric(PM_LargeIconSize, opt);
@@ -1893,18 +1889,18 @@ void QWindowsStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComp
 #if 0 && QT_CONFIG(slider)
     case CC_Slider:
         if (const QStyleOptionSlider *slider = qstyleoption_cast<const QStyleOptionSlider *>(opt)) {
-            int thickness  = proxy()->pixelMetric(PM_SliderControlThickness, slider, widget);
-            int len        = proxy()->pixelMetric(PM_SliderLength, slider, widget);
+            int thickness  = proxy()->pixelMetric(PM_SliderControlThickness, slider);
+            int len        = proxy()->pixelMetric(PM_SliderLength, slider);
             int ticks = slider->tickPosition;
-            QRect groove = proxy()->subControlRect(CC_Slider, slider, SC_SliderGroove, widget);
-            QRect handle = proxy()->subControlRect(CC_Slider, slider, SC_SliderHandle, widget);
+            QRect groove = proxy()->subControlRect(CC_Slider, slider, SC_SliderGroove);
+            QRect handle = proxy()->subControlRect(CC_Slider, slider, SC_SliderHandle);
 
             if ((slider->subControls & SC_SliderGroove) && groove.isValid()) {
                 int mid = thickness / 2;
 
-                if (ticks & QSlider::TicksAbove)
+                if (ticks & QStyleOptionSlider::TicksAbove)
                     mid += len / 8;
-                if (ticks & QSlider::TicksBelow)
+                if (ticks & QStyleOptionSlider::TicksBelow)
                     mid -= len / 8;
 
                 p->setPen(slider->palette.shadow().color());
@@ -1924,7 +1920,7 @@ void QWindowsStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComp
             if (slider->subControls & SC_SliderTickmarks) {
                 QStyleOptionSlider tmpSlider = *slider;
                 tmpSlider.subControls = SC_SliderTickmarks;
-                QCommonStyle::drawComplexControl(cc, &tmpSlider, p, widget);
+                QCommonStyle::drawComplexControl(cc, &tmpSlider, p);
             }
 
             if (slider->subControls & SC_SliderHandle) {
@@ -1961,14 +1957,14 @@ void QWindowsStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComp
                 int y2 = y+he-1;
 
                 Qt::Orientation orient = slider->orientation;
-                bool tickAbove = slider->tickPosition == QSlider::TicksAbove;
-                bool tickBelow = slider->tickPosition == QSlider::TicksBelow;
+                bool tickAbove = slider->tickPosition == QStyleOptionSlider::TicksAbove;
+                bool tickBelow = slider->tickPosition == QStyleOptionSlider::TicksBelow;
 
                 if (slider->state & State_HasFocus) {
                     QStyleOptionFocusRect fropt;
                     fropt.QStyleOption::operator=(*slider);
-                    fropt.rect = subElementRect(SE_SliderFocusRect, slider, widget);
-                    proxy()->drawPrimitive(PE_FrameFocusRect, &fropt, p, widget);
+                    fropt.rect = subElementRect(SE_SliderFocusRect, slider);
+                    proxy()->drawPrimitive(PE_FrameFocusRect, &fropt, p);
                 }
 
                 if ((tickAbove && tickBelow) || (!tickAbove && !tickBelow)) {
