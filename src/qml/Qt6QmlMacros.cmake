@@ -554,7 +554,7 @@ function(qt6_target_qml_files target)
         endif()
 
         if (qml_file_singleton)
-            string(APPEND file_contents "[singleton] ")
+            string(APPEND file_contents "singleton ")
         endif()
 
         foreach(qml_file_version IN LISTS qml_file_versions)
