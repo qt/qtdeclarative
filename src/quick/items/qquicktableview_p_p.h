@@ -213,8 +213,10 @@ public:
         ViewportOnly = 0x4,
         CalculateNewTopLeftRow = 0x8,
         CalculateNewTopLeftColumn = 0x10,
-        PositionViewAtRow = 0x20,
-        PositionViewAtColumn = 0x40,
+        CalculateNewContentWidth = 0x20,
+        CalculateNewContentHeight = 0x40,
+        PositionViewAtRow = 0x80,
+        PositionViewAtColumn = 0x100,
     };
     Q_DECLARE_FLAGS(RebuildOptions, RebuildOption)
 
@@ -371,7 +373,8 @@ public:
 
     void updateContentWidth();
     void updateContentHeight();
-    void updateAverageEdgeSize();
+    void updateAverageColumnWidth();
+    void updateAverageRowHeight();
     RebuildOptions checkForVisibilityChanges();
     void forceLayout();
 
