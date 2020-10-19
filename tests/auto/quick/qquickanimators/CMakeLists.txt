@@ -13,9 +13,13 @@ list(APPEND test_data ${test_data_glob})
 qt_internal_add_test(tst_qquickanimators
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
+        ../shared/geometrytestutil.cpp ../shared/geometrytestutil.h
+        ../shared/viewtestutil.cpp ../shared/viewtestutil.h
+        ../shared/visualtestutil.cpp ../shared/visualtestutil.h
         tst_qquickanimators.cpp
     DEFINES
         QT_DISABLE_DEPRECATED_BEFORE=0
+        QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
     INCLUDE_DIRECTORIES
         ../../shared
     PUBLIC_LIBRARIES
@@ -28,7 +32,7 @@ qt_internal_add_test(tst_qquickanimators
 )
 
 #### Keys ignored in scope 1:.:.:qquickanimators.pro:<TRUE>:
-# OTHER_FILES = "data/positionerWithAnimator.qml" "data/windowWithAnimator.qml"
+# OTHER_FILES = "data/positionerWithAnimator.qml" "data/windowWithAnimator.qml" "data/animatorImplicitFrom.qml"
 
 ## Scopes:
 #####################################################################

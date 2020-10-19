@@ -61,7 +61,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickAnimatorController : public QObject, public QAnimationJobChangeListener
+class Q_AUTOTEST_EXPORT QQuickAnimatorController : public QObject, public QAnimationJobChangeListener
 {
     Q_OBJECT
 

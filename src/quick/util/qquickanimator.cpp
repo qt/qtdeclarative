@@ -202,9 +202,9 @@ qreal QQuickAnimator::to() const
 void QQuickAnimator::setFrom(qreal from)
 {
     Q_D(QQuickAnimator);
+    d->isFromDefined = true;
     if (from == d->from)
         return;
-    d->isFromDefined = true;
     d->from = from;
     Q_EMIT fromChanged(d->from);
 }
@@ -255,7 +255,8 @@ void QQuickAnimatorPrivate::apply(QQuickAnimatorJob *job,
 
     if (modified.isEmpty()) {
         job->setTarget(target);
-        job->setFrom(from);
+        if (isFromDefined)
+            job->setFrom(from);
         job->setTo(to);
     }
 
@@ -265,6 +266,9 @@ void QQuickAnimatorPrivate::apply(QQuickAnimatorJob *job,
         else
             job->setTarget(qobject_cast<QQuickItem *>(defaultTarget));
     }
+
+    if (modified.isEmpty() && !isFromDefined && job->target())
+        job->setFrom(job->target()->property(propertyName.toLatin1()).toReal());
 
     job->setDuration(duration);
     job->setLoopCount(loopCount);
