@@ -51,6 +51,7 @@ QUICKTESTS += \
     qquickaccessible \
     qquickanchors \
     qquickanimatedimage \
+    qquickanimators \
     qquickdynamicpropertyanimation \
     qquickborderimage \
     qquickwindow \

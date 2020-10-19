@@ -4,3 +4,8 @@ CONFIG += testcase
 macx: CONFIG -= app_bundle
 SOURCES += tst_qquickanimators.cpp
 
+include (../../shared/util.pri)
+include (../shared/util.pri)
+
+TESTDATA = data/*
+DISTFILES += data/*
