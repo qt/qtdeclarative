@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -26,16 +26,20 @@
 **
 ****************************************************************************/
 
-#include <qtest.h>
+#include <QtTest/QtTest>
+#include <QtQuickTest/quicktest.h>
 
-#include <QtQuick>
-#include <private/qquickanimator_p.h>
-#include <private/qquickrepeater_p.h>
-#include <private/qquicktransition_p.h>
+#include <QtQuick/qquickview.h>
+#include <QtQuick/private/qquickanimator_p.h>
+#include <QtQuick/private/qquickrepeater_p.h>
+#include <QtQuick/private/qquicktransition_p.h>
 
-#include <QtQml>
+#include "../../shared/util.h"
+#include "../shared/viewtestutil.h"
 
-class tst_Animators: public QObject
+using namespace QQuickViewTestUtil;
+
+class tst_Animators: public QQmlDataTest
 {
     Q_OBJECT
 
@@ -58,10 +62,10 @@ void tst_Animators::testMultiWinAnimator()
     QFETCH(int, count);
 
     QQmlEngine engine;
-    QQmlComponent component(&engine, "data/windowWithAnimator.qml");
+    QQmlComponent component(&engine, testFileUrl("windowWithAnimator.qml"));
 
     QList<QQuickWindow *> windows;
-    for (int i=0; i<count; ++i) {
+    for (int i = 0; i < count; ++i) {
         QQuickWindow *win = qobject_cast<QQuickWindow *>(component.create());
         windows << win;
 
@@ -71,9 +75,10 @@ void tst_Animators::testMultiWinAnimator()
         // to ensure they are exposed and actually rendering.
         if (i > 0) {
             QPoint pos = win->position();
-            if (pos == windows.first()->position())
+            if (pos == windows.first()->position()) {
                 pos += QPoint(10 * i, 10 * i);
                 win->setPosition(pos);
+            }
         }
     }
 
@@ -99,24 +104,26 @@ void tst_Animators::testMultiWinAnimator()
 
 void tst_Animators::testTransitions()
 {
-    QQuickView view(QUrl::fromLocalFile("data/positionerWithAnimator.qml"));
-    view.show();
-    QVERIFY(QTest::qWaitForWindowExposed(&view));
-    QVERIFY(view.rootObject());
+    QScopedPointer<QQuickView> view(createView());
+    view->setSource(testFileUrl("positionerWithAnimator.qml"));
+    view->show();
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+    QQuickItem *root = view->rootObject();
+    QVERIFY(root);
 
-    QQuickRepeater *repeater = view.rootObject()->property("repeater").value<QQuickRepeater *>();
+    QQuickRepeater *repeater = root->property("repeater").value<QQuickRepeater *>();
     QVERIFY(repeater);
 
     QQuickItem *child = repeater->itemAt(0);
     QVERIFY(child);
-    QCOMPARE(child->scale(), qreal(0.0));
+    QCOMPARE(child->scale(), qreal(0));
 
-    QQuickTransition *transition = view.rootObject()->property("transition").value<QQuickTransition *>();
+    QQuickTransition *transition = root->property("transition").value<QQuickTransition *>();
     QVERIFY(transition);
 
     QTRY_VERIFY(transition->running());
     QTRY_VERIFY(!transition->running());
-    QCOMPARE(child->scale(), qreal(1.0));
+    QCOMPARE(child->scale(), qreal(1));
 }
 
 #include "tst_qquickanimators.moc"
