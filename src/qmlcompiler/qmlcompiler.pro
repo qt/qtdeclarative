@@ -12,6 +12,7 @@ SOURCES = \
     qqmljstypedescriptionreader.cpp \
     qqmljsstreamwriter.cpp \
     qqmljsloadergenerator.cpp \
+    qqmljscompiler.cpp \
     qresourcerelocater.cpp
 
 HEADERS = \
@@ -25,6 +26,7 @@ HEADERS = \
     qqmljstypedescriptionreader_p.h \
     qqmljsstreamwriter_p.h \
     qqmljsloadergenerator_p.h \
+    qqmljscompiler_p.h \
     qresourcerelocater_p.h
 
 load(qt_module)
