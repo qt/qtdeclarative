@@ -386,6 +386,9 @@ static bool saveUnitAsCpp(const QString &inputFileName, const QString &outputFil
     if (!writeStr("\n"))
         return false;
 
+    if (!writeStr("#include <QtQml/qqmlprivate.h>\n"))
+        return false;
+
     if (!writeStr(QByteArrayLiteral("namespace QmlCacheGeneratedCode {\nnamespace ")))
         return false;
 
@@ -418,7 +421,14 @@ static bool saveUnitAsCpp(const QString &inputFileName, const QString &outputFil
 
 
 
-    if (!writeStr("};\n}\n}\n"))
+    if (!writeStr("};\n"))
+        return false;
+
+    if (!writeStr("extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[] = "
+                  "{ { 0, QMetaType::fromType<void>(), nullptr } };\n"))
+        return false;
+
+    if (!writeStr("}\n}\n"))
         return false;
 
 #if QT_CONFIG(temporaryfile)
