@@ -9,7 +9,6 @@ qt_internal_add_tool(${target_name}
     TARGET_DESCRIPTION "QML Cache Generator"
     TOOLS_TARGET Qml # special case
     SOURCES
-        generateloader.cpp
         qmlcachegen.cpp
     DEFINES
         QT_NO_CAST_FROM_ASCII

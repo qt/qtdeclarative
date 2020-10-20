@@ -4,8 +4,7 @@ QT = qmldevtools-private qmlcompiler-private
 DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII
 
 SOURCES = \
-    qmlcachegen.cpp \
-    generateloader.cpp
+    qmlcachegen.cpp
 
 TARGET = qmlcachegen
 

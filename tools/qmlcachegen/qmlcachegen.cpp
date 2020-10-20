@@ -41,15 +41,12 @@
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljslexer_p.h>
 #include <private/qqmljsresourcefilemapper_p.h>
+#include <private/qqmljsloadergenerator_p.h>
 #include <private/qresourcerelocater_p.h>
 
 #include <algorithm>
 
 using namespace QQmlJS;
-
-bool generateLoader(const QStringList &compiledFiles, const QString &output,
-                    const QStringList &resourceFileMappings, QString *errorString);
-QString symbolNamespaceForPath(const QString &relativePath);
 
 QSet<QString> illegalNames;
 
@@ -392,7 +389,7 @@ static bool saveUnitAsCpp(const QString &inputFileName, const QString &outputFil
     if (!writeStr(QByteArrayLiteral("namespace QmlCacheGeneratedCode {\nnamespace ")))
         return false;
 
-    if (!writeStr(symbolNamespaceForPath(inputFileName).toUtf8()))
+    if (!writeStr(qQmlJSSymbolNamespaceForPath(inputFileName).toUtf8()))
         return false;
 
     if (!writeStr(QByteArrayLiteral(" {\nextern const unsigned char qmlData alignas(16) [] = {\n")))
@@ -514,8 +511,8 @@ int main(int argc, char **argv)
         QQmlJSResourceFileMapper mapper(sources);
 
         Error error;
-        if (!generateLoader(mapper.qmlCompilerFiles(), outputFileName,
-                            parser.values(resourceFileMappingOption), &error.message)) {
+        if (!qQmlJSGenerateLoader(mapper.qmlCompilerFiles(), outputFileName,
+                                  parser.values(resourceFileMappingOption), &error.message)) {
             error.augment(QLatin1String("Error generating loader stub: ")).print();
             return EXIT_FAILURE;
         }
@@ -524,8 +521,8 @@ int main(int argc, char **argv)
 
     if (target == GenerateLoaderStandAlone) {
         Error error;
-        if (!generateLoader(sources, outputFileName,
-                            parser.values(resourceNameOption), &error.message)) {
+        if (!qQmlJSGenerateLoader(sources, outputFileName,
+                                  parser.values(resourceNameOption), &error.message)) {
             error.augment(QLatin1String("Error generating loader stub: ")).print();
             return EXIT_FAILURE;
         }

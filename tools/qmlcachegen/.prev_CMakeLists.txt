@@ -8,7 +8,6 @@ qt_get_tool_target_name(target_name qmlcachegen)
 qt_internal_add_tool(${target_name}
     TARGET_DESCRIPTION "QML Cache Generator"
     SOURCES
-        generateloader.cpp
         qmlcachegen.cpp
     DEFINES
         QT_NO_CAST_FROM_ASCII

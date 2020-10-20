@@ -25,6 +25,9 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
+#include "qqmljsloadergenerator_p.h"
+
 #include <QByteArray>
 #include <QRegularExpression>
 #include <QString>
@@ -37,6 +40,8 @@
 #include <QSaveFile>
 
 #include <algorithm>
+
+QT_BEGIN_NAMESPACE
 
 /*!
  * \internal
@@ -84,7 +89,7 @@ QString mangledIdentifier(const QString &str)
     return mangled;
 }
 
-QString symbolNamespaceForPath(const QString &relativePath)
+QString qQmlJSSymbolNamespaceForPath(const QString &relativePath)
 {
     QFileInfo fi(relativePath);
     QString symbol = fi.path();
@@ -110,8 +115,8 @@ static QString qtResourceNameForFile(const QString &fileName)
     return name;
 }
 
-bool generateLoader(const QStringList &compiledFiles, const QString &outputFileName,
-                    const QStringList &resourceFileMappings, QString *errorString)
+bool qQmlJSGenerateLoader(const QStringList &compiledFiles, const QString &outputFileName,
+                          const QStringList &resourceFileMappings, QString *errorString)
 {
     QByteArray generatedLoaderCode;
 
@@ -125,7 +130,7 @@ bool generateLoader(const QStringList &compiledFiles, const QString &outputFileN
         stream << "namespace QmlCacheGeneratedCode {\n";
         for (int i = 0; i < compiledFiles.count(); ++i) {
             const QString compiledFile = compiledFiles.at(i);
-            const QString ns = symbolNamespaceForPath(compiledFile);
+            const QString ns = qQmlJSSymbolNamespaceForPath(compiledFile);
             stream << "namespace " << ns << " { \n";
             stream << "    extern const unsigned char qmlData[];\n";
             stream << "    const QQmlPrivate::CachedQmlUnit unit = {\n";
@@ -150,7 +155,7 @@ bool generateLoader(const QStringList &compiledFiles, const QString &outputFileN
 
         for (int i = 0; i < compiledFiles.count(); ++i) {
             const QString qrcFile = compiledFiles.at(i);
-            const QString ns = symbolNamespaceForPath(qrcFile);
+            const QString ns = qQmlJSSymbolNamespaceForPath(qrcFile);
             stream << "        resourcePathToCachedUnit.insert(QStringLiteral(\"" << qrcFile << "\"), &QmlCacheGeneratedCode::" << ns << "::unit);\n";
         }
 
@@ -229,3 +234,5 @@ bool generateLoader(const QStringList &compiledFiles, const QString &outputFileN
 
     return true;
 }
+
+QT_END_NAMESPACE

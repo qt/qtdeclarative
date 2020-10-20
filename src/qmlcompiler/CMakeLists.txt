@@ -11,6 +11,7 @@ qt_internal_add_module(QmlCompiler
         qdeferredpointer_p.h
         qqmljsimporter.cpp qqmljsimporter_p.h
         qqmljsimportvisitor.cpp qqmljsimportvisitor_p.h
+        qqmljsloadergenerator.cpp qqmljsloadergenerator_p.h
         qqmljsmetatypes_p.h
         qqmljsresourcefilemapper.cpp qqmljsresourcefilemapper_p.h
         qqmljsscope.cpp qqmljsscope_p.h
