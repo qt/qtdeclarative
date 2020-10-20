@@ -15,8 +15,8 @@ project(QtDeclarative # special case
 set(QT_NO_INTERNAL_COMPATIBILITY_FUNCTIONS TRUE)
 # special case end
 
-find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core Gui Widgets Network # special case
-                                           OPTIONAL_COMPONENTS OpenGL OpenGLWidgets Sql Concurrent Test) # special case
+find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core) # special case
+find_package(Qt6 ${PROJECT_VERSION} QUIET CONFIG OPTIONAL_COMPONENTS Gui Network Widgets OpenGL OpenGLWidgets Sql Concurrent Test) # special case
 
 # special case begin
 # export QT6_ADD_QML_MODULE to this project
