@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
 
 QUntypedPropertyBinding QQmlPropertyBinding::create(const QQmlPropertyData *pd, QV4::Function *function,
                                                     QObject *obj, const QQmlRefPointer<QQmlContextData> &ctxt,
-                                                    QV4::ExecutionContext *scope)
+                                                    QV4::ExecutionContext *scope, QObject *target, QQmlPropertyIndex targetIndex)
 {
     if (auto aotFunction = function->aotFunction; aotFunction && aotFunction->returnType == pd->propType()) {
         return QUntypedPropertyBinding(aotFunction->returnType,
@@ -69,7 +69,7 @@ QUntypedPropertyBinding QQmlPropertyBinding::create(const QQmlPropertyData *pd, 
     }
 
     auto buffer = new std::byte[sizeof(QQmlPropertyBinding)]; // QQmlPropertyBinding uses delete[]
-    auto binding = new (buffer) QQmlPropertyBinding(QMetaType(pd->propType()));
+    auto binding = new(buffer) QQmlPropertyBinding(QMetaType(pd->propType()), target, targetIndex);
     binding->setNotifyOnValueChanged(true);
     binding->setContext(ctxt);
     binding->setScopeObject(obj);
@@ -87,6 +87,7 @@ void QQmlPropertyBinding::expressionChanged()
         err.setLine(location.line);
         err.setColumn(location.column);
         err.setDescription(QString::fromLatin1("Binding loop detected"));
+        err.setObject(target());
         qmlWarning(this->scopeObject(), err);
         return;
     }
@@ -95,11 +96,16 @@ void QQmlPropertyBinding::expressionChanged()
     m_error.setTag(currentTag);
 }
 
-QQmlPropertyBinding::QQmlPropertyBinding(QMetaType mt)
+QQmlPropertyBinding::QQmlPropertyBinding(QMetaType mt, QObject *target, QQmlPropertyIndex targetIndex)
     : QPropertyBindingPrivate(mt,
                               &QtPrivate::bindingFunctionVTable<QQmlPropertyBinding>,
-                              QPropertyBindingSourceLocation())
+                              QPropertyBindingSourceLocation(), true)
 {
+    static_assert (std::is_trivially_destructible_v<TargetData>);
+    static_assert (sizeof(TargetData) + sizeof(DeclarativeErrorCallback) <= sizeof(QPropertyBindingSourceLocation));
+    static_assert (alignof(TargetData) <= alignof(QPropertyBindingSourceLocation));
+    new (&declarativeExtraData) TargetData {target, targetIndex};
+    errorCallBack = bindingErrorCallback;
 }
 
 bool QQmlPropertyBinding::evaluate(QMetaType metaType, void *dataPtr)
@@ -124,6 +130,7 @@ bool QQmlPropertyBinding::evaluate(QMetaType metaType, void *dataPtr)
     if (hasError()) {
         QPropertyBindingError error(QPropertyBindingError::UnknownError, delayedError()->error().description());
         QPropertyBindingPrivate::currentlyEvaluatingBinding()->setError(std::move(error));
+        bindingErrorCallback(this);
         return false;
     }
 
@@ -192,6 +199,57 @@ bool QQmlPropertyBinding::evaluate(QMetaType metaType, void *dataPtr)
     metaType.destruct(dataPtr);
     metaType.construct(dataPtr, resultVariant.constData());
     return hasChanged;
+}
+
+QString QQmlPropertyBinding::createBindingLoopErrorDescription(QJSEnginePrivate *ep)
+{
+    QQmlPropertyData *propertyData = nullptr;
+    QQmlPropertyData valueTypeData;
+    QQmlData *data = QQmlData::get(target(), false);
+    Q_ASSERT(data);
+    if (Q_UNLIKELY(!data->propertyCache)) {
+        data->propertyCache = ep->cache(target()->metaObject());
+        data->propertyCache->addref();
+    }
+    propertyData = data->propertyCache->property(targetIndex().coreIndex());
+    Q_ASSERT(propertyData);
+    Q_ASSERT(!targetIndex().hasValueTypeIndex());
+    QQmlProperty prop = QQmlPropertyPrivate::restore(target(), *propertyData, &valueTypeData, nullptr);
+    return QStringLiteral(R"(QML %1: Binding loop detected for property "%2")").arg(QQmlMetaType::prettyTypeName(target()) , prop.name());
+}
+
+QObject *QQmlPropertyBinding::target()
+{
+    return std::launder(reinterpret_cast<TargetData *>(&declarativeExtraData))->target;
+}
+
+QQmlPropertyIndex QQmlPropertyBinding::targetIndex()
+{
+    return std::launder(reinterpret_cast<TargetData *>(&declarativeExtraData))->targetIndex;
+}
+
+void QQmlPropertyBinding::bindingErrorCallback(QPropertyBindingPrivate *that)
+{
+    auto This = static_cast<QQmlPropertyBinding *>(that);
+    auto target = This->target();
+    auto engine = qmlEngine(target);
+    if (!engine)
+        return;
+    auto ep = QQmlEnginePrivate::get(engine);
+
+    auto error = This->bindingError();
+    QQmlError qmlError;
+    auto location = This->QQmlJavaScriptExpression::sourceLocation();
+    qmlError.setColumn(location.column);
+    qmlError.setLine(location.line);
+    qmlError.setUrl(QUrl {location.sourceFile});
+    auto description = error.description();
+    if (error.type() == QPropertyBindingError::BindingLoop) {
+        description = This->createBindingLoopErrorDescription(ep);
+    }
+    qmlError.setDescription(description);
+    qmlError.setObject(target);
+    ep->warning(qmlError);
 }
 
 QUntypedPropertyBinding QQmlTranslationPropertyBinding::create(const QQmlPropertyData *pd, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding)

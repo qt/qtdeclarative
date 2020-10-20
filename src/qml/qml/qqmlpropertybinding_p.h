@@ -74,7 +74,8 @@ public:
 
     static QUntypedPropertyBinding create(const QQmlPropertyData *pd, QV4::Function *function,
                                           QObject *obj, const QQmlRefPointer<QQmlContextData> &ctxt,
-                                          QV4::ExecutionContext *scope);
+                                          QV4::ExecutionContext *scope, QObject *target,
+                                          QQmlPropertyIndex targetIndex);
 
     void expressionChanged() override;
 
@@ -87,11 +88,21 @@ public:
     }
 
 private:
-    QQmlPropertyBinding(QMetaType metaType);
+    QQmlPropertyBinding(QMetaType metaType, QObject *target, QQmlPropertyIndex targetIndex);
 
     bool evaluate(QMetaType metaType, void *dataPtr);
 
+    QString createBindingLoopErrorDescription(QJSEnginePrivate *ep);
 
+    struct TargetData {
+        QObject *target;
+        QQmlPropertyIndex targetIndex;
+    };
+
+    QObject *target();
+    QQmlPropertyIndex targetIndex();
+
+    static void bindingErrorCallback(QPropertyBindingPrivate *);
 };
 
 template <auto I>

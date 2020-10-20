@@ -922,7 +922,8 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
                 qmlBinding = QQmlTranslationPropertyBinding::create(bindingProperty, compilationUnit, binding);
             } else {
                 QV4::Function *runtimeFunction = compilationUnit->runtimeFunctions[binding->value.compiledScriptIndex];
-                qmlBinding = QQmlPropertyBinding::create(bindingProperty, runtimeFunction, _scopeObject, context, currentQmlContext());
+                QQmlPropertyIndex index(bindingProperty->coreIndex(), -1);
+                qmlBinding = QQmlPropertyBinding::create(bindingProperty, runtimeFunction, _scopeObject, context, currentQmlContext(), _bindingTarget, index);
             }
             sharedState.data()->allQPropertyBindings.emplaceBack(_bindingTarget, bindingProperty->coreIndex(), qmlBinding);
         } else {
