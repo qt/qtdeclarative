@@ -101,6 +101,7 @@ private slots:
     void menuItemWidthAfterImplicitWidthChanged_data();
     void menuItemWidthAfterImplicitWidthChanged();
     void menuItemWidthAfterRetranslate();
+    void giveMenuItemFocusOnButtonPress();
 };
 
 void tst_QQuickMenu::defaults()
@@ -1859,6 +1860,32 @@ void tst_QQuickMenu::menuItemWidthAfterRetranslate()
             qPrintable(QString::fromLatin1("Expected width of %1 to be %2, but it's %3")
                 .arg(item->objectName()).arg(menu->availableWidth()).arg(item->width())));
     }
+}
+
+void tst_QQuickMenu::giveMenuItemFocusOnButtonPress()
+{
+    QQuickApplicationHelper helper(this, QLatin1String("giveMenuItemFocusOnButtonPress.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    // Press enter on the button to open the menu.
+    QQuickButton *menuButton = window->property("menuButton").value<QQuickButton*>();
+    QVERIFY(menuButton);
+    menuButton->forceActiveFocus();
+    QVERIFY(menuButton->hasActiveFocus());
+
+    QSignalSpy clickedSpy(window, SIGNAL(menuButtonClicked()));
+    QVERIFY(clickedSpy.isValid());
+
+    QTest::keyClick(window, Qt::Key_Return);
+    QCOMPARE(clickedSpy.count(), 1);
+
+    // The menu should still be open.
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
+    QVERIFY(menu);
+    QTRY_VERIFY(menu->isOpened());
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickMenu)
