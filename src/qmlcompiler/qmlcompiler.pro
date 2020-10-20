@@ -10,7 +10,8 @@ SOURCES = \
     qqmljstypereader.cpp \
     qqmljsscope.cpp \
     qqmljstypedescriptionreader.cpp \
-    qqmljsstreamwriter.cpp
+    qqmljsstreamwriter.cpp \
+    qresourcerelocater.cpp
 
 HEADERS = \
     qdeferredpointer_p.h \
@@ -21,6 +22,7 @@ HEADERS = \
     qqmljsmetatypes_p.h \
     qqmljsscope_p.h \
     qqmljstypedescriptionreader_p.h \
-    qqmljsstreamwriter_p.h
+    qqmljsstreamwriter_p.h \
+    qresourcerelocater_p.h
 
 load(qt_module)

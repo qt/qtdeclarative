@@ -41,12 +41,12 @@
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljslexer_p.h>
 #include <private/qqmljsresourcefilemapper_p.h>
+#include <private/qresourcerelocater_p.h>
 
 #include <algorithm>
 
 using namespace QQmlJS;
 
-int filterResourceFile(const QString &input, const QString &output);
 bool generateLoader(const QStringList &compiledFiles, const QString &output,
                     const QStringList &resourceFileMappings, QString *errorString);
 QString symbolNamespaceForPath(const QString &relativePath);
@@ -507,9 +507,8 @@ int main(int argc, char **argv)
     if (outputFileName.isEmpty())
         outputFileName = inputFile + QLatin1Char('c');
 
-    if (parser.isSet(filterResourceFileOption)) {
-        return filterResourceFile(inputFile, outputFileName);
-    }
+    if (parser.isSet(filterResourceFileOption))
+        return qRelocateResourceFile(inputFile, outputFileName);
 
     if (target == GenerateLoader) {
         QQmlJSResourceFileMapper mapper(sources);

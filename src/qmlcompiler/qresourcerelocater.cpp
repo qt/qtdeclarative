@@ -25,12 +25,20 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include <QString>
+
+#include "qresourcerelocater_p.h"
+
 #include <QXmlStreamReader>
 #include <QFile>
 #include <QDir>
 
-int filterResourceFile(const QString &input, const QString &output)
+QT_BEGIN_NAMESPACE
+
+/*!
+  Changes all the paths in resource file \a input so that they are relative to
+  location \a output and writes the result to resource file \a output.
+ */
+int qRelocateResourceFile(const QString &input, const QString &output)
 {
     enum State {
         InitialState,
@@ -170,3 +178,5 @@ int filterResourceFile(const QString &input, const QString &output)
 
     return EXIT_SUCCESS;
 }
+
+QT_END_NAMESPACE
