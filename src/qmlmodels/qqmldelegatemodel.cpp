@@ -2061,7 +2061,7 @@ QQmlDelegateModelItemMetaType::~QQmlDelegateModelItemMetaType()
 void QQmlDelegateModelItemMetaType::initializeMetaObject()
 {
     QMetaObjectBuilder builder;
-    builder.setFlags(QMetaObjectBuilder::DynamicMetaObject);
+    builder.setFlags(DynamicMetaObject);
     builder.setClassName(QQmlDelegateModelAttached::staticMetaObject.className());
     builder.setSuperClass(&QQmlDelegateModelAttached::staticMetaObject);
 

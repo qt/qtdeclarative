@@ -1612,7 +1612,7 @@ QList<QQmlProxyMetaObject::ProxyData> QQmlMetaType::proxyData(const QMetaObject 
                 if (t->extraData.cd->extFunc) {
                     QMetaObjectBuilder builder;
                     clone(builder, t->extraData.cd->extMetaObject, t->baseMetaObject, baseMetaObject);
-                    builder.setFlags(QMetaObjectBuilder::DynamicMetaObject);
+                    builder.setFlags(MetaObjectFlag::DynamicMetaObject);
                     QMetaObject *mmo = builder.toMetaObject();
                     mmo->d.superdata = baseMetaObject;
                     if (!metaObjects.isEmpty())

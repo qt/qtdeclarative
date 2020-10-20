@@ -166,7 +166,7 @@ void QQmlOpenMetaObjectTypePrivate::init(const QMetaObject *metaObj)
     if (!mem) {
         mob.setSuperClass(metaObj);
         mob.setClassName(metaObj->className());
-        mob.setFlags(QMetaObjectBuilder::DynamicMetaObject);
+        mob.setFlags(MetaObjectFlag::DynamicMetaObject);
 
         mem = mob.toMetaObject();
 

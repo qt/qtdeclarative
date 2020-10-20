@@ -221,7 +221,7 @@ void QQmlTypePrivate::init() const
             QMetaObjectBuilder builder;
             QQmlMetaType::clone(builder, extraData.cd->extMetaObject, extraData.cd->extMetaObject,
                                 extraData.cd->extMetaObject);
-            builder.setFlags(QMetaObjectBuilder::DynamicMetaObject);
+            builder.setFlags(MetaObjectFlag::DynamicMetaObject);
             QMetaObject *mmo = builder.toMetaObject();
             mmo->d.superdata = mo;
             QQmlProxyMetaObject::ProxyData data = { mmo, extraData.cd->extFunc, 0, 0 };

@@ -72,7 +72,7 @@ static QV4::ReturnedValue get_index(const QV4::FunctionObject *f, const QV4::Val
 
 template <typename T, typename M> static void setModelDataType(QMetaObjectBuilder *builder, M *metaType)
 {
-    builder->setFlags(QMetaObjectBuilder::DynamicMetaObject);
+    builder->setFlags(MetaObjectFlag::DynamicMetaObject);
     builder->setClassName(T::staticMetaObject.className());
     builder->setSuperClass(&T::staticMetaObject);
     metaType->propertyOffset = T::staticMetaObject.propertyCount();
@@ -770,7 +770,7 @@ public:
                 | QMetaObjectBuilder::SuperClass
                 | QMetaObjectBuilder::ClassName)
     {
-        builder.setFlags(QMetaObjectBuilder::DynamicMetaObject);
+        builder.setFlags(MetaObjectFlag::DynamicMetaObject);
     }
 
     int rowCount(const QQmlAdaptorModel &model) const override
