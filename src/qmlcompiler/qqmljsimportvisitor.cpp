@@ -84,6 +84,7 @@ QQmlJSScope::Ptr QQmlJSImportVisitor::result() const
         result->addEnum(enumerator);
 
     result->resolveTypes(m_rootScopeImports);
+    result->setSourceLocation(m_qmlRootScope->sourceLocation());
     return result;
 }
 
