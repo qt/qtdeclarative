@@ -234,6 +234,9 @@ void QQmlJSImporter::processImport(
  */
 QQmlJSImporter::ImportedTypes QQmlJSImporter::importBuiltins()
 {
+    if (!m_builtins.isEmpty())
+        return m_builtins;
+
     AvailableTypes types;
 
     for (auto const &dir : m_importPaths) {
@@ -246,7 +249,8 @@ QQmlJSImporter::ImportedTypes QQmlJSImporter::importBuiltins()
         processImport(result, &types);
     }
 
-    return types.qmlNames;
+    m_builtins = types.qmlNames;
+    return m_builtins;
 }
 
 /*!

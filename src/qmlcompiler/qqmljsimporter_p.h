@@ -105,6 +105,7 @@ private:
     QHash<QPair<QString, QTypeRevision>, Import> m_seenImports;
     QHash<QString, QQmlJSScope::Ptr> m_importedFiles;
     QList<QQmlJS::DiagnosticMessage> m_warnings;
+    ImportedTypes m_builtins;
 };
 
 QT_END_NAMESPACE
