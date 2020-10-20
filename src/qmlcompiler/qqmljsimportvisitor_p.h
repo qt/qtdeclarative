@@ -55,6 +55,7 @@ public:
 
     QQmlJSScope::Ptr result() const;
     QList<QQmlJS::DiagnosticMessage> errors() const { return m_errors; }
+    QHash<QString, QQmlJSScope::ConstPtr> imports() const { return m_rootScopeImports; }
 
 protected:
     bool visit(QQmlJS::AST::UiProgram *) override;
