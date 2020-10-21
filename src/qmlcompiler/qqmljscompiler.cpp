@@ -228,12 +228,14 @@ bool qCompileQmlFile(const QString &inputFileName, QQmlJSSaveFunction saveFuncti
                     break;
                 }
 
+                qCDebug(lcAotCompiler) << "Compiling binding for property"
+                                       << irDocument.stringAt(binding.propertyNameIndex);
                 auto result = aotCompiler->compileBinding(binding);
                 if (auto *error = std::get_if<QQmlJS::DiagnosticMessage>(&result)) {
-                    qCDebug(lcAotCompiler()) << "Could not compile binding:"
+                    qCDebug(lcAotCompiler) << "Could not compile binding:"
                                              << diagnosticErrorMessage(inputFileName, *error);
                 } else if (auto *func = std::get_if<QQmlJSAotFunction>(&result)) {
-                    qCInfo(lcAotCompiler()) << "Generated code:" << func->code;
+                    qCInfo(lcAotCompiler) << "Generated code:" << func->code;
                     aotFunctionsByIndex[runtimeFunctionIndices[binding.value.compiledScriptIndex]] = *func;
                 }
             });
