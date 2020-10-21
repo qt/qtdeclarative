@@ -1494,9 +1494,9 @@ void tst_QQuickItem::standardKeys()
     QQuickItem *item = qobject_cast<QQuickItem*>(view.rootObject());
     QVERIFY(item);
 
-    const int key = keySequence[0] & Qt::Key_unknown;
-    const int modifiers = keySequence[0] & Qt::KeyboardModifierMask;
-    QKeyEvent keyEvent(eventType, key, static_cast<Qt::KeyboardModifiers>(modifiers));
+    const int key = keySequence[0].key();
+    Qt::KeyboardModifiers modifiers = keySequence[0].keyboardModifiers();
+    QKeyEvent keyEvent(eventType, key, modifiers);
     QGuiApplication::sendEvent(&view, &keyEvent);
 
     QCOMPARE(item->property("pressed").toBool(), pressed);
