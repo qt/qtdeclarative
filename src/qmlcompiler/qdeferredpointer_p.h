@@ -96,7 +96,7 @@ public:
 
     T *data() const { return QSharedPointer<T>(*this).data(); }
 
-    friend qsizetype qHash(const QDeferredSharedPointer &ptr, qsizetype seed = 0)
+    friend size_t qHash(const QDeferredSharedPointer &ptr, size_t seed = 0)
     {
         return qHashMulti(seed, ptr.m_factory, ptr.m_data);
     }
@@ -167,7 +167,7 @@ public:
 
     T *data() const { return QWeakPointer<T>(*this).data(); }
 
-    friend qsizetype qHash(const QDeferredWeakPointer &ptr, qsizetype seed = 0)
+    friend size_t qHash(const QDeferredWeakPointer &ptr, size_t seed = 0)
     {
         return qHashMulti(seed, ptr.m_factory, ptr.m_data);
     }
