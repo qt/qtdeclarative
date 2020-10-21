@@ -371,7 +371,7 @@ public:
     // specified object. Used for declarations inside group properties.
     Object *declarationsOverride;
 
-    void init(QQmlJS::MemoryPool *pool, int typeNameIndex, int idIndex, const QQmlJS::SourceLocation &location = QQmlJS::SourceLocation());
+    void init(QQmlJS::MemoryPool *pool, int typeNameIndex, int idIndex, const QV4::CompiledData::Location &location);
 
     QString appendEnum(Enum *enumeration);
     QString appendSignal(Signal *signal);
@@ -492,9 +492,21 @@ public:
     void accept(QQmlJS::AST::Node *node);
 
     // returns index in _objects
-    bool defineQMLObject(int *objectIndex, QQmlJS::AST::UiQualifiedId *qualifiedTypeNameId, const QQmlJS::SourceLocation &location, QQmlJS::AST::UiObjectInitializer *initializer, Object *declarationsOverride = nullptr);
-    bool defineQMLObject(int *objectIndex, QQmlJS::AST::UiObjectDefinition *node, Object *declarationsOverride = nullptr)
-    { return defineQMLObject(objectIndex, node->qualifiedTypeNameId, node->qualifiedTypeNameId->firstSourceLocation(), node->initializer, declarationsOverride); }
+    bool defineQMLObject(
+            int *objectIndex, QQmlJS::AST::UiQualifiedId *qualifiedTypeNameId,
+            const QV4::CompiledData::Location &location,
+            QQmlJS::AST::UiObjectInitializer *initializer, Object *declarationsOverride = nullptr);
+
+    bool defineQMLObject(
+            int *objectIndex, QQmlJS::AST::UiObjectDefinition *node,
+            Object *declarationsOverride = nullptr)
+    {
+        const QQmlJS::SourceLocation location = node->qualifiedTypeNameId->firstSourceLocation();
+        return defineQMLObject(
+                    objectIndex, node->qualifiedTypeNameId,
+                    { location.startLine, location.startColumn }, node->initializer,
+                    declarationsOverride);
+    }
 
     static QString asString(QQmlJS::AST::UiQualifiedId *node);
     QStringView asStringRef(QQmlJS::AST::Node *node);

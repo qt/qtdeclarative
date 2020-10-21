@@ -871,8 +871,10 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
         compiler->addImport(componentType.module(), qualifier, componentType.version());
 
         QmlIR::Object *syntheticComponent = pool->New<QmlIR::Object>();
-        syntheticComponent->init(pool, compiler->registerString(qualifier + QLatin1Char('.') + componentType.elementName()), compiler->registerString(QString()));
-        syntheticComponent->location = binding->valueLocation;
+        syntheticComponent->init(
+                    pool,
+                    compiler->registerString(qualifier + QLatin1Char('.') + componentType.elementName()),
+                    compiler->registerString(QString()), binding->valueLocation);
         syntheticComponent->flags |= QV4::CompiledData::Object::IsComponent;
 
         if (!containsResolvedType(syntheticComponent->inheritedTypeNameIndex)) {

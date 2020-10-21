@@ -91,14 +91,14 @@ private:
 QmlIR::Object *QQmlIRLoader::loadObject(const QV4::CompiledData::Object *serializedObject)
 {
     QmlIR::Object *object = pool->New<QmlIR::Object>();
-    object->init(pool, serializedObject->inheritedTypeNameIndex, serializedObject->idNameIndex);
+    object->init(pool, serializedObject->inheritedTypeNameIndex, serializedObject->idNameIndex,
+                 serializedObject->location);
 
     object->indexOfDefaultPropertyOrAlias = serializedObject->indexOfDefaultPropertyOrAlias;
     object->defaultPropertyIsAlias = serializedObject->defaultPropertyIsAlias;
     object->isInlineComponent = serializedObject->flags & QV4::CompiledData::Object::IsInlineComponentRoot;
     object->flags = serializedObject->flags;
     object->id = serializedObject->id;
-    object->location = serializedObject->location;
     object->locationOfIdProperty = serializedObject->locationOfIdProperty;
 
     QVector<int> functionIndices;

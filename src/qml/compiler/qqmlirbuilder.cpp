@@ -169,13 +169,12 @@ QV4::CompiledData::BuiltinType Parameter::stringToBuiltinType(const QString &typ
     return QV4::CompiledData::BuiltinType::InvalidBuiltin;
 }
 
-void Object::init(QQmlJS::MemoryPool *pool, int typeNameIndex, int idIndex, const QQmlJS::SourceLocation &loc)
+void Object::init(QQmlJS::MemoryPool *pool, int typeNameIndex, int idIndex,
+                  const QV4::CompiledData::Location &loc)
 {
+    Q_ASSERT(loc.line > 0 && loc.column > 0);
     inheritedTypeNameIndex = typeNameIndex;
-
-    location.line = loc.startLine;
-    location.column = loc.startColumn;
-
+    location = loc;
     idNameIndex = idIndex;
     id = -1;
     indexOfDefaultPropertyOrAlias = -1;
@@ -535,8 +534,13 @@ bool IRBuilder::visit(QQmlJS::AST::UiObjectDefinition *node)
         appendBinding(nameLocation, nameLocation, emptyStringIndex, idx);
     } else {
         int idx = 0;
-        if (!defineQMLObject(&idx, /*qualfied type name id*/nullptr, node->qualifiedTypeNameId->firstSourceLocation(), node->initializer, /*declarations should go here*/_object))
+        const QQmlJS::SourceLocation location = node->qualifiedTypeNameId->firstSourceLocation();
+        if (!defineQMLObject(
+                    &idx, /*qualfied type name id*/nullptr,
+                    { location.startLine, location.startColumn }, node->initializer,
+                    /*declarations should go here*/_object)) {
             return false;
+        }
         appendBinding(node->qualifiedTypeNameId, idx);
     }
     return false;
@@ -578,8 +582,11 @@ bool IRBuilder::visit(QQmlJS::AST::UiInlineComponent *ast)
 bool IRBuilder::visit(QQmlJS::AST::UiObjectBinding *node)
 {
     int idx = 0;
-    if (!defineQMLObject(&idx, node->qualifiedTypeNameId, node->qualifiedTypeNameId->firstSourceLocation(), node->initializer))
+    const QQmlJS::SourceLocation location = node->qualifiedTypeNameId->firstSourceLocation();
+    if (!defineQMLObject(&idx, node->qualifiedTypeNameId,
+                         { location.startLine, location.startColumn }, node->initializer)) {
         return false;
+    }
     appendBinding(node->qualifiedId, idx, node->hasOnToken);
     return false;
 }
@@ -657,7 +664,10 @@ void IRBuilder::accept(QQmlJS::AST::Node *node)
     QQmlJS::AST::Node::accept(node, this);
 }
 
-bool IRBuilder::defineQMLObject(int *objectIndex, QQmlJS::AST::UiQualifiedId *qualifiedTypeNameId, const QQmlJS::SourceLocation &location, QQmlJS::AST::UiObjectInitializer *initializer, Object *declarationsOverride)
+bool IRBuilder::defineQMLObject(
+        int *objectIndex, QQmlJS::AST::UiQualifiedId *qualifiedTypeNameId,
+        const QV4::CompiledData::Location &location, QQmlJS::AST::UiObjectInitializer *initializer,
+        Object *declarationsOverride)
 {
     if (QQmlJS::AST::UiQualifiedId *lastName = qualifiedTypeNameId) {
         while (lastName->next)
@@ -1509,7 +1519,7 @@ bool IRBuilder::resolveQualifiedId(QQmlJS::AST::UiQualifiedId **nameToResolve, O
                 binding->type = QV4::CompiledData::Binding::Type_GroupProperty;
 
             int objIndex = 0;
-            if (!defineQMLObject(&objIndex, nullptr, QQmlJS::SourceLocation(), nullptr, nullptr))
+            if (!defineQMLObject(&objIndex, nullptr, binding->location, nullptr, nullptr))
                 return false;
             binding->value.objectIndex = objIndex;
 
