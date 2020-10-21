@@ -98,6 +98,10 @@ private:
 
     void throwRecursionDepthError() override;
 
+    // work around compiler error in clang11
+    using QQmlJSImportVisitor::visit;
+    using QQmlJSImportVisitor::endVisit;
+
     // start block/scope handling
     bool visit(QQmlJS::AST::ExpressionStatement *ast) override;
     void endVisit(QQmlJS::AST::ExpressionStatement *ast) override;

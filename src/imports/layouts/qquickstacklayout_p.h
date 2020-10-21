@@ -92,12 +92,12 @@ private:
 
     QList<QQuickItem*> m_items;
 
-    typedef struct {
+    struct SizeHints {
         inline QSizeF &min() { return array[Qt::MinimumSize]; }
         inline QSizeF &pref() { return array[Qt::PreferredSize]; }
         inline QSizeF &max() { return array[Qt::MaximumSize]; }
         QSizeF array[Qt::NSizeHints];
-    } SizeHints;
+    };
 
     mutable QVector<SizeHints> m_cachedItemSizeHints;
     mutable QSizeF m_cachedSizeHints[Qt::NSizeHints];
