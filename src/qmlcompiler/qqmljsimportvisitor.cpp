@@ -51,7 +51,10 @@ void QQmlJSImportVisitor::enterEnvironment(QQmlJSScope::ScopeType type, const QS
                                            const QQmlJS::SourceLocation &location)
 {
     m_currentScope = QQmlJSScope::create(type, m_currentScope);
-    m_currentScope->setBaseTypeName(name);
+    if (type == QQmlJSScope::GroupedPropertyScope)
+        m_currentScope->setInternalName(name);
+    else
+        m_currentScope->setBaseTypeName(name);
     m_currentScope->setIsComposite(true);
     m_currentScope->setSourceLocation(location);
 }
@@ -126,6 +129,7 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
 
 void QQmlJSImportVisitor::endVisit(UiObjectDefinition *)
 {
+    m_currentScope->resolveGroupedScopes();
     leaveEnvironment();
 }
 
@@ -235,11 +239,27 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::ClassExpression *)
 
 bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
 {
-    if (scriptBinding->qualifiedId->name == QLatin1String("id")) {
+    const auto id = scriptBinding->qualifiedId;
+    if (!id->next && id->name == QLatin1String("id")) {
         const auto *statement = cast<ExpressionStatement *>(scriptBinding->statement);
         const auto *idExprension = cast<IdentifierExpression *>(statement->expression);
         m_scopesById.insert(idExprension->name.toString(), m_currentScope);
+    } else {
+        for (auto group = id; group->next; group = group->next) {
+            const QString name = group->name.toString();
+
+            if (name.isEmpty() || name.front().isUpper())
+                break; // TODO: uppercase grouped scopes are attached properties. Handle them.
+
+            enterEnvironment(QQmlJSScope::GroupedPropertyScope, name, group->firstSourceLocation());
+        }
+
+        // TODO: remember the actual binding, once we can process it.
+
+        while (m_currentScope->scopeType() == QQmlJSScope::GroupedPropertyScope)
+            leaveEnvironment();
     }
+
     return true;
 }
 
@@ -448,6 +468,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
 
 void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
 {
+    m_currentScope->resolveGroupedScopes();
     const QQmlJSScope::ConstPtr childScope = m_currentScope;
     leaveEnvironment();
 

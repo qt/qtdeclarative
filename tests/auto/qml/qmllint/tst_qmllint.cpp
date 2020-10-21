@@ -222,11 +222,11 @@ void TestQmllint::dirtyQmlCode_data()
             << QString();
     QTest::newRow("nanchors2")
             << QStringLiteral("nanchors2.qml")
-            << QString()
+            << QString("unknown grouped property scope nanchors.")
             << QString();
     QTest::newRow("nanchors3")
             << QStringLiteral("nanchors3.qml")
-            << QString()
+            << QString("unknown grouped property scope nanchors.")
             << QString();
     QTest::newRow("badAliasObject")
             << QStringLiteral("badAliasObject.qml")
@@ -246,9 +246,7 @@ void TestQmllint::dirtyQmlCode()
         QVERIFY(process.waitForFinished());
         QCOMPARE(process.exitStatus(), QProcess::NormalExit);
         QEXPECT_FAIL("anchors3", "We don't see that QQuickItem cannot be assigned to QQuickAnchorLine", Abort);
-        QEXPECT_FAIL("nanchors1", "Invalid grouped properties are not detected", Abort);
-        QEXPECT_FAIL("nanchors2", "Invalid grouped properties are not detected", Abort);
-        QEXPECT_FAIL("nanchors3", "Invalid grouped properties are not detected", Abort);
+        QEXPECT_FAIL("nanchors1", "Invalid grouped properties are not always detected", Abort);
         QVERIFY(process.exitCode() != 0);
     });
 

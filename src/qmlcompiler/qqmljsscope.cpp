@@ -168,6 +168,27 @@ void QQmlJSScope::resolveTypes(const QHash<QString, QQmlJSScope::ConstPtr> &cont
     }
 }
 
+void QQmlJSScope::resolveGroupedScopes()
+{
+    for (auto it = m_childScopes.begin(), end = m_childScopes.end(); it != end; ++it) {
+        QQmlJSScope::Ptr childScope = *it;
+        if (childScope->scopeType() != QQmlJSScope::GroupedPropertyScope)
+            continue;
+
+        const QString propertyName = childScope->internalName();
+        for (const QQmlJSScope *type = this; type; type = type->baseType().data()) {
+            auto propertyIt = type->m_properties.find(propertyName);
+            if (propertyIt != type->m_properties.end()) {
+                childScope->m_baseType = QQmlJSScope::ConstPtr(propertyIt->type());
+                childScope->m_baseTypeName = propertyIt->typeName();
+                break;
+            }
+        }
+
+        childScope->resolveGroupedScopes();
+    }
+}
+
 QQmlJSScope::ConstPtr QQmlJSScope::findCurrentQMLScope(const QQmlJSScope::ConstPtr &scope)
 {
     auto qmlScope = scope;
