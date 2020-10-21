@@ -85,6 +85,6 @@ but not all the files it references.
         list(APPEND compiler_output ${loader_source})
     endif()
 
-    qt5_add_resources(output_resources ${filtered_rcc_files} OPTIONS ${options})
+    qt5_add_resources(output_resources ${filtered_rcc_files} OPTIONS ${rcc_options})
     set(${outfiles} ${output_resources} ${compiler_output} PARENT_SCOPE)
 endfunction()
