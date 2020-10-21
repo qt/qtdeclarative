@@ -3782,7 +3782,7 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
           << itemPriv->clipNode()
           << itemPriv->rootNode()
           << itemPriv->paintNode;
-    nodes.removeAll(0);
+    nodes.removeAll(nullptr);
 
     Q_ASSERT(nodes.constFirst() == itemPriv->itemNodeInstance);
     for (int i=1; i<nodes.size(); ++i) {
