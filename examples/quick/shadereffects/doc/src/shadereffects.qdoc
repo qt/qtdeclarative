@@ -51,13 +51,14 @@
     shader:
     \snippet shadereffects/shadereffects.qml fragment
 
-    In order to support multiple graphics APIs, not just OpenGL, the shader
-    source is not embedded into QML. When running with the graphics API
-    independent scene graph, the actual file in use is a pre-generated shader
-    pack containing multiple variants of the shader code. The appropriate
-    shader is then chosen by Qt Quick, regardless of running on Vulkan, Metal,
-    Direct 3D, or OpenGL. Qt automatically selects the file under the \c qsb
-    selector, for example \c{shaders/+qsb/wobble.frag}, when present.
+    In order to support multiple graphics APIs, not just OpenGL, the
+    shader source is not embedded into QML.  The referenced \c{.qsb}
+    file is a pre-generated shader pack containing multiple variants
+    of the shader code. The appropriate shader is then chosen by Qt
+    Quick at run time, depending on the graphics API (Vulkan, Metal,
+    Direct3D 11, or OpenGL) used at run time. The .qsb file is
+    generated offline and is bundled with the executable via the Qt
+    Resource System.
 
     You can use any custom property on the ShaderEffect in your shader. This
     makes animated shader code very easy:
