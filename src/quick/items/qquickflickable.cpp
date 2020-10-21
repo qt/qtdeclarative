@@ -2382,15 +2382,9 @@ void QQuickFlickablePrivate::addPointerHandler(QQuickPointerHandler *h)
 */
 bool QQuickFlickable::filterMouseEvent(QQuickItem *receiver, QMouseEvent *event)
 {
+    Q_ASSERT_X(receiver != this, "", "Flickable received a filter event for itself");
     Q_D(QQuickFlickable);
     QPointF localPos = mapFromScene(event->scenePosition());
-
-    Q_ASSERT_X(receiver != this, "", "Flickable received a filter event for itself");
-    if (receiver == this && d->stealMouse) {
-        // we are already the grabber and we do want the mouse event to ourselves.
-        return true;
-    }
-
     bool receiverDisabled = receiver && !receiver->isEnabled();
     bool stealThisEvent = d->stealMouse;
     bool receiverKeepsGrab = receiver && (receiver->keepMouseGrab() || receiver->keepTouchGrab());
