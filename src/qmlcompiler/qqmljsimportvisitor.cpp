@@ -30,6 +30,7 @@
 
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qdir.h>
+#include <QtCore/qqueue.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -60,32 +61,33 @@ void QQmlJSImportVisitor::leaveEnvironment()
     m_currentScope = m_currentScope->parentScope();
 }
 
+void QQmlJSImportVisitor::resolveAliases()
+{
+    QQueue<QQmlJSScope::Ptr> objects;
+    objects.enqueue(m_qmlRootScope);
+
+    while (!objects.isEmpty()) {
+        const QQmlJSScope::Ptr object = objects.dequeue();
+        const auto properties = object->properties();
+        for (auto property : properties) {
+            if (!property.isAlias())
+                continue;
+            const auto it = m_scopesById.find(property.typeName());
+            if (it != m_scopesById.end()) {
+                property.setType(QQmlJSScope::ConstPtr(*it));
+                object->addProperty(property);
+            }
+        }
+
+        const auto childScopes = object->childScopes();
+        for (const auto &childScope : childScopes)
+            objects.enqueue(childScope);
+    }
+}
+
 QQmlJSScope::Ptr QQmlJSImportVisitor::result() const
 {
-    QQmlJSScope::Ptr result = QQmlJSScope::create();
-    result->setIsComposite(true);
-    result->setBaseTypeName(m_qmlRootScope->baseTypeName());
-    const auto properties = m_qmlRootScope->properties();
-    for (auto property : properties) {
-        if (property.isAlias()) {
-            const auto it = m_scopesById.find(property.typeName());
-            if (it != m_scopesById.end())
-                property.setType(QQmlJSScope::ConstPtr(*it));
-            result->addProperty(property);
-        } else {
-            result->addProperty(property);
-        }
-    }
-
-    for (const auto &method : m_qmlRootScope->methods())
-        result->addMethod(method);
-
-    for (const auto &enumerator : m_qmlRootScope->enums())
-        result->addEnum(enumerator);
-
-    result->resolveTypes(m_rootScopeImports);
-    result->setSourceLocation(m_qmlRootScope->sourceLocation());
-    return result;
+    return m_qmlRootScope;
 }
 
 void QQmlJSImportVisitor::importExportedNames(QQmlJSScope::ConstPtr scope)
@@ -124,6 +126,11 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiProgram *)
 
     m_errors.append(m_importer->takeWarnings());
     return true;
+}
+
+void QQmlJSImportVisitor::endVisit(UiProgram *)
+{
+    resolveAliases();
 }
 
 bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)

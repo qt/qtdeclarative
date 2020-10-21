@@ -228,6 +228,10 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("nanchors3.qml")
             << QString()
             << QString();
+    QTest::newRow("badAliasObject")
+            << QStringLiteral("badAliasObject.qml")
+            << QString("Warning: Property \"wrongwrongwrong\" not found on type \"QtObject\"")
+            << QString();
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -287,6 +291,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("anchors1") << QStringLiteral("anchors1.qml");
     QTest::newRow("anchors2") << QStringLiteral("anchors2.qml");
     QTest::newRow("optionalImport") << QStringLiteral("optionalImport.qml");
+    QTest::newRow("goodAliasObject") << QStringLiteral("goodAliasObject.qml");
 }
 
 void TestQmllint::cleanQmlCode()

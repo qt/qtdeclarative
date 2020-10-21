@@ -59,6 +59,7 @@ public:
 
 protected:
     bool visit(QQmlJS::AST::UiProgram *) override;
+    void endVisit(QQmlJS::AST::UiProgram *) override;
     bool visit(QQmlJS::AST::UiObjectDefinition *) override;
     void endVisit(QQmlJS::AST::UiObjectDefinition *) override;
     bool visit(QQmlJS::AST::UiPublicMember *) override;
@@ -97,7 +98,7 @@ protected:
     QString m_implicitImportDirectory;
     QStringList m_qmltypesFiles;
     QQmlJSScope::Ptr m_currentScope;
-    QQmlJSScope::ConstPtr m_qmlRootScope;
+    QQmlJSScope::Ptr m_qmlRootScope;
     QQmlJSScope::ConstPtr m_globalScope;
     QHash<QString, QQmlJSScope::ConstPtr> m_scopesById;
     QHash<QString, QQmlJSScope::ConstPtr> m_rootScopeImports;
@@ -110,6 +111,7 @@ protected:
     void leaveEnvironment();
 
 private:
+    void resolveAliases();
     void visitFunctionExpressionHelper(QQmlJS::AST::FunctionExpression *fexpr);
     void importExportedNames(QQmlJSScope::ConstPtr scope);
 };
