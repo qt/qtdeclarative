@@ -91,9 +91,6 @@ private:
     QVarLengthArray<OutstandingConnection, 3> m_outstandingConnections; // Connections whose target we have not encountered
 
     void checkInheritanceCycle(QQmlJSScope::ConstPtr scope);
-
-    void parseHeaders(QQmlJS::AST::UiHeaderItemList *headers);
-    QQmlJSScope::Ptr parseProgram(QQmlJS::AST::Program *program, const QString &name);
     void flushPendingSignalParameters();
 
     void throwRecursionDepthError() override;
