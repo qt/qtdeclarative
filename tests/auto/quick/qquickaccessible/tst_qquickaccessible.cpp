@@ -117,11 +117,13 @@ void tst_QQuickAccessible::cleanup()
 {
     const EventList list = QTestAccessibility::events();
     if (!list.isEmpty()) {
-        qWarning("%d accessibility event(s) were not handled in testfunction '%s':", list.count(),
-                 QString(QTest::currentTestFunction()).toLatin1().constData());
+        qWarning().noquote() << list.count()
+                             << "accessibility event(s) were not handled in testfunction '"
+                             << QTest::currentTestFunction() << "':";
         for (int i = 0; i < list.count(); ++i)
-            qWarning(" %d: Object: %p Event: '%s' Child: %d", i + 1, list.at(i)->object(),
-                     qAccessibleEventString(list.at(i)->type()), list.at(i)->child());
+            qWarning().noquote() << " " << (i + 1) << ": Object: " << list.at(i)->object()
+                       << "Event: '" << qAccessibleEventString(list.at(i)->type())
+                       << "' Child: " << list.at(i)->child();
     }
     QTestAccessibility::clearEvents();
 }

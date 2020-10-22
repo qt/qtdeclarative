@@ -610,9 +610,8 @@ static bool compareStates(const StateChangeListener& spy, const StateList &expec
             }
 
         }
-        qDebug("\n"
-               "expected (count == %d): %s\n"
-               "actual   (count == %d): %s\n", expectedStates.count(), qPrintable(e), spy.count(), qPrintable(a));
+        qDebug().noquote() << "\nexpected (count == " << expectedStates.count() << "): " << e
+                           << "\nactual   (count == " << spy.count() << "): " << a << "\n";
     }
     return equals;
 }

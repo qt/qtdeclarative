@@ -792,7 +792,7 @@ void tst_qquickflickable::resizeContent()
     QSizeChangeListener sizeListener(fp->contentItem);
 
     QMetaObject::invokeMethod(root, "resizeContent");
-    for (const QSize sizeOnGeometryChanged : sizeListener) {
+    for (const QSize &sizeOnGeometryChanged : sizeListener) {
         // Check that we have the correct size on all signals
         QCOMPARE(sizeOnGeometryChanged, QSize(600, 600));
     }

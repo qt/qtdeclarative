@@ -68,7 +68,7 @@ void tst_qqmltranslation::translation()
     QFETCH(bool, verifyCompiledData);
 
     QTranslator translator;
-    translator.load(translation, dataDirectory());
+    QVERIFY(translator.load(translation, dataDirectory()));
     QCoreApplication::installTranslator(&translator);
 
     QQmlEngine engine;
@@ -128,7 +128,7 @@ void tst_qqmltranslation::translation()
 void tst_qqmltranslation::idTranslation()
 {
     QTranslator translator;
-    translator.load(QLatin1String("qmlid_fr"), dataDirectory());
+    QVERIFY(translator.load(QLatin1String("qmlid_fr"), dataDirectory()));
     QCoreApplication::installTranslator(&translator);
 
     QQmlEngine engine;

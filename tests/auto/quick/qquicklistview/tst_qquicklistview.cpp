@@ -5489,9 +5489,9 @@ void tst_QQuickListView::headerSnapToItem()
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, startPos, 200);     // Wait 200 ms before we release to avoid trigger a flick
 
     // wait for the "fixup" animation to finish
-    QTest::qWaitFor([&]()
+    QVERIFY(QTest::qWaitFor([&]()
         { return !listview->isMoving();}
-    );
+    ));
 
     QCOMPARE(listview->contentPosition(), expectedContentPosition);
     QCOMPARE(listview->headerPosition(),  expectedHeaderPosition);
