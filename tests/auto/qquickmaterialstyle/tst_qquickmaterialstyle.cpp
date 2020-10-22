@@ -60,7 +60,7 @@ public slots:
 
     void qmlWarnings(const QList<QQmlError> &warnings)
     {
-        for (const auto error : warnings) {
+        for (const auto &error : warnings) {
             if (error.messageType() == QtWarningMsg && error.description().contains(QStringLiteral("Binding loop detected")))
                 mBindingLoopDetected = true;
         }
