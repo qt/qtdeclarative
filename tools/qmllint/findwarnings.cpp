@@ -192,7 +192,7 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
     if (signal.isEmpty())
         return true;
 
-    if (!m_currentScope->methods().contains(signal) && m_warnUnqualified) {
+    if (!m_currentScope->hasMethod(signal) && m_warnUnqualified) {
         m_errors.append({
                             QStringLiteral("no matching signal found for handler \"%1\"\n")
                                .arg(name.toString()),
@@ -212,18 +212,20 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
         }
     }
 
-    const auto methods = m_currentScope->methods();
-    const auto methodsRange = methods.equal_range(signal);
-    for (auto method = methodsRange.first; method != methodsRange.second; ++method) {
-        if (method->methodType() != QQmlJSMetaMethod::Signal)
-            continue;
+    for (QQmlJSScope::ConstPtr scope = m_currentScope; scope; scope = scope->baseType()) {
+        const auto methods = scope->ownMethods();
+        const auto methodsRange = methods.equal_range(signal);
+        for (auto method = methodsRange.first; method != methodsRange.second; ++method) {
+            if (method->methodType() != QQmlJSMetaMethod::Signal)
+                continue;
 
-        const auto firstSourceLocation = statement->firstSourceLocation();
-        bool hasMultilineStatementBody
-                = statement->lastSourceLocation().startLine > firstSourceLocation.startLine;
-        m_pendingSingalHandler = firstSourceLocation;
-        m_signalHandlers.insert(firstSourceLocation, {*method, hasMultilineStatementBody});
-        break; // If there are multiple candidates for the signal, it's a mess anyway.
+            const auto firstSourceLocation = statement->firstSourceLocation();
+            bool hasMultilineStatementBody
+                    = statement->lastSourceLocation().startLine > firstSourceLocation.startLine;
+            m_pendingSingalHandler = firstSourceLocation;
+            m_signalHandlers.insert(firstSourceLocation, {*method, hasMultilineStatementBody});
+            return true; // If there are multiple candidates for the signal, it's a mess anyway.
+        }
     }
 
     return true;
@@ -319,8 +321,14 @@ bool FindWarningVisitor::check()
     // now that all ids are known, revisit any Connections whose target were perviously unknown
     for (auto const &outstandingConnection: m_outstandingConnections) {
         auto targetScope = m_scopesById[outstandingConnection.targetName];
-        if (outstandingConnection.scope && !targetScope.isNull())
-            outstandingConnection.scope->addMethods(targetScope->methods());
+        if (outstandingConnection.scope) {
+            for (const auto scope = targetScope; targetScope;
+                 targetScope = targetScope->baseType()) {
+                const auto connectionMethods = targetScope->ownMethods();
+                for (const auto &method : connectionMethods)
+                    outstandingConnection.scope->addOwnMethod(method);
+            }
+        }
         QScopedValueRollback<QQmlJSScope::Ptr> rollback(m_currentScope, outstandingConnection.scope);
         outstandingConnection.uiod->initializer->accept(this);
     }
@@ -392,8 +400,11 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
                 return false; // visit children later once target is known
             }
         }
-        if (targetScope)
-            m_currentScope->addMethods(targetScope->methods());
+        for (const auto scope = targetScope; targetScope; targetScope = targetScope->baseType()) {
+            const auto connectionMethods = targetScope->ownMethods();
+            for (const auto &method : connectionMethods)
+                m_currentScope->addOwnMethod(method);
+        }
     }
     return true;
 }
@@ -427,12 +438,10 @@ void FindWarningVisitor::endVisit(QQmlJS::AST::UiObjectDefinition *uiod)
         return;
     }
 
-    const auto properties = childScope->properties();
-    const auto it = properties.find(QStringLiteral("parent"));
-    if (it != properties.end()) {
-        auto property = *it;
+    auto property = childScope->property(QStringLiteral("parent"));
+    if (!property.propertyName().isEmpty()) {
         property.setType(QQmlJSScope::ConstPtr(m_currentScope));
-        childScope->addProperty(property);
+        childScope->addOwnProperty(property);
     }
 }
 

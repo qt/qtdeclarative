@@ -308,7 +308,7 @@ void QQmlJSTypeDescriptionReader::readSignalOrMethod(UiObjectDefinition *ast, bo
         return;
     }
 
-    scope->addMethod(metaMethod);
+    scope->addOwnMethod(metaMethod);
 }
 
 void QQmlJSTypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQmlJSScope::Ptr &scope)
@@ -351,7 +351,7 @@ void QQmlJSTypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQ
         return;
     }
 
-    scope->addProperty(property);
+    scope->addOwnProperty(property);
 }
 
 void QQmlJSTypeDescriptionReader::readEnum(UiObjectDefinition *ast, const QQmlJSScope::Ptr &scope)

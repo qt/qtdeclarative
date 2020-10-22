@@ -113,7 +113,6 @@ protected:
 private:
     void resolveAliases();
     void visitFunctionExpressionHelper(QQmlJS::AST::FunctionExpression *fexpr);
-    void importExportedNames(QQmlJSScope::ConstPtr scope);
 };
 
 QT_END_NAMESPACE

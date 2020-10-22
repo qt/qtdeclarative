@@ -149,12 +149,11 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
             return false;
         }
 
-        const auto properties = scope->properties();
-        const auto scopeIt = properties.find(access.m_name);
-        if (scopeIt != properties.end()) {
-            const QString typeName = access.m_parentType.isEmpty() ? scopeIt->typeName()
+        const auto property = scope->property(access.m_name);
+        if (!property.propertyName().isEmpty()) {
+            const QString typeName = access.m_parentType.isEmpty() ? property.typeName()
                                                                    : access.m_parentType;
-            if (scopeIt->isList()) {
+            if (property.isList()) {
                 detectedRestrictiveKind = QLatin1String("list");
                 detectedRestrictiveName = access.m_name;
                 expectedNext.append(QLatin1String("length"));
@@ -169,7 +168,7 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
             }
 
             if (access.m_parentType.isEmpty()) {
-                scope = scopeIt->type();
+                scope = property.type();
                 if (scope.isNull()) {
                     // Properties should always have a type. Otherwise something
                     // was missing from the import already.
@@ -194,9 +193,7 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
             continue;
         }
 
-        const auto methods = scope->methods();
-        const auto scopeMethodIt = methods.find(access.m_name);
-        if (scopeMethodIt != methods.end())
+        if (scope->hasMethod(access.m_name))
             return true; // Access to property of JS function
 
         auto checkEnums = [&](const QQmlJSScope::ConstPtr &scope) {
@@ -232,14 +229,14 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
 
         bool typeFound =
                 walkViaParentAndAttachedScopes(rootType, [&](QQmlJSScope::ConstPtr type) {
-                    const auto typeProperties = type->properties();
+                    const auto typeProperties = type->ownProperties();
                     const auto typeIt = typeProperties.find(access.m_name);
                     if (typeIt != typeProperties.end()) {
                         scope = typeIt->type();
                         return true;
                     }
 
-                    const auto typeMethods = type->methods();
+                    const auto typeMethods = type->ownMethods();
                     const auto typeMethodIt = typeMethods.find(access.m_name);
                     if (typeMethodIt != typeMethods.end()) {
                         detectedRestrictiveName = access.m_name;
@@ -326,18 +323,17 @@ bool CheckIdentifiers::operator()(
             }
 
             auto qmlScope = QQmlJSScope::findCurrentQMLScope(currentScope);
-            if (qmlScope->methods().contains(memberAccessBase.m_name)) {
-                // a property of a JavaScript function
+            if (qmlScope->hasMethod(memberAccessBase.m_name)) {
+                // a property of a JavaScript function, or a method
                 continue;
             }
 
-            const auto properties = qmlScope->properties();
-            const auto qmlIt = properties.find(memberAccessBase.m_name);
-            if (qmlIt != properties.end()) {
-                if (memberAccessChain.isEmpty() || unknownBuiltins.contains(qmlIt->typeName()))
+            const auto property = qmlScope->property(memberAccessBase.m_name);
+            if (!property.propertyName().isEmpty()) {
+                if (memberAccessChain.isEmpty() || unknownBuiltins.contains(property.typeName()))
                     continue;
 
-                if (!qmlIt->type()) {
+                if (!property.type()) {
                     m_colorOut->writePrefixedMessage(QString::fromLatin1(
                                            "Type of property \"%2\" not found at %3:%4:%5\n")
                                            .arg(memberAccessBase.m_name)
@@ -346,7 +342,7 @@ bool CheckIdentifiers::operator()(
                                            .arg(memberAccessBase.m_location.startColumn), Warning);
                     printContext(m_code, m_colorOut, memberAccessBase.m_location);
                     noUnqualifiedIdentifier = false;
-                } else if (!checkMemberAccess(memberAccessChain, qmlIt->type(), &*qmlIt)) {
+                } else if (!checkMemberAccess(memberAccessChain, property.type(), &property)) {
                     noUnqualifiedIdentifier = false;
                 }
 
@@ -375,8 +371,8 @@ bool CheckIdentifiers::operator()(
 
             // root(JS) --> (first element)
             const auto firstElement = root->childScopes()[0];
-            if (firstElement->properties().contains(memberAccessBase.m_name)
-                    || firstElement->methods().contains(memberAccessBase.m_name)
+            if (firstElement->hasProperty(memberAccessBase.m_name)
+                    || firstElement->hasMethod(memberAccessBase.m_name)
                     || firstElement->enums().contains(memberAccessBase.m_name)) {
                 m_colorOut->writePrefixedMessage(
                             memberAccessBase.m_name

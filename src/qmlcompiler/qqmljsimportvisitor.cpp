@@ -68,14 +68,14 @@ void QQmlJSImportVisitor::resolveAliases()
 
     while (!objects.isEmpty()) {
         const QQmlJSScope::Ptr object = objects.dequeue();
-        const auto properties = object->properties();
+        const auto properties = object->ownProperties();
         for (auto property : properties) {
             if (!property.isAlias())
                 continue;
             const auto it = m_scopesById.find(property.typeName());
             if (it != m_scopesById.end()) {
                 property.setType(QQmlJSScope::ConstPtr(*it));
-                object->addProperty(property);
+                object->addOwnProperty(property);
             }
         }
 
@@ -88,31 +88,6 @@ void QQmlJSImportVisitor::resolveAliases()
 QQmlJSScope::Ptr QQmlJSImportVisitor::result() const
 {
     return m_qmlRootScope;
-}
-
-void QQmlJSImportVisitor::importExportedNames(QQmlJSScope::ConstPtr scope)
-{
-    QList<QQmlJSScope::ConstPtr> scopes;
-    while (!scope.isNull()) {
-        if (scopes.contains(scope))
-            break;
-
-        scopes.append(scope);
-
-        const auto properties = scope->properties();
-        for (auto property : properties)
-            m_currentScope->insertPropertyIdentifier(property);
-
-        m_currentScope->addMethods(scope->methods());
-
-        if (scope->baseTypeName().isEmpty())
-            break;
-
-        if (auto newScope = scope->baseType())
-            scope = newScope;
-        else
-            break;
-    }
 }
 
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiProgram *)
@@ -146,8 +121,6 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
         m_qmlRootScope = m_currentScope;
 
     m_currentScope->resolveTypes(m_rootScopeImports);
-    importExportedNames(m_currentScope);
-
     return true;
 }
 
@@ -168,7 +141,7 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
             method.addParameter(param->name.toString(), param->type->name.toString());
             param = param->next;
         }
-        m_currentScope->addMethod(method);
+        m_currentScope->addOwnMethod(method);
         break;
     }
     case UiPublicMember::Property: {
@@ -208,7 +181,7 @@ void QQmlJSImportVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExp
                 method.addParameter(parameters->element->bindingIdentifier.toString(), QString());
                 parameters = parameters->next;
             }
-            m_currentScope->addMethod(method);
+            m_currentScope->addOwnMethod(method);
         } else {
             m_currentScope->insertJSIdentifier(
                         name, {
@@ -249,7 +222,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::ClassExpression *ast)
 {
     QQmlJSMetaProperty prop;
     prop.setPropertyName(ast->name.toString());
-    m_currentScope->addProperty(prop);
+    m_currentScope->addOwnProperty(prop);
     enterEnvironment(QQmlJSScope::JSFunctionScope, ast->name.toString(),
                      ast->firstSourceLocation());
     return true;
@@ -466,11 +439,10 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
     prop.setIsPointer(true);
     prop.setIsAlias(name == QLatin1String("alias"));
     prop.setType(m_rootScopeImports.value(uiob->qualifiedTypeNameId->name.toString()));
-    m_currentScope->addProperty(prop);
+    m_currentScope->addOwnProperty(prop);
 
     enterEnvironment(QQmlJSScope::QMLScope, name, uiob->firstSourceLocation());
     m_currentScope->resolveTypes(m_rootScopeImports);
-    importExportedNames(m_currentScope);
     return true;
 }
 
@@ -481,7 +453,7 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
 
     QQmlJSMetaProperty property = m_currentScope->property(uiob->qualifiedId->name.toString());
     property.setType(childScope);
-    m_currentScope->addProperty(property);
+    m_currentScope->addOwnProperty(property);
 }
 
 QT_END_NAMESPACE

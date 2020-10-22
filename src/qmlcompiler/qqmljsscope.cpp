@@ -66,14 +66,33 @@ void QQmlJSScope::insertJSIdentifier(const QString &name, const JavaScriptIdenti
 
 void QQmlJSScope::insertPropertyIdentifier(const QQmlJSMetaProperty &property)
 {
-    addProperty(property);
+    addOwnProperty(property);
     QQmlJSMetaMethod method(property.propertyName() + QLatin1String("Changed"), QLatin1String("void"));
-    addMethod(method);
+    addOwnMethod(method);
 }
 
 bool QQmlJSScope::isIdInCurrentScope(const QString &id) const
 {
     return isIdInCurrentQMlScopes(id) || isIdInCurrentJSScopes(id);
+}
+
+bool QQmlJSScope::hasMethod(const QString &name) const
+{
+    for (const QQmlJSScope *scope = this; scope; scope = scope->baseType().data()) {
+        if (scope->m_methods.contains(name))
+            return true;
+    }
+    return false;
+}
+
+QQmlJSMetaMethod QQmlJSScope::method(const QString &name) const
+{
+    for (const QQmlJSScope *scope = this; scope; scope = scope->baseType().data()) {
+        const auto it = scope->m_methods.find(name);
+        if (it != scope->m_methods.end())
+            return *it;
+    }
+    return {};
 }
 
 bool QQmlJSScope::isIdInCurrentQMlScopes(const QString &id) const
@@ -161,6 +180,25 @@ void QQmlJSScope::addExport(const QString &name, const QString &package,
                             const QTypeRevision &version)
 {
     m_exports.append(Export(package, name, version));
+}
+
+bool QQmlJSScope::hasProperty(const QString &name) const
+{
+    for (const QQmlJSScope *scope = this; scope; scope = scope->baseType().data()) {
+        if (scope->m_properties.contains(name))
+            return true;
+    }
+    return false;
+}
+
+QQmlJSMetaProperty QQmlJSScope::property(const QString &name) const
+{
+    for (const QQmlJSScope *scope = this; scope; scope = scope->baseType().data()) {
+        const auto it = scope->m_properties.find(name);
+        if (it != scope->m_properties.end())
+            return *it;
+    }
+    return {};
 }
 
 QQmlJSScope::Export::Export(QString package, QString type, const QTypeRevision &version) :

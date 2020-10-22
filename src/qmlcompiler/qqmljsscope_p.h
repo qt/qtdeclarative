@@ -156,11 +156,13 @@ public:
 
     ScopeType scopeType() const { return m_scopeType; }
 
-    void addMethods(const QMultiHash<QString, QQmlJSMetaMethod> &methods) { m_methods.unite(methods); }
-    void addMethod(const QQmlJSMetaMethod &method) { m_methods.insert(method.methodName(), method); }
-    QMultiHash<QString, QQmlJSMetaMethod> methods() const { return m_methods; }
-    QQmlJSMetaMethod method(const QString &name) const { return m_methods.value(name); }
-    bool hasMethod(const QString &name) const { return m_methods.contains(name); }
+    void addOwnMethod(const QQmlJSMetaMethod &method) { m_methods.insert(method.methodName(), method); }
+    QMultiHash<QString, QQmlJSMetaMethod> ownMethods() const { return m_methods; }
+    QQmlJSMetaMethod ownMethod(const QString &name) const { return m_methods.value(name); }
+    bool hasOwnMethod(const QString &name) const { return m_methods.contains(name); }
+
+    bool hasMethod(const QString &name) const;
+    QQmlJSMetaMethod method(const QString &name) const;
 
     void addEnum(const QQmlJSMetaEnum &fakeEnum) { m_enums.insert(fakeEnum.name(), fakeEnum); }
     QHash<QString, QQmlJSMetaEnum> enums() const { return m_enums; }
@@ -182,10 +184,13 @@ public:
     QString baseTypeName() const { return m_baseTypeName; }
     QQmlJSScope::ConstPtr baseType() const { return m_baseType; }
 
-    void addProperty(const QQmlJSMetaProperty &prop) { m_properties.insert(prop.propertyName(), prop); }
-    QHash<QString, QQmlJSMetaProperty> properties() const { return m_properties; }
-    QQmlJSMetaProperty property(const QString &name) const { return m_properties.value(name); }
-    bool hasProperty(const QString &name) const { return m_properties.contains(name); }
+    void addOwnProperty(const QQmlJSMetaProperty &prop) { m_properties.insert(prop.propertyName(), prop); }
+    QHash<QString, QQmlJSMetaProperty> ownProperties() const { return m_properties; }
+    QQmlJSMetaProperty ownProperty(const QString &name) const { return m_properties.value(name); }
+    bool hasOwnProperty(const QString &name) const { return m_properties.contains(name); }
+
+    bool hasProperty(const QString &name) const;
+    QQmlJSMetaProperty property(const QString &name) const;
 
     QString defaultPropertyName() const { return m_defaultPropertyName; }
     void setDefaultPropertyName(const QString &name) { m_defaultPropertyName = name; }

@@ -51,7 +51,7 @@ static QQmlJSScope::Ptr parseProgram(QQmlJS::AST::Program *program, const QStrin
             method.setMethodType(QQmlJSMetaMethod::Method);
             for (auto *parameters = function->formals; parameters; parameters = parameters->next)
                 method.addParameter(parameters->element->bindingIdentifier.toString(), QString());
-            result->addMethod(method);
+            result->addOwnMethod(method);
         }
     }
     return result;
