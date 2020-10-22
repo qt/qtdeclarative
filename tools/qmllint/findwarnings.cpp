@@ -141,7 +141,7 @@ bool FindWarningVisitor::visit(QQmlJS::AST::WithStatement *withStatement)
         m_errors.append({
                             QStringLiteral(
                                 "with statements are strongly discouraged in QML "
-                                "and might cause false positives when analysing unqalified "
+                                "and might cause false positives when analysing unqualified "
                                 "identifiers\n"),
                             QtWarningMsg,
                             withStatement->firstSourceLocation()
