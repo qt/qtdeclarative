@@ -49,7 +49,7 @@ class QQmlJSImporter
 public:
     using ImportedTypes = QHash<QString, QQmlJSScope::ConstPtr>;
 
-    QQmlJSImporter(const QStringList &importPaths) : m_importPaths(importPaths) {}
+    QQmlJSImporter(const QStringList &importPaths) : m_importPaths(importPaths), m_builtins({}) {}
 
     ImportedTypes importBuiltins();
     ImportedTypes importQmltypes(const QStringList &qmltypesFiles);
@@ -73,6 +73,10 @@ private:
 
     struct AvailableTypes
     {
+        AvailableTypes(QHash<QString, QQmlJSScope::ConstPtr> builtins)
+            : cppNames(std::move(builtins))
+        {}
+
         // C++ names used in qmltypes files for non-composite types
         QHash<QString, QQmlJSScope::ConstPtr> cppNames;
 
@@ -87,6 +91,7 @@ private:
         QList<QQmlDirParser::Import> dependencies;
     };
 
+    AvailableTypes builtinImportHelper();
     void importHelper(const QString &module, AvailableTypes *types,
                       const QString &prefix = QString(),
                       QTypeRevision version = QTypeRevision());
@@ -105,7 +110,7 @@ private:
     QHash<QPair<QString, QTypeRevision>, Import> m_seenImports;
     QHash<QString, QQmlJSScope::Ptr> m_importedFiles;
     QList<QQmlJS::DiagnosticMessage> m_warnings;
-    ImportedTypes m_builtins;
+    AvailableTypes m_builtins;
 };
 
 QT_END_NAMESPACE

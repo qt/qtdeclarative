@@ -234,10 +234,14 @@ void QQmlJSImporter::processImport(
  */
 QQmlJSImporter::ImportedTypes QQmlJSImporter::importBuiltins()
 {
-    if (!m_builtins.isEmpty())
-        return m_builtins;
+    return builtinImportHelper().qmlNames;
+}
 
-    AvailableTypes types;
+
+QQmlJSImporter::AvailableTypes QQmlJSImporter::builtinImportHelper()
+{
+    if (!m_builtins.qmlNames.isEmpty() || !m_builtins.cppNames.isEmpty())
+        return m_builtins;
 
     for (auto const &dir : m_importPaths) {
         Import result;
@@ -245,11 +249,10 @@ QQmlJSImporter::ImportedTypes QQmlJSImporter::importBuiltins()
                           QDirIterator::Subdirectories };
         while (it.hasNext())
             readQmltypes(it.next(), &result.objects, &result.dependencies);
-        importDependencies(result, &types);
-        processImport(result, &types);
+        importDependencies(result, &m_builtins);
+        processImport(result, &m_builtins);
     }
 
-    m_builtins = types.qmlNames;
     return m_builtins;
 }
 
@@ -258,7 +261,7 @@ QQmlJSImporter::ImportedTypes QQmlJSImporter::importBuiltins()
  */
 QQmlJSImporter::ImportedTypes QQmlJSImporter::importQmltypes(const QStringList &qmltypesFiles)
 {
-    AvailableTypes types;
+    AvailableTypes types(builtinImportHelper().cppNames);
     Import result;
 
     for (const auto &qmltypeFile : qmltypesFiles)
@@ -273,7 +276,7 @@ QQmlJSImporter::ImportedTypes QQmlJSImporter::importQmltypes(const QStringList &
 QQmlJSImporter::ImportedTypes QQmlJSImporter::importModule(
         const QString &module, const QString &prefix, QTypeRevision version)
 {
-    AvailableTypes result;
+    AvailableTypes result(builtinImportHelper().cppNames);
     importHelper(module, &result, prefix, version);
     return result.qmlNames;
 }
