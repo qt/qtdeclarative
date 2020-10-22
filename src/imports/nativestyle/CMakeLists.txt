@@ -11,6 +11,7 @@ qt_internal_add_qml_module(qtquickcontrols2nativestyleplugin
     DEPENDENCIES
         QtQuick.Controls/2.5
     GENERATE_QMLTYPES
+    INSTALL_QMLTYPES
     SOURCES
         items/qquickstyleitem.cpp items/qquickstyleitem.h
         items/qquickstyleitembutton.cpp items/qquickstyleitembutton.h
@@ -68,6 +69,7 @@ qt_internal_add_qml_module(qtquickcontrols2nativestyleplugin
 
 qt_internal_extend_target(qtquickcontrols2nativestyleplugin CONDITION MACOS
     SOURCES
+        items/qquickstyleitemscrollviewcorner.cpp items/qquickstyleitemscrollviewcorner.h
         qstyle/mac/qquickmacstyle_mac.mm qstyle/mac/qquickmacstyle_mac_p.h
         qstyle/mac/qquickmacstyle_mac_p_p.h
         util/qquickmacfocusframe.h util/qquickmacfocusframe.mm
