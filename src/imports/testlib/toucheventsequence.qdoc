@@ -57,7 +57,7 @@
 /*!
     \qmlmethod TouchEventSequence TouchEventSequence::press(int touchId, object item, real x = item.width / 2, real y = item.height / 2)
 
-    Creates a new point identified as \a touchId, at the point indicated by \e x and \e y relative to \a item.
+    Creates a new point identified as \a touchId, at the point indicated by \a x and \a y relative to \a item.
     Further use of the same touch point should maintain the same touchId.
 
     Item defaults to the value provided via touchEvent().
@@ -67,7 +67,7 @@
 /*!
     \qmlmethod TouchEventSequence TouchEventSequence::move(int touchId, object item, real x = item.width / 2, real y = item.height / 2)
 
-    Moves \a touchId to the point indicated by \e x and \e y relative to \a item.
+    Moves \a touchId to the point indicated by \a x and \a y relative to \a item.
 
     Item defaults to the value provided via touchEvent().
     X and y default to the midpoint of the item.
@@ -76,7 +76,7 @@
 /*!
     \qmlmethod TouchEventSequence TouchEventSequence::release(int touchId, object item, real x = item.width / 2, real y = item.height / 2)
 
-    Removes \a touchId at the point indicated by \e x and \e y relative to \a item.
+    Removes \a touchId at the point indicated by \a x and \a y relative to \a item.
 
     Item defaults to the value provided via touchEvent().
     X and y default to the midpoint of the item.
