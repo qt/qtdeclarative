@@ -326,6 +326,7 @@ Module {
         exports: ["QML/int 1.0"]
         exportMetaObjectRevisions: [256]
         prototype: "NumberPrototype"
+        accessSemantics: "value"
     }
     Component {
         name: "float"
@@ -337,6 +338,7 @@ Module {
         exports: ["QML/real 1.0"]
         exportMetaObjectRevisions: [256]
         prototype: "NumberPrototype"
+        accessSemantics: "value"
     }
     Component {
         name: "JSON"
@@ -527,6 +529,7 @@ Module {
         prototype: "StringPrototype"
         exports: ["QML/string 1.0"]
         exportMetaObjectRevisions: [256]
+        accessSemantics: "value"
     }
     Component {
         name: "Boolean"
@@ -549,6 +552,7 @@ Module {
         prototype: "BooleanPrototype"
         exports: ["QML/bool 1.0"]
         exportMetaObjectRevisions: [256]
+        accessSemantics: "value"
     }
     Component {
         name: "Date"
@@ -952,5 +956,6 @@ Module {
         prototype: "DatePrototype"
         exports: ["QML/date 1.0"]
         exportMetaObjectRevisions: [256]
+        accessSemantics: "value"
     }
 }
