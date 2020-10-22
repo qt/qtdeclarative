@@ -240,8 +240,8 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::ClassExpression *)
 bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
 {
     const auto id = scriptBinding->qualifiedId;
+    const auto *statement = cast<ExpressionStatement *>(scriptBinding->statement);
     if (!id->next && id->name == QLatin1String("id")) {
-        const auto *statement = cast<ExpressionStatement *>(scriptBinding->statement);
         const auto *idExprension = cast<IdentifierExpression *>(statement->expression);
         m_scopesById.insert(idExprension->name.toString(), m_currentScope);
     } else {
@@ -258,9 +258,24 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
 
         while (m_currentScope->scopeType() == QQmlJSScope::GroupedPropertyScope)
             leaveEnvironment();
+
+        if (!statement || !statement->expression->asFunctionDefinition()) {
+            enterEnvironment(QQmlJSScope::JSFunctionScope, QStringLiteral("binding"),
+                             scriptBinding->statement->firstSourceLocation());
+        }
     }
 
     return true;
+}
+
+void QQmlJSImportVisitor::endVisit(UiScriptBinding *scriptBinding)
+{
+    const auto id = scriptBinding->qualifiedId;
+    if (id->next || id->name != QLatin1String("id")) {
+        const auto *statement = cast<ExpressionStatement *>(scriptBinding->statement);
+        if (!statement || !statement->expression->asFunctionDefinition())
+            leaveEnvironment();
+    }
 }
 
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiEnumDeclaration *uied)

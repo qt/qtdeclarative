@@ -194,13 +194,14 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
 {
     using namespace QQmlJS::AST;
 
+    const auto qmlScope = m_currentScope;
     if (!QQmlJSImportVisitor::visit(uisb))
         return false;
 
     auto name = uisb->qualifiedId->name;
     if (name == QLatin1String("id")) {
         // Figure out whether the current scope is the root scope.
-        if (auto parentScope = m_currentScope->parentScope()) {
+        if (auto parentScope = qmlScope->parentScope()) {
             if (!parentScope->parentScope()) {
                 const auto expstat = cast<ExpressionStatement *>(uisb->statement);
                 const auto identexp = cast<IdentifierExpression *>(expstat->expression);
@@ -214,7 +215,8 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
     if (signal.isEmpty())
         return true;
 
-    if (!m_currentScope->hasMethod(signal) && m_warnUnqualified) {
+
+    if (!qmlScope->hasMethod(signal) && m_warnUnqualified) {
         m_errors.append({
                             QStringLiteral("no matching signal found for handler \"%1\"\n")
                                .arg(name.toString()),
@@ -234,7 +236,7 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
         }
     }
 
-    for (QQmlJSScope::ConstPtr scope = m_currentScope; scope; scope = scope->baseType()) {
+    for (QQmlJSScope::ConstPtr scope = qmlScope; scope; scope = scope->baseType()) {
         const auto methods = scope->ownMethods();
         const auto methodsRange = methods.equal_range(signal);
         for (auto method = methodsRange.first; method != methodsRange.second; ++method) {

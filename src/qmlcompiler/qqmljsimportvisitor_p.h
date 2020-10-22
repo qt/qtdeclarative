@@ -65,6 +65,7 @@ protected:
     void endVisit(QQmlJS::AST::UiObjectDefinition *) override;
     bool visit(QQmlJS::AST::UiPublicMember *) override;
     bool visit(QQmlJS::AST::UiScriptBinding *) override;
+    void endVisit(QQmlJS::AST::UiScriptBinding *) override;
     bool visit(QQmlJS::AST::UiEnumDeclaration *uied) override;
     bool visit(QQmlJS::AST::FunctionExpression *fexpr) override;
     void endVisit(QQmlJS::AST::FunctionExpression *) override;
