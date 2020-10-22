@@ -368,8 +368,20 @@ bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFile
         return false;
 
     if (!aotFunctions.isEmpty()) {
-        if (!writeStr("#include <QtQml/qqmlcontext.h>\n#include <type_traits>\n\n"))
-            return false;
+        QStringList includes = {
+            QStringLiteral("QtQml/qqmlcontext.h"),
+            QStringLiteral("type_traits")
+        };
+
+        for (const auto &function : aotFunctions)
+            includes.append(function.includes);
+
+        std::sort(includes.begin(), includes.end());
+        const auto end = std::unique(includes.begin(), includes.end());
+        for (auto it = includes.begin(); it != end; ++it) {
+            if (!writeStr(QStringLiteral("#include <%1>\n").arg(*it).toUtf8()))
+                return false;
+        }
     }
 
     if (!writeStr(QByteArrayLiteral("namespace QmlCacheGeneratedCode {\nnamespace ")))

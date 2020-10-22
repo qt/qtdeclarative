@@ -63,6 +63,7 @@ struct QQmlJSCompileError
 
 struct QQmlJSAotFunction
 {
+    QStringList includes;
     QString code;
     QString returnType;
 };
