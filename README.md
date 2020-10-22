@@ -39,7 +39,7 @@ If you have problems or questions, don't hesitate to:
 ## Installation
 
 The MINIMUM REQUIREMENT for building this project is to use the same branch
-of Qt 5. The dependencies are *qtbase*, *qtxmlpatterns* and *qtdeclarative*.
+of Qt 5. The dependencies are *qtbase* and *qtdeclarative*.
 
 To install the controls into your Qt directory (```QTDIR/qml```):
 
