@@ -77,30 +77,11 @@ private slots:
     void updateProperties();
     void importBothVersions();
 private:
-    void checkNoErrors(const QQmlComponent& component);
     QQmlEngine engine;
 
     int removeStart = 0;
     int removeEnd = 0;
 };
-
-void tst_qquickfolderlistmodel::checkNoErrors(const QQmlComponent& component)
-{
-    // Wait until the component is ready
-    QTRY_VERIFY(component.isReady() || component.isError());
-
-    if (component.isError()) {
-        QList<QQmlError> errors = component.errors();
-        for (int ii = 0; ii < errors.count(); ++ii) {
-            const QQmlError &error = errors.at(ii);
-            QByteArray errorStr = QByteArray::number(error.line()) + ':' +
-                                  QByteArray::number(error.column()) + ':' +
-                                  error.description().toUtf8();
-            qWarning() << errorStr;
-        }
-    }
-    QVERIFY(!component.isError());
-}
 
 void tst_qquickfolderlistmodel::initTestCase()
 {
@@ -118,7 +99,7 @@ void tst_qquickfolderlistmodel::basicProperties()
           " and from there on it is unreliable to change the folder");
 #endif
     QQmlComponent component(&engine, testFileUrl("basic.qml"));
-    checkNoErrors(component);
+    QTRY_VERIFY2(component.isReady(), qPrintable(component.errorString()));
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
     QVERIFY(flm != nullptr);
@@ -152,7 +133,7 @@ void tst_qquickfolderlistmodel::basicProperties()
 void tst_qquickfolderlistmodel::status()
 {
     QQmlComponent component(&engine, testFileUrl("basic.qml"));
-    checkNoErrors(component);
+    QTRY_VERIFY2(component.isReady(), qPrintable(component.errorString()));
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
     QVERIFY(flm != nullptr);
@@ -166,7 +147,7 @@ void tst_qquickfolderlistmodel::status()
 void tst_qquickfolderlistmodel::showFiles()
 {
     QQmlComponent component(&engine, testFileUrl("basic.qml"));
-    checkNoErrors(component);
+    QTRY_VERIFY2(component.isReady(), qPrintable(component.errorString()));
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
     QVERIFY(flm != nullptr);
@@ -184,7 +165,7 @@ void tst_qquickfolderlistmodel::resetFiltering()
 {
     // see QTBUG-17837
     QQmlComponent component(&engine, testFileUrl("resetFiltering.qml"));
-    checkNoErrors(component);
+    QTRY_VERIFY2(component.isReady(), qPrintable(component.errorString()));
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
     QVERIFY(flm != nullptr);
@@ -206,7 +187,7 @@ void tst_qquickfolderlistmodel::nameFilters()
 {
     // see QTBUG-36576
     QQmlComponent component(&engine, testFileUrl("resetFiltering.qml"));
-    checkNoErrors(component);
+    QTRY_VERIFY2(component.isReady(), qPrintable(component.errorString()));
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
     QVERIFY(flm != nullptr);
@@ -238,7 +219,7 @@ void tst_qquickfolderlistmodel::nameFilters()
 void tst_qquickfolderlistmodel::refresh()
 {
     QQmlComponent component(&engine, testFileUrl("basic.qml"));
-    checkNoErrors(component);
+    QTRY_VERIFY2(component.isReady(), qPrintable(component.errorString()));
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
     QVERIFY(flm != nullptr);
@@ -261,7 +242,7 @@ void tst_qquickfolderlistmodel::cdUp()
 {
     enum { maxIterations = 50 };
     QQmlComponent component(&engine, testFileUrl("basic.qml"));
-    checkNoErrors(component);
+    QTRY_VERIFY2(component.isReady(), qPrintable(component.errorString()));
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
     QVERIFY(flm != nullptr);
@@ -339,7 +320,7 @@ void tst_qquickfolderlistmodel::showDotAndDotDot()
     QFETCH(bool, showDotDot);
 
     QQmlComponent component(&engine, testFileUrl("showDotAndDotDot.qml"));
-    checkNoErrors(component);
+    QTRY_VERIFY2(component.isReady(), qPrintable(component.errorString()));
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
     QVERIFY(flm != nullptr);
@@ -378,7 +359,7 @@ void tst_qquickfolderlistmodel::showDotAndDotDot_data()
 void tst_qquickfolderlistmodel::sortReversed()
 {
     QQmlComponent component(&engine, testFileUrl("sortReversed.qml"));
-    checkNoErrors(component);
+    QTRY_VERIFY2(component.isReady(), qPrintable(component.errorString()));
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
     QVERIFY(flm != nullptr);
     flm->setProperty("folder", dataDirectoryUrl());
@@ -389,7 +370,7 @@ void tst_qquickfolderlistmodel::sortReversed()
 void tst_qquickfolderlistmodel::introspectQrc()
 {
     QQmlComponent component(&engine, testFileUrl("qrc.qml"));
-    checkNoErrors(component);
+    QTRY_VERIFY2(component.isReady(), qPrintable(component.errorString()));
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
     QVERIFY(flm != nullptr);
     QTRY_COMPARE(flm->property("count").toInt(), 1); // wait for refresh
@@ -415,7 +396,7 @@ void tst_qquickfolderlistmodel::sortCaseSensitive()
     QQmlComponent component(&engine);
     component.setData("import Qt.labs.folderlistmodel 1.0\n"
                       "FolderListModel { }", QUrl());
-    checkNoErrors(component);
+    QTRY_VERIFY2(component.isReady(), qPrintable(component.errorString()));
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
     QVERIFY(flm != 0);
@@ -429,7 +410,7 @@ void tst_qquickfolderlistmodel::sortCaseSensitive()
 void tst_qquickfolderlistmodel::updateProperties()
 {
     QQmlComponent component(&engine, testFileUrl("basic.qml"));
-    checkNoErrors(component);
+    QTRY_VERIFY2(component.isReady(), qPrintable(component.errorString()));
 
     QObject *folderListModel = component.create();
     QVERIFY(folderListModel);
@@ -471,13 +452,13 @@ void tst_qquickfolderlistmodel::importBothVersions()
 {
     {
         QQmlComponent component(&engine, testFileUrl("sortReversed.qml"));
-        checkNoErrors(component);
+        QTRY_VERIFY2(component.isReady(), qPrintable(component.errorString()));
         QScopedPointer<QObject> obj(component.create());
         QVERIFY(obj);
     }
     {
         QQmlComponent component(&engine, testFileUrl("qrc.qml"));
-        checkNoErrors(component);
+        QTRY_VERIFY2(component.isReady(), qPrintable(component.errorString()));
         QScopedPointer<QObject> obj(component.create());
         QVERIFY(obj);
     }
