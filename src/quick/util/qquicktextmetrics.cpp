@@ -182,7 +182,7 @@ void QQuickTextMetrics::setElideWidth(qreal elideWidth)
     This is the distance from the position of the string to where the next
     string should be drawn.
 
-    \sa {QFontMetricsF::width()}
+    \sa {QFontMetricsF::horizontalAdvance()}
 */
 qreal QQuickTextMetrics::advanceWidth() const
 {
