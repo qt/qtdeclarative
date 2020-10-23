@@ -136,6 +136,7 @@ struct Location
 
     Location() : _dummy(0) { }
     Location(quint32 l, quint32 c)
+    : Location()
     {
         line = l;
         column = c;
