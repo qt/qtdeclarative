@@ -217,6 +217,17 @@ bool qCompileQmlFile(const QString &inputFileName, QQmlJSSaveFunction saveFuncti
             aotCompiler->setScopeObject(object);
 
             std::for_each(object->bindingsBegin(), object->bindingsEnd(), [&](const QmlIR::Binding &binding) {
+
+                switch (binding.type) {
+                case QmlIR::Binding::Type_Boolean:
+                case QmlIR::Binding::Type_Number:
+                case QmlIR::Binding::Type_String:
+                case QmlIR::Binding::Type_Null:
+                    return;
+                default:
+                    break;
+                }
+
                 auto result = aotCompiler->compileBinding(binding);
                 if (auto *error = std::get_if<QQmlJS::DiagnosticMessage>(&result)) {
                     qCDebug(lcAotCompiler()) << "Could not compile binding:"
