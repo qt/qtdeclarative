@@ -155,6 +155,7 @@ struct QQmlPointValueType
     QML_ADDED_IN_VERSION(2, 0)
 
 public:
+    Q_INVOKABLE QString toString() const;
     int x() const;
     int y() const;
     void setX(int);
@@ -191,6 +192,7 @@ struct QQmlSizeValueType
     QML_ADDED_IN_VERSION(2, 0)
 
 public:
+    Q_INVOKABLE QString toString() const;
     int width() const;
     int height() const;
     void setWidth(int);
@@ -249,6 +251,7 @@ struct QQmlRectValueType
     QML_ADDED_IN_VERSION(2, 0)
 
 public:
+    Q_INVOKABLE QString toString() const;
     int x() const;
     int y() const;
     void setX(int);

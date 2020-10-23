@@ -348,6 +348,11 @@ void QQmlPointFValueType::setY(qreal y)
 }
 
 
+QString QQmlPointValueType::toString() const
+{
+    return QString::asprintf("QPoint(%d, %d)", v.x(), v.y());
+}
+
 int QQmlPointValueType::x() const
 {
     return v.x();
@@ -394,6 +399,11 @@ void QQmlSizeFValueType::setHeight(qreal h)
     v.setHeight(h);
 }
 
+
+QString QQmlSizeValueType::toString() const
+{
+    return QString::asprintf("QSize(%d, %d)", v.width(), v.height());
+}
 
 int QQmlSizeValueType::width() const
 {
@@ -478,6 +488,12 @@ qreal QQmlRectFValueType::top() const
 qreal QQmlRectFValueType::bottom() const
 {
     return v.bottom();
+}
+
+
+QString QQmlRectValueType::toString() const
+{
+    return QString::asprintf("QRect(%d, %d, %d, %d)", v.x(), v.y(), v.width(), v.height());
 }
 
 int QQmlRectValueType::x() const
