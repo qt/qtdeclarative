@@ -1370,15 +1370,11 @@ ReturnedValue QtObject::method_get_uiLanguage(const FunctionObject *b, const Val
 
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(scope.engine);
     if (ep && ep->propertyCapture) {
-        static int propertyIndex = -1;
-        static int notifySignalIndex = -1;
-        if (propertyIndex < 0) {
-            QMetaProperty metaProperty =
-                    QQmlEngine::staticMetaObject.property(QQmlEngine::staticMetaObject.indexOfProperty("uiLanguage"));
-            propertyIndex = metaProperty.propertyIndex();
-            notifySignalIndex = metaProperty.notifySignalIndex();
-        }
-        ep->propertyCapture->captureProperty(QQmlEnginePrivate::get(ep), propertyIndex, notifySignalIndex);
+        static const QMetaProperty metaProperty
+                = QQmlEngine::staticMetaObject.property(
+                    QQmlEngine::staticMetaObject.indexOfProperty("uiLanguage"));
+        QQmlEngine *e = QQmlEnginePrivate::get(ep);
+        e->captureProperty(e, metaProperty);
     }
 
     return Encode(scope.engine->newString(QJSEnginePrivate::get(jsEngine)->uiLanguage));

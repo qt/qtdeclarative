@@ -158,6 +158,8 @@ public:
     template<typename T>
     T singletonInstance(int qmlTypeId);
 
+    void captureProperty(QObject *object, const QMetaProperty &property) const;
+
 public Q_SLOTS:
     void retranslate();
 

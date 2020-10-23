@@ -1327,6 +1327,21 @@ void QQmlEngine::setOutputWarningsToStandardError(bool enabled)
 }
 
 /*!
+  \internal
+
+  Capture the given property as part of a binding.
+ */
+void QQmlEngine::captureProperty(QObject *object, const QMetaProperty &property) const
+{
+    Q_D(const QQmlEngine);
+    if (d->propertyCapture) {
+        d->propertyCapture->captureProperty(
+                    object, property.propertyIndex(),
+                    QMetaObjectPrivate::signalIndex(property.notifySignal()));
+    }
+}
+
+/*!
   \qmlproperty string Qt::uiLanguage
   \since 5.15
 
