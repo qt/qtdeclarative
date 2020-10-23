@@ -274,12 +274,8 @@ void tst_qquicktextedit::simulateKeys(QWindow *window, const QList<Key> &keys)
 
 void tst_qquicktextedit::simulateKeys(QWindow *window, const QKeySequence &sequence)
 {
-    for (int i = 0; i < sequence.count(); ++i) {
-        const int key = sequence[i];
-        const int modifiers = key & Qt::KeyboardModifierMask;
-
-        QTest::keyClick(window, Qt::Key(key & ~modifiers), Qt::KeyboardModifiers(modifiers));
-    }
+    for (int i = 0; i < sequence.count(); ++i)
+        QTest::keyClick(window, sequence[i].key(), sequence[i].keyboardModifiers());
 }
 
 QList<Key> &operator <<(QList<Key> &keys, const QKeySequence &sequence)
@@ -1606,7 +1602,7 @@ void tst_qquicktextedit::isRightToLeft_data()
     QTest::addColumn<bool>("midString");
     QTest::addColumn<bool>("endString");
 
-    const quint16 arabic_str[] = { 0x0638, 0x0643, 0x00646, 0x0647, 0x0633, 0x0638, 0x0643, 0x00646, 0x0647, 0x0633, 0x0647};
+    const char16_t arabic_str[] = { 0x0638, 0x0643, 0x0646, 0x0647, 0x0633, 0x0638, 0x0643, 0x0646, 0x0647, 0x0633, 0x0647};
     QTest::newRow("Empty") << "" << false << false << false << false << false << false << false;
     QTest::newRow("Neutral") << "23244242" << false << false << false << false << false << false << false;
     QTest::newRow("LTR") << "Hello world" << false << false << false << false << false << false << false;
