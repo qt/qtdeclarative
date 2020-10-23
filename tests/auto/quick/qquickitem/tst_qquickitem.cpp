@@ -74,15 +74,15 @@ public:
     QPoint lastWheelEventGlobalPos;
     int languageChangeEventCount = 0;
 protected:
-    virtual void focusInEvent(QFocusEvent *) { Q_ASSERT(!focused); focused = true; }
-    virtual void focusOutEvent(QFocusEvent *) { Q_ASSERT(focused); focused = false; }
-    virtual void mousePressEvent(QMouseEvent *event) { event->accept(); ++pressCount; }
-    virtual void mouseReleaseEvent(QMouseEvent *event) { event->accept(); ++releaseCount; }
-    virtual void touchEvent(QTouchEvent *event) {
+    void focusInEvent(QFocusEvent *) override { Q_ASSERT(!focused); focused = true; }
+    void focusOutEvent(QFocusEvent *) override { Q_ASSERT(focused); focused = false; }
+    void mousePressEvent(QMouseEvent *event) override { event->accept(); ++pressCount; }
+    void mouseReleaseEvent(QMouseEvent *event) override { event->accept(); ++releaseCount; }
+    void touchEvent(QTouchEvent *event) override {
         touchEventReached = true;
         event->setAccepted(acceptIncomingTouchEvents);
     }
-    virtual void wheelEvent(QWheelEvent *event) {
+    void wheelEvent(QWheelEvent *event) override {
         event->accept();
         ++wheelCount;
         timestamp = event->timestamp();
