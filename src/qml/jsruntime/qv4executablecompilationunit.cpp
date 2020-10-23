@@ -212,17 +212,23 @@ QV4::Function *ExecutableCompilationUnit::linkToEngine(ExecutionEngine *engine)
 
     runtimeFunctions.resize(data->functionTableSize);
     const QQmlPrivate::AOTCompiledFunction *aotFunction = aotCompiledFunctions;
-    for (int i = 0 ;i < runtimeFunctions.size(); ++i) {
-        const QV4::CompiledData::Function *compiledFunction = data->functionAt(i);
-        runtimeFunctions[i] = QV4::Function::create(engine, this, compiledFunction, aotFunction);
+
+    auto advanceAotFunction = [&](int i) -> const QQmlPrivate::AOTCompiledFunction * {
         if (aotFunction) {
             if (aotFunction->functionPtr) {
                 if (aotFunction->index == i)
-                    ++aotFunction;
+                    return aotFunction++;
             } else {
                 aotFunction = nullptr;
             }
         }
+        return nullptr;
+    };
+
+    for (int i = 0 ;i < runtimeFunctions.size(); ++i) {
+        const QV4::CompiledData::Function *compiledFunction = data->functionAt(i);
+        runtimeFunctions[i] = QV4::Function::create(engine, this, compiledFunction,
+                                                    advanceAotFunction(i));
     }
 
     Scope scope(engine);
