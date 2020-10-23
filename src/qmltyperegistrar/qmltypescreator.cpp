@@ -64,11 +64,6 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
     QStringList exports;
     QStringList metaObjects;
 
-    if (collector.isBuiltin) {
-        exports.append(enquote(QString::fromLatin1("QML/%1 1.0").arg(collector.elementName)));
-        metaObjects.append(QString::number(QTypeRevision::fromVersion(1, 0).toEncodedVersion<quint16>()));
-    }
-
     for (auto it = collector.revisions.begin(), end = collector.revisions.end(); it != end; ++it) {
         const QTypeRevision revision = *it;
         if (revision < collector.addedInRevision)
@@ -273,6 +268,7 @@ void QmlTypesCreator::writeComponents()
     const QLatin1String methodsKey("methods");
     const QLatin1String accessKey("access");
     const QLatin1String typeKey("type");
+    const QLatin1String returnTypeKey("returnType");
     const QLatin1String argumentsKey("arguments");
 
     const QLatin1String destroyedName("destroyed");
@@ -287,6 +283,7 @@ void QmlTypesCreator::writeComponents()
 
     const QLatin1String publicAccess("public");
     const QLatin1String intType("int");
+    const QLatin1String stringType("string");
 
     for (const QJsonObject &component : m_ownTypes) {
         m_qml.writeStartObject(componentElement);
@@ -331,6 +328,7 @@ void QmlTypesCreator::writeComponents()
             QJsonObject toStringMethod;
             toStringMethod.insert(nameKey, toStringName);
             toStringMethod.insert(accessKey, publicAccess);
+            toStringMethod.insert(returnTypeKey, stringType);
             componentMethods.append(toStringMethod);
 
             // Add destroy()

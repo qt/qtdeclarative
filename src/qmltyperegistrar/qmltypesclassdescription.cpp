@@ -123,9 +123,6 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
             }
         } else if (name == QLatin1String("QML.Root")) {
             isRootClass = true;
-            isBuiltin = true;
-        } else if (name == QLatin1String("QML.Builtin")) {
-            isBuiltin = true;
         }
     }
 

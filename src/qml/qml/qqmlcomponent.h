@@ -73,7 +73,6 @@ class Q_QML_EXPORT QQmlComponent : public QObject
     QML_NAMED_ELEMENT(Component)
     QML_ADDED_IN_VERSION(2, 0)
     QML_ATTACHED(QQmlComponentAttached)
-    Q_CLASSINFO("QML.Builtin", "QML")
 
 public:
     enum CompilationMode { PreferSynchronous, Asynchronous };

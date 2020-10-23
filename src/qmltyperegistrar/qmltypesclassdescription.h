@@ -51,7 +51,6 @@ struct QmlTypesClassDescription
     bool isCreatable = true;
     bool isSingleton = false;
     bool isRootClass = false;
-    bool isBuiltin = false;
 
     enum CollectMode {
         TopLevel,

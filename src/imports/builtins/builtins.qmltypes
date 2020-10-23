@@ -12,6 +12,42 @@ Module {
         exports: ["QML/var 1.0", "QML/variant 1.0"]
         exportMetaObjectRevisions: [256]
     }
+
+    Component {
+        name: "QObject"
+        accessSemantics: "reference"
+        exports: [ "QML/QtObject 1.0"]
+
+        exportMetaObjectRevisions: [256]
+        Method { name: "toString"; type: "string" }
+        Method { name: "destroy" }
+        Method {
+            name: "destroy"
+            Parameter { name: "delay"; type: "int" }
+        }
+    }
+
+    Component {
+        name: "QQmlComponent"
+
+        accessSemantics: "reference"
+        prototype: "QObject"
+        exports: [ "QML/Component 1.0" ]
+
+        exportMetaObjectRevisions: [256]
+        Enum {
+            name: "Status"
+            values: ["Null", "Ready", "Loading", "Error"]
+        }
+        Property { name: "status"; type: "Status"; isReadonly: true }
+
+        Signal {
+            name: "statusChanged"
+            Parameter { type: "QQmlComponent::Status" }
+        }
+        Method { name: "errorString"; type: "string" }
+    }
+
     Component {
         name: "Number"
         // is a singleton, but its constructor can construct NumberPrototype objects...
