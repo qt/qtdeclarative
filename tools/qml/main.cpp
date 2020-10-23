@@ -108,7 +108,7 @@ static void loadConf(const QString &override, bool quiet) // Terminates app on f
     bool builtIn = false; //just for keeping track of the warning
     if (override.isEmpty()) {
         QFileInfo fi;
-        fi.setFile(QStandardPaths::locate(QStandardPaths::DataLocation, defaultFileName));
+        fi.setFile(QStandardPaths::locate(QStandardPaths::AppDataLocation, defaultFileName));
         if (fi.exists()) {
             settingsUrl = QUrl::fromLocalFile(fi.absoluteFilePath());
         } else {
