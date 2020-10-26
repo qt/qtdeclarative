@@ -23,6 +23,10 @@ find_package(Qt6 COMPONENTS QuickControls2)
 qt_add_executable(gallery_controls2 # special case
     gallery.cpp
 )
+set_target_properties(gallery_controls2 PROPERTIES # special case
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(gallery_controls2 PUBLIC # special case
     Qt::Core
     Qt::Gui

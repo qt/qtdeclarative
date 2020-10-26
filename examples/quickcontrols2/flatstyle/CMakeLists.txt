@@ -24,6 +24,10 @@ find_package(Qt6 COMPONENTS Widgets)
 qt_add_executable(flatstyle
     main.cpp
 )
+set_target_properties(flatstyle PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(flatstyle PUBLIC
     Qt::Core
     Qt::Gui

@@ -26,6 +26,10 @@ qt_add_executable(chapter5-styling
     sqlcontactmodel.cpp sqlcontactmodel.h
     sqlconversationmodel.cpp sqlconversationmodel.h
 )
+set_target_properties(chapter5-styling PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(chapter5-styling PUBLIC
     Qt::Core
     Qt::Gui

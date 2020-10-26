@@ -23,6 +23,10 @@ find_package(Qt6 COMPONENTS QuickControls2)
 qt_add_executable(wearable
     wearable.cpp
 )
+set_target_properties(wearable PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(wearable PUBLIC
     Qt::Core
     Qt::Gui

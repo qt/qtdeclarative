@@ -23,6 +23,10 @@ qt_add_executable(contactlist
     contactmodel.cpp contactmodel.h
     main.cpp
 )
+set_target_properties(contactlist PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(contactlist PUBLIC
     Qt::Core
     Qt::Gui

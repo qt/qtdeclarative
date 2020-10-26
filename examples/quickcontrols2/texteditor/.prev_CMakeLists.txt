@@ -24,6 +24,10 @@ qt_add_executable(texteditor
     documenthandler.cpp documenthandler.h
     texteditor.cpp
 )
+set_target_properties(texteditor PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(texteditor PUBLIC
     Qt::Core
     Qt::Gui

@@ -23,6 +23,10 @@ find_package(Qt6 COMPONENTS QuickControls2)
 qt_add_executable(gallery
     gallery.cpp
 )
+set_target_properties(gallery PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(gallery PUBLIC
     Qt::Core
     Qt::Gui
