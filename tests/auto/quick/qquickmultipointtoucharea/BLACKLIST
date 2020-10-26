@@ -20,5 +20,3 @@ macos # QTBUG-86729
 [cancel]
 macos # QTBUG-86729
 *
-[inMouseArea]  # QTBUG-86729
-*

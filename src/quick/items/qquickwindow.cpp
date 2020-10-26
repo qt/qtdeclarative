@@ -3178,7 +3178,7 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QPointerEvent *event, QQu
         if (isMouseEvent(event)) {
             auto me = static_cast<QMouseEvent *>(event);
             if (receiver->acceptedMouseButtons()) {
-                const bool wasAccepted = me->isAccepted();
+                const bool wasAccepted = event->allPointsAccepted();
                 Q_ASSERT(event->pointCount());
                 localizePointerEvent(event, receiver);
                 event->setAccepted(true);
