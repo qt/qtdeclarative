@@ -8430,6 +8430,8 @@ QTouchEvent QQuickItemPrivate::localizedTouchEvent(const QTouchEvent *event, boo
         QEventPoint pCopy(p);
         QMutableEventPoint mut = QMutableEventPoint::from(pCopy);
         eventStates |= p.state();
+        if (p.state() == QEventPoint::State::Released)
+            mut.detach();
         mut.setPosition(localPos);
         touchPoints << mut;
     }
