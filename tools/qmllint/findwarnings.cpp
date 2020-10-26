@@ -339,9 +339,6 @@ bool FindWarningVisitor::check()
         }
     }
 
-    if (m_visitFailed)
-        return false;
-
     // now that all ids are known, revisit any Connections whose target were perviously unknown
     for (auto const &outstandingConnection: m_outstandingConnections) {
         auto targetScope = m_scopesById[outstandingConnection.targetName];
@@ -361,7 +358,8 @@ bool FindWarningVisitor::check()
         return true;
 
     CheckIdentifiers check(&m_colorOut, m_code, m_rootScopeImports, m_filePath);
-    return check(m_scopesById, m_signalHandlers, m_memberAccessChains, m_globalScope, m_rootId);
+    return check(m_scopesById, m_signalHandlers, m_memberAccessChains, m_globalScope, m_rootId)
+            && !m_visitFailed;
 }
 
 bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
