@@ -770,7 +770,8 @@ void QQmlMetaType::registerModule(const char *uri, QTypeRevision version)
     QQmlTypeModule *module = getTypeModule(QString::fromUtf8(uri), version, data);
     Q_ASSERT(module);
 
-    module->addMinorVersion(version.minorVersion());
+    if (version.hasMinorVersion())
+        module->addMinorVersion(version.minorVersion());
 }
 
 int QQmlMetaType::typeId(const char *uri, QTypeRevision version, const char *qmlName)

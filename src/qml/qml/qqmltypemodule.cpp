@@ -61,7 +61,9 @@ void QQmlTypeModule::addMinorVersion(quint8 version)
 void QQmlTypeModule::add(QQmlTypePrivate *type)
 {
     QMutexLocker lock(&m_mutex);
-    addMinorVersion(type->version.minorVersion());
+
+    if (type->version.hasMinorVersion())
+        addMinorVersion(type->version.minorVersion());
 
     QList<QQmlTypePrivate *> &list = m_typeHash[type->elementName];
     for (int ii = 0; ii < list.count(); ++ii) {
