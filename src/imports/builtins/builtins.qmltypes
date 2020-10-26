@@ -82,7 +82,7 @@ Module {
         Property{ name:"NEGATIVE_INFINITY" ; type: "NumberPrototype"; isReadonly: true }
         Method{
             name: "parseFloat"
-            type: "real"
+            type: "double"
             Parameter { name: "string"; type: "string" }
         }
         Method{
@@ -131,135 +131,135 @@ Module {
         isSingleton: true
         exports: ["QML/Math 1.0"]
         exportMetaObjectRevisions: [256]
-        Property{ name:"E" ; type: "real"; isReadonly: true }
-        Property{ name:"LN10" ; type: "real"; isReadonly: true }
-        Property{ name:"LN2" ; type: "real"; isReadonly: true }
-        Property{ name:"LOG10E" ; type: "real"; isReadonly: true }
-        Property{ name:"LOG2E" ; type: "real"; isReadonly: true }
-        Property{ name:"PI" ; type: "real"; isReadonly: true }
-        Property{ name:"SQRT1_2" ; type: "real"; isReadonly: true }
-        Property{ name:"SQRT2" ; type: "real"; isReadonly: true }
+        Property{ name:"E" ; type: "double"; isReadonly: true }
+        Property{ name:"LN10" ; type: "double"; isReadonly: true }
+        Property{ name:"LN2" ; type: "double"; isReadonly: true }
+        Property{ name:"LOG10E" ; type: "double"; isReadonly: true }
+        Property{ name:"LOG2E" ; type: "double"; isReadonly: true }
+        Property{ name:"PI" ; type: "double"; isReadonly: true }
+        Property{ name:"SQRT1_2" ; type: "double"; isReadonly: true }
+        Property{ name:"SQRT2" ; type: "double"; isReadonly: true }
         Method{
             name: "abs"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
         Method{
             name: "acos"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
         Method{
             name: "acosh"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
         Method{
             name: "asin"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
         Method{
             name: "asinh"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
         Method{
             name: "atan"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
         Method{
             name: "atanh"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
         Method{
             name: "atan2"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
         Method{
             name: "acbrt"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
         Method{
             name: "ceil"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
         Method{
             name: "clz32"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
         Method{
             name: "cos"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
         Method{
             name: "cosh"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
         Method{
             name: "exp"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
         Method{
             name: "expm1"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
         Method{
             name: "floor"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
         Method{
             name: "fround"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
         Method{
             name: "hypot"
-            type: "real"
-            Parameter { name: "value1"; type: "real" }
-            Parameter { name: "value2"; type: "real" }
+            type: "double"
+            Parameter { name: "value1"; type: "double" }
+            Parameter { name: "value2"; type: "double" }
             // vararg
         }
         Method{
             name: "cosh"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
         Method{
             name: "imul"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
         Method{
             name: "log"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
         Method{
             name: "log1p"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
         Method{
             name: "log10"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
         Method{
             name: "log2"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
         Method{
             name: "max"
@@ -277,48 +277,48 @@ Module {
         }
         Method{
             name: "pow"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
-            Parameter { name: "y"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
+            Parameter { name: "y"; type: "double" }
         }
         Method{
             name: "random"
-            type: "real"
+            type: "double"
         }
         Method{
             name: "round"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
         Method{
             name: "sign"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
         Method{
             name: "sin"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
         Method{
             name: "sinh"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
         Method{
             name: "sqrt"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
         Method{
             name: "tanh"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
         Method{
             name: "trunc"
-            type: "real"
-            Parameter { name: "x"; type: "real" }
+            type: "double"
+            Parameter { name: "x"; type: "double" }
         }
     }
     Component {
@@ -328,7 +328,12 @@ Module {
         prototype: "NumberPrototype"
     }
     Component {
-        name: "real"
+        name: "float"
+        prototype: "NumberPrototype"
+        accessSemantics: "value"
+    }
+    Component {
+        name: "double"
         exports: ["QML/real 1.0"]
         exportMetaObjectRevisions: [256]
         prototype: "NumberPrototype"
@@ -631,11 +636,11 @@ Module {
         }
         Method{
             name: "getTime"
-            type: "real"
+            type: "double"
         }
         Method{
             name: "getTimeZoneOffset"
-            type: "real"
+            type: "double"
         }
         Method{
             name: "getUTCDate"
