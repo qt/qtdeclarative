@@ -26,6 +26,10 @@ qt_add_executable(rendercontrol_opengl
     main.cpp
     window_singlethreaded.cpp window_singlethreaded.h
 )
+set_target_properties(rendercontrol_opengl PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(rendercontrol_opengl PUBLIC
     Qt::Core
     Qt::Gui

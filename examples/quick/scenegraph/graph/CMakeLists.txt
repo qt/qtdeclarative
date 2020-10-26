@@ -26,6 +26,10 @@ qt_add_executable(graph
     main.cpp
     noisynode.cpp noisynode.h
 )
+set_target_properties(graph PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(graph PUBLIC
     Qt::Core
     Qt::Gui

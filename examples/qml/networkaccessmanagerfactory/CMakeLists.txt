@@ -24,6 +24,10 @@ find_package(Qt6 COMPONENTS Network)
 qt_add_executable(networkaccessmanagerfactory
     main.cpp
 )
+set_target_properties(networkaccessmanagerfactory PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(networkaccessmanagerfactory PUBLIC
     Qt::Core
     Qt::Gui

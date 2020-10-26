@@ -24,6 +24,10 @@ qt_add_executable(chapter3-bindings
     main.cpp
     piechart.cpp piechart.h
 )
+set_target_properties(chapter3-bindings PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(chapter3-bindings PUBLIC
     Qt::Core
     Qt::Gui

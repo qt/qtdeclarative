@@ -24,6 +24,10 @@ qt_add_executable(threadedanimation
     main.cpp
     spinner.cpp spinner.h
 )
+set_target_properties(threadedanimation PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(threadedanimation PUBLIC
     Qt::Core
     Qt::Gui

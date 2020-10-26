@@ -24,6 +24,10 @@ qt_add_executable(maskedmousearea
     main.cpp
     maskedmousearea.cpp maskedmousearea.h
 )
+set_target_properties(maskedmousearea PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(maskedmousearea PUBLIC
     Qt::Core
     Qt::Gui

@@ -24,6 +24,10 @@ qt_add_executable(vulkanunderqml
     main.cpp
     vulkansquircle.cpp vulkansquircle.h
 )
+set_target_properties(vulkanunderqml PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(vulkanunderqml PUBLIC
     Qt::Core
     Qt::Gui

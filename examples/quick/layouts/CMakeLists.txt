@@ -23,6 +23,10 @@ find_package(Qt6 COMPONENTS Quick)
 qt_add_executable(layouts
     main.cpp
 )
+set_target_properties(layouts PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(layouts PUBLIC
     Qt::Core
     Qt::Gui

@@ -25,6 +25,10 @@ qt_add_executable(fboitem
     fboinsgrenderer.cpp fboinsgrenderer.h
     main.cpp
 )
+set_target_properties(fboitem PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_include_directories(fboitem PUBLIC
     ../shared
 )

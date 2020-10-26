@@ -24,6 +24,10 @@ qt_add_executable(gameoflife
     gameoflifemodel.cpp gameoflifemodel.h
     main.cpp
 )
+set_target_properties(gameoflife PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(gameoflife PUBLIC
     Qt::Core
     Qt::Gui

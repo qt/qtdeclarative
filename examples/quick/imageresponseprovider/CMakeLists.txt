@@ -30,6 +30,10 @@ qt6_add_qml_module(qmlimageresponseproviderplugin
 target_sources(qmlimageresponseproviderplugin PRIVATE
     imageresponseprovider.cpp
 )
+set_target_properties(qmlimageresponseproviderplugin PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(qmlimageresponseproviderplugin PUBLIC
     Qt::Core
     Qt::Gui

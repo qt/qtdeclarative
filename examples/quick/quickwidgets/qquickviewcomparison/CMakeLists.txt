@@ -27,6 +27,10 @@ qt_add_executable(qquickviewcomparison
     main.cpp
     mainwindow.cpp mainwindow.h
 )
+set_target_properties(qquickviewcomparison PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(qquickviewcomparison PUBLIC
     Qt::Core
     Qt::Gui

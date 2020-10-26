@@ -24,6 +24,10 @@ qt_add_executable(signal
     main.cpp
     person.cpp person.h
 )
+set_target_properties(signal PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(signal PUBLIC
     Qt::Core
     Qt::Gui

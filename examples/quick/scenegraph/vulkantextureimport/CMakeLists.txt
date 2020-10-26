@@ -24,6 +24,10 @@ qt_add_executable(vulkantextureimport
     main.cpp
     vulkantextureimport.cpp vulkantextureimport.h
 )
+set_target_properties(vulkantextureimport PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(vulkantextureimport PUBLIC
     Qt::Core
     Qt::Gui

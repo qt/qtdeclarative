@@ -24,6 +24,10 @@ qt_add_executable(custommaterial_declarative # special case
     customitem.cpp customitem.h
     main.cpp
 )
+set_target_properties(custommaterial_declarative PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(custommaterial_declarative PUBLIC # special case
     Qt::Core
     Qt::Gui

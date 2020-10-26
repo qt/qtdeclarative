@@ -24,6 +24,10 @@ qt_add_executable(d3d11underqml
     d3d11squircle.cpp d3d11squircle.h
     main.cpp
 )
+set_target_properties(d3d11underqml PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(d3d11underqml PUBLIC
     Qt::Core
     Qt::Gui

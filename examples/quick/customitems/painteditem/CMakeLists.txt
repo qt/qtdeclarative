@@ -31,6 +31,10 @@ target_sources(qmltextballoonplugin PRIVATE
     TextBalloonPlugin/plugin.h
     textballoon.cpp textballoon.h
 )
+set_target_properties(qmltextballoonplugin PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(qmltextballoonplugin PUBLIC
     Qt::Core
     Qt::Gui

@@ -25,6 +25,10 @@ qt_add_executable(valuesource
     main.cpp
     person.cpp person.h
 )
+set_target_properties(valuesource PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(valuesource PUBLIC
     Qt::Core
     Qt::Gui

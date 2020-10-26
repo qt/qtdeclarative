@@ -24,6 +24,10 @@ qt_add_executable(abstractitemmodel
     main.cpp
     model.cpp model.h
 )
+set_target_properties(abstractitemmodel PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(abstractitemmodel PUBLIC
     Qt::Core
     Qt::Gui

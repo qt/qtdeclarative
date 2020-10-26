@@ -23,6 +23,10 @@ find_package(Qt6 COMPONENTS Qml)
 qt_add_executable(touchinteraction
     main.cpp
 )
+set_target_properties(touchinteraction PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(touchinteraction PUBLIC
     Qt::Core
     Qt::Gui

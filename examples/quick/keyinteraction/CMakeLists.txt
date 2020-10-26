@@ -23,6 +23,10 @@ find_package(Qt6 COMPONENTS Qml)
 qt_add_executable(keyinteraction
     main.cpp
 )
+set_target_properties(keyinteraction PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(keyinteraction PUBLIC
     Qt::Core
     Qt::Gui

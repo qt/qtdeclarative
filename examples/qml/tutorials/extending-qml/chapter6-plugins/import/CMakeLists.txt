@@ -32,6 +32,10 @@ target_sources(chartsplugin PRIVATE
     piechart.cpp piechart.h
     pieslice.cpp pieslice.h
 )
+set_target_properties(chartsplugin PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(chartsplugin PUBLIC
     Qt::Core
     Qt::Gui

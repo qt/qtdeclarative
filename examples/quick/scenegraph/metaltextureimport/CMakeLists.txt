@@ -24,6 +24,10 @@ qt_add_executable(metaltextureimport
     main.cpp
     metaltextureimport.h metaltextureimport.mm
 )
+set_target_properties(metaltextureimport PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(metaltextureimport PUBLIC
     "-framework Metal"
     Qt::Core

@@ -24,6 +24,10 @@ qt_add_executable(extended
     lineedit.cpp lineedit.h
     main.cpp
 )
+set_target_properties(extended PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(extended PUBLIC
     Qt::Core
     Qt::Gui

@@ -25,6 +25,10 @@ qt_add_executable(chapter4-customPropertyTypes
     piechart.cpp piechart.h
     pieslice.cpp pieslice.h
 )
+set_target_properties(chapter4-customPropertyTypes PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(chapter4-customPropertyTypes PUBLIC
     Qt::Core
     Qt::Gui

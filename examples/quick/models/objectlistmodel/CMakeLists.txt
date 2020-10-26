@@ -24,6 +24,10 @@ qt_add_executable(objectlistmodel
     dataobject.cpp dataobject.h
     main.cpp
 )
+set_target_properties(objectlistmodel PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(objectlistmodel PUBLIC
     Qt::Core
     Qt::Gui

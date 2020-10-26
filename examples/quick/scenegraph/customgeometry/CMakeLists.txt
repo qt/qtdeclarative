@@ -23,6 +23,10 @@ qt_add_executable(customgeometry_declarative # special case
     beziercurve.cpp beziercurve.h
     main.cpp
 )
+set_target_properties(customgeometry_declarative PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(customgeometry_declarative PUBLIC # special case
     Qt::Core
     Qt::Gui

@@ -24,6 +24,10 @@ find_package(Qt6 COMPONENTS QuickTest)
 qt_add_executable(tst_qmltestexample
     tst_qmltest.cpp
 )
+set_target_properties(tst_qmltestexample PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(tst_qmltestexample PUBLIC
     Qt::Core
     Qt::Gui
@@ -41,6 +45,12 @@ target_link_libraries(tst_qmltestexample PUBLIC
 #    )
 #endif()
 # special case end
+
+if(MACOS AND QT_BUILDING_QT)
+    set_target_properties(tst_qmltestexample PROPERTIES
+        MACOSX_BUNDLE FALSE
+    )
+endif()
 
 install(TARGETS tst_qmltestexample
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

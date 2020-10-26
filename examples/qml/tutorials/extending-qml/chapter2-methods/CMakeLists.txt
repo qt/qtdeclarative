@@ -24,6 +24,10 @@ qt_add_executable(chapter2-methods
     main.cpp
     piechart.cpp piechart.h
 )
+set_target_properties(chapter2-methods PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(chapter2-methods PUBLIC
     Qt::Core
     Qt::Gui

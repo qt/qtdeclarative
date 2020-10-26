@@ -30,6 +30,10 @@ qt6_add_qml_module(qmlimageproviderplugin
 target_sources(qmlimageproviderplugin PRIVATE
     imageprovider.cpp
 )
+set_target_properties(qmlimageproviderplugin PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(qmlimageproviderplugin PUBLIC
     Qt::Core
     Qt::Gui

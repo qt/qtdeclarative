@@ -21,10 +21,26 @@ find_package(Qt6 COMPONENTS Qml)
 qt_add_executable(shell
     main.cpp
 )
+set_target_properties(shell PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(shell PUBLIC
     Qt::Core
     Qt::Qml
 )
+
+if(WIN32)
+    set_target_properties(shell PROPERTIES
+        WIN32_EXECUTABLE FALSE
+    )
+endif()
+
+if(APPLE)
+    set_target_properties(shell PROPERTIES
+        MACOSX_BUNDLE FALSE
+    )
+endif()
 
 install(TARGETS shell
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

@@ -24,6 +24,10 @@ qt_add_executable(grouped
     main.cpp
     person.cpp person.h
 )
+set_target_properties(grouped PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(grouped PUBLIC
     Qt::Core
     Qt::Gui

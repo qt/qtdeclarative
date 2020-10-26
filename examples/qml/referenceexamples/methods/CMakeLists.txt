@@ -23,6 +23,10 @@ qt_add_executable(methods
     main.cpp
     person.cpp person.h
 )
+set_target_properties(methods PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(methods PUBLIC
     Qt::Core
     Qt::Qml

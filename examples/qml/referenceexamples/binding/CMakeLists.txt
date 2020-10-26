@@ -25,6 +25,10 @@ qt_add_executable(binding
     main.cpp
     person.cpp person.h
 )
+set_target_properties(binding PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(binding PUBLIC
     Qt::Core
     Qt::Gui

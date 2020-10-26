@@ -24,6 +24,10 @@ qt_add_executable(metalunderqml
     main.cpp
     metalsquircle.h metalsquircle.mm
 )
+set_target_properties(metalunderqml PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(metalunderqml PUBLIC
     "-framework Metal"
     Qt::Core

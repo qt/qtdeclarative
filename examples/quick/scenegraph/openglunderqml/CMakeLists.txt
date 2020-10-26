@@ -24,6 +24,10 @@ qt_add_executable(openglunderqml
     main.cpp
     squircle.cpp squircle.h
 )
+set_target_properties(openglunderqml PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(openglunderqml PUBLIC
     Qt::Core
     Qt::Gui

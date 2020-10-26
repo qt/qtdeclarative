@@ -30,6 +30,10 @@ target_sources(qmlqtimeexampleplugin PRIVATE
     plugin.cpp
     timemodel.cpp timemodel.h
 )
+set_target_properties(qmlqtimeexampleplugin PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(qmlqtimeexampleplugin PUBLIC
     Qt::Core
     Qt::Gui

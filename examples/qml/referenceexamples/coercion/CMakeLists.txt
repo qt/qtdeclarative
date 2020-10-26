@@ -23,6 +23,10 @@ qt_add_executable(coercion
     main.cpp
     person.cpp person.h
 )
+set_target_properties(coercion PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(coercion PUBLIC
     Qt::Core
     Qt::Qml

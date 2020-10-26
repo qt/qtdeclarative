@@ -24,6 +24,10 @@ qt_add_executable(qml_pixelator
     imagemodel.cpp imagemodel.h
     main.cpp
 )
+set_target_properties(qml_pixelator PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(qml_pixelator PUBLIC
     Qt::Core
     Qt::Gui

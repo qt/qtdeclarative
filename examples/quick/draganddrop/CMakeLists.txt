@@ -23,6 +23,10 @@ find_package(Qt6 COMPONENTS Qml)
 qt_add_executable(draganddrop
     main.cpp
 )
+set_target_properties(draganddrop PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(draganddrop PUBLIC
     Qt::Core
     Qt::Gui

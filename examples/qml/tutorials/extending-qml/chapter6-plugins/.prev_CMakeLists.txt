@@ -21,6 +21,10 @@ find_package(Qt6 COMPONENTS Quick)
 qt_add_executable(chapter6-plugins
     main.cpp
 )
+set_target_properties(chapter6-plugins PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(chapter6-plugins PUBLIC
     Qt::Qml
     Qt::Quick

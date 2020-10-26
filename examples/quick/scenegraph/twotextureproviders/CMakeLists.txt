@@ -24,6 +24,10 @@ qt_add_executable(twotextureproviders
     main.cpp
     xorblender.cpp xorblender.h
 )
+set_target_properties(twotextureproviders PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(twotextureproviders PUBLIC
     Qt::Core
     Qt::Gui

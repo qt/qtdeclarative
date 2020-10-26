@@ -25,6 +25,10 @@ qt_add_executable(rendercontrol_d3d11
     main.cpp
     window.cpp window.h
 )
+set_target_properties(rendercontrol_d3d11 PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 target_link_libraries(rendercontrol_d3d11 PUBLIC
     Qt::Core
     Qt::Gui
