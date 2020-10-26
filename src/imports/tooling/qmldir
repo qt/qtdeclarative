@@ -1,0 +1,10 @@
+module QtQuick.tooling
+
+Component 1.2 Component.qml
+Enum 1.2 Enum.qml
+Member 1.2 Member.qml
+Method 1.2 Method.qml
+Module 1.2 Module.qml
+Parameter 1.2 Parameter.qml
+Property 1.2 Property.qml
+Signal 1.2 Signal.qml

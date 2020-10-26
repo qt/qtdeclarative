@@ -5,7 +5,8 @@ SUBDIRS += \
     builtins \
     qtqml \
     models \
-    labsmodels
+    labsmodels \
+    tooling
 
 qtConfig(qml-itemmodel): SUBDIRS += folderlistmodel
 qtConfig(qml-worker-script): SUBDIRS += workerscript
