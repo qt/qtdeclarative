@@ -314,6 +314,7 @@ void QQmlJSTypeDescriptionReader::readSignalOrMethod(UiObjectDefinition *ast, bo
 void QQmlJSTypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQmlJSScope::Ptr &scope)
 {
     QQmlJSMetaProperty property;
+    property.setIsWritable(true); // default is writable
 
     for (UiObjectMemberList *it = ast->initializer->members; it; it = it->next) {
         UiObjectMember *member = it->member;
