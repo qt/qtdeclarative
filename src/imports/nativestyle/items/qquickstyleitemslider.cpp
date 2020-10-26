@@ -89,7 +89,6 @@ void QQuickStyleItemSlider::initStyleOption(QStyleOptionSlider &styleOption)
     if (slider->isPressed())
         styleOption.state |= QStyle::State_Sunken;
 
-
     qreal min = 0;
     qreal max = 1;
     if (!qFuzzyIsNull(slider->stepSize())) {
@@ -116,5 +115,5 @@ void QQuickStyleItemSlider::initStyleOption(QStyleOptionSlider &styleOption)
     styleOption.minimum = 0;
     styleOption.maximum = int(Scale);
     styleOption.sliderValue = int((slider->value() - min) * normalizeMultiplier);
-    styleOption.sliderPosition = int((slider->position() - min) * normalizeMultiplier);
+    styleOption.sliderPosition = int(slider->position() * styleOption.maximum);
 }
