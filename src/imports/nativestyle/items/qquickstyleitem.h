@@ -144,7 +144,7 @@ struct StyleItemGeometry
     QSize minimumSize;
     QSize implicitSize;
     QRect contentRect;
-    QRect layoutRect;
+    QRect layoutRect;   //If invalid, there are no layout margins!
     QMargins ninePatchMargins;
     qreal focusFrameRadius;
 };

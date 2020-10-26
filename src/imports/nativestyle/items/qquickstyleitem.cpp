@@ -433,8 +433,12 @@ QQuickStyleMargins QQuickStyleItem::layoutMargins() const
     // than the control(frame) itself, to e.g make room for shadow effects
     // or focus rects/glow. And this will differ from control to control. The
     // layoutRect will then inform where the frame of the control is.
-    const QRect outerRect(QPoint(0, 0), m_styleItemGeometry.implicitSize);
-    return QQuickStyleMargins(outerRect, m_styleItemGeometry.layoutRect);
+    QQuickStyleMargins margins;
+    if (m_styleItemGeometry.layoutRect.isValid()) {
+        const QRect outerRect(QPoint(0, 0), m_styleItemGeometry.implicitSize);
+        margins = QQuickStyleMargins(outerRect, m_styleItemGeometry.layoutRect);
+    }
+    return margins;
 }
 
 QSize QQuickStyleItem::minimumSize() const
