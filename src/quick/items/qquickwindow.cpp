@@ -3176,18 +3176,17 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QPointerEvent *event, QQu
     if (filteringParent->filtersChildMouseEvents() && !hasFiltered.contains(filteringParent)) {
         hasFiltered.append(filteringParent);
         if (isMouseEvent(event)) {
-            auto me = static_cast<QMouseEvent *>(event);
             if (receiver->acceptedMouseButtons()) {
                 const bool wasAccepted = event->allPointsAccepted();
                 Q_ASSERT(event->pointCount());
                 localizePointerEvent(event, receiver);
                 event->setAccepted(true);
                 auto oldMouseGrabber = event->exclusiveGrabber(event->point(0));
-                if (filteringParent->childMouseEventFilter(receiver, const_cast<QMouseEvent *>(me))) {
+                if (filteringParent->childMouseEventFilter(receiver, event)) {
                     qCDebug(DBG_MOUSE) << "mouse event intercepted by childMouseEventFilter of " << filteringParent;
                     skipDelivery.append(filteringParent);
                     filtered = true;
-                    if (me->isAccepted() && me->isBeginEvent()) {
+                    if (event->isAccepted() && event->isBeginEvent()) {
                         auto &point = event->point(0);
                         auto mouseGrabber = event->exclusiveGrabber(point);
                         if (mouseGrabber && mouseGrabber != receiver && mouseGrabber != oldMouseGrabber) {
@@ -3198,13 +3197,12 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QPointerEvent *event, QQu
                     }
                 } else {
                     // Restore accepted state if the event was not filtered.
-                    const_cast<QMouseEvent *>(me)->setAccepted(wasAccepted);
+                    event->setAccepted(wasAccepted);
                 }
             }
         } else if (isTouchEvent(event)) {
-            auto te = static_cast<QTouchEvent *>(event);
             bool acceptsTouchEvents = receiver->acceptTouchEvents();
-            auto device = te->device();
+            auto device = event->device();
             if (device->type() == QInputDevice::DeviceType::TouchPad &&
                     device->capabilities().testFlag(QInputDevice::Capability::MouseEmulation)) {
                 qCDebug(DBG_TOUCH_TARGET) << "skipping filtering of synth-mouse event from" << device;
@@ -3212,13 +3210,13 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QPointerEvent *event, QQu
                 // get a touch event customized for delivery to filteringParent
                 // TODO should not be necessary? because QQuickWindowPrivate::deliverMatchingPointsToItem() does it
                 QTouchEvent filteringParentTouchEvent =
-                        QQuickItemPrivate::get(receiver)->localizedTouchEvent(te, true);
+                        QQuickItemPrivate::get(receiver)->localizedTouchEvent(static_cast<QTouchEvent *>(event), true);
                 if (filteringParentTouchEvent.type() != QEvent::None) {
                     if (filteringParent->childMouseEventFilter(receiver, &filteringParentTouchEvent)) {
                         qCDebug(DBG_TOUCH) << "touch event intercepted by childMouseEventFilter of " << filteringParent;
                         skipDelivery.append(filteringParent);
                         for (auto point : filteringParentTouchEvent.points())
-                            te->setExclusiveGrabber(point, filteringParent);
+                            event->setExclusiveGrabber(point, filteringParent);
                         return true;
                     }
                     else if (Q_LIKELY(QCoreApplication::testAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents))) {
