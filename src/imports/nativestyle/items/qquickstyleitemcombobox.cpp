@@ -77,7 +77,7 @@ void QQuickStyleItemComboBox::initStyleOption(QStyleOptionComboBox &styleOption)
     initStyleOptionBase(styleOption);
     auto comboBox = control<QQuickComboBox>();
 
-    styleOption.subControls = QStyle::SC_ComboBoxFrame | QStyle::SC_ComboBoxArrow;// | QStyle::SC_ComboBoxEditField | QStyle::SC_ComboBoxArrow;
+    styleOption.subControls = QStyle::SC_ComboBoxArrow | QStyle::SC_ComboBoxFrame | QStyle::SC_ComboBoxEditField;
     styleOption.frame = true;
     styleOption.state |= QStyle::State_Selected;
     styleOption.editable = comboBox->isEditable();
