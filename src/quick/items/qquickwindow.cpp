@@ -953,7 +953,7 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QTouchEvent *poi
             if (!item->contains(pos))
                 break;
 
-            qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << Qt::hex << p.id() << "->" << item;
+            qCDebug(DBG_TOUCH_TARGET) << device << "TP (mouse)" << Qt::hex << p.id() << "->" << item;
             QMouseEvent mousePress = touchToMouseEvent(QEvent::MouseButtonPress, p, &event, item);
 
             // Send a single press and see if that's accepted
@@ -994,7 +994,7 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QTouchEvent *poi
                     QCoreApplication::sendEvent(item, &me);
                     event.setAccepted(me.isAccepted());
                     if (me.isAccepted())
-                        qCDebug(DBG_TOUCH_TARGET) << "TP (mouse)" << Qt::hex << p.id() << "->" << mouseGrabberItem;
+                        qCDebug(DBG_TOUCH_TARGET) << device << "TP (mouse)" << Qt::hex << p.id() << "->" << mouseGrabberItem;
                     return event.isAccepted();
                 } else {
                     // no grabber, check if we care about mouse hover
