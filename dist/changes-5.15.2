@@ -1,0 +1,91 @@
+Qt 5.15.2 is a bug-fix release. It maintains both forward and backward
+compatibility (source and binary) with Qt 5.15.1.
+
+For more details, refer to the online documentation included in this
+distribution. The documentation is also available online:
+
+  https://doc.qt.io/qt-5.15/index.html
+
+The Qt version 5.15 series is binary compatible with the 5.14.x series.
+Applications compiled for 5.14 will continue to run with 5.15.
+
+Some of the changes listed in this file include issue tracking numbers
+corresponding to tasks in the Qt Bug Tracker:
+
+  https://bugreports.qt.io/
+
+Each of these identifiers can be entered in the bug tracker to obtain more
+information about a particular change.
+
+****************************************************************************
+*                          QtQuick                                         *
+****************************************************************************
+
+ - Animations:
+   * [QTBUG-82890] alwaysRunToEnd==true does not prevent complex Animations
+     from stopping anymore.
+
+ - Drag and drop:
+   * [QTBUG-82157] Fixed a crash when changing supportedActions in Drag.
+
+ - Item Views:
+   * [QTBUG-87821] TableView: The sync view is rebuilt even when flicking on
+     a sync view child now.
+   * [QTBUG-87680] TableView: The content size is always updated upon model
+     changes now.
+   * [QTBUG-74046][QTBUG-85302] ListView: Floating headers and footers
+     containing mouse-handling items work again when the listview is clipped.
+
+ - Layouts:
+   * [QTBUG-62989] We follow layoutMirroring in Layout margins now.
+
+ - Loader:
+   * [QTBUG-85938] QQuickLoader: The status property changes properly now when
+     setSource() is called.
+
+ - RHI / scene graph:
+   * [QTBUG-86402] Fixed a crash in QQuickShaderEffect when hiding a parent.
+   * [QTBUG-86524] We don't leak memory from QQuickView's QOpenGLContextGroup
+     object anymore.
+
+ - Text:
+   * [QTBUG-61475] You can use different input methods on TextEdit in
+     QQuickWidget now.
+
+****************************************************************************
+*                          Tooling                                         *
+****************************************************************************
+
+ - [QTBUG-87222] qmlformat: Computed property names work correctly now.
+ - [QTBUG-86980] qmlformat: for...of loops using array variables are
+   formatted correctly now.
+ - [QTBUG-86979] qmlformat: Inline components are formatted correctly now.
+ - [QTBUG-85317] qmlformat: Template literals are correctly formatted now.
+
+****************************************************************************
+*                          Examples                                        *
+****************************************************************************
+
+ - [QTBUG-87150] The lineedit example uses the correct QML_NAMED_ELEMENT
+   macro now.
+ - [QTBUG-85724] The Screen example does not attempt to shadow final
+   properties with required properties anymore.
+
+****************************************************************************
+*                          QtQml                                           *
+****************************************************************************
+
+ - [QTBUG-87721] qtquick_compiler_add_resources now takes OPTIONS into
+   account.
+ - [QTBUG-86989] You can define more than one inline component in a QML file
+   now.
+ - [QTBUG-75777] The QML Engine does not deadlock in its destructor anymore
+   under some conditions when asynchronous loaders are used.
+
+****************************************************************************
+*                        Platform Specific Changes                         *
+****************************************************************************
+
+ - WebOS:
+   * [QTBUG-83361] You can have activeFocus on multiple windows,
+     if there is a single window per screen on eglfs.
