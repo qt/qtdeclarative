@@ -74,7 +74,7 @@ Module {
             type: "bool"
             Parameter { name: "number"; type: "NumberPrototype" }
         }
-        Property{ name:"MAX_SAFE_INTEGER" ; type: "NumberPrototype"; isReadonly: true; isReadonly: true }
+        Property{ name:"MAX_SAFE_INTEGER" ; type: "NumberPrototype"; isReadonly: true }
         Property{ name:"MAX_VALUE" ; type: "NumberPrototype"; isReadonly: true }
         Property{ name:"MIN_SAFE_INTEGER" ; type: "NumberPrototype"; isReadonly: true }
         Property{ name:"MIN_VALUE" ; type: "NumberPrototype"; isReadonly: true }
