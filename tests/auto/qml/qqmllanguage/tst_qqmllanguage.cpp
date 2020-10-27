@@ -111,6 +111,7 @@ private slots:
     void bindJSValueToType();
     void bindTypeToJSValue();
     void customParserTypes();
+    void customParserTypeInInlineComponent();
     void rootAsQmlComponent();
     void rootItemIsComponent();
     void inlineQmlComponents();
@@ -1311,6 +1312,16 @@ void tst_qqmllanguage::customParserTypes()
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
     QCOMPARE(object->property("count"), QVariant(2));
+}
+
+// Tests that custom pursor types can be instantiated in ICs
+void tst_qqmllanguage::customParserTypeInInlineComponent()
+{
+    QQmlComponent component(&engine, testFileUrl("customParserTypeInIC.qml"));
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object != nullptr);
+    QCOMPARE(object->property("count"), 2);
 }
 
 // Tests that the root item can be a custom component

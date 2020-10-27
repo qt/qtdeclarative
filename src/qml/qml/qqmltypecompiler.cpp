@@ -683,6 +683,9 @@ QQmlCustomParserScriptIndexer::QQmlCustomParserScriptIndexer(QQmlTypeCompiler *t
 void QQmlCustomParserScriptIndexer::annotateBindingsWithScriptStrings()
 {
     scanObjectRecursively(/*root object*/0);
+    for (int i = 0; i < qmlObjects.size(); ++i)
+        if (qmlObjects.at(i)->isInlineComponent)
+            scanObjectRecursively(i);
 }
 
 void QQmlCustomParserScriptIndexer::scanObjectRecursively(int objectIndex, bool annotateScriptBindings)
@@ -1223,6 +1226,9 @@ QQmlDeferredAndCustomParserBindingScanner::QQmlDeferredAndCustomParserBindingSca
 
 bool QQmlDeferredAndCustomParserBindingScanner::scanObject()
 {
+    for (int i = 0; i < qmlObjects->size(); ++i)
+        if (qmlObjects->at(i)->isInlineComponent)
+            scanObject(i);
     return scanObject(/*root object*/0);
 }
 
