@@ -126,7 +126,7 @@ void tst_MouseAreaInterop::dragHandlerInSiblingStealingGrabFromMouseAreaViaTouch
     QScopedPointer<QQuickView> windowPtr;
     createView(windowPtr, "dragTakeOverFromSibling.qml");
     QQuickView * window = windowPtr.data();
-    auto devPriv = QPointingDevicePrivate::get(QPointingDevice::primaryPointingDevice());
+    auto devPriv = QPointingDevicePrivate::get(touchDevice);
 
     QPointer<QQuickPointerHandler> handler = window->rootObject()->findChild<QQuickPointerHandler*>();
     QVERIFY(handler);
@@ -139,9 +139,12 @@ void tst_MouseAreaInterop::dragHandlerInSiblingStealingGrabFromMouseAreaViaTouch
 
     touch.press(1, p1).commit();
     QQuickTouchUtils::flush(window);
-    QTRY_VERIFY(devPriv->pointById(0)->passiveGrabbers.contains(handler.data()));
-    QCOMPARE(devPriv->pointById(0)->exclusiveGrabber, ma);
-    QCOMPARE(window->mouseGrabberItem(), ma);
+    QTRY_VERIFY(!devPriv->activePoints.isEmpty());
+    qCDebug(lcPointerTests) << "active point after press:" << devPriv->activePoints.values().first().eventPoint;
+    auto epd = devPriv->queryPointById(1);
+    QVERIFY(epd);
+    QVERIFY(epd->passiveGrabbers.contains(handler.data()));
+    QCOMPARE(epd->exclusiveGrabber, ma);
     QCOMPARE(ma->pressed(), true);
 
     // Start dragging
@@ -152,7 +155,7 @@ void tst_MouseAreaInterop::dragHandlerInSiblingStealingGrabFromMouseAreaViaTouch
         p1 += QPoint(dragThreshold / 2, 0);
         touch.move(1, p1).commit();
         QQuickTouchUtils::flush(window);
-        if (!dragStoleGrab && devPriv->pointById(0)->exclusiveGrabber == handler)
+        if (!dragStoleGrab && epd->exclusiveGrabber == handler)
             dragStoleGrab = i;
     }
     if (dragStoleGrab)
