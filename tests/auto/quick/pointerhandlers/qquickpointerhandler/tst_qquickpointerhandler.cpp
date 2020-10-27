@@ -623,17 +623,19 @@ void tst_PointerHandlers::touchReleaseOutside()
     QVERIFY(eventItem1);
 
     eventItem1->acceptTouch = true;
+    eventItem1->setAcceptTouchEvents(true);
     eventItem1->acceptPointer = acceptPointer;
     eventItem1->grabPointer = grabPointer;
 
     QPoint p1 = QPoint(20, 20);
     QTest::touchEvent(window, touchDevice).press(0, p1, window);
     QQuickTouchUtils::flush(window);
+    qCDebug(lcPointerTests) << "events after touch press" << eventItem1->eventList;
     p1.setX(eventItem1->mapToScene(eventItem1->clipRect().bottomRight()).x() + 10);
     QTest::touchEvent(window, touchDevice).move(0, p1, window);
     QTest::touchEvent(window, touchDevice).release(0, p1, window);
     QQuickTouchUtils::flush(window);
-    qCDebug(lcPointerTests) << eventItem1->eventList;
+    qCDebug(lcPointerTests) << "events after touch release" << eventItem1->eventList;
     QCOMPARE(eventItem1->eventList.size(), eventCount);
     QCOMPARE_EVENT(endIndexToTest, endDestination, endType, endState, endGrabState);
 }
