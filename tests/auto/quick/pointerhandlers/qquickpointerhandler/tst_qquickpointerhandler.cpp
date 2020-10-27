@@ -510,12 +510,15 @@ void tst_PointerHandlers::mouseEventDelivery()
     // Do not accept anything
     QPoint p1 = QPoint(20, 20);
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, p1);
+    qCDebug(lcPointerTests) << "events after mouse press" << eventItem1->eventList;
     QCOMPARE(eventItem1->eventList.size(), 2);
     p1 += QPoint(10, 0);
     QTest::mouseMove(window, p1);
-    QCOMPARE(eventItem1->eventList.size(), 3);
+    qCDebug(lcPointerTests) << "events after mouse move" << eventItem1->eventList;
+    QCOMPARE(eventItem1->eventList.size(), 2);
     QTest::mouseRelease(window, Qt::LeftButton);
-    QCOMPARE(eventItem1->eventList.size(), 3);
+    qCDebug(lcPointerTests) << "events after mouse release" << eventItem1->eventList;
+    QCOMPARE(eventItem1->eventList.size(), 2);
     eventItem1->eventList.clear();
 
     // wait to avoid getting a double click event
@@ -527,6 +530,7 @@ void tst_PointerHandlers::mouseEventDelivery()
     eventItem1->setAcceptedMouseButtons(Qt::LeftButton);
     p1 = QPoint(20, 20);
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, p1);
+    qCDebug(lcPointerTests) << "events after mouse press" << eventItem1->eventList;
     QCOMPARE(eventItem1->eventList.size(), 2);
     QCOMPARE_EVENT(0, Event::HandlerDestination, QEvent::Pointer, QEventPoint::State::Pressed, NoGrab);
     QCOMPARE_EVENT(1, Event::MouseDestination, QEvent::MouseButtonPress, QEventPoint::State::Pressed, QPointingDevice::GrabExclusive);
@@ -541,18 +545,23 @@ void tst_PointerHandlers::mouseEventDelivery()
 
     p1 += QPoint(10, 0);
     QTest::mouseMove(window, p1);
-    QCOMPARE(eventItem1->eventList.size(), 3);
-    QCOMPARE_EVENT(2, Event::MouseDestination, QEvent::MouseMove, QEventPoint::State::Updated, QPointingDevice::GrabExclusive);
+    qCDebug(lcPointerTests) << "events after mouse move" << eventItem1->eventList;
+    QCOMPARE(eventItem1->eventList.size(), 4);
+    QCOMPARE_EVENT(3, Event::MouseDestination, QEvent::MouseMove, QEventPoint::State::Updated, QPointingDevice::GrabExclusive);
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
-    QCOMPARE(eventItem1->eventList.size(), 5);
-    QCOMPARE_EVENT(3, Event::MouseDestination, QEvent::MouseButtonRelease, QEventPoint::State::Released, NoGrab);
-    QCOMPARE_EVENT(4, Event::MouseDestination, QEvent::UngrabMouse, QEventPoint::State::Released, QPointingDevice::UngrabExclusive);
+    qCDebug(lcPointerTests) << "events after mouse release" << eventItem1->eventList;
+    QCOMPARE(eventItem1->eventList.size(), 7);
+    QCOMPARE_EVENT(eventItem1->eventList.size() - 2, Event::MouseDestination, QEvent::MouseButtonRelease, QEventPoint::State::Released, NoGrab);
+    QCOMPARE_EVENT(eventItem1->eventList.size() - 1, Event::MouseDestination, QEvent::UngrabMouse, QEventPoint::State::Released, QPointingDevice::UngrabExclusive);
     eventItem1->eventList.clear();
 
     // wait to avoid getting a double click event
     QTest::qWait(qApp->styleHints()->mouseDoubleClickInterval() + 10);
 
     // Grab pointer events
+    // TODO acceptPointer currently does nothing unique, but we could
+    // re-enable this test if we define the best way to handle generic QPointerEvents in Item subclasses
+    /*
     eventItem1->acceptMouse = false;
     eventItem1->acceptPointer = true;
     eventItem1->grabPointer = true;
@@ -571,6 +580,7 @@ void tst_PointerHandlers::mouseEventDelivery()
     QCOMPARE_EVENT(4, Event::HandlerDestination, QEvent::Pointer, QEventPoint::State::Released, QPointingDevice::GrabExclusive);
     QCOMPARE_EVENT(5, Event::HandlerDestination, QEvent::None, QEventPoint::State::Released, QPointingDevice::UngrabExclusive);
     eventItem1->eventList.clear();
+    */
 }
 
 void tst_PointerHandlers::touchReleaseOutside_data()
