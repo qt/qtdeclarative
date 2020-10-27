@@ -82,7 +82,11 @@ void QQuickStyleItemSlider::initStyleOption(QStyleOptionSlider &styleOption)
     initStyleOptionBase(styleOption);
     auto slider = control<QQuickSlider>();
 
-    styleOption.subControls = m_subControl == Groove ? QStyle::SC_SliderGroove : QStyle::SC_SliderHandle;
+    styleOption.subControls = QStyle::SC_None;
+    if (m_subControl & Groove)
+        styleOption.subControls |= QStyle::SC_SliderGroove;
+    if (m_subControl & Handle)
+        styleOption.subControls |= QStyle::SC_SliderHandle;
     styleOption.activeSubControls = QStyle::SC_None;
     styleOption.orientation = slider->orientation();
 
