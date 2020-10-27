@@ -234,6 +234,7 @@ protected:
     void componentComplete() override;
     QSGNode *updatePaintNode(QSGNode *oldNode, QQuickItem::UpdatePaintNodeData *updatePaintNodeData) override;
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
+    void itemChange(ItemChange change, const ItemChangeData &data) override;
     void updatePolish() override;
 
     virtual void connectToControl();

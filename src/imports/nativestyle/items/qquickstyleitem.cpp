@@ -220,6 +220,20 @@ void QQuickStyleItem::geometryChange(const QRectF &newGeometry, const QRectF &ol
         markGeometryDirty();
 }
 
+void QQuickStyleItem::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data)
+{
+    QQuickItem::itemChange(change, data);
+
+    switch (change) {
+    case QQuickItem::ItemVisibleHasChanged:
+        if (data.boolValue)
+            markImageDirty();
+        break;
+    default:
+        break;
+    }
+}
+
 void QQuickStyleItem::updateGeometry()
 {
     qqc2DebugHeading("GEOMETRY");
@@ -321,7 +335,7 @@ void QQuickStyleItem::updatePolish()
     QScopedValueRollback<bool> guard(m_polishing, true);
 
     const bool dirtyGeometry = m_dirty & DirtyFlag::Geometry;
-    const bool dirtyImage = (m_dirty & DirtyFlag::Image) || (!m_useNinePatchImage && dirtyGeometry);
+    const bool dirtyImage = isVisible() && ((m_dirty & DirtyFlag::Image) || (!m_useNinePatchImage && dirtyGeometry));
 
     if (dirtyGeometry)
         updateGeometry();
