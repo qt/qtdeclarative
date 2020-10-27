@@ -225,13 +225,20 @@ function(qt6_add_qml_module target)
             QT_QML_MODULE_RESOURCE_EXPORT "${arg_RESOURCE_EXPORT}"
     )
 
-    if (arg_OUTPUT_DIRECTORY AND NOT DO_NOT_CREATE_TARGET)
-        set_target_properties(${target}
-            PROPERTIES
-                LIBRARY_OUTPUT_DIRECTORY "${arg_OUTPUT_DIRECTORY}"
-                ARCHIVE_OUTPUT_DIRECTORY "${arg_OUTPUT_DIRECTORY}"
-         )
+    if (NOT DO_NOT_CREATE_TARGET)
+        if (arg_OUTPUT_DIRECTORY)
+            set_target_properties(${target}
+                PROPERTIES
+                    LIBRARY_OUTPUT_DIRECTORY "${arg_OUTPUT_DIRECTORY}"
+                    ARCHIVE_OUTPUT_DIRECTORY "${arg_OUTPUT_DIRECTORY}"
+            )
+        elseif (should_install)
+            install(TARGETS ${target}
+                DESTINATION "${arg_INSTALL_LOCATION}"
+            )
+        endif()
     endif()
+
     if (arg_OUTPUT_DIRECTORY)
         set(target_output_dir ${arg_OUTPUT_DIRECTORY})
     else()
@@ -281,13 +288,15 @@ function(qt6_add_qml_module target)
     endif()
     if (arg_TYPEINFO)
         string(APPEND qmldir_file_contents "typeinfo ${arg_TYPEINFO}\n")
-    else()
+    elseif (arg_SOURCES)
         # This always need to be written out since at the moment we have cases
         # where qmltyperegistrar is not run with the plugin but on a module
         # e.g: src/qml generates the qmltypes for src/imports/qtqml.
         # When this has been fixed/standardized we should move this to
         # qt6_qml_type_registration() so that it is written out when the
         # plugins.qmltypes is actually generated.
+        # However, if there are no sources, then this is a pure QML module. In
+        # that case there cannot be a plugins.qmltypes file.
         string(APPEND qmldir_file_contents "typeinfo plugins.qmltypes\n")
     endif()
 
