@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtSG module of the Qt Toolkit.
@@ -64,11 +64,7 @@ class QQuickPinchAreaPrivate : public QQuickItemPrivate
     Q_DECLARE_PUBLIC(QQuickPinchArea)
 public:
     QQuickPinchAreaPrivate()
-      : enabled(true), stealMouse(false), inPinch(false)
-      , pinchRejected(false), pinchActivated(false), initPinch(false)
-      , pinch(0), pinchStartDist(0), pinchStartScale(1.0)
-      , pinchLastScale(1.0), pinchStartRotation(0.0), pinchStartAngle(0.0)
-      , pinchLastAngle(0.0), pinchRotation(0.0)
+      : enabled(true), inPinch(false), pinchRejected(false), pinchActivated(false), initPinch(false)
     {
     }
 
@@ -77,34 +73,33 @@ public:
     void init()
     {
         Q_Q(QQuickPinchArea);
-        q->setAcceptedMouseButtons(Qt::LeftButton);
+        q->setAcceptTouchEvents(true);
         q->setFiltersChildMouseEvents(true);
     }
 
     bool enabled : 1;
-    bool stealMouse : 1;
     bool inPinch : 1;
     bool pinchRejected : 1;
     bool pinchActivated : 1;
     bool initPinch : 1;
-    QQuickPinch *pinch;
+    int id1 = -1;
+    QQuickPinch *pinch = nullptr;
     QPointF sceneStartPoint1;
     QPointF sceneStartPoint2;
     QPointF lastPoint1;
     QPointF lastPoint2;
-    qreal pinchStartDist;
-    qreal pinchStartScale;
-    qreal pinchLastScale;
-    qreal pinchStartRotation;
-    qreal pinchStartAngle;
-    qreal pinchLastAngle;
-    qreal pinchRotation;
+    qreal pinchStartDist = 0;
+    qreal pinchStartScale = 1;
+    qreal pinchLastScale = 1;
+    qreal pinchStartRotation = 0;
+    qreal pinchStartAngle = 0;
+    qreal pinchLastAngle = 0;
+    qreal pinchRotation = 0;
     QPointF sceneStartCenter;
     QPointF pinchStartCenter;
     QPointF sceneLastCenter;
     QPointF pinchStartPos;
     QList<QEventPoint> touchPoints;
-    int id1;
 };
 
 QT_END_NAMESPACE

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtSG module of the Qt Toolkit.
@@ -300,12 +300,10 @@ protected:
     bool event(QEvent *) override;
 
 private:
-    void clearPinch();
-    void cancelPinch();
-    void updatePinch();
+    void clearPinch(QTouchEvent *event);
+    void cancelPinch(QTouchEvent *event);
+    void updatePinch(QTouchEvent *event, bool filtering);
     void updatePinchTarget();
-    void handlePress();
-    void handleRelease();
 
 private:
     Q_DISABLE_COPY(QQuickPinchArea)

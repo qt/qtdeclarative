@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtSG module of the Qt Toolkit.
@@ -337,25 +337,25 @@ void QQuickPinchArea::touchEvent(QTouchEvent *event)
         d->touchPoints.clear();
         for (int i = 0; i < event->pointCount(); ++i) {
             auto &tp = event->point(i);
-            if (!(tp.state() & QEventPoint::State::Released)) {
+            if (tp.state() != QEventPoint::State::Released) {
                 d->touchPoints << tp;
                 tp.setAccepted();
             }
         }
-        updatePinch();
+        updatePinch(event, false);
         break;
     case QEvent::TouchEnd:
-        clearPinch();
+        clearPinch(event);
         break;
     case QEvent::TouchCancel:
-        cancelPinch();
+        cancelPinch(event);
         break;
     default:
         QQuickItem::touchEvent(event);
     }
 }
 
-void QQuickPinchArea::clearPinch()
+void QQuickPinchArea::clearPinch(QTouchEvent *event)
 {
     Q_D(QQuickPinchArea);
 
@@ -380,15 +380,17 @@ void QQuickPinchArea::clearPinch()
     d->pinchActivated = false;
     d->initPinch = false;
     d->pinchRejected = false;
-    d->stealMouse = false;
     d->id1 = -1;
-    QQuickWindow *win = window();
-    if (win && win->mouseGrabberItem() == this)
-        ungrabMouse();
-    setKeepMouseGrab(false);
+    if (event) {
+        for (const auto &point : event->points()) {
+            if (event->exclusiveGrabber(point) == this)
+                event->setExclusiveGrabber(point, nullptr);
+        }
+    }
+    setKeepTouchGrab(false);
 }
 
-void QQuickPinchArea::cancelPinch()
+void QQuickPinchArea::cancelPinch(QTouchEvent *event)
 {
     Q_D(QQuickPinchArea);
 
@@ -421,25 +423,29 @@ void QQuickPinchArea::cancelPinch()
     d->pinchActivated = false;
     d->initPinch = false;
     d->pinchRejected = false;
-    d->stealMouse = false;
     d->id1 = -1;
-    QQuickWindow *win = window();
-    if (win && win->mouseGrabberItem() == this)
-        ungrabMouse();
-    setKeepMouseGrab(false);
+    for (const auto &point : event->points()) {
+        if (event->exclusiveGrabber(point) == this)
+            event->setExclusiveGrabber(point, nullptr);
+    }
+    setKeepTouchGrab(false);
 }
 
-void QQuickPinchArea::updatePinch()
+void QQuickPinchArea::updatePinch(QTouchEvent *event, bool filtering)
 {
     Q_D(QQuickPinchArea);
 
-    QQuickWindow *win = window();
-
     if (d->touchPoints.count() < 2) {
-        setKeepMouseGrab(false);
-        QQuickWindow *c = window();
-        if (c && c->mouseGrabberItem() == this)
-            ungrabMouse();
+        // A pinch gesture is not occurring, so stealing the grab is permitted.
+        setKeepTouchGrab(false);
+        // During filtering, there's no need to hold a grab for one point,
+        // because filtering happens for every event anyway.
+        // But if we receive the event via direct delivery, and give up the grab,
+        // not only will we not see any more updates, but any filtering parent
+        // (such as Flickable) will also not get a chance to filter them.
+        // Continuing to hold the grab in this case keeps tst_TouchMouse::pinchOnFlickable() working.
+        if (filtering && !d->touchPoints.isEmpty() && event->exclusiveGrabber(d->touchPoints.first()) == this)
+            event->setExclusiveGrabber(d->touchPoints.first(), nullptr);
     }
 
     if (d->touchPoints.count() == 0) {
@@ -463,7 +469,6 @@ void QQuickPinchArea::updatePinch()
         }
         d->initPinch = false;
         d->pinchRejected = false;
-        d->stealMouse = false;
         return;
     }
 
@@ -481,18 +486,13 @@ void QQuickPinchArea::updatePinch()
     // AND one or more of the points has just now been pressed (wasn't pressed already)
     // AND both points are inside the bounds.
     if (d->touchPoints.count() == 2
-            && (touchPoint1.state() & QEventPoint::State::Pressed || touchPoint2.state() & QEventPoint::State::Pressed) &&
+            && (touchPoint1.state() == QEventPoint::State::Pressed || touchPoint2.state() == QEventPoint::State::Pressed) &&
             bounds.contains(touchPoint1.position()) && bounds.contains(touchPoint2.position())) {
         d->id1 = touchPoint1.id();
         d->pinchActivated = true;
         d->initPinch = true;
-
-        int touchMouseId = QQuickWindowPrivate::get(win)->touchMouseId;
-        if (touchPoint1.id() == touchMouseId || touchPoint2.id() == touchMouseId) {
-            if (win && win->mouseGrabberItem() != this) {
-                grabMouse();
-            }
-        }
+        event->setExclusiveGrabber(touchPoint1, this);
+        event->setExclusiveGrabber(touchPoint2, this);
     }
     if (d->pinchActivated && !d->pinchRejected) {
         const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
@@ -550,13 +550,10 @@ void QQuickPinchArea::updatePinch()
                     emit pinchStarted(&pe);
                     if (pe.accepted()) {
                         d->inPinch = true;
-                        d->stealMouse = true;
-                        if (win && win->mouseGrabberItem() != this)
-                            grabMouse();
-                        setKeepMouseGrab(true);
-                        grabTouchPoints(QList<int>() << touchPoint1.id() << touchPoint2.id());
+                        event->setExclusiveGrabber(touchPoint1, this);
+                        event->setExclusiveGrabber(touchPoint2, this);
+                        setKeepTouchGrab(true);
                         d->inPinch = true;
-                        d->stealMouse = true;
                         if (d->pinch && d->pinch->target()) {
                             d->pinchStartPos = pinch()->target()->position();
                             d->pinchStartScale = d->pinch->target()->scale();
@@ -631,28 +628,38 @@ void QQuickPinchArea::updatePinchTarget()
     }
 }
 
+/*! \internal
+    PinchArea needs to filter touch events going to its children: in case
+    one of them stops event propagation by accepting the touch event, filtering
+    is the only way PinchArea can see the touch event.
+
+    This method is called childMouseEventFilter instead of childPointerEventFilter
+    for historical reasons, but actually filters all pointer events (and the
+    occasional QEvent::UngrabMouse).
+*/
 bool QQuickPinchArea::childMouseEventFilter(QQuickItem *i, QEvent *e)
 {
     Q_D(QQuickPinchArea);
     if (!d->enabled || !isVisible())
         return QQuickItem::childMouseEventFilter(i, e);
+    auto *te = static_cast<QTouchEvent*>(e);
     switch (e->type()) {
     case QEvent::TouchBegin:
-        clearPinch();
+        clearPinch(te);
         Q_FALLTHROUGH();
     case QEvent::TouchUpdate: {
-            const auto &points = static_cast<QTouchEvent*>(e)->points();
+            const auto &points = te->points();
             d->touchPoints.clear();
             for (auto &tp : points) {
-                if (!(tp.state() & QEventPoint::State::Released))
+                if (tp.state() != QEventPoint::State::Released)
                     d->touchPoints << tp;
             }
-            updatePinch();
+            updatePinch(te, true);
         }
         e->setAccepted(d->inPinch);
         return d->inPinch;
     case QEvent::TouchEnd:
-        clearPinch();
+        clearPinch(te);
         break;
     default:
         break;
@@ -683,7 +690,7 @@ bool QQuickPinchArea::event(QEvent *event)
         QNativeGestureEvent *gesture = static_cast<QNativeGestureEvent *>(event);
         switch (gesture->gestureType()) {
         case Qt::BeginNativeGesture:
-            clearPinch(); // probably not necessary; JIC
+            clearPinch(nullptr); // probably not necessary; JIC
             d->pinchStartCenter = gesture->position();
             d->pinchStartAngle = 0.0;
             d->pinchStartRotation = 0.0;
@@ -703,7 +710,7 @@ bool QQuickPinchArea::event(QEvent *event)
             }
             break;
         case Qt::EndNativeGesture:
-            clearPinch();
+            clearPinch(nullptr);
             break;
         case Qt::ZoomNativeGesture: {
             qreal scale = d->pinchLastScale * (1.0 + gesture->value());
