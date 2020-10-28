@@ -13,7 +13,7 @@ development of entire custom styles and user experiences. Qt Quick Controls 2
 comes with a selection of built-in styles:
 
 - Default style - a simple and minimal all-round style that offers the maximum performance
-- Fusion style - a platform-agnostic style that offers a desktop-oriented look'n'feel
+- Fusion style - a platform-agnostic style that offers a desktop-oriented look and feel
 - Imagine style - a designer-friendly style based on image assets
 - Material style - a style based on the Google Material Design Guidelines
 - Universal style - a style based on the Microsoft Universal Design Guidelines

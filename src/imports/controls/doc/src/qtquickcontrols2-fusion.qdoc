@@ -32,8 +32,8 @@
     The Fusion style is a desktop-oriented style.
 
     The Fusion style is a platform-agnostic style that offers a desktop-oriented
-    look'n'feel. It implements the same design language as the \l {Qt Widget Gallery}
-    {Fusion style for Qt Widgets}.
+    look and feel. It implements the same design language as the
+    \l {Qt Widget Gallery}{Fusion style for Qt Widgets}.
 
     \image qtquickcontrols2-fusion.png
 
