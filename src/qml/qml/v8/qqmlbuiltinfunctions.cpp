@@ -1632,7 +1632,7 @@ static QString serializeArray(Object *array, ExecutionEngine *v4, QSet<QV4::Heap
     return result;
 };
 
-static ReturnedValue writeToConsole(const FunctionObject *b, const Value *, const Value *argv, int argc,
+static ReturnedValue writeToConsole(const FunctionObject *b, const Value *argv, int argc,
                                     ConsoleLogTypes logType, bool printStack = false)
 {
     QLoggingCategory *loggingCategory = nullptr;
@@ -1704,22 +1704,22 @@ static ReturnedValue writeToConsole(const FunctionObject *b, const Value *, cons
 
 DEFINE_OBJECT_VTABLE(ConsoleObject);
 
-ReturnedValue ConsoleObject::method_error(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+ReturnedValue ConsoleObject::method_error(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
-    return writeToConsole(b, thisObject, argv, argc, Error);
+    return writeToConsole(b, argv, argc, Error);
 }
 
-ReturnedValue ConsoleObject::method_log(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+ReturnedValue ConsoleObject::method_log(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
     //console.log
     //console.debug
     //print
-    return writeToConsole(b, thisObject, argv, argc, Log);
+    return writeToConsole(b, argv, argc, Log);
 }
 
-ReturnedValue ConsoleObject::method_info(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+ReturnedValue ConsoleObject::method_info(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
-    return writeToConsole(b, thisObject, argv, argc, Info);
+    return writeToConsole(b, argv, argc, Info);
 }
 
 ReturnedValue ConsoleObject::method_profile(const FunctionObject *b, const Value *, const Value *, int)
@@ -1831,9 +1831,9 @@ ReturnedValue ConsoleObject::method_trace(const FunctionObject *b, const Value *
     return QV4::Encode::undefined();
 }
 
-ReturnedValue ConsoleObject::method_warn(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+ReturnedValue ConsoleObject::method_warn(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
-    return writeToConsole(b, thisObject, argv, argc, Warn);
+    return writeToConsole(b, argv, argc, Warn);
 }
 
 ReturnedValue ConsoleObject::method_assert(const FunctionObject *b, const Value *, const Value *argv, int argc)
@@ -1864,13 +1864,13 @@ ReturnedValue ConsoleObject::method_assert(const FunctionObject *b, const Value 
     return QV4::Encode::undefined();
 }
 
-ReturnedValue ConsoleObject::method_exception(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+ReturnedValue ConsoleObject::method_exception(const FunctionObject *b, const Value *, const Value *argv, int argc)
 {
     QV4::Scope scope(b);
     if (argc == 0)
         THROW_GENERIC_ERROR("console.exception(): Missing argument");
 
-    return writeToConsole(b, thisObject, argv, argc, Error, true);
+    return writeToConsole(b, argv, argc, Error, true);
 }
 
 
