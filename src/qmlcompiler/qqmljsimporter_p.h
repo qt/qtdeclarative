@@ -61,6 +61,8 @@ public:
             const QString &module, const QString &prefix = QString(),
             QTypeRevision version = QTypeRevision());
 
+    ImportedTypes builtinInternalNames();
+
     QList<QQmlJS::DiagnosticMessage> takeWarnings()
     {
         const auto result = std::move(m_warnings);

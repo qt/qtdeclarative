@@ -281,6 +281,11 @@ QQmlJSImporter::ImportedTypes QQmlJSImporter::importModule(
     return result.qmlNames;
 }
 
+QQmlJSImporter::ImportedTypes QQmlJSImporter::builtinInternalNames()
+{
+    return builtinImportHelper().cppNames;
+}
+
 void QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
                                                 const QString &prefix, QTypeRevision version)
 {
