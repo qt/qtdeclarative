@@ -127,26 +127,29 @@ QSGNode *QQuickStyleItem::updatePaintNode(QSGNode *oldNode, QQuickItem::UpdatePa
     }
 #endif
 
-    QMargins padding = m_useNinePatchImage ? m_styleItemGeometry.ninePatchMargins : QMargins(0, 0, 0, 0);
-    if (padding.right() == -1) {
-        // Special case: a right padding of -1 means that
-        // the image should not scale horizontally.
-        bounds.setWidth(ninePatchImageSize.width());
-        padding.setLeft(0);
-        padding.setRight(0);
-    } else if (boundingRect().width() < imageSize().width()) {
-        // If the item size is smaller that the image, using nine-patch scaling
-        // ends up wrapping it. In that case we scale the whole image instead.
-        padding.setLeft(0);
-        padding.setRight(0);
-    }
-    if (padding.bottom() == -1) {
-        bounds.setHeight(ninePatchImageSize.height());
-        padding.setTop(0);
-        padding.setBottom(0);
-    } else if (boundingRect().height() < imageSize().height()) {
-        padding.setTop(0);
-        padding.setBottom(0);
+    QMargins padding;
+    if (m_useNinePatchImage) {
+        padding = m_styleItemGeometry.ninePatchMargins;
+        if (padding.right() == -1) {
+            // Special case: a right padding of -1 means that
+            // the image should not scale horizontally.
+            bounds.setWidth(ninePatchImageSize.width());
+            padding.setLeft(0);
+            padding.setRight(0);
+        } else if (boundingRect().width() < imageSize().width()) {
+            // If the item size is smaller that the image, using nine-patch scaling
+            // ends up wrapping it. In that case we scale the whole image instead.
+            padding.setLeft(0);
+            padding.setRight(0);
+        }
+        if (padding.bottom() == -1) {
+            bounds.setHeight(ninePatchImageSize.height());
+            padding.setTop(0);
+            padding.setBottom(0);
+        } else if (boundingRect().height() < imageSize().height()) {
+            padding.setTop(0);
+            padding.setBottom(0);
+        }
     }
 
     node->setBounds(bounds);
