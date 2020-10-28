@@ -1,11 +1,9 @@
 import QtQuick 2.0
-import Qt.test 1.0
 
 Rectangle {
     id: root
     width: 600
     height: 600
-    color: "green"
 
     PinchArea {
         objectName: "pincharea"
@@ -23,25 +21,34 @@ Rectangle {
 
             MouseArea {
                 anchors.fill: parent
-                onClicked: {
-                    if (rect.color == "#000000")
-                        rect.color = "#00ff00"
-                    else
-                        rect.color = "#000000"
+                property int nextTimestamp: 0
+                Component {
+                    id: clickFeeback
+                    Text {
+                        text: parent.timestamp
+                        Rectangle {
+                            color: "red"
+                            width: 5; height: 5; radius: 2
+                            x: -2; y: -2
+                        }
+                    }
                 }
+
+                onClicked: clickFeeback.createObject(parent, { x: mouse.x - 2, y: mouse.y - 2, text: nextTimestamp++ })
             }
 
             Rectangle {
                 objectName: "rect"
                 id: rect
-                color: "blue"
+                color: "lightsteelblue"
                 x: 200
                 y: 200
                 width: 400
                 height: 400
+                Text {
+                    text: "pinch, click or flick anywhere\nthis rectangle is the pinch target"
+                }
             }
         }
     }
-
 }
-
