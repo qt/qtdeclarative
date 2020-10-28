@@ -340,6 +340,7 @@ private slots:
 
     void checkURLtoURLObject();
     void registerValueTypes();
+    void extendedNamespace();
 
 private:
     QQmlEngine engine;
@@ -6025,6 +6026,26 @@ void tst_qqmllanguage::accessNullPointerPropertyCache()
     QVERIFY(c.isReady());
     QScopedPointer<QObject> obj(c.create());
     QVERIFY(!obj.isNull());
+}
+
+void tst_qqmllanguage::extendedNamespace()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+    c.setData("import StaticTest\n"
+              "import QtQml\n"
+              "ExtendedByNamespace {\n"
+              "    property int mine: own\n"
+              "    property int myEnum: ExtendedByNamespace.Moo\n"
+              "    property int fromExtension: ExtendedByNamespace.Bar\n"
+              "}", QUrl());
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> obj(c.create());
+    QVERIFY(!obj.isNull());
+
+    QCOMPARE(obj->property("mine").toInt(), 93);
+    QCOMPARE(obj->property("myEnum").toInt(), 16);
+    QCOMPARE(obj->property("fromExtension").toInt(), 9);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

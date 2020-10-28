@@ -1534,6 +1534,35 @@ class UncreatableElementNoReason : public QObject
     QML_UNCREATABLE("")
 };
 
+namespace ExtensionNamespace {
+Q_NAMESPACE
+
+enum Foo {
+    Bar = 9,
+    Baz = 12
+};
+Q_ENUM_NS(Foo)
+}
+
+class ExtendedByNamespace : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_EXTENDED_NAMESPACE(ExtensionNamespace)
+
+    Q_PROPERTY(int own READ own CONSTANT)
+public:
+
+    enum OwnEnum {
+        Moo = 16,
+        Maeh = 17
+    };
+    Q_ENUM(OwnEnum)
+
+    ExtendedByNamespace(QObject *parent = nullptr) : QObject(parent) {}
+    int own() const { return 93; }
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H

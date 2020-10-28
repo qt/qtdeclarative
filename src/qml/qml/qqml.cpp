@@ -483,7 +483,7 @@ namespace QQmlPrivate {
     template<>
     void qmlRegisterTypeAndRevisions<QQmlTypeNotAvailable, void>(
             const char *uri, int versionMajor, const QMetaObject *classInfoMetaObject,
-            QVector<int> *qmlTypeIds)
+            QVector<int> *qmlTypeIds, const QMetaObject *extension)
     {
         using T = QQmlTypeNotAvailable;
 
@@ -509,7 +509,7 @@ namespace QQmlPrivate {
             StaticCastSelector<T, QQmlPropertyValueSource>::cast(),
             StaticCastSelector<T, QQmlPropertyValueInterceptor>::cast(),
 
-            nullptr, nullptr, qmlCreateCustomParser<T>, qmlTypeIds
+            nullptr, extension, qmlCreateCustomParser<T>, qmlTypeIds
         };
 
         qmlregister(TypeAndRevisionsRegistration, &type);

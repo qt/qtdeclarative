@@ -310,6 +310,9 @@ QLineEdit, without modifying its source code.
 The QML_EXTENDED(extended) macro is for registering extended types. The
 argument is the name of another class to be used as extension.
 
+You can also use QML_EXTENDED_NAMESPACE(namespace) to register a namespace, and
+especially the enumerations declared within, as an extension to a type.
+
 An extension class is a regular QObject, with a constructor that takes a QObject
 pointer. However, the extension class creation is delayed until the first
 extended property is accessed. The extension class is created and the target

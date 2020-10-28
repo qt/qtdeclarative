@@ -119,6 +119,13 @@
     template<typename T, typename... Args> \
     friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QList<int> *);
 
+#define QML_EXTENDED_NAMESPACE(EXTENDED_NAMESPACE) \
+    Q_CLASSINFO("QML.Extended", #EXTENDED_NAMESPACE) \
+    static constexpr const QMetaObject *qmlExtendedNamespace() { return &EXTENDED_NAMESPACE::staticMetaObject; } \
+    template<class, class> friend struct QML_PRIVATE_NAMESPACE::QmlExtendedNamespace; \
+    template<typename T, typename... Args> \
+    friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QList<int> *);
+
 #define QML_FOREIGN(FOREIGN_TYPE) \
     Q_CLASSINFO("QML.Foreign", #FOREIGN_TYPE) \
     using QmlForeignType = FOREIGN_TYPE; \
@@ -792,25 +799,30 @@ struct QmlTypeAndRevisionsRegistration;
 
 template<class T, class Resolved, class Extended>
 struct QmlTypeAndRevisionsRegistration<T, Resolved, Extended, false, false> {
-    static void registerTypeAndRevisions(const char *uri, int versionMajor, QList<int> *qmlTypeIds)
+    static void registerTypeAndRevisions(const char *uri, int versionMajor, QList<int> *qmlTypeIds,
+                                         const QMetaObject *extension)
     {
         QQmlPrivate::qmlRegisterTypeAndRevisions<Resolved, Extended>(
-                    uri, versionMajor, QQmlPrivate::StaticMetaObject<T>::staticMetaObject(), qmlTypeIds);
+                    uri, versionMajor, QQmlPrivate::StaticMetaObject<T>::staticMetaObject(),
+                    qmlTypeIds, extension);
     }
 };
 
 template<class T, class Resolved>
 struct QmlTypeAndRevisionsRegistration<T, Resolved, void, true, false> {
-    static void registerTypeAndRevisions(const char *uri, int versionMajor, QList<int> *qmlTypeIds)
+    static void registerTypeAndRevisions(const char *uri, int versionMajor, QList<int> *qmlTypeIds,
+                                         const QMetaObject *)
     {
         QQmlPrivate::qmlRegisterSingletonAndRevisions<Resolved>(
-                    uri, versionMajor, QQmlPrivate::StaticMetaObject<T>::staticMetaObject(), qmlTypeIds);
+                    uri, versionMajor, QQmlPrivate::StaticMetaObject<T>::staticMetaObject(),
+                    qmlTypeIds);
     }
 };
 
 template<class T, class Resolved>
 struct QmlTypeAndRevisionsRegistration<T, Resolved, void, false, true> {
-    static void registerTypeAndRevisions(const char *uri, int versionMajor, QList<int> *qmlTypeIds)
+    static void registerTypeAndRevisions(const char *uri, int versionMajor, QList<int> *qmlTypeIds,
+                                         const QMetaObject *)
     {
         const int id = qmlRegisterInterface<Resolved>(uri, versionMajor);
         if (qmlTypeIds)
@@ -830,7 +842,8 @@ void qmlRegisterTypesAndRevisions(const char *uri, int versionMajor, QList<int> 
             typename QQmlPrivate::QmlExtended<T>::Type,
             QQmlPrivate::QmlSingleton<T>::Value,
             QQmlPrivate::QmlInterface<T>::Value>
-            ::registerTypeAndRevisions(uri, versionMajor, qmlTypeIds);
+            ::registerTypeAndRevisions(uri, versionMajor, qmlTypeIds,
+                                       QQmlPrivate::QmlExtendedNamespace<T>::metaObject());
     qmlRegisterTypesAndRevisions<Args...>(uri, versionMajor, qmlTypeIds);
 }
 

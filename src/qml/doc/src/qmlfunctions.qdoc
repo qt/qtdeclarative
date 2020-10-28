@@ -230,10 +230,24 @@
   \relates QQmlEngine
 
   Declares that the enclosing type uses \a EXTENDED_TYPE as an extension to
-  provide further properties and methods in QML. This takes effect if the type
+  provide further properties, methods, and enumerations in QML. This takes
+  effect if the type is exposed to QML using a \l QML_ELEMENT or
+  \l QML_NAMED_ELEMENT() macro.
+
+  \sa QML_ELEMENT, QML_NAMED_ELEMENT(), QML_EXTENDED_NAMEPSACE(),
+      {Registering Extension Objects}
+*/
+
+/*!
+  \macro QML_EXTENDED_NAMESPACE(EXTENDED_NAMESPACE)
+  \relates QQmlEngine
+
+  Declares that the enclosing type uses \a EXTENDED_NAMESPACE as an extension to
+  provide further enumerations in QML. This takes effect if the type
   is exposed to QML using a \l QML_ELEMENT or \l QML_NAMED_ELEMENT() macro.
 
-  \sa QML_ELEMENT, QML_NAMED_ELEMENT(), {Registering Extension Objects}
+  \sa QML_ELEMENT, QML_NAMED_ELEMENT(), QML_EXTENDED(),
+      {Registering Extension Objects}
 */
 
 /*!
@@ -243,9 +257,9 @@
   Declares that any \l QML_ELEMENT, \l QML_NAMED_ELEMENT(), \l QML_ANONYMOUS,
   \l QML_INTERFACE, \l QML_UNCREATABLE(), \l QML_SINGLETON,
   \l QML_ADDED_IN_MINOR_VERSION(), \l QML_REMOVED_IN_MINOR_VERSION(),
-  \l QML_ATTACHED(), or \l QML_EXTENDED() macros in the enclosing C++ type do
-  not apply to the enclosing type but instead to \a FOREIGN_TYPE. The enclosing
-  type still needs to be registered with the
+  \l QML_ATTACHED(), \l QML_EXTENDED(), or \l  QML_EXTENDED_NAMESPACE() macros
+  in the enclosing C++ type do not apply to the enclosing type but instead to
+  \a FOREIGN_TYPE. The enclosing type still needs to be registered with the
   \l {The Meta-Object System}{meta object system} using a \l Q_GADGET or
   \l Q_OBJECT macro.
 

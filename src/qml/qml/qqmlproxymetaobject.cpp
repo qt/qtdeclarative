@@ -83,6 +83,8 @@ int QQmlProxyMetaObject::metaCall(QObject *o, QMetaObject::Call c, int id, void 
                 }
 
                 if (!proxies[ii]) {
+                    if (!data.createFunc)
+                        continue;
                     QObject *proxy = data.createFunc(object);
                     const QMetaObject *metaObject = proxy->metaObject();
                     proxies[ii] = proxy;

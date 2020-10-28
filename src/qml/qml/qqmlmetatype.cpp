@@ -1610,7 +1610,7 @@ QList<QQmlProxyMetaObject::ProxyData> QQmlMetaType::proxyData(const QMetaObject 
         QQmlTypePrivate *t = data->metaObjectToType.value(mo);
         if (t) {
             if (t->regType == QQmlType::CppType) {
-                if (t->extraData.cd->extFunc) {
+                if (t->extraData.cd->extMetaObject) {
                     QMetaObjectBuilder builder;
                     clone(builder, t->extraData.cd->extMetaObject, t->baseMetaObject, baseMetaObject);
                     builder.setFlags(MetaObjectFlag::DynamicMetaObject);

@@ -217,7 +217,7 @@ void QQmlTypePrivate::init() const
     if (regType == QQmlType::CppType) {
         // Setup extended meta object
         // XXX - very inefficient
-        if (extraData.cd->extFunc) {
+        if (extraData.cd->extMetaObject) {
             QMetaObjectBuilder builder;
             QQmlMetaType::clone(builder, extraData.cd->extMetaObject, extraData.cd->extMetaObject,
                                 extraData.cd->extMetaObject);
@@ -269,14 +269,15 @@ void QQmlTypePrivate::initEnums(QQmlEnginePrivate *engine) const
             ? compositePropertyCache(engine)
             : nullptr;
 
+    // beware: It could be a singleton type without metaobject
     const QMetaObject *metaObject = !isEnumFromBaseSetup.loadAcquire()
-            ? baseMetaObject // beware: It could be a singleton type without metaobject
+            ? baseMetaObject
             : nullptr;
 
     if (!cache && !metaObject)
         return;
 
-    init();
+    init(); // init() can add to the metaObjects list. Therefore, check metaObjects only below
 
     QMutexLocker lock(QQmlMetaType::typeRegistrationLock());
 
@@ -286,7 +287,7 @@ void QQmlTypePrivate::initEnums(QQmlEnginePrivate *engine) const
     }
 
     if (metaObject) {
-        insertEnums(metaObject);
+        insertEnums(metaObjects.isEmpty() ? baseMetaObject : metaObjects.constFirst().metaObject);
         isEnumFromBaseSetup.storeRelease(true);
     }
 }

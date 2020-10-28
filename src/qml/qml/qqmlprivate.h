@@ -625,6 +625,18 @@ namespace QQmlPrivate
     };
 
     template<class T, class = std::void_t<>>
+    struct QmlExtendedNamespace
+    {
+        static constexpr const QMetaObject *metaObject() { return nullptr; }
+    };
+
+    template<class T>
+    struct QmlExtendedNamespace<T, std::void_t<decltype(T::qmlExtendedNamespace())>>
+    {
+        static constexpr const QMetaObject *metaObject() { return T::qmlExtendedNamespace(); }
+    };
+
+    template<class T, class = std::void_t<>>
     struct QmlResolved
     {
         using Type = T;
@@ -718,7 +730,7 @@ namespace QQmlPrivate
     template<typename T, typename E>
     void qmlRegisterTypeAndRevisions(const char *uri, int versionMajor,
                                      const QMetaObject *classInfoMetaObject,
-                                     QVector<int> *qmlTypeIds)
+                                     QVector<int> *qmlTypeIds, const QMetaObject *extension)
     {
         RegisterTypeAndRevisions type = {
             0,
@@ -742,7 +754,7 @@ namespace QQmlPrivate
             StaticCastSelector<T, QQmlPropertyValueInterceptor>::cast(),
 
             ExtendedType<E>::createParent,
-            ExtendedType<E>::staticMetaObject(),
+            extension ? extension : ExtendedType<E>::staticMetaObject(),
 
             &qmlCreateCustomParser<T>,
             qmlTypeIds
@@ -754,7 +766,7 @@ namespace QQmlPrivate
     template<>
     void Q_QML_EXPORT qmlRegisterTypeAndRevisions<QQmlTypeNotAvailable, void>(
             const char *uri, int versionMajor, const QMetaObject *classInfoMetaObject,
-            QVector<int> *qmlTypeIds);
+            QVector<int> *qmlTypeIds, const QMetaObject *);
 
 } // namespace QQmlPrivate
 
