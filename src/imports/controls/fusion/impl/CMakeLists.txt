@@ -9,6 +9,7 @@ qt_internal_add_qml_module(qtquickcontrols2fusionstyleimplplugin
     VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QtQuickControls2FusionStyleImplPlugin
     GENERATE_QMLTYPES
+    INSTALL_QMLTYPES
     SOURCES
         qquickfusionbusyindicator.cpp qquickfusionbusyindicator_p.h
         qquickfusiondial.cpp qquickfusiondial_p.h

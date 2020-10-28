@@ -9,6 +9,7 @@ qt_internal_add_qml_module(qtquickcontrols2materialstyleimplplugin
     VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QtQuickControls2MaterialStyleImplPlugin
     GENERATE_QMLTYPES
+    INSTALL_QMLTYPES
     SOURCES
         qquickmaterialbusyindicator.cpp qquickmaterialbusyindicator_p.h
         qquickmaterialprogressbar.cpp qquickmaterialprogressbar_p.h

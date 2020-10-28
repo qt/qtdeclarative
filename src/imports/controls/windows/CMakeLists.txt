@@ -11,6 +11,7 @@ qt_internal_add_qml_module(qtquickcontrols2windowsstyleplugin
     IMPORTS
         QtQuick.Controls.Fusion/auto
     GENERATE_QMLTYPES
+    INSTALL_QMLTYPES
     SOURCES
         qtquickcontrols2windowsstyleplugin.cpp
     DEFINES
@@ -85,6 +86,9 @@ set_source_files_properties(TextArea.qml PROPERTIES
     QT_QML_SOURCE_VERSION "6.0"
 )
 set_source_files_properties(TextField.qml PROPERTIES
+    QT_QML_SOURCE_VERSION "6.0"
+)
+set_source_files_properties(ScrollBar.qml PROPERTIES
     QT_QML_SOURCE_VERSION "6.0"
 )
 set_source_files_properties(ScrollView.qml PROPERTIES

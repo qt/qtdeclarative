@@ -10,6 +10,7 @@ qt_internal_add_qml_module(qtquickcontrols2basicstyleimplplugin
     CLASSNAME QtQuickControls2BasicStyleImplPlugin
     SKIP_TYPE_REGISTRATION
     GENERATE_QMLTYPES
+    INSTALL_QMLTYPES
     SOURCES
         qquickbasicbusyindicator.cpp qquickbasicbusyindicator_p.h
         qquickbasicdial.cpp qquickbasicdial_p.h

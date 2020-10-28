@@ -9,6 +9,7 @@ qt_internal_add_qml_module(qtquickcontrols2universalstyleimplplugin
     VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QtQuickControls2UniversalStyleImplPlugin
     GENERATE_QMLTYPES
+    INSTALL_QMLTYPES
     SOURCES
         qquickuniversalbusyindicator.cpp qquickuniversalbusyindicator_p.h
         qquickuniversalfocusrectangle.cpp qquickuniversalfocusrectangle_p.h

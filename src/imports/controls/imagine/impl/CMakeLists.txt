@@ -9,6 +9,7 @@ qt_internal_add_qml_module(qtquickcontrols2imaginestyleimplplugin
     VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QtQuickControls2ImagineStyleImplPlugin
     GENERATE_QMLTYPES
+    INSTALL_QMLTYPES
     SOURCES
         qquickimageselector.cpp qquickimageselector_p.h
         qquickninepatchimage.cpp qquickninepatchimage_p.h

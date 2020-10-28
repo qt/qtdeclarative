@@ -11,6 +11,7 @@ qt_internal_add_qml_module(qtquickcontrols2macosstyleplugin
     IMPORTS
         QtQuick.Controls.Fusion/auto
     GENERATE_QMLTYPES
+    INSTALL_QMLTYPES
     SOURCES
         qtquickcontrols2macosstyleplugin.cpp
     DEFINES
