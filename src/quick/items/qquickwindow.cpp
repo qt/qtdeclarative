@@ -2882,6 +2882,7 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, bool isG
             } else if (item->isEnabled() && item->isVisible()) {
                 pointerEvent->setExclusiveGrabber(point, item);
             }
+            point.setAccepted(true);
         }
         return;
     }
