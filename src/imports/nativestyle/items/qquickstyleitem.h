@@ -244,7 +244,7 @@ protected:
     static QStyle::State controlSize(QQuickItem *item);
     void initStyleOptionBase(QStyleOption &styleOption);
 
-    inline QSize contentSize() { return m_contentSize.toSize(); }
+    inline QSize contentSize() { return QSize(qCeil(m_contentSize.width()), qCeil(m_contentSize.height())); }
     inline static QStyle *style() { return QQuickNativeStyle::style(); }
 
     template <class T> inline const T* control() const {
