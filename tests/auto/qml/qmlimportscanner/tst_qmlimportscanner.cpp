@@ -145,7 +145,7 @@ void TestQmlimportscanner::runQmlimportscanner(const QString &mode, const QStrin
 
     const QJsonArray generatedArray = generated.array();
     QJsonArray expectedArray = expected.array();
-    for (const QJsonValue &value : generatedArray) {
+    for (const QJsonValue value : generatedArray) {
         QVERIFY(value.isObject());
         QJsonObject object = value.toObject();
 

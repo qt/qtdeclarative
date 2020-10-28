@@ -969,7 +969,7 @@ void tst_QQmlDebugJS::encodeQmlScope()
             if (scopes.count() < 2)
                 scopesFailed = true;
 
-            for (const QJsonValue &scope : scopes) {
+            for (const QJsonValue scope : scopes) {
                 ++numExpectedScopes;
                 m_client->scope(scope.toObject().value("index").toInt());
             }

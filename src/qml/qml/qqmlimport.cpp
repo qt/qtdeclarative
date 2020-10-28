@@ -1170,7 +1170,7 @@ bool QQmlImportsPrivate::populatePluginPairVector(QVector<StaticPluginPair> &res
                 return false;
             }
             // A plugin can be set up to handle multiple URIs, so go through the list:
-            for (const QJsonValue &metaTagUri : metaTagsUriList) {
+            for (const QJsonValue metaTagUri : metaTagsUriList) {
                 if (versionUris.contains(metaTagUri.toString())) {
                     result.append(qMakePair(plugin, metaTagsUriList));
                     break;
@@ -1256,7 +1256,7 @@ QTypeRevision QQmlImportsPrivate::importExtension(
             const QString basePath = QFileInfo(qmldirPath).absoluteFilePath();
             for (const QString &versionUri : versionUris) {
                 for (const StaticPluginPair &pair : qAsConst(pluginPairs)) {
-                    for (const QJsonValue &metaTagUri : pair.second) {
+                    for (const QJsonValue metaTagUri : pair.second) {
                         if (versionUri == metaTagUri.toString()) {
                             staticPluginsFound++;
                             QObject *instance = pair.first.instance();

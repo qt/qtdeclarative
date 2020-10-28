@@ -219,7 +219,7 @@ void ValueLookupJob::run()
                                 scopeObject.data());
     }
     QV4::ScopedStackFrame frame(scope, qmlContext);
-    for (const QJsonValue &handle : handles) {
+    for (const QJsonValue handle : handles) {
         QV4DataCollector::Ref ref = handle.toInt();
         if (!collector->isValidRef(ref)) {
             exception = QString::fromLatin1("Invalid Ref: %1").arg(ref);

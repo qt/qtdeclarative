@@ -820,7 +820,7 @@ static bool readDependenciesData(QString dependenciesFile, const QByteArray &fil
         const QStringList requiredKeys = QStringList() << QStringLiteral("name")
                                                        << QStringLiteral("type");
         const auto deps = doc.array();
-        for (const QJsonValue &dep : deps) {
+        for (const QJsonValue dep : deps) {
             if (dep.isObject()) {
                 QJsonObject obj = dep.toObject();
                 for (const QString &requiredKey : requiredKeys)

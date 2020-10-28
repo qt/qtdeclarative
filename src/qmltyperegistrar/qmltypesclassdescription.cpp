@@ -35,7 +35,7 @@ static void collectExtraVersions(const QJsonObject *component, const QString &ke
                                  QList<QTypeRevision> &extraVersions)
 {
     const QJsonArray &items = component->value(key).toArray();
-    for (const QJsonValue &item : items) {
+    for (const QJsonValue item : items) {
         const QJsonObject obj = item.toObject();
         const auto revision = obj.find(QLatin1String("revision"));
         if (revision != obj.end()) {
@@ -67,7 +67,7 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
     if (file.isEmpty() && classDef->value(QLatin1String("registerable")).toBool())
         file = classDef->value(QLatin1String("inputFile")).toString();
     const auto classInfos = classDef->value(QLatin1String("classInfos")).toArray();
-    for (const QJsonValue &classInfo : classInfos) {
+    for (const QJsonValue classInfo : classInfos) {
         const QJsonObject obj = classInfo.toObject();
         const QString name = obj[QLatin1String("name")].toString();
         const QString value = obj[QLatin1String("value")].toString();
@@ -108,7 +108,7 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
                 classDef = other;
                 // Foreign type can have a default property or an attached types
                 const auto classInfos = classDef->value(QLatin1String("classInfos")).toArray();
-                for (const QJsonValue &classInfo : classInfos) {
+                for (const QJsonValue classInfo : classInfos) {
                     const QJsonObject obj = classInfo.toObject();
                     const QString foreignName = obj[QLatin1String("name")].toString();
                     const QString foreignValue = obj[QLatin1String("value")].toString();
@@ -136,11 +136,11 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
     auto supers = classDef->value(QLatin1String("superClasses")).toArray();
     if (classDef != origClassDef) {
         const QJsonArray origSupers = origClassDef->value(QLatin1String("superClasses")).toArray();
-        for (const QJsonValue &origSuper : origSupers)
+        for (const QJsonValue origSuper : origSupers)
             supers.append(origSuper);
     }
 
-    for (const QJsonValue &superValue : qAsConst(supers)) {
+    for (const QJsonValue superValue : qAsConst(supers)) {
         const QJsonObject superObject = superValue.toObject();
         if (superObject[QLatin1String("access")].toString() == QLatin1String("public")) {
             const QString superName = superObject[QLatin1String("name")].toString();

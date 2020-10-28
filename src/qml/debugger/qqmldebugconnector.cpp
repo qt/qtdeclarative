@@ -148,7 +148,7 @@ QQmlDebugConnector *QQmlDebugConnector::instance()
             for (const QJsonObject &object : metaData) {
                 const auto keys = object.value(QLatin1String("MetaData")).toObject()
                         .value(QLatin1String("Keys")).toArray();
-                for (const QJsonValue &key : keys) {
+                for (const QJsonValue key : keys) {
                     QString keyString = key.toString();
                     if (params->services.isEmpty() || params->services.contains(keyString))
                         loadQQmlDebugService(keyString);

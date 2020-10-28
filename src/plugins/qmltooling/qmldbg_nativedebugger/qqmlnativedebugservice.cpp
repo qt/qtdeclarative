@@ -479,7 +479,7 @@ void NativeDebugger::handleVariables(QJsonObject *response, const QJsonObject &a
 
     Collector collector(engine);
     const QJsonArray expanded = arguments.value(QLatin1String("expanded")).toArray();
-    for (const QJsonValue &ex : expanded)
+    for (const QJsonValue ex : expanded)
         collector.m_expanded.append(ex.toString());
     TRACE_PROTOCOL("Expanded: " << collector.m_expanded);
 
@@ -522,7 +522,7 @@ void NativeDebugger::handleExpressions(QJsonObject *response, const QJsonObject 
 
     Collector collector(engine);
     const QJsonArray expanded = arguments.value(QLatin1String("expanded")).toArray();
-    for (const QJsonValue &ex : expanded)
+    for (const QJsonValue ex : expanded)
         collector.m_expanded.append(ex.toString());
     TRACE_PROTOCOL("Expanded: " << collector.m_expanded);
 
@@ -530,7 +530,7 @@ void NativeDebugger::handleExpressions(QJsonObject *response, const QJsonObject 
     QV4::Scope scope(engine);
 
     const QJsonArray expressions = arguments.value(QLatin1String("expressions")).toArray();
-    for (const QJsonValue &expr : expressions) {
+    for (const QJsonValue expr : expressions) {
         QString expression = expr.toObject().value(QLatin1String("expression")).toString();
         QString name = expr.toObject().value(QLatin1String("name")).toString();
         TRACE_PROTOCOL("Evaluate expression: " << expression);

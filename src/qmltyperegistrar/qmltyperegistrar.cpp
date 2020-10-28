@@ -57,7 +57,7 @@ enum RegistrationMode {
 static RegistrationMode qmlTypeRegistrationMode(const QJsonObject &classDef)
 {
     const QJsonArray classInfos = classDef[QLatin1String("classInfos")].toArray();
-    for (const QJsonValue &info: classInfos) {
+    for (const QJsonValue info : classInfos) {
         const QString name = info[QLatin1String("name")].toString();
         if (name == QLatin1String("QML.Element")) {
             if (classDef[QLatin1String("object")].toBool())
@@ -127,7 +127,7 @@ static QVector<QJsonObject> foreignRelatedTypes(const QVector<QJsonObject> &type
     for (const QJsonObject &type : types) {
         processedRelatedNames.insert(type.value(qualifiedClassNameKey).toString());
         const auto classInfos = type.value(classInfosKey).toArray();
-        for (const QJsonValue &classInfo : classInfos) {
+        for (const QJsonValue classInfo : classInfos) {
             const QJsonObject obj = classInfo.toObject();
             if (obj.value(nameKey).toString() == qmlForeignName) {
                 processedRelatedNames.insert(obj.value(valueKey).toString());
@@ -141,7 +141,7 @@ static QVector<QJsonObject> foreignRelatedTypes(const QVector<QJsonObject> &type
     for (const QJsonObject &foreignType : foreignTypes) {
         const auto classInfos = foreignType.value(classInfosKey).toArray();
         bool seenQmlPrefix = false;
-        for (const QJsonValue &classInfo : classInfos) {
+        for (const QJsonValue classInfo : classInfos) {
             const QJsonObject obj = classInfo.toObject();
             const QString name = obj.value(nameKey).toString();
             if (!seenQmlPrefix && name.startsWith(qmlNamePrefix)) {
@@ -171,7 +171,7 @@ static QVector<QJsonObject> foreignRelatedTypes(const QVector<QJsonObject> &type
         const QJsonObject classDef = typeQueue.dequeue();
 
         const auto classInfos = classDef.value(classInfosKey).toArray();
-        for (const QJsonValue &classInfo : classInfos) {
+        for (const QJsonValue classInfo : classInfos) {
             const QJsonObject obj = classInfo.toObject();
             if (obj.value(nameKey).toString() == qmlAttachedName) {
                 addType(obj.value(valueKey).toString());
@@ -187,7 +187,7 @@ static QVector<QJsonObject> foreignRelatedTypes(const QVector<QJsonObject> &type
                     }
 
                     const auto otherClassInfos = other->value(classInfosKey).toArray();
-                    for (const QJsonValue &otherClassInfo : otherClassInfos) {
+                    for (const QJsonValue otherClassInfo : otherClassInfos) {
                         const QJsonObject obj = otherClassInfo.toObject();
                         if (obj.value(nameKey).toString() == qmlAttachedName) {
                             addType(obj.value(valueKey).toString());
@@ -335,7 +335,7 @@ int main(int argc, char **argv)
         auto processMetaObject = [&](const QJsonObject &metaObject) {
             const QString include = resolvedInclude(metaObject[QLatin1String("inputFile")].toString());
             const QJsonArray classes = metaObject[QLatin1String("classes")].toArray();
-            for (const auto &cls : classes) {
+            for (const QJsonValue cls : classes) {
                 QJsonObject classDef = cls.toObject();
                 classDef.insert(QLatin1String("inputFile"), include);
 
@@ -357,7 +357,8 @@ int main(int argc, char **argv)
                     includes.append(include);
                     {
                         bool shouldRegister = true;
-                        for (const QJsonValue &v : classDef.value(QLatin1String("classInfos")).toArray()) {
+                        for (const QJsonValue v :
+                             classDef.value(QLatin1String("classInfos")).toArray()) {
                             if (v[QLatin1String("name")].toString() == QLatin1String("QML.ManualRegistration"))
                                 shouldRegister = QStringView(u"true").compare(v[QLatin1String("value")].toString(), Qt::CaseInsensitive) != 0;
                         }
@@ -376,7 +377,7 @@ int main(int argc, char **argv)
 
         if (metaObjects.isArray()) {
             const QJsonArray metaObjectsArray = metaObjects.array();
-            for (const auto &metaObject : metaObjectsArray) {
+            for (const QJsonValue metaObject : metaObjectsArray) {
                 if (!metaObject.isObject()) {
                     fprintf(stderr, "Error parsing %s: JSON is not an object\n",
                             qPrintable(source));
@@ -435,7 +436,7 @@ int main(int argc, char **argv)
 
         if (classDef.value(QLatin1String("namespace")).toBool()) {
             QString targetName = className;
-            for (const QJsonValue &v : classDef.value(QLatin1String("classInfos")).toArray()) {
+            for (const QJsonValue v : classDef.value(QLatin1String("classInfos")).toArray()) {
                 if (v[QLatin1String("name")].toString() == QLatin1String("QML.Foreign"))
                     targetName = v[QLatin1String("value")].toString();
             }
@@ -474,7 +475,7 @@ int main(int argc, char **argv)
             }
 
             const QJsonArray foreignObjectsArray = foreignMetaObjects.array();
-            for (const auto &metaObject : foreignObjectsArray) {
+            for (const QJsonValue metaObject : foreignObjectsArray) {
                 if (!metaObject.isObject()) {
                     fprintf(stderr, "Error parsing %s: JSON is not an object\n",
                             qPrintable(types));
@@ -484,7 +485,7 @@ int main(int argc, char **argv)
                 auto const asObject = metaObject.toObject();
                 const QString include = asObject[QLatin1String("inputFile")].toString();
                 const QJsonArray classes = asObject[QLatin1String("classes")].toArray();
-                for (const auto &cls : classes) {
+                for (const QJsonValue cls : classes) {
                     QJsonObject classDef = cls.toObject();
                     classDef.insert(QLatin1String("inputFile"), include);
                     foreignTypes.append(classDef);
