@@ -16,6 +16,11 @@ Module {
     }
 
     Component {
+        name: "varargs"
+        accessSemantics: "value"
+    }
+
+    Component {
         name: "QObject"
         accessSemantics: "reference"
         exports: ["QML/QtObject 1.0"]
@@ -519,16 +524,9 @@ Module {
             type: "double"
 
             Parameter {
-                name: "value1"
-                type: "double"
+                name: "arguments"
+                type: "varargs"
             }
-
-            Parameter {
-                name: "value2"
-                type: "double"
-            }
-            // vararg
-
         }
 
         Method {
@@ -602,16 +600,9 @@ Module {
             type: "NumberPrototype"
 
             Parameter {
-                name: "value1"
-                type: "NumberPrototype"
+                name: "arguments"
+                type: "varargs"
             }
-
-            Parameter {
-                name: "value2"
-                type: "NumberPrototype"
-            }
-            // vararg
-
         }
 
         Method {
@@ -619,16 +610,9 @@ Module {
             type: "NumberPrototype"
 
             Parameter {
-                name: "value1"
-                type: "NumberPrototype"
+                name: "arguments"
+                type: "varargs"
             }
-
-            Parameter {
-                name: "value2"
-                type: "NumberPrototype"
-            }
-            // vararg
-
         }
 
         Method {
@@ -810,11 +794,9 @@ Module {
             type: "string"
 
             Parameter {
-                name: "codeUnits"
-                type: "int"
+                name: "arguments"
+                type: "varargs"
             }
-            // vararg
-
         }
 
         Method {
@@ -822,11 +804,9 @@ Module {
             type: "string"
 
             Parameter {
-                name: "codeUnits"
-                type: "int"
+                name: "arguments"
+                type: "varargs"
             }
-            // vararg
-
         }
 
         Method {
@@ -835,15 +815,13 @@ Module {
 
             Parameter {
                 name: "template"
-                type: "string"
+                type: "var"
             }
 
             Parameter {
                 name: "substitutions"
-                type: "list"
+                type: "varargs"
             }
-            // vararg
-
         }
 
     }
@@ -889,11 +867,9 @@ Module {
             type: "string"
 
             Parameter {
-                name: "args"
-                type: "string"
+                name: "arguments"
+                type: "varargs"
             }
-            // vararg
-
         }
 
         Method {
