@@ -95,11 +95,11 @@ TextEdit {
     Setting \l {Item::focus}{focus} to \c true enables the TextEdit item to receive keyboard focus.
 
     Note that the TextEdit does not implement scrolling, following the cursor, or other behaviors specific
-    to a look-and-feel. For example, to add flickable scrolling that follows the cursor:
+    to a look and feel. For example, to add flickable scrolling that follows the cursor:
 
     \snippet qml/texteditor.qml 0
 
-    A particular look-and-feel might use smooth scrolling (eg. using SmoothedAnimation), might have a visible
+    A particular look and feel might use smooth scrolling (eg. using SmoothedAnimation), might have a visible
     scrollbar, or a scrollbar that fades in to show location, etc.
 
     Clipboard support is provided by the cut(), copy(), and paste() functions, and the selection can
