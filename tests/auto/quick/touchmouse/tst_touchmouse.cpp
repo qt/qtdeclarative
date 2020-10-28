@@ -1043,6 +1043,7 @@ void tst_TouchMouse::pinchOnFlickable()
     QQuickViewTestUtil::centerOnScreen(window.data());
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
     QVERIFY(window->rootObject() != nullptr);
+    const int threshold = qApp->styleHints()->startDragDistance();
 
     QQuickPinchArea *pinchArea = window->rootObject()->findChild<QQuickPinchArea*>("pincharea");
     QVERIFY(pinchArea);
@@ -1051,37 +1052,27 @@ void tst_TouchMouse::pinchOnFlickable()
     QQuickItem *rect = window->rootObject()->findChild<QQuickItem*>("rect");
     QVERIFY(rect);
 
-    // flickable - single touch point
-    QCOMPARE(flickable->contentX(), 0.0);
+    // flick the flickable with one touchpoint
+    QCOMPARE(flickable->contentX(), 0);
     QPoint p = QPoint(100, 100);
     QTest::touchEvent(window.data(), device).press(0, p, window.data());
     QQuickTouchUtils::flush(window.data());
-    QCOMPARE(rect->position(), QPointF(200.0, 200.0));
-    p -= QPoint(10, 0);
-    QTest::touchEvent(window.data(), device).move(0, p, window.data());
-    QQuickTouchUtils::flush(window.data());
-    p -= QPoint(10, 0);
-    QTest::touchEvent(window.data(), device).move(0, p, window.data());
-    QQuickTouchUtils::flush(window.data());
-    p -= QPoint(10, 0);
-    QTest::touchEvent(window.data(), device).move(0, p, window.data());
-    QQuickTouchUtils::flush(window.data());
-    p -= QPoint(10, 0);
-    QTest::touchEvent(window.data(), device).move(0, p, window.data());
-    QQuickTouchUtils::flush(window.data());
+    QCOMPARE(rect->position(), QPointF(200, 200));
+    for (int i = 0; i < 4; ++i) {
+        p -= QPoint(threshold, 0);
+        QTest::touchEvent(window.data(), device).move(0, p, window.data());
+        QQuickTouchUtils::flush(window.data());
+        if (!flickable->isAtXBeginning()) // currently happens when i == 3
+            qCDebug(lcTests, "flicking after %d moves: %lf", i + 1, flickable->contentX());
+    }
     QTest::touchEvent(window.data(), device).release(0, p, window.data());
-    QQuickTouchUtils::flush(window.data());
-
-    QGuiApplication::processEvents();
-    QTest::qWait(10);
-    QVERIFY(!flickable->isAtXBeginning());
+    QTRY_COMPARE(flickable->isAtXBeginning(), false);
     // wait until flicking is done
-    QTRY_VERIFY(!flickable->isFlicking());
+    QTRY_COMPARE(flickable->isFlicking(), false);
 
-    // pinch
+    // pinch with two touchpoints
     QPoint p1 = QPoint(40, 20);
     QPoint p2 = QPoint(60, 20);
-
     QTest::QTouchEventSequence pinchSequence = QTest::touchEvent(window.data(), device);
     QQuickTouchUtils::flush(window.data());
     pinchSequence.press(0, p1, window.data()).commit();
@@ -1093,27 +1084,19 @@ void tst_TouchMouse::pinchOnFlickable()
     // it is outside its bounds.
     pinchSequence.stationary(0).press(1, p2, window.data()).commit();
     QQuickTouchUtils::flush(window.data());
-    p1 -= QPoint(10,10);
-    p2 += QPoint(10,10);
-    pinchSequence.move(0, p1, window.data()).move(1, p2, window.data()).commit();
-    QQuickTouchUtils::flush(window.data());
-    QCOMPARE(rect->scale(), 1.0);
-    p1 -= QPoint(10, 0);
-    p2 += QPoint(10, 0);
-    pinchSequence.move(0, p1, window.data()).move(1, p2, window.data()).commit();
-    QQuickTouchUtils::flush(window.data());
-    p1 -= QPoint(10, 0);
-    p2 += QPoint(10, 0);
-    pinchSequence.move(0, p1, window.data()).move(1, p2, window.data()).commit();
-    QQuickTouchUtils::flush(window.data());
-    p1 -= QPoint(10, 0);
-    p2 += QPoint(10, 0);
-    pinchSequence.move(0, p1, window.data()).move(1, p2, window.data()).commit();
+    QCOMPARE(rect->scale(), 1);
+    for (int i = 0; i < 3; ++i) {
+        p1 -= QPoint(threshold, 0);
+        p2 += QPoint(threshold, 0);
+        pinchSequence.move(0, p1, window.data()).move(1, p2, window.data()).commit();
+        QQuickTouchUtils::flush(window.data());
+        qCDebug(lcTests, "pinch scale after %d moves: %lf", i + 1, rect->scale());
+    }
     QVERIFY(!flickable->isDragging());
     QQuickTouchUtils::flush(window.data());
     pinchSequence.release(0, p1, window.data()).release(1, p2, window.data()).commit();
     QQuickTouchUtils::flush(window.data());
-    QVERIFY(rect->scale() > 1.0);
+    QVERIFY(rect->scale() > 1); // depends on threshold
 }
 
 void tst_TouchMouse::flickableOnPinch()
