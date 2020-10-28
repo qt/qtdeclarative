@@ -204,7 +204,7 @@ public:
     Q_DECLARE_FLAGS(DebugFlags, DebugFlag)
 #endif
 
-    QQuickStyleItem();
+    explicit QQuickStyleItem(QQuickItem *parent = nullptr);
     ~QQuickStyleItem() override;
 
     qreal contentWidth();

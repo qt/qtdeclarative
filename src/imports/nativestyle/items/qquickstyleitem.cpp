@@ -79,7 +79,8 @@ QDebug operator<<(QDebug debug, const StyleItemGeometry &cg)
     return debug;
 }
 
-QQuickStyleItem::QQuickStyleItem()
+QQuickStyleItem::QQuickStyleItem(QQuickItem *parent)
+    : QQuickItem(parent)
 {
     setFlag(QQuickItem::ItemHasContents);
 }
