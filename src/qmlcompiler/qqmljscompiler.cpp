@@ -40,6 +40,8 @@ Q_LOGGING_CATEGORY(lcAotCompiler, "qml.compiler.aot", QtWarningMsg);
 
 QT_BEGIN_NAMESPACE
 
+static const int FileScopeCodeIndex = -1;
+
 static QSet<QString> getIllegalNames()
 {
     QSet<QString> illegalNames;
@@ -216,6 +218,8 @@ bool qCompileQmlFile(const QString &inputFileName, QQmlJSSaveFunction saveFuncti
 
             aotCompiler->setScopeObject(object);
 
+            aotFunctionsByIndex[FileScopeCodeIndex] = aotCompiler->globalCode();
+
             std::for_each(object->bindingsBegin(), object->bindingsEnd(), [&](const QmlIR::Binding &binding) {
 
                 switch (binding.type) {
@@ -381,10 +385,7 @@ bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFile
         return false;
 
     if (!aotFunctions.isEmpty()) {
-        QStringList includes = {
-            QStringLiteral("QtQml/qqmlcontext.h"),
-            QStringLiteral("type_traits")
-        };
+        QStringList includes;
 
         for (const auto &function : aotFunctions)
             includes.append(function.includes);
@@ -435,6 +436,7 @@ bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFile
     if (aotFunctions.isEmpty()) {
         writeStr("extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[] = { { 0, QMetaType::fromType<void>(), nullptr } };");
     } else {
+        writeStr(aotFunctions[FileScopeCodeIndex].code.toUtf8().constData());
         writeStr(R"(template <typename Binding>
                  void wrapCall(QQmlContext *context, QObject *scopeObject, void *dataPtr, Binding &&binding) {
                  using return_type = std::invoke_result_t<Binding, QQmlContext*, QObject*>;
@@ -457,6 +459,9 @@ bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFile
         for (QQmlJSAotFunctionMap::ConstIterator func = aotFunctions.constBegin(),
              end = aotFunctions.constEnd();
              func != end; ++func) {
+
+            if (func.key() == FileScopeCodeIndex)
+                continue;
 
             QString function = header + func.value().code + footer;
 

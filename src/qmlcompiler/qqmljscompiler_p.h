@@ -77,10 +77,12 @@ public:
     virtual void setScopeObject(const QmlIR::Object *object) = 0;
     virtual std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage> compileBinding(
             const QmlIR::Binding &binding) = 0;
+
+    virtual QQmlJSAotFunction globalCode() const = 0;
 };
 
 
-using QQmlJSAotFunctionMap = QMap<uint, QQmlJSAotFunction>;
+using QQmlJSAotFunctionMap = QMap<int, QQmlJSAotFunction>;
 using QQmlJSSaveFunction
     = std::function<bool(const QV4::CompiledData::SaveableUnitPointer &,
                          const QQmlJSAotFunctionMap &, QString *)>;
