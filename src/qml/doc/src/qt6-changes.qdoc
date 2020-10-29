@@ -41,6 +41,34 @@
     In this topic we summarize those changes in Qt QML, and provide
     guidance to handle them.
 
-    \section1 ADD STUFF HERE
+    \section1 QML language
+
+    \c variant properties, which have been marked as obsolete since Qt 5, are now treated in exactly
+    the same way as \c var properties.
+    Code that relied on implicit string conversion triggered on assignment to variant properties
+    should be updated to explicitly create an object of the correct type.
+    \oldcode
+    property variant myColor: "red"
+    \newcode
+    property variant myColor: Qt.color("red")
+    \endcode
+
+    Implicit conversions were done for strings that could be parsed as
+    \list
+    \li color (use Qt.color instead instead),
+    \li date (use the Date object instead),
+    \li rect (use Qt.rect instead) and
+    \li size (use Qt.size instead)
+    \endlist
+
+    \c variant still remains a deprecated keyword in Qt 6, though new code is strongly encouraged to
+    use \c var properties instead.
+
+    \note If the type of the property is known not to change, use a property of the concrete type,
+    instead of a \c var property.
+
+    \note These conversions were also applied to \c QVariant properties of classes registered with
+    the engine. As with \c variant properties, code that relied on implicit string conversions need
+    to use the corresponding functions of the Qt object.
 
 */
