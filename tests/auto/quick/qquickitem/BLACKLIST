@@ -6,5 +6,3 @@ xcb
 * # QTBUG-86729
 [touchEventAcceptIgnore]
 * # QTBUG-86729
-[mouseGrab]
-* # QTBUG-86729

@@ -59,23 +59,17 @@ class TestItem : public QQuickItem
 Q_OBJECT
 public:
     TestItem(QQuickItem *parent = nullptr)
-        : QQuickItem(parent), focused(false), pressCount(0), releaseCount(0)
-        , wheelCount(0), acceptIncomingTouchEvents(true)
-        , touchEventReached(false), timestamp(0)
-        , lastWheelEventPos(0, 0), lastWheelEventGlobalPos(0, 0)
+        : QQuickItem(parent)
     {
-#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
-        setAcceptTouchEvents(true);
-#endif
     }
 
-    bool focused;
-    int pressCount;
-    int releaseCount;
-    int wheelCount;
-    bool acceptIncomingTouchEvents;
-    bool touchEventReached;
-    ulong timestamp;
+    bool focused = false;
+    int pressCount = 0;
+    int releaseCount = 0;
+    int wheelCount = 0;
+    bool acceptIncomingTouchEvents = true;
+    bool touchEventReached = false;
+    ulong timestamp = 0;
     QPoint lastWheelEventPos;
     QPoint lastWheelEventGlobalPos;
     int languageChangeEventCount = 0;
@@ -1251,91 +1245,70 @@ void tst_qquickitem::enabledFocus()
     QCOMPARE(window.activeFocusItem(), window.contentItem());
 }
 
-static inline QByteArray msgItem(const QQuickItem *item)
-{
-    QString result;
-    QDebug(&result) << item;
-    return result.toLocal8Bit();
-}
-
 void tst_qquickitem::mouseGrab()
 {
-#ifdef Q_OS_WIN
-    if (QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGLES)
-        QSKIP("Fails in the CI for ANGLE builds on Windows, QTBUG-32664");
-#endif
     QQuickWindow window;
-    window.setFramePosition(QPoint(100, 100));
     window.resize(200, 200);
     window.show();
     QVERIFY(QTest::qWaitForWindowExposed(&window));
+    auto devPriv = QPointingDevicePrivate::get(QPointingDevice::primaryPointingDevice());
 
-    QScopedPointer<TestItem> child1(new TestItem);
+    auto child1 = new TestItem(window.contentItem());
     child1->setObjectName(QStringLiteral("child1"));
     child1->setAcceptedMouseButtons(Qt::LeftButton);
     child1->setSize(QSizeF(200, 100));
-    child1->setParentItem(window.contentItem());
 
-    QScopedPointer<TestItem> child2(new TestItem);
+    auto child2 = new TestItem(window.contentItem());
     child2->setObjectName(QStringLiteral("child2"));
     child2->setAcceptedMouseButtons(Qt::LeftButton);
     child2->setY(51);
     child2->setSize(QSizeF(200, 100));
-    child2->setParentItem(window.contentItem());
 
+    // click over child1
     QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50,50));
-    QTest::qWait(100);
-    QVERIFY2(window.mouseGrabberItem() == child1.data(), msgItem(window.mouseGrabberItem()).constData());
-    QTest::qWait(100);
-
+    QTRY_COMPARE(devPriv->firstPointExclusiveGrabber(), child1);
     QCOMPARE(child1->pressCount, 1);
+    QCOMPARE(child2->pressCount, 0);
     QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50,50));
-    QTest::qWait(50);
-    QVERIFY2(window.mouseGrabberItem() == nullptr, msgItem(window.mouseGrabberItem()).constData());
+    QCOMPARE(devPriv->firstPointExclusiveGrabber(), nullptr);
     QCOMPARE(child1->releaseCount, 1);
+    QCOMPARE(child2->releaseCount, 0);
 
+    // press over child1 and then disable it: it doesn't get the release
     QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50,50));
-    QTest::qWait(50);
-    QVERIFY2(window.mouseGrabberItem() == child1.data(), msgItem(window.mouseGrabberItem()).constData());
+    QTRY_COMPARE(devPriv->firstPointExclusiveGrabber(), child1);
     QCOMPARE(child1->pressCount, 2);
+    QCOMPARE(child2->pressCount, 0);
     child1->setEnabled(false);
-    QVERIFY2(window.mouseGrabberItem() == nullptr, msgItem(window.mouseGrabberItem()).constData());
+    QCOMPARE(devPriv->firstPointExclusiveGrabber(), nullptr);
     QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50,50));
-    QTest::qWait(50);
     QCOMPARE(child1->releaseCount, 1);
+    QCOMPARE(child2->releaseCount, 0);
     child1->setEnabled(true);
 
+    // press over child1 and then hide it: it doesn't get the release
     QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50,50));
-    QTest::qWait(50);
-    QVERIFY2(window.mouseGrabberItem() == child1.data(), msgItem(window.mouseGrabberItem()).constData());
+    QTRY_COMPARE(devPriv->firstPointExclusiveGrabber(), child1);
     QCOMPARE(child1->pressCount, 3);
+    QCOMPARE(child2->pressCount, 0);
     child1->setVisible(false);
-    QVERIFY2(window.mouseGrabberItem() == nullptr, msgItem(window.mouseGrabberItem()));
+    QCOMPARE(devPriv->firstPointExclusiveGrabber(), nullptr);
     QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50,50));
     QCOMPARE(child1->releaseCount, 1);
+    QCOMPARE(child2->releaseCount, 0);
     child1->setVisible(true);
 
-    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50,50));
-    QTest::qWait(50);
-    QVERIFY2(window.mouseGrabberItem() == child1.data(), msgItem(window.mouseGrabberItem()).constData());
-    QCOMPARE(child1->pressCount, 4);
-    child2->grabMouse();
-    QVERIFY2(window.mouseGrabberItem() == child2.data(), msgItem(window.mouseGrabberItem()).constData());
-    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50,50));
-    QTest::qWait(50);
+    // click in a position over both children: only the top one gets it,
+    // because the event is pre-accepted, which implies that the event
+    // stops propagating and the top item gets the mouse grab.
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, QPoint(75,75));
+    QCOMPARE(child1->pressCount, 3);
+    QCOMPARE(child2->pressCount, 1);
+    QCOMPARE(devPriv->firstPointExclusiveGrabber(), child2);
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(75,75));
+    QCOMPARE(devPriv->firstPointExclusiveGrabber(), nullptr);
     QCOMPARE(child1->releaseCount, 1);
     QCOMPARE(child2->releaseCount, 1);
-
-    child2->grabMouse();
-    QVERIFY2(window.mouseGrabberItem() == child2.data(), msgItem(window.mouseGrabberItem()).constData());
-    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50,50));
-    QTest::qWait(50);
-    QCOMPARE(child1->pressCount, 4);
-    QCOMPARE(child2->pressCount, 1);
-    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50,50));
-    QTest::qWait(50);
-    QCOMPARE(child1->releaseCount, 1);
-    QCOMPARE(child2->releaseCount, 2);
 }
 
 void tst_qquickitem::mousePropagationToParent()
@@ -1662,14 +1635,6 @@ void tst_qquickitem::hoverEvent_data()
     QTest::newRow("invisible, disabled, not accept hover") << false << false << false;
 }
 
-// ### For some unknown reason QTest::mouseMove() isn't working correctly.
-// TODO Qt 6: it should work now
-static void sendMouseMove(QObject *object, const QPoint &position)
-{
-    QMouseEvent moveEvent(QEvent::MouseMove, position, Qt::NoButton, Qt::NoButton, Qt::NoModifier);
-    QGuiApplication::sendEvent(object, &moveEvent);
-}
-
 void tst_qquickitem::hoverEvent()
 {
     QFETCH(bool, visible);
@@ -1692,14 +1657,14 @@ void tst_qquickitem::hoverEvent()
     const QPoint inside(50, 50);
     const QPoint anotherInside(51, 51);
 
-    sendMouseMove(window, outside);
+    QTest::mouseMove(window, outside);
     item->resetCounters();
 
     // Enter, then move twice inside, then leave.
-    sendMouseMove(window, inside);
-    sendMouseMove(window, anotherInside);
-    sendMouseMove(window, inside);
-    sendMouseMove(window, outside);
+    QTest::mouseMove(window, inside);
+    QTest::mouseMove(window, anotherInside);
+    QTest::mouseMove(window, inside);
+    QTest::mouseMove(window, outside);
 
     const bool shouldReceiveHoverEvents = visible && enabled && acceptHoverEvents;
     if (shouldReceiveHoverEvents) {
@@ -1737,12 +1702,12 @@ void tst_qquickitem::hoverEventInParent()
     const QPoint insideLeft(50, 100);
     const QPoint insideRight(150, 100);
 
-    sendMouseMove(&window, insideLeft);
+    QTest::mouseMove(&window, insideLeft);
     parentItem->resetCounters();
     leftItem->resetCounters();
     rightItem->resetCounters();
 
-    sendMouseMove(&window, insideRight);
+    QTest::mouseMove(&window, insideRight);
     QCOMPARE(parentItem->hoverEnterCount, 0);
     QCOMPARE(parentItem->hoverLeaveCount, 0);
     QCOMPARE(leftItem->hoverEnterCount, 0);
@@ -1750,7 +1715,7 @@ void tst_qquickitem::hoverEventInParent()
     QCOMPARE(rightItem->hoverEnterCount, 1);
     QCOMPARE(rightItem->hoverLeaveCount, 0);
 
-    sendMouseMove(&window, insideLeft);
+    QTest::mouseMove(&window, insideLeft);
     QCOMPARE(parentItem->hoverEnterCount, 0);
     QCOMPARE(parentItem->hoverLeaveCount, 0);
     QCOMPARE(leftItem->hoverEnterCount, 1);
