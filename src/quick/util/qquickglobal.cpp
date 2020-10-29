@@ -314,7 +314,7 @@ public:
         return QFontDatabase::families();
     }
 
-    bool openUrlExternally(QUrl &url) override
+    bool openUrlExternally(const QUrl &url) override
     {
 #ifndef QT_NO_DESKTOPSERVICES
         return QDesktopServices::openUrl(url);

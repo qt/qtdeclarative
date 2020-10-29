@@ -59,20 +59,21 @@ QT_BEGIN_NAMESPACE
 
 QV4Include::QV4Include(const QUrl &url, QV4::ExecutionEngine *engine,
                        QV4::QmlContext *qmlContext, const QV4::Value &callback)
-    : v4(engine), m_url(url)
+    : QObject(engine->jsEngine())
+    , v4(engine), m_url(url)
 #if QT_CONFIG(qml_network)
     , m_redirectCount(0), m_network(nullptr) , m_reply(nullptr)
 #endif
 {
     if (qmlContext)
-        m_qmlContext.set(engine, *qmlContext);
+        m_qmlContext.set(v4, *qmlContext);
     if (callback.as<QV4::FunctionObject>())
-        m_callbackFunction.set(engine, callback);
+        m_callbackFunction.set(v4, callback);
 
     m_resultObject.set(v4, resultValue(v4));
 
 #if QT_CONFIG(qml_network)
-    if (QQmlEngine *qmlEngine = engine->qmlEngine()) {
+    if (QQmlEngine *qmlEngine = v4->qmlEngine()) {
         m_network = qmlEngine->networkAccessManager();
 
         QNetworkRequest request;
@@ -202,37 +203,40 @@ void QV4Include::finished()
 /*
     Documented in qv4engine.cpp
 */
-QV4::ReturnedValue QV4Include::method_include(const QV4::FunctionObject *b, const QV4::Value *, const QV4::Value *argv, int argc)
+QJSValue QV4Include::method_include(QV4::ExecutionEngine *engine, const QUrl &url,
+                                    const QJSValue &callbackFunction)
 {
-    QV4::Scope scope(b);
-    if (!argc)
-        RETURN_UNDEFINED();
+    QQmlRefPointer<QQmlContextData> context = engine->callingQmlContext();
 
-    QQmlRefPointer<QQmlContextData> context = scope.engine->callingQmlContext();
+    if ((!context || !context->isJSContext()) && engine->qmlEngine()) {
+        return QJSValuePrivate::fromReturnedValue(
+                    engine->throwError(
+                        QString::fromUtf8(
+                            "Qt.include(): Can only be called from JavaScript files")));
+    }
 
-    if ((!context || !context->isJSContext()) && scope.engine->qmlEngine())
-        RETURN_RESULT(scope.engine->throwError(QString::fromUtf8("Qt.include(): Can only be called from JavaScript files")));
 
-    QV4::ScopedValue callbackFunction(scope, QV4::Value::undefinedValue());
-    if (argc >= 2 && argv[1].as<QV4::FunctionObject>())
-        callbackFunction = argv[1];
+    QV4::Scope scope(engine);
+    QV4::ScopedValue scopedCallbackFunction(scope, QV4::Value::undefinedValue());
+    if (auto function = QJSValuePrivate::asManagedType<QV4::FunctionObject>(&callbackFunction))
+        scopedCallbackFunction = *function;
 
-    QUrl url(scope.engine->resolvedUrl(argv[0].toQStringNoThrow()));
-    if (const QQmlEngine *qmlEngine = scope.engine->qmlEngine())
-        url = qmlEngine->interceptUrl(url, QQmlAbstractUrlInterceptor::JavaScriptFile);
-
-    QString localFile = QQmlFile::urlToLocalFileOrQrc(url);
+    const QQmlEngine *qmlEngine = engine->qmlEngine();
+    const QUrl intercepted = qmlEngine
+            ? qmlEngine->interceptUrl(url, QQmlAbstractUrlInterceptor::JavaScriptFile)
+            : url;
+    QString localFile = QQmlFile::urlToLocalFileOrQrc(intercepted);
 
     QV4::ScopedValue result(scope);
     QV4::Scoped<QV4::QmlContext> qmlcontext(scope, scope.engine->qmlContext());
 
     if (localFile.isEmpty()) {
 #if QT_CONFIG(qml_network)
-        QV4Include *i = new QV4Include(url, scope.engine, qmlcontext, callbackFunction);
+        QV4Include *i = new QV4Include(url, engine, qmlcontext, scopedCallbackFunction);
         result = i->result();
 #else
         result = resultValue(scope.engine, NetworkError);
-        callback(callbackFunction, result);
+        callback(scopedCallbackFunction, result);
 #endif
     } else {
         QScopedPointer<QV4::Script> script;
@@ -255,10 +259,10 @@ QV4::ReturnedValue QV4Include::method_include(const QV4::FunctionObject *b, cons
             result = resultValue(scope.engine, NetworkError, error);
         }
 
-        callback(callbackFunction, result);
+        callback(scopedCallbackFunction, result);
     }
 
-    return result->asReturnedValue();
+    return QJSValuePrivate::fromReturnedValue(result->asReturnedValue());
 }
 
 QT_END_NAMESPACE

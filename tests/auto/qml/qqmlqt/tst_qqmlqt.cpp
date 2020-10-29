@@ -180,9 +180,9 @@ void tst_qqmlqt::rgba()
 {
     QQmlComponent component(&engine, testFileUrl("rgba.qml"));
 
-    QString warning1 = component.url().toString() + ":6: Error: Qt.rgba(): Invalid arguments";
-    QString warning2 = component.url().toString() + ":7: Error: Qt.rgba(): Invalid arguments";
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
+    QString warning1 = "rgba.qml:6: Error: Unable to determine callable overload";
+    QString warning2 = component.url().toString() + ":7: Error: Too many arguments";
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(warning1));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
     QScopedPointer<QObject> object(component.create());
@@ -201,9 +201,9 @@ void tst_qqmlqt::hsla()
 {
     QQmlComponent component(&engine, testFileUrl("hsla.qml"));
 
-    QString warning1 = component.url().toString() + ":6: Error: Qt.hsla(): Invalid arguments";
-    QString warning2 = component.url().toString() + ":7: Error: Qt.hsla(): Invalid arguments";
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
+    QString warning1 = "hsla.qml:6: Error: Unable to determine callable overload";
+    QString warning2 = component.url().toString() + ":7: Error: Too many arguments";
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(warning1));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
     QScopedPointer<QObject> object(component.create());
@@ -221,9 +221,9 @@ void tst_qqmlqt::hsva()
 {
     QQmlComponent component(&engine, testFileUrl("hsva.qml"));
 
-    QString warning1 = component.url().toString() + ":6: Error: Qt.hsva(): Invalid arguments";
-    QString warning2 = component.url().toString() + ":7: Error: Qt.hsva(): Invalid arguments";
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
+    QString warning1 = "hsva.qml:6: Error: Unable to determine callable overload";
+    QString warning2 = component.url().toString() + ":7: Error: Too many arguments";
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(warning1));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
     QScopedPointer<QObject> object(component.create());
@@ -241,8 +241,8 @@ void tst_qqmlqt::colorEqual()
 {
     QQmlComponent component(&engine, testFileUrl("colorEqual.qml"));
 
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(component.url().toString() + ":6: Error: Qt.colorEqual(): Invalid arguments"));
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(component.url().toString() + ":7: Error: Qt.colorEqual(): Invalid arguments"));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(component.url().toString() + ":6: Error: Insufficient arguments"));
+    QTest::ignoreMessage(QtWarningMsg, qPrintable(component.url().toString() + ":7: Error: Insufficient arguments"));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(component.url().toString() + ":9: Error: Qt.colorEqual(): Invalid color name"));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(component.url().toString() + ":10: Error: Qt.colorEqual(): Invalid color name"));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(component.url().toString() + ":12: Error: Qt.colorEqual(): Invalid arguments"));
@@ -322,8 +322,8 @@ void tst_qqmlqt::rect()
 {
     QQmlComponent component(&engine, testFileUrl("rect.qml"));
 
-    QString warning1 = component.url().toString() + ":6: Error: Qt.rect(): Invalid arguments";
-    QString warning2 = component.url().toString() + ":7: Error: Qt.rect(): Invalid arguments";
+    QString warning1 = component.url().toString() + ":6: Error: Insufficient arguments";
+    QString warning2 = component.url().toString() + ":7: Error: Too many arguments";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
@@ -341,8 +341,8 @@ void tst_qqmlqt::point()
 {
     QQmlComponent component(&engine, testFileUrl("point.qml"));
 
-    QString warning1 = component.url().toString() + ":6: Error: Qt.point(): Invalid arguments";
-    QString warning2 = component.url().toString() + ":7: Error: Qt.point(): Invalid arguments";
+    QString warning1 = component.url().toString() + ":6: Error: Insufficient arguments";
+    QString warning2 = component.url().toString() + ":7: Error: Too many arguments";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
@@ -359,8 +359,8 @@ void tst_qqmlqt::size()
 {
     QQmlComponent component(&engine, testFileUrl("size.qml"));
 
-    QString warning1 = component.url().toString() + ":7: Error: Qt.size(): Invalid arguments";
-    QString warning2 = component.url().toString() + ":8: Error: Qt.size(): Invalid arguments";
+    QString warning1 = component.url().toString() + ":7: Error: Insufficient arguments";
+    QString warning2 = component.url().toString() + ":8: Error: Too many arguments";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
@@ -378,8 +378,8 @@ void tst_qqmlqt::vector2d()
 {
     QQmlComponent component(&engine, testFileUrl("vector2.qml"));
 
-    QString warning1 = component.url().toString() + ":6: Error: Qt.vector2d(): Invalid arguments";
-    QString warning2 = component.url().toString() + ":7: Error: Qt.vector2d(): Invalid arguments";
+    QString warning1 = component.url().toString() + ":6: Error: Insufficient arguments";
+    QString warning2 = component.url().toString() + ":7: Error: Too many arguments";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
@@ -396,8 +396,8 @@ void tst_qqmlqt::vector3d()
 {
     QQmlComponent component(&engine, testFileUrl("vector.qml"));
 
-    QString warning1 = component.url().toString() + ":6: Error: Qt.vector3d(): Invalid arguments";
-    QString warning2 = component.url().toString() + ":7: Error: Qt.vector3d(): Invalid arguments";
+    QString warning1 = component.url().toString() + ":6: Error: Insufficient arguments";
+    QString warning2 = component.url().toString() + ":7: Error: Too many arguments";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
@@ -414,8 +414,8 @@ void tst_qqmlqt::vector4d()
 {
     QQmlComponent component(&engine, testFileUrl("vector4.qml"));
 
-    QString warning1 = component.url().toString() + ":6: Error: Qt.vector4d(): Invalid arguments";
-    QString warning2 = component.url().toString() + ":7: Error: Qt.vector4d(): Invalid arguments";
+    QString warning1 = component.url().toString() + ":6: Error: Insufficient arguments";
+    QString warning2 = component.url().toString() + ":7: Error: Too many arguments";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
@@ -432,8 +432,8 @@ void tst_qqmlqt::quaternion()
 {
     QQmlComponent component(&engine, testFileUrl("quaternion.qml"));
 
-    QString warning1 = component.url().toString() + ":6: Error: Qt.quaternion(): Invalid arguments";
-    QString warning2 = component.url().toString() + ":7: Error: Qt.quaternion(): Invalid arguments";
+    QString warning1 = component.url().toString() + ":6: Error: Insufficient arguments";
+    QString warning2 = component.url().toString() + ":7: Error: Too many arguments";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
@@ -450,7 +450,7 @@ void tst_qqmlqt::matrix4x4()
 {
     QQmlComponent component(&engine, testFileUrl("matrix4x4.qml"));
 
-    QString warning1 = component.url().toString() + ":6: Error: Qt.matrix4x4(): Invalid arguments";
+    QString warning1 = component.url().toString() + ":6: Error: Too many arguments";
     QString warning2 = component.url().toString() + ":7: Error: Qt.matrix4x4(): Invalid argument: not a valid matrix4x4 values array";
     QString warning3 = component.url().toString() + ":8: Error: Qt.matrix4x4(): Invalid argument: not a valid matrix4x4 values array";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
@@ -471,7 +471,7 @@ void tst_qqmlqt::font()
 {
     QQmlComponent component(&engine, testFileUrl("font.qml"));
 
-    QString warning1 = component.url().toString() + ":6: Error: Qt.font(): Invalid arguments";
+    QString warning1 = component.url().toString() + ":6: Error: Too many arguments";
     QString warning2 = component.url().toString() + ":7: Error: Qt.font(): Invalid argument: no valid font subproperties specified";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
@@ -495,9 +495,9 @@ void tst_qqmlqt::lighter()
 {
     QQmlComponent component(&engine, testFileUrl("lighter.qml"));
 
-    QString warning1 = component.url().toString() + ":5: Error: Qt.lighter(): Invalid arguments";
-    QString warning2 = component.url().toString() + ":10: Error: Qt.lighter(): Invalid arguments";
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
+    QString warning1 = "lighter.qml:5: Error: Unable to determine callable overload";
+    QString warning2 = component.url().toString() + ":10: Error: Too many arguments";
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(warning1));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
     QScopedPointer<QObject> object(component.create());
@@ -520,9 +520,9 @@ void tst_qqmlqt::darker()
 {
     QQmlComponent component(&engine, testFileUrl("darker.qml"));
 
-    QString warning1 = component.url().toString() + ":5: Error: Qt.darker(): Invalid arguments";
-    QString warning2 = component.url().toString() + ":10: Error: Qt.darker(): Invalid arguments";
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
+    QString warning1 = "darker.qml:5: Error: Unable to determine callable overload";
+    QString warning2 = component.url().toString() + ":10: Error: Too many arguments";
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(warning1));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
     QScopedPointer<QObject> object(component.create());
@@ -545,8 +545,8 @@ void tst_qqmlqt::alpha()
 {
     QQmlComponent component(&engine, testFileUrl("alpha.qml"));
 
-    QString warning1 = component.url().toString() + ":5: Error: Qt.alpha(): Wrong number of arguments provided";
-    QString warning2 = component.url().toString() + ":10: Error: Qt.alpha(): Wrong number of arguments provided";
+    QString warning1 = component.url().toString() + ":5: Error: Insufficient arguments";
+    QString warning2 = component.url().toString() + ":10: Error: Too many arguments";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
@@ -576,8 +576,8 @@ void tst_qqmlqt::tint()
 {
     QQmlComponent component(&engine, testFileUrl("tint.qml"));
 
-    QString warning1 = component.url().toString() + ":7: Error: Qt.tint(): Invalid arguments";
-    QString warning2 = component.url().toString() + ":8: Error: Qt.tint(): Invalid arguments";
+    QString warning1 = component.url().toString() + ":7: Error: Too many arguments";
+    QString warning2 = component.url().toString() + ":8: Error: Insufficient arguments";
     QString warning3 = component.url().toString() + ":13: Error: Insufficient arguments";
 
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
@@ -604,9 +604,10 @@ void tst_qqmlqt::color()
 {
     QQmlComponent component(&engine, testFileUrl("color.qml"));
 
-    QStringList warnings = { ":7: Error: Qt.color(): Argument must be a string",
-                             ":8: Error: Qt.color(): Qt.color takes exactly one argument",
-                             ":9: Error: Qt.color(): Qt.color takes exactly one argument" };
+    QStringList warnings = { ":6: Error: \"taint\" is not a valid color name",
+                             ":7: Error: \"0.5\" is not a valid color name",
+                             ":8: Error: Insufficient arguments",
+                             ":9: Error: Too many arguments" };
 
     for (const QString &warning : warnings)
         QTest::ignoreMessage(QtWarningMsg, qPrintable(component.url().toString() + warning));
@@ -682,7 +683,7 @@ void tst_qqmlqt::md5()
 {
     QQmlComponent component(&engine, testFileUrl("md5.qml"));
 
-    QString warning1 = component.url().toString() + ":4: Error: Qt.md5(): Invalid arguments";
+    QString warning1 = component.url().toString() + ":4: Error: Insufficient arguments";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
 
     QScopedPointer<QObject> object(component.create());
@@ -696,9 +697,9 @@ void tst_qqmlqt::createComponent()
     {
         QQmlComponent component(&engine, testFileUrl("createComponent.qml"));
 
-        QString warning1 = component.url().toString() + ":9: Error: Qt.createComponent(): Invalid arguments";
-        QString warning2 = component.url().toString() + ":10: Error: Qt.createComponent(): Invalid arguments";
-        QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
+        QString warning1 = "createComponent.qml:9: Error: Unable to determine callable overload";
+        QString warning2 = component.url().toString() + ":10: Error: Invalid compilation mode 10";
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(warning1));
         QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
 
         QScopedPointer<QObject> object(component.create());
@@ -733,18 +734,22 @@ void tst_qqmlqt::createQmlObject()
 {
     QQmlComponent component(&engine, testFileUrl("createQmlObject.qml"));
 
-    QString warning1 = component.url().toString() + ":7: Error: Qt.createQmlObject(): Invalid arguments";
+    QString warning1 = "createQmlObject.qml:7: Error: Unable to determine callable overload";
     QString warning2 = component.url().toString()+ ":10: Error: Qt.createQmlObject(): failed to create object: \n    " + testFileUrl("inline").toString() + ":2:10: Blah is not a type";
     QString warning3 = component.url().toString()+ ":11: Error: Qt.createQmlObject(): failed to create object: \n    " + testFileUrl("main.qml").toString() + ":4:14: Duplicate property name";
-    QString warning4 = component.url().toString()+ ":9: Error: Qt.createQmlObject(): Missing parent object";
-    QString warning5 = component.url().toString()+ ":8: Error: Qt.createQmlObject(): Invalid arguments";
+    QString warning4 = component.url().toString()+ ":9: TypeError: Passing incompatible arguments to C++ functions from JavaScript is not allowed.";
+    QString warning5 = component.url().toString()+ ":8: Error: Too many arguments";
     QString warning6 = "RunTimeError:  Qt.createQmlObject(): failed to create object: \n    " + testFileUrl("inline").toString() + ":3:16: Cannot assign object type QObject with no default method";
-    QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
+    QString warning7 = "Could not convert argument 1 at";
+    QString warning8 = "expression for noParent@";
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(warning1));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning2));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning3));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning4));
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning5));
     QTest::ignoreMessage(QtDebugMsg, qPrintable(warning6));
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(warning7));
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(warning8));
 
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
@@ -808,28 +813,41 @@ void tst_qqmlqt::dateTimeFormatting()
     QQmlComponent component(&eng, testFileUrl("formatting.qml"));
 
     QStringList warnings;
-    warnings << component.url().toString() + ":37: Error: Qt.formatDate(): Bad second argument (must be either string, number or locale)"
-        << component.url().toString() + ":36: Error: Qt.formatDate(): Missing argument"
-        << component.url().toString() + ":40: Error: Qt.formatTime(): Bad second argument (must be either string, number or locale)"
-        << component.url().toString() + ":39: Error: Qt.formatTime(): Missing argument"
-        << component.url().toString() + ":43: Error: Qt.formatDateTime(): Bad second argument (must be either string, number or locale)"
-        << component.url().toString() + ":42: Error: Qt.formatDateTime(): Missing argument";
+    warnings
+        << component.url().toString() + ":37: TypeError: Passing incompatible arguments to C++ functions from JavaScript is not allowed."
+        << component.url().toString() + ":40: TypeError: Passing incompatible arguments to C++ functions from JavaScript is not allowed."
+        << component.url().toString() + ":43: TypeError: Passing incompatible arguments to C++ functions from JavaScript is not allowed.";
 
     foreach (const QString &warning, warnings)
         QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
 
-    QObject *object = component.createWithInitialProperties({
+    warnings.clear();
+    warnings
+        << "formatting.qml:36: Error: Unable to determine callable overload"
+        << "formatting.qml:39: Error: Unable to determine callable overload"
+        << "formatting.qml:42: Error: Unable to determine callable overload"
+        << "Could not convert argument 1 at"
+        << "expression for err_date2@"
+        << "Could not convert argument 1 at"
+        << "expression for err_time2@"
+        << "Could not convert argument 1 at"
+        << "expression for err_dateTime2@";
+
+    foreach (const QString &warning, warnings)
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(warning));
+
+    QScopedPointer<QObject> object(component.createWithInitialProperties({
             {"qdate", date},
             {"qtime", time},
             {"qdatetime", dateTime}
-    });
+    }));
     QVERIFY2(component.errorString().isEmpty(), qPrintable(component.errorString()));
     QVERIFY(object != nullptr);
 
     QVERIFY(inputProperties.count() > 0);
     QVariant result;
     foreach(const QString &prop, inputProperties) {
-        QVERIFY(QMetaObject::invokeMethod(object, method.toUtf8().constData(),
+        QVERIFY(QMetaObject::invokeMethod(object.data(), method.toUtf8().constData(),
                 Q_RETURN_ARG(QVariant, result),
                 Q_ARG(QVariant, prop)));
         QStringList output = result.toStringList();
@@ -837,8 +855,6 @@ void tst_qqmlqt::dateTimeFormatting()
         for (int i=0; i<output.count(); i++)
             QCOMPARE(output[i], expectedResults[i]);
     }
-
-    delete object;
 }
 
 void tst_qqmlqt::dateTimeFormatting_data()
@@ -884,28 +900,63 @@ void tst_qqmlqt::dateTimeFormattingVariants()
     QQmlComponent component(&eng, testFileUrl("formatting.qml"));
 
     QStringList warnings;
-    warnings << component.url().toString() + ":37: Error: Qt.formatDate(): Bad second argument (must be either string, number or locale)"
-             << component.url().toString() + ":36: Error: Qt.formatDate(): Missing argument"
-             << component.url().toString() + ":40: Error: Qt.formatTime(): Bad second argument (must be either string, number or locale)"
-             << component.url().toString() + ":39: Error: Qt.formatTime(): Missing argument"
-             << component.url().toString() + ":43: Error: Qt.formatDateTime(): Bad second argument (must be either string, number or locale)"
-             << component.url().toString() + ":42: Error: Qt.formatDateTime(): Missing argument";
+    warnings << component.url().toString() + ":37: TypeError: Passing incompatible arguments to C++ functions from JavaScript is not allowed."
+             << component.url().toString() + ":40: TypeError: Passing incompatible arguments to C++ functions from JavaScript is not allowed."
+             << component.url().toString() + ":43: TypeError: Passing incompatible arguments to C++ functions from JavaScript is not allowed.";
 
-    foreach (const QString &warning, warnings)
+    for (const QString &warning : qAsConst(warnings))
         QTest::ignoreMessage(QtWarningMsg, qPrintable(warning));
 
-    QObject *object = component.createWithInitialProperties({{"qvariant", variant}});
+    warnings.clear();
+    warnings << "formatting.qml:36: Error: Unable to determine callable overload."
+             << "formatting.qml:39: Error: Unable to determine callable overload."
+             << "formatting.qml:42: Error: Unable to determine callable overload."
+             << "Could not convert argument 1 at"
+             << "expression for err_date2@"
+             << "Could not convert argument 1 at"
+             << "expression for err_time2@"
+             << "Could not convert argument 1 at"
+             << "expression for err_dateTime2@";
+
+    for (const QString &warning : qAsConst(warnings))
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(warning));
+
+    warnings.clear();
+    if (method == QStringLiteral("formatTime") && variant.typeId() == QMetaType::QString) {
+        for (int i = 0; i < 4; ++i) {
+            QTest::ignoreMessage(QtWarningMsg,
+                                 "\"2011/05/31 11:16:39.755\" is a "
+                                 "date/time string being passed to formatTime(). You should only "
+                                 "pass time strings to formatTime().");
+        }
+    }
+
+    if (variant.typeId() == QMetaType::QColor || variant.typeId() == QMetaType::Int) {
+        if (method == "formatTime") {
+            // formatTime has special error handling as it parses the strings itself.
+            QTest::ignoreMessage(QtWarningMsg, QRegularExpression(
+                                     "formatting.qml:18: Error: Invalid argument passed to "
+                                     "formatTime"));
+        } else {
+            QTest::ignoreMessage(QtWarningMsg,
+                                 QRegularExpression("Could not convert argument 0 at"));
+            QTest::ignoreMessage(QtWarningMsg, QRegularExpression(method + "@"));
+            QTest::ignoreMessage(QtWarningMsg, QRegularExpression(
+                                     "TypeError: Passing incompatible arguments to "
+                                     "C.. functions from JavaScript is not allowed."));
+        }
+    }
+
+    QScopedPointer<QObject> object(component.createWithInitialProperties({{"qvariant", variant}}));
     QVERIFY2(component.errorString().isEmpty(), qPrintable(component.errorString()));
     QVERIFY(object != nullptr);
 
     QVariant result;
-    QVERIFY(QMetaObject::invokeMethod(object, method.toUtf8().constData(),
+    QVERIFY(QMetaObject::invokeMethod(object.data(), method.toUtf8().constData(),
             Q_RETURN_ARG(QVariant, result),
             Q_ARG(QVariant, QString(QLatin1String("qvariant")))));
     QStringList output = result.toStringList();
     QCOMPARE(output, expectedResults);
-
-    delete object;
 }
 
 void tst_qqmlqt::dateTimeFormattingVariants_data()
@@ -997,45 +1048,25 @@ void tst_qqmlqt::dateTimeFormattingVariants_data()
     temporary = QVariant::fromValue(color).toDateTime();
     QTest::newRow("formatDate, qcolor")
         << "formatDate" << QVariant::fromValue(color)
-        << (QStringList()
-            << QLocale().toString(temporary.date(), QLocale::ShortFormat)
-            << QLocale().toString(temporary.date(), QLocale::LongFormat)
-            << temporary.date().toString("ddd MMMM d yy"));
+        << QStringList();
     QTest::newRow("formatDateTime, qcolor")
         << "formatDateTime" << QVariant::fromValue(color)
-        << (QStringList()
-            << QLocale().toString(temporary, QLocale::ShortFormat)
-            << QLocale().toString(temporary, QLocale::LongFormat)
-            << temporary.toString("M/d/yy H:m:s a"));
+        << QStringList();
     QTest::newRow("formatTime, qcolor")
         << "formatTime" << QVariant::fromValue(color)
-        << (QStringList()
-            << QLocale().toString(temporary.time(), QLocale::ShortFormat)
-            << QLocale().toString(temporary.time(), QLocale::LongFormat)
-            << temporary.time().toString("H:m:s a")
-            << temporary.time().toString("hh:mm:ss.zzz"));
+        << QStringList();
 
     int integer(4);
     temporary = QVariant::fromValue(integer).toDateTime();
     QTest::newRow("formatDate, int")
         << "formatDate" << QVariant::fromValue(integer)
-        << (QStringList()
-            << QLocale().toString(temporary.date(), QLocale::ShortFormat)
-            << QLocale().toString(temporary.date(), QLocale::LongFormat)
-            << temporary.date().toString("ddd MMMM d yy"));
+        << QStringList();
     QTest::newRow("formatDateTime, int")
         << "formatDateTime" << QVariant::fromValue(integer)
-        << (QStringList()
-            << QLocale().toString(temporary, QLocale::ShortFormat)
-            << QLocale().toString(temporary, QLocale::LongFormat)
-            << temporary.toString("M/d/yy H:m:s a"));
+        << QStringList();
     QTest::newRow("formatTime, int")
         << "formatTime" << QVariant::fromValue(integer)
-        << (QStringList()
-            << QLocale().toString(temporary.time(), QLocale::ShortFormat)
-            << QLocale().toString(temporary.time(), QLocale::LongFormat)
-            << temporary.time().toString("H:m:s a")
-            << temporary.time().toString("hh:mm:ss.zzz"));
+        << QStringList();
 }
 
 void tst_qqmlqt::dateTimeFormattingWithLocale()
@@ -1054,8 +1085,13 @@ void tst_qqmlqt::dateTimeFormattingWithLocale()
     auto dateString = o->property("dateString").toString();
     QCOMPARE(dateString, QLocale("de_DE").toString(date, QLocale::ShortFormat));
 
-    QString warningMsg = url.toString() + QLatin1String(":11: Error: Qt.formatTime(): Third argument must be a Locale format option");
-    QTest::ignoreMessage(QtMsgType::QtWarningMsg, warningMsg.toUtf8().constData());
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression("Could not convert argument 1 at"));
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression("invalidUsage@"));
+    QTest::ignoreMessage(
+                QtWarningMsg,
+                qPrintable(url.toString() + QStringLiteral(":11: TypeError: Passing incompatible "
+                                                           "arguments to C++ functions from "
+                                                           "JavaScript is not allowed.")));
     QMetaObject::invokeMethod(o.get(), "invalidUsage");
 }
 
@@ -1076,7 +1112,7 @@ void tst_qqmlqt::btoa()
 {
     QQmlComponent component(&engine, testFileUrl("btoa.qml"));
 
-    QString warning1 = component.url().toString() + ":4: Error: Qt.btoa(): Invalid arguments";
+    QString warning1 = component.url().toString() + ":4: Error: Insufficient arguments";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
 
     QScopedPointer<QObject> object(component.create());
@@ -1089,7 +1125,7 @@ void tst_qqmlqt::atob()
 {
     QQmlComponent component(&engine, testFileUrl("atob.qml"));
 
-    QString warning1 = component.url().toString() + ":4: Error: Qt.atob(): Invalid arguments";
+    QString warning1 = component.url().toString() + ":4: Error: Insufficient arguments";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
 
     QScopedPointer<QObject> object(component.create());
@@ -1102,7 +1138,7 @@ void tst_qqmlqt::fontFamilies()
 {
     QQmlComponent component(&engine, testFileUrl("fontFamilies.qml"));
 
-    QString warning1 = component.url().toString() + ":4: Error: Qt.fontFamilies(): Invalid arguments";
+    QString warning1 = component.url().toString() + ":4: Error: Too many arguments";
     QTest::ignoreMessage(QtWarningMsg, qPrintable(warning1));
 
     QScopedPointer<QObject> object(component.create());
@@ -1141,7 +1177,8 @@ void tst_qqmlqt::resolvedUrl()
     QVERIFY(object != nullptr);
 
     QCOMPARE(object->property("result").toString(), component.url().toString());
-    QCOMPARE(object->property("isString").toBool(), true);
+    QCOMPARE(object->property("isString").toBool(), false);
+    QCOMPARE(object->property("isObject").toBool(), true);
 }
 
 void tst_qqmlqt::later_data()
@@ -1245,39 +1282,56 @@ void tst_qqmlqt::later()
 
 void tst_qqmlqt::qtObjectContents()
 {
-    QQmlComponent component(&engine, testFileUrl("qtObjectContents.qml"));
+    QByteArray qml =
+            "import QtQml\n"
+            "QtObject {\n"
+            "    property int vLoadingModeAsynchronous: Qt.Asynchronous\n"
+            "    property int vLoadingModeSynchronous: Qt.Synchronous\n";
 
-    QScopedPointer<QObject> object(component.create());
-    QVERIFY(object != nullptr);
-
-    QVERIFY(object->property("values").canConvert<QJSValue>());
-    QVariantMap values = object->property("values").value<QJSValue>().toVariant().toMap();
-
-    QSet<const char *> keys;
-    int uniqueKeys = 0;
     const QMetaObject *qtMetaObject = &Qt::staticMetaObject;
     for (int ii = 0; ii < qtMetaObject->enumeratorCount(); ++ii) {
-        QMetaEnum enumerator = qtMetaObject->enumerator(ii);
+        const QMetaEnum enumerator = qtMetaObject->enumerator(ii);
         for (int jj = 0; jj < enumerator.keyCount(); ++jj) {
-            auto key = enumerator.key(jj);
-//            qDebug() << "key:" << key;
-            if (!keys.contains(key)) {
-                ++uniqueKeys;
-                keys.insert(key);
-            }
-            QVERIFY(values.contains(key));
-            QVariant value = values.value(key);
-            QVERIFY(value.canConvert<int>());
-            QCOMPARE(value.toInt(), enumerator.value(jj));
+            const QByteArray key = enumerator.key(jj);
+            QVERIFY(!key.isEmpty());
+
+            // We don't want to check for Qt.green and things like that.
+            // They're nonsensical
+            if (QChar::fromLatin1(key.front()).isLower())
+                continue;
+
+            qml += QByteArray("    property int v") + enumerator.name() + key
+                    + QByteArray(": Qt.") + key + '\n';
         }
     }
-    QVERIFY(values.contains("Asynchronous"));
-    QCOMPARE(values.value("Asynchronous").toInt(), 0);
-    ++uniqueKeys;
-    QVERIFY(values.contains("Synchronous"));
-    QCOMPARE(values.value("Synchronous").toInt(), 1);
-    ++uniqueKeys;
-    QCOMPARE(values.count(), uniqueKeys);
+
+    qml += "}\n";
+
+    QQmlComponent component(&engine);
+    component.setData(qml, QUrl());
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY2(object != nullptr, qPrintable(component.errorString()));
+
+    bool ok = false;
+    for (int ii = 0; ii < qtMetaObject->enumeratorCount(); ++ii) {
+        const QMetaEnum enumerator = qtMetaObject->enumerator(ii);
+        for (int jj = 0; jj < enumerator.keyCount(); ++jj) {
+            const QByteArray key = enumerator.key(jj);
+
+            if (QChar::fromLatin1(key.front()).isLower())
+                continue;
+
+            QCOMPARE(object->property(QByteArray("v") + enumerator.name() + key).toInt(&ok),
+                     enumerator.value(jj));
+            QVERIFY(ok);
+        }
+    }
+
+    QCOMPARE(object->property("vLoadingModeAsynchronous").toInt(&ok), 0);
+    QVERIFY(ok);
+    QCOMPARE(object->property("vLoadingModeSynchronous").toInt(&ok), 1);
+    QVERIFY(ok);
 }
 
 class TimeProvider: public QObject

@@ -248,16 +248,16 @@ public:
 Q_QML_PRIVATE_EXPORT QQmlColorProvider *QQml_setColorProvider(QQmlColorProvider *);
 Q_QML_PRIVATE_EXPORT QQmlColorProvider *QQml_colorProvider();
 
-
+class QQmlApplication;
 class Q_QML_PRIVATE_EXPORT QQmlGuiProvider
 {
 public:
     virtual ~QQmlGuiProvider();
-    virtual QObject *application(QObject *parent);
+    virtual QQmlApplication *application(QObject *parent);
     virtual QObject *inputMethod();
     virtual QObject *styleHints();
     virtual QStringList fontFamilies();
-    virtual bool openUrlExternally(QUrl &);
+    virtual bool openUrlExternally(const QUrl &);
     virtual QString pluginName() const;
 };
 

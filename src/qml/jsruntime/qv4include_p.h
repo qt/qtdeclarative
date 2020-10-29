@@ -61,7 +61,8 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlEngine;
+class QJSEngine;
+class QJSValue;
 #if QT_CONFIG(qml_network)
 class QNetworkAccessManager;
 #endif
@@ -77,13 +78,15 @@ public:
         Exception = 3
     };
 
-    static QV4::ReturnedValue method_include(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
+    static QJSValue method_include(QV4::ExecutionEngine *engine, const QUrl &url,
+                                   const QJSValue &callbackFunction);
 
 private Q_SLOTS:
     void finished();
 
 private:
-    QV4Include(const QUrl &url, QV4::ExecutionEngine *engine, QV4::QmlContext *qmlContext, const QV4::Value &callback);
+    QV4Include(const QUrl &url, QV4::ExecutionEngine *engine, QV4::QmlContext *qmlContext,
+               const QV4::Value &callback);
     ~QV4Include();
 
     QV4::ReturnedValue result();

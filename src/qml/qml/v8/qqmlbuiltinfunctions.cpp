@@ -84,145 +84,42 @@
 
 QT_BEGIN_NAMESPACE
 
-using namespace QV4;
+Q_LOGGING_CATEGORY(lcRootProperties, "qml.rootObjectProperties");
 
-DEFINE_OBJECT_VTABLE(QtObject);
+using namespace QV4;
 
 #define THROW_TYPE_ERROR_WITH_MESSAGE(msg) \
     do { \
         return scope.engine->throwTypeError(QString::fromUtf8(msg)); \
     } while (false)
 
-void Heap::QtObject::init(QQmlEngine *qmlEngine)
+QtObject::QtObject(ExecutionEngine *engine)
+    : m_engine(engine)
 {
-    Heap::Object::init();
-    enumeratorIterator = 0;
-    keyIterator = 0;
-    Scope scope(internalClass->engine);
-    ScopedObject o(scope, this);
+    QV4::Scope scope(engine);
+    QV4::ScopedString callLaterName(scope, engine->newIdentifier(QStringLiteral("callLater")));
 
-    {
-        ScopedString str(scope);
-        ScopedValue v(scope);
-        o->put((str = scope.engine->newString(QStringLiteral("Asynchronous"))), (v = QV4::Value::fromInt32(0)));
-        o->put((str = scope.engine->newString(QStringLiteral("Synchronous"))), (v = QV4::Value::fromInt32(1)));
-    }
+    QV4::ScopedFunctionObject function(scope, QV4::FunctionObject::createBuiltinFunction(
+                engine, callLaterName, QQmlDelayedCallQueue::addUniquelyAndExecuteLater, 1));
 
-    o->defineDefaultProperty(QStringLiteral("include"), QV4Include::method_include);
-    o->defineDefaultProperty(QStringLiteral("isQtObject"), QV4::QtObject::method_isQtObject);
-    o->defineDefaultProperty(QStringLiteral("color"), QV4::QtObject::method_color);
-    o->defineDefaultProperty(QStringLiteral("rgba"), QV4::QtObject::method_rgba);
-    o->defineDefaultProperty(QStringLiteral("hsla"), QV4::QtObject::method_hsla);
-    o->defineDefaultProperty(QStringLiteral("hsva"), QV4::QtObject::method_hsva);
-    o->defineDefaultProperty(QStringLiteral("colorEqual"), QV4::QtObject::method_colorEqual);
-    o->defineDefaultProperty(QStringLiteral("rect"), QV4::QtObject::method_rect);
-    o->defineDefaultProperty(QStringLiteral("point"), QV4::QtObject::method_point);
-    o->defineDefaultProperty(QStringLiteral("size"), QV4::QtObject::method_size);
-    o->defineDefaultProperty(QStringLiteral("font"), QV4::QtObject::method_font);
-
-    o->defineDefaultProperty(QStringLiteral("vector2d"), QV4::QtObject::method_vector2d);
-    o->defineDefaultProperty(QStringLiteral("vector3d"), QV4::QtObject::method_vector3d);
-    o->defineDefaultProperty(QStringLiteral("vector4d"), QV4::QtObject::method_vector4d);
-    o->defineDefaultProperty(QStringLiteral("quaternion"), QV4::QtObject::method_quaternion);
-    o->defineDefaultProperty(QStringLiteral("matrix4x4"), QV4::QtObject::method_matrix4x4);
-
-    o->defineDefaultProperty(QStringLiteral("formatDate"), QV4::QtObject::method_formatDate);
-    o->defineDefaultProperty(QStringLiteral("formatTime"), QV4::QtObject::method_formatTime);
-    o->defineDefaultProperty(QStringLiteral("formatDateTime"), QV4::QtObject::method_formatDateTime);
-
-    o->defineDefaultProperty(QStringLiteral("openUrlExternally"), QV4::QtObject::method_openUrlExternally);
-    o->defineDefaultProperty(QStringLiteral("fontFamilies"), QV4::QtObject::method_fontFamilies);
-    o->defineDefaultProperty(QStringLiteral("md5"), QV4::QtObject::method_md5);
-    o->defineDefaultProperty(QStringLiteral("btoa"), QV4::QtObject::method_btoa);
-    o->defineDefaultProperty(QStringLiteral("atob"), QV4::QtObject::method_atob);
-    o->defineDefaultProperty(QStringLiteral("resolvedUrl"), QV4::QtObject::method_resolvedUrl);
-#if QT_CONFIG(qml_locale)
-    o->defineDefaultProperty(QStringLiteral("locale"), QV4::QtObject::method_locale);
-#endif
-    o->defineDefaultProperty(QStringLiteral("binding"), QV4::QtObject::method_binding);
-
-    if (qmlEngine) {
-        o->defineDefaultProperty(QStringLiteral("alpha"), QV4::QtObject::method_alpha);
-        o->defineDefaultProperty(QStringLiteral("lighter"), QV4::QtObject::method_lighter);
-        o->defineDefaultProperty(QStringLiteral("darker"), QV4::QtObject::method_darker);
-        o->defineDefaultProperty(QStringLiteral("tint"), QV4::QtObject::method_tint);
-        o->defineDefaultProperty(QStringLiteral("quit"), QV4::QtObject::method_quit);
-        o->defineDefaultProperty(QStringLiteral("exit"), QV4::QtObject::method_exit);
-        o->defineDefaultProperty(QStringLiteral("createQmlObject"), QV4::QtObject::method_createQmlObject);
-        o->defineDefaultProperty(QStringLiteral("createComponent"), QV4::QtObject::method_createComponent);
-    }
-
-    o->defineAccessorProperty(QStringLiteral("platform"), QV4::QtObject::method_get_platform, nullptr);
-    o->defineAccessorProperty(QStringLiteral("application"), QV4::QtObject::method_get_application, nullptr);
-    o->defineAccessorProperty(QStringLiteral("inputMethod"), QV4::QtObject::method_get_inputMethod, nullptr);
-    o->defineAccessorProperty(QStringLiteral("styleHints"), QV4::QtObject::method_get_styleHints, nullptr);
-
-    o->defineDefaultProperty(QStringLiteral("callLater"), QV4::QtObject::method_callLater);
+    m_callLater = QJSValuePrivate::fromReturnedValue(function.asReturnedValue());
 }
 
-void QtObject::addAll()
+QtObject *QtObject::create(QQmlEngine *, QJSEngine *jsEngine)
 {
-    bool dummy = false;
-    findAndAdd(nullptr, dummy);
+    QV4::ExecutionEngine *v4 = jsEngine->handle();
+    QV4::Scope scope(v4);
+    ScopedObject globalObject(scope, v4->globalObject);
+    ScopedString qtName(scope, v4->newString(QStringLiteral("Qt")));
+    QV4::ScopedValue result(scope, globalObject->get(qtName->toPropertyKey()));
+    return qobject_cast<QtObject *>(result->as<QV4::QObjectWrapper>()->object());
 }
 
-ReturnedValue QtObject::findAndAdd(const QString *name, bool &foundProperty) const
+QJSValue QtObject::include(const QString &url, const QJSValue &callback) const
 {
-    Scope scope(engine());
-    ScopedObject o(scope, this);
-    ScopedString key(scope);
-    ScopedValue value(scope);
-
-    const QMetaObject *qtMetaObject = &Qt::staticMetaObject;
-    for (int enumCount = qtMetaObject->enumeratorCount(); d()->enumeratorIterator < enumCount;
-         ++d()->enumeratorIterator) {
-        QMetaEnum enumerator = qtMetaObject->enumerator(d()->enumeratorIterator);
-        for (int keyCount = enumerator.keyCount(); d()->keyIterator < keyCount; ++d()->keyIterator) {
-            key = scope.engine->newString(QString::fromUtf8(enumerator.key(d()->keyIterator)));
-            value = QV4::Value::fromInt32(enumerator.value(d()->keyIterator));
-            o->put(key, value);
-            if (name && key->toQString() == *name) {
-                ++d()->keyIterator;
-                foundProperty = true;
-                return value->asReturnedValue();
-            }
-        }
-        d()->keyIterator = 0;
-    }
-    d()->enumeratorIterator = Heap::QtObject::Finished;
-    foundProperty = false;
-    return Encode::undefined();
+    return QV4Include::method_include(v4Engine(), v4Engine()->resolvedUrl(url), callback);
 }
 
-ReturnedValue QtObject::virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty)
-{
-    bool hasProp = false;
-    if (hasProperty == nullptr) {
-        hasProperty = &hasProp;
-    }
-
-    ReturnedValue ret = QV4::Object::virtualGet(m, id, receiver, hasProperty);
-    if (*hasProperty) {
-        return ret;
-    }
-
-    auto that = static_cast<const QtObject*>(m);
-    if (!that->d()->isComplete()) {
-        const QString key = id.toQString();
-        ret = that->findAndAdd(&key, *hasProperty);
-    }
-
-    return ret;
-}
-
-OwnPropertyKeyIterator *QtObject::virtualOwnPropertyKeys(const Object *m, Value *target)
-{
-    auto that = static_cast<const QtObject*>(m);
-    if (!that->d()->isComplete())
-        const_cast<QtObject *>(that)->addAll();
-
-    return Object::virtualOwnPropertyKeys(m, target);
-}
 
 /*!
     \qmlmethod bool Qt::isQtObject(object)
@@ -230,12 +127,9 @@ OwnPropertyKeyIterator *QtObject::virtualOwnPropertyKeys(const Object *m, Value 
     Returns \c true if \a object is a valid reference to a Qt or QML object,
     \c false otherwise.
 */
-ReturnedValue QtObject::method_isQtObject(const FunctionObject *, const Value *, const Value *argv, int argc)
+bool QtObject::isQtObject(const QJSValue &value) const
 {
-    if (argc == 0)
-        RETURN_RESULT(QV4::Encode(false));
-
-    return QV4::Encode(argv[0].as<QV4::QObjectWrapper>() != nullptr);
+    return qjsvalue_cast<QObject *>(value) != nullptr;
 }
 
 /*!
@@ -244,25 +138,15 @@ ReturnedValue QtObject::method_isQtObject(const FunctionObject *, const Value *,
     Returns the color corresponding to the given \a name (i.e. red or #ff0000).
     If there is no such color, \c null is returned.
 */
-ReturnedValue QtObject::method_color(const FunctionObject *f, const Value *, const Value *argv,
-                                     int argc)
+QVariant QtObject::color(const QString &name) const
 {
-    QV4::Scope scope(f);
-    if (argc != 1)
-        THROW_GENERIC_ERROR("Qt.color(): Qt.color takes exactly one argument");
+    bool ok = false;
+    const QVariant v = QQmlStringConverters::colorFromString(name, &ok);
+    if (ok)
+        return v;
 
-    QVariant v = scope.engine->toVariant(argv[0], -1);
-    if (v.userType() == QMetaType::QString) {
-        bool ok = false;
-        v = QQmlStringConverters::colorFromString(v.toString(), &ok);
-        if (!ok) {
-            return QV4::Encode::null();
-        }
-    } else {
-        THROW_GENERIC_ERROR("Qt.color(): Argument must be a string");
-    }
-
-    return scope.engine->fromVariant(v);
+    v4Engine()->throwError(QStringLiteral("\"%1\" is not a valid color name").arg(name));
+    return QVariant::fromValue(nullptr);
 }
 
 /*!
@@ -271,17 +155,8 @@ ReturnedValue QtObject::method_color(const FunctionObject *f, const Value *, con
     Returns a color with the specified \a red, \a green, \a blue, and \a alpha
     components. All components should be in the range 0-1 (inclusive).
 */
-ReturnedValue QtObject::method_rgba(const FunctionObject *f, const Value *, const Value *argv, int argc)
+QVariant QtObject::rgba(double r, double g, double b, double a) const
 {
-    QV4::Scope scope(f);
-    if (argc < 3 || argc > 4)
-        THROW_GENERIC_ERROR("Qt.rgba(): Invalid arguments");
-
-    double r = argv[0].toNumber();
-    double g = argv[1].toNumber();
-    double b = argv[2].toNumber();
-    double a = (argc == 4) ? argv[3].toNumber() : 1;
-
     if (r < 0.0) r=0.0;
     if (r > 1.0) r=1.0;
     if (g < 0.0) g=0.0;
@@ -291,7 +166,7 @@ ReturnedValue QtObject::method_rgba(const FunctionObject *f, const Value *, cons
     if (a < 0.0) a=0.0;
     if (a > 1.0) a=1.0;
 
-    return scope.engine->fromVariant(QQml_colorProvider()->fromRgbF(r, g, b, a));
+    return QQml_colorProvider()->fromRgbF(r, g, b, a);
 }
 
 /*!
@@ -300,18 +175,8 @@ ReturnedValue QtObject::method_rgba(const FunctionObject *f, const Value *, cons
     Returns a color with the specified \a hue, \a saturation, \a lightness, and \a alpha
     components. All components should be in the range 0-1 (inclusive).
 */
-ReturnedValue QtObject::method_hsla(const FunctionObject *b, const Value *, const Value *argv, int argc)
+QVariant QtObject::hsla(double h, double s, double l, double a) const
 {
-    QV4::Scope scope(b);
-    int argCount = argc;
-    if (argCount < 3 || argCount > 4)
-        THROW_GENERIC_ERROR("Qt.hsla(): Invalid arguments");
-
-    double h = argv[0].toNumber();
-    double s = argv[1].toNumber();
-    double l = argv[2].toNumber();
-    double a = (argCount == 4) ? argv[3].toNumber() : 1;
-
     if (h < 0.0) h=0.0;
     if (h > 1.0) h=1.0;
     if (s < 0.0) s=0.0;
@@ -321,7 +186,7 @@ ReturnedValue QtObject::method_hsla(const FunctionObject *b, const Value *, cons
     if (a < 0.0) a=0.0;
     if (a > 1.0) a=1.0;
 
-    return scope.engine->fromVariant(QQml_colorProvider()->fromHslF(h, s, l, a));
+    return QQml_colorProvider()->fromHslF(h, s, l, a);
 }
 
 /*!
@@ -332,24 +197,14 @@ ReturnedValue QtObject::method_hsla(const FunctionObject *b, const Value *, cons
     components. All components should be in the range 0-1 (inclusive).
 
 */
-ReturnedValue QtObject::method_hsva(const FunctionObject *b, const Value *, const Value *argv, int argc)
+QVariant QtObject::hsva(double h, double s, double v, double a) const
 {
-    QV4::Scope scope(b);
-    int argCount = argc;
-    if (argCount < 3 || argCount > 4)
-        THROW_GENERIC_ERROR("Qt.hsva(): Invalid arguments");
-
-    double h = argv[0].toNumber();
-    double s = argv[1].toNumber();
-    double v = argv[2].toNumber();
-    double a = (argCount == 4) ? argv[3].toNumber() : 1;
-
     h = qBound(0.0, h, 1.0);
     s = qBound(0.0, s, 1.0);
     v = qBound(0.0, v, 1.0);
     a = qBound(0.0, a, 1.0);
 
-    return scope.engine->fromVariant(QQml_colorProvider()->fromHsvF(h, s, v, a));
+    return QQml_colorProvider()->fromHsvF(h, s, v, a);
 }
 
 /*!
@@ -360,36 +215,35 @@ ReturnedValue QtObject::method_hsva(const FunctionObject *b, const Value *, cons
     is supplied it must be convertible to a color, as described for the
     \l{colorbasictypedocs}{color} basic type.
 */
-ReturnedValue QtObject::method_colorEqual(const FunctionObject *b, const Value *, const Value *argv, int argc)
+bool QtObject::colorEqual(const QVariant &lhs, const QVariant &rhs) const
 {
-    QV4::Scope scope(b);
-    if (argc != 2)
-        THROW_GENERIC_ERROR("Qt.colorEqual(): Invalid arguments");
-
     bool ok = false;
 
-    QVariant lhs = scope.engine->toVariant(argv[0], -1);
-    if (lhs.userType() == QMetaType::QString) {
-        lhs = QQmlStringConverters::colorFromString(lhs.toString(), &ok);
+    QVariant color1 = lhs;
+    if (color1.userType() == QMetaType::QString) {
+        color1 = QQmlStringConverters::colorFromString(color1.toString(), &ok);
         if (!ok) {
-            THROW_GENERIC_ERROR("Qt.colorEqual(): Invalid color name");
+            v4Engine()->throwError(QStringLiteral("Qt.colorEqual(): Invalid color name"));
+            return false;
         }
-    } else if (lhs.userType() != QMetaType::QColor) {
-        THROW_GENERIC_ERROR("Qt.colorEqual(): Invalid arguments");
+    } else if (color1.userType() != QMetaType::QColor) {
+        v4Engine()->throwError(QStringLiteral("Qt.colorEqual(): Invalid arguments"));
+        return false;
     }
 
-    QVariant rhs = scope.engine->toVariant(argv[1], -1);
-    if (rhs.userType() == QMetaType::QString) {
-        rhs = QQmlStringConverters::colorFromString(rhs.toString(), &ok);
+    QVariant color2 = rhs;
+    if (color2.userType() == QMetaType::QString) {
+        color2 = QQmlStringConverters::colorFromString(color2.toString(), &ok);
         if (!ok) {
-            THROW_GENERIC_ERROR("Qt.colorEqual(): Invalid color name");
+            v4Engine()->throwError(QStringLiteral("Qt.colorEqual(): Invalid color name"));
+            return false;
         }
-    } else if (rhs.userType() != QMetaType::QColor) {
-        THROW_GENERIC_ERROR("Qt.colorEqual(): Invalid arguments");
+    } else if (color2.userType() != QMetaType::QColor) {
+        v4Engine()->throwError(QStringLiteral("Qt.colorEqual(): Invalid arguments"));
+        return false;
     }
 
-    bool equal = (lhs == rhs);
-    return QV4::Encode(equal);
+    return color1 == color2;
 }
 
 /*!
@@ -397,18 +251,9 @@ ReturnedValue QtObject::method_colorEqual(const FunctionObject *b, const Value *
 
     Returns a rect with the top-left corner at \a x, \a y and the specified \a width and \a height.
 */
-ReturnedValue QtObject::method_rect(const FunctionObject *b, const Value *, const Value *argv, int argc)
+QRectF QtObject::rect(double x, double y, double width, double height) const
 {
-    QV4::Scope scope(b);
-    if (argc != 4)
-        THROW_GENERIC_ERROR("Qt.rect(): Invalid arguments");
-
-    double x = argv[0].toNumber();
-    double y = argv[1].toNumber();
-    double w = argv[2].toNumber();
-    double h = argv[3].toNumber();
-
-    return scope.engine->fromVariant(QVariant::fromValue(QRectF(x, y, w, h)));
+    return QRectF(x, y, width, height);
 }
 
 /*!
@@ -416,16 +261,9 @@ ReturnedValue QtObject::method_rect(const FunctionObject *b, const Value *, cons
 
     Returns a point with the specified \a x and \a y coordinates.
 */
-ReturnedValue QtObject::method_point(const FunctionObject *b, const Value *, const Value *argv, int argc)
+QPointF QtObject::point(double x, double y) const
 {
-    QV4::Scope scope(b);
-    if (argc != 2)
-        THROW_GENERIC_ERROR("Qt.point(): Invalid arguments");
-
-    double x = argv[0].toNumber();
-    double y = argv[1].toNumber();
-
-    return scope.engine->fromVariant(QVariant::fromValue(QPointF(x, y)));
+    return QPointF(x, y);
 }
 
 /*!
@@ -433,16 +271,9 @@ ReturnedValue QtObject::method_point(const FunctionObject *b, const Value *, con
 
     Returns a size with the specified \a width and \a height.
 */
-ReturnedValue QtObject::method_size(const FunctionObject *b, const Value *, const Value *argv, int argc)
+QSizeF QtObject::size(double w, double h) const
 {
-    QV4::Scope scope(b);
-    if (argc != 2)
-        THROW_GENERIC_ERROR("Qt.size(): Invalid arguments");
-
-    double w = argv[0].toNumber();
-    double h = argv[1].toNumber();
-
-    return scope.engine->fromVariant(QVariant::fromValue(QSizeF(w, h)));
+    return QSizeF(w, h);
 }
 
 /*!
@@ -454,37 +285,53 @@ ReturnedValue QtObject::method_size(const FunctionObject *b, const Value *, cons
     subproperty names, and the values are valid values for each subproperty.
     Invalid keys will be ignored.
 */
-ReturnedValue QtObject::method_font(const FunctionObject *b, const Value *, const Value *argv, int argc)
+QVariant QtObject::font(const QJSValue &fontSpecifier) const
 {
-    QV4::Scope scope(b);
-    if (argc != 1 || !argv[0].isObject())
-        THROW_GENERIC_ERROR("Qt.font(): Invalid arguments");
-
-    QVariant v;
-    if (!QQml_valueTypeProvider()->createValueType(
-                QMetaType::QFont, QJSValuePrivate::fromReturnedValue(argv[0].asReturnedValue()),
-                v)) {
-        THROW_GENERIC_ERROR("Qt.font(): Invalid argument: no valid font subproperties specified");
+    if (!fontSpecifier.isObject()) {
+        v4Engine()->throwError(QStringLiteral("Qt.font(): Invalid arguments"));
+        return QVariant();
     }
-    return scope.engine->fromVariant(v);
+
+    {
+        QVariant v;
+        if (QQml_valueTypeProvider()->createValueType(QMetaType::QFont, fontSpecifier, v))
+            return v;
+    }
+
+    v4Engine()->throwError(QStringLiteral("Qt.font(): Invalid argument: "
+                                          "no valid font subproperties specified"));
+    return QVariant();
 }
 
-static ReturnedValue createValueType(const FunctionObject *b, const Value *argv, int argc,
-                                     int parameters, QMetaType::Type type, const char *method)
+template<typename T>
+void addParameters(QJSEngine *e, QJSValue &result, int i, T parameter)
 {
-    QV4::Scope scope(b);
-    if (argc != parameters) {
-        return scope.engine->throwError(QString::fromUtf8("Qt.%1(): Invalid arguments")
-                                        .arg(QString::fromUtf8(method)));
-    }
+    result.setProperty(i, e->toScriptValue(parameter));
+}
 
-    QJSValue params = scope.engine->jsEngine()->newArray(parameters);
-    for (int i = 0; i < parameters; ++i)
-        params.setProperty(i, QJSValuePrivate::fromReturnedValue(argv[i].asReturnedValue()));
+template<>
+void addParameters<double>(QJSEngine *, QJSValue &result, int i, double parameter)
+{
+    result.setProperty(i, QJSValue(parameter));
+}
 
+template<typename T, typename ...Others>
+void addParameters(QJSEngine *e, QJSValue &result, int i, T parameter, Others... others)
+{
+    addParameters<T>(e, result, i, parameter);
+    addParameters<Others...>(e, result, ++i, others...);
+}
+
+template<typename ...T>
+static QVariant createValueType(QJSEngine *e, QMetaType::Type type, T... parameters)
+{
+    if (!e)
+        return QVariant();
+    QJSValue params = e->newArray(sizeof...(parameters));
+    addParameters(e, params, 0, parameters...);
     QVariant variant;
     QQml_valueTypeProvider()->createValueType(type, params, variant);
-    return scope.engine->fromVariant(variant);
+    return variant;
 }
 
 /*!
@@ -492,9 +339,9 @@ static ReturnedValue createValueType(const FunctionObject *b, const Value *argv,
 
     Returns a vector2d with the specified \a x and \a y values.
 */
-ReturnedValue QtObject::method_vector2d(const FunctionObject *b, const Value *, const Value *argv, int argc)
+QVariant QtObject::vector2d(double x, double y) const
 {
-    return createValueType(b, argv, argc, 2, QMetaType::QVector2D, "vector2d");
+    return createValueType(jsEngine(), QMetaType::QVector2D, x, y);
 }
 
 /*!
@@ -502,9 +349,9 @@ ReturnedValue QtObject::method_vector2d(const FunctionObject *b, const Value *, 
 
     Returns a vector3d with the specified \a x, \a y, and \a z values.
 */
-ReturnedValue QtObject::method_vector3d(const FunctionObject *b, const Value *, const Value *argv, int argc)
+QVariant QtObject::vector3d(double x, double y, double z) const
 {
-    return createValueType(b, argv, argc, 3, QMetaType::QVector3D, "vector3d");
+    return createValueType(jsEngine(), QMetaType::QVector3D, x, y, z);
 }
 
 /*!
@@ -512,9 +359,9 @@ ReturnedValue QtObject::method_vector3d(const FunctionObject *b, const Value *, 
 
     Returns a vector4d with the specified \a x, \a y, \a z, and \a w values.
 */
-ReturnedValue QtObject::method_vector4d(const FunctionObject *b, const Value *, const Value *argv, int argc)
+QVariant QtObject::vector4d(double x, double y, double z, double w) const
 {
-    return createValueType(b, argv, argc, 4, QMetaType::QVector4D, "vector4d");
+    return createValueType(jsEngine(), QMetaType::QVector4D, x, y, z, w);
 }
 
 /*!
@@ -522,9 +369,9 @@ ReturnedValue QtObject::method_vector4d(const FunctionObject *b, const Value *, 
 
     Returns a quaternion with the specified \a scalar, \a x, \a y, and \a z values.
 */
-ReturnedValue QtObject::method_quaternion(const FunctionObject *b, const Value *, const Value *argv, int argc)
+QVariant QtObject::quaternion(double scalar, double x, double y, double z) const
 {
-    return createValueType(b, argv, argc, 4, QMetaType::QQuaternion, "quaternion");
+    return createValueType(jsEngine(), QMetaType::QQuaternion, scalar, x, y, z);
 }
 
 /*!
@@ -548,27 +395,53 @@ ReturnedValue QtObject::method_quaternion(const FunctionObject *b, const Value *
     Finally, the function may be called with no arguments and the resulting
     matrix will be the identity matrix.
 */
-ReturnedValue QtObject::method_matrix4x4(const FunctionObject *b, const Value *, const Value *argv, int argc)
+QVariant QtObject::matrix4x4() const
 {
-    QV4::Scope scope(b);
+    QVariant variant;
+    QQml_valueTypeProvider()->createValueType(QMetaType::QMatrix4x4, QJSValue(), variant);
+    return variant;
+}
 
-    if (argc == 0) {
-        QVariant variant;
-        QQml_valueTypeProvider()->createValueType(QMetaType::QMatrix4x4, QJSValue(), variant);
-        return scope.engine->fromVariant(variant);
-    }
-
-    if (argc == 1 && argv[0].isObject()) {
+QVariant QtObject::matrix4x4(const QJSValue &value) const
+{
+    if (value.isObject()) {
         QVariant v;
-        if (!QQml_valueTypeProvider()->createValueType(
-                    QMetaType::QMatrix4x4,
-                    QJSValuePrivate::fromReturnedValue(argv[0].asReturnedValue()), v)) {
-            THROW_GENERIC_ERROR("Qt.matrix4x4(): Invalid argument: not a valid matrix4x4 values array");
-        }
-        return scope.engine->fromVariant(v);
+        if (QQml_valueTypeProvider()->createValueType(QMetaType::QMatrix4x4, value, v))
+            return v;
     }
 
-    return createValueType(b, argv, argc, 16, QMetaType::QMatrix4x4, "matrix4x4");
+    v4Engine()->throwError(QStringLiteral("Qt.matrix4x4(): Invalid argument: "
+                                          "not a valid matrix4x4 values array"));
+    return QVariant();
+}
+
+QVariant QtObject::matrix4x4(double m11, double m12, double m13, double m14,
+                             double m21, double m22, double m23, double m24,
+                             double m31, double m32, double m33, double m34,
+                             double m41, double m42, double m43, double m44) const
+{
+    return createValueType(jsEngine(), QMetaType::QMatrix4x4,
+                           m11, m12, m13, m14, m21, m22, m23, m24,
+                           m31, m32, m33, m34, m41, m42, m43, m44);
+}
+
+static QVariant colorVariantFromJSValue(const QJSValue &color, bool *ok)
+{
+    QVariant v;
+    if (color.isString()) {
+        v = QQmlStringConverters::colorFromString(color.toString(), ok);
+        if (!(*ok))
+            return QVariant::fromValue(nullptr);
+    } else {
+        v = color.toVariant();
+        if (v.userType() != QMetaType::QColor) {
+            *ok = false;
+            return QVariant::fromValue(nullptr);
+        }
+    }
+
+    *ok = true;
+    return v;
 }
 
 /*!
@@ -586,28 +459,11 @@ ReturnedValue QtObject::method_matrix4x4(const FunctionObject *b, const Value *,
 
     If \a factor is not supplied, returns a color that is 50% lighter than \a baseColor (factor 1.5).
 */
-ReturnedValue QtObject::method_lighter(const FunctionObject *b, const Value *, const Value *argv, int argc)
+QVariant QtObject::lighter(const QJSValue &color, double factor) const
 {
-    QV4::Scope scope(b);
-    if (argc != 1 && argc != 2)
-        THROW_GENERIC_ERROR("Qt.lighter(): Invalid arguments");
-
-    QVariant v = scope.engine->toVariant(argv[0], -1);
-    if (v.userType() == QMetaType::QString) {
-        bool ok = false;
-        v = QQmlStringConverters::colorFromString(v.toString(), &ok);
-        if (!ok) {
-            return QV4::Encode::null();
-        }
-    } else if (v.userType() != QMetaType::QColor) {
-        return QV4::Encode::null();
-    }
-
-    qreal factor = 1.5;
-    if (argc == 2)
-        factor = argv[1].toNumber();
-
-    return scope.engine->fromVariant(QQml_colorProvider()->lighter(v, factor));
+    bool ok;
+    const QVariant v = colorVariantFromJSValue(color, &ok);
+    return ok ? QQml_colorProvider()->lighter(v, factor) : v;
 }
 
 /*!
@@ -626,28 +482,11 @@ ReturnedValue QtObject::method_lighter(const FunctionObject *b, const Value *, c
 
     If \a factor is not supplied, returns a color that is 50% darker than \a baseColor (factor 2.0).
 */
-ReturnedValue QtObject::method_darker(const FunctionObject *b, const Value *, const Value *argv, int argc)
+QVariant QtObject::darker(const QJSValue &color, double factor) const
 {
-    QV4::Scope scope(b);
-    if (argc != 1 && argc != 2)
-        THROW_GENERIC_ERROR("Qt.darker(): Invalid arguments");
-
-    QVariant v = scope.engine->toVariant(argv[0], -1);
-    if (v.userType() == QMetaType::QString) {
-        bool ok = false;
-        v = QQmlStringConverters::colorFromString(v.toString(), &ok);
-        if (!ok) {
-            return QV4::Encode::null();
-        }
-    } else if (v.userType() != QMetaType::QColor) {
-        return QV4::Encode::null();
-    }
-
-    qreal factor = 2.0;
-    if (argc == 2)
-        factor = argv[1].toNumber();
-
-    return scope.engine->fromVariant(QQml_colorProvider()->darker(v, factor));
+    bool ok;
+    const QVariant v = colorVariantFromJSValue(color, &ok);
+    return ok ? QQml_colorProvider()->darker(v, factor) : v;
 }
 
 /*!
@@ -657,26 +496,11 @@ ReturnedValue QtObject::method_darker(const FunctionObject *b, const Value *, co
 
     \a value is a real ranging from 0 (completely transparent) to 1 (completely opaque).
 */
-ReturnedValue QtObject::method_alpha(const FunctionObject *b, const Value *, const Value *argv,
-                                     int argc)
+QVariant QtObject::alpha(const QJSValue &baseColor, double value) const
 {
-    QV4::Scope scope(b);
-    if (argc != 2)
-        THROW_GENERIC_ERROR("Qt.alpha(): Wrong number of arguments provided");
-
-    QVariant v = scope.engine->toVariant(argv[0], -1);
-    if (v.userType() == QMetaType::QString) {
-        bool ok = false;
-        v = QQmlStringConverters::colorFromString(v.toString(), &ok);
-        if (!ok)
-            return QV4::Encode::null();
-    } else if (v.userType() != QMetaType::QColor) {
-        return QV4::Encode::null();
-    }
-
-    qreal value = argv[1].toNumber();
-
-    return scope.engine->fromVariant(QQml_colorProvider()->alpha(v, value));
+    bool ok;
+    const QVariant v = colorVariantFromJSValue(baseColor, &ok);
+    return ok ? QQml_colorProvider()->alpha(v, value) : v;
 }
 
 /*!
@@ -705,37 +529,19 @@ ReturnedValue QtObject::method_alpha(const FunctionObject *b, const Value *, con
     Tint is most useful when a subtle change is intended to be conveyed due to some event;
     you can then use tinting to more effectively tune the visible color.
 */
-ReturnedValue QtObject::method_tint(const FunctionObject *b, const Value *, const Value *argv, int argc)
+QVariant QtObject::tint(const QJSValue &baseColor, const QJSValue &tintColor) const
 {
-    QV4::Scope scope(b);
-    if (argc != 2)
-        THROW_GENERIC_ERROR("Qt.tint(): Invalid arguments");
+    bool ok;
 
     // base color
-    QVariant v1 = scope.engine->toVariant(argv[0], -1);
-    if (v1.userType() == QMetaType::QString) {
-        bool ok = false;
-        v1 = QQmlStringConverters::colorFromString(v1.toString(), &ok);
-        if (!ok) {
-            return QV4::Encode::null();
-        }
-    } else if (v1.userType() != QMetaType::QColor) {
-        return QV4::Encode::null();
-    }
+    const QVariant v1 = colorVariantFromJSValue(baseColor, &ok);
+    if (!ok)
+        return v1;
 
     // tint color
-    QVariant v2 = scope.engine->toVariant(argv[1], -1);
-    if (v2.userType() == QMetaType::QString) {
-        bool ok = false;
-        v2 = QQmlStringConverters::colorFromString(v2.toString(), &ok);
-        if (!ok) {
-            return QV4::Encode::null();
-        }
-    } else if (v2.userType() != QMetaType::QColor) {
-        return QV4::Encode::null();
-    }
+    const QVariant v2 = colorVariantFromJSValue(tintColor, &ok);
 
-    return scope.engine->fromVariant(QQml_colorProvider()->tint(v1, v2));
+    return ok ? QQml_colorProvider()->tint(v1, v2) : v2;
 }
 
 namespace {
@@ -753,46 +559,6 @@ QString formatDateTimeObjectUsingDateFormat(T formatThis, Qt::DateFormat format)
     // Q_UNREACHABLE(); // ### Qt 6: restore once the default is gone
     return QString();
 }
-
-template <typename T>
-ReturnedValue formatDateTimeObject(const T &formatThis, const QV4::Scope &scope, const QString &functionName, int argc, const Value *argv) {
-
-    QString formatted;
-    if (argc >= 2) {
-        QV4::ScopedString s(scope, argv[1]);
-        if (s) {
-            if (argc == 3)
-                scope.engine->throwError(QLatin1String("%1(): Stay argument, third argument can only be used if second argument is a locale").arg(functionName));
-            QString format = s->toQString();
-            formatted = formatThis.toString(format);
-        } else if (argv[1].isNumber()) {
-            if (argc == 3)
-                scope.engine->throwError(QLatin1String("%1(): Stay argument, third argument can only be used if second argument is a locale").arg(functionName));
-            quint32 intFormat = argv[1].asDouble();
-            Qt::DateFormat format = Qt::DateFormat(intFormat);
-            formatted = formatDateTimeObjectUsingDateFormat(formatThis, format);
-        } else {
-            QLocale::FormatType formatOptions = QLocale::ShortFormat;
-            if (argc == 3) {
-                if (argv[2].isNumber())
-                    formatOptions = QLocale::FormatType(quint32(argv[2].asDouble()));
-                else
-                    scope.engine->throwError(QLatin1String("%1(): Third argument must be a Locale format option").arg(functionName));
-            }
-            auto enginePriv = QQmlEnginePrivate::get(scope.engine->qmlEngine());
-            auto localeMetaTypeId = qMetaTypeId<QLocale>();
-            QVariant locale = enginePriv->v4engine()->toVariant(argv[1], localeMetaTypeId);
-            if (!locale.canConvert(QMetaType(localeMetaTypeId)))
-                scope.engine->throwError(QLatin1String("%1(): Bad second argument (must be either string, number or locale)").arg(functionName));
-            formatted = locale.value<QLocale>().toString(formatThis, formatOptions);
-        }
-    } else {
-        formatted = QLocale().toString(formatThis, QLocale::ShortFormat);
-    }
-
-    return Encode(scope.engine->newString(formatted));
-}
-
 }
 
 /*!
@@ -811,17 +577,23 @@ default locale.
 
 \sa Locale
 */
-ReturnedValue QtObject::method_formatDate(const FunctionObject *b, const Value *, const Value *argv, int argc)
+QString QtObject::formatDate(const QDate &date, const QString &format) const
 {
-    QV4::Scope scope(b);
-    if (argc < 1)
-        THROW_GENERIC_ERROR("Qt.formatDate(): Missing argument");
-    if (argc > 3)
-        THROW_GENERIC_ERROR("Qt.formatDate(): Stray arguments; formatDate takes at most 3 arguments.");
-
-    QDate date = scope.engine->toVariant(argv[0], -1).toDateTime().date();
-    return formatDateTimeObject(date, scope, QLatin1String("Qt.formatDate"), argc, argv);
+    return date.toString(format);
 }
+
+QString QtObject::formatDate(const QDate &date, Qt::DateFormat format) const
+{
+    return formatDateTimeObjectUsingDateFormat(date, format);
+}
+
+#if QT_CONFIG(qml_locale)
+QString QtObject::formatDate(const QDate &date, const QLocale &locale,
+                             QLocale::FormatType formatType) const
+{
+    return locale.toString(date, formatType);
+}
+#endif
 
 /*!
 \qmlmethod string Qt::formatTime(datetime time, variant format, variant localeFormatOption)
@@ -839,22 +611,72 @@ If \a format is not specified, \a time is formatted using
 
 \sa Locale
 */
-ReturnedValue QtObject::method_formatTime(const FunctionObject *b, const Value *, const Value *argv, int argc)
+static std::optional<QTime> timeFromString(const QString &string, QV4::ExecutionEngine *engine)
 {
-    QV4::Scope scope(b);
-    if (argc < 1)
-        THROW_GENERIC_ERROR("Qt.formatTime(): Missing argument");
-    if (argc > 3)
-        THROW_GENERIC_ERROR("Qt.formatTime(): Stray arguments; formatTime takes at most 3 arguments.");
+    {
+        const QTime time = QTime::fromString(string, Qt::ISODate);
+        if (time.isValid())
+            return time;
+    }
 
-    QVariant argVariant = scope.engine->toVariant(argv[0], -1);
-    QTime time;
-    if (argv[0].as<DateObject>() || (argVariant.userType() == QMetaType::QString))
-        time = argVariant.toDateTime().time();
-    else // if (argVariant.type() == QVariant::Time), or invalid.
-        time = argVariant.toTime();
-    return formatDateTimeObject(time, scope, QLatin1String("Qt.formatTime"), argc, argv);
+    {
+        // For historical reasons, the string argument is parsed as datetime, not as only time
+        const QDateTime dateTime = QDateTime::fromString(string, Qt::ISODate);
+        if (dateTime.isValid()) {
+            qCWarning(lcRootProperties())
+                    << string << "is a date/time string being passed to formatTime()."
+                    << "You should only pass time strings to formatTime().";
+            return dateTime.time();
+        }
+    }
+
+    engine->throwError(QStringLiteral("Invalid argument passed to formatTime(): %1").arg(string));
+    return std::nullopt;
 }
+
+QString QtObject::formatTime(const QTime &time, const QString &format) const
+{
+    return time.toString(format);
+}
+
+QString QtObject::formatTime(const QString &time, const QString &format) const
+{
+
+    if (auto qTime = timeFromString(time, v4Engine()))
+        return formatTime(qTime.value(), format);
+
+    return QString();
+}
+
+QString QtObject::formatTime(const QTime &time, Qt::DateFormat format) const
+{
+    return formatDateTimeObjectUsingDateFormat(time, format);
+}
+
+QString QtObject::formatTime(const QString &time, Qt::DateFormat format) const
+{
+    if (auto qTime = timeFromString(time, v4Engine()))
+        return formatTime(qTime.value(), format);
+
+    return QString();
+}
+
+#if QT_CONFIG(qml_locale)
+QString QtObject::formatTime(const QTime &time, const QLocale &locale,
+                             QLocale::FormatType formatType) const
+{
+    return locale.toString(time, formatType);
+}
+
+QString QtObject::formatTime(const QString &time, const QLocale &locale,
+                             QLocale::FormatType formatType) const
+{
+    if (auto qTime = timeFromString(time, v4Engine()))
+        return locale.toString(qTime.value(), formatType);
+
+    return QString();
+}
+#endif
 
 /*!
 \qmlmethod string Qt::formatDateTime(datetime dateTime, variant format, variant localeFormatOption)
@@ -954,17 +776,23 @@ with the \a format values below to produce the following results:
 
     \sa Locale
 */
-ReturnedValue QtObject::method_formatDateTime(const FunctionObject *b, const Value *, const Value *argv, int argc)
+QString QtObject::formatDateTime(const QDateTime &dateTime, const QString &format) const
 {
-    QV4::Scope scope(b);
-    if (argc < 1)
-        THROW_GENERIC_ERROR("Qt.formatDateTime(): Missing argument");
-    if (argc > 3)
-        THROW_GENERIC_ERROR("Qt.formatDateTime(): Stray arguments; formatDate takes at most 3 arguments.");
-
-    QDateTime dt = scope.engine->toVariant(argv[0], -1).toDateTime();
-    return formatDateTimeObject(dt, scope, QLatin1String("Qt.formatDateTime"), argc, argv);
+    return dateTime.toString(format);
 }
+
+QString QtObject::formatDateTime(const QDateTime &dateTime, Qt::DateFormat format) const
+{
+    return formatDateTimeObjectUsingDateFormat(dateTime, format);
+}
+
+#if QT_CONFIG(qml_locale)
+QString QtObject::formatDateTime(const QDateTime &dateTime, const QLocale &locale,
+                                 QLocale::FormatType formatType) const
+{
+    return locale.toString(dateTime, formatType);
+}
+#endif
 
 /*!
     \qmlmethod bool Qt::openUrlExternally(url target)
@@ -977,15 +805,9 @@ ReturnedValue QtObject::method_formatDateTime(const FunctionObject *b, const Val
     still fail to launch or fail to open the requested URL. This result will not be reported back
     to the application.
 */
-ReturnedValue QtObject::method_openUrlExternally(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+bool QtObject::openUrlExternally(const QUrl &url) const
 {
-    QV4::Scope scope(b);
-    if (argc != 1)
-        return QV4::Encode(false);
-
-    ScopedValue result(scope, method_resolvedUrl(b, thisObject, argv, argc));
-    QUrl url(result->toQStringNoThrow());
-    return scope.engine->fromVariant(QQml_guiProvider()->openUrlExternally(url));
+    return QQml_guiProvider()->openUrlExternally(resolvedUrl(url));
 }
 
 /*!
@@ -993,24 +815,13 @@ ReturnedValue QtObject::method_openUrlExternally(const FunctionObject *b, const 
 
   Returns \a url resolved relative to the URL of the caller.
 */
-ReturnedValue QtObject::method_resolvedUrl(const FunctionObject *b, const Value *, const Value *argv, int argc)
+QUrl QtObject::resolvedUrl(const QUrl &url) const
 {
-    QV4::Scope scope(b);
-    if (argc != 1)
-        return Encode::undefined();
-
-    QUrl url = scope.engine->toVariant(argv[0], -1).toUrl();
-    QQmlEngine *e = scope.engine->qmlEngine();
-    QQmlEnginePrivate *p = nullptr;
-    if (e) p = QQmlEnginePrivate::get(e);
-    if (p) {
-        if (QQmlRefPointer<QQmlContextData> ctxt = scope.engine->callingQmlContext())
-            return Encode(scope.engine->newString(ctxt->resolvedUrl(url).toString()));
-        else
-            return Encode(scope.engine->newString(url.toString()));
-    }
-
-    return Encode(scope.engine->newString(e->baseUrl().resolved(url).toString()));
+    if (QQmlRefPointer<QQmlContextData> ctxt = v4Engine()->callingQmlContext())
+        return ctxt->resolvedUrl(url);
+    if (QQmlEngine *engine = qmlEngine())
+        return engine->baseUrl().resolved(url);
+    return url;
 }
 
 /*!
@@ -1018,58 +829,36 @@ ReturnedValue QtObject::method_resolvedUrl(const FunctionObject *b, const Value 
 
 Returns a list of the font families available to the application.
 */
-ReturnedValue QtObject::method_fontFamilies(const FunctionObject *b, const Value *, const Value *, int argc)
+QStringList QtObject::fontFamilies() const
 {
-    QV4::Scope scope(b);
-    if (argc != 0)
-        THROW_GENERIC_ERROR("Qt.fontFamilies(): Invalid arguments");
-
-    return scope.engine->fromVariant(QVariant(QQml_guiProvider()->fontFamilies()));
+    return QQml_guiProvider()->fontFamilies();
 }
 
 /*!
 \qmlmethod string Qt::md5(data)
 Returns a hex string of the md5 hash of \a data.
 */
-ReturnedValue QtObject::method_md5(const FunctionObject *b, const Value *, const Value *argv, int argc)
+QString QtObject::md5(const QString &data) const
 {
-    QV4::Scope scope(b);
-    if (argc != 1)
-        THROW_GENERIC_ERROR("Qt.md5(): Invalid arguments");
-
-    QByteArray data = argv[0].toQStringNoThrow().toUtf8();
-    QByteArray result = QCryptographicHash::hash(data, QCryptographicHash::Md5);
-    return Encode(scope.engine->newString(QLatin1String(result.toHex())));
+    return QLatin1String(QCryptographicHash::hash(data.toUtf8(), QCryptographicHash::Md5).toHex());
 }
 
 /*!
 \qmlmethod string Qt::btoa(data)
 Binary to ASCII - this function returns a base64 encoding of \a data.
 */
-ReturnedValue QtObject::method_btoa(const FunctionObject *b, const Value *, const Value *argv, int argc)
+QString QtObject::btoa(const QString &data) const
 {
-    QV4::Scope scope(b);
-    if (argc != 1)
-        THROW_GENERIC_ERROR("Qt.btoa(): Invalid arguments");
-
-    QByteArray data = argv[0].toQStringNoThrow().toUtf8();
-
-    return Encode(scope.engine->newString(QLatin1String(data.toBase64())));
+    return QLatin1String(data.toUtf8().toBase64());
 }
 
 /*!
 \qmlmethod string Qt::atob(data)
 ASCII to binary - this function decodes the base64 encoded \a data string and returns it.
 */
-ReturnedValue QtObject::method_atob(const FunctionObject *b, const Value *, const Value *argv, int argc)
+QString QtObject::atob(const QString &data) const
 {
-    QV4::Scope scope(b);
-    if (argc != 1)
-        THROW_GENERIC_ERROR("Qt.atob(): Invalid arguments");
-
-    QByteArray data = argv[0].toQStringNoThrow().toLatin1();
-
-    return Encode(scope.engine->newString(QString::fromUtf8(QByteArray::fromBase64(data))));
+    return QString::fromUtf8(QByteArray::fromBase64(data.toLatin1()));
 }
 
 /*!
@@ -1081,10 +870,10 @@ QQmlEngine::quit() signal to the QCoreApplication::quit() slot.
 
 \sa exit()
 */
-ReturnedValue QtObject::method_quit(const FunctionObject *b, const Value *, const Value *, int)
+void QtObject::quit() const
 {
-    QQmlEnginePrivate::get(b->engine()->qmlEngine())->sendQuit();
-    return Encode::undefined();
+    if (QQmlEngine *engine = qmlEngine())
+        QQmlEnginePrivate::get(engine)->sendQuit();
 }
 
 /*!
@@ -1098,16 +887,10 @@ ReturnedValue QtObject::method_quit(const FunctionObject *b, const Value *, cons
 
     \sa quit()
 */
-ReturnedValue QtObject::method_exit(const FunctionObject *b, const Value *, const Value *argv, int argc)
+void QtObject::exit(int retCode) const
 {
-    QV4::Scope scope(b);
-    if (argc != 1)
-        THROW_GENERIC_ERROR("Qt.exit(): Invalid arguments");
-
-    int retCode = argv[0].toNumber();
-
-    QQmlEnginePrivate::get(scope.engine->qmlEngine())->sendExit(retCode);
-    return QV4::Encode::undefined();
+    if (QQmlEngine *engine = qmlEngine())
+        QQmlEnginePrivate::get(engine)->sendExit(retCode);
 }
 
 /*!
@@ -1134,11 +917,14 @@ If this is the case, consider using \l{QtQml::Qt::createComponent()}{Qt.createCo
 
 See \l {Dynamic QML Object Creation from JavaScript} for more information on using this function.
 */
-ReturnedValue QtObject::method_createQmlObject(const FunctionObject *b, const Value *, const Value *argv, int argc)
+QObject *QtObject::createQmlObject(const QString &qml, QObject *parent, const QUrl &url) const
 {
-    QV4::Scope scope(b);
-    if (argc < 2 || argc > 3)
-        THROW_GENERIC_ERROR("Qt.createQmlObject(): Invalid arguments");
+    QQmlEngine *engine = qmlEngine();
+    if (!engine) {
+        v4Engine()->throwError(QStringLiteral("Qt.createQmlObject(): "
+                                              "Can only be called on a QML engine."));
+        return nullptr;
+    }
 
     struct Error {
         static ReturnedValue create(QV4::ExecutionEngine *v4, const QList<QQmlError> &errors) {
@@ -1169,14 +955,10 @@ ReturnedValue QtObject::method_createQmlObject(const FunctionObject *b, const Va
         }
     };
 
-    QQmlEngine *engine = scope.engine->qmlEngine();
+    QQmlRefPointer<QQmlContextData> context = v4Engine()->callingQmlContext();
+    if (!context)
+        context = QQmlContextData::get(QQmlEnginePrivate::get(engine)->rootContext);
 
-    QQmlRefPointer<QQmlContextData> context = scope.engine->callingQmlContext();
-    if (!context) {
-        QQmlEngine *qmlEngine = scope.engine->qmlEngine();
-        if (qmlEngine)
-            context = QQmlContextData::get(QQmlEnginePrivate::get(qmlEngine)->rootContext);
-    }
     Q_ASSERT(context);
     QQmlContext *effectiveContext = nullptr;
     if (context->isPragmaLibraryContext())
@@ -1185,44 +967,42 @@ ReturnedValue QtObject::method_createQmlObject(const FunctionObject *b, const Va
         effectiveContext = context->asQQmlContext();
     Q_ASSERT(effectiveContext);
 
-    QString qml = argv[0].toQStringNoThrow();
     if (qml.isEmpty())
-        RETURN_RESULT(Encode::null());
+        return nullptr;
 
-    QUrl url;
-    if (argc > 2)
-        url = QUrl(argv[2].toQStringNoThrow());
-    else
-        url = QUrl(QLatin1String("inline"));
-
+    QUrl resolvedUrl = url;
     if (url.isValid() && url.isRelative())
-        url = context->resolvedUrl(url);
+        resolvedUrl = context->resolvedUrl(url);
 
-    QObject *parentArg = nullptr;
-    QV4::Scoped<QV4::QObjectWrapper> qobjectWrapper(scope, argv[1]);
-    if (!!qobjectWrapper)
-        parentArg = qobjectWrapper->object();
-    if (!parentArg)
-        THROW_GENERIC_ERROR("Qt.createQmlObject(): Missing parent object");
+    if (!parent) {
+        v4Engine()->throwError(QStringLiteral("Qt.createQmlObject(): Missing parent object"));
+        return nullptr;
+    }
 
     QQmlRefPointer<QQmlTypeData> typeData = QQmlEnginePrivate::get(engine)->typeLoader.getType(
-                qml.toUtf8(), url, QQmlTypeLoader::Synchronous);
+                qml.toUtf8(), resolvedUrl, QQmlTypeLoader::Synchronous);
     Q_ASSERT(typeData->isCompleteOrError());
     QQmlComponent component(engine);
     QQmlComponentPrivate *componentPrivate = QQmlComponentPrivate::get(&component);
     componentPrivate->fromTypeData(typeData);
     componentPrivate->progress = 1.0;
 
+    Scope scope(v4Engine());
     if (component.isError()) {
         ScopedValue v(scope, Error::create(scope.engine, component.errors()));
-        RETURN_RESULT(scope.engine->throwError(v));
+        scope.engine->throwError(v);
+        return nullptr;
     }
 
-    if (!component.isReady())
-        THROW_GENERIC_ERROR("Qt.createQmlObject(): Component is not ready");
+    if (!component.isReady()) {
+        v4Engine()->throwError(QStringLiteral("Qt.createQmlObject(): Component is not ready"));
+        return nullptr;
+    }
 
     if (!effectiveContext->isValid()) {
-        THROW_GENERIC_ERROR("Qt.createQmlObject(): Cannot create a component in an invalid context");
+        v4Engine()->throwError(QStringLiteral("Qt.createQmlObject(): Cannot create a component "
+                                              "in an invalid context"));
+        return nullptr;
     }
 
     QObject *obj = component.beginCreate(effectiveContext);
@@ -1230,12 +1010,11 @@ ReturnedValue QtObject::method_createQmlObject(const FunctionObject *b, const Va
         QQmlData::get(obj, true)->explicitIndestructibleSet = false;
         QQmlData::get(obj)->indestructible = false;
 
-
-        obj->setParent(parentArg);
+        obj->setParent(parent);
 
         QList<QQmlPrivate::AutoParentFunction> functions = QQmlMetaType::parentFunctions();
         for (int ii = 0; ii < functions.count(); ++ii) {
-            if (QQmlPrivate::Parented == functions.at(ii)(obj, parentArg))
+            if (QQmlPrivate::Parented == functions.at(ii)(obj, parent))
                 break;
         }
     }
@@ -1243,12 +1022,12 @@ ReturnedValue QtObject::method_createQmlObject(const FunctionObject *b, const Va
 
     if (component.isError()) {
         ScopedValue v(scope, Error::create(scope.engine, component.errors()));
-        return scope.engine->throwError(v);
+        scope.engine->throwError(v);
+        return nullptr;
     }
 
     Q_ASSERT(obj);
-
-    return QV4::QObjectWrapper::wrap(scope.engine, obj);
+    return obj;
 }
 
 /*!
@@ -1295,101 +1074,59 @@ See \l {Dynamic QML Object Creation from JavaScript} for more information on usi
 To create a QML object from an arbitrary string of QML (instead of a file),
 use \l{QtQml::Qt::createQmlObject()}{Qt.createQmlObject()}.
 */
-ReturnedValue QtObject::method_createComponent(const FunctionObject *b, const Value *, const Value *argv, int argc)
+QQmlComponent *QtObject::createComponent(const QUrl &url, QObject *parent) const
 {
-    QV4::Scope scope(b);
-    if (argc < 1 || argc > 3)
-        THROW_GENERIC_ERROR("Qt.createComponent(): Invalid arguments");
+    return createComponent(url, QQmlComponent::PreferSynchronous, parent);
+}
 
-    QQmlEngine *engine = scope.engine->qmlEngine();
-
-    QQmlRefPointer<QQmlContextData> context = scope.engine->callingQmlContext();
-    if (!context) {
-        QQmlEngine *qmlEngine = scope.engine->qmlEngine();
-        if (qmlEngine)
-            context = QQmlContextData::get(QQmlEnginePrivate::get(qmlEngine)->rootContext);
+QQmlComponent *QtObject::createComponent(const QUrl &url, QQmlComponent::CompilationMode mode,
+                                         QObject *parent) const
+{
+    if (mode != QQmlComponent::Asynchronous && mode != QQmlComponent::PreferSynchronous) {
+        v4Engine()->throwError(QStringLiteral("Invalid compilation mode %1").arg(mode));
+        return nullptr;
     }
+
+    if (url.isEmpty())
+        return nullptr;
+
+    QQmlEngine *engine = qmlEngine();
+    if (!engine)
+        return nullptr;
+
+    QQmlRefPointer<QQmlContextData> context = v4Engine()->callingQmlContext();
+    if (!context)
+        context = QQmlContextData::get(QQmlEnginePrivate::get(engine)->rootContext);
+
     Q_ASSERT(context);
     QQmlRefPointer<QQmlContextData> effectiveContext
             = context->isPragmaLibraryContext() ? nullptr : context;
 
-    QString arg = argv[0].toQStringNoThrow();
-    if (arg.isEmpty())
-        RETURN_RESULT(QV4::Encode::null());
-
-    QQmlComponent::CompilationMode compileMode = QQmlComponent::PreferSynchronous;
-    QObject *parentArg = nullptr;
-
-    int consumedCount = 1;
-    if (argc > 1) {
-        ScopedValue lastArg(scope, argv[argc-1]);
-
-        // The second argument could be the mode enum
-        if (argv[1].isInteger()) {
-            int mode = argv[1].integerValue();
-            if (mode != int(QQmlComponent::PreferSynchronous) && mode != int(QQmlComponent::Asynchronous))
-                THROW_GENERIC_ERROR("Qt.createComponent(): Invalid arguments");
-            compileMode = QQmlComponent::CompilationMode(mode);
-            consumedCount += 1;
-        } else {
-            // The second argument could be the parent only if there are exactly two args
-            if ((argc != 2) || !(lastArg->isObject() || lastArg->isNull()))
-                THROW_GENERIC_ERROR("Qt.createComponent(): Invalid arguments");
-        }
-
-        if (consumedCount < argc) {
-            if (lastArg->isObject()) {
-                Scoped<QObjectWrapper> qobjectWrapper(scope, lastArg);
-                if (qobjectWrapper)
-                    parentArg = qobjectWrapper->object();
-                if (!parentArg)
-                    THROW_GENERIC_ERROR("Qt.createComponent(): Invalid parent object");
-            } else if (lastArg->isNull()) {
-                parentArg = nullptr;
-            } else {
-                THROW_GENERIC_ERROR("Qt.createComponent(): Invalid parent object");
-            }
-        }
-    }
-
-    QUrl url = context->resolvedUrl(QUrl(arg));
-    QQmlComponent *c = new QQmlComponent(engine, url, compileMode, parentArg);
+    QQmlComponent *c = new QQmlComponent(engine, context->resolvedUrl(url), mode, parent);
     QQmlComponentPrivate::get(c)->creationContext = effectiveContext;
     QQmlData::get(c, true)->explicitIndestructibleSet = false;
     QQmlData::get(c)->indestructible = false;
-
-    return QV4::QObjectWrapper::wrap(scope.engine, c);
+    return c;
 }
 
-ReturnedValue QtObject::method_get_uiLanguage(const FunctionObject *b, const Value * /*thisObject*/, const Value * /*argv*/, int /*argc*/)
+QString QtObject::uiLanguage() const
 {
-    QV4::Scope scope(b);
-    QJSEngine *jsEngine = scope.engine->jsEngine();
-    if (!jsEngine)
-        return Encode::null();
-
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(scope.engine);
-    if (ep && ep->propertyCapture) {
-        static const QMetaProperty metaProperty
-                = QQmlEngine::staticMetaObject.property(
-                    QQmlEngine::staticMetaObject.indexOfProperty("uiLanguage"));
-        QQmlEngine *e = QQmlEnginePrivate::get(ep);
-        e->captureProperty(e, metaProperty);
-    }
-
-    return Encode(scope.engine->newString(QJSEnginePrivate::get(jsEngine)->uiLanguage));
+    if (const QJSEngine *e = jsEngine())
+        return e->uiLanguage();
+    return QString();
 }
 
-ReturnedValue QtObject::method_set_uiLanguage(const FunctionObject *b, const Value * /*thisObject*/, const Value *argv, int argc)
+void QtObject::setUiLanguage(const QString &uiLanguage)
 {
-    Scope scope(b);
-    if (!argc)
-        THROW_TYPE_ERROR();
-    QJSEngine *jsEngine = scope.engine->jsEngine();
-    if (!jsEngine)
-        THROW_TYPE_ERROR();
-    jsEngine->setUiLanguage(argv[0].toQString());
-    return Encode::undefined();
+    if (QJSEngine *e = jsEngine())
+        e->setUiLanguage(uiLanguage);
+}
+
+QBindable<QString> QtObject::uiLanguageBindable()
+{
+    if (QJSEngine *e = jsEngine())
+        return QBindable<QString>(&QJSEnginePrivate::get(e)->uiLanguage);
+    return QBindable<QString>();
 }
 
 #if QT_CONFIG(qml_locale)
@@ -1413,19 +1150,14 @@ ReturnedValue QtObject::method_set_uiLanguage(const FunctionObject *b, const Val
 
     \sa Locale
 */
-ReturnedValue QtObject::method_locale(const FunctionObject *b, const Value *, const Value *argv, int argc)
+QLocale QtObject::locale() const
 {
-    QV4::Scope scope(b);
-    QString code;
-    if (argc > 1)
-        THROW_GENERIC_ERROR("locale() requires 0 or 1 argument");
-    if (argc == 1 && !argv[0].isString())
-        THROW_TYPE_ERROR_WITH_MESSAGE("locale(): argument (locale code) must be a string");
+    return QLocale();
+}
 
-    if (argc == 1)
-        code = argv[0].toQStringNoThrow();
-
-    return QQmlLocale::locale(scope.engine, code);
+QLocale QtObject::locale(const QString &name) const
+{
+    return QLocale(name);
 }
 #endif
 
@@ -1489,67 +1221,52 @@ DEFINE_OBJECT_VTABLE(QQmlBindingFunction);
 
     \since 5.0
 */
-ReturnedValue QtObject::method_binding(const FunctionObject *b, const Value *, const Value *argv, int argc)
+QJSValue QtObject::binding(const QJSValue &function) const
 {
-    QV4::Scope scope(b);
-    if (argc != 1)
-        THROW_GENERIC_ERROR("binding() requires 1 argument");
-    const QV4::FunctionObject *f = argv[0].as<FunctionObject>();
-    if (!f)
-        THROW_TYPE_ERROR_WITH_MESSAGE("binding(): argument (binding expression) must be a function");
+    const QV4::FunctionObject *f = QJSValuePrivate::asManagedType<FunctionObject>(&function);
+    QV4::ExecutionEngine *e = v4Engine();
+    if (!f) {
+        return QJSValuePrivate::fromReturnedValue(
+                    e->throwError(
+                        QStringLiteral(
+                            "binding(): argument (binding expression) must be a function")));
+    }
 
-    return Encode(scope.engine->memoryManager->allocate<QQmlBindingFunction>(f));
+    return QJSValuePrivate::fromReturnedValue(
+                Encode(e->memoryManager->allocate<QQmlBindingFunction>(f)));
 }
 
 
-ReturnedValue QtObject::method_get_platform(const FunctionObject *b, const Value *thisObject, const Value *, int)
+QQmlPlatform *QtObject::platform()
 {
-    QV4::Scope scope(b);
-    // ### inefficient. Should be just a value based getter
-    const Object *o = thisObject->as<Object>();
-    if (!o)
-        THROW_TYPE_ERROR();
-    const QtObject *qt = o->as<QtObject>();
-    if (!qt)
-        THROW_TYPE_ERROR();
-
-    if (!qt->d()->platform)
-        // Only allocate a platform object once
-        qt->d()->platform = new QQmlPlatform(scope.engine->jsEngine());
-
-    return QV4::QObjectWrapper::wrap(scope.engine, qt->d()->platform);
+    if (!m_platform)
+        m_platform = new QQmlPlatform(this);
+    return m_platform;
 }
 
-ReturnedValue QtObject::method_get_application(const FunctionObject *b, const Value *thisObject, const Value *, int)
+QQmlApplication *QtObject::application()
 {
-    QV4::Scope scope(b);
-    // ### inefficient. Should be just a value based getter
-    const Object *o = thisObject->as<Object>();
-    if (!o)
-        THROW_TYPE_ERROR();
-    const QtObject *qt = o->as<QtObject>();
-    if (!qt)
-        THROW_TYPE_ERROR();
-
-    if (!qt->d()->application)
+    if (!m_application)
         // Only allocate an application object once
-        qt->d()->application = QQml_guiProvider()->application(scope.engine->jsEngine());
+        m_application = QQml_guiProvider()->application(this);
 
-    return QV4::QObjectWrapper::wrap(scope.engine, qt->d()->application);
+    return m_application;
 }
 
-ReturnedValue QtObject::method_get_inputMethod(const FunctionObject *b, const Value *, const Value *, int)
+QObject *QtObject::inputMethod() const
 {
-    QObject *o = QQml_guiProvider()->inputMethod();
-    return QV4::QObjectWrapper::wrap(b->engine(), o);
+    return QQml_guiProvider()->inputMethod();
 }
 
-ReturnedValue QtObject::method_get_styleHints(const FunctionObject *b, const Value *, const Value *, int)
+QObject *QtObject::styleHints() const
 {
-    QObject *o = QQml_guiProvider()->styleHints();
-    return QV4::QObjectWrapper::wrap(b->engine(), o);
+    return QQml_guiProvider()->styleHints();
 }
 
+QJSValue QtObject::callLater() const
+{
+    return m_callLater;
+}
 
 void QV4::Heap::ConsoleObject::init()
 {
@@ -1873,8 +1590,6 @@ ReturnedValue ConsoleObject::method_exception(const FunctionObject *b, const Val
     return writeToConsole(b, argv, argc, Error, true);
 }
 
-
-
 void QV4::GlobalExtensions::init(Object *globalObject, QJSEngine::Extensions extensions)
 {
     ExecutionEngine *v4 = globalObject->engine();
@@ -1889,13 +1604,11 @@ void QV4::GlobalExtensions::init(Object *globalObject, QJSEngine::Extensions ext
         globalObject->defineDefaultProperty(QStringLiteral("qsTrId"), QV4::GlobalExtensions::method_qsTrId);
         globalObject->defineDefaultProperty(QStringLiteral("QT_TRID_NOOP"), QV4::GlobalExtensions::method_qsTrIdNoOp);
 
+        // Initialize the Qt global object for the uiLanguage property
         ScopedString qtName(scope, v4->newString(QStringLiteral("Qt")));
         ScopedObject qt(scope, globalObject->get(qtName));
-        if (!qt) {
-            qt = v4->newObject();
-            globalObject->defineDefaultProperty(qtName, qt);
-        }
-        qt->defineAccessorProperty(QStringLiteral("uiLanguage"), QV4::QtObject::method_get_uiLanguage, QV4::QtObject::method_set_uiLanguage);
+        if (!qt)
+            v4->createQtObject();
 
         // string prototype extension
         scope.engine->stringPrototype()->defineDefaultProperty(QStringLiteral("arg"), QV4::GlobalExtensions::method_string_arg);
@@ -2236,7 +1949,8 @@ be passed on to the function invoked. Note that if redundant calls
 are eliminated, then only the last set of arguments will be passed to the
 function.
 */
-ReturnedValue QtObject::method_callLater(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)
+ReturnedValue QtObject::method_callLater(const FunctionObject *b, const Value *thisObject,
+                                         const Value *argv, int argc)
 {
     return b->engine()->delayedCallQueue()->addUniquelyAndExecuteLater(b, thisObject, argv, argc);
 }

@@ -1782,15 +1782,15 @@ void tst_qqmlecmascript::componentCreation_data()
         << "null";
     QTest::newRow("invalidSecondArg")
         << "invalidSecondArg"
-        << ":40: Error: Qt.createComponent(): Invalid arguments"
+        << "" // We cannot catch this case as coercing a string to a number is valid in JavaScript
         << "";
     QTest::newRow("invalidThirdArg")
         << "invalidThirdArg"
-        << ":45: Error: Qt.createComponent(): Invalid parent object"
+        << ":45: TypeError: Passing incompatible arguments to C++ functions from JavaScript is not allowed."
         << "";
     QTest::newRow("invalidMode")
         << "invalidMode"
-        << ":50: Error: Qt.createComponent(): Invalid arguments"
+        << ":50: Error: Invalid compilation mode -666"
         << "";
 }
 
@@ -3448,6 +3448,9 @@ void tst_qqmlecmascript::scriptConnect()
         QVERIFY(object != nullptr);
 
         QCOMPARE(object->methodCalled(), false);
+
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression("When matching arguments for MyQmlObject_QML_[0-9]+::methodNoArgs\\(\\):"));
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression("Too many arguments, ignoring 5"));
         emit object->argumentSignal(19, "Hello world!", 10.25, MyQmlObject::EnumValue4, Qt::RightButton);
         QCOMPARE(object->methodCalled(), true);
 
@@ -3461,6 +3464,8 @@ void tst_qqmlecmascript::scriptConnect()
         QVERIFY(object != nullptr);
 
         QCOMPARE(object->methodCalled(), false);
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression("When matching arguments for MyQmlObject_QML_[0-9]+::methodNoArgs\\(\\):"));
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression("Too many arguments, ignoring 5"));
         emit object->argumentSignal(19, "Hello world!", 10.25, MyQmlObject::EnumValue4, Qt::RightButton);
         QCOMPARE(object->methodCalled(), true);
 
@@ -6365,7 +6370,7 @@ void tst_qqmlecmascript::include()
     // Non-library relative include
     {
     QQmlComponent component(&engine, testFileUrl("include.qml"));
-    QObject *o = component.create();
+    QScopedPointer<QObject> o(component.create());
     QVERIFY(o != nullptr);
 
     QCOMPARE(o->property("test0").toInt(), 99);
@@ -6375,13 +6380,12 @@ void tst_qqmlecmascript::include()
     QCOMPARE(o->property("test3").toBool(), true);
     QCOMPARE(o->property("test3_1").toBool(), true);
 
-    delete o;
     }
 
     // Library relative include
     {
     QQmlComponent component(&engine, testFileUrl("include_shared.qml"));
-    QObject *o = component.create();
+    QScopedPointer<QObject> o(component.create());
     QVERIFY(o != nullptr);
 
     QCOMPARE(o->property("test0").toInt(), 99);
@@ -6391,13 +6395,12 @@ void tst_qqmlecmascript::include()
     QCOMPARE(o->property("test3").toBool(), true);
     QCOMPARE(o->property("test3_1").toBool(), true);
 
-    delete o;
     }
 
     // Callback
     {
     QQmlComponent component(&engine, testFileUrl("include_callback.qml"));
-    QObject *o = component.create();
+    QScopedPointer<QObject> o(component.create());
     QVERIFY(o != nullptr);
 
     QCOMPARE(o->property("test1").toBool(), true);
@@ -6407,17 +6410,15 @@ void tst_qqmlecmascript::include()
     QCOMPARE(o->property("test5").toBool(), true);
     QCOMPARE(o->property("test6").toBool(), true);
 
-    delete o;
     }
 
     // Including file with ".pragma library"
     {
     QQmlComponent component(&engine, testFileUrl("include_pragma.qml"));
-    QObject *o = component.create();
+    QScopedPointer<QObject> o(component.create());
     QVERIFY(o != nullptr);
     QCOMPARE(o->property("test1").toInt(), 100);
 
-    delete o;
     }
 
     // Including file with ".pragma library", shadowing a global var
@@ -6435,7 +6436,7 @@ void tst_qqmlecmascript::include()
     server.serveDirectory(dataDirectory());
 
     QQmlComponent component(&engine, testFileUrl("include_remote_missing.qml"));
-    QObject *o = component.beginCreate(engine.rootContext());
+    QScopedPointer<QObject> o(component.beginCreate(engine.rootContext()));
     QVERIFY(o != nullptr);
     o->setProperty("serverBaseUrl", server.baseUrl().toString());
     component.completeCreate();
@@ -6446,13 +6447,12 @@ void tst_qqmlecmascript::include()
     QCOMPARE(o->property("test2").toBool(), true);
     QCOMPARE(o->property("test3").toBool(), true);
 
-    delete o;
     }
 
     // include from resources
     {
     QQmlComponent component(&engine, QUrl("qrc:///data/include.qml"));
-    QObject *o = component.create();
+    QScopedPointer<QObject> o(component.create());
     QVERIFY(o != nullptr);
 
     QCOMPARE(o->property("test0").toInt(), 99);
@@ -6462,7 +6462,6 @@ void tst_qqmlecmascript::include()
     QCOMPARE(o->property("test3").toBool(), true);
     QCOMPARE(o->property("test3_1").toBool(), true);
 
-    delete o;
     }
 
 }
@@ -7495,14 +7494,13 @@ void tst_qqmlecmascript::registeredFlagMethod()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("registeredFlagMethod.qml"));
-    MyQmlObject *object = qobject_cast<MyQmlObject *>(component.create());
+    QScopedPointer<QObject> o(component.create());
+    MyQmlObject *object = qobject_cast<MyQmlObject *>(o.data());
     QVERIFY(object != nullptr);
 
     QCOMPARE(object->buttons(), 0);
     emit object->basicSignal();
     QCOMPARE(object->buttons(), Qt::RightButton);
-
-    delete object;
 }
 
 // QTBUG-23138

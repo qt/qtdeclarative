@@ -689,6 +689,7 @@ public:
     QV4::ReturnedValue global();
     void initQmlGlobalObject();
     void initializeGlobal();
+    void createQtObject();
 
     void freezeObject(const QV4::Value &value);
 

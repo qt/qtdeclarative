@@ -108,6 +108,9 @@ void QQmlDelayedCallQueue::init(QV4::ExecutionEngine* engine)
 
 QV4::ReturnedValue QQmlDelayedCallQueue::addUniquelyAndExecuteLater(const QV4::FunctionObject *b, const QV4::Value *, const QV4::Value *argv, int argc)
 {
+    QV4::ExecutionEngine *engine = b->engine();
+    QQmlDelayedCallQueue *self = engine->delayedCallQueue();
+
     QV4::Scope scope(b);
     if (argc == 0)
         THROW_GENERIC_ERROR("Qt.callLater: no arguments given");
@@ -123,8 +126,8 @@ QV4::ReturnedValue QQmlDelayedCallQueue::addUniquelyAndExecuteLater(const QV4::F
     QVector<DelayedFunctionCall>::Iterator iter;
     if (functionData.second != -1) {
         // This is a QObject function wrapper
-        iter = m_delayedFunctionCalls.begin();
-        while (iter != m_delayedFunctionCalls.end()) {
+        iter = self->m_delayedFunctionCalls.begin();
+        while (iter != self->m_delayedFunctionCalls.end()) {
             DelayedFunctionCall& dfc = *iter;
             QPair<QObject *, int> storedFunctionData = QV4::QObjectMethod::extractQtMethod(dfc.m_function.as<QV4::FunctionObject>());
             if (storedFunctionData == functionData) {
@@ -134,8 +137,8 @@ QV4::ReturnedValue QQmlDelayedCallQueue::addUniquelyAndExecuteLater(const QV4::F
         }
     } else {
         // This is a JavaScript function (dynamic slot on VMEMO)
-        iter = m_delayedFunctionCalls.begin();
-        while (iter != m_delayedFunctionCalls.end()) {
+        iter = self->m_delayedFunctionCalls.begin();
+        while (iter != self->m_delayedFunctionCalls.end()) {
             DelayedFunctionCall& dfc = *iter;
             if (arg0 == dfc.m_function.value()) {
                 break; // Already stored!
@@ -144,16 +147,16 @@ QV4::ReturnedValue QQmlDelayedCallQueue::addUniquelyAndExecuteLater(const QV4::F
         }
     }
 
-    const bool functionAlreadyStored = (iter != m_delayedFunctionCalls.end());
+    const bool functionAlreadyStored = (iter != self->m_delayedFunctionCalls.end());
     if (functionAlreadyStored) {
         DelayedFunctionCall dfc = *iter;
-        m_delayedFunctionCalls.erase(iter);
-        m_delayedFunctionCalls.append(dfc);
+        self->m_delayedFunctionCalls.erase(iter);
+        self->m_delayedFunctionCalls.append(dfc);
     } else {
-        m_delayedFunctionCalls.append(QV4::PersistentValue(m_engine, arg0));
+        self->m_delayedFunctionCalls.append(QV4::PersistentValue(engine, arg0));
     }
 
-    DelayedFunctionCall& dfc = m_delayedFunctionCalls.last();
+    DelayedFunctionCall& dfc = self->m_delayedFunctionCalls.last();
     if (dfc.m_objectGuard.isNull()) {
         if (functionData.second != -1) {
             // if it's a qobject function wrapper, guard against qobject deletion
@@ -166,11 +169,11 @@ QV4::ReturnedValue QQmlDelayedCallQueue::addUniquelyAndExecuteLater(const QV4::F
             dfc.m_guarded = true;
         }
     }
-    storeAnyArguments(dfc, argv, argc, 1, m_engine);
+    self->storeAnyArguments(dfc, argv, argc, 1, engine);
 
-    if (!m_callbackOutstanding) {
-        m_tickedMethod.invoke(this, Qt::QueuedConnection);
-        m_callbackOutstanding = true;
+    if (!self->m_callbackOutstanding) {
+        self->m_tickedMethod.invoke(self, Qt::QueuedConnection);
+        self->m_callbackOutstanding = true;
     }
     return QV4::Encode::undefined();
 }

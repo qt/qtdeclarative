@@ -69,7 +69,9 @@ public:
 
     void init(QV4::ExecutionEngine *);
 
-    QV4::ReturnedValue addUniquelyAndExecuteLater(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
+    static QV4::ReturnedValue addUniquelyAndExecuteLater(
+            const QV4::FunctionObject *, const QV4::Value *thisObject,
+            const QV4::Value *argv, int argc);
 
 public Q_SLOTS:
     void ticked();

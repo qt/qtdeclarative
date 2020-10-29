@@ -1554,6 +1554,16 @@ static const QQmlPropertyData * RelatedMethod(const QQmlObjectOrGadget &object,
     }
 }
 
+static int numDefinedArguments(QV4::CallData *callArgs)
+{
+    int numDefinedArguments = callArgs->argc();
+    while (numDefinedArguments > 0
+           && callArgs->args[numDefinedArguments - 1].type() == QV4::StaticValue::Undefined_Type) {
+        --numDefinedArguments;
+    }
+    return numDefinedArguments;
+}
+
 static QV4::ReturnedValue CallPrecise(const QQmlObjectOrGadget &object, const QQmlPropertyData &data,
                                       QV4::ExecutionEngine *engine, QV4::CallData *callArgs,
                                       QMetaObject::Call callType = QMetaObject::InvokeMetaMethod)
@@ -1566,6 +1576,35 @@ static QV4::ReturnedValue CallPrecise(const QQmlObjectOrGadget &object, const QQ
         return engine->throwError(QLatin1String("Unknown method return type: ")
                                   + QLatin1String(unknownTypeError));
     }
+
+    auto handleTooManyArguments = [&](int expectedArguments) {
+        const QMetaObject *metaObject = object.metaObject();
+        const int indexOfClassInfo = metaObject->indexOfClassInfo("QML.StrictArguments");
+        if (indexOfClassInfo != -1
+                && QString::fromUtf8(metaObject->classInfo(indexOfClassInfo).value())
+                    == QStringLiteral("true")) {
+            engine->throwError(QStringLiteral("Too many arguments"));
+            return false;
+        }
+
+        const auto stackTrace = engine->stackTrace();
+        if (stackTrace.isEmpty()) {
+            qWarning().nospace().noquote()
+                    << "When matching arguments for "
+                    << object.className() << "::" << data.name(object.metaObject()) << "():";
+        } else {
+            const StackFrame frame = engine->stackTrace().first();
+            qWarning().noquote() << frame.function + QLatin1Char('@') + frame.source
+                            + (frame.line > 0 ? (QLatin1Char(':') + QString::number(frame.line))
+                                              : QString());
+        }
+
+        qWarning().noquote() << QStringLiteral("Too many arguments, ignoring %1")
+                                        .arg(callArgs->argc() - expectedArguments);
+        return true;
+    };
+
+    const int definedArgumentCount = numDefinedArguments(callArgs);
 
     if (data.hasArguments()) {
 
@@ -1588,24 +1627,19 @@ static QV4::ReturnedValue CallPrecise(const QQmlObjectOrGadget &object, const QQ
             return engine->throwError(error);
         }
 
-        if (args[0] < callArgs->argc()) {
-            Q_ASSERT(!engine->stackTrace().isEmpty());
+        if (args[0] < definedArgumentCount) {
+            if (!handleTooManyArguments(args[0]))
+                return Encode::undefined();
 
-            const StackFrame frame = engine->stackTrace().first();
-            qWarning().noquote() << frame.function + QLatin1Char('@') + frame.source
-                            + (frame.line > 0 ? (QLatin1Char(':') + QString::number(frame.line))
-                                              : QString());
-
-            qWarning().noquote() << QStringLiteral("Too many arguments, ignoring %1")
-                                            .arg(callArgs->argc() - args[0]);
         }
 
         return CallMethod(object, data.coreIndex(), returnType, args[0], args + 1, engine, callArgs, callType);
 
     } else {
+        if (definedArgumentCount > 0 && !handleTooManyArguments(0))
+            return Encode::undefined();
 
         return CallMethod(object, data.coreIndex(), returnType, 0, nullptr, engine, callArgs, callType);
-
     }
 }
 
@@ -1626,7 +1660,8 @@ static QV4::ReturnedValue CallOverloaded(const QQmlObjectOrGadget &object, const
                                          QV4::ExecutionEngine *engine, QV4::CallData *callArgs, const QQmlPropertyCache *propertyCache,
                                          QMetaObject::Call callType = QMetaObject::InvokeMetaMethod)
 {
-    int argumentCount = callArgs->argc();
+    const int argumentCount = callArgs->argc();
+    const int definedArgumentCount = numDefinedArguments(callArgs);
 
     QQmlPropertyData best;
     int bestParameterScore = INT_MAX;
@@ -1654,7 +1689,7 @@ static QV4::ReturnedValue CallOverloaded(const QQmlObjectOrGadget &object, const
         if (methodArgumentCount > argumentCount)
             continue; // We don't have sufficient arguments to call this method
 
-        int methodParameterScore = argumentCount - methodArgumentCount;
+        int methodParameterScore = definedArgumentCount - methodArgumentCount;
         if (methodParameterScore > bestParameterScore)
             continue; // We already have a better option
 

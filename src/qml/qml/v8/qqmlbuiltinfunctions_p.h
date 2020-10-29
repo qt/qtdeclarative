@@ -54,28 +54,20 @@
 #include <private/qqmlglobal_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qjsengine_p.h>
+#include <private/qqmlplatform_p.h>
 #include <QtCore/qnamespace.h>
+#include <QtCore/qdatetime.h>
+#include <QtCore/qsize.h>
+#include <QtCore/qrect.h>
+#include <QtCore/qpoint.h>
+#include <QtQml/qqmlcomponent.h>
+#include <QtQml/qqmlengine.h>
 
 QT_BEGIN_NAMESPACE
-
-class QQmlEngine;
 
 namespace QV4 {
 
 namespace Heap {
-
-struct QtObject : Object {
-    void init(QQmlEngine *qmlEngine);
-    QObject *platform;
-    QObject *application;
-
-    enum { Finished = -1 };
-    int enumeratorIterator;
-    int keyIterator;
-
-    bool isComplete() const
-    { return enumeratorIterator == Finished; }
-};
 
 struct ConsoleObject : Object {
     void init();
@@ -90,73 +82,139 @@ DECLARE_HEAP_OBJECT(QQmlBindingFunction, FunctionObject) {
 
 }
 
-namespace QtInQml {
-Q_NAMESPACE
-QML_FOREIGN_NAMESPACE(Qt)
-QML_NAMED_ELEMENT(Qt)
-QML_ADDED_IN_VERSION(2, 0)
-Q_CLASSINFO("QML.ManualRegistration", "true")
-// should add the functions defined below...
-}
-
-struct QtObject : Object
+class Q_QML_EXPORT QtObject : public QObject
 {
-    V4_OBJECT2(QtObject, Object)
+    Q_OBJECT
+    Q_PROPERTY(QQmlApplication *application READ application CONSTANT)
+    Q_PROPERTY(QQmlPlatform *platform READ platform CONSTANT)
+    Q_PROPERTY(QObject *inputMethod READ inputMethod CONSTANT)
+    Q_PROPERTY(QObject *styleHints READ styleHints CONSTANT)
+    Q_PROPERTY(QJSValue callLater READ callLater CONSTANT)
 
-    static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
-    static OwnPropertyKeyIterator *virtualOwnPropertyKeys(const Object *m, Value *target);
-
-    static ReturnedValue method_isQtObject(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_color(const FunctionObject *b, const Value *thisObject,
-                                      const Value *argv, int argc);
-    static ReturnedValue method_rgba(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_hsla(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_hsva(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_colorEqual(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_font(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_rect(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_point(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_size(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_vector2d(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_vector3d(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_vector4d(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_quaternion(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_matrix4x4(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_lighter(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_darker(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_alpha(const FunctionObject *b, const Value *thisObject,
-                                      const Value *argv, int argc);
-    static ReturnedValue method_tint(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_formatDate(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_formatTime(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_formatDateTime(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_openUrlExternally(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_fontFamilies(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_md5(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_btoa(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_atob(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_quit(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_exit(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_resolvedUrl(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_createQmlObject(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_createComponent(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_get_uiLanguage(const FunctionObject *b, const Value *, const Value *, int);
-    static ReturnedValue method_set_uiLanguage(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-#if QT_CONFIG(qml_locale)
-    static ReturnedValue method_locale(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+#if QT_CONFIG(translation)
+    Q_PROPERTY(QString uiLanguage READ uiLanguage WRITE setUiLanguage BINDABLE uiLanguageBindable)
 #endif
-    static ReturnedValue method_binding(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
 
-    static ReturnedValue method_get_platform(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_get_application(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_get_inputMethod(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
-    static ReturnedValue method_get_styleHints(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc);
+    QML_NAMED_ELEMENT(Qt)
+    QML_SINGLETON
+    QML_EXTENDED_NAMESPACE(QT_PREPEND_NAMESPACE(Qt))
+    QML_ADDED_IN_VERSION(2, 0)
 
-    static ReturnedValue method_callLater(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    Q_CLASSINFO("QML.StrictArguments", "true")
+
+public:
+    enum LoadingMode { Asynchronous = 0, Synchronous = 1 };
+    Q_ENUM(LoadingMode);
+
+    static QtObject *create(QQmlEngine *, QJSEngine *jsEngine);
+
+    Q_INVOKABLE QJSValue include(const QString &url, const QJSValue &callback = QJSValue()) const;
+    Q_INVOKABLE bool isQtObject(const QJSValue &value) const;
+
+    Q_INVOKABLE QVariant color(const QString &name) const;
+    Q_INVOKABLE QVariant rgba(double r, double g, double b, double a = 1) const;
+    Q_INVOKABLE QVariant hsla(double h, double s, double l, double a = 1) const;
+    Q_INVOKABLE QVariant hsva(double h, double s, double v, double a = 1) const;
+    Q_INVOKABLE bool colorEqual(const QVariant &lhs, const QVariant &rhs) const;
+
+    Q_INVOKABLE QRectF rect(double x, double y, double width, double height) const;
+    Q_INVOKABLE QPointF point(double x, double y) const;
+    Q_INVOKABLE QSizeF size(double width, double height) const;
+    Q_INVOKABLE QVariant vector2d(double x, double y) const;
+    Q_INVOKABLE QVariant vector3d(double x, double y, double z) const;
+    Q_INVOKABLE QVariant vector4d(double x, double y, double z, double w) const;
+    Q_INVOKABLE QVariant quaternion(double scalar, double x, double y, double z) const;
+
+    Q_INVOKABLE QVariant matrix4x4() const;
+    Q_INVOKABLE QVariant matrix4x4(double m11, double m12, double m13, double m14,
+                                   double m21, double m22, double m23, double m24,
+                                   double m31, double m32, double m33, double m34,
+                                   double m41, double m42, double m43, double m44) const;
+    Q_INVOKABLE QVariant matrix4x4(const QJSValue &value) const;
+
+    Q_INVOKABLE QVariant lighter(const QJSValue &color, double factor = 1.5) const;
+    Q_INVOKABLE QVariant darker(const QJSValue &color, double factor = 2.0) const;
+    Q_INVOKABLE QVariant alpha(const QJSValue &baseColor, double value) const;
+    Q_INVOKABLE QVariant tint(const QJSValue &baseColor, const QJSValue &tintColor) const;
+
+    Q_INVOKABLE QString formatDate(const QDate &date, const QString &format) const;
+    Q_INVOKABLE QString formatDate(const QDate &date, Qt::DateFormat format) const;
+
+    Q_INVOKABLE QString formatTime(const QTime &time, const QString &format) const;
+    Q_INVOKABLE QString formatTime(const QString &time, const QString &format) const;
+    Q_INVOKABLE QString formatTime(const QTime &time, Qt::DateFormat format) const;
+    Q_INVOKABLE QString formatTime(const QString &time, Qt::DateFormat format) const;
+
+    Q_INVOKABLE QString formatDateTime(const QDateTime &date, const QString &format) const;
+    Q_INVOKABLE QString formatDateTime(const QDateTime &date, Qt::DateFormat format) const;
+
+#if QT_CONFIG(qml_locale)
+    Q_INVOKABLE QString formatDate(const QDate &date, const QLocale &locale = QLocale(),
+                                   QLocale::FormatType formatType = QLocale::ShortFormat) const;
+    Q_INVOKABLE QString formatTime(const QTime &time, const QLocale &locale = QLocale(),
+                                   QLocale::FormatType formatType = QLocale::ShortFormat) const;
+    Q_INVOKABLE QString formatTime(const QString &time, const QLocale &locale = QLocale(),
+                                   QLocale::FormatType formatType = QLocale::ShortFormat) const;
+    Q_INVOKABLE QString formatDateTime(const QDateTime &date, const QLocale &locale = QLocale(),
+                                       QLocale::FormatType formatType = QLocale::ShortFormat) const;
+    Q_INVOKABLE QLocale locale() const;
+    Q_INVOKABLE QLocale locale(const QString &name) const;
+#endif
+
+    Q_INVOKABLE QUrl resolvedUrl(const QUrl &url) const;
+    Q_INVOKABLE bool openUrlExternally(const QUrl &url) const;
+
+    Q_INVOKABLE QVariant font(const QJSValue &fontSpecifier) const;
+    Q_INVOKABLE QStringList fontFamilies() const;
+
+    Q_INVOKABLE QString md5(const QString &data) const;
+    Q_INVOKABLE QString btoa(const QString &data) const;
+    Q_INVOKABLE QString atob(const QString &data) const;
+
+    Q_INVOKABLE void quit() const;
+    Q_INVOKABLE void exit(int retCode) const;
+
+    Q_INVOKABLE QObject *createQmlObject(const QString &qml, QObject *parent,
+                                         const QUrl &url = QUrl(QStringLiteral("inline"))) const;
+    Q_INVOKABLE QQmlComponent *createComponent(const QUrl &url, QObject *parent) const;
+    Q_INVOKABLE QQmlComponent *createComponent(
+            const QUrl &url, QQmlComponent::CompilationMode mode = QQmlComponent::PreferSynchronous,
+            QObject *parent = nullptr) const;
+
+    Q_INVOKABLE QJSValue binding(const QJSValue &function) const;
+
+    // We can't make this invokable as it uses actual varargs
+    static ReturnedValue method_callLater(const FunctionObject *b, const Value *thisObject,
+                                          const Value *argv, int argc);
+
+#if QT_CONFIG(translation)
+    QString uiLanguage() const;
+    void setUiLanguage(const QString &uiLanguage);
+    QBindable<QString> uiLanguageBindable();
+#endif
+
+    // Not const because created on first use, and parented to this.
+    QQmlPlatform *platform();
+    QQmlApplication *application();
+
+    QObject *inputMethod() const;
+    QObject *styleHints() const;
+    QJSValue callLater() const;
 
 private:
-    void addAll();
-    ReturnedValue findAndAdd(const QString *name, bool &foundProperty) const;
+    friend struct ExecutionEngine;
+
+    QtObject(QV4::ExecutionEngine *engine);
+
+    QQmlEngine *qmlEngine() const { return m_engine->qmlEngine(); }
+    QJSEngine *jsEngine() const { return m_engine->jsEngine(); }
+    QV4::ExecutionEngine *v4Engine() const { return m_engine; }
+
+    QQmlPlatform *m_platform = nullptr;
+    QQmlApplication *m_application = nullptr;
+
+    QV4::ExecutionEngine *m_engine = nullptr;
+    QJSValue m_callLater;
 };
 
 struct ConsoleObject : Object

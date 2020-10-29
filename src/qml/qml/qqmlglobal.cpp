@@ -149,9 +149,12 @@ Q_AUTOTEST_EXPORT QQmlColorProvider *QQml_colorProvider(void)
 
 
 QQmlGuiProvider::~QQmlGuiProvider() {}
-QObject *QQmlGuiProvider::application(QObject *) { return new QQmlApplication(); }
+QQmlApplication *QQmlGuiProvider::application(QObject *parent)
+{
+    return new QQmlApplication(parent);
+}
 QStringList QQmlGuiProvider::fontFamilies() { return QStringList(); }
-bool QQmlGuiProvider::openUrlExternally(QUrl &) { return false; }
+bool QQmlGuiProvider::openUrlExternally(const QUrl &) { return false; }
 
 QObject *QQmlGuiProvider::inputMethod()
 {
