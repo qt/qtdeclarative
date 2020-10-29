@@ -631,6 +631,8 @@ static inline double ParseString(const QString &s, double localTZA)
             QStringLiteral("d MMMM, yyyy"),
             QStringLiteral("d MMMM, yyyy hh:mm"),
             QStringLiteral("d MMMM, yyyy hh:mm:ss"),
+
+            QStringLiteral("yyyy-MM-dd hh:mm:ss t"),
         };
 
         for (const QString &format : formats) {
