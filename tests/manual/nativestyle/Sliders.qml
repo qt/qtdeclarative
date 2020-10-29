@@ -92,7 +92,7 @@ ControlContainer {
                 to: 3.7
                 stepSize: 0.05
                 value: 3.5
-                property int qqc2_style_tickPosition: 2
+                property int qqc2_style_tickPosition: 3
             }
 
         }
@@ -137,6 +137,16 @@ ControlContainer {
                 value: 65
 
                 property int qqc2_style_tickPosition: 2
+            }
+            Slider {
+                // Should show 9 tickmarks
+                height: sliderHeight
+                orientation: Qt.Vertical
+                from: 3.3
+                to: 3.7
+                stepSize: 0.05
+                value: 3.5
+                property int qqc2_style_tickPosition: 3
             }
         }
     }
