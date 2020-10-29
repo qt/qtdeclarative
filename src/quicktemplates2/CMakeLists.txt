@@ -41,6 +41,7 @@ qt_internal_add_module(QuickTemplates2
         qquickheaderview.cpp qquickheaderview_p.h
         qquickheaderview_p_p.h
         qquickicon.cpp qquickicon_p.h
+        qquickindicatorbutton_p.cpp qquickindicatorbutton_p.h
         qquickitemdelegate.cpp qquickitemdelegate_p.h
         qquickitemdelegate_p_p.h
         qquicklabel.cpp qquicklabel_p.h

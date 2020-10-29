@@ -2552,14 +2552,16 @@ void QWindowsXPStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCo
                 d->drawBackground(theme);
             }
             if (maxedOut) {
-                theme.rect = proxy()->subControlRect(CC_ScrollBar, option, SC_ScrollBarSlider);
-                theme.rect = theme.rect.united(proxy()->subControlRect(CC_ScrollBar, option, SC_ScrollBarSubPage));
-                theme.rect = theme.rect.united(proxy()->subControlRect(CC_ScrollBar, option, SC_ScrollBarAddPage));
-                partId = scrollbar->orientation == Qt::Horizontal ? SBP_LOWERTRACKHORZ : SBP_LOWERTRACKVERT;
-                stateId = SCRBS_DISABLED;
-                theme.partId = partId;
-                theme.stateId = stateId;
-                d->drawBackground(theme);
+                if (sub & SC_ScrollBarSlider) {
+                    theme.rect = proxy()->subControlRect(CC_ScrollBar, option, SC_ScrollBarSlider);
+                    theme.rect = theme.rect.united(proxy()->subControlRect(CC_ScrollBar, option, SC_ScrollBarSubPage));
+                    theme.rect = theme.rect.united(proxy()->subControlRect(CC_ScrollBar, option, SC_ScrollBarAddPage));
+                    partId = scrollbar->orientation == Qt::Horizontal ? SBP_LOWERTRACKHORZ : SBP_LOWERTRACKVERT;
+                    stateId = SCRBS_DISABLED;
+                    theme.partId = partId;
+                    theme.stateId = stateId;
+                    d->drawBackground(theme);
+                }
             } else {
                 if (sub & SC_ScrollBarSubPage) {
                     theme.rect = proxy()->subControlRect(CC_ScrollBar, option, SC_ScrollBarSubPage);
@@ -3535,6 +3537,12 @@ QSize QWindowsXPStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt
             int &szh = slider->orientation == Qt::Horizontal ? sz.rheight() : sz.rwidth();
             if (slider->subControls & (SC_ScrollBarSlider | SC_ScrollBarGroove)) {
                 szw = qMax(szw, scrollBarSliderMin + 2 * scrollBarHeight);
+                szh = scrollBarHeight;
+            } else if (slider->subControls & (SC_ScrollBarAddLine| SC_ScrollBarSubLine)) {
+                // Assume that the AddLine and SubLine buttons have the same size, and just query
+                // for the size of AddLine
+                const QSize s = proxy()->subControlRect(CC_ScrollBar, slider, SC_ScrollBarAddLine).size();
+                szw = qMax(szw, s.width());
                 szh = scrollBarHeight;
             }
         }

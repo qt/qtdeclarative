@@ -34,6 +34,7 @@ HEADERS += \
     $$PWD/qquickheaderview_p.h \
     $$PWD/qquickheaderview_p_p.h \
     $$PWD/qquickicon_p.h \
+    $$PWD/qquickindicatorbutton_p.h \
     $$PWD/qquickitemdelegate_p.h \
     $$PWD/qquickitemdelegate_p_p.h \
     $$PWD/qquicklabel_p.h \
@@ -122,6 +123,7 @@ SOURCES += \
     $$PWD/qquickgroupbox.cpp \
     $$PWD/qquickheaderview.cpp \
     $$PWD/qquickicon.cpp \
+    $$PWD/qquickindicatorbutton_p.cpp \
     $$PWD/qquickitemdelegate.cpp \
     $$PWD/qquicklabel.cpp \
     $$PWD/qquickmenu.cpp \

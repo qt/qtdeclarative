@@ -54,9 +54,8 @@
 QT_BEGIN_NAMESPACE
 
 class QValidator;
-class QQuickSpinButton;
-class QQuickSpinButtonPrivate;
 class QQuickSpinBoxPrivate;
+class QQuickIndicatorButton;
 
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSpinBox : public QQuickControl
 {
@@ -69,8 +68,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSpinBox : public QQuickControl
     Q_PROPERTY(QValidator *validator READ validator WRITE setValidator NOTIFY validatorChanged FINAL)
     Q_PROPERTY(QJSValue textFromValue READ textFromValue WRITE setTextFromValue NOTIFY textFromValueChanged FINAL)
     Q_PROPERTY(QJSValue valueFromText READ valueFromText WRITE setValueFromText NOTIFY valueFromTextChanged FINAL)
-    Q_PROPERTY(QQuickSpinButton *up READ up CONSTANT FINAL)
-    Q_PROPERTY(QQuickSpinButton *down READ down CONSTANT FINAL)
+    Q_PROPERTY(QQuickIndicatorButton *up READ up CONSTANT FINAL)
+    Q_PROPERTY(QQuickIndicatorButton *down READ down CONSTANT FINAL)
     // 2.2 (Qt 5.9)
     Q_PROPERTY(Qt::InputMethodHints inputMethodHints READ inputMethodHints WRITE setInputMethodHints NOTIFY inputMethodHintsChanged FINAL REVISION(2, 2))
     Q_PROPERTY(bool inputMethodComposing READ isInputMethodComposing NOTIFY inputMethodComposingChanged FINAL REVISION(2, 2))
@@ -109,8 +108,8 @@ public:
     QJSValue valueFromText() const;
     void setValueFromText(const QJSValue &callback);
 
-    QQuickSpinButton *up() const;
-    QQuickSpinButton *down() const;
+    QQuickIndicatorButton *up() const;
+    QQuickIndicatorButton *down() const;
 
     // 2.2 (Qt 5.9)
     Qt::InputMethodHints inputMethodHints() const;
@@ -175,51 +174,6 @@ protected:
 private:
     Q_DISABLE_COPY(QQuickSpinBox)
     Q_DECLARE_PRIVATE(QQuickSpinBox)
-};
-
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickSpinButton : public QObject
-{
-    Q_OBJECT
-    Q_PROPERTY(bool pressed READ isPressed WRITE setPressed NOTIFY pressedChanged FINAL)
-    Q_PROPERTY(QQuickItem *indicator READ indicator WRITE setIndicator NOTIFY indicatorChanged FINAL)
-    // 2.1 (Qt 5.8)
-    Q_PROPERTY(bool hovered READ isHovered WRITE setHovered NOTIFY hoveredChanged FINAL REVISION(2, 1))
-    // 2.5 (Qt 5.12)
-    Q_PROPERTY(qreal implicitIndicatorWidth READ implicitIndicatorWidth NOTIFY implicitIndicatorWidthChanged FINAL REVISION(2, 5))
-    Q_PROPERTY(qreal implicitIndicatorHeight READ implicitIndicatorHeight NOTIFY implicitIndicatorHeightChanged FINAL REVISION(2, 5))
-    Q_CLASSINFO("DeferredPropertyNames", "indicator")
-    QML_ANONYMOUS
-    QML_ADDED_IN_VERSION(2, 0)
-
-public:
-    explicit QQuickSpinButton(QQuickSpinBox *parent);
-
-    bool isPressed() const;
-    void setPressed(bool pressed);
-
-    QQuickItem *indicator() const;
-    void setIndicator(QQuickItem *indicator);
-
-    // 2.1 (Qt 5.8)
-    bool isHovered() const;
-    void setHovered(bool hovered);
-
-    // 2.5 (Qt 5.12)
-    qreal implicitIndicatorWidth() const;
-    qreal implicitIndicatorHeight() const;
-
-Q_SIGNALS:
-    void pressedChanged();
-    void indicatorChanged();
-    // 2.1 (Qt 5.8)
-    Q_REVISION(2, 1) void hoveredChanged();
-    // 2.5 (Qt 5.12)
-    Q_REVISION(2, 5) void implicitIndicatorWidthChanged();
-    Q_REVISION(2, 5) void implicitIndicatorHeightChanged();
-
-private:
-    Q_DISABLE_COPY(QQuickSpinButton)
-    Q_DECLARE_PRIVATE(QQuickSpinButton)
 };
 
 QT_END_NAMESPACE

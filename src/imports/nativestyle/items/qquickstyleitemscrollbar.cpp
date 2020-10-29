@@ -56,6 +56,14 @@ StyleItemGeometry QQuickStyleItemScrollBar::calculateGeometry()
 
     StyleItemGeometry geometry;
     geometry.minimumSize = style()->sizeFromContents(QStyle::CT_ScrollBar, &styleOption, QSize(0, 0));
+    if (m_subControl == SubLine || m_subControl == AddLine) {
+        // So far, we know that only the windows style uses these subcontrols,
+        // so we can use hardcoded sizes...
+        QSize sz(16, 17);
+        if (styleOption.orientation == Qt::Vertical)
+            sz.transpose();
+        geometry.minimumSize = sz;
+    }
     geometry.implicitSize = geometry.minimumSize;
     styleOption.rect = QRect(QPoint(0, 0), geometry.implicitSize);
     geometry.layoutRect = style()->subElementRect(QStyle::SE_ScrollBarLayoutItem, &styleOption);
@@ -68,7 +76,27 @@ void QQuickStyleItemScrollBar::paintEvent(QPainter *painter) const
 {
     QStyleOptionSlider styleOption;
     initStyleOption(styleOption);
-    style()->drawComplexControl(QStyle::CC_ScrollBar, &styleOption, painter);
+    if (m_subControl == SubLine || m_subControl == AddLine) {
+        QStyle::SubControl sc = m_subControl == SubLine ? QStyle::SC_ScrollBarSubLine : QStyle::SC_ScrollBarAddLine;
+        QStyleOptionSlider opt = styleOption;
+        opt.subControls = QStyle::SC_ScrollBarAddLine
+                        | QStyle::SC_ScrollBarSubLine
+                        | QStyle::SC_ScrollBarGroove;
+
+        const qreal scale = window()->devicePixelRatio();
+        const QSize scrollBarMinSize = style()->sizeFromContents(QStyle::CT_ScrollBar, &opt, QSize(0, 0));
+        const QSize sz = scrollBarMinSize * scale;
+        QImage scrollBarImage(sz, QImage::Format_ARGB32_Premultiplied);
+        scrollBarImage.setDevicePixelRatio(scale);
+        QPainter p(&scrollBarImage);
+        opt.rect = QRect(QPoint(0, 0), scrollBarMinSize);
+        style()->drawComplexControl(QStyle::CC_ScrollBar, &opt, &p);
+        QRect sourceImageRect = style()->subControlRect(QStyle::CC_ScrollBar, &opt, sc);
+        sourceImageRect = QRect(sourceImageRect.topLeft() * scale, sourceImageRect.size() * scale);
+        painter->drawImage(QPoint(0, 0), scrollBarImage, sourceImageRect);
+    } else {
+        style()->drawComplexControl(QStyle::CC_ScrollBar, &styleOption, painter);
+    }
 }
 
 void QQuickStyleItemScrollBar::initStyleOption(QStyleOptionSlider &styleOption) const
@@ -76,9 +104,21 @@ void QQuickStyleItemScrollBar::initStyleOption(QStyleOptionSlider &styleOption) 
     initStyleOptionBase(styleOption);
     auto scrollBar = control<QQuickScrollBar>();
 
-    styleOption.subControls = m_subControl == Groove
-                            ? QStyle::SC_ScrollBarGroove | QStyle::SC_ScrollBarAddLine | QStyle::SC_ScrollBarSubLine
-                            : QStyle::SC_ScrollBarSlider;
+    switch (m_subControl) {
+    case Groove:
+        styleOption.subControls = QStyle::SC_ScrollBarGroove | QStyle::SC_ScrollBarAddLine | QStyle::SC_ScrollBarSubLine;
+        break;
+    case Handle:
+        styleOption.subControls = QStyle::SC_ScrollBarSlider;
+        break;
+    case AddLine:
+        styleOption.subControls = QStyle::SC_ScrollBarAddLine;
+        break;
+    case SubLine:
+        styleOption.subControls = QStyle::SC_ScrollBarSubLine;
+        break;
+    }
+
     styleOption.activeSubControls = QStyle::SC_None;
     styleOption.orientation = scrollBar->orientation();
     if (styleOption.orientation == Qt::Horizontal)
@@ -90,12 +130,14 @@ void QQuickStyleItemScrollBar::initStyleOption(QStyleOptionSlider &styleOption) 
     if (m_overrideState != None) {
         // In ScrollBar.qml we fade between two versions of
         // the handle, depending on if it's hovered or not
-        if (m_overrideState & AlwaysHovered) {
+
+        if (m_overrideState == AlwaysHovered) {
+            styleOption.activeSubControls = (styleOption.subControls & (QStyle::SC_ScrollBarSlider | QStyle::SC_ScrollBarGroove | QStyle::SC_ScrollBarAddLine | QStyle::SC_ScrollBarSubLine));
+        } else if (m_overrideState == NeverHovered) {
+            styleOption.activeSubControls &= ~(styleOption.subControls & (QStyle::SC_ScrollBarSlider | QStyle::SC_ScrollBarGroove | QStyle::SC_ScrollBarAddLine | QStyle::SC_ScrollBarSubLine));
+        } else if (m_overrideState  == AlwaysSunken) {
             styleOption.state |= QStyle::State_Sunken;
-            styleOption.activeSubControls = (styleOption.subControls & (QStyle::SC_ScrollBarSlider | QStyle::SC_ScrollBarGroove));
-        } else if (m_overrideState & NeverHovered) {
-            styleOption.state &= ~QStyle::State_Sunken;
-            styleOption.activeSubControls &= ~(styleOption.subControls & (QStyle::SC_ScrollBarSlider | QStyle::SC_ScrollBarGroove));
+            styleOption.activeSubControls = (styleOption.subControls & (QStyle::SC_ScrollBarSlider | QStyle::SC_ScrollBarGroove | QStyle::SC_ScrollBarAddLine | QStyle::SC_ScrollBarSubLine));
         }
     }
 

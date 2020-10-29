@@ -49,7 +49,7 @@
 //
 
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
-
+#include <QtQuickTemplates2/private/qquickindicatorbutton_p.h>
 QT_BEGIN_NAMESPACE
 
 class QQuickScrollBarAttached;
@@ -75,6 +75,10 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickScrollBar : public QQuickControl
     Q_PROPERTY(qreal minimumSize READ minimumSize WRITE setMinimumSize NOTIFY minimumSizeChanged FINAL REVISION(2, 4))
     Q_PROPERTY(qreal visualSize READ visualSize NOTIFY visualSizeChanged FINAL REVISION(2, 4))
     Q_PROPERTY(qreal visualPosition READ visualPosition NOTIFY visualPositionChanged FINAL REVISION(2, 4))
+
+    Q_PROPERTY(QQuickIndicatorButton *__decreaseVisual READ decreaseVisual CONSTANT FINAL)
+    Q_PROPERTY(QQuickIndicatorButton *__increaseVisual READ increaseVisual CONSTANT FINAL)
+
     QML_NAMED_ELEMENT(ScrollBar)
     QML_ATTACHED(QQuickScrollBarAttached)
     QML_ADDED_IN_VERSION(2, 0)
@@ -135,6 +139,9 @@ public:
     qreal visualSize() const;
     qreal visualPosition() const;
 
+    QQuickIndicatorButton *decreaseVisual();
+    QQuickIndicatorButton *increaseVisual();
+
 public Q_SLOTS:
     void increase();
     void decrease();
@@ -162,6 +169,9 @@ protected:
 
 #if QT_CONFIG(quicktemplates2_hover)
     void hoverChange() override;
+    void hoverEnterEvent(QHoverEvent *event) override;
+    void hoverMoveEvent(QHoverEvent *event) override;
+    void hoverLeaveEvent(QHoverEvent *event) override;
 #endif
 
 #if QT_CONFIG(accessibility)

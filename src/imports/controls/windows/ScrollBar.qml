@@ -40,10 +40,10 @@ import QtQuick.NativeStyle as NativeStyle
 NativeStyle.DefaultScrollBar {
     id: controlRoot
 
-    topPadding: orientation == Qt.Vertical ? 17 : 0
-    bottomPadding: orientation == Qt.Vertical ? 17 : 0
-    leftPadding: orientation == Qt.Horizontal ? 17 : 0
-    rightPadding: orientation == Qt.Horizontal ? 17 : 0
+    topPadding:    orientation === Qt.Vertical   ? controlRoot.__decreaseVisual.indicator.height : 0
+    bottomPadding: orientation === Qt.Vertical   ? controlRoot.__increaseVisual.indicator.height : 0
+    leftPadding:   orientation === Qt.Horizontal ? controlRoot.__decreaseVisual.indicator.width : 0
+    rightPadding:  orientation === Qt.Horizontal ? controlRoot.__increaseVisual.indicator.width : 0
 
     contentItem: NativeStyle.ScrollBar {
         control: controlRoot
@@ -80,5 +80,49 @@ NativeStyle.DefaultScrollBar {
         control: controlRoot
         subControl: NativeStyle.ScrollBar.Groove
         overrideState: NativeStyle.ScrollBar.NeverHovered
+    }
+
+    __decreaseVisual.indicator: NativeStyle.ScrollBar {
+        control: controlRoot
+        subControl: NativeStyle.ScrollBar.SubLine
+        overrideState: NativeStyle.ScrollBar.AlwaysHovered
+        opacity: controlRoot.__decreaseVisual.hovered ? 1 : 0
+        visible: contentItem instanceof NativeStyle.StyleItem
+        Behavior on opacity { NumberAnimation { duration: contentItem.transitionDuration } }
+        useNinePatchImage: false
+    }
+
+    NativeStyle.ScrollBar {
+        control: controlRoot
+        subControl: NativeStyle.ScrollBar.SubLine
+        overrideState: NativeStyle.ScrollBar.AlwaysSunken
+        opacity: controlRoot.__decreaseVisual.pressed ? 1 : 0
+        visible: contentItem instanceof NativeStyle.StyleItem
+        useNinePatchImage: false
+        z: 1
+    }
+
+    __increaseVisual.indicator: NativeStyle.ScrollBar {
+        control: controlRoot
+        subControl: NativeStyle.ScrollBar.AddLine
+        x: orientation == Qt.Horizontal ? controlRoot.width - width : 0
+        y: orientation == Qt.Vertical ? controlRoot.height - height : 0
+        overrideState: NativeStyle.ScrollBar.AlwaysHovered
+        opacity: controlRoot.__increaseVisual.hovered ? 1 : 0
+        visible: contentItem instanceof NativeStyle.StyleItem
+        Behavior on opacity { NumberAnimation { duration: contentItem.transitionDuration } }
+        useNinePatchImage: false
+    }
+
+    NativeStyle.ScrollBar {
+        control: controlRoot
+        subControl: NativeStyle.ScrollBar.AddLine
+        x: __increaseVisual.indicator.x
+        y: __increaseVisual.indicator.y
+        z: 1
+        overrideState: NativeStyle.ScrollBar.AlwaysSunken
+        opacity: controlRoot.__increaseVisual.pressed ? 1 : 0
+        visible: contentItem instanceof NativeStyle.StyleItem
+        useNinePatchImage: false
     }
 }

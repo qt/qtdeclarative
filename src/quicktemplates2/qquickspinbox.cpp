@@ -36,6 +36,7 @@
 
 #include "qquickspinbox_p.h"
 #include "qquickcontrol_p_p.h"
+#include "qquickindicatorbutton_p.h"
 #include "qquickdeferredexecute_p_p.h"
 
 #include <QtGui/qguiapplication.h>
@@ -149,30 +150,12 @@ public:
     int delayTimer = 0;
     int repeatTimer = 0;
     QString displayText;
-    QQuickSpinButton *up = nullptr;
-    QQuickSpinButton *down = nullptr;
+    QQuickIndicatorButton *up = nullptr;
+    QQuickIndicatorButton *down = nullptr;
     QValidator *validator = nullptr;
     mutable QJSValue textFromValue;
     mutable QJSValue valueFromText;
     Qt::InputMethodHints inputMethodHints = Qt::ImhDigitsOnly;
-};
-
-class QQuickSpinButtonPrivate : public QObjectPrivate
-{
-    Q_DECLARE_PUBLIC(QQuickSpinButton)
-
-public:
-    static QQuickSpinButtonPrivate *get(QQuickSpinButton *button)
-    {
-        return button->d_func();
-    }
-
-    void cancelIndicator();
-    void executeIndicator(bool complete = false);
-
-    bool pressed = false;
-    bool hovered = false;
-    QQuickDeferredPointer<QQuickItem> indicator;
 };
 
 int QQuickSpinBoxPrivate::boundValue(int value, bool wrap) const
@@ -443,8 +426,8 @@ QQuickSpinBox::QQuickSpinBox(QQuickItem *parent)
     : QQuickControl(*(new QQuickSpinBoxPrivate), parent)
 {
     Q_D(QQuickSpinBox);
-    d->up = new QQuickSpinButton(this);
-    d->down = new QQuickSpinButton(this);
+    d->up = new QQuickIndicatorButton(this);
+    d->down = new QQuickIndicatorButton(this);
 
     setFlag(ItemIsFocusScope);
     setFiltersChildMouseEvents(true);
@@ -741,7 +724,7 @@ void QQuickSpinBox::setValueFromText(const QJSValue &callback)
 
     \sa increase()
 */
-QQuickSpinButton *QQuickSpinBox::up() const
+QQuickIndicatorButton *QQuickSpinBox::up() const
 {
     Q_D(const QQuickSpinBox);
     return d->up;
@@ -761,7 +744,7 @@ QQuickSpinButton *QQuickSpinBox::up() const
 
     \sa decrease()
 */
-QQuickSpinButton *QQuickSpinBox::down() const
+QQuickIndicatorButton *QQuickSpinBox::down() const
 {
     Q_D(const QQuickSpinBox);
     return d->down;
@@ -1002,8 +985,8 @@ void QQuickSpinBox::classBegin()
 void QQuickSpinBox::componentComplete()
 {
     Q_D(QQuickSpinBox);
-    QQuickSpinButtonPrivate::get(d->up)->executeIndicator(true);
-    QQuickSpinButtonPrivate::get(d->down)->executeIndicator(true);
+    QQuickIndicatorButtonPrivate::get(d->up)->executeIndicator(true);
+    QQuickIndicatorButtonPrivate::get(d->down)->executeIndicator(true);
 
     QQuickControl::componentComplete();
     if (!d->setValue(d->value, /* allowWrap = */ false, /* modified = */ false)) {
@@ -1068,118 +1051,6 @@ void QQuickSpinBox::accessibilityActiveChanged(bool active)
         setAccessibleProperty("editable", d->editable);
 }
 #endif
-
-static inline QString indicatorName() { return QStringLiteral("indicator"); }
-
-void QQuickSpinButtonPrivate::cancelIndicator()
-{
-    Q_Q(QQuickSpinButton);
-    quickCancelDeferred(q, indicatorName());
-}
-
-void QQuickSpinButtonPrivate::executeIndicator(bool complete)
-{
-    Q_Q(QQuickSpinButton);
-    if (indicator.wasExecuted())
-        return;
-
-    if (!indicator || complete)
-        quickBeginDeferred(q, indicatorName(), indicator);
-    if (complete)
-        quickCompleteDeferred(q, indicatorName(), indicator);
-}
-
-QQuickSpinButton::QQuickSpinButton(QQuickSpinBox *parent)
-    : QObject(*(new QQuickSpinButtonPrivate), parent)
-{
-}
-
-bool QQuickSpinButton::isPressed() const
-{
-    Q_D(const QQuickSpinButton);
-    return d->pressed;
-}
-
-void QQuickSpinButton::setPressed(bool pressed)
-{
-    Q_D(QQuickSpinButton);
-    if (d->pressed == pressed)
-        return;
-
-    d->pressed = pressed;
-    emit pressedChanged();
-}
-
-QQuickItem *QQuickSpinButton::indicator() const
-{
-    QQuickSpinButtonPrivate *d = const_cast<QQuickSpinButtonPrivate *>(d_func());
-    if (!d->indicator)
-        d->executeIndicator();
-    return d->indicator;
-}
-
-void QQuickSpinButton::setIndicator(QQuickItem *indicator)
-{
-    Q_D(QQuickSpinButton);
-    if (d->indicator == indicator)
-        return;
-
-    if (!d->indicator.isExecuting())
-        d->cancelIndicator();
-
-    const qreal oldImplicitIndicatorWidth = implicitIndicatorWidth();
-    const qreal oldImplicitIndicatorHeight = implicitIndicatorHeight();
-
-    QQuickSpinBox *spinBox = static_cast<QQuickSpinBox *>(parent());
-    QQuickSpinBoxPrivate::get(spinBox)->removeImplicitSizeListener(d->indicator);
-    QQuickControlPrivate::hideOldItem(d->indicator);
-    d->indicator = indicator;
-
-    if (indicator) {
-        if (!indicator->parentItem())
-            indicator->setParentItem(spinBox);
-        QQuickSpinBoxPrivate::get(spinBox)->addImplicitSizeListener(indicator);
-    }
-
-    if (!qFuzzyCompare(oldImplicitIndicatorWidth, implicitIndicatorWidth()))
-        emit implicitIndicatorWidthChanged();
-    if (!qFuzzyCompare(oldImplicitIndicatorHeight, implicitIndicatorHeight()))
-        emit implicitIndicatorHeightChanged();
-    if (!d->indicator.isExecuting())
-        emit indicatorChanged();
-}
-
-bool QQuickSpinButton::isHovered() const
-{
-    Q_D(const QQuickSpinButton);
-    return d->hovered;
-}
-
-void QQuickSpinButton::setHovered(bool hovered)
-{
-    Q_D(QQuickSpinButton);
-    if (d->hovered == hovered)
-        return;
-
-    d->hovered = hovered;
-    emit hoveredChanged();
-}
-
-qreal QQuickSpinButton::implicitIndicatorWidth() const
-{
-    Q_D(const QQuickSpinButton);
-    if (!d->indicator)
-        return 0;
-    return d->indicator->implicitWidth();
-}
-
-qreal QQuickSpinButton::implicitIndicatorHeight() const
-{
-    Q_D(const QQuickSpinButton);
-    if (!d->indicator)
-        return 0;
-    return d->indicator->implicitHeight();
-}
 
 QT_END_NAMESPACE
 

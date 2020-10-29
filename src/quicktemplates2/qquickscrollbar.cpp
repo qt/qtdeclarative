@@ -254,10 +254,56 @@ void QQuickScrollBarPrivate::resizeContent()
     }
 }
 
+void QQuickScrollBarPrivate::itemImplicitWidthChanged(QQuickItem *item)
+{
+    Q_Q(QQuickScrollBar);
+    QQuickControlPrivate::itemImplicitWidthChanged(item);
+    QQuickIndicatorButton *indicatorButton = q->decreaseVisual();
+    if (!indicatorButton || item != indicatorButton->indicator()) {
+        indicatorButton = q->increaseVisual();
+        if (!indicatorButton || item != indicatorButton->indicator())
+            return;
+    }
+    if (indicatorButton)
+        emit indicatorButton->implicitIndicatorWidthChanged();
+}
+
+void QQuickScrollBarPrivate::itemImplicitHeightChanged(QQuickItem *item)
+{
+    Q_Q(QQuickScrollBar);
+    QQuickControlPrivate::itemImplicitHeightChanged(item);
+    QQuickIndicatorButton *indicatorButton = q->decreaseVisual();
+    if (!indicatorButton || item != indicatorButton->indicator()) {
+        indicatorButton = q->increaseVisual();
+        if (!indicatorButton || item != indicatorButton->indicator())
+            return;
+    }
+    if (indicatorButton)
+        emit indicatorButton->implicitIndicatorHeightChanged();
+}
+
 void QQuickScrollBarPrivate::handlePress(const QPointF &point)
 {
     Q_Q(QQuickScrollBar);
     QQuickControlPrivate::handlePress(point);
+    if (QQuickIndicatorButton *indicatorButton = q->decreaseVisual()) {
+        QQuickItem *decreaseArrow = indicatorButton->indicator();
+        if (decreaseArrow && decreaseArrow->contains(q->mapToItem(decreaseArrow, point + QPointF(0.5, 0.5)))) {
+            indicatorButton->setPressed(true);
+            q->decrease();
+            return;
+        }
+    }
+
+    if (QQuickIndicatorButton *increaseObject = q->increaseVisual()) {
+        QQuickItem *increaseArrow = increaseObject->indicator();
+        if (increaseArrow && increaseArrow->contains(q->mapToItem(increaseArrow, point + QPointF(0.5, 0.5)))) {
+            increaseObject->setPressed(true);
+            q->increase();
+            return;
+        }
+    }
+
     offset = positionAt(point) - position;
     qreal sz = qMax(size, logicalPosition(minimumSize));
     if (offset < 0 || offset > sz)
@@ -269,6 +315,16 @@ void QQuickScrollBarPrivate::handleMove(const QPointF &point)
 {
     Q_Q(QQuickScrollBar);
     QQuickControlPrivate::handleMove(point);
+
+    /*
+     * handleMove() will be called as soon as you hold the mouse button down *anywhere* on the
+     * ScrollBar, including the increase/decrease button indicator areas. So without the following
+     * early return, it would move the scrollbar handle to one of its extremeties. That would
+     * ruin the behavior we would like when clicking e.g. the "increase button": To step the
+     * scrollbar gently.
+     */
+    if (!pressed)
+        return;
     qreal pos = qBound<qreal>(0.0, positionAt(point) - offset, 1.0 - size);
     if (snapMode == QQuickScrollBar::SnapAlways)
         pos = snapPosition(pos);
@@ -279,6 +335,14 @@ void QQuickScrollBarPrivate::handleRelease(const QPointF &point)
 {
     Q_Q(QQuickScrollBar);
     QQuickControlPrivate::handleRelease(point);
+
+    if (orientation == Qt::Vertical) {
+        if (point.y() < q->topPadding() || point.y() >= (q->height() - q->bottomPadding()))
+            return;
+    } else /* orientation == Qt::Horizontal */{
+        if (point.x() < q->leftPadding() || point.x() >= (q->width() - q->rightPadding()))
+            return;
+    }
     qreal pos = qBound<qreal>(0.0, positionAt(point) - offset, 1.0 - size);
     if (snapMode != QQuickScrollBar::NoSnap)
         pos = snapPosition(pos);
@@ -302,6 +366,23 @@ void QQuickScrollBarPrivate::visualAreaChange(const VisualArea &newVisualArea, c
         emit q->visualSizeChanged();
     if (!qFuzzyCompare(newVisualArea.position, oldVisualArea.position))
         emit q->visualPositionChanged();
+}
+
+void QQuickScrollBarPrivate::updateHover(const QPointF &pos, std::optional<bool> newHoverState)
+{
+    Q_Q(QQuickScrollBar);
+    auto updateHoverOnButton = [&](QQuickIndicatorButton *sbButton) {
+        if (sbButton) {
+            bool hovered = newHoverState.value_or(false);
+            if (!newHoverState.has_value()) {
+                if (QQuickItem *indicator = sbButton->indicator())
+                    hovered = indicator->contains(q->mapToItem(indicator, pos));
+            }
+            sbButton->setHovered(hovered);
+        }
+    };
+    updateHoverOnButton(q->decreaseVisual());
+    updateHoverOnButton(q->increaseVisual());
 }
 
 QQuickScrollBar::QQuickScrollBar(QQuickItem *parent)
@@ -451,6 +532,12 @@ bool QQuickScrollBar::isPressed() const
 void QQuickScrollBar::setPressed(bool pressed)
 {
     Q_D(QQuickScrollBar);
+    if (!pressed) {
+        if (QQuickIndicatorButton *button = decreaseVisual())
+            button->setPressed(false);
+        if (QQuickIndicatorButton *button = increaseVisual())
+            button->setPressed(false);
+    }
     if (d->pressed == pressed)
         return;
 
@@ -681,6 +768,22 @@ qreal QQuickScrollBar::visualPosition() const
     return d->visualArea().position;
 }
 
+QQuickIndicatorButton *QQuickScrollBar::decreaseVisual()
+{
+    Q_D(QQuickScrollBar);
+    if (!d->decreaseVisual)
+        d->decreaseVisual = new QQuickIndicatorButton(this);
+    return d->decreaseVisual;
+}
+
+QQuickIndicatorButton *QQuickScrollBar::increaseVisual()
+{
+    Q_D(QQuickScrollBar);
+    if (!d->increaseVisual)
+        d->increaseVisual = new QQuickIndicatorButton(this);
+    return d->increaseVisual;
+}
+
 /*!
     \qmlmethod void QtQuick.Controls::ScrollBar::increase()
 
@@ -729,6 +832,28 @@ void QQuickScrollBar::hoverChange()
     d->updateActive();
 }
 #endif
+
+void QQuickScrollBar::hoverEnterEvent(QHoverEvent *event)
+{
+    Q_D(QQuickScrollBar);
+    QQuickControl::hoverEnterEvent(event);
+    d->updateHover(event->position());
+}
+
+void QQuickScrollBar::hoverMoveEvent(QHoverEvent *event)
+{
+    Q_D(QQuickScrollBar);
+    QQuickControl::hoverMoveEvent(event);
+    d->updateHover(event->position());
+}
+
+void QQuickScrollBar::hoverLeaveEvent(QHoverEvent *event)
+{
+    Q_D(QQuickScrollBar);
+    QQuickControl::hoverLeaveEvent(event);
+
+    d->updateHover(QPoint(), false);    //position is not needed when we force it to unhover
+}
 
 #if QT_CONFIG(accessibility)
 void QQuickScrollBar::accessibilityActiveChanged(bool active)

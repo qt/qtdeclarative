@@ -52,6 +52,8 @@ public:
     enum SubControl {
         Groove = 1,
         Handle,
+        AddLine,
+        SubLine
     };
     Q_ENUM(SubControl)
 

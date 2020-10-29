@@ -55,6 +55,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickFlickable;
+class QQuickIndicatorButton;
 
 class QQuickScrollBarPrivate : public QQuickControlPrivate
 {
@@ -82,6 +83,8 @@ public:
     void setInteractive(bool interactive);
     void updateActive();
     void resizeContent() override;
+    void itemImplicitWidthChanged(QQuickItem *item) override;
+    void itemImplicitHeightChanged(QQuickItem *item) override;
 
     void handlePress(const QPointF &point) override;
     void handleMove(const QPointF &point) override;
@@ -90,6 +93,10 @@ public:
 
     void visualAreaChange(const VisualArea &newVisualArea, const VisualArea &oldVisualArea);
 
+    void updateHover(const QPointF &pos,  std::optional<bool> newHoverState = {});
+
+    QQuickIndicatorButton *decreaseVisual = nullptr;
+    QQuickIndicatorButton *increaseVisual = nullptr;
     qreal size = 0;
     qreal position = 0;
     qreal stepSize = 0;

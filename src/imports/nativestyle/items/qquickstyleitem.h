@@ -186,6 +186,7 @@ public:
         None = 0,
         AlwaysHovered,
         NeverHovered,
+        AlwaysSunken
     };
     Q_ENUM(OverrideState)
 

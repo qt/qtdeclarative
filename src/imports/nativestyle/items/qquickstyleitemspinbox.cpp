@@ -35,6 +35,7 @@
 ****************************************************************************/
 
 #include "qquickstyleitemspinbox.h"
+#include <QtQuickTemplates2/private/qquickindicatorbutton_p.h>
 
 QFont QQuickStyleItemSpinBox::styleFont(QQuickItem *control) const
 {
@@ -45,8 +46,8 @@ void QQuickStyleItemSpinBox::connectToControl() const
 {
     QQuickStyleItem::connectToControl();
     auto spinbox = control<QQuickSpinBox>();
-    connect(spinbox->up(), &QQuickSpinButton::pressedChanged, this, &QQuickStyleItem::markImageDirty);
-    connect(spinbox->down(), &QQuickSpinButton::pressedChanged, this, &QQuickStyleItem::markImageDirty);
+    connect(spinbox->up(), &QQuickIndicatorButton::pressedChanged, this, &QQuickStyleItem::markImageDirty);
+    connect(spinbox->down(), &QQuickIndicatorButton::pressedChanged, this, &QQuickStyleItem::markImageDirty);
 }
 
 StyleItemGeometry QQuickStyleItemSpinBox::calculateGeometry()

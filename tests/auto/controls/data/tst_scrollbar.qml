@@ -74,6 +74,13 @@ TestCase {
     }
 
     Component {
+        id: scrollBarWithDefaultPadding
+        ScrollBar {
+            minimumSize: 0
+        }
+    }
+
+    Component {
         id: flickable
         Flickable {
             width: 100
@@ -197,13 +204,30 @@ TestCase {
     }
 
     function test_mouse(data) {
-        var control = createTemporaryObject(scrollBar, testCase, data.properties)
+        var control = createTemporaryObject(scrollBarWithDefaultPadding, testCase, data.properties)
         verify(control)
+        // ### we should consider calling updateGeometry() from QQuickStyleItem::componentComplete()
+        // to avoid the wait here...
+        if (control.__decreaseVisual.indicator !== null)
+            waitForItemPolished(control.__decreaseVisual.indicator)
+
+        var grooveRange = {
+            start: {
+               x: control.orientation == Qt.Horizontal ? control.leftPadding : 0,
+               y: control.orientation == Qt.Vertical ? control.topPadding : 0
+            },
+            end: {
+               x: control.orientation == Qt.Horizontal ? control.width - control.rightPadding : 0,
+               y: control.orientation == Qt.Vertical ? control.height - control.bottomPadding: 0
+            },
+            width : control.width - control.leftPadding - control.rightPadding,
+            height: control.height - control.topPadding - control.bottomPadding
+        }
 
         var pressedSpy = signalSpy.createObject(control, {target: control, signalName: "pressedChanged"})
         verify(pressedSpy.valid)
 
-        mousePress(control, 0, 0, Qt.LeftButton)
+        mousePress(control, grooveRange.start.x, grooveRange.start.y, Qt.LeftButton)
         compare(pressedSpy.count, 1)
         compare(control.pressed, true)
         compare(control.position, 0.0)
@@ -233,15 +257,35 @@ TestCase {
         compare(control.pressed, true)
         compare(control.position, 1.0)
 
-        mouseMove(control, control.width * 0.75, control.height * 0.75, 0)
+        mouseMove(control, grooveRange.start.x + grooveRange.width * 0.75, grooveRange.start.y + grooveRange.height * 0.75, 0)
         compare(pressedSpy.count, 3)
         compare(control.pressed, true)
-        compare(control.position, 0.75)
+        fuzzyCompare(control.position, 0.75, 0.01)
 
-        mouseRelease(control, control.width * 0.25, control.height * 0.25, Qt.LeftButton)
+        mouseRelease(control, grooveRange.start.x + grooveRange.width * 0.25, grooveRange.start.y + grooveRange.height * 0.25, Qt.LeftButton)
         compare(pressedSpy.count, 4)
         compare(control.pressed, false)
-        compare(control.position, 0.25)
+        fuzzyCompare(control.position, 0.25, 0.01)
+
+        if (control.__decreaseVisual.indicator !== null) {
+            var p = control.__decreaseVisual.indicator.mapToItem(control, Qt.point(0, 0))
+            mousePress(control, p.x, p.y, Qt.LeftButton)
+            compare(pressedSpy.count, 4)
+            compare(control.pressed, false)
+            compare(control.__decreaseVisual.pressed, true)
+            fuzzyCompare(control.position, 0.15, 0.01)
+            mouseRelease(control.__decreaseVisual.indicator, 0, 0, Qt.LeftButton)
+            compare(control.__decreaseVisual.pressed, false)
+
+            p = control.__increaseVisual.indicator.mapToItem(control, Qt.point(0, 0))
+            mousePress(control, p.x, p.y, Qt.LeftButton)
+            compare(pressedSpy.count, 4)
+            compare(control.pressed, false)
+            compare(control.__increaseVisual.pressed, true)
+            fuzzyCompare(control.position, 0.25, 0.01)
+            mouseRelease(control.__increaseVisual.indicator, 0, 0, Qt.LeftButton)
+            compare(control.__increaseVisual.pressed, false)
+        }
     }
 
     function test_touch_data() {
