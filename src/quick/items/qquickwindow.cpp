@@ -2865,26 +2865,29 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, bool isG
         return;
 
     // TODO: unite this mouse point delivery with the synthetic mouse event below
-    if (isMouse && (isGrabber || (item->acceptedMouseButtons() & static_cast<QSinglePointEvent *>(pointerEvent)->button()))) {
-        // The only reason to already have a mouse grabber here is
-        // synthetic events - flickable sends one when setPressDelay is used.
-        auto oldMouseGrabber = pointerEvent->exclusiveGrabber(pointerEvent->point(0));
-        pointerEvent->accept();
-        if (isGrabber && sendFilteredPointerEvent(pointerEvent, item))
-            return;
-        localizePointerEvent(pointerEvent, item);
-        QCoreApplication::sendEvent(item, pointerEvent);
-        if (pointerEvent->isAccepted()) {
-            auto &point = pointerEvent->point(0);
-            auto mouseGrabber = pointerEvent->exclusiveGrabber(point);
-            if (mouseGrabber && mouseGrabber != item && mouseGrabber != oldMouseGrabber) {
-                // we don't need item->mouseUngrabEvent() because QQuickWindowPrivate::onGrabChanged does it
-            } else if (item->isEnabled() && item->isVisible()) {
-                pointerEvent->setExclusiveGrabber(point, item);
+    if (isMouse) {
+        auto button = static_cast<QSinglePointEvent *>(pointerEvent)->button();
+        if ((isGrabber && button == Qt::NoButton) || item->acceptedMouseButtons().testFlag(button)) {
+            // The only reason to already have a mouse grabber here is
+            // synthetic events - flickable sends one when setPressDelay is used.
+            auto oldMouseGrabber = pointerEvent->exclusiveGrabber(pointerEvent->point(0));
+            pointerEvent->accept();
+            if (isGrabber && sendFilteredPointerEvent(pointerEvent, item))
+                return;
+            localizePointerEvent(pointerEvent, item);
+            QCoreApplication::sendEvent(item, pointerEvent);
+            if (pointerEvent->isAccepted()) {
+                auto &point = pointerEvent->point(0);
+                auto mouseGrabber = pointerEvent->exclusiveGrabber(point);
+                if (mouseGrabber && mouseGrabber != item && mouseGrabber != oldMouseGrabber) {
+                    // we don't need item->mouseUngrabEvent() because QQuickWindowPrivate::onGrabChanged does it
+                } else if (item->isEnabled() && item->isVisible()) {
+                    pointerEvent->setExclusiveGrabber(point, item);
+                }
+                point.setAccepted(true);
             }
-            point.setAccepted(true);
+            return;
         }
-        return;
     }
 
     if (!isTouchEvent(pointerEvent))
