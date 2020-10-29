@@ -1344,15 +1344,18 @@ void tst_qquickitem::mousePropagationToParent()
 
 void tst_qquickitem::touchEventAcceptIgnore_data()
 {
-    QTest::addColumn<bool>("itemSupportsTouch");
+    QTest::addColumn<bool>("itemAcceptsTouch");
+    QTest::addColumn<bool>("itemAcceptsTouchEvents");
 
-    QTest::newRow("with touch") << true;
-    QTest::newRow("without touch") << false;
+    QTest::newRow("accepts touch, accepts events") << true << true;
+    QTest::newRow("accepts touch, ignores events") << true << false;
+    QTest::newRow("doesn't accept touch, gets no events") << false << false;
 }
 
 void tst_qquickitem::touchEventAcceptIgnore()
 {
-    QFETCH(bool, itemSupportsTouch);
+    QFETCH(bool, itemAcceptsTouch);
+    QFETCH(bool, itemAcceptsTouchEvents);
 
     TestWindow window;
     window.resize(100, 100);
@@ -1362,74 +1365,27 @@ void tst_qquickitem::touchEventAcceptIgnore()
     QScopedPointer<TestItem> item(new TestItem);
     item->setSize(QSizeF(100, 100));
     item->setParentItem(window.contentItem());
-    item->acceptIncomingTouchEvents = itemSupportsTouch;
+    if (itemAcceptsTouch)
+        item->setAcceptTouchEvents(itemAcceptsTouch); // it's false by default in Qt 6
+    item->acceptIncomingTouchEvents = itemAcceptsTouchEvents;
 
     static QPointingDevice* device = QTest::createTouchDevice();
 
     // Send Begin, Update & End touch sequence
-    {
-        QMutableEventPoint point(1, QEventPoint::State::Pressed);
-        point.setPosition(QPointF(50, 50));
-        point.setGlobalPosition(point.position());
+    item->touchEventReached = false;
+    QTest::touchEvent(&window, device).press(1, QPoint(50, 50), &window);
+    QQuickTouchUtils::flush(&window);
+    QTRY_COMPARE(item->touchEventReached, itemAcceptsTouch);
 
-        QTouchEvent event(QEvent::TouchBegin, device,
-                          Qt::NoModifier,
-                          QList<QEventPoint>() << point);
-        event.setAccepted(true);
+    item->touchEventReached = false;
+    QTest::touchEvent(&window, device).move(1, QPoint(60, 60), &window);
+    QQuickTouchUtils::flush(&window);
+    QTRY_COMPARE(item->touchEventReached, itemAcceptsTouchEvents);
 
-        item->touchEventReached = false;
-
-        bool accepted = window.event(&event);
-        QQuickTouchUtils::flush(&window);
-
-        QVERIFY(item->touchEventReached);
-
-        // always true because QtQuick always eats touch events so as to not
-        // allow QtGui to synthesise them for us.
-        QCOMPARE(accepted && event.isAccepted(), true);
-    }
-    {
-        QMutableEventPoint point(1, QEventPoint::State::Updated);
-        point.setPosition(QPointF(60, 60));
-        point.setGlobalPosition(point.position());
-
-        QTouchEvent event(QEvent::TouchUpdate, device,
-                          Qt::NoModifier,
-                          QList<QEventPoint>() << point);
-        event.setAccepted(true);
-
-        item->touchEventReached = false;
-
-        bool accepted = window.event(&event);
-        QQuickTouchUtils::flush(&window);
-
-        QCOMPARE(item->touchEventReached, itemSupportsTouch);
-
-        // always true because QtQuick always eats touch events so as to not
-        // allow QtGui to synthesise them for us.
-        QCOMPARE(accepted && event.isAccepted(), true);
-    }
-    {
-        QMutableEventPoint point(1, QEventPoint::State::Released);
-        point.setPosition(QPointF(60, 60));
-        point.setGlobalPosition(point.position());
-
-        QTouchEvent event(QEvent::TouchEnd, device,
-                          Qt::NoModifier,
-                          QList<QEventPoint>() << point);
-        event.setAccepted(true);
-
-        item->touchEventReached = false;
-
-        bool accepted = window.event(&event);
-        QQuickTouchUtils::flush(&window);
-
-        QCOMPARE(item->touchEventReached, itemSupportsTouch);
-
-        // always true because QtQuick always eats touch events so as to not
-        // allow QtGui to synthesise them for us.
-        QCOMPARE(accepted && event.isAccepted(), true);
-    }
+    item->touchEventReached = false;
+    QTest::touchEvent(&window, device).release(1, QPoint(60, 60), &window);
+    QQuickTouchUtils::flush(&window);
+    QTRY_COMPARE(item->touchEventReached, itemAcceptsTouchEvents);
 }
 
 void tst_qquickitem::polishOutsideAnimation()

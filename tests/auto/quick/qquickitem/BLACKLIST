@@ -2,5 +2,3 @@
 xcb
 [qtBug60123]
 * # QTBUG-86729
-[touchEventAcceptIgnore]
-* # QTBUG-86729
