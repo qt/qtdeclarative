@@ -52,6 +52,8 @@
 #include <QMainWindow>
 #endif
 
+Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
+
 class TestItem : public QQuickItem
 {
 Q_OBJECT
@@ -78,15 +80,33 @@ public:
     QPoint lastWheelEventGlobalPos;
     int languageChangeEventCount = 0;
 protected:
-    void focusInEvent(QFocusEvent *) override { Q_ASSERT(!focused); focused = true; }
-    void focusOutEvent(QFocusEvent *) override { Q_ASSERT(focused); focused = false; }
-    void mousePressEvent(QMouseEvent *event) override { event->accept(); ++pressCount; }
-    void mouseReleaseEvent(QMouseEvent *event) override { event->accept(); ++releaseCount; }
+    void focusInEvent(QFocusEvent *event) override {
+        qCDebug(lcTests) << objectName() << event;
+        Q_ASSERT(!focused);
+        focused = true;
+    }
+    void focusOutEvent(QFocusEvent *event) override {
+        qCDebug(lcTests) << objectName() << event;
+        Q_ASSERT(focused);
+        focused = false;
+    }
+    void mousePressEvent(QMouseEvent *event) override {
+        qCDebug(lcTests) << objectName() << event;
+        // Tradition holds that an item or widget does not need to accept a mouse event:
+        // it arrives pre-accepted.
+        ++pressCount;
+    }
+    void mouseReleaseEvent(QMouseEvent *event) override {
+        qCDebug(lcTests) << objectName() << event;
+        ++releaseCount;
+    }
     void touchEvent(QTouchEvent *event) override {
+        qCDebug(lcTests) << objectName() << event;
         touchEventReached = true;
         event->setAccepted(acceptIncomingTouchEvents);
     }
     void wheelEvent(QWheelEvent *event) override {
+        qCDebug(lcTests) << objectName() << event;
         event->accept();
         ++wheelCount;
         timestamp = event->timestamp();
@@ -95,9 +115,10 @@ protected:
     }
     bool event(QEvent *e) override
     {
+        Q_ASSERT(e->isAccepted()); // every event is constructed with the accept flag initialized to true
         if (e->type() == QEvent::LanguageChange)
             languageChangeEventCount++;
-        return QQuickItem::event(e);
+        return QQuickItem::event(e); // default dispatch
     }
 };
 
@@ -179,6 +200,7 @@ private slots:
     void enabledFocus();
 
     void mouseGrab();
+    void mousePropagationToParent();
     void touchEventAcceptIgnore_data();
     void touchEventAcceptIgnore();
     void polishOutsideAnimation();
@@ -1316,6 +1338,37 @@ void tst_qquickitem::mouseGrab()
     QCOMPARE(child2->releaseCount, 2);
 }
 
+void tst_qquickitem::mousePropagationToParent()
+{
+    QQuickWindow window;
+    window.resize(200, 200);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    auto devPriv = QPointingDevicePrivate::get(QPointingDevice::primaryPointingDevice());
+
+    auto child1 = new TestItem(window.contentItem());
+    child1->setObjectName(QStringLiteral("child1"));
+    child1->setAcceptedMouseButtons(Qt::LeftButton);
+    child1->setSize(QSizeF(200, 100));
+
+    auto child2 = new TestItem(child1);
+    child2->setObjectName(QStringLiteral("child2"));
+    child2->setAcceptedMouseButtons(Qt::LeftButton);
+    child2->setSize(QSizeF(200, 100));
+
+    QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50,50));
+    // The event is pre-accepted; child2 gets it first because it's on top,
+    // and it does NOT call QPointerEvent::accept(), but by tradition,
+    // the event stops there anyway: child1 does not see it.
+    QTRY_COMPARE(child2->pressCount, 1);
+    QCOMPARE(child1->pressCount, 0);
+    // child1 also does not explicitly grab, but the grab happens because the event is accepted.
+    QCOMPARE(devPriv->firstPointExclusiveGrabber(), child2);
+    QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, QPoint(50,50));
+    QTRY_COMPARE(child2->releaseCount, 1);
+    QTRY_COMPARE(child1->releaseCount, 0);
+}
+
 void tst_qquickitem::touchEventAcceptIgnore_data()
 {
     QTest::addColumn<bool>("itemSupportsTouch");
@@ -1610,6 +1663,7 @@ void tst_qquickitem::hoverEvent_data()
 }
 
 // ### For some unknown reason QTest::mouseMove() isn't working correctly.
+// TODO Qt 6: it should work now
 static void sendMouseMove(QObject *object, const QPoint &position)
 {
     QMouseEvent moveEvent(QEvent::MouseMove, position, Qt::NoButton, Qt::NoButton, Qt::NoModifier);
