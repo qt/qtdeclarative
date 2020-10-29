@@ -4871,95 +4871,45 @@ void QMacStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComplex 
                 [slider.cell startTrackingAt:pressPoint inView:slider];
             }
 
-            d->drawNSViewInRect(slider, opt->rect, p, ^(CGContextRef ctx, const CGRect &rect) {
-                QMacAutoReleasePool pool;
+            d->drawNSViewInRect(slider, opt->rect, p, ^(CGContextRef, const CGRect &) {
+                // Note that we don't support drawing the slider upside down. When this
+                // is needed, simply set scale = -1 on the QML control / style item instead.
+                NSSliderCell *cell = slider.cell;
 
-                // Since the GC is flipped, upsideDown means *not* inverted when vertical.
-                const bool verticalFlip = !isHorizontal && !sl->upsideDown; // FIXME: && !isSierraOrLater
-
-                if (isHorizontal) {
-                    if (sl->upsideDown) {
-                        CGContextTranslateCTM(ctx, rect.size.width, rect.origin.y);
-                        CGContextScaleCTM(ctx, -1, 1);
-                    } else {
-                        CGContextTranslateCTM(ctx, 0, rect.origin.y);
-                    }
-                } else if (verticalFlip) {
-                    CGContextTranslateCTM(ctx, rect.origin.x, rect.size.height);
-                    CGContextScaleCTM(ctx, 1, -1);
-                }
-
-                if (hasDoubleTicks) {
-                    // This ain't HIG kosher: eye-proved constants
-                    if (isHorizontal)
-                        CGContextTranslateCTM(ctx, 0, 4);
-                    else
-                        CGContextTranslateCTM(ctx, 1, 0);
-                }
-
-#if 0
-                // FIXME: Sadly, this part doesn't work. It seems to somehow polute the
-                // NSSlider's internal state and, when we need to use the "else" part,
-                // the slider's frame is not in sync with its cell dimensions.
-                const bool drawAllParts = drawKnob && drawBar && (!hasTicks || drawTicks);
-                if (drawAllParts && !hasDoubleTicks && (!verticalFlip || drawTicks)) {
-                    // Draw eveything at once if we're going to, except for inverted vertical
-                    // sliders which need to be drawn part by part because of the shadow below
-                    // the knob. Same for two-sided tickmarks.
-                    if (verticalFlip && drawTicks) {
-                        // Since tickmarks are always rendered symmetrically, a vertically
-                        // flipped slider with tickmarks only needs to get its value flipped.
-                        slider.intValue = slider.maxValue - slider.intValue + slider.minValue;
-                    }
-                    [slider drawRect:CGRectZero];
-                } else
-#endif
-                {
-                    NSSliderCell *cell = slider.cell;
-
-                    const int numberOfTickMarks = slider.numberOfTickMarks;
-                    // This ain't HIG kosher: force tick-less bar position.
-                    if (hasDoubleTicks)
-                        slider.numberOfTickMarks = 0;
-
+                if (drawBar) {
                     const CGRect barRect = [cell barRectFlipped:slider.isFlipped];
-                    if (drawBar) {
-                        [cell drawBarInside:barRect flipped:!verticalFlip];
-                        // This ain't HIG kosher: force unfilled bar look.
-                        if (hasDoubleTicks)
-                            slider.numberOfTickMarks = numberOfTickMarks;
-                    }
+                    // "flipped" will only make a difference when NSSliderCell is vertical. And then
+                    // flipped means fill the groove from bottom-to-top instead of top-to-bottom.
+                    // Bottom-to-top is QSlider's normal mode, which means that we always need to flip
+                    // in vertical mode. (In case NSSlider can also be flipped horizontally in the future,
+                    // we stay on the safe side, and only flip when in vertical mode).
+                    [cell drawBarInside:barRect flipped:!isHorizontal];
+                }
 
-                    if (drawBar && hasTicks && drawTicks) {
-                        if (!drawBar && hasDoubleTicks)
-                            slider.numberOfTickMarks = numberOfTickMarks;
-
+                if (drawBar && hasTicks && drawTicks) {
+                    if (!hasDoubleTicks) {
                         [cell drawTickMarks];
-
-                        if (hasDoubleTicks) {
-                            // This ain't HIG kosher: just slap a set of tickmarks on each side, like we used to.
-                            CGAffineTransform tickMarksFlip;
-                            const CGRect tickMarkRect = [cell rectOfTickMarkAtIndex:0];
-                            if (isHorizontal) {
-                                tickMarksFlip = CGAffineTransformMakeTranslation(0, rect.size.height - tickMarkRect.size.height - 3);
-                                tickMarksFlip = CGAffineTransformScale(tickMarksFlip, 1, -1);
-                            } else {
-                                tickMarksFlip = CGAffineTransformMakeTranslation(rect.size.width - tickMarkRect.size.width / 2, 0);
-                                tickMarksFlip = CGAffineTransformScale(tickMarksFlip, -1, 1);
-                            }
-                            CGContextConcatCTM(ctx, tickMarksFlip);
+                    } else {
+                        if (sl->orientation == Qt::Horizontal) {
+                            slider.tickMarkPosition = NSTickMarkPositionAbove;
+                            [slider layoutSubtreeIfNeeded];
                             [cell drawTickMarks];
-                            CGContextConcatCTM(ctx, CGAffineTransformInvert(tickMarksFlip));
+                            slider.tickMarkPosition = NSTickMarkPositionBelow;
+                            [slider layoutSubtreeIfNeeded];
+                            [cell drawTickMarks];
+                        } else {
+                            slider.tickMarkPosition = NSTickMarkPositionLeading;
+                            [slider layoutSubtreeIfNeeded];
+                            [cell drawTickMarks];
+                            slider.tickMarkPosition = NSTickMarkPositionTrailing;
+                            [slider layoutSubtreeIfNeeded];
+                            [cell drawTickMarks];
                         }
                     }
-
-                    if (drawKnob) {
-                        // This ain't HIG kosher: force round knob look.
-                        if (hasDoubleTicks)
-                            slider.numberOfTickMarks = 0;
-                        [cell drawKnob];
-                    }
                 }
+
+                if (drawKnob)
+                    [cell drawKnob];
             });
 
             if (isPressed && drawKnob)
