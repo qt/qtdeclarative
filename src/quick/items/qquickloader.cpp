@@ -412,19 +412,6 @@ void QQuickLoader::setSource(const QUrl &url)
 void QQuickLoader::setSource(const QUrl &url, bool needsClear)
 {
     Q_D(QQuickLoader);
-
-    // The source has been changed at this point, and we assume that (after
-    // notifying potential listeners with sourceChanged) that it is now
-    // safe to actually delete the old component. We have to do this here
-    // in case the component referenced expensive resources (like uncached
-    // images), as it might take too long until we return to the event loop.
-    // We need to explicitly pass QEvent::DeferredDelete to sendPostedEvents,
-    // else the allowDeferredDelete check in qcoreapplication.cpp will not
-    // allow the event to pass. This will not affect anything deleted by this
-    // call, only the previous one. This has to be done as otherwise there
-    // might be signal handlers that are still in progress.
-    QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
-
     if (d->source == url)
         return;
 
