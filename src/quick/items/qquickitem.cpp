@@ -7686,9 +7686,8 @@ void QQuickItem::ungrabMouse()
         return;
     }
     const auto &eventPoint = windowPriv->mousePointData()->eventPoint;
-    if (eventInDelivery->exclusiveGrabber(eventPoint) != this)
-        return;
-    eventInDelivery->setExclusiveGrabber(eventPoint, this);
+    if (eventInDelivery->exclusiveGrabber(eventPoint) == this)
+        eventInDelivery->setExclusiveGrabber(eventPoint, nullptr);
 }
 
 /*!
