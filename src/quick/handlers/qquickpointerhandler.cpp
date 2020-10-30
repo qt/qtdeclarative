@@ -757,6 +757,7 @@ QVector<QObject *> &QQuickPointerHandlerPrivate::deviceDeliveryTargets(const QIn
         return *static_cast<QVector<QObject *>*>(devPriv->qqExtra);
     auto targets = new QVector<QObject *>;
     devPriv->qqExtra = targets;
+    QObject::connect(device, &QObject::destroyed, [targets]() { delete targets; });
     return *targets;
 }
 
