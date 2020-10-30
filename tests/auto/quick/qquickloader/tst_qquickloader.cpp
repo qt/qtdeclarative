@@ -114,6 +114,7 @@ private slots:
     void asyncToSync1();
     void asyncToSync2();
     void loadedSignal();
+    void selfSetSource();
 
     void parented();
     void sizeBound();
@@ -1140,6 +1141,17 @@ void tst_QQuickLoader::loadedSignal()
         QCOMPARE(obj->property("loadCount").toInt(), 0);
         QVERIFY(obj->property("success").toBool());
     }
+}
+
+void tst_QQuickLoader::selfSetSource()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("selfSetSourceTest.qml"));
+
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(obj);
+
+    QTRY_COMPARE(obj->property("source").toUrl(), testFileUrl("empty.qml"));
 }
 
 void tst_QQuickLoader::parented()
