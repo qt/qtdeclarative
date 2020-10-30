@@ -92,7 +92,7 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
 
 #define V4_MANAGED(DataClass, superClass) \
     private: \
-        DataClass() Q_DECL_EQ_DELETE; \
+        DataClass() = delete; \
         Q_DISABLE_COPY(DataClass) \
         V4_MANAGED_ITSELF(DataClass, superClass) \
         Q_STATIC_ASSERT(std::is_trivial< QV4::Heap::DataClass >::value);
@@ -119,7 +119,7 @@ struct Q_QML_PRIVATE_EXPORT Managed : Value, VTableBase
     };
 private:
     void *operator new(size_t);
-    Managed() Q_DECL_EQ_DELETE;
+    Managed() = delete;
     Q_DISABLE_COPY(Managed)
 
 public:

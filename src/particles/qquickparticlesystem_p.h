@@ -335,7 +335,7 @@ public:
     QV4::ReturnedValue v4Value(QQuickParticleSystem *particleSystem);
     void extendLife(float time, QQuickParticleSystem *particleSystem);
 
-    static inline Q_DECL_CONSTEXPR float EPSILON() Q_DECL_NOTHROW { return 0.001f; }
+    static inline constexpr float EPSILON() noexcept { return 0.001f; }
 
 private:
     QQuickV4ParticleData* v8Datum;

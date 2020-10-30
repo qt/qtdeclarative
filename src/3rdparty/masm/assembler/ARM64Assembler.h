@@ -525,8 +525,8 @@ typedef enum {
     #undef DECLARE_REGISTER
 } FPRegisterID;
 
-static Q_DECL_CONSTEXPR bool isSp(RegisterID reg) { return reg == sp; }
-static Q_DECL_CONSTEXPR bool isZr(RegisterID reg) { return reg == zr; }
+static constexpr bool isSp(RegisterID reg) { return reg == sp; }
+static constexpr bool isZr(RegisterID reg) { return reg == zr; }
 
 } // namespace ARM64Registers
 
@@ -535,15 +535,15 @@ public:
     typedef ARM64Registers::RegisterID RegisterID;
     typedef ARM64Registers::FPRegisterID FPRegisterID;
     
-    static Q_DECL_CONSTEXPR RegisterID firstRegister() { return ARM64Registers::x0; }
-    static Q_DECL_CONSTEXPR RegisterID lastRegister() { return ARM64Registers::sp; }
+    static constexpr RegisterID firstRegister() { return ARM64Registers::x0; }
+    static constexpr RegisterID lastRegister() { return ARM64Registers::sp; }
     
-    static Q_DECL_CONSTEXPR FPRegisterID firstFPRegister() { return ARM64Registers::q0; }
-    static Q_DECL_CONSTEXPR FPRegisterID lastFPRegister() { return ARM64Registers::q31; }
+    static constexpr FPRegisterID firstFPRegister() { return ARM64Registers::q0; }
+    static constexpr FPRegisterID lastFPRegister() { return ARM64Registers::q31; }
 
 private:
-    static Q_DECL_CONSTEXPR bool isSp(RegisterID reg) { return ARM64Registers::isSp(reg); }
-    static Q_DECL_CONSTEXPR bool isZr(RegisterID reg) { return ARM64Registers::isZr(reg); }
+    static constexpr bool isSp(RegisterID reg) { return ARM64Registers::isSp(reg); }
+    static constexpr bool isZr(RegisterID reg) { return ARM64Registers::isZr(reg); }
 
 public:
     ARM64Assembler()

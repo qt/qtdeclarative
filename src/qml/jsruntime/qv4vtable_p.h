@@ -202,7 +202,7 @@ const QV4::VTable classname::static_vtbl = DEFINE_MANAGED_VTABLE_INT(classname, 
 
 #define V4_OBJECT2(DataClass, superClass) \
     private: \
-        DataClass() Q_DECL_EQ_DELETE; \
+        DataClass() = delete; \
         Q_DISABLE_COPY(DataClass) \
     public: \
         Q_MANAGED_CHECK \

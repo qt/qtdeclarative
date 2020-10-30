@@ -124,7 +124,7 @@ QQmlFileSelector::~QQmlFileSelector()
   \since 5.7
   Returns the QFileSelector instance used by the QQmlFileSelector.
 */
-QFileSelector *QQmlFileSelector::selector() const Q_DECL_NOTHROW
+QFileSelector *QQmlFileSelector::selector() const noexcept
 {
     Q_D(const QQmlFileSelector);
     return d->selector;

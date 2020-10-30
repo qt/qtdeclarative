@@ -69,7 +69,7 @@ namespace Heap {
 
 template <typename T, size_t o>
 struct Pointer {
-    static Q_CONSTEXPR size_t offset = o;
+    static constexpr size_t offset = o;
     T operator->() const { return get(); }
     operator T () const { return get(); }
 
@@ -245,7 +245,7 @@ struct QV4QPointer {
         init(o);
         return *this;
     }
-    bool isNull() const Q_DECL_NOTHROW
+    bool isNull() const noexcept
     {
         return d == nullptr || qObject == nullptr || d->strongref.loadRelaxed() == 0;
     }

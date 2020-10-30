@@ -480,7 +480,7 @@ inline double Value::toInteger() const
 
 template <size_t o>
 struct HeapValue : Value {
-    static Q_CONSTEXPR size_t offset = o;
+    static constexpr size_t offset = o;
     HeapBasePtr base() {
         HeapBasePtr base = reinterpret_cast<HeapBasePtr>(this) - (offset/sizeof(Heap::Base));
         Q_ASSERT(base->inUse());
@@ -497,7 +497,7 @@ struct HeapValue : Value {
 
 template <size_t o>
 struct ValueArray {
-    static Q_CONSTEXPR size_t offset = o;
+    static constexpr size_t offset = o;
     uint size;
     uint alloc;
     Value values[1];

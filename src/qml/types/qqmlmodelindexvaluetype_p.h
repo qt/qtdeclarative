@@ -76,11 +76,11 @@ public:
     Q_INVOKABLE QString toString() const
     { return QLatin1String("QModelIndex") + propertiesString(v); }
 
-    inline int row() const Q_DECL_NOTHROW { return v.row(); }
-    inline int column() const Q_DECL_NOTHROW { return v.column(); }
+    inline int row() const noexcept { return v.row(); }
+    inline int column() const noexcept { return v.column(); }
     inline QModelIndex parent() const { return v.parent(); }
-    inline bool isValid() const Q_DECL_NOTHROW { return v.isValid(); }
-    inline QAbstractItemModel *model() const Q_DECL_NOTHROW
+    inline bool isValid() const noexcept { return v.isValid(); }
+    inline QAbstractItemModel *model() const noexcept
     { return const_cast<QAbstractItemModel *>(v.model()); }
     quint64 internalId() const { return v.internalId(); }
 

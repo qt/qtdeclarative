@@ -153,7 +153,7 @@ public:
 private:
     friend class QJSValuePrivate;
     // force compile error, prevent QJSValue(bool) to be called
-    QJSValue(void *) Q_DECL_EQ_DELETE;
+    QJSValue(void *) = delete;
 
     quint64 d;
 };

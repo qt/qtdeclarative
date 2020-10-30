@@ -95,7 +95,7 @@ struct CallData
 
     StaticValue args[1];
 
-    static Q_DECL_CONSTEXPR int HeaderSize()
+    static constexpr int HeaderSize()
     {
         return offsetof(CallData, args) / sizeof(QV4::StaticValue);
     }

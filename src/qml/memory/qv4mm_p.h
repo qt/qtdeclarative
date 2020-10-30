@@ -156,7 +156,7 @@ public:
 
     // TODO: this is only for 64bit (and x86 with SSE/AVX), so exend it for other architectures to be slightly more efficient (meaning, align on 8-byte boundaries).
     // Note: all occurrences of "16" in alloc/dealloc are also due to the alignment.
-    Q_DECL_CONSTEXPR static inline std::size_t align(std::size_t size)
+    constexpr static inline std::size_t align(std::size_t size)
     { return (size + Chunk::SlotSize - 1) & ~(Chunk::SlotSize - 1); }
 
     template<typename ManagedType>

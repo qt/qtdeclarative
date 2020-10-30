@@ -1921,7 +1921,7 @@ void QQuickPathView::updatePolish()
     refill();
 }
 
-static inline int currentIndexRemainder(int currentIndex, int modelCount) Q_DECL_NOTHROW
+static inline int currentIndexRemainder(int currentIndex, int modelCount) noexcept
 {
     if (currentIndex < 0)
         return modelCount + currentIndex % modelCount;

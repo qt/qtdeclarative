@@ -56,7 +56,7 @@ class Q_QML_EXPORT QQmlFileSelector : public QObject
 public:
     explicit QQmlFileSelector(QQmlEngine *engine, QObject *parent = nullptr);
     ~QQmlFileSelector() override;
-    QFileSelector *selector() const Q_DECL_NOTHROW;
+    QFileSelector *selector() const noexcept;
     void setSelector(QFileSelector *selector);
     void setExtraSelectors(const QStringList &strings);
 

@@ -642,9 +642,9 @@ struct GraphicsState
     float lineWidth = 1.0f;
 };
 
-bool operator==(const GraphicsState &a, const GraphicsState &b) Q_DECL_NOTHROW;
-bool operator!=(const GraphicsState &a, const GraphicsState &b) Q_DECL_NOTHROW;
-size_t qHash(const GraphicsState &s, size_t seed = 0) Q_DECL_NOTHROW;
+bool operator==(const GraphicsState &a, const GraphicsState &b) noexcept;
+bool operator!=(const GraphicsState &a, const GraphicsState &b) noexcept;
+size_t qHash(const GraphicsState &s, size_t seed = 0) noexcept;
 
 struct ShaderManagerShader;
 
@@ -656,9 +656,9 @@ struct GraphicsPipelineStateKey
     const QRhiShaderResourceBindings *layoutCompatibleSrb;
 };
 
-bool operator==(const GraphicsPipelineStateKey &a, const GraphicsPipelineStateKey &b) Q_DECL_NOTHROW;
-bool operator!=(const GraphicsPipelineStateKey &a, const GraphicsPipelineStateKey &b) Q_DECL_NOTHROW;
-size_t qHash(const GraphicsPipelineStateKey &k, size_t seed = 0) Q_DECL_NOTHROW;
+bool operator==(const GraphicsPipelineStateKey &a, const GraphicsPipelineStateKey &b) noexcept;
+bool operator!=(const GraphicsPipelineStateKey &a, const GraphicsPipelineStateKey &b) noexcept;
+size_t qHash(const GraphicsPipelineStateKey &k, size_t seed = 0) noexcept;
 
 struct ShaderManagerShader
 {

@@ -70,7 +70,7 @@ static const bool qsg_leak_check = !qEnvironmentVariableIsEmpty("QML_LEAK_CHECK"
 
 QT_BEGIN_NAMESPACE
 
-bool operator==(const QSGSamplerDescription &a, const QSGSamplerDescription &b) Q_DECL_NOTHROW
+bool operator==(const QSGSamplerDescription &a, const QSGSamplerDescription &b) noexcept
 {
     return a.filtering == b.filtering
             && a.mipmapFiltering == b.mipmapFiltering
@@ -79,12 +79,12 @@ bool operator==(const QSGSamplerDescription &a, const QSGSamplerDescription &b) 
             && a.anisotropylevel == b.anisotropylevel;
 }
 
-bool operator!=(const QSGSamplerDescription &a, const QSGSamplerDescription &b) Q_DECL_NOTHROW
+bool operator!=(const QSGSamplerDescription &a, const QSGSamplerDescription &b) noexcept
 {
     return !(a == b);
 }
 
-size_t qHash(const QSGSamplerDescription &s, size_t seed) Q_DECL_NOTHROW
+size_t qHash(const QSGSamplerDescription &s, size_t seed) noexcept
 {
     const int f = s.filtering;
     const int m = s.mipmapFiltering;

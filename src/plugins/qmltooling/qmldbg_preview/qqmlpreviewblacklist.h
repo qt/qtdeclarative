@@ -71,12 +71,12 @@ private:
     public:
         Node();
         Node(const Node &other);
-        Node(Node &&other) Q_DECL_NOEXCEPT;
+        Node(Node &&other) noexcept;
 
         ~Node();
 
         Node &operator=(const Node &other);
-        Node &operator=(Node &&other) Q_DECL_NOEXCEPT;
+        Node &operator=(Node &&other) noexcept;
 
         void split(QString::iterator it, QString::iterator end);
         void insert(const QString &path, int offset);

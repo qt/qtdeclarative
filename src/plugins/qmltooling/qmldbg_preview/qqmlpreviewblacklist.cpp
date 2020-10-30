@@ -74,7 +74,7 @@ QQmlPreviewBlacklist::Node::Node(const QQmlPreviewBlacklist::Node &other) :
         m_next.insert(it.key(), new Node(**it));
 }
 
-QQmlPreviewBlacklist::Node::Node(QQmlPreviewBlacklist::Node &&other) Q_DECL_NOEXCEPT
+QQmlPreviewBlacklist::Node::Node(QQmlPreviewBlacklist::Node &&other) noexcept
 {
     m_mine.swap(other.m_mine);
     m_next.swap(other.m_next);
@@ -99,7 +99,7 @@ QQmlPreviewBlacklist::Node &QQmlPreviewBlacklist::Node::operator=(
 }
 
 QQmlPreviewBlacklist::Node &QQmlPreviewBlacklist::Node::operator=(
-        QQmlPreviewBlacklist::Node &&other) Q_DECL_NOEXCEPT
+        QQmlPreviewBlacklist::Node &&other) noexcept
 {
     if (&other != this) {
         m_mine.swap(other.m_mine);

@@ -3889,7 +3889,7 @@ void Renderer::invalidatePipelineCacheDependency(QRhiRenderPassDescriptor *rpDes
     }
 }
 
-bool operator==(const GraphicsState &a, const GraphicsState &b) Q_DECL_NOTHROW
+bool operator==(const GraphicsState &a, const GraphicsState &b) noexcept
 {
     return a.depthTest == b.depthTest
             && a.depthWrite == b.depthWrite
@@ -3906,12 +3906,12 @@ bool operator==(const GraphicsState &a, const GraphicsState &b) Q_DECL_NOTHROW
             && a.lineWidth == b.lineWidth;
 }
 
-bool operator!=(const GraphicsState &a, const GraphicsState &b) Q_DECL_NOTHROW
+bool operator!=(const GraphicsState &a, const GraphicsState &b) noexcept
 {
     return !(a == b);
 }
 
-size_t qHash(const GraphicsState &s, size_t seed) Q_DECL_NOTHROW
+size_t qHash(const GraphicsState &s, size_t seed) noexcept
 {
     // do not bother with all fields
     return seed
@@ -3926,7 +3926,7 @@ size_t qHash(const GraphicsState &s, size_t seed) Q_DECL_NOTHROW
             + s.sampleCount;
 }
 
-bool operator==(const GraphicsPipelineStateKey &a, const GraphicsPipelineStateKey &b) Q_DECL_NOTHROW
+bool operator==(const GraphicsPipelineStateKey &a, const GraphicsPipelineStateKey &b) noexcept
 {
     return a.state == b.state
             && a.sms->programRhi.program == b.sms->programRhi.program
@@ -3934,12 +3934,12 @@ bool operator==(const GraphicsPipelineStateKey &a, const GraphicsPipelineStateKe
             && a.layoutCompatibleSrb->isLayoutCompatible(b.layoutCompatibleSrb);
 }
 
-bool operator!=(const GraphicsPipelineStateKey &a, const GraphicsPipelineStateKey &b) Q_DECL_NOTHROW
+bool operator!=(const GraphicsPipelineStateKey &a, const GraphicsPipelineStateKey &b) noexcept
 {
     return !(a == b);
 }
 
-size_t qHash(const GraphicsPipelineStateKey &k, size_t seed) Q_DECL_NOTHROW
+size_t qHash(const GraphicsPipelineStateKey &k, size_t seed) noexcept
 {
     // no srb and rp included due to their special comparison semantics and lack of hash keys
     return qHash(k.state, seed) + qHash(k.sms->programRhi.program, seed);

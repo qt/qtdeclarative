@@ -80,7 +80,7 @@ Q_ALWAYS_INLINE void fence() {}
 #if WRITEBARRIER(none)
 
 template <NewValueType type>
-static Q_CONSTEXPR inline bool isRequired() {
+static constexpr inline bool isRequired() {
     return false;
 }
 

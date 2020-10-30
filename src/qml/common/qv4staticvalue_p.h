@@ -191,9 +191,9 @@ struct StaticValue
 
     quint64 _val;
 
-    QV4_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR quint64 &rawValueRef() { return _val; }
-    QV4_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR quint64 rawValue() const { return _val; }
-    QV4_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR void setRawValue(quint64 raw) { _val = raw; }
+    QV4_NEARLY_ALWAYS_INLINE constexpr quint64 &rawValueRef() { return _val; }
+    QV4_NEARLY_ALWAYS_INLINE constexpr quint64 rawValue() const { return _val; }
+    QV4_NEARLY_ALWAYS_INLINE constexpr void setRawValue(quint64 raw) { _val = raw; }
 
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
     static inline int valueOffset() { return 0; }
@@ -203,22 +203,22 @@ struct StaticValue
     static inline int tagOffset() { return 0; }
 #endif
     static inline constexpr quint64 tagValue(quint32 tag, quint32 value) { return quint64(tag) << 32 | value; }
-    QV4_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR void setTagValue(quint32 tag, quint32 value) { _val = quint64(tag) << 32 | value; }
+    QV4_NEARLY_ALWAYS_INLINE constexpr void setTagValue(quint32 tag, quint32 value) { _val = quint64(tag) << 32 | value; }
     QV4_NEARLY_ALWAYS_INLINE constexpr quint32 value() const { return _val & quint64(~quint32(0)); }
     QV4_NEARLY_ALWAYS_INLINE constexpr quint32 tag() const { return _val >> 32; }
-    QV4_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR void setTag(quint32 tag) { setTagValue(tag, value()); }
+    QV4_NEARLY_ALWAYS_INLINE constexpr void setTag(quint32 tag) { setTagValue(tag, value()); }
 
     QV4_NEARLY_ALWAYS_INLINE constexpr int int_32() const
     {
         return int(value());
     }
-    QV4_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR void setInt_32(int i)
+    QV4_NEARLY_ALWAYS_INLINE constexpr void setInt_32(int i)
     {
         setTagValue(quint32(ValueTypeInternal::Integer), quint32(i));
     }
     QV4_NEARLY_ALWAYS_INLINE uint uint_32() const { return value(); }
 
-    QV4_NEARLY_ALWAYS_INLINE Q_DECL_RELAXED_CONSTEXPR void setEmpty()
+    QV4_NEARLY_ALWAYS_INLINE constexpr void setEmpty()
     {
         setTagValue(quint32(ValueTypeInternal::Empty), 0);
     }
