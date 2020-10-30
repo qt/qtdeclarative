@@ -2,6 +2,8 @@
 # Q6QmlMacros
 #
 
+set(__qt_qml_macros_module_base_dir "${CMAKE_CURRENT_LIST_DIR}")
+
 #
 # Create a Qml Module. Arguments:
 #
@@ -51,7 +53,7 @@
 #   information is required for all the QML modules that depend on a C++ plugin
 #   for additional functionality. Qt Quick applications built with static
 #   linking cannot resolve the module imports without this information.
-#   (REQUIRED for static targets)
+#   (REQUIRED for static QML modules backed by C++ sources aka non-pure QML modules)
 #
 # DESIGNER_SUPPORTED: Specify this argument if the plugin is supported by Qt
 #   Quick Designer. By default, the plugin will not be supported. (OPTIONAL)
@@ -84,10 +86,12 @@
 #   type registration functions are already available by other means, typically
 #   by linking a library proxied by the plugin, it won't be loaded.
 #
+# PURE_MODULE: The plugin does not take any C++ source files. A dummy class plugin cpp file will
+#              be generated to ensure the module is found by the Qml engine.
+#
 # This function is currently in Technical Preview.
 # It's signature and behavior might change.
 function(qt6_add_qml_module target)
-
     set(args_optional
         GENERATE_QMLTYPES
         INSTALL_QMLTYPES
@@ -96,6 +100,7 @@ function(qt6_add_qml_module target)
         SKIP_TYPE_REGISTRATION
         PLUGIN_OPTIONAL
         INSTALL_QML_FILES
+        PURE_MODULE
     )
 
     if (QT_BUILDING_QT)
@@ -142,11 +147,18 @@ function(qt6_add_qml_module target)
         message(FATAL_ERROR "qt6_add_qml_module called with an invalid version argument: '${arg_VERSION}'. Expected version style: VersionMajor.VersionMinor.")
     endif()
 
-    if (NOT BUILD_SHARED_LIBS AND NOT arg_CLASSNAME)
-        message(FATAL_ERROR "qt6_add_qml_module Static builds of Qml modules require a class name, none was provided. Please specify one using the CLASSNAME argument.")
+    # If C++ sources were directly specified (not via qt_internal_add_qml_module), we assume the
+    # user will provide a plugin.cpp file. Don't generate a dummy plugin.cpp file in this case.
+    #
+    # If no sources were specified or the plugin was marked as a pure QML module, generate a
+    # dummy plugin.cpp file.
+    if (arg_SOURCES OR NOT arg_PURE_MODULE)
+        set(create_pure_qml_module_plugin FALSE)
+    else()
+        set(create_pure_qml_module_plugin TRUE)
     endif()
 
-    if (arg_DO_NOT_CREATE_TARGET AND NOT TARGET ${target})
+    if (arg_DO_NOT_CREATE_TARGET AND NOT TARGET "${target}")
         message(FATAL_ERROR "qt6_add_qml_module called with DO_NOT_CREATE_TARGET, but the given target '${target}' is not a cmake target")
     endif()
 
@@ -160,6 +172,9 @@ function(qt6_add_qml_module target)
             message(FATAL_ERROR "qt6_add_qml_module called with DO_NOT_CREATE_TARGET, but target '${target}' is neither a static or a module library.")
         endif()
     else()
+        # TODO: Creating a library here means we're missing creation of supporting .prl files,
+        # as well as install(TARGET foo EXPORT bar) mapping,  as opposed to when it's done
+        # by qt_internal_add_plugin inside the qt_internal_add_qml_module call.
         if(NOT BUILD_SHARED_LIBS)
             add_library(${target} STATIC)
             set(is_static TRUE)
@@ -181,6 +196,10 @@ function(qt6_add_qml_module target)
 
     if (NOT arg_TARGET_PATH)
         string(REPLACE "." "/" arg_TARGET_PATH ${arg_URI})
+    endif()
+
+    if(create_pure_qml_module_plugin)
+        _qt_internal_create_dummy_qml_plugin("${target}" "${arg_URI}" arg_CLASSNAME)
     endif()
 
     if (ANDROID)
@@ -458,6 +477,45 @@ if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
         qt6_add_qml_module(${ARGV})
     endfunction()
 endif()
+
+# Creates a dummy Qml plugin class for pure Qml modules.
+# Needed for both shared and static Qt builds, so that the Qml engine knows to load the plugin.
+function(_qt_internal_create_dummy_qml_plugin target uri out_class_name)
+    # Use the escaped URI name as the basis for the class name.
+    string(REGEX REPLACE "[^A-Za-z0-9]" "_" escaped_uri "${uri}")
+
+    set(qt_qml_plugin_class_name "${escaped_uri}Plugin")
+    set(generated_cpp_file_name_base "Qt6_PureQmlModule_${target}_${qt_qml_plugin_class_name}")
+    set(qt_qml_plugin_moc_include_name "${generated_cpp_file_name_base}.moc")
+
+    set(register_types_function_name "qml_register_types_${escaped_uri}")
+    set(qt_qml_plugin_intro "extern void ${register_types_function_name}();")
+
+    if(QT_BUILDING_QT)
+        string(APPEND qt_qml_plugin_intro "\n\nQT_BEGIN_NAMESPACE")
+        set(qt_qml_plugin_outro "QT_END_NAMESPACE")
+    endif()
+
+    set(qt_qml_plugin_constructor_content
+        "volatile auto registration = &${register_types_function_name};
+        Q_UNUSED(registration);
+")
+
+    set(template_path "${__qt_qml_macros_module_base_dir}/Qt6QmlPluginTemplate.cpp.in")
+    set(generated_cpp_file_name "${generated_cpp_file_name_base}.cpp")
+    set(generated_cpp_file_path "${CMAKE_CURRENT_BINARY_DIR}/${generated_cpp_file_name}")
+
+    configure_file("${template_path}" "${generated_cpp_file_path}" @ONLY)
+
+    target_sources("${target}" PRIVATE "${generated_cpp_file_path}")
+    target_link_libraries("${target}" PRIVATE ${QT_CMAKE_EXPORT_NAMESPACE}::Qml)
+
+    set(${out_class_name} "${qt_qml_plugin_class_name}" PARENT_SCOPE)
+
+    # Enable AUTOMOC explicitly, because the generated cpp file expects to include its moc-ed
+    # output file.
+    set_property(TARGET "${target}" PROPERTY AUTOMOC ON)
+endfunction()
 
 #
 # Add Qml files (.qml,.js,.mjs) to a Qml module. This will also append the

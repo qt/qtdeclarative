@@ -668,4 +668,10 @@ qt_copy_or_install(FILES
     "${CMAKE_CURRENT_LIST_DIR}/${INSTALL_CMAKE_NAMESPACE}${target}ImportScannerTemplate.cpp.in"
     DESTINATION "${config_install_dir}"
 )
+
+# Install pure QML Plugin template cpp file.
+qt_copy_or_install(FILES
+    "${CMAKE_CURRENT_LIST_DIR}/${INSTALL_CMAKE_NAMESPACE}${target}PluginTemplate.cpp.in"
+    DESTINATION "${config_install_dir}"
+)
 # special case end

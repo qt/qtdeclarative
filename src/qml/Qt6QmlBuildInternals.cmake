@@ -9,7 +9,6 @@ include_guard(GLOBAL)
 # in an IDE. Finally, it will also create a custom ${target}_qmltypes which
 # can be used to generate the respective plugins.qmltypes file.
 #
-#  CPP_PLUGIN: Whether this qml module has any c++ source files.
 #  URI: Module's uri.
 #  TARGET_PATH: Expected installation path for the Qml Module. Equivalent
 #  to the module's URI where '.' is replaced with '/'. Use this to override the
@@ -79,22 +78,15 @@ function(qt_internal_add_qml_module target)
             ${ARGV}
     )
 
-    # If we have no sources, but qml files, create a custom target so the
-    # qml file will be visibile in an IDE.
-    if (arg_SOURCES)
-        qt_internal_add_plugin(${target}
-            TYPE
-                qml_plugin
-            QML_TARGET_PATH
-                "${arg_TARGET_PATH}"
-            ${plugin_args}
-        )
-    endif()
+    qt_internal_add_plugin(${target}
+        TYPE
+            qml_plugin
+        QML_TARGET_PATH
+            "${arg_TARGET_PATH}"
+        ${plugin_args}
+    )
 
-
-    if (arg_CPP_PLUGIN OR arg_SOURCES)
-        set(no_create_option DO_NOT_CREATE_TARGET)
-    endif()
+    set(no_create_option DO_NOT_CREATE_TARGET)
 
     if (arg_CLASSNAME)
         set(classname_arg CLASSNAME ${arg_CLASSNAME})
@@ -120,6 +112,15 @@ function(qt_internal_add_qml_module target)
         set(install_qmltypes_arg INSTALL_QMLTYPES)
     endif()
 
+
+    # Because qt_internal_add_qml_module does not propagate its SOURCES option to
+    # qt6_add_qml_module, but only to qt_internal_add_plugin, we need a way to tell
+    # qt6_add_qml_module if it should generate a dummy plugin cpp file. Otherwise we'd generate
+    # a dummy plugin.cpp file twice and thus cause duplicate symbol issues.
+    if (NOT arg_SOURCES)
+        set(pure_qml_module "PURE_MODULE")
+    endif()
+
     qt_path_join(qml_module_install_dir ${QT_INSTALL_DIR} "${INSTALL_QMLDIR}/${arg_TARGET_PATH}")
 
     set(qml_module_build_dir "")
@@ -140,6 +141,7 @@ function(qt_internal_add_qml_module target)
         ${classname_arg}
         ${generate_qmltypes_arg}
         ${install_qmltypes_arg}
+        ${pure_qml_module}
         RESOURCE_PREFIX "/qt-project.org/imports"
         TARGET_PATH ${arg_TARGET_PATH}
         URI ${arg_URI}
