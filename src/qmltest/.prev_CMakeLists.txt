@@ -5,6 +5,7 @@
 #####################################################################
 
 qt_internal_add_module(QuickTest
+    CONFIG_MODULE_NAME qmltest
     GENERATE_METATYPES
     QMAKE_MODULE_CONFIG $${QT.testlib.CONFIG}
     SOURCES
