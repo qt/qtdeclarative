@@ -86,12 +86,15 @@ public:
 
 private:
     void detach();
+    bool isEqual(const QQuickRenderTarget &other) const noexcept;
     QQuickRenderTargetPrivate *d;
     friend class QQuickRenderTargetPrivate;
-};
 
-Q_QUICK_EXPORT bool operator==(const QQuickRenderTarget &a, const QQuickRenderTarget &b) Q_DECL_NOTHROW;
-Q_QUICK_EXPORT bool operator!=(const QQuickRenderTarget &a, const QQuickRenderTarget &b) Q_DECL_NOTHROW;
+    friend bool operator==(const QQuickRenderTarget &lhs, const QQuickRenderTarget &rhs) noexcept
+    { return lhs.isEqual(rhs); }
+    friend bool operator!=(const QQuickRenderTarget &lhs, const QQuickRenderTarget &rhs) noexcept
+    { return !lhs.isEqual(rhs); }
+};
 
 QT_END_NAMESPACE
 

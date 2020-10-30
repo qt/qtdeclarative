@@ -317,30 +317,39 @@ QQuickRenderTarget QQuickRenderTarget::fromRhiRenderTarget(QRhiRenderTarget *ren
 }
 
 /*!
+    \fn bool QQuickRenderTarget::operator==(const QQuickRenderTarget &a, const QQuickRenderTarget &b) noexcept
     \return true if \a a and \a b refer to the same set of native objects and
     have matching associated data (size, sample count).
- */
-bool operator==(const QQuickRenderTarget &a, const QQuickRenderTarget &b) Q_DECL_NOTHROW
+*/
+/*!
+    \fn bool QQuickRenderTarget::operator!=(const QQuickRenderTarget &a, const QQuickRenderTarget &b) noexcept
+
+    \return true if \a a and \a b refer to a different set of native objects,
+    or the associated data (size, sample count) does not match.
+*/
+
+/*!
+    \internal
+*/
+bool QQuickRenderTarget::isEqual(const QQuickRenderTarget &other) const noexcept
 {
-    const QQuickRenderTargetPrivate *da = QQuickRenderTargetPrivate::get(&a);
-    const QQuickRenderTargetPrivate *db = QQuickRenderTargetPrivate::get(&b);
-    if (da->type != db->type
-            || da->pixelSize != db->pixelSize
-            || da->sampleCount != db->sampleCount)
+    if (d->type != other.d->type
+            || d->pixelSize != other.d->pixelSize
+            || d->sampleCount != other.d->sampleCount)
     {
         return false;
     }
 
-    switch (da->type) {
+    switch (d->type) {
     case QQuickRenderTargetPrivate::Type::Null:
         break;
     case QQuickRenderTargetPrivate::Type::NativeTexture:
-        if (da->u.nativeTexture.object != db->u.nativeTexture.object
-                || da->u.nativeTexture.layout != db->u.nativeTexture.layout)
+        if (d->u.nativeTexture.object != other.d->u.nativeTexture.object
+                || d->u.nativeTexture.layout != other.d->u.nativeTexture.layout)
             return false;
         break;
     case QQuickRenderTargetPrivate::Type::RhiRenderTarget:
-        if (da->u.rhiRt != db->u.rhiRt)
+        if (d->u.rhiRt != other.d->u.rhiRt)
             return false;
         break;
     default:
@@ -348,15 +357,6 @@ bool operator==(const QQuickRenderTarget &a, const QQuickRenderTarget &b) Q_DECL
     }
 
     return true;
-}
-
-/*!
-    \return true if \a a and \a b refer to a different set of native objects,
-    or the associated data (size, sample count) does not match.
- */
-bool operator!=(const QQuickRenderTarget &a, const QQuickRenderTarget &b) Q_DECL_NOTHROW
-{
-    return !(a == b);
 }
 
 bool QQuickRenderTargetPrivate::resolve(QRhi *rhi, QQuickWindowRenderTarget *dst)
