@@ -71,4 +71,106 @@
     the engine. As with \c variant properties, code that relied on implicit string conversions need
     to use the corresponding functions of the Qt object.
 
+    \section1 Removed API
+
+    Various deprecated functions have been removed.
+
+    \list
+    \li The QQmlListProperty constructor taking a reference has been removed.
+    \oldcode
+    QQmlListProperty<QObject>(owner, owner->objectList);
+    \newcode
+    QQmlListProperty<QObject>(owner, &owner->objectList);
+    \endcode
+
+    \li The functions  \c qmlExecuteDeferred, \c qmlContext and \c qmlEngine used to exist both in
+    the global namespace (or Qt namespace in namespaced builds), and in the \c QtQml namespace. The
+    latter has been removed.
+    \oldcode
+    QQmlEngine *engine = QtQml::qmlEngine(qmlObject);
+    \newcode
+    QQmlEngine *engine = qmlEngine(qmlObject);
+    \endcode
+
+    \li The \c qmlRegisterType overload taking no arguments has been removed. Use
+    \c qmlRegisterAnonymousType instead, or switch to declarative type registration with
+    \c QML_ANONYMOUS.
+    \oldcode
+    class AnonymousType : public QObject {
+      // ...
+    };
+
+    qmlRegisterType<AnonymousType>();
+    \newcode
+    class AnonymousType : public QObject {
+      // ...
+    };
+
+    qmlRegisterAnonymousType<AnonymousType>("MyModule", 1);
+    \endcode
+    Or alternatively
+    \code
+    class AnonymousType : public QObject {
+        QML_ANONYMOUS
+        // ...
+    };
+    \endcode
+
+    \li  The overloads of \c qmlRegisterExtendedType and \c qmlRegisterInterface
+    which take no version argument have been removed. Use the overloads providing a
+    version, or switch to declarative type registration with QML_EXTENDED
+    and QML_INTERFACE.
+
+    \oldcode
+    struct GreetInterface
+    {
+       virtual ~GreetInterface();
+       virtual void greet();
+    };
+    Q_DECLARE_INTERFACE(GreetInterface, "org.hi.GreetInterface")
+
+    qmlRegisterInterface<GreetInterface>("Greeter");
+    \newcode
+    struct GreetInterface
+    {
+       virtual ~GreetInterface();
+       virtual void greet();
+    };
+    Q_DECLARE_INTERFACE(GreetInterface, "org.hi.GreetInterface")
+
+    qmlRegisterInterface<GreetInterface>("Greeter", 1);
+    \endcode
+    Alternatively
+    \code
+    struct GreetInterface
+    {
+       QML_INTERFACE(Greeter)
+       virtual ~GreetInterface();
+       virtual void greet();
+    };
+    Q_DECLARE_INTERFACE(GreetInterface, "org.hi.GreetInterface")
+    \endcode
+    \note In new code, declarative type registration should be preferred.
+
+    \li The function \c QJSValue::engine has been removed. If access to the engine is required, a
+    reference to it must be stored instead.
+
+    \li \c qmlAttachedPropertiesObjectById and \c qmlAttachedPropertiesObject(int *, const QObject *,
+    const QMetaObject *, bool) have been removed.  Use the
+    \c qmlAttachedPropertiesObject(QObject *, QQmlAttachedPropertiesFunc, bool) overload of
+    \c qmlAttachedPropertiesObject instead.
+
+    \li \c QJSEngine::installTranslatorFunctions has been removed. \c QJSEngine::installExtensions
+    is available as a replacement.
+    \oldcode
+    QJSEngine engine;
+    engine.installTranslatorFunctions();
+    \newcode
+    QJSEngine engine;
+    engine.installExtensions(QJSEngine::TranslationExtension
+    \endcode;
+
+    \endlist
+
+
 */
