@@ -39,11 +39,12 @@ target_link_libraries(flatstyle PUBLIC
 
 # Resources:
 set(qmake_immediate_resource_files
-    "Flat/Button.qml"
-    "Flat/CheckBox.qml"
-    "Flat/Switch.qml"
     "MainForm.ui.qml"
     "flatstyle.qml"
+    "imports/Flat/Button.qml"
+    "imports/Flat/CheckBox.qml"
+    "imports/Flat/Switch.qml"
+    "imports/Flat/qmldir"
     "imports/Theme/Theme.qml"
     "imports/Theme/qmldir"
     "qtquickcontrols2.conf"

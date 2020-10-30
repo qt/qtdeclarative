@@ -9,9 +9,10 @@ RESOURCES += \
     qtquickcontrols2.conf \
     flatstyle.qml \
     MainForm.ui.qml \
-    Flat/Button.qml \
-    Flat/CheckBox.qml \
-    Flat/Switch.qml \
+    imports/Flat/Button.qml \
+    imports/Flat/CheckBox.qml \
+    imports/Flat/qmldir \
+    imports/Flat/Switch.qml \
     imports/Theme/Theme.qml \
     imports/Theme/qmldir
 
