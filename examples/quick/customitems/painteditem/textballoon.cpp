@@ -49,6 +49,7 @@
 ****************************************************************************/
 
 #include "textballoon.h"
+#include <QPainter>
 
 //! [0]
 TextBalloon::TextBalloon(QQuickItem *parent)
