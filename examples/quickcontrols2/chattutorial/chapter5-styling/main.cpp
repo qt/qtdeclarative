@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
+#include <QtCore>
 #include <QGuiApplication>
-#include <QStandardPaths>
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QtQml>

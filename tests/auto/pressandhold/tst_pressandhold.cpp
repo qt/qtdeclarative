@@ -37,6 +37,7 @@
 #include <QtTest>
 #include <QtQuick>
 #include <QtQuickControls2/qquickstyle.h>
+#include <QStyleHints>
 
 class tst_PressAndHold : public QObject
 {
