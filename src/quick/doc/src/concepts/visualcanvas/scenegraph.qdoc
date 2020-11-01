@@ -358,6 +358,15 @@ this resource in a Qt Quick scene in a custom QQuickItem, is demonstrated in
 the \l {Scene Graph - Metal Texture Import} example. That example uses Metal,
 the concepts however apply to all other graphics APIs as well.
 
+\warning Starting with Qt 6.0, direct usage of the underlying graphics API must
+be enclosed by a call to \l QQuickWindow::beginExternalCommands() and \l
+QQuickWindow::endExternalCommands(). This concept may be familiar from \l
+QPainter::beginNativePainting(), and serves a similar purpose: it allows the Qt
+Quick Scene Graph to recognize that any cached state and assumptions about the
+state within the currently recorded render pass, if there is one, are now
+invalid, because the application code may have altered it by working directly
+with the underlying graphics API.
+
 \warning When mixing OpenGL content with scene graph rendering, it is
 important the application does not leave the OpenGL context in a state
 with buffers bound, attributes enabled, special values in the z-buffer
