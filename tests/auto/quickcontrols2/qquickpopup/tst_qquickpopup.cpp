@@ -1286,8 +1286,6 @@ void tst_QQuickPopup::countChanged()
 // QTBUG-73243
 void tst_QQuickPopup::toolTipCrashOnClose()
 {
-    if (QOperatingSystemVersion::current() <= QOperatingSystemVersion::Windows7)
-        QSKIP("Test requires a version of Windows newer than 7: QTBUG-84443");
     if (!canImportModule("import QtGraphicalEffects; DropShadow {}"))
         QSKIP("Test requires QtGraphicalEffects");
 
@@ -1307,8 +1305,6 @@ void tst_QQuickPopup::toolTipCrashOnClose()
 
 void tst_QQuickPopup::setOverlayParentToNull()
 {
-    if (QOperatingSystemVersion::current() <= QOperatingSystemVersion::Windows7)
-        QSKIP("Test requires a version of Windows newer than 7: QTBUG-84443");
     if (!canImportModule("import QtGraphicalEffects; DropShadow {}"))
         QSKIP("Test requires QtGraphicalEffects");
 
