@@ -358,9 +358,8 @@ void tst_qqmlbinding::delayed()
     // doesn't update immediately
     QCOMPARE(item->property("changeCount").toInt(), 1);
 
-    QCoreApplication::processEvents();
     // only updates once (non-delayed would update twice)
-    QCOMPARE(item->property("changeCount").toInt(), 2);
+    QTRY_COMPARE(item->property("changeCount").toInt(), 2);
 }
 
 void tst_qqmlbinding::bindingOverwriting()
