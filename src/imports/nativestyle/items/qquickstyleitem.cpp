@@ -89,7 +89,7 @@ QQuickStyleItem::~QQuickStyleItem()
 {
 }
 
-void QQuickStyleItem::connectToControl()
+void QQuickStyleItem::connectToControl() const
 {
     connect(m_control, &QQuickStyleItem::enabledChanged, this, &QQuickStyleItem::markImageDirty);
     connect(m_control, &QQuickItem::activeFocusChanged, this, &QQuickStyleItem::markImageDirty);
@@ -171,7 +171,7 @@ QStyle::State QQuickStyleItem::controlSize(QQuickItem *item)
     return QStyle::State_None;
 }
 
-void QQuickStyleItem::initStyleOptionBase(QStyleOption &styleOption)
+void QQuickStyleItem::initStyleOptionBase(QStyleOption &styleOption) const
 {
     Q_ASSERT(m_control);
 
@@ -478,7 +478,7 @@ qreal QQuickStyleItem::focusFrameRadius() const
     return m_styleItemGeometry.focusFrameRadius;
 }
 
-QFont QQuickStyleItem::styleFont(QQuickItem *control)
+QFont QQuickStyleItem::styleFont(QQuickItem *control) const
 {
     Q_ASSERT(control);
     // Note: This function should be treated as if it was static

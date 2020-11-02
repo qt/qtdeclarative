@@ -56,7 +56,7 @@ StyleItemGeometry QQuickStyleItemScrollViewCorner::calculateGeometry()
     return geometry;
 }
 
-void QQuickStyleItemScrollViewCorner::paintEvent(QPainter *painter)
+void QQuickStyleItemScrollViewCorner::paintEvent(QPainter *painter) const
 {
     QStyleOptionSlider styleOption;
     initStyleOption(styleOption);
@@ -106,7 +106,7 @@ void QQuickStyleItemScrollViewCorner::paintEvent(QPainter *painter)
     painter->restore();
 }
 
-void QQuickStyleItemScrollViewCorner::initStyleOption(QStyleOptionSlider &styleOption)
+void QQuickStyleItemScrollViewCorner::initStyleOption(QStyleOptionSlider &styleOption) const
 {
     initStyleOptionBase(styleOption);
 

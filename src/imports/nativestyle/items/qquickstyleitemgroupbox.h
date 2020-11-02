@@ -50,21 +50,21 @@ class QQuickStyleItemGroupBox : public QQuickStyleItem
 public:
     QQuickStyleMargins groupBoxPadding() const;
     QPointF labelPos() const;
-    QFont styleFont(QQuickItem *control) override;
+    QFont styleFont(QQuickItem *control) const override;
 
 signals:
     void groupBoxPaddingChanged();
     void labelPosChanged();
 
 protected:
-    void paintEvent(QPainter *painter) override;
+    void paintEvent(QPainter *painter) const override;
     StyleItemGeometry calculateGeometry() override;
 
 private:
     QQuickStyleMargins m_groupBoxPadding;
     QPointF m_labelPos;
 
-    void initStyleOption(QStyleOptionGroupBox &styleOption);
+    void initStyleOption(QStyleOptionGroupBox &styleOption) const;
 };
 
 #endif // QQUICKSTYLEITEMGROUPBOX_H

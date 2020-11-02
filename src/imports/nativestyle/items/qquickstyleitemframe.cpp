@@ -51,14 +51,14 @@ StyleItemGeometry QQuickStyleItemFrame::calculateGeometry()
     return geometry;
 }
 
-void QQuickStyleItemFrame::paintEvent(QPainter *painter)
+void QQuickStyleItemFrame::paintEvent(QPainter *painter) const
 {
     QStyleOptionFrame styleOption;
     initStyleOption(styleOption);
     style()->drawControl(QStyle::CE_ShapedFrame, &styleOption, painter);
 }
 
-void QQuickStyleItemFrame::initStyleOption(QStyleOptionFrame &styleOption)
+void QQuickStyleItemFrame::initStyleOption(QStyleOptionFrame &styleOption) const
 {
     initStyleOptionBase(styleOption);
     styleOption.lineWidth = 1;

@@ -36,12 +36,12 @@
 
 #include "qquickstyleitemslider.h"
 
-QFont QQuickStyleItemSlider::styleFont(QQuickItem *control)
+QFont QQuickStyleItemSlider::styleFont(QQuickItem *control) const
 {
     return style()->font(QStyle::CE_ProgressBarLabel, controlSize(control));
 }
 
-void QQuickStyleItemSlider::connectToControl()
+void QQuickStyleItemSlider::connectToControl() const
 {
     QQuickStyleItem::connectToControl();
     auto slider = control<QQuickSlider>();
@@ -70,14 +70,14 @@ StyleItemGeometry QQuickStyleItemSlider::calculateGeometry()
     return geometry;
 }
 
-void QQuickStyleItemSlider::paintEvent(QPainter *painter)
+void QQuickStyleItemSlider::paintEvent(QPainter *painter) const
 {
     QStyleOptionSlider styleOption;
     initStyleOption(styleOption);
     style()->drawComplexControl(QStyle::CC_Slider, &styleOption, painter);
 }
 
-void QQuickStyleItemSlider::initStyleOption(QStyleOptionSlider &styleOption)
+void QQuickStyleItemSlider::initStyleOption(QStyleOptionSlider &styleOption) const
 {
     initStyleOptionBase(styleOption);
     auto slider = control<QQuickSlider>();

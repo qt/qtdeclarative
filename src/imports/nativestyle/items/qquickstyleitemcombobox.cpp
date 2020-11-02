@@ -36,12 +36,12 @@
 
 #include "qquickstyleitemcombobox.h"
 
-QFont QQuickStyleItemComboBox::styleFont(QQuickItem *control)
+QFont QQuickStyleItemComboBox::styleFont(QQuickItem *control) const
 {
     return style()->font(QStyle::CE_PushButtonLabel, controlSize(control));
 }
 
-void QQuickStyleItemComboBox::connectToControl()
+void QQuickStyleItemComboBox::connectToControl() const
 {
     QQuickStyleItem::connectToControl();
     auto comboBox = control<QQuickComboBox>();
@@ -65,14 +65,14 @@ StyleItemGeometry QQuickStyleItemComboBox::calculateGeometry()
     return geometry;
 }
 
-void QQuickStyleItemComboBox::paintEvent(QPainter *painter)
+void QQuickStyleItemComboBox::paintEvent(QPainter *painter) const
 {
     QStyleOptionComboBox styleOption;
     initStyleOption(styleOption);
     style()->drawComplexControl(QStyle::CC_ComboBox, &styleOption, painter);
 }
 
-void QQuickStyleItemComboBox::initStyleOption(QStyleOptionComboBox &styleOption)
+void QQuickStyleItemComboBox::initStyleOption(QStyleOptionComboBox &styleOption) const
 {
     initStyleOptionBase(styleOption);
     auto comboBox = control<QQuickComboBox>();

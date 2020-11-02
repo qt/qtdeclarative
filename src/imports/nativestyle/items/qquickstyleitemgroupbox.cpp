@@ -36,7 +36,7 @@
 
 #include "qquickstyleitemgroupbox.h"
 
-QFont QQuickStyleItemGroupBox::styleFont(QQuickItem *control)
+QFont QQuickStyleItemGroupBox::styleFont(QQuickItem *control) const
 {
     return style()->font(QStyle::CE_HeaderLabel, controlSize(control));
 }
@@ -75,14 +75,14 @@ StyleItemGeometry QQuickStyleItemGroupBox::calculateGeometry()
     return geometry;
 }
 
-void QQuickStyleItemGroupBox::paintEvent(QPainter *painter)
+void QQuickStyleItemGroupBox::paintEvent(QPainter *painter) const
 {
     QStyleOptionGroupBox styleOption;
     initStyleOption(styleOption);
     style()->drawComplexControl(QStyle::CC_GroupBox, &styleOption, painter);
 }
 
-void QQuickStyleItemGroupBox::initStyleOption(QStyleOptionGroupBox &styleOption)
+void QQuickStyleItemGroupBox::initStyleOption(QStyleOptionGroupBox &styleOption) const
 {
     initStyleOptionBase(styleOption);
     styleOption.subControls = QStyle::SC_GroupBoxFrame;

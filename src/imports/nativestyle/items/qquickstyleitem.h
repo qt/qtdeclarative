@@ -218,7 +218,7 @@ public:
     QSize imageSize() const;
     qreal focusFrameRadius() const;
 
-    Q_INVOKABLE virtual QFont styleFont(QQuickItem *control);
+    Q_INVOKABLE virtual QFont styleFont(QQuickItem *control) const;
 
     void markGeometryDirty();
     void markImageDirty();
@@ -237,14 +237,14 @@ protected:
     void itemChange(ItemChange change, const ItemChangeData &data) override;
     void updatePolish() override;
 
-    virtual void connectToControl();
-    virtual void paintEvent(QPainter *painter) = 0;
+    virtual void connectToControl() const;
+    virtual void paintEvent(QPainter *painter) const = 0;
     virtual StyleItemGeometry calculateGeometry() = 0;
 
     static QStyle::State controlSize(QQuickItem *item);
-    void initStyleOptionBase(QStyleOption &styleOption);
+    void initStyleOptionBase(QStyleOption &styleOption) const;
 
-    inline QSize contentSize() { return QSize(qCeil(m_contentSize.width()), qCeil(m_contentSize.height())); }
+    inline QSize contentSize() const { return QSize(qCeil(m_contentSize.width()), qCeil(m_contentSize.height())); }
     inline static QStyle *style() { return QQuickNativeStyle::style(); }
 
     template <class T> inline const T* control() const {

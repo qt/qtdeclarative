@@ -36,12 +36,12 @@
 
 #include "qquickstyleitemscrollbar.h"
 
-QFont QQuickStyleItemScrollBar::styleFont(QQuickItem *control)
+QFont QQuickStyleItemScrollBar::styleFont(QQuickItem *control) const
 {
     return style()->font(QStyle::CE_ProgressBarLabel, controlSize(control));
 }
 
-void QQuickStyleItemScrollBar::connectToControl()
+void QQuickStyleItemScrollBar::connectToControl() const
 {
     QQuickStyleItem::connectToControl();
     auto scrollBar = control<QQuickScrollBar>();
@@ -64,14 +64,14 @@ StyleItemGeometry QQuickStyleItemScrollBar::calculateGeometry()
     return geometry;
 }
 
-void QQuickStyleItemScrollBar::paintEvent(QPainter *painter)
+void QQuickStyleItemScrollBar::paintEvent(QPainter *painter) const
 {
     QStyleOptionSlider styleOption;
     initStyleOption(styleOption);
     style()->drawComplexControl(QStyle::CC_ScrollBar, &styleOption, painter);
 }
 
-void QQuickStyleItemScrollBar::initStyleOption(QStyleOptionSlider &styleOption)
+void QQuickStyleItemScrollBar::initStyleOption(QStyleOptionSlider &styleOption) const
 {
     initStyleOptionBase(styleOption);
     auto scrollBar = control<QQuickScrollBar>();

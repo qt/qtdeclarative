@@ -46,11 +46,11 @@ class QQuickStyleItemScrollViewCorner : public QQuickStyleItem
     QML_NAMED_ELEMENT(ScrollViewCorner)
 
 protected:
-    void paintEvent(QPainter *painter) override;
+    void paintEvent(QPainter *painter) const override;
     StyleItemGeometry calculateGeometry() override;
 
 private:
-    void initStyleOption(QStyleOptionSlider &styleOption);
+    void initStyleOption(QStyleOptionSlider &styleOption) const;
 };
 
 #endif // QQUICKSTYLEITEMSCROLLVIEWCORNER_H

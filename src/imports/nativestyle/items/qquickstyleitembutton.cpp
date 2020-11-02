@@ -36,12 +36,12 @@
 
 #include "qquickstyleitembutton.h"
 
-QFont QQuickStyleItemButton::styleFont(QQuickItem *control)
+QFont QQuickStyleItemButton::styleFont(QQuickItem *control) const
 {
     return style()->font(QStyle::CE_PushButtonLabel, controlSize(control));
 }
 
-void QQuickStyleItemButton::connectToControl()
+void QQuickStyleItemButton::connectToControl() const
 {
     QQuickStyleItem::connectToControl();
     auto button = control<QQuickButton>();
@@ -65,14 +65,14 @@ StyleItemGeometry QQuickStyleItemButton::calculateGeometry()
     return geometry;
 }
 
-void QQuickStyleItemButton::paintEvent(QPainter *painter)
+void QQuickStyleItemButton::paintEvent(QPainter *painter) const
 {
     QStyleOptionButton styleOption;
     initStyleOption(styleOption);
     style()->drawControl(QStyle::CE_PushButtonBevel, &styleOption, painter);
 }
 
-void QQuickStyleItemButton::initStyleOption(QStyleOptionButton &styleOption)
+void QQuickStyleItemButton::initStyleOption(QStyleOptionButton &styleOption) const
 {
     initStyleOptionBase(styleOption);
     auto button = control<QQuickButton>();

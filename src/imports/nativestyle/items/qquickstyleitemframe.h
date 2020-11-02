@@ -46,11 +46,11 @@ class QQuickStyleItemFrame : public QQuickStyleItem
     QML_NAMED_ELEMENT(Frame)
 
 protected:
-    void paintEvent(QPainter *painter) override;
+    void paintEvent(QPainter *painter) const override;
     StyleItemGeometry calculateGeometry() override;
 
 private:
-    void initStyleOption(QStyleOptionFrame &styleOption);
+    void initStyleOption(QStyleOptionFrame &styleOption) const;
 };
 
 #endif // QQUICKSTYLEITEMFRAME_H

@@ -36,12 +36,12 @@
 
 #include "qquickstyleitemtextfield.h"
 
-QFont QQuickStyleItemTextField::styleFont(QQuickItem *control)
+QFont QQuickStyleItemTextField::styleFont(QQuickItem *control) const
 {
     return style()->font(QStyle::CE_ComboBoxLabel, controlSize(control));
 }
 
-void QQuickStyleItemTextField::connectToControl()
+void QQuickStyleItemTextField::connectToControl() const
 {
     QQuickStyleItem::connectToControl();
     auto textField = control<QQuickTextField>();
@@ -66,14 +66,14 @@ StyleItemGeometry QQuickStyleItemTextField::calculateGeometry()
     return geometry;
 }
 
-void QQuickStyleItemTextField::paintEvent(QPainter *painter)
+void QQuickStyleItemTextField::paintEvent(QPainter *painter) const
 {
     QStyleOptionFrame styleOption;
     initStyleOption(styleOption);
     style()->drawPrimitive(QStyle::PE_PanelLineEdit, &styleOption, painter);
 }
 
-void QQuickStyleItemTextField::initStyleOption(QStyleOptionFrame &styleOption)
+void QQuickStyleItemTextField::initStyleOption(QStyleOptionFrame &styleOption) const
 {
     initStyleOptionBase(styleOption);
     auto textField = control<QQuickTextField>();

@@ -36,12 +36,12 @@
 
 #include "qquickstyleitemcheckbox.h"
 
-QFont QQuickStyleItemCheckBox::styleFont(QQuickItem *control)
+QFont QQuickStyleItemCheckBox::styleFont(QQuickItem *control) const
 {
     return style()->font(QStyle::CE_RadioButtonLabel, controlSize(control));
 }
 
-void QQuickStyleItemCheckBox::connectToControl()
+void QQuickStyleItemCheckBox::connectToControl() const
 {
     QQuickStyleItem::connectToControl();
     auto checkbox = control<QQuickCheckBox>();
@@ -69,14 +69,14 @@ StyleItemGeometry QQuickStyleItemCheckBox::calculateGeometry()
     return geometry;
 }
 
-void QQuickStyleItemCheckBox::paintEvent(QPainter *painter)
+void QQuickStyleItemCheckBox::paintEvent(QPainter *painter) const
 {
     QStyleOptionButton styleOption;
     initStyleOption(styleOption);
     style()->drawControl(QStyle::CE_CheckBox, &styleOption, painter);
 }
 
-void QQuickStyleItemCheckBox::initStyleOption(QStyleOptionButton &styleOption)
+void QQuickStyleItemCheckBox::initStyleOption(QStyleOptionButton &styleOption) const
 {
     initStyleOptionBase(styleOption);
     auto checkbox = control<QQuickCheckBox>();

@@ -36,12 +36,12 @@
 
 #include "qquickstyleitemprogressbar.h"
 
-QFont QQuickStyleItemProgressBar::styleFont(QQuickItem *control)
+QFont QQuickStyleItemProgressBar::styleFont(QQuickItem *control) const
 {
     return style()->font(QStyle::CE_ProgressBarLabel, controlSize(control));
 }
 
-void QQuickStyleItemProgressBar::connectToControl()
+void QQuickStyleItemProgressBar::connectToControl() const
 {
     QQuickStyleItem::connectToControl();
     auto progressBar = control<QQuickProgressBar>();
@@ -74,7 +74,7 @@ StyleItemGeometry QQuickStyleItemProgressBar::calculateGeometry()
     return geometry;
 }
 
-void QQuickStyleItemProgressBar::paintEvent(QPainter *painter)
+void QQuickStyleItemProgressBar::paintEvent(QPainter *painter) const
 {
     QStyleOptionProgressBar styleOption;
     initStyleOption(styleOption);
@@ -91,7 +91,7 @@ void QQuickStyleItemProgressBar::paintEvent(QPainter *painter)
 #endif
 }
 
-void QQuickStyleItemProgressBar::initStyleOption(QStyleOptionProgressBar &styleOption)
+void QQuickStyleItemProgressBar::initStyleOption(QStyleOptionProgressBar &styleOption) const
 {
     initStyleOptionBase(styleOption);
     auto progressBar = control<QQuickProgressBar>();

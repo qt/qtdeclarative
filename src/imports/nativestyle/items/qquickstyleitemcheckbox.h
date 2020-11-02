@@ -46,15 +46,15 @@ class QQuickStyleItemCheckBox : public QQuickStyleItem
     QML_NAMED_ELEMENT(CheckBox)
 
 public:
-    QFont styleFont(QQuickItem *control) override;
+    QFont styleFont(QQuickItem *control) const override;
 
 protected:
-    void connectToControl() override;
-    void paintEvent(QPainter *painter) override;
+    void connectToControl() const override;
+    void paintEvent(QPainter *painter) const override;
     StyleItemGeometry calculateGeometry() override;
 
 private:
-    void initStyleOption(QStyleOptionButton &styleOption);
+    void initStyleOption(QStyleOptionButton &styleOption) const;
 };
 
 #endif // QQUICKSTYLEITEMCHECKBOX_H

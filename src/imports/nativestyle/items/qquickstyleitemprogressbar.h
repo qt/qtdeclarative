@@ -47,15 +47,15 @@ class QQuickStyleItemProgressBar : public QQuickStyleItem
     QML_NAMED_ELEMENT(ProgressBar)
 
 public:
-    QFont styleFont(QQuickItem *control) override;
+    QFont styleFont(QQuickItem *control) const override;
 
 protected:
-    void connectToControl() override;
-    void paintEvent(QPainter *painter) override;
+    void connectToControl() const override;
+    void paintEvent(QPainter *painter) const override;
     StyleItemGeometry calculateGeometry() override;
 
 private:
-    void initStyleOption(QStyleOptionProgressBar &styleOption);
+    void initStyleOption(QStyleOptionProgressBar &styleOption) const;
 };
 
 #endif // QQUICKSTYLEITEMPROGRESSBAR_H

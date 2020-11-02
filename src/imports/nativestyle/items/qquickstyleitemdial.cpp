@@ -36,12 +36,12 @@
 
 #include "qquickstyleitemdial.h"
 
-QFont QQuickStyleItemDial::styleFont(QQuickItem *control)
+QFont QQuickStyleItemDial::styleFont(QQuickItem *control) const
 {
     return style()->font(QStyle::CE_ProgressBarLabel, controlSize(control));
 }
 
-void QQuickStyleItemDial::connectToControl()
+void QQuickStyleItemDial::connectToControl() const
 {
     QQuickStyleItem::connectToControl();
     auto dial = control<QQuickDial>();
@@ -68,14 +68,14 @@ StyleItemGeometry QQuickStyleItemDial::calculateGeometry()
     return geometry;
 }
 
-void QQuickStyleItemDial::paintEvent(QPainter *painter)
+void QQuickStyleItemDial::paintEvent(QPainter *painter) const
 {
     QStyleOptionSlider styleOption;
     initStyleOption(styleOption);
     style()->drawComplexControl(QStyle::CC_Dial, &styleOption, painter);
 }
 
-void QQuickStyleItemDial::initStyleOption(QStyleOptionSlider &styleOption)
+void QQuickStyleItemDial::initStyleOption(QStyleOptionSlider &styleOption) const
 {
     initStyleOptionBase(styleOption);
     auto dial = control<QQuickDial>();

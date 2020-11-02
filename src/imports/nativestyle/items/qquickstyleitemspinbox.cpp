@@ -36,12 +36,12 @@
 
 #include "qquickstyleitemspinbox.h"
 
-QFont QQuickStyleItemSpinBox::styleFont(QQuickItem *control)
+QFont QQuickStyleItemSpinBox::styleFont(QQuickItem *control) const
 {
     return style()->font(QStyle::CE_ComboBoxLabel, controlSize(control));
 }
 
-void QQuickStyleItemSpinBox::connectToControl()
+void QQuickStyleItemSpinBox::connectToControl() const
 {
     QQuickStyleItem::connectToControl();
     auto spinbox = control<QQuickSpinBox>();
@@ -71,14 +71,14 @@ StyleItemGeometry QQuickStyleItemSpinBox::calculateGeometry()
     return geometry;
 }
 
-void QQuickStyleItemSpinBox::paintEvent(QPainter *painter)
+void QQuickStyleItemSpinBox::paintEvent(QPainter *painter) const
 {
     QStyleOptionSpinBox styleOption;
     initStyleOption(styleOption);
     style()->drawComplexControl(QStyle::CC_SpinBox, &styleOption, painter);
 }
 
-void QQuickStyleItemSpinBox::initStyleOption(QStyleOptionSpinBox &styleOption)
+void QQuickStyleItemSpinBox::initStyleOption(QStyleOptionSpinBox &styleOption) const
 {
     initStyleOptionBase(styleOption);
     auto spinbox = control<QQuickSpinBox>();
