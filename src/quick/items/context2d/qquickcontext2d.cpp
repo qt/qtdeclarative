@@ -311,8 +311,7 @@ static QStringList qExtractFontFamiliesFromString(QStringView fontFamiliesString
 static bool qSetFontFamilyFromTokens(QFont &font, const QStringList &fontFamilyTokens)
 {
     for (const QString &fontFamilyToken : fontFamilyTokens) {
-        QFontDatabase fontDatabase;
-        if (fontDatabase.hasFamily(fontFamilyToken)) {
+        if (QFontDatabase::hasFamily(fontFamilyToken)) {
             font.setFamily(fontFamilyToken);
             return true;
         } else {

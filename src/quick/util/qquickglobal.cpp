@@ -311,8 +311,7 @@ public:
 
     QStringList fontFamilies() override
     {
-        QFontDatabase database;
-        return database.families();
+        return QFontDatabase::families();
     }
 
     bool openUrlExternally(QUrl &url) override

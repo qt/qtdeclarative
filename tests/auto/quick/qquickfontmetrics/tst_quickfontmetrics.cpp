@@ -55,7 +55,7 @@ tst_QuickFontMetrics::tst_QuickFontMetrics()
 
 void tst_QuickFontMetrics::properties()
 {
-    QStringList families = QFontDatabase().families().mid(0, 10);
+    QStringList families = QFontDatabase::families().mid(0, 10);
     QQuickFontMetrics metrics;
 
     foreach (const QString &family, families) {

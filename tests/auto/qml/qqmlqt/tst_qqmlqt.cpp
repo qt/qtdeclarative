@@ -1108,8 +1108,7 @@ void tst_qqmlqt::fontFamilies()
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
 
-    QFontDatabase database;
-    QCOMPARE(object->property("test2"), QVariant::fromValue(database.families()));
+    QCOMPARE(object->property("test2"), QVariant::fromValue(QFontDatabase::families()));
 }
 
 void tst_qqmlqt::quit()
