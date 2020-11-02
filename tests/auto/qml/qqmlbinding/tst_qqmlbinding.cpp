@@ -380,7 +380,8 @@ void tst_qqmlbinding::bindToQmlComponent()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("bindToQMLComponent.qml"));
-    QVERIFY(c.create());
+    QScopedPointer<QObject> root {c.create()};
+    QVERIFY(root);
 }
 
 // QTBUG-78943
