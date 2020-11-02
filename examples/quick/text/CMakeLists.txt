@@ -137,6 +137,8 @@ qt6_add_resources(text "shared"
         ${shared_resource_files}
 )
 
+qt_import_qml_plugins(text) # special case
+
 install(TARGETS text
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
