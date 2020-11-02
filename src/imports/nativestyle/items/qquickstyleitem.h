@@ -56,11 +56,13 @@
 #endif
 
 #ifdef QT_DEBUG
-#define qqc2Debug() if (m_debugFlags.testFlag(Output)) qDebug() << __FUNCTION__ << ":"
-#define qqc2DebugHeading(HEADING) if (m_debugFlags.testFlag(Output)) qDebug() << "--------" << HEADING << "--------"
+#define qqc2Debug() if (m_debugFlags.testFlag(Debug)) qDebug() << __FUNCTION__ << ":"
+#define qqc2Info() if (m_debugFlags.testFlag(Info)) qDebug() << __FUNCTION__ << ":"
+#define qqc2InfoHeading(HEADING) if (m_debugFlags.testFlag(Info)) qDebug() << "--------" << HEADING << "--------"
 #else
 #define qqc2Debug() if (false) qDebug()
-#define qqc2DebugHeading(HEADING) if (false) qDebug()
+#define qqc2Info() if (false) qDebug()
+#define qqc2InfoHeading(HEADING) if (false) qDebug()
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -190,15 +192,16 @@ public:
 
 #ifdef QT_DEBUG
     enum DebugFlag {
-        NoDebug = 0x00,
-        Output = 0x01,
-        ImageRect = 0x02,
-        ContentRect = 0x04,
-        LayoutRect = 0x08,
-        Unscaled = 0x10,
-        InputContentSize = 0x20,
-        DontUseNinePatchImage = 0x40,
-        NinePatchMargins = 0x80
+        NoDebug = 0x000,
+        Debug = 0x001,
+        Info = 0x002,
+        ImageRect = 0x003,
+        ContentRect = 0x008,
+        LayoutRect = 0x010,
+        Unscaled = 0x020,
+        InputContentSize = 0x040,
+        DontUseNinePatchImage = 0x080,
+        NinePatchMargins = 0x100,
     };
     Q_FLAG(DebugFlag)
     Q_DECLARE_FLAGS(DebugFlags, DebugFlag)

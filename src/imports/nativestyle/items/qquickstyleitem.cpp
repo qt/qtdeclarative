@@ -123,7 +123,7 @@ QSGNode *QQuickStyleItem::updatePaintNode(QSGNode *oldNode, QQuickItem::UpdatePa
 #ifdef QT_DEBUG
     if (m_debugFlags.testFlag(Unscaled)) {
         bounds = QRectF(QPointF(), ninePatchImageSize);
-        qqc2Debug() << "Setting paint node bounds to size of image:" << bounds;
+        qqc2Info() << "Setting paint node bounds to size of image:" << bounds;
     }
 #endif
 
@@ -209,7 +209,7 @@ void QQuickStyleItem::initStyleOptionBase(QStyleOption &styleOption) const
             styleOption.state &= ~QStyle::State_MouseOver;
     }
 
-    qqc2Debug() << styleOption;
+    qqc2Info() << styleOption;
 }
 
 void QQuickStyleItem::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
@@ -239,7 +239,7 @@ void QQuickStyleItem::itemChange(QQuickItem::ItemChange change, const QQuickItem
 
 void QQuickStyleItem::updateGeometry()
 {
-    qqc2DebugHeading("GEOMETRY");
+    qqc2InfoHeading("GEOMETRY");
     m_dirty.setFlag(DirtyFlag::Geometry, false);
 
     const QQuickStyleMargins oldContentPadding = contentPadding();
@@ -257,7 +257,7 @@ void QQuickStyleItem::updateGeometry()
         // If the item has no contents (or its size is
         // empty), we just use the minimum size as implicit size.
         m_styleItemGeometry.implicitSize = m_styleItemGeometry.minimumSize;
-        qqc2Debug() << "implicitSize is empty, using minimumSize instead";
+        qqc2Info() << "implicitSize is empty, using minimumSize instead";
     }
 
     if (contentPadding() != oldContentPadding)
@@ -269,7 +269,7 @@ void QQuickStyleItem::updateGeometry()
 
     setImplicitSize(m_styleItemGeometry.implicitSize.width(), m_styleItemGeometry.implicitSize.height());
 
-    qqc2Debug() << m_styleItemGeometry
+    qqc2Info() << m_styleItemGeometry
                 << "bounding rect:" << boundingRect()
                 << "layout margins:" << layoutMargins()
                 << "content padding:" << contentPadding()
@@ -278,7 +278,7 @@ void QQuickStyleItem::updateGeometry()
 
 void QQuickStyleItem::paintControlToImage()
 {
-    qqc2DebugHeading("PAINT");
+    qqc2InfoHeading("PAINT");
     if (m_styleItemGeometry.minimumSize.isEmpty())
         return;
 
@@ -371,7 +371,7 @@ void QQuickStyleItem::addDebugInfo()
 #define QQC2_DEBUG_FLAG(FLAG) \
     if (debugString.contains(QLatin1String(#FLAG), Qt::CaseInsensitive)) m_debugFlags |= FLAG
 
-    QQC2_DEBUG_FLAG(Output);
+    QQC2_DEBUG_FLAG(Info);
     QQC2_DEBUG_FLAG(ImageRect);
     QQC2_DEBUG_FLAG(ContentRect);
     QQC2_DEBUG_FLAG(LayoutRect);
@@ -379,6 +379,7 @@ void QQuickStyleItem::addDebugInfo()
     QQC2_DEBUG_FLAG(DontUseNinePatchImage);
     QQC2_DEBUG_FLAG(NinePatchMargins);
     QQC2_DEBUG_FLAG(Unscaled);
+    QQC2_DEBUG_FLAG(Debug);
 
     if (m_debugFlags & (DontUseNinePatchImage
                         | InputContentSize
