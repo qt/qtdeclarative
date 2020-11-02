@@ -4205,9 +4205,8 @@ void tst_qqmlecmascript::singletonType()
     if (!errorMessage.isEmpty())
         QTest::ignoreMessage(QtWarningMsg, errorMessage.toLatin1().constData());
 
-    if (warningMessages.size())
-        foreach (const QString &warning, warningMessages)
-            QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
+    for (const QString &warning : qAsConst(warningMessages))
+        QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
 
     QObject *object = component.create();
     if (!errorMessage.isEmpty()) {
@@ -4566,9 +4565,10 @@ void tst_qqmlecmascript::importScripts()
     if (!errorMessage.isEmpty())
         QTest::ignoreMessage(QtWarningMsg, errorMessage.toLatin1().constData());
 
-    if (compilationShouldSucceed && warningMessages.size())
-        foreach (const QString &warning, warningMessages)
+    if (compilationShouldSucceed) {
+        for (const QString &warning : qAsConst(warningMessages))
             QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
+    }
 
     if (compilationShouldSucceed)
         QTRY_VERIFY(component.isReady());

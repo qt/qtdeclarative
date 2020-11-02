@@ -1744,8 +1744,8 @@ public:
     QString funcCalled;
 public slots:
     QPersistentModelIndex getIndex() const { return QPersistentModelIndex(QModelIndex()); }
-    void selection(const QModelIndex &mi, int n = 0) { funcCalled = QLatin1String("QModelIndex"); }
-    void selection(const QItemSelection &is, int n = 0) { funcCalled = QLatin1String("QItemSelection"); }
+    void selection(const QModelIndex &, int = 0) { funcCalled = QLatin1String("QModelIndex"); }
+    void selection(const QItemSelection &, int = 0) { funcCalled = QLatin1String("QItemSelection"); }
 };
 
 struct ClassWithQProperty2 : public QObject
