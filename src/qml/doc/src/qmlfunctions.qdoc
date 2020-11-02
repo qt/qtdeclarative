@@ -236,7 +236,7 @@
   effect if the type is exposed to QML using a \l QML_ELEMENT or
   \l QML_NAMED_ELEMENT() macro.
 
-  \sa QML_ELEMENT, QML_NAMED_ELEMENT(), QML_EXTENDED_NAMEPSACE(),
+  \sa QML_ELEMENT, QML_NAMED_ELEMENT(), QML_EXTENDED_NAMESPACE(),
       {Registering Extension Objects}
 */
 
