@@ -357,9 +357,8 @@ private:
     // a specific userType.
     static bool isJSNumberType(int userType)
     {
-        return userType == (int) QVariant::Int
-                || userType == (int) QVariant::UInt
-                || userType == (int) QVariant::Double;
+        return userType == QMetaType::Int || userType == QMetaType::UInt
+                || userType == QMetaType::Double;
     }
 
     void getSingletonInstance(QQmlEngine& engine, const char* fileName, const char* propertyName, QObject** result /* out */);
@@ -764,7 +763,7 @@ void tst_qqmllanguage::assignObjectToVariant()
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
     QVariant v = object->property("a");
-    QVERIFY(v.userType() == qMetaTypeId<QObject *>());
+    QVERIFY(v.typeId() == qMetaTypeId<QObject *>());
 }
 
 void tst_qqmllanguage::assignLiteralSignalProperty()
@@ -864,24 +863,24 @@ void tst_qqmllanguage::assignLiteralToVar()
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
 
-    QVERIFY(isJSNumberType(object->property("test1").userType()));
-    QCOMPARE(object->property("test2").userType(), (int)QMetaType::Double);
-    QCOMPARE(object->property("test3").userType(), (int)QVariant::String);
-    QCOMPARE(object->property("test4").userType(), (int)QVariant::String);
-    QCOMPARE(object->property("test5").userType(), (int)QVariant::String);
-    QCOMPARE(object->property("test6").userType(), (int)QVariant::String);
-    QCOMPARE(object->property("test7").userType(), (int)QVariant::String);
-    QCOMPARE(object->property("test8").userType(), (int)QVariant::String);
-    QCOMPARE(object->property("test9").userType(), (int)QVariant::String);
-    QCOMPARE(object->property("test10").userType(), (int)QVariant::Bool);
-    QCOMPARE(object->property("test11").userType(), (int)QVariant::Bool);
-    QCOMPARE(object->property("test12").userType(), (int)QVariant::Color);
-    QCOMPARE(object->property("test13").userType(), (int)QVariant::RectF);
-    QCOMPARE(object->property("test14").userType(), (int)QVariant::PointF);
-    QCOMPARE(object->property("test15").userType(), (int)QVariant::SizeF);
-    QCOMPARE(object->property("test16").userType(), (int)QVariant::Vector3D);
-    QVERIFY(isJSNumberType(object->property("variantTest1Bound").userType()));
-    QVERIFY(isJSNumberType(object->property("test1Bound").userType()));
+    QVERIFY(isJSNumberType(object->property("test1").typeId()));
+    QCOMPARE(object->property("test2").typeId(), (int)QMetaType::Double);
+    QCOMPARE(object->property("test3").typeId(), QMetaType::QString);
+    QCOMPARE(object->property("test4").typeId(), QMetaType::QString);
+    QCOMPARE(object->property("test5").typeId(), QMetaType::QString);
+    QCOMPARE(object->property("test6").typeId(), QMetaType::QString);
+    QCOMPARE(object->property("test7").typeId(), QMetaType::QString);
+    QCOMPARE(object->property("test8").typeId(), QMetaType::QString);
+    QCOMPARE(object->property("test9").typeId(), QMetaType::QString);
+    QCOMPARE(object->property("test10").typeId(), QMetaType::Bool);
+    QCOMPARE(object->property("test11").typeId(), QMetaType::Bool);
+    QCOMPARE(object->property("test12").typeId(), QMetaType::QColor);
+    QCOMPARE(object->property("test13").typeId(), QMetaType::QRectF);
+    QCOMPARE(object->property("test14").typeId(), QMetaType::QPointF);
+    QCOMPARE(object->property("test15").typeId(), QMetaType::QSizeF);
+    QCOMPARE(object->property("test16").typeId(), QMetaType::QVector3D);
+    QVERIFY(isJSNumberType(object->property("variantTest1Bound").typeId()));
+    QVERIFY(isJSNumberType(object->property("test1Bound").typeId()));
 
     QCOMPARE(object->property("test1"), QVariant(5));
     QCOMPARE(object->property("test2"), QVariant((double)1.7));
@@ -1019,24 +1018,24 @@ void tst_qqmllanguage::bindJSValueToVar()
 
     QObject *object = root->findChild<QObject *>("varProperties");
 
-    QVERIFY(isJSNumberType(object->property("test1").userType()));
-    QVERIFY(isJSNumberType(object->property("test2").userType()));
-    QCOMPARE(object->property("test3").userType(), (int)QVariant::String);
-    QCOMPARE(object->property("test4").userType(), (int)QVariant::String);
-    QCOMPARE(object->property("test5").userType(), (int)QVariant::String);
-    QCOMPARE(object->property("test6").userType(), (int)QVariant::String);
-    QCOMPARE(object->property("test7").userType(), (int)QVariant::String);
-    QCOMPARE(object->property("test8").userType(), (int)QVariant::String);
-    QCOMPARE(object->property("test9").userType(), (int)QVariant::String);
-    QCOMPARE(object->property("test10").userType(), (int)QVariant::Bool);
-    QCOMPARE(object->property("test11").userType(), (int)QVariant::Bool);
-    QCOMPARE(object->property("test12").userType(), (int)QVariant::Color);
-    QCOMPARE(object->property("test13").userType(), (int)QVariant::RectF);
-    QCOMPARE(object->property("test14").userType(), (int)QVariant::PointF);
-    QCOMPARE(object->property("test15").userType(), (int)QVariant::SizeF);
-    QCOMPARE(object->property("test16").userType(), (int)QVariant::Vector3D);
-    QVERIFY(isJSNumberType(object->property("test1Bound").userType()));
-    QVERIFY(isJSNumberType(object->property("test20Bound").userType()));
+    QVERIFY(isJSNumberType(object->property("test1").typeId()));
+    QVERIFY(isJSNumberType(object->property("test2").typeId()));
+    QCOMPARE(object->property("test3").typeId(), QMetaType::QString);
+    QCOMPARE(object->property("test4").typeId(), QMetaType::QString);
+    QCOMPARE(object->property("test5").typeId(), QMetaType::QString);
+    QCOMPARE(object->property("test6").typeId(), QMetaType::QString);
+    QCOMPARE(object->property("test7").typeId(), QMetaType::QString);
+    QCOMPARE(object->property("test8").typeId(), QMetaType::QString);
+    QCOMPARE(object->property("test9").typeId(), QMetaType::QString);
+    QCOMPARE(object->property("test10").typeId(), QMetaType::Bool);
+    QCOMPARE(object->property("test11").typeId(), QMetaType::Bool);
+    QCOMPARE(object->property("test12").typeId(), QMetaType::QColor);
+    QCOMPARE(object->property("test13").typeId(), QMetaType::QRectF);
+    QCOMPARE(object->property("test14").typeId(), QMetaType::QPointF);
+    QCOMPARE(object->property("test15").typeId(), QMetaType::QSizeF);
+    QCOMPARE(object->property("test16").typeId(), QMetaType::QVector3D);
+    QVERIFY(isJSNumberType(object->property("test1Bound").typeId()));
+    QVERIFY(isJSNumberType(object->property("test20Bound").typeId()));
 
     QCOMPARE(object->property("test1"), QVariant(5));
     QCOMPARE(object->property("test2"), QVariant((double)1.7));
@@ -1068,24 +1067,24 @@ void tst_qqmllanguage::bindJSValueToVariant()
 
     QObject *object = root->findChild<QObject *>("variantProperties");
 
-    QVERIFY(isJSNumberType(object->property("test1").userType()));
-    QVERIFY(isJSNumberType(object->property("test2").userType()));
-    QCOMPARE(object->property("test3").userType(), (int)QVariant::String);
-    QCOMPARE(object->property("test4").userType(), (int)QVariant::String);
-    QCOMPARE(object->property("test5").userType(), (int)QVariant::String);
-    QCOMPARE(object->property("test6").userType(), (int)QVariant::String);
-    QCOMPARE(object->property("test7").userType(), (int)QVariant::String);
-    QCOMPARE(object->property("test8").userType(), (int)QVariant::String);
-    QCOMPARE(object->property("test9").userType(), (int)QVariant::String);
-    QCOMPARE(object->property("test10").userType(), (int)QVariant::Bool);
-    QCOMPARE(object->property("test11").userType(), (int)QVariant::Bool);
-    QCOMPARE(object->property("test12").userType(), (int)QVariant::Color);
-    QCOMPARE(object->property("test13").userType(), (int)QVariant::RectF);
-    QCOMPARE(object->property("test14").userType(), (int)QVariant::PointF);
-    QCOMPARE(object->property("test15").userType(), (int)QVariant::SizeF);
-    QCOMPARE(object->property("test16").userType(), (int)QVariant::Vector3D);
-    QVERIFY(isJSNumberType(object->property("test1Bound").userType()));
-    QVERIFY(isJSNumberType(object->property("test20Bound").userType()));
+    QVERIFY(isJSNumberType(object->property("test1").typeId()));
+    QVERIFY(isJSNumberType(object->property("test2").typeId()));
+    QCOMPARE(object->property("test3").typeId(), QMetaType::QString);
+    QCOMPARE(object->property("test4").typeId(), QMetaType::QString);
+    QCOMPARE(object->property("test5").typeId(), QMetaType::QString);
+    QCOMPARE(object->property("test6").typeId(), QMetaType::QString);
+    QCOMPARE(object->property("test7").typeId(), QMetaType::QString);
+    QCOMPARE(object->property("test8").typeId(), QMetaType::QString);
+    QCOMPARE(object->property("test9").typeId(), QMetaType::QString);
+    QCOMPARE(object->property("test10").typeId(), QMetaType::Bool);
+    QCOMPARE(object->property("test11").typeId(), QMetaType::Bool);
+    QCOMPARE(object->property("test12").typeId(), QMetaType::QColor);
+    QCOMPARE(object->property("test13").typeId(), QMetaType::QRectF);
+    QCOMPARE(object->property("test14").typeId(), QMetaType::QPointF);
+    QCOMPARE(object->property("test15").typeId(), QMetaType::QSizeF);
+    QCOMPARE(object->property("test16").typeId(), QMetaType::QVector3D);
+    QVERIFY(isJSNumberType(object->property("test1Bound").typeId()));
+    QVERIFY(isJSNumberType(object->property("test20Bound").typeId()));
 
     QCOMPARE(object->property("test1"), QVariant(5));
     QCOMPARE(object->property("test2"), QVariant((double)1.7));
@@ -1455,7 +1454,7 @@ void tst_qqmllanguage::dynamicProperties()
     QCOMPARE(object->property("urlProperty"), QVariant(QUrl("main.qml")));
     QCOMPARE(object->property("colorProperty"), QVariant(QColor("red")));
     QVariant date = object->property("dateProperty");
-    if (!date.convert(QMetaType::QDate))
+    if (!date.convert(QMetaType(QMetaType::QDate)))
         QFAIL("could not convert to date");
     QCOMPARE(date, QVariant(QDate(1945, 9, 2)));
     QCOMPARE(object->property("varProperty"), QVariant("Hello World!"));
@@ -1964,14 +1963,14 @@ void tst_qqmllanguage::aliasProperties()
         QVERIFY(object != nullptr);
 
         QVariant v = object->property("otherAlias");
-        QCOMPARE(v.userType(), qMetaTypeId<MyQmlObject*>());
+        QCOMPARE(v.typeId(), qMetaTypeId<MyQmlObject *>());
         MyQmlObject *o = qvariant_cast<MyQmlObject*>(v);
         QCOMPARE(o->value(), 10);
 
         delete o;
 
         v = object->property("otherAlias");
-        QCOMPARE(v.userType(), qMetaTypeId<MyQmlObject*>());
+        QCOMPARE(v.typeId(), qMetaTypeId<MyQmlObject *>());
         o = qvariant_cast<MyQmlObject*>(v);
         QVERIFY(!o);
     }
@@ -3995,7 +3994,7 @@ void tst_qqmllanguage::functionParameterTypes()
     {
         QMetaMethod slot = metaObject->method(metaObject->indexOfSlot("returnItem()"));
         QVERIFY(slot.isValid());
-        QCOMPARE(slot.returnType(), QMetaType::type("QObject*"));
+        QCOMPARE(slot.returnType(), QMetaType::QObjectStar);
         QObject *returnedPtr = nullptr;
         slot.invoke(obj.data(), Qt::DirectConnection, Q_RETURN_ARG(QObject*, returnedPtr));
         QCOMPARE(returnedPtr, obj.data());
@@ -4388,9 +4387,9 @@ void tst_qqmllanguage::getSingletonInstance(QObject* o, const char* propertyName
     QVERIFY(variant.isValid());
 
     QObject *singleton = nullptr;
-    if (variant.userType() == qMetaTypeId<QObject *>())
+    if (variant.typeId() == qMetaTypeId<QObject *>())
         singleton = variant.value<QObject*>();
-    else if (variant.userType() == qMetaTypeId<QJSValue>())
+    else if (variant.typeId() == qMetaTypeId<QJSValue>())
         singleton = variant.value<QJSValue>().toQObject();
 
     QVERIFY(singleton != nullptr);
@@ -4399,10 +4398,10 @@ void tst_qqmllanguage::getSingletonInstance(QObject* o, const char* propertyName
 
 void verifyCompositeSingletonPropertyValues(QObject* o, const char* n1, int v1, const char* n2, int v2)
 {
-    QCOMPARE(o->property(n1).userType(), (int)QMetaType::Int);
+    QCOMPARE(o->property(n1).typeId(), (int)QMetaType::Int);
     QCOMPARE(o->property(n1), QVariant(v1));
 
-    QCOMPARE(o->property(n2).userType(), (int)QVariant::String);
+    QCOMPARE(o->property(n2).typeId(), QMetaType::QString);
     QString numStr;
     QCOMPARE(o->property(n2), QVariant(QString(QLatin1String("Test value: ")).append(numStr.setNum(v2))));
 }
@@ -5334,7 +5333,7 @@ void tst_qqmllanguage::instanceof()
     QQmlExpression expr(engine.contextForObject(o.data()), nullptr, QString::fromLatin1(QTest::currentDataTag()));
     QVariant ret = expr.evaluate();
 
-    if (expectedValue.type() == QVariant::Bool) {
+    if (expectedValue.typeId() == QMetaType::Bool) {
         // no error expected
         QVERIFY2(!expr.hasError(), qPrintable(expr.error().description()));
         bool returnValue = ret.toBool();
@@ -5503,7 +5502,7 @@ void tst_qqmllanguage::selfReference()
 
     const QMetaObject *metaObject = o->metaObject();
     QMetaProperty selfProperty = metaObject->property(metaObject->indexOfProperty("self"));
-    QCOMPARE(selfProperty.userType(), compilationUnit->typeIds.id.id());
+    QCOMPARE(selfProperty.metaType().id(), compilationUnit->typeIds.id.id());
 
     QByteArray typeName = selfProperty.typeName();
     QVERIFY(typeName.endsWith('*'));

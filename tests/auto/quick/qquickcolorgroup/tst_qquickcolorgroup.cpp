@@ -92,7 +92,7 @@ void tst_QQuickColorGroup::checkColorProperty_data()
     auto mo = QQuickColorGroup::staticMetaObject;
     for (int i = mo.propertyOffset(); i < mo.propertyCount(); ++i) {
         auto property = mo.property(i);
-        if (property.type() == QVariant::Color) {
+        if (property.userType() == QMetaType::QColor) {
             QTest::addRow("%s", property.name()) << i;
         }
     }

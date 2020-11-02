@@ -405,9 +405,8 @@ private:
     // a specific userType.
     static bool isJSNumberType(int userType)
     {
-        return userType == (int) QVariant::Int
-                || userType == (int) QVariant::UInt
-                || userType == (int) QVariant::Double;
+        return userType == QMetaType::Int || userType == QMetaType::UInt
+                || userType == QMetaType::Double;
     }
 };
 
@@ -942,7 +941,7 @@ void tst_qqmlecmascript::arrayExpressions()
 
     MyExpression expr(&context, "[a, b, c, 10]");
     QVariant result = expr.evaluate();
-    QCOMPARE(result.userType(), qMetaTypeId<QJSValue>());
+    QCOMPARE(result.typeId(), qMetaTypeId<QJSValue>());
     QJSValue list = qvariant_cast<QJSValue>(result);
     QCOMPARE(list.property("length").toInt(), 4);
     QCOMPARE(list.property(0).toQObject(), &obj1);
@@ -3316,7 +3315,7 @@ void tst_qqmlecmascript::listToVariant()
     QVERIFY(object != nullptr);
 
     QVariant v = object->property("test");
-    QCOMPARE(v.userType(), qMetaTypeId<QQmlListReference>());
+    QCOMPARE(v.typeId(), qMetaTypeId<QQmlListReference>());
     QCOMPARE(qvariant_cast<QQmlListReference>(v).object(), &container);
 
     delete object;
@@ -4917,9 +4916,9 @@ void tst_qqmlecmascript::scarceResources()
         QVariant value = expectedValues.at(i);
 
         QCOMPARE(object->property(prop.toLatin1().constData()).isValid(), validity);
-        if (value.type() == QVariant::Int) {
+        if (value.typeId() == QMetaType::Int) {
             QCOMPARE(object->property(prop.toLatin1().constData()).toInt(), value.toInt());
-        } else if (value.type() == QVariant::Pixmap) {
+        } else if (value.typeId() == QMetaType::QPixmap) {
             QCOMPARE(object->property(prop.toLatin1().constData()).value<QPixmap>(), value.value<QPixmap>());
         }
     }
@@ -5069,15 +5068,15 @@ void tst_qqmlecmascript::propertyVarCpp()
     QVERIFY(object->setProperty("varProperty", QVariant::fromValue(10)));
     QCOMPARE(object->property("varBound"), QVariant(15));
     QCOMPARE(object->property("intBound"), QVariant(15));
-    QVERIFY(isJSNumberType(object->property("varProperty").userType()));
-    QVERIFY(isJSNumberType(object->property("varBound").userType()));
+    QVERIFY(isJSNumberType(object->property("varProperty").typeId()));
+    QVERIFY(isJSNumberType(object->property("varBound").typeId()));
     // assign string to property var that current has bool assigned
-    QCOMPARE(object->property("varProperty2").userType(), (int)QVariant::Bool);
+    QCOMPARE(object->property("varProperty2").typeId(), QMetaType::Bool);
     QVERIFY(object->setProperty("varProperty2", QVariant(QLatin1String("randomString"))));
     QCOMPARE(object->property("varProperty2"), QVariant(QLatin1String("randomString")));
-    QCOMPARE(object->property("varProperty2").userType(), (int)QVariant::String);
+    QCOMPARE(object->property("varProperty2").typeId(), QMetaType::QString);
     // now enforce behaviour when accessing JavaScript objects from cpp.
-    QCOMPARE(object->property("jsobject").userType(), qMetaTypeId<QJSValue>());
+    QCOMPARE(object->property("jsobject").typeId(), qMetaTypeId<QJSValue>());
     delete object;
 }
 
@@ -5948,7 +5947,7 @@ void tst_qqmlecmascript::assignSequenceTypes()
     QVERIFY(object != nullptr);
     QVariant result;
     QMetaObject::invokeMethod(object.data(), "tryWritingReadOnlySequence", Q_RETURN_ARG(QVariant, result));
-    QVERIFY(result.type() == QVariant::Bool);
+    QVERIFY(result.typeId() == QMetaType::Bool);
     QVERIFY(result.toBool());
     }
 }
@@ -5986,7 +5985,7 @@ void tst_qqmlecmascript::nullObjectInitializer()
         }
 
         QVariant value = obj->property("testProperty");
-        QVERIFY(value.userType() == qMetaTypeId<QObject*>());
+        QVERIFY(value.typeId() == qMetaTypeId<QObject*>());
         QVERIFY(!value.value<QObject*>());
     }
 
@@ -6007,7 +6006,7 @@ void tst_qqmlecmascript::nullObjectInitializer()
         QVERIFY(obj->property("success").toBool());
 
         QVariant value = obj->property("testProperty");
-        QVERIFY(value.userType() == qMetaTypeId<QObject*>());
+        QVERIFY(value.typeId() == qMetaTypeId<QObject*>());
         QVERIFY(!value.value<QObject*>());
     }
 
@@ -6080,10 +6079,10 @@ void tst_qqmlecmascript::variants()
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
 
-    QCOMPARE(object->property("undefinedVariant").type(), QVariant::Invalid);
-    QCOMPARE(int(object->property("nullVariant").type()), int(QMetaType::Nullptr));
-    QCOMPARE(object->property("intVariant").type(), QVariant::Int);
-    QCOMPARE(object->property("doubleVariant").type(), QVariant::Double);
+    QCOMPARE(object->property("undefinedVariant").typeId(), QMetaType::UnknownType);
+    QCOMPARE(object->property("nullVariant").typeId(), QMetaType::Nullptr);
+    QCOMPARE(object->property("intVariant").typeId(), QMetaType::Int);
+    QCOMPARE(object->property("doubleVariant").typeId(), QMetaType::Double);
 
     QVariant result;
     QMetaObject::invokeMethod(object.get(), "checkNull", Q_RETURN_ARG(QVariant, result));
@@ -8245,7 +8244,7 @@ void tst_qqmlecmascript::singletonWithEnum()
         qDebug() << component.errors().first().toString();
     QVERIFY(!obj.isNull());
     QVariant prop = obj->property("testValue");
-    QCOMPARE(prop.type(), QVariant::Int);
+    QCOMPARE(prop.typeId(), QMetaType::Int);
     QCOMPARE(prop.toInt(), int(SingletonWithEnum::TestValue));
 
     {
@@ -8267,7 +8266,7 @@ void tst_qqmlecmascript::lazyBindingEvaluation()
        qDebug() << component.errors().first().toString();
     QVERIFY(!obj.isNull());
     QVariant prop = obj->property("arrayLength");
-    QCOMPARE(prop.type(), QVariant::Int);
+    QCOMPARE(prop.typeId(), QMetaType::Int);
     QCOMPARE(prop.toInt(), 2);
 }
 
@@ -8574,7 +8573,7 @@ void tst_qqmlecmascript::instanceof()
     QJSEngine engine;
     QJSValue ret = engine.evaluate(setupCode + ";\n" + QTest::currentDataTag());
 
-    if (expectedValue.type() == QVariant::Bool) {
+    if (expectedValue.typeId() == QMetaType::Bool) {
         bool returnValue = ret.toBool();
         QVERIFY2(!ret.isError(), qPrintable(ret.toString()));
         QCOMPARE(returnValue, expectedValue.toBool());

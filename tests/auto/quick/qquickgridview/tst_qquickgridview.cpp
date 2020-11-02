@@ -6447,7 +6447,7 @@ void tst_QQuickGridView::matchIndexLists(const QVariantList &indexLists, const Q
 void tst_QQuickGridView::matchItemsAndIndexes(const QVariantMap &items, const QaimModel &model, const QList<int> &expectedIndexes)
 {
     for (QVariantMap::const_iterator it = items.begin(); it != items.end(); ++it) {
-        QCOMPARE(it.value().type(), QVariant::Int);
+        QCOMPARE(it.value().typeId(), QMetaType::Int);
         QString name = it.key();
         int itemIndex = it.value().toInt();
         QVERIFY2(expectedIndexes.contains(itemIndex), QTest::toString(QString("Index %1 not found in expectedIndexes").arg(itemIndex)));

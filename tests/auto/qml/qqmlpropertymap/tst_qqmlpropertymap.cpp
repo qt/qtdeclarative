@@ -468,7 +468,7 @@ void tst_QQmlPropertyMap::QTBUG_35906()
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
     QVariant value = obj->property("testValue");
-    QCOMPARE(value.type(), QVariant::Int);
+    QCOMPARE(value.typeId(), QMetaType::Int);
     QCOMPARE(value.toInt(), 42);
 }
 

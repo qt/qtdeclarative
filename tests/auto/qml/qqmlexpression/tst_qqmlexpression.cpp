@@ -142,7 +142,7 @@ void tst_qqmlexpression::expressionFromDataComponent()
 
     QQmlExpression expression(object->scriptString());
     QVariant result = expression.evaluate();
-    QCOMPARE(result.type(), QVariant::String);
+    QCOMPARE(result.typeId(), QMetaType::QString);
     QCOMPARE(result.toString(), QStringLiteral("success"));
 }
 

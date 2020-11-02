@@ -145,7 +145,7 @@ bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVarian
 
     for (int i=0 ; i < testList.count() ; ++i) {
         const QVariant &testVariant = testList.at(i);
-        if (testVariant.type() != QVariant::Map)
+        if (testVariant.typeId() != QMetaType::QVariantMap)
             return false;
         const QVariantMap &map = testVariant.toMap();
 
@@ -164,7 +164,7 @@ bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVarian
 
             const QVariant &modelData = model->data(i, roleIndex);
 
-            if (testData.type() == QVariant::List) {
+            if (testData.typeId() == QMetaType::QVariantList) {
                 const QVariantList &subList = testData.toList();
                 allOk = allOk && compareVariantList(subList, modelData);
             } else {
@@ -421,7 +421,7 @@ void tst_qqmllistmodel::static_nestedElements()
     QVERIFY(obj != nullptr);
 
     QVariant count = obj->property("count");
-    QCOMPARE(count.type(), QVariant::Int);
+    QCOMPARE(count.typeId(), QMetaType::Int);
     QCOMPARE(count.toInt(), elementCount);
 
     delete obj;
@@ -809,7 +809,7 @@ void tst_qqmllistmodel::get()
     int role = roleFromName(model, roleName);
     QVERIFY(role >= 0);
 
-    if (roleValue.type() == QVariant::List) {
+    if (roleValue.typeId() == QMetaType::QVariantList) {
         const QVariantList &list = roleValue.toList();
         QVERIFY(compareVariantList(list, model->data(index, role)));
     } else {
@@ -861,7 +861,7 @@ void tst_qqmllistmodel::get_nested()
     QFETCH(QVariant, roleValue);
     QFETCH(bool, dynamicRoles);
 
-    if (roleValue.type() == QVariant::Map)
+    if (roleValue.typeId() == QMetaType::QVariantMap)
         return;
 
     QQmlEngine engine;
@@ -935,7 +935,7 @@ void tst_qqmllistmodel::get_nested()
 
         int role = roleFromName(childModel, roleName);
         QVERIFY(role >= 0);
-        if (roleValue.type() == QVariant::List) {
+        if (roleValue.typeId() == QMetaType::QVariantList) {
             QVERIFY(compareVariantList(roleValue.toList(), childModel->data(index, role)));
         } else {
             QCOMPARE(childModel->data(index, role), roleValue);

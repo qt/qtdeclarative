@@ -976,8 +976,9 @@ void tst_QJSValue::toVariant()
         QCOMPARE(qjsvalue_cast<QVariant>(number), QVariant(123.0));
 
         QJSValue intNumber = eng.toScriptValue((qint32)123);
-        QCOMPARE(intNumber.toVariant().type(), QVariant((qint32)123).type());
-        QCOMPARE((qjsvalue_cast<QVariant>(number)).type(), QVariant((qint32)123).type());
+        QCOMPARE(intNumber.toVariant().typeId(), QVariant((qint32)123).typeId());
+        QCOMPARE((qjsvalue_cast<QVariant>(number)).typeId(),
+                 QVariant((qint32)123).typeId());
 
         QJSValue falskt = eng.toScriptValue(false);
         QCOMPARE(falskt.toVariant(), QVariant(false));
@@ -998,7 +999,7 @@ void tst_QJSValue::toVariant()
     QJSValue qobject = eng.newQObject(&temp);
     {
         QVariant var = qobject.toVariant();
-        QCOMPARE(var.userType(), int(QMetaType::QObjectStar));
+        QCOMPARE(var.typeId(), int(QMetaType::QObjectStar));
         QCOMPARE(qvariant_cast<QObject*>(var), (QObject *)&temp);
     }
 
@@ -1060,7 +1061,7 @@ void tst_QJSValue::toVariant()
         QVERIFY(array.isArray());
         QCOMPARE(array.property("length").toInt(), 2);
         QVariant ret = array.toVariant();
-        QCOMPARE(ret.userType(), QVariant::List);
+        QCOMPARE(ret.typeId(), QMetaType::QVariantList);
         QVariantList listOut = ret.toList();
         QCOMPARE(listOut.size(), listIn.size());
         for (int i = 0; i < listIn.size(); ++i)

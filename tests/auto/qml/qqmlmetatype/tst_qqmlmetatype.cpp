@@ -329,10 +329,10 @@ void tst_qqmlmetatype::externalEnums()
     QScopedPointer<QObject> obj(c.create());
     QVERIFY(obj);
     QVariant a = obj->property("a");
-    QCOMPARE(a.userType(), QVariant::Int);
+    QCOMPARE(a.typeId(), QMetaType::Int);
     QCOMPARE(a.toInt(), int(QStandardPaths::DocumentsLocation));
     QVariant b = obj->property("b");
-    QCOMPARE(b.userType(), QVariant::Int);
+    QCOMPARE(b.typeId(), QMetaType::Int);
     QCOMPARE(b.toInt(), int(QStandardPaths::DocumentsLocation));
 
 }
@@ -398,10 +398,10 @@ void tst_qqmlmetatype::unregisterCustomType()
         QObject *controller = obj->findChild<QObject *>("controller");
         QVERIFY2(qobject_cast<Controller1 *>(controller), "child 'controller' could be found and is a Controller1*");
         QVariant stringVal = controller->property("string");
-        QCOMPARE(stringVal.userType(), QVariant::String);
+        QCOMPARE(stringVal.typeId(), QMetaType::QString);
         QCOMPARE(stringVal.toString(), QStringLiteral("Controller #1"));
         QVariant enumVal = controller->property("enumVal");
-        QVERIFY2(QMetaType(enumVal.userType()).flags() & QMetaType::IsEnumeration, "enumVal's type is enumeratoion");
+        QVERIFY2(QMetaType(enumVal.typeId()).flags() & QMetaType::IsEnumeration, "enumVal's type is enumeratoion");
         QCOMPARE(enumVal.toInt(), 1);
     }
     QQmlMetaType::unregisterType(controllerId);
@@ -423,10 +423,10 @@ void tst_qqmlmetatype::unregisterCustomType()
         QObject *controller = obj->findChild<QObject *>("controller");
         QVERIFY2(qobject_cast<Controller2 *>(controller), "child 'controller' could be found and is a Controller2*");
         QVariant stringVal = controller->property("string");
-        QCOMPARE(stringVal.userType(), QVariant::String);
+        QCOMPARE(stringVal.typeId(), QMetaType::QString);
         QCOMPARE(stringVal.toString(), QStringLiteral("Controller #2"));
         QVariant enumVal = controller->property("enumVal");
-        QVERIFY2(QMetaType(enumVal.userType()).flags() & QMetaType::IsEnumeration, "enumVal's type is enumeratoion");
+        QVERIFY2(QMetaType(enumVal.typeId()).flags() & QMetaType::IsEnumeration, "enumVal's type is enumeratoion");
         QCOMPARE(enumVal.toInt(), 111);
     }
     QQmlMetaType::unregisterType(controllerId);
@@ -448,10 +448,10 @@ void tst_qqmlmetatype::unregisterCustomType()
         QObject *controller = obj->findChild<QObject *>("controller");
         QVERIFY2(qobject_cast<Controller1 *>(controller), "child 'controller' could be found and is a Controller1*");
         QVariant stringVal = controller->property("string");
-        QCOMPARE(stringVal.userType(), QVariant::String);
+        QCOMPARE(stringVal.typeId(), QMetaType::QString);
         QCOMPARE(stringVal.toString(), QStringLiteral("Controller #1"));
         QVariant enumVal = controller->property("enumVal");
-        QVERIFY2(QMetaType(enumVal.userType()).flags() & QMetaType::IsEnumeration, "enumVal's type is enumeratoion");
+        QVERIFY2(QMetaType(enumVal.typeId()).flags() & QMetaType::IsEnumeration, "enumVal's type is enumeratoion");
         QCOMPARE(enumVal.toInt(), 1);
     }
 }
@@ -498,7 +498,7 @@ void tst_qqmlmetatype::unregisterCustomSingletonType()
         QScopedPointer<QObject> obj(c.create());
         QVERIFY(obj.data());
         QVariant stringVal = obj->property("text");
-        QCOMPARE(stringVal.userType(), QVariant::String);
+        QCOMPARE(stringVal.typeId(), QMetaType::QString);
         QCOMPARE(stringVal.toString(), QStringLiteral("StaticProvider #1"));
     }
     QQmlMetaType::unregisterType(staticProviderId);
@@ -515,7 +515,7 @@ void tst_qqmlmetatype::unregisterCustomSingletonType()
         QScopedPointer<QObject> obj(c.create());
         QVERIFY(obj.data());
         QVariant stringVal = obj->property("text");
-        QCOMPARE(stringVal.userType(), QVariant::String);
+        QCOMPARE(stringVal.typeId(), QMetaType::QString);
         QCOMPARE(stringVal.toString(), QStringLiteral("StaticProvider #2"));
     }
     QQmlMetaType::unregisterType(staticProviderId);
@@ -532,7 +532,7 @@ void tst_qqmlmetatype::unregisterCustomSingletonType()
         QScopedPointer<QObject> obj(c.create());
         QVERIFY(obj.data());
         QVariant stringVal = obj->property("text");
-        QCOMPARE(stringVal.userType(), QVariant::String);
+        QCOMPARE(stringVal.typeId(), QMetaType::QString);
         QCOMPARE(stringVal.toString(), QStringLiteral("StaticProvider #1"));
     }
 }

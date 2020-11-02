@@ -119,7 +119,7 @@ bool tst_qqmllistmodelworkerscript::compareVariantList(const QVariantList &testL
 
     for (int i=0 ; i < testList.count() ; ++i) {
         const QVariant &testVariant = testList.at(i);
-        if (testVariant.type() != QVariant::Map)
+        if (testVariant.typeId() != QMetaType::QVariantMap)
             return false;
         const QVariantMap &map = testVariant.toMap();
 
@@ -138,7 +138,7 @@ bool tst_qqmllistmodelworkerscript::compareVariantList(const QVariantList &testL
 
             const QVariant &modelData = model->data(model->index(i, 0, QModelIndex()), roleIndex);
 
-            if (testData.type() == QVariant::List) {
+            if (testData.typeId() == QMetaType::QVariantList) {
                 const QVariantList &subList = testData.toList();
                 allOk = allOk && compareVariantList(subList, modelData);
             } else {
@@ -484,7 +484,7 @@ void tst_qqmllistmodelworkerscript::get_worker()
     waitForWorker(item);
 
     // see if we receive the model changes in the main thread's model
-    if (roleValue.type() == QVariant::List) {
+    if (roleValue.typeId() == QMetaType::QVariantList) {
         const QVariantList &list = roleValue.toList();
         QVERIFY(compareVariantList(list, model.data(index, role)));
     } else {

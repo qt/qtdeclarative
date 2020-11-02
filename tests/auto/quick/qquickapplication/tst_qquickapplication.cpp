@@ -217,7 +217,7 @@ void tst_qquickapplication::font()
 
     QVariant defaultFontProperty = item->property("defaultFont");
     QVERIFY(defaultFontProperty.isValid());
-    QCOMPARE(defaultFontProperty.type(), QVariant::Font);
+    QCOMPARE(defaultFontProperty.typeId(), QMetaType::QFont);
     QCOMPARE(defaultFontProperty.value<QFont>(), qApp->font());
 }
 

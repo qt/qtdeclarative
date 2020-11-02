@@ -98,7 +98,7 @@ public:
     {
         int row = index.row();
         if ((row<0) || (row>=items.count()))
-            return QVariant::Invalid;
+            return QVariant(QMetaType(QMetaType::UnknownType));
 
         switch (role) {
         case Qt::DisplayRole:

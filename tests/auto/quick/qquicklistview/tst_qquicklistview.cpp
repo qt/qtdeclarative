@@ -7906,7 +7906,7 @@ void tst_QQuickListView::matchIndexLists(const QVariantList &indexLists, const Q
 void tst_QQuickListView::matchItemsAndIndexes(const QVariantMap &items, const QaimModel &model, const QList<int> &expectedIndexes)
 {
     for (QVariantMap::const_iterator it = items.begin(); it != items.end(); ++it) {
-        QCOMPARE(it.value().type(), QVariant::Int);
+        QCOMPARE(it.value().typeId(), QMetaType::Int);
         QString name = it.key();
         int itemIndex = it.value().toInt();
         QVERIFY2(expectedIndexes.contains(itemIndex), qPrintable(QString("Index %1 not found in expectedIndexes").arg(itemIndex)));
@@ -7920,7 +7920,7 @@ void tst_QQuickListView::matchItemsAndIndexes(const QVariantMap &items, const Qa
 void tst_QQuickListView::matchItemLists(const QVariantList &itemLists, const QList<QQuickItem *> &expectedItems)
 {
     for (int i=0; i<itemLists.count(); i++) {
-        QCOMPARE(itemLists[i].type(), QVariant::List);
+        QCOMPARE(itemLists[i].typeId(), QMetaType::QVariantList);
         QVariantList current = itemLists[i].toList();
         for (int j=0; j<current.count(); j++) {
             QQuickItem *o = qobject_cast<QQuickItem*>(current[j].value<QObject*>());

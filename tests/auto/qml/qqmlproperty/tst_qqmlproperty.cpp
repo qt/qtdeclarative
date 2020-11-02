@@ -525,7 +525,7 @@ void tst_qqmlproperty::qmlmetaproperty_object()
         QCOMPARE(prop.isValid(), true);
         QCOMPARE(prop.object(), qobject_cast<QObject*>(&dobject));
         QCOMPARE(prop.propertyTypeCategory(), QQmlProperty::Normal);
-        QCOMPARE(prop.propertyType(), (int)QVariant::Int);
+        QCOMPARE(prop.propertyType(), QMetaType::Int);
         QCOMPARE(prop.propertyTypeName(), "int");
         QCOMPARE(QString(prop.property().name()), QString("defaultProperty"));
         QVERIFY(!QQmlPropertyPrivate::binding(prop));
@@ -630,7 +630,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string()
         QCOMPARE(prop.isValid(), true);
         QCOMPARE(prop.object(), qobject_cast<QObject*>(&dobject));
         QCOMPARE(prop.propertyTypeCategory(), QQmlProperty::Normal);
-        QCOMPARE(prop.propertyType(), (int)QVariant::Int);
+        QCOMPARE(prop.propertyType(), QMetaType::Int);
         QCOMPARE(prop.propertyTypeName(), "int");
         QCOMPARE(QString(prop.property().name()), QString("defaultProperty"));
         QVERIFY(!QQmlPropertyPrivate::binding(prop));
@@ -835,7 +835,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_context()
         QCOMPARE(prop.isValid(), true);
         QCOMPARE(prop.object(), qobject_cast<QObject*>(&dobject));
         QCOMPARE(prop.propertyTypeCategory(), QQmlProperty::Normal);
-        QCOMPARE(prop.propertyType(), (int)QVariant::Int);
+        QCOMPARE(prop.propertyType(), QMetaType::Int);
         QCOMPARE(prop.propertyTypeName(), "int");
         QCOMPARE(QString(prop.property().name()), QString("defaultProperty"));
         QVERIFY(!QQmlPropertyPrivate::binding(prop));
@@ -940,7 +940,7 @@ void tst_qqmlproperty::qmlmetaproperty_object_string_context()
         QCOMPARE(prop.isValid(), true);
         QCOMPARE(prop.object(), qobject_cast<QObject*>(&dobject));
         QCOMPARE(prop.propertyTypeCategory(), QQmlProperty::Normal);
-        QCOMPARE(prop.propertyType(), (int)QVariant::Int);
+        QCOMPARE(prop.propertyType(), QMetaType::Int);
         QCOMPARE(prop.propertyTypeName(), "int");
         QCOMPARE(QString(prop.property().name()), QString("defaultProperty"));
         QVERIFY(!QQmlPropertyPrivate::binding(prop));
@@ -1232,7 +1232,7 @@ void tst_qqmlproperty::read()
 
         QCOMPARE(p.propertyType(), qMetaTypeId<MyQObject*>());
         QVariant v = p.read();
-        QVERIFY(v.canConvert(QMetaType::QObjectStar));
+        QVERIFY(v.canConvert(QMetaType(QMetaType::QObjectStar)));
         QVERIFY(qvariant_cast<QObject *>(v) == o.qObject());
     }
     {
@@ -1243,7 +1243,7 @@ void tst_qqmlproperty::read()
 
         QCOMPARE(p.propertyType(), qMetaTypeId<MyQObject*>());
         QVariant v = p.read();
-        QVERIFY(v.canConvert(QMetaType::QObjectStar));
+        QVERIFY(v.canConvert(QMetaType(QMetaType::QObjectStar)));
         QVERIFY(qvariant_cast<QObject *>(v) == o.qObject());
     }
 
@@ -1254,7 +1254,7 @@ void tst_qqmlproperty::read()
         QCOMPARE(p.propertyTypeCategory(), QQmlProperty::Object);
         QCOMPARE(p.propertyType(), qMetaTypeId<MyQmlObject*>());
         QVariant v = p.read();
-        QCOMPARE(v.userType(), int(QMetaType::QObjectStar));
+        QCOMPARE(v.typeId(), QMetaType::QObjectStar);
         QVERIFY(qvariant_cast<QObject *>(v) == o.qmlObject());
     }
     {
@@ -1268,7 +1268,7 @@ void tst_qqmlproperty::read()
         QVERIFY(p.propertyType() != QMetaType::QObjectStar);
 
         QVariant v = p.read();
-        QCOMPARE(v.userType(), int(QMetaType::QObjectStar));
+        QCOMPARE(v.typeId(), QMetaType::QObjectStar);
         QCOMPARE(qvariant_cast<QObject *>(v)->property("a").toInt(), 10);
         QCOMPARE(qvariant_cast<QObject *>(v)->property("b").toInt(), 19);
     }
@@ -1278,7 +1278,7 @@ void tst_qqmlproperty::read()
         QVERIFY(object != nullptr);
 
         QVariant v = QQmlProperty::read(object.data(), "test", &engine);
-        QCOMPARE(v.userType(), int(QMetaType::QObjectStar));
+        QCOMPARE(v.typeId(), QMetaType::QObjectStar);
         QCOMPARE(qvariant_cast<QObject *>(v)->property("a").toInt(), 10);
         QCOMPARE(qvariant_cast<QObject *>(v)->property("b").toInt(), 19);
     }
@@ -1996,14 +1996,14 @@ void tst_qqmlproperty::copy()
     QCOMPARE(property->read(), QVariant(10));
     QCOMPARE(property->type(), QQmlProperty::Property);
     QCOMPARE(property->propertyTypeCategory(), QQmlProperty::Normal);
-    QCOMPARE(property->propertyType(), (int)QVariant::Int);
+    QCOMPARE(property->propertyType(), QMetaType::Int);
 
     QQmlProperty p1(*property);
     QCOMPARE(p1.name(), QString("defaultProperty"));
     QCOMPARE(p1.read(), QVariant(10));
     QCOMPARE(p1.type(), QQmlProperty::Property);
     QCOMPARE(p1.propertyTypeCategory(), QQmlProperty::Normal);
-    QCOMPARE(p1.propertyType(), (int)QVariant::Int);
+    QCOMPARE(p1.propertyType(), QMetaType::Int);
 
     QQmlProperty p2(&object, QLatin1String("url"));
     QCOMPARE(p2.name(), QString("url"));
@@ -2012,7 +2012,7 @@ void tst_qqmlproperty::copy()
     QCOMPARE(p2.read(), QVariant(10));
     QCOMPARE(p2.type(), QQmlProperty::Property);
     QCOMPARE(p2.propertyTypeCategory(), QQmlProperty::Normal);
-    QCOMPARE(p2.propertyType(), (int)QVariant::Int);
+    QCOMPARE(p2.propertyType(), QMetaType::Int);
 
     delete property; property = nullptr;
 
@@ -2020,13 +2020,13 @@ void tst_qqmlproperty::copy()
     QCOMPARE(p1.read(), QVariant(10));
     QCOMPARE(p1.type(), QQmlProperty::Property);
     QCOMPARE(p1.propertyTypeCategory(), QQmlProperty::Normal);
-    QCOMPARE(p1.propertyType(), (int)QVariant::Int);
+    QCOMPARE(p1.propertyType(), QMetaType::Int);
 
     QCOMPARE(p2.name(), QString("defaultProperty"));
     QCOMPARE(p2.read(), QVariant(10));
     QCOMPARE(p2.type(), QQmlProperty::Property);
     QCOMPARE(p2.propertyTypeCategory(), QQmlProperty::Normal);
-    QCOMPARE(p2.propertyType(), (int)QVariant::Int);
+    QCOMPARE(p2.propertyType(), QMetaType::Int);
 }
 
 void tst_qqmlproperty::noContext()
