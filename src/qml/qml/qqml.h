@@ -677,7 +677,9 @@ inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versi
         uri, QTypeRevision::fromVersion(versionMajor, versionMinor), typeName,
 
         callback,
-        nullptr, nullptr, QMetaType(), QTypeRevision::zero()
+        nullptr, nullptr, QMetaType(),
+        nullptr, nullptr,
+        QTypeRevision::zero()
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::SingletonRegistration, &api);
@@ -697,6 +699,7 @@ inline int qmlRegisterSingletonType(
         callback,
         QQmlPrivate::StaticMetaObject<T>::staticMetaObject(),
         QQmlPrivate::QmlMetaType<T>::self(),
+        nullptr, nullptr,
         QTypeRevision::zero()
     };
 
@@ -722,6 +725,7 @@ inline int qmlRegisterSingletonType(const char *uri, int versionMajor, int versi
         callback,
         QQmlPrivate::StaticMetaObject<T>::staticMetaObject(),
         QQmlPrivate::QmlMetaType<T>::self(),
+        nullptr, nullptr,
         QTypeRevision::zero()
     };
 
@@ -808,14 +812,14 @@ struct QmlTypeAndRevisionsRegistration<T, Resolved, Extended, false, false> {
     }
 };
 
-template<class T, class Resolved>
-struct QmlTypeAndRevisionsRegistration<T, Resolved, void, true, false> {
+template<class T, class Resolved, class Extended>
+struct QmlTypeAndRevisionsRegistration<T, Resolved, Extended, true, false> {
     static void registerTypeAndRevisions(const char *uri, int versionMajor, QList<int> *qmlTypeIds,
-                                         const QMetaObject *)
+                                         const QMetaObject *extension)
     {
-        QQmlPrivate::qmlRegisterSingletonAndRevisions<Resolved>(
+        QQmlPrivate::qmlRegisterSingletonAndRevisions<Resolved, Extended>(
                     uri, versionMajor, QQmlPrivate::StaticMetaObject<T>::staticMetaObject(),
-                    qmlTypeIds);
+                    qmlTypeIds, extension);
     }
 };
 

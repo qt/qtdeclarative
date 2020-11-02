@@ -131,6 +131,8 @@ public:
     struct QQmlSingletonTypeData
     {
         QQmlType::SingletonInstanceInfo *singletonInstanceInfo;
+        QObject *(*extFunc)(QObject *);
+        const QMetaObject *extMetaObject;
     };
 
     struct QQmlCompositeTypeData

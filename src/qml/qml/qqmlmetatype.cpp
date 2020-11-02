@@ -152,6 +152,8 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
     d->extraData.sd->singletonInstanceInfo->typeName = QString::fromUtf8(type.typeName);
     d->extraData.sd->singletonInstanceInfo->instanceMetaObject
             = type.qObjectApi ? type.instanceMetaObject : nullptr;
+    d->extraData.sd->extFunc = type.extensionObjectCreate;
+    d->extraData.sd->extMetaObject = type.extensionMetaObject;
 
     return d;
 }
@@ -1606,23 +1608,34 @@ QList<QQmlProxyMetaObject::ProxyData> QQmlMetaType::proxyData(const QMetaObject 
 
     const QQmlMetaTypeDataPtr data;
 
+    auto createProxyMetaObject = [&](const QMetaObject *superdataBaseMetaObject,
+                                     const QMetaObject *extMetaObject,
+                                     QObject *(*extFunc)(QObject *)) {
+        if (!extMetaObject)
+            return;
+
+        QMetaObjectBuilder builder;
+        clone(builder, extMetaObject, superdataBaseMetaObject, baseMetaObject);
+        builder.setFlags(MetaObjectFlag::DynamicMetaObject);
+        QMetaObject *mmo = builder.toMetaObject();
+        mmo->d.superdata = baseMetaObject;
+        if (!metaObjects.isEmpty())
+            metaObjects.constLast().metaObject->d.superdata = mmo;
+        else if (lastMetaObject)
+            lastMetaObject->d.superdata = mmo;
+        QQmlProxyMetaObject::ProxyData data = { mmo, extFunc, 0, 0 };
+        metaObjects << data;
+    };
+
     while (mo) {
         QQmlTypePrivate *t = data->metaObjectToType.value(mo);
         if (t) {
             if (t->regType == QQmlType::CppType) {
-                if (t->extraData.cd->extMetaObject) {
-                    QMetaObjectBuilder builder;
-                    clone(builder, t->extraData.cd->extMetaObject, t->baseMetaObject, baseMetaObject);
-                    builder.setFlags(MetaObjectFlag::DynamicMetaObject);
-                    QMetaObject *mmo = builder.toMetaObject();
-                    mmo->d.superdata = baseMetaObject;
-                    if (!metaObjects.isEmpty())
-                        metaObjects.constLast().metaObject->d.superdata = mmo;
-                    else if (lastMetaObject)
-                        lastMetaObject->d.superdata = mmo;
-                    QQmlProxyMetaObject::ProxyData data = { mmo, t->extraData.cd->extFunc, 0, 0 };
-                    metaObjects << data;
-                }
+                createProxyMetaObject(t->baseMetaObject, t->extraData.cd->extMetaObject,
+                                      t->extraData.cd->extFunc);
+            } else if (t->regType == QQmlType::SingletonType) {
+                createProxyMetaObject(t->baseMetaObject, t->extraData.sd->extMetaObject,
+                                      t->extraData.sd->extFunc);
             }
         }
         mo = mo->d.superdata;

@@ -61,6 +61,7 @@
 #include <private/qqmldirparser_p.h>
 #include <private/qqmlboundsignal_p.h>
 #include <private/qqmljsdiagnosticmessage_p.h>
+#include <private/qqmltype_p_p.h>
 #include <QtCore/qstandardpaths.h>
 #include <QtCore/qmetaobject.h>
 #include <QDebug>
@@ -2398,6 +2399,8 @@ QJSValue QQmlEnginePrivate::singletonInstance<QJSValue>(const QQmlType &type)
                                                    qPrintable(QString::fromUtf8(type.typeName()))));
             warning(error);
         } else {
+            type.createProxy(o);
+
             // if this object can use a property cache, create it now
             QQmlData::ensurePropertyCache(q, o);
         }

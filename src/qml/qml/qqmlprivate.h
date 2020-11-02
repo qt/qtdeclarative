@@ -526,6 +526,10 @@ namespace QQmlPrivate
 
         const QMetaObject *instanceMetaObject;
         QMetaType typeId;
+
+        QObject *(*extensionObjectCreate)(QObject *);
+        const QMetaObject *extensionMetaObject;
+
         QTypeRevision revision;
     };
 
@@ -540,6 +544,10 @@ namespace QQmlPrivate
         const QMetaObject *classInfoMetaObject;
 
         QMetaType typeId;
+
+        QObject *(*extensionObjectCreate)(QObject *);
+        const QMetaObject *extensionMetaObject;
+
         QVector<int> *qmlTypeIds;
     };
 
@@ -752,10 +760,10 @@ namespace QQmlPrivate
         }
     };
 
-    template<typename T>
+    template<typename T, typename E>
     void qmlRegisterSingletonAndRevisions(const char *uri, int versionMajor,
                                           const QMetaObject *classInfoMetaObject,
-                                          QVector<int> *qmlTypeIds)
+                                          QVector<int> *qmlTypeIds, const QMetaObject *extension)
     {
         RegisterSingletonTypeAndRevisions api = {
             0,
@@ -769,6 +777,10 @@ namespace QQmlPrivate
             classInfoMetaObject,
 
             QmlMetaType<T>::self(),
+
+            ExtendedType<E>::createParent,
+            extension ? extension : ExtendedType<E>::staticMetaObject(),
+
             qmlTypeIds
         };
 

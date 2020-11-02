@@ -1583,6 +1583,30 @@ private:
     FactorySingleton() = default;
 };
 
+class ExtendedSingleton : public QObject {
+    Q_OBJECT
+    QML_ELEMENT
+    QML_SINGLETON
+    QML_EXTENDED(Extension)
+
+    Q_PROPERTY(int foo READ foo CONSTANT)
+public:
+
+    int foo() const { return 315; }
+};
+
+class NamespaceExtendedSingleton : public QObject {
+    Q_OBJECT
+    QML_ELEMENT
+    QML_SINGLETON
+    QML_EXTENDED_NAMESPACE(ExtensionNamespace)
+
+    Q_PROPERTY(int foo READ foo CONSTANT)
+public:
+
+    int foo() const { return 316; }
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H

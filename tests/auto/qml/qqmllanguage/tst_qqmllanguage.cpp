@@ -342,6 +342,7 @@ private slots:
     void registerValueTypes();
     void extendedNamespace();
     void factorySingleton();
+    void extendedSingleton();
 
 private:
     QQmlEngine engine;
@@ -6063,6 +6064,28 @@ void tst_qqmllanguage::factorySingleton()
     QVERIFY(!obj.isNull());
 
     QCOMPARE(obj->property("mine").toInt(), 314);
+}
+
+void tst_qqmllanguage::extendedSingleton()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+    c.setData("import StaticTest\n"
+              "import QtQml\n"
+              "QtObject {\n"
+              "    property int a: ExtendedSingleton.foo\n"
+              "    property int b: NamespaceExtendedSingleton.foo\n"
+              "    property int c: ExtendedSingleton.extension\n"
+              "    property int d: NamespaceExtendedSingleton.Bar\n"
+              "}", QUrl());
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> obj(c.create());
+    QVERIFY(!obj.isNull());
+
+    QCOMPARE(obj->property("a").toInt(), 315);
+    QCOMPARE(obj->property("b").toInt(), 316);
+    QCOMPARE(obj->property("c").toInt(), 42);
+    QCOMPARE(obj->property("d").toInt(), 9);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

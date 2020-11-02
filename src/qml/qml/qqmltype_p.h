@@ -201,6 +201,8 @@ public:
     void setPendingResolutionName(const QString &name);
     QString pendingResolutionName() const;
 
+    void createProxy(QObject *instance) const;
+
 private:
     friend class QQmlTypePrivate;
     friend size_t qHash(const QQmlType &t, size_t seed);

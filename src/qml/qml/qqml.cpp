@@ -385,6 +385,8 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
             type.qObjectApi,
             type.instanceMetaObject,
             type.typeId,
+            type.extensionObjectCreate,
+            type.extensionMetaObject,
             QTypeRevision()
         };
 

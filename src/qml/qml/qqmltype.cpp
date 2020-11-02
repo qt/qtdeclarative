@@ -78,6 +78,8 @@ QQmlTypePrivate::QQmlTypePrivate(QQmlType::RegistrationType type)
     case QQmlType::CompositeSingletonType:
         extraData.sd = new QQmlSingletonTypeData;
         extraData.sd->singletonInstanceInfo = nullptr;
+        extraData.sd->extFunc = nullptr;
+        extraData.sd->extMetaObject = nullptr;
         break;
     case QQmlType::InterfaceType:
         extraData.cd = nullptr;
@@ -214,20 +216,27 @@ void QQmlTypePrivate::init() const
         return;
     }
 
-    if (regType == QQmlType::CppType) {
-        // Setup extended meta object
+    auto setupExtendedMetaObject = [&](
+            const QMetaObject *extMetaObject,
+            QObject *(*extFunc)(QObject *)) {
+
+        if (!extMetaObject)
+            return;
+
         // XXX - very inefficient
-        if (extraData.cd->extMetaObject) {
-            QMetaObjectBuilder builder;
-            QQmlMetaType::clone(builder, extraData.cd->extMetaObject, extraData.cd->extMetaObject,
-                                extraData.cd->extMetaObject);
-            builder.setFlags(MetaObjectFlag::DynamicMetaObject);
-            QMetaObject *mmo = builder.toMetaObject();
-            mmo->d.superdata = mo;
-            QQmlProxyMetaObject::ProxyData data = { mmo, extraData.cd->extFunc, 0, 0 };
-            metaObjects << data;
-        }
-    }
+        QMetaObjectBuilder builder;
+        QQmlMetaType::clone(builder, extMetaObject, extMetaObject, extMetaObject);
+        builder.setFlags(MetaObjectFlag::DynamicMetaObject);
+        QMetaObject *mmo = builder.toMetaObject();
+        mmo->d.superdata = mo;
+        QQmlProxyMetaObject::ProxyData data = { mmo, extFunc, 0, 0 };
+        metaObjects << data;
+    };
+
+    if (regType == QQmlType::SingletonType)
+        setupExtendedMetaObject(extraData.sd->extMetaObject, extraData.sd->extFunc);
+    else if (regType == QQmlType::CppType)
+        setupExtendedMetaObject(extraData.cd->extMetaObject, extraData.cd->extFunc);
 
     metaObjects.append(QQmlMetaType::proxyData(
             mo, baseMetaObject, metaObjects.isEmpty() ? nullptr
@@ -477,9 +486,7 @@ QObject *QQmlType::create() const
 
     d->extraData.cd->newFunc(rv, d->extraData.cd->userdata);
 
-    if (rv && !d->metaObjects.isEmpty())
-        (void)new QQmlProxyMetaObject(rv, &d->metaObjects);
-
+    createProxy(rv);
     return rv;
 }
 
@@ -493,9 +500,7 @@ void QQmlType::create(QObject **out, void **memory, size_t additionalMemory) con
     QObject *rv = (QObject *)operator new(d->extraData.cd->allocationSize + additionalMemory);
     d->extraData.cd->newFunc(rv, d->extraData.cd->userdata);
 
-    if (rv && !d->metaObjects.isEmpty())
-        (void)new QQmlProxyMetaObject(rv, &d->metaObjects);
-
+    createProxy(rv);
     *out = rv;
     *memory = ((char *)rv) + d->extraData.cd->allocationSize;
 }
@@ -546,16 +551,32 @@ bool QQmlType::isCreatable() const
 
 QQmlType::ExtensionFunc QQmlType::extensionFunction() const
 {
-    if (!d || d->regType != CppType)
+    if (!d)
         return nullptr;
-    return d->extraData.cd->extFunc;
+
+    switch (d->regType) {
+    case CppType:
+        return d->extraData.cd->extFunc;
+    case SingletonType:
+        return d->extraData.sd->extFunc;
+    default:
+        return nullptr;
+    }
 }
 
 const QMetaObject *QQmlType::extensionMetaObject() const
 {
-    if (!d || d->regType != CppType)
+    if (!d)
         return nullptr;
-    return d->extraData.cd->extMetaObject;
+
+    switch (d->regType) {
+    case CppType:
+        return d->extraData.cd->extMetaObject;
+    case SingletonType:
+        return d->extraData.sd->extMetaObject;
+    default:
+        return nullptr;
+    }
 }
 
 bool QQmlType::isExtendedType() const
@@ -974,6 +995,12 @@ QString QQmlType::pendingResolutionName() const
 {
     Q_ASSERT(d && d->regType == QQmlType::RegistrationType::InlineComponentType);
     return d->extraData.id->inlineComponentName;
+}
+
+void QQmlType::createProxy(QObject *instance) const
+{
+    if (!d->metaObjects.isEmpty())
+        (void)new QQmlProxyMetaObject(instance, &d->metaObjects);
 }
 
 QT_END_NAMESPACE
