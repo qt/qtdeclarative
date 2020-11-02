@@ -145,17 +145,57 @@ namespace QQmlPrivate
         }
     };
 
-    template<typename T>
-    constexpr bool isConstructible()
+    enum class ConstructionMode
     {
-        return std::is_default_constructible<T>::value && std::is_base_of<QObject, T>::value;
+        None,
+        Constructor,
+        Factory
+    };
+
+    template<typename T, typename = std::void_t<>>
+    struct HasSingletonFactory
+    {
+        static constexpr bool value = false;
+    };
+
+    template<typename T>
+    struct HasSingletonFactory<T, std::void_t<decltype(T::create(
+                                                           static_cast<QQmlEngine *>(nullptr),
+                                                           static_cast<QJSEngine *>(nullptr)))>>
+    {
+        static constexpr bool value = std::is_same_v<
+            decltype(T::create(static_cast<QQmlEngine *>(nullptr),
+                               static_cast<QJSEngine *>(nullptr))), T *>;
+    };
+
+    template<typename T>
+    constexpr ConstructionMode constructionMode()
+    {
+        if constexpr (!std::is_base_of<QObject, T>::value)
+            return ConstructionMode::None;
+        if constexpr (std::is_default_constructible<T>::value)
+            return ConstructionMode::Constructor;
+        if constexpr (HasSingletonFactory<T>::value)
+            return ConstructionMode::Factory;
+
+        return ConstructionMode::None;
     }
 
     template<typename T>
     void createInto(void *memory, void *) { new (memory) QQmlElement<T>; }
 
-    template<typename T>
-    QObject *createSingletonInstance(QQmlEngine *, QJSEngine *) { return new T; }
+    template<typename T, ConstructionMode Mode>
+    QObject *createSingletonInstance(QQmlEngine *q, QJSEngine *j)
+    {
+        Q_UNUSED(q);
+        Q_UNUSED(j);
+        if constexpr (Mode == ConstructionMode::Constructor)
+            return new T;
+        else if constexpr (Mode == ConstructionMode::Factory)
+            return T::create(q, j);
+        else
+            return nullptr;
+    }
 
     template<typename T>
     QObject *createParent(QObject *p) { return new T(p); }
@@ -165,23 +205,31 @@ namespace QQmlPrivate
     using CreateParentFunction = QObject *(*)(QObject *);
     using CreateValueTypeFunction = QVariant (*)(const QJSValue &);
 
-    template<typename T, bool Constructible = isConstructible<T>()>
+    template<typename T, ConstructionMode Mode = constructionMode<T>()>
     struct Constructors;
 
     template<typename T>
-    struct Constructors<T, true>
+    struct Constructors<T, ConstructionMode::Constructor>
     {
         static constexpr CreateIntoFunction createInto
                 = QQmlPrivate::createInto<T>;
         static constexpr CreateSingletonFunction createSingletonInstance
-                = QQmlPrivate::createSingletonInstance<T>;
+                = QQmlPrivate::createSingletonInstance<T, ConstructionMode::Constructor>;
     };
 
     template<typename T>
-    struct Constructors<T, false>
+    struct Constructors<T, ConstructionMode::None>
     {
         static constexpr CreateIntoFunction createInto = nullptr;
         static constexpr CreateSingletonFunction createSingletonInstance = nullptr;
+    };
+
+    template<typename T>
+    struct Constructors<T, ConstructionMode::Factory>
+    {
+        static constexpr CreateIntoFunction createInto = nullptr;
+        static constexpr CreateSingletonFunction createSingletonInstance
+                = QQmlPrivate::createSingletonInstance<T, ConstructionMode::Factory>;
     };
 
     template<typename T,

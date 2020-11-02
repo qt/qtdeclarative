@@ -1563,6 +1563,26 @@ public:
     int own() const { return 93; }
 };
 
+class FactorySingleton : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_SINGLETON
+
+    Q_PROPERTY(int foo READ foo CONSTANT)
+public:
+
+    static FactorySingleton *create(QQmlEngine *, QJSEngine *)
+    {
+        return new FactorySingleton;
+    }
+
+    int foo() const { return 314; }
+
+private:
+    FactorySingleton() = default;
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H

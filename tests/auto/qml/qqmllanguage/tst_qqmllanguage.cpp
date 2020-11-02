@@ -341,6 +341,7 @@ private slots:
     void checkURLtoURLObject();
     void registerValueTypes();
     void extendedNamespace();
+    void factorySingleton();
 
 private:
     QQmlEngine engine;
@@ -6046,6 +6047,22 @@ void tst_qqmllanguage::extendedNamespace()
     QCOMPARE(obj->property("mine").toInt(), 93);
     QCOMPARE(obj->property("myEnum").toInt(), 16);
     QCOMPARE(obj->property("fromExtension").toInt(), 9);
+}
+
+void tst_qqmllanguage::factorySingleton()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+    c.setData("import StaticTest\n"
+              "import QtQml\n"
+              "QtObject {\n"
+              "    property int mine: FactorySingleton.foo\n"
+              "}", QUrl());
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> obj(c.create());
+    QVERIFY(!obj.isNull());
+
+    QCOMPARE(obj->property("mine").toInt(), 314);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
