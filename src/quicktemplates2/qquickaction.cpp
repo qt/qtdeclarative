@@ -118,7 +118,7 @@ QT_BEGIN_NAMESPACE
 #if QT_CONFIG(shortcut)
 static QKeySequence variantToKeySequence(const QVariant &var)
 {
-    if (var.type() == QVariant::Int)
+    if (var.metaType().id() == QMetaType::Int)
         return QKeySequence(static_cast<QKeySequence::StandardKey>(var.toInt()));
     return QKeySequence::fromString(var.toString());
 }

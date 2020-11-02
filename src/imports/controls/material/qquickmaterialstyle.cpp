@@ -1356,7 +1356,7 @@ void QQuickMaterialStyle::attachedParentChange(QQuickAttachedObject *newParent, 
 bool QQuickMaterialStyle::variantToRgba(const QVariant &var, const char *name, QRgb *rgba, bool *custom) const
 {
     *custom = false;
-    if (var.type() == QVariant::Int) {
+    if (var.metaType().id() == QMetaType::Int) {
         int val = var.toInt();
         if (val > BlueGrey) {
             qmlWarning(parent()) << "unknown Material." << name << " value: " << val;

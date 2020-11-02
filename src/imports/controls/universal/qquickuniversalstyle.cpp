@@ -592,7 +592,7 @@ void QQuickUniversalStyle::initGlobals()
 
 bool QQuickUniversalStyle::variantToRgba(const QVariant &var, const char *name, QRgb *rgba) const
 {
-    if (var.type() == QVariant::Int) {
+    if (var.metaType().id() == QMetaType::Int) {
         int val = var.toInt();
         if (val < Lime || val > Taupe) {
             qmlWarning(parent()) << "unknown Universal." << name << " value: " << val;

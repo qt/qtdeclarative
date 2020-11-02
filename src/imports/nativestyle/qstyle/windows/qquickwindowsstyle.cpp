@@ -112,7 +112,7 @@ bool QWindowsStylePrivate::isDarkMode()
     // dark mode is in effect.
     if (auto ni = QGuiApplication::platformNativeInterface()) {
         const QVariant darkModeStyleP = ni->property("darkModeStyle");
-        result = darkModeStyleP.type() == QVariant::Bool
+        result = darkModeStyleP.metaType().id() == QMetaType::Bool
                  && darkModeStyleP.value<bool>()
                  && ni->property("darkMode").value<bool>();
     }

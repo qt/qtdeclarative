@@ -124,7 +124,7 @@ QQuickPlatformMenuItem::~QQuickPlatformMenuItem()
 #if QT_CONFIG(shortcut)
     if (m_shortcutId != -1) {
         QKeySequence sequence;
-        if (m_shortcut.type() == QVariant::Int)
+        if (m_shortcut.metaType().id() == QMetaType::Int)
             sequence = QKeySequence(static_cast<QKeySequence::StandardKey>(m_shortcut.toInt()));
         else
             sequence = QKeySequence::fromString(m_shortcut.toString());
@@ -186,7 +186,7 @@ void QQuickPlatformMenuItem::sync()
 
 #if QT_CONFIG(shortcut)
     QKeySequence sequence;
-    if (m_shortcut.type() == QVariant::Int)
+    if (m_shortcut.metaType().id() == QMetaType::Int)
         sequence = QKeySequence(static_cast<QKeySequence::StandardKey>(m_shortcut.toInt()));
     else
         sequence = QKeySequence::fromString(m_shortcut.toString());
@@ -503,7 +503,7 @@ void QQuickPlatformMenuItem::setShortcut(const QVariant& shortcut)
 #if QT_CONFIG(shortcut)
     if (m_shortcutId != -1) {
         QKeySequence sequence;
-        if (m_shortcut.type() == QVariant::Int)
+        if (m_shortcut.metaType().id() == QMetaType::Int)
             sequence = QKeySequence(static_cast<QKeySequence::StandardKey>(m_shortcut.toInt()));
         else
             sequence = QKeySequence::fromString(m_shortcut.toString());
@@ -514,7 +514,7 @@ void QQuickPlatformMenuItem::setShortcut(const QVariant& shortcut)
     sync();
 #if QT_CONFIG(shortcut)
     QKeySequence sequence;
-    if (m_shortcut.type() == QVariant::Int)
+    if (m_shortcut.metaType().id() == QMetaType::Int)
         sequence = QKeySequence(static_cast<QKeySequence::StandardKey>(m_shortcut.toInt()));
     else
         sequence = QKeySequence::fromString(m_shortcut.toString());
