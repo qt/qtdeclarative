@@ -73,8 +73,7 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 #endif
 
-    QFontDatabase fontDatabase;
-    if (fontDatabase.addApplicationFont(":/fonts/fontello.ttf") == -1)
+    if (QFontDatabase::addApplicationFont(":/fonts/fontello.ttf") == -1)
         qWarning() << "Failed to load fontello.ttf";
 
     qmlRegisterType<DocumentHandler>("io.qt.examples.texteditor", 1, 0, "DocumentHandler");
