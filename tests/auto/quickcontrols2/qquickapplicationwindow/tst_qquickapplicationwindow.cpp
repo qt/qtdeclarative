@@ -766,8 +766,6 @@ void tst_QQuickApplicationWindow::focusAfterPopupClosed()
 
 void tst_QQuickApplicationWindow::clearFocusOnDestruction()
 {
-    if (QOperatingSystemVersion::current() <= QOperatingSystemVersion::Windows7)
-        QSKIP("Test requires a version of Windows newer than 7: QTBUG-84443");
     if (!canImportModule("import QtGraphicalEffects; DropShadow {}"))
         QSKIP("Test requires QtGraphicalEffects");
 

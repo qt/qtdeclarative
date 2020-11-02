@@ -128,8 +128,7 @@ void tst_RenderControl::renderAndReadBackWithRhi_data()
     QTest::newRow("Vulkan") << QSGRendererInterface::VulkanRhi;
 #endif
 #ifdef Q_OS_WIN
-    if (QOperatingSystemVersion::current() > QOperatingSystemVersion::Windows7)
-        QTest::newRow("D3D11") << QSGRendererInterface::Direct3D11Rhi;
+    QTest::newRow("D3D11") << QSGRendererInterface::Direct3D11Rhi;
 #endif
 #if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
     QTest::newRow("Metal") << QSGRendererInterface::MetalRhi;
