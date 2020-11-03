@@ -39,11 +39,14 @@ Rectangle {
         highlight: Rectangle { width: 80; height: 80; color: "yellow" }
         model: 10
         delegate: myDelegate
+
+        // speed up test runs
+        flickDeceleration: 5000
     }
 
     Text {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        text: list.contentX + ", " + list.contentY
+        text: list.contentX.toFixed(1) + ", " + list.contentY.toFixed(1)
     }
 }

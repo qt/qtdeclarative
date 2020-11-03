@@ -36,14 +36,23 @@ Rectangle {
         highlightRangeMode: ListView.StrictlyEnforceRange
 //        highlightRangeMode: ListView.NoHighlightRange
         highlight: Rectangle { width: 200; height: 200; color: "yellow" }
-        flickDeceleration: 200 // encourages long flick
         model: 4
         delegate: myDelegate
+
+        // speed up test runs
+        flickDeceleration: 5000
+        rebound: Transition {
+            NumberAnimation {
+                properties: "x,y"
+                duration: 30
+                easing.type: Easing.OutBounce
+            }
+        }
     }
 
     Text {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
-        text: list.contentX + ", " + list.contentY
+        text: list.contentX.toFixed(1) + ", " + list.contentY.toFixed(1)
     }
 }
