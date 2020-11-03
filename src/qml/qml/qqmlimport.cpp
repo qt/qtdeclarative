@@ -1274,6 +1274,11 @@ QTypeRevision QQmlImportsPrivate::importExtension(
                                 }
                                 return QTypeRevision();
                             }
+
+                            if (qmlImportTrace())
+                                qDebug().nospace() << "QQmlImports(" << qPrintable(base) << ")::importExtension: "
+                                                   << "loaded static plugin " << versionUri;
+
                             break;
                         }
                     }
