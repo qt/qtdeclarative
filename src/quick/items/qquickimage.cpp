@@ -532,7 +532,7 @@ qreal QQuickImage::paintedHeight() const
 
     The URL may be absolute, or relative to the URL of the component.
 
-    \sa QQuickImageProvider {Compressed Texture Files} {Automatic Detection of File Extension}
+    \sa QQuickImageProvider, {Compressed Texture Files}, {Automatic Detection of File Extension}
 */
 
 /*!
