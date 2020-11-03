@@ -192,11 +192,7 @@ void tst_QQmlMetaObject::property()
     QCOMPARE(prop.name(), "test");
 
     QCOMPARE(QByteArray(prop.typeName()), cppTypeName);
-    if (prop.userType() < QMetaType::User)
-        QCOMPARE(prop.type(), QVariant::Type(cppType));
-    else
-        QCOMPARE(prop.type(), QVariant::UserType);
-    QCOMPARE(prop.userType(), cppType);
+    QCOMPARE(prop.metaType().id(), cppType);
 
     QVERIFY(!prop.isConstant());
     QVERIFY(!prop.isDesignable());

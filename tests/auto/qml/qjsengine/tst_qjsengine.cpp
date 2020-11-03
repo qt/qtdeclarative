@@ -563,9 +563,9 @@ void tst_QJSEngine::toScriptValue()
     QVariant output = engine.fromScriptValue<QVariant>(outputJS);
 
     if (input.metaType().id() == QMetaType::QChar) {
-        if (!input.convert(QMetaType::QString))
+        if (!input.convert(QMetaType(QMetaType::QString)))
             QFAIL("cannot convert to the original value");
-    } else if (!output.convert(input.metaType().id()) && input.isValid())
+    } else if (!output.convert(input.metaType()) && input.isValid())
         QFAIL("cannot convert to the original value");
     QCOMPARE(input, output);
 }
@@ -3758,7 +3758,8 @@ class TranslationScope
 public:
     TranslationScope(const QString &fileName)
     {
-        translator.load(fileName);
+        if (!translator.load(fileName))
+            QFAIL("failed to load translation");
         QCoreApplication::instance()->installTranslator(&translator);
     }
     ~TranslationScope()
@@ -4947,7 +4948,7 @@ void tst_QJSEngine::interrupt()
     Q_UNUSED(threshold);
 
     QJSEngine *engineInThread = nullptr;
-    QScopedPointer<QThread> worker(QThread::create([&engineInThread, &code, jitThreshold](){
+    QScopedPointer<QThread> worker(QThread::create([&engineInThread, &code](){
         QJSEngine jsEngine;
         engineInThread = &jsEngine;
         QJSValue result = jsEngine.evaluate(code);

@@ -514,7 +514,7 @@ void tst_qqmlpropertycache::passQGadget()
     QVERIFY(before.isNull());
     emit emitter.emitGadget(SimpleGadget());
     QVariant after = obj->property("result");
-    QCOMPARE(QMetaType::Type(after.type()), QMetaType::Bool);
+    QCOMPARE(after.typeId(), QMetaType::Bool);
     QVERIFY(after.toBool());
 }
 
