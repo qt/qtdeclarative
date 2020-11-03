@@ -476,7 +476,9 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
     prop.setType(m_rootScopeImports.value(uiob->qualifiedTypeNameId->name.toString()));
     m_currentScope->addOwnProperty(prop);
 
-    enterEnvironment(QQmlJSScope::QMLScope, name, uiob->firstSourceLocation());
+    enterEnvironment(QQmlJSScope::QMLScope, name,
+                     uiob->qualifiedTypeNameId ? uiob->qualifiedTypeNameId->identifierToken
+                                               : uiob->firstSourceLocation());
     m_currentScope->resolveTypes(m_rootScopeImports);
     return true;
 }
