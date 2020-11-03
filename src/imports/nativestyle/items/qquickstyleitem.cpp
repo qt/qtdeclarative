@@ -284,7 +284,8 @@ void QQuickStyleItem::paintControlToImage()
 
     m_dirty.setFlag(DirtyFlag::Image, false);
     const qreal scale = window()->devicePixelRatio();
-    const QSize scaledImageSize = imageSize() * scale;
+    const QSize imgSize = imageSize();
+    const QSize scaledImageSize = imgSize * scale;
 
     if (m_paintedImage.size() != scaledImageSize) {
         m_paintedImage = QImage(scaledImageSize, QImage::Format_ARGB32_Premultiplied);
@@ -300,16 +301,16 @@ void QQuickStyleItem::paintControlToImage()
     if (m_debugFlags != NoDebug) {
         painter.setPen(QColor(255, 0, 0, 255));
         if (m_debugFlags.testFlag(ImageRect))
-            painter.drawRect(QRect(QPoint(0, 0), m_paintedImage.size() / scale));
+            painter.drawRect(QRect(QPoint(0, 0), imgSize));
         if (m_debugFlags.testFlag(LayoutRect)) {
             const auto m = layoutMargins();
-            QRect rect = QRect(QPoint(0, 0), m_paintedImage.size() / scale);
+            QRect rect = QRect(QPoint(0, 0), imgSize);
             rect.adjust(m.left(), m.top(), -m.right(), -m.bottom());
             painter.drawRect(rect);
         }
         if (m_debugFlags.testFlag(ContentRect)) {
             const auto p = contentPadding();
-            QRect rect = QRect(QPoint(0, 0), m_paintedImage.size() / scale);
+            QRect rect = QRect(QPoint(0, 0), imgSize);
             rect.adjust(p.left(), p.top(), -p.right(), -p.bottom());
             painter.drawRect(rect);
         }
@@ -321,15 +322,13 @@ void QQuickStyleItem::paintControlToImage()
         }
         if (m_debugFlags.testFlag(NinePatchMargins)) {
             const QMargins m = m_styleItemGeometry.ninePatchMargins;
-            const int w = int(m_paintedImage.rect().width() / scale);
-            const int h = int(m_paintedImage.rect().height() / scale);
             if (m.right() != -1) {
-                painter.drawLine(m.left(), 0, m.left(), h);
-                painter.drawLine(w - m.right(), 0, w - m.right(), h);
+                painter.drawLine(m.left(), 0, m.left(), imgSize.height());
+                painter.drawLine(imgSize.width() - m.right(), 0, imgSize.width() - m.right(), imgSize.height());
             }
             if (m.bottom() != -1) {
-                painter.drawLine(0, m.top(), w, m.top());
-                painter.drawLine(0, h - m.bottom(), w, h - m.bottom());
+                painter.drawLine(0, m.top(), imgSize.width(), m.top());
+                painter.drawLine(0, imgSize.height() - m.bottom(), imgSize.width(), imgSize.height() - m.bottom());
             }
         }
     }
