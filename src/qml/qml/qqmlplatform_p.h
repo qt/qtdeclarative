@@ -62,6 +62,8 @@ class Q_QML_PRIVATE_EXPORT QQmlPlatform : public QObject
     Q_OBJECT
     Q_PROPERTY(QString os READ os CONSTANT)
     Q_PROPERTY(QString pluginName READ pluginName CONSTANT)
+    QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 
 public:
     explicit QQmlPlatform(QObject *parent = nullptr);

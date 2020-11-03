@@ -55,6 +55,7 @@
 #include <QtCore/QObject>
 #include <private/qqmlmetaobject_p.h>
 #include <private/qmetaobject_p.h>
+#include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -274,6 +275,8 @@ class Q_QML_PRIVATE_EXPORT QQmlApplication : public QObject
     Q_PROPERTY(QString version READ version WRITE setVersion NOTIFY versionChanged)
     Q_PROPERTY(QString organization READ organization WRITE setOrganization NOTIFY organizationChanged)
     Q_PROPERTY(QString domain READ domain WRITE setDomain NOTIFY domainChanged)
+    QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(2, 0)
 public:
     QQmlApplication(QObject* parent=nullptr);
 
