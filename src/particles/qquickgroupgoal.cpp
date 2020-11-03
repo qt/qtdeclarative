@@ -92,13 +92,9 @@ bool QQuickGroupGoalAffector::affectParticle(QQuickParticleData *d, qreal dt)
 {
     Q_UNUSED(dt);
     QQuickStochasticEngine *engine = m_system->stateEngine;
-    bool notUsingEngine = false;
-    if (!engine)
-        notUsingEngine = true;
-
     int index = d->systemIndex;
     int goalIdx = m_system->groupIds[m_goalState];
-    if (notUsingEngine){//no stochastic states defined. So cut out the engine
+    if (!engine){//no stochastic states defined. So cut out the engine
         //TODO: It's possible to move to a group that is intermediate and not used by painters or emitters - but right now that will redirect to the default group
         m_system->moveGroups(d, goalIdx);
         return true;

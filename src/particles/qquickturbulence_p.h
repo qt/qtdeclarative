@@ -112,7 +112,6 @@ private:
     void initializeGrid();
     qreal boundsRespectingField(int x, int y);
     qreal m_strength;
-    qreal m_lastT;
     int m_gridSize;
     qreal** m_field;
     QPointF** m_vectorField;

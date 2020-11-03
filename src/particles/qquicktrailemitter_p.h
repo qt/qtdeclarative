@@ -159,7 +159,6 @@ private Q_SLOTS:
     void recalcParticlesPerSecond();
 
 private:
-    QSet<QQuickParticleData*> m_pending;
     QVector<qreal> m_lastEmission;
     int m_particlesPerParticlePerSecond;
     qreal m_lastTimeStamp;

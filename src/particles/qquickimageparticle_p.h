@@ -327,7 +327,6 @@ Q_SIGNALS:
     void statusChanged(Status arg);
 
 public Q_SLOTS:
-    void reloadColor(const Color4ub &c, QQuickParticleData* d);
     void setAlphaVariation(qreal arg);
 
     void setAlpha(qreal arg);
@@ -429,7 +428,6 @@ private:
     bool m_bypassOptimizations;
     PerformanceLevel perfLevel;
 
-    PerformanceLevel m_lastLevel;
     bool m_debugMode;
 
     template<class Vertex>

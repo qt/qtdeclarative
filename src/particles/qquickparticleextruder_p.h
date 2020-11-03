@@ -70,10 +70,6 @@ public:
     explicit QQuickParticleExtruder(QObject *parent = 0);
     virtual QPointF extrude(const QRectF &);
     virtual bool contains(const QRectF &bounds, const QPointF &point);
-
-Q_SIGNALS:
-public Q_SLOTS:
-protected:
 };
 
 QT_END_NAMESPACE

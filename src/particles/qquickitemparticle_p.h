@@ -114,7 +114,6 @@ private:
     bool m_fade;
 
     QList<QQuickItem*> m_pendingItems;
-    QList<int> m_available;
     QSet<QQuickItem*> m_stasis;
     qreal m_lastT;
     int m_activeCount;

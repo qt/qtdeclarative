@@ -701,7 +701,6 @@ QQuickImageParticle::QQuickImageParticle(QQuickItem* parent)
     , m_explicitAnimation(false)
     , m_bypassOptimizations(false)
     , perfLevel(Unknown)
-    , m_lastLevel(Unknown)
     , m_debugMode(false)
     , m_entryEffect(Fade)
     , m_startedImageLoading(0)
@@ -1141,8 +1140,8 @@ QQuickParticleData* QQuickImageParticle::getShadowDatum(QQuickParticleData* datu
     //Will return datum if the datum is a sentinel or uninitialized, to centralize that one check
     if (datum->systemIndex == -1)
         return datum;
-    QQuickParticleGroupData* gd = m_system->groupData[datum->groupId];
     if (!m_shadowData.contains(datum->groupId)) {
+        QQuickParticleGroupData* gd = m_system->groupData[datum->groupId];
         QVector<QQuickParticleData*> data;
         const int gdSize = gd->size();
         data.reserve(gdSize);
@@ -1229,7 +1228,7 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
         return;
     }
 
-    if (count() <= 0)
+    if (m_count <= 0)
         return;
 
     m_debugMode = m_system->m_debugMode;
@@ -1492,7 +1491,6 @@ QSGNode *QQuickImageParticle::updatePaintNode(QSGNode *node, UpdatePaintNodeData
         m_outgoingNode = node;
         node = nullptr;
 
-        m_lastLevel = perfLevel;
         m_nodes.clear();
 
         m_idxStarts.clear();
@@ -1663,12 +1661,6 @@ void QQuickImageParticle::spriteAdvance(int spriteIdx)
     datum->animHeight = m_spriteEngine->spriteHeight(spriteIdx);
 }
 
-void QQuickImageParticle::reloadColor(const Color4ub &c, QQuickParticleData* d)
-{
-    d->color = c;
-    //TODO: get index for reload - or make function take an index
-}
-
 void QQuickImageParticle::initialize(int gIdx, int pIdx)
 {
     Color4ub color;
@@ -1732,8 +1724,9 @@ void QQuickImageParticle::initialize(int gIdx, int pIdx)
                         datum->xx = ret.x();
                         datum->xy = ret.y();
                     } else {
-                        getShadowDatum(datum)->xx = ret.x();
-                        getShadowDatum(datum)->xy = ret.y();
+                        QQuickParticleData* shadow = getShadowDatum(datum);
+                        shadow->xx = ret.x();
+                        shadow->xy = ret.y();
                     }
                 }
                 if (m_yVector){
@@ -1742,8 +1735,9 @@ void QQuickImageParticle::initialize(int gIdx, int pIdx)
                         datum->yx = ret.x();
                         datum->yy = ret.y();
                     } else {
-                        getShadowDatum(datum)->yx = ret.x();
-                        getShadowDatum(datum)->yy = ret.y();
+                        QQuickParticleData* shadow = getShadowDatum(datum);
+                        shadow->yx = ret.x();
+                        shadow->yy = ret.y();
                     }
                 }
             }
@@ -1761,9 +1755,10 @@ void QQuickImageParticle::initialize(int gIdx, int pIdx)
                     datum->rotationVelocity = rotationVelocity;
                     datum->autoRotate = autoRotate;
                 } else {
-                    getShadowDatum(datum)->rotation = rotation;
-                    getShadowDatum(datum)->rotationVelocity = rotationVelocity;
-                    getShadowDatum(datum)->autoRotate = autoRotate;
+                    QQuickParticleData* shadow = getShadowDatum(datum);
+                    shadow->rotation = rotation;
+                    shadow->rotationVelocity = rotationVelocity;
+                    shadow->autoRotate = autoRotate;
                 }
             }
             Q_FALLTHROUGH();
@@ -1838,15 +1833,9 @@ void QQuickImageParticle::commit(int gIdx, int pIdx)
             //Sprite-related vertices updated per-frame in spritesUpdate(), not on demand
             if (m_explicitColor && datum->colorOwner != this) {
                 QQuickParticleData* shadow = getShadowDatum(datum);
-                spriteVertices[i].color.r = shadow->color.r;
-                spriteVertices[i].color.g = shadow->color.g;
-                spriteVertices[i].color.b = shadow->color.b;
-                spriteVertices[i].color.a = shadow->color.a;
+                spriteVertices[i].color = shadow->color;
             } else {
-                spriteVertices[i].color.r = datum->color.r;
-                spriteVertices[i].color.g = datum->color.g;
-                spriteVertices[i].color.b = datum->color.b;
-                spriteVertices[i].color.a = datum->color.a;
+                spriteVertices[i].color = datum->color;
             }
         }
         break;
@@ -1888,15 +1877,9 @@ void QQuickImageParticle::commit(int gIdx, int pIdx)
             }
             if (m_explicitColor && datum->colorOwner != this) {
                 QQuickParticleData* shadow = getShadowDatum(datum);
-                deformableVertices[i].color.r = shadow->color.r;
-                deformableVertices[i].color.g = shadow->color.g;
-                deformableVertices[i].color.b = shadow->color.b;
-                deformableVertices[i].color.a = shadow->color.a;
+                deformableVertices[i].color = shadow->color;
             } else {
-                deformableVertices[i].color.r = datum->color.r;
-                deformableVertices[i].color.g = datum->color.g;
-                deformableVertices[i].color.b = datum->color.b;
-                deformableVertices[i].color.a = datum->color.a;
+                deformableVertices[i].color = datum->color;
             }
         }
         break;
@@ -1915,15 +1898,9 @@ void QQuickImageParticle::commit(int gIdx, int pIdx)
             coloredVertices[i].ay = datum->ay;
             if (m_explicitColor && datum->colorOwner != this) {
                 QQuickParticleData* shadow = getShadowDatum(datum);
-                coloredVertices[i].color.r = shadow->color.r;
-                coloredVertices[i].color.g = shadow->color.g;
-                coloredVertices[i].color.b = shadow->color.b;
-                coloredVertices[i].color.a = shadow->color.a;
+                coloredVertices[i].color = shadow->color;
             } else {
-                coloredVertices[i].color.r = datum->color.r;
-                coloredVertices[i].color.g = datum->color.g;
-                coloredVertices[i].color.b = datum->color.b;
-                coloredVertices[i].color.a = datum->color.a;
+                coloredVertices[i].color = datum->color;
             }
         }
         break;

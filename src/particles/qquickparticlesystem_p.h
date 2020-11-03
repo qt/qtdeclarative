@@ -200,10 +200,12 @@ public:
     QQuickParticleGroupData(const QString &name, QQuickParticleSystem* sys);
     ~QQuickParticleGroupData();
 
-    int size()
-    { return m_size; }
+    int size() const
+    {
+        return m_size;
+    }
 
-    QString name();
+    QString name() const;
 
     void setSize(int newSize);
 
@@ -321,7 +323,6 @@ public:
 
     //Used by ItemParticle
     QQuickItem* delegate;
-    int modelIndex;
     //Used by custom affectors
     float update;
 
@@ -359,7 +360,10 @@ public:
         return m_running;
     }
 
-    int count(){ return particleCount; }
+    int count() const
+    {
+        return particleCount;
+    }
 
     static const int maxLife = 600000;
 

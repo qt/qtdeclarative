@@ -81,7 +81,7 @@ QT_BEGIN_NAMESPACE
 
 QQuickTurbulenceAffector::QQuickTurbulenceAffector(QQuickItem *parent) :
     QQuickParticleAffector(parent),
-    m_strength(10), m_lastT(0), m_gridSize(0), m_field(nullptr), m_vectorField(nullptr), m_inited(false)
+    m_strength(10), m_gridSize(0), m_field(nullptr), m_vectorField(nullptr), m_inited(false)
 {
 }
 

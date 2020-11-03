@@ -328,7 +328,7 @@ QQuickParticleGroupData::~QQuickParticleGroupData()
         delete d;
 }
 
-QString QQuickParticleGroupData::name()//### Worth caching as well?
+QString QQuickParticleGroupData::name() const//### Worth caching as well?
 {
     return m_system->groupIds.key(index);
 }
@@ -413,9 +413,10 @@ void QQuickParticleGroupData::prepareRecycler(QQuickParticleData* d)
     if (d->lifeSpan*1000 < m_system->maxLife) {
         dataHeap.insert(d);
     } else {
-        while ((roundedTime(d->t) + 2*m_system->maxLife/3) <= m_system->timeInt)
+        int extend = 2 * m_system->maxLife / 3;
+        while ((roundedTime(d->t) + extend) <= m_system->timeInt)
             d->extendLife(m_system->maxLife / 3000.0, m_system);
-        dataHeap.insertTimed(d, roundedTime(d->t) + 2*m_system->maxLife/3);
+        dataHeap.insertTimed(d, roundedTime(d->t) + extend);
     }
 }
 
@@ -460,7 +461,6 @@ QQuickParticleData::QQuickParticleData()
     color.b = 255;
     color.a = 255;
     delegate = nullptr;
-    modelIndex = -1;
 }
 
 QQuickParticleData::~QQuickParticleData()
@@ -513,12 +513,8 @@ void QQuickParticleData::clone(const QQuickParticleData& other)
     animY = other.animY;
     animWidth = other.animWidth;
     animHeight = other.animHeight;
-    color.r = other.color.r;
-    color.g = other.color.g;
-    color.b = other.color.b;
-    color.a = other.color.a;
+    color = other.color;
     delegate = other.delegate;
-    modelIndex = other.modelIndex;
 
     colorOwner = other.colorOwner;
     rotationOwner = other.rotationOwner;

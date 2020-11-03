@@ -341,7 +341,6 @@ protected:
        qreal m_particleEndSize;
        qreal m_particleSizeVariation;
 
-       qreal m_velocityFromMovement;
        int m_startTime;
        bool m_overwrite;
 
@@ -359,7 +358,6 @@ protected:
 
        QPointF m_last_emitter;
        QPointF m_last_last_emitter;
-       QPointF m_last_last_last_emitter;
 
        bool isEmitConnected();
 

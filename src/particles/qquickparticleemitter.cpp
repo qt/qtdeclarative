@@ -503,7 +503,6 @@ void QQuickParticleEmitter::emitWindow(int timeStamp)
 
     m_last_emission = pt;
 
-    m_last_last_last_emitter = m_last_last_emitter;
     m_last_last_emitter = m_last_emitter;
     m_last_emitter = QPointF(x(), y());
     m_last_timestamp = time;

@@ -58,9 +58,6 @@ QT_BEGIN_NAMESPACE
 class QQuickParticleGroup : public QQuickStochasticState, public QQmlParserStatus
 {
     Q_OBJECT
-    //### Would setting limits per group be useful? Or clutter the API?
-    //Q_PROPERTY(int maximumAlive READ maximumAlive WRITE setMaximumAlive NOTIFY maximumAliveChanged)
-
     Q_PROPERTY(QQuickParticleSystem* system READ system WRITE setSystem NOTIFY systemChanged)
 
     //Intercept children requests and assign to the group & system
@@ -75,11 +72,6 @@ public:
 
     QQmlListProperty<QObject> particleChildren();
 
-    int maximumAlive() const
-    {
-        return m_maximumAlive;
-    }
-
     QQuickParticleSystem* system() const
     {
         return m_system;
@@ -87,21 +79,11 @@ public:
 
 public Q_SLOTS:
 
-    void setMaximumAlive(int arg)
-    {
-        if (m_maximumAlive != arg) {
-            m_maximumAlive = arg;
-            Q_EMIT maximumAliveChanged(arg);
-        }
-    }
-
     void setSystem(QQuickParticleSystem* arg);
 
     void delayRedirect(QObject* obj);
 
 Q_SIGNALS:
-
-    void maximumAliveChanged(int arg);
 
     void systemChanged(QQuickParticleSystem* arg);
 
@@ -113,7 +95,6 @@ private:
 
     void performDelayedRedirects();
 
-    int m_maximumAlive;
     QQuickParticleSystem* m_system;
     QList<QObject*> m_delayedRedirects;
 };
