@@ -18,3 +18,7 @@
 
 [SwipeDelegate::test_removableDelegates]
 *
+
+# QTBUG-70597
+[Tumbler::test_itemsCorrectlyPositioned]
+*
