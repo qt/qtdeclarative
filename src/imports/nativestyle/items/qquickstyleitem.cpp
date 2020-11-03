@@ -284,8 +284,13 @@ void QQuickStyleItem::paintControlToImage()
 
     m_dirty.setFlag(DirtyFlag::Image, false);
     const qreal scale = window()->devicePixelRatio();
-    m_paintedImage = QImage(imageSize() * scale, QImage::Format_ARGB32_Premultiplied);
-    m_paintedImage.setDevicePixelRatio(scale);
+    const QSize scaledImageSize = imageSize() * scale;
+
+    if (m_paintedImage.size() != scaledImageSize) {
+        m_paintedImage = QImage(scaledImageSize, QImage::Format_ARGB32_Premultiplied);
+        m_paintedImage.setDevicePixelRatio(scale);
+    }
+
     m_paintedImage.fill(Qt::transparent);
 
     QPainter painter(&m_paintedImage);
