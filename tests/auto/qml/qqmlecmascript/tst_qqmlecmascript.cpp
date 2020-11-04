@@ -391,6 +391,7 @@ private slots:
     void urlSearchParamsConstruction();
     void urlSearchParamsMethods();
     void variantConversionMethod();
+    void sequenceConversionMethod();
 
     void gcCrashRegressionTest();
 
@@ -9495,6 +9496,19 @@ void tst_qqmlecmascript::variantConversionMethod()
     QScopedPointer<QObject> o(component.create());
     QVERIFY(o != nullptr);
     QCOMPARE(obj.funcCalled, QLatin1String("QModelIndex"));
+}
+
+void tst_qqmlecmascript::sequenceConversionMethod()
+{
+    QQmlEngine qmlengine;
+
+    SequenceConvertObject obj;
+    qmlRegisterSingletonInstance("qt.test", 1, 0, "SequenceConvertObject", &obj);
+
+    QQmlComponent component(&qmlengine, testFileUrl("sequenceConvert.qml"));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(o != nullptr);
+    QCOMPARE(obj.funcCalled, QLatin1String("stringlist"));
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

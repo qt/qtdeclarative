@@ -1748,6 +1748,27 @@ public slots:
     void selection(const QItemSelection &, int = 0) { funcCalled = QLatin1String("QItemSelection"); }
 };
 
+class SequenceConvertObject : public QObject
+{
+    Q_OBJECT
+
+public:
+    QString funcCalled;
+public slots:
+
+    Q_INVOKABLE QStringList getValues() const {
+        return QStringList() << QStringLiteral("one") << QStringLiteral("two");
+    }
+
+    Q_INVOKABLE void call(const QStringList &) {
+        funcCalled = QLatin1String("stringlist");
+    }
+
+    Q_INVOKABLE void call(const QList<int> &) {
+        funcCalled = QLatin1String("intlist");
+    }
+};
+
 struct ClassWithQProperty2 : public QObject
 {
     Q_OBJECT
