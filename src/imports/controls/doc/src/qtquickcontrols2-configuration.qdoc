@@ -151,8 +151,8 @@
 
     \section1 Palette Configuration
 
-    The default \l {Control::palette}{palette} can be specified in a \c Palette sub-group
-    in each style's section in the configuration file. The \c Palette sub-group can be
+    The default \c palette can be configured for each style using the
+    \c Palette sub-group in the configuration file. The \c Palette sub-group can be
     defined in two alternative ways:
 
     \code
@@ -168,8 +168,7 @@
     WindowText=#212121
     \endcode
 
-    See \l {qtquickcontrols2-palette}{palette QML Basic Type} for a full list of supported
-    attributes.
+    See \l [QtQuick]{Palette} QML type for more information.
 
     \section1 Using the Configuration File in a Project
 

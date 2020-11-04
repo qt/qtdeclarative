@@ -127,7 +127,7 @@ QT_BEGIN_NAMESPACE
     \section2 Dynamically Generating Menu Items
 
     It is possible to dynamically generate menu items. One of the easiest ways
-    to do so is with \l[QtQml]{Instantiator}. For example, to implement a
+    to do so is with \l Instantiator. For example, to implement a
     "Recent Files" submenu, where the items are based on a list of files stored
     in settings, the following code could be used:
 

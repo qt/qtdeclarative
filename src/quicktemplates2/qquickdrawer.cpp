@@ -90,10 +90,9 @@ QT_BEGIN_NAMESPACE
     \endcode
 
     Drawer is a special type of popup that resides at one of the window \l {edge}{edges}.
-    By default, Drawer re-parents itself to the window \l {ApplicationWindow::}{overlay},
-    and therefore operates on window coordinates. It is also possible to manually set the
-    \l {Popup::}{parent} to something else to make the drawer operate in a specific
-    coordinate space.
+    By default, Drawer re-parents itself to the window \c overlay, and therefore operates
+    on window coordinates. It is also possible to manually set the \l{Popup::}{parent} to
+    something else to make the drawer operate in a specific coordinate space.
 
     Drawer can be configured to cover only part of its window edge. The following example
     illustrates how Drawer can be positioned to appear below a window header:

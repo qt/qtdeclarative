@@ -26,23 +26,6 @@
 ****************************************************************************/
 
 /*!
-    \page qtquickcontrols-changes-qt6.html
-    \title Porting to Qt 6 - Qt Quick Controls
-
-    Qt 6 is a result of the conscious effort to make the framework more
-    efficient and easy to use.
-
-    We try to maintain compatibility for all the public APIs in each release.
-    Some changes were inevitable in an effort to make Qt a better framework.
-
-    In this topic we summarize those changes in Qt Quick Controls, and provide
-    guidance to handle them.
-
-    \section1 Migrating from Qt Quick Controls 1
-
-    Qt Quick Controls 1 was deprecated in Qt 5.11 and is removed from
-    Qt 6.0. Use Qt Quick Controls (previously known as Qt Quick Controls 2)
-    instead. For more information, refer to the
-    \l{Qt 5.15: Qt Quick Controls vs Qt Quick Controls 1} topic in the Qt 5
-    documentation.
+    \externalpage https://doc.qt.io/qt-5/qtquickcontrols2-differences.html
+    \title Qt 5.15: Qt Quick Controls vs Qt Quick Controls 1
 */

@@ -817,7 +817,7 @@ that the selection feature is not accidentally triggered.
 
 Here's \c +material/ChatToolBar.qml:
 
-\quotefromfile chattutorial/chapter5-styling/+material/ChatToolBar.qml
+\quotefromfile chattutorial/chapter5-styling/+Material/ChatToolBar.qml
 \skipto import
 \printuntil }
 

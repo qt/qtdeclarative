@@ -193,7 +193,7 @@ static const int SUBMENU_DELAY = 225;
 
     The default value is \c false.
 
-    \sa activeFocus
+    \sa {Popup::}{activeFocus}
 */
 
 static const QQuickPopup::ClosePolicy cascadingSubMenuClosePolicy = QQuickPopup::CloseOnEscape | QQuickPopup::CloseOnPressOutsideParent;

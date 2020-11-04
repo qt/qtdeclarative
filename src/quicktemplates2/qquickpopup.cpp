@@ -610,7 +610,7 @@ void QQuickPopupPrivate::setBottomMargin(qreal value, bool reset)
     \note Popups can only be centered within their immediate parent or
     the window overlay; trying to center in other items will produce a warning.
 
-    \sa {Popup Positioning}, {QtQuick::Item::anchors}{anchors}
+    \sa {Popup Positioning}, {Item::}{anchors}
 */
 QQuickPopupAnchors *QQuickPopupPrivate::getAnchors()
 {
@@ -2360,7 +2360,7 @@ void QQuickPopup::resetBottomInset()
     }
     \endcode
 
-    \sa Item::palette, Window::palette, QQuickAbstractPaletteProvider, ColorGroup, Palette
+    \sa Item::palette, Window::palette, ColorGroup, Palette
 */
 
 bool QQuickPopup::filtersChildMouseEvents() const

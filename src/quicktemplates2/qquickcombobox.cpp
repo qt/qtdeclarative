@@ -1691,7 +1691,7 @@ void QQuickComboBox::setSelectTextByMouse(bool canSelect)
     \since QtQuick.Controls 6.0 (Qt 6.0)
     \qmlproperty enumeration QtQuick.Controls::ComboBox::implicitContentWidthPolicy
 
-    This property controls how the \l implicitContentWidth of the ComboBox is
+    This property controls how the \l{Control::}{implicitContentWidth} of the ComboBox is
     calculated.
 
     When the width of a ComboBox is not large enough to display text, that text
@@ -1711,12 +1711,12 @@ void QQuickComboBox::setSelectTextByMouse(bool canSelect)
 
     implicitContentWidthPolicy provides an easy way to control how the
     implicitContentWidth is calculated, which in turn affects the
-    \l implicitWidth of the ComboBox and ensures that text will not be elided.
+    \l{Item::}{implicitWidth} of the ComboBox and ensures that text will not be elided.
 
     The available values are:
 
     \value ContentItemImplicitWidth
-        The implicitContentWidth will default to that of the \l contentItem.
+        The implicitContentWidth will default to that of the \l{Control::}{contentItem}.
 
         This is the most efficient option, as no extra text layout is done.
     \value WidestText
@@ -1734,8 +1734,8 @@ void QQuickComboBox::setSelectTextByMouse(bool canSelect)
 
     The default value is \c ContentItemImplicitWidth.
 
-    As this property only affects the \l implicitWidth of the ComboBox, setting
-    an explicit \l width can still result in eliding.
+    As this property only affects the \c implicitWidth of the ComboBox, setting
+    an explicit \l{Item::}{width} can still result in eliding.
 
     \note This feature requires the contentItem to be a type derived from
         \l TextInput.

@@ -1727,7 +1727,7 @@ void QQuickSplitViewAttached::resetPreferredWidth()
     \l{Item::}{implicitHeight} will be used instead. To reset this property to
     its default value, set it to \c undefined.
 
-    \note Do not set the \l{Item:}{height} property of a split item, as it will be
+    \note Do not set the \l{Item::}{height} property of a split item, as it will be
     overwritten upon each layout of the SplitView.
 
     \sa minimumHeight, maximumHeight, fillHeight, preferredWidth

@@ -76,10 +76,7 @@
 
     \section2 Building From Source
 
-    When building from source, ensure that the \l {Qt Graphical Effects} module
-    is also built, as Qt Quick Controls requires it.
-
-    The \l {Qt Image Formats} module is recommended, but not
+    The \b{Qt Image Formats} module is recommended, but not
     required. It provides support for the \c {.webp} format used by the
     \l {Animated Images}{Imagine style}.
 

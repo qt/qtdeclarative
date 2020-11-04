@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
 
     Items declared as children of a Pane are automatically parented to the
     Pane's \l[QtQuickControls2]{Control::}{contentItem}. Items created
-    dynamically need to be explicitly parented to the contentItem.
+    dynamically need to be explicitly parented to the \c contentItem.
 
     \section1 Content Sizing
 
@@ -103,9 +103,9 @@ QT_BEGIN_NAMESPACE
      }
     \endcode
 
-    If the \l contentItem has no implicit size and only one child, Pane will
-    use the implicit size of that child. For example, in the following code,
-    the Pane will assume the size of the Rectangle:
+    If the \l[QtQuickControls2]{Control::}{contentItem} has no implicit size
+    and only one child, Pane will use the implicit size of that child. For
+    example, in the following code, the Pane assumes the size of the Rectangle:
 
     \code
     Pane {

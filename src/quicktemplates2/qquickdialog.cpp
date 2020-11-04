@@ -511,7 +511,7 @@ void QQuickDialog::reject()
     \li Emits \l accepted() or \l rejected() depending on
     whether the result is \c Dialog.Accepted or \c Dialog.Rejected,
     respectively.
-    \li Emits \l closed().
+    \li Emits \l{Popup::}{closed()).
     \endlist
 
     \sa accept(), reject(), result
