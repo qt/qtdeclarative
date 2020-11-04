@@ -37,8 +37,7 @@
     use a
     \l{https://developer.apple.com/documentation/metal/mtltexture}{MTLTexture}
     in the Qt Quick scene. This provides an alternative to the \l{Scene Graph -
-    Metal Under QML}{underlay}, overlay, or \l{Scene Graph - Custom Rendering
-    with QSGRenderNode}{render node} approaches when it comes to integrating
+    Metal Under QML}{underlay} or overlay approaches when it comes to integrating
     native Metal rendering. In many cases going through a texture, and
     therefore "flattening" the 3D contents first, is the best option to
     integrate and mix custom 3D contents with the 2D UI elements provided by Qt

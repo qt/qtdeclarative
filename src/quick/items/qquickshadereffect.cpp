@@ -354,9 +354,6 @@ QT_BEGIN_NAMESPACE
     corner. For non-linear vertex transformations, like page curl, you can
     specify a fine grid of vertices by specifying a \l mesh resolution.
 
-    The \l {Qt Graphical Effects} module contains several ready-made effects
-    for using with Qt Quick applications.
-
     \sa {Item Layers}
 */
 

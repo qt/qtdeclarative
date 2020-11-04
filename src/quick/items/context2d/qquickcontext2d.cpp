@@ -3011,7 +3011,8 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_strokeText(const QV4::Func
   \qmlmethod object QtQuick::Context2D::measureText(text)
 
   Returns an object with a \c width property, whose value is equivalent to
-  calling \l {QFontMetrics::width()} with the given \a text in the current font.
+  calling QFontMetrics::horizontalAdvance() with the given \a text in the
+  current font.
   */
 QV4::ReturnedValue QQuickJSContext2DPrototype::method_measureText(const QV4::FunctionObject *b, const QV4::Value *thisObject, const QV4::Value *argv, int argc)
 {

@@ -119,7 +119,15 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty QQuickColorGroup QtQuick::QQuickPalette::inactive
+    \qmlproperty QQuickColorGroup QtQuick::Palette::active
+
+    The Active group is used for windows that are in focus.
+
+    \sa QPalette::Active
+*/
+
+/*!
+    \qmlproperty QQuickColorGroup QtQuick::Palette::inactive
 
     The Inactive group is used for windows that have no keyboard focus.
 
@@ -127,7 +135,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty QQuickColorGroup QtQuick::QQuickPalette::disabled
+    \qmlproperty QQuickColorGroup QtQuick::Palette::disabled
 
     The Disabled group is used for elements that are disabled for some reason.
 

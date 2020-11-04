@@ -38,8 +38,7 @@
     use a
     \l{https://www.khronos.org/registry/vulkan/specs/1.1-extensions/man/html/VkImage.html}
     {VkImage} in the Qt Quick scene. This provides an alternative to the \l{Scene Graph -
-    Vulkan Under QML}{underlay}, overlay, or \l{Scene Graph - Custom Rendering
-    with QSGRenderNode}{render node} approaches when it comes to integrating
+    Vulkan Under QML}{underlay} or overlay approaches when it comes to integrating
     native Vulkan rendering.
 
     This example is equivalent in most ways to the \l{Scene Graph - Metal Texture Import}{Metal Texture Import}

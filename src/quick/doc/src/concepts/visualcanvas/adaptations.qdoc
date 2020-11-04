@@ -136,12 +136,6 @@ updates can significantly improve performance for many applications.
 
 ShaderEffect components in QtQuick 2 cannot be rendered by the Software adaptation.
 
-\section2 Qt Graphical Effects Module
-
-\l {Qt Graphical Effects} uses ShaderEffect items to render effects. If you use graphical effects
-from this module, then you should not hide the source item so that the original item can still be
-rendered.
-
 \section2 Particle Effects
 
 It is not possible to render particle effects with the Software adaptation. Whenever possible,
@@ -208,12 +202,6 @@ lacks an API for applying per vertex and per fragment shader operations. However
 to take advantage of Image Filter operations in the OpenVG API to get effects that are similar to
 what ShaderEffects provides in custom items. To integrate custom OpenVG rendering, use
 QSGRenderNode in combination with QSGRendererInterface.
-
-\section2 Qt Graphical Effects Module
-
-\l {Qt Graphical Effects} uses ShaderEffect items to render effects. If you use graphical effects
-from this module, then you shouldn't hide the source item so that the original item can still be
-rendered.
 
 \section2 Particle Effects
 

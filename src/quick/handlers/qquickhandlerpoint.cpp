@@ -218,7 +218,7 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
     Interpreting the contents of this ID requires knowledge of the hardware and
     drivers in use.
 
-    \sa QTabletEvent::uniqueId, QtQuick::TouchPoint::uniqueId, QtQuick::EventTouchPoint::uniqueId
+    \sa QTabletEvent::uniqueId, QtQuick::TouchPoint::uniqueId
 */
 
 /*!
@@ -295,7 +295,7 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
     nonzero when this point is in motion. It holds the average recent velocity:
     how fast and in which direction the event point has been moving recently.
 
-    \sa QtQuick::EventPoint::velocity, QtQuick::TouchPoint::velocity, QEventPoint::velocity
+    \sa QtQuick::TouchPoint::velocity, QEventPoint::velocity
 */
 
 /*!
@@ -345,7 +345,7 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
     If the contact patch is unknown, or the device is not a touchscreen,
     these values will be zero.
 
-    \sa QtQuick::EventTouchPoint::ellipseDiameters, QtQuick::TouchPoint::ellipseDiameters, QEventPoint::ellipseDiameters
+    \sa QtQuick::TouchPoint::ellipseDiameters, QEventPoint::ellipseDiameters
 */
 
 QT_END_NAMESPACE

@@ -111,7 +111,7 @@ integrating 3rd party tools such as QmlLive and GammaRay.
 \endlist
 
 \section1 qmllint
-qmllint is a tool shipped with Qt, that verifies the syntatic validity of QML files.
+\e qmllint is a tool shipped with Qt, that verifies the syntatic validity of QML files.
 It also warns about some QML anti-patterns. If you want to disable a specific
 warning type, you can find the appropriate flag for doing so by passing \c{--help} on the command line.
 
@@ -130,12 +130,12 @@ via the -I flag.
 
 \section2 Related Information
 \list
-  \li \l{qmltypes}
+  \li \l{Writing a qmltypes File}{qmltypes}
 \endlist
 
 \section1 qmlformat
 
-qmlformat is a tool that automatically formats QML files in accordance
+\e qmlformat is a tool that automatically formats QML files in accordance
 with the \l{QML Coding Conventions}.
 
 The tool groups all properties, functions, and signals together, instead of
@@ -148,5 +148,5 @@ By default, qmlformat writes the formatted version of the file to stdout.
 If you wish to have your file updated in-place specify the \c{-i} flag.
 
 \section2 Related Information
-\sa \l{QML Coding Conventions}
+\sa {QML Coding Conventions}
 */

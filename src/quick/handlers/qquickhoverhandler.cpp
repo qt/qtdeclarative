@@ -176,14 +176,14 @@ void QQuickHoverHandler::setHovered(bool hovered)
     \endlist
 
     The default value of this property is not set, which allows any active
-    handler on the same \l parentItem to determine the cursor shape.
+    handler on the same \e parent item to determine the cursor shape.
     This property can be reset to the initial condition by setting it to
     \c undefined.
 
     If any handler with defined \c cursorShape is
     \l {PointerHandler::active}{active}, that cursor will appear.
     Else if the HoverHandler has a defined \c cursorShape, that cursor will appear.
-    Otherwise, the \l {QQuickItem::cursor()}{cursor} of \l parentItem will appear.
+    Otherwise, the \l {QQuickItem::cursor()}{cursor} of \e parent item will appear.
 
     \note When this property has not been set, or has been set to \c undefined,
     if you read the value it will return \c Qt.ArrowCursor.

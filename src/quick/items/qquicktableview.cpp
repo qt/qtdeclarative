@@ -267,7 +267,7 @@
 
     The model provides the set of data that is used to create the items
     in the view. Models can be created directly in QML using \l TableModel,
-    \l ListModel, \l XmlListModel, or \l ObjectModel, or provided by a custom
+    \l ListModel, \l ObjectModel, or provided by a custom
     C++ model class. The C++ model must be a subclass of \l QAbstractItemModel
     or a simple list.
 
@@ -389,23 +389,22 @@
 /*!
     \qmlmethod QtQuick::TableView::positionViewAtCell(point cell, Qt.Alignment alignment, point offset)
 
-    Positions \l contentX and \l contentY such that \a cell is at the position specified by
-    \a alignment. \a alignment can be an or-ed combination of the following:
+    Positions \l {Flickable::}{contentX} and \l {Flickable::}{contentY} such
+    that \a cell is at the position specified by \a alignment. \a alignment
+    can be an or-ed combination of the following:
 
-    \list
-    \li Qt.AlignLeft - position the cell at the left of the view.
-    \li Qt.AlignHCenter - position the cell at the horizontal center of the view.
-    \li Qt.AlignRight - position the cell at the right of the view.
-    \li Qt.AlignTop - position the cell at the top of the view.
-    \li Qt.AlignVCenter - position the cell at the vertical center of the view.
-    \li Qt.AlignBottom - position the cell at the bottom of the view.
-    \li Qt.AlignCenter - the same as (Qt.AlignHCenter | Qt.AlignVCenter)
-    \endlist
+    \value Qt.AlignLeft Position the cell at the left of the view.
+    \value Qt.AlignHCenter Position the cell at the horizontal center of the view.
+    \value Qt.AlignRight Position the cell at the right of the view.
+    \value Qt.AlignTop Position the cell at the top of the view.
+    \value Qt.AlignVCenter Position the cell at the vertical center of the view.
+    \value Qt.AlignBottom Position the cell at the bottom of the view.
+    \value Qt.AlignCenter The same as (Qt.AlignHCenter | Qt.AlignVCenter)
 
     If no vertical alignment is specified, vertical positioning will be ignored.
     The same is true for horizontal alignment.
 
-    Optionally, you can specify \a offset to move \l contentX and \l contentY an extra number of
+    Optionally, you can specify \a offset to move \e contentX and \e contentY an extra number of
     pixels beyond the target alignment. E.g if you want to position the view so
     that cell [10, 10] ends up at the top-left corner with a 5px margin, you could do:
 
@@ -413,7 +412,7 @@
     positionViewAtCell(Qt.point(10, 10), Qt.AlignLeft | Qt.AlignTop, Qt.point(-5, -5))
     \endcode
 
-    \note it is not recommended to use \l {Flickable::}{contentX} or \l {Flickable::}{contentY}
+    \note It is not recommended to use \e contentX or \e contentY
     to position the view at a particular cell. This is unreliable since removing items from
     the start of the table does not cause all other items to be repositioned.
     TableView can also sometimes place rows and columns at approximate positions to
@@ -441,19 +440,17 @@
 /*!
     \qmlmethod QtQuick::TableView::positionViewAtRow(int row, Qt.Alignment alignment, real offset)
 
-    Convenience for calling
-    \code
-    positionViewAtCell(Qt.point(0, row), alignment & Qt.AlignVertical_Mask, Qt.point(0, offset))
-    \endcode
+    Convenience method for calling
+
+    \c {positionViewAtCell(Qt.point(0, }\a{row}\c{), }\a{alignment}\c{ & Qt.AlignVertical_Mask, Qt.point(0, }\a{offset}\c{))}
 */
 
 /*!
     \qmlmethod QtQuick::TableView::positionViewAtColumn(int column, Qt.Alignment alignment, real offset)
 
-    Convenience for calling
-    \code
-    positionViewAtCell(Qt.point(column, 0), alignment & Qt.AlignHorizontal_Mask, Qt.point(offset, 0))
-    \endcode
+    Convenience method for calling
+
+    \c {positionViewAtCell(Qt.point(}\a{column}\c{, 0), }\a{alignment}\c{ & Qt.AlignHorizontal_Mask, Qt.point(}\a{offset}\c{, 0))}
 */
 
 /*!
@@ -3152,13 +3149,13 @@ void QQuickTableView::setContentHeight(qreal height)
     tables will synchronize with regard to flicking, column widths/row heights,
     and spacing according to \l syncDirection.
 
-    If \l syncDirection contains \l Qt.Horizontal, current tableView's column
-    widths, column spacing, and horizontal flicking movement synchronizes with
-    syncView's.
+    If \l syncDirection contains \l {Qt::Horizontal}{Qt.Horizontal}, current
+    tableView's column widths, column spacing, and horizontal flicking movement
+    synchronizes with syncView's.
 
-    If \l syncDirection contains \l Qt.Vertical, current tableView's row
-    heights, row spacing, and vertical flicking movement synchronizes with
-    syncView's.
+    If \l syncDirection contains \l {Qt::Vertical}{Qt.Vertical}, current
+    tableView's row heights, row spacing, and vertical flicking movement
+    synchronizes with syncView's.
 
     \sa syncDirection
 */
@@ -3195,7 +3192,7 @@ void QQuickTableView::setSyncView(QQuickTableView *view)
 
     A typical use case is to make several headers flick along with the table.
 
-    \sa syncView, headerView
+    \sa syncView
 */
 Qt::Orientations QQuickTableView::syncDirection() const
 {

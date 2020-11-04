@@ -157,7 +157,7 @@ void QQuickPointerHandler::resetDragThreshold()
     \since 5.15
     \qmlproperty Qt::CursorShape PointerHandler::cursorShape
     This property holds the cursor shape that will appear whenever the mouse is
-    hovering over the \l parentItem while \l active is \c true.
+    hovering over the \l parent item while \l active is \c true.
 
     The available cursor shapes are:
     \list
@@ -186,7 +186,7 @@ void QQuickPointerHandler::resetDragThreshold()
     \endlist
 
     The default value is not set, which allows the \l {QQuickItem::cursor()}{cursor}
-    of \l parentItem to appear. This property can be reset to the same initial
+    of \l parent item to appear. This property can be reset to the same initial
     condition by setting it to undefined.
 
     \note When this property has not been set, or has been set to \c undefined,

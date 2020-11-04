@@ -67,7 +67,7 @@ events and key-presses, and displays the appropriate text.  See the
 documentation about \l{qtquick-input-textinput.html}{text input} for
 in-depth information on the topic.
 
-
+\omit //! QtSensors
 \section1 Device Motion Gestures
 
 Detecting device gestures with an accelerometer, or through camera-based gesture
@@ -78,6 +78,7 @@ and engaging experience.
 Qt Quick itself does not offer first-class support for physical device motion gestures;
 however, the \l{Qt Sensors} module provides QML types with support for such gestures.
 See the \l{Qt Sensors} module documentation for more information on the topic.
+\endomit //! QtSensors
 
 */
 

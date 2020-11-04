@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
     directly on Qt Quick's scene graph, rather than the QML objects and their
     properties like regular Animation types do. This has the benefit that
     Animator based animations can animate on the \l
-    {Threaded Render Loop ("threaded")}{scene graph's rendering thread} even when the
+    {Threaded Render Loop ('threaded')}{scene graph's rendering thread} even when the
     UI thread is blocked.
 
     The value of the QML property will be updated after the animation has

@@ -54,7 +54,8 @@ QT_BEGIN_NAMESPACE
 
     Used by QQuickPalette to provide different groups of colors by roles.
 
-    \sa QQuickPalette, QQuickAbstractPaletteProvider, QPalette::ColorRole
+    \sa QPalette::ColorRole
+    //! internal \sa QQuickPalette, QQuickAbstractPaletteProvider
  */
 
 /*!
@@ -207,7 +208,7 @@ QT_BEGIN_NAMESPACE
     Additional signal indicates that the current state of this color group
     has been changed. Usually it means that one of the colors is changed.
 
-    \sa QtQuick::Palette::changed
+    \sa Palette
 */
 
 /*!

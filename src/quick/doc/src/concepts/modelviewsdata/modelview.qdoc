@@ -236,7 +236,7 @@ To visualize data, bind the view's \c model property to a model and the
     Even if subsequent roles are added, only the first two will be handled by views
     using the model. To reset the roles available in the model, call ListModel::clear().
 
-
+\omit //! XmlListModel
     \section2 XML Model
 
     XmlListModel allows construction of a model from an XML data source. The roles
@@ -264,7 +264,7 @@ To visualize data, bind the view's \c model property to a model and the
 
     The \l{Qt Quick Demo - RSS News}{RSS News demo} shows how XmlListModel can
     be used to display an RSS feed.
-
+\endomit
 
     \section2 Object Model
 
@@ -431,7 +431,7 @@ ListView {
 \note The \c edit role is equal to \l Qt::EditRole. See \l{QAbstractItemModel::}{roleNames}()
 for the built-in role names. However, real life models would usually register custom roles.
 
-\note If a model role is bound to a \l{Required Property}{required property}, assigning to
+\note If a model role is bound to a \l{Required Properties}{required property}, assigning to
 that property will not modify the model. It will instead break the binding to the model (just
 like assigning to any other property breaks existing bindings). If you want to use
 required properties and change the model data, make model also a required property and assign to

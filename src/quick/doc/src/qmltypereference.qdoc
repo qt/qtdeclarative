@@ -49,16 +49,10 @@ information about the concepts which are central to \c QtQuick.
     Qt Quick includes several submodules which contain additional types.
 
     \list
-    \li \l{Qt Quick XmlListModel QML Types}{Xml List Model} - contains types
-    for creating models from XML data
     \li \l{Qt Quick Local Storage QML Types}{Local Storage} - a submodule
     containing a JavaScript interface for an SQLite database
     \li \l{Qt Quick Particles QML Types}{Particles} - provides a particle
     system for QML applications
-    \li \l{Qt Quick Window QML Types}{Window} - contains types for creating
-    top-level windows and accessing screen information
-    \li \l{Qt Quick Dialogs QML Types}{Dialogs} - contains types for creating and
-    interacting with system dialogs
     \li \l{Qt Quick Controls QML Types}{Controls} - provides a set of reusable
     UI components
     \li \l{Qt Quick Layouts QML Types}{Layouts} - contains types that are used

@@ -276,7 +276,7 @@ static void qt_debug_remove_texture(QSGTexture* texture)
     \note All classes with QSG prefix should be used solely on the scene graph's
     rendering thread. See \l {Scene Graph and Rendering} for more information.
 
-    \sa {Scene Graph - Rendering FBOs}, {Scene Graph - Rendering FBOs in a thread}
+    \sa {Scene Graph - Rendering FBOs}
  */
 
 /*!
@@ -724,7 +724,8 @@ namespace QNativeInterface {
 QT_DEFINE_NATIVE_INTERFACE(QSGOpenGLTexture);
 
 /*!
-    Creates a new QSGTexture wrapping an existing OpenGL texture object.
+    Creates a new QSGTexture wrapping an existing OpenGL texture object for
+    \a window.
 
     The native object specified in \a textureId is wrapped, but not owned, by
     the resulting QSGTexture. The caller of the function is responsible for
@@ -791,7 +792,8 @@ namespace QNativeInterface {
 QT_DEFINE_NATIVE_INTERFACE(QSGD3D11Texture);
 
 /*!
-    Creates a new QSGTexture wrapping an existing Direct 3D 11 \a texture object.
+    Creates a new QSGTexture wrapping an existing Direct 3D 11 \a texture object
+    for \a window.
 
     The native object is wrapped, but not owned, by the resulting QSGTexture.
     The caller of the function is responsible for deleting the returned
@@ -857,7 +859,8 @@ namespace QNativeInterface {
 /*!
     \fn QSGTexture *QNativeInterface::QSGMetalTexture::fromNative(id<MTLTexture> texture, QQuickWindow *window, const QSize &size, QQuickWindow::CreateTextureOptions options)
 
-    Creates a new QSGTexture wrapping an existing Metal \a texture object.
+    Creates a new QSGTexture wrapping an existing Metal \a texture object for
+    \a window.
 
     The native object is wrapped, but not owned, by the resulting QSGTexture.
     The caller of the function is responsible for deleting the returned
@@ -915,7 +918,8 @@ namespace QNativeInterface {
 QT_DEFINE_NATIVE_INTERFACE(QSGVulkanTexture);
 
 /*!
-    Creates a new QSGTexture wrapping an existing Vulkan \a image object.
+    Creates a new QSGTexture wrapping an existing Vulkan \a image object for
+    \a window.
 
     The native object is wrapped, but not owned, by the resulting QSGTexture.
     The caller of the function is responsible for deleting the returned

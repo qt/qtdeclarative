@@ -200,7 +200,7 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
     started: two touch points (fingers) have been detected, and they have moved
     beyond the \l {QStyleHints}{startDragDistance} threshold for the gesture to begin.
 
-    The \l {PinchEvent}{pinch} parameter (not the same as the \l {PinchArea}{pinch}
+    The \a pinch parameter (not the same as the \l {PinchArea}{pinch}
     property) provides information about the pinch gesture, including the scale,
     center and angle of the pinch. At the time of the \c pinchStarted signal,
     these values are reset to the default values, regardless of the results
@@ -217,7 +217,7 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
 
     This signal is emitted when the pinch area detects that a pinch gesture has changed.
 
-    The \l {PinchEvent}{pinch} parameter provides information about the pinch
+    The \a pinch parameter provides information about the pinch
     gesture, including the scale, center and angle of the pinch. These values
     reflect changes only since the beginning of the current gesture, and
     therefore are not limited by the minimum and maximum limits in the
@@ -229,7 +229,7 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
 
     This signal is emitted when the pinch area detects that a pinch gesture has finished.
 
-    The \l {PinchEvent}{pinch} parameter (not the same as the \l {PinchArea}{pinch}
+    The \a pinch parameter (not the same as the \l {PinchArea}{pinch}
     property) provides information about the pinch gesture, including the
     scale, center and angle of the pinch.
 */
@@ -238,10 +238,10 @@ QQuickPinchAreaPrivate::~QQuickPinchAreaPrivate()
     \qmlsignal QtQuick::PinchArea::smartZoom(PinchEvent pinch)
     \since 5.5
 
-    This signal is emitted when the pinch area detects the smart zoom gesture.
+    This signal is emitted when the pinch area detects a smart zoom gesture.
     This gesture occurs only on certain operating systems such as \macos.
 
-    The \l {PinchEvent}{pinch} parameter provides information about the pinch
+    The \a pinch parameter provides information about the pinch
     gesture, including the location where the gesture occurred.  \c pinch.scale
     will be greater than zero when the gesture indicates that the user wishes to
     enter smart zoom, and zero when exiting (even though typically the same gesture

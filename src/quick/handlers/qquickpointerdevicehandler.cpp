@@ -136,7 +136,7 @@ Qt::KeyboardModifiers QQuickPointerDeviceHandler::acceptedModifiers() const
     The types of pointing devices that can activate this Pointer Handler.
 
     By default, this property is set to
-    \l{QtQuick::PointerDevice::type} {PointerDevice.AllDevices}.
+    \l{QInputDevice::DeviceType}{PointerDevice.AllDevices}.
     If you set it to an OR combination of device types, it will ignore events
     from non-matching devices.
 
@@ -173,7 +173,7 @@ void QQuickPointerDeviceHandler::setAcceptedDevices(QPointingDevice::DeviceTypes
     that can activate this Pointer Handler.
 
     By default, this property is set to
-    \l {QtQuick::PointerDevice::pointerType} {PointerDevice.AllPointerTypes}.
+    \l {QPointingDevice::PointerType} {PointerDevice.AllPointerTypes}.
     If you set it to an OR combination of device types, it will ignore events
     from non-matching events.
 

@@ -1991,10 +1991,6 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     }
     \endqml
 
-    In this example, we implement the shader effect manually. The \l
-    {Qt Graphical Effects} module contains a suite of ready-made
-    effects for use with Qt Quick.
-
     See ShaderEffect for more information about using effects.
 
     \note \l layer.enabled is actually just a more convenient way of using
@@ -7576,7 +7572,7 @@ void QQuickItem::unsetCursor()
 /*!
     \internal
     Returns the cursor that should actually be shown, allowing the given
-    \handler to override the Item cursor if it is active or hovered.
+    \a handler to override the Item cursor if it is active or hovered.
 
     \sa cursor(), setCursor(), QtQuick::PointerHandler::cursor
 */
@@ -8339,7 +8335,7 @@ QSGTextureProvider *QQuickItem::textureProvider() const
     }
     \endcode
 
-    \sa Window::palette, Popup::palette, QQuickAbstractPaletteProvider, ColorGroup, Palette
+    \sa Window::palette, Popup::palette, ColorGroup, Palette
 */
 
 /*!

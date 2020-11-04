@@ -1975,7 +1975,7 @@ QQuickItemViewAttached *QQuickListViewPrivate::getAttachedObject(const QObject *
     Delegates are instantiated as needed and may be destroyed at any time.
     As such, state should \e never be stored in a delegate.
     Delegates are usually parented to ListView's \l {Flickable::contentItem}{contentItem}, but
-    typically depending on whether it's visible in the view or not, the \l parent
+    typically depending on whether it's visible in the view or not, the \e parent
     can change, and sometimes be \c null. Because of that, binding to
     the parent's properties from within the delegate is \e not recommended. If you
     want the delegate to fill out the width of the ListView, consider
@@ -2221,8 +2221,8 @@ QQuickListView::~QQuickListView()
     This property holds the model providing data for the list.
 
     The model provides the set of data that is used to create the items
-    in the view. Models can be created directly in QML using \l ListModel, \l XmlListModel
-    or \l ObjectModel, or provided by C++ model classes. If a C++ model class is
+    in the view. Models can be created directly in QML using \l ListModel,
+    \l ObjectModel, or provided by C++ model classes. If a C++ model class is
     used, it must be a subclass of \l QAbstractItemModel or a simple list.
 
     \sa {qml-data-models}{Data Models}
@@ -2971,7 +2971,8 @@ void QQuickListView::setFooterPositioning(QQuickListView::FooterPositioning posi
     \list
     \li The view is first created
     \li The view's \l model changes in such a way that the visible delegates are completely replaced
-    \li The view's \l model is \l {QAbstractItemModel::reset()}{reset}, if the model is a QAbstractItemModel subclass
+    \li The view's \l model is \l {QAbstractItemModel::beginResetModel()}{reset}, if the model is a
+        QAbstractItemModel subclass
     \endlist
 
     For example, here is a view that specifies such a transition:

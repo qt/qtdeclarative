@@ -278,6 +278,8 @@ int QQuickRenderControl::samples() const
     responsibility to create a suitable QVulkanInstance and
     \l{QWindow::setVulkanInstance()}{associate it} with the QQuickWindow.
 
+    Returns \c true on success, \c false otherwise.
+
     \note This function does not need to be, and must not be, called when using
     the \c software adaptation of Qt Quick.
 

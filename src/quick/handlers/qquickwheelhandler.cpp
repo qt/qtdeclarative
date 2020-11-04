@@ -163,10 +163,12 @@ void QQuickWheelHandler::setInvertible(bool invertible)
     \l {Qt::ScrollPhase}{scroll phase} information, such as events from some
     touchpads, the \l active property will become \c false as soon as an event
     with phase \l Qt::ScrollEnd is received; in that case the timeout is not
-    necessary. But a conventional mouse with a wheel does not provide the
-    \l {QQuickPointerScrollEvent::phase}{scroll phase}: the mouse cannot detect
-    when the user has decided to stop scrolling, so the \l active property
-    transitions to \c false after this much time has elapsed.
+    necessary. But a conventional mouse with a wheel does not provide a scroll
+    phase: the mouse cannot detect when the user has decided to stop
+    scrolling, so the \l active property transitions to \c false after this
+    much time has elapsed.
+
+    \sa QWheelEvent::phase()
 */
 qreal QQuickWheelHandler::activeTimeout() const
 {
@@ -506,8 +508,9 @@ void QQuickWheelHandler::timerEvent(QTimerEvent *event)
 /*!
     \qmlsignal QtQuick::WheelHandler::wheel(PointerScrollEvent event)
 
-    This signal is emitted every time this handler receives a \l QWheelEvent:
-    that is, every time the wheel is moved or the scrolling gesture is updated.
+    This signal is emitted every time this handler receives an \a event
+    of type \l QWheelEvent: that is, every time the wheel is moved or the
+    scrolling gesture is updated.
 */
 
 QQuickWheelHandlerPrivate::QQuickWheelHandlerPrivate()

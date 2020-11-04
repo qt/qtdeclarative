@@ -216,12 +216,11 @@ QT_BEGIN_NAMESPACE
     window system perspective.
 
     Most mobile devices and tablet computers contain accelerometer sensors.
-    The Qt Sensors module provides the ability to read this sensor directly.
-    However, the windowing system may rotate the entire screen automatically
+    The windowing system may rotate the entire screen automatically
     based on how it is being held, or manually via settings to rotate a desktop
     monitor; in that case, this \c orientation property will change.
 
-    \sa primaryOrientation(), QWindow::contentOrientation(), QOrientationSensor
+    \sa primaryOrientation, QWindow::contentOrientation()
 */
 /*!
     \qmlattachedmethod int Screen::angleBetween(Qt::ScreenOrientation a, Qt::ScreenOrientation b)

@@ -104,17 +104,11 @@ Additional Qt Quick information:
 \li \l{Qt Quick QML Types} - a list of QML types provided by the
     \c{QtQuick} import
     \list
-    \li \l{Qt Quick XmlListModel QML Types}{XML List Model} - contains types
-    for creating models from XML data
     \li \l{Qt Quick Local Storage QML Types}{Local Storage} - a submodule
     containing a JavaScript interface for an SQLite database
     \li \l{Qt Quick Particles QML Types}{Particles} - provides a particle
     system for Qt Quick
     \li \l{Qt Quick Layouts}{Layouts} - provides layouts for arranging Qt Quick items
-    \li \l{Qt Quick Window QML Types}{Window} - contains types for creating
-    top-level windows and accessing screen information
-    \li \l{Qt Quick Dialogs}{Dialogs} - contains types for creating and
-    interacting with system dialogs
     \li \l{Qt Quick Test QML Types}{Tests} - contains types for writing unit test for a QML application
     \endlist
 \li \l{Qt Quick Examples and Tutorials}

@@ -145,9 +145,6 @@ type.
 Below is a complete list of material classes:
 \annotatedlist{qtquick-scenegraph-materials}
 
-For more details, see the \l {Scene Graph - Simple Material}
-
-
 \section2 Convenience Nodes
 
 The scene graph API is low-level and focuses on performance rather than
@@ -196,7 +193,7 @@ the CPU at 100%. If a system is known to be unable to provide vsync-based
 throttling, use the \c basic render loop instead by setting \c
 {QSG_RENDER_LOOP=basic} in the environment.
 
-\section2 Threaded Render Loop ("threaded")
+\section2 Threaded Render Loop ('threaded')
 
 On many configurations, the scene graph rendering will happen on a
 dedicated render thread. This is done to increase parallelism of
@@ -279,7 +276,7 @@ change in future releases.  It is always possible to force use of the
 threaded renderer by setting \c {QSG_RENDER_LOOP=threaded} in the
 environment.
 
-\section2 Non-threaded Render Loop ("basic")
+\section2 Non-threaded Render Loop ('basic')
 
 The non-threaded render loop is currently used by default on Windows with
 OpenGL when not using the system's standard opengl32.dll, \macos with OpenGL,
@@ -346,10 +343,7 @@ how to use these signals using Vulkan.
 The other alternative, only available for OpenGL currently, is to create a
 QQuickFramebufferObject, render into it, and let it be displayed in the scene
 graph as a texture. The \l {Scene Graph - Rendering FBOs} example shows how
-this can be done. It is also possible to combine multiple rendering contexts
-and multiple threads to create content to be displayed in the scene graph. The
-\l {Scene Graph - Rendering FBOs in a thread} examples show how this can be
-done.
+this can be done.
 
 Graphics APIs other than OpenGL can also follow this approach, even though
 QQuickFramebufferObject does not currently support them. Creating and rendering

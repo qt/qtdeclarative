@@ -1400,11 +1400,11 @@ QQuickText::~QQuickText()
     \row
         \li implicitWidth (read-only)
         \li The width that the line would naturally occupy based on its contents,
-            not taking into account any modifications made to \a width.
+            not taking into account any modifications made to \e width.
     \row
         \li isLast (read-only)
         \li Whether the line is the last. This property can change if you
-            set the \a width property to a different value.
+            set the \e width property to a different value.
     \endtable
 
     For example, this will move the first 5 lines of a Text item by 100 pixels to the right:
@@ -2650,8 +2650,8 @@ void QQuickText::setLineHeightMode(LineHeightMode mode)
     If the text does not fit within the item bounds with the minimum font size
     the text will be elided as per the \l elide property.
 
-    If the \l textFormat property is set to \l Text.RichText, this will have no effect at all as the
-    property will be ignored completely. If \l textFormat is set to \l Text.StyledText, then the
+    If the \l textFormat property is set to \c Text.RichText, this will have no effect at all as the
+    property will be ignored completely. If \l textFormat is set to \c Text.StyledText, then the
     property will be respected provided there is no font size tags inside the text. If there are
     font size tags, the property will still respect those. This can cause it to not fully comply with
     the fontSizeMode setting.
