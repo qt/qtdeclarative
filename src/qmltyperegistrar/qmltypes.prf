@@ -63,6 +63,10 @@ QML_TYPEREGISTRAR_FLAGS = \
     --minor-version=$$QML_IMPORT_MINOR_VERSION \
     --foreign-types=$$join(QML_FOREIGN_METATYPES, ',')
 
+!isEmpty(QML_PAST_MAJOR_VERSIONS) {
+    for(past_major_version,QML_PAST_MAJOR_VERSIONS): QML_TYPEREGISTRAR_FLAGS += --past-major-version $$past_major_version
+}
+
 !isEmpty(MODULE_PRIVATE_INCLUDES): QML_TYPEREGISTRAR_FLAGS += --private-includes
 
 METATYPES_JSON = $${TARGET_BASENAME}_metatypes.json

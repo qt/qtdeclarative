@@ -15,6 +15,7 @@ QMLTYPES_FILENAME = tst_qmltyperegistrar.qmltypes
 QML_FOREIGN_METATYPES += foreign/foreign_metatypes.json
 QML_IMPORT_NAME = QmlTypeRegistrarTest
 QML_IMPORT_VERSION = 1.0
+QML_PAST_MAJOR_VERSIONS = 0
 
 INCLUDEPATH += foreign
 LIBS += -Lforeign -lforeign

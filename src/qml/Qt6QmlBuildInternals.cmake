@@ -42,6 +42,7 @@ function(qt_internal_add_qml_module target)
         OPTIONAL_IMPORTS
         TYPEINFO
         DEPENDENCIES
+        PAST_MAJOR_VERSIONS
     )
 
     qt_parse_all_arguments(arg "qt_add_qml_module"
@@ -143,6 +144,7 @@ function(qt_internal_add_qml_module target)
         TARGET_PATH ${arg_TARGET_PATH}
         URI ${arg_URI}
         VERSION ${arg_VERSION}
+        PAST_MAJOR_VERSIONS ${arg_PAST_MAJOR_VERSIONS}
         QML_FILES ${arg_QML_FILES}
         IMPORTS "${arg_IMPORTS}"
         OPTIONAL_IMPORTS "${arg_OPTIONAL_IMPORTS}"

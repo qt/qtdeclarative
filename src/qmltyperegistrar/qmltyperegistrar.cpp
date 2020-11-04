@@ -106,6 +106,12 @@ int main(int argc, char **argv)
     importNameOption.setValueName(QStringLiteral("module name"));
     parser.addOption(importNameOption);
 
+    QCommandLineOption pastMajorVersionOption(QStringLiteral("past-major-version"));
+    pastMajorVersionOption.setDescription(QStringLiteral("Past major version to use for type and module "
+                                                         "registrations."));
+    pastMajorVersionOption.setValueName(QStringLiteral("past major version"));
+    parser.addOption(pastMajorVersionOption);
+
     QCommandLineOption majorVersionOption(QStringLiteral("major-version"));
     majorVersionOption.setDescription(QStringLiteral("Major version to use for type and module "
                                                      "registrations."));
@@ -188,7 +194,13 @@ int main(int argc, char **argv)
 
     fprintf(output, "void %s()\n{", qPrintable(functionName));
     const auto majorVersion = parser.value(majorVersionOption);
+    const auto pastMajorVersions = parser.values(pastMajorVersionOption);
     const auto minorVersion = parser.value(minorVersionOption);
+
+    for (const auto &version : pastMajorVersions) {
+        fprintf(output, "\n    qmlRegisterModule(\"%s\", %s, 0);\n    qmlRegisterModule(\"%s\", %s, 254);",
+                qPrintable(module), qPrintable(version), qPrintable(module), qPrintable(version));
+    }
 
     if (minorVersion.toInt() != 0) {
         fprintf(output, "\n    qmlRegisterModule(\"%s\", %s, 0);",

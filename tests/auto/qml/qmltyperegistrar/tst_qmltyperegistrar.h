@@ -123,6 +123,7 @@ private slots:
     void accessSemantics();
     void isBindable();
     void restrictToImportVersion();
+    void pastMajorVersions();
 
 private:
     QByteArray qmltypesData;

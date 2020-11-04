@@ -41,6 +41,9 @@
 # DEPENDENCIES: List of QML Module dependencies and their versions. The module
 #   and its version must be separated via a slash(/). E.g. QtQuick/2.0
 #
+# PAST_MAJOR_VERSIONS: List of past major versions this QML module was available
+#   in. Ensures that the module can be imported when using these major versions.
+#
 # QML_FILES: List of Qml files. See qt6_target_qml_files for more information
 #   on how to specify additional properties on qml files. (OPTIONAL)
 #
@@ -117,6 +120,7 @@ function(qt6_add_qml_module target)
        IMPORTS
        OPTIONAL_IMPORTS
        DEPENDENCIES
+       PAST_MAJOR_VERSIONS
     )
 
     cmake_parse_arguments(arg
@@ -439,6 +443,10 @@ function(qt6_add_qml_module target)
         endif()
     endif()
 
+    if (arg_PAST_MAJOR_VERSIONS)
+        set_target_properties(${target} PROPERTIES QT_QML_PAST_MAJOR_VERSIONS "${arg_PAST_MAJOR_VERSIONS}")
+    endif()
+
     # Generate meta types data
     if (arg_GENERATE_QMLTYPES)
         qt6_qml_type_registration(${target})
@@ -663,6 +671,18 @@ function(qt6_qml_type_registration target)
         --major-version=${major_version}
         --minor-version=${minor_version}
     )
+
+    # Add past minor versions
+    get_target_property(past_major_versions ${target} QT_QML_PAST_MAJOR_VERSIONS)
+
+    if (past_major_versions OR past_major_versions STREQUAL "0")
+        foreach (past_major_version ${past_major_versions})
+            list(APPEND cmd_args
+                --past-major-version ${past_major_version}
+            )
+        endforeach()
+    endif()
+
 
     # Run a script to recursively evaluate all the metatypes.json files in order
     # to collect all foreign types.
