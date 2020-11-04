@@ -2283,7 +2283,7 @@ void QQmlListModel::clear()
 /*!
     \qmlmethod ListModel::remove(int index, int count = 1)
 
-    Deletes the content at \a index from the model.
+    Deletes \a count number of items at \a index from the model.
 
     \sa clear()
 */

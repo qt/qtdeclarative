@@ -363,8 +363,8 @@ void QQmlDelegateModel::componentComplete()
     provided by a C++ model object.  The C++ model object must be a \l
     {QAbstractItemModel} subclass or a simple list.
 
-    Models can also be created directly in QML, using a \l{ListModel} or
-    \l{QtQuick.XmlListModel::XmlListModel}{XmlListModel}.
+    Models can also be created directly in QML, for example using
+    ListModel.
 
     \sa {qml-data-models}{Data Models}
     \keyword dm-model-property

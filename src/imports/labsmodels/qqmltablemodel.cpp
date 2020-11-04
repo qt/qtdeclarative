@@ -561,7 +561,7 @@ void QQmlTableModel::moveRow(int fromRowIndex, int toRowIndex, int rows)
 /*!
     \qmlmethod TableModel::removeRow(int rowIndex, int rows = 1)
 
-    Removes the row at \a rowIndex from the model.
+    Removes a number of \a rows at \a rowIndex from the model.
 
     \sa clear(), rowCount
 */

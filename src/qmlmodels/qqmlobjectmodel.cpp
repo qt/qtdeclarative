@@ -396,7 +396,7 @@ void QQmlObjectModel::insert(int index, QObject *object)
     \qmlmethod QtQml.Models::ObjectModel::move(int from, int to, int n = 1)
     \since 5.6
 
-    Moves \e n items \a from one position \a to another.
+    Moves \a n items \a from one position \a to another.
 
     The from and to ranges must exist; for example, to move the first 3 items
     to the end of the model:
@@ -423,7 +423,7 @@ void QQmlObjectModel::move(int from, int to, int n)
     \qmlmethod QtQml.Models::ObjectModel::remove(int index, int n = 1)
     \since 5.6
 
-    Removes \e n items at \a index from the model.
+    Removes \a n items at \a index from the model.
 
     \sa clear()
 */

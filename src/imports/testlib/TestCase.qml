@@ -1621,7 +1621,7 @@ Item {
         }
         \endcode
 
-        \sa TouchEventSequence::press(), TouchEventSequence::move(), TouchEventSequence::release(), TouchEventSequence::stationary(), TouchEventSequence::commit(), QInputDevice::DeviceType::TouchScreen
+        \sa TouchEventSequence::press(), TouchEventSequence::move(), TouchEventSequence::release(), TouchEventSequence::stationary(), TouchEventSequence::commit(), QInputDevice::DeviceType
     */
 
     function touchEvent(item) {
