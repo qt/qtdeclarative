@@ -157,7 +157,8 @@ void QQuickGraphicsConfiguration::setDeviceExtensions(const QByteArrayList &exte
 }
 
 /*!
-    Sets the usage of depth buffer for 2D content to \a enable.
+    Sets the usage of depth buffer for 2D content to \a enable. When disabled,
+    the Qt Quick scene graph never writes into the depth buffer.
 
     By default the value is true, unless the \c{QSG_NO_DEPTH_BUFFER}
     environment variable is set.
@@ -166,12 +167,17 @@ void QQuickGraphicsConfiguration::setDeviceExtensions(const QByteArrayList &exte
     of scenes. Disabling depth buffer usage reduces the efficiency of the scene
     graph's batching.
 
-    There are special cases however, when allowing the 2D content write to the
-    depth buffer is not ideal. Consider a 3D overlay, rendered via Qt Quick 3D
-    in overlay mode. In that case, having the depth buffer filled by 2D content
-    can cause unexpected results, because the way the scene graph renderer
-    handles depth values is not necessarily compatible with how a 3D scene
-    works. In that case, \a enable can be set to false.
+    There are cases however, when allowing the 2D content write to the depth
+    buffer is not ideal. Consider a 3D scene as an "overlay" on top the 2D
+    scene, rendered via Qt Quick 3D using a \l View3D with
+    \l{View3D::renderMode}}{renderMode} set to \c Overlay. In this case, having
+    the depth buffer filled by 2D content can cause unexpected results. This is
+    because the way the 2D scene graph renderer generates and handles depth
+    values is not necessarily compatible with how a 3D scene works. This may end
+    up in depth value clashes, collisions, and unexpected depth test
+    failures. Therefore, the robust approach here is to call this function with
+    \a enable set to false, and disable depth buffer writes for the 2D content
+    in the QQuickWindow.
 
     \note This flag is not fully identical to setting the
     \c{QSG_NO_DEPTH_BUFFER} environment variable. This flag does not control the
