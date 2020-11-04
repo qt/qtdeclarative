@@ -188,9 +188,8 @@ struct QQuickStyleSpec
             qCDebug(lcQtQuickControlsStyle) << "no style was specified; checking if we have an appropriate style for this platform";
 #if defined(Q_OS_MACOS)
             style = QLatin1String("macOS");
-// TODO: Enable this section when the windows style is complete: QTBUG-86399
-//#elif defined(Q_OS_WINDOWS)
-//            style = QLatin1String("Windows");
+#elif defined(Q_OS_WINDOWS)
+            style = QLatin1String("Windows");
 #elif defined(Q_OS_ANDROID)
             style = QLatin1String("Material");
 #elif defined(QT_OS_LINUX)
@@ -420,10 +419,9 @@ QStringList QQuickStylePrivate::builtInStyles()
 #endif
         QLatin1String("Material"),
         QLatin1String("Universal"),
-// #ifdef Q_OS_WINDOWS
-// Enable this section when the windows style is complete
-//         QLatin1String("Windows")
-// #endif
+#ifdef Q_OS_WINDOWS
+        QLatin1String("Windows")
+#endif
     };
 }
 
