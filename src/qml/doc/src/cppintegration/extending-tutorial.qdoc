@@ -328,7 +328,7 @@ version 1.0 to the .pro file:
 
 \snippet tutorials/extending-qml/chapter4-customPropertyTypes/pieslice.h 0
 \dots
-\quotefile tutorials/extending-qml/chapter1-basics/chapter4-customPropertyTypes.pro
+\quotefile tutorials/extending-qml/chapter4-customPropertyTypes/chapter4-customPropertyTypes.pro
 
 The source code from the following files are referred to in this chapter:
 \generatelist examplefiles .*chapter4.*
@@ -391,16 +391,13 @@ by any QML application, instead of restricting these types to be only used by
 the one application.
 
 The steps for creating a plugin are described in \l {Creating C++ Plugins for QML}.
-To start with, we create a plugin class named \c ChartsPlugin. It subclasses QQmlExtensionPlugin
-and registers our QML types in the inherited \l{QQmlExtensionPlugin::}{registerTypes()} method.
+To start with, we create a plugin class named \c ChartsPlugin. It subclasses
+QQmlEngineExtensionPlugin and uses the Q_PLUGIN_METADATA() macro to register the
+plugin with the Qt meta object system.
 
 Here is the \c ChartsPlugin definition in \c chartsplugin.h:
 
 \snippet tutorials/extending-qml/chapter6-plugins/import/chartsplugin.h 0
-
-And its implementation in \c chartsplugin.cpp:
-
-\snippet tutorials/extending-qml/chapter6-plugins/import/chartsplugin.cpp 0
 
 Then, we write a \c .pro project file that defines the project as a plugin library
 and specifies with DESTDIR that library files should be built into a \c {../Charts}

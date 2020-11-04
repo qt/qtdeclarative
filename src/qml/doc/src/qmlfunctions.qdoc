@@ -164,7 +164,7 @@
   if the type is available in QML, by having a \l QML_ELEMENT or
   \l QML_NAMED_ELEMENT() macro. By default, each QQmlEngine will try to create a
   singleton instance using either the type's default constructor or a static
-  factory function of the signature \a{T *create(QQmlEngine *, QJSEngine *)}
+  factory function of the signature \c{T *create(QQmlEngine *, QJSEngine *)}
   when the type is first accessed. If both do exist and are accessible, the
   default constructor is preferred. If there is no default constructor and no
   factory function the singleton is initially inaccessible. This behavior can be

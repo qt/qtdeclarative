@@ -731,7 +731,7 @@ V4_DEFINE_EXTENSION(QV4LocaleDataDeletable, localeV4Data);
 
 /*!
     \qmltype Locale
-    \instantiates QQmlLocale
+    //! \instantiates QQmlLocale
     \inqmlmodule QtQml
     \brief Provides locale specific properties and formatted data.
 

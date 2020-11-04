@@ -110,11 +110,11 @@ static QTypeRevision resolveModuleVersion(int moduleMajor)
  */
 
 /*!
- * Registers an implicit import for module \a uri of major version \a majorVersion
+ * Registers an implicit import for module \a uri of major version \a majorVersion.
  *
  * This has the same effect as an \c import statement in a qmldir file: Whenever
  * \a uri of version \a moduleMajor is imported, \a import of version
- * \a importMajor.\a importMinor is automatically imported, too. If
+ * \a importMajor. \a importMinor is automatically imported, too. If
  * \a importMajor is \l QmlModuleImportLatest the latest version
  * available of that module is imported, and \a importMinor does not matter. If
  * \a importMinor is \l QmlModuleImportLatest the latest minor version of a

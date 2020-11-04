@@ -543,7 +543,7 @@ The following functions are also on the Qt object.
     \li application.font
     \endlist
 
-    \sa Screen, Window, {QtQuick.Window::Window::screen}{Window.screen}
+    \sa Screen, Window, {Window::screen}{Window.screen}
 */
 
 /*!

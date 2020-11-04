@@ -134,10 +134,12 @@ the QML code to interact with C++ code.
 \li \l{Integrating QML and C++}
 \endlist
 
-\section1 Additional Frameworks
-\list
-\li \l{The Declarative State Machine Framework}
-\endlist
+\omit
+    \section1 Additional Frameworks
+    \list
+        \li \l{The Declarative State Machine Framework}
+    \endlist
+\endomit
 
 \section1 Licenses and Attributions
 
