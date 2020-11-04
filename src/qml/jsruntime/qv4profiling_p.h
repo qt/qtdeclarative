@@ -276,7 +276,6 @@ public:
     // It's enough to ref() the function in the destructor as it will probably not disappear while
     // it's executing ...
     FunctionCallProfiler(ExecutionEngine *engine, Function *f)
-        : profiler(nullptr)
     {
         Profiler *p = engine->profiler();
         if (Q_UNLIKELY(p) && (p->featuresEnabled & (1 << Profiling::FeatureFunctionCall))) {
@@ -292,9 +291,9 @@ public:
             profiler->m_data.append(FunctionCall(function, startTime, profiler->m_timer.nsecsElapsed()));
     }
 
-    Profiler *profiler;
-    Function *function;
-    qint64 startTime;
+    Profiler *profiler = nullptr;
+    Function *function = nullptr;
+    qint64 startTime = 0;
 };
 
 
