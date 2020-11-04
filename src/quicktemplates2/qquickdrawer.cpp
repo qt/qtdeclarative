@@ -759,6 +759,9 @@ bool QQuickDrawer::childMouseEventFilter(QQuickItem *child, QEvent *event)
 #if QT_CONFIG(quicktemplates2_multitouch)
     case QEvent::TouchUpdate:
         return d->grabTouch(child, static_cast<QTouchEvent *>(event));
+    case QEvent::TouchBegin:
+    case QEvent::TouchEnd:
+        return d->handleTouchEvent(child, static_cast<QTouchEvent *>(event));
 #endif
     case QEvent::MouseMove:
         return d->grabMouse(child, static_cast<QMouseEvent *>(event));
