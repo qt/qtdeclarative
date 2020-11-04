@@ -58,8 +58,10 @@ public:
     {
     }
 
-    int rowCount(const QModelIndex & = QModelIndex()) const override
+    int rowCount(const QModelIndex &index = QModelIndex()) const override
     {
+        if (index.isValid())
+            return 0;
         return m_rows;
     }
     virtual void setRowCount(int count)
@@ -70,8 +72,10 @@ public:
         endResetModel();
     }
 
-    int columnCount(const QModelIndex & = QModelIndex()) const override
+    int columnCount(const QModelIndex &index = QModelIndex()) const override
     {
+        if (index.isValid())
+            return 0;
         return m_cols;
     }
     virtual void setColumnCount(int count)

@@ -364,18 +364,22 @@ QModelIndex QHeaderDataProxyModel::parent(const QModelIndex &child) const
     return QModelIndex();
 }
 
-QModelIndex QHeaderDataProxyModel::sibling(int row, int column, const QModelIndex &idx) const
+QModelIndex QHeaderDataProxyModel::sibling(int row, int column, const QModelIndex &) const
 {
-    return index(row, column, idx);
+    return index(row, column);
 }
 
 int QHeaderDataProxyModel::rowCount(const QModelIndex &parent) const
 {
+    if (parent.isValid())
+        return 0;
     return m_model.isNull() ? -1 : (m_orientation == Qt::Horizontal ? 1 : m_model->rowCount(parent));
 }
 
 int QHeaderDataProxyModel::columnCount(const QModelIndex &parent) const
 {
+    if (parent.isValid())
+        return 0;
     return m_model.isNull() ? -1 : (m_orientation == Qt::Vertical ? 1 : m_model->columnCount(parent));
 }
 
@@ -401,7 +405,8 @@ bool QHeaderDataProxyModel::setData(const QModelIndex &index, const QVariant &va
 
 bool QHeaderDataProxyModel::hasChildren(const QModelIndex &parent) const
 {
-    Q_UNUSED(parent);
+    if (!parent.isValid())
+        return rowCount(parent) > 0 && columnCount(parent) > 0;
     return false;
 }
 
