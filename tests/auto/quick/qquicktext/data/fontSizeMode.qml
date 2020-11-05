@@ -16,7 +16,7 @@ Item {
         height: 35
         minimumPointSize: 8
         minimumPixelSize: 8
-        font.pixelSize: 25
+        font.pixelSize: 23
         font.family: "Helvetica"
     }
 }
