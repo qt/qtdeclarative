@@ -45,4 +45,254 @@
     instead. For more information, refer to the
     \l{Qt 5.15: Qt Quick Controls vs Qt Quick Controls 1} topic in the Qt 5
     documentation.
+
+    \section1 Type registration changes
+
+    Qt Quick Controls has undergone some large, mostly internal changes in Qt
+    6. By making use of the improved type registration introduced in Qt 5.15,
+    we pave the way for compilation of the module's QML files to C++ and enable
+    tooling to become more effective. In particular, Qt Creator's QML code
+    model should have a more complete picture of types, making its completion
+    and error checking of Qt Quick Controls code more reliable. Static analysis
+    tools like qmllint and qmlformat also benefit by becoming aware of the
+    types that are now declared at compile time in C++.
+
+    As a result of these changes, some things are done a little differently.
+
+    \section2 Custom styles are now proper QML modules
+
+    To enable compile time type registration, each Qt Quick Controls style is
+    now a proper QML module. Previously, a single \c Button.qml was sufficient
+    to create your own style. While convenient, this required some non-standard
+    API, which in turn required adaptation in tooling like Qt Designer.
+
+    Now, all QML types that a style implements must be declared in that style's
+    qmldir file:
+
+    \code
+    module MyStyle
+    Button 1.0 Button.qml
+    \endcode
+
+    \omit
+    TODO: Once we have documentation for the CMake function qt6_add_qml_module,
+    this would be a good place to link to it, stating that you don't have to
+    manually write the qmldir files.
+    \endomit
+
+    By unifying this with the rest of the QML world, styles become more
+    familiar to developers and hopefully easier to understand for beginners. As
+    a consequence, the following API had to be removed:
+
+    \list
+        \li QQuickStyle::addStylePath()
+        \li QQuickStyle::availableStyles()
+        \li QQuickStyle::path()
+        \li QQuickStyle::stylePathList()
+        \li QT_QUICK_CONTROLS_STYLE_PATH
+    \endlist
+
+    Now that the styles are required to be found in the QML engine's import
+    path like any other QML module, it is no longer necessary or possible to
+    support this API.
+
+    \section3 Style names
+
+    In addition, there is now only one valid, case-sensitive form for style
+    names: "Material", "MyStyle", and so on. That is: the style name must
+    exactly match the name of the QML module. This also applies to file
+    selectors, where previously, all style names were lower case. For example,
+    where the following was a valid structure for a Qt 5 project:
+
+    \badcode
+    MyProject
+    ├── main.qml
+    ├── HomePage.qml
+    └── +material
+        └───HomePage.qml
+    \endcode
+
+    In Qt 6, \c +material becomes \c +Material:
+
+    \badcode
+    MyProject
+    ├── main.qml
+    ├── HomePage.qml
+    └── +Material
+        └───HomePage.qml
+    \endcode
+
+    All of the existing ways to \l {Using Styles in Qt Quick Controls}{run an
+    application with a specific style} are still supported.
+
+    \section2 Runtime and compile time style selection
+
+    Importing a style now has extra meaning due to the way that imports work
+    internally. Previously, importing \c QtQuick.Controls would register the
+    control types from the current style with the QML engine:
+
+    \qml
+    import QtQuick.Controls
+    \endqml
+
+    We refer to this as runtime style selection, as the style is selected at
+    runtime.
+
+    Explicitly importing \c QtQuick.Controls.Material would then simply expose
+    any extra API provided by that style (for example, the attached Material
+    type):
+
+    \qml
+    import QtQuick.Controls.Material
+    \endqml
+
+    Now, explicitly importing a style does both.
+
+    This effectively means that the control types (like Button) from the last
+    imported style will be used. We refer to this as compile time style
+    selection.
+
+    This has implications for existing code. Namely, if your application
+    supports more than one style, move these imports into their own QML files
+    that are file-selected.
+
+    For example, if you have the following \c main.qml:
+
+    \qml
+    import QtQuick.Controls
+    import QtQuick.Material
+    import QtQuick.Universal
+
+    ApplicationWindow {
+        width: 600
+        height: 400
+        visible: true
+
+        Material.theme: darkMode ? Material.Dark : Material.Light
+        Universal.theme: darkMode ? Universal.Dark : Universal.Light
+
+        // Child items, etc.
+    }
+    \endqml
+
+    You can move the common code into a "base" component:
+
+    \qml
+    // MainWindow.qml
+
+    import QtQuick.Controls
+
+    ApplicationWindow {}
+    \endqml
+
+    Then, add a \c +Material subdirectory, and in it, add the Material-specific code into \c MainWindow.qml:
+
+    \qml
+    // +Material/MainWindow.qml
+
+    import QtQuick.Material
+
+    ApplicationWindow {
+        Material.theme: darkMode ? Material.Dark : Material.Light
+    }
+    \endqml
+
+    Do the same for Universal:
+
+    \qml
+    // +Universal/MainWindow.qml
+
+    import QtQuick.Universal
+
+    ApplicationWindow {
+        Universal.theme: darkMode ? Universal.Dark : Universal.Light
+    }
+    \endqml
+
+    Then, in \c main.qml:
+
+    \qml
+    import QtQuick.Controls
+
+    MainWindow {
+        width: 600
+        height: 400
+        visible: true
+
+        // Child items, etc.
+    }
+    \endqml
+
+    See also: \l {Using File Selectors with Qt Quick Controls}.
+
+    \section1 Default Style
+
+    The Default style was renamed to "Basic", as it is no longer the default
+    style. Instead, the default style is now chosen based on the platform
+    that Qt was built for:
+
+    \list
+    \li Android: \l {Material Style}
+    \li Linux: \l {Fusion Style}
+    \li macOS: \l {macOS Style}
+    \li Windows: \l {Windows Style}
+    \li All other platforms: \l {Basic Style}
+    \endlist
+
+    \section1 Palette
+
+    The palette API was moved to QQuickItem. The various APIs that use palettes
+    in Qt Quick Controls are unchanged.
+
+    \section1 Controls
+
+    \section2 ApplicationWindow
+
+    The deprecated overlay properties and attached API were removed. Use the
+    \l Overlay attached type instead.
+
+    \section2 ComboBox
+
+    The \l {ComboBox::}{pressed} property is now read-only. To modify the
+    visual pressed state of a ComboBox, use the \l {ComboBox::}{down} property
+    instead.
+
+    \section2 Container
+
+    The deprecated \c removeItem(var) function was removed.
+    \l {Container::}{removeItem(Item)} or \l {Container::}{takeItem(int)} can
+    be used instead.
+
+    \section2 Dialog
+
+    \l {Dialog}'s \l {Dialog::}{accepted()} and \l {Dialog::}{rejected()}
+    signals are now emitted before \l {Popup::}{closed()} when calling
+    \l {Dialog::}{done()}, \l {Dialog::}{accept()} and \l {Dialog::}{reject()}.
+
+    \section2 Menu
+
+    The deprecated \c removeItem(var) function was removed.
+    \l {Menu::}{removeItem(Item)} or \l {Menu::}{takeItem(int)} can be used
+    instead.
+
+    \section2 ToolTip
+
+    \l {ToolTip}'s timeout now begins only after \l {Popup::}{opened()} has
+    been emitted. This results in tooltips with enter transitions being visible
+    for the entire duration of the timeout property. This means that they are
+    visible slightly longer than they were before, so it may be worthwhile to
+    visually check tooltips in your application and adjust timeouts if
+    necessary.
+
+    \section2 StackView
+
+    The StackView.Transition enum value was deprecated. The operation argument
+    can be omitted in order to use the default transition for any given
+    operation.
+
+    \section2 Tumbler
+
+    \l {Item::}{implicitWidth} and \l {Item::}{implicitHeight} must now be
+    provided for \l {Tumbler}'s \l {Control::}{contentItem}, making it
+    consistent with all other controls.
 */
