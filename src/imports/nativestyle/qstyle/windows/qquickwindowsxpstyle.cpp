@@ -3223,6 +3223,15 @@ QRect QWindowsXPStyle::subControlRect(ComplexControl cc, const QStyleOptionCompl
     QRect rect;
 
     switch (cc) {
+    case CC_GroupBox:
+        rect = visualRect(option->direction, option->rect,
+                          QWindowsStyle::subControlRect(cc, option, subControl));
+        if (subControl == QStyle::SC_GroupBoxContents) {
+            // This will add the margins that was added by QLayouts in QtWidgets
+            // (default to 9 for layouts inside a QGroupBox)
+            rect.adjust(9, 9, -9, -9);
+        }
+        break;
     case CC_TitleBar:
         if (const QStyleOptionTitleBar *tb = qstyleoption_cast<const QStyleOptionTitleBar *>(option)) {
             if (!buttonVisible(subControl, tb))
