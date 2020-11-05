@@ -2845,6 +2845,14 @@ bool QQuickWindowPrivate::deliverPressOrReleaseEvent(QPointerEvent *event, bool 
 void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, bool isGrabber, QPointerEvent *pointerEvent, bool handlersOnly)
 {
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
+#if defined(Q_OS_ANDROID) && QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    // QTBUG-85379
+    // In QT_VERSION below 6.0.0 touchEnabled for QtQuickItems is set by default to true
+    // It causes delivering touch events to Items which are not interested
+    // In some cases (like using Material Style in Android) it may cause a crash
+    if (itemPrivate->wasDeleted)
+        return;
+#endif
     localizePointerEvent(pointerEvent, item);
     bool isMouse = isMouseEvent(pointerEvent);
 
