@@ -33,3 +33,10 @@ qt_internal_extend_target(tst_qmlimportscanner CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )
+
+# special case begin
+qt_internal_extend_target(tst_qmlimportscanner CONDITION DEFINED QT_LIBINFIX
+    DEFINES
+    LIBINFIX=${QT_LIBINFIX}
+)
+# special case end

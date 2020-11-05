@@ -268,9 +268,9 @@ function(qt6_add_qml_module target)
     set(qmldir_file_contents "module ${arg_URI}\n")
 
     if (arg_PLUGIN_OPTIONAL)
-        string(APPEND qmldir_file_contents "optional plugin ${target}\n")
+       string(APPEND qmldir_file_contents "optional plugin ${target}${QT_LIBINFIX}\n")
     else()
-        string(APPEND qmldir_file_contents "plugin ${target}\n")
+        string(APPEND qmldir_file_contents "plugin ${target}${QT_LIBINFIX}\n")
     endif()
 
     if (arg_CLASSNAME)

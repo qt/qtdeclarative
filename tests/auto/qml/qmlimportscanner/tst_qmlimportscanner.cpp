@@ -151,6 +151,16 @@ void TestQmlimportscanner::runQmlimportscanner(const QString &mode, const QStrin
 
         // Path is omitted because it's an absolute path, dependent on host system.
         object["path"] = QJsonValue::Undefined;
+#ifdef LIBINFIX
+#define XSTR(a) STR(a)
+#define STR(A) #A
+        if (object.contains("plugin")) {
+            auto plugin = object["plugin"].toString();
+            const auto pos = plugin.lastIndexOf(XSTR(LIBINFIX));
+            if (pos != -1)
+                object["plugin"] = plugin.left(pos);
+        }
+#endif
 
         bool found = false;
         for (auto it = expectedArray.begin(), end = expectedArray.end(); it != end; ++it) {
@@ -160,7 +170,7 @@ void TestQmlimportscanner::runQmlimportscanner(const QString &mode, const QStrin
                 break;
             }
         }
-        QVERIFY(found);
+        QVERIFY2(found, qPrintable(QDebug::toString(object)));
     }
     QVERIFY(expectedArray.isEmpty());
 }
