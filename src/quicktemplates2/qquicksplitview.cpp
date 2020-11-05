@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype SplitView
-    \inherits Control
+    \inherits Container
 //!     \instantiates QQuickSplitView
     \inqmlmodule QtQuick.Controls
     \since 5.13
