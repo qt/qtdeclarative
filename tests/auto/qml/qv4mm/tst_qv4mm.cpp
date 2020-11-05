@@ -48,6 +48,7 @@ private slots:
     void multiWrappedQObjects();
     void accessParentOnDestruction();
     void clearICParent();
+    void createObjectsOnDestruction();
 };
 
 void tst_qv4mm::gcStats()
@@ -146,6 +147,17 @@ void tst_qv4mm::clearICParent()
             return;
     }
     QFAIL("Garbage collector was not triggered by large amount of InternalClasses");
+}
+
+void tst_qv4mm::createObjectsOnDestruction()
+{
+    QLoggingCategory::setFilterRules("qt.qml.gc.*=false");
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("createobjects.qml"));
+    std::unique_ptr<QObject> obj(component.create());
+    QVERIFY(obj);
+    QCOMPARE(obj->property("numChecked").toInt(), 1000);
+    QCOMPARE(obj->property("ok").toBool(), true);
 }
 
 QTEST_MAIN(tst_qv4mm)

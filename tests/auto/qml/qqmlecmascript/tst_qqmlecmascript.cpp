@@ -7676,7 +7676,10 @@ void tst_qqmlecmascript::onDestructionViaGC()
     gc(engine);
 
     QVERIFY2(mutatorResult, "We failed to re-assign the weak reference a new value during GC");
-    QVERIFY2(sentinelResult, "The weak reference was not cleared properly");
+    QVERIFY2(!sentinelResult, "The weak value was cleared on first GC run");
+    QVERIFY2(!weakRef->isNullOrUndefined(), "The weak value was cleared on first GC run");
+    gc(engine);
+    QVERIFY2(weakRef->isNullOrUndefined(), "The weak value was not cleared on second gc run");
 }
 
 struct EventProcessor : public QObject

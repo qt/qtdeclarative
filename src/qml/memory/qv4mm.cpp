@@ -790,6 +790,13 @@ Heap::Base *MemoryManager::allocString(std::size_t unmanagedSize)
 
     HeapItem *m = allocate(&blockAllocator, stringSize);
     memset(m, 0, stringSize);
+    if (gcBlocked) {
+        // If the gc is running right now, it will not have a chance to mark the newly created item
+        // and may therefore sweep it right away.
+        // Protect the new object from the current GC run to avoid this.
+        m->as<Heap::Base>()->setMarkBit();
+    }
+
     return *m;
 }
 
@@ -805,6 +812,13 @@ Heap::Base *MemoryManager::allocData(std::size_t size)
 
     HeapItem *m = allocate(&blockAllocator, size);
     memset(m, 0, size);
+    if (gcBlocked) {
+        // If the gc is running right now, it will not have a chance to mark the newly created item
+        // and may therefore sweep it right away.
+        // Protect the new object from the current GC run to avoid this.
+        m->as<Heap::Base>()->setMarkBit();
+    }
+
     return *m;
 }
 
