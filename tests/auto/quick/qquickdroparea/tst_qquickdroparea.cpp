@@ -134,17 +134,14 @@ void tst_QQuickDropArea::containsDrag_internal()
     QCOMPARE(evaluate<int>(dropArea, "exitEvents"), 0);
 
     dragItem->setPosition(QPointF(50, 50));
-    QCoreApplication::processEvents();
-    QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), true);
+    QTRY_COMPARE(evaluate<bool>(dropArea, "containsDrag"), true);
     QCOMPARE(evaluate<bool>(dropArea, "hasDrag"), true);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 1);
     QCOMPARE(evaluate<int>(dropArea, "exitEvents"), 0);
 
     evaluate<void>(dropArea, "{ enterEvents = 0; exitEvents = 0 }");
     dragItem->setPosition(QPointF(150, 50));
-    QCoreApplication::processEvents();
-
-    QCOMPARE(evaluate<bool>(dropArea, "containsDrag"), false);
+    QTRY_COMPARE(evaluate<bool>(dropArea, "containsDrag"), false);
     QCOMPARE(evaluate<bool>(dropArea, "hasDrag"), false);
     QCOMPARE(evaluate<int>(dropArea, "enterEvents"), 0);
     QCOMPARE(evaluate<int>(dropArea, "exitEvents"), 1);
