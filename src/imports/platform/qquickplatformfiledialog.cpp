@@ -352,7 +352,6 @@ void QQuickPlatformFileDialog::resetNameFilters()
 }
 
 /*!
-    \qmlpropertygroup Qt.labs.platform::FileDialog::selectedNameFilter
     \qmlproperty int Qt.labs.platform::FileDialog::selectedNameFilter.index
     \qmlproperty string Qt.labs.platform::FileDialog::selectedNameFilter.name
     \qmlproperty list<string> Qt.labs.platform::FileDialog::selectedNameFilter.extensions

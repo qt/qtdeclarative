@@ -746,7 +746,6 @@ qreal QQuickRangeSlider::valueAt(qreal position) const
 }
 
 /*!
-    \qmlpropertygroup QtQuick.Controls::RangeSlider::first
     \qmlproperty real QtQuick.Controls::RangeSlider::first.value
     \qmlproperty real QtQuick.Controls::RangeSlider::first.position
     \qmlproperty real QtQuick.Controls::RangeSlider::first.visualPosition
@@ -825,7 +824,6 @@ QQuickRangeSliderNode *QQuickRangeSlider::first() const
 */
 
 /*!
-    \qmlpropertygroup QtQuick.Controls::RangeSlider::second
     \qmlproperty real QtQuick.Controls::RangeSlider::second.value
     \qmlproperty real QtQuick.Controls::RangeSlider::second.position
     \qmlproperty real QtQuick.Controls::RangeSlider::second.visualPosition

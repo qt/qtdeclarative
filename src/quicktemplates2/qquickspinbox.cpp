@@ -728,7 +728,6 @@ void QQuickSpinBox::setValueFromText(const QJSValue &callback)
 }
 
 /*!
-    \qmlpropertygroup QtQuick.Controls::SpinBox::up
     \qmlproperty bool QtQuick.Controls::SpinBox::up.pressed
     \qmlproperty Item QtQuick.Controls::SpinBox::up.indicator
     \qmlproperty bool QtQuick.Controls::SpinBox::up.hovered
@@ -749,7 +748,6 @@ QQuickSpinButton *QQuickSpinBox::up() const
 }
 
 /*!
-    \qmlpropertygroup QtQuick.Controls::SpinBox::down
     \qmlproperty bool QtQuick.Controls::SpinBox::down.pressed
     \qmlproperty Item QtQuick.Controls::SpinBox::down.indicator
     \qmlproperty bool QtQuick.Controls::SpinBox::down.hovered

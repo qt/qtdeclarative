@@ -552,7 +552,6 @@ void QQuickPlatformMenuItem::setFont(const QFont& font)
 
 /*!
     \since Qt.labs.platform 1.1 (Qt 5.12)
-    \qmlpropertygroup Qt.labs.platform::MenuItem::icon
     \qmlproperty url Qt.labs.platform::MenuItem::icon.source
     \qmlproperty string Qt.labs.platform::MenuItem::icon.name
     \qmlproperty bool Qt.labs.platform::MenuItem::icon.mask

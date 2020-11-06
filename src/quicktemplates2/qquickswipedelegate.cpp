@@ -1030,7 +1030,6 @@ QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent)
 */
 
 /*!
-    \qmlpropertygroup QtQuick.Controls::SwipeDelegate::swipe
     \qmlproperty real QtQuick.Controls::SwipeDelegate::swipe.position
     \qmlproperty bool QtQuick.Controls::SwipeDelegate::swipe.complete
     \qmlproperty bool QtQuick.Controls::SwipeDelegate::swipe.enabled

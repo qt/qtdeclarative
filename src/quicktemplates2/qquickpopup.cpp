@@ -581,7 +581,6 @@ void QQuickPopupPrivate::setBottomMargin(qreal value, bool reset)
 
 /*!
     \since QtQuick.Controls 2.5 (Qt 5.12)
-    \qmlpropertygroup QtQuick.Controls::Popup::anchors
     \qmlproperty Object QtQuick.Controls::Popup::anchors.centerIn
 
     Anchors provide a way to position an item by specifying its

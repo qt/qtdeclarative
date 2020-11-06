@@ -381,7 +381,6 @@ void QQuickAction::setText(const QString &text)
 }
 
 /*!
-    \qmlpropertygroup QtQuick.Controls::Action::icon
     \qmlproperty string QtQuick.Controls::Action::icon.name
     \qmlproperty url QtQuick.Controls::Action::icon.source
     \qmlproperty int QtQuick.Controls::Action::icon.width

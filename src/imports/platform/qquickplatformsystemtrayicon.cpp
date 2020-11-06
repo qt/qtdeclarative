@@ -314,7 +314,6 @@ QRect QQuickPlatformSystemTrayIcon::geometry() const
 
 /*!
     \since Qt.labs.platform 1.1 (Qt 5.12)
-    \qmlpropertygroup Qt.labs.platform::SystemTrayIcon::icon
     \qmlproperty url Qt.labs.platform::SystemTrayIcon::icon.source
     \qmlproperty string Qt.labs.platform::SystemTrayIcon::icon.name
     \qmlproperty bool Qt.labs.platform::SystemTrayIcon::icon.mask
