@@ -248,13 +248,14 @@ bool AstDumper::visit(UiImport *el)
 }
 
 bool AstDumper::visit(UiPublicMember *el) {
+    auto boolToStr = [](bool b) { return b ? "true" : "false"; };
     QString typeStr = ((el->type == UiPublicMember::Signal)   ? QLatin1String("Signal") :
-                                                                (el->type == UiPublicMember::Property) ? QLatin1String("Property") : QLatin1String("Unexpected(%1)").arg(el->type));
+                                                                (el->type == UiPublicMember::Property) ? QLatin1String("Property") : QStringLiteral("Unexpected(%1)").arg(el->type));
     start(QLatin1String("UiPublicMember type=%1 typeModifier=%2 name=%3 isDefaultMember=%4 isReadonlyMember=%5 isRequired=%6 "
                         "defaultToken=%7 readonlyToken=%8 propertyToken=%9 requiredToken=%10 typeModifierToken=%11 typeToken=%12 "
                         "identifierToken=%13 colonToken=%14 semicolonToken=%15")
           .arg(qs(typeStr), qs(el->typeModifier), qs(el->name),
-               el->isDefaultMember, el->isReadonlyMember, el->isRequired,
+               boolToStr(el->isDefaultMember), boolToStr(el->isReadonlyMember), boolToStr(el->isRequired),
                loc(el->defaultToken), loc(el->readonlyToken), loc(el->propertyToken),
                loc(el->requiredToken), loc(el->typeModifierToken), loc(el->typeToken),
                loc(el->identifierToken), loc(el->colonToken), loc(el->semicolonToken)
