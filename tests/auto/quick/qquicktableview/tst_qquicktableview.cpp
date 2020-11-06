@@ -176,6 +176,7 @@ private slots:
     void checkSyncView_connect_late_data();
     void checkSyncView_connect_late();
     void checkSyncView_pageFlicking();
+    void checkSyncView_emptyModel();
     void delegateWithRequiredProperties();
     void checkThatFetchMoreIsCalledWhenScrolledToTheEndOfTable();
     void replaceModel();
@@ -2729,6 +2730,48 @@ void tst_QQuickTableView::checkSyncView_pageFlicking()
     QVERIFY(tableViewPrivate->scheduledRebuildOptions & QQuickTableViewPrivate::RebuildOption::ViewportOnly);
     QVERIFY(!(tableViewPrivate->scheduledRebuildOptions & QQuickTableViewPrivate::RebuildOption::CalculateNewTopLeftColumn));
     QVERIFY(tableViewPrivate->scheduledRebuildOptions & QQuickTableViewPrivate::RebuildOption::CalculateNewTopLeftRow);
+}
+
+void tst_QQuickTableView::checkSyncView_emptyModel()
+{
+    // When a tableview has a syncview with an empty model then it should still be
+    // showing the tableview without depending on the syncview. This is particularly
+    // important for headerviews for example
+    LOAD_TABLEVIEW("syncviewsimple.qml");
+    GET_QML_TABLEVIEW(tableViewH);
+    GET_QML_TABLEVIEW(tableViewV);
+    GET_QML_TABLEVIEW(tableViewHV);
+    QQuickTableView *views[] = {tableViewH, tableViewV, tableViewHV};
+
+    auto model = TestModelAsVariant(100, 100);
+
+    for (auto view : views)
+        view->setModel(model);
+
+    WAIT_UNTIL_POLISHED_ARG(tableViewHV);
+
+    // Check that geometry properties are mirrored
+    QCOMPARE(tableViewH->columnSpacing(), tableView->columnSpacing());
+    QCOMPARE(tableViewH->rowSpacing(), 0);
+    QCOMPARE(tableViewH->contentWidth(), tableView->contentWidth());
+    QVERIFY(tableViewH->contentHeight() > 0);
+    QCOMPARE(tableViewV->columnSpacing(), 0);
+    QCOMPARE(tableViewV->rowSpacing(), tableView->rowSpacing());
+    QCOMPARE(tableViewV->contentHeight(), tableView->contentHeight());
+    QVERIFY(tableViewV->contentWidth() > 0);
+
+    QCOMPARE(tableViewH->contentX(), tableView->contentX());
+    QCOMPARE(tableViewH->contentY(), 0);
+    QCOMPARE(tableViewV->contentX(), 0);
+    QCOMPARE(tableViewV->contentY(), tableView->contentY());
+    QCOMPARE(tableViewHV->contentX(), tableView->contentX());
+    QCOMPARE(tableViewHV->contentY(), tableView->contentY());
+
+    QCOMPARE(tableViewHPrivate->loadedTableOuterRect.left(), tableViewPrivate->loadedTableOuterRect.left());
+    QCOMPARE(tableViewHPrivate->loadedTableOuterRect.top(), 0);
+
+    QCOMPARE(tableViewVPrivate->loadedTableOuterRect.top(), tableViewPrivate->loadedTableOuterRect.top());
+    QCOMPARE(tableViewVPrivate->loadedTableOuterRect.left(), 0);
 }
 
 void tst_QQuickTableView::checkThatFetchMoreIsCalledWhenScrolledToTheEndOfTable()

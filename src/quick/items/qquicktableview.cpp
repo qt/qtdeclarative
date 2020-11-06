@@ -1760,11 +1760,8 @@ void QQuickTableViewPrivate::calculateTopLeft(QPoint &topLeftCell, QPointF &topL
         const auto syncView_d = syncView->d_func();
 
         if (syncView_d->loadedItems.isEmpty()) {
-            // The sync view contains no loaded items. This probably means
-            // that it has not been rebuilt yet. Which also means that
-            // we cannot rebuild anything before this happens.
-            topLeftCell.rx() = kEdgeIndexNotSet;
-            topLeftCell.ry() = kEdgeIndexNotSet;
+            topLeftCell.rx() = 0;
+            topLeftCell.ry() = 0;
             return;
         }
 
