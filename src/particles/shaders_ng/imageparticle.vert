@@ -4,7 +4,7 @@ layout(location = 1) in vec4 vData; // x = time, y = lifeSpan, z = size, w = end
 layout(location = 2) in vec4 vVec;  // x,y = constant velocity,  z,w = acceleration
 
 #if defined(DEFORM)
-layout(location = 0) in vec4 vPosTex;
+layout(location = 0) in vec4 vPosRot; //x = x, y = y,  z = radians of rotation, w = rotation velocity
 #else
 layout(location = 0) in vec2 vPos;
 #endif
@@ -15,12 +15,12 @@ layout(location = 3) in vec4 vColor;
 
 #if defined(DEFORM)
 layout(location = 4) in vec4 vDeformVec; // x,y x unit vector; z,w = y unit vector
-layout(location = 5) in vec3 vRotation;  // x = radians of rotation, y = rotation velocity, z = bool autoRotate
+layout(location = 5) in vec3 vTex;  // x = tx, y = ty, z = bool autoRotate
 #endif
 
 #if defined(SPRITE)
 layout(location = 6) in vec3 vAnimData; // w,h(premultiplied of anim), interpolation progress
-layout(location = 7) in vec4 vAnimPos;  // x,y, x,y (two frames for interpolation)
+layout(location = 7) in vec3 vAnimPos;  // x, y, x2 (two frames for interpolation)
 #endif
 
 #if defined(TABLE)
@@ -55,7 +55,7 @@ void main()
     float t = (ubuf.timestamp - vData.x) / vData.y;
     if (t < 0. || t > 1.) {
 #if defined(DEFORM)
-        gl_Position = ubuf.matrix * vec4(vPosTex.x, vPosTex.y, 0., 1.);
+        gl_Position = ubuf.matrix * vec4(vPosRot.x, vPosRot.y, 0., 1.);
 #else
         gl_PointSize = 0.;
 #endif
@@ -64,13 +64,13 @@ void main()
         tt.y = vAnimData.z;
 
         // Calculate frame location in texture
-        fTexS.xy = vAnimPos.xy + vPosTex.zw * vAnimData.xy;
+        fTexS.xy = vAnimPos.xy + vTex.xy * vAnimData.xy;
 
         // Next frame is also passed, for interpolation
-        fTexS.zw = vAnimPos.zw + vPosTex.zw * vAnimData.xy;
+        fTexS.zw = vAnimPos.zy + vTex.xy * vAnimData.xy;
 
 #elif defined(DEFORM)
-        fTex = vPosTex.zw;
+        fTex = vTex.xy;
 #endif
         float currentSize = mix(vData.z, vData.w, t * t);
         float fade = 1.;
@@ -89,7 +89,7 @@ void main()
 
         if (currentSize <= 0.) {
 #if defined(DEFORM)
-            gl_Position = ubuf.matrix * vec4(vPosTex.x, vPosTex.y, 0., 1.);
+            gl_Position = ubuf.matrix * vec4(vPosRot.x, vPosRot.y, 0., 1.);
 #else
             gl_PointSize = 0.;
 #endif
@@ -99,14 +99,14 @@ void main()
 
             vec2 pos;
 #if defined(DEFORM)
-            float rotation = vRotation.x + vRotation.y * t * vData.y;
-            if (vRotation.z == 1.0) {
+            float rotation = vPosRot.z + vPosRot.w * t * vData.y;
+            if (vTex.z > 0.) {
                 vec2 curVel = vVec.zw * t * vData.y + vVec.xy;
                 if (length(curVel) > 0.)
                     rotation += atan(curVel.y, curVel.x);
             }
             vec2 trigCalcs = vec2(cos(rotation), sin(rotation));
-            vec4 deform = vDeformVec * currentSize * (vPosTex.zzww - 0.5);
+            vec4 deform = vDeformVec * currentSize * (vTex.xxyy - 0.5);
             vec4 rotatedDeform = deform.xxzz * trigCalcs.xyxy;
             rotatedDeform = rotatedDeform + (deform.yyww * trigCalcs.yxyx * vec4(-1.,1.,-1.,1.));
             /* The readable version:
@@ -119,7 +119,7 @@ void main()
             yRotatedDeform.x = trigCalcs.x*yDeform.x - trigCalcs.y*yDeform.y;
             yRotatedDeform.y = trigCalcs.y*yDeform.x + trigCalcs.x*yDeform.y;
             */
-            pos = vPosTex.xy
+            pos = vPosRot.xy
                   + rotatedDeform.xy
                   + rotatedDeform.zw
                   + vVec.xy * t * vData.y         // apply velocity

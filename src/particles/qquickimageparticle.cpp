@@ -1067,8 +1067,8 @@ void QQuickImageParticle::createEngine()
 }
 
 static QSGGeometry::Attribute SimpleParticle_Attributes[] = {
-    QSGGeometry::Attribute::create(0, 2, QSGGeometry::FloatType, true),             // Position
-    QSGGeometry::Attribute::create(1, 4, QSGGeometry::FloatType),             // Data
+    QSGGeometry::Attribute::create(0, 2, QSGGeometry::FloatType, true),      // Position
+    QSGGeometry::Attribute::create(1, 4, QSGGeometry::FloatType),            // Data
     QSGGeometry::Attribute::create(2, 4, QSGGeometry::FloatType)             // Vectors
 };
 
@@ -1080,9 +1080,9 @@ static QSGGeometry::AttributeSet SimpleParticle_AttributeSet =
 };
 
 static QSGGeometry::Attribute ColoredParticle_Attributes[] = {
-    QSGGeometry::Attribute::create(0, 2, QSGGeometry::FloatType, true),             // Position
-    QSGGeometry::Attribute::create(1, 4, QSGGeometry::FloatType),             // Data
-    QSGGeometry::Attribute::create(2, 4, QSGGeometry::FloatType),             // Vectors
+    QSGGeometry::Attribute::create(0, 2, QSGGeometry::FloatType, true),      // Position
+    QSGGeometry::Attribute::create(1, 4, QSGGeometry::FloatType),            // Data
+    QSGGeometry::Attribute::create(2, 4, QSGGeometry::FloatType),            // Vectors
     QSGGeometry::Attribute::create(3, 4, QSGGeometry::UnsignedByteType),     // Colors
 };
 
@@ -1094,36 +1094,36 @@ static QSGGeometry::AttributeSet ColoredParticle_AttributeSet =
 };
 
 static QSGGeometry::Attribute DeformableParticle_Attributes[] = {
-    QSGGeometry::Attribute::create(0, 4, QSGGeometry::FloatType),             // Position & TexCoord
-    QSGGeometry::Attribute::create(1, 4, QSGGeometry::FloatType),             // Data
-    QSGGeometry::Attribute::create(2, 4, QSGGeometry::FloatType),             // Vectors
+    QSGGeometry::Attribute::create(0, 4, QSGGeometry::FloatType),            // Position & Rotation
+    QSGGeometry::Attribute::create(1, 4, QSGGeometry::FloatType),            // Data
+    QSGGeometry::Attribute::create(2, 4, QSGGeometry::FloatType),            // Vectors
     QSGGeometry::Attribute::create(3, 4, QSGGeometry::UnsignedByteType),     // Colors
-    QSGGeometry::Attribute::create(4, 4, QSGGeometry::FloatType),             // DeformationVectors
-    QSGGeometry::Attribute::create(5, 3, QSGGeometry::FloatType),             // Rotation
+    QSGGeometry::Attribute::create(4, 4, QSGGeometry::FloatType),            // DeformationVectors
+    QSGGeometry::Attribute::create(5, 4, QSGGeometry::UnsignedByteType),     // TexCoord & autoRotate
 };
 
 static QSGGeometry::AttributeSet DeformableParticle_AttributeSet =
 {
     6, // Attribute Count
-    (4 + 4 + 4 + 4 + 3) * sizeof(float) + 4 * sizeof(uchar),
+    (4 + 4 + 4 + 4) * sizeof(float) + (4 + 4) * sizeof(uchar),
     DeformableParticle_Attributes
 };
 
 static QSGGeometry::Attribute SpriteParticle_Attributes[] = {
-    QSGGeometry::Attribute::create(0, 4, QSGGeometry::FloatType),       // Position & TexCoord
-    QSGGeometry::Attribute::create(1, 4, QSGGeometry::FloatType),             // Data
-    QSGGeometry::Attribute::create(2, 4, QSGGeometry::FloatType),             // Vectors
+    QSGGeometry::Attribute::create(0, 4, QSGGeometry::FloatType),            // Position & Rotation
+    QSGGeometry::Attribute::create(1, 4, QSGGeometry::FloatType),            // Data
+    QSGGeometry::Attribute::create(2, 4, QSGGeometry::FloatType),            // Vectors
     QSGGeometry::Attribute::create(3, 4, QSGGeometry::UnsignedByteType),     // Colors
-    QSGGeometry::Attribute::create(4, 4, QSGGeometry::FloatType),             // DeformationVectors
-    QSGGeometry::Attribute::create(5, 3, QSGGeometry::FloatType),             // Rotation
-    QSGGeometry::Attribute::create(6, 3, QSGGeometry::FloatType),             // Anim Data
-    QSGGeometry::Attribute::create(7, 4, QSGGeometry::FloatType)              // Anim Pos
+    QSGGeometry::Attribute::create(4, 4, QSGGeometry::FloatType),            // DeformationVectors
+    QSGGeometry::Attribute::create(5, 4, QSGGeometry::UnsignedByteType),     // TexCoord & autoRotate
+    QSGGeometry::Attribute::create(6, 3, QSGGeometry::FloatType),            // Anim Data
+    QSGGeometry::Attribute::create(7, 3, QSGGeometry::FloatType)             // Anim Pos
 };
 
 static QSGGeometry::AttributeSet SpriteParticle_AttributeSet =
 {
     8, // Attribute Count
-    (4 + 4 + 4 + 4 + 3 + 3 + 4) * sizeof(float) + 4 * sizeof(uchar),
+    (4 + 4 + 4 + 4 + 3 + 3) * sizeof(float) + (4 + 4) * sizeof(uchar),
     SpriteParticle_Attributes
 };
 
@@ -1622,7 +1622,6 @@ void QQuickImageParticle::spritesUpdate(qreal time)
                 spriteVertices[i].animX1 = x1;
                 spriteVertices[i].animY1 = y;
                 spriteVertices[i].animX2 = x2;
-                spriteVertices[i].animY2 = y;
                 spriteVertices[i].animW = w;
                 spriteVertices[i].animH = h;
                 spriteVertices[i].animProgress = progress;
@@ -1677,7 +1676,7 @@ void QQuickImageParticle::initialize(int gIdx, int pIdx)
 
     float rotation;
     float rotationVelocity;
-    float autoRotate;
+    uchar autoRotate;
     switch (perfLevel){//Fall-through is intended on all of them
         case Sprites:
             // Initial Sprite State
@@ -1749,7 +1748,7 @@ void QQuickImageParticle::initialize(int gIdx, int pIdx)
                         (m_rotation + (m_rotationVariation - 2*QRandomGenerator::global()->bounded(m_rotationVariation)) ) * CONV;
                 rotationVelocity =
                         (m_rotationVelocity + (m_rotationVelocityVariation - 2*QRandomGenerator::global()->bounded(m_rotationVelocityVariation)) ) * CONV;
-                autoRotate = m_autoRotation?1.0:0.0;
+                autoRotate = m_autoRotation ? 1 : 0;
                 if (datum->rotationOwner == this) {
                     datum->rotation = rotation;
                     datum->rotationVelocity = rotationVelocity;

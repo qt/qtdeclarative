@@ -75,7 +75,7 @@ void tst_qquickcustomaffector::test_basic()
         QCOMPARE(d->lifeSpan, 0.5f);
         QCOMPARE(d->size, 100.f);
         QCOMPARE(d->endSize, 100.f);
-        QCOMPARE(d->autoRotate, 1.f);
+        QCOMPARE(d->autoRotate, (uchar)1);
         QCOMPARE(d->color.r, (uchar)0);
         QCOMPARE(d->color.g, (uchar)255);
         QCOMPARE(d->color.b, (uchar)0);

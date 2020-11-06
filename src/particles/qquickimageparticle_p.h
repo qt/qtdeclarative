@@ -99,8 +99,8 @@ struct ColoredVertex {
 struct DeformableVertex {
     float x;
     float y;
-    float tx;
-    float ty;
+    float rotation;
+    float rotationVelocity;
     float t;
     float lifeSpan;
     float size;
@@ -114,16 +114,17 @@ struct DeformableVertex {
     float xy;
     float yx;
     float yy;
-    float rotation;
-    float rotationVelocity;
-    float autoRotate;//Assumed that GPUs prefer floats to bools
+    uchar tx;
+    uchar ty;
+    uchar autoRotate;
+    uchar _padding; // feel free to use
 };
 
 struct SpriteVertex {
     float x;
     float y;
-    float tx;
-    float ty;
+    float rotation;
+    float rotationVelocity;
     float t;
     float lifeSpan;
     float size;
@@ -137,16 +138,16 @@ struct SpriteVertex {
     float xy;
     float yx;
     float yy;
-    float rotation;
-    float rotationVelocity;
-    float autoRotate;//Assumed that GPUs prefer floats to bools
+    uchar tx;
+    uchar ty;
+    uchar autoRotate;
+    uchar _padding; // feel free to use
     float animW;
     float animH;
     float animProgress;
     float animX1;
     float animY1;
     float animX2;
-    float animY2;
 };
 
 template <typename Vertex>
@@ -433,18 +434,19 @@ private:
     template<class Vertex>
     void initTexCoords(Vertex* v, int count){
         Vertex* end = v + count;
+        // Vertex coords between (0.0, 0.0) and (1.0, 1.0)
         while (v < end){
             v[0].tx = 0;
             v[0].ty = 0;
 
-            v[1].tx = 1;
+            v[1].tx = 255;
             v[1].ty = 0;
 
             v[2].tx = 0;
-            v[2].ty = 1;
+            v[2].ty = 255;
 
-            v[3].tx = 1;
-            v[3].ty = 1;
+            v[3].tx = 255;
+            v[3].ty = 255;
 
             v += 4;
         }
