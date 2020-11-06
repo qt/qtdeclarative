@@ -280,8 +280,7 @@ public:
 static inline bool isOpenGL(QSGRenderContext *rc)
 {
     QSGRendererInterface *rif = rc->sceneGraphContext()->rendererInterface(rc);
-    return rif && (rif->graphicsApi() == QSGRendererInterface::OpenGL
-                   || rif->graphicsApi() == QSGRendererInterface::OpenGLRhi);
+    return rif && rif->graphicsApi() == QSGRendererInterface::OpenGL;
 }
 
 /*!
