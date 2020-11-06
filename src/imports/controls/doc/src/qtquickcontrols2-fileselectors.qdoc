@@ -45,17 +45,17 @@
     The following example demonstrates a custom rounded button that has a
     styled drop shadow in the \l {Material Style}{Material style}, and looks
     flat in other styles. The files are organized so that the Material version
-    of \c CustomButton.qml is placed into a \c +material sub-directory.
+    of \c CustomButton.qml is placed into a \c +Material sub-directory.
 
     \code
     :/main.qml
     :/CustomButton.qml
-    :/+material/CustomButton.qml
+    :/+Material/CustomButton.qml
     \endcode
 
     By default, \c main.qml will use \c CustomButton.qml for the \c CustomButton
     type. However, when the application is run with the Material style, the
-    \c material selector will be present and the \c +material/CustomButton.qml
+    \c Material selector will be present and the \c +Material/CustomButton.qml
     version will be used instead.
 
     \code \QtMinorVersion
@@ -99,7 +99,7 @@
     a drop shadow for the background.
 
     \code \QtMinorVersion
-    // +material/CustomButton.qml
+    // +Material/CustomButton.qml
     import QtQuick 2.\1
     import QtGraphicalEffects 1.\1
     import QtQuick.Controls 2.\1

@@ -811,11 +811,11 @@ Back in \c ContactPage.qml, we update the code to use the new type:
 Now we need to add the Material version of the toolbar. File selectors expect
 variants of a file to be in appropriately named directories that exist
 alongside the default version of the file. This means that we need to add a
-folder named "+material" in the same directory that ChatToolBar.qml is in:
+folder named "+Material" in the same directory that ChatToolBar.qml is in:
 the root folder. The "+" is required by \l QFileSelector as a way of ensuring
 that the selection feature is not accidentally triggered.
 
-Here's \c +material/ChatToolBar.qml:
+Here's \c +Material/ChatToolBar.qml:
 
 \quotefromfile chattutorial/chapter5-styling/+Material/ChatToolBar.qml
 \skipto import
@@ -848,7 +848,7 @@ as possible. We'll test out the Material style first, so add an entry to
 \c qtquickcontrols2.conf that tells it to use its dark theme:
 
 \code
-[material]
+[Material]
 Primary=Indigo
 Accent=Indigo
 Theme=Dark
