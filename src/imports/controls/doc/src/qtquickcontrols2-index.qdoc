@@ -82,10 +82,15 @@
 
     \section1 Versions
 
-    Qt Quick Controls.0 was introduced in Qt 5.7. Subsequent minor Qt releases
+    Qt Quick Controls 2.0 was introduced in Qt 5.7. Subsequent minor Qt releases
     increment the import version of the Qt Quick Controls modules by one,
-    until Qt 5.12, where the import versions match Qt's minor version. The
-    experimental Qt Labs modules use import version 1.0.
+    until Qt 5.12, where the import versions match Qt's minor version.
+
+    In Qt 6, both the major and minor versions match, and version numbers may
+    be omitted from imports in QML. If the version is omitted, the latest
+    version will be used.
+
+    The experimental Qt Labs modules use import version 1.0.
 
     \table
       \header
@@ -95,8 +100,7 @@
             \l {Material Style}{\c QtQuick.Controls.Material},\br
             \l {Universal Style}{\c QtQuick.Controls.Universal},\br
             \l {Qt Quick Templates 2 QML Types}{\c QtQuick.Templates}
-        \li \l {Qt Quick Calendar QML Types}{\c QtQuick.Calendar},\br
-            \l {Qt Labs Platform QML Types}{\c Qt.labs.platform}
+        \li \l {Qt Labs Platform QML Types}{\c Qt.labs.platform}
       \row
         \li 5.7
         \li 2.7
@@ -126,6 +130,11 @@
         \li 5.12
         \li 2.12
         \li 2.12
+        \li 1.0
+      \row
+        \li 6.0
+        \li 6.0
+        \li 6.0
         \li 1.0
       \row
         \li ...
