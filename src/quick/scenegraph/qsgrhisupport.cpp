@@ -566,10 +566,6 @@ void QSGRhiSupport::prepareWindowForRhi(QQuickWindow *window)
 // must be called on the render thread
 QRhi *QSGRhiSupport::createRhi(QQuickWindow *window, QOffscreenSurface *offscreenSurface)
 {
-    QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
-    const QQuickGraphicsDevice &customDev(wd->customDeviceObjects);
-    const QQuickGraphicsDevicePrivate *customDevD = QQuickGraphicsDevicePrivate::get(&customDev);
-
     QRhi *rhi = nullptr;
 
     QRhi::Flags flags;
@@ -585,6 +581,8 @@ QRhi *QSGRhiSupport::createRhi(QQuickWindow *window, QOffscreenSurface *offscree
     }
 #if QT_CONFIG(opengl)
     if (backend == QRhi::OpenGLES2) {
+        QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
+        const QQuickGraphicsDevicePrivate *customDevD = QQuickGraphicsDevicePrivate::get(&wd->customDeviceObjects);
         const QSurfaceFormat format = window->requestedFormat();
         QRhiGles2InitParams rhiParams;
         rhiParams.format = format;
@@ -604,6 +602,8 @@ QRhi *QSGRhiSupport::createRhi(QQuickWindow *window, QOffscreenSurface *offscree
 #endif
 #if QT_CONFIG(vulkan)
     if (backend == QRhi::Vulkan) {
+        QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
+        const QQuickGraphicsDevicePrivate *customDevD = QQuickGraphicsDevicePrivate::get(&wd->customDeviceObjects);
         QRhiVulkanInitParams rhiParams;
         prepareWindowForRhi(window); // sets a vulkanInstance if not yet present
         rhiParams.inst = window->vulkanInstance();
@@ -633,6 +633,8 @@ QRhi *QSGRhiSupport::createRhi(QQuickWindow *window, QOffscreenSurface *offscree
 #endif
 #ifdef Q_OS_WIN
     if (backend == QRhi::D3D11) {
+        QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
+        const QQuickGraphicsDevicePrivate *customDevD = QQuickGraphicsDevicePrivate::get(&wd->customDeviceObjects);
         QRhiD3D11InitParams rhiParams;
         rhiParams.enableDebugLayer = isDebugLayerRequested();
         if (m_killDeviceFrameCount > 0) {
@@ -661,6 +663,8 @@ QRhi *QSGRhiSupport::createRhi(QQuickWindow *window, QOffscreenSurface *offscree
 #endif
 #if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
     if (backend == QRhi::Metal) {
+        QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
+        const QQuickGraphicsDevicePrivate *customDevD = QQuickGraphicsDevicePrivate::get(&wd->customDeviceObjects);
         QRhiMetalInitParams rhiParams;
         if (customDevD->type == QQuickGraphicsDevicePrivate::Type::DeviceAndCommandQueue) {
             QRhiMetalNativeHandles importDev;
