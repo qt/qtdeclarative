@@ -415,7 +415,7 @@ public:
     QString stringProperty() const { return m_stringProperty;}
     QChar qcharProperty() const { return m_qcharProperty; }
 
-    QChar constQChar() const { return 0x25cf; /* Unicode: black circle */ }
+    QChar constQChar() const { return u'\u25cf'; /* Unicode: black circle */ }
 
     void setStringProperty(QString arg) { m_stringProperty = arg; }
     void setQcharProperty(QChar arg) { m_qcharProperty = arg; }
@@ -1454,7 +1454,7 @@ void tst_qqmlproperty::write()
         QQmlProperty qcharProperty(&o, "qcharProperty");
         QQmlProperty stringProperty(&o, "stringProperty");
 
-        const int black_circle = 0x25cf;
+        const char16_t black_circle = 0x25cf;
 
         QCOMPARE(qcharProperty.write(QString("foo")), false);
         QCOMPARE(qcharProperty.write('Q'), true);

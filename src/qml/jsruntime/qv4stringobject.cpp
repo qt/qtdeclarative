@@ -230,7 +230,7 @@ ReturnedValue StringCtor::method_fromCodePoint(const FunctionObject *f, const Va
             ++ch;
             *ch = QChar::lowSurrogate(cp);
         } else {
-            *ch = cp;
+            *ch = QChar(cp);
         }
         ++ch;
     }
@@ -653,7 +653,7 @@ ReturnedValue StringPrototype::method_padEnd(const FunctionObject *f, const Valu
         toFill -= copy;
         ch += copy;
     }
-    *ch = 0;
+    *ch = '\0';
 
     return v4->newString(padded)->asReturnedValue();
 }
@@ -695,7 +695,7 @@ ReturnedValue StringPrototype::method_padStart(const FunctionObject *f, const Va
     }
     memcpy(ch, original.constData(), oldLength*sizeof(QChar));
     ch += oldLength;
-    *ch = 0;
+    *ch = '\0';
 
     return v4->newString(padded)->asReturnedValue();
 }

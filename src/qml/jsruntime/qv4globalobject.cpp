@@ -122,7 +122,7 @@ static QString unescape(const QString &input)
                 int d1 = fromHex(a.unicode());
                 int d0 = fromHex(input.at(i+1).unicode());
                 if ((d1 != -1) && (d0 != -1)) {
-                    c = (d1 << 4) | d0;
+                    c = QChar((d1 << 4) | d0);
                     i += 2;
                 }
                 result.append(c);

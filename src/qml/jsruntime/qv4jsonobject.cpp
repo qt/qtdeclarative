@@ -125,12 +125,13 @@ enum {
 bool JsonParser::eatSpace()
 {
     while (json < end) {
-        if (*json > Space)
+        const char16_t ch = json->unicode();
+        if (ch > Space)
             break;
-        if (*json != Space &&
-            *json != Tab &&
-            *json != LineFeed &&
-            *json != Return)
+        if (ch != Space &&
+            ch != Tab &&
+            ch != LineFeed &&
+            ch != Return)
             break;
         ++json;
     }
@@ -140,7 +141,7 @@ bool JsonParser::eatSpace()
 QChar JsonParser::nextToken()
 {
     if (!eatSpace())
-        return 0;
+        return u'\0';
     QChar token = *json++;
     switch (token.unicode()) {
     case BeginArray:
@@ -153,7 +154,7 @@ QChar JsonParser::nextToken()
     case Quote:
         break;
     default:
-        token = 0;
+        token = u'\0';
         break;
     }
     return token;
@@ -216,21 +217,21 @@ ReturnedValue JsonParser::parseObject()
     ScopedObject o(scope, engine->newObject());
 
     QChar token = nextToken();
-    while (token == Quote) {
+    while (token.unicode() == Quote) {
         if (!parseMember(o))
             return Encode::undefined();
         token = nextToken();
-        if (token != ValueSeparator)
+        if (token.unicode() != ValueSeparator)
             break;
         token = nextToken();
-        if (token == EndObject) {
+        if (token.unicode() == EndObject) {
             lastError = QJsonParseError::MissingObject;
             return Encode::undefined();
         }
     }
 
     DEBUG << "end token=" << token;
-    if (token != EndObject) {
+    if (token.unicode() != EndObject) {
         lastError = QJsonParseError::UnterminatedObject;
         return Encode::undefined();
     }
@@ -253,7 +254,7 @@ bool JsonParser::parseMember(Object *o)
     if (!parseString(&key))
         return false;
     QChar token = nextToken();
-    if (token != NameSeparator) {
+    if (token.unicode() != NameSeparator) {
         lastError = QJsonParseError::MissingNameSeparator;
         return false;
     }
@@ -292,7 +293,7 @@ ReturnedValue JsonParser::parseArray()
         lastError = QJsonParseError::UnterminatedArray;
         return Encode::undefined();
     }
-    if (*json == EndArray) {
+    if (json->unicode() == EndArray) {
         nextToken();
     } else {
         uint index = 0;
@@ -302,9 +303,9 @@ ReturnedValue JsonParser::parseArray()
                 return Encode::undefined();
             array->arraySet(index, val);
             QChar token = nextToken();
-            if (token == EndArray)
+            if (token.unicode() == EndArray)
                 break;
-            else if (token != ValueSeparator) {
+            else if (token.unicode() != ValueSeparator) {
                 if (!eatSpace())
                     lastError = QJsonParseError::UnterminatedArray;
                 else

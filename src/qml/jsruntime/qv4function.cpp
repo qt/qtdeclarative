@@ -143,7 +143,7 @@ void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArr
             const QString &dup = parameterNames[duplicate];
             parameterNames.append(dup);
             parameterNames[duplicate] =
-                    QString(0xfffe) + QString::number(duplicate) + dup;
+                    QString(QChar(0xfffe)) + QString::number(duplicate) + dup;
         }
 
     }
