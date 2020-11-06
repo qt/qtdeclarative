@@ -693,9 +693,9 @@ void QQuickPixmapReader::processJobs()
 
         // Clean cancelled jobs
         if (!cancelled.isEmpty()) {
-#if QT_CONFIG(qml_network)
             for (int i = 0; i < cancelled.count(); ++i) {
                 QQuickPixmapReply *job = cancelled.at(i);
+#if QT_CONFIG(qml_network)
                 QNetworkReply *reply = networkJobs.key(job, 0);
                 if (reply) {
                     networkJobs.remove(reply);
@@ -711,11 +711,11 @@ void QQuickPixmapReader::processJobs()
                     }
                 }
                 PIXMAP_PROFILE(pixmapStateChanged<QQuickProfiler::PixmapLoadingError>(job->url));
+#endif
                 // deleteLater, since not owned by this thread
                 job->deleteLater();
             }
             cancelled.clear();
-#endif
         }
 
         if (!jobs.isEmpty()) {
