@@ -2148,7 +2148,7 @@ void QQuickTextInput::insert(int position, const QString &text)
 
     if (d->hasSelectedText()) {
         d->addCommand(QQuickTextInputPrivate::Command(
-                QQuickTextInputPrivate::SetSelection, d->m_cursor, 0, d->m_selstart, d->m_selend));
+                QQuickTextInputPrivate::SetSelection, d->m_cursor, u'\0', d->m_selstart, d->m_selend));
     }
     if (d->m_maskData) {
         insertText = d->maskString(position, insertText);
@@ -2184,7 +2184,7 @@ void QQuickTextInput::insert(int position, const QString &text)
     }
 
     d->addCommand(QQuickTextInputPrivate::Command(
-            QQuickTextInputPrivate::SetSelection, d->m_cursor, 0, d->m_selstart, d->m_selend));
+            QQuickTextInputPrivate::SetSelection, d->m_cursor, u'\0', d->m_selstart, d->m_selend));
     d->finishChange(priorState);
 
     if (d->lastSelectionStart != d->lastSelectionEnd) {
@@ -2223,7 +2223,7 @@ void QQuickTextInput::remove(int start, int end)
     const int priorState = d->m_undoState;
 
     d->addCommand(QQuickTextInputPrivate::Command(
-            QQuickTextInputPrivate::SetSelection, d->m_cursor, 0, d->m_selstart, d->m_selend));
+            QQuickTextInputPrivate::SetSelection, d->m_cursor, u'\0', d->m_selstart, d->m_selend));
 
     if (start <= d->m_cursor && d->m_cursor < end) {
         // cursor is within the selection. Split up the commands
@@ -2259,7 +2259,7 @@ void QQuickTextInput::remove(int start, int end)
             d->m_selend -= end - start;
     }
     d->addCommand(QQuickTextInputPrivate::Command(
-            QQuickTextInputPrivate::SetSelection, d->m_cursor, 0, d->m_selstart, d->m_selend));
+            QQuickTextInputPrivate::SetSelection, d->m_cursor, u'\0', d->m_selstart, d->m_selend));
 
     d->m_textDirty = true;
     d->finishChange(priorState);
@@ -3689,7 +3689,7 @@ void QQuickTextInputPrivate::addCommand(const Command &cmd)
 {
     if (m_separator && m_undoState && m_history[m_undoState - 1].type != Separator) {
         m_history.resize(m_undoState + 2);
-        m_history[m_undoState++] = Command(Separator, m_cursor, 0, m_selstart, m_selend);
+        m_history[m_undoState++] = Command(Separator, m_cursor, u'\0', m_selstart, m_selend);
     } else {
         m_history.resize(m_undoState + 1);
     }
@@ -3816,7 +3816,7 @@ bool QQuickTextInputPrivate::separateSelection()
 {
     if (hasSelectedText()) {
         separate();
-        addCommand(Command(SetSelection, m_cursor, 0, m_selstart, m_selend));
+        addCommand(Command(SetSelection, m_cursor, u'\0', m_selstart, m_selend));
         return true;
     } else {
         return false;
@@ -3852,7 +3852,7 @@ void QQuickTextInputPrivate::parseInputMask(const QString &maskFields)
 
     // calculate m_maxLength / m_maskData length
     m_maxLength = 0;
-    QChar c = 0;
+    QChar c = u'\0';
     for (int i=0; i<m_inputMask.length(); i++) {
         c = m_inputMask.at(i);
         if (i > 0 && m_inputMask.at(i-1) == QLatin1Char('\\')) {
@@ -3870,7 +3870,7 @@ void QQuickTextInputPrivate::parseInputMask(const QString &maskFields)
     m_maskData = new MaskInputData[m_maxLength];
 
     MaskInputData::Casemode m = MaskInputData::NoCaseMode;
-    c = 0;
+    c = u'\0';
     bool s;
     bool escape = false;
     int index = 0;
@@ -4603,7 +4603,7 @@ void QQuickTextInputPrivate::processKeyEvent(QKeyEvent* event)
 void QQuickTextInputPrivate::deleteStartOfWord()
 {
     int priorState = m_undoState;
-    Command cmd(SetSelection, m_cursor, 0, m_selstart, m_selend);
+    Command cmd(SetSelection, m_cursor, u'\0', m_selstart, m_selend);
     separate();
     cursorWordBackward(true);
     addCommand(cmd);
@@ -4620,7 +4620,7 @@ void QQuickTextInputPrivate::deleteStartOfWord()
 void QQuickTextInputPrivate::deleteEndOfWord()
 {
     int priorState = m_undoState;
-    Command cmd(SetSelection, m_cursor, 0, m_selstart, m_selend);
+    Command cmd(SetSelection, m_cursor, u'\0', m_selstart, m_selend);
     separate();
     cursorWordForward(true);
     // moveCursor (sometimes) calls separate() so we need to add the command after that so the
@@ -4639,7 +4639,7 @@ void QQuickTextInputPrivate::deleteEndOfWord()
 void QQuickTextInputPrivate::deleteEndOfLine()
 {
     int priorState = m_undoState;
-    Command cmd(SetSelection, m_cursor, 0, m_selstart, m_selend);
+    Command cmd(SetSelection, m_cursor, u'\0', m_selstart, m_selend);
     separate();
     setSelection(m_cursor, end());
     addCommand(cmd);
