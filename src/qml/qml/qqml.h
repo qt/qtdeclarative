@@ -94,6 +94,14 @@
     template<typename T, typename... Args> \
     friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QList<int> *);
 
+#define QML_SEQUENTIAL_CONTAINER(VALUE_TYPE) \
+    Q_CLASSINFO("QML.Sequence", #VALUE_TYPE) \
+    using QmlSequenceValueType = VALUE_TYPE; \
+    enum class QmlIsSequence {yes = true}; \
+    template<typename, typename> friend struct QML_PRIVATE_NAMESPACE::QmlSequence; \
+    template<typename T, typename... Args> \
+    friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QList<int> *);
+
 #define QML_ADDED_IN_MINOR_VERSION(VERSION) \
     Q_CLASSINFO("QML.AddedInVersion", Q_REVISION(VERSION))
 
@@ -792,17 +800,18 @@ inline int qmlRegisterAnonymousSequentialContainer(const char *uri, int versionM
         QTypeRevision::fromMajorVersion(versionMajor),
         nullptr,
         QMetaType::fromType<Container>(),
-        QMetaSequence::fromContainer<Container>()
+        QMetaSequence::fromContainer<Container>(),
+        QTypeRevision::zero()
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::SequentialContainerRegistration, &type);
 }
 
-template<class T, class Resolved, class Extended, bool Singleton, bool Interface>
+template<class T, class Resolved, class Extended, bool Singleton, bool Interface, bool Sequence>
 struct QmlTypeAndRevisionsRegistration;
 
 template<class T, class Resolved, class Extended>
-struct QmlTypeAndRevisionsRegistration<T, Resolved, Extended, false, false> {
+struct QmlTypeAndRevisionsRegistration<T, Resolved, Extended, false, false, false> {
     static void registerTypeAndRevisions(const char *uri, int versionMajor, QList<int> *qmlTypeIds,
                                          const QMetaObject *extension)
     {
@@ -812,8 +821,19 @@ struct QmlTypeAndRevisionsRegistration<T, Resolved, Extended, false, false> {
     }
 };
 
+template<class T, class Resolved>
+struct QmlTypeAndRevisionsRegistration<T, Resolved, void, false, false, true> {
+    static void registerTypeAndRevisions(const char *uri, int versionMajor, QList<int> *qmlTypeIds,
+                                         const QMetaObject *)
+    {
+        QQmlPrivate::qmlRegisterSequenceAndRevisions<Resolved>(
+                    uri, versionMajor, QQmlPrivate::StaticMetaObject<T>::staticMetaObject(),
+                    qmlTypeIds);
+    }
+};
+
 template<class T, class Resolved, class Extended>
-struct QmlTypeAndRevisionsRegistration<T, Resolved, Extended, true, false> {
+struct QmlTypeAndRevisionsRegistration<T, Resolved, Extended, true, false, false> {
     static void registerTypeAndRevisions(const char *uri, int versionMajor, QList<int> *qmlTypeIds,
                                          const QMetaObject *extension)
     {
@@ -824,7 +844,7 @@ struct QmlTypeAndRevisionsRegistration<T, Resolved, Extended, true, false> {
 };
 
 template<class T, class Resolved>
-struct QmlTypeAndRevisionsRegistration<T, Resolved, void, false, true> {
+struct QmlTypeAndRevisionsRegistration<T, Resolved, void, false, true, false> {
     static void registerTypeAndRevisions(const char *uri, int versionMajor, QList<int> *qmlTypeIds,
                                          const QMetaObject *)
     {
@@ -845,7 +865,8 @@ void qmlRegisterTypesAndRevisions(const char *uri, int versionMajor, QList<int> 
             T, typename QQmlPrivate::QmlResolved<T>::Type,
             typename QQmlPrivate::QmlExtended<T>::Type,
             QQmlPrivate::QmlSingleton<T>::Value,
-            QQmlPrivate::QmlInterface<T>::Value>
+            QQmlPrivate::QmlInterface<T>::Value,
+            QQmlPrivate::QmlSequence<T>::Value>
             ::registerTypeAndRevisions(uri, versionMajor, qmlTypeIds,
                                        QQmlPrivate::QmlExtendedNamespace<T>::metaObject());
     qmlRegisterTypesAndRevisions<Args...>(uri, versionMajor, qmlTypeIds);

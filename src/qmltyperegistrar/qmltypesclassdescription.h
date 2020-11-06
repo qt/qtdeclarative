@@ -44,6 +44,7 @@ struct QmlTypesClassDescription
     QString defaultProp;
     QString superClass;
     QString attachedType;
+    QString sequenceValueType;
     QString accessSemantics;
     QList<QTypeRevision> revisions;
     QTypeRevision addedInRevision;
@@ -61,8 +62,8 @@ struct QmlTypesClassDescription
     void collect(const QJsonObject *classDef, const QVector<QJsonObject> &types,
                  const QVector<QJsonObject> &foreign, CollectMode mode,
                  QTypeRevision defaultRevision);
-    void collectAttached(const QString &attached, const QVector<QJsonObject> &types,
-                         const QVector<QJsonObject> &foreign, QTypeRevision defaultRevision);
+    void collectRelated(const QString &related, const QVector<QJsonObject> &types,
+                        const QVector<QJsonObject> &foreign, QTypeRevision defaultRevision);
 
     static const QJsonObject *findType(const QVector<QJsonObject> &types, const QString &name);
 };

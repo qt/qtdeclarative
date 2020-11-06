@@ -224,6 +224,8 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
                 readMetaObjectRevisions(script, scope);
             } else if (name == QLatin1String("attachedType")) {
                 scope->setAttachedTypeName(readStringBinding(script));
+            } else if (name == QLatin1String("valueType")) {
+                scope->setValueTypeName(readStringBinding(script));
             } else if (name == QLatin1String("isSingleton")) {
                 scope->setIsSingleton(readBoolBinding(script));
             } else if (name == QLatin1String("isCreatable")) {
@@ -238,6 +240,8 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
                     scope->setAccessSemantics(QQmlJSScope::AccessSemantics::Value);
                 } else if (semantics == QLatin1String("none")) {
                     scope->setAccessSemantics(QQmlJSScope::AccessSemantics::None);
+                } else if (semantics == QLatin1String("sequence")) {
+                    scope->setAccessSemantics(QQmlJSScope::AccessSemantics::Sequence);
                 } else {
                     addWarning(script->firstSourceLocation(),
                                tr("Unknown access semantics \"%1\".").arg(semantics));
@@ -245,7 +249,7 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
             } else {
                 addWarning(script->firstSourceLocation(),
                            tr("Expected only name, prototype, defaultProperty, attachedType, "
-                              "exports, isSingleton, isCreatable, isComposite and "
+                              "valueType, exports, isSingleton, isCreatable, isComposite and "
                               "exportMetaObjectRevisions script bindings, not \"%1\".").arg(name));
             }
         } else {

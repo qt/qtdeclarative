@@ -421,6 +421,48 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
         }
         break;
     }
+    case SequentialContainerAndRevisionsRegistration: {
+        const RegisterSequentialContainerAndRevisions &type
+                = *reinterpret_cast<RegisterSequentialContainerAndRevisions *>(data);
+        const char *elementName = classElementName(type.classInfoMetaObject);
+        RegisterSequentialContainer revisionRegistration = {
+            0,
+            type.uri,
+            type.version,
+            elementName,
+            type.typeId,
+            type.metaSequence,
+            QTypeRevision()
+        };
+
+        const QTypeRevision added = revisionClassInfo(
+                    type.classInfoMetaObject, "QML.AddedInVersion",
+                    QTypeRevision::fromMinorVersion(0));
+        const QTypeRevision removed = revisionClassInfo(
+                    type.classInfoMetaObject, "QML.RemovedInVersion");
+
+        QVector<QTypeRevision> revisions = { added };
+        uniqueRevisions(&revisions, type.version, added);
+
+        for (QTypeRevision revision : qAsConst(revisions)) {
+            if (revision < added)
+                continue;
+            if (revision.hasMajorVersion() && revision.majorVersion() > type.version.majorVersion())
+                break;
+
+            // When removed, we still add revisions, but anonymous ones
+            if (removed.isValid() && !(revision < removed))
+                revisionRegistration.typeName = nullptr;
+            else
+                revisionRegistration.typeName = elementName;
+
+            assignVersions(&revisionRegistration, revision, type.version);
+            const int id = qmlregister(SequentialContainerRegistration, &revisionRegistration);
+            if (type.qmlTypeIds)
+                type.qmlTypeIds->append(id);
+        }
+        break;
+    }
     case TypeRegistration:
         dtype = QQmlMetaType::registerType(*reinterpret_cast<RegisterType *>(data));
         break;
@@ -472,6 +514,7 @@ void QQmlPrivate::qmlunregister(RegistrationType type, quintptr data)
         break;
     case TypeAndRevisionsRegistration:
     case SingletonAndRevisionsRegistration:
+    case SequentialContainerAndRevisionsRegistration:
         // Currently unnecessary. We'd need a special data structure to hold
         // URI + majorVersion and then we'd iterate the minor versions, look up the
         // associated QQmlType objects by uri/elementName/major/minor and qmlunregister

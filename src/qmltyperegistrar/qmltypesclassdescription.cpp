@@ -99,7 +99,11 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
         } else if (name == QLatin1String("QML.Creatable")) {
             isCreatable = (value != QLatin1String("false"));
         } else if (name == QLatin1String("QML.Attached")) {
-            collectAttached(value, types, foreign, defaultRevision);
+            attachedType = value;
+            collectRelated(value, types, foreign, defaultRevision);
+        } else if (name == QLatin1String("QML.Sequence")) {
+            sequenceValueType = value;
+            collectRelated(value, types, foreign, defaultRevision);
         } else if (name == QLatin1String("QML.Singleton")) {
             if (value == QLatin1String("true"))
                 isSingleton = true;
@@ -112,10 +116,15 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
                     const QJsonObject obj = classInfo.toObject();
                     const QString foreignName = obj[QLatin1String("name")].toString();
                     const QString foreignValue = obj[QLatin1String("value")].toString();
-                    if (defaultProp.isEmpty() && foreignName == QLatin1String("DefaultProperty"))
+                    if (defaultProp.isEmpty() && foreignName == QLatin1String("DefaultProperty")) {
                         defaultProp = foreignValue;
-                    else if (foreignName == QLatin1String("QML.Attached"))
-                        collectAttached(foreignValue, types, foreign, defaultRevision);
+                    } else if (foreignName == QLatin1String("QML.Attached")) {
+                        attachedType = foreignValue;
+                        collectRelated(foreignValue, types, foreign, defaultRevision);
+                    } else if (foreignName == QLatin1String("QML.Sequence")) {
+                        sequenceValueType = foreignValue;
+                        collectRelated(foreignValue, types, foreign, defaultRevision);
+                    }
                 }
             } else {
                 // The foreign type does not have a meta object: We only override the name.
@@ -176,7 +185,10 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
     if (className.isEmpty() && mode == TopLevel)
         className = classDef->value(QLatin1String("qualifiedClassName")).toString();
 
-    if (classDef->value(QLatin1String("object")).toBool()) {
+    if (!sequenceValueType.isEmpty()) {
+        isCreatable = false;
+        accessSemantics = QLatin1String("sequence");
+    } else if (classDef->value(QLatin1String("object")).toBool()) {
         accessSemantics = QLatin1String("reference");
     } else {
         isCreatable = false;
@@ -186,14 +198,13 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
     }
 }
 
-void QmlTypesClassDescription::collectAttached(const QString &attached,
+void QmlTypesClassDescription::collectRelated(const QString &related,
                                                const QVector<QJsonObject> &types,
                                                const QVector<QJsonObject> &foreign,
                                                QTypeRevision defaultRevision)
 {
-    attachedType = attached;
-    if (const QJsonObject *other = findType(types, attachedType))
+    if (const QJsonObject *other = findType(types, related))
         collect(other, types, foreign, AttachedType, defaultRevision);
-    else if (const QJsonObject *other = findType(foreign, attachedType))
+    else if (const QJsonObject *other = findType(foreign, related))
         collect(other, types, foreign, AttachedType, defaultRevision);
 }

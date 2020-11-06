@@ -53,11 +53,17 @@
 
 #include <QtCore/qglobal.h>
 #include <QtCore/qvariant.h>
+#include <QtQml/qqml.h>
 
 #include "qv4value_p.h"
 #include "qv4object_p.h"
 #include "qv4context_p.h"
 #include "qv4string_p.h"
+
+#if QT_CONFIG(qml_itemmodel)
+#include <private/qqmlmodelindexvaluetype_p.h>
+#include <QtCore/qabstractitemmodel.h>
+#endif
 
 QT_REQUIRE_CONFIG(qml_sequence_object);
 
@@ -68,7 +74,6 @@ namespace QV4 {
 struct Q_QML_PRIVATE_EXPORT SequencePrototype : public QV4::Object
 {
     V4_PROTOTYPE(arrayPrototype)
-    static bool registerDefaultTypes();
     void init();
 
     static ReturnedValue method_valueOf(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
@@ -83,6 +88,45 @@ struct Q_QML_PRIVATE_EXPORT SequencePrototype : public QV4::Object
 };
 
 }
+
+#define QT_DECLARE_SEQUENTIAL_CONTAINER(LOCAL, FOREIGN, VALUE) \
+    struct LOCAL \
+    { \
+        Q_GADGET \
+        QML_ANONYMOUS \
+        QML_SEQUENTIAL_CONTAINER(VALUE) \
+        QML_FOREIGN(FOREIGN) \
+        QML_ADDED_IN_VERSION(2, 0) \
+    }
+
+// We use the original QT_COORD_TYPE name because that will match up with relevant other
+// types in plugins.qmltypes (if you use either float or double, that is; otherwise you're
+// on your own).
+#ifdef QT_COORD_TYPE
+QT_DECLARE_SEQUENTIAL_CONTAINER(QStdRealVectorForeign, std::vector<qreal>, QT_COORD_TYPE);
+QT_DECLARE_SEQUENTIAL_CONTAINER(QRealListForeign, QList<qreal>, QT_COORD_TYPE);
+#else
+QT_DECLARE_SEQUENTIAL_CONTAINER(QRealStdVectorForeign, std::vector<qreal>, double);
+QT_DECLARE_SEQUENTIAL_CONTAINER(QRealListForeign, QList<qreal>, double);
+#endif
+
+QT_DECLARE_SEQUENTIAL_CONTAINER(QIntStdVectorForeign, std::vector<int>, int);
+QT_DECLARE_SEQUENTIAL_CONTAINER(QBoolStdVectorForeign, std::vector<bool>, bool);
+QT_DECLARE_SEQUENTIAL_CONTAINER(QStringStdVectorForeign, std::vector<QString>, QString);
+QT_DECLARE_SEQUENTIAL_CONTAINER(QUrlStdVectorForeign, std::vector<QUrl>, QUrl);
+
+QT_DECLARE_SEQUENTIAL_CONTAINER(QIntListForeign, QList<int>, int);
+QT_DECLARE_SEQUENTIAL_CONTAINER(QBoolListForeign, QList<bool>, bool);
+QT_DECLARE_SEQUENTIAL_CONTAINER(QStringListForeign, QStringList, QString);
+QT_DECLARE_SEQUENTIAL_CONTAINER(QUrlListForeign, QList<QUrl>, QUrl);
+
+#if QT_CONFIG(qml_itemmodel)
+QT_DECLARE_SEQUENTIAL_CONTAINER(QModelIndexListForeign, QModelIndexList, QModelIndex);
+QT_DECLARE_SEQUENTIAL_CONTAINER(QModelIndexStdVectorForeign, std::vector<QModelIndex>, QModelIndex);
+QT_DECLARE_SEQUENTIAL_CONTAINER(QItemSelectionForeign, QItemSelection, QItemSelectionRange);
+#endif
+
+#undef QT_DECLARE_SEQUENTIAL_CONTAINER
 
 QT_END_NAMESPACE
 

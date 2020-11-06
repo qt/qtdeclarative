@@ -33,6 +33,8 @@
 
 #include <QtWidgets/QPushButton>
 #include <QtCore/qthread.h>
+#include <QtQml/qqmlengine.h>
+#include <QtQml/qqmlcomponent.h>
 
 #include <memory>
 
@@ -2250,8 +2252,8 @@ void tst_QJSValue::strictlyEquals()
     {
         QJSValue var1 = eng.toScriptValue(QVariant(QStringList() << "a"));
         QJSValue var2 = eng.toScriptValue(QVariant(QStringList() << "a"));
-        QVERIFY(!var1.isArray());
-        QVERIFY(!var2.isArray());
+        QVERIFY(var1.isArray());
+        QVERIFY(var2.isArray());
         QVERIFY(!var1.strictlyEquals(var2));
     }
     {
@@ -2267,6 +2269,22 @@ void tst_QJSValue::strictlyEquals()
     {
         QJSValue var1 = eng.toScriptValue(QVariant(QPoint(1, 2)));
         QJSValue var2 = eng.toScriptValue(QVariant(QPoint(3, 4)));
+        QVERIFY(!var1.strictlyEquals(var2));
+    }
+
+    {
+        // Import QtQml to trigger the registration of QStringList, which makes it a sequence
+        // type, rather than a generic JS array.
+        QQmlEngine qmlEngine;
+        QQmlComponent c(&qmlEngine);
+        c.setData("import QtQml\nQtObject {}", QUrl());
+        QScopedPointer<QObject> obj(c.create());
+        QVERIFY(!obj.isNull());
+
+        QJSValue var1 = qmlEngine.toScriptValue(QVariant(QStringList() << "a"));
+        QJSValue var2 = qmlEngine.toScriptValue(QVariant(QStringList() << "a"));
+        QVERIFY(!var1.isArray());
+        QVERIFY(!var2.isArray());
         QVERIFY(!var1.strictlyEquals(var2));
     }
 }

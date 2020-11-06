@@ -152,6 +152,7 @@ void QQmlJSScope::resolveTypes(const QHash<QString, QQmlJSScope::ConstPtr> &cont
 
     m_baseType = findType(m_baseTypeName);
     m_attachedType = findType(m_attachedTypeName);
+    m_valueType = findType(m_valueTypeName);
 
     for (auto it = m_properties.begin(), end = m_properties.end(); it != end; ++it)
         it->setType(findType(it->typeName()));

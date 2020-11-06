@@ -101,7 +101,8 @@ public:
     enum class AccessSemantics {
         Reference,
         Value,
-        None
+        None,
+        Sequence
     };
 
     enum Flag {
@@ -200,6 +201,10 @@ public:
     void setAttachedTypeName(const QString &name) { m_attachedTypeName = name; }
     QQmlJSScope::ConstPtr attachedType() const { return m_attachedType; }
 
+    QString valueTypeName() const { return m_valueTypeName; }
+    void setValueTypeName(const QString &name) { m_valueTypeName = name; }
+    QQmlJSScope::ConstPtr valueType() const { return m_valueType; }
+
     bool isSingleton() const { return m_flags & Singleton; }
     bool isCreatable() const { return m_flags & Creatable; }
     bool isComposite() const { return m_flags & Composite; }
@@ -257,6 +262,9 @@ private:
     QString m_defaultPropertyName;
     QString m_attachedTypeName;
     QQmlJSScope::WeakConstPtr m_attachedType;
+
+    QString m_valueTypeName;
+    QQmlJSScope::WeakConstPtr m_valueType;
 
     Flags m_flags;
     AccessSemantics m_semantics = AccessSemantics::Reference;

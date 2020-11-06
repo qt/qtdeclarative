@@ -58,6 +58,9 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
     if (!collector.superClass.isEmpty())
         m_qml.writeScriptBinding(QLatin1String("prototype"), enquote(collector.superClass));
 
+    if (!collector.sequenceValueType.isEmpty())
+        m_qml.writeScriptBinding(QLatin1String("valueType"), enquote(collector.sequenceValueType));
+
     if (collector.elementName.isEmpty())
         return;
 

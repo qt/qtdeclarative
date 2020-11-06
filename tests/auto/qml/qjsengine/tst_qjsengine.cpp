@@ -41,6 +41,8 @@
 #include <private/qv4alloca_p.h>
 #include <private/qjsvalue_p.h>
 #include <QScopeGuard>
+#include <QUrl>
+#include <QModelIndex>
 
 #ifdef Q_CC_MSVC
 #define NO_INLINE __declspec(noinline)
@@ -66,8 +68,10 @@ private slots:
     void newArray();
     void newArray_HooliganTask218092();
     void newArray_HooliganTask233836();
-    void toScriptValue_data();
-    void toScriptValue();
+    void toScriptValueBuiltin_data();
+    void toScriptValueBuiltin();
+    void toScriptValueQtQml_data();
+    void toScriptValueQtQml();
     void toScriptValuenotroundtripped_data();
     void toScriptValuenotroundtripped();
     void newVariant();
@@ -512,7 +516,7 @@ void tst_QJSEngine::newArray_HooliganTask233836()
     }
 }
 
-void tst_QJSEngine::toScriptValue_data()
+void tst_QJSEngine::toScriptValueBuiltin_data()
 {
     QTest::addColumn<QVariant>("input");
 
@@ -544,8 +548,6 @@ void tst_QJSEngine::toScriptValue_data()
     vm.clear(); vm.insert("point1", QPointF(42.24, 24.42)); vm.insert("point2", QPointF(42.24, 24.42));
     QTest::newRow("qvariantmap_point") << QVariant(vm);
     QTest::newRow("qvariant") << QVariant(QVariant(42));
-    QTest::newRow("QList<int>") << QVariant::fromValue(QList<int>() << 1 << 2 << 3 << 4);
-    QTest::newRow("QVector<int>") << QVariant::fromValue(QVector<int>() << 1 << 2 << 3 << 4);
     QTest::newRow("QList<QString>") << QVariant::fromValue(QVector<QString>() << "1" << "2" << "3" << "4");
     QTest::newRow("QStringList") << QVariant::fromValue(QStringList() << "1" << "2" << "3" << "4");
     QTest::newRow("QMap<QString, QString>") << QVariant::fromValue(QMap<QString, QString>{{ "1", "2" }, { "3", "4" }});
@@ -554,11 +556,67 @@ void tst_QJSEngine::toScriptValue_data()
     QTest::newRow("QHash<QString, QPointF>") << QVariant::fromValue(QHash<QString, QPointF>{{ "1", { 42.24, 24.42 } }, { "3", { 24.42, 42.24 } }});
 }
 
-void tst_QJSEngine::toScriptValue()
+void tst_QJSEngine::toScriptValueBuiltin()
 {
     QFETCH(QVariant, input);
 
     QJSEngine engine;
+    QJSValue outputJS = engine.toScriptValue(input);
+    QVariant output = engine.fromScriptValue<QVariant>(outputJS);
+
+    if (input.metaType().id() == QMetaType::QChar) {
+        if (!input.convert(QMetaType(QMetaType::QString)))
+            QFAIL("cannot convert to the original value");
+    } else if (!output.convert(input.metaType()) && input.isValid())
+        QFAIL("cannot convert to the original value");
+    QCOMPARE(input, output);
+}
+
+void tst_QJSEngine::toScriptValueQtQml_data()
+{
+    QTest::addColumn<QVariant>("input");
+
+    QTest::newRow("std::vector<qreal>") << QVariant::fromValue(std::vector<qreal>{.1, .2, .3, .4});
+    QTest::newRow("QList<qreal>") << QVariant::fromValue(QList<qreal>{.1, .2, .3, .4});
+
+    QTest::newRow("std::vector<int>") << QVariant::fromValue(std::vector<int>{1, 2, 3, 4});
+    QTest::newRow("std::vector<bool>") << QVariant::fromValue(std::vector<bool>{true, false, true, false});
+    QTest::newRow("std::vector<QString>") << QVariant::fromValue(std::vector<QString>{"a", "b", "c", "d"});
+    QTest::newRow("std::vector<QUrl>") << QVariant::fromValue(std::vector<QUrl>{QUrl("htt://a.com"), QUrl("file:///tmp/b/"), QUrl("c.foo"), QUrl("/some/d")});
+
+    QTest::newRow("QList<int>") << QVariant::fromValue(QList<int>{1, 2, 3, 4});
+    QTest::newRow("QList<bool>") << QVariant::fromValue(QList<bool>{true, false, true, false});
+    QTest::newRow("QStringList") << QVariant::fromValue(QStringList{"a", "b", "c", "d"});
+    QTest::newRow("QList<QUrl>") << QVariant::fromValue(QList<QUrl>{QUrl("htt://a.com"), QUrl("file:///tmp/b/"), QUrl("c.foo"), QUrl("/some/d")});
+
+    static const QStandardItemModel model(4, 4);
+    QTest::newRow("QModelIndexList") << QVariant::fromValue(QModelIndexList{ model.index(1, 2), model.index(2, 3), model.index(3, 1), model.index(3, 2)});
+    QTest::newRow("std::vector<QModelIndex>") << QVariant::fromValue(std::vector<QModelIndex>{ model.index(1, 2), model.index(2, 3), model.index(3, 1), model.index(3, 2)});
+
+    // QVariant wants to implicitly convert this to a QList<QItemSelectionRange>. Prevent that by
+    // keeping the instance on the stack, and explicitly instantiating the template below.
+    QItemSelection selection;
+
+    // It doesn't have an initializer list ctor ...
+    selection << QItemSelectionRange(model.index(1, 2), model.index(2, 3))
+              << QItemSelectionRange(model.index(3, 1), model.index(3, 2))
+              << QItemSelectionRange(model.index(2, 2), model.index(3, 3))
+              << QItemSelectionRange(model.index(1, 1), model.index(2, 2));
+
+    QTest::newRow("QItemSelection") << QVariant::fromValue<QItemSelection>(selection);
+}
+
+void tst_QJSEngine::toScriptValueQtQml()
+{
+    QFETCH(QVariant, input);
+
+    // Import QtQml, to enable the sequential containers defined there.
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+    c.setData("import QtQml\nQtObject{}", QUrl());
+    QScopedPointer<QObject> obj(c.create());
+    QVERIFY(!obj.isNull());
+
     QJSValue outputJS = engine.toScriptValue(input);
     QVariant output = engine.fromScriptValue<QVariant>(outputJS);
 

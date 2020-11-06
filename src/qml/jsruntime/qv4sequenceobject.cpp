@@ -37,7 +37,6 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqml.h>
 #include <QtCore/qsequentialiterable.h>
 
 #include "qv4sequenceobject_p.h"
@@ -51,10 +50,6 @@
 #include "qv4objectiterator_p.h"
 #include <private/qqmlmetatype_p.h>
 #include <private/qqmltype_p_p.h>
-#if QT_CONFIG(qml_itemmodel)
-#include <private/qqmlmodelindexvaluetype_p.h>
-#include <QtCore/qabstractitemmodel.h>
-#endif
 
 #include <algorithm>
 
@@ -579,34 +574,6 @@ void Heap::QV4Sequence::init(QObject *object, int propertyIndex, const QQmlType 
 
 namespace QV4 {
 DEFINE_OBJECT_VTABLE(QV4Sequence);
-}
-
-
-template<typename SequenceType>
-void registerSequenceType()
-{
-    qRegisterMetaType<SequenceType>();
-    qmlRegisterAnonymousSequentialContainer<SequenceType>("QML", 1);
-}
-
-bool SequencePrototype::registerDefaultTypes()
-{
-    registerSequenceType<std::vector<int>>();
-    registerSequenceType<std::vector<qreal>>();
-    registerSequenceType<std::vector<bool>>();
-    registerSequenceType<QList<int>>();
-    registerSequenceType<QList<qreal>>();
-    registerSequenceType<QList<bool>>();
-    registerSequenceType<QStringList>();
-    registerSequenceType<std::vector<QString>>();
-    registerSequenceType<QList<QUrl>>();
-    registerSequenceType<std::vector<QUrl>>();
-#if QT_CONFIG(qml_itemmodel)
-    registerSequenceType<QModelIndexList>();
-    registerSequenceType<std::vector<QModelIndex>>();
-    registerSequenceType<QItemSelection>();
-#endif
-    return true;
 }
 
 void SequencePrototype::init()

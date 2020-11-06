@@ -574,6 +574,19 @@ namespace QQmlPrivate
         const char *typeName;
         QMetaType typeId;
         QMetaSequence metaSequence;
+        QTypeRevision revision;
+    };
+
+    struct RegisterSequentialContainerAndRevisions {
+        int structVersion;
+        const char *uri;
+        QTypeRevision version;
+
+        const QMetaObject *classInfoMetaObject;
+        QMetaType typeId;
+        QMetaSequence metaSequence;
+
+        QVector<int> *qmlTypeIds;
     };
 
     struct AOTCompiledFunction {
@@ -605,6 +618,7 @@ namespace QQmlPrivate
         TypeAndRevisionsRegistration = 7,
         SingletonAndRevisionsRegistration = 8,
         SequentialContainerRegistration = 9,
+        SequentialContainerAndRevisionsRegistration = 10,
     };
 
     int Q_QML_EXPORT qmlregister(RegistrationType, void *);
@@ -717,6 +731,20 @@ namespace QQmlPrivate
     };
 
     template<class T, class = std::void_t<>>
+    struct QmlSequence
+    {
+        static constexpr bool Value = false;
+    };
+
+    template<class T>
+    struct QmlSequence<T, std::void_t<typename T::QmlIsSequence>>
+    {
+        Q_STATIC_ASSERT((std::is_same_v<typename T::QmlSequenceValueType,
+                                        typename QmlResolved<T>::Type::value_type>));
+        static constexpr bool Value = bool(T::QmlIsSequence::yes);
+    };
+
+    template<class T, class = std::void_t<>>
     struct QmlInterface
     {
         static constexpr bool Value = false;
@@ -821,6 +849,24 @@ namespace QQmlPrivate
         };
 
         qmlregister(TypeAndRevisionsRegistration, &type);
+    }
+
+    template<typename T>
+    void qmlRegisterSequenceAndRevisions(const char *uri, int versionMajor,
+                                         const QMetaObject *classInfoMetaObject,
+                                         QVector<int> *qmlTypeIds)
+    {
+        RegisterSequentialContainerAndRevisions type = {
+            0,
+            uri,
+            QTypeRevision::fromMajorVersion(versionMajor),
+            classInfoMetaObject,
+            QMetaType::fromType<T>(),
+            QMetaSequence::fromContainer<T>(),
+            qmlTypeIds
+        };
+
+        qmlregister(SequentialContainerAndRevisionsRegistration, &type);
     }
 
     template<>

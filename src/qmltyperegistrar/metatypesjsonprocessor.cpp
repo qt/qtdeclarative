@@ -153,6 +153,7 @@ QVector<QJsonObject> MetaTypesJsonProcessor::foreignRelatedTypes() const
     const QLatin1String qmlNamePrefix("QML.");
     const QLatin1String qmlForeignName("QML.Foreign");
     const QLatin1String qmlAttachedName("QML.Attached");
+    const QLatin1String qmlSequenceName("QML.Sequence");
     const QLatin1String valueKey("value");
     const QLatin1String superClassesKey("superClasses");
     const QLatin1String accessKey("access");
@@ -214,9 +215,10 @@ QVector<QJsonObject> MetaTypesJsonProcessor::foreignRelatedTypes() const
         const auto classInfos = classDef.value(classInfosKey).toArray();
         for (const QJsonValue classInfo : classInfos) {
             const QJsonObject obj = classInfo.toObject();
-            if (obj.value(nameKey).toString() == qmlAttachedName) {
+            const QString objNameValue = obj.value(nameKey).toString();
+            if (objNameValue == qmlAttachedName || objNameValue == qmlSequenceName) {
                 addType(obj.value(valueKey).toString());
-            } else if (obj.value(nameKey).toString() == qmlForeignName) {
+            } else if (objNameValue == qmlForeignName) {
                 const QString foreignClassName = obj.value(valueKey).toString();
                 if (const QJsonObject *other = QmlTypesClassDescription::findType(
                             m_foreignTypes, foreignClassName)) {
@@ -230,7 +232,8 @@ QVector<QJsonObject> MetaTypesJsonProcessor::foreignRelatedTypes() const
                     const auto otherClassInfos = other->value(classInfosKey).toArray();
                     for (const QJsonValue otherClassInfo : otherClassInfos) {
                         const QJsonObject obj = otherClassInfo.toObject();
-                        if (obj.value(nameKey).toString() == qmlAttachedName) {
+                        const QString objNameValue = obj.value(nameKey).toString();
+                        if (objNameValue == qmlAttachedName || objNameValue == qmlSequenceName) {
                             addType(obj.value(valueKey).toString());
                             break;
                         }

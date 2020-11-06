@@ -667,7 +667,8 @@ QQmlType QQmlMetaType::registerSequentialContainer(
 
     QQmlMetaTypeDataPtr data;
 
-    if (!checkRegistration(QQmlType::SequentialContainerType, data, container.uri, QString(),
+    const QString typeName = QString::fromUtf8(container.typeName);
+    if (!checkRegistration(QQmlType::SequentialContainerType, data, container.uri, typeName,
                            container.version, {})) {
         return QQmlType();
     }
@@ -675,8 +676,9 @@ QQmlType QQmlMetaType::registerSequentialContainer(
     QQmlTypePrivate *priv = new QQmlTypePrivate(QQmlType::SequentialContainerType);
 
     data->registerType(priv);
-    priv->setName(QString::fromUtf8(container.uri), QString());
+    priv->setName(QString::fromUtf8(container.uri), typeName);
     priv->version = container.version;
+    priv->revision = container.revision;
     priv->typeId = container.typeId;
     *priv->extraData.ld = container.metaSequence;
 
