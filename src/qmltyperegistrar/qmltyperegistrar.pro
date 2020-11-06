@@ -14,12 +14,15 @@ SOURCES += \
     ../qmlcompiler/qqmljsstreamwriter.cpp \
     qmltyperegistrar.cpp \
     qmltypesclassdescription.cpp \
-    qmltypescreator.cpp
+    qmltypescreator.cpp \
+    metatypesjsonprocessor.cpp
+
 
 HEADERS += \
     ../qmlcompiler/qqmljsstreamwriter_p.h \
     qmltypesclassdescription.h \
-    qmltypescreator.h
+    qmltypescreator.h \
+    metatypesjsonprocessor.h
 
 build_integration.files = qmltypes.prf
 build_integration.path = $$[QT_HOST_DATA]/mkspecs/features

@@ -10,6 +10,7 @@ qt_internal_add_tool(${target_name}
     TOOLS_TARGET Qml # special case
     SOURCES
         ../qmlcompiler/qqmljsstreamwriter.cpp ../qmlcompiler/qqmljsstreamwriter_p.h
+        metatypesjsonprocessor.cpp metatypesjsonprocessor.h
         qmltyperegistrar.cpp
         qmltypesclassdescription.cpp qmltypesclassdescription.h
         qmltypescreator.cpp qmltypescreator.h
