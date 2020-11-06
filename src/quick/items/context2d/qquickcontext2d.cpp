@@ -4248,15 +4248,12 @@ void QQuickContext2D::init(QQuickCanvasItem *canvasItem, const QVariantMap &args
         m_renderTarget = QQuickCanvasItem::Image;
     }
 
-    // Disable Framebuffer Object based rendering when not running with OpenGL.
-    // Same goes for the RHI based code path (regardless of the backend in use).
-    if (m_renderTarget == QQuickCanvasItem::FramebufferObject) {
-        QSGRendererInterface *rif = canvasItem->window()->rendererInterface();
-        if (rif && rif->graphicsApi() != QSGRendererInterface::OpenGL)
-            m_renderTarget = QQuickCanvasItem::Image;
-    }
+    // Disable framebuffer object based rendering always in Qt 6. It
+    // is not implemented in the new RHI-based graphics stack, but the
+    // enum value is still present. Switch to Image instead.
+    if (m_renderTarget == QQuickCanvasItem::FramebufferObject)
+        m_renderTarget = QQuickCanvasItem::Image;
 
-    Q_ASSERT(m_renderTarget == QQuickCanvasItem::Image);
     m_texture = new QQuickContext2DImageTexture;
 
     m_texture->setItem(canvasItem);
