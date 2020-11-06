@@ -84,8 +84,13 @@ public:
     enum GraphicsApi {
         Unknown = QSGRendererInterface::Unknown,
         Software = QSGRendererInterface::Software,
-        OpenGL = QSGRendererInterface::OpenGL,
         OpenVG = QSGRendererInterface::OpenVG,
+        OpenGL = QSGRendererInterface::OpenGL,
+        Direct3D11 = QSGRendererInterface::Direct3D11,
+        Vulkan = QSGRendererInterface::Vulkan,
+        Metal = QSGRendererInterface::Metal,
+        Null = QSGRendererInterface::Null,
+
         OpenGLRhi = QSGRendererInterface::OpenGLRhi,
         Direct3D11Rhi = QSGRendererInterface::Direct3D11Rhi,
         VulkanRhi = QSGRendererInterface::VulkanRhi,
