@@ -38,5 +38,18 @@
     In this topic we summarize those changes in Qt Quick Labs Platform, and
     provide guidance to handle them.
 
-    \section1 ADD STUFF HERE
+    \section1 Menu
+
+    The deprecated \c iconName and \c iconSource properties were removed. Use
+    the \l {Menu::}{icon} property instead.
+
+    \section1 MenuItem
+
+    The deprecated \c iconName and \c iconSource properties were removed. Use
+    the \l {MenuItem::}{icon} property instead.
+
+    \section1 SystemTrayIcon
+
+    The deprecated \c iconName and \c iconSource properties were removed. Use
+    the \l {SystemTrayIcon::}{icon} property instead.
 */
