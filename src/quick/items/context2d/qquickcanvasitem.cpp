@@ -246,21 +246,12 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
 
     \section1 Threaded Rendering and Render Target
 
-    The Canvas item supports two render targets: \c Canvas.Image and
-    \c Canvas.FramebufferObject.
+    In Qt 6.0 the Canvas item supports one render target: \c Canvas.Image.
 
     The \c Canvas.Image render target is a \a QImage object. This render target
     supports background thread rendering, allowing complex or long running
     painting to be executed without blocking the UI. This is the only render
     target that is supported by all Qt Quick backends.
-
-    The Canvas.FramebufferObject render target utilizes OpenGL hardware
-    acceleration rather than rendering into system memory, which in many cases
-    results in faster rendering. Canvas.FramebufferObject relies on the OpenGL
-    extensions \c GL_EXT_framebuffer_multisample and \c GL_EXT_framebuffer_blit
-    for antialiasing. It will also use more graphics memory when rendering
-    strategy is anything other than Canvas.Cooperative. Framebuffer objects may
-    not be available with Qt Quick backends other than OpenGL.
 
     The default render target is Canvas.Image and the default renderStrategy is
     Canvas.Immediate.
@@ -268,12 +259,7 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
     \section1 Pixel Operations
     All HTML5 2D context pixel operations are supported. In order to ensure
     improved pixel reading/writing performance the \a Canvas.Image render
-    target should be chosen. The \a Canvas.FramebufferObject render target
-    requires the pixel data to be exchanged between the system memory and the
-    graphic card, which is significantly more expensive.  Rendering may also be
-    synchronized with the V-sync signal (to avoid
-    \l{http://en.wikipedia.org/wiki/Screen_tearing}{screen tearing}) which will further
-    impact pixel operations with \c Canvas.FrambufferObject render target.
+    target should be chosen.
 
     \section1 Tips for Porting Existing HTML5 Canvas Applications
 
@@ -496,7 +482,6 @@ void QQuickCanvasItem::setCanvasWindow(const QRectF& rect)
 
     \list
     \li Canvas.Image  - render to an in memory image buffer.
-    \li Canvas.FramebufferObject - render to an OpenGL frame buffer
     \endlist
 
     This hint is supplied along with renderStrategy to the graphics context to
