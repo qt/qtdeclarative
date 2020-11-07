@@ -889,7 +889,7 @@ private:
         return peek() - '0';
     }
 
-    int tryConsumeUnicodeEscape()
+    char16_t tryConsumeUnicodeEscape()
     {
         if (!tryConsume('u'))
             return -1;
@@ -942,9 +942,9 @@ private:
         return u;
     }
 
-    int tryConsumeIdentifierCharacter()
+    char16_t tryConsumeIdentifierCharacter()
     {
-        int ch = peek();
+        char16_t ch = peek();
 
         if (ch == '\\') {
             consume();
@@ -970,7 +970,7 @@ private:
         return WTF::isASCIIAlphanumeric(ch) || ch == '_' || ch == '=';
     }
 
-    int consume()
+    char16_t consume()
     {
         ASSERT(m_index < m_size);
         return m_data[m_index++];
@@ -1030,7 +1030,7 @@ private:
 
         ParseState state = saveState();
         
-        int ch = tryConsumeIdentifierCharacter();
+        char16_t ch = tryConsumeIdentifierCharacter();
 
         if (isIdentifierStart(ch)) {
             StringBuilder identifierBuilder;
@@ -1065,10 +1065,10 @@ private:
         bool foundEquals = false;
         unsigned errors = 0;
 
-        expressionBuilder.append(consume());
+        expressionBuilder.append(QChar(consume()));
 
         while (!atEndOfPattern()) {
-            int ch = peek();
+            char16_t ch = peek();
             if (ch == '}') {
                 consume();
                 if (errors) {
