@@ -27,7 +27,7 @@
 
 /*!
     \page qtquickcontrols-changes-qt6.html
-    \title Porting to Qt 6 - Qt Quick Controls
+    \title Changes to Qt Quick Controls
 
     Qt 6 is a result of the conscious effort to make the framework more
     efficient and easy to use.

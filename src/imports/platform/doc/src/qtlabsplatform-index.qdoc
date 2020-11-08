@@ -42,7 +42,7 @@
     \labs
 
     \section1 Module Evolution
-    \l{Porting to Qt 6 - Qt Quick Labs Platform} lists important changes in the
+    \l{Changes to Qt Quick Labs Platform} lists important changes in the
     module API and functionality that were done for the Qt 6 series of Qt.
 
     \section1 Related Information
