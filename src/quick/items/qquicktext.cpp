@@ -350,13 +350,14 @@ void QQuickTextPrivate::updateBaseline(qreal baseline, qreal dy)
 void QQuickTextPrivate::signalSizeChange(const QSizeF &previousSize)
 {
     Q_Q(QQuickText);
+    const QSizeF contentSize(q->contentWidth(), q->contentHeight());
 
-    if (layedOutTextRect.size() != previousSize) {
+    if (contentSize != previousSize) {
         emit q->contentSizeChanged();
-        if (layedOutTextRect.width() != previousSize.width())
-            emit q->contentWidthChanged(layedOutTextRect.width());
-        if (layedOutTextRect.height() != previousSize.height())
-            emit q->contentHeightChanged(layedOutTextRect.height());
+        if (contentSize.width() != previousSize.width())
+            emit q->contentWidthChanged(contentSize.width());
+        if (contentSize.height() != previousSize.height())
+            emit q->contentHeightChanged(contentSize.height());
     }
 }
 
@@ -380,7 +381,7 @@ void QQuickTextPrivate::updateSize()
     qreal hPadding = q->leftPadding() + q->rightPadding();
     qreal vPadding = q->topPadding() + q->bottomPadding();
 
-    const QSizeF previousSize = layedOutTextRect.size();
+    const QSizeF previousSize(q->contentWidth(), q->contentHeight());
 
     if (text.isEmpty() && !isLineLaidOutConnected() && fontSizeMode() == QQuickText::FixedSize) {
         // How much more expensive is it to just do a full layout on an empty string here?
@@ -395,7 +396,7 @@ void QQuickTextPrivate::updateSize()
                     : fontHeight * lineHeight();
         }
         updateBaseline(fm.ascent(), q->height() - fontHeight - vPadding);
-        q->setImplicitSize(hPadding, fontHeight + vPadding);
+        q->setImplicitSize(hPadding, fontHeight + qMax(lineHeightOffset(), 0) + vPadding);
         layedOutTextRect = QRectF(0, 0, 0, fontHeight);
         advance = QSizeF();
         signalSizeChange(previousSize);
@@ -468,7 +469,7 @@ void QQuickTextPrivate::updateSize()
         if (!q->widthValid())
             iWidth = size.width();
         if (iWidth > -1)
-            q->setImplicitSize(iWidth + hPadding, size.height() + vPadding);
+            q->setImplicitSize(iWidth + hPadding, size.height() + qMax(lineHeightOffset(), 0) + vPadding);
         internalWidthUpdate = false;
 
         // If the implicit width update caused a recursive change of the width,
@@ -482,7 +483,7 @@ void QQuickTextPrivate::updateSize()
             updateSizeRecursionGuard = false;
         } else {
             if (iWidth == -1)
-                q->setImplicitHeight(size.height() + vPadding);
+                q->setImplicitHeight(size.height() + lineHeightOffset() + vPadding);
 
             QTextBlock firstBlock = extra->doc->firstBlock();
             while (firstBlock.layout()->lineCount() == 0)
@@ -946,7 +947,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
 
             bool wasInLayout = internalWidthUpdate;
             internalWidthUpdate = true;
-            q->setImplicitSize(naturalWidth + q->leftPadding() + q->rightPadding(), naturalHeight + q->topPadding() + q->bottomPadding());
+            q->setImplicitSize(naturalWidth + q->leftPadding() + q->rightPadding(), naturalHeight + qMax(lineHeightOffset(), 0) + q->topPadding() + q->bottomPadding());
             internalWidthUpdate = wasInLayout;
 
             // Update any variables that are dependent on the validity of the width or height.
@@ -1010,7 +1011,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
 
             bool wasInLayout = internalWidthUpdate;
             internalWidthUpdate = true;
-            q->setImplicitHeight(naturalHeight + q->topPadding() + q->bottomPadding());
+            q->setImplicitHeight(naturalHeight + qMax(lineHeightOffset(), 0) + q->topPadding() + q->bottomPadding());
             internalWidthUpdate = wasInLayout;
 
             multilineElide = elideMode == QQuickText::ElideRight
@@ -2560,7 +2561,7 @@ qreal QQuickText::contentWidth() const
 qreal QQuickText::contentHeight() const
 {
     Q_D(const QQuickText);
-    return d->layedOutTextRect.height();
+    return d->layedOutTextRect.height() + qMax(d->lineHeightOffset(), 0);
 }
 
 /*!
