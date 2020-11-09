@@ -28,8 +28,4 @@
 # manifestmeta.global.names           = *
 # manifestmeta.global.tags            = qt5
 
-manifestmeta.highlighted.names      =  "QtQuickControls2/Qt Quick Controls 2 - Gallery" \
-                                       "QtQuickControls2/Qt Quick Controls 2 - Wearable Demo" \
-                                       "QtQuickControls2/Qt Quick Controls 2 - Text Editor" \
-                                       "QtQuickControls2/Qt Quick Controls 2 - Contact List" \
-                                       "QtQuickControls2/Qt Quick Controls 2 - Side Panel"
+manifestmeta.highlighted.names      =  "QtQuickControls/Qt Quick Controls - Gallery"
