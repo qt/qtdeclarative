@@ -3673,6 +3673,10 @@ QQmlListProperty<QObject> QQuickItemPrivate::data()
 
     This property is useful if you need to access the collective geometry
     of an item's children in order to correctly size the item.
+
+    The geometry that is returned is local to the item. For example:
+
+    \snippet qml/item/childrenRect.qml local
 */
 /*!
     \property QQuickItem::childrenRect
@@ -3682,6 +3686,10 @@ QQmlListProperty<QObject> QQuickItemPrivate::data()
 
     This property is useful if you need to access the collective geometry
     of an item's children in order to correctly size the item.
+
+    The geometry that is returned is local to the item. For example:
+
+    \snippet qml/item/childrenRect.qml local
 */
 QRectF QQuickItem::childrenRect()
 {
