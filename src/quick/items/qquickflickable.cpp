@@ -1908,13 +1908,13 @@ void QQuickFlickablePrivate::data_append(QQmlListProperty<QObject> *prop, QObjec
     }
 }
 
-int QQuickFlickablePrivate::data_count(QQmlListProperty<QObject> *)
+qsizetype QQuickFlickablePrivate::data_count(QQmlListProperty<QObject> *)
 {
     // XXX todo
     return 0;
 }
 
-QObject *QQuickFlickablePrivate::data_at(QQmlListProperty<QObject> *, int)
+QObject *QQuickFlickablePrivate::data_at(QQmlListProperty<QObject> *, qsizetype)
 {
     // XXX todo
     return nullptr;

@@ -107,15 +107,15 @@ public:
         QList<DataGuard> *list = static_cast<QList<DataGuard> *>(prop->data);
         list->clear();
     }
-    static QObject *data_at(QQmlListProperty<QObject> *prop, int index) {
+    static QObject *data_at(QQmlListProperty<QObject> *prop, qsizetype index) {
         QList<DataGuard> *list = static_cast<QList<DataGuard> *>(prop->data);
         return list->at(index);
     }
-    static int data_count(QQmlListProperty<QObject> *prop) {
+    static qsizetype data_count(QQmlListProperty<QObject> *prop) {
         QList<DataGuard> *list = static_cast<QList<DataGuard> *>(prop->data);
         return list->count();
     }
-    static void data_replace(QQmlListProperty<QObject> *prop, int index, QObject *o) {
+    static void data_replace(QQmlListProperty<QObject> *prop, qsizetype index, QObject *o) {
         QList<DataGuard> *list = static_cast<QList<DataGuard> *>(prop->data);
         list->replace(index, DataGuard(o, list));
     }

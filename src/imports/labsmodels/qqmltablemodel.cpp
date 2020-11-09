@@ -658,13 +658,13 @@ void QQmlTableModel::columns_append(QQmlListProperty<QQmlTableModelColumn> *prop
         model->mColumns.append(column);
 }
 
-int QQmlTableModel::columns_count(QQmlListProperty<QQmlTableModelColumn> *property)
+qsizetype QQmlTableModel::columns_count(QQmlListProperty<QQmlTableModelColumn> *property)
 {
     const QQmlTableModel *model = static_cast<QQmlTableModel*>(property->object);
     return model->mColumns.count();
 }
 
-QQmlTableModelColumn *QQmlTableModel::columns_at(QQmlListProperty<QQmlTableModelColumn> *property, int index)
+QQmlTableModelColumn *QQmlTableModel::columns_at(QQmlListProperty<QQmlTableModelColumn> *property, qsizetype index)
 {
     const QQmlTableModel *model = static_cast<QQmlTableModel*>(property->object);
     return model->mColumns.at(index);
@@ -676,7 +676,7 @@ void QQmlTableModel::columns_clear(QQmlListProperty<QQmlTableModelColumn> *prope
     return model->mColumns.clear();
 }
 
-void QQmlTableModel::columns_replace(QQmlListProperty<QQmlTableModelColumn> *property, int index, QQmlTableModelColumn *value)
+void QQmlTableModel::columns_replace(QQmlListProperty<QQmlTableModelColumn> *property, qsizetype index, QQmlTableModelColumn *value)
 {
     QQmlTableModel *model = static_cast<QQmlTableModel*>(property->object);
     if (QQmlTableModelColumn *column = qobject_cast<QQmlTableModelColumn*>(value))

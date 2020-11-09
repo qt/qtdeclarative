@@ -94,10 +94,10 @@ public:
     QQmlListProperty<QQmlTableModelColumn> columns();
 
     static void columns_append(QQmlListProperty<QQmlTableModelColumn> *property, QQmlTableModelColumn *value);
-    static int columns_count(QQmlListProperty<QQmlTableModelColumn> *property);
-    static QQmlTableModelColumn *columns_at(QQmlListProperty<QQmlTableModelColumn> *property, int index);
+    static qsizetype columns_count(QQmlListProperty<QQmlTableModelColumn> *property);
+    static QQmlTableModelColumn *columns_at(QQmlListProperty<QQmlTableModelColumn> *property, qsizetype index);
     static void columns_clear(QQmlListProperty<QQmlTableModelColumn> *property);
-    static void columns_replace(QQmlListProperty<QQmlTableModelColumn> *property, int index, QQmlTableModelColumn *value);
+    static void columns_replace(QQmlListProperty<QQmlTableModelColumn> *property, qsizetype index, QQmlTableModelColumn *value);
     static void columns_removeLast(QQmlListProperty<QQmlTableModelColumn> *property);
 
     QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;

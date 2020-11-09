@@ -283,7 +283,7 @@ static QQuickPathPrivate *privatePath(QObject *object)
     return QQuickPathPrivate::get(path);
 }
 
-QQuickPathElement *QQuickPath::pathElements_at(QQmlListProperty<QQuickPathElement> *property, int index)
+QQuickPathElement *QQuickPath::pathElements_at(QQmlListProperty<QQuickPathElement> *property, qsizetype index)
 {
     QQuickPathPrivate *d = privatePath(property->object);
 
@@ -315,7 +315,7 @@ void QQuickPath::pathElements_append(QQmlListProperty<QQuickPathElement> *proper
     }
 }
 
-int QQuickPath::pathElements_count(QQmlListProperty<QQuickPathElement> *property)
+qsizetype QQuickPath::pathElements_count(QQmlListProperty<QQuickPathElement> *property)
 {
     QQuickPathPrivate *d = privatePath(property->object);
 

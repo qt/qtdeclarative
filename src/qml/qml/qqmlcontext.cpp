@@ -441,7 +441,7 @@ QUrl QQmlContext::baseUrl() const
     return d->m_data->baseUrl();
 }
 
-int QQmlContextPrivate::context_count(QQmlListProperty<QObject> *prop)
+qsizetype QQmlContextPrivate::context_count(QQmlListProperty<QObject> *prop)
 {
     QQmlContext *context = static_cast<QQmlContext*>(prop->object);
     QQmlContextPrivate *d = QQmlContextPrivate::get(context);
@@ -453,7 +453,7 @@ int QQmlContextPrivate::context_count(QQmlListProperty<QObject> *prop)
         return ((const QList<QObject> *)d->propertyValue(contextProperty).constData())->count();
 }
 
-QObject *QQmlContextPrivate::context_at(QQmlListProperty<QObject> *prop, int index)
+QObject *QQmlContextPrivate::context_at(QQmlListProperty<QObject> *prop, qsizetype index)
 {
     QQmlContext *context = static_cast<QQmlContext*>(prop->object);
     QQmlContextPrivate *d = QQmlContextPrivate::get(context);

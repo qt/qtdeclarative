@@ -76,18 +76,18 @@ public:
 
     QQmlListProperty<Person> guests();
     void appendGuest(Person*);
-    int guestCount() const;
-    Person *guest(int) const;
+    qsizetype guestCount() const;
+    Person *guest(qsizetype) const;
     void clearGuests();
-    void replaceGuest(int, Person*);
+    void replaceGuest(qsizetype, Person*);
     void removeLastGuest();
 
 private:
     static void appendGuest(QQmlListProperty<Person>*, Person*);
-    static int guestCount(QQmlListProperty<Person>*);
-    static Person* guest(QQmlListProperty<Person>*, int);
+    static qsizetype guestCount(QQmlListProperty<Person>*);
+    static Person* guest(QQmlListProperty<Person>*, qsizetype);
     static void clearGuests(QQmlListProperty<Person>*);
-    static void replaceGuest(QQmlListProperty<Person>*, int, Person*);
+    static void replaceGuest(QQmlListProperty<Person>*, qsizetype, Person*);
     static void removeLastGuest(QQmlListProperty<Person>*);
 
     Person *m_host;

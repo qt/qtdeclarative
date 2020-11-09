@@ -330,10 +330,10 @@ public:
 
     // data property
     static void data_append(QQmlListProperty<QObject> *, QObject *);
-    static int data_count(QQmlListProperty<QObject> *);
-    static QObject *data_at(QQmlListProperty<QObject> *, int);
+    static qsizetype data_count(QQmlListProperty<QObject> *);
+    static QObject *data_at(QQmlListProperty<QObject> *, qsizetype);
     static void data_clear(QQmlListProperty<QObject> *);
-    static void data_replace(QQmlListProperty<QObject> *, int, QObject *);
+    static void data_replace(QQmlListProperty<QObject> *, qsizetype, QObject *);
     static void data_removeLast(QQmlListProperty<QObject> *);
 
     static void rhiCreationFailureMessage(const QString &backendName,

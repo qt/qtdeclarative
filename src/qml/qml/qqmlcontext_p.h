@@ -78,8 +78,8 @@ public:
         return static_cast<QQmlContext *>(context->q_func());
     }
 
-    static int context_count(QQmlListProperty<QObject> *);
-    static QObject *context_at(QQmlListProperty<QObject> *, int);
+    static qsizetype context_count(QQmlListProperty<QObject> *);
+    static QObject *context_at(QQmlListProperty<QObject> *, qsizetype);
 
     void dropDestroyedQObject(const QString &name, QObject *destroyed);
 

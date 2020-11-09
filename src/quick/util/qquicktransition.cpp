@@ -135,8 +135,8 @@ public:
 protected:
 
     static void append_animation(QQmlListProperty<QQuickAbstractAnimation> *list, QQuickAbstractAnimation *a);
-    static int animation_count(QQmlListProperty<QQuickAbstractAnimation> *list);
-    static QQuickAbstractAnimation* animation_at(QQmlListProperty<QQuickAbstractAnimation> *list, int pos);
+    static qsizetype animation_count(QQmlListProperty<QQuickAbstractAnimation> *list);
+    static QQuickAbstractAnimation* animation_at(QQmlListProperty<QQuickAbstractAnimation> *list, qsizetype pos);
     static void clear_animations(QQmlListProperty<QQuickAbstractAnimation> *list);
     QList<QQuickAbstractAnimation *> animations;
 };
@@ -148,13 +148,13 @@ void QQuickTransitionPrivate::append_animation(QQmlListProperty<QQuickAbstractAn
     a->setDisableUserControl();
 }
 
-int QQuickTransitionPrivate::animation_count(QQmlListProperty<QQuickAbstractAnimation> *list)
+qsizetype QQuickTransitionPrivate::animation_count(QQmlListProperty<QQuickAbstractAnimation> *list)
 {
     QQuickTransition *q = static_cast<QQuickTransition *>(list->object);
     return q->d_func()->animations.count();
 }
 
-QQuickAbstractAnimation* QQuickTransitionPrivate::animation_at(QQmlListProperty<QQuickAbstractAnimation> *list, int pos)
+QQuickAbstractAnimation* QQuickTransitionPrivate::animation_at(QQmlListProperty<QQuickAbstractAnimation> *list, qsizetype pos)
 {
     QQuickTransition *q = static_cast<QQuickTransition *>(list->object);
     return q->d_func()->animations.at(pos);

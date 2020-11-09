@@ -314,7 +314,7 @@ inline void spriteAppend(QQmlListProperty<QQuickSprite> *p, QQuickSprite* s)
     p->object->metaObject()->invokeMethod(p->object, "createEngine");
 }
 
-inline QQuickSprite* spriteAt(QQmlListProperty<QQuickSprite> *p, int idx)
+inline QQuickSprite* spriteAt(QQmlListProperty<QQuickSprite> *p, qsizetype idx)
 {
     return reinterpret_cast<QList<QQuickSprite *> *>(p->data)->at(idx);
 }
@@ -325,12 +325,12 @@ inline void spriteClear(QQmlListProperty<QQuickSprite> *p)
     p->object->metaObject()->invokeMethod(p->object, "createEngine");
 }
 
-inline int spriteCount(QQmlListProperty<QQuickSprite> *p)
+inline qsizetype spriteCount(QQmlListProperty<QQuickSprite> *p)
 {
     return reinterpret_cast<QList<QQuickSprite *> *>(p->data)->count();
 }
 
-inline void spriteReplace(QQmlListProperty<QQuickSprite> *p, int idx, QQuickSprite *s)
+inline void spriteReplace(QQmlListProperty<QQuickSprite> *p, qsizetype idx, QQuickSprite *s)
 {
     reinterpret_cast<QList<QQuickSprite *> *>(p->data)->replace(idx, s);
     p->object->metaObject()->invokeMethod(p->object, "createEngine");

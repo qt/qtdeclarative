@@ -115,7 +115,7 @@ void QQmlListAccessor::setList(const QVariant &v, QQmlEngine *engine)
     }
 }
 
-int QQmlListAccessor::count() const
+qsizetype QQmlListAccessor::count() const
 {
     switch(m_type) {
     case StringList:
@@ -136,7 +136,7 @@ int QQmlListAccessor::count() const
     }
 }
 
-QVariant QQmlListAccessor::at(int idx) const
+QVariant QQmlListAccessor::at(qsizetype idx) const
 {
     Q_ASSERT(idx >= 0 && idx < count());
     switch(m_type) {

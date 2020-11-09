@@ -1687,8 +1687,8 @@ public:
     QQmlListProperty<QObject> data();
 
     static void children_append(QQmlListProperty<QObject> *prop, QObject *o);
-    static int children_count(QQmlListProperty<QObject> *prop);
-    static QObject *children_at(QQmlListProperty<QObject> *prop, int index);
+    static qsizetype children_count(QQmlListProperty<QObject> *prop);
+    static QObject *children_at(QQmlListProperty<QObject> *prop, qsizetype index);
     static void children_clear(QQmlListProperty<QObject> *prop);
 
     QList<QObject*> dataChildren;

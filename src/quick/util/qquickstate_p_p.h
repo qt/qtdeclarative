@@ -236,15 +236,15 @@ public:
             e->setState(nullptr);
         list->clear();
     }
-    static int operations_count(QQmlListProperty<QQuickStateOperation> *prop) {
+    static qsizetype operations_count(QQmlListProperty<QQuickStateOperation> *prop) {
         QList<OperationGuard> *list = static_cast<QList<OperationGuard> *>(prop->data);
         return list->count();
     }
-    static QQuickStateOperation *operations_at(QQmlListProperty<QQuickStateOperation> *prop, int index) {
+    static QQuickStateOperation *operations_at(QQmlListProperty<QQuickStateOperation> *prop, qsizetype index) {
         QList<OperationGuard> *list = static_cast<QList<OperationGuard> *>(prop->data);
         return list->at(index);
     }
-    static void operations_replace(QQmlListProperty<QQuickStateOperation> *prop, int index,
+    static void operations_replace(QQmlListProperty<QQuickStateOperation> *prop, qsizetype index,
                                    QQuickStateOperation *op) {
         QList<OperationGuard> *list = static_cast<QList<OperationGuard> *>(prop->data);
         auto &guard = list->at(index);

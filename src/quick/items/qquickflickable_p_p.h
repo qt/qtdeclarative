@@ -273,8 +273,8 @@ public:
 
     // flickableData property
     static void data_append(QQmlListProperty<QObject> *, QObject *);
-    static int data_count(QQmlListProperty<QObject> *);
-    static QObject *data_at(QQmlListProperty<QObject> *, int);
+    static qsizetype data_count(QQmlListProperty<QObject> *);
+    static QObject *data_at(QQmlListProperty<QObject> *, qsizetype);
     static void data_clear(QQmlListProperty<QObject> *);
 };
 

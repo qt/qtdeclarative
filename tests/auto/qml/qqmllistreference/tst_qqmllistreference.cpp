@@ -98,16 +98,16 @@ public:
     static void append(QQmlListProperty<TestType> *p, TestType *v) {
         reinterpret_cast<QList<TestType *> *>(p->data)->append(v);
     }
-    static int count(QQmlListProperty<TestType> *p) {
+    static qsizetype count(QQmlListProperty<TestType> *p) {
         return reinterpret_cast<QList<TestType *> *>(p->data)->count();
     }
-    static TestType *at(QQmlListProperty<TestType> *p, int idx) {
+    static TestType *at(QQmlListProperty<TestType> *p, qsizetype idx) {
         return reinterpret_cast<QList<TestType *> *>(p->data)->at(idx);
     }
     static void clear(QQmlListProperty<TestType> *p) {
         return reinterpret_cast<QList<TestType *> *>(p->data)->clear();
     }
-    static void replace(QQmlListProperty<TestType> *p, int idx, TestType *v) {
+    static void replace(QQmlListProperty<TestType> *p, qsizetype idx, TestType *v) {
         return reinterpret_cast<QList<TestType *> *>(p->data)->replace(idx, v);
     }
     static void removeLast(QQmlListProperty<TestType> *p) {

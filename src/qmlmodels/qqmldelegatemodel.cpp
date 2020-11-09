@@ -697,7 +697,7 @@ void QQmlDelegateModelPrivate::group_append(
     d->m_groupCount += 1;
 }
 
-int QQmlDelegateModelPrivate::group_count(
+qsizetype QQmlDelegateModelPrivate::group_count(
         QQmlListProperty<QQmlDelegateModelGroup> *property)
 {
     QQmlDelegateModelPrivate *d = static_cast<QQmlDelegateModelPrivate *>(property->data);
@@ -705,7 +705,7 @@ int QQmlDelegateModelPrivate::group_count(
 }
 
 QQmlDelegateModelGroup *QQmlDelegateModelPrivate::group_at(
-        QQmlListProperty<QQmlDelegateModelGroup> *property, int index)
+        QQmlListProperty<QQmlDelegateModelGroup> *property, qsizetype index)
 {
     QQmlDelegateModelPrivate *d = static_cast<QQmlDelegateModelPrivate *>(property->data);
     return index >= 0 && index < d->m_groupCount - 1

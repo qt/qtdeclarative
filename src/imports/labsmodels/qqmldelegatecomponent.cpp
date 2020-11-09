@@ -263,13 +263,13 @@ void QQmlDelegateChooser::choices_append(QQmlListProperty<QQmlDelegateChoice> *p
     q->delegateChanged();
 }
 
-int QQmlDelegateChooser::choices_count(QQmlListProperty<QQmlDelegateChoice> *prop)
+qsizetype QQmlDelegateChooser::choices_count(QQmlListProperty<QQmlDelegateChoice> *prop)
 {
     QQmlDelegateChooser *q = static_cast<QQmlDelegateChooser*>(prop->object);
     return q->m_choices.count();
 }
 
-QQmlDelegateChoice *QQmlDelegateChooser::choices_at(QQmlListProperty<QQmlDelegateChoice> *prop, int index)
+QQmlDelegateChoice *QQmlDelegateChooser::choices_at(QQmlListProperty<QQmlDelegateChoice> *prop, qsizetype index)
 {
     QQmlDelegateChooser *q = static_cast<QQmlDelegateChooser*>(prop->object);
     return q->m_choices.at(index);
@@ -284,8 +284,8 @@ void QQmlDelegateChooser::choices_clear(QQmlListProperty<QQmlDelegateChoice> *pr
     q->delegateChanged();
 }
 
-void QQmlDelegateChooser::choices_replace(QQmlListProperty<QQmlDelegateChoice> *prop, int index,
-                                          QQmlDelegateChoice *choice)
+void QQmlDelegateChooser::choices_replace(QQmlListProperty<QQmlDelegateChoice> *prop,
+                                          qsizetype index, QQmlDelegateChoice *choice)
 {
     QQmlDelegateChooser *q = static_cast<QQmlDelegateChooser *>(prop->object);
     disconnect(q->m_choices[index], &QQmlDelegateChoice::changed,

@@ -128,7 +128,7 @@ static void allSubObjects(QObject *object, QObjectList &objectList)
                 && QQmlMetaType::isList(metaProperty.userType())) {
             QQmlListReference list(object, metaProperty.name());
             if (list.canCount() && list.canAt()) {
-                for (int i = 0; i < list.count(); i++) {
+                for (qsizetype i = 0; i < list.count(); i++) {
                     QObject *propertyObject = list.at(i);
                     allSubObjects(propertyObject, objectList);
 

@@ -424,12 +424,12 @@ void QObjectContainer::children_append(QQmlListProperty<QObject> *prop, QObject 
     }
 }
 
-int QObjectContainer::children_count(QQmlListProperty<QObject> *prop)
+qsizetype QObjectContainer::children_count(QQmlListProperty<QObject> *prop)
 {
     return static_cast<QObjectContainer*>(prop->object)->dataChildren.count();
 }
 
-QObject *QObjectContainer::children_at(QQmlListProperty<QObject> *prop, int index)
+QObject *QObjectContainer::children_at(QQmlListProperty<QObject> *prop, qsizetype index)
 {
     return static_cast<QObjectContainer*>(prop->object)->dataChildren.at(index);
 }

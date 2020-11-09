@@ -240,12 +240,12 @@ public:
         q->addTouchPrototype(touch);
     }
 
-    static int touchPoint_count(QQmlListProperty<QQuickTouchPoint> *list) {
+    static qsizetype touchPoint_count(QQmlListProperty<QQuickTouchPoint> *list) {
         QQuickMultiPointTouchArea *q = static_cast<QQuickMultiPointTouchArea*>(list->object);
         return q->_touchPrototypes.count();
     }
 
-    static QQuickTouchPoint* touchPoint_at(QQmlListProperty<QQuickTouchPoint> *list, int index) {
+    static QQuickTouchPoint* touchPoint_at(QQmlListProperty<QQuickTouchPoint> *list, qsizetype index) {
         QQuickMultiPointTouchArea *q = static_cast<QQuickMultiPointTouchArea*>(list->object);
         return q->_touchPrototypes.value(index);
     }

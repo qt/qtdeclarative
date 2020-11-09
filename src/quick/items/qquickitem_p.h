@@ -288,31 +288,31 @@ public:
 
     // data property
     static void data_append(QQmlListProperty<QObject> *, QObject *);
-    static int data_count(QQmlListProperty<QObject> *);
-    static QObject *data_at(QQmlListProperty<QObject> *, int);
+    static qsizetype data_count(QQmlListProperty<QObject> *);
+    static QObject *data_at(QQmlListProperty<QObject> *, qsizetype);
     static void data_clear(QQmlListProperty<QObject> *);
 
     // resources property
-    static QObject *resources_at(QQmlListProperty<QObject> *, int);
+    static QObject *resources_at(QQmlListProperty<QObject> *, qsizetype);
     static void resources_append(QQmlListProperty<QObject> *, QObject *);
-    static int resources_count(QQmlListProperty<QObject> *);
+    static qsizetype resources_count(QQmlListProperty<QObject> *);
     static void resources_clear(QQmlListProperty<QObject> *);
 
     // children property
     static void children_append(QQmlListProperty<QQuickItem> *, QQuickItem *);
-    static int children_count(QQmlListProperty<QQuickItem> *);
-    static QQuickItem *children_at(QQmlListProperty<QQuickItem> *, int);
+    static qsizetype children_count(QQmlListProperty<QQuickItem> *);
+    static QQuickItem *children_at(QQmlListProperty<QQuickItem> *, qsizetype);
     static void children_clear(QQmlListProperty<QQuickItem> *);
 
     // visibleChildren property
     static void visibleChildren_append(QQmlListProperty<QQuickItem> *prop, QQuickItem *o);
-    static int visibleChildren_count(QQmlListProperty<QQuickItem> *prop);
-    static QQuickItem *visibleChildren_at(QQmlListProperty<QQuickItem> *prop, int index);
+    static qsizetype visibleChildren_count(QQmlListProperty<QQuickItem> *prop);
+    static QQuickItem *visibleChildren_at(QQmlListProperty<QQuickItem> *prop, qsizetype index);
 
     // transform property
-    static int transform_count(QQmlListProperty<QQuickTransform> *list);
+    static qsizetype transform_count(QQmlListProperty<QQuickTransform> *list);
     static void transform_append(QQmlListProperty<QQuickTransform> *list, QQuickTransform *);
-    static QQuickTransform *transform_at(QQmlListProperty<QQuickTransform> *list, int);
+    static QQuickTransform *transform_at(QQmlListProperty<QQuickTransform> *list, qsizetype);
     static void transform_clear(QQmlListProperty<QQuickTransform> *list);
 
     void _q_resourceObjectDeleted(QObject *);

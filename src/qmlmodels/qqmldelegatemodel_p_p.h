@@ -338,8 +338,8 @@ public:
     int adaptorModelCount() const;
 
     static void group_append(QQmlListProperty<QQmlDelegateModelGroup> *property, QQmlDelegateModelGroup *group);
-    static int group_count(QQmlListProperty<QQmlDelegateModelGroup> *property);
-    static QQmlDelegateModelGroup *group_at(QQmlListProperty<QQmlDelegateModelGroup> *property, int index);
+    static qsizetype group_count(QQmlListProperty<QQmlDelegateModelGroup> *property);
+    static QQmlDelegateModelGroup *group_at(QQmlListProperty<QQmlDelegateModelGroup> *property, qsizetype index);
 
     void releaseIncubator(QQDMIncubationTask *incubationTask);
     void incubatorStatusChanged(QQDMIncubationTask *incubationTask, QQmlIncubator::Status status);

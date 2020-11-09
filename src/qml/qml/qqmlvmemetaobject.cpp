@@ -131,12 +131,12 @@ static void list_append(QQmlListProperty<QObject> *prop, QObject *o)
     resolved.activateSignal();
 }
 
-static int list_count(QQmlListProperty<QObject> *prop)
+static qsizetype list_count(QQmlListProperty<QObject> *prop)
 {
     return ResolvedList(prop).list()->count();
 }
 
-static QObject *list_at(QQmlListProperty<QObject> *prop, int index)
+static QObject *list_at(QQmlListProperty<QObject> *prop, qsizetype index)
 {
     return ResolvedList(prop).list()->at(index);
 }
@@ -148,7 +148,7 @@ static void list_clear(QQmlListProperty<QObject> *prop)
     resolved.activateSignal();
 }
 
-static void list_replace(QQmlListProperty<QObject> *prop, int index, QObject *o)
+static void list_replace(QQmlListProperty<QObject> *prop, qsizetype index, QObject *o)
 {
     const ResolvedList resolved(prop);
     resolved.list()->replace(index, o);

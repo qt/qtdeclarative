@@ -67,15 +67,15 @@ public:
     QQuickState *nullState;
 
     static void append_state(QQmlListProperty<QQuickState> *list, QQuickState *state);
-    static int count_state(QQmlListProperty<QQuickState> *list);
-    static QQuickState *at_state(QQmlListProperty<QQuickState> *list, int index);
+    static qsizetype count_state(QQmlListProperty<QQuickState> *list);
+    static QQuickState *at_state(QQmlListProperty<QQuickState> *list, qsizetype index);
     static void clear_states(QQmlListProperty<QQuickState> *list);
-    static void replace_states(QQmlListProperty<QQuickState> *list, int index, QQuickState *state);
+    static void replace_states(QQmlListProperty<QQuickState> *list, qsizetype index, QQuickState *state);
     static void removeLast_states(QQmlListProperty<QQuickState> *list);
 
     static void append_transition(QQmlListProperty<QQuickTransition> *list, QQuickTransition *state);
-    static int count_transitions(QQmlListProperty<QQuickTransition> *list);
-    static QQuickTransition *at_transition(QQmlListProperty<QQuickTransition> *list, int index);
+    static qsizetype count_transitions(QQmlListProperty<QQuickTransition> *list);
+    static QQuickTransition *at_transition(QQmlListProperty<QQuickTransition> *list, qsizetype index);
     static void clear_transitions(QQmlListProperty<QQuickTransition> *list);
 
     QList<QQuickState *> states;
@@ -184,13 +184,13 @@ void QQuickStateGroupPrivate::append_state(QQmlListProperty<QQuickState> *list, 
 
 }
 
-int QQuickStateGroupPrivate::count_state(QQmlListProperty<QQuickState> *list)
+qsizetype QQuickStateGroupPrivate::count_state(QQmlListProperty<QQuickState> *list)
 {
     QQuickStateGroup *_this = static_cast<QQuickStateGroup *>(list->object);
     return _this->d_func()->states.count();
 }
 
-QQuickState *QQuickStateGroupPrivate::at_state(QQmlListProperty<QQuickState> *list, int index)
+QQuickState *QQuickStateGroupPrivate::at_state(QQmlListProperty<QQuickState> *list, qsizetype index)
 {
     QQuickStateGroup *_this = static_cast<QQuickStateGroup *>(list->object);
     return _this->d_func()->states.at(index);
@@ -200,13 +200,13 @@ void QQuickStateGroupPrivate::clear_states(QQmlListProperty<QQuickState> *list)
 {
     QQuickStateGroup *_this = static_cast<QQuickStateGroup *>(list->object);
     _this->d_func()->setCurrentStateInternal(QString(), true);
-    for (int i = 0; i < _this->d_func()->states.count(); ++i) {
+    for (qsizetype i = 0; i < _this->d_func()->states.count(); ++i) {
         _this->d_func()->states.at(i)->setStateGroup(nullptr);
     }
     _this->d_func()->states.clear();
 }
 
-void QQuickStateGroupPrivate::replace_states(QQmlListProperty<QQuickState> *list, int index, QQuickState *state)
+void QQuickStateGroupPrivate::replace_states(QQmlListProperty<QQuickState> *list, qsizetype index, QQuickState *state)
 {
     auto *self = qobject_cast<QQuickStateGroup *>(list->object);
     auto *d = self->d_func();
@@ -265,13 +265,13 @@ void QQuickStateGroupPrivate::append_transition(QQmlListProperty<QQuickTransitio
         _this->d_func()->transitions.append(trans);
 }
 
-int QQuickStateGroupPrivate::count_transitions(QQmlListProperty<QQuickTransition> *list)
+qsizetype QQuickStateGroupPrivate::count_transitions(QQmlListProperty<QQuickTransition> *list)
 {
     QQuickStateGroup *_this = static_cast<QQuickStateGroup *>(list->object);
     return _this->d_func()->transitions.count();
 }
 
-QQuickTransition *QQuickStateGroupPrivate::at_transition(QQmlListProperty<QQuickTransition> *list, int index)
+QQuickTransition *QQuickStateGroupPrivate::at_transition(QQmlListProperty<QQuickTransition> *list, qsizetype index)
 {
     QQuickStateGroup *_this = static_cast<QQuickStateGroup *>(list->object);
     return _this->d_func()->transitions.at(index);

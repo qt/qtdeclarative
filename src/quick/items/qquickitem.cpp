@@ -3295,7 +3295,7 @@ void QQuickItemPrivate::data_append(QQmlListProperty<QObject> *prop, QObject *o)
     automatically assigned to this property.
  */
 
-int QQuickItemPrivate::data_count(QQmlListProperty<QObject> *property)
+qsizetype QQuickItemPrivate::data_count(QQmlListProperty<QObject> *property)
 {
     QQuickItem *item = static_cast<QQuickItem*>(property->object);
     QQuickItemPrivate *privateItem = QQuickItemPrivate::get(item);
@@ -3305,17 +3305,17 @@ int QQuickItemPrivate::data_count(QQmlListProperty<QObject> *property)
     return resources_count(&resourcesProperty) + children_count(&childrenProperty);
 }
 
-QObject *QQuickItemPrivate::data_at(QQmlListProperty<QObject> *property, int i)
+QObject *QQuickItemPrivate::data_at(QQmlListProperty<QObject> *property, qsizetype i)
 {
     QQuickItem *item = static_cast<QQuickItem*>(property->object);
     QQuickItemPrivate *privateItem = QQuickItemPrivate::get(item);
     QQmlListProperty<QObject> resourcesProperty = privateItem->resources();
     QQmlListProperty<QQuickItem> childrenProperty = privateItem->children();
 
-    int resourcesCount = resources_count(&resourcesProperty);
+    qsizetype resourcesCount = resources_count(&resourcesProperty);
     if (i < resourcesCount)
         return resources_at(&resourcesProperty, i);
-    const int j = i - resourcesCount;
+    const qsizetype j = i - resourcesCount;
     if (j < children_count(&childrenProperty))
         return children_at(&childrenProperty, j);
     return nullptr;
@@ -3332,7 +3332,7 @@ void QQuickItemPrivate::data_clear(QQmlListProperty<QObject> *property)
     children_clear(&childrenProperty);
 }
 
-QObject *QQuickItemPrivate::resources_at(QQmlListProperty<QObject> *prop, int index)
+QObject *QQuickItemPrivate::resources_at(QQmlListProperty<QObject> *prop, qsizetype index)
 {
     QQuickItemPrivate *quickItemPrivate = QQuickItemPrivate::get(static_cast<QQuickItem *>(prop->object));
     return quickItemPrivate->extra.isAllocated() ? quickItemPrivate->extra->resourcesList.value(index) : 0;
@@ -3349,7 +3349,7 @@ void QQuickItemPrivate::resources_append(QQmlListProperty<QObject> *prop, QObjec
     }
 }
 
-int QQuickItemPrivate::resources_count(QQmlListProperty<QObject> *prop)
+qsizetype QQuickItemPrivate::resources_count(QQmlListProperty<QObject> *prop)
 {
     QQuickItemPrivate *quickItemPrivate = QQuickItemPrivate::get(static_cast<QQuickItem *>(prop->object));
     return  quickItemPrivate->extra.isAllocated() ? quickItemPrivate->extra->resourcesList.count() : 0;
@@ -3368,7 +3368,7 @@ void QQuickItemPrivate::resources_clear(QQmlListProperty<QObject> *prop)
     }
 }
 
-QQuickItem *QQuickItemPrivate::children_at(QQmlListProperty<QQuickItem> *prop, int index)
+QQuickItem *QQuickItemPrivate::children_at(QQmlListProperty<QQuickItem> *prop, qsizetype index)
 {
     QQuickItemPrivate *p = QQuickItemPrivate::get(static_cast<QQuickItem *>(prop->object));
     if (index >= p->childItems.count() || index < 0)
@@ -3389,7 +3389,7 @@ void QQuickItemPrivate::children_append(QQmlListProperty<QQuickItem> *prop, QQui
     o->setParentItem(that);
 }
 
-int QQuickItemPrivate::children_count(QQmlListProperty<QQuickItem> *prop)
+qsizetype QQuickItemPrivate::children_count(QQmlListProperty<QQuickItem> *prop)
 {
     QQuickItemPrivate *p = QQuickItemPrivate::get(static_cast<QQuickItem *>(prop->object));
     return p->childItems.count();
@@ -3403,11 +3403,11 @@ void QQuickItemPrivate::children_clear(QQmlListProperty<QQuickItem> *prop)
         p->childItems.at(0)->setParentItem(nullptr);
 }
 
-int QQuickItemPrivate::visibleChildren_count(QQmlListProperty<QQuickItem> *prop)
+qsizetype QQuickItemPrivate::visibleChildren_count(QQmlListProperty<QQuickItem> *prop)
 {
     QQuickItemPrivate *p = QQuickItemPrivate::get(static_cast<QQuickItem *>(prop->object));
-    int visibleCount = 0;
-    int c = p->childItems.count();
+    qsizetype visibleCount = 0;
+    qsizetype c = p->childItems.count();
     while (c--) {
         if (p->childItems.at(c)->isVisible()) visibleCount++;
     }
@@ -3415,22 +3415,22 @@ int QQuickItemPrivate::visibleChildren_count(QQmlListProperty<QQuickItem> *prop)
     return visibleCount;
 }
 
-QQuickItem *QQuickItemPrivate::visibleChildren_at(QQmlListProperty<QQuickItem> *prop, int index)
+QQuickItem *QQuickItemPrivate::visibleChildren_at(QQmlListProperty<QQuickItem> *prop, qsizetype index)
 {
     QQuickItemPrivate *p = QQuickItemPrivate::get(static_cast<QQuickItem *>(prop->object));
-    const int childCount = p->childItems.count();
+    const qsizetype childCount = p->childItems.count();
     if (index >= childCount || index < 0)
         return nullptr;
 
-    int visibleCount = -1;
-    for (int i = 0; i < childCount; i++) {
+    qsizetype visibleCount = -1;
+    for (qsizetype i = 0; i < childCount; i++) {
         if (p->childItems.at(i)->isVisible()) visibleCount++;
         if (visibleCount == index) return p->childItems.at(i);
     }
     return nullptr;
 }
 
-int QQuickItemPrivate::transform_count(QQmlListProperty<QQuickTransform> *prop)
+qsizetype QQuickItemPrivate::transform_count(QQmlListProperty<QQuickTransform> *prop)
 {
     QQuickItem *that = static_cast<QQuickItem *>(prop->object);
     QQuickItemPrivate *p = QQuickItemPrivate::get(that);
@@ -3485,7 +3485,7 @@ void QQuickItemPrivate::transform_append(QQmlListProperty<QQuickTransform> *prop
     transform->appendToItem(that);
 }
 
-QQuickTransform *QQuickItemPrivate::transform_at(QQmlListProperty<QQuickTransform> *prop, int idx)
+QQuickTransform *QQuickItemPrivate::transform_at(QQmlListProperty<QQuickTransform> *prop, qsizetype idx)
 {
     QQuickItem *that = static_cast<QQuickItem *>(prop->object);
     QQuickItemPrivate *p = QQuickItemPrivate::get(that);
@@ -3501,7 +3501,7 @@ void QQuickItemPrivate::transform_clear(QQmlListProperty<QQuickTransform> *prop)
     QQuickItem *that = static_cast<QQuickItem *>(prop->object);
     QQuickItemPrivate *p = QQuickItemPrivate::get(that);
 
-    for (int ii = 0; ii < p->transforms.count(); ++ii) {
+    for (qsizetype ii = 0; ii < p->transforms.count(); ++ii) {
         QQuickTransform *t = p->transforms.at(ii);
         QQuickTransformPrivate *tp = QQuickTransformPrivate::get(t);
         tp->items.removeOne(that);

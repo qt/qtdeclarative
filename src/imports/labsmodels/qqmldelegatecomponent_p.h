@@ -116,10 +116,11 @@ public:
 
     virtual QQmlListProperty<QQmlDelegateChoice> choices();
     static void choices_append(QQmlListProperty<QQmlDelegateChoice> *, QQmlDelegateChoice *);
-    static int choices_count(QQmlListProperty<QQmlDelegateChoice> *);
-    static QQmlDelegateChoice *choices_at(QQmlListProperty<QQmlDelegateChoice> *, int);
+    static qsizetype choices_count(QQmlListProperty<QQmlDelegateChoice> *);
+    static QQmlDelegateChoice *choices_at(QQmlListProperty<QQmlDelegateChoice> *, qsizetype);
     static void choices_clear(QQmlListProperty<QQmlDelegateChoice> *);
-    static void choices_replace(QQmlListProperty<QQmlDelegateChoice> *, int, QQmlDelegateChoice *);
+    static void choices_replace(QQmlListProperty<QQmlDelegateChoice> *, qsizetype,
+                                QQmlDelegateChoice *);
     static void choices_removeLast(QQmlListProperty<QQmlDelegateChoice> *);
 
     QQmlComponent *delegate(QQmlAdaptorModel *adaptorModel, int row, int column = -1) const override;

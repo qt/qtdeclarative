@@ -3378,7 +3378,7 @@ void QQuickWindowPrivate::data_append(QQmlListProperty<QObject> *property, QObje
     itemProperty.append(&itemProperty, o);
 }
 
-int QQuickWindowPrivate::data_count(QQmlListProperty<QObject> *property)
+qsizetype QQuickWindowPrivate::data_count(QQmlListProperty<QObject> *property)
 {
     QQuickWindow *win = static_cast<QQuickWindow*>(property->object);
     if (!win || !win->contentItem() || !QQuickItemPrivate::get(win->contentItem())->data().count)
@@ -3387,7 +3387,7 @@ int QQuickWindowPrivate::data_count(QQmlListProperty<QObject> *property)
     return itemProperty.count(&itemProperty);
 }
 
-QObject *QQuickWindowPrivate::data_at(QQmlListProperty<QObject> *property, int i)
+QObject *QQuickWindowPrivate::data_at(QQmlListProperty<QObject> *property, qsizetype i)
 {
     QQuickWindow *win = static_cast<QQuickWindow*>(property->object);
     QQmlListProperty<QObject> itemProperty = QQuickItemPrivate::get(win->contentItem())->data();
@@ -3401,7 +3401,7 @@ void QQuickWindowPrivate::data_clear(QQmlListProperty<QObject> *property)
     itemProperty.clear(&itemProperty);
 }
 
-void QQuickWindowPrivate::data_replace(QQmlListProperty<QObject> *property, int i, QObject *o)
+void QQuickWindowPrivate::data_replace(QQmlListProperty<QObject> *property, qsizetype i, QObject *o)
 {
     QQuickWindow *win = static_cast<QQuickWindow*>(property->object);
     QQmlListProperty<QObject> itemProperty = QQuickItemPrivate::get(win->contentItem())->data();

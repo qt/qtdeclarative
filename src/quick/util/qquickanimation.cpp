@@ -1724,14 +1724,14 @@ void QQuickAnimationGroupPrivate::append_animation(QQmlListProperty<QQuickAbstra
         a->setGroup(q);
 }
 
-QQuickAbstractAnimation *QQuickAnimationGroupPrivate::at_animation(QQmlListProperty<QQuickAbstractAnimation> *list, int index)
+QQuickAbstractAnimation *QQuickAnimationGroupPrivate::at_animation(QQmlListProperty<QQuickAbstractAnimation> *list, qsizetype index)
 {
     if (auto q = qmlobject_cast<QQuickAnimationGroup *>(list->object))
         return q->d_func()->animations.at(index);
     return nullptr;
 }
 
-int QQuickAnimationGroupPrivate::count_animation(QQmlListProperty<QQuickAbstractAnimation> *list)
+qsizetype QQuickAnimationGroupPrivate::count_animation(QQmlListProperty<QQuickAbstractAnimation> *list)
 {
     if (auto q = qmlobject_cast<QQuickAnimationGroup *>(list->object))
         return q->d_func()->animations.count();
@@ -1750,7 +1750,7 @@ void QQuickAnimationGroupPrivate::clear_animation(QQmlListProperty<QQuickAbstrac
 }
 
 void QQuickAnimationGroupPrivate::replace_animation(QQmlListProperty<QQuickAbstractAnimation> *list,
-                                                    int i, QQuickAbstractAnimation *a)
+                                                    qsizetype i, QQuickAbstractAnimation *a)
 {
     if (auto *q = qmlobject_cast<QQuickAnimationGroup *>(list->object)) {
         if (QQuickAbstractAnimation *anim = q->d_func()->animations.at(i))

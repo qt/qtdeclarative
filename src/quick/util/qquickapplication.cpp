@@ -113,12 +113,12 @@ void QQuickApplication::setDisplayName(const QString &displayName)
     return QGuiApplication::setApplicationDisplayName(displayName);
 }
 
-int screens_count(QQmlListProperty<QQuickScreenInfo> *prop)
+qsizetype screens_count(QQmlListProperty<QQuickScreenInfo> *prop)
 {
     return static_cast<QVector<QQuickScreenInfo *> *>(prop->data)->count();
 }
 
-QQuickScreenInfo *screens_at(QQmlListProperty<QQuickScreenInfo> *prop, int idx)
+QQuickScreenInfo *screens_at(QQmlListProperty<QQuickScreenInfo> *prop, qsizetype idx)
 {
     return static_cast<QVector<QQuickScreenInfo *> *>(prop->data)->at(idx);
 }

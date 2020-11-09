@@ -256,10 +256,10 @@ public:
     : QQuickAbstractAnimationPrivate() {}
 
     static void append_animation(QQmlListProperty<QQuickAbstractAnimation> *list, QQuickAbstractAnimation *role);
-    static QQuickAbstractAnimation *at_animation(QQmlListProperty<QQuickAbstractAnimation> *list, int index);
-    static int count_animation(QQmlListProperty<QQuickAbstractAnimation> *list);
+    static QQuickAbstractAnimation *at_animation(QQmlListProperty<QQuickAbstractAnimation> *list, qsizetype index);
+    static qsizetype count_animation(QQmlListProperty<QQuickAbstractAnimation> *list);
     static void clear_animation(QQmlListProperty<QQuickAbstractAnimation> *list);
-    static void replace_animation(QQmlListProperty<QQuickAbstractAnimation> *list, int index,
+    static void replace_animation(QQmlListProperty<QQuickAbstractAnimation> *list, qsizetype index,
                                   QQuickAbstractAnimation *role);
     static void removeLast_animation(QQmlListProperty<QQuickAbstractAnimation> *list);
     QList<QQuickAbstractAnimation *> animations;

@@ -4274,13 +4274,13 @@ public:
                                          &ObjectsProvider::listAt);
     }
 
-    static int listLength(QQmlListProperty<QObject> *property)
+    static qsizetype listLength(QQmlListProperty<QObject> *property)
     {
         auto objectsProvider = qobject_cast<ObjectsProvider*>(property->object);
         return objectsProvider ? objectsProvider->m_objects.length() : 0;
     }
 
-    static QObject* listAt(QQmlListProperty<QObject> *property, int index)
+    static QObject* listAt(QQmlListProperty<QObject> *property, qsizetype index)
     {
         auto objectsProvider = qobject_cast<ObjectsProvider*>(property->object);
         return objectsProvider ? objectsProvider->m_objects.at(index) : nullptr;

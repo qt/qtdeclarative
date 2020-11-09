@@ -324,7 +324,7 @@ Returns the list element at \a index, or 0 if the operation failed.
 
 \sa canAt()
 */
-QObject *QQmlListReference::at(int index) const
+QObject *QQmlListReference::at(qsizetype index) const
 {
     if (!canAt()) return nullptr;
 
@@ -348,7 +348,7 @@ bool QQmlListReference::clear() const
 /*!
 Returns the number of objects in the list, or 0 if the operation failed.
 */
-int QQmlListReference::count() const
+qsizetype QQmlListReference::count() const
 {
     if (!canCount()) return 0;
 
@@ -361,7 +361,7 @@ Returns true if the operation succeeded, otherwise false.
 
 \sa canReplace()
 */
-bool QQmlListReference::replace(int index, QObject *object) const
+bool QQmlListReference::replace(qsizetype index, QObject *object) const
 {
     if (!canReplace())
         return false;
@@ -602,7 +602,7 @@ Append the \a value to the list \a property.
 /*!
 \typedef QQmlListProperty::CountFunction
 
-Synonym for \c {int (*)(QQmlListProperty<T> *property)}.
+Synonym for \c {qsizetype (*)(QQmlListProperty<T> *property)}.
 
 Return the number of elements in the list \a property.
 */
@@ -616,7 +616,7 @@ Returns true if this QQmlListProperty is equal to \a other, otherwise false.
 /*!
 \typedef QQmlListProperty::AtFunction
 
-Synonym for \c {T *(*)(QQmlListProperty<T> *property, int index)}.
+Synonym for \c {T *(*)(QQmlListProperty<T> *property, qsizetype index)}.
 
 Return the element at position \a index in the list \a property.
 */
@@ -632,7 +632,7 @@ Clear the list \a property.
 /*!
 \typedef QQmlListProperty::ReplaceFunction
 
-Synonym for \c {void (*)(QQmlListProperty<T> *property, int index, T *value)}.
+Synonym for \c {void (*)(QQmlListProperty<T> *property, qsizetype index, T *value)}.
 
 Replace the element at position \a index in the list \a property with \a value.
 */

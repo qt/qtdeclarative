@@ -67,8 +67,8 @@ public:
 
     bool isValid() const;
 
-    int count() const;
-    QVariant at(int) const;
+    qsizetype count() const;
+    QVariant at(qsizetype) const;
 
     enum Type { Invalid, StringList, VariantList, ObjectList, ListProperty, Instance, Integer };
     Type type() const { return m_type; }

@@ -75,15 +75,15 @@ public:
     QQmlObjectModelPrivate() : QObjectPrivate(), moveId(0) {}
 
     static void children_append(QQmlListProperty<QObject> *prop, QObject *item) {
-        int index = static_cast<QQmlObjectModelPrivate *>(prop->data)->children.count();
+        qsizetype index = static_cast<QQmlObjectModelPrivate *>(prop->data)->children.count();
         static_cast<QQmlObjectModelPrivate *>(prop->data)->insert(index, item);
     }
 
-    static int children_count(QQmlListProperty<QObject> *prop) {
+    static qsizetype children_count(QQmlListProperty<QObject> *prop) {
         return static_cast<QQmlObjectModelPrivate *>(prop->data)->children.count();
     }
 
-    static QObject *children_at(QQmlListProperty<QObject> *prop, int index) {
+    static QObject *children_at(QQmlListProperty<QObject> *prop, qsizetype index) {
         return static_cast<QQmlObjectModelPrivate *>(prop->data)->children.at(index).item;
     }
 
@@ -91,7 +91,7 @@ public:
         static_cast<QQmlObjectModelPrivate *>(prop->data)->clear();
     }
 
-    static void children_replace(QQmlListProperty<QObject> *prop, int index, QObject *item) {
+    static void children_replace(QQmlListProperty<QObject> *prop, qsizetype index, QObject *item) {
         static_cast<QQmlObjectModelPrivate *>(prop->data)->replace(index, item);
     }
 
