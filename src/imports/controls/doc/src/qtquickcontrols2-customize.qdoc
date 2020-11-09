@@ -329,8 +329,8 @@
     style will illustrate the elevation with a drop shadow; the higher the
     elevation, the larger the shadow.
 
-    The first step is to \l {Creating Qt Quick Projects}{create a new Qt Quick
-    Controls 2 application} in Qt Creator. After that, we
+    The first step is to \l {Qt Creator: Project Types}{create a new Qt Quick
+    Controls application} in Qt Creator. After that, we
     \l {Qt Creator: Creating C++ Classes}{add a C++ type} that stores the elevation. Since
     the type will be used for every control supported by our style, and because
     we may wish to add other attached properties later on, we'll call it

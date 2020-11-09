@@ -29,3 +29,8 @@
     \externalpage https://doc.qt.io/qt-5/qtquickcontrols2-differences.html
     \title Qt 5.15: Qt Quick Controls vs Qt Quick Controls 1
 */
+
+/*!
+    \externalpage https://doc.qt.io/qtcreator/creator-project-creating.html#selecting-project-type
+    \title Qt Creator: Project Types
+*/
