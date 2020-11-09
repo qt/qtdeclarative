@@ -504,7 +504,7 @@ void QQmlTableInstanceModelIncubationTask::statusChanged(QQmlIncubator::Status s
     tableInstanceModel->incubatorStatusChanged(this, status);
 }
 
-#include "moc_qqmltableinstancemodel_p.cpp"
-
 QT_END_NAMESPACE
+
+#include "moc_qqmltableinstancemodel_p.cpp"
 
