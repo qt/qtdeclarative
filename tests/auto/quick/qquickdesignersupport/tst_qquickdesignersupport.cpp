@@ -62,7 +62,69 @@ private slots:
     void testNotifyPropertyChangeCallBack();
     void testFixResourcePathsForObjectCallBack();
     void testComponentOnCompleteSignal();
+    void testSimpleBindings();
+    void testDotProperties();
+    void testItemReparenting();
 };
+
+
+static bool isList(const QQmlProperty &property)
+{
+    return property.propertyTypeCategory() == QQmlProperty::List;
+}
+
+static bool isObject(const QQmlProperty &property)
+{
+    return property.isValid() && (property.propertyTypeCategory() == QQmlProperty::Object
+                                  || !strcmp(property.propertyTypeName(), "QVariant"));
+}
+
+static QVariant objectToVariant(QObject *object)
+{
+    return QVariant::fromValue(object);
+}
+
+void addToNewProperty(QObject *object, QObject *newParent, const QByteArray &newParentProperty)
+{
+    QQmlProperty property(newParent, QString::fromUtf8(newParentProperty));
+
+    if (object)
+        object->setParent(newParent);
+
+    if (isList(property)) {
+        QQmlListReference list = qvariant_cast<QQmlListReference>(property.read());
+        list.append(object);
+    } else if (isObject(property)) {
+        property.write(objectToVariant(object));
+
+        if (QQuickItem *item = qobject_cast<QQuickItem *>(object))
+            if (QQuickItem *newParentItem = qobject_cast<QQuickItem *>(newParent))
+                item->setParentItem(newParentItem);
+    }
+
+    Q_ASSERT(objectToVariant(object).isValid());
+}
+
+static void removeObjectFromList(const QQmlProperty &property, QObject *objectToBeRemoved, QQmlEngine * engine)
+{
+    QQmlListReference listReference(property.object(), property.name().toUtf8(), engine);
+
+    int count = listReference.count();
+
+    QObjectList objectList;
+
+    for (int i = 0; i < count; i ++) {
+        QObject *listItem = listReference.at(i);
+        if (listItem && listItem != objectToBeRemoved)
+            objectList.append(listItem);
+    }
+
+    listReference.clear();
+
+    for (QObject *object : objectList)
+        listReference.append(object);
+}
+
 
 void tst_qquickdesignersupport::customData()
 {
@@ -598,6 +660,107 @@ void tst_qquickdesignersupport::testComponentOnCompleteSignal()
     }
 }
 
+
+void tst_qquickdesignersupport::testSimpleBindings()
+{
+    QScopedPointer<QQuickView> view(new QQuickView);
+    view->engine()->setOutputWarningsToStandardError(false);
+    view->setSource(testFileUrl("bindingTest.qml"));
+
+    QVERIFY(view->errors().isEmpty());
+    QQuickItem *rootItem = view->rootObject();
+    QVERIFY(rootItem);
+
+    QQuickItem *text = findItem<QQuickItem>(rootItem, QLatin1String("text"));
+    QVERIFY(text);
+
+    QQuickItem *item = findItem<QQuickItem>(rootItem, QLatin1String("item"));
+    QVERIFY(item);
+
+    QQuickDesignerSupportProperties::registerNodeInstanceMetaObject(item, view->engine());
+    QQuickDesignerSupportProperties::registerNodeInstanceMetaObject(text, view->engine());
+
+    QQuickDesignerSupportProperties::registerCustomData(item);
+    QQuickDesignerSupportProperties::registerCustomData(text);
+
+    QVERIFY(QQuickDesignerSupportProperties::hasBindingForProperty(text,
+                                                                   QQmlEngine::contextForObject(text),
+                                                                   "text",
+                                                                   nullptr));
+
+    QQuickDesignerSupportProperties::doResetProperty(text, QQmlEngine::contextForObject(text),  "text");
+
+
+    QQuickDesignerSupportProperties::setPropertyBinding(text,
+                                                        QQmlEngine::contextForObject(text),
+                                                        "text",
+                                                        "qsTr(\"someText\")");
+
+    QVERIFY(QQuickDesignerSupportProperties::hasBindingForProperty(text,
+                                                                   QQmlEngine::contextForObject(text),
+                                                                   "text",
+                                                                   nullptr));
+}
+
+void tst_qquickdesignersupport::testDotProperties()
+{
+    QScopedPointer<QQuickView> view(new QQuickView);
+    view->engine()->setOutputWarningsToStandardError(false);
+    view->setSource(testFileUrl("bindingTest.qml"));
+
+    QVERIFY(view->errors().isEmpty());
+    QQuickItem *rootItem = view->rootObject();
+    QVERIFY(rootItem);
+
+    QQuickItem *text = findItem<QQuickItem>(rootItem, QLatin1String("text"));
+    QVERIFY(text);
+
+    QQuickItem *item = findItem<QQuickItem>(rootItem, QLatin1String("item"));
+    QVERIFY(item);
+
+    QQuickDesignerSupportProperties::registerNodeInstanceMetaObject(item, view->engine());
+    QQuickDesignerSupportProperties::registerNodeInstanceMetaObject(text, view->engine());
+
+    QQuickDesignerSupportProperties::registerCustomData(item);
+    QQuickDesignerSupportProperties::registerCustomData(text);
+
+    QCOMPARE(text->property("font.bold").value<QColor>(), QColor("true"));
+    QCOMPARE(text->property("font.italic").value<QColor>(), QColor("false"));
+    QCOMPARE(text->property("font.underline").value<QColor>(), QColor("false"));
+
+    QQmlProperty property(text, "font.capitalization");
+}
+
+void  tst_qquickdesignersupport::testItemReparenting()
+{
+
+    QScopedPointer<QQuickView> view(new QQuickView);
+    view->engine()->setOutputWarningsToStandardError(false);
+    view->setSource(testFileUrl("bindingTest.qml"));
+
+    QVERIFY(view->errors().isEmpty());
+    QQuickItem *rootItem = view->rootObject();
+    QVERIFY(rootItem);
+
+    QQuickItem *text = findItem<QQuickItem>(rootItem, QLatin1String("text"));
+    QVERIFY(text);
+
+    QQuickItem *item = findItem<QQuickItem>(rootItem, QLatin1String("item"));
+    QVERIFY(item);
+
+    QQuickDesignerSupportProperties::registerNodeInstanceMetaObject(item, view->engine());
+    QQuickDesignerSupportProperties::registerNodeInstanceMetaObject(text, view->engine());
+
+    QQuickDesignerSupportProperties::registerCustomData(item);
+    QQuickDesignerSupportProperties::registerCustomData(text);
+
+
+    QCOMPARE(text->parentItem(), rootItem);
+    QQmlProperty childrenProperty(rootItem, "children");
+    removeObjectFromList(childrenProperty, text, view->engine());
+    addToNewProperty(text, item, "children");
+    QCOMPARE(text->parentItem(), item);
+}
 
 QTEST_MAIN(tst_qquickdesignersupport)
 

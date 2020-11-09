@@ -16,4 +16,5 @@ DISTFILES += \
     data/test.qml \
     data/componentTest.qml \
     data/Component01.qml \
-    data/Component02.qml
+    data/Component02.qml \
+    data/bindingTest.qml
