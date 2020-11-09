@@ -57,6 +57,7 @@
 
     \list
         \li \l {Qt Quick Controls QML Types}
+        \li \l {Using Qt Quick Controls types in property declarations}
     \endlist
 
     \noautolist

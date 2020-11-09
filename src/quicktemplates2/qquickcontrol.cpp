@@ -140,7 +140,8 @@ Q_LOGGING_CATEGORY(lcItemManagement, "qt.quick.controls.control.itemmanagement")
     }
     \endcode
 
-    \sa ApplicationWindow, Container
+    \sa ApplicationWindow, Container, {Using Qt Quick Controls types in
+        property declarations}
 */
 
 const QQuickItemPrivate::ChangeTypes QQuickControlPrivate::ImplicitSizeChanges = QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight | QQuickItemPrivate::Destroyed;
