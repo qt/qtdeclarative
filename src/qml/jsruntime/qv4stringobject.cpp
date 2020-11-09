@@ -653,7 +653,7 @@ ReturnedValue StringPrototype::method_padEnd(const FunctionObject *f, const Valu
         toFill -= copy;
         ch += copy;
     }
-    *ch = '\0';
+    *ch = QChar::Null;
 
     return v4->newString(padded)->asReturnedValue();
 }
@@ -695,7 +695,7 @@ ReturnedValue StringPrototype::method_padStart(const FunctionObject *f, const Va
     }
     memcpy(ch, original.constData(), oldLength*sizeof(QChar));
     ch += oldLength;
-    *ch = '\0';
+    *ch = QChar::Null;
 
     return v4->newString(padded)->asReturnedValue();
 }
