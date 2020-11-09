@@ -63,12 +63,14 @@ SOURCES += \
     $$PWD/qquickgroupgoal.cpp
 
 OTHER_FILES += \
+    $$PWD/shaders_ng/imageparticle_simplepoint.frag.qsb \
+    $$PWD/shaders_ng/imageparticle_simplepoint.vert.qsb \
+    $$PWD/shaders_ng/imageparticle_coloredpoint.frag.qsb \
+    $$PWD/shaders_ng/imageparticle_coloredpoint.vert.qsb \
     $$PWD/shaders_ng/imageparticle_colored.frag.qsb \
     $$PWD/shaders_ng/imageparticle_colored.vert.qsb \
     $$PWD/shaders_ng/imageparticle_deformed.frag.qsb \
     $$PWD/shaders_ng/imageparticle_deformed.vert.qsb \
-    $$PWD/shaders_ng/imageparticle_simple.frag.qsb \
-    $$PWD/shaders_ng/imageparticle_simple.vert.qsb \
     $$PWD/shaders_ng/imageparticle_sprite.frag.qsb \
     $$PWD/shaders_ng/imageparticle_sprite.vert.qsb \
     $$PWD/shaders_ng/imageparticle_tabled.frag.qsb \

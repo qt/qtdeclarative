@@ -69,7 +69,7 @@ class QQuickStochasticEngine;
 
 class QRhi;
 
-struct SimpleVertex {
+struct SimplePointVertex {
     float x;
     float y;
     float t;
@@ -82,6 +82,21 @@ struct SimpleVertex {
     float ay;
 };
 
+struct ColoredPointVertex {
+    float x;
+    float y;
+    float t;
+    float lifeSpan;
+    float size;
+    float endSize;
+    float vx;
+    float vy;
+    float ax;
+    float ay;
+    Color4ub color;
+};
+
+// Like Colored, but using DrawTriangles instead of DrawPoints
 struct ColoredVertex {
     float x;
     float y;
@@ -94,6 +109,9 @@ struct ColoredVertex {
     float ax;
     float ay;
     Color4ub color;
+    uchar tx;
+    uchar ty;
+    uchar _padding[2]; // feel free to use
 };
 
 struct DeformableVertex {
@@ -224,7 +242,8 @@ public:
 
     enum PerformanceLevel{//TODO: Expose?
         Unknown = 0,
-        Simple,
+        SimplePoint,
+        ColoredPoint,
         Colored,
         Deformable,
         Tabled,

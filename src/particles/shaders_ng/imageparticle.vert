@@ -13,6 +13,10 @@ layout(location = 0) in vec2 vPos;
 layout(location = 3) in vec4 vColor;
 #endif
 
+#if !defined(DEFORM) && !defined(POINT) // Color-level
+layout(location = 4) in vec2 vTex; // x = tx, y = ty
+#endif
+
 #if defined(DEFORM)
 layout(location = 4) in vec4 vDeformVec; // x,y x unit vector; z,w = y unit vector
 layout(location = 5) in vec3 vTex;  // x = tx, y = ty, z = bool autoRotate
@@ -29,7 +33,7 @@ layout(location = 0) out vec2 tt; //y is progress if Sprite mode
 
 #if defined(SPRITE)
 layout(location = 1) out vec4 fTexS;
-#elif defined(DEFORM)
+#elif !defined(POINT)
 layout(location = 1) out vec2 fTex;
 #endif
 
@@ -56,8 +60,10 @@ void main()
     if (t < 0. || t > 1.) {
 #if defined(DEFORM)
         gl_Position = ubuf.matrix * vec4(vPosRot.x, vPosRot.y, 0., 1.);
-#else
+#elif defined(POINT)
         gl_PointSize = 0.;
+#else
+        gl_Position = ubuf.matrix * vec4(vPos.x, vPos.y, 0., 1.);
 #endif
     } else {
 #if defined(SPRITE)
@@ -69,7 +75,7 @@ void main()
         // Next frame is also passed, for interpolation
         fTexS.zw = vAnimPos.zy + vTex.xy * vAnimData.xy;
 
-#elif defined(DEFORM)
+#elif !defined(POINT)
         fTex = vTex.xy;
 #endif
         float currentSize = mix(vData.z, vData.w, t * t);
@@ -90,9 +96,12 @@ void main()
         if (currentSize <= 0.) {
 #if defined(DEFORM)
             gl_Position = ubuf.matrix * vec4(vPosRot.x, vPosRot.y, 0., 1.);
-#else
+#elif defined(POINT)
             gl_PointSize = 0.;
+#else
+            gl_Position = ubuf.matrix * vec4(vPos.x, vPos.y, 0., 1.);
 #endif
+
         } else {
             if (currentSize < 3.) // Sizes too small look jittery as they move
                 currentSize = 3.;
@@ -124,11 +133,17 @@ void main()
                   + rotatedDeform.zw
                   + vVec.xy * t * vData.y         // apply velocity
                   + 0.5 * vVec.zw * pow(t * vData.y, 2.); // apply acceleration
-#else
-            pos = vPos
+#elif defined(POINT)
+            pos = vPos.xy
                   + vVec.xy * t * vData.y         // apply velocity vector..
                   + 0.5 * vVec.zw * pow(t * vData.y, 2.);
             gl_PointSize = currentSize;
+#else // non point color
+            vec2 deform = currentSize * (vTex.xy - 0.5);
+            pos = vPos.xy
+                  + deform.xy
+                  + vVec.xy * t * vData.y         // apply velocity
+                  + 0.5 * vVec.zw * pow(t * vData.y, 2.); // apply acceleration
 #endif
             gl_Position = ubuf.matrix * vec4(pos.x, pos.y, 0, 1);
 

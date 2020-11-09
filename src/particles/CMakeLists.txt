@@ -64,12 +64,14 @@ qt_internal_add_resource(QuickParticles "particles"
         ${particles_resource_files}
 )
 set(particles1_resource_files
+    "shaders_ng/imageparticle_simplepoint.frag.qsb"
+    "shaders_ng/imageparticle_simplepoint.vert.qsb"
+    "shaders_ng/imageparticle_coloredpoint.frag.qsb"
+    "shaders_ng/imageparticle_coloredpoint.vert.qsb"
     "shaders_ng/imageparticle_colored.frag.qsb"
     "shaders_ng/imageparticle_colored.vert.qsb"
     "shaders_ng/imageparticle_deformed.frag.qsb"
     "shaders_ng/imageparticle_deformed.vert.qsb"
-    "shaders_ng/imageparticle_simple.frag.qsb"
-    "shaders_ng/imageparticle_simple.vert.qsb"
     "shaders_ng/imageparticle_sprite.frag.qsb"
     "shaders_ng/imageparticle_sprite.vert.qsb"
     "shaders_ng/imageparticle_tabled.frag.qsb"

@@ -6,7 +6,7 @@ layout(location = 0) in vec2 tt;
 
 #if defined(SPRITE)
 layout(location = 1) in vec4 fTexS;
-#elif defined(DEFORM)
+#elif !defined(POINT)
 layout(location = 1) in vec2 fTex;
 #endif
 
@@ -45,11 +45,11 @@ void main()
               * fColor
               * texture(colortable, tt)
               * ubuf.opacity;
-#elif defined(DEFORM)
+#elif !defined(POINT)
     fragColor = texture(_qt_texture, fTex) * fColor * ubuf.opacity;
 #elif defined(COLOR)
     fragColor = texture(_qt_texture, gl_PointCoord) * fColor * ubuf.opacity;
-#else
+#else // simple point
     fragColor = texture(_qt_texture, gl_PointCoord) * fFade * ubuf.opacity;
 #endif
 }
