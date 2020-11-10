@@ -42,6 +42,8 @@
 #include <QtQml/qqmllist.h>
 #include <QtQml/private/qv4qmlcontext_p.h>
 #include <QtQml/private/qv4qobjectwrapper_p.h>
+#include <QtQml/private/qv4variantobject_p.h>
+#include <QtQml/private/qv4urlobject_p.h>
 #include <QtQuick/private/qquickanimation_p.h>
 #include <QtQuick/private/qquicktransition_p.h>
 
@@ -155,6 +157,13 @@ QQuickStackElement *QQuickStackViewPrivate::findElement(const QV4::Value &value)
     return nullptr;
 }
 
+static QUrl resolvedUrl(const QUrl &url, const QQmlRefPointer<QQmlContextData> &context)
+{
+    if (url.isRelative())
+        return context->resolvedUrl(url).toString();
+    return url;
+}
+
 static QString resolvedUrl(const QString &str, const QQmlRefPointer<QQmlContextData> &context)
 {
     QUrl url(str);
@@ -170,6 +179,17 @@ QQuickStackElement *QQuickStackViewPrivate::createElement(const QV4::Value &valu
         return QQuickStackElement::fromString(resolvedUrl(s->toQString(), context), q, error);
     if (const QV4::QObjectWrapper *o = value.as<QV4::QObjectWrapper>())
         return QQuickStackElement::fromObject(o->object(), q, error);
+    if (const QV4::UrlObject *u = value.as<QV4::UrlObject>())
+        return QQuickStackElement::fromString(resolvedUrl(u->href(), context), q, error);
+
+    if (const QV4::Object *v = value.as<QV4::Object>()) {
+        const QVariant data = v->engine()->toVariant(value, QMetaType::QUrl);
+        if (data.typeId() == QMetaType::QUrl) {
+            return QQuickStackElement::fromString(resolvedUrl(data.toUrl(), context).toString(), q,
+                                                  error);
+        }
+    }
+
     return nullptr;
 }
 
