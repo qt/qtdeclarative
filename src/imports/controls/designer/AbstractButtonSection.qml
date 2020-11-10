@@ -108,8 +108,8 @@ Section {
         }
 
         Label {
-            text: qsTr("Repeat")
-            tooltip: qsTr("Whether the button repeats while pressed and held down.")
+            text: qsTr("Auto-Repeat")
+            tooltip: qsTr("Whether the button repeats pressed(), released() and clicked() signals while the button is pressed and held down.")
         }
         SecondColumnLayout {
             CheckBox {

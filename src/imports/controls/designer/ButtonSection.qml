@@ -43,17 +43,7 @@ Section {
     caption: qsTr("Button")
 
     SectionLayout {
-        Label {
-            text: qsTr("AutoRepeat")
-            tooltip: qsTr("Whether the button repeats pressed(), released() and clicked() signals while the button is pressed and held down.")
-        }
-        SecondColumnLayout {
-            CheckBox {
-                text: backendValues.autoRepeat.valueToString
-                backendValue: backendValues.autoRepeat
-                Layout.fillWidth: true
-            }
-        }
+
         Label {
             text: qsTr("Flat")
             tooltip: qsTr("Whether the button is flat.")
