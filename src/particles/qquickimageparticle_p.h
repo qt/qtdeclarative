@@ -447,6 +447,8 @@ private:
 
     bool m_bypassOptimizations;
     PerformanceLevel perfLevel;
+    PerformanceLevel m_targetPerfLevel;
+    void checkPerfLevel(PerformanceLevel level);
 
     bool m_debugMode;
 

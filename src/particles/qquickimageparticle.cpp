@@ -729,6 +729,7 @@ QQuickImageParticle::QQuickImageParticle(QQuickItem* parent)
     , m_explicitAnimation(false)
     , m_bypassOptimizations(false)
     , perfLevel(Unknown)
+    , m_targetPerfLevel(Unknown)
     , m_debugMode(false)
     , m_entryEffect(Fade)
     , m_startedImageLoading(0)
@@ -842,8 +843,7 @@ void QQuickImageParticle::setColor(const QColor &color)
     m_color = color;
     emit colorChanged();
     m_explicitColor = true;
-    if (perfLevel < ColoredPoint)
-        reset();
+    checkPerfLevel(ColoredPoint);
 }
 
 void QQuickImageParticle::setColorVariation(qreal var)
@@ -853,8 +853,7 @@ void QQuickImageParticle::setColorVariation(qreal var)
     m_color_variation = var;
     emit colorVariationChanged();
     m_explicitColor = true;
-    if (perfLevel < ColoredPoint)
-        reset();
+    checkPerfLevel(ColoredPoint);
 }
 
 void QQuickImageParticle::setAlphaVariation(qreal arg)
@@ -864,8 +863,7 @@ void QQuickImageParticle::setAlphaVariation(qreal arg)
         emit alphaVariationChanged(arg);
     }
     m_explicitColor = true;
-    if (perfLevel < ColoredPoint)
-        reset();
+    checkPerfLevel(ColoredPoint);
 }
 
 void QQuickImageParticle::setAlpha(qreal arg)
@@ -875,8 +873,7 @@ void QQuickImageParticle::setAlpha(qreal arg)
         emit alphaChanged(arg);
     }
     m_explicitColor = true;
-    if (perfLevel < ColoredPoint)
-        reset();
+    checkPerfLevel(ColoredPoint);
 }
 
 void QQuickImageParticle::setRedVariation(qreal arg)
@@ -886,8 +883,7 @@ void QQuickImageParticle::setRedVariation(qreal arg)
         emit redVariationChanged(arg);
     }
     m_explicitColor = true;
-    if (perfLevel < ColoredPoint)
-        reset();
+    checkPerfLevel(ColoredPoint);
 }
 
 void QQuickImageParticle::setGreenVariation(qreal arg)
@@ -897,8 +893,7 @@ void QQuickImageParticle::setGreenVariation(qreal arg)
         emit greenVariationChanged(arg);
     }
     m_explicitColor = true;
-    if (perfLevel < ColoredPoint)
-        reset();
+    checkPerfLevel(ColoredPoint);
 }
 
 void QQuickImageParticle::setBlueVariation(qreal arg)
@@ -908,8 +903,7 @@ void QQuickImageParticle::setBlueVariation(qreal arg)
         emit blueVariationChanged(arg);
     }
     m_explicitColor = true;
-    if (perfLevel < ColoredPoint)
-        reset();
+    checkPerfLevel(ColoredPoint);
 }
 
 void QQuickImageParticle::setRotation(qreal arg)
@@ -919,8 +913,7 @@ void QQuickImageParticle::setRotation(qreal arg)
         emit rotationChanged(arg);
     }
     m_explicitRotation = true;
-    if (perfLevel < Deformable)
-        reset();
+    checkPerfLevel(Deformable);
 }
 
 void QQuickImageParticle::setRotationVariation(qreal arg)
@@ -930,8 +923,7 @@ void QQuickImageParticle::setRotationVariation(qreal arg)
         emit rotationVariationChanged(arg);
     }
     m_explicitRotation = true;
-    if (perfLevel < Deformable)
-        reset();
+    checkPerfLevel(Deformable);
 }
 
 void QQuickImageParticle::setRotationVelocity(qreal arg)
@@ -941,8 +933,7 @@ void QQuickImageParticle::setRotationVelocity(qreal arg)
         emit rotationVelocityChanged(arg);
     }
     m_explicitRotation = true;
-    if (perfLevel < Deformable)
-        reset();
+    checkPerfLevel(Deformable);
 }
 
 void QQuickImageParticle::setRotationVelocityVariation(qreal arg)
@@ -952,8 +943,7 @@ void QQuickImageParticle::setRotationVelocityVariation(qreal arg)
         emit rotationVelocityVariationChanged(arg);
     }
     m_explicitRotation = true;
-    if (perfLevel < Deformable)
-        reset();
+    checkPerfLevel(Deformable);
 }
 
 void QQuickImageParticle::setAutoRotation(bool arg)
@@ -963,8 +953,7 @@ void QQuickImageParticle::setAutoRotation(bool arg)
         emit autoRotationChanged(arg);
     }
     m_explicitRotation = true;
-    if (perfLevel < Deformable)
-        reset();
+    checkPerfLevel(Deformable);
 }
 
 void QQuickImageParticle::setXVector(QQuickDirection* arg)
@@ -974,8 +963,7 @@ void QQuickImageParticle::setXVector(QQuickDirection* arg)
         emit xVectorChanged(arg);
     }
     m_explicitDeformation = true;
-    if (perfLevel < Deformable)
-        reset();
+    checkPerfLevel(Deformable);
 }
 
 void QQuickImageParticle::setYVector(QQuickDirection* arg)
@@ -985,8 +973,7 @@ void QQuickImageParticle::setYVector(QQuickDirection* arg)
         emit yVectorChanged(arg);
     }
     m_explicitDeformation = true;
-    if (perfLevel < Deformable)
-        reset();
+    checkPerfLevel(Deformable);
 }
 
 void QQuickImageParticle::setSpritesInterpolate(bool arg)
@@ -1200,6 +1187,14 @@ QQuickParticleData* QQuickImageParticle::getShadowDatum(QQuickParticleData* datu
     return m_shadowData[datum->groupId][datum->index];
 }
 
+void QQuickImageParticle::checkPerfLevel(PerformanceLevel level)
+{
+    if (m_targetPerfLevel < level) {
+        m_targetPerfLevel = level;
+        reset();
+    }
+}
+
 bool QQuickImageParticle::loadingSomething()
 {
     return (m_image && m_image->pix.isLoading())
@@ -1318,6 +1313,8 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
 
     if (perfLevel >= ColoredPoint  && !m_color.isValid())
         m_color = QColor(Qt::white);//Hidden default, but different from unset
+
+    m_targetPerfLevel = perfLevel;
 
     clearShadows();
     if (m_material)
