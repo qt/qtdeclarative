@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Labs Platform module of the Qt Toolkit.
@@ -96,13 +96,13 @@ protected:
     QWindow *findWindow() const;
 
     static void data_append(QQmlListProperty<QObject> *property, QObject *object);
-    static int data_count(QQmlListProperty<QObject> *property);
-    static QObject *data_at(QQmlListProperty<QObject> *property, int index);
+    static qsizetype data_count(QQmlListProperty<QObject> *property);
+    static QObject *data_at(QQmlListProperty<QObject> *property, qsizetype index);
     static void data_clear(QQmlListProperty<QObject> *property);
 
     static void menus_append(QQmlListProperty<QQuickPlatformMenu> *property, QQuickPlatformMenu *menu);
-    static int menus_count(QQmlListProperty<QQuickPlatformMenu> *property);
-    static QQuickPlatformMenu *menus_at(QQmlListProperty<QQuickPlatformMenu> *property, int index);
+    static qsizetype menus_count(QQmlListProperty<QQuickPlatformMenu> *property);
+    static QQuickPlatformMenu *menus_at(QQmlListProperty<QQuickPlatformMenu> *property, qsizetype index);
     static void menus_clear(QQmlListProperty<QQuickPlatformMenu> *property);
 
 private:

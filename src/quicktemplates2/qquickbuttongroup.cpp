@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Quick Templates 2 module of the Qt Toolkit.
@@ -161,8 +161,8 @@ public:
     void setCheckState(Qt::CheckState state);
 
     static void buttons_append(QQmlListProperty<QQuickAbstractButton> *prop, QQuickAbstractButton *obj);
-    static int buttons_count(QQmlListProperty<QQuickAbstractButton> *prop);
-    static QQuickAbstractButton *buttons_at(QQmlListProperty<QQuickAbstractButton> *prop, int index);
+    static qsizetype buttons_count(QQmlListProperty<QQuickAbstractButton> *prop);
+    static QQuickAbstractButton *buttons_at(QQmlListProperty<QQuickAbstractButton> *prop, qsizetype index);
     static void buttons_clear(QQmlListProperty<QQuickAbstractButton> *prop);
 
     bool complete = true;
@@ -235,13 +235,13 @@ void QQuickButtonGroupPrivate::buttons_append(QQmlListProperty<QQuickAbstractBut
     q->addButton(obj);
 }
 
-int QQuickButtonGroupPrivate::buttons_count(QQmlListProperty<QQuickAbstractButton> *prop)
+qsizetype QQuickButtonGroupPrivate::buttons_count(QQmlListProperty<QQuickAbstractButton> *prop)
 {
     QQuickButtonGroupPrivate *p = static_cast<QQuickButtonGroupPrivate *>(prop->data);
     return p->buttons.count();
 }
 
-QQuickAbstractButton *QQuickButtonGroupPrivate::buttons_at(QQmlListProperty<QQuickAbstractButton> *prop, int index)
+QQuickAbstractButton *QQuickButtonGroupPrivate::buttons_at(QQmlListProperty<QQuickAbstractButton> *prop, qsizetype index)
 {
     QQuickButtonGroupPrivate *p = static_cast<QQuickButtonGroupPrivate *>(prop->data);
     return p->buttons.value(index);

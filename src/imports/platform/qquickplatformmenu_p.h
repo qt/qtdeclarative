@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Labs Platform module of the Qt Toolkit.
@@ -173,13 +173,13 @@ protected:
     QWindow *findWindow(QQuickItem *target, QPoint *offset) const;
 
     static void data_append(QQmlListProperty<QObject> *property, QObject *object);
-    static int data_count(QQmlListProperty<QObject> *property);
-    static QObject *data_at(QQmlListProperty<QObject> *property, int index);
+    static qsizetype data_count(QQmlListProperty<QObject> *property);
+    static QObject *data_at(QQmlListProperty<QObject> *property, qsizetype index);
     static void data_clear(QQmlListProperty<QObject> *property);
 
     static void items_append(QQmlListProperty<QQuickPlatformMenuItem> *property, QQuickPlatformMenuItem *item);
-    static int items_count(QQmlListProperty<QQuickPlatformMenuItem> *property);
-    static QQuickPlatformMenuItem *items_at(QQmlListProperty<QQuickPlatformMenuItem> *property, int index);
+    static qsizetype items_count(QQmlListProperty<QQuickPlatformMenuItem> *property);
+    static QQuickPlatformMenuItem *items_at(QQmlListProperty<QQuickPlatformMenuItem> *property, qsizetype index);
     static void items_clear(QQmlListProperty<QQuickPlatformMenuItem> *property);
 
 private Q_SLOTS:

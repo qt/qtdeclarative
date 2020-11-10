@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Labs Templates module of the Qt Toolkit.
@@ -105,8 +105,8 @@ private:
     void hoverItem();
 
     static void items_append(QQmlListProperty<QQuickPlatformMenuItem> *prop, QQuickPlatformMenuItem *obj);
-    static int items_count(QQmlListProperty<QQuickPlatformMenuItem> *prop);
-    static QQuickPlatformMenuItem *items_at(QQmlListProperty<QQuickPlatformMenuItem> *prop, int index);
+    static qsizetype items_count(QQmlListProperty<QQuickPlatformMenuItem> *prop);
+    static QQuickPlatformMenuItem *items_at(QQmlListProperty<QQuickPlatformMenuItem> *prop, qsizetype index);
     static void items_clear(QQmlListProperty<QQuickPlatformMenuItem> *prop);
 
     bool m_enabled;

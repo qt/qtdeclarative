@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Quick Templates 2 module of the Qt Toolkit.
@@ -149,8 +149,8 @@ public:
     static bool changeEnabled(QQuickAction *action, bool enabled);
 
     static void actions_append(QQmlListProperty<QQuickAction> *prop, QQuickAction *obj);
-    static int actions_count(QQmlListProperty<QQuickAction> *prop);
-    static QQuickAction *actions_at(QQmlListProperty<QQuickAction> *prop, int index);
+    static qsizetype actions_count(QQmlListProperty<QQuickAction> *prop);
+    static QQuickAction *actions_at(QQmlListProperty<QQuickAction> *prop, qsizetype index);
     static void actions_clear(QQmlListProperty<QQuickAction> *prop);
 
     bool enabled = true;
@@ -200,13 +200,13 @@ void QQuickActionGroupPrivate::actions_append(QQmlListProperty<QQuickAction> *pr
     q->addAction(obj);
 }
 
-int QQuickActionGroupPrivate::actions_count(QQmlListProperty<QQuickAction> *prop)
+qsizetype QQuickActionGroupPrivate::actions_count(QQmlListProperty<QQuickAction> *prop)
 {
     QQuickActionGroupPrivate *p = static_cast<QQuickActionGroupPrivate *>(prop->data);
     return p->actions.count();
 }
 
-QQuickAction *QQuickActionGroupPrivate::actions_at(QQmlListProperty<QQuickAction> *prop, int index)
+QQuickAction *QQuickActionGroupPrivate::actions_at(QQmlListProperty<QQuickAction> *prop, qsizetype index)
 {
     QQuickActionGroupPrivate *p = static_cast<QQuickActionGroupPrivate *>(prop->data);
     return p->actions.value(index);

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Quick Templates 2 module of the Qt Toolkit.
@@ -265,13 +265,13 @@ void QQuickMenuBarPrivate::menus_append(QQmlListProperty<QQuickMenu> *prop, QQui
     menuBar->addMenu(obj);
 }
 
-int QQuickMenuBarPrivate::menus_count(QQmlListProperty<QQuickMenu> *prop)
+qsizetype QQuickMenuBarPrivate::menus_count(QQmlListProperty<QQuickMenu> *prop)
 {
     QQuickMenuBar *menuBar = static_cast<QQuickMenuBar *>(prop->object);
     return menuBar->count();
 }
 
-QQuickMenu *QQuickMenuBarPrivate::menus_at(QQmlListProperty<QQuickMenu> *prop, int index)
+QQuickMenu *QQuickMenuBarPrivate::menus_at(QQmlListProperty<QQuickMenu> *prop, qsizetype index)
 {
     QQuickMenuBar *menuBar = static_cast<QQuickMenuBar *>(prop->object);
     return menuBar->menuAt(index);

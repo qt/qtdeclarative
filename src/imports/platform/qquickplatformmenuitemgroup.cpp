@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Labs Templates module of the Qt Toolkit.
@@ -369,13 +369,13 @@ void QQuickPlatformMenuItemGroup::items_append(QQmlListProperty<QQuickPlatformMe
     group->addItem(item);
 }
 
-int QQuickPlatformMenuItemGroup::items_count(QQmlListProperty<QQuickPlatformMenuItem> *prop)
+qsizetype QQuickPlatformMenuItemGroup::items_count(QQmlListProperty<QQuickPlatformMenuItem> *prop)
 {
     QQuickPlatformMenuItemGroup *group = static_cast<QQuickPlatformMenuItemGroup *>(prop->object);
     return group->m_items.count();
 }
 
-QQuickPlatformMenuItem *QQuickPlatformMenuItemGroup::items_at(QQmlListProperty<QQuickPlatformMenuItem> *prop, int index)
+QQuickPlatformMenuItem *QQuickPlatformMenuItemGroup::items_at(QQmlListProperty<QQuickPlatformMenuItem> *prop, qsizetype index)
 {
     QQuickPlatformMenuItemGroup *group = static_cast<QQuickPlatformMenuItemGroup *>(prop->object);
     return group->m_items.value(index);

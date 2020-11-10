@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Quick Templates 2 module of the Qt Toolkit.
@@ -92,8 +92,8 @@ public:
     static void contentData_append(QQmlListProperty<QObject> *prop, QObject *obj);
 
     static void menus_append(QQmlListProperty<QQuickMenu> *prop, QQuickMenu *obj);
-    static int menus_count(QQmlListProperty<QQuickMenu> *prop);
-    static QQuickMenu *menus_at(QQmlListProperty<QQuickMenu> *prop, int index);
+    static qsizetype menus_count(QQmlListProperty<QQuickMenu> *prop);
+    static QQuickMenu *menus_at(QQmlListProperty<QQuickMenu> *prop, qsizetype index);
     static void menus_clear(QQmlListProperty<QQuickMenu> *prop);
 
     QPalette defaultPalette() const override;

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Quick Templates 2 module of the Qt Toolkit.
@@ -81,13 +81,13 @@ public:
     void itemDestroyed(QQuickItem *item) override;
 
     static void contentData_append(QQmlListProperty<QObject> *prop, QObject *obj);
-    static int contentData_count(QQmlListProperty<QObject> *prop);
-    static QObject *contentData_at(QQmlListProperty<QObject> *prop, int index);
+    static qsizetype contentData_count(QQmlListProperty<QObject> *prop);
+    static QObject *contentData_at(QQmlListProperty<QObject> *prop, qsizetype index);
     static void contentData_clear(QQmlListProperty<QObject> *prop);
 
     static void contentChildren_append(QQmlListProperty<QQuickItem> *prop, QQuickItem *obj);
-    static int contentChildren_count(QQmlListProperty<QQuickItem> *prop);
-    static QQuickItem *contentChildren_at(QQmlListProperty<QQuickItem> *prop, int index);
+    static qsizetype contentChildren_count(QQmlListProperty<QQuickItem> *prop);
+    static QQuickItem *contentChildren_at(QQmlListProperty<QQuickItem> *prop, qsizetype index);
     static void contentChildren_clear(QQmlListProperty<QQuickItem> *prop);
 
     void updateContentWidth();
@@ -99,7 +99,7 @@ public:
     qreal contentHeight = 0;
     QObjectList contentData;
     QQmlObjectModel *contentModel = nullptr;
-    int currentIndex = -1;
+    qsizetype currentIndex = -1;
     bool updatingCurrent = false;
     QQuickItemPrivate::ChangeTypes changeTypes = Destroyed | Parent | SiblingOrder;
 };

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Labs Platform module of the Qt Toolkit.
@@ -286,13 +286,13 @@ void QQuickPlatformMenuBar::data_append(QQmlListProperty<QObject> *property, QOb
         menuBar->m_data.append(object);
 }
 
-int QQuickPlatformMenuBar::data_count(QQmlListProperty<QObject> *property)
+qsizetype QQuickPlatformMenuBar::data_count(QQmlListProperty<QObject> *property)
 {
     QQuickPlatformMenuBar *menuBar = static_cast<QQuickPlatformMenuBar *>(property->object);
     return menuBar->m_data.count();
 }
 
-QObject *QQuickPlatformMenuBar::data_at(QQmlListProperty<QObject> *property, int index)
+QObject *QQuickPlatformMenuBar::data_at(QQmlListProperty<QObject> *property, qsizetype index)
 {
     QQuickPlatformMenuBar *menuBar = static_cast<QQuickPlatformMenuBar *>(property->object);
     return menuBar->m_data.value(index);
@@ -310,13 +310,13 @@ void QQuickPlatformMenuBar::menus_append(QQmlListProperty<QQuickPlatformMenu> *p
     menuBar->addMenu(menu);
 }
 
-int QQuickPlatformMenuBar::menus_count(QQmlListProperty<QQuickPlatformMenu> *property)
+qsizetype QQuickPlatformMenuBar::menus_count(QQmlListProperty<QQuickPlatformMenu> *property)
 {
     QQuickPlatformMenuBar *menuBar = static_cast<QQuickPlatformMenuBar *>(property->object);
     return menuBar->m_menus.count();
 }
 
-QQuickPlatformMenu *QQuickPlatformMenuBar::menus_at(QQmlListProperty<QQuickPlatformMenu> *property, int index)
+QQuickPlatformMenu *QQuickPlatformMenuBar::menus_at(QQmlListProperty<QQuickPlatformMenu> *property, qsizetype index)
 {
     QQuickPlatformMenuBar *menuBar = static_cast<QQuickPlatformMenuBar *>(property->object);
     return menuBar->m_menus.value(index);

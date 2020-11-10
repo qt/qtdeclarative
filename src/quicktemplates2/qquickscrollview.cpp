@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Quick Templates 2 module of the Qt Toolkit.
@@ -149,13 +149,13 @@ public:
     void setScrollBarsInteractive(bool interactive);
 
     static void contentData_append(QQmlListProperty<QObject> *prop, QObject *obj);
-    static int contentData_count(QQmlListProperty<QObject> *prop);
-    static QObject *contentData_at(QQmlListProperty<QObject> *prop, int index);
+    static qsizetype contentData_count(QQmlListProperty<QObject> *prop);
+    static QObject *contentData_at(QQmlListProperty<QObject> *prop, qsizetype index);
     static void contentData_clear(QQmlListProperty<QObject> *prop);
 
     static void contentChildren_append(QQmlListProperty<QQuickItem> *prop, QQuickItem *obj);
-    static int contentChildren_count(QQmlListProperty<QQuickItem> *prop);
-    static QQuickItem *contentChildren_at(QQmlListProperty<QQuickItem> *prop, int index);
+    static qsizetype contentChildren_count(QQmlListProperty<QQuickItem> *prop);
+    static QQuickItem *contentChildren_at(QQmlListProperty<QQuickItem> *prop, qsizetype index);
     static void contentChildren_clear(QQmlListProperty<QQuickItem> *prop);
 
     void itemImplicitWidthChanged(QQuickItem *item) override;
@@ -346,7 +346,7 @@ void QQuickScrollViewPrivate::contentData_append(QQmlListProperty<QObject> *prop
     data.append(&data, obj);
 }
 
-int QQuickScrollViewPrivate::contentData_count(QQmlListProperty<QObject> *prop)
+qsizetype QQuickScrollViewPrivate::contentData_count(QQmlListProperty<QObject> *prop)
 {
     QQuickScrollViewPrivate *p = static_cast<QQuickScrollViewPrivate *>(prop->data);
     if (!p->flickable)
@@ -356,7 +356,7 @@ int QQuickScrollViewPrivate::contentData_count(QQmlListProperty<QObject> *prop)
     return data.count(&data);
 }
 
-QObject *QQuickScrollViewPrivate::contentData_at(QQmlListProperty<QObject> *prop, int index)
+QObject *QQuickScrollViewPrivate::contentData_at(QQmlListProperty<QObject> *prop, qsizetype index)
 {
     QQuickScrollViewPrivate *p = static_cast<QQuickScrollViewPrivate *>(prop->data);
     if (!p->flickable)
@@ -388,7 +388,7 @@ void QQuickScrollViewPrivate::contentChildren_append(QQmlListProperty<QQuickItem
     children.append(&children, item);
 }
 
-int QQuickScrollViewPrivate::contentChildren_count(QQmlListProperty<QQuickItem> *prop)
+qsizetype QQuickScrollViewPrivate::contentChildren_count(QQmlListProperty<QQuickItem> *prop)
 {
     QQuickScrollViewPrivate *p = static_cast<QQuickScrollViewPrivate *>(prop->data);
     if (!p->flickable)
@@ -398,7 +398,7 @@ int QQuickScrollViewPrivate::contentChildren_count(QQmlListProperty<QQuickItem> 
     return children.count(&children);
 }
 
-QQuickItem *QQuickScrollViewPrivate::contentChildren_at(QQmlListProperty<QQuickItem> *prop, int index)
+QQuickItem *QQuickScrollViewPrivate::contentChildren_at(QQmlListProperty<QQuickItem> *prop, qsizetype index)
 {
     QQuickScrollViewPrivate *p = static_cast<QQuickScrollViewPrivate *>(prop->data);
     if (!p->flickable)

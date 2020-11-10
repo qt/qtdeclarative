@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Quick Templates 2 module of the Qt Toolkit.
@@ -391,13 +391,13 @@ void QQuickContainerPrivate::contentData_append(QQmlListProperty<QObject> *prop,
     }
 }
 
-int QQuickContainerPrivate::contentData_count(QQmlListProperty<QObject> *prop)
+qsizetype QQuickContainerPrivate::contentData_count(QQmlListProperty<QObject> *prop)
 {
     QQuickContainer *q = static_cast<QQuickContainer *>(prop->object);
     return QQuickContainerPrivate::get(q)->contentData.count();
 }
 
-QObject *QQuickContainerPrivate::contentData_at(QQmlListProperty<QObject> *prop, int index)
+QObject *QQuickContainerPrivate::contentData_at(QQmlListProperty<QObject> *prop, qsizetype index)
 {
     QQuickContainer *q = static_cast<QQuickContainer *>(prop->object);
     return QQuickContainerPrivate::get(q)->contentData.value(index);
@@ -415,13 +415,13 @@ void QQuickContainerPrivate::contentChildren_append(QQmlListProperty<QQuickItem>
     q->addItem(item);
 }
 
-int QQuickContainerPrivate::contentChildren_count(QQmlListProperty<QQuickItem> *prop)
+qsizetype QQuickContainerPrivate::contentChildren_count(QQmlListProperty<QQuickItem> *prop)
 {
     QQuickContainer *q = static_cast<QQuickContainer *>(prop->object);
     return QQuickContainerPrivate::get(q)->contentModel->count();
 }
 
-QQuickItem *QQuickContainerPrivate::contentChildren_at(QQmlListProperty<QQuickItem> *prop, int index)
+QQuickItem *QQuickContainerPrivate::contentChildren_at(QQmlListProperty<QQuickItem> *prop, qsizetype index)
 {
     QQuickContainer *q = static_cast<QQuickContainer *>(prop->object);
     return q->itemAt(index);

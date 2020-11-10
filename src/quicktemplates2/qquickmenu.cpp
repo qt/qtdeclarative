@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Quick Templates 2 module of the Qt Toolkit.
@@ -703,13 +703,13 @@ void QQuickMenuPrivate::contentData_append(QQmlListProperty<QObject> *prop, QObj
     }
 }
 
-int QQuickMenuPrivate::contentData_count(QQmlListProperty<QObject> *prop)
+qsizetype QQuickMenuPrivate::contentData_count(QQmlListProperty<QObject> *prop)
 {
     QQuickMenu *q = static_cast<QQuickMenu *>(prop->object);
     return QQuickMenuPrivate::get(q)->contentData.count();
 }
 
-QObject *QQuickMenuPrivate::contentData_at(QQmlListProperty<QObject> *prop, int index)
+QObject *QQuickMenuPrivate::contentData_at(QQmlListProperty<QObject> *prop, qsizetype index)
 {
     QQuickMenu *q = static_cast<QQuickMenu *>(prop->object);
     return QQuickMenuPrivate::get(q)->contentData.value(index);
