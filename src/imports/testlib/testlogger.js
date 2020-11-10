@@ -39,14 +39,12 @@
 
 .pragma library
 
-// We need a global place to store the results that can be
-// shared between multiple TestCase instances.  Because QML
-// creates a separate scope for every inclusion of this file,
-// we hijack the global "Qt" object to store our data.
+var testResults = null;
+
 function log_init_results()
 {
-    if (!Qt.testResults) {
-        Qt.testResults = {
+    if (!testResults) {
+        testResults = {
             reportedStart: false,
             nextId: 0,
             testCases: []
@@ -57,40 +55,40 @@ function log_init_results()
 function log_register_test(name)
 {
     log_init_results()
-    var testId = Qt.testResults.nextId++
-    Qt.testResults.testCases.push(testId)
+    var testId = testResults.nextId++
+    testResults.testCases.push(testId)
     return testId
 }
 
 function log_optional_test(testId)
 {
     log_init_results()
-    var index = Qt.testResults.testCases.indexOf(testId)
+    var index = testResults.testCases.indexOf(testId)
     if (index >= 0)
-        Qt.testResults.testCases.splice(index, 1)
+        testResults.testCases.splice(index, 1)
 }
 
 function log_mandatory_test(testId)
 {
     log_init_results()
-    var index = Qt.testResults.testCases.indexOf(testId)
+    var index = testResults.testCases.indexOf(testId)
     if (index == -1)
-        Qt.testResults.testCases.push(testId)
+        testResults.testCases.push(testId)
 }
 
 function log_start_test()
 {
     log_init_results()
-    if (Qt.testResults.reportedStart)
+    if (testResults.reportedStart)
         return false
-    Qt.testResults.reportedStart = true
+    testResults.reportedStart = true
     return true
 }
 
 function log_complete_test(testId)
 {
-    var index = Qt.testResults.testCases.indexOf(testId)
+    var index = testResults.testCases.indexOf(testId)
     if (index >= 0)
-        Qt.testResults.testCases.splice(index, 1)
-    return Qt.testResults.testCases.length > 0
+        testResults.testCases.splice(index, 1)
+    return testResults.testCases.length > 0
 }
