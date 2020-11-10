@@ -326,7 +326,6 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
 
                 QMetaProperty vtProp = valueTypeMetaObject->property(idx);
 
-                Q_ASSERT(vtProp.userType() <= 0x0000FFFF);
                 Q_ASSERT(idx <= 0x0000FFFF);
 
                 object = currentObject;
