@@ -121,6 +121,7 @@ private slots:
     void empty_element_warning_data();
     void datetime();
     void datetime_data();
+    void url();
     void about_to_be_signals();
     void modify_through_delegate();
     void bindingsOnGetResult();
@@ -1390,6 +1391,16 @@ void tst_qqmllistmodel::datetime_data()
     QTest::newRow("dt2") << "{append({'date':dt0});set(0,{'date':dt1});get(0).date}" << dt1;
     QTest::newRow("dt3") << "{append({'date':dt0});get(0).date=undefined;get(0).date}" << dt;
     QTest::newRow("dt4") << "{append({'date':dt0});setProperty(0,'date',dt1);get(0).date}" << dt1;
+}
+
+void tst_qqmllistmodel::url()
+{
+    QQmlEngine engine;
+    QQmlComponent comp(&engine, testFileUrl("urls.qml"));
+    QScopedPointer<QObject> o {comp.create()};
+    QVERIFY(o);
+    QCOMPARE(o->property("result1").toUrl(), QUrl("http://qt.io"));
+    QCOMPARE(o->property("result2").toUrl(), QUrl("http://qt-project.org"));
 }
 
 void tst_qqmllistmodel::datetime()

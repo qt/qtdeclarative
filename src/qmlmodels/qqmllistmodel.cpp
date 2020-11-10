@@ -50,6 +50,7 @@
 
 #include <private/qv4object_p.h>
 #include <private/qv4dateobject_p.h>
+#include <private/qv4urlobject_p.h>
 #include <private/qv4objectiterator_p.h>
 #include <private/qv4alloca_p.h>
 #include <private/qv4lookup_p.h>
@@ -89,7 +90,7 @@ static QString roleTypeName(ListLayout::Role::DataType t)
     static const QString roleTypeNames[] = {
         QStringLiteral("String"), QStringLiteral("Number"), QStringLiteral("Bool"),
         QStringLiteral("List"), QStringLiteral("QObject"), QStringLiteral("VariantMap"),
-        QStringLiteral("DateTime"), QStringLiteral("Function")
+        QStringLiteral("DateTime"), QStringLiteral("Url"), QStringLiteral("Function")
     };
 
     if (t > ListLayout::Role::Invalid && t < ListLayout::Role::MaxDataType)
@@ -128,8 +129,8 @@ const ListLayout::Role &ListLayout::getRoleOrCreate(QV4::String *key, Role::Data
 
 const ListLayout::Role &ListLayout::createRole(const QString &key, ListLayout::Role::DataType type)
 {
-    const int dataSizes[] = { sizeof(StringOrTranslation), sizeof(double), sizeof(bool), sizeof(ListModel *), sizeof(QPointer<QObject>), sizeof(QVariantMap), sizeof(QDateTime), sizeof(QJSValue) };
-    const int dataAlignments[] = { sizeof(StringOrTranslation), sizeof(double), sizeof(bool), sizeof(ListModel *), sizeof(QObject *), sizeof(QVariantMap), sizeof(QDateTime), sizeof(QJSValue) };
+    const int dataSizes[] = { sizeof(StringOrTranslation), sizeof(double), sizeof(bool), sizeof(ListModel *), sizeof(QPointer<QObject>), sizeof(QVariantMap), sizeof(QDateTime), sizeof(QUrl), sizeof(QJSValue) };
+    const int dataAlignments[] = { sizeof(StringOrTranslation), sizeof(double), sizeof(bool), sizeof(ListModel *), sizeof(QObject *), sizeof(QVariantMap), sizeof(QDateTime), sizeof(QUrl), sizeof(QJSValue) };
 
     Role *r = new Role;
     r->name = key;
@@ -226,6 +227,7 @@ const ListLayout::Role *ListLayout::getRoleOrCreate(const QString &key, const QV
         case QMetaType::QString:      type = Role::String;      break;
         case QMetaType::QVariantMap:         type = Role::VariantMap;  break;
         case QMetaType::QDateTime:    type = Role::DateTime;    break;
+    case QMetaType::QUrl:            type = Role::Url;         break;
         default:    {
             if (data.userType() == qMetaTypeId<QJSValue>() &&
                 data.value<QJSValue>().isCallable()) {
@@ -587,6 +589,10 @@ void ListModel::set(int elementIndex, QV4::Object *object, QVector<int> *roles)
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::DateTime);
             QDateTime dt = dd->toQDateTime();
             roleIndex = e->setDateTimeProperty(r, dt);
+        } else if (QV4::UrlObject *url = propertyValue->as<QV4::UrlObject>()) {
+            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Url);
+            QUrl qurl = QUrl(url->href());
+            roleIndex = e->setUrlProperty(r, qurl);
         } else if (QV4::FunctionObject *f = propertyValue->as<QV4::FunctionObject>()) {
             const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Function);
             QV4::ScopedFunctionObject func(scope, f);
@@ -599,6 +605,11 @@ void ListModel::set(int elementIndex, QV4::Object *object, QVector<int> *roles)
                 const ListLayout::Role &role = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::QObject);
                 if (role.type == ListLayout::Role::QObject)
                     roleIndex = e->setQObjectProperty(role, o);
+            } else if (QVariant maybeUrl = o->engine()->toVariant(o->asReturnedValue(), QMetaType::QUrl, true);
+                       maybeUrl.metaType() == QMetaType::fromType<QUrl>()) {
+                const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Url);
+                QUrl qurl = maybeUrl.toUrl();
+                roleIndex = e->setUrlProperty(r, qurl);
             } else {
                 const ListLayout::Role &role = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::VariantMap);
                 if (role.type == ListLayout::Role::VariantMap) {
@@ -673,6 +684,12 @@ void ListModel::set(int elementIndex, QV4::Object *object, ListModel::SetElement
                 QDateTime dt = date->toQDateTime();
                 e->setDateTimePropertyFast(r, dt);
             }
+        } else if (QV4::UrlObject *url = propertyValue->as<QV4::UrlObject>()){
+            const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Url);
+            if (r.type == ListLayout::Role::Url) {
+                QUrl qurl = QUrl(url->href()); // does what the private UrlObject->toQUrl would do
+                e->setUrlPropertyFast(r, qurl);
+            }
         } else if (QV4::Object *o = propertyValue->as<QV4::Object>()) {
             if (QV4::QObjectWrapper *wrapper = o->as<QV4::QObjectWrapper>()) {
                 QObject *o = wrapper->object();
@@ -680,6 +697,15 @@ void ListModel::set(int elementIndex, QV4::Object *object, ListModel::SetElement
                 if (r.type == ListLayout::Role::QObject)
                     e->setQObjectPropertyFast(r, o);
             } else {
+                QVariant maybeUrl = o->engine()->toVariant(o->asReturnedValue(), QMetaType::QUrl, true);
+                if (maybeUrl.metaType() == QMetaType::fromType<QUrl>()) {
+                    const QUrl qurl = maybeUrl.toUrl();
+                    const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Url);
+                    if (r.type == ListLayout::Role::Url) {
+                        e->setUrlPropertyFast(r, qurl);
+                    }
+                    return;
+                }
                 const ListLayout::Role &role = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::VariantMap);
                 if (role.type == ListLayout::Role::VariantMap)
                     e->setVariantMapFast(role, o);
@@ -823,6 +849,17 @@ QDateTime *ListElement::getDateTimeProperty(const ListLayout::Role &role)
     return dt;
 }
 
+QUrl *ListElement::getUrlProperty(const ListLayout::Role &role)
+{
+    QUrl *url = nullptr;
+
+    char *mem = getPropertyMemory(role);
+    if (isMemoryUsed<QUrl>(mem))
+        url = reinterpret_cast<QUrl *>(mem);
+
+    return url;
+}
+
 QJSValue *ListElement::getFunctionProperty(const ListLayout::Role &role)
 {
     QJSValue *f = nullptr;
@@ -924,6 +961,14 @@ QVariant ListElement::getProperty(const ListLayout::Role &role, const QQmlListMo
                 if (isMemoryUsed<QDateTime>(mem)) {
                     QDateTime *dt = reinterpret_cast<QDateTime *>(mem);
                     data = *dt;
+                }
+            }
+            break;
+        case ListLayout::Role::Url:
+            {
+                if (isMemoryUsed<QUrl>(mem)) {
+                    QUrl *url = reinterpret_cast<QUrl *>(mem);
+                    data = *url;
                 }
             }
             break;
@@ -1099,6 +1144,23 @@ int ListElement::setDateTimeProperty(const ListLayout::Role &role, const QDateTi
     return roleIndex;
 }
 
+int ListElement::setUrlProperty(const ListLayout::Role &role, const QUrl &url)
+{
+    int roleIndex = -1;
+
+    if (role.type == ListLayout::Role::Url) {
+        char *mem = getPropertyMemory(role);
+        if (isMemoryUsed<QUrl>(mem)) {
+            QUrl *qurl = reinterpret_cast<QUrl *>(mem);
+            qurl->~QUrl();
+        }
+        new (mem) QUrl(url);
+        roleIndex = role.index;
+    }
+
+    return roleIndex;
+}
+
 int ListElement::setFunctionProperty(const ListLayout::Role &role, const QJSValue &f)
 {
     int roleIndex = -1;
@@ -1177,6 +1239,12 @@ void ListElement::setDateTimePropertyFast(const ListLayout::Role &role, const QD
     new (mem) QDateTime(dt);
 }
 
+void ListElement::setUrlPropertyFast(const ListLayout::Role &role, const QUrl &url)
+{
+    char *mem = getPropertyMemory(role);
+    new (mem) QUrl(url);
+}
+
 void ListElement::setFunctionPropertyFast(const ListLayout::Role &role, const QJSValue &f)
 {
     char *mem = getPropertyMemory(role);
@@ -1203,6 +1271,9 @@ void ListElement::clearProperty(const ListLayout::Role &role)
         break;
     case ListLayout::Role::DateTime:
         setDateTimeProperty(role, QDateTime());
+        break;
+    case ListLayout::Role::Url:
+        setUrlProperty(role, QUrl());
         break;
     case ListLayout::Role::VariantMap:
         setVariantMapProperty(role, (QVariantMap *)nullptr);
@@ -1336,6 +1407,13 @@ void ListElement::destroy(ListLayout *layout)
                             dt->~QDateTime();
                     }
                     break;
+                case ListLayout::Role::Url:
+                    {
+                        QUrl *url = getUrlProperty(r);
+                        if (url)
+                            url->~QUrl();
+                        break;
+                    }
                 case ListLayout::Role::Function:
                     {
                         QJSValue *f = getFunctionProperty(r);
@@ -1388,6 +1466,9 @@ int ListElement::setVariantProperty(const ListLayout::Role &role, const QVariant
         case ListLayout::Role::DateTime:
             roleIndex = setDateTimeProperty(role, d.toDateTime());
             break;
+        case ListLayout::Role::Url:
+            roleIndex = setUrlProperty(role, d.toUrl());
+            break;
         case ListLayout::Role::Function:
             roleIndex = setFunctionProperty(role, d.value<QJSValue>());
             break;
@@ -1433,6 +1514,10 @@ int ListElement::setJsProperty(const ListLayout::Role &role, const QV4::Value &d
         QV4::Scoped<QV4::DateObject> dd(scope, d);
         QDateTime dt = dd->toQDateTime();
         roleIndex = setDateTimeProperty(role, dt);
+    } else if (d.as<QV4::UrlObject>()) {
+        QV4::Scoped<QV4::UrlObject> url(scope, d);
+        QUrl qurl = QUrl(url->href());
+        roleIndex = setUrlProperty(role, qurl);
     } else if (d.as<QV4::FunctionObject>()) {
         QV4::ScopedFunctionObject f(scope, d);
         QJSValue jsv;
@@ -1446,6 +1531,11 @@ int ListElement::setJsProperty(const ListLayout::Role &role, const QV4::Value &d
             roleIndex = setQObjectProperty(role, o);
         } else if (role.type == ListLayout::Role::VariantMap) {
             roleIndex = setVariantMapProperty(role, o);
+        } else if (role.type == ListLayout::Role::Url) {
+            QVariant maybeUrl = o->engine()->toVariant(o.asReturnedValue(), QMetaType::QUrl, true);
+            if (maybeUrl.metaType() == QMetaType::fromType<QUrl>()) {
+                roleIndex = setUrlProperty(role, maybeUrl.toUrl());
+            }
         }
     } else if (d.isNullOrUndefined()) {
         clearProperty(role);

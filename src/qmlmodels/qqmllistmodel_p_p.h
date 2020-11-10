@@ -216,6 +216,7 @@ public:
             QObject,
             VariantMap,
             DateTime,
+            Url,
             Function,
 
             MaxDataType
@@ -305,6 +306,7 @@ private:
     int setVariantMapProperty(const ListLayout::Role &role, QV4::Object *o);
     int setVariantMapProperty(const ListLayout::Role &role, QVariantMap *m);
     int setDateTimeProperty(const ListLayout::Role &role, const QDateTime &dt);
+    int setUrlProperty(const ListLayout::Role &role, const QUrl &url);
     int setFunctionProperty(const ListLayout::Role &role, const QJSValue &f);
     int setTranslationProperty(const ListLayout::Role &role, const QV4::CompiledData::Binding *b);
 
@@ -315,6 +317,7 @@ private:
     void setListPropertyFast(const ListLayout::Role &role, ListModel *m);
     void setVariantMapFast(const ListLayout::Role &role, QV4::Object *o);
     void setDateTimePropertyFast(const ListLayout::Role &role, const QDateTime &dt);
+    void setUrlPropertyFast(const ListLayout::Role &role, const QUrl &url);
     void setFunctionPropertyFast(const ListLayout::Role &role, const QJSValue &f);
 
     void clearProperty(const ListLayout::Role &role);
@@ -326,6 +329,7 @@ private:
     QPointer<QObject> *getGuardProperty(const ListLayout::Role &role);
     QVariantMap *getVariantMapProperty(const ListLayout::Role &role);
     QDateTime *getDateTimeProperty(const ListLayout::Role &role);
+    QUrl *getUrlProperty(const ListLayout::Role &role);
     QJSValue *getFunctionProperty(const ListLayout::Role &role);
 
     inline char *getPropertyMemory(const ListLayout::Role &role);
