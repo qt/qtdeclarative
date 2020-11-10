@@ -33,8 +33,6 @@
 #include <QtQml/QQmlEngine>
 #include <QtQml/QQmlComponent>
 
-#define QT_FORCE_ASSERTS 1
-
 void tst_qmltyperegistrar::initTestCase()
 {
     Q_ASSERT(QCoreApplication::instance());
