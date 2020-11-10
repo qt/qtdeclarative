@@ -3757,6 +3757,14 @@ void QQuickItem::geometryChange(const QRectF &newGeometry, const QRectF &oldGeom
         emit widthChanged();
     if (change.heightChange())
         emit heightChanged();
+#if QT_CONFIG(accessibility)
+    if (QAccessible::isActive()) {
+        if (QObject *acc = QQuickAccessibleAttached::findAccessible(this)) {
+            QAccessibleEvent ev(acc, QAccessible::LocationChanged);
+            QAccessible::updateAccessibility(&ev);
+        }
+    }
+#endif
 }
 
 /*!
