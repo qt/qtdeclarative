@@ -58,5 +58,6 @@
 #define Q_QMLWORKERSCRIPT_AUTOTEST_EXPORT Q_AUTOTEST_EXPORT
 
 void Q_QMLWORKERSCRIPT_PRIVATE_EXPORT qml_register_types_QtQml_WorkerScript();
+GHS_KEEP_REFERENCE(qml_register_types_QtQml_WorkerScript);
 
 #endif // QTQMLWORKERSCRIPTGLOBAL_P_H

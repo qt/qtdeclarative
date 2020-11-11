@@ -42,6 +42,7 @@
 #include "plugin.h"
 
 extern void qml_register_types_QtQuick_Window();
+GHS_KEEP_REFERENCE(qml_register_types_QtQuick_Window);
 
 QT_BEGIN_NAMESPACE
 

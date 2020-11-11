@@ -43,6 +43,7 @@
 #include "qquickboundaryrule_p.h"
 
 extern void qml_register_types_Qt_labs_animation();
+GHS_KEEP_REFERENCE(qml_register_types_Qt_labs_animation);
 
 QT_BEGIN_NAMESPACE
 

@@ -51,6 +51,7 @@ QML_DECLARE_TYPE(QuickTestEvent)
 QML_DECLARE_TYPE(QuickTestUtil)
 
 extern void qml_register_types_QtTest();
+GHS_KEEP_REFERENCE(qml_register_types_QtTest);
 
 QT_BEGIN_NAMESPACE
 

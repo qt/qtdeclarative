@@ -43,6 +43,7 @@
 #include "qquickfolderlistmodel.h"
 
 extern void qml_register_types_Qt_labs_folderlistmodel();
+GHS_KEEP_REFERENCE(qml_register_types_Qt_labs_folderlistmodel);
 
 QT_BEGIN_NAMESPACE
 

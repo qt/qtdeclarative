@@ -51,6 +51,7 @@
 #endif
 
 extern void qml_register_types_Qt_labs_qmlmodels();
+GHS_KEEP_REFERENCE(qml_register_types_Qt_labs_qmlmodels);
 
 QT_BEGIN_NAMESPACE
 

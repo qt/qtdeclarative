@@ -49,6 +49,7 @@
 #include <qqml.h>
 
 extern void qml_register_types_QtQml_StateMachine();
+GHS_KEEP_REFERENCE(qml_register_types_QtQml_StateMachine);
 
 QT_BEGIN_NAMESPACE
 

@@ -51,6 +51,7 @@
 // We mean it.
 //
 
+#include <QtQml/qqmlextensionplugin.h>
 #include "qquickshapesglobal.h"
 
 QT_BEGIN_NAMESPACE
@@ -60,5 +61,6 @@ QT_BEGIN_NAMESPACE
 QT_END_NAMESPACE
 
 void Q_QUICKSHAPES_PRIVATE_EXPORT qml_register_types_QtQuick_Shapes();
+GHS_KEEP_REFERENCE(qml_register_types_QtQuick_Shapes);
 
 #endif // QQUICKSHAPESGLOBAL_P_H

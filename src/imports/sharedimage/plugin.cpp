@@ -100,6 +100,7 @@
 */
 
 extern void qml_register_types_Qt_labs_sharedimage();
+GHS_KEEP_REFERENCE(qml_register_types_Qt_labs_sharedimage);
 
 QT_BEGIN_NAMESPACE
 

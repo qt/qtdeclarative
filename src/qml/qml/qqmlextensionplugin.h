@@ -44,6 +44,13 @@
 #include <QtCore/QUrl>
 #include <QtQml/qqmlextensioninterface.h>
 
+#if defined(Q_CC_GHS)
+#  define GHS_PRAGMA(S) _Pragma(#S)
+#  define GHS_KEEP_REFERENCE(S) GHS_PRAGMA(ghs reference S ##__Fv)
+#else
+#  define GHS_KEEP_REFERENCE(S)
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QQmlEngine;

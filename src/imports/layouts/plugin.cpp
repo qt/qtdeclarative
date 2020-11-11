@@ -43,6 +43,7 @@
 #include "qquickstacklayout_p.h"
 
 extern void qml_register_types_QtQuick_Layouts();
+GHS_KEEP_REFERENCE(qml_register_types_QtQuick_Layouts);
 
 QT_BEGIN_NAMESPACE
 

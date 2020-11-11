@@ -59,5 +59,6 @@
 #define Q_QMLMODELS_AUTOTEST_EXPORT Q_AUTOTEST_EXPORT
 
 void Q_QMLMODELS_PRIVATE_EXPORT qml_register_types_QtQml_Models();
+GHS_KEEP_REFERENCE(qml_register_types_QtQml_Models);
 
 #endif // QTQMLMODELSGLOBAL_P_H

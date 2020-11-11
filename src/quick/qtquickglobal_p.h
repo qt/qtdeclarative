@@ -62,6 +62,7 @@
 #define Q_QUICK_PRIVATE_EXPORT Q_QUICK_EXPORT
 
 void Q_QUICK_PRIVATE_EXPORT qml_register_types_QtQuick();
+GHS_KEEP_REFERENCE(qml_register_types_QtQuick);
 
 QT_BEGIN_NAMESPACE
 
