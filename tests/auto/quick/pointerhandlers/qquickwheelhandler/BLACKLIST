@@ -1,6 +1,3 @@
 # QTBUG-81993
 [singleHandler]
 macos ci
-* # QTBUG-86729
-[nestedHandler]
-* # QTBUG-86729

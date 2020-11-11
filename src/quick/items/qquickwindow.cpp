@@ -2209,6 +2209,7 @@ bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
 bool QQuickWindowPrivate::deliverSinglePointEventUntilAccepted(QPointerEvent *event)
 {
     Q_ASSERT(event->points().count() == 1);
+    QQuickPointerHandlerPrivate::deviceDeliveryTargets(event->pointingDevice()).clear();
     QEventPoint &point = event->point(0);
     QVector<QQuickItem *> targetItems = pointerTargets(contentItem, event, point, false, false);
     point.setAccepted(false);
