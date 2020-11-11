@@ -138,31 +138,37 @@ void tst_QQuickApplicationWindow::activeFocusOnTab1()
     QVERIFY(!item->hasActiveFocus());
 
     // Tab: contentItem->sub1
-    QKeyEvent key(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
+    {
+        QKeyEvent key(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
+        QGuiApplication::sendEvent(window, &key);
+        QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(window->contentItem(), "sub1");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
+        item = findItem<QQuickItem>(window->contentItem(), "sub1");
+        QVERIFY(item);
+        QVERIFY(item->hasActiveFocus());
+    }
 
     // Tab: sub1->sub2
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
+    {
+        QKeyEvent key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
+        QGuiApplication::sendEvent(window, &key);
+        QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(window->contentItem(), "sub2");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
+        item = findItem<QQuickItem>(window->contentItem(), "sub2");
+        QVERIFY(item);
+        QVERIFY(item->hasActiveFocus());
+    }
 
     // Tab: sub2->sub1
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
+    {
+        QKeyEvent key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::NoModifier, "", false, 1);
+        QGuiApplication::sendEvent(window, &key);
+        QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(window->contentItem(), "sub1");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
+        item = findItem<QQuickItem>(window->contentItem(), "sub1");
+        QVERIFY(item);
+        QVERIFY(item->hasActiveFocus());
+    }
 }
 
 void tst_QQuickApplicationWindow::activeFocusOnTab2()
@@ -190,31 +196,37 @@ void tst_QQuickApplicationWindow::activeFocusOnTab2()
     QVERIFY(!item->hasActiveFocus());
 
     // BackTab: contentItem->sub2
-    QKeyEvent key(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
+    {
+        QKeyEvent key(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
+        QGuiApplication::sendEvent(window, &key);
+        QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(window->contentItem(), "sub2");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
+        item = findItem<QQuickItem>(window->contentItem(), "sub2");
+        QVERIFY(item);
+        QVERIFY(item->hasActiveFocus());
+    }
 
     // BackTab: sub2->sub1
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
+    {
+        QKeyEvent key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
+        QGuiApplication::sendEvent(window, &key);
+        QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(window->contentItem(), "sub1");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
+        item = findItem<QQuickItem>(window->contentItem(), "sub1");
+        QVERIFY(item);
+        QVERIFY(item->hasActiveFocus());
+    }
 
     // BackTab: sub1->sub2
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
+    {
+        QKeyEvent key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
+        QGuiApplication::sendEvent(window, &key);
+        QVERIFY(key.isAccepted());
 
-    item = findItem<QQuickItem>(window->contentItem(), "sub2");
-    QVERIFY(item);
-    QVERIFY(item->hasActiveFocus());
+        item = findItem<QQuickItem>(window->contentItem(), "sub2");
+        QVERIFY(item);
+        QVERIFY(item->hasActiveFocus());
+    }
 }
 
 void tst_QQuickApplicationWindow::defaultFocus()
