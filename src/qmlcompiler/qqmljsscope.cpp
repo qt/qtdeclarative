@@ -98,12 +98,12 @@ QQmlJSMetaMethod QQmlJSScope::method(const QString &name) const
 bool QQmlJSScope::isIdInCurrentQMlScopes(const QString &id) const
 {
     if (m_scopeType == QQmlJSScope::QMLScope)
-        return m_properties.contains(id) || m_methods.contains(id) || m_enums.contains(id);
+        return m_properties.contains(id) || m_methods.contains(id) || m_enumerations.contains(id);
 
     const auto qmlScope = findCurrentQMLScope(parentScope());
     return qmlScope->m_properties.contains(id)
             || qmlScope->m_methods.contains(id)
-            || qmlScope->m_enums.contains(id);
+            || qmlScope->m_enumerations.contains(id);
 }
 
 bool QQmlJSScope::isIdInCurrentJSScopes(const QString &id) const

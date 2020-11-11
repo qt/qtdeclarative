@@ -197,7 +197,7 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
             return true; // Access to property of JS function
 
         auto checkEnums = [&](const QQmlJSScope::ConstPtr &scope) {
-            const auto enums = scope->enums();
+            const auto enums = scope->enumerations();
             for (const auto &enumerator : enums) {
                 if (enumerator.name() == access.m_name) {
                     detectedRestrictiveKind = QLatin1String("enum");
@@ -373,7 +373,7 @@ bool CheckIdentifiers::operator()(
             const auto firstElement = root->childScopes()[0];
             if (firstElement->hasProperty(memberAccessBase.m_name)
                     || firstElement->hasMethod(memberAccessBase.m_name)
-                    || firstElement->enums().contains(memberAccessBase.m_name)) {
+                    || firstElement->enumerations().contains(memberAccessBase.m_name)) {
                 m_colorOut->writePrefixedMessage(
                             memberAccessBase.m_name
                             + QLatin1String(" is a member of the root element\n")

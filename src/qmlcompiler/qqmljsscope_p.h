@@ -166,8 +166,13 @@ public:
     bool hasMethod(const QString &name) const;
     QQmlJSMetaMethod method(const QString &name) const;
 
-    void addEnum(const QQmlJSMetaEnum &fakeEnum) { m_enums.insert(fakeEnum.name(), fakeEnum); }
-    QHash<QString, QQmlJSMetaEnum> enums() const { return m_enums; }
+    void addEnumeration(const QQmlJSMetaEnum &enumeration)
+    {
+        m_enumerations.insert(enumeration.name(), enumeration);
+    }
+    QHash<QString, QQmlJSMetaEnum> enumerations() const { return m_enumerations; }
+    QQmlJSMetaEnum enumeration(const QString &name) const { return m_enumerations.value(name); }
+    bool hasEnumeration(const QString &name) const { return m_enumerations.contains(name); }
 
     QString fileName() const { return m_fileName; }
     void setFileName(const QString &file) { m_fileName = file; }
@@ -246,7 +251,7 @@ private:
 
     QMultiHash<QString, QQmlJSMetaMethod> m_methods;
     QHash<QString, QQmlJSMetaProperty> m_properties;
-    QHash<QString, QQmlJSMetaEnum> m_enums;
+    QHash<QString, QQmlJSMetaEnum> m_enumerations;
 
     QVector<QQmlJSScope::Ptr> m_childScopes;
     QQmlJSScope::WeakPtr m_parentScope;
