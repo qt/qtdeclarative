@@ -48,6 +48,72 @@ qt_internal_add_qml_module(qtquickcontrols2plugin
 
 ## Scopes:
 #####################################################################
+
+if(QT_FEATURE_quick_designer)
+    get_target_property(__aux_qml_files_install_base qtquickcontrols2plugin QT_QML_MODULE_INSTALL_DIR)
+
+    file(GLOB_RECURSE __aux_qml_glob_files
+        RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+        "designer/images/*.png")
+    qt_path_join(__aux_qml_files_install_dir "${__aux_qml_files_install_base}" "designer/images")
+
+    qt_copy_or_install(
+        FILES
+            ${__aux_qml_glob_files}
+        DESTINATION "${__aux_qml_files_install_dir}")
+
+    qt_path_join(__aux_qml_files_install_dir "${__aux_qml_files_install_base}" "designer")
+
+    qt_copy_or_install(
+        FILES
+            designer/AbstractButtonSection.qml
+            designer/BusyIndicatorSpecifics.qml
+            designer/ButtonSection.qml
+            designer/ButtonSpecifics.qml
+            designer/CheckBoxSpecifics.qml
+            designer/CheckDelegateSpecifics.qml
+            designer/CheckSection.qml
+            designer/ComboBoxSpecifics.qml
+            designer/ContainerSection.qml
+            designer/ControlSection.qml
+            designer/ControlSpecifics.qml
+            designer/DelayButtonSpecifics.qml
+            designer/DialSpecifics.qml
+            designer/FrameSpecifics.qml
+            designer/GroupBoxSpecifics.qml
+            designer/InsetSection.qml
+            designer/ItemDelegateSection.qml
+            designer/ItemDelegateSpecifics.qml
+            designer/LabelSpecifics.qml
+            designer/PaddingSection.qml
+            designer/PageIndicatorSpecifics.qml
+            designer/PageSpecifics.qml
+            designer/PaneSection.qml
+            designer/PaneSpecifics.qml
+            designer/ProgressBarSpecifics.qml
+            designer/RadioButtonSpecifics.qml
+            designer/RadioDelegateSpecifics.qml
+            designer/RangeSliderSpecifics.qml
+            designer/RoundButtonSpecifics.qml
+            designer/ScrollViewSpecifics.qml
+            designer/SliderSpecifics.qml
+            designer/SpinBoxSpecifics.qml
+            designer/StackViewSpecifics.qml
+            designer/SwipeDelegateSpecifics.qml
+            designer/SwipeViewSpecifics.qml
+            designer/SwitchDelegateSpecifics.qml
+            designer/SwitchSpecifics.qml
+            designer/TabBarSpecifics.qml
+            designer/TabButtonSpecifics.qml
+            designer/TextAreaSpecifics.qml
+            designer/TextFieldSpecifics.qml
+            designer/ToolBarSpecifics.qml
+            designer/ToolButtonSpecifics.qml
+            designer/ToolSeparatorSpecifics.qml
+            designer/TumblerSpecifics.qml
+            designer/qtquickcontrols2.metainfo
+        DESTINATION "${__aux_qml_files_install_dir}")
+endif()
 qt_internal_add_docs(qtquickcontrols2plugin
     doc/qtquickcontrols.qdocconf
 )
