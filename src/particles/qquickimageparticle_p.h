@@ -482,6 +482,7 @@ private:
     int m_startedImageLoading;
     QRhi *m_rhi;
     bool m_apiChecked;
+    qreal m_dpr;
 };
 
 QT_END_NAMESPACE

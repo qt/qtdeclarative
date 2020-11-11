@@ -79,6 +79,7 @@ class ImageMaterialData
     float sizeTable[UNIFORM_ARRAY_SIZE];
     float opacityTable[UNIFORM_ARRAY_SIZE];
 
+    qreal dpr;
     qreal timestamp;
     qreal entry;
     QSizeF animSheetSize;
@@ -336,6 +337,9 @@ public:
         float timestamp = float(state->timestamp);
         memcpy(buf->data() + 72, &timestamp, 4);
 
+        float dpr = float(state->dpr);
+        memcpy(buf->data() + 76, &dpr, 4);
+
         return true;
     }
 
@@ -427,6 +431,9 @@ public:
 
         float timestamp = float(state->timestamp);
         memcpy(buf->data() + 72, &timestamp, 4);
+
+        float dpr = float(state->dpr);
+        memcpy(buf->data() + 76, &dpr, 4);
 
         return true;
     }
@@ -735,6 +742,7 @@ QQuickImageParticle::QQuickImageParticle(QQuickItem* parent)
     , m_startedImageLoading(0)
     , m_rhi(nullptr)
     , m_apiChecked(false)
+    , m_dpr(1.0)
 {
     setFlag(ItemHasContents);
 }
@@ -1420,6 +1428,8 @@ void QQuickImageParticle::finishBuildParticleNodes(QSGNode** node)
         }
         state->texture->setFiltering(QSGTexture::Linear);
         state->entry = (qreal) m_entryEffect;
+        state->dpr = m_dpr;
+
         m_material->setFlag(QSGMaterial::Blending | QSGMaterial::RequiresFullMatrix);
     }
     }
@@ -1531,6 +1541,8 @@ QSGNode *QQuickImageParticle::updatePaintNode(QSGNode *node, UpdatePaintNodeData
             qWarning("Failed to query QRhi, particles disabled");
             return nullptr;
         }
+        // Get the pixel ratio of the window, used for pointsize scaling
+        m_dpr = m_window ? m_window->devicePixelRatio() : 1.0;
     }
 
     if (m_pleaseReset){

@@ -23,6 +23,7 @@ layout(std140, binding = 0) uniform buf {
     float opacity;
     float entry;
     float timestamp;
+    float dpr;
     float sizetable[64];
     float opacitytable[64];
 } ubuf;

@@ -48,6 +48,7 @@ layout(std140, binding = 0) uniform buf {
     float opacity;
     float entry;
     float timestamp;
+    float dpr;
     float sizetable[64];
     float opacitytable[64];
 } ubuf;
@@ -137,7 +138,7 @@ void main()
             pos = vPos.xy
                   + vVec.xy * t * vData.y         // apply velocity vector..
                   + 0.5 * vVec.zw * pow(t * vData.y, 2.);
-            gl_PointSize = currentSize;
+            gl_PointSize = currentSize * ubuf.dpr;
 #else // non point color
             vec2 deform = currentSize * (vTex.xy - 0.5);
             pos = vPos.xy
