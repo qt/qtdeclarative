@@ -87,38 +87,55 @@ class QQuickKeyEvent : public QObject
 
 public:
     QQuickKeyEvent()
-        : event(QEvent::None, 0, { })
     {}
 
     void reset(QEvent::Type type, int key, Qt::KeyboardModifiers modifiers,
                const QString &text = QString(), bool autorep = false, ushort count = 1)
     {
-        event = QKeyEvent(type, key, modifiers, text, autorep, count);
-        event.setAccepted(false);
+        m_type = type;
+        m_key = key;
+        m_modifiers = modifiers;
+        m_text = text;
+        m_autoRepeat = autorep;
+        m_count = count;
+        setAccepted(false);
     }
 
     void reset(const QKeyEvent &ke)
     {
-        event = ke;
-        event.setAccepted(false);
+        m_type = ke.type();
+        m_key = ke.key();
+        m_modifiers = ke.modifiers();
+        m_text = ke.text();
+        m_autoRepeat = ke.isAutoRepeat();
+        m_count = ke.count();
+        m_nativeScanCode = ke.nativeScanCode();
+        setAccepted(false);
     }
 
-    int key() const { return event.key(); }
-    QString text() const { return event.text(); }
-    int modifiers() const { return event.modifiers(); }
-    bool isAutoRepeat() const { return event.isAutoRepeat(); }
-    int count() const { return event.count(); }
-    quint32 nativeScanCode() const { return event.nativeScanCode(); }
+    int key() const { return m_key; }
+    QString text() const { return m_text; }
+    int modifiers() const { return m_modifiers; }
+    bool isAutoRepeat() const { return m_autoRepeat; }
+    int count() const { return m_count; }
+    quint32 nativeScanCode() const { return m_nativeScanCode; }
 
-    bool isAccepted() { return event.isAccepted(); }
-    void setAccepted(bool accepted) { event.setAccepted(accepted); }
+    bool isAccepted() { return m_accepted; }
+    void setAccepted(bool accepted) { m_accepted = accepted; }
 
 #if QT_CONFIG(shortcut)
-    Q_REVISION(2, 2) Q_INVOKABLE bool matches(QKeySequence::StandardKey key) const { return event.matches(key); }
+    Q_REVISION(2, 2) Q_INVOKABLE bool matches(QKeySequence::StandardKey key) const;
 #endif
 
 private:
-    QKeyEvent event;
+    QString m_text;
+    quint32 m_nativeScanCode;
+    QEvent::Type m_type;
+    int m_key;
+    int m_modifiers;
+    int m_count;
+    bool m_accepted;
+    bool m_autoRepeat;
 };
 
 // used in Qt Location

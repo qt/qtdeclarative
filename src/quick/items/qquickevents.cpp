@@ -157,10 +157,10 @@ Item {
 */
 
 /*!
-    \qmlmethod bool QtQuick::KeyEvent::matches(StandardKey key)
+    \qmlmethod bool QtQuick::KeyEvent::matches(StandardKey matchKey)
     \since 5.2
 
-    Returns \c true if the key event matches the given standard \a key; otherwise returns \c false.
+    Returns \c true if the key event matches the given standard \a matchKey; otherwise returns \c false.
 
     \qml
     Item {
@@ -176,6 +176,17 @@ Item {
 
     \sa QKeySequence::StandardKey
 */
+#if QT_CONFIG(shortcut)
+bool QQuickKeyEvent::matches(QKeySequence::StandardKey matchKey) const
+{
+    // copying QKeyEvent::matches
+    uint searchkey = (modifiers() | key()) & ~(Qt::KeypadModifier | Qt::GroupSwitchModifier);
+
+    const QList<QKeySequence> bindings = QKeySequence::keyBindings(matchKey);
+    return bindings.contains(QKeySequence(searchkey));
+}
+#endif
+
 
 /*!
     \qmltype MouseEvent
