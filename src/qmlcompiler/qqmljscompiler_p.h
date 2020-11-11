@@ -77,6 +77,8 @@ public:
     virtual void setScopeObject(const QmlIR::Object *object) = 0;
     virtual std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage> compileBinding(
             const QmlIR::Binding &binding) = 0;
+    virtual std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage> compileFunction(
+            const QmlIR::Function &function) = 0;
 
     virtual QQmlJSAotFunction globalCode() const = 0;
 };

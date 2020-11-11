@@ -243,6 +243,21 @@ bool qCompileQmlFile(const QString &inputFileName, QQmlJSSaveFunction saveFuncti
                     aotFunctionsByIndex[runtimeFunctionIndices[binding.value.compiledScriptIndex]] = *func;
                 }
             });
+
+            std::for_each(object->functionsBegin(), object->functionsEnd(),
+                          [&](const QmlIR::Function &function) {
+
+                qCDebug(lcAotCompiler) << "Compiling function"
+                                       << irDocument.stringAt(function.nameIndex);
+                auto result = aotCompiler->compileFunction(function);
+                if (auto *error = std::get_if<QQmlJS::DiagnosticMessage>(&result)) {
+                    qCDebug(lcAotCompiler) << "Could not compile function:"
+                                           << diagnosticErrorMessage(inputFileName, *error);
+                } else if (auto *func = std::get_if<QQmlJSAotFunction>(&result)) {
+                    qCInfo(lcAotCompiler) << "Generated code:" << func->code;
+                    aotFunctionsByIndex[runtimeFunctionIndices[function.index]] = *func;
+                }
+            });
         }
 
         if (!checkArgumentsObjectUseInSignalHandlers(irDocument, error)) {
