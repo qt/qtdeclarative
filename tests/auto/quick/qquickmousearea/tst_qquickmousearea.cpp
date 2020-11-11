@@ -1018,8 +1018,8 @@ void tst_QQuickMouseArea::doubleClick()
     QCOMPARE(window.rootObject()->property("released").toInt(), 1);
 
     QGuiApplication::sendEvent(&window, &pressEvent);
-    pressEvent = QMouseEvent(QEvent::MouseButtonDblClick, QPoint(100, 100), button, button, {});
-    QGuiApplication::sendEvent(&window, &pressEvent);
+    QMouseEvent pressEvent2 = QMouseEvent(QEvent::MouseButtonDblClick, QPoint(100, 100), button, button, {});
+    QGuiApplication::sendEvent(&window, &pressEvent2);
     QGuiApplication::sendEvent(&window, &releaseEvent);
 
     QCOMPARE(window.rootObject()->property("clicked").toInt(), 1);
@@ -1055,8 +1055,9 @@ void tst_QQuickMouseArea::clickTwice()
     QCOMPARE(window.rootObject()->property("clicked").toInt(), 1);
 
     QGuiApplication::sendEvent(&window, &pressEvent);
-    pressEvent = QMouseEvent(QEvent::MouseButtonDblClick, QPoint(100, 100), button, button, {});
-    QGuiApplication::sendEvent(&window, &pressEvent);
+
+    QMouseEvent pressEvent2 = QMouseEvent(QEvent::MouseButtonDblClick, QPoint(100, 100), button, button, {});
+    QGuiApplication::sendEvent(&window, &pressEvent2);
     QGuiApplication::sendEvent(&window, &releaseEvent);
 
     QCOMPARE(window.rootObject()->property("pressed").toInt(), 2);
@@ -1091,8 +1092,8 @@ void tst_QQuickMouseArea::invalidClick()
     QCOMPARE(window.rootObject()->property("released").toInt(), 0);
 
     QGuiApplication::sendEvent(&window, &pressEvent);
-    pressEvent = QMouseEvent(QEvent::MouseButtonDblClick, QPoint(100, 100), button, button, {});
-    QGuiApplication::sendEvent(&window, &pressEvent);
+    QMouseEvent pressEvent2 = QMouseEvent(QEvent::MouseButtonDblClick, QPoint(100, 100), button, button, {});
+    QGuiApplication::sendEvent(&window, &pressEvent2);
     QGuiApplication::sendEvent(&window, &releaseEvent);
 
     QCOMPARE(window.rootObject()->property("clicked").toInt(), 0);

@@ -189,30 +189,39 @@ namespace QtQuickTest
 
         stateKey &= static_cast<unsigned int>(Qt::KeyboardModifierMask);
 
-        QMouseEvent me(QEvent::User, QPoint(), Qt::LeftButton, button, stateKey);
+        QEvent::Type meType;
+        Qt::MouseButton meButton;
+        Qt::MouseButtons meButtons;
         switch (action)
         {
             case MousePress:
-                me = QMouseEvent(QEvent::MouseButtonPress, pos, window->mapToGlobal(pos), button, button, stateKey);
-                me.setTimestamp(++lastMouseTimestamp);
+                meType = QEvent::MouseButtonPress;
+                meButton = button;
+                meButtons = button;
                 break;
             case MouseRelease:
-                me = QMouseEvent(QEvent::MouseButtonRelease, pos, window->mapToGlobal(pos), button, {}, stateKey);
-                me.setTimestamp(++lastMouseTimestamp);
-                lastMouseTimestamp += 500; // avoid double clicks being generated
+                meType = QEvent::MouseButtonRelease;
+                meButton = button;
+                meButtons = Qt::MouseButton();
                 break;
             case MouseDoubleClick:
-                me = QMouseEvent(QEvent::MouseButtonDblClick, pos, window->mapToGlobal(pos), button, button, stateKey);
-                me.setTimestamp(++lastMouseTimestamp);
+                meType = QEvent::MouseButtonDblClick;
+                meButton = button;
+                meButtons = button;
                 break;
             case MouseMove:
-                // with move event the button is NoButton, but 'buttons' holds the currently pressed buttons
-                me = QMouseEvent(QEvent::MouseMove, pos, window->mapToGlobal(pos), Qt::NoButton, button, stateKey);
-                me.setTimestamp(++lastMouseTimestamp);
+                meType = QEvent::MouseMove;
+                meButton = Qt::NoButton;
+                meButtons = button;
                 break;
             default:
                 QTEST_ASSERT(false);
         }
+        QMouseEvent me(meType, pos, window->mapToGlobal(pos), meButton, meButtons, stateKey);
+        me.setTimestamp(++lastMouseTimestamp);
+        if (action == MouseRelease) // avoid double clicks being generated
+            lastMouseTimestamp += 500;
+
         QSpontaneKeyEvent::setSpontaneous(&me);
         if (!qApp->notify(window, &me)) {
             static const char *mouseActionNames[] =

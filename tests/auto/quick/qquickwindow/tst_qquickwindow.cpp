@@ -327,22 +327,22 @@ public:
 protected:
     void mousePressEvent(QMouseEvent *event) override {
         qCDebug(lcTests) << event;
-        m_mouseEvents << *event;
+        m_mouseEvents << event->source();
         QQuickWindow::mousePressEvent(event);
     }
     void mouseMoveEvent(QMouseEvent *event) override {
         qCDebug(lcTests) << event;
-        m_mouseEvents << *event;
+        m_mouseEvents << event->source();
         QQuickWindow::mouseMoveEvent(event);
     }
     void mouseReleaseEvent(QMouseEvent *event) override {
         qCDebug(lcTests) << event;
-        m_mouseEvents << *event;
+        m_mouseEvents << event->source();
         QQuickWindow::mouseReleaseEvent(event);
     }
 
 public:
-    QList<QMouseEvent> m_mouseEvents;
+    QList<Qt::MouseEventSource> m_mouseEvents;
 };
 
 class MouseRecordingItem : public QQuickItem
@@ -360,30 +360,35 @@ public:
 protected:
     void touchEvent(QTouchEvent* event) override {
         event->setAccepted(m_acceptTouch);
-        m_touchEvents << *event;
+        m_touchEvents << event->type();
         qCDebug(lcTests) << "accepted?" << event->isAccepted() << event;
     }
     void mousePressEvent(QMouseEvent *event) override {
         qCDebug(lcTests) << event;
-        m_mouseEvents << *event;
+        m_mouseEvents << MouseEvent{event->type(), event->source()};
     }
     void mouseMoveEvent(QMouseEvent *event) override {
         qCDebug(lcTests) << event;
-        m_mouseEvents << *event;
+        m_mouseEvents << MouseEvent{event->type(), event->source()};
     }
     void mouseReleaseEvent(QMouseEvent *event) override {
         qCDebug(lcTests) << event;
-        m_mouseEvents << *event;
+        m_mouseEvents << MouseEvent{event->type(), event->source()};
     }
 
     void mouseDoubleClickEvent(QMouseEvent *event) override {
         qCDebug(lcTests) << event;
-        m_mouseEvents << *event;
+        m_mouseEvents << MouseEvent{event->type(), event->source()};
     }
 
 public:
-    QList<QMouseEvent> m_mouseEvents;
-    QList<QTouchEvent> m_touchEvents;
+    struct MouseEvent
+    {
+        QEvent::Type type;
+        Qt::MouseEventSource source;
+    };
+    QList<MouseEvent> m_mouseEvents;
+    QList<QEvent::Type> m_touchEvents;
 
 private:
     bool m_acceptTouch;
@@ -1263,8 +1268,8 @@ void tst_qquickwindow::synthMouseFromTouch()
     QCOMPARE(item->m_touchEvents.count(), !synthMouse && !acceptTouch ? 1 : 3);
     QCOMPARE(item->m_mouseEvents.count(), (acceptTouch || !synthMouse) ? 0 : 3);
     QCOMPARE(window->m_mouseEvents.count(), 0);
-    for (const QMouseEvent &ev : item->m_mouseEvents)
-        QCOMPARE(ev.source(), Qt::MouseEventSynthesizedByQt);
+    for (const auto &ev : item->m_mouseEvents)
+        QCOMPARE(ev.source, Qt::MouseEventSynthesizedByQt);
 }
 
 void tst_qquickwindow::synthMouseDoubleClickFromTouch_data()
@@ -1311,7 +1316,7 @@ void tst_qquickwindow::synthMouseDoubleClickFromTouch()
     QVERIFY(eventCount >= 2);
 
     const int nDoubleClicks = std::count_if(item->m_mouseEvents.constBegin(), item->m_mouseEvents.constEnd(),
-                                            [](const QMouseEvent &ev) { return (ev.type() == QEvent::MouseButtonDblClick); } );
+                                            [](const MouseRecordingItem::MouseEvent &ev) { return (ev.type == QEvent::MouseButtonDblClick); } );
     const bool foundDoubleClick = (nDoubleClicks == 1);
     QCOMPARE(foundDoubleClick, expectedSynthesizedDoubleClickEvent);
 
@@ -2114,17 +2119,21 @@ void tst_qquickwindow::requestActivate()
     //copied from src/qmltest/quicktestevent.cpp
     QPoint pos = item->mapToScene(QPointF(item->width()/2, item->height()/2)).toPoint();
 
-    QMouseEvent me(QEvent::MouseButtonPress, pos, window1->mapToGlobal(pos), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
-    QSpontaneKeyEvent::setSpontaneous(&me);
-    if (!qApp->notify(window1.data(), &me)) {
-        QString warning = QString::fromLatin1("Mouse event MousePress not accepted by receiving window");
-        QWARN(warning.toLatin1().data());
+    {
+        QMouseEvent me(QEvent::MouseButtonPress, pos, window1->mapToGlobal(pos), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+        QSpontaneKeyEvent::setSpontaneous(&me);
+        if (!qApp->notify(window1.data(), &me)) {
+            QString warning = QString::fromLatin1("Mouse event MousePress not accepted by receiving window");
+            QWARN(warning.toLatin1().data());
+        }
     }
-    me = QMouseEvent(QEvent::MouseButtonPress, pos, window1->mapToGlobal(pos), Qt::LeftButton, {}, Qt::NoModifier);
-    QSpontaneKeyEvent::setSpontaneous(&me);
-    if (!qApp->notify(window1.data(), &me)) {
-        QString warning = QString::fromLatin1("Mouse event MouseRelease not accepted by receiving window");
-        QWARN(warning.toLatin1().data());
+    {
+        QMouseEvent me = QMouseEvent(QEvent::MouseButtonPress, pos, window1->mapToGlobal(pos), Qt::LeftButton, {}, Qt::NoModifier);
+        QSpontaneKeyEvent::setSpontaneous(&me);
+        if (!qApp->notify(window1.data(), &me)) {
+            QString warning = QString::fromLatin1("Mouse event MouseRelease not accepted by receiving window");
+            QWARN(warning.toLatin1().data());
+        }
     }
 
     QTRY_COMPARE(QGuiApplication::focusWindow(), windows.at(0));

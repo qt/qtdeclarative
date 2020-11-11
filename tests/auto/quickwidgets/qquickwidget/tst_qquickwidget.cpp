@@ -60,22 +60,22 @@ public:
 protected:
     void mousePressEvent(QMouseEvent *event) override {
         qCDebug(lcTests) << event;
-        m_mouseEvents << *event;
+        m_mouseEvents << event->source();
         QQuickWidget::mousePressEvent(event);
     }
     void mouseMoveEvent(QMouseEvent *event) override {
         qCDebug(lcTests) << event;
-        m_mouseEvents << *event;
+        m_mouseEvents << event->source();
         QQuickWidget::mouseMoveEvent(event);
     }
     void mouseReleaseEvent(QMouseEvent *event) override {
         qCDebug(lcTests) << event;
-        m_mouseEvents << *event;
+        m_mouseEvents << event->source();
         QQuickWidget::mouseReleaseEvent(event);
     }
 
 public:
-    QList<QMouseEvent> m_mouseEvents;
+    QList<Qt::MouseEventSource> m_mouseEvents;
 };
 
 class MouseRecordingItem : public QQuickItem
@@ -92,25 +92,25 @@ public:
 protected:
     void touchEvent(QTouchEvent* event) override {
         event->setAccepted(m_acceptTouch);
-        m_touchEvents << *event;
+        m_touchEvents << event->type();
         qCDebug(lcTests) << "accepted?" << event->isAccepted() << event;
     }
     void mousePressEvent(QMouseEvent *event) override {
         qCDebug(lcTests) << event;
-        m_mouseEvents << *event;
+        m_mouseEvents << event->source();
     }
     void mouseMoveEvent(QMouseEvent *event) override {
         qCDebug(lcTests) << event;
-        m_mouseEvents << *event;
+        m_mouseEvents << event->source();
     }
     void mouseReleaseEvent(QMouseEvent *event) override {
         qCDebug(lcTests) << event;
-        m_mouseEvents << *event;
+        m_mouseEvents << event->source();
     }
 
 public:
-    QList<QMouseEvent> m_mouseEvents;
-    QList<QTouchEvent> m_touchEvents;
+    QList<Qt::MouseEventSource> m_mouseEvents;
+    QList<QEvent::Type> m_touchEvents;
 
 private:
     bool m_acceptTouch;
@@ -626,8 +626,8 @@ void tst_qquickwidget::synthMouseFromTouch()
     QCOMPARE(item->m_touchEvents.count(), !synthMouse && !acceptTouch ? 1 : 3);
     QCOMPARE(item->m_mouseEvents.count(), (acceptTouch || !synthMouse) ? 0 : 3);
     QCOMPARE(childView->m_mouseEvents.count(), 0);
-    for (const QMouseEvent &ev : item->m_mouseEvents)
-        QCOMPARE(ev.source(), Qt::MouseEventSynthesizedByQt);
+    for (const auto &ev : item->m_mouseEvents)
+        QCOMPARE(ev, Qt::MouseEventSynthesizedByQt);
 }
 
 void tst_qquickwidget::tabKey()

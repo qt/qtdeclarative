@@ -3589,13 +3589,15 @@ void tst_qquicktextedit::signal_editingfinished()
     QTRY_VERIFY(input1->hasActiveFocus());
     QTRY_VERIFY(!input2->hasActiveFocus());
 
-    QKeyEvent key(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-    QTRY_COMPARE(editingFinished1Spy.count(), 1);
+    {
+        QKeyEvent key(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
+        QGuiApplication::sendEvent(window, &key);
+        QVERIFY(key.isAccepted());
+        QTRY_COMPARE(editingFinished1Spy.count(), 1);
 
-    QTRY_VERIFY(!input1->hasActiveFocus());
-    QTRY_VERIFY(input2->hasActiveFocus());
+        QTRY_VERIFY(!input1->hasActiveFocus());
+        QTRY_VERIFY(input2->hasActiveFocus());
+    }
 
     QSignalSpy editingFinished2Spy(input2, SIGNAL(editingFinished()));
 
@@ -3603,13 +3605,15 @@ void tst_qquicktextedit::signal_editingfinished()
     QTRY_VERIFY(!input1->hasActiveFocus());
     QTRY_VERIFY(input2->hasActiveFocus());
 
-    key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
-    QGuiApplication::sendEvent(window, &key);
-    QVERIFY(key.isAccepted());
-    QTRY_COMPARE(editingFinished2Spy.count(), 1);
+    {
+        QKeyEvent key = QKeyEvent(QEvent::KeyPress, Qt::Key_Tab, Qt::ShiftModifier, "", false, 1);
+        QGuiApplication::sendEvent(window, &key);
+        QVERIFY(key.isAccepted());
+        QTRY_COMPARE(editingFinished2Spy.count(), 1);
 
-    QTRY_VERIFY(input1->hasActiveFocus());
-    QTRY_VERIFY(!input2->hasActiveFocus());
+        QTRY_VERIFY(input1->hasActiveFocus());
+        QTRY_VERIFY(!input2->hasActiveFocus());
+    }
 }
 
 void tst_qquicktextedit::clipRect()
