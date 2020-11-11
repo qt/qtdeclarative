@@ -127,9 +127,9 @@ private:
 };
 typedef QList<QQmlProperty> QQmlProperties;
 
-inline size_t qHash (const QQmlProperty &key)
+inline size_t qHash (const QQmlProperty &key, size_t seed = 0)
 {
-    return qHash(key.object()) + qHash(key.name());
+    return qHashMulti(seed, key.object(), key.name());
 }
 
 Q_DECLARE_TYPEINFO(QQmlProperty, Q_MOVABLE_TYPE);
