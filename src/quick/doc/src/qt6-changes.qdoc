@@ -41,6 +41,167 @@
     In this topic we summarize those changes in Qt Quick, and provide
     guidance to handle them.
 
-    \section1 ADD STUFF HERE
+
+    \section1 Changes to Qt Quick
+
+    \section2 Changes to QQuickItem
+
+    QQuickItem's geometryChanged() function was renamed to
+    \l{QQuickItem::}{geometryChange()}.
+
+    \section2 Changes to QQuickWidget
+
+    QQuickWidget is functional only when the scenegraph is rendering with
+    OpenGL. It will not be functional when using another graphics API, such as
+    Vulkan or Metal. Applications relying on QQuickWidget should force the usage
+    of OpenGL by calling
+    \c{QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGLRhi)} in their
+    main() function.
+
+
+    \section1 Changes to Qt Quick Scenegraph
+
+    Here are changes to the \l{Qt Quick Scenegraph} from Qt 5 to Qt 6.
+
+    \section2 Changes to QQuick* APIs
+
+    \list
+
+    \li Applications wishing to integrate their own set of Vulkan, Metal, or
+    Direct3D rendering commands should be aware of new QQuickWindow signals in
+    addition to QQuickWindow::beforeRendering() and afterRendering(). The
+    existing Qt 5 pattern of connecting to just beforeRendering or
+    afterRendering is often not sufficient anymore on its own, and will likely
+    need to be complemented by connecting to additional signals, such as
+    \l{QQuickWindow::beforeRenderPassRecording()}{beforeRenderPassRecording()}
+    or \l{QQuickWindow::afterRenderPassRecording()}{afterRenderPassRecording()}.
+
+    \li Applications that rely on the QQuickWindow::beforeRendering() or
+    afterRendering() signals to issue their own set of OpenGL rendering commands
+    should call QQuickWindow::beginExternalCommands() before, and
+    QQuickWindow::endExternalCommands() after, the OpenGL calls. This ensures
+    that state changes made by the application code does not lead to confusion
+    with regards to the scene graph renderer's own cached state. Note however,
+    that, just like in Qt 5, changing OpenGL 3.x or 4.x state that is not used
+    by the Qt Quick renderer can still lead to unexpected issues, so therefore
+    application are advised to reset any such OpenGL state to the default value
+    before returning from the slots or lambdas connected to these signals.
+
+    \li The existing QQuickWindow::setRenderTarget() overloads, and the
+    related getters, are removed and replaced by a new function taking a
+    QQuickRenderTarget. Applications performing redirected rendering in
+    combination with QQuickRenderControl are now expected to use this new
+    function to specify the render target in a manner that is not tied to
+    OpenGL.
+
+    \li The QQuickWindow::setSceneGraphBackend() overload taking a
+    QSGRendererInterface::GraphicsApi argument has been renamed to
+    \l{QQuickWindow::setGraphicsApi()}{setGraphicsApi()}.
+
+    \li The QQuickWindow functions setPersistentOpenGLContext and
+    isPersistentOpenGLContext are renamed, and are now
+    QQuickWindow::setPersistentGraphics() and
+    QQuickWindow::isPersistentGraphics().
+
+    \li setClearBeforeRendering() and clearBeforeRendering() have been removed
+    from QQuickWindow. There is no option for skipping the color buffer clearing
+    in Qt 6. Calling setClearBeforeRendering() was often necessary in Qt 5 in
+    combination with underlays, to prevent Qt Quick from clearing the content
+    rendered into the color buffer. In Qt 6, there is a more robust approach:
+    connecting to the \c beforeRenderPassRecording() signal,
+    that is emitted after clearing, but before rendering Qt Quick's content.
+
+
+    \li The QQuickWindow::openglContext() function has been removed. When the
+    application has ensured the scene graph is using OpenGL for rendering, it
+    can query the QOpenGLContext from QSGRendererInterface::getResource().
+
+    \li The QQuickWindow::openglContextCreated() signal has been removed.
+
+    \li The deprecated QQuickWindow::createTextureFromId() function has been
+    removed. Instead, use the fromNative() function from
+    QPlatformInterface::QSGOpenGLTexture, QPlatformInterface::QSGVulkanTexture,
+    QPlatformInterface::QSGD3D11Texture, or QPlatformInterface::QSGMetalTexture.
+    \endlist
+
+    \li The QQuickFramebufferObject class is available with an unchanged API,
+    but is only functional when the scenegraph is rendering with OpenGL. It will
+    not be functional when using another graphics API, such as Vulkan or Metal.
+    Applications relying on QQuickFramebufferObject should force the usage of
+    OpenGL by calling
+    \c{QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGLRhi)} in their
+    main() function.
+
+    \li QQuickRenderControl has a slightly changed API: grab() is now
+    removed, use QQuickWindow::grabWindow() instead, where applicable. The
+    initialize() function no longer takes a QOpenGLContext. Applications are
+    now also required to call QQuickRenderControl::beginFrame() and
+    QQuickRenderControl::endFrame() as appropriate. When multisampling is
+    desired, the new function QQuickRenderControl::setSamples() must be
+    called to indicate the sample count.
+
+    \li Applications wishing to perform Qt Quick rendering in combination
+    with an existing native graphics device or context object must take the
+    new QQuickWindow::setGraphicsDevice() function into use as
+    QQuickRenderControl no longer provides the
+    \c{initialize(QOpenGLContext*)} function.
+
+    \li Setting QQuickPaintedItem and Context2D to \c Framebuffer mode has
+    no effect. It will behave as if the mode was set to the default Image
+    mode.
+
+    \li The environment variable \c{QSG_NO_DEPTH_BUFFER} is still supported in
+    Qt 6.0, but its usage is recommended to be replaced by calling
+    \l{QQuickGraphicsConfiguration::setDepthBufferFor2D()}{setDepthBufferFor2D()}
+    on a QQuickGraphicsConfiguration that is then associated with the
+    QQuickWindow.
+
+    \endlist
+
+    \section1 Changes to QSG* APIs
+
+    \list
+
+    \li QSGMaterialShader has a changed interface. Implementations should
+    not rely on OpenGL anymore, and cannot assume that functions, such as
+    the now-removed updateState(), are called with a QOpenGLContext
+    current. In the new, data-oriented interface updateState() is replaced
+    by \l{QSGMaterialShader::updateUniformData()}{updateUniformData()},
+    \l{QSGMaterialShader::updateSampledImage()}{updateSampledImage()}, and
+    \l{QSGMaterialShader::updateGraphicsPipelineState()}{updateGraphicsPipelineState()}.
+    Instead of GLSL shader code provided as strings, shaders are now
+    expected to be preprocessed by the tools from the Qt Shader Tools
+    module, such as the \c qsb command line tool, thus ensuring the shader
+    assets are usable regardless of which graphics API (Vulkan, Metal,
+    OpenGL, or Direct 3D) is used at run time.
+
+    \li QSGEngine has been removed. In the unlikely case of an application
+    utilizing this class, it is recommended to port to using
+    QQuickRenderControl instead.
+
+    \li QSGAbstractRenderer is no longer public. The usage of this class made
+    sense only in combination with QSGEngine, and with that class being
+    removed QSGAbstractRenderer has been moved back to private.
+
+    \li The QSGSimpleMaterial convenience class has been
+    removed. Applications are expected to use the revised, OpenGL-independent
+    QSGMaterial APIs instead.
+
+    \li To access the underlying native texture object for a QSGTexture,
+    textureId() is no longer available. Instead, use
+    QSGTexture::platformInterface() with QPlatformInterface::QSGOpenGLTexture,
+    QPlatformInterface::QSGVulkanTexture, QPlatformInterface::QSGD3D11Texture,
+    or QPlatformInterface::QSGMetalTexture.
+
+    \li Subclasses of QSGImageNode are now required to override new
+    additional virtuals, such as setAnisotropyLevel() and anisotropyLevel().
+
+    \li Subclasses of QSGTexture will likely need to be redesigned. Some of
+    the OpenGL-specific virtual functions, such as bind() or
+    updateBindOptions(), are no longer present, while there are new virtuals
+    that are mandatory to implement, such as
+    \l{QSGTexture::comparisonKey()}{comparisonKey()}.
+
+    \endlist
 
 */
