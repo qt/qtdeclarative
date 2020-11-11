@@ -637,9 +637,8 @@ static inline double ParseString(const QString &s, double localTZA)
 
         for (const QString &format : formats) {
             dt = format.indexOf(QLatin1String("hh:mm")) < 0
-                ? QDateTime(QDate::fromString(s, format),
-                            QTime(0, 0, 0), Qt::UTC)
-                : QDateTime::fromString(s, format); // as local time
+                    ? QDate::fromString(s, format).startOfDay(Qt::UTC)
+                    : QDateTime::fromString(s, format); // as local time
             if (dt.isValid())
                 break;
         }
