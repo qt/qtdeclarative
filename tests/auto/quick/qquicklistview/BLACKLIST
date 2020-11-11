@@ -14,3 +14,5 @@ opensuse-leap
 ubuntu-18.04
 [touchCancel]
 * # QTBUG-86729
+[sectionsSnap]
+macos ci # QTBUG-86729
