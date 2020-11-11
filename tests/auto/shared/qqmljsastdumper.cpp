@@ -423,6 +423,7 @@ void AstDumper::endVisit(UiAnnotationList *) { stop("UiAnnotationList"); }
 
 // QQmlJS
 bool AstDumper::visit(AST::TypeExpression *el) {
+    Q_UNUSED(el);
     start("TypeExpression");
     return true;
 }

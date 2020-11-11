@@ -4373,7 +4373,7 @@ void tst_qquickvisualdatamodel::readFromProxyObject()
     auto *window = qobject_cast<QQuickWindow *>(obj.get());
     QVERIFY(window);
 
-    QCOMPARE(window->property("name").type(), QMetaType::QString);
+    QCOMPARE(window->property("name").metaType(), QMetaType(QMetaType::QString));
     QTRY_VERIFY(window->property("name").toString() != QLatin1String("wrong"));
 }
 

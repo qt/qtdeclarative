@@ -2714,10 +2714,7 @@ void tst_QQuickTableView::checkSyncView_pageFlicking()
     // needs to rebuild. This, in turn, will eventually rebuild the
     // sync children as well when they sync up later.
     LOAD_TABLEVIEW("syncviewsimple.qml");
-    GET_QML_TABLEVIEW(tableViewH);
-    GET_QML_TABLEVIEW(tableViewV);
     GET_QML_TABLEVIEW(tableViewHV);
-    QQuickTableView *views[] = {tableViewH, tableViewV, tableViewHV};
 
     auto model = TestModelAsVariant(100, 100);
 
