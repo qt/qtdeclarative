@@ -1,5 +1,0 @@
-[nestedSliderUsingTouch]
-macos # QTBUG-86729
-*
-[nestedStopAtBounds] # QTBUG-86729
-*

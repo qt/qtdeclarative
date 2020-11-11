@@ -1,22 +1,4 @@
 [nonOverlapping]
-ubuntu-16.04
-ubuntu-18.04
-opensuse-42.3
-opensuse-leap
-sles
+ubuntu-20.04
 [nested]
-ubuntu-16.04
-ubuntu-18.04
-opensuse-42.3
-opensuse-leap
-sles
-* # QTBUG-86729
-[inFlickable]
-macos # QTBUG-86729
-*
-[signalTest]
-macos # QTBUG-86729
-*
-[cancel]
-macos # QTBUG-86729
-*
+ubuntu-20.04
