@@ -160,8 +160,8 @@
 
     \qml
     import QtQuick.Controls
-    import QtQuick.Material
-    import QtQuick.Universal
+    import QtQuick.Controls.Material
+    import QtQuick.Controls.Universal
 
     ApplicationWindow {
         width: 600
@@ -190,7 +190,7 @@
     \qml
     // +Material/MainWindow.qml
 
-    import QtQuick.Material
+    import QtQuick.Controls.Material
 
     ApplicationWindow {
         Material.theme: darkMode ? Material.Dark : Material.Light
@@ -202,7 +202,7 @@
     \qml
     // +Universal/MainWindow.qml
 
-    import QtQuick.Universal
+    import QtQuick.Controls.Universal
 
     ApplicationWindow {
         Universal.theme: darkMode ? Universal.Dark : Universal.Light
