@@ -10,7 +10,8 @@ Module {
     }
 
     Component {
-        name: "var"
+        name: "QJSValue"
+        accessSemantics: "value"
         exports: ["QML/var 1.0", "QML/variant 1.0"]
         exportMetaObjectRevisions: [256]
     }
@@ -745,7 +746,7 @@ Module {
 
         Method {
             name: "parse"
-            type: "var"
+            type: "QJSValue"
 
             Parameter {
                 name: "text"
@@ -754,7 +755,7 @@ Module {
 
             Parameter {
                 name: "reviver"
-                type: "var"
+                type: "QJSValue"
             }
 
         }
@@ -765,12 +766,12 @@ Module {
 
             Parameter {
                 name: "value"
-                type: "var"
+                type: "QJSValue"
             }
 
             Parameter {
                 name: "replacer"
-                type: "var"
+                type: "QJSValue"
             }
 
             Parameter {
@@ -815,7 +816,7 @@ Module {
 
             Parameter {
                 name: "template"
-                type: "var"
+                type: "QJSValue"
             }
 
             Parameter {
@@ -959,7 +960,7 @@ Module {
 
         Method {
             name: "match"
-            type: "var"
+            type: "QJSValue"
 
             Parameter {
                 name: "that"
@@ -1018,11 +1019,11 @@ Module {
 
         Method {
             name: "search"
-            type: "var"
+            type: "QJSValue"
 
             Parameter {
                 name: "regexp"
-                type: "var"
+                type: "QJSValue"
             }
 
         }
@@ -1102,7 +1103,7 @@ Module {
 
             Parameter {
                 name: "options"
-                type: "var"
+                type: "QJSValue"
             }
 
         }
@@ -1123,7 +1124,7 @@ Module {
 
             Parameter {
                 name: "options"
-                type: "var"
+                type: "QJSValue"
             }
 
         }
@@ -1616,7 +1617,7 @@ Module {
 
             Parameter {
                 name: "key"
-                type: "var" // ignored
+                type: "QJSValue" // ignored
             }
 
         }
@@ -1632,7 +1633,7 @@ Module {
 
             Parameter {
                 name: "options"
-                type: "var"
+                type: "QJSValue"
             }
 
         }
@@ -1648,7 +1649,7 @@ Module {
 
             Parameter {
                 name: "options"
-                type: "var"
+                type: "QJSValue"
             }
 
         }
@@ -1664,7 +1665,7 @@ Module {
 
             Parameter {
                 name: "options"
-                type: "var"
+                type: "QJSValue"
             }
 
         }
@@ -1680,7 +1681,7 @@ Module {
 
             Parameter {
                 name: "options"
-                type: "var"
+                type: "QJSValue"
             }
 
         }
