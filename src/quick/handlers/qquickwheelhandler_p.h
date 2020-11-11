@@ -103,7 +103,7 @@ public:
     void setTargetTransformAroundCursor(bool ttac);
 
 Q_SIGNALS:
-    void wheel(QWheelEvent event);
+    void wheel(const QWheelEvent &event);
 
     void orientationChanged();
     void invertibleChanged();
