@@ -2016,10 +2016,8 @@ void QWindowsStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComp
                 }
 
                 QBrush oldBrush = p->brush();
-                bool oldQt4CompatiblePainting = p->testRenderHint(QPainter::Qt4CompatiblePainting);
                 p->setPen(Qt::NoPen);
                 p->setBrush(handleBrush);
-                p->setRenderHint(QPainter::Qt4CompatiblePainting);
                 Qt::BGMode oldMode = p->backgroundMode();
                 p->setBackgroundMode(Qt::OpaqueMode);
                 p->drawRect(x1, y1, x2-x1+1, y2-y1+1);
@@ -2102,7 +2100,6 @@ void QWindowsStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComp
                     p->drawLine(x2, y2-1, x2+d, y2-1-d);
                     break;
                 }
-                p->setRenderHint(QPainter::Qt4CompatiblePainting, oldQt4CompatiblePainting);
             }
         }
         break;
