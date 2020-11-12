@@ -1,7 +1,0 @@
-# QTBUG-88038
-[flickable:touch,straight]
-*
-[flickable:touch,diagonal]
-*
-[slider:touch]
-*
