@@ -36,6 +36,7 @@
 #include <QtQml/qqmlexpression.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtGui/qguiapplication.h>
+#include <private/qquickflickable_p.h>
 #include <private/qquickrectangle_p.h>
 #include <private/qquicktextedit_p.h>
 #include <private/qquicktextedit_p_p.h>
@@ -64,6 +65,8 @@
 Q_DECLARE_METATYPE(QQuickTextEdit::SelectionMode)
 Q_DECLARE_METATYPE(Qt::Key)
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
+
+Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 
 static bool isPlatformWayland()
 {
@@ -223,6 +226,12 @@ private slots:
     void keys_shortcutoverride();
 
     void transparentSelectionColor();
+
+    void inFlickableMouse_data();
+    void inFlickableMouse();
+    void inFlickableTouch_data();
+    void inFlickableTouch();
+
 private:
     void simulateKeys(QWindow *window, const QList<Key> &keys);
 #if QT_CONFIG(shortcut)
@@ -243,6 +252,8 @@ private:
     QStringList colorStrings;
 
     QQmlEngine engine;
+
+    QPointingDevice *touchDevice = QTest::createTouchDevice();
 };
 
 typedef QList<int> IntList;
@@ -3210,6 +3221,110 @@ void tst_qquicktextedit::readOnly()
     edit->setReadOnly(false);
     QCOMPARE(edit->isReadOnly(), false);
     QCOMPARE(edit->cursorPosition(), edit->text().length());
+}
+
+void tst_qquicktextedit::inFlickableMouse_data()
+{
+    QTest::addColumn<bool>("readonly");
+    QTest::addColumn<bool>("enabled");
+    QTest::addColumn<int>("expectFlickingAfter");
+    QTest::newRow("editable") << false << true << 3;
+    QTest::newRow("readonly") << true << true << 3;
+    QTest::newRow("disabled") << false << false << 3;
+}
+
+void tst_qquicktextedit::inFlickableMouse()
+{
+    QFETCH(bool, readonly);
+    QFETCH(bool, enabled);
+    QFETCH(int, expectFlickingAfter);
+
+    const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
+    QQuickView view(testFileUrl("inFlickable.qml"));
+    view.show();
+    view.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&view));
+    QQuickFlickable *flick = qobject_cast<QQuickFlickable *>(view.rootObject());
+    QVERIFY(flick);
+    QQuickTextEdit *edit = flick->findChild<QQuickTextEdit*>("text");
+    QVERIFY(edit);
+    edit->setReadOnly(readonly);
+    edit->setEnabled(enabled);
+
+    // flick with mouse
+    QPoint p(10, 100);
+    QTest::mousePress(&view, Qt::LeftButton, {}, p);
+    QObject *pressGrabber = QPointingDevicePrivate::get(QPointingDevice::primaryPointingDevice())->firstPointExclusiveGrabber();
+    // even if TextEdit is readonly, it still grabs on press.  But not if it's disabled.
+    if (enabled)
+        QCOMPARE(pressGrabber, edit);
+    else
+        QCOMPARE(pressGrabber, flick);
+    int i = 0;
+    // after a couple of events, Flickable steals the grab and starts moving
+    for (; i < 4 && !flick->isMoving(); ++i) {
+        p -= QPoint(0, dragThreshold);
+        QTest::mouseMove(&view, p);
+    }
+    QCOMPARE(flick->isMoving(), bool(expectFlickingAfter));
+    if (expectFlickingAfter) {
+        qCDebug(lcTests) << "flickable started moving after" << i << "moves, when we got to" << p;
+        QCOMPARE(i, expectFlickingAfter);
+    }
+    QTest::mouseRelease(&view, Qt::LeftButton, {}, p);
+}
+
+void tst_qquicktextedit::inFlickableTouch_data()
+{
+    QTest::addColumn<bool>("readonly");
+    QTest::addColumn<bool>("enabled");
+    QTest::addColumn<int>("expectFlickingAfter");
+    QTest::newRow("editable") << false << true << 3;
+    QTest::newRow("readonly") << true << true << 3;
+    QTest::newRow("disabled") << false << false << 3;
+}
+
+void tst_qquicktextedit::inFlickableTouch()
+{
+    QFETCH(bool, readonly);
+    QFETCH(bool, enabled);
+    QFETCH(int, expectFlickingAfter);
+
+    const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
+    QQuickView view(testFileUrl("inFlickable.qml"));
+    view.show();
+    view.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&view));
+    QQuickFlickable *flick = qobject_cast<QQuickFlickable *>(view.rootObject());
+    QVERIFY(flick);
+    QQuickTextEdit *edit = flick->findChild<QQuickTextEdit*>("text");
+    QVERIFY(edit);
+    edit->setReadOnly(readonly);
+    edit->setEnabled(enabled);
+
+    // flick with touch
+    QPoint p(10, 100);
+    QTest::touchEvent(&view, touchDevice).press(1, p, &view);
+    QQuickTouchUtils::flush(&view);
+    QObject *pressGrabber = QPointingDevicePrivate::get(touchDevice)->firstPointExclusiveGrabber();
+    // even if TextEdit is readonly, it still grabs on press.  But not if it's disabled.
+    if (enabled)
+        QCOMPARE(pressGrabber, edit);
+    else
+        QCOMPARE(pressGrabber, flick);
+    int i = 0;
+    // after a couple of events, Flickable steals the grab and starts moving
+    for (; i < 4 && !flick->isMoving(); ++i) {
+        p -= QPoint(0, dragThreshold);
+        QTest::touchEvent(&view, touchDevice).move(1, p, &view);
+        QQuickTouchUtils::flush(&view);
+    }
+    QCOMPARE(flick->isMoving(), bool(expectFlickingAfter));
+    if (expectFlickingAfter) {
+        qCDebug(lcTests) << "flickable started moving after" << i << "moves, when we got to" << p;
+        QCOMPARE(i, expectFlickingAfter);
+    }
+    QTest::touchEvent(&view, touchDevice).release(1, p, &view);
 }
 
 void tst_qquicktextedit::simulateKey(QWindow *view, int key, Qt::KeyboardModifiers modifiers)
