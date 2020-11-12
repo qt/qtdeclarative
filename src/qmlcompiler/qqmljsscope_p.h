@@ -244,6 +244,15 @@ public:
         return m_sourceLocation;
     }
 
+    static QQmlJSScope::ConstPtr nonCompositeBaseType(const QQmlJSScope::ConstPtr &type)
+    {
+        for (QQmlJSScope::ConstPtr base = type; base; base = base->baseType()) {
+            if (!base->isComposite())
+                return base;
+        }
+        return {};
+    }
+
 private:
     QQmlJSScope(ScopeType type, const QQmlJSScope::Ptr &parentScope = QQmlJSScope::Ptr());
 
