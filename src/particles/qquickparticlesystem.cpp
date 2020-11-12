@@ -638,7 +638,8 @@ void QQuickParticleSystem::registerParticleAffector(QQuickParticleAffector* a)
 {
     if (m_debugMode)
         qDebug() << "Registering Affector" << a << "to" << this;
-    m_affectors << QPointer<QQuickParticleAffector>(a);
+    if (!m_affectors.contains(a))
+        m_affectors << QPointer<QQuickParticleAffector>(a);
 }
 
 void QQuickParticleSystem::registerParticleGroup(QQuickParticleGroup* g)

@@ -147,6 +147,9 @@ void QQuickParticleAffector::componentComplete()
 }
 
 bool QQuickParticleAffector::activeGroup(int g) {
+    if (!m_system)
+        return false;
+
     if (m_updateIntSet){ //This can occur before group ids are properly assigned, but that resets the flag
         m_groupIds.clear();
         foreach (const QString &p, m_groups)
@@ -160,6 +163,9 @@ bool QQuickParticleAffector::shouldAffect(QQuickParticleData* d)
 {
     if (!d)
         return false;
+    if (!m_system)
+        return false;
+
     if (activeGroup(d->groupId)){
         if ((m_onceOff && m_onceOffed.contains(qMakePair(d->groupId, d->index)))
                 || !d->stillAlive(m_system))
@@ -178,6 +184,9 @@ bool QQuickParticleAffector::shouldAffect(QQuickParticleData* d)
 
 void QQuickParticleAffector::postAffect(QQuickParticleData* d)
 {
+    if (!m_system)
+        return;
+
     m_system->needsReset << d;
     if (m_onceOff)
         m_onceOffed << qMakePair(d->groupId, d->index);
@@ -192,6 +201,9 @@ void QQuickParticleAffector::affectSystem(qreal dt)
 {
     if (!m_enabled)
         return;
+    if (!m_system)
+        return;
+
     //If not reimplemented, calls affectParticle per particle
     //But only on particles in targeted system/area
     updateOffsets();//### Needed if an ancestor is transformed.
@@ -244,6 +256,9 @@ void QQuickParticleAffector::updateOffsets()
 
 bool QQuickParticleAffector::isColliding(QQuickParticleData *d) const
 {
+    if (!m_system)
+        return false;
+
     qreal myCurX = d->curX(m_system);
     qreal myCurY = d->curY(m_system);
     qreal myCurSize = d->curSize(m_system) / 2;

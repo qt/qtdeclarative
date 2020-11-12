@@ -128,7 +128,8 @@ void setSystem(QQuickParticleSystem* arg)
 {
     if (m_system != arg) {
         m_system = arg;
-        m_system->registerParticleAffector(this);
+        if (m_system)
+            m_system->registerParticleAffector(this);
         Q_EMIT systemChanged(arg);
     }
 }
