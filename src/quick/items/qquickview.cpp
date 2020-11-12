@@ -240,7 +240,11 @@ void QQuickView::setSource(const QUrl& url)
    Sets the initial properties \a initialProperties with which the QML
    component gets initialized after calling \l QQuickView::setSource().
 
+   \snippet qquickview-ex.cpp 1
+
    \note You can only use this function to initialize top-level properties.
+   \note This function should always be called before setSource, as it has
+   no effect once the component has become \c Ready.
 
    \sa QQmlComponent::createWithInitialProperties()
    \since 5.14

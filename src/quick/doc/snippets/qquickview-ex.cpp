@@ -59,3 +59,12 @@ int main(int argc, char *argv[])
     return app.exec();
 }
 //![0]
+
+void makeDocTeamHappyByKeepingExampleCompilable() {
+//![1]
+    QScopedPointer<QQuickView> view { new QQuickView };
+    view->setInitialProperties({"x, 100"}, {"width", 50});
+    view->setSource(QUrl::fromLocalFile("myqmlfile.qml"));
+    view->show();
+//![1]
+}
