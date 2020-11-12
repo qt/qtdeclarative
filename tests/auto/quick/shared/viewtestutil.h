@@ -77,10 +77,10 @@ namespace QQuickViewTestUtil
 
         QaimModel(QObject *parent=0);
 
-        int rowCount(const QModelIndex &parent=QModelIndex()) const;
-        int columnCount(const QModelIndex &parent=QModelIndex()) const;
-        QVariant data(const QModelIndex &index, int role=Qt::DisplayRole) const;
-        QHash<int,QByteArray> roleNames() const;
+        int rowCount(const QModelIndex &parent=QModelIndex()) const override;
+        int columnCount(const QModelIndex &parent=QModelIndex()) const override;
+        QVariant data(const QModelIndex &index, int role=Qt::DisplayRole) const override;
+        QHash<int,QByteArray> roleNames() const override;
 
         int count() const;
         QString name(int index) const;
@@ -170,8 +170,8 @@ namespace QQuickViewTestUtil
 
         StressTestModel();
 
-        int rowCount(const QModelIndex &) const;
-        QVariant data(const QModelIndex &, int) const;
+        int rowCount(const QModelIndex &) const override;
+        QVariant data(const QModelIndex &, int) const override;
 
     public Q_SLOTS:
         void updateModel();
