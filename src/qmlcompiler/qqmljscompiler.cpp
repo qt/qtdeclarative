@@ -448,10 +448,11 @@ bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFile
     if (!writeStr("};\n"))
         return false;
 
-    if (aotFunctions.isEmpty()) {
+    writeStr(aotFunctions[FileScopeCodeIndex].code.toUtf8().constData());
+    if (aotFunctions.size() <= 1) {
+        // FileScopeCodeIndex is always there, but it may be the only one.
         writeStr("extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[] = { { 0, QMetaType::fromType<void>(), nullptr } };");
     } else {
-        writeStr(aotFunctions[FileScopeCodeIndex].code.toUtf8().constData());
         writeStr(R"(template <typename Binding>
                  void wrapCall(QQmlContext *context, QObject *scopeObject, void *dataPtr, Binding &&binding) {
                  using return_type = std::invoke_result_t<Binding, QQmlContext*, QObject*>;
@@ -485,6 +486,8 @@ bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFile
                      .toUtf8().constData());
         }
 
+        // Conclude the list with a nullptr
+        writeStr("{ 0, QMetaType::fromType<void>(), nullptr }");
         writeStr("};\n");
     }
 
