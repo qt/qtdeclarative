@@ -1335,7 +1335,7 @@ void QQmlEngine::setOutputWarningsToStandardError(bool enabled)
 void QQmlEngine::captureProperty(QObject *object, const QMetaProperty &property) const
 {
     Q_D(const QQmlEngine);
-    if (d->propertyCapture) {
+    if (d->propertyCapture && !property.isConstant()) {
         d->propertyCapture->captureProperty(
                     object, property.propertyIndex(),
                     QMetaObjectPrivate::signalIndex(property.notifySignal()));
