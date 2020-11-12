@@ -59,6 +59,7 @@ class QQmlJSScope;
 class QQmlJSMetaEnum
 {
     QStringList m_keys;
+    QList<int> m_values; // empty if values unknown.
     QString m_name;
     QString m_alias;
     bool m_isFlag = false;
@@ -80,6 +81,13 @@ public:
 
     void addKey(const QString &key) { m_keys.append(key); }
     QStringList keys() const { return m_keys; }
+
+    void addValue(int value) { m_values.append(value); }
+    QList<int> values() const { return m_values; }
+
+    bool hasValues() const { return !m_values.isEmpty(); }
+    int value(const QString &key) const { return m_values.value(m_keys.indexOf(key)); }
+    bool hasKey(const QString &key) const { return m_keys.indexOf(key) != -1; }
 };
 
 class QQmlJSMetaMethod

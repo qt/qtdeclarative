@@ -677,10 +677,25 @@ void QQmlJSTypeDescriptionReader::readEnumValues(UiScriptBinding *ast, QQmlJSMet
     }
 
     if (auto *objectLit = cast<ObjectPattern *>(expStmt->expression)) {
+        int currentValue = -1;
         for (PatternPropertyList *it = objectLit->properties; it; it = it->next) {
             if (PatternProperty *assignement = it->property) {
                 if (auto *name = cast<StringLiteralPropertyName *>(assignement->name)) {
                     metaEnum->addKey(name->id.toString());
+
+                    if (auto *value = AST::cast<NumericLiteral *>(assignement->initializer)) {
+                        currentValue = int(value->value);
+                    } else if (auto *minus = AST::cast<UnaryMinusExpression *>(
+                                   assignement->initializer)) {
+                        if (auto *value = AST::cast<NumericLiteral *>(minus->expression))
+                            currentValue = -int(value->value);
+                        else
+                            ++currentValue;
+                    } else {
+                        ++currentValue;
+                    }
+
+                    metaEnum->addValue(currentValue);
                     continue;
                 }
             }

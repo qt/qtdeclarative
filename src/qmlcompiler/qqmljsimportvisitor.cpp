@@ -281,8 +281,10 @@ void QQmlJSImportVisitor::endVisit(UiScriptBinding *scriptBinding)
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiEnumDeclaration *uied)
 {
     QQmlJSMetaEnum qmlEnum(uied->name.toString());
-    for (const auto *member = uied->members; member; member = member->next)
+    for (const auto *member = uied->members; member; member = member->next) {
         qmlEnum.addKey(member->member.toString());
+        qmlEnum.addValue(int(member->value));
+    }
     m_currentScope->addEnumeration(qmlEnum);
     return true;
 }
