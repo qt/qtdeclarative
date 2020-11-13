@@ -2529,12 +2529,15 @@ bool QQuickFlickable::childMouseEventFilter(QQuickItem *i, QEvent *e)
         return QQuickItem::childMouseEventFilter(i, e);
     }
 
-    if (e->isPointerEvent()) {
+    if (e->type() == QEvent::UngrabMouse) {
+        Q_ASSERT(e->isSinglePointEvent());
+        auto spe = static_cast<QSinglePointEvent *>(e);
+        const QObject *grabber = spe->exclusiveGrabber(spe->points().first());
+        qCDebug(lcFilter) << "filtering UngrabMouse" << spe->points().first() << "for" << i << "grabber is" << grabber;
+        if (grabber != this)
+            mouseUngrabEvent(); // A child has been ungrabbed
+    } else if (e->isPointerEvent()) {
         return filterPointerEvent(i, static_cast<QPointerEvent *>(e));
-    } else if (e->type() == QEvent::UngrabMouse && d->window &&
-               d->window->mouseGrabberItem() && d->window->mouseGrabberItem() != this) {
-        // The grab has been taken away from a child and given to some other item.
-        mouseUngrabEvent();
     }
 
     return QQuickItem::childMouseEventFilter(i, e);

@@ -2605,7 +2605,7 @@ void QQuickWindowPrivate::onGrabChanged(QObject *grabber, QPointingDevice::GrabT
                 if (isDeliveringTouchAsMouse() ||
                         point.device()->type() == QInputDevice::DeviceType::Mouse ||
                         point.device()->type() == QInputDevice::DeviceType::TouchPad) {
-                    QEvent e(QEvent::UngrabMouse);
+                    QMutableSinglePointEvent e(QEvent::UngrabMouse, point.device(), point);
                     hasFiltered.clear();
                     filtered = sendFilteredMouseEvent(&e, item, item->parentItem());
                     if (!filtered)
