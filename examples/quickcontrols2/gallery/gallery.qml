@@ -60,7 +60,7 @@ ApplicationWindow {
     width: 360
     height: 520
     visible: true
-    title: "Qt Quick Controls 2"
+    title: "Qt Quick Controls"
 
     function help() {
         let displayingControl = listView.currentIndex !== -1
@@ -232,7 +232,7 @@ ApplicationWindow {
             }
 
             Label {
-                text: "Qt Quick Controls 2 provides a set of controls that can be used to build complete interfaces in Qt Quick."
+                text: "Qt Quick Controls provides a set of controls that can be used to build complete interfaces in Qt Quick."
                 anchors.margins: 20
                 anchors.top: logo.bottom
                 anchors.left: parent.left
@@ -323,16 +323,15 @@ ApplicationWindow {
 
             Label {
                 width: aboutDialog.availableWidth
-                text: "The Qt Quick Controls 2 module delivers the next generation user interface controls based on Qt Quick."
+                text: "The Qt Quick Controls module delivers the next generation user interface controls based on Qt Quick."
                 wrapMode: Label.Wrap
                 font.pixelSize: 12
             }
 
             Label {
                 width: aboutDialog.availableWidth
-                text: "In comparison to the desktop-oriented Qt Quick Controls 1, Qt Quick Controls 2 "
-                    + "are an order of magnitude simpler, lighter and faster, and are primarily targeted "
-                    + "towards embedded and mobile platforms."
+                text: "In comparison to Qt Quick Controls 1, Qt Quick Controls "
+                    + "are an order of magnitude simpler, lighter, and faster."
                 wrapMode: Label.Wrap
                 font.pixelSize: 12
             }

@@ -61,7 +61,7 @@ ApplicationWindow {
     minimumWidth: 1180
     minimumHeight: 663
     visible: true
-    title: "Qt Quick Controls 2 - Imagine Style Example: Automotive"
+    title: "Qt Quick Controls - Imagine Style Example: Automotive"
 
     readonly property color colorGlow: "#1d6d64"
     readonly property color colorWarning: "#d5232f"

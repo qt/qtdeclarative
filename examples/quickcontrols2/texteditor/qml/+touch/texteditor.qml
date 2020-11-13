@@ -261,7 +261,7 @@ ApplicationWindow {
         y: parent.height / 2 - height / 2
 
         contentItem: Label {
-            text: qsTr("Qt Quick Controls 2 - Text Editor Example")
+            text: qsTr("Qt Quick Controls - Text Editor Example")
         }
     }
 }

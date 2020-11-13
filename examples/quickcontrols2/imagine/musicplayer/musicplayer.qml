@@ -58,7 +58,7 @@ ApplicationWindow {
     width: 1280
     height: 720
     visible: true
-    title: "Qt Quick Controls 2 - Imagine Style Example: Music Player"
+    title: "Qt Quick Controls - Imagine Style Example: Music Player"
 
     Component.onCompleted: {
         x = Screen.width / 2 - width / 2

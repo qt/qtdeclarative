@@ -72,7 +72,7 @@ ApplicationWindow {
         Label {
             id: label
             anchors.centerIn: parent
-            text: "Qt Quick Controls 2"
+            text: "Qt Quick Controls"
         }
     }
 
