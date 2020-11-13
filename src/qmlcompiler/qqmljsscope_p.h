@@ -160,11 +160,11 @@ public:
 
     void addOwnMethod(const QQmlJSMetaMethod &method) { m_methods.insert(method.methodName(), method); }
     QMultiHash<QString, QQmlJSMetaMethod> ownMethods() const { return m_methods; }
-    QQmlJSMetaMethod ownMethod(const QString &name) const { return m_methods.value(name); }
+    QList<QQmlJSMetaMethod> ownMethods(const QString &name) const { return m_methods.values(name); }
     bool hasOwnMethod(const QString &name) const { return m_methods.contains(name); }
 
     bool hasMethod(const QString &name) const;
-    QQmlJSMetaMethod method(const QString &name) const;
+    QList<QQmlJSMetaMethod> methods(const QString &name) const;
 
     void addEnumeration(const QQmlJSMetaEnum &enumeration)
     {

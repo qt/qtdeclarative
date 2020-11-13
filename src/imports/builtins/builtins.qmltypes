@@ -10,10 +10,15 @@ Module {
     }
 
     Component {
-        name: "QJSValue"
+        name: "QVariant"
         accessSemantics: "value"
         exports: ["QML/var 1.0", "QML/variant 1.0"]
         exportMetaObjectRevisions: [256]
+    }
+
+    Component {
+        name: "QJSValue"
+        accessSemantics: "value"
     }
 
     Component {

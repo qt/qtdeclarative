@@ -156,6 +156,8 @@ public:
     int revision() const { return m_revision; }
     void setRevision(int r) { m_revision = r; }
 
+    bool isValid() const { return !m_name.isEmpty(); }
+
 private:
     QString m_name;
     QString m_returnTypeName;

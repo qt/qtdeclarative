@@ -85,14 +85,12 @@ bool QQmlJSScope::hasMethod(const QString &name) const
     return false;
 }
 
-QQmlJSMetaMethod QQmlJSScope::method(const QString &name) const
+QList<QQmlJSMetaMethod> QQmlJSScope::methods(const QString &name) const
 {
-    for (const QQmlJSScope *scope = this; scope; scope = scope->baseType().data()) {
-        const auto it = scope->m_methods.find(name);
-        if (it != scope->m_methods.end())
-            return *it;
-    }
-    return {};
+    QList<QQmlJSMetaMethod> results;
+    for (const QQmlJSScope *scope = this; scope; scope = scope->baseType().data())
+        results.append(scope->ownMethods(name));
+    return results;
 }
 
 bool QQmlJSScope::isIdInCurrentQMlScopes(const QString &id) const
@@ -150,20 +148,37 @@ void QQmlJSScope::resolveTypes(const QHash<QString, QQmlJSScope::ConstPtr> &cont
         return QQmlJSScope::ConstPtr();
     };
 
-    m_baseType = findType(m_baseTypeName);
-    m_attachedType = findType(m_attachedTypeName);
-    m_valueType = findType(m_valueTypeName);
+    if (!m_baseType && !m_baseTypeName.isEmpty())
+        m_baseType = findType(m_baseTypeName);
 
-    for (auto it = m_properties.begin(), end = m_properties.end(); it != end; ++it)
-        it->setType(findType(it->typeName()));
+    if (!m_attachedType && !m_attachedTypeName.isEmpty())
+        m_attachedType = findType(m_attachedTypeName);
+
+    if (!m_valueType && !m_valueTypeName.isEmpty())
+        m_valueType = findType(m_valueTypeName);
+
+    for (auto it = m_properties.begin(), end = m_properties.end(); it != end; ++it) {
+        const QString typeName = it->typeName();
+        if (!it->type() && !typeName.isEmpty())
+            it->setType(findType(typeName));
+    }
 
     for (auto it = m_methods.begin(), end = m_methods.end(); it != end; ++it) {
-        it->setReturnType(findType(it->returnTypeName()));
-        const auto paramNames = it->parameterTypeNames();
-        QList<QSharedPointer<const QQmlJSScope>> paramTypes;
+        const QString returnTypeName = it->returnTypeName();
+        if (!it->returnType() && !returnTypeName.isEmpty())
+            it->setReturnType(findType(returnTypeName));
 
-        for (const QString &paramName: paramNames)
-            paramTypes.append(findType(paramName));
+        const auto paramTypeNames = it->parameterTypeNames();
+        QList<QSharedPointer<const QQmlJSScope>> paramTypes = it->parameterTypes();
+        if (paramTypes.length() < paramTypeNames.length())
+            paramTypes.resize(paramTypeNames.length());
+
+        for (int i = 0, length = paramTypes.length(); i < length; ++i) {
+            auto &paramType = paramTypes[i];
+            const auto paramTypeName = paramTypeNames[i];
+            if (!paramType && !paramTypeName.isEmpty())
+                paramType = findType(paramTypeName);
+        }
 
         it->setParameterTypes(paramTypes);
     }

@@ -129,6 +129,7 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
 
 void QQmlJSImportVisitor::endVisit(UiObjectDefinition *)
 {
+    m_currentScope->resolveTypes(m_rootScopeImports);
     m_currentScope->resolveGroupedScopes();
     leaveEnvironment();
 }
@@ -178,13 +179,19 @@ void QQmlJSImportVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExp
     auto name = fexpr->name.toString();
     if (!name.isEmpty()) {
         if (m_currentScope->scopeType() == QQmlJSScope::QMLScope) {
-            QQmlJSMetaMethod method(name, QStringLiteral("void"));
+            QQmlJSMetaMethod method(name);
             method.setMethodType(QQmlJSMetaMethod::Method);
-            FormalParameterList *parameters = fexpr->formals;
-            while (parameters) {
-                method.addParameter(parameters->element->bindingIdentifier.toString(), QString());
-                parameters = parameters->next;
+            if (const auto *formals = fexpr->formals) {
+                const auto parameters = formals->formals();
+                for (const auto &parameter : parameters) {
+                    const QString type = parameter.typeName();
+                    method.addParameter(parameter.id,
+                                        type.isEmpty() ? QStringLiteral("var") : type);
+                }
             }
+            method.setReturnTypeName(fexpr->typeAnnotation
+                                     ? fexpr->typeAnnotation->type->toString()
+                                     : QStringLiteral("var"));
             m_currentScope->addOwnMethod(method);
         } else {
             m_currentScope->insertJSIdentifier(
@@ -487,6 +494,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
 
 void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
 {
+    m_currentScope->resolveTypes(m_rootScopeImports);
     m_currentScope->resolveGroupedScopes();
     const QQmlJSScope::ConstPtr childScope = m_currentScope;
     leaveEnvironment();
