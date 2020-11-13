@@ -2118,6 +2118,7 @@ bool QQuickWindowPrivate::sendHoverEvent(QEvent::Type type, QQuickItem *item,
     return hoverEvent.isAccepted();
 }
 
+// TODO later: specify the device in case of multi-mouse scenario, or mouse and tablet both in use
 bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &scenePos, const QPointF &lastScenePos,
                                          Qt::KeyboardModifiers modifiers, ulong timestamp, bool &accepted)
 {
@@ -2130,7 +2131,12 @@ bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
             return false;
     }
 
-    qCDebug(DBG_HOVER_TRACE) << q << item << scenePos << lastScenePos << "subtreeHoverEnabled" << itemPrivate->subtreeHoverEnabled;
+    if (Q_UNLIKELY(DBG_HOVER_TRACE().isDebugEnabled())) {
+        if (lastScenePos == scenePos)
+            qCDebug(DBG_HOVER_TRACE) << scenePos << "(unchanged)" << item << "subtreeHoverEnabled" << itemPrivate->subtreeHoverEnabled << "in window" << windowTitle;
+        else
+            qCDebug(DBG_HOVER_TRACE) << lastScenePos << "->" << scenePos << item << "subtreeHoverEnabled" << itemPrivate->subtreeHoverEnabled << "in window" << windowTitle;
+    }
     if (itemPrivate->subtreeHoverEnabled) {
         QList<QQuickItem *> children = itemPrivate->paintOrderChildItems();
         for (int ii = children.count() - 1; ii >= 0; --ii) {
