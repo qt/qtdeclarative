@@ -1,8 +1,13 @@
 TARGETPATH = QtQuick/tooling
 
 QML_FILES = \
-    TestCase.qml \
-    SignalSpy.qml \
-    testlogger.js
+    Component.qml \
+    Enum.qml \
+    Member.qml \
+    Method.qml \
+    Module.qml \
+    Parameter.qml \
+    Property.qml \
+    Signal.qml
 
 load(qml_module)
