@@ -53,6 +53,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_LOGGING_CATEGORY(lcPA, "qt.quick.pincharea")
+
 /*!
     \qmltype PinchEvent
     \instantiates QQuickPinchEvent
@@ -358,7 +360,7 @@ void QQuickPinchArea::touchEvent(QTouchEvent *event)
 void QQuickPinchArea::clearPinch(QTouchEvent *event)
 {
     Q_D(QQuickPinchArea);
-
+    qCDebug(lcPA, "clear: %lld touchpoints", d->touchPoints.count());
     d->touchPoints.clear();
     if (d->inPinch) {
         d->inPinch = false;
@@ -393,7 +395,7 @@ void QQuickPinchArea::clearPinch(QTouchEvent *event)
 void QQuickPinchArea::cancelPinch(QTouchEvent *event)
 {
     Q_D(QQuickPinchArea);
-
+    qCDebug(lcPA, "cancel: %lld touchpoints", d->touchPoints.count());
     d->touchPoints.clear();
     if (d->inPinch) {
         d->inPinch = false;
@@ -481,6 +483,8 @@ void QQuickPinchArea::updatePinch(QTouchEvent *event, bool filtering)
     if (touchPoint2.state() == QEventPoint::State::Pressed)
         d->sceneStartPoint2 = touchPoint2.scenePosition();
 
+    qCDebug(lcPA) << "updating based on" << touchPoint1 << touchPoint2;
+
     QRectF bounds = clipRect();
     // Pinch is not started unless there are exactly two touch points
     // AND one or more of the points has just now been pressed (wasn't pressed already)
@@ -489,6 +493,8 @@ void QQuickPinchArea::updatePinch(QTouchEvent *event, bool filtering)
             && (touchPoint1.state() == QEventPoint::State::Pressed || touchPoint2.state() == QEventPoint::State::Pressed) &&
             bounds.contains(touchPoint1.position()) && bounds.contains(touchPoint2.position())) {
         d->id1 = touchPoint1.id();
+        if (!d->pinchActivated)
+             qCDebug(lcPA, "pinch activating");
         d->pinchActivated = true;
         d->initPinch = true;
         event->setExclusiveGrabber(touchPoint1, this);
@@ -514,6 +520,8 @@ void QQuickPinchArea::updatePinch(QTouchEvent *event, bool filtering)
         d->id1 = touchPoint1.id();
         if (angle > 180)
             angle -= 360;
+        qCDebug(lcPA, "pinch \u2316 %.1lf,%.1lf \u21e4%.1lf\u21e5 \u2220 %.1lf",
+                sceneCenter.x(), sceneCenter.y(), dist, angle);
         if (!d->inPinch || d->initPinch) {
             if (d->touchPoints.count() >= 2) {
                 if (d->initPinch) {
