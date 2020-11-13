@@ -457,6 +457,7 @@ bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFile
                  void wrapCall(QQmlContext *context, QObject *scopeObject, void *dataPtr, Binding &&binding) {
                  using return_type = std::invoke_result_t<Binding, QQmlContext*, QObject*>;
                  if constexpr (std::is_same_v<return_type, void>) {
+                 Q_UNUSED(dataPtr);
                  binding(context, scopeObject);
                  } else {
                  auto result = binding(context, scopeObject);
