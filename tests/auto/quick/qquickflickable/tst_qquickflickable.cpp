@@ -44,6 +44,8 @@
 
 #include <qpa/qwindowsysteminterface.h>
 
+Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
+
 using namespace QQuickViewTestUtil;
 using namespace QQuickVisualTestUtil;
 
@@ -201,6 +203,7 @@ private slots:
     void synchronousDrag_data();
     void synchronousDrag();
     void visibleAreaBinding();
+    void parallelTouch();
 
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
@@ -2543,6 +2546,46 @@ void tst_qquickflickable::visibleAreaBinding()
     window->setSource(testFileUrl("visibleAreaBinding.qml"));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
     // Shouldn't crash.
+}
+
+void tst_qquickflickable::parallelTouch() // QTBUG-30840
+{
+    const int threshold = qApp->styleHints()->startDragDistance();
+    QQuickView view;
+    view.setSource(testFileUrl("parallel.qml"));
+    view.show();
+    view.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&view));
+    QVERIFY(view.rootObject());
+    QQuickFlickable *flickable1 = view.rootObject()->findChild<QQuickFlickable*>("fl1");
+    QVERIFY(flickable1);
+    QQuickFlickable *flickable2 = view.rootObject()->findChild<QQuickFlickable*>("fl2");
+    QVERIFY(flickable2);
+
+    // Drag both in parallel via touch, opposite directions
+    QPoint p0(80, 240);
+    QPoint p1(240, 240);
+    QTest::touchEvent(&view, touchDevice).press(0, p0, &view).press(1, p1, &view);
+    int began1After = -1;
+    int began2After = -1;
+    for (int i = 0; i < 8; ++i) {
+        p0 += QPoint(0, threshold);
+        p1 -= QPoint(0, threshold);
+        QTest::touchEvent(&view, touchDevice).move(0, p0, &view).move(1, p1, &view);
+        QQuickTouchUtils::flush(&view);
+        if (began1After < 0 && flickable1->isDragging())
+            began1After = i;
+        if (began2After < 0 && flickable2->isDragging())
+            began2After = i;
+    }
+    qCDebug(lcTests, "flickables began dragging after %d and %d events respectively", began1After, began2After);
+    QVERIFY(flickable1->isDraggingVertically());
+    QVERIFY(flickable2->isDraggingVertically());
+    QCOMPARE(began1After, 2);
+    QCOMPARE(began2After, 2);
+    QTest::touchEvent(&view, touchDevice).release(0, p0, &view).release(1, p1, &view);
+    QTRY_VERIFY(!flickable1->isMoving());
+    QTRY_VERIFY(!flickable2->isMoving());
 }
 
 QTEST_MAIN(tst_qquickflickable)
