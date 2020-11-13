@@ -50,6 +50,8 @@
 # include "qquickwindowsxpstyle_p.h"
 #endif
 
+extern void qml_register_types_QtQuick_NativeStyle();
+
 QT_BEGIN_NAMESPACE
 
 using namespace QQC2;
@@ -60,6 +62,7 @@ class QtQuickControls2NativeStylePlugin : public QQuickStylePlugin
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 
 public:
+    QtQuickControls2NativeStylePlugin(QObject *parent = nullptr);
     ~QtQuickControls2NativeStylePlugin() override;
 
     void initializeEngine(QQmlEngine *engine, const char *uri) override;
@@ -83,6 +86,13 @@ static void deleteQStyle()
     // we see a crash in AppKit from the destructor in QMacStyle. So for this reason, we
     // delete QStyle from a post routine rather than from the destructor.
     QQuickNativeStyle::setStyle(nullptr);
+}
+
+QtQuickControls2NativeStylePlugin::QtQuickControls2NativeStylePlugin(QObject *parent):
+    QQuickStylePlugin(parent)
+{
+    volatile auto registration = &qml_register_types_QtQuick_NativeStyle;
+    Q_UNUSED(registration);
 }
 
 QtQuickControls2NativeStylePlugin::~QtQuickControls2NativeStylePlugin()

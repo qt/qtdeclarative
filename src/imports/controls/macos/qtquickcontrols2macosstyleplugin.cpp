@@ -38,6 +38,8 @@
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
 #include <QtQuickControls2/qquickstyle.h>
 
+extern void qml_register_types_QtQuick_Controls_macOS();
+
 QT_BEGIN_NAMESPACE
 
 class QtQuickControls2MacOSStylePlugin : public QQuickStylePlugin
@@ -46,9 +48,18 @@ class QtQuickControls2MacOSStylePlugin : public QQuickStylePlugin
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 
 public:
+    QtQuickControls2MacOSStylePlugin(QObject *parent = nullptr);
     QString name() const override;
     void initializeTheme(QQuickTheme *theme) override;
 };
+
+
+QtQuickControls2MacOSStylePlugin::QtQuickControls2MacOSStylePlugin(QObject *parent):
+    QQuickStylePlugin(parent)
+{
+    volatile auto registration = &qml_register_types_QtQuick_Controls_macOS;
+    Q_UNUSED(registration);
+}
 
 QString QtQuickControls2MacOSStylePlugin::name() const
 {

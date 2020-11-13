@@ -38,6 +38,8 @@
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
 #include <QtQuickControls2/qquickstyle.h>
 
+extern void qml_register_types_QtQuick_Controls_Windows();
+
 QT_BEGIN_NAMESPACE
 
 class QtQuickControls2WindowsStylePlugin : public QQuickStylePlugin
@@ -46,9 +48,17 @@ class QtQuickControls2WindowsStylePlugin : public QQuickStylePlugin
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 
 public:
+    QtQuickControls2WindowsStylePlugin(QObject *parent = nullptr);
     QString name() const override;
     void initializeTheme(QQuickTheme *theme) override;
 };
+
+QtQuickControls2WindowsStylePlugin::QtQuickControls2WindowsStylePlugin(QObject *parent):
+    QQuickStylePlugin(parent)
+{
+    volatile auto registration = &qml_register_types_QtQuick_Controls_Windows;
+    Q_UNUSED(registration);
+}
 
 QString QtQuickControls2WindowsStylePlugin::name() const
 {
