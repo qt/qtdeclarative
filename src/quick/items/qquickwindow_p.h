@@ -134,6 +134,8 @@ public:
     QQuickWindowPrivate();
     ~QQuickWindowPrivate() override;
 
+    void updateChildrenPalettes(const QPalette &parentPalette) override;
+
     void init(QQuickWindow *, QQuickRenderControl *control = nullptr);
 
     QQuickRootItem *contentItem;

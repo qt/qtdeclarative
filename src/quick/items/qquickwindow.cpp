@@ -772,6 +772,16 @@ QQuickWindowPrivate::~QQuickWindowPrivate()
         service->removeWindow(q_func());
 }
 
+void QQuickWindowPrivate::updateChildrenPalettes(const QPalette &parentPalette)
+{
+    Q_Q(QQuickWindow);
+    if (auto root = q->contentItem()) {
+        for (auto &&child: root->childItems()) {
+            QQuickItemPrivate::get(child)->inheritPalette(parentPalette);
+        }
+    }
+}
+
 void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
 {
     q_ptr = c;

@@ -344,10 +344,21 @@ void QQuickPaletteProviderPrivateBase<I, Impl>::setCurrentColorGroup()
 template<class I, class Impl>
 void QQuickPaletteProviderPrivateBase<I, Impl>::updateChildrenPalettes(const QPalette &parentPalette)
 {
-    if (auto root = rootItem(*itemWithPalette())) {
-        for (auto &&child : root->childItems()) {
-            if (Q_LIKELY(child)) {
-                getPrivate(*child)->inheritPalette(parentPalette);
+    if constexpr (std::is_same_v<QQuickWindow, I> && std::is_same_v<QQuickWindowPrivate, Impl>) {
+        /* QQuickWindowPrivate instantiates this template, but does not include QQuickItemPrivate
+         * This causes an error with the QQuickItemPrivate::inheritPalette call below on MSVC in
+         * static builds, as QQuickItemPrivate is incomplete. To work around this situation, we do
+         * nothing in this instantiation of updateChildrenPalettes and instead add an override in
+         * QQuickWindowPrivate, which does the correct thing.
+         */
+        Q_UNREACHABLE(); // You are not supposed to call this function
+        return;
+    } else {
+        if (auto root = rootItem(*itemWithPalette())) {
+            for (auto &&child : root->childItems()) {
+                if (Q_LIKELY(child)) {
+                    getPrivate(*child)->inheritPalette(parentPalette);
+                }
             }
         }
     }
