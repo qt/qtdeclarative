@@ -1,2 +1,4 @@
 [pressedMultipleButtons] # QTBUG-86729
 *
+[tabletStylus]
+macos ci
