@@ -650,7 +650,7 @@ static QStyleHelper::WidgetSizePolicy getControlSize(const QStyleOption *option)
 
 static QString qt_mac_removeMnemonics(const QString &original)
 {
-    QString returnText(original.size(), 0);
+    QString returnText(original.size(), QChar());
     int finalDest = 0;
     int currPos = 0;
     int l = original.length();
