@@ -272,9 +272,10 @@ void TestQmlformat::testExample_data()
 void TestQmlformat::testExample()
 {
     QFETCH(QString, file);
-    QString output = runQmlformat(file, true, !isInvalidFile(file));
+    const bool isInvalid = isInvalidFile(QFileInfo(file));
+    QString output = runQmlformat(file, true, !isInvalid);
 
-    if (!isInvalidFile(file))
+    if (!isInvalid)
         QVERIFY(!output.isEmpty());
 }
 #endif
