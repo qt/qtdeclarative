@@ -17,10 +17,11 @@ qt_internal_add_qml_module(quicktooling
     VERSION "${CMAKE_PROJECT_VERSION}"
     GENERATE_QMLTYPES
     INSTALL_QMLTYPES
+    PAST_MAJOR_VERSIONS 1
 )
 
 set_source_files_properties(${qml_files} PROPERTIES
-    QT_QML_SOURCE_VERSION "1.2"
+    QT_QML_SOURCE_VERSION "1.2;6.0"
 )
 
 qt6_target_qml_files(quicktooling
