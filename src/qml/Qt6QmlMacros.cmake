@@ -311,15 +311,13 @@ function(qt6_add_qml_module target)
     endif()
     if (arg_TYPEINFO)
         string(APPEND qmldir_file_contents "typeinfo ${arg_TYPEINFO}\n")
-    elseif (arg_SOURCES)
+    else()
         # This always need to be written out since at the moment we have cases
         # where qmltyperegistrar is not run with the plugin but on a module
         # e.g: src/qml generates the qmltypes for src/imports/qtqml.
         # When this has been fixed/standardized we should move this to
         # qt6_qml_type_registration() so that it is written out when the
         # plugins.qmltypes is actually generated.
-        # However, if there are no sources, then this is a pure QML module. In
-        # that case there cannot be a plugins.qmltypes file.
         string(APPEND qmldir_file_contents "typeinfo plugins.qmltypes\n")
     endif()
 
