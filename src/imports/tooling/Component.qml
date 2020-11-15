@@ -48,6 +48,7 @@ QtObject {
     property var exports: []
     property var exportMetaObjectRevisions: []
     property string attachedType
+    property string valueType
     property bool isSingleton: false
     property bool isCreatable: name.length > 0
     property bool isComposite: false

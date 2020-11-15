@@ -53,6 +53,9 @@ private Q_SLOTS:
     void directoryPassedAsQmlTypesFile();
     void oldQmltypes();
 
+    void qmltypes_data();
+    void qmltypes();
+
 private:
     QString runQmllint(const QString &fileToLint,
                        std::function<void(QProcess &)> handleResult,
@@ -144,6 +147,23 @@ void TestQmllint::oldQmltypes()
     // Checking for both lines separately so that we don't have to mess with the line endings.b
     QVERIFY(errors.contains(QStringLiteral("Meta object revision and export version differ, ignoring the revision.")));
     QVERIFY(errors.contains(QStringLiteral("Revision 0 corresponds to version 0.0; it should be 1.0.")));
+}
+
+void TestQmllint::qmltypes_data()
+{
+    QTest::addColumn<QString>("file");
+
+    const QString importsPath = QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath);
+    QDirIterator it(importsPath, { "*.qmltypes" },
+                    QDir::Files, QDirIterator::Subdirectories);
+    while (it.hasNext())
+        QTest::addRow("%s", qPrintable(it.next().mid(importsPath.length()))) << it.filePath();
+}
+
+void TestQmllint::qmltypes()
+{
+    QFETCH(QString, file);
+    runQmllint(file, true);
 }
 
 void TestQmllint::dirtyQmlCode_data()
@@ -306,7 +326,8 @@ QString TestQmllint::runQmllint(const QString &fileToLint,
 {
     auto qmlImportDir = QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath);
     QStringList args;
-    args  << testFile(fileToLint)
+
+    args << (QFileInfo(fileToLint).isAbsolute() ? fileToLint : testFile(fileToLint))
          << QStringLiteral("-I") << qmlImportDir
          << QStringLiteral("-I") << dataDirectory();
     args << extraArgs;
