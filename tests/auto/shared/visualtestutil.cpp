@@ -41,6 +41,7 @@
 #include <QtGui/QCursor>
 #include <QtCore/QCoreApplication>
 #include <QtQml/QQmlFile>
+#include <QtTest/qsignalspy.h>
 #include <QtTest/QTest>
 
 bool QQuickVisualTestUtil::delegateVisible(QQuickItem *item)
@@ -166,4 +167,77 @@ void QQuickVisualTestUtil::MnemonicKeySimulator::click(Qt::Key key)
 {
     press(key);
     release(key);
+}
+
+
+bool QQuickVisualTestUtil::verifyButtonClickable(QQuickAbstractButton *button)
+{
+    if (!button->window()) {
+        qWarning() << "button" << button << "doesn't have an associated window";
+        return false;
+    }
+
+    if (!button->isEnabled()) {
+        qWarning() << "button" << button << "is not enabled";
+        return false;
+    }
+
+    if (!button->isVisible()) {
+        qWarning() << "button" << button << "is not visible";
+        return false;
+    }
+
+    if (button->width() <= 0.0) {
+        qWarning() << "button" << button << "must have a width greater than 0";
+        return false;
+    }
+
+    if (button->height() <= 0.0) {
+        qWarning() << "button" << button << "must have a height greater than 0";
+        return false;
+    }
+
+    return true;
+}
+
+bool QQuickVisualTestUtil::clickButton(QQuickAbstractButton *button)
+{
+    if (!verifyButtonClickable(button))
+        return false;
+
+    QSignalSpy spy(button, &QQuickAbstractButton::clicked);
+    if (!spy.isValid()) {
+        qWarning() << "button" << button << "must have a valid clicked signal";
+        return false;
+    }
+
+    const QPoint buttonCenter = button->mapToScene(QPointF(button->width() / 2, button->height() / 2)).toPoint();
+    QTest::mouseClick(button->window(), Qt::LeftButton, Qt::NoModifier, buttonCenter);
+    if (spy.count() != 1) {
+        qWarning() << "clicked signal of button" << button << "was not emitted after clicking";
+        return false;
+    }
+
+    return true;
+}
+
+bool QQuickVisualTestUtil::doubleClickButton(QQuickAbstractButton *button)
+{
+    if (!verifyButtonClickable(button))
+        return false;
+
+    QSignalSpy spy(button, &QQuickAbstractButton::clicked);
+    if (!spy.isValid()) {
+        qWarning() << "button" << button << "must have a valid doubleClicked signal";
+        return false;
+    }
+
+    const QPoint buttonCenter = button->mapToScene(QPointF(button->width() / 2, button->height() / 2)).toPoint();
+    QTest::mouseDClick(button->window(), Qt::LeftButton, Qt::NoModifier, buttonCenter);
+    if (spy.count() != 1) {
+        qWarning() << "doubleClicked signal of button" << button << "was not emitted after double-clicking";
+        return false;
+    }
+
+    return true;
 }

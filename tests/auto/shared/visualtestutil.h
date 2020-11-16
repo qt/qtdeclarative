@@ -45,6 +45,7 @@
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuickControls2/qquickstyle.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
+#include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
 
 #include "util.h"
 
@@ -211,6 +212,10 @@ namespace QQuickVisualTestUtil
         QPointer<QWindow> m_window;
         Qt::KeyboardModifiers m_modifiers;
     };
+
+    [[nodiscard]] bool verifyButtonClickable(QQuickAbstractButton *button);
+    [[nodiscard]] bool clickButton(QQuickAbstractButton *button);
+    [[nodiscard]] bool doubleClickButton(QQuickAbstractButton *button);
 }
 
 #define QQUICK_VERIFY_POLISH(item) \
