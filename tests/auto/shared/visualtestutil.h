@@ -43,6 +43,8 @@
 #include <QtQuick/QQuickItem>
 #include <QtQml/QQmlExpression>
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtQuick/private/qquickitemview_p.h>
+#include <QtQuickTest/quicktest.h>
 #include <QtQuickControls2/qquickstyle.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
@@ -115,6 +117,15 @@ namespace QQuickVisualTestUtil
             items << qobject_cast<QQuickItem*>(findItem<T>(parent, objectName, indexes[i]));
         return items;
     }
+
+    enum class FindViewDelegateItemFlag {
+        None = 0x0,
+        PositionViewAtIndex = 0x01
+    };
+    Q_DECLARE_FLAGS(FindViewDelegateItemFlags, FindViewDelegateItemFlag)
+
+    QQuickItem* findViewDelegateItem(QQuickItemView *itemView, int index,
+        FindViewDelegateItemFlags flags = FindViewDelegateItemFlag::PositionViewAtIndex);
 
     class QQuickApplicationHelper
     {

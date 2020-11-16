@@ -22,6 +22,7 @@ qt_internal_add_test(tst_sanity
         Qt::QuickControls2Private
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
+        Qt::QuickTest
         Qt::TestPrivate
 )
 

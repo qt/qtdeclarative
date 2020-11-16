@@ -96,6 +96,35 @@ void QQuickVisualTestUtil::centerOnScreen(QQuickWindow *window)
     window->setFramePosition(screenGeometry.center() - offset);
 }
 
+/*!
+    \internal
+
+    Finds the delegate at \c index belonging to \c itemView, using the given \c flags.
+
+    If the view needs to be polished, the function will wait for it to be done before continuing,
+    and returns \c nullptr if the polish didn't happen.
+*/
+QQuickItem *QQuickVisualTestUtil::findViewDelegateItem(QQuickItemView *itemView, int index, FindViewDelegateItemFlags flags)
+{
+    if (QQuickTest::qIsPolishScheduled(itemView)) {
+        if (!QQuickTest::qWaitForItemPolished(itemView)) {
+            qWarning() << "failed to polish" << itemView;
+            return nullptr;
+        }
+    }
+
+    // Do this after the polish, just in case the count changes after a polish...
+    if (index <= -1 || index >= itemView->count()) {
+        qWarning() << "index" << index << "is out of bounds for" << itemView;
+        return nullptr;
+    }
+
+    if (flags.testFlag(FindViewDelegateItemFlag::PositionViewAtIndex))
+        itemView->positionViewAtIndex(index, QQuickItemView::Center);
+
+    return itemView->itemAtIndex(index);
+}
+
 void QQuickVisualTestUtil::forEachControl(QQmlEngine *engine, const QString &sourcePath, const QString &targetPath, const QStringList &skipList, QQuickVisualTestUtil::ForEachCallback callback)
 {
     // We cannot use QQmlComponent to load QML files directly from the source tree.

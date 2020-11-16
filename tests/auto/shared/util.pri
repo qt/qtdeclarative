@@ -1,4 +1,4 @@
-QT += testlib-private core-private gui-private qml-private quick-private quicktemplates2-private quickcontrols2 quickcontrols2-private
+QT += testlib-private core-private gui-private qml-private quick-private qmltest quicktemplates2-private quickcontrols2 quickcontrols2-private
 
 HEADERS += $$PWD/visualtestutil.h \
            $$PWD/util.h \
