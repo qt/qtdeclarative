@@ -44,6 +44,7 @@
 #include "qquickcontrol_p_p.h"
 #include "qquickdialog_p.h"
 
+#include <QtCore/qloggingcategory.h>
 #include <QtQml/qqmlinfo.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/private/qquicktransition_p.h>
@@ -52,6 +53,7 @@
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcDimmer, "qt.quick.controls.popup.dimmer")
+Q_LOGGING_CATEGORY(lcPopup, "qt.quick.controls.popup")
 
 /*!
     \qmltype Popup
@@ -2450,6 +2452,7 @@ void QQuickPopup::classBegin()
 void QQuickPopup::componentComplete()
 {
     Q_D(QQuickPopup);
+    qCDebug(lcPopup) << "componentComplete";
     if (!parentItem())
         resetParentItem();
 

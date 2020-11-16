@@ -53,7 +53,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickDialogButtonBoxPrivate : public QQuickContainerPrivate
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDialogButtonBoxPrivate : public QQuickContainerPrivate
 {
     Q_DECLARE_PUBLIC(QQuickDialogButtonBox)
 
@@ -74,6 +74,8 @@ public:
     qreal getContentHeight() const override;
 
     void handleClick();
+
+    static QString buttonText(QPlatformDialogHelper::StandardButton standardButton);
 
     QQuickAbstractButton *createStandardButton(QPlatformDialogHelper::StandardButton button);
     void removeStandardButtons();

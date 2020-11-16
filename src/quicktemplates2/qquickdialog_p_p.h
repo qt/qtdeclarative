@@ -57,7 +57,7 @@ QT_BEGIN_NAMESPACE
 class QQuickAbstractButton;
 class QQuickDialogButtonBox;
 
-class QQuickDialogPrivate : public QQuickPopupPrivate
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDialogPrivate : public QQuickPopupPrivate
 {
     Q_DECLARE_PUBLIC(QQuickDialog)
 
@@ -69,7 +69,9 @@ public:
 
     static QPlatformDialogHelper::ButtonRole buttonRole(QQuickAbstractButton *button);
 
-    void handleClick(QQuickAbstractButton *button);
+    virtual void handleAccept();
+    virtual void handleReject();
+    virtual void handleClick(QQuickAbstractButton *button);
 
     int result = 0;
     QString title;

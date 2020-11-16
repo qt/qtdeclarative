@@ -396,6 +396,11 @@ void QQuickDialogButtonBoxPrivate::handleClick()
     }
 }
 
+QString QQuickDialogButtonBoxPrivate::buttonText(QPlatformDialogHelper::StandardButton standardButton)
+{
+    return QPlatformTheme::removeMnemonics(QGuiApplicationPrivate::platformTheme()->standardButtonText(standardButton));
+}
+
 QQuickAbstractButton *QQuickDialogButtonBoxPrivate::createStandardButton(QPlatformDialogHelper::StandardButton standardButton)
 {
     Q_Q(QQuickDialogButtonBox);
@@ -414,7 +419,7 @@ QQuickAbstractButton *QQuickDialogButtonBoxPrivate::createStandardButton(QPlatfo
         QQuickDialogButtonBoxAttached *attached = qobject_cast<QQuickDialogButtonBoxAttached *>(qmlAttachedPropertiesObject<QQuickDialogButtonBox>(button, true));
         QQuickDialogButtonBoxAttachedPrivate::get(attached)->standardButton = standardButton;
         attached->setButtonRole(QPlatformDialogHelper::buttonRole(standardButton));
-        button->setText(QPlatformTheme::removeMnemonics(QGuiApplicationPrivate::platformTheme()->standardButtonText(standardButton)));
+        button->setText(buttonText(standardButton));
         delegate->completeCreate();
         return button;
     }
@@ -457,8 +462,7 @@ void QQuickDialogButtonBoxPrivate::updateLanguage()
             const QPlatformDialogHelper::StandardButton standardButton = boxAttachedPrivate->standardButton;
             // The button might be a custom one with explicitly specified text, so we shouldn't change it in that case.
             if (standardButton != QPlatformDialogHelper::NoButton) {
-                const QString buttonText = QGuiApplicationPrivate::platformTheme()->standardButtonText(standardButton);
-                button->setText(QPlatformTheme::removeMnemonics(buttonText));
+                button->setText(buttonText(standardButton));
             }
         }
         --i;

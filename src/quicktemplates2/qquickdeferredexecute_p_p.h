@@ -50,6 +50,7 @@
 
 #include <QtCore/qglobal.h>
 #include <QtQuickTemplates2/private/qquickdeferredpointer_p_p.h>
+#include <QtQuickTemplates2/private/qtquicktemplates2global_p.h>
 
 #include <QtQml/private/qqmlvme_p.h>
 
@@ -59,9 +60,9 @@ class QString;
 class QObject;
 
 namespace QtQuickPrivate {
-    void beginDeferred(QObject *object, const QString &property);
-    void cancelDeferred(QObject *object, const QString &property);
-    void completeDeferred(QObject *object, const QString &property);
+    Q_QUICKTEMPLATES2_PRIVATE_EXPORT void beginDeferred(QObject *object, const QString &property);
+    Q_QUICKTEMPLATES2_PRIVATE_EXPORT void cancelDeferred(QObject *object, const QString &property);
+    Q_QUICKTEMPLATES2_PRIVATE_EXPORT void completeDeferred(QObject *object, const QString &property);
 }
 
 template<typename T>

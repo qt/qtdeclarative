@@ -52,7 +52,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickItemDelegatePrivate : public QQuickAbstractButtonPrivate
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickItemDelegatePrivate : public QQuickAbstractButtonPrivate
 {
     Q_DECLARE_PUBLIC(QQuickItemDelegate)
 

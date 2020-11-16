@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickPopup;
 
-class QQuickPopupItemPrivate : public QQuickPagePrivate
+class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopupItemPrivate : public QQuickPagePrivate
 {
     Q_DECLARE_PUBLIC(QQuickPopupItem)
 

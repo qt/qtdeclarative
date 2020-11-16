@@ -158,6 +158,18 @@ QPlatformDialogHelper::ButtonRole QQuickDialogPrivate::buttonRole(QQuickAbstract
     return attached ? attached->buttonRole() : QPlatformDialogHelper::InvalidRole;
 }
 
+void QQuickDialogPrivate::handleAccept()
+{
+    Q_Q(QQuickDialog);
+    q->accept();
+}
+
+void QQuickDialogPrivate::handleReject()
+{
+    Q_Q(QQuickDialog);
+    q->reject();
+}
+
 void QQuickDialogPrivate::handleClick(QQuickAbstractButton *button)
 {
     Q_Q(QQuickDialog);
@@ -180,16 +192,21 @@ void QQuickDialogPrivate::handleClick(QQuickAbstractButton *button)
 }
 
 QQuickDialog::QQuickDialog(QObject *parent)
-    : QQuickPopup(*(new QQuickDialogPrivate), parent)
+    : QQuickDialog(*(new QQuickDialogPrivate), parent)
+{
+}
+
+QQuickDialog::QQuickDialog(QQuickDialogPrivate &dd, QObject *parent)
+    : QQuickPopup(dd, parent)
 {
     Q_D(QQuickDialog);
-    connect(d->popupItem, &QQuickPopupItem::titleChanged, this, &QQuickDialog::titleChanged);
-    connect(d->popupItem, &QQuickPopupItem::headerChanged, this, &QQuickDialog::headerChanged);
-    connect(d->popupItem, &QQuickPopupItem::footerChanged, this, &QQuickDialog::footerChanged);
-    connect(d->popupItem, &QQuickPopupItem::implicitHeaderWidthChanged, this, &QQuickDialog::implicitHeaderWidthChanged);
-    connect(d->popupItem, &QQuickPopupItem::implicitHeaderHeightChanged, this, &QQuickDialog::implicitHeaderHeightChanged);
-    connect(d->popupItem, &QQuickPopupItem::implicitFooterWidthChanged, this, &QQuickDialog::implicitFooterWidthChanged);
-    connect(d->popupItem, &QQuickPopupItem::implicitFooterHeightChanged, this, &QQuickDialog::implicitFooterHeightChanged);
+    QObject::connect(d->popupItem, &QQuickPopupItem::titleChanged, this, &QQuickDialog::titleChanged);
+    QObject::connect(d->popupItem, &QQuickPopupItem::headerChanged, this, &QQuickDialog::headerChanged);
+    QObject::connect(d->popupItem, &QQuickPopupItem::footerChanged, this, &QQuickDialog::footerChanged);
+    QObject::connect(d->popupItem, &QQuickPopupItem::implicitHeaderWidthChanged, this, &QQuickDialog::implicitHeaderWidthChanged);
+    QObject::connect(d->popupItem, &QQuickPopupItem::implicitHeaderHeightChanged, this, &QQuickDialog::implicitHeaderHeightChanged);
+    QObject::connect(d->popupItem, &QQuickPopupItem::implicitFooterWidthChanged, this, &QQuickDialog::implicitFooterWidthChanged);
+    QObject::connect(d->popupItem, &QQuickPopupItem::implicitFooterHeightChanged, this, &QQuickDialog::implicitFooterHeightChanged);
 }
 
 /*!
@@ -251,16 +268,16 @@ void QQuickDialog::setHeader(QQuickItem *header)
         return;
 
     if (QQuickDialogButtonBox *buttonBox = qobject_cast<QQuickDialogButtonBox *>(oldHeader)) {
-        disconnect(buttonBox, &QQuickDialogButtonBox::accepted, this, &QQuickDialog::accept);
-        disconnect(buttonBox, &QQuickDialogButtonBox::rejected, this, &QQuickDialog::reject);
+        QObjectPrivate::disconnect(buttonBox, &QQuickDialogButtonBox::accepted, d, &QQuickDialogPrivate::handleAccept);
+        QObjectPrivate::disconnect(buttonBox, &QQuickDialogButtonBox::rejected, d, &QQuickDialogPrivate::handleReject);
         QObjectPrivate::disconnect(buttonBox, &QQuickDialogButtonBox::clicked, d, &QQuickDialogPrivate::handleClick);
         if (d->buttonBox == buttonBox)
             d->buttonBox = nullptr;
     }
 
     if (QQuickDialogButtonBox *buttonBox = qobject_cast<QQuickDialogButtonBox *>(header)) {
-        connect(buttonBox, &QQuickDialogButtonBox::accepted, this, &QQuickDialog::accept);
-        connect(buttonBox, &QQuickDialogButtonBox::rejected, this, &QQuickDialog::reject);
+        QObjectPrivate::connect(buttonBox, &QQuickDialogButtonBox::accepted, d, &QQuickDialogPrivate::handleAccept);
+        QObjectPrivate::connect(buttonBox, &QQuickDialogButtonBox::rejected, d, &QQuickDialogPrivate::handleReject);
         QObjectPrivate::connect(buttonBox, &QQuickDialogButtonBox::clicked, d, &QQuickDialogPrivate::handleClick);
         d->buttonBox = buttonBox;
         buttonBox->setStandardButtons(d->standardButtons);
@@ -299,15 +316,15 @@ void QQuickDialog::setFooter(QQuickItem *footer)
         return;
 
     if (QQuickDialogButtonBox *buttonBox = qobject_cast<QQuickDialogButtonBox *>(oldFooter)) {
-        disconnect(buttonBox, &QQuickDialogButtonBox::accepted, this, &QQuickDialog::accept);
-        disconnect(buttonBox, &QQuickDialogButtonBox::rejected, this, &QQuickDialog::reject);
+        QObjectPrivate::disconnect(buttonBox, &QQuickDialogButtonBox::accepted, d, &QQuickDialogPrivate::handleAccept);
+        QObjectPrivate::disconnect(buttonBox, &QQuickDialogButtonBox::rejected, d, &QQuickDialogPrivate::handleReject);
         QObjectPrivate::disconnect(buttonBox, &QQuickDialogButtonBox::clicked, d, &QQuickDialogPrivate::handleClick);
         if (d->buttonBox == buttonBox)
             d->buttonBox = nullptr;
     }
     if (QQuickDialogButtonBox *buttonBox = qobject_cast<QQuickDialogButtonBox *>(footer)) {
-        connect(buttonBox, &QQuickDialogButtonBox::accepted, this, &QQuickDialog::accept);
-        connect(buttonBox, &QQuickDialogButtonBox::rejected, this, &QQuickDialog::reject);
+        QObjectPrivate::connect(buttonBox, &QQuickDialogButtonBox::accepted, d, &QQuickDialogPrivate::handleAccept);
+        QObjectPrivate::connect(buttonBox, &QQuickDialogButtonBox::rejected, d, &QQuickDialogPrivate::handleReject);
         QObjectPrivate::connect(buttonBox, &QQuickDialogButtonBox::clicked, d, &QQuickDialogPrivate::handleClick);
         d->buttonBox = buttonBox;
         buttonBox->setStandardButtons(d->standardButtons);

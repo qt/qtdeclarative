@@ -2,6 +2,7 @@
 
 add_subdirectory(controls)
 add_subdirectory(controlsimpl)
+add_subdirectory(dialogs)
 add_subdirectory(platform)
 add_subdirectory(templates)
 add_subdirectory(nativestyle)

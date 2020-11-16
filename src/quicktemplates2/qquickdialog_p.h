@@ -129,6 +129,8 @@ Q_SIGNALS:
     void implicitFooterHeightChanged();
 
 protected:
+    QQuickDialog(QQuickDialogPrivate &dd, QObject *parent);
+
 #if QT_CONFIG(accessibility)
     QAccessible::Role accessibleRole() const override;
     void accessibilityActiveChanged(bool active) override;

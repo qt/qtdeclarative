@@ -127,6 +127,20 @@ namespace QQuickVisualTestUtil
     QQuickItem* findViewDelegateItem(QQuickItemView *itemView, int index,
         FindViewDelegateItemFlags flags = FindViewDelegateItemFlag::PositionViewAtIndex);
 
+    /*!
+        \internal
+
+        Same as above except allows use in QTRY_* functions without having to call it again
+        afterwards to assign the delegate.
+    */
+    template<typename T>
+    bool findViewDelegateItem(QQuickItemView *itemView, int index, T &delegateItem,
+        FindViewDelegateItemFlags flags = FindViewDelegateItemFlag::PositionViewAtIndex)
+    {
+        delegateItem = qobject_cast<T>(findViewDelegateItem(itemView, index, flags));
+        return delegateItem != nullptr;
+    }
+
     class QQuickApplicationHelper
     {
     public:
