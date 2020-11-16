@@ -868,18 +868,15 @@ QQmlListProperty<QObject> QQuickWindowPrivate::data()
                                      QQuickWindowPrivate::data_removeLast);
 }
 
-QMouseEvent QQuickWindowPrivate::touchToMouseEvent(QEvent::Type type, const QEventPoint &p, QTouchEvent *event, QQuickItem *item)
+void QQuickWindowPrivate::touchToMouseEvent(QEvent::Type type, const QEventPoint &p, const QTouchEvent *touchEvent, QMutableSinglePointEvent *mouseEvent)
 {
-    Q_UNUSED(item)
     Q_ASSERT(QCoreApplication::testAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents));
-    QMutableSinglePointEvent ret(type, event->pointingDevice(), p,
+    QMutableSinglePointEvent ret(type, touchEvent->pointingDevice(), p,
                                  (type == QEvent::MouseMove ? Qt::NoButton : Qt::LeftButton),
                                  (type == QEvent::MouseButtonRelease ? Qt::NoButton : Qt::LeftButton),
-                                 event->modifiers(), Qt::MouseEventSynthesizedByQt);
+                                 touchEvent->modifiers(), Qt::MouseEventSynthesizedByQt);
     ret.setAccepted(true); // this now causes the persistent touchpoint to be accepted too
-    ret.setTimestamp(event->timestamp());
-    static_assert(sizeof(QMutableSinglePointEvent) == sizeof(QMouseEvent));
-    return *static_cast<QMouseEvent*>(static_cast<QSinglePointEvent*>(&ret));
+    *mouseEvent = ret;
 }
 
 bool QQuickWindowPrivate::checkIfDoubleTapped(ulong newPressEventTimestamp, QPoint newPressPos)
@@ -947,7 +944,8 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QTouchEvent *poi
     }
 
     // FIXME: make this work for mouse events too and get rid of the asTouchEvent in here.
-    QTouchEvent event = QQuickItemPrivate::get(item)->localizedTouchEvent(pointerEvent, false);
+    QMutableTouchEvent event;
+    QQuickItemPrivate::get(item)->localizedTouchEvent(pointerEvent, false, &event);
     if (!event.points().count())
         return false;
 
@@ -964,7 +962,8 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QTouchEvent *poi
                 break;
 
             qCDebug(DBG_TOUCH_TARGET) << device << "TP (mouse)" << Qt::hex << p.id() << "->" << item;
-            QMouseEvent mousePress = touchToMouseEvent(QEvent::MouseButtonPress, p, &event, item);
+            QMutableSinglePointEvent mousePress(QEvent::None, nullptr, QEventPoint());
+            touchToMouseEvent(QEvent::MouseButtonPress, p, &event, &mousePress);
 
             // Send a single press and see if that's accepted
             QCoreApplication::sendEvent(item, &mousePress);
@@ -979,7 +978,8 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QTouchEvent *poi
                 if (checkIfDoubleTapped(event.timestamp(), p.globalPosition().toPoint())) {
                     // since we synth the mouse event from from touch, we respect the
                     // QPlatformTheme::TouchDoubleTapDistance instead of QPlatformTheme::MouseDoubleClickDistance
-                    QMouseEvent mouseDoubleClick = touchToMouseEvent(QEvent::MouseButtonDblClick, p, &event, item);
+                    QMutableSinglePointEvent mouseDoubleClick(QEvent::None, nullptr, QEventPoint());
+                    touchToMouseEvent(QEvent::MouseButtonDblClick, p, &event, &mouseDoubleClick);
                     QCoreApplication::sendEvent(item, &mouseDoubleClick);
                     event.setAccepted(mouseDoubleClick.isAccepted());
                     if (!mouseDoubleClick.isAccepted())
@@ -1000,7 +1000,8 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QTouchEvent *poi
                         touchMousePressTimestamp = 0;   // Got dragged too far, dismiss the double tap
                 }
                 if (QQuickItem *mouseGrabberItem = qmlobject_cast<QQuickItem *>(pointerEvent->exclusiveGrabber(p))) {
-                    QMouseEvent me = touchToMouseEvent(QEvent::MouseMove, p, &event, mouseGrabberItem);
+                    QMutableSinglePointEvent me(QEvent::None, nullptr, QEventPoint());
+                    touchToMouseEvent(QEvent::MouseMove, p, &event, &me);
                     QCoreApplication::sendEvent(item, &me);
                     event.setAccepted(me.isAccepted());
                     if (me.isAccepted())
@@ -1010,7 +1011,8 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QTouchEvent *poi
                     // no grabber, check if we care about mouse hover
                     // FIXME: this should only happen once, not recursively... I'll ignore it just ignore hover now.
                     // hover for touch???
-                    QMouseEvent me = touchToMouseEvent(QEvent::MouseMove, p, &event, item);
+                    QMutableSinglePointEvent me(QEvent::None, nullptr, QEventPoint());
+                    touchToMouseEvent(QEvent::MouseMove, p, &event, &me);
                     if (lastMousePosition.isNull())
                         lastMousePosition = me.scenePosition();
                     QPointF last = lastMousePosition;
@@ -1026,7 +1028,8 @@ bool QQuickWindowPrivate::deliverTouchAsMouse(QQuickItem *item, QTouchEvent *poi
             } else if (p.state() & QEventPoint::State::Released) {
                 // currently handled point was released
                 if (QQuickItem *mouseGrabberItem = qmlobject_cast<QQuickItem *>(pointerEvent->exclusiveGrabber(p))) {
-                    QMouseEvent me = touchToMouseEvent(QEvent::MouseButtonRelease, p, &event, mouseGrabberItem);
+                    QMutableSinglePointEvent me(QEvent::None, nullptr, QEventPoint());
+                    touchToMouseEvent(QEvent::MouseButtonRelease, p, &event, &me);
                     QCoreApplication::sendEvent(item, &me);
 
                     if (item->acceptHoverEvents() && p.globalPosition() != QGuiApplicationPrivate::lastCursorPosition) {
@@ -2057,14 +2060,7 @@ void QQuickWindowPrivate::deliverKeyEvent(QKeyEvent *e)
 */
 QPointerEvent *QQuickWindowPrivate::clonePointerEvent(QPointerEvent *event, std::optional<QPointF> transformedLocalPos)
 {
-    QPointerEvent *ret = nullptr;
-    if (isMouseEvent(event)) {
-        ret = new QMouseEvent(*(static_cast<QMouseEvent *>(event)));
-    } else if (isTouchEvent(event)) {
-        ret = new QTouchEvent(*(static_cast<QTouchEvent *>(event)));
-    } else if (isTabletEvent(event)) {
-        ret = new QTabletEvent(*(static_cast<QTabletEvent *>(event)));
-    }
+    QPointerEvent *ret = static_cast<QPointerEvent*>(event->clone());
     QMutableEventPoint &point = QMutableEventPoint::from(ret->point(0));
     point.detach();
     point.setTimestamp(event->timestamp());
@@ -2945,7 +2941,8 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, bool isG
         return;
 
     bool eventAccepted = false;
-    QTouchEvent touchEvent = QQuickItemPrivate::get(item)->localizedTouchEvent(static_cast<QTouchEvent *>(pointerEvent), false);
+    QMutableTouchEvent touchEvent;
+    QQuickItemPrivate::get(item)->localizedTouchEvent(static_cast<QTouchEvent *>(pointerEvent), false, &touchEvent);
     if (touchEvent.type() == QEvent::None)
         return;  // no points inside this item
 
@@ -3261,8 +3258,8 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QPointerEvent *event, QQu
             } else if (acceptsTouchEvents || receiver->acceptedMouseButtons()) {
                 // get a touch event customized for delivery to filteringParent
                 // TODO should not be necessary? because QQuickWindowPrivate::deliverMatchingPointsToItem() does it
-                QTouchEvent filteringParentTouchEvent =
-                        QQuickItemPrivate::get(receiver)->localizedTouchEvent(static_cast<QTouchEvent *>(event), true);
+                QMutableTouchEvent filteringParentTouchEvent;
+                QQuickItemPrivate::get(receiver)->localizedTouchEvent(static_cast<QTouchEvent *>(event), true, &filteringParentTouchEvent);
                 if (filteringParentTouchEvent.type() != QEvent::None) {
                     qCDebug(DBG_TOUCH) << "letting parent" << filteringParent << "filter for" << receiver << &filteringParentTouchEvent;
                     if (filteringParent->childMouseEventFilter(receiver, &filteringParentTouchEvent)) {
@@ -3299,7 +3296,8 @@ bool QQuickWindowPrivate::sendFilteredPointerEventImpl(QPointerEvent *event, QQu
                             if (touchMouseUnset || touchMouseId == tp.id()) {
                                 // convert filteringParentTouchEvent (which is already transformed wrt local position, velocity, etc.)
                                 // into a synthetic mouse event, and let childMouseEventFilter() have another chance with that
-                                QMouseEvent mouseEvent = touchToMouseEvent(t, tp, &filteringParentTouchEvent, receiver);
+                                QMutableSinglePointEvent mouseEvent(QEvent::None, nullptr, QEventPoint());
+                                touchToMouseEvent(t, tp, &filteringParentTouchEvent, &mouseEvent);
                                 // If a filtering item calls QQuickWindow::mouseGrabberItem(), it should
                                 // report the touchpoint's grabber.  Whenever we send a synthetic mouse event,
                                 // touchMouseId and touchMouseDevice must be set, even if it's only temporarily and isn't grabbed.

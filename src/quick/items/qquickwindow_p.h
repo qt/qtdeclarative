@@ -197,7 +197,7 @@ public:
     static bool isTabletEvent(const QPointerEvent *ev);
 
     // delivery of pointer events:
-    QMouseEvent touchToMouseEvent(QEvent::Type type, const QEventPoint &p, QTouchEvent *event, QQuickItem *item);
+    void touchToMouseEvent(QEvent::Type type, const QEventPoint &p, const QTouchEvent *touchEvent, QMutableSinglePointEvent *mouseEvent);
     void ensureDeviceConnected(const QPointingDevice *dev);
     void deliverPointerEvent(QPointerEvent *);
     bool deliverTouchCancelEvent(QTouchEvent *);

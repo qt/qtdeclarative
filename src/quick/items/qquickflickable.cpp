@@ -1451,10 +1451,9 @@ void QQuickFlickable::mouseReleaseEvent(QMouseEvent *event)
             d->replayDelayedPress();
 
             // Now send the release
-            auto &firstPoint = event->point(0);
-            if (auto grabber = qmlobject_cast<QQuickItem *>(event->exclusiveGrabber(firstPoint))) {
-                QMouseEvent localized(*event);
-                QMutableEventPoint::from(firstPoint).setPosition(grabber->mapFromScene(event->scenePosition()));
+            if (auto grabber = qmlobject_cast<QQuickItem *>(event->exclusiveGrabber(event->point(0)))) {
+                QMutableSinglePointEvent localized(*event);
+                localized.mutablePoint().setPosition(grabber->mapFromScene(localized.scenePosition()));
                 QCoreApplication::sendEvent(window(), &localized);
             }
 

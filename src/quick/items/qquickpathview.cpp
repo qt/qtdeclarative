@@ -1859,20 +1859,20 @@ bool QQuickPathView::childMouseEventFilter(QQuickItem *i, QEvent *e)
         bool stealThisEvent = d->stealMouse;
         if ((stealThisEvent || contains(localPos)) && (!grabber || !grabber->keepMouseGrab() || grabberDisabled)) {
             // Make a localized copy of the QMouseEvent.
-            QMouseEvent localizedEvent(*static_cast<QMouseEvent *>(pe));
+            QMutableSinglePointEvent localizedEvent(*static_cast<QMouseEvent *>(pe));
             QMutableEventPoint::from(localizedEvent.point(0)).setPosition(localPos);
             localizedEvent.setAccepted(false);
 
             switch (localizedEvent.type()) {
             case QEvent::MouseMove:
-                d->handleMouseMoveEvent(&localizedEvent);
+                d->handleMouseMoveEvent(static_cast<QMouseEvent *>(static_cast<QSinglePointEvent *>(&localizedEvent)));
                 break;
             case QEvent::MouseButtonPress:
-                d->handleMousePressEvent(&localizedEvent);
+                d->handleMousePressEvent(static_cast<QMouseEvent *>(static_cast<QSinglePointEvent *>(&localizedEvent)));
                 stealThisEvent = d->stealMouse;   // Update stealThisEvent in case changed by function call above
                 break;
             case QEvent::MouseButtonRelease:
-                d->handleMouseReleaseEvent(&localizedEvent);
+                d->handleMouseReleaseEvent(static_cast<QMouseEvent *>(static_cast<QSinglePointEvent *>(&localizedEvent)));
                 break;
             default:
                 break;

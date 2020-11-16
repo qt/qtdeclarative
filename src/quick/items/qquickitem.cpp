@@ -8389,7 +8389,7 @@ QQuickItemLayer *QQuickItemPrivate::layer() const
     monitor eventpoint movements until a drag threshold is exceeded or the
     requirements for a gesture to be recognized are met in some other way.
 */
-QTouchEvent QQuickItemPrivate::localizedTouchEvent(const QTouchEvent *event, bool isFiltering)
+void QQuickItemPrivate::localizedTouchEvent(const QTouchEvent *event, bool isFiltering, QMutableTouchEvent *localized)
 {
     Q_Q(QQuickItem);
     QList<QEventPoint> touchPoints;
@@ -8449,8 +8449,10 @@ QTouchEvent QQuickItemPrivate::localizedTouchEvent(const QTouchEvent *event, boo
 
     // Now touchPoints will have only points which are inside the item.
     // But if none of them were just pressed inside, and the item has no other reason to care, ignore them anyway.
-    if (touchPoints.isEmpty() || (!anyPressOrReleaseInside && !anyGrabber && !isFiltering))
-        return QTouchEvent(QEvent::None);
+    if (touchPoints.isEmpty() || (!anyPressOrReleaseInside && !anyGrabber && !isFiltering)) {
+        *localized = QMutableTouchEvent(QEvent::None);
+        return;
+    }
 
     // if all points have the same state, set the event type accordingly
     QEvent::Type eventType = event->type();
@@ -8470,7 +8472,7 @@ QTouchEvent QQuickItemPrivate::localizedTouchEvent(const QTouchEvent *event, boo
     ret.setTarget(q);
     ret.setTimestamp(event->timestamp());
     ret.accept();
-    return ret;
+    *localized = ret;
 }
 
 bool QQuickItemPrivate::hasPointerHandlers() const

@@ -281,7 +281,7 @@ public:
 
     QQuickItemLayer *layer() const;
 
-    QTouchEvent localizedTouchEvent(const QTouchEvent *event, bool isFiltering);
+    void localizedTouchEvent(const QTouchEvent *event, bool isFiltering, QMutableTouchEvent *localized);
     bool hasPointerHandlers() const;
     bool hasHoverHandlers() const;
     virtual void addPointerHandler(QQuickPointerHandler *h);
