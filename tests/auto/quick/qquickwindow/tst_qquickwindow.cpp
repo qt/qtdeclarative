@@ -3642,8 +3642,10 @@ void tst_qquickwindow::rendererInterface()
                 case QSGRendererInterface::MetalRhi:
                     if (!rif->getResource(window, QSGRendererInterface::CommandListResource))
                         ok[idx] = false;
-                    if (!rif->getResource(window, QSGRendererInterface::CommandEncoderResource))
-                        ok[idx] = false;
+                    if (idx == 1 || idx == 2) { // must be recording a render pass to query the command encoder
+                        if (!rif->getResource(window, QSGRendererInterface::CommandEncoderResource))
+                            ok[idx] = false;
+                    }
                     break;
                 default:
                     break;
@@ -3837,8 +3839,10 @@ void tst_qquickwindow::rendererInterfaceWithRenderControl()
                 case QSGRendererInterface::MetalRhi:
                     if (!rif->getResource(window, QSGRendererInterface::CommandListResource))
                         ok[idx] = false;
-                    if (!rif->getResource(window, QSGRendererInterface::CommandEncoderResource))
-                        ok[idx] = false;
+                    if (idx == 1 || idx == 2) { // must be recording a render pass to query the command encoder
+                        if (!rif->getResource(window, QSGRendererInterface::CommandEncoderResource))
+                            ok[idx] = false;
+                    }
                     break;
                 default:
                     break;
