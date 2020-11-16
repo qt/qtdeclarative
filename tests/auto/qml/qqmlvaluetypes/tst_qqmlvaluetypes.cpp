@@ -99,6 +99,7 @@ private slots:
     void enumProperties();
     void scarceTypes();
     void nonValueTypes();
+    void char16Type();
 
 private:
     QQmlEngine engine;
@@ -1843,7 +1844,22 @@ void tst_qqmlvaluetypes::scarceTypes()
 void tst_qqmlvaluetypes::nonValueTypes()
 {
     CHECK_TYPE_IS_NOT_VALUETYPE(UnknownType, 0, void)
-    QT_FOR_EACH_STATIC_PRIMITIVE_TYPE(CHECK_TYPE_IS_NOT_VALUETYPE);
+            QT_FOR_EACH_STATIC_PRIMITIVE_TYPE(CHECK_TYPE_IS_NOT_VALUETYPE);
+}
+
+void tst_qqmlvaluetypes::char16Type()
+{
+    QV4::ExecutionEngine engine;
+    QV4::Scope scope(&engine);
+
+    char16_t t = 't';
+    QVariant v = QVariant::fromValue(t);
+    char16_t *vt = static_cast<char16_t *>(v.data());
+    *vt++ = 'a';
+    *vt++ = 'u';
+    QCOMPARE(v.typeId(), QMetaType::Char16);
+    QV4::ScopedValue scoped(scope, engine.fromVariant(v));
+    QCOMPARE(scoped->toQString(), "a");
 }
 
 #undef CHECK_TYPE_IS_NOT_VALUETYPE
