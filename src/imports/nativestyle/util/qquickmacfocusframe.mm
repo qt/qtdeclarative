@@ -132,8 +132,7 @@ QQuickFocusFrameDescription QQuickMacFocusFrame::getDescriptionForItem(QQuickIte
     if (!target) {
         // __focusFrameTarget points to the item in the control that should
         // get the focus frame. This is usually the control itself, but can
-        // sometimes be a child (CheckBox), and other times a grand parent
-        // (a ScrollView that has a TextArea as child). We anyway require
+        // sometimes be a child (CheckBox). We anyway require
         // this property to be set if we are to show the focus frame around
         // the control in the first place. So for controls that don't want
         // a frame (ProgressBar), we simply skip setting it.
@@ -144,27 +143,6 @@ QQuickFocusFrameDescription QQuickMacFocusFrame::getDescriptionForItem(QQuickIte
         // way for custom controls to get a native focus frame is for us to offer
         // a FocusFrame control (QTBUG-86818).
         return QQuickFocusFrameDescription::Invalid;
-    }
-
-    if (qobject_cast<QQuickTextArea *>(target)) {
-        // Special case: if the target is a TextArea, we check if it's the only
-        // child inside a ScrollArea, Flickable, or Frame. If that is the case, we
-        // redirect the focus frame to be around the container instead.
-        const auto parent1 = target->parentItem();
-        if (parent1 && parent1->childItems().count() == 1) {
-            const auto parent2 = parent1->parentItem();
-            const auto parent3 = parent2 ? parent2->parentItem() : nullptr;
-            if (qobject_cast<QQuickScrollView *>(parent3)) {
-                target = parent3;
-                qCDebug(lcFocusFrame) << "redirecting target to ScrollView:" << target;
-            } else if (qobject_cast<QQuickFlickable *>(parent2)) {
-                target = parent2;
-                qCDebug(lcFocusFrame) << "redirecting target to Flickable:" << target;
-            } else if (qobject_cast<QQuickFrame *>(parent2)) {
-                target = parent2;
-                qCDebug(lcFocusFrame) << "redirecting target to Frame:" << target;
-            }
-        }
     }
 
     // If the control gives us a QQuickStyleItem, we use that to configure the focus frame.
@@ -182,7 +160,7 @@ QQuickFocusFrameDescription QQuickMacFocusFrame::getDescriptionForItem(QQuickIte
     if (QQuickStyleItem *styleItem = qobject_cast<QQuickStyleItem *>(item))
         return { target, QQuickStyleMargins(styleItem->layoutMargins()), styleItem->focusFrameRadius() };
 
-    // Some controls don't have a QQuickStyleItem (TextArea). But if the __focusFrameStyleItem
+    // Some controls don't have a QQuickStyleItem. But if the __focusFrameStyleItem
     // has a "__isDefaultDelegate" property set, we show a default focus frame instead.
     if (item->property("__isDefaultDelegate").toBool() == true) {
         qCDebug(lcFocusFrame) << "'__isDefaultDelegate' property found, showing a default focus frame";

@@ -38,15 +38,4 @@ import QtQuick
 import QtQuick.NativeStyle as NativeStyle
 
 NativeStyle.DefaultTextArea {
-    id: control
-
-    readonly property Item __focusFrameTarget: control
-
-    background: Rectangle {
-        color: control.palette.light
-        // Since this delegate is a plain Rectangle, we need to tag it to know
-        // that it's still the default one, and not some custom item set by the
-        // application. Only in the former case do we wan't to show a focus frame.
-        readonly property bool __isDefaultDelegate: true
-    }
 }
