@@ -809,23 +809,31 @@ void tst_QQuickMultiPointTouchArea::inFlickableWithPressDelay() // QTBUG-78818
     QTRY_COMPARE(point11->pressed(), true); // wait until pressDelay exceeded
     QCOMPARE(devPriv->pointById(0)->exclusiveGrabber, mpta);
 
-    // drag past the threshold: Flickable takes over the grab, MPTA gets touchUngrab and is no longer pressed
+    // drag past the threshold: Flickable takes over the grab,
+    // MPTA gets touchUngrab and is no longer pressed,
+    // and Flickable starts moving
     int i = 0;
-    for (; i < 10 && devPriv->firstPointExclusiveGrabber() != flickable; ++i) {
+    int grabbedAfter = -1;
+    int movedAfter = -1;
+    int contentYChangedAfter = -1;
+    for (; i < 10 && contentYChangedAfter < 0; ++i) {
         p1 += QPoint(0,dragThreshold);
         QTest::touchEvent(window.data(), device).move(0, p1);
         QQuickTouchUtils::flush(window.data());
+        if (devPriv->firstPointExclusiveGrabber() == flickable)
+            grabbedAfter = i;
+        if (flickable->isMoving())
+            movedAfter = i;
+        if (!qFuzzyIsNull(flickable->contentY()))
+            contentYChangedAfter = i;
     }
     QCOMPARE(devPriv->firstPointExclusiveGrabber(), flickable);
-    qCDebug(lcTests, "Flickable stole grab from MPTA after %d moves", i);
+    int cancelCount = window->rootObject()->property("cancelCount").toInt();
+    qCDebug(lcTests, "Flickable stole grab from MPTA after %d moves, started moving after %d, and moved to contentY %lf after %d moves; got %d cancel(s)",
+            grabbedAfter, movedAfter, flickable->contentY(), contentYChangedAfter, cancelCount);
     QCOMPARE(devPriv->pointById(0)->exclusiveGrabber, flickable);
     QCOMPARE(point11->pressed(), false);
-    QVERIFY(window->rootObject()->property("cancelCount").toInt() > 0); // actually 2 because 2 touchPoints are declared... but only one was really cancelled
-
-    // drag a little more and the Flickable moves
-    p1 += QPoint(0,1);
-    QTest::touchEvent(window.data(), device).move(0, p1);
-    QQuickTouchUtils::flush(window.data());
+    QVERIFY(cancelCount > 0); // 2 touchPoints are declared but only one was really cancelled
     QVERIFY(flickable->contentY() < 0);
     QVERIFY(flickable->isMoving());
 
