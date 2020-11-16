@@ -902,13 +902,14 @@ void QQuickMultiPointTouchArea::touchUngrabEvent()
 
 bool QQuickMultiPointTouchArea::sendMouseEvent(QMouseEvent *event)
 {
-    QPointF localPos = mapFromScene(event->scenePosition());
+    const QPointF localPos = mapFromScene(event->scenePosition());
 
     QQuickWindow *c = window();
     QQuickItem *grabber = c ? c->mouseGrabberItem() : nullptr;
     bool stealThisEvent = _stealMouse;
     if ((stealThisEvent || contains(localPos)) && (!grabber || !grabber->keepMouseGrab())) {
         QMutableSinglePointEvent mouseEvent(*event);
+        const auto oldPosition = mouseEvent.mutablePoint().position();
         mouseEvent.mutablePoint().setPosition(localPos);
         mouseEvent.setSource(Qt::MouseEventSynthesizedByQt);
         mouseEvent.setAccepted(false);
@@ -931,6 +932,7 @@ bool QQuickMultiPointTouchArea::sendMouseEvent(QMouseEvent *event)
         if (grabber && stealThisEvent && !grabber->keepMouseGrab() && grabber != this)
             grabMouse();
 
+        mouseEvent.mutablePoint().setPosition(oldPosition);
         return stealThisEvent;
     }
     if (event->type() == QEvent::MouseButtonRelease) {
