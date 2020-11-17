@@ -319,6 +319,14 @@ QString TestQmllint::runQmllint(const QString &fileToLint,
 
         if (isSilent)
             QVERIFY(errors.isEmpty());
+
+        if (QTest::currentTestFailed()) {
+            qDebug() << "Command:" << process.program() << args.join(u' ');
+            qDebug() << "Exit status:" << process.exitStatus();
+            qDebug() << "Exit code:" << process.exitCode();
+            qDebug() << "stderr:" << errors;
+            qDebug() << "stdout:" << process.readAllStandardOutput();
+        }
     };
     verify(true);
     args.removeLast();
