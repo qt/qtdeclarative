@@ -71,7 +71,31 @@
     the engine. As with \c variant properties, code that relied on implicit string conversions need
     to use the corresponding functions of the Qt object.
 
-    \section1 Removed API
+    \section1 Source Incompatible API Changes
+
+    \section2 Changed API
+
+    \c QQmlListProperty's  \c CountFunction and \c AtFunction have been changed to use \c qsizetype
+    instead of \c int to align with the corresponding changes in Qt's containers.
+
+    \oldcode
+    int myCountFunction(QQmlListProperty<MyType> *);
+    MyType *myAtFunction(QQmlListProperty<MyType> *, int);
+
+    QQmlListProperty<MyType> myReadOnlyList(containingObject, container, &myCountFunction,
+                                            &myAtFunction);
+    \newcode
+    qsizetype myCountFunction(QQmlListProperty<MyType> *);
+    MyType *myAtFunction(QQmlListProperty<MyType> *, qsizetype);
+
+    QQmlListProperty<MyType> myReadOnlyList(containingObject, container, &myCountFunction,
+                                            &myAtFunction);
+    \endcode
+
+    Code which needs to supports both Qt 5 and Qt 6 can either use a typedef which is \c int in Qt 5
+    and \c qsizetype in Qt 6, or use \c QList::size_type, which already is such a type alias.
+
+    \section2 Removed API
 
     Various deprecated functions have been removed.
 
