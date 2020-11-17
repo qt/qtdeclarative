@@ -810,6 +810,11 @@ void QSGRenderThread::syncAndRender()
                                 QQuickProfiler::SceneGraphRenderLoopSync, 1);
         Q_TRACE(QSG_swap_entry);
         qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- window not ready, skipping render");
+        // Make sure a beginFrame() always gets an endFrame(). We could have
+        // started a frame but then not have a valid renderer (if there was no
+        // sync). So gracefully handle that.
+        if (cd->swapchain && rhi->isRecordingFrame())
+            rhi->endFrame(cd->swapchain, QRhi::SkipPresent);
     }
 
     qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- rendering done");
