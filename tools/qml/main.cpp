@@ -60,7 +60,6 @@
 #include <qqmldebug.h>
 #include <qqmlfileselector.h>
 
-#include <private/qmemory_p.h>
 #include <private/qtqmlglobal_p.h>
 #if QT_CONFIG(qml_animation)
 #include <private/qabstractanimation_p.h>
@@ -383,11 +382,11 @@ int main(int argc, char *argv[])
     switch (applicationType) {
 #ifdef QT_GUI_LIB
     case QmlApplicationTypeGui:
-        app = qt_make_unique<LoaderApplication>(argc, argv);
+        app = std::make_unique<LoaderApplication>(argc, argv);
         break;
 #ifdef QT_WIDGETS_LIB
     case QmlApplicationTypeWidget:
-        app = qt_make_unique<QApplication>(argc, argv);
+        app = std::make_unique<QApplication>(argc, argv);
         static_cast<QApplication *>(app.get())->setWindowIcon(QIcon(iconResourcePath));
         break;
 #endif // QT_WIDGETS_LIB
@@ -395,7 +394,7 @@ int main(int argc, char *argv[])
     case QmlApplicationTypeCore:
         Q_FALLTHROUGH();
     default: // QmlApplicationTypeUnknown: not allowed, but we'll exit after checking apptypeOption below
-        app = qt_make_unique<QCoreApplication>(argc, argv);
+        app = std::make_unique<QCoreApplication>(argc, argv);
         break;
     }
 
