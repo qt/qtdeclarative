@@ -114,11 +114,13 @@ QSGNode *QQuickStyleItem::updatePaintNode(QSGNode *oldNode, QQuickItem::UpdatePa
     QSGNinePatchNode *node = static_cast<QSGNinePatchNode *>(oldNode);
     if (!node)
         node = window()->createNinePatchNode();
+    if (m_paintedImage.isNull())
+        return node;
 
     auto texture = window()->createTextureFromImage(m_paintedImage, QQuickWindow::TextureCanUseAtlas);
 
     QRectF bounds = boundingRect();
-    const qreal scale = window()->devicePixelRatio();
+    const qreal scale = m_paintedImage.devicePixelRatioF();
     const QSizeF ninePatchImageSize = m_paintedImage.rect().size() / scale;
 #ifdef QT_DEBUG
     if (m_debugFlags.testFlag(Unscaled)) {
@@ -154,7 +156,7 @@ QSGNode *QQuickStyleItem::updatePaintNode(QSGNode *oldNode, QQuickItem::UpdatePa
 
     node->setBounds(bounds);
     node->setTexture(texture);
-    node->setDevicePixelRatio(window()->devicePixelRatio());
+    node->setDevicePixelRatio(scale);
     node->setPadding(padding.left(), padding.top(), padding.right(), padding.bottom());
     node->update();
 
