@@ -2146,6 +2146,9 @@ void tst_qqmlproperty::nullPropertyBinding()
 
 void tst_qqmlproperty::interfaceBinding()
 {
+#if defined(Q_CC_MSVC)
+    QSKIP("Test disabled due to crashing. See QTBUG-84416");
+#endif
     qmlRegisterInterface<Interface>("Interface", 1);
     qmlRegisterType<A>("io.qt.bugreports", 1, 0, "A");
     qmlRegisterType<B>("io.qt.bugreports", 1, 0, "B");
