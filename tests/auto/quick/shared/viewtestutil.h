@@ -188,7 +188,8 @@ namespace QQuickTouchUtils {
 }
 
 namespace QQuickTest {
-    bool initView(QQuickView &v, const QUrl &url, bool moveMouseOut, QByteArray *errorMessage);
+    bool initView(QQuickView &v, const QUrl &url, bool moveMouseOut = true, QByteArray *errorMessage = nullptr);
+    bool showView(QQuickView &v, const QUrl &url);
 }
 
 QT_END_NAMESPACE

@@ -469,28 +469,60 @@ namespace QQuickTouchUtils {
 }
 
 namespace QQuickTest {
-    // Initialize view, set Url, center in available geometry, move mouse away if desired
-    bool initView(QQuickView &v, const QUrl &url, bool moveMouseOut, QByteArray *errorMessage)
+
+    /*! \internal
+        Initialize \a view, set \a url, center in available geometry, move mouse away if desired.
+        If \a errorMessage is given, QQuickView::errors() will be concatenated into it;
+        otherwise, the QWARN messages are generally enough to debug the test.
+
+        Returns \c false if the view fails to load the QML.  That should be fatal in most tests,
+        so normally the return value should be checked with QVERIFY.
+    */
+    bool initView(QQuickView &view, const QUrl &url, bool moveMouseOut, QByteArray *errorMessage)
     {
-        v.setBaseSize(QSize(240,320));
-        v.setSource(url);
-        while (v.status() == QQuickView::Loading)
+        view.setSource(url);
+        while (view.status() == QQuickView::Loading)
             QTest::qWait(10);
-        if (v.status() != QQuickView::Ready) {
-            foreach (const QQmlError &e, v.errors())
-                errorMessage->append(e.toString().toLocal8Bit() + '\n');
+        if (view.status() != QQuickView::Ready) {
+            if (errorMessage) {
+                for (const QQmlError &e : view.errors())
+                    errorMessage->append(e.toString().toLocal8Bit() + '\n');
+            }
             return false;
         }
-        const QRect screenGeometry = v.screen()->availableGeometry();
-        const QSize size = v.size();
+        const QRect screenGeometry = view.screen()->availableGeometry();
+        const QSize size = view.size();
         const QPoint offset = QPoint(size.width() / 2, size.height() / 2);
-        v.setFramePosition(screenGeometry.center() - offset);
+        view.setFramePosition(screenGeometry.center() - offset);
     #if QT_CONFIG(cursor) // Get the cursor out of the way.
         if (moveMouseOut)
-             QCursor::setPos(v.geometry().topRight() + QPoint(100, 100));
+             QCursor::setPos(view.geometry().topRight() + QPoint(100, 100));
     #else
         Q_UNUSED(moveMouseOut);
     #endif
+        return true;
+    }
+
+    /*! \internal
+        Initialize \a view, set \a url, center in available geometry, move mouse away,
+        show the \a view, wait for it to be exposed, and verify that its rootObject is not null.
+
+        Returns \c false if anything fails, which should be fatal in most tests.
+        The usual way to call this function is
+        \code
+        QQuickView window;
+        QVERIFY(QQuickTest::showView(window, testFileUrl("myitems.qml")));
+        \endcode
+    */
+    bool showView(QQuickView &view, const QUrl &url)
+    {
+        if (!initView(view, url))
+            return false;
+        view.show();
+        if (!QTest::qWaitForWindowExposed(&view))
+            return false;
+        if (!view.rootObject())
+            return false;
         return true;
     }
 }
