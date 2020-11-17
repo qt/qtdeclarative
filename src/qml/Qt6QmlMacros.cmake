@@ -379,7 +379,7 @@ function(qt6_add_qml_module target)
         )
 
         set(resource_target "Foo")
-        QT6_ADD_RESOURCES(${target} ${qmldir_resource_name}
+        qt6_add_resources(${target} ${qmldir_resource_name}
             PREFIX ${target_resource_prefix}
             FILES "${qmldir_file}"
             OUTPUT_TARGETS resource_targets
@@ -390,6 +390,12 @@ function(qt6_add_qml_module target)
                 EXPORT "${arg_RESOURCE_EXPORT}"
                 DESTINATION "${arg_INSTALL_LOCATION}"
             )
+
+            # When building a static Qt, we need to record information about the compiled resource
+            # object files to embed them into .prl files.
+            if(COMMAND qt_internal_record_rcc_object_files)
+                qt_internal_record_rcc_object_files("${target}" "${resource_targets}")
+            endif()
         endif()
     else()
         # Copy QMLDIR file to build directory
@@ -588,6 +594,12 @@ function(qt6_target_qml_files target)
             EXPORT "${target_resource_export}"
             DESTINATION "${qml_module_install_dir}"
         )
+
+        # When building a static Qt, we need to record information about the compiled resource
+        # object files to embed them into .prl files.
+        if(COMMAND qt_internal_record_rcc_object_files)
+            qt_internal_record_rcc_object_files("${target}" "${resource_targets}")
+        endif()
     endif()
 
     set(file_contents "")
