@@ -55,7 +55,7 @@ QUntypedPropertyBinding QQmlPropertyBinding::create(const QQmlPropertyData *pd, 
                 context = ctxt
             ](const QMetaType &, void *dataPtr) -> bool {
                 Q_UNUSED(unit); // to keep refcount
-                aotFunction->functionPtr(context->asQQmlContext(), scopeObject.data(), dataPtr);
+                aotFunction->functionPtr(context->asQQmlContext(), scopeObject.data(), dataPtr, nullptr);
                 // ### Fixme: The aotFunction should do the check whether old and new value are the same and
                 // return false in that case
                 return true;

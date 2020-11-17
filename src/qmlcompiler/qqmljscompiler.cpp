@@ -451,25 +451,24 @@ bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFile
     writeStr(aotFunctions[FileScopeCodeIndex].code.toUtf8().constData());
     if (aotFunctions.size() <= 1) {
         // FileScopeCodeIndex is always there, but it may be the only one.
-        writeStr("extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[] = { { 0, QMetaType::fromType<void>(), nullptr } };");
+        writeStr("extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[] = { { 0, QMetaType::fromType<void>(), {}, nullptr } };");
     } else {
         writeStr(R"(template <typename Binding>
-                 void wrapCall(QQmlContext *context, QObject *scopeObject, void *dataPtr, Binding &&binding) {
-                 using return_type = std::invoke_result_t<Binding, QQmlContext*, QObject*>;
+                 void wrapCall(QQmlContext *context, QObject *scopeObject, void *dataPtr, const void **argumentsPtr, Binding &&binding) {
+                 using return_type = std::invoke_result_t<Binding, QQmlContext*, QObject*, const void **>;
                  if constexpr (std::is_same_v<return_type, void>) {
-                 Q_UNUSED(dataPtr);
-                 binding(context, scopeObject);
+                    Q_UNUSED(dataPtr);
+                    binding(context, scopeObject, argumentsPtr);
                  } else {
-                 auto result = binding(context, scopeObject);
-                 *reinterpret_cast<return_type *>(dataPtr) = std::move(result);
+                    new (dataPtr) return_type(binding(context, scopeObject, argumentsPtr));
                  }
                  }        )");
 
         writeStr("extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[] = {");
 
-        QString header = QStringLiteral("[](QQmlContext *context, QObject *scopeObject, void *dataPtr) {\n");
-        header += QStringLiteral("wrapCall(context, scopeObject, dataPtr, [](QQmlContext *context, QObject *scopeObject) {");
-        header += QStringLiteral("Q_UNUSED(context); Q_UNUSED(scopeObject);\n");
+        QString header = QStringLiteral("[](QQmlContext *context, QObject *scopeObject, void *dataPtr, const void **argumentsPtr) {\n");
+        header += QStringLiteral("wrapCall(context, scopeObject, dataPtr, argumentsPtr, [](QQmlContext *context, QObject *scopeObject, const void **argumentsPtr) {");
+        header += QStringLiteral("Q_UNUSED(context); Q_UNUSED(scopeObject); Q_UNUSED(argumentsPtr);\n");
 
         QString footer = QStringLiteral("});}\n");
 
@@ -482,13 +481,23 @@ bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFile
 
             QString function = header + func.value().code + footer;
 
-            writeStr(QStringLiteral("{ %1, QMetaType::fromType<%2>(), %3 },")
-                     .arg(func.key()).arg(func.value().returnType).arg(function)
+            QString argumentTypes = func.value().argumentTypes.join(
+                        QStringLiteral(">(), QMetaType::fromType<"));
+            if (!argumentTypes.isEmpty()) {
+                argumentTypes = QStringLiteral("QMetaType::fromType<")
+                        + argumentTypes + QStringLiteral(">()");
+            }
+
+            writeStr(QStringLiteral("{ %1, QMetaType::fromType<%2>(), { %3 }, %4 },")
+                     .arg(func.key())
+                     .arg(func.value().returnType)
+                     .arg(argumentTypes)
+                     .arg(function)
                      .toUtf8().constData());
         }
 
         // Conclude the list with a nullptr
-        writeStr("{ 0, QMetaType::fromType<void>(), nullptr }");
+        writeStr("{ 0, QMetaType::fromType<void>(), {}, nullptr }");
         writeStr("};\n");
     }
 

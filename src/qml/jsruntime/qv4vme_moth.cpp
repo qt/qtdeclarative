@@ -42,6 +42,7 @@
 #include <QtCore/qjsondocument.h>
 #include <QtCore/qjsonobject.h>
 
+#include <private/qv4alloca_p.h>
 #include <private/qv4instr_moth_p.h>
 #include <private/qv4value_p.h>
 #include <private/qv4debugging_p.h>
@@ -460,21 +461,33 @@ ReturnedValue VME::exec(CppStackFrame *frame, ExecutionEngine *engine)
     if (function->jittedCode != nullptr && debugger == nullptr) {
         result = function->jittedCode(frame, engine);
     } else if (function->aotFunction) {
+        const qsizetype numFunctionArguments = function->aotFunction->argumentTypes.size();
+        Q_ALLOCA_VAR(void *, argumentPtrs, numFunctionArguments * sizeof(void *));
+
+        for (qsizetype i = 0; i < numFunctionArguments; ++i) {
+            const QMetaType argumentType = function->aotFunction->argumentTypes[i];
+            Q_ALLOCA_VAR(void, argument, argumentType.sizeOf());
+            if (i < frame->originalArgumentsCount)
+                engine->metaTypeFromJS(frame->originalArguments[i], argumentType.id(), argument);
+            else
+                argumentType.construct(argument);
+            argumentPtrs[i] = argument;
+        }
+
+        const QMetaType returnType = function->aotFunction->returnType;
+        Q_ALLOCA_VAR(void, returnValue, returnType.sizeOf());
+
         Scope scope(engine);
         Scoped<QmlContext> qmlContext(scope, engine->qmlContext());
+        function->aotFunction->functionPtr(
+                qmlContext->qmlContext()->asQQmlContext(), qmlContext->qmlScope(),
+                returnValue, const_cast<const void **>(argumentPtrs)); // We're adding const here
 
-        QVariant resultVariant;
-        if (function->aotFunction->returnType.id() == QMetaType::QVariant) {
-            function->aotFunction->functionPtr(
-                    qmlContext->qmlContext()->asQQmlContext(), qmlContext->qmlScope(),
-                    &resultVariant);
-        } else {
-            resultVariant = QVariant(function->aotFunction->returnType, nullptr);
-            function->aotFunction->functionPtr(
-                    qmlContext->qmlContext()->asQQmlContext(), qmlContext->qmlScope(),
-                    resultVariant.data());
-        }
-        result = engine->fromVariant(resultVariant);
+        result = engine->metaTypeToJS(returnType.id(), returnValue);
+
+        returnType.destruct(returnValue);
+        for (qsizetype i = 0; i < numFunctionArguments; ++i)
+            function->aotFunction->argumentTypes[i].destruct(argumentPtrs[i]);
     } else {
         // interpreter
         result = interpret(frame, engine, function->codeData);

@@ -592,7 +592,9 @@ namespace QQmlPrivate
     struct AOTCompiledFunction {
         int index;
         QMetaType returnType;
-        void (*functionPtr)(QQmlContext *context, QObject *scopeObject, void *resultPtr);
+        QList<QMetaType> argumentTypes;
+        void (*functionPtr)(QQmlContext *context, QObject *scopeObject, void *resultPtr,
+                            const void **arguments);
     };
 
     struct CachedQmlUnit {
