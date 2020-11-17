@@ -399,6 +399,8 @@ void QQuickTextPrivate::updateSize()
         layedOutTextRect = QRectF(0, 0, 0, fontHeight);
         advance = QSizeF();
         signalSizeChange(previousSize);
+        lineCount = 1;
+        emit q->lineCountChanged();
         updateType = UpdatePaintNode;
         q->update();
         return;

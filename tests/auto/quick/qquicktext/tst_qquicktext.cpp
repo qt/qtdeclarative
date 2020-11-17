@@ -2243,6 +2243,43 @@ void tst_qquicktext::lineCount()
     QCOMPARE(myText->lineCount(), 2);
     QCOMPARE(myText->truncated(), true);
     QCOMPARE(myText->maximumLineCount(), 2);
+
+    // QTBUG-84458
+    myText->resetMaximumLineCount();
+    myText->setText("qqqqq\nqqqqq");
+    QCOMPARE(myText->lineCount(), 2);
+    myText->setText("qqqqq\nqqqqq\nqqqqq");
+    QCOMPARE(myText->lineCount(), 3);
+    myText->setText("");
+    QCOMPARE(myText->lineCount(), 1);
+
+    myText->setText("qqqqq\nqqqqq\nqqqqq");
+    QCOMPARE(myText->lineCount(), 3);
+    myText->setFontSizeMode(QQuickText::HorizontalFit);
+    myText->setText("");
+    QCOMPARE(myText->lineCount(), 1);
+
+    myText->setText("qqqqq\nqqqqq\nqqqqq");
+    QCOMPARE(myText->lineCount(), 3);
+    myText->setFontSizeMode(QQuickText::VerticalFit);
+    myText->setText("");
+    QCOMPARE(myText->lineCount(), 1);
+
+    myText->setText("qqqqq\nqqqqq\nqqqqq");
+    QCOMPARE(myText->lineCount(), 3);
+    myText->setFontSizeMode(QQuickText::Fit);
+    myText->setText("");
+    QCOMPARE(myText->lineCount(), 1);
+
+    QScopedPointer<QQuickView> layoutWindow(createView(testFile("lineLayoutHAlign.qml")));
+    QQuickText *lineLaidOut = layoutWindow->rootObject()->findChild<QQuickText*>("myText");
+    QVERIFY(lineLaidOut != nullptr);
+
+    lineLaidOut->setText("qqqqq\nqqqqq\nqqqqq");
+    QCOMPARE(lineLaidOut->lineCount(), 3);
+    lineLaidOut->setFontSizeMode(QQuickText::FixedSize);
+    lineLaidOut->setText("");
+    QCOMPARE(lineLaidOut->lineCount(), 1);
 }
 
 void tst_qquicktext::lineHeight()
