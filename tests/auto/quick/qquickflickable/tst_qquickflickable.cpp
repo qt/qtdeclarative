@@ -1565,8 +1565,6 @@ void tst_qquickflickable::cancelOnHide()
 
 void tst_qquickflickable::cancelOnMouseGrab()
 {
-    QSKIP("need a realistic test scenario: can no longer grab mouse between events");
-
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("cancel.qml"));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
@@ -1592,7 +1590,10 @@ void tst_qquickflickable::cancelOnMouseGrab()
 
     // grabbing mouse will cancel flickable interaction.
     QQuickItem *item = window->rootObject()->findChild<QQuickItem*>("row");
-    item->grabMouse();
+    auto mouse = QPointingDevice::primaryPointingDevice();
+    auto mousePriv = QPointingDevicePrivate::get(const_cast<QPointingDevice *>(mouse));
+    QMouseEvent fakeMouseEv(QEvent::MouseMove, QPoint(130, 100), Qt::NoButton, Qt::LeftButton, Qt::NoModifier, mouse);
+    mousePriv->setExclusiveGrabber(&fakeMouseEv, fakeMouseEv.points().first(), item);
 
     QTRY_COMPARE(flickable->contentX(), 0.);
     QTRY_COMPARE(flickable->contentY(), 0.);
@@ -1600,7 +1601,6 @@ void tst_qquickflickable::cancelOnMouseGrab()
     QTRY_VERIFY(!flickable->isDragging());
 
     moveAndRelease(window.data(), QPoint(50, 10));
-
 }
 
 void tst_qquickflickable::clickAndDragWhenTransformed()

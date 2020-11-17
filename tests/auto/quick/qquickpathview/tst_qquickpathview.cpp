@@ -1930,8 +1930,10 @@ void tst_QQuickPathView::cancelDrag()
     QCOMPARE(dragEndedSpy.count(), 0);
 
     // steal mouse grab - cancels PathView dragging
-    QQuickItem *item = window->rootObject()->findChild<QQuickItem*>("text");
-    item->grabMouse();
+    auto mouse = QPointingDevice::primaryPointingDevice();
+    auto mousePriv = QPointingDevicePrivate::get(const_cast<QPointingDevice *>(mouse));
+    QMouseEvent fakeMouseEv(QEvent::MouseMove, QPoint(130, 100), Qt::NoButton, Qt::LeftButton, Qt::NoModifier, mouse);
+    mousePriv->setExclusiveGrabber(&fakeMouseEv, fakeMouseEv.points().first(), nullptr);
 
     // returns to a snap point.
     QTRY_COMPARE(pathview->offset(), qreal(qFloor(pathview->offset())));
@@ -1942,7 +1944,6 @@ void tst_QQuickPathView::cancelDrag()
     QCOMPARE(dragEndedSpy.count(), 1);
 
     QTest::mouseRelease(window.data(), Qt::LeftButton, Qt::NoModifier, QPoint(40,100));
-
 }
 
 void tst_QQuickPathView::maximumFlickVelocity()
