@@ -355,6 +355,8 @@ qt_internal_add_module(Qml
         Qt::Core
     PRIVATE_MODULE_INTERFACE
         Qt::CorePrivate
+    EXTRA_CMAKE_FILES
+        "${CMAKE_CURRENT_SOURCE_DIR}/Qt6qmldirTemplate.cmake.in"
 )
 
 # special case begin remove the block, handled manually

@@ -362,7 +362,7 @@ function(qt6_add_qml_module target)
         endif()
     endforeach()
 
-    file(WRITE ${qmldir_file} ${qmldir_file_contents})
+    _qt_internal_qmldir_defer_file(WRITE "${qmldir_file}" "${qmldir_file_contents}")
 
     # Process qml files
     if (arg_QML_FILES)
@@ -419,7 +419,9 @@ function(qt6_add_qml_module target)
         set_target_properties(${target}
             PROPERTIES QT_QML_MODULE_PLUGIN_TYPES_FILE "${target_plugin_qmltypes}"
         )
-        file(APPEND ${qmldir_file} "typeinfo plugins.qmltypes\n")
+
+        _qt_internal_qmldir_defer_file(APPEND "${qmldir_file}" "typeinfo plugins.qmltypes\n")
+
         if (NOT arg_DO_NOT_INSTALL_METADATA AND should_install)
             install(FILES "${target_plugin_qmltypes}"
                     DESTINATION "${arg_INSTALL_LOCATION}"
@@ -639,7 +641,7 @@ function(qt6_target_qml_files target)
         endif()
 
     endforeach()
-    file(APPEND ${qmldir_file} ${file_contents})
+    _qt_internal_qmldir_defer_file(APPEND "${qmldir_file}" "${file_contents}")
 endfunction()
 
 if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
@@ -1141,3 +1143,38 @@ if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
         endif()
     endfunction()
 endif()
+
+# Wrapper around configure_file. Passes content collected in $directory-scoped property.
+function(_qt_internal_configure_qmldir directory)
+    get_property(__qt_qmldir_content DIRECTORY "${directory}" PROPERTY _qt_internal_qmldir_content)
+    configure_file(${ARGN} @ONLY)
+endfunction()
+
+# Collects content for target $filepath and use deferred call of 'configure_file' to avoid
+# rebuilding of targets that depend on provided qmldir.
+# Note: For cmake versions < 3.19.0 plain 'file' function call will be used.
+function(_qt_internal_qmldir_defer_file command filepath content)
+    if(${CMAKE_VERSION} VERSION_LESS "3.19.0")
+        file(${ARGV})
+    else()
+        if("${command}" STREQUAL "WRITE")
+            # Wrap with EVAL CODE to evaluate and expand arguments
+            cmake_language(EVAL CODE
+                           "cmake_language(DEFER DIRECTORY \"${CMAKE_CURRENT_SOURCE_DIR}\" CALL
+                            \"_qt_internal_configure_qmldir\"
+                            \"${CMAKE_CURRENT_SOURCE_DIR}\"
+                            \"${__qt_qml_macros_module_base_dir}/Qt6qmldirTemplate.cmake.in\"
+                            \"${filepath}\")")
+            set_property(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+                         PROPERTY _qt_internal_qmldir_content "${content}")
+        elseif("${command}" STREQUAL "APPEND")
+            set_property(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+                         APPEND_STRING
+                         PROPERTY _qt_internal_qmldir_content "${content}")
+        else()
+            message(FATAL_ERROR "Unknown command ${command}. \
+                                 _qt_internal_qmldir_defer_file only accepts \
+                                 WRITE and APPEND commands.")
+        endif()
+    endif()
+endfunction()
