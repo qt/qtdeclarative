@@ -58,11 +58,6 @@
     \c{QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGLRhi)} in their
     main() function.
 
-
-    \section1 Changes to Qt Quick Scenegraph
-
-    Here are changes to the \l{Qt Quick Scenegraph} from Qt 5 to Qt 6.
-
     \section2 Changes to QQuick* APIs
 
     \list
