@@ -1961,8 +1961,6 @@ bool QQuickWindow::event(QEvent *e)
         if (d->activeFocusItem)
             qGuiApp->inputMethod()->commit();
 #endif
-        if (mouseGrabberItem())
-            mouseGrabberItem()->ungrabMouse();
         break;
     case QEvent::UpdateRequest: {
         if (d->windowManager)
