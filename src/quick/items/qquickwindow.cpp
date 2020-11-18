@@ -849,7 +849,7 @@ void QQuickWindow::handleApplicationStateChanged(Qt::ApplicationState state)
 {
     Q_D(QQuickWindow);
     if (state != Qt::ApplicationActive && d->contentItem)
-        d->contentItem->windowDeactivateEvent();
+        d->handleWindowDeactivate();
 }
 
 /*!
@@ -1945,8 +1945,7 @@ bool QQuickWindow::event(QEvent *e)
         break;
 #endif
     case QEvent::WindowDeactivate:
-        if (d->contentItem)
-            d->contentItem->windowDeactivateEvent();
+        d->handleWindowDeactivate();
         break;
     case QEvent::PlatformSurface:
         if ((static_cast<QPlatformSurfaceEvent *>(e))->surfaceEventType() == QPlatformSurfaceEvent::SurfaceAboutToBeDestroyed) {
@@ -2294,6 +2293,41 @@ void QQuickWindowPrivate::deliverDelayedTouchEvent()
     QScopedPointer<QTouchEvent> e(delayedTouch.take());
     qCDebug(lcTouchCmprs) << "delivering" << e.data();
     deliverPointerEvent(e.data());
+}
+
+/*! \internal
+    The handler for the QEvent::WindowDeactivate event, and also when
+    Qt::ApplicationState tells us the application is no longer active.
+    It clears all exclusive grabs of items and handlers whose window is this one,
+    for all known pointing devices.
+
+    The QEvent is not passed into this function because in the first case it's
+    just a plain QEvent with no extra data, and because the application state
+    change is delivered via a signal rather than an event.
+*/
+void QQuickWindowPrivate::handleWindowDeactivate()
+{
+    Q_Q(QQuickWindow);
+    qCDebug(DBG_FOCUS) << "deactivated" << windowTitle;
+    const auto inputDevices = QInputDevice::devices();
+    for (auto device : inputDevices) {
+        if (auto pointingDevice = qobject_cast<const QPointingDevice *>(device)) {
+            auto devPriv = QPointingDevicePrivate::get(const_cast<QPointingDevice *>(pointingDevice));
+            for (auto epd : devPriv->activePoints.values()) {
+                if (!epd.exclusiveGrabber.isNull()) {
+                    bool relevant = false;
+                    if (QQuickItem *item = qmlobject_cast<QQuickItem *>(epd.exclusiveGrabber.data()))
+                        relevant = (item->window() == q);
+                    else if (QQuickPointerHandler *handler = qmlobject_cast<QQuickPointerHandler *>(epd.exclusiveGrabber.data()))
+                        relevant = (handler->parentItem()->window() == q);
+                    if (relevant)
+                        devPriv->setExclusiveGrabber(nullptr, epd.eventPoint, nullptr);
+                }
+                // For now, we don't clearPassiveGrabbers(), just in case passive grabs
+                // can be useful to keep monitoring the mouse even after window deactivation.
+            }
+        }
+    }
 }
 
 bool QQuickWindowPrivate::allUpdatedPointsAccepted(const QPointerEvent *ev)

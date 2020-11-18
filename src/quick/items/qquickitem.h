@@ -449,7 +449,6 @@ protected:
     virtual void dropEvent(QDropEvent *);
 #endif
     virtual bool childMouseEventFilter(QQuickItem *, QEvent *);
-    virtual void windowDeactivateEvent();
 
     virtual QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
     virtual void releaseResources();

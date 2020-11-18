@@ -180,7 +180,6 @@ protected:
 #endif
     bool childMouseEventFilter(QQuickItem *i, QEvent *e) override;
     void timerEvent(QTimerEvent *event) override;
-    void windowDeactivateEvent() override;
 
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void itemChange(ItemChange change, const ItemChangeData& value) override;

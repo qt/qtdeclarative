@@ -187,6 +187,7 @@ public:
     bool compressTouchEvent(QTouchEvent *);
     void flushFrameSynchronousEvents();
     void deliverDelayedTouchEvent();
+    void handleWindowDeactivate();
 
     // utility functions that used to be in QQuickPointerEvent et al.
     bool allUpdatedPointsAccepted(const QPointerEvent *ev);

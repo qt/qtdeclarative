@@ -1038,12 +1038,6 @@ void QQuickMouseArea::timerEvent(QTimerEvent *event)
     }
 }
 
-void QQuickMouseArea::windowDeactivateEvent()
-{
-    ungrabMouse();
-    QQuickItem::windowDeactivateEvent();
-}
-
 void QQuickMouseArea::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickMouseArea);

@@ -4226,17 +4226,6 @@ bool QQuickItem::childMouseEventFilter(QQuickItem *item, QEvent *event)
     return false;
 }
 
-/*!
-    \internal
-  */
-void QQuickItem::windowDeactivateEvent()
-{
-    const auto children = childItems();
-    for (QQuickItem* item : children) {
-        item->windowDeactivateEvent();
-    }
-}
-
 #if QT_CONFIG(im)
 /*!
     This method is only relevant for input items.
