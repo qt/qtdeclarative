@@ -937,7 +937,6 @@ void tst_QQuickMouseArea::pressedCanceledOnWindowDeactivate()
     QCOMPARE(window.rootObject()->property("released").toInt(), expectedRelease);
     QCOMPARE(window.rootObject()->property("clicked").toInt(), expectedClicks);
 
-
     QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, {});
     QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, {});
 
@@ -966,11 +965,8 @@ void tst_QQuickMouseArea::pressedCanceledOnWindowDeactivate()
         QCOMPARE(window.rootObject()->property("doubleClicked").toInt(), 1);
     }
 
-
-    QWindow *secondWindow = qvariant_cast<QWindow*>(window.rootObject()->property("secondWindow"));
-    secondWindow->setProperty("visible", true);
-    QVERIFY(QTest::qWaitForWindowExposed(secondWindow));
-
+    QEvent windowDeactivateEvent(QEvent::WindowDeactivate);
+    QGuiApplication::sendEvent(&window, &windowDeactivateEvent);
     QTRY_VERIFY(!window.rootObject()->property("pressed").toBool());
     QVERIFY(window.rootObject()->property("canceled").toBool());
     QCOMPARE(window.rootObject()->property("released").toInt(), expectedRelease);

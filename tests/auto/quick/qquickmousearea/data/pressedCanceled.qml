@@ -1,5 +1,4 @@
 import QtQuick 2.0
-import QtQuick.Window 2.0
 
 Rectangle {
     id: root
@@ -10,12 +9,6 @@ Rectangle {
     property int clicked: 0
     property int doubleClicked: 0
     property int released: 0
-    property alias secondWindow: secondWindow
-
-    Window {
-        id: secondWindow
-        x: root.x + root.width
-    }
 
     MouseArea {
         id: mouse
