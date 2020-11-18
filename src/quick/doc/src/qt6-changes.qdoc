@@ -117,7 +117,6 @@
     removed. Instead, use the fromNative() function from
     QPlatformInterface::QSGOpenGLTexture, QPlatformInterface::QSGVulkanTexture,
     QPlatformInterface::QSGD3D11Texture, or QPlatformInterface::QSGMetalTexture.
-    \endlist
 
     \li The QQuickFramebufferObject class is available with an unchanged API,
     but is only functional when the scenegraph is rendering with OpenGL. It will
