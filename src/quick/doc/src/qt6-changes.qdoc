@@ -42,7 +42,90 @@
     guidance to handle them.
 
 
-    \section1 Changes to Qt Quick
+    \section1 Changes to Qt Quick QML Types
+
+    \section2 Changed Type of font.weight
+
+    The type of \c font.weight has been changed to \c int. The pre-defined
+    weight classes still exist, but it is now possible to use arbitrary integers
+    to select fonts which do not match any of these weight classes. This ensures
+    parity with the C++ API, where it has always been possible to express the
+    font weight as an arbitrary integer.
+
+    Most code will be unaffected by this change, except in the case where an
+    implicit conversion from a string to enum value was used.
+
+    \code
+    font.weight: "Bold"
+    \endcode
+
+    This code will no longer parse correctly and has to be replaced by its
+    equivalent enum value, as demonstrated below.
+
+    \code
+    font.weight: Font.Bold
+    \endcode
+
+    \section2 FontLoader.name Is Now a Read-Only Property
+
+    In Qt 5, the \c name property of FontLoader was writable and would override
+    the source property of the item when set. This caused some confusion as to
+    its purpose and could cause undeterministic behavior if there was a race
+    condition between the setters for the conflicting properties.
+
+    This means that code such as the following will no longer work.
+
+    \code
+    FontLoader {
+        id: fontLoader
+        name: "Helvetica"
+    }
+
+    Text {
+        font.family: fontLoader.name
+        text: "Foobar"
+    }
+    \endcode
+
+    Instead, use a custom property to store font family names.
+
+    \code
+    property string fontName: "Helvetica"
+
+    Text {
+        font.family: fontName
+        text: "Foobar"
+    }
+    \endcode
+
+    \section2 The OpenGLInfo QML Type Is Removed
+
+    In Qt 5.8, OpenGLInfo was deprecated and is removed for Qt 6.
+    Please use GraphicsInfo instead.
+
+    \section1 ShaderEffect No Longer Supports Inline GLSL Shader Strings
+
+    Just like with \l{QSGMaterial}{custom materials}, the effects are no longer
+    specified in form of GLSL shader strings. Rather, shaders are expected to be
+    preprocessed by the tools from the \l{Qt Shader Tools} module, such as the
+    \c qsb command line tool, thus ensuring the shader assets are usable
+    regardless of which graphics API (Vulkan, Metal, OpenGL, or Direct 3D) is
+    used at runtime. ShaderEffect items are expected to reference the resulting
+    \c{.qsb} files.
+
+    \section2 ShaderEffect Source Properties Are Now URLs
+
+    The ShaderEffect properties \l{ShaderEffect::vertexShader}{vertexShader} and
+    \l{ShaderEffect::fragmentShader}{fragmentShader} both have a type of QUrl
+    now, instead of QByteArray. Their behavior is therefore identical to other
+    similar properties, such as \l{Image::source}{Image.source}. Existing code
+    that refers to files via the \c file or \c qrc scheme will continue to work
+    as-is. In addition, this change allows referring to files with a path
+    relative to the component's (the .qml file's) location. Specifying the
+    \c{file:} scheme is therefore optional now.
+
+
+    \section1 Changes to Qt Quick C++ APIs
 
     \section2 Changes to QQuickItem
 
@@ -197,5 +280,20 @@
     \l{QSGTexture::comparisonKey()}{comparisonKey()}.
 
     \endlist
+
+    \section1 Changes to OpenGL Use in Qt Quick
+
+    While it will present no breaks for many applications, application
+    developers should be aware that, OpenGL is not always the default choice
+    anymore for Qt Quick rendering in Qt 6. Unless the \c software backend is
+    used, a Qt Quick application could use OpenGL, Vulkan, Metal, or Direct3D 11
+    at runtime. When no explicit request is made, either via the
+    \c QSG_RHI_BACKEND environment variable or the
+    QQuickWindow::setSceneGraphBackend() function, a platform-specific
+    default is chosen by Qt Quick.
+
+    For more information, visit the \l{Qt Quick Scene Graph} and the
+    \l{Qt Quick Scene Graph Default Renderer} pages.
+
 
 */
