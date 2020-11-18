@@ -56,7 +56,6 @@
 #include <QtCore/QDebug>
 #include <QtCore/QTypeRevision>
 #include <private/qtqmlcompilerglobal_p.h>
-#include <private/qqmljsengine_p.h>
 #include <private/qqmljsdiagnosticmessage_p.h>
 
 QT_BEGIN_NAMESPACE
