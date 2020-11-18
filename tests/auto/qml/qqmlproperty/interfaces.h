@@ -30,8 +30,11 @@
 #define INTERFACES_H
 
 #include <QtQml/qqml.h>
+#include <QTest>
 
 struct Interface {
+    // non-virtual, non-QObject interfaces are not supported
+    virtual ~Interface() {};
 };
 
 QT_BEGIN_NAMESPACE
@@ -39,7 +42,7 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_INTERFACE(Interface, MyInterface_iid);
 QT_END_NAMESPACE
 
-class A : public QObject, Interface {
+class A : public QObject, public Interface {
     Q_OBJECT
     Q_INTERFACES(Interface)
 };
@@ -57,6 +60,9 @@ struct Interface2
 {
     Q_GADGET
     QML_INTERFACE
+public:
+    // non-virtual, non-QObject interfaces are not supported
+    virtual ~Interface2() {};
 };
 
 QT_BEGIN_NAMESPACE
@@ -64,7 +70,8 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_INTERFACE(Interface2, MyInterface2_iid);
 QT_END_NAMESPACE
 
-class A2 : public QObject, Interface2 {
+class A2 : public QObject, public Interface2
+{
     Q_OBJECT
     QML_ELEMENT
     Q_INTERFACES(Interface2)
@@ -94,7 +101,8 @@ public:
     }
     void setInterface(Interface* interface)
     {
-        QObject* object = reinterpret_cast<QObject*>(interface);
+        QObject* object = dynamic_cast<A*>(interface); // we know that we only get an A
+        QVERIFY(object);
         m_testValue = object->property("i").toInt();
         emit testValueChanged();
         if (m_interface == interface)
@@ -135,7 +143,7 @@ public:
     }
     void setInterface(Interface2* interface2)
     {
-        QObject* object = reinterpret_cast<QObject*>(interface2);
+        QObject* object = dynamic_cast<QObject*>(interface2);
         m_testValue = object->property("i").toInt();
         emit testValueChanged();
         if (m_interface == interface2)

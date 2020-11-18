@@ -2146,14 +2146,22 @@ void tst_qqmlproperty::nullPropertyBinding()
 
 void tst_qqmlproperty::interfaceBinding()
 {
-#if defined(Q_CC_MSVC)
-    QSKIP("Test disabled due to crashing. See QTBUG-84416");
-#endif
     qmlRegisterInterface<Interface>("Interface", 1);
     qmlRegisterType<A>("io.qt.bugreports", 1, 0, "A");
     qmlRegisterType<B>("io.qt.bugreports", 1, 0, "B");
     qmlRegisterType<C>("io.qt.bugreports", 1, 0, "C");
     qmlRegisterType<InterfaceConsumer>("io.qt.bugreports", 1, 0, "InterfaceConsumer");
+
+    // Currently registration macros such as QML_ELEMENT are broken when there's multiple inheritance (QTBUG-88623)
+    // So these types have to be registered again.
+    // TODO: Fix QTBUG-88623 and remove this hack
+    qmlRegisterInterface<Interface2>("Interface2", 2);
+    qmlRegisterType<A2>("io.qt.bugreports", 2, 0, "A2");
+    qmlRegisterType<A2>("io.qt.bugreports", 2, 0, "A2");
+    qmlRegisterType<B2>("io.qt.bugreports", 2, 0, "B2");
+    qmlRegisterType<C2>("io.qt.bugreports", 2, 0, "C2");
+    qmlRegisterType<InterfaceConsumer2>("io.qt.bugreports", 2, 0, "InterfaceConsumer2");
+
 
     const QVector<QUrl> urls = {
         testFileUrl("interfaceBinding.qml"),
@@ -2164,7 +2172,8 @@ void tst_qqmlproperty::interfaceBinding()
         QQmlEngine engine;
         QQmlComponent component(&engine, url);
         QScopedPointer<QObject> root(component.create());
-        QVERIFY(root);
+        QVERIFY2(root, qPrintable(component.errorString()));
+
         QCOMPARE(root->findChild<QObject*>("a1")->property("testValue").toInt(), 42);
         QCOMPARE(root->findChild<QObject*>("a2")->property("testValue").toInt(), 43);
         QCOMPARE(root->findChild<QObject*>("a3")->property("testValue").toInt(), 44);

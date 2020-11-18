@@ -1417,10 +1417,14 @@ bool QQmlPropertyPrivate::write(
 
         if (!ok && QQmlMetaType::isInterface(propertyType)) {
             auto valueAsQObject = qvariant_cast<QObject *>(value);
-            if (valueAsQObject && valueAsQObject->qt_metacast(QQmlMetaType::interfaceIId(propertyType))) {
+
+            if (void *interface = valueAsQObject
+                        ? valueAsQObject->qt_metacast(QQmlMetaType::interfaceIId(propertyType))
+                        : nullptr;
+                interface) {
                 // this case can occur when object has an interface type
                 // and the variant contains a type implementing the interface
-                return property.writeProperty(object, const_cast<void *>(value.constData()), flags);
+                return property.writeProperty(object, &interface, flags);
             }
         }
 
