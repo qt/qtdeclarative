@@ -41,6 +41,8 @@
     In this topic we summarize those changes in Qt Quick Test, and provide
     guidance to handle them.
 
-    \section1 ADD STUFF HERE
+    \section1 Mouse event simulation
 
+    \l{TestCase::mouseMove} moves the cursor to the center of the item
+    if the coordinate is not explicitly specified.
 */
