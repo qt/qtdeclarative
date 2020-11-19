@@ -2694,6 +2694,8 @@ void tst_QJSValue::deleteFromDifferentThread()
 {
 #if !QT_CONFIG(thread)
     QSKIP("Need thread support to destroy QJSValues from different threads");
+#elif !QT_CONFIG(cxx11_future)
+    QSKIP("This test requires QThread::create");
 #else
     QV4::PersistentValueStorage storage(engine->handle());
     QCOMPARE(storage.firstPage, nullptr);
