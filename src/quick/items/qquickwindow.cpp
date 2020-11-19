@@ -2636,8 +2636,10 @@ void QQuickWindowPrivate::onGrabChanged(QObject *grabber, QPointingDevice::GrabT
                     QMutableSinglePointEvent e(QEvent::UngrabMouse, point.device(), point);
                     hasFiltered.clear();
                     filtered = sendFilteredMouseEvent(&e, item, item->parentItem());
-                    if (!filtered)
+                    if (!filtered) {
+                        lastUngrabbed = item;
                         item->mouseUngrabEvent();
+                    }
                 }
                 if (point.device()->type() == QInputDevice::DeviceType::TouchScreen) {
                     bool allReleasedOrCancelled = true;
@@ -2713,6 +2715,7 @@ void QQuickWindowPrivate::deliverPointerEvent(QPointerEvent *event)
 
     eventsInDelivery.pop();
     --pointerEventRecursionGuard;
+    lastUngrabbed = nullptr;
 }
 
 // check if item or any of its child items contain the point, or if any pointer handler "wants" the point
@@ -2959,7 +2962,15 @@ void QQuickWindowPrivate::deliverMatchingPointsToItem(QQuickItem *item, bool isG
                 auto &point = pointerEvent->point(0);
                 auto mouseGrabber = pointerEvent->exclusiveGrabber(point);
                 if (mouseGrabber && mouseGrabber != item && mouseGrabber != oldMouseGrabber) {
-                    // we don't need item->mouseUngrabEvent() because QQuickWindowPrivate::onGrabChanged does it
+                    // Normally we don't need item->mouseUngrabEvent() here, because QQuickWindowPrivate::onGrabChanged does it.
+                    // However, if one item accepted the mouse event, it expects to have the grab and be in "pressed" state,
+                    // because accepting implies grabbing.  But before it actually gets the grab, another item could steal it.
+                    // In that case, onGrabChanged() does NOT notify the item that accepted the event that it's not getting the grab after all.
+                    // So after ensuring that it's not redundant, we send a notification here, for that case (QTBUG-55325).
+                    if (item != lastUngrabbed) {
+                        item->mouseUngrabEvent();
+                        lastUngrabbed = item;
+                    }
                 } else if (item->isEnabled() && item->isVisible() && point.state() != QEventPoint::State::Released) {
                     pointerEvent->setExclusiveGrabber(point, item);
                 }

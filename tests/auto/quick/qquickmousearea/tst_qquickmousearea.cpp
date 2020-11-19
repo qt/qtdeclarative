@@ -43,6 +43,8 @@
 #include <QtGui/QScreen>
 #include <qpa/qwindowsysteminterface.h>
 
+Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
+
 class CircleMask : public QObject
 {
     Q_OBJECT
@@ -2228,7 +2230,7 @@ void tst_QQuickMouseArea::ignoreBySource()
     QCOMPARE(flickable->contentY(), 0.);
 }
 
-void tst_QQuickMouseArea::notPressedAfterStolenGrab()
+void tst_QQuickMouseArea::notPressedAfterStolenGrab() // QTBUG-55325
 {
     QQuickWindow window;
     window.resize(200, 200);
@@ -2239,7 +2241,7 @@ void tst_QQuickMouseArea::notPressedAfterStolenGrab()
     ma->setSize(window.size());
     QObject::connect(ma,
                      static_cast<void (QQuickMouseArea::*)(QQuickMouseEvent*)>(&QQuickMouseArea::pressed),
-                     [&]() { window.contentItem()->grabMouse(); });
+                     [&]() { qCDebug(lcTests) << "stealing grab now"; window.contentItem()->grabMouse(); });
 
     QTest::mouseClick(&window, Qt::LeftButton);
     QVERIFY(!ma->pressed());

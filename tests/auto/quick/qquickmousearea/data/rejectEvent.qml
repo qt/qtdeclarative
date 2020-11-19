@@ -13,6 +13,7 @@ Rectangle {
 
     MouseArea {
         id: mouseRegion1
+        objectName: "mouseRegion1"
         anchors.fill: parent
         onPressed: { root.mr1_pressed = true }
         onReleased: { root.mr1_released = true }
@@ -20,6 +21,7 @@ Rectangle {
     }
     MouseArea {
         id: mouseRegion2
+        objectName: "mouseRegion2"
         width: 120; height: 120
         onPressed: { root.mr2_pressed = true; mouse.accepted = false }
         onReleased: { root.mr2_released = true }

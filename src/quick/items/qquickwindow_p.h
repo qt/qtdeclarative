@@ -154,6 +154,7 @@ public:
 #if QT_CONFIG(quick_draganddrop)
     QQuickDragGrabber *dragGrabber;
 #endif
+    QQuickItem *lastUngrabbed = nullptr;
     QStack<QPointerEvent *> eventsInDelivery;
 
     int touchMouseId; // only for obsolete stuff like QQuickItem::grabMouse()
