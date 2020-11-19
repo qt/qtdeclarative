@@ -6,5 +6,6 @@ macos
 opensuse-42.1
 [contentSize]
 windows gcc
+msvc-2019
 [hAlignVisual]
 sles
