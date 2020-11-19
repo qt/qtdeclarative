@@ -117,6 +117,14 @@ QML_IMPORT_NAME = com.mycompany.messaging
 QML_IMPORT_MAJOR_VERSION = 1
 \endcode
 
+If the header the class is declared in is not accessible from your project's
+include path, you may have to amend the include path so that the generated
+registration code can be compiled:
+
+\code
+INCLUDEPATH += com/mycompany/messaging
+\endcode
+
 The type can be used in an \l{qtqml-syntax-basics.html#object-declarations}
 {object declaration} from QML, and its properties can be read and written to,
 as per the example below:
