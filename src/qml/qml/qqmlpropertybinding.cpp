@@ -82,7 +82,7 @@ void QQmlPropertyBinding::expressionChanged()
         err.setLine(location.line);
         err.setColumn(location.column);
         err.setDescription(QString::fromLatin1("Binding loop detected"));
-        QtQml::qmlWarning(this->scopeObject(), err);
+        qmlWarning(this->scopeObject(), err);
         return;
     }
     m_error.setTag(currentTag | InEvaluationLoop);
