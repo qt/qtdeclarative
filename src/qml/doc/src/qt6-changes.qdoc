@@ -107,9 +107,9 @@
     QQmlListProperty<QObject>(owner, &owner->objectList);
     \endcode
 
-    \li The functions  \c qmlExecuteDeferred, \c qmlContext and \c qmlEngine used to exist both in
-    the global namespace (or Qt namespace in namespaced builds), and in the \c QtQml namespace. The
-    latter has been removed.
+    \li The functions \c qmlDebug, \c qmlInfo, \c qmlWarning,  \c qmlContext and \c qmlEngine used
+    to exist both in the global namespace (or Qt namespace in namespaced builds), and in the \c
+    QtQml namespace. These functions now exist only in the global namespace.
     \oldcode
     QQmlEngine *engine = QtQml::qmlEngine(qmlObject);
     \newcode
