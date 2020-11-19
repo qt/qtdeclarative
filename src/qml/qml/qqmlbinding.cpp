@@ -738,7 +738,7 @@ QQmlBinding *QQmlBinding::newBinding(QQmlEnginePrivate *engine, const QQmlProper
     if (property && property->isQObject())
         return new QObjectPointerBinding(engine, property->propType());
 
-    const int type = (property && property->isFullyResolved()) ? property->propType() : QMetaType::UnknownType;
+    const int type = property ? property->propType() : QMetaType::UnknownType;
 
     if (type == qMetaTypeId<QQmlBinding *>()) {
         return new QQmlBindingBinding;

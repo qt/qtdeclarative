@@ -134,23 +134,6 @@ static void populate(QQmlPropertyData *data, const QMetaProperty &p)
     data->setRevision(QTypeRevision::fromEncodedVersion(p.revision()));
 }
 
-void QQmlPropertyData::lazyLoad(const QMetaProperty &p)
-{
-    populate(this, p);
-    int type = static_cast<int>(p.userType());
-    if (type == QMetaType::QObjectStar) {
-        setPropType(type);
-        m_flags.type = Flags::QObjectDerivedType;
-    } else if (type == QMetaType::QVariant) {
-        setPropType(type);
-        m_flags.type = Flags::QVariantType;
-    } else if (type >= QMetaType::User || type == 0) {
-        m_flags.notFullyResolved = true;
-    } else {
-        setPropType(type);
-    }
-}
-
 void QQmlPropertyData::load(const QMetaProperty &p)
 {
     populate(this, p);
@@ -186,18 +169,6 @@ void QQmlPropertyData::load(const QMetaMethod &m)
 
     Q_ASSERT(m.revision() <= std::numeric_limits<quint16>::max());
     setRevision(QTypeRevision::fromEncodedVersion(m.revision()));
-}
-
-void QQmlPropertyData::lazyLoad(const QMetaMethod &m)
-{
-    load(m);
-
-    const char *returnType = m.typeName();
-    if (!returnType)
-        returnType = "\0";
-    if ((*returnType != 'v') || (qstrcmp(returnType+1, "oid") != 0)) {
-        m_flags.notFullyResolved = true;
-    }
 }
 
 /*!
@@ -532,7 +503,7 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
         else
             data->setFlags(methodFlags);
 
-        data->lazyLoad(m);
+        data->load(m);
         data->m_flags.setIsDirect(!dynamicMetaObject);
 
         Q_ASSERT((allowedRevisionCache.count() - 1) < Q_INT16_MAX);
@@ -611,7 +582,7 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
         QQmlPropertyData *data = &propertyIndexCache[ii - propertyIndexCacheStart];
 
         data->setFlags(propertyFlags);
-        data->lazyLoad(p);
+        data->load(p);
         data->setTypeVersion(typeVersion);
 
         data->m_flags.setIsDirect(!dynamicMetaObject);
@@ -645,42 +616,6 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
             data->trySetStaticMetaCallFunction(metaObject->d.static_metacall, ii - propOffset);
         if (old)
             data->markAsOverrideOf(old);
-    }
-}
-
-void QQmlPropertyCache::resolve(QQmlPropertyData *data) const
-{
-    Q_ASSERT(data->notFullyResolved());
-    data->m_flags.notFullyResolved = false;
-
-    const QMetaObject *mo = firstCppMetaObject();
-    if (data->isFunction()) {
-        auto metaMethod = mo->method(data->coreIndex());
-        const char *retTy = metaMethod.typeName();
-        if (!retTy)
-            retTy = "\0";
-        data->setPropType(QMetaType::fromName(retTy).id());
-    } else {
-        auto metaProperty = mo->property(data->coreIndex());
-        data->setPropType(metaProperty.metaType().id());
-    }
-
-    if (!data->isFunction()) {
-        if (data->propType() == QMetaType::UnknownType) {
-            int propOffset = mo->propertyOffset();
-            if (mo && data->coreIndex() < propOffset + mo->propertyCount()) {
-                while (data->coreIndex() < propOffset) {
-                    mo = mo->superClass();
-                    propOffset = mo->propertyOffset();
-                }
-
-                int registerResult = -1;
-                void *argv[] = { &registerResult };
-                mo->static_metacall(QMetaObject::RegisterPropertyMetaType, data->coreIndex() - propOffset, argv);
-                data->setPropType(registerResult == -1 ? QMetaType::UnknownType : registerResult);
-            }
-        }
-        flagsForPropertyType(QMetaType(data->propType()), data->m_flags);
     }
 }
 
@@ -827,7 +762,7 @@ QQmlPropertyData *QQmlPropertyCache::findProperty(
             } while (it != end);
         }
 
-        return ensureResolved(result);
+        return result;
     }
 
     return nullptr;

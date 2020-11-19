@@ -256,9 +256,6 @@ private:
     QQmlPropertyData *findProperty(StringCache::ConstIterator it, const QQmlVMEMetaObject *,
                                    const QQmlRefPointer<QQmlContextData> &) const;
 
-    QQmlPropertyData *ensureResolved(QQmlPropertyData*) const;
-
-    Q_NEVER_INLINE void resolve(QQmlPropertyData *) const;
     void updateRecur(const QMetaObject *);
 
     template<typename K>
@@ -299,14 +296,6 @@ private:
     QByteArray _checksum;
 };
 
-inline QQmlPropertyData *QQmlPropertyCache::ensureResolved(QQmlPropertyData *p) const
-{
-    if (p && Q_UNLIKELY(p->notFullyResolved()))
-        resolve(p);
-
-    return p;
-}
-
 // Returns this property cache's metaObject.  May be null if it hasn't been created yet.
 inline const QMetaObject *QQmlPropertyCache::metaObject() const
 {
@@ -331,8 +320,7 @@ inline QQmlPropertyData *QQmlPropertyCache::property(int index) const
     if (index < propertyIndexCacheStart)
         return _parent->property(index);
 
-    QQmlPropertyData *rv = const_cast<QQmlPropertyData *>(&propertyIndexCache.at(index - propertyIndexCacheStart));
-    return ensureResolved(rv);
+    return const_cast<QQmlPropertyData *>(&propertyIndexCache.at(index - propertyIndexCacheStart));
 }
 
 inline QQmlPropertyData *QQmlPropertyCache::method(int index) const
@@ -343,8 +331,7 @@ inline QQmlPropertyData *QQmlPropertyCache::method(int index) const
     if (index < methodIndexCacheStart)
         return _parent->method(index);
 
-    QQmlPropertyData *rv = const_cast<QQmlPropertyData *>(&methodIndexCache.at(index - methodIndexCacheStart));
-    return ensureResolved(rv);
+    return const_cast<QQmlPropertyData *>(&methodIndexCache.at(index - methodIndexCacheStart));
 }
 
 /*! \internal
@@ -361,7 +348,7 @@ inline QQmlPropertyData *QQmlPropertyCache::signal(int index) const
 
     QQmlPropertyData *rv = const_cast<QQmlPropertyData *>(&methodIndexCache.at(index - signalHandlerIndexCacheStart));
     Q_ASSERT(rv->isSignal() || rv->coreIndex() == -1);
-    return ensureResolved(rv);
+    return rv;
 }
 
 inline QQmlEnumData *QQmlPropertyCache::qmlEnum(int index) const
