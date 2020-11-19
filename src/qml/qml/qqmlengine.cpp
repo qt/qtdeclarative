@@ -1511,6 +1511,9 @@ void QQmlEnginePrivate::doDeleteInEngineThread()
         delete d;
 }
 
+/*!
+   \internal
+*/
 void qmlExecuteDeferred(QObject *object)
 {
     QQmlData *data = QQmlData::get(object);
