@@ -2299,7 +2299,38 @@ QQuickListView::~QQuickListView()
 
     \since 5.15
 
-    \sa {Reusing items}, ListView::pooled, ListView::reused
+    \sa {Reusing items}, pooled(), reused()
+*/
+
+/*!
+    \qmlattachedsignal QtQuick::ListView::pooled()
+
+    This signal is emitted after an item has been added to the reuse
+    pool. You can use it to pause ongoing timers or animations inside
+    the item, or free up resources that cannot be reused.
+
+    This signal is emitted only if the \l reuseItems property is \c true.
+
+    \sa {Reusing items}, reuseItems, reused()
+*/
+
+/*!
+    \qmlattachedsignal QtQuick::ListView::reused()
+
+    This signal is emitted after an item has been reused. At this point, the
+    item has been taken out of the pool and placed inside the content view,
+    and the model properties such as \c index and \c row have been updated.
+
+    Other properties that are not provided by the model does not change when an
+    item is reused. You should avoid storing any state inside a delegate, but if
+    you do, manually reset that state on receiving this signal.
+
+    This signal is emitted when the item is reused, and not the first time the
+    item is created.
+
+    This signal is emitted only if the \l reuseItems property is \c true.
+
+    \sa {Reusing items}, reuseItems, pooled()
 */
 
 /*!
