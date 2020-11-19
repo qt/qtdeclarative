@@ -2152,17 +2152,6 @@ void tst_qqmlproperty::interfaceBinding()
     qmlRegisterType<C>("io.qt.bugreports", 1, 0, "C");
     qmlRegisterType<InterfaceConsumer>("io.qt.bugreports", 1, 0, "InterfaceConsumer");
 
-    // Currently registration macros such as QML_ELEMENT are broken when there's multiple inheritance (QTBUG-88623)
-    // So these types have to be registered again.
-    // TODO: Fix QTBUG-88623 and remove this hack
-    qmlRegisterInterface<Interface2>("Interface2", 2);
-    qmlRegisterType<A2>("io.qt.bugreports", 2, 0, "A2");
-    qmlRegisterType<A2>("io.qt.bugreports", 2, 0, "A2");
-    qmlRegisterType<B2>("io.qt.bugreports", 2, 0, "B2");
-    qmlRegisterType<C2>("io.qt.bugreports", 2, 0, "C2");
-    qmlRegisterType<InterfaceConsumer2>("io.qt.bugreports", 2, 0, "InterfaceConsumer2");
-
-
     const QVector<QUrl> urls = {
         testFileUrl("interfaceBinding.qml"),
         testFileUrl("interfaceBinding2.qml")

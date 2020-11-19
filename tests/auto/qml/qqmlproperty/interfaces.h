@@ -44,12 +44,12 @@ QT_END_NAMESPACE
 
 class A : public QObject, public Interface {
     Q_OBJECT
-    Q_INTERFACES(Interface)
+    QML_IMPLEMENTS_INTERFACES(Interface)
 };
 
 class B : public QObject, Interface {
     Q_OBJECT
-    Q_INTERFACES(Interface)
+    QML_IMPLEMENTS_INTERFACES(Interface)
 };
 
 class C : public QObject {
@@ -74,13 +74,13 @@ class A2 : public QObject, public Interface2
 {
     Q_OBJECT
     QML_ELEMENT
-    Q_INTERFACES(Interface2)
+    QML_IMPLEMENTS_INTERFACES(Interface2)
 };
 
 class B2 : public QObject, Interface2 {
     Q_OBJECT
     QML_ELEMENT
-    Q_INTERFACES(Interface2)
+    QML_IMPLEMENTS_INTERFACES(Interface2)
 };
 
 class C2 : public QObject {

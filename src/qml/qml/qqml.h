@@ -151,6 +151,10 @@
     template<typename T, typename... Args> \
     friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QList<int> *);
 
+#define QML_IMPLEMENTS_INTERFACES(INTERFACES) \
+    Q_INTERFACES(INTERFACES) \
+    enum class QmlIsInterface {yes = false};
+
 #define QML_UNAVAILABLE \
     QML_FOREIGN(QQmlTypeNotAvailable)
 
