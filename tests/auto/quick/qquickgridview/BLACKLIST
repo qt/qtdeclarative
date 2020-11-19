@@ -1,2 +1,5 @@
 [snapOneRow]
 macos # QTBUG-86729
+msvc-2019
+[snapToRow]
+msvc-2019
