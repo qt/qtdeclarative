@@ -9,12 +9,3 @@ opensuse-leap
 [pressOneAndTapAnother]
 opensuse-leap
 
-[nestedEventDelivery]
-* # QTBUG-86729
-
-[ignoreBySource]
-* # QTBUG-86729
-
-[onMousePressRejected]
-* # QTBUG-86729
-
