@@ -203,6 +203,7 @@ public:
         InputContentSize = 0x040,
         DontUseNinePatchImage = 0x080,
         NinePatchMargins = 0x100,
+        SaveImage = 0x200,
     };
     Q_FLAG(DebugFlag)
     Q_DECLARE_FLAGS(DebugFlags, DebugFlag)

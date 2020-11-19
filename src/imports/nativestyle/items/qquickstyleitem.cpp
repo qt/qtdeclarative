@@ -37,6 +37,7 @@
 #include "qquickstyleitem.h"
 
 #include <QtCore/qscopedvaluerollback.h>
+#include <QtCore/qdir.h>
 
 #include <QtQuick/qsgninepatchnode.h>
 #include <QtQuick/private/qquickwindow_p.h>
@@ -379,6 +380,15 @@ void QQuickStyleItem::paintControlToImage()
                 painter.drawLine(0, imgSize.height() - m.bottom(), imgSize.width(), imgSize.height() - m.bottom());
             }
         }
+        if (m_debugFlags.testFlag(SaveImage)) {
+            static int nr = -1;
+            ++nr;
+            static QString filename = QStringLiteral("styleitem_saveimage_");
+            const QString path = QDir::current().absoluteFilePath(filename);
+            const QString name = path + QString::number(nr) + QStringLiteral(".png");
+            m_paintedImage.save(name);
+            qDebug() << "image saved to:" << name;
+        }
     }
 #endif
 
@@ -432,6 +442,7 @@ void QQuickStyleItem::addDebugInfo()
     QQC2_DEBUG_FLAG(NinePatchMargins);
     QQC2_DEBUG_FLAG(Unscaled);
     QQC2_DEBUG_FLAG(Debug);
+    QQC2_DEBUG_FLAG(SaveImage);
 
     if (m_debugFlags & (DontUseNinePatchImage
                         | InputContentSize
