@@ -160,9 +160,8 @@ qt6_add_resources(automotive "imagine-assets"
         ${imagine-assets_resource_files}
 )
 set(qml_resource_files
-    "CustomGlow.qml"
     "FeatureButton.qml"
-    "GlowingLabel.qml"
+    "LargeLabel.qml"
     "automotive.qml"
 )
 

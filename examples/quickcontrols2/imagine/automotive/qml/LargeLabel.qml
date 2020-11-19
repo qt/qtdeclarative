@@ -64,18 +64,12 @@ Item {
     property alias horizontalAlignment: label.horizontalAlignment
     property alias verticalAlignment: label.verticalAlignment
     property bool glowEnabled: true
-    property color glowColor: colorGlow
     property color color: colorBright
 
     Label {
         id: label
         anchors.baseline: root.baseline
         color: root.color
-
-        layer.enabled: root.glowEnabled
-        layer.effect: CustomGlow {
-            color: glowColor
-        }
 
         TextMetrics {
             id: labelTextMetrics

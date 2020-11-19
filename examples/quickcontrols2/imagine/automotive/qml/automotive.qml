@@ -189,7 +189,7 @@ ApplicationWindow {
                         }
                     }
 
-                    GlowingLabel {
+                    LargeLabel {
                         text: qsTr("VOLUME")
                         color: "white"
                         font.pixelSize: fontSizeMedium
@@ -226,7 +226,7 @@ ApplicationWindow {
                     RowLayout {
                         Layout.topMargin: 16
 
-                        GlowingLabel {
+                        LargeLabel {
                             id: radioOption
                             text: qsTr("RADIO")
                             color: "white"
@@ -235,7 +235,7 @@ ApplicationWindow {
 
                             Layout.fillWidth: true
                         }
-                        GlowingLabel {
+                        LargeLabel {
                             text: qsTr("AUX")
                             color: colorLightGrey
                             font.pixelSize: fontSizeMedium * 0.8
@@ -245,7 +245,7 @@ ApplicationWindow {
                             Layout.alignment: Qt.AlignBottom
                             Layout.fillWidth: true
                         }
-                        GlowingLabel {
+                        LargeLabel {
                             text: qsTr("MP3")
                             color: colorDarkGrey
                             font.pixelSize: fontSizeMedium * 0.6
@@ -366,14 +366,14 @@ ApplicationWindow {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
 
-                GlowingLabel {
+                LargeLabel {
                     id: timeLabel
                     text: qsTr("11:02")
                     font.pixelSize: fontSizeExtraLarge
 
                     Layout.alignment: Qt.AlignHCenter
 
-                    GlowingLabel {
+                    LargeLabel {
                         text: qsTr("AM")
                         font.pixelSize: fontSizeLarge
                         anchors.left: parent.right
@@ -405,19 +405,11 @@ ApplicationWindow {
                         Image {
                             source: "qrc:/icons/warning.png"
                             anchors.horizontalCenter: parent.horizontalCenter
-
-                            layer.enabled: true
-                            layer.effect: CustomGlow {
-                                spread: 0.2
-                                samples: 40
-                                color: colorWarning
-                            }
                         }
 
-                        GlowingLabel {
+                        LargeLabel {
                             text: qsTr("Door open")
                             color: colorWarning
-                            glowColor: Qt.rgba(colorWarning.r, colorWarning.g, colorWarning.b, 0.4)
                         }
                     }
                 }
@@ -443,13 +435,13 @@ ApplicationWindow {
                         Row {
                             anchors.horizontalCenter: parent.horizontalCenter
 
-                            GlowingLabel {
+                            LargeLabel {
                                 id: outsideTempValueLabel
                                 text: qsTr("31")
                                 font.pixelSize: fontSizeExtraLarge
                             }
 
-                            GlowingLabel {
+                            LargeLabel {
                                 text: qsTr("°C")
                                 font.pixelSize: Qt.application.font.pixelSize * 2.5
                                 anchors.baseline: outsideTempValueLabel.baseline
@@ -498,7 +490,7 @@ ApplicationWindow {
                             anchors.left: parent.left
                         }
 
-                        GlowingLabel {
+                        LargeLabel {
                             id: temperatureValueLabel
                             text: qsTr("24°C")
                             font.pixelSize: fontSizeLarge
@@ -523,7 +515,7 @@ ApplicationWindow {
                             anchors.left: parent.left
                         }
 
-                        GlowingLabel {
+                        LargeLabel {
                             id: powerValueLabel
                             text: qsTr("10%")
                             font.pixelSize: fontSizeLarge
