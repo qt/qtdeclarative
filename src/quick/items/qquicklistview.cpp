@@ -1024,7 +1024,7 @@ QQuickItem * QQuickListViewPrivate::getSectionItem(const QString &section)
         QObject *nobj = delegate->beginCreate(context);
         if (nobj) {
             if (delegatePriv->hadRequiredProperties()) {
-                delegate->setInitialProperties(nobj, {{"section", section}});
+                delegate->setInitialProperties(nobj, {{QLatin1String("section"), section}});
             } else {
                 context->setContextProperty(QLatin1String("section"), section);
             }
