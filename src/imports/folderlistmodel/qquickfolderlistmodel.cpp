@@ -225,7 +225,7 @@ QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
     To use this module, import the module with the following line:
 
     \qml \QtMinorVersion
-    import Qt.labs.folderlistmodel 2.\1
+    import Qt.labs.folderlistmodel
     \endqml
 */
 
@@ -245,7 +245,7 @@ QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
     in future versions.}
 
     \qml \QtMinorVersion
-    import Qt.labs.folderlistmodel 2.\1
+    import Qt.labs.folderlistmodel
     \endqml
 
     The \l folder property specifies the folder to access. Information about the
@@ -292,8 +292,8 @@ QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
     of QML files in a \l ListView:
 
     \qml \QtMinorVersion
-    import QtQuick 2.\1
-    import Qt.labs.folderlistmodel 2.\1
+    import QtQuick
+    import Qt.labs.folderlistmodel
 
     ListView {
         width: 200; height: 400

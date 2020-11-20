@@ -66,7 +66,7 @@ QT_BEGIN_NAMESPACE
     To use the types in this module, import the module with the following line:
 
     \code
-    import Qt.labs.qmlmodels 1.0
+    import Qt.labs.qmlmodels
     \endcode
 */
 
