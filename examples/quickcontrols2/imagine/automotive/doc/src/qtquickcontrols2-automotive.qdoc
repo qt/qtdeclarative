@@ -32,12 +32,9 @@
     \keyword Qt Quick Controls 2 - Imagine Style Example: Automotive
     \ingroup qtquickcontrols2-examples
     \brief An automotive user interface using custom Imagine style assets.
-    \excludefromcreator
 
     This example demonstrates how custom Imagine style assets can be used to
     style an automotive user interface.
-
-    \note This example requires \l {Qt Graphical Effects}.
 
     \image qtquickcontrols2-automotive.png
 
