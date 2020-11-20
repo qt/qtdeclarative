@@ -3444,9 +3444,13 @@ QSize QWindowsXPStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt
     case CT_LineEdit:
     case CT_ComboBox:
         {
+            const qreal factor = QWindowsXPStylePrivate::nativeMetricScaleFactor(option);
+            if (contentsSize.isEmpty()) {
+                // Minimum size
+                return QSize(20, 20) / factor;
+            }
             XPThemeData buttontheme(option->window, nullptr, QWindowsXPStylePrivate::ButtonTheme, BP_PUSHBUTTON, PBS_NORMAL);
             if (buttontheme.isValid()) {
-                const qreal factor = QWindowsXPStylePrivate::nativeMetricScaleFactor(option);
                 const QMarginsF borderSize = buttontheme.margins() * factor;
                 if (!borderSize.isNull()) {
                     const qreal margin = qreal(2) * factor;
