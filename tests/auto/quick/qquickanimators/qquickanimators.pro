@@ -1,11 +1,16 @@
-QT += core-private gui-private qml-private quick-private testlib
-TARGET=tst_qquickanimators
 CONFIG += testcase
-macx: CONFIG -= app_bundle
+TARGET = tst_qquickanimators
 SOURCES += tst_qquickanimators.cpp
 
 include (../../shared/util.pri)
-include (../shared/util.pri)
+
+macos:CONFIG -= app_bundle
 
 TESTDATA = data/*
-DISTFILES += data/*
+
+QT += core-private gui-private  qml-private quick-private testlib
+DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0
+
+OTHER_FILES += \
+    data/positionerWithAnimator.qml \
+    data/windowWithAnimator.qml
