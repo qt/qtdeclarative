@@ -104,9 +104,15 @@ private:
 DECLARE_HEAP_OBJECT(QObjectMethod, FunctionObject) {
     DECLARE_MARKOBJECTS(QObjectMethod);
 
+    QQmlPropertyData *methods;
+    int methodCount;
+    alignas(alignof(QQmlPropertyData)) std::byte _singleMethod[sizeof(QQmlPropertyData)];
+
     void init(QV4::ExecutionContext *scope);
     void destroy()
     {
+        if (methods != reinterpret_cast<QQmlPropertyData *>(&_singleMethod))
+            delete[] methods;
         setPropertyCache(nullptr);
         qObj.destroy();
         FunctionObject::destroy();
@@ -120,6 +126,8 @@ DECLARE_HEAP_OBJECT(QObjectMethod, FunctionObject) {
             _propertyCache->release();
         _propertyCache = c;
     }
+
+    void ensureMethodsCache();
 
     const QMetaObject *metaObject();
     QObject *object() const { return qObj.data(); }
@@ -317,9 +325,6 @@ protected:
 private:
     void init(ExecutionEngine *engine);
     ReturnedValue constructInternal(const Value *argv, int argc) const;
-    ReturnedValue callConstructor(const QQmlPropertyData &data, QV4::ExecutionEngine *engine, QV4::CallData *callArgs) const;
-    ReturnedValue callOverloadedConstructor(QV4::ExecutionEngine *engine, QV4::CallData *callArgs) const;
-
 };
 
 struct Q_QML_EXPORT QmlSignalHandler : public QV4::Object

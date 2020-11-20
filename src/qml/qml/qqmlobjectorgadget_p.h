@@ -62,8 +62,8 @@ public:
         : QQmlMetaObject(obj),
         ptr(obj)
     {}
-    QQmlObjectOrGadget(QQmlPropertyCache *propertyCache, void *gadget)
-        : QQmlMetaObject(propertyCache)
+    QQmlObjectOrGadget(const QMetaObject *metaObject, void *gadget)
+        : QQmlMetaObject(metaObject)
         , ptr(gadget)
     {}
     QQmlObjectOrGadget(const QMetaObject* metaObject)
