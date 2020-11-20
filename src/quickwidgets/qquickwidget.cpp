@@ -171,7 +171,8 @@ void QQuickWidgetPrivate::invalidateRenderControl()
 {
 #if QT_CONFIG(opengl)
     if (!useSoftwareRenderer) {
-        if (!context) // this is not an error, could be called before creating the context, or multiple times
+        QOpenGLContext *current =QOpenGLContext::currentContext();
+        if (!context || !current) // this is not an error, could be called before creating the context, or multiple times
             return;
 
         bool success = context->makeCurrent(offscreenSurface);
@@ -985,12 +986,12 @@ void QQuickWidgetPrivate::createContext()
 // Never called by Software Rendering backend
 void QQuickWidgetPrivate::destroyContext()
 {
-    delete offscreenSurface;
-    offscreenSurface = nullptr;
 #if QT_CONFIG(opengl)
     delete context;
     context = nullptr;
 #endif
+    delete offscreenSurface;
+    offscreenSurface = nullptr;
 }
 
 void QQuickWidget::createFramebufferObject()
