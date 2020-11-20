@@ -40,6 +40,26 @@
 
 QT_BEGIN_NAMESPACE
 
+static QQmlJSScope::Ptr parseModule(QQmlJS::AST::ESModule *module, const QString &name)
+{
+    using namespace QQmlJS::AST;
+    QQmlJSScope::Ptr result = QQmlJSScope::create(QQmlJSScope::JSLexicalScope);
+    result->setInternalName(name);
+    for (auto *statement = module->body; statement; statement = statement->next) {
+        if (auto *exp = cast<ExportDeclaration *>(statement->statement)) {
+            // TODO: There are a number of other things we could find here
+            if (auto *function = cast<FunctionDeclaration *>(exp->variableStatementOrDeclaration)) {
+                QQmlJSMetaMethod method(function->name.toString());
+                method.setMethodType(QQmlJSMetaMethod::Method);
+                for (auto *argument = function->formals; argument; argument = argument->next)
+                    method.addParameter(argument->element->bindingIdentifier.toString(), QString());
+                result->addOwnMethod(method);
+            }
+        }
+    }
+    return result;
+}
+
 static QQmlJSScope::Ptr parseProgram(QQmlJS::AST::Program *program, const QString &name)
 {
     using namespace QQmlJS::AST;
@@ -105,8 +125,11 @@ QQmlJSScope::Ptr QQmlJSTypeReader::operator()()
         return membersVisitor.result();
     }
 
-    // TODO: Anything special to do with ES modules here?
-    return parseProgram(QQmlJS::AST::cast<QQmlJS::AST::Program *>(parser.rootNode()), scopeName);
+
+    if (isESModule)
+        return parseModule(cast<ESModule *>(parser.rootNode()), scopeName);
+    else
+        return parseProgram(cast<Program *>(parser.rootNode()), scopeName);
 }
 
 QT_END_NAMESPACE

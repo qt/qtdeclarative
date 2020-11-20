@@ -290,6 +290,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("anchors2") << QStringLiteral("anchors2.qml");
     QTest::newRow("optionalImport") << QStringLiteral("optionalImport.qml");
     QTest::newRow("goodAliasObject") << QStringLiteral("goodAliasObject.qml");
+    QTest::newRow("jsmoduleimport") << QStringLiteral("jsmoduleimport.qml");
 }
 
 void TestQmllint::cleanQmlCode()
