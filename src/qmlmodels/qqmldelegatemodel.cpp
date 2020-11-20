@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -2379,6 +2379,15 @@ void QQmlDelegateModelItem::destroyObject()
         data->ownContext = nullptr;
         data->context = nullptr;
     }
+    /* QTBUG-87228: when destroying object at the application exit, the deferred
+     * parent by setting it to QCoreApplication instance if it's nullptr, so
+     * deletion won't work. Not to leak memory, make sure our object has a that
+     * the parent claims the object at the end of the lifetime. When not at the
+     * application exit, normal event loop will handle the deferred deletion
+     * earlier.
+     */
+    if (object->parent() == nullptr)
+        object->setParent(QCoreApplication::instance());
     object->deleteLater();
 
     if (attached) {
