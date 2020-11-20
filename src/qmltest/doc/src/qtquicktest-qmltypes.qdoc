@@ -33,7 +33,7 @@
 
     You can import this module using the following statement:
 
-    \qml \QtMinorVersion
+    \qml
     import QtTest
     \endqml
 

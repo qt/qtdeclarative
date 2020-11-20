@@ -180,10 +180,10 @@ bool QQmlDelegateChoice::match(int row, int column, const QVariant &value) const
     sliders, radio buttons, and other visualizations based on the type of each setting. In this case, DelegateChooser
     could provide an easy way to associate a different type of delegate with each setting:
 
-    \qml \QtMinorVersion
-    import QtQuick 2.\1
-    import QtQuick.Controls 2.\1
-    import Qt.labs.qmlmodels 1.0
+    \qml
+    import QtQuick
+    import QtQuick.Controls
+    import Qt.labs.qmlmodels
 
     ListView {
         width: 200; height: 400

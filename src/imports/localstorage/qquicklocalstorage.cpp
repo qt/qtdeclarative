@@ -545,7 +545,7 @@ through the data.
     To use the types in this module, import the module and call the
     relevant functions using the \c LocalStorage type:
 
-    \qml \QtMinorVersion
+    \qml
     import QtQuick
     import QtQuick.LocalStorage
 
@@ -575,7 +575,7 @@ using the Offline Storage API.
 
 \section3 Open or Create a Database
 
-\qml \QtMinorVersion
+\qml
 import QtQuick.LocalStorage as Sql
 
 db = Sql.openDatabaseSync(identifier, version, description, estimated_size, callback(db))
