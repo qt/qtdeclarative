@@ -151,7 +151,7 @@ public:
     QQmlPropertyCache *copyAndReserve(int propertyCount,
                                       int methodCount, int signalCount, int enumCount);
     void appendProperty(const QString &, QQmlPropertyData::Flags flags, int coreIndex,
-                        int propType, QTypeRevision revision, int notifyIndex);
+                        QMetaType propType, QTypeRevision revision, int notifyIndex);
     void appendSignal(const QString &, QQmlPropertyData::Flags, int coreIndex,
                       const int *types = nullptr, const QList<QByteArray> &names = QList<QByteArray>());
     void appendMethod(const QString &, QQmlPropertyData::Flags flags, int coreIndex, int returnType,

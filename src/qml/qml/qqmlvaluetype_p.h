@@ -121,7 +121,9 @@ class Q_QML_PRIVATE_EXPORT QQmlValueTypeFactory
 {
 public:
     static bool isValueType(int idx);
+    static QQmlValueType *valueType(QMetaType metaType) {return valueType(metaType.id());};
     static QQmlValueType *valueType(int idx);
+    static const QMetaObject *metaObjectForMetaType(QMetaType type) {return metaObjectForMetaType(type.id());};
     static const QMetaObject *metaObjectForMetaType(int type);
 };
 

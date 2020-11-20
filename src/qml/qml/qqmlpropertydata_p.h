@@ -259,8 +259,8 @@ public:
     bool hasOverride() const { return overrideIndex() >= 0; }
     bool hasRevision() const { return revision() != QTypeRevision::zero(); }
 
-    int propType() const { return m_propType; }
-    void setPropType(int pt)
+    QMetaType propType() const { return m_propType; }
+    void setPropType(QMetaType pt)
     {
         m_propType = pt;
     }
@@ -397,7 +397,6 @@ private:
     void lazyLoad(const QMetaMethod &);
 
     Flags m_flags;
-    int m_propType = 0;
     qint16 m_coreIndex = -1;
 
     // The notify index is in the range returned by QObjectPrivate::signalIndex().
@@ -409,6 +408,8 @@ private:
 
     QTypeRevision m_revision = QTypeRevision::zero();
     QTypeRevision m_typeVersion = QTypeRevision::zero();
+
+    QMetaType m_propType = {};
 
     QQmlPropertyCacheMethodArguments *m_arguments = nullptr;
     StaticMetaCallFunction m_staticMetaCallFunction = nullptr;

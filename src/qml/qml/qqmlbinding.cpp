@@ -292,7 +292,7 @@ protected:
 
         int propertyType = StaticPropType; // If the binding is specialized to a type, the if and switch below will be constant-folded.
         if (propertyType == QMetaType::UnknownType)
-            propertyType = pd->propType();
+            propertyType = pd->propType().id();
 
         if (Q_LIKELY(!isUndefined && !vpd.isValid())) {
             switch (propertyType) {
@@ -322,7 +322,7 @@ protected:
                 break;
             default:
                 if (const QV4::QQmlValueTypeWrapper *vtw = result.as<const QV4::QQmlValueTypeWrapper>()) {
-                    if (vtw->d()->valueType()->metaType.id() == pd->propType()) {
+                    if (vtw->d()->valueType()->metaType == pd->propType()) {
                         return vtw->write(m_target.data(), pd->coreIndex());
                     }
                 }
@@ -372,7 +372,7 @@ public:
         QQmlPropertyData vpd;
         getPropertyData(&pd, &vpd);
         Q_ASSERT(pd);
-        if (pd->propType() == QMetaType::QString) {
+        if (pd->propType().id() == QMetaType::QString) {
             doStore(result, pd, flags);
         } else {
             QV4::ScopedString value(scope, scope.engine->newString(result));
@@ -413,7 +413,7 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
     QQmlEngine *qmlEngine = engine();
     QV4::ExecutionEngine *v4engine = qmlEngine->handle();
 
-    int type = valueTypeData.isValid() ? valueTypeData.propType() : core.propType();
+    const int type = valueTypeData.isValid() ? valueTypeData.propType().id() : core.propType().id();
 
     QQmlJavaScriptExpression::DeleteWatcher watcher(this);
 
@@ -425,7 +425,7 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
         value = v4engine->toVariant(result, qMetaTypeId<QList<QObject *> >());
     } else if (result.isNull() && core.isQObject()) {
         value = QVariant::fromValue((QObject *)nullptr);
-    } else if (core.propType() == qMetaTypeId<QList<QUrl> >()) {
+    } else if (core.propType().id() == qMetaTypeId<QList<QUrl> >()) {
         value = QQmlPropertyPrivate::urlSequence(v4engine->toVariant(result, qMetaTypeId<QList<QUrl>>()));
     } else if (!isVarProperty && type != qMetaTypeId<QJSValue>()) {
         value = v4engine->toVariant(result, type);
@@ -630,11 +630,11 @@ void QQmlBinding::getPropertyData(QQmlPropertyData **propertyData, QQmlPropertyD
     Q_ASSERT(*propertyData);
 
     if (Q_UNLIKELY(m_targetIndex.hasValueTypeIndex() && valueTypeData)) {
-        const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType((*propertyData)->propType());
+        const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType((*propertyData)->propType().id());
         Q_ASSERT(valueTypeMetaObject);
         QMetaProperty vtProp = valueTypeMetaObject->property(m_targetIndex.valueTypeIndex());
         valueTypeData->setFlags(QQmlPropertyData::flagsForProperty(vtProp));
-        valueTypeData->setPropType(vtProp.userType());
+        valueTypeData->setPropType(vtProp.metaType());
         valueTypeData->setCoreIndex(m_targetIndex.valueTypeIndex());
     }
 }
@@ -736,9 +736,9 @@ protected:
 QQmlBinding *QQmlBinding::newBinding(QQmlEnginePrivate *engine, const QQmlPropertyData *property)
 {
     if (property && property->isQObject())
-        return new QObjectPointerBinding(engine, property->propType());
+        return new QObjectPointerBinding(engine, property->propType().id());
 
-    const int type = property ? property->propType() : QMetaType::UnknownType;
+    const int type = property ? property->propType().id() : QMetaType::UnknownType;
 
     if (type == qMetaTypeId<QQmlBinding *>()) {
         return new QQmlBindingBinding;

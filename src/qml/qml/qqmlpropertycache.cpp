@@ -138,7 +138,7 @@ void QQmlPropertyData::load(const QMetaProperty &p)
 {
     populate(this, p);
     QMetaType type = p.metaType();
-    setPropType(type.id());
+    setPropType(type);
     flagsForPropertyType(type, m_flags);
 }
 
@@ -147,14 +147,14 @@ void QQmlPropertyData::load(const QMetaMethod &m)
     setCoreIndex(m.methodIndex());
     setArguments(nullptr);
 
-    setPropType(m.returnType());
+    setPropType(m.returnMetaType());
 
     m_flags.type = Flags::FunctionType;
     if (m.methodType() == QMetaMethod::Signal) {
         m_flags.setIsSignal(true);
     } else if (m.methodType() == QMetaMethod::Constructor) {
         m_flags.setIsConstructor(true);
-        setPropType(QMetaType::QObjectStar);
+        setPropType(QMetaType::fromType<QObject *>());
     }
 
     const int paramCount = m.parameterCount();
@@ -261,7 +261,7 @@ QQmlPropertyCache *QQmlPropertyCache::copyAndReserve(int propertyCount, int meth
     This is different from QMetaMethod::methodIndex().
 */
 void QQmlPropertyCache::appendProperty(const QString &name, QQmlPropertyData::Flags flags,
-                                       int coreIndex, int propType, QTypeRevision version,
+                                       int coreIndex, QMetaType propType, QTypeRevision version,
                                        int notifyIndex)
 {
     QQmlPropertyData data;
@@ -286,7 +286,7 @@ void QQmlPropertyCache::appendSignal(const QString &name, QQmlPropertyData::Flag
                                      const QList<QByteArray> &names)
 {
     QQmlPropertyData data;
-    data.setPropType(QMetaType::UnknownType);
+    data.setPropType(QMetaType());
     data.setCoreIndex(coreIndex);
     data.setFlags(flags);
     data.setArguments(nullptr);
@@ -326,7 +326,7 @@ void QQmlPropertyCache::appendMethod(const QString &name, QQmlPropertyData::Flag
     int argumentCount = names.count();
 
     QQmlPropertyData data;
-    data.setPropType(returnType);
+    data.setPropType(QMetaType(returnType));
     data.setCoreIndex(coreIndex);
 
     QQmlPropertyCacheMethodArguments *args = createArgumentsObject(argumentCount, names);
@@ -1091,8 +1091,8 @@ void QQmlPropertyCache::toMetaObjectBuilder(QMetaObjectBuilder &builder)
         QQmlPropertyData *data = methods.at(ii).second;
 
         QByteArray returnType;
-        if (data->propType() != 0)
-            returnType = QMetaType(data->propType()).name();
+        if (data->propType().isValid())
+            returnType = data->propType().name();
 
         QByteArray signature;
         // '+=' reserves extra capacity. Follow-up appending will be probably free.

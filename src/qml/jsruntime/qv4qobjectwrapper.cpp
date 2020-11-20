@@ -132,42 +132,43 @@ static QV4::ReturnedValue loadProperty(QV4::ExecutionEngine *v4, QObject *object
 {
     Q_ASSERT(!property.isFunction());
     QV4::Scope scope(v4);
+    const int propType = property.propType().id();
 
     if (property.isQObject()) {
         QObject *rv = nullptr;
         property.readProperty(object, &rv);
         return QV4::QObjectWrapper::wrap(v4, rv);
     } else if (property.isQList()) {
-        return QmlListWrapper::create(v4, object, property.coreIndex(), property.propType());
-    } else if (property.propType() == QMetaType::QReal) {
+        return QmlListWrapper::create(v4, object, property.coreIndex(), property.propType().id());
+    } else if (propType == QMetaType::QReal) {
         qreal v = 0;
         property.readProperty(object, &v);
         return QV4::Encode(v);
-    } else if (property.propType() == QMetaType::Int || property.isEnum()) {
+    } else if (propType == QMetaType::Int || property.isEnum()) {
         int v = 0;
         property.readProperty(object, &v);
         return QV4::Encode(v);
-    } else if (property.propType() == QMetaType::Bool) {
+    } else if (propType == QMetaType::Bool) {
         bool v = false;
         property.readProperty(object, &v);
         return QV4::Encode(v);
-    } else if (property.propType() == QMetaType::QString) {
+    } else if (propType == QMetaType::QString) {
         QString v;
         property.readProperty(object, &v);
         return v4->newString(v)->asReturnedValue();
-    } else if (property.propType() == QMetaType::UInt) {
+    } else if (propType == QMetaType::UInt) {
         uint v = 0;
         property.readProperty(object, &v);
         return QV4::Encode(v);
-    } else if (property.propType() == QMetaType::Float) {
+    } else if (propType == QMetaType::Float) {
         float v = 0;
         property.readProperty(object, &v);
         return QV4::Encode(v);
-    } else if (property.propType() == QMetaType::Double) {
+    } else if (propType == QMetaType::Double) {
         double v = 0;
         property.readProperty(object, &v);
         return QV4::Encode(v);
-    } else if (property.propType() == qMetaTypeId<QJSValue>()) {
+    } else if (propType == qMetaTypeId<QJSValue>()) {
         QJSValue v;
         property.readProperty(object, &v);
         return QJSValuePrivate::convertToReturnedValue(v4, v);
@@ -181,26 +182,26 @@ static QV4::ReturnedValue loadProperty(QV4::ExecutionEngine *v4, QObject *object
         }
 
         return scope.engine->fromVariant(v);
-    } else if (QQmlValueTypeFactory::isValueType(property.propType())) {
-        if (const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(property.propType()))
-            return QV4::QQmlValueTypeWrapper::create(v4, object, property.coreIndex(), valueTypeMetaObject, property.propType());
+    } else if (QQmlValueTypeFactory::isValueType(propType)) {
+        if (const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(propType))
+            return QV4::QQmlValueTypeWrapper::create(v4, object, property.coreIndex(), valueTypeMetaObject, propType);
     } else {
 #if QT_CONFIG(qml_sequence_object)
         // see if it's a sequence type
         bool succeeded = false;
-        QV4::ScopedValue retn(scope, QV4::SequencePrototype::newSequence(v4, property.propType(), object, property.coreIndex(), !property.isWritable(), &succeeded));
+        QV4::ScopedValue retn(scope, QV4::SequencePrototype::newSequence(v4, propType, object, property.coreIndex(), !property.isWritable(), &succeeded));
         if (succeeded)
             return retn->asReturnedValue();
 #endif
     }
 
-    if (property.propType() == QMetaType::UnknownType) {
+    if (propType == QMetaType::UnknownType) {
         QMetaProperty p = object->metaObject()->property(property.coreIndex());
         qWarning("QMetaProperty::read: Unable to handle unregistered datatype '%s' for property "
                  "'%s::%s'", p.typeName(), object->metaObject()->className(), p.name());
         return QV4::Encode::undefined();
     } else {
-        QVariant v(QMetaType(property.propType()), (void *)nullptr);
+        QVariant v(property.propType(), (void *)nullptr);
         property.readProperty(object, v.data());
         return scope.engine->fromVariant(v);
     }
@@ -461,7 +462,7 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlP
     QV4::ScopedFunctionObject f(scope, value);
     if (f) {
         if (!f->isBinding()) {
-            if (!property->isVarProperty() && property->propType() != qMetaTypeId<QJSValue>()) {
+            if (!property->isVarProperty() && property->propType().id() != qMetaTypeId<QJSValue>()) {
                 // assigning a JS function to a non var or QJSValue property or is not allowed.
                 QString error = QLatin1String("Cannot assign JavaScript function to ");
                 if (!QMetaType(property->propType()).name())
@@ -520,42 +521,43 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlP
     void *argv[] = { &o, 0, &status, &flags }; \
     QMetaObject::metacall(object, QMetaObject::WriteProperty, property->coreIndex(), argv);
 
+    const int propType = property->propType().id();
     if (value.isNull() && property->isQObject()) {
         PROPERTY_STORE(QObject*, nullptr);
     } else if (value.isUndefined() && property->isResettable()) {
         void *a[] = { nullptr };
         QMetaObject::metacall(object, QMetaObject::ResetProperty, property->coreIndex(), a);
-    } else if (value.isUndefined() && property->propType() == qMetaTypeId<QVariant>()) {
+    } else if (value.isUndefined() && propType == qMetaTypeId<QVariant>()) {
         PROPERTY_STORE(QVariant, QVariant());
-    } else if (value.isUndefined() && property->propType() == QMetaType::QJsonValue) {
+    } else if (value.isUndefined() && propType == QMetaType::QJsonValue) {
         PROPERTY_STORE(QJsonValue, QJsonValue(QJsonValue::Undefined));
-    } else if (!newBinding && property->propType() == qMetaTypeId<QJSValue>()) {
+    } else if (!newBinding && propType == qMetaTypeId<QJSValue>()) {
         PROPERTY_STORE(QJSValue, QJSValuePrivate::fromReturnedValue(value.asReturnedValue()));
-    } else if (value.isUndefined() && property->propType() != qMetaTypeId<QQmlScriptString>()) {
+    } else if (value.isUndefined() && propType != qMetaTypeId<QQmlScriptString>()) {
         QString error = QLatin1String("Cannot assign [undefined] to ");
-        if (!QMetaType(property->propType()).name())
+        if (!property->propType().name())
             error += QLatin1String("[unknown property type]");
         else
-            error += QLatin1String(QMetaType(property->propType()).name());
+            error += QLatin1String(property->propType().name());
         scope.engine->throwError(error);
         return;
     } else if (value.as<FunctionObject>()) {
         // this is handled by the binding creation above
-    } else if (property->propType() == QMetaType::Int && value.isNumber()) {
+    } else if (property->propType().id() == QMetaType::Int && value.isNumber()) {
         PROPERTY_STORE(int, value.asDouble());
-    } else if (property->propType() == QMetaType::QReal && value.isNumber()) {
+    } else if (propType == QMetaType::QReal && value.isNumber()) {
         PROPERTY_STORE(qreal, qreal(value.asDouble()));
-    } else if (property->propType() == QMetaType::Float && value.isNumber()) {
+    } else if (propType == QMetaType::Float && value.isNumber()) {
         PROPERTY_STORE(float, float(value.asDouble()));
-    } else if (property->propType() == QMetaType::Double && value.isNumber()) {
+    } else if (propType == QMetaType::Double && value.isNumber()) {
         PROPERTY_STORE(double, double(value.asDouble()));
-    } else if (property->propType() == QMetaType::QString && value.isString()) {
+    } else if (propType == QMetaType::QString && value.isString()) {
         PROPERTY_STORE(QString, value.toQStringNoThrow());
     } else if (property->isVarProperty()) {
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
         Q_ASSERT(vmemo);
         vmemo->setVMEProperty(property->coreIndex(), value);
-    } else if (property->propType() == qMetaTypeId<QQmlScriptString>() && (value.isUndefined() || value.isPrimitive())) {
+    } else if (propType == qMetaTypeId<QQmlScriptString>() && (value.isUndefined() || value.isPrimitive())) {
         QQmlScriptString ss(value.toQStringNoThrow(), nullptr /* context */, object);
         if (value.isNumber()) {
             ss.d->numberValue = value.toNumber();
@@ -570,7 +572,7 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlP
         if (property->isQList())
             v = scope.engine->toVariant(value, qMetaTypeId<QList<QObject *> >());
         else
-            v = scope.engine->toVariant(value, property->propType());
+            v = scope.engine->toVariant(value, propType);
 
         QQmlRefPointer<QQmlContextData> callingQmlContext = scope.engine->callingQmlContext();
         if (!QQmlPropertyPrivate::write(object, *property, v, callingQmlContext)) {

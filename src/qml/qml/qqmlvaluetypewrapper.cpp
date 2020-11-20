@@ -449,15 +449,15 @@ Q_ALWAYS_INLINE static ReturnedValue getGadgetProperty(ExecutionEngine *engine,
     QQmlMetaObject::resolveGadgetMethodOrPropertyIndex(QMetaObject::ReadProperty, &metaObject, &index);
 
     // These four types are the most common used by the value type wrappers
-    VALUE_TYPE_LOAD(QMetaType::QReal, qreal, qreal);
-    VALUE_TYPE_LOAD(QMetaType::Int || property->isEnum(), int, int);
-    VALUE_TYPE_LOAD(QMetaType::Int, int, int);
-    VALUE_TYPE_LOAD(QMetaType::QString, QString, engine->newString);
-    VALUE_TYPE_LOAD(QMetaType::Bool, bool, bool);
+    VALUE_TYPE_LOAD(QMetaType::fromType<qreal>(), qreal, qreal);
+    VALUE_TYPE_LOAD(QMetaType::fromType<int>() || property->isEnum(), int, int);
+    VALUE_TYPE_LOAD(QMetaType::fromType<int>(), int, int);
+    VALUE_TYPE_LOAD(QMetaType::fromType<QString>(), QString, engine->newString);
+    VALUE_TYPE_LOAD(QMetaType::fromType<bool>(), bool, bool);
 
     QVariant v;
     void *args[] = { nullptr, nullptr };
-    if (property->propType() == QMetaType::QVariant) {
+    if (property->propType() == QMetaType::fromType<QVariant>()) {
         args[0] = &v;
     } else {
         v = QVariant(QMetaType(property->propType()), static_cast<void *>(nullptr));
@@ -578,7 +578,7 @@ bool QQmlValueTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &v
     Scoped<QQmlValueTypeWrapper> r(scope, static_cast<QQmlValueTypeWrapper *>(m));
     Scoped<QQmlValueTypeReference> reference(scope, m->d());
 
-    int writeBackPropertyType = -1;
+    QMetaType writeBackPropertyType;
 
     if (reference) {
         QMetaProperty writebackProperty = reference->d()->object->metaObject()->property(reference->d()->property);
@@ -586,7 +586,7 @@ bool QQmlValueTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &v
         if (!writebackProperty.isWritable() || !reference->readReferenceValue())
             return false;
 
-        writeBackPropertyType = writebackProperty.userType();
+        writeBackPropertyType = writebackProperty.metaType();
     }
 
     ScopedString name(scope, id.asStringOrSymbol());
@@ -660,7 +660,7 @@ bool QQmlValueTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &v
 
 
     if (reference) {
-        if (writeBackPropertyType == QMetaType::QVariant) {
+        if (writeBackPropertyType == QMetaType::fromType<QVariant>()) {
             QVariant variantReferenceValue = r->d()->toVariant();
 
             int flags = 0;

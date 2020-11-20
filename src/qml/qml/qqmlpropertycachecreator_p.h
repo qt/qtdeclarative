@@ -101,7 +101,7 @@ struct QQmlPropertyCacheCreatorBase
 public:
     static QAtomicInt classIndexCounter;
 
-    static int metaTypeForPropertyType(QV4::CompiledData::BuiltinType type);
+    static QMetaType metaTypeForPropertyType(QV4::CompiledData::BuiltinType type);
 
     static QByteArray createClassNameTypeByUrl(const QUrl &url);
 };
@@ -237,7 +237,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectRecur
                 // group properties and value type group properties. For the former the base type is derived from
                 // the property that references us, for the latter we only need a meta-object on the referencing object
                 // because interceptors can't go to the shared value type instances.
-                if (context.instantiatingProperty && QQmlValueTypeFactory::isValueType(context.instantiatingProperty->propType())) {
+                if (context.instantiatingProperty && QQmlValueTypeFactory::isValueType(context.instantiatingProperty->propType().id())) {
                     if (!propertyCaches->needsVMEMetaObject(context.referencingObjectIndex)) {
                         const CompiledObject *obj = objectContainer->objectAt(context.referencingObjectIndex);
                         auto *typeRef = objectContainer->resolvedType(obj->inheritedTypeNameIndex);
@@ -532,7 +532,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int
     p = obj->propertiesBegin();
     pend = obj->propertiesEnd();
     for ( ; p != pend; ++p, ++propertyIdx) {
-        int propertyType = 0;
+        QMetaType propertyType;
         QTypeRevision propertyTypeVersion = QTypeRevision::zero();
         QQmlPropertyData::Flags propertyFlags;
 
@@ -582,15 +582,15 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int
                 }
 
                 if (p->isList) {
-                    propertyType = typeIds.listId.id();
+                    propertyType = typeIds.listId;
                 } else {
-                    propertyType = typeIds.id.id();
+                    propertyType = typeIds.id;
                 }
             } else {
                 if (p->isList) {
-                    propertyType = qmltype.qListTypeId().id();
+                    propertyType = qmltype.qListTypeId();
                 } else {
-                    propertyType = qmltype.typeId().id();
+                    propertyType = qmltype.typeId();
                     propertyTypeVersion = qmltype.version();
                 }
             }
@@ -624,7 +624,7 @@ inline int QQmlPropertyCacheCreator<ObjectContainer>::metaTypeForParameter(const
 {
     if (param.indexIsBuiltinType) {
         // built-in type
-        return metaTypeForPropertyType(static_cast<QV4::CompiledData::BuiltinType>(int(param.typeNameIndexOrBuiltinType)));
+        return metaTypeForPropertyType(static_cast<QV4::CompiledData::BuiltinType>(int(param.typeNameIndexOrBuiltinType))).id();
     }
 
     // lazily resolved type
@@ -666,7 +666,7 @@ public:
 
 private:
     void appendAliasPropertiesInMetaObjectsWithinComponent(const CompiledObject &component, int firstObjectIndex, QQmlEnginePrivate *enginePriv);
-    QQmlError propertyDataForAlias(const CompiledObject &component, const QV4::CompiledData::Alias &alias, int *type, QTypeRevision *version, QQmlPropertyData::Flags *propertyFlags, QQmlEnginePrivate *enginePriv);
+    QQmlError propertyDataForAlias(const CompiledObject &component, const QV4::CompiledData::Alias &alias, QMetaType *type, QTypeRevision *version, QQmlPropertyData::Flags *propertyFlags, QQmlEnginePrivate *enginePriv);
 
     void collectObjectsWithAliasesRecursively(int objectIndex, QVector<int> *objectsWithAliases) const;
 
@@ -778,11 +778,11 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::collectObjectsWithAl
 
 template <typename ObjectContainer>
 inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataForAlias(
-        const CompiledObject &component, const QV4::CompiledData::Alias &alias, int *type,
+        const CompiledObject &component, const QV4::CompiledData::Alias &alias, QMetaType *type,
         QTypeRevision *version, QQmlPropertyData::Flags *propertyFlags,
         QQmlEnginePrivate *enginePriv)
 {
-    *type = 0;
+    *type = QMetaType();
     bool writable = false;
     bool resettable = false;
     bool bindable = false;
@@ -833,9 +833,9 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
 
         const auto referencedType = typeRef->type();
         if (referencedType.isValid())
-            *type = referencedType.typeId().id();
+            *type = referencedType.typeId();
         else
-            *type = typeRef->compilationUnit()->typeIds.id.id();
+            *type = typeRef->compilationUnit()->typeIds.id;
 
         *version = typeRef->version();
 
@@ -851,10 +851,10 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
         Q_ASSERT(targetProperty);
 
         // for deep aliases, valueTypeIndex is always set
-        if (!QQmlValueTypeFactory::isValueType(targetProperty->propType()) && valueTypeIndex != -1) {
+        if (!QQmlValueTypeFactory::isValueType(targetProperty->propType().id()) && valueTypeIndex != -1) {
             // deep alias property
             *type = targetProperty->propType();
-            targetCache = enginePriv->propertyCacheForType(*type);
+            targetCache = enginePriv->propertyCacheForType(type->id());
             Q_ASSERT(targetCache);
             targetProperty = targetCache->property(valueTypeIndex);
 
@@ -874,12 +874,12 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
             if (valueTypeIndex != -1) {
                 const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(*type);
                 if (valueTypeMetaObject->property(valueTypeIndex).isEnumType())
-                    *type = QMetaType::Int;
+                    *type = QMetaType::fromType<int>();
                 else
-                    *type = valueTypeMetaObject->property(valueTypeIndex).userType();
+                    *type = valueTypeMetaObject->property(valueTypeIndex).metaType();
             } else {
                 if (targetProperty->isEnum()) {
-                    *type = QMetaType::Int;
+                    *type = QMetaType::fromType<int>();
                 } else {
                     // Copy type flags
                     propertyFlags->copyPropertyTypeFlags(targetProperty->flags());
@@ -917,7 +917,7 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasesTo
     for ( ; alias != end; ++alias, ++aliasIndex) {
         Q_ASSERT(alias->flags & QV4::CompiledData::Alias::Resolved);
 
-        int type = 0;
+        QMetaType type;
         QTypeRevision version = QTypeRevision::zero();
         QQmlPropertyData::Flags propertyFlags;
         QQmlError error = propertyDataForAlias(component, *alias, &type, &version,

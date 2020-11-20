@@ -139,32 +139,32 @@ int QQmlMetaObject::methodReturnType(const QQmlPropertyData &data, QByteArray *u
 {
     Q_ASSERT(_m && data.coreIndex() >= 0);
 
-    int type = data.propType();
+    QMetaType type = data.propType();
 
     const char *propTypeName = nullptr;
 
-    if (type == QMetaType::UnknownType) {
+    if (!type.isValid()) {
         // Find the return type name from the method info
         QMetaMethod m = _m->method(data.coreIndex());
 
-        type = m.returnType();
+        type = m.returnMetaType();
         propTypeName = m.typeName();
     }
 
-    if (QMetaType(type).sizeOf() <= qsizetype(sizeof(int))) {
-        if (QMetaType(type).flags() & QMetaType::IsEnumeration)
+    if (type.sizeOf() <= qsizetype(sizeof(int))) {
+        if (type.flags() & QMetaType::IsEnumeration)
             return QMetaType::Int;
 
         if (isNamedEnumerator(_m, propTypeName))
             return QMetaType::Int;
 
-        if (type == QMetaType::UnknownType) {
+        if (!type.isValid()) {
             if (unknownTypeError)
                 *unknownTypeError = propTypeName;
         }
     } // else we know that it's a known type, as sizeOf(UnknownType) == 0
 
-    return type;
+    return type.id();
 }
 
 int *QQmlMetaObject::methodParameterTypes(int index, ArgTypeStorage *argStorage,

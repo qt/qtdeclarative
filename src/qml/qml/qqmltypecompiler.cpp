@@ -542,7 +542,7 @@ bool QQmlEnumTypeResolver::resolveEnumBindings()
             if (!pd)
                 continue;
 
-            if (!pd->isEnum() && pd->propType() != QMetaType::Int)
+            if (!pd->isEnum() && pd->propType().id() != QMetaType::Int)
                 continue;
 
             if (!tryQualifiedEnumAssignment(obj, propertyCache, pd, binding))
@@ -564,7 +564,7 @@ bool QQmlEnumTypeResolver::assignEnumToBinding(QmlIR::Binding *binding, QStringV
 
 bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(const QmlIR::Object *obj, const QQmlPropertyCache *propertyCache, const QQmlPropertyData *prop, QmlIR::Binding *binding)
 {
-    bool isIntProp = (prop->propType() == QMetaType::Int) && !prop->isEnum();
+    bool isIntProp = (prop->propType().id() == QMetaType::Int) && !prop->isEnum();
     if (!prop->isEnum() && !isIntProp)
         return true;
 
@@ -763,7 +763,7 @@ QQmlScriptStringScanner::QQmlScriptStringScanner(QQmlTypeCompiler *typeCompiler)
 
 void QQmlScriptStringScanner::scan()
 {
-    const int scriptStringMetaType = qMetaTypeId<QQmlScriptString>();
+    const QMetaType scriptStringMetaType = QMetaType::fromType<QQmlScriptString>();
     for (int i = 0; i < qmlObjects.count(); ++i) {
         QQmlPropertyCache *propertyCache = propertyCaches->at(i);
         if (!propertyCache)
@@ -854,8 +854,8 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
         // Otherwise, make sure we look up by metaobject.
         // TODO: Is this correct?
         QQmlPropertyCache *pc = pd->typeVersion().hasMinorVersion()
-                ? enginePrivate->rawPropertyCacheForType(pd->propType(), pd->typeVersion())
-                : enginePrivate->rawPropertyCacheForType(pd->propType());
+                ? enginePrivate->rawPropertyCacheForType(pd->propType().id(), pd->typeVersion())
+                : enginePrivate->rawPropertyCacheForType(pd->propType().id());
         const QMetaObject *mo = pc ? pc->firstCppMetaObject() : nullptr;
         while (mo) {
             if (mo == &QQmlComponent::staticMetaObject)
@@ -1184,7 +1184,7 @@ QQmlComponentAndAliasResolver::resolveAliasesInObject(int objectIndex,
             propIdx = QQmlPropertyIndex(targetProperty->coreIndex());
 
             if (!subProperty.isEmpty()) {
-                const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(targetProperty->propType());
+                const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(targetProperty->propType().id());
                 if (!valueTypeMetaObject) {
                     // could be a deep alias
                     bool isDeepAlias = subProperty.at(0).isLower();

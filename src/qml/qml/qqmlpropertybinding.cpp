@@ -46,7 +46,7 @@ QUntypedPropertyBinding QQmlPropertyBinding::create(const QQmlPropertyData *pd, 
                                                     QObject *obj, const QQmlRefPointer<QQmlContextData> &ctxt,
                                                     QV4::ExecutionContext *scope)
 {
-    if (auto aotFunction = function->aotFunction; aotFunction && aotFunction->returnType.id() == pd->propType()) {
+    if (auto aotFunction = function->aotFunction; aotFunction && aotFunction->returnType == pd->propType()) {
         return QUntypedPropertyBinding(aotFunction->returnType,
             [
                 aotFunction,
