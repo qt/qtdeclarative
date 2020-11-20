@@ -80,11 +80,14 @@ private:
     QTypeRevision readNumericVersionBinding(QQmlJS::AST::UiScriptBinding *ast);
     int readIntBinding(QQmlJS::AST::UiScriptBinding *ast);
     void readExports(QQmlJS::AST::UiScriptBinding *ast, const QQmlJSScope::Ptr &scope);
+    void readInterfaces(QQmlJS::AST::UiScriptBinding *ast, const QQmlJSScope::Ptr &scope);
     void readMetaObjectRevisions(QQmlJS::AST::UiScriptBinding *ast, const QQmlJSScope::Ptr &scope);
     void readEnumValues(QQmlJS::AST::UiScriptBinding *ast, QQmlJSMetaEnum *metaEnum);
 
     void addError(const QQmlJS::SourceLocation &loc, const QString &message);
     void addWarning(const QQmlJS::SourceLocation &loc, const QString &message);
+
+    QQmlJS::AST::ArrayPattern *getArray(QQmlJS::AST::UiScriptBinding *ast);
 
     QString m_fileName;
     QString m_source;

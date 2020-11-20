@@ -185,6 +185,9 @@ public:
     void addExport(const QString &name, const QString &package, const QTypeRevision &version);
     QList<Export> exports() const { return m_exports; }
 
+    void setInterfaceNames(const QStringList& interfaces) { m_interfaceNames = interfaces; }
+    QStringList interfaceNames() { return m_interfaceNames; }
+
     // If isComposite(), this is the QML/JS name of the prototype. Otherwise it's the
     // relevant base class (in the hierarchy starting from QObject) of a C++ type.
     void setBaseTypeName(const QString &baseTypeName) { m_baseTypeName = baseTypeName; }
@@ -272,6 +275,7 @@ private:
 
     ScopeType m_scopeType = QMLScope;
     QList<Export> m_exports;
+    QStringList m_interfaceNames;
 
     QString m_defaultPropertyName;
     QString m_attachedTypeName;

@@ -111,4 +111,10 @@ void tst_qmltyperegistrar::pastMajorVersions()
     QVERIFY2(!c.isError(), qPrintable(c.errorString()));
 }
 
+void tst_qmltyperegistrar::implementsInterfaces()
+{
+    QVERIFY(qmltypesData.contains("interfaces: [\"Interface\"]"));
+    QVERIFY(qmltypesData.contains("interfaces: [\"Interface\", \"Interface2\"]"));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

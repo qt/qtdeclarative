@@ -34,6 +34,29 @@
 #include <QtQml/qqml.h>
 #include <QtCore/qproperty.h>
 
+class Interface {};
+class Interface2 {};
+
+QT_BEGIN_NAMESPACE
+Q_DECLARE_INTERFACE(Interface, "io.qt.bugreports.Interface");
+Q_DECLARE_INTERFACE(Interface2, "io.qt.bugreports.Interface2");
+QT_END_NAMESPACE
+
+
+class ImplementsInterfaces : public QObject, public Interface
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_IMPLEMENTS_INTERFACES(Interface)
+};
+
+class ImplementsInterfaces2 : public QObject, public Interface, public Interface2
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_IMPLEMENTS_INTERFACES(Interface Interface2)
+};
+
 class ExcessiveVersion : public QObject
 {
     Q_OBJECT
@@ -124,6 +147,7 @@ private slots:
     void isBindable();
     void restrictToImportVersion();
     void pastMajorVersions();
+    void implementsInterfaces();
 
 private:
     QByteArray qmltypesData;

@@ -52,6 +52,7 @@ struct QmlTypesClassDescription
     bool isCreatable = true;
     bool isSingleton = false;
     bool isRootClass = false;
+    QStringList implementsInterfaces;
 
     enum CollectMode {
         TopLevel,

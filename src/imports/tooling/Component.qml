@@ -47,6 +47,7 @@ QtObject {
     property string prototype
     property var exports: []
     property var exportMetaObjectRevisions: []
+    property var interfaces: []
     property string attachedType
     property string valueType
     property bool isSingleton: false

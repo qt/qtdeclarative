@@ -96,6 +96,14 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
 
     if (!collector.attachedType.isEmpty())
         m_qml.writeScriptBinding(QLatin1String("attachedType"), enquote(collector.attachedType));
+
+    if (!collector.implementsInterfaces.isEmpty()) {
+        QStringList interfaces;
+        for (const QString &interface : collector.implementsInterfaces)
+            interfaces << enquote(interface);
+
+        m_qml.writeArrayBinding(QLatin1String("interfaces"), interfaces);
+    }
 }
 
 void QmlTypesCreator::writeType(const QJsonObject &property, const QString &key, bool isReadonly,
