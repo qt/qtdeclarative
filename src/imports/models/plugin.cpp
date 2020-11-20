@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
     To use the types in this module, import the module with the following line:
 
     \qml \QtMinorVersion
-    import QtQml.Models 2.\1
+    import QtQml.Models
     \endqml
 
     \note QtQml.Models module started at version 2.1 to match the version
@@ -64,7 +64,7 @@ QT_BEGIN_NAMESPACE
     To use these experimental types, import the module with the following line:
 
     \qml
-    import Qt.labs.qmlmodels 1.0
+    import Qt.labs.qmlmodels
     \endqml
 
     \section1 QML Types

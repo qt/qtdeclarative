@@ -34,7 +34,7 @@
   This QML module contains a particle system for Qt Quick. To use these types, import the module with the following line:
 
   \qml \QtMinorVersion
-  import QtQuick.Particles 2.\1
+  import QtQuick.Particles
   \endqml
 
   For a simple overview of how the system can be used, see \l{Using the Qt Quick Particle System}.

@@ -47,7 +47,7 @@ The current version of the \c QtQml module is version 2.\QtMinorVersion, and
 thus it may be imported via the following statement:
 
 \qml \QtMinorVersion
-import QtQml 2.\1
+import QtQml
 \endqml
 
 Most clients will never need to use the \c QtQml import, as all of the types
@@ -55,7 +55,7 @@ are also provided by the \c QtQuick namespace which may be imported as
 follows:
 
 \qml \QtMinorVersion
-import QtQuick 2.\1
+import QtQuick
 \endqml
 
 See the \l{Qt Quick} module documentation for more information about the \c

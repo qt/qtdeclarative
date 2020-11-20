@@ -546,8 +546,8 @@ through the data.
     relevant functions using the \c LocalStorage type:
 
     \qml \QtMinorVersion
-    import QtQuick 2.\1
-    import QtQuick.LocalStorage 2.\1
+    import QtQuick
+    import QtQuick.LocalStorage
 
     Item {
         Component.onCompleted: {
@@ -576,7 +576,7 @@ using the Offline Storage API.
 \section3 Open or Create a Database
 
 \qml \QtMinorVersion
-import QtQuick.LocalStorage 2.\1 as Sql
+import QtQuick.LocalStorage as Sql
 
 db = Sql.openDatabaseSync(identifier, version, description, estimated_size, callback(db))
 \endqml
