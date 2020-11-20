@@ -224,7 +224,7 @@ QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
 
     To use this module, import the module with the following line:
 
-    \qml \QtMinorVersion
+    \qml
     import Qt.labs.folderlistmodel
     \endqml
 */
@@ -244,7 +244,7 @@ QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
     \e{Elements in the Qt.labs module are not guaranteed to remain compatible
     in future versions.}
 
-    \qml \QtMinorVersion
+    \qml
     import Qt.labs.folderlistmodel
     \endqml
 
@@ -291,7 +291,7 @@ QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
     The following example shows a FolderListModel being used to provide a list
     of QML files in a \l ListView:
 
-    \qml \QtMinorVersion
+    \qml
     import QtQuick
     import Qt.labs.folderlistmodel
 

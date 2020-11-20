@@ -53,7 +53,7 @@ QT_BEGIN_NAMESPACE
 
     To use the types in this module, import the module with the following line:
 
-    \qml \QtMinorVersion
+    \qml
     import QtQml
     \endqml
 */

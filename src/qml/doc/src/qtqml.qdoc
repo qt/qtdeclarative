@@ -53,8 +53,8 @@ for an introduction to writing QML applications.
 The QML types in Qt QML are available through the \c QtQml import. To use the
 types, add the following import statement to your .qml file:
 
-\qml \QtMinorVersion
-import QtQml 2.\1
+\qml
+import QtQml
 \endqml
 
 \section2 C++ API

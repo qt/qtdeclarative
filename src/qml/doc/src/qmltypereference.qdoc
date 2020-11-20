@@ -43,10 +43,9 @@ The types provided by the \c QtQml module are only available in a QML document
 if that document imports the \c QtQml namespace (or if the document imports the
 \c QtQuick namespace, as noted below).
 
-The current version of the \c QtQml module is version 2.\QtMinorVersion, and
-thus it may be imported via the following statement:
+To use the module, import the \c QtQml module with the following statement:
 
-\qml \QtMinorVersion
+\qml
 import QtQml
 \endqml
 
@@ -54,7 +53,7 @@ Most clients will never need to use the \c QtQml import, as all of the types
 are also provided by the \c QtQuick namespace which may be imported as
 follows:
 
-\qml \QtMinorVersion
+\qml
 import QtQuick
 \endqml
 

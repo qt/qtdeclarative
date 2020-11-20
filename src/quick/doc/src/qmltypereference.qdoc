@@ -34,10 +34,9 @@
 The \l{Qt Quick} module provides graphical primitive types. These types are only
 available in a QML document if that document imports the \c QtQuick namespace.
 
-The current version of the \c QtQuick module is version \QtMinorVersion, and
-thus it may be imported via the following statement:
+To use the module, import the \c QtQuick module with the following statement:
 
-\qml \QtMinorVersion
+\qml
 import QtQuick
 \endqml
 
