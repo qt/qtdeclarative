@@ -62,7 +62,7 @@
 
     To use this module, import it like this:
     \code
-    import Qt.labs.sharedimage 1.0
+    import Qt.labs.sharedimage
     \endcode
 
     The sharing functionality is provided through a QQuickImageProvider. Use

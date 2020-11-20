@@ -38,7 +38,7 @@ The current version of the \c QtQuick module is version \QtMinorVersion, and
 thus it may be imported via the following statement:
 
 \qml \QtMinorVersion
-import QtQuick 2.\1
+import QtQuick
 \endqml
 
 Visit the \l {Qt Quick} module documentation for more

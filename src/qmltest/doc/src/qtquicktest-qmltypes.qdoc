@@ -34,7 +34,7 @@
     You can import this module using the following statement:
 
     \qml \QtMinorVersion
-    import QtTest 1.\1
+    import QtTest
     \endqml
 
     \section1 QML Types
