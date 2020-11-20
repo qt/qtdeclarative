@@ -65,9 +65,16 @@ QT_BEGIN_NAMESPACE
 
 #define Q_INT16_MAX 32767
 
-// Flags that do *NOT* depend on the property's QMetaProperty::userType() and thus are quick
-// to load
-static QQmlPropertyData::Flags fastFlagsForProperty(const QMetaProperty &p)
+static int metaObjectSignalCount(const QMetaObject *metaObject)
+{
+    int signalCount = 0;
+    for (const QMetaObject *obj = metaObject; obj; obj = obj->superClass())
+        signalCount += QMetaObjectPrivate::get(obj)->signalCount;
+    return signalCount;
+}
+
+QQmlPropertyData::Flags
+QQmlPropertyData::flagsForProperty(const QMetaProperty &p)
 {
     QQmlPropertyData::Flags flags;
 
@@ -78,17 +85,12 @@ static QQmlPropertyData::Flags fastFlagsForProperty(const QMetaProperty &p)
     flags.setIsRequired(p.isRequired());
     flags.setIsBindable(p.isBindable());
 
-    if (p.isEnumType())
-        flags.type = QQmlPropertyData::Flags::EnumType;
 
-    return flags;
-}
-
-// Flags that do depend on the property's QMetaType
-static void flagsForPropertyType(QMetaType metaType, QQmlPropertyData::Flags &flags)
-{
+    const QMetaType metaType = p.metaType();
     int propType = metaType.id();
-    if (metaType.flags() & QMetaType::PointerToQObject) {
+    if (p.isEnumType()) {
+        flags.type = QQmlPropertyData::Flags::EnumType;
+    } else if (metaType.flags() & QMetaType::PointerToQObject) {
         flags.type = QQmlPropertyData::Flags::QObjectDerivedType;
     } else if (propType == QMetaType::QVariant) {
         flags.type = QQmlPropertyData::Flags::QVariantType;
@@ -107,39 +109,19 @@ static void flagsForPropertyType(QMetaType metaType, QQmlPropertyData::Flags &fl
         else if (cat == QQmlMetaType::List)
             flags.type = QQmlPropertyData::Flags::QListType;
     }
-}
 
-static int metaObjectSignalCount(const QMetaObject *metaObject)
-{
-    int signalCount = 0;
-    for (const QMetaObject *obj = metaObject; obj; obj = obj->superClass())
-        signalCount += QMetaObjectPrivate::get(obj)->signalCount;
-    return signalCount;
-}
-
-QQmlPropertyData::Flags
-QQmlPropertyData::flagsForProperty(const QMetaProperty &p)
-{
-    auto flags = fastFlagsForProperty(p);
-    flagsForPropertyType(p.metaType(), flags);
     return flags;
-}
-
-static void populate(QQmlPropertyData *data, const QMetaProperty &p)
-{
-    Q_ASSERT(p.revision() <= std::numeric_limits<quint16>::max());
-    data->setCoreIndex(p.propertyIndex());
-    data->setNotifyIndex(QMetaObjectPrivate::signalIndex(p.notifySignal()));
-    data->setFlags(fastFlagsForProperty(p));
-    data->setRevision(QTypeRevision::fromEncodedVersion(p.revision()));
 }
 
 void QQmlPropertyData::load(const QMetaProperty &p)
 {
-    populate(this, p);
+    Q_ASSERT(p.revision() <= std::numeric_limits<quint16>::max());
+    setCoreIndex(p.propertyIndex());
+    setNotifyIndex(QMetaObjectPrivate::signalIndex(p.notifySignal()));
+    setFlags(flagsForProperty(p));
+    setRevision(QTypeRevision::fromEncodedVersion(p.revision()));
     QMetaType type = p.metaType();
     setPropType(type);
-    flagsForPropertyType(type, m_flags);
 }
 
 void QQmlPropertyData::load(const QMetaMethod &m)
