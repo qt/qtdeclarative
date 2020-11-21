@@ -98,6 +98,8 @@ static void flagsForPropertyType(QMetaType metaType, QQmlPropertyData::Flags &fl
         flags.type = QQmlPropertyData::Flags::QmlBindingType;
     } else if (propType == qMetaTypeId<QJSValue>()) {
         flags.type = QQmlPropertyData::Flags::QJSValueType;
+    } else if (metaType.flags() & QMetaType::IsQmlList) {
+        flags.type = QQmlPropertyData::Flags::QListType;
     } else {
         QQmlMetaType::TypeCategory cat = QQmlMetaType::typeCategory(propType);
         if (cat == QQmlMetaType::Object)
