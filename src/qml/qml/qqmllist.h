@@ -43,9 +43,9 @@
 #include <QtQml/qtqmlglobal.h>
 #include <QtCore/qlist.h>
 #include <QtCore/qvariant.h>
+#include <QtCore/QMetaType>
 
 QT_BEGIN_NAMESPACE
-
 
 class QObject;
 struct QMetaObject;
@@ -229,6 +229,11 @@ private:
     friend class QQmlListReferencePrivate;
     QQmlListReferencePrivate* d;
 };
+
+namespace QtPrivate {
+template<typename T>
+inline constexpr bool IsQmlListType<QQmlListProperty<T>> = true;
+}
 
 QT_END_NAMESPACE
 
