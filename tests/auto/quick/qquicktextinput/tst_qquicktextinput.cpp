@@ -87,7 +87,20 @@ template <typename T> static T evaluate(QObject *scope, const QString &expressio
 
 template<typename T, int N> int lengthOf(const T (&)[N]) { return N; }
 
-typedef QPair<int, QChar> Key;
+struct Key {
+    Key() = default;
+    Key(int key, Qt::Key keyAsCharacter) : key(key), character(keyAsCharacter <= 0xffff ? keyAsCharacter : 0) {}
+    Key(int key, QChar character) : key(key), character(character) {}
+
+    QString toString() const {
+        if (character == 0)
+            return {};
+        return character;
+    }
+
+    int key; // a Qt::Key
+    QChar character; // the character corresponding to the key (if any)
+};
 
 class tst_qquicktextinput : public QQmlDataTest
 
@@ -258,9 +271,9 @@ Q_DECLARE_METATYPE(KeyList)
 void tst_qquicktextinput::simulateKeys(QWindow *window, const QList<Key> &keys)
 {
     for (int i = 0; i < keys.count(); ++i) {
-        const int key = keys.at(i).first & ~Qt::KeyboardModifierMask;
-        const int modifiers = keys.at(i).first & Qt::KeyboardModifierMask;
-        const QString text = !keys.at(i).second.isNull() ? QString(keys.at(i).second) : QString();
+        const int key = keys.at(i).key & ~Qt::KeyboardModifierMask;
+        const int modifiers = keys.at(i).key & Qt::KeyboardModifierMask;
+        const QString text = keys.at(i).toString();
 
         QKeyEvent press(QEvent::KeyPress, Qt::Key(key), Qt::KeyboardModifiers(modifiers), text);
         QKeyEvent release(QEvent::KeyRelease, Qt::Key(key), Qt::KeyboardModifiers(modifiers), text);
