@@ -355,7 +355,7 @@ bool QQuickStyledTextPrivate::parseTag(const QChar *&ch, const QString &textIn, 
                     preFormat = true;
                     if (!hasNewLine)
                         textOut.append(QChar::LineSeparator);
-                    format.setFontFamily(QString::fromLatin1("Courier New,courier"));
+                    format.setFontFamilies(QStringList {QString::fromLatin1("Courier New"), QString::fromLatin1("courier")});
                     format.setFontFixedPitch(true);
                     return true;
                 }
