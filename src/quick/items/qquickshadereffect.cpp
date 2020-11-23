@@ -490,8 +490,6 @@ public:
     void updatePolish() override;
 };
 
-QSGContextFactoryInterface::Flags qsg_backend_flags();
-
 QQuickShaderEffect::QQuickShaderEffect(QQuickItem *parent)
     : QQuickItem(*new QQuickShaderEffectPrivate, parent),
       m_impl(nullptr)
