@@ -39,7 +39,7 @@
     following import statement in your .qml file:
 
     \qml
-    import Qt.labs.platform 1.1
+    import Qt.labs.platform
     \endqml
 
     \section1 QML Types

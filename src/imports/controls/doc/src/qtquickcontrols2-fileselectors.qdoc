@@ -58,10 +58,10 @@
     \c Material selector will be present and the \c +Material/CustomButton.qml
     version will be used instead.
 
-    \code \QtMinorVersion
+    \code
     // main.qml
-    import QtQuick 2.\1
-    import QtQuick.Controls 2.\1
+    import QtQuick
+    import QtQuick.Controls
 
     ApplicationWindow {
         id: window
@@ -77,10 +77,10 @@
     The base implementation of the custom button is a simple rounded
     flat button.
 
-    \code \QtMinorVersion
+    \code
     // CustomButton.qml
-    import QtQuick 2.\1
-    import QtQuick.Controls 2.\1
+    import QtQuick
+    import QtQuick.Controls
 
     Button {
         id: control
@@ -98,12 +98,12 @@
     Material style, requests a dark theme to get light text, and creates
     a drop shadow for the background.
 
-    \code \QtMinorVersion
+    \code
     // +Material/CustomButton.qml
-    import QtQuick 2.\1
-    import QtGraphicalEffects 1.\1
-    import QtQuick.Controls 2.\1
-    import QtQuick.Controls.Material 2.\1
+    import QtQuick
+    import QtGraphicalEffects
+    import QtQuick.Controls
+    import QtQuick.Controls.Material
 
     Button {
         id: control

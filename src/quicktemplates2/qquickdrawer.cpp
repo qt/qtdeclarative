@@ -68,9 +68,9 @@ QT_BEGIN_NAMESPACE
     drawer is then opened by \e "dragging" it out from the left edge of the
     window.
 
-    \code \QtMinorVersion
-    import QtQuick 2.\1
-    import QtQuick.Controls 2.\1
+    \code
+    import QtQuick
+    import QtQuick.Controls
 
     ApplicationWindow {
         id: window
@@ -97,9 +97,9 @@ QT_BEGIN_NAMESPACE
     Drawer can be configured to cover only part of its window edge. The following example
     illustrates how Drawer can be positioned to appear below a window header:
 
-    \code \QtMinorVersion
-    import QtQuick 2.\1
-    import QtQuick.Controls 2.\1
+    \code
+    import QtQuick
+    import QtQuick.Controls
 
     ApplicationWindow {
         id: window
@@ -123,9 +123,9 @@ QT_BEGIN_NAMESPACE
     In the image above, the application's contents are \e "pushed" across the
     screen. This is achieved by applying a translation to the contents:
 
-    \code \QtMinorVersion
-    import QtQuick 2.\1
-    import QtQuick.Controls 2.\1
+    \code
+    import QtQuick
+    import QtQuick.Controls
 
     ApplicationWindow {
         id: window

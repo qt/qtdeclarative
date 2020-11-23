@@ -32,9 +32,9 @@
 
     A basic example of a QML file that makes use of controls is shown here:
 
-    \qml \QtMinorVersion
-    import QtQuick 2.\1
-    import QtQuick.Controls 2.\1
+    \qml
+    import QtQuick
+    import QtQuick.Controls
 
     ApplicationWindow {
         title: "My Application"

@@ -1,7 +1,7 @@
 //! [file]
-\qml \QtMinorVersion
-import QtQuick 2.\1
-import QtQuick.Controls 2.\1
+\qml
+import QtQuick
+import QtQuick.Controls
 
 ApplicationWindow {
     width: 400

@@ -37,8 +37,8 @@
     The QML types can be imported using the following import statement in your
     \c .qml file:
 
-    \qml \QtMinorVersion
-    import QtQuick.Templates 2.\1 as T
+    \qml
+    import QtQuick.Templates as T
     \endqml
 
     For the sake of clarity, there is a one-to-one mapping between the types

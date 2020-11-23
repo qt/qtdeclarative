@@ -70,8 +70,8 @@
     module itself, we'll call the file \c MyButton.qml. To use the control in
     your application, refer to it by its filename:
 
-    \qml \QtMinorVersion
-    import QtQuick.Controls 2.\1
+    \qml
+    import QtQuick.Controls
 
     ApplicationWindow {
         MyButton {
@@ -86,8 +86,8 @@
     subfolder in your project named (for example) \c controls. To use the
     control, first import the folder into a namespace:
 
-    \qml \QtMinorVersion
-    import QtQuick.Controls 2.\1
+    \qml
+    import QtQuick.Controls
     import "controls" as MyControls
 
     ApplicationWindow {
@@ -432,10 +432,10 @@
     Next, we add a drop shadow to the \l {Control::}{background} delegate of
     the Button:
 
-    \code \QtMinorVersion
+    \code
     // ...
-    import QtGraphicalEffects 1.\1
-    import MyStyle 1.0
+    import QtGraphicalEffects
+    import MyStyle
     // ...
 
     background: Rectangle {
@@ -463,9 +463,9 @@
     To try out the attached property, we create a \l Row with two Buttons in
     \c main.qml:
 
-    \qml \QtMinorVersion
-    import QtQuick 2.\1
-    import QtQuick.Controls 2.\1
+    \qml
+    import QtQuick
+    import QtQuick.Controls
 
     import MyStyle 1.0
 
@@ -518,9 +518,9 @@
         ApplicationWindow consists of one visual item:
         \l {ApplicationWindow::background}{background}.
 
-        \code \QtMinorVersion
-        import QtQuick 2.\1
-        import QtQuick.Controls 2.\1
+        \code
+        import
+        import QtQuick.Controls
 
         ApplicationWindow {
             visible: true
