@@ -9,7 +9,3 @@ windows gcc
 macos # QTBUG-86729
 [touchDragSliderAndFlickable]
 * # QTBUG-86729
-[touchAndDragHandlerOnFlickable]
-* # QTBUG-86729
-[dragHandlerInSiblingStealingGrabFromMouseAreaViaTouch]
-* # QTBUG-86729
