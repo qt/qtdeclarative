@@ -1158,6 +1158,11 @@ static inline QVariant getValueFromProperty(QObject *item, const QMetaObject *it
 using QQuickShaderInfoCache = QHash<QUrl, QSGGuiThreadShaderEffectManager::ShaderInfo>;
 Q_GLOBAL_STATIC(QQuickShaderInfoCache, shaderInfoCache)
 
+void qtquick_shadereffect_purge_gui_thread_shader_cache()
+{
+    shaderInfoCache()->clear();
+}
+
 bool QQuickShaderEffectImpl::updateShader(Shader shaderType, const QUrl &fileUrl)
 {
     QSGGuiThreadShaderEffectManager *mgr = shaderEffectManager();

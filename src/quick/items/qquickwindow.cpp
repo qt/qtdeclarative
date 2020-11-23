@@ -1681,6 +1681,10 @@ QQuickWindow::~QQuickWindow()
     QQuickPixmap::purgeCache();
 }
 
+#if QT_CONFIG(quick_shadereffect)
+void qtquick_shadereffect_purge_gui_thread_shader_cache();
+#endif
+
 /*!
     This function tries to release redundant resources currently held by the QML scene.
 
@@ -1707,6 +1711,9 @@ void QQuickWindow::releaseResources()
     if (d->windowManager)
         d->windowManager->releaseResources(this);
     QQuickPixmap::purgeCache();
+#if QT_CONFIG(quick_shadereffect)
+    qtquick_shadereffect_purge_gui_thread_shader_cache();
+#endif
 }
 
 
