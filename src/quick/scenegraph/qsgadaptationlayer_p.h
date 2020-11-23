@@ -283,7 +283,6 @@ public:
         };
 
         QString name; // optional, f.ex. the filename, used for debugging purposes only
-        QByteArray blob; // source or bytecode (when not using QRhi)
         QShader rhiShader;
         Type type;
         QVector<Variable> variables;
