@@ -462,20 +462,31 @@ ReturnedValue VME::exec(CppStackFrame *frame, ExecutionEngine *engine)
         result = function->jittedCode(frame, engine);
     } else if (function->aotFunction) {
         const qsizetype numFunctionArguments = function->aotFunction->argumentTypes.size();
-        Q_ALLOCA_VAR(void *, argumentPtrs, numFunctionArguments * sizeof(void *));
+        Q_ALLOCA_DECLARE(void *, argumentPtrs);
 
-        for (qsizetype i = 0; i < numFunctionArguments; ++i) {
-            const QMetaType argumentType = function->aotFunction->argumentTypes[i];
-            Q_ALLOCA_VAR(void, argument, argumentType.sizeOf());
-            if (i < frame->originalArgumentsCount)
-                engine->metaTypeFromJS(frame->originalArguments[i], argumentType.id(), argument);
-            else
-                argumentType.construct(argument);
-            argumentPtrs[i] = argument;
+        if (numFunctionArguments > 0) {
+            Q_ALLOCA_ASSIGN(void *, argumentPtrs, numFunctionArguments * sizeof(void *));
+            for (qsizetype i = 0; i < numFunctionArguments; ++i) {
+                const QMetaType argumentType = function->aotFunction->argumentTypes[i];
+                if (const qsizetype argumentSize = argumentType.sizeOf()) {
+                    Q_ALLOCA_VAR(void, argument, argumentSize);
+                    if (i < frame->originalArgumentsCount) {
+                        engine->metaTypeFromJS(frame->originalArguments[i], argumentType.id(),
+                                               argument);
+                    } else {
+                        argumentType.construct(argument);
+                    }
+                    argumentPtrs[i] = argument;
+                } else {
+                    argumentPtrs[i] = nullptr;
+                }
+            }
         }
 
+        Q_ALLOCA_DECLARE(void, returnValue);
         const QMetaType returnType = function->aotFunction->returnType;
-        Q_ALLOCA_VAR(void, returnValue, returnType.sizeOf());
+        if (const qsizetype returnSize = returnType.sizeOf())
+            Q_ALLOCA_ASSIGN(void, returnValue, returnSize);
 
         Scope scope(engine);
         Scoped<QmlContext> qmlContext(scope, engine->qmlContext());
@@ -483,9 +494,13 @@ ReturnedValue VME::exec(CppStackFrame *frame, ExecutionEngine *engine)
                 qmlContext->qmlContext()->asQQmlContext(), qmlContext->qmlScope(),
                 returnValue, const_cast<const void **>(argumentPtrs)); // We're adding const here
 
-        result = engine->metaTypeToJS(returnType.id(), returnValue);
+        if (returnValue) {
+            result = engine->metaTypeToJS(returnType.id(), returnValue);
+            returnType.destruct(returnValue);
+        } else {
+            result = Encode::undefined();
+        }
 
-        returnType.destruct(returnValue);
         for (qsizetype i = 0; i < numFunctionArguments; ++i)
             function->aotFunction->argumentTypes[i].destruct(argumentPtrs[i]);
     } else {
