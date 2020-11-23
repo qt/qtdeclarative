@@ -515,14 +515,15 @@ void forceUpdate(QQuickItem *item)
 
 void QQuickWindowRenderTarget::reset(QRhi *rhi, QSGRenderer *renderer)
 {
-    if (rhi && owns) {
-        if (renderer != nullptr && rpDesc != nullptr)
+    if (rhi) {
+        if (renderer)
             renderer->invalidatePipelineCacheDependency(rpDesc);
-
-        delete renderTarget;
-        delete rpDesc;
-        delete texture;
-        delete depthStencil;
+        if (owns) {
+            delete renderTarget;
+            delete rpDesc;
+            delete texture;
+            delete depthStencil;
+        }
     }
 
     renderTarget = nullptr;
