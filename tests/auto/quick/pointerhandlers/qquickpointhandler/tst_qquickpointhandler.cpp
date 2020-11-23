@@ -281,6 +281,7 @@ void tst_PointHandler::pressedMultipleButtons_data()
     QTest::addColumn<QList<bool> >("active");
     QTest::addColumn<QList<Qt::MouseButtons> >("pressedButtons");
     QTest::addColumn<int>("changeCount");
+    QTest::addColumn<int>("activeChangeCount");
 
     QList<Qt::MouseButtons> buttons;
     QList<bool> active;
@@ -298,7 +299,7 @@ void tst_PointHandler::pressedMultipleButtons_data()
                    << Qt::LeftButton
                    << Qt::NoButton;
     QTest::newRow("Accept Left - Press left, Press Right, Release Right")
-            << Qt::MouseButtons(Qt::LeftButton) << buttons << active << pressedButtons << 4;
+            << Qt::MouseButtons(Qt::LeftButton) << buttons << active << pressedButtons << 4 << 4;
 
     buttons.clear();
     active.clear();
@@ -316,7 +317,7 @@ void tst_PointHandler::pressedMultipleButtons_data()
                    << Qt::NoButton // Not the "truth" but filtered according to this handler's acceptedButtons
                    << Qt::NoButton;
     QTest::newRow("Accept Left - Press left, Press Right, Release Left")
-            << Qt::MouseButtons(Qt::LeftButton) << buttons << active << pressedButtons << 3;
+            << Qt::MouseButtons(Qt::LeftButton) << buttons << active << pressedButtons << 3 << 4;
 
     buttons.clear();
     active.clear();
@@ -334,7 +335,7 @@ void tst_PointHandler::pressedMultipleButtons_data()
                    << Qt::LeftButton
                    << Qt::NoButton;
     QTest::newRow("Accept Left|Right - Press left, Press Right, Release Right")
-            << (Qt::LeftButton | Qt::RightButton) << buttons << active << pressedButtons << 4;
+            << (Qt::LeftButton | Qt::RightButton) << buttons << active << pressedButtons << 4 << 4;
 
     buttons.clear();
     active.clear();
@@ -352,7 +353,7 @@ void tst_PointHandler::pressedMultipleButtons_data()
                    << Qt::NoButton // Not the "truth" but filtered according to this handler's acceptedButtons
                    << Qt::NoButton;
     QTest::newRow("Accept Right - Press Right, Press Left, Release Right")
-            << Qt::MouseButtons(Qt::RightButton) << buttons << active << pressedButtons << 3;
+            << Qt::MouseButtons(Qt::RightButton) << buttons << active << pressedButtons << 3 << 4;
 }
 
 void tst_PointHandler::pressedMultipleButtons()
@@ -362,6 +363,7 @@ void tst_PointHandler::pressedMultipleButtons()
     QFETCH(QList<bool>, active);
     QFETCH(QList<Qt::MouseButtons>, pressedButtons);
     QFETCH(int, changeCount);
+    QFETCH(int, activeChangeCount);
 
     QScopedPointer<QQuickView> windowPtr;
     createView(windowPtr, "pointTracker.qml");
@@ -397,7 +399,7 @@ void tst_PointHandler::pressedMultipleButtons()
 
     QTest::mousePress(windowPtr.data(), Qt::NoButton, Qt::NoModifier, point);
     QCOMPARE(handler->active(), false);
-    QCOMPARE(activeSpy.count(), 2);
+    QCOMPARE(activeSpy.count(), activeChangeCount);
     QCOMPARE(pointSpy.count(), changeCount);
 }
 
