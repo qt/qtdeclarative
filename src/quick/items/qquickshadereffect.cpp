@@ -440,7 +440,7 @@ private slots:
     void markGeometryDirtyAndUpdate();
     void markGeometryDirtyAndUpdateIfSupportsAtlas();
     void shaderCodePrepared(bool ok, QSGGuiThreadShaderEffectManager::ShaderInfo::Type typeHint,
-                            const QUrl &fileUrl, QSGGuiThreadShaderEffectManager::ShaderInfo *result);
+                            const QUrl &loadUrl, QSGGuiThreadShaderEffectManager::ShaderInfo *result);
 
 private:
     QSGGuiThreadShaderEffectManager *shaderEffectManager() const;
@@ -1193,8 +1193,10 @@ bool QQuickShaderEffectImpl::updateShader(Shader shaderType, const QUrl &fileUrl
     m_shaders[shaderType].varData.clear();
 
     if (!fileUrl.isEmpty()) {
-        if (shaderInfoCache()->contains(fileUrl)) {
-            m_shaders[shaderType].shaderInfo = shaderInfoCache()->value(fileUrl);
+        const QQmlContext *context = qmlContext(m_item);
+        const QUrl loadUrl = context ? context->resolvedUrl(fileUrl) : fileUrl;
+        if (shaderInfoCache()->contains(loadUrl)) {
+            m_shaders[shaderType].shaderInfo = shaderInfoCache()->value(loadUrl);
             m_shaders[shaderType].hasShaderCode = true;
         } else {
             // Each prepareShaderCode call needs its own work area, hence the
@@ -1205,8 +1207,6 @@ bool QQuickShaderEffectImpl::updateShader(Shader shaderType, const QUrl &fileUrl
             const QSGGuiThreadShaderEffectManager::ShaderInfo::Type typeHint =
                     shaderType == Vertex ? QSGGuiThreadShaderEffectManager::ShaderInfo::TypeVertex
                                          : QSGGuiThreadShaderEffectManager::ShaderInfo::TypeFragment;
-            const QQmlContext *context = qmlContext(m_item);
-            const QUrl loadUrl = context ? context->resolvedUrl(fileUrl) : fileUrl;
             // Figure out what input parameters and variables are used in the
             // shader. This is where the data is pulled in from the file.
             // (however, if there is compilation involved, that happens at a
@@ -1239,7 +1239,7 @@ bool QQuickShaderEffectImpl::updateShader(Shader shaderType, const QUrl &fileUrl
 }
 
 void QQuickShaderEffectImpl::shaderCodePrepared(bool ok, QSGGuiThreadShaderEffectManager::ShaderInfo::Type typeHint,
-                                                const QUrl &fileUrl, QSGGuiThreadShaderEffectManager::ShaderInfo *result)
+                                                const QUrl &loadUrl, QSGGuiThreadShaderEffectManager::ShaderInfo *result)
 {
     const Shader shaderType = typeHint == QSGGuiThreadShaderEffectManager::ShaderInfo::TypeVertex ? Vertex : Fragment;
 
@@ -1256,13 +1256,13 @@ void QQuickShaderEffectImpl::shaderCodePrepared(bool ok, QSGGuiThreadShaderEffec
 
     if (!ok) {
         qWarning("ShaderEffect: shader preparation failed for %s\n%s\n",
-                 qPrintable(fileUrl.toString()), qPrintable(log()));
+                 qPrintable(loadUrl.toString()), qPrintable(log()));
         m_shaders[shaderType].hasShaderCode = false;
         return;
     }
 
     m_shaders[shaderType].hasShaderCode = true;
-    shaderInfoCache()->insert(fileUrl, m_shaders[shaderType].shaderInfo);
+    shaderInfoCache()->insert(loadUrl, m_shaders[shaderType].shaderInfo);
     updateShaderVars(shaderType);
     m_dirty |= QSGShaderEffectNode::DirtyShaders;
     m_item->update();
