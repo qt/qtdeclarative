@@ -87,13 +87,15 @@ Item {
                 lifeSpan: 2000
             }
 
-            ListView.onRemove: SequentialAnimation {
+            SequentialAnimation {
+                id: removeAnimation
                 PropertyAction { target: item; property: "ListView.delayRemove"; value: true }
                 PropertyAction { target: item; property: "opacity"; value: 0 }
                 ScriptAction { script: item.boom() }
                 PauseAnimation { duration: 1000 }
                 PropertyAction { target: item; property: "ListView.delayRemove"; value: false }
             }
+            ListView.onRemove: removeAnimation.start()
         }
     }
 

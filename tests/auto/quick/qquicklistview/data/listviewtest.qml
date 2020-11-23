@@ -95,12 +95,14 @@ Rectangle {
                     text: wrapper.y
                 }
                 color: ListView.isCurrentItem ? "lightsteelblue" : "white"
-                ListView.onRemove: SequentialAnimation {
+                SequentialAnimation {
+                    id: removeAnimation
                     PropertyAction { target: wrapper; property: "ListView.delayRemove"; value: true }
                     NumberAnimation { target: wrapper; property: "scale"; to: 0; duration: 250; easing.type: "InOutQuad" }
                     PropertyAction { target: wrapper; property: "ListView.delayRemove"; value: false }
 
                 }
+                ListView.onRemove: removeAnimation.start()
             }
         },
         Component {

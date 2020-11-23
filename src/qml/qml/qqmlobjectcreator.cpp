@@ -66,6 +66,9 @@
 
 #include <qtqml_tracepoints_p.h>
 #include <QScopedValueRollback>
+#include <QLoggingCategory>
+
+Q_LOGGING_CATEGORY(lcQmlDefaultMethod, "qt.qml.defaultmethod")
 
 QT_USE_NAMESPACE
 
@@ -1036,7 +1039,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
             return false;
         }
 
-        // Assigning object to signal property?
+        // Assigning object to signal property? ### Qt 7: Remove that functionality
         if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject) {
             if (!bindingProperty->isFunction()) {
                 recordError(binding->valueLocation, tr("Cannot assign an object to signal property %1").arg(bindingProperty->name(_qobject)));
@@ -1047,6 +1050,9 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
                 recordError(binding->valueLocation, tr("Cannot assign object type %1 with no default method").arg(QString::fromLatin1(createdSubObject->metaObject()->className())));
                 return false;
             }
+            qCWarning(lcQmlDefaultMethod) << "Assigning an object to a signal handler is deprecated."
+                                             "Instead, create the object, give it an id, and call the desired slot from the signal handler."
+                                             ;
 
             QMetaMethod signalMethod = _qobject->metaObject()->method(bindingProperty->coreIndex());
             if (!QMetaObject::checkConnectArgs(signalMethod, method)) {

@@ -200,18 +200,22 @@ Rectangle {
 
             // Animate adding and removing of items:
 //! [1]
-            ListView.onAdd: SequentialAnimation {
+            SequentialAnimation {
+                id: addAnimation
                 PropertyAction { target: delegateItem; property: "height"; value: 0 }
                 NumberAnimation { target: delegateItem; property: "height"; to: 80; duration: 250; easing.type: Easing.InOutQuad }
             }
+            ListView.onAdd: addAnimation.start()
 
-            ListView.onRemove: SequentialAnimation {
+            SequentialAnimation {
+                id: removeAnimation
                 PropertyAction { target: delegateItem; property: "ListView.delayRemove"; value: true }
                 NumberAnimation { target: delegateItem; property: "height"; to: 0; duration: 250; easing.type: Easing.InOutQuad }
 
                 // Make sure delayRemove is set back to false so that the item can be destroyed
                 PropertyAction { target: delegateItem; property: "ListView.delayRemove"; value: false }
             }
+            ListView.onRemove: removeAnimation.start()
         }
 //! [1]
     }
