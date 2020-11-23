@@ -611,7 +611,7 @@ QRectF QSGRhiShaderEffectNode::updateNormalizedTextureSubRect(bool supportsAtlas
     return srcRect;
 }
 
-static QShader loadShader(const QString &filename)
+static QShader loadShaderFromFile(const QString &filename)
 {
     QFile f(filename);
     if (!f.open(QIODevice::ReadOnly)) {
@@ -642,7 +642,7 @@ void QSGRhiShaderEffectNode::syncMaterial(SyncData *syncData)
             m_material.m_vertexShader = syncData->vertex.shader->shaderInfo.rhiShader;
         } else {
             if (!defaultVertexShader.isValid())
-                defaultVertexShader = loadShader(QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/shadereffect.vert.qsb"));
+                defaultVertexShader = loadShaderFromFile(QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/shadereffect.vert.qsb"));
             m_material.m_vertexShader = defaultVertexShader;
         }
 
@@ -651,7 +651,7 @@ void QSGRhiShaderEffectNode::syncMaterial(SyncData *syncData)
             m_material.m_fragmentShader = syncData->fragment.shader->shaderInfo.rhiShader;
         } else {
             if (!defaultFragmentShader.isValid())
-                defaultFragmentShader = loadShader(QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/shadereffect.frag.qsb"));
+                defaultFragmentShader = loadShaderFromFile(QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/shadereffect.frag.qsb"));
             m_material.m_fragmentShader = defaultFragmentShader;
         }
 
@@ -801,16 +801,7 @@ void QSGRhiGuiThreadShaderEffectManager::prepareShaderCode(ShaderInfo::Type type
             m_fileSelector->setExtraSelectors(QStringList() << QStringLiteral("qsb"));
         }
         const QString fn = m_fileSelector->select(QQmlFile::urlToLocalFileOrQrc(src));
-        QFile f(fn);
-        if (!f.open(QIODevice::ReadOnly)) {
-            qWarning("ShaderEffect: Failed to read %s", qPrintable(fn));
-            m_status = Error;
-            emit shaderCodePrepared(false, typeHint, src, result);
-            emit logAndStatusChanged();
-            return;
-        }
-        const QShader s = QShader::fromSerialized(f.readAll());
-        f.close();
+        const QShader s = loadShaderFromFile(fn);
         if (!s.isValid()) {
             qWarning("ShaderEffect: Failed to deserialize QShader from %s", qPrintable(fn));
             m_status = Error;
