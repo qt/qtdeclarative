@@ -1155,27 +1155,8 @@ static inline QVariant getValueFromProperty(QObject *item, const QMetaObject *it
     return value;
 }
 
-struct ShaderInfoCache
-{
-    bool contains(const QUrl &key) const
-    {
-        return m_shaderInfoCache.contains(key);
-    }
-
-    QSGGuiThreadShaderEffectManager::ShaderInfo value(const QUrl &key) const
-    {
-        return m_shaderInfoCache.value(key);
-    }
-
-    void insert(const QUrl &key, const QSGGuiThreadShaderEffectManager::ShaderInfo &value)
-    {
-        m_shaderInfoCache.insert(key, value);
-    }
-
-    QHash<QUrl, QSGGuiThreadShaderEffectManager::ShaderInfo> m_shaderInfoCache;
-};
-
-Q_GLOBAL_STATIC(ShaderInfoCache, shaderInfoCache)
+using QQuickShaderInfoCache = QHash<QUrl, QSGGuiThreadShaderEffectManager::ShaderInfo>;
+Q_GLOBAL_STATIC(QQuickShaderInfoCache, shaderInfoCache)
 
 bool QQuickShaderEffectImpl::updateShader(Shader shaderType, const QUrl &fileUrl)
 {
@@ -1193,8 +1174,9 @@ bool QQuickShaderEffectImpl::updateShader(Shader shaderType, const QUrl &fileUrl
     if (!fileUrl.isEmpty()) {
         const QQmlContext *context = qmlContext(m_item);
         const QUrl loadUrl = context ? context->resolvedUrl(fileUrl) : fileUrl;
-        if (shaderInfoCache()->contains(loadUrl)) {
-            m_shaders[shaderType].shaderInfo = shaderInfoCache()->value(loadUrl);
+        auto it = shaderInfoCache()->constFind(loadUrl);
+        if (it != shaderInfoCache()->cend()) {
+            m_shaders[shaderType].shaderInfo = *it;
             m_shaders[shaderType].hasShaderCode = true;
         } else {
             // Each prepareShaderCode call needs its own work area, hence the
