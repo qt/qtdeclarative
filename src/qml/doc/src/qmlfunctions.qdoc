@@ -134,7 +134,22 @@
 
   Interface types are implicitly anonymous and uncreatable in QML.
 
-  \sa QML_ELEMENT, QML_NAMED_ELEMENT(), QML_UNCREATABLE(), QML_ANONYMOUS
+  \b{NOTE:} When inheriting from types using QML_INTERFACE, use \l QML_IMPLEMENTS_INTERFACES
+  instead of \l Q_INTERFACES.
+
+  \sa  QML_IMPLEMENTS_INTERFACES(), QML_ELEMENT, QML_NAMED_ELEMENT(), QML_UNCREATABLE(), QML_ANONYMOUS
+*/
+
+/*!
+  \macro QML_IMPLEMENTS_INTERFACES(interfaces)
+  \relates QQmlEngine
+
+  This macro tells Qt which QML interfaces the class implements.
+  This macro should only be used for interfacing with classes using \l QML_INTERFACE, use \l Q_INTERFACES otherwise.
+  It's required in order for declarative registration via \l QML_ELEMENT to function properly.
+
+
+  \sa QML_INTERFACE, Q_INTERFACES
 */
 
 /*!
