@@ -2831,8 +2831,10 @@ void QQuickWindowPrivate::deliverUpdatedPoints(QPointerEvent *event)
     if (!event->allPointsGrabbed()) {
         QVector<QQuickItem *> targetItems;
         for (auto &point : event->points()) {
-            if (point.state() == QEventPoint::Pressed)
-                continue; // presses were delivered earlier; not the responsibility of deliverUpdatedTouchPoints
+            // Presses were delivered earlier; not the responsibility of deliverUpdatedTouchPoints.
+            // Don't find handlers for points that are already grabbed by an Item (such as Flickable).
+            if (point.state() == QEventPoint::Pressed || qmlobject_cast<QQuickItem *>(event->exclusiveGrabber(point)))
+                continue;
             QVector<QQuickItem *> targetItemsForPoint = pointerTargets(contentItem, event, point, false, false);
             if (targetItems.count()) {
                 targetItems = mergePointerTargets(targetItems, targetItemsForPoint);
