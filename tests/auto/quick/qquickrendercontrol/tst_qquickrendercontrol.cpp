@@ -232,7 +232,38 @@ void tst_RenderControl::renderAndReadBackWithRhi()
     // redirect Qt Quick rendering into our texture
     quickWindow->setRenderTarget(QQuickRenderTarget::fromRhiRenderTarget(texRt.data()));
 
+    QSize currentSize = size;
+
     for (int frame = 0; frame < 100; ++frame) {
+        // QTBUG-88761 - change the render target size at some point and verify the renderer continues to function
+        if (frame == 80) {
+            currentSize -= QSize(2, 2); // small enough change to not bother the pixel verification checks
+            tex->setPixelSize(currentSize);
+            QVERIFY(tex->create()); // internally we now have a whole new native texture object
+            ds->setPixelSize(currentSize);
+            QVERIFY(ds->create());
+            QVERIFY(texRt->create());
+            // setRenderTarget is mandatory upon changing something, even if the texRt pointer itself is the same
+            quickWindow->setRenderTarget(QQuickRenderTarget::fromRhiRenderTarget(texRt.data()));
+        } else if (frame == 90) {
+            // Go berserk, destroy and recreate the texture and related stuff
+            // (the QRhi objects themselves, not just the native stuff
+            // internally), it should still work.
+            currentSize -= QSize(2, 2); // chip off another 2 pixels
+            tex.reset(rhi->newTexture(QRhiTexture::RGBA8, currentSize, 1,
+                                      QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource));
+            QVERIFY(tex->create());
+            ds.reset(rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, currentSize, 1));
+            QVERIFY(ds->create());
+            rtDesc = QRhiTextureRenderTargetDescription(QRhiColorAttachment(tex.data()));
+            rtDesc.setDepthStencilBuffer(ds.data());
+            texRt.reset(rhi->newTextureRenderTarget(rtDesc));
+            rp.reset(texRt->newCompatibleRenderPassDescriptor());
+            texRt->setRenderPassDescriptor(rp.data());
+            QVERIFY(texRt->create());
+            quickWindow->setRenderTarget(QQuickRenderTarget::fromRhiRenderTarget(texRt.data()));
+        }
+
         // have to process events, e.g. to get queued metacalls delivered
         QCoreApplication::processEvents();
 
@@ -276,7 +307,7 @@ void tst_RenderControl::renderAndReadBackWithRhi()
 
         QImage img = result;
         QVERIFY(!img.isNull());
-        QCOMPARE(img.size(), rootItem->size());
+        QCOMPARE(img.size(), currentSize);
 
         const int maxFuzz = 2;
 

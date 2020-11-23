@@ -404,6 +404,7 @@ bool QQuickRenderTargetPrivate::resolve(QRhi *rhi, QQuickWindowRenderTarget *dst
 
     case Type::RhiRenderTarget:
         dst->renderTarget = u.rhiRt;
+        dst->rpDesc = u.rhiRt->renderPassDescriptor(); // just for QQuickWindowRenderTarget::reset()
         dst->owns = false;
         return true;
 
