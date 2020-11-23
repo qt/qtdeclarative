@@ -269,6 +269,10 @@
   for example because they belong to 3rdparty libraries.
   To register a namespace, see \l QML_FOREIGN_NAMESPACE().
 
+  \b{NOTE:} You may want to use \l QML_NAMED_ELEMENT() instead of \l QML_ELEMENT due to the fact that
+  the element will be named like the struct it is contained in, not the foreign type.
+  See \l {Extending QML - Extension Objects Example} for an example.
+
   \sa QML_ELEMENT, QML_NAMED_ELEMENT(), QML_FOREIGN_NAMESPACE()
 */
 
