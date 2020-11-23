@@ -198,8 +198,9 @@ bool qCompileQmlFile(const QString &inputFileName, QQmlJSSaveFunction saveFuncti
         if (aotCompiler)
             aotCompiler->setDocument(&irDocument);
 
+        QHash<QmlIR::Object *, QmlIR::Object *> effectiveScopes;
         for (QmlIR::Object *object: qAsConst(irDocument.objects)) {
-            if (object->functionsAndExpressions->count == 0)
+            if (object->functionsAndExpressions->count == 0 && object->bindingCount() == 0)
                 continue;
             QList<QmlIR::CompiledFunctionOrExpression> functionsToCompile;
             for (QmlIR::CompiledFunctionOrExpression *foe = object->functionsAndExpressions->first; foe; foe = foe->next)
@@ -216,13 +217,22 @@ bool qCompileQmlFile(const QString &inputFileName, QQmlJSSaveFunction saveFuncti
             if (!aotCompiler)
                 continue;
 
-            aotCompiler->setScopeObject(object);
+            QmlIR::Object *scope = object;
+            for (auto it = effectiveScopes.constFind(scope), end = effectiveScopes.constEnd();
+                 it != end; it = effectiveScopes.constFind(scope)) {
+                scope = *it;
+            }
+
+            aotCompiler->setScope(object, scope);
 
             aotFunctionsByIndex[FileScopeCodeIndex] = aotCompiler->globalCode();
 
             std::for_each(object->bindingsBegin(), object->bindingsEnd(), [&](const QmlIR::Binding &binding) {
-
                 switch (binding.type) {
+                case QmlIR::Binding::Type_AttachedProperty:
+                case QmlIR::Binding::Type_GroupProperty:
+                    effectiveScopes.insert(irDocument.objects.at(binding.value.objectIndex), scope);
+                    return;
                 case QmlIR::Binding::Type_Boolean:
                 case QmlIR::Binding::Type_Number:
                 case QmlIR::Binding::Type_String:

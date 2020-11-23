@@ -75,7 +75,7 @@ public:
     virtual ~QQmlJSAotCompiler() = default;
 
     virtual void setDocument(QmlIR::Document *document) = 0;
-    virtual void setScopeObject(const QmlIR::Object *object) = 0;
+    virtual void setScope(const QmlIR::Object *object, const QmlIR::Object *scope) = 0;
     virtual std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage> compileBinding(
             const QmlIR::Binding &binding) = 0;
     virtual std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage> compileFunction(
