@@ -79,6 +79,10 @@ Qt's internal QLineEdit class.
 
 \snippet referenceexamples/extended/lineedit.h 0
 
+Note the usage of \l QML_NAMED_ELEMENT() instead of \l QML_ELEMENT.
+QML_ELEMENT uses the name of the containing type by default, "LineEditExtension" in this case.
+As the class being an extension class is an implementation detail, we choose the more natural name "LineEdit" instead
+
 The QML engine then instantiates a \l QLineEdit:
 
 \snippet referenceexamples/extended/main.cpp 1
