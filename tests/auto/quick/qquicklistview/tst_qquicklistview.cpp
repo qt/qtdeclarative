@@ -130,6 +130,8 @@ private slots:
     void spacing();
     void qAbstractItemModel_package_sections();
     void qAbstractItemModel_sections();
+    void sectionsSnap_data();
+    void sectionsSnap();
     void sectionsPositioning();
     void sectionsDelegate_data();
     void sectionsDelegate();
@@ -139,8 +141,6 @@ private slots:
     void sectionPropertyChange();
     void sectionDelegateChange();
     void sectionsItemInsertion();
-    void sectionsSnap_data();
-    void sectionsSnap();
     void cacheBuffer();
     void positionViewAtBeginningEnd();
     void positionViewAtIndex();

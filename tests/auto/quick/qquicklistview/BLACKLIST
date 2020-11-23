@@ -12,5 +12,3 @@ macos
 macos
 opensuse-leap
 ubuntu-18.04
-[sectionsSnap]
-macos ci # QTBUG-86729
