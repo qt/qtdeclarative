@@ -209,9 +209,9 @@ void QQuickParticleAffector::affectSystem(qreal dt)
     updateOffsets();//### Needed if an ancestor is transformed.
     if (m_onceOff)
         dt = 1.0;
-    foreach (QQuickParticleGroupData* gd, m_system->groupData) {
+    for (QQuickParticleGroupData* gd : qAsConst(m_system->groupData)) {
         if (activeGroup(gd->index)) {
-            foreach (QQuickParticleData* d, gd->data) {
+            for (QQuickParticleData* d : qAsConst(gd->data)) {
                 if (shouldAffect(d)) {
                     bool affected = false;
                     qreal myDt = dt;
