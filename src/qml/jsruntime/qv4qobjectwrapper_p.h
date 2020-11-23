@@ -98,7 +98,6 @@ private:
 #define QObjectMethodMembers(class, Member) \
     Member(class, Pointer, QQmlValueTypeWrapper *, valueTypeWrapper) \
     Member(class, NoMark, QV4QPointer<QObject>, qObj) \
-    Member(class, NoMark, QQmlPropertyCache *, _propertyCache) \
     Member(class, NoMark, int, index)
 
 DECLARE_HEAP_OBJECT(QObjectMethod, FunctionObject) {
@@ -113,18 +112,8 @@ DECLARE_HEAP_OBJECT(QObjectMethod, FunctionObject) {
     {
         if (methods != reinterpret_cast<QQmlPropertyData *>(&_singleMethod))
             delete[] methods;
-        setPropertyCache(nullptr);
         qObj.destroy();
         FunctionObject::destroy();
-    }
-
-    QQmlPropertyCache *propertyCache() const { return _propertyCache; }
-    void setPropertyCache(QQmlPropertyCache *c) {
-        if (c)
-            c->addref();
-        if (_propertyCache)
-            _propertyCache->release();
-        _propertyCache = c;
     }
 
     void ensureMethodsCache();

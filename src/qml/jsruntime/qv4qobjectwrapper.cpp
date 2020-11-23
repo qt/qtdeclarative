@@ -2011,9 +2011,6 @@ ReturnedValue QObjectMethod::create(ExecutionContext *scope, QObject *object, in
     Scoped<QObjectMethod> method(valueScope, valueScope.engine->memoryManager->allocate<QObjectMethod>(scope));
     method->d()->setObject(object);
 
-    if (QQmlData *ddata = QQmlData::get(object))
-        method->d()->setPropertyCache(ddata->propertyCache);
-
     method->d()->index = index;
     return method.asReturnedValue();
 }
@@ -2022,7 +2019,6 @@ ReturnedValue QObjectMethod::create(ExecutionContext *scope, Heap::QQmlValueType
 {
     Scope valueScope(scope);
     Scoped<QObjectMethod> method(valueScope, valueScope.engine->memoryManager->allocate<QObjectMethod>(scope));
-    method->d()->setPropertyCache(valueType->propertyCache());
     method->d()->index = index;
     method->d()->valueTypeWrapper.set(valueScope.engine, valueType);
     return method.asReturnedValue();
@@ -2035,8 +2031,8 @@ void Heap::QObjectMethod::init(QV4::ExecutionContext *scope)
 
 const QMetaObject *Heap::QObjectMethod::metaObject()
 {
-    if (propertyCache())
-        return propertyCache()->createMetaObject();
+    if (valueTypeWrapper)
+        return valueTypeWrapper->propertyCache()->createMetaObject();
     return object()->metaObject();
 }
 
