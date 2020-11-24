@@ -95,12 +95,21 @@ protected:
     bool visit(QQmlJS::AST::UiObjectBinding *uiob) override;
     void endVisit(QQmlJS::AST::UiObjectBinding *uiob) override;
 
+    bool visit(QQmlJS::AST::ExportDeclaration *exp) override;
+    void endVisit(QQmlJS::AST::ExportDeclaration *exp) override;
+
+    bool visit(QQmlJS::AST::ESModule *module) override;
+    void endVisit(QQmlJS::AST::ESModule *module) override;
+
+    bool visit(QQmlJS::AST::Program *program) override;
+    void endVisit(QQmlJS::AST::Program *program) override;
+
     void throwRecursionDepthError() override;
 
     QString m_implicitImportDirectory;
     QStringList m_qmltypesFiles;
     QQmlJSScope::Ptr m_currentScope;
-    QQmlJSScope::Ptr m_qmlRootScope;
+    QQmlJSScope::Ptr m_exportedRootScope;
     QQmlJSScope::ConstPtr m_globalScope;
     QHash<QString, QQmlJSScope::ConstPtr> m_scopesById;
     QHash<QString, QQmlJSScope::ConstPtr> m_rootScopeImports;
@@ -113,6 +122,7 @@ protected:
     void leaveEnvironment();
 
 private:
+    void importBaseModules();
     void resolveAliases();
     void visitFunctionExpressionHelper(QQmlJS::AST::FunctionExpression *fexpr);
 };
