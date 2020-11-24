@@ -382,7 +382,7 @@ private slots:
     void semicolonAfterProperty();
     void hugeStack();
     void variantConversionMethod();
-
+    void proxyHandlerTraps();
     void gcCrashRegressionTest();
 
 private:
@@ -9304,6 +9304,35 @@ void tst_qqmlecmascript::variantConversionMethod()
     QScopedPointer<QObject> o(component.create());
     QVERIFY(o != nullptr);
     QCOMPARE(obj.funcCalled, QLatin1String("QModelIndex"));
+}
+
+void tst_qqmlecmascript::proxyHandlerTraps()
+{
+    const QString expression = QStringLiteral(R"SNIPPET(
+        (function(){
+            const target = {
+                prop: 47
+            };
+            const handler = {
+                getOwnPropertyDescriptor(target, prop) {
+                    return { configurable: true, enumerable: true, value: 47 };
+                }
+            };
+            const proxy = new Proxy(target, handler);
+
+            // QTBUG-88786
+            if (!proxy.propertyIsEnumerable("prop"))
+                throw Error("FAIL: propertyisEnumerable");
+            if (!proxy.hasOwnProperty("prop"))
+                throw Error("FAIL: hasOwnProperty");
+
+            return "SUCCESS";
+        })()
+    )SNIPPET");
+
+    QJSEngine engine;
+    QJSValue value = engine.evaluate(expression);
+    QVERIFY(value.isString() && value.toString() == QStringLiteral("SUCCESS"));
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
