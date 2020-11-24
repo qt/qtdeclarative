@@ -3444,19 +3444,17 @@ QSize QWindowsXPStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt
     case CT_LineEdit:
     case CT_ComboBox:
         {
-            const qreal factor = QWindowsXPStylePrivate::nativeMetricScaleFactor(option);
             if (contentsSize.isEmpty()) {
                 // Minimum size
-                return QSize(20, 20) / factor;
+                return QSize(20, 20);
             }
             XPThemeData buttontheme(option->window, nullptr, QWindowsXPStylePrivate::ButtonTheme, BP_PUSHBUTTON, PBS_NORMAL);
             if (buttontheme.isValid()) {
-                const QMarginsF borderSize = buttontheme.margins() * factor;
+                const QMarginsF borderSize = buttontheme.margins();
                 if (!borderSize.isNull()) {
-                    const qreal margin = qreal(2) * factor;
+                    const qreal margin = qreal(2);
                     sz.rwidth() += qRound(borderSize.left() + borderSize.right() - margin);
-                    sz.rheight() += int(borderSize.bottom() + borderSize.top() - margin
-                        + qreal(1) / factor - 1);
+                    sz.rheight() += int(borderSize.bottom() + borderSize.top() - margin);
                 }
                 const int textMargins = 2*(proxy()->pixelMetric(PM_FocusFrameHMargin, option) + 1);
                 sz += QSize(qMax(pixelMetric(QStyle::PM_ScrollBarExtent, option)
