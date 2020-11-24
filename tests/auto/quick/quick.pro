@@ -87,6 +87,7 @@ QUICKTESTS += \
     qquicktextinput \
     qquickvisualdatamodel \
     qquickview \
+    qquickview_extra \
     qquickcanvasitem \
     qquickdesignersupport \
     qquickscreen \
