@@ -2057,7 +2057,7 @@ void QQuickWindowPrivate::deliverKeyEvent(QKeyEvent *e)
 */
 QPointerEvent *QQuickWindowPrivate::clonePointerEvent(QPointerEvent *event, std::optional<QPointF> transformedLocalPos)
 {
-    QPointerEvent *ret = static_cast<QPointerEvent*>(event->clone());
+    QPointerEvent *ret = event->clone();
     QMutableEventPoint &point = QMutableEventPoint::from(ret->point(0));
     point.detach();
     point.setTimestamp(event->timestamp());
