@@ -58,6 +58,8 @@
 
 #include "qplatformdefs.h"
 
+#include <memory>
+
 //
 //  W A R N I N G
 //  -------------
@@ -230,7 +232,7 @@ public:
 
     QQuickItem *cursorItem;
     QQuickTextNode *textNode;
-    MaskInputData *m_maskData;
+    std::unique_ptr<MaskInputData[]> m_maskData;
     QInputControl *m_inputControl;
 
     QList<int> m_transactions;
