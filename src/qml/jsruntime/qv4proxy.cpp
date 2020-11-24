@@ -265,9 +265,9 @@ PropertyAttributes ProxyObject::virtualGetOwnProperty(const Managed *m, Property
     ScopedProperty targetDesc(scope);
     PropertyAttributes targetAttributes = target->getOwnProperty(id, targetDesc);
     if (trapResult->isUndefined()) {
-        p->value = Encode::undefined();
-        if (targetAttributes == Attr_Invalid) {
+        if (p)
             p->value = Encode::undefined();
+        if (targetAttributes == Attr_Invalid) {
             return Attr_Invalid;
         }
         if (!targetAttributes.isConfigurable() || !target->isExtensible()) {
@@ -295,8 +295,10 @@ PropertyAttributes ProxyObject::virtualGetOwnProperty(const Managed *m, Property
         }
     }
 
-    p->value = resultDesc->value;
-    p->set = resultDesc->set;
+    if (p) {
+        p->value = resultDesc->value;
+        p->set = resultDesc->set;
+    }
     return resultAttributes;
 }
 
