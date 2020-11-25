@@ -405,7 +405,8 @@ function(qt6_add_qml_module target)
             # When building a static Qt, we need to record information about the compiled resource
             # object files to embed them into .prl files.
             if(COMMAND qt_internal_record_rcc_object_files)
-                qt_internal_record_rcc_object_files("${target}" "${resource_targets}")
+                qt_internal_record_rcc_object_files(
+                    "${target}" "${resource_targets}" INSTALL_LOCATION "${arg_INSTALL_LOCATION}")
             endif()
         endif()
     else()
@@ -609,7 +610,8 @@ function(qt6_target_qml_files target)
         # When building a static Qt, we need to record information about the compiled resource
         # object files to embed them into .prl files.
         if(COMMAND qt_internal_record_rcc_object_files)
-            qt_internal_record_rcc_object_files("${target}" "${resource_targets}")
+            qt_internal_record_rcc_object_files(
+                "${target}" "${resource_targets}" INSTALL_LOCATION "${qml_module_install_dir}")
         endif()
     endif()
 
