@@ -45,6 +45,7 @@ QQmlJSImportVisitor::QQmlJSImportVisitor(
     , m_importer(importer)
 {
     m_globalScope = m_currentScope;
+    m_currentScope->setIsComposite(true);
 }
 
 void QQmlJSImportVisitor::enterEnvironment(QQmlJSScope::ScopeType type, const QString &name,
