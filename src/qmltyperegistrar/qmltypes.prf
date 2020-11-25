@@ -44,7 +44,8 @@ qt_module_deps = $$replace(qt_module_deps, _private$, '')
 qt_module_deps = $$unique(qt_module_deps)
 
 for(dep, qt_module_deps) {
-    METATYPES_FILENAME = $$lower($$eval(QT.$${dep}.module))_metatypes.json
+    android:ABI = _$${ANDROID_TARGET_ARCH}
+    METATYPES_FILENAME = $$lower($$eval(QT.$${dep}.module))$${ABI}_metatypes.json
     INSTALLED_METATYPES = $$[QT_INSTALL_LIBS]/metatypes/$$METATYPES_FILENAME
     isEmpty(MODULE_BASE_OUTDIR) {
         QML_FOREIGN_METATYPES += $$INSTALLED_METATYPES
