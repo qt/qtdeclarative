@@ -346,7 +346,7 @@ const QFont *QQuickStylePrivate::readFont(const QSharedPointer<QSettings> &setti
 
     QFont f;
     settings->beginGroup(QStringLiteral("Font"));
-    readValue(settings, QStringLiteral("Family"), [&f](const QVariant &var) { f.setFamily(var.toString()); });
+    readValue(settings, QStringLiteral("Family"), [&f](const QVariant &var) { f.setFamilies(QStringList{var.toString()}); });
     readValue(settings, QStringLiteral("PointSize"), [&f](const QVariant &var) { f.setPointSizeF(var.toReal()); });
     readValue(settings, QStringLiteral("PixelSize"), [&f](const QVariant &var) { f.setPixelSize(var.toInt()); });
     readValue(settings, QStringLiteral("StyleHint"), [&f](const QVariant &var) { f.setStyleHint(toEnumValue<QFont::StyleHint>(var.toInt())); });

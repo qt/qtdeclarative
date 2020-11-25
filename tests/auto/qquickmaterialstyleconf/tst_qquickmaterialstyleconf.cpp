@@ -60,7 +60,7 @@ void tst_qquickmaterialstyleconf::conf()
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QFont customFont;
-    customFont.setFamily("Courier");
+    customFont.setFamilies(QStringList{QLatin1String("Courier")});
     customFont.setPixelSize(22);
 
     QQuickApplicationWindow *window = helper.appWindow;

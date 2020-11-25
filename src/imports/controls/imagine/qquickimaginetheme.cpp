@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
 void QQuickImagineTheme::initialize(QQuickTheme *theme)
 {
     QFont systemFont;
-    systemFont.setFamily(QLatin1String("Open Sans"));
+    systemFont.setFamilies(QStringList{QLatin1String("Open Sans")});
     theme->setFont(QQuickTheme::System, systemFont);
 
     const QColor accentColor = QColor::fromRgb(0x4fc1e9);

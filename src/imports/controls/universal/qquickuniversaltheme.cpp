@@ -49,10 +49,10 @@ void QQuickUniversalTheme::initialize(QQuickTheme *theme)
 
     const QFont font(QLatin1String("Segoe UI"));
     if (QFontInfo(font).family() == QLatin1String("Segoe UI")) {
-        const QString family = font.family();
-        systemFont.setFamily(family);
-        groupBoxTitleFont.setFamily(family);
-        tabButtonFont.setFamily(family);
+        const QStringList families{font.family()};
+        systemFont.setFamilies(families);
+        groupBoxTitleFont.setFamilies(families);
+        tabButtonFont.setFamilies(families);
     }
 
     systemFont.setPixelSize(15);

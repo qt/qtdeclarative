@@ -124,7 +124,7 @@ void tst_font::font_data()
 
     QFont customFont;
     customFont.setCapitalization(QFont::AllUppercase);
-    customFont.setFamily("Courier");
+    customFont.setFamilies(QStringList{QLatin1String("Courier")});
     customFont.setItalic(true);
     customFont.setPixelSize(60);
     customFont.setStrikeOut(true);
@@ -198,7 +198,7 @@ void tst_font::inheritance()
     QCOMPARE(grandChild->property("font").value<QFont>(), QFont());
 
     QFont childFont;
-    childFont.setFamily("Arial");
+    childFont.setFamilies(QStringList{QLatin1String("Arial")});
     childFont.setPixelSize(80);
     childFont.setItalic(true);
     child->setProperty("font", childFont);
@@ -206,7 +206,7 @@ void tst_font::inheritance()
     QCOMPARE(grandChild->property("font").value<QFont>(), childFont);
 
     QFont grandChildFont(childFont);
-    grandChildFont.setFamily("Times New Roman");
+    grandChildFont.setFamilies(QStringList{QLatin1String("Times New Roman")});
     grandChildFont.setUnderline(true);
     grandChild->setProperty("font", grandChildFont);
     QCOMPARE(child->property("font").value<QFont>(), childFont);

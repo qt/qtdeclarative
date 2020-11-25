@@ -226,9 +226,6 @@ void QQuickTextFieldPrivate::inheritFont(const QFont &font)
 
     const QFont defaultFont = QQuickTheme::font(QQuickTheme::TextField);
     QFont resolvedFont = parentFont.resolve(defaultFont);
-    // See comment in QQuickControlPrivate::inheritFont
-    if (defaultFont.families().isEmpty())
-        resolvedFont.setFamilies(QStringList());
 
     setFont_helper(resolvedFont);
 }

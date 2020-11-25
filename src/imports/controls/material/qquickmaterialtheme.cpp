@@ -55,22 +55,23 @@ void QQuickMaterialTheme::initialize(QQuickTheme *theme)
     QFont editorFont;
 
     QFont font;
-    font.setFamily(QLatin1String("Roboto"));
+    font.setFamilies(QStringList{QLatin1String("Roboto")});
     QString family = QFontInfo(font).family();
 
     if (family != QLatin1String("Roboto")) {
-        font.setFamily(QLatin1String("Noto"));
+        font.setFamilies(QStringList{QLatin1String("Noto")});
         family = QFontInfo(font).family();
     }
 
     if (family == QLatin1String("Roboto") || family == QLatin1String("Noto")) {
-        systemFont.setFamily(family);
-        buttonFont.setFamily(family);
-        toolTipFont.setFamily(family);
-        itemViewFont.setFamily(family);
-        listViewFont.setFamily(family);
-        menuItemFont.setFamily(family);
-        editorFont.setFamily(family);
+        const QStringList families{family};
+        systemFont.setFamilies(families);
+        buttonFont.setFamilies(families);
+        toolTipFont.setFamilies(families);
+        itemViewFont.setFamilies(families);
+        listViewFont.setFamilies(families);
+        menuItemFont.setFamilies(families);
+        editorFont.setFamilies(families);
     }
 
     const bool dense = QQuickMaterialStyle::variant() == QQuickMaterialStyle::Dense;
