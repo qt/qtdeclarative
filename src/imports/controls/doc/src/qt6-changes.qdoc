@@ -236,8 +236,8 @@
     \list
     \li Android: \l {Material Style}
     \li Linux: \l {Fusion Style}
-    \li macOS: \l {macOS Style}
-    \li Windows: \l {Windows Style}
+    \li macOS: \macos Style
+    \li Windows: Windows Style
     \li All other platforms: \l {Basic Style}
     \endlist
 

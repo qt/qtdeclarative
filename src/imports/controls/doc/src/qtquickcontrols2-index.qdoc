@@ -199,7 +199,10 @@
       \li \l{Qt Quick}
       \li \l{Qt Quick Layouts}
       \li \l{Qt Quick Templates 2}
-      \li \l{Qt Quick Calendar}
+      \if defined(onlinedocs)
+        \li \l{Qt Quick Calendar}
+      \endif
+      \li Qt Quick Calendar
       \li \l{Qt Labs Platform}
     \endlist
 */
