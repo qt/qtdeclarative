@@ -441,6 +441,17 @@ QUrl QQmlContext::baseUrl() const
     return d->m_data->baseUrl();
 }
 
+QJSValue QQmlContext::importedScript(const QString &name) const
+{
+    Q_D(const QQmlContext);
+
+    QQmlTypeNameCache::Result r = d->m_data->imports()->query(name);
+    QV4::Scope scope(engine()->handle());
+    QV4::ScopedObject scripts(scope, d->m_data->importedScripts().valueRef());
+    return scripts ? QJSValuePrivate::fromReturnedValue(scripts->get(r.scriptIndex))
+                   : QJSValue(QJSValue::UndefinedValue);
+}
+
 qsizetype QQmlContextPrivate::context_count(QQmlListProperty<QObject> *prop)
 {
     QQmlContext *context = static_cast<QQmlContext*>(prop->object);

@@ -69,6 +69,7 @@ private slots:
     void qtbug_49232();
     void contextViaClosureAfterDestruction();
     void contextLeak();
+    void importedScriptLookup();
 
     void outerContextObject();
     void contextObjectHierarchy();
@@ -820,6 +821,16 @@ void tst_qqmlcontext::contextLeak()
     // The QQmlGuardedContextData also holds a reference. Therefore, the refCount is still 1.
     // All other references should be gone by now.
     QCOMPARE(scriptContext->refCount(), 1);
+}
+
+void tst_qqmlcontext::importedScriptLookup()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("contextLeak.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+    QJSValue script = qmlContext(obj.data())->importedScript("ContextLeak");
+    QCOMPARE(script.property("value").toInt(), 42);
 }
 
 

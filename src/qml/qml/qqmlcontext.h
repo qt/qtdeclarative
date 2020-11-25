@@ -90,6 +90,8 @@ public:
     void setBaseUrl(const QUrl &);
     QUrl baseUrl() const;
 
+    QJSValue importedScript(const QString &name) const;
+
 private:
     friend class QQmlEngine;
     friend class QQmlEnginePrivate;
