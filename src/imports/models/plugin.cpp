@@ -76,8 +76,6 @@ QT_BEGIN_NAMESPACE
     \noautolist
 */
 
-
-
 //![class decl]
 class QtQmlModelsPlugin : public QQmlEngineExtensionPlugin
 {

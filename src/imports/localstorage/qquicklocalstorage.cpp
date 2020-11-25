@@ -522,7 +522,6 @@ We add a "forwardOnly" property that stops Qt caching results (code promises to 
 through the data.
 */
 
-
 /*!
     \qmlmodule QtQuick.LocalStorage 2.\QtMinorVersion
     \title Qt Quick Local Storage QML Types
@@ -536,8 +535,8 @@ through the data.
     \section1 Methods
 
     \list
-    \li object \b{\l{#openDatabaseSync}{openDatabaseSync}}(string name, string version, string description, int estimated_size, jsobject callback(db))
-    \endlist
+    \li object \b{\l{#openDatabaseSync}{openDatabaseSync}}(string name, string version, string
+description, int estimated_size, jsobject callback(db)) \endlist
 
 
     \section1 Detailed Description
@@ -581,10 +580,11 @@ import QtQuick.LocalStorage as Sql
 db = Sql.openDatabaseSync(identifier, version, description, estimated_size, callback(db))
 \endqml
 
-The above code returns the database identified by \e identifier. If the database does not already exist, it
-is created, and the function \e callback is called with the database as a parameter. \e identifier is the
-name of the physical file (with or without full path) containing the database.  \e description and
-\e estimated_size are written to the INI file (described below), but are currently unused.
+The above code returns the database identified by \e identifier. If the database does not already
+exist, it is created, and the function \e callback is called with the database as a parameter. \e
+identifier is the name of the physical file (with or without full path) containing the database.  \e
+description and \e estimated_size are written to the INI file (described below), but are currently
+unused.
 
 May throw exception with code property SQLException.DATABASE_ERR, or SQLException.VERSION_ERR.
 
@@ -616,9 +616,8 @@ May throw exception with code property SQLException.DATABASE_ERR or SQLException
 See example below.
 
 \badcode
-    var db = LocalStorage.openDatabaseSync("ActivityTrackDB", "", "Database tracking sports activities", 1000000);
-    if (db.version == "0.1") {
-        db.changeVersion("0.1", "0.2", function(tx) {
+    var db = LocalStorage.openDatabaseSync("ActivityTrackDB", "", "Database tracking sports
+activities", 1000000); if (db.version == "0.1") { db.changeVersion("0.1", "0.2", function(tx) {
             tx.executeSql("INSERT INTO trip_log VALUES(?, ?, ?)",
                         [ "01/10/2016","Sylling - Vikersund", "53" ]);
         }
@@ -672,7 +671,8 @@ you can call \e executeSql on \e tx to read the database (with \c select stateme
 
 \section3 results = tx.executeSql(statement, values)
 
-This method executes an SQL \e statement, binding the list of \e values to SQL positional parameters ("?").
+This method executes an SQL \e statement, binding the list of \e values to SQL positional parameters
+("?").
 
 It returns a results object, with the following properties:
 
@@ -684,7 +684,8 @@ It returns a results object, with the following properties:
 \row \li string \li insertId \li The id of the row inserted \li INSERT
 \endtable
 
-May throw exception with code property SQLException.DATABASE_ERR, SQLException.SYNTAX_ERR, or SQLException.UNKNOWN_ERR.
+May throw exception with code property SQLException.DATABASE_ERR, SQLException.SYNTAX_ERR, or
+SQLException.UNKNOWN_ERR.
 
 See below for an example:
 
@@ -696,8 +697,8 @@ See below for an example:
 
 \target openDatabaseSync
 \code
-object openDatabaseSync(string name, string version, string description, int estimated_size, jsobject callback(db))
-\endcode
+object openDatabaseSync(string name, string version, string description, int estimated_size,
+jsobject callback(db)) \endcode
 
 Opens or creates a local storage sql database by the given parameters.
 

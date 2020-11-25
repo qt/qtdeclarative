@@ -229,7 +229,6 @@ QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
     \endqml
 */
 
-
 /*!
     \qmltype FolderListModel
     \inqmlmodule Qt.labs.folderlistmodel
