@@ -276,6 +276,8 @@ public:
     static qsizetype data_count(QQmlListProperty<QObject> *);
     static QObject *data_at(QQmlListProperty<QObject> *, qsizetype);
     static void data_clear(QQmlListProperty<QObject> *);
+
+    static QVarLengthArray<const QPointingDevice *, 4> nonClickyWheelMice;
 };
 
 class QQuickFlickableVisibleArea : public QObject
