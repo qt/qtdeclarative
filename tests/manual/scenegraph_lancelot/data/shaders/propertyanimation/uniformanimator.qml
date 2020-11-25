@@ -13,7 +13,7 @@ Item {
         fragmentShader: "qrc:shaders/property.frag"
 
         UniformAnimator on colorProperty {
-            duration: 200
+            duration: 20
             from: 0.0
             to: 1.0
         }
