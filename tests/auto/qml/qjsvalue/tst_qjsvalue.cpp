@@ -1077,6 +1077,21 @@ void tst_QJSValue::toVariant()
 
         qInstallMessageHandler(handler);
     }
+
+    // function
+    {
+        QJSValue func = eng.evaluate("(function() { return 5 + 5 })");
+        QVERIFY(func.isCallable());
+        QCOMPARE(func.call().toInt(), 10);
+
+        QVariant funcVar = func.toVariant();
+        QVERIFY(funcVar.isValid());
+        QCOMPARE(funcVar.metaType(), QMetaType::fromType<QJSValue>());
+
+        QJSValue func2 = eng.toScriptValue(funcVar);
+        QVERIFY(func2.isCallable());
+        QCOMPARE(func2.call().toInt(), 10);
+    }
 }
 
 void tst_QJSValue::toQObject_nonQObject_data()

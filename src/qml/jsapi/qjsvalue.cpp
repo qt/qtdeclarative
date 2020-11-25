@@ -591,8 +591,10 @@ QVariant QJSValue::toVariant() const
 
     if (val.isString())
         return QVariant(val.toQString());
-    if (QV4::Managed *m = val.as<QV4::Managed>())
-        return m->engine()->toVariant(val, /*typeHint*/ -1, /*createJSValueForObjects*/ false);
+    if (QV4::Managed *m = val.as<QV4::Managed>()) {
+        return m->engine()->toVariant(val, /*typeHint*/ -1,
+                                      /*createJSValueForObjects*/ val.isFunctionObject());
+    }
 
     Q_ASSERT(false);
     return QVariant();
