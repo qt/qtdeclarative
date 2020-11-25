@@ -270,7 +270,7 @@ quint16 tst_Scenegraph::checksumFileOrDir(const QString &path)
         QFile f(path);
         f.open(QIODevice::ReadOnly);
         QByteArray contents = f.readAll();
-        return qChecksum(contents.constData(), uint(contents.size()));
+        return qChecksum(contents);
     }
     if (fi.isDir()) {
         static const QStringList nameFilters = QStringList() << "*.qml" << "*.cpp" << "*.png" << "*.jpg";
