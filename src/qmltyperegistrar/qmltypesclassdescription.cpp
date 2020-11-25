@@ -68,8 +68,8 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
         file = classDef->value(QLatin1String("inputFile")).toString();
 
     if (classDef->contains(QLatin1String("interfaces"))) {
-        QJsonArray array = classDef->value(QLatin1String("interfaces")).toArray();
-        for (const QJsonValue& value : array) {
+        const QJsonArray array = classDef->value(QLatin1String("interfaces")).toArray();
+        for (const QJsonValue value : array) {
             auto object = value.toArray()[0].toObject();
             implementsInterfaces << object[QLatin1String("className")].toString();
         }
