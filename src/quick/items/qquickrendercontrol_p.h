@@ -60,7 +60,7 @@ class QRhi;
 class QRhiCommandBuffer;
 class QOffscreenSurface;
 
-class Q_AUTOTEST_EXPORT QQuickRenderControlPrivate : public QObjectPrivate
+class Q_QUICK_PRIVATE_EXPORT QQuickRenderControlPrivate : public QObjectPrivate
 {
 public:
     Q_DECLARE_PUBLIC(QQuickRenderControl)
