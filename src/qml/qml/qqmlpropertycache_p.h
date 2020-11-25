@@ -138,10 +138,6 @@ public:
 
     QQmlPropertyCache *copy();
 
-    QQmlPropertyCache *copyAndAppend(const QMetaObject *,
-                QQmlPropertyData::Flags propertyFlags = QQmlPropertyData::Flags(),
-                QQmlPropertyData::Flags methodFlags = QQmlPropertyData::Flags(),
-                QQmlPropertyData::Flags signalFlags = QQmlPropertyData::Flags());
     QQmlPropertyCache *copyAndAppend(
                 const QMetaObject *, QTypeRevision typeVersion,
                 QQmlPropertyData::Flags propertyFlags = QQmlPropertyData::Flags(),

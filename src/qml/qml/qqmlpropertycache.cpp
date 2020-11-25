@@ -380,15 +380,6 @@ void QQmlPropertyCache::setParent(QQmlPropertyCache *newParent)
 
 QQmlPropertyCache *
 QQmlPropertyCache::copyAndAppend(const QMetaObject *metaObject,
-                                 QQmlPropertyData::Flags propertyFlags,
-                                 QQmlPropertyData::Flags methodFlags,
-                                 QQmlPropertyData::Flags signalFlags)
-{
-    return copyAndAppend(metaObject, QTypeRevision(), propertyFlags, methodFlags, signalFlags);
-}
-
-QQmlPropertyCache *
-QQmlPropertyCache::copyAndAppend(const QMetaObject *metaObject,
                                  QTypeRevision typeVersion,
                                  QQmlPropertyData::Flags propertyFlags,
                                  QQmlPropertyData::Flags methodFlags,

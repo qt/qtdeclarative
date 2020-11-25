@@ -221,7 +221,7 @@ void tst_qqmlpropertycache::propertiesDerived()
     QQmlRefPointer<QQmlPropertyCache> parentCache(
                 new QQmlPropertyCache(&BaseObject::staticMetaObject),
                 QQmlRefPointer<QQmlPropertyCache>::Adopt);
-    QQmlRefPointer<QQmlPropertyCache> cache(parentCache->copyAndAppend(object.metaObject()),
+    QQmlRefPointer<QQmlPropertyCache> cache(parentCache->copyAndAppend(object.metaObject(), QTypeRevision()),
                                             QQmlRefPointer<QQmlPropertyCache>::Adopt);
     QQmlPropertyData *data;
 
@@ -302,7 +302,7 @@ void tst_qqmlpropertycache::methodsDerived()
     QQmlRefPointer<QQmlPropertyCache> parentCache(
                 new QQmlPropertyCache(&BaseObject::staticMetaObject),
                 QQmlRefPointer<QQmlPropertyCache>::Adopt);
-    QQmlRefPointer<QQmlPropertyCache> cache(parentCache->copyAndAppend(object.metaObject()),
+    QQmlRefPointer<QQmlPropertyCache> cache(parentCache->copyAndAppend(object.metaObject(), QTypeRevision {}),
                                             QQmlRefPointer<QQmlPropertyCache>::Adopt);
     QQmlPropertyData *data;
 
@@ -369,7 +369,7 @@ void tst_qqmlpropertycache::signalHandlersDerived()
     QQmlRefPointer<QQmlPropertyCache> parentCache(
                 new QQmlPropertyCache(&BaseObject::staticMetaObject),
                 QQmlRefPointer<QQmlPropertyCache>::Adopt);
-    QQmlRefPointer<QQmlPropertyCache> cache(parentCache->copyAndAppend(object.metaObject()),
+    QQmlRefPointer<QQmlPropertyCache> cache(parentCache->copyAndAppend(object.metaObject(), QTypeRevision{}),
                                             QQmlRefPointer<QQmlPropertyCache>::Adopt);
     QQmlPropertyData *data;
 
