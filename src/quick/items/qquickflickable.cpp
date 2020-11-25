@@ -53,6 +53,7 @@
 #include <QtGui/qguiapplication.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qstylehints.h>
+#include <QtGui/qpa/qplatformtheme.h>
 #include <QtCore/qmath.h>
 #include "qplatformdefs.h"
 
@@ -62,8 +63,11 @@
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(lcHandlerParent)
+Q_LOGGING_CATEGORY(lcFlickable, "qt.quick.flickable")
 Q_LOGGING_CATEGORY(lcFilter, "qt.quick.flickable.filter")
 Q_LOGGING_CATEGORY(lcReplay, "qt.quick.flickable.replay")
+Q_LOGGING_CATEGORY(lcWheel, "qt.quick.flickable.wheel")
+Q_LOGGING_CATEGORY(lcVel, "qt.quick.flickable.velocity")
 
 // FlickThreshold determines how far the "mouse" must have moved
 // before we perform a flick.
@@ -251,6 +255,8 @@ QQuickFlickablePrivate::AxisData::~AxisData()
 }
 
 
+QVarLengthArray<const QPointingDevice *, 4> QQuickFlickablePrivate::nonClickyWheelMice;
+
 QQuickFlickablePrivate::QQuickFlickablePrivate()
   : contentItem(new QQuickItem)
     , hData(this, &QQuickFlickablePrivate::setViewportX)
@@ -390,10 +396,13 @@ bool QQuickFlickablePrivate::flick(AxisData &data, qreal minExtent, qreal maxExt
 
         resetTimeline(data);
         if (!data.inOvershoot) {
-            if (boundsBehavior & QQuickFlickable::OvershootBounds)
+            if (boundsBehavior & QQuickFlickable::OvershootBounds) {
+                qCDebug(lcVel) << "timeline.accel(" << data.move << v << accel << ')';
                 timeline.accel(data.move, v, accel);
-            else
+            } else {
+                qCDebug(lcVel) << "timeline.accel(" << data.move << v << accel << "maxDist" << maxDistance << ')';
                 timeline.accel(data.move, v, accel, maxDistance);
+            }
         }
         timeline.callback(QQuickTimeLineCallback(&data.move, fixupCallback, this));
 
@@ -1130,6 +1139,10 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
     bool prevVMoved = vMoved;
 
     qint64 elapsedSincePress = currentTimestamp - lastPressTime;
+    qCDebug(lcFlickable).nospace() << currentTimestamp << ' ' << eventType << " drag @ " << localPos.x() << ',' << localPos.y()
+                                   << " \u0394 " << deltas.x() << ',' << deltas.y() << " vel " << velocity.x() << ',' << velocity.y()
+                                   << " thrsld? " << overThreshold << " momentum? " << momentum << " velSens? " << velocitySensitiveOverBounds
+                                   << " sincePress " << elapsedSincePress;
 
     if (q->yflick()) {
         qreal dy = deltas.y();
@@ -1529,6 +1542,21 @@ void QQuickFlickable::touchEvent(QTouchEvent *event)
         QQuickItem::touchEvent(event);
 }
 
+enum class WheelMomentumSetting {
+    Default = -1,
+    Disabled = 0,
+    Enabled
+};
+
+static WheelMomentumSetting wheelMomentumEnabled()
+{
+    bool envIsSet = true;
+    const bool wheelMomentumEnabled = qEnvironmentVariableIntValue("QT_QUICK_FLICKABLE_WHEEL_MOMENTUM_ENABLED", &envIsSet);
+    if (!envIsSet)
+        return WheelMomentumSetting::Default;
+    return wheelMomentumEnabled ? WheelMomentumSetting::Enabled : WheelMomentumSetting::Disabled;
+}
+
 #if QT_CONFIG(wheelevent)
 void QQuickFlickable::wheelEvent(QWheelEvent *event)
 {
@@ -1537,6 +1565,7 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
         QQuickItem::wheelEvent(event);
         return;
     }
+    qCDebug(lcWheel) << event->device() << event;
     event->setAccepted(false);
     qint64 currentTimestamp = d->computeCurrentTime(event);
     switch (event->phase()) {
@@ -1577,46 +1606,102 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
         // physical mouse wheel, so use angleDelta
         int xDelta = event->angleDelta().x();
         int yDelta = event->angleDelta().y();
-        if (yflick() && yDelta != 0) {
-            bool valid = false;
-            if (yDelta > 0 && contentY() > -minYExtent()) {
-                d->vData.velocity = qMax(yDelta*2 - d->vData.smoothVelocity.value(), qreal(d->maxVelocity/4));
-                valid = true;
-            } else if (yDelta < 0 && contentY() < -maxYExtent()) {
-                d->vData.velocity = qMin(yDelta*2 - d->vData.smoothVelocity.value(), qreal(-d->maxVelocity/4));
-                valid = true;
-            }
-            if (valid) {
-                d->flickY(d->vData.velocity);
-                d->flickingStarted(false, true);
-                if (d->vData.flicking) {
-                    d->vMoved = true;
-                    movementStarting();
+        /*! \internal
+            Will we get smooth scrolling with momentum, or not?
+
+            |env var|enabled |delta|momentum|
+            |-------|--------|-----|--------|
+            |not set|Default |120x |y       |
+            |not set|Default |other|n       |
+            |0      |Disabled|120x |n       |
+            |0      |Disabled|other|n       |
+            |1      |Enabled |120x |y       |
+            |1      |Enabled |other|y       |
+        */
+        static const WheelMomentumSetting momentumEnvEnabled = wheelMomentumEnabled();
+        bool momentumEnabled = (momentumEnvEnabled != WheelMomentumSetting::Disabled);
+        if (momentumEnvEnabled == WheelMomentumSetting::Default) {
+            momentumEnabled = !d->nonClickyWheelMice.contains(event->pointingDevice());
+            if (momentumEnabled) {
+                // If a particular mouse ever generates deltas that are not a multiple of 120,
+                // momentum scrolling is disabled.  On a laptop, the "core pointer" might sometimes
+                // be the touchpad and sometimes a USB mouse (until Qt's multi-mouse support is
+                // better developed to keep them separate); but if you miss momentum, you can set
+                // QT_QUICK_FLICKABLE_WHEEL_MOMENTUM_ENABLED=1 to opt back in again.
+                if (xDelta % 120 || yDelta % 120) {
+                    d->nonClickyWheelMice.append(event->pointingDevice());
+                    qCDebug(lcWheel) << event->pointingDevice() << "doesn't have a 'clicky' mouse wheel";
+                    momentumEnabled = false;
                 }
-                event->accept();
             }
         }
-        if (xflick() && xDelta != 0) {
-            bool valid = false;
-            if (xDelta > 0 && contentX() > -minXExtent()) {
-                d->hData.velocity = qMax(xDelta*2 - d->hData.smoothVelocity.value(), qreal(d->maxVelocity/4));
-                valid = true;
-            } else if (xDelta < 0 && contentX() < -maxXExtent()) {
-                d->hData.velocity = qMin(xDelta*2 - d->hData.smoothVelocity.value(), qreal(-d->maxVelocity/4));
-                valid = true;
-            }
-            if (valid) {
-                d->flickX(d->hData.velocity);
-                d->flickingStarted(true, false);
-                if (d->hData.flicking) {
-                    d->hMoved = true;
-                    movementStarting();
+        qCDebug(lcWheel) << "momentum env:" << int(momentumEnvEnabled) << "this device:" << momentumEnabled;
+        if (momentumEnabled) {
+            // engage the velocity timeline for smooth scrolling
+            if (yflick() && yDelta != 0) {
+                bool valid = false;
+                if (yDelta > 0 && contentY() > -minYExtent()) {
+                    d->vData.velocity = qMax(yDelta*2 - d->vData.smoothVelocity.value(), qreal(d->maxVelocity/4));
+                    valid = true;
+                } else if (yDelta < 0 && contentY() < -maxYExtent()) {
+                    d->vData.velocity = qMin(yDelta*2 - d->vData.smoothVelocity.value(), qreal(-d->maxVelocity/4));
+                    valid = true;
                 }
+                if (valid) {
+                    d->flickY(d->vData.velocity);
+                    d->flickingStarted(false, true);
+                    if (d->vData.flicking) {
+                        d->vMoved = true;
+                        movementStarting();
+                    }
+                    event->accept();
+                }
+            }
+            if (xflick() && xDelta != 0) {
+                bool valid = false;
+                if (xDelta > 0 && contentX() > -minXExtent()) {
+                    d->hData.velocity = qMax(xDelta*2 - d->hData.smoothVelocity.value(), qreal(d->maxVelocity/4));
+                    valid = true;
+                } else if (xDelta < 0 && contentX() < -maxXExtent()) {
+                    d->hData.velocity = qMin(xDelta*2 - d->hData.smoothVelocity.value(), qreal(-d->maxVelocity/4));
+                    valid = true;
+                }
+                if (valid) {
+                    d->flickX(d->hData.velocity);
+                    d->flickingStarted(true, false);
+                    if (d->hData.flicking) {
+                        d->hMoved = true;
+                        movementStarting();
+                    }
+                    event->accept();
+                }
+            }
+        } else {
+            // if it's a laptop touchpad, ignore velocity and make scroll distance directly proportional to angleDelta
+            if (yDelta > 0)
+                yDelta = qMin(yDelta, int(contentY() + minYExtent()));
+            else if (yDelta < 0)
+                yDelta = qMax(yDelta, int(contentY() + maxYExtent()));
+            else if (xDelta > 0)
+                xDelta = qMin(xDelta, int(contentX() + minXExtent()));
+            else if (xDelta < 0)
+                xDelta = qMax(xDelta, int(contentX() + maxXExtent()));
+
+            if (xDelta != 0 || yDelta != 0) {
+                // if QStyleHints::wheelScrollLines() != 3, scale it accordingly
+                // (Flickable has no idea how many "lines" are being scrolled: depends on font size etc.)
+                static const float defaultWheelScrollLines = QPlatformTheme::defaultThemeHint(QPlatformTheme::WheelScrollLines).toFloat();
+                const float configuredWheelScrollLines = qGuiApp->styleHints()->wheelScrollLines();
+                const float deltaRatio = configuredWheelScrollLines / defaultWheelScrollLines;
+                d->accumulatedWheelPixelDelta += QVector2D(xDelta * deltaRatio, yDelta * deltaRatio);
+                qCDebug(lcWheel) << "scroll lines: default" << defaultWheelScrollLines
+                                 << "style hint" << configuredWheelScrollLines << "scaled acc delta" << d->accumulatedWheelPixelDelta;
+                d->drag(currentTimestamp, event->type(), event->position(), d->accumulatedWheelPixelDelta, true, false, false, {});
                 event->accept();
             }
         }
     } else {
-        // use pixelDelta (probably from a trackpad)
+        // use pixelDelta (probably from a trackpad): this is where we want to be on most platforms eventually
         int xDelta = event->pixelDelta().x();
         int yDelta = event->pixelDelta().y();
 
@@ -1845,12 +1930,15 @@ void QQuickFlickablePrivate::viewportAxisMoved(AxisData &data, qreal minExtent, 
                 else
                     velocityTimeline.move(data.smoothVelocity, velocity, reportedVelocitySmoothing);
                 velocityTimeline.move(data.smoothVelocity, 0, reportedVelocitySmoothing);
+                qCDebug(lcVel) << "touchpad scroll phase: velocity" << velocity;
             }
         }
     } else {
         if (timeline.time() > data.vTime) {
             velocityTimeline.reset(data.smoothVelocity);
             qreal velocity = (data.lastPos - data.move.value()) * 1000 / (timeline.time() - data.vTime);
+            if (!qFuzzyCompare(data.smoothVelocity.value(), velocity))
+                qCDebug(lcVel) << "velocity" << data.smoothVelocity.value() << "->" << velocity;
             data.smoothVelocity.setValue(velocity);
         }
     }
@@ -1865,8 +1953,11 @@ void QQuickFlickablePrivate::viewportAxisMoved(AxisData &data, qreal minExtent, 
         data.inOvershoot = true;
         qreal maxDistance = overShootDistance(vSize) - overBound;
         resetTimeline(data);
-        if (maxDistance > 0)
+        if (maxDistance > 0) {
+            qCDebug(lcVel) << "timeline.accel(" << data.move << -data.smoothVelocity.value()
+                           << deceleration*QML_FLICK_OVERSHOOTFRICTION << "maxDist" << maxDistance << ')';
             timeline.accel(data.move, -data.smoothVelocity.value(), deceleration*QML_FLICK_OVERSHOOTFRICTION, maxDistance);
+        }
         timeline.callback(QQuickTimeLineCallback(&data.move, fixupCallback, this));
     }
 
