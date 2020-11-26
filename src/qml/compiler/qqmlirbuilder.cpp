@@ -787,9 +787,10 @@ bool IRBuilder::visit(QQmlJS::AST::UiPragma *node)
     // For now the only valid pragma is Singleton, so lets validate the input
     if (!node->name.isNull())
     {
-        if (QLatin1String("Singleton") == node->name)
-        {
+        if (node->name == QStringLiteral("Singleton")) {
             pragma->type = Pragma::PragmaSingleton;
+        } else if (node->name == QStringLiteral("Strict")) {
+            pragma->type = Pragma::PragmaStrict;
         } else {
             recordError(node->pragmaToken, QCoreApplication::translate("QQmlParser","Pragma requires a valid qualifier"));
             return false;
@@ -1603,8 +1604,12 @@ void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::Depen
 
         // enable flag if we encountered pragma Singleton
         for (Pragma *p : qAsConst(output.pragmas)) {
-            if (p->type == Pragma::PragmaSingleton) {
+            switch (p->type) {
+            case Pragma::PragmaSingleton:
                 createdUnit->flags |= QV4::CompiledData::Unit::IsSingleton;
+                break;
+            case Pragma::PragmaStrict:
+                createdUnit->flags |= QV4::CompiledData::Unit::IsStrict;
                 break;
             }
         }

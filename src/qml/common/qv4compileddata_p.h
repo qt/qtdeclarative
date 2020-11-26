@@ -964,7 +964,8 @@ struct Unit
         IsSingleton = 0x4,
         IsSharedLibrary = 0x8, // .pragma shared?
         IsESModule = 0x10,
-        PendingTypeCompilation = 0x20 // the QML data structures present are incomplete and require type compilation
+        PendingTypeCompilation = 0x20, // the QML data structures present are incomplete and require type compilation
+        IsStrict = 0x40
     };
     quint32_le flags;
     quint32_le stringTableSize;

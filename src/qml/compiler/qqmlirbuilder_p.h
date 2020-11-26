@@ -410,7 +410,8 @@ private:
 struct Q_QMLCOMPILER_PRIVATE_EXPORT Pragma
 {
     enum PragmaType {
-        PragmaSingleton = 0x1
+        PragmaSingleton = 0x1,
+        PragmaStrict    = 0x2
     };
     quint32 type;
 

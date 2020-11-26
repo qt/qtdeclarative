@@ -58,12 +58,18 @@ void QQmlIRLoader::load()
     for (quint32 i = 0; i < qmlUnit->nImports; ++i)
         output->imports << qmlUnit->importAt(i);
 
-    if (unit->flags & QV4::CompiledData::Unit::IsSingleton) {
+    const auto createPragma = [&](QmlIR::Pragma::PragmaType type) {
         QmlIR::Pragma *p = New<QmlIR::Pragma>();
         p->location = QV4::CompiledData::Location();
-        p->type = QmlIR::Pragma::PragmaSingleton;
+        p->type = type;
         output->pragmas << p;
-    }
+    };
+
+    if (unit->flags & QV4::CompiledData::Unit::IsSingleton)
+        createPragma(QmlIR::Pragma::PragmaSingleton);
+    if (unit->flags & QV4::CompiledData::Unit::IsStrict)
+        createPragma(QmlIR::Pragma::PragmaStrict);
+
 
     for (uint i = 0; i < qmlUnit->nObjects; ++i) {
         const QV4::CompiledData::Object *serializedObject = qmlUnit->objectAt(i);
