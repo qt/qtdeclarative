@@ -583,7 +583,7 @@ function(qt6_target_qml_files target)
     math(EXPR new_count "${resource_count} + 1")
     set_target_properties(${target} PROPERTIES QT6_QML_MODULE_ADD_QML_FILES_COUNT ${new_count})
 
-    qt6_add_resources(${target} "qml_files_${new_count}"
+    qt6_add_resources(${target} "${target}_qml_files_${new_count}"
         FILES ${arg_FILES}
         OUTPUT_TARGETS resource_targets
     )
