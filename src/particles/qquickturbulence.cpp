@@ -180,7 +180,7 @@ void QQuickTurbulenceAffector::affectSystem(qreal dt)
     updateOffsets();//### Needed if an ancestor is transformed.
 
     QRect boundsRect(0,0,m_gridSize,m_gridSize);
-    foreach (QQuickParticleGroupData *gd, m_system->groupData){
+    for (QQuickParticleGroupData *gd : m_system->groupData) {
         if (!activeGroup(gd->index))
             continue;
         foreach (QQuickParticleData *d, gd->data){

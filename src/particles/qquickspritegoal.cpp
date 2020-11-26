@@ -124,10 +124,11 @@ bool QQuickSpriteGoalAffector::affectParticle(QQuickParticleData *d, qreal dt)
     QQuickStochasticEngine *engine = nullptr;
     if (!m_systemStates){
         //TODO: Affect all engines
-        foreach (QQuickParticlePainter *p, m_system->groupData[d->groupId]->painters)
+        for (QQuickParticlePainter *p : m_system->groupData[d->groupId]->painters) {
             if (qobject_cast<QQuickImageParticle*>(p))
                 engine = qobject_cast<QQuickImageParticle*>(p)->spriteEngine();
-    }else{
+        }
+    } else {
         engine = m_system->stateEngine;
         if (!engine)
             m_notUsingEngine = true;

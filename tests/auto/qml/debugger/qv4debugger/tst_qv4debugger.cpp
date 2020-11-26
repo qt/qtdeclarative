@@ -238,7 +238,7 @@ public:
             QJsonObject object = job.returnValue();
             object = object.value(QLatin1String("object")).toObject();
             QVERIFY(!object.contains("ref") || object.contains("properties"));
-            foreach (const QJsonValue &value, object.value(QLatin1String("properties")).toArray()) {
+            for (const QJsonValue value : object.value(QLatin1String("properties")).toArray()) {
                 QJsonObject property = value.toObject();
                 QString name = property.value(QLatin1String("name")).toString();
                 property.remove(QLatin1String("name"));
