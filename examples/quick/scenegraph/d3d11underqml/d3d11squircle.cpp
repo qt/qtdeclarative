@@ -245,7 +245,7 @@ void SquircleRenderer::mainPassRecordingStart()
         memcpy(mp.pData, &t, 4);
         m_context->Unmap(m_cbuf, 0);
     } else {
-        qFatal("Failed to map constant buffer: 0x%x", hr);
+        qFatal("Failed to map constant buffer: 0x%x", uint(hr));
     }
 
     D3D11_VIEWPORT v;
@@ -353,11 +353,11 @@ void SquircleRenderer::init()
 
     HRESULT hr = m_device->CreateVertexShader(vs.constData(), vs.size(), nullptr, &m_vs);
     if (FAILED(hr))
-        qFatal("Failed to create vertex shader: 0x%x", hr);
+        qFatal("Failed to create vertex shader: 0x%x", uint(hr));
 
     hr = m_device->CreatePixelShader(fs.constData(), fs.size(), nullptr, &m_ps);
     if (FAILED(hr))
-        qFatal("Failed to create pixel shader: 0x%x", hr);
+        qFatal("Failed to create pixel shader: 0x%x", uint(hr));
 
     D3D11_BUFFER_DESC bufDesc;
     memset(&bufDesc, 0, sizeof(bufDesc));
@@ -366,7 +366,7 @@ void SquircleRenderer::init()
     bufDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
     hr = m_device->CreateBuffer(&bufDesc, nullptr, &m_vbuf);
     if (FAILED(hr))
-        qFatal("Failed to create buffer: 0x%x", hr);
+        qFatal("Failed to create buffer: 0x%x", uint(hr));
 
     m_context->UpdateSubresource(m_vbuf, 0, nullptr, vertices, 0, 0);
 
@@ -376,7 +376,7 @@ void SquircleRenderer::init()
     bufDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
     hr = m_device->CreateBuffer(&bufDesc, nullptr, &m_cbuf);
     if (FAILED(hr))
-        qFatal("Failed to create buffer: 0x%x", hr);
+        qFatal("Failed to create buffer: 0x%x", uint(hr));
 
     D3D11_INPUT_ELEMENT_DESC inputDesc;
     memset(&inputDesc, 0, sizeof(inputDesc));
@@ -389,7 +389,7 @@ void SquircleRenderer::init()
     inputDesc.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
     hr = m_device->CreateInputLayout(&inputDesc, 1, vs.constData(), vs.size(), &m_inputLayout);
     if (FAILED(hr))
-        qFatal("Failed to create input layout: 0x%x", hr);
+        qFatal("Failed to create input layout: 0x%x", uint(hr));
 
     D3D11_RASTERIZER_DESC rastDesc;
     memset(&rastDesc, 0, sizeof(rastDesc));
@@ -397,13 +397,13 @@ void SquircleRenderer::init()
     rastDesc.CullMode = D3D11_CULL_NONE;
     hr = m_device->CreateRasterizerState(&rastDesc, &m_rastState);
     if (FAILED(hr))
-        qFatal("Failed to create rasterizer state: 0x%x", hr);
+        qFatal("Failed to create rasterizer state: 0x%x", uint(hr));
 
     D3D11_DEPTH_STENCIL_DESC dsDesc;
     memset(&dsDesc, 0, sizeof(dsDesc));
     hr = m_device->CreateDepthStencilState(&dsDesc, &m_dsState);
     if (FAILED(hr))
-        qFatal("Failed to create depth/stencil state: 0x%x", hr);
+        qFatal("Failed to create depth/stencil state: 0x%x", uint(hr));
 
     D3D11_BLEND_DESC blendDesc;
     memset(&blendDesc, 0, sizeof(blendDesc));
@@ -421,7 +421,7 @@ void SquircleRenderer::init()
     blendDesc.RenderTarget[0] = blend;
     hr = m_device->CreateBlendState(&blendDesc, &m_blendState);
     if (FAILED(hr))
-        qFatal("Failed to create blend state: 0x%x", hr);
+        qFatal("Failed to create blend state: 0x%x", uint(hr));
 }
 
 #include "d3d11squircle.moc"
