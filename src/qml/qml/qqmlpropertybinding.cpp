@@ -122,6 +122,65 @@ bool QQmlPropertyBinding::evaluate(QMetaType metaType, void *dataPtr)
         return false;
     }
 
+    int propertyType = metaType.id();
+
+    switch (propertyType) {
+    case QMetaType::Bool: {
+        bool b;
+        if (result->isBoolean())
+            b = result->booleanValue();
+        else
+            b = result->toBoolean();
+        if (b == *static_cast<bool *>(dataPtr))
+            return false;
+        *static_cast<bool *>(dataPtr) = b;
+        return true;
+    }
+    case QMetaType::Int: {
+        int i;
+        if (result->isInteger())
+            i = result->integerValue();
+        else if (result->isNumber()) {
+            i = QV4::StaticValue::toInteger(result->doubleValue());
+        } else {
+            break;
+        }
+        if (i == *static_cast<int *>(dataPtr))
+            return false;
+        *static_cast<int *>(dataPtr) = i;
+        return true;
+    }
+    case QMetaType::Double:
+        if (result->isNumber()) {
+            double d = result->asDouble();
+            if (d == *static_cast<double *>(dataPtr))
+                return false;
+            *static_cast<double *>(dataPtr) = d;
+            return true;
+        }
+        break;
+    case QMetaType::Float:
+        if (result->isNumber()) {
+            float d = float(result->asDouble());
+            if (d == *static_cast<float *>(dataPtr))
+                return false;
+            *static_cast<float *>(dataPtr) = d;
+            return true;
+        }
+        break;
+    case QMetaType::QString:
+        if (result->isString()) {
+            QString s = result->toQStringNoThrow();
+            if (s == *static_cast<QString *>(dataPtr))
+                return false;
+            *static_cast<QString *>(dataPtr) = s;
+            return true;
+        }
+        break;
+    default:
+        break;
+    }
+
     QVariant resultVariant(scope.engine->toVariant(result, metaType.id()));
     resultVariant.convert(metaType);
     const bool hasChanged = !metaType.equals(resultVariant.constData(), dataPtr);
