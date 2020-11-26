@@ -211,7 +211,9 @@ QV4::Function *ExecutableCompilationUnit::linkToEngine(ExecutionEngine *engine)
     }
 
     runtimeFunctions.resize(data->functionTableSize);
-    const QQmlPrivate::AOTCompiledFunction *aotFunction = aotCompiledFunctions;
+    static bool forceInterpreter = qEnvironmentVariableIsSet("QV4_FORCE_INTERPRETER");
+    const QQmlPrivate::AOTCompiledFunction *aotFunction
+            = forceInterpreter ? nullptr : aotCompiledFunctions;
 
     auto advanceAotFunction = [&](int i) -> const QQmlPrivate::AOTCompiledFunction * {
         if (aotFunction) {
