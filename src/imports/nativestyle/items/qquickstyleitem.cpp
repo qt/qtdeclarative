@@ -79,6 +79,26 @@ QDebug operator<<(QDebug debug, const StyleItemGeometry &cg)
     return debug;
 }
 
+int QQuickStyleItem::dprAlignedSize(const int size) const
+{
+    // Return the first value equal to or bigger than size
+    // that is a whole number when multiplied with the dpr.
+    static int multiplier = [&]() {
+        const qreal dpr = window()->devicePixelRatio();
+        for (int m = 1; m <= 10; ++m) {
+            const qreal v = m * dpr;
+            if (v == int(v))
+                return m;
+        }
+
+        qWarning() << "The current dpr (" << dpr << ") is not supported"
+                   << "by the style and might result in drawing artifacts";
+        return 1;
+    }();
+
+    return int(qCeil(qreal(size) / qreal(multiplier)) * multiplier);
+}
+
 QQuickStyleItem::QQuickStyleItem(QQuickItem *parent)
     : QQuickItem(parent)
 {
@@ -280,17 +300,32 @@ void QQuickStyleItem::updateGeometry()
 void QQuickStyleItem::paintControlToImage()
 {
     qqc2InfoHeading("PAINT");
-    if (m_styleItemGeometry.minimumSize.isEmpty())
+    const QSize imgSize = imageSize();
+    if (imgSize.isEmpty())
         return;
 
     m_dirty.setFlag(DirtyFlag::Image, false);
-    const qreal scale = window()->devicePixelRatio();
-    const QSize imgSize = imageSize();
-    const QSize scaledImageSize = imgSize * scale;
 
-    if (m_paintedImage.size() != scaledImageSize) {
-        m_paintedImage = QImage(scaledImageSize, QImage::Format_ARGB32_Premultiplied);
-        m_paintedImage.setDevicePixelRatio(scale);
+    // The size of m_paintedImage should normally be imgSize * dpr. The problem is
+    // that the dpr can be e.g 1.25, which means that the size can end up having a
+    // fraction. But an image cannot have a size with a fraction, so it would need
+    // to be rounded. But on the flip side, rounding the size means that the size
+    // of the scene graph node (which is, when the texture is not scaled,
+    // m_paintedImage.size() / dpr), will end up with a fraction instead. And this
+    // causes rendering artifacts in the scene graph when the texture is mapped
+    // to physical screen coordinates. So for that reason we calculate an image size
+    // that might be slightly larger than imgSize, so that imgSize * dpr lands on a
+    // whole number. The result is that neither the image size, nor the scene graph
+    // node, ends up with a size that has a fraction.
+    const qreal dpr = window()->devicePixelRatio();
+    const int alignedW = int(dprAlignedSize(imgSize.width()) * dpr);
+    const int alignedH = int(dprAlignedSize(imgSize.height()) * dpr);
+    const QSize alignedSize = QSize(alignedW, alignedH);
+
+    if (m_paintedImage.size() != alignedSize) {
+        m_paintedImage = QImage(alignedSize, QImage::Format_ARGB32_Premultiplied);
+        m_paintedImage.setDevicePixelRatio(dpr);
+        qqc2Info() << "created image with dpr aligned size:" << alignedSize;
     }
 
     m_paintedImage.fill(Qt::transparent);
@@ -302,7 +337,7 @@ void QQuickStyleItem::paintControlToImage()
     if (m_debugFlags != NoDebug) {
         painter.setPen(QColor(255, 0, 0, 255));
         if (m_debugFlags.testFlag(ImageRect))
-            painter.drawRect(QRect(QPoint(0, 0), imgSize));
+            painter.drawRect(QRect(QPoint(0, 0), alignedSize / dpr));
         if (m_debugFlags.testFlag(LayoutRect)) {
             const auto m = layoutMargins();
             QRect rect = QRect(QPoint(0, 0), imgSize);

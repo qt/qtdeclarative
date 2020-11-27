@@ -269,6 +269,8 @@ private:
     inline void updateGeometry();
     inline void paintControlToImage();
 
+    int dprAlignedSize(const int size) const;
+
 #ifdef QT_DEBUG
     void addDebugInfo();
 #endif
