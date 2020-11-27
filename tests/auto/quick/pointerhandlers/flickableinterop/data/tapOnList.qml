@@ -38,6 +38,15 @@ ListView {
     model: 10
     spacing: 2
 
+    // faster rebound to speed up test runs
+    rebound: Transition {
+        NumberAnimation {
+            properties: "x,y"
+            duration: 30
+            easing.type: Easing.OutBounce
+        }
+    }
+
     delegate: Rectangle {
         objectName: "itemview delegate"
         color: delegateTap.pressed ? "wheat" : "beige"

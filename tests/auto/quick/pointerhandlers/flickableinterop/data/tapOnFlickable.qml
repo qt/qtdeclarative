@@ -36,6 +36,15 @@ Flickable {
     contentWidth: 1000
     contentHeight: 600
 
+    // faster rebound to speed up test runs
+    rebound: Transition {
+        NumberAnimation {
+            properties: "x,y"
+            duration: 30
+            easing.type: Easing.OutBounce
+        }
+    }
+
     Rectangle {
         objectName: "button"
         anchors.centerIn: parent

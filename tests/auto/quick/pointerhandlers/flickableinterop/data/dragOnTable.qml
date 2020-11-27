@@ -40,6 +40,15 @@ TableView {
     // TODO use TableModel when it's ready, to test with multiple columns
     model: 10
 
+    // faster rebound to speed up test runs
+    rebound: Transition {
+        NumberAnimation {
+            properties: "x,y"
+            duration: 30
+            easing.type: Easing.OutBounce
+        }
+    }
+
     delegate: Rectangle {
         id: tableDelegate
         objectName: "itemview delegate"
