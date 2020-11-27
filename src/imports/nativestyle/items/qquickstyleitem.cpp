@@ -117,47 +117,46 @@ QSGNode *QQuickStyleItem::updatePaintNode(QSGNode *oldNode, QQuickItem::UpdatePa
     if (m_paintedImage.isNull())
         return node;
 
-    auto texture = window()->createTextureFromImage(m_paintedImage, QQuickWindow::TextureCanUseAtlas);
+    const auto texture = window()->createTextureFromImage(m_paintedImage, QQuickWindow::TextureCanUseAtlas);
 
     QRectF bounds = boundingRect();
-    const qreal scale = m_paintedImage.devicePixelRatioF();
-    const QSizeF ninePatchImageSize = m_paintedImage.rect().size() / scale;
+    const qreal dpr = window()->devicePixelRatio();
+    const QSizeF unscaledImageSize = QSizeF(m_paintedImage.size()) / dpr;
+
+    // We can scale the image up with a nine patch node, but should
+    // avoid to scale it down. Otherwise the nine patch image will look
+    // wrapped (or look truncated, in case of no padding). So if the
+    // item is smaller that the image, don't scale.
+    if (bounds.width() < unscaledImageSize.width())
+        bounds.setWidth(unscaledImageSize.width());
+    if (bounds.height() < unscaledImageSize.height())
+        bounds.setHeight(unscaledImageSize.height());
+
 #ifdef QT_DEBUG
     if (m_debugFlags.testFlag(Unscaled)) {
-        bounds = QRectF(QPointF(), ninePatchImageSize);
-        qqc2Info() << "Setting paint node bounds to size of image:" << bounds;
+        bounds.setSize(unscaledImageSize);
+        qqc2Info() << "Setting qsg node size to the unscaled size of m_paintedImage:" << bounds;
     }
 #endif
 
-    QMargins padding;
     if (m_useNinePatchImage) {
-        padding = m_styleItemGeometry.ninePatchMargins;
+        QMargins padding = m_styleItemGeometry.ninePatchMargins;
         if (padding.right() == -1) {
-            // Special case: a right padding of -1 means that
-            // the image should not scale horizontally.
-            bounds.setWidth(ninePatchImageSize.width());
-            padding.setLeft(0);
-            padding.setRight(0);
-        } else if (boundingRect().width() < imageSize().width()) {
-            // If the item size is smaller that the image, using nine-patch scaling
-            // ends up wrapping it. In that case we scale the whole image instead.
+            // Special case: a padding of -1 means that
+            // the image shouldn't scale in the given direction.
             padding.setLeft(0);
             padding.setRight(0);
         }
         if (padding.bottom() == -1) {
-            bounds.setHeight(ninePatchImageSize.height());
-            padding.setTop(0);
-            padding.setBottom(0);
-        } else if (boundingRect().height() < imageSize().height()) {
             padding.setTop(0);
             padding.setBottom(0);
         }
+        node->setPadding(padding.left(), padding.top(), padding.right(), padding.bottom());
     }
 
     node->setBounds(bounds);
     node->setTexture(texture);
-    node->setDevicePixelRatio(scale);
-    node->setPadding(padding.left(), padding.top(), padding.right(), padding.bottom());
+    node->setDevicePixelRatio(dpr);
     node->update();
 
     return node;
