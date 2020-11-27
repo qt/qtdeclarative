@@ -22,8 +22,11 @@ Module {
     }
 
     Component {
-        name: "varargs"
-        accessSemantics: "value"
+        // QQmlV4Function is the name for varargs. If such parameter is declared
+        // we can invoke the method with any number of QJSValue parameters.
+        // Access semantics are not "value" because the actual QQmlV4Function object
+        // is passed as a pointer.
+        name: "QQmlV4Function"
     }
 
     Component {
@@ -531,7 +534,7 @@ Module {
 
             Parameter {
                 name: "arguments"
-                type: "varargs"
+                type: "QQmlV4Function"
             }
         }
 
@@ -607,7 +610,7 @@ Module {
 
             Parameter {
                 name: "arguments"
-                type: "varargs"
+                type: "QQmlV4Function"
             }
         }
 
@@ -617,7 +620,7 @@ Module {
 
             Parameter {
                 name: "arguments"
-                type: "varargs"
+                type: "QQmlV4Function"
             }
         }
 
@@ -801,7 +804,7 @@ Module {
 
             Parameter {
                 name: "arguments"
-                type: "varargs"
+                type: "QQmlV4Function"
             }
         }
 
@@ -811,7 +814,7 @@ Module {
 
             Parameter {
                 name: "arguments"
-                type: "varargs"
+                type: "QQmlV4Function"
             }
         }
 
@@ -826,7 +829,7 @@ Module {
 
             Parameter {
                 name: "substitutions"
-                type: "varargs"
+                type: "QQmlV4Function"
             }
         }
 
@@ -874,7 +877,7 @@ Module {
 
             Parameter {
                 name: "arguments"
-                type: "varargs"
+                type: "QQmlV4Function"
             }
         }
 
