@@ -43,6 +43,28 @@
 
     \section1 QML language
 
+    \section2 URL resolution
+
+    In Qt 5, relative urls were often, albeit inconsistently, directly resolved, especially when
+    assigned to an url property. In Qt 6 this is no longer the case.
+
+    If you had a QML file stored under "/home/qml/example.qml", and "example.qml" contained
+    \begincode
+    property url imageFolder: "./images"
+    \oldcode
+    then the url property would store the URL "/home/qml/images". This made it impossible to use
+    relative URLs in QML in this way, so in Qt 6, the URL stays relative, and only gets resolved
+    when this is required (e.g. when it is used as the source of an Image component).
+    If you depend on the old behavior, you can use \c Qt.resolvedUrl
+    \oldcode
+    property url imageFolder: "./images"
+    \newcode
+    property url imageFolder: Qt.resolvedUrl("./images")
+    \endcode
+    Qt.resolvedUrl can be used in both Qt 5 and 6.
+
+    \section2 Variant Properties
+
     \c variant properties, which have been marked as obsolete since Qt 5, are now treated in exactly
     the same way as \c var properties.
     Code that relied on implicit string conversion triggered on assignment to variant properties
