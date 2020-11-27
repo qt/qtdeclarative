@@ -90,6 +90,7 @@ public:
     bool isSignalProperty() const;
 
     int propertyType() const;
+    QMetaType propertyMetaType() const;
     PropertyTypeCategory propertyTypeCategory() const;
     const char *propertyTypeName() const;
 

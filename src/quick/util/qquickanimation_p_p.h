@@ -296,7 +296,7 @@ public:
     QQuickStateActions *actions;
 
     static QVariant interpolateVariant(const QVariant &from, const QVariant &to, qreal progress);
-    static void convertVariant(QVariant &variant, int type);
+    static void convertVariant(QVariant &variant, QMetaType type);
 };
 
 class QQuickRotationAnimationPrivate : public QQuickPropertyAnimationPrivate

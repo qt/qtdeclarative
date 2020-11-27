@@ -288,13 +288,14 @@ public:
 
     mutable QMutex networkAccessManagerMutex;
 
-    QQmlGadgetPtrWrapper *valueTypeInstance(int typeIndex)
+    QQmlGadgetPtrWrapper *valueTypeInstance(QMetaType type)
     {
+        int typeIndex = type.id();
         auto it = cachedValueTypeInstances.find(typeIndex);
         if (it != cachedValueTypeInstances.end())
             return *it;
 
-        if (QQmlValueType *valueType = QQmlValueTypeFactory::valueType(typeIndex)) {
+        if (QQmlValueType *valueType = QQmlValueTypeFactory::valueType(type)) {
             QQmlGadgetPtrWrapper *instance = new QQmlGadgetPtrWrapper(valueType, q_func());
             cachedValueTypeInstances.insert(typeIndex, instance);
             return instance;

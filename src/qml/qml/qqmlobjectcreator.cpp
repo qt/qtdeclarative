@@ -843,8 +843,8 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
             const QQmlPropertyData *valueTypeProperty = nullptr;
             QObject *bindingTarget = _bindingTarget;
 
-            if (QQmlValueTypeFactory::isValueType(bindingProperty->propType().id())) {
-                valueType = QQmlGadgetPtrWrapper::instance(engine, bindingProperty->propType().id());
+            if (QQmlValueTypeFactory::isValueType(bindingProperty->propType())) {
+                valueType = QQmlGadgetPtrWrapper::instance(engine, bindingProperty->propType());
                 if (!valueType) {
                     recordError(binding->location, tr("Cannot set properties on %1 as it is null").arg(stringAt(binding->propertyNameIndex)));
                     return false;

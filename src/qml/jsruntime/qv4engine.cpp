@@ -1718,7 +1718,8 @@ static QVariant objectToVariant(QV4::ExecutionEngine *e, const QV4::Object *o, V
 
 QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
 {
-    int type = variant.userType();
+    const QMetaType metaType = variant.metaType();
+    int type = metaType.id();
     const void *ptr = variant.constData();
 
     if (type < QMetaType::User) {
@@ -1804,8 +1805,8 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
                 break;
         }
 
-        if (const QMetaObject *vtmo = QQmlValueTypeFactory::metaObjectForMetaType(type))
-            return QV4::QQmlValueTypeWrapper::create(this, variant, vtmo, type);
+        if (const QMetaObject *vtmo = QQmlValueTypeFactory::metaObjectForMetaType(metaType))
+            return QV4::QQmlValueTypeWrapper::create(this, variant, vtmo, metaType);
     } else {
         QV4::Scope scope(this);
         if (type == qMetaTypeId<QQmlListReference>()) {
@@ -1851,8 +1852,8 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
             return sequentialIterableToJS(this, lst);
         }
 
-        if (const QMetaObject *vtmo = QQmlValueTypeFactory::metaObjectForMetaType(type))
-            return QV4::QQmlValueTypeWrapper::create(this, variant, vtmo, type);
+        if (const QMetaObject *vtmo = QQmlValueTypeFactory::metaObjectForMetaType(metaType))
+            return QV4::QQmlValueTypeWrapper::create(this, variant, vtmo, metaType);
     }
 
     // XXX TODO: To be compatible, we still need to handle:

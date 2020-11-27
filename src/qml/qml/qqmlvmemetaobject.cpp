@@ -321,12 +321,13 @@ bool QQmlInterceptorMetaObject::intercept(QMetaObject::Call c, int id, void **a)
 
             const int valueIndex = vi->m_propertyIndex.valueTypeIndex();
             const QQmlData *data = QQmlData::get(object);
-            const int type = data->propertyCache->property(id)->propType().id();
+            const QMetaType metaType = data->propertyCache->property(id)->propType();
+            const int type = metaType.id();
 
             if (type != QMetaType::UnknownType) {
                 if (valueIndex != -1) {
                     QQmlGadgetPtrWrapper *valueType = QQmlGadgetPtrWrapper::instance(
-                                data->context->engine(), type);
+                                data->context->engine(), metaType);
                     Q_ASSERT(valueType);
 
                     //
@@ -930,7 +931,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                     const QQmlPropertyData *pd = targetDData->propertyCache->property(coreIndex);
                     // Value type property or deep alias
                     QQmlGadgetPtrWrapper *valueType = QQmlGadgetPtrWrapper::instance(
-                                ctxt->engine(), pd->propType().id());
+                                ctxt->engine(), pd->propType());
                     if (valueType) {
                         valueType->read(target, coreIndex);
                         int rv = QMetaObject::metacall(valueType, c, valueTypePropertyIndex, a);

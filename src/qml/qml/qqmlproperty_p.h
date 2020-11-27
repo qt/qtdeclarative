@@ -96,7 +96,7 @@ public:
     void initDefault(QObject *obj);
 
     bool isValueType() const;
-    int propertyType() const;
+    QMetaType propertyType() const;
     QQmlProperty::Type type() const;
     QQmlProperty::PropertyTypeCategory propertyTypeCategory() const;
 

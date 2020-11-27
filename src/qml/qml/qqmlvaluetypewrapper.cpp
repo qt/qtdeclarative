@@ -138,8 +138,8 @@ bool QQmlValueTypeReference::readReferenceValue() const
         void *a[] = { &variantReferenceValue, nullptr };
         QMetaObject::metacall(d()->object, QMetaObject::ReadProperty, d()->property, a);
 
-        int variantReferenceType = variantReferenceValue.userType();
-        if (variantReferenceType != typeId()) {
+        const QMetaType variantReferenceType = variantReferenceValue.metaType();
+        if (variantReferenceType != type()) {
             // This is a stale VariantReference.  That is, the variant has been
             // overwritten with a different type in the meantime.
             // We need to modify this reference to the updated value type, if
@@ -183,7 +183,7 @@ void QQmlValueTypeWrapper::initProto(ExecutionEngine *v4)
     v4->jsObjects[QV4::ExecutionEngine::ValueTypeProto] = o->d();
 }
 
-ReturnedValue QQmlValueTypeWrapper::create(ExecutionEngine *engine, QObject *object, int property, const QMetaObject *metaObject, int typeId)
+ReturnedValue QQmlValueTypeWrapper::create(ExecutionEngine *engine, QObject *object, int property, const QMetaObject *metaObject, QMetaType type)
 {
     Scope scope(engine);
     initProto(engine);
@@ -192,27 +192,27 @@ ReturnedValue QQmlValueTypeWrapper::create(ExecutionEngine *engine, QObject *obj
     r->d()->object = object;
     r->d()->property = property;
     r->d()->setMetaObject(metaObject);
-    auto valueType = QQmlValueTypeFactory::valueType(typeId);
+    auto valueType = QQmlValueTypeFactory::valueType(type);
     if (!valueType) {
         return engine->throwTypeError(QLatin1String("Type %1 is not a value type")
-                                      .arg(QString::fromUtf8(QMetaType(typeId).name())));
+                                      .arg(QString::fromUtf8(type.name())));
     }
     r->d()->setValueType(valueType);
     r->d()->setGadgetPtr(nullptr);
     return r->asReturnedValue();
 }
 
-ReturnedValue QQmlValueTypeWrapper::create(ExecutionEngine *engine, const QVariant &value,  const QMetaObject *metaObject, int typeId)
+ReturnedValue QQmlValueTypeWrapper::create(ExecutionEngine *engine, const QVariant &value,  const QMetaObject *metaObject, QMetaType type)
 {
     Scope scope(engine);
     initProto(engine);
 
     Scoped<QQmlValueTypeWrapper> r(scope, engine->memoryManager->allocate<QQmlValueTypeWrapper>());
     r->d()->setMetaObject(metaObject);
-    auto valueType = QQmlValueTypeFactory::valueType(typeId);
+    auto valueType = QQmlValueTypeFactory::valueType(type);
     if (!valueType) {
         return engine->throwTypeError(QLatin1String("Type %1 is not a value type")
-                                      .arg(QString::fromUtf8(QMetaType(typeId).name())));
+                                      .arg(QString::fromUtf8(type.name())));
     }
     r->d()->setValueType(valueType);
     r->d()->setGadgetPtr(nullptr);
@@ -403,6 +403,11 @@ bool QQmlValueTypeWrapper::isEqual(const QVariant& value) const
 int QQmlValueTypeWrapper::typeId() const
 {
     return d()->valueType()->metaType.id();
+}
+
+QMetaType QQmlValueTypeWrapper::type() const
+{
+    return d()->valueType()->metaType;
 }
 
 bool QQmlValueTypeWrapper::write(QObject *target, int propertyIndex) const

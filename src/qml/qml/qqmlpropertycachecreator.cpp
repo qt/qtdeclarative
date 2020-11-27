@@ -123,7 +123,7 @@ QQmlRefPointer<QQmlPropertyCache> QQmlBindingInstantiationContext::instantiating
             // There is another overload that takes no version, which we shall not use here.
             return enginePrivate->rawPropertyCacheForType(instantiatingProperty->propType().id(),
                                                           instantiatingProperty->typeVersion());
-        } else if (const QMetaObject *vtmo = QQmlValueTypeFactory::metaObjectForMetaType(instantiatingProperty->propType().id())) {
+        } else if (const QMetaObject *vtmo = QQmlValueTypeFactory::metaObjectForMetaType(instantiatingProperty->propType())) {
             return enginePrivate->cache(vtmo, instantiatingProperty->typeVersion());
         }
     }

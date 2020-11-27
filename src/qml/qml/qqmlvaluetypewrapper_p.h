@@ -121,13 +121,14 @@ struct Q_QML_EXPORT QQmlValueTypeWrapper : Object
 
 public:
 
-    static ReturnedValue create(ExecutionEngine *engine, QObject *, int, const QMetaObject *metaObject, int typeId);
-    static ReturnedValue create(ExecutionEngine *engine, const QVariant &, const QMetaObject *metaObject, int typeId);
+    static ReturnedValue create(ExecutionEngine *engine, QObject *, int, const QMetaObject *metaObject, QMetaType type);
+    static ReturnedValue create(ExecutionEngine *engine, const QVariant &, const QMetaObject *metaObject, QMetaType type);
 
     QVariant toVariant() const;
     bool toGadget(void *data) const;
     bool isEqual(const QVariant& value) const;
     int typeId() const;
+    QMetaType type() const;
     bool write(QObject *target, int propertyIndex) const;
 
     QQmlPropertyData dataForPropertyKey(PropertyKey id) const;

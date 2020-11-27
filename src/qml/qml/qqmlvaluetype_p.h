@@ -97,7 +97,7 @@ class Q_QML_PRIVATE_EXPORT QQmlGadgetPtrWrapper : public QObject
 {
     Q_OBJECT
 public:
-    static QQmlGadgetPtrWrapper *instance(QQmlEngine *engine, int index);
+    static QQmlGadgetPtrWrapper *instance(QQmlEngine *engine, QMetaType type);
 
     QQmlGadgetPtrWrapper(QQmlValueType *valueType, QObject *parent);
     ~QQmlGadgetPtrWrapper();
@@ -120,11 +120,9 @@ private:
 class Q_QML_PRIVATE_EXPORT QQmlValueTypeFactory
 {
 public:
-    static bool isValueType(int idx);
-    static QQmlValueType *valueType(QMetaType metaType) {return valueType(metaType.id());};
-    static QQmlValueType *valueType(int idx);
-    static const QMetaObject *metaObjectForMetaType(QMetaType type) {return metaObjectForMetaType(type.id());};
-    static const QMetaObject *metaObjectForMetaType(int type);
+    static bool isValueType(QMetaType type);
+    static QQmlValueType *valueType(QMetaType metaType);
+    static const QMetaObject *metaObjectForMetaType(QMetaType type);
 };
 
 struct QQmlPointFValueType

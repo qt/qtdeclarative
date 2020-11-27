@@ -215,7 +215,8 @@ QVariant QQmlEngineDebugServiceImpl::valueContents(QVariant value) const
     // maps for serialization.
     if (value.userType() == qMetaTypeId<QJSValue>())
         value = value.value<QJSValue>().toVariant();
-    const int userType = value.userType();
+    const QMetaType metaType = value.metaType();
+    const int metaTypeId = metaType.id();
 
     //QObject * is not streamable.
     //Convert all such instances to a String value
@@ -238,7 +239,7 @@ QVariant QQmlEngineDebugServiceImpl::valueContents(QVariant value) const
         return contents;
     }
 
-    switch (userType) {
+    switch (metaTypeId) {
     case QMetaType::QRect:
     case QMetaType::QRectF:
     case QMetaType::QPoint:
@@ -257,8 +258,8 @@ QVariant QQmlEngineDebugServiceImpl::valueContents(QVariant value) const
     case QMetaType::QJsonDocument:
         return value.toJsonDocument().toVariant();
     default:
-        if (QQmlValueTypeFactory::isValueType(userType)) {
-            const QMetaObject *mo = QQmlValueTypeFactory::metaObjectForMetaType(userType);
+        if (QQmlValueTypeFactory::isValueType(metaType)) {
+            const QMetaObject *mo = QQmlValueTypeFactory::metaObjectForMetaType(metaType);
             if (mo) {
                 int toStringIndex = mo->indexOfMethod("toString()");
                 if (toStringIndex != -1) {
@@ -274,7 +275,7 @@ QVariant QQmlEngineDebugServiceImpl::valueContents(QVariant value) const
             return value;
     }
 
-    if (QQmlMetaType::isQObject(userType)) {
+    if (QQmlMetaType::isQObject(metaTypeId)) {
         QObject *o = QQmlMetaType::toQObject(value);
         if (o) {
             QString name = o->objectName();

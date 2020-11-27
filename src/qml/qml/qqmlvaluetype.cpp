@@ -59,10 +59,10 @@ struct QQmlValueTypeFactoryImpl
     QQmlValueTypeFactoryImpl();
     ~QQmlValueTypeFactoryImpl();
 
-    bool isValueType(int idx);
+    bool isValueType(QMetaType type);
 
-    const QMetaObject *metaObjectForMetaType(int);
-    QQmlValueType *valueType(int);
+    const QMetaObject *metaObjectForMetaType(QMetaType metaType);
+    QQmlValueType *valueType(QMetaType type);
 
     QQmlValueType *valueTypes[QMetaType::User];
     QHash<int, QQmlValueType *> userTypes;
@@ -109,16 +109,17 @@ bool isInternalType(int idx)
     }
 }
 
-bool QQmlValueTypeFactoryImpl::isValueType(int idx)
+bool QQmlValueTypeFactoryImpl::isValueType(QMetaType type)
 {
-    if (idx < 0 || isInternalType(idx))
+    if (!type.isValid() || isInternalType(type.id()))
         return false;
 
-    return valueType(idx) != nullptr;
+    return valueType(type) != nullptr;
 }
 
-const QMetaObject *QQmlValueTypeFactoryImpl::metaObjectForMetaType(int t)
+const QMetaObject *QQmlValueTypeFactoryImpl::metaObjectForMetaType(QMetaType metaType)
 {
+    const int t = metaType.id();
     switch (t) {
     case QMetaType::QPoint:
         return &QQmlPointValueType::staticMetaObject;
@@ -144,15 +145,13 @@ const QMetaObject *QQmlValueTypeFactoryImpl::metaObjectForMetaType(int t)
 #endif
     default:
 #if QT_CONFIG(qml_itemmodel)
-        if (t == qMetaTypeId<QItemSelectionRange>())
+        if (metaType == QMetaType::fromType<QItemSelectionRange>())
             return &QQmlItemSelectionRangeValueType::staticMetaObject;
 #endif
-        if (t == qMetaTypeId<QQmlProperty>())
+        if (metaType == QMetaType::fromType<QQmlProperty>())
             return &QQmlPropertyValueType::staticMetaObject;
         break;
     }
-
-    const QMetaType metaType(t);
 
     // It doesn't have to be a gadget for a QML type to exist, but we don't want to
     // call QObject pointers value types. Explicitly registered types also override
@@ -176,8 +175,9 @@ const QMetaObject *QQmlValueTypeFactoryImpl::metaObjectForMetaType(int t)
     return nullptr;
 }
 
-QQmlValueType *QQmlValueTypeFactoryImpl::valueType(int idx)
+QQmlValueType *QQmlValueTypeFactoryImpl::valueType(QMetaType type)
 {
+    int idx = type.id();
     if (idx >= (int)QMetaType::User) {
         // Protect the hash with a mutex
         mutex.lock();
@@ -185,7 +185,7 @@ QQmlValueType *QQmlValueTypeFactoryImpl::valueType(int idx)
         QHash<int, QQmlValueType *>::iterator it = userTypes.find(idx);
         if (it == userTypes.end()) {
             QQmlValueType *vt = nullptr;
-            if (const QMetaObject *mo = metaObjectForMetaType(idx))
+            if (const QMetaObject *mo = metaObjectForMetaType(type))
                 vt = new QQmlValueType(idx, mo);
             it = userTypes.insert(idx, vt);
         }
@@ -202,7 +202,7 @@ QQmlValueType *QQmlValueTypeFactoryImpl::valueType(int idx)
         // removing the preallocated array
         if (isInternalType(idx))
             rv = valueTypes[idx] = nullptr;
-        else if (const QMetaObject *mo = metaObjectForMetaType(idx))
+        else if (const QMetaObject *mo = metaObjectForMetaType(type))
             rv = valueTypes[idx] = new QQmlValueType(idx, mo);
         else
             rv = valueTypes[idx] = nullptr;
@@ -215,17 +215,17 @@ QQmlValueType *QQmlValueTypeFactoryImpl::valueType(int idx)
 
 Q_GLOBAL_STATIC(QQmlValueTypeFactoryImpl, factoryImpl);
 
-bool QQmlValueTypeFactory::isValueType(int idx)
+bool QQmlValueTypeFactory::isValueType(QMetaType type)
 {
-    return factoryImpl()->isValueType(idx);
+    return factoryImpl()->isValueType(type);
 }
 
-QQmlValueType *QQmlValueTypeFactory::valueType(int idx)
+QQmlValueType *QQmlValueTypeFactory::valueType(QMetaType type)
 {
-    return factoryImpl()->valueType(idx);
+    return factoryImpl()->valueType(type);
 }
 
-const QMetaObject *QQmlValueTypeFactory::metaObjectForMetaType(int type)
+const QMetaObject *QQmlValueTypeFactory::metaObjectForMetaType(QMetaType type)
 {
     return factoryImpl()->metaObjectForMetaType(type);
 }
@@ -243,9 +243,9 @@ QQmlValueType::~QQmlValueType()
     ::free(dynamicMetaObject);
 }
 
-QQmlGadgetPtrWrapper *QQmlGadgetPtrWrapper::instance(QQmlEngine *engine, int index)
+QQmlGadgetPtrWrapper *QQmlGadgetPtrWrapper::instance(QQmlEngine *engine, QMetaType type)
 {
-    return engine ? QQmlEnginePrivate::get(engine)->valueTypeInstance(index) : nullptr;
+    return engine ? QQmlEnginePrivate::get(engine)->valueTypeInstance(type) : nullptr;
 }
 
 QQmlGadgetPtrWrapper::QQmlGadgetPtrWrapper(QQmlValueType *valueType, QObject *parent)

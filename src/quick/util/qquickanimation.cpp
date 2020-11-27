@@ -1270,7 +1270,7 @@ QAbstractAnimationJob* QQuickPropertyAction::transition(QQuickStateActions &acti
                 myAction.property = d->createProperty(targets.at(j), props.at(i), this);
                 if (myAction.property.isValid()) {
                     myAction.toValue = d->value;
-                    QQuickPropertyAnimationPrivate::convertVariant(myAction.toValue, myAction.property.propertyType());
+                    QQuickPropertyAnimationPrivate::convertVariant(myAction.toValue, myAction.property.propertyMetaType());
                     data->actions << myAction;
                     hasExplicit = true;
                     for (int ii = 0; ii < actions.count(); ++ii) {
@@ -1303,7 +1303,7 @@ QAbstractAnimationJob* QQuickPropertyAction::transition(QQuickStateActions &acti
 
             if (d->value.isValid())
                 myAction.toValue = d->value;
-            QQuickPropertyAnimationPrivate::convertVariant(myAction.toValue, myAction.property.propertyType());
+            QQuickPropertyAnimationPrivate::convertVariant(myAction.toValue, myAction.property.propertyMetaType());
 
             modified << action.property;
             data->actions << myAction;
@@ -1962,14 +1962,14 @@ QAbstractAnimationJob* QQuickParallelAnimation::transition(QQuickStateActions &a
 }
 
 //convert a variant from string type to another animatable type
-void QQuickPropertyAnimationPrivate::convertVariant(QVariant &variant, int type)
+void QQuickPropertyAnimationPrivate::convertVariant(QVariant &variant, QMetaType type)
 {
     if (variant.userType() != QMetaType::QString) {
-        variant.convert(QMetaType(type));
+        variant.convert(type);
         return;
     }
 
-    switch (type) {
+    switch (type.id()) {
     case QMetaType::QRect:
     case QMetaType::QRectF:
     case QMetaType::QPoint:
@@ -1980,14 +1980,14 @@ void QQuickPropertyAnimationPrivate::convertVariant(QVariant &variant, int type)
     case QMetaType::QVector3D:
         {
         bool ok = false;
-        variant = QQmlStringConverters::variantFromString(variant.toString(), type, &ok);
+        variant = QQmlStringConverters::variantFromString(variant.toString(), type.id(), &ok);
         }
         break;
     default:
-        if (QQmlValueTypeFactory::isValueType((uint)type)) {
+        if (QQmlValueTypeFactory::isValueType(type)) {
             variant.convert(QMetaType(type));
         } else {
-            QQmlMetaType::StringConverter converter = QQmlMetaType::customStringConverter(type);
+            QQmlMetaType::StringConverter converter = QQmlMetaType::customStringConverter(type.id());
             if (converter)
                 variant = converter(variant.toString());
         }
@@ -2599,7 +2599,7 @@ void QQuickAnimationPropertyUpdater::setValue(qreal v)
             if (!fromSourced && !fromDefined) {
                 action.fromValue = action.property.read();
                 if (interpolatorType) {
-                    QQuickPropertyAnimationPrivate::convertVariant(action.fromValue, interpolatorType);
+                    QQuickPropertyAnimationPrivate::convertVariant(action.fromValue, QMetaType(interpolatorType));
                 }
             }
             if (!interpolatorType) {
@@ -2681,10 +2681,10 @@ QQuickStateActions QQuickPropertyAnimation::createTransitionActions(QQuickStateA
 
                     if (d->fromIsDefined) {
                         myAction.fromValue = d->from;
-                        d->convertVariant(myAction.fromValue, d->interpolatorType ? d->interpolatorType : myAction.property.propertyType());
+                        d->convertVariant(myAction.fromValue, d->interpolatorType ? QMetaType(d->interpolatorType) : myAction.property.propertyMetaType());
                     }
                     myAction.toValue = d->to;
-                    d->convertVariant(myAction.toValue, d->interpolatorType ? d->interpolatorType : myAction.property.propertyType());
+                    d->convertVariant(myAction.toValue, d->interpolatorType ? QMetaType(d->interpolatorType) : myAction.property.propertyMetaType());
                     newActions << myAction;
                     hasExplicit = true;
                     for (int ii = 0; ii < actions.count(); ++ii) {
@@ -2730,8 +2730,8 @@ QQuickStateActions QQuickPropertyAnimation::createTransitionActions(QQuickStateA
             if (d->toIsDefined)
                 myAction.toValue = d->to;
 
-            d->convertVariant(myAction.fromValue, d->interpolatorType ? d->interpolatorType : myAction.property.propertyType());
-            d->convertVariant(myAction.toValue, d->interpolatorType ? d->interpolatorType : myAction.property.propertyType());
+            d->convertVariant(myAction.fromValue, d->interpolatorType ? QMetaType(d->interpolatorType) : myAction.property.propertyMetaType());
+            d->convertVariant(myAction.toValue, d->interpolatorType ? QMetaType(d->interpolatorType) : myAction.property.propertyMetaType());
 
             modified << action.property;
 
