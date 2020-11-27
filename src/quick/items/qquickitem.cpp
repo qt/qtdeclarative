@@ -8377,9 +8377,9 @@ QQuickItemLayer *QQuickItemPrivate::layer() const
     coordinate system.
 
     Returns an invalid event with type \l QEvent::None if all points are
-    stationary, or there are no points inside the item, or none of the points
-    were pressed inside and the item was not grabbing any of them and
-    \a isFiltering is false.
+    stationary; or there are no points inside the item; or none of the points
+    were pressed inside, neither the item nor any of its handlers is grabbing
+    any of them, and \a isFiltering is false.
 
     When \a isFiltering is true, it is assumed that the item cares about all
     points which are inside its bounds, because most filtering items need to
@@ -8397,11 +8397,18 @@ void QQuickItemPrivate::localizedTouchEvent(const QTouchEvent *event, bool isFil
     for (auto &p : event->points()) {
         if (p.isAccepted())
             continue;
-        // include points where item is the grabber
+
+        // include points where item is the grabber, or if any of its handlers is the grabber while some parent is filtering
         auto pointGrabber = event->exclusiveGrabber(p);
         bool isGrabber = (pointGrabber == q);
+        if (!isGrabber && pointGrabber && isFiltering) {
+            auto handlerGrabber = qmlobject_cast<QQuickPointerHandler *>(pointGrabber);
+            if (handlerGrabber && handlerGrabber->parentItem() == q)
+                isGrabber = true;
+        }
         if (isGrabber)
             anyGrabber = true;
+
         // include points inside the bounds if no other item is the grabber or if the item is filtering
         const auto localPos = q->mapFromScene(p.scenePosition());
         bool isInside = q->contains(localPos);
