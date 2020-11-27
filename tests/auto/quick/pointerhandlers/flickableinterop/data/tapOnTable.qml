@@ -59,7 +59,7 @@ TableView {
                 id: innerTap
                 objectName: "buttonTap"
             }
-            Component.onCompleted: if (!root.buttonUnderTest) {
+            Component.onCompleted: if (!root.buttonUnderTest && index == 2) {
                 root.buttonUnderTest = this
                 root.delegateUnderTest = parent
             }

@@ -259,7 +259,8 @@ void QQuickTapHandler::setGesturePolicy(QQuickTapHandler::GesturePolicy gestureP
 void QQuickTapHandler::setPressed(bool press, bool cancel, QPointerEvent *event, QEventPoint &point)
 {
     if (m_pressed != press) {
-        qCDebug(lcTapHandler) << objectName() << "pressed" << m_pressed << "->" << press << (cancel ? "CANCEL" : "") << point;
+        qCDebug(lcTapHandler) << objectName() << "pressed" << m_pressed << "->" << press
+                              << (cancel ? "CANCEL" : "") << point << "gp" << m_gesturePolicy;
         m_pressed = press;
         connectPreRenderSignal(press);
         updateTimeHeld();
