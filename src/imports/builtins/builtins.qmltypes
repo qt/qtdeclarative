@@ -216,6 +216,7 @@ Module {
 
     Component {
         name: "NumberPrototype"
+        accessSemantics: "value"
 
         Method {
             name: "toExponential"
@@ -286,7 +287,6 @@ Module {
 
     Component {
         name: "Math"
-        isSingleton: true
         exports: ["QML/Math 1.0"]
         exportMetaObjectRevisions: [256]
 
