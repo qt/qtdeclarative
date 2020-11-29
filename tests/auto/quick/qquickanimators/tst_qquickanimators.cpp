@@ -153,29 +153,29 @@ void tst_Animators::testTransitionsWithImplicitFrom()
 
     // transition to the "right" state
     rectangle->setState("right");
-    QTRY_VERIFY_WITH_TIMEOUT(!controller->m_runningAnimators.isEmpty(), 1000);
+    QTRY_VERIFY(!controller->m_runningAnimators.isEmpty());
     auto r_job = *controller->m_runningAnimators.constBegin();
     QVERIFY(r_job);
     QCOMPARE(r_job->from(), 0);
     QCOMPARE(r_job->to(), 100);
-    QTRY_VERIFY_WITH_TIMEOUT(controller->m_runningAnimators.isEmpty(), 1000);
+    QTRY_VERIFY(controller->m_runningAnimators.isEmpty());
 
     // verify state after first transition
-    QTRY_COMPARE_WITH_TIMEOUT(rectangle->x(), 100, 1000); // the render thread has to sync first
+    QTRY_COMPARE(rectangle->x(), 100); // the render thread has to sync first
     QCOMPARE(rectangle->state(), "right");
     QVERIFY(controller->m_runningAnimators.isEmpty());
 
     // transition back to the "left" state
     rectangle->setState("left");
-    QTRY_VERIFY_WITH_TIMEOUT(!controller->m_runningAnimators.isEmpty(), 1000);
+    QTRY_VERIFY(!controller->m_runningAnimators.isEmpty());
     auto l_job = *controller->m_runningAnimators.constBegin();
     QVERIFY(l_job);
     QCOMPARE(l_job->from(), 100); // this was not working in older Qt versions
     QCOMPARE(l_job->to(), 0);
-    QTRY_VERIFY_WITH_TIMEOUT(controller->m_runningAnimators.isEmpty(), 1000);
+    QTRY_VERIFY(controller->m_runningAnimators.isEmpty());
 
     // verify the final state
-    QTRY_COMPARE_WITH_TIMEOUT(rectangle->x(), 0, 1000); // the render thread has to sync first
+    QTRY_COMPARE(rectangle->x(), 0); // the render thread has to sync first
     QCOMPARE(rectangle->state(), "left");
     QVERIFY(controller->m_runningAnimators.isEmpty());
 }
