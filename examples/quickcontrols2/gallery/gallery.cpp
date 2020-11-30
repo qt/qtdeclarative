@@ -65,16 +65,18 @@ int main(int argc, char *argv[])
     QIcon::setThemeName("gallery");
 
     QSettings settings;
-    QString style = QQuickStyle::name();
-    if (!style.isEmpty())
-        settings.setValue("style", style);
-    else
+    if (qgetenv("QT_QUICK_CONTROLS_STYLE").isEmpty())
         QQuickStyle::setStyle(settings.value("style").toString());
 
     QQmlApplicationEngine engine;
 
-    const QStringList builtInStyles = { QLatin1String("Basic"), QLatin1String("Fusion"),
+    QStringList builtInStyles = { QLatin1String("Basic"), QLatin1String("Fusion"),
         QLatin1String("Imagine"), QLatin1String("Material"), QLatin1String("Universal") };
+#if defined(Q_OS_MACOS)
+    builtInStyles << QLatin1String("macOS");
+#elif defined(Q_OS_WINDOWS)
+    builtInStyles << QLatin1String("Windows");
+#endif
     engine.rootContext()->setContextProperty("builtInStyles", builtInStyles);
 
     engine.load(QUrl("qrc:/gallery.qml"));
