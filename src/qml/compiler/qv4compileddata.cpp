@@ -62,6 +62,7 @@
 #include <QStandardPaths>
 #include <QDir>
 #include <private/qv4identifiertable_p.h>
+#include <private/qqmltypewrapper_p.h>
 #endif
 #include <private/qqmlirbuilder_p.h>
 #include <QCoreApplication>
@@ -285,7 +286,8 @@ void CompilationUnit::unlink()
     if (runtimeLookups) {
         for (uint i = 0; i < data->lookupTableSize; ++i) {
             QV4::Lookup &l = runtimeLookups[i];
-            if (l.getter == QV4::QObjectWrapper::lookupGetter) {
+            if (l.getter == QV4::QObjectWrapper::lookupGetter
+                    || l.getter == QQmlTypeWrapper::lookupSingletonProperty) {
                 if (QQmlPropertyCache *pc = l.qobjectLookup.propertyCache)
                     pc->release();
             } else if (l.getter == QQmlValueTypeWrapper::lookupGetter) {
@@ -293,7 +295,8 @@ void CompilationUnit::unlink()
                     pc->release();
             }
 
-            if (l.qmlContextPropertyGetter == QQmlContextWrapper::lookupScopeObjectProperty) {
+            if (l.qmlContextPropertyGetter == QQmlContextWrapper::lookupScopeObjectProperty
+                    || l.qmlContextPropertyGetter == QQmlContextWrapper::lookupContextObjectProperty) {
                 if (QQmlPropertyCache *pc = l.qobjectLookup.propertyCache)
                     pc->release();
             }
