@@ -942,6 +942,11 @@ function(_qt_internal_quick_compiler_process_resources target resource_name)
             set(chained_resource_name "${resource_name}_qmlcache")
         endif()
 
+        get_target_property(direct_calls ${target} QT_QMLCACHEGEN_DIRECT_CALLS)
+        if (direct_calls)
+            list(APPEND qmlcachegen_extra_args "--direct-calls")
+        endif()
+
         foreach(file IN LISTS qml_files)
             get_filename_component(file_absolute ${file} ABSOLUTE)
             file(RELATIVE_PATH file_relative ${CMAKE_CURRENT_SOURCE_DIR} ${file_absolute})
@@ -969,6 +974,7 @@ function(_qt_internal_quick_compiler_process_resources target resource_name)
                 COMMAND
                     ${QT_CMAKE_EXPORT_NAMESPACE}::qmlcachegen
                     --resource-path "${file_resource_path}"
+                    ${qmlcachegen_extra_args}
                     -o "${compiled_file}"
                     "${file_absolute}"
                 DEPENDS
