@@ -105,6 +105,8 @@ int main(int argc, char **argv)
     parser.addOption(resourceNameOption);
     QCommandLineOption directCallsOption(QStringLiteral("direct-calls"), QCoreApplication::translate("main", "This option is ignored."));
     parser.addOption(directCallsOption);
+    QCommandLineOption qmlJSRuntimeOption(QStringLiteral("qmljs-runtime"), QCoreApplication::translate("main", "This option is ignored."));
+    parser.addOption(qmlJSRuntimeOption);
 
     QCommandLineOption outputFileOption(QStringLiteral("o"), QCoreApplication::translate("main", "Output file name"), QCoreApplication::translate("main", "file name"));
     parser.addOption(outputFileOption);

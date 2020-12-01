@@ -947,6 +947,11 @@ function(_qt_internal_quick_compiler_process_resources target resource_name)
             list(APPEND qmlcachegen_extra_args "--direct-calls")
         endif()
 
+        get_target_property(qmljs_runtime ${target} QT_QMLCACHEGEN_QMLJS_RUNTIME)
+        if (qmljs_runtime)
+            list(APPEND qmlcachegen_extra_args "--qmljs-runtime")
+        endif()
+
         foreach(file IN LISTS qml_files)
             get_filename_component(file_absolute ${file} ABSOLUTE)
             file(RELATIVE_PATH file_relative ${CMAKE_CURRENT_SOURCE_DIR} ${file_absolute})
