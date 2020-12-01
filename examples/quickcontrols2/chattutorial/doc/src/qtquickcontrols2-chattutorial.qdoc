@@ -78,7 +78,7 @@ Within \c main(), we set up the application object and QML engine:
 \skipto main
 \printuntil }
 
-It begins with enabling \l {High DPI Displays}{high DPI scaling}, which is not
+It begins with enabling \l {High DPI}{high DPI scaling}, which is not
 part of the default code. It is necessary to do so before the application
 object is constructed.
 
