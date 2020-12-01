@@ -80,6 +80,7 @@ protected:
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
+    void mouseUngrabEvent() override;
     void touchEvent(QTouchEvent *event) override;
 
     void componentComplete() override;

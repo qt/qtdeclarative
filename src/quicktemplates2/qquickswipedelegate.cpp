@@ -169,6 +169,7 @@ public:
     bool wasComplete = false;
     bool complete = false;
     bool enabled = true;
+    bool waitForTransition = false;
     QQuickVelocityCalculator velocityCalculator;
     QQmlComponent *left = nullptr;
     QQmlComponent *behind = nullptr;
@@ -401,6 +402,8 @@ bool QQuickSwipePrivate::isTransitioning() const
 
 void QQuickSwipePrivate::beginTransition(qreal newPosition)
 {
+    if (waitForTransition)
+        return;
     Q_Q(QQuickSwipe);
     if (!transition) {
         q->setPosition(newPosition);
@@ -417,11 +420,15 @@ void QQuickSwipePrivate::beginTransition(qreal newPosition)
 void QQuickSwipePrivate::finishTransition()
 {
     Q_Q(QQuickSwipe);
+    waitForTransition = false;
     q->setComplete(qFuzzyCompare(qAbs(position), qreal(1.0)));
-    if (complete)
+    if (complete) {
         emit q->opened();
-    else
+    } else {
+        if (qFuzzyIsNull(position))
+            wasComplete = false;
         emit q->closed();
+    }
 }
 
 QQuickSwipe::QQuickSwipe(QQuickSwipeDelegate *control)
@@ -703,6 +710,7 @@ void QQuickSwipe::close()
     }
 
     d->beginTransition(0.0);
+    d->waitForTransition = true;
     d->wasComplete = false;
     d->positionBeforePress = 0.0;
     d->velocityCalculator.reset();
@@ -739,6 +747,7 @@ void QQuickSwipeDelegatePrivate::resizeBackground()
 bool QQuickSwipeDelegatePrivate::handleMousePressEvent(QQuickItem *item, QMouseEvent *event)
 {
     Q_Q(QQuickSwipeDelegate);
+    const auto posInItem = item->mapToItem(q, event->position().toPoint());
     QQuickSwipePrivate *swipePrivate = QQuickSwipePrivate::get(&swipe);
     // If the position is 0, we want to handle events ourselves - we don't want child items to steal them.
     // This code will only get called when a child item has been created;
@@ -748,9 +757,14 @@ bool QQuickSwipeDelegatePrivate::handleMousePressEvent(QQuickItem *item, QMouseE
         // The press point could be incorrect if the press happened over a child item,
         // so we correct it after calling the base class' mousePressEvent(), rather
         // than having to duplicate its code just so we can set the pressPoint.
-        setPressPoint(item->mapToItem(q, event->position().toPoint()));
+        setPressPoint(posInItem);
         return true;
     }
+
+    // If the delegate is swiped open, send the event to the exposed item,
+    // in case it's an interactive child (like a Button).
+    if (swipePrivate->complete)
+        forwardMouseEvent(event, item, posInItem);
 
     // The position is non-zero, this press could be either for a delegate or the control itself
     // (the control can be clicked to e.g. close the swipe). Either way, we must begin measuring
@@ -759,16 +773,12 @@ bool QQuickSwipeDelegatePrivate::handleMousePressEvent(QQuickItem *item, QMouseE
     swipePrivate->velocityCalculator.startMeasuring(event->position().toPoint(), event->timestamp());
     setPressPoint(item->mapToItem(q, event->position().toPoint()));
 
-    // When a delegate uses the attached properties and signals, it declares that it wants mouse events.
-    Attached *attached = attachedObject(item);
-    if (attached) {
-        attached->setPressed(true);
-        // Stop the event from propagating, as QQuickItem explicitly ignores events.
+    // When a delegate or any of its children uses the attached properties and signals,
+    // it declares that it wants mouse events.
+    const bool delivered = attachedObjectsSetPressed(item, event->scenePosition(), true);
+    if (delivered)
         event->accept();
-        return true;
-    }
-
-    return false;
+    return delivered;
 }
 
 bool QQuickSwipeDelegatePrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEvent *event)
@@ -812,8 +822,7 @@ bool QQuickSwipeDelegatePrivate::handleMouseMoveEvent(QQuickItem *item, QMouseEv
                 q->setPressed(true);
                 swipe.setComplete(false);
 
-                if (Attached *attached = attachedObject(item))
-                    attached->setPressed(false);
+                attachedObjectsSetPressed(item, event->scenePosition(), false, true);
             }
         }
     }
@@ -891,6 +900,11 @@ bool QQuickSwipeDelegatePrivate::handleMouseReleaseEvent(QQuickItem *item, QMous
     const bool hadGrabbedMouse = q->keepMouseGrab();
     q->setKeepMouseGrab(false);
 
+    // QQuickSwipe::close() doesn't allow closing while pressed, but now we're releasing.
+    // So set the pressed state false if this release _could_ result in closing, so that check can be bypassed.
+    if (!qIsNull(swipePrivate->position))
+        q->setPressed(false);
+
     // Animations for the background and contentItem delegates are typically
     // only enabled when !control.down, so that the animations aren't running
     // when the user is swiping. To ensure that the animations are enabled
@@ -905,6 +919,10 @@ bool QQuickSwipeDelegatePrivate::handleMouseReleaseEvent(QQuickItem *item, QMous
         stopPressAndHold();
         emit q->canceled();
     }
+
+    // Inform the given item that the mouse is released, in case it's an interactive child.
+    if (item != q && (swipePrivate->complete || swipePrivate->wasComplete))
+        forwardMouseEvent(event, item, item->mapFromScene(event->scenePosition()));
 
     // The control can be exposed by either swiping past the halfway mark, or swiping fast enough.
     const qreal swipeVelocity = swipePrivate->velocityCalculator.velocity().x();
@@ -925,16 +943,53 @@ bool QQuickSwipeDelegatePrivate::handleMouseReleaseEvent(QQuickItem *item, QMous
         swipePrivate->wasComplete = false;
     }
 
-    if (Attached *attached = attachedObject(item)) {
-        const bool wasPressed = attached->isPressed();
-        if (wasPressed) {
-            attached->setPressed(false);
-            emit attached->clicked();
-        }
-    }
+    // Inform any QQuickSwipeDelegateAttached objects that the mouse is released.
+    attachedObjectsSetPressed(item, event->scenePosition(), false);
 
     // Only consume child events if we had grabbed the mouse.
     return hadGrabbedMouse;
+}
+
+/*! \internal
+    Send a localized copy of \a event with \a localPos to the \a destination item.
+*/
+void QQuickSwipeDelegatePrivate::forwardMouseEvent(QMouseEvent *event, QQuickItem *destination, QPointF localPos)
+{
+    Q_Q(QQuickSwipeDelegate);
+    QMutableSinglePointEvent localizedEvent(*event);
+    localizedEvent.mutablePoint().setPosition(localPos);
+    QGuiApplication::sendEvent(destination, &localizedEvent);
+    q->setPressed(!localizedEvent.isAccepted());
+}
+
+/*! \internal
+    For each QQuickSwipeDelegateAttached object on children of \a item:
+    if \a scenePos is in the attachee (the item to which it's attached), then
+    set its \a pressed state. Unless \a cancel is \c true, when the state
+    transitions from pressed to released, also emit \l QQuickSwipeDelegateAttached::clicked().
+    Returns \c true if at least one relevant attached object was found.
+*/
+bool QQuickSwipeDelegatePrivate::attachedObjectsSetPressed(QQuickItem *item, QPointF scenePos, bool pressed, bool cancel)
+{
+    bool found = false;
+    QVarLengthArray<QQuickItem *, 16> itemAndChildren;
+    itemAndChildren.append(item);
+    for (int i = 0; i < itemAndChildren.count(); ++i) {
+        auto item = itemAndChildren.at(i);
+        auto posInItem = item->mapFromScene(scenePos);
+        if (item->contains(posInItem)) {
+            if (Attached *attached = attachedObject(item)) {
+                const bool wasPressed = attached->isPressed();
+                attached->setPressed(pressed);
+                if (wasPressed && !pressed && !cancel)
+                    emit attached->clicked();
+                found = true;
+            }
+        }
+        for (auto child : item->childItems())
+            itemAndChildren.append(child);
+    }
+    return found;
 }
 
 static void warnIfHorizontallyAnchored(QQuickItem *item, const QString &itemName)
@@ -979,6 +1034,8 @@ QPalette QQuickSwipeDelegatePrivate::defaultPalette() const
 QQuickSwipeDelegate::QQuickSwipeDelegate(QQuickItem *parent)
     : QQuickItemDelegate(*(new QQuickSwipeDelegatePrivate(this)), parent)
 {
+    // QQuickSwipeDelegate still depends on synthesized mouse events
+    setAcceptTouchEvents(false);
 }
 
 /*!
@@ -1214,6 +1271,20 @@ void QQuickSwipeDelegate::mousePressEvent(QMouseEvent *event)
 
     swipePrivate->positionBeforePress = swipePrivate->position;
     swipePrivate->velocityCalculator.startMeasuring(event->position().toPoint(), event->timestamp());
+
+    if (swipePrivate->complete) {
+        auto item = d->swipe.rightItem();
+        if (item && item->contains(item->mapFromScene(event->scenePosition()))) {
+            d->pressedItem = item;
+            d->handleMousePressEvent(item, event);
+        } else {
+            item = d->swipe.leftItem();
+            if (item && item->contains(item->mapFromScene(event->scenePosition()))) {
+                d->pressedItem = item;
+                d->handleMousePressEvent(item, event);
+            }
+        }
+    }
 }
 
 void QQuickSwipeDelegate::mouseMoveEvent(QMouseEvent *event)
@@ -1223,6 +1294,8 @@ void QQuickSwipeDelegate::mouseMoveEvent(QMouseEvent *event)
         d->handleMouseMoveEvent(this, event);
     else
         QQuickItemDelegate::mouseMoveEvent(event);
+    if (d->pressedItem)
+        d->handleMouseMoveEvent(d->pressedItem, event);
 }
 
 void QQuickSwipeDelegate::mouseReleaseEvent(QMouseEvent *event)
@@ -1230,6 +1303,38 @@ void QQuickSwipeDelegate::mouseReleaseEvent(QMouseEvent *event)
     Q_D(QQuickSwipeDelegate);
     if (!filtersChildMouseEvents() || !d->handleMouseReleaseEvent(this, event))
         QQuickItemDelegate::mouseReleaseEvent(event);
+
+    if (d->pressedItem) {
+        if (d->pressedItem->acceptedMouseButtons())
+            d->handleMouseReleaseEvent(d->pressedItem, event);
+        d->pressedItem = nullptr;
+    }
+}
+
+void QQuickSwipeDelegate::mouseUngrabEvent()
+{
+    Q_D(QQuickSwipeDelegate);
+    setPressed(false);
+
+    auto item = d->swipe.rightItem();
+    if (item) {
+        if (auto control = qmlobject_cast<QQuickControl *>(item))
+            QQuickControlPrivate::get(control)->handleUngrab();
+        Attached *attached = attachedObject(item);
+        if (attached)
+            attached->setPressed(false);
+    } else {
+        item = d->swipe.leftItem();
+        if (item) {
+            if (auto control = qmlobject_cast<QQuickControl *>(item))
+                QQuickControlPrivate::get(control)->handleUngrab();
+            Attached *attached = attachedObject(item);
+            if (attached)
+                attached->setPressed(false);
+        }
+    }
+
+    d->pressedItem = nullptr;
 }
 
 void QQuickSwipeDelegate::touchEvent(QTouchEvent *event)

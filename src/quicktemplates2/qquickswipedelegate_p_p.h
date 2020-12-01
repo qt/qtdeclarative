@@ -65,6 +65,8 @@ public:
     bool handleMousePressEvent(QQuickItem *item, QMouseEvent *event);
     bool handleMouseMoveEvent(QQuickItem *item, QMouseEvent *event);
     bool handleMouseReleaseEvent(QQuickItem *item, QMouseEvent *event);
+    void forwardMouseEvent(QMouseEvent *event, QQuickItem *destination, QPointF localPos);
+    bool attachedObjectsSetPressed(QQuickItem *item, QPointF scenePos, bool pressed, bool cancel = false);
 
     void resizeContent() override;
     void resizeBackground() override;
@@ -72,6 +74,7 @@ public:
     QPalette defaultPalette() const override;
 
     QQuickSwipe swipe;
+    QQuickItem *pressedItem = nullptr;
 };
 
 QT_END_NAMESPACE

@@ -780,7 +780,7 @@ TestCase {
         mousePress(listView, firstItem.width / 2, firstItem.height / 2);
         verify(firstItem.swipe.leftItem.SwipeDelegate.pressed);
         compare(leftClickedSpy.count, 0);
-        verify(!firstItem.pressed);
+        verify(firstItem.pressed);
 
         mouseRelease(listView, firstItem.width / 2, firstItem.height / 2);
         verify(!firstItem.swipe.leftItem.SwipeDelegate.pressed);
@@ -1076,7 +1076,8 @@ TestCase {
             text: "SwipeDelegate"
             width: 150
 
-            swipe.right: Item {
+            swipe.right: Rectangle {
+                color: "green"
                 width: parent.width
                 height: parent.height
 

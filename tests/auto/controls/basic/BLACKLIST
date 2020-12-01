@@ -1,24 +1,5 @@
 # See qtbase/src/testlib/qtestblacklist.cpp for format
 
-# https://bugreports.qt.io/browse/QTBUG-87018
-[SwipeDelegate::test_close]
-*
-
-[SwipeDelegate::test_dragSideAction]
-*
-
-[SwipeDelegate::test_eventsToLeftAndRight]
-*
-
-[SwipeDelegate::test_mouseButtons]
-*
-
-[SwipeDelegate::test_multipleClickableActions]
-*
-
-[SwipeDelegate::test_removableDelegates]
-*
-
 # QTBUG-70597
 [Tumbler::test_itemsCorrectlyPositioned]
 *
