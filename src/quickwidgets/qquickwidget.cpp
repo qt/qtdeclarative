@@ -985,12 +985,12 @@ void QQuickWidgetPrivate::createContext()
 // Never called by Software Rendering backend
 void QQuickWidgetPrivate::destroyContext()
 {
-    delete offscreenSurface;
-    offscreenSurface = nullptr;
 #if QT_CONFIG(opengl)
     delete context;
     context = nullptr;
 #endif
+    delete offscreenSurface;
+    offscreenSurface = nullptr;
 }
 
 void QQuickWidget::createFramebufferObject()
