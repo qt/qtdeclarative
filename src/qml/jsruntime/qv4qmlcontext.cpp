@@ -466,9 +466,9 @@ ReturnedValue QQmlContextWrapper::resolveQmlContextPropertyLookupGetter(Lookup *
                 return static_cast<Heap::CallContext *>(ctx)->locals[index].asReturnedValue();
         }
 
-        // Skip only block contexts within the current call context.
+        // Skip only block and call contexts.
         // Other contexts need a regular QML property lookup. See below.
-        if (ctx->type != Heap::ExecutionContext::Type_BlockContext)
+        if (ctx->type != Heap::ExecutionContext::Type_BlockContext && ctx->type != Heap::ExecutionContext::Type_CallContext)
             break;
     }
 
