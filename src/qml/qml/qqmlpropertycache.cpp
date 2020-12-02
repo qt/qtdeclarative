@@ -980,7 +980,7 @@ static inline const QByteArray stringData(const QMetaObject *mo, int index)
 
 bool QQmlPropertyCache::isDynamicMetaObject(const QMetaObject *mo)
 {
-    return priv(mo->d.data)->revision >= 3 && priv(mo->d.data)->flags & DynamicMetaObject;
+    return priv(mo->d.data)->flags & DynamicMetaObject;
 }
 
 const char *QQmlPropertyCache::className() const
