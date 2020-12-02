@@ -594,7 +594,7 @@ namespace QQmlPrivate
         QMetaType returnType;
         QList<QMetaType> argumentTypes;
         void (*functionPtr)(QQmlContext *context, QObject *scopeObject, void *resultPtr,
-                            const void **arguments);
+                            void **arguments);
     };
 
     struct CachedQmlUnit {

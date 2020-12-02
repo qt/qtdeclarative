@@ -491,7 +491,7 @@ ReturnedValue VME::exec(CppStackFrame *frame, ExecutionEngine *engine)
         Scoped<QmlContext> qmlContext(scope, engine->qmlContext());
         function->aotFunction->functionPtr(
                 qmlContext->qmlContext()->asQQmlContext(), qmlContext->qmlScope(),
-                returnValue, const_cast<const void **>(argumentPtrs)); // We're adding const here
+                returnValue, argumentPtrs);
 
         if (returnValue) {
             result = engine->metaTypeToJS(returnType.id(), returnValue);

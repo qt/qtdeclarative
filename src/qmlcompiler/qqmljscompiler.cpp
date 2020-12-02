@@ -464,8 +464,8 @@ bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFile
         writeStr("extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[] = { { 0, QMetaType::fromType<void>(), {}, nullptr } };");
     } else {
         writeStr(R"(template <typename Binding>
-                 void wrapCall(QQmlContext *context, QObject *scopeObject, void *dataPtr, const void **argumentsPtr, Binding &&binding) {
-                 using return_type = std::invoke_result_t<Binding, QQmlContext*, QObject*, const void **>;
+                 void wrapCall(QQmlContext *context, QObject *scopeObject, void *dataPtr, void **argumentsPtr, Binding &&binding) {
+                 using return_type = std::invoke_result_t<Binding, QQmlContext*, QObject*, void **>;
                  if constexpr (std::is_same_v<return_type, void>) {
                     Q_UNUSED(dataPtr);
                     binding(context, scopeObject, argumentsPtr);
@@ -476,8 +476,8 @@ bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFile
 
         writeStr("extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[] = {");
 
-        QString header = QStringLiteral("[](QQmlContext *context, QObject *scopeObject, void *dataPtr, const void **argumentsPtr) {\n");
-        header += QStringLiteral("wrapCall(context, scopeObject, dataPtr, argumentsPtr, [](QQmlContext *context, QObject *scopeObject, const void **argumentsPtr) {");
+        QString header = QStringLiteral("[](QQmlContext *context, QObject *scopeObject, void *dataPtr, void **argumentsPtr) {\n");
+        header += QStringLiteral("wrapCall(context, scopeObject, dataPtr, argumentsPtr, [](QQmlContext *context, QObject *scopeObject, void **argumentsPtr) {");
         header += QStringLiteral("Q_UNUSED(context); Q_UNUSED(scopeObject); Q_UNUSED(argumentsPtr);\n");
 
         QString footer = QStringLiteral("});}\n");
