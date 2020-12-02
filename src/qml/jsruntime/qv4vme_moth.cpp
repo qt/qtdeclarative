@@ -470,11 +470,10 @@ ReturnedValue VME::exec(CppStackFrame *frame, ExecutionEngine *engine)
                 const QMetaType argumentType = function->aotFunction->argumentTypes[i];
                 if (const qsizetype argumentSize = argumentType.sizeOf()) {
                     Q_ALLOCA_VAR(void, argument, argumentSize);
+                    argumentType.construct(argument);
                     if (i < frame->originalArgumentsCount) {
                         engine->metaTypeFromJS(frame->originalArguments[i], argumentType.id(),
                                                argument);
-                    } else {
-                        argumentType.construct(argument);
                     }
                     argumentPtrs[i] = argument;
                 } else {
