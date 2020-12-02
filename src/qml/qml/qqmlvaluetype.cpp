@@ -64,16 +64,12 @@ struct QQmlValueTypeFactoryImpl
     const QMetaObject *metaObjectForMetaType(QMetaType metaType);
     QQmlValueType *valueType(QMetaType type);
 
-    QQmlValueType *valueTypes[QMetaType::User];
-    QHash<int, QQmlValueType *> userTypes;
-    QMutex mutex;
-
-    QQmlValueType invalidValueType;
+    QHash<int, QQmlValueType *> metaTypeToValueType;
+    QReadWriteLock rwLock;
 };
 
 QQmlValueTypeFactoryImpl::QQmlValueTypeFactoryImpl()
 {
-    std::fill_n(valueTypes, int(QMetaType::User), &invalidValueType);
 
 #if QT_CONFIG(qml_itemmodel)
     // See types wrapped in qqmlmodelindexvaluetype_p.h
@@ -83,11 +79,7 @@ QQmlValueTypeFactoryImpl::QQmlValueTypeFactoryImpl()
 
 QQmlValueTypeFactoryImpl::~QQmlValueTypeFactoryImpl()
 {
-    for (QQmlValueType *type : valueTypes) {
-        if (type != &invalidValueType)
-            delete type;
-    }
-    qDeleteAll(userTypes);
+    qDeleteAll(metaTypeToValueType);
 }
 
 bool isInternalType(int idx)
@@ -178,37 +170,29 @@ const QMetaObject *QQmlValueTypeFactoryImpl::metaObjectForMetaType(QMetaType met
 QQmlValueType *QQmlValueTypeFactoryImpl::valueType(QMetaType type)
 {
     int idx = type.id();
-    if (idx >= (int)QMetaType::User) {
-        // Protect the hash with a mutex
-        mutex.lock();
+    // Protect the hash with a mutex
+    {
+        QReadLocker lock(&rwLock);
 
-        QHash<int, QQmlValueType *>::iterator it = userTypes.find(idx);
-        if (it == userTypes.end()) {
-            QQmlValueType *vt = nullptr;
-            if (const QMetaObject *mo = metaObjectForMetaType(type))
-                vt = new QQmlValueType(idx, mo);
-            it = userTypes.insert(idx, vt);
+        auto it = metaTypeToValueType.constFind(idx);
+        if (it != metaTypeToValueType.constEnd()) {
+            return *it;
         }
+    }
 
-        mutex.unlock();
+    {
+        QWriteLocker lock(&rwLock);
+        // TODO: we need try_emplace to avoid the double lookup
+        auto it = metaTypeToValueType.find(idx);
+        if (it != metaTypeToValueType.end()) // another thread inserted the element before we relocked
+            return *it;
+        QQmlValueType *vt = nullptr;
+        if (const QMetaObject *mo = metaObjectForMetaType(type))
+            vt = new QQmlValueType(idx, mo);
+        it = metaTypeToValueType.insert(idx, vt);
         return *it;
     }
 
-    QQmlValueType *rv = valueTypes[idx];
-    if (rv == &invalidValueType) {
-        // No need for mutex protection - the most we can lose is a valueType instance
-
-        // TODO: Investigate the performance/memory characteristics of
-        // removing the preallocated array
-        if (isInternalType(idx))
-            rv = valueTypes[idx] = nullptr;
-        else if (const QMetaObject *mo = metaObjectForMetaType(type))
-            rv = valueTypes[idx] = new QQmlValueType(idx, mo);
-        else
-            rv = valueTypes[idx] = nullptr;
-    }
-
-    return rv;
 }
 
 }
