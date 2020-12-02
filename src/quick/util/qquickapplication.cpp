@@ -58,18 +58,19 @@ QT_BEGIN_NAMESPACE
 QQuickApplication::QQuickApplication(QObject *parent)
     : QQmlApplication(parent)
 {
-    if (qApp) {
-        connect(qApp, SIGNAL(layoutDirectionChanged(Qt::LayoutDirection)),
-                this, SIGNAL(layoutDirectionChanged()));
-        connect(qApp, SIGNAL(applicationStateChanged(Qt::ApplicationState)),
-                this, SIGNAL(stateChanged(Qt::ApplicationState)));
-        connect(qApp, SIGNAL(applicationStateChanged(Qt::ApplicationState)),
-                this, SIGNAL(activeChanged()));
-        connect(qApp, SIGNAL(applicationDisplayNameChanged()),
-                this, SIGNAL(displayNameChanged()));
+    QCoreApplication *app = QCoreApplication::instance();
+    if (QGuiApplication *guiApp = qobject_cast<QGuiApplication *>(app)) {
+        connect(guiApp, &QGuiApplication::layoutDirectionChanged,
+                this, &QQuickApplication::layoutDirectionChanged);
+        connect(guiApp, &QGuiApplication::applicationStateChanged,
+                this, &QQuickApplication::stateChanged);
+        connect(guiApp, &QGuiApplication::applicationStateChanged,
+                this, &QQuickApplication::activeChanged);
+        connect(guiApp, &QGuiApplication::applicationDisplayNameChanged,
+                this, &QQuickApplication::displayNameChanged);
 
-        connect(qApp, &QGuiApplication::screenAdded, this, &QQuickApplication::updateScreens);
-        connect(qApp, &QGuiApplication::screenRemoved, this, &QQuickApplication::updateScreens);
+        connect(guiApp, &QGuiApplication::screenAdded, this, &QQuickApplication::updateScreens);
+        connect(guiApp, &QGuiApplication::screenRemoved, this, &QQuickApplication::updateScreens);
         updateScreens();
     }
 }
