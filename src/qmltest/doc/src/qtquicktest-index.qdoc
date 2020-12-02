@@ -63,6 +63,52 @@
           only guaranteed to work with the Qt version it was developed against.
           However, source compatibility is guaranteed.
 
+    \section1 Using the Module
+
+    \section2 QML API
+
+    The QML types in Qt Quick Test are available through the \c QtTest import.
+    To use the types, add the following import statement to your .qml file:
+
+    \qml
+    import QtTest
+    \endqml
+
+    \section2 C++ API
+
+    Using the \l{Qt Quick Test C++ API}{C++ API} requires linking against the
+    module library, either directly or through other dependencies. Several
+    build tools have dedicated support for this, including
+    \l{CMake Documentation}{CMake} and \l{qmake}.
+
+    \section3 Building with CMake
+
+    Use the \c find_package() command to locate the needed module components in
+    the Qt6 package:
+
+    \snippet overview.cmake cmake_use
+
+    See also the \l{Build with CMake} overview.
+
+    \section3 Building with qmake
+
+    There are two ways to link against the corresponding C++ library. If your
+    test project uses a QML \l TestCase, you should already have the following
+    line in your project file:
+
+    \badcode
+    CONFIG += qmltestcase
+    \endcode
+
+    This will cause the test to link to the C++ \QtQuickTest library.
+
+    If you have a C++-only test project, you can add the following line
+    to your project file:
+
+    \badcode
+    QT += qmltest
+    \endcode
+
     \target Running Qt Quick Tests
     \section1 Running Tests
 

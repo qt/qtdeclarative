@@ -38,22 +38,5 @@
 
     \snippet src_qmltest_qquicktest_snippet.cpp 0
 
-    There are two ways to link against the corresponding C++ library. If your
-    test project uses a QML \l TestCase, you should already have the following
-    line in your project file:
-
-    \badcode
-    CONFIG += qmltestcase
-    \endcode
-
-    This will cause the test to link to the C++ \QtQuickTest library.
-
-    If you have a C++-only test project, you can add the following line
-    to your project file:
-
-    \badcode
-    QT += qmltest
-    \endcode
-
     \sa {Executing C++ Before QML Tests}
 */
