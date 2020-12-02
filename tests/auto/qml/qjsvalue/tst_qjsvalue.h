@@ -144,6 +144,7 @@ private slots:
     void jsvalueArrayToSequenceType();
 
     void deleteFromDifferentThread();
+    void stringAndUrl();
 
 private:
     void newEngine()

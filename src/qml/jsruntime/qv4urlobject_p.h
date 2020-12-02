@@ -143,8 +143,9 @@ struct UrlObject : Object
     QString username() const { return d()->username->toQString(); }
     bool setUsername(QString username);
 
-private:
     QUrl toQUrl() const;
+
+private:
     void updateOrigin();
     void updateHost();
 };

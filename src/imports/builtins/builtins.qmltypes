@@ -1724,4 +1724,10 @@ Module {
         accessSemantics: "value"
     }
 
+    Component {
+        name: "QUrl"
+        exports: ["QML/url 1.0"]
+        exportMetaObjectRevisions: [256]
+        accessSemantics: "value"
+    }
 }

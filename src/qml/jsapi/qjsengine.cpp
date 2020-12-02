@@ -755,6 +755,11 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
             *reinterpret_cast<QString*>(ptr) = *string;
             return true;
         }
+        if (type == QMetaType::QUrl) {
+            *reinterpret_cast<QUrl *>(ptr) = QUrl(*string);
+            return true;
+        }
+
         double d = QV4::RuntimeHelpers::stringToNumber(*string);
         switch (type) {
         case QMetaType::Int:

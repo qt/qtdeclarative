@@ -2737,4 +2737,23 @@ void tst_QJSValue::deleteFromDifferentThread()
 #endif
 }
 
+void tst_QJSValue::stringAndUrl()
+{
+    QJSEngine engine;
+    const QString string = QStringLiteral("http://example.com/something.html");
+    const QUrl url(string);
+
+    const QJSValue urlValue(engine.toScriptValue(url));
+    QCOMPARE(urlValue.toString(), string);
+    QCOMPARE(engine.fromScriptValue<QUrl>(urlValue), url);
+
+    const QJSValue stringValue(engine.toScriptValue(string));
+    QCOMPARE(stringValue.toString(), string);
+    QCOMPARE(engine.fromScriptValue<QUrl>(stringValue), url);
+
+    const QJSValue immediateStringValue(string);
+    QCOMPARE(immediateStringValue.toString(), string);
+    QCOMPARE(engine.fromScriptValue<QUrl>(immediateStringValue), url);
+}
+
 QTEST_MAIN(tst_QJSValue)

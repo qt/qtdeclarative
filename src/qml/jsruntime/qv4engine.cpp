@@ -2240,6 +2240,14 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, int type, void *data)
             *reinterpret_cast<QDate *>(data) = d->toQDateTime().date();
             return true;
         } break;
+    case QMetaType::QUrl:
+        if (String *s = value.stringValue()) {
+            *reinterpret_cast<QUrl *>(data) = QUrl(s->toQString());
+            return true;
+        } else if (const QV4::UrlObject *d = value.as<UrlObject>()) {
+            *reinterpret_cast<QUrl *>(data) = d->toQUrl();
+            return true;
+        } break;
 #if QT_CONFIG(regularexpression)
     case QMetaType::QRegularExpression:
         if (const QV4::RegExpObject *r = value.as<QV4::RegExpObject>()) {
