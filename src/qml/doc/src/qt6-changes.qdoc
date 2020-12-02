@@ -49,9 +49,9 @@
     assigned to an url property. In Qt 6 this is no longer the case.
 
     If you had a QML file stored under "/home/qml/example.qml", and "example.qml" contained
-    \begincode
+    \code
     property url imageFolder: "./images"
-    \oldcode
+    \endcode
     then the url property would store the URL "/home/qml/images". This made it impossible to use
     relative URLs in QML in this way, so in Qt 6, the URL stays relative, and only gets resolved
     when this is required (e.g. when it is used as the source of an Image component).
