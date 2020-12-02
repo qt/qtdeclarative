@@ -52,7 +52,9 @@ depends += \
     qtwidgets \
     qmake \
     qtsql \
-    qtshadertools
+    qtshadertools \
+    qmake \
+    qtcmake
 
 headerdirs  += ..\
                ../../quick \
