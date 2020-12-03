@@ -1423,12 +1423,12 @@ bool QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
     }
 
     while (!sharedState->allQPropertyBindings.isEmpty()) {
-        auto& [target, index, qmlBinding] = sharedState->allQPropertyBindings.last();
+        auto& [target, index, qmlBinding] = sharedState->allQPropertyBindings.first();
         QUntypedBindable bindable;
         void *argv[] = { &bindable };
         target->qt_metacall(QMetaObject::BindableProperty, index, argv);
         bindable.setBinding(qmlBinding);
-        sharedState->allQPropertyBindings.pop_back();
+        sharedState->allQPropertyBindings.pop_front();
         if (watcher.hasRecursed() || interrupt.shouldInterrupt())
             return false;
     }
