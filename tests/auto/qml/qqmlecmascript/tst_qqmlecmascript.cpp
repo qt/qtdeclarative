@@ -4587,16 +4587,15 @@ void tst_qqmlecmascript::importScripts()
         return;
     }
 
-    QObject *object = component.create();
+    QScopedPointer<QObject> object {component.create()};
     if (!errorMessage.isEmpty()) {
         QVERIFY(!object);
     } else {
-        QVERIFY(object != nullptr);
+        QVERIFY(!object.isNull());
         tst_qqmlecmascript::verifyContextLifetime(QQmlContextData::get(engine.rootContext()));
 
         for (int i = 0; i < propertyNames.size(); ++i)
             QCOMPARE(object->property(propertyNames.at(i).toLatin1().constData()), propertyValues.at(i));
-        delete object;
     }
 
     engine.setImportPathList(importPathList);
