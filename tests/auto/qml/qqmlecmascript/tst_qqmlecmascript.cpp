@@ -382,6 +382,7 @@ private slots:
     void semicolonAfterProperty();
     void hugeStack();
     void bindingOnQProperty();
+    void overwrittenBindingOnQProperty();
     void aliasOfQProperty();
     void bindingOnQPropertyContextProperty();
     void bindingContainingQProperty();
@@ -9180,6 +9181,19 @@ void tst_qqmlecmascript::bindingOnQProperty()
     QVERIFY(qobject_cast<ClassWithQProperty*>(test.data()));
     QProperty<float> &qprop = static_cast<ClassWithQProperty*>(test.data())->value;
     QVERIFY(qprop.hasBinding());
+}
+
+void tst_qqmlecmascript::overwrittenBindingOnQProperty()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("QPropertyOverwrite.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> root(component.create());
+    auto test = root->findChild<ClassWithQProperty *>("test");
+    QVERIFY(test);
+    QCOMPARE(test->value.value(), 13.f);
+    root->setProperty("value", 14.f);
+    QCOMPARE(test->value.value(), 14.0);
 }
 
 void tst_qqmlecmascript::aliasOfQProperty() {

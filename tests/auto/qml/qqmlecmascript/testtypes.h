@@ -1732,9 +1732,12 @@ struct ClassWithQProperty : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(float value MEMBER value BINDABLE bindableValue)
+    Q_PROPERTY(float value2 MEMBER value2 BINDABLE bindableValue2)
 public:
     QProperty<float> value;
+    QProperty<float> value2;
     QBindable<float> bindableValue() { return QBindable<float>(&value); }
+    QBindable<float> bindableValue2() { return QBindable<float>(&value2); }
 };
 
 class VariantConvertObject : public QObject
