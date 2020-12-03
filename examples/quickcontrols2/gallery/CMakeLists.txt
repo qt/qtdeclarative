@@ -32,6 +32,10 @@ target_link_libraries(gallery_controls2 PUBLIC # special case
     Qt::Gui
     Qt::Quick
     Qt::QuickControls2
+# special case begin
+    # Work around QTBUG-86533
+    Qt::QuickTemplates2
+# special case end
 )
 
 
