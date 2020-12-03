@@ -148,7 +148,15 @@ public:
                                  const QQmlJSScope::Ptr &parentScope = QQmlJSScope::Ptr());
     static QQmlJSScope::ConstPtr findCurrentQMLScope(const QQmlJSScope::ConstPtr &scope);
 
-    QQmlJSScope::Ptr parentScope() const { return m_parentScope.toStrongRef(); }
+    QQmlJSScope::Ptr parentScope()
+    {
+        return m_parentScope.toStrongRef();
+    }
+
+    QQmlJSScope::ConstPtr parentScope() const
+    {
+        return QQmlJSScope::WeakConstPtr(m_parentScope).toStrongRef();
+    }
 
     void insertJSIdentifier(const QString &name, const JavaScriptIdentifier &identifier);
 
@@ -232,9 +240,18 @@ public:
 
     std::optional<JavaScriptIdentifier> findJSIdentifier(const QString &id) const;
 
-    QVector<QQmlJSScope::Ptr> childScopes() const
+    QVector<QQmlJSScope::Ptr> childScopes()
     {
         return m_childScopes;
+    }
+
+    QVector<QQmlJSScope::ConstPtr> childScopes() const
+    {
+        QVector<QQmlJSScope::ConstPtr> result;
+        result.reserve(m_childScopes.size());
+        for (const auto &child : m_childScopes)
+            result.append(child);
+        return result;
     }
 
     void resolveTypes(const QHash<QString, ConstPtr> &contextualTypes);
