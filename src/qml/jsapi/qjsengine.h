@@ -121,6 +121,8 @@ public:
 
     void throwError(const QString &message);
     void throwError(QJSValue::ErrorType errorType, const QString &message = QString());
+    bool hasError() const;
+    QJSValue catchError();
 
     QString uiLanguage() const;
     void setUiLanguage(const QString &language);

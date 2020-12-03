@@ -243,6 +243,7 @@ private slots:
     void throwError();
     void throwErrorObject();
     void returnError();
+    void catchError();
     void mathMinMax();
 
     void importModule();
@@ -4808,6 +4809,19 @@ void tst_QJSEngine::returnError()
     QCOMPARE(result.property("lineNumber").toString(), "1");
     QCOMPARE(result.property("message").toString(), "Something is wrong");
     QVERIFY(!result.property("stack").isUndefined());
+}
+
+void tst_QJSEngine::catchError()
+{
+    QJSEngine engine;
+    QVERIFY(!engine.hasError());
+    engine.throwError(QJSValue::GenericError, "some error");
+    QVERIFY(engine.hasError());
+    const QJSValue error = engine.catchError();
+    QVERIFY(error.isError());
+    QCOMPARE(error.errorType(), QJSValue::GenericError);
+    QCOMPARE(error.property("message").toString(), "some error");
+    QVERIFY(!engine.hasError());
 }
 
 QJSValue tst_QJSEngine::throwingCppMethod1()

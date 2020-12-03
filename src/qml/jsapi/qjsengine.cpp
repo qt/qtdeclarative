@@ -927,6 +927,33 @@ void QJSEngine::throwError(QJSValue::ErrorType errorType, const QString &message
 }
 
 /*!
+ * Returns \c true if the last JavaScript execution resulted in an exception or
+ * if throwError() was called. Otherwise returns \c false. Mind that evaluate()
+ * catches any exceptions thrown in the evaluated code.
+ *
+ * \since Qt 6.1
+ */
+bool QJSEngine::hasError() const
+{
+    return m_v4Engine->hasException;
+}
+
+/*!
+ * If an exception is currently pending, catches it and returns it as a
+ * QJSValue. Otherwise returns undefined as QJSValue. After calling this method
+ * hasError() returns \c false.
+ *
+ * \since Qt 6.1
+ */
+QJSValue QJSEngine::catchError()
+{
+    if (m_v4Engine->hasException)
+        return QJSValuePrivate::fromReturnedValue(m_v4Engine->catchException());
+    else
+        return QJSValue();
+}
+
+/*!
   \property QJSEngine::uiLanguage
   \brief the language to be used for translating user interface strings
   \since 5.15
