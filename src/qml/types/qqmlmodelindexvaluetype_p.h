@@ -116,7 +116,7 @@ public:
     inline QAbstractItemModel *model() const { return const_cast<QAbstractItemModel *>(v.model()); }
     inline quint64 internalId() const { return v.internalId(); }
 
-    static const QModelIndex &toModelIndex(const QPersistentModelIndex &index)
+    static QModelIndex toModelIndex(const QPersistentModelIndex &index)
     { return index; }
 };
 
