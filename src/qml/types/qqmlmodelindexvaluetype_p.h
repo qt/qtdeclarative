@@ -115,9 +115,6 @@ public:
     inline bool isValid() const { return v.isValid(); }
     inline QAbstractItemModel *model() const { return const_cast<QAbstractItemModel *>(v.model()); }
     inline quint64 internalId() const { return v.internalId(); }
-
-    static QModelIndex toModelIndex(const QPersistentModelIndex &index)
-    { return index; }
 };
 
 struct QQmlItemSelectionRangeValueType
