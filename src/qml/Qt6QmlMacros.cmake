@@ -178,6 +178,9 @@ function(qt6_add_qml_module target)
         if(NOT BUILD_SHARED_LIBS)
             add_library(${target} STATIC)
             set(is_static TRUE)
+
+            # No need to compile Q_IMPORT_PLUGIN-containing files for non-executables.
+            _qt_internal_disable_static_default_plugins("${resource_target}")
         else()
             add_library(${target} MODULE)
             set(is_static FALSE)
