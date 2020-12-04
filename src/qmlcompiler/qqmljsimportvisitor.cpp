@@ -324,11 +324,6 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
     }
 
     QString path {};
-    if (!import->importId.isEmpty()) {
-        // TODO: do not put imported ids into the same space as qml IDs
-        const QString importId = import->importId.toString();
-        m_scopesById.insert(importId, m_rootScopeImports.value(importId));
-    }
     auto uri = import->importUri;
     while (uri) {
         path.append(uri->name);

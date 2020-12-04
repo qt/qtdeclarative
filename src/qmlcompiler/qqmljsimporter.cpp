@@ -209,6 +209,9 @@ void QQmlJSImporter::processImport(
         QQmlJSImporter::AvailableTypes *types,
         const QString &prefix)
 {
+    if (!prefix.isEmpty())
+        types->qmlNames.insert(prefix, {}); // Empty type means "this is the prefix"
+
     for (auto it = import.scripts.begin(); it != import.scripts.end(); ++it)
         types->qmlNames.insert(prefixedName(prefix, it.key()), it.value());
 

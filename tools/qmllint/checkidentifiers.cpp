@@ -355,8 +355,13 @@ bool CheckIdentifiers::operator()(
 
             const auto typeIt = m_types.find(memberAccessBase.m_name);
             if (typeIt != m_types.end()) {
-                if (!checkMemberAccess(memberAccessChain, *typeIt))
+                if (typeIt->isNull()) {
+                    // This is a namespaced import. Check with the full name.
+                    if (!memberAccessChain.isEmpty())
+                        memberAccessChain.front().m_name.prepend(memberAccessBase.m_name + u'.');
+                } else if (!checkMemberAccess(memberAccessChain, *typeIt)) {
                     noUnqualifiedIdentifier = false;
+                }
                 continue;
             }
 
