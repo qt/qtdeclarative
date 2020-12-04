@@ -34,7 +34,7 @@ set(qml_resource_files
     "content/TextBox.qml"
     "content/TouchpointFeedbackSprite.qml"
     "fakeFlickable.qml"
-    "flickableWithHandlers.qml"
+    "flickablesWithHandlers.qml"
     "flingAnimation.qml"
     "joystick.qml"
     "main.qml"

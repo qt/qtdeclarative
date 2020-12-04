@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the manual tests of the Qt Toolkit.
@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
+import QtQuick
 import "qrc:/quick/shared/" as Examples
 import "content"
 
@@ -35,18 +35,24 @@ Rectangle {
     width: 400
     height: 400
     objectName: "root"
-    color: "#222222"
+    color: "steelblue"
 
-    Flickable {
-        anchors.fill: parent
-        anchors.margins: 10
-        anchors.topMargin: 40
-        contentHeight: 600
-        contentWidth: 600
+    component FlickableStuff: Flickable {
+        width: root.width / 2 - 2
+        height: 400
+        contentWidth: width
+        contentHeight: 800
         pressDelay: pressDelayCB.checked ? 1000 : 0
+
+        Rectangle {
+            anchors.fill: parent
+            color: "#222222"
+        }
 
         Column {
             spacing: 6
+            anchors.fill: parent
+            anchors.margins: 6
             Rectangle {
                 radius: 5
                 width: parent.width - 12
@@ -59,7 +65,6 @@ Rectangle {
                     text: "press delay"
                 }
             }
-
 
             Row {
                 spacing: 6
@@ -91,5 +96,12 @@ Rectangle {
                 }
             }
         }
+    }
+
+    Row {
+        anchors.fill: parent
+        spacing: 2
+        FlickableStuff { }
+        FlickableStuff { }
     }
 }

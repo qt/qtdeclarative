@@ -3,7 +3,7 @@
         <file>flingAnimation.qml</file>
         <file>main.qml</file>
         <file>fakeFlickable.qml</file>
-        <file>flickableWithHandlers.qml</file>
+        <file>flickablesWithHandlers.qml</file>
         <file>joystick.qml</file>
         <file>map.qml</file>
         <file>mixer.qml</file>
