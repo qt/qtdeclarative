@@ -566,6 +566,10 @@ void QSGRhiSupport::prepareWindowForRhi(QQuickWindow *window)
 // must be called on the render thread
 QRhi *QSGRhiSupport::createRhi(QQuickWindow *window, QOffscreenSurface *offscreenSurface)
 {
+#if !QT_CONFIG(opengl) && !QT_CONFIG(vulkan) && !defined(Q_OS_WIN) && !defined(Q_OS_MACOS) && !defined(Q_OS_IOS)
+    Q_UNUSED(window);
+#endif
+
     QRhi *rhi = nullptr;
 
     QRhi::Flags flags;
