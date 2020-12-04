@@ -96,6 +96,7 @@ public:
     virtual ~ByteCodeHandler();
 
     void decode(const char *code, uint len);
+    void reset() { _currentOffset = _nextOffset = 0; }
 
     int currentInstructionOffset() const { return _currentOffset; }
     int nextInstructionOffset() const { return _nextOffset; }
