@@ -79,6 +79,11 @@ public:
         URIError
     };
 
+    enum ObjectConversionBehavior {
+        ConvertJSObjects,
+        RetainJSObjects
+    };
+
 public:
     QJSValue(SpecialValue value = UndefinedValue);
     ~QJSValue();
@@ -121,7 +126,10 @@ public:
     qint32 toInt() const;
     quint32 toUInt() const;
     bool toBool() const;
+
     QVariant toVariant() const;
+    QVariant toVariant(ObjectConversionBehavior behavior) const;
+
     QObject *toQObject() const;
     const QMetaObject *toQMetaObject() const;
     QDateTime toDateTime() const;

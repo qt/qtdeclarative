@@ -184,6 +184,17 @@
     provided is malformed.
 */
 
+/*!
+    \enum QJSValue::ObjectConversionBehavior
+
+    This enum is used to specify how JavaScript objects without an equivalent
+    native Qt type should be treated when converting to QVariant.
+
+    \value ConvertJSObjects A best-effort, possibly lossy, conversion is attempted.
+
+    \value RetainJSObjects The value is retained as QJSValue wrapped in QVariant.
+*/
+
 QT_BEGIN_NAMESPACE
 
 using namespace QV4;
@@ -549,9 +560,22 @@ quint32 QJSValue::toUInt() const
 }
 
 /*!
-  Returns the QVariant value of this QJSValue, if it can be
-  converted to a QVariant; otherwise returns an invalid QVariant.
-  The conversion is performed according to the following table:
+    \overload
+
+    Returns toVariant(ConvertJSObjects).
+
+    \sa isVariant()
+*/
+QVariant QJSValue::toVariant() const
+{
+    return toVariant(ConvertJSObjects);
+}
+
+/*!
+    Returns the QVariant value of this QJSValue, if it can be
+    converted to a QVariant; otherwise returns an invalid QVariant.
+    Some JavaScript types and objects have native expressions in Qt.
+    Those are converted to their native expressions. For example:
 
     \table
     \header \li Input Type \li Result
@@ -563,14 +587,22 @@ quint32 QJSValue::toUInt() const
     \row    \li QVariant Object \li The result is the QVariant value of the object (no conversion).
     \row    \li QObject Object \li A QVariant containing a pointer to the QObject.
     \row    \li Date Object \li A QVariant containing the date value (toDateTime()).
-    \row    \li RegExp Object \li A QVariant containing the regular expression value.
-    \row    \li Array Object \li The array is converted to a QVariantList. Each element is converted to a QVariant, recursively; cyclic references are not followed.
-    \row    \li Object     \li The object is converted to a QVariantMap. Each property is converted to a QVariant, recursively; cyclic references are not followed.
+    \row    \li RegularExpression Object \li A QVariant containing the regular expression value.
     \endtable
 
-  \sa isVariant()
+    For other types the \a behavior parameter is relevant. If
+    \c ConvertJSObjects is given, a best effort but possibly lossy conversion is
+    attempted. Generic JavaScript objects are converted to QVariantMap.
+    JavaScript arrays are converted to QVariantList. Each property or element is
+    converted to a QVariant, recursively; cyclic references are not followed.
+    JavaScript function objects are dropped. If \c RetainJSObjects is given, the
+    QJSValue is wrapped into a QVariant via QVariant::fromValue(). The resulting
+    conversion is lossless but the internal structure of the objects is not
+    immediately accessible.
+
+    \sa isVariant()
 */
-QVariant QJSValue::toVariant() const
+QVariant QJSValue::toVariant(QJSValue::ObjectConversionBehavior behavior) const
 {
     if (const QString *string = QJSValuePrivate::asQString(this))
         return QVariant(*string);
@@ -591,10 +623,8 @@ QVariant QJSValue::toVariant() const
 
     if (val.isString())
         return QVariant(val.toQString());
-    if (QV4::Managed *m = val.as<QV4::Managed>()) {
-        return m->engine()->toVariant(val, /*typeHint*/ -1,
-                                      /*createJSValueForObjects*/ val.isFunctionObject());
-    }
+    if (QV4::Managed *m = val.as<QV4::Managed>())
+        return m->engine()->toVariant(val, /*typeHint*/ -1, behavior == RetainJSObjects);
 
     Q_ASSERT(false);
     return QVariant();
