@@ -1,4 +1,3 @@
-TEMPLATE = app
 TARGET = qmltime
 QT += qml quick
 QT += quick-private
@@ -12,3 +11,5 @@ QMAKE_TARGET_DESCRIPTION = QML Time
 
 SOURCES += qmltime.cpp
 HEADERS += qmltime.h
+
+load(qt_tool)
