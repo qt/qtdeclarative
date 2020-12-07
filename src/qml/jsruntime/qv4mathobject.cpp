@@ -310,29 +310,14 @@ ReturnedValue MathObject::method_hypot(const FunctionObject *, const Value *, co
 {
     // ES6 Math.hypot(v1, ..., vn) -> sqrt(sum(vi**2)) but "should take care to
     // avoid the loss of precision from overflows and underflows" (as std::hypot does).
-    double v = argc ? argv[0].toNumber() : 0;
+    double v = 0;
     // Spec mandates +0 on no args; and says nothing about what to do if toNumber() signals ...
-#ifdef Q_OS_ANDROID // incomplete std :-(
-    bool big = qt_is_inf(v), bad = std::isnan(v);
-    v *= v;
-    for (int i = 1; !big && i < argc; i++) {
-        double u = argv[i].toNumber();
-        if (qt_is_inf(u))
-            big = true;
-        if (std::isnan(u))
-            bad = true;
-        v += u * u;
+    if (argc > 0) {
+        QtPrivate::QHypotHelper<double> h(argv[0].toNumber());
+        for (int i = 1; i < argc; i++)
+            h = h.add(argv[i].toNumber());
+        v = h.result();
     }
-    if (big)
-        RETURN_RESULT(Encode(qt_inf()));
-    if (bad)
-        RETURN_RESULT(Encode(qt_qnan()));
-    // Should actually check for {und,ov}erflow, but too fiddly !
-    RETURN_RESULT(Value::fromDouble(sqrt(v)));
-#else
-    for (int i = 1; i < argc; i++)
-        v = std::hypot(v, argv[i].toNumber());
-#endif
     RETURN_RESULT(Value::fromDouble(v));
 }
 
