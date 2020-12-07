@@ -2756,4 +2756,19 @@ void tst_QJSValue::stringAndUrl()
     QCOMPARE(engine.fromScriptValue<QUrl>(immediateStringValue), url);
 }
 
+void tst_QJSValue::jsFunctionInVariant()
+{
+    QJSEngine engine;
+    engine.installExtensions(QJSEngine::ConsoleExtension);
+    QJSValue console = engine.globalObject().property("console");
+    QVERIFY(console.isObject());
+    QJSValue log = console.property("log");
+    QVERIFY(log.isCallable());
+
+    {
+        QTest::ignoreMessage(QtDebugMsg, "direct call");
+        log.callWithInstance(console, {"direct call"});
+    }
+}
+
 QTEST_MAIN(tst_QJSValue)

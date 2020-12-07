@@ -145,6 +145,7 @@ private slots:
 
     void deleteFromDifferentThread();
     void stringAndUrl();
+    void jsFunctionInVariant();
 
 private:
     void newEngine()
