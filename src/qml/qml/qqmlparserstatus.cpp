@@ -68,19 +68,7 @@ QT_BEGIN_NAMESPACE
     To use QQmlParserStatus, you must inherit both a QObject-derived class
     and QQmlParserStatus, and use the Q_INTERFACES() macro.
 
-    \code
-    class MyObject : public QObject, public QQmlParserStatus
-    {
-        \Q_OBJECT
-        Q_INTERFACES(QQmlParserStatus)
-
-    public:
-        MyObject(QObject *parent = 0);
-        ...
-        void classBegin();
-        void componentComplete();
-    }
-    \endcode
+    \snippet code/src_qml_qqmlparserstatus.cpp 0
 */
 
 /*! \internal */

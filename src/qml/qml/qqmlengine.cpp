@@ -1368,34 +1368,18 @@ void QQmlEngine::captureProperty(QObject *object, const QMetaProperty &property)
   type, either a default constructed QJSValue or a \c nullptr is returned.
 
   QObject* example:
-  \code
-  class MySingleton : public QObject {
-    \Q_OBJECT
 
-    // Register as default constructed singleton.
-    QML_ELEMENT
-    QML_SINGLETON
-
-    static int typeId;
-    // ...
-  };
-
-  MySingleton::typeId = qmlTypeId(...);
-
-  // Retrieve as QObject*
-  QQmlEngine engine;
-  MySingleton* instance = engine.singletonInstance<MySingleton*>(MySingleton::typeId);
-  \endcode
+  \snippet code/src_qml_qqmlengine.cpp 0
+  \codeline
+  \snippet code/src_qml_qqmlengine.cpp 1
+  \codeline
+  \snippet code/src_qml_qqmlengine.cpp 2
 
   QJSValue example:
-  \code
-  // Register with QJSValue callback
-  int typeId = qmlRegisterSingletonType(...);
 
-  // Retrieve as QJSValue
-  QQmlEngine engine;
-  QJSValue instance = engine.singletonInstance<QJSValue>(typeId);
-  \endcode
+  \snippet code/src_qml_qqmlengine.cpp 3
+  \codeline
+  \snippet code/src_qml_qqmlengine.cpp 4
 
   It is recommended to store the QML type id, e.g. as a static member in the
   singleton class. The lookup via qmlTypeId() is costly.
