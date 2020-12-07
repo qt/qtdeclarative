@@ -126,6 +126,9 @@ QSGTexturePrivate::QSGTexturePrivate(QSGTexture *t)
     , m_vulkanTextureAccessor(t)
 #endif
 {
+#if !QT_CONFIG(opengl)
+    Q_UNUSED(t);
+#endif
 }
 
 #ifndef QT_NO_DEBUG
