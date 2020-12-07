@@ -436,18 +436,7 @@ QML list properties are type-safe - in this case \c {Fruit} is a QObject type th
     When assigning the property in a derived type, the values are appended
     to those of the base class. This is the default behavior.
 
-    \code
-    class FruitBasket : QObject {
-        \Q_OBJECT
-        QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_APPEND
-        Q_PROPERTY(QQmlListProperty<Fruit> fruit READ fruit)
-
-        public:
-        // ...
-        QQmlListProperty<Fruit> fruit();
-        // ...
-    };
-    \endcode
+    \snippet code/src_qml_qqmllist.cpp 0
 
     \sa QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE_IF_NOT_DEFAULT
     \sa QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE
@@ -463,18 +452,7 @@ QML list properties are type-safe - in this case \c {Fruit} is a QObject type th
     the base class unless it's the default property.
     In the case of the default property, values are appended to those of the base class.
 
-    \code
-    class FruitBasket : QObject {
-        \Q_OBJECT
-        QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE_IF_NOT_DEFAULT
-        Q_PROPERTY(QQmlListProperty<Fruit> fruit READ fruit)
-
-        public:
-        // ...
-        QQmlListProperty<Fruit> fruit();
-        // ...
-    };
-    \endcode
+    \snippet code/src_qml_qqmllist.cpp 1
 
     \sa QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_APPEND
     \sa QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE
@@ -488,18 +466,7 @@ QML list properties are type-safe - in this case \c {Fruit} is a QObject type th
     When assigning the property in a derived type, the values replace those
     of the base class.
 
-    \code
-    class FruitBasket : QObject {
-        \Q_OBJECT
-        QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE
-        Q_PROPERTY(QQmlListProperty<Fruit> fruit READ fruit)
-
-        public:
-        // ...
-        QQmlListProperty<Fruit> fruit();
-        // ...
-    };
-    \endcode
+    \snippet code/src_qml_qqmllist.cpp 2
 
     \sa QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_APPEND
     \sa QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE_IF_NOT_DEFAULT
