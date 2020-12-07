@@ -184,8 +184,11 @@ struct QQuickStyleSpec
         // Find the config file.
         resolveConfigFilePath();
 
-        if (style.isEmpty()) {
-            qCDebug(lcQtQuickControlsStyle) << "no style was specified; checking if we have an appropriate style for this platform";
+        if (style.isEmpty() || style.toLower() == QStringLiteral("default")) {
+            style.clear();
+
+            qCDebug(lcQtQuickControlsStyle) << "no style (or Default) was specified;"
+                << "checking if we have an appropriate style for this platform";
 #if defined(Q_OS_MACOS)
             style = QLatin1String("macOS");
 #elif defined(Q_OS_WINDOWS)
