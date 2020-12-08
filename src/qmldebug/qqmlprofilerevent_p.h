@@ -346,7 +346,7 @@ bool operator!=(const QQmlProfilerEvent &event1, const QQmlProfilerEvent &event2
 QDataStream &operator>>(QDataStream &stream, QQmlProfilerEvent &event);
 QDataStream &operator<<(QDataStream &stream, const QQmlProfilerEvent &event);
 
-Q_DECLARE_TYPEINFO(QQmlProfilerEvent, Q_MOVABLE_TYPE);
+Q_DECLARE_TYPEINFO(QQmlProfilerEvent, Q_RELOCATABLE_TYPE);
 
 QT_END_NAMESPACE
 

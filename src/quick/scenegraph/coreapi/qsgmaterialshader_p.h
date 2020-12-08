@@ -107,7 +107,7 @@ public:
     QRhiSampler *samplerBindingTable[MAX_SHADER_RESOURCE_BINDINGS];
 };
 
-Q_DECLARE_TYPEINFO(QSGMaterialShaderPrivate::ShaderStageData, Q_MOVABLE_TYPE);
+Q_DECLARE_TYPEINFO(QSGMaterialShaderPrivate::ShaderStageData, Q_RELOCATABLE_TYPE);
 
 QT_END_NAMESPACE
 

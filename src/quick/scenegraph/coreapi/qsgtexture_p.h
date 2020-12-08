@@ -68,7 +68,7 @@ struct QSGSamplerDescription
     static QSGSamplerDescription fromTexture(QSGTexture *t);
 };
 
-Q_DECLARE_TYPEINFO(QSGSamplerDescription, Q_MOVABLE_TYPE);
+Q_DECLARE_TYPEINFO(QSGSamplerDescription, Q_RELOCATABLE_TYPE);
 
 bool operator==(const QSGSamplerDescription &a, const QSGSamplerDescription &b) noexcept;
 bool operator!=(const QSGSamplerDescription &a, const QSGSamplerDescription &b) noexcept;

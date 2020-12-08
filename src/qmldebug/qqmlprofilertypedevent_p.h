@@ -67,7 +67,7 @@ struct QQmlProfilerTypedEvent
 
 QDataStream &operator>>(QDataStream &stream, QQmlProfilerTypedEvent &event);
 
-Q_DECLARE_TYPEINFO(QQmlProfilerTypedEvent, Q_MOVABLE_TYPE);
+Q_DECLARE_TYPEINFO(QQmlProfilerTypedEvent, Q_RELOCATABLE_TYPE);
 
 QT_END_NAMESPACE
 

@@ -83,7 +83,7 @@ private:
 
 QDebug Q_QML_EXPORT operator<<(QDebug debug, const QQmlError &error);
 
-Q_DECLARE_TYPEINFO(QQmlError, Q_MOVABLE_TYPE);
+Q_DECLARE_TYPEINFO(QQmlError, Q_RELOCATABLE_TYPE);
 
 QT_END_NAMESPACE
 

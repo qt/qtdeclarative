@@ -300,11 +300,11 @@ public:
 } // namespace Profiling
 } // namespace QV4
 
-Q_DECLARE_TYPEINFO(QV4::Profiling::MemoryAllocationProperties, Q_MOVABLE_TYPE);
-Q_DECLARE_TYPEINFO(QV4::Profiling::FunctionCallProperties, Q_MOVABLE_TYPE);
-Q_DECLARE_TYPEINFO(QV4::Profiling::FunctionCall, Q_MOVABLE_TYPE);
-Q_DECLARE_TYPEINFO(QV4::Profiling::FunctionLocation, Q_MOVABLE_TYPE);
-Q_DECLARE_TYPEINFO(QV4::Profiling::Profiler::SentMarker, Q_MOVABLE_TYPE);
+Q_DECLARE_TYPEINFO(QV4::Profiling::MemoryAllocationProperties, Q_RELOCATABLE_TYPE);
+Q_DECLARE_TYPEINFO(QV4::Profiling::FunctionCallProperties, Q_RELOCATABLE_TYPE);
+Q_DECLARE_TYPEINFO(QV4::Profiling::FunctionCall, Q_RELOCATABLE_TYPE);
+Q_DECLARE_TYPEINFO(QV4::Profiling::FunctionLocation, Q_RELOCATABLE_TYPE);
+Q_DECLARE_TYPEINFO(QV4::Profiling::Profiler::SentMarker, Q_RELOCATABLE_TYPE);
 
 QT_END_NAMESPACE
 Q_DECLARE_METATYPE(QV4::Profiling::FunctionLocationHash)

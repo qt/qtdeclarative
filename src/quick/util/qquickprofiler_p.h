@@ -146,7 +146,7 @@ struct Q_AUTOTEST_EXPORT QQuickProfilerData
     };
 };
 
-Q_DECLARE_TYPEINFO(QQuickProfilerData, Q_MOVABLE_TYPE);
+Q_DECLARE_TYPEINFO(QQuickProfilerData, Q_RELOCATABLE_TYPE);
 
 class QQuickProfilerSceneGraphData : public QQmlProfilerDefinitions {
 private:

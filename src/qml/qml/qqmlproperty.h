@@ -133,7 +133,7 @@ inline size_t qHash (const QQmlProperty &key, size_t seed = 0)
     return qHashMulti(seed, key.object(), key.name());
 }
 
-Q_DECLARE_TYPEINFO(QQmlProperty, Q_MOVABLE_TYPE);
+Q_DECLARE_TYPEINFO(QQmlProperty, Q_RELOCATABLE_TYPE);
 
 QT_END_NAMESPACE
 

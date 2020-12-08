@@ -86,7 +86,7 @@ struct DiagnosticMessage
 };
 } // namespace QQmlJS
 
-Q_DECLARE_TYPEINFO(QQmlJS::DiagnosticMessage, Q_MOVABLE_TYPE);
+Q_DECLARE_TYPEINFO(QQmlJS::DiagnosticMessage, Q_RELOCATABLE_TYPE);
 
 QT_END_NAMESPACE
 

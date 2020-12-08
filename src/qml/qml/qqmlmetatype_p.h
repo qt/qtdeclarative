@@ -264,7 +264,7 @@ public:
     static int qmlRegisteredListTypeCount();
 };
 
-Q_DECLARE_TYPEINFO(QQmlMetaType, Q_MOVABLE_TYPE);
+Q_DECLARE_TYPEINFO(QQmlMetaType, Q_RELOCATABLE_TYPE);
 
 QT_END_NAMESPACE
 

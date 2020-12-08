@@ -116,7 +116,7 @@ inline bool operator!=(const QQmlProfilerEventType &type1, const QQmlProfilerEve
     return !(type1 == type2);
 }
 
-Q_DECLARE_TYPEINFO(QQmlProfilerEventType, Q_MOVABLE_TYPE);
+Q_DECLARE_TYPEINFO(QQmlProfilerEventType, Q_RELOCATABLE_TYPE);
 
 QT_END_NAMESPACE
 

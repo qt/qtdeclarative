@@ -145,7 +145,7 @@ struct Q_AUTOTEST_EXPORT QQmlProfilerData : public QQmlProfilerDefinitions
     RangeType detailType;
 };
 
-Q_DECLARE_TYPEINFO(QQmlProfilerData, Q_MOVABLE_TYPE);
+Q_DECLARE_TYPEINFO(QQmlProfilerData, Q_RELOCATABLE_TYPE);
 
 class Q_QML_PRIVATE_EXPORT QQmlProfiler : public QObject, public QQmlProfilerDefinitions {
     Q_OBJECT
