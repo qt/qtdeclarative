@@ -90,6 +90,15 @@ QByteArray QQmlPropertyCacheCreatorBase::createClassNameTypeByUrl(const QUrl &ur
             QByteArray::number(classIndexCounter.fetchAndAddRelaxed(1));
 }
 
+QByteArray QQmlPropertyCacheCreatorBase::createClassNameForInlineComponent(const QUrl &baseUrl, int icId)
+{
+    QByteArray baseName = createClassNameTypeByUrl(baseUrl);
+    if (baseName.isEmpty())
+        baseName = QByteArray("ANON_QML_IC_") + QByteArray::number(classIndexCounter.fetchAndAddRelaxed(1));
+    baseName += "_" + QByteArray::number(icId);
+    return baseName;
+}
+
 QQmlBindingInstantiationContext::QQmlBindingInstantiationContext(int referencingObjectIndex, const QV4::CompiledData::Binding *instantiatingBinding,
                                                                  const QString &instantiatingPropertyName, QQmlPropertyCache *referencingObjectPropertyCache)
     : referencingObjectIndex(referencingObjectIndex)

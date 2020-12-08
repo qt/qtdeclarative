@@ -5604,6 +5604,7 @@ void tst_qqmllanguage::inlineComponent_data()
     QTest::newRow("Alias resolves correctly") << testFileUrl("inlineComponentWithAlias.qml") << QColorConstants::Svg::lime << 42 << true;
 
     QTest::newRow("Two inline components in same do not crash (QTBUG-86989)") << testFileUrl("twoInlineComponents.qml") << QColor() << 0 << false;
+    QTest::newRow("Inline components used in same file (QTBUG-89173)") << testFileUrl("inlineComponentsSameFile.qml") << QColor() << 0 << false;
 }
 
 void tst_qqmllanguage::inlineComponentReferenceCycle_data()

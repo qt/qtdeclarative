@@ -283,9 +283,7 @@ void setupICs(const ObjectContainer &container, QHash<int, InlineComponentData> 
     for (int i = 0; i != container->objectCount(); ++i) {
         auto root = container->objectAt(i);
         for (auto it = root->inlineComponentsBegin(); it != root->inlineComponentsEnd(); ++it) {
-            auto url = finalUrl;
-            url.setFragment(QString::number(it->objectIndex));
-            const QByteArray &className = QQmlPropertyCacheCreatorBase::createClassNameTypeByUrl(url);
+            const QByteArray &className = QQmlPropertyCacheCreatorBase::createClassNameForInlineComponent(finalUrl, it->objectIndex);
             InlineComponentData icDatum(QQmlMetaType::registerInternalCompositeType(className), int(it->objectIndex), int(it->nameIndex), 0, 0, 0);
             icData->insert(it->objectIndex, icDatum);
         }

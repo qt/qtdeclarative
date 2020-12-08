@@ -104,6 +104,8 @@ public:
     static int metaTypeForPropertyType(QV4::CompiledData::BuiltinType type);
 
     static QByteArray createClassNameTypeByUrl(const QUrl &url);
+
+    static QByteArray createClassNameForInlineComponent(const QUrl &baseUrl, int icId);
 };
 
 template <typename ObjectContainer>
