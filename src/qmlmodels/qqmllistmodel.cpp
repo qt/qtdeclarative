@@ -703,7 +703,7 @@ void ListModel::set(int elementIndex, QV4::Object *object, ListModel::SetElement
         } else if (propertyValue->isNullOrUndefined()) {
             if (reason == SetElement::WasJustInserted) {
                 QQmlError err;
-                auto memberName = propertyName->toString(m_modelCache->engine())->toQString();
+                auto memberName = propertyName->toString(v4)->toQString();
                 err.setDescription(QString::fromLatin1("%1 is %2. Adding an object with a %2 member does not create a role for it.").arg(memberName, propertyValue->isNull() ? QLatin1String("null") : QLatin1String("undefined")));
                 qmlWarning(nullptr, err);
             } else {

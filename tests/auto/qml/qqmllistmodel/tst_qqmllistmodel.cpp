@@ -130,6 +130,7 @@ private slots:
     void dynamic_roles_crash_QTBUG_38907();
     void nestedListModelIteration();
     void undefinedAppendShouldCauseError();
+    void nullPropertyCrash();
 };
 
 bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVariant object)
@@ -1723,6 +1724,27 @@ void tst_qqmllistmodel::undefinedAppendShouldCauseError()
     QScopedPointer<QObject>(component.create());
 }
 
+// QTBUG-89173
+void tst_qqmllistmodel::nullPropertyCrash()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(
+            R"(import QtQuick 2.15
+            ListView {
+                model: ListModel { id: listModel }
+
+                delegate: Item {}
+
+                Component.onCompleted: {
+                    listModel.append({"a": "value1", "b":[{"c":"value2"}]})
+                    listModel.append({"a": "value2", "b":[{"c":null}]})
+                }
+            })",
+            QUrl());
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg, "<Unknown File>: c is null. Adding an object with a null member does not create a role for it.");
+    QScopedPointer<QObject>(component.create());
+}
 
 QTEST_MAIN(tst_qqmllistmodel)
 
