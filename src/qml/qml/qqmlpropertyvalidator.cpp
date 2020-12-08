@@ -651,6 +651,19 @@ bool QQmlPropertyValidator::canCoerce(int to, QQmlPropertyCache *fromMo) const
 {
     QQmlPropertyCache *toMo = enginePrivate->rawPropertyCacheForType(to);
 
+    if (toMo == nullptr) {
+        // if we have an inline component from the current file,
+        // it is not properly registered at this point, as registration
+        // only occurs after the whole file has been validated
+        // Therefore we need to check the ICs here
+        for (const auto& icDatum : compilationUnit->inlineComponentData) {
+            if (icDatum.typeIds.id.id() == to) {
+                toMo = compilationUnit->propertyCaches.at(icDatum.objectIndex);
+                break;
+            }
+        }
+    }
+
     while (fromMo) {
         if (fromMo == toMo)
             return true;
@@ -746,6 +759,18 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *propert
         // effect the properties on the type, but don't effect assignability
         // Not passing a version ensures that we get the raw metaObject.
         QQmlPropertyCache *propertyMetaObject = enginePrivate->rawPropertyCacheForType(propType);
+        if (!propertyMetaObject) {
+            // if we have an inline component from the current file,
+            // it is not properly registered at this point, as registration
+            // only occurs after the whole file has been validated
+            // Therefore we need to check the ICs here
+            for (const auto& icDatum: compilationUnit->inlineComponentData) {
+                if (icDatum.typeIds.id == property->propType()) {
+                    propertyMetaObject = compilationUnit->propertyCaches.at(icDatum.objectIndex);
+                    break;
+                }
+            }
+        }
 
         if (propertyMetaObject) {
             // Will be true if the assigned type inherits propertyMetaObject
