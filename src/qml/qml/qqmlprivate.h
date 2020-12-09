@@ -671,8 +671,15 @@ namespace QQmlPrivate
     inline const char *classElementName(const QMetaObject *metaObject)
     {
         const char *elementName = classInfo(metaObject, "QML.Element");
-        if (qstrcmp(elementName, "auto") == 0)
-            return metaObject->className();
+        if (qstrcmp(elementName, "auto") == 0) {
+            const char *strippedClassName = metaObject->className();
+            for (const char *c = strippedClassName; *c != '\0'; c++) {
+                if (*c == ':')
+                    strippedClassName = c + 1;
+            }
+
+            return strippedClassName;
+        }
         if (qstrcmp(elementName, "anonymous") == 0)
             return nullptr;
 

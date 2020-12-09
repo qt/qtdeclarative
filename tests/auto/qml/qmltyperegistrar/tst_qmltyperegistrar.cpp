@@ -117,4 +117,12 @@ void tst_qmltyperegistrar::implementsInterfaces()
     QVERIFY(qmltypesData.contains("interfaces: [\"Interface\", \"Interface2\"]"));
 }
 
+void tst_qmltyperegistrar::namespacedElement()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+    c.setData("import QML\nimport QmlTypeRegistrarTest 1.0\nElement {}", QUrl());
+    QVERIFY2(!c.isError(), qPrintable(c.errorString()));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

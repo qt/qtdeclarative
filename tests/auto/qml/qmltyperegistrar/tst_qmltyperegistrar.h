@@ -132,6 +132,14 @@ public:
     QProperty<int> someProperty;
 };
 
+namespace Namespace {
+    class Element : public QObject
+    {
+        Q_OBJECT
+        QML_ELEMENT
+    };
+}
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -148,7 +156,7 @@ private slots:
     void restrictToImportVersion();
     void pastMajorVersions();
     void implementsInterfaces();
-
+    void namespacedElement();
 private:
     QByteArray qmltypesData;
 };
