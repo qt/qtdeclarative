@@ -192,7 +192,7 @@ struct QQuickStyleSpec
             style = QLatin1String("Windows");
 #elif defined(Q_OS_ANDROID)
             style = QLatin1String("Material");
-#elif defined(QT_OS_LINUX)
+#elif defined(Q_OS_LINUX)
             style = QLatin1String("Fusion");
 #endif
             if (!style.isEmpty())
