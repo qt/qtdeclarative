@@ -9,8 +9,8 @@ qt_internal_add_qml_module(qtquickcontrols2nativestyleplugin
     VERSION "6.0"
     CLASSNAME QtQuickControls2NativeStylePlugin
     DEPENDENCIES
-        QtQuick.Controls
-        QtQuick.Layouts
+        QtQuick.Controls/auto
+        QtQuick.Layouts/auto
     PAST_MAJOR_VERSIONS 2
     GENERATE_QMLTYPES
     INSTALL_QMLTYPES

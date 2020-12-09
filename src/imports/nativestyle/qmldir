@@ -1,8 +1,8 @@
 module QtQuick.NativeStyle
 plugin qtquickcontrols2nativestyleplugin
 classname QtQuickControls2NativeStylePlugin
-depends QtQuick.Controls
-depends QtQuick.Layouts
+depends QtQuick.Controls auto
+depends QtQuick.Layouts auto
 
 DefaultButton 2.0 controls/DefaultButton.qml
 DefaultButton 6.0 controls/DefaultButton.qml
