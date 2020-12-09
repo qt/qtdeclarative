@@ -4,7 +4,7 @@
 ## Slow Generic Library:
 #####################################################################
 
-qt_internal_add_cmake_library(Slow
+qt_internal_add_cmake_library(Slow MODULE # special case
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../Slow"
     SOURCES
         plugin.cpp plugin.h
