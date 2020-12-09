@@ -142,6 +142,9 @@ Q_DECLARE_METATYPE(QList<int>)
 
 QT_BEGIN_NAMESPACE
 
+DEFINE_BOOL_CONFIG_OPTION(disableDiskCache, QML_DISABLE_DISK_CACHE);
+DEFINE_BOOL_CONFIG_OPTION(forceDiskCache, QML_FORCE_DISK_CACHE);
+
 using namespace QV4;
 
 static QBasicAtomicInt engineSerial = Q_BASIC_ATOMIC_INITIALIZER(1);
@@ -1957,9 +1960,13 @@ ReturnedValue ExecutionEngine::global()
 QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::compileModule(const QUrl &url)
 {
     QQmlMetaType::CachedUnitLookupError cacheError = QQmlMetaType::CachedUnitLookupError::NoError;
-    if (const QQmlPrivate::CachedQmlUnit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(url, &cacheError)) {
+    if (const QQmlPrivate::CachedQmlUnit *cachedUnit = diskCacheEnabled()
+            ? QQmlMetaType::findCachedCompilationUnit(url, &cacheError)
+            : nullptr) {
         return ExecutableCompilationUnit::create(
-                    QV4::CompiledData::CompilationUnit(cachedUnit->qmlData, cachedUnit->aotCompiledFunctions, url.fileName(), url.toString()));
+                    QV4::CompiledData::CompilationUnit(
+                        cachedUnit->qmlData, cachedUnit->aotCompiledFunctions,
+                        url.fileName(), url.toString()));
     }
 
     QFile f(QQmlFile::urlToLocalFileOrQrc(url));
@@ -2037,6 +2044,11 @@ QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::loadModule(const QUrl
     }
 
     return newModule;
+}
+
+bool ExecutionEngine::diskCacheEnabled() const
+{
+    return (!disableDiskCache() && !debugger()) || forceDiskCache();
 }
 
 void ExecutionEngine::initQmlGlobalObject()

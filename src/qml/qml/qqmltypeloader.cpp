@@ -68,8 +68,6 @@
 #define ASSERT_LOADTHREAD()
 #endif
 
-DEFINE_BOOL_CONFIG_OPTION(disableDiskCache, QML_DISABLE_DISK_CACHE);
-DEFINE_BOOL_CONFIG_OPTION(forceDiskCache, QML_FORCE_DISK_CACHE);
 
 QT_BEGIN_NAMESPACE
 
@@ -772,7 +770,7 @@ bool QQmlTypeLoader::Blob::isDebugging() const
 
 bool QQmlTypeLoader::Blob::diskCacheEnabled() const
 {
-    return (!disableDiskCache() && !isDebugging()) || forceDiskCache();
+    return typeLoader()->engine()->handle()->diskCacheEnabled();
 }
 
 bool QQmlTypeLoader::Blob::qmldirDataAvailable(const QQmlRefPointer<QQmlQmldirData> &data, QList<QQmlError> *errors)
@@ -863,7 +861,10 @@ QQmlRefPointer<QQmlTypeData> QQmlTypeLoader::getType(const QUrl &unNormalizedUrl
         // TODO: if (compiledData == 0), is it safe to omit this insertion?
         m_typeCache.insert(url, typeData);
         QQmlMetaType::CachedUnitLookupError error = QQmlMetaType::CachedUnitLookupError::NoError;
-        if (const QQmlPrivate::CachedQmlUnit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(typeData->url(), &error)) {
+
+        if (const QQmlPrivate::CachedQmlUnit *cachedUnit = typeData->diskCacheEnabled()
+                ? QQmlMetaType::findCachedCompilationUnit(typeData->url(), &error)
+                : nullptr) {
             QQmlTypeLoader::loadWithCachedUnit(typeData, cachedUnit, mode);
         } else {
             typeData->setCachedUnitStatus(error);
@@ -922,7 +923,9 @@ QQmlRefPointer<QQmlScriptBlob> QQmlTypeLoader::getScript(const QUrl &unNormalize
         m_scriptCache.insert(url, scriptBlob);
 
         QQmlMetaType::CachedUnitLookupError error;
-        if (const QQmlPrivate::CachedQmlUnit *cachedUnit = QQmlMetaType::findCachedCompilationUnit(scriptBlob->url(), &error)) {
+        if (const QQmlPrivate::CachedQmlUnit *cachedUnit = scriptBlob->diskCacheEnabled()
+                ? QQmlMetaType::findCachedCompilationUnit(scriptBlob->url(), &error)
+                : nullptr) {
             QQmlTypeLoader::loadWithCachedUnit(scriptBlob, cachedUnit);
         } else {
             scriptBlob->setCachedUnitStatus(error);
