@@ -7,7 +7,7 @@
 qt_internal_add_module(QmlDom
     STATIC
     INTERNAL_MODULE
-    # NO_SYNC_QT # special case remove, it's actually needed for tests
+    NO_SYNC_QT
     SOURCES
         qqmldom_fwd_p.h
         qqmldom_global.h

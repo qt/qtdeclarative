@@ -1,7 +1,7 @@
 # Generated from domitem.pro.
 
 #####################################################################
-## tst_qmldomitem Binary:
+## tst_qmldomitem Test:
 #####################################################################
 
 qt_internal_add_test(tst_qmldomitem
@@ -10,8 +10,6 @@ qt_internal_add_test(tst_qmldomitem
     DEFINES
         QT_DEPRECATED_WARNINGS
     PUBLIC_LIBRARIES
-        Qt::Core
         Qt::QmlDevToolsPrivate
         Qt::QmlDomPrivate
-        Qt::Test
 )

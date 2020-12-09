@@ -31,7 +31,7 @@ qt_internal_add_test(tst_qquickdesignersupport
 )
 
 #### Keys ignored in scope 1:.:.:qquickdesignersupport.pro:<TRUE>:
-# DISTFILES = "data/TestComponent.qml" "data/test.qml" "data/componentTest.qml" "data/Component01.qml" "data/Component02.qml"
+# DISTFILES = "data/TestComponent.qml" "data/test.qml" "data/componentTest.qml" "data/Component01.qml" "data/Component02.qml" "data/bindingTest.qml"
 
 ## Scopes:
 #####################################################################

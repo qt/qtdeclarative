@@ -1,4 +1,4 @@
-QT = core qmldevtools-private testlib
+QT = core qmldevtools-private qmldom-private testlib
 TARGET = tst_qmldomstringdumper
 
 
@@ -7,6 +7,7 @@ INCLUDEPATH += ../../../../src/qmldom
 
 CONFIG += c++11 console
 CONFIG -= app_bundle
+CONFIG += testcase
 
 # The following define makes your compiler emit warnings if you use
 # any Qt feature that has been marked deprecated (the exact warnings

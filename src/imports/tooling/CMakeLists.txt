@@ -1,6 +1,6 @@
 # Generated from tooling.pro.
+# special case skip regeneration
 
-# special case begin
 set(qml_files
     "Component.qml"
     "Enum.qml"
@@ -28,6 +28,4 @@ qt6_target_qml_files(quicktooling
     FILES
         ${qml_files}
 )
-
-# special case end
 

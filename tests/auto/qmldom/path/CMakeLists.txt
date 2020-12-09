@@ -1,7 +1,7 @@
 # Generated from path.pro.
 
 #####################################################################
-## tst_qmldompath Binary:
+## tst_qmldompath Test:
 #####################################################################
 
 qt_internal_add_test(tst_qmldompath
@@ -10,8 +10,6 @@ qt_internal_add_test(tst_qmldompath
     DEFINES
         QT_DEPRECATED_WARNINGS
     PUBLIC_LIBRARIES
-        Qt::Core
         Qt::QmlDevToolsPrivate
         Qt::QmlDomPrivate
-        Qt::Test
 )
