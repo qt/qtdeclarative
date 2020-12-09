@@ -32,12 +32,14 @@ target_link_libraries(gallery_controls2 PUBLIC # special case
     Qt::Gui
     Qt::Quick
     Qt::QuickControls2
-# special case begin
-    # Work around QTBUG-86533
-    Qt::QuickTemplates2
-# special case end
 )
-
+# special case begin
+if(UNIX AND NOT APPLE AND CMAKE_CROSSCOMPILING)
+    find_package(Qt6 COMPONENTS QuickTemplates2)
+     # Work around QTBUG-86533
+    target_link_libraries(gallery_controls2 PRIVATE Qt::QuickTemplates2)
+endif()
+# special case end
 
 # Resources:
 set(qmake_immediate_resource_files
