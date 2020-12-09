@@ -66,7 +66,7 @@ qt_feature("quick-particles" PRIVATE
     SECTION "Qt Quick"
     LABEL "Particle support"
     PURPOSE "Provides a particle system."
-    CONDITION TARGET Qt::Gui AND QT_FEATURE_quick_shadereffect AND QT_FEATURE_quick_sprite AND QT_FEATURE_opengl
+    CONDITION TARGET Qt::Gui AND QT_FEATURE_quick_shadereffect AND QT_FEATURE_quick_sprite
 )
 qt_feature("quick-path" PRIVATE
     SECTION "Qt Quick"

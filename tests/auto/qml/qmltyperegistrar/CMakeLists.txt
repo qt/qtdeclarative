@@ -24,6 +24,7 @@ target_compile_definitions(tst_qmltyperegistrar PRIVATE BUILD_WITH_CMAKE) # spec
 # QML_FOREIGN_METATYPES = "foreign/foreign_metatypes.json"
 # QML_IMPORT_NAME = "QmlTypeRegistrarTest"
 # QML_IMPORT_VERSION = "1.0"
+# QML_PAST_MAJOR_VERSIONS = "0"
 # TEMPLATE = "app"
 
 ## Scopes:
@@ -31,8 +32,8 @@ target_compile_definitions(tst_qmltyperegistrar PRIVATE BUILD_WITH_CMAKE) # spec
 
 set_target_properties(tst_qmltyperegistrar PROPERTIES
     QT_QML_MODULE_VERSION 1.0
+    QT_QML_PAST_MAJOR_VERSIONS 0
     QT_QML_MODULE_URI QmlTypeRegistrarTest
-    QT_QML_PAST_MAJOR_VERSIONS 0 # special case
     QT_QMLTYPES_FILENAME tst_qmltyperegistrar.qmltypes
 )
 
