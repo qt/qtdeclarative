@@ -120,7 +120,7 @@ static bool beginDeferred(QQmlEnginePrivate *enginePriv, const QQmlProperty &pro
 void beginDeferred(QObject *object, const QString &property)
 {
     QQmlData *data = QQmlData::get(object);
-    if (data && !data->deferredData.isEmpty() && !data->wasDeleted(object)) {
+    if (data && !data->deferredData.isEmpty() && !data->wasDeleted(object) && data->context) {
         QQmlEnginePrivate *ep = QQmlEnginePrivate::get(data->context->engine());
 
         QQmlComponentPrivate::DeferredState *state = new QQmlComponentPrivate::DeferredState;
