@@ -44,7 +44,8 @@
 #include "dumpastvisitor.h"
 #include "restructureastvisitor.h"
 
-bool parseFile(const QString& filename, bool inplace, bool verbose, bool sortImports, bool force, const QString& newline)
+bool parseFile(const QString &filename, bool inplace, bool verbose, bool force,
+               const QString &newline)
 {
     QFile file(filename);
 
@@ -90,11 +91,8 @@ bool parseFile(const QString& filename, bool inplace, bool verbose, bool sortImp
         qWarning().noquote() << orphaned << "comments are orphans.";
     }
 
-    if (verbose && sortImports)
-        qWarning().noquote() << "Sorting imports";
-
     // Do the actual restructuring
-    RestructureAstVisitor restructure(parser.rootNode(), sortImports);
+    RestructureAstVisitor restructure(parser.rootNode());
 
     // Turn AST back into source code
     if (verbose)
@@ -182,9 +180,6 @@ int main(int argc, char *argv[])
     parser.addOption(QCommandLineOption({"V", "verbose"},
                      QStringLiteral("Verbose mode. Outputs more detailed information.")));
 
-    parser.addOption(QCommandLineOption({"n", "no-sort"},
-                     QStringLiteral("Do not sort imports.")));
-
     parser.addOption(QCommandLineOption({"i", "inplace"},
                      QStringLiteral("Edit file in-place instead of outputting to stdout.")));
 
@@ -225,15 +220,15 @@ int main(int argc, char *argv[])
             if (file.isEmpty())
                 continue;
 
-            if (!parseFile(file, true, parser.isSet("verbose"), !parser.isSet("no-sort"),
-                           parser.isSet("force"), parser.value("newline")))
+            if (!parseFile(file, true, parser.isSet("verbose"),
+                           parser.isSet("force"),
+                           parser.value("newline")))
                 success = false;
         }
     } else {
         for (const QString &file : parser.positionalArguments()) {
             if (!parseFile(file, parser.isSet("inplace"), parser.isSet("verbose"),
-                           !parser.isSet("no-sort"), parser.isSet("force"),
-                           parser.value("newline")))
+                           parser.isSet("force"), parser.value("newline")))
                 success = false;
         }
     }

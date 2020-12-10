@@ -53,7 +53,7 @@ private Q_SLOTS:
 
 private:
     QString readTestFile(const QString &path);
-    QString runQmlformat(const QString &fileToFormat, bool sortImports, bool shouldSucceed, const QString &newlineFormat = "native");
+    QString runQmlformat(const QString &fileToFormat, bool shouldSucceed, const QString &newlineFormat = "native");
 
     QString m_qmlformatPath;
     QStringList m_excludedDirs;
@@ -179,16 +179,16 @@ QString TestQmlformat::readTestFile(const QString &path)
 void TestQmlformat::testLineEndings()
 {
     // macos
-    const QString macosContents = runQmlformat(testFile("Example1.formatted.qml"), false, true, "macos");
+    const QString macosContents = runQmlformat(testFile("Example1.formatted.qml"), true, "macos");
     QVERIFY(!macosContents.contains("\n"));
     QVERIFY(macosContents.contains("\r"));
 
     // windows
-    const QString windowsContents = runQmlformat(testFile("Example1.formatted.qml"), false, true, "windows");
+    const QString windowsContents = runQmlformat(testFile("Example1.formatted.qml"), true, "windows");
     QVERIFY(windowsContents.contains("\r\n"));
 
     // unix
-    const QString unixContents = runQmlformat(testFile("Example1.formatted.qml"), false, true, "unix");
+    const QString unixContents = runQmlformat(testFile("Example1.formatted.qml"), true, "unix");
     QVERIFY(unixContents.contains("\n"));
     QVERIFY(!unixContents.contains("\r"));
 }
@@ -197,58 +197,54 @@ void TestQmlformat::testFormat_data()
 {
     QTest::addColumn<QString>("file");
     QTest::addColumn<QString>("fileFormatted");
-    QTest::addColumn<bool>("sortImports");
     QTest::addColumn<bool>("shouldSucceed");
 
-    QTest::newRow("example1 (sorted)") << "Example1.qml"
-                                       << "Example1.formatted.qml" << true << true;
-    QTest::newRow("example1 (not sorted)") << "Example1.qml"
-                                           << "Example1.formatted.nosort.qml" << false << true;
-    QTest::newRow("annotation (sorted)") << "Annotations.qml"
-                                         << "Annotations.formatted.qml" << true << true;
-    QTest::newRow("annotation (not sorted)") << "Annotations.qml"
-                                             << "Annotations.formatted.nosort.qml" << false << true;
+    QTest::newRow("example1")
+            << "Example1.qml"
+            << "Example1.formatted.qml" << true;
+    QTest::newRow("annotation")
+            << "Annotations.qml"
+            << "Annotations.formatted.qml" << true;
     QTest::newRow("front inline") << "FrontInline.qml"
-                                  << "FrontInline.formatted.qml" << false << true;
+                                  << "FrontInline.formatted.qml" << true;
     QTest::newRow("if blocks") << "IfBlocks.qml"
-                               << "IfBlocks.formatted.qml" << false << true;
+                               << "IfBlocks.formatted.qml" << true;
     QTest::newRow("read-only properties") << "readOnlyProps.qml"
-                                          << "readOnlyProps.formatted.qml" << false << true;
+                                          << "readOnlyProps.formatted.qml" << true;
     QTest::newRow("states and transitions")
             << "statesAndTransitions.qml"
-            << "statesAndTransitions.formatted.qml" << false << true;
+            << "statesAndTransitions.formatted.qml" << true;
     QTest::newRow("large bindings") << "largeBindings.qml"
-                                    << "largeBindings.formatted.qml" << false << true;
+                                    << "largeBindings.formatted.qml" << true;
     QTest::newRow("verbatim strings") << "verbatimString.qml"
-                                      << "verbatimString.formatted.qml" << false << true;
+                                      << "verbatimString.formatted.qml" << true;
     QTest::newRow("inline components") << "inlineComponents.qml"
-                                       << "inlineComponents.formatted.qml" << false << true;
+                                       << "inlineComponents.formatted.qml" << true;
     QTest::newRow("nested ifs") << "nestedIf.qml"
-                                << "nestedIf.formatted.qml" << false << true;
+                                << "nestedIf.formatted.qml" << true;
     QTest::newRow("QTBUG-85003") << "QtBug85003.qml"
-                                 << "QtBug85003.formatted.qml" << false << true;
+                                 << "QtBug85003.formatted.qml" << true;
     QTest::newRow("nested functions") << "nestedFunctions.qml"
-                                      << "nestedFunctions.formatted.qml" << false << true;
+                                      << "nestedFunctions.formatted.qml" << true;
     QTest::newRow("multiline comments") << "multilineComment.qml"
-                                        << "multilineComment.formatted.qml" << false << true;
+                                        << "multilineComment.formatted.qml" << true;
     QTest::newRow("for of") << "forOf.qml"
-                            << "forOf.formatted.qml" << false << true;
+                            << "forOf.formatted.qml" << true;
     QTest::newRow("property names") << "propertyNames.qml"
-                                    << "propertyNames.formatted.qml" << false << true;
+                                    << "propertyNames.formatted.qml" << true;
     QTest::newRow("empty object") << "emptyObject.qml"
-                                  << "emptyObject.formatted.qml" << false << true;
+                                  << "emptyObject.formatted.qml" << true;
     QTest::newRow("arrow functions") << "arrowFunctions.qml"
-                                     << "arrowFunctions.formatted.qml" << false << true;
+                                     << "arrowFunctions.formatted.qml" << true;
 }
 
 void TestQmlformat::testFormat()
 {
     QFETCH(QString, file);
     QFETCH(QString, fileFormatted);
-    QFETCH(bool, sortImports);
     QFETCH(bool, shouldSucceed);
 
-    QCOMPARE(runQmlformat(testFile(file), sortImports, shouldSucceed), readTestFile(fileFormatted));
+    QCOMPARE(runQmlformat(testFile(file), shouldSucceed), readTestFile(fileFormatted));
 }
 
 #if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
@@ -273,14 +269,14 @@ void TestQmlformat::testExample()
 {
     QFETCH(QString, file);
     const bool isInvalid = isInvalidFile(QFileInfo(file));
-    QString output = runQmlformat(file, true, !isInvalid);
+    QString output = runQmlformat(file, !isInvalid);
 
     if (!isInvalid)
         QVERIFY(!output.isEmpty());
 }
 #endif
 
-QString TestQmlformat::runQmlformat(const QString &fileToFormat, bool sortImports, bool shouldSucceed, const QString &newlineFormat)
+QString TestQmlformat::runQmlformat(const QString &fileToFormat, bool shouldSucceed, const QString &newlineFormat)
 {
     // Copy test file to temporary location
     QTemporaryDir tempDir;
@@ -290,9 +286,6 @@ QString TestQmlformat::runQmlformat(const QString &fileToFormat, bool sortImport
     QStringList args;
     args << "-i";
     args << tempFile;
-
-    if (!sortImports)
-        args << "-n";
 
     args << "-l" << newlineFormat;
 

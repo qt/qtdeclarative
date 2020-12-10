@@ -30,7 +30,7 @@
 
 #include <QList>
 
-RestructureAstVisitor::RestructureAstVisitor(Node *rootNode, bool sortImports) : m_sortImports(sortImports)
+RestructureAstVisitor::RestructureAstVisitor(Node *rootNode)
 {
     rootNode->accept(this);
 }
@@ -67,43 +67,6 @@ static QString parseUiQualifiedId(UiQualifiedId *id)
     }
 
     return name;
-}
-
-void RestructureAstVisitor::endVisit(UiHeaderItemList *node)
-{
-    QList<Node *> correctOrder;
-
-    auto imports = findKind<UiImport>(node);
-
-    if (!m_sortImports)
-        return;
-
-    // Sort imports
-    std::sort(imports.begin(), imports.end(), [](UiImport *a, UiImport *b)
-    {
-        auto nameA = a->fileName.isEmpty() ? parseUiQualifiedId(a->importUri)
-                                           : a->fileName.toString();
-        auto nameB = b->fileName.isEmpty() ? parseUiQualifiedId(b->importUri)
-                                           : b->fileName.toString();
-
-        return nameA < nameB;
-    });
-
-    // Add imports
-    for (auto *import : imports)
-        correctOrder.append(import);
-
-    // Add all the other items
-    for (auto *item = node; item != nullptr; item = item->next) {
-        if (!correctOrder.contains(item->headerItem))
-            correctOrder.append(item->headerItem);
-    }
-
-    // Rebuild member list from correctOrder
-    for (auto *item = node; item != nullptr; item = item->next) {
-        item->headerItem = correctOrder.front();
-        correctOrder.pop_front();
-    }
 }
 
 void RestructureAstVisitor::endVisit(UiObjectMemberList *node)

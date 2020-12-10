@@ -37,14 +37,11 @@ using namespace QQmlJS::AST;
 class RestructureAstVisitor : protected Visitor
 {
 public:
-    RestructureAstVisitor(Node *rootNode, bool sortImports);
+    RestructureAstVisitor(Node *rootNode);
 
     void throwRecursionDepthError() override {}
 
     void endVisit(UiObjectMemberList *node) override;
-    void endVisit(UiHeaderItemList *node) override;
-private:
-    bool m_sortImports = false;
 };
 
 #endif // RESTRUCTUREASTVISITOR_H
