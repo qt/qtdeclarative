@@ -125,7 +125,6 @@ struct QQmlMetaTypeData
     bool registerModuleTypes(const QString &uri);
 
     QSet<int> interfaces;
-    QSet<int> objects;
     QSet<int> lists;
 
     QList<QQmlPrivate::AutoParentFunction> parentFunctions;
