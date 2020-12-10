@@ -201,21 +201,17 @@ void TestQmlformat::testFormat_data()
     QTest::addColumn<QString>("fileFormatted");
     QTest::addColumn<QStringList>("args");
 
-    QTest::newRow("example1 (sorted)") << "Example1.qml"
-                                       << "Example1.formatted.qml" << QStringList {};
-    QTest::newRow("example1 (not sorted)")
+    QTest::newRow("example1")
             << "Example1.qml"
-            << "Example1.formatted.nosort.qml" << QStringList { "-n" };
+            << "Example1.formatted.qml" << QStringList {};
     QTest::newRow("example1 (tabs)") << "Example1.qml"
                                      << "Example1.formatted.tabs.qml" << QStringList { "-t" };
     QTest::newRow("example1 (two spaces)")
             << "Example1.qml"
             << "Example1.formatted.2spaces.qml" << QStringList { "-w", "2" };
-    QTest::newRow("annotation (sorted)") << "Annotations.qml"
-                                         << "Annotations.formatted.qml" << QStringList {};
-    QTest::newRow("annotation (not sorted)")
+    QTest::newRow("annotation")
             << "Annotations.qml"
-            << "Annotations.formatted.nosort.qml" << QStringList { "-n" };
+            << "Annotations.formatted.qml" << QStringList {};
     QTest::newRow("front inline") << "FrontInline.qml"
                                   << "FrontInline.formatted.qml" << QStringList {};
     QTest::newRow("if blocks") << "IfBlocks.qml"
