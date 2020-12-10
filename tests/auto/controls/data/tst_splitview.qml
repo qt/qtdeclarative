@@ -66,7 +66,7 @@ TestCase {
         // For the serialization tests.
         Qt.application.name = "qtquickcontrols2-splitview-auto-test"
         Qt.application.domain = "org.qt-project"
-        Qt.application.organization = "Qt Project"
+        Qt.application.organization = "QtProject"
     }
 
     function findHandles(splitView) {
