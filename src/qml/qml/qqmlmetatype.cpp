@@ -1088,7 +1088,7 @@ QList<QQmlPrivate::AutoParentFunction> QQmlMetaType::parentFunctions()
 
 QObject *QQmlMetaType::toQObject(const QVariant &v, bool *ok)
 {
-    if (!isQObject(v.userType())) {
+    if (!v.metaType().flags().testFlag(QMetaType::PointerToQObject)) {
         if (ok) *ok = false;
         return nullptr;
     }

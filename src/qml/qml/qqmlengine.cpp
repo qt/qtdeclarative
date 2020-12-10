@@ -2196,14 +2196,7 @@ bool QQmlEnginePrivate::isQObject(int t)
 
 QObject *QQmlEnginePrivate::toQObject(const QVariant &v, bool *ok) const
 {
-    Locker locker(this);
-    int t = v.userType();
-    if (t == QMetaType::QObjectStar || m_compositeTypes.contains(t)) {
-        if (ok) *ok = true;
-        return *(QObject *const *)(v.constData());
-    } else {
-        return QQmlMetaType::toQObject(v, ok);
-    }
+    return QQmlMetaType::toQObject(v, ok);
 }
 
 QQmlMetaType::TypeCategory QQmlEnginePrivate::typeCategory(int t) const
