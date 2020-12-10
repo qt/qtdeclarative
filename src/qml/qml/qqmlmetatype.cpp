@@ -379,7 +379,6 @@ QQmlType QQmlMetaType::registerInterface(const QQmlPrivate::RegisterInterface &t
     data->idToType.insert(priv->listId.id(), priv);
 
     data->interfaces.insert(type.typeId.id());
-    data->lists.insert(type.listId.id());
 
     return QQmlType(priv);
 }
@@ -477,7 +476,6 @@ void addTypeToData(QQmlTypePrivate *type, QQmlMetaTypeData *data)
 
     if (type->listId.isValid()) {
         data->idToType.insert(type->listId.id(), type);
-        data->lists.insert(type->listId.id());
     }
 
     if (!type->module.isEmpty()) {
@@ -1189,11 +1187,11 @@ QQmlMetaType::TypeCategory QQmlMetaType::typeCategory(int userType)
     QMetaType type(userType);
     if (type.flags().testFlag(QMetaType::PointerToQObject))
         return Object;
+    else if (type.flags().testFlag(QMetaType::IsQmlList))
+        return List;
 
     QQmlMetaTypeDataPtr data;
     if (data->qmlLists.contains(userType))
-        return List;
-    else if (data->lists.contains(userType))
         return List;
     else
         return Unknown;
@@ -1226,10 +1224,13 @@ const char *QQmlMetaType::interfaceIId(int userType)
 
 bool QQmlMetaType::isList(int userType)
 {
+    QMetaType type(userType);
+    if (type.flags().testFlag(QMetaType::IsQmlList))
+        return true;
     QQmlMetaTypeDataPtr data;
     if (data->qmlLists.contains(userType))
         return true;
-    return data->lists.contains(userType);
+    return false;
 }
 
 /*!
