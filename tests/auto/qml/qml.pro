@@ -6,6 +6,7 @@ METATYPETESTS += \
 
 PUBLICTESTS += \
     parserstress \
+    qjsprimitivevalue \
     qjsvalueiterator \
     qjsonbinding \
     qqmlfile \

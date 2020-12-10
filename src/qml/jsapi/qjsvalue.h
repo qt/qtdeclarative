@@ -53,6 +53,7 @@ class QVariant;
 class QObject;
 struct QMetaObject;
 class QDateTime;
+class QJSPrimitiveValue;
 
 typedef QList<QJSValue> QJSValueList;
 namespace QV4 {
@@ -106,6 +107,8 @@ public:
 #endif
 
     QJSValue &operator=(const QJSValue &other);
+
+    explicit QJSValue(QJSPrimitiveValue &&value);
 
     bool isBool() const;
     bool isNumber() const;

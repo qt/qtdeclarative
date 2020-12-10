@@ -42,6 +42,7 @@
 #include <QtCore/qdatetime.h>
 #include "qjsengine.h"
 #include "qjsvalue.h"
+#include "qjsprimitivevalue.h"
 #include "qjsvalue_p.h"
 #include "qv4value_p.h"
 #include "qv4object_p.h"
@@ -855,6 +856,32 @@ QJSValue& QJSValue::operator=(const QJSValue& other)
         QJSValuePrivate::setValue(this, QJSValuePrivate::asReturnedValue(&other));
 
     return *this;
+}
+
+QJSValue::QJSValue(QJSPrimitiveValue &&value)
+{
+    switch (value.type()) {
+    case QJSPrimitiveValue::Undefined:
+        d = QV4::Encode::undefined();
+        return;
+    case QJSPrimitiveValue::Null:
+        d = QV4::Encode::null();
+        return;
+    case QJSPrimitiveValue::Boolean:
+        d = QV4::Encode(value.asBoolean());
+        return;
+    case QJSPrimitiveValue::Integer:
+        d = QV4::Encode(value.asInteger());
+        return;
+    case QJSPrimitiveValue::Double:
+        d = QV4::Encode(value.asDouble());
+        return;
+    case QJSPrimitiveValue::String:
+        QJSValuePrivate::setString(this, std::move(std::get<QString>(value.d)));
+        return;
+    }
+
+    Q_UNREACHABLE();
 }
 
 static bool js_equal(const QString &string, const QV4::Value &value)

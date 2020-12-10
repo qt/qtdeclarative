@@ -24,6 +24,7 @@
 }
 
 HEADERS += \
+    $$PWD/qjsnumbercoercion.h \
     $$PWD/qqmlapiversion_p.h \
     $$PWD/qqmljsdiagnosticmessage_p.h \
     $$PWD/qqmljsfixedpoolarray_p.h \
@@ -34,3 +35,6 @@ HEADERS += \
     $$PWD/qv4compileddata_p.h \
     $$PWD/qv4staticvalue_p.h \
     $$PWD/qv4stringtoarrayindex_p.h
+
+SOURCES += \
+    $$PWD/qjsnumbercoercion.cpp

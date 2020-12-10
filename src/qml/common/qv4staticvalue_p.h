@@ -50,6 +50,8 @@
 // We mean it.
 //
 
+#include <qjsnumbercoercion.h>
+
 #include <QtCore/private/qnumeric_p.h>
 #include <cstring>
 
@@ -68,53 +70,6 @@ namespace QV4 {
 // will return it in a register on all platforms.
 // It will be returned in rax on x64, [eax,edx] on x86 and [r0,r1] on arm
 typedef quint64 ReturnedValue;
-
-struct Double {
-    quint64 d;
-
-    Double(double dbl) {
-        memcpy(&d, &dbl, sizeof(double));
-    }
-
-    int sign() const {
-        return (d >> 63) ? -1 : 1;
-    }
-
-    bool isDenormal() const {
-        return static_cast<int>((d << 1) >> 53) == 0;
-    }
-
-    int exponent() const {
-        return static_cast<int>((d << 1) >> 53) - 1023;
-    }
-
-    quint64 significant() const {
-        quint64 m = (d << 12) >> 12;
-        if (!isDenormal())
-            m |= (static_cast<quint64>(1) << 52);
-        return m;
-    }
-
-    static int toInt32(double d) {
-        int i = static_cast<int>(d);
-        if (i == d)
-            return i;
-        return Double(d).toInt32();
-    }
-
-    int toInt32() {
-        int e = exponent() - 52;
-        if (e < 0) {
-            if (e <= -53)
-                return 0;
-            return sign() * static_cast<int>(significant() >> -e);
-        } else {
-            if (e > 31)
-                return 0;
-            return sign() * (static_cast<int>(significant()) << e);
-        }
-    }
-};
 
 struct StaticValue
 {
@@ -440,13 +395,15 @@ struct StaticValue
         case Integer_Type:
             return int_32();
         case Double_Type:
-            return Double::toInt32(doubleValue());
+            return QJSNumberCoercion::toInteger(doubleValue());
         case Empty_Type:
         case Undefined_Type:
         case Managed_Type:
-            break;
+            return 0; // Coercion of NaN to int, results in 0;
         }
-        return Double::toInt32(std::numeric_limits<double>::quiet_NaN());
+
+        Q_UNREACHABLE();
+        return 0;
     }
 
     ReturnedValue *data_ptr() { return &_val; }
@@ -488,7 +445,7 @@ struct StaticValue
 
     static int toInt32(double d)
     {
-        return Double::toInt32(d);
+        return QJSNumberCoercion::toInteger(d);
     }
 
     static unsigned int toUInt32(double d)

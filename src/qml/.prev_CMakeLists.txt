@@ -85,6 +85,7 @@ qt_internal_add_module(Qml
         ../3rdparty/masm/yarr/YarrPattern.cpp ../3rdparty/masm/yarr/YarrPattern.h
         ../3rdparty/masm/yarr/YarrSyntaxChecker.cpp ../3rdparty/masm/yarr/YarrSyntaxChecker.h
         ../3rdparty/masm/yarr/YarrUnicodeProperties.h
+        common/qjsnumbercoercion.cpp common/qjsnumbercoercion.h
         common/qqmlapiversion_p.h
         common/qqmljsdiagnosticmessage_p.h
         common/qqmljsfixedpoolarray_p.h
@@ -113,6 +114,7 @@ qt_internal_add_module(Qml
         debugger/qqmlprofiler_p.h
         inlinecomponentutils_p.h
         jsapi/qjsengine.cpp jsapi/qjsengine.h jsapi/qjsengine_p.h
+        jsapi/qjsprimitivevalue.cpp jsapi/qjsprimitivevalue.h
         jsapi/qjsvalue.cpp jsapi/qjsvalue.h jsapi/qjsvalue_p.h
         jsapi/qjsvalueiterator.cpp jsapi/qjsvalueiterator.h jsapi/qjsvalueiterator_p.h
         jsruntime/qv4argumentsobject.cpp jsruntime/qv4argumentsobject_p.h

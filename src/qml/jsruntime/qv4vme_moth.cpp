@@ -425,7 +425,7 @@ static bool compareEqualInt(QV4::Value &accumulator, QV4::Value lhs, int rhs)
                 d = val.toNumberImpl(); \
                 CHECK_EXCEPTION; \
             } \
-            i = Double::toInt32(d); \
+            i = QJSNumberCoercion::toInteger(d); \
         } \
     } while (false)
 

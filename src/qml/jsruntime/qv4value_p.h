@@ -434,9 +434,9 @@ inline int Value::toInt32() const
         return int_32();
 
     if (Q_LIKELY(isDouble()))
-        return Double::toInt32(doubleValue());
+        return QJSNumberCoercion::toInteger(doubleValue());
 
-    return Double::toInt32(toNumberImpl());
+    return QJSNumberCoercion::toInteger(toNumberImpl());
 }
 
 inline unsigned int Value::toUInt32() const

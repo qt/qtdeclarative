@@ -89,9 +89,9 @@ class Q_AUTOTEST_EXPORT QJSValuePrivate
         return (m & IsString) ? reinterpret_cast<QString *>(m & ~IsString) : nullptr;
     }
 
-    static QV4::ReturnedValue encode(const QString &string)
+    static QV4::ReturnedValue encode(QString string)
     {
-        const quintptr m = quintptr(new QString(string)) | IsString;
+        const quintptr m = quintptr(new QString(std::move(string))) | IsString;
         return encodeRawValue(m);
     }
 
@@ -160,9 +160,9 @@ public:
         return QV4::Encode::undefined();
     }
 
-    static void setString(QJSValue *jsval, const QString &s)
+    static void setString(QJSValue *jsval, QString s)
     {
-        jsval->d = encode(s);
+        jsval->d = encode(std::move(s));
     }
 
     static void setValue(QJSValue *jsval, const QV4::Value &v)

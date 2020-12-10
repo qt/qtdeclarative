@@ -6,6 +6,7 @@ qt_exclude_tool_directories_from_default_target(
 )
 
 add_subdirectory(parserstress)
+add_subdirectory(qjsprimitivevalue)
 add_subdirectory(qjsvalueiterator)
 add_subdirectory(qjsonbinding)
 add_subdirectory(qqmlfile)

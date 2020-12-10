@@ -63,7 +63,7 @@ static inline int toInt32(Value v)
     Q_ASSERT(v.isNumber());
     if (v.isInteger())
         return v.integerValue();
-    return Double::toInt32(v.doubleValue());
+    return QJSNumberCoercion::toInteger(v.doubleValue());
 }
 
 static inline double toDouble(Value v)
