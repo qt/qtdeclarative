@@ -64,21 +64,6 @@
 #include <qtqmlglobal.h>
 #include <private/qtqmlglobal_p.h>
 
-#if defined(Q_CC_MSVC)
-#include <float.h>
-#include <math.h>
-
-namespace std {
-
-inline bool isinf(double d) { return !_finite(d) && !_isnan(d); }
-inline bool isnan(double d) { return !!_isnan(d); }
-inline bool isfinite(double d) { return _finite(d); }
-
-} // namespace std
-
-inline double trunc(double d) { return d > 0 ? floor(d) : ceil(d); }
-#endif
-
 // Do certain things depending on whether the JIT is enabled or disabled
 
 #if QT_CONFIG(qml_jit)
