@@ -533,9 +533,9 @@ ReturnedValue StringPrototype::method_lastIndexOf(const FunctionObject *b, const
     if (std::isnan(position))
         position = +qInf();
     else
-        position = trunc(position);
+        position = std::trunc(position);
 
-    int pos = trunc(qMin(qMax(position, 0.0), double(value.length())));
+    int pos = std::trunc(qMin(qMax(position, 0.0), double(value.length())));
     if (!searchString.isEmpty() && pos == value.length())
         --pos;
     if (searchString.isNull() && pos == 0)
