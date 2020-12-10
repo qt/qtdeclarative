@@ -174,6 +174,9 @@ protected:
     void hoverLeaveEvent(QHoverEvent *event) override;
 #endif
 
+    void classBegin() override;
+    void componentComplete() override;
+
 #if QT_CONFIG(accessibility)
     void accessibilityActiveChanged(bool active) override;
     QAccessible::Role accessibleRole() const override;

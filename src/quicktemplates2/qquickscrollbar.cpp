@@ -388,6 +388,9 @@ void QQuickScrollBarPrivate::updateHover(const QPointF &pos, std::optional<bool>
 QQuickScrollBar::QQuickScrollBar(QQuickItem *parent)
     : QQuickControl(*(new QQuickScrollBarPrivate), parent)
 {
+    Q_D(QQuickScrollBar);
+    d->decreaseVisual = new QQuickIndicatorButton(this);
+    d->increaseVisual = new QQuickIndicatorButton(this);
     setKeepMouseGrab(true);
     setAcceptedMouseButtons(Qt::LeftButton);
 #if QT_CONFIG(quicktemplates2_multitouch)
@@ -771,16 +774,12 @@ qreal QQuickScrollBar::visualPosition() const
 QQuickIndicatorButton *QQuickScrollBar::decreaseVisual()
 {
     Q_D(QQuickScrollBar);
-    if (!d->decreaseVisual)
-        d->decreaseVisual = new QQuickIndicatorButton(this);
     return d->decreaseVisual;
 }
 
 QQuickIndicatorButton *QQuickScrollBar::increaseVisual()
 {
     Q_D(QQuickScrollBar);
-    if (!d->increaseVisual)
-        d->increaseVisual = new QQuickIndicatorButton(this);
     return d->increaseVisual;
 }
 
@@ -853,6 +852,27 @@ void QQuickScrollBar::hoverLeaveEvent(QHoverEvent *event)
     QQuickControl::hoverLeaveEvent(event);
 
     d->updateHover(QPoint(), false);    //position is not needed when we force it to unhover
+}
+
+void QQuickScrollBar::classBegin()
+{
+    Q_D(QQuickScrollBar);
+    QQuickControl::classBegin();
+
+    QQmlContext *context = qmlContext(this);
+    if (context) {
+        QQmlEngine::setContextForObject(d->decreaseVisual, context);
+        QQmlEngine::setContextForObject(d->increaseVisual, context);
+    }
+}
+
+void QQuickScrollBar::componentComplete()
+{
+    Q_D(QQuickScrollBar);
+    QQuickIndicatorButtonPrivate::get(d->decreaseVisual)->executeIndicator(true);
+    QQuickIndicatorButtonPrivate::get(d->increaseVisual)->executeIndicator(true);
+
+    QQuickControl::componentComplete();
 }
 
 #if QT_CONFIG(accessibility)
