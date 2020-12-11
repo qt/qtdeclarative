@@ -157,3 +157,4 @@ qt.conf
 *.qmlc
 .qmlcache
 codeattributions.qdoc
+*CMakeLists.txt.user
