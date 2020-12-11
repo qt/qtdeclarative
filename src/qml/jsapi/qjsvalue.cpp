@@ -43,6 +43,7 @@
 #include "qjsengine.h"
 #include "qjsvalue.h"
 #include "qjsprimitivevalue.h"
+#include "qjsmanagedvalue.h"
 #include "qjsvalue_p.h"
 #include "qv4value_p.h"
 #include "qv4object_p.h"
@@ -882,6 +883,20 @@ QJSValue::QJSValue(QJSPrimitiveValue &&value)
     }
 
     Q_UNREACHABLE();
+}
+
+QJSValue::QJSValue(QJSManagedValue &&value)
+{
+    if (!value.d) {
+        d = QV4::Encode::undefined();
+    } else if (value.d->isManaged()) {
+        QJSValuePrivate::setRawValue(this, value.d);
+        value.d = nullptr;
+    } else {
+        d = value.d->asReturnedValue();
+        QV4::PersistentValueStorage::free(value.d);
+        value.d = nullptr;
+    }
 }
 
 static bool js_equal(const QString &string, const QV4::Value &value)

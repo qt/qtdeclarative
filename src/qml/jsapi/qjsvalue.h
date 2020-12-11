@@ -61,6 +61,9 @@ namespace QV4 {
     struct Value;
 }
 
+class QJSPrimitiveValue;
+class QJSManagedValue;
+
 class Q_QML_EXPORT QJSValue
 {
 public:
@@ -109,6 +112,7 @@ public:
     QJSValue &operator=(const QJSValue &other);
 
     explicit QJSValue(QJSPrimitiveValue &&value);
+    explicit QJSValue(QJSManagedValue &&value);
 
     bool isBool() const;
     bool isNumber() const;

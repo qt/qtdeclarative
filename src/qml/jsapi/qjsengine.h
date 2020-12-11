@@ -46,7 +46,7 @@
 #include <QtCore/qsharedpointer.h>
 #include <QtCore/qobject.h>
 #include <QtQml/qjsvalue.h>
-
+#include <QtQml/qjsmanagedvalue.h>
 #include <QtQml/qqmldebug.h>
 
 QT_BEGIN_NAMESPACE
@@ -92,8 +92,21 @@ public:
     {
         return create(qMetaTypeId<T>(), &value);
     }
+
+    template <typename T>
+    inline QJSManagedValue toManagedValue(const T &value)
+    {
+        return createManaged(QMetaType::fromType<T>(), &value);
+    }
+
     template <typename T>
     inline T fromScriptValue(const QJSValue &value)
+    {
+        return qjsvalue_cast<T>(value);
+    }
+
+    template <typename T>
+    inline T fromManagedValue(const QJSManagedValue &value)
     {
         return qjsvalue_cast<T>(value);
     }
@@ -131,12 +144,17 @@ Q_SIGNALS:
     void uiLanguageChanged();
 
 private:
+    QJSManagedValue createManaged(QMetaType type, const void *ptr);
     QJSValue create(int type, const void *ptr);
 
+    static bool convertManaged(const QJSManagedValue &value, int type, void *ptr);
     static bool convertV2(const QJSValue &value, int type, void *ptr);
 
     template<typename T>
     friend inline T qjsvalue_cast(const QJSValue &);
+
+    template<typename T>
+    friend inline T qjsvalue_cast(const QJSManagedValue &);
 
 protected:
     QJSEngine(QJSEnginePrivate &dd, QObject *parent = nullptr);
@@ -163,8 +181,26 @@ T qjsvalue_cast(const QJSValue &value)
     return T();
 }
 
+template<typename T>
+T qjsvalue_cast(const QJSManagedValue &value)
+{
+    {
+        T t;
+        if (QJSEngine::convertManaged(value, qMetaTypeId<T>(), &t))
+            return t;
+    }
+
+    return qvariant_cast<T>(value.toVariant());
+}
+
 template <>
 inline QVariant qjsvalue_cast<QVariant>(const QJSValue &value)
+{
+    return value.toVariant();
+}
+
+template <>
+inline QVariant qjsvalue_cast<QVariant>(const QJSManagedValue &value)
 {
     return value.toVariant();
 }

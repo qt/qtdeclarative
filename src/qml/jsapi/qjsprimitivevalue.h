@@ -439,6 +439,7 @@ public:
     }
 
 private:
+    friend class QJSManagedValue;
     friend class QJSValue;
 
     constexpr bool asBoolean() const { return std::get<bool>(d); }

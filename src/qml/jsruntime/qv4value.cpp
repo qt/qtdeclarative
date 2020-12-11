@@ -122,100 +122,125 @@ double Value::toNumberImpl(Value val)
     }
 }
 
-QString Value::toQStringNoThrow() const
+static QString primitiveToQString(const Value *value)
 {
-    switch (type()) {
+    switch (value->type()) {
     case Value::Empty_Type:
         Q_ASSERT(!"empty Value encountered");
         Q_UNREACHABLE();
+        return QString();
     case Value::Undefined_Type:
         return QStringLiteral("undefined");
     case Value::Null_Type:
         return QStringLiteral("null");
     case Value::Boolean_Type:
-        if (booleanValue())
+        if (value->booleanValue())
             return QStringLiteral("true");
         else
             return QStringLiteral("false");
     case Value::Managed_Type:
+        Q_UNREACHABLE();
+        return QString();
+    case Value::Integer_Type: {
+        QString str;
+        RuntimeHelpers::numberToString(&str, (double)value->int_32(), 10);
+        return str;
+    }
+    case Value::Double_Type: {
+        QString str;
+        RuntimeHelpers::numberToString(&str, value->doubleValue(), 10);
+        return str;
+    }
+    } // switch
+
+    Q_UNREACHABLE();
+    return QString();
+}
+
+
+QString Value::toQStringNoThrow() const
+{
+    if (isManaged()) {
         if (String *s = stringValue())
             return s->toQString();
         if (Symbol *s = symbolValue())
             return s->descriptiveString();
-        {
-            Q_ASSERT(isObject());
-            Scope scope(objectValue()->engine());
-            ScopedValue ex(scope);
-            bool caughtException = false;
-            ScopedValue prim(scope, RuntimeHelpers::toPrimitive(*this, STRING_HINT));
+
+        Q_ASSERT(isObject());
+        Scope scope(objectValue()->engine());
+        ScopedValue ex(scope);
+        bool caughtException = false;
+        ScopedValue prim(scope, RuntimeHelpers::toPrimitive(*this, STRING_HINT));
+        if (scope.hasException()) {
+            ex = scope.engine->catchException();
+            caughtException = true;
+        } else if (prim->isPrimitive()) {
+            return prim->toQStringNoThrow();
+        }
+
+        // Can't nest try/catch due to CXX ABI limitations for foreign exception nesting.
+        if (caughtException) {
+            ScopedValue prim(scope, RuntimeHelpers::toPrimitive(ex, STRING_HINT));
             if (scope.hasException()) {
                 ex = scope.engine->catchException();
-                caughtException = true;
             } else if (prim->isPrimitive()) {
-                    return prim->toQStringNoThrow();
+                return prim->toQStringNoThrow();
             }
-            // Can't nest try/catch due to CXX ABI limitations for foreign exception nesting.
-            if (caughtException) {
-                ScopedValue prim(scope, RuntimeHelpers::toPrimitive(ex, STRING_HINT));
-                if (scope.hasException()) {
-                    ex = scope.engine->catchException();
-                } else if (prim->isPrimitive()) {
-                    return prim->toQStringNoThrow();
-                }
-            }
-            return QString();
         }
-    case Value::Integer_Type: {
-        QString str;
-        RuntimeHelpers::numberToString(&str, (double)int_32(), 10);
-        return str;
+
+        return QString();
     }
-    default: { // double
-        QString str;
-        RuntimeHelpers::numberToString(&str, doubleValue(), 10);
-        return str;
-    }
-    } // switch
+
+    return primitiveToQString(this);
 }
 
 QString Value::toQString() const
 {
-    switch (type()) {
-    case Value::Empty_Type:
-        Q_ASSERT(!"empty Value encountered");
-        Q_UNREACHABLE();
-    case Value::Undefined_Type:
-        return QStringLiteral("undefined");
-    case Value::Null_Type:
-        return QStringLiteral("null");
-    case Value::Boolean_Type:
-        if (booleanValue())
-            return QStringLiteral("true");
-        else
-            return QStringLiteral("false");
-    case Value::Managed_Type:
-        if (String *s = stringValue()) {
+    if (isManaged()) {
+        if (String *s = stringValue())
             return s->toQString();
-        } else if (isSymbol()) {
+
+        if (isSymbol()) {
             static_cast<const Managed *>(this)->engine()->throwTypeError();
             return QString();
-        } else {
-            Q_ASSERT(isObject());
-            Scope scope(objectValue()->engine());
-            ScopedValue prim(scope, RuntimeHelpers::toPrimitive(*this, STRING_HINT));
-            return prim->toQString();
         }
-    case Value::Integer_Type: {
-        QString str;
-        RuntimeHelpers::numberToString(&str, (double)int_32(), 10);
-        return str;
+
+        Q_ASSERT(isObject());
+        Scope scope(objectValue()->engine());
+        ScopedValue prim(scope, RuntimeHelpers::toPrimitive(*this, STRING_HINT));
+        return prim->toQString();
     }
-    default: { // double
-        QString str;
-        RuntimeHelpers::numberToString(&str, doubleValue(), 10);
-        return str;
+
+    return primitiveToQString(this);
+}
+
+QString Value::toQString(bool *ok) const
+{
+    if (isManaged()) {
+        if (String *s = stringValue()) {
+            *ok = true;
+            return s->toQString();
+        }
+
+        if (isSymbol()) {
+            static_cast<const Managed *>(this)->engine()->throwTypeError();
+            *ok = false;
+            return QString();
+        }
+
+        Q_ASSERT(isObject());
+        Scope scope(objectValue()->engine());
+        ScopedValue prim(scope, RuntimeHelpers::toPrimitive(*this, STRING_HINT));
+
+        if (scope.hasException()) {
+            *ok = false;
+            return QString();
+        }
+
+        return prim->toQString(ok);
     }
-    } // switch
+
+    return primitiveToQString(this);
 }
 
 QV4::PropertyKey Value::toPropertyKey(ExecutionEngine *e) const
