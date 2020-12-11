@@ -68,6 +68,10 @@
   You can also make namespaces tagged with Q_NAMESPACE available this way, in
   order to expose any enums tagged with Q_ENUM_NS they contain.
 
+  \b{NOTE:} When classes have the same name but are located in different namespaces using
+  \l QML_ELEMENT on both of them will cause a conflict.
+  Make sure to use \l QML_NAMED_ELEMENT() for one of them instead.
+
   \sa {Choosing the Correct Integration Method Between C++ and QML}, QML_NAMED_ELEMENT(),
       Q_REVISION(), QML_ADDED_IN_MINOR_VERSION()
 */
