@@ -602,10 +602,10 @@ bool QQmlTypeLoader::Blob::addImport(QQmlTypeLoader::Blob::PendingImportPtr impo
             if (!loadImportDependencies(import, qmldirFilePath, errors))
                 return false;
 
+            const QQmlTypeLoaderQmldirContent qmldir = typeLoader()->qmldirContent(qmldirFilePath);
             if (!import->qualifier.isEmpty()) {
                 // Does this library contain any qualified scripts?
                 QUrl libraryUrl(qmldirUrl);
-                const QQmlTypeLoaderQmldirContent qmldir = typeLoader()->qmldirContent(qmldirFilePath);
                 const auto qmldirScripts = qmldir.scripts();
                 for (const QQmlDirParser::Script &script : qmldirScripts) {
                     QUrl scriptUrl = libraryUrl.resolved(QUrl(script.fileName));
@@ -614,6 +614,14 @@ bool QQmlTypeLoader::Blob::addImport(QQmlTypeLoader::Blob::PendingImportPtr impo
 
                     scriptImported(blob, import->location, script.nameSpace, import->qualifier);
                 }
+            }
+            if (!qmldir.plugins().count()) {
+                // If the qmldir does not register a plugin, we might still have declaratively
+                // registered types (if we are dealing with an application instead of a library)
+                auto module = QQmlMetaType::typeModule(import->uri, import->version);
+                // If the module already exists, the types must have been already registered
+                if (!module)
+                    QQmlMetaType::qmlRegisterModuleTypes(import->uri);
             }
         } else if (
                 // Major version of module already registered:

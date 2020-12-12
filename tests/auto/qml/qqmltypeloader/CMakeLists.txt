@@ -42,6 +42,14 @@ qt_internal_extend_target(tst_qqmltypeloader CONDITION NOT ANDROID AND NOT IOS
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )
 
+qt_add_resources(tst_qqmltypeloader "typeloader"
+    PREFIX
+        "/"
+    FILES
+        "declarative/import/for/typeloader/test/qmldir"
+        "declarative/import/for/typeloader/test/Singleton.qml"
+)
+
 set_target_properties(tst_qqmltypeloader PROPERTIES
     QT_QML_MODULE_VERSION 3.2
     QT_QML_MODULE_URI declarative.import.for.typeloader.test

@@ -64,6 +64,7 @@ private slots:
     void compositeSingletonCycle();
     void declarativeCppType();
     void circularDependency();
+    void declarativeCppAndQmlDir();
 private:
     void checkSingleton(const QString & dataDirectory);
 };
@@ -647,6 +648,16 @@ void tst_QQMLTypeLoader::circularDependency()
     QTest::ignoreMessage(QtWarningMsg, QRegularExpression("Cyclic dependency detected between (.*) and (.*)"));
     QQmlComponent component(&engine, testFileUrl("CircularDependency.qml"));
     QCOMPARE(component.status(), QQmlComponent::Null);
+}
+
+void tst_QQMLTypeLoader::declarativeCppAndQmlDir()
+{
+    QQmlEngine engine;
+    engine.addImportPath("qrc:/");
+    QQmlComponent component(&engine, testFileUrl("cppAndQmlDir.qml"));
+    QVERIFY2(!component.isError(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> root(component.create());
+    QCOMPARE(root->objectName(), "Singleton");
 }
 
 QTEST_MAIN(tst_QQMLTypeLoader)
