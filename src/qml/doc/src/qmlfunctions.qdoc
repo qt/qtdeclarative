@@ -186,10 +186,7 @@
   factory function of the signature \c{T *create(QQmlEngine *, QJSEngine *)}
   when the type is first accessed. If both do exist and are accessible, the
   default constructor is preferred. If there is no default constructor and no
-  factory function the singleton is initially inaccessible. This behavior can be
-  overridden by calling \l qmlRegisterSingletonType() with a specific (external)
-  factory function or \l qmlRegisterSingletonInstance() with a specific instance
-  for the same class and the same type namespace and version.
+  factory function the singleton is initially inaccessible.
 
   \sa QML_ELEMENT, QML_NAMED_ELEMENT(), qmlRegisterSingletonInstance().
 */
@@ -1004,6 +1001,8 @@
    you want separate singleton instances for multiple engines, you need to use
    \l {qmlRegisterSingletonType}.  See \l{Threads and QObjects} for more
    information about thread safety.
+
+   \b{NOTE:} qmlRegisterSingleton can only be used when all types of that module are registered procedurally.
 
     Usage:
     \code
