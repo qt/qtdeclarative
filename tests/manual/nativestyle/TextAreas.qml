@@ -86,9 +86,14 @@ ControlContainer {
         spacing: container.rowSpacing
 
         Frame {
+            id: frame
+            contentWidth: textArea.width
+            contentHeight: textArea.height
+
             TextArea {
-                id: area1
+                id: textArea
                 width: 200
+                height: 80
                 wrapMode: TextEdit.WrapAnywhere
                 selectByMouse: true
                 text: "Inside frame - Lorem ipsum dolor sit amet, consectetur adipiscing elit, "
