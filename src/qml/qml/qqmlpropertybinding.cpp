@@ -41,8 +41,11 @@
 #include <private/qv4functionobject_p.h>
 #include <private/qv4jscall_p.h>
 #include <qqmlinfo.h>
+#include <QtCore/qloggingcategory.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(lcQQPropertyBinding, "qt.qml.propertybinding");
 
 namespace {
 constexpr std::size_t jsExpressionOffsetLength() {
@@ -166,7 +169,8 @@ QQmlPropertyBinding::QQmlPropertyBinding(QMetaType mt, QObject *target, QQmlProp
     static_assert (std::is_trivially_destructible_v<TargetData>);
     static_assert (sizeof(TargetData) + sizeof(DeclarativeErrorCallback) <= sizeof(QPropertyBindingSourceLocation));
     static_assert (alignof(TargetData) <= alignof(QPropertyBindingSourceLocation));
-    new (&declarativeExtraData) TargetData {target, targetIndex, hasBoundFunction};
+    const auto state = hasBoundFunction ? TargetData::HasBoundFunction : TargetData::WithoutBoundFunction;
+    new (&declarativeExtraData) TargetData {target, targetIndex, state};
     errorCallBack = bindingErrorCallback;
 }
 
@@ -182,16 +186,26 @@ bool QQmlPropertyBinding::evaluate(QMetaType metaType, void *dataPtr)
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
     ep->referenceScarceResources();
 
-    bool isUndefined = false;
+    bool evaluatedToUndefined = false;
 
     QV4::Scope scope(engine->handle());
     QV4::ScopedValue result(scope, hasBoundFunction()
-                            ? static_cast<QQmlPropertyBindingJSForBoundFunction *>(jsExpression())->evaluate(&isUndefined)
-                            : jsExpression()->evaluate(&isUndefined));
+                            ? static_cast<QQmlPropertyBindingJSForBoundFunction *>(jsExpression())->evaluate(&evaluatedToUndefined)
+                            : jsExpression()->evaluate(&evaluatedToUndefined));
 
     ep->dereferenceScarceResources();
 
-    if (jsExpression()->hasError()) {
+    bool hadError = jsExpression()->hasError();
+    if (!hadError) {
+        if (evaluatedToUndefined) {
+            handleUndefinedAssignment(ep, dataPtr);
+            // if property has been changed due to reset, reset is responsible for
+            // notifying observers
+            return false;
+        } else if (isUndefined()) {
+            setIsUndefined(false);
+        }
+    } else {
         QPropertyBindingError error(QPropertyBindingError::UnknownError, jsExpression()->delayedError()->error().description());
         QPropertyBindingPrivate::currentlyEvaluatingBinding()->setError(std::move(error));
         bindingErrorCallback(this);
@@ -265,6 +279,98 @@ bool QQmlPropertyBinding::evaluate(QMetaType metaType, void *dataPtr)
     return hasChanged;
 }
 
+static QtPrivate::QPropertyBindingData *bindingDataFromPropertyData(QUntypedPropertyData *dataPtr, QMetaType type)
+{
+    // XXX Qt 7: We need a clean way to access the binding data
+    /* This function makes the (dangerous) assumption that if we could not get the binding data
+       from the binding storage, we must have been handed a QProperty.
+       This does hold for anything a user could write, as there the only ways of providing a bindable property
+       are to use the Q_X_BINDABLE macros, or to directly expose a QProperty.
+       As long as we can ensure that any "fancier" property we implement is not resettable, we should be fine.
+       We procede to calculate the address of the binding data pointer from the address of the data pointer
+    */
+    Q_ASSERT(dataPtr);
+    std::byte *qpropertyPointer = reinterpret_cast<std::byte *>(dataPtr);
+    qpropertyPointer += type.sizeOf();
+    constexpr auto alignment = alignof(QtPrivate::QPropertyBindingData *);
+    auto aligned = (quintptr(qpropertyPointer) + alignment - 1) & ~(alignment - 1); // ensure pointer alignment
+    return reinterpret_cast<QtPrivate::QPropertyBindingData *>(aligned);
+}
+
+void QQmlPropertyBinding::handleUndefinedAssignment(QQmlEnginePrivate *ep, void *dataPtr)
+{
+    QQmlPropertyData *propertyData = nullptr;
+    QQmlPropertyData valueTypeData;
+    QQmlData *data = QQmlData::get(target(), false);
+    Q_ASSERT(data);
+    if (Q_UNLIKELY(!data->propertyCache)) {
+        data->propertyCache = ep->cache(target()->metaObject());
+        data->propertyCache->addref();
+    }
+    propertyData = data->propertyCache->property(targetIndex().coreIndex());
+    Q_ASSERT(propertyData);
+    Q_ASSERT(!targetIndex().hasValueTypeIndex());
+    QQmlProperty prop = QQmlPropertyPrivate::restore(target(), *propertyData, &valueTypeData, nullptr);
+    // helper function for writing back value into dataPtr
+    // this is necessary  for QObjectCompatProperty, which doesn't give us the "real" dataPtr
+    // if we don't write the correct value, we would otherwise set the default constructed value
+    auto writeBackCurrentValue = [&](QVariant &&currentValue) {
+        currentValue.convert(valueMetaType());
+        auto metaType = valueMetaType();
+        metaType.destruct(dataPtr);
+        metaType.construct(dataPtr, currentValue.constData());
+    };
+    if (isUndefined()) {
+        // if we are already detached, there is no reason to call reset again (?)
+        return;
+    }
+    if (prop.isResettable()) {
+        // Normally a reset would remove any existing binding; but now we need to keep the binding alive
+        // to handle the case where this binding becomes defined again
+        // We therefore detach the binding, call reset, and reattach again
+        const auto storage = qGetBindingStorage(target());
+        auto bindingData = storage->bindingData(propertyDataPtr);
+        if (!bindingData)
+            bindingData = bindingDataFromPropertyData(propertyDataPtr, propertyData->propType());
+        QPropertyBindingDataPointer bindingDataPointer{bindingData};
+        auto firstObserver = takeObservers();
+        if (firstObserver)
+            bindingDataPointer.setObservers(firstObserver.ptr);
+        else
+            bindingData->d_ptr = 0;
+        setIsUndefined(true);
+        //suspend binding evaluation state for reset and subsequent read
+        auto state = QtPrivate::suspendCurrentBindingStatus();
+        prop.reset();
+        QVariant currentValue = prop.read();
+        QtPrivate::restoreBindingStatus(state);
+        currentValue.convert(valueMetaType());
+        writeBackCurrentValue(std::move(currentValue));
+        // reattach the binding (without causing a new notification)
+        if (Q_UNLIKELY(bindingData->d_ptr & QtPrivate::QPropertyBindingData::BindingBit)) {
+            qCWarning(lcQQPropertyBinding) << "Resetting " << prop.name() << "due to the binding becoming undefined  caused a new binding to be installed\n"
+                       << "The old binding binding will be abandonned";
+            deref();
+            return;
+        }
+        // reset might have changed observers (?), so refresh firstObserver
+        firstObserver = bindingDataPointer.firstObserver();
+        bindingData->d_ptr = reinterpret_cast<quintptr>(this) | QtPrivate::QPropertyBindingData::BindingBit;
+        if (firstObserver)
+            bindingDataPointer.setFirstObserver(firstObserver.ptr);
+    } else {
+        QQmlError qmlError;
+        auto location = jsExpression()->sourceLocation();
+        qmlError.setColumn(location.column);
+        qmlError.setLine(location.line);
+        qmlError.setUrl(QUrl {location.sourceFile});
+        const QString description = QStringLiteral(R"(QML %1: Unable to assign [undefined] to "%2")").arg(QQmlMetaType::prettyTypeName(target()) , prop.name());
+        qmlError.setDescription(description);
+        qmlError.setObject(target());
+        ep->warning(qmlError);
+    }
+}
+
 QString QQmlPropertyBinding::createBindingLoopErrorDescription(QJSEnginePrivate *ep)
 {
     QQmlPropertyData *propertyData = nullptr;
@@ -295,6 +401,16 @@ QQmlPropertyIndex QQmlPropertyBinding::targetIndex()
 bool QQmlPropertyBinding::hasBoundFunction()
 {
     return std::launder(reinterpret_cast<TargetData *>(&declarativeExtraData))->hasBoundFunction;
+}
+
+bool QQmlPropertyBinding::isUndefined() const
+{
+    return std::launder(reinterpret_cast<TargetData const *>(&declarativeExtraData))->isUndefined;
+}
+
+void QQmlPropertyBinding::setIsUndefined(bool isUndefined)
+{
+    std::launder(reinterpret_cast<TargetData *>(&declarativeExtraData))->isUndefined = isUndefined;
 }
 
 void QQmlPropertyBinding::bindingErrorCallback(QPropertyBindingPrivate *that)

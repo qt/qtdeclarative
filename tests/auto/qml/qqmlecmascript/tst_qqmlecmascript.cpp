@@ -382,6 +382,10 @@ private slots:
     void saveAccumulatorBeforeToInt32();
     void intMinDividedByMinusOne();
     void undefinedPropertiesInObjectWrapper();
+    void qpropertyBindingHandlesUndefinedCorrectly_data();
+    void qpropertyBindingHandlesUndefinedCorrectly();
+    void qpropertyBindingHandlesUndefinedWithoutResetCorrectly_data();
+    void qpropertyBindingHandlesUndefinedWithoutResetCorrectly();
     void hugeRegexpQuantifiers();
     void singletonTypeWrapperLookup();
     void getThisObject();
@@ -9191,6 +9195,82 @@ void tst_qqmlecmascript::undefinedPropertiesInObjectWrapper()
     QVERIFY(component.isReady());
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
+}
+
+void tst_qqmlecmascript::qpropertyBindingHandlesUndefinedCorrectly_data()
+{
+    QTest::addColumn<QString>("fileName");
+    QTest::addRow("QProperty") << "qpropertyBindingUndefined.qml";
+    QTest::addRow("QObjectProperty") << "qpropertyBindingUndefined2.qml";
+}
+
+void tst_qqmlecmascript::qpropertyBindingHandlesUndefinedCorrectly()
+{
+    QFETCH(QString, fileName);
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl(fileName));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY2(root, qPrintable(component.errorString()));
+    // sanity check
+    QCOMPARE(root->property("value").toInt(), 1);
+    // If the binding evaluates to undefined,
+    root->setProperty("toggle", true);
+    // then the property gets reset.
+    QCOMPARE(root->property("value").toInt(), 2);
+    // If the binding reevaluates, the value should not change
+    root->setProperty("anotherValue", 3);
+    QCOMPARE(root->property("value").toInt(), 2);
+    // When the binding becomes defined again
+    root->setProperty("toggle", false);
+    // we obtain the correct new value.
+    QCOMPARE(root->property("value").toInt(), 3);
+}
+
+struct ClassWithQCompatProperty : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int value READ value WRITE setValue BINDABLE bindableValue RESET resetValue)
+    Q_PROPERTY(int value2 READ value2 WRITE setValue2 BINDABLE bindableValue2)
+public:
+    QBindable<int> bindableValue() {return &m_value;}
+    void resetValue() { m_value.setValue(2); }
+    int value() { return m_value; }
+    void setValue(int i) { m_value.setValue(i); }
+    Q_OBJECT_COMPAT_PROPERTY(ClassWithQCompatProperty, int, m_value, &ClassWithQCompatProperty::setValue);
+
+    QBindable<int> bindableValue2() {return &m_value2;}
+    int value2() { return m_value2; }
+    void setValue2(int i) { m_value2.setValue(i); }
+    Q_OBJECT_COMPAT_PROPERTY(ClassWithQCompatProperty, int, m_value2, &ClassWithQCompatProperty::setValue2);
+};
+
+void tst_qqmlecmascript::qpropertyBindingHandlesUndefinedWithoutResetCorrectly_data()
+{
+        qmlRegisterType<ClassWithQCompatProperty>("Qt.test", 1, 0, "ClassWithQCompatProperty");
+    QTest::addColumn<QString>("fileName");
+    QTest::addRow("QProperty") << "qpropertyBindingUndefinedWithoutReset1.qml";
+    QTest::addRow("QObjectProperty") << "qpropertyBindingUndefinedWithoutReset2.qml";
+    QTest::addRow("QCompatProperty") << "qpropertyBindingUndefinedWithoutReset3.qml";
+}
+
+void tst_qqmlecmascript::qpropertyBindingHandlesUndefinedWithoutResetCorrectly()
+{
+    QQmlEngine engine;
+    QFETCH(QString, fileName);
+    QQmlComponent component(&engine, testFileUrl(fileName));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY2(root, qPrintable(component.errorString()));
+    // sanity check
+    QCOMPARE(root->property("value2").toInt(), 1);
+    // If the binding evaluates to undefined,
+    root->setProperty("toggle", true);
+    // then the value still stays the same.
+    QEXPECT_FAIL("QCompatProperty", "Not implemented for QObjectCompatProperty", Continue);
+    QCOMPARE(root->property("value2").toInt(), 1);
+    // and the binding is still active
+    root->setProperty("anotherValue", 2);
+    root->setProperty("toggle", false);
+    QCOMPARE(root->property("value2").toInt(), 2);
 }
 
 void tst_qqmlecmascript::hugeRegexpQuantifiers()

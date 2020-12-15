@@ -555,6 +555,7 @@ void registerTypes()
     qmlRegisterType<ClashingNames>("Qt.test", 1, 0, "ClashingNames");
 
     qmlRegisterType<ClassWithQProperty>("Qt.test", 1, 0, "ClassWithQProperty");
+    qmlRegisterType<ClassWithQObjectProperty>("Qt.test", 1, 0, "ClassWithQObjectProperty");
     qmlRegisterType<ClassWithQProperty2>("Qt.test", 1, 0, "ClassWithQProperty2");
 }
 

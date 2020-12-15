@@ -1731,13 +1731,32 @@ public:
 struct ClassWithQProperty : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(float value MEMBER value BINDABLE bindableValue)
+    Q_PROPERTY(float value MEMBER value BINDABLE bindableValue RESET resetValue)
     Q_PROPERTY(float value2 MEMBER value2 BINDABLE bindableValue2)
 public:
+    void resetValue() { value = 2; }
     QProperty<float> value;
     QProperty<float> value2;
     QBindable<float> bindableValue() { return QBindable<float>(&value); }
     QBindable<float> bindableValue2() { return QBindable<float>(&value2); }
+};
+
+struct ClassWithQObjectProperty : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int value READ value WRITE setValue BINDABLE bindableValue RESET resetValue)
+    Q_PROPERTY(int value2 READ value2 WRITE setValue2 BINDABLE bindableValue2)
+public:
+    Q_OBJECT_BINDABLE_PROPERTY(ClassWithQObjectProperty, int, m_value);
+    QBindable<int> bindableValue() {return &m_value;}
+    void resetValue() { m_value = 2; }
+    int value() { return m_value; }
+    void setValue(int i) { m_value = i; }
+
+    Q_OBJECT_BINDABLE_PROPERTY(ClassWithQObjectProperty, int, m_value2);
+    QBindable<int> bindableValue2() {return &m_value2;}
+    int value2() { return m_value2; }
+    void setValue2(int i) { m_value2 = i; }
 };
 
 class VariantConvertObject : public QObject

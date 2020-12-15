@@ -112,6 +112,17 @@ public:
                                           QV4::ExecutionContext *scope, QObject *target,
                                           QQmlPropertyIndex targetIndex);
 
+    static bool isUndefined(const QUntypedPropertyBinding &binding)
+    {
+        return isUndefined(QPropertyBindingPrivate::get(binding));
+    }
+
+    static bool isUndefined(const QPropertyBindingPrivate *binding)
+    {
+        if (!(binding && binding->hasCustomVTable()))
+            return false;
+        return static_cast<const QQmlPropertyBinding *>(binding)->isUndefined();
+    }
 
     static bool doEvaluate(QMetaType metaType, QUntypedPropertyData *dataPtr, void *f) {
         auto address = static_cast<std::byte*>(f);
@@ -125,17 +136,29 @@ private:
 
     bool evaluate(QMetaType metaType, void *dataPtr);
 
+    Q_NEVER_INLINE void handleUndefinedAssignment(QQmlEnginePrivate *ep, void *dataPtr);
+
     QString createBindingLoopErrorDescription(QJSEnginePrivate *ep);
 
     struct TargetData {
+        enum BoundFunction : bool {
+            WithoutBoundFunction = false,
+            HasBoundFunction = true,
+        };
+        TargetData(QObject *target, QQmlPropertyIndex index, BoundFunction state)
+            : target(target), targetIndex(index), hasBoundFunction(state)
+        {}
         QObject *target;
         QQmlPropertyIndex targetIndex;
         bool hasBoundFunction;
+        bool isUndefined = false;
     };
 
     QObject *target();
     QQmlPropertyIndex targetIndex();
     bool hasBoundFunction();
+    bool isUndefined() const;
+    void setIsUndefined(bool isUndefined);
 
     static void bindingErrorCallback(QPropertyBindingPrivate *);
 };
