@@ -195,6 +195,7 @@ QQuickFlickable *QQuickScrollViewPrivate::ensureFlickable(bool content)
         // optimization is needed, the user can simply create his own flickable
         // child inside the scrollview, and control clipping on it explicit.
         flickable->setClip(true);
+        flickable->setPixelAligned(true);
         setFlickable(flickable, content);
     }
     return flickable;
