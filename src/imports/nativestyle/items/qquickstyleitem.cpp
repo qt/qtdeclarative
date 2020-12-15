@@ -113,8 +113,11 @@ void QQuickStyleItem::connectToControl() const
 {
     connect(m_control, &QQuickStyleItem::enabledChanged, this, &QQuickStyleItem::markImageDirty);
     connect(m_control, &QQuickItem::activeFocusChanged, this, &QQuickStyleItem::markImageDirty);
-    connect(m_control, &QQuickStyleItem::windowChanged, this, &QQuickStyleItem::markImageDirty);
-    connect(window(), &QQuickWindow::activeChanged, this, &QQuickStyleItem::markImageDirty);
+
+    if (QQuickWindow *win = window()) {
+        connect(win, &QQuickWindow::activeChanged, this, &QQuickStyleItem::markImageDirty);
+        m_connectedWindow = win;
+    }
 }
 
 void QQuickStyleItem::markImageDirty()
@@ -253,6 +256,15 @@ void QQuickStyleItem::itemChange(QQuickItem::ItemChange change, const QQuickItem
         if (data.boolValue)
             markImageDirty();
         break;
+    case QQuickItem::ItemSceneChange: {
+        markImageDirty();
+        QQuickWindow *win = data.window;
+        if (m_connectedWindow)
+            disconnect(m_connectedWindow, &QQuickWindow::activeChanged, this, &QQuickStyleItem::markImageDirty);
+        if (win)
+            connect(win, &QQuickWindow::activeChanged, this, &QQuickStyleItem::markImageDirty);
+        m_connectedWindow = win;
+        break;}
     default:
         break;
     }
