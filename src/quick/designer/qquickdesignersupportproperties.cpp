@@ -137,11 +137,8 @@ QQuickDesignerSupport::PropertyNameList QQuickDesignerSupportProperties::propert
     if (inspectedObjects == nullptr)
         inspectedObjects = &localObjectList;
 
-
-    if (inspectedObjects->contains(object))
-        return propertyNameList;
-
-    inspectedObjects->append(object);
+    if (!inspectedObjects->contains(object))
+        inspectedObjects->append(object);
 
     const QMetaObject *metaObject = object->metaObject();
     for (int index = 0; index < metaObject->propertyCount(); ++index) {
@@ -194,12 +191,8 @@ QQuickDesignerSupport::PropertyNameList QQuickDesignerSupportProperties::allProp
     if (inspectedObjects == nullptr)
         inspectedObjects = &localObjectList;
 
-
-    if (inspectedObjects->contains(object))
-        return propertyNameList;
-
-    inspectedObjects->append(object);
-
+    if (!inspectedObjects->contains(object))
+        inspectedObjects->append(object);
 
     const QMetaObject *metaObject = object->metaObject();
 
