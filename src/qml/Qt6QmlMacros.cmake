@@ -615,6 +615,8 @@ function(qt6_target_qml_files target)
         endif()
     endif()
 
+    _qt_add_qmllint_command(${target} ${arg_FILES})
+
     set(file_contents "")
     foreach(qml_file IN LISTS arg_FILES)
         get_filename_component(qml_file_dir "${qml_file}" DIRECTORY)
@@ -1213,4 +1215,20 @@ function(_qt_internal_qmldir_defer_file command filepath content)
                                  WRITE and APPEND commands.")
         endif()
     endif()
+endfunction()
+
+function(_qt_add_qmllint_command target files)
+    get_target_property(target_source ${target} SOURCE_DIR)
+    get_target_property(includes ${target} QML2_IMPORT_PATH)
+
+    if(includes)
+        foreach(dir in LISTS includes)
+            list(APPEND include_args "-I${dir}")
+        endforeach()
+    endif()
+
+    add_custom_target(${target}_qmllint
+        ${QT_CMAKE_EXPORT_NAMESPACE}::qmllint ${files} ${include_args}
+        WORKING_DIRECTORY ${target_source}
+    )
 endfunction()
