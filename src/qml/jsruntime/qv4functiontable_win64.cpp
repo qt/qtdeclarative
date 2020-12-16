@@ -106,7 +106,7 @@ struct ExceptionHandlerRecord
 void generateFunctionTable(Function *, JSC::MacroAssemblerCodeRef *codeRef)
 {
     ExceptionHandlerRecord *record = reinterpret_cast<ExceptionHandlerRecord *>(
-                codeRef->executableMemory()->exceptionHandler());
+                codeRef->executableMemory()->exceptionHandlerStart());
 
     record->info.Version             = 1;
     record->info.Flags               = 0;
@@ -136,7 +136,7 @@ void generateFunctionTable(Function *, JSC::MacroAssemblerCodeRef *codeRef)
 void destroyFunctionTable(Function *, JSC::MacroAssemblerCodeRef *codeRef)
 {
     ExceptionHandlerRecord *record = reinterpret_cast<ExceptionHandlerRecord *>(
-                codeRef->executableMemory()->exceptionHandler());
+                codeRef->executableMemory()->exceptionHandlerStart());
     if (!RtlDeleteFunctionTable(&record->handler)) {
         const unsigned int errorCode = GetLastError();
         qWarning() << "Failed to remove win64 unwind hook. Error code:" << errorCode;

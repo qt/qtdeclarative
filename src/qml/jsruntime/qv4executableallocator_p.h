@@ -86,8 +86,14 @@ public:
             , free(true)
         {}
 
-        void *exceptionHandler() const;
-        void *start() const;
+        void *memoryStart() const;
+        size_t memorySize() const { return size; }
+
+        void *exceptionHandlerStart() const;
+        size_t exceptionHandlerSize() const;
+
+        void *codeStart() const;
+
         void invalidate() { addr = 0; }
         bool isValid() const { return addr != 0; }
         void deallocate(ExecutableAllocator *allocator);
