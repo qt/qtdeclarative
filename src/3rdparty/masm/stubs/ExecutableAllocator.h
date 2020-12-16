@@ -82,9 +82,14 @@ struct ExecutableMemoryHandle : public RefCounted<ExecutableMemoryHandle> {
 
     inline bool isManaged() const { return true; }
 
-    void *exceptionHandler() { return m_allocation->exceptionHandler(); }
-    void *start() { return m_allocation->start(); }
-    size_t sizeInBytes() { return m_size; }
+    void *memoryStart() { return m_allocation->memoryStart(); }
+    size_t memorySize() { return m_allocation->memorySize(); }
+
+    void *exceptionHandlerStart() { return m_allocation->exceptionHandlerStart(); }
+    size_t exceptionHandlerSize() { return m_allocation->exceptionHandlerSize(); }
+
+    void *codeStart() { return m_allocation->codeStart(); }
+    size_t codeSize() { return m_size; }
 
     QV4::ExecutableAllocator::ChunkOfPages *chunk() const
     { return m_allocator->chunkForAllocation(m_allocation); }

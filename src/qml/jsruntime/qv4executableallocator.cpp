@@ -45,12 +45,22 @@
 
 using namespace QV4;
 
-void *ExecutableAllocator::Allocation::exceptionHandler() const
+void *ExecutableAllocator::Allocation::exceptionHandlerStart() const
 {
     return reinterpret_cast<void*>(addr);
 }
 
-void *ExecutableAllocator::Allocation::start() const
+size_t ExecutableAllocator::Allocation::exceptionHandlerSize() const
+{
+    return QV4::exceptionHandlerSize();
+}
+
+void *ExecutableAllocator::Allocation::memoryStart() const
+{
+    return reinterpret_cast<void*>(addr);
+}
+
+void *ExecutableAllocator::Allocation::codeStart() const
 {
     return reinterpret_cast<void*>(addr + exceptionHandlerSize());
 }
