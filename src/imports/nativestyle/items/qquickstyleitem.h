@@ -196,7 +196,7 @@ public:
         NoDebug = 0x000,
         Debug = 0x001,
         Info = 0x002,
-        ImageRect = 0x003,
+        ImageRect = 0x004,
         ContentRect = 0x008,
         LayoutRect = 0x010,
         Unscaled = 0x020,
