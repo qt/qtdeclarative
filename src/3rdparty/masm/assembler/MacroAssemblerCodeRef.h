@@ -357,11 +357,11 @@ public:
     }
 
     MacroAssemblerCodeRef(PassRefPtr<ExecutableMemoryHandle> executableMemory)
-        : m_codePtr(executableMemory->start())
+        : m_codePtr(executableMemory->codeStart())
         , m_executableMemory(executableMemory)
     {
         ASSERT(m_executableMemory->isManaged());
-        ASSERT(m_executableMemory->start());
+        ASSERT(m_executableMemory->codeStart());
         ASSERT(m_codePtr);
     }
     
@@ -395,7 +395,7 @@ public:
     {
         if (!m_executableMemory)
             return 0;
-        return m_executableMemory->sizeInBytes();
+        return m_executableMemory->codeSize();
     }
     
     bool tryToDisassemble(const char* prefix) const
