@@ -3637,6 +3637,32 @@ int QWindowsXPStyle::styleHint(StyleHint hint, const QStyleOption *option,
     return res;
 }
 
+QMargins QWindowsXPStyle::ninePatchMargins(QStyle::ComplexControl cc, const QStyleOptionComplex *opt, const QSize &imageSize) const
+{
+    QMargins margins;
+
+    switch (cc) {
+    case CC_ScrollBar: {
+        margins = QWindowsStyle::ninePatchMargins(cc, opt, imageSize);
+        if (const auto option = qstyleoption_cast<const QStyleOptionSlider *>(opt)) {
+            if (option->orientation == Qt::Horizontal) {
+                margins.setTop(-1);
+                margins.setBottom(-1);
+            } else {
+                margins.setLeft(-1);
+                margins.setRight(-1);
+            }
+        }
+        break; }
+    default:
+        margins = QWindowsStyle::ninePatchMargins(cc, opt, imageSize);
+        break;
+    }
+
+    return margins;
+}
+
+
 /*! \reimp */
 QPalette QWindowsXPStyle::standardPalette() const
 {
