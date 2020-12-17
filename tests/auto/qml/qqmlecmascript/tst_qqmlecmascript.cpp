@@ -393,6 +393,7 @@ private slots:
     void urlSearchParamsMethods();
     void variantConversionMethod();
     void sequenceConversionMethod();
+    void proxyIteration();
     void proxyHandlerTraps();
     void gcCrashRegressionTest();
 
@@ -9523,6 +9524,15 @@ void tst_qqmlecmascript::sequenceConversionMethod()
     QScopedPointer<QObject> o(component.create());
     QVERIFY(o != nullptr);
     QCOMPARE(obj.funcCalled, QLatin1String("stringlist"));
+}
+
+void tst_qqmlecmascript::proxyIteration()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("proxyIteration.qml"));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY2(root != nullptr, qPrintable(component.errorString()));
+    QCOMPARE(root->property("sum").toInt(), 6);
 }
 
 void tst_qqmlecmascript::proxyHandlerTraps()
