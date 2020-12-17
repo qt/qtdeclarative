@@ -14,6 +14,10 @@ qt_internal_add_test(tst_ecmascripttests
         Qt::QmlPrivate
 )
 
+# special case begin
+set_property(TEST tst_ecmascripttests APPEND PROPERTY ENVIRONMENT "QTEST_FUNCTION_TIMEOUT=500000")
+# special case end
+
 #### Keys ignored in scope 2:.:.:testcase.pro:<TRUE>:
 # QT_TOOL_ENV = "checkenv"
 # checkenv.name = "QTEST_FUNCTION_TIMEOUT"
