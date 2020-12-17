@@ -615,7 +615,7 @@ function(qt6_target_qml_files target)
         endif()
     endif()
 
-    _qt_add_qmllint_command(${target} ${arg_FILES})
+    qt6_target_enable_qmllint(${target})
 
     set(file_contents "")
     foreach(qml_file IN LISTS arg_FILES)
@@ -936,6 +936,18 @@ function(_qt_internal_quick_compiler_process_resources target resource_name)
         endif()
         list(APPEND resource_files ${file})
     endforeach()
+
+    # Create a list of QML files for use with qmllint
+    if(qml_files)
+        get_target_property(qml_files_list ${target} QML_FILES)
+        if(NOT qml_files_list)
+            set(qml_files_list)
+        endif()
+
+        list(APPEND qml_files_list ${qml_files})
+        set_target_properties(${target} PROPERTIES QML_FILES "${qml_files_list}")
+    endif()
+
     if (NOT TARGET ${QT_CMAKE_EXPORT_NAMESPACE}::qmlcachegen AND qml_files)
         message(WARNING "QT6_PROCESS_RESOURCE: Qml files were detected but the qmlcachgen target is not defined. Consider adding QmlTools to your find_package command.")
     endif()
@@ -1217,9 +1229,11 @@ function(_qt_internal_qmldir_defer_file command filepath content)
     endif()
 endfunction()
 
-function(_qt_add_qmllint_command target files)
+# Adds a target called TARGET_qmllint that runs on all qml files compiled ahead-of-time.
+function(qt6_target_enable_qmllint target)
     get_target_property(target_source ${target} SOURCE_DIR)
     get_target_property(includes ${target} QML2_IMPORT_PATH)
+    get_target_property(files ${target} QML_FILES)
 
     if(includes)
         foreach(dir in LISTS includes)
