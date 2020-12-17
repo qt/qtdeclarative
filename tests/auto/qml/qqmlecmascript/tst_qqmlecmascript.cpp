@@ -382,6 +382,7 @@ private slots:
     void semicolonAfterProperty();
     void hugeStack();
     void variantConversionMethod();
+    void proxyIteration();
     void proxyHandlerTraps();
     void gcCrashRegressionTest();
 
@@ -9304,6 +9305,15 @@ void tst_qqmlecmascript::variantConversionMethod()
     QScopedPointer<QObject> o(component.create());
     QVERIFY(o != nullptr);
     QCOMPARE(obj.funcCalled, QLatin1String("QModelIndex"));
+}
+
+void tst_qqmlecmascript::proxyIteration()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("proxyIteration.qml"));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY2(root != nullptr, qPrintable(component.errorString()));
+    QCOMPARE(root->property("sum").toInt(), 6);
 }
 
 void tst_qqmlecmascript::proxyHandlerTraps()
