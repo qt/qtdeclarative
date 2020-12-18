@@ -338,8 +338,8 @@ void QQuickSplitViewPrivate::layoutResizeSplitItems(qreal &usedWidth, qreal &use
         if (isBeingResized) {
             // Don't let the mouse go past either edge of the SplitView.
             const qreal clampedMousePos = horizontal
-                ? qBound(qreal(0.0), m_mousePos.x(), width)
-                : qBound(qreal(0.0), m_mousePos.y(), height);
+                ? qBound(qreal(0.0), m_mousePos.x(), qreal(width))
+                : qBound(qreal(0.0), m_mousePos.y(), qreal(height));
 
             // We also need to ensure that the item's edge doesn't go too far
             // out and hence give the item more space than is available.

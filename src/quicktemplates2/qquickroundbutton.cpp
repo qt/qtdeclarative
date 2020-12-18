@@ -76,7 +76,7 @@ void QQuickRoundButtonPrivate::setRadius(qreal newRadius)
     Q_Q(QQuickRoundButton);
     const qreal oldRadius = radius;
     if (newRadius < 0)
-        radius = qMax<qreal>(0, qMin(width, height) / 2);
+        radius = qMax<qreal>(0, qMin<qreal>(width, height) / 2);
     else
         radius = newRadius;
 
