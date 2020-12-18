@@ -1018,6 +1018,7 @@ void tst_QJSManagedValue::call_function()
     QJSManagedValue result(fun.call(), &eng);
     QCOMPARE(result.type(), QJSManagedValue::Number);
     QCOMPARE(result.toInteger(), 1);
+    QVERIFY(!eng.hasError());
 }
 
 void tst_QJSManagedValue::call_object()
@@ -1028,6 +1029,7 @@ void tst_QJSManagedValue::call_object()
     QJSManagedValue result(object.callWithInstance(object.toJSValue()), &eng);
     QCOMPARE(result.type(), QJSManagedValue::Object);
     QVERIFY(!result.isNull());
+    QVERIFY(!eng.hasError());
 }
 
 void tst_QJSManagedValue::call_newObjects()
@@ -1041,6 +1043,7 @@ void tst_QJSManagedValue::call_newObjects()
     args << eng.toScriptValue(123);
     QJSManagedValue result(number.callWithInstance(object.toJSValue(), args), &eng);
     QVERIFY(result.strictlyEquals(QJSManagedValue(args.at(0), &eng)));
+    QVERIFY(!eng.hasError());
 }
 
 void tst_QJSManagedValue::call_this()
@@ -1054,6 +1057,7 @@ void tst_QJSManagedValue::call_this()
     QJSManagedValue result(fun.callWithInstance(QJSValue(std::move(numberObject))), &eng);
     QCOMPARE(result.type(), QJSManagedValue::Object);
     QCOMPARE(result.toNumber(), 123.0);
+    QVERIFY(!eng.hasError());
 }
 
 void tst_QJSManagedValue::call_arguments()
@@ -1066,6 +1070,7 @@ void tst_QJSManagedValue::call_arguments()
     {
         QJSManagedValue result(fun.callWithInstance(eng.toScriptValue(QVariant())), &eng);
         QCOMPARE(result.type(), QJSManagedValue::Undefined);
+        QVERIFY(!eng.hasError());
     }
     {
         QJSValueList args;
@@ -1073,6 +1078,7 @@ void tst_QJSManagedValue::call_arguments()
         QJSManagedValue result(fun.callWithInstance(eng.toScriptValue(QVariant()), args), &eng);
         QCOMPARE(result.type(), QJSManagedValue::Number);
         QCOMPARE(result.toNumber(), 123.0);
+        QVERIFY(!eng.hasError());
     }
     // V2 constructors
     {
@@ -1081,6 +1087,7 @@ void tst_QJSManagedValue::call_arguments()
         QJSManagedValue result(fun.callWithInstance(eng.toScriptValue(QVariant()), args), &eng);
         QCOMPARE(result.type(), QJSManagedValue::Number);
         QCOMPARE(result.toNumber(), 123.0);
+        QVERIFY(!eng.hasError());
     }
 }
 
@@ -1091,24 +1098,23 @@ void tst_QJSManagedValue::call()
         QJSManagedValue fun(eng.evaluate(QStringLiteral("(function() { return arguments[1]; })")), &eng);
         QCOMPARE(fun.isCallable(), true);
 
-        {
-            QJSValueList args;
-            args << eng.toScriptValue(123.0) << eng.toScriptValue(456.0);
-            QJSManagedValue result(fun.callWithInstance(eng.toScriptValue(QVariant()), args), &eng);
-            QCOMPARE(result.type(), QJSManagedValue::Number);
-            QCOMPARE(result.toNumber(), 456.0);
-        }
+        QJSValueList args;
+        args << eng.toScriptValue(123.0) << eng.toScriptValue(456.0);
+        QJSManagedValue result(fun.callWithInstance(eng.toScriptValue(QVariant()), args), &eng);
+        QCOMPARE(result.type(), QJSManagedValue::Number);
+        QCOMPARE(result.toNumber(), 456.0);
+        QVERIFY(!eng.hasError());
     }
     {
         QJSManagedValue fun(eng.evaluate(QStringLiteral("(function() { throw new Error('foo'); })")), &eng);
         QCOMPARE(fun.isCallable(), true);
         QVERIFY(!eng.hasError());
 
-        {
-            QJSManagedValue result(fun.call(), &eng);
-            QCOMPARE(result.type(), QJSManagedValue::Undefined);
-            QJSManagedValue error(eng.catchError(), &eng);
-        }
+        QJSManagedValue result(fun.call(), &eng);
+        QCOMPARE(result.type(), QJSManagedValue::Undefined);
+        QVERIFY(eng.hasError());
+        QJSManagedValue error(eng.catchError(), &eng);
+        QVERIFY(error.toString().contains("foo"));
     }
 }
 
@@ -1164,6 +1170,9 @@ void tst_QJSManagedValue::call_nonFunction()
     // calling things that are not functions
     QFETCH(QJSValue, value);
     QVERIFY(QJSManagedValue(std::move(value), engine.data()).call().isUndefined());
+    QVERIFY(engine->hasError());
+    QJSManagedValue error(engine->catchError(), engine.data());
+    QVERIFY(error.toString().contains("TypeError"));
 }
 
 void tst_QJSManagedValue::construct_nonFunction_data()
@@ -1175,6 +1184,9 @@ void tst_QJSManagedValue::construct_nonFunction()
 {
     QFETCH(QJSValue, value);
     QVERIFY(QJSManagedValue(std::move(value), engine.data()).callAsConstructor().isUndefined());
+    QVERIFY(engine->hasError());
+    QJSManagedValue error(engine->catchError(), engine.data());
+    QVERIFY(error.toString().contains("TypeError"));
 }
 
 void tst_QJSManagedValue::construct_simple()
@@ -1188,6 +1200,7 @@ void tst_QJSManagedValue::construct_simple()
     QVERIFY(ret.prototype().strictlyEquals(
                 QJSManagedValue(fun.property(QStringLiteral("prototype")), &eng)));
     QCOMPARE(ret.property(QStringLiteral("foo")).toInt(), 123);
+    QVERIFY(!eng.hasError());
 }
 
 void tst_QJSManagedValue::construct_newObjectJS()
@@ -1202,6 +1215,7 @@ void tst_QJSManagedValue::construct_newObjectJS()
     QVERIFY(!ret.prototype().strictlyEquals(
                 QJSManagedValue(fun.property(QStringLiteral("prototype")), &eng)));
     QCOMPARE(ret.property(QStringLiteral("bar")).toInt(), 456);
+    QVERIFY(!eng.hasError());
 }
 
 void tst_QJSManagedValue::construct_arg()
@@ -1215,6 +1229,7 @@ void tst_QJSManagedValue::construct_arg()
     QCOMPARE(ret.type(), QJSManagedValue::Object);
     QVERIFY(!ret.isNull());
     QCOMPARE(ret.toNumber(), args.at(0).toNumber());
+    QVERIFY(!eng.hasError());
 }
 
 void tst_QJSManagedValue::construct_proto()
@@ -1226,6 +1241,7 @@ void tst_QJSManagedValue::construct_proto()
     QCOMPARE(fun.property(QStringLiteral("prototype")).isObject(), true);
     QJSManagedValue ret(fun.callAsConstructor(), &eng);
     QVERIFY(QJSManagedValue(fun.property(QStringLiteral("prototype")), &eng).strictlyEquals(ret));
+    QVERIFY(!eng.hasError());
 }
 
 void tst_QJSManagedValue::construct_returnInt()
@@ -1237,6 +1253,7 @@ void tst_QJSManagedValue::construct_returnInt()
     QJSManagedValue ret(fun.callAsConstructor(), &eng);
     QCOMPARE(ret.type(), QJSManagedValue::Object);
     QVERIFY(!ret.isNull());
+    QVERIFY(!eng.hasError());
 }
 
 void tst_QJSManagedValue::construct_throw()

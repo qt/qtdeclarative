@@ -916,6 +916,21 @@ bool QJSManagedValue::isCallable() const
     return d && d->isFunctionObject();
 }
 
+static const QV4::FunctionObject *functionObjectForCall(QV4::Value *d)
+{
+    if (Q_UNLIKELY(!d)) {
+        qWarning("QJSManagedValue: Calling a default-constructed or moved-from managed value"
+                 "should throw an exception, but there is no engine to receive it.");
+        return nullptr;
+    }
+
+    if (const QV4::FunctionObject *f = d->as<QV4::FunctionObject>())
+        return f;
+
+    v4Engine(d)->throwTypeError(QStringLiteral("Value is not a function"));
+    return nullptr;
+}
+
 /*!
  * If this QJSManagedValue represents a JavaScript FunctionObject, calls it with
  * the given \a arguments, and returns the result. Otherwise returns a
@@ -927,7 +942,7 @@ bool QJSManagedValue::isCallable() const
  */
 QJSValue QJSManagedValue::call(const QJSValueList &arguments) const
 {
-    const QV4::FunctionObject *f = d ? d->as<QV4::FunctionObject>() : nullptr;
+    const QV4::FunctionObject *f = functionObjectForCall(d);
     if (!f)
         return QJSValue();
 
@@ -960,7 +975,7 @@ QJSValue QJSManagedValue::call(const QJSValueList &arguments) const
 QJSValue QJSManagedValue::callWithInstance(const QJSValue &instance,
                                            const QJSValueList &arguments) const
 {
-    const QV4::FunctionObject *f = d ? d->as<QV4::FunctionObject>() : nullptr;
+    const QV4::FunctionObject *f = functionObjectForCall(d);
     if (!f)
         return QJSValue();
 
@@ -999,7 +1014,7 @@ QJSValue QJSManagedValue::callWithInstance(const QJSValue &instance,
  */
 QJSValue QJSManagedValue::callAsConstructor(const QJSValueList &arguments) const
 {
-    const QV4::FunctionObject *f = d ? d->as<QV4::FunctionObject>() : nullptr;
+    const QV4::FunctionObject *f = functionObjectForCall(d);
     if (!f)
         return QJSValue();
 
