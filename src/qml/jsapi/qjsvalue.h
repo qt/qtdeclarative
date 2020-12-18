@@ -136,6 +136,7 @@ public:
 
     QVariant toVariant() const;
     QVariant toVariant(ObjectConversionBehavior behavior) const;
+    QJSPrimitiveValue toPrimitive() const;
 
     QObject *toQObject() const;
     const QMetaObject *toQMetaObject() const;

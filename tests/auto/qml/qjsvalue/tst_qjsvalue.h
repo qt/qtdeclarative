@@ -69,6 +69,8 @@ private slots:
     void toInt();
     void toUInt();
     void toVariant();
+    void toPrimitive_data();
+    void toPrimitive();
     void toQObject_nonQObject_data();
     void toQObject_nonQObject();
     void toQObject();

@@ -1149,6 +1149,52 @@ void tst_QJSValue::toVariant()
     }
 }
 
+void tst_QJSValue::toPrimitive_data()
+{
+    newEngine();
+    QTest::addColumn<QJSValue>("value");
+    QTest::addColumn<QJSPrimitiveValue>("result");
+    QTest::addColumn<bool>("causesError");
+
+    QTest::newRow("undefined")       << QJSValue(QJSValue::UndefinedValue)
+                                     << QJSPrimitiveValue(QJSPrimitiveUndefined()) << false;
+    QTest::newRow("null")            << QJSValue(QJSValue::NullValue)
+                                     << QJSPrimitiveValue(QJSPrimitiveNull()) << false;
+    QTest::newRow("bool(true)")      << QJSValue(true) << QJSPrimitiveValue(true) << false;
+    QTest::newRow("bool(false)")     << QJSValue(false) << QJSPrimitiveValue(false) << false;
+    QTest::newRow("int")             << QJSValue(123) << QJSPrimitiveValue(123) << false;
+    QTest::newRow("double")          << QJSValue(10.2) << QJSPrimitiveValue(10.2) << false;
+    QTest::newRow("string")          << QJSValue(QStringLiteral("boo"))
+                                     << QJSPrimitiveValue(QStringLiteral("boo")) << false;
+    QTest::newRow("string(managed)") << engine->toScriptValue(QStringLiteral("mmmm"))
+                                     << QJSPrimitiveValue(QStringLiteral("mmmm")) << false;
+    QTest::newRow("symbol")          << engine->evaluate(QStringLiteral("Symbol('bar')"))
+                                     << QJSPrimitiveValue(QJSPrimitiveUndefined()) << true;
+    QTest::newRow("throws")          << engine->evaluate(QStringLiteral(
+                                                             "var a = {};\n"
+                                                             "a.__proto__.toString = function() {\n"
+                                                             "    throw new Error('naeh!');\n"
+                                                             "};\n"
+                                                             "a;"))
+                                     << QJSPrimitiveValue(QJSPrimitiveUndefined()) << true;
+}
+
+void tst_QJSValue::toPrimitive()
+{
+    QFETCH(QJSValue, value);
+    QFETCH(QJSPrimitiveValue, result);
+    QFETCH(bool, causesError);
+
+    QCOMPARE(value.toPrimitive(), result);
+    if (causesError) {
+        QVERIFY(engine->hasError());
+        engine->catchError();
+    } else {
+        QJSValue reconstructed(std::move(result));
+        QVERIFY(reconstructed.strictlyEquals(value));
+    }
+}
+
 void tst_QJSValue::toQObject_nonQObject_data()
 {
     newEngine();

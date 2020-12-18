@@ -633,6 +633,39 @@ QVariant QJSValue::toVariant(QJSValue::ObjectConversionBehavior behavior) const
 }
 
 /*!
+ * Converts the value to a QJSPrimitiveValue. If the value holds a type
+ * supported by QJSPrimitiveValue, the value is copied. Otherwise the
+ * value is converted to a string, and the string is stored in
+ * QJSPrimitiveValue.
+ *
+ * \note Conversion of a managed value to a string can throw an exception. In
+ *       particular, symbols cannot be coerced into strings, or a custom
+ *       toString() method  may throw. In this case the result is the undefined
+ *       value and the engine carries an error after the conversion.
+ */
+QJSPrimitiveValue QJSValue::toPrimitive() const
+{
+    if (const QString *string = QJSValuePrivate::asQString(this))
+        return *string;
+
+    const QV4::Value val = QV4::Value::fromReturnedValue(QJSValuePrivate::asReturnedValue(this));
+    if (val.isUndefined())
+        return QJSPrimitiveUndefined();
+    if (val.isNull())
+        return QJSPrimitiveNull();
+    if (val.isBoolean())
+        return val.toBoolean();
+    if (val.isInteger())
+        return val.integerValue();
+    if (val.isDouble())
+        return val.doubleValue();
+
+    bool ok;
+    const QString result = val.toQString(&ok);
+    return ok ? QJSPrimitiveValue(result) : QJSPrimitiveValue(QJSPrimitiveUndefined());
+}
+
+/*!
   Calls this QJSValue as a function, passing \a args as arguments
   to the function, and using the globalObject() as the "this"-object.
   Returns the value returned from the function.
