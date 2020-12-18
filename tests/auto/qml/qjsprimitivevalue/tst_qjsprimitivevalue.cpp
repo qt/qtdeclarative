@@ -40,6 +40,8 @@ private slots:
     void operators_data();
     void operators();
 
+    void toFromVariant();
+
 private:
     QJSEngine engine;
 
@@ -219,6 +221,44 @@ void tst_QJSPrimitiveValue::operators()
     doTestForAllOperators(&engine, lhs, rhs.toString() + " bar");
     doTestForAllOperators(&engine, "foo" + lhs.toString(), rhs);
     doTestForAllOperators(&engine, lhs, "foo" + rhs.toString());
+}
+
+void tst_QJSPrimitiveValue::toFromVariant()
+{
+    for (const auto &operand : operands) {
+        const QVariant var = operand.toVariant();
+        switch (operand.type()) {
+        case QJSPrimitiveValue::Undefined:
+            QVERIFY(!var.isValid());
+            break;
+        case QJSPrimitiveValue::Null:
+            QCOMPARE(var.typeId(), QMetaType::Nullptr);
+            break;
+        case QJSPrimitiveValue::Boolean:
+            QCOMPARE(var.typeId(), QMetaType::Bool);
+            QCOMPARE(var.toBool(), operand.toBoolean());
+            break;
+        case QJSPrimitiveValue::Integer:
+            QCOMPARE(var.typeId(), QMetaType::Int);
+            QCOMPARE(var.toInt(), operand.toInteger());
+            break;
+        case QJSPrimitiveValue::Double:
+            QCOMPARE(var.typeId(), QMetaType::Double);
+            QCOMPARE(var.toDouble(), operand.toDouble());
+            break;
+        case QJSPrimitiveValue::String:
+            QCOMPARE(var.typeId(), QMetaType::QString);
+            QCOMPARE(var.toString(), operand.toString());
+            break;
+        }
+
+        QJSPrimitiveValue fromVar(var);
+        QCOMPARE(fromVar.type(), operand.type());
+        if (operand.type() == QJSPrimitiveValue::Double && std::isnan(operand.toDouble()))
+            QVERIFY(fromVar != operand);
+        else
+            QCOMPARE(fromVar, operand);
+    }
 }
 
 QTEST_MAIN(tst_QJSPrimitiveValue)

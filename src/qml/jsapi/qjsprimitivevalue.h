@@ -45,6 +45,7 @@
 
 #include <QtCore/qstring.h>
 #include <QtCore/qnumeric.h>
+#include <QtCore/qvariant.h>
 
 #include <variant>
 
@@ -160,6 +161,32 @@ public:
     constexpr QJSPrimitiveValue(int value) : d(value) {}
     constexpr QJSPrimitiveValue(double value) : d(value) {}
     QJSPrimitiveValue(QString string) : d(std::move(string)) {}
+    QJSPrimitiveValue(const QVariant &variant)
+    {
+        switch (variant.typeId()) {
+        case QMetaType::UnknownType:
+            d = QJSPrimitiveUndefined();
+            break;
+        case QMetaType::Nullptr:
+            d = QJSPrimitiveNull();
+            break;
+        case QMetaType::Bool:
+            d = variant.toBool();
+            break;
+        case QMetaType::Int:
+            d = variant.toInt();
+            break;
+        case QMetaType::Double:
+            d = variant.toDouble();
+            break;
+        case QMetaType::QString:
+            d = variant.toString();
+            break;
+        default:
+            // Unsupported. Remains undefined.
+            break;
+        }
+    }
 
     constexpr bool toBoolean() const
     {
@@ -228,6 +255,21 @@ public:
 
         Q_UNREACHABLE();
         return QString();
+    }
+
+    QVariant toVariant() const
+    {
+        switch (type()) {
+        case Undefined: return QVariant();
+        case Null:      return QVariant::fromValue<std::nullptr_t>(nullptr);
+        case Boolean:   return QVariant(asBoolean());
+        case Integer:   return QVariant(asInteger());
+        case Double:    return QVariant(asDouble());
+        case String:    return QVariant(asString());
+        }
+
+        Q_UNREACHABLE();
+        return QVariant();
     }
 
     friend inline QJSPrimitiveValue operator+(const QJSPrimitiveValue &lhs,
