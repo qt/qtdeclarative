@@ -68,14 +68,14 @@ Atlas::~Atlas()
 {
 }
 
-Texture *Atlas::create(const QByteArray &data, int dataLength, int dataOffset, const QSize &size)
+Texture *Atlas::create(QByteArrayView data, const QSize &size)
 {
     // Align reservation to 16x16, >= any compressed block size
     QSize paddedSize(((size.width() + 15) / 16) * 16, ((size.height() + 15) / 16) * 16);
     // No need to lock, as manager already locked it.
     QRect rect = m_allocator.allocate(paddedSize);
     if (rect.width() > 0 && rect.height() > 0) {
-        Texture *t = new Texture(this, rect, data, dataLength, dataOffset, size);
+        Texture *t = new Texture(this, rect, data, size);
         m_pending_uploads << t;
         return t;
     }
@@ -109,8 +109,8 @@ void Atlas::enqueueTextureUpload(QSGRhiAtlasTexture::TextureBase *t, QRhiResourc
 
     const QRect &r = texture->atlasSubRect();
 
-    const char *rawData = texture->data().constData() + texture->dataOffset();
-    QRhiTextureSubresourceUploadDescription subresDesc(rawData, texture->sizeInBytes());
+    QRhiTextureSubresourceUploadDescription subresDesc(texture->data().constData(),
+                                                       texture->sizeInBytes());
     subresDesc.setSourceSize(texture->textureSize());
     subresDesc.setDestinationTopLeft(r.topLeft());
 
@@ -121,14 +121,10 @@ void Atlas::enqueueTextureUpload(QSGRhiAtlasTexture::TextureBase *t, QRhiResourc
             t->textureSize().width(), t->textureSize().height(), m_format);
 }
 
-Texture::Texture(Atlas *atlas, const QRect &textureRect, const QByteArray &data, int dataLength,
-                 int dataOffset, const QSize &size)
+Texture::Texture(Atlas *atlas, const QRect &textureRect, QByteArrayView data, const QSize &size)
     : QSGRhiAtlasTexture::TextureBase(atlas, textureRect),
       m_nonatlas_texture(nullptr),
-      m_data(data),
-      m_size(size),
-      m_dataLength(dataLength),
-      m_dataOffset(dataOffset)
+      m_data(data.toByteArray())
 {
     float w = atlas->size().width();
     float h = atlas->size().height();
@@ -163,8 +159,6 @@ QSGTexture *Texture::removedFromAtlas(QRhiResourceUpdateBatch *) const
         texData.setData(m_data);
         texData.setSize(m_size);
         texData.setGLInternalFormat(static_cast<Atlas*>(m_atlas)->format());
-        texData.setDataLength(m_dataLength);
-        texData.setDataOffset(m_dataOffset);
         m_nonatlas_texture = new QSGCompressedTexture(texData);
         m_nonatlas_texture->setMipmapFiltering(mipmapFiltering());
         m_nonatlas_texture->setFiltering(filtering());

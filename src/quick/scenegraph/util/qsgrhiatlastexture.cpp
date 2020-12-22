@@ -140,7 +140,7 @@ QSGTexture *Manager::create(const QSGCompressedTextureFactory *factory)
             i = m_atlases.insert(format, newAtlas);
         }
         const QTextureFileData *cmpData = factory->textureData();
-        t = i.value()->create(cmpData->data(), cmpData->dataLength(), cmpData->dataOffset(), size);
+        t = i.value()->create(cmpData->getDataView(), size);
     }
 
     return t;

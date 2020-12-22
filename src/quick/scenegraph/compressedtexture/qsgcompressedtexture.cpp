@@ -397,8 +397,11 @@ void QSGCompressedTexture::commitTextureOperations(QRhi *rhi, QRhiResourceUpdate
     }
 
     // only upload mip level 0 since we never do mipmapping for compressed textures (for now?)
-    resourceUpdates->uploadTexture(m_texture, QRhiTextureUploadEntry(0, 0,
-        { m_textureData.data().constData() + m_textureData.dataOffset(), m_textureData.dataLength() }));
+    resourceUpdates->uploadTexture(
+            m_texture,
+            QRhiTextureUploadEntry(0, 0,
+                                   QRhiTextureSubresourceUploadDescription(
+                                           m_textureData.getDataView().toByteArray())));
 
     m_textureData = QTextureFileData(); // Release this memory, not needed anymore
 }
@@ -454,7 +457,7 @@ QSGTexture *QSGCompressedTextureFactory::createTexture(QQuickWindow *window) con
 
 int QSGCompressedTextureFactory::textureByteCount() const
 {
-    return qMax(0, m_textureData.data().size() - m_textureData.dataOffset());
+    return m_textureData.getDataView().size();
 }
 
 QSize QSGCompressedTextureFactory::textureSize() const
