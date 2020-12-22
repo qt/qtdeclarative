@@ -171,20 +171,28 @@ void tst_qqmlenginecleanup::test_valueTypeProviderModule()
     QVERIFY(noDangling);
 }
 
+static QByteArray msgModuleCleanupFail(int attempt, const QQmlComponent &c)
+{
+    return "Attempt #" + QByteArray::number(attempt) + " :"
+           + c.errorString().toUtf8();
+}
+
 void tst_qqmlenginecleanup::test_customModuleCleanup()
 {
     for (int i = 0; i < 5; ++i) {
         qmlClearTypeRegistrations();
 
         QQmlEngine engine;
+        engine.setOutputWarningsToStandardError(true);
         engine.addImportPath(QT_TESTCASE_BUILDDIR);
 
         QQmlComponent component(&engine);
         component.setData("import CustomModule 1.0\nModuleType {}", QUrl());
-        QCOMPARE(component.status(), QQmlComponent::Ready);
+        QVERIFY2(component.status() == QQmlComponent::Ready,
+                 msgModuleCleanupFail(i, component).constData());
 
         QScopedPointer<QObject> object(component.create());
-        QVERIFY(!object.isNull());
+        QVERIFY2(!object.isNull(), msgModuleCleanupFail(i, component).constData());
     }
 }
 
