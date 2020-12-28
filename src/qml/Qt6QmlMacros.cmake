@@ -1208,6 +1208,11 @@ function(_qt_internal_qmldir_defer_file command filepath content)
         file(${ARGV})
     else()
         if("${command}" STREQUAL "WRITE")
+            if("${__qt_qml_macros_module_base_dir}" STREQUAL "")
+                message(FATAL_ERROR "Unable to configure qml module.
+    \"find_package(Qt\${QT_VERSION_MAJOR} CONFIG COMPONENTS Qml)\" \
+is missing.")
+            endif()
             # Wrap with EVAL CODE to evaluate and expand arguments
             cmake_language(EVAL CODE
                            "cmake_language(DEFER DIRECTORY \"${CMAKE_CURRENT_SOURCE_DIR}\" CALL
