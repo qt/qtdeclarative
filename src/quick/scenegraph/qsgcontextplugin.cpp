@@ -144,6 +144,18 @@ QSGAdaptationBackendData *contextFactory()
             requestedBackend = QLatin1String("software");
 #endif
 
+        // As an exception to the above, play nice with platform plugins like
+        // vnc or linuxfb: Trying to initialize a QRhi is futile on these, and
+        // Qt 5 had an explicit fallback to the software backend, based on the
+        // OpenGL capability. Replicate that behavior using the new
+        // RhiBasedRendering capability flag, which, on certain platforms,
+        // indicates that we should not even bother trying to initialize a QRhi
+        // as no 3D API can be expected work.
+        if (!QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::RhiBasedRendering)) {
+            if (requestedBackend.isEmpty())
+                requestedBackend = QLatin1String("software");
+        }
+
         // This is handy if some of the logic above goes wrong and we select
         // e.g. the software backend when it is not desired.
         if (requestedBackend == QLatin1String("rhi"))
