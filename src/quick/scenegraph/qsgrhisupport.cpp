@@ -345,7 +345,7 @@ QSurface::SurfaceType QSGRhiSupport::windowSurfaceType() const
     case QRhi::OpenGLES2:
         return QSurface::OpenGLSurface;
     case QRhi::D3D11:
-        return QSurface::OpenGLSurface; // yup, OpenGLSurface
+        return QSurface::Direct3DSurface;
     case QRhi::Metal:
         return QSurface::MetalSurface;
     default:
