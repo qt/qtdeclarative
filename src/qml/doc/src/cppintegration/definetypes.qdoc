@@ -46,6 +46,7 @@ features such as \e{attached properties} and \e{default properties} in C++.
 (Note that a number of the important concepts covered in this document are
 demonstrated in the \l{Writing QML Extensions with C++} tutorial.)
 
+\b{NOTE:} All headers that declare QML types need to be accessible without any prefix from the project's include path.
 
 \section1 Registering C++ Types with the QML Type System
 
