@@ -133,13 +133,6 @@ bool QQuickTest::qWaitForItemPolished(const QQuickItem *item, int timeout)
     return QTest::qWaitFor([&]() { return !QQuickItemPrivate::get(item)->polishScheduled; }, timeout);
 }
 
-static QObject *testRootObject(QQmlEngine *engine, QJSEngine *jsEngine)
-{
-    Q_UNUSED(engine);
-    Q_UNUSED(jsEngine);
-    return QTestRootObject::instance();
-}
-
 static inline QString stripQuotes(const QString &s)
 {
     if (s.length() >= 2 && s.startsWith(QLatin1Char('"')) && s.endsWith(QLatin1Char('"')))
@@ -534,9 +527,6 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
 
     qputenv("QT_QTESTLIB_RUNNING", "1");
 
-    // Register the custom factory function
-    qmlRegisterSingletonType<QTestRootObject>("Qt.test.qtestroot", 1, 0, "QTestRootObject", testRootObject);
-
     QSet<QString> commandLineTestFunctions(QTest::testFunctions.cbegin(), QTest::testFunctions.cend());
     const bool filteringTestFunctions = !commandLineTestFunctions.isEmpty();
 
@@ -594,7 +584,7 @@ int quick_test_main_with_setup(int argc, char **argv, const char *name, const ch
         QObject::connect(view.engine(), SIGNAL(quit()),
                          &eventLoop, SLOT(quit()));
         view.rootContext()->setContextProperty
-            (QLatin1String("qtest"), QTestRootObject::instance()); // Deprecated. Use QTestRootObject from Qt.test.qtestroot instead
+            (QLatin1String("qtest"), QTestRootObject::instance()); // Deprecated. Use QTestRootObject from QtTest instead
 
         view.setObjectName(fi.baseName());
         view.setTitle(view.objectName());

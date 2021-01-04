@@ -11,8 +11,10 @@ qt_internal_add_module(QuickTest
     SOURCES
         qtestoptions_p.h
         quicktest.cpp quicktest.h quicktest_p.h
-        quicktestglobal.h
+        quicktestevent.cpp quicktestevent_p.h
+        quicktestglobal.h quicktestglobal_p.h
         quicktestresult.cpp quicktestresult_p.h
+        quicktestutil.cpp quicktestutil_p.h
     DEFINES
         QT_NO_FOREACH
         QT_NO_URL_CAST_FROM_STRING
@@ -34,11 +36,9 @@ qt_internal_add_module(QuickTest
 #### Keys ignored in scope 1:.:.:qmltest.pro:<TRUE>:
 # MODULE_CONFIG = "$${QT.testlib.CONFIG}"
 # QMLTYPES_FILENAME = "plugins.qmltypes"
-# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/Qt/test/qtestroot"
-# QML_IMPORT_NAME = "Qt.test.qtestroot"
-# QML_IMPORT_VERSION = "1.0"
-# qmldir.files = "$$PWD/qmldir"
-# qmldir.path = "$$QMLTYPES_INSTALL_DIR"
+# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtTest"
+# QML_IMPORT_NAME = "QtTest"
+# QML_IMPORT_VERSION = "$$QT_VERSION"
 
 ## Scopes:
 #####################################################################
@@ -54,12 +54,6 @@ qt_internal_extend_target(QuickTest CONDITION QT_FEATURE_qml_debug
     DEFINES
         QT_QML_DEBUG_NO_WARNING
 )
-
-#### Keys ignored in scope 4:.:.:qmltest.pro:prefix_build:
-# INSTALLS = "qmldir"
-
-#### Keys ignored in scope 5:.:.:qmltest.pro:else:
-# COPIES = "qmldir"
 qt_internal_add_docs(QuickTest
     doc/qtqmltest.qdocconf
 )
@@ -67,18 +61,10 @@ qt_internal_add_docs(QuickTest
 
 set_target_properties(QuickTest PROPERTIES
     QT_QML_MODULE_INSTALL_QMLTYPES TRUE
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI Qt.test.qtestroot
+    QT_QML_MODULE_VERSION ${CMAKE_PROJECT_VERSION}
+    QT_QML_MODULE_URI QtTest
     QT_QMLTYPES_FILENAME plugins.qmltypes
-    QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/Qt/test/qtestroot"
+    QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtTest"
 )
 
 qt6_qml_type_registration(QuickTest)
-
-#special case begin
-if (QT_WILL_INSTALL)
-    install(FILES qmldir DESTINATION "${INSTALL_QMLDIR}/Qt/test/qtestroot")
-else()
-    file(COPY qmldir DESTINATION "${QT_BUILD_DIR}/${INSTALL_QMLDIR}/Qt/test/qtestroot")
-endif()
-#special case end

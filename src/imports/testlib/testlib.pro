@@ -3,17 +3,10 @@ TARGET  = qmltestplugin
 TARGETPATH = QtTest
 QML_IMPORT_VERSION = $$QT_VERSION
 
-QT += quick qmltest-private qml-private core-private testlib gui-private
+QT = qmltest-private qml core
 
 SOURCES += \
-    main.cpp \
-    quicktestevent.cpp \
-    quicktestutil.cpp
-
-HEADERS += \
-    quicktestevent_p.h \
-    quicktestresultforeign_p.h \
-    quicktestutil_p.h
+    main.cpp
 
 QML_FILES = \
     TestCase.qml \
@@ -21,6 +14,3 @@ QML_FILES = \
     testlogger.js
 
 load(qml_plugin)
-
-OTHER_FILES += testlib.json
-CONFIG += qmltypes install_qmltypes

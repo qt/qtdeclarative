@@ -1,5 +1,5 @@
 module QtTest
-plugin qmltestplugin
+optional plugin qmltestplugin
 classname QTestQmlModule
 typeinfo plugins.qmltypes
 TestCase 1.0 TestCase.qml

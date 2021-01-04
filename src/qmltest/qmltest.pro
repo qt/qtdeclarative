@@ -31,14 +31,8 @@ qtConfig(qml-debug): DEFINES += QT_QML_DEBUG_NO_WARNING
 load(qt_module)
 
 QMLTYPES_FILENAME = plugins.qmltypes
-QMLTYPES_INSTALL_DIR = $$[QT_INSTALL_QML]/Qt/test/qtestroot
-QML_IMPORT_NAME = Qt.test.qtestroot
-QML_IMPORT_VERSION = 1.0
+QMLTYPES_INSTALL_DIR = $$[QT_INSTALL_QML]/QtTest
+QML_IMPORT_NAME = QtTest
+QML_IMPORT_VERSION = $$QT_VERSION
 CONFIG += qmltypes install_qmltypes install_metatypes
 
-# Install qmldir
-qmldir.files = $$PWD/qmldir
-qmldir.path = $$QMLTYPES_INSTALL_DIR
-
-prefix_build: INSTALLS += qmldir
-else: COPIES += qmldir

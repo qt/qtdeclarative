@@ -37,20 +37,8 @@
 **
 ****************************************************************************/
 
-#include "quicktestevent_p.h"
-#include "quicktestutil_p.h"
-
 #include <QtQml/qqmlextensionplugin.h>
-#include <QtQml/qqml.h>
-#include <QtQuickTest/quicktest.h>
-#include <QtQuickTest/private/quicktestresult_p.h>
-#include <QtQuickTest/private/qtestoptions_p.h>
-
-QML_DECLARE_TYPE(QuickTestResult)
-QML_DECLARE_TYPE(QuickTestEvent)
-QML_DECLARE_TYPE(QuickTestUtil)
-
-extern void qml_register_types_QtTest();
+#include <QtQuickTest/private/quicktestglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 

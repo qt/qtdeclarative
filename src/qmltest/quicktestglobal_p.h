@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the test suite of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QUICKTESTRESULTFOREIGN_P_H
-#define QUICKTESTRESULTFOREIGN_P_H
+#ifndef QUICKTESTGLOBAL_P_H
+#define QUICKTESTGLOBAL_P_H
 
 //
 //  W A R N I N G
@@ -51,19 +51,11 @@
 // We mean it.
 //
 
-#include <QtQuickTest/private/quicktestresult_p.h>
-#include <QtQml/qqml.h>
+#include "quicktestglobal.h"
 
-QT_BEGIN_NAMESPACE
+#define Q_QUICK_TEST_PRIVATE_EXPORT Q_QUICK_TEST_EXPORT
 
-struct QuickTestResultForeign
-{
-    Q_GADGET
-    QML_FOREIGN(QuickTestResult)
-    QML_NAMED_ELEMENT(TestResult)
-    QML_ADDED_IN_VERSION(1, 0)
-};
+void Q_QUICK_TEST_PRIVATE_EXPORT qml_register_types_QtTest();
 
-QT_END_NAMESPACE
 
-#endif // QUICKTESTRESULTFOREIGN_P_H
+#endif // QUICKTESTGLOBAL_P_H

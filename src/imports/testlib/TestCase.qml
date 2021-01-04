@@ -41,7 +41,6 @@ import QtQuick 2.0
 import QtQuick.Window 2.0 // used for qtest_verifyItem
 import QtTest 1.2
 import "testlogger.js" as TestLogger
-import Qt.test.qtestroot 1.0
 
 /*!
     \qmltype TestCase

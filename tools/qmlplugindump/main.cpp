@@ -923,13 +923,6 @@ static bool getDependencies(const QQmlEngine &engine, const QString &pluginImpor
         return false;
     }
 
-    QStringList aux;
-    for (const QString &str : qAsConst(*dependencies)) {
-        if (!str.startsWith("Qt.test.qtestroot"))
-            aux += str;
-    }
-    *dependencies = aux;
-
     return true;
 }
 
