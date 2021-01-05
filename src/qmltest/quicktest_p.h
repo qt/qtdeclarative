@@ -51,6 +51,7 @@
 // We mean it.
 //
 
+#include <QtQuickTest/private/quicktestglobal_p.h>
 #include <QtQuickTest/quicktest.h>
 
 #include <QtQml/qqmlpropertymap.h>
@@ -58,7 +59,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QTestRootObject : public QObject
+class Q_QUICK_TEST_PRIVATE_EXPORT QTestRootObject : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool windowShown READ windowShown NOTIFY windowShownChanged)

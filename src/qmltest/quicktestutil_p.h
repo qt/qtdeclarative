@@ -51,13 +51,15 @@
 // We mean it.
 //
 
+#include <QtQuickTest/private/quicktestglobal_p.h>
+
 #include <QtCore/qobject.h>
 #include <QtQml/qqml.h>
 #include <QtQml/qjsvalue.h>
 
 QT_BEGIN_NAMESPACE
 
-class QuickTestUtil : public QObject
+class Q_QUICK_TEST_PRIVATE_EXPORT QuickTestUtil : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool printAvailableFunctions READ printAvailableFunctions NOTIFY printAvailableFunctionsChanged)
