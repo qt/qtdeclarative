@@ -88,11 +88,12 @@ struct Q_QML_EXPORT EngineBase {
     MemoryManager *memoryManager = nullptr;
 
     qint32 callDepth = 0;
+    quint8 padding2[QT_POINTER_SIZE - sizeof(quint32)];
+    Object *globalObject = nullptr;
     Value *jsStackLimit = nullptr;
     Value *jsStackBase = nullptr;
 
     IdentifierTable *identifierTable = nullptr;
-    Object *globalObject = nullptr;
 
     // Exception handling
     Value *exceptionValue = nullptr;
@@ -146,6 +147,7 @@ Q_STATIC_ASSERT(offsetof(EngineBase, jsStackTop) == offsetof(EngineBase, current
 Q_STATIC_ASSERT(offsetof(EngineBase, hasException) == offsetof(EngineBase, jsStackTop) + QT_POINTER_SIZE);
 Q_STATIC_ASSERT(offsetof(EngineBase, memoryManager) == offsetof(EngineBase, hasException) + 8);
 Q_STATIC_ASSERT(offsetof(EngineBase, isInterrupted) + sizeof(EngineBase::isInterrupted) <= offsetof(EngineBase, hasException) + 4);
+Q_STATIC_ASSERT(offsetof(EngineBase, globalObject) % QT_POINTER_SIZE == 0);
 
 }
 
