@@ -33,7 +33,7 @@ called "my.module", you would add the forward declaration in global scope:
 
 \code
 void qml_register_types_my_module();
-\code
+\endcode
 
 Then add the following snippet of code in the implementation of any function
 that's part of the same binary as the registration:
@@ -41,7 +41,7 @@ that's part of the same binary as the registration:
 \code
 volatile auto registration = &qml_register_types_my_module;
 Q_UNUSED(registration);
-\code
+\endcode
 
 \section1 TimeExample QML extension plugin
 
