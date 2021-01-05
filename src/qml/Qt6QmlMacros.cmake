@@ -959,6 +959,11 @@ function(_qt_internal_quick_compiler_process_resources target resource_name)
             set(chained_resource_name "${resource_name}_qmlcache")
         endif()
 
+        get_target_property(qmltypes ${target} QT_QML_MODULE_PLUGIN_TYPES_FILE)
+        if (qmltypes)
+            list(APPEND qmlcachegen_extra_args "-i" ${qmltypes})
+        endif()
+
         get_target_property(direct_calls ${target} QT_QMLCACHEGEN_DIRECT_CALLS)
         if (direct_calls)
             list(APPEND qmlcachegen_extra_args "--direct-calls")
