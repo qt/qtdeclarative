@@ -197,6 +197,7 @@ class Q_QML_EXPORT QQmlListReference
 {
 public:
     QQmlListReference();
+    explicit QQmlListReference(const QVariant &variant, QQmlEngine *engine = nullptr);
     QQmlListReference(QObject *, const char *property, QQmlEngine * = nullptr);
     QQmlListReference(const QQmlListReference &);
     QQmlListReference &operator=(const QQmlListReference &);

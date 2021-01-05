@@ -120,6 +120,42 @@ QQmlListReference::QQmlListReference()
 }
 
 /*!
+\since 6.1
+
+Constructs a QQmlListReference from a QVariant \a variant containing a QQmlListProperty. If
+\a variant does not contain a list property, an invalid QQmlListReference is created. If the object
+owning the list property is destroyed after the reference is constructed, it will automatically
+become invalid.  That is, it is safe to hold QQmlListReference instances even after the object is
+deleted.
+
+The \a engine is required to look up the element type, which may be a dynamically created QML type.
+If it's omitted, only pre-registered types are available.
+*/
+QQmlListReference::QQmlListReference(const QVariant &variant, QQmlEngine *engine)
+    : d(nullptr)
+{
+    const QMetaType t = variant.metaType();
+    if (!(t.flags() & QMetaType::IsQmlList))
+        return;
+
+    QQmlEnginePrivate *p = engine ? QQmlEnginePrivate::get(engine) : nullptr;
+    const int listType = p ? p->listType(t.id()) : QQmlMetaType::listType(t.id());
+    if (listType == -1)
+        return;
+
+    d = new QQmlListReferencePrivate;
+    d->propertyType = t.id();
+    d->elementType = p
+            ? p->rawMetaObjectForType(listType)
+            : QQmlMetaType::qmlType(listType).baseMetaObject();
+
+    d->property.~QQmlListProperty();
+    t.construct(&d->property, variant.constData());
+
+    d->object = d->property.object;
+}
+
+/*!
 Constructs a QQmlListReference for \a object's \a property.  If \a property is not a list
 property, an invalid QQmlListReference is created.  If \a object is destroyed after
 the reference is constructed, it will automatically become invalid.  That is, it is safe to hold

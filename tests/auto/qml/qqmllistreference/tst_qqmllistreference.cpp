@@ -179,6 +179,17 @@ void tst_qqmllistreference::qmllistreference()
 
     tt.data.append(&tt);
     QCOMPARE(r.count(), 1);
+
+    const QMetaObject *m = tt.metaObject();
+    const int index = m->indexOfProperty("data");
+    const QMetaProperty prop = m->property(index);
+    const QVariant var = prop.read(&tt);
+
+    QQmlListReference fromVar(var);
+    QVERIFY(fromVar.isValid());
+    QCOMPARE(fromVar.count(), 1);
+    fromVar.append(&tt);
+    QCOMPARE(tt.data.count(), 2);
 }
 
 void tst_qqmllistreference::qmllistreference_invalid()
@@ -804,6 +815,17 @@ void tst_qqmllistreference::engineTypes()
     QCOMPARE(ref.count(), 2);
     QVERIFY(ref.listElementType());
     QVERIFY(ref.listElementType() != &QObject::staticMetaObject);
+
+
+    const QMetaObject *m = o->metaObject();
+    const int index = m->indexOfProperty("myList");
+    const QMetaProperty prop = m->property(index);
+    const QVariant var = prop.read(o);
+
+    QQmlListReference fromVar(var, &engine);
+    QVERIFY(fromVar.isValid());
+    QCOMPARE(fromVar.count(), 2);
+    QCOMPARE(fromVar.listElementType(), ref.listElementType());
 
     delete o;
 }
