@@ -772,7 +772,7 @@ function(qt6_qml_type_registration target)
     # Run a script to recursively evaluate all the metatypes.json files in order
     # to collect all foreign types.
     string(TOLOWER "${target}_qmltyperegistrations.cpp" type_registration_cpp_file_name)
-    set(foreign_types_file "${target_binary_dir}/qmltypes/foreign_types.txt")
+    set(foreign_types_file "${target_binary_dir}/qmltypes/${target}_foreign_types.txt")
     set(type_registration_cpp_file "${target_binary_dir}/${type_registration_cpp_file_name}")
 
     set(dependency_file_cpp "${target_binary_dir}/qmltypes/${type_registration_cpp_file_name}.d")
