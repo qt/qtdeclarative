@@ -1760,4 +1760,29 @@ void tst_QJSManagedValue::jsFunctionInVariant()
     }
 }
 
+void tst_QJSManagedValue::stringByIndex()
+{
+    QJSEngine engine;
+
+    const QString testString = QStringLiteral("foobar");
+    QJSManagedValue str(testString, &engine);
+
+    for (uint i = 0; i < testString.length(); ++i) {
+        QVERIFY(str.hasOwnProperty(i));
+        QVERIFY(str.hasProperty(i));
+
+        QVERIFY(str.property(i).strictlyEquals(QJSValue(testString.mid(i, 1))));
+        str.setProperty(i, QStringLiteral("u")); // ignored
+        QCOMPARE(str.toString(), testString);
+    }
+
+    QVERIFY(!str.hasOwnProperty(6));
+    QVERIFY(!str.hasProperty(6));
+    QVERIFY(!str.hasOwnProperty(16));
+    QVERIFY(!str.hasProperty(26));
+
+    QVERIFY(str.property(6).isUndefined());
+    QVERIFY(str.property(506).isUndefined());
+}
+
 QTEST_MAIN(tst_QJSManagedValue)

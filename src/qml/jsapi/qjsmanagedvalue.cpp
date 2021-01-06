@@ -830,6 +830,9 @@ bool QJSManagedValue::hasProperty(quint32 arrayIndex) const
     if (!d || d->isNullOrUndefined())
         return false;
 
+    if (QV4::String *string = d->as<QV4::String>())
+        return arrayIndex < quint32(string->d()->length());
+
     if (QV4::Object *obj = d->as<QV4::Object>()) {
         bool hasProperty = false;
         if (arrayIndex == std::numeric_limits<quint32>::max())
@@ -851,6 +854,9 @@ bool QJSManagedValue::hasOwnProperty(quint32 arrayIndex) const
 {
     if (!d || d->isNullOrUndefined())
         return false;
+
+    if (QV4::String *string = d->as<QV4::String>())
+        return arrayIndex < quint32(string->d()->length());
 
     if (QV4::Object *obj = d->as<QV4::Object>()) {
         if (arrayIndex == std::numeric_limits<quint32>::max()) {
@@ -874,6 +880,13 @@ QJSValue QJSManagedValue::property(quint32 arrayIndex) const
 {
     if (!d || d->isNullOrUndefined())
         return QJSValue();
+
+    if (QV4::String *string = d->as<QV4::String>()) {
+        const QString qString = string->toQString();
+        if (arrayIndex < qString.size())
+            return qString.sliced(arrayIndex, 1);
+        return QJSValue();
+    }
 
     if (QV4::Object *obj = d->as<QV4::Object>()) {
         if (arrayIndex == std::numeric_limits<quint32>::max())

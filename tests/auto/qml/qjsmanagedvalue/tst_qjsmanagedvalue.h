@@ -107,6 +107,7 @@ private Q_SLOTS:
 
     void stringAndUrl();
     void jsFunctionInVariant();
+    void stringByIndex();
 
 private:
     void newEngine() { engine.reset(new QJSEngine()); }
