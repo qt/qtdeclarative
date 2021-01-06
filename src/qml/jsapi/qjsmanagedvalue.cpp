@@ -107,7 +107,7 @@ QT_BEGIN_NAMESPACE
  * \enum QJSManagedValue::Type
  *
  * This enum represents the JavaScript native types, as specified by
- * \l{ECMA-26}.
+ * \l{ECMA-262}.
  *
  * \value Undefined The \c undefined type
  * \value Boolean   The \c boolean type
@@ -789,7 +789,7 @@ void QJSManagedValue::setProperty(const QString &name, const QJSValue &value)
 
 /*!
  * Deletes the property \a name from this QJSManagedValue. Returns \c true if
- * the deletion succeeded, or \a false otherwise.
+ * the deletion succeeded, or \c false otherwise.
  */
 bool QJSManagedValue::deleteProperty(const QString &name)
 {
@@ -894,7 +894,7 @@ void QJSManagedValue::setProperty(quint32 arrayIndex, const QJSValue &value)
 
 /*!
  * Deletes the value stored at \a arrayIndex from this QJSManagedValue. Returns
- * \c true if the deletion succeeded, or \a false otherwise.
+ * \c true if the deletion succeeded, or \c false otherwise.
  */
 bool QJSManagedValue::deleteProperty(quint32 arrayIndex)
 {
