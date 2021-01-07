@@ -135,7 +135,12 @@ QT_BEGIN_NAMESPACE
 
 static QV4::ExecutionEngine *v4Engine(QV4::Value *d)
 {
-    return d ? QV4::PersistentValueStorage::getEngine(d) : nullptr;
+    if (!d)
+        return nullptr;
+
+    QV4::ExecutionEngine *v4 = QV4::PersistentValueStorage::getEngine(d);
+    Q_ASSERT(v4);
+    return v4;
 }
 
 /*!
@@ -1037,7 +1042,7 @@ QJSValue QJSManagedValue::callAsConstructor(const QJSValueList &arguments) const
 }
 
 QJSManagedValue::QJSManagedValue(QV4::ExecutionEngine *engine) :
-    d(engine ? engine->memoryManager->m_persistentValues->allocate() : nullptr)
+    d(engine->memoryManager->m_persistentValues->allocate())
 {
 }
 
