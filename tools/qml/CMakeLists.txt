@@ -19,7 +19,7 @@ qt_internal_add_tool(${target_name}
 # special case begin
 # Don't set properties on a host tool when cross compiling, because it
 # is not being built.
-if(CMAKE_CROSSCOMPILING)
+if(CMAKE_CROSSCOMPILING AND NOT QT_BUILD_TOOLS_WHEN_CROSSCOMPILING)
     return()
 endif()
 
