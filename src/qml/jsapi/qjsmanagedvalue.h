@@ -62,7 +62,8 @@ public:
         Number,
         String,
         Object,
-        Symbol
+        Symbol,
+        Function
     };
 
     QJSManagedValue() = default;
@@ -92,6 +93,7 @@ public:
     bool isString() const { return type() == String; }
     bool isObject() const { return type() == Object; }
     bool isSymbol() const { return type() == Symbol; }
+    bool isFunction() const { return type() == Function; }
 
     // Special case of Number
     bool isInteger() const;
@@ -106,7 +108,6 @@ public:
     bool isQMetaObject() const;
     bool isDate() const;
     bool isError() const;
-    bool isCallable() const;
 
     // Native type transformations
     QString toString() const;

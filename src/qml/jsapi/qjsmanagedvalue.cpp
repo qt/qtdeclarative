@@ -115,6 +115,7 @@ QT_BEGIN_NAMESPACE
  * \value String    The \c string type
  * \value Object    The \c object type
  * \value Symbol    The \c symbol type
+ * \value Function  The \c function type
  *
  * Note that the \c null value is not a type of itself but rather a special kind
  * of object. You can query a QJSManagedValue for this condition using the
@@ -380,6 +381,8 @@ QJSManagedValue::Type QJSManagedValue::type() const
         return String;
     if (d->isSymbol())
         return Symbol;
+    if (d->isFunctionObject())
+        return Function;
     return Object;
 }
 
@@ -423,6 +426,13 @@ QJSManagedValue::Type QJSManagedValue::type() const
  *
  * Returns \c true if the type of this QJSManagedValue is \c object,
  * or \c false otherwise.
+ */
+
+/*!
+ * \fn QJSManagedValue::isFunction() const
+ *
+ * Returns \c true if the type of this QJSManagedValue is \c function,
+ * \c false otherwise.
  */
 
 /*!
@@ -905,15 +915,6 @@ bool QJSManagedValue::deleteProperty(quint32 arrayIndex)
         return obj->deleteProperty(QV4::PropertyKey::fromArrayIndex(arrayIndex));
 
     return false;
-}
-
-/*!
- * Returns \c true if this QJSManagedValue is a JavaScript FunctionObject, or
- * \c false otherwise.
- */
-bool QJSManagedValue::isCallable() const
-{
-    return d && d->isFunctionObject();
 }
 
 static const QV4::FunctionObject *functionObjectForCall(QV4::Value *d)

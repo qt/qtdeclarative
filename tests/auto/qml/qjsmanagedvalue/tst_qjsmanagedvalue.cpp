@@ -600,7 +600,7 @@ void tst_QJSManagedValue::toVariant()
     // function
     {
         QJSManagedValue func(eng.evaluate(QStringLiteral("(function() { return 5 + 5 })")), &eng);
-        QVERIFY(func.isCallable());
+        QVERIFY(func.isFunction());
         QCOMPARE(func.call().toInt(), 10);
 
         QVariant funcVar = func.toVariant();
@@ -608,7 +608,7 @@ void tst_QJSManagedValue::toVariant()
         QCOMPARE(funcVar.metaType(), QMetaType::fromType<QJSValue>());
 
         QJSManagedValue func2(eng.toManagedValue(funcVar));
-        QVERIFY(func2.isCallable());
+        QVERIFY(func2.isFunction());
         QCOMPARE(func2.call().toInt(), 10);
     }
 }
@@ -1014,7 +1014,7 @@ void tst_QJSManagedValue::call_function()
 {
     QJSEngine eng;
     QJSManagedValue fun(eng.evaluate(QStringLiteral("(function() { return 1; })")), &eng);
-    QVERIFY(fun.isCallable());
+    QVERIFY(fun.isFunction());
     QJSManagedValue result(fun.call(), &eng);
     QCOMPARE(result.type(), QJSManagedValue::Number);
     QCOMPARE(result.toInteger(), 1);
@@ -1025,7 +1025,7 @@ void tst_QJSManagedValue::call_object()
 {
     QJSEngine eng;
     QJSManagedValue object(eng.evaluate(QStringLiteral("Object")), &eng);
-    QCOMPARE(object.isCallable(), true);
+    QCOMPARE(object.isFunction(), true);
     QJSManagedValue result(object.callWithInstance(object.toJSValue()), &eng);
     QCOMPARE(result.type(), QJSManagedValue::Object);
     QVERIFY(!result.isNull());
@@ -1038,7 +1038,7 @@ void tst_QJSManagedValue::call_newObjects()
     // test that call() doesn't construct new objects
     QJSManagedValue number(eng.evaluate(QStringLiteral("Number")), &eng);
     QJSManagedValue object(eng.evaluate(QStringLiteral("Object")), &eng);
-    QCOMPARE(object.isCallable(), true);
+    QCOMPARE(object.isFunction(), true);
     QJSValueList args;
     args << eng.toScriptValue(123);
     QJSManagedValue result(number.callWithInstance(object.toJSValue(), args), &eng);
@@ -1051,7 +1051,7 @@ void tst_QJSManagedValue::call_this()
     QJSEngine eng;
     // test that correct "this" object is used
     QJSManagedValue fun(eng.evaluate(QStringLiteral("(function() { return this; })")), &eng);
-    QCOMPARE(fun.isCallable(), true);
+    QCOMPARE(fun.isFunction(), true);
 
     QJSManagedValue numberObject(eng.evaluate(QStringLiteral("new Number(123)")), &eng);
     QJSManagedValue result(fun.callWithInstance(QJSValue(std::move(numberObject))), &eng);
@@ -1066,7 +1066,7 @@ void tst_QJSManagedValue::call_arguments()
     // test that correct arguments are passed
 
     QJSManagedValue fun(eng.evaluate(QStringLiteral("(function() { return arguments[0]; })")), &eng);
-    QCOMPARE(fun.isCallable(), true);
+    QCOMPARE(fun.isFunction(), true);
     {
         QJSManagedValue result(fun.callWithInstance(eng.toScriptValue(QVariant())), &eng);
         QCOMPARE(result.type(), QJSManagedValue::Undefined);
@@ -1096,7 +1096,7 @@ void tst_QJSManagedValue::call()
     QJSEngine eng;
     {
         QJSManagedValue fun(eng.evaluate(QStringLiteral("(function() { return arguments[1]; })")), &eng);
-        QCOMPARE(fun.isCallable(), true);
+        QCOMPARE(fun.isFunction(), true);
 
         QJSValueList args;
         args << eng.toScriptValue(123.0) << eng.toScriptValue(456.0);
@@ -1107,7 +1107,7 @@ void tst_QJSManagedValue::call()
     }
     {
         QJSManagedValue fun(eng.evaluate(QStringLiteral("(function() { throw new Error('foo'); })")), &eng);
-        QCOMPARE(fun.isCallable(), true);
+        QCOMPARE(fun.isFunction(), true);
         QVERIFY(!eng.hasError());
 
         QJSManagedValue result(fun.call(), &eng);
@@ -1124,7 +1124,7 @@ void tst_QJSManagedValue::call_twoEngines()
     QJSManagedValue object(eng.evaluate(QStringLiteral("Object")), &eng);
     QJSEngine otherEngine;
     QJSManagedValue fun(otherEngine.evaluate(QStringLiteral("(function() { return 1; })")), &otherEngine);
-    QVERIFY(fun.isCallable());
+    QVERIFY(fun.isFunction());
     QTest::ignoreMessage(QtWarningMsg, "QJSManagedValue::callWithInstance() failed: Instance was created in different engine.");
     QVERIFY(fun.callWithInstance(QJSValue(std::move(object))).isUndefined());
 
@@ -1136,7 +1136,7 @@ void tst_QJSManagedValue::call_twoEngines()
             .isUndefined());
     {
         QJSManagedValue fun(eng.evaluate(QStringLiteral("Object")), &eng);
-        QVERIFY(fun.isCallable());
+        QVERIFY(fun.isFunction());
         QJSEngine eng2;
         QJSManagedValue objectInDifferentEngine(eng2.newObject(), &eng2);
         QJSValueList args;
@@ -1193,7 +1193,7 @@ void tst_QJSManagedValue::construct_simple()
 {
     QJSEngine eng;
     QJSManagedValue fun(eng.evaluate(QStringLiteral("(function () { this.foo = 123; })")), &eng);
-    QVERIFY(fun.isCallable());
+    QVERIFY(fun.isFunction());
     QJSManagedValue ret(fun.callAsConstructor(), &eng);
     QCOMPARE(ret.type(), QJSManagedValue::Object);
     QVERIFY(!ret.isNull());
@@ -1208,7 +1208,7 @@ void tst_QJSManagedValue::construct_newObjectJS()
     QJSEngine eng;
     // returning a different object overrides the default-constructed one
     QJSManagedValue fun(eng.evaluate(QStringLiteral("(function () { return { bar: 456 }; })")), &eng);
-    QVERIFY(fun.isCallable());
+    QVERIFY(fun.isFunction());
     QJSManagedValue ret(fun.callAsConstructor(), &eng);
     QCOMPARE(ret.type(), QJSManagedValue::Object);
     QVERIFY(!ret.isNull());
@@ -1222,7 +1222,7 @@ void tst_QJSManagedValue::construct_arg()
 {
     QJSEngine eng;
     QJSManagedValue Number(eng.evaluate(QStringLiteral("Number")), &eng);
-    QCOMPARE(Number.isCallable(), true);
+    QCOMPARE(Number.isFunction(), true);
     QJSValueList args;
     args << eng.toScriptValue(123);
     QJSManagedValue ret(Number.callAsConstructor(args), &eng);
@@ -1237,7 +1237,7 @@ void tst_QJSManagedValue::construct_proto()
     QJSEngine eng;
     // test that internal prototype is set correctly
     QJSManagedValue fun(eng.evaluate(QStringLiteral("(function() { return this.__proto__; })")), &eng);
-    QCOMPARE(fun.isCallable(), true);
+    QCOMPARE(fun.isFunction(), true);
     QCOMPARE(fun.property(QStringLiteral("prototype")).isObject(), true);
     QJSManagedValue ret(fun.callAsConstructor(), &eng);
     QVERIFY(QJSManagedValue(fun.property(QStringLiteral("prototype")), &eng).strictlyEquals(ret));
@@ -1249,7 +1249,7 @@ void tst_QJSManagedValue::construct_returnInt()
     QJSEngine eng;
     // test that we return the new object even if a non-object value is returned from the function
     QJSManagedValue fun(eng.evaluate(QStringLiteral("(function() { return 123; })")), &eng);
-    QCOMPARE(fun.isCallable(), true);
+    QCOMPARE(fun.isFunction(), true);
     QJSManagedValue ret(fun.callAsConstructor(), &eng);
     QCOMPARE(ret.type(), QJSManagedValue::Object);
     QVERIFY(!ret.isNull());
@@ -1260,7 +1260,7 @@ void tst_QJSManagedValue::construct_throw()
 {
     QJSEngine eng;
     QJSManagedValue fun(eng.evaluate(QStringLiteral("(function() { throw new Error('foo'); })")), &eng);
-    QCOMPARE(fun.isCallable(), true);
+    QCOMPARE(fun.isFunction(), true);
     QVERIFY(!eng.hasError());
     QJSManagedValue ret(fun.callAsConstructor(), &eng);
     QCOMPARE(ret.type(), QJSManagedValue::Undefined);
@@ -1290,7 +1290,7 @@ void tst_QJSManagedValue::construct_constructorThrowsPrimitive()
 {
     QJSEngine eng;
     QJSManagedValue fun(eng.evaluate(QStringLiteral("(function() { throw 123; })")), &eng);
-    QVERIFY(fun.isCallable());
+    QVERIFY(fun.isFunction());
     // construct(QJSValueList)
     {
         QJSManagedValue ret(fun.callAsConstructor(), &eng);
@@ -1407,7 +1407,7 @@ void tst_QJSManagedValue::equals()
     QVERIFY(!qobj2.equals(obj2)); // compares the QObject pointers
 
     QJSManagedValue compareFun(eng.evaluate(QStringLiteral("(function(a, b) { return a == b; })")), &eng);
-    QVERIFY(compareFun.isCallable());
+    QVERIFY(compareFun.isFunction());
     {
         QJSManagedValue ret(compareFun.call(QJSValueList() << qobj1.toJSValue() << qobj2.toJSValue()), &eng);
         QCOMPARE(ret.type(), QJSManagedValue::Boolean);
@@ -1752,7 +1752,7 @@ void tst_QJSManagedValue::jsFunctionInVariant()
     QCOMPARE(console.type(), QJSManagedValue::Object);
     QVERIFY(!console.isNull());
     QJSManagedValue log(console.property(QStringLiteral("log")), &engine);
-    QVERIFY(log.isCallable());
+    QVERIFY(log.isFunction());
 
     {
         QTest::ignoreMessage(QtDebugMsg, "direct call");
