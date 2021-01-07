@@ -78,16 +78,8 @@ Q_LOGGING_CATEGORY(lcWheelHandler, "qt.quick.handler.wheel")
     property, or you can implement \c onWheel and handle the wheel event
     directly.
 
-    WheelHandler handles only a rotating mouse wheel by default.
-    Optionally it can handle smooth-scrolling events from touchpad gestures,
-    by setting \l {QtQuick::PointerDeviceHandler::}{acceptedDevices} to
-    \c{PointerDevice.Mouse | PointerDevice.TouchPad}.
-
-    \note Some non-mouse hardware (such as a touch-sensitive Wacom tablet, or
-    a Linux laptop touchpad) generates real wheel events from gestures.
-    WheelHandler will respond to those events as wheel events regardless of the
-    setting of the \l {QtQuick::PointerDeviceHandler::}{acceptedDevices}
-    property.
+    WheelHandler handles only a rotating mouse wheel by default; this
+    can be changed by setting acceptedDevices.
 
     \sa MouseArea, Flickable
 */
@@ -531,5 +523,24 @@ QMetaProperty &QQuickWheelHandlerPrivate::targetMetaProperty() const
     }
     return metaProperty;
 }
+
+/*!
+    \qmlproperty flags WheelHandler::acceptedDevices
+
+    The types of pointing devices that can activate this handler.
+
+    By default, this property is set to
+    \l{QInputDevice::DeviceType}{PointerDevice.Mouse}, so as to react only to
+    events events from an actual mouse wheel.
+
+    WheelHandler can be made to respond to both mouse wheel and touchpad
+    scrolling by setting acceptedDevices to
+    \c{PointerDevice.Mouse | PointerDevice.TouchPad}.
+
+    \note Some non-mouse hardware (such as a touch-sensitive Wacom tablet, or a
+    Linux laptop touchpad) generates real wheel events from gestures.
+    WheelHandler will respond to those events as wheel events even if
+    \c acceptedDevices remains set to its default value.
+*/
 
 QT_END_NAMESPACE
