@@ -93,5 +93,5 @@
     section, so that only the minimum set of files that are necessary for a
     particular device are deployed.
 
-    \sa {Deploying Qt Applications}, \sa {Using Styles in Qt Quick Controls}
+    \sa {Deploying Qt Applications}, {Using Styles in Qt Quick Controls}
 */
