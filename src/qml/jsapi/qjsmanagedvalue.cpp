@@ -533,6 +533,17 @@ bool QJSManagedValue::isError() const
 }
 
 /*!
+ * \internal
+ *
+ * Returns \c true if this value represents a JavaScript meta type, or \c false
+ * otherwise.
+ */
+bool QJSManagedValue::isJsMetaType() const
+{
+    return d && d->as<QV4::InternalClass>();
+}
+
+/*!
  * Converts the manged value to a string. If the managed value holds a string,
  * that one is returned. Otherwise a string coercion by JavaScript rules is
  * performed.
@@ -798,7 +809,8 @@ void QJSManagedValue::setProperty(const QString &name, const QJSValue &value)
         }
         QV4::Scope scope(obj->engine());
         QV4::ScopedString str(scope, obj->engine()->newString(name));
-        obj->put(str->toPropertyKey(), QJSValuePrivate::convertToReturnedValue(v4, value));
+        obj->put(str->toPropertyKey(),
+                 QJSValuePrivate::convertToReturnedValue(scope.engine, value));
     }
 }
 
@@ -1052,6 +1064,96 @@ QJSValue QJSManagedValue::callAsConstructor(const QJSValueList &arguments) const
     }
 
     return QJSValuePrivate::fromReturnedValue(f->callAsConstructor(jsCallData));
+}
+
+/*!
+ * \internal
+ *
+ * Retrieves the JavaScript meta type of this value. The JavaScript meta type
+ * represents the layout of members in an object. Instantiating a meta type is
+ * faster than re-constructing the same object using a sequence of setProperty()
+ * calls on a new object.
+ *
+ * \sa members(), instantiate()
+ */
+QJSManagedValue QJSManagedValue::jsMetaType() const
+{
+    if (!d)
+        return QJSManagedValue();
+
+    QJSManagedValue result(v4Engine(d));
+    if (QV4::Managed *m = d->as<QV4::Managed>())
+        *result.d = m->internalClass();
+
+    return result;
+}
+
+/*!
+ * \internal
+ *
+ * If this value is a JavaScript meta type, retrieves the names of its members
+ * The ordering of the names corresponds to the ordering of the values to be
+ * passed to instantiate().
+ *
+ * If the value is not a meta type, an empty list is returned.
+ *
+ * \sa isMetaType(), metaType(), instantiate()
+ */
+QStringList QJSManagedValue::jsMetaMembers() const
+{
+    if (!d)
+        return {};
+
+    if (QV4::InternalClass *c = d->as<QV4::InternalClass>()) {
+        const auto heapClass = c->d();
+        const int size = heapClass->size;
+        QStringList result;
+        result.reserve(size);
+        for (int i = 0; i < size; ++i)
+            result.append(heapClass->keyAt(i));
+        return result;
+    }
+
+    return {};
+}
+
+/*!
+ * \internal
+ *
+ * If this value is a JavaScript meta type, instantiates it using the
+ * \a values, and returns the result. Otherwise returns undefined.
+ *
+ * The values are expected in the same order as the keys in the return value of
+ * members(), and that is the order in which properties were added to the object
+ * this meta type originally belongs to.
+ *
+ * \sa members(), metaType(), isMetaType().
+ */
+QJSManagedValue QJSManagedValue::jsMetaInstantiate(const QJSValueList &values) const
+{
+    if (!d)
+        return {};
+
+    if (QV4::InternalClass *c = d->as<QV4::InternalClass>()) {
+        QV4::ExecutionEngine *engine = c->engine();
+        QJSManagedValue result(engine);
+        *result.d = c->engine()->newObject(c->d());
+        QV4::Object *o = result.d->as<QV4::Object>();
+
+        for (uint i = 0, end = qMin(qsizetype(c->d()->size), values.size()); i < end; ++i) {
+            const QJSValue &arg = values[i];
+            if (Q_UNLIKELY(!QJSValuePrivate::checkEngine(engine, arg))) {
+                qWarning("QJSManagedValue::instantiate() failed: "
+                         "Argument was created in different engine.");
+                return QJSManagedValue();
+            }
+            o->setProperty(i, QJSValuePrivate::convertToReturnedValue(engine, arg));
+        }
+
+        return result;
+    }
+
+    return {};
 }
 
 QJSManagedValue::QJSManagedValue(QV4::ExecutionEngine *engine) :

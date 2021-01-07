@@ -108,6 +108,7 @@ public:
     bool isQMetaObject() const;
     bool isDate() const;
     bool isError() const;
+    bool isJsMetaType() const;
 
     // Native type transformations
     QString toString() const;
@@ -145,6 +146,11 @@ public:
     QJSValue call(const QJSValueList &arguments = {}) const;
     QJSValue callWithInstance(const QJSValue &instance, const QJSValueList &arguments = {}) const;
     QJSValue callAsConstructor(const QJSValueList &arguments = {}) const;
+
+    // JavaScript metatypes
+    QJSManagedValue jsMetaType() const;
+    QStringList jsMetaMembers() const;
+    QJSManagedValue jsMetaInstantiate(const QJSValueList &values = {}) const;
 
 private:
     friend class QJSValue;

@@ -108,6 +108,7 @@ private Q_SLOTS:
     void stringAndUrl();
     void jsFunctionInVariant();
     void stringByIndex();
+    void jsMetaTypes();
 
 private:
     void newEngine() { engine.reset(new QJSEngine()); }

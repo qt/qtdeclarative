@@ -1785,4 +1785,41 @@ void tst_QJSManagedValue::stringByIndex()
     QVERIFY(str.property(506).isUndefined());
 }
 
+void tst_QJSManagedValue::jsMetaTypes()
+{
+    QJSEngine engine;
+    QJSManagedValue obj(engine.newObject(), &engine);
+
+    QJSManagedValue emptyMetaType = obj.jsMetaType();
+    QVERIFY(emptyMetaType.jsMetaMembers().isEmpty());
+
+    QJSManagedValue emptyObj = emptyMetaType.jsMetaInstantiate();
+    QVERIFY(emptyObj.isObject());
+
+    obj.setProperty("a", 1);
+    obj.setProperty("b", "foo");
+    obj.setProperty("llala", true);
+    obj.setProperty("ccc", QJSValue(std::move(emptyObj)));
+
+    const QStringList expectedMembers = { "a", "b", "llala", "ccc" };
+
+    QJSManagedValue populatedMetaType = obj.jsMetaType();
+    QCOMPARE(populatedMetaType.jsMetaMembers(), expectedMembers);
+
+    QJSManagedValue populatedObj = populatedMetaType.jsMetaInstantiate(
+                {"bar", 11, QJSValue(QJSValue::NullValue), 17, "ignored"});
+    QVERIFY(populatedObj.isObject());
+    QCOMPARE(populatedObj.property("a").toString(), QStringLiteral("bar"));
+    QCOMPARE(populatedObj.property("b").toInt(), 11);
+    QVERIFY(populatedObj.property("llala").isNull());
+    QCOMPARE(populatedObj.property("ccc").toInt(), 17);
+
+    QJSManagedValue halfPopulated = populatedMetaType.jsMetaInstantiate({"one", 111});
+    QVERIFY(halfPopulated.isObject());
+    QCOMPARE(halfPopulated.property("a").toString(), QStringLiteral("one"));
+    QCOMPARE(halfPopulated.property("b").toInt(), 111);
+    QVERIFY(halfPopulated.property("llala").isUndefined());
+    QVERIFY(halfPopulated.property("ccc").isUndefined());
+}
+
 QTEST_MAIN(tst_QJSManagedValue)
