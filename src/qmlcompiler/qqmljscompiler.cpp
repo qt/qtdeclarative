@@ -377,6 +377,27 @@ bool qCompileJSFile(const QString &inputFileName, const QString &inputFileUrl, Q
     return saveFunction(QV4::CompiledData::SaveableUnitPointer(unit.data), empty, &error->message);
 }
 
+static const char *wrapCallCode = R"(
+template <typename Binding>
+void wrapCall(const QQmlPrivate::AOTCompiledContext *context, void *dataPtr, void **argumentsPtr, Binding &&binding)
+{
+    using return_type = std::invoke_result_t<Binding, const QQmlPrivate::AOTCompiledContext *, void **>;
+    if constexpr (std::is_same_v<return_type, void>) {
+       Q_UNUSED(dataPtr);
+       binding(context, argumentsPtr);
+    } else {
+       new (dataPtr) return_type(binding(context, argumentsPtr));
+    }
+}
+)";
+
+static const char *funcHeaderCode = R"(
+    [](const QQmlPrivate::AOTCompiledContext *context, void *dataPtr, void **argumentsPtr) {
+        wrapCall(context, dataPtr, argumentsPtr, [](const QQmlPrivate::AOTCompiledContext *context, void **argumentsPtr) {
+Q_UNUSED(context);
+Q_UNUSED(argumentsPtr);
+)";
+
 bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFileName, const QV4::CompiledData::SaveableUnitPointer &unit, const QQmlJSAotFunctionMap &aotFunctions, QString *errorString)
 {
 #if QT_CONFIG(temporaryfile)
@@ -463,22 +484,8 @@ bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFile
         // FileScopeCodeIndex is always there, but it may be the only one.
         writeStr("extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[] = { { 0, QMetaType::fromType<void>(), {}, nullptr } };");
     } else {
-        writeStr(R"(template <typename Binding>
-                 void wrapCall(QQmlContext *context, QObject *scopeObject, void *dataPtr, void **argumentsPtr, Binding &&binding) {
-                 using return_type = std::invoke_result_t<Binding, QQmlContext*, QObject*, void **>;
-                 if constexpr (std::is_same_v<return_type, void>) {
-                    Q_UNUSED(dataPtr);
-                    binding(context, scopeObject, argumentsPtr);
-                 } else {
-                    new (dataPtr) return_type(binding(context, scopeObject, argumentsPtr));
-                 }
-                 }        )");
-
-        writeStr("extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[] = {");
-
-        QString header = QStringLiteral("[](QQmlContext *context, QObject *scopeObject, void *dataPtr, void **argumentsPtr) {\n");
-        header += QStringLiteral("wrapCall(context, scopeObject, dataPtr, argumentsPtr, [](QQmlContext *context, QObject *scopeObject, void **argumentsPtr) {");
-        header += QStringLiteral("Q_UNUSED(context); Q_UNUSED(scopeObject); Q_UNUSED(argumentsPtr);\n");
+        writeStr(wrapCallCode);
+        writeStr("extern const QQmlPrivate::AOTCompiledFunction aotBuiltFunctions[] = {\n");
 
         QString footer = QStringLiteral("});}\n");
 
@@ -489,7 +496,7 @@ bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFile
             if (func.key() == FileScopeCodeIndex)
                 continue;
 
-            QString function = header + func.value().code + footer;
+            QString function = QString::fromUtf8(funcHeaderCode) + func.value().code + footer;
 
             QString argumentTypes = func.value().argumentTypes.join(
                         QStringLiteral(">(), QMetaType::fromType<"));

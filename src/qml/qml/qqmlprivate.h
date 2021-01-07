@@ -589,12 +589,20 @@ namespace QQmlPrivate
         QVector<int> *qmlTypeIds;
     };
 
+    struct AOTCompiledContext {
+        QQmlContext *qmlContext;
+        QObject *qmlScopeObject;
+        QJSEngine *engine;
+        QV4::CompiledData::CompilationUnit *compilationUnit;
+
+        QJSValue Q_QML_EXPORT jsMetaType(int index) const;
+    };
+
     struct AOTCompiledFunction {
         int index;
         QMetaType returnType;
         QList<QMetaType> argumentTypes;
-        void (*functionPtr)(QQmlContext *context, QObject *scopeObject, void *resultPtr,
-                            void **arguments);
+        void (*functionPtr)(const AOTCompiledContext *context, void *resultPtr, void **arguments);
     };
 
     struct CachedQmlUnit {

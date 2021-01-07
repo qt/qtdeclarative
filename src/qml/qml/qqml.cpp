@@ -41,6 +41,7 @@
 
 #include <QtQml/qqmlprivate.h>
 
+#include <private/qjsvalue_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlmetatype_p.h>
 #include <private/qqmlmetatypedata_p.h>
@@ -559,6 +560,12 @@ namespace QQmlPrivate {
 
         qmlregister(TypeAndRevisionsRegistration, &type);
     }
+}
+
+QJSValue QQmlPrivate::AOTCompiledContext::jsMetaType(int index) const
+{
+    return QJSValuePrivate::fromReturnedValue(
+                compilationUnit->runtimeClasses[index]->asReturnedValue());
 }
 
 QT_END_NAMESPACE

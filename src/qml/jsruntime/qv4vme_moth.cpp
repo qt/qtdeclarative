@@ -489,9 +489,12 @@ ReturnedValue VME::exec(CppStackFrame *frame, ExecutionEngine *engine)
 
         Scope scope(engine);
         Scoped<QmlContext> qmlContext(scope, engine->qmlContext());
-        function->aotFunction->functionPtr(
-                qmlContext->qmlContext()->asQQmlContext(), qmlContext->qmlScope(),
-                returnValue, argumentPtrs);
+        QQmlPrivate::AOTCompiledContext aotContext;
+        aotContext.qmlContext = qmlContext ? qmlContext->qmlContext()->asQQmlContext() : nullptr;
+        aotContext.qmlScopeObject = qmlContext ? qmlContext->qmlScope() : nullptr;
+        aotContext.engine = engine->jsEngine();
+        aotContext.compilationUnit = function->executableCompilationUnit();
+        function->aotFunction->functionPtr(&aotContext, returnValue, argumentPtrs);
 
         if (returnValue) {
             result = engine->metaTypeToJS(returnType.id(), returnValue);

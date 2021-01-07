@@ -52,10 +52,15 @@ QUntypedPropertyBinding QQmlPropertyBinding::create(const QQmlPropertyData *pd, 
                 aotFunction,
                 unit = QQmlRefPointer<QV4::ExecutableCompilationUnit>(function->executableCompilationUnit()),
                 scopeObject = QPointer<QObject>(obj),
-                context = ctxt
+                context = ctxt,
+                engine = scope->engine()
             ](const QMetaType &, void *dataPtr) -> bool {
-                Q_UNUSED(unit); // to keep refcount
-                aotFunction->functionPtr(context->asQQmlContext(), scopeObject.data(), dataPtr, nullptr);
+                QQmlPrivate::AOTCompiledContext aotContext;
+                aotContext.qmlContext = context->asQQmlContext();
+                aotContext.qmlScopeObject = scopeObject.data();
+                aotContext.engine = engine->jsEngine();
+                aotContext.compilationUnit = unit.data();
+                aotFunction->functionPtr(&aotContext, dataPtr, nullptr);
                 // ### Fixme: The aotFunction should do the check whether old and new value are the same and
                 // return false in that case
                 return true;
