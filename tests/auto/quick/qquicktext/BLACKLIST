@@ -5,3 +5,8 @@ windows gcc
 msvc-2019
 [hAlignVisual]
 sles
+# QTQAINFRA-4127
+[fontSizeModeMultiline]
+ci b2qt 32bit
+[baselineOffset]
+ci b2qt 32bit

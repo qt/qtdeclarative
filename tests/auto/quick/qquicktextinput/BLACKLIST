@@ -5,3 +5,7 @@ opensuse-leap
 # QTBUG-82058
 [setInputMask]
 macos ci
+
+# QTQAINFRA-4127
+[passwordCharacter]
+ci b2qt 32bit

@@ -16,3 +16,6 @@ macos ci
 opensuse-leap
 [ContextFontValidation::test_valid]
 opensuse-leap
+# QTQAINFRA-4127
+[canvas::test_extraArgumentsIgnored:text]
+ci b2qt 32bit
