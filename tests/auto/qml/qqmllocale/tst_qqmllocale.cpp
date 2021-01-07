@@ -73,7 +73,7 @@ private slots:
     void dateTimeFormat();
     void timeFormat_data();
     void timeFormat();
-#if defined(Q_OS_UNIX)
+#if defined(Q_OS_UNIX) && QT_CONFIG(timezone)
     void timeZoneUpdated();
 #endif
 
@@ -1276,7 +1276,7 @@ QString DateFormatter::getLocalizedForm(const QString &isoTimestamp)
     return locale.toString(input);
 }
 
-#if defined(Q_OS_UNIX)
+#if defined(Q_OS_UNIX) && QT_CONFIG(timezone)
 // Currently disabled on Windows as adjusting the timezone
 // requires additional privileges that aren't normally
 // enabled for a process. This can be achieved by calling
@@ -1327,8 +1327,10 @@ void tst_qqmllocale::timeZoneUpdated()
     obj.reset(c.create());
     QVERIFY(obj);
 
-#if !defined(Q_OS_WIN) && QT_CONFIG(timezone) && (!defined(Q_OS_LINUX) || defined(Q_OS_ANDROID))
-    QEXPECT_FAIL("", "Date.timeZoneUpdated() only works on non-Android Linux with QT_CONFIG(timezone).", Continue);
+#if !defined(Q_OS_LINUX) || defined(Q_OS_ANDROID)
+    QEXPECT_FAIL("",
+                 "Date.timeZoneUpdated() only works on non-Android Linux with QT_CONFIG(timezone).",
+                 Continue);
 #endif
     QVERIFY(obj->property("success").toBool());
 
@@ -1337,12 +1339,14 @@ void tst_qqmllocale::timeZoneUpdated()
 
     QMetaObject::invokeMethod(obj.data(), "check");
 
-#if !defined(Q_OS_WIN) && QT_CONFIG(timezone) && (!defined(Q_OS_LINUX) || defined(Q_OS_ANDROID))
-    QEXPECT_FAIL("", "Date.timeZoneUpdated() only works on non-Android Linux with QT_CONFIG(timezone).", Continue);
+#if !defined(Q_OS_LINUX) || defined(Q_OS_ANDROID)
+    QEXPECT_FAIL("",
+                 "Date.timeZoneUpdated() only works on non-Android Linux with QT_CONFIG(timezone).",
+                 Continue);
 #endif
     QVERIFY(obj->property("success").toBool());
 }
-#endif
+#endif // Unix && timezone
 
 QTEST_MAIN(tst_qqmllocale)
 
