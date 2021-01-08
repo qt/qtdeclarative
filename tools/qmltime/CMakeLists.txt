@@ -25,9 +25,14 @@ qt_internal_add_tool(${target_name}
 ## Scopes:
 #####################################################################
 
+# Don't set properties on a host tool when cross compiling, because it
+# is not being built.
+if(NOT CMAKE_CROSSCOMPILING OR QT_BUILD_TOOLS_WHEN_CROSSCOMPILING)
+
 set_target_properties(${target_name} PROPERTIES
     QT_QML_MODULE_VERSION 1.0
     QT_QML_MODULE_URI QmlTime
 )
-
 qt6_qml_type_registration(${target_name})
+endif()
+
