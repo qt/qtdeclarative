@@ -42,6 +42,7 @@ public:
 private slots:
     void valueWithoutCallingObjectFirst_data();
     void valueWithoutCallingObjectFirst();
+    void qtbug_86017();
 };
 
 class AbstractItemModel : public QAbstractItemModel
@@ -132,6 +133,21 @@ void tst_QQmlDelegateModel::valueWithoutCallingObjectFirst()
     QQmlDelegateModel *model = qobject_cast<QQmlDelegateModel*>(root.data());
     QVERIFY(model);
     QCOMPARE(model->variantValue(index, role), expectedValue);
+}
+
+void tst_QQmlDelegateModel::qtbug_86017()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("qtbug_86017.qml"));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY2(root, qPrintable(component.errorString()));
+    QTRY_VERIFY(component.isReady());
+    QQmlDelegateModel *model = qobject_cast<QQmlDelegateModel*>(root.data());
+
+    QVERIFY(model);
+    QCOMPARE(model->count(), 2);
+    QCOMPARE(model->filterGroup(), "selected");
 }
 
 QTEST_MAIN(tst_QQmlDelegateModel)
