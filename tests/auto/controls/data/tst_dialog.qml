@@ -469,6 +469,9 @@ TestCase {
     }
 
     function test_focusLeavingDialog(data) {
+        if (Qt.platform.pluginName === "offscreen")
+            skip("QTBUG-89909")
+
         var window = createTemporaryObject(qtbug85884, testCase)
         verify(window)
         tryCompare(window, "focusItemActiveFocus", true)
