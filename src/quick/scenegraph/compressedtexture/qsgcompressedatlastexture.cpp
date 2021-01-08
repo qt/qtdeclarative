@@ -124,7 +124,8 @@ void Atlas::enqueueTextureUpload(QSGRhiAtlasTexture::TextureBase *t, QRhiResourc
 Texture::Texture(Atlas *atlas, const QRect &textureRect, QByteArrayView data, const QSize &size)
     : QSGRhiAtlasTexture::TextureBase(atlas, textureRect),
       m_nonatlas_texture(nullptr),
-      m_data(data.toByteArray())
+      m_data(data.toByteArray()),
+      m_size(size)
 {
     float w = atlas->size().width();
     float h = atlas->size().height();
