@@ -1343,6 +1343,8 @@ QObject *QQmlDelegateModel::object(int index, QQmlIncubator::IncubationMode incu
 QQmlIncubator::Status QQmlDelegateModel::incubationStatus(int index)
 {
     Q_D(QQmlDelegateModel);
+    if (d->m_compositor.count(d->m_compositorGroup) <= index)
+        return QQmlIncubator::Null;
     Compositor::iterator it = d->m_compositor.find(d->m_compositorGroup, index);
     if (!it->inCache())
         return QQmlIncubator::Null;
