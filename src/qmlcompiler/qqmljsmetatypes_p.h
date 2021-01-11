@@ -88,6 +88,25 @@ public:
     bool hasValues() const { return !m_values.isEmpty(); }
     int value(const QString &key) const { return m_values.value(m_keys.indexOf(key)); }
     bool hasKey(const QString &key) const { return m_keys.indexOf(key) != -1; }
+
+    friend bool operator==(const QQmlJSMetaEnum &a, const QQmlJSMetaEnum &b)
+    {
+        return a.m_keys == b.m_keys
+                && a.m_values == b.m_values
+                && a.m_name == b.m_name
+                && a.m_alias == b.m_alias
+                && a.m_isFlag == b.m_isFlag;
+    }
+
+    friend bool operator!=(const QQmlJSMetaEnum &a, const QQmlJSMetaEnum &b)
+    {
+        return !(a == b);
+    }
+
+    friend size_t qHash(const QQmlJSMetaEnum &e, size_t seed = 0)
+    {
+        return qHashMulti(seed, e.m_keys, e.m_values, e.m_name, e.m_alias, e.m_isFlag);
+    }
 };
 
 class QQmlJSMetaMethod
@@ -158,6 +177,42 @@ public:
 
     bool isValid() const { return !m_name.isEmpty(); }
 
+    friend bool operator==(const QQmlJSMetaMethod &a, const QQmlJSMetaMethod &b)
+    {
+        return a.m_name == b.m_name
+                && a.m_returnTypeName == b.m_returnTypeName
+                && a.m_returnType == b.m_returnType
+                && a.m_paramNames == b.m_paramNames
+                && a.m_paramTypeNames == b.m_paramTypeNames
+                && a.m_paramTypes == b.m_paramTypes
+                && a.m_methodType == b.m_methodType
+                && a.m_methodAccess == b.m_methodAccess
+                && a.m_revision == b.m_revision;
+    }
+
+    friend bool operator!=(const QQmlJSMetaMethod &a, const QQmlJSMetaMethod &b)
+    {
+        return !(a == b);
+    }
+
+    friend size_t qHash(const QQmlJSMetaMethod &method, size_t seed = 0)
+    {
+        QtPrivate::QHashCombine combine;
+
+        seed = combine(seed, method.m_name);
+        seed = combine(seed, method.m_returnTypeName);
+        seed = combine(seed, method.m_returnType.toStrongRef().data());
+        seed = combine(seed, method.m_paramNames);
+        seed = combine(seed, method.m_methodType);
+        seed = combine(seed, method.m_methodAccess);
+        seed = combine(seed, method.m_revision);
+
+        for (const auto &type : method.m_paramTypes)
+            seed = combine(seed, type.toStrongRef().data());
+
+        return seed;
+    }
+
 private:
     QString m_name;
     QString m_returnTypeName;
@@ -213,6 +268,32 @@ public:
 
     void setRevision(int revision) { m_revision = revision; }
     int revision() const { return m_revision; }
+
+    friend bool operator==(const QQmlJSMetaProperty &a, const QQmlJSMetaProperty &b)
+    {
+        return a.m_propertyName == b.m_propertyName
+                && a.m_typeName == b.m_typeName
+                && a.m_bindable == b.m_bindable
+                && a.m_type == b.m_type
+                && a.m_isList == b.m_isList
+                && a.m_isWritable == b.m_isWritable
+                && a.m_isPointer == b.m_isPointer
+                && a.m_isAlias == b.m_isAlias
+                && a.m_revision == b.m_revision;
+    }
+
+    friend bool operator!=(const QQmlJSMetaProperty &a, const QQmlJSMetaProperty &b)
+    {
+        return !(a == b);
+    }
+
+    friend size_t qHash(const QQmlJSMetaProperty &prop, size_t seed = 0)
+    {
+        return qHashMulti(seed, prop.m_propertyName, prop.m_typeName, prop.m_bindable,
+                          prop.m_type.toStrongRef().data(),
+                          prop.m_isList, prop.m_isWritable, prop.m_isPointer, prop.m_isAlias,
+                          prop.m_revision);
+    }
 };
 
 QT_END_NAMESPACE
