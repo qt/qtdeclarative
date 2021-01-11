@@ -59,7 +59,7 @@ private slots:
     void environmentVariables();
 
 private:
-    void loadControls();
+    Q_REQUIRED_RESULT bool loadControls();
     void unloadControls();
 };
 
@@ -73,7 +73,7 @@ void tst_QQuickStyle::cleanup()
     qunsetenv("QT_QUICK_CONTROLS_CONF");
 }
 
-void tst_QQuickStyle::loadControls()
+bool tst_QQuickStyle::loadControls()
 {
     QQmlEngine engine;
     engine.addImportPath(dataDirectory());
@@ -81,7 +81,11 @@ void tst_QQuickStyle::loadControls()
     component.setData("import QtQuick; import QtQuick.Controls; Control { }", QUrl());
 
     QScopedPointer<QObject> object(component.create());
-    QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
+    if (object.isNull()) {
+        qWarning() << component.errorString();
+        return false;
+    }
+    return true;
 }
 
 void tst_QQuickStyle::unloadControls()
@@ -94,7 +98,7 @@ void tst_QQuickStyle::lookup()
     QQuickStyle::setStyle("Material");
     QCOMPARE(QQuickStyle::name(), QString("Material"));
 
-    loadControls();
+    QVERIFY(loadControls());
 
     // The font size for editors in the (default) Normal variant is 16.
     // If this is wrong, the style plugin may not have been loaded.
@@ -147,7 +151,7 @@ void tst_QQuickStyle::commandLineArgument()
 {
     QGuiApplicationPrivate::styleOverride = "CmdLineArgStyle";
 
-    loadControls();
+    QVERIFY(loadControls());
 
     QCOMPARE(QQuickStyle::name(), QString("CmdLineArgStyle"));
 }
