@@ -65,17 +65,20 @@ struct Unit;
 class CompilationUnitMapper
 {
 public:
-    CompilationUnitMapper();
     ~CompilationUnitMapper();
 
-    CompiledData::Unit *open(const QString &cacheFilePath, const QDateTime &sourceTimeStamp, QString *errorString);
-    void close();
+    CompiledData::Unit *get(
+            const QString &cacheFilePath, const QDateTime &sourceTimeStamp, QString *errorString);
 
 private:
+    CompiledData::Unit *open(
+            const QString &cacheFilePath, const QDateTime &sourceTimeStamp, QString *errorString);
+    void close();
+
 #if defined(Q_OS_UNIX)
-    size_t length;
+    size_t length = 0;
 #endif
-    void *dataPtr;
+    void *dataPtr = nullptr;
 };
 
 }

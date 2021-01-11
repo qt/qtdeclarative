@@ -64,6 +64,7 @@ private slots:
     void singletonDependency();
     void cppRegisteredSingletonDependency();
     void cacheModuleScripts();
+    void reuseStaticMappings();
 
 private:
     QDir m_qmlCacheDirectory;
@@ -127,32 +128,41 @@ struct TestCompiler
         mappedFile.setFileName(cacheFilePath);
     }
 
-    bool compile(const QByteArray &contents)
+    void reset()
     {
         closeMapping();
         engine->clearComponentCache();
-
         waitForFileSystem();
+    }
 
-        {
-            QFile f(testFilePath);
-            if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-                lastErrorString = f.errorString();
-                return false;
-            }
-            if (f.write(contents) != contents.size()) {
-                lastErrorString = f.errorString();
-                return false;
-            }
+    bool writeTestFile(const QByteArray &contents)
+    {
+        QFile f(testFilePath);
+        if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+            lastErrorString = f.errorString();
+            return false;
         }
+        if (f.write(contents) != contents.size()) {
+            lastErrorString = f.errorString();
+            return false;
+        }
+        return true;
+    }
 
+    bool loadTestFile()
+    {
         CleanlyLoadingComponent component(engine, testFilePath);
         if (!component.isReady()) {
             lastErrorString = component.errorString();
             return false;
         }
-
         return true;
+    }
+
+    bool compile(const QByteArray &contents)
+    {
+        reset();
+        return writeTestFile(contents) && loadTestFile();
     }
 
     const QV4::CompiledData::Unit *mapUnit()
@@ -173,28 +183,61 @@ struct TestCompiler
     }
 
     typedef void (*HeaderTweakFunction)(QV4::CompiledData::Unit *header);
-    bool tweakHeader(HeaderTweakFunction function)
+    bool tweakHeader(HeaderTweakFunction function, const QString &newName)
     {
         closeMapping();
 
-        QFile f(cacheFilePath);
-        if (!f.open(QIODevice::ReadWrite))
+        const QString targetTestFilePath = tempDir.path() + "/" + newName;
+
+        {
+            QFile testFile(testFilePath);
+            if (!testFile.copy(targetTestFilePath))
+                return false;
+        }
+
+        const QString targetCacheFilePath = QV4::ExecutableCompilationUnit::localCacheFilePath(
+                    QUrl::fromLocalFile(targetTestFilePath));
+
+        QFile source(cacheFilePath);
+        if (!source.copy(targetCacheFilePath))
             return false;
+
+        if (!source.open(QIODevice::ReadOnly))
+            return false;
+
+        QFile target(targetCacheFilePath);
+        if (!target.open(QIODevice::WriteOnly))
+            return false;
+
         QV4::CompiledData::Unit header;
-        if (f.read(reinterpret_cast<char *>(&header), sizeof(header)) != sizeof(header))
+        if (source.read(reinterpret_cast<char *>(&header), sizeof(header)) != sizeof(header))
             return false;
         function(&header);
-        f.seek(0);
-        return f.write(reinterpret_cast<const char *>(&header), sizeof(header)) == sizeof(header);
+
+        return target.write(reinterpret_cast<const char *>(&header), sizeof(header))
+                == sizeof(header);
     }
 
-    bool verify()
+    bool verify(const QString &fileName = QString())
+    {
+        const QString path = fileName.isEmpty() ? testFilePath : tempDir.path() + "/" + fileName;
+
+        QQmlRefPointer<QV4::ExecutableCompilationUnit> unit
+                = QV4::ExecutableCompilationUnit::create();
+        return unit->loadFromDisk(QUrl::fromLocalFile(path),
+                                  QFileInfo(path).lastModified(), &lastErrorString);
+    }
+
+    quintptr unitData()
     {
         QQmlRefPointer<QV4::ExecutableCompilationUnit> unit
                 = QV4::ExecutableCompilationUnit::create();
         return unit->loadFromDisk(QUrl::fromLocalFile(testFilePath),
-                                  QFileInfo(testFilePath).lastModified(), &lastErrorString);
+                                  QFileInfo(testFilePath).lastModified(), &lastErrorString)
+                ? quintptr(unit->unitData())
+                : 0;
     }
+
 
     void closeMapping()
     {
@@ -205,10 +248,11 @@ struct TestCompiler
         mappedFile.close();
     }
 
-    void clearCache()
+    void clearCache(const QString &fileName = QString())
     {
+        const QString path = fileName.isEmpty() ? testFilePath : tempDir.path() + "/" + fileName;
         closeMapping();
-        QFile::remove(cacheFilePath);
+        QFile::remove(path);
     }
 
     QQmlEngine *engine;
@@ -404,25 +448,28 @@ void tst_qmldiskcache::basicVersionChecks()
         testCompiler.clearCache();
         QVERIFY2(testCompiler.compile(contents), qPrintable(testCompiler.lastErrorString));
 
-        testCompiler.tweakHeader([](QV4::CompiledData::Unit *header) {
+        const QString qtVersionFile = QStringLiteral("qtversion.qml");
+        QVERIFY(testCompiler.tweakHeader([](QV4::CompiledData::Unit *header) {
             header->qtVersion = 0;
-        });
+        }, qtVersionFile));
 
-        QVERIFY(!testCompiler.verify());
+        QVERIFY(!testCompiler.verify(qtVersionFile));
         QCOMPARE(testCompiler.lastErrorString, QString::fromUtf8("Qt version mismatch. Found 0 expected %1").arg(QT_VERSION, 0, 16));
-        testCompiler.clearCache();
+        testCompiler.clearCache(qtVersionFile);
     }
 
     {
         testCompiler.clearCache();
         QVERIFY2(testCompiler.compile(contents), qPrintable(testCompiler.lastErrorString));
 
-        testCompiler.tweakHeader([](QV4::CompiledData::Unit *header) {
+        const QString versionFile = QStringLiteral("version.qml");
+        QVERIFY(testCompiler.tweakHeader([](QV4::CompiledData::Unit *header) {
             header->version = 0;
-        });
+        }, versionFile));
 
-        QVERIFY(!testCompiler.verify());
+        QVERIFY(!testCompiler.verify(versionFile));
         QCOMPARE(testCompiler.lastErrorString, QString::fromUtf8("V4 data structure version mismatch. Found 0 expected %1").arg(QV4_DATA_STRUCTURE_VERSION, 0, 16));
+        testCompiler.clearCache(versionFile);
     }
 }
 
@@ -961,6 +1008,26 @@ void tst_qmldiskcache::cacheModuleScripts()
 
         QVERIFY(unit.flags & QV4::CompiledData::Unit::IsESModule);
     }
+}
+
+void tst_qmldiskcache::reuseStaticMappings()
+{
+    QQmlEngine engine;
+
+    TestCompiler testCompiler(&engine);
+    QVERIFY(testCompiler.tempDir.isValid());
+
+    QVERIFY2(testCompiler.compile("import QtQml 2.15\nQtObject { objectName: 'foobar' }\n"),
+             qPrintable(testCompiler.lastErrorString));
+
+    const quintptr data1 = testCompiler.unitData();
+    QVERIFY(data1 != 0);
+    QCOMPARE(testCompiler.unitData(), data1);
+
+    testCompiler.reset();
+    QVERIFY(testCompiler.loadTestFile());
+
+    QCOMPARE(testCompiler.unitData(), data1);
 }
 
 QTEST_MAIN(tst_qmldiskcache)
