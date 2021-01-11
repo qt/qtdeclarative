@@ -96,6 +96,8 @@
     particle of the followed type within the bounds of a TrailEmitter will cause particle emission from its location, as if there
     were an Emitter on it with the same properties as the TrailEmitter.
 
+    \sa {Qt Quick Particles Examples - Emitters}
+
     \section1 ParticlePainters
     Painters are the types that visualize logical particles. For each logical particle in the groups assigned to it,
     which are within its bounds (or outside, if you do not set the clip property on the type) it will be visualized
@@ -111,6 +113,10 @@
     Affectors are an optional component of a particle system. They can perform a variety of manipulations to the simulation,
     such as altering the trajectory of particles or prematurely ending their life in the simulation. For performance reasons,
     it is recommended not to use Affectors in high-volume particle systems.
+
+    \sa {Qt Quick Particles Examples - Affectors}{Examples Affectors},
+        {Qt Quick Particles Examples - Example Image Particles},
+        {Qt Quick Particles Examples - System}{Example Affectors - System}
 
     \section1 Stochastic Parameters
     As particle systems benefit from stochastic control of parameters across a large number of instances, several stochastic
