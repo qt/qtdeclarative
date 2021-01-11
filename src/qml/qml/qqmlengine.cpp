@@ -2391,6 +2391,12 @@ QJSValue QQmlEnginePrivate::singletonInstance<QJSValue>(const QQmlType &type)
         singletonInstances.convertAndInsert(v4engine(), type, &value);
     } else if (!siinfo->url.isEmpty()) {
         QQmlComponent component(q, siinfo->url, QQmlComponent::PreferSynchronous);
+        if (component.isError()) {
+            warning(component.errors());
+            v4engine()->throwError(QLatin1String("Due to the preceding error(s), Singleton \"%1\" could not be loaded.").arg(QString::fromUtf8(type.typeName())));
+
+            return QJSValue(QJSValue::UndefinedValue);
+        }
         QObject *o = component.beginCreate(q->rootContext());
         value = q->newQObject(o);
         singletonInstances.convertAndInsert(v4engine(), type, &value);

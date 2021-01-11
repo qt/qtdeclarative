@@ -344,6 +344,7 @@ private slots:
     void extendedNamespace();
     void factorySingleton();
     void extendedSingleton();
+    void qtbug_85932();
 
 private:
     QQmlEngine engine;
@@ -6093,6 +6094,27 @@ void tst_qqmllanguage::extendedSingleton()
     QCOMPARE(obj->property("b").toInt(), 316);
     QCOMPARE(obj->property("c").toInt(), 42);
     QCOMPARE(obj->property("d").toInt(), 9);
+}
+
+void tst_qqmllanguage::qtbug_85932()
+{
+    QString warning1 = QLatin1String("%1:10:9: id is not unique").arg(testFileUrl("SingletonTest.qml").toString());
+    QString warning2 = QLatin1String("%1:4: Error: Due to the preceding error(s), Singleton \"SingletonTest\" could not be loaded.").arg(testFileUrl("qtbug_85932.qml").toString());
+
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg, qPrintable(warning1));
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg, qPrintable(warning2));
+
+    QQmlEngine engine;
+    QList<QQmlError> allWarnings;
+    QObject::connect(&engine, &QQmlEngine::warnings, [&allWarnings](const QList<QQmlError> &warnings) {
+        allWarnings.append(warnings);
+    });
+
+    QQmlComponent c(&engine, testFileUrl("qtbug_85932.qml"));
+    QScopedPointer<QObject> obj(c.create());
+    QTRY_COMPARE(allWarnings.count(), 2);
+    QCOMPARE(allWarnings.at(0).toString(), warning1);
+    QCOMPARE(allWarnings.at(1).toString(), warning2);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
