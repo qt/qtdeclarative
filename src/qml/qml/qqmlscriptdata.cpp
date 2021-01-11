@@ -117,11 +117,6 @@ QV4::ReturnedValue QQmlScriptData::scriptValueForContext(
     QV4::ExecutionEngine *v4 = parentQmlContextData->engine()->handle();
     QV4::Scope scope(v4);
 
-    if (!hasEngine()) {
-        addToEngine(parentQmlContextData->engine());
-        addref();
-    }
-
     QV4::Scoped<QV4::QmlContext> qmlExecutionContext(scope);
     if (auto qmlContextData = qmlContextDataForContext(parentQmlContextData)) {
         qmlExecutionContext = QV4::QmlContext::create(v4->rootContext(), std::move(qmlContextData),
@@ -156,15 +151,6 @@ QV4::ReturnedValue QQmlScriptData::scriptValueForContext(
     }
 
     return value->asReturnedValue();
-}
-
-void QQmlScriptData::clear()
-{
-    typeNameCache = nullptr;
-    scripts.clear();
-
-    // An addref() was made when the QQmlCleanup was added to the engine.
-    release();
 }
 
 QT_END_NAMESPACE
