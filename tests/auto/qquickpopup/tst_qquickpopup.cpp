@@ -100,6 +100,7 @@ private slots:
     void tabFence();
     void invisibleToolTipOpen();
     void centerInOverlayWithinStackViewItem();
+    void destroyDuringExitTransition();
 };
 
 void tst_QQuickPopup::initTestCase()
@@ -1424,6 +1425,35 @@ void tst_QQuickPopup::centerInOverlayWithinStackViewItem()
     QTRY_COMPARE(popup->isVisible(), true);
 
     // Shouldn't crash on exit.
+}
+
+void tst_QQuickPopup::destroyDuringExitTransition()
+{
+    QQuickApplicationHelper helper(this, "destroyDuringExitTransition.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QPointer<QQuickPopup> dialog2 = window->property("dialog2").value<QQuickPopup*>();
+    QVERIFY(dialog2);
+    QTRY_COMPARE(dialog2->isVisible(), true);
+
+    // Close the second dialog, destroying it before its exit transition can finish.
+    QTest::keyClick(window, Qt::Key_Escape);
+    QTRY_VERIFY(!dialog2);
+
+    // Events should go through to the dialog underneath.
+    QQuickPopup *dialog1 = window->property("dialog1").value<QQuickPopup*>();
+    QVERIFY(dialog1);
+    QQuickButton *button = dialog1->property("button").value<QQuickButton*>();
+    QVERIFY(button);
+    const auto buttonClickPos = button->mapToScene(QPointF(button->width() / 2, button->height() / 2)).toPoint();
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, buttonClickPos);
+    QVERIFY(button->isDown());
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, buttonClickPos);
+    QVERIFY(!button->isDown());
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)

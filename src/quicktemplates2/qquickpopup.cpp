@@ -51,6 +51,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_LOGGING_CATEGORY(lcDimmer, "qt.quick.controls.popup.dimmer")
+
 /*!
     \qmltype Popup
     \inherits QtObject
@@ -499,8 +501,10 @@ void QQuickPopupPrivate::finalizeExitTransition()
 {
     Q_Q(QQuickPopup);
     getPositioner()->setParentItem(nullptr);
-    popupItem->setParentItem(nullptr);
-    popupItem->setVisible(false);
+    if (popupItem) {
+        popupItem->setParentItem(nullptr);
+        popupItem->setVisible(false);
+    }
     destroyOverlay();
 
     if (hadActiveFocusBeforeExitTransition && window) {
@@ -531,8 +535,10 @@ void QQuickPopupPrivate::finalizeExitTransition()
     hadActiveFocusBeforeExitTransition = false;
     emit q->visibleChanged();
     emit q->closed();
-    popupItem->setScale(prevScale);
-    popupItem->setOpacity(prevOpacity);
+    if (popupItem) {
+        popupItem->setScale(prevScale);
+        popupItem->setOpacity(prevOpacity);
+    }
 }
 
 void QQuickPopupPrivate::opened()
@@ -733,6 +739,8 @@ static QQuickItem *createDimmer(QQmlComponent *component, QQuickPopup *popup, QQ
         if (component)
             component->completeCreate();
     }
+    qCDebug(lcDimmer) << "finished creating dimmer from component" << component
+        << "for popup" << popup << "with parent" << parent << "- item is:" << item;
     return item;
 }
 
@@ -759,6 +767,7 @@ void QQuickPopupPrivate::createOverlay()
 void QQuickPopupPrivate::destroyOverlay()
 {
     if (dimmer) {
+        qCDebug(lcDimmer) << "destroying dimmer" << dimmer;
         dimmer->setParentItem(nullptr);
         dimmer->deleteLater();
         dimmer = nullptr;
@@ -857,6 +866,12 @@ QQuickPopup::~QQuickPopup()
     d->popupItem = nullptr;
     delete d->positioner;
     d->positioner = nullptr;
+
+    // If the popup is destroyed before the exit transition finishes,
+    // the necessary cleanup (removing modal dimmers that block mouse events,
+    // emitting closed signal, etc.) won't happen. That's why we do it manually here.
+    if (d->transitionState == QQuickPopupPrivate::ExitTransition && d->transitionManager.isRunning())
+        d->finalizeExitTransition();
 }
 
 /*!
