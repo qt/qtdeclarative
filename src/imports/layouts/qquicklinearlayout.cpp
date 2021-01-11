@@ -470,8 +470,6 @@ void QQuickGridLayoutBase::rearrange(const QSizeF &size)
     if (!isReady())
         return;
 
-    ensureLayoutItemsUpdated();
-
     qCDebug(lcQuickLayouts) << "QQuickGridLayoutBase::rearrange" << d->m_recurRearrangeCounter << this;
     const auto refCounter = qScopeGuard([&d] {
         --(d->m_recurRearrangeCounter);
@@ -482,6 +480,8 @@ void QQuickGridLayoutBase::rearrange(const QSizeF &size)
         qWarning() << "Qt Quick Layouts: Detected recursive rearrange. Aborting after two iterations.";
         return;
     }
+
+    ensureLayoutItemsUpdated();
 
     d->m_rearranging = true;
     qCDebug(lcQuickLayouts) << objectName() << "QQuickGridLayoutBase::rearrange()" << size;
