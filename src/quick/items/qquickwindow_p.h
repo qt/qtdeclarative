@@ -255,10 +255,16 @@ public:
 
     bool emitError(QQuickWindow::SceneGraphError error, const QString &msg);
 
+    enum TextureFromNativeTextureFlag {
+        NativeTextureIsExternalOES = 0x01
+    };
+    Q_DECLARE_FLAGS(TextureFromNativeTextureFlags, TextureFromNativeTextureFlag)
+
     QSGTexture *createTextureFromNativeTexture(quint64 nativeObjectHandle,
                                                int nativeLayout,
                                                const QSize &size,
-                                               QQuickWindow::CreateTextureOptions options) const;
+                                               QQuickWindow::CreateTextureOptions options,
+                                               TextureFromNativeTextureFlags flags = {}) const;
 
     QQuickItem::UpdatePaintNodeData updatePaintNodeData;
 
@@ -388,6 +394,7 @@ public:
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickWindowPrivate::FocusOptions)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickWindowPrivate::TextureFromNativeTextureFlags)
 
 QT_END_NAMESPACE
 

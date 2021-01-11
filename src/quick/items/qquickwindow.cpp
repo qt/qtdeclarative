@@ -4689,14 +4689,15 @@ QSGTexture *QQuickWindow::createTextureFromImage(const QImage &image, CreateText
 QSGTexture *QQuickWindowPrivate::createTextureFromNativeTexture(quint64 nativeObjectHandle,
                                                                 int nativeLayout,
                                                                 const QSize &size,
-                                                                QQuickWindow::CreateTextureOptions options) const
+                                                                QQuickWindow::CreateTextureOptions options,
+                                                                TextureFromNativeTextureFlags flags) const
 {
     if (!rhi)
         return nullptr;
 
     QSGPlainTexture *texture = new QSGPlainTexture;
     texture->setTextureFromNativeTexture(rhi, nativeObjectHandle, nativeLayout,
-                                         size, options.testFlag(QQuickWindow::TextureHasMipmaps));
+                                         size, options, flags);
     texture->setHasAlphaChannel(options & QQuickWindow::TextureHasAlphaChannel);
     // note that the QRhiTexture does not (and cannot) own the native object
     texture->setOwnsTexture(true); // texture meaning the QRhiTexture here, not the native object

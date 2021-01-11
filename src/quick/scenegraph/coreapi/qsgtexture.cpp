@@ -759,6 +759,44 @@ QSGTexture *QSGOpenGLTexture::fromNative(GLuint textureId,
 {
     return QQuickWindowPrivate::get(window)->createTextureFromNativeTexture(quint64(textureId), 0, size, options);
 }
+
+/*!
+    Creates a new QSGTexture wrapping an existing OpenGL texture object for
+    \a window.
+
+    The native object specified in \a textureId is wrapped, but not owned, by
+    the resulting QSGTexture. The caller of the function is responsible for
+    deleting the returned QSGTexture, but that will not destroy the underlying
+    native object.
+
+    This function is suitable only for textures that are meant to be
+    used with the \c{GL_TEXTURE_EXTERNAL_OES} target.
+
+    \warning This function will return null if the scenegraph has not yet been
+    initialized.
+
+    Use \a options to customize the texture attributes. Only the
+    TextureHasAlphaChannel and TextureHasMipmaps are taken into account here.
+
+    \a size specifies the size in pixels.
+
+    \note This function must be called on the scenegraph rendering thread.
+
+    \since 6.1
+
+    \sa fromNative()
+ */
+QSGTexture *QSGOpenGLTexture::fromNativeExternalOES(GLuint textureId,
+                                                    QQuickWindow *window,
+                                                    const QSize &size,
+                                                    QQuickWindow::CreateTextureOptions options)
+{
+    return QQuickWindowPrivate::get(window)->createTextureFromNativeTexture(quint64(textureId),
+                                                                            0,
+                                                                            size,
+                                                                            options,
+                                                                            QQuickWindowPrivate::NativeTextureIsExternalOES);
+}
 } // QNativeInterface
 
 GLuint QSGTexturePlatformOpenGL::nativeTexture() const

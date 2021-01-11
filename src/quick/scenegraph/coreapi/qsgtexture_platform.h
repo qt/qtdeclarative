@@ -67,6 +67,10 @@ struct Q_QUICK_EXPORT QSGOpenGLTexture
                                   QQuickWindow *window,
                                   const QSize &size,
                                   QQuickWindow::CreateTextureOptions options = {});
+    static QSGTexture *fromNativeExternalOES(GLuint textureId,
+                                             QQuickWindow *window,
+                                             const QSize &size,
+                                             QQuickWindow::CreateTextureOptions options = {});
 };
 #endif
 

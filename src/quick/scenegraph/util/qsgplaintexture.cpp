@@ -101,14 +101,19 @@ void QSGPlainTexture::setTexture(QRhiTexture *texture) // RHI only
 }
 
 void QSGPlainTexture::setTextureFromNativeTexture(QRhi *rhi,
-                                                  quint64 nativeObjectHandle, int nativeLayout,
-                                                  const QSize &size, bool mipmap)
+                                                  quint64 nativeObjectHandle,
+                                                  int nativeLayout,
+                                                  const QSize &size,
+                                                  QQuickWindow::CreateTextureOptions options,
+                                                  QQuickWindowPrivate::TextureFromNativeTextureFlags flags)
 {
-    QRhiTexture::Flags flags;
-    if (mipmap)
-        flags |= QRhiTexture::MipMapped | QRhiTexture::UsedWithGenerateMips;
+    QRhiTexture::Flags texFlags;
+    if (options.testFlag(QQuickWindow::TextureHasMipmaps))
+        texFlags |= QRhiTexture::MipMapped | QRhiTexture::UsedWithGenerateMips;
+    if (flags.testFlag(QQuickWindowPrivate::NativeTextureIsExternalOES))
+        texFlags |= QRhiTexture::ExternalOES;
 
-    QRhiTexture *t = rhi->newTexture(QRhiTexture::RGBA8, size, 1, flags);
+    QRhiTexture *t = rhi->newTexture(QRhiTexture::RGBA8, size, 1, texFlags);
 
     // ownership of the native object is never taken
     t->createFrom({nativeObjectHandle, nativeLayout});
