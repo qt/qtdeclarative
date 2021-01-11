@@ -184,7 +184,10 @@ struct QQuickStyleSpec
         // Find the config file.
         resolveConfigFilePath();
 
+        usingDefaultStyle = false;
+
         if (style.isEmpty() || style.toLower() == QStringLiteral("default")) {
+            usingDefaultStyle = true;
             style.clear();
 
             qCDebug(lcQtQuickControlsStyle) << "no style (or Default) was specified;"
@@ -226,6 +229,7 @@ struct QQuickStyleSpec
 
         custom = false;
         resolved = false;
+        usingDefaultStyle = false;
         style.clear();
         fallbackStyle.clear();
         fallbackMethod.clear();
@@ -250,6 +254,8 @@ struct QQuickStyleSpec
     bool custom = false;
     // Have we resolved the style yet?
     bool resolved = false;
+    // Are we using the default style for this platform (because no style was specified)?
+    bool usingDefaultStyle = false;
     // The name of the style.
     QString style;
     // The built-in style to use if the requested style cannot be found.
@@ -262,6 +268,11 @@ struct QQuickStyleSpec
 
 Q_GLOBAL_STATIC(QQuickStyleSpec, styleSpec)
 
+/*
+    Note that most of these functions (with the exception of e.g. isResolved())
+    should not be called before the style has been resolved, as it's only after
+    that happens that they will have been set.
+*/
 QString QQuickStylePrivate::style()
 {
     return styleSpec()->style;
@@ -285,6 +296,11 @@ bool QQuickStylePrivate::isCustomStyle()
 bool QQuickStylePrivate::isResolved()
 {
     return styleSpec()->resolved;
+}
+
+bool QQuickStylePrivate::isUsingDefaultStyle()
+{
+    return styleSpec()->usingDefaultStyle;
 }
 
 void QQuickStylePrivate::init()

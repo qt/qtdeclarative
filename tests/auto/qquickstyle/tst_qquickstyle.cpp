@@ -137,6 +137,7 @@ void tst_QQuickStyle::configurationFile()
     QVERIFY2(!object.isNull(), qPrintable(labelComponent.errorString()));
 
     QCOMPARE(QQuickStyle::name(), expectedStyle);
+    QVERIFY(!QQuickStylePrivate::isUsingDefaultStyle());
 
     // Test that fonts and palettes specified in configuration files are respected.
     QQuickLabel *label = qobject_cast<QQuickLabel *>(object.data());

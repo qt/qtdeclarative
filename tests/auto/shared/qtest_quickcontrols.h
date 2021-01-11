@@ -46,7 +46,11 @@
 
 static QStringList testStyles()
 {
-    if (QQuickStyle::name().isEmpty())
+    // It's not enough to check if the name is empty, because since Qt 6
+    // we set an appropriate style for the platform if no style was specified.
+    // Also, we need the name check to come first, as isUsingDefaultStyle() does not do any resolving,
+    // and so its return value wouldn't be correct otherwise.
+    if (QQuickStyle::name().isEmpty() || QQuickStylePrivate::isUsingDefaultStyle())
         return QQuickStylePrivate::builtInStyles();
     return QStringList(QQuickStyle::name());
 }

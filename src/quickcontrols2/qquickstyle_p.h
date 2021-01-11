@@ -63,6 +63,7 @@ public:
     static QString fallbackStyle();
     static bool isCustomStyle();
     static bool isResolved();
+    static bool isUsingDefaultStyle();
     static bool exists();
     static void init();
     static void reset();
