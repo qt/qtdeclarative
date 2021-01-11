@@ -51,7 +51,6 @@ template <typename, template <typename> class>
 class LinkBufferBase;
 template <typename>
 class BranchCompactingLinkBuffer;
-class RepatchBuffer;
 class Watchpoint;
 namespace DFG {
 struct OSRExit;
@@ -831,7 +830,6 @@ protected:
 
     template <typename, template <typename> class> friend class LinkBufferBase;
     template <typename> friend class BranchCompactingLinkBuffer;
-    friend class RepatchBuffer;
 
     static void linkJump(void* code, Jump jump, CodeLocationLabel target)
     {

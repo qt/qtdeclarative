@@ -14,7 +14,6 @@ HEADERS += $$PWD/assembler/AbstractMacroAssembler.h \
     $$PWD/assembler/MacroAssemblerX86Common.h \
     $$PWD/assembler/MacroAssemblerX86.h \
     $$PWD/assembler/MIPSAssembler.h \
-    $$PWD/assembler/RepatchBuffer.h \
     $$PWD/assembler/X86Assembler.h
 
 SOURCES += $$PWD/assembler/ARMv7Assembler.cpp \

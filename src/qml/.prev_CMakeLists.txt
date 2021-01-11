@@ -24,7 +24,6 @@ qt_internal_add_module(Qml
         ../3rdparty/masm/assembler/MacroAssemblerX86.h
         ../3rdparty/masm/assembler/MacroAssemblerX86Common.h
         ../3rdparty/masm/assembler/MacroAssemblerX86_64.h
-        ../3rdparty/masm/assembler/RepatchBuffer.h
         ../3rdparty/masm/assembler/X86Assembler.h
         ../3rdparty/masm/disassembler/ARM64/A64DOpcode.cpp ../3rdparty/masm/disassembler/ARM64/A64DOpcode.h
         ../3rdparty/masm/disassembler/ARM64Disassembler.cpp
