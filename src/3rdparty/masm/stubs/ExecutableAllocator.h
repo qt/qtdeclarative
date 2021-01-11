@@ -109,7 +109,7 @@ struct ExecutableAllocator {
         return adoptRef(new ExecutableMemoryHandle(realAllocator, size));
     }
 
-    static void makeWritable(void* addr, size_t size)
+    static bool makeWritable(void* addr, size_t size)
     {
         quintptr pageSize = WTF::pageSize();
         quintptr iaddr = reinterpret_cast<quintptr>(addr);
@@ -125,7 +125,7 @@ struct ExecutableAllocator {
 #    else
         bool hr = VirtualProtectFromApp(addr, size, PAGE_READWRITE, &oldProtect);
         if (!hr) {
-            Q_UNREACHABLE();
+            return false;
         }
 #    endif
 #  elif OS(INTEGRITY)
@@ -134,7 +134,7 @@ struct ExecutableAllocator {
         int mode = PROT_READ | PROT_WRITE;
         if (mprotect(addr, size, mode) != 0) {
             perror("mprotect failed in ExecutableAllocator::makeWritable");
-            Q_UNREACHABLE();
+            return false;
         }
 #  endif
 #else
@@ -142,9 +142,10 @@ struct ExecutableAllocator {
         (void)addr; // suppress unused parameter warning
         (void)size; // suppress unused parameter warning
 #endif
+        return true;
     }
 
-    static void makeExecutable(void* addr, size_t size)
+    static bool makeExecutable(void* addr, size_t size)
     {
         quintptr pageSize = WTF::pageSize();
         quintptr iaddr = reinterpret_cast<quintptr>(addr);
@@ -161,7 +162,7 @@ struct ExecutableAllocator {
 #    else
         bool hr = VirtualProtectFromApp(addr, size, PAGE_EXECUTE_READ, &oldProtect);
         if (!hr) {
-            Q_UNREACHABLE();
+            return false;
         }
 #    endif
 #  elif OS(INTEGRITY)
@@ -170,7 +171,7 @@ struct ExecutableAllocator {
         int mode = PROT_READ | PROT_EXEC;
         if (mprotect(addr, size, mode) != 0) {
             perror("mprotect failed in ExecutableAllocator::makeExecutable");
-            Q_UNREACHABLE();
+            return false;
         }
 #  endif
 #else
@@ -180,6 +181,7 @@ struct ExecutableAllocator {
         (void)addr; // suppress unused parameter warning
         (void)size; // suppress unused parameter warning
 #endif
+        return true;
     }
 
     QV4::ExecutableAllocator *realAllocator;

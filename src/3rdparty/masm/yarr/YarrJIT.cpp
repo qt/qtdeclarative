@@ -3928,7 +3928,8 @@ public:
         }
         QV4::generateFunctionTable(nullptr, &codeRef);
 
-        linkBuffer.makeExecutable();
+        if (Q_UNLIKELY(!linkBuffer.makeExecutable()))
+            m_failureReason = JITFailureReason::ExecutableMemoryAllocationFailure;
 
         if (m_failureReason)
             codeBlock.setFallBackWithFailureReason(*m_failureReason);

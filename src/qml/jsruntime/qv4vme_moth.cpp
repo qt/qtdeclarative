@@ -442,7 +442,10 @@ ReturnedValue VME::exec(CppStackFrame *frame, ExecutionEngine *engine)
 
 #if QT_CONFIG(qml_jit)
     if (debugger == nullptr) {
-        if (function->jittedCode == nullptr) {
+        // Check for codeRef here. In rare cases the JIT compilation may fail, which leaves us
+        // with a (useless) codeRef, but no jittedCode. In that case, don't try to JIT again every
+        // time we execute the function, but just interpret instead.
+        if (function->codeRef == nullptr) {
             if (engine->canJIT(function))
                 QV4::JIT::BaselineJIT(function).generate();
             else

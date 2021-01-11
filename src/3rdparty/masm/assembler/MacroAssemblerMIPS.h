@@ -2818,7 +2818,6 @@ private:
     bool m_fixedWidth;
 
     template <typename, template <typename> class> friend class LinkBufferBase;
-    friend class RepatchBuffer;
 
     static void linkCall(void* code, Call call, FunctionPtr function)
     {

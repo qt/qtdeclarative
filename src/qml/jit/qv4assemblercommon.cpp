@@ -159,7 +159,8 @@ void PlatformAssemblerCommon::link(Function *function, const char *jitKind)
 
     generateFunctionTable(function, &codeRef);
 
-    linkBuffer.makeExecutable();
+    if (Q_UNLIKELY(!linkBuffer.makeExecutable()))
+        function->jittedCode = nullptr; // The function is not executable, but the coderef exists.
 }
 
 void PlatformAssemblerCommon::prepareCallWithArgCount(int argc)

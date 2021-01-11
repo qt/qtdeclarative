@@ -140,7 +140,8 @@ namespace JSC {
             if (!result)
                 return 0;
 
-            ExecutableAllocator::makeWritable(result->memoryStart(), result->memorySize());
+            if (Q_UNLIKELY(!ExecutableAllocator::makeWritable(result->memoryStart(), result->memorySize())))
+                return 0;
 
             memcpy(result->codeStart(), m_buffer, m_index);
             
