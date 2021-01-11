@@ -1233,5 +1233,42 @@ Item {
 
             // DO NOT CRASH due to stack overflow (or loop endlessly due to updatePolish()/polish() loop)
         }
+
+        Component {
+            id: layout_dependentWidth_QTBUG_87253_Component
+
+            RowLayout {
+                anchors.fill: parent;
+
+                RowLayout {
+                    spacing: 10
+
+                    Text {
+                        id: btnOPE
+                        text: qsTr("Ok")
+                        Layout.fillWidth: true
+                        Layout.preferredWidth: (parent.width - 20) / 2
+                    }
+
+                    Text {
+                        id: btnSeeChanged
+                        text: qsTr("Not Ok");
+                        Layout.fillWidth: true
+                        Layout.preferredWidth: (parent.width - 20) / 2
+                    }
+                }
+            }
+        }
+
+        function test_dependentWidth_QTBUG_87253()
+        {
+            var warningMsg = new RegExp("Qt Quick Layouts: Detected recursive rearrange. "
+                                      + "Aborting after two iterations.")
+            for (var i = 0; i < 10; ++i) {
+                ignoreWarning(warningMsg)
+            }
+            var layout = createTemporaryObject(layout_dependentWidth_QTBUG_87253_Component, container)
+            waitForRendering(layout)
+        }
     }
 }
