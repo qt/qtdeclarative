@@ -65,14 +65,7 @@ QT_BEGIN_NAMESPACE
 class QQmlTypeNameCache;
 class QQmlContextData;
 
-// QQmlScriptData instances are created, uninitialized, by the loader in the
-// load thread.  The first time they are used by the VME, they are initialized which
-// creates their v8 objects and they are referenced and added to the  engine's cleanup
-// list.  During QQmlCleanup::clear() all v8 resources are destroyed, and the
-// reference that was created is released but final deletion only occurs once all the
-// references as released.  This is all intended to ensure that the v8 resources are
-// only created and destroyed in the main thread :)
-class Q_AUTOTEST_EXPORT QQmlScriptData : public QQmlCleanup, public QQmlRefCount
+class Q_AUTOTEST_EXPORT QQmlScriptData : public QQmlRefCount
 {
 private:
     friend class QQmlTypeLoader;
@@ -89,13 +82,9 @@ public:
 
     QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit() const { return m_precompiledScript; }
 
-protected:
-    void clear() override; // From QQmlCleanup
-
 private:
     friend class QQmlScriptBlob;
 
-    void initialize(QQmlEngine *);
     QQmlContextData *qmlContextDataForContext(QQmlContextData *parentQmlContextData);
 
     bool m_loaded;
