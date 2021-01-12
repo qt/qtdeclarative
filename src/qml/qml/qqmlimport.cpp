@@ -202,26 +202,31 @@ private:
 
 Q_GLOBAL_STATIC(PathPluginMap, qmlPluginsByPath); // stores the uri and the PluginLoaders
 
+static bool unloadPlugin(const std::pair<const QString, QmlPlugin> &plugin)
+{
+    const auto &loader = plugin.second.loader;
+    if (!loader)
+        return false;
+
+    if (auto extensionPlugin = qobject_cast<QQmlExtensionPlugin *>(loader->instance()))
+        extensionPlugin->unregisterTypes();
+
+#if QT_CONFIG(library) && !defined(Q_OS_MACOS)
+    if (!loader->unload()) {
+        qWarning("Unloading %s failed: %s", qPrintable(plugin.first),
+                 qPrintable(loader->errorString()));
+        return false;
+    }
+#endif
+
+    return true;
+}
+
 void qmlClearEnginePlugins()
 {
     PathPluginMapPtr plugins(qmlPluginsByPath());
-#if QT_CONFIG(library)
-    for (const auto &plugin : qAsConst(*plugins)) {
-        const auto &loader = plugin.second.loader;
-        if (loader) {
-            auto extensionPlugin = qobject_cast<QQmlExtensionPlugin *>(loader->instance());
-            if (extensionPlugin) {
-                extensionPlugin->unregisterTypes();
-            }
-#ifndef Q_OS_MACOS
-            if (!loader->unload()) {
-                qWarning("Unloading %s failed: %s", qPrintable(plugin.first),
-                         qPrintable(loader->errorString()));
-            }
-#endif
-        }
-    }
-#endif
+    for (const auto &plugin : qAsConst(*plugins))
+        unloadPlugin(plugin);
     plugins->clear();
 }
 
@@ -2389,19 +2394,10 @@ bool QQmlImportDatabase::removeDynamicPlugin(const QString &filePath)
     if (it == plugins->end())
         return false;
 
-    auto &loader = it->second.loader;
-    if (!loader)
-        return false;
-
-#if QT_CONFIG(library)
-    if (!loader->unload()) {
-        qWarning("Unloading %s failed: %s", qPrintable(it->first),
-                 qPrintable(loader->errorString()));
-    }
-#endif
+    const bool success = unloadPlugin(*it);
 
     plugins->erase(it);
-    return true;
+    return success;
 }
 
 QStringList QQmlImportDatabase::dynamicPlugins() const
