@@ -79,6 +79,55 @@ private:
 QML_DECLARE_TYPE(MyRect)
 QML_DECLARE_TYPEINFO(MyRect, QML_HAS_ATTACHED_PROPERTIES)
 
+class RemovableObj : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int prop READ prop WRITE setProp NOTIFY propChanged)
+
+public:
+    RemovableObj(QObject *parent) : QObject(parent), m_prop(4321) { }
+    int prop() const { return m_prop; }
+
+public slots:
+    void setProp(int prop)
+    {
+        if (m_prop == prop)
+            return;
+
+        m_prop = prop;
+        emit propChanged(m_prop);
+    }
+
+signals:
+    void propChanged(int prop);
+
+private:
+    int m_prop;
+};
+
+class ContainingObj : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(RemovableObj *obj READ obj NOTIFY objChanged)
+    RemovableObj *m_obj;
+
+public:
+    ContainingObj() : m_obj(new RemovableObj(this)) { }
+    RemovableObj *obj() const { return m_obj; }
+
+    Q_INVOKABLE void reset()
+    {
+        if (m_obj) {
+            m_obj->deleteLater();
+        }
+
+        m_obj = new RemovableObj(this);
+        emit objChanged();
+    }
+signals:
+    void objChanged();
+};
+
 class tst_qquickstates : public QQmlDataTest
 {
     Q_OBJECT
@@ -140,12 +189,20 @@ private slots:
     void duplicateStateName();
     void trivialWhen();
     void parentChangeCorrectReversal();
+    void revertNullObjectBinding();
 };
 
 void tst_qquickstates::initTestCase()
 {
     QQmlDataTest::initTestCase();
     qmlRegisterType<MyRect>("Qt.test", 1, 0, "MyRectangle");
+    qmlRegisterSingletonType<ContainingObj>(
+            "Qt.test", 1, 0, "ContainingObj", [](QQmlEngine *engine, QJSEngine *) {
+                static ContainingObj instance;
+                engine->setObjectOwnership(&instance, QQmlEngine::CppOwnership);
+                return &instance;
+            });
+    qmlRegisterUncreatableType<RemovableObj>("Qt.test", 1, 0, "RemovableObj", "Uncreatable");
 }
 
 QByteArray tst_qquickstates::fullDataPath(const QString &path) const
@@ -1692,6 +1749,17 @@ void tst_qquickstates::parentChangeCorrectReversal()
     QCOMPARE(oldX, stayingRectX.read().toDouble());
 }
 
+void tst_qquickstates::revertNullObjectBinding()
+{
+    QQmlEngine engine;
+
+    QQmlComponent c(&engine, testFileUrl("revertNullObjectBinding.qml"));
+    QScopedPointer<QObject> root { c.create() };
+    QVERIFY(root);
+    QTest::qWait(10);
+    QQmlProperty state2Active(root.get(), "state2Active");
+    state2Active.write(false);
+}
 
 QTEST_MAIN(tst_qquickstates)
 

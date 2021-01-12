@@ -635,6 +635,11 @@ void QQuickState::apply(QQuickTransition *trans, QQuickState *revert)
             }
         }
         if (!found) {
+            // If revert list contains bindings assigned to deleted objects, we need to
+            // prevent reverting properties of those objects.
+            if (d->revertList.at(ii).binding() && !d->revertList.at(ii).property().object()) {
+                continue;
+            }
             QVariant cur = d->revertList.at(ii).property().read();
             QQmlPropertyPrivate::removeBinding(d->revertList.at(ii).property());
 
