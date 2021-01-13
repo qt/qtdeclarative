@@ -110,7 +110,7 @@ QQmlDesignerMetaObject* QQmlDesignerMetaObject::getNodeInstanceMetaObject(QObjec
 void QQmlDesignerMetaObject::init(QObject *object, QQmlEngine *engine)
 {
     //Creating QQmlOpenMetaObjectType
-    m_type = new QQmlOpenMetaObjectType(metaObjectParent(), engine);
+    m_type = new QQmlOpenMetaObjectType(metaObjectParent());
     m_type->addref();
     //Assigning type to this
     copyTypeMetaObject();

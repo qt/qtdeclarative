@@ -41,7 +41,6 @@
 #include <private/qqmlpropertycache_p.h>
 #include <private/qqmldata_p.h>
 #include <private/qmetaobjectbuilder_p.h>
-#include <qqmlengine.h>
 #include <qdebug.h>
 
 QT_BEGIN_NAMESPACE
@@ -50,7 +49,7 @@ QT_BEGIN_NAMESPACE
 class QQmlOpenMetaObjectTypePrivate
 {
 public:
-    QQmlOpenMetaObjectTypePrivate() : mem(nullptr), cache(nullptr), engine(nullptr) {}
+    QQmlOpenMetaObjectTypePrivate() : mem(nullptr), cache(nullptr) {}
 
     void init(const QMetaObject *metaObj);
 
@@ -60,14 +59,12 @@ public:
     QMetaObjectBuilder mob;
     QMetaObject *mem;
     QQmlPropertyCache *cache;
-    QQmlEngine *engine;
     QSet<QQmlOpenMetaObject*> referers;
 };
 
-QQmlOpenMetaObjectType::QQmlOpenMetaObjectType(const QMetaObject *base, QQmlEngine *engine)
-    : QQmlCleanup(engine), d(new QQmlOpenMetaObjectTypePrivate)
+QQmlOpenMetaObjectType::QQmlOpenMetaObjectType(const QMetaObject *base)
+    : d(new QQmlOpenMetaObjectTypePrivate)
 {
-    d->engine = engine;
     d->init(base);
 }
 
@@ -78,11 +75,6 @@ QQmlOpenMetaObjectType::~QQmlOpenMetaObjectType()
     if (d->cache)
         d->cache->release();
     delete d;
-}
-
-void QQmlOpenMetaObjectType::clear()
-{
-    d->engine = nullptr;
 }
 
 int QQmlOpenMetaObjectType::propertyOffset() const
@@ -258,7 +250,7 @@ public:
 QQmlOpenMetaObject::QQmlOpenMetaObject(QObject *obj, const QMetaObject *base, bool automatic)
 : d(new QQmlOpenMetaObjectPrivate(this, automatic, obj))
 {
-    d->type.adopt(new QQmlOpenMetaObjectType(base ? base : obj->metaObject(), nullptr));
+    d->type.adopt(new QQmlOpenMetaObjectType(base ? base : obj->metaObject()));
     d->type->d->referers.insert(this);
 
     QObjectPrivate *op = QObjectPrivate::get(obj);
@@ -428,7 +420,7 @@ bool QQmlOpenMetaObject::hasValue(int id) const
 
 void QQmlOpenMetaObject::setCached(bool c)
 {
-    if (c == d->cacheProperties || !d->type->d->engine)
+    if (c == d->cacheProperties)
         return;
 
     d->cacheProperties = c;

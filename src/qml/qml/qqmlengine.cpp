@@ -621,7 +621,7 @@ QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
   profiler(nullptr),
 #endif
   outputWarningsToMsgLog(true),
-  cleanup(nullptr), erroredBindings(nullptr), inProgressCreations(0),
+  erroredBindings(nullptr), inProgressCreations(0),
 #if QT_CONFIG(qml_worker_script)
   workerScriptEngine(nullptr),
 #endif
@@ -638,15 +638,6 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
 {
     if (inProgressCreations)
         qWarning() << QQmlEngine::tr("There are still \"%1\" items in the process of being created at engine destruction.").arg(inProgressCreations);
-
-    while (cleanup) {
-        QQmlCleanup *c = cleanup;
-        cleanup = c->next;
-        if (cleanup) cleanup->prev = &cleanup;
-        c->next = nullptr;
-        c->prev = nullptr;
-        c->clear();
-    }
 
     doDeleteInEngineThread();
 

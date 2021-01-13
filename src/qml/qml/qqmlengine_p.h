@@ -95,7 +95,6 @@ class QNetworkAccessManager;
 class QQmlNetworkAccessManagerFactory;
 class QQmlTypeNameCache;
 class QQmlComponentAttached;
-class QQmlCleanup;
 class QQmlDelayedError;
 class QQmlObjectCreator;
 class QDir;
@@ -168,9 +167,6 @@ public:
 #endif
 
     bool outputWarningsToMsgLog;
-
-    // Registered cleanup handlers
-    QQmlCleanup *cleanup;
 
     // Bindings that have had errors during startup
     QQmlDelayedError *erroredBindings;

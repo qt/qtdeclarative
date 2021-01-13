@@ -52,7 +52,6 @@
 //
 
 #include <private/qqmlrefcount_p.h>
-#include "qqmlcleanup_p.h"
 #include "qqmlmetatype_p.h"
 
 #include <private/qstringhash_p.h>

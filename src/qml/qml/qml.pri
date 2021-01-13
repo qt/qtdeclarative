@@ -34,7 +34,6 @@ SOURCES += \
     $$PWD/qqmltypeloader.cpp \
     $$PWD/qqmlinfo.cpp \
     $$PWD/qqmlvaluetype.cpp \
-    $$PWD/qqmlcleanup.cpp \
     $$PWD/qqmlpropertycache.cpp \
     $$PWD/qqmlmetaobject.cpp \
     $$PWD/qqmlnotifier.cpp \
@@ -118,7 +117,6 @@ HEADERS += \
     $$PWD/qqmllist_p.h \
     $$PWD/qqmldata_p.h \
     $$PWD/qqmlvaluetype_p.h \
-    $$PWD/qqmlcleanup_p.h \
     $$PWD/qqmlenumdata_p.h \
     $$PWD/qqmlenumvalue_p.h \
     $$PWD/qqmlpropertycache_p.h \

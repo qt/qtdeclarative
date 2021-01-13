@@ -221,10 +221,9 @@ QQuickPathViewAttached *QQuickPathViewPrivate::attached(QQuickItem *item)
 
 QQmlOpenMetaObjectType *QQuickPathViewPrivate::attachedType()
 {
-    Q_Q(QQuickPathView);
     if (!attType) {
         // pre-create one metatype to share with all attached objects
-        attType = new QQmlOpenMetaObjectType(&QQuickPathViewAttached::staticMetaObject, qmlEngine(q));
+        attType = new QQmlOpenMetaObjectType(&QQuickPathViewAttached::staticMetaObject);
         if (path) {
             const auto attributes = path->attributes();
             for (const QString &attr : attributes)

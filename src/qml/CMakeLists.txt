@@ -226,7 +226,6 @@ qt_internal_add_module(Qml
         qml/qqmlapplicationengine.cpp qml/qqmlapplicationengine.h qml/qqmlapplicationengine_p.h
         qml/qqmlbinding.cpp qml/qqmlbinding_p.h
         qml/qqmlboundsignal.cpp qml/qqmlboundsignal_p.h
-        qml/qqmlcleanup.cpp qml/qqmlcleanup_p.h
         qml/qqmlcomponent.cpp qml/qqmlcomponent.h qml/qqmlcomponent_p.h
         qml/qqmlcomponentattached_p.h
         qml/qqmlcontext.cpp qml/qqmlcontext.h qml/qqmlcontext_p.h

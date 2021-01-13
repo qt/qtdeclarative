@@ -55,7 +55,6 @@
 #include <QtCore/QObject>
 
 #include <private/qqmlrefcount_p.h>
-#include <private/qqmlcleanup_p.h>
 #include <private/qtqmlglobal_p.h>
 #include <private/qobject_p.h>
 
@@ -65,10 +64,10 @@ QT_BEGIN_NAMESPACE
 class QQmlEngine;
 class QMetaPropertyBuilder;
 class QQmlOpenMetaObjectTypePrivate;
-class Q_QML_PRIVATE_EXPORT QQmlOpenMetaObjectType : public QQmlRefCount, public QQmlCleanup
+class Q_QML_PRIVATE_EXPORT QQmlOpenMetaObjectType : public QQmlRefCount
 {
 public:
-    QQmlOpenMetaObjectType(const QMetaObject *base, QQmlEngine *engine);
+    QQmlOpenMetaObjectType(const QMetaObject *base);
     ~QQmlOpenMetaObjectType() override;
 
     void createProperties(const QVector<QByteArray> &names);
@@ -83,7 +82,6 @@ public:
 
 protected:
     virtual void propertyCreated(int, QMetaPropertyBuilder &);
-    void clear() override;
 
 private:
     QQmlOpenMetaObjectTypePrivate *d;
