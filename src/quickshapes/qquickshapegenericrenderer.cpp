@@ -204,8 +204,12 @@ void QQuickShapeGenericRenderer::setStrokeWidth(int index, qreal w)
 void QQuickShapeGenericRenderer::setFillColor(int index, const QColor &color)
 {
     ShapePathData &d(m_sp[index]);
+    const bool wasTransparent = d.fillColor.a == 0;
     d.fillColor = colorToColor4ub(color);
+    const bool isTransparent = d.fillColor.a == 0;
     d.syncDirty |= DirtyColor;
+    if (wasTransparent && !isTransparent)
+        d.syncDirty |= DirtyFillGeom;
 }
 
 void QQuickShapeGenericRenderer::setFillRule(int index, QQuickShapePath::FillRule fillRule)
