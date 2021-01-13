@@ -446,7 +446,8 @@ bool ListModel::sync(ListModel *src, ListModel *target)
     // to ensure things are kept in the correct order, emit inserts and moves first. This shouls ensure all persistent
     // model indices are updated correctly
     int rowsInserted = 0;
-    for (int i = 0 ; i < target->elements.count() ; ++i) {
+    const int targetElementCount = target->elements.count();
+    for (int i = 0 ; i < targetElementCount ; ++i) {
         ListElement *element = target->elements.at(i);
         ElementSync &s = elementHash.find(element->getUid()).value();
         Q_ASSERT(s.srcIndex >= 0);
@@ -456,13 +457,33 @@ bool ListModel::sync(ListModel *src, ListModel *target)
                 if (s.targetIndex == -1) {
                     targetModel->beginInsertRows(QModelIndex(), i, i);
                     targetModel->endInsertRows();
+                    ++rowsInserted;
                 } else {
-                    targetModel->beginMoveRows(QModelIndex(), i, i, QModelIndex(), s.srcIndex);
+                    bool validMove = targetModel->beginMoveRows(QModelIndex(), s.targetIndex, s.targetIndex, QModelIndex(), i);
+                    Q_ASSERT(validMove);
+                    Q_UNUSED(validMove); // fixes unused variable warning if asserts are disabled
                     targetModel->endMoveRows();
+                    // fixup target indices of elements that still need to move
+                    for (int j=i+1; j < targetElementCount; ++j) {
+                        ListElement *eToFix = target->elements.at(j);
+                        ElementSync &sToFix = elementHash.find(eToFix->getUid()).value();
+                        if (i < s.targetIndex) {
+                            // element was moved down
+                            if (sToFix.targetIndex > s.targetIndex || sToFix.targetIndex < i)
+                                continue; // unaffected by reordering
+                            else
+                                sToFix.targetIndex += 1;
+                        } else {
+                            // element was moved up
+                            if (sToFix.targetIndex < s.targetIndex || sToFix.targetIndex > i)
+                                continue; // unaffected by reordering
+                            else
+                                sToFix.targetIndex -= 1;
+                        }
+                    }
                 }
             }
             hasChanges = true;
-            ++rowsInserted;
         }
         if (s.targetIndex != -1 && !s.changedRoles.isEmpty()) {
             QModelIndex idx = targetModel->createIndex(i, 0);
