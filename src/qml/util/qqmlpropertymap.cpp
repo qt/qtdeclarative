@@ -57,7 +57,6 @@ protected:
     QVariant propertyWriteValue(int, const QVariant &) override;
     void propertyWritten(int index) override;
     void propertyCreated(int, QMetaPropertyBuilder &) override;
-    int createProperty(const char *, const char *) override;
 
     const QString &propertyName(int index);
 
@@ -130,13 +129,6 @@ void QQmlPropertyMapMetaObject::propertyCreated(int, QMetaPropertyBuilder &b)
     priv->keys.append(QString::fromUtf8(b.name()));
 }
 
-int QQmlPropertyMapMetaObject::createProperty(const char *name, const char *value)
-{
-    if (!priv->validKeyName(QString::fromUtf8(name)))
-        return -1;
-    return QQmlOpenMetaObject::createProperty(name, value);
-}
-
 /*!
     \class QQmlPropertyMap
     \brief The QQmlPropertyMap class allows you to set key-value pairs that can be used in QML bindings.
@@ -207,7 +199,8 @@ QQmlPropertyMap::~QQmlPropertyMap()
 void QQmlPropertyMap::clear(const QString &key)
 {
     Q_D(QQmlPropertyMap);
-    d->mo->setValue(key.toUtf8(), QVariant());
+    if (d->validKeyName(key))
+        d->mo->setValue(key.toUtf8(), QVariant());
 }
 
 /*!
