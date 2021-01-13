@@ -234,6 +234,36 @@ void QQmlPropertyMap::insert(const QString &key, const QVariant &value)
 }
 
 /*!
+    \since 6.1
+
+    Inserts the \a values into the QQmlPropertyMap.
+
+    Keys that don't exist are automatically created.
+
+    This method is substantially faster than calling \c{insert(key, value)}
+    many times in a row.
+*/
+void QQmlPropertyMap::insert(const QVariantHash &values)
+{
+    Q_D(QQmlPropertyMap);
+
+    QHash<QByteArray, QVariant> checkedValues;
+    for (auto it = values.begin(), end = values.end(); it != end; ++it) {
+        const QString &key = it.key();
+        if (!d->validKeyName(key)) {
+            qWarning() << "Creating property with name"
+                       << key
+                       << "is not permitted, conflicts with internal symbols.";
+            return;
+        }
+
+        checkedValues.insert(key.toUtf8(), it.value());
+    }
+    d->mo->setValues(checkedValues);
+
+}
+
+/*!
     Returns the list of keys.
 
     Keys that have been cleared will still appear in this list, even though their

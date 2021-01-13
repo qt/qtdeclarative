@@ -101,6 +101,7 @@ public:
 
     QVariant value(const QByteArray &) const;
     bool setValue(const QByteArray &, const QVariant &, bool force = false);
+    void setValues(const QHash<QByteArray, QVariant> &, bool force = false);
     QVariant value(int) const;
     void setValue(int, const QVariant &);
     QVariant &valueRef(const QByteArray &);
@@ -131,6 +132,8 @@ protected:
     virtual void propertyCreated(int, QMetaPropertyBuilder &);
 
     QAbstractDynamicMetaObject *parent() const;
+
+    bool checkedSetValue(int index, const QVariant &value, bool force);
 
 private:
     QQmlOpenMetaObjectPrivate *d;

@@ -236,11 +236,21 @@ public:
         return data[idx].valueSet;
     }
 
+    void dropPropertyCache() {
+        if (QQmlData *ddata = QQmlData::get(object, /*create*/false)) {
+            if (ddata->propertyCache) {
+                ddata->propertyCache->release();
+                ddata->propertyCache = nullptr;
+            }
+        }
+    }
+
     QQmlOpenMetaObject *q;
     QAbstractDynamicMetaObject *parent = nullptr;
     QVector<Property> data;
     QObject *object;
     QQmlRefPointer<QQmlOpenMetaObjectType> type;
+    QVector<QByteArray> *deferredPropertyNames = nullptr;
     bool autoCreate;
     bool cacheProperties = false;
 };
@@ -322,6 +332,16 @@ QAbstractDynamicMetaObject *QQmlOpenMetaObject::parent() const
     return d->parent;
 }
 
+bool QQmlOpenMetaObject::checkedSetValue(int index, const QVariant &value, bool force)
+{
+    if (!force && d->propertyValue(index) == value)
+        return false;
+
+    d->setPropertyValue(index, value);
+    activate(d->object, index + d->type->d->signalOffset, nullptr);
+    return true;
+}
+
 QVariant QQmlOpenMetaObject::value(int id) const
 {
     return d->propertyValue(id);
@@ -361,16 +381,43 @@ bool QQmlOpenMetaObject::setValue(const QByteArray &name, const QVariant &val, b
         id = *iter;
     }
 
-    if (id >= 0) {
-        if (!force && d->propertyValue(id) == val)
-            return false;
-
-        d->setPropertyValue(id, val);
-        activate(d->object, id + d->type->d->signalOffset, nullptr);
-        return true;
-    }
+    if (id >= 0)
+        return checkedSetValue(id, val, force);
 
     return false;
+}
+
+void QQmlOpenMetaObject::setValues(const QHash<QByteArray, QVariant> &values, bool force)
+{
+    QVector<QByteArray> missingProperties;
+    d->deferredPropertyNames = &missingProperties;
+    const auto &names = d->type->d->names;
+
+    for (auto valueIt = values.begin(), end = values.end(); valueIt != end; ++valueIt) {
+        const auto nameIt = names.constFind(valueIt.key());
+        if (nameIt == names.constEnd()) {
+            const int id = createProperty(valueIt.key(), "") - d->type->d->propertyOffset;
+
+            // If id >= 0 some override of createProperty() created it. Then set it.
+            // Else it either ends up in missingProperties and we create it later
+            // or it cannot be created.
+
+            if (id >= 0)
+                checkedSetValue(id, valueIt.value(), force);
+        } else {
+            checkedSetValue(*nameIt, valueIt.value(), force);
+        }
+    }
+
+    d->deferredPropertyNames = nullptr;
+    if (missingProperties.isEmpty())
+        return;
+
+    d->type->createProperties(missingProperties);
+    d->dropPropertyCache();
+
+    for (const QByteArray &name : qAsConst(missingProperties))
+        checkedSetValue(names[name], values[name], force);
 }
 
 // returns true if this value has been initialized by a call to either value() or setValue()
@@ -403,15 +450,14 @@ void QQmlOpenMetaObject::setCached(bool c)
 int QQmlOpenMetaObject::createProperty(const char *name, const char *)
 {
     if (d->autoCreate) {
-        int result = d->type->createProperty(name);
-
-        if (QQmlData *ddata = QQmlData::get(d->object, /*create*/false)) {
-            if (ddata->propertyCache) {
-                ddata->propertyCache->release();
-                ddata->propertyCache = nullptr;
-            }
+        if (d->deferredPropertyNames) {
+            // Defer the creation of new properties. See setValues(QHash<QByteArray, QVariant>)
+            d->deferredPropertyNames->append(name);
+            return -1;
         }
 
+        const int result = d->type->createProperty(name);
+        d->dropPropertyCache();
         return result;
     } else
         return -1;

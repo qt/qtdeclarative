@@ -60,6 +60,7 @@ public:
 
     QVariant value(const QString &key) const;
     void insert(const QString &key, const QVariant &value);
+    void insert(const QVariantHash &values);
     void clear(const QString &key);
 
     Q_INVOKABLE QStringList keys() const;
