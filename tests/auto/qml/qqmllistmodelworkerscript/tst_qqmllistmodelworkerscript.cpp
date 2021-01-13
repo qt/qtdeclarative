@@ -104,6 +104,7 @@ private slots:
     void worker_remove_list();
     void dynamic_role_data();
     void dynamic_role();
+    void correctMoves();
 };
 
 bool tst_qqmllistmodelworkerscript::compareVariantList(const QVariantList &testList, QVariant object)
@@ -840,6 +841,22 @@ void tst_qqmllistmodelworkerscript::dynamic_role()
 
     delete item;
     qApp->processEvents();
+}
+
+void tst_qqmllistmodelworkerscript::correctMoves()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("listmodel_async_sort/main.qml"));
+    QScopedPointer<QObject> root {component.create()};
+    QVERIFY2(root, qPrintable(component.errorString()));
+    bool ok =QMetaObject::invokeMethod(root.get(), "doSort");
+    QVERIFY(ok);
+    auto check = [&](){
+        bool success = false;
+        QMetaObject::invokeMethod(root.get(), "verify", Q_RETURN_ARG(bool, success));
+        return success;
+    };
+    QTRY_VERIFY(check());
 }
 
 QTEST_MAIN(tst_qqmllistmodelworkerscript)
