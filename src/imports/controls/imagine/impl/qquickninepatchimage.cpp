@@ -449,6 +449,13 @@ QSGNode *QQuickNinePatchImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNode
     qsgnode_set_description(patchNode, QString::fromLatin1("QQuickNinePatchImage: '%1'").arg(d->url.toString()));
 #endif
 
+    // The image may wrap non-owned data (due to pixmapChange). Ensure we never
+    // pass such an image to the scenegraph, because with a separate render
+    // thread the data may become invalid (in a subsequent pixmapChange on the
+    // gui thread) by the time the renderer gets to do something with the QImage
+    // passed in here.
+    image.detach();
+
     QSGTexture *texture = window()->createTextureFromImage(image);
     patchNode->initialize(texture, sz * d->devicePixelRatio, image.size(), d->xDivs, d->yDivs, d->devicePixelRatio);
     return patchNode;
