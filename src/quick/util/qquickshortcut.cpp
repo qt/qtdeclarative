@@ -44,6 +44,7 @@
 #include <QtQuick/qquickrendercontrol.h>
 #include <QtQuick/private/qtquickglobal_p.h>
 #include <QtGui/private/qguiapplication_p.h>
+#include <QtQml/qqmlinfo.h>
 
 /*!
     \qmltype Shortcut
@@ -124,11 +125,33 @@ Q_QUICK_PRIVATE_EXPORT void qt_quick_set_shortcut_context_matcher(ContextMatcher
 
 QT_BEGIN_NAMESPACE
 
-static QKeySequence valueToKeySequence(const QVariant &value)
+static QKeySequence valueToKeySequence(const QVariant &value, const QQuickShortcut *const shortcut)
 {
-    if (value.userType() == QMetaType::Int)
-        return QKeySequence(static_cast<QKeySequence::StandardKey>(value.toInt()));
+    if (value.userType() == QMetaType::Int) {
+        const QList<QKeySequence> s =
+                QKeySequence::keyBindings(static_cast<QKeySequence::StandardKey>(value.toInt()));
+        if (s.size() > 1) {
+            const QString templateString = QString::fromUtf16(
+                    u"Shortcut: Only binding to one of multiple key bindings associated with %1. "
+                    u"Use 'sequences: [ <key> ]' to bind to all of them.");
+            qmlWarning(shortcut)
+                    << templateString.arg(static_cast<QKeySequence::StandardKey>(value.toInt()));
+        }
+        return s.size() > 0 ? s[0] : QKeySequence {};
+    }
+
     return QKeySequence::fromString(value.toString());
+}
+
+static QList<QKeySequence> valueToKeySequences(const QVariant &value)
+{
+    if (value.userType() == QMetaType::Int) {
+        return QKeySequence::keyBindings(static_cast<QKeySequence::StandardKey>(value.toInt()));
+    } else {
+        QList<QKeySequence> result;
+        result.push_back(QKeySequence::fromString(value.toString()));
+        return result;
+    }
 }
 
 QQuickShortcut::QQuickShortcut(QObject *parent) : QObject(parent),
@@ -172,7 +195,7 @@ void QQuickShortcut::setSequence(const QVariant &value)
     if (value == m_shortcut.userValue)
         return;
 
-    QKeySequence keySequence = valueToKeySequence(value);
+    QKeySequence keySequence = valueToKeySequence(value, this);
 
     ungrabShortcut(m_shortcut);
     m_shortcut.userValue = value;
@@ -207,28 +230,42 @@ QVariantList QQuickShortcut::sequences() const
 
 void QQuickShortcut::setSequences(const QVariantList &values)
 {
-    QVector<Shortcut> remainder = m_shortcuts.mid(values.count());
-    m_shortcuts.resize(values.count());
-
-    bool changed = !remainder.isEmpty();
-    for (int i = 0; i < values.count(); ++i) {
-        const QVariant &value = values.at(i);
-        Shortcut& shortcut = m_shortcuts[i];
-        if (value == shortcut.userValue)
-            continue;
-
-        QKeySequence keySequence = valueToKeySequence(value);
-
-        ungrabShortcut(shortcut);
-        shortcut.userValue = value;
-        shortcut.keySequence = keySequence;
-        grabShortcut(shortcut, m_context);
-
-        changed = true;
+    // convert QVariantList to QVector<Shortcut>
+    QVector<Shortcut> requestedShortcuts;
+    for (const QVariant &v : values) {
+        const QList<QKeySequence> list = valueToKeySequences(v);
+        for (const QKeySequence &s : list) {
+            Shortcut sc;
+            sc.userValue = v;
+            sc.keySequence = s;
+            requestedShortcuts.push_back(sc);
+        }
     }
 
-    if (changed)
-        emit sequencesChanged();
+    // if nothing has changed, just return:
+    if (m_shortcuts.size() == requestedShortcuts.size()) {
+        bool changed = false;
+        for (int i = 0; i < requestedShortcuts.count(); ++i) {
+            const Shortcut &requestedShortcut = requestedShortcuts[i];
+            const Shortcut &shortcut = m_shortcuts[i];
+            if (!(requestedShortcut.userValue == shortcut.userValue
+                  && requestedShortcut.keySequence == shortcut.keySequence)) {
+                changed = true;
+                break;
+            }
+        }
+        if (!changed) {
+            return;
+        }
+    }
+
+    for (Shortcut &s : m_shortcuts)
+        ungrabShortcut(s);
+    m_shortcuts = requestedShortcuts;
+    for (Shortcut &s : m_shortcuts)
+        grabShortcut(s, m_context);
+
+    emit sequencesChanged();
 }
 
 /*!

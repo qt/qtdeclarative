@@ -42,6 +42,8 @@ class tst_QQuickShortcut : public QQmlDataTest
     Q_OBJECT
 
 private slots:
+    void standardShortcuts_data();
+    void standardShortcuts();
     void shortcuts_data();
     void shortcuts();
     void sequence_data();
@@ -79,6 +81,49 @@ static QVariant shortcutMap(const QVariant &sequence, Qt::ShortcutContext contex
 static QVariant shortcutMap(const QVariant &key, bool enabled = true, bool autoRepeat = true)
 {
     return shortcutMap(key, Qt::WindowShortcut, enabled, autoRepeat);
+}
+
+void tst_QQuickShortcut::standardShortcuts_data()
+{
+    QTest::addColumn<QKeySequence::StandardKey>("standardKey");
+    QTest::newRow("Close") << QKeySequence::Close;
+    QTest::newRow("Cut") << QKeySequence::Cut;
+    QTest::newRow("NextChild") << QKeySequence::NextChild;
+    QTest::newRow("PreviousChild") << QKeySequence::PreviousChild;
+    QTest::newRow("FindNext") << QKeySequence::FindNext;
+    QTest::newRow("FindPrevious") << QKeySequence::FindPrevious;
+    QTest::newRow("FullScreen") << QKeySequence::FullScreen;
+}
+
+void tst_QQuickShortcut::standardShortcuts()
+{
+    QFETCH(QKeySequence::StandardKey, standardKey);
+
+    QQmlApplicationEngine engine;
+
+    engine.load(testFileUrl("multiple.qml"));
+    QQuickWindow *window = qobject_cast<QQuickWindow *>(engine.rootObjects().value(0));
+    QVERIFY(window);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QObject *shortcut = window->property("shortcut").value<QObject *>();
+    QVERIFY(shortcut);
+
+    // create list of shortcuts
+    QVariantList shortcuts;
+    shortcuts.push_back(standardKey);
+    shortcut->setProperty("sequences", shortcuts);
+
+    // test all:
+    QList<QKeySequence> allsequences = QKeySequence::keyBindings(standardKey);
+    for (const QKeySequence &s : allsequences) {
+        window->setProperty("activated", false);
+        QTest::keySequence(window, s);
+        QCOMPARE(window->property("activated").toBool(), true);
+    }
 }
 
 void tst_QQuickShortcut::shortcuts_data()
@@ -188,6 +233,7 @@ void tst_QQuickShortcut::shortcuts()
     window->setProperty("shortcuts", shortcuts);
 
     QTest::keyPress(window, key, modifiers);
+    QTest::keyRelease(window, key, modifiers);
     QCOMPARE(window->property("activatedShortcut").toString(), activatedShortcut);
     QCOMPARE(window->property("ambiguousShortcut").toString(), ambiguousShortcut);
 }
@@ -263,14 +309,22 @@ void tst_QQuickShortcut::sequence()
 
     window->setProperty("shortcuts", shortcuts);
 
-    if (key1 != 0)
+    if (key1 != 0) {
         QTest::keyPress(window, key1, modifiers1);
-    if (key2 != 0)
+        QTest::keyRelease(window, key1, modifiers1);
+    }
+    if (key2 != 0) {
         QTest::keyPress(window, key2, modifiers2);
-    if (key3 != 0)
+        QTest::keyRelease(window, key2, modifiers2);
+    }
+    if (key3 != 0) {
         QTest::keyPress(window, key3, modifiers3);
-    if (key4 != 0)
+        QTest::keyRelease(window, key3, modifiers3);
+    }
+    if (key4 != 0) {
         QTest::keyPress(window, key4, modifiers4);
+        QTest::keyRelease(window, key4, modifiers4);
+    }
 
     QCOMPARE(window->property("activatedShortcut").toString(), activatedShortcut);
     QCOMPARE(window->property("ambiguousShortcut").toString(), ambiguousShortcut);
@@ -352,6 +406,7 @@ void tst_QQuickShortcut::context()
     activeWindow->setProperty("shortcuts", activeWindowShortcuts);
 
     QTest::keyPress(activeWindow, key);
+    QTest::keyRelease(activeWindow, key);
 
     QCOMPARE(activeWindow->property("activatedShortcut").toString(), activeWindowActivatedShortcut);
     QCOMPARE(inactiveWindow->property("activatedShortcut").toString(), inactiveWindowActivatedShortcut);
@@ -411,6 +466,8 @@ void tst_QQuickShortcut::matcher()
     QVERIFY(window);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
 
     window->setProperty("shortcuts", QVariantList() << shortcut);
     QTest::keyClick(window, key);
@@ -452,6 +509,8 @@ void tst_QQuickShortcut::multiple()
     QVERIFY(window);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
 
     QObject *shortcut = window->property("shortcut").value<QObject *>();
     QVERIFY(shortcut);
@@ -460,8 +519,33 @@ void tst_QQuickShortcut::multiple()
     shortcut->setProperty("sequences", sequences);
 
     QTest::keyPress(window, key, modifiers);
+    QTest::keyRelease(window, key, modifiers);
 
     QCOMPARE(window->property("activated").toBool(), activated);
+
+    // check it still works after rotating the sequences
+    QStringList rotatedSequences;
+    for (int i = 1; i < sequences.size(); ++i)
+        rotatedSequences.push_back(sequences[i]);
+    if (sequences.size())
+        rotatedSequences.push_back(sequences[0]);
+
+    window->setProperty("activated", false);
+    shortcut->setProperty("sequences", rotatedSequences);
+
+    QTest::keyPress(window, key, modifiers);
+    QTest::keyRelease(window, key, modifiers);
+    QCOMPARE(window->property("activated").toBool(), activated);
+
+    // check setting to no shortcuts
+    QStringList emptySequence;
+
+    window->setProperty("activated", false);
+    shortcut->setProperty("sequences", emptySequence);
+
+    QTest::keyPress(window, key, modifiers);
+    QTest::keyRelease(window, key, modifiers);
+    QCOMPARE(window->property("activated").toBool(), false);
 }
 
 void tst_QQuickShortcut::contextChange_data()
@@ -616,6 +700,7 @@ void tst_QQuickShortcut::renderControlShortcuts()
     QQuickItem* item = quickWidget->rootObject();
     item->setProperty("shortcuts", shortcuts);
     QTest::keyPress(quickWidget->quickWindow(), key, modifiers, 1500);
+    QTest::keyRelease(quickWidget->quickWindow(), key, modifiers, 1600);
     QCOMPARE(item->property("activatedShortcut").toString(), activatedShortcut);
     QCOMPARE(item->property("ambiguousShortcut").toString(), ambiguousShortcut);
 }
