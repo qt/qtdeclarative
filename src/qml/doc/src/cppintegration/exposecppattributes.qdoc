@@ -91,6 +91,29 @@ For example, below is a \c Message class with an \c author property. As
 specified by the Q_PROPERTY macro call, this property is readable through
 the \c author() method, and writable through the \c setAuthor() method:
 
+\note Do not use \e typedef or \e using for Q_PROPERTY types as these
+will confuse moc. This may make certain type comparisons fail.
+
+Instead of:
+
+\badcode
+using FooEnum = Foo::Enum;
+
+class Bar : public QObject {
+    Q_OBJECT
+    Q_PROPERTY(FooEnum enum READ enum WRITE setEnum NOTIFY enumChanged)
+};
+\endcode
+
+Refer to the type directly:
+
+\code
+class Bar : public QObject {
+    Q_OBJECT
+    Q_PROPERTY(Foo::Enum enum READ enum WRITE setEnum NOTIFY enumChanged)
+};
+\endcode
+
 \code
 class Message : public QObject
 {
