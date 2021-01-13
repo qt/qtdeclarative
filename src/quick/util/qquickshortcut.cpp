@@ -342,8 +342,15 @@ void QQuickShortcut::setContext(Qt::ShortcutContext context)
         return;
 
     ungrabShortcut(m_shortcut);
+    for (auto &s : m_shortcuts)
+        ungrabShortcut(s);
+
     m_context = context;
+
     grabShortcut(m_shortcut, context);
+    for (auto &s : m_shortcuts)
+        grabShortcut(s, context);
+
     emit contextChanged();
 }
 

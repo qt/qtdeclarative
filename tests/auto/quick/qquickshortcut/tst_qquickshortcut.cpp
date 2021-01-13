@@ -48,6 +48,8 @@ private slots:
     void sequence();
     void context_data();
     void context();
+    void contextChange_data();
+    void contextChange();
     void matcher_data();
     void matcher();
     void multiple_data();
@@ -460,6 +462,48 @@ void tst_QQuickShortcut::multiple()
     QTest::keyPress(window, key, modifiers);
 
     QCOMPARE(window->property("activated").toBool(), activated);
+}
+
+void tst_QQuickShortcut::contextChange_data()
+{
+    multiple_data();
+}
+void tst_QQuickShortcut::contextChange()
+{
+    QFETCH(QStringList, sequences);
+    QFETCH(Qt::Key, key);
+    QFETCH(Qt::KeyboardModifiers, modifiers);
+    QFETCH(bool, enabled);
+    QFETCH(bool, activated);
+
+    QQmlApplicationEngine engine;
+
+    engine.load(testFileUrl("multiple.qml"));
+    QQuickWindow *inactivewindow = qobject_cast<QQuickWindow *>(engine.rootObjects().value(0));
+    QVERIFY(inactivewindow);
+    inactivewindow->show();
+    QVERIFY(QTest::qWaitForWindowExposed(inactivewindow));
+
+    QObject *shortcut = inactivewindow->property("shortcut").value<QObject *>();
+    QVERIFY(shortcut);
+
+    shortcut->setProperty("enabled", enabled);
+    shortcut->setProperty("sequences", sequences);
+    shortcut->setProperty("context", Qt::WindowShortcut);
+
+    engine.load(testFileUrl("multiple.qml"));
+    QQuickWindow *activewindow = qobject_cast<QQuickWindow *>(engine.rootObjects().value(1));
+    QVERIFY(activewindow);
+    activewindow->show();
+    QVERIFY(QTest::qWaitForWindowExposed(activewindow));
+
+    QTest::keyPress(activewindow, key, modifiers);
+    QCOMPARE(inactivewindow->property("activated").toBool(), false);
+
+    shortcut->setProperty("context", Qt::ApplicationShortcut);
+
+    QTest::keyPress(activewindow, key, modifiers);
+    QCOMPARE(inactivewindow->property("activated").toBool(), activated);
 }
 
 #ifdef QT_QUICKWIDGETS_LIB
