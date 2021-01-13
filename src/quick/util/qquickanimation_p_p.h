@@ -270,7 +270,7 @@ class QQuickPropertyAnimationPrivate : public QQuickAbstractAnimationPrivate
     Q_DECLARE_PUBLIC(QQuickPropertyAnimation)
 public:
     QQuickPropertyAnimationPrivate()
-    : QQuickAbstractAnimationPrivate(), target(nullptr), fromSourced(false), fromIsDefined(false), toIsDefined(false),
+    : QQuickAbstractAnimationPrivate(), target(nullptr), fromIsDefined(false), toIsDefined(false),
       defaultToInterpolatorType(0), interpolatorType(0), interpolator(nullptr), duration(250), actions(nullptr) {}
 
     QVariant from;
@@ -283,7 +283,6 @@ public:
     QList<QObject *> exclude;
     QString defaultProperties;
 
-    bool fromSourced;
     bool fromIsDefined:1;
     bool toIsDefined:1;
     bool defaultToInterpolatorType:1;
