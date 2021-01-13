@@ -93,8 +93,8 @@ class QQmlOpenMetaObjectPrivate;
 class Q_QML_PRIVATE_EXPORT QQmlOpenMetaObject : public QAbstractDynamicMetaObject
 {
 public:
-    QQmlOpenMetaObject(QObject *, const QMetaObject * = nullptr, bool = true);
-    QQmlOpenMetaObject(QObject *, QQmlOpenMetaObjectType *, bool = true);
+    QQmlOpenMetaObject(QObject *, const QMetaObject * = nullptr);
+    QQmlOpenMetaObject(QObject *, QQmlOpenMetaObjectType *);
     ~QQmlOpenMetaObject() override;
 
     QVariant value(const QByteArray &) const;
@@ -114,6 +114,9 @@ public:
     // Be careful - once setCached(true) is called createProperty() is no
     // longer automatically called for new properties.
     void setCached(bool);
+
+    bool autoCreatesProperties() const;
+    void setAutoCreatesProperties(bool autoCreate);
 
     QQmlOpenMetaObjectType *type() const;
 

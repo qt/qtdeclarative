@@ -172,8 +172,8 @@ void QQmlOpenMetaObjectTypePrivate::init(const QMetaObject *metaObj)
 class QQmlOpenMetaObjectPrivate
 {
 public:
-    QQmlOpenMetaObjectPrivate(QQmlOpenMetaObject *_q, bool _autoCreate, QObject *obj)
-        : q(_q), object(obj), autoCreate(_autoCreate) {}
+    QQmlOpenMetaObjectPrivate(QQmlOpenMetaObject *_q, QObject *obj)
+        : q(_q), object(obj) {}
 
     struct Property {
     private:
@@ -243,12 +243,12 @@ public:
     QObject *object;
     QQmlRefPointer<QQmlOpenMetaObjectType> type;
     QVector<QByteArray> *deferredPropertyNames = nullptr;
-    bool autoCreate;
+    bool autoCreate = true;
     bool cacheProperties = false;
 };
 
-QQmlOpenMetaObject::QQmlOpenMetaObject(QObject *obj, const QMetaObject *base, bool automatic)
-: d(new QQmlOpenMetaObjectPrivate(this, automatic, obj))
+QQmlOpenMetaObject::QQmlOpenMetaObject(QObject *obj, const QMetaObject *base)
+: d(new QQmlOpenMetaObjectPrivate(this, obj))
 {
     d->type.adopt(new QQmlOpenMetaObjectType(base ? base : obj->metaObject()));
     d->type->d->referers.insert(this);
@@ -259,8 +259,8 @@ QQmlOpenMetaObject::QQmlOpenMetaObject(QObject *obj, const QMetaObject *base, bo
     op->metaObject = this;
 }
 
-QQmlOpenMetaObject::QQmlOpenMetaObject(QObject *obj, QQmlOpenMetaObjectType *type, bool automatic)
-: d(new QQmlOpenMetaObjectPrivate(this, automatic, obj))
+QQmlOpenMetaObject::QQmlOpenMetaObject(QObject *obj, QQmlOpenMetaObjectType *type)
+: d(new QQmlOpenMetaObjectPrivate(this, obj))
 {
     d->type = type;
     d->type->d->referers.insert(this);
@@ -436,6 +436,16 @@ void QQmlOpenMetaObject::setCached(bool c)
             d->type->d->cache->release();
         qmldata->propertyCache = nullptr;
     }
+}
+
+bool QQmlOpenMetaObject::autoCreatesProperties() const
+{
+    return d->autoCreate;
+}
+
+void QQmlOpenMetaObject::setAutoCreatesProperties(bool autoCreate)
+{
+    d->autoCreate = autoCreate;
 }
 
 

@@ -204,6 +204,22 @@ void QQmlPropertyMap::clear(const QString &key)
 }
 
 /*!
+    \since 6.1
+
+    Disallows any further properties to be added to this property map.
+    Existing properties can be modified or cleared.
+
+    In turn, an internal cache is turned on for the existing properties, which
+    may result in faster access from QML.
+ */
+void QQmlPropertyMap::freeze()
+{
+    Q_D(QQmlPropertyMap);
+    d->mo->setAutoCreatesProperties(false);
+    d->mo->setCached(true);
+}
+
+/*!
     Returns the value associated with \a key.
 
     If no value has been set for this key (or if the value has been cleared),

@@ -63,6 +63,7 @@ private slots:
     void QTBUG_35906();
     void QTBUG_48136();
     void lookupsInSubTypes();
+    void freeze();
 };
 
 class LazyPropertyMap : public QQmlPropertyMap, public QQmlParserStatus
@@ -572,6 +573,26 @@ void tst_QQmlPropertyMap::lookupsInSubTypes()
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
     QCOMPARE(object->property("newProperty").toInt(), 42);
+}
+
+void tst_QQmlPropertyMap::freeze()
+{
+    QQmlPropertyMap map;
+
+    map.insert(QLatin1String("key1"),100);
+    map.insert(QLatin1String("key2"),200);
+    QCOMPARE(map.keys().count(), 2);
+    QVERIFY(map.contains(QLatin1String("key1")));
+    QCOMPARE(map.value(QLatin1String("key1")), QVariant(100));
+    QCOMPARE(map.value(QLatin1String("key2")), QVariant(200));
+
+    map.freeze();
+    map.insert(QLatin1String("key3"), 32);
+    QCOMPARE(map.keys().count(), 2);
+    QVERIFY(!map.contains("key3"));
+
+    map.insert(QLatin1String("key1"), QStringLiteral("Hello World"));
+    QCOMPARE(map.value("key1").toString(), QStringLiteral("Hello World"));
 }
 
 QTEST_MAIN(tst_QQmlPropertyMap)
