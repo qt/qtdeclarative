@@ -1565,7 +1565,7 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
         QQuickItem::wheelEvent(event);
         return;
     }
-    qCDebug(lcWheel) << event->device() << event;
+    qCDebug(lcWheel) << event->device() << event << event->source();
     event->setAccepted(false);
     qint64 currentTimestamp = d->computeCurrentTime(event);
     switch (event->phase()) {
@@ -1586,7 +1586,8 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
         d->pressed = false;
         d->scrollingPhase = false;
         d->draggingEnding();
-        event->accept();
+        if (isMoving())
+            event->accept();
         d->lastPosTime = -1;
         break;
     case Qt::ScrollEnd:
@@ -1713,9 +1714,21 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
         QVector2D velocity(xDelta / elapsed, yDelta / elapsed);
         d->lastPosTime = currentTimestamp;
         d->accumulatedWheelPixelDelta += QVector2D(event->pixelDelta());
-        d->drag(currentTimestamp, event->type(), event->position(), d->accumulatedWheelPixelDelta,
-                true, !d->scrollingPhase, true, velocity);
-        event->accept();
+        // Try to drag if 1) we already are dragging or flicking, or
+        // 2) the flickable is free to flick both directions, or
+        // 3) the movement so far has been mostly horizontal AND it's free to flick horizontally, or
+        // 4) the movement so far has been mostly vertical AND it's free to flick vertically.
+        // Otherwise, wait until the next event.  Wheel events with pixel deltas tend to come frequently.
+        if (isMoving() || isFlicking() || (yflick() && xflick())
+                || (xflick() && qAbs(d->accumulatedWheelPixelDelta.x()) > qAbs(d->accumulatedWheelPixelDelta.y() * 2))
+                || (yflick() && qAbs(d->accumulatedWheelPixelDelta.y()) > qAbs(d->accumulatedWheelPixelDelta.x() * 2))) {
+            d->drag(currentTimestamp, event->type(), event->position(), d->accumulatedWheelPixelDelta,
+                    true, !d->scrollingPhase, true, velocity);
+            event->accept();
+        } else {
+            qCDebug(lcWheel) << "not dragging: accumulated deltas" << d->accumulatedWheelPixelDelta <<
+                                "moving?" << isMoving() << "can flick horizontally?" << xflick() << "vertically?" << yflick();
+        }
     }
 
     if (!event->isAccepted())
