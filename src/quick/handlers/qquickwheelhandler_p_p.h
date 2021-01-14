@@ -80,6 +80,7 @@ public:
     mutable bool metaPropertyDirty = true;
     bool invertible = true;
     bool targetTransformAroundCursor = true;
+    QQuickWheelEvent wheelEvent;
 };
 
 QT_END_NAMESPACE

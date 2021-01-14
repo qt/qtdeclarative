@@ -405,7 +405,9 @@ void QQuickWheelHandler::handleEventPoint(QPointerEvent *ev, QEventPoint &point)
                                                                            event->angleDelta().y()) / 8;
     d->rotation += angleDelta;
     emit rotationChanged();
-    emit wheel(*event);
+
+    d->wheelEvent.reset(event);
+    emit wheel(&d->wheelEvent);
     if (!d->propertyName.isEmpty() && target()) {
         QQuickItem *t = target();
         // writing target()'s property is done via QMetaProperty::write() so that any registered interceptors can react.
