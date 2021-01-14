@@ -667,8 +667,9 @@ void QQuickTumblerPrivate::syncCurrentIndex()
         return;
     }
 
-    // PathView likes to use 0 as currentIndex for empty models, but we use -1 for that.
-    if (q->count() == 0 && actualViewIndex == 0)
+    // actualViewIndex might be 0 or -1 for PathView and ListView respectively,
+    // but we always use -1 for that.
+    if (q->count() == 0 && actualViewIndex <= 0)
         return;
 
     ignoreCurrentIndexChanges = true;

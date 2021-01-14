@@ -1257,4 +1257,25 @@ TestCase {
         tumbler.height *= 1.4
         tryCompare(delegate, "displacement", 0)
     }
+
+    //QTBUG-84426
+    Component {
+        id: initialCurrentIndexTumbler
+
+        Tumbler {
+            anchors.centerIn: parent
+            width: 60
+            height: 200
+            delegate: Text {text: modelData}
+            model: 10
+            currentIndex: 4
+        }
+    }
+
+    function test_initialCurrentIndex() {
+        var tumbler = createTemporaryObject(initialCurrentIndexTumbler, testCase, {wrap: true});
+        compare(tumbler.currentIndex, 4);
+        tumbler = createTemporaryObject(initialCurrentIndexTumbler, testCase, {wrap: false});
+        compare(tumbler.currentIndex, 4);
+    }
 }
