@@ -211,10 +211,12 @@ private:
 class QQuickWheelEvent : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(const QPointingDevice *device READ pointingDevice CONSTANT)
     Q_PROPERTY(qreal x READ x CONSTANT)
     Q_PROPERTY(qreal y READ y CONSTANT)
     Q_PROPERTY(QPoint angleDelta READ angleDelta CONSTANT)
     Q_PROPERTY(QPoint pixelDelta READ pixelDelta CONSTANT)
+    Q_PROPERTY(Qt::ScrollPhase phase READ phase CONSTANT)
     Q_PROPERTY(int buttons READ buttons CONSTANT)
     Q_PROPERTY(int modifiers READ modifiers CONSTANT)
     Q_PROPERTY(bool inverted READ inverted CONSTANT)
@@ -223,40 +225,43 @@ class QQuickWheelEvent : public QObject
     QML_ADDED_IN_VERSION(2, 0)
 
 public:
-    QQuickWheelEvent()
-      : _buttons(Qt::NoButton), _modifiers(Qt::NoModifier)
-    {}
+    QQuickWheelEvent() = default;
 
-    void reset(qreal x, qreal y, const QPoint &angleDelta, const QPoint &pixelDelta,
-                     Qt::MouseButtons buttons, Qt::KeyboardModifiers modifiers, bool inverted)
+    void reset(const QWheelEvent *event)
     {
-        _x = x;
-        _y = y;
-        _angleDelta = angleDelta;
-        _pixelDelta = pixelDelta;
-        _buttons = buttons;
-        _modifiers = modifiers;
+        _device = event->pointingDevice();
+        _x = event->position().x();
+        _y = event->position().y();
+        _angleDelta = event->angleDelta();
+        _pixelDelta = event->pixelDelta();
+        _buttons = event->buttons();
+        _modifiers = event->modifiers();
         _accepted = true;
-        _inverted = inverted;
+        _inverted = event->inverted();
+        _phase = event->phase();
     }
 
+    const QPointingDevice *pointingDevice() const { return _device; }
     qreal x() const { return _x; }
     qreal y() const { return _y; }
     QPoint angleDelta() const { return _angleDelta; }
     QPoint pixelDelta() const { return _pixelDelta; }
     int buttons() const { return _buttons; }
     int modifiers() const { return _modifiers; }
+    Qt::ScrollPhase phase() const { return _phase; }
     bool inverted() const { return _inverted; }
     bool isAccepted() { return _accepted; }
     void setAccepted(bool accepted) { _accepted = accepted; }
 
 private:
+    const QPointingDevice *_device = nullptr;
     qreal _x = 0;
     qreal _y = 0;
     QPoint _angleDelta;
     QPoint _pixelDelta;
-    Qt::MouseButtons _buttons;
-    Qt::KeyboardModifiers _modifiers;
+    Qt::MouseButtons _buttons = Qt::NoButton;
+    Qt::KeyboardModifiers _modifiers = Qt::NoModifier;
+    Qt::ScrollPhase _phase = Qt::NoScrollPhase;
     bool _inverted = false;
     bool _accepted = false;
 };
