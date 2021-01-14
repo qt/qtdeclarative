@@ -2019,8 +2019,9 @@ void QQuickBulkValueAnimator::updateCurrentTime(int currentTime)
 
 void QQuickBulkValueAnimator::topLevelAnimationLoopChanged()
 {
-    //check for new from every top-level loop (when the top level animation is started and all subsequent loops)
-    if (fromIsSourced)
+    // Check for new "from" value only when animation has one loop.
+    // Otherwise use the initial "from" value for every iteration.
+    if (m_loopCount == 1 && fromIsSourced)
         *fromIsSourced = false;
     QAbstractAnimationJob::topLevelAnimationLoopChanged();
 }
