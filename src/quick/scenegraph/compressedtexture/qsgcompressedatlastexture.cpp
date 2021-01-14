@@ -160,6 +160,8 @@ QSGTexture *Texture::removedFromAtlas(QRhiResourceUpdateBatch *) const
         texData.setData(m_data);
         texData.setSize(m_size);
         texData.setGLInternalFormat(static_cast<Atlas*>(m_atlas)->format());
+        texData.setDataLength(m_data.size());
+        texData.setDataOffset(0);
         m_nonatlas_texture = new QSGCompressedTexture(texData);
         m_nonatlas_texture->setMipmapFiltering(mipmapFiltering());
         m_nonatlas_texture->setFiltering(filtering());
