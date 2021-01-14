@@ -117,6 +117,7 @@ private slots:
     void opacityAnimationFromZero();
     void alwaysRunToEndInSequentialAnimationBug();
     void cleanupWhenRenderThreadStops();
+    void infiniteLoopsWithoutFrom();
 };
 
 #define QTIMED_COMPARE(lhs, rhs) do { \
@@ -2010,6 +2011,54 @@ void tst_qquickanimations::cleanupWhenRenderThreadStops()
     view.hide();
     view.show();
     QVERIFY(QTest::qWaitForWindowExposed(&view));
+}
+
+void tst_qquickanimations::infiniteLoopsWithoutFrom()
+{
+    // This test checks QTBUG-84375
+    QQuickView view(testFileUrl("infiniteAnimationWithoutFrom.qml"));
+    view.show();
+
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+    QVERIFY(view.rootObject());
+
+    QObject *root = view.rootObject();
+    QQuickAbstractAnimation *animation = root->findChild<QQuickAbstractAnimation *>("anim");
+    QVERIFY(animation);
+    QQuickRectangle *rectangle = root->findChild<QQuickRectangle *>("rect");
+    QVERIFY(rectangle);
+
+    qreal prevRotation = rectangle->rotation();
+    int numsCrossedZero = 0;
+    connect(rectangle, &QQuickRectangle::rotationChanged, this, [&]() {
+        const auto rotation = rectangle->rotation();
+        // We take a large range of (180; 360] here, because the animation in
+        // the test runs for a short time, and so there can be huge gaps between
+        // rotation values.
+        const bool prevRotationOldLoop = prevRotation > 180.0 && prevRotation <= 360.0;
+        const bool currRotationNewLoop = rotation >= 0.0 && rotation <= 180.0;
+        if (prevRotationOldLoop && currRotationNewLoop)
+            numsCrossedZero++;
+        prevRotation = rotation;
+    });
+
+    // The logic in lamdba function above requires at least two positions in
+    // a rotation animation - one in [0; 180] range, and another in (180; 360]
+    // range
+    animation->start();
+    animation->pause();
+    QCOMPARE(numsCrossedZero, 0);
+    animation->setCurrentTime(40);
+    animation->setCurrentTime(90);
+    QCOMPARE(numsCrossedZero, 0);
+    animation->setCurrentTime(140);
+    animation->setCurrentTime(190);
+    QCOMPARE(numsCrossedZero, 1);
+    animation->setCurrentTime(240);
+    animation->setCurrentTime(290);
+    QCOMPARE(numsCrossedZero, 2);
+
+    animation->stop();
 }
 
 QTEST_MAIN(tst_qquickanimations)
