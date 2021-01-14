@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QTQUICKTEMPLATES2GLOBAL_P_H
-#define QTQUICKTEMPLATES2GLOBAL_P_H
+#ifndef QACCESSIBLEQUICKPAGE_H
+#define QACCESSIBLEQUICKPAGE_H
 
 //
 //  W A R N I N G
@@ -48,26 +48,23 @@
 // We mean it.
 //
 
-#include <QtCore/qglobal.h>
-#include <QtQml/private/qqmlglobal_p.h>
-#include <QtQuickTemplates2/private/qtquicktemplates2-config_p.h>
+#include <QtQuick/private/qaccessiblequickitem_p.h>
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_STATIC
-#  if defined(QT_BUILD_QUICKTEMPLATES2_LIB)
-#    define Q_QUICKTEMPLATES2_PRIVATE_EXPORT Q_DECL_EXPORT
-#  else
-#    define Q_QUICKTEMPLATES2_PRIVATE_EXPORT Q_DECL_IMPORT
-#  endif
-#else
-#  define Q_QUICKTEMPLATES2_PRIVATE_EXPORT
-#endif
+class QQuickPage;
 
-Q_QUICKTEMPLATES2_PRIVATE_EXPORT void QQuickTemplates_initializeModule();
+class QAccessibleQuickPage : public QAccessibleQuickItem
+{
+public:
+    QAccessibleQuickPage(QQuickPage *page);
+    QAccessibleInterface *child(int index) const override;
+    int indexOfChild(const QAccessibleInterface *iface) const override;
+private:
+    QQuickPage *page() const;
+    QList<QQuickItem *> orderedChildItems() const;
+};
 
 QT_END_NAMESPACE
 
-Q_QUICKTEMPLATES2_PRIVATE_EXPORT void qml_register_types_QtQuick_Templates();
-
-#endif // QTQUICKTEMPLATES2GLOBAL_P_H
+#endif // QACCESSIBLEQUICKPAGE_H

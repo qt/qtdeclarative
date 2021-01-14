@@ -34,40 +34,48 @@
 **
 ****************************************************************************/
 
-#ifndef QTQUICKTEMPLATES2GLOBAL_P_H
-#define QTQUICKTEMPLATES2GLOBAL_P_H
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <QtCore/qglobal.h>
-#include <QtQml/private/qqmlglobal_p.h>
-#include <QtQuickTemplates2/private/qtquicktemplates2-config_p.h>
+#include "qaccessiblequickpage_p.h"
+#include "qquickpage_p.h"
 
 QT_BEGIN_NAMESPACE
 
-#ifndef QT_STATIC
-#  if defined(QT_BUILD_QUICKTEMPLATES2_LIB)
-#    define Q_QUICKTEMPLATES2_PRIVATE_EXPORT Q_DECL_EXPORT
-#  else
-#    define Q_QUICKTEMPLATES2_PRIVATE_EXPORT Q_DECL_IMPORT
-#  endif
-#else
-#  define Q_QUICKTEMPLATES2_PRIVATE_EXPORT
-#endif
+QAccessibleQuickPage::QAccessibleQuickPage(QQuickPage *page)
+    : QAccessibleQuickItem(page)
+{
+}
 
-Q_QUICKTEMPLATES2_PRIVATE_EXPORT void QQuickTemplates_initializeModule();
+QAccessibleInterface *QAccessibleQuickPage::child(int index) const
+{
+    const QList<QQuickItem*> kids = orderedChildItems();
+    if (QQuickItem *item = kids.value(index))
+        return QAccessible::queryAccessibleInterface(item);
+    return nullptr;
+}
+
+int QAccessibleQuickPage::indexOfChild(const QAccessibleInterface *iface) const
+{
+    const QList<QQuickItem*> kids = orderedChildItems();
+    return (int)kids.indexOf(static_cast<QQuickItem*>(iface->object()));
+}
+
+QList<QQuickItem *> QAccessibleQuickPage::orderedChildItems() const
+{
+    // Just ensures that the header is first, and footer is last. Other existing order is kept.
+    const QQuickPage *p = page();
+    QList<QQuickItem*> kids = childItems();
+    const qsizetype hidx = kids.indexOf(p->header());
+    if (hidx != -1)
+        kids.move(hidx, 0);
+    const qsizetype fidx = kids.indexOf(p->footer());
+    if (fidx != -1)
+        kids.move(fidx, kids.count() - 1);
+    return kids;
+}
+
+QQuickPage *QAccessibleQuickPage::page() const
+{
+    return static_cast<QQuickPage*>(object());
+}
 
 QT_END_NAMESPACE
 
-Q_QUICKTEMPLATES2_PRIVATE_EXPORT void qml_register_types_QtQuick_Templates();
-
-#endif // QTQUICKTEMPLATES2GLOBAL_P_H

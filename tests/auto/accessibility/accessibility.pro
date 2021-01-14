@@ -12,5 +12,7 @@ include (../shared/util.pri)
 TESTDATA = data/*
 
 OTHER_FILES += \
-    data/*.qml
+    data/defaults\*.qml \
+    data/ordering\*.qml \
+    data/override*.qml
 

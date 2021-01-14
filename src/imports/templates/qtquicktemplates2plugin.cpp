@@ -71,7 +71,10 @@ QtQuickTemplates2Plugin::QtQuickTemplates2Plugin(QObject *parent)
     : QQmlExtensionPlugin(parent), registered(false)
 {
     volatile auto registration = &qml_register_types_QtQuick_Templates;
+    volatile auto initialization = &QQuickTemplates_initializeModule;
+
     Q_UNUSED(registration)
+    Q_UNUSED(initialization)
 }
 
 QtQuickTemplates2Plugin::~QtQuickTemplates2Plugin()

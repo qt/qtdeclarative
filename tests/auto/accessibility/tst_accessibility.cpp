@@ -60,6 +60,7 @@ private slots:
     void override_data();
     void override();
 
+    void ordering();
 private:
     QQmlEngine engine;
 };
@@ -266,6 +267,35 @@ void tst_accessibility::override()
 #else
     Q_UNUSED(role);
     Q_UNUSED(text);
+#endif
+}
+template <typename Predicate>
+void a11yDescendants(QAccessibleInterface *iface, Predicate pred)
+{
+    for (int i = 0; i < iface->childCount(); ++i) {
+        if (QAccessibleInterface *child = iface->child(i)) {
+            pred(child);
+            a11yDescendants(child, pred);
+        }
+    }
+}
+
+void tst_accessibility::ordering()
+{
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("ordering/page.qml"));
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
+
+#if QT_CONFIG(accessibility)
+    QQuickItem *item = findItem(object.data());
+    QVERIFY(item);
+    QAccessibleInterface *iface = QAccessible::queryAccessibleInterface(item);
+    QVERIFY(iface);
+    QStringList strings;
+    a11yDescendants(iface, [&](QAccessibleInterface *iface) {strings << iface->text(QAccessible::Name);});
+    QCOMPARE(strings.join(QLatin1String(", ")), "Header, Content item 1, Content item 2, Footer");
 #endif
 }
 

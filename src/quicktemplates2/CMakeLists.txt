@@ -7,6 +7,7 @@
 qt_internal_add_module(QuickTemplates2
     GENERATE_METATYPES
     SOURCES
+        accessible/qaccessiblequickpage.cpp accessible/qaccessiblequickpage_p.h
         qquickabstractbutton.cpp qquickabstractbutton_p.h
         qquickabstractbutton_p_p.h
         qquickaction.cpp qquickaction_p.h
@@ -112,7 +113,7 @@ qt_internal_add_module(QuickTemplates2
         qquicktooltip.cpp qquicktooltip_p.h
         qquickvelocitycalculator.cpp
         qquickvelocitycalculator_p_p.h
-        qtquicktemplates2global_p.h
+        qtquicktemplates2global.cpp qtquicktemplates2global_p.h
     DEFINES
         QT_NO_CAST_FROM_ASCII
         QT_NO_CAST_TO_ASCII
