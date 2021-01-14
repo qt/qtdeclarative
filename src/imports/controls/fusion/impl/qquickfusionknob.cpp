@@ -62,7 +62,7 @@ void QQuickFusionKnob::paint(QPainter *painter)
                  qMin(140, color .saturation()),
                  qMax(180, color.value()));
     color = color.lighter(104);
-    color.setAlphaF(qreal(0.8));
+    color.setAlphaF(0.8f);
 
     const qreal sz = qMin(w, h);
     QRectF rect(0, 0, sz, sz);

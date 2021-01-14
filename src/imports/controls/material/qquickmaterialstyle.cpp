@@ -883,7 +883,7 @@ QColor QQuickMaterialStyle::hintTextColor() const
 QColor QQuickMaterialStyle::textSelectionColor() const
 {
     QColor color = accentColor();
-    color.setAlphaF(0.4);
+    color.setAlphaF(0.4f);
     return color;
 }
 
