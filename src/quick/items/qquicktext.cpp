@@ -2430,7 +2430,10 @@ void QQuickText::geometryChange(const QRectF &newGeometry, const QRectF &oldGeom
             }
         }
     } else if (!heightChanged && widthMaximum) {
-        goto geomChangeDone;
+        if (!qFuzzyIsNull(oldGeometry.width())) {
+            // no change to height, width is adequate and wasn't 0 before
+            goto geomChangeDone;
+        }
     }
 
     if (d->updateOnComponentComplete || d->textHasChanged) {

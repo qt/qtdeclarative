@@ -68,6 +68,7 @@ private slots:
     void wrap();
     void elide();
     void elideParentChanged();
+    void elideRelayoutAfterZeroWidth();
     void multilineElide_data();
     void multilineElide();
     void implicitElide_data();
@@ -605,6 +606,15 @@ void tst_qquicktext::elideParentChanged()
     QTRY_VERIFY(!grabResult->image().isNull());
     const QImage actualItemImageGrab(grabResult->image());
     QCOMPARE(actualItemImageGrab, expectedItemImageGrab);
+}
+
+void tst_qquicktext::elideRelayoutAfterZeroWidth()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("elideZeroWidth.qml"));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY2(root, qPrintable(component.errorString()));
+    QVERIFY(root->property("ok").toBool());
 }
 
 void tst_qquicktext::multilineElide_data()
