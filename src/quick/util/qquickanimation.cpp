@@ -1990,7 +1990,7 @@ void QQuickPropertyAnimationPrivate::convertVariant(QVariant &variant, QMetaType
 }
 
 QQuickBulkValueAnimator::QQuickBulkValueAnimator()
-    : QAbstractAnimationJob(), animValue(nullptr), fromSourced(nullptr), m_duration(250)
+    : QAbstractAnimationJob(), animValue(nullptr), fromIsSourced(nullptr), m_duration(250)
 {
 }
 
@@ -2020,8 +2020,8 @@ void QQuickBulkValueAnimator::updateCurrentTime(int currentTime)
 void QQuickBulkValueAnimator::topLevelAnimationLoopChanged()
 {
     //check for new from every top-level loop (when the top level animation is started and all subsequent loops)
-    if (fromSourced)
-        *fromSourced = false;
+    if (fromIsSourced)
+        *fromIsSourced = false;
     QAbstractAnimationJob::topLevelAnimationLoopChanged();
 }
 
@@ -2590,7 +2590,7 @@ void QQuickAnimationPropertyUpdater::setValue(qreal v)
         if (v == 1.) {
             QQmlPropertyPrivate::write(action.property, action.toValue, QQmlPropertyData::BypassInterceptor | QQmlPropertyData::DontRemoveBinding);
         } else {
-            if (!fromSourced && !fromDefined) {
+            if (!fromIsSourced && !fromIsDefined) {
                 action.fromValue = action.property.read();
                 if (interpolatorType) {
                     QQuickPropertyAnimationPrivate::convertVariant(action.fromValue, QMetaType(interpolatorType));
@@ -2610,7 +2610,7 @@ void QQuickAnimationPropertyUpdater::setValue(qreal v)
             return;
     }
     wasDeleted = nullptr;
-    fromSourced = true;
+    fromIsSourced = true;
 }
 
 void QQuickAnimationPropertyUpdater::debugUpdater(QDebug d, int indentLevel) const
@@ -2754,11 +2754,11 @@ QAbstractAnimationJob* QQuickPropertyAnimation::transition(QQuickStateActions &a
         data->interpolatorType = d->interpolatorType;
         data->interpolator = d->interpolator;
         data->reverse = direction == Backward ? true : false;
-        data->fromSourced = false;
-        data->fromDefined = d->fromIsDefined;
+        data->fromIsSourced = false;
+        data->fromIsDefined = d->fromIsDefined;
         data->actions = dataActions;
         animator->setAnimValue(data);
-        animator->setFromSourcedValue(&data->fromSourced);
+        animator->setFromIsSourcedValue(&data->fromIsSourced);
         d->actions = &data->actions; //remove this?
     }
 
