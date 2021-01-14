@@ -125,6 +125,7 @@ private slots:
     void testRequiredProperties();
     void testRequiredPropertiesFromQml();
     void testSetInitialProperties();
+    void createInsideJSModule();
 
 private:
     QQmlEngine engine;
@@ -830,6 +831,15 @@ void tst_qqmlcomponent::testSetInitialProperties()
         QVERIFY(obj);
         QVERIFY(comp.errorString().contains("Could not set property notThePropertiesYoureLookingFor"));
     }
+}
+
+void tst_qqmlcomponent::createInsideJSModule()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("jsmodule/test.qml"));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY2(root, qPrintable(component.errorString()));
+    QVERIFY(root->property("ok").toBool());
 }
 
 QTEST_MAIN(tst_qqmlcomponent)
