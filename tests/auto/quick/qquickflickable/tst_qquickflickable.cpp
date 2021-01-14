@@ -170,6 +170,7 @@ private slots:
     void returnToBounds_data();
     void wheel();
     void trackpad();
+    void nestedTrackpad();
     void movingAndFlicking();
     void movingAndFlicking_data();
     void movingAndDragging();
@@ -957,6 +958,66 @@ void tst_qquickflickable::trackpad()
 
     QTRY_COMPARE(moveEndSpy.count(), 1); // QTBUG-55871
     QCOMPARE(flick->property("movementsAfterEnd").value<int>(), 0); // QTBUG-55886
+}
+
+void tst_qquickflickable::nestedTrackpad()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("nested.qml")));
+
+    QQuickFlickable *rootFlickable = qmlobject_cast<QQuickFlickable *>(window.rootObject());
+    QVERIFY(rootFlickable);
+    QQuickFlickable *innerFlickable = rootFlickable->findChild<QQuickFlickable*>();
+    QVERIFY(innerFlickable);
+    QSignalSpy outerMoveEndSpy(rootFlickable, SIGNAL(movementEnded()));
+    QSignalSpy innerMoveEndSpy(innerFlickable, SIGNAL(movementEnded()));
+    QPoint pos = innerFlickable->mapToScene(QPoint(50, 50)).toPoint();
+    quint64 timestamp = 10;
+
+    // Scroll horizontally
+    for (int i = 0; i < 10 && qFuzzyIsNull(innerFlickable->contentX()); ++i) {
+        QWheelEvent event(pos, window.mapToGlobal(pos), QPoint(-10,4), QPoint(-20,8),
+                          Qt::NoButton, Qt::NoModifier, i ? Qt::ScrollUpdate : Qt::ScrollBegin, false,
+                          Qt::MouseEventSynthesizedBySystem);
+        event.setAccepted(false);
+        event.setTimestamp(timestamp++);
+        QGuiApplication::sendEvent(&window, &event);
+    }
+    QVERIFY(innerFlickable->contentX() > 0);
+    QCOMPARE(innerFlickable->contentY(), qreal(0));
+    {
+        QWheelEvent event(pos, window.mapToGlobal(pos), QPoint(0,0), QPoint(0,0),
+                          Qt::NoButton, Qt::NoModifier, Qt::ScrollEnd, false,
+                          Qt::MouseEventSynthesizedBySystem);
+        event.setAccepted(false);
+        event.setTimestamp(timestamp++);
+        QGuiApplication::sendEvent(&window, &event);
+    }
+    QTRY_COMPARE(innerMoveEndSpy.count(), 1);
+
+    innerFlickable->setContentX(0);
+    QCOMPARE(innerFlickable->contentX(), qreal(0));
+
+    // Scroll vertically
+    for (int i = 0; i < 10 && qFuzzyIsNull(innerFlickable->contentY()); ++i) {
+        QWheelEvent event(pos, window.mapToGlobal(pos), QPoint(4,-10), QPoint(8,-20),
+                          Qt::NoButton, Qt::NoModifier, i ? Qt::ScrollUpdate : Qt::ScrollBegin, false,
+                          Qt::MouseEventSynthesizedBySystem);
+        event.setAccepted(false);
+        event.setTimestamp(timestamp++);
+        QGuiApplication::sendEvent(&window, &event);
+    }
+    QVERIFY(rootFlickable->contentY() > 0);
+    QCOMPARE(rootFlickable->contentX(), qreal(0));
+    {
+        QWheelEvent event(pos, window.mapToGlobal(pos), QPoint(0,0), QPoint(0,0),
+                          Qt::NoButton, Qt::NoModifier, Qt::ScrollEnd, false,
+                          Qt::MouseEventSynthesizedBySystem);
+        event.setAccepted(false);
+        event.setTimestamp(timestamp++);
+        QGuiApplication::sendEvent(&window, &event);
+    }
+    QTRY_COMPARE(outerMoveEndSpy.count(), 1);
 }
 
 void tst_qquickflickable::movingAndFlicking_data()
