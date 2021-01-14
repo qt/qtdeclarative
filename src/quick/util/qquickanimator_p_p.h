@@ -68,8 +68,8 @@ public:
         , duration(250)
         , from(0)
         , to(0)
-        , isFromDefined(false)
-        , isToDefined(false)
+        , fromIsDefined(false)
+        , toIsDefined(false)
     {
     }
 
@@ -79,8 +79,8 @@ public:
     qreal from;
     qreal to;
 
-    uint isFromDefined : 1;
-    uint isToDefined : 1;
+    uint fromIsDefined : 1;
+    uint toIsDefined : 1;
 
     void apply(QQuickAnimatorJob *job, const QString &propertyName, QQuickStateActions &actions, QQmlProperties &modified, QObject *defaultTarget);
 };
