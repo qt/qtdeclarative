@@ -92,7 +92,7 @@ class QQuickPathAnimationUpdater : public QQuickBulkValueUpdater
 {
 public:
     QQuickPathAnimationUpdater() : path(nullptr), pathLength(0), target(nullptr), reverse(false),
-        fromSourced(false), fromDefined(false), toDefined(false),
+        fromIsSourced(false), fromIsDefined(false), toIsDefined(false),
         toX(0), toY(0), currentV(0), orientation(QQuickPathAnimation::Fixed),
         entryInterval(0), exitInterval(0) {}
     ~QQuickPathAnimationUpdater() {}
@@ -108,9 +108,9 @@ public:
 
     QQuickItem *target;
     bool reverse;
-    bool fromSourced;
-    bool fromDefined;
-    bool toDefined;
+    bool fromIsSourced;
+    bool fromIsDefined;
+    bool toIsDefined;
     qreal toX;
     qreal toY;
     qreal currentV;

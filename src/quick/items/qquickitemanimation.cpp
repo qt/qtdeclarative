@@ -532,8 +532,8 @@ QAbstractAnimationJob* QQuickAnchorAnimation::transition(QQuickStateActions &act
     data->interpolatorType = QMetaType::QReal;
     data->interpolator = d->interpolator;
     data->reverse = direction == Backward ? true : false;
-    data->fromSourced = false;
-    data->fromDefined = false;
+    data->fromIsSourced = false;
+    data->fromIsDefined = false;
 
     for (int ii = 0; ii < actions.count(); ++ii) {
         QQuickStateAction &action = actions[ii];
@@ -546,7 +546,7 @@ QAbstractAnimationJob* QQuickAnchorAnimation::transition(QQuickStateActions &act
     QQuickBulkValueAnimator *animator = new QQuickBulkValueAnimator;
     if (data->actions.count()) {
         animator->setAnimValue(data);
-        animator->setFromSourcedValue(&data->fromSourced);
+        animator->setFromIsSourcedValue(&data->fromIsSourced);
     } else {
         delete data;
     }
@@ -867,9 +867,9 @@ QAbstractAnimationJob* QQuickPathAnimation::transition(QQuickStateActions &actio
     data->exitInterval = d->duration ? qreal(d->exitDuration) / d->duration : qreal(0);
     data->endRotation = d->endRotation;
     data->reverse = direction == Backward ? true : false;
-    data->fromSourced = false;
-    data->fromDefined = (d->path && d->path->hasStartX() && d->path->hasStartY()) ? true : false;
-    data->toDefined = d->path ? true : false;
+    data->fromIsSourced = false;
+    data->fromIsDefined = (d->path && d->path->hasStartX() && d->path->hasStartY()) ? true : false;
+    data->toIsDefined = d->path ? true : false;
     int origModifiedSize = modified.count();
 
     for (int i = 0; i < actions.count(); ++i) {
@@ -888,8 +888,7 @@ QAbstractAnimationJob* QQuickPathAnimation::transition(QQuickStateActions &actio
         }
     }
 
-    if (target && d->path &&
-        (modified.count() > origModifiedSize || data->toDefined)) {
+    if (target && d->path && (modified.count() > origModifiedSize || data->toIsDefined)) {
         data->target = target;
         data->path = d->path;
         data->path->invalidateSequentialHistory();
@@ -900,13 +899,13 @@ QAbstractAnimationJob* QQuickPathAnimation::transition(QQuickStateActions &actio
 
             // treat interruptions specially, otherwise we end up with strange paths
             if ((data->reverse || prevData.reverse) && prevData.currentV > 0 && prevData.currentV < 1) {
-                if (!data->fromDefined && !data->toDefined && !prevData.painterPath.isEmpty()) {
+                if (!data->fromIsDefined && !data->toIsDefined && !prevData.painterPath.isEmpty()) {
                     QPointF pathPos = QQuickPath::sequentialPointAt(prevData.painterPath, prevData.pathLength, prevData.attributePoints, prevData.prevBez, prevData.currentV);
                     if (!prevData.anchorPoint.isNull())
                         pathPos -= prevData.anchorPoint;
                     if (pathPos == data->target->position()) {   //only treat as interruption if we interrupted ourself
                         data->painterPath = prevData.painterPath;
-                        data->toDefined = data->fromDefined = data->fromSourced = true;
+                        data->toIsDefined = data->fromIsDefined = data->fromIsSourced = true;
                         data->prevBez.isValid = false;
                         data->interruptStart = prevData.currentV;
                         data->startRotation = prevData.startRotation;
@@ -916,13 +915,13 @@ QAbstractAnimationJob* QQuickPathAnimation::transition(QQuickStateActions &actio
                 }
             }
         }
-        pa->setFromSourcedValue(&data->fromSourced);
+        pa->setFromIsSourcedValue(&data->fromIsSourced);
         pa->setAnimValue(data);
         pa->setDuration(d->duration);
         pa->setEasingCurve(d->easingCurve);
         return initInstance(pa);
     } else {
-        pa->setFromSourcedValue(nullptr);
+        pa->setFromIsSourcedValue(nullptr);
         pa->setAnimValue(nullptr);
         delete pa;
         delete data;
@@ -942,7 +941,7 @@ void QQuickPathAnimationUpdater::setValue(qreal v)
     }
     currentV = v;
     bool atStart = ((reverse && v == 1.0) || (!reverse && v == 0.0));
-    if (!fromSourced && (!fromDefined || !toDefined)) {
+    if (!fromIsSourced && (!fromIsDefined || !toIsDefined)) {
         qreal startX = reverse ? toX + anchorPoint.x() : target->x() + anchorPoint.x();
         qreal startY = reverse ? toY + anchorPoint.y() : target->y() + anchorPoint.y();
         qreal endX = reverse ? target->x() + anchorPoint.x() : toX + anchorPoint.x();
@@ -950,7 +949,7 @@ void QQuickPathAnimationUpdater::setValue(qreal v)
 
         prevBez.isValid = false;
         painterPath = path->createPath(QPointF(startX, startY), QPointF(endX, endY), QStringList(), pathLength, attributePoints);
-        fromSourced = true;
+        fromIsSourced = true;
     }
 
     qreal angle;
