@@ -90,6 +90,7 @@
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcBindingRemoval, "qt.qml.binding.removal", QtWarningMsg)
+Q_LOGGING_CATEGORY(lcObjectConnect, "qt.qml.object.connect", QtWarningMsg)
 
 // The code in this file does not violate strict aliasing, but GCC thinks it does
 // so turn off the warnings for us to have a clean build
@@ -1100,7 +1101,16 @@ ReturnedValue QObjectWrapper::method_connect(const FunctionObject *b, const Valu
             QQmlPropertyPrivate::flushSignal(signalObject, propertyCache->methodIndexToSignalIndex(signalIndex));
         }
     }
-    QObjectPrivate::connect(signalObject, signalIndex, slot, Qt::AutoConnection);
+
+    QPair<QObject *, int> functionData = QObjectMethod::extractQtMethod(f); // align with disconnect
+    if (QObject *receiver = functionData.first) {
+        QObjectPrivate::connect(signalObject, signalIndex, receiver, slot, Qt::AutoConnection);
+    } else {
+        qCInfo(lcObjectConnect,
+               "Could not find receiver of the connection, using sender as receiver. Disconnect "
+               "explicitly (or delete the sender) to make sure the connection is removed.");
+        QObjectPrivate::connect(signalObject, signalIndex, signalObject, slot, Qt::AutoConnection);
+    }
 
     RETURN_UNDEFINED();
 }
@@ -1151,7 +1161,13 @@ ReturnedValue QObjectWrapper::method_disconnect(const FunctionObject *b, const V
         &functionData.second
     };
 
-    QObjectPrivate::disconnect(signalObject, signalIndex, reinterpret_cast<void**>(&a));
+    if (QObject *receiver = functionData.first) {
+        QObjectPrivate::disconnect(signalObject, signalIndex, receiver,
+                                   reinterpret_cast<void **>(&a));
+    } else {
+        QObjectPrivate::disconnect(signalObject, signalIndex, signalObject,
+                                   reinterpret_cast<void **>(&a));
+    }
 
     RETURN_UNDEFINED();
 }

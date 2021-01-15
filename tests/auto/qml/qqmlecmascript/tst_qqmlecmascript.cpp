@@ -3500,6 +3500,46 @@ void tst_qqmlecmascript::scriptConnect()
 
         delete object;
     }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("scriptConnect.dynamic.1.qml"));
+
+        QObject *object = component.create();
+        QVERIFY(object != nullptr);
+
+        QCOMPARE(object->property("test").toInt(), 0);
+
+        QMetaObject::invokeMethod(object, "outer");
+        QCOMPARE(object->property("test").toInt(), 1);
+
+        // process the dynamic object deletion queried with deleteLater()
+        QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
+        QCoreApplication::processEvents();
+
+        // after deletion, further invocations do not update the property
+        QMetaObject::invokeMethod(object, "outer");
+        QCOMPARE(object->property("test").toInt(), 1);
+
+        delete object;
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("scriptConnect.dynamic.2.qml"));
+
+        QObject *object = component.create();
+        QVERIFY(object != nullptr);
+
+        QCOMPARE(object->property("test").toInt(), 0);
+        QMetaObject::invokeMethod(object, "outer");
+        QCOMPARE(object->property("test").toInt(), 1);
+
+        // no need to manually process events here, as we disconnect explicitly
+
+        QMetaObject::invokeMethod(object, "outer");
+        QCOMPARE(object->property("test").toInt(), 1);
+
+        delete object;
+    }
 }
 
 void tst_qqmlecmascript::scriptDisconnect()
