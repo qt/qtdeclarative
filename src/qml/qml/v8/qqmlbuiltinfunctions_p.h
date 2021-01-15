@@ -65,23 +65,6 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QV4 {
-
-namespace Heap {
-
-struct ConsoleObject : Object {
-    void init();
-};
-
-#define QQmlBindingFunctionMembers(class, Member) \
-    Member(class, Pointer, FunctionObject *, bindingFunction)
-DECLARE_HEAP_OBJECT(QQmlBindingFunction, FunctionObject) {
-    DECLARE_MARKOBJECTS(QQmlBindingFunction)
-    void init(const QV4::FunctionObject *bindingFunction);
-};
-
-}
-
 class Q_QML_EXPORT QtObject : public QObject
 {
     Q_OBJECT
@@ -97,7 +80,7 @@ class Q_QML_EXPORT QtObject : public QObject
 
     QML_NAMED_ELEMENT(Qt)
     QML_SINGLETON
-    QML_EXTENDED_NAMESPACE(QT_PREPEND_NAMESPACE(Qt))
+    QML_EXTENDED_NAMESPACE(Qt)
     QML_ADDED_IN_VERSION(2, 0)
 
     Q_CLASSINFO("QML.StrictArguments", "true")
@@ -184,8 +167,9 @@ public:
     Q_INVOKABLE QJSValue binding(const QJSValue &function) const;
 
     // We can't make this invokable as it uses actual varargs
-    static ReturnedValue method_callLater(const FunctionObject *b, const Value *thisObject,
-                                          const Value *argv, int argc);
+    static QV4::ReturnedValue method_callLater(
+            const QV4::FunctionObject *b, const QV4::Value *thisObject,
+            const QV4::Value *argv, int argc);
 
 #if QT_CONFIG(translation)
     QString uiLanguage() const;
@@ -202,7 +186,7 @@ public:
     QJSValue callLater() const;
 
 private:
-    friend struct ExecutionEngine;
+    friend struct QV4::ExecutionEngine;
 
     QtObject(QV4::ExecutionEngine *engine);
 
@@ -216,6 +200,23 @@ private:
     QV4::ExecutionEngine *m_engine = nullptr;
     QJSValue m_callLater;
 };
+
+namespace QV4 {
+
+namespace Heap {
+
+struct ConsoleObject : Object {
+    void init();
+};
+
+#define QQmlBindingFunctionMembers(class, Member) \
+    Member(class, Pointer, FunctionObject *, bindingFunction)
+DECLARE_HEAP_OBJECT(QQmlBindingFunction, FunctionObject) {
+    DECLARE_MARKOBJECTS(QQmlBindingFunction)
+    void init(const QV4::FunctionObject *bindingFunction);
+};
+
+}
 
 struct ConsoleObject : Object
 {
