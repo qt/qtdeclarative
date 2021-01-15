@@ -55,6 +55,8 @@ public:
     QQuickGraphicsConfiguration(const QQuickGraphicsConfiguration &other);
     QQuickGraphicsConfiguration &operator=(const QQuickGraphicsConfiguration &other);
 
+    static QByteArrayList preferredInstanceExtensions();
+
     void setDeviceExtensions(const QByteArrayList &extensions);
     QByteArrayList deviceExtensions() const;
 

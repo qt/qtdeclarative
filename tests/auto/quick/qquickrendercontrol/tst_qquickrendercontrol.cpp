@@ -34,6 +34,7 @@
 #include <QQuickRenderControl>
 #include <QQuickRenderTarget>
 #include <QQuickGraphicsDevice>
+#include <QQuickGraphicsConfiguration>
 #include <QQuickItem>
 #include <QQmlEngine>
 #include <QQmlComponent>
@@ -98,6 +99,7 @@ void tst_RenderControl::initTestCase()
 
 #if QT_CONFIG(vulkan)
     vulkanInstance.setLayers({ "VK_LAYER_LUNARG_standard_validation" });
+    vulkanInstance.setExtensions(QQuickGraphicsConfiguration::preferredInstanceExtensions());
     vulkanInstance.create(); // may fail, that's sometimes ok, we'll check for it later
 #endif
 

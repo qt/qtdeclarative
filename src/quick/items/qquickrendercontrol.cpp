@@ -273,10 +273,13 @@ int QQuickRenderControl::samples() const
     To configure which device extensions to enable (for example, for Vulkan),
     call QQuickWindow::setGraphicsConfiguration() before this function.
 
-    \note When using Vulkan, QQuickRenderControl does not create a
-    QVulkanInstance automatically. Rather, it is the application's
-    responsibility to create a suitable QVulkanInstance and
-    \l{QWindow::setVulkanInstance()}{associate it} with the QQuickWindow.
+    \note When using Vulkan, QQuickRenderControl does not create a QVulkanInstance
+    automatically. Rather, it is the application's responsibility to create a
+    suitable QVulkanInstance and \l{QWindow::setVulkanInstance()}{associate it} with
+    the QQuickWindow. Before initializing the QVulkanInstance, it is strongly
+    encouraged to query the list of Qt Quick's desired instance extensions by calling
+    the static function QQuickGraphicsConfiguration::preferredInstanceExtensions()
+    and to pass the returned list to QVulkanInstance::setExtensions().
 
     Returns \c true on success, \c false otherwise.
 
@@ -285,7 +288,7 @@ int QQuickRenderControl::samples() const
 
     \since 6.0
 
-    \sa QQuickRenderTarget, QQuickGraphicsDevice
+    \sa QQuickRenderTarget, QQuickGraphicsDevice, QQuickGraphicsConfiguration::preferredInstanceExtensions()
  */
 bool QQuickRenderControl::initialize()
 {
