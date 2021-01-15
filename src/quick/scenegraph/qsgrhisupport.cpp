@@ -83,8 +83,7 @@ QVulkanInstance *QSGRhiSupport::defaultVulkanInstance()
                                         << "VK_LAYER_GOOGLE_unique_objects");
 #endif
         }
-        s_vulkanInstance->setExtensions(QByteArrayList()
-                                        << "VK_KHR_get_physical_device_properties2");
+        s_vulkanInstance->setExtensions(QRhiVulkanInitParams::preferredInstanceExtensions());
         if (!s_vulkanInstance->create()) {
             qWarning("Failed to create Vulkan instance");
             delete s_vulkanInstance;
