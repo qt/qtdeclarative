@@ -77,7 +77,7 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
             break;
 
         exports.append(enquote(QString::fromLatin1("%1/%2 %3.%4")
-                               .arg(m_module).arg(collector.elementName)
+                               .arg(m_module, collector.elementName)
                                .arg(revision.hasMajorVersion() ? revision.majorVersion()
                                                                : m_version.majorVersion())
                                .arg(revision.minorVersion())));
@@ -163,7 +163,7 @@ void QmlTypesCreator::writeType(const QJsonObject &property, const QString &key,
 
 void QmlTypesCreator::writeProperties(const QJsonArray &properties, QSet<QString> &notifySignals)
 {
-    for (const QJsonValue property : properties) {
+    for (const QJsonValue &property : properties) {
         const QJsonObject obj = property.toObject();
         const QString name = obj[QLatin1String("name")].toString();
         m_qml.writeStartObject(QLatin1String("Property"));
@@ -186,7 +186,7 @@ void QmlTypesCreator::writeProperties(const QJsonArray &properties, QSet<QString
 void QmlTypesCreator::writeMethods(const QJsonArray &methods, const QString &type,
                                    const QSet<QString> &notifySignals)
 {
-    for (const QJsonValue method : methods) {
+    for (const QJsonValue &method : methods) {
         const QJsonObject obj = method.toObject();
         const QString name = obj[QLatin1String("name")].toString();
         if (name.isEmpty())
@@ -200,7 +200,7 @@ void QmlTypesCreator::writeMethods(const QJsonArray &methods, const QString &typ
         if (revision != obj.end())
             m_qml.writeScriptBinding(QLatin1String("revision"), QString::number(revision.value().toInt()));
         writeType(obj, QLatin1String("returnType"), false, false);
-        for (const QJsonValue argument : arguments) {
+        for (const QJsonValue &argument : arguments) {
             const QJsonObject obj = argument.toObject();
             m_qml.writeStartObject(QLatin1String("Parameter"));
             const QString name = obj[QLatin1String("name")].toString();
@@ -215,12 +215,12 @@ void QmlTypesCreator::writeMethods(const QJsonArray &methods, const QString &typ
 
 void QmlTypesCreator::writeEnums(const QJsonArray &enums)
 {
-    for (const QJsonValue item : enums) {
+    for (const QJsonValue &item : enums) {
         const QJsonObject obj = item.toObject();
         const QJsonArray values = obj.value(QLatin1String("values")).toArray();
         QStringList valueList;
 
-        for (const QJsonValue value : values)
+        for (const QJsonValue &value : values)
             valueList.append(enquote(value.toString()));
 
         m_qml.writeStartObject(QLatin1String("Enum"));
@@ -255,7 +255,7 @@ static QJsonArray members(const QJsonObject *classDef, const QJsonObject *origCl
     QJsonArray classDefMembers;
 
     const QJsonArray candidates = classDef->value(key).toArray();
-    for (const QJsonValue member : candidates) {
+    for (const QJsonValue &member : candidates) {
         if (isAllowedInMajorVersion(member, maxMajorVersion))
             classDefMembers.append(member);
     }
