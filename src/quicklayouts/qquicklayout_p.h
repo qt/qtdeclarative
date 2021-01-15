@@ -42,6 +42,7 @@
 
 #include <QPointer>
 #include <QQuickItem>
+#include <QtQuickLayouts/private/qquicklayoutglobal_p.h>
 #include <private/qquickitem_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtGui/private/qlayoutpolicy_p.h>
@@ -52,7 +53,7 @@ class QQuickLayoutAttached;
 Q_DECLARE_LOGGING_CATEGORY(lcQuickLayouts)
 
 class QQuickLayoutPrivate;
-class QQuickLayout : public QQuickItem, public QQuickItemChangeListener
+class Q_QUICKLAYOUT_PRIVATE_EXPORT QQuickLayout : public QQuickItem, public QQuickItemChangeListener
 
 {
     Q_OBJECT

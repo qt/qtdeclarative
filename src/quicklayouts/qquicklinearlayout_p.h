@@ -40,6 +40,7 @@
 #ifndef QQUICKLINEARLAYOUT_P_H
 #define QQUICKLINEARLAYOUT_P_H
 
+#include <QtQuickLayouts/private/qquicklayoutglobal_p.h>
 #include "qquicklayout_p.h"
 #include "qquickgridlayoutengine_p.h"
 
@@ -52,7 +53,7 @@ QT_BEGIN_NAMESPACE
  **/
 class QQuickGridLayoutBasePrivate;
 
-class QQuickGridLayoutBase : public QQuickLayout
+class Q_QUICKLAYOUT_PRIVATE_EXPORT QQuickGridLayoutBase : public QQuickLayout
 {
     Q_OBJECT
 
@@ -136,7 +137,7 @@ public:
  **
  **/
 class QQuickGridLayoutPrivate;
-class QQuickGridLayout : public QQuickGridLayoutBase
+class Q_QUICKLAYOUT_PRIVATE_EXPORT QQuickGridLayout : public QQuickGridLayoutBase
 {
     Q_OBJECT
 
@@ -227,7 +228,7 @@ public:
  ** QQuickRowLayout
  **
  **/
-class QQuickRowLayout : public QQuickLinearLayout
+class Q_QUICKLAYOUT_PRIVATE_EXPORT  QQuickRowLayout : public QQuickLinearLayout
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(RowLayout)
@@ -244,7 +245,7 @@ public:
  ** QQuickColumnLayout
  **
  **/
-class QQuickColumnLayout : public QQuickLinearLayout
+class Q_QUICKLAYOUT_PRIVATE_EXPORT QQuickColumnLayout : public QQuickLinearLayout
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(ColumnLayout)

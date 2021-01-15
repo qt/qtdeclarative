@@ -16,6 +16,7 @@ endif()
 if(TARGET Qt::Gui AND QT_FEATURE_qml_animation)
     add_subdirectory(quick)
     add_subdirectory(quickshapes)
+    add_subdirectory(quicklayouts)
 
     find_package(Qt6 ${PROJECT_VERSION} CONFIG COMPONENTS Test) # special case
     if(QT_FEATURE_testlib AND TARGET Qt::Test) # special case

@@ -40,6 +40,7 @@
 #ifndef QQUICKSTACKLAYOUT_H
 #define QQUICKSTACKLAYOUT_H
 
+#include <QtQuickLayouts/private/qquicklayoutglobal_p.h>
 #include <qquicklayout_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -47,7 +48,7 @@ QT_BEGIN_NAMESPACE
 class QQuickStackLayoutPrivate;
 class QQuickStackLayoutAttached;
 
-class QQuickStackLayout : public QQuickLayout
+class Q_QUICKLAYOUT_PRIVATE_EXPORT QQuickStackLayout : public QQuickLayout
 {
     Q_OBJECT
     Q_PROPERTY(int count READ count NOTIFY countChanged)
