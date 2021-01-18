@@ -76,6 +76,7 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
     }
 
     const auto classInfos = classDef->value(QLatin1String("classInfos")).toArray();
+    const QString classDefName = classDef->value(QLatin1String("className")).toString();
     for (const QJsonValue &classInfo : classInfos) {
         const QJsonObject obj = classInfo.toObject();
         const QString name = obj[QLatin1String("name")].toString();
@@ -100,7 +101,7 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
         // These only apply to the original class
         if (name == QLatin1String("QML.Element")) {
             if (value == QLatin1String("auto"))
-                elementName = classDef->value(QLatin1String("className")).toString();
+                elementName = classDefName;
             else if (value != QLatin1String("anonymous"))
                 elementName = value;
         } else if (name == QLatin1String("QML.RemovedInVersion")) {
