@@ -463,7 +463,24 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlP
     QV4::ScopedFunctionObject f(scope, value);
     if (f) {
         if (!f->isBinding()) {
-            if (!property->isVarProperty() && property->propType().id() != qMetaTypeId<QJSValue>()) {
+            const bool isAliasToAllowed = [&]() {
+                if (property->isAlias()) {
+                    const QQmlPropertyIndex originalIndex(property->coreIndex(), -1);
+                    QObject *targetObject = nullptr;
+                    QQmlPropertyIndex targetIndex;
+                    QQmlPropertyPrivate::findAliasTarget(object, originalIndex, &targetObject, &targetIndex);
+                    Q_ASSERT(targetObject);
+                    QQmlPropertyCache *targetCache = QQmlData::get(targetObject)->propertyCache;
+                    Q_ASSERT(targetCache);
+                    QQmlPropertyData *targetProperty = targetCache->property(targetIndex.coreIndex());
+                    object = targetObject;
+                    property = targetProperty;
+                    return targetProperty->isVarProperty() || targetProperty->propType() == QMetaType::fromType<QJSValue>();
+                } else {
+                    return false;
+                }
+            }();
+            if (!isAliasToAllowed && !property->isVarProperty() && property->propType().id() != qMetaTypeId<QJSValue>()) {
                 // assigning a JS function to a non var or QJSValue property or is not allowed.
                 QString error = QLatin1String("Cannot assign JavaScript function to ");
                 if (!QMetaType(property->propType()).name())

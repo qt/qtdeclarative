@@ -79,6 +79,7 @@ private slots:
     void assignBasicTypes();
     void assignDate_data();
     void assignDate();
+    void assignFunctionThroughAliasToVarProperty();
     void exportDate_data();
     void exportDate();
     void checkDate_data();
@@ -560,6 +561,19 @@ void tst_qqmlecmascript::assignDate()
     QCOMPARE(object->dateTimeProperty(), expectedDateTime);
     QCOMPARE(object->dateTimeProperty2(), expectedDateTime2);
     QCOMPARE(object->boolProperty(), true);
+}
+
+void tst_qqmlecmascript::assignFunctionThroughAliasToVarProperty()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("assignFunctionThroughAliasToVarProperty.qml"));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY2(root, qPrintable(component.errorString()));
+
+    QJSValue fooFunc = root->property("foo").value<QJSValue>();
+    QVERIFY(fooFunc.isCallable());
+    QJSValue callResult = fooFunc.call();
+    QVERIFY(callResult.toBool());
 }
 
 void tst_qqmlecmascript::exportDate_data()
