@@ -209,9 +209,6 @@ int main(int argc, char **argv)
 
     const QVector<QJsonObject> types = processor.types();
     for (const QJsonObject &classDef : types) {
-        if (!classDef.value(QLatin1String("registerable")).toBool())
-            continue;
-
         const QString className = classDef[QLatin1String("qualifiedClassName")].toString();
 
         if (classDef.value(QLatin1String("namespace")).toBool()) {

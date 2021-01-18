@@ -303,20 +303,6 @@ void MetaTypesJsonProcessor::processTypes(const QJsonObject &types)
                         qPrintable(include));
             }
             m_includes.append(include);
-            {
-                bool shouldRegister = true;
-                const QJsonArray classInfos = classDef.value(QLatin1String("classInfos")).toArray();
-                for (const QJsonValue &v : classInfos) {
-                    if (v[QLatin1String("name")].toString()
-                            == QLatin1String("QML.ManualRegistration")) {
-                        shouldRegister = QStringView(u"true").compare(
-                                    v[QLatin1String("value")].toString(),
-                                Qt::CaseInsensitive) != 0;
-                    }
-                }
-                classDef.insert(QLatin1String("registerable"), shouldRegister);
-            }
-
             m_types.append(classDef);
             break;
         }

@@ -126,7 +126,7 @@ void QmlTypesClassDescription::collect(
         const QJsonObject *classDef, const QVector<QJsonObject> &types,
         const QVector<QJsonObject> &foreign, CollectMode mode, QTypeRevision defaultRevision)
 {
-    if (file.isEmpty() && classDef->value(QLatin1String("registerable")).toBool())
+    if (file.isEmpty())
         file = classDef->value(QLatin1String("inputFile")).toString();
 
     const auto classInfos = classDef->value(QLatin1String("classInfos")).toArray();
