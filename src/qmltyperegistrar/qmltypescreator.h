@@ -44,6 +44,7 @@ public:
 
     void setOwnTypes(QVector<QJsonObject> ownTypes) { m_ownTypes = std::move(ownTypes); }
     void setForeignTypes(QVector<QJsonObject> foreignTypes) { m_foreignTypes = std::move(foreignTypes); }
+    void setReferencedTypes(QStringList referencedTypes) { m_referencedTypes = std::move(referencedTypes); }
     void setModule(QString module) { m_module = std::move(module); }
     void setVersion(QTypeRevision version) { m_version = version; }
 
@@ -61,6 +62,7 @@ private:
     QQmlJSStreamWriter m_qml;
     QVector<QJsonObject> m_ownTypes;
     QVector<QJsonObject> m_foreignTypes;
+    QStringList m_referencedTypes;
     QString m_module;
     QTypeRevision m_version = QTypeRevision::zero();
 };

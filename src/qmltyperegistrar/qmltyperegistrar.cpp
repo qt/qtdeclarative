@@ -245,6 +245,7 @@ int main(int argc, char **argv)
     QmlTypesCreator creator;
     creator.setOwnTypes(processor.types());
     creator.setForeignTypes(processor.foreignTypes());
+    creator.setReferencedTypes(processor.referencedTypes());
     creator.setModule(module);
     creator.setVersion(QTypeRevision::fromVersion(parser.value(majorVersionOption).toInt(), 0));
 

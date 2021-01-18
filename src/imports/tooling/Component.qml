@@ -50,6 +50,7 @@ QtObject {
     property var interfaces: []
     property string attachedType
     property string valueType
+    property string extension
     property bool isSingleton: false
     property bool isCreatable: name.length > 0
     property bool isComposite: false

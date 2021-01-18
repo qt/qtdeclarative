@@ -86,7 +86,7 @@ private:
 class SizeEnums
 {
     Q_GADGET
-    QML_NAMED_ELEMENT(SizeEnums)
+    QML_NAMED_ELEMENT(sizeEnums)
     QML_UNCREATABLE("Element is not creatable.")
 
 public:
@@ -99,8 +99,9 @@ class SizeValueType : public SizeEnums
     QSize v;
     Q_GADGET
     Q_PROPERTY(int width READ width WRITE setWidth FINAL)
-    QML_NAMED_ELEMENT(MySize)
+    QML_NAMED_ELEMENT(mySize)
     QML_FOREIGN(SizeGadget)
+    QML_EXTENDED(SizeValueType)
 
 public:
     Q_INVOKABLE QString sizeToString() const

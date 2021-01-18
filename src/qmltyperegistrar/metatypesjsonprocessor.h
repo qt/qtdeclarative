@@ -48,6 +48,7 @@ public:
 
     QVector<QJsonObject> types() const { return m_types; }
     QVector<QJsonObject> foreignTypes() const { return m_foreignTypes; }
+    QStringList referencedTypes() const { return m_referencedTypes; }
     QStringList includes() const { return m_includes; }
 
 private:
@@ -59,15 +60,15 @@ private:
     };
 
     static RegistrationMode qmlTypeRegistrationMode(const QJsonObject &classDef);
-    QVector<QJsonObject> foreignRelatedTypes() const;
+    void addRelatedTypes();
 
     void sortTypes(QVector<QJsonObject> &types);
-    void sortIncludes();
     QString resolvedInclude(const QString &include);;
     void processTypes(const QJsonObject &types);
     void processForeignTypes(const QJsonObject &types);
 
     QStringList m_includes;
+    QStringList m_referencedTypes;
     QVector<QJsonObject> m_types;
     QVector<QJsonObject> m_foreignTypes;
     bool m_privateIncludes = false;

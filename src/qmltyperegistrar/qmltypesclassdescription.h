@@ -44,6 +44,7 @@ struct QmlTypesClassDescription
     QString defaultProp;
     QString superClass;
     QString attachedType;
+    QString extensionType;
     QString sequenceValueType;
     QString accessSemantics;
     QList<QTypeRevision> revisions;
@@ -57,7 +58,7 @@ struct QmlTypesClassDescription
     enum CollectMode {
         TopLevel,
         SuperClass,
-        AttachedType
+        RelatedType
     };
 
     void collect(const QJsonObject *classDef, const QVector<QJsonObject> &types,
@@ -67,6 +68,16 @@ struct QmlTypesClassDescription
                         const QVector<QJsonObject> &foreign, QTypeRevision defaultRevision);
 
     static const QJsonObject *findType(const QVector<QJsonObject> &types, const QString &name);
+
+    void collectLocalAnonymous(const QJsonObject *classDef,const QVector<QJsonObject> &types,
+                      const QVector<QJsonObject> &foreign, QTypeRevision defaultRevision);
+
+
+private:
+    void collectSuperClasses(
+            const QJsonObject *classDef, const QVector<QJsonObject> &types,
+            const QVector<QJsonObject> &foreign, CollectMode mode, QTypeRevision defaultRevision);
+    void collectInterfaces(const QJsonObject *classDef);
 };
 
 #endif // QMLTYPESCLASSDESCRIPTION_H

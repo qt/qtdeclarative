@@ -110,16 +110,24 @@ bool MetaTypesJsonProcessor::processForeignTypes(const QStringList &foreignTypes
     return success;
 }
 
+static void sortStringList(QStringList *list)
+{
+    std::sort(list->begin(), list->end());
+    const auto newEnd = std::unique(list->begin(), list->end());
+    list->erase(QStringList::const_iterator(newEnd), list->constEnd());
+}
+
 void MetaTypesJsonProcessor::postProcessTypes()
 {
     sortTypes(m_types);
-    sortIncludes();
+    sortStringList(&m_includes);
 }
 
 void MetaTypesJsonProcessor::postProcessForeignTypes()
 {
     sortTypes(m_foreignTypes);
-    m_types += foreignRelatedTypes();
+    addRelatedTypes();
+    sortStringList(&m_referencedTypes);
     sortTypes(m_types);
 }
 
@@ -145,13 +153,14 @@ MetaTypesJsonProcessor::RegistrationMode MetaTypesJsonProcessor::qmlTypeRegistra
     return NoRegistration;
 }
 
-QVector<QJsonObject> MetaTypesJsonProcessor::foreignRelatedTypes() const
+void MetaTypesJsonProcessor::addRelatedTypes()
 {
     const QLatin1String classInfosKey("classInfos");
     const QLatin1String nameKey("name");
     const QLatin1String qualifiedClassNameKey("qualifiedClassName");
     const QLatin1String qmlNamePrefix("QML.");
     const QLatin1String qmlForeignName("QML.Foreign");
+    const QLatin1String qmlExtendedName("QML.Extended");
     const QLatin1String qmlAttachedName("QML.Attached");
     const QLatin1String qmlSequenceName("QML.Sequence");
     const QLatin1String valueKey("value");
@@ -162,7 +171,6 @@ QVector<QJsonObject> MetaTypesJsonProcessor::foreignRelatedTypes() const
     QSet<QString> processedRelatedNames;
     QQueue<QJsonObject> typeQueue;
     typeQueue.append(m_types);
-    QVector<QJsonObject> relatedTypes;
 
     // First mark all classes registered from this module as already processed.
     for (const QJsonObject &type : m_types) {
@@ -197,12 +205,13 @@ QVector<QJsonObject> MetaTypesJsonProcessor::foreignRelatedTypes() const
     }
 
     auto addType = [&](const QString &typeName) {
+        m_referencedTypes.append(typeName);
         if (processedRelatedNames.contains(typeName))
             return;
         processedRelatedNames.insert(typeName);
         if (const QJsonObject *other
                 = QmlTypesClassDescription::findType(m_foreignTypes, typeName)) {
-            relatedTypes.append(*other);
+            m_types.append(*other);
             typeQueue.enqueue(*other);
         }
     };
@@ -216,7 +225,8 @@ QVector<QJsonObject> MetaTypesJsonProcessor::foreignRelatedTypes() const
         for (const QJsonValue &classInfo : classInfos) {
             const QJsonObject obj = classInfo.toObject();
             const QString objNameValue = obj.value(nameKey).toString();
-            if (objNameValue == qmlAttachedName || objNameValue == qmlSequenceName) {
+            if (objNameValue == qmlAttachedName || objNameValue == qmlSequenceName
+                    || objNameValue == qmlExtendedName) {
                 addType(obj.value(valueKey).toString());
             } else if (objNameValue == qmlForeignName) {
                 const QString foreignClassName = obj.value(valueKey).toString();
@@ -233,13 +243,13 @@ QVector<QJsonObject> MetaTypesJsonProcessor::foreignRelatedTypes() const
                     for (const QJsonValue &otherClassInfo : otherClassInfos) {
                         const QJsonObject obj = otherClassInfo.toObject();
                         const QString objNameValue = obj.value(nameKey).toString();
-                        if (objNameValue == qmlAttachedName || objNameValue == qmlSequenceName) {
+                        if (objNameValue == qmlAttachedName || objNameValue == qmlSequenceName
+                                || objNameValue == qmlExtendedName) {
                             addType(obj.value(valueKey).toString());
                             break;
                         }
                         // No, you cannot chain QML_FOREIGN declarations. Sorry.
                     }
-                    break;
                 }
             }
         }
@@ -251,8 +261,6 @@ QVector<QJsonObject> MetaTypesJsonProcessor::foreignRelatedTypes() const
                 addType(superObject.value(nameKey).toString());
         }
     }
-
-    return relatedTypes;
 }
 
 void MetaTypesJsonProcessor::sortTypes(QVector<QJsonObject> &types)
@@ -262,13 +270,6 @@ void MetaTypesJsonProcessor::sortTypes(QVector<QJsonObject> &types)
         return a.value(qualifiedClassNameKey).toString() <
                 b.value(qualifiedClassNameKey).toString();
     });
-}
-
-void MetaTypesJsonProcessor::sortIncludes()
-{
-    std::sort(m_includes.begin(), m_includes.end());
-    const auto newEnd = std::unique(m_includes.begin(), m_includes.end());
-    m_includes.erase(QList<QString>::const_iterator(newEnd), m_includes.constEnd());
 }
 
 QString MetaTypesJsonProcessor::resolvedInclude(const QString &include)

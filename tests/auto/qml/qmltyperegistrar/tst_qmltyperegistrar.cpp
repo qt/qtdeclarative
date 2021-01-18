@@ -82,6 +82,7 @@ void tst_qmltyperegistrar::superAndForeignTypes()
     QVERIFY(qmltypesData.contains("Property { name: \"height\"; type: \"int\" }"));
     QVERIFY(qmltypesData.contains("Property { name: \"width\"; type: \"int\" }"));
     QVERIFY(qmltypesData.contains("Method { name: \"sizeToString\"; type: \"QString\" }"));
+    QVERIFY(qmltypesData.contains("extension: \"SizeValueType\""));
 }
 
 void tst_qmltyperegistrar::accessSemantics()
