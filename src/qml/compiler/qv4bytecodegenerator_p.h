@@ -186,13 +186,13 @@ QT_WARNING_POP
 
     Q_REQUIRED_RESULT Jump jumpNotUndefined()
     {
-        Instruction::JumpNotUndefined data;
+        Instruction::JumpNotUndefined data{};
         return addJumpInstruction(data);
     }
 
     Q_REQUIRED_RESULT Jump jumpNoException()
     {
-        Instruction::JumpNoException data;
+        Instruction::JumpNoException data{};
         return addJumpInstruction(data);
     }
 
