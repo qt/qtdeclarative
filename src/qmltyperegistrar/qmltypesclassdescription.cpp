@@ -122,7 +122,7 @@ void QmlTypesClassDescription::collect(const QJsonObject *classDef,
                 classDef = other;
                 // Foreign type can have a default property or an attached types
                 const auto classInfos = classDef->value(QLatin1String("classInfos")).toArray();
-                for (const QJsonValue classInfo : classInfos) {
+                for (const QJsonValue &classInfo : classInfos) {
                     const QJsonObject obj = classInfo.toObject();
                     const QString foreignName = obj[QLatin1String("name")].toString();
                     const QString foreignValue = obj[QLatin1String("value")].toString();

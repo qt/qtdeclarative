@@ -216,7 +216,7 @@ int main(int argc, char **argv)
 
         if (classDef.value(QLatin1String("namespace")).toBool()) {
             QString targetName = className;
-            for (const QJsonValue v : classDef.value(QLatin1String("classInfos")).toArray()) {
+            for (const QJsonValue &v : classDef.value(QLatin1String("classInfos")).toArray()) {
                 if (v[QLatin1String("name")].toString() == QLatin1String("QML.Foreign"))
                     targetName = v[QLatin1String("value")].toString();
             }
