@@ -1387,13 +1387,13 @@ void QQmlComponentPrivate::setInitialProperties(QV4::ExecutionEngine *engine, QV
             }
         }
         if (engine->hasException || !object) {
-            engine->hasException = false;
+            qmlWarning(createdComponent, engine->catchExceptionAsQmlError());
             continue;
         }
         name = engine->newString(properties.last());
         object->put(name, val);
         if (engine->hasException) {
-            engine->hasException = false;
+            qmlWarning(createdComponent, engine->catchExceptionAsQmlError());
             continue;
         } else if (isTopLevelProperty) {
             auto prop = removePropertyFromRequired(createdComponent, name->toQString(), requiredProperties);

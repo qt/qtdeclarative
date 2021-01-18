@@ -706,6 +706,11 @@ void tst_QQuickLoader::initialPropertyValues_data()
             << QStringList()
             << (QStringList() << "i")
             << (QVariantList() << 12);
+
+    QTest::newRow("initial property errors get reported") << testFileUrl("initialPropertyTriggerException.qml")
+                                                          << (QStringList() << "^.*:11: Error: Cannot assign JavaScript function to int")
+                                                          << QStringList()
+                                                          << QVariantList();
 }
 
 void tst_QQuickLoader::initialPropertyValues()
@@ -718,7 +723,7 @@ void tst_QQuickLoader::initialPropertyValues()
     ThreadedTestHTTPServer server(dataDirectory());
 
     foreach (const QString &warning, expectedWarnings)
-        QTest::ignoreMessage(QtWarningMsg, warning.toLatin1().constData());
+        QTest::ignoreMessage(QtWarningMsg, QRegularExpression(warning.toLatin1().constData()));
 
     QQmlEngine engine;
     QQmlComponent component(&engine, qmlFile);
