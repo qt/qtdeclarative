@@ -130,7 +130,7 @@ via the -I flag.
 
 \section2 Related Information
 \list
-  \li \l{Writing a qmltypes File}{qmltypes}
+  \li \l{Type Description Files}{qmltypes}
 \endlist
 
 \section1 qmlformat

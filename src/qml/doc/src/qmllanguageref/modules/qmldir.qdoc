@@ -216,7 +216,7 @@ classname <C++ plugin class>
             \code
 typeinfo <File>
             \endcode
-        \li Declares a \l{Writing a qmltypes file}{type description file} for
+        \li Declares a \l{Type Description Files}{type description file} for
             the module that can be read by QML tools such as Qt Creator to
             access information about the types defined by the module's plugins.
             \c <File> is the (relative) file name of a \c .qmltypes file.
@@ -398,21 +398,24 @@ The \c CustomButton type used above would come from the definition specified in
 the \c CustomButton21.qml file, and the JavaScript resource identified by the
 \c MathFunctions identifier would be defined in the \c mathfuncs.js file.
 
-\section1 Writing a qmltypes File
+\section1 Type Description Files
 
 QML modules may refer to one or more type information files in their
 \c qmldir file. These usually have the \c .qmltypes
 extension and are read by external tools to gain information about
-types defined in plugins.
+types defined in C++ and typically imported via plugins.
 
 As such qmltypes files have no effect on the functionality of a QML module.
 Their only use is to allow tools such as Qt Creator to provide code completion,
 error checking and other functionality to users of your module.
 
-Any module that uses plugins should also ship a type description file.
+Any module that defines QML types in C++ should also ship a type description
+file.
 
 The best way to create a qmltypes file for your module is to generate it
-using the build system and the \l QML_ELEMENT macros.
+using the build system and the \l QML_ELEMENT macros. If you follow the
+documentation on this, no further action is needed. qmltyperegistrar will
+automatically generate the \c .qmltypes files.
 
 Example:
 If your module is in \c /tmp/imports/My/Module, a file caled \c plugins.qmltypes
@@ -423,103 +426,6 @@ Add the line
 typeinfo plugins.qmltypes
 \endcode
 to \c /tmp/imports/My/Module/qmldir to register it.
-
-While the automatic generation covers most cases, it does not work if the plugin
-uses a \c{QQmlCustomParser}. The component that uses the custom parser will not
-get its members documented.
-
-In case you have to create a qmltypes file manually or need to adjust
-an existing one, this is the file format:
-
-\qml
-import QtQuick.tooling 1.1
-
-// There always is a single Module object that contains all
-// Component objects.
-Module {
-    // A Component object directly corresponds to a type exported
-    // using the QML_ELEMENT or QML_NAMED_ELEMENT macros.
-    Component {
-
-        // The name is a unique identifier used to refer to this type.
-        // It is recommended you simply use the C++ type name.
-        name: "QQuickAbstractAnimation"
-
-        // The name of the prototype Component.
-        prototype: "QObject"
-
-        // The name of the default property.
-        defaultProperty: "animations"
-
-        // The name of the type containing attached properties
-        // and methods.
-        attachedType: "QQuickAnimationAttached"
-
-        // The list of exports determines how a type can be imported.
-        // Each string has the format "URI/Name version". The URI is
-        // the import name given via the build system, for example as
-        // QML_IMPORT_NAME in qmake. The name is either the C++ class
-        // name or, in case of QML_NAMED_ELEMENT(), an explicitly given
-        // name. The version is constructed from the major version
-        // given via the build system, as QML_IMPORT_MAJOR_VERSION in
-        // qmake, and any revisions given in the class or its base
-        // classes by Q_REVISION(), the REVISION argument to Q_PROPERTY,
-        // or QML_ADDED_IN_MINOR_VERSION(). Usually types are only
-        // exported once, if at all. The following tells us that there
-        // are two variants of Animation, and that 'import QtQuick 2.0'
-        // will expose a different revision than imports of later
-        // versions.
-        exports: [
-            "QtQuick/Animation 2.0",
-            "QtQuick/Animation 2.1"
-        ]
-
-        // The meta object revisions for the exports specified in 'exports'.
-        // Each meta object revision may add additional properties or methods,
-        // relative to the previous one. Those will only be visible when the
-        // module is imported with at least the corresponding version as
-        // specified in the 'exports' list.
-        // The exportMetaObjectRevisions list must have exactly the same
-        // length as the 'exports' list. For example, the 'animations' property
-        // described below will only be available through the QtQuick/Animation
-        // 2.1 export. Usually the revisions will match the versions in the
-        // 'exports' list.
-        exportMetaObjectRevisions: [0, 1]
-
-        Property {
-            name: "animations";
-            type: "QQuickAbstractAnimation"
-            // defaults to false, whether this property is read only
-            isReadonly: true
-            // defaults to false, whether the type of this property was a pointer in C++
-            isPointer: true
-            // defaults to false: whether the type actually is a QQmlListProperty<type>
-            isList: true
-            // defaults to 0: the meta object revision that introduced this property
-            revision: 1
-        }
-        Property { name: "loops"; type: "int" }
-        Property { name: "name"; type: "string" }
-        Property { name: "loopsEnum"; type: "Loops" }
-
-        Enum {
-            name: "Loops"
-            values: [ "Infinite", "OnceOnly" ]
-        }
-
-        // Signal and Method work the same way. The inner Parameter
-        // declarations also support the isReadonly, isPointer and isList
-        // attributes which mean the same as for Property
-        Method { name: "restart" }
-        Signal { name: "started"; revision: 1 }
-        Signal {
-            name: "runningChanged"
-            Parameter { type: "bool" }
-            Parameter { name: "foo"; type: "bool" }
-        }
-    }
-}
-\endqml
 
 */
 
