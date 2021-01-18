@@ -2432,18 +2432,20 @@ ClipState::ClipType Renderer::updateStencilClip(const QSGClipNode *clip)
         // TODO: Check for multisampling and pixel grid alignment.
         bool isRectangleWithNoPerspective = clip->isRectangular()
                 && qFuzzyIsNull(m(3, 0)) && qFuzzyIsNull(m(3, 1));
-        auto noRotate = [] (const QMatrix4x4 &m) { return qFuzzyIsNull(m(0, 1)) && qFuzzyIsNull(m(1, 0)); };
-        auto isRotate90 = [] (const QMatrix4x4 &m) { return qFuzzyIsNull(m(0, 0)) && qFuzzyIsNull(m(1, 1)); };
-        auto scissorRect = [&] (const QRectF &bbox, const QMatrix4x4 &m) {
+        bool noRotate = qFuzzyIsNull(m(0, 1)) && qFuzzyIsNull(m(1, 0));
+        bool isRotate90 = qFuzzyIsNull(m(0, 0)) && qFuzzyIsNull(m(1, 1));
+
+        if (isRectangleWithNoPerspective && (noRotate || isRotate90)) {
+            QRectF bbox = clip->clipRect();
             qreal invW = 1 / m(3, 3);
             qreal fx1, fy1, fx2, fy2;
-            if (noRotate(m)) {
+            if (noRotate) {
                 fx1 = (bbox.left() * m(0, 0) + m(0, 3)) * invW;
                 fy1 = (bbox.bottom() * m(1, 1) + m(1, 3)) * invW;
                 fx2 = (bbox.right() * m(0, 0) + m(0, 3)) * invW;
                 fy2 = (bbox.top() * m(1, 1) + m(1, 3)) * invW;
             } else {
-                Q_ASSERT(isRotate90(m));
+                Q_ASSERT(isRotate90);
                 fx1 = (bbox.bottom() * m(0, 1) + m(0, 3)) * invW;
                 fy1 = (bbox.left() * m(1, 0) + m(1, 3)) * invW;
                 fx2 = (bbox.top() * m(0, 1) + m(0, 3)) * invW;
@@ -2462,18 +2464,12 @@ ClipState::ClipType Renderer::updateStencilClip(const QSGClipNode *clip)
             GLint ix2 = qRound((fx2 + 1) * deviceRect.width() * qreal(0.5));
             GLint iy2 = qRound((fy2 + 1) * deviceRect.height() * qreal(0.5));
 
-            return QRect(ix1, iy1, ix2 - ix1, iy2 - iy1);
-        };
-
-        if (isRectangleWithNoPerspective && (noRotate(m) || isRotate90(m))) {
-            auto rect = scissorRect(clip->clipRect(), m);
-
             if (!(clipType & ClipState::ScissorClip)) {
-                m_currentScissorRect = rect;
+                m_currentScissorRect = QRect(ix1, iy1, ix2 - ix1, iy2 - iy1);
                 glEnable(GL_SCISSOR_TEST);
                 clipType |= ClipState::ScissorClip;
             } else {
-                m_currentScissorRect &= rect;
+                m_currentScissorRect &= QRect(ix1, iy1, ix2 - ix1, iy2 - iy1);
             }
             glScissor(m_currentScissorRect.x(), m_currentScissorRect.y(),
                       m_currentScissorRect.width(), m_currentScissorRect.height());
@@ -2488,31 +2484,9 @@ ClipState::ClipType Renderer::updateStencilClip(const QSGClipNode *clip)
                     m_clipProgram.link();
                     m_clipMatrixId = m_clipProgram.uniformLocation("matrix");
                 }
-                const QSGClipNode *clipNext = clip->clipList();
-                if (clipNext) {
-                    QMatrix4x4 mNext = m_current_projection_matrix;
-                    if (clipNext->matrix())
-                        mNext *= *clipNext->matrix();
-
-                    auto rect = scissorRect(clipNext->clipRect(), mNext);
-
-                    ClipState::ClipType clipTypeNext = clipType ;
-                    clipTypeNext |= ClipState::StencilClip;
-                    QRect m_next_scissor_rect = m_currentScissorRect;
-                    if (!(clipTypeNext & ClipState::ScissorClip)) {
-                        m_next_scissor_rect = rect;
-                        glEnable(GL_SCISSOR_TEST);
-                    } else {
-                        m_next_scissor_rect =
-                           m_currentScissorRect & rect;
-                    }
-                    glScissor(m_next_scissor_rect.x(), m_next_scissor_rect.y(),
-                              m_next_scissor_rect.width(), m_next_scissor_rect.height());
-                }
 
                 glClearStencil(0);
                 glClear(GL_STENCIL_BUFFER_BIT);
-                glDisable(GL_SCISSOR_TEST);
                 glEnable(GL_STENCIL_TEST);
                 glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
                 glDepthMask(GL_FALSE);
