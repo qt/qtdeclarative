@@ -149,30 +149,33 @@ namespace QQmlPrivate
     {
         None,
         Constructor,
-        Factory
+        Factory,
+        FactoryWrapper
     };
 
-    template<typename T, typename = std::void_t<>>
+    template<typename T, typename WrapperT = T, typename = std::void_t<>>
     struct HasSingletonFactory
     {
         static constexpr bool value = false;
     };
 
-    template<typename T>
-    struct HasSingletonFactory<T, std::void_t<decltype(T::create(
-                                                           static_cast<QQmlEngine *>(nullptr),
-                                                           static_cast<QJSEngine *>(nullptr)))>>
+    template<typename T, typename WrapperT>
+    struct HasSingletonFactory<T, WrapperT, std::void_t<decltype(WrapperT::create(
+                                                               static_cast<QQmlEngine *>(nullptr),
+                                                               static_cast<QJSEngine *>(nullptr)))>>
     {
         static constexpr bool value = std::is_same_v<
-            decltype(T::create(static_cast<QQmlEngine *>(nullptr),
+            decltype(WrapperT::create(static_cast<QQmlEngine *>(nullptr),
                                static_cast<QJSEngine *>(nullptr))), T *>;
     };
 
-    template<typename T>
+    template<typename T, typename WrapperT>
     constexpr ConstructionMode constructionMode()
     {
         if constexpr (!std::is_base_of<QObject, T>::value)
             return ConstructionMode::None;
+        if constexpr (!std::is_same_v<T, WrapperT> && HasSingletonFactory<T, WrapperT>::value)
+            return ConstructionMode::FactoryWrapper;
         if constexpr (std::is_default_constructible<T>::value)
             return ConstructionMode::Constructor;
         if constexpr (HasSingletonFactory<T>::value)
@@ -184,7 +187,7 @@ namespace QQmlPrivate
     template<typename T>
     void createInto(void *memory, void *) { new (memory) QQmlElement<T>; }
 
-    template<typename T, ConstructionMode Mode>
+    template<typename T, typename WrapperT, ConstructionMode Mode>
     QObject *createSingletonInstance(QQmlEngine *q, QJSEngine *j)
     {
         Q_UNUSED(q);
@@ -193,6 +196,8 @@ namespace QQmlPrivate
             return new T;
         else if constexpr (Mode == ConstructionMode::Factory)
             return T::create(q, j);
+        else if constexpr (Mode == ConstructionMode::FactoryWrapper)
+            return WrapperT::create(q, j);
         else
             return nullptr;
     }
@@ -205,31 +210,39 @@ namespace QQmlPrivate
     using CreateParentFunction = QObject *(*)(QObject *);
     using CreateValueTypeFunction = QVariant (*)(const QJSValue &);
 
-    template<typename T, ConstructionMode Mode = constructionMode<T>()>
+    template<typename T, typename WrapperT = T, ConstructionMode Mode = constructionMode<T, WrapperT>()>
     struct Constructors;
 
-    template<typename T>
-    struct Constructors<T, ConstructionMode::Constructor>
+    template<typename T, typename WrapperT>
+    struct Constructors<T, WrapperT, ConstructionMode::Constructor>
     {
         static constexpr CreateIntoFunction createInto
                 = QQmlPrivate::createInto<T>;
         static constexpr CreateSingletonFunction createSingletonInstance
-                = QQmlPrivate::createSingletonInstance<T, ConstructionMode::Constructor>;
+                = QQmlPrivate::createSingletonInstance<T, WrapperT, ConstructionMode::Constructor>;
     };
 
-    template<typename T>
-    struct Constructors<T, ConstructionMode::None>
+    template<typename T, typename WrapperT>
+    struct Constructors<T, WrapperT, ConstructionMode::None>
     {
         static constexpr CreateIntoFunction createInto = nullptr;
         static constexpr CreateSingletonFunction createSingletonInstance = nullptr;
     };
 
-    template<typename T>
-    struct Constructors<T, ConstructionMode::Factory>
+    template<typename T, typename WrapperT>
+    struct Constructors<T, WrapperT, ConstructionMode::Factory>
     {
         static constexpr CreateIntoFunction createInto = nullptr;
         static constexpr CreateSingletonFunction createSingletonInstance
-                = QQmlPrivate::createSingletonInstance<T, ConstructionMode::Factory>;
+                = QQmlPrivate::createSingletonInstance<T, WrapperT, ConstructionMode::Factory>;
+    };
+
+    template<typename T, typename WrapperT>
+    struct Constructors<T, WrapperT, ConstructionMode::FactoryWrapper>
+    {
+        static constexpr CreateIntoFunction createInto = nullptr;
+        static constexpr CreateSingletonFunction createSingletonInstance
+                = QQmlPrivate::createSingletonInstance<T, WrapperT, ConstructionMode::FactoryWrapper>;
     };
 
     template<typename T,
@@ -805,7 +818,7 @@ namespace QQmlPrivate
         }
     };
 
-    template<typename T, typename E>
+    template<typename T, typename E, typename WrapperT = T>
     void qmlRegisterSingletonAndRevisions(const char *uri, int versionMajor,
                                           const QMetaObject *classInfoMetaObject,
                                           QVector<int> *qmlTypeIds, const QMetaObject *extension)
@@ -816,7 +829,7 @@ namespace QQmlPrivate
             uri,
             QTypeRevision::fromMajorVersion(versionMajor),
 
-            Constructors<T>::createSingletonInstance,
+            Constructors<T, WrapperT>::createSingletonInstance,
 
             StaticMetaObject<T>::staticMetaObject(),
             classInfoMetaObject,

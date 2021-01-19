@@ -313,6 +313,7 @@ private slots:
     void typeWrapperToVariant();
 
     void extendedForeignTypes();
+    void foreignTypeSingletons();
 
     void inlineComponent();
     void inlineComponent_data();
@@ -5494,6 +5495,16 @@ void tst_qqmllanguage::extendedForeignTypes()
     QCOMPARE(o->property("foreignExtendedExtension").toInt(), 42);
     QCOMPARE(o->property("foreignObjectName").toString(), QLatin1String("foreign"));
     QCOMPARE(o->property("foreignExtendedObjectName").toString(), QLatin1String("foreignExtended"));
+}
+
+void tst_qqmllanguage::foreignTypeSingletons() {
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("foreignSingleton.qml"));
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("number").toInt(), 42);
 }
 
 void tst_qqmllanguage::selfReference()

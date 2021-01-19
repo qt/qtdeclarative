@@ -1607,6 +1607,37 @@ public:
     int foo() const { return 316; }
 };
 
+class ForeignSingleton : public QObject {
+    Q_OBJECT
+    Q_PROPERTY(int number READ number WRITE setnumber NOTIFY numberchanged)
+public:
+    ForeignSingleton(QObject *parent = nullptr) : QObject(parent) {};
+    int number() { return m_number; }
+    void setnumber(int number) { m_number = number; }
+    static ForeignSingleton *obtain() { return new ForeignSingleton; }
+signals:
+    void numberchanged();
+private:
+    int m_number = 0;
+};
+
+class WrapperSingleton : public QObject {
+    Q_OBJECT
+    QML_NAMED_ELEMENT(ForeignSingleton)
+    QML_FOREIGN(ForeignSingleton)
+    QML_SINGLETON
+
+public:
+    static ForeignSingleton* create(QQmlEngine *, QJSEngine *) {
+        ForeignSingleton *singleton = ForeignSingleton::obtain();
+        singleton->setnumber(42);
+        return singleton;
+    }
+
+private:
+    WrapperSingleton() = default;
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H

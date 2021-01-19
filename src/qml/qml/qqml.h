@@ -841,7 +841,7 @@ struct QmlTypeAndRevisionsRegistration<T, Resolved, Extended, true, false, false
     static void registerTypeAndRevisions(const char *uri, int versionMajor, QList<int> *qmlTypeIds,
                                          const QMetaObject *extension)
     {
-        QQmlPrivate::qmlRegisterSingletonAndRevisions<Resolved, Extended>(
+        QQmlPrivate::qmlRegisterSingletonAndRevisions<Resolved, Extended, T>(
                     uri, versionMajor, QQmlPrivate::StaticMetaObject<T>::staticMetaObject(),
                     qmlTypeIds, extension);
     }
