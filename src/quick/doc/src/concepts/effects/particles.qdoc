@@ -115,7 +115,7 @@
     it is recommended not to use Affectors in high-volume particle systems.
 
     \sa {Qt Quick Particles Examples - Affectors}{Examples Affectors},
-        {Qt Quick Particles Examples - Example Image Particles},
+        {Qt Quick Particles Examples - Image Particles}{Examples Image Particles},
         {Qt Quick Particles Examples - System}{Example Affectors - System}
 
     \section1 Stochastic Parameters
