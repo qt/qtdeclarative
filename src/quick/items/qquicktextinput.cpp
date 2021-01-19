@@ -3432,17 +3432,19 @@ void QQuickTextInputPrivate::processInputMethodEvent(QInputMethodEvent *event)
     if (event->replacementStart() <= 0)
         c += event->commitString().length() - qMin(-event->replacementStart(), event->replacementLength());
 
-    m_cursor += event->replacementStart();
-    if (m_cursor < 0)
-        m_cursor = 0;
+    int cursorInsertPos = m_cursor + event->replacementStart();
+    if (cursorInsertPos < 0)
+        cursorInsertPos = 0;
 
     // insert commit string
     if (event->replacementLength()) {
-        m_selstart = m_cursor;
+        m_selstart = cursorInsertPos;
         m_selend = m_selstart + event->replacementLength();
         m_selend = qMin(m_selend, m_text.length());
         removeSelectedText();
     }
+    m_cursor = cursorInsertPos;
+
     if (!event->commitString().isEmpty()) {
         internalInsert(event->commitString());
         cursorPositionChanged = true;
