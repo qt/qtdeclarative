@@ -164,7 +164,7 @@ protected:
 
 public slots:
     void incubate() {
-        if (incubatingObjectCount()) {
+        if (m_renderLoop && incubatingObjectCount()) {
             if (m_renderLoop->interleaveIncubation()) {
                 incubateFor(m_incubation_time);
             } else {
@@ -180,12 +180,12 @@ public slots:
 protected:
     void incubatingObjectCountChanged(int count) override
     {
-        if (count && !m_renderLoop->interleaveIncubation())
+        if (count && m_renderLoop && !m_renderLoop->interleaveIncubation())
             incubateAgain();
     }
 
 private:
-    QSGRenderLoop *m_renderLoop;
+    QPointer<QSGRenderLoop> m_renderLoop;
     int m_incubation_time;
     int m_timer;
 };
