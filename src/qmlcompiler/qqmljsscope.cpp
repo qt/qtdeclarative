@@ -73,7 +73,7 @@ void QQmlJSScope::insertPropertyIdentifier(const QQmlJSMetaProperty &property)
 
 bool QQmlJSScope::isIdInCurrentScope(const QString &id) const
 {
-    return isIdInCurrentQMlScopes(id) || isIdInCurrentJSScopes(id);
+    return isIdInCurrentQmlScopes(id) || isIdInCurrentJSScopes(id);
 }
 
 bool QQmlJSScope::hasMethod(const QString &name) const
@@ -113,7 +113,7 @@ QList<QQmlJSMetaMethod> QQmlJSScope::methods(const QString &name) const
     return results;
 }
 
-bool QQmlJSScope::isIdInCurrentQMlScopes(const QString &id) const
+bool QQmlJSScope::isIdInCurrentQmlScopes(const QString &id) const
 {
     if (m_scopeType == QQmlJSScope::QMLScope)
         return m_properties.contains(id) || m_methods.contains(id) || m_enumerations.contains(id);
