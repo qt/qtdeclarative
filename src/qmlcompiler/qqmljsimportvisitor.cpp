@@ -298,7 +298,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiEnumDeclaration *uied)
         qmlEnum.addKey(member->member.toString());
         qmlEnum.addValue(int(member->value));
     }
-    m_currentScope->addEnumeration(qmlEnum);
+    m_currentScope->addOwnEnumeration(qmlEnum);
     return true;
 }
 

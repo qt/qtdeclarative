@@ -38,6 +38,30 @@
 
 QT_BEGIN_NAMESPACE
 
+template<typename Action>
+static bool searchBaseAndExtensionTypes(const QQmlJSScope *type, const Action &check)
+{
+    const QQmlJSScope *nonCompositeBase = nullptr;
+    for (const QQmlJSScope *scope = type; scope; scope = scope->baseType().data()) {
+        if (check(scope))
+            return true;
+
+        if (!nonCompositeBase && !scope->isComposite())
+            nonCompositeBase = scope;
+    }
+
+    if (!nonCompositeBase)
+        return false;
+
+    for (const QQmlJSScope *scope = nonCompositeBase->extensionType().data(); scope;
+         scope = scope->baseType().data()) {
+        if (check(scope))
+            return true;
+    }
+
+    return false;
+}
+
 QQmlJSScope::QQmlJSScope(ScopeType type, const QQmlJSScope::Ptr &parentScope)
     : m_parentScope(parentScope), m_scopeType(type) {}
 
@@ -78,39 +102,53 @@ bool QQmlJSScope::isIdInCurrentScope(const QString &id) const
 
 bool QQmlJSScope::hasMethod(const QString &name) const
 {
-    const QQmlJSScope *nonCompositeBase = isComposite() ? this : nullptr;
-    for (const QQmlJSScope *scope = this; scope; scope = scope->baseType().data()) {
-        if (scope->m_methods.contains(name))
-            return true;
-        if (!nonCompositeBase && !scope->isComposite())
-            nonCompositeBase = scope;
-    }
-
-    if (nonCompositeBase && nonCompositeBase != this) {
-        if (QQmlJSScope::ConstPtr extension = nonCompositeBase->extensionType())
-            return extension->hasMethod(name);
-    }
-
-    return false;
+    return searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+        return scope->m_methods.contains(name);
+    });
 }
 
 QList<QQmlJSMetaMethod> QQmlJSScope::methods(const QString &name) const
 {
     QList<QQmlJSMetaMethod> results;
 
-    const QQmlJSScope *nonCompositeBase = isComposite() ? this : nullptr;
-    for (const QQmlJSScope *scope = this; scope; scope = scope->baseType().data()) {
+    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
         results.append(scope->ownMethods(name));
-        if (!nonCompositeBase && !scope->isComposite())
-            nonCompositeBase = scope;
-    }
-
-    if (nonCompositeBase && nonCompositeBase != this) {
-        if (QQmlJSScope::ConstPtr extension = nonCompositeBase->extensionType())
-            results.append(extension->methods(name));
-    }
-
+        return false;
+    });
     return results;
+}
+
+bool QQmlJSScope::hasEnumeration(const QString &name) const
+{
+    return searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+        return scope->m_enumerations.contains(name);
+    });
+}
+
+bool QQmlJSScope::hasEnumerationKey(const QString &name) const
+{
+    return searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+        for (const auto &e : scope->m_enumerations) {
+            if (e.keys().contains(name))
+                return true;
+        }
+        return false;
+    });
+}
+
+QQmlJSMetaEnum QQmlJSScope::enumeration(const QString &name) const
+{
+    QQmlJSMetaEnum result;
+
+    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+        const auto it = scope->m_enumerations.find(name);
+        if (it == scope->m_enumerations.end())
+            return false;
+        result = *it;
+        return true;
+    });
+
+    return result;
 }
 
 bool QQmlJSScope::isIdInCurrentQmlScopes(const QString &id) const
@@ -262,41 +300,22 @@ void QQmlJSScope::addExport(const QString &name, const QString &package,
 
 bool QQmlJSScope::hasProperty(const QString &name) const
 {
-    const QQmlJSScope *nonCompositeBase = isComposite() ? this : nullptr;
-    for (const QQmlJSScope *scope = this; scope; scope = scope->baseType().data()) {
-        if (scope->m_properties.contains(name))
-            return true;
-
-        if (!nonCompositeBase && !scope->isComposite())
-            nonCompositeBase = scope;
-    }
-
-    if (nonCompositeBase && nonCompositeBase != this) {
-        if (QQmlJSScope::ConstPtr extension = nonCompositeBase->extensionType())
-            return extension->hasProperty(name);
-    }
-
-    return false;
+    return searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+        return scope->m_properties.contains(name);
+    });
 }
 
 QQmlJSMetaProperty QQmlJSScope::property(const QString &name) const
 {
-    const QQmlJSScope *nonCompositeBase = isComposite() ? this : nullptr;
-    for (const QQmlJSScope *scope = this; scope; scope = scope->baseType().data()) {
+    QQmlJSMetaProperty prop;
+    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
         const auto it = scope->m_properties.find(name);
-        if (it != scope->m_properties.end())
-            return *it;
-
-        if (!nonCompositeBase && !scope->isComposite())
-            nonCompositeBase = scope;
-    }
-
-    if (nonCompositeBase && nonCompositeBase != this) {
-        if (QQmlJSScope::ConstPtr extension = nonCompositeBase->extensionType())
-            return extension->property(name);
-    }
-
-    return {};
+        if (it == scope->m_properties.end())
+            return false;
+        prop = *it;
+        return true;
+    });
+    return prop;
 }
 
 QQmlJSScope::Export::Export(QString package, QString type, const QTypeRevision &version) :

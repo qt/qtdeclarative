@@ -390,7 +390,7 @@ void QQmlJSTypeDescriptionReader::readEnum(UiObjectDefinition *ast, const QQmlJS
         }
     }
 
-    scope->addEnumeration(metaEnum);
+    scope->addOwnEnumeration(metaEnum);
 }
 
 void QQmlJSTypeDescriptionReader::readParameter(UiObjectDefinition *ast, QQmlJSMetaMethod *metaMethod)

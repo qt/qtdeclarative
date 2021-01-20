@@ -175,13 +175,14 @@ public:
     bool hasMethod(const QString &name) const;
     QList<QQmlJSMetaMethod> methods(const QString &name) const;
 
-    void addEnumeration(const QQmlJSMetaEnum &enumeration)
-    {
-        m_enumerations.insert(enumeration.name(), enumeration);
-    }
-    QHash<QString, QQmlJSMetaEnum> enumerations() const { return m_enumerations; }
-    QQmlJSMetaEnum enumeration(const QString &name) const { return m_enumerations.value(name); }
-    bool hasEnumeration(const QString &name) const { return m_enumerations.contains(name); }
+    void addOwnEnumeration(const QQmlJSMetaEnum &enumeration) { m_enumerations.insert(enumeration.name(), enumeration); }
+    QHash<QString, QQmlJSMetaEnum> ownEnumerations() const { return m_enumerations; }
+    QQmlJSMetaEnum ownEnumeration(const QString &name) const { return m_enumerations.value(name); }
+    bool hasOwnEnumeration(const QString &name) const { return m_enumerations.contains(name); }
+
+    bool hasEnumeration(const QString &name) const;
+    bool hasEnumerationKey(const QString &name) const;
+    QQmlJSMetaEnum enumeration(const QString &name) const;
 
     QString fileName() const { return m_fileName; }
     void setFileName(const QString &file) { m_fileName = file; }
