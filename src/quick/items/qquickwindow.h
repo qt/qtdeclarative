@@ -48,6 +48,7 @@
 #include <QtGui/qevent.h>
 #include <QtQml/qqml.h>
 #include <QtQml/qqmldebug.h>
+#include <QtQml/qqmlinfo.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -253,6 +254,14 @@ private Q_SLOTS:
     void runJobsAfterSwap();
     void handleApplicationStateChanged(Qt::ApplicationState state);
 private:
+#ifndef QT_NO_DEBUG_STREAM
+    inline friend QQmlInfo operator<<(QQmlInfo info, const QQuickWindow *window)
+    {
+        info.QDebug::operator<<(window);
+        return info;
+    }
+#endif
+
     friend class QQuickItem;
     friend class QQuickWidget;
     friend class QQuickRenderControl;
@@ -263,6 +272,12 @@ private:
 
 #ifndef QT_NO_DEBUG_STREAM
 QDebug Q_QUICK_EXPORT operator<<(QDebug debug, const QQuickWindow *item);
+
+inline QQmlInfo operator<<(QQmlInfo info, const QWindow *window)
+{
+    info.QDebug::operator<<(window);
+    return info;
+}
 #endif
 
 QT_END_NAMESPACE
