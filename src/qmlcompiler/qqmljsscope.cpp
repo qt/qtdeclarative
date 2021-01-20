@@ -78,18 +78,38 @@ bool QQmlJSScope::isIdInCurrentScope(const QString &id) const
 
 bool QQmlJSScope::hasMethod(const QString &name) const
 {
+    const QQmlJSScope *nonCompositeBase = isComposite() ? this : nullptr;
     for (const QQmlJSScope *scope = this; scope; scope = scope->baseType().data()) {
         if (scope->m_methods.contains(name))
             return true;
+        if (!nonCompositeBase && !scope->isComposite())
+            nonCompositeBase = scope;
     }
+
+    if (nonCompositeBase && nonCompositeBase != this) {
+        if (QQmlJSScope::ConstPtr extension = nonCompositeBase->extensionType())
+            return extension->hasMethod(name);
+    }
+
     return false;
 }
 
 QList<QQmlJSMetaMethod> QQmlJSScope::methods(const QString &name) const
 {
     QList<QQmlJSMetaMethod> results;
-    for (const QQmlJSScope *scope = this; scope; scope = scope->baseType().data())
+
+    const QQmlJSScope *nonCompositeBase = isComposite() ? this : nullptr;
+    for (const QQmlJSScope *scope = this; scope; scope = scope->baseType().data()) {
         results.append(scope->ownMethods(name));
+        if (!nonCompositeBase && !scope->isComposite())
+            nonCompositeBase = scope;
+    }
+
+    if (nonCompositeBase && nonCompositeBase != this) {
+        if (QQmlJSScope::ConstPtr extension = nonCompositeBase->extensionType())
+            results.append(extension->methods(name));
+    }
+
     return results;
 }
 
@@ -157,6 +177,9 @@ void QQmlJSScope::resolveTypes(const QHash<QString, QQmlJSScope::ConstPtr> &cont
     if (!m_valueType && !m_valueTypeName.isEmpty())
         m_valueType = findType(m_valueTypeName);
 
+    if (!m_extensionType && !m_extensionTypeName.isEmpty())
+        m_extensionType = findType(m_extensionTypeName);
+
     for (auto it = m_properties.begin(), end = m_properties.end(); it != end; ++it) {
         const QString typeName = it->typeName();
         if (!it->type() && !typeName.isEmpty())
@@ -192,12 +215,30 @@ void QQmlJSScope::resolveGroupedScopes()
             continue;
 
         const QString propertyName = childScope->internalName();
-        for (const QQmlJSScope *type = this; type; type = type->baseType().data()) {
+        auto findProperty = [&](const QQmlJSScope *type) {
             auto propertyIt = type->m_properties.find(propertyName);
             if (propertyIt != type->m_properties.end()) {
                 childScope->m_baseType = QQmlJSScope::ConstPtr(propertyIt->type());
                 childScope->m_baseTypeName = propertyIt->typeName();
+                return true;
+            }
+            return false;
+        };
+
+        const QQmlJSScope *nonCompositeBase = isComposite() ? this : nullptr;
+        for (const QQmlJSScope *type = this; type; type = type->baseType().data()) {
+            if (findProperty(type))
                 break;
+
+            if (!nonCompositeBase && !type->isComposite())
+                nonCompositeBase = type;
+        }
+
+        if (!childScope->m_baseType && nonCompositeBase && nonCompositeBase != this) {
+            for (const QQmlJSScope *type = nonCompositeBase->extensionType().data(); type;
+                 type = type->baseType().data()) {
+                if (findProperty(type))
+                    break;
             }
         }
 
@@ -221,20 +262,40 @@ void QQmlJSScope::addExport(const QString &name, const QString &package,
 
 bool QQmlJSScope::hasProperty(const QString &name) const
 {
+    const QQmlJSScope *nonCompositeBase = isComposite() ? this : nullptr;
     for (const QQmlJSScope *scope = this; scope; scope = scope->baseType().data()) {
         if (scope->m_properties.contains(name))
             return true;
+
+        if (!nonCompositeBase && !scope->isComposite())
+            nonCompositeBase = scope;
     }
+
+    if (nonCompositeBase && nonCompositeBase != this) {
+        if (QQmlJSScope::ConstPtr extension = nonCompositeBase->extensionType())
+            return extension->hasProperty(name);
+    }
+
     return false;
 }
 
 QQmlJSMetaProperty QQmlJSScope::property(const QString &name) const
 {
+    const QQmlJSScope *nonCompositeBase = isComposite() ? this : nullptr;
     for (const QQmlJSScope *scope = this; scope; scope = scope->baseType().data()) {
         const auto it = scope->m_properties.find(name);
         if (it != scope->m_properties.end())
             return *it;
+
+        if (!nonCompositeBase && !scope->isComposite())
+            nonCompositeBase = scope;
     }
+
+    if (nonCompositeBase && nonCompositeBase != this) {
+        if (QQmlJSScope::ConstPtr extension = nonCompositeBase->extensionType())
+            return extension->property(name);
+    }
+
     return {};
 }
 

@@ -317,7 +317,6 @@ void TestQmllint::cleanQmlCode()
 {
     QFETCH(QString, filename);
     const QString warnings = runQmllint(filename, true);
-    QEXPECT_FAIL("unknownBuiltinFont", "Broken extended support", Continue);
     QVERIFY2(warnings.isEmpty(), qPrintable(warnings));
 }
 
@@ -362,7 +361,6 @@ QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed, c
     return runQmllint(fileToLint, [&](QProcess &process) {
         QVERIFY(process.waitForFinished());
         QCOMPARE(process.exitStatus(), QProcess::NormalExit);
-        QEXPECT_FAIL("unknownBuiltinFont", "Broken extended support", Continue);
         if (shouldSucceed)
             QCOMPARE(process.exitCode(), 0);
         else

@@ -249,7 +249,7 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
                                tr("Unknown access semantics \"%1\".").arg(semantics));
                 }
             } else if (name == QLatin1String("extension")) {
-                // not implemented
+                scope->setExtensionTypeName(readStringBinding(script));
             } else {
                 addWarning(script->firstSourceLocation(),
                            tr("Expected only name, prototype, defaultProperty, attachedType, "

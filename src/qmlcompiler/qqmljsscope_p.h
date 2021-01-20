@@ -218,6 +218,10 @@ public:
     void setAttachedTypeName(const QString &name) { m_attachedTypeName = name; }
     QQmlJSScope::ConstPtr attachedType() const { return m_attachedType; }
 
+    QString extensionTypeName() const { return m_extensionTypeName; }
+    void setExtensionTypeName(const QString &name) { m_extensionTypeName =  name; }
+    QQmlJSScope::ConstPtr extensionType() const { return m_extensionType; }
+
     QString valueTypeName() const { return m_valueTypeName; }
     void setValueTypeName(const QString &name) { m_valueTypeName = name; }
     QQmlJSScope::ConstPtr valueType() const { return m_valueType; }
@@ -303,6 +307,9 @@ private:
 
     QString m_valueTypeName;
     QQmlJSScope::WeakConstPtr m_valueType;
+
+    QString m_extensionTypeName;
+    QQmlJSScope::WeakConstPtr m_extensionType;
 
     Flags m_flags;
     AccessSemantics m_semantics = AccessSemantics::Reference;

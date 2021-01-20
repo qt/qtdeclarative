@@ -86,6 +86,12 @@ static bool walkViaParentAndAttachedScopes(QQmlJSScope::ConstPtr rootType,
         return false;
     std::stack<QQmlJSScope::ConstPtr> stack;
     stack.push(rootType);
+
+    if (!rootType->isComposite()) {
+        if (auto extension = rootType->extensionType())
+            stack.push(extension);
+    }
+
     while (!stack.empty()) {
         const auto type = stack.top();
         stack.pop();
@@ -93,8 +99,13 @@ static bool walkViaParentAndAttachedScopes(QQmlJSScope::ConstPtr rootType,
         if (visit(type))
             return true;
 
-        if (auto superType = type->baseType())
+        if (auto superType = type->baseType()) {
             stack.push(superType);
+            if (type->isComposite() && !superType->isComposite()) {
+                if (auto extension = superType->extensionType())
+                    stack.push(extension);
+            }
+        }
 
         if (auto attachedType = type->attachedType())
             stack.push(attachedType);
