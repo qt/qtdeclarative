@@ -666,7 +666,7 @@ bool QQuickRenderControlPrivate::initRhi()
 
 void QQuickRenderControlPrivate::resetRhi()
 {
-    delete rhi;
+    QSGRhiSupport::instance()->destroyRhi(rhi);
     rhi = nullptr;
 
     delete offscreenSurface;

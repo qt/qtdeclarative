@@ -127,6 +127,7 @@ public:
 
     QOffscreenSurface *maybeCreateOffscreenSurface(QWindow *window);
     QRhi *createRhi(QQuickWindow *window, QOffscreenSurface *offscreenSurface);
+    void destroyRhi(QRhi *rhi);
     void prepareWindowForRhi(QQuickWindow *window);
 
     QImage grabAndBlockInCurrentFrame(QRhi *rhi, QRhiCommandBuffer *cb, QRhiTexture *src = nullptr);
@@ -146,6 +147,8 @@ private:
     } m_requested;
     QRhi::Implementation m_rhiBackend = QRhi::Null;
     int m_killDeviceFrameCount;
+    QString m_pipelineCacheSave;
+    QString m_pipelineCacheLoad;
     uint m_settingsApplied : 1;
     uint m_enableRhi : 1;
     uint m_debugLayer : 1;

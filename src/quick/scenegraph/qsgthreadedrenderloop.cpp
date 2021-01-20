@@ -556,7 +556,7 @@ void QSGRenderThread::invalidateGraphics(QQuickWindow *window, bool inDestructor
                          window, dd->swapchain);
             }
         }
-        delete rhi;
+        QSGRhiSupport::instance()->destroyRhi(rhi);
         rhi = nullptr;
         qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- QRhi destroyed");
     } else {
@@ -637,7 +637,7 @@ void QSGRenderThread::handleDeviceLoss()
     sgrc->invalidate();
     wm->releaseSwapchain(window);
     rhiDeviceLost = true;
-    delete rhi;
+    QSGRhiSupport::instance()->destroyRhi(rhi);
     rhi = nullptr;
 }
 
