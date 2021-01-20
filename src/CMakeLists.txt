@@ -8,6 +8,7 @@ endif()
 add_subdirectory(qmltyperegistrar)
 add_subdirectory(qml)
 add_subdirectory(qmlmodels)
+add_subdirectory(labs)
 
 if(QT_FEATURE_qml_worker_script)
     add_subdirectory(qmlworkerscript)

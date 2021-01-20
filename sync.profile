@@ -12,7 +12,8 @@
     "QtQmlCompiler" => "$basedir/src/qmlcompiler",
     "QtQmlDom" => "$basedir/src/qmldom",
     "QtQuickLayouts" => "$basedir/src/quicklayouts",
-    "QtQmlLocalStorage" => "$basedir/src/qmllocalstorage"
+    "QtQmlLocalStorage" => "$basedir/src/qmllocalstorage",
+    "QtLabsSettings" => "$basedir/src/labs/settings"
 );
 %inject_headers = (
     "$basedir/src/qml" => [ "^qqmljsgrammar_p.h", "^qqmljsparser_p.h", "^qml_compile_hash_p.h" ],

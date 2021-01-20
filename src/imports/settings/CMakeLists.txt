@@ -9,14 +9,13 @@ qt_internal_add_qml_module(qmlsettingsplugin
     VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QmlSettingsPlugin
     SKIP_TYPE_REGISTRATION
-    GENERATE_QMLTYPES
-    INSTALL_QMLTYPES
+    PLUGIN_OPTIONAL
     SOURCES
         plugin.cpp
-        qqmlsettings.cpp qqmlsettings_p.h
     PUBLIC_LIBRARIES
         Qt::Core
         Qt::Qml
+        Qt::LabsSettingsPrivate
 )
 
 #### Keys ignored in scope 1:.:.:settings.pro:<TRUE>:

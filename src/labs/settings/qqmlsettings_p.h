@@ -40,6 +40,8 @@
 #ifndef QQMLSETTINGS_P_H
 #define QQMLSETTINGS_P_H
 
+#include "qqmlsettingsglobal_p.h"
+
 //
 //  W A R N I N G
 //  -------------
@@ -60,7 +62,7 @@ QT_BEGIN_NAMESPACE
 
 class QQmlSettingsPrivate;
 
-class QQmlSettings : public QObject, public QQmlParserStatus
+class Q_LABSSETTINGS_PRIVATE_EXPORT QQmlSettings : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
