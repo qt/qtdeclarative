@@ -708,7 +708,7 @@ void tst_QQuickLoader::initialPropertyValues_data()
             << (QVariantList() << 12);
 
     QTest::newRow("initial property errors get reported") << testFileUrl("initialPropertyTriggerException.qml")
-                                                          << (QStringList() << "^.*:11: Error: Cannot assign JavaScript function to int")
+                                                          << (QStringList() << "^.*: Error: Cannot assign JavaScript function to int")
                                                           << QStringList()
                                                           << QVariantList();
 }
