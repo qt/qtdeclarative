@@ -40,6 +40,8 @@
 #ifndef QQUICKFOLDERLISTMODEL_H
 #define QQUICKFOLDERLISTMODEL_H
 
+#include "qquickfolderlistmodelglobal_p.h"
+
 #include <qqml.h>
 #include <QStringList>
 #include <QUrl>
@@ -54,7 +56,7 @@ class QModelIndex;
 class QQuickFolderListModelPrivate;
 
 //![class begin]
-class QQuickFolderListModel : public QAbstractListModel, public QQmlParserStatus
+class Q_LABSFOLDERMODEL_PRIVATE_EXPORT QQuickFolderListModel : public QAbstractListModel, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)

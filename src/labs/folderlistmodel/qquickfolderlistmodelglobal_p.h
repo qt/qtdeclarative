@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,46 +37,37 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
-#include <QtQml/qqml.h>
-#include <QtQml/private/qqmlmetatype_p.h>
+#ifndef QTLABSFOLDERLISTMODELGLOBAL_P_H
+#define QTLABSFOLDERLISTMODELGLOBAL_P_H
 
-#include <QtLabsFolderListModel/private/qquickfolderlistmodelglobal_p.h>
-#include <QtLabsFolderListModel/qquickfolderlistmodel.h>
+#include <QtCore/qglobal.h>
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
 QT_BEGIN_NAMESPACE
 
-//![class decl]
-class QmlFolderListModelPlugin : public QQmlExtensionPlugin
-{
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
-
-public:
-    QmlFolderListModelPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent)
-    {
-        volatile auto registration = &qml_register_types_Qt_labs_folderlistmodel;
-        Q_UNUSED(registration);
-    }
-
-    void registerTypes(const char *uri) override
-    {
-        Q_ASSERT(QLatin1String(uri) == QLatin1String("Qt.labs.folderlistmodel"));
-
-        // Major version 1 only has a single revision, 0.
-        folderListModelId = qmlRegisterType<QQuickFolderListModel>(uri, 1, 0, "FolderListModel");
-    }
-
-    void unregisterTypes() override {
-        QQmlMetaType::unregisterType(folderListModelId);
-        folderListModelId = -1;
-    }
-
-private:
-    int folderListModelId = -1;
-};
-//![class decl]
+#if !defined(QT_STATIC)
+#  if defined(QT_BUILD_LABSFOLDERMODEL_LIB)
+#    define Q_LABSFOLDERMODEL_EXPORT Q_DECL_EXPORT
+#  else
+#    define Q_LABSFOLDERMODEL_EXPORT Q_DECL_IMPORT
+#  endif
+#else
+#  define Q_LABSFOLDERMODEL_EXPORT
+#endif
+#define Q_LABSFOLDERMODEL_PRIVATE_EXPORT Q_LABSFOLDERMODEL_EXPORT
 
 QT_END_NAMESPACE
 
-#include "plugin.moc"
+void Q_LABSFOLDERMODEL_PRIVATE_EXPORT qml_register_types_Qt_labs_folderlistmodel();
+
+#endif // QTLABSFOLDERLISTMODELGLOBAL_P_H
