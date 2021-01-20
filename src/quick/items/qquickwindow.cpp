@@ -2291,7 +2291,7 @@ bool QQuickWindowPrivate::deliverTouchCancelEvent(QTouchEvent *event)
     // Deliver it to all items and handlers that have active touches.
     const_cast<QPointingDevicePrivate *>(QPointingDevicePrivate::get(event->pointingDevice()))->
             sendTouchCancelEvent(event);
-
+    cancelTouchMouseSynthesis();
     return true;
 }
 
