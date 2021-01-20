@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the test suite of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKLOCALSTORAGE_P_H
-#define QQUICKLOCALSTORAGE_P_H
+#ifndef QQMLLOCALSTORAGEGLOBAL_P_H
+#define QQMLLOCALSTORAGEGLOBAL_P_H
 
 //
 //  W A R N I N G
@@ -51,26 +51,25 @@
 // We mean it.
 //
 
-#include <QtCore/qobject.h>
-#include <QtQml/qqml.h>
-#include <QtQml/private/qv4engine_p.h>
+#include <QtCore/qglobal.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickLocalStorage : public QObject
-{
-    Q_OBJECT
-    QML_NAMED_ELEMENT(LocalStorage)
-    QML_ADDED_IN_VERSION(2, 0)
-    QML_SINGLETON
+#if !defined(QT_STATIC)
+#  if defined(QT_BUILD_QMLLOCALSTORAGE_LIB)
+#    define Q_QMLLOCALSTORAGE_EXPORT Q_DECL_EXPORT
+#  else
+#    define Q_QMLLOCALSTORAGE_EXPORT Q_DECL_IMPORT
+#  endif
+#else
+#  define Q_QMLLOCALSTORAGE_EXPORT
+#endif
 
-public:
-    QQuickLocalStorage(QObject *parent = nullptr) : QObject(parent) {}
-    ~QQuickLocalStorage() override = default;
 
-    Q_INVOKABLE void openDatabaseSync(QQmlV4Function* args);
-};
+#define Q_QMLLOCALSTORAGE_PRIVATE_EXPORT Q_QMLLOCALSTORAGE_EXPORT
 
 QT_END_NAMESPACE
 
-#endif // QQUICKLOCALSTORAGE_P_H
+void Q_QMLLOCALSTORAGE_PRIVATE_EXPORT qml_register_types_QtQuick_LocalStorage();
+
+#endif // QQMLLOCALSTORAGEGLOBAL_P_H

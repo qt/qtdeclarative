@@ -13,6 +13,11 @@ if(QT_FEATURE_qml_worker_script)
     add_subdirectory(qmlworkerscript)
 endif()
 
+if(TARGET Qt::Sql)
+   add_subdirectory(qmllocalstorage)
+ endif()
+
+
 if(TARGET Qt::Gui AND QT_FEATURE_qml_animation)
     add_subdirectory(quick)
     add_subdirectory(quickshapes)

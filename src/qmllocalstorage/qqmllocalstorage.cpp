@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-#include "qquicklocalstorage_p.h"
+#include "qqmllocalstorage_p.h"
 
 #include <QtQml/private/qqmlengine_p.h>
 #include <QtQml/private/qv4global_p.h>
@@ -714,7 +714,7 @@ Returns the created database object.
 
 */
 
-void QQuickLocalStorage::openDatabaseSync(QQmlV4Function *args)
+void QQmlLocalStorage::openDatabaseSync(QQmlV4Function *args)
 {
 #if QT_CONFIG(settings)
     QV4::Scope scope(args->v4engine());
