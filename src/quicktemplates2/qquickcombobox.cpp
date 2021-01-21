@@ -1905,7 +1905,11 @@ void QQuickComboBox::focusInEvent(QFocusEvent *event)
 {
     Q_D(QQuickComboBox);
     QQuickControl::focusInEvent(event);
-    if (d->contentItem && isEditable())
+    // Setting focus on TextField should not be done when drop down indicator was clicked
+    // That is why, if focus is not set with key reason, it should not be passed to textEdit by default.
+    // Focus on Edit Text should be set only intentionally by user.
+    if ((event->reason() == Qt::TabFocusReason || event->reason() == Qt::BacktabFocusReason ||
+            event->reason() == Qt::ShortcutFocusReason) && d->contentItem && isEditable())
         d->contentItem->forceActiveFocus(event->reason());
 }
 
