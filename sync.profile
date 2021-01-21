@@ -15,7 +15,8 @@
     "QtQmlLocalStorage" => "$basedir/src/qmllocalstorage",
     "QtLabsSettings" => "$basedir/src/labs/settings",
     "QtLabsFolderListModel" => "$basedir/src/labs/folderlistmodel",
-    "QtLabsAnimation" => "$basedir/src/labs/animation"
+    "QtLabsAnimation" => "$basedir/src/labs/animation",
+    "QtLabsWavefrontMesh" => "$basedir/src/labs/wavefrontmesh"
 );
 %inject_headers = (
     "$basedir/src/qml" => [ "^qqmljsgrammar_p.h", "^qqmljsparser_p.h", "^qml_compile_hash_p.h" ],

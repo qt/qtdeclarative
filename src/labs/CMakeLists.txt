@@ -7,3 +7,7 @@ endif()
 if(TARGET Qt::Quick)
     add_subdirectory(animation)
 endif()
+
+if(QT_FEATURE_quick_shadereffect AND TARGET Qt::Quick)
+    add_subdirectory(wavefrontmesh)
+endif()
