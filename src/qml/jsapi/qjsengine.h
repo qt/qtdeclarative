@@ -134,6 +134,7 @@ public:
 
     void throwError(const QString &message);
     void throwError(QJSValue::ErrorType errorType, const QString &message = QString());
+    void throwError(const QJSValue &error);
     bool hasError() const;
     QJSValue catchError();
 

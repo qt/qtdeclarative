@@ -4826,7 +4826,7 @@ void tst_QJSEngine::catchError()
 
 QJSValue tst_QJSEngine::throwingCppMethod1()
 {
-    qjsEngine(this)->throwError("blub");
+    qjsEngine(this)->throwError(QStringLiteral("blub"));
     return QJSValue(47);
 }
 
@@ -4837,7 +4837,9 @@ void tst_QJSEngine::throwingCppMethod2()
 
 QJSValue tst_QJSEngine::throwingCppMethod3()
 {
-    return qjsEngine(this)->newErrorObject(QJSValue::EvalError, "Something is wrong");
+    QJSEngine *engine = qjsEngine(this);
+    engine->throwError(engine->newErrorObject(QJSValue::EvalError, "Something is wrong"));
+    return QJSValue(31);
 }
 
 void tst_QJSEngine::mathMinMax()

@@ -939,6 +939,20 @@ void QJSEngine::throwError(QJSValue::ErrorType errorType, const QString &message
 }
 
 /*!
+    \overload throwError()
+
+    Throws a pre-constructed run-time \a error (exception). This way you can
+    use \l newErrorObject() to create the error and customize it as necessary.
+
+    \since 6.1
+    \sa {Script Exceptions}, newErrorObject()
+*/
+void QJSEngine::throwError(const QJSValue &error)
+{
+    m_v4Engine->throwError(QJSValuePrivate::asReturnedValue(&error));
+}
+
+/*!
  * Returns \c true if the last JavaScript execution resulted in an exception or
  * if throwError() was called. Otherwise returns \c false. Mind that evaluate()
  * catches any exceptions thrown in the evaluated code.
