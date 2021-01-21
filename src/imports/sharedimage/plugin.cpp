@@ -37,10 +37,11 @@
 **
 ****************************************************************************/
 
+#include <QtLabsSharedImage/private/qtlabssharedimageglobal_p.h>
+#include <QtLabsSharedImage/private/qsharedimageprovider_p.h>
+
 #include <qqmlextensionplugin.h>
 #include <qqmlengine.h>
-#include <sharedimageprovider.h>
-
 
 /*!
     \qmlmodule Qt.labs.sharedimage 1
@@ -98,8 +99,6 @@
 
     The shared image module does not provide any directly usable QML types.
 */
-
-extern void qml_register_types_Qt_labs_sharedimage();
 
 QT_BEGIN_NAMESPACE
 

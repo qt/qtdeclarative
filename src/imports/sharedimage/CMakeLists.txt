@@ -9,19 +9,13 @@ qt_internal_add_qml_module(sharedimageplugin
     VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QtQuickSharedImagePlugin
     SKIP_TYPE_REGISTRATION
-    GENERATE_QMLTYPES
-    INSTALL_QMLTYPES
+    PLUGIN_OPTIONAL
     SOURCES
         plugin.cpp
-        qsharedimageloader.cpp qsharedimageloader_p.h
-        sharedimageprovider.cpp sharedimageprovider.h
     PUBLIC_LIBRARIES
         Qt::Core
-        Qt::CorePrivate
-        Qt::Gui
-        Qt::GuiPrivate
         Qt::Qml
-        Qt::QuickPrivate
+        Qt::LabsSharedImagePrivate
 )
 
 #### Keys ignored in scope 1:.:.:sharedimage.pro:<TRUE>:

@@ -40,6 +40,19 @@
 #ifndef QSHAREDIMAGELOADER_H
 #define QSHAREDIMAGELOADER_H
 
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include "qtlabssharedimageglobal_p.h"
+
 #include <QImage>
 #include <QVariant>
 #include <QLoggingCategory>
@@ -51,7 +64,7 @@ Q_DECLARE_LOGGING_CATEGORY(lcSharedImage);
 
 class QSharedImageLoaderPrivate;
 
-class QSharedImageLoader : public QObject
+class Q_LABSSHAREDIMAGE_PRIVATE_EXPORT QSharedImageLoader : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QSharedImageLoader)

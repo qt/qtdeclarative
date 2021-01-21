@@ -37,8 +37,7 @@
 **
 ****************************************************************************/
 
-#include <sharedimageprovider.h>
-#include <qsharedimageloader_p.h>
+#include <qsharedimageprovider_p.h>
 #include <private/qquickpixmapcache_p.h>
 #include <private/qimage_p.h>
 #include <QImageReader>
@@ -47,80 +46,62 @@
 
 Q_DECLARE_METATYPE(QQuickImageProviderOptions)
 
-class QuickSharedImageLoader : public QSharedImageLoader
+
+QuickSharedImageLoader::QuickSharedImageLoader(QObject *parent) : QSharedImageLoader(parent) {}
+
+QImage QuickSharedImageLoader::loadFile(const QString &path, ImageParameters *params)
 {
-    Q_OBJECT
-    friend class SharedImageProvider;
-
-public:
-    enum ImageParameter {
-        OriginalSize = 0,
-        RequestedSize,
-        ProviderOptions,
-        NumImageParameters
-    };
-
-    QuickSharedImageLoader(QObject *parent = nullptr)
-        : QSharedImageLoader(parent)
-    {
+    QImageReader imgio(path);
+    QSize realSize = imgio.size();
+    QSize requestSize;
+    QQuickImageProviderOptions options;
+    if (params) {
+        requestSize = params->value(RequestedSize).toSize();
+        options = params->value(ProviderOptions).value<QQuickImageProviderOptions>();
     }
 
-protected:
-    QImage loadFile(const QString &path, ImageParameters *params) override
-    {
-        QImageReader imgio(path);
-        QSize realSize = imgio.size();
-        QSize requestSize;
-        QQuickImageProviderOptions options;
-        if (params) {
-            requestSize = params->value(RequestedSize).toSize();
-            options = params->value(ProviderOptions).value<QQuickImageProviderOptions>();
+    QSize scSize = QQuickImageProviderWithOptions::loadSize(imgio.size(), requestSize, imgio.format(), options);
+
+    if (scSize.isValid())
+        imgio.setScaledSize(scSize);
+
+    QImage image;
+    if (imgio.read(&image)) {
+        if (realSize.isEmpty())
+            realSize = image.size();
+        // Make sure we have acceptable format for texture uploader, or it will convert & lose sharing
+        // This mimics the testing & conversion normally done by the quick pixmapcache & texturefactory
+        if (image.format() != QImage::Format_RGB32 && image.format() != QImage::Format_ARGB32_Premultiplied) {
+            QImage::Format newFmt = QImage::Format_RGB32;
+            if (image.hasAlphaChannel() && image.data_ptr()->checkForAlphaPixels())
+                newFmt = QImage::Format_ARGB32_Premultiplied;
+            qCDebug(lcSharedImage) << "Convert on load from format" << image.format() << "to" << newFmt;
+            image = image.convertToFormat(newFmt);
         }
-
-        QSize scSize = QQuickImageProviderWithOptions::loadSize(imgio.size(), requestSize, imgio.format(), options);
-
-        if (scSize.isValid())
-            imgio.setScaledSize(scSize);
-
-        QImage image;
-        if (imgio.read(&image)) {
-            if (realSize.isEmpty())
-                realSize = image.size();
-            // Make sure we have acceptable format for texture uploader, or it will convert & lose sharing
-            // This mimics the testing & conversion normally done by the quick pixmapcache & texturefactory
-            if (image.format() != QImage::Format_RGB32 && image.format() != QImage::Format_ARGB32_Premultiplied) {
-                QImage::Format newFmt = QImage::Format_RGB32;
-                if (image.hasAlphaChannel() && image.data_ptr()->checkForAlphaPixels())
-                    newFmt = QImage::Format_ARGB32_Premultiplied;
-                qCDebug(lcSharedImage) << "Convert on load from format" << image.format() << "to" << newFmt;
-                image = image.convertToFormat(newFmt);
-            }
-        }
-
-        if (params && params->count() > OriginalSize)
-            params->replace(OriginalSize, realSize);
-
-        return image;
     }
 
-    QString key(const QString &path, ImageParameters *params) override
-    {
-        QSize reqSz;
-        QQuickImageProviderOptions opts;
-        if (params) {
-            reqSz = params->value(RequestedSize).toSize();
-            opts = params->value(ProviderOptions).value<QQuickImageProviderOptions>();
-        }
-        if (!reqSz.isValid())
-            return path;
-        int aspect = opts.preserveAspectRatioCrop() || opts.preserveAspectRatioFit() ? 1 : 0;
+    if (params && params->count() > OriginalSize)
+        params->replace(OriginalSize, realSize);
 
-        QString key = path + QStringLiteral("_%1x%2_%3").arg(reqSz.width()).arg(reqSz.height()).arg(aspect);
-        qCDebug(lcSharedImage) << "KEY:" << key;
-        return key;
+    return image;
+}
+
+QString QuickSharedImageLoader::key(const QString &path, ImageParameters *params)
+{
+    QSize reqSz;
+    QQuickImageProviderOptions opts;
+    if (params) {
+        reqSz = params->value(RequestedSize).toSize();
+        opts = params->value(ProviderOptions).value<QQuickImageProviderOptions>();
     }
-};
+    if (!reqSz.isValid())
+        return path;
+    int aspect = opts.preserveAspectRatioCrop() || opts.preserveAspectRatioFit() ? 1 : 0;
 
+    QString key = path + QStringLiteral("_%1x%2_%3").arg(reqSz.width()).arg(reqSz.height()).arg(aspect);
+    qCDebug(lcSharedImage) << "KEY:" << key;
+    return key;
+}
 
 SharedImageProvider::SharedImageProvider()
     : QQuickImageProviderWithOptions(QQuickImageProvider::Image), loader(new QuickSharedImageLoader)
@@ -156,5 +137,3 @@ QImage SharedImageProvider::requestImage(const QString &id, QSize *size, const Q
 
     return img;
 }
-
-#include "sharedimageprovider.moc"
