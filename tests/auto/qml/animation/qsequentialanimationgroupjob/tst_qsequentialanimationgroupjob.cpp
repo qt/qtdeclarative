@@ -31,6 +31,8 @@
 #include <QtQml/private/qparallelanimationgroupjob_p.h>
 #include <QtQml/private/qpauseanimationjob_p.h>
 
+#include <memory>
+
 Q_DECLARE_METATYPE(QAbstractAnimationJob::State)
 Q_DECLARE_METATYPE(QAbstractAnimationJob*)
 
@@ -733,12 +735,13 @@ void tst_QSequentialAnimationGroupJob::restart()
     sequence->addAnimationChangeListener(&seqStateChangedSpy, QAbstractAnimationJob::StateChange);
 
     TestAnimation *anims[3];
-    StateChangeListener *animsStateChanged[3];
+    QScopedPointer<StateChangeListener> animsStateChanged[3];
 
     for (int i = 0; i < 3; i++) {
         anims[i] = new TestAnimation(100);
-        animsStateChanged[i] = new StateChangeListener;
-        anims[i]->addAnimationChangeListener(animsStateChanged[i], QAbstractAnimationJob::StateChange);
+        animsStateChanged[i].reset(new StateChangeListener);
+        anims[i]->addAnimationChangeListener(animsStateChanged[i].data(),
+                                             QAbstractAnimationJob::StateChange);
     }
 
     anims[1]->setLoopCount(2);
@@ -1436,18 +1439,20 @@ void tst_QSequentialAnimationGroupJob::addRemoveAnimation()
     QCOMPARE(group.currentAnimation(), anim1);
     QCOMPARE(anim1->currentLoopTime(), 50);
 
+    std::unique_ptr<QAbstractAnimationJob> anim0Guard(anim0);
     group.removeAnimation(anim0); //anim1 | anim2
     QCOMPARE(group.currentLoopTime(), 50);
     QCOMPARE(group.currentAnimation(), anim1);
     QCOMPARE(anim1->currentLoopTime(), 50);
 
     group.setCurrentTime(0);
-    group.prependAnimation(anim0); //anim0 | anim1 | anim2
+    group.prependAnimation(anim0Guard.release()); //anim0 | anim1 | anim2
     group.setCurrentTime(300);
     QCOMPARE(group.currentLoopTime(), 300);
     QCOMPARE(group.currentAnimation(), anim1);
     QCOMPARE(anim1->currentLoopTime(), 50);
 
+    std::unique_ptr<QAbstractAnimationJob> anim1Guard(anim1);
     group.removeAnimation(anim1); //anim0 | anim2
     QCOMPARE(group.currentLoopTime(), 250);
     QCOMPARE(group.currentAnimation(), anim2);
