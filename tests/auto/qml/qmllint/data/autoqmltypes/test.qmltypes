@@ -1,0 +1,8 @@
+import QtQuick.tooling 1.2
+Module {
+    Component {
+        name: "Foo"
+        exports: ["TestTest/Foo 1.0"]
+        exportMetaObjectRevisions: [256]
+    }
+}
