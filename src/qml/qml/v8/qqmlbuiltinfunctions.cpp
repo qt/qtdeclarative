@@ -1109,6 +1109,7 @@ QQmlComponent *QtObject::createComponent(const QUrl &url, QQmlComponent::Compila
     return c;
 }
 
+#if QT_CONFIG(translation)
 QString QtObject::uiLanguage() const
 {
     if (const QJSEngine *e = jsEngine())
@@ -1128,6 +1129,7 @@ QBindable<QString> QtObject::uiLanguageBindable()
         return QBindable<QString>(&QJSEnginePrivate::get(e)->uiLanguage);
     return QBindable<QString>();
 }
+#endif
 
 #if QT_CONFIG(qml_locale)
 /*!
