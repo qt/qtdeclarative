@@ -52,7 +52,7 @@
 //
 
 #include <qqml.h>
-#include <qtquickglobal.h>
+#include <private/qtquickglobal_p.h>
 #include <private/qqmlvaluetype_p.h>
 
 #include <QtGui/QColor>
@@ -66,7 +66,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickColorValueType
+class Q_QUICK_PRIVATE_EXPORT QQuickColorValueType
 {
     QColor v;
     Q_PROPERTY(qreal r READ r WRITE setR FINAL)
@@ -119,7 +119,7 @@ public:
     void setHslLightness(qreal);
 };
 
-class QQuickVector2DValueType
+class Q_QUICK_PRIVATE_EXPORT QQuickVector2DValueType
 {
     QVector2D v;
     Q_PROPERTY(qreal x READ x WRITE setX FINAL)
@@ -153,7 +153,7 @@ public:
     Q_INVOKABLE bool fuzzyEquals(const QVector2D &vec) const;
 };
 
-class QQuickVector3DValueType
+class Q_QUICK_PRIVATE_EXPORT QQuickVector3DValueType
 {
     QVector3D v;
     Q_PROPERTY(qreal x READ x WRITE setX FINAL)
@@ -192,7 +192,7 @@ public:
     Q_INVOKABLE bool fuzzyEquals(const QVector3D &vec) const;
 };
 
-class QQuickVector4DValueType
+class Q_QUICK_PRIVATE_EXPORT QQuickVector4DValueType
 {
     QVector4D v;
     Q_PROPERTY(qreal x READ x WRITE setX FINAL)
@@ -233,7 +233,7 @@ public:
     Q_INVOKABLE bool fuzzyEquals(const QVector4D &vec) const;
 };
 
-class QQuickQuaternionValueType
+class Q_QUICK_PRIVATE_EXPORT QQuickQuaternionValueType
 {
     QQuaternion v;
     Q_PROPERTY(qreal scalar READ scalar WRITE setScalar)
@@ -261,7 +261,7 @@ public:
     void setZ(qreal);
 };
 
-class QQuickMatrix4x4ValueType
+class Q_QUICK_PRIVATE_EXPORT QQuickMatrix4x4ValueType
 {
     QMatrix4x4 v;
     Q_PROPERTY(qreal m11 READ m11 WRITE setM11 FINAL)
@@ -381,7 +381,7 @@ enum HintingPreference {
 Q_ENUM_NS(HintingPreference)
 };
 
-class QQuickFontValueType
+class Q_QUICK_PRIVATE_EXPORT QQuickFontValueType
 {
     QFont v;
     Q_GADGET
@@ -497,7 +497,7 @@ enum class TransferFunction {
 Q_ENUM_NS(TransferFunction)
 }
 
-class QQuickColorSpaceValueType
+class Q_QUICK_PRIVATE_EXPORT QQuickColorSpaceValueType
 {
     QColorSpace v;
     Q_GADGET

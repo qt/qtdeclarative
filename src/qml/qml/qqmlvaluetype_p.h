@@ -125,7 +125,7 @@ public:
     static const QMetaObject *metaObjectForMetaType(QMetaType type);
 };
 
-struct QQmlPointFValueType
+struct Q_QML_PRIVATE_EXPORT QQmlPointFValueType
 {
     QPointF v;
     Q_PROPERTY(qreal x READ x WRITE setX FINAL)
@@ -144,7 +144,7 @@ public:
     void setY(qreal);
 };
 
-struct QQmlPointValueType
+struct Q_QML_PRIVATE_EXPORT QQmlPointValueType
 {
     QPoint v;
     Q_PROPERTY(int x READ x WRITE setX FINAL)
@@ -162,7 +162,7 @@ public:
     void setY(int);
 };
 
-struct QQmlSizeFValueType
+struct Q_QML_PRIVATE_EXPORT QQmlSizeFValueType
 {
     QSizeF v;
     Q_PROPERTY(qreal width READ width WRITE setWidth FINAL)
@@ -181,7 +181,7 @@ public:
     void setHeight(qreal);
 };
 
-struct QQmlSizeValueType
+struct Q_QML_PRIVATE_EXPORT QQmlSizeValueType
 {
     QSize v;
     Q_PROPERTY(int width READ width WRITE setWidth FINAL)
@@ -199,7 +199,7 @@ public:
     void setHeight(int);
 };
 
-struct QQmlRectFValueType
+struct Q_QML_PRIVATE_EXPORT QQmlRectFValueType
 {
     QRectF v;
     Q_PROPERTY(qreal x READ x WRITE setX FINAL)
@@ -234,7 +234,7 @@ public:
     qreal bottom() const;
 };
 
-struct QQmlRectValueType
+struct Q_QML_PRIVATE_EXPORT QQmlRectValueType
 {
     QRect v;
     Q_PROPERTY(int x READ x WRITE setX FINAL)
@@ -306,7 +306,7 @@ enum Type {
 Q_ENUM_NS(Type)
 };
 
-struct QQmlEasingValueType
+struct Q_QML_PRIVATE_EXPORT QQmlEasingValueType
 {
     QEasingCurve v;
     Q_GADGET
@@ -334,7 +334,7 @@ public:
 };
 #endif
 
-struct QQmlPropertyValueType
+struct Q_QML_PRIVATE_EXPORT QQmlPropertyValueType
 {
     QQmlProperty v;
     Q_PROPERTY(QObject *object READ object CONSTANT FINAL)
