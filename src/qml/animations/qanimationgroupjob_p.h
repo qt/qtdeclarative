@@ -91,6 +91,9 @@ protected:
     void debugChildren(QDebug d) const;
 
 private:
+    void ungroupChild(QAbstractAnimationJob *animation);
+    void handleAnimationRemoved(QAbstractAnimationJob *animation);
+
     //definition
     QAbstractAnimationJob *m_firstChild = nullptr;
     QAbstractAnimationJob *m_lastChild = nullptr;
