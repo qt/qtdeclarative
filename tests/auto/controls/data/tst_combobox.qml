@@ -157,6 +157,7 @@ TestCase {
         verify(control.delegate)
         verify(control.indicator)
         verify(control.popup)
+        compare(control.inputMethodHints, Qt.ImhNoPredictiveText)
     }
 
     function test_array() {

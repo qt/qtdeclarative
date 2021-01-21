@@ -269,6 +269,8 @@ public:
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
 
+    void setInputMethodHints(Qt::InputMethodHints hints, bool force = false);
+
     virtual qreal getContentWidth() const override;
     qreal calculateWidestTextWidth() const;
     void maybeUpdateImplicitContentWidth();
@@ -791,6 +793,16 @@ void QQuickComboBoxPrivate::itemImplicitWidthChanged(QQuickItem *item)
         emit q->implicitIndicatorWidthChanged();
 }
 
+void QQuickComboBoxPrivate::setInputMethodHints(Qt::InputMethodHints hints, bool force)
+{
+    Q_Q(QQuickComboBox);
+    if (!force && hints == q->inputMethodHints())
+        return;
+
+    extra.value().inputMethodHints = hints;
+    emit q->inputMethodHintsChanged();
+}
+
 void QQuickComboBoxPrivate::itemImplicitHeightChanged(QQuickItem *item)
 {
     Q_Q(QQuickComboBox);
@@ -893,7 +905,8 @@ QQuickComboBox::QQuickComboBox(QQuickItem *parent)
 #if QT_CONFIG(cursor)
     setCursor(Qt::ArrowCursor);
 #endif
-    setInputMethodHints(Qt::ImhNoPredictiveText);
+    Q_D(QQuickComboBox);
+    d->setInputMethodHints(Qt::ImhNoPredictiveText, true);
 }
 
 QQuickComboBox::~QQuickComboBox()
@@ -1529,11 +1542,7 @@ Qt::InputMethodHints QQuickComboBox::inputMethodHints() const
 void QQuickComboBox::setInputMethodHints(Qt::InputMethodHints hints)
 {
     Q_D(QQuickComboBox);
-    if (hints == inputMethodHints())
-        return;
-
-    d->extra.value().inputMethodHints = hints;
-    emit inputMethodHintsChanged();
+    d->setInputMethodHints(hints);
 }
 
 /*!
