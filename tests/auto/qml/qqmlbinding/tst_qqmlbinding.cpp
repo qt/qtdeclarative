@@ -31,6 +31,7 @@
 #include <private/qqmlbind_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include "../../shared/util.h"
+#include "WithBindableProperties.h"
 
 class tst_qqmlbinding : public QQmlDataTest
 {
@@ -42,6 +43,7 @@ private slots:
     void binding();
     void whenAfterValue();
     void restoreBinding();
+    void restoreBindingBindablePorperty();
     void restoreBindingValue();
     void restoreBindingVarValue();
     void restoreBindingJSValue();
@@ -132,6 +134,34 @@ void tst_qqmlbinding::restoreBinding()
     //original binding restored
     myItem->setY(49);
     QCOMPARE(myItem->x(), qreal(100-49));
+}
+
+void tst_qqmlbinding::restoreBindingBindablePorperty()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("restoreBinding5.qml"));
+    QScopedPointer<QQuickRectangle> rect { qobject_cast<QQuickRectangle*>(c.create()) };
+    QVERIFY2(rect, qPrintable(c.errorString()));
+
+    auto *myItem = rect->findChild<WithBindableProperties*>("myItem");
+    QVERIFY(myItem != nullptr);
+
+    myItem->setB(25);
+    QCOMPARE(myItem->a(), qreal(100-25));
+
+    myItem->setB(13);
+    QCOMPARE(myItem->a(), qreal(100-13));
+
+    //Binding takes effect
+    myItem->setB(51);
+    QCOMPARE(myItem->a(), qreal(51));
+
+    myItem->setB(88);
+    QCOMPARE(myItem->a(), qreal(88));
+
+    //original binding restored
+    myItem->setB(49);
+    QCOMPARE(myItem->a(), qreal(100-49));
 }
 
 void tst_qqmlbinding::restoreBindingValue()

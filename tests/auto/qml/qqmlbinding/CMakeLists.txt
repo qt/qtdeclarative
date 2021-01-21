@@ -14,6 +14,7 @@ qt_internal_add_test(tst_qqmlbinding
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         tst_qqmlbinding.cpp
+        WithBindableProperties.h
     INCLUDE_DIRECTORIES
         ../../shared
     PUBLIC_LIBRARIES
@@ -24,6 +25,14 @@ qt_internal_add_test(tst_qqmlbinding
         Qt::QuickPrivate
     TESTDATA ${test_data}
 )
+
+set_target_properties(tst_qqmlbinding PROPERTIES
+    QT_QML_MODULE_URI "test"
+    QT_QML_MODULE_VERSION 1.0
+)
+
+qt6_qml_type_registration(tst_qqmlbinding)
+
 
 ## Scopes:
 #####################################################################
