@@ -40,6 +40,8 @@
 #ifndef QQUICKBOUNDARYRULE_H
 #define QQUICKBOUNDARYRULE_H
 
+#include "qqmlanimationglobal_p.h"
+
 //
 //  W A R N I N G
 //  -------------
@@ -60,7 +62,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickAbstractAnimation;
 class QQuickBoundaryRulePrivate;
-class QQuickBoundaryRule : public QObject, public QQmlPropertyValueInterceptor
+class Q_LABSANIMATION_PRIVATE_EXPORT QQuickBoundaryRule : public QObject, public QQmlPropertyValueInterceptor
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickBoundaryRule)

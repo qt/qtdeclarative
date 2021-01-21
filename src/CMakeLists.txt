@@ -8,7 +8,6 @@ endif()
 add_subdirectory(qmltyperegistrar)
 add_subdirectory(qml)
 add_subdirectory(qmlmodels)
-add_subdirectory(labs)
 
 if(QT_FEATURE_qml_worker_script)
     add_subdirectory(qmlworkerscript)
@@ -37,6 +36,8 @@ if(TARGET Qt::Gui AND QT_FEATURE_qml_animation)
         add_subdirectory(quickwidgets)
     endif()
 endif()
+
+add_subdirectory(labs)
 
 # special case begin
 # These need to be included here since they have dependencies on the modules

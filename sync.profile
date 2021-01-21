@@ -14,7 +14,8 @@
     "QtQuickLayouts" => "$basedir/src/quicklayouts",
     "QtQmlLocalStorage" => "$basedir/src/qmllocalstorage",
     "QtLabsSettings" => "$basedir/src/labs/settings",
-    "QtLabsFolderListModel" => "$basedir/src/labs/folderlistmodel"
+    "QtLabsFolderListModel" => "$basedir/src/labs/folderlistmodel",
+    "QtLabsAnimation" => "$basedir/src/labs/animation"
 );
 %inject_headers = (
     "$basedir/src/qml" => [ "^qqmljsgrammar_p.h", "^qqmljsparser_p.h", "^qml_compile_hash_p.h" ],
