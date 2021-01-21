@@ -56,6 +56,8 @@ private Q_SLOTS:
     void qmltypes_data();
     void qmltypes();
 
+    void autoqmltypes();
+
 private:
     QString runQmllint(const QString &fileToLint,
                        std::function<void(QProcess &)> handleResult,
@@ -164,6 +166,21 @@ void TestQmllint::qmltypes()
 {
     QFETCH(QString, file);
     runQmllint(file, true);
+}
+
+void TestQmllint::autoqmltypes()
+{
+    QProcess process;
+    process.setWorkingDirectory(testFile("autoqmltypes"));
+    process.start(m_qmllintPath, { QStringLiteral("test.qml") });
+
+    process.waitForFinished();
+
+    QCOMPARE(process.exitStatus(), QProcess::NormalExit);
+    QCOMPARE(process.exitCode(), 0);
+
+    QVERIFY(process.readAllStandardError().isEmpty());
+    QVERIFY(process.readAllStandardOutput().isEmpty());
 }
 
 void TestQmllint::dirtyQmlCode_data()

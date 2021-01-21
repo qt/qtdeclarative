@@ -171,8 +171,10 @@ int main(int argv, char *argc[])
     } else {
         // If none are given explicitly, use the qmltypes files from the current directory.
         QDirIterator it(".", {"*.qmltypes"}, QDir::Files);
-        while (it.hasNext())
+        while (it.hasNext()) {
+            it.next();
             qmltypesFiles.append(it.fileInfo().absoluteFilePath());
+        }
     }
 
 #else
