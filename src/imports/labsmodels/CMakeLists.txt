@@ -9,13 +9,12 @@ qt_internal_add_qml_module(labsmodelsplugin
     VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QtQmlLabsModelsPlugin
     SKIP_TYPE_REGISTRATION
-    GENERATE_QMLTYPES
-    INSTALL_QMLTYPES
+    PLUGIN_OPTIONAL
     SOURCES
         plugin.cpp
     PUBLIC_LIBRARIES
-        Qt::QmlModelsPrivate
         Qt::QmlPrivate
+        Qt::LabsQmlModelsPrivate
 )
 
 #### Keys ignored in scope 1:.:.:labsmodels.pro:<TRUE>:
@@ -25,14 +24,3 @@ qt_internal_add_qml_module(labsmodelsplugin
 
 ## Scopes:
 #####################################################################
-
-qt_internal_extend_target(labsmodelsplugin CONDITION QT_FEATURE_qml_table_model
-    SOURCES
-        qqmltablemodel.cpp qqmltablemodel_p.h
-        qqmltablemodelcolumn.cpp qqmltablemodelcolumn_p.h
-)
-
-qt_internal_extend_target(labsmodelsplugin CONDITION QT_FEATURE_qml_delegate_model
-    SOURCES
-        qqmldelegatecomponent.cpp qqmldelegatecomponent_p.h
-)

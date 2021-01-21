@@ -1,4 +1,5 @@
 add_subdirectory(settings)
+add_subdirectory(models)
 
 if(QT_FEATURE_qml_itemmodel)
     add_subdirectory(folderlistmodel)

@@ -40,6 +40,8 @@
 #ifndef QQMLDELEGATECOMPONENT_P_H
 #define QQMLDELEGATECOMPONENT_P_H
 
+#include "qqmlmodelsglobal_p.h"
+
 //
 //  W A R N I N G
 //  -------------
@@ -59,7 +61,7 @@ QT_REQUIRE_CONFIG(qml_delegate_model);
 
 QT_BEGIN_NAMESPACE
 
-class QQmlDelegateChoice : public QObject
+class Q_LABSQMLMODELS_PRIVATE_EXPORT QQmlDelegateChoice : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QVariant roleValue READ roleValue WRITE setRoleValue NOTIFY roleValueChanged)
@@ -101,7 +103,7 @@ private:
     QQmlComponent *m_delegate = nullptr;
 };
 
-class QQmlDelegateChooser : public QQmlAbstractDelegateComponent
+class Q_LABSQMLMODELS_PRIVATE_EXPORT QQmlDelegateChooser : public QQmlAbstractDelegateComponent
 {
     Q_OBJECT
     Q_PROPERTY(QString role READ role WRITE setRole NOTIFY roleChanged)

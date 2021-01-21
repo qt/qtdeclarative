@@ -51,6 +51,7 @@
 // We mean it.
 //
 
+#include "qqmlmodelsglobal_p.h"
 #include "qqmltablemodelcolumn_p.h"
 
 #include <QtCore/QObject>
@@ -64,7 +65,7 @@ QT_REQUIRE_CONFIG(qml_table_model);
 
 QT_BEGIN_NAMESPACE
 
-class QQmlTableModel : public QAbstractTableModel, public QQmlParserStatus
+class Q_LABSQMLMODELS_PRIVATE_EXPORT QQmlTableModel : public QAbstractTableModel, public QQmlParserStatus
 {
     Q_OBJECT
     Q_PROPERTY(int columnCount READ columnCount NOTIFY columnCountChanged FINAL)

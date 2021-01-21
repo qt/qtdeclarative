@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2018 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the plugins of the Qt Toolkit.
+** This file is part of the QtQml module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -37,45 +37,37 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
-#include <QtQml/qqml.h>
+#ifndef QTLABSQMLMODELSGLOBAL_P_H
+#define QTLABSQMLMODELSGLOBAL_P_H
 
-#include <private/qqmlmodelsmodule_p.h>
+#include <QtCore/qglobal.h>
 
-#include <QtLabsQmlModels/private/qqmlmodelsglobal_p.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
 QT_BEGIN_NAMESPACE
 
-/*!
-    \qmlmodule Qt.labs.qmlmodels 1.0
-    \title Qt QML Models experimental QML Types
-    \ingroup qmlmodules
-    \brief Provides QML experimental types for data models.
-    \since 5.12
-
-    This QML module contains experimental QML types related to data models.
-
-    To use the types in this module, import the module with the following line:
-
-    \code
-    import Qt.labs.qmlmodels
-    \endcode
-*/
-
-//![class decl]
-class QtQmlLabsModelsPlugin : public QQmlEngineExtensionPlugin
-{
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
-public:
-    QtQmlLabsModelsPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent)
-    {
-        volatile auto registration = &qml_register_types_Qt_labs_qmlmodels;
-        Q_UNUSED(registration);
-    }
-};
-//![class decl]
+#if !defined(QT_STATIC)
+#  if defined(QT_BUILD_LABSQMLMODELS_LIB)
+#    define Q_LABSQMLMODELS_EXPORT Q_DECL_EXPORT
+#  else
+#    define Q_LABSQMLMODELS_EXPORT Q_DECL_IMPORT
+#  endif
+#else
+#  define Q_LABSQMLMODELS_EXPORT
+#endif
+#define Q_LABSQMLMODELS_PRIVATE_EXPORT Q_LABSQMLMODELS_EXPORT
 
 QT_END_NAMESPACE
 
-#include "plugin.moc"
+void Q_LABSQMLMODELS_PRIVATE_EXPORT qml_register_types_Qt_labs_qmlmodels();
+
+#endif // QTLABSQMLMODELSGLOBAL_P_H
