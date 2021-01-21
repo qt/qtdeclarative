@@ -47,9 +47,45 @@ QAnimationGroupJob::QAnimationGroupJob()
     m_isGroup = true;
 }
 
+void QAnimationGroupJob::ungroupChild(QAbstractAnimationJob *animation)
+{
+    Q_ASSERT(animation);
+    Q_ASSERT(animation->m_group == this);
+    QAbstractAnimationJob *prev = animation->previousSibling();
+    QAbstractAnimationJob *next = animation->nextSibling();
+
+    if (prev)
+        prev->m_nextSibling = next;
+    else
+        m_firstChild = next;
+
+    if (next)
+        next->m_previousSibling = prev;
+    else
+        m_lastChild = prev;
+
+    animation->m_previousSibling = nullptr;
+    animation->m_nextSibling = nullptr;
+
+    animation->m_group = nullptr;
+}
+
+void QAnimationGroupJob::handleAnimationRemoved(QAbstractAnimationJob *animation)
+{
+    resetUncontrolledAnimationFinishTime(animation);
+    if (!firstChild()) {
+        m_currentTime = 0;
+        stop();
+    }
+}
+
 QAnimationGroupJob::~QAnimationGroupJob()
 {
-    clear();
+    while (QAbstractAnimationJob *animation = firstChild()) {
+        ungroupChild(animation);
+        handleAnimationRemoved(animation);
+        delete animation;
+    }
 }
 
 void QAnimationGroupJob::topLevelAnimationLoopChanged()
@@ -96,25 +132,9 @@ void QAnimationGroupJob::prependAnimation(QAbstractAnimationJob *animation)
 
 void QAnimationGroupJob::removeAnimation(QAbstractAnimationJob *animation)
 {
-    Q_ASSERT(animation);
-    Q_ASSERT(animation->m_group == this);
     QAbstractAnimationJob *prev = animation->previousSibling();
     QAbstractAnimationJob *next = animation->nextSibling();
-
-    if (prev)
-        prev->m_nextSibling = next;
-    else
-        m_firstChild = next;
-
-    if (next)
-        next->m_previousSibling = prev;
-    else
-        m_lastChild = prev;
-
-    animation->m_previousSibling = nullptr;
-    animation->m_nextSibling = nullptr;
-
-    animation->m_group = nullptr;
+    ungroupChild(animation);
     animationRemoved(animation, prev, next);
 }
 
@@ -154,11 +174,7 @@ void QAnimationGroupJob::uncontrolledAnimationFinished(QAbstractAnimationJob *an
 
 void QAnimationGroupJob::animationRemoved(QAbstractAnimationJob* anim, QAbstractAnimationJob* , QAbstractAnimationJob* )
 {
-    resetUncontrolledAnimationFinishTime(anim);
-    if (!firstChild()) {
-        m_currentTime = 0;
-        stop();
-    }
+    handleAnimationRemoved(anim);
 }
 
 void QAnimationGroupJob::debugChildren(QDebug d) const
