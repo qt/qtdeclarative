@@ -78,7 +78,7 @@ QT_BEGIN_NAMESPACE
 }
 
 #define V4THROW_REFERENCE(string) { \
-    QV4::ScopedString v(scope, scope.engine->newString(string)); \
+    QV4::ScopedString v(scope, scope.engine->newString(QLatin1String(string))); \
     scope.engine->throwReferenceError(v); \
     RETURN_UNDEFINED(); \
 }
@@ -335,9 +335,12 @@ static ReturnedValue qmlsqldatabase_executeSql(const FunctionObject *b, const Va
             // XXX optimize
             ScopedString s(scope);
             ScopedValue v(scope);
-            resultObject->put((s = scope.engine->newIdentifier("rowsAffected")).getPointer(), (v = Value::fromInt32(query.numRowsAffected())));
-            resultObject->put((s = scope.engine->newIdentifier("insertId")).getPointer(), (v = scope.engine->newString(query.lastInsertId().toString())));
-            resultObject->put((s = scope.engine->newIdentifier("rows")).getPointer(), rows);
+            resultObject->put((s = scope.engine->newIdentifier(QLatin1String("rowsAffected"))).getPointer(),
+                              (v = Value::fromInt32(query.numRowsAffected())));
+            resultObject->put((s = scope.engine->newIdentifier(QLatin1String("insertId"))).getPointer(),
+                              (v = scope.engine->newString(query.lastInsertId().toString())));
+            resultObject->put((s = scope.engine->newIdentifier(QLatin1String("rows"))).getPointer(),
+                              rows);
         } else {
             err = true;
         }

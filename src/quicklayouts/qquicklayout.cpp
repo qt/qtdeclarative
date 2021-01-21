@@ -1236,9 +1236,9 @@ void QQuickLayout::_q_dumpLayoutTree() const
 
 void QQuickLayout::dumpLayoutTreeRecursive(int level, QString &buf) const
 {
-    auto formatLine = [&level](const char *fmt) {
+    auto formatLine = [&level](const char *fmt) -> QString {
         QString ss(level *4, QLatin1Char(' '));
-        return QString::fromLatin1("%1%2\n").arg(ss).arg(fmt);
+        return ss + QLatin1String(fmt) + QLatin1Char('\n');
     };
 
     auto f2s = [](qreal f) {

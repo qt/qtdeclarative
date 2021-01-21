@@ -330,9 +330,11 @@ void QQmlSettingsPrivate::load()
 
     for (int i = offset; i < count; ++i) {
         QMetaProperty property = mo->property(i);
+        const QString propertyName = QString::fromUtf8(property.name());
 
         const QVariant previousValue = readProperty(property);
-        const QVariant currentValue = instance()->value(property.name(), previousValue);
+        const QVariant currentValue = instance()->value(propertyName,
+                                                        previousValue);
 
         if (!currentValue.isNull() && (!previousValue.isValid()
                 || (currentValue.canConvert(previousValue.metaType())
@@ -343,7 +345,7 @@ void QQmlSettingsPrivate::load()
 
         // ensure that a non-existent setting gets written
         // even if the property wouldn't change later
-        if (!instance()->contains(property.name()))
+        if (!instance()->contains(propertyName))
             _q_propertyChanged();
 
         // setup change notifications on first load
@@ -358,7 +360,7 @@ void QQmlSettingsPrivate::store()
 {
     QHash<const char *, QVariant>::const_iterator it = changedProperties.constBegin();
     while (it != changedProperties.constEnd()) {
-        instance()->setValue(it.key(), it.value());
+        instance()->setValue(QString::fromUtf8(it.key()), it.value());
         qCDebug(lcSettings) << "QQmlSettings: store" << it.key() << ":" << it.value();
         ++it;
     }
