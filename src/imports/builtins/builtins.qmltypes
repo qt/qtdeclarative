@@ -290,8 +290,6 @@ Module {
 
     Component {
         name: "Math"
-        exports: ["QML/Math 1.0"]
-        exportMetaObjectRevisions: [256]
 
         Property {
             name: "E"
@@ -748,9 +746,6 @@ Module {
 
     Component {
         name: "JSON"
-        exports: ["QML/JSON 1.0"]
-        exportMetaObjectRevisions: [256]
-        isSingleton: true
 
         Method {
             name: "parse"
@@ -793,9 +788,6 @@ Module {
 
     Component {
         name: "String"
-        exports: ["QML/String 1.0"]
-        exportMetaObjectRevisions: [256]
-        isSingleton: true
         prototype: "StringPrototype"
 
         Method {
