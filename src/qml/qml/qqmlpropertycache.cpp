@@ -1051,7 +1051,8 @@ void QQmlPropertyCache::toMetaObjectBuilder(QMetaObjectBuilder &builder)
             notifierId = data->notifyIndex() - signalHandlerIndexCacheStart;
 
         QMetaPropertyBuilder property = builder.addProperty(properties.at(ii).first.toUtf8(),
-                                                            QMetaType(data->propType()).name(),
+                                                            data->propType().name(),
+                                                            data->propType(),
                                                             notifierId);
 
         property.setReadable(true);
