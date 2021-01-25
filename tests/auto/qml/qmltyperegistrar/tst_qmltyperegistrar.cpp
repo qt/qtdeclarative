@@ -126,4 +126,33 @@ void tst_qmltyperegistrar::namespacedElement()
     QVERIFY2(!c.isError(), qPrintable(c.errorString()));
 }
 
+void tst_qmltyperegistrar::derivedFromForeign()
+{
+    QVERIFY(qmltypesData.contains("name: \"DerivedFromForeign\""));
+    QVERIFY(qmltypesData.contains("prototype: \"QTimeLine\""));
+    QVERIFY(qmltypesData.contains("name: \"QTimeLine\""));
+}
+
+void tst_qmltyperegistrar::metaTypesRegistered()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+    c.setData("import QmlTypeRegistrarTest\nOoo {}", QUrl());
+    QVERIFY(c.isReady());
+    QScopedPointer<QObject> obj(c.create());
+
+    auto verifyMetaType = [](const char *name, const char *className) {
+        const auto foundMetaType = QMetaType::fromName(name);
+        QVERIFY(foundMetaType.isValid());
+        QCOMPARE(foundMetaType.name(), name);
+        QVERIFY(foundMetaType.metaObject());
+        QCOMPARE(foundMetaType.metaObject()->className(), className);
+    };
+
+    verifyMetaType("Foo", "Foo");
+    verifyMetaType("Ooo*", "Ooo");
+    verifyMetaType("Bbb*", "Bbb");
+    verifyMetaType("Ccc*", "Ccc");
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

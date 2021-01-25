@@ -181,6 +181,11 @@ int main(int argc, char **argv)
 
     processor.postProcessTypes();
 
+    if (parser.isSet(foreignTypesOption))
+        processor.processForeignTypes(parser.value(foreignTypesOption).split(QLatin1Char(',')));
+
+    processor.postProcessForeignTypes();
+
     const QStringList includes = processor.includes();
     for (const QString &include : includes)
         fprintf(output, "\n#include <%s>", qPrintable(include));
@@ -211,17 +216,45 @@ int main(int argc, char **argv)
     for (const QJsonObject &classDef : types) {
         const QString className = classDef[QLatin1String("qualifiedClassName")].toString();
 
+        QString targetName = className;
+        bool seenQmlElement = false;
+        const QJsonArray classInfos = classDef.value(QLatin1String("classInfos")).toArray();
+        for (const QJsonValue &v : classInfos) {
+            const QString name = v[QStringLiteral("name")].toString();
+            if (name == QStringLiteral("QML.Element"))
+                seenQmlElement = true;
+            else if (name == QStringLiteral("QML.Foreign"))
+                targetName = v[QLatin1String("value")].toString();
+        }
+
+        // We want all related metatypes to be registered by name, so that we can look them up
+        // without including the C++ headers. That's the reason for the QMetaType(foo).id() calls.
+
         if (classDef.value(QLatin1String("namespace")).toBool()) {
-            QString targetName = className;
-            for (const QJsonValue &v : classDef.value(QLatin1String("classInfos")).toArray()) {
-                if (v[QLatin1String("name")].toString() == QLatin1String("QML.Foreign"))
-                    targetName = v[QLatin1String("value")].toString();
+            fprintf(output, "\n    {");
+            fprintf(output, "\n        static const auto metaType "
+                            "= QQmlPrivate::metaTypeForNamespace("
+                            "[](const QtPrivate::QMetaTypeInterface *) { "
+                            "return &%s::staticMetaObject; "
+                            "}, \"%s\");",
+                    qPrintable(targetName), qPrintable(targetName));
+            fprintf(output, "\n        QMetaType(&metaType).id();");
+            fprintf(output, "\n    }");
+            if (seenQmlElement) {
+                fprintf(output, "\n    qmlRegisterNamespaceAndRevisions(&%s::staticMetaObject, "
+                                "\"%s\", %s, nullptr, &%s::staticMetaObject);",
+                        qPrintable(targetName), qPrintable(module), qPrintable(majorVersion),
+                        qPrintable(className));
             }
-            fprintf(output, "\n    qmlRegisterNamespaceAndRevisions(&%s::staticMetaObject, \"%s\", %s, nullptr, &%s::staticMetaObject);",
-                    qPrintable(targetName), qPrintable(module), qPrintable(majorVersion), qPrintable(className));
         } else {
-            fprintf(output, "\n    qmlRegisterTypesAndRevisions<%s>(\"%s\", %s);",
-                    qPrintable(className), qPrintable(module), qPrintable(majorVersion));
+            if (seenQmlElement) {
+                fprintf(output, "\n    qmlRegisterTypesAndRevisions<%s>(\"%s\", %s);",
+                        qPrintable(className), qPrintable(module), qPrintable(majorVersion));
+            } else {
+                fprintf(output, "\n    QMetaType::fromType<%s%s>().id();",
+                        qPrintable(className),
+                        classDef.value(QLatin1String("object")).toBool() ? " *" : "");
+            }
         }
     }
 
@@ -233,11 +266,6 @@ int main(int argc, char **argv)
 
     if (!parser.isSet(pluginTypesOption))
         return EXIT_SUCCESS;
-
-    if (parser.isSet(foreignTypesOption))
-        processor.processForeignTypes(parser.value(foreignTypesOption).split(QLatin1Char(',')));
-
-    processor.postProcessForeignTypes();
 
     QmlTypesCreator creator;
     creator.setOwnTypes(processor.types());

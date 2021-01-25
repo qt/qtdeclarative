@@ -10,6 +10,7 @@ qt_internal_add_test(tst_qmltyperegistrar
         hppheader.hpp
         # noextheader special case
         tst_qmltyperegistrar.cpp tst_qmltyperegistrar.h
+        foo.cpp foo.h
     INCLUDE_DIRECTORIES
         foreign
     PUBLIC_LIBRARIES

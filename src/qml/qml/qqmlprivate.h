@@ -904,6 +904,30 @@ namespace QQmlPrivate
             const char *uri, int versionMajor, const QMetaObject *classInfoMetaObject,
             QVector<int> *qmlTypeIds, const QMetaObject *);
 
+    constexpr QtPrivate::QMetaTypeInterface metaTypeForNamespace(
+            const QtPrivate::QMetaTypeInterface::MetaObjectFn &metaObjectFunction, const char *name)
+    {
+        return {
+            /*.revision=*/ 0,
+            /*.alignment=*/ 0,
+            /*.size=*/ 0,
+            /*.flags=*/ 0,
+            /*.typeId=*/ {},
+            /*.metaObject=*/ metaObjectFunction,
+            /*.name=*/ name,
+            /*.defaultCtr=*/ nullptr,
+            /*.copyCtr=*/ nullptr,
+            /*.moveCtr=*/ nullptr,
+            /*.dtor=*/ nullptr,
+            /*.equals*/ nullptr,
+            /*.lessThan*/ nullptr,
+            /*.debugStream=*/ nullptr,
+            /*.dataStreamOut=*/ nullptr,
+            /*.dataStreamIn=*/ nullptr,
+            /*.legacyRegisterOp=*/ nullptr
+        };
+    }
+
 } // namespace QQmlPrivate
 
 QT_END_NAMESPACE

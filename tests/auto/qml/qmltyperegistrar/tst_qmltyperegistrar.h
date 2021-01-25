@@ -33,6 +33,7 @@
 
 #include <QtQml/qqml.h>
 #include <QtCore/qproperty.h>
+#include <QtCore/qtimeline.h>
 
 class Interface {};
 class Interface2 {};
@@ -141,6 +142,14 @@ namespace Namespace {
     };
 }
 
+class DerivedFromForeign : public QTimeLine
+{
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    DerivedFromForeign(QObject *parent) : QTimeLine(1000, parent) {}
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -158,6 +167,9 @@ private slots:
     void pastMajorVersions();
     void implementsInterfaces();
     void namespacedElement();
+    void derivedFromForeign();
+    void metaTypesRegistered();
+
 private:
     QByteArray qmltypesData;
 };
