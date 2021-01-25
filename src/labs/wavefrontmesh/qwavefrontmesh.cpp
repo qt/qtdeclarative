@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-#include "qwavefrontmesh.h"
+#include "qwavefrontmesh_p.h"
 
 #include <QtCore/qfile.h>
 #include <QtCore/qtextstream.h>

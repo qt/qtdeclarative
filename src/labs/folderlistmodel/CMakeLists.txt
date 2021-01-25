@@ -3,7 +3,7 @@ qt_internal_add_module(LabsFolderListModel
   SOURCES
         fileinfothread.cpp fileinfothread_p.h
         fileproperty_p.h
-        qquickfolderlistmodel.cpp qquickfolderlistmodel.h
+        qquickfolderlistmodel.cpp qquickfolderlistmodel_p.h
         qquickfolderlistmodelglobal_p.h
   DEFINES
         QT_BUILD_LABSFOLDERMODEL_LIB

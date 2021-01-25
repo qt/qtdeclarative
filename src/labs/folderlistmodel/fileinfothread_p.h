@@ -61,7 +61,7 @@
 #include <QDir>
 
 #include "fileproperty_p.h"
-#include "qquickfolderlistmodel.h"
+#include "qquickfolderlistmodel_p.h"
 
 class FileInfoThread : public QThread
 {

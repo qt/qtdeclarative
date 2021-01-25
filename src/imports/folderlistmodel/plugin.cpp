@@ -42,7 +42,7 @@
 #include <QtQml/private/qqmlmetatype_p.h>
 
 #include <QtLabsFolderListModel/private/qquickfolderlistmodelglobal_p.h>
-#include <QtLabsFolderListModel/qquickfolderlistmodel.h>
+#include <QtLabsFolderListModel/private/qquickfolderlistmodel_p.h>
 
 QT_BEGIN_NAMESPACE
 
