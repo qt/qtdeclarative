@@ -601,4 +601,9 @@ QJSValue QQmlPrivate::AOTCompiledContext::jsMetaType(int index) const
                 compilationUnit->runtimeClasses[index]->asReturnedValue());
 }
 
+void QQmlPrivate::AOTCompiledContext::setInstructionPointer(int offset) const
+{
+    engine->handle()->currentStackFrame->instructionPointer = offset;
+}
+
 QT_END_NAMESPACE

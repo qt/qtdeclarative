@@ -602,13 +602,14 @@ namespace QQmlPrivate
         QVector<int> *qmlTypeIds;
     };
 
-    struct AOTCompiledContext {
+    struct Q_QML_EXPORT AOTCompiledContext {
         QQmlContext *qmlContext;
         QObject *qmlScopeObject;
         QJSEngine *engine;
         QV4::CompiledData::CompilationUnit *compilationUnit;
 
-        QJSValue Q_QML_EXPORT jsMetaType(int index) const;
+        QJSValue jsMetaType(int index) const;
+        void setInstructionPointer(int offset) const;
     };
 
     struct AOTCompiledFunction {
