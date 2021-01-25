@@ -105,40 +105,6 @@
 
 QT_BEGIN_NAMESPACE
 
-// Declared in qqml.h
-int qmlRegisterUncreatableMetaObject(const QMetaObject &staticMetaObject,
-                                     const char *uri, int versionMajor,
-                                     int versionMinor, const char *qmlName,
-                                     const QString& reason)
-{
-    QQmlPrivate::RegisterType type = {
-        0,
-        QMetaType(),
-        QMetaType(),
-        0,
-        nullptr,
-        nullptr,
-        reason,
-        nullptr,
-
-        uri, QTypeRevision::fromVersion(versionMajor, versionMinor), qmlName, &staticMetaObject,
-
-        QQmlAttachedPropertiesFunc(),
-        nullptr,
-
-        0,
-        0,
-        0,
-
-        nullptr, nullptr,
-
-        nullptr,
-        QTypeRevision::zero()
-    };
-
-    return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
-}
-
 /*!
   \qmltype QtObject
     \instantiates QObject
