@@ -930,7 +930,7 @@ QQmlRefPointer<QQmlScriptBlob> QQmlTypeLoader::getScript(const QUrl &unNormalize
         scriptBlob = new QQmlScriptBlob(url, this);
         m_scriptCache.insert(url, scriptBlob);
 
-        QQmlMetaType::CachedUnitLookupError error;
+        QQmlMetaType::CachedUnitLookupError error = QQmlMetaType::CachedUnitLookupError::NoError;
         if (const QQmlPrivate::CachedQmlUnit *cachedUnit = scriptBlob->diskCacheEnabled()
                 ? QQmlMetaType::findCachedCompilationUnit(scriptBlob->url(), &error)
                 : nullptr) {
