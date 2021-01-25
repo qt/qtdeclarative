@@ -501,10 +501,7 @@ QQmlType QQmlMetaType::registerType(const QQmlPrivate::RegisterType &type)
     }
 
     QQmlTypePrivate *priv = createQQmlType(data, elementName, type);
-
     addTypeToData(priv, data);
-    if (!type.typeId.isValid())
-        data->idToType.insert(priv->typeId.id(), priv);
 
     return QQmlType(priv);
 }
@@ -677,8 +674,6 @@ QQmlType QQmlMetaType::registerSequentialContainer(
     *priv->extraData.ld = container.metaSequence;
 
     addTypeToData(priv, data);
-    if (!container.typeId.isValid())
-        data->idToType.insert(priv->typeId.id(), priv);
 
     return QQmlType(priv);
 }
