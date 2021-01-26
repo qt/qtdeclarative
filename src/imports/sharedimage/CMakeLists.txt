@@ -9,7 +9,6 @@ qt_internal_add_qml_module(sharedimageplugin
     VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QtQuickSharedImagePlugin
     SKIP_TYPE_REGISTRATION
-    PLUGIN_OPTIONAL
     SOURCES
         plugin.cpp
     PUBLIC_LIBRARIES
