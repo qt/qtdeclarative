@@ -3084,8 +3084,9 @@ Returns a transform that maps points from item space into window space.
 */
 QTransform QQuickItemPrivate::itemToWindowTransform() const
 {
-    // XXX todo
-    QTransform rv = parentItem?QQuickItemPrivate::get(parentItem)->itemToWindowTransform():QTransform();
+    // item's parent must not be itself, otherwise calling itemToWindowTransform() on it is infinite recursion
+    Q_ASSERT(!parentItem || QQuickItemPrivate::get(parentItem) != this);
+    QTransform rv = parentItem ? QQuickItemPrivate::get(parentItem)->itemToWindowTransform() : QTransform();
     itemToParentTransform(rv);
     return rv;
 }
