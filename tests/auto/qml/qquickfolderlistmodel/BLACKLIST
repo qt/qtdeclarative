@@ -1,4 +1,0 @@
-[nameFilters]
-macos ci # QTBUG-90468
-msvc-2015
-msvc-2017

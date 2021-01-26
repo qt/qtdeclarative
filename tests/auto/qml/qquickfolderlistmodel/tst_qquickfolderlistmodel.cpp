@@ -196,7 +196,11 @@ void tst_qquickfolderlistmodel::nameFilters()
             this, SLOT(removed(QModelIndex,int,int)));
 
     QTRY_VERIFY(flm->rowCount() > 0);
+    // read an invalid directory first...
+    flm->setProperty("folder", testFileUrl("nosuchdirectory"));
+    QTRY_COMPARE(flm->property("count").toInt(),0);
     flm->setProperty("folder", testFileUrl("resetfiltering"));
+    // so that the QTRY_COMPARE for 3 entries will process queued signals
     QTRY_COMPARE(flm->property("count").toInt(),3); // all files visible
 
     int count = flm->rowCount();
