@@ -320,7 +320,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
             const auto scope = m_importer->importFile(path.canonicalFilePath());
             m_rootScopeImports.insert(prefix.isEmpty() ? scope->internalName() : prefix, scope);
         }
-
+        return true;
     }
 
     QString path {};
