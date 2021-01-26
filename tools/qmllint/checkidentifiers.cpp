@@ -299,7 +299,7 @@ bool CheckIdentifiers::operator()(
             if (memberAccessChain.isEmpty())
                 continue;
 
-            const auto memberAccessBase = memberAccessChain.takeFirst();
+            auto memberAccessBase = memberAccessChain.takeFirst();
             const auto jsId = currentScope->findJSIdentifier(memberAccessBase.m_name);
             if (jsId.has_value() && jsId->kind != QQmlJSScope::JavaScriptIdentifier::Injected)
                 continue;
@@ -354,24 +354,45 @@ bool CheckIdentifiers::operator()(
                 continue;
             }
 
-            const auto typeIt = m_types.find(memberAccessBase.m_name);
-            if (typeIt != m_types.end()) {
-                if (typeIt->isNull()) {
-                    // This is a namespaced import. Check with the full name.
-                    if (!memberAccessChain.isEmpty())
-                        memberAccessChain.front().m_name.prepend(memberAccessBase.m_name + u'.');
-                } else if (!checkMemberAccess(memberAccessChain, *typeIt)) {
-                    noUnqualifiedIdentifier = false;
+            const QString baseName = memberAccessBase.m_name;
+            auto typeIt = m_types.find(memberAccessBase.m_name);
+            bool baseIsPrefixed = false;
+            while (typeIt != m_types.end() && typeIt->isNull()) {
+                // This is a namespaced import. Check with the full name.
+                if (!memberAccessChain.isEmpty()) {
+                    auto location = memberAccessBase.m_location;
+                    memberAccessBase = memberAccessChain.takeFirst();
+                    memberAccessBase.m_name.prepend(baseName + u'.');
+                    location.length = memberAccessBase.m_location.offset - location.offset
+                            + memberAccessBase.m_location.length;
+                    memberAccessBase.m_location = location;
+                    typeIt = m_types.find(memberAccessBase.m_name);
+                    baseIsPrefixed = true;
                 }
+            }
+
+            if (typeIt != m_types.end() && !typeIt->isNull()) {
+                if (!checkMemberAccess(memberAccessChain, *typeIt))
+                    noUnqualifiedIdentifier = false;
                 continue;
             }
 
             noUnqualifiedIdentifier = false;
             const auto location = memberAccessBase.m_location;
-            m_colorOut->writePrefixedMessage(QString::fromLatin1("unqualified access at %1:%2:%3\n")
-                           .arg(m_fileName)
-                           .arg(location.startLine).arg(location.startColumn),
-                           Warning);
+
+            if (baseIsPrefixed) {
+                m_colorOut->writePrefixedMessage(
+                            QString::fromLatin1("type not found in namespace at %1:%2:%3\n")
+                               .arg(m_fileName)
+                               .arg(location.startLine).arg(location.startColumn),
+                               Warning);
+            } else {
+                m_colorOut->writePrefixedMessage(
+                            QString::fromLatin1("unqualified access at %1:%2:%3\n")
+                               .arg(m_fileName)
+                               .arg(location.startLine).arg(location.startColumn),
+                               Warning);
+            }
 
             printContext(m_code, m_colorOut, location);
 

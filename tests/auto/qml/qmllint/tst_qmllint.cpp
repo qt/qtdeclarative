@@ -273,6 +273,10 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("badScript.qml")
             << QString("Warning: Property \"stuff\" not found on type \"Empty\"")
             << QString();
+    QTest::newRow("brokenNamespace")
+            << QStringLiteral("brokenNamespace.qml")
+            << QString("Warning: type not found in namespace at %1:4:17")
+            << QString();
 }
 
 void TestQmllint::dirtyQmlCode()
