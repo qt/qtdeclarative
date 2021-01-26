@@ -269,6 +269,10 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("badAliasObject.qml")
             << QString("Warning: Property \"wrongwrongwrong\" not found on type \"QtObject\"")
             << QString();
+    QTest::newRow("badScript")
+            << QStringLiteral("badScript.qml")
+            << QString("Warning: Property \"stuff\" not found on type \"Empty\"")
+            << QString();
 }
 
 void TestQmllint::dirtyQmlCode()

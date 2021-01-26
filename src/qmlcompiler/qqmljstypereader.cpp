@@ -55,13 +55,16 @@ QQmlJSScope::Ptr QQmlJSTypeReader::operator()()
     const bool isESModule = lowerSuffix == QLatin1String("mjs");
     const bool isJavaScript = isESModule || lowerSuffix == QLatin1String("js");
 
-    QFile file(m_file);
-    if (!file.open(QFile::ReadOnly)) {
+    auto errorResult = [&](){
         QQmlJSScope::Ptr result = QQmlJSScope::create(
                     isJavaScript ? QQmlJSScope::JSLexicalScope : QQmlJSScope::QMLScope);
         result->setInternalName(scopeName);
         return result;
-    }
+    };
+
+    QFile file(m_file);
+    if (!file.open(QFile::ReadOnly))
+        return errorResult();
 
     QString code = QString::fromUtf8(file.readAll());
     file.close();
@@ -72,14 +75,13 @@ QQmlJSScope::Ptr QQmlJSTypeReader::operator()()
     const bool success = isJavaScript ? (isESModule ? parser.parseModule()
                                                     : parser.parseProgram())
                                       : parser.parse();
-    if (!success) {
-        QQmlJSScope::Ptr result = QQmlJSScope::create(
-                    isJavaScript ? QQmlJSScope::JSLexicalScope : QQmlJSScope::QMLScope);
-        result->setInternalName(scopeName);
-        return result;
-    }
+    if (!success)
+        return errorResult();
 
     QQmlJS::AST::Node *rootNode = parser.rootNode();
+    if (!rootNode)
+        return errorResult();
+
     QQmlJSImportVisitor membersVisitor(m_importer, QFileInfo(m_file).canonicalPath(),
                                        m_qmltypesFiles);
     rootNode->accept(&membersVisitor);
