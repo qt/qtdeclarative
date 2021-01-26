@@ -184,7 +184,7 @@ void QSGRhiTextureGlyphCache::prepareGlyphImage(QImage *img)
     }
 }
 
-void QSGRhiTextureGlyphCache::fillTexture(const Coord &c, glyph_t glyph, QFixed subPixelPosition)
+void QSGRhiTextureGlyphCache::fillTexture(const Coord &c, glyph_t glyph, const QFixedPoint &subPixelPosition)
 {
     QRhiTextureSubresourceUploadDescription subresDesc;
     QImage mask;

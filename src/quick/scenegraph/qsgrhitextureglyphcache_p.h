@@ -66,7 +66,7 @@ public:
     void createTextureData(int width, int height) override;
     void resizeTextureData(int width, int height) override;
     void beginFillTexture() override;
-    void fillTexture(const Coord &c, glyph_t glyph, QFixed subPixelPosition) override;
+    void fillTexture(const Coord &c, glyph_t glyph, const QFixedPoint &subPixelPosition) override;
     void endFillTexture() override;
     int glyphPadding() const override;
     int maxTextureWidth() const override;

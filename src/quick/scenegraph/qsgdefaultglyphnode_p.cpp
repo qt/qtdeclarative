@@ -488,14 +488,15 @@ void QSGTextMaskMaterial::populate(const QPointF &p,
     Q_ASSERT(geometry->sizeOfVertex() == sizeof(QVector4D));
     ushort *ip = geometry->indexDataAsUShort();
 
-    bool supportsSubPixelPositions = fontD->fontEngine->supportsSubPixelPositions();
+    bool supportsSubPixelPositions = fontD->fontEngine->supportsHorizontalSubPixelPositions();
     for (int i=0; i<glyphIndexes.size(); ++i) {
          QPointF glyphPosition = glyphPositions.at(i) + position;
          QFixed subPixelPosition;
          if (supportsSubPixelPositions)
              subPixelPosition = fontD->fontEngine->subPixelPositionForX(QFixed::fromReal(glyphPosition.x()));
 
-         QTextureGlyphCache::GlyphAndSubPixelPosition glyph(glyphIndexes.at(i), subPixelPosition);
+         QTextureGlyphCache::GlyphAndSubPixelPosition glyph(glyphIndexes.at(i),
+                                                            QFixedPoint(subPixelPosition, 0));
          const QTextureGlyphCache::Coord &c = cache->coords.value(glyph);
 
          // On a retina screen the glyph positions are not pre-scaled (as opposed to
