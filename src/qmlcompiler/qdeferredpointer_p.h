@@ -77,11 +77,7 @@ public:
 
     operator QSharedPointer<T>() const
     {
-        if (m_factory && m_factory->isValid()) {
-            Factory localFactory;
-            std::swap(localFactory, *m_factory); // Swap before executing, to avoid recursion
-            const_cast<std::remove_const_t<T> &>(*m_data) = localFactory.create();
-        }
+        lazyLoad();
         return m_data;
     }
 
@@ -90,7 +86,12 @@ public:
     T &operator*() const { return QSharedPointer<T>(*this).operator*(); }
     T *operator->() const { return QSharedPointer<T>(*this).operator->(); }
 
-    bool isNull() const { return m_data.isNull(); }
+    bool isNull() const
+    {
+        lazyLoad();
+        return m_data.isNull();
+    }
+
     explicit operator bool() const noexcept { return !isNull(); }
     bool operator !() const noexcept { return isNull(); }
 
@@ -98,11 +99,14 @@ public:
 
     friend size_t qHash(const QDeferredSharedPointer &ptr, size_t seed = 0)
     {
+        ptr.lazyLoad();
         return qHashMulti(seed, ptr.m_factory, ptr.m_data);
     }
 
     friend bool operator==(const QDeferredSharedPointer &a, const QDeferredSharedPointer &b)
     {
+        a.lazyLoad();
+        b.lazyLoad();
         return a.m_factory == b.m_factory && a.m_data == b.m_data;
     }
 
@@ -113,6 +117,15 @@ public:
 
 private:
     friend class QDeferredWeakPointer<T>;
+
+    void lazyLoad() const
+    {
+        if (m_factory && m_factory->isValid()) {
+            Factory localFactory;
+            std::swap(localFactory, *m_factory); // Swap before executing, to avoid recursion
+            const_cast<std::remove_const_t<T> &>(*m_data) = localFactory.create();
+        }
+    }
 
     QSharedPointer<T> m_data;
     QSharedPointer<Factory> m_factory;
@@ -137,15 +150,7 @@ public:
 
     operator QWeakPointer<T>() const
     {
-        if (m_factory) {
-            auto factory = m_factory.toStrongRef();
-            if (factory->isValid()) {
-                Factory localFactory;
-                std::swap(localFactory, *factory); // Swap before executing, to avoid recursion
-                const_cast<std::remove_const_t<T> &>(*(m_data.toStrongRef()))
-                        = localFactory.create();
-            }
-        }
+        lazyLoad();
         return m_data;
     }
 
@@ -161,7 +166,12 @@ public:
         return QWeakPointer<T>(*this).toStrongRef();
     }
 
-    bool isNull() const { return m_data.isNull(); }
+    bool isNull() const
+    {
+        lazyLoad();
+        return m_data.isNull();
+    }
+
     explicit operator bool() const noexcept { return !isNull(); }
     bool operator !() const noexcept { return isNull(); }
 
@@ -169,11 +179,14 @@ public:
 
     friend size_t qHash(const QDeferredWeakPointer &ptr, size_t seed = 0)
     {
+        ptr.lazyLoad();
         return qHashMulti(seed, ptr.m_factory, ptr.m_data);
     }
 
     friend bool operator==(const QDeferredWeakPointer &a, const QDeferredWeakPointer &b)
     {
+        a.lazyLoad();
+        b.lazyLoad();
         return a.m_factory == b.m_factory && a.m_data == b.m_data;
     }
 
@@ -183,6 +196,19 @@ public:
     }
 
 private:
+    void lazyLoad() const
+    {
+        if (m_factory) {
+            auto factory = m_factory.toStrongRef();
+            if (factory->isValid()) {
+                Factory localFactory;
+                std::swap(localFactory, *factory); // Swap before executing, to avoid recursion
+                const_cast<std::remove_const_t<T> &>(*(m_data.toStrongRef()))
+                        = localFactory.create();
+            }
+        }
+    }
+
     QWeakPointer<T> m_data;
     QWeakPointer<Factory> m_factory;
 };
