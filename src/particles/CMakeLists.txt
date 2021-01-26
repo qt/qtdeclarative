@@ -27,7 +27,6 @@ qt_internal_add_module(QuickParticles
         qquickparticleflatset_p.h
         qquickparticlegroup.cpp qquickparticlegroup_p.h
         qquickparticlepainter.cpp qquickparticlepainter_p.h
-        qquickparticlesmodule.cpp qquickparticlesmodule_p.h
         qquickparticlesystem.cpp qquickparticlesystem_p.h
         qquickpointattractor.cpp qquickpointattractor_p.h
         qquickpointdirection.cpp qquickpointdirection_p.h

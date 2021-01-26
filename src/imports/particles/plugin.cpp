@@ -40,26 +40,20 @@
 #include <QtQml/qqmlextensionplugin.h>
 #include <QtQml/qqml.h>
 
-#include <private/qquickparticlesmodule_p.h>
+#include <private/qtquickparticlesglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
 //![class decl]
-class QtQuick2ParticlesPlugin : public QQmlExtensionPlugin
+class QtQuick2ParticlesPlugin : public QQmlEngineExtensionPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
+    Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
 public:
-    QtQuick2ParticlesPlugin(QObject *parent = nullptr) : QQmlExtensionPlugin(parent)
+    QtQuick2ParticlesPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent)
     {
         volatile auto registration = &qml_register_types_QtQuick_Particles;
         Q_UNUSED(registration);
-    }
-
-    void registerTypes(const char *uri) override
-    {
-        Q_UNUSED(uri);
-        QQuickParticlesModule::defineModule();
     }
 };
 //![class decl]
