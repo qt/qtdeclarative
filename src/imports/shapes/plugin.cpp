@@ -43,23 +43,19 @@
 
 QT_BEGIN_NAMESPACE
 
-class QmlShapesPlugin : public QQmlExtensionPlugin
+class QmlShapesPlugin : public QQmlEngineExtensionPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
+    Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
 
 public:
     QmlShapesPlugin(QObject *parent = nullptr)
-        : QQmlExtensionPlugin(parent)
+        : QQmlEngineExtensionPlugin(parent)
     {
         volatile auto registration = &qml_register_types_QtQuick_Shapes;
+        volatile auto initialize = &QQuickShapes_initializeModule;
         Q_UNUSED(registration);
-    }
-
-    void registerTypes(const char *uri) override
-    {
-        Q_UNUSED(uri);
-        QQuickShapesModule::defineModule();
+        Q_UNUSED(initialize);
     }
 };
 

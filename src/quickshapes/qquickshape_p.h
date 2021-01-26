@@ -63,6 +63,8 @@ QT_BEGIN_NAMESPACE
 class QQuickShapePathPrivate;
 class QQuickShapePrivate;
 
+void Q_QUICKSHAPES_PRIVATE_EXPORT QQuickShapes_initializeModule();
+
 class Q_QUICKSHAPES_PRIVATE_EXPORT QQuickShapesModule
 {
 public:

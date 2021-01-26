@@ -72,6 +72,13 @@ Q_LOGGING_CATEGORY(QQSHAPE_LOG_TIME_DIRTY_SYNC, "qt.shape.time.sync")
     \endqml
 */
 
+void QQuickShapes_initializeModule()
+{
+    QQuickShapesModule::defineModule();
+}
+
+Q_CONSTRUCTOR_FUNCTION(QQuickShapes_initializeModule)
+
 void QQuickShapesModule::defineModule()
 {
     initResources();
