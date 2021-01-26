@@ -440,17 +440,33 @@ QString QWavefrontMesh::log() const
 {
     Q_D(const QWavefrontMesh);
     switch (d->lastError) {
-    case NoError: return QStringLiteral("No error");
-    case InvalidSourceError: return QStringLiteral("Error: Invalid source");
-    case UnsupportedFaceShapeError: return QStringLiteral("Error: Unsupported face shape in source");
-    case UnsupportedIndexSizeError: return QStringLiteral("Error: Unsupported index size in source");
-    case FileNotFoundError: return QStringLiteral("Error: File not found");
-    case MissingPositionAttributeError: return QStringLiteral("Error: Missing '%1' attribute").arg(qtPositionAttributeName());
-    case MissingTextureCoordinateAttributeError: return QStringLiteral("Error: Missing '%1' attribute").arg(qtTexCoordAttributeName());
-    case MissingPositionAndTextureCoordinateAttributesError: return QStringLiteral("Error: Missing '%1' and '%2' attributes").arg(qtPositionAttributeName()).arg(qtTexCoordAttributeName());
-    case TooManyAttributesError: return QStringLiteral("Error: Too many attributes");
-    case InvalidPlaneDefinitionError: return QStringLiteral("Error: Invalid plane. V and W must be non-null and cannot be parallel");
-    default: return QStringLiteral("Unknown error");
+    case NoError:
+        return QStringLiteral("No error");
+    case InvalidSourceError:
+        return QStringLiteral("Error: Invalid source");
+    case UnsupportedFaceShapeError:
+        return QStringLiteral("Error: Unsupported face shape in source");
+    case UnsupportedIndexSizeError:
+        return QStringLiteral("Error: Unsupported index size in source");
+    case FileNotFoundError:
+        return QStringLiteral("Error: File not found");
+    case MissingPositionAttributeError:
+        return QStringLiteral("Error: Missing '%1' attribute").arg(
+                    QLatin1String(qtPositionAttributeName()));
+    case MissingTextureCoordinateAttributeError:
+        return QStringLiteral("Error: Missing '%1' attribute").arg(
+                    QLatin1String(qtTexCoordAttributeName()));
+    case MissingPositionAndTextureCoordinateAttributesError:
+        return QStringLiteral("Error: Missing '%1' and '%2' attributes").arg(
+                    QLatin1String(qtPositionAttributeName()),
+                    QLatin1String(qtTexCoordAttributeName()));
+    case TooManyAttributesError:
+        return QStringLiteral("Error: Too many attributes");
+    case InvalidPlaneDefinitionError:
+        return QStringLiteral("Error: Invalid plane. "
+                              "V and W must be non-null and cannot be parallel");
+    default:
+        return QStringLiteral("Unknown error");
     };
 }
 
