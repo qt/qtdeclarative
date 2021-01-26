@@ -93,7 +93,7 @@ class Q_LABSFOLDERMODEL_PRIVATE_EXPORT QQuickFolderListModel : public QAbstractL
 //![class props]
 
     QML_NAMED_ELEMENT(FolderListModel)
-    QML_ADDED_IN_VERSION(2, 0)
+    QML_ADDED_IN_VERSION(1, 0)
 //![abslistmodel]
 public:
     QQuickFolderListModel(QObject *parent = nullptr);
