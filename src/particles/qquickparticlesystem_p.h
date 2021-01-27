@@ -205,6 +205,8 @@ public:
         return m_size;
     }
 
+    bool isActive() { return freeList.count() > 0; }
+
     QString name() const;
 
     void setSize(int newSize);
