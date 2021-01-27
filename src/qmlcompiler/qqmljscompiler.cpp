@@ -36,6 +36,8 @@
 #include <QtCore/qfile.h>
 #include <QtCore/qloggingcategory.h>
 
+#include <limits>
+
 Q_LOGGING_CATEGORY(lcAotCompiler, "qml.compiler.aot", QtWarningMsg);
 
 QT_BEGIN_NAMESPACE
@@ -162,6 +164,34 @@ static bool checkArgumentsObjectUseInSignalHandlers(const QmlIR::Document &doc,
     return true;
 }
 
+class BindingOrFunction
+{
+public:
+    BindingOrFunction(const QmlIR::Binding &b) : m_binding(&b) {}
+    BindingOrFunction(const QmlIR::Function &f) : m_function(&f) {}
+
+    friend bool operator<(const BindingOrFunction &lhs, const BindingOrFunction &rhs)
+    {
+        return lhs.index() < rhs.index();
+    }
+
+    const QmlIR::Binding *binding() const { return m_binding; }
+    const QmlIR::Function *function() const { return m_function; }
+
+    quint32 index() const
+    {
+        return m_binding
+                ? m_binding->value.compiledScriptIndex
+                : (m_function
+                   ? m_function->index
+                   : std::numeric_limits<quint32>::max());
+    }
+
+private:
+    const QmlIR::Binding *m_binding = nullptr;
+    const QmlIR::Function *m_function = nullptr;
+};
+
 bool qCompileQmlFile(const QString &inputFileName, QQmlJSSaveFunction saveFunction,
                      QQmlJSAotCompiler *aotCompiler, QQmlJSCompileError *error)
 {
@@ -224,48 +254,55 @@ bool qCompileQmlFile(const QString &inputFileName, QQmlJSSaveFunction saveFuncti
             }
 
             aotCompiler->setScope(object, scope);
-
             aotFunctionsByIndex[FileScopeCodeIndex] = aotCompiler->globalCode();
 
-            std::for_each(object->bindingsBegin(), object->bindingsEnd(), [&](const QmlIR::Binding &binding) {
-                switch (binding.type) {
-                case QmlIR::Binding::Type_AttachedProperty:
-                case QmlIR::Binding::Type_GroupProperty:
-                    effectiveScopes.insert(irDocument.objects.at(binding.value.objectIndex), scope);
-                    return;
-                case QmlIR::Binding::Type_Boolean:
-                case QmlIR::Binding::Type_Number:
-                case QmlIR::Binding::Type_String:
-                case QmlIR::Binding::Type_Null:
-                    return;
-                default:
-                    break;
+            std::vector<BindingOrFunction> bindingsAndFunctions;
+            bindingsAndFunctions.reserve(object->bindingCount() + object->functionCount());
+
+            std::copy(object->bindingsBegin(), object->bindingsEnd(),
+                      std::back_inserter(bindingsAndFunctions));
+            std::copy(object->functionsBegin(), object->functionsEnd(),
+                      std::back_inserter(bindingsAndFunctions));
+
+            // AOT-compile bindings and functions in the same order as above so that the runtime
+            // class indices match
+            std::sort(bindingsAndFunctions.begin(), bindingsAndFunctions.end());
+            std::for_each(bindingsAndFunctions.begin(), bindingsAndFunctions.end(),
+                          [&](const BindingOrFunction &bindingOrFunction) {
+                std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage> result;
+                if (const auto *binding = bindingOrFunction.binding()) {
+                    switch (binding->type) {
+                    case QmlIR::Binding::Type_AttachedProperty:
+                    case QmlIR::Binding::Type_GroupProperty:
+                        effectiveScopes.insert(
+                                    irDocument.objects.at(binding->value.objectIndex), scope);
+                        return;
+                    case QmlIR::Binding::Type_Boolean:
+                    case QmlIR::Binding::Type_Number:
+                    case QmlIR::Binding::Type_String:
+                    case QmlIR::Binding::Type_Null:
+                        return;
+                    default:
+                        break;
+                    }
+
+                    qCDebug(lcAotCompiler) << "Compiling binding for property"
+                                           << irDocument.stringAt(binding->propertyNameIndex);
+                    result = aotCompiler->compileBinding(*binding);
+                } else if (const auto *function = bindingOrFunction.function()) {
+                    qCDebug(lcAotCompiler) << "Compiling function"
+                                           << irDocument.stringAt(function->nameIndex);
+                    result = aotCompiler->compileFunction(*function);
+                } else {
+                    Q_UNREACHABLE();
                 }
 
-                qCDebug(lcAotCompiler) << "Compiling binding for property"
-                                       << irDocument.stringAt(binding.propertyNameIndex);
-                auto result = aotCompiler->compileBinding(binding);
                 if (auto *error = std::get_if<QQmlJS::DiagnosticMessage>(&result)) {
-                    qCDebug(lcAotCompiler) << "Could not compile binding:"
-                                             << diagnosticErrorMessage(inputFileName, *error);
-                } else if (auto *func = std::get_if<QQmlJSAotFunction>(&result)) {
-                    qCInfo(lcAotCompiler) << "Generated code:" << func->code;
-                    aotFunctionsByIndex[runtimeFunctionIndices[binding.value.compiledScriptIndex]] = *func;
-                }
-            });
-
-            std::for_each(object->functionsBegin(), object->functionsEnd(),
-                          [&](const QmlIR::Function &function) {
-
-                qCDebug(lcAotCompiler) << "Compiling function"
-                                       << irDocument.stringAt(function.nameIndex);
-                auto result = aotCompiler->compileFunction(function);
-                if (auto *error = std::get_if<QQmlJS::DiagnosticMessage>(&result)) {
-                    qCDebug(lcAotCompiler) << "Could not compile function:"
+                    qCDebug(lcAotCompiler) << "Compilation failed:"
                                            << diagnosticErrorMessage(inputFileName, *error);
                 } else if (auto *func = std::get_if<QQmlJSAotFunction>(&result)) {
                     qCInfo(lcAotCompiler) << "Generated code:" << func->code;
-                    aotFunctionsByIndex[runtimeFunctionIndices[function.index]] = *func;
+                    aotFunctionsByIndex[runtimeFunctionIndices[bindingOrFunction.index()]] = *func;
                 }
             });
         }
