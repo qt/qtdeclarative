@@ -1210,6 +1210,7 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_END_INSTR(CmpStrictNotEqual)
 
     MOTH_BEGIN_INSTR(CmpIn)
+        STORE_IP();
         STORE_ACC();
         acc = Runtime::In::call(engine, STACK_VALUE(lhs), accumulator);
         CHECK_EXCEPTION;

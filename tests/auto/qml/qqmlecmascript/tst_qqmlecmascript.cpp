@@ -400,6 +400,7 @@ private slots:
     void proxyIteration();
     void proxyHandlerTraps();
     void gcCrashRegressionTest();
+    void cmpInThrows();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -9691,6 +9692,18 @@ void tst_qqmlecmascript::proxyHandlerTraps()
     QJSEngine engine;
     QJSValue value = engine.evaluate(expression);
     QVERIFY(value.isString() && value.toString() == QStringLiteral("SUCCESS"));
+}
+
+void tst_qqmlecmascript::cmpInThrows()
+{
+    QJSEngine engine;
+    QStringList stacktrace;
+    QJSValue value = engine.evaluate(QStringLiteral("\n\n'foo' in 1"), QStringLiteral("foo.js"), 12,
+                                     &stacktrace);
+    QVERIFY(value.isError());
+    QCOMPARE(value.errorType(), QJSValue::TypeError);
+    QVERIFY(!stacktrace.isEmpty());
+    QCOMPARE(stacktrace.at(0), QStringLiteral("%entry:14:-1:file:foo.js"));
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

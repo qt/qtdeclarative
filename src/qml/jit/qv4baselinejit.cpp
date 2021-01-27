@@ -829,6 +829,7 @@ void BaselineJIT::generate_CmpStrictNotEqual(int lhs) { as->cmpStrictNotEqual(lh
 
 void BaselineJIT::generate_CmpIn(int lhs)
 {
+    STORE_IP();
     STORE_ACC();
     as->prepareCallWithArgCount(3);
     as->passAccumulatorAsArg(2);
