@@ -58,11 +58,13 @@ depends += \
 
 headerdirs  += ..\
                ../../quick \
-               ../../quickwidgets
+               ../../quickwidgets \
+               ../../qmllocalstorage
 
 sourcedirs  += .. \
                ../../quick \
-               ../../quickwidgets
+               ../../quickwidgets \
+               ../../qmllocalstorage
 
 exampledirs +=  ../../../examples/quick \
                 snippets
