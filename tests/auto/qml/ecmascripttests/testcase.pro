@@ -11,5 +11,5 @@ DEFINES += SRCDIR=\\\"$$PWD\\\"
 # test some of the time.  Fix by raising time-out to 400s when
 # invoking tst_ecmascripttests:
 checkenv.name = QTEST_FUNCTION_TIMEOUT
-checkenv.value = 500000
+checkenv.value = 1000000
 QT_TOOL_ENV += checkenv
