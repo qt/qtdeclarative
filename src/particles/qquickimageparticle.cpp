@@ -1132,6 +1132,7 @@ QQuickImageParticle::QQuickImageParticle(QQuickItem* parent)
     , m_startedImageLoading(0)
     , m_rhi(nullptr)
     , m_apiChecked(false)
+    , m_previousActive(false)
 {
     setFlag(ItemHasContents);
 }
@@ -1960,11 +1961,13 @@ QSGNode *QQuickImageParticle::updatePaintNode(QSGNode *node, UpdatePaintNodeData
     }
 
     if (m_system && m_system->isRunning() && !m_system->isPaused()){
-        prepareNextFrame(&node);
+        bool dirty = prepareNextFrame(&node);
         if (node) {
             update();
-            foreach (QSGGeometryNode* n, m_nodes)
-                n->markDirty(QSGNode::DirtyGeometry);
+            if (dirty) {
+                foreach (QSGGeometryNode* n, m_nodes)
+                    n->markDirty(QSGNode::DirtyGeometry);
+            }
         } else if (m_startedImageLoading < 2) {
             update();//To call prepareNextFrame() again from the renderThread
         }
@@ -1978,7 +1981,7 @@ QSGNode *QQuickImageParticle::updatePaintNode(QSGNode *node, UpdatePaintNodeData
     return node;
 }
 
-void QQuickImageParticle::prepareNextFrame(QSGNode **node)
+bool QQuickImageParticle::prepareNextFrame(QSGNode **node)
 {
     if (*node == nullptr){//TODO: Staggered loading (as emitted)
         buildParticleNodes(node);
@@ -1994,7 +1997,7 @@ void QQuickImageParticle::prepareNextFrame(QSGNode **node)
             qDebug() << "Total count: " << count;
         }
         if (*node == nullptr)
-            return;
+            return false;
     }
     qint64 timeStamp = m_system->systemSync(this);
 
@@ -2015,8 +2018,23 @@ void QQuickImageParticle::prepareNextFrame(QSGNode **node)
         getState(m_material)->timestamp = time;
         break;
     }
-    foreach (QSGGeometryNode* node, m_nodes)
-        node->markDirty(QSGNode::DirtyMaterial);
+
+    bool active = false;
+    for (auto groupId : groupIds()) {
+        if (m_system->groupData[groupId]->isActive()) {
+            active = true;
+            break;
+        }
+    }
+
+    const bool dirty = active || m_previousActive;
+    if (dirty) {
+        foreach (QSGGeometryNode* node, m_nodes)
+            node->markDirty(QSGNode::DirtyMaterial);
+    }
+
+    m_previousActive = active;
+    return dirty;
 }
 
 void QQuickImageParticle::spritesUpdate(qreal time)
