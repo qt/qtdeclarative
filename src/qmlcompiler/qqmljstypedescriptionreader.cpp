@@ -347,6 +347,9 @@ void QQmlJSTypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQ
             property.setRevision(readIntBinding(script));
         } else if (id == QLatin1String("bindable")) {
             property.setBindable(readStringBinding(script));
+        } else if (id == QLatin1String("read") || id == QLatin1String("write")) {
+            // QQmlJSMetaProperty currently does not make use of the getter and setter name
+            continue;
         } else {
             addWarning(script->firstSourceLocation(),
                        tr("Expected only type, name, revision, isPointer, isReadonly, bindable, and"

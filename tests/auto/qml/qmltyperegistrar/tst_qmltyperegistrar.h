@@ -158,6 +158,7 @@ private slots:
     void initTestCase();
     void qmltypesHasForeign();
     void qmltypesHasHppClassAndNoext();
+    void qmltypesHasReadAndWrite();
     void qmltypesHasFileNames();
     void qmltypesHasFlags();
     void superAndForeignTypes();

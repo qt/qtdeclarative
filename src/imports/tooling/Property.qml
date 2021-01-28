@@ -46,4 +46,6 @@ Member {
     property bool isList: false
     property int revision: 0
     property string bindable
+    property string read
+    property string write
 }

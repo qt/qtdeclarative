@@ -57,6 +57,12 @@ void tst_qmltyperegistrar::qmltypesHasHppClassAndNoext()
     QVERIFY(qmltypesData.contains("Noext"));
 }
 
+void tst_qmltyperegistrar::qmltypesHasReadAndWrite()
+{
+    QVERIFY(qmltypesData.contains(R"(read: "eieiei")"));
+    QVERIFY(qmltypesData.contains(R"(write: "setEieiei")"));
+}
+
 void tst_qmltyperegistrar::qmltypesHasFileNames()
 {
     QVERIFY(qmltypesData.contains("file: \"hppheader.hpp\""));
@@ -79,8 +85,8 @@ void tst_qmltyperegistrar::superAndForeignTypes()
     QVERIFY(qmltypesData.contains("values: [\"Pixel\", \"Centimeter\", \"Inch\", \"Point\"]"));
     QVERIFY(qmltypesData.contains("name: \"SizeGadget\""));
     QVERIFY(qmltypesData.contains("prototype: \"SizeEnums\""));
-    QVERIFY(qmltypesData.contains("Property { name: \"height\"; type: \"int\" }"));
-    QVERIFY(qmltypesData.contains("Property { name: \"width\"; type: \"int\" }"));
+    QVERIFY(qmltypesData.contains("Property { name: \"height\"; type: \"int\"; read: \"height\"; write: \"setHeight\" }"));
+    QVERIFY(qmltypesData.contains("Property { name: \"width\"; type: \"int\"; read: \"width\"; write: \"setWidth\" }"));
     QVERIFY(qmltypesData.contains("Method { name: \"sizeToString\"; type: \"QString\" }"));
     QVERIFY(qmltypesData.contains("extension: \"SizeValueType\""));
 }

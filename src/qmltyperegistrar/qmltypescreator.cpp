@@ -178,6 +178,12 @@ void QmlTypesCreator::writeProperties(const QJsonArray &properties, QSet<QString
         if (bindable != obj.constEnd())
             m_qml.writeScriptBinding(QLatin1String("bindable"), enquote(bindable->toString()));
         writeType(obj, QLatin1String("type"), !obj.contains(QLatin1String("write")), true);
+        const auto read = obj.constFind(QLatin1String("read"));
+        if (read != obj.constEnd())
+             m_qml.writeScriptBinding(QLatin1String("read"), enquote(read->toString()));
+        const auto write = obj.constFind(QLatin1String("write"));
+        if (write != obj.constEnd())
+             m_qml.writeScriptBinding(QLatin1String("write"), enquote(write->toString()));
         m_qml.writeEndObject();
 
         const QString notify = obj[QLatin1String("notify")].toString();
