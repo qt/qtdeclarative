@@ -165,6 +165,7 @@ void QQuickItemParticle::give(QQuickItem *item)
             if (data->delegate == item){
                 m_deletables << item;
                 data->delegate = nullptr;
+                m_system->groupData[groupId]->kill(data);
                 return;
             }
         }

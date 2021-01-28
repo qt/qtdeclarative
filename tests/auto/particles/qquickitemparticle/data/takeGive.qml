@@ -65,9 +65,10 @@ Rectangle {
         }
 
         Emitter{
+            objectName: "emitter"
             //0,0 position
             size: 32
-            emitRate: 1000
+            emitRate: 0
             lifeSpan: Emitter.InfiniteLife
         }
     }
