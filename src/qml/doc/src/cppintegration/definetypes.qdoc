@@ -331,6 +331,32 @@ accessed, the corresponding property on the extension object is used instead.
 The \l{Extending QML - Extension Objects Example}{Extension Objects Example}
 demonstrates a usage of extension objects.
 
+\section2 Registering Foreign Types
+
+There may be C++ types that cannot be modified to hold the above mentioned
+macros. Those may be types from 3rdparty libraries, or types that need to
+fulfill some contract that contradicts the presence of those macros. You can
+still expose those types to QML, though, using the QML_FOREIGN macro. In order
+to do this, create a separate struct that consists entirely of the registration
+macros, like this:
+
+\code
+// Contains class Immutable3rdParty
+#include <3rdpartyheader.h>
+
+struct Foreign
+{
+    Q_GADGET
+    QML_FOREIGN(Immutable3rdParty)
+    QML_NAMED_ELEMENT(Accessible3rdParty)
+    QML_ADDED_IN_VERSION(2, 4)
+    // QML_EXTENDED, QML_SINGLETON ...
+};
+\endcode
+
+From this code, you get a QML type with the methods and properties of
+Immutable3rdParty, and the QML traits (e.g.: singleton, extended) specified in
+Foreign.
 
 \section1 Defining QML-Specific Types and Attributes
 
