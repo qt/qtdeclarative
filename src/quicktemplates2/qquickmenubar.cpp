@@ -181,7 +181,7 @@ void QQuickMenuBarPrivate::onItemHovered()
 {
     Q_Q(QQuickMenuBar);
     QQuickMenuBarItem *item = qobject_cast<QQuickMenuBarItem *>(q->sender());
-    if (!item || item == currentItem || !item->isHovered() || QQuickMenuBarItemPrivate::get(item)->touchId != -1)
+    if (!item || item == currentItem || !item->isHovered() || !item->isEnabled() || QQuickMenuBarItemPrivate::get(item)->touchId != -1)
         return;
 
     activateItem(item);
@@ -204,7 +204,7 @@ void QQuickMenuBarPrivate::onItemTriggered()
 
 void QQuickMenuBarPrivate::onMenuAboutToHide()
 {
-    if (triggering || !currentItem || currentItem->isHovered() || !currentItem->isHighlighted())
+    if (triggering || !currentItem || (currentItem->isHovered() && currentItem->isEnabled()) || !currentItem->isHighlighted())
         return;
 
     popupMode = false;

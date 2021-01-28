@@ -477,7 +477,7 @@ void QQuickMenuPrivate::onItemHovered()
 {
     Q_Q(QQuickMenu);
     QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton *>(q->sender());
-    if (!button || !button->isHovered() || QQuickAbstractButtonPrivate::get(button)->touchId != -1)
+    if (!button || !button->isHovered() || !button->isEnabled() || QQuickAbstractButtonPrivate::get(button)->touchId != -1)
         return;
 
     QQuickMenuItem *oldCurrentItem = currentItem;

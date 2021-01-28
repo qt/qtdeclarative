@@ -384,7 +384,7 @@ void QQuickComboBoxPrivate::itemHovered()
         return;
 
     QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton *>(q->sender());
-    if (!button || !button->isHovered() || QQuickAbstractButtonPrivate::get(button)->touchId != -1)
+    if (!button || !button->isHovered() || !button->isEnabled() || QQuickAbstractButtonPrivate::get(button)->touchId != -1)
         return;
 
     int index = delegateModel->indexOf(button, nullptr);
