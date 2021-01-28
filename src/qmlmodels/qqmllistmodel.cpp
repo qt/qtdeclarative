@@ -281,6 +281,8 @@ StringOrTranslation::~StringOrTranslation()
 void StringOrTranslation::setString(const QString &s)
 {
     clear();
+    if (s.isEmpty())
+        return;
     QString mutableString(s);
     QString::DataPointer dataPointer = mutableString.data_ptr();
     arrayData = dataPointer->d_ptr();
