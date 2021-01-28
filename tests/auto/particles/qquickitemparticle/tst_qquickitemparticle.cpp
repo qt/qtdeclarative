@@ -29,6 +29,7 @@
 #include <QtTest/QtTest>
 #include "../shared/particlestestsshared.h"
 #include <private/qquickparticlesystem_p.h>
+#include <private/qquickparticleemitter_p.h>
 #include <private/qquickimage_p.h>
 #include <private/qabstractanimation_p.h>
 
@@ -114,11 +115,14 @@ void tst_qquickitemparticle::test_takeGive()
 {
     QQuickView* view = createView(testFileUrl("takeGive.qml"), 500);
     QQuickParticleSystem* system = view->rootObject()->findChild<QQuickParticleSystem*>("system");
+    QQuickParticleEmitter* emitter = view->rootObject()->findChild<QQuickParticleEmitter*>("emitter");
     QMetaObject::invokeMethod(view->rootObject(), "takeItems");
+    emitter->burst(100);
     ensureAnimTime(1000, system->m_animation);
     QVERIFY(system->property("acc").toInt() == 100);
     QMetaObject::invokeMethod(view->rootObject(), "giveItems");
     QTRY_VERIFY(system->property("acc").toInt() == 0);
+    QTRY_VERIFY(system->isEmpty() == true);
     delete view;
 }
 
