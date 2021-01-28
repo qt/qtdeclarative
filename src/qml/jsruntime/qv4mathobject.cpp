@@ -474,11 +474,14 @@ ReturnedValue MathObject::method_random(const FunctionObject *, const Value *, c
 ReturnedValue MathObject::method_round(const FunctionObject *, const Value *, const Value *argv, int argc)
 {
     double v = argc ? argv[0].toNumber() : qt_qnan();
-    if (std::isnan(v) || qt_is_inf(v) || qIsNull(v))
+    if (!std::isfinite(v))
         RETURN_RESULT(Encode(v));
 
-     v = copySign(std::floor(v + 0.5), v);
-     RETURN_RESULT(Encode(v));
+    if (v < 0.5 && v >= -0.5)
+        v = std::copysign(0.0, v);
+    else
+        v = std::floor(v + 0.5);
+    RETURN_RESULT(Encode(v));
 }
 
 ReturnedValue MathObject::method_sign(const FunctionObject *, const Value *, const Value *argv, int argc)
