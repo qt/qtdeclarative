@@ -1348,7 +1348,7 @@ Module {
 
         Method {
             name: "setDate"
-            type: "date"
+            type: "Date"
 
             Parameter {
                 name: "date"
@@ -1359,7 +1359,7 @@ Module {
 
         Method {
             name: "setFullYear"
-            type: "date"
+            type: "Date"
 
             Parameter {
                 name: "year"
@@ -1380,7 +1380,7 @@ Module {
 
         Method {
             name: "setHours"
-            type: "date"
+            type: "Date"
 
             Parameter {
                 name: "hour"
@@ -1406,7 +1406,7 @@ Module {
 
         Method {
             name: "setMilliseconds"
-            type: "date"
+            type: "Date"
 
             Parameter {
                 name: "ms"
@@ -1417,7 +1417,7 @@ Module {
 
         Method {
             name: "setMinutes"
-            type: "date"
+            type: "Date"
 
             Parameter {
                 name: "min"
@@ -1438,7 +1438,7 @@ Module {
 
         Method {
             name: "setMonth"
-            type: "date"
+            type: "Date"
 
             Parameter {
                 name: "month"
@@ -1454,7 +1454,7 @@ Module {
 
         Method {
             name: "setSeconds"
-            type: "date"
+            type: "Date"
 
             Parameter {
                 name: "seconds"
@@ -1470,7 +1470,7 @@ Module {
 
         Method {
             name: "setTime"
-            type: "date"
+            type: "Date"
 
             Parameter {
                 name: "time"
@@ -1481,7 +1481,7 @@ Module {
 
         Method {
             name: "setUTCDate"
-            type: "date"
+            type: "Date"
 
             Parameter {
                 name: "date"
@@ -1492,7 +1492,7 @@ Module {
 
         Method {
             name: "setUTCFullYear"
-            type: "date"
+            type: "Date"
 
             Parameter {
                 name: "year"
@@ -1513,7 +1513,7 @@ Module {
 
         Method {
             name: "setUTCHours"
-            type: "date"
+            type: "Date"
 
             Parameter {
                 name: "hour"
@@ -1539,7 +1539,7 @@ Module {
 
         Method {
             name: "setUTCMilliseconds"
-            type: "date"
+            type: "Date"
 
             Parameter {
                 name: "ms"
@@ -1550,7 +1550,7 @@ Module {
 
         Method {
             name: "setUTCMinutes"
-            type: "date"
+            type: "Date"
 
             Parameter {
                 name: "min"
@@ -1571,7 +1571,7 @@ Module {
 
         Method {
             name: "setUTCMonth"
-            type: "date"
+            type: "Date"
 
             Parameter {
                 name: "month"
@@ -1587,7 +1587,7 @@ Module {
 
         Method {
             name: "setUTCSeconds"
-            type: "date"
+            type: "Date"
 
             Parameter {
                 name: "seconds"
@@ -1703,14 +1703,18 @@ Module {
 
         Method {
             name: "valueOf"
-            type: "date"
+            type: "Date"
         }
 
     }
 
     Component {
-        name: "date"
+        name: "Date"
         prototype: "DatePrototype"
+    }
+
+    Component {
+        name: "QDateTime"
         exports: ["QML/date 1.0"]
         exportMetaObjectRevisions: [256]
         accessSemantics: "value"
