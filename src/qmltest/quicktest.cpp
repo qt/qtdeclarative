@@ -309,14 +309,17 @@ private:
 
         if (!object) // Start at root of compilation unit if not enumerating a specific child
             object = compilationUnit->objectAt(0);
+        if (object->flags & Object::IsInlineComponentRoot)
+            return result;
 
         if (const auto superTypeUnit = compilationUnit->resolvedTypes.value(
                     object->inheritedTypeNameIndex)->compilationUnit()) {
             // We have a non-C++ super type, which could indicate we're a subtype of a TestCase
             if (testCaseType.isValid() && superTypeUnit->url() == testCaseType.sourceUrl())
                 result.isTestCase = true;
-            else
+            else if (superTypeUnit->url() != compilationUnit->url()) { // urls are the same for inline component, avoid infinite recursion
                 result = enumerateTestCases(superTypeUnit);
+            }
 
             if (result.isTestCase) {
                 // Look for override of name in this type
