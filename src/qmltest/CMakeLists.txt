@@ -43,13 +43,6 @@ qt_internal_add_module(QuickTest
 ## Scopes:
 #####################################################################
 
-qt_internal_extend_target(QuickTest CONDITION TARGET Qt::Widgets
-    DEFINES
-        QT_QMLTEST_WITH_WIDGETS
-    PUBLIC_LIBRARIES
-        Qt::Widgets
-)
-
 qt_internal_extend_target(QuickTest CONDITION QT_FEATURE_qml_debug
     DEFINES
         QT_QML_DEBUG_NO_WARNING
