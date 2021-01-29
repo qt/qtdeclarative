@@ -3,4 +3,5 @@ SUBDIRS = \
     polish \
     signalspy \
     quicktestmainwithsetup \
-    testfiltering
+    testfiltering \
+    testwithcomponents
