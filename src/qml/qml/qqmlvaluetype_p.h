@@ -153,6 +153,7 @@ struct Q_QML_PRIVATE_EXPORT QQmlPointValueType
     QML_ANONYMOUS
     QML_FOREIGN(QPoint)
     QML_ADDED_IN_VERSION(2, 0)
+    QML_EXTENDED(QQmlPointValueType)
 
 public:
     Q_INVOKABLE QString toString() const;
@@ -190,6 +191,7 @@ struct Q_QML_PRIVATE_EXPORT QQmlSizeValueType
     QML_ANONYMOUS
     QML_FOREIGN(QSize)
     QML_ADDED_IN_VERSION(2, 0)
+    QML_EXTENDED(QQmlSizeValueType)
 
 public:
     Q_INVOKABLE QString toString() const;
@@ -249,6 +251,7 @@ struct Q_QML_PRIVATE_EXPORT QQmlRectValueType
     QML_ANONYMOUS
     QML_FOREIGN(QRect)
     QML_ADDED_IN_VERSION(2, 0)
+    QML_EXTENDED(QQmlRectValueType)
 
 public:
     Q_INVOKABLE QString toString() const;
@@ -313,6 +316,7 @@ struct Q_QML_PRIVATE_EXPORT QQmlEasingValueType
     QML_ANONYMOUS
     QML_FOREIGN(QEasingCurve)
     QML_ADDED_IN_VERSION(2, 0)
+    QML_EXTENDED(QQmlEasingValueType)
 
     Q_PROPERTY(QQmlEasingEnums::Type type READ type WRITE setType FINAL)
     Q_PROPERTY(qreal amplitude READ amplitude WRITE setAmplitude FINAL)
@@ -343,6 +347,7 @@ struct Q_QML_PRIVATE_EXPORT QQmlPropertyValueType
     QML_ANONYMOUS
     QML_FOREIGN(QQmlProperty)
     QML_ADDED_IN_VERSION(2, 15)
+    QML_EXTENDED(QQmlPropertyValueType)
 
 public:
     QObject *object() const;
