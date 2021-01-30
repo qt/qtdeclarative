@@ -72,7 +72,9 @@
 #include <QtQuick/QSGRendererInterface>
 
 #ifdef Q_OS_WIN
+#if QT_CONFIG(messagebox)
 #  include <QtWidgets/QMessageBox>
+#endif
 #  include <QtCore/QLibraryInfo>
 #  include <QtCore/qt_windows.h>
 #endif
@@ -922,7 +924,7 @@ void QQuickWidgetPrivate::handleContextCreationFailure(const QSurfaceFormat &)
     if (signalConnected)
         emit q->sceneGraphError(QQuickWindow::ContextNotAvailable, translatedMessage);
 
-#if defined(Q_OS_WIN)
+#if defined(Q_OS_WIN) && QT_CONFIG(messagebox)
     if (!signalConnected && !QLibraryInfo::isDebugBuild() && !GetConsoleWindow())
         QMessageBox::critical(q, QCoreApplication::applicationName(), translatedMessage);
 #endif // Q_OS_WIN
