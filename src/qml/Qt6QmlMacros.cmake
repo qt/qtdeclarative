@@ -818,7 +818,10 @@ function(qt6_qml_type_registration target)
         file(TO_NATIVE_PATH "${${PROJECT_NAME}_BINARY_DIR}/bin$<SEMICOLON>${CMAKE_INSTALL_PREFIX}/${INSTALL_BINDIR}$<SEMICOLON>%PATH%" env_path_native)
         set(extra_env_command COMMAND set \"PATH=${env_path_native}\")
     endif()
-    add_custom_command(OUTPUT ${type_registration_cpp_file}
+    add_custom_command(
+        OUTPUT
+            ${type_registration_cpp_file}
+            ${plugin_types_file}
         DEPENDS
             ${foreign_types_file}
             ${target_metatypes_json_file}
@@ -1007,8 +1010,12 @@ function(_qt_internal_quick_compiler_process_resources target resource_name)
                 DEPENDS
                     $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmlcachegen>
                     "${file_absolute}"
+                    "$<$<BOOL:${qmltypes}>:${qmltypes}>"
             )
             target_sources(${target} PRIVATE ${compiled_file})
+            set_source_files_properties(${compiled_file} PROPERTIES
+                SKIP_AUTOGEN ON
+            )
         endforeach()
 
         set(qmlcache_loader_list "${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache/${resource_name}/qml_loader_file_list.rsp")
