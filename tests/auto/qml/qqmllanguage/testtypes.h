@@ -1638,6 +1638,68 @@ private:
     WrapperSingleton() = default;
 };
 
+class ExtensionA : public QObject
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+    Q_PROPERTY(int a READ a CONSTANT)
+    Q_PROPERTY(int c READ c CONSTANT)
+    Q_PROPERTY(int d READ d CONSTANT)
+    Q_PROPERTY(int f READ f CONSTANT)
+    Q_PROPERTY(int g READ g CONSTANT)
+public:
+    ExtensionA(QObject *parent = nullptr) : QObject(parent) {}
+    int a() const { return 'a'; }
+    int c() const { return 11; }
+    int d() const { return 21; }
+    int f() const { return 31; }
+    int g() const { return 41; }
+};
+
+class ExtensionB : public QObject
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+    Q_PROPERTY(int b READ b CONSTANT)
+    Q_PROPERTY(int c READ c CONSTANT)
+    Q_PROPERTY(int d READ d CONSTANT)
+public:
+    ExtensionB(QObject *parent = nullptr) : QObject(parent) {}
+    int b() const { return 'b'; }
+    int c() const { return 12; }
+    int d() const { return 22; }
+};
+
+class MultiExtensionParent : public QObject
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+    QML_EXTENDED(ExtensionA)
+    Q_PROPERTY(int p READ p CONSTANT)
+    Q_PROPERTY(int c READ c CONSTANT)
+    Q_PROPERTY(int f READ f CONSTANT)
+public:
+    MultiExtensionParent(QObject *parent = nullptr) : QObject(parent) {}
+    int p() const { return 'p'; }
+    int c() const { return 13; }
+    int f() const { return 33; }
+};
+
+class MultiExtension : public MultiExtensionParent
+{
+    Q_OBJECT
+    QML_ELEMENT
+    QML_EXTENDED(ExtensionB)
+    Q_PROPERTY(int e READ e CONSTANT)
+    Q_PROPERTY(int c READ c CONSTANT)
+    Q_PROPERTY(int g READ g CONSTANT)
+public:
+    MultiExtension(QObject *parent = nullptr) : MultiExtensionParent(parent) {}
+    int e() const { return 'e'; }
+    int c() const { return 14; }
+    int g() const { return 44; }
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H

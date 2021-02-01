@@ -41,20 +41,14 @@ QT_BEGIN_NAMESPACE
 template<typename Action>
 static bool searchBaseAndExtensionTypes(const QQmlJSScope *type, const Action &check)
 {
-    const QQmlJSScope *nonCompositeBase = nullptr;
     for (const QQmlJSScope *scope = type; scope; scope = scope->baseType().data()) {
-        if (check(scope))
-            return true;
+        // Extensions override their base types
+        for (const QQmlJSScope *extension = scope->extensionType().data(); extension;
+             extension = extension->baseType().data()) {
+            if (check(extension))
+                return true;
+        }
 
-        if (!nonCompositeBase && !scope->isComposite())
-            nonCompositeBase = scope;
-    }
-
-    if (!nonCompositeBase)
-        return false;
-
-    for (const QQmlJSScope *scope = nonCompositeBase->extensionType().data(); scope;
-         scope = scope->baseType().data()) {
         if (check(scope))
             return true;
     }
@@ -263,23 +257,7 @@ void QQmlJSScope::resolveGroupedScopes()
             return false;
         };
 
-        const QQmlJSScope *nonCompositeBase = isComposite() ? this : nullptr;
-        for (const QQmlJSScope *type = this; type; type = type->baseType().data()) {
-            if (findProperty(type))
-                break;
-
-            if (!nonCompositeBase && !type->isComposite())
-                nonCompositeBase = type;
-        }
-
-        if (!childScope->m_baseType && nonCompositeBase && nonCompositeBase != this) {
-            for (const QQmlJSScope *type = nonCompositeBase->extensionType().data(); type;
-                 type = type->baseType().data()) {
-                if (findProperty(type))
-                    break;
-            }
-        }
-
+        searchBaseAndExtensionTypes(this, findProperty);
         childScope->resolveGroupedScopes();
     }
 }

@@ -76,18 +76,13 @@ void CheckIdentifiers::printContext(
                            + QLatin1Char('\n'), Normal);
 }
 
-static bool walkViaParentAndAttachedScopes(QQmlJSScope::ConstPtr rootType,
-                                           std::function<bool(QQmlJSScope::ConstPtr)> visit)
+template<typename Visitor>
+static bool walkRelatedScopes(QQmlJSScope::ConstPtr rootType, const Visitor &visit)
 {
     if (rootType.isNull())
         return false;
     std::stack<QQmlJSScope::ConstPtr> stack;
     stack.push(rootType);
-
-    if (!rootType->isComposite()) {
-        if (auto extension = rootType->extensionType())
-            stack.push(extension);
-    }
 
     while (!stack.empty()) {
         const auto type = stack.top();
@@ -96,17 +91,17 @@ static bool walkViaParentAndAttachedScopes(QQmlJSScope::ConstPtr rootType,
         if (visit(type))
             return true;
 
-        if (auto superType = type->baseType()) {
-            stack.push(superType);
-            if (type->isComposite() && !superType->isComposite()) {
-                if (auto extension = superType->extensionType())
-                    stack.push(extension);
-            }
-        }
-
         if (auto attachedType = type->attachedType())
             stack.push(attachedType);
+
+        if (auto baseType = type->baseType())
+            stack.push(baseType);
+
+        // Push extension type last. It overrides the base type.
+        if (auto extensionType = type->extensionType())
+            stack.push(extensionType);
     }
+
     return false;
 }
 
@@ -233,7 +228,7 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
             rootType = scope;
 
         bool typeFound =
-                walkViaParentAndAttachedScopes(rootType, [&](QQmlJSScope::ConstPtr type) {
+                walkRelatedScopes(rootType, [&](QQmlJSScope::ConstPtr type) {
                     const auto typeProperties = type->ownProperties();
                     const auto typeIt = typeProperties.find(access.m_name);
                     if (typeIt != typeProperties.end()) {

@@ -153,7 +153,8 @@
 
 #define QML_IMPLEMENTS_INTERFACES(INTERFACES) \
     Q_INTERFACES(INTERFACES) \
-    enum class QmlIsInterface {yes = false};
+    enum class QmlIsInterface {yes = false}; \
+    template<typename, typename> friend struct QML_PRIVATE_NAMESPACE::QmlInterface;
 
 #define QML_UNAVAILABLE \
     QML_FOREIGN(QQmlTypeNotAvailable)

@@ -347,6 +347,8 @@ private slots:
     void extendedSingleton();
     void qtbug_85932();
 
+    void multiExtension();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -6126,6 +6128,25 @@ void tst_qqmllanguage::qtbug_85932()
     QTRY_COMPARE(allWarnings.count(), 2);
     QCOMPARE(allWarnings.at(0).toString(), warning1);
     QCOMPARE(allWarnings.at(1).toString(), warning2);
+}
+
+void tst_qqmllanguage::multiExtension()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+    c.setData("import StaticTest\nMultiExtension {}", QUrl());
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QCOMPARE(o->property("a").toInt(), int('a'));
+    QCOMPARE(o->property("b").toInt(), int('b'));
+    QCOMPARE(o->property("p").toInt(), int('p'));
+    QCOMPARE(o->property("e").toInt(), int('e'));
+
+    // Extension properties override base object properties
+    QCOMPARE(o->property("c").toInt(), 12);
+    QCOMPARE(o->property("d").toInt(), 22);
+    QCOMPARE(o->property("f").toInt(), 31);
+    QCOMPARE(o->property("g").toInt(), 44);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

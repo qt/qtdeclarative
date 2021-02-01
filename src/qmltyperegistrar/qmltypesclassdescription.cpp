@@ -112,9 +112,14 @@ void QmlTypesClassDescription::collectLocalAnonymous(
     const auto classInfos = classDef->value(QLatin1String("classInfos")).toArray();
     for (const QJsonValue &classInfo : classInfos) {
         const QJsonObject obj = classInfo.toObject();
-        if (obj[QLatin1String("name")].toString() == QLatin1String("DefaultProperty")) {
+        const QString name = obj[QStringLiteral("name")].toString();
+        const QString value = obj[QStringLiteral("value")].toString();
+
+        if (name == QStringLiteral("DefaultProperty")) {
             defaultProp = obj[QLatin1String("value")].toString();
-            break;
+        } else if (name == QStringLiteral("QML.Extended")) {
+            extensionType = value;
+            collectRelated(value, types, foreign, defaultRevision);
         }
     }
 

@@ -161,4 +161,14 @@ void tst_qmltyperegistrar::metaTypesRegistered()
     verifyMetaType("Ccc*", "Ccc");
 }
 
+void tst_qmltyperegistrar::multiExtensions()
+{
+    QVERIFY(qmltypesData.contains("name: \"MultiExtension\""));
+    QVERIFY(qmltypesData.contains("prototype: \"MultiExtensionParent\""));
+    QVERIFY(qmltypesData.contains("name: \"MultiExtensionParent\""));
+    QVERIFY(qmltypesData.contains("extension: \"ExtensionA\""));
+    QVERIFY(qmltypesData.contains("extension: \"ExtensionB\""));
+    QVERIFY(qmltypesData.contains("interfaces: [\"Interface3\"]"));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

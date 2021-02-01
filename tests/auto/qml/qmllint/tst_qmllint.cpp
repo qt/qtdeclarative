@@ -337,6 +337,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("goodAliasObject") << QStringLiteral("goodAliasObject.qml");
     QTest::newRow("jsmoduleimport") << QStringLiteral("jsmoduleimport.qml");
     QTest::newRow("overridescript") << QStringLiteral("overridescript.qml");
+    QTest::newRow("multiExtension") << QStringLiteral("multiExtension.qml");
 }
 
 void TestQmllint::cleanQmlCode()
