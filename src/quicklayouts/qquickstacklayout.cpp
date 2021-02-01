@@ -45,7 +45,7 @@
 
 /*!
     \qmltype StackLayout
-    \instantiates QQuickStackLayout
+    //! \instantiates QQuickStackLayout
     \inherits Item
     \inqmlmodule QtQuick.Layouts
     \ingroup layouts

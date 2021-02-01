@@ -56,19 +56,16 @@ depends += \
     qmake \
     qtcmake
 
-headerdirs  += ..\
-               ../../quick \
-               ../../quickwidgets \
-               ../../qmllocalstorage
-
-sourcedirs  += .. \
-               ../../quick \
-               ../../quickwidgets \
-               ../../qmllocalstorage
+{headerdirs,sourcedirs} += \
+    ..\
+    ../../quick \
+    ../../quickwidgets \
+    ../../qmllocalstorage \
+    ../../quicklayouts \
+    ../../labs/animation
 
 exampledirs +=  ../../../examples/quick \
                 snippets
-
 
 imagedirs   += images
 

@@ -25,12 +25,11 @@ tagfile      = qtqmlmodels.tags
 
 depends += qtcore qtqml qtquick qtdoc qtqmlworkerscript qtquickcontrols
 
-headerdirs  += .. \
-               ../../imports/labsmodels
-
-sourcedirs  += .. \
-               ../../imports/models \
-               ../../imports/labsmodels
+{headerdirs,sourcedirs} += \
+    .. \
+    ../../labs/models \
+    ../../imports/models \
+    ../../imports/labsmodels
 
 exampledirs += .. \
                snippets
