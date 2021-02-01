@@ -901,9 +901,9 @@ signals:
 public:
 
     float eager1() {return eager1Data;}
-    void setEager1(float f) {eager1Data = f;}
+    void setEager1(float f) {eager1Data.setValue(f);}
     float eager2() {return eager2Data;}
-    void setEager2(float f) {eager2Data = f;}
+    void setEager2(float f) {eager2Data.setValue(f);}
     QProperty<float> value;
     QProperty<float> value2;
     QBindable<float> bindableValue() { return QBindable<float>(&value); }
