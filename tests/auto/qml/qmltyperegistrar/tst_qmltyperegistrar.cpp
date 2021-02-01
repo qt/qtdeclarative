@@ -51,9 +51,6 @@ void tst_qmltyperegistrar::qmltypesHasForeign()
 void tst_qmltyperegistrar::qmltypesHasHppClassAndNoext()
 {
     QVERIFY(qmltypesData.contains("HppClass"));
-#ifdef BUILD_WITH_CMAKE
-    QEXPECT_FAIL("", "Type registration does not work manually moced files", Continue);
-#endif
     QVERIFY(qmltypesData.contains("Noext"));
 }
 
@@ -66,9 +63,6 @@ void tst_qmltyperegistrar::qmltypesHasReadAndWrite()
 void tst_qmltyperegistrar::qmltypesHasFileNames()
 {
     QVERIFY(qmltypesData.contains("file: \"hppheader.hpp\""));
-#ifdef BUILD_WITH_CMAKE
-    QEXPECT_FAIL("", "Type registration does not work manually moced files", Continue);
-#endif
     QVERIFY(qmltypesData.contains("file: \"noextheader\""));
     QVERIFY(qmltypesData.contains("file: \"tst_qmltyperegistrar.h\""));
 }
