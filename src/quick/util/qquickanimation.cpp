@@ -165,17 +165,15 @@ void QQuickAbstractAnimationPrivate::commence()
     QQuickStateActions actions;
     QQmlProperties properties;
 
-    QAbstractAnimationJob *oldInstance = animationInstance;
-    animationInstance = q->transition(actions, properties, QQuickAbstractAnimation::Forward);
-    if (oldInstance && oldInstance != animationInstance)
-        delete oldInstance;
+    auto *newInstance = q->transition(actions, properties, QQuickAbstractAnimation::Forward);
+    Q_ASSERT(newInstance != animationInstance);
+    delete animationInstance;
+    animationInstance = newInstance;
 
     if (animationInstance) {
-        if (oldInstance != animationInstance) {
-            if (q->threadingModel() == QQuickAbstractAnimation::RenderThread)
-                animationInstance = new QQuickAnimatorProxyJob(animationInstance, q);
-            animationInstance->addAnimationChangeListener(this, QAbstractAnimationJob::Completion);
-        }
+        if (q->threadingModel() == QQuickAbstractAnimation::RenderThread)
+            animationInstance = new QQuickAnimatorProxyJob(animationInstance, q);
+        animationInstance->addAnimationChangeListener(this, QAbstractAnimationJob::Completion);
         emit q->started();
         animationInstance->start();
     }

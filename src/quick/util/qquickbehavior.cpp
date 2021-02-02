@@ -308,21 +308,20 @@ void QQuickBehavior::write(const QVariant &value)
     actions << action;
 
     QList<QQmlProperty> after;
-    QAbstractAnimationJob *prev = d->animationInstance;
-    d->animationInstance = d->animation->transition(actions, after, QQuickAbstractAnimation::Forward);
-
-    if (d->animationInstance && d->animation->threadingModel() == QQuickAbstractAnimation::RenderThread)
-        d->animationInstance = new QQuickAnimatorProxyJob(d->animationInstance, d->animation);
-
-    if (prev && prev != d->animationInstance)
-        delete prev;
+    auto *newInstance = d->animation->transition(actions, after, QQuickAbstractAnimation::Forward);
+    Q_ASSERT(newInstance != d->animationInstance);
+    delete d->animationInstance;
+    d->animationInstance = newInstance;
 
     if (d->animationInstance) {
-        if (d->animationInstance != prev)
-            d->animationInstance->addAnimationChangeListener(d, QAbstractAnimationJob::StateChange);
+        if (d->animation->threadingModel() == QQuickAbstractAnimation::RenderThread)
+            d->animationInstance = new QQuickAnimatorProxyJob(d->animationInstance, d->animation);
+
+        d->animationInstance->addAnimationChangeListener(d, QAbstractAnimationJob::StateChange);
         d->animationInstance->start();
         d->blockRunningChanged = false;
     }
+
     if (!after.contains(d->property))
         QQmlPropertyPrivate::write(d->property, value, QQmlPropertyData::BypassInterceptor | QQmlPropertyData::DontRemoveBinding);
 }
