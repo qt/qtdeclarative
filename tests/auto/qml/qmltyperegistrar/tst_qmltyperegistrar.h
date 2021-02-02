@@ -116,11 +116,61 @@ public:
     void setWidth(int width) { v.setWidth(width); }
 };
 
+class ForeignWithoutDefault : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QObject *d READ d WRITE setD NOTIFY dChanged)
+public:
+    QObject *d() const { return m_d; }
+
+    void setD(QObject *d)
+    {
+        if (m_d != d) {
+            m_d = d;
+            emit dChanged();
+        }
+    }
+
+signals:
+    void dChanged();
+
+private:
+    QObject *m_d = nullptr;
+};
+
+class LocalWithDefault : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QObject *d READ d WRITE setD NOTIFY dChanged)
+    QML_NAMED_ELEMENT(ForeignWithoutDefault)
+    QML_FOREIGN(ForeignWithoutDefault)
+    Q_CLASSINFO("DefaultProperty", "d")
+
+public:
+    LocalWithDefault(QObject *parent = nullptr) : QObject(parent) {}
+    QObject *d() const { return m_d; }
+
+    void setD(QObject *d)
+    {
+        if (m_d != d) {
+            m_d = d;
+            emit dChanged();
+        }
+    }
+
+signals:
+    void dChanged();
+
+private:
+    QObject *m_d = nullptr;
+};
+
 class Local : public Foreign
 {
     Q_OBJECT
     QML_ELEMENT
     Q_PROPERTY(int someProperty MEMBER someProperty BINDABLE bindableSomeProperty)
+    QML_EXTENDED(LocalWithDefault)
 public:
     enum Flag {
         Flag1 = 0x1,
@@ -216,6 +266,7 @@ private slots:
     void derivedFromForeign();
     void metaTypesRegistered();
     void multiExtensions();
+    void localDefault();
 
 private:
     QByteArray qmltypesData;

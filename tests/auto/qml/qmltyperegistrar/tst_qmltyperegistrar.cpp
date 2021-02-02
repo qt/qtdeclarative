@@ -171,4 +171,38 @@ void tst_qmltyperegistrar::multiExtensions()
     QVERIFY(qmltypesData.contains("interfaces: [\"Interface3\"]"));
 }
 
+void tst_qmltyperegistrar::localDefault()
+{
+    QQmlEngine engine;
+    {
+        QQmlComponent c(&engine);
+        c.setData("import QmlTypeRegistrarTest\n"
+                  "import QtQml\n"
+                  "ForeignWithoutDefault { QtObject {} }", QUrl());
+        QVERIFY(c.isError());
+        QVERIFY(c.errorString().contains(
+                    QStringLiteral("Cannot assign to non-existent default property")));
+    }
+    {
+        QQmlComponent c(&engine);
+        c.setData("import QmlTypeRegistrarTest\n"
+                  "import QtQml\n"
+                  "Local { QtObject {} }", QUrl());
+        QVERIFY(c.isReady());
+    }
+
+    QCOMPARE(qmltypesData.count("name: \"LocalWithDefault\""), 1);
+    QCOMPARE(qmltypesData.count("name: \"ForeignWithoutDefault\""), 1);
+    QCOMPARE(qmltypesData.count("defaultProperty: \"d\""), 1);
+
+    const int local = qmltypesData.indexOf("name: \"LocalWithDefault\"");
+    const int foreign = qmltypesData.indexOf("name: \"ForeignWithoutDefault\"");
+    const int defaultProp = qmltypesData.indexOf("defaultProperty: \"d\"");
+
+    // We assume that name is emitted before defaultProperty.
+    // Then this proves that the default property does not belong to ForeignWithoutDefault.
+    QVERIFY(local < defaultProp);
+    QVERIFY(foreign > defaultProp || foreign < local);
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)
