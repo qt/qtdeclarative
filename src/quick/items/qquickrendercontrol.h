@@ -43,7 +43,6 @@
 #include <QtCore/qobject.h>
 #include <QtQuick/qtquickglobal.h>
 #include <QtGui/qimage.h>
-#include <QObject>
 
 QT_BEGIN_NAMESPACE
 
