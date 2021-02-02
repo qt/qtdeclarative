@@ -3494,11 +3494,10 @@ void QQuickTextInputPrivate::processInputMethodEvent(QInputMethodEvent *event)
     m_textLayout.setFormats(formats);
 
     updateDisplayText(/*force*/ true);
-    if ((cursorPositionChanged && !emitCursorPositionChanged())
-            || m_preeditCursor != oldPreeditCursor
-            || isGettingInput) {
+    if (cursorPositionChanged && emitCursorPositionChanged())
+        q->updateInputMethod(Qt::ImCursorPosition | Qt::ImAnchorPosition);
+    else if (m_preeditCursor != oldPreeditCursor || isGettingInput)
         q->updateCursorRectangle();
-    }
 
     if (isGettingInput)
         finishChange(priorState);
