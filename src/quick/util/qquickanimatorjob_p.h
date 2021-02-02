@@ -77,7 +77,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickAnimatorProxyJob : public QObject, public QAb
     Q_OBJECT
 
 public:
-    QQuickAnimatorProxyJob(QAbstractAnimationJob *job, QObject *item);
+    QQuickAnimatorProxyJob(QAbstractAnimationJob *job, QQuickAbstractAnimation *animation);
     ~QQuickAnimatorProxyJob();
 
     int duration() const override { return m_duration; }
@@ -101,7 +101,6 @@ private:
     static QObject *findAnimationContext(QQuickAbstractAnimation *);
 
     QPointer<QQuickAnimatorController> m_controller;
-    QQuickAbstractAnimation *m_animation;
     QSharedPointer<QAbstractAnimationJob> m_job;
     int m_duration;
 

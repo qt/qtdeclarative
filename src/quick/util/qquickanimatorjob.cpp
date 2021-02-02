@@ -81,14 +81,14 @@ struct QQuickTransformAnimatorHelperStore
 };
 Q_GLOBAL_STATIC(QQuickTransformAnimatorHelperStore, qquick_transform_animatorjob_helper_store);
 
-QQuickAnimatorProxyJob::QQuickAnimatorProxyJob(QAbstractAnimationJob *job, QObject *item)
+QQuickAnimatorProxyJob::QQuickAnimatorProxyJob(QAbstractAnimationJob *job,
+                                               QQuickAbstractAnimation *animation)
     : m_controller(nullptr)
     , m_internalState(State_Stopped)
 {
     m_job.reset(job);
 
     m_isRenderThreadProxy = true;
-    m_animation = qobject_cast<QQuickAbstractAnimation *>(item);
 
     setLoopCount(job->loopCount());
 
@@ -101,7 +101,7 @@ QQuickAnimatorProxyJob::QQuickAnimatorProxyJob(QAbstractAnimationJob *job, QObje
     // be negligiblie compared to animating and re-rendering the scene on the render thread.
     m_duration = -1;
 
-    QObject *ctx = findAnimationContext(m_animation);
+    QObject *ctx = findAnimationContext(animation);
     if (!ctx) {
         qWarning("QtQuick: unable to find animation context for RT animation...");
         return;
