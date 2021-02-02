@@ -88,7 +88,7 @@ void tst_qmltyperegistrar::superAndForeignTypes()
     QVERIFY(qmltypesData.contains("Property { name: \"height\"; type: \"int\"; read: \"height\"; write: \"setHeight\" }"));
     QVERIFY(qmltypesData.contains("Property { name: \"width\"; type: \"int\"; read: \"width\"; write: \"setWidth\" }"));
     QVERIFY(qmltypesData.contains("Method { name: \"sizeToString\"; type: \"QString\" }"));
-    QVERIFY(qmltypesData.contains("extension: \"SizeValueType\""));
+    QCOMPARE(qmltypesData.count("extension: \"SizeValueType\""), 1);
 }
 
 void tst_qmltyperegistrar::accessSemantics()
