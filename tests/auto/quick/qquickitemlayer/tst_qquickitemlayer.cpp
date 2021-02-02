@@ -89,6 +89,14 @@ private:
     void mirroringCheck(int mirroring, int x, bool shouldMirror, const QImage &fb);
 };
 
+bool isOffscreen()
+{
+    return (QGuiApplication::platformName() == QLatin1String("offscreen"))
+            || (QGuiApplication::platformName() == QLatin1String("minimal"));
+}
+const char skipOffscreenMsg[] =
+        "Skipping due to grabWindow not functional on offscreen/minimal platformsi (QTBUG-63185)";
+
 tst_QQuickItemLayer::tst_QQuickItemLayer() { }
 
 void tst_QQuickItemLayer::initTestCase()
@@ -105,9 +113,8 @@ void tst_QQuickItemLayer::initTestCase()
 
 void tst_QQuickItemLayer::layerSmooth()
 {
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
+    if (isOffscreen())
+        QSKIP(skipOffscreenMsg);
 
     QImage fb = runTest("Smooth.qml");
     QVERIFY(!fb.size().isEmpty());
@@ -127,9 +134,8 @@ void tst_QQuickItemLayer::layerSmooth()
 
 void tst_QQuickItemLayer::layerEnabled()
 {
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
+    if (isOffscreen())
+        QSKIP(skipOffscreenMsg);
 
     QImage fb = runTest("Enabled.qml");
     QVERIFY(!fb.size().isEmpty());
@@ -157,9 +163,8 @@ void tst_QQuickItemLayer::layerMipmap()
 
 void tst_QQuickItemLayer::layerEffect()
 {
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
+    if (isOffscreen())
+        QSKIP(skipOffscreenMsg);
 
     QImage fb = runTest("Effect.qml");
     QVERIFY(!fb.size().isEmpty());
@@ -173,6 +178,9 @@ void tst_QQuickItemLayer::layerEffect()
 // a shader that pads transparent to blue. Everything else is red.
 void tst_QQuickItemLayer::layerSourceRect()
 {
+    if (isOffscreen())
+        QSKIP(skipOffscreenMsg);
+
     QImage fb = runTest("SourceRect.qml");
     QVERIFY(!fb.size().isEmpty());
 
@@ -192,6 +200,9 @@ void tst_QQuickItemLayer::layerSourceRect()
 // directly in a stand alone ShaderEffect
 void tst_QQuickItemLayer::layerIsTextureProvider()
 {
+    if (isOffscreen())
+        QSKIP(skipOffscreenMsg);
+
     QImage fb = runTest("TextureProvider.qml");
     QVERIFY(!fb.size().isEmpty());
     QCOMPARE(fb.pixel(0, 0), qRgb(0xff, 0, 0));
@@ -223,6 +234,9 @@ void tst_QQuickItemLayer::layerVisibility_data()
 
 void tst_QQuickItemLayer::layerVisibility()
 {
+    if (isOffscreen())
+        QSKIP(skipOffscreenMsg);
+
     QFETCH(bool, visible);
     QFETCH(bool, effect);
     QFETCH(qreal, opacity);
@@ -268,6 +282,9 @@ void tst_QQuickItemLayer::layerZOrder_data()
 
 void tst_QQuickItemLayer::layerZOrder()
 {
+    if (isOffscreen())
+        QSKIP(skipOffscreenMsg);
+
     QFETCH(bool, effect);
 
     QQuickView view;
@@ -299,6 +316,9 @@ void tst_QQuickItemLayer::changeZOrder_data()
 
 void tst_QQuickItemLayer::changeZOrder()
 {
+    if (isOffscreen())
+        QSKIP(skipOffscreenMsg);
+
     QFETCH(bool, layered);
     QFETCH(bool, effect);
 
@@ -364,6 +384,9 @@ void tst_QQuickItemLayer::disableLayer()
 
 void tst_QQuickItemLayer::changeSamplerName()
 {
+    if (isOffscreen())
+        QSKIP(skipOffscreenMsg);
+
     QImage fb = runTest("SamplerNameChange.qml");
     QVERIFY(!fb.size().isEmpty());
     QCOMPARE(fb.pixel(0, 0), qRgb(0, 0, 0xff));
@@ -371,6 +394,9 @@ void tst_QQuickItemLayer::changeSamplerName()
 
 void tst_QQuickItemLayer::itemEffect()
 {
+    if (isOffscreen())
+        QSKIP(skipOffscreenMsg);
+
     QImage fb = runTest("ItemEffect.qml");
     QVERIFY(!fb.size().isEmpty());
     QCOMPARE(fb.pixel(0, 0), qRgb(0xff, 0, 0));
@@ -381,9 +407,8 @@ void tst_QQuickItemLayer::itemEffect()
 
 void tst_QQuickItemLayer::rectangleEffect()
 {
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
+    if (isOffscreen())
+        QSKIP(skipOffscreenMsg);
 
     QImage fb = runTest("RectangleEffect.qml");
     QVERIFY(!fb.size().isEmpty());
@@ -410,6 +435,9 @@ void tst_QQuickItemLayer::textureMirroring_data()
 
 void tst_QQuickItemLayer::textureMirroring()
 {
+    if (isOffscreen())
+        QSKIP(skipOffscreenMsg);
+
     QFETCH(int, mirroring);
 
     QQuickView view;
