@@ -208,6 +208,13 @@ QmlIR::Object *QQmlIRLoader::loadObject(const QV4::CompiledData::Object *seriali
         object->inlineComponents->append(ic);
     }
 
+    const QV4::CompiledData::RequiredPropertyExtraData *serializedRequiredPropertyExtraData = serializedObject->requiredPropertyExtraDataTable();
+    for (uint i = 0u; i < serializedObject->nRequiredPropertyExtraData; ++i, ++serializedRequiredPropertyExtraData) {
+        QmlIR::RequiredPropertyExtraData *extra = pool->New<QmlIR::RequiredPropertyExtraData>();
+        *static_cast<QV4::CompiledData::RequiredPropertyExtraData *>(extra) = *serializedRequiredPropertyExtraData;
+        object->requiredPropertyExtraDatas->append(extra);
+    }
+
     return object;
 }
 

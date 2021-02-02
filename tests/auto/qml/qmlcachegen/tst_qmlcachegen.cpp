@@ -77,6 +77,7 @@ private slots:
 
     void parameterAdjustment();
     void inlineComponent();
+    void posthocRequired();
 };
 
 // A wrapper around QQmlComponent to ensure the temporary reference counts
@@ -699,6 +700,17 @@ void tst_qmlcachegen::inlineComponent()
     QTest::ignoreMessage(QtMsgType::QtInfoMsg, "42");
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
+}
+
+void tst_qmlcachegen::posthocRequired()
+{
+    bool ok = generateCache(testFile("posthocrequired.qml"));
+    QVERIFY(ok);
+    QQmlEngine engine;
+    CleanlyLoadingComponent component(&engine, testFileUrl("posthocrequired.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(obj.isNull() && component.isError());
+    QVERIFY(component.errorString().contains(QStringLiteral("Required property x was not initialized")));
 }
 
 QTEST_GUILESS_MAIN(tst_qmlcachegen)
