@@ -42,6 +42,8 @@
 
 using namespace QQuickViewTestUtil;
 
+QT_BEGIN_NAMESPACE
+
 class tst_Animators: public QQmlDataTest
 {
     Q_OBJECT
@@ -179,6 +181,8 @@ void tst_Animators::testTransitionsWithImplicitFrom()
     QCOMPARE(rectangle->state(), "left");
     QVERIFY(controller->m_runningAnimators.isEmpty());
 }
+
+QT_END_NAMESPACE
 
 QTEST_MAIN(tst_Animators)
 

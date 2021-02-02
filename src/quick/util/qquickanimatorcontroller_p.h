@@ -93,10 +93,11 @@ public:
     QQuickWindow *window() const { return m_window; }
 
 private:
+    friend class tst_Animators;
+
     void start_helper(QAbstractAnimationJob *job);
     void cancel_helper(QAbstractAnimationJob *job);
 
-public:
     QSet<QQuickAnimatorJob * > m_runningAnimators;
     QHash<QAbstractAnimationJob *, QSharedPointer<QAbstractAnimationJob> > m_animationRoots;
     QSet<QSharedPointer<QAbstractAnimationJob> > m_rootsPendingStop;
