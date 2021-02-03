@@ -277,6 +277,12 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("brokenNamespace.qml")
             << QString("Warning: type not found in namespace at %1:4:17")
             << QString();
+    // TODO: This fails but currently for the wrong reasons, make sure to add a warning message requirement
+    // once it does fail properly in order to avoid regressions.
+    QTest::newRow("segFault (bad)")
+            << QStringLiteral("SegFault.bad.qml")
+            << QString()
+            << QString();
     QTest::newRow("VariableUsedBeforeDeclaration")
             << QStringLiteral("useBeforeDeclaration.qml")
             << QStringLiteral("Variable \"argq\" is used before its declaration at 5:9. "
@@ -357,12 +363,14 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("jsmoduleimport") << QStringLiteral("jsmoduleimport.qml");
     QTest::newRow("overridescript") << QStringLiteral("overridescript.qml");
     QTest::newRow("multiExtension") << QStringLiteral("multiExtension.qml");
+    QTest::newRow("segFault") << QStringLiteral("SegFault.qml");
 }
 
 void TestQmllint::cleanQmlCode()
 {
     QFETCH(QString, filename);
     const QString warnings = runQmllint(filename, true);
+    QEXPECT_FAIL("segFault", "This property exists and should not produce a warning", Abort);
     QVERIFY2(warnings.isEmpty(), qPrintable(warnings));
 }
 
@@ -407,6 +415,8 @@ QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed, c
     return runQmllint(fileToLint, [&](QProcess &process) {
         QVERIFY(process.waitForFinished());
         QCOMPARE(process.exitStatus(), QProcess::NormalExit);
+
+        QEXPECT_FAIL("segFault", "This property exists and should not produce a warning", Abort);
         if (shouldSucceed)
             QCOMPARE(process.exitCode(), 0);
         else
