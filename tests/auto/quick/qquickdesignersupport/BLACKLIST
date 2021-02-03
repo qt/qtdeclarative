@@ -1,0 +1,7 @@
+# QTBUG-90869
+[testSimpleBindings]
+ci b2qt
+[testDotProperties]
+ci b2qt
+[testItemReparenting]
+ci b2qt
