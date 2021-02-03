@@ -35,7 +35,7 @@ static void collectExtraVersions(const QJsonObject *component, const QString &ke
                                  QList<QTypeRevision> &extraVersions)
 {
     const QJsonArray &items = component->value(key).toArray();
-    for (const QJsonValue &item : items) {
+    for (const QJsonValue item : items) {
         const QJsonObject obj = item.toObject();
         const auto revision = obj.find(QLatin1String("revision"));
         if (revision != obj.end()) {
@@ -63,7 +63,7 @@ void QmlTypesClassDescription::collectSuperClasses(
         const QVector<QJsonObject> &foreign, CollectMode mode,  QTypeRevision defaultRevision)
 {
     const auto supers = classDef->value(QLatin1String("superClasses")).toArray();
-    for (const QJsonValue &superValue : supers) {
+    for (const QJsonValue superValue : supers) {
         const QJsonObject superObject = superValue.toObject();
         if (superObject[QLatin1String("access")].toString() == QLatin1String("public")) {
             const QString superName = superObject[QLatin1String("name")].toString();
@@ -86,7 +86,7 @@ void QmlTypesClassDescription::collectInterfaces(const QJsonObject *classDef)
 {
     if (classDef->contains(QLatin1String("interfaces"))) {
         const QJsonArray array = classDef->value(QLatin1String("interfaces")).toArray();
-        for (const QJsonValue &value : array) {
+        for (const QJsonValue value : array) {
             auto object = value.toArray()[0].toObject();
             implementsInterfaces << object[QLatin1String("className")].toString();
         }
@@ -110,7 +110,7 @@ void QmlTypesClassDescription::collectLocalAnonymous(
         accessSemantics = QStringLiteral("none");
 
     const auto classInfos = classDef->value(QLatin1String("classInfos")).toArray();
-    for (const QJsonValue &classInfo : classInfos) {
+    for (const QJsonValue classInfo : classInfos) {
         const QJsonObject obj = classInfo.toObject();
         if (obj[QStringLiteral("name")].toString() == QStringLiteral("DefaultProperty"))
             defaultProp = obj[QStringLiteral("value")].toString();
@@ -130,7 +130,7 @@ void QmlTypesClassDescription::collect(
     const auto classInfos = classDef->value(QLatin1String("classInfos")).toArray();
     const QString classDefName = classDef->value(QLatin1String("className")).toString();
     QString foreignTypeName;
-    for (const QJsonValue &classInfo : classInfos) {
+    for (const QJsonValue classInfo : classInfos) {
         const QJsonObject obj = classInfo.toObject();
         const QString name = obj[QLatin1String("name")].toString();
         const QString value = obj[QLatin1String("value")].toString();
@@ -189,7 +189,7 @@ void QmlTypesClassDescription::collect(
 
             // Foreign type can have a default property or an attached types
             const auto classInfos = classDef->value(QLatin1String("classInfos")).toArray();
-            for (const QJsonValue &classInfo : classInfos) {
+            for (const QJsonValue classInfo : classInfos) {
                 const QJsonObject obj = classInfo.toObject();
                 const QString foreignName = obj[QLatin1String("name")].toString();
                 const QString foreignValue = obj[QLatin1String("value")].toString();
