@@ -252,7 +252,7 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
         if (access.m_name.front().isUpper() && scope->scopeType() == QQmlJSScope::QMLScope) {
             // may be an attached type
             const auto it = m_types.find(access.m_name);
-            if (it != m_types.end() && !(*it)->attachedTypeName().isEmpty()) {
+            if (it != m_types.end() && *it && !(*it)->attachedTypeName().isEmpty()) {
                 if (const auto attached = (*it)->attachedType()) {
                     scope = attached;
                     continue;

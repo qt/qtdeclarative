@@ -249,6 +249,12 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("badAliasObject.qml")
             << QString("Warning: Property \"wrongwrongwrong\" not found on type \"QtObject\"")
             << QString();
+    // TODO: This fails but currently for the wrong reasons, make sure to add a warning message requirement
+    // once it does fail properly in order to avoid regressions.
+    QTest::newRow("segFault (bad)")
+            << QStringLiteral("SegFault.bad.qml")
+            << QString()
+            << QString();
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -307,12 +313,14 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("anchors2") << QStringLiteral("anchors2.qml");
     QTest::newRow("optionalImport") << QStringLiteral("optionalImport.qml");
     QTest::newRow("goodAliasObject") << QStringLiteral("goodAliasObject.qml");
+    QTest::newRow("segFault") << QStringLiteral("SegFault.qml");
 }
 
 void TestQmllint::cleanQmlCode()
 {
     QFETCH(QString, filename);
     const QString warnings = runQmllint(filename, true);
+    QEXPECT_FAIL("segFault", "This property exists and should not produce a warning", Abort);
     QVERIFY2(warnings.isEmpty(), qPrintable(warnings));
 }
 
@@ -356,6 +364,8 @@ QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed, c
     return runQmllint(fileToLint, [&](QProcess &process) {
         QVERIFY(process.waitForFinished());
         QCOMPARE(process.exitStatus(), QProcess::NormalExit);
+
+        QEXPECT_FAIL("segFault", "This property exists and should not produce a warning", Abort);
         if (shouldSucceed)
             QCOMPARE(process.exitCode(), 0);
         else
