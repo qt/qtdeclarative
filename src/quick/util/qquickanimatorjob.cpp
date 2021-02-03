@@ -243,7 +243,7 @@ static void qquick_syncback_helper(QAbstractAnimationJob *job)
 
     } else if (job->isGroup()) {
         QAnimationGroupJob *g = static_cast<QAnimationGroupJob *>(job);
-        for (QAbstractAnimationJob *a = g->firstChild(); a; a = a->nextSibling())
+        for (QAbstractAnimationJob *a : *g->children())
             qquick_syncback_helper(a);
     }
 

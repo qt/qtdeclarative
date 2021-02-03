@@ -85,13 +85,13 @@ private:
         // Note that the index semantic is slightly different depending on the direction.
         bool afterCurrent = false;  //whether animation is before or after m_currentAnimation   //TODO: make enum Before/After/Same
         int timeOffset = 0; // time offset when the animation at index starts.
-        QAbstractAnimationJob *animation = nullptr; //points to the animation at timeOffset
+        const QAbstractAnimationJob *animation = nullptr; //points to the animation at timeOffset
     };
 
-    int animationActualTotalDuration(QAbstractAnimationJob *anim) const;
+    int animationActualTotalDuration(const QAbstractAnimationJob *anim) const;
     AnimationIndex indexForCurrentTime() const;
 
-    void setCurrentAnimation(QAbstractAnimationJob *anim, bool intermediate = false);
+    void setCurrentAnimation(const QAbstractAnimationJob *anim, bool intermediate = false);
     void activateCurrentAnimation(bool intermediate = false);
 
     void animationInserted(QAbstractAnimationJob *anim) override;

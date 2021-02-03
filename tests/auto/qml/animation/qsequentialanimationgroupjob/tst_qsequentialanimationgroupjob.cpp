@@ -933,14 +933,11 @@ void tst_QSequentialAnimationGroupJob::clearGroup()
         subGroup->appendAnimation(new QPauseAnimationJob(10));
     }
 
-    int count = 0;
-    for (QAbstractAnimationJob *anim = group.firstChild(); anim; anim = anim->nextSibling())
-        ++count;
-    QCOMPARE(count, animationCount);
+    QCOMPARE(group.children()->count(), animationCount);
 
     group.clear();
 
-    QVERIFY(!group.firstChild() && !group.lastChild());
+    QVERIFY(group.children()->isEmpty());
     QCOMPARE(group.currentLoopTime(), 0);
 }
 
@@ -1131,7 +1128,7 @@ void tst_QSequentialAnimationGroupJob::deleteChildrenWithRunningGroup()
     QTRY_VERIFY(group.currentLoopTime() > 0);
 
     delete anim1;
-    QVERIFY(!group.firstChild());
+    QVERIFY(group.children()->isEmpty());
     QCOMPARE(group.duration(), 0);
     QCOMPARE(group.state(), QAnimationGroupJob::Stopped);
     QCOMPARE(group.currentLoopTime(), 0); //that's the invariant
@@ -1568,12 +1565,12 @@ void tst_QSequentialAnimationGroupJob::clear()
 
     TestAnimation *anim2 = new TestAnimation;
     group.appendAnimation(anim2);
-    QCOMPARE(group.firstChild(), anim1);
-    QCOMPARE(group.lastChild(), anim2);
+    QCOMPARE(group.children()->first(), anim1);
+    QCOMPARE(group.children()->last(), anim2);
 
     group.start();
     QTest::qWait(anim1->duration() + 100);
-    QTRY_VERIFY(!group.firstChild());
+    QTRY_VERIFY(group.children()->isEmpty());
     QCOMPARE(group.state(), QAbstractAnimationJob::Stopped);
     QCOMPARE(group.currentLoopTime(), 0);
 

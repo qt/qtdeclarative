@@ -1543,7 +1543,7 @@ void tst_qquickanimations::loopingBug()
     QVERIFY(anim != nullptr);
     QCOMPARE(anim->qtAnimation()->totalDuration(), 300);
     QCOMPARE(anim->isRunning(), true);
-    QTRY_COMPARE(static_cast<QAnimationGroupJob*>(anim->qtAnimation())->firstChild()->currentLoop(), 2);
+    QTRY_COMPARE(static_cast<QAnimationGroupJob*>(anim->qtAnimation())->children()->first()->currentLoop(), 2);
     QTRY_COMPARE(anim->isRunning(), false);
 
     QQuickRectangle *rect = obj->findChild<QQuickRectangle*>();

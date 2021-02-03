@@ -65,8 +65,7 @@ static void qquickanimator_invalidate_jobs(QAbstractAnimationJob *job)
     if (job->isRenderThreadJob()) {
         static_cast<QQuickAnimatorJob *>(job)->invalidate();
     } else if (job->isGroup()) {
-        QAnimationGroupJob *g = static_cast<QAnimationGroupJob *>(job);
-        for (QAbstractAnimationJob *a = g->firstChild(); a; a = a->nextSibling())
+        for (QAbstractAnimationJob *a : *static_cast<QAnimationGroupJob *>(job)->children())
             qquickanimator_invalidate_jobs(a);
     }
 }
@@ -115,8 +114,7 @@ static void qquickanimator_sync_before_start(QAbstractAnimationJob *job)
     if (job->isRenderThreadJob()) {
         static_cast<QQuickAnimatorJob *>(job)->preSync();
     } else if (job->isGroup()) {
-        QAnimationGroupJob *g = static_cast<QAnimationGroupJob *>(job);
-        for (QAbstractAnimationJob *a = g->firstChild(); a; a = a->nextSibling())
+        for (QAbstractAnimationJob *a : *static_cast<QAnimationGroupJob *>(job)->children())
             qquickanimator_sync_before_start(a);
     }
 }
@@ -195,8 +193,7 @@ void QQuickAnimatorController::start_helper(QAbstractAnimationJob *job)
         j->addAnimationChangeListener(this, QAbstractAnimationJob::StateChange);
         j->initialize(this);
     } else if (job->isGroup()) {
-        QAnimationGroupJob *g = static_cast<QAnimationGroupJob *>(job);
-        for (QAbstractAnimationJob *a = g->firstChild(); a; a = a->nextSibling())
+        for (QAbstractAnimationJob *a : *static_cast<QAnimationGroupJob *>(job)->children())
             start_helper(a);
     }
 }

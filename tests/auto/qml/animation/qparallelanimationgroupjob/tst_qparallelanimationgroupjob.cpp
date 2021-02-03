@@ -321,14 +321,11 @@ void tst_QParallelAnimationGroupJob::clearGroup()
         group.appendAnimation(new QParallelAnimationGroupJob);
     }
 
-    int count = 0;
-    for (QAbstractAnimationJob *anim = group.firstChild(); anim; anim = anim->nextSibling())
-        ++count;
-    QCOMPARE(count, animationCount);
+    QCOMPARE(group.children()->count(), animationCount);
 
     group.clear();
 
-    QVERIFY(!group.firstChild() && !group.lastChild());
+    QVERIFY(group.children()->isEmpty());
     QCOMPARE(group.currentLoopTime(), 0);
 }
 
@@ -435,7 +432,7 @@ void tst_QParallelAnimationGroupJob::deleteChildrenWithRunningGroup()
     QTRY_VERIFY(group.currentLoopTime() > 0);
 
     delete anim1;
-    QVERIFY(!group.firstChild());
+    QVERIFY(group.children()->isEmpty());
     QCOMPARE(group.duration(), 0);
     QCOMPARE(group.state(), QAnimationGroupJob::Stopped);
     QCOMPARE(group.currentLoopTime(), 0); //that's the invariant

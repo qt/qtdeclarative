@@ -51,7 +51,8 @@
 // We mean it.
 //
 
-#include "private/qabstractanimationjob_p.h"
+#include <QtQml/private/qabstractanimationjob_p.h>
+#include <QtQml/private/qdoubleendedlist_p.h>
 #include <QtCore/qdebug.h>
 
 QT_REQUIRE_CONFIG(qml_animation);
@@ -62,6 +63,8 @@ class Q_QML_PRIVATE_EXPORT QAnimationGroupJob : public QAbstractAnimationJob
 {
     Q_DISABLE_COPY(QAnimationGroupJob)
 public:
+    using Children = QDoubleEndedList<QAbstractAnimationJob>;
+
     QAnimationGroupJob();
     ~QAnimationGroupJob() override;
 
@@ -69,8 +72,8 @@ public:
     void prependAnimation(QAbstractAnimationJob *animation);
     void removeAnimation(QAbstractAnimationJob *animation);
 
-    QAbstractAnimationJob *firstChild() const { return m_firstChild; }
-    QAbstractAnimationJob *lastChild() const { return m_lastChild; }
+    Children *children() { return &m_children; }
+    const Children *children() const { return &m_children; }
 
     virtual void clear();
 
@@ -85,18 +88,18 @@ protected:
     //TODO: confirm location of these (should any be moved into QAbstractAnimationJob?)
     void resetUncontrolledAnimationsFinishTime();
     void resetUncontrolledAnimationFinishTime(QAbstractAnimationJob *anim);
-    int uncontrolledAnimationFinishTime(QAbstractAnimationJob *anim) const { return anim->m_uncontrolledFinishTime; }
+    int uncontrolledAnimationFinishTime(const QAbstractAnimationJob *anim) const
+    {
+        return anim->m_uncontrolledFinishTime;
+    }
     void setUncontrolledAnimationFinishTime(QAbstractAnimationJob *anim, int time);
 
     void debugChildren(QDebug d) const;
 
-private:
     void ungroupChild(QAbstractAnimationJob *animation);
     void handleAnimationRemoved(QAbstractAnimationJob *animation);
 
-    //definition
-    QAbstractAnimationJob *m_firstChild = nullptr;
-    QAbstractAnimationJob *m_lastChild = nullptr;
+    Children m_children;
 };
 
 QT_END_NAMESPACE

@@ -52,9 +52,8 @@ QContinuingAnimationGroupJob::~QContinuingAnimationGroupJob()
 
 void QContinuingAnimationGroupJob::updateCurrentTime(int /*currentTime*/)
 {
-    Q_ASSERT(firstChild());
-
-    for (QAbstractAnimationJob *animation = firstChild(); animation; animation = animation->nextSibling()) {
+    Q_ASSERT(!m_children.isEmpty());
+    for (QAbstractAnimationJob *animation : m_children) {
         if (animation->state() == state()) {
             RETURN_IF_DELETED(animation->setCurrentTime(m_currentTime));
         }
@@ -68,20 +67,20 @@ void QContinuingAnimationGroupJob::updateState(QAbstractAnimationJob::State newS
 
     switch (newState) {
     case Stopped:
-        for (QAbstractAnimationJob *animation = firstChild(); animation; animation = animation->nextSibling())
+        for (QAbstractAnimationJob *animation  : m_children)
             animation->stop();
         break;
     case Paused:
-        for (QAbstractAnimationJob *animation = firstChild(); animation; animation = animation->nextSibling())
+        for (QAbstractAnimationJob *animation  : m_children)
             if (animation->isRunning())
                 animation->pause();
         break;
     case Running:
-        if (!firstChild()) {
+        if (m_children.isEmpty()) {
             stop();
             return;
         }
-        for (QAbstractAnimationJob *animation = firstChild(); animation; animation = animation->nextSibling()) {
+        for (QAbstractAnimationJob *animation  : m_children) {
             resetUncontrolledAnimationFinishTime(animation);
             animation->setDirection(m_direction);
             animation->start();
@@ -93,9 +92,8 @@ void QContinuingAnimationGroupJob::updateState(QAbstractAnimationJob::State newS
 void QContinuingAnimationGroupJob::updateDirection(QAbstractAnimationJob::Direction direction)
 {
     if (!isStopped()) {
-        for (QAbstractAnimationJob *animation = firstChild(); animation; animation = animation->nextSibling()) {
+        for (QAbstractAnimationJob *animation  : m_children)
             animation->setDirection(direction);
-        }
     }
 }
 
@@ -104,7 +102,7 @@ void QContinuingAnimationGroupJob::uncontrolledAnimationFinished(QAbstractAnimat
     Q_ASSERT(animation && (animation->duration() == -1));
     int uncontrolledRunningCount = 0;
 
-    for (QAbstractAnimationJob *child = firstChild(); child; child = child->nextSibling()) {
+    for (QAbstractAnimationJob *child : m_children) {
         if (child == animation)
             setUncontrolledAnimationFinishTime(animation, animation->currentTime());
         else if (uncontrolledAnimationFinishTime(child) == -1)
