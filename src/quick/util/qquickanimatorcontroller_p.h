@@ -86,8 +86,6 @@ public:
     void lock() { m_mutex.lock(); }
     void unlock() { m_mutex.unlock(); }
 
-    void proxyWasDestroyed(QQuickAnimatorProxyJob *proxy);
-    void stopProxyJobs();
     void windowNodesDestroyed();
 
     QQuickWindow *window() const { return m_window; }
