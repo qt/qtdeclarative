@@ -949,6 +949,12 @@ void QQuickTextControlPrivate::keyPressEvent(QKeyEvent *e)
 process:
     {
         if (q->isAcceptableInput(e)) {
+#if QT_CONFIG(im)
+            // QTBUG-90362
+            // Before key press event will be handled, pre-editing part should be finished
+            if (isPreediting())
+                commitPreedit();
+#endif
             if (overwriteMode
                 // no need to call deleteChar() if we have a selection, insertText
                 // does it already
