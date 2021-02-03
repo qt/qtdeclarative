@@ -1,3 +1,4 @@
+#!/she-bang
 Item {
     function test() {
         //// The following if blocks should NOT HAVE braces

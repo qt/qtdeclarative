@@ -1,3 +1,5 @@
+#!/she-bang
+// extra comment
 Item {
      Component.onCompleted:
      {

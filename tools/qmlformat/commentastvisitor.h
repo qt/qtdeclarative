@@ -65,6 +65,7 @@ struct Comment
 
     QList<SourceLocation> m_srcLocations;
 
+    bool hasSheBang() const { return !m_srcLocations.isEmpty() && m_srcLocations.first().begin() == 0; }
     bool isValid() const { return !m_srcLocations.isEmpty(); }
     bool isMultiline() const { return m_text.contains("\n"); }
     bool isSyntheticMultiline() const { return m_srcLocations.size() > 1; }

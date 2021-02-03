@@ -768,6 +768,20 @@ again:
         else
             return scanNumber(ch);
 
+    case '#':
+        if (_currentLineNumber == 1 && _currentColumnNumber == 2) {
+            // shebang support
+            while (_codePtr <= _endPtr && !isLineTerminator()) {
+                scanChar();
+            }
+            if (_engine) {
+                _engine->addComment(tokenOffset(), _codePtr - _tokenStartPtr - 1,
+                                    tokenStartLine(), tokenStartColumn());
+            }
+            goto again;
+        }
+        Q_FALLTHROUGH();
+
     default: {
         uint c = ch.unicode();
         bool identifierWithEscapeChars = false;

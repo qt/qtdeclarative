@@ -1,3 +1,4 @@
+#!/she-bang
 import QtQml 2.0
 QtObject {
     enum Test {

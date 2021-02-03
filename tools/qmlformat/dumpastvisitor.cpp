@@ -129,7 +129,7 @@ QString DumpAstVisitor::formatComment(const Comment &comment) const
 
     if (useMultilineComment)
         result += "/*";
-    else
+    else if (!comment.hasSheBang())
         result += "//";
 
     result += comment.m_text;
