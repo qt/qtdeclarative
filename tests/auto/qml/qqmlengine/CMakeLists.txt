@@ -42,11 +42,6 @@ qt_internal_add_resource(tst_qqmlengine "qmake_immediate"
 ## Scopes:
 #####################################################################
 
-qt_internal_extend_target(tst_qqmlengine CONDITION boot2qt
-    DEFINES
-        SKIP_GCCORRUPTION_TEST
-)
-
 qt_internal_extend_target(tst_qqmlengine CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
