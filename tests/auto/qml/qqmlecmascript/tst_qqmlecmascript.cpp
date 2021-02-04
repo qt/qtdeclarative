@@ -9241,14 +9241,14 @@ struct ClassWithQCompatProperty : public QObject
     Q_PROPERTY(int value2 READ value2 WRITE setValue2 BINDABLE bindableValue2)
 public:
     QBindable<int> bindableValue() {return &m_value;}
-    void resetValue() { m_value.setValue(2); }
+    void resetValue() { m_value = 2; m_value.notify(); }
     int value() { return m_value; }
-    void setValue(int i) { m_value.setValue(i); }
+    void setValue(int i) { m_value = i; m_value.notify(); }
     Q_OBJECT_COMPAT_PROPERTY(ClassWithQCompatProperty, int, m_value, &ClassWithQCompatProperty::setValue);
 
     QBindable<int> bindableValue2() {return &m_value2;}
     int value2() { return m_value2; }
-    void setValue2(int i) { m_value2.setValue(i); }
+    void setValue2(int i) { m_value2 = i; m_value2.notify(); }
     Q_OBJECT_COMPAT_PROPERTY(ClassWithQCompatProperty, int, m_value2, &ClassWithQCompatProperty::setValue2);
 };
 
