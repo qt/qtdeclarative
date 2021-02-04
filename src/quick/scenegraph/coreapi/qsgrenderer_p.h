@@ -115,6 +115,18 @@ public:
     void setRenderPassDescriptor(QRhiRenderPassDescriptor *rpDesc) { m_rp_desc = rpDesc; }
     QRhiRenderPassDescriptor *renderPassDescriptor() const { return m_rp_desc; }
 
+    void setExternalRenderPassDescriptor(QRhiRenderPassDescriptor *rpDesc) {
+        if (m_external_rp_desc) {
+            // Changes will be rare in practice - one has to construct a
+            // dynamic Quick 3D scene with reparenting involved for that. Play
+            // nice nonetheless and invalidate as soon as possible.
+            if (m_external_rp_desc != rpDesc)
+                invalidatePipelineCacheDependency(m_external_rp_desc);
+        }
+        m_rp_desc = rpDesc;
+        m_external_rp_desc = rpDesc;
+    }
+
     void setRenderPassRecordingCallbacks(QSGRenderContext::RenderPassCallback start,
                                          QSGRenderContext::RenderPassCallback end,
                                          void *userData)
@@ -150,6 +162,7 @@ protected:
     QRhiRenderTarget *m_rt;
     QRhiCommandBuffer *m_cb;
     QRhiRenderPassDescriptor *m_rp_desc;
+    QRhiRenderPassDescriptor *m_external_rp_desc;
     struct {
         QSGRenderContext::RenderPassCallback start = nullptr;
         QSGRenderContext::RenderPassCallback end = nullptr;
