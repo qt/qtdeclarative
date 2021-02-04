@@ -959,6 +959,11 @@ static void qsg_wipeBatch(Batch *batch, bool separateIndexBuffer)
 Renderer::~Renderer()
 {
     if (m_rhi) {
+        // If setExternalRenderPassDescriptor() was called, we have to
+        // aggressively invalidate to prevent an object, the lifetime of which
+        // we have no control over, staying in the (per-window) caches.
+        invalidatePipelineCacheDependency(m_external_rp_desc);
+
         // Clean up batches and buffers
         const bool separateIndexBuffer = m_context->separateIndexBuffer();
         for (int i = 0; i < m_opaqueBatches.size(); ++i)
