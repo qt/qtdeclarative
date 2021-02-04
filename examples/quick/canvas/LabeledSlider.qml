@@ -49,22 +49,37 @@
 ****************************************************************************/
 
 import QtQuick
-import "../shared" as Examples
+import QtQuick.Controls
 
 Item {
-    height: 480
-    width: 320
-    Examples.LauncherList {
-        id: ll
-        anchors.fill: parent
-        Component.onCompleted: {
-            addExample("Red heart", "Draws a red heart with bezier curves",  Qt.resolvedUrl("bezierCurve/bezierCurve.qml"));
-            addExample("Talk bubble", "Draws a talk bubble with quadratic curves",  Qt.resolvedUrl("quadraticCurveTo/quadraticCurveTo.qml"));
-            addExample("Squircle", "Draws a smooth squircle with simple lines",  Qt.resolvedUrl("squircle/squircle.qml"));
-            addExample("Rounded rectangle", "Draws a rounded rectangle with lines and arcs",  Qt.resolvedUrl("roundedrect/roundedrect.qml"));
-            addExample("Smile face", "Draws a smile face with complex paths",  Qt.resolvedUrl("smile/smile.qml"));
-            addExample("Clip", "Shows the canvas clip feature",  Qt.resolvedUrl("clip/clip.qml"));
-            addExample("Tiger", "Draw a tiger with a collection of SVG paths",  Qt.resolvedUrl("tiger/tiger.qml"));
-        }
+    id: labeledSlider
+    property alias name: label.text
+    implicitHeight: Math.max(label.implicitHeight, quickControlsSlider.implicitHeight)
+    property real min: 0.0
+    property real max: 1.0
+    property real init: 0.0
+    readonly property alias value: quickControlsSlider.value
+
+    Label {
+        id: label
+        anchors.left: parent.left
+        anchors.leftMargin: 10
+        anchors.verticalCenter: parent.verticalCenter
+        color: "#333"
+        font: Qt.font({pointSize: 13})
+    }
+
+    Slider {
+        id: quickControlsSlider
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.right: parent.right
+        anchors.rightMargin: 10
+        anchors.left: label.right
+        anchors.leftMargin: 20
+        from: labeledSlider.min
+        to: labeledSlider.max
+        width: labeledSlider.width - label.implicitWidth - (label.anchors.leftMargin + anchors.rightMargin + anchors.leftMargin)
+
+        Component.onCompleted: ()=> value = labeledSlider.init;
     }
 }

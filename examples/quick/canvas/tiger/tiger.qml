@@ -48,9 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import "../contents"
-import "../../shared"
+import QtQuick
+import QtQuick.Controls
+import "../"
 import "tiger.js" as Tiger
 
 Item {
@@ -63,7 +63,7 @@ Item {
         anchors.fill: parent
         anchors.topMargin: 12
 
-        Text {
+        Label {
             font.pointSize: 24
             font.bold: true
             text: "Tiger with SVG path"
@@ -137,8 +137,9 @@ Item {
         id: controls
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 12
-        Slider {id: scaleCtrl ; min: 0.1 ; max: 1 ; init: 0.3 ; name: "Scale"}
-        Slider {id: rotateCtrl ; min: 0 ; max: Math.PI*2 ; init: 0 ; name: "Rotate"}
-        Slider {id: alphaCtrl ; min: 0 ; max: 1 ; init: 1 ; name: "Alpha"}
+
+        LabeledSlider {id: scaleCtrl ; min: 0.1 ; max: 1 ; init: 0.3 ; name: "Scale"; width: container.width}
+        LabeledSlider {id: rotateCtrl ; min: 0 ; max: Math.PI*2 ; init: 0 ; name: "Rotate"; width: container.width}
+        LabeledSlider {id: alphaCtrl ; min: 0 ; max: 1 ; init: 1 ; name: "Alpha"; width: container.width}
     }
 }

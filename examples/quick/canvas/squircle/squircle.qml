@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -48,9 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import "../contents"
-import "../../shared"
+import QtQuick
+import QtQuick.Controls
+import "../"
 
 Item {
     id: container
@@ -61,7 +61,8 @@ Item {
         spacing: 6
         anchors.fill: parent
         anchors.topMargin: 12
-        Text {
+
+        Label {
             font.pointSize: 24
             font.bold: true
             text: "Squircles"
@@ -154,7 +155,8 @@ Item {
     Column {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 12
-        Slider {id: nCtrl ; min: 1 ; max: 10 ; init: 2 ; name: "N"}
-        Slider {id: rCtrl ; min: 30 ; max: 180 ; init: 60 ; name: "Radius"}
+
+        LabeledSlider {id: nCtrl ; min: 1 ; max: 10 ; init: 2 ; name: "N"; width: container.width}
+        LabeledSlider {id: rCtrl ; min: 30 ; max: 180 ; init: 60 ; name: "Radius"; width: container.width}
     }
 }

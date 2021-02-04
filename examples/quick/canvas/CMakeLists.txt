@@ -38,6 +38,7 @@ target_link_libraries(canvas PUBLIC
 # Resources:
 set(canvas_resource_files
     "bezierCurve/bezierCurve.qml"
+    "LabeledSlider.qml"
     "canvas.qml"
     "clip/clip.qml"
     "contents/qt-logo.png"

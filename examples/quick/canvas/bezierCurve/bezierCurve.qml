@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -48,9 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import "../contents"
-import "../../shared"
+import QtQuick
+import QtQuick.Controls
+import "../"
 
 Item {
     id:container
@@ -62,7 +62,7 @@ Item {
         anchors.fill: parent
         anchors.topMargin: 12
 
-        Text {
+        Label {
             font.pointSize: 24
             font.bold: true
             text: "Bezier Curve"
@@ -130,8 +130,17 @@ Item {
         id: controls
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 12
-        Slider {id: lineWidthCtrl; min: 1; max: 10; init: 2; name: "Outline"}
-        Slider {id: scaleCtrl; min: 0.1; max: 10; init: 1; name: "Scale"}
-        Slider {id: rotateCtrl; min: 0; max: Math.PI*2; init: 0; name: "Rotate"}
+
+        LabeledSlider {
+            id: lineWidthCtrl; name: "Outline"; min: 1; max: 10; init: 2; width: container.width
+        }
+
+        LabeledSlider {
+            id: scaleCtrl; name: "Scale"; min: 0.1; max: 10; init: 1; width: container.width
+        }
+
+        LabeledSlider {
+            id: rotateCtrl; name: "Rotate"; min: 0; max: Math.PI*2; init: 0; width: container.width
+        }
     }
 }
