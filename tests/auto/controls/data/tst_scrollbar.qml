@@ -548,7 +548,7 @@ TestCase {
             { tag: "NoSnap2", snapMode: ScrollBar.NoSnap, stepSize: 0.2, size: 0.1, width: 200, steps: 180 }, /* 0.9*200 */
 
             { tag: "SnapAlways", snapMode: ScrollBar.SnapAlways, stepSize: 0.1, size: 0.2, width: 100, steps: 10 },
-            { tag: "SnapAlways2", snapMode: ScrollBar.SnapAlways, stepSize: 0.2, size: 0.1, width: 200, steps: 5 },
+            { tag: "SnapAlways2", snapMode: ScrollBar.SnapAlways, stepSize: 0.2, size: 0.125, width: 200, steps: 5 },
 
             { tag: "SnapOnRelease", snapMode: ScrollBar.SnapOnRelease, stepSize: 0.1, size: 0.2, width: 100, steps: 80 }, /* 0.8*100 */
             { tag: "SnapOnRelease2", snapMode: ScrollBar.SnapOnRelease, stepSize: 0.2, size: 0.1, width: 200, steps: 180 }, /* 0.9*200 */
