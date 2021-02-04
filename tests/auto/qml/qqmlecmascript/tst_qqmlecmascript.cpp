@@ -950,9 +950,9 @@ void tst_qqmlecmascript::cppPropertyBindingLoop_data()
     QTest::addColumn<QString>("warningMsg");
 
     QTest::newRow("eager eager") << "bindingLoopEagerEager.qml" << R"(:4:5: QML BindingLoop: Binding loop detected for property "eager1")";
-    QTest::newRow("lazy lazy") << "bindingLoopLazyLazy.qml" << R"(:7:5: QML BindingLoop: Binding loop detected for property "value2")";
+    QTest::newRow("lazy lazy") << "bindingLoopLazyLazy.qml" << R"(:6:5: QML BindingLoop: Binding loop detected for property "value")";
     QTest::newRow("lazy eager") << "bindingLoopLazyEager.qml" << R"(:4:5: QML BindingLoop: Binding loop detected for property "eager1")";
-    QTest::newRow("eager lazy") << "bindingLoopEagerLazy.qml" << R"(:10:9: QML BindingLoop: Binding loop detected for property "eager1")";
+    QTest::newRow("eager lazy") << "bindingLoopEagerLazy.qml" << R"(:6:9: QML BindingLoop: Binding loop detected for property "value")";
     QTest::newRow("eager old") << "bindingLoopEagerOld.qml" << R"(:4:5: QML BindingLoop: Binding loop detected for property "eager1")";
 
     qmlRegisterType<QPropertyBindingLoop>("test", 1, 0, "BindingLoop");

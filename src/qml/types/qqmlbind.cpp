@@ -492,8 +492,8 @@ void QQmlBind::eval()
 
         //save any set binding for restoration
         if (!d->prevBindingSet() && d->v4Value.isEmpty() && !d->prevIsVariant) {
-            // try binding first
-            d->prevBind = QQmlAnyBinding::ofProperty(d->prop);
+            // try binding first; we need to use takeFrom to properly unlink the binding
+            d->prevBind = QQmlAnyBinding::takeFrom(d->prop);
 
             if (!d->prevBindingSet()) { // nope, try a V4 value next
                 auto propPriv = QQmlPropertyPrivate::get(d->prop);

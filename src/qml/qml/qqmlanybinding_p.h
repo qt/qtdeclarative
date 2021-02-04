@@ -113,9 +113,9 @@ public:
         } else {
             auto qmlBinding = QQmlPropertyPrivate::binding(prop);
             if (qmlBinding) {
+                binding = qmlBinding; // this needs to run before removeFromObject, else the refcount might reach zero
                 qmlBinding->setEnabled(false, QQmlPropertyData::DontRemoveBinding | QQmlPropertyData::BypassInterceptor);
                 qmlBinding->removeFromObject();
-                binding = qmlBinding;
             }
         }
         return binding;

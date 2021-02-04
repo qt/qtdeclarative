@@ -165,7 +165,8 @@ void QQmlPropertyBindingJS::expressionChanged()
         return;
     }
     m_error.setTag(currentTag | InEvaluationLoop);
-    asBinding()->markDirtyAndNotifyObservers();
+    asBinding()->evaluateRecursive();
+    asBinding()->notifyRecursive();
     m_error.setTag(currentTag);
 }
 
@@ -193,7 +194,8 @@ bool QQmlPropertyBinding::evaluate(QMetaType metaType, void *dataPtr)
     QQmlEngine *engine = ctxt ? ctxt->engine() : nullptr;
     if (!engine) {
         QPropertyBindingError error(QPropertyBindingError::EvaluationError);
-        QPropertyBindingPrivate::currentlyEvaluatingBinding()->setError(std::move(error));
+        if (auto currentBinding = QPropertyBindingPrivate::currentlyEvaluatingBinding())
+            currentBinding->setError(std::move(error));
         return false;
     }
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
@@ -350,7 +352,7 @@ void QQmlPropertyBinding::handleUndefinedAssignment(QQmlEnginePrivate *ep, void 
         if (firstObserver)
             bindingDataPointer.setObservers(firstObserver.ptr);
         else
-            bindingData->d_ptr = 0;
+            bindingData->d_ref() = 0;
         setIsUndefined(true);
         //suspend binding evaluation state for reset and subsequent read
         auto state = QtPrivate::suspendCurrentBindingStatus();
@@ -360,7 +362,7 @@ void QQmlPropertyBinding::handleUndefinedAssignment(QQmlEnginePrivate *ep, void 
         currentValue.convert(valueMetaType());
         writeBackCurrentValue(std::move(currentValue));
         // reattach the binding (without causing a new notification)
-        if (Q_UNLIKELY(bindingData->d_ptr & QtPrivate::QPropertyBindingData::BindingBit)) {
+        if (Q_UNLIKELY(bindingData->d_ref() & QtPrivate::QPropertyBindingData::BindingBit)) {
             qCWarning(lcQQPropertyBinding) << "Resetting " << prop.name() << "due to the binding becoming undefined  caused a new binding to be installed\n"
                        << "The old binding binding will be abandonned";
             deref();
@@ -368,7 +370,7 @@ void QQmlPropertyBinding::handleUndefinedAssignment(QQmlEnginePrivate *ep, void 
         }
         // reset might have changed observers (?), so refresh firstObserver
         firstObserver = bindingDataPointer.firstObserver();
-        bindingData->d_ptr = reinterpret_cast<quintptr>(this) | QtPrivate::QPropertyBindingData::BindingBit;
+        bindingData->d_ref() = reinterpret_cast<quintptr>(this) | QtPrivate::QPropertyBindingData::BindingBit;
         if (firstObserver)
             bindingDataPointer.setFirstObserver(firstObserver.ptr);
     } else {
