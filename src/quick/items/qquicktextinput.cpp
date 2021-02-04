@@ -4394,8 +4394,6 @@ void QQuickTextInputPrivate::processKeyEvent(QKeyEvent* event)
 
             QInputMethod *inputMethod = QGuiApplication::inputMethod();
             inputMethod->commit();
-            if (!(q->inputMethodHints() & Qt::ImhMultiLine))
-                inputMethod->hide();
 
             if (activeFocus) {
                 // If we lost focus after hiding the virtual keyboard, we've already emitted
