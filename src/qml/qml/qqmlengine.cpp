@@ -1919,7 +1919,7 @@ void QQmlEngine::addImportPath(const QString& path)
   type version mapping and possibly QML extensions plugins.
 
   By default, the list contains the directory of the application executable,
-  paths specified in the \c QML2_IMPORT_PATH environment variable,
+  paths specified in the \c QML_IMPORT_PATH environment variable,
   and the builtin \c QmlImportsPath from QLibraryInfo.
 
   \sa addImportPath(), setImportPathList()
@@ -1935,7 +1935,7 @@ QStringList QQmlEngine::importPathList() const
   installed modules in a URL-based directory structure.
 
   By default, the list contains the directory of the application executable,
-  paths specified in the \c QML2_IMPORT_PATH environment variable,
+  paths specified in the \c QML_IMPORT_PATH environment variable,
   and the builtin \c QmlImportsPath from QLibraryInfo.
 
   \sa importPathList(), addImportPath()

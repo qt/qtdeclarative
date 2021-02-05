@@ -1932,6 +1932,29 @@ void QQmlImports::setDesignerSupportRequired(bool b)
     designerSupportRequired = b;
 }
 
+static QStringList parseEnvImportPath(const QString &envImportPath)
+{
+    if (QDir::listSeparator() == u':') {
+        // Double colons are interpreted as separator + resource path.
+        QStringList paths = envImportPath.split(u':');
+        bool wasEmpty = false;
+        for (auto it = paths.begin(); it != paths.end();) {
+            if (it->isEmpty()) {
+                wasEmpty = true;
+                it = paths.erase(it);
+            } else {
+                if (wasEmpty) {
+                    it->prepend(u':');
+                    wasEmpty = false;
+                }
+                ++it;
+            }
+        }
+        return paths;
+    } else {
+        return envImportPath.split(QDir::listSeparator(), Qt::SkipEmptyParts);
+    }
+}
 
 /*!
 \class QQmlImportDatabase
@@ -1942,39 +1965,22 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
 : engine(e)
 {
     filePluginPath << QLatin1String(".");
-    // Search order is applicationDirPath(), qrc:/qt-project.org/imports, $QML2_IMPORT_PATH, QLibraryInfo::QmlImportsPath
+    // Search order is applicationDirPath(), qrc:/qt-project.org/imports, $QML_IMPORT_PATH, $QML2_IMPORT_PATH, QLibraryInfo::QmlImportsPath
 
     QString installImportsPath = QLibraryInfo::path(QLibraryInfo::QmlImportsPath);
     addImportPath(installImportsPath);
 
-    // env import paths
-    if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty("QML2_IMPORT_PATH"))) {
-        const QString envImportPath = qEnvironmentVariable("QML2_IMPORT_PATH");
-        const QChar pathSep = QDir::listSeparator();
-        QStringList paths;
-        if (pathSep == u':') {
-            // Double colons are interpreted as separator + resource path.
-            paths = envImportPath.split(u':');
-            bool wasEmpty = false;
-            for (auto it = paths.begin(); it != paths.end();) {
-                if (it->isEmpty()) {
-                    wasEmpty = true;
-                    it = paths.erase(it);
-                } else {
-                    if (wasEmpty) {
-                        it->prepend(u':');
-                        wasEmpty = false;
-                    }
-                    ++it;
-                }
-            }
-        } else {
-            paths = envImportPath.split(pathSep, Qt::SkipEmptyParts);
+    auto addEnvImportPath = [this](const char *var) {
+        if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty(var))) {
+            const QStringList paths = parseEnvImportPath(qEnvironmentVariable(var));
+            for (int ii = paths.count() - 1; ii >= 0; --ii)
+                addImportPath(paths.at(ii));
         }
+    };
 
-        for (int ii = paths.count() - 1; ii >= 0; --ii)
-            addImportPath(paths.at(ii));
-    }
+    // env import paths
+    addEnvImportPath("QML_IMPORT_PATH");
+    addEnvImportPath("QML2_IMPORT_PATH");
 
     addImportPath(QStringLiteral("qrc:/qt-project.org/imports"));
     addImportPath(QCoreApplication::applicationDirPath());

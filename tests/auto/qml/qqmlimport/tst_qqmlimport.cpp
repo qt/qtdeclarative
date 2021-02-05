@@ -64,13 +64,13 @@ void tst_QQmlImport::cleanup()
 
 void tst_QQmlImport::envResourceImportPath()
 {
-    const bool hadEnv = qEnvironmentVariableIsSet("QML2_IMPORT_PATH");
-    const QByteArray oldEnv = hadEnv ? qgetenv("QML2_IMPORT_PATH") : QByteArray();
+    const bool hadEnv = qEnvironmentVariableIsSet("QML_IMPORT_PATH");
+    const QByteArray oldEnv = hadEnv ? qgetenv("QML_IMPORT_PATH") : QByteArray();
     auto guard = qScopeGuard([&] {
         if (hadEnv)
-            qputenv("QML2_IMPORT_PATH", oldEnv);
+            qputenv("QML_IMPORT_PATH", oldEnv);
         else
-            qunsetenv("QML2_IMPORT_PATH");
+            qunsetenv("QML_IMPORT_PATH");
     });
 
     const QStringList envPaths({
@@ -80,7 +80,7 @@ void tst_QQmlImport::envResourceImportPath()
         directory()
     });
 
-    qputenv("QML2_IMPORT_PATH", envPaths.join(QDir::listSeparator()).toUtf8());
+    qputenv("QML_IMPORT_PATH", envPaths.join(QDir::listSeparator()).toUtf8());
 
     QQmlImportDatabase importDb(nullptr);
     const QStringList importPaths = importDb.importPathList();
