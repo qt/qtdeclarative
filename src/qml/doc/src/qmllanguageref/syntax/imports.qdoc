@@ -289,7 +289,7 @@ default locations to be searched by the engine. By default, this list contains:
 
 \list
 \li The directory of the current file
-\li The location specified by QLibraryInfo::Qml2ImportsPath
+\li The location specified by QLibraryInfo::QmlImportsPath
 \li Paths specified by the \c QML2_IMPORT_PATH environment variable
 \li The qrc:/qt-project.org/imports path inside the resources.
 \endlist

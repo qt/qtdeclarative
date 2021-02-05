@@ -155,7 +155,7 @@ void TestQmllint::qmltypes_data()
 {
     QTest::addColumn<QString>("file");
 
-    const QString importsPath = QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath);
+    const QString importsPath = QLibraryInfo::path(QLibraryInfo::QmlImportsPath);
     QDirIterator it(importsPath, { "*.qmltypes" },
                     QDir::Files, QDirIterator::Subdirectories);
     while (it.hasNext())
@@ -359,7 +359,7 @@ QString TestQmllint::runQmllint(const QString &fileToLint,
                                 std::function<void(QProcess &)> handleResult,
                                 const QStringList &extraArgs)
 {
-    auto qmlImportDir = QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath);
+    auto qmlImportDir = QLibraryInfo::path(QLibraryInfo::QmlImportsPath);
     QStringList args;
 
     args << (QFileInfo(fileToLint).isAbsolute() ? fileToLint : testFile(fileToLint))

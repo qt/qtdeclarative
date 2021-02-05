@@ -121,7 +121,7 @@ void TestQmlimportscanner::runQmlimportscanner(const QString &mode, const QStrin
     const QString file(pathToScan);
     QStringList args {
         mode, file,
-        "-importPath", QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath), dataDirectory()
+        "-importPath", QLibraryInfo::path(QLibraryInfo::QmlImportsPath), dataDirectory()
     };
     QString errors;
     QProcess process;

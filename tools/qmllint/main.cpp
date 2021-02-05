@@ -160,7 +160,7 @@ int main(int argv, char *argc[])
     QStringList qmlImportPaths = parser.isSet(qmlImportPathsOption)
             ? parser.values(qmlImportPathsOption)
 #   ifndef QT_BOOTSTRAPPED
-            : QStringList { QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath), QDir::currentPath() };
+            : QStringList { QLibraryInfo::path(QLibraryInfo::QmlImportsPath), QDir::currentPath() };
 #   else
             : QStringList { QDir::currentPath() };
 #   endif

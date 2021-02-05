@@ -76,7 +76,7 @@ void printUsage(const QString &appNameIn)
 {
     const std::wstring appName = appNameIn.toStdWString();
 #ifndef QT_BOOTSTRAPPED
-    const QString qmlPath = QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath);
+    const QString qmlPath = QLibraryInfo::path(QLibraryInfo::QmlImportsPath);
 #else
     const QString qmlPath = QStringLiteral("/home/user/dev/qt-install/qml");
 #endif
