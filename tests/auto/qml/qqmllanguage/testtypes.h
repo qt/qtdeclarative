@@ -1468,6 +1468,9 @@ class Extension : public QObject
 public:
     Extension(QObject *parent = nullptr) : QObject(parent) {}
     int extension() const { return 42; }
+    Q_INVOKABLE int invokable() { return 123; }
+public slots:
+    int slot() { return 456; }
 };
 
 class Extended : public QObject

@@ -12,6 +12,9 @@ QtObject {
 
     property int extendedBase: extended.base
 
+    property int extendedInvokable: extended.invokable()
+    property int extendedSlot: extended.slot()
+
     property int extendedExtension: extended.extension
     property int foreignExtendedExtension: foreignExtended.extension
 

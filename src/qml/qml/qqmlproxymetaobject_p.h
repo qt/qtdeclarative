@@ -80,6 +80,8 @@ protected:
     int metaCall(QObject *o, QMetaObject::Call _c, int _id, void **_a) override;
 
 private:
+    QObject *getProxy(int index);
+
     QList<ProxyData> *metaObjects;
     QObject **proxies;
 

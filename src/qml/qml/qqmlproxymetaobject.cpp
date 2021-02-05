@@ -65,6 +65,41 @@ QQmlProxyMetaObject::~QQmlProxyMetaObject()
     proxies = nullptr;
 }
 
+QObject *QQmlProxyMetaObject::getProxy(int index)
+{
+    if (!proxies) {
+        if (!proxies) {
+            proxies = new QObject*[metaObjects->count()];
+            ::memset(proxies, 0,
+                     sizeof(QObject *) * metaObjects->count());
+        }
+    }
+
+    if (!proxies[index]) {
+        const ProxyData &data = metaObjects->at(index);
+        if (!data.createFunc)
+            return nullptr;
+
+        QObject *proxy = data.createFunc(object);
+        const QMetaObject *metaObject = proxy->metaObject();
+        proxies[index] = proxy;
+
+        int localOffset = data.metaObject->methodOffset();
+        int methodOffset = metaObject->methodOffset();
+        int methods = metaObject->methodCount() - methodOffset;
+
+        // ### - Can this be done more optimally?
+        for (int jj = 0; jj < methods; ++jj) {
+            QMetaMethod method =
+                metaObject->method(jj + methodOffset);
+            if (method.methodType() == QMetaMethod::Signal)
+                QQmlPropertyPrivate::connect(proxy, methodOffset + jj, object, localOffset + jj);
+        }
+    }
+
+    return proxies[index];
+}
+
 int QQmlProxyMetaObject::metaCall(QObject *o, QMetaObject::Call c, int id, void **a)
 {
     Q_ASSERT(object == o);
@@ -74,38 +109,13 @@ int QQmlProxyMetaObject::metaCall(QObject *o, QMetaObject::Call c, int id, void 
             id >= metaObjects->constLast().propertyOffset) {
 
         for (int ii = 0; ii < metaObjects->count(); ++ii) {
-            const ProxyData &data = metaObjects->at(ii);
-            if (id >= data.propertyOffset) {
-                if (!proxies) {
-                    proxies = new QObject*[metaObjects->count()];
-                    ::memset(proxies, 0,
-                             sizeof(QObject *) * metaObjects->count());
-                }
+            const int globalPropertyOffset = metaObjects->at(ii).propertyOffset;
+            if (id >= globalPropertyOffset) {
+                QObject *proxy = getProxy(ii);
+                const int localProxyOffset = proxy->metaObject()->propertyOffset();
+                const int localProxyId = id - globalPropertyOffset + localProxyOffset;
 
-                if (!proxies[ii]) {
-                    if (!data.createFunc)
-                        continue;
-                    QObject *proxy = data.createFunc(object);
-                    const QMetaObject *metaObject = proxy->metaObject();
-                    proxies[ii] = proxy;
-
-                    int localOffset = data.metaObject->methodOffset();
-                    int methodOffset = metaObject->methodOffset();
-                    int methods = metaObject->methodCount() - methodOffset;
-
-                    // ### - Can this be done more optimally?
-                    for (int jj = 0; jj < methods; ++jj) {
-                        QMetaMethod method =
-                            metaObject->method(jj + methodOffset);
-                        if (method.methodType() == QMetaMethod::Signal)
-                            QQmlPropertyPrivate::connect(proxy, methodOffset + jj, object, localOffset + jj);
-                    }
-                }
-
-                int proxyOffset = proxies[ii]->metaObject()->propertyOffset();
-                int proxyId = id - data.propertyOffset + proxyOffset;
-
-                return proxies[ii]->qt_metacall(c, proxyId, a);
+                return proxy->qt_metacall(c, localProxyId, a);
             }
         }
     } else if (c == QMetaObject::InvokeMetaMethod &&
@@ -114,6 +124,18 @@ int QQmlProxyMetaObject::metaCall(QObject *o, QMetaObject::Call c, int id, void 
         if (m.methodType() == QMetaMethod::Signal) {
             QMetaObject::activate(object, id, a);
             return -1;
+        } else {
+            for (int ii = 0; ii < metaObjects->count(); ++ii) {
+                const int globalMethodOffset = metaObjects->at(ii).methodOffset;
+                if (id >= globalMethodOffset) {
+                    QObject *proxy = getProxy(ii);
+
+                    const int localMethodOffset = proxy->metaObject()->methodOffset();
+                    const int localMethodId = id - globalMethodOffset + localMethodOffset;
+
+                    return proxy->qt_metacall(c, localMethodId, a);
+                }
+            }
         }
     }
 
