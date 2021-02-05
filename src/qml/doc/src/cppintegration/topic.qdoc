@@ -150,6 +150,9 @@ flowchart can be used:
 
 \image cpp-qml-integration-flowchart
 
+For a description of the macros in the flowchart, see the
+\l {qtqml-cppintegration-definetypes.html}{Defining QML Types from C++} documentation.
+
 \section1 Exposing Attributes of C++ Classes to QML
 
 QML can easily be extended from C++ due to the QML engine's integration with the Qt meta object
