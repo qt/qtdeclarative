@@ -141,7 +141,7 @@ public:
 private:
     QPixmap m_pixmap;
     QRectF m_bounds;
-    qreal m_pixelRatio;
+    qreal m_pixelRatio = 1.0;
     QMargins m_margins;
 };
 
