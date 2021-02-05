@@ -68,6 +68,7 @@ private slots:
     void insertAnimation();
     void clear();
     void pauseResume();
+    void deleteFromListener();
 };
 
 void tst_QSequentialAnimationGroupJob::initTestCase()
@@ -126,15 +127,23 @@ protected:
 class StateChangeListener: public QAnimationJobChangeListener
 {
 public:
-    virtual void animationStateChanged(QAbstractAnimationJob *, QAbstractAnimationJob::State newState, QAbstractAnimationJob::State)
+    virtual void animationStateChanged(
+            QAbstractAnimationJob *job, QAbstractAnimationJob::State newState,
+            QAbstractAnimationJob::State)
     {
         states << newState;
+        if (beEvil) {
+            delete job->group();
+            groupDeleted = true;
+        }
     }
 
     void clear() { states.clear(); }
     int count() const { return states.count(); }
 
     QList<QAbstractAnimationJob::State> states;
+    bool beEvil = false;
+    bool groupDeleted = false;
 };
 
 class FinishedListener: public QAnimationJobChangeListener
@@ -1644,6 +1653,37 @@ void tst_QSequentialAnimationGroupJob::uncontrolledWithLoops()
     QTRY_COMPARE(group.state(), QAbstractAnimationJob::Stopped);
 }
 
+void tst_QSequentialAnimationGroupJob::deleteFromListener()
+{
+    QSequentialAnimationGroupJob *group = new QSequentialAnimationGroupJob;
+
+    UncontrolledAnimation *uncontrolled = new UncontrolledAnimation();
+    TestAnimation *shortLoop = new TestAnimation(100);
+    UncontrolledAnimation *more = new UncontrolledAnimation();
+
+    shortLoop->setLoopCount(-1);
+
+    group->appendAnimation(uncontrolled);
+    group->appendAnimation(shortLoop);
+    group->appendAnimation(more);
+
+    StateChangeListener listener;
+    listener.beEvil = true;
+    shortLoop->addAnimationChangeListener(&listener, QAbstractAnimationJob::StateChange);
+    group->setLoopCount(2);
+
+    group->start();
+
+    QCOMPARE(group->currentLoop(), 0);
+    QCOMPARE(group->state(), QAbstractAnimationJob::Running);
+    QTRY_COMPARE(uncontrolled->state(), QAbstractAnimationJob::Running);
+
+    QVERIFY(!listener.groupDeleted);
+    uncontrolled->stop();
+
+    QTRY_VERIFY(listener.groupDeleted);
+    // It's dead, Jim.
+}
 
 QTEST_MAIN(tst_QSequentialAnimationGroupJob)
 #include "tst_qsequentialanimationgroupjob.moc"

@@ -70,7 +70,7 @@ struct SelfDeletable {
 // \param func statements or functions that to be executed under test.
 // \param action post process if p was deleted under test.
 #define ACTION_IF_DELETED(p, func, action) \
-{ \
+do { \
     static_assert(std::is_same<decltype((p)->m_selfDeletable), SelfDeletable>::value, "m_selfDeletable must be SelfDeletable");\
     bool *prevWasDeleted = (p)->m_selfDeletable.m_wasDeleted; \
     bool wasDeleted = false; \
@@ -82,7 +82,7 @@ struct SelfDeletable {
         {action;} \
     } \
     (p)->m_selfDeletable.m_wasDeleted = prevWasDeleted; \
-}
+} while (false)
 
 #define RETURN_IF_DELETED(func) \
 ACTION_IF_DELETED(this, func, return)
