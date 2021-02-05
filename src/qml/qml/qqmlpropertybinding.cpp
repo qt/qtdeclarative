@@ -86,7 +86,12 @@ void QQmlPropertyBinding::expressionChanged()
         err.setUrl(QUrl{location.sourceFile});
         err.setLine(location.line);
         err.setColumn(location.column);
-        err.setDescription(QString::fromLatin1("Binding loop detected"));
+        const auto ctxt = context();
+        QQmlEngine *engine = ctxt ? ctxt->engine() : nullptr;
+        if (engine)
+            err.setDescription(createBindingLoopErrorDescription(QQmlEnginePrivate::get(engine)));
+        else
+            err.setDescription(QString::fromLatin1("Binding loop detected"));
         err.setObject(target());
         qmlWarning(this->scopeObject(), err);
         return;
