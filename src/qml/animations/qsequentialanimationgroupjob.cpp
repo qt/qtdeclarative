@@ -338,7 +338,7 @@ void QSequentialAnimationGroupJob::uncontrolledAnimationFinished(QAbstractAnimat
     if (m_direction == Forward) {
         // set the current animation to be the next one
         if (m_currentAnimation->nextSibling())
-            setCurrentAnimation(m_currentAnimation->nextSibling());
+            RETURN_IF_DELETED(setCurrentAnimation(m_currentAnimation->nextSibling()));
 
         for (QAbstractAnimationJob *a = animation->nextSibling(); a; a = a->nextSibling()) {
             int dur = a->duration();
@@ -353,7 +353,7 @@ void QSequentialAnimationGroupJob::uncontrolledAnimationFinished(QAbstractAnimat
     } else {
         // set the current animation to be the previous one
         if (m_currentAnimation->previousSibling())
-            setCurrentAnimation(m_currentAnimation->previousSibling());
+            RETURN_IF_DELETED(setCurrentAnimation(m_currentAnimation->previousSibling()));
 
         for (QAbstractAnimationJob *a = animation->previousSibling(); a; a = a->previousSibling()) {
             int dur = a->duration();
@@ -374,12 +374,12 @@ void QSequentialAnimationGroupJob::uncontrolledAnimationFinished(QAbstractAnimat
 void QSequentialAnimationGroupJob::animationInserted(QAbstractAnimationJob *anim)
 {
     if (m_currentAnimation == nullptr)
-        setCurrentAnimation(firstChild()); // initialize the current animation
+        RETURN_IF_DELETED(setCurrentAnimation(firstChild())); // initialize the current animation
 
     if (m_currentAnimation == anim->nextSibling()
         && m_currentAnimation->currentTime() == 0 && m_currentAnimation->currentLoop() == 0) {
             //in this case we simply insert the animation before the current one has actually started
-            setCurrentAnimation(anim);
+            RETURN_IF_DELETED(setCurrentAnimation(anim));
     }
 
 //    TODO
@@ -398,11 +398,11 @@ void QSequentialAnimationGroupJob::animationRemoved(QAbstractAnimationJob *anim,
     bool removingCurrent = anim == m_currentAnimation;
     if (removingCurrent) {
         if (next)
-            setCurrentAnimation(next); //let's try to take the next one
+            RETURN_IF_DELETED(setCurrentAnimation(next)); //let's try to take the next one
         else if (prev)
-            setCurrentAnimation(prev);
+            RETURN_IF_DELETED(setCurrentAnimation(prev));
         else// case all animations were removed
-            setCurrentAnimation(nullptr);
+            RETURN_IF_DELETED(setCurrentAnimation(nullptr));
     }
 
     // duration of the previous animations up to the current animation
