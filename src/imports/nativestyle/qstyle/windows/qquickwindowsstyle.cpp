@@ -70,8 +70,6 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace QQC2 {
-
 #if defined(Q_OS_WIN)
 
 QT_BEGIN_INCLUDE_NAMESPACE
@@ -90,6 +88,8 @@ Q_GUI_EXPORT HICON qt_pixmapToWinHICON(const QPixmap &);
 QT_BEGIN_INCLUDE_NAMESPACE
 #include <limits.h>
 QT_END_INCLUDE_NAMESPACE
+
+namespace QQC2 {
 
 enum QSliderDirection { SlUp, SlDown, SlLeft, SlRight };
 
@@ -2378,7 +2378,7 @@ QIcon QWindowsStyle::standardIcon(StandardPixmap standardIcon, const QStyleOptio
     return QCommonStyle::standardIcon(standardIcon, option);
 }
 
-} //namespace QQC2
+} // namespace QQC2
 
 QT_END_NAMESPACE
 
