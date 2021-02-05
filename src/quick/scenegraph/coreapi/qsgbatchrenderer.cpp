@@ -1073,11 +1073,11 @@ void Renderer::unmap(Buffer *buffer, bool isIndexBuf)
     }
     if (buffer->buf->type() != QRhiBuffer::Dynamic) {
         m_resourceUpdates->uploadStaticBuffer(buffer->buf,
-                                              QByteArray::fromRawData(buffer->data, buffer->size));
+                                             0, buffer->size, buffer->data);
         buffer->nonDynamicChangeCount += 1;
     } else {
         m_resourceUpdates->updateDynamicBuffer(buffer->buf, 0, buffer->size,
-                                               QByteArray::fromRawData(buffer->data, buffer->size));
+                                               buffer->data);
     }
     if (m_visualizer->mode() == Visualizer::VisualizeNothing)
         buffer->data = nullptr;
