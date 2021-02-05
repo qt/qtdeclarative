@@ -61,6 +61,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
  * \class QJSManagedValue
+ * \inmodule QtQml
  * \since 6.1
  *
  * \brief QJSManagedValue represents a value on the JavaScript heap belonging to a QJSEngine.

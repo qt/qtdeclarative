@@ -47,12 +47,14 @@ QT_BEGIN_NAMESPACE
   \since 6.1
   \class QJSPrimitiveUndefined
   \brief An empty marker type to signify the JavaScript Undefined type and its single value.
+  \inmodule QtQml
  */
 
 /*!
   \since 6.1
   \class QJSPrimitiveNull
   \brief An empty marker type to signify the JavaScript null value.
+  \inmodule QtQml
  */
 
 /*!
