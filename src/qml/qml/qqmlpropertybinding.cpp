@@ -42,6 +42,20 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace {
+constexpr std::size_t jsExpressionOffsetLength() {
+    struct composite { QQmlPropertyBinding b; QQmlPropertyBindingJS js; };
+    QT_WARNING_PUSH QT_WARNING_DISABLE_INVALID_OFFSETOF
+    return sizeof (QQmlPropertyBinding) - offsetof(composite, js);
+    QT_WARNING_POP
+}
+}
+
+const QQmlPropertyBindingJS *QQmlPropertyBinding::jsExpression() const
+{
+    return std::launder(reinterpret_cast<QQmlPropertyBindingJS const *>(reinterpret_cast<std::byte const*>(this) + sizeof(QQmlPropertyBinding) + jsExpressionOffsetLength()));
+}
+
 QUntypedPropertyBinding QQmlPropertyBinding::create(const QQmlPropertyData *pd, QV4::Function *function,
                                                     QObject *obj, const QQmlRefPointer<QQmlContextData> &ctxt,
                                                     QV4::ExecutionContext *scope, QObject *target, QQmlPropertyIndex targetIndex)
@@ -68,16 +82,20 @@ QUntypedPropertyBinding QQmlPropertyBinding::create(const QQmlPropertyData *pd, 
             QPropertyBindingSourceLocation());
     }
 
-    auto buffer = new std::byte[sizeof(QQmlPropertyBinding)]; // QQmlPropertyBinding uses delete[]
+    auto buffer = new std::byte[sizeof(QQmlPropertyBinding)+sizeof(QQmlPropertyBindingJS)+jsExpressionOffsetLength()]; // QQmlPropertyBinding uses delete[]
     auto binding = new(buffer) QQmlPropertyBinding(QMetaType(pd->propType()), target, targetIndex);
-    binding->setNotifyOnValueChanged(true);
-    binding->setContext(ctxt);
-    binding->setScopeObject(obj);
-    binding->setupFunction(scope, function);
+    auto js = new(buffer + sizeof(QQmlPropertyBinding) + jsExpressionOffsetLength()) QQmlPropertyBindingJS();
+    Q_ASSERT(binding->jsExpression() == js);
+    Q_ASSERT(js->asBinding() == binding);
+    Q_UNUSED(js);
+    binding->jsExpression()->setNotifyOnValueChanged(true);
+    binding->jsExpression()->setContext(ctxt);
+    binding->jsExpression()->setScopeObject(obj);
+    binding->jsExpression()->setupFunction(scope, function);
     return QUntypedPropertyBinding(static_cast<QPropertyBindingPrivate *>(QPropertyBindingPrivatePtr(binding).data()));
 }
 
-void QQmlPropertyBinding::expressionChanged()
+void QQmlPropertyBindingJS::expressionChanged()
 {
     const auto currentTag = m_error.tag();
     if (currentTag & InEvaluationLoop) {
@@ -89,16 +107,21 @@ void QQmlPropertyBinding::expressionChanged()
         const auto ctxt = context();
         QQmlEngine *engine = ctxt ? ctxt->engine() : nullptr;
         if (engine)
-            err.setDescription(createBindingLoopErrorDescription(QQmlEnginePrivate::get(engine)));
+            err.setDescription(asBinding()->createBindingLoopErrorDescription(QQmlEnginePrivate::get(engine)));
         else
             err.setDescription(QString::fromLatin1("Binding loop detected"));
-        err.setObject(target());
+        err.setObject(asBinding()->target());
         qmlWarning(this->scopeObject(), err);
         return;
     }
     m_error.setTag(currentTag | InEvaluationLoop);
-    markDirtyAndNotifyObservers();
+    asBinding()->markDirtyAndNotifyObservers();
     m_error.setTag(currentTag);
+}
+
+const QQmlPropertyBinding *QQmlPropertyBindingJS::asBinding() const
+{
+    return std::launder(reinterpret_cast<QQmlPropertyBinding const *>(reinterpret_cast<std::byte const*>(this) - sizeof(QQmlPropertyBinding) - jsExpressionOffsetLength()));
 }
 
 QQmlPropertyBinding::QQmlPropertyBinding(QMetaType mt, QObject *target, QQmlPropertyIndex targetIndex)
@@ -115,7 +138,7 @@ QQmlPropertyBinding::QQmlPropertyBinding(QMetaType mt, QObject *target, QQmlProp
 
 bool QQmlPropertyBinding::evaluate(QMetaType metaType, void *dataPtr)
 {
-    const auto ctxt = context();
+    const auto ctxt = jsExpression()->context();
     QQmlEngine *engine = ctxt ? ctxt->engine() : nullptr;
     if (!engine) {
         QPropertyBindingError error(QPropertyBindingError::EvaluationError);
@@ -128,12 +151,12 @@ bool QQmlPropertyBinding::evaluate(QMetaType metaType, void *dataPtr)
     bool isUndefined = false;
 
     QV4::Scope scope(engine->handle());
-    QV4::ScopedValue result(scope, QQmlJavaScriptExpression::evaluate(&isUndefined));
+    QV4::ScopedValue result(scope, jsExpression()->evaluate(&isUndefined));
 
     ep->dereferenceScarceResources();
 
-    if (hasError()) {
-        QPropertyBindingError error(QPropertyBindingError::UnknownError, delayedError()->error().description());
+    if (jsExpression()->hasError()) {
+        QPropertyBindingError error(QPropertyBindingError::UnknownError, jsExpression()->delayedError()->error().description());
         QPropertyBindingPrivate::currentlyEvaluatingBinding()->setError(std::move(error));
         bindingErrorCallback(this);
         return false;
@@ -244,7 +267,7 @@ void QQmlPropertyBinding::bindingErrorCallback(QPropertyBindingPrivate *that)
 
     auto error = This->bindingError();
     QQmlError qmlError;
-    auto location = This->QQmlJavaScriptExpression::sourceLocation();
+    auto location = This->jsExpression()->sourceLocation();
     qmlError.setColumn(location.column);
     qmlError.setLine(location.line);
     qmlError.setUrl(QUrl {location.sourceFile});

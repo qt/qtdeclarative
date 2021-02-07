@@ -311,7 +311,7 @@ void QQmlPropertyCapture::captureProperty(QObject *o, int c, int n, bool doNotif
     if (isBindable) {
         // if the property is a QPropery, and we're binding to a QProperty
         // the automatic capturing process already takes care of everything
-        if (typeid(QQmlPropertyBinding) == typeid(*expression))
+        if (typeid(QQmlPropertyBindingJS) == typeid(*expression))
             return;
         for (auto trigger = expression->qpropertyChangeTriggers; trigger; trigger = trigger->next) {
             if (trigger->target == o && trigger->propertyIndex == c)
