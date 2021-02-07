@@ -44,8 +44,24 @@
 #include "dumpastvisitor.h"
 #include "restructureastvisitor.h"
 
-bool parseFile(const QString &filename, bool inplace, bool verbose, bool force,
-               int indentWidth, bool tabs, const QString &newline)
+struct Options
+{
+    bool verbose = false;
+    bool inplace = false;
+    bool force = false;
+    bool tabs = false;
+    bool valid = false;
+
+    int indentWidth = 4;
+    bool indentWidthSet = false;
+    QString newline = "native";
+
+    QStringList files;
+    QStringList arguments;
+    QStringList errors;
+};
+
+bool parseFile(const QString &filename, const Options &options)
 {
     QFile file(filename);
 
@@ -79,10 +95,10 @@ bool parseFile(const QString &filename, bool inplace, bool verbose, bool force,
     // Try to attach comments to AST nodes
     CommentAstVisitor comment(&engine, parser.rootNode());
 
-    if (verbose)
+    if (options.verbose)
         qWarning().noquote() << comment.attachedComments().size() << "comment(s) attached.";
 
-    if (verbose) {
+    if (options.verbose) {
         int orphaned = 0;
 
         for (const auto& orphanList : comment.orphanComments().values())
@@ -95,12 +111,12 @@ bool parseFile(const QString &filename, bool inplace, bool verbose, bool force,
     RestructureAstVisitor restructure(parser.rootNode());
 
     // Turn AST back into source code
-    if (verbose)
+    if (options.verbose)
         qWarning().noquote() << "Dumping" << filename;
 
-    DumpAstVisitor dump(&engine, parser.rootNode(), &comment, tabs ? 1 : indentWidth,
-                        tabs ? DumpAstVisitor::Indentation::Tabs
-                             : DumpAstVisitor::Indentation::Spaces);
+    DumpAstVisitor dump(
+            &engine, parser.rootNode(), &comment, options.tabs ? 1 : options.indentWidth,
+            options.tabs ? DumpAstVisitor::Indentation::Tabs : DumpAstVisitor::Indentation::Spaces);
 
     QString dumpCode = dump.toString();
 
@@ -109,7 +125,7 @@ bool parseFile(const QString &filename, bool inplace, bool verbose, bool force,
     bool dumpSuccess = parser.parse();
 
     if (!dumpSuccess) {
-        if (verbose) {
+        if (options.verbose) {
             const auto diagnosticMessages = parser.diagnosticMessages();
             for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
               qWarning().noquote() << QString::fromLatin1("<formatted>:%2 : %3")
@@ -121,7 +137,7 @@ bool parseFile(const QString &filename, bool inplace, bool verbose, bool force,
     }
 
     if (dump.error() || !dumpSuccess) {
-        if (force) {
+        if (options.force) {
             qWarning().noquote() << "An error has occurred. The output may not be reliable.";
         } else {
             qWarning().noquote() << "An error has occurred. Aborting.";
@@ -129,50 +145,43 @@ bool parseFile(const QString &filename, bool inplace, bool verbose, bool force,
         }
    }
 
+   const bool native = options.newline == "native";
 
-    const bool native = newline == "native";
+   if (!native) {
+       if (options.newline == "macos") {
+           dumpCode = dumpCode.replace("\n", "\r");
+       } else if (options.newline == "windows") {
+           dumpCode = dumpCode.replace("\n", "\r\n");
+       } else if (options.newline == "unix") {
+           // Nothing needs to be done for unix line-endings
+       } else {
+           qWarning().noquote() << "Unknown line ending type" << options.newline;
+           return false;
+       }
+   }
 
-    if (!native) {
-        if (newline == "macos") {
-            dumpCode = dumpCode.replace("\n","\r");
-        } else if (newline == "windows") {
-            dumpCode = dumpCode.replace("\n", "\r\n");
-        } else if (newline == "unix") {
-            // Nothing needs to be done for unix line-endings
-        } else {
-            qWarning().noquote() << "Unknown line ending type" << newline;
-            return false;
-        }
-    }
+   if (options.inplace) {
+       if (options.verbose)
+           qWarning().noquote() << "Writing to file" << filename;
 
-    if (inplace) {
-        if (verbose)
-            qWarning().noquote() << "Writing to file" << filename;
+       if (!file.open(native ? QIODevice::WriteOnly | QIODevice::Text : QIODevice::WriteOnly)) {
+           qWarning().noquote() << "Failed to open" << filename << "for writing";
+           return false;
+       }
 
-        if (!file.open(native ? QIODevice::WriteOnly | QIODevice::Text : QIODevice::WriteOnly))
-        {
-            qWarning().noquote() << "Failed to open" << filename << "for writing";
-            return false;
-        }
-
-        file.write(dumpCode.toUtf8());
-        file.close();
-    } else {
-        QFile out;
-        out.open(stdout, QIODevice::WriteOnly);
-        out.write(dumpCode.toUtf8());
-    }
+       file.write(dumpCode.toUtf8());
+       file.close();
+   } else {
+       QFile out;
+       out.open(stdout, QIODevice::WriteOnly);
+       out.write(dumpCode.toUtf8());
+   }
 
     return true;
 }
 
-int main(int argc, char *argv[])
+Options buildCommandLineOptions(const QCoreApplication &app)
 {
-    QCoreApplication app(argc, argv);
-    QCoreApplication::setApplicationName("qmlformat");
-    QCoreApplication::setApplicationVersion("1.0");
-
-    bool success = true;
 #if QT_CONFIG(commandlineparser)
     QCommandLineParser parser;
     parser.setApplicationDescription("Formats QML files according to the QML Coding Conventions.");
@@ -206,35 +215,18 @@ int main(int argc, char *argv[])
 
     parser.process(app);
 
-    const auto positionalArguments = parser.positionalArguments();
-
-    if (positionalArguments.isEmpty() && !parser.isSet("files"))
-        parser.showHelp(-1);
-
-    if (!parser.isSet("inplace") && parser.value("newline") != "native") {
-        qWarning() << "Error: The -l option can only be used with -i";
-        return -1;
-    }
-
-    if (parser.isSet("indent-width") && parser.isSet("tabs")) {
-        qWarning() << "Error: Cannot use --indent-width with --tabs";
-        return -1;
-    }
-
     bool indentWidthOkay = false;
-    int indentWidth = parser.value("indent-width").toInt(&indentWidthOkay);
-
+    const int indentWidth = parser.value("indent-width").toInt(&indentWidthOkay);
     if (!indentWidthOkay) {
-        qWarning() << "Error: Invalid value passed to -w";
-        return -1;
+        Options options;
+        options.errors.push_back("Error: Invalid value passed to -w");
+        return options;
     }
 
-    if (parser.isSet("files")) {
-        if (!positionalArguments.isEmpty())
-            qWarning() << "Warning: Positional arguments are ignored when -F is used";
-
-        QFile file(parser.value("files"));
-        file.open(QIODevice::Text | QIODevice::ReadOnly);
+    QStringList files;
+    QFile file(parser.value("files"));
+    file.open(QIODevice::Text | QIODevice::ReadOnly);
+    if (file.isOpen()) {
         QTextStream in(&file);
         while (!in.atEnd()) {
             QString file = in.readLine();
@@ -242,20 +234,60 @@ int main(int argc, char *argv[])
             if (file.isEmpty())
                 continue;
 
-            if (!parseFile(file, true, parser.isSet("verbose"),
-                           parser.isSet("force"), indentWidth, parser.isSet("tabs"),
-                           parser.value("newline")))
+            files.push_back(file);
+        }
+    }
+
+    Options options;
+    options.verbose = parser.isSet("verbose");
+    options.inplace = parser.isSet("inplace");
+    options.force = parser.isSet("force");
+    options.tabs = parser.isSet("tabs");
+    options.valid = true;
+
+    options.indentWidth = indentWidth;
+    options.indentWidthSet = parser.isSet("indent-width");
+    options.newline = parser.value("newline");
+    options.files = files;
+    options.arguments = parser.positionalArguments();
+    return options;
+#else
+    return Options {};
+#endif
+}
+
+int main(int argc, char *argv[])
+{
+    QCoreApplication app(argc, argv);
+    QCoreApplication::setApplicationName("qmlformat");
+    QCoreApplication::setApplicationVersion("1.0");
+
+    const auto options = buildCommandLineOptions(app);
+    if (!options.valid) {
+        for (const auto &error : options.errors) {
+            qWarning().noquote() << error;
+        }
+
+        return -1;
+    }
+
+    bool success = true;
+    if (!options.files.isEmpty()) {
+        if (!options.arguments.isEmpty())
+            qWarning() << "Warning: Positional arguments are ignored when -F is used";
+
+        for (const QString &file : options.files) {
+            Q_ASSERT(!file.isEmpty());
+
+            if (!parseFile(file, options))
                 success = false;
         }
     } else {
-        for (const QString &file : parser.positionalArguments()) {
-            if (!parseFile(file, parser.isSet("inplace"), parser.isSet("verbose"),
-                           parser.isSet("force"), indentWidth,
-                           parser.isSet("tabs"), parser.value("newline")))
+        for (const QString &file : options.arguments) {
+            if (!parseFile(file, options))
                 success = false;
         }
     }
-#endif
 
     return success ? 0 : 1;
 }
