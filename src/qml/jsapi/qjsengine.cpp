@@ -821,6 +821,7 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
 /*! \fn template <typename T> QJSValue QJSEngine::toScriptValue(const T &value)
 
     Creates a QJSValue with the given \a value.
+    This works with any type \c{T} that has a \c{QMetaType}.
 
     \sa fromScriptValue()
 */
@@ -828,6 +829,7 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
 /*! \fn template <typename T> T QJSEngine::fromScriptValue(const QJSValue &value)
 
     Returns the given \a value converted to the template type \c{T}.
+    This works with any type \c{T} that has a \c{QMetaType}.
 
     \sa toScriptValue()
 */
