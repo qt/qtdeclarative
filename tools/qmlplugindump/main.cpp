@@ -108,15 +108,16 @@ struct QmlVersionInfo
 };
 
 static bool matchingImportUri(const QQmlType &ty, const QmlVersionInfo& versionInfo) {
+    const QString &module = ty.module();
     if (versionInfo.strict) {
-        return (versionInfo.pluginImportUri == ty.module()
+        return (versionInfo.pluginImportUri == module
                 && (ty.version().majorVersion() == versionInfo.version.majorVersion()
                     || !ty.version().hasMajorVersion()))
-                || ty.module().isEmpty();
+                || module.isEmpty();
     }
-    return ty.module().isEmpty()
-            || versionInfo.pluginImportUri == ty.module()
-            || ty.module().startsWith(versionInfo.pluginImportUri + QLatin1Char('.'));
+    return module.isEmpty()
+            || versionInfo.pluginImportUri == module
+            || module.startsWith(versionInfo.pluginImportUri + QLatin1Char('.'));
 }
 
 void collectReachableMetaObjects(const QMetaObject *meta, QSet<const QMetaObject *> *metas,  const QmlVersionInfo &info, bool extended = false, bool alreadyChangedModule = false)
