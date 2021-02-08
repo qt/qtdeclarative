@@ -93,6 +93,7 @@
 #include "qv4stackframe_p.h"
 #include "qv4atomics_p.h"
 #include "qv4urlobject_p.h"
+#include "qv4jscall_p.h"
 
 #if QT_CONFIG(qml_sequence_object)
 #include "qv4sequenceobject_p.h"
@@ -123,6 +124,8 @@
 #include <qqmlfile.h>
 #include <qmetatype.h>
 #include <qsequentialiterable.h>
+
+#include <private/qqmlengine_p.h>
 
 #if USE(PTHREADS)
 #  include <pthread.h>
@@ -2049,6 +2052,31 @@ QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::loadModule(const QUrl
 bool ExecutionEngine::diskCacheEnabled() const
 {
     return (!disableDiskCache() && !debugger()) || forceDiskCache();
+}
+
+ReturnedValue ExecutionEngine::callInContext(Function *function, QObject *self,
+                                             QQmlRefPointer<QQmlContextData> ctxtdata, void **args,
+                                             int *types)
+{
+    QV4::Scope scope(this);
+    ExecutionContext *ctx = currentStackFrame ? currentContext() : scriptContext();
+    QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(ctx, ctxtdata, self));
+    QV4::ScopedValue selfValue(scope, QV4::QObjectWrapper::wrap(this, self));
+
+    if (!args)
+        return function->call(selfValue, nullptr, 0, qmlContext);
+
+    if (!types) // both args and types must be present
+        return Encode::undefined();
+
+    // use JSCallData to pass arguments into the function call
+    QV4::JSCallData jsCall(scope, types[0]);
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(m_qmlEngine);
+    QV4::populateJSCallArguments(ep, this, jsCall, args, types);
+
+    QV4::CallData *callData = jsCall->callData();
+    return function->call(selfValue, callData->argValues<QV4::Value>(), callData->argc(),
+                          qmlContext);
 }
 
 void ExecutionEngine::initQmlGlobalObject()

@@ -300,6 +300,9 @@ public:
         return nullptr;
     }
 
+    QJSValue executeRuntimeFunction(const QUrl &url, qsizetype functionIndex, QObject *thisObject,
+                                    void **args = nullptr, int *types = nullptr);
+
 private:
     class SingletonInstances : private QHash<QQmlType, QJSValue>
     {

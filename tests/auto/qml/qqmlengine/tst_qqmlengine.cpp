@@ -85,6 +85,7 @@ private slots:
     void cachedGetterLookup_qtbug_75335();
     void createComponentOnSingletonDestruction();
     void uiLanguage();
+    void executeRuntimeFunction();
 
 public slots:
     QObject *createAQObjectForOwnershipTest ()
@@ -1232,6 +1233,40 @@ void tst_qqmlengine::uiLanguage()
         engine.setUiLanguage("TestLanguage");
         QCOMPARE(object->property("chosenLanguage").toString(), "TestLanguage");
     }
+}
+
+void tst_qqmlengine::executeRuntimeFunction()
+{
+    QQmlEngine engine;
+    QQmlEnginePrivate *priv = QQmlEnginePrivate::get(std::addressof(engine));
+
+    const QUrl url = testFileUrl("runtimeFunctions.qml");
+    QQmlComponent component(&engine, url);
+    QScopedPointer<QObject> dummy(component.create());
+
+    // getConstantValue():
+    const int constant = qjsvalue_cast<int>(priv->executeRuntimeFunction(url, 0, dummy.get()));
+    QCOMPARE(constant, 42);
+
+    // squareValue():
+    int x = 5;
+    void *a0[] = { nullptr, const_cast<void *>(reinterpret_cast<const void *>(std::addressof(x))) };
+    int t0[] = { 1, QMetaTypeId2<int>::qt_metatype_id() };
+    const int squared =
+            qjsvalue_cast<int>(priv->executeRuntimeFunction(url, 1, dummy.get(), a0, t0));
+    QCOMPARE(squared, x * x);
+
+    // concatenate():
+    QString str1 = QStringLiteral("Hello"); // uses "raw data" storage
+    QString str2 = QLatin1String(", Qml"); // uses own QString storage
+    void *a1[] = { nullptr,
+                   const_cast<void *>(reinterpret_cast<const void *>(std::addressof(str1))),
+                   const_cast<void *>(reinterpret_cast<const void *>(std::addressof(str2))) };
+    int t1[] = { 2, QMetaTypeId2<QString>::qt_metatype_id(),
+                 QMetaTypeId2<QString>::qt_metatype_id() };
+    QString concatenated =
+            qjsvalue_cast<QString>(priv->executeRuntimeFunction(url, 2, dummy.get(), a1, t1));
+    QCOMPARE(concatenated, str1 + str2);
 }
 
 QTEST_MAIN(tst_qqmlengine)

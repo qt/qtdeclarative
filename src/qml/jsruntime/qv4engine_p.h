@@ -741,6 +741,9 @@ public:
 
     bool diskCacheEnabled() const;
 
+    ReturnedValue callInContext(Function *function, QObject *self,
+                                QQmlRefPointer<QQmlContextData> ctxtdata, void **args, int *types);
+
 private:
 #if QT_CONFIG(qml_debug)
     QScopedPointer<QV4::Debugging::Debugger> m_debugger;

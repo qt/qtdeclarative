@@ -2312,6 +2312,30 @@ bool QQmlEnginePrivate::isScriptLoaded(const QUrl &url) const
     return typeLoader.isScriptLoaded(url);
 }
 
+QJSValue QQmlEnginePrivate::executeRuntimeFunction(const QUrl &url, qsizetype functionIndex,
+                                                   QObject *thisObject, void **args, int *types)
+{
+    Q_Q(QQmlEngine);
+    if (const auto unit = typeLoader.getType(url)->compilationUnit()) {
+        Q_ASSERT(functionIndex >= 0);
+        Q_ASSERT(thisObject);
+
+        if (!unit->engine)
+            unit->linkToEngine(q->handle());
+
+        if (unit->runtimeFunctions.length() <= functionIndex)
+            return QJSValue();
+
+        QQmlContext *ctx = q->contextForObject(thisObject);
+        if (!ctx)
+            ctx = q->rootContext();
+        return QJSValuePrivate::fromReturnedValue(
+                q->handle()->callInContext(unit->runtimeFunctions[functionIndex], thisObject,
+                                           QQmlContextData::get(ctx), args, types));
+    }
+    return QJSValue();
+}
+
 #if defined(Q_OS_WIN)
 // Normalize a file name using Shell API. As opposed to converting it
 // to a short 8.3 name and back, this also works for drives where 8.3 notation
