@@ -348,6 +348,7 @@ private slots:
     void qtbug_85932();
 
     void multiExtension();
+    void invalidInlineComponent();
 
 private:
     QQmlEngine engine;
@@ -6149,6 +6150,22 @@ void tst_qqmllanguage::multiExtension()
     QCOMPARE(o->property("d").toInt(), 22);
     QCOMPARE(o->property("f").toInt(), 31);
     QCOMPARE(o->property("g").toInt(), 44);
+}
+
+void tst_qqmllanguage::invalidInlineComponent()
+{
+    QQmlEngine e;
+    QQmlComponent c(&engine);
+    c.setData("import QtQuick 2.0\n"
+              "import QtQuick.Window 2.1\n"
+              "Window {\n"
+              "    component TestPopup: Window {\n"
+              "        visibility: Window.Windowed\n"
+              "    }\n"
+              "    TestPopup { color: \"blue\" }\n"
+              "}", QUrl());
+    QVERIFY(c.isError());
+    QVERIFY(c.errorString().contains("\"Window.visibility\" is not available in QtQuick 2.0."));
 }
 
 QTEST_MAIN(tst_qqmllanguage)
