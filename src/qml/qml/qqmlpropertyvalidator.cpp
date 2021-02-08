@@ -101,7 +101,9 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
 {
     const QV4::CompiledData::Object *obj = compilationUnit->objectAt(objectIndex);
     for (auto it = obj->inlineComponentsBegin(); it != obj->inlineComponentsEnd(); ++it) {
-        validateObject(it->objectIndex, /* instantiatingBinding*/ nullptr);
+        const auto errors = validateObject(it->objectIndex, /* instantiatingBinding*/ nullptr);
+        if (!errors.isEmpty())
+            return errors;
     }
 
     if (obj->flags & QV4::CompiledData::Object::IsComponent && !(obj->flags & QV4::CompiledData::Object::IsInlineComponentRoot)) {
