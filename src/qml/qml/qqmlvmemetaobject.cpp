@@ -322,9 +322,8 @@ bool QQmlInterceptorMetaObject::intercept(QMetaObject::Call c, int id, void **a)
             const int valueIndex = vi->m_propertyIndex.valueTypeIndex();
             const QQmlData *data = QQmlData::get(object);
             const QMetaType metaType = data->propertyCache->property(id)->propType();
-            const int type = metaType.id();
 
-            if (type != QMetaType::UnknownType) {
+            if (metaType.isValid()) {
                 if (valueIndex != -1) {
                     QQmlGadgetPtrWrapper *valueType = QQmlGadgetPtrWrapper::instance(
                                 data->context->engine(), metaType);
@@ -362,7 +361,7 @@ bool QQmlInterceptorMetaObject::intercept(QMetaObject::Call c, int id, void **a)
                     //
 
                     QMetaProperty valueProp = valueType->property(valueIndex);
-                    QVariant newValue(QMetaType(type), a[0]);
+                    QVariant newValue(metaType, a[0]);
 
                     valueType->read(object, id);
                     QVariant prevComponentValue = valueProp.read(valueType);
@@ -383,7 +382,7 @@ bool QQmlInterceptorMetaObject::intercept(QMetaObject::Call c, int id, void **a)
                     if (updated)
                         return true;
                 } else {
-                    vi->write(QVariant(QMetaType(type), a[0]));
+                    vi->write(QVariant(metaType, a[0]));
                     return true;
                 }
             }
