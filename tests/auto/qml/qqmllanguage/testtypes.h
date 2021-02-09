@@ -1703,6 +1703,17 @@ public:
     int g() const { return 44; }
 };
 
+class StringSignaler : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    StringSignaler(QObject *parent = nullptr) : QObject(parent) {}
+    Q_INVOKABLE void call() { emit signal(QJSValue("Hello world!")); }
+signals:
+    void signal(QJSValue value);
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H
