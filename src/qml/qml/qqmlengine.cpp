@@ -1778,24 +1778,24 @@ static void dumpwarning(const QQmlError &error)
     switch (error.messageType()) {
     case QtDebugMsg:
         QMessageLogger(error.url().toString().toLatin1().constData(),
-                       error.line(), nullptr).debug().nospace()
-                << qPrintable(error.toString());
+                       error.line(), nullptr).debug().noquote().nospace()
+                << error.toString();
         break;
     case QtInfoMsg:
         QMessageLogger(error.url().toString().toLatin1().constData(),
-                       error.line(), nullptr).info().nospace()
-                << qPrintable(error.toString());
+                       error.line(), nullptr).info().noquote().nospace()
+                << error.toString();
         break;
     case QtWarningMsg:
     case QtFatalMsg: // fatal does not support streaming, and furthermore, is actually fatal. Probably not desirable for QML.
         QMessageLogger(error.url().toString().toLatin1().constData(),
-                       error.line(), nullptr).warning().nospace()
-                << qPrintable(error.toString());
+                       error.line(), nullptr).warning().noquote().nospace()
+                << error.toString();
         break;
     case QtCriticalMsg:
         QMessageLogger(error.url().toString().toLatin1().constData(),
-                       error.line(), nullptr).critical().nospace()
-                << qPrintable(error.toString());
+                       error.line(), nullptr).critical().noquote().nospace()
+                << error.toString();
         break;
     }
 }
