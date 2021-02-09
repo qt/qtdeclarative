@@ -343,6 +343,7 @@ private slots:
     void extendedNamespace();
     void factorySingleton();
     void extendedSingleton();
+    void qtbug_86482();
 
     void invalidInlineComponent();
 
@@ -6103,6 +6104,26 @@ void tst_qqmllanguage::invalidInlineComponent()
               "}", QUrl());
     QVERIFY(c.isError());
     QVERIFY(c.errorString().contains("\"Window.visibility\" is not available in QtQuick 2.0."));
+}
+
+void tst_qqmllanguage::qtbug_86482()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(QByteArray(R"(import QtQml 2.0
+                                 import StaticTest
+                                 QtObject {
+                                     id: root
+                                     property string result
+                                     property StringSignaler str: StringSignaler {
+                                        onSignal: function(value) { root.result = value; }
+                                     }
+                                     Component.onCompleted: str.call();
+                                 })"), QUrl());
+    VERIFY_ERRORS(0);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QCOMPARE(o->property("result").toString(), QStringLiteral("Hello world!"));
 }
 
 QTEST_MAIN(tst_qqmllanguage)
