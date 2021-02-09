@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -48,14 +48,14 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.3
-import "../shared" as Shared
+import QtQuick
+import QtQuick.Controls
 
 Column {
     id: root
     spacing: 8
 
-    Shared.Label {
+    Label {
         text: "Total number of screens: " + screenInfo.count
         font.bold: true
     }
@@ -67,7 +67,7 @@ Column {
         Repeater {
             id: screenInfo
             model: Qt.application.screens
-            Shared.Label {
+            Label {
                 required property string name
                 required property int virtualX
                 required property int virtualY

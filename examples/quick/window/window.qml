@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import "../shared" as Shared
+import QtQuick
+import QtQuick.Controls
 
 QtObject {
     id: root
@@ -67,20 +67,20 @@ QtObject {
             anchors.margins: root.defaultSpacing
             spacing: root.defaultSpacing
             property real cellWidth: col.width / 3 - spacing
-            Shared.Label { text: "Control the second window:" }
+            Label { text: "Control the second window:" }
             Grid {
                 id: grid
                 columns: 3
                 spacing: root.defaultSpacing
                 width: parent.width
-                Shared.Button {
+                Button {
                     id: showButton
                     width: col.cellWidth
                     text: root.testWindow.visible ? "Hide" : "Show"
                     onClicked: root.testWindow.visible = !root.testWindow.visible
                 }
                 //! [windowedCheckbox]
-                Shared.CheckBox {
+                CheckBox {
                     text: "Windowed"
                     height: showButton.height
                     width: col.cellWidth
@@ -88,26 +88,26 @@ QtObject {
                     onClicked: root.testWindow.visibility = Window.Windowed
                 }
                 //! [windowedCheckbox]
-                Shared.CheckBox {
+                CheckBox {
                     height: showButton.height
                     width: col.cellWidth
                     text: "Full Screen"
                     Binding on checked { value: root.testWindow.visibility === Window.FullScreen }
                     onClicked: root.testWindow.visibility = Window.FullScreen
                 }
-                Shared.Button {
+                Button {
                     id: autoButton
                     width: col.cellWidth
                     text: "Automatic"
                     onClicked: root.testWindow.visibility = Window.AutomaticVisibility
                 }
-                Shared.CheckBox {
+                CheckBox {
                     height: autoButton.height
                     text: "Minimized"
                     Binding on checked { value: root.testWindow.visibility === Window.Minimized }
                     onClicked: root.testWindow.visibility = Window.Minimized
                 }
-                Shared.CheckBox {
+                CheckBox {
                     height: autoButton.height
                     text: "Maximized"
                     Binding on checked { value: root.testWindow.visibility === Window.Maximized }
@@ -131,7 +131,7 @@ QtObject {
                 }
                 return "unknown";
             }
-            Shared.Label {
+            Label {
                 id: visibilityLabel
                 text: "second window is " + (root.testWindow.visible ? "visible" : "invisible") +
                       " and has visibility " + parent.visibilityToString(root.testWindow.visibility)
@@ -160,7 +160,7 @@ QtObject {
         Rectangle {
             anchors.fill: parent
             anchors.margins: root.defaultSpacing
-            Shared.Label {
+            Label {
                 anchors.centerIn: parent
                 text: "Second Window"
             }
@@ -168,7 +168,7 @@ QtObject {
                 anchors.fill: parent
                 onClicked: root.testWindow.color = "#e0c31e"
             }
-            Shared.Button {
+            Button {
                 anchors.right: parent.right
                 anchors.top: parent.top
                 anchors.margins: root.defaultSpacing
@@ -181,7 +181,7 @@ QtObject {
                         root.testWindow.visibility = Window.FullScreen
                 }
             }
-            Shared.Button {
+            Button {
                 anchors.left: parent.left
                 anchors.top: parent.top
                 anchors.margins: root.defaultSpacing

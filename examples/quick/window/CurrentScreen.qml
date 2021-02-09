@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.3
-import "../shared" as Shared
+import QtQuick
+import QtQuick.Controls
 
 Item {
     id: root
@@ -80,47 +80,47 @@ Item {
         y: spacing
 
         //! [screen]
-        Shared.Label {
+        Label {
             text: "Screen \"" + Screen.name + "\":"
             font.bold: true
         }
         Item { width: 1; height: 1 } // spacer
 
-        Shared.Label { text: "manufacturer" }
-        Shared.Label { text: Screen.manufacturer ? Screen.manufacturer : "unknown" }
+        Label { text: "manufacturer" }
+        Label { text: Screen.manufacturer ? Screen.manufacturer : "unknown" }
 
-        Shared.Label { text: "model" }
-        Shared.Label { text: Screen.model ? Screen.model : "unknown" }
+        Label { text: "model" }
+        Label { text: Screen.model ? Screen.model : "unknown" }
 
-        Shared.Label { text: "serial number" }
-        Shared.Label { text: Screen.serialNumber ? Screen.serialNumber : "unknown" }
+        Label { text: "serial number" }
+        Label { text: Screen.serialNumber ? Screen.serialNumber : "unknown" }
 
-        Shared.Label { text: "dimensions" }
-        Shared.Label { text: Screen.width + "x" + Screen.height }
+        Label { text: "dimensions" }
+        Label { text: Screen.width + "x" + Screen.height }
 
-        Shared.Label { text: "pixel density" }
-        Shared.Label { text: Screen.pixelDensity.toFixed(2) + " dots/mm (" + (Screen.pixelDensity * 25.4).toFixed(2) + " dots/inch)" }
+        Label { text: "pixel density" }
+        Label { text: Screen.pixelDensity.toFixed(2) + " dots/mm (" + (Screen.pixelDensity * 25.4).toFixed(2) + " dots/inch)" }
 
-        Shared.Label { text: "logical pixel density" }
-        Shared.Label { text: Screen.logicalPixelDensity.toFixed(2) + " dots/mm (" + (Screen.logicalPixelDensity * 25.4).toFixed(2) + " dots/inch)" }
+        Label { text: "logical pixel density" }
+        Label { text: Screen.logicalPixelDensity.toFixed(2) + " dots/mm (" + (Screen.logicalPixelDensity * 25.4).toFixed(2) + " dots/inch)" }
 
-        Shared.Label { text: "device pixel ratio" }
-        Shared.Label { text: Screen.devicePixelRatio.toFixed(2) }
+        Label { text: "device pixel ratio" }
+        Label { text: Screen.devicePixelRatio.toFixed(2) }
 
-        Shared.Label { text: "available virtual desktop" }
-        Shared.Label { text: Screen.desktopAvailableWidth + "x" + Screen.desktopAvailableHeight }
+        Label { text: "available virtual desktop" }
+        Label { text: Screen.desktopAvailableWidth + "x" + Screen.desktopAvailableHeight }
 
-        Shared.Label { text: "position in virtual desktop" }
-        Shared.Label { text: Screen.virtualX + ", " + Screen.virtualY }
+        Label { text: "position in virtual desktop" }
+        Label { text: Screen.virtualX + ", " + Screen.virtualY }
 
-        Shared.Label { text: "orientation" }
-        Shared.Label { text: root.orientationToString(Screen.orientation) + " (" + Screen.orientation + ")" }
+        Label { text: "orientation" }
+        Label { text: root.orientationToString(Screen.orientation) + " (" + Screen.orientation + ")" }
 
-        Shared.Label { text: "primary orientation" }
-        Shared.Label { text: root.orientationToString(Screen.primaryOrientation) + " (" + Screen.primaryOrientation + ")" }
+        Label { text: "primary orientation" }
+        Label { text: root.orientationToString(Screen.primaryOrientation) + " (" + Screen.primaryOrientation + ")" }
         //! [screen]
 
-        Shared.Label { text: "10mm rectangle" }
+        Label { text: "10mm rectangle" }
         Rectangle {
             color: "red"
             width: Screen.pixelDensity * 10
