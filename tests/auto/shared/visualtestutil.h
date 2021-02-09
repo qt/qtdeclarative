@@ -131,7 +131,8 @@ namespace QQuickVisualTestUtil
     {
     public:
         QQuickApplicationHelper(QQmlDataTest *testCase, const QString &testFilePath,
-                const QStringList &qmlImportPaths = QStringList())
+                const QStringList &qmlImportPaths = {},
+                const QVariantMap &initialProperties = {})
         {
             for (const auto &path : qmlImportPaths)
                 engine.addImportPath(path);
@@ -139,7 +140,7 @@ namespace QQuickVisualTestUtil
             QQmlComponent component(&engine);
 
             component.loadUrl(testCase->testFileUrl(testFilePath));
-            QObject *rootObject = component.create();
+            QObject *rootObject = component.createWithInitialProperties(initialProperties);
             cleanup.reset(rootObject);
             if (!rootObject) {
                 errorMessage = QString::fromUtf8("Failed to create window: %1").arg(component.errorString()).toUtf8();
