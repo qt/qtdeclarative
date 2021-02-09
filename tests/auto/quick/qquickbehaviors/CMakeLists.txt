@@ -14,6 +14,7 @@ qt_internal_add_test(tst_qquickbehaviors
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         tst_qquickbehaviors.cpp
+        bindable.h
     INCLUDE_DIRECTORIES
         ../../shared
     PUBLIC_LIBRARIES
@@ -24,6 +25,14 @@ qt_internal_add_test(tst_qquickbehaviors
         Qt::QuickPrivate
     TESTDATA ${test_data}
 )
+
+set_target_properties(tst_qquickbehaviors PROPERTIES
+    QT_QML_MODULE_VERSION 1.0
+    QT_QML_MODULE_URI test
+)
+
+qt6_qml_type_registration(tst_qquickbehaviors)
+
 
 #### Keys ignored in scope 1:.:.:qquickbehaviors.pro:<TRUE>:
 # DISTFILES = "data/*"

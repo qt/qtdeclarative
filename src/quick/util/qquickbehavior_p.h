@@ -81,6 +81,7 @@ public:
 
     void setTarget(const QQmlProperty &) override;
     void write(const QVariant &value) override;
+    bool bindable(QUntypedBindable *untypedBindable, QUntypedBindable target) override;
 
     QQuickAbstractAnimation *animation();
     void setAnimation(QQuickAbstractAnimation *);

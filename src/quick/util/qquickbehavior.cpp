@@ -53,23 +53,139 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickBehaviorPrivate : public QObjectPrivate, public QAnimationJobChangeListener
+/*!
+   \internal
+   \brief The UntypedProxyProperty class is a property used in Behavior to handle bindable properties.
+
+   Whenever a bindable property with a Behavior gets a request for its bindable interface, we instead
+   return the bindable interface of the UntypedProxyProperty. This causes all reads and writes to be
+   intercepted to use \c m_storage instead; moreover, any installed binding will also use \c m_storage
+   as the property data for the binding.
+
+   The BehaviorPrivate acts as an observer, listening to changes of the proxy property. If those occur,
+   QQuickBehavior::write is called with the new value, which will then adjust the actual property (playing
+   animations if necessary).
+
+   \warning The interception mechanism works only via the metaobject system, just like it is the case with
+   non-binadble properties and writes. Bypassing the metaobject system can thus lead to inconsistent results;
+   it is however currently safe, as we do not publically expose the classes, and the code in Quick plays
+   nicely.
+ */
+class UntypedProxyProperty : public QUntypedPropertyData
+{
+    QtPrivate::QPropertyBindingData m_bindingData;
+    QUntypedPropertyData *m_sourcePropertyData;
+    const QtPrivate::QBindableInterface *m_sourceInterface;
+    QVariant m_storage;
+public:
+    void static getter(const QUntypedPropertyData *d, void *value)
+    {
+        auto This = static_cast<const UntypedProxyProperty *>(d);
+        // multiplexing: If the flag is set, we want to receive the metatype instead
+        if (quintptr(value) & QtPrivate::QBindableInterface::MetaTypeAccessorFlag) {
+            *reinterpret_cast<QMetaType *>(quintptr(value) &
+                                           ~QtPrivate::QBindableInterface::MetaTypeAccessorFlag)
+                    = This->type();
+            return;
+        }
+        This->type().construct(value, This->m_storage.constData());
+        This->m_bindingData.registerWithCurrentlyEvaluatingBinding();
+    }
+
+    void static setter(QUntypedPropertyData *d, const void *value)
+    {
+        auto This = static_cast<UntypedProxyProperty *>(d);
+        This->type().construct(This->m_storage.data(), value);
+        This->m_bindingData.notifyObservers(reinterpret_cast<QUntypedPropertyData *>(This->m_storage.data()));
+    }
+
+    static QUntypedPropertyBinding bindingGetter(const QUntypedPropertyData *d)
+    {
+        auto This = static_cast<const UntypedProxyProperty *>(d);
+        return QUntypedPropertyBinding(This->m_bindingData.binding());
+    }
+
+    static QUntypedPropertyBinding bindingSetter(QUntypedPropertyData *d,
+                                                 const QUntypedPropertyBinding &binding)
+    {
+        auto This = static_cast<UntypedProxyProperty *>(d);
+        if (binding.valueMetaType() != This->type())
+            return {};
+        return This->m_bindingData.setBinding(binding,
+                                              reinterpret_cast<QUntypedPropertyData *>(
+                                                  This->m_storage.data()));
+    }
+
+    static QUntypedPropertyBinding makeBinding(const QUntypedPropertyData *d,
+                                               const QPropertyBindingSourceLocation &location)
+    {
+        auto This = static_cast<const UntypedProxyProperty *>(d);
+        return This->m_sourceInterface->makeBinding(This->m_sourcePropertyData, location);
+    }
+
+    static void setObserver(const QUntypedPropertyData *d, QPropertyObserver *observer)
+    {
+        auto This = static_cast<const UntypedProxyProperty *>(d);
+        This->m_sourceInterface->setObserver(This->m_sourcePropertyData, observer);
+    }
+
+
+
+    UntypedProxyProperty(QUntypedBindable bindable, QQuickBehaviorPrivate *behavior);
+
+    QUntypedBindable getBindable();
+    QMetaType type() const { return m_storage.metaType(); }
+    QVariant value() const {return m_storage;}
+};
+
+static constexpr inline QtPrivate::QBindableInterface untypedProxyPropertyBindableInterafce {
+    &UntypedProxyProperty::getter,
+    &UntypedProxyProperty::setter,
+    &UntypedProxyProperty::bindingGetter,
+    &UntypedProxyProperty::bindingSetter,
+    &UntypedProxyProperty::makeBinding,
+    &UntypedProxyProperty::setObserver,
+    /*metatype*/nullptr
+};
+
+struct UntypedProxyPropertyBindable : QUntypedBindable {
+    UntypedProxyPropertyBindable(UntypedProxyProperty *property)
+        :QUntypedBindable (property, &untypedProxyPropertyBindableInterafce)
+    {}
+};
+
+QUntypedBindable UntypedProxyProperty::getBindable()
+{
+    return UntypedProxyPropertyBindable {const_cast<UntypedProxyProperty *>(this)};
+}
+
+class QQuickBehaviorPrivate : public QObjectPrivate, public QAnimationJobChangeListener, public QPropertyObserver
 {
     Q_DECLARE_PUBLIC(QQuickBehavior)
 public:
-    QQuickBehaviorPrivate() : animation(nullptr), animationInstance(nullptr), enabled(true), finalized(false)
-      , blockRunningChanged(false) {}
-
+    static void onProxyChanged(QPropertyObserver *, QUntypedPropertyData *);
+    QQuickBehaviorPrivate()
+        : QPropertyObserver(&QQuickBehaviorPrivate::onProxyChanged) {}
     void animationStateChanged(QAbstractAnimationJob *, QAbstractAnimationJob::State newState, QAbstractAnimationJob::State oldState) override;
 
     QQmlProperty property;
     QVariant targetValue;
-    QPointer<QQuickAbstractAnimation> animation;
-    QAbstractAnimationJob *animationInstance;
-    bool enabled;
-    bool finalized;
-    bool blockRunningChanged;
+    QPointer<QQuickAbstractAnimation> animation = nullptr;
+    QAbstractAnimationJob *animationInstance = nullptr;
+    std::unique_ptr<UntypedProxyProperty> propertyProxy;
+    bool enabled = true;
+    bool finalized = false;
+    bool blockRunningChanged = false;
+
 };
+
+UntypedProxyProperty::UntypedProxyProperty(QUntypedBindable bindable, QQuickBehaviorPrivate *behavior) :
+    m_sourcePropertyData(QUntypedBindablePrivate::getPropertyData(bindable)),
+    m_sourceInterface(QUntypedBindablePrivate::getInterface(bindable)),
+    m_storage(QVariant(QUntypedBindablePrivate::getInterface(bindable)->metaType()))
+{
+    behavior->setSource(m_bindingData);
+}
 
 /*!
     \qmltype Behavior
@@ -140,6 +256,12 @@ void QQuickBehavior::setAnimation(QQuickAbstractAnimation *animation)
     }
 }
 
+
+void QQuickBehaviorPrivate::onProxyChanged(QPropertyObserver *observer, QUntypedPropertyData *)
+{
+    auto This = static_cast<QQuickBehaviorPrivate *>(observer);
+    This->q_func()->write(This->propertyProxy->value());
+}
 
 void QQuickBehaviorPrivate::animationStateChanged(QAbstractAnimationJob *, QAbstractAnimationJob::State newState,QAbstractAnimationJob::State)
 {
@@ -326,12 +448,30 @@ void QQuickBehavior::write(const QVariant &value)
         QQmlPropertyPrivate::write(d->property, value, QQmlPropertyData::BypassInterceptor | QQmlPropertyData::DontRemoveBinding);
 }
 
+bool QQuickBehavior::bindable(QUntypedBindable *untypedBindable, QUntypedBindable target)
+{
+    Q_D(QQuickBehavior);
+    if (!d->propertyProxy)
+        d->propertyProxy = std::make_unique<UntypedProxyProperty>(target, d);
+    *untypedBindable = d->propertyProxy->getBindable();
+    return true;
+}
+
 void QQuickBehavior::setTarget(const QQmlProperty &property)
 {
     Q_D(QQuickBehavior);
     d->property = property;
     if (d->animation)
         d->animation->setDefaultTarget(property);
+
+    if (QMetaProperty metaProp = property.property(); metaProp.isBindable()) {
+        QUntypedBindable untypedBindable = metaProp.bindable(property.object());
+        d->propertyProxy = std::make_unique<UntypedProxyProperty>(untypedBindable, d);
+        if (untypedBindable.hasBinding()) {
+            // should not happen as bindings should get initialized only after interceptors
+            UntypedProxyProperty::bindingSetter(d->propertyProxy.get(), untypedBindable.takeBinding());
+        }
+    }
 
     QQmlEnginePrivate *engPriv = QQmlEnginePrivate::get(qmlEngine(this));
     static int finalizedIdx = -1;
