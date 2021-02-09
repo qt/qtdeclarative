@@ -65,6 +65,7 @@ public:
     virtual ~QQmlPropertyValueInterceptor();
     virtual void setTarget(const QQmlProperty &property) = 0;
     virtual void write(const QVariant &value) = 0;
+    virtual bool bindable(QUntypedBindable *bindable, QUntypedBindable target);
 
 private:
     friend class QQmlInterceptorMetaObject;

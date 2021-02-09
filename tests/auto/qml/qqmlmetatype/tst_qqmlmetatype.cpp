@@ -57,6 +57,8 @@ private slots:
     void compositeType();
     void externalEnums();
 
+    void interceptorAPI();
+
     void isList();
 
     void defaultObject();
@@ -335,6 +337,46 @@ void tst_qqmlmetatype::externalEnums()
     QCOMPARE(b.typeId(), QMetaType::Int);
     QCOMPARE(b.toInt(), int(QStandardPaths::DocumentsLocation));
 
+}
+
+class ForwardAndLogInterceptor : public QObject, public QQmlPropertyValueInterceptor {
+    Q_OBJECT
+    Q_INTERFACES(QQmlPropertyValueInterceptor)
+public:
+
+    // QQmlPropertyValueInterceptor interface
+    void setTarget(const QQmlProperty &property) override
+    {
+        m_property = property;
+    }
+    void write(const QVariant &value) override
+    {
+        interceptedWrite = true;
+        QQmlPropertyPrivate::write(m_property, value, QQmlPropertyData::BypassInterceptor);
+    }
+    bool bindable(QUntypedBindable *bindable, QUntypedBindable target) override
+    {
+        interceptedBindable = true;
+        *bindable = target;
+        return true;
+    }
+
+    QQmlProperty m_property;
+    bool interceptedBindable = false;
+    bool interceptedWrite = false;
+};
+
+void tst_qqmlmetatype::interceptorAPI()
+{
+    qmlRegisterType<ForwardAndLogInterceptor>("test", 1, 0, "Interceptor");
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("interceptorApi.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY2(obj, qPrintable(component.errorString()));
+
+    auto interceptor = obj->property("i").value<ForwardAndLogInterceptor *>();
+    QVERIFY(interceptor->interceptedBindable);
+    QVERIFY(interceptor->interceptedWrite);
 }
 
 class Controller1 : public QObject

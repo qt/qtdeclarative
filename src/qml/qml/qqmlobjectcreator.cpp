@@ -1423,7 +1423,8 @@ bool QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
         auto& [target, index, qmlBinding] = sharedState->allQPropertyBindings.first();
         QUntypedBindable bindable;
         void *argv[] = { &bindable };
-        target->qt_metacall(QMetaObject::BindableProperty, index, argv);
+        // allow interception
+        target->metaObject()->metacall(target, QMetaObject::BindableProperty, index, argv);
         bindable.setBinding(qmlBinding);
         sharedState->allQPropertyBindings.pop_front();
         if (watcher.hasRecursed() || interrupt.shouldInterrupt())

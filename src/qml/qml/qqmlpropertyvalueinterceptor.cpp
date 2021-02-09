@@ -64,6 +64,21 @@ QQmlPropertyValueInterceptor::~QQmlPropertyValueInterceptor()
 }
 
 /*!
+  \internal
+  Called when a BindableProperty metacall gets intercepted. The default implementation does nothing
+  and simply returns false.
+  A subclass which can properly intercept the metacall should return true after doing its work.
+  \a bindable is the pointer to the QUntypedBindable passed through the metacall
+  \a target is the QUntypedBindable of the intercepted property
+*/
+bool QQmlPropertyValueInterceptor::bindable(QUntypedBindable *bindable, QUntypedBindable target)
+{
+    Q_UNUSED(bindable);
+    Q_UNUSED(target)
+    return false;
+}
+
+/*!
     \fn void QQmlPropertyValueInterceptor::setTarget(const QQmlProperty &property)
     Set the target \a property for the value interceptor.  This method will
     be called by the QML engine when assigning a value interceptor.

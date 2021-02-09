@@ -312,8 +312,9 @@ int QQmlInterceptorMetaObject::metaCall(QObject *o, QMetaObject::Call c, int id,
 
 bool QQmlInterceptorMetaObject::intercept(QMetaObject::Call c, int id, void **a)
 {
-    if (c == QMetaObject::WriteProperty && interceptors &&
-       !(*reinterpret_cast<int*>(a[3]) & QQmlPropertyData::BypassInterceptor)) {
+    if ( ( (c == QMetaObject::WriteProperty &&
+            !(*reinterpret_cast<int*>(a[3]) & QQmlPropertyData::BypassInterceptor)) || c == QMetaObject::BindableProperty )
+         && interceptors ) {
 
         for (QQmlPropertyValueInterceptor *vi = interceptors; vi; vi = vi->m_next) {
             if (vi->m_propertyIndex.coreIndex() != id)
@@ -324,7 +325,8 @@ bool QQmlInterceptorMetaObject::intercept(QMetaObject::Call c, int id, void **a)
             const QMetaType metaType = data->propertyCache->property(id)->propType();
 
             if (metaType.isValid()) {
-                if (valueIndex != -1) {
+                if (valueIndex != -1 && c == QMetaObject::WriteProperty) {
+                    // TODO: handle intercepting bindable properties for value types?
                     QQmlGadgetPtrWrapper *valueType = QQmlGadgetPtrWrapper::instance(
                                 data->context->engine(), metaType);
                     Q_ASSERT(valueType);
@@ -381,9 +383,13 @@ bool QQmlInterceptorMetaObject::intercept(QMetaObject::Call c, int id, void **a)
 
                     if (updated)
                         return true;
-                } else {
+                } else if (c == QMetaObject::WriteProperty) {
                     vi->write(QVariant(metaType, a[0]));
                     return true;
+                } else {
+                    object->qt_metacall(c, id, a);
+                    QUntypedBindable target = *reinterpret_cast<QUntypedBindable *>(a[0]);
+                    return vi->bindable(reinterpret_cast<QUntypedBindable *>(a[0]), target);
                 }
             }
         }
