@@ -240,15 +240,22 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
                         QQmlEnginePrivate *e = QQmlEnginePrivate::get(v4->qmlEngine());
                         if (r.type.isQObjectSingleton() || r.type.isCompositeSingleton()) {
                             e->singletonInstance<QObject*>(r.type);
-                            lookup->qmlContextSingletonLookup.singleton =
-                                    static_cast<Heap::Object*>(
+                            lookup->qmlContextSingletonLookup.singletonObject =
                                         Value::fromReturnedValue(
                                             QQmlTypeWrapper::create(v4, nullptr, r.type)
-                                        ).heapObject());
+                                        ).heapObject();
                         } else {
                             QJSValue singleton = e->singletonInstance<QJSValue>(r.type);
-                            QV4::ScopedObject o(scope, QJSValuePrivate::asReturnedValue(&singleton));
-                            lookup->qmlContextSingletonLookup.singleton = o->d();
+
+                            // QSrting values should already have been put on the engine heap at this point
+                            // to manage their memory. We later assume this has already happened.
+                            Q_ASSERT(!QJSValuePrivate::asQString(&singleton));
+
+                            if (QV4::Value *val = QJSValuePrivate::takeManagedValue(&singleton)) {
+                                lookup->qmlContextSingletonLookup.singletonObject = val->heapObject();
+                            } else {
+                                lookup->qmlContextSingletonLookup.singletonValue = QJSValuePrivate::asReturnedValue(&singleton);
+                            }
                         }
                         lookup->qmlContextPropertyGetter = QQmlContextWrapper::lookupSingleton;
                         return lookup->qmlContextPropertyGetter(lookup, v4, base);
@@ -539,7 +546,11 @@ ReturnedValue QQmlContextWrapper::lookupSingleton(Lookup *l, ExecutionEngine *en
 {
     Q_UNUSED(engine);
     Q_UNUSED(base);
-    return Value::fromHeapObject(l->qmlContextSingletonLookup.singleton).asReturnedValue();
+
+    if (l->qmlContextSingletonLookup.singletonObject != nullptr)
+        return l->qmlContextSingletonLookup.singletonObject->asReturnedValue();
+
+    return l->qmlContextSingletonLookup.singletonValue;
 }
 
 ReturnedValue QQmlContextWrapper::lookupIdObject(Lookup *l, ExecutionEngine *engine, Value *base)

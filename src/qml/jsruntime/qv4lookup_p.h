@@ -139,8 +139,9 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
             int scriptIndex;
         } qmlContextScriptLookup;
         struct {
-            Heap::Object *singleton;
-            quintptr unused;
+            Heap::Base *singletonObject;
+            quintptr unused2;
+            QV4::ReturnedValue singletonValue;
         } qmlContextSingletonLookup;
         struct {
             quintptr unused1;
