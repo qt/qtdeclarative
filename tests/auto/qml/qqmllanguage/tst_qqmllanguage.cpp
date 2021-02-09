@@ -352,6 +352,8 @@ private slots:
     void invalidInlineComponent();
     void warnOnInjectedParameters();
 
+    void qtbug_85615();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -6204,6 +6206,46 @@ void tst_qqmllanguage::qtbug_86482()
     QScopedPointer<QObject> o(component.create());
     QVERIFY2(component.isReady(), qPrintable(component.errorString()));
     QCOMPARE(o->property("result").toString(), QStringLiteral("Hello world!"));
+}
+
+void tst_qqmllanguage::qtbug_85615()
+{
+    qmlRegisterSingletonType("Test.Singleton", 1, 0, "SingletonString", [](QQmlEngine *, QJSEngine *) -> QJSValue {
+        return QJSValue("Test");
+    });
+    qmlRegisterSingletonType("Test.Singleton", 1, 0, "SingletonInt", [](QQmlEngine *, QJSEngine *) -> QJSValue {
+        return QJSValue(123);
+    });
+    qmlRegisterSingletonType("Test.Singleton", 1, 0, "SingletonDouble", [](QQmlEngine *, QJSEngine *) -> QJSValue {
+        return QJSValue(1.23);
+    });
+    qmlRegisterSingletonType("Test.Singleton", 1, 0, "SingletonUndefined", [](QQmlEngine *, QJSEngine *) -> QJSValue {
+        return QJSValue(QJSValue::UndefinedValue);
+    });
+    qmlRegisterSingletonType("Test.Singleton", 1, 0, "SingletonNull", [](QQmlEngine *, QJSEngine *) -> QJSValue {
+        return QJSValue(QJSValue::NullValue);
+    });
+
+    QQmlEngine e;
+    QQmlComponent c(&engine);
+    c.setData("import QtQml 2.0\n"
+              "import Test.Singleton\n"
+              "QtObject {\n"
+              "    property var resultString: SingletonString\n"
+              "    property var resultInt: SingletonInt\n"
+              "    property var resultDouble: SingletonDouble\n"
+              "    property var resultUndefined: SingletonUndefined\n"
+              "    property var resultNull: SingletonNull\n"
+              "}", QUrl());
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QScopedPointer<QObject> o(c.create());
+    QCOMPARE(o->property("resultString").toString(), "Test");
+    QCOMPARE(o->property("resultInt").toInt(), 123);
+    QCOMPARE(o->property("resultDouble").toDouble(), 1.23);
+    QVERIFY(!o->property("resultUndefined").isValid());
+    QCOMPARE(o->property("resultUndefined").metaType(), QMetaType(QMetaType::UnknownType));
+    QCOMPARE(o->property("resultNull").metaType(), QMetaType(QMetaType::Nullptr));
 }
 
 QTEST_MAIN(tst_qqmllanguage)
