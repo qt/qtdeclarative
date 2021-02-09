@@ -21,7 +21,7 @@ if (QT_FEATURE_qml_xmllistmodel)
     add_subdirectory(qmlxmllistmodel)
 endif()
 
-if(TARGET Qt::Gui AND QT_FEATURE_qml_animation)
+if(TARGET Qt::Gui AND TARGET Qt::ShaderTools AND QT_FEATURE_qml_animation)
     add_subdirectory(quick)
     add_subdirectory(quickshapes)
     add_subdirectory(quicklayouts)

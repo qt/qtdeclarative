@@ -327,7 +327,7 @@ QT_END_NAMESPACE
 
 static void initResources()
 {
-    Q_INIT_RESOURCE(scenegraph);
+    Q_INIT_RESOURCE(scenegraph_shaders);
 }
 
 Q_CONSTRUCTOR_FUNCTION(initResources)
