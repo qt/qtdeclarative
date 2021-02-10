@@ -1,4 +1,3 @@
-
 /****************************************************************************
 **
 ** Copyright (C) 2021 The Qt Company Ltd.
@@ -60,7 +59,8 @@ Item {
     height: Screen.height / 7
 
     required property ListView listView
-    required property Text statusText
+    signal statusMessage(string msg)
+    enabled: false
 
     function insertrec() {
         var rowid = parseInt(JS.dbInsert(dateInput.text, descInput.text, distInput.text), 10)
@@ -125,19 +125,19 @@ Item {
                     anchors.fill: parent
 
                     Label {
-                        text: "Date"
+                        text: qsTr("Date")
                         font.pixelSize: 22
                         rightPadding: 10
                     }
 
                     Label {
-                        text: "Description"
+                        text: qsTr("Description")
                         font.pixelSize: 22
                         rightPadding: 10
                     }
 
                     Label {
-                        text: "Distance"
+                        text: qsTr("Distance")
                         font.pixelSize: 22
                     }
 
@@ -146,14 +146,29 @@ Item {
                         font.pixelSize: 22
                         activeFocusOnPress: true
                         activeFocusOnTab: true
-                        validator: RegularExpressionValidator {
-                            regularExpression: /[0-9/,:.]+/
+
+                        ToolTip {
+                            parent: dateInput
+                            x: parent.width + 3
+                            y: (parent.height - height) / 2
+                            text: qsTr("Date format = 'YYYY-MM-DD'")
+                            visible: parent.enabled && parent.hovered
+                            delay: 1000
                         }
-                        onEditingFinished: {
-                            if (dateInput.text == "") {
-                                root.statusText.text = "Please fill in the date"
-                                dateInput.forceActiveFocus()
-                            }
+
+                        validator: RegularExpressionValidator {
+                            regularExpression: /\d{4}[,.:/-]\d\d?[,.:/-]\d\d?/
+                        }
+
+                        onFocusChanged: ()=> {
+                            if (!dateInput.focus && !acceptableInput && root.enabled)
+                                root.statusMessage(qsTr("Please fill in the date"));
+                        }
+
+                        onEditingFinished: ()=> {
+                            let regex = /(\d+)[,.:/-](\d+)[,.:/-](\d+)/
+                            if (dateInput.text.match(regex))
+                                dateInput.text = dateInput.text.replace(regex, '$1-$2-$3')
                         }
                     }
 
@@ -162,13 +177,11 @@ Item {
                         font.pixelSize: 22
                         activeFocusOnPress: true
                         activeFocusOnTab: true
-                        onEditingFinished: {
-                            if (descInput.text.length < 8) {
-                                root.statusText.text = "Enter a description of minimum 8 characters"
-                                descInput.forceActiveFocus()
-                            } else {
-                                root.statusText.text = ""
-                            }
+                        property string oldString
+                        onFocusChanged: ()=> { if (focus) oldString = descInput.text; }
+                        onEditingFinished: ()=> {
+                            if (descInput.text.length < 8  && descInput.text != descInput.oldString && root.enabled)
+                                root.statusMessage(qsTr("Enter a description of minimum 8 characters"))
                         }
                     }
 
@@ -180,11 +193,11 @@ Item {
                         validator: RegularExpressionValidator {
                             regularExpression: /\d{1,3}/
                         }
-                        onEditingFinished: {
-                            if (distInput.text == "") {
-                                root.statusText.text = "Please fill in the distance"
-                                distInput.forceActiveFocus()
-                            }
+                        property string oldString
+                        onFocusChanged: ()=> { if (focus) oldString = distInput.text; }
+                        onEditingFinished: ()=> {
+                            if (distInput.text == "" && distInput.text != distInput.oldString && root.enabled)
+                                root.statusMessage(qsTr("Please fill in the distance"))
                         }
                     }
                 }
