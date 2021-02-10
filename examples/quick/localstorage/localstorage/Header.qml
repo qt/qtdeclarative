@@ -1,7 +1,7 @@
 
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -48,11 +48,11 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-import QtQuick 2.14
-import QtQuick.Window 2.0
-import QtQuick.LocalStorage 2.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import QtQuick.LocalStorage
 import "Database.js" as JS
-import QtQuick.Layouts 1.1
 
 Item {
     id: root
@@ -124,24 +124,24 @@ Item {
                     flow: GridLayout.TopToBottom
                     anchors.fill: parent
 
-                    Text {
+                    Label {
                         text: "Date"
                         font.pixelSize: 22
                         rightPadding: 10
                     }
 
-                    Text {
+                    Label {
                         text: "Description"
                         font.pixelSize: 22
                         rightPadding: 10
                     }
 
-                    Text {
+                    Label {
                         text: "Distance"
                         font.pixelSize: 22
                     }
 
-                    TextInput {
+                    TextField {
                         id: dateInput
                         font.pixelSize: 22
                         activeFocusOnPress: true
@@ -157,7 +157,7 @@ Item {
                         }
                     }
 
-                    TextInput {
+                    TextField {
                         id: descInput
                         font.pixelSize: 22
                         activeFocusOnPress: true
@@ -172,7 +172,7 @@ Item {
                         }
                     }
 
-                    TextInput {
+                    TextField {
                         id: distInput
                         font.pixelSize: 22
                         activeFocusOnPress: true

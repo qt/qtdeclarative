@@ -39,7 +39,6 @@ target_link_libraries(localstorage PUBLIC
 set(localstorage_resource_files
     "Database.js"
     "Header.qml"
-    "MyButton.qml"
     "MyDelegate.qml"
     "MyModel.qml"
     "localstorage.qml"

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -48,10 +48,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.5
-import QtQuick.Window 2.2
-import QtQuick.Layouts 1.1
-import QtQuick.LocalStorage 2.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import QtQuick.LocalStorage
 import "Database.js" as JS
 
 Window {
@@ -77,7 +77,7 @@ Window {
                 statusText: statustext
             }
             RowLayout {
-                MyButton {
+                Button {
                     text: "New"
                     onClicked: {
                         input.initrec_new()
@@ -85,7 +85,7 @@ Window {
                         listView.model.setProperty(listView.currentIndex, "id", 0)
                     }
                 }
-                MyButton {
+                Button {
                     id: saveButton
                     enabled: (window.creatingNewEntry || window.editingEntry) && listView.currentIndex != -1
                     text: "Save"
@@ -118,7 +118,7 @@ Window {
                         }
                     }
                 }
-                MyButton {
+                Button {
                     id: editButton
                     text: "Edit"
                     enabled: !window.creatingNewEntry && !window.editingEntry && listView.currentIndex != -1
@@ -131,7 +131,7 @@ Window {
                         window.editingEntry = true
                     }
                 }
-                MyButton {
+                Button {
                     id: deleteButton
                     text: "Delete"
                     enabled: !window.creatingNewEntry && listView.currentIndex != -1
@@ -145,7 +145,7 @@ Window {
                         }
                     }
                 }
-                MyButton {
+                Button {
                     id: cancelButton
                     text: "Cancel"
                     enabled: (window.creatingNewEntry || window.editingEntry) && listView.currentIndex != -1
@@ -161,7 +161,7 @@ Window {
                         input.initrec()
                     }
                 }
-                MyButton {
+                Button {
                     text: "Exit"
                     onClicked: Qt.quit()
                 }
@@ -195,7 +195,7 @@ Window {
                     }
                 }
             }
-            Text {
+            Label {
                 id: statustext
                 color: "red"
                 Layout.fillWidth: true
