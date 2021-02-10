@@ -750,9 +750,6 @@ QQmlPropertyPrivate::binding(const QQmlProperty &that)
 
     Ownership of \a newBinding transfers to QML.  Ownership of the return value
     is assumed by the caller.
-
-    \a flags is passed through to the binding and is used for the initial update (when
-    the binding sets the initial value, it will use these flags for the write).
 */
 void
 QQmlPropertyPrivate::setBinding(const QQmlProperty &that, QQmlAbstractBinding *newBinding)
