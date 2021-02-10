@@ -788,13 +788,13 @@ public:
     QQuickItem *target;
     QQuickAnchorSet *anchorSet;
 
-    QExplicitlySharedDataPointer<QQmlBinding> leftBinding;
-    QExplicitlySharedDataPointer<QQmlBinding> rightBinding;
-    QExplicitlySharedDataPointer<QQmlBinding> hCenterBinding;
-    QExplicitlySharedDataPointer<QQmlBinding> topBinding;
-    QExplicitlySharedDataPointer<QQmlBinding> bottomBinding;
-    QExplicitlySharedDataPointer<QQmlBinding> vCenterBinding;
-    QExplicitlySharedDataPointer<QQmlBinding> baselineBinding;
+    QQmlBinding::Ptr leftBinding;
+    QQmlBinding::Ptr rightBinding;
+    QQmlBinding::Ptr hCenterBinding;
+    QQmlBinding::Ptr topBinding;
+    QQmlBinding::Ptr bottomBinding;
+    QQmlBinding::Ptr vCenterBinding;
+    QQmlBinding::Ptr baselineBinding;
 
     QQmlAbstractBinding::Ptr origLeftBinding;
     QQmlAbstractBinding::Ptr origRightBinding;
