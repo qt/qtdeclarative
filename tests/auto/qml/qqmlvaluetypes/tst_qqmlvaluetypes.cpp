@@ -1823,8 +1823,8 @@ void tst_qqmlvaluetypes::scarceTypes()
     // These should not be treated as value types because we want the scarce resource
     // mechanism to clear them when going out of scope. The scarce resource mechanism
     // only works on QV4::VariantObject as that has an additional level of redirection.
-    QVERIFY(!QQmlValueTypeFactory::isValueType(QMetaType::fromType<QImage>()));
-    QVERIFY(!QQmlValueTypeFactory::isValueType(QMetaType::fromType<QPixmap>()));
+    QVERIFY(!QQmlMetaType::isValueType(QMetaType::fromType<QImage>()));
+    QVERIFY(!QQmlMetaType::isValueType(QMetaType::fromType<QPixmap>()));
 
     QV4::ExecutionEngine engine;
     QV4::Scope scope(&engine);
@@ -1839,7 +1839,7 @@ void tst_qqmlvaluetypes::scarceTypes()
 }
 
 #define CHECK_TYPE_IS_NOT_VALUETYPE(Type, typeId, cppType) \
-    QVERIFY(!QQmlValueTypeFactory::isValueType(QMetaType(QMetaType::Type)));
+    QVERIFY(!QQmlMetaType::isValueType(QMetaType(QMetaType::Type)));
 
 void tst_qqmlvaluetypes::nonValueTypes()
 {

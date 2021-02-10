@@ -54,6 +54,7 @@
 #include <private/qqmltype_p.h>
 #include <private/qqmlmetatype_p.h>
 #include <private/qhashedstring_p.h>
+#include <private/qqmlvaluetype_p.h>
 
 #include <QtCore/qset.h>
 #include <QtCore/qvector.h>
@@ -85,6 +86,7 @@ struct QQmlMetaTypeData
     typedef QHash<int, QQmlMetaType::StringConverter> StringConverters;
     StringConverters stringConverters;
     QVector<QHash<QTypeRevision, QQmlRefPointer<QQmlPropertyCache>>> typePropertyCaches;
+    QHash<int, QQmlValueType *> metaTypeToValueType;
 
     struct VersionedUri {
         VersionedUri() = default;

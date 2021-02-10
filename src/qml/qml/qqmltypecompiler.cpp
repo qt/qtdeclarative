@@ -1184,7 +1184,7 @@ QQmlComponentAndAliasResolver::resolveAliasesInObject(int objectIndex,
             propIdx = QQmlPropertyIndex(targetProperty->coreIndex());
 
             if (!subProperty.isEmpty()) {
-                const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(targetProperty->propType());
+                const QMetaObject *valueTypeMetaObject = QQmlMetaType::metaObjectForMetaType(targetProperty->propType());
                 if (!valueTypeMetaObject) {
                     // could be a deep alias
                     bool isDeepAlias = subProperty.at(0).isLower();

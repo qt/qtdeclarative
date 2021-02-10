@@ -291,7 +291,7 @@ public:
         if (it != cachedValueTypeInstances.end())
             return *it;
 
-        if (QQmlValueType *valueType = QQmlValueTypeFactory::valueType(type)) {
+        if (QQmlValueType *valueType = QQmlMetaType::valueType(type)) {
             QQmlGadgetPtrWrapper *instance = new QQmlGadgetPtrWrapper(valueType, q_func());
             cachedValueTypeInstances.insert(typeIndex, instance);
             return instance;

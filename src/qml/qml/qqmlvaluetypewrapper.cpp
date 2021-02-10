@@ -144,15 +144,15 @@ bool QQmlValueTypeReference::readReferenceValue() const
             // overwritten with a different type in the meantime.
             // We need to modify this reference to the updated value type, if
             // possible, or return false if it is not a value type.
-            if (QQmlValueTypeFactory::isValueType(variantReferenceType)) {
-                const QMetaObject *mo = QQmlValueTypeFactory::metaObjectForMetaType(variantReferenceType);
+            if (QQmlMetaType::isValueType(variantReferenceType)) {
+                const QMetaObject *mo = QQmlMetaType::metaObjectForMetaType(variantReferenceType);
                 if (d()->gadgetPtr()) {
                     d()->valueType()->metaType.destruct(d()->gadgetPtr());
                     ::operator delete(d()->gadgetPtr());
                 }
                 d()->setGadgetPtr(nullptr);
                 d()->setMetaObject(mo);
-                d()->setValueType(QQmlValueTypeFactory::valueType(variantReferenceType));
+                d()->setValueType(QQmlMetaType::valueType(variantReferenceType));
                 if (!mo)
                     return false;
             } else {
@@ -192,7 +192,7 @@ ReturnedValue QQmlValueTypeWrapper::create(ExecutionEngine *engine, QObject *obj
     r->d()->object = object;
     r->d()->property = property;
     r->d()->setMetaObject(metaObject);
-    auto valueType = QQmlValueTypeFactory::valueType(type);
+    auto valueType = QQmlMetaType::valueType(type);
     if (!valueType) {
         return engine->throwTypeError(QLatin1String("Type %1 is not a value type")
                                       .arg(QString::fromUtf8(type.name())));
@@ -209,7 +209,7 @@ ReturnedValue QQmlValueTypeWrapper::create(ExecutionEngine *engine, const QVaria
 
     Scoped<QQmlValueTypeWrapper> r(scope, engine->memoryManager->allocate<QQmlValueTypeWrapper>());
     r->d()->setMetaObject(metaObject);
-    auto valueType = QQmlValueTypeFactory::valueType(type);
+    auto valueType = QQmlMetaType::valueType(type);
     if (!valueType) {
         return engine->throwTypeError(QLatin1String("Type %1 is not a value type")
                                       .arg(QString::fromUtf8(type.name())));

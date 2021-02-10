@@ -178,14 +178,14 @@ static QV4::ReturnedValue loadProperty(QV4::ExecutionEngine *v4, QObject *object
         QVariant v;
         property.readProperty(object, &v);
 
-        if (QQmlValueTypeFactory::isValueType(v.metaType())) {
-            if (const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(v.metaType()))
+        if (QQmlMetaType::isValueType(v.metaType())) {
+            if (const QMetaObject *valueTypeMetaObject = QQmlMetaType::metaObjectForMetaType(v.metaType()))
                 return QV4::QQmlValueTypeWrapper::create(v4, object, property.coreIndex(), valueTypeMetaObject, v.metaType()); // VariantReference value-type.
         }
 
         return scope.engine->fromVariant(v);
-    } else if (QQmlValueTypeFactory::isValueType(propMetaType)) {
-        if (const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(propMetaType))
+    } else if (QQmlMetaType::isValueType(propMetaType)) {
+        if (const QMetaObject *valueTypeMetaObject = QQmlMetaType::metaObjectForMetaType(propMetaType))
             return QV4::QQmlValueTypeWrapper::create(v4, object, property.coreIndex(), valueTypeMetaObject, propMetaType);
     } else {
 #if QT_CONFIG(qml_sequence_object)

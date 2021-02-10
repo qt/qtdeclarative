@@ -231,7 +231,7 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
         if (binding->type >= QV4::CompiledData::Binding::Type_Object && (pd || binding->isAttachedProperty())) {
             const bool populatingValueTypeGroupProperty
                     = pd
-                      && QQmlValueTypeFactory::metaObjectForMetaType(pd->propType())
+                      && QQmlMetaType::metaObjectForMetaType(pd->propType())
                       && !(binding->flags & QV4::CompiledData::Binding::IsOnAssignment);
             const QVector<QQmlError> subObjectValidatorErrors
                     = validateObject(binding->value.objectIndex, binding,
@@ -284,7 +284,7 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
                 if (loc < (*assignedGroupProperty)->valueLocation)
                     loc = (*assignedGroupProperty)->valueLocation;
 
-                if (pd && QQmlValueTypeFactory::isValueType(pd->propType()))
+                if (pd && QQmlMetaType::isValueType(pd->propType()))
                     return recordError(loc, tr("Property has already been assigned a value"));
                 return recordError(loc, tr("Cannot assign a value directly to a grouped property"));
             }
@@ -298,8 +298,8 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
                 if (bindingError.isValid())
                     return recordError(bindingError);
             } else if (binding->isGroupProperty()) {
-                if (QQmlValueTypeFactory::isValueType(pd->propType())) {
-                    if (QQmlValueTypeFactory::metaObjectForMetaType(pd->propType())) {
+                if (QQmlMetaType::isValueType(pd->propType())) {
+                    if (QQmlMetaType::metaObjectForMetaType(pd->propType())) {
                         if (!pd->isWritable()) {
                             return recordError(binding->location, tr("Invalid property assignment: \"%1\" is a read-only property").arg(name));
                         }
@@ -752,7 +752,7 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *propert
                                                       .arg(typeName));
     } else if (propType == qMetaTypeId<QQmlScriptString>()) {
         return qQmlCompileError(binding->valueLocation, tr("Invalid property assignment: script expected"));
-    } else if (QQmlValueTypeFactory::isValueType(property->propType())) {
+    } else if (QQmlMetaType::isValueType(property->propType())) {
         return qQmlCompileError(binding->location, tr("Cannot assign value of type \"%1\" to property \"%2\", expecting an object")
                                                       .arg(rhsType()).arg(propertyName));
     } else {

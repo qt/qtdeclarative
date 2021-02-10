@@ -316,9 +316,9 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
             if (property->isFunction())
                 return; // Not an object property
 
-            if (ii == (path.count() - 2) && QQmlValueTypeFactory::isValueType(property->propType())) {
+            if (ii == (path.count() - 2) && QQmlMetaType::isValueType(property->propType())) {
                 // We're now at a value type property
-                const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(property->propType());
+                const QMetaObject *valueTypeMetaObject = QQmlMetaType::metaObjectForMetaType(property->propType());
                 if (!valueTypeMetaObject) return; // Not a value type
 
                 int idx = valueTypeMetaObject->indexOfProperty(path.last().toUtf8().constData());
@@ -480,7 +480,7 @@ QQmlPropertyPrivate::propertyTypeCategory() const
         QMetaType type = propertyType();
         if (!type.isValid())
             return QQmlProperty::InvalidCategory;
-        else if (QQmlValueTypeFactory::isValueType(type))
+        else if (QQmlMetaType::isValueType(type))
             return QQmlProperty::Normal;
         else if (core.isQObject())
             return QQmlProperty::Object;
@@ -502,7 +502,7 @@ const char *QQmlProperty::propertyTypeName() const
     if (!d)
         return nullptr;
     if (d->isValueType()) {
-        const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(d->core.propType());
+        const QMetaObject *valueTypeMetaObject = QQmlMetaType::metaObjectForMetaType(d->core.propType());
         Q_ASSERT(valueTypeMetaObject);
         return valueTypeMetaObject->property(d->valueTypeData.coreIndex()).typeName();
     } else if (d->object && type() & Property && d->core.isValid()) {
@@ -681,7 +681,7 @@ QString QQmlProperty::name() const
         // ###
         if (!d->object) {
         } else if (d->isValueType()) {
-            const QMetaObject *valueTypeMetaObject = QQmlValueTypeFactory::metaObjectForMetaType(d->core.propType());
+            const QMetaObject *valueTypeMetaObject = QQmlMetaType::metaObjectForMetaType(d->core.propType());
             Q_ASSERT(valueTypeMetaObject);
 
             const char *vtName = valueTypeMetaObject->property(d->valueTypeData.coreIndex()).name();
@@ -1061,7 +1061,7 @@ QVariant QQmlPropertyPrivate::readValueProperty()
     if (isValueType()) {
         if (QQmlGadgetPtrWrapper *wrapper = QQmlGadgetPtrWrapper::instance(engine, core.propType()))
             return doRead(wrapper);
-        if (QQmlValueType *valueType = QQmlValueTypeFactory::valueType(core.propType())) {
+        if (QQmlValueType *valueType = QQmlMetaType::valueType(core.propType())) {
             QQmlGadgetPtrWrapper wrapper(valueType, nullptr);
             return doRead(&wrapper);
         }
@@ -1201,7 +1201,7 @@ QQmlPropertyPrivate::writeValueProperty(QObject *object,
                 : nullptr;
         if (wrapper) {
             doWrite(wrapper);
-        } else if (QQmlValueType *valueType = QQmlValueTypeFactory::valueType(core.propType())) {
+        } else if (QQmlValueType *valueType = QQmlMetaType::valueType(core.propType())) {
             QQmlGadgetPtrWrapper wrapper(valueType, nullptr);
             doWrite(&wrapper);
         }

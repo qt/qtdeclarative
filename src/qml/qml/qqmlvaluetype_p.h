@@ -117,14 +117,6 @@ private:
     void *m_gadgetPtr = nullptr;
 };
 
-class Q_QML_PRIVATE_EXPORT QQmlValueTypeFactory
-{
-public:
-    static bool isValueType(QMetaType type);
-    static QQmlValueType *valueType(QMetaType metaType);
-    static const QMetaObject *metaObjectForMetaType(QMetaType type);
-};
-
 struct Q_QML_PRIVATE_EXPORT QQmlPointFValueType
 {
     QPointF v;

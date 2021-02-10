@@ -247,7 +247,7 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
             int coreIndex = encodedIndex.coreIndex();
             int valueTypeIndex = encodedIndex.valueTypeIndex();
             const QQmlPropertyData *pd = targetDData->propertyCache->property(coreIndex);
-            if (pd && valueTypeIndex != -1 && !QQmlValueTypeFactory::valueType(pd->propType())) {
+            if (pd && valueTypeIndex != -1 && !QQmlMetaType::valueType(pd->propType())) {
                 // deep alias
                 QQmlEnginePrivate *enginePriv = QQmlEnginePrivate::get(metaObject->compilationUnit->engine->qmlEngine());
                 auto const *newPropertyCache = enginePriv->propertyCacheForType(pd->propType().id());

@@ -57,6 +57,7 @@ QQmlMetaTypeData::~QQmlMetaTypeData()
     // Do this before the attached properties disappear.
     types.clear();
     undeletableTypes.clear();
+    qDeleteAll(metaTypeToValueType);
 }
 
 // This expects a "fresh" QQmlTypePrivate and adopts its reference.

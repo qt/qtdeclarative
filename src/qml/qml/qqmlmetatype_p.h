@@ -61,6 +61,7 @@ QT_BEGIN_NAMESPACE
 class QQmlTypeModule;
 class QRecursiveMutex;
 class QQmlError;
+class QQmlValueType;
 
 namespace QV4 { class ExecutableCompilationUnit; }
 
@@ -262,6 +263,10 @@ public:
     static bool qmlRegisterModuleTypes(const QString &uri);
 
     static int qmlRegisteredListTypeCount();
+
+    static bool isValueType(QMetaType type);
+    static QQmlValueType *valueType(QMetaType metaType);
+    static const QMetaObject *metaObjectForMetaType(QMetaType type);
 };
 
 Q_DECLARE_TYPEINFO(QQmlMetaType, Q_RELOCATABLE_TYPE);

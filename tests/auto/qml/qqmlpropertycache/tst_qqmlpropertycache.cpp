@@ -654,6 +654,8 @@ void tst_qqmlpropertycache::metaObjectsForRootElements()
 
 void tst_qqmlpropertycache::derivedGadgetMethod()
 {
+    metaObjectsForRootElements();
+
     qmlRegisterTypesAndRevisions<BaseGadget, DerivedGadget, GadgetUser>("Test.PropertyCache", 1);
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("derivedGadgetMethod.qml"));

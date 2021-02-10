@@ -44,7 +44,12 @@
 #include <private/qqmltype_p_p.h>
 #include <private/qqmltypeloader_p.h>
 #include <private/qqmlextensionplugin_p.h>
+#include <private/qqmlvaluetype_p.h>
 #include <private/qv4executablecompilationunit_p.h>
+
+#if QT_CONFIG(qml_itemmodel)
+#include <private/qqmlmodelindexvaluetype_p.h>
+#endif
 
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qmutex.h>
@@ -629,11 +634,18 @@ CompositeMetaTypeIds QQmlMetaType::registerInternalCompositeType(const QByteArra
 
 void QQmlMetaType::unregisterInternalCompositeType(const CompositeMetaTypeIds &typeIds)
 {
-    QQmlMetaTypeDataPtr data;
-    data->qmlLists.remove(typeIds.listId.id());
     QMetaType metaType(typeIds.id);
-    QMetaType::unregisterMetaType(metaType);
     QMetaType listMetaType(typeIds.listId);
+
+    QQmlMetaTypeDataPtr data;
+
+    if (QQmlValueType *vt = data->metaTypeToValueType.take(metaType.id()))
+        delete vt;
+    if (QQmlValueType *vt = data->metaTypeToValueType.take(listMetaType.id()))
+        delete vt;
+
+    data->qmlLists.remove(listMetaType.id());
+    QMetaType::unregisterMetaType(metaType);
     QMetaType::unregisterMetaType(listMetaType);
     delete static_cast<const QQmlMetaTypeInterface *>(metaType.iface());
     delete static_cast<const QQmlMetaTypeInterface *>(listMetaType.iface());
@@ -1638,6 +1650,105 @@ QList<QQmlProxyMetaObject::ProxyData> QQmlMetaType::proxyData(const QMetaObject 
     }
 
     return metaObjects;
+}
+
+bool isInternalType(int idx)
+{
+    // Qt internal types
+    switch (idx) {
+    case QMetaType::UnknownType:
+    case QMetaType::QStringList:
+    case QMetaType::QObjectStar:
+    case QMetaType::VoidStar:
+    case QMetaType::Nullptr:
+    case QMetaType::QVariant:
+    case QMetaType::QLocale:
+    case QMetaType::QImage:  // scarce type, keep as QVariant
+    case QMetaType::QPixmap: // scarce type, keep as QVariant
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool QQmlMetaType::isValueType(QMetaType type)
+{
+    if (!type.isValid() || isInternalType(type.id()))
+        return false;
+
+    return valueType(type) != nullptr;
+}
+
+const QMetaObject *QQmlMetaType::metaObjectForMetaType(QMetaType metaType)
+{
+    const int t = metaType.id();
+    switch (t) {
+    case QMetaType::QPoint:
+        return &QQmlPointValueType::staticMetaObject;
+    case QMetaType::QPointF:
+        return &QQmlPointFValueType::staticMetaObject;
+    case QMetaType::QSize:
+        return &QQmlSizeValueType::staticMetaObject;
+    case QMetaType::QSizeF:
+        return &QQmlSizeFValueType::staticMetaObject;
+    case QMetaType::QRect:
+        return &QQmlRectValueType::staticMetaObject;
+    case QMetaType::QRectF:
+        return &QQmlRectFValueType::staticMetaObject;
+#if QT_CONFIG(easingcurve)
+    case QMetaType::QEasingCurve:
+        return &QQmlEasingValueType::staticMetaObject;
+#endif
+#if QT_CONFIG(qml_itemmodel)
+    case QMetaType::QModelIndex:
+        return &QQmlModelIndexValueType::staticMetaObject;
+    case QMetaType::QPersistentModelIndex:
+        return &QQmlPersistentModelIndexValueType::staticMetaObject;
+#endif
+    default:
+#if QT_CONFIG(qml_itemmodel)
+        if (metaType == QMetaType::fromType<QItemSelectionRange>())
+            return &QQmlItemSelectionRangeValueType::staticMetaObject;
+#endif
+        if (metaType == QMetaType::fromType<QQmlProperty>())
+            return &QQmlPropertyValueType::staticMetaObject;
+        break;
+    }
+
+    // It doesn't have to be a gadget for a QML type to exist, but we don't want to
+    // call QObject pointers value types. Explicitly registered types also override
+    // the implicit use of gadgets.
+    if (!(metaType.flags() & QMetaType::PointerToQObject)) {
+        const QQmlType qmlType = QQmlMetaType::qmlType(t, QQmlMetaType::TypeIdCategory::MetaType);
+
+        // Prefer the extension meta object.
+        // Extensions allow registration of non-gadget value types.
+        if (const QMetaObject *extensionMetaObject = qmlType.extensionMetaObject())
+            return extensionMetaObject;
+
+        if (const QMetaObject *qmlTypeMetaObject = qmlType.metaObject())
+            return qmlTypeMetaObject;
+    }
+
+    // If it _is_ a gadget, we can just use it.
+    if (metaType.flags() & QMetaType::IsGadget)
+        return metaType.metaObject();
+
+    return nullptr;
+}
+
+QQmlValueType *QQmlMetaType::valueType(QMetaType type)
+{
+    const int idx = type.id();
+    QQmlMetaTypeDataPtr data;
+
+    const auto it = data->metaTypeToValueType.constFind(idx);
+    if (it != data->metaTypeToValueType.constEnd())
+        return *it;
+
+    if (const QMetaObject *mo = metaObjectForMetaType(type))
+        return *data->metaTypeToValueType.insert(idx, new QQmlValueType(idx, mo));
+    return *data->metaTypeToValueType.insert(idx, nullptr);
 }
 
 QT_END_NAMESPACE
