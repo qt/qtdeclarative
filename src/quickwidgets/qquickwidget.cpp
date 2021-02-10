@@ -481,9 +481,13 @@ QImage QQuickWidgetPrivate::grabFramebuffer()
 
     \note QQuickWidget is an alternative to using QQuickView and QWidget::createWindowContainer().
     The restrictions on stacking order do not apply, making QQuickWidget the more flexible
-    alternative, behaving more like an ordinary widget. This comes at the expense of
-    performance. Unlike QQuickWindow and QQuickView, QQuickWidget involves rendering into OpenGL
-    framebuffer objects. This will naturally carry a minor performance hit.
+    alternative, behaving more like an ordinary widget.
+
+    \note However, the above mentioned advantages come at the expense of performance.
+    Unlike QQuickWindow and QQuickView, QQuickWidget requires rendering into OpenGL
+    framebuffer objects, which needs to be enforced by calling
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGLRhi) at startup.
+    This will naturally carry a minor performance hit.
 
     \note Using QQuickWidget disables the threaded render loop on all platforms. This means that
     some of the benefits of threaded rendering, for example \l Animator classes and vsync driven
