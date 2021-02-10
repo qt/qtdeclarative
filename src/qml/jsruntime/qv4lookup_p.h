@@ -69,6 +69,7 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
         bool (*setter)(Lookup *l, ExecutionEngine *engine, Value &object, const Value &v);
     };
     // NOTE: gc assumes the first two entries in the struct are pointers to heap objects or null
+    //       or that the least significant bit is 1 (see the Lookup::markObjects function)
     union {
         struct {
             Heap::Base *h1;
