@@ -1986,7 +1986,7 @@ public slots:
 void tst_qquickitem::testSGInvalidate()
 {
     for (int i=0; i<2; ++i) {
-        QScopedPointer<QQuickView> view(new QQuickView());
+        std::unique_ptr<QQuickView> view(new QQuickView());
 
         InvalidatedItem *item = new InvalidatedItem();
 
@@ -2003,9 +2003,9 @@ void tst_qquickitem::testSGInvalidate()
         item->setParentItem(view->contentItem());
         view->show();
 
-        QVERIFY(QTest::qWaitForWindowExposed(view.data()));
+        QVERIFY(QTest::qWaitForWindowExposed(view.get()));
 
-        delete view.take();
+        view.reset();
         QCOMPARE(invalidateSpy.size(), expected);
     }
 }

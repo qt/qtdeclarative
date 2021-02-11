@@ -1177,7 +1177,7 @@ void tst_QQuickMultiPointTouchArea::transformedTouchArea()
 
 QQuickView *tst_QQuickMultiPointTouchArea::createAndShowView(const QString &file)
 {
-    QScopedPointer<QQuickView> window(new QQuickView(nullptr));
+    std::unique_ptr<QQuickView> window(new QQuickView(nullptr));
     window->setSource(testFileUrl(file));
     if (window->status() != QQuickView::Ready)
         return nullptr;
@@ -1186,9 +1186,9 @@ QQuickView *tst_QQuickMultiPointTouchArea::createAndShowView(const QString &file
     const QPoint offset = QPoint(size.width() / 2, size.height() / 2);
     window->setFramePosition(screenGeometry.center() - offset);
     window->show();
-    if (!QTest::qWaitForWindowExposed(window.data()))
+    if (!QTest::qWaitForWindowExposed(window.get()))
         return nullptr;
-    return window.take();
+    return window.release();
 }
 
 void tst_QQuickMultiPointTouchArea::mouseInteraction_data()
