@@ -1074,40 +1074,40 @@ void tst_QQuickRepeater::ownership()
 
     QQmlComponent component(&engine, testFileUrl("ownership.qml"));
 
-    QScopedPointer<QAbstractItemModel> aim(new QStandardItemModel);
-    QPointer<QAbstractItemModel> modelGuard(aim.data());
-    QQmlEngine::setObjectOwnership(aim.data(), QQmlEngine::JavaScriptOwnership);
+    std::unique_ptr<QAbstractItemModel> aim(new QStandardItemModel);
+    QPointer<QAbstractItemModel> modelGuard(aim.get());
+    QQmlEngine::setObjectOwnership(aim.get(), QQmlEngine::JavaScriptOwnership);
     {
-        QJSValue wrapper = engine.newQObject(aim.data());
+        QJSValue wrapper = engine.newQObject(aim.get());
     }
 
-    QScopedPointer<QObject> repeater(component.create());
-    QVERIFY(!repeater.isNull());
+    std::unique_ptr<QObject> repeater(component.create());
+    QVERIFY(repeater);
 
-    QVERIFY(!QQmlData::keepAliveDuringGarbageCollection(aim.data()));
+    QVERIFY(!QQmlData::keepAliveDuringGarbageCollection(aim.get()));
 
-    repeater->setProperty("model", QVariant::fromValue<QObject*>(aim.data()));
+    repeater->setProperty("model", QVariant::fromValue<QObject*>(aim.get()));
 
-    QVERIFY(!QQmlData::keepAliveDuringGarbageCollection(aim.data()));
+    QVERIFY(!QQmlData::keepAliveDuringGarbageCollection(aim.get()));
 
     engine.collectGarbage();
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
 
     QVERIFY(modelGuard);
 
-    QScopedPointer<QQmlComponent> delegate(new QQmlComponent(&engine));
+    std::unique_ptr<QQmlComponent> delegate(new QQmlComponent(&engine));
     delegate->setData(QByteArrayLiteral("import QtQuick 2.0\nItem{}"), dataDirectoryUrl().resolved(QUrl("inline.qml")));
-    QPointer<QQmlComponent> delegateGuard(delegate.data());
-    QQmlEngine::setObjectOwnership(delegate.data(), QQmlEngine::JavaScriptOwnership);
+    QPointer<QQmlComponent> delegateGuard(delegate.get());
+    QQmlEngine::setObjectOwnership(delegate.get(), QQmlEngine::JavaScriptOwnership);
     {
-        QJSValue wrapper = engine.newQObject(delegate.data());
+        QJSValue wrapper = engine.newQObject(delegate.get());
     }
 
-    QVERIFY(!QQmlData::keepAliveDuringGarbageCollection(delegate.data()));
+    QVERIFY(!QQmlData::keepAliveDuringGarbageCollection(delegate.get()));
 
-    repeater->setProperty("delegate", QVariant::fromValue<QObject*>(delegate.data()));
+    repeater->setProperty("delegate", QVariant::fromValue<QObject*>(delegate.get()));
 
-    QVERIFY(!QQmlData::keepAliveDuringGarbageCollection(delegate.data()));
+    QVERIFY(!QQmlData::keepAliveDuringGarbageCollection(delegate.get()));
 
     engine.collectGarbage();
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
@@ -1120,8 +1120,8 @@ void tst_QQuickRepeater::ownership()
     QVERIFY(delegateGuard);
     QVERIFY(modelGuard);
 
-    delegate.take();
-    aim.take();
+    delegate.release();
+    aim.release();
 
     engine.collectGarbage();
     QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
