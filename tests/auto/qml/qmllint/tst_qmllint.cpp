@@ -288,6 +288,16 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("Variable \"argq\" is used before its declaration at 5:9. "
                               "The declaration is at 6:13.")
             << QString();
+    QTest::newRow("SignalParameterMismatch")
+            << QStringLiteral("namedSignalParameters.qml")
+            << QStringLiteral("Parameter 1 to signal handler for \"onSig\" is called \"argarg\". "
+                              "The signal has a parameter of the same name in position 2.")
+            << QStringLiteral("onSig2");
+    QTest::newRow("TooManySignalParameters")
+            << QStringLiteral("tooManySignalParameters.qml")
+            << QStringLiteral("Signal handler for \"onSig\" has more formal parameters "
+                              "than the signal it handles.")
+            << QString();
 }
 
 void TestQmllint::dirtyQmlCode()

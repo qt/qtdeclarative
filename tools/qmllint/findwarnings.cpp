@@ -223,35 +223,68 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
                             QtWarningMsg,
                             uisb->firstSourceLocation()
                         });
+        m_visitFailed = true;
         return true;
     }
 
-    const auto statement = uisb->statement;
-    if (statement->kind == Node::Kind::Kind_ExpressionStatement) {
-        if (cast<ExpressionStatement *>(statement)->expression->asFunctionDefinition()) {
-            // functions are already handled
-            // they do not get names inserted according to the signal, but access their formal
-            // parameters
-            return true;
-        }
-    }
-
+    QQmlJSMetaMethod scopeSignal;
     for (QQmlJSScope::ConstPtr scope = qmlScope; scope; scope = scope->baseType()) {
         const auto methods = scope->ownMethods();
         const auto methodsRange = methods.equal_range(signal);
         for (auto method = methodsRange.first; method != methodsRange.second; ++method) {
             if (method->methodType() != QQmlJSMetaMethod::Signal)
                 continue;
-
-            const auto firstSourceLocation = statement->firstSourceLocation();
-            bool hasMultilineStatementBody
-                    = statement->lastSourceLocation().startLine > firstSourceLocation.startLine;
-            m_pendingSingalHandler = firstSourceLocation;
-            m_signalHandlers.insert(firstSourceLocation, {*method, hasMultilineStatementBody});
-            return true; // If there are multiple candidates for the signal, it's a mess anyway.
+            scopeSignal = *method;
+            break;
         }
     }
 
+    const auto statement = uisb->statement;
+    if (ExpressionStatement *expr = cast<ExpressionStatement *>(statement)) {
+        if (FunctionExpression *func = expr->expression->asFunctionDefinition()) {
+            // functions are already handled
+            // they do not get names inserted according to the signal, but access their formal
+            // parameters. Let's still check if the names match, though.
+            const QStringList signalParameters = scopeSignal.parameterNames();
+            qsizetype i = 0, end = signalParameters.length();
+            for (FormalParameterList *formal = func->formals;
+                 formal; ++i, formal = formal->next) {
+                if (i == end) {
+                    m_errors.append({
+                                        QStringLiteral("Signal handler for \"%2\" has more formal"
+                                                       " parameters than the signal it handles.")
+                                                .arg(name),
+                                        QtWarningMsg,
+                                        uisb->firstSourceLocation()
+                                    });
+                    m_visitFailed = true;
+                }
+
+                const QStringView handlerParameter = formal->element->bindingIdentifier;
+                const qsizetype j = signalParameters.indexOf(handlerParameter);
+                if (j == i || j < 0)
+                    continue;
+
+                m_errors.append({
+                                    QStringLiteral("Parameter %1 to signal handler for \"%2\""
+                                                   " is called \"%3\". The signal has a parameter"
+                                                   " of the same name in position %4.\n")
+                                            .arg(i + 1).arg(name, handlerParameter).arg(j + 1),
+                                    QtWarningMsg,
+                                    uisb->firstSourceLocation()
+                                });
+                m_visitFailed = true;
+            }
+
+            return true;
+        }
+    }
+
+    const auto firstSourceLocation = statement->firstSourceLocation();
+    bool hasMultilineStatementBody
+            = statement->lastSourceLocation().startLine > firstSourceLocation.startLine;
+    m_pendingSingalHandler = firstSourceLocation;
+    m_signalHandlers.insert(firstSourceLocation, {scopeSignal, hasMultilineStatementBody});
     return true;
 }
 
