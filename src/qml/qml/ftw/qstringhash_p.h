@@ -164,7 +164,7 @@ public:
     inline bool equals(const QHashedStringRef &string) const {
         return length == string.length() &&
                hash == string.hash() &&
-               (isQString()?QHashedString::compare(string.constData(), (const QChar *)utf16Data(), length):
+               (isQString()? string == QStringView {utf16Data(), length}:
                             QHashedString::compare(string.constData(), cStrData(), length));
     }
 
