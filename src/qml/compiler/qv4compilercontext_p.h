@@ -183,7 +183,7 @@ struct Context {
         QQmlJS::AST::VariableScope scope = QQmlJS::AST::VariableScope::Var;
         mutable bool canEscape = false;
         QQmlJS::AST::FunctionExpression *function = nullptr;
-        QQmlJS::SourceLocation endOfInitializerLocation;
+        QQmlJS::SourceLocation declarationLocation;
 
         bool isLexicallyScoped() const { return this->scope != QQmlJS::AST::VariableScope::Var; }
         bool requiresTDZCheck(const QQmlJS::SourceLocation &accessLocation, bool accessAcrossContextBoundaries) const;
@@ -331,7 +331,7 @@ struct Context {
     }
 
     bool addLocalVar(const QString &name, MemberType contextType, QQmlJS::AST::VariableScope scope, QQmlJS::AST::FunctionExpression *function = nullptr,
-                     const QQmlJS::SourceLocation &endOfInitializer = QQmlJS::SourceLocation());
+                     const QQmlJS::SourceLocation &declarationLocation = QQmlJS::SourceLocation());
 
     struct ResolvedName {
         enum Type {
@@ -348,7 +348,7 @@ struct Context {
         bool requiresTDZCheck = false;
         int scope = -1;
         int index = -1;
-        QQmlJS::SourceLocation endOfDeclarationLocation;
+        QQmlJS::SourceLocation declarationLocation;
         bool isValid() const { return type != Unresolved; }
     };
     ResolvedName resolveName(const QString &name, const QQmlJS::SourceLocation &accessLocation);

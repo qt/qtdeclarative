@@ -80,14 +80,14 @@ bool Context::Member::requiresTDZCheck(const SourceLocation &accessLocation, boo
     if (accessAcrossContextBoundaries)
         return true;
 
-    if (!accessLocation.isValid() || !endOfInitializerLocation.isValid())
+    if (!accessLocation.isValid() || !declarationLocation.isValid())
         return true;
 
-    return accessLocation.begin() < endOfInitializerLocation.end();
+    return accessLocation.begin() < declarationLocation.end();
 }
 
 bool Context::addLocalVar(const QString &name, Context::MemberType type, VariableScope scope, FunctionExpression *function,
-                          const QQmlJS::SourceLocation &endOfInitializer)
+                          const QQmlJS::SourceLocation &declarationLocation)
 {
     // ### can this happen?
     if (name.isEmpty())
@@ -112,13 +112,13 @@ bool Context::addLocalVar(const QString &name, Context::MemberType type, Variabl
 
     // hoist var declarations to the function level
     if (contextType == ContextType::Block && (scope == VariableScope::Var && type != MemberType::FunctionDefinition))
-        return parent->addLocalVar(name, type, scope, function, endOfInitializer);
+        return parent->addLocalVar(name, type, scope, function, declarationLocation);
 
     Member m;
     m.type = type;
     m.function = function;
     m.scope = scope;
-    m.endOfInitializerLocation = endOfInitializer;
+    m.declarationLocation = declarationLocation;
     members.insert(name, m);
     return true;
 }
@@ -146,6 +146,7 @@ Context::ResolvedName Context::resolveName(const QString &name, const QQmlJS::So
             result.requiresTDZCheck = m.requiresTDZCheck(accessLocation, c != this);
             if (c->isStrict && (name == QLatin1String("arguments") || name == QLatin1String("eval")))
                 result.isArgOrEval = true;
+            result.declarationLocation = m.declarationLocation;
             return result;
         }
         const int argIdx = c->findArgument(name);
