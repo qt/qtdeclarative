@@ -330,9 +330,13 @@ bool ScanFunctions::visit(PatternElement *ast)
     BoundNames names;
     ast->boundNames(&names);
 
-    QQmlJS::SourceLocation lastInitializerLocation = ast->lastSourceLocation();
-    if (_context->lastBlockInitializerLocation.isValid())
-        lastInitializerLocation = _context->lastBlockInitializerLocation;
+    QQmlJS::SourceLocation declarationLocation = ast->firstSourceLocation();
+    if (_context->lastBlockInitializerLocation.isValid()) {
+        declarationLocation.length = _context->lastBlockInitializerLocation.end()
+                - declarationLocation.offset;
+    } else {
+        declarationLocation.length = ast->lastSourceLocation().end() - declarationLocation.offset;
+    }
 
     for (const auto &name : qAsConst(names)) {
         if (_context->isStrict && (name.id == QLatin1String("eval") || name.id == QLatin1String("arguments")))
@@ -345,7 +349,7 @@ bool ScanFunctions::visit(PatternElement *ast)
             return false;
         }
         if (!_context->addLocalVar(name.id, ast->initializer ? Context::VariableDefinition : Context::VariableDeclaration, ast->scope,
-                                   /*function*/nullptr, lastInitializerLocation)) {
+                                   /*function*/nullptr, declarationLocation)) {
             _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Identifier %1 has already been declared").arg(name.id));
             return false;
         }

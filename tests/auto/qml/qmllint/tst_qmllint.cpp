@@ -277,6 +277,11 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("brokenNamespace.qml")
             << QString("Warning: type not found in namespace at %1:4:17")
             << QString();
+    QTest::newRow("VariableUsedBeforeDeclaration")
+            << QStringLiteral("useBeforeDeclaration.qml")
+            << QStringLiteral("Variable \"argq\" is used before its declaration at 5:9. "
+                              "The declaration is at 6:13.")
+            << QString();
 }
 
 void TestQmllint::dirtyQmlCode()

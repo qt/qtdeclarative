@@ -281,7 +281,7 @@ bool CheckIdentifiers::operator()(
         const MemberAccessChains &memberAccessChains,
         const QQmlJSScope::ConstPtr &root, const QString &rootId) const
 {
-    bool noUnqualifiedIdentifier = true;
+    bool identifiersClean = true;
 
     // revisit all scopes
     QQueue<QQmlJSScope::ConstPtr> workQueue;
@@ -296,14 +296,28 @@ bool CheckIdentifiers::operator()(
 
             auto memberAccessBase = memberAccessChain.takeFirst();
             const auto jsId = currentScope->findJSIdentifier(memberAccessBase.m_name);
-            if (jsId.has_value() && jsId->kind != QQmlJSScope::JavaScriptIdentifier::Injected)
+            if (jsId.has_value() && jsId->kind != QQmlJSScope::JavaScriptIdentifier::Injected) {
+                if (memberAccessBase.m_location.end() < jsId->location.begin()) {
+                    m_colorOut->writePrefixedMessage(
+                                QStringLiteral(
+                                    "Variable \"%1\" is used before its declaration at %2:%3. "
+                                    "The declaration is at %4:%5.\n")
+                                           .arg(memberAccessBase.m_name)
+                                           .arg(memberAccessBase.m_location.startLine)
+                                           .arg(memberAccessBase.m_location.startColumn)
+                                           .arg(jsId->location.startLine)
+                                           .arg(jsId->location.startColumn), Warning);
+                    printContext(m_code, m_colorOut, memberAccessBase.m_location);
+                    identifiersClean = false;
+                }
                 continue;
+            }
 
             auto it = qmlIDs.find(memberAccessBase.m_name);
             if (it != qmlIDs.end()) {
                 if (!it->isNull()) {
                     if (!checkMemberAccess(memberAccessChain, *it))
-                        noUnqualifiedIdentifier = false;
+                        identifiersClean = false;
                     continue;
                 } else if (!memberAccessChain.isEmpty()) {
                     // It could be a qualified type name
@@ -315,7 +329,7 @@ bool CheckIdentifiers::operator()(
                         if (typeIt != m_types.end()) {
                             memberAccessChain.takeFirst();
                             if (!checkMemberAccess(memberAccessChain, *typeIt))
-                                noUnqualifiedIdentifier = false;
+                                identifiersClean = false;
                             continue;
                         }
                     }
@@ -341,9 +355,9 @@ bool CheckIdentifiers::operator()(
                                            .arg(memberAccessBase.m_location.startLine)
                                            .arg(memberAccessBase.m_location.startColumn), Warning);
                     printContext(m_code, m_colorOut, memberAccessBase.m_location);
-                    noUnqualifiedIdentifier = false;
+                    identifiersClean = false;
                 } else if (!checkMemberAccess(memberAccessChain, property.type(), &property)) {
-                    noUnqualifiedIdentifier = false;
+                    identifiersClean = false;
                 }
 
                 continue;
@@ -368,11 +382,11 @@ bool CheckIdentifiers::operator()(
 
             if (typeIt != m_types.end() && !typeIt->isNull()) {
                 if (!checkMemberAccess(memberAccessChain, *typeIt))
-                    noUnqualifiedIdentifier = false;
+                    identifiersClean = false;
                 continue;
             }
 
-            noUnqualifiedIdentifier = false;
+            identifiersClean = false;
             const auto location = memberAccessBase.m_location;
 
             if (baseIsPrefixed) {
@@ -444,5 +458,5 @@ bool CheckIdentifiers::operator()(
         for (auto const &childScope : childScopes)
             workQueue.enqueue(childScope);
     }
-    return noUnqualifiedIdentifier;
+    return identifiersClean;
 }

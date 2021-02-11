@@ -44,6 +44,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QStack>
 #include <QtCore/qurl.h>
+#include <QtCore/qloggingcategory.h>
 #include <QScopeGuard>
 #include <private/qqmljsast_p.h>
 #include <private/qqmljslexer_p.h>
@@ -65,7 +66,10 @@ static const bool disable_lookups = false;
 #undef CONST
 #endif
 
-QT_USE_NAMESPACE
+QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(lcQmlCompiler, "qt.qml.compiler");
+
 using namespace QV4;
 using namespace QV4::Compiler;
 using namespace QQmlJS;
@@ -2378,6 +2382,17 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs, co
         if (resolved.isArgOrEval && isLhs)
             // ### add correct source location
             throwSyntaxError(SourceLocation(), QStringLiteral("Variable name may not be eval or arguments in strict mode"));
+
+        if (resolved.declarationLocation.isValid() && accessLocation.isValid()
+                && resolved.declarationLocation.begin() > accessLocation.end()) {
+            qCWarning(lcQmlCompiler).nospace().noquote()
+                    << url().toString() << ":" << accessLocation.startLine
+                    << ":" << accessLocation.startColumn << " Variable \"" << name
+                    << "\" is used before its declaration at "
+                    << resolved.declarationLocation.startLine << ":"
+                    << resolved.declarationLocation.startColumn << ".";
+        }
+
         Reference r;
         switch (resolved.type) {
         case Context::ResolvedName::Local:
@@ -4458,3 +4473,5 @@ QT_WARNING_POP
     }
     Q_UNREACHABLE();
 }
+
+QT_END_NAMESPACE
