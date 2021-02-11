@@ -350,6 +350,7 @@ private slots:
 
     void multiExtension();
     void invalidInlineComponent();
+    void warnOnInjectedParameters();
 
 private:
     QQmlEngine engine;
@@ -6167,6 +6168,24 @@ void tst_qqmllanguage::invalidInlineComponent()
               "}", QUrl());
     QVERIFY(c.isError());
     QVERIFY(c.errorString().contains("\"Window.visibility\" is not available in QtQuick 2.0."));
+}
+
+void tst_qqmllanguage::warnOnInjectedParameters()
+{
+   QQmlEngine e;
+   QQmlComponent c(&engine);
+   QTest::ignoreMessage(QtWarningMsg, "qrc:/foo.qml:4:18 Parameter \"bar\" is not declared."
+                                      " Injection of parameters into signal handlers is deprecated."
+                                      " Use JavaScript functions with formal parameters instead.");
+   c.setData("import QtQml\n"
+             "QtObject {\n"
+             "    signal foo(bar: string)\n"
+             "    onFoo: print(bar)\n"
+             "    Component.onCompleted: foo('baz')\n"
+             "}", QUrl("qrc:/foo.qml"));
+   QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+   QTest::ignoreMessage(QtDebugMsg, "baz");
+   QScopedPointer<QObject> o(c.create());
 }
 
 void tst_qqmllanguage::qtbug_86482()

@@ -86,8 +86,10 @@ bool Context::Member::requiresTDZCheck(const SourceLocation &accessLocation, boo
     return accessLocation.begin() < declarationLocation.end();
 }
 
-bool Context::addLocalVar(const QString &name, Context::MemberType type, VariableScope scope, FunctionExpression *function,
-                          const QQmlJS::SourceLocation &declarationLocation)
+bool Context::addLocalVar(
+        const QString &name, Context::MemberType type, VariableScope scope,
+        FunctionExpression *function, const QQmlJS::SourceLocation &declarationLocation,
+        bool isInjected)
 {
     // ### can this happen?
     if (name.isEmpty())
@@ -119,6 +121,7 @@ bool Context::addLocalVar(const QString &name, Context::MemberType type, Variabl
     m.function = function;
     m.scope = scope;
     m.declarationLocation = declarationLocation;
+    m.isInjected = isInjected;
     members.insert(name, m);
     return true;
 }
@@ -147,9 +150,10 @@ Context::ResolvedName Context::resolveName(const QString &name, const QQmlJS::So
             if (c->isStrict && (name == QLatin1String("arguments") || name == QLatin1String("eval")))
                 result.isArgOrEval = true;
             result.declarationLocation = m.declarationLocation;
+            result.isInjected = m.isInjected;
             return result;
         }
-        const int argIdx = c->findArgument(name);
+        const int argIdx = c->findArgument(name, &result.isInjected);
         if (argIdx != -1) {
             if (c->argumentsCanEscape) {
                 result.index = argIdx + c->locals.size();
