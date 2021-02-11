@@ -2393,6 +2393,15 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs, co
                     << resolved.declarationLocation.startColumn << ".";
         }
 
+        if (resolved.isInjected && accessLocation.isValid()) {
+            qCWarning(lcQmlCompiler).nospace().noquote()
+                    << url().toString() << ":" << accessLocation.startLine
+                    << ":" << accessLocation.startColumn << " Parameter \"" << name
+                    << "\" is not declared."
+                    << " Injection of parameters into signal handlers is deprecated."
+                    << " Use JavaScript functions with formal parameters instead.";
+        }
+
         Reference r;
         switch (resolved.type) {
         case Context::ResolvedName::Local:

@@ -57,7 +57,11 @@
 #include <private/qv4lookup_p.h>
 #include <private/qv4identifiertable_p.h>
 
+#include <QtCore/qloggingcategory.h>
+
 QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(lcQmlContext, "qt.qml.context");
 
 using namespace QV4;
 
@@ -457,8 +461,9 @@ bool QQmlContextWrapper::virtualPut(Managed *m, PropertyKey id, const Value &val
 ReturnedValue QQmlContextWrapper::resolveQmlContextPropertyLookupGetter(Lookup *l, ExecutionEngine *engine, Value *base)
 {
     Scope scope(engine);
-    PropertyKey name =engine->identifierTable->asPropertyKey(engine->currentStackFrame->v4Function->compilationUnit->
-                                                             runtimeStrings[l->nameIndex]);
+    auto *func = engine->currentStackFrame->v4Function;
+    PropertyKey name =engine->identifierTable->asPropertyKey(
+                func->compilationUnit->runtimeStrings[l->nameIndex]);
 
     // Special hack for bounded signal expressions, where the parameters of signals are injected
     // into the handler expression through the locals of the call context. So for onClicked: { ... }
@@ -467,8 +472,21 @@ ReturnedValue QQmlContextWrapper::resolveQmlContextPropertyLookupGetter(Lookup *
     for (Heap::ExecutionContext *ctx = engine->currentContext()->d(); ctx; ctx = ctx->outer) {
         if (ctx->type == Heap::ExecutionContext::Type_CallContext) {
             const uint index = ctx->internalClass->indexOfValueOrGetter(name);
-            if (index < std::numeric_limits<uint>::max())
+            if (index < std::numeric_limits<uint>::max()) {
+                if (!func->detectedInjectedParameters) {
+                    const auto location = func->sourceLocation();
+                    qCWarning(lcQmlContext).nospace().noquote()
+                            << location.sourceFile << ":" << location.line << ":" << location.column
+                            << " Parameter \"" << name.toQString() << "\" is not declared."
+                            << " Injection of parameters into signal handlers is deprecated."
+                            << " Use JavaScript functions with formal parameters instead.";
+
+                    // Don't warn over and over for the same function
+                    func->detectedInjectedParameters = true;
+                }
+
                 return static_cast<Heap::CallContext *>(ctx)->locals[index].asReturnedValue();
+            }
         }
 
         // Skip only block and call contexts.

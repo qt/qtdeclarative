@@ -1009,7 +1009,13 @@ BoundNames FormalParameterList::formals() const
                 // change the name of the earlier argument to enforce the lookup semantics from the spec
                 formals[duplicateIndex].id += QLatin1String("#") + QString::number(i);
             }
-            formals += {name, it->element->typeAnnotation};
+            formals += {
+                    name,
+                    it->element->typeAnnotation,
+                    it->element->isInjectedSignalParameter
+                        ? BoundName::Injected
+                        : BoundName::Declared
+            };
         }
         ++i;
     }
@@ -1412,7 +1418,8 @@ void PatternElement::boundNames(BoundNames *names)
         else if (PatternPropertyList *p = propertyList())
             p->boundNames(names);
     } else {
-        names->append({bindingIdentifier.toString(), typeAnnotation});
+        names->append({bindingIdentifier.toString(), typeAnnotation,
+                       isInjectedSignalParameter ? BoundName::Injected : BoundName::Declared});
     }
 }
 

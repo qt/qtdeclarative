@@ -473,6 +473,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
             QStringView paramNameRef = compiler->newStringRef(param);
 
             QQmlJS::AST::PatternElement *b = new (pool) QQmlJS::AST::PatternElement(paramNameRef, nullptr);
+            b->isInjectedSignalParameter = true;
             paramList = new (pool) QQmlJS::AST::FormalParameterList(paramList, b);
         }
 

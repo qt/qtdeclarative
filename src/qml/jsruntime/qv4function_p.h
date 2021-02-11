@@ -114,6 +114,7 @@ public:
     uint nFormals;
     int interpreterCallCount = 0;
     bool isEval = false;
+    bool detectedInjectedParameters = false;
 
     static Function *create(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
                             const CompiledData::Function *function,

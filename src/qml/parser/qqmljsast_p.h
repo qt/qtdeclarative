@@ -887,13 +887,19 @@ public:
 
 struct QML_PARSER_EXPORT BoundName
 {
+    enum Type {
+        Declared,
+        Injected,
+    };
+
     QString id;
-    TypeAnnotation *typeAnnotation = nullptr;
-    BoundName(const QString &id, TypeAnnotation *typeAnnotation)
-        : id(id), typeAnnotation(typeAnnotation)
+    QTaggedPointer<TypeAnnotation, Type> typeAnnotation;
+    BoundName(const QString &id, TypeAnnotation *typeAnnotation, Type type = Declared)
+        : id(id), typeAnnotation(typeAnnotation, type)
     {}
     BoundName() = default;
     QString typeName() const { return typeAnnotation ? typeAnnotation->type->toString() : QString(); }
+    bool isInjected() const { return typeAnnotation.tag() == Injected; }
 };
 
 struct BoundNames : public QVector<BoundName>
@@ -981,6 +987,7 @@ public:
     // when used in a VariableDeclarationList
     VariableScope scope = VariableScope::NoScope;
     bool isForDeclaration = false;
+    bool isInjectedSignalParameter = false;
 };
 
 class QML_PARSER_EXPORT PatternElementList : public Node
