@@ -196,27 +196,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
     int argCount = argsTypes ? *argsTypes : 0;
 
     QV4::JSCallData jsCall(scope, argCount);
-    for (int ii = 0; ii < argCount; ++ii) {
-        int type = argsTypes[ii + 1];
-        //### ideally we would use metaTypeToJS, however it currently gives different results
-        //    for several cases (such as QVariant type and QObject-derived types)
-        //args[ii] = engine->metaTypeToJS(type, a[ii + 1]);
-        if (type == qMetaTypeId<QJSValue>()) {
-            jsCall->args[ii] = QJSValuePrivate::convertToReturnedValue(v4, *reinterpret_cast<QJSValue *>(a[ii + 1]));
-        } else if (type == QMetaType::QVariant) {
-            jsCall->args[ii] = scope.engine->fromVariant(*((QVariant *)a[ii + 1]));
-        } else if (type == QMetaType::Int) {
-            //### optimization. Can go away if we switch to metaTypeToJS, or be expanded otherwise
-            jsCall->args[ii] = QV4::Value::fromInt32(*reinterpret_cast<const int*>(a[ii + 1]));
-        } else if (ep->isQObject(type)) {
-            if (!*reinterpret_cast<void* const *>(a[ii + 1]))
-                jsCall->args[ii] = QV4::Value::nullValue();
-            else
-                jsCall->args[ii] = QV4::QObjectWrapper::wrap(v4, *reinterpret_cast<QObject* const *>(a[ii + 1]));
-        } else {
-            jsCall->args[ii] = scope.engine->fromVariant(QVariant(QMetaType(type), a[ii + 1]));
-        }
-    }
+    populateJSCallArguments(ep, v4, jsCall, a, argsTypes);
 
     QQmlJavaScriptExpression::evaluate(jsCall.callData(), nullptr);
 

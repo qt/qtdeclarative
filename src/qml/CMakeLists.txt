@@ -148,7 +148,7 @@ qt_internal_add_module(Qml
         jsruntime/qv4include.cpp jsruntime/qv4include_p.h
         jsruntime/qv4internalclass.cpp jsruntime/qv4internalclass_p.h
         jsruntime/qv4iterator.cpp jsruntime/qv4iterator_p.h
-        jsruntime/qv4jscall_p.h
+        jsruntime/qv4jscall_p.h jsruntime/qv4jscall.cpp
         jsruntime/qv4jsonobject.cpp jsruntime/qv4jsonobject_p.h
         jsruntime/qv4lookup.cpp jsruntime/qv4lookup_p.h
         jsruntime/qv4managed.cpp jsruntime/qv4managed_p.h
