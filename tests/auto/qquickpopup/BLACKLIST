@@ -1,0 +1,8 @@
+[overlay]
+macos # QTBUG-89938
+
+[zPolicy]
+macos # QTBUG-89938
+
+[closePolicy]
+macos # QTBUG-89938
