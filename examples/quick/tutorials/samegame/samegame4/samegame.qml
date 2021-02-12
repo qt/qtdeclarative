@@ -80,7 +80,8 @@ Rectangle {
             height: parent.height - (parent.height % blockSize);
 
             MouseArea {
-                anchors.fill: parent; onClicked: SameGame.handleClick(mouse.x,mouse.y);
+                anchors.fill: parent
+                onClicked: (mouse)=> SameGame.handleClick(mouse.x,mouse.y);
             }
         }
     }

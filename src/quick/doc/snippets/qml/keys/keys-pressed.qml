@@ -57,7 +57,7 @@ Item {
 Item {
     anchors.fill: parent
     focus: true
-    Keys.onPressed: {
+    Keys.onPressed: (event)=> {
         if (event.key == Qt.Key_Left) {
             console.log("move left");
             event.accepted = true;

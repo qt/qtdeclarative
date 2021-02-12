@@ -56,7 +56,7 @@ Rectangle {
     Item {
         id: keyHandler
         focus: true
-        Keys.onPressed: {
+        Keys.onPressed: (event)=> {
             if (event.key == Qt.Key_A)
                 myText.text = 'Key A was pressed'
             else if (event.key == Qt.Key_B)

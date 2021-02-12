@@ -73,7 +73,7 @@ Rectangle {
                 initialHeight = flick.contentHeight
             }
 
-            onPinchUpdated: {
+            onPinchUpdated: (pinch)=> {
                 // adjust content pos due to drag
                 flick.contentX += pinch.previousCenter.x - pinch.center.x
                 flick.contentY += pinch.previousCenter.y - pinch.center.y

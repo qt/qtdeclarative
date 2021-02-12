@@ -54,7 +54,7 @@ Rectangle {
         }
     }
 
-    Keys.onPressed: {
+    Keys.onPressed: (event)=> {
         console.log("Captured:",
                     event.text);
     }

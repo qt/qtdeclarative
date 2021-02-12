@@ -52,7 +52,7 @@ import QtQuick 2.0
 // application.qml
 Button {
     width: 100; height: 100
-    onButtonClicked: {
+    onButtonClicked: (xPos, yPos)=> {
         console.log("Mouse clicked at " + xPos + "," + yPos)
     }
 }

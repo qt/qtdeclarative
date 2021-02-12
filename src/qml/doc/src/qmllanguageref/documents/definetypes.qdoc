@@ -208,7 +208,7 @@ Rectangle {
     MouseArea {
         id: mouseArea
         anchors.fill: parent
-        onClicked: root.buttonClicked(mouse.x, mouse.y)
+        onClicked: (mouse)=> root.buttonClicked(mouse.x, mouse.y)
     }
 }
 \endqml
@@ -224,7 +224,7 @@ import QtQuick 2.0
 SquareButton {
     id: squareButton
 
-    onButtonClicked: {
+    onButtonClicked: (xPos, yPos)=> {
         console.log("Clicked", xPos, yPos)
         randomizeColor()
     }

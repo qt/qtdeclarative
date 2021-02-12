@@ -498,7 +498,7 @@ value:
 
 \qml
 MessageBoard {
-    onNewMessagePosted: console.log("New message received:", subject)
+    onNewMessagePosted: (subject)=> console.log("New message received:", subject)
 }
 \endqml
 

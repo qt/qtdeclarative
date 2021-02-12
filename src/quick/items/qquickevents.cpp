@@ -65,7 +65,7 @@ Q_LOGGING_CATEGORY(lcPointerEvents, "qt.quick.pointer.events")
     \qml
 Item {
     focus: true
-    Keys.onPressed: { if (event.key == Qt.Key_Enter) state = 'ShowDetails'; }
+    Keys.onPressed: (event)=> { if (event.key == Qt.Key_Enter) state = 'ShowDetails'; }
 }
     \endqml
 */
@@ -148,7 +148,7 @@ Item {
     \qml
     Item {
         focus: true
-        Keys.onPressed: {
+        Keys.onPressed: (event)=> {
             if ((event.key == Qt.Key_Enter) && (event.modifiers & Qt.ShiftModifier))
                 doSomething();
         }
@@ -165,7 +165,7 @@ Item {
     \qml
     Item {
         focus: true
-        Keys.onPressed: {
+        Keys.onPressed: (event)=> {
             if (event.matches(StandardKey.Undo))
                 myModel.undo();
             else if (event.matches(StandardKey.Redo))
@@ -278,7 +278,7 @@ bool QQuickKeyEvent::matches(QKeySequence::StandardKey matchKey) const
     For example, to react to a Shift key + Left mouse button click:
     \qml
     MouseArea {
-        onClicked: {
+        onClicked: (mouse)=> {
             if ((mouse.button == Qt.LeftButton) && (mouse.modifiers & Qt.ShiftModifier))
                 doSomething();
         }
@@ -322,8 +322,9 @@ bool QQuickKeyEvent::matches(QKeySequence::StandardKey matchKey) const
     For example, to react only to events which come from an actual mouse:
     \qml
     MouseArea {
-        onPressed: if (mouse.source !== Qt.MouseEventNotSynthesized) {
-            mouse.accepted = false
+        onPressed: (mouse)=> {
+            if (mouse.source !== Qt.MouseEventNotSynthesized)
+                mouse.accepted = false
         }
 
         onClicked: doSomething()
@@ -449,7 +450,7 @@ bool QQuickKeyEvent::matches(QKeySequence::StandardKey matchKey) const
     For example, to react to a Control key pressed during the wheel event:
     \qml
     MouseArea {
-        onWheel: {
+        onWheel: (wheel)=> {
             if (wheel.modifiers & Qt.ControlModifier) {
                 adjustZoom(wheel.angleDelta.y / 120);
             }

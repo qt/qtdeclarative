@@ -77,7 +77,7 @@ Rectangle {
             MouseArea {
                 anchors.fill: parent
                 acceptedButtons: Qt.LeftButton | Qt.RightButton
-                onClicked: {
+                onClicked: (mouse)=> {
                     if (mouse.button == Qt.RightButton)
                         parent.color = 'blue';
                     else

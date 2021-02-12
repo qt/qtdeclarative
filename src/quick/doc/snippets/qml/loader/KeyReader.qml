@@ -42,7 +42,7 @@ import QtQuick 2.0
 Item {
     Item {
         focus: true
-        Keys.onPressed: {
+        Keys.onPressed: (event)=> {
             console.log("KeyReader captured:",
                         event.text);
             event.accepted = true;
