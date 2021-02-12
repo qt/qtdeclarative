@@ -893,8 +893,10 @@ Renderer::Renderer(QSGDefaultRenderContext *ctx, QSGRendererInterface::RenderMod
     , m_tmpOpaqueElements(16)
     , m_rebuild(FullRebuild)
     , m_zRange(0)
+#if defined(QSGBATCHRENDERER_INVALIDATE_WEDGED_NODES)
     , m_renderOrderRebuildLower(-1)
     , m_renderOrderRebuildUpper(-1)
+#endif
     , m_currentMaterial(nullptr)
     , m_currentShader(nullptr)
     , m_vertexUploadPool(256)
@@ -1644,10 +1646,18 @@ void Renderer::invalidateBatchAndOverlappingRenderOrders(Batch *batch)
     Q_ASSERT(batch);
     Q_ASSERT(batch->first);
 
+#if defined(QSGBATCHRENDERER_INVALIDATE_WEDGED_NODES)
     if (m_renderOrderRebuildLower < 0 || batch->first->order < m_renderOrderRebuildLower)
         m_renderOrderRebuildLower = batch->first->order;
     if (m_renderOrderRebuildUpper < 0 || batch->lastOrderInBatch > m_renderOrderRebuildUpper)
         m_renderOrderRebuildUpper = batch->lastOrderInBatch;
+
+    int first = m_renderOrderRebuildLower;
+    int last = m_renderOrderRebuildUpper;
+#else
+    int first = batch->first->order;
+    int last = batch->lastOrderInBatch;
+#endif
 
     batch->invalidate();
 
@@ -1656,7 +1666,7 @@ void Renderer::invalidateBatchAndOverlappingRenderOrders(Batch *batch)
         if (b->first) {
             int bf = b->first->order;
             int bl = b->lastOrderInBatch;
-            if (bl > m_renderOrderRebuildLower && bf < m_renderOrderRebuildUpper)
+            if (bl > first && bf < last)
                 b->invalidate();
         }
     }
@@ -1731,7 +1741,11 @@ bool Renderer::checkOverlap(int first, int last, const Rect &bounds)
 {
     for (int i=first; i<=last; ++i) {
         Element *e = m_alphaRenderList.at(i);
+#if defined(QSGBATCHRENDERER_INVALIDATE_WEDGED_NODES)
         if (!e || e->batch)
+#else
+        if (!e)
+#endif
             continue;
         Q_ASSERT(e->boundsComputed);
         if (e->bounds.intersects(bounds))
@@ -1802,8 +1816,12 @@ void Renderer::prepareAlphaBatches()
                 continue;
             if (ej->root != ei->root || ej->isRenderNode)
                 break;
-            if (ej->batch)
+            if (ej->batch) {
+#if !defined(QSGBATCHRENDERER_INVALIDATE_WEDGED_NODES)
+                overlapBounds |= ej->bounds;
+#endif
                 continue;
+            }
 
             QSGGeometryNode *gnj = ej->node;
             if (gnj->geometry()->vertexCount() == 0)
@@ -3637,8 +3655,11 @@ void Renderer::prepareRenderPass(RenderPassContext *ctx)
     }
 
     m_rebuild = 0;
+
+#if defined(QSGBATCHRENDERER_INVALIDATE_WEDGED_NODES)
     m_renderOrderRebuildLower = -1;
     m_renderOrderRebuildUpper = -1;
+#endif
 
     if (m_visualizer->mode() != Visualizer::VisualizeNothing)
         m_visualizer->prepareVisualize();
