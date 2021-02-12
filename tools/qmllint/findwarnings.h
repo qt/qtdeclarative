@@ -109,7 +109,6 @@ private:
     /* --- end block handling --- */
 
     bool visit(QQmlJS::AST::UiObjectBinding *uiob) override;
-    void endVisit(QQmlJS::AST::UiObjectBinding *uiob) override;
     bool visit(QQmlJS::AST::UiObjectDefinition *uiod) override;
     void endVisit(QQmlJS::AST::UiObjectDefinition *) override;
     bool visit(QQmlJS::AST::UiScriptBinding *uisb) override;
