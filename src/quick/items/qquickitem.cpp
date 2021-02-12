@@ -7415,6 +7415,12 @@ bool QQuickItem::isUnderMouse() const
     if (!d->window)
         return false;
 
+    // QQuickWindow handles QEvent::Leave to reset the lastMousePosition
+    // FIXME: Using QPointF() as the reset value means an item will not be
+    // under the mouse if the mouse is at 0,0 of the window.
+    if (QQuickWindowPrivate::get(d->window)->lastMousePosition == QPointF())
+        return false;
+
     QPointF cursorPos = QGuiApplicationPrivate::lastCursorPosition;
     return contains(mapFromScene(d->window->mapFromGlobal(cursorPos.toPoint())));
 }
