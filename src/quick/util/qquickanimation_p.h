@@ -190,7 +190,7 @@ protected:
 };
 
 class QQuickScriptActionPrivate;
-class QQuickScriptAction : public QQuickAbstractAnimation
+class Q_QUICK_PRIVATE_EXPORT QQuickScriptAction : public QQuickAbstractAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickScriptAction)
@@ -218,7 +218,7 @@ protected:
 };
 
 class QQuickPropertyActionPrivate;
-class QQuickPropertyAction : public QQuickAbstractAnimation
+class Q_QUICK_PRIVATE_EXPORT QQuickPropertyAction : public QQuickAbstractAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickPropertyAction)
@@ -449,7 +449,7 @@ protected:
     QQuickAnimationGroup(QQuickAnimationGroupPrivate &dd, QObject *parent);
 };
 
-class QQuickSequentialAnimation : public QQuickAnimationGroup
+class Q_QUICK_PRIVATE_EXPORT QQuickSequentialAnimation : public QQuickAnimationGroup
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickAnimationGroup)
