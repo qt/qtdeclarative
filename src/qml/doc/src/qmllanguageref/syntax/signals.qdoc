@@ -209,8 +209,8 @@ Rectangle {
 
     TapHandler {
         id: handler
-        onTapped: root.activated(mouseXY.x, mouseXY.y)
-        onPressedChanged: mouseXY = handler.point.position
+        onTapped: root.activated(root.mouseXY.x, root.mouseXY.y)
+        onPressedChanged: root.mouseXY = handler.point.position
     }
 }
 \endqml
