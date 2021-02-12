@@ -56,8 +56,9 @@ Rectangle {
 
     WheelHandler {
         property: "rotation"
-        onWheel: console.log("rotation", event.angleDelta.y,
-                             "scaled", rotation, "@", point.position, "=>", parent.rotation)
+        onWheel: (event)=> console.log("rotation", event.angleDelta.y,
+                                       "scaled", rotation, "@", point.position,
+                                       "=>", parent.rotation)
     }
 }
 //![0]

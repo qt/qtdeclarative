@@ -1412,7 +1412,7 @@ QQuickText::~QQuickText()
 
     For example, this will move the first 5 lines of a Text item by 100 pixels to the right:
     \code
-    onLineLaidOut: {
+    onLineLaidOut: (line)=> {
         if (line.number < 5) {
             line.x = line.x + 100
             line.width = line.width - 100
@@ -1422,7 +1422,7 @@ QQuickText::~QQuickText()
 
     The following example will allow you to position an item at the end of the last line:
     \code
-    onLineLaidOut: {
+    onLineLaidOut: (line)=> {
         if (line.isLast) {
             lastLineMarker.x = line.x + line.implicitWidth
             lastLineMarker.y = line.y + (line.height - lastLineMarker.height) / 2

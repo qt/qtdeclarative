@@ -121,7 +121,7 @@ Rectangle {
             DropArea {
                 anchors { fill: parent; margins: 10 }
 
-                onEntered: {
+                onEntered: (drag)=> {
                     visualModel.items.move(
                             drag.source.DelegateModel.itemsIndex,
                             dragArea.DelegateModel.itemsIndex)

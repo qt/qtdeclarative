@@ -56,7 +56,7 @@ Rectangle {
     Text {
             textFormat: Text.RichText
             text: "See the <a href=\"http://qt-project.org\">Qt Project website</a>."
-            onLinkActivated: console.log(link + " link activated")
+            onLinkActivated: (link)=> console.log(link + " link activated")
     }
 //![0]
 

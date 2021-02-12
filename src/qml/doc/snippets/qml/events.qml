@@ -66,7 +66,7 @@ Rectangle {
 //! [signal handler declaration]
 onTrigger: console.log("trigger signal emitted")
 
-onSend: {
+onSend: (notice)=> {
     console.log("send signal emitted with notice: " + notice)
 }
 
@@ -90,7 +90,7 @@ Rectangle {
 
     signal send(person: string, notice: string)
 
-    onSend: {
+    onSend: (person, notice)=> {
         console.log("For " + person + ", the notice is: " + notice)
     }
 
@@ -103,7 +103,7 @@ Rectangle {
     id: relay
 
     signal send(person: string, notice: string)
-    onSend: console.log("Send signal to: " + person + ", " + notice)
+    onSend: (person, notice)=> console.log("Send signal to: " + person + ", " + notice)
 
     Component.onCompleted: {
         relay.send.connect(sendToPost)

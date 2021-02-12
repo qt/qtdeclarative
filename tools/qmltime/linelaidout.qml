@@ -40,7 +40,7 @@ Item {
             font.pixelSize: 15
             font.bold: true
 
-            onLineLaidOut: {
+            onLineLaidOut: (line)=> {
                 line.x = (line.number % 7) * 70
                 line.y = Math.floor(line.number / 7.0) * 70
             }

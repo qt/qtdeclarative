@@ -597,7 +597,7 @@ void QQuickMouseArea::setPreventStealing(bool prevent)
             MouseArea {
                 anchors.fill: parent
                 propagateComposedEvents: true
-                onClicked: {
+                onClicked: (mouse)=> {
                     console.log("clicked blue")
                     mouse.accepted = false
                 }

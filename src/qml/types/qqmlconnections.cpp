@@ -88,7 +88,7 @@ public:
 
     \qml
     MouseArea {
-        onClicked: { foo(parameters) }
+        onClicked: (mouse)=> { foo(mouse) }
     }
     \endqml
 

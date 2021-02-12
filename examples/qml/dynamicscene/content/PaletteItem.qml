@@ -62,8 +62,8 @@ Image {
     MouseArea {
         anchors.fill: parent
 
-        onPressed: Code.startDrag(mouse);
-        onPositionChanged: Code.continueDrag(mouse);
-        onReleased: Code.endDrag(mouse);
+        onPressed: (mouse)=> Code.startDrag(mouse);
+        onPositionChanged: (mouse)=> Code.continueDrag(mouse);
+        onReleased: (mouse)=> Code.endDrag(mouse);
     }
 }

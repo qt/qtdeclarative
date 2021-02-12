@@ -138,7 +138,7 @@ Rectangle {
     }
     MouseArea {
         anchors.fill: parent
-        onClicked: customEmit(mouse.x, mouse.y);
+        onClicked: (mouse)=> customEmit(mouse.x, mouse.y);
     }
 
     Text {

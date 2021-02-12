@@ -852,8 +852,8 @@ Rectangle {
 
     MouseArea {
         anchors.fill: parent
-        onPressed: root.activated(mouse.x, mouse.y)
         onReleased: root.deactivated()
+        onPressed: (mouse)=> root.activated(mouse.x, mouse.y)
     }
 }
 \endqml
@@ -865,8 +865,8 @@ provided by the client:
 \qml
 // myapplication.qml
 SquareButton {
-    onActivated: console.log("Activated at " + xPosition + "," + yPosition)
     onDeactivated: console.log("Deactivated!")
+    onActivated: (xPosition, yPosition)=> console.log("Activated at " + xPosition + "," + yPosition)
 }
 \endqml
 
@@ -954,7 +954,7 @@ Item {
 
     MouseArea {
         anchors.fill: parent
-        onClicked: label.moveTo(mouse.x, mouse.y)
+        onClicked: (mouse)=> label.moveTo(mouse.x, mouse.y)
     }
 
     Text {

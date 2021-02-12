@@ -968,7 +968,7 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
         focus: true
 
         // Ensure that we get escape key press events first.
-        Keys.onShortcutOverride: event.accepted = (event.key === Qt.Key_Escape)
+        Keys.onShortcutOverride: (event)=> event.accepted = (event.key === Qt.Key_Escape)
 
         Keys.onEscapePressed: {
             console.log("escapeItem is handling escape");
@@ -1922,7 +1922,7 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
 
     Item {
         focus: true
-        Keys.onPressed: {
+        Keys.onPressed: (event)=> {
             if (event.key == Qt.Key_Left) {
                 console.log("move left");
                 event.accepted = true;

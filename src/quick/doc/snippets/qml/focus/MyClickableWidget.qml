@@ -65,7 +65,7 @@ FocusScope {
         color: "lightsteelblue"; width: 175; height: 25; radius: 10; antialiasing: true
         Text { id: label; anchors.centerIn: parent }
         focus: true
-        Keys.onPressed: {
+        Keys.onPressed: (event)=> {
             if (event.key == Qt.Key_A)
                 label.text = 'Key A was pressed'
             else if (event.key == Qt.Key_B)

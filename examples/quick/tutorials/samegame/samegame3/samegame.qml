@@ -83,7 +83,7 @@ Rectangle {
 
             MouseArea {
                 anchors.fill: parent
-                onClicked: SameGame.handleClick(mouse.x, mouse.y)
+                onClicked: (mouse)=> SameGame.handleClick(mouse.x, mouse.y)
             }
         }
 //![1]

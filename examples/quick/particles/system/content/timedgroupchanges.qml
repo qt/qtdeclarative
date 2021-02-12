@@ -88,7 +88,7 @@ Rectangle {
             duration: 1000
             Affector {
                 once: true
-                onAffected: worksEmitter.burst(400,x,y)
+                onAffected: (x, y)=> worksEmitter.burst(400,x,y)
             }
         }
         //! [2]

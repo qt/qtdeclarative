@@ -56,9 +56,9 @@ Rectangle {
 
     TapHandler {
         acceptedButtons: Qt.LeftButton | Qt.RightButton
-        onTapped: console.log("tapped", eventPoint.event.device.name,
-                              "button", eventPoint.event.button,
-                              "@", eventPoint.scenePosition)
+        onTapped: (eventPoint)=> console.log("tapped", eventPoint.event.device.name,
+                                             "button", eventPoint.event.button,
+                                             "@", eventPoint.scenePosition)
     }
 }
 //![0]

@@ -59,7 +59,7 @@ Rectangle {
 
     MouseArea {
         anchors.fill: parent
-        onClicked: rect.buttonClicked(mouse.x, mouse.y)
+        onClicked: (mouse)=> rect.buttonClicked(mouse.x, mouse.y)
     }
 }
 //![0]

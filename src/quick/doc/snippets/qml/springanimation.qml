@@ -65,7 +65,7 @@ Item {
 
     MouseArea {
         anchors.fill: parent
-        onClicked: {
+        onClicked: (mouse)=> {
             rect.x = mouse.x - rect.width/2
             rect.y = mouse.y - rect.height/2
         }

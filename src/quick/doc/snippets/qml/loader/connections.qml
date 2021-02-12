@@ -49,7 +49,7 @@ Item {
 
     Connections {
         target: myLoader.item
-        onMessage: console.log(msg)
+        function onMessage(msg) { console.log(msg) }
     }
 }
 //![0]

@@ -63,12 +63,12 @@ Rectangle {
         id: myWorker
         source: "script.mjs"
 
-        onMessage: myText.text = messageObject.reply
+        onMessage: (messageObject)=> myText.text = messageObject.reply
     }
 
     MouseArea {
         anchors.fill: parent
-        onClicked: myWorker.sendMessage({ 'x': mouse.x, 'y': mouse.y })
+        onClicked: (mouse)=> myWorker.sendMessage({ 'x': mouse.x, 'y': mouse.y })
     }
 }
 //![0]

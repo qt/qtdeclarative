@@ -190,7 +190,7 @@ Rectangle {
                     onExited: color = rr.color
                     onPressed: a = true
                     onReleased: a = false
-                    onPositionChanged: {
+                    onPositionChanged: (mouse)=> {
                         if (a) {
                             var pt = mapToItem(rr.parent, mouse.x, mouse.y);
                             rr.obj[rr.xprop] = pt.x
@@ -323,10 +323,10 @@ Rectangle {
 
         MouseArea {
             anchors.fill: parent
-            onPressed: {
+            onPressed: (mouse)=> {
                 canvas.funcs[root.mode].start(mouse.x, mouse.y);
             }
-            onPositionChanged: {
+            onPositionChanged: (mouse)=> {
                 canvas.funcs[root.mode].move(mouse.x, mouse.y);
             }
             onReleased: {
