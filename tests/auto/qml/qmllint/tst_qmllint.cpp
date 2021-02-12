@@ -292,6 +292,10 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("Signal handler for \"onSig\" has more formal parameters "
                               "than the signal it handles.")
             << QString();
+    QTest::newRow("OnAssignment")
+            << QStringLiteral("onAssignment.qml")
+            << QStringLiteral("Property \"loops\" not found on type \"bool\"")
+            << QString();
 }
 
 void TestQmllint::dirtyQmlCode()

@@ -470,21 +470,22 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::FormalParameterList *fpl)
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
 {
     // property QtObject __styleData: QtObject {...}
-
     QString name;
     for (auto id = uiob->qualifiedTypeNameId; id; id = id->next)
         name += id->name.toString() + QLatin1Char('.');
 
     name.chop(1);
 
-    QQmlJSMetaProperty prop;
-    prop.setPropertyName(uiob->qualifiedId->name.toString());
-    prop.setTypeName(name);
-    prop.setIsWritable(true);
-    prop.setIsPointer(true);
-    prop.setIsAlias(name == QLatin1String("alias"));
-    prop.setType(m_rootScopeImports.value(uiob->qualifiedTypeNameId->name.toString()));
-    m_currentScope->addOwnProperty(prop);
+    if (!uiob->hasOnToken) {
+        QQmlJSMetaProperty prop;
+        prop.setPropertyName(uiob->qualifiedId->name.toString());
+        prop.setTypeName(name);
+        prop.setIsWritable(true);
+        prop.setIsPointer(true);
+        prop.setIsAlias(name == QLatin1String("alias"));
+        prop.setType(m_rootScopeImports.value(uiob->qualifiedTypeNameId->name.toString()));
+        m_currentScope->addOwnProperty(prop);
+    }
 
     enterEnvironment(QQmlJSScope::QMLScope, name,
                      uiob->qualifiedTypeNameId ? uiob->qualifiedTypeNameId->identifierToken
@@ -500,9 +501,11 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
     const QQmlJSScope::ConstPtr childScope = m_currentScope;
     leaveEnvironment();
 
-    QQmlJSMetaProperty property = m_currentScope->property(uiob->qualifiedId->name.toString());
-    property.setType(childScope);
-    m_currentScope->addOwnProperty(property);
+    if (!uiob->hasOnToken) {
+        QQmlJSMetaProperty property = m_currentScope->property(uiob->qualifiedId->name.toString());
+        property.setType(childScope);
+        m_currentScope->addOwnProperty(property);
+    }
 }
 
 bool QQmlJSImportVisitor::visit(ExportDeclaration *)
