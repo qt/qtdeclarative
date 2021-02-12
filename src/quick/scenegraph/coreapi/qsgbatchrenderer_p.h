@@ -886,8 +886,10 @@ private:
 
     uint m_rebuild;
     qreal m_zRange;
+#if defined(QSGBATCHRENDERER_INVALIDATE_WEDGED_NODES)
     int m_renderOrderRebuildLower;
     int m_renderOrderRebuildUpper;
+#endif
 
     int m_batchNodeThreshold;
     int m_batchVertexThreshold;
