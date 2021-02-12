@@ -42,6 +42,7 @@
 #include <private/qquickrectangle_p.h>
 #include "../../shared/util.h"
 #include "../shared/visualtestutil.h"
+#include <QtTest/private/qemulationdetector_p.h>
 
 using namespace QQuickVisualTestUtil;
 
@@ -663,6 +664,9 @@ void tst_qquickdesignersupport::testComponentOnCompleteSignal()
 
 void tst_qquickdesignersupport::testSimpleBindings()
 {
+    if (QTestPrivate::isRunningArmOnX86())
+        QSKIP("Crashes in QEMU. (QTBUG-90869)");
+
     QScopedPointer<QQuickView> view(new QQuickView);
     view->engine()->setOutputWarningsToStandardError(false);
     view->setSource(testFileUrl("bindingTest.qml"));
@@ -704,6 +708,9 @@ void tst_qquickdesignersupport::testSimpleBindings()
 
 void tst_qquickdesignersupport::testDotProperties()
 {
+    if (QTestPrivate::isRunningArmOnX86())
+        QSKIP("Crashes in QEMU. (QTBUG-90869)");
+
     QScopedPointer<QQuickView> view(new QQuickView);
     view->engine()->setOutputWarningsToStandardError(false);
     view->setSource(testFileUrl("bindingTest.qml"));
@@ -733,6 +740,8 @@ void tst_qquickdesignersupport::testDotProperties()
 
 void  tst_qquickdesignersupport::testItemReparenting()
 {
+    if (QTestPrivate::isRunningArmOnX86())
+        QSKIP("Crashes in QEMU. (QTBUG-90869)");
 
     QScopedPointer<QQuickView> view(new QQuickView);
     view->engine()->setOutputWarningsToStandardError(false);
