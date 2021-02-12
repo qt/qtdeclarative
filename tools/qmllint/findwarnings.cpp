@@ -404,14 +404,6 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
     return true;
 }
 
-void FindWarningVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
-{
-    QQmlJSImportVisitor::endVisit(uiob);
-
-    if (m_warnUnqualified)
-        checkGroupedScopes(m_currentScope);
-}
-
 bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
 {
     using namespace QQmlJS::AST;

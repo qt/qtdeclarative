@@ -360,6 +360,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("overridescript") << QStringLiteral("overridescript.qml");
     QTest::newRow("multiExtension") << QStringLiteral("multiExtension.qml");
     QTest::newRow("segFault") << QStringLiteral("SegFault.qml");
+    QTest::newRow("grouped scope failure") << QStringLiteral("groupedScope.qml");
 }
 
 void TestQmllint::cleanQmlCode()
