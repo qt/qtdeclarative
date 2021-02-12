@@ -160,6 +160,7 @@ private slots:
     void mask();
     void nestedEventDelivery();
     void settingHiddenInPressUngrabs();
+    void containsMouseAndVisibility();
 
 private:
     int startDragDistance() const {
@@ -2448,6 +2449,55 @@ void tst_QQuickMouseArea::settingHiddenInPressUngrabs()
     QTRY_VERIFY(!mouseArea->isEnabled());
     // The mouse area is not stuck in pressed state.
     QVERIFY(!mouseArea->pressed());
+}
+
+// QTBUG-87197
+void tst_QQuickMouseArea::containsMouseAndVisibility()
+{
+    QQuickView window;
+    QByteArray errorMessage;
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("containsMouse.qml"), true, &errorMessage), errorMessage.constData());
+    window.show();
+    window.requestActivate();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    QQuickMouseArea *mouseArea = window.rootObject()->findChild<QQuickMouseArea*>("mouseArea");
+    QVERIFY(mouseArea != nullptr);
+    QVERIFY(!mouseArea->isVisible());
+
+    QTest::mouseMove(&window, QPoint(10, 10));
+    QTRY_VERIFY(!mouseArea->hovered());
+
+    mouseArea->setVisible(true);
+    QVERIFY(mouseArea->isVisible());
+    QTRY_VERIFY(mouseArea->hovered());
+
+    /* we (ab-)use QPointF() as the 'reset' value in QQuickWindow's leave-event handling,
+       but can't verify that this leaves an invalid interpretation of states for position
+       QPoint(0, 0) as QTest::mouseMove interprets a null-position as "center of the window".
+
+       So instead, verify the current (unexpectedly expected) behavior as far as testing is
+       concern.
+    */
+    QTest::mouseMove(&window, QPoint(0, 0));
+    QTRY_VERIFY(mouseArea->hovered());
+    QTRY_VERIFY(mouseArea->isUnderMouse());
+
+    // move to the edge (can't move outside)
+    QTest::mouseMove(&window, QPoint(window.width() - 1, window.height() / 2));
+    // then pretend we left
+    QEvent event(QEvent::Leave);
+    QGuiApplication::sendEvent(&window, &event);
+    QVERIFY(!mouseArea->hovered());
+
+    // toggle mouse area visibility - the hover state should not change
+    mouseArea->setVisible(false);
+    QVERIFY(!mouseArea->isVisible());
+    QVERIFY(!mouseArea->hovered());
+
+    mouseArea->setVisible(true);
+    QVERIFY(mouseArea->isVisible());
+    QVERIFY(!mouseArea->hovered());
 }
 
 QTEST_MAIN(tst_QQuickMouseArea)
