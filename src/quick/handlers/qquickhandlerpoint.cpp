@@ -110,7 +110,7 @@ void QQuickHandlerPoint::reset(const QPointerEvent *event, const QEventPoint &po
     default:
         break;
     }
-    const bool isTouch = QQuickWindowPrivate::isTouchEvent(event);
+    const bool isTouch = QQuickDeliveryAgentPrivate::isTouchEvent(event);
     if (!isTouch)
         m_pressedButtons = static_cast<const QSinglePointEvent *>(event)->buttons();
     m_pressedModifiers = event->modifiers();
@@ -120,7 +120,7 @@ void QQuickHandlerPoint::reset(const QPointerEvent *event, const QEventPoint &po
         m_pressure = point.pressure();
         m_ellipseDiameters = point.ellipseDiameters();
 #if QT_CONFIG(tabletevent)
-    } else if (QQuickWindowPrivate::isTabletEvent(event)) {
+    } else if (QQuickDeliveryAgentPrivate::isTabletEvent(event)) {
         m_uniqueId = event->pointingDevice()->uniqueId();
         m_rotation = point.rotation();
         m_pressure = point.pressure();

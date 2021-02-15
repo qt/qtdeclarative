@@ -351,8 +351,8 @@ bool QQuickPointerHandler::approveGrabTransition(QPointerEvent *event, const QEv
                     allowed = true;
             } else if ((d->grabPermissions & CanTakeOverFromItems)) {
                 QQuickItem * existingItemGrabber = qobject_cast<QQuickItem *>(event->exclusiveGrabber(point));
-                if (existingItemGrabber && !((existingItemGrabber->keepMouseGrab() && QQuickWindowPrivate::isMouseEvent(event)) ||
-                                             (existingItemGrabber->keepTouchGrab() && QQuickWindowPrivate::isTouchEvent(event)))) {
+                if (existingItemGrabber && !((existingItemGrabber->keepMouseGrab() && QQuickDeliveryAgentPrivate::isMouseEvent(event)) ||
+                                             (existingItemGrabber->keepTouchGrab() && QQuickDeliveryAgentPrivate::isTouchEvent(event)))) {
                     allowed = true;
                     // If the handler wants to steal the exclusive grab from an Item, the Item can usually veto
                     // by having its keepMouseGrab flag set.  But an exception is if that Item is a parent that

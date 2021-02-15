@@ -99,8 +99,9 @@ QQuickTapHandler::QQuickTapHandler(QQuickItem *parent)
 
 bool QQuickTapHandler::wantsEventPoint(const QPointerEvent *event, const QEventPoint &point)
 {
-    if (!QQuickWindowPrivate::isMouseEvent(event) && !QQuickWindowPrivate::isTouchEvent(event) &&
-            !QQuickWindowPrivate::isTabletEvent(event))
+    if (!QQuickDeliveryAgentPrivate::isMouseEvent(event) &&
+            !QQuickDeliveryAgentPrivate::isTouchEvent(event) &&
+            !QQuickDeliveryAgentPrivate::isTabletEvent(event))
         return false;
     // If the user has not violated any constraint, it could be a tap.
     // Otherwise we want to give up the grab so that a competing handler
@@ -154,7 +155,7 @@ void QQuickTapHandler::handleEventPoint(QPointerEvent *event, QEventPoint &point
         setPressed(true, false, event, point);
         break;
     case QEventPoint::Released: {
-        if (QQuickWindowPrivate::isTouchEvent(event) ||
+        if (QQuickDeliveryAgentPrivate::isTouchEvent(event) ||
                 (static_cast<const QSinglePointEvent *>(event)->buttons() & acceptedButtons()) == Qt::NoButton)
             setPressed(false, false, event, point);
         break;

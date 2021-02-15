@@ -1844,7 +1844,7 @@ bool QQuickPathView::childMouseEventFilter(QQuickItem *i, QEvent *e)
         return QQuickItem::childMouseEventFilter(i, e);
 
     QPointerEvent *pe = static_cast<QPointerEvent *>(e);
-    if (QQuickWindowPrivate::isMouseEvent(pe)) {
+    if (QQuickDeliveryAgentPrivate::isMouseEvent(pe)) {
         // The event is localized for the intended receiver (in the delegate, probably),
         // but we need to look at position relative to the PathView itself.
         const auto &point = pe->points().first();

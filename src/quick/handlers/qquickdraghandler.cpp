@@ -162,7 +162,7 @@ void QQuickDragHandler::onActiveChanged()
     QQuickMultiPointHandler::onActiveChanged();
     if (active()) {
         if (auto parent = parentItem()) {
-            if (QQuickWindowPrivate::isTouchEvent(currentEvent()))
+            if (QQuickDeliveryAgentPrivate::isTouchEvent(currentEvent()))
                 parent->setKeepTouchGrab(true);
             // tablet and mouse are treated the same by Item's legacy event handling, and
             // touch becomes synth-mouse for Flickable, so we need to prevent stealing
@@ -251,7 +251,7 @@ void QQuickDragHandler::handlePointerEventImpl(QPointerEvent *event)
                 // (That affects behavior for mouse but not for touch, because Flickable only handles mouse.)
                 // So we have to compensate by accepting the event here to avoid any parent Flickable from
                 // getting the event via direct delivery and grabbing too soon.
-                point->setAccepted(QQuickWindowPrivate::isMouseEvent(event)); // stop propagation iff it's a mouse event
+                point->setAccepted(QQuickDeliveryAgentPrivate::isMouseEvent(event)); // stop propagation iff it's a mouse event
             }
         }
         if (allOverThreshold) {

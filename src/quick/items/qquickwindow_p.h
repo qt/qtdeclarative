@@ -150,10 +150,7 @@ public:
     QQuickDeliveryAgentPrivate *deliveryAgentPrivate() const
     { return static_cast<QQuickDeliveryAgentPrivate *>(QQuickDeliveryAgentPrivate::get(deliveryAgent)); }
 
-    // TODO remove these: they were moved to QQuickDeliveryAgentPrivate
-    static bool isMouseEvent(const QPointerEvent *ev) { return QQuickDeliveryAgentPrivate::isMouseEvent(ev); }
-    static bool isTouchEvent(const QPointerEvent *ev) { return QQuickDeliveryAgentPrivate::isTouchEvent(ev); }
-    static bool isTabletEvent(const QPointerEvent *ev) { return QQuickDeliveryAgentPrivate::isTabletEvent(ev); }
+    // TODO remove this: it was moved to QQuickDeliveryAgentPrivate
     void flushFrameSynchronousEvents();
 
 #if QT_CONFIG(cursor)

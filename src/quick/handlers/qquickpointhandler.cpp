@@ -140,14 +140,14 @@ void QQuickPointHandler::handleEventPoint(QPointerEvent *event, QEventPoint &poi
 {
     switch (point.state()) {
     case QEventPoint::Pressed:
-        if (QQuickWindowPrivate::isTouchEvent(event) ||
+        if (QQuickDeliveryAgentPrivate::isTouchEvent(event) ||
                 (static_cast<const QSinglePointEvent *>(event)->buttons() & acceptedButtons()) != Qt::NoButton) {
             setPassiveGrab(event, point);
             setActive(true);
         }
         break;
     case QEventPoint::Released:
-        if (QQuickWindowPrivate::isTouchEvent(event) ||
+        if (QQuickDeliveryAgentPrivate::isTouchEvent(event) ||
                 (static_cast<const QSinglePointEvent *>(event)->buttons() & acceptedButtons()) == Qt::NoButton)
             setActive(false);
         break;

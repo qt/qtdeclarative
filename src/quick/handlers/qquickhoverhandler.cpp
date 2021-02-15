@@ -122,7 +122,7 @@ bool QQuickHoverHandler::wantsPointerEvent(QPointerEvent *event)
     // the hovered property to transition to false prematurely.
     // If a QQuickPointerTabletEvent caused the hovered property to become true,
     // then only another QQuickPointerTabletEvent can make it become false.
-    if (!(m_hoveredTablet && QQuickWindowPrivate::isMouseEvent(event)))
+    if (!(m_hoveredTablet && QQuickDeliveryAgentPrivate::isMouseEvent(event)))
         setHovered(false);
 
     return false;
@@ -134,7 +134,7 @@ void QQuickHoverHandler::handleEventPoint(QPointerEvent *ev, QEventPoint &point)
     if (point.state() == QEventPoint::Released &&
             ev->pointingDevice()->pointerType() == QPointingDevice::PointerType::Finger)
         hovered = false;
-    else if (QQuickWindowPrivate::isTabletEvent(ev))
+    else if (QQuickDeliveryAgentPrivate::isTabletEvent(ev))
         m_hoveredTablet = true;
     setHovered(hovered);
     setPassiveGrab(ev, point);

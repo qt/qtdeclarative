@@ -2561,9 +2561,9 @@ void QQuickFlickablePrivate::addPointerHandler(QQuickPointerHandler *h)
 */
 bool QQuickFlickable::filterPointerEvent(QQuickItem *receiver, QPointerEvent *event)
 {
-    const bool isTouch = QQuickWindowPrivate::isTouchEvent(event);
-    if (!(QQuickWindowPrivate::isMouseEvent(event) || isTouch ||
-          QQuickWindowPrivate::isTabletEvent(event)))
+    const bool isTouch = QQuickDeliveryAgentPrivate::isTouchEvent(event);
+    if (!(QQuickDeliveryAgentPrivate::isMouseEvent(event) || isTouch ||
+          QQuickDeliveryAgentPrivate::isTabletEvent(event)))
         return false; // don't filter hover events or wheel events, for example
     Q_ASSERT_X(receiver != this, "", "Flickable received a filter event for itself");
     qCDebug(lcFilter) << objectName() << "filtering" << event << "for" << receiver;
