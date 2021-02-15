@@ -1,0 +1,6 @@
+Item {
+    width: qmlObject.value
+    height: width + 10
+    x: width / height
+    y: x + width + height
+}

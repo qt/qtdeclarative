@@ -122,6 +122,10 @@ void tst_binding::basicproperty_data()
     QTest::addColumn<QString>("file");
     QTest::addColumn<QString>("binding");
 
+    QTest::newRow("value (repeated)") << SRCDIR "/data/repeated.plain.out.txt" << "value";
+    QTest::newRow("value (repeated multiple)") << SRCDIR "/data/repeated.multiple.out.txt" << "value";
+    QTest::newRow("value (repeated branch)") << SRCDIR "/data/repeated.branch.out.txt" << "value";
+
     QTest::newRow("value") << SRCDIR "/data/localproperty.txt" << "value";
     QTest::newRow("value + 10") << SRCDIR "/data/localproperty.txt" << "value + 10";
     QTest::newRow("value + value + 10") << SRCDIR "/data/localproperty.txt" << "value + value + 10";
