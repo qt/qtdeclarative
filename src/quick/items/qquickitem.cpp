@@ -89,15 +89,15 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_LOGGING_CATEGORY(DBG_MOUSE_TARGET)
-Q_DECLARE_LOGGING_CATEGORY(DBG_HOVER_TRACE)
+Q_DECLARE_LOGGING_CATEGORY(lcMouseTarget)
+Q_DECLARE_LOGGING_CATEGORY(lcHoverTrace)
 Q_DECLARE_LOGGING_CATEGORY(lcTransient)
 Q_LOGGING_CATEGORY(lcHandlerParent, "qt.quick.handler.parent")
 
 void debugFocusTree(QQuickItem *item, QQuickItem *scope = nullptr, int depth = 1)
 {
-    if (DBG_FOCUS().isEnabled(QtDebugMsg)) {
-        qCDebug(DBG_FOCUS)
+    if (lcFocus().isEnabled(QtDebugMsg)) {
+        qCDebug(lcFocus)
                 << QByteArray(depth, '\t').constData()
                 << (scope && QQuickItemPrivate::get(scope)->subFocusItem == item ? '*' : ' ')
                 << item->hasFocus()
@@ -2493,7 +2493,7 @@ QQuickItem *QQuickItemPrivate::prevTabChildItem(const QQuickItem *item, int star
 QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, bool forward)
 {
     Q_ASSERT(item);
-    qCDebug(DBG_FOCUS) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: item:" << item << ", forward:" << forward;
+    qCDebug(lcFocus) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: item:" << item << ", forward:" << forward;
 
     if (!item->window())
         return item;
@@ -2530,11 +2530,11 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
 
     QQuickItem *firstFromItem = from;
     QQuickItem *current = item;
-    qCDebug(DBG_FOCUS) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: startItem:" << startItem;
-    qCDebug(DBG_FOCUS) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: firstFromItem:" << firstFromItem;
+    qCDebug(lcFocus) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: startItem:" << startItem;
+    qCDebug(lcFocus) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: firstFromItem:" << firstFromItem;
     do {
-        qCDebug(DBG_FOCUS) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: current:" << current;
-        qCDebug(DBG_FOCUS) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: from:" << from;
+        qCDebug(lcFocus) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: current:" << current;
+        qCDebug(lcFocus) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: from:" << from;
         skip = false;
         QQuickItem *last = current;
 
@@ -2601,10 +2601,10 @@ QQuickItem* QQuickItemPrivate::nextPrevItemInTabFocusChain(QQuickItem *item, boo
         if ((current == startItem || current == originalStartItem) && from == firstFromItem) {
             // wrapped around, avoid endless loops
             if (item == contentItem) {
-                qCDebug(DBG_FOCUS) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: looped, return contentItem";
+                qCDebug(lcFocus) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: looped, return contentItem";
                 return item;
             } else {
-                qCDebug(DBG_FOCUS) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: looped, return " << startItem;
+                qCDebug(lcFocus) << "QQuickItemPrivate::nextPrevItemInTabFocusChain: looped, return " << startItem;
                 return startItem;
             }
         }
@@ -7528,7 +7528,7 @@ void QQuickItemPrivate::setHasHoverInChild(bool hasHover)
         }
     }
 
-    qCDebug(DBG_HOVER_TRACE) << q << subtreeHoverEnabled << "->" << hasHover;
+    qCDebug(lcHoverTrace) << q << subtreeHoverEnabled << "->" << hasHover;
     subtreeHoverEnabled = hasHover;
     QQuickItem *parent = q->parentItem();
     if (parent) {

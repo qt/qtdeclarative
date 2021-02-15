@@ -77,7 +77,7 @@
 const int textCursorWidth = 1;
 
 QT_BEGIN_NAMESPACE
-Q_DECLARE_LOGGING_CATEGORY(DBG_HOVER_TRACE)
+Q_DECLARE_LOGGING_CATEGORY(lcHoverTrace)
 
 // could go into QTextCursor...
 static QTextLine currentTextLine(const QTextCursor &cursor)
@@ -1501,14 +1501,14 @@ void QQuickTextControlPrivate::hoverEvent(QHoverEvent *e, const QPointF &pos)
     if (hoveredLink != link) {
         hoveredLink = link;
         emit q->linkHovered(link);
-        qCDebug(DBG_HOVER_TRACE) << q << e->type() << pos << "hoveredLink" << hoveredLink;
+        qCDebug(lcHoverTrace) << q << e->type() << pos << "hoveredLink" << hoveredLink;
     } else {
         QTextBlock block = q->blockWithMarkerAt(pos);
         if (block.isValid() != hoveredMarker)
             emit q->markerHovered(block.isValid());
         hoveredMarker = block.isValid();
         if (hoveredMarker)
-            qCDebug(DBG_HOVER_TRACE) << q << e->type() << pos << "hovered marker" << int(block.blockFormat().marker()) << block.text();
+            qCDebug(lcHoverTrace) << q << e->type() << pos << "hovered marker" << int(block.blockFormat().marker()) << block.text();
     }
 }
 
