@@ -1,4 +1,4 @@
 # Generated from tableview.pro.
 
-add_subdirectory(gameoflife)
-add_subdirectory(pixelator)
+qt_internal_add_example(gameoflife)
+qt_internal_add_example(pixelator)

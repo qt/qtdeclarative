@@ -1,3 +1,3 @@
 # Generated from qmltest.pro.
 
-add_subdirectory(qmltest)
+qt_internal_add_example(qmltest)

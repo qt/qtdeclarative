@@ -1,4 +1,4 @@
 # Generated from quickwidgets.pro.
 
-add_subdirectory(quickwidget)
-add_subdirectory(qquickviewcomparison)
+qt_internal_add_example(quickwidget)
+qt_internal_add_example(qquickviewcomparison)

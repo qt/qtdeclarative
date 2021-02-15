@@ -1,4 +1,5 @@
 # Generated from customitems.pro.
 
-add_subdirectory(painteditem)
-add_subdirectory(maskedmousearea)
+qt_internal_add_example(dialcontrol)
+qt_internal_add_example(painteditem)
+qt_internal_add_example(maskedmousearea)

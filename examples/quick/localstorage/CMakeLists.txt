@@ -1,3 +1,3 @@
 # Generated from localstorage.pro.
 
-add_subdirectory(localstorage)
+qt_internal_add_example(localstorage)

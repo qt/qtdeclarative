@@ -1,5 +1,5 @@
 # Generated from models.pro.
 
-add_subdirectory(abstractitemmodel)
-add_subdirectory(objectlistmodel)
-add_subdirectory(stringlistmodel)
+qt_internal_add_example(abstractitemmodel)
+qt_internal_add_example(objectlistmodel)
+qt_internal_add_example(stringlistmodel)
