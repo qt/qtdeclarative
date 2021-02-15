@@ -41,7 +41,7 @@
 #include "private/qquickevents_p_p.h"
 
 QT_BEGIN_NAMESPACE
-Q_DECLARE_LOGGING_CATEGORY(DBG_TOUCH_TARGET)
+Q_DECLARE_LOGGING_CATEGORY(lcTouchTarget)
 
 /*!
     \qmltype HandlerPoint

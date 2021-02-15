@@ -41,7 +41,7 @@
 #include "qquicksinglepointhandler_p_p.h"
 
 QT_BEGIN_NAMESPACE
-Q_DECLARE_LOGGING_CATEGORY(DBG_TOUCH_TARGET)
+Q_DECLARE_LOGGING_CATEGORY(lcTouchTarget)
 
 /*!
     \qmltype SinglePointHandler
@@ -94,7 +94,7 @@ bool QQuickSinglePointHandler::wantsPointerEvent(QPointerEvent *event)
             }
         }
         if (missing)
-            qCWarning(DBG_TOUCH_TARGET) << this << "pointId" << Qt::hex << d->pointInfo.id()
+            qCWarning(lcTouchTarget) << this << "pointId" << Qt::hex << d->pointInfo.id()
                 << "is missing from current event, but was neither canceled nor released";
         if (point) {
             if (candidatePointCount == 1 || (candidatePointCount > 1 && d->ignoreAdditionalPoints)) {
