@@ -1084,10 +1084,21 @@ endfunction()
 
 include(CMakeParseArguments)
 
+# This function is called as a finalizer in qt6_finalize_executable() for any
+# target that links against the Qml library for a statically built Qt.
 function(qt6_import_qml_plugins target)
     if(QT6_IS_SHARED_LIBS_BUILD)
         return()
     endif()
+
+    # Protect against being called multiple times in case we are being called
+    # explicitly before the finalizer is invoked.
+    get_target_property(alreadyImported ${target} _QT_QML_PLUGINS_IMPORTED)
+    if(alreadyImported)
+        return()
+    endif()
+    set_target_properties(${target} PROPERTIES _QT_QML_PLUGINS_IMPORTED TRUE)
+
     set(options)
     set(oneValueArgs "PATH_TO_SCAN")
     set(multiValueArgs)
