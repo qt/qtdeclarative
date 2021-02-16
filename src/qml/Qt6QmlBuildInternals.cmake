@@ -439,7 +439,7 @@ endfunction()
 function(qt_internal_target_compile_qml_to_cpp target)
     set(option_args "")
     set(single_args NAMESPACE)
-    set(multi_args FILES)
+    set(multi_args FILES IMPORT_PATHS)
     qt_parse_all_arguments(arg "qt_internal_target_compile_qml_to_cpp"
         "${option_args}"
         "${single_args}"

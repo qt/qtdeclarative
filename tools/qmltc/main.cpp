@@ -27,8 +27,9 @@
 ****************************************************************************/
 
 #include "qmltccommandlineutils.h"
-#include "qmltccompiler.h"
-#include "qmltcvisitor.h"
+#include "prototype/codegenerator.h"
+#include "prototype/visitor.h"
+#include "prototype/typeresolver.h"
 
 #include <QtQml/private/qqmlirbuilder_p.h>
 #include <private/qqmljscompiler_p.h>
@@ -42,7 +43,7 @@
 #    include <QtCore/qcommandlineparser.h>
 #endif
 
-#include <cstdio>
+#include <cstdlib> // EXIT_SUCCESS, EXIT_FAILURE
 
 void setupLogger(QQmlJSLogger &logger) // prepare logger to work with compiler
 {
@@ -163,31 +164,28 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    QmltcCompilerInfo info;
-    info.outputCppFile = outputCppFile;
-    info.outputHFile = outputHFile;
-    info.outputNamespace = parser.value(namespaceOption);
-    info.resourcePath = parser.value(resourcePathOption);
+    Options options;
+    options.outputCppFile = parser.value(outputCppOption);
+    options.outputHFile = parser.value(outputHOption);
+    options.resourcePath = parser.value(resourcePathOption);
+    options.outNamespace = parser.value(namespaceOption);
 
     QQmlJSImporter importer { importPaths, /* resource file mapper */ nullptr };
     QQmlJSLogger logger;
     logger.setFileName(url);
     logger.setCode(sourceCode);
     setupLogger(logger);
-    QmltcVisitor visitor(&importer, &logger, implicitImportDirectory, qmldirFiles);
-    QmltcTypeResolver typeResolver { &importer };
-    typeResolver.init(&visitor, document.program);
+
+    Qmltc::Visitor visitor(&importer, &logger, implicitImportDirectory, qmldirFiles);
+    Qmltc::TypeResolver typeResolver { &importer };
+    typeResolver.init(visitor, document.program);
 
     if (logger.hasWarnings() || logger.hasErrors())
         return EXIT_FAILURE;
 
-    if (logger.hasWarnings() || logger.hasErrors()) {
-        // TODO: how do we print errors/warnings/etc.?
-        return EXIT_FAILURE;
-    }
+    CodeGenerator generator(url, &logger, &document, &typeResolver);
+    generator.generate(options);
 
-    QmltcCompiler compiler(url, &typeResolver, &visitor, &logger);
-    compiler.compile(info);
     if (logger.hasWarnings() || logger.hasErrors())
         return EXIT_FAILURE;
 
