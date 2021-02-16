@@ -282,13 +282,10 @@ animation is rather complex, you might also consider creating a custom animation
 component and assigning an instance to each Behavior, for example:
 
 \qml
-// MyNumberAnimation.qml
-NumberAnimation { id: anim; duration: 300; easing.type: Easing.InBack }
-\endqml
-
-\qml
-// main.qml
 Rectangle {
+    component MyNumberAnimation : NumberAnimation {
+        duration: 300; easing.type: Easing.InBack
+    }
     Behavior on x { MyNumberAnimation {} }
     Behavior on y { MyNumberAnimation {} }
 }

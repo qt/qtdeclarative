@@ -170,20 +170,21 @@ Rectangle {
     id: ball
     color: "salmon"
 
+    component BounceAnimation : NumberAnimation {
+       easing {
+          type: Easing.OutElastic
+          amplitude: 1.0
+          period: 0.5
+       }
+    }
+
     Behavior on x {
-        NumberAnimation {
-            id: bouncebehavior
-            easing {
-                type: Easing.OutElastic
-                amplitude: 1.0
-                period: 0.5
-            }
-        }
+        BounceAnimation {}
     }
     Behavior on y {
-        animation: bouncebehavior
+        BounceAnimation {}
     }
-    Behavior {
+    Behavior on color {
         ColorAnimation { target: ball; duration: 100 }
     }
 }
