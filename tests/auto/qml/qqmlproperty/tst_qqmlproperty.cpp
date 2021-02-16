@@ -164,6 +164,8 @@ private slots:
     void nestedQQmlPropertyMap();
 
     void underscorePropertyChangeHandler();
+
+    void signalExpressionWithoutObject();
 private:
     QQmlEngine engine;
 };
@@ -2208,6 +2210,14 @@ void tst_qqmlproperty::underscorePropertyChangeHandler()
     QQmlProperty changeHandler(root.get(), "on__WithUnderScoreChanged");
     QVERIFY(changeHandler.isValid());
     QVERIFY(changeHandler.isSignalProperty());
+}
+
+void tst_qqmlproperty::signalExpressionWithoutObject()
+{
+    QQmlProperty invalid;
+    QQmlPropertyPrivate::setSignalExpression(invalid, nullptr);
+    QQmlBoundSignalExpression *expr = QQmlPropertyPrivate::signalExpression(invalid);
+    QVERIFY(!expr);
 }
 
 QTEST_MAIN(tst_qqmlproperty)
