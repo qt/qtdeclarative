@@ -459,10 +459,8 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlP
         return;
     }
 
-    QQmlBinding *newBinding = nullptr;
     QV4::Scope scope(engine);
-    QV4::ScopedFunctionObject f(scope, value);
-    if (f) {
+    if (QV4::ScopedFunctionObject f(scope, value); f) {
         if (!f->isBinding()) {
             const bool isAliasToAllowed = [&]() {
                 if (property->isAlias()) {
@@ -499,33 +497,31 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlP
 
             QV4::ScopedFunctionObject f(scope, bindingFunction->bindingFunction());
             QV4::ScopedContext ctx(scope, bindingFunction->scope());
-            newBinding = QQmlBinding::create(property, f->function(), object, callingQmlContext, ctx);
+            QQmlBinding *newBinding = QQmlBinding::create(property, f->function(), object, callingQmlContext, ctx);
             newBinding->setSourceLocation(bindingFunction->currentLocation());
             if (f->isBoundFunction())
                 newBinding->setBoundFunction(static_cast<QV4::BoundFunction *>(f.getPointer()));
             newBinding->setTarget(object, *property, nullptr);
+            QQmlPropertyPrivate::setBinding(newBinding);
+            return;
         }
     }
 
-    if (newBinding) {
-        QQmlPropertyPrivate::setBinding(newBinding);
-    } else {
-        if (Q_UNLIKELY(lcBindingRemoval().isInfoEnabled())) {
-            if (auto binding = QQmlPropertyPrivate::binding(object, QQmlPropertyIndex(property->coreIndex()))) {
-                Q_ASSERT(!binding->isValueTypeProxy());
-                const auto qmlBinding = static_cast<const QQmlBinding*>(binding);
-                const auto stackFrame = engine->currentStackFrame;
-                qCInfo(lcBindingRemoval,
-                       "Overwriting binding on %s::%s at %s:%d that was initially bound at %s",
-                       object->metaObject()->className(), qPrintable(property->name(object)),
-                       qPrintable(stackFrame->source()), stackFrame->lineNumber(),
-                       qPrintable(qmlBinding->expressionIdentifier()));
-            }
+    if (Q_UNLIKELY(lcBindingRemoval().isInfoEnabled())) {
+        if (auto binding = QQmlPropertyPrivate::binding(object, QQmlPropertyIndex(property->coreIndex()))) {
+            Q_ASSERT(!binding->isValueTypeProxy());
+            const auto qmlBinding = static_cast<const QQmlBinding*>(binding);
+            const auto stackFrame = engine->currentStackFrame;
+            qCInfo(lcBindingRemoval,
+                   "Overwriting binding on %s::%s at %s:%d that was initially bound at %s",
+                   object->metaObject()->className(), qPrintable(property->name(object)),
+                   qPrintable(stackFrame->source()), stackFrame->lineNumber(),
+                   qPrintable(qmlBinding->expressionIdentifier()));
         }
-        QQmlPropertyPrivate::removeBinding(object, QQmlPropertyIndex(property->coreIndex()));
     }
+    QQmlPropertyPrivate::removeBinding(object, QQmlPropertyIndex(property->coreIndex()));
 
-    if (!newBinding && property->isVarProperty()) {
+    if (property->isVarProperty()) {
         // allow assignment of "special" values (null, undefined, function) to var properties
         QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(object);
         Q_ASSERT(vmemo);
@@ -541,6 +537,9 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlP
     QMetaObject::metacall(object, QMetaObject::WriteProperty, property->coreIndex(), argv);
 
     const int propType = property->propType().id();
+    // functions are already handled, except for the QJSValue case
+    Q_ASSERT(!value.as<FunctionObject>() || propType == qMetaTypeId<QJSValue>());
+
     if (value.isNull() && property->isQObject()) {
         PROPERTY_STORE(QObject*, nullptr);
     } else if (value.isUndefined() && property->isResettable()) {
@@ -550,7 +549,7 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlP
         PROPERTY_STORE(QVariant, QVariant());
     } else if (value.isUndefined() && propType == QMetaType::QJsonValue) {
         PROPERTY_STORE(QJsonValue, QJsonValue(QJsonValue::Undefined));
-    } else if (!newBinding && propType == qMetaTypeId<QJSValue>()) {
+    } else if (propType == qMetaTypeId<QJSValue>()) {
         PROPERTY_STORE(QJSValue, QJSValuePrivate::fromReturnedValue(value.asReturnedValue()));
     } else if (value.isUndefined() && propType != qMetaTypeId<QQmlScriptString>()) {
         QString error = QLatin1String("Cannot assign [undefined] to ");
@@ -560,8 +559,6 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlP
             error += QLatin1String(property->propType().name());
         scope.engine->throwError(error);
         return;
-    } else if (value.as<FunctionObject>()) {
-        // this is handled by the binding creation above
     } else if (property->propType().id() == QMetaType::Int && value.isNumber()) {
         PROPERTY_STORE(int, value.asDouble());
     } else if (propType == QMetaType::QReal && value.isNumber()) {
