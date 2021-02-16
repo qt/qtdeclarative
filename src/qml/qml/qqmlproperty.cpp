@@ -907,6 +907,8 @@ QQmlPropertyPrivate::signalExpression(const QQmlProperty &that)
     if (!(that.type() & QQmlProperty::SignalProperty))
         return nullptr;
 
+    if (!that.d->object)
+        return nullptr;
     QQmlData *data = QQmlData::get(that.d->object);
     if (!data)
         return nullptr;
@@ -946,6 +948,8 @@ void QQmlPropertyPrivate::takeSignalExpression(const QQmlProperty &that,
         return;
     }
 
+    if (!that.d->object)
+        return;
     QQmlData *data = QQmlData::get(that.d->object, nullptr != expr);
     if (!data)
         return;

@@ -149,6 +149,8 @@ private slots:
     void floatToStringPrecision();
 
     void copy();
+
+    void signalExpressionWithoutObject();
 private:
     QQmlEngine engine;
 };
@@ -2104,6 +2106,14 @@ void tst_qqmlproperty::initTestCase()
     qmlRegisterType<MyQmlObject>("Test",1,0,"MyQmlObject");
     qmlRegisterType<PropertyObject>("Test",1,0,"PropertyObject");
     qmlRegisterType<MyContainer>("Test",1,0,"MyContainer");
+}
+
+void tst_qqmlproperty::signalExpressionWithoutObject()
+{
+    QQmlProperty invalid;
+    QQmlPropertyPrivate::setSignalExpression(invalid, nullptr);
+    QQmlBoundSignalExpression *expr = QQmlPropertyPrivate::signalExpression(invalid);
+    QVERIFY(!expr);
 }
 
 QTEST_MAIN(tst_qqmlproperty)
