@@ -11,6 +11,8 @@ qt_internal_add_qml_module(qquicklayoutsplugin
     DESIGNER_SUPPORTED
     CLASSNAME QtQuickLayoutsPlugin
     SKIP_TYPE_REGISTRATION
+    DEPENDENCIES
+        QtQuick
     PLUGIN_OPTIONAL
     SOURCES
         plugin.cpp

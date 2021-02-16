@@ -365,6 +365,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("multiExtension") << QStringLiteral("multiExtension.qml");
     QTest::newRow("segFault") << QStringLiteral("SegFault.qml");
     QTest::newRow("grouped scope failure") << QStringLiteral("groupedScope.qml");
+    QTest::newRow("layouts depends quick") << QStringLiteral("layouts.qml");
 }
 
 void TestQmllint::cleanQmlCode()
