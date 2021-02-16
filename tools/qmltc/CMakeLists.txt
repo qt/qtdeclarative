@@ -14,6 +14,16 @@ qt_internal_add_tool(${target_name}
         qmltccompilerpieces.h
         qmltccompilerutils.h
         qmltcpropertyutils.h
+
+        prototype/generatedcodeprimitives.h
+        prototype/qml2cppcontext.h
+        prototype/visitor.cpp prototype/visitor.h
+        prototype/qml2cppdefaultpasses.cpp prototype/qml2cppdefaultpasses.h
+        prototype/codegenerator.cpp prototype/codegenerator.h
+        prototype/codegeneratorutil.cpp prototype/codegeneratorutil.h
+        prototype/codegeneratorwriter.cpp prototype/codegeneratorwriter.h
+        prototype/qmlcompiler.h
+        prototype/typeresolver.cpp prototype/typeresolver.h
     DEFINES
         QT_NO_CAST_FROM_ASCII
         QT_NO_CAST_TO_ASCII

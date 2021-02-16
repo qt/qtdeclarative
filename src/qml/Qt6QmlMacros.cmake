@@ -1028,10 +1028,7 @@ endfunction()
 function(qt6_target_compile_qml_to_cpp target)
     set(args_option "")
     set(args_single NAMESPACE)
-    set(args_multi FILES)
-
-    # TODO: add qmldir argument
-    # TODO: add qml import path argument
+    set(args_multi FILES IMPORT_PATHS)
 
     cmake_parse_arguments(PARSE_ARGV 1 arg
         "${args_option}" "${args_single}" "${args_multi}"
@@ -1072,6 +1069,23 @@ function(qt6_target_compile_qml_to_cpp target)
     set(common_args "")
     if(arg_NAMESPACE)
         list(APPEND common_args --namespace "${arg_NAMESPACE}")
+    endif()
+
+    get_target_property(output_dir ${target} QT_QML_MODULE_OUTPUT_DIRECTORY)
+    set(qmldir_file ${output_dir}/qmldir)
+    list(APPEND common_args "-i" ${qmldir_file})
+
+    foreach(import_path IN LISTS arg_IMPORT_PATHS)
+        list(APPEND common_args -I "${import_path}")
+    endforeach()
+
+    # we explicitly depend on qmldir (due to `-i ${qmldir_file}`) but also
+    # implicitly on the generated qmltypes file, which is a part of qmldir
+    set(qml_module_files)
+    list(APPEND qml_module_files ${qmldir_file})
+    get_target_property(qmltypes_file ${target} QT_QML_MODULE_TYPEINFO)
+    if(qmltypes_file)
+        list(APPEND qml_module_files ${output_dir}/${qmltypes_file})
     endif()
 
     foreach(qml_file_src IN LISTS arg_FILES)
@@ -1120,6 +1134,7 @@ function(qt6_target_compile_qml_to_cpp target)
             DEPENDS
                 ${qmltc_executable}
                 "${file_absolute}"
+                ${qml_module_files}
         )
 
         set_source_files_properties(${compiled_header} ${compiled_cpp}

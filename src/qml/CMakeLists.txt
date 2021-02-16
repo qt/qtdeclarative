@@ -345,6 +345,10 @@ qt_internal_add_qml_module(Qml
         types/qqmlconnections.cpp types/qqmlconnections_p.h
         util/qqmlpropertymap.cpp util/qqmlpropertymap.h
         qmltc/qqmltcobjectcreationhelper_p.h
+        qmltc/supportlibrary/qqmlcppbinding_p.h
+        qmltc/supportlibrary/qqmlcppbinding.cpp
+        qmltc/supportlibrary/qqmlcpponassignment_p.h
+        qmltc/supportlibrary/qqmlcpponassignment.cpp
     DEFINES
         BUILDING_QT__
         ENABLE_ASSEMBLER_WX_EXCLUSIVE=1
