@@ -48,6 +48,7 @@
 #include <QtCore/qvariant.h>
 
 #include <variant>
+#include <cmath>
 
 QT_BEGIN_NAMESPACE
 
@@ -294,6 +295,33 @@ public:
                                               const QJSPrimitiveValue &rhs)
     {
         return operate<DivOperators>(lhs, rhs);
+    }
+
+    friend inline QJSPrimitiveValue operator%(const QJSPrimitiveValue &lhs,
+                                              const QJSPrimitiveValue &rhs)
+    {
+        switch (lhs.type()) {
+        case Null:
+        case Boolean:
+        case Integer:
+            switch (rhs.type()) {
+            case Boolean:
+            case Integer: {
+                const int leftInt = lhs.toInteger();
+                const int rightInt = rhs.toInteger();
+                if (leftInt >= 0 && rightInt > 0)
+                    return leftInt % rightInt;
+                Q_FALLTHROUGH();
+            }
+            default:
+                break;
+            }
+            Q_FALLTHROUGH();
+        default:
+            break;
+        }
+
+        return std::fmod(lhs.toDouble(), rhs.toDouble());
     }
 
     constexpr bool strictlyEquals(const QJSPrimitiveValue &other) const
