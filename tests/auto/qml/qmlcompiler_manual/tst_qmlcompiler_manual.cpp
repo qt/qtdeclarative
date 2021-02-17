@@ -472,8 +472,7 @@ void tst_qmlcompiler_manual::changingBindings()
     // test resetting value through C++
     created.setP2(0);
     created.setP1(-10);
-    QEXPECT_FAIL("", "Direct set doesn't clear Qt.binding() (and C++ binding hides Qt.binding())",
-                 Continue);
+
     QCOMPARE(created.property("p2").toInt(), 0);
     QCOMPARE(created.initialBindingCallCount, 2);
 

@@ -61,6 +61,10 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace QV4 {
+    class BoundFunction;
+}
+
 class QQmlPropertyBinding;
 
 class Q_QML_PRIVATE_EXPORT QQmlPropertyBindingJS : public QQmlJavaScriptExpression
@@ -72,6 +76,13 @@ class Q_QML_PRIVATE_EXPORT QQmlPropertyBindingJS : public QQmlJavaScriptExpressi
         return const_cast<QQmlPropertyBinding *>(static_cast<const QQmlPropertyBindingJS *>(this)->asBinding());
     }
     QQmlPropertyBinding const *asBinding() const;;
+};
+
+class Q_QML_PRIVATE_EXPORT QQmlPropertyBindingJSForBoundFunction : public QQmlPropertyBindingJS
+{
+public:
+    QV4::ReturnedValue evaluate(bool *isUndefined);
+    QV4::PersistentValue m_boundFunction;
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlPropertyBinding : public QPropertyBindingPrivate
@@ -91,6 +102,11 @@ public:
                                           QV4::ExecutionContext *scope, QObject *target,
                                           QQmlPropertyIndex targetIndex);
 
+    static QUntypedPropertyBinding createFromBoundFunction(const QQmlPropertyData *pd, QV4::BoundFunction *function,
+                                          QObject *obj, const QQmlRefPointer<QQmlContextData> &ctxt,
+                                          QV4::ExecutionContext *scope, QObject *target,
+                                          QQmlPropertyIndex targetIndex);
+
 
     static bool doEvaluate(QMetaType metaType, QUntypedPropertyData *dataPtr, void *f) {
         auto address = static_cast<std::byte*>(f);
@@ -100,7 +116,7 @@ public:
     }
 
 private:
-    QQmlPropertyBinding(QMetaType metaType, QObject *target, QQmlPropertyIndex targetIndex);
+    QQmlPropertyBinding(QMetaType metaType, QObject *target, QQmlPropertyIndex targetIndex, bool hasBoundFunction);
 
     bool evaluate(QMetaType metaType, void *dataPtr);
 
@@ -109,10 +125,12 @@ private:
     struct TargetData {
         QObject *target;
         QQmlPropertyIndex targetIndex;
+        bool hasBoundFunction;
     };
 
     QObject *target();
     QQmlPropertyIndex targetIndex();
+    bool hasBoundFunction();
 
     static void bindingErrorCallback(QPropertyBindingPrivate *);
 };

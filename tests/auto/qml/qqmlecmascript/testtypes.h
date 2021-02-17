@@ -1781,6 +1781,30 @@ public:
     // QNotifiedProperty<float, &ClassWithQProperty2::callback> value;
 };
 
+struct QPropertyQtBindingTester : public QObject
+{
+    Q_OBJECT
+public:
+    Q_PROPERTY(int nonBound READ nonBound WRITE setNonBound BINDABLE bindableNonBound)
+    Q_PROPERTY(int simple MEMBER simple BINDABLE bindableSimple)
+    Q_PROPERTY(int complex MEMBER complex BINDABLE bindableComplex)
+    Q_PROPERTY(int readOnlyBindable MEMBER readOnlyBindable BINDABLE bindableReadOnlyBindable)
+
+    int nonBound() { return m_nonBound; }
+
+    void setNonBound(int i) {m_nonBound = i;}
+
+    QBindable<int> bindableNonBound() { return &m_nonBound; }
+    QBindable<int> bindableSimple() { return &simple; }
+    QBindable<int> bindableComplex() {return &complex; }
+    QBindable<int> bindableReadOnlyBindable() const {return &readOnlyBindable; }
+
+    QProperty<int> readOnlyBindable;
+    QProperty<int> m_nonBound;
+    QProperty<int> simple;
+    QProperty<int> complex;
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H

@@ -72,6 +72,7 @@
 #include <private/qv4mm_p.h>
 #include <private/qqmlscriptstring_p.h>
 #include <private/qv4compileddata_p.h>
+#include <private/qqmlpropertybinding_p.h>
 
 #include <QtQml/qjsvalue.h>
 #include <QtCore/qjsonarray.h>
@@ -488,19 +489,42 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlP
                 return;
             }
         } else {
-            // binding assignment.
+
             QQmlRefPointer<QQmlContextData> callingQmlContext = scope.engine->callingQmlContext();
-
             QV4::Scoped<QQmlBindingFunction> bindingFunction(scope, (const Value &)f);
-
             QV4::ScopedFunctionObject f(scope, bindingFunction->bindingFunction());
-            QV4::ScopedContext ctx(scope, bindingFunction->scope());
-            QQmlBinding *newBinding = QQmlBinding::create(property, f->function(), object, callingQmlContext, ctx);
-            newBinding->setSourceLocation(bindingFunction->currentLocation());
-            if (f->isBoundFunction())
+            QV4::ScopedContext ctx(scope, f->scope());
+
+            // binding assignment.
+            if (property->isBindable()) {
+                const QQmlPropertyIndex idx(property->coreIndex(), /*not a value type*/-1);
+                auto [targetObject, targetIndex] = QQmlPropertyPrivate::findAliasTarget(object, idx);
+                QUntypedPropertyBinding binding;
+                if (f->isBoundFunction()) {
+                    auto boundFunction = static_cast<QV4::BoundFunction *>(f.getPointer());
+                    binding = QQmlPropertyBinding::createFromBoundFunction(property, boundFunction, object, callingQmlContext,
+                                                                           ctx, targetObject, targetIndex);
+                } else {
+                    binding = QQmlPropertyBinding::create(property, f->function(), object, callingQmlContext,
+                                                           ctx, targetObject, targetIndex);
+                }
+                QUntypedBindable bindable;
+                void *argv = {&bindable};
+                // indirect metacall in case interceptors are installed
+                targetObject->metaObject()->metacall(targetObject, QMetaObject::BindableProperty, targetIndex.coreIndex(), &argv);
+                bool ok = bindable.setBinding(binding);
+                if (!ok) {
+                    auto error = QStringLiteral("Failed to set binding on %1::%2.").arg(object->metaObject()->className(), property->name(object));
+                    scope.engine->throwError(error);
+                }
+            } else {
+                QQmlBinding *newBinding = QQmlBinding::create(property, f->function(), object, callingQmlContext, ctx);
+                newBinding->setSourceLocation(bindingFunction->currentLocation());
+                if (f->isBoundFunction())
                 newBinding->setBoundFunction(static_cast<QV4::BoundFunction *>(f.getPointer()));
-            newBinding->setTarget(object, *property, nullptr);
-            QQmlPropertyPrivate::setBinding(newBinding);
+                newBinding->setTarget(object, *property, nullptr);
+                QQmlPropertyPrivate::setBinding(newBinding);
+            }
             return;
         }
     }

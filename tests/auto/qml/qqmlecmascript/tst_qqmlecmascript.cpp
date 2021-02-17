@@ -303,6 +303,7 @@ private slots:
     void tryStatement();
     void replaceBinding();
     void bindingBoundFunctions();
+    void qpropertyAndQtBinding();
     void deleteRootObjectInCreation();
     void onDestruction();
     void onDestructionViaGC();
@@ -7655,6 +7656,24 @@ void tst_qqmlecmascript::bindingBoundFunctions()
 
     QVERIFY(obj->property("success").toBool());
     delete obj;
+}
+
+void tst_qqmlecmascript::qpropertyAndQtBinding()
+{
+    QQmlEngine engine;
+    qmlRegisterType<QPropertyQtBindingTester>("test", 1, 0, "Tester");
+    QQmlComponent c(&engine, testFileUrl("qpropertyAndQtBinding.qml"));
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg, QRegularExpression("Error: Failed to set binding on QPropertyQtBindingTester.*::readOnlyBindable."));
+    QScopedPointer<QPropertyQtBindingTester> root(qobject_cast<QPropertyQtBindingTester *>(c.create()));
+    QVERIFY(root);
+    QCOMPARE(root->nonBound(), 42);
+    bool ok = root->setProperty("i", 24);
+    QVERIFY(ok);
+    QCOMPARE(root->simple.value(), 100);
+    QCOMPARE(root->complex.value(), 200);
+    ok = root->setProperty("num", 50);
+    QVERIFY(ok);
+    QCOMPARE(root->complex.value(), 150);
 }
 
 void tst_qqmlecmascript::deleteRootObjectInCreation()
