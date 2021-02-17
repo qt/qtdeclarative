@@ -52,7 +52,7 @@
 //
 
 #include <QtQuickLayouts/private/qquicklayoutglobal_p.h>
-#include <qquicklayout_p.h>
+#include <QtQuickLayouts/private/qquicklayout_p.h>
 
 QT_BEGIN_NAMESPACE
 
