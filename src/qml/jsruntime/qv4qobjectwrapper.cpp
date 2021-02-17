@@ -465,9 +465,7 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlP
             const bool isAliasToAllowed = [&]() {
                 if (property->isAlias()) {
                     const QQmlPropertyIndex originalIndex(property->coreIndex(), -1);
-                    QObject *targetObject = nullptr;
-                    QQmlPropertyIndex targetIndex;
-                    QQmlPropertyPrivate::findAliasTarget(object, originalIndex, &targetObject, &targetIndex);
+                    auto [targetObject, targetIndex] = QQmlPropertyPrivate::findAliasTarget(object, originalIndex);
                     Q_ASSERT(targetObject);
                     QQmlPropertyCache *targetCache = QQmlData::get(targetObject)->propertyCache;
                     Q_ASSERT(targetCache);
