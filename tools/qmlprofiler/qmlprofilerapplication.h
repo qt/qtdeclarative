@@ -78,6 +78,7 @@ private:
 
     void prompt(const QString &line = QString(), bool ready = true);
     void logError(const QString &error);
+    void logWarning(const QString &warning);
     void logStatus(const QString &status);
 
     quint64 parseFeatures(const QStringList &featureList, const QString &values, bool exclude);
