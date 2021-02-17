@@ -831,6 +831,7 @@ function(qt6_qml_type_registration target)
             ${foreign_types_file}
             ${target_metatypes_json_file}
             ${QT_CMAKE_EXPORT_NAMESPACE}::qmltyperegistrar
+            "$<$<BOOL:${genex_list}>:${genex_list}>"
         ${extra_env_command}
         COMMAND
             $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmltyperegistrar>
