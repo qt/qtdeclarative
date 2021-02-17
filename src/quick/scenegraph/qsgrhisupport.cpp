@@ -231,17 +231,7 @@ void QSGRhiSupport::applySettings()
 
 void QSGRhiSupport::adjustToPlatformQuirks()
 {
-#if defined(Q_OS_WIN)
-    // Temporary Windows 7 workaround: no D3D. Just stick with OpenGL like Qt 5
-    // would. Can be removed when Win 7 support is finally dropped from Qt 6.
-    // (but as long as we have a Win 7 CI, this is mandatory)
-    if (QOperatingSystemVersion::current() <= QOperatingSystemVersion::Windows7) {
-        if (m_rhiBackend == QRhi::D3D11) {
-            qCDebug(QSG_LOG_INFO, "D3D on Windows 7 is not supported. Trying OpenGL instead.");
-            m_rhiBackend = QRhi::OpenGLES2;
-        }
-    }
-#elif defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
 
     // ### For now just create a throwaway QRhi instance. This will be replaced
     // by a more lightweight way, once a helper function is added gui/rhi.
