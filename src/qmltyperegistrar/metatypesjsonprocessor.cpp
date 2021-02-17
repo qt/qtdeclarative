@@ -47,7 +47,8 @@ bool MetaTypesJsonProcessor::processTypes(const QStringList &files)
             QJsonParseError error = {0, QJsonParseError::NoError};
             metaObjects = QJsonDocument::fromJson(f.readAll(), &error);
             if (error.error != QJsonParseError::NoError) {
-                fprintf(stderr, "Error parsing %s\n", qPrintable(source));
+                fprintf(stderr, "Error %d while parsing %s: %s\n", error.error, qPrintable(source),
+                        qPrintable(error.errorString()));
                 return false;
             }
         }
@@ -90,7 +91,8 @@ bool MetaTypesJsonProcessor::processForeignTypes(const QStringList &foreignTypes
         QJsonParseError error = {0, QJsonParseError::NoError};
         QJsonDocument foreignMetaObjects = QJsonDocument::fromJson(typesFile.readAll(), &error);
         if (error.error != QJsonParseError::NoError) {
-            fprintf(stderr, "Error parsing %s\n", qPrintable(types));
+            fprintf(stderr, "Error %d while parsing %s: %s\n", error.error, qPrintable(types),
+                    qPrintable(error.errorString()));
             success = false;
             continue;
         }
