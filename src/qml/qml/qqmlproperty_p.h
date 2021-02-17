@@ -114,6 +114,18 @@ public:
                       QQmlPropertyData::WriteFlags flags = {});
     static void findAliasTarget(QObject *, QQmlPropertyIndex, QObject **, QQmlPropertyIndex *);
 
+    struct ResolvedAlias
+    {
+        QObject *targetObject;
+        QQmlPropertyIndex targetIndex;
+    };
+    /*!
+        \internal
+        Given an alias property specified by \a baseObject and \a baseIndex, this function
+        computes the alias target.
+     */
+    static ResolvedAlias findAliasTarget(QObject *baseObject, QQmlPropertyIndex baseIndex);
+
     enum BindingFlag {
         None = 0,
         DontEnable = 0x1

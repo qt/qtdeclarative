@@ -884,6 +884,14 @@ void QQmlPropertyPrivate::findAliasTarget(QObject *object, QQmlPropertyIndex bin
     *targetBindingIndex = bindingIndex;
 }
 
+QQmlPropertyPrivate::ResolvedAlias QQmlPropertyPrivate::findAliasTarget(QObject *baseObject, QQmlPropertyIndex baseIndex)
+{
+    ResolvedAlias resolved;
+    findAliasTarget(baseObject, baseIndex, &resolved.targetObject, &resolved.targetIndex);
+    return resolved;
+}
+
+
 
 void QQmlPropertyPrivate::setBinding(QQmlAbstractBinding *binding, BindingFlags flags, QQmlPropertyData::WriteFlags writeFlags)
 {
