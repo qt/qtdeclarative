@@ -96,18 +96,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcTouch, "qt.quick.touch")
-Q_LOGGING_CATEGORY(lcTouchCmprs, "qt.quick.touch.compression")
-Q_LOGGING_CATEGORY(lcTouchTarget, "qt.quick.touch.target")
-Q_LOGGING_CATEGORY(lcMouse, "qt.quick.mouse")
-Q_LOGGING_CATEGORY(lcMouseTarget, "qt.quick.mouse.target")
-Q_LOGGING_CATEGORY(lcPtr, "qt.quick.pointer")
-Q_LOGGING_CATEGORY(lcPtrGrab, "qt.quick.pointer.grab")
 Q_LOGGING_CATEGORY(lcTablet, "qt.quick.tablet")
-Q_LOGGING_CATEGORY(lcWheelTarget, "qt.quick.wheel.target")
-Q_LOGGING_CATEGORY(lcGestureTarget, "qt.quick.gesture.target")
-Q_LOGGING_CATEGORY(lcHoverTrace, "qt.quick.hover.trace")
-Q_LOGGING_CATEGORY(lcFocus, "qt.quick.focus")
 Q_LOGGING_CATEGORY(lcDirty, "qt.quick.dirty")
 Q_LOGGING_CATEGORY(lcTransient, "qt.quick.window.transient")
 
