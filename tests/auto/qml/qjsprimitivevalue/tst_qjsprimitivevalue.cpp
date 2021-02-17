@@ -97,7 +97,7 @@ do {\
     QVERIFY2(condition, qPrintable(expression + " -> " + js.toString()))
 
 enum Operator {
-    Add, Sub, Mul, Div, Eq, SEq, NEq, SNEq, GT, LT, GEq, LEq
+    Add, Sub, Mul, Div, Eq, SEq, NEq, SNEq, GT, LT, GEq, LEq, Mod
 };
 
 QString toString(Operator op) {
@@ -114,6 +114,7 @@ QString toString(Operator op) {
     case LT:   return "<";
     case GEq:  return ">=";
     case LEq:  return "<=";
+    case Mod:  return "%";
     }
 
     Q_UNREACHABLE();
@@ -149,6 +150,8 @@ void doTestOperator(QJSEngine *engine, LHS lhs, RHS rhs)
         result = lhs >= rhs;
     else if constexpr (op == LEq)
         result = lhs <= rhs;
+    else if constexpr (op == Mod)
+        result = lhs % rhs;
     else
         QFAIL("Unkonwn operator");
 
@@ -199,6 +202,7 @@ void doTestForAllOperators(QJSEngine *engine, LHS lhs, RHS rhs)
     doTestOperator<LHS, RHS, QJSPrimitiveValue, Sub>(engine, lhs, rhs);
     doTestOperator<LHS, RHS, QJSPrimitiveValue, Mul>(engine, lhs, rhs);
     doTestOperator<LHS, RHS, QJSPrimitiveValue, Div>(engine, lhs, rhs);
+    doTestOperator<LHS, RHS, QJSPrimitiveValue, Mod>(engine, lhs, rhs);
     doTestOperator<LHS, RHS, bool, Eq>(engine, lhs, rhs);
     doTestOperator<LHS, RHS, bool, SEq>(engine, lhs, rhs);
     doTestOperator<LHS, RHS, bool, NEq>(engine, lhs, rhs);
