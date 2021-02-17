@@ -526,7 +526,6 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPath : public QObject, public QQmlParserStatu
     Q_CLASSINFO("DefaultProperty", "pathElements")
     QML_NAMED_ELEMENT(Path)
     QML_ADDED_IN_VERSION(2, 0)
-    Q_INTERFACES(QQmlParserStatus)
 public:
     QQuickPath(QObject *parent=nullptr);
     ~QQuickPath() override;
