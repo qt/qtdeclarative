@@ -528,14 +528,21 @@ bool QQmlProperty::operator==(const QQmlProperty &other) const
 }
 
 /*!
-    Returns the QVariant type of the property, or QVariant::Invalid if the
-    property has no QVariant type.
+    Returns the metatype id of the property, or QMetaType::UnknownType if the
+    property has no metatype.
+
+    \sa propertyMetaType
 */
 int QQmlProperty::propertyType() const
 {
     return d ? d->propertyType().id() : int(QMetaType::UnknownType);
 }
 
+/*!
+     Returns the metatype of the property.
+
+     \sa propertyType
+ */
 QMetaType QQmlProperty::propertyMetaType() const
 {
     return d ? d->propertyType() : QMetaType {};
