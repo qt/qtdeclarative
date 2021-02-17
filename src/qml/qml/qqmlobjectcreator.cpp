@@ -716,13 +716,11 @@ void QQmlObjectCreator::setupBindings(bool applyDeferredBindings)
             QQmlPropertyData* targetProperty = property;
             if (targetProperty->isAlias()) {
                 // follow alias
-                auto target = _bindingTarget;
                 QQmlPropertyIndex originalIndex(targetProperty->coreIndex(), _valueTypeProperty ? _valueTypeProperty->coreIndex() : -1);
-                QQmlPropertyIndex propIndex;
-                QQmlPropertyPrivate::findAliasTarget(target, originalIndex, &target, &propIndex);
-                QQmlData *data = QQmlData::get(target);
+                auto [targetObject, targetIndex] = QQmlPropertyPrivate::findAliasTarget(_bindingTarget, originalIndex);
+                QQmlData *data = QQmlData::get(targetObject);
                 Q_ASSERT(data && data->propertyCache);
-                targetProperty = data->propertyCache->property(propIndex.coreIndex());
+                targetProperty = data->propertyCache->property(targetIndex.coreIndex());
             }
             sharedState->requiredProperties.remove(targetProperty);
         }
@@ -900,11 +898,11 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
                     // This should be faster than doing a detour through the metaobject of the target, and relying on
                     // QMetaObject::metacall doing the correct resolution
                     QQmlPropertyIndex originalIndex(bindingProperty->coreIndex(), _valueTypeProperty ? _valueTypeProperty->coreIndex() : -1);
-                    QQmlPropertyIndex propIndex;
-                    QQmlPropertyPrivate::findAliasTarget(target, originalIndex, &target, &propIndex);
+                    auto [aliasTargetObject, aliasTargetIndex] = QQmlPropertyPrivate::findAliasTarget(target, originalIndex);
+                    target = aliasTargetObject;
                     QQmlData *data = QQmlData::get(target);
                     Q_ASSERT(data && data->propertyCache);
-                    bindingProperty = data->propertyCache->property(propIndex.coreIndex());
+                    bindingProperty = data->propertyCache->property(aliasTargetIndex.coreIndex());
                 }
                 auto &observer = QQmlData::get(_scopeObject)->propertyObservers.emplace_back(expr);
                 QUntypedBindable bindable;
@@ -1004,8 +1002,8 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
                 QQmlPropertyIndex propertyIndex;
                 if (bindingProperty->isAlias()) {
                     QQmlPropertyIndex originalIndex(bindingProperty->coreIndex(), _valueTypeProperty ? _valueTypeProperty->coreIndex() : -1);
-                    QQmlPropertyIndex propIndex;
-                    QQmlPropertyPrivate::findAliasTarget(target, originalIndex, &target, &propIndex);
+                    auto aliasTarget = QQmlPropertyPrivate::findAliasTarget(target, originalIndex);
+                    target = aliasTarget.targetObject;
                     QQmlData *data = QQmlData::get(target);
                     if (!data || !data->propertyCache) {
                         qWarning() << "can't resolve property alias for 'on' assignment";
@@ -1013,7 +1011,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
                     }
 
                     // we can't have aliasses on subproperties of value types, so:
-                    QQmlPropertyData targetPropertyData = *data->propertyCache->property(propIndex.coreIndex());
+                    QQmlPropertyData targetPropertyData = *data->propertyCache->property(aliasTarget.targetIndex.coreIndex());
                     auto prop = QQmlPropertyPrivate::restore(
                                 target, targetPropertyData, nullptr, context);
                     vi->setTarget(prop);
