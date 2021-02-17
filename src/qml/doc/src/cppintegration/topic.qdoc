@@ -53,8 +53,11 @@ The \c QML_ELEMENT macro makes the BackEnd class available in QML.
 
 \li Add the following lines to your project file:
 
-\snippet code/backend/backend.pro registration
-
+\badcode
+CONFIG += qmltypes
+QML_IMPORT_NAME = io.qt.examples.backend
+QML_IMPORT_MAJOR_VERSION = 1
+\endcode
 The BackEnd class is automatically registered as a type, which is accessible
 from QML by importing the URL, "\c{io.qt.examples.backend 1.0}".
 

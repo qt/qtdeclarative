@@ -43,7 +43,9 @@
   To link against the module, add this line to your \l qmake \c
   .pro file:
 
-  \snippet code/doc_src_qtquick.pro 0
+  \badcode
+  QT += quick
+  \endcode
   \endif
 
   For more information on the Qt Quick module, see the

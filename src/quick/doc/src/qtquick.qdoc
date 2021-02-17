@@ -81,7 +81,9 @@ See also the \l{Build with CMake} overview.
 To configure the module for building with qmake, add the module as a value of
 the QT variable in the project's .pro file:
 
-\snippet code/doc_src_qtquick.pro 0
+\badcode
+QT += quick
+\endcode
 
 \section1 Important Concepts in Qt Quick
 
