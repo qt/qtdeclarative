@@ -828,13 +828,11 @@ again:
                     if (!isIdentifierPart(c))
                         break;
 
-                    if (identifierWithEscapeChars) {
-                        if (QChar::requiresSurrogates(c)) {
-                            _tokenText += QChar(QChar::highSurrogate(c));
-                            _tokenText += QChar(QChar::lowSurrogate(c));
-                        } else {
-                            _tokenText += QChar(c);
-                        }
+                    if (QChar::requiresSurrogates(c)) {
+                        _tokenText += QChar(QChar::highSurrogate(c));
+                        _tokenText += QChar(QChar::lowSurrogate(c));
+                    } else {
+                        _tokenText += QChar(c);
                     }
                     continue;
                 }
