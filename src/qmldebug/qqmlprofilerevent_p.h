@@ -274,6 +274,7 @@ private:
         if (m_dataType & External) {
             uint length = m_dataLength * (other.m_dataType / 8);
             m_data.external = malloc(length);
+            Q_CHECK_PTR(m_data.external);
             memcpy(m_data.external, other.m_data.external, length);
         } else {
             memcpy(&m_data, &other.m_data, sizeof(m_data));
@@ -317,6 +318,7 @@ private:
                 return;
             m_dataType = static_cast<Type>((sizeof(Number) * 8) | External);
             m_data.external = malloc(m_dataLength * sizeof(Number));
+            Q_CHECK_PTR(m_data.external);
             data = static_cast<Number *>(m_data.external);
         } else {
             m_dataType = static_cast<Type>(sizeof(Number) * 8);
