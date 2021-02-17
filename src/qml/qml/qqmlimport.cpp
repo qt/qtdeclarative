@@ -751,7 +751,7 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
             if (containingType.isValid()) {
                 // we currently cannot reference a Singleton inside itself
                 // in that case, containingType is still invalid
-                if (int icID = containingType.lookupInlineComponentIdByName(typeStr) != -1) {
+                if (int icID = containingType.lookupInlineComponentIdByName(typeStr); icID != -1) {
                     *type_return = containingType.lookupInlineComponentById(icID);
                 } else {
                     auto icType = createICType();
