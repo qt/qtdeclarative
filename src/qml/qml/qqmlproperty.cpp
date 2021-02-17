@@ -805,9 +805,7 @@ void QQmlPropertyPrivate::removeBinding(QObject *o, QQmlPropertyIndex index)
 {
     Q_ASSERT(o);
 
-    QObject *target;
-    QQmlPropertyIndex targetIndex;
-    findAliasTarget(o, index, &target, &targetIndex);
+    auto [target, targetIndex] = findAliasTarget(o, index);
     removeOldBinding(target, targetIndex);
 }
 
@@ -822,7 +820,9 @@ void QQmlPropertyPrivate::removeBinding(const QQmlProperty &that)
 QQmlAbstractBinding *
 QQmlPropertyPrivate::binding(QObject *object, QQmlPropertyIndex index)
 {
-    findAliasTarget(object, index, &object, &index);
+    auto aliasTarget = findAliasTarget(object, index);
+    object = aliasTarget.targetObject;
+    index = aliasTarget.targetIndex;
 
     QQmlData *data = QQmlData::get(object);
     if (!data)
