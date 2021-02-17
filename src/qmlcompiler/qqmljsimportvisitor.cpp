@@ -470,6 +470,8 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::FormalParameterList *fpl)
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
 {
     // property QtObject __styleData: QtObject {...}
+
+    Q_ASSERT(uiob->qualifiedTypeNameId);
     QString name;
     for (auto id = uiob->qualifiedTypeNameId; id; id = id->next)
         name += id->name.toString() + QLatin1Char('.');
@@ -488,8 +490,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
     }
 
     enterEnvironment(QQmlJSScope::QMLScope, name,
-                     uiob->qualifiedTypeNameId ? uiob->qualifiedTypeNameId->identifierToken
-                                               : uiob->firstSourceLocation());
+                     uiob->qualifiedTypeNameId->identifierToken);
     m_currentScope->resolveTypes(m_rootScopeImports);
     return true;
 }
