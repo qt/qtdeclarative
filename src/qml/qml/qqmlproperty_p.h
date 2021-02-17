@@ -80,10 +80,9 @@ public:
     QQmlPropertyData core;
     QQmlPropertyData valueTypeData;
 
-    bool isNameCached:1;
     QString nameCache;
 
-    QQmlPropertyPrivate() : isNameCached(false) {}
+    QQmlPropertyPrivate() {}
 
     QQmlPropertyIndex encodedIndex() const
     { return encodedIndex(core, valueTypeData); }

@@ -414,7 +414,6 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
         object = currentObject;
         core = *property;
         nameCache = terminal.toString();
-        isNameCached = true;
     }
 }
 
@@ -677,7 +676,7 @@ QString QQmlProperty::name() const
 {
     if (!d)
         return QString();
-    if (!d->isNameCached) {
+    if (d->nameCache.isEmpty()) {
         // ###
         if (!d->object) {
         } else if (d->isValueType()) {
@@ -693,7 +692,6 @@ QString QQmlProperty::name() const
         } else {
             d->nameCache = d->core.name(d->object);
         }
-        d->isNameCached = true;
     }
 
     return d->nameCache;
