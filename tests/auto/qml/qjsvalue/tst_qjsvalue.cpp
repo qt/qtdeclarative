@@ -2872,4 +2872,21 @@ void tst_QJSValue::jsFunctionInVariant()
     }
 }
 
+void tst_QJSValue::integerToEnum()
+{
+    QJSEngine engine;
+
+    QJSValue enumVal = engine.toScriptValue(QQmlComponent::Error);
+    QJSValue intVal(static_cast<int>(QQmlComponent::Error));
+
+    QVERIFY(enumVal.equals(intVal));
+    QVERIFY(intVal.equals(enumVal));
+
+    QCOMPARE(qjsvalue_cast<QQmlComponent::Status>(intVal), QQmlComponent::Error);
+    QCOMPARE(qjsvalue_cast<QQmlComponent::Status>(enumVal), QQmlComponent::Error);
+
+    QCOMPARE(qjsvalue_cast<int>(intVal), static_cast<int>(QQmlComponent::Error));
+    QCOMPARE(qjsvalue_cast<int>(enumVal), static_cast<int>(QQmlComponent::Error));
+}
+
 QTEST_MAIN(tst_QJSValue)

@@ -148,6 +148,7 @@ private slots:
     void deleteFromDifferentThread();
     void stringAndUrl();
     void jsFunctionInVariant();
+    void integerToEnum();
 
 private:
     void newEngine()
