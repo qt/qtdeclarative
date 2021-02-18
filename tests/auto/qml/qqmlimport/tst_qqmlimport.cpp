@@ -187,6 +187,11 @@ void tst_QQmlImport::importPathOrder()
     engine.addImportPath(QT_QMLTEST_DATADIR);
     expectedImportPaths.prepend(QT_QMLTEST_DATADIR);
     QCOMPARE(expectedImportPaths, engine.importPathList());
+
+    // Add qml2Imports again to make it the first of the list
+    engine.addImportPath(qml2Imports);
+    expectedImportPaths.move(expectedImportPaths.indexOf(qml2Imports), 0);
+    QCOMPARE(expectedImportPaths, engine.importPathList());
 }
 
 Q_DECLARE_METATYPE(QQmlImports::ImportVersion)

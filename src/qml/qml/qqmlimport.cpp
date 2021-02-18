@@ -2192,9 +2192,12 @@ void QQmlImportDatabase::addImportPath(const QString& path)
         cPath.replace(Backslash, Slash);
     }
 
-    if (!cPath.isEmpty()
-        && !fileImportPath.contains(cPath))
-        fileImportPath.prepend(cPath);
+    if (!cPath.isEmpty()) {
+        if (fileImportPath.contains(cPath))
+            fileImportPath.move(fileImportPath.indexOf(cPath), 0);
+        else
+            fileImportPath.prepend(cPath);
+    }
 }
 
 /*!
