@@ -96,7 +96,8 @@ public:
         JSLexicalScope,
         QMLScope,
         GroupedPropertyScope,
-        AttachedPropertyScope
+        AttachedPropertyScope,
+        EnumScope
     };
 
     enum class AccessSemantics {
@@ -260,7 +261,8 @@ public:
         return result;
     }
 
-    void resolveTypes(const QHash<QString, ConstPtr> &contextualTypes);
+    static void resolveTypes(const QQmlJSScope::Ptr &self,
+                             const QHash<QString, ConstPtr> &contextualTypes);
 
     void setSourceLocation(const QQmlJS::SourceLocation &sourceLocation)
     {

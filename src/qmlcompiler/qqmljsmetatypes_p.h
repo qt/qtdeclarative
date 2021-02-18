@@ -62,6 +62,7 @@ class QQmlJSMetaEnum
     QList<int> m_values; // empty if values unknown.
     QString m_name;
     QString m_alias;
+    QSharedPointer<const QQmlJSScope> m_type;
     bool m_isFlag = false;
 
 public:
@@ -89,13 +90,17 @@ public:
     int value(const QString &key) const { return m_values.value(m_keys.indexOf(key)); }
     bool hasKey(const QString &key) const { return m_keys.indexOf(key) != -1; }
 
+    QSharedPointer<const QQmlJSScope> type() const { return m_type; }
+    void setType(const QSharedPointer<const QQmlJSScope> &type) { m_type = type; }
+
     friend bool operator==(const QQmlJSMetaEnum &a, const QQmlJSMetaEnum &b)
     {
         return a.m_keys == b.m_keys
                 && a.m_values == b.m_values
                 && a.m_name == b.m_name
                 && a.m_alias == b.m_alias
-                && a.m_isFlag == b.m_isFlag;
+                && a.m_isFlag == b.m_isFlag
+                && a.m_type == b.m_type;
     }
 
     friend bool operator!=(const QQmlJSMetaEnum &a, const QQmlJSMetaEnum &b)
@@ -105,7 +110,7 @@ public:
 
     friend size_t qHash(const QQmlJSMetaEnum &e, size_t seed = 0)
     {
-        return qHashMulti(seed, e.m_keys, e.m_values, e.m_name, e.m_alias, e.m_isFlag);
+        return qHashMulti(seed, e.m_keys, e.m_values, e.m_name, e.m_alias, e.m_isFlag, e.m_type);
     }
 };
 

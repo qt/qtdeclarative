@@ -218,8 +218,41 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
     }
 
     const QString signal = signalName(name);
-    if (signal.isEmpty())
+    if (signal.isEmpty()) {
+        for (const auto &childScope : qmlScope->childScopes()) {
+            if ((childScope->scopeType() == QQmlJSScope::AttachedPropertyScope
+                 || childScope->scopeType() == QQmlJSScope::GroupedPropertyScope)
+                    && childScope->internalName() == name) {
+                return true;
+            }
+        }
+
+        if (!qmlScope->hasProperty(name.toString())) {
+            m_errors.append({
+                                QStringLiteral("Binding assigned to \"%1\", but no property \"%1\" "
+                                               "exists in the current element.\n").arg(name),
+                                QtWarningMsg,
+                                uisb->firstSourceLocation()
+                            });
+            m_visitFailed = true;
+            return true;
+        }
+
+        const auto property = qmlScope->property(name.toString());
+        if (!property.type()) {
+            m_errors.append({
+                                QStringLiteral("No type found for property \"%1\". This may be due "
+                                               "to a missing import statement or incomplete "
+                                               "qmltypes files.\n").arg(name),
+                                QtWarningMsg,
+                                uisb->firstSourceLocation()
+                            });
+            m_visitFailed = true;
+
+        }
+
         return true;
+    }
 
 
     if (!qmlScope->hasMethod(signal) && m_warnUnqualified) {

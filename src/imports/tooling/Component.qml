@@ -55,4 +55,5 @@ QtObject {
     property bool isCreatable: name.length > 0
     property bool isComposite: false
     property string accessSemantics: "reference"
+    property string defaultProperty
 }

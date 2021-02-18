@@ -129,13 +129,13 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
     if (!m_exportedRootScope)
         m_exportedRootScope = m_currentScope;
 
-    m_currentScope->resolveTypes(m_rootScopeImports);
+    QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports);
     return true;
 }
 
 void QQmlJSImportVisitor::endVisit(UiObjectDefinition *)
 {
-    m_currentScope->resolveTypes(m_rootScopeImports);
+    QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports);
     leaveEnvironment();
 }
 
@@ -494,13 +494,13 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
 
     enterEnvironment(QQmlJSScope::QMLScope, name,
                      uiob->qualifiedTypeNameId->identifierToken);
-    m_currentScope->resolveTypes(m_rootScopeImports);
+    QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports);
     return true;
 }
 
 void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
 {
-    m_currentScope->resolveTypes(m_rootScopeImports);
+    QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports);
     const QQmlJSScope::ConstPtr childScope = m_currentScope;
     leaveEnvironment();
 
@@ -541,7 +541,7 @@ bool QQmlJSImportVisitor::visit(ESModule *module)
 
 void QQmlJSImportVisitor::endVisit(ESModule *)
 {
-    m_exportedRootScope->resolveTypes(m_rootScopeImports);
+    QQmlJSScope::resolveTypes(m_exportedRootScope, m_rootScopeImports);
 }
 
 bool QQmlJSImportVisitor::visit(Program *)
@@ -556,7 +556,7 @@ bool QQmlJSImportVisitor::visit(Program *)
 
 void QQmlJSImportVisitor::endVisit(Program *)
 {
-    m_exportedRootScope->resolveTypes(m_rootScopeImports);
+    QQmlJSScope::resolveTypes(m_exportedRootScope, m_rootScopeImports);
 }
 
 QT_END_NAMESPACE
