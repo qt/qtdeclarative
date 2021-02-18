@@ -1460,7 +1460,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_fillStyle(const QV4::FunctionOb
 }
 /*!
     \qmlproperty enumeration QtQuick::Context2D::fillRule
-     Holds the current fill rule used for filling shapes. The following fill rules supported:
+     Holds the current fill rule used for filling shapes. The following fill rules are supported:
      \list
      \li Qt.OddEvenFill
      \li Qt.WindingFill
