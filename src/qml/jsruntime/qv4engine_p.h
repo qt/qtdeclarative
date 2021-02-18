@@ -677,8 +677,10 @@ public:
 #if QT_CONFIG(qml_jit)
         if (!m_canAllocateExecutableMemory)
             return false;
-        if (f)
-            return !f->isGenerator() && f->interpreterCallCount >= jitCallCountThreshold;
+        if (f) {
+            return !f->aotFunction && !f->isGenerator()
+                    && f->interpreterCallCount >= jitCallCountThreshold;
+        }
         return true;
 #else
         Q_UNUSED(f);
