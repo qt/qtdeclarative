@@ -302,6 +302,10 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("onAssignment.qml")
             << QStringLiteral("Property \"loops\" not found on type \"bool\"")
             << QString();
+    QTest::newRow("BadAttached")
+            << QStringLiteral("badAttached.qml")
+            << QStringLiteral("unknown attached property scope WrongAttached.")
+            << QString();
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -366,6 +370,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("segFault") << QStringLiteral("SegFault.qml");
     QTest::newRow("grouped scope failure") << QStringLiteral("groupedScope.qml");
     QTest::newRow("layouts depends quick") << QStringLiteral("layouts.qml");
+    QTest::newRow("attached") << QStringLiteral("attached.qml");
 }
 
 void TestQmllint::cleanQmlCode()

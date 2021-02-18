@@ -90,25 +90,31 @@ void FindWarningVisitor::checkInheritanceCycle(QQmlJSScope::ConstPtr scope)
     }
 }
 
-void FindWarningVisitor::checkGroupedScopes(QQmlJSScope::ConstPtr scope)
+void FindWarningVisitor::checkGroupedAndAttachedScopes(QQmlJSScope::ConstPtr scope)
 {
     auto children = scope->childScopes();
     while (!children.isEmpty()) {
         auto childScope = children.takeFirst();
-        if (childScope->scopeType() != QQmlJSScope::GroupedPropertyScope)
-            continue;
-
-        if (!childScope->baseType()) {
-            m_errors.append({
-                                QStringLiteral("unknown grouped property scope %1.")
-                                        .arg(childScope->internalName()),
-                                QtWarningMsg,
-                                childScope->sourceLocation()
-                            });
-            m_visitFailed = true;
+        const auto type = childScope->scopeType();
+        switch (type) {
+        case QQmlJSScope::GroupedPropertyScope:
+        case QQmlJSScope::AttachedPropertyScope:
+            if (!childScope->baseType()) {
+                m_errors.append({
+                                    QStringLiteral("unknown %1 property scope %2.")
+                                            .arg(type == QQmlJSScope::GroupedPropertyScope
+                                                    ? QStringLiteral("grouped")
+                                                    : QStringLiteral("attached"),
+                                            childScope->internalName()),
+                                    QtWarningMsg,
+                                    childScope->sourceLocation()
+                                });
+                m_visitFailed = true;
+            }
+            children.append(childScope->childScopes());
+        default:
+            break;
         }
-
-        children.append(childScope->childScopes());
     }
 }
 
@@ -489,7 +495,7 @@ void FindWarningVisitor::endVisit(QQmlJS::AST::UiObjectDefinition *uiod)
     QQmlJSImportVisitor::endVisit(uiod);
 
     if (m_warnUnqualified)
-        checkGroupedScopes(childScope);
+        checkGroupedAndAttachedScopes(childScope);
 
     if (m_currentScope == m_globalScope
             || m_currentScope->baseTypeName() == QStringLiteral("Component")) {

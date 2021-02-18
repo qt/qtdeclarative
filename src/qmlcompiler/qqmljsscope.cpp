@@ -237,28 +237,31 @@ void QQmlJSScope::resolveTypes(const QHash<QString, QQmlJSScope::ConstPtr> &cont
 
         it->setParameterTypes(paramTypes);
     }
-}
 
-void QQmlJSScope::resolveGroupedScopes()
-{
     for (auto it = m_childScopes.begin(), end = m_childScopes.end(); it != end; ++it) {
         QQmlJSScope::Ptr childScope = *it;
-        if (childScope->scopeType() != QQmlJSScope::GroupedPropertyScope)
-            continue;
-
-        const QString propertyName = childScope->internalName();
-        auto findProperty = [&](const QQmlJSScope *type) {
-            auto propertyIt = type->m_properties.find(propertyName);
-            if (propertyIt != type->m_properties.end()) {
-                childScope->m_baseType = QQmlJSScope::ConstPtr(propertyIt->type());
-                childScope->m_baseTypeName = propertyIt->typeName();
-                return true;
+        switch (childScope->scopeType()) {
+        case QQmlJSScope::GroupedPropertyScope:
+            searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *type) {
+                const auto propertyIt = type->m_properties.find(childScope->internalName());
+                if (propertyIt != type->m_properties.end()) {
+                    childScope->m_baseType = QQmlJSScope::ConstPtr(propertyIt->type());
+                    childScope->m_baseTypeName = propertyIt->typeName();
+                    return true;
+                }
+                return false;
+            });
+            break;
+        case QQmlJSScope::AttachedPropertyScope:
+            if (const auto attachedBase = findType(childScope->internalName())) {
+                childScope->m_baseType = attachedBase->attachedType();
+                childScope->m_baseTypeName = attachedBase->attachedTypeName();
             }
-            return false;
-        };
-
-        searchBaseAndExtensionTypes(this, findProperty);
-        childScope->resolveGroupedScopes();
+            break;
+        default:
+            break;
+        }
+        childScope->resolveTypes(contextualTypes);
     }
 }
 
