@@ -306,6 +306,16 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("badAttached.qml")
             << QStringLiteral("unknown attached property scope WrongAttached.")
             << QString();
+    QTest::newRow("BadBinding")
+            << QStringLiteral("badBinding.qml")
+            << QStringLiteral("Binding assigned to \"doesNotExist\", but no property "
+                              "\"doesNotExist\" exists in the current element.")
+            << QString();
+    QTest::newRow("BadPropertyType")
+            << QStringLiteral("badPropertyType.qml")
+            << QStringLiteral("No type found for property \"bad\". This may be due to a missing "
+                              "import statement or incomplete qmltypes files.")
+            << QString();
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -371,6 +381,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("grouped scope failure") << QStringLiteral("groupedScope.qml");
     QTest::newRow("layouts depends quick") << QStringLiteral("layouts.qml");
     QTest::newRow("attached") << QStringLiteral("attached.qml");
+    QTest::newRow("enumProperty") << QStringLiteral("enumProperty.qml");
 }
 
 void TestQmllint::cleanQmlCode()
