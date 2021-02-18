@@ -4294,6 +4294,7 @@ QVariant QQuickItem::inputMethodQuery(Qt::InputMethodQuery query) const
     case Qt::ImMaximumTextLength:
     case Qt::ImAnchorPosition:
     case Qt::ImPreferredLanguage:
+    case Qt::ImReadOnly:
         if (d->extra.isAllocated() && d->extra->keyHandler)
             v = d->extra->keyHandler->inputMethodQuery(query);
         break;
