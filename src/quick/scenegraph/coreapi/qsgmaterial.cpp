@@ -98,34 +98,38 @@ static void qt_print_material_count()
     \inmodule QtQuick
     \ingroup qtquick-scenegraph-materials
 
-    The QSGMaterial, QSGMaterialShader and QSGMaterialShader subclasses
-    form a tight relationship. For one scene graph (including nested graphs),
-    there is one unique QSGMaterialShader or QSGMaterialShader instance
-    which encapsulates the shaders the scene graph uses to render that
-    material, such as a shader to flat coloring of geometry. Each
-    QSGGeometryNode can have a unique QSGMaterial containing the how the shader
-    should be configured when drawing that node, such as the actual color to
-    used to render the geometry.
+    QSGMaterial and QSGMaterialShader subclasses form a tight relationship. For
+    one scene graph (including nested graphs), there is one unique
+    QSGMaterialShader instance which encapsulates the shaders the scene graph
+    uses to render that material, such as a shader to flat coloring of
+    geometry. Each QSGGeometryNode can have a unique QSGMaterial containing the
+    how the shader should be configured when drawing that node, such as the
+    actual color to used to render the geometry.
 
     QSGMaterial has two virtual functions that both need to be implemented. The
     function type() should return a unique instance for all instances of a
     specific subclass. The createShader() function should return a new instance
-    of QSGMaterialShader or QSGMaterialShader, specific to that subclass of
-    QSGMaterial.
+    of QSGMaterialShader, specific to that subclass of QSGMaterial.
 
     A minimal QSGMaterial implementation could look like this:
     \code
         class Material : public QSGMaterial
         {
         public:
-            QSGMaterialType *type() const { static QSGMaterialType type; return &type; }
-            QSGMaterialShader *createShader(QSGRendererInterface::RenderMode) const { return new Shader; }
+            QSGMaterialType *type() const override { static QSGMaterialType type; return &type; }
+            QSGMaterialShader *createShader(QSGRendererInterface::RenderMode) const override { return new Shader; }
         };
     \endcode
 
     See the \l{Scene Graph - Custom Material}{Custom Material example} for an introduction
     on implementing a QQuickItem subclass backed by a QSGGeometryNode and a custom
     material.
+
+    \note createShader() is called only once per QSGMaterialType, to reduce
+    redundant work with shader preparation. If a QSGMaterial is backed by
+    multiple sets of vertex and fragment shader combinations, the implementation
+    of type() must return a different, unique QSGMaterialType pointer for each
+    combination of shaders.
 
     \note All classes with QSG prefix should be used solely on the scene graph's
     rendering thread. See \l {Scene Graph and Rendering} for more information.
@@ -236,10 +240,22 @@ int QSGMaterial::compare(const QSGMaterial *other) const
 
 
 /*!
-    \fn QSGMaterialType QSGMaterial::type() const
+    \fn QSGMaterialType *QSGMaterial::type() const
 
-    This function is called by the scene graph to return a unique instance
-    per subclass.
+    This function is called by the scene graph to query an identifier that is
+    unique to the QSGMaterialShader instantiated by createShader().
+
+    For many materials, the typical approach will be to return a pointer to a
+    static, and so globally available, QSGMaterialType instance. The
+    QSGMaterialType is an opaque object. Its purpose is only to serve as a
+    type-safe, simple way to generate unique material identifiers.
+    \code
+        QSGMaterialType *type() const override
+        {
+            static QSGMaterialType type;
+            return &type;
+        }
+    \endcode
  */
 
 
