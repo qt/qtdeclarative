@@ -2338,6 +2338,14 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, int type, void *data)
     }
 
     {
+        const QMetaType metaType(type);
+        if (metaType.flags() & QMetaType::IsEnumeration) {
+            *reinterpret_cast<int *>(data) = value.toInt32();
+            return true;
+        }
+    }
+
+    {
         const QQmlValueTypeWrapper *vtw = value.as<QQmlValueTypeWrapper>();
         if (vtw && vtw->typeId() == type) {
             return vtw->toGadget(data);
