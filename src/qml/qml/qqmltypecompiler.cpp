@@ -356,30 +356,20 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
 
         QQmlPropertyResolver resolver(propertyCache);
 
-        Q_ASSERT(bindingPropertyName.startsWith(QLatin1String("on")));
-        QString signalNameCandidate = bindingPropertyName;
-        signalNameCandidate.remove(0, 2);
-
-        // Note that the property name could start with any alpha or '_' or '$' character,
-        // so we need to do the lower-casing of the first alpha character.
-        for (int firstAlphaIndex = 0; firstAlphaIndex < signalNameCandidate.size(); ++firstAlphaIndex) {
-            if (signalNameCandidate.at(firstAlphaIndex).isUpper()) {
-                signalNameCandidate[firstAlphaIndex] = signalNameCandidate.at(firstAlphaIndex).toLower();
-                break;
-            }
-        }
+        const QString signalName = QmlIR::IRBuilder::signalNameFromSignalPropertyName(
+                    bindingPropertyName);
 
         QString qPropertyName;
-        if (signalNameCandidate.endsWith(QLatin1String("Changed")))
-            qPropertyName = signalNameCandidate.mid(0, signalNameCandidate.length() - static_cast<int>(strlen("Changed")));
+        if (signalName.endsWith(QLatin1String("Changed")))
+            qPropertyName = signalName.mid(0, signalName.length() - static_cast<int>(strlen("Changed")));
 
         QList<QString> parameters;
 
         bool notInRevision = false;
-        QQmlPropertyData * const signal = resolver.signal(signalNameCandidate, &notInRevision);
-        QQmlPropertyData * const signalPropertyData = resolver.property(signalNameCandidate, /*notInRevision ptr*/nullptr);
+        QQmlPropertyData * const signal = resolver.signal(signalName, &notInRevision);
+        QQmlPropertyData * const signalPropertyData = resolver.property(signalName, /*notInRevision ptr*/nullptr);
         QQmlPropertyData * const qPropertyData = !qPropertyName.isEmpty() ? resolver.property(qPropertyName) : nullptr;
-        QString finalSignalHandlerPropertyName = signalNameCandidate;
+        QString finalSignalHandlerPropertyName = signalName;
         uint flags = QV4::CompiledData::Binding::IsSignalHandlerExpression;
 
         const bool isPropertyObserver = !signalPropertyData && qPropertyData && qPropertyData->isBindable();
@@ -439,7 +429,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
                 }
             }
 
-            QHash<QString, QStringList>::ConstIterator entry = customSignals.constFind(signalNameCandidate);
+            QHash<QString, QStringList>::ConstIterator entry = customSignals.constFind(signalName);
             if (entry == customSignals.constEnd() && !qPropertyName.isEmpty())
                 entry = customSignals.constFind(qPropertyName);
 

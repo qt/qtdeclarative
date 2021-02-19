@@ -501,6 +501,25 @@ bool IRBuilder::isSignalPropertyName(const QString &name)
     return false; // consists solely of underscores - invalid.
 }
 
+QString IRBuilder::signalNameFromSignalPropertyName(const QString &signalPropertyName)
+{
+    Q_ASSERT(signalPropertyName.startsWith(QLatin1String("on")));
+    QString signalNameCandidate = signalPropertyName;
+    signalNameCandidate.remove(0, 2);
+
+    // Note that the property name could start with any alpha or '_' or '$' character,
+    // so we need to do the lower-casing of the first alpha character.
+    for (int firstAlphaIndex = 0; firstAlphaIndex < signalNameCandidate.size(); ++firstAlphaIndex) {
+        if (signalNameCandidate.at(firstAlphaIndex).isUpper()) {
+            signalNameCandidate[firstAlphaIndex] = signalNameCandidate.at(firstAlphaIndex).toLower();
+            return signalNameCandidate;
+        }
+    }
+
+    Q_UNREACHABLE();
+    return QString();
+}
+
 bool IRBuilder::visit(QQmlJS::AST::UiArrayMemberList *ast)
 {
     return QQmlJS::AST::Visitor::visit(ast);
