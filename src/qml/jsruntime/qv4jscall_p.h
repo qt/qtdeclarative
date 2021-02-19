@@ -112,8 +112,8 @@ ReturnedValue FunctionObject::call(const JSCallData &data) const
     return call(data.thisObject, data.args, data.argc);
 }
 
-void populateJSCallArguments(ExecutionEngine *v4, JSCallData &jsCall,
-                             void **args, int *types);
+void populateJSCallArguments(ExecutionEngine *v4, JSCallData &jsCall, int argc,
+                             void **args, const QMetaType *types);
 
 struct ScopedStackFrame {
     Scope &scope;

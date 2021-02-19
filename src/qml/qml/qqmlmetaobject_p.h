@@ -72,7 +72,7 @@ class QQmlPropertyData;
 class Q_QML_EXPORT QQmlMetaObject
 {
 public:
-    typedef QVarLengthArray<int, 9> ArgTypeStorage;
+    typedef QVarLengthArray<QMetaType, 9> ArgTypeStorage;
 
     inline QQmlMetaObject() = default;
     inline QQmlMetaObject(const QObject *);
@@ -90,9 +90,19 @@ public:
     inline const QMetaObject *metaObject() const;
 
     QMetaType methodReturnType(const QQmlPropertyData &data, QByteArray *unknownTypeError) const;
-    int *methodParameterTypes(int index, ArgTypeStorage *argStorage,
+    /*!
+      \internal
+      Returns false if one of the types is unknown. Otherwise, fills \a argstorage with the
+      metatypes of the function.
+    */
+    bool methodParameterTypes(int index, ArgTypeStorage *argStorage,
                               QByteArray *unknownTypeError) const;
-    int *constructorParameterTypes(int index, ArgTypeStorage *dummy, QByteArray *unknownTypeError) const;
+    /*!
+      \internal
+      Returns false if one of the types is unknown. Otherwise, fills \a argstorage with the
+      metatypes of the function.
+    */
+    bool constructorParameterTypes(int index, ArgTypeStorage *dummy, QByteArray *unknownTypeError) const;
 
 
     static bool canConvert(const QQmlMetaObject &from, const QQmlMetaObject &to);
@@ -103,7 +113,7 @@ public:
 
 protected:
     const QMetaObject *_m = nullptr;
-    int *methodParameterTypes(const QMetaMethod &method, ArgTypeStorage *argStorage,
+    bool methodParameterTypes(const QMetaMethod &method, ArgTypeStorage *argStorage,
                               QByteArray *unknownTypeError) const;
 
 };

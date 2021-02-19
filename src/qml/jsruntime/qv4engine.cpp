@@ -2064,8 +2064,8 @@ bool ExecutionEngine::diskCacheEnabled() const
 }
 
 ReturnedValue ExecutionEngine::callInContext(Function *function, QObject *self,
-                                             QQmlRefPointer<QQmlContextData> ctxtdata, void **args,
-                                             int *types)
+                                             QQmlRefPointer<QQmlContextData> ctxtdata, int argc, void **args,
+                                             QMetaType *types)
 {
     QV4::Scope scope(this);
     ExecutionContext *ctx = currentStackFrame ? currentContext() : scriptContext();
@@ -2079,8 +2079,8 @@ ReturnedValue ExecutionEngine::callInContext(Function *function, QObject *self,
         return Encode::undefined();
 
     // use JSCallData to pass arguments into the function call
-    QV4::JSCallData jsCall(scope, types[0]);
-    QV4::populateJSCallArguments(this, jsCall, args, types);
+    QV4::JSCallData jsCall(scope, argc);
+    QV4::populateJSCallArguments(this, jsCall, argc, args, types);
 
     QV4::CallData *callData = jsCall->callData();
     return function->call(selfValue, callData->argValues<QV4::Value>(), callData->argc(),

@@ -190,11 +190,11 @@ void QQmlBoundSignalExpression::evaluate(void **a)
     QQmlMetaObject::ArgTypeStorage storage;
     //TODO: lookup via signal index rather than method index as an optimization
     int methodIndex = QMetaObjectPrivate::signal(m_target->metaObject(), m_index).methodIndex();
-    int *argsTypes = QQmlMetaObject(m_target).methodParameterTypes(methodIndex, &storage, nullptr);
-    int argCount = argsTypes ? *argsTypes : 0;
+    bool ok = QQmlMetaObject(m_target).methodParameterTypes(methodIndex, &storage, nullptr);
+    const int argCount = ok ? storage.size() : 0;
 
     QV4::JSCallData jsCall(scope, argCount);
-    populateJSCallArguments(v4, jsCall, a, argsTypes);
+    populateJSCallArguments(v4, jsCall, argCount, a, storage.constData());
 
     QQmlJavaScriptExpression::evaluate(jsCall.callData(), nullptr);
 

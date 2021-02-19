@@ -50,11 +50,10 @@ QT_BEGIN_NAMESPACE
     information provided by \a types
  */
 void QV4::populateJSCallArguments(ExecutionEngine *v4, JSCallData &jsCall,
-                                  void **args, int *types)
+                                  int argc, void **args, const QMetaType *types)
 {
-    const int argCount = types ? types[0] : 0;
-    for (int ii = 0; ii < argCount; ++ii) {
-        auto type = QMetaType(types[ii + 1]);
+    for (int ii = 0; ii < argc; ++ii) {
+        auto type = QMetaType(types[ii]);
         jsCall.args[ii] = v4->metaTypeToJS(type, args[ii + 1]);
     }
 }

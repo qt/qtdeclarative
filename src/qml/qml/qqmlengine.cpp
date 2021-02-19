@@ -2289,7 +2289,7 @@ bool QQmlEnginePrivate::isScriptLoaded(const QUrl &url) const
 }
 
 QJSValue QQmlEnginePrivate::executeRuntimeFunction(const QUrl &url, qsizetype functionIndex,
-                                                   QObject *thisObject, void **args, int *types)
+                                                   QObject *thisObject, int argc, void **args, QMetaType *types)
 {
     Q_Q(QQmlEngine);
     if (const auto unit = typeLoader.getType(url)->compilationUnit()) {
@@ -2307,7 +2307,7 @@ QJSValue QQmlEnginePrivate::executeRuntimeFunction(const QUrl &url, qsizetype fu
             ctx = q->rootContext();
         return QJSValuePrivate::fromReturnedValue(
                 q->handle()->callInContext(unit->runtimeFunctions[functionIndex], thisObject,
-                                           QQmlContextData::get(ctx), args, types));
+                                           QQmlContextData::get(ctx), argc, args, types));
     }
     return QJSValue();
 }

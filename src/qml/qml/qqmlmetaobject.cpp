@@ -114,7 +114,7 @@ QMetaType QQmlMetaObject::methodReturnType(const QQmlPropertyData &data, QByteAr
     return QMetaType();
 }
 
-int *QQmlMetaObject::methodParameterTypes(int index, ArgTypeStorage *argStorage,
+bool QQmlMetaObject::methodParameterTypes(int index, ArgTypeStorage *argStorage,
                                           QByteArray *unknownTypeError) const
 {
     Q_ASSERT(_m && index >= 0);
@@ -123,21 +123,20 @@ int *QQmlMetaObject::methodParameterTypes(int index, ArgTypeStorage *argStorage,
     return methodParameterTypes(m, argStorage, unknownTypeError);
 }
 
-int *QQmlMetaObject::constructorParameterTypes(int index, ArgTypeStorage *dummy,
+bool QQmlMetaObject::constructorParameterTypes(int index, ArgTypeStorage *dummy,
                                                      QByteArray *unknownTypeError) const
 {
     QMetaMethod m = _m->constructor(index);
     return methodParameterTypes(m, dummy, unknownTypeError);
 }
 
-int *QQmlMetaObject::methodParameterTypes(const QMetaMethod &m, ArgTypeStorage *argStorage,
+bool QQmlMetaObject::methodParameterTypes(const QMetaMethod &m, ArgTypeStorage *argStorage,
                                           QByteArray *unknownTypeError) const
 {
     Q_ASSERT(argStorage);
 
     int argc = m.parameterCount();
-    argStorage->resize(argc + 1);
-    argStorage->operator[](0) = argc;
+    argStorage->resize(argc);
     for (int ii = 0; ii < argc; ++ii) {
         QMetaType type = m.parameterMetaType(ii);
         // we treat enumerations as int
@@ -146,12 +145,11 @@ int *QQmlMetaObject::methodParameterTypes(const QMetaMethod &m, ArgTypeStorage *
         if (!type.isValid()) {
             if (unknownTypeError)
                 *unknownTypeError =  m.parameterTypeName(ii);
-            return nullptr;
+            return false;
         }
-        argStorage->operator[](ii + 1) = type.id();
+        argStorage->operator[](ii) = type;
     }
-
-    return argStorage->data();
+    return true;
 }
 
 QT_END_NAMESPACE

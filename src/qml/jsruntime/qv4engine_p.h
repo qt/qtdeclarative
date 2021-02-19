@@ -744,7 +744,7 @@ public:
     bool diskCacheEnabled() const;
 
     ReturnedValue callInContext(Function *function, QObject *self,
-                                QQmlRefPointer<QQmlContextData> ctxtdata, void **args, int *types);
+                                QQmlRefPointer<QQmlContextData> ctxtdata, int argc, void **args, QMetaType *types);
 
 private:
 #if QT_CONFIG(qml_debug)

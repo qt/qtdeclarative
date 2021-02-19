@@ -1252,9 +1252,9 @@ void tst_qqmlengine::executeRuntimeFunction()
     // squareValue():
     int x = 5;
     void *a0[] = { nullptr, const_cast<void *>(reinterpret_cast<const void *>(std::addressof(x))) };
-    int t0[] = { 1, QMetaTypeId2<int>::qt_metatype_id() };
+    QMetaType t0[] = { QMetaType::fromType<int>() };
     const int squared =
-            qjsvalue_cast<int>(priv->executeRuntimeFunction(url, 1, dummy.get(), a0, t0));
+            qjsvalue_cast<int>(priv->executeRuntimeFunction(url, 1, dummy.get(), 1, a0, t0));
     QCOMPARE(squared, x * x);
 
     // concatenate():
@@ -1263,10 +1263,10 @@ void tst_qqmlengine::executeRuntimeFunction()
     void *a1[] = { nullptr,
                    const_cast<void *>(reinterpret_cast<const void *>(std::addressof(str1))),
                    const_cast<void *>(reinterpret_cast<const void *>(std::addressof(str2))) };
-    int t1[] = { 2, QMetaTypeId2<QString>::qt_metatype_id(),
-                 QMetaTypeId2<QString>::qt_metatype_id() };
+    QMetaType t1[] = { QMetaType::fromType<QString>(),
+                 QMetaType::fromType<QString>() };
     QString concatenated =
-            qjsvalue_cast<QString>(priv->executeRuntimeFunction(url, 2, dummy.get(), a1, t1));
+            qjsvalue_cast<QString>(priv->executeRuntimeFunction(url, 2, dummy.get(), 2, a1, t1));
     QCOMPARE(concatenated, str1 + str2);
 }
 
