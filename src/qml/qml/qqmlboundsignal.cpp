@@ -196,7 +196,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
     int argCount = argsTypes ? *argsTypes : 0;
 
     QV4::JSCallData jsCall(scope, argCount);
-    populateJSCallArguments(ep, v4, jsCall, a, argsTypes);
+    populateJSCallArguments(v4, jsCall, a, argsTypes);
 
     QQmlJavaScriptExpression::evaluate(jsCall.callData(), nullptr);
 

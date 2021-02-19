@@ -49,32 +49,13 @@ QT_BEGIN_NAMESPACE
     Sets the arguments of JSCallData from type erased \a args based on type
     information provided by \a types
  */
-void QV4::populateJSCallArguments(QQmlEnginePrivate *ep, ExecutionEngine *v4, JSCallData &jsCall,
+void QV4::populateJSCallArguments(ExecutionEngine *v4, JSCallData &jsCall,
                                   void **args, int *types)
 {
     const int argCount = types ? types[0] : 0;
     for (int ii = 0; ii < argCount; ++ii) {
         int type = types[ii + 1];
-        //### ideally we would use metaTypeToJS, however it currently gives different results
-        //    for several cases (such as QVariant type and QObject-derived types)
-        // args[ii] = v4->metaTypeToJS(type, args[ii + 1]);
-        if (type == qMetaTypeId<QJSValue>()) {
-            jsCall.args[ii] = QJSValuePrivate::convertToReturnedValue(
-                    v4, *reinterpret_cast<QJSValue *>(args[ii + 1]));
-        } else if (type == QMetaType::QVariant) {
-            jsCall.args[ii] = v4->fromVariant(*((QVariant *)args[ii + 1]));
-        } else if (type == QMetaType::Int) {
-            //### optimization. Can go away if we switch to metaTypeToJS, or be expanded otherwise
-            jsCall.args[ii] = QV4::Value::fromInt32(*reinterpret_cast<const int *>(args[ii + 1]));
-        } else if (ep->isQObject(type)) {
-            if (!*reinterpret_cast<void *const *>(args[ii + 1]))
-                jsCall.args[ii] = QV4::Value::nullValue();
-            else
-                jsCall.args[ii] = QV4::QObjectWrapper::wrap(
-                        v4, *reinterpret_cast<QObject *const *>(args[ii + 1]));
-        } else {
-            jsCall.args[ii] = v4->fromVariant(QVariant(QMetaType(type), args[ii + 1]));
-        }
+        jsCall.args[ii] = v4->metaTypeToJS(type, args[ii + 1]);
     }
 }
 

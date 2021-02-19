@@ -2071,8 +2071,7 @@ ReturnedValue ExecutionEngine::callInContext(Function *function, QObject *self,
 
     // use JSCallData to pass arguments into the function call
     QV4::JSCallData jsCall(scope, types[0]);
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(m_qmlEngine);
-    QV4::populateJSCallArguments(ep, this, jsCall, args, types);
+    QV4::populateJSCallArguments(this, jsCall, args, types);
 
     QV4::CallData *callData = jsCall->callData();
     return function->call(selfValue, callData->argValues<QV4::Value>(), callData->argc(),

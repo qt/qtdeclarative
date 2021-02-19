@@ -112,7 +112,7 @@ ReturnedValue FunctionObject::call(const JSCallData &data) const
     return call(data.thisObject, data.args, data.argc);
 }
 
-void populateJSCallArguments(QQmlEnginePrivate *ep, ExecutionEngine *v4, JSCallData &jsCall,
+void populateJSCallArguments(ExecutionEngine *v4, JSCallData &jsCall,
                              void **args, int *types);
 
 struct ScopedStackFrame {
