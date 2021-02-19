@@ -461,6 +461,7 @@ public:
     bool generateFromQml(const QString &code, const QString &url, Document *output);
 
     static bool isSignalPropertyName(const QString &name);
+    static QString signalNameFromSignalPropertyName(const QString &signalPropertyName);
 
     using QQmlJS::AST::Visitor::visit;
     using QQmlJS::AST::Visitor::endVisit;
