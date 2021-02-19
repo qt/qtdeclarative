@@ -1004,7 +1004,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                 *jsCallData->thisObject = v4->global();
 
                 for (uint ii = 0; ii < parameterCount; ++ii) {
-                    jsCallData->args[ii] = scope.engine->metaTypeToJS(arguments->arguments[ii + 1], a[ii + 1]);
+                    jsCallData->args[ii] = scope.engine->metaTypeToJS(QMetaType(arguments->arguments[ii + 1]), a[ii + 1]);
                 }
 
                 const QMetaType returnType = methodData->propType();

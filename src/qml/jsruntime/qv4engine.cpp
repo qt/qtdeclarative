@@ -1508,7 +1508,7 @@ static QV4::ReturnedValue sequentialIterableToJS(QV4::ExecutionEngine *v4, const
 static QV4::ReturnedValue variantMapToJS(QV4::ExecutionEngine *v4, const QVariantMap &vmap);
 static QV4::ReturnedValue variantToJS(QV4::ExecutionEngine *v4, const QVariant &value)
 {
-    return v4->metaTypeToJS(value.userType(), value.constData());
+    return v4->metaTypeToJS(value.metaType(), value.constData());
 }
 
 
@@ -1932,11 +1932,11 @@ static QV4::ReturnedValue variantMapToJS(QV4::ExecutionEngine *v4, const QVarian
 
 // Converts the meta-type defined by the given type and data to JS.
 // Returns the value if conversion succeeded, an empty handle otherwise.
-QV4::ReturnedValue ExecutionEngine::metaTypeToJS(int type, const void *data)
+QV4::ReturnedValue ExecutionEngine::metaTypeToJS(QMetaType type, const void *data)
 {
     Q_ASSERT(data != nullptr);
 
-    QVariant variant(QMetaType(type), data);
+    QVariant variant(type, data);
     if (QMetaType::Type(variant.userType()) == QMetaType::QVariant) {
         // unwrap it: this is tested in QJSEngine, and makes the most sense for
         // end-user code too.

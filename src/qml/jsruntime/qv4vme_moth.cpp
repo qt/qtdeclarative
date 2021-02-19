@@ -500,7 +500,7 @@ ReturnedValue VME::exec(CppStackFrame *frame, ExecutionEngine *engine)
         function->aotFunction->functionPtr(&aotContext, returnValue, argumentPtrs);
 
         if (returnValue) {
-            result = engine->metaTypeToJS(returnType.id(), returnValue);
+            result = engine->metaTypeToJS(returnType, returnValue);
             returnType.destruct(returnValue);
         } else {
             result = Encode::undefined();

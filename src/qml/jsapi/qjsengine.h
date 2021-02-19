@@ -90,7 +90,7 @@ public:
     template <typename T>
     inline QJSValue toScriptValue(const T &value)
     {
-        return create(qMetaTypeId<T>(), &value);
+        return create(QMetaType::fromType<T>(), &value);
     }
 
     template <typename T>
@@ -146,7 +146,7 @@ Q_SIGNALS:
 
 private:
     QJSManagedValue createManaged(QMetaType type, const void *ptr);
-    QJSValue create(int type, const void *ptr);
+    QJSValue create(QMetaType type, const void *ptr);
 
     static bool convertManaged(const QJSManagedValue &value, int type, void *ptr);
     static bool convertV2(const QJSValue &value, int type, void *ptr);

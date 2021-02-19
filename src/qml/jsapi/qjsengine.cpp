@@ -731,7 +731,7 @@ QJSValue QJSEngine::globalObject() const
 QJSManagedValue QJSEngine::createManaged(QMetaType type, const void *ptr)
 {
     QJSManagedValue result(m_v4Engine);
-    *result.d = m_v4Engine->metaTypeToJS(type.id(), ptr);
+    *result.d = m_v4Engine->metaTypeToJS(type, ptr);
     return result;
 }
 
@@ -739,7 +739,7 @@ QJSManagedValue QJSEngine::createManaged(QMetaType type, const void *ptr)
  *  \internal
  * used by QJSEngine::toScriptValue
  */
-QJSValue QJSEngine::create(int type, const void *ptr)
+QJSValue QJSEngine::create(QMetaType type, const void *ptr)
 {
     QV4::Scope scope(m_v4Engine);
     QV4::ScopedValue v(scope, scope.engine->metaTypeToJS(type, ptr));

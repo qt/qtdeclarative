@@ -54,7 +54,7 @@ void QV4::populateJSCallArguments(ExecutionEngine *v4, JSCallData &jsCall,
 {
     const int argCount = types ? types[0] : 0;
     for (int ii = 0; ii < argCount; ++ii) {
-        int type = types[ii + 1];
+        auto type = QMetaType(types[ii + 1]);
         jsCall.args[ii] = v4->metaTypeToJS(type, args[ii + 1]);
     }
 }

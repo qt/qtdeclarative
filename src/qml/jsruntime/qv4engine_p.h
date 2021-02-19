@@ -665,7 +665,7 @@ public:
     QVariantMap variantMapFromJS(const QV4::Object *o);
 
     static bool metaTypeFromJS(const Value &value, int type, void *data);
-    QV4::ReturnedValue metaTypeToJS(int type, const void *data);
+    QV4::ReturnedValue metaTypeToJS(QMetaType type, const void *data);
 
     int maxJSStackSize() const;
     int maxGCStackSize() const;
