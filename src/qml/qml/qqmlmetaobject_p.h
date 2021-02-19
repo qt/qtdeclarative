@@ -89,7 +89,7 @@ public:
 
     inline const QMetaObject *metaObject() const;
 
-    int methodReturnType(const QQmlPropertyData &data, QByteArray *unknownTypeError) const;
+    QMetaType methodReturnType(const QQmlPropertyData &data, QByteArray *unknownTypeError) const;
     int *methodParameterTypes(int index, ArgTypeStorage *argStorage,
                               QByteArray *unknownTypeError) const;
     int *constructorParameterTypes(int index, ArgTypeStorage *dummy, QByteArray *unknownTypeError) const;

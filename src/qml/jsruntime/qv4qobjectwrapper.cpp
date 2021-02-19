@@ -1565,7 +1565,7 @@ static QV4::ReturnedValue CallPrecise(const QQmlObjectOrGadget &object, const QQ
 {
     QByteArray unknownTypeError;
 
-    int returnType = object.methodReturnType(data, &unknownTypeError);
+    int returnType = object.methodReturnType(data, &unknownTypeError).id();
 
     if (returnType == QMetaType::UnknownType) {
         return engine->throwError(QLatin1String("Unknown method return type: ")

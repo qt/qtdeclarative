@@ -135,36 +135,22 @@ void QQmlMetaObject::resolveGadgetMethodOrPropertyIndex(QMetaObject::Call type, 
     *index -= offset;
 }
 
-int QQmlMetaObject::methodReturnType(const QQmlPropertyData &data, QByteArray *unknownTypeError) const
+QMetaType QQmlMetaObject::methodReturnType(const QQmlPropertyData &data, QByteArray *unknownTypeError) const
 {
     Q_ASSERT(_m && data.coreIndex() >= 0);
 
     QMetaType type = data.propType();
-
-    const char *propTypeName = nullptr;
-
     if (!type.isValid()) {
         // Find the return type name from the method info
-        QMetaMethod m = _m->method(data.coreIndex());
-
-        type = m.returnMetaType();
-        propTypeName = m.typeName();
+        type = _m->method(data.coreIndex()).returnMetaType();
     }
-
-    if (type.sizeOf() <= qsizetype(sizeof(int))) {
-        if (type.flags() & QMetaType::IsEnumeration)
-            return QMetaType::Int;
-
-        if (isNamedEnumerator(_m, propTypeName))
-            return QMetaType::Int;
-
-        if (!type.isValid()) {
-            if (unknownTypeError)
-                *unknownTypeError = propTypeName;
-        }
-    } // else we know that it's a known type, as sizeOf(UnknownType) == 0
-
-    return type.id();
+    if (type.flags().testFlag(QMetaType::IsEnumeration))
+        type = QMetaType::fromType<int>();
+    if (type.isValid())
+        return type;
+    else if (unknownTypeError)
+        *unknownTypeError = _m->method(data.coreIndex()).typeName();
+    return QMetaType();
 }
 
 int *QQmlMetaObject::methodParameterTypes(int index, ArgTypeStorage *argStorage,
