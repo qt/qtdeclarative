@@ -44,45 +44,6 @@
 
 QT_BEGIN_NAMESPACE
 
-static bool isNamedEnumeratorInScope(const QMetaObject *resolvedMetaObject, const QByteArray &scope,
-                                     const QByteArray &name)
-{
-    for (int i = resolvedMetaObject->enumeratorCount() - 1; i >= 0; --i) {
-        QMetaEnum m = resolvedMetaObject->enumerator(i);
-        if ((m.name() == name) && (scope.isEmpty() || (m.scope() == scope)))
-            return true;
-    }
-    return false;
-}
-
-static bool isNamedEnumerator(const QMetaObject *metaObj, const QByteArray &scopedName)
-{
-    QByteArray scope;
-    QByteArray name;
-    int scopeIdx = scopedName.lastIndexOf("::");
-    if (scopeIdx != -1) {
-        scope = scopedName.left(scopeIdx);
-        name = scopedName.mid(scopeIdx + 2);
-    } else {
-        name = scopedName;
-    }
-
-    if (scope == "Qt")
-        return isNamedEnumeratorInScope(&Qt::staticMetaObject, scope, name);
-
-    if (isNamedEnumeratorInScope(metaObj, scope, name))
-        return true;
-
-    if (metaObj->d.relatedMetaObjects && !scope.isEmpty()) {
-        for (auto related = metaObj->d.relatedMetaObjects; *related; ++related) {
-            if (isNamedEnumeratorInScope(*related, scope, name))
-                return true;
-        }
-    }
-
-    return false;
-}
-
 // Returns true if \a from is assignable to a property of type \a to
 bool QQmlMetaObject::canConvert(const QQmlMetaObject &from, const QQmlMetaObject &to)
 {
@@ -177,27 +138,17 @@ int *QQmlMetaObject::methodParameterTypes(const QMetaMethod &m, ArgTypeStorage *
     int argc = m.parameterCount();
     argStorage->resize(argc + 1);
     argStorage->operator[](0) = argc;
-    QList<QByteArray> argTypeNames; // Only loaded if needed
-
     for (int ii = 0; ii < argc; ++ii) {
-        int type = m.parameterType(ii);
-        if (QMetaType(type).sizeOf() > qsizetype(sizeof(int))) {
-            // Cannot be passed as int
-            // We know that it's a known type, as sizeOf(UnknownType) == 0
-        } else if (QMetaType(type).flags() & QMetaType::IsEnumeration) {
-            type = QMetaType::Int;
-        } else {
-            if (argTypeNames.isEmpty())
-                argTypeNames = m.parameterTypes();
-            if (isNamedEnumerator(_m, argTypeNames.at(ii))) {
-                type = QMetaType::Int;
-            } else if (type == QMetaType::UnknownType) {
-                if (unknownTypeError)
-                    *unknownTypeError = argTypeNames.at(ii);
-                return nullptr;
-            }
+        QMetaType type = m.parameterMetaType(ii);
+        // we treat enumerations as int
+        if (type.flags().testFlag(QMetaType::IsEnumeration))
+            type = QMetaType::fromType<int>();
+        if (!type.isValid()) {
+            if (unknownTypeError)
+                *unknownTypeError =  m.parameterTypeName(ii);
+            return nullptr;
         }
-        argStorage->operator[](ii + 1) = type;
+        argStorage->operator[](ii + 1) = type.id();
     }
 
     return argStorage->data();
