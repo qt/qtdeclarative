@@ -985,7 +985,12 @@ function(_qt_internal_quick_compiler_process_resources target resource_name)
 
         foreach(file IN LISTS qml_files)
             get_filename_component(file_absolute ${file} ABSOLUTE)
-            file(RELATIVE_PATH file_relative ${CMAKE_CURRENT_SOURCE_DIR} ${file_absolute})
+            string(FIND "${file_absolute}" "${CMAKE_SOURCE_DIR}" start_index_of_source_dir)
+            if (start_index_of_source_dir EQUAL 0)
+                file(RELATIVE_PATH file_relative ${CMAKE_CURRENT_SOURCE_DIR} ${file_absolute})
+            else()
+                file(RELATIVE_PATH file_relative ${CMAKE_CURRENT_BINARY_DIR} ${file_absolute})
+            endif()
             __qt_get_relative_resource_path_for_file(file_resource_path ${file})
             if (arg_PREFIX STREQUAL "/")
                 # TO_CMAKE_PATH does not clean up cases such as //Foo
