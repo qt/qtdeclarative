@@ -18,4 +18,9 @@ QML_IMPORT_VERSION = 1.0
 QML_PAST_MAJOR_VERSIONS = 0
 
 INCLUDEPATH += foreign
-LIBS += -Lforeign -lforeign
+debug_and_release {
+    CONFIG(release, debug|release): LIBS += -Lforeign/release -lforeign
+    else:  LIBS += -Lforeign/debug -lforeign
+} else {
+    LIBS += -Lforeign -lforeign
+}
