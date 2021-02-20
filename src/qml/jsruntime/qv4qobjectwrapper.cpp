@@ -140,7 +140,16 @@ static QV4::ReturnedValue loadProperty(QV4::ExecutionEngine *v4, QObject *object
     if (property.isQObject()) {
         QObject *rv = nullptr;
         property.readProperty(object, &rv);
-        return QV4::QObjectWrapper::wrap(v4, rv);
+        QV4::ReturnedValue ret = QV4::QObjectWrapper::wrap(v4, rv);
+        if (property.propType().flags().testFlag(QMetaType::IsConst)) {
+            QV4::ScopedValue v(scope, ret);
+            if (auto obj = v->as<Object>()) {
+                obj->setInternalClass(obj->internalClass()->cryopreserved());
+                return obj->asReturnedValue();
+            }
+        }
+        return ret;
+
     } else if (property.isQList()) {
         return QmlListWrapper::create(v4, object, property.coreIndex(), property.propType().id());
     } else if (propType == QMetaType::QReal) {
@@ -765,6 +774,14 @@ bool QObjectWrapper::virtualPut(Managed *m, PropertyKey id, const Value &value, 
     Scope scope(m);
     QObjectWrapper *that = static_cast<QObjectWrapper*>(m);
     ScopedString name(scope, id.asStringOrSymbol());
+
+    if (that->internalClass()->isFrozen) {
+        QString error = QLatin1String("Cannot assign to property \"") +
+                        name->toQString() + QLatin1String("\" of read-only object");
+        scope.engine->throwError(error);
+        return false;
+    }
+
 
     if (scope.engine->hasException || QQmlData::wasDeleted(that->d()->object()))
         return false;

@@ -402,6 +402,8 @@ private slots:
     void proxyHandlerTraps();
     void gcCrashRegressionTest();
     void cmpInThrows();
+    void frozenQObject();
+    void constPointer();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -9723,6 +9725,36 @@ void tst_qqmlecmascript::cmpInThrows()
     QCOMPARE(value.errorType(), QJSValue::TypeError);
     QVERIFY(!stacktrace.isEmpty());
     QCOMPARE(stacktrace.at(0), QStringLiteral("%entry:14:-1:file:foo.js"));
+}
+
+void tst_qqmlecmascript::frozenQObject()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("frozenQObject.qml"));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(root->property("caughtException").toBool());
+    QVERIFY(root->property("nameCorrect").toBool());
+}
+
+struct ConstPointer : QObject
+{
+    Q_OBJECT
+
+public:
+    Q_INVOKABLE bool test(const QObject *testObject) const {return testObject == this;}
+    Q_PROPERTY(const ConstPointer *device READ device CONSTANT)
+
+    const ConstPointer *device() const {return this;}
+};
+
+void tst_qqmlecmascript::constPointer()
+{
+    qmlRegisterType<ConstPointer>("test", 1, 0, "ConstPointer");
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("constPointer.qml"));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(root->property("invokableOk").toBool());
+    QVERIFY(root->property("propertyOk").toBool());
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

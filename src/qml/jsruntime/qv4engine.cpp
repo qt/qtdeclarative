@@ -1837,8 +1837,17 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
                 a->arrayPut(ii, (v = QV4::QObjectWrapper::wrap(this, list.at(ii))));
             a->setArrayLengthUnchecked(list.count());
             return a.asReturnedValue();
-        } else if (QMetaType(type).flags() & QMetaType::PointerToQObject) {
-            return QV4::QObjectWrapper::wrap(this, *reinterpret_cast<QObject* const *>(ptr));
+        } else if (auto flags = QMetaType(type).flags(); flags & QMetaType::PointerToQObject) {
+            QV4::ReturnedValue ret = QV4::QObjectWrapper::wrap(this, *reinterpret_cast<QObject* const *>(ptr));
+            if (!flags.testFlag(QMetaType::IsConst))
+                return ret;
+            QV4::ScopedValue v(scope, ret);
+            if (auto obj = v->as<Object>()) {
+                obj->setInternalClass(obj->internalClass()->cryopreserved());
+                return obj->asReturnedValue();
+            } else {
+                return ret;
+            }
         }
 
         bool objOk;
