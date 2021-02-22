@@ -43,6 +43,8 @@
 #include "../../shared/util.h"
 #include "testhttpserver.h"
 
+#include <algorithm>
+
 class MyIC : public QObject, public QQmlIncubationController
 {
     Q_OBJECT
@@ -126,6 +128,7 @@ private slots:
     void testRequiredPropertiesFromQml();
     void testSetInitialProperties();
     void createInsideJSModule();
+    void qmlErrorIsReported();
 
 private:
     QQmlEngine engine;
@@ -840,6 +843,31 @@ void tst_qqmlcomponent::createInsideJSModule()
     QScopedPointer<QObject> root(component.create());
     QVERIFY2(root, qPrintable(component.errorString()));
     QVERIFY(root->property("ok").toBool());
+}
+
+void tst_qqmlcomponent::qmlErrorIsReported()
+{
+    struct LogControl
+    {
+        LogControl() { QLoggingCategory::setFilterRules("qt.qml.diskcache.debug=true"); }
+        ~LogControl() { QLoggingCategory::setFilterRules(QString()); }
+    };
+    LogControl lc;
+    Q_UNUSED(lc);
+
+    QRegularExpression errorMessage(
+            R"(.*Cannot assign to non-existent property.*onSomePropertyChanged.*)");
+    QTest::ignoreMessage(QtDebugMsg, errorMessage);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("qmlWithError.qml"));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(root == nullptr);
+    QVERIFY(component.isError());
+    const auto componentErrors = component.errors();
+    QVERIFY(std::any_of(componentErrors.begin(), componentErrors.end(), [&](const QQmlError &e) {
+        return errorMessage.match(e.toString()).hasMatch();
+    }));
 }
 
 QTEST_MAIN(tst_qqmlcomponent)

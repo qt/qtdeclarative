@@ -315,8 +315,12 @@ void QQmlTypeData::done()
     auto cleanup = qScopeGuard([this]{
         m_document.reset();
         m_typeReferences.clear();
-        if (isError())
+        if (isError()) {
+            const auto encounteredErrors = errors();
+            for (const QQmlError &e : encounteredErrors)
+                qCDebug(DBG_DISK_CACHE) << e.toString();
             m_compiledData = nullptr;
+        }
     });
 
     if (isError())
