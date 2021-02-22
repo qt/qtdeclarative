@@ -963,9 +963,11 @@ function(_qt_internal_quick_compiler_process_resources target resource_name)
 
     if (TARGET ${QT_CMAKE_EXPORT_NAMESPACE}::qmlcachegen AND qml_files)
         # Enable qt quick compiler support
-        set(qml_resource_file "${CMAKE_CURRENT_BINARY_DIR}/.rcc/${resource_name}.qrc")
         if (resource_files)
             set(chained_resource_name "${resource_name}_qmlcache")
+            set(qml_resource_file "${CMAKE_CURRENT_BINARY_DIR}/.rcc/${chained_resource_name}.qrc")
+        else()
+            set(qml_resource_file "${CMAKE_CURRENT_BINARY_DIR}/.rcc/${resource_name}.qrc")
         endif()
 
         get_target_property(qmltypes ${target} QT_QML_MODULE_PLUGIN_TYPES_FILE)
@@ -1015,6 +1017,7 @@ function(_qt_internal_quick_compiler_process_resources target resource_name)
                 COMMAND
                     ${QT_CMAKE_EXPORT_NAMESPACE}::qmlcachegen
                     --resource-path "${file_resource_path}"
+                    --resource "${qml_resource_file}"
                     ${qmlcachegen_extra_args}
                     -o "${compiled_file}"
                     "${file_absolute}"
@@ -1022,6 +1025,7 @@ function(_qt_internal_quick_compiler_process_resources target resource_name)
                     $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmlcachegen>
                     "${file_absolute}"
                     "$<$<BOOL:${qmltypes}>:${qmltypes}>"
+                    "${qml_resource_file}"
             )
             target_sources(${target} PRIVATE ${compiled_file})
             set_source_files_properties(${compiled_file} PROPERTIES

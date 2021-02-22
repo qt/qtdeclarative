@@ -191,13 +191,6 @@ int main(int argc, char **argv)
         QQmlJSResourceFileMapper fileMapper(parser.values(resourceOption));
         QString inputResourcePath = parser.value(resourcePathOption);
 
-        if (!inputResourcePath.isEmpty() && !fileMapper.isEmpty()) {
-            fprintf(stderr, "--%s and --%s are mutually exclusive.\n",
-                    qPrintable(resourcePathOption.names().first()),
-                    qPrintable(resourceOption.names().first()));
-            return EXIT_FAILURE;
-        }
-
         // If the user didn't specify the resource path corresponding to the file on disk being
         // compiled, try to determine it from the resource file, if one was supplied.
         if (inputResourcePath.isEmpty()) {
