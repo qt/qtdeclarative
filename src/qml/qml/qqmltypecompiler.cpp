@@ -107,8 +107,8 @@ QQmlRefPointer<QV4::ExecutableCompilationUnit> QQmlTypeCompiler::compile()
     }
 
     {
-        SignalHandlerConverter converter(this);
-        if (!converter.convertSignalHandlerExpressionsToFunctionDeclarations())
+        SignalHandlerResolver converter(this);
+        if (!converter.resolveSignalHandlerExpressions())
             return nullptr;
     }
 
@@ -296,9 +296,7 @@ QQmlCompilePass::QQmlCompilePass(QQmlTypeCompiler *typeCompiler)
 {
 }
 
-
-
-SignalHandlerConverter::SignalHandlerConverter(QQmlTypeCompiler *typeCompiler)
+SignalHandlerResolver::SignalHandlerResolver(QQmlTypeCompiler *typeCompiler)
     : QQmlCompilePass(typeCompiler)
     , enginePrivate(typeCompiler->enginePrivate())
     , qmlObjects(*typeCompiler->qmlObjects())
@@ -309,7 +307,7 @@ SignalHandlerConverter::SignalHandlerConverter(QQmlTypeCompiler *typeCompiler)
 {
 }
 
-bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclarations()
+bool SignalHandlerResolver::resolveSignalHandlerExpressions()
 {
     for (int objectIndex = 0; objectIndex < qmlObjects.count(); ++objectIndex) {
         const QmlIR::Object * const obj = qmlObjects.at(objectIndex);
@@ -321,13 +319,15 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
                 continue;
         }
         const QString elementName = stringAt(obj->inheritedTypeNameIndex);
-        if (!convertSignalHandlerExpressionsToFunctionDeclarations(obj, elementName, cache))
+        if (!resolveSignalHandlerExpressions(obj, elementName, cache))
             return false;
     }
     return true;
 }
 
-bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclarations(const QmlIR::Object *obj, const QString &typeName, QQmlPropertyCache *propertyCache)
+bool SignalHandlerResolver::resolveSignalHandlerExpressions(const QmlIR::Object *obj,
+                                                            const QString &typeName,
+                                                            QQmlPropertyCache *propertyCache)
 {
     // map from signal name defined in qml itself to list of parameters
     QHash<QString, QStringList> customSignals;
@@ -346,7 +346,7 @@ bool SignalHandlerConverter::convertSignalHandlerExpressionsToFunctionDeclaratio
             if (!attachedType)
                 COMPILE_EXCEPTION(binding, tr("Non-existent attached object"));
             QQmlPropertyCache *cache = compiler->enginePrivate()->cache(attachedType);
-            if (!convertSignalHandlerExpressionsToFunctionDeclarations(attachedObj, bindingPropertyName, cache))
+            if (!resolveSignalHandlerExpressions(attachedObj, bindingPropertyName, cache))
                 return false;
             continue;
         }

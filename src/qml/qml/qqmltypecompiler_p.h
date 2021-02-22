@@ -176,16 +176,17 @@ protected:
 // parameters taken from the signal declarations
 // It also updates the QV4::CompiledData::Binding objects to set the property name
 // to the final signal name (onTextChanged -> textChanged) and sets the IsSignalExpression flag.
-struct SignalHandlerConverter : public QQmlCompilePass
+struct SignalHandlerResolver : public QQmlCompilePass
 {
-    Q_DECLARE_TR_FUNCTIONS(SignalHandlerConverter)
+    Q_DECLARE_TR_FUNCTIONS(SignalHandlerResolver)
 public:
-    SignalHandlerConverter(QQmlTypeCompiler *typeCompiler);
+    SignalHandlerResolver(QQmlTypeCompiler *typeCompiler);
 
-    bool convertSignalHandlerExpressionsToFunctionDeclarations();
+    bool resolveSignalHandlerExpressions();
 
 private:
-    bool convertSignalHandlerExpressionsToFunctionDeclarations(const QmlIR::Object *obj, const QString &typeName, QQmlPropertyCache *propertyCache);
+    bool resolveSignalHandlerExpressions(const QmlIR::Object *obj, const QString &typeName,
+                                         QQmlPropertyCache *propertyCache);
 
     QQmlEnginePrivate *enginePrivate;
     const QVector<QmlIR::Object*> &qmlObjects;
