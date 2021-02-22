@@ -338,7 +338,9 @@ bool FindWarningVisitor::visit(QQmlJS::AST::IdentifierExpression *idexp)
 FindWarningVisitor::FindWarningVisitor(
         QQmlJSImporter *importer, QStringList qmltypesFiles, QString code, QString fileName,
         bool silent, bool warnUnqualified, bool warnWithStatement, bool warnInheritanceCycle)
-    : QQmlJSImportVisitor(importer, QFileInfo {fileName}.canonicalPath(), qmltypesFiles),
+    : QQmlJSImportVisitor(importer,
+                          implicitImportDirectory(fileName, importer->resourceFileMapper()),
+                          qmltypesFiles),
       m_code(std::move(code)),
       m_rootId(QLatin1String("<id>")),
       m_filePath(std::move(fileName)),

@@ -57,6 +57,7 @@ private Q_SLOTS:
     void qmltypes();
 
     void autoqmltypes();
+    void resources();
 
 private:
     QString runQmllint(const QString &fileToLint,
@@ -181,6 +182,16 @@ void TestQmllint::autoqmltypes()
 
     QVERIFY(process.readAllStandardError().isEmpty());
     QVERIFY(process.readAllStandardOutput().isEmpty());
+}
+
+void TestQmllint::resources()
+{
+    runQmllint(testFile("resource.qml"), true,
+               {QStringLiteral("--resource"), testFile("resource.qrc")});
+    runQmllint(testFile("badResource.qml"), false,
+               {QStringLiteral("--resource"), testFile("resource.qrc")});
+    runQmllint(testFile("resource.qml"), false, {});
+    runQmllint(testFile("badResource.qml"), true, {});
 }
 
 void TestQmllint::dirtyQmlCode_data()

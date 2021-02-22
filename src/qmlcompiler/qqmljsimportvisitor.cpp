@@ -27,6 +27,7 @@
 ****************************************************************************/
 
 #include "qqmljsimportvisitor_p.h"
+#include "qqmljsresourcefilemapper_p.h"
 
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qdir.h>
@@ -92,6 +93,23 @@ void QQmlJSImportVisitor::resolveAliases()
 QQmlJSScope::Ptr QQmlJSImportVisitor::result() const
 {
     return m_exportedRootScope;
+}
+
+QString QQmlJSImportVisitor::implicitImportDirectory(
+        const QString &localFile, QQmlJSResourceFileMapper *mapper)
+{
+    if (mapper) {
+        const auto resource = mapper->entry(
+                    QQmlJSResourceFileMapper::localFileFilter(localFile));
+        if (resource.isValid()) {
+            return resource.resourcePath.contains(u'/')
+                    ? (u':' + resource.resourcePath.left(
+                           resource.resourcePath.lastIndexOf(u'/') + 1))
+                    : QStringLiteral(":/");
+        }
+    }
+
+    return QFileInfo(localFile).canonicalPath() + u'/';
 }
 
 void QQmlJSImportVisitor::importBaseModules()
@@ -315,8 +333,29 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
     auto filename = import->fileName.toString();
     if (!filename.isEmpty()) {
         const QFileInfo file(filename);
-        const QFileInfo path(file.isRelative() ? QDir(m_implicitImportDirectory).filePath(filename)
-                                               : filename);
+        const QString absolute = file.isRelative()
+                ? QDir(m_implicitImportDirectory).filePath(filename)
+                : filename;
+
+        if (absolute.startsWith(u':')) {
+            if (m_importer->resourceFileMapper()) {
+                if (m_importer->resourceFileMapper()->isFile(absolute.mid(1))) {
+                    const auto entry = m_importer->resourceFileMapper()->entry(
+                                QQmlJSResourceFileMapper::resourceFileFilter(absolute.mid(1)));
+                    const auto scope = m_importer->importFile(entry.filePath);
+                    m_rootScopeImports.insert(
+                                prefix.isEmpty()
+                                    ? QFileInfo(entry.resourcePath).baseName()
+                                    : prefix,
+                                scope);
+                } else {
+                    m_rootScopeImports.insert(m_importer->importDirectory(absolute, prefix));
+                }
+            }
+            return true;
+        }
+
+        QFileInfo path(absolute);
         if (path.isDir()) {
             m_rootScopeImports.insert(m_importer->importDirectory(path.canonicalFilePath(), prefix));
         } else if (path.isFile()) {

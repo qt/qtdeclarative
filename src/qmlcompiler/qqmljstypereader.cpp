@@ -82,8 +82,11 @@ QQmlJSScope::Ptr QQmlJSTypeReader::operator()()
     if (!rootNode)
         return errorResult();
 
-    QQmlJSImportVisitor membersVisitor(m_importer, QFileInfo(m_file).canonicalPath(),
-                                       m_qmltypesFiles);
+    QQmlJSImportVisitor membersVisitor(
+                m_importer,
+                QQmlJSImportVisitor::implicitImportDirectory(
+                    m_file, m_importer->resourceFileMapper()),
+                m_qmltypesFiles);
     rootNode->accept(&membersVisitor);
     auto result = membersVisitor.result();
     result->setInternalName(scopeName);

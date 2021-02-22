@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>resource.qml</file>
+        <file>badResource.qml</file>
+        <file alias="Bar.qml">resource/Bar.qml</file>
+    </qresource>
+</RCC>

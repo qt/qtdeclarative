@@ -47,6 +47,7 @@
 
 QT_BEGIN_NAMESPACE
 
+struct QQmlJSResourceFileMapper;
 class QQmlJSImportVisitor : public QQmlJS::AST::Visitor
 {
 public:
@@ -57,6 +58,9 @@ public:
     QList<QQmlJS::DiagnosticMessage> errors() const { return m_errors; }
     QHash<QString, QQmlJSScope::ConstPtr> imports() const { return m_rootScopeImports; }
     QHash<QString, QQmlJSScope::ConstPtr> addressableScopes() const { return m_scopesById; }
+
+    static QString implicitImportDirectory(
+            const QString &localFile, QQmlJSResourceFileMapper *mapper);
 
 protected:
     bool visit(QQmlJS::AST::UiProgram *) override;

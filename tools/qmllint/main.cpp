@@ -28,6 +28,8 @@
 
 #include "findwarnings.h"
 
+#include <QtQmlCompiler/private/qqmljsresourcefilemapper_p.h>
+
 #include <QtQml/private/qqmljslexer_p.h>
 #include <QtQml/private/qqmljsparser_p.h>
 #include <QtQml/private/qqmljsengine_p.h>
@@ -50,7 +52,8 @@
 
 static bool lint_file(const QString &filename, const bool silent, const bool warnUnqualified,
                       const bool warnWithStatement, const bool warnInheritanceCycle,
-                      const QStringList &qmlImportPaths, const QStringList &qmltypesFiles)
+                      const QStringList &qmlImportPaths, const QStringList &qmltypesFiles,
+                      const QString &resourceFile)
 {
     QFile file(filename);
     if (!file.open(QFile::ReadOnly)) {
@@ -85,12 +88,20 @@ static bool lint_file(const QString &filename, const bool silent, const bool war
     }
 
     if (success && !isJavaScript) {
-        auto root = parser.rootNode();
-        QQmlJSImporter importer(qmlImportPaths);
-        FindWarningVisitor v { &importer, qmltypesFiles, code, filename, silent,
-                               warnUnqualified, warnWithStatement, warnInheritanceCycle };
-        root->accept(&v);
-        success = v.check();
+        const auto check = [&](QQmlJSResourceFileMapper *mapper) {
+            QQmlJSImporter importer(qmlImportPaths, mapper);
+            FindWarningVisitor v { &importer, qmltypesFiles, code, filename, silent,
+                                   warnUnqualified, warnWithStatement, warnInheritanceCycle };
+            parser.rootNode()->accept(&v);
+            success = v.check();
+        };
+
+        if (resourceFile.isEmpty()) {
+            check(nullptr);
+        } else {
+            QQmlJSResourceFileMapper mapper({ resourceFile });
+            check(&mapper);
+        }
     }
 
     return success;
@@ -123,6 +134,12 @@ int main(int argv, char *argc[])
                                                     QLatin1String("Don't warn about inheritance cycles"));
 
     parser.addOption(disableCheckInheritanceCycle);
+
+    QCommandLineOption resourceOption(
+                { QStringLiteral("resource") },
+                QStringLiteral("Look for related files in the given resource file"),
+                QStringLiteral("resource"));
+    parser.addOption(resourceOption);
 
     QCommandLineOption qmlImportPathsOption(
             QStringList() << "I"
@@ -177,6 +194,8 @@ int main(int argv, char *argc[])
         }
     }
 
+    const QString resourceFile = parser.value(resourceOption);
+
 #else
     bool silent = false;
     bool warnUnqualified = true;
@@ -193,7 +212,7 @@ int main(int argv, char *argc[])
     for (const QString &filename : arguments)
 #endif
         success &= lint_file(filename, silent, warnUnqualified, warnWithStatement,
-                             warnInheritanceCycle, qmlImportPaths, qmltypesFiles);
+                             warnInheritanceCycle, qmlImportPaths, qmltypesFiles, resourceFile);
 
     return success ? 0 : -1;
 }

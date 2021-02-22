@@ -40,6 +40,7 @@
 // We mean it.
 
 #include "qqmljsscope_p.h"
+#include "qqmljsresourcefilemapper_p.h"
 #include <QtQml/private/qqmldirparser_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -49,7 +50,13 @@ class QQmlJSImporter
 public:
     using ImportedTypes = QHash<QString, QQmlJSScope::ConstPtr>;
 
-    QQmlJSImporter(const QStringList &importPaths) : m_importPaths(importPaths), m_builtins({}) {}
+    QQmlJSImporter(const QStringList &importPaths, QQmlJSResourceFileMapper *mapper)
+        : m_importPaths(importPaths)
+        , m_builtins({})
+        , m_mapper(mapper)
+    {}
+
+    QQmlJSResourceFileMapper *resourceFileMapper() { return m_mapper; }
 
     ImportedTypes importBuiltins();
     ImportedTypes importQmltypes(const QStringList &qmltypesFiles);
@@ -113,6 +120,7 @@ private:
     QHash<QString, QQmlJSScope::Ptr> m_importedFiles;
     QList<QQmlJS::DiagnosticMessage> m_warnings;
     AvailableTypes m_builtins;
+    QQmlJSResourceFileMapper *m_mapper = nullptr;
 };
 
 QT_END_NAMESPACE

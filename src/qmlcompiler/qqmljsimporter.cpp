@@ -346,6 +346,21 @@ QQmlJSImporter::ImportedTypes QQmlJSImporter::importDirectory(
 {
     QHash<QString, QQmlJSScope::ConstPtr> qmlNames;
 
+    if (directory.startsWith(u':')) {
+        if (m_mapper) {
+            const auto resources = m_mapper->filter(
+                        QQmlJSResourceFileMapper::resourceQmlDirectoryFilter(directory.mid(1)));
+            for (const auto &entry : resources) {
+                const QString name = QFileInfo(entry.resourcePath).baseName();
+                if (name.front().isUpper()) {
+                    qmlNames.insert(prefixedName(prefix, name),
+                                    localFile2ScopeTree(entry.filePath));
+                }
+            }
+        }
+        return qmlNames;
+    }
+
     QDirIterator it {
         directory,
         QStringList() << QLatin1String("*.qml"),
