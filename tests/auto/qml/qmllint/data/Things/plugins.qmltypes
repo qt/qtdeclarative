@@ -62,5 +62,6 @@ Module {
         exports: [
             "Things/ItemDerived 1.0"
         ]
+        Property { name: "alignment"; type: "Qt::Alignment" }
     }
 }

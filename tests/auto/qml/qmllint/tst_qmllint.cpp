@@ -382,6 +382,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("layouts depends quick") << QStringLiteral("layouts.qml");
     QTest::newRow("attached") << QStringLiteral("attached.qml");
     QTest::newRow("enumProperty") << QStringLiteral("enumProperty.qml");
+    QTest::newRow("externalEnumProperty") << QStringLiteral("externalEnumProperty.qml");
 }
 
 void TestQmllint::cleanQmlCode()

@@ -193,10 +193,21 @@ QQmlJSScope::findJSIdentifier(const QString &id) const
 void QQmlJSScope::resolveTypes(const QQmlJSScope::Ptr &self,
                                const QHash<QString, QQmlJSScope::ConstPtr> &contextualTypes)
 {
-    auto findType = [&](const QString &name) {
+    auto findType = [&](const QString &name) -> QQmlJSScope::ConstPtr {
         auto type = contextualTypes.constFind(name);
         if (type != contextualTypes.constEnd())
             return *type;
+
+        const auto colonColon = name.indexOf(QStringLiteral("::"));
+        if (colonColon > 0) {
+            const auto outerType = contextualTypes.constFind(name.left(colonColon));
+            if (outerType != contextualTypes.constEnd()) {
+                for (const auto &innerType : qAsConst((*outerType)->m_childScopes)) {
+                    if (innerType->m_internalName == name)
+                        return innerType;
+                }
+            }
+        }
 
         return QQmlJSScope::ConstPtr();
     };
@@ -217,6 +228,8 @@ void QQmlJSScope::resolveTypes(const QQmlJSScope::Ptr &self,
     Q_ASSERT(intType); // There always has to be a builtin "int" type
     for (auto it = self->m_enumerations.begin(), end = self->m_enumerations.end();
          it != end; ++it) {
+        if (it->type())
+            continue;
         auto enumScope = QQmlJSScope::create(EnumScope, self);
         enumScope->m_baseTypeName = QStringLiteral("int");
         enumScope->m_baseType = intType;
