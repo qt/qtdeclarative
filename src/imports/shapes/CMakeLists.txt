@@ -9,6 +9,8 @@ qt_internal_add_qml_module(qmlshapesplugin
     VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QmlShapesPlugin
     SKIP_TYPE_REGISTRATION
+    DEPENDENCIES
+        QtQuick
     SOURCES
         plugin.cpp
     PUBLIC_LIBRARIES
