@@ -62,7 +62,7 @@
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
-    class BoundFunction;
+    struct BoundFunction;
 }
 
 class QQmlPropertyBinding;
