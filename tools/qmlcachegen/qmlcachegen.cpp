@@ -167,8 +167,9 @@ int main(int argc, char **argv)
         QQmlJSResourceFileMapper mapper(sources);
 
         QQmlJSCompileError error;
-        if (!qQmlJSGenerateLoader(mapper.qmlCompilerFiles(), outputFileName,
-                                  parser.values(resourceFileMappingOption), &error.message)) {
+        if (!qQmlJSGenerateLoader(
+                    mapper.resourcePaths(QQmlJSResourceFileMapper::allQmlJSFilter()),
+                    outputFileName, parser.values(resourceFileMappingOption), &error.message)) {
             error.augment(QLatin1String("Error generating loader stub: ")).print();
             return EXIT_FAILURE;
         }
@@ -194,7 +195,8 @@ int main(int argc, char **argv)
         // If the user didn't specify the resource path corresponding to the file on disk being
         // compiled, try to determine it from the resource file, if one was supplied.
         if (inputResourcePath.isEmpty()) {
-            const QStringList resourcePaths = fileMapper.resourcePaths(inputFile);
+            const QStringList resourcePaths = fileMapper.resourcePaths(
+                        QQmlJSResourceFileMapper::localFileFilter(inputFile));
             if (resourcePaths.isEmpty()) {
                 fprintf(stderr, "No resource path for file: %s\n", qPrintable(inputFile));
                 return EXIT_FAILURE;

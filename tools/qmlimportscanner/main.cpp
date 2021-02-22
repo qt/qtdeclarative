@@ -631,8 +631,10 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (!qrcFiles.isEmpty())
-        scanFiles << QQmlJSResourceFileMapper(qrcFiles).qmlCompilerFiles(QQmlJSResourceFileMapper::FileOutput::AbsoluteFilePath);
+    if (!qrcFiles.isEmpty()) {
+        scanFiles << QQmlJSResourceFileMapper(qrcFiles).filePaths(
+                         QQmlJSResourceFileMapper::allQmlJSFilter());
+    }
 
     g_qmlImportPaths = qmlImportPaths;
 

@@ -34,6 +34,42 @@
 
 QT_BEGIN_NAMESPACE
 
+QQmlJSResourceFileMapper::Filter QQmlJSResourceFileMapper::allQmlJSFilter() {
+    return Filter {
+        QString(),
+        QStringList { QStringLiteral("qml"), QStringLiteral("js"), QStringLiteral("mjs") },
+        Directory | Recurse
+    };
+}
+
+QQmlJSResourceFileMapper::Filter QQmlJSResourceFileMapper::localFileFilter(const QString &file)
+{
+    return Filter {
+        QFileInfo(file).canonicalFilePath(),
+        QStringList(),
+        File
+    };
+}
+
+QQmlJSResourceFileMapper::Filter QQmlJSResourceFileMapper::resourceFileFilter(const QString &file)
+{
+    return Filter {
+        file,
+        QStringList(),
+        Resource
+    };
+}
+
+QQmlJSResourceFileMapper::Filter QQmlJSResourceFileMapper::resourceQmlDirectoryFilter(
+        const QString &directory)
+{
+    return Filter {
+        directory,
+        QStringList { QStringLiteral("qml") },
+        Directory | Resource
+    };
+}
+
 QQmlJSResourceFileMapper::QQmlJSResourceFileMapper(const QStringList &resourceFiles)
 {
     for (const QString &fileName: resourceFiles) {
@@ -49,32 +85,111 @@ bool QQmlJSResourceFileMapper::isEmpty() const
     return qrcPathToFileSystemPath.isEmpty();
 }
 
-QStringList QQmlJSResourceFileMapper::resourcePaths(const QString &fileName)
+bool QQmlJSResourceFileMapper::isFile(const QString &resourcePath) const
 {
-    const QString absPath = QDir::cleanPath(QDir::current().absoluteFilePath(fileName));
-    QStringList resourcePaths;
-    for (auto it = qrcPathToFileSystemPath.cbegin(), end = qrcPathToFileSystemPath.cend(); it != end; ++it) {
-        if (QFileInfo(it.value()) == QFileInfo(absPath))
-            resourcePaths.append(it.key());
+    for (const auto &entry : qrcPathToFileSystemPath) {
+        if (entry.resourcePath == resourcePath)
+            return true;
     }
-    return resourcePaths;
+    return false;
 }
 
-QStringList QQmlJSResourceFileMapper::qmlCompilerFiles(FileOutput fo) const
+static bool hasSuffix(const QString &qrcPath, const QStringList &suffixes)
 {
-    QStringList files;
-    for (auto it = qrcPathToFileSystemPath.constBegin(), end = qrcPathToFileSystemPath.constEnd();
-         it != end; ++it) {
-        const QString &qrcPath = it.key();
-        const QString suffix = QFileInfo(qrcPath).suffix();
-        if (suffix != QStringLiteral("qml") && suffix != QStringLiteral("js") && suffix != QStringLiteral("mjs"))
-            continue;
-        if (fo == FileOutput::AbsoluteFilePath)
-            files << it.value();
-        else
-            files << qrcPath;
+    if (suffixes.isEmpty())
+        return true;
+    const QString suffix = QFileInfo(qrcPath).suffix();
+    return suffixes.contains(suffix);
+}
+
+template<typename HandleMatch>
+void doFilter(const QList<QQmlJSResourceFileMapper::Entry> &qrcPathToFileSystemPath,
+              const QQmlJSResourceFileMapper::Filter &filter,
+              const HandleMatch &handler)
+{
+    if (filter.flags & QQmlJSResourceFileMapper::Directory) {
+        const QString terminatedDirectory = filter.path.endsWith(u'/')
+                ? filter.path : (filter.path + u'/');
+
+        for (auto it = qrcPathToFileSystemPath.constBegin(),
+             end = qrcPathToFileSystemPath.constEnd(); it != end; ++it) {
+
+            const QString candidate = (filter.flags & QQmlJSResourceFileMapper::Resource)
+                    ? it->resourcePath
+                    : it->filePath;
+
+            if (!candidate.startsWith(terminatedDirectory))
+                continue;
+
+            if (!hasSuffix(candidate, filter.suffixes))
+                continue;
+
+            if ((filter.flags & QQmlJSResourceFileMapper::Recurse)
+                    // Crude. But shall we really allow slashes in QRC file names?
+                    || !candidate.mid(terminatedDirectory.length()).contains(u'/')) {
+                if (handler(*it))
+                    return;
+            }
+        }
+        return;
     }
-    return files;
+
+    if (!hasSuffix(filter.path, filter.suffixes))
+        return;
+
+    for (auto it = qrcPathToFileSystemPath.constBegin(),
+         end = qrcPathToFileSystemPath.constEnd(); it != end; ++it) {
+        if (filter.flags & QQmlJSResourceFileMapper::Resource) {
+            if (it->resourcePath == filter.path && handler(*it))
+                return;
+        } else if (it->filePath == filter.path && handler(*it)) {
+            return;
+        }
+    }
+}
+
+QList<QQmlJSResourceFileMapper::Entry> QQmlJSResourceFileMapper::filter(
+        const QQmlJSResourceFileMapper::Filter &filter) const
+{
+    QList<Entry> result;
+    doFilter(qrcPathToFileSystemPath, filter, [&](const Entry &entry) {
+        result.append(entry);
+        return false;
+    });
+    return result;
+}
+
+QStringList QQmlJSResourceFileMapper::filePaths(
+        const QQmlJSResourceFileMapper::Filter &filter) const
+{
+    QStringList result;
+    doFilter(qrcPathToFileSystemPath, filter, [&](const Entry &entry) {
+        result.append(entry.filePath);
+        return false;
+    });
+    return result;
+}
+
+QStringList QQmlJSResourceFileMapper::resourcePaths(
+        const QQmlJSResourceFileMapper::Filter &filter) const
+{
+    QStringList result;
+    doFilter(qrcPathToFileSystemPath, filter, [&](const Entry &entry) {
+        result.append(entry.resourcePath);
+        return false;
+    });
+    return result;
+}
+
+QQmlJSResourceFileMapper::Entry QQmlJSResourceFileMapper::entry(
+        const QQmlJSResourceFileMapper::Filter &filter) const
+{
+    Entry result;
+    doFilter(qrcPathToFileSystemPath, filter, [&](const Entry &entry) {
+        result = entry;
+        return true;
+    });
+    return result;
 }
 
 void QQmlJSResourceFileMapper::populateFromQrcFile(QFile &file)
@@ -162,7 +277,7 @@ void QQmlJSResourceFileMapper::populateFromQrcFile(QFile &file)
 
             const QString qrcPath = prefix + currentFileName;
             if (QFile::exists(fsPath))
-                qrcPathToFileSystemPath.insert(qrcPath, fsPath);
+                qrcPathToFileSystemPath.append({qrcPath, fsPath});
             continue;
         }
 

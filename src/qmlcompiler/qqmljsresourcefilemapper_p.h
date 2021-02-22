@@ -46,22 +46,49 @@ QT_BEGIN_NAMESPACE
 
 struct QQmlJSResourceFileMapper
 {
-    enum class FileOutput {
-        RelativeFilePath,
-        AbsoluteFilePath
+    struct Entry
+    {
+        QString resourcePath;
+        QString filePath;
+        bool isValid() const { return !resourcePath.isEmpty() && !filePath.isEmpty(); }
     };
+
+    enum FilterMode {
+        File      = 0x0, // Default is local (non-directory) file, without recursion
+        Directory = 0x1, // Directory, either local or resource
+        Resource  = 0x2, // Resource path, either to file or directory
+        Recurse   = 0x4, // Recurse into subdirectories if Directory
+    };
+    Q_DECLARE_FLAGS(FilterFlags, FilterMode);
+
+    struct Filter {
+        QString path;
+        QStringList suffixes;
+        FilterFlags flags;
+    };
+
+    static Filter allQmlJSFilter();
+    static Filter localFileFilter(const QString &file);
+    static Filter resourceFileFilter(const QString &file);
+    static Filter resourceQmlDirectoryFilter(const QString &directory);
+
     QQmlJSResourceFileMapper(const QStringList &resourceFiles);
 
     bool isEmpty() const;
+    bool isFile(const QString &resourcePath) const;
 
-    QStringList resourcePaths(const QString &fileName);
-    QStringList qmlCompilerFiles(FileOutput fo = FileOutput::RelativeFilePath) const;
+    QList<Entry> filter(const Filter &filter) const;
+    QStringList filePaths(const Filter &filter) const;
+    QStringList resourcePaths(const Filter &filter) const;
+    Entry entry(const Filter &filter) const;
 
 private:
     void populateFromQrcFile(QFile &file);
 
-    QHash<QString, QString> qrcPathToFileSystemPath;
+    QList<Entry> qrcPathToFileSystemPath;
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlJSResourceFileMapper::FilterFlags);
 
 QT_END_NAMESPACE
 
