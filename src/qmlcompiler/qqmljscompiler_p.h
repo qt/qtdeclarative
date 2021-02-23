@@ -92,6 +92,9 @@ using QQmlJSSaveFunction
 
 bool qCompileQmlFile(const QString &inputFileName, QQmlJSSaveFunction saveFunction,
                      QQmlJSAotCompiler *aotCompiler, QQmlJSCompileError *error);
+bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
+                     QQmlJSSaveFunction saveFunction, QQmlJSAotCompiler *aotCompiler,
+                     QQmlJSCompileError *error);
 bool qCompileJSFile(const QString &inputFileName, const QString &inputFileUrl,
                     QQmlJSSaveFunction saveFunction, QQmlJSCompileError *error);
 

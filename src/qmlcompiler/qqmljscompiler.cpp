@@ -196,7 +196,13 @@ bool qCompileQmlFile(const QString &inputFileName, QQmlJSSaveFunction saveFuncti
                      QQmlJSAotCompiler *aotCompiler, QQmlJSCompileError *error)
 {
     QmlIR::Document irDocument(/*debugMode*/false);
+    return qCompileQmlFile(irDocument, inputFileName, saveFunction, aotCompiler, error);
+}
 
+bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
+                     QQmlJSSaveFunction saveFunction, QQmlJSAotCompiler *aotCompiler,
+                     QQmlJSCompileError *error)
+{
     QString sourceCode;
     {
         QFile f(inputFileName);
