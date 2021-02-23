@@ -29,6 +29,7 @@
 #include <QDebug>
 
 #include <QtQml/qqmlengine.h>
+#include <QtQml/qqmlexpression.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtCore/QDateTime>
@@ -76,6 +77,8 @@ private slots:
 #if defined(Q_OS_UNIX) && QT_CONFIG(timezone)
     void timeZoneUpdated();
 #endif
+    void formattedDataSize_data();
+    void formattedDataSize();
 
     void dateToLocaleString_data();
     void dateToLocaleString();
@@ -118,6 +121,7 @@ private:
     void addDateTimeFormatData(const QString &l);
     void addDateFormatData(const QString &l);
     void addTimeFormatData(const QString &l);
+    void addFormattedDataSizeDataForLocale(const QString &l);
     QQmlEngine engine;
 };
 
@@ -627,6 +631,112 @@ void tst_qqmllocale::timeFormat()
             Q_ARG(QVariant, QVariant(param)));
 
     QCOMPARE(val.toString(), l.timeFormat(format));
+}
+
+void tst_qqmllocale::addFormattedDataSizeDataForLocale(const QString &localeStr)
+{
+    const QByteArray localeByteArray = localeStr.toLatin1();
+    QString functionCallScript;
+    QString expectedResult;
+    QString expectedErrorMessage;
+
+    const QLocale locale(localeStr);
+
+    const auto makeTag = [&](){
+        QRegularExpression argRegex("formattedDataSize\\((.*)\\)");
+        QString tag = functionCallScript;
+        const auto match = argRegex.match(functionCallScript);
+        if (match.hasMatch())
+            tag = match.captured(1);
+        return localeStr + QLatin1String(", ") + tag;
+    };
+
+    functionCallScript = QLatin1String("locale.formattedDataSize(1000000)");
+    expectedResult = locale.formattedDataSize(1000000);
+    QTest::newRow(qPrintable(makeTag())) << localeStr << functionCallScript << expectedResult << expectedErrorMessage;
+
+    functionCallScript = QLatin1String("locale.formattedDataSize(1000000, 3)");
+    expectedResult = locale.formattedDataSize(1000000, 3);
+    QTest::newRow(qPrintable(makeTag())) << localeStr << functionCallScript << expectedResult << expectedErrorMessage;
+
+    functionCallScript = QLatin1String("locale.formattedDataSize(1000000, 3, localeType.DataSizeIecFormat)");
+    expectedResult = locale.formattedDataSize(1000000, 3, QLocale::DataSizeIecFormat);
+    QTest::newRow(qPrintable(makeTag())) << localeStr << functionCallScript << expectedResult << expectedErrorMessage;
+
+    functionCallScript = QLatin1String("locale.formattedDataSize(1000000, 3, localeType.DataSizeTraditionalFormat)");
+    expectedResult = locale.formattedDataSize(1000000, 3, QLocale::DataSizeTraditionalFormat);
+    QTest::newRow(qPrintable(makeTag())) << localeStr << functionCallScript << expectedResult << expectedErrorMessage;
+
+    functionCallScript = QLatin1String("locale.formattedDataSize(1000000, 3, localeType.DataSizeSIFormat)");
+    expectedResult = locale.formattedDataSize(1000000, 3, QLocale::DataSizeSIFormat);
+    QTest::newRow(qPrintable(makeTag())) << localeStr << functionCallScript << expectedResult << expectedErrorMessage;
+}
+
+void tst_qqmllocale::formattedDataSize_data()
+{
+    QTest::addColumn<QString>("localeStr");
+    QTest::addColumn<QString>("functionCallScript");
+    QTest::addColumn<QString>("expectedResult");
+    QTest::addColumn<QString>("expectedErrorMessagePattern");
+
+    addFormattedDataSizeDataForLocale("en_US");
+    addFormattedDataSizeDataForLocale("de_DE");
+    addFormattedDataSizeDataForLocale("ar_SA");
+    addFormattedDataSizeDataForLocale("hi_IN");
+    addFormattedDataSizeDataForLocale("zh_CN");
+    addFormattedDataSizeDataForLocale("th_TH");
+
+    // Test error conditions (which aren't locale-specific).
+    QString functionCallScript = "locale.formattedDataSize()";
+    QString errorMessage = ".*Locale: formattedDataSize\\(\\): Expected 1-3 arguments, but received 0";
+    QTest::newRow("too few args") << "en_AU" << functionCallScript << QString() << errorMessage;
+
+    functionCallScript = "locale.formattedDataSize(10, 1, localeType.DataSizeIecFormat, \"foo\")";
+    errorMessage = ".*Locale: formattedDataSize\\(\\): Expected 1-3 arguments, but received 4";
+    QTest::newRow("too many args") << "en_AU" << functionCallScript << QString() << errorMessage;
+
+    functionCallScript = "locale.formattedDataSize(10, \"no\")";
+    errorMessage = ".*Locale: formattedDataSize\\(\\): Invalid argument \\('precision' must be an int\\)";
+    QTest::newRow("precision wrong type") << "en_AU" << functionCallScript << QString() << errorMessage;
+
+    functionCallScript = "locale.formattedDataSize(10, 1, \"no\")";
+    errorMessage = ".*Locale: formattedDataSize\\(\\): Invalid argument \\('format' must be DataSizeFormat\\)";
+    QTest::newRow("format wrong type") << "en_AU" << functionCallScript << QString() << errorMessage;
+}
+
+void tst_qqmllocale::formattedDataSize()
+{
+    QFETCH(QString, localeStr);
+    QFETCH(QString, functionCallScript);
+    QFETCH(QString, expectedResult);
+    QFETCH(QString, expectedErrorMessagePattern);
+
+    QQmlComponent component(&engine, testFileUrl("functions.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object);
+
+    QLocale locale(localeStr);
+    QVariant returnValue;
+
+    QVERIFY(QMetaObject::invokeMethod(object.data(), "setLocale", Qt::DirectConnection,
+        Q_ARG(QVariant, QVariant(localeStr))));
+
+    QQmlExpression qmlExpression(engine.rootContext(), object.data(), functionCallScript);
+    const QVariant evaluationResult = qmlExpression.evaluate();
+    if (expectedErrorMessagePattern.isEmpty()) {
+        QVERIFY2(!qmlExpression.hasError(), qPrintable(qmlExpression.error().toString()));
+        QVERIFY(evaluationResult.canConvert<QString>());
+        QCOMPARE(evaluationResult.toString(), expectedResult);
+    } else {
+        QVERIFY(qmlExpression.hasError());
+        QRegularExpression errorRegex(expectedErrorMessagePattern);
+        QVERIFY(errorRegex.isValid());
+        QVERIFY2(errorRegex.match(qmlExpression.error().toString()).hasMatch(),
+            qPrintable(QString::fromLatin1("Mismatch in actual vs expected error message:\n   Actual: %1\n Expected: %2")
+                .arg(qmlExpression.error().toString()).arg(expectedErrorMessagePattern)));
+    }
 }
 
 void tst_qqmllocale::dateToLocaleString_data()

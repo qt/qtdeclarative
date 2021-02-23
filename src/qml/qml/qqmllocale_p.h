@@ -139,6 +139,15 @@ namespace QQmlLocale
     };
     Q_ENUM_NS(NumberOptions)
 
+    enum DataSizeFormat {
+        DataSizeBase1000 = QLocale::DataSizeBase1000,
+        DataSizeSIQuantifiers = QLocale::DataSizeSIQuantifiers,
+        DataSizeIecFormat = QLocale::DataSizeIecFormat,
+        DataSizeTraditionalFormat = QLocale::DataSizeTraditionalFormat,
+        DataSizeSIFormat = QLocale::DataSizeSIFormat
+    };
+    Q_ENUM_NS(DataSizeFormat)
+
     Q_QML_PRIVATE_EXPORT QV4::ReturnedValue locale(QV4::ExecutionEngine *engine, const QString &localeName);
     Q_QML_PRIVATE_EXPORT QV4::ReturnedValue wrap(QV4::ExecutionEngine *engine, const QLocale &locale);
     Q_QML_PRIVATE_EXPORT void registerStringLocaleCompare(QV4::ExecutionEngine *engine);
@@ -205,6 +214,8 @@ struct QQmlLocaleData : public QV4::Object
 
     static QV4::ReturnedValue method_get_numberOptions(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
     static QV4::ReturnedValue method_set_numberOptions(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
+
+    static QV4::ReturnedValue method_get_formattedDataSize(const QV4::FunctionObject *, const QV4::Value *thisObject, const QV4::Value *argv, int argc);
 };
 
 }
