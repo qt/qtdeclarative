@@ -640,6 +640,21 @@ bool QQmlProperty::isWritable() const
 }
 
 /*!
+    \internal
+    Returns true if the property is bindable, otherwise false.
+ */
+bool QQmlProperty::isBindable() const
+{
+    if (!d)
+        return false;
+    if (!d->object)
+        return false;
+    if (d->core.isValid())
+        return d->core.isBindable();
+    return false;
+}
+
+/*!
     Returns true if the property is designable, otherwise false.
 */
 bool QQmlProperty::isDesignable() const

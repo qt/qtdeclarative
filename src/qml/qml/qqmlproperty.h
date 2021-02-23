@@ -114,6 +114,7 @@ public:
     bool connectNotifySignal(QObject *dest, int method) const;
 
     bool isWritable() const;
+    bool isBindable() const;
     bool isDesignable() const;
     bool isResettable() const;
     QObject *object() const;
