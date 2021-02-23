@@ -85,7 +85,7 @@ class tst_qqmllanguage : public QQmlDataTest
     Q_OBJECT
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void cleanupTestCase();
 
     void errors_data();

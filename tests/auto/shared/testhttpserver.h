@@ -113,7 +113,7 @@ public:
     QString urlString(const QString &documentPath) const;
 
 protected:
-    void run();
+    void run() override;
 
 private:
     void start();

@@ -51,7 +51,7 @@ public:
     tst_QQuickItem();
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void cleanup();
 
     void activeFocusOnTab();

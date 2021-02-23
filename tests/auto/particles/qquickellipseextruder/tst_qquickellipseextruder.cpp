@@ -41,7 +41,7 @@ public:
     tst_qquickellipseextruder() {}
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void test_basic();
 private:
     bool inCircle(qreal x, qreal y, qreal r, bool borderOnly=false);

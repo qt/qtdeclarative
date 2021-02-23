@@ -57,7 +57,7 @@ public slots:
     }
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void basicProperties();
     void status();
     void showFiles();

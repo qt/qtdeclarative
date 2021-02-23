@@ -48,7 +48,7 @@ public:
 
     int m_updateCurrentTimeCount = 0;
 protected:
-    void updateCurrentTime(int currentTime)
+    void updateCurrentTime(int currentTime) override
     {
         QPauseAnimationJob::updateCurrentTime(currentTime);
         ++m_updateCurrentTimeCount;
@@ -59,7 +59,7 @@ class TestableGenericAnimation : public QAbstractAnimationJob
 {
 public:
     TestableGenericAnimation(int duration = 250) : m_duration(duration) {}
-    int duration() const { return m_duration; }
+    int duration() const override { return m_duration; }
 
 private:
     int m_duration;

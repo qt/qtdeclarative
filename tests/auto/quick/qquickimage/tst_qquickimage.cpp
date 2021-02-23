@@ -64,7 +64,7 @@ public:
     tst_qquickimage();
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void cleanup();
     void noSource();
     void imageSource();

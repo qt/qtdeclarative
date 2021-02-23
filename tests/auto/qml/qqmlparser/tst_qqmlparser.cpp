@@ -48,7 +48,7 @@ public:
     tst_qqmlparser();
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
 #if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
     void qmlParser_data();
     void qmlParser();

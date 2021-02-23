@@ -43,7 +43,7 @@ public:
     ~tst_qquickimageparticle();
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void test_basic();
     void test_colored();
     void test_colorVariance();

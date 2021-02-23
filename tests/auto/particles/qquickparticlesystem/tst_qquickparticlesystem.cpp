@@ -40,7 +40,7 @@ public:
     tst_qquickparticlesystem() {}
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void test_basic();
     void test_affectorscrash();
 };

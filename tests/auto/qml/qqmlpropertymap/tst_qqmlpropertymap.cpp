@@ -42,7 +42,7 @@ public:
     tst_QQmlPropertyMap() {}
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
 
     void insert();
     void insertMany();

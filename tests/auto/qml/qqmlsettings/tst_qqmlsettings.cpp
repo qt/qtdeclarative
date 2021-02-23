@@ -41,7 +41,7 @@ class tst_QQmlSettings : public QQmlDataTest
     Q_OBJECT
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
 
     void init();
     void cleanup();

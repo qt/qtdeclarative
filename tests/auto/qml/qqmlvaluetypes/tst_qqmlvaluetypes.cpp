@@ -50,7 +50,7 @@ public:
     tst_qqmlvaluetypes() {}
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
 
     void point();
     void pointf();

@@ -49,7 +49,7 @@ private:
     void modeData();
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void qmllistreference();
     void qmllistreference_invalid();
     void isValid();

@@ -50,7 +50,7 @@ public:
     tst_qqmlincubator() {}
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
 
     void incubationMode();
     void objectDeleted();

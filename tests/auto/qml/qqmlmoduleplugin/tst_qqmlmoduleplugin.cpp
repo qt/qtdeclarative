@@ -60,7 +60,7 @@ class tst_qqmlmoduleplugin : public QQmlDataTest
 public:
 
 private slots:
-    virtual void initTestCase();
+    void initTestCase() override;
     void importsPlugin();
     void importsPlugin_data();
     void importsMixedQmlCppPlugin();

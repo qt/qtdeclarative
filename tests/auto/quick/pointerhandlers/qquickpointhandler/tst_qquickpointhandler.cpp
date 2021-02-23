@@ -52,7 +52,7 @@ public:
     {}
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
 
     void singleTouch();
     void tabletStylus();

@@ -52,7 +52,7 @@ public:
     tst_qqmlxmlhttprequest() {}
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
 
     void domExceptionCodes();
     void callbackException();

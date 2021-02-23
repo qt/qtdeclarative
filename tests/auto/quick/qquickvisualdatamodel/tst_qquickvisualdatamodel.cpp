@@ -384,7 +384,7 @@ public:
     tst_qquickvisualdatamodel();
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void cleanupTestCase();
     void rootIndex();
     void updateLayout_data();

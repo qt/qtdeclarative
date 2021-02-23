@@ -48,7 +48,7 @@ public:
     tst_qqmlitemmodels() {}
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
 
     void modelIndex();
     void persistentModelIndex();

@@ -45,7 +45,7 @@ public:
     tst_qqmlmetatype() {}
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
 
     void qmlParserStatusCast();
     void qmlPropertyValueSourceCast();

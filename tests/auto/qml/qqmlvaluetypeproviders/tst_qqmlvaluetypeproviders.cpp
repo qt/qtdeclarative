@@ -53,7 +53,7 @@ public:
     tst_qqmlvaluetypeproviders() {}
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
 
     void qtqmlValueTypes();   // This test function _must_ be the first test function run.
     void qtquickValueTypes();

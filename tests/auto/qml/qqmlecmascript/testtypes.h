@@ -1716,8 +1716,8 @@ class FloatingQObject : public QObject, public QQmlParserStatus
 public:
     FloatingQObject() {}
 
-    virtual void classBegin();
-    virtual void componentComplete();
+    void classBegin() override;
+    void componentComplete() override;
 };
 
 class ClashingNames : public QObject

@@ -45,7 +45,7 @@ public:
     tst_qquickanimatedsprite(){}
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void test_properties();
     void test_runningChangedSignal();
     void test_startStop();

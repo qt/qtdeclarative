@@ -40,7 +40,7 @@ public:
     tst_qquickgravity() {}
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void test_basic();
 };
 

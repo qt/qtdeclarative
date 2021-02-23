@@ -143,7 +143,7 @@ public:
     tst_qqmlproperty() {}
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
 
     // Constructors
     void qmlmetaproperty();

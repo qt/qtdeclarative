@@ -49,7 +49,7 @@ public:
     tst_qquickpixmapcache() {}
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void single();
     void single_data();
     void parallel();
@@ -340,7 +340,7 @@ public:
     MyPixmapProvider()
     : QQuickImageProvider(Pixmap) {}
 
-    virtual QPixmap requestPixmap(const QString &d, QSize *, const QSize &) {
+    QPixmap requestPixmap(const QString &d, QSize *, const QSize &) override {
         Q_UNUSED(d);
         QPixmap pix(800, 600);
         pix.fill(fillColor);

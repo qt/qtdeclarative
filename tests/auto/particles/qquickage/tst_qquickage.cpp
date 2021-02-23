@@ -40,7 +40,7 @@ public:
     tst_qquickage() {}
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
 
     void test_kill();
     void test_jump();

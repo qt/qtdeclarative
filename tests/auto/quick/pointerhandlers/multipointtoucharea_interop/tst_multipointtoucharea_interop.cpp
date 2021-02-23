@@ -50,7 +50,7 @@ public:
     {}
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
 
     void touchDrag();
     void touchesThenPinch();

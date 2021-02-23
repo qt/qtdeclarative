@@ -43,7 +43,7 @@ public:
     tst_qquickfontloader();
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void noFont();
     void localFont();
     void failLocalFont();

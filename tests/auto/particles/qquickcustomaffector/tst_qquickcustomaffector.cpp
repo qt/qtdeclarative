@@ -40,7 +40,7 @@ public:
     tst_qquickcustomaffector() {}
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void test_basic();
     void test_move();
     void test_affectedSignal();

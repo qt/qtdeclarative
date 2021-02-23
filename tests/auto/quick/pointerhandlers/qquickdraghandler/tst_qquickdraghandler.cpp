@@ -51,7 +51,7 @@ public:
     {}
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
 
     void defaultPropertyValues();
     void touchDrag_data();

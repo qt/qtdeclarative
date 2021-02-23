@@ -40,7 +40,7 @@ public:
     tst_qquickgroupgoal() {}
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void test_instantTransition();
 };
 

@@ -42,7 +42,7 @@ public:
     tst_qquickitemparticle() {}
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void test_basic();
     void test_deletion();
     void test_noDeletion();

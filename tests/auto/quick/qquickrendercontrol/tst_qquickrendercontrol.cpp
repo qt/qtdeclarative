@@ -80,7 +80,7 @@ class tst_RenderControl : public QQmlDataTest
     Q_OBJECT
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void cleanupTestCase();
     void renderAndReadBackWithRhi_data();
     void renderAndReadBackWithRhi();

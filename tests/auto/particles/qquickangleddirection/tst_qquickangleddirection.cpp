@@ -41,7 +41,7 @@ public:
     tst_qquickangleddirection() {}
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void test_basic();
 };
 

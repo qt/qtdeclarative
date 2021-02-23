@@ -52,7 +52,7 @@ private slots:
     void touchToMousePressMove();
 
 public slots:
-    void initTestCase() {
+    void initTestCase() override {
         QQmlDataTest::initTestCase();
         window.setBaseSize(QSize(400, 400));
         window.setSource(testFileUrl("mouseevent.qml"));

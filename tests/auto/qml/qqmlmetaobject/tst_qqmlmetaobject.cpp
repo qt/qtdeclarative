@@ -43,7 +43,7 @@ class tst_QQmlMetaObject : public QQmlDataTest
 {
     Q_OBJECT
 private slots:
-    void initTestCase();
+    void initTestCase() override;
 
     void property_data();
     void property();

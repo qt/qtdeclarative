@@ -73,7 +73,7 @@ public:
     tst_qquickshadereffect();
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void cleanupTestCase();
     void testConnection();
     void deleteSourceItem();

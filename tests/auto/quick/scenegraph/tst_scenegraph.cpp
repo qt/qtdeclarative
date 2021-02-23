@@ -103,7 +103,7 @@ class tst_SceneGraph : public QQmlDataTest
     Q_OBJECT
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
 
     void manyWindows_data();
     void manyWindows();

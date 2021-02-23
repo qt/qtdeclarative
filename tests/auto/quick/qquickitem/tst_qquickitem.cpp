@@ -123,7 +123,7 @@ public:
         : QQuickWindow()
     {}
 
-    virtual bool event(QEvent *event)
+    bool event(QEvent *event) override
     {
         return QQuickWindow::event(event);
     }
@@ -174,7 +174,7 @@ class tst_qquickitem : public QQmlDataTest
 public:
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
 
     void noWindow();
     void simpleFocus();

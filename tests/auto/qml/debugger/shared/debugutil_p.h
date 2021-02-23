@@ -92,7 +92,7 @@ signals:
     void serverMessage(const QByteArray &);
 
 protected:
-    virtual void messageReceived(const QByteArray &ba);
+    void messageReceived(const QByteArray &ba) override;
 
 private:
     QByteArray lastMsg;

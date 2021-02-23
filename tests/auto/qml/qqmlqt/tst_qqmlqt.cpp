@@ -59,7 +59,7 @@ public:
     tst_qqmlqt() {}
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void enums();
     void rgba();
     void hsla();

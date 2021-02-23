@@ -57,7 +57,7 @@ private:
 
 private slots:
 
-    void initTestCase();
+    void initTestCase() override;
     void checkPortRange();
     void name();
     void version();

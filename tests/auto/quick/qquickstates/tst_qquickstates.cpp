@@ -138,7 +138,7 @@ private:
     QByteArray fullDataPath(const QString &path) const;
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
 
     void basicChanges();
     void attachedPropertyChanges();

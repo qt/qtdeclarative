@@ -75,7 +75,7 @@ public:
     tst_qqmlecmascript() {}
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void arrayIncludesValueType();
     void assignBasicTypes();
     void assignDate_data();

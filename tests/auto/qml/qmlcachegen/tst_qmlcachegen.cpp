@@ -46,7 +46,7 @@ class tst_qmlcachegen: public QQmlDataTest
     Q_OBJECT
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
 
     void loadGeneratedFile();
     void translationExpressionSupport();

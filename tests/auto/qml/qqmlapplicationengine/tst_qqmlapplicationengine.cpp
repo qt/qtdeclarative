@@ -44,7 +44,7 @@ public:
 
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void basicLoading();
     void testNonResolvedPath();
     void application_data();

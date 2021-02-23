@@ -88,7 +88,7 @@ class TestAnimation : public QAbstractAnimationJob
 {
 public:
     TestAnimation(int duration = 250) : m_duration(duration) {}
-    int duration() const { return m_duration; }
+    int duration() const override { return m_duration; }
 
 private:
     int m_duration;
@@ -100,7 +100,7 @@ public:
     TestValueAnimation(int duration = 250)
         : TestAnimation(duration) {}
 
-    void updateCurrentTime(int msecs)
+    void updateCurrentTime(int msecs) override
     {
         if (msecs >= duration())
             value = end;
@@ -116,10 +116,10 @@ class UncontrolledAnimation : public QObject, public QAbstractAnimationJob
 {
     Q_OBJECT
 public:
-    int duration() const { return -1; /* not time driven */ }
+    int duration() const override { return -1; /* not time driven */ }
 
 protected:
-    void updateCurrentTime(int currentTime)
+    void updateCurrentTime(int currentTime) override
     {
         if (currentTime >= 250)
             stop();
@@ -129,9 +129,9 @@ protected:
 class StateChangeListener: public QAnimationJobChangeListener
 {
 public:
-    virtual void animationStateChanged(
+    void animationStateChanged(
             QAbstractAnimationJob *job, QAbstractAnimationJob::State newState,
-            QAbstractAnimationJob::State)
+            QAbstractAnimationJob::State) override
     {
         states << newState;
         if (beEvil) {
@@ -153,7 +153,7 @@ class FinishedListener: public QAnimationJobChangeListener
 public:
     FinishedListener() {}
 
-    virtual void animationFinished(QAbstractAnimationJob *) { ++m_count; }
+    void animationFinished(QAbstractAnimationJob *) override { ++m_count; }
     void clear() { m_count = 0; }
     int count() { return m_count; }
 
@@ -1530,7 +1530,7 @@ class ClearFinishedListener: public QAnimationJobChangeListener
 public:
     ClearFinishedListener(QSequentialAnimationGroupJob *g) : group(g) {}
 
-    virtual void animationFinished(QAbstractAnimationJob *)
+    void animationFinished(QAbstractAnimationJob *) override
     {
         group->clear();
     }
@@ -1543,7 +1543,7 @@ class RefillFinishedListener: public QAnimationJobChangeListener
 public:
     RefillFinishedListener(QSequentialAnimationGroupJob *g) : group(g) {}
 
-    virtual void animationFinished(QAbstractAnimationJob *)
+    void animationFinished(QAbstractAnimationJob *) override
     {
         group->stop();
         group->clear();

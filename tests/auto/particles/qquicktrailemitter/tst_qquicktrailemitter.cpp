@@ -40,7 +40,7 @@ public:
     tst_qquicktrailemitter() {}
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void test_basic();
 };
 

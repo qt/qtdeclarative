@@ -237,7 +237,7 @@ public:
     {}
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
 
     void touchEventDelivery_data();
     void touchEventDelivery();

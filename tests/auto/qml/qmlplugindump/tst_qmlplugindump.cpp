@@ -42,7 +42,7 @@ public:
     tst_qmlplugindump();
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void builtins();
     void singleton();
     void compositeWithinSingleton();

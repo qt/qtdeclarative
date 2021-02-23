@@ -67,7 +67,7 @@ public:
     virtual ~tst_QQuickAccessible();
 
 public slots:
-    void initTestCase();
+    void initTestCase() override;
     void cleanupTestCase();
     void init();
     void cleanup();

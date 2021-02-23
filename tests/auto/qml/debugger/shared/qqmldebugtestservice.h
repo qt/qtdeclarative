@@ -39,9 +39,9 @@ public:
     QQmlDebugTestService(const QString &s, float version = 1, QObject *parent = 0);
 
 protected:
-    virtual void messageReceived(const QByteArray &ba);
-    virtual void stateAboutToBeChanged(State state);
-    virtual void stateChanged(State state);
+    void messageReceived(const QByteArray &ba) override;
+    void stateAboutToBeChanged(State state) override;
+    void stateChanged(State state) override;
 };
 
 #endif // QQMLDEBUGTESTSERVICE_H
