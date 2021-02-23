@@ -179,7 +179,7 @@ TestCase {
 
         // RTL locale
         control.locale = Qt.locale("ar_EG")
-        compare(control.visualPosition, 0.75)
+        compare(control.visualPosition, 0.25)
 
         // RTL locale + LayoutMirroring
         control.LayoutMirroring.enabled = true
@@ -623,7 +623,7 @@ TestCase {
         compare(pressedSpy.count, 3)
         compare(control.pressed, true)
         compare(control.value, 0.0)
-        compare(control.position, 1.0)
+        compare(control.position, 0.0)
         compare(control.visualPosition, 0.0)
 
         mouseMove(control, control.leftPadding + control.availableWidth * 0.5, control.height * 0.5, 0)
@@ -637,7 +637,7 @@ TestCase {
         compare(pressedSpy.count, 3)
         compare(control.pressed, true)
         compare(control.value, 0.0)
-        verify(control.position < 0.5)
+        verify(control.position > 0.5)
         verify(control.visualPosition > 0.5)
 
         mouseRelease(control, control.leftPadding + control.availableWidth * 0.5, control.height * 0.5, Qt.LeftButton)

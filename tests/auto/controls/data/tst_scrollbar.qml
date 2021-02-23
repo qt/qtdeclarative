@@ -546,7 +546,7 @@ TestCase {
         container.ScrollBar.vertical = scrollBar.createObject(container)
         compare(container.ScrollBar.vertical.x, container.width - container.ScrollBar.vertical.width)
         container.ScrollBar.vertical.locale = Qt.locale("ar_EG")
-        compare(container.ScrollBar.vertical.x, 0)
+        compare(container.ScrollBar.vertical.x, container.width - container.ScrollBar.vertical.width)
     }
 
     function test_hover_data() {

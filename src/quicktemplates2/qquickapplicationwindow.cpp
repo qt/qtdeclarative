@@ -635,7 +635,7 @@ void QQuickApplicationWindow::resetFont()
     the window's locale, that locale propagates to all child controls in the
     window, overriding the system default locale.
 
-    \sa Control::locale, {LayoutMirroring}{LayoutMirroring}
+    \sa Control::locale
 */
 QLocale QQuickApplicationWindow::locale() const
 {

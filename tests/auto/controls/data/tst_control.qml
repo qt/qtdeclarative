@@ -435,8 +435,8 @@ TestCase {
         compare(control.mirrored, false)
 
         control.locale = Qt.locale("ar_EG")
-        compare(control.mirrored, true)
-        compare(mirroredSpy.count, 1)
+        compare(control.mirrored, false)
+        compare(mirroredSpy.count, 0)
 
         control.LayoutMirroring.enabled = true
         compare(control.mirrored, true)
@@ -960,14 +960,14 @@ TestCase {
         control.locale = Qt.locale("ar_EG")
         control.localespy.wait()
         compare(control.localespy.count, 2)
-        compare(control.mirroredspy.count, 1)
+        compare(control.mirroredspy.count, 0)
         compare(control.locale.name, "ar_EG")
         compare(control.item2_2.locale.name, "ar_EG")
         compare(control.item2_3.locale.name, "ar_EG")
         compare(control.localespy_2.count, 2)
-        compare(control.mirroredspy_2.count, 1)
+        compare(control.mirroredspy_2.count, 0)
         compare(control.localespy_3.count, 2)
-        compare(control.mirroredspy_3.count, 1)
+        compare(control.mirroredspy_3.count, 0)
     }
 
     Component {
@@ -1051,11 +1051,11 @@ TestCase {
         control.locale = Qt.locale("ar_EG")
         control.localespy.wait()
         compare(control.localespy.count, 2)
-        compare(control.mirroredspy.count, 1)
+        compare(control.mirroredspy.count, 0)
         compare(control.locale.name, "ar_EG")
         compare(control.item6_5.locale.name, "ar_EG")
         compare(control.localespy_5.count, 2)
-        compare(control.mirroredspy_5.count, 1)
+        compare(control.mirroredspy_5.count, 0)
     }
 
     function test_hover_data() {

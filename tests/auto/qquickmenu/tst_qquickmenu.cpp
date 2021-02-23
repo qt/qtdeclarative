@@ -1236,8 +1236,11 @@ void tst_QQuickMenu::subMenuKeyboard()
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
-    if (mirrored)
-        window->setLocale(QLocale("ar_EG"));
+    if (mirrored) {
+        QQmlExpression mirroringExpression(qmlContext(window), window,
+            "LayoutMirroring.childrenInherit = true; LayoutMirroring.enabled = true");
+        QVERIFY2(mirroringExpression.evaluate().isValid(), qPrintable(mirroringExpression.error().toString()));
+    }
 
     QQuickMenu *mainMenu = window->property("mainMenu").value<QQuickMenu *>();
     QVERIFY(mainMenu);
@@ -1359,8 +1362,11 @@ void tst_QQuickMenu::subMenuDisabledKeyboard()
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
-    if (mirrored)
-        window->setLocale(QLocale("ar_EG"));
+    if (mirrored) {
+        QQmlExpression mirroringExpression(qmlContext(window), window,
+            "LayoutMirroring.childrenInherit = true; LayoutMirroring.enabled = true");
+        QVERIFY2(mirroringExpression.evaluate().isValid(), qPrintable(mirroringExpression.error().toString()));
+    }
 
     QQuickMenu *mainMenu = window->property("mainMenu").value<QQuickMenu *>();
     QVERIFY(mainMenu);
@@ -1454,8 +1460,11 @@ void tst_QQuickMenu::subMenuPosition()
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
-    if (mirrored)
-        window->setLocale(QLocale("ar_EG"));
+    if (mirrored) {
+        QQmlExpression mirroringExpression(qmlContext(window), window,
+            "LayoutMirroring.childrenInherit = true; LayoutMirroring.enabled = true");
+        QVERIFY2(mirroringExpression.evaluate().isValid(), qPrintable(mirroringExpression.error().toString()));
+    }
 
     mainMenu->setCascade(cascade);
     QCOMPARE(mainMenu->cascade(), cascade);
@@ -1733,8 +1742,11 @@ void tst_QQuickMenu::menuItemWidth()
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
-    if (mirrored)
-        window->setLocale(QLocale("ar_EG"));
+    if (mirrored) {
+        QQmlExpression mirroringExpression(qmlContext(window), window,
+            "LayoutMirroring.childrenInherit = true; LayoutMirroring.enabled = true");
+        QVERIFY2(mirroringExpression.evaluate().isValid(), qPrintable(mirroringExpression.error().toString()));
+    }
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
     QVERIFY(menu);
@@ -1762,8 +1774,11 @@ void tst_QQuickMenu::menuItemWidthAfterMenuWidthChanged()
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
-    if (mirrored)
-        window->setLocale(QLocale("ar_EG"));
+    if (mirrored) {
+        QQmlExpression mirroringExpression(qmlContext(window), window,
+            "LayoutMirroring.childrenInherit = true; LayoutMirroring.enabled = true");
+        QVERIFY2(mirroringExpression.evaluate().isValid(), qPrintable(mirroringExpression.error().toString()));
+    }
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
     QVERIFY(menu);
@@ -1807,8 +1822,11 @@ void tst_QQuickMenu::menuItemWidthAfterImplicitWidthChanged()
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
-    if (mirrored)
-        window->setLocale(QLocale("ar_EG"));
+    if (mirrored) {
+        QQmlExpression mirroringExpression(qmlContext(window), window,
+            "LayoutMirroring.childrenInherit = true; LayoutMirroring.enabled = true");
+        QVERIFY2(mirroringExpression.evaluate().isValid(), qPrintable(mirroringExpression.error().toString()));
+    }
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
     QVERIFY(menu);

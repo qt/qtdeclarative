@@ -163,7 +163,7 @@ TestCase {
 
         // RTL locale
         control.locale = Qt.locale("ar_EG")
-        compare(control.visualPosition, 0.75)
+        compare(control.visualPosition, 0.25)
 
         // RTL locale + LayoutMirroring
         control.LayoutMirroring.enabled = true

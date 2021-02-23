@@ -232,8 +232,7 @@ void QQuickControlPrivate::handleUngrab()
 void QQuickControlPrivate::mirrorChange()
 {
     Q_Q(QQuickControl);
-    if (locale.textDirection() == Qt::LeftToRight)
-        q->mirrorChange();
+    q->mirrorChange();
 }
 
 void QQuickControlPrivate::setTopPadding(qreal value, bool reset)
@@ -636,13 +635,10 @@ void QQuickControlPrivate::updateLocale(const QLocale &l, bool e)
     QLocale old = q->locale();
     hasLocale = e;
     if (old != l) {
-        bool wasMirrored = q->isMirrored();
         locale = l;
         q->localeChange(l, old);
         QQuickControlPrivate::updateLocaleRecur(q, l);
         emit q->localeChanged();
-        if (wasMirrored != q->isMirrored())
-            q->mirrorChange();
     }
 }
 
@@ -1246,7 +1242,7 @@ void QQuickControl::resetSpacing()
     control's locale, that locale propagates to all of the control's children,
     overriding the system default locale.
 
-    \sa mirrored, {LayoutMirroring}{LayoutMirroring}
+    \sa mirrored
 */
 QLocale QQuickControl::locale() const
 {
@@ -1280,16 +1276,17 @@ void QQuickControl::resetLocale()
     This property holds whether the control is mirrored.
 
     This property is provided for convenience. A control is considered mirrored
-    when its visual layout direction is right-to-left; that is, when using a
-    right-to-left locale or when \l {LayoutMirroring::enabled}{LayoutMirroring.enabled}
-    is \c true.
+    when its visual layout direction is right-to-left; that is, when
+    \l {LayoutMirroring::enabled}{LayoutMirroring.enabled} is \c true.
 
-    \sa locale, {LayoutMirroring}{LayoutMirroring}, {Right-to-left User Interfaces}
+    As of Qt 6.2, the \l locale property no longer affects this property.
+
+    \sa {LayoutMirroring}{LayoutMirroring}, {Right-to-left User Interfaces}
 */
 bool QQuickControl::isMirrored() const
 {
     Q_D(const QQuickControl);
-    return d->isMirrored() || d->locale.textDirection() == Qt::RightToLeft;
+    return d->isMirrored();
 }
 
 /*!
