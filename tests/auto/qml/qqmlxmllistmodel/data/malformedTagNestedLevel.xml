@@ -1,0 +1,28 @@
+<Pets>
+    <Pet>
+        <name>Polly</name>
+        <completely>
+            <useless>
+                <hierarchy/>
+            </useless>
+        </completely>
+        <some>
+            <other>
+                <type>incorrect type tag</type>
+                <another>
+                    <nested>
+                        <tag/>
+                    </nested>
+                </another>
+                <useful>
+                    <tags>
+                        <type>Parrot
+                        <size>incorrect size tag</size>
+                    </tags>
+                </useful>
+                <age value="12"/>
+            </other>
+            <size>Small</size>
+        </some>
+    </Pet>
+</Pets>

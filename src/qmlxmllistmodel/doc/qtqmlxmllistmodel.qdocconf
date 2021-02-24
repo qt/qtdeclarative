@@ -1,0 +1,36 @@
+include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
+include($QT_INSTALL_DOCS/config/exampleurl-qtdeclarative.qdocconf)
+
+project                 = QtQmlXmlListModel
+description             = Qt QML XmlListModel Reference Documentation
+version                 = $QT_VERSION
+moduleheader            = QtQmlXmlListModel
+qhp.projects            = QtQmlXmlListModel
+
+qhp.QtQmlXmlListModel.file                = qtqmlxmllistmodel.qhp
+qhp.QtQmlXmlListModel.namespace           = org.qt-project.qtqmlxmllistmodel.$QT_VERSION_TAG
+qhp.QtQmlXmlListModel.virtualFolder       = qtqmlxmllistmodel
+qhp.QtQmlXmlListModel.indexRoot           =
+
+qhp.QtQmlXmlListModel.filterAttributes    = qtqmlxmllistmodel $QT_VERSION qtrefdoc
+qhp.QtQmlXmlListModel.customFilters.Qt.name = QtQmlXmlListModel $QT_VERSION
+qhp.QtQmlXmlListModel.customFilters.Qt.filterAttributes = qtqmlxmllistmodel $QT_VERSION
+
+qhp.QtQmlXmlListModel.title      = QML Types
+qhp.QtQmlXmlListModel.indexTitle = Qt XmlListModel QML Types
+qhp.QtQmlXmlListModel.selectors  = qmlclass
+qhp.QtQmlXmlListModel.sortPages  = true
+
+tagfile      = qtqmlxmllistmodel.tags
+
+depends += qtcore qtqml qtdoc
+
+{headerdirs,sourcedirs} += \
+    ..
+
+exampledirs += .. \
+               snippets
+
+imagedirs += images
+
+navigation.qmltypespage = "Qt XmlListModel QML Types"

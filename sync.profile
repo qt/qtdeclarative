@@ -18,7 +18,8 @@
     "QtLabsAnimation" => "$basedir/src/labs/animation",
     "QtLabsWavefrontMesh" => "$basedir/src/labs/wavefrontmesh",
     "QtLabsQmlModels" => "$basedir/src/labs/models",
-    "QtLabsSharedImage" => "$basedir/src/labs/sharedimage"
+    "QtLabsSharedImage" => "$basedir/src/labs/sharedimage",
+    "QtQmlXmlListModel" => "$basedir/src/qmlxmllistmodel"
 );
 %inject_headers = (
     "$basedir/src/qml" => [ "^qqmljsgrammar_p.h", "^qqmljsparser_p.h", "^qml_compile_hash_p.h" ],

@@ -17,6 +17,9 @@ if(TARGET Qt::Sql)
    add_subdirectory(qmllocalstorage)
  endif()
 
+if (QT_FEATURE_qml_xmllistmodel)
+    add_subdirectory(qmlxmllistmodel)
+endif()
 
 if(TARGET Qt::Gui AND QT_FEATURE_qml_animation)
     add_subdirectory(quick)

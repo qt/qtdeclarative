@@ -1,0 +1,14 @@
+<Pets>
+    <Pet name="Polly">
+        <info type="Parrot" age="12" size="Small"/>
+    </Pet>
+    <Pet name="Penny">
+        <info type="Turtle" age="4" size="Small"/>
+    </Pet>
+    <Pet name="Spot">
+        <info type="Dog" age="9" size="Medium"/>
+    </Pet>
+    <Pet name="Tiny">
+        <info type="Elephant" age="15" size="Large"/>
+    </Pet>
+</Pets>

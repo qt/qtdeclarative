@@ -188,6 +188,13 @@ qt_feature("qml-itemmodel" PRIVATE
     CONDITION QT_FEATURE_itemmodel
 )
 
+qt_feature("qml-xmllistmodel" PRIVATE
+    SECTION "QML"
+    LABEL "QML XmlListModel"
+    PURPOSE "Enable XmlListModel in QML"
+    CONDITION QT_FEATURE_future
+)
+
 # special case begin
 qt_qml_find_python(__qt_qml_python_path __qt_qml_python_found)
 # special case end

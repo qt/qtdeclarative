@@ -1,0 +1,76 @@
+<Pets>
+    <Pet>
+        <name>Polly</name>
+        <completely>
+            <useless>
+                <hierarchy/>
+            </useless>
+        </completely>
+        <some>
+            <other>
+                <type>incorrect type tag</type>
+                <another>
+                    <nested>
+                        <tag/>
+                    </nested>
+                </another>
+                <useful>
+                    <tags>
+                        <type>Parrot</type>
+                        <size>incorrect size tag</size>
+                    </tags>
+                </useful>
+                <age value="12"/>
+            </other>
+            <size>Small</size>
+        </some>
+    </Pet>
+    <Pet>
+        <name>Penny</name>
+        <some>
+            <other>
+                <type>incorrect type tag</type>
+                <useful>
+                    <tags>
+                        <type>Turtle</type>
+                        <size>incorrect size tag</size>
+                    </tags>
+                </useful>
+                <age value="4"/>
+            </other>
+            <size>Small</size>
+        </some>
+    </Pet>
+    <Pet>
+        <name>Spot</name>
+        <some>
+            <other>
+                <type>incorrect type tag</type>
+                <useful>
+                    <tags>
+                        <type>Dog</type>
+                        <size>incorrect size tag</size>
+                    </tags>
+                </useful>
+                <age value="9"/>
+            </other>
+            <size>Medium</size>
+        </some>
+    </Pet>
+    <Pet>
+        <name>Tiny</name>
+        <some>
+            <other>
+                <type>incorrect type tag</type>
+                <useful>
+                    <tags>
+                        <type>Elephant</type>
+                        <size>incorrect size tag</size>
+                    </tags>
+                </useful>
+                <age value="15"/>
+            </other>
+            <size>Large</size>
+        </some>
+    </Pet>
+</Pets>
