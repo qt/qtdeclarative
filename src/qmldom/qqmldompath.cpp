@@ -365,7 +365,7 @@ Path Path::fromString(QStringView s, ErrorHandler errorHandler)
                 components.append(Component(Current(s.mid(i0,i-i0))));
                 state = ParserState::End;
             } else if (c.isLetter()) {
-                myErrors().warning(tr("Field expressions should start with dot even a the start of the path %1.")
+                myErrors().warning(tr("Field expressions should start with a dot, even when at the start of the path %1.")
                                  .arg(s)).handle(errorHandler);
                 return Path();
             } else {
@@ -455,7 +455,7 @@ Path Path::fromString(QStringView s, ErrorHandler errorHandler)
                 myErrors().error(tr("Filter from string not yet implemented.")).handle(errorHandler);
                 return Path();
             } else {
-                myErrors().error(tr("Unexpected character '%1' after square braket at %2.")
+                myErrors().error(tr("Unexpected character '%1' after square bracket at %2.")
                                  .arg(c).arg(i-1)).handle(errorHandler);
                 return Path();
             }
@@ -495,7 +495,7 @@ Path Path::fromString(QStringView s, ErrorHandler errorHandler)
                                            .arg(QString::number(i0))).handle(errorHandler);
                         return Path();
                     } else {
-                        myErrors().hint(tr("Index shound use square brackets and not a dot (at char %1).")
+                        myErrors().hint(tr("Index should use square brackets and not a dot (at char %1).")
                                            .arg(QString::number(i0))).handle(errorHandler);
                     }
                     state = ParserState::End;
