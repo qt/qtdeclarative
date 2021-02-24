@@ -1726,19 +1726,16 @@ void QQuickComboBox::setSelectTextByMouse(bool canSelect)
 
     \value ContentItemImplicitWidth
         The implicitContentWidth will default to that of the \l{Control::}{contentItem}.
-
         This is the most efficient option, as no extra text layout is done.
     \value WidestText
         The implicitContentWidth will be set to the implicit width of the
         the largest text for the given \l textRole every time the model
         changes.
-
         This option should be used with smaller models, as it can be expensive.
     \value WidestTextWhenCompleted
         The implicitContentWidth will be set to the implicit width of the
         the largest text for the given \l textRole once after
         \l {QQmlParserStatus::componentComplete()}{component completion}.
-
         This option should be used with smaller models, as it can be expensive.
 
     The default value is \c ContentItemImplicitWidth.
