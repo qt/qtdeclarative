@@ -41,6 +41,7 @@
 
 #include "qqmljsmetatypes_p.h"
 #include "qdeferredpointer_p.h"
+#include "qqmljsannotation_p.h"
 
 #include <QtQml/private/qqmljssourcelocation_p.h>
 
@@ -186,6 +187,9 @@ public:
     bool hasEnumerationKey(const QString &name) const;
     QQmlJSMetaEnum enumeration(const QString &name) const;
 
+    void setAnnotations(const QList<QQmlJSAnnotation> &annotation) { m_annotations = std::move(annotation); }
+    const QList<QQmlJSAnnotation> &annotations() const { return m_annotations; }
+
     QString fileName() const { return m_fileName; }
     void setFileName(const QString &file) { m_fileName = file; }
 
@@ -296,6 +300,7 @@ private:
     QHash<QString, QQmlJSMetaProperty> m_properties;
     QHash<QString, QQmlJSMetaEnum> m_enumerations;
 
+    QVector<QQmlJSAnnotation> m_annotations;
     QVector<QQmlJSScope::Ptr> m_childScopes;
     QQmlJSScope::WeakPtr m_parentScope;
 

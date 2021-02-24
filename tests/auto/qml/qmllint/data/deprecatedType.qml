@@ -1,0 +1,3 @@
+import QtQml
+
+TypeDeprecated {}

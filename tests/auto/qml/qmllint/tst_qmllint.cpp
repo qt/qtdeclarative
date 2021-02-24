@@ -329,6 +329,22 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("No type found for property \"bad\". This may be due to a missing "
                               "import statement or incomplete qmltypes files.")
             << QString();
+    QTest::newRow("Deprecation (Property, with reason)")
+            << QStringLiteral("deprecatedPropertyReason.qml")
+            << QStringLiteral("Property \"deprecated\" is deprecated (Reason: Test)")
+            << QString();
+    QTest::newRow("Deprecation (Property, no reason)")
+            << QStringLiteral("deprecatedProperty.qml")
+            << QStringLiteral("Property \"deprecated\" is deprecated")
+            << QString();
+    QTest::newRow("Deprecation (Type, with reason)")
+            << QStringLiteral("deprecatedTypeReason.qml")
+            << QStringLiteral("Type \"TypeDeprecatedReason\" is deprecated (Reason: Test)")
+            << QString();
+    QTest::newRow("Deprecation (Type, no reason)")
+            << QStringLiteral("deprecatedType.qml")
+            << QStringLiteral("Type \"TypeDeprecated\" is deprecated")
+            << QString();
 }
 
 void TestQmllint::dirtyQmlCode()

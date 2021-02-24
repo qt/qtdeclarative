@@ -20,6 +20,7 @@ qt_internal_add_module(QmlCompiler
         qqmljstypedescriptionreader.cpp qqmljstypedescriptionreader_p.h
         qqmljstypereader.cpp qqmljstypereader_p.h
         qresourcerelocater.cpp qresourcerelocater_p.h
+        qqmljsannotation_p.h qqmljsannotation.cpp
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::QmlDevToolsPrivate

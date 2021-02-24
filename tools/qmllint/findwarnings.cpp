@@ -45,8 +45,30 @@
 
 void FindWarningVisitor::checkInheritanceCycle(QQmlJSScope::ConstPtr scope)
 {
+    QQmlJSScope::ConstPtr originalScope = scope;
     QList<QQmlJSScope::ConstPtr> scopes;
     while (!scope.isNull()) {
+
+        for (const QQmlJSAnnotation &annotation : scope->annotations()) {
+            if (annotation.isDeprecation()) {
+                QQQmlJSDeprecation deprecation = annotation.deprecation();
+
+                QString message = QStringLiteral("Type \"%1\" is deprecated")
+                        .arg(scope->internalName());
+
+                if (!deprecation.reason.isEmpty())
+                    message.append(QStringLiteral(" (Reason: %1)").arg(deprecation.reason));
+
+                m_errors.append({
+                                    message,
+                                    QtWarningMsg,
+                                    originalScope->sourceLocation()
+                });
+
+                m_visitFailed = true;
+            }
+        }
+
         if (scopes.contains(scope)) {
             QString inheritenceCycle;
             for (const auto &seen: qAsConst(scopes)) {

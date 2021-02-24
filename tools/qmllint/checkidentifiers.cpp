@@ -347,6 +347,27 @@ bool CheckIdentifiers::operator()(
 
             const auto property = qmlScope->property(memberAccessBase.m_name);
             if (!property.propertyName().isEmpty()) {
+                for (const QQmlJSAnnotation &annotation : property.annotations()) {
+                    if (annotation.isDeprecation()) {
+                        QQQmlJSDeprecation deprecation = annotation.deprecation();
+
+                        QString message = QStringLiteral("Property \"%1\" is deprecated")
+                                .arg(memberAccessBase.m_name);
+
+                        if (!deprecation.reason.isEmpty())
+                            message.append(QStringLiteral(" (Reason: %1)").arg(deprecation.reason));
+
+                        message.append(QStringLiteral(" at %2:%3:%4")
+                                       .arg(m_fileName)
+                                       .arg(memberAccessBase.m_location.startLine)
+                                       .arg(memberAccessBase.m_location.startColumn)
+                                       );
+
+                        m_colorOut->writePrefixedMessage(message, Warning);
+                        identifiersClean = false;
+                    }
+                }
+
                 if (memberAccessChain.isEmpty() || unknownBuiltins.contains(property.typeName()))
                     continue;
 

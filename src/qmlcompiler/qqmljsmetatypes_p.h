@@ -43,6 +43,8 @@
 #include <QtCore/qstringlist.h>
 #include <QtCore/qsharedpointer.h>
 
+#include "qqmljsannotation_p.h"
+
 // MetaMethod and MetaProperty have both type names and actual QQmlJSScope types.
 // When parsing the information from the relevant QML or qmltypes files, we only
 // see the names and don't have a complete picture of the types, yet. In a second
@@ -238,6 +240,7 @@ class QQmlJSMetaProperty
     QString m_typeName;
     QString m_bindable;
     QWeakPointer<const QQmlJSScope> m_type;
+    QVector<QQmlJSAnnotation> m_annotations;
     bool m_isList = false;
     bool m_isWritable = false;
     bool m_isPointer = false;
@@ -258,6 +261,9 @@ public:
 
     void setType(const QSharedPointer<const QQmlJSScope> &type) { m_type = type; }
     QSharedPointer<const QQmlJSScope> type() const { return m_type.toStrongRef(); }
+
+    void setAnnotations(const QList<QQmlJSAnnotation> &annotation) { m_annotations = std::move(annotation); }
+    const QList<QQmlJSAnnotation> &annotations() const { return m_annotations; }
 
     void setIsList(bool isList) { m_isList = isList; }
     bool isList() const { return m_isList; }

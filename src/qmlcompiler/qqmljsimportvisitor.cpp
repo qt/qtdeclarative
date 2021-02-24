@@ -135,6 +135,69 @@ void QQmlJSImportVisitor::endVisit(UiProgram *)
     resolveAliases();
 }
 
+static QVariant bindingToVariant(QQmlJS::AST::Statement *statement)
+{
+    ExpressionStatement *expr = cast<ExpressionStatement *>(statement);
+
+    if (!statement || !expr->expression)
+        return QVariant();
+
+    switch (expr->expression->kind) {
+    case Node::Kind_StringLiteral:
+        return cast<StringLiteral *>(expr->expression)->value.toString();
+    case Node::Kind_NumericLiteral:
+        return cast<NumericLiteral *>(expr->expression)->value;
+    default:
+        return QVariant();
+    }
+}
+
+QVector<QQmlJSAnnotation> QQmlJSImportVisitor::parseAnnotations(QQmlJS::AST::UiAnnotationList *list)
+{
+
+    QVector<QQmlJSAnnotation> annotationList;
+
+    for (UiAnnotationList *item = list; item != nullptr; item = item->next) {
+        UiAnnotation *annotation = item->annotation;
+
+        QString name;
+        for (auto id = annotation->qualifiedTypeNameId; id; id = id->next)
+            name += id->name.toString() + QLatin1Char('.');
+
+        name.chop(1);
+
+
+
+        QQmlJSAnnotation qqmljsAnnotation;
+
+        qqmljsAnnotation.name = name;
+
+        for (UiObjectMemberList *memberItem = annotation->initializer->members; memberItem != nullptr; memberItem = memberItem->next) {
+            switch (memberItem->member->kind) {
+            case Node::Kind_UiScriptBinding: {
+                auto *scriptBinding = QQmlJS::AST::cast<UiScriptBinding*>(memberItem->member);
+                QString bindingName;
+                for (auto id = scriptBinding->qualifiedId; id; id = id->next)
+                    bindingName += id->name.toString() + QLatin1Char('.');
+
+                bindingName.chop(1);
+
+                qqmljsAnnotation.bindings[bindingName] = bindingToVariant(scriptBinding->statement);
+                break;
+            }
+            default:
+                // We ignore all the other information contained in the annotation
+                break;
+            }
+        }
+
+        annotationList.append(qqmljsAnnotation);
+    }
+
+    return annotationList;
+}
+
+
 bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
 {
     QString superType;
@@ -146,6 +209,8 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
     enterEnvironment(QQmlJSScope::QMLScope, superType, definition->firstSourceLocation());
     if (!m_exportedRootScope)
         m_exportedRootScope = m_currentScope;
+
+    m_currentScope->setAnnotations(parseAnnotations(definition->annotations));
 
     QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports);
     return true;
@@ -189,6 +254,8 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         prop.setIsWritable(!publicMember->isReadonlyMember);
         prop.setIsAlias(isAlias);
         prop.setType(m_rootScopeImports.value(prop.typeName()));
+        prop.setAnnotations(parseAnnotations(publicMember->annotations));
+
         m_currentScope->insertPropertyIdentifier(prop);
         if (publicMember->isRequired)
             m_currentScope->setPropertyLocallyRequired(prop.propertyName(), true);

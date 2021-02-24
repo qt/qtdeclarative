@@ -40,6 +40,7 @@
 // We mean it.
 
 #include "qqmljsscope_p.h"
+#include "qqmljsannotation_p.h"
 
 #include <private/qqmljsast_p.h>
 #include <private/qqmljsdiagnosticmessage_p.h>
@@ -125,6 +126,8 @@ protected:
     void enterEnvironment(QQmlJSScope::ScopeType type, const QString &name,
                           const QQmlJS::SourceLocation &location);
     void leaveEnvironment();
+
+    QVector<QQmlJSAnnotation> parseAnnotations(QQmlJS::AST::UiAnnotationList *list);
 
 private:
     void importBaseModules();
