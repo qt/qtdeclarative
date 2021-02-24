@@ -614,7 +614,7 @@ bool DomItem::resolve(Path path,
             root = root.environment()[u"universe"];
             break;
         case PathRoot::Other:
-            myResolveErrors().error(tr("Root context %1 is not knwon").arg(path.headName())).handle(errorHandler);
+            myResolveErrors().error(tr("Root context %1 is not known").arg(path.headName())).handle(errorHandler);
             return false;
         }
         toDos[0] = {root, 1};
@@ -660,7 +660,8 @@ bool DomItem::resolve(Path path,
                     }
                     if (visitedRefs->contains(toResolve)) {
                         myResolveErrors().error([visitedRefs, toResolve](Sink sink) {
-                            sink(tr("Circular reference:\n"));
+                            sink(tr("Circular reference:"));
+                            sink(u"\n");
                             for (const Path &vPath : *visitedRefs) {
                                 sink(u"  ");
                                 vPath.dump(sink);
@@ -755,7 +756,7 @@ bool DomItem::resolve(Path path,
                             current = PathCurrent::LookupDynamic;
                     }
                     if (current == PathCurrent::LookupStrict) {
-                        myResolveErrors().error(tr("@lookupStrinct unimplemented"))
+                        myResolveErrors().error(tr("@lookupStrict unimplemented"))
                                 .handle(errorHandler);
                         return false;
                     } else if (current == PathCurrent::LookupDynamic) {
