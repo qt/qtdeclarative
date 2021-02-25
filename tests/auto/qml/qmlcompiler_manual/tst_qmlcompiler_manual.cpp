@@ -48,10 +48,14 @@ class tst_qmlcompiler_manual : public QQmlDataTest
 private slots:
     void cppBinding();
     void signalHandlers();
+    void signalHandlers_qmlcachegen();
     void jsFunctions();
     void changingBindings();
     void propertyAlias();
     void propertyChangeHandler();
+
+private:
+    void signalHandlers_impl(const QUrl &url);
 };
 
 // test workaround: hardcode runtime function indices. because they could be
@@ -258,10 +262,10 @@ public:
     }
 };
 
-void tst_qmlcompiler_manual::signalHandlers()
+void tst_qmlcompiler_manual::signalHandlers_impl(const QUrl &url)
 {
     ANON_signalHandlers created;
-    created.url = testFileUrl("signalHandlers.qml"); // workaround
+    created.url = url; // workaround
     QQmlEngine e;
     e.setContextForObject(&created, e.rootContext());
 
@@ -297,6 +301,18 @@ void tst_qmlcompiler_manual::signalHandlers()
     QCOMPARE(created.property("signal2P1").toString(), QStringLiteral("abc"));
     QCOMPARE(created.property("signal2P2").toInt(), 0);
     QCOMPARE(created.property("signal2P3").toString(), QStringLiteral("abc0"));
+}
+
+void tst_qmlcompiler_manual::signalHandlers()
+{
+    // use QQmlTypeCompiler's compilation unit
+    signalHandlers_impl(testFileUrl("signalHandlers.qml"));
+}
+
+void tst_qmlcompiler_manual::signalHandlers_qmlcachegen()
+{
+    // use qmlcachegen's compilation unit
+    signalHandlers_impl(QUrl("qrc:/data/signalHandlers.qml"));
 }
 
 class ANON_javaScriptFunctions : public QObject

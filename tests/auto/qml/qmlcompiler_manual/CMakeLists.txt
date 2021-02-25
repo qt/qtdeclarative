@@ -19,6 +19,13 @@ qt_internal_add_test(tst_qmlcompiler_manual
 ## Scopes:
 #####################################################################
 
+qt_add_resources(tst_qmlcompiler_manual "qmlcompiler"
+    PREFIX
+        "/"
+    FILES
+        "data/signalHandlers.qml"
+)
+
 qt_internal_extend_target(tst_qmlcompiler_manual CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"
