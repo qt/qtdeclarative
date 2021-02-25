@@ -344,15 +344,13 @@ static inline bool singleWindowOnScreen(QQuickWindow *win)
 void QQuickDeliveryAgentPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *item,
                                                  Qt::FocusReason reason, FocusOptions options)
 {
+    Q_Q(QQuickDeliveryAgent);
     Q_ASSERT(item);
     Q_ASSERT(scope || item == rootItem);
 
-    qCDebug(lcFocus) << "QQuickDeliveryAgentPrivate::setFocusInScope():";
-    qCDebug(lcFocus) << "    scope:" << (QObject *)scope;
+    qCDebug(lcFocus) << q << "focus" << item << "in scope" << scope;
     if (scope)
-        qCDebug(lcFocus) << "    scopeSubFocusItem:" << (QObject *)QQuickItemPrivate::get(scope)->subFocusItem;
-    qCDebug(lcFocus) << "    item:" << (QObject *)item;
-    qCDebug(lcFocus) << "    activeFocusItem:" << (QObject *)activeFocusItem;
+        qCDebug(lcFocus) << "    scopeSubFocusItem:" << QQuickItemPrivate::get(scope)->subFocusItem;
 
     QQuickItemPrivate *scopePrivate = scope ? QQuickItemPrivate::get(scope) : nullptr;
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
@@ -457,17 +455,23 @@ void QQuickDeliveryAgentPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *
 
     if (!changed.isEmpty())
         notifyFocusChangesRecur(changed.data(), changed.count() - 1);
+    if (isSubsceneAgent) {
+        auto da = QQuickWindowPrivate::get(rootItem->window())->deliveryAgent;
+        qCDebug(lcFocus) << "    delegating setFocusInScope to" << da;
+        QQuickWindowPrivate::get(rootItem->window())->deliveryAgentPrivate()->setFocusInScope(da->rootItem(), item, reason, options);
+    }
+    if (oldActiveFocusItem == activeFocusItem)
+        qCDebug(lcFocus) << "    activeFocusItem remains" << activeFocusItem << "in" << q;
+    else
+        qCDebug(lcFocus) << "    activeFocusItem" << oldActiveFocusItem << "->" << activeFocusItem << "in" << q;
 }
 
 void QQuickDeliveryAgentPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem *item, Qt::FocusReason reason, FocusOptions options)
 {
     Q_ASSERT(item);
     Q_ASSERT(scope || item == rootItem);
-
-    qCDebug(lcFocus) << "QQuickDeliveryAgentPrivate::clearFocusInScope():";
-    qCDebug(lcFocus) << "    scope:" << (QObject *)scope;
-    qCDebug(lcFocus) << "    item:" << (QObject *)item;
-    qCDebug(lcFocus) << "    activeFocusItem:" << (QObject *)activeFocusItem;
+    Q_Q(QQuickDeliveryAgent);
+    qCDebug(lcFocus) << q << "clear focus" << item << "in scope" << scope;
 
     QQuickItemPrivate *scopePrivate = nullptr;
     if (scope) {
@@ -547,6 +551,11 @@ void QQuickDeliveryAgentPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem
 
     if (!changed.isEmpty())
         notifyFocusChangesRecur(changed.data(), changed.count() - 1);
+
+    if (oldActiveFocusItem == activeFocusItem)
+        qCDebug(lcFocus) << "activeFocusItem remains" << activeFocusItem << "in" << q;
+    else
+        qCDebug(lcFocus) << "    activeFocusItem" << oldActiveFocusItem << "->" << activeFocusItem << "in" << q;
 }
 
 void QQuickDeliveryAgentPrivate::clearFocusObject()
@@ -1403,8 +1412,8 @@ void QQuickDeliveryAgentPrivate::onGrabChanged(QObject *grabber, QPointingDevice
             auto itemPriv = QQuickItemPrivate::get(handler->parentItem());
             // An item that is NOT a subscene root needs to track whether it got a grab via a subscene delivery agent,
             // whereas the subscene root item already knows it has its own DA.
-            if (!itemPriv->extra.isAllocated() || !itemPriv->extra->subsceneDeliveryAgent)
-                itemPriv->hasSubsceneDeliveryAgent = grabGained;
+            if (grabGained && (!itemPriv->extra.isAllocated() || !itemPriv->extra->subsceneDeliveryAgent))
+                itemPriv->maybeHasSubsceneDeliveryAgent = true;
             subsceneAgent = itemPriv->deliveryAgent();
         }
     } else {
@@ -1447,8 +1456,8 @@ void QQuickDeliveryAgentPrivate::onGrabChanged(QObject *grabber, QPointingDevice
             auto itemPriv = QQuickItemPrivate::get(grabberItem);
             // An item that is NOT a subscene root needs to track whether it got a grab via a subscene delivery agent,
             // whereas the subscene root item already knows it has its own DA.
-            if (!itemPriv->extra.isAllocated() || !itemPriv->extra->subsceneDeliveryAgent)
-                itemPriv->hasSubsceneDeliveryAgent = grabGained;
+            if (grabGained && (!itemPriv->extra.isAllocated() || !itemPriv->extra->subsceneDeliveryAgent))
+                itemPriv->maybeHasSubsceneDeliveryAgent = true;
             subsceneAgent = itemPriv->deliveryAgent();
         }
     }
@@ -1726,6 +1735,10 @@ bool QQuickDeliveryAgentPrivate::deliverPressOrReleaseEvent(QPointerEvent *event
     }
 
     for (QQuickItem *item : targetItems) {
+        // failsafe: when items get into a subscene somehow, ensure that QQuickItemPrivate::deliveryAgent() can find it
+        if (isSubsceneAgent)
+            QQuickItemPrivate::get(item)->maybeHasSubsceneDeliveryAgent = true;
+
         hasFiltered.clear();
         if (!handlersOnly && sendFilteredPointerEvent(event, item)) {
             if (event->isAccepted())

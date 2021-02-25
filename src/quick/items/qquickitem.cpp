@@ -3196,7 +3196,7 @@ QQuickItemPrivate::QQuickItemPrivate()
     , replayingPressEvent(false)
     , touchEnabled(false)
     , hasCursorHandler(false)
-    , hasSubsceneDeliveryAgent(false)
+    , maybeHasSubsceneDeliveryAgent(true)
     , dirtyAttributes(0)
     , nextDirtyItem(nullptr)
     , prevDirtyItem(nullptr)
@@ -5202,22 +5202,47 @@ QPointF QQuickItemPrivate::adjustedPosForTransform(const QPointF &centroidParent
     Returns the delivery agent for the narrowest subscene containing this item,
     but falls back to QQuickWindowPrivate::deliveryAgent if there are no subscenes.
 
+    If this item is not sure whether it's in a subscene (as by default), we need to
+    explore the parents to find out.
+
+    If this item is in a subscene, we will find that DA during the exploration,
+    and return it.
+
+    If we find the root item without finding a DA, then we know that this item
+    does NOT belong to a subscene, so we remember that by setting
+    maybeHasSubsceneDeliveryAgent to false, so that exploration of the parents
+    can be avoided next time.
+
+    In the usual case in normal 2D scenes without subscenes,
+    maybeHasSubsceneDeliveryAgent gets set to false here.
+
     \note When a Qt Quick scene is shown in the usual way in its own window,
     subscenes are ignored, and QQuickWindowPrivate::deliveryAgent is used.
     Subscene delivery agents are used only in QtQuick 3D so far.
 */
 QQuickDeliveryAgent *QQuickItemPrivate::deliveryAgent()
 {
-    // optimization: don't go up the parent hierarchy if this item is not aware of being in a subscene
-    if (hasSubsceneDeliveryAgent) {
+    Q_Q(QQuickItem);
+    if (maybeHasSubsceneDeliveryAgent) {
         QQuickItemPrivate *p = this;
         do {
+            if (qmlobject_cast<QQuickRootItem *>(p->q_ptr)) {
+                // found the root item without finding a different DA:
+                // it means we don't need to repeat this search next time.
+                // TODO maybe optimize further: make this function recursive, and
+                // set it to false on each item that we visit in the tail
+                maybeHasSubsceneDeliveryAgent = false;
+                break;
+            }
             if (p->extra.isAllocated()) {
                 if (auto da = p->extra->subsceneDeliveryAgent)
                     return da;
-                p = p->parentItem ? QQuickItemPrivate::get(p->parentItem) : nullptr;
             }
+            p = p->parentItem ? QQuickItemPrivate::get(p->parentItem) : nullptr;
         } while (p);
+        // arriving here is somewhat unexpected: a detached root can easily be created (just set an item's parent to null),
+        // but why would we deliver events to that subtree? only if root got detached while an item in that subtree still has a grab?
+        qCWarning(lcPtr) << "detached root of" << q << "is not a QQuickRootItem and also does not have its own DeliveryAgent";
     }
     if (window)
         return QQuickWindowPrivate::get(window)->deliveryAgent;
@@ -5231,7 +5256,7 @@ QQuickDeliveryAgentPrivate *QQuickItemPrivate::deliveryAgentPrivate()
 }
 
 /*! \internal
-    Ensures that this item, presumably the root of a sub-scene (e.g. because it
+    Ensures that this item, presumably the root of a subscene (e.g. because it
     is mapped onto a 3D object in Qt Quick 3D), has a delivery agent to be used
     when delivering events to the subscene: i.e. when the viewport delivers an
     event to the subscene, or when the outer delivery agent delivers an update
@@ -5241,11 +5266,17 @@ QQuickDeliveryAgentPrivate *QQuickItemPrivate::deliveryAgentPrivate()
 QQuickDeliveryAgent *QQuickItemPrivate::ensureSubsceneDeliveryAgent()
 {
     Q_Q(QQuickItem);
-    hasSubsceneDeliveryAgent = true;
+    // We are (about to be) sure that it has one now; but just to save space,
+    // we avoid storing a DA pointer in each item; so deliveryAgent() always needs to
+    // go up the hierarchy to find it. maybeHasSubsceneDeliveryAgent tells it to do that.
+    maybeHasSubsceneDeliveryAgent = true;
     if (extra.isAllocated() && extra->subsceneDeliveryAgent)
         return extra->subsceneDeliveryAgent;
     extra.value().subsceneDeliveryAgent = new QQuickDeliveryAgent(q);
     qCDebug(lcPtr) << "created new" << extra->subsceneDeliveryAgent;
+    // every subscene root needs to be a focus scope so that when QQuickItem::forceActiveFocus()
+    // goes up the parent hierarchy, it finds the subscene root and calls setFocus() on it
+    q->setFlag(QQuickItem::ItemIsFocusScope);
     return extra->subsceneDeliveryAgent;
 }
 
