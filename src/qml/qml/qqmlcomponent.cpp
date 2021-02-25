@@ -64,11 +64,14 @@
 #include <QStringList>
 #include <QThreadStorage>
 #include <QtCore/qdebug.h>
+#include <QtCore/qloggingcategory.h>
 #include <qqmlinfo.h>
 
 namespace {
     QThreadStorage<int> creationDepth;
 }
+
+Q_LOGGING_CATEGORY(lcQmlComponentGeneral, "qt.qml.qmlcomponent")
 
 QT_BEGIN_NAMESPACE
 
@@ -890,6 +893,12 @@ QObject *QQmlComponent::beginCreate(QQmlContext *publicContext)
 QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> context)
 {
     Q_Q(QQmlComponent);
+    auto cleanup = qScopeGuard([this] {
+        if (!state.errors.isEmpty()) {
+            for (const auto &e : qAsConst(state.errors))
+                qCDebug(lcQmlComponentGeneral) << "QQmlComponent: " << e.toString();
+        }
+    });
     if (!context) {
         qWarning("QQmlComponent: Cannot create a component in a null context");
         return nullptr;
