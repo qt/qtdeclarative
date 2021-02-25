@@ -482,8 +482,8 @@ public:
     bool replayingPressEvent:1;
     bool touchEnabled:1;
     bool hasCursorHandler:1;
-    // set true when this item expects events via a subscene delivery agent; false otherwise
-    bool hasSubsceneDeliveryAgent:1;
+    // set true when this item does not expect events via a subscene delivery agent; false otherwise
+    bool maybeHasSubsceneDeliveryAgent:1;
 
     enum DirtyType {
         TransformOrigin         = 0x00000001,

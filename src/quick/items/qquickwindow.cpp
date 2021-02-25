@@ -1386,7 +1386,7 @@ bool QQuickWindow::event(QEvent *e)
             }
             if (ret)
                 return true;
-        } else if (pe->pointCount()) {
+        } else if (pe->pointCount() && !pe->isBeginEvent()) {
             // single-point event
             if (auto *ptda = QQuickDeliveryAgent::grabberAgent(pe, pe->points().first()))
                 da = ptda;
