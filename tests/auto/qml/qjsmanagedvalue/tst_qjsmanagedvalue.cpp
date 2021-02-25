@@ -1624,13 +1624,12 @@ void tst_QJSManagedValue::engineDeleted()
 
     delete eng;
 
+    // You can still check the type, but anything involving the engine is obviously prohibited.
     QCOMPARE(v1.type(), QJSManagedValue::Undefined);
     QCOMPARE(v2.type(), QJSManagedValue::Undefined);
     QCOMPARE(v3.type(), QJSManagedValue::Undefined);
     QCOMPARE(v4.type(), QJSManagedValue::Undefined);
     QCOMPARE(v5.type(), QJSManagedValue::Undefined);
-
-    QVERIFY(v3.property(QStringLiteral("foo")).isUndefined());
 }
 
 void tst_QJSManagedValue::valueOfWithClosure()
@@ -1820,6 +1819,38 @@ void tst_QJSManagedValue::jsMetaTypes()
     QCOMPARE(halfPopulated.property("b").toInt(), 111);
     QVERIFY(halfPopulated.property("llala").isUndefined());
     QVERIFY(halfPopulated.property("ccc").isUndefined());
+}
+
+void tst_QJSManagedValue::exceptionsOnNullAccess()
+{
+    QJSEngine engine;
+    QJSManagedValue null(QJSValue(QJSValue::NullValue), &engine);
+    QJSManagedValue undef(QJSValue(QJSValue::UndefinedValue), &engine);
+
+    const QString nullReadError = engine.evaluate(
+                QStringLiteral("var n = null; n.prop")).toString();
+    const QString nullWriteError = engine.evaluate(
+                QStringLiteral("var n = null; n.prop = 5")).toString();
+    const QString undefReadError = engine.evaluate(
+                QStringLiteral("var n; n.prop")).toString();
+    const QString undefWriteError = engine.evaluate(
+                QStringLiteral("var n; n.prop = 5")).toString();
+
+    QVERIFY(null.property(QStringLiteral("prop")).isUndefined());
+    QVERIFY(engine.hasError());
+    QCOMPARE(engine.catchError().toString(), nullReadError);
+
+    null.setProperty(QStringLiteral("prop"), 5);
+    QVERIFY(engine.hasError());
+    QCOMPARE(engine.catchError().toString(), nullWriteError);
+
+    QVERIFY(undef.property(QStringLiteral("prop")).isUndefined());
+    QVERIFY(engine.hasError());
+    QCOMPARE(engine.catchError().toString(), undefReadError);
+
+    undef.setProperty(QStringLiteral("prop"), 5);
+    QVERIFY(engine.hasError());
+    QCOMPARE(engine.catchError().toString(), undefWriteError);
 }
 
 QTEST_MAIN(tst_QJSManagedValue)

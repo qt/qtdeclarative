@@ -110,6 +110,8 @@ private Q_SLOTS:
     void stringByIndex();
     void jsMetaTypes();
 
+    void exceptionsOnNullAccess();
+
 private:
     void newEngine() { engine.reset(new QJSEngine()); }
     QScopedPointer<QJSEngine> engine;

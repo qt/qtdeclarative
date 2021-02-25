@@ -774,8 +774,14 @@ bool QJSManagedValue::hasOwnProperty(const QString &name) const
  */
 QJSValue QJSManagedValue::property(const QString &name) const
 {
-    if (!d || d->isNullOrUndefined())
+    if (!d)
         return QJSValue();
+
+    if (d->isNullOrUndefined()) {
+        QV4::ExecutionEngine *e = v4Engine(d);
+        e->throwTypeError(QStringLiteral("Cannot read property '%1' of null").arg(name));
+        return QJSValue();
+    }
 
     if (QV4::String *string = d->as<QV4::String>()) {
         if (name == QStringLiteral("length"))
@@ -800,6 +806,11 @@ void QJSManagedValue::setProperty(const QString &name, const QJSValue &value)
 {
     if (!d)
         return;
+
+    if (d->isNullOrUndefined()) {
+        v4Engine(d)->throwTypeError(
+                    QStringLiteral("Value is null and could not be converted to an object"));
+    }
 
     if (QV4::Object *obj = d->as<QV4::Object>()) {
         QV4::ExecutionEngine *v4 = QJSValuePrivate::engine(&value);
