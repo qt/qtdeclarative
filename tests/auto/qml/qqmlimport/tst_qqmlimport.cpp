@@ -181,17 +181,18 @@ void tst_QQmlImport::importPathOrder()
                         << QLatin1String("qrc:/qt-project.org/imports")
                         << qml2Imports;
     QQmlEngine engine;
-    QCOMPARE(expectedImportPaths, engine.importPathList());
+    QCOMPARE(engine.importPathList(), expectedImportPaths);
 
     // Add an import path
     engine.addImportPath(QT_QMLTEST_DATADIR);
-    expectedImportPaths.prepend(QT_QMLTEST_DATADIR);
-    QCOMPARE(expectedImportPaths, engine.importPathList());
+    QFileInfo fi(QT_QMLTEST_DATADIR);
+    expectedImportPaths.prepend(fi.absoluteFilePath());
+    QCOMPARE(engine.importPathList(), expectedImportPaths);
 
     // Add qml2Imports again to make it the first of the list
     engine.addImportPath(qml2Imports);
     expectedImportPaths.move(expectedImportPaths.indexOf(qml2Imports), 0);
-    QCOMPARE(expectedImportPaths, engine.importPathList());
+    QCOMPARE(engine.importPathList(), expectedImportPaths);
 }
 
 Q_DECLARE_METATYPE(QQmlImports::ImportVersion)
