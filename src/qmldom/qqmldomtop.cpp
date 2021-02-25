@@ -285,7 +285,7 @@ void DomUniverse::execQueue()
     ParsingTask t = m_queue.dequeue();
     shared_ptr<DomUniverse> topPtr = t.requestingUniverse.lock();
     if (!topPtr) {
-        myErrors().error(tr("Ignoring calback for loading of %1: universe is not valid anymore").arg(t.canonicalPath)).handle();
+        myErrors().error(tr("Ignoring callback for loading of %1: universe is not valid anymore").arg(t.canonicalPath)).handle();
     }
     Q_ASSERT(false  && "Unhandled kind in queue");
 }
