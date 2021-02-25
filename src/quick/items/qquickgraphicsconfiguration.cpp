@@ -198,7 +198,7 @@ void QQuickGraphicsConfiguration::setDeviceExtensions(const QByteArrayList &exte
     There are cases however, when allowing the 2D content write to the depth
     buffer is not ideal. Consider a 3D scene as an "overlay" on top the 2D
     scene, rendered via Qt Quick 3D using a \l View3D with
-    \l{View3D::renderMode}}{renderMode} set to \c Overlay. In this case, having
+    \l{View3D::renderMode}{renderMode} set to \c Overlay. In this case, having
     the depth buffer filled by 2D content can cause unexpected results. This is
     because the way the 2D scene graph renderer generates and handles depth
     values is not necessarily compatible with how a 3D scene works. This may end
