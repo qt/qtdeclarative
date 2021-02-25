@@ -803,8 +803,11 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
 void QQuickWindow::handleApplicationStateChanged(Qt::ApplicationState state)
 {
     Q_D(QQuickWindow);
-    if (state != Qt::ApplicationActive && d->contentItem)
-        d->deliveryAgentPrivate()->handleWindowDeactivate(this);
+    if (state != Qt::ApplicationActive && d->contentItem) {
+        auto da = d->deliveryAgentPrivate();
+        Q_ASSERT(da);
+        da->handleWindowDeactivate(this);
+    }
 }
 
 /*!
@@ -836,13 +839,21 @@ void QQuickWindowPrivate::dirtyItem(QQuickItem *)
 QQuickItem *QQuickWindow::mouseGrabberItem() const
 {
     Q_D(const QQuickWindow);
-    auto epd = const_cast<QQuickWindowPrivate *>(d)->deliveryAgentPrivate()->mousePointData();
-    if (!epd && d->deliveryAgentPrivate()->eventsInDelivery.isEmpty()) {
+    auto da = const_cast<QQuickWindowPrivate *>(d)->deliveryAgentPrivate();
+    Q_ASSERT(da);
+    // The normal use case is to call this function while an event is being delivered;
+    // but if the caller knows about the event, it should call QPointerEvent::exclusiveGrabber() instead.
+    if (auto epd = da->mousePointData())
+        return qmlobject_cast<QQuickItem *>(epd->exclusiveGrabber);
+
+    if (Q_LIKELY(d->deliveryAgentPrivate()->eventsInDelivery.isEmpty()))
+        // mousePointData() checked that already: it's one reason epd can be null
         qCDebug(lcMouse, "mouse grabber ambiguous: no event is currently being delivered");
-        return qmlobject_cast<QQuickItem *>(QPointingDevicePrivate::get(QPointingDevice::primaryPointingDevice())->
-                                            firstPointExclusiveGrabber());
-    }
-    return qobject_cast<QQuickItem *>(epd->exclusiveGrabber);
+    // If no event is being delivered, we can return "the mouse" grabber,
+    // but in general there could be more than one mouse, could be only a touchscreen etc.
+    // That's why this function is obsolete.
+    return qmlobject_cast<QQuickItem *>(QPointingDevicePrivate::get(QPointingDevice::primaryPointingDevice())->
+                                        firstPointExclusiveGrabber());
 }
 
 void QQuickWindowPrivate::cleanup(QSGNode *n)
@@ -1302,8 +1313,9 @@ QQuickItem *QQuickWindow::contentItem() const
 QQuickItem *QQuickWindow::activeFocusItem() const
 {
     Q_D(const QQuickWindow);
-
-    return d->deliveryAgentPrivate()->activeFocusItem;
+    auto da = d->deliveryAgentPrivate();
+    Q_ASSERT(da);
+    return da->activeFocusItem;
 }
 
 /*!
@@ -1313,9 +1325,10 @@ QQuickItem *QQuickWindow::activeFocusItem() const
 QObject *QQuickWindow::focusObject() const
 {
     Q_D(const QQuickWindow);
-
-    if (!d->inDestructor && d->deliveryAgentPrivate()->activeFocusItem)
-        return d->deliveryAgentPrivate()->activeFocusItem;
+    auto da = d->deliveryAgentPrivate();
+    Q_ASSERT(da);
+    if (!d->inDestructor && da->activeFocusItem)
+        return da->activeFocusItem;
     return const_cast<QQuickWindow*>(this);
 }
 
@@ -1435,7 +1448,8 @@ bool QQuickWindow::event(QEvent *e)
         }
         break;
     case QEvent::WindowDeactivate:
-        d->deliveryAgentPrivate()->handleWindowDeactivate(this);
+        if (auto da = d->deliveryAgentPrivate())
+            da->handleWindowDeactivate(this);
         break;
     default:
         break;
@@ -1453,14 +1467,18 @@ bool QQuickWindow::event(QEvent *e)
 void QQuickWindow::keyPressEvent(QKeyEvent *e)
 {
     Q_D(QQuickWindow);
-    d->deliveryAgentPrivate()->deliverKeyEvent(e);
+    auto da = d->deliveryAgentPrivate();
+    Q_ASSERT(da);
+    da->deliverKeyEvent(e);
 }
 
 /*! \reimp */
 void QQuickWindow::keyReleaseEvent(QKeyEvent *e)
 {
     Q_D(QQuickWindow);
-    d->deliveryAgentPrivate()->deliverKeyEvent(e);
+    auto da = d->deliveryAgentPrivate();
+    Q_ASSERT(da);
+    da->deliverKeyEvent(e);
 }
 
 #if QT_CONFIG(wheelevent)
@@ -1468,7 +1486,9 @@ void QQuickWindow::keyReleaseEvent(QKeyEvent *e)
 void QQuickWindow::wheelEvent(QWheelEvent *event)
 {
     Q_D(QQuickWindow);
-    d->deliveryAgentPrivate()->deliverSinglePointEventUntilAccepted(event);
+    auto da = d->deliveryAgentPrivate();
+    Q_ASSERT(da);
+    da->deliverSinglePointEventUntilAccepted(event);
 }
 #endif // wheelevent
 
@@ -1477,7 +1497,9 @@ void QQuickWindow::wheelEvent(QWheelEvent *event)
 void QQuickWindow::tabletEvent(QTabletEvent *event)
 {
     Q_D(QQuickWindow);
-    d->deliveryAgentPrivate()->deliverPointerEvent(event);
+    auto da = d->deliveryAgentPrivate();
+    Q_ASSERT(da);
+    da->deliverPointerEvent(event);
 }
 #endif // tabletevent
 
@@ -1485,31 +1507,41 @@ void QQuickWindow::tabletEvent(QTabletEvent *event)
 void QQuickWindow::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickWindow);
-    d->deliveryAgentPrivate()->handleMouseEvent(event);
+    auto da = d->deliveryAgentPrivate();
+    Q_ASSERT(da);
+    da->handleMouseEvent(event);
 }
 /*! \reimp */
 void QQuickWindow::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickWindow);
-    d->deliveryAgentPrivate()->handleMouseEvent(event);
+    auto da = d->deliveryAgentPrivate();
+    Q_ASSERT(da);
+    da->handleMouseEvent(event);
 }
 /*! \reimp */
 void QQuickWindow::mouseDoubleClickEvent(QMouseEvent *event)
 {
     Q_D(QQuickWindow);
-    d->deliveryAgentPrivate()->handleMouseEvent(event);
+    auto da = d->deliveryAgentPrivate();
+    Q_ASSERT(da);
+    da->handleMouseEvent(event);
 }
 /*! \reimp */
 void QQuickWindow::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickWindow);
-    d->deliveryAgentPrivate()->handleMouseEvent(event);
+    auto da = d->deliveryAgentPrivate();
+    Q_ASSERT(da);
+    da->handleMouseEvent(event);
 }
 
 void QQuickWindowPrivate::flushFrameSynchronousEvents()
 {
     Q_Q(QQuickWindow);
-    deliveryAgentPrivate()->flushFrameSynchronousEvents(q);
+    auto da = deliveryAgentPrivate();
+    Q_ASSERT(da);
+    da->flushFrameSynchronousEvents(q);
 }
 
 #if QT_CONFIG(cursor)
