@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
 
     QSettings settings;
     QString style = QQuickStyle::name();
-    if (!style.isEmpty())
+    if (!style.isEmpty() && !QQuickStylePrivate::isUsingDefaultStyle())
         settings.setValue("style", style);
     else
         QQuickStyle::setStyle(settings.value("style").isValid() ? settings.value("style").toString() : "Imagine");
