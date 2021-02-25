@@ -387,6 +387,8 @@ bool QQuickWheelHandler::wantsPointerEvent(QPointerEvent *event)
 void QQuickWheelHandler::handleEventPoint(QPointerEvent *ev, QEventPoint &point)
 {
     Q_D(QQuickWheelHandler);
+    QQuickSinglePointHandler::handleEventPoint(ev, point);
+
     if (ev->type() != QEvent::Wheel)
         return;
     const QWheelEvent *event = static_cast<const QWheelEvent *>(ev);

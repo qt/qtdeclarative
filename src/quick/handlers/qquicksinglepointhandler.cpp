@@ -136,11 +136,19 @@ void QQuickSinglePointHandler::handlePointerEventImpl(QPointerEvent *event)
     Q_ASSERT(currentPoint);
     d->pointInfo.reset(event, *currentPoint);
     handleEventPoint(event, *currentPoint);
-    if (currentPoint->state() == QEventPoint::Released && (static_cast<QSinglePointEvent *>(event)->buttons() & acceptedButtons()) == Qt::NoButton) {
-        setExclusiveGrab(event, *currentPoint, false);
-        d->reset();
-    }
     emit pointChanged();
+}
+
+void QQuickSinglePointHandler::handleEventPoint(QPointerEvent *event, QEventPoint &point)
+{
+    if (point.state() != QEventPoint::Released)
+        return;
+
+    const Qt::MouseButtons releasedButtons = static_cast<QSinglePointEvent *>(event)->buttons();
+    if ((releasedButtons & acceptedButtons()) == Qt::NoButton) {
+        setExclusiveGrab(event, point, false);
+        d_func()->reset();
+    }
 }
 
 void QQuickSinglePointHandler::onGrabChanged(QQuickPointerHandler *grabber, QPointingDevice::GrabTransition transition, QPointerEvent *event, QEventPoint &point)
