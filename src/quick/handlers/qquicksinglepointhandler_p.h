@@ -76,7 +76,7 @@ protected:
 
     bool wantsPointerEvent(QPointerEvent *event) override;
     void handlePointerEventImpl(QPointerEvent *event) override;
-    virtual void handleEventPoint(QPointerEvent *event, QEventPoint &point) = 0;
+    virtual void handleEventPoint(QPointerEvent *event, QEventPoint &point);
 
     QEventPoint &currentPoint(QPointerEvent *ev);
     void onGrabChanged(QQuickPointerHandler *grabber, QPointingDevice::GrabTransition transition, QPointerEvent *event, QEventPoint &point) override;

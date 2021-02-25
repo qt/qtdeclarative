@@ -162,6 +162,8 @@ void QQuickTapHandler::handleEventPoint(QPointerEvent *event, QEventPoint &point
     default:
         break;
     }
+
+    QQuickSinglePointHandler::handleEventPoint(event, point);
 }
 
 /*!

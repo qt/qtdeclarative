@@ -156,6 +156,7 @@ void QQuickPointHandler::handleEventPoint(QPointerEvent *event, QEventPoint &poi
     }
     point.setAccepted(false); // Just lurking... don't interfere with propagation
     emit translationChanged();
+    QQuickSinglePointHandler::handleEventPoint(event, point);
 }
 
 QVector2D QQuickPointHandler::translation() const
