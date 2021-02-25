@@ -1,0 +1,15 @@
+# Generated from manual.pro.
+
+add_subdirectory(buttons)
+add_subdirectory(gifs)
+add_subdirectory(fonts)
+add_subdirectory(headerview)
+add_subdirectory(screenshots)
+add_subdirectory(styles)
+add_subdirectory(testbench)
+if(QT_FEATURE_systemtrayicon)
+    add_subdirectory(systemtrayicon)
+endif()
+if(TARGET Qt::Widgets)
+    add_subdirectory(viewinqwidget)
+endif()
