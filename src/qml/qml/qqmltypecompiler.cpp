@@ -363,8 +363,6 @@ bool SignalHandlerResolver::resolveSignalHandlerExpressions(const QmlIR::Object 
         if (signalName.endsWith(QLatin1String("Changed")))
             qPropertyName = signalName.mid(0, signalName.length() - static_cast<int>(strlen("Changed")));
 
-        QList<QString> parameters;
-
         bool notInRevision = false;
         QQmlPropertyData * const signal = resolver.signal(signalName, &notInRevision);
         QQmlPropertyData * const signalPropertyData = resolver.property(signalName, /*notInRevision ptr*/nullptr);
@@ -389,7 +387,6 @@ bool SignalHandlerResolver::resolveSignalHandlerExpressions(const QmlIR::Object 
                 } else if (illegalNames.contains(param)) {
                     COMPILE_EXCEPTION(binding, tr("Signal parameter \"%1\" hides global variable.").arg(param));
                 }
-                parameters += param;
             }
         } else if (isPropertyObserver) {
             finalSignalHandlerPropertyName = qPropertyName;
@@ -438,8 +435,6 @@ bool SignalHandlerResolver::resolveSignalHandlerExpressions(const QmlIR::Object 
                 // keeping the binding as a regular property assignment.
                 continue;
             }
-
-            parameters = entry.value();
         }
 
         // Binding object to signal means connect the signal to the object's default method.
@@ -456,44 +451,6 @@ bool SignalHandlerResolver::resolveSignalHandlerExpressions(const QmlIR::Object 
             }
         }
 
-        QQmlJS::MemoryPool *pool = compiler->memoryPool();
-
-        QQmlJS::AST::FormalParameterList *paramList = nullptr;
-        for (const QString &param : qAsConst(parameters)) {
-            QStringView paramNameRef = compiler->newStringRef(param);
-
-            QQmlJS::AST::PatternElement *b = new (pool) QQmlJS::AST::PatternElement(paramNameRef, nullptr);
-            b->isInjectedSignalParameter = true;
-            paramList = new (pool) QQmlJS::AST::FormalParameterList(paramList, b);
-        }
-
-        if (paramList)
-            paramList = paramList->finish(pool);
-
-        QmlIR::CompiledFunctionOrExpression *foe = obj->functionsAndExpressions->slowAt(binding->value.compiledScriptIndex);
-        QQmlJS::AST::FunctionDeclaration *functionDeclaration = nullptr;
-        if (QQmlJS::AST::ExpressionStatement *es = QQmlJS::AST::cast<QQmlJS::AST::ExpressionStatement*>(foe->node)) {
-            if (QQmlJS::AST::FunctionExpression *fe = QQmlJS::AST::cast<QQmlJS::AST::FunctionExpression*>(es->expression)) {
-                functionDeclaration = new (pool) QQmlJS::AST::FunctionDeclaration(fe->name, fe->formals, fe->body);
-                functionDeclaration->functionToken = fe->functionToken;
-                functionDeclaration->identifierToken = fe->identifierToken;
-                functionDeclaration->lparenToken = fe->lparenToken;
-                functionDeclaration->rparenToken = fe->rparenToken;
-                functionDeclaration->lbraceToken = fe->lbraceToken;
-                functionDeclaration->rbraceToken = fe->rbraceToken;
-            }
-        }
-        if (!functionDeclaration) {
-            QQmlJS::AST::Statement *statement = static_cast<QQmlJS::AST::Statement*>(foe->node);
-            QQmlJS::AST::StatementList *body = new (pool) QQmlJS::AST::StatementList(statement);
-            body = body->finish();
-
-            functionDeclaration = new (pool) QQmlJS::AST::FunctionDeclaration(compiler->newStringRef(stringAt(binding->propertyNameIndex)), paramList, body);
-            functionDeclaration->lbraceToken = functionDeclaration->functionToken
-                    = foe->node->firstSourceLocation();
-            functionDeclaration->rbraceToken = foe->node->lastSourceLocation();
-        }
-        foe->node = functionDeclaration;
         binding->propertyNameIndex = compiler->registerString(finalSignalHandlerPropertyName);
         binding->flags |= flags;
     }

@@ -38,6 +38,8 @@
 #include <QtQml/private/qqmlengine_p.h>
 #include <QtQml/private/qqmltypedata_p.h>
 #include <QtQml/private/qqmltypeloader_p.h>
+#include <QtQml/private/qqmlirbuilder_p.h>
+#include <QtQml/private/qqmlirloader_p.h>
 #include "../../shared/testhttpserver.h"
 #include "../../shared/util.h"
 
@@ -65,6 +67,8 @@ private slots:
     void declarativeCppType();
     void circularDependency();
     void declarativeCppAndQmlDir();
+    void signalHandlersAreCompatible();
+
 private:
     void checkSingleton(const QString & dataDirectory);
 };
@@ -658,6 +662,69 @@ void tst_QQMLTypeLoader::declarativeCppAndQmlDir()
     QVERIFY2(!component.isError(), qPrintable(component.errorString()));
     QScopedPointer<QObject> root(component.create());
     QCOMPARE(root->objectName(), "Singleton");
+}
+
+static void getCompilationUnitAndRuntimeInfo(QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
+                                             QList<int> &runtimeFunctionIndices, const QUrl &url,
+                                             QQmlEngine *engine)
+{
+    QQmlTypeLoader &loader = QQmlEnginePrivate::get(engine)->typeLoader;
+    auto typeData = loader.getType(url);
+    QVERIFY(typeData);
+
+    if (typeData->isError()) {
+        const auto errors = typeData->errors();
+        for (const QQmlError &e : errors)
+            qDebug().noquote() << e.toString();
+        QVERIFY(!typeData->isError()); // this returns
+    }
+
+    unit = typeData->compilationUnit();
+    QVERIFY(unit);
+
+    // the QmlIR::Document is deleted once loader.getType() is complete, so
+    // restore it
+    QmlIR::Document restoredIrDocument(false);
+    QQmlIRLoader irLoader(unit->unitData(), &restoredIrDocument);
+    irLoader.load();
+    QCOMPARE(restoredIrDocument.objects.size(), 1);
+
+    const QmlIR::Object *irRoot = restoredIrDocument.objects.at(0);
+    runtimeFunctionIndices = QList<int>(irRoot->runtimeFunctionIndices.begin(),
+                                        irRoot->runtimeFunctionIndices.end());
+}
+
+void tst_QQMLTypeLoader::signalHandlersAreCompatible()
+{
+    QQmlEngine engine;
+
+    QQmlRefPointer<QV4::ExecutableCompilationUnit> unitFromCachegen;
+    QList<int> runtimeFunctionIndicesFromCachegen;
+    getCompilationUnitAndRuntimeInfo(unitFromCachegen, runtimeFunctionIndicesFromCachegen,
+                                     // use qmlcachegen version
+                                     QUrl("qrc:/data/compilercompatibility/signalHandlers.qml"),
+                                     &engine);
+    if (QTest::currentTestFailed())
+        return;
+
+    QQmlRefPointer<QV4::ExecutableCompilationUnit> unitFromTypeCompiler;
+    QList<int> runtimeFunctionIndicesFromTypeCompiler;
+    getCompilationUnitAndRuntimeInfo(unitFromTypeCompiler, runtimeFunctionIndicesFromTypeCompiler,
+                                     // use qqmltypecompiler version
+                                     testFileUrl("compilercompatibility/signalHandlers.qml"),
+                                     &engine);
+    if (QTest::currentTestFailed())
+        return;
+
+    // this is a "bare minimum" test, but if this succeeds, we could test other
+    // things elsewhere
+    QCOMPARE(runtimeFunctionIndicesFromCachegen, runtimeFunctionIndicesFromTypeCompiler);
+    QCOMPARE(unitFromCachegen->runtimeFunctions.size(),
+             unitFromTypeCompiler->runtimeFunctions.size());
+    // make sure that units really come from different places (the machinery
+    // could in theory be smart enough to figure the qmlcachegen cached
+    // version), fairly questionable check but better than nothing
+    QVERIFY(unitFromCachegen->url() != unitFromTypeCompiler->url());
 }
 
 QTEST_MAIN(tst_QQMLTypeLoader)

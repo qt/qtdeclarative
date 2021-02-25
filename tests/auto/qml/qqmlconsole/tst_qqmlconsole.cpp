@@ -155,9 +155,10 @@ void tst_qqmlconsole::tracing()
 {
     QUrl testUrl = testFileUrl("tracing.qml");
 
-    QString traceText =
-            QString::fromLatin1("tracing (%1:%2)\n").arg(testUrl.toString()).arg(37) +
-            QString::fromLatin1("onCompleted (%1:%2)").arg(testUrl.toString()).arg(41);
+    QString traceText = QString::fromLatin1("tracing (%1:%2)\n").arg(testUrl.toString()).arg(37)
+            + QString::fromLatin1("expression for onCompleted (%1:%2)")
+                      .arg(testUrl.toString())
+                      .arg(41);
 
     QTest::ignoreMessage(QtDebugMsg, qPrintable(traceText));
 
@@ -186,12 +187,16 @@ void tst_qqmlconsole::testAssert()
     QUrl testUrl = testFileUrl("assert.qml");
 
     // assert()
-    QString assert1 = "This will fail\n" +
-            QString::fromLatin1("onCompleted (%1:%2)").arg(testUrl.toString()).arg(41);
+    QString assert1 = "This will fail\n"
+            + QString::fromLatin1("expression for onCompleted (%1:%2)")
+                      .arg(testUrl.toString())
+                      .arg(41);
 
-    QString assert2 = "This will fail too\n" +
-            QString::fromLatin1("assertFail (%1:%2)\n").arg(testUrl.toString()).arg(34) +
-            QString::fromLatin1("onCompleted (%1:%2)").arg(testUrl.toString()).arg(46);
+    QString assert2 = "This will fail too\n"
+            + QString::fromLatin1("assertFail (%1:%2)\n").arg(testUrl.toString()).arg(34)
+            + QString::fromLatin1("expression for onCompleted (%1:%2)")
+                      .arg(testUrl.toString())
+                      .arg(46);
 
     QTest::ignoreMessage(QtCriticalMsg, qPrintable(assert1));
     QTest::ignoreMessage(QtCriticalMsg, qPrintable(assert2));
@@ -207,12 +212,16 @@ void tst_qqmlconsole::exception()
     QUrl testUrl = testFileUrl("exception.qml");
 
     // exception()
-    QString exception1 = "Exception 1\n" +
-            QString::fromLatin1("onCompleted (%1:%2)").arg(testUrl.toString()).arg(38);
+    QString exception1 = "Exception 1\n"
+            + QString::fromLatin1("expression for onCompleted (%1:%2)")
+                      .arg(testUrl.toString())
+                      .arg(38);
 
-    QString exception2 = "Exception 2\n" +
-            QString::fromLatin1("exceptionFail (%1:%2)\n").arg(testUrl.toString()).arg(33) +
-            QString::fromLatin1("onCompleted (%1:%2)").arg(testUrl.toString()).arg(43);
+    QString exception2 = "Exception 2\n"
+            + QString::fromLatin1("exceptionFail (%1:%2)\n").arg(testUrl.toString()).arg(33)
+            + QString::fromLatin1("expression for onCompleted (%1:%2)")
+                      .arg(testUrl.toString())
+                      .arg(43);
 
     QTest::ignoreMessage(QtCriticalMsg, qPrintable(exception1));
     QTest::ignoreMessage(QtCriticalMsg, qPrintable(exception2));

@@ -48,6 +48,7 @@ qt_add_resources(tst_qqmltypeloader "typeloader"
     FILES
         "declarative/import/for/typeloader/test/qmldir"
         "declarative/import/for/typeloader/test/Singleton.qml"
+        "data/compilercompatibility/signalHandlers.qml"
 )
 
 set_target_properties(tst_qqmltypeloader PROPERTIES

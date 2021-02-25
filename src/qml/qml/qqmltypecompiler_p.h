@@ -172,10 +172,9 @@ protected:
     QQmlTypeCompiler *compiler;
 };
 
-// "Converts" signal expressions to full-fleged function declarations with
-// parameters taken from the signal declarations
-// It also updates the QV4::CompiledData::Binding objects to set the property name
-// to the final signal name (onTextChanged -> textChanged) and sets the IsSignalExpression flag.
+// Resolves signal handlers. Updates the QV4::CompiledData::Binding objects to
+// set the property name to the final signal name (onTextChanged -> textChanged)
+// and sets the IsSignalExpression flag.
 struct SignalHandlerResolver : public QQmlCompilePass
 {
     Q_DECLARE_TR_FUNCTIONS(SignalHandlerResolver)

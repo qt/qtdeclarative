@@ -6176,7 +6176,7 @@ void tst_qqmllanguage::warnOnInjectedParameters()
 {
    QQmlEngine e;
    QQmlComponent c(&engine);
-   QTest::ignoreMessage(QtWarningMsg, "qrc:/foo.qml:4:18 Parameter \"bar\" is not declared."
+   QTest::ignoreMessage(QtWarningMsg, "qrc:/foo.qml:4:5 Parameter \"bar\" is not declared."
                                       " Injection of parameters into signal handlers is deprecated."
                                       " Use JavaScript functions with formal parameters instead.");
    c.setData("import QtQml\n"

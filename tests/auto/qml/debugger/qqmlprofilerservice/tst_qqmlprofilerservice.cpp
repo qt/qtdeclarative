@@ -657,8 +657,8 @@ void tst_QQmlProfilerService::signalSourceLocation()
                                               column));
     };
 
-    VERIFY(MessageListQML, 4, createType(8, 28), CheckType | CheckNumbers, m_rangeStart);
-    VERIFY(MessageListQML, 6, createType(7, 21), CheckType | CheckNumbers, m_rangeEnd);
+    VERIFY(MessageListQML, 4, createType(8, 5), CheckType | CheckNumbers, m_rangeStart);
+    VERIFY(MessageListQML, 6, createType(7, 5), CheckType | CheckNumbers, m_rangeEnd);
 }
 
 void tst_QQmlProfilerService::javascript()
