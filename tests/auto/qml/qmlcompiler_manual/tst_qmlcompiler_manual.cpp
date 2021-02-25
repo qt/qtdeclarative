@@ -53,6 +53,7 @@ private slots:
     void changingBindings();
     void propertyAlias();
     void propertyChangeHandler();
+    void propertyReturningFunction();
 
 private:
     void signalHandlers_impl(const QUrl &url);
@@ -92,6 +93,8 @@ static constexpr int PROPERTY_ALIAS_GET_ALIAS_VALUE = 7;
 
 static constexpr int PROPERTY_CHANGE_HANDLER_P_BINDING = 0;
 static constexpr int PROPERTY_CHANGE_HANDLER_ON_P_CHANGED = 1;
+
+static constexpr int PROPERTY_RETURNING_FUNCTION_F_BINDING = 0;
 };
 
 // test utility function for type erasure. the "real" code would be
@@ -752,6 +755,59 @@ void tst_qmlcompiler_manual::propertyChangeHandler()
     created.setWatcher(-47);
     created.setP(96);
     QCOMPARE(created.property("watcher").toInt(), 96);
+}
+
+class ANON_propertyReturningFunction : public QObject
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+    Q_PROPERTY(int counter READ getCounter WRITE setCounter)
+    Q_PROPERTY(QVariant f READ getF WRITE setF BINDABLE bindableF)
+
+public:
+    // test workaround: the url is resolved by the test base class, so use
+    // member variable to store the resolved url used as argument in engine
+    // evaluation of runtime functions
+    QUrl url;
+
+    ANON_propertyReturningFunction(QObject *parent = nullptr) : QObject(parent)
+    {
+        QPropertyBinding<QVariant> ANON_propertyReturningFunction_f_binding(
+                [&]() {
+                    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+                    const auto index = FunctionIndices::PROPERTY_RETURNING_FUNCTION_F_BINDING;
+                    return qjsvalue_cast<QVariant>(e->executeRuntimeFunction(url, index, this));
+                },
+                QT_PROPERTY_DEFAULT_BINDING_LOCATION);
+        bindableF().setBinding(ANON_propertyReturningFunction_f_binding);
+    }
+
+    int getCounter() { return counter.value(); }
+    QVariant getF() { return f.value(); }
+
+    void setCounter(int counter_) { counter.setValue(counter_); }
+    void setF(QVariant f_) { f.setValue(f_); }
+
+    QBindable<QVariant> bindableF() { return QBindable<QVariant>(&f); }
+
+    QProperty<int> counter;
+    QProperty<QVariant> f;
+};
+
+void tst_qmlcompiler_manual::propertyReturningFunction()
+{
+    ANON_propertyReturningFunction created;
+    created.url = testFileUrl("propertyReturningFunction.qml"); // workaround
+    QQmlEngine e;
+    e.setContextForObject(&created, e.rootContext());
+
+    QCOMPARE(created.getCounter(), 0);
+    QVariant function = created.getF();
+    Q_UNUSED(function); // ignored as it can't be used currently
+    QCOMPARE(created.getCounter(), 0);
+
+    created.property("f");
+    QCOMPARE(created.getCounter(), 0);
 }
 
 QTEST_MAIN(tst_qmlcompiler_manual)
