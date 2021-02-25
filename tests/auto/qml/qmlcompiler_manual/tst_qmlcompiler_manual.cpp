@@ -69,11 +69,11 @@ private:
 namespace FunctionIndices {
 static constexpr int HELLO_WORLD_GREETING_BINDING = 0;
 
-static constexpr int SIGNAL_HANDLERS_ON_SIGNAL1 = 0;
-static constexpr int SIGNAL_HANDLERS_ON_SIGNAL2 = 2;
-static constexpr int SIGNAL_HANDLERS_QML_EMIT_SIGNAL1 = 3;
-static constexpr int SIGNAL_HANDLERS_QML_EMIT_SIGNAL2 = 4;
-static constexpr int SIGNAL_HANDLERS_QML_EMIT_SIGNAL2_WITH_ARGS = 5;
+static constexpr int SIGNAL_HANDLERS_ON_SIGNAL1 = 1;
+static constexpr int SIGNAL_HANDLERS_ON_SIGNAL2 = 3;
+static constexpr int SIGNAL_HANDLERS_QML_EMIT_SIGNAL1 = 4;
+static constexpr int SIGNAL_HANDLERS_QML_EMIT_SIGNAL2 = 5;
+static constexpr int SIGNAL_HANDLERS_QML_EMIT_SIGNAL2_WITH_ARGS = 6;
 
 static constexpr int JS_FUNCTIONS_FUNC1 = 0;
 static constexpr int JS_FUNCTIONS_FUNC2 = 1;
