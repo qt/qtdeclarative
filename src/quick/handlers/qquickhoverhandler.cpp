@@ -139,7 +139,6 @@ void QQuickHoverHandler::handleEventPoint(QPointerEvent *ev, QEventPoint &point)
     else if (QQuickDeliveryAgentPrivate::isTabletEvent(ev))
         m_hoveredTablet = true;
     setHovered(hovered);
-    setPassiveGrab(ev, point);
 }
 
 /*!

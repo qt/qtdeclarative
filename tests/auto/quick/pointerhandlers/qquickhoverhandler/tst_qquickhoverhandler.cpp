@@ -190,8 +190,8 @@ void tst_HoverHandler::mouseAreaAndUnderlyingHoverHandler()
 #endif
 
     QTest::mouseMove(window, buttonCenter);
-    QCOMPARE(topSidebarHH->isHovered(), true);
-    QCOMPARE(sidebarHoveredSpy.count(), 1);
+    QCOMPARE(topSidebarHH->isHovered(), false);
+    QCOMPARE(sidebarHoveredSpy.count(), 2);
     QCOMPARE(buttonMA->hovered(), true);
     QCOMPARE(buttonHoveredSpy.count(), 1);
 #if QT_CONFIG(cursor)
@@ -200,7 +200,7 @@ void tst_HoverHandler::mouseAreaAndUnderlyingHoverHandler()
 
     QTest::mouseMove(window, rightOfButton);
     QCOMPARE(topSidebarHH->isHovered(), true);
-    QCOMPARE(sidebarHoveredSpy.count(), 1);
+    QCOMPARE(sidebarHoveredSpy.count(), 3);
     QCOMPARE(buttonMA->hovered(), false);
     QCOMPARE(buttonHoveredSpy.count(), 2);
 #if QT_CONFIG(cursor)
@@ -209,7 +209,7 @@ void tst_HoverHandler::mouseAreaAndUnderlyingHoverHandler()
 
     QTest::mouseMove(window, outOfSidebar);
     QCOMPARE(topSidebarHH->isHovered(), false);
-    QCOMPARE(sidebarHoveredSpy.count(), 2);
+    QCOMPARE(sidebarHoveredSpy.count(), 4);
     QCOMPARE(buttonMA->hovered(), false);
     QCOMPARE(buttonHoveredSpy.count(), 2);
 #if QT_CONFIG(cursor)
@@ -256,8 +256,8 @@ void tst_HoverHandler::hoverHandlerAndUnderlyingMouseArea()
 #endif
 
     QTest::mouseMove(window, buttonCenter);
-    QCOMPARE(bottomSidebarMA->hovered(), false);
-    QCOMPARE(sidebarHoveredSpy.count(), 2);
+    QCOMPARE(bottomSidebarMA->hovered(), true);
+    QCOMPARE(sidebarHoveredSpy.count(), 1);
     QCOMPARE(buttonHH->isHovered(), true);
     QCOMPARE(buttonHoveredSpy.count(), 1);
 #if QT_CONFIG(cursor)
@@ -266,7 +266,7 @@ void tst_HoverHandler::hoverHandlerAndUnderlyingMouseArea()
 
     QTest::mouseMove(window, rightOfButton);
     QCOMPARE(bottomSidebarMA->hovered(), true);
-    QCOMPARE(sidebarHoveredSpy.count(), 3);
+    QCOMPARE(sidebarHoveredSpy.count(), 1);
     QCOMPARE(buttonHH->isHovered(), false);
     QCOMPARE(buttonHoveredSpy.count(), 2);
 #if QT_CONFIG(cursor)
@@ -275,7 +275,7 @@ void tst_HoverHandler::hoverHandlerAndUnderlyingMouseArea()
 
     QTest::mouseMove(window, outOfSidebar);
     QCOMPARE(bottomSidebarMA->hovered(), false);
-    QCOMPARE(sidebarHoveredSpy.count(), 4);
+    QCOMPARE(sidebarHoveredSpy.count(), 2);
     QCOMPARE(buttonHH->isHovered(), false);
     QCOMPARE(buttonHoveredSpy.count(), 2);
 #if QT_CONFIG(cursor)
