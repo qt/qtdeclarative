@@ -66,10 +66,12 @@ function(qt_internal_add_qml_module target)
     qt_remove_args(plugin_args
         ARGS_TO_REMOVE
             ${target}
-            ${qml_module_multi_args}
+            ${qml_module_optional_args}
             ${qml_module_single_args}
+            ${qml_module_multi_args}
         ALL_ARGS
             ${__qt_add_plugin_optional_args}
+            ${qml_module_optional_args}
             ${__qt_add_plugin_single_args}
             ${qml_module_single_args}
             ${__qt_add_plugin_multi_args}
