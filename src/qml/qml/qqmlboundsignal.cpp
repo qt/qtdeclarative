@@ -64,8 +64,7 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlBoundSignalExpression::QQmlBoundSignalExpression(
-        QObject *target, int index, const QQmlRefPointer<QQmlContextData> &ctxt, QObject *scope,
+QQmlBoundSignalExpression::QQmlBoundSignalExpression(const QObject *target, int index, const QQmlRefPointer<QQmlContextData> &ctxt, QObject *scope,
         const QString &expression, const QString &fileName, quint16 line, quint16 column,
         const QString &handlerName, const QString &parameterString)
     : QQmlJavaScriptExpression(),
@@ -104,8 +103,7 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(
     setupFunction(context, f->function());
 }
 
-QQmlBoundSignalExpression::QQmlBoundSignalExpression(
-        QObject *target, int index, const QQmlRefPointer<QQmlContextData> &ctxt,
+QQmlBoundSignalExpression::QQmlBoundSignalExpression(const QObject *target, int index, const QQmlRefPointer<QQmlContextData> &ctxt,
         QObject *scopeObject, QV4::Function *function, QV4::ExecutionContext *scope)
     : QQmlJavaScriptExpression(),
       m_index(index),

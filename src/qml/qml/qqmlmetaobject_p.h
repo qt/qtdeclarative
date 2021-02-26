@@ -75,7 +75,7 @@ public:
     typedef QVarLengthArray<int, 9> ArgTypeStorage;
 
     inline QQmlMetaObject() = default;
-    inline QQmlMetaObject(QObject *);
+    inline QQmlMetaObject(const QObject *);
     inline QQmlMetaObject(const QMetaObject *);
     inline QQmlMetaObject(QQmlPropertyCache *);
     inline QQmlMetaObject(const QQmlMetaObject &);
@@ -108,7 +108,7 @@ protected:
 
 };
 
-QQmlMetaObject::QQmlMetaObject(QObject *o)
+QQmlMetaObject::QQmlMetaObject(const QObject *o)
 {
     if (o)
         _m = o->metaObject();
