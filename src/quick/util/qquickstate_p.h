@@ -57,6 +57,9 @@
 #include <QtCore/qsharedpointer.h>
 #include <private/qtquickglobal_p.h>
 #include <private/qqmlabstractbinding_p.h>
+#include <private/qqmlanybinding_p.h>
+
+#include <QtCore/private/qproperty_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -81,8 +84,8 @@ public:
     QVariant fromValue;
     QVariant toValue;
 
-    QQmlAbstractBinding::Ptr fromBinding;
-    QQmlAbstractBinding::Ptr toBinding;
+    QQmlAnyBinding fromBinding;
+    QQmlAnyBinding toBinding;
     QQuickStateActionEvent *event;
 
     //strictly for matching
@@ -191,13 +194,13 @@ public:
 
     bool containsPropertyInRevertList(QObject *target, const QString &name) const;
     bool changeValueInRevertList(QObject *target, const QString &name, const QVariant &revertValue);
-    bool changeBindingInRevertList(QObject *target, const QString &name, QQmlAbstractBinding *binding);
+    bool changeBindingInRevertList(QObject *target, const QString &name, QQmlAnyBinding binding);
     bool removeEntryFromRevertList(QObject *target, const QString &name);
     void addEntryToRevertList(const QQuickStateAction &action);
     void removeAllEntriesFromRevertList(QObject *target);
     void addEntriesToRevertList(const QList<QQuickStateAction> &actions);
     QVariant valueInRevertList(QObject *target, const QString &name) const;
-    QQmlAbstractBinding *bindingInRevertList(QObject *target, const QString &name) const;
+    QQmlAnyBinding bindingInRevertList(QObject *target, const QString &name) const;
 
     bool isStateActive() const;
 

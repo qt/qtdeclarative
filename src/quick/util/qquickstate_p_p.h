@@ -76,9 +76,7 @@ public:
         m_event = a.event;
         if (state == StartState) {
             m_value = a.fromValue;
-            if (QQmlPropertyPrivate::binding(m_property)) {
-                m_binding = QQmlPropertyPrivate::binding(m_property);
-            }
+            m_binding = QQmlAnyBinding::ofProperty(m_property);
             m_reverseEvent = true;
         } else {
             m_value = a.toValue;
@@ -135,14 +133,14 @@ public:
         return m_value;
     }
 
-    void setBinding(QQmlAbstractBinding *binding)
+    void setBinding(QQmlAnyBinding binding)
     {
         m_binding = binding;
     }
 
-    QQmlAbstractBinding *binding() const
+    QQmlAnyBinding binding() const
     {
-        return m_binding.data();
+        return m_binding;
     }
 
     QObject *specifiedObject() const
@@ -168,7 +166,7 @@ public:
 private:
     QQmlProperty m_property;
     QVariant m_value;
-    QQmlAbstractBinding::Ptr m_binding;
+    QQmlAnyBinding m_binding;
     QObject *m_specifiedObject;
     QString m_specifiedProperty;
     QQuickStateActionEvent *m_event;

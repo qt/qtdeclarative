@@ -76,6 +76,17 @@ private:
     int m_prop;
 };
 
+class MyBindable : public QQuickItem
+{
+    Q_OBJECT
+    Q_PROPERTY(int prop READ prop WRITE setProp BINDABLE bindableProp)
+public:
+    int prop() {return m_prop; }
+    void setProp(int i) { m_prop = i; }
+    QBindable<int> bindableProp() { return &m_prop; }
+    Q_OBJECT_BINDABLE_PROPERTY(MyBindable, int, m_prop);
+};
+
 QML_DECLARE_TYPE(MyRect)
 QML_DECLARE_TYPEINFO(MyRect, QML_HAS_ATTACHED_PROPERTIES)
 
@@ -190,6 +201,7 @@ private slots:
     void trivialWhen();
     void parentChangeCorrectReversal();
     void revertNullObjectBinding();
+    void bindableProperties();
 };
 
 void tst_qquickstates::initTestCase()
@@ -1662,7 +1674,7 @@ void tst_qquickstates::revertListMemoryLeak()
 
         item->setState("testState");
 
-        QQmlAbstractBinding *binding = state->bindingInRevertList(item.get(), "height");
+        QQmlAbstractBinding *binding = state->bindingInRevertList(item.get(), "height").asAbstractBinding();
         QVERIFY(binding);
         bindingPtr = binding;
         QVERIFY(bindingPtr->ref > 1);
@@ -1716,6 +1728,44 @@ void tst_qquickstates::revertNullObjectBinding()
     QTest::qWait(10);
     QQmlProperty state2Active(root.get(), "state2Active");
     state2Active.write(false);
+}
+
+void tst_qquickstates::bindableProperties()
+{
+    QQmlEngine engine;
+    qmlRegisterType<MyBindable>("Qt.test", 1, 0, "MyBindable");
+    QQmlComponent c(&engine, testFileUrl("bindableProperties.qml"));
+    QScopedPointer<MyBindable> root { qobject_cast<MyBindable *>(c.create()) };
+    QVERIFY(root);
+    {
+        // initial sanity check
+        QCOMPARE(root->prop(), 84);
+        QVERIFY(root->bindableProp().hasBinding());
+        root->setX(0);
+        QCOMPARE(root->prop(), 42);
+    }
+    {
+        // When the state changes,
+        root->setProperty("toggle", true);
+        // the value gets updated,
+        QCOMPARE(root->prop(), 5);
+        // the binding is accessible from C++,
+        QVERIFY(root->bindableProp().hasBinding());
+        // and the new binding is active.
+        root->setHeight(10);
+        QCOMPARE(root->prop(), 10);
+    }
+    {
+        // After changing the state back,
+        root->setProperty("toggle", false);
+        // the old value is restored,
+        QCOMPARE(root->prop(), 42);
+        // the binding is accessible from C++,
+        QVERIFY(root->bindableProp().hasBinding());
+        // and the old binding is active.
+        root->setX(42);
+        QCOMPARE(root->prop(), 84);
+    }
 }
 
 QTEST_MAIN(tst_qquickstates)

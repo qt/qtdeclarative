@@ -52,6 +52,7 @@
 #include <private/qquickstate_p_p.h>
 #include <private/qqmlboundsignal_p.h>
 #include <private/qv4qmlcontext_p.h>
+#include <private/qqmlpropertybinding_p.h>
 
 #include <QtCore/qdebug.h>
 
@@ -472,29 +473,35 @@ QQuickPropertyChanges::ActionList QQuickPropertyChanges::actions()
             a.specifiedProperty = property;
 
             QQmlRefPointer<QQmlContextData> context = QQmlContextData::get(qmlContext(this));
-
-            QQmlBinding *newBinding = nullptr;
-            if (e.binding && e.binding->isTranslationBinding()) {
-                newBinding = QQmlBinding::createTranslationBinding(d->compilationUnit, e.binding, object(), context);
-            } else if (e.id != QQmlBinding::Invalid) {
-                QV4::Scope scope(qmlEngine(this)->handle());
-                QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(scope.engine->rootContext(), context, object()));
-                newBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(prop)->core,
-                                                 d->compilationUnit->runtimeFunctions.at(e.id), object(), context, qmlContext);
-            }
-            if (!newBinding)
-                newBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(prop)->core,
-                                                 e.expression, object(), context, e.url.toString(), e.line);
+            QV4::Scope scope(qmlEngine(this)->handle());
+            QV4::Scoped<QV4::QmlContext> qmlCtxt(scope, QV4::QmlContext::create(scope.engine->rootContext(), context, object()));
 
             if (d->isExplicit) {
                 // in this case, we don't want to assign a binding, per se,
                 // so we evaluate the expression and assign the result.
                 // XXX TODO: add a static QQmlJavaScriptExpression::evaluate(QString)
                 // so that we can avoid creating then destroying the binding in this case.
+                std::unique_ptr<QQmlBinding> newBinding = nullptr;
+                if (e.binding && e.binding->isTranslationBinding()) {
+                    newBinding.reset(QQmlBinding::createTranslationBinding(d->compilationUnit, e.binding, object(), context));
+                } else if (e.id != QQmlBinding::Invalid) {
+                    newBinding.reset(QQmlBinding::create(&QQmlPropertyPrivate::get(prop)->core, d->compilationUnit->runtimeFunctions.at(e.id), object(), context, qmlCtxt));
+                } else {
+                    newBinding.reset(QQmlBinding::create(&QQmlPropertyPrivate::get(prop)->core, e.expression, object(), context, e.url.toString(), e.line));
+                }
                 a.toValue = newBinding->evaluate();
-                delete newBinding;
             } else {
-                newBinding->setTarget(prop);
+                QQmlAnyBinding newBinding = nullptr;
+                if (e.binding && e.binding->isTranslationBinding()) {
+                    newBinding = QQmlAnyBinding::createTranslationBinding(prop, d->compilationUnit, e.binding, object(), context);
+                } else if (e.id != QQmlBinding::Invalid) {
+                    newBinding = QQmlAnyBinding::createFromFunction(prop,
+                                                                       d->compilationUnit->runtimeFunctions.at(e.id),
+                                                                       object(), context, qmlCtxt);
+                } else {
+                    newBinding = QQmlAnyBinding::createFromCodeString(prop, e.expression, object(), context, e.url.toString(), e.line);
+                }
+
                 a.toBinding = newBinding;
                 a.deletableToBinding = true;
             }
@@ -635,11 +642,10 @@ void QQuickPropertyChanges::changeExpression(const QString &name, const QString 
             it->expression = expression;
             if (state() && state()->isStateActive()) {
                 auto prop = d->property(name);
-                QQmlBinding *newBinding = QQmlBinding::create(
-                            &QQmlPropertyPrivate::get(prop)->core, expression, object(),
-                            QQmlContextData::get(qmlContext(this)));
-                newBinding->setTarget(prop);
-                QQmlPropertyPrivate::setBinding(newBinding, QQmlPropertyPrivate::None, QQmlPropertyData::DontRemoveBinding | QQmlPropertyData::BypassInterceptor);
+                auto context = QQmlContextData::get(qmlContext(this));
+                QString url;
+                int lineNumber = 0;
+                QQmlAnyBinding::createFromCodeString(prop, expression, object(), context, url, lineNumber).installOn(prop);
             }
             return;
         }
@@ -648,20 +654,16 @@ void QQuickPropertyChanges::changeExpression(const QString &name, const QString 
     // adding a new expression.
     d->expressions.append(ExpressionEntry(name, nullptr, QQmlBinding::Invalid, expression, QUrl(), -1, -1));
 
+    const QString url;
+    const quint16 lineNumber = 0;
     if (state() && state()->isStateActive()) {
         if (hadValue) {
-            QQmlAbstractBinding *oldBinding = QQmlPropertyPrivate::binding(d->property(name));
-            if (oldBinding) {
-                oldBinding->setEnabled(false, QQmlPropertyData::DontRemoveBinding | QQmlPropertyData::BypassInterceptor);
-                state()->changeBindingInRevertList(object(), name, oldBinding);
-            }
-
             auto prop = d->property(name);
-            QQmlBinding *newBinding = QQmlBinding::create(
-                        &QQmlPropertyPrivate::get(prop)->core, expression, object(),
-                        QQmlContextData::get(qmlContext(this)));
-            newBinding->setTarget(prop);
-            QQmlPropertyPrivate::setBinding(newBinding, QQmlPropertyPrivate::None, QQmlPropertyData::DontRemoveBinding | QQmlPropertyData::BypassInterceptor);
+            QQmlAnyBinding oldBinding = QQmlAnyBinding::takeFrom(prop);
+            if (oldBinding)
+                state()->changeBindingInRevertList(object(), name, oldBinding);
+
+            QQmlAnyBinding::createFromCodeString(prop, expression, object(), QQmlContextData::get(qmlContext(this)), url, lineNumber).installOn(prop);
         } else {
             QQuickStateAction action;
             action.restore = restoreEntryValues();
@@ -670,26 +672,28 @@ void QQuickPropertyChanges::changeExpression(const QString &name, const QString 
             action.specifiedObject = object();
             action.specifiedProperty = name;
 
-            QQmlBinding *newBinding = QQmlBinding::create(
+            QQmlAnyBinding newBinding;
+            if (d->isExplicit) {
+                newBinding = QQmlBinding::create(
                         &QQmlPropertyPrivate::get(action.property)->core, expression,
                         object(), QQmlContextData::get(qmlContext(this)));
+            } else {
+                const auto prop = action.property;
+                const auto context = QQmlContextData::get(qmlContext(this));
+                newBinding = QQmlAnyBinding::createFromCodeString(prop, expression, object(), context, url, lineNumber);
+            }
             if (d->isExplicit) {
                 // don't assign the binding, merely evaluate the expression.
                 // XXX TODO: add a static QQmlJavaScriptExpression::evaluate(QString)
                 // so that we can avoid creating then destroying the binding in this case.
-                action.toValue = newBinding->evaluate();
-                delete newBinding;
+                action.toValue = static_cast<QQmlBinding *>(newBinding.asAbstractBinding())->evaluate();
             } else {
-                newBinding->setTarget(action.property);
+                // TODO: replace binding would be more efficient for new-style properties
+                QQmlAnyBinding::removeBindingFrom(action.property);
+                newBinding.installOn(action.property);
                 action.toBinding = newBinding;
                 action.deletableToBinding = true;
-
                 state()->addEntryToRevertList(action);
-                QQmlAbstractBinding *oldBinding = QQmlPropertyPrivate::binding(action.property);
-                if (oldBinding)
-                    oldBinding->setEnabled(false, QQmlPropertyData::DontRemoveBinding | QQmlPropertyData::BypassInterceptor);
-
-                QQmlPropertyPrivate::setBinding(newBinding, QQmlPropertyPrivate::None, QQmlPropertyData::DontRemoveBinding | QQmlPropertyData::BypassInterceptor);
             }
         }
     }

@@ -109,8 +109,8 @@ void QQuickTransitionManager::complete()
 void QQuickTransitionManagerPrivate::applyBindings()
 {
     for (const QQuickStateAction &action : qAsConst(bindingsList)) {
-        if (action.toBinding) {
-            QQmlPropertyPrivate::setBinding(action.toBinding.data());
+        if (auto binding = action.toBinding; binding) {
+            binding.installOn(action.property, QQmlAnyBinding::RespectInterceptors);
         } else if (action.event) {
             if (action.reverseEvent)
                 action.event->reverse();
@@ -160,8 +160,8 @@ void QQuickTransitionManager::transition(const QList<QQuickStateAction> &list,
 
         // Apply all the property and binding changes
         for (const QQuickStateAction &action : qAsConst(applyList)) {
-            if (action.toBinding) {
-                QQmlPropertyPrivate::setBinding(action.toBinding.data(), QQmlPropertyPrivate::None, QQmlPropertyData::BypassInterceptor | QQmlPropertyData::DontRemoveBinding);
+            if (auto binding = action.toBinding; binding) {
+                binding.installOn(action.property);
             } else if (!action.event) {
                 QQmlPropertyPrivate::write(action.property, action.toValue, QQmlPropertyData::BypassInterceptor | QQmlPropertyData::DontRemoveBinding);
             } else if (action.event->isReversable()) {

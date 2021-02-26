@@ -56,6 +56,7 @@
 #include <QtQml/private/qqmlglobal_p.h>
 #include <QtQml/private/qv4engine_p.h>
 #include <QtQml/private/qv4object_p.h>
+#include <QtQml/private/qqmlanybinding_p.h>
 
 #include <QtCore/qiterable.h>
 
@@ -140,15 +141,13 @@ void QQmlQtQuick2DebugStatesDelegate::updateBinding(QQmlContext *context,
             if (state->isStateActive() && state->containsPropertyInRevertList(object, propertyName)) {
                 *inBaseState = false;
 
-                QQmlBinding *newBinding = nullptr;
+                QQmlAnyBinding newBinding;
                 if (!isLiteralValue) {
-                    newBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(property)->core,
+                    newBinding = QQmlAnyBinding::createFromCodeString(property,
                                                      expression.toString(), object,
                                                      QQmlContextData::get(context), fileName,
                                                      line);
-                    newBinding->setTarget(property);
                 }
-
                 state->changeBindingInRevertList(object, propertyName, newBinding);
 
                 if (isLiteralValue)
