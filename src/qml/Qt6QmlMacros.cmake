@@ -655,11 +655,10 @@ function(qt6_target_qml_files target)
             get_filename_component(qml_file_typename ${qml_file} NAME_WLE)
         endif()
 
-        if (qml_file_singleton)
-            string(APPEND file_contents "singleton ")
-        endif()
-
         foreach(qml_file_version IN LISTS qml_file_versions)
+            if (qml_file_singleton)
+                string(APPEND file_contents "singleton ")
+            endif()
             string(APPEND file_contents "${qml_file_typename} ${qml_file_version} ${qml_file}\n")
         endforeach()
 
