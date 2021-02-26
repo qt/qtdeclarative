@@ -66,12 +66,12 @@ class Q_QML_PRIVATE_EXPORT QQmlBoundSignalExpression : public QQmlJavaScriptExpr
 {
 public:
     QQmlBoundSignalExpression(
-            QObject *target, int index, const QQmlRefPointer<QQmlContextData> &ctxt, QObject *scope,
+            const QObject *target, int index, const QQmlRefPointer<QQmlContextData> &ctxt, QObject *scope,
             const QString &expression, const QString &fileName, quint16 line, quint16 column,
             const QString &handlerName = QString(), const QString &parameterString = QString());
 
     QQmlBoundSignalExpression(
-            QObject *target, int index, const QQmlRefPointer<QQmlContextData> &ctxt,
+            const QObject *target, int index, const QQmlRefPointer<QQmlContextData> &ctxt,
             QObject *scopeObject, QV4::Function *function, QV4::ExecutionContext *scope = nullptr);
 
     // inherited from QQmlJavaScriptExpression.
@@ -83,7 +83,7 @@ public:
     void evaluate(const QList<QVariant> &args);
 
     QString expression() const;
-    QObject *target() const { return m_target; }
+    const QObject *target() const { return m_target; }
 
 private:
     ~QQmlBoundSignalExpression() override;
@@ -93,7 +93,7 @@ private:
     bool expressionFunctionValid() const { return function() != nullptr; }
 
     int m_index;
-    QObject *m_target;
+    const QObject *m_target;
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlBoundSignal : public QQmlNotifierEndpoint

@@ -196,7 +196,7 @@ public:
 
     //see QMetaObjectPrivate::originalClone
     int originalClone(int index);
-    static int originalClone(QObject *, int index);
+    static int originalClone(const QObject *, int index);
 
     QList<QByteArray> signalParameterNames(int index) const;
     static QString signalParameterStringForJS(QV4::ExecutionEngine *engine, const QList<QByteArray> &parameterNameList, QString *errorString = nullptr);
