@@ -681,6 +681,12 @@ public:
                 QT_PROPERTY_DEFAULT_BINDING_LOCATION);
         bindableP().setBinding(ANON_propertyChangeHandler_p_binding);
         watcher = 0;
+
+        // NB: make sure property change handler appears after setBinding().
+        // this prevents preliminary binding evaluation (which would fail as
+        // this object doesn't yet know about qmlEngine(this))
+        pChangeHandler.reset(new QPropertyChangeHandler<ANON_propertyChangeHandler_p_changeHandler>(
+                bindableP().onValueChanged(ANON_propertyChangeHandler_p_changeHandler(this))));
     }
 
     int getDummy() { return dummy.value(); }
@@ -713,17 +719,6 @@ public:
     // the handler object has to be alive as long as the object
     std::unique_ptr<QPropertyChangeHandler<ANON_propertyChangeHandler_p_changeHandler>>
             pChangeHandler;
-
-    // NB: has to defer the creation of property change handlers, because their
-    // instantiation leads to "dirty" state and property binding evaluation. if
-    // this is done on construction, then the engine is not yet set and nothing
-    // can be evaluated yet.
-    void initPropertyHandlers()
-    {
-        auto tmp = bindableP().onValueChanged(ANON_propertyChangeHandler_p_changeHandler(this));
-        pChangeHandler.reset(new QPropertyChangeHandler<ANON_propertyChangeHandler_p_changeHandler>(
-                std::move(tmp)));
-    }
 };
 
 void tst_qmlcompiler_manual::propertyChangeHandler()
@@ -732,7 +727,6 @@ void tst_qmlcompiler_manual::propertyChangeHandler()
     created.url = testFileUrl("propertyChangeHandler.qml"); // workaround
     QQmlEngine e;
     e.setContextForObject(&created, e.rootContext());
-    created.initPropertyHandlers();
 
     // test that fetching "dirty" property value doesn't trigger property change
     // handler
