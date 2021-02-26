@@ -55,6 +55,7 @@
 #include <QtCore/qdebug.h>
 #include <QtCore/qtimer.h>
 #include <QtCore/qloggingcategory.h>
+#include <private/qqmlanybinding_p.h>
 
 #include <private/qobject_p.h>
 
@@ -67,7 +68,7 @@ class QQmlBindPrivate : public QObjectPrivate
 public:
     QQmlBindPrivate()
         : obj(nullptr)
-        , prevBind(QQmlAbstractBinding::Ptr())
+        , prevBind(nullptr)
         , prevIsVariant(false)
         , componentComplete(true)
         , delayed(false)
@@ -83,10 +84,7 @@ public:
     QString propName;
     QQmlNullableValue<QJSValue> value;
     QQmlProperty prop;
-    union {
-        QQmlAbstractBinding::Ptr prevBind;
-        QUntypedPropertyBinding prevPropertyBinding;
-    };
+    QQmlAnyBinding prevBind;
     QV4::PersistentValue v4Value;
     QVariant prevValue;
     bool prevIsVariant:1;
@@ -448,10 +446,7 @@ void QQmlBind::prepareEval()
 
 void QQmlBindPrivate::clearPrev()
 {
-    if (prop.property().isBindable())
-        prevPropertyBinding = {};
-    else
-        prevBind = nullptr;
+    prevBind = nullptr;
     v4Value.clear();
     prevValue.clear();
     prevIsVariant = false;
@@ -459,10 +454,7 @@ void QQmlBindPrivate::clearPrev()
 
 bool QQmlBindPrivate::prevBindingSet() const
 {
-    if (prop.property().isBindable())
-        return !prevPropertyBinding.isNull();
-    else
-        return prevBind;
+    return prevBind;
 }
 
 void QQmlBind::eval()
@@ -477,16 +469,9 @@ void QQmlBind::eval()
             //restore any previous binding
             if (d->prevBindingSet()) {
                 if (d->restoreBinding) {
-                    QMetaProperty metaProp = d->prop.property();
-                    if (metaProp.isBindable()) {
-                        auto prevBinding = d->prevPropertyBinding;
-                        d->clearPrev(); // Do that before setBinding(), as setBinding() may recurse.
-                        metaProp.bindable(d->prop.object()).setBinding(prevBinding);
-                    } else {
-                        QQmlAbstractBinding::Ptr p = d->prevBind;
-                        d->clearPrev(); // Do that before setBinding(), as setBinding() may recurse.
-                        QQmlPropertyPrivate::setBinding(p.data());
-                    }
+                    QQmlAnyBinding p = d->prevBind;
+                    d->clearPrev(); // Do that before setBinding(), as setBinding() may recurse.
+                    p.installOn(d->prop);
                 }
             } else if (!d->v4Value.isEmpty()) {
                 if (d->restoreValue) {
@@ -508,14 +493,7 @@ void QQmlBind::eval()
         //save any set binding for restoration
         if (!d->prevBindingSet() && d->v4Value.isEmpty() && !d->prevIsVariant) {
             // try binding first
-            d->prop.property().isBindable();
-            QMetaProperty metaProp = d->prop.property();
-            if (metaProp.isBindable()) {
-                QUntypedBindable bindable = d->prop.property().bindable(d->prop.object());
-                d->prevPropertyBinding = bindable.takeBinding();
-            } else {
-                d->prevBind = QQmlPropertyPrivate::binding(d->prop);
-            }
+            d->prevBind = QQmlAnyBinding::ofProperty(d->prop);
 
             if (!d->prevBindingSet()) { // nope, try a V4 value next
                 auto propPriv = QQmlPropertyPrivate::get(d->prop);
