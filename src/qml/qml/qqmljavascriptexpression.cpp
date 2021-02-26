@@ -299,33 +299,40 @@ void QQmlPropertyCapture::captureProperty(QObject *o, int c, int n, bool doNotif
         return;
 
     Q_ASSERT(expression);
-    const QQmlData *ddata = QQmlData::get(o, /*create=*/false);
-    bool isBindable = false;
-    if (auto const propCache = ddata ? ddata->propertyCache : nullptr; propCache) {
-        Q_ASSERT(propCache->property(c));
-        isBindable = propCache->property(c)->isBindable();
-    } else {
-        auto metaProp = o->staticMetaObject.property(c);
-        isBindable = metaProp.isBindable();
-    }
-    if (isBindable) {
-        // if the property is a QPropery, and we're binding to a QProperty
-        // the automatic capturing process already takes care of everything
-        if (typeid(QQmlPropertyBinding) == typeid(*expression))
-            return;
-        for (auto trigger = expression->qpropertyChangeTriggers; trigger; trigger = trigger->next) {
-            if (trigger->target == o && trigger->propertyIndex == c)
-                return; // already installed
-        }
-        auto trigger = expression->allocatePropertyChangeTrigger(o, c);
-        QUntypedBindable bindable;
-        void *argv[] = { &bindable };
-        o->qt_metacall(QMetaObject::BindableProperty, c, argv);
-        bindable.observe(trigger);
-        return;
-    }
-    if (n == -1) {
 
+    // If c < 0 we won't find any property. We better leave the metaobjects alone in that case.
+    // QQmlListModel expects us _not_ to trigger the creation of dynamic metaobjects from here.
+    if (c >= 0) {
+        const QQmlData *ddata = QQmlData::get(o, /*create=*/false);
+        const QMetaObject *metaObjectForBindable = nullptr;
+        if (auto const propCache = ddata ? ddata->propertyCache : nullptr; propCache) {
+            Q_ASSERT(propCache->property(c));
+            if (propCache->property(c)->isBindable())
+                metaObjectForBindable = propCache->metaObject();
+        } else {
+            const QMetaObject *m = o->metaObject();
+            if (m->property(c).isBindable())
+                metaObjectForBindable = m;
+        }
+        if (metaObjectForBindable) {
+            // if the property is a QPropery, and we're binding to a QProperty
+            // the automatic capturing process already takes care of everything
+            if (typeid(QQmlPropertyBinding) == typeid(*expression))
+                return;
+            for (auto trigger = expression->qpropertyChangeTriggers; trigger; trigger = trigger->next) {
+                if (trigger->target == o && trigger->propertyIndex == c)
+                    return; // already installed
+            }
+            auto trigger = expression->allocatePropertyChangeTrigger(o, c);
+            QUntypedBindable bindable;
+            void *argv[] = { &bindable };
+            metaObjectForBindable->metacall(o, QMetaObject::BindableProperty, c, argv);
+            bindable.observe(trigger);
+            return;
+        }
+    }
+
+    if (n == -1) {
         if (!errorString) {
             errorString = new QStringList;
             QString preamble = QLatin1String("QQmlExpression: Expression ") +

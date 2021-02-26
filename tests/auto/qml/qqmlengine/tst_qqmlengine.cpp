@@ -85,6 +85,7 @@ private slots:
     void cachedGetterLookup_qtbug_75335();
     void createComponentOnSingletonDestruction();
     void uiLanguage();
+    void captureQProperty();
 
 public slots:
     QObject *createAQObjectForOwnershipTest ()
@@ -1236,6 +1237,78 @@ void tst_qqmlengine::uiLanguage()
         engine.setUiLanguage("TestLanguage");
         QCOMPARE(object->property("chosenLanguage").toString(), "TestLanguage");
     }
+}
+
+class WithQProperty : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int foo READ foo WRITE setFoo BINDABLE fooBindable)
+
+public:
+    WithQProperty(QObject *parent = nullptr) : QObject(parent) { m_foo.setValue(12); }
+
+    int foo() const { return m_foo.value(); }
+    void setFoo(int foo) { m_foo.setValue(foo); }
+    QBindable<int> fooBindable() { return QBindable<int>(&m_foo); }
+
+    int getFooWithCapture()
+    {
+        const QMetaObject *m = metaObject();
+        currentEngine->captureProperty(this, m->property(m->indexOfProperty("foo")));
+        return m_foo.value();
+    }
+
+    static QQmlEngine *currentEngine;
+
+private:
+    QProperty<int> m_foo;
+};
+
+class WithoutQProperty : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int foo READ foo WRITE setFoo NOTIFY fooChanged)
+public:
+    WithoutQProperty(QObject *parent = nullptr) : QObject(parent), m_foo(new WithQProperty(this)) {}
+
+    int foo() const { return m_foo->getFooWithCapture(); }
+
+    void setFoo(int foo) {
+        if (foo != m_foo->foo()) {
+            m_foo->setFoo(foo);
+            emit fooChanged();
+        }
+    }
+
+    void triggerBinding(int val)
+    {
+        m_foo->setFoo(val);
+    }
+
+signals:
+    void fooChanged();
+
+private:
+    WithQProperty *m_foo;
+};
+
+QQmlEngine *WithQProperty::currentEngine = nullptr;
+
+void tst_qqmlengine::captureQProperty()
+{
+    qmlRegisterType<WithoutQProperty>("Foo", 1, 0, "WithoutQProperty");
+    QQmlEngine engine;
+    WithQProperty::currentEngine = &engine;
+    QQmlComponent c(&engine);
+    c.setData("import Foo\n"
+              "WithoutQProperty {\n"
+              "    property int x: foo\n"
+              "}", QUrl());
+    QVERIFY2(c.isReady(), c.errorString().toUtf8());
+    QScopedPointer<QObject> o(c.create());
+    QCOMPARE(o->property("x").toInt(), 12);
+    static_cast<WithoutQProperty *>(o.data())->triggerBinding(13);
+    QCOMPARE(o->property("x").toInt(), 13);
 }
 
 QTEST_MAIN(tst_qqmlengine)
