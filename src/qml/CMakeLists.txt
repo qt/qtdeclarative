@@ -269,6 +269,7 @@ qt_internal_add_module(Qml
         qml/qqmlprivate.h
         qml/qqmlproperty.cpp qml/qqmlproperty.h qml/qqmlproperty_p.h
         qml/qqmlpropertybinding.cpp qml/qqmlpropertybinding_p.h
+        qml/qqmlanybinding_p.h
         qml/qqmlpropertycache.cpp qml/qqmlpropertycache_p.h
         qml/qqmlpropertycachecreator.cpp qml/qqmlpropertycachecreator_p.h
         qml/qqmlpropertycachemethodarguments_p.h

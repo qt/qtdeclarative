@@ -101,6 +101,11 @@ public:
                                           QObject *obj, const QQmlRefPointer<QQmlContextData> &ctxt,
                                           QV4::ExecutionContext *scope, QObject *target,
                                           QQmlPropertyIndex targetIndex);
+    static QUntypedPropertyBinding createFromCodeString(const QQmlPropertyData *property,
+                                                        const QString &str, QObject *obj,
+                                                        const QQmlRefPointer<QQmlContextData> &ctxt,
+                                                        const QString &url, quint16 lineNumber,
+                                                        QObject *target, QQmlPropertyIndex targetIndex);
 
     static QUntypedPropertyBinding createFromBoundFunction(const QQmlPropertyData *pd, QV4::BoundFunction *function,
                                           QObject *obj, const QQmlRefPointer<QQmlContextData> &ctxt,
@@ -157,7 +162,7 @@ inline constexpr BindingFunctionVTable bindingFunctionVTable<QQmlPropertyBinding
 class QQmlTranslationPropertyBinding
 {
 public:
-    static QUntypedPropertyBinding create(const QQmlPropertyData *pd,
+    static QUntypedPropertyBinding Q_QML_PRIVATE_EXPORT create(const QQmlPropertyData *pd,
                                           const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
                                           const QV4::CompiledData::Binding *binding);
 };

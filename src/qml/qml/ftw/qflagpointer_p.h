@@ -87,6 +87,26 @@ public:
     inline QBiPointer<T, T2> &operator=(T *);
     inline QBiPointer<T, T2> &operator=(T2 *);
 
+    friend inline bool operator==(QBiPointer<T, T2> ptr1, QBiPointer<T, T2> ptr2)
+    {
+        if (ptr1.isNull() && ptr2.isNull())
+            return true;
+        if (ptr1.isT1() && ptr2.isT1())
+            return ptr1.asT1() == ptr2.asT1();
+        if (ptr1.isT2() && ptr2.isT2())
+            return ptr1.asT2() == ptr2.asT2();
+        return false;
+    }
+    friend inline bool operator!=(QBiPointer<T, T2> ptr1, QBiPointer<T, T2> ptr2)
+    {
+        return !(ptr1 == ptr2);
+    }
+
+    friend inline void swap(QBiPointer<T, T2> ptr1, QBiPointer<T, T2> ptr2)
+    {
+        qSwap(ptr1.ptr_value, ptr2.ptr_value);
+    }
+
     inline T *asT1() const;
     inline T2 *asT2() const;
 
