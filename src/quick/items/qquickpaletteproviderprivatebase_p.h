@@ -323,7 +323,7 @@ void QQuickPaletteProviderPrivateBase<I, Impl>::inheritPalette(const QPalette &p
     if (providesPalette()) {
         // If palette is changed, then this function will be invoked
         // for all children because of connection with signal changed()
-        m_palette->inheritPalette(parentPalette);
+        palette()->inheritPalette(parentPalette);
     } else {
         // Otherwise, just propagate parent palette to all children
         updateChildrenPalettes(parentPalette);
