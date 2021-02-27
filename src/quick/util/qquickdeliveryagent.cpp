@@ -979,7 +979,8 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEvent(QQuickItem *item, const QPoin
             // Leaving from previous hovered items until we reach the item or one of its ancestors.
             while (!hoverItems.isEmpty() && !itemsToHover.contains(hoverItems.at(0))) {
                 QQuickItem *hoverLeaveItem = hoverItems.takeFirst();
-                sendHoverEvent(QEvent::HoverLeave, hoverLeaveItem, scenePos, lastScenePos, modifiers, timestamp, accepted);
+                if (hoverLeaveItem)
+                    sendHoverEvent(QEvent::HoverLeave, hoverLeaveItem, scenePos, lastScenePos, modifiers, timestamp, accepted);
             }
 
             if (!hoverItems.isEmpty() && hoverItems.at(0) == item) {//Not entering a new Item
