@@ -144,6 +144,7 @@ void tst_focus::policy()
     QFETCH(QString, name);
 
     QQmlEngine engine;
+    QScopedPointer<QPointingDevice> device(QTest::createTouchDevice());
     QQmlComponent component(&engine);
     component.setData(QString("import QtQuick.Controls; ApplicationWindow { width: 100; height: 100; %1 { anchors.fill: parent } }").arg(name).toUtf8(), QUrl());
 
@@ -159,8 +160,6 @@ void tst_focus::policy()
     window->show();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
-
-    QScopedPointer<QPointingDevice> device(QTest::createTouchDevice());
 
     control->setFocusPolicy(Qt::NoFocus);
     QCOMPARE(control->focusPolicy(), Qt::NoFocus);
@@ -340,6 +339,7 @@ void tst_focus::scope()
     QQmlComponent component(&engine);
     component.setData(QString("import QtQuick; import QtQuick.Controls; ApplicationWindow { property alias child: child; width: 100; height: 100; %1 { anchors.fill: parent; Item { id: child; width: 10; height: 10 } } }").arg(name).toUtf8(), QUrl());
 
+    QScopedPointer<QPointingDevice> device(QTest::createTouchDevice());
     QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(component.create()));
     QVERIFY2(window, qPrintable(component.errorString()));
 
@@ -356,7 +356,6 @@ void tst_focus::scope()
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
-    QScopedPointer<QPointingDevice> device(QTest::createTouchDevice());
 
     child->forceActiveFocus();
     QVERIFY(child->hasActiveFocus());

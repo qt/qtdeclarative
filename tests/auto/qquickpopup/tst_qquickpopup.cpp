@@ -215,6 +215,7 @@ void tst_QQuickPopup::overlay()
     QFETCH(bool, modal);
     QFETCH(bool, dim);
 
+    QScopedPointer<QPointingDevice> device(QTest::createTouchDevice());
     QQuickApplicationHelper helper(this, source);
     QVERIFY2(helper.ready, helper.failureMessage());
 
@@ -305,7 +306,6 @@ void tst_QQuickPopup::overlay()
     QVERIFY(popup->isVisible());
     QVERIFY(overlay->isVisible());
 
-    QScopedPointer<QPointingDevice> device(QTest::createTouchDevice());
 
     QTest::touchEvent(window, device.data()).press(0, QPoint(1, 1));
     QCOMPARE(overlayPressedSignal.count(), ++overlayPressCount);
