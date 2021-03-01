@@ -86,6 +86,8 @@ set(__qt_qml_macros_module_base_dir "${CMAKE_CURRENT_LIST_DIR}")
 # PURE_MODULE: The plugin does not take any C++ source files. A dummy class plugin cpp file will
 #              be generated to ensure the module is found by the Qml engine.
 #
+# IMPORT_PATH: State that QML modules this one depends on may be found in the given import paths.
+#
 # This function is currently in Technical Preview.
 # It's signature and behavior might change.
 function(qt6_add_qml_module target)
@@ -119,6 +121,7 @@ function(qt6_add_qml_module target)
        SOURCES
        QML_FILES
        IMPORTS
+       IMPORT_PATH
        OPTIONAL_IMPORTS
        DEPENDENCIES
        PAST_MAJOR_VERSIONS
@@ -277,6 +280,10 @@ function(qt6_add_qml_module target)
 
     if (arg_SOURCES)
         target_sources(${target} PRIVATE ${arg_SOURCES})
+    endif()
+
+    if (arg_IMPORT_PATH)
+        set_target_properties(${target} PROPERTIES QT_QML_IMPORT_PATH "${arg_IMPORT_PATH}")
     endif()
 
     # Insert the plugins URI into its meta data to enable usage
@@ -960,6 +967,14 @@ function(_qt_internal_quick_compiler_process_resources target resource_name)
             set(qml_resource_file "${CMAKE_CURRENT_BINARY_DIR}/.rcc/${resource_name}.qrc")
         endif()
 
+        get_target_property(import_path ${target} QT_QML_IMPORT_PATH)
+        if (import_path)
+            foreach(dir IN LISTS import_path)
+                list(APPEND qmlcachegen_extra_args "-I" "${dir}")
+            endforeach()
+            list(APPEND qmlcachegen_extra_args "-I" "${QT_INSTALL_DIR}/${INSTALL_QMLDIR}")
+        endif()
+
         get_target_property(qmltypes ${target} QT_QML_MODULE_PLUGIN_TYPES_FILE)
         if (qmltypes)
             list(APPEND qmlcachegen_extra_args "-i" ${qmltypes})
@@ -1265,20 +1280,14 @@ endfunction()
 # Adds a target called TARGET_qmllint that runs on all qml files compiled ahead-of-time.
 function(qt6_target_enable_qmllint target)
     get_target_property(target_source ${target} SOURCE_DIR)
-    get_target_property(includes ${target} QML_IMPORT_PATH)
-    get_target_property(deprecated_includes ${target} QML2_IMPORT_PATH)
+    get_target_property(import_path ${target} QT_QML_IMPORT_PATH)
     get_target_property(files ${target} QML_FILES)
 
-    if(includes)
-        foreach(dir in LISTS includes)
-            list(APPEND include_args "-I${dir}")
+    if(import_path)
+        foreach(dir IN LISTS import_path)
+            list(APPEND import_args "-I" "${dir}")
         endforeach()
-    endif()
-
-    if(deprecated_includes)
-        foreach(dir in LISTS deprecated_includes)
-            list(APPEND include_args "-I${dir}")
-        endforeach()
+        list(APPEND import_args "-I" "${QT_INSTALL_DIR}/${INSTALL_QMLDIR}")
     endif()
 
     add_custom_target(${target}_qmllint
