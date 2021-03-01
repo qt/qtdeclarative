@@ -296,6 +296,22 @@ designersupported
          The items of an unsupported plugin are not painted in the Qt Quick Designer,
          but they are still available as empty boxes and the properties can be edited.
 
+    \row
+    \li
+        \code
+prefer <Path>
+        \endcode
+
+    \li This property directs the QML engine to load any further files for this
+        module from <path>, rather than the current directory. This can be used
+        to load files compiled with qmlcachegen.
+
+        For example, you can add a module's QML files as resources to a resource
+        path \c{:/my/path/MyModule/}. Then, add \c{prefer :/my/path/MyModule} to
+        the qmldir file in order to use the files in the resource system, rather
+        than the ones in the file system. If you then use qmlcachegen for those,
+        the pre-compiled files will be available to any clients of the module.
+
 \endtable
 
 Each command in a \c qmldir file must be on a separate line.

@@ -1,0 +1,6 @@
+module FooBar
+classname FooBarInstance
+prefer :/foo/bar/
+prefer :/wrong/wrong/
+plugin doesnotexist
+Foo 1.0 Foo.qml

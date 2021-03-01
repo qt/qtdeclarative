@@ -160,6 +160,7 @@ public:
 
     QStringList typeInfos() const;
     QStringList classNames() const;
+    QString preferredPath() const;
 
 private:
     bool maybeAddComponent(const QString &typeName, const QString &fileName, const QString &version, QHash<QString,Component> &hash, int lineNumber = -1, bool multi = true);
@@ -168,6 +169,7 @@ private:
 private:
     QList<QQmlJS::DiagnosticMessage> _errors;
     QString _typeNamespace;
+    QString _preferredPath;
     QMultiHash<QString,Component> _components;
     QList<Import> _dependencies;
     QList<Import> _imports;

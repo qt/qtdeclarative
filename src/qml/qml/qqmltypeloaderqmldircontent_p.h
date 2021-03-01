@@ -81,6 +81,7 @@ public:
     QQmlDirImports imports() const;
 
     QString qmldirLocation() const;
+    QString preferredPath() const;
 
     bool designerSupported() const;
 

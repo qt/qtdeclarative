@@ -55,6 +55,7 @@ private slots:
     void importDependenciesPrecedence();
     void cleanup();
     void envResourceImportPath();
+    void preferResourcePath();
 };
 
 void tst_QQmlImport::cleanup()
@@ -87,6 +88,17 @@ void tst_QQmlImport::envResourceImportPath()
 
     for (const QString &path : envPaths)
         QVERIFY((importPaths.contains(path.startsWith(u':') ? QLatin1String("qrc") + path : path)));
+}
+
+void tst_QQmlImport::preferResourcePath()
+{
+    QQmlEngine engine;
+    engine.addImportPath(dataDirectory());
+
+    QQmlComponent component(&engine, testFileUrl("prefer.qml"));
+    QVERIFY2(component.isReady(), component.errorString().toUtf8());
+    QScopedPointer<QObject> o(component.create());
+    QCOMPARE(o->objectName(), "right");
 }
 
 void tst_QQmlImport::testDesignerSupported()

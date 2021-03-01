@@ -115,6 +115,11 @@ QString QQmlTypeLoaderQmldirContent::qmldirLocation() const
     return m_location;
 }
 
+QString QQmlTypeLoaderQmldirContent::preferredPath() const
+{
+    return m_parser.preferredPath();
+}
+
 bool QQmlTypeLoaderQmldirContent::designerSupported() const
 {
     return m_parser.designerSupported();

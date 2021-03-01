@@ -299,6 +299,28 @@ bool QQmlDirParser::parse(const QString &source)
                    || sections[0] == QLatin1String("depends")) {
             if (!readImport(sections, sectionCount, Import::Default))
                 continue;
+        } else if (sections[0] == QLatin1String("prefer")) {
+            if (sectionCount < 2) {
+                reportError(lineNumber, 0,
+                            QStringLiteral("prefer directive requires one argument, "
+                                           "but %1 were provided").arg(sectionCount - 1));
+                continue;
+            }
+
+            if (!_preferredPath.isEmpty()) {
+                reportError(lineNumber, 0, QStringLiteral(
+                                "only one prefer directive may be defined in a qmldir file"));
+                continue;
+            }
+
+            if (!sections[1].endsWith(u'/')) {
+                // Yes. People should realize it's a directory.
+                reportError(lineNumber, 0, QStringLiteral(
+                                "the preferred directory has to end with a '/'"));
+                continue;
+            }
+
+            _preferredPath = sections[1];
         } else if (sectionCount == 2) {
             // No version specified (should only be used for relative qmldir files)
             const Component entry(sections[0], sections[1], QTypeRevision());
@@ -414,6 +436,11 @@ bool QQmlDirParser::designerSupported() const
 QStringList QQmlDirParser::classNames() const
 {
     return _classNames;
+}
+
+QString QQmlDirParser::preferredPath() const
+{
+    return _preferredPath;
 }
 
 QDebug &operator<< (QDebug &debug, const QQmlDirParser::Component &component)

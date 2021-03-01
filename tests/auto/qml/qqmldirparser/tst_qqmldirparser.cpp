@@ -150,6 +150,7 @@ namespace {
 void tst_qqmldirparser::parse_data()
 {
     QTest::addColumn<QString>("file");
+    QTest::addColumn<QString>("preferredPath");
     QTest::addColumn<QStringList>("errors");
     QTest::addColumn<QStringList>("plugins");
     QTest::addColumn<QStringList>("classnames");
@@ -160,6 +161,7 @@ void tst_qqmldirparser::parse_data()
 
     QTest::newRow("empty")
         << "empty/qmldir"
+        << QString()
         << QStringList()
         << QStringList()
         << QStringList()
@@ -170,6 +172,7 @@ void tst_qqmldirparser::parse_data()
 
     QTest::newRow("no-content")
         << "no-content/qmldir"
+        << QString()
         << QStringList()
         << QStringList()
         << QStringList()
@@ -180,6 +183,7 @@ void tst_qqmldirparser::parse_data()
 
     QTest::newRow("one-section")
         << "one-section/qmldir"
+        << QString()
         << (QStringList() << "qmldir:1: a component declaration requires two or three arguments, but 1 were provided")
         << QStringList()
         << QStringList()
@@ -190,6 +194,7 @@ void tst_qqmldirparser::parse_data()
 
     QTest::newRow("four-sections")
         << "four-sections/qmldir"
+        << QString()
         << (QStringList() << "qmldir:1: a component declaration requires two or three arguments, but 4 were provided")
         << QStringList()
         << QStringList()
@@ -200,6 +205,7 @@ void tst_qqmldirparser::parse_data()
 
     QTest::newRow("incomplete-module")
         << "incomplete-module/qmldir"
+        << QString()
         << (QStringList() << "qmldir:1: module identifier directive requires one argument, but 0 were provided")
         << QStringList()
         << QStringList()
@@ -210,6 +216,7 @@ void tst_qqmldirparser::parse_data()
 
     QTest::newRow("excessive-module")
         << "excessive-module/qmldir"
+        << QString()
         << (QStringList() << "qmldir:1: module identifier directive requires one argument, but 2 were provided")
         << QStringList()
         << QStringList()
@@ -220,6 +227,7 @@ void tst_qqmldirparser::parse_data()
 
     QTest::newRow("repeated-module")
         << "repeated-module/qmldir"
+        << QString()
         << (QStringList() << "qmldir:2: only one module identifier directive may be defined in a qmldir file")
         << QStringList()
         << QStringList()
@@ -230,6 +238,7 @@ void tst_qqmldirparser::parse_data()
 
     QTest::newRow("non-first-module")
         << "non-first-module/qmldir"
+        << QString()
         << (QStringList() << "qmldir:2: module identifier directive must be the first directive in a qmldir file")
         << (QStringList() << "foo|")
         << QStringList()
@@ -240,6 +249,7 @@ void tst_qqmldirparser::parse_data()
 
     QTest::newRow("incomplete-plugin")
         << "incomplete-plugin/qmldir"
+        << QString()
         << (QStringList() << "qmldir:1: plugin directive requires one or two arguments, but 0 were provided")
         << QStringList()
         << QStringList()
@@ -250,6 +260,7 @@ void tst_qqmldirparser::parse_data()
 
     QTest::newRow("excessive-plugin")
         << "excessive-plugin/qmldir"
+        << QString()
         << (QStringList() << "qmldir:1: plugin directive requires one or two arguments, but 3 were provided")
         << QStringList()
         << QStringList()
@@ -260,6 +271,7 @@ void tst_qqmldirparser::parse_data()
 
     QTest::newRow("name-plugin")
         << "name-plugin/qmldir"
+        << QString()
         << QStringList()
         << (QStringList() << "foo|")
         << QStringList()
@@ -270,6 +282,7 @@ void tst_qqmldirparser::parse_data()
 
     QTest::newRow("name-path-plugin")
         << "name-path-plugin/qmldir"
+        << QString()
         << QStringList()
         << (QStringList() << "foo|bar")
         << QStringList()
@@ -280,6 +293,7 @@ void tst_qqmldirparser::parse_data()
 
     QTest::newRow("unversioned-component")
         << "unversioned-component/qmldir"
+        << QString()
         << QStringList()
         << QStringList()
         << QStringList()
@@ -290,6 +304,7 @@ void tst_qqmldirparser::parse_data()
 
     QTest::newRow("invalid-versioned-component")
         << "invalid-versioned-component/qmldir"
+        << QString()
         << (QStringList() << "qmldir:1: invalid version 100, expected <major>.<minor>")
         << QStringList()
         << QStringList()
@@ -300,6 +315,7 @@ void tst_qqmldirparser::parse_data()
 
     QTest::newRow("versioned-component")
         << "versioned-component/qmldir"
+        << QString()
         << QStringList()
         << QStringList()
         << QStringList()
@@ -310,6 +326,7 @@ void tst_qqmldirparser::parse_data()
 
     QTest::newRow("invalid-versioned-script")
         << "invalid-versioned-script/qmldir"
+        << QString()
         << (QStringList() << "qmldir:1: invalid version 100, expected <major>.<minor>")
         << QStringList()
         << QStringList()
@@ -320,6 +337,7 @@ void tst_qqmldirparser::parse_data()
 
     QTest::newRow("versioned-script")
         << "versioned-script/qmldir"
+        << QString()
         << QStringList()
         << QStringList()
         << QStringList()
@@ -330,6 +348,7 @@ void tst_qqmldirparser::parse_data()
 
     QTest::newRow("multiple")
         << "multiple/qmldir"
+        << QString()
         << QStringList()
         << (QStringList() << "PluginA|plugina.so")
         << QStringList()
@@ -342,6 +361,7 @@ void tst_qqmldirparser::parse_data()
 
     QTest::newRow("designersupported-yes")
         << "designersupported-yes/qmldir"
+        << QString()
         << QStringList()
         << (QStringList() << "foo|")
         << QStringList()
@@ -352,6 +372,7 @@ void tst_qqmldirparser::parse_data()
 
     QTest::newRow("designersupported-no")
         << "designersupported-no/qmldir"
+        << QString()
         << QStringList()
         << (QStringList() << "foo|")
         << QStringList()
@@ -362,6 +383,7 @@ void tst_qqmldirparser::parse_data()
 
     QTest::newRow("invalid-versioned-dependency")
         << "invalid-versioned-dependency/qmldir"
+        << QString()
         << (QStringList() << "qmldir:1: invalid version 100, expected <major>.<minor>")
         << QStringList()
         << QStringList()
@@ -372,6 +394,7 @@ void tst_qqmldirparser::parse_data()
 
     QTest::newRow("dependency")
             << "dependency/qmldir"
+            << QString()
             << QStringList()
             << (QStringList() << "foo|")
             << QStringList()
@@ -382,6 +405,7 @@ void tst_qqmldirparser::parse_data()
 
     QTest::newRow("classname")
             << "classname/qmldir"
+            << QString()
             << QStringList()
             << (QStringList() << "qtquick2plugin|")
             << (QStringList() << "QtQuick2Plugin")
@@ -389,6 +413,39 @@ void tst_qqmldirparser::parse_data()
             << QStringList()
             << QStringList()
             << true;
+
+    QTest::newRow("prefer")
+        << "prefer/qmldir"
+        << ":/foo/bar/"
+        << QStringList()
+        << QStringList({"doesnotexist|"})
+        << QStringList({"FooBarInstance"})
+        << QStringList({"Foo|Foo.qml|1|0|false"})
+        << QStringList()
+        << QStringList()
+        << false;
+
+    QTest::newRow("two-prefer")
+        << "two-prefer/qmldir"
+        << ":/foo/bar/"
+        << QStringList({"qmldir:4: only one prefer directive may be defined in a qmldir file"})
+        << QStringList({"doesnotexist|"})
+        << QStringList({"FooBarInstance"})
+        << QStringList({"Foo|Foo.qml|1|0|false"})
+        << QStringList()
+        << QStringList()
+        << false;
+
+    QTest::newRow("prefer-no-slash")
+        << "prefer-no-slash/qmldir"
+        << QString()
+        << QStringList({"qmldir:3: the preferred directory has to end with a '/'"})
+        << QStringList({"doesnotexist|"})
+        << QStringList({"FooBarInstance"})
+        << QStringList({"Foo|Foo.qml|1|0|false"})
+        << QStringList()
+        << QStringList()
+        << false;
 }
 
 void tst_qqmldirparser::parse()

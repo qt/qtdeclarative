@@ -654,8 +654,18 @@ bool QQmlImportInstance::setQmldirContent(const QString &resolvedUrl,
                                           const QQmlTypeLoaderQmldirContent &qmldir,
                                           QQmlImportNamespace *nameSpace, QList<QQmlError> *errors)
 {
-    Q_ASSERT(resolvedUrl.endsWith(Slash));
-    url = resolvedUrl;
+
+    const QString preferredPath = qmldir.preferredPath();
+    if (preferredPath.isEmpty()) {
+        Q_ASSERT(resolvedUrl.endsWith(Slash));
+        url = resolvedUrl;
+    } else {
+        Q_ASSERT(preferredPath.endsWith(Slash));
+        if (preferredPath.startsWith(u':'))
+            url = QStringLiteral("qrc") + preferredPath;
+        else
+            url = QUrl::fromLocalFile(preferredPath).toString();
+    }
 
     qmlDirComponents = qmldir.components();
 

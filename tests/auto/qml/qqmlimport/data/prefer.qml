@@ -1,0 +1,3 @@
+import ModuleWithPrefer
+
+Preferred {}

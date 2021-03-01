@@ -36,6 +36,13 @@ qt_internal_add_test(tst_qqmlimport
     TESTDATA ${test_data}
 )
 
+qt_internal_add_resource(tst_qqmlimport "preferred"
+    PREFIX
+        "/qqmlimport/ModuleWithPrefer/"
+    FILES
+        "Preferred.qml"
+)
+
 ## Scopes:
 #####################################################################
 
