@@ -57,7 +57,7 @@ public:
     tst_Scenegraph();
 
 private Q_SLOTS:
-    void initTestCase() override;
+    void initTestCase();
     void cleanup();
 #ifdef TEXTLESS_TEST
     void testNoTextRendering_data();
