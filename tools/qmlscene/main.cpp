@@ -34,6 +34,7 @@
 #include <QtCore/qscopedpointer.h>
 #include <QtCore/qtextstream.h>
 #include <QtCore/qregularexpression.h>
+#include <QtCore/qloggingcategory.h>
 
 #include <QtGui/QGuiApplication>
 
@@ -57,6 +58,8 @@
 
 #include <QtCore/QTranslator>
 #include <QtCore/QLibraryInfo>
+
+Q_LOGGING_CATEGORY(lcQmlsceneDeprecated, "qt.tools.qmlscene.deprecated")
 
 #ifdef QML_RUNTIME_TESTING
 class RenderStatistics
@@ -430,6 +433,8 @@ int main(int argc, char ** argv)
     QStringList imports;
     QStringList customSelectors;
     QStringList pluginPaths;
+
+    qCWarning(lcQmlsceneDeprecated()) << "Warning: qmlscene is deprecated and will be removed in a future version of Qt. Please use qml instead.";
 
     // Parse arguments for application attributes to be applied before Q[Gui]Application creation.
     for (int i = 1; i < argc; ++i) {
