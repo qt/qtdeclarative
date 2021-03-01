@@ -79,7 +79,6 @@ struct QQmlImportInstance
 {
     QString uri; // e.g. QtQuick
     QString url; // the base path of the import
-    QString localDirectoryPath; // the base path of the import if it's a local file
     QQmlType containingType; // points to the containing type for inline components
     QTypeRevision version; // the version imported
     bool isLibrary; // true means that this is not a file import

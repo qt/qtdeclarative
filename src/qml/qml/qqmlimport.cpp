@@ -657,7 +657,6 @@ bool QQmlImportInstance::setQmldirContent(const QString &resolvedUrl,
 {
     Q_ASSERT(resolvedUrl.endsWith(Slash));
     url = resolvedUrl;
-    localDirectoryPath = QQmlFile::urlToLocalFileOrQrc(url);
 
     qmlDirComponents = qmldir.components();
 
@@ -834,7 +833,12 @@ bool QQmlImportInstance::resolveType(QQmlTypeLoader *typeLoader, const QHashedSt
                 *type_return = returnType;
             return returnType.isValid();
         }
-    } else if (!isLibrary && !localDirectoryPath.isEmpty()) {
+    } else if (!isLibrary) {
+        // the base path of the import if it's a local file
+        const QString localDirectoryPath = QQmlFile::urlToLocalFileOrQrc(url);
+        if (localDirectoryPath.isEmpty())
+            return false;
+
         QString qmlUrl;
         bool exists = false;
 
@@ -1570,7 +1574,6 @@ QQmlImportInstance *QQmlImportsPrivate::addImportToNamespace(
     QQmlImportInstance *import = new QQmlImportInstance;
     import->uri = uri;
     import->url = url;
-    import->localDirectoryPath = QQmlFile::urlToLocalFileOrQrc(url);
     import->version = version;
     import->isLibrary = (type == QV4::CompiledData::Import::ImportLibrary);
     if (flags & QQmlImports::ImportImplicit) {
