@@ -112,6 +112,9 @@ int main(int argc, char **argv)
     QCommandLineOption includesOption(QStringLiteral("i"), QCoreApplication::translate("main", "This option is ignored."), QCoreApplication::translate("main", "ignored file"));
     includesOption.setFlags(QCommandLineOption::HiddenFromHelp);
     parser.addOption(includesOption);
+    QCommandLineOption importPathOption(QStringLiteral("I"), QCoreApplication::translate("main", "This option is ignored."), QCoreApplication::translate("main", "ignored path"));
+    importPathOption.setFlags(QCommandLineOption::HiddenFromHelp);
+    parser.addOption(importPathOption);
 
     QCommandLineOption outputFileOption(QStringLiteral("o"), QCoreApplication::translate("main", "Output file name"), QCoreApplication::translate("main", "file name"));
     parser.addOption(outputFileOption);
