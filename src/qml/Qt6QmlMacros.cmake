@@ -29,11 +29,7 @@ set(__qt_qml_macros_module_base_dir "${CMAKE_CURRENT_LIST_DIR}")
 #   ${CMAKE_CURRENT_BINARY_DIR}. This ensures the qmldir file is copied to the
 #   right location.  (OPTIONAL)
 #
-# INSTALL_LOCATION: Intended installation directory for this module. If no
-#   value is supplied, the default installation path will be ${INSTALL_QMLDIR}.
-#   (OPTIONAL).
-#
-# DO_NOT_INSTALL_METADATA: When present, will not install the supporting files.
+# INSTALL_DIRECTORY: Intended installation directory for this module. (OPTIONAL)
 #
 # SOURCES: List of C++ sources. (OPTIONAL)
 #
@@ -93,7 +89,6 @@ function(qt6_add_qml_module target)
         GENERATE_QMLTYPES
         INSTALL_QMLTYPES
         DESIGNER_SUPPORTED
-        DO_NOT_INSTALL_METADATA
         SKIP_TYPE_REGISTRATION
         PLUGIN_OPTIONAL
         PURE_MODULE
@@ -109,7 +104,7 @@ function(qt6_add_qml_module target)
         TARGET_PATH
         VERSION
         OUTPUT_DIRECTORY
-        INSTALL_LOCATION
+        INSTALL_DIRECTORY
         CLASSNAME
         TYPEINFO
         RESOURCE_EXPORT
@@ -225,16 +220,9 @@ function(qt6_add_qml_module target)
         set(arg_RESOURCE_PREFIX "/org.qt-project/imports")
     endif()
 
-    set(should_install "TRUE")
-    if (NOT arg_INSTALL_LOCATION)
-        message(AUTHOR_WARNING "No Qml install location provided for target ${target}."
-                               "Consider specifying the INSTALL_LOCATION option.")
-        set(should_install "FALSE")
-    endif()
-
-    if (DEFINED QT_WILL_INSTALL AND NOT QT_WILL_INSTALL
-            AND NOT IS_ABSOLUTE "${arg_INSTALL_LOCATION}" AND QT_BUILD_DIR)
-        set(arg_INSTALL_LOCATION "${QT_BUILD_DIR}/${arg_INSTALL_LOCATION}")
+    set(should_install TRUE)
+    if (NOT arg_INSTALL_DIRECTORY)
+        set(should_install FALSE)
     endif()
 
     set_target_properties(${target}
@@ -243,22 +231,22 @@ function(qt6_add_qml_module target)
             QT_QML_MODULE_URI "${arg_URI}"
             QT_RESOURCE_PREFIX "${arg_RESOURCE_PREFIX}/${arg_TARGET_PATH}"
             QT_QML_MODULE_VERSION "${arg_VERSION}"
-            QT_QML_MODULE_INSTALL_DIR "${arg_INSTALL_LOCATION}"
+            QT_QML_MODULE_INSTALL_DIR "${arg_INSTALL_DIRECTORY}"
             QT_QML_MODULE_RESOURCE_EXPORT "${arg_RESOURCE_EXPORT}"
     )
+    if (arg_OUTPUT_DIRECTORY)
+        set_target_properties(${target}
+            PROPERTIES
+                LIBRARY_OUTPUT_DIRECTORY "${arg_OUTPUT_DIRECTORY}"
+                ARCHIVE_OUTPUT_DIRECTORY "${arg_OUTPUT_DIRECTORY}"
+                QT_QML_MODULE_OUTPUT_DIR "${arg_OUTPUT_DIRECTORY}"
+        )
+    endif()
 
-    if (NOT DO_NOT_CREATE_TARGET)
-        if (arg_OUTPUT_DIRECTORY)
-            set_target_properties(${target}
-                PROPERTIES
-                    LIBRARY_OUTPUT_DIRECTORY "${arg_OUTPUT_DIRECTORY}"
-                    ARCHIVE_OUTPUT_DIRECTORY "${arg_OUTPUT_DIRECTORY}"
-            )
-        elseif (should_install)
-            install(TARGETS ${target}
-                DESTINATION "${arg_INSTALL_LOCATION}"
-            )
-        endif()
+    if (NOT DO_NOT_CREATE_TARGET AND should_install)
+        install(TARGETS ${target}
+            DESTINATION "${arg_INSTALL_DIRECTORY}"
+        )
     endif()
 
     if (arg_OUTPUT_DIRECTORY)
@@ -392,30 +380,33 @@ function(qt6_add_qml_module target)
         if (resource_targets AND arg_RESOURCE_EXPORT)
             install(TARGETS ${resource_targets}
                 EXPORT "${arg_RESOURCE_EXPORT}"
-                DESTINATION "${arg_INSTALL_LOCATION}"
+                DESTINATION "${arg_INSTALL_DIRECTORY}"
             )
 
             # When building a static Qt, we need to record information about the compiled resource
             # object files to embed them into .prl files.
             if(COMMAND qt_internal_record_rcc_object_files)
                 qt_internal_record_rcc_object_files(
-                    "${target}" "${resource_targets}" INSTALL_LOCATION "${arg_INSTALL_LOCATION}")
+                    "${target}" "${resource_targets}" INSTALL_DIRECTORY "${arg_INSTALL_DIRECTORY}")
             endif()
         endif()
-    else()
-        # Copy QMLDIR file to build directory
-        add_custom_command(TARGET ${target} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy
-                ${qmldir_file}
-                ${target_output_dir}
-        )
+    endif()
 
-        # Install QMLDIR file
-        if (NOT DO_NOT_INSTALL_METADATA AND should_install)
-            install(FILES ${qmldir_file}
-                DESTINATION "${arg_INSTALL_LOCATION}"
-            )
-        endif()
+    # Copy QMLDIR file to build directory. We want to do this even for static
+    # builds so that tools and IDEs can read it.
+    add_custom_command(TARGET ${target} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${qmldir_file}
+            ${target_output_dir}/qmldir
+        BYPRODUCTS
+            ${target_output_dir}/qmldir
+    )
+
+    # Install QMLDIR file
+    if (should_install)
+        install(FILES ${qmldir_file}
+            DESTINATION "${arg_INSTALL_DIRECTORY}"
+        )
     endif()
 
     # Install and Copy plugin.qmltypes if exists
@@ -433,41 +424,46 @@ function(qt6_add_qml_module target)
 
         _qt_internal_qmldir_defer_file(APPEND "${qmldir_file}" "typeinfo plugins.qmltypes\n")
 
-        if (NOT arg_DO_NOT_INSTALL_METADATA AND should_install)
+        if (should_install)
             install(FILES "${target_plugin_qmltypes}"
-                    DESTINATION "${arg_INSTALL_LOCATION}"
+                    DESTINATION "${arg_INSTALL_DIRECTORY}"
             )
         endif()
 
         add_custom_command(TARGET ${target} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
                 ${target_plugin_qmltypes}
-                ${target_output_dir}
+                ${target_output_dir}/plugins.qmltypes
+            BYPRODUCTS
+                ${target_output_dir}/plugins.qmltypes
         )
     endif()
 
     # Copy/Install type info file
     if (EXISTS ${arg_TYPEINFO})
-        if (NOT arg_DO_NOT_INSTALL_METADATA AND should_install)
+        if (should_install)
             install(FILES "${arg_TYPEINFO}"
-                    DESTINATION "${arg_INSTALL_LOCATION}"
+                    DESTINATION "${arg_INSTALL_DIRECTORY}"
             )
         endif()
 
+        get_filename_component(filename ${arg_TYPEINFO} NAME)
         add_custom_command(TARGET ${target} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
                 ${arg_TYPEINFO}
-                ${target_output_dir}
+                ${target_output_dir}/${filename}
+            BYPRODUCTS
+                ${target_output_dir}/${filename}
         )
     endif()
 
     if (arg_INSTALL_QMLTYPES)
         set_target_properties(${target} PROPERTIES QT_QML_MODULE_INSTALL_QMLTYPES TRUE)
-        if (arg_INSTALL_LOCATION)
+        if (arg_INSTALL_DIRECTORY)
             get_target_property(qml_module_install_dir ${target} QT_QML_MODULE_INSTALL_DIR)
             if (NOT qml_module_install_dir)
                 set_target_properties(${target}
-                    PROPERTIES QT_QML_MODULE_INSTALL_DIR "${arg_INSTALL_LOCATION}"
+                    PROPERTIES QT_QML_MODULE_INSTALL_DIR "${arg_INSTALL_DIRECTORY}"
                 )
             endif()
         endif()
@@ -585,6 +581,7 @@ function(qt6_target_qml_files target)
     get_target_property(skip_type_registration ${target} QT_QML_MODULE_SKIP_TYPE_REGISTRATION)
     get_target_property(target_resource_export ${target} QT_QML_MODULE_RESOURCE_EXPORT)
     get_target_property(qml_module_install_dir ${target} QT_QML_MODULE_INSTALL_DIR)
+    get_target_property(qml_module_output_dir  ${target} QT_QML_MODULE_OUTPUT_DIR)
 
     if(NOT qml_module_install_dir)
         message(AUTHOR_WARNING
@@ -602,7 +599,7 @@ function(qt6_target_qml_files target)
         # object files to embed them into .prl files.
         if(COMMAND qt_internal_record_rcc_object_files)
             qt_internal_record_rcc_object_files(
-                "${target}" "${resource_targets}" INSTALL_LOCATION "${qml_module_install_dir}")
+                "${target}" "${resource_targets}" INSTALL_DIRECTORY "${qml_module_install_dir}")
         endif()
     endif()
 
@@ -614,12 +611,11 @@ function(qt6_target_qml_files target)
         if (NOT "${qml_file_dir}" STREQUAL "")
             set(qml_file_dir "/${qml_file_dir}")
         endif()
+        if (qml_module_output_dir)
+            file(COPY "${qml_file}" DESTINATION "${qml_module_output_dir}${qml_file_dir}")
+        endif()
         if (qml_module_install_dir)
-            if (NOT QT_WILL_INSTALL)
-                file(COPY "${qml_file}" DESTINATION "${qml_module_install_dir}${qml_file_dir}")
-            else()
-                install(FILES "${qml_file}" DESTINATION "${qml_module_install_dir}${qml_file_dir}")
-            endif()
+            install(FILES "${qml_file}" DESTINATION "${qml_module_install_dir}${qml_file_dir}")
         endif()
 
         if (skip_type_registration AND qml_file MATCHES "\\.qml$")
@@ -879,6 +875,8 @@ function(qt6_qml_type_registration target)
                 add_custom_command(TARGET ${target} POST_BUILD
                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
                         "${plugin_types_file}"
+                        "${qml_install_dir}/${qmltypes_output_name}"
+                    BYPRODUCTS
                         "${qml_install_dir}/${qmltypes_output_name}"
                     COMMENT "Copying ${plugin_types_file} to ${qml_install_dir}"
                 )
