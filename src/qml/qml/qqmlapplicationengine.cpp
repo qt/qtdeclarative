@@ -146,6 +146,14 @@ void QQmlApplicationEnginePrivate::finishLoad(QQmlComponent *c)
         break;
     case QQmlComponent::Ready: {
         auto newObj = initialProperties.empty() ? c->create() : c->createWithInitialProperties(initialProperties);
+
+        if (c->isError()) {
+           qWarning() << "QQmlApplicationEngine failed to create component";
+           warning(c->errors());
+           q->objectCreated(nullptr, c->url());
+           break;
+        }
+
         objects << newObj;
         QObject::connect(newObj, &QObject::destroyed, q, [&](QObject *obj) { objects.removeAll(obj); });
         q->objectCreated(objects.constLast(), c->url());
