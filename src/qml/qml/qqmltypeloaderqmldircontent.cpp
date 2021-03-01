@@ -110,7 +110,7 @@ QQmlDirImports QQmlTypeLoaderQmldirContent::imports() const
     return m_parser.imports();
 }
 
-QString QQmlTypeLoaderQmldirContent::pluginLocation() const
+QString QQmlTypeLoaderQmldirContent::qmldirLocation() const
 {
     return m_location;
 }

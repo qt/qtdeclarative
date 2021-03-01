@@ -80,7 +80,7 @@ public:
     QQmlDirPlugins plugins() const;
     QQmlDirImports imports() const;
 
-    QString pluginLocation() const;
+    QString qmldirLocation() const;
 
     bool designerSupported() const;
 

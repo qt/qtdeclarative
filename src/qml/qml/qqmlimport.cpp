@@ -315,9 +315,8 @@ public:
             QTypeRevision version, QList<QQmlError> *errors);
 
     QTypeRevision importExtension(
-            const QString &absoluteFilePath, const QString &uri, QTypeRevision version,
-            QQmlImportDatabase *database, const QQmlTypeLoaderQmldirContent &qmldir,
-            QList<QQmlError> *errors);
+            const QString &uri, QTypeRevision version, QQmlImportDatabase *database,
+            const QQmlTypeLoaderQmldirContent &qmldir, QList<QQmlError> *errors);
 
     bool getQmldirContent(const QString &qmldirIdentifier, const QString &uri,
                           QQmlTypeLoaderQmldirContent *qmldir, QList<QQmlError> *errors);
@@ -1192,16 +1191,14 @@ bool QQmlImportsPrivate::populatePluginPairVector(QVector<StaticPluginPair> &res
 
 /*
 Import an extension defined by a qmldir file.
-
-\a qmldirFilePath is a raw file path.
 */
 QTypeRevision QQmlImportsPrivate::importExtension(
-        const QString &qmldirFilePath, const QString &uri, QTypeRevision version,
-        QQmlImportDatabase *database, const QQmlTypeLoaderQmldirContent &qmldir,
-        QList<QQmlError> *errors)
+        const QString &uri, QTypeRevision version, QQmlImportDatabase *database,
+        const QQmlTypeLoaderQmldirContent &qmldir, QList<QQmlError> *errors)
 {
     Q_ASSERT(qmldir.hasContent());
 
+    const QString qmldirFilePath = qmldir.qmldirLocation();
     if (qmlImportTrace())
         qDebug().nospace() << "QQmlImports(" << qPrintable(base) << ")::importExtension: "
                            << "loaded " << qmldirFilePath;
@@ -1624,8 +1621,7 @@ QTypeRevision QQmlImportsPrivate::addLibraryImport(
                 return QTypeRevision();
 
             if (qmldir.hasContent()) {
-                version = importExtension(
-                            qmldir.pluginLocation(), uri, version, database, qmldir, errors);
+                version = importExtension(uri, version, database, qmldir, errors);
                 if (!version.isValid())
                     return QTypeRevision();
 
@@ -1744,8 +1740,7 @@ QTypeRevision QQmlImportsPrivate::addFileImport(
             return QTypeRevision();
 
         if (qmldir.hasContent()) {
-            version = importExtension(
-                        qmldir.pluginLocation(), importUri, version, database, qmldir, errors);
+            version = importExtension(importUri, version, database, qmldir, errors);
             if (!version.isValid())
                 return QTypeRevision();
 
@@ -1770,8 +1765,7 @@ QTypeRevision QQmlImportsPrivate::updateQmldirContent(const QString &uri, const 
             return QTypeRevision();
 
         if (qmldir.hasContent()) {
-            QTypeRevision version = importExtension(
-                        qmldir.pluginLocation(), uri, import->version, database, qmldir, errors);
+            QTypeRevision version = importExtension(uri, import->version, database, qmldir, errors);
             if (!version.isValid())
                 return QTypeRevision();
 
