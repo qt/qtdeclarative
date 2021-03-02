@@ -242,6 +242,7 @@ class QQmlJSMetaProperty
     bool m_isWritable = false;
     bool m_isPointer = false;
     bool m_isAlias = false;
+    bool m_isRequired = false;
     int m_revision = 0;
 
 public:
@@ -270,6 +271,9 @@ public:
 
     void setIsAlias(bool isAlias) { m_isAlias = isAlias; }
     bool isAlias() const { return m_isAlias; }
+
+    void setIsRequired(bool isRequired) { m_isRequired = isRequired; }
+    bool isRequired() const { return m_isRequired; }
 
     void setRevision(int revision) { m_revision = revision; }
     int revision() const { return m_revision; }

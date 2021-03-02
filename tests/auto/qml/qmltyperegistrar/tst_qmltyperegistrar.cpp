@@ -199,4 +199,10 @@ void tst_qmltyperegistrar::localDefault()
     QVERIFY(foreign > defaultProp || foreign < local);
 }
 
+void tst_qmltyperegistrar::requiredProperty()
+{
+    QCOMPARE(qmltypesData.count("name: \"RequiredProperty\""), 1);
+    QCOMPARE(qmltypesData.count("isRequired: true"), 1);
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

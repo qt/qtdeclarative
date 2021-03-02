@@ -59,6 +59,8 @@ private Q_SLOTS:
     void autoqmltypes();
     void resources();
 
+    void requiredProperty();
+
 private:
     QString runQmllint(const QString &fileToLint,
                        std::function<void(QProcess &)> handleResult,
@@ -455,6 +457,15 @@ QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed, c
             QVERIFY(process.exitCode() != 0);
     }, extraArgs);
 }
+
+void TestQmllint::requiredProperty()
+{
+    QVERIFY(runQmllint("requiredProperty.qml", true).isEmpty());
+
+    const QString errors = runQmllint("requiredMissingProperty.qml", true);
+    QVERIFY(errors.contains(QStringLiteral("Property \"foo\" was marked as required but does not exist.")));
+}
+
 
 QTEST_MAIN(TestQmllint)
 #include "tst_qmllint.moc"

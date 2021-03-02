@@ -341,6 +341,8 @@ void QQmlJSTypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQ
             property.setIsPointer(readBoolBinding(script));
         } else if (id == QLatin1String("isReadonly")) {
             property.setIsWritable(!readBoolBinding(script));
+        } else if (id == QLatin1String("isRequired")) {
+            property.setIsRequired(readBoolBinding(script));
         } else if (id == QLatin1String("isList")) {
             property.setIsList(readBoolBinding(script));
         } else if (id == QLatin1String("revision")) {
@@ -352,7 +354,7 @@ void QQmlJSTypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQ
             continue;
         } else {
             addWarning(script->firstSourceLocation(),
-                       tr("Expected only type, name, revision, isPointer, isReadonly, bindable, and"
+                       tr("Expected only type, name, revision, isPointer, isReadonly, isRequired, bindable, and"
                           " isList script bindings."));
         }
     }

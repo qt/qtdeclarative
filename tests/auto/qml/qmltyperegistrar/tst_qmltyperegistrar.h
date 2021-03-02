@@ -234,6 +234,19 @@ public:
     int p() const { return 'p'; }
 };
 
+class RequiredProperty : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(int foo READ foo WRITE setFoo REQUIRED)
+public:
+    RequiredProperty(QObject *parent = nullptr) : QObject(parent) {}
+    int foo() { return m_foo; }
+    void setFoo(int foo) { m_foo = foo; }
+private:
+    int m_foo;
+};
+
 class MultiExtension : public MultiExtensionParent
 {
     Q_OBJECT
@@ -267,6 +280,7 @@ private slots:
     void metaTypesRegistered();
     void multiExtensions();
     void localDefault();
+    void requiredProperty();
 
 private:
     QByteArray qmltypesData;
