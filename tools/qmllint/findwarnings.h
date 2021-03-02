@@ -90,9 +90,14 @@ private:
 
     QVarLengthArray<OutstandingConnection, 3> m_outstandingConnections; // Connections whose target we have not encountered
 
+    // records of whether a default property has object assigned to it. for
+    // correctness, the scope that defines the default property acts as a key
+    QHash<const QQmlJSScope *, bool> m_scopeHasDefaultPropertyAssignment;
+
     void checkInheritanceCycle(QQmlJSScope::ConstPtr scope);
     void checkGroupedAndAttachedScopes(QQmlJSScope::ConstPtr scope);
     void flushPendingSignalParameters();
+    void checkDefaultProperty(const QQmlJSScope::ConstPtr &scope);
 
     void throwRecursionDepthError() override;
 

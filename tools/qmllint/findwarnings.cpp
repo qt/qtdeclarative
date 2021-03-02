@@ -153,6 +153,60 @@ void FindWarningVisitor::flushPendingSignalParameters()
     m_pendingSingalHandler = QQmlJS::SourceLocation();
 }
 
+void FindWarningVisitor::checkDefaultProperty(const QQmlJSScope::ConstPtr &scope)
+{
+    if (scope == m_exportedRootScope) // inapplicable
+        return;
+
+    const QQmlJSScope *scopeOfDefaultProperty = nullptr;
+    QString defaultPropertyName;
+    // NB: start looking for default property in parent scope (because this
+    // scope is not suitable), but progress through baseType()
+    for (auto s = scope->parentScope(); s; s = s->baseType()) {
+        defaultPropertyName = s->defaultPropertyName();
+        if (!defaultPropertyName.isEmpty()) {
+            scopeOfDefaultProperty = s.data();
+            break;
+        }
+    }
+    if (defaultPropertyName.isEmpty()) {
+        m_errors.append({ QStringLiteral("Cannot assign to non-existent default property"),
+                          QtWarningMsg, scope->sourceLocation() });
+        m_visitFailed = true;
+        return;
+    }
+
+    Q_ASSERT(scopeOfDefaultProperty);
+    Q_ASSERT(scope->parentScope());
+    QQmlJSMetaProperty defaultProp = scopeOfDefaultProperty->property(defaultPropertyName);
+
+    // abuse QHash feature to construct default value through
+    // operator[]. default bool is false, which is what's needed
+    if (m_scopeHasDefaultPropertyAssignment[scopeOfDefaultProperty] && !defaultProp.isList()) {
+        // already has some object assigned to a default property and
+        // this default property is not a list property
+        m_errors.append(
+                { QStringLiteral("Cannot assign multiple objects to a default non-list property"),
+                  QtWarningMsg, scope->sourceLocation() });
+        m_visitFailed = true;
+    }
+    m_scopeHasDefaultPropertyAssignment[scopeOfDefaultProperty] = true;
+
+    auto propType = defaultProp.type().data();
+    if (!propType) // should be an error somewhere else
+        return;
+
+    // scope's type hierarchy has to have property type
+    for (const QQmlJSScope *type = scope.data(); type; type = type->baseType().data()) {
+        if (type == propType)
+            return;
+    }
+
+    m_errors.append({ QStringLiteral("Cannot assign to default property of incompatible type"),
+                      QtWarningMsg, scope->sourceLocation() });
+    m_visitFailed = true;
+}
+
 void FindWarningVisitor::throwRecursionDepthError()
 {
     QQmlJSImportVisitor::throwRecursionDepthError();
@@ -524,6 +578,9 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
                 m_currentScope->addOwnMethod(method);
         }
     }
+
+    checkDefaultProperty(m_currentScope);
+
     return true;
 }
 

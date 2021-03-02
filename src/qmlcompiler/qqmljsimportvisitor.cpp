@@ -255,7 +255,8 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         prop.setIsAlias(isAlias);
         prop.setType(m_rootScopeImports.value(prop.typeName()));
         prop.setAnnotations(parseAnnotations(publicMember->annotations));
-
+        if (publicMember->isDefaultMember)
+            m_currentScope->setDefaultPropertyName(prop.propertyName());
         m_currentScope->insertPropertyIdentifier(prop);
         if (publicMember->isRequired)
             m_currentScope->setPropertyLocallyRequired(prop.propertyName(), true);

@@ -345,6 +345,21 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("deprecatedType.qml")
             << QStringLiteral("Type \"TypeDeprecated\" is deprecated")
             << QString();
+    QTest::newRow("MissingDefaultProperty")
+            << QStringLiteral("defaultPropertyWithoutKeyword.qml")
+            << QStringLiteral("Cannot assign to non-existent default property") << QString();
+    QTest::newRow("DoubleAssignToDefaultProperty")
+            << QStringLiteral("defaultPropertyWithDoubleAssignment.qml")
+            << QStringLiteral("Cannot assign multiple objects to a default non-list property")
+            << QString();
+    QTest::newRow("DefaultPropertyWithWrongType(string)")
+            << QStringLiteral("defaultPropertyWithWrongType.qml")
+            << QStringLiteral("Cannot assign to default property of incompatible type")
+            << QStringLiteral("Cannot assign to non-existent default property");
+    QTest::newRow("DefaultPropertyWithWrongType(var)")
+            << QStringLiteral("defaultPropertyWithWrongType2.qml")
+            << QStringLiteral("Cannot assign to default property of incompatible type")
+            << QStringLiteral("Cannot assign to non-existent default property");
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -414,6 +429,8 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("externalEnumProperty") << QStringLiteral("externalEnumProperty.qml");
     QTest::newRow("shapes") << QStringLiteral("shapes.qml");
     QTest::newRow("var") << QStringLiteral("var.qml");
+    QTest::newRow("defaultProperty") << QStringLiteral("defaultProperty.qml");
+    QTest::newRow("defaultPropertyList") << QStringLiteral("defaultPropertyList.qml");
 }
 
 void TestQmllint::cleanQmlCode()
