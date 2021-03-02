@@ -189,7 +189,6 @@ QQmlPropertyCache::~QQmlPropertyCache()
     QQmlPropertyCacheMethodArguments *args = argumentsCache;
     while (args) {
         QQmlPropertyCacheMethodArguments *next = args->next;
-        delete args->signalParameterStringForJS;
         delete args->names;
         free(args);
         args = next;
@@ -778,7 +777,6 @@ QQmlPropertyCacheMethodArguments *QQmlPropertyCache::createArgumentsObject(int a
     A *args = static_cast<A *>(malloc(sizeof(A) + (argc) * sizeof(int)));
     args->arguments[0] = argc;
     args->argumentsValid = false;
-    args->signalParameterStringForJS = nullptr;
     args->parameterError = false;
     args->names = argc ? new QList<QByteArray>(names) : nullptr;
     args->next = argumentsCache;
