@@ -100,13 +100,17 @@ QT_BEGIN_NAMESPACE
     The following inputs are predefined:
 
     \list
-    \li vec4 qt_Vertex - vertex position, the top-left vertex has
+    \li vec4 qt_Vertex with location 0 - vertex position, the top-left vertex has
        position (0, 0), the bottom-right (\l{Item::width}{width},
        \l{Item::height}{height}).
-    \li vec2 qt_MultiTexCoord0 - texture coordinate, the top-left
+    \li vec2 qt_MultiTexCoord0 with location 1 - texture coordinate, the top-left
        coordinate is (0, 0), the bottom-right (1, 1). If \l supportsAtlasTextures
        is true, coordinates will be based on position in the atlas instead.
     \endlist
+
+    \note It is only the vertex input location that matters in practice. The
+    names are freely changeable, while the location must always be \c 0 for
+    vertex position, \c 1 for texture coordinates.
 
     The following uniforms are predefined:
 
@@ -122,6 +126,9 @@ QT_BEGIN_NAMESPACE
     must always use a uniform block with a binding point of \c 0.
 
     \note The uniform block layout qualifier must always be \c std140.
+
+    \note Unlike vertex inputs, the predefined names (qt_Matrix, qt_Opacity)
+    must not be changed.
 
     In addition, any property that can be mapped to a GLSL type can be made
     available to the shaders. The following list shows how properties are
@@ -215,7 +222,6 @@ QT_BEGIN_NAMESPACE
             mat4 qt_Matrix;
             float qt_Opacity;
         };
-        out gl_PerVertex { vec4 gl_Position; };
         void main() {
             coord = qt_MultiTexCoord0;
             gl_Position = qt_Matrix * qt_Vertex;
@@ -354,7 +360,155 @@ QT_BEGIN_NAMESPACE
     corner. For non-linear vertex transformations, like page curl, you can
     specify a fine grid of vertices by specifying a \l mesh resolution.
 
-    \sa {Item Layers}
+    \section1 Migrating From Qt 5
+
+    For Qt 5 applications with ShaderEffect items the migration to Qt 6 involves:
+    \list
+    \li Moving the shader code to separate \c{.vert} and \c{.frag} files,
+    \li updating the shaders to Vulkan-compatible GLSL,
+    \li running the \c qsb tool on them,
+    \li including the resulting \c{.qsb} files in the executable with the Qt resource system,
+    \li and referencing the file in the \l vertexShader and \l fragmentShader properties.
+    \endlist
+
+    As described in the \l{Qt Shader Tools} module some of these steps can be
+    automated by letting CMake invoke the \c qsb tool at build time. See \l{Qt
+    Shader Tools Build System Integration} for more information and examples.
+
+    When it comes to updating the shader code, below is an overview of the
+    commonly required changes.
+
+    \table
+    \header
+    \li Vertex shader in Qt 5
+    \li Vertex shader in Qt 6
+    \row
+    \li \badcode
+        attribute highp vec4 qt_Vertex;
+        attribute highp vec2 qt_MultiTexCoord0;
+        varying highp vec2 coord;
+        uniform highp mat4 qt_Matrix;
+        void main() {
+            coord = qt_MultiTexCoord0;
+            gl_Position = qt_Matrix * qt_Vertex;
+        }
+    \endcode
+    \li \badcode
+        #version 440
+        layout(location = 0) in vec4 qt_Vertex;
+        layout(location = 1) in vec2 qt_MultiTexCoord0;
+        layout(location = 0) out vec2 coord;
+        layout(std140, binding = 0) uniform buf {
+            mat4 qt_Matrix;
+            float qt_Opacity;
+        };
+        void main() {
+            coord = qt_MultiTexCoord0;
+            gl_Position = qt_Matrix * qt_Vertex;
+        }
+    \endcode
+    \endtable
+
+    The conversion process mostly involves updating the code to be compatible
+    with
+    \l{https://github.com/KhronosGroup/GLSL/blob/master/extensions/khr/GL_KHR_vulkan_glsl.txt}{GL_KHR_vulkan_glsl}.
+    It is worth noting that Qt Quick uses a subset of the features provided by
+    GLSL and Vulkan, and therefore the conversion process for typical
+    ShaderEffect shaders is usually straightforward.
+
+    \list
+
+    \li The \c version directive should state \c 440 or \c 450, although
+    specifying other GLSL version may work too, because the
+    \l{https://github.com/KhronosGroup/GLSL/blob/master/extensions/khr/GL_KHR_vulkan_glsl.txt}{GL_KHR_vulkan_glsl}
+    extension is written for GLSL 140 and higher.
+
+    \li Inputs and outputs must use the modern GLSL \c in and \c out keywords.
+    In addition, specifying a location is required. The input and output
+    location namespaces are separate, and therefore assigning locations
+    starting from 0 for both is safe.
+
+    \li When it comes to vertex shader inputs, the only possibilities with
+    ShaderEffect are location \c 0 for vertex position (traditionally named \c
+    qt_Vertex) and location \c 1 for texture coordinates (traditionally named
+    \c qt_MultiTexCoord0).
+
+    \li The vertex shader outputs and fragment shader inputs are up to the
+    shader code to define. The fragment shader must have a \c vec4 output at
+    location 0 (typically called \c fragColor).
+
+    \li Uniform variables outside a uniform block are not legal. Rather,
+    uniform data must be declared in a uniform block with binding point \c 0.
+
+    \li The uniform block is expected to use the std140 qualifier.
+
+    \li At run time, the vertex and fragment shader will get the same uniform
+    buffer bound to binding point 0. Therefore, as a general rule, the uniform
+    block declarations must be identical between the shaders. This also
+    includes members that are not used in one of the shaders. The member names
+    must match, because with some graphics APIs the uniform block is converted
+    to a traditional struct uniform, transparently to the application.
+
+    \li When providing one of the shaders only, watch out for the fact that the
+    built-in shaders expect \c qt_Matrix and \c qt_Opacity at the top of the
+    uniform block. (more precisely, at offset 0 and 64, respectively) As a
+    general rule, always include these as the first and second members in the
+    block.
+
+    \li In the example the uniform block specifies the block name \c buf. This
+    name can be changed freely, but must match between the shaders. Using an
+    instance name, such as \c{layout(...) uniform buf { ... } instance_name;}
+    is optional. When specified, all accesses to the members must be qualified
+    with instance_name.
+
+    \endlist
+
+    \table
+    \header
+    \li Fragment shader in Qt 5
+    \li Fragment shader in Qt 6
+    \row
+    \li \badcode
+        varying highp vec2 coord;
+        uniform lowp float qt_Opacity;
+        uniform sampler2D src;
+        void main() {
+            lowp vec4 tex = texture2D(src, coord);
+            gl_FragColor = vec4(vec3(dot(tex.rgb,
+                                vec3(0.344, 0.5, 0.156))),
+                                     tex.a) * qt_Opacity;
+        }
+    \endcode
+    \li \badcode
+        #version 440
+        layout(location = 0) in vec2 coord;
+        layout(location = 0) out vec4 fragColor;
+        layout(std140, binding = 0) uniform buf {
+            mat4 qt_Matrix;
+            float qt_Opacity;
+        };
+        layout(binding = 1) uniform sampler2D src;
+        void main() {
+            vec4 tex = texture(src, coord);
+            fragColor = vec4(vec3(dot(tex.rgb,
+                             vec3(0.344, 0.5, 0.156))),
+                                  tex.a) * qt_Opacity;
+        }
+    \endcode
+    \endtable
+
+    \list
+
+    \li Precision qualifiers (\c lowp, \c mediump, \c highp) are not currently used.
+
+    \li Calling built-in GLSL functions must follow the modern GLSL names, most
+    prominently, \c{texture()} instead of \c{texture2D()}.
+
+    \li Samplers must use binding points starting from 1.
+
+    \endlist
+
+    \sa {Item Layers}, {QSB Manual}, {Qt Shader Tools Build System Integration}
 */
 
 
