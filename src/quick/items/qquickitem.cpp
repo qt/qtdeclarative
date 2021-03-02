@@ -5242,7 +5242,7 @@ QQuickDeliveryAgent *QQuickItemPrivate::deliveryAgent()
         } while (p);
         // arriving here is somewhat unexpected: a detached root can easily be created (just set an item's parent to null),
         // but why would we deliver events to that subtree? only if root got detached while an item in that subtree still has a grab?
-        qCWarning(lcPtr) << "detached root of" << q << "is not a QQuickRootItem and also does not have its own DeliveryAgent";
+        qCDebug(lcPtr) << "detached root of" << q << "is not a QQuickRootItem and also does not have its own DeliveryAgent";
     }
     if (window)
         return QQuickWindowPrivate::get(window)->deliveryAgent;
