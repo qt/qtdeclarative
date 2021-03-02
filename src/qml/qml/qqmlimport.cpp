@@ -1436,11 +1436,16 @@ QQmlImports::LocalQmldirResult QQmlImportsPrivate::locateLocalQmldir(
         if (!absoluteFilePath.isEmpty()) {
             QString url;
             const QStringView absolutePath = QStringView{absoluteFilePath}.left(absoluteFilePath.lastIndexOf(Slash) + 1);
-            if (absolutePath.at(0) == Colon)
+            if (absolutePath.at(0) == Colon) {
                 url = QLatin1String("qrc") + absolutePath;
-            else
+            } else {
                 url = QUrl::fromLocalFile(absolutePath.toString()).toString();
-
+                // This handles the UNC path case as when the path is retrieved from the QUrl it
+                // will convert the host name from upper case to lower case. So the absoluteFilePath
+                // is changed at this point to make sure it will match later on in that case.
+                if (absoluteFilePath.startsWith(QLatin1String("//")))
+                    absoluteFilePath = QUrl::fromLocalFile(absoluteFilePath).toString(QUrl::RemoveScheme);
+            }
             QQmlImportDatabase::QmldirCache *cache = new QQmlImportDatabase::QmldirCache;
             cache->version = version;
             cache->qmldirFilePath = absoluteFilePath;
