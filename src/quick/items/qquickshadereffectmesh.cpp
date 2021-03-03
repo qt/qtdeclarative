@@ -195,6 +195,10 @@ QSGGeometry *QQuickGridMesh::updateGeometry(QSGGeometry *geometry, int attrCount
     resolution higher.
 
     \table
+    \header
+    \li Result
+    \li QML code
+    \li gridmesh.vert
     \row
     \li \image declarative-gridmesh.png
     \li \qml
@@ -210,21 +214,27 @@ QSGGeometry *QQuickGridMesh::updateGeometry(QSGGeometry *geometry, int attrCount
                 source: "qt-logo.png"
                 sourceSize { width: 200; height: 200 }
             }
-            vertexShader: "
-                uniform highp mat4 qt_Matrix;
-                attribute highp vec4 qt_Vertex;
-                attribute highp vec2 qt_MultiTexCoord0;
-                varying highp vec2 qt_TexCoord0;
-                uniform highp float width;
-                void main() {
-                    highp vec4 pos = qt_Vertex;
-                    highp float d = .5 * smoothstep(0., 1., qt_MultiTexCoord0.y);
-                    pos.x = width * mix(d, 1.0 - d, qt_MultiTexCoord0.x);
-                    gl_Position = qt_Matrix * pos;
-                    qt_TexCoord0 = qt_MultiTexCoord0;
-                }"
+            vertexShader: "gridmesh.vert"
         }
         \endqml
+    \li \badcode
+        #version 440
+        layout(location = 0) in vec4 qt_Vertex;
+        layout(location = 1) in vec2 qt_MultiTexCoord0;
+        layout(location = 0) out vec2 qt_TexCoord0;
+        layout(std140, binding = 0) uniform buf {
+            mat4 qt_Matrix;
+            float qt_Opacity;
+            float width;
+        };
+        void main() {
+            vec4 pos = qt_Vertex;
+            float d = 0.5 * smoothstep(0.0, 1.0, qt_MultiTexCoord0.y);
+            pos.x = width * mix(d, 1.0 - d, qt_MultiTexCoord0.x);
+            gl_Position = qt_Matrix * pos;
+            qt_TexCoord0 = qt_MultiTexCoord0;
+        }
+        \endcode
     \endtable
 */
 
