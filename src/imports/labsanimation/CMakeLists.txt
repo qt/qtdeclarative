@@ -7,7 +7,7 @@
 qt_internal_add_qml_module(labsanimationplugin
     URI "Qt.labs.animation"
     VERSION "${CMAKE_PROJECT_VERSION}"
-    CLASSNAME QtLabsAnimationPlugin
+    CLASS_NAME QtLabsAnimationPlugin
     SKIP_TYPE_REGISTRATION
     PLUGIN_OPTIONAL
     SOURCES

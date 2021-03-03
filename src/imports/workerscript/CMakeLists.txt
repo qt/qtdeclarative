@@ -8,7 +8,7 @@ qt_internal_add_qml_module(workerscriptplugin
     URI "QtQml.WorkerScript"
     VERSION "${CMAKE_PROJECT_VERSION}"
     DESIGNER_SUPPORTED
-    CLASSNAME QtQmlWorkerScriptPlugin
+    CLASS_NAME QtQmlWorkerScriptPlugin
     SKIP_TYPE_REGISTRATION
     PLUGIN_OPTIONAL
     SOURCES

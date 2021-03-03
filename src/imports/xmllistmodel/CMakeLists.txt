@@ -1,7 +1,7 @@
 qt_internal_add_qml_module(qmlxmllistmodelplugin
     URI "QtQml.XmlListModel"
     VERSION "${CMAKE_PROJECT_VERSION}"
-    CLASSNAME QtQmlXmlListModelPlugin
+    CLASS_NAME QtQmlXmlListModelPlugin
     SKIP_TYPE_REGISTRATION
     DEPENDENCIES
         QtQml

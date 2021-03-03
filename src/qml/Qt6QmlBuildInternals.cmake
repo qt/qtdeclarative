@@ -31,6 +31,12 @@ function(qt_internal_add_qml_module target)
         internal_multi_args
     )
 
+    # We don't want to pass CLASS_NAME to qt_internal_add_plugin(), we will
+    # pass it to qt6_add_qml_module() to handle instead. qt_internal_add_plugin()
+    # would just ignore it anyway because we set TYPE to qml_plugin, but we have
+    # to remove it to prevent duplicates in argument parsing.
+    list(REMOVE_ITEM public_single_args CLASS_NAME)
+
     set(qml_module_option_args
         GENERATE_QMLTYPES
         INSTALL_QMLTYPES
@@ -43,8 +49,10 @@ function(qt_internal_add_qml_module target)
         URI
         TARGET_PATH
         VERSION
-        CLASSNAME
         TYPEINFO
+        CLASS_NAME
+        CLASSNAME  # TODO: Remove once all other repos have been updated to use
+                   #       CLASS_NAME instead.
     )
 
     set(qml_module_multi_args
@@ -123,11 +131,8 @@ function(qt_internal_add_qml_module target)
         endif()
     endforeach()
 
-    # Pass through single and multi-value args as provided. CLASSNAME is
-    # special because it can be passed to qt_internal_add_plugin() and
-    # qt6_add_qml_module().
-    foreach(arg IN LISTS qml_module_single_args qml_module_multi_args
-                   ITEMS CLASSNAME)
+    # Pass through single and multi-value args as provided
+    foreach(arg IN LISTS qml_module_single_args qml_module_multi_args)
         if(DEFINED arg_${arg})
             list(APPEND add_qml_module_args ${arg} ${arg_${arg}})
         endif()

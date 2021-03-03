@@ -7,7 +7,7 @@
 qt_internal_add_qml_module(qmlfolderlistmodelplugin
     URI "Qt.labs.folderlistmodel"
     VERSION "${CMAKE_PROJECT_VERSION}"
-    CLASSNAME QmlFolderListModelPlugin
+    CLASS_NAME QmlFolderListModelPlugin
     SKIP_TYPE_REGISTRATION
     PLUGIN_OPTIONAL
     SOURCES

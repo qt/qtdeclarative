@@ -7,7 +7,7 @@
 qt_internal_add_qml_module(qmllocalstorageplugin
     URI "QtQuick.LocalStorage"
     VERSION "${CMAKE_PROJECT_VERSION}"
-    CLASSNAME QQmlLocalStoragePlugin
+    CLASS_NAME QQmlLocalStoragePlugin
     SKIP_TYPE_REGISTRATION
     PLUGIN_OPTIONAL
     SOURCES

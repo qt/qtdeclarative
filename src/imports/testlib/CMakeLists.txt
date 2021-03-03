@@ -7,7 +7,7 @@
 qt_internal_add_qml_module(qmltestplugin
     URI "QtTest"
     VERSION "${CMAKE_PROJECT_VERSION}"
-    CLASSNAME QTestQmlModule
+    CLASS_NAME QTestQmlModule
     DEPENDENCIES
         QtQuick.Window/2.0
     SOURCES

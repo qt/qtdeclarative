@@ -8,7 +8,7 @@ qt_internal_add_qml_module(modelsplugin
     URI "QtQml.Models"
     VERSION "${CMAKE_PROJECT_VERSION}"
     DESIGNER_SUPPORTED
-    CLASSNAME QtQmlModelsPlugin
+    CLASS_NAME QtQmlModelsPlugin
     SKIP_TYPE_REGISTRATION
     PLUGIN_OPTIONAL
     SOURCES
