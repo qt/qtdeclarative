@@ -76,8 +76,6 @@
 
 QT_BEGIN_NAMESPACE
 
-using namespace QQmlVMETypes;
-
 bool QQmlVME::s_enableComponentComplete = true;
 
 void QQmlVME::enableComponentComplete()

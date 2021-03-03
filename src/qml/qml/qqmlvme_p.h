@@ -69,32 +69,6 @@
 QT_BEGIN_NAMESPACE
 
 class QObject;
-class QJSValue;
-class QQmlScriptData;
-class QQmlContextData;
-
-namespace QQmlVMETypes {
-    struct List
-    {
-        List() : type(0) {}
-        List(int t) : type(t) {}
-
-        int type;
-        QQmlListProperty<void> qListProperty;
-    };
-    struct State {
-        enum Flag { Deferred = 0x00000001 };
-
-        State() : flags(0), context(nullptr), instructionStream(nullptr) {}
-        quint32 flags;
-        QQmlRefPointer<QQmlContextData> context;
-        const char *instructionStream;
-        QBitField bindingSkipList;
-    };
-}
-Q_DECLARE_TYPEINFO(QQmlVMETypes::List, Q_PRIMITIVE_TYPE  | Q_RELOCATABLE_TYPE);
-template<>
-class QTypeInfo<QQmlVMETypes::State> : public QTypeInfoMerger<QQmlVMETypes::State, QBitField> {}; //Q_DECLARE_TYPEINFO
 
 class QQmlInstantiationInterrupt {
 public:
