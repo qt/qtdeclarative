@@ -52,7 +52,6 @@
 //
 
 #include "qqmlerror.h"
-#include <private/qbitfield_p.h>
 #include <private/qrecursionwatcher_p.h>
 
 #include <QtCore/QStack>

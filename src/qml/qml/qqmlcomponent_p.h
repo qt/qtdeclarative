@@ -55,7 +55,6 @@
 
 #include "qqmlengine_p.h"
 #include "qqmltypeloader_p.h"
-#include <private/qbitfield_p.h>
 #include "qqmlvme_p.h"
 #include "qqmlerror.h"
 #include "qqml.h"

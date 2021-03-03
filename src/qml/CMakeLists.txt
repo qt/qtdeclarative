@@ -204,7 +204,6 @@ qt_internal_add_module(Qml
         parser/qqmljsglobal_p.h
         parser/qqmljskeywords_p.h
         parser/qqmljslexer.cpp parser/qqmljslexer_p.h
-        qml/ftw/qbitfield_p.h
         qml/ftw/qdoubleendedlist_p.h
         qml/ftw/qfieldlist_p.h
         qml/ftw/qfinitestack_p.h

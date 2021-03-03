@@ -58,7 +58,6 @@
 #include <private/qflagpointer_p.h>
 #include <private/qqmlrefcount_p.h>
 #include <private/qqmlglobal_p.h>
-#include <private/qbitfield_p.h>
 
 QT_BEGIN_NAMESPACE
 
