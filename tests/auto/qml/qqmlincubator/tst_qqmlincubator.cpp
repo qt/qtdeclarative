@@ -71,6 +71,7 @@ private slots:
     void contextDelete();
     void garbageCollection();
     void requiredProperties();
+    void deleteInSetInitialState();
 
 private:
     QQmlIncubationController controller;
@@ -1211,6 +1212,38 @@ void tst_qqmlincubator::requiredProperties()
         QVERIFY(error.description().contains(QLatin1String("Required property requiredProperty was not initialized")));
         QVERIFY(incubator.object() == nullptr);
     }
+}
+
+class DeletingIncubator : public QQmlIncubator
+{
+
+
+    // QQmlIncubator interface
+protected:
+    void statusChanged(Status) override
+    {
+
+    }
+    void setInitialState(QObject *obj) override
+    {
+        delete obj;
+        clear();
+    }
+};
+
+void tst_qqmlincubator::deleteInSetInitialState()
+{
+    QQmlComponent component(&engine, testFileUrl("requiredProperty.qml"));
+    QVERIFY(component.isReady());
+    // forceCompletion immediately after creating an asynchronous object completes it
+    DeletingIncubator incubator;
+    incubator.setInitialProperties({{"requiredProperty", 42}});
+    QVERIFY(incubator.isNull());
+    component.create(incubator);
+    QVERIFY(incubator.isLoading());
+    incubator.forceCompletion(); // no crash
+    QVERIFY(incubator.isNull());
+    QCOMPARE(incubator.object(), nullptr); // object was deleted
 }
 
 QTEST_MAIN(tst_qqmlincubator)
