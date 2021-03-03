@@ -179,20 +179,40 @@ QQuickItemGrabResult::QQuickItemGrabResult(QObject *parent)
 /*!
  * \qmlmethod bool QtQuick::ItemGrabResult::saveToFile(fileName)
  *
- * Saves the grab result as an image to \a fileName. Returns true
- * if successful; otherwise returns false.
+ * Saves the grab result as an image to \a fileName. Returns \c true
+ * if successful; otherwise returns \c false.
  */
 
 /*!
- * Saves the grab result as an image to \a fileName. Returns true
- * if successful; otherwise returns false.
+ * Saves the grab result as an image to \a fileName. Returns \c true
+ * if successful; otherwise returns \c false.
  *
  * \note In Qt versions prior to 5.9, this function is marked as non-\c{const}.
  */
+// ### Qt 7: remove and keep only QUrl overload
 bool QQuickItemGrabResult::saveToFile(const QString &fileName) const
 {
     Q_D(const QQuickItemGrabResult);
+    if (fileName.startsWith(QLatin1String("file:/")))
+        return saveToFile(QUrl(fileName));
     return d->image.save(fileName);
+}
+
+/*!
+ * \since 6.2
+ * Saves the grab result as an image to \a filePath, which must refer to a
+ * \l{QUrl::isLocalFile}{local file name} with a
+ * \l{QImageWriter::supportedImageFormats()}{supported image format} extension.
+ * Returns \c true if successful; otherwise returns \c false.
+ */
+bool QQuickItemGrabResult::saveToFile(const QUrl &filePath) const
+{
+    Q_D(const QQuickItemGrabResult);
+    if (!filePath.isLocalFile()) {
+        qWarning() << "saveToFile can only save to a file on the local filesystem";
+        return false;
+    }
+    return d->image.save(filePath.toLocalFile());
 }
 
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)

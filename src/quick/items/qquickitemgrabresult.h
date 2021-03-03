@@ -75,6 +75,7 @@ public:
 #endif
 #endif
     Q_INVOKABLE bool saveToFile(const QString &fileName) const;
+    Q_INVOKABLE bool saveToFile(const QUrl &fileName) const;
 
 protected:
     bool event(QEvent *) override;
