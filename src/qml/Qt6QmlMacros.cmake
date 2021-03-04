@@ -356,6 +356,8 @@ function(qt6_add_qml_module target)
         endif()
     endforeach()
 
+    string(APPEND qmldir_file_contents "prefer :${arg_RESOURCE_PREFIX}/${arg_TARGET_PATH}/\n")
+
     _qt_internal_qmldir_defer_file(WRITE "${qmldir_file}" "${qmldir_file_contents}")
 
     # Process qml files

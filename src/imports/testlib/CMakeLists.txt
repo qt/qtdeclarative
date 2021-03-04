@@ -10,7 +10,6 @@ qt_internal_add_qml_module(qmltestplugin
     CLASSNAME QTestQmlModule
     DEPENDENCIES
         QtQuick.Window/2.0
-    PLUGIN_OPTIONAL
     SOURCES
         main.cpp
     PUBLIC_LIBRARIES
