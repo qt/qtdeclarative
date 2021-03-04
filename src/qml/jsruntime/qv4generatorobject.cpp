@@ -97,24 +97,21 @@ ReturnedValue GeneratorFunction::virtualCall(const FunctionObject *f, const Valu
     Function *function = gf->function();
     ExecutionEngine *engine = gf->engine();
 
-    // We need to set up a separate stack for the generator, as it's being re-entered
-    uint stackSize = argc // space for the original arguments
-                   + CppStackFrame::requiredJSStackFrameSize(function); // space for the JS stack frame
-
-    size_t requiredMemory = sizeof(GeneratorObject::Data) - sizeof(Value) + sizeof(Value) * stackSize;
-
     Scope scope(gf);
-    Scoped<GeneratorObject> g(scope, scope.engine->memoryManager->allocManaged<GeneratorObject>(requiredMemory, scope.engine->classes[EngineBase::Class_GeneratorObject]));
+    Scoped<GeneratorObject> g(scope, engine->memoryManager->allocManaged<GeneratorObject>(sizeof(GeneratorObject::Data), engine->classes[EngineBase::Class_GeneratorObject]));
     g->setPrototypeOf(ScopedObject(scope, gf->get(scope.engine->id_prototype())));
 
+    // We need to set up a separate JSFrame for the generator, as it's being re-entered
     Heap::GeneratorObject *gp = g->d();
-    gp->stack.size = stackSize;
-    gp->stack.alloc = stackSize;
+    gp->values.set(engine, engine->newArrayObject(argc));
+    gp->jsFrame.set(engine, engine->newArrayObject(CppStackFrame::requiredJSStackFrameSize(function)));
 
     // copy original arguments
-    memcpy(gp->stack.values, argv, argc*sizeof(Value));
-    gp->cppFrame.init(engine, function, gp->stack.values, argc);
-    gp->cppFrame.setupJSFrame(&gp->stack.values[argc], *gf, gf->scope(),
+    for (int i = 0; i < argc; i++)
+        gp->values->arrayData->setArrayData(engine, i, argv[i]);
+
+    gp->cppFrame.init(engine, function, gp->values->arrayData->values.values, argc);
+    gp->cppFrame.setupJSFrame(gp->jsFrame->arrayData->values.values, *gf, gf->scope(),
                               thisObject ? *thisObject : Value::undefinedValue(),
                               Value::undefinedValue());
 
