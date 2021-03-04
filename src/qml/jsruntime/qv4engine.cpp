@@ -1837,7 +1837,7 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
                 a->arrayPut(ii, (v = QV4::QObjectWrapper::wrap(this, list.at(ii))));
             a->setArrayLengthUnchecked(list.count());
             return a.asReturnedValue();
-        } else if (auto flags = QMetaType(type).flags(); flags & QMetaType::PointerToQObject) {
+        } else if (auto flags = metaType.flags(); flags & QMetaType::PointerToQObject) {
             QV4::ReturnedValue ret = QV4::QObjectWrapper::wrap(this, *reinterpret_cast<QObject* const *>(ptr));
             if (!flags.testFlag(QMetaType::IsConst))
                 return ret;
@@ -1849,11 +1849,6 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
                 return ret;
             }
         }
-
-        bool objOk;
-        QObject *obj = QQmlMetaType::toQObject(variant, &objOk);
-        if (objOk)
-            return QV4::QObjectWrapper::wrap(this, obj);
 
 #if QT_CONFIG(qml_sequence_object)
         bool succeeded = false;
