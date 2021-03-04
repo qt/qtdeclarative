@@ -118,7 +118,6 @@ public:
         if (!explicitIndestructibleSet) indestructible = false;
     }
 
-    quint32 ownedByQml1:1; // This bit is shared with QML1's QDeclarativeData.
     quint32 ownMemory:1;
     quint32 indestructible:1;
     quint32 explicitIndestructibleSet:1;
@@ -132,7 +131,7 @@ public:
     quint32 hasInterceptorMetaObject:1;
     quint32 hasVMEMetaObject:1;
     quint32 parentFrozen:1;
-    quint32 dummy:6;
+    quint32 dummy:7;
 
     // When bindingBitsSize < sizeof(ptr), we store the binding bit flags inside
     // bindingBitsValue. When we need more than sizeof(ptr) bits, we allocated
