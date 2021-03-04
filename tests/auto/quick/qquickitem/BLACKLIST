@@ -1,2 +1,5 @@
 [contains:hollow square: testing points inside]
 xcb
+# QTBUG-91548: receives 3 hover moves instead of 2
+[hoverEvent]
+b2qt
