@@ -323,6 +323,7 @@ void QQmlJSTypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQ
 {
     QQmlJSMetaProperty property;
     property.setIsWritable(true); // default is writable
+    bool isRequired = false;
 
     for (UiObjectMemberList *it = ast->initializer->members; it; it = it->next) {
         UiObjectMember *member = it->member;
@@ -342,7 +343,7 @@ void QQmlJSTypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQ
         } else if (id == QLatin1String("isReadonly")) {
             property.setIsWritable(!readBoolBinding(script));
         } else if (id == QLatin1String("isRequired")) {
-            property.setIsRequired(readBoolBinding(script));
+            isRequired = readBoolBinding(script);
         } else if (id == QLatin1String("isList")) {
             property.setIsList(readBoolBinding(script));
         } else if (id == QLatin1String("revision")) {
@@ -366,6 +367,8 @@ void QQmlJSTypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQ
     }
 
     scope->addOwnProperty(property);
+    if (isRequired)
+        scope->setPropertyLocallyRequired(property.propertyName(), true);
 }
 
 void QQmlJSTypeDescriptionReader::readEnum(UiObjectDefinition *ast, const QQmlJSScope::Ptr &scope)

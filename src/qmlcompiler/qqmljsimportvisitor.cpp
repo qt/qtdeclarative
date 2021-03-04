@@ -188,9 +188,10 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         prop.setIsList(publicMember->typeModifier == QLatin1String("list"));
         prop.setIsWritable(!publicMember->isReadonlyMember);
         prop.setIsAlias(isAlias);
-        prop.setIsRequired(publicMember->isRequired);
         prop.setType(m_rootScopeImports.value(prop.typeName()));
         m_currentScope->insertPropertyIdentifier(prop);
+        if (publicMember->isRequired)
+            m_currentScope->setPropertyLocallyRequired(prop.propertyName(), true);
         break;
     }
     }
@@ -211,14 +212,7 @@ bool QQmlJSImportVisitor::visit(UiRequired *required)
         return true;
     }
 
-    QQmlJSMetaProperty prop = m_currentScope->property(name);
-    prop.setIsRequired(true);
-
-    // Add a synthetic property that is identical to the previous one in every way, except in our current scope.
-    // This is necessary as we can't just modify the existing property to be required as this would affect every use of it,
-    // not just the one where the property is actually marked as required.
-    m_currentScope->insertPropertyIdentifier(prop);
-
+    m_currentScope->setPropertyLocallyRequired(name, true);
     return true;
 }
 

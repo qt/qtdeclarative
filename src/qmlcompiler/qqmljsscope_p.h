@@ -214,6 +214,10 @@ public:
     bool hasProperty(const QString &name) const;
     QQmlJSMetaProperty property(const QString &name) const;
 
+    void setPropertyLocallyRequired(const QString &name, bool isRequired);
+    bool isPropertyRequired(const QString &name) const;
+    bool isPropertyLocallyRequired(const QString &name) const;
+
     QString defaultPropertyName() const { return m_defaultPropertyName; }
     void setDefaultPropertyName(const QString &name) { m_defaultPropertyName = name; }
 
@@ -306,6 +310,7 @@ private:
 
     QString m_defaultPropertyName;
     QString m_attachedTypeName;
+    QStringList m_requiredPropertyNames;
     QQmlJSScope::WeakConstPtr m_attachedType;
 
     QString m_valueTypeName;

@@ -334,6 +334,36 @@ QQmlJSMetaProperty QQmlJSScope::property(const QString &name) const
     return prop;
 }
 
+void QQmlJSScope::setPropertyLocallyRequired(const QString &name, bool isRequired)
+{
+    if (!isRequired)
+        m_requiredPropertyNames.removeOne(name);
+    else if (!m_requiredPropertyNames.contains(name))
+        m_requiredPropertyNames.append(name);
+}
+
+bool QQmlJSScope::isPropertyRequired(const QString &name) const
+{
+    bool isRequired = false;
+    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+        if (scope->isPropertyLocallyRequired(name)) {
+            isRequired = true;
+            return true;
+        }
+
+        // If it has a property of that name, and that is not required, then none of the
+        // base types matter. You cannot make a derived type's property required with
+        // a "required" specification in a base type.
+        return scope->hasOwnProperty(name);
+    });
+    return isRequired;
+}
+
+bool QQmlJSScope::isPropertyLocallyRequired(const QString &name) const
+{
+    return m_requiredPropertyNames.contains(name);
+}
+
 QQmlJSScope::Export::Export(QString package, QString type, const QTypeRevision &version) :
     m_package(std::move(package)),
     m_type(std::move(type)),
