@@ -98,7 +98,7 @@ public:
         if (!initialized) {
             initialized = true;
             QAbstractDeclarativeData::destroyed = destroyed;
-            QAbstractDeclarativeData::parentChanged = parentChanged;
+            QAbstractDeclarativeData::parentChanged = nullptr;
             QAbstractDeclarativeData::signalEmitted = signalEmitted;
             QAbstractDeclarativeData::receivers = receivers;
             QAbstractDeclarativeData::isSignalConnected = isSignalConnected;
@@ -106,13 +106,11 @@ public:
     }
 
     static void destroyed(QAbstractDeclarativeData *, QObject *);
-    static void parentChanged(QAbstractDeclarativeData *, QObject *, QObject *);
     static void signalEmitted(QAbstractDeclarativeData *, QObject *, int, void **);
     static int receivers(QAbstractDeclarativeData *, const QObject *, int);
     static bool isSignalConnected(QAbstractDeclarativeData *, const QObject *, int);
 
     void destroyed(QObject *);
-    void parentChanged(QObject *, QObject *);
 
     void setImplicitDestructible() {
         if (!explicitIndestructibleSet) indestructible = false;
@@ -141,8 +139,7 @@ public:
     // set when at least one of the object's properties is intercepted
     quint32 hasInterceptorMetaObject:1;
     quint32 hasVMEMetaObject:1;
-    quint32 parentFrozen:1;
-    quint32 dummy:7;
+    quint32 dummy:8;
 
     // When bindingBitsSize < sizeof(ptr), we store the binding bit flags inside
     // bindingBitsValue. When we need more than sizeof(ptr) bits, we allocated

@@ -653,7 +653,7 @@ void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
 QQmlData::QQmlData()
     : ownMemory(true), indestructible(true), explicitIndestructibleSet(false),
       hasTaintedV4Object(false), isQueuedForDeletion(false), rootObjectInCreation(false),
-      hasInterceptorMetaObject(false), hasVMEMetaObject(false), parentFrozen(false),
+      hasInterceptorMetaObject(false), hasVMEMetaObject(false),
       bindingBitsArraySize(InlineBindingArraySize), notifyList(nullptr),
       bindings(nullptr), signalHandlers(nullptr), nextContextObject(nullptr), prevContextObject(nullptr),
       lineNumber(0), columnNumber(0), jsEngineId(0),
@@ -673,11 +673,6 @@ void QQmlData::destroyed(QAbstractDeclarativeData *d, QObject *o)
     ddata->destroyed(o);
 }
 
-void QQmlData::parentChanged(QAbstractDeclarativeData *d, QObject *o, QObject *p)
-{
-    QQmlData *ddata = static_cast<QQmlData *>(d);
-    ddata->parentChanged(o, p);
-}
 
 class QQmlThreadNotifierProxyObject : public QObject
 {
@@ -1697,25 +1692,6 @@ void QQmlData::destroyed(QObject *object)
         delete this;
     else
         this->~QQmlData();
-}
-
-DEFINE_BOOL_CONFIG_OPTION(parentTest, QML_PARENT_TEST);
-
-void QQmlData::parentChanged(QObject *object, QObject *parent)
-{
-    if (parentTest()) {
-        if (parentFrozen && !QObjectPrivate::get(object)->wasDeleted) {
-            QString on;
-            QString pn;
-
-            { QDebug dbg(&on); dbg << object; on = on.left(on.length() - 1); }
-            { QDebug dbg(&pn); dbg << parent; pn = pn.left(pn.length() - 1); }
-
-            qFatal("Object %s has had its parent frozen by QML and cannot be changed.\n"
-                   "User code is attempting to change it to %s.\n"
-                   "This behavior is NOT supported!", qPrintable(on), qPrintable(pn));
-        }
-    }
 }
 
 QQmlData::BindingBitsType *QQmlData::growBits(QObject *obj, int bit)
