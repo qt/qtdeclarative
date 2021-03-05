@@ -98,7 +98,6 @@ public:
         if (!initialized) {
             initialized = true;
             QAbstractDeclarativeData::destroyed = destroyed;
-            QAbstractDeclarativeData::parentChanged = nullptr;
             QAbstractDeclarativeData::signalEmitted = signalEmitted;
             QAbstractDeclarativeData::receivers = receivers;
             QAbstractDeclarativeData::isSignalConnected = isSignalConnected;
