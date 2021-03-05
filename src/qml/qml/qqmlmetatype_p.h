@@ -187,7 +187,6 @@ public:
     static QMetaMethod defaultMethod(const QMetaObject *);
     static QMetaMethod defaultMethod(QObject *);
 
-    static bool isQObject(int);
     static QObject *toQObject(const QVariant &, bool *ok = nullptr);
 
     static int listType(int);

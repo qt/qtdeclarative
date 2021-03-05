@@ -157,7 +157,7 @@ void collectReachableMetaObjects(QObject *object, QSet<const QMetaObject *> *met
 
     for (int index = 0; index < meta->propertyCount(); ++index) {
         QMetaProperty prop = meta->property(index);
-        if (QQmlMetaType::isQObject(prop.userType())) {
+        if (prop.metaType().flags().testFlag(QMetaType::PointerToQObject)) {
             if (verbose)
                 std::cerr << "  Processing property " << qPrintable( prop.name() ) << std::endl;
             currentProperty = QString("%1::%2").arg(meta->className(), prop.name());

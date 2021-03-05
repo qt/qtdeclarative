@@ -1099,14 +1099,6 @@ QObject *QQmlMetaType::toQObject(const QVariant &v, bool *ok)
     return *(QObject *const *)v.constData();
 }
 
-bool QQmlMetaType::isQObject(int userType)
-{
-    if (userType == QMetaType::QObjectStar)
-        return true;
-    QMetaType type (userType);
-    return type.flags().testFlag(QMetaType::PointerToQObject);
-}
-
 /*
     Returns the item type for a list of type \a id.
  */

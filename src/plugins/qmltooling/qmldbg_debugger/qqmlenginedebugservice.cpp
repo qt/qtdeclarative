@@ -196,7 +196,7 @@ QQmlEngineDebugServiceImpl::propertyData(QObject *obj, int propIdx)
 
     rv.value = valueContents(prop.read(obj));
 
-    if (QQmlMetaType::isQObject(prop.userType()))  {
+    if (prop.metaType().flags().testFlag(QMetaType::PointerToQObject))  {
         rv.type = QQmlObjectProperty::Object;
     } else if (QQmlMetaType::isList(prop.userType())) {
         rv.type = QQmlObjectProperty::List;
@@ -275,7 +275,7 @@ QVariant QQmlEngineDebugServiceImpl::valueContents(QVariant value) const
             return value;
     }
 
-    if (QQmlMetaType::isQObject(metaTypeId)) {
+    if (metaType.flags().testFlag(QMetaType::PointerToQObject)) {
         QObject *o = QQmlMetaType::toQObject(value);
         if (o) {
             QString name = o->objectName();

@@ -112,7 +112,7 @@ void QQuickDesignerSupportProperties::keepBindingFromGettingDeleted(QObject *obj
 
 bool QQuickDesignerSupportProperties::isPropertyQObject(const QMetaProperty &metaProperty)
 {
-    return QQmlMetaType::isQObject(metaProperty.userType());
+    return metaProperty.metaType().flags().testFlag(QMetaType::PointerToQObject);
 }
 
 
