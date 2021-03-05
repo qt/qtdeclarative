@@ -251,7 +251,7 @@ QPair<std::shared_ptr<ExternalItemPair<T>>,std::shared_ptr<ExternalItemPair<T>>>
     {
         QMutexLocker l(mutex);
         auto it = map.find(canonicalPath);
-        if (it != map.cend() && (*it) && (*it)->current) {
+        if ((*it) && it != map.cend() && (*it)->current) {
             oldValue = *it;
             QString oldCode = oldValue->current->code();
             QString newCode = newItem->code();
