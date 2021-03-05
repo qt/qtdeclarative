@@ -142,7 +142,11 @@ function(qt6_add_qml_module target)
         message(FATAL_ERROR "qt6_add_qml_module called without a module version. Please specify one using the VERSION argument.")
     endif()
 
-    if (NOT "${arg_VERSION}" MATCHES "[0-9]+\\.[0-9]+")
+    if ("${arg_VERSION}" MATCHES "^([0-9]+\\.[0-9]+)\\.[0-9]+$")
+        set(arg_VERSION "${CMAKE_MATCH_1}")
+    endif()
+
+    if (NOT "${arg_VERSION}" MATCHES "^[0-9]+\\.[0-9]+$")
         message(FATAL_ERROR "qt6_add_qml_module called with an invalid version argument: '${arg_VERSION}'. Expected version style: VersionMajor.VersionMinor.")
     endif()
 
