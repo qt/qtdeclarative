@@ -65,25 +65,25 @@ private:
     void setError(const QQmlError &);
 
 public:
-    QQmlTypeLoaderQmldirContent();
+    QQmlTypeLoaderQmldirContent() = default;
     QQmlTypeLoaderQmldirContent(const QQmlTypeLoaderQmldirContent &) = default;
     QQmlTypeLoaderQmldirContent &operator=(const QQmlTypeLoaderQmldirContent &) = default;
 
     bool hasContent() const { return m_hasContent; }
-    bool hasError() const;
+    bool hasError() const { return m_parser.hasError(); }
     QList<QQmlError> errors(const QString &uri) const;
 
-    QString typeNamespace() const;
+    QString typeNamespace() const { return m_parser.typeNamespace(); }
 
-    QQmlDirComponents components() const;
-    QQmlDirScripts scripts() const;
-    QQmlDirPlugins plugins() const;
-    QQmlDirImports imports() const;
+    QQmlDirComponents components() const { return m_parser.components(); }
+    QQmlDirScripts scripts() const { return m_parser.scripts(); }
+    QQmlDirPlugins plugins() const { return m_parser.plugins(); }
+    QQmlDirImports imports() const { return m_parser.imports(); }
 
-    QString qmldirLocation() const;
-    QString preferredPath() const;
+    QString qmldirLocation() const { return m_location; }
+    QString preferredPath() const { return m_parser.preferredPath(); }
 
-    bool designerSupported() const;
+    bool designerSupported() const { return m_parser.designerSupported(); }
 
 private:
     QQmlDirParser m_parser;

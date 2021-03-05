@@ -43,15 +43,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlTypeLoaderQmldirContent::QQmlTypeLoaderQmldirContent()
-{
-}
-
-bool QQmlTypeLoaderQmldirContent::hasError() const
-{
-    return m_parser.hasError();
-}
-
 QList<QQmlError> QQmlTypeLoaderQmldirContent::errors(const QString &uri) const
 {
     QList<QQmlError> errors;
@@ -66,11 +57,6 @@ QList<QQmlError> QQmlTypeLoaderQmldirContent::errors(const QString &uri) const
         errors.append(error);
     }
     return errors;
-}
-
-QString QQmlTypeLoaderQmldirContent::typeNamespace() const
-{
-    return m_parser.typeNamespace();
 }
 
 void QQmlTypeLoaderQmldirContent::setContent(const QString &location, const QString &content)
@@ -88,41 +74,6 @@ void QQmlTypeLoaderQmldirContent::setError(const QQmlError &error)
     parseError.loc.startColumn = error.column();
     parseError.message = error.description();
     m_parser.setError(parseError);
-}
-
-QQmlDirComponents QQmlTypeLoaderQmldirContent::components() const
-{
-    return m_parser.components();
-}
-
-QQmlDirScripts QQmlTypeLoaderQmldirContent::scripts() const
-{
-    return m_parser.scripts();
-}
-
-QQmlDirPlugins QQmlTypeLoaderQmldirContent::plugins() const
-{
-    return m_parser.plugins();
-}
-
-QQmlDirImports QQmlTypeLoaderQmldirContent::imports() const
-{
-    return m_parser.imports();
-}
-
-QString QQmlTypeLoaderQmldirContent::qmldirLocation() const
-{
-    return m_location;
-}
-
-QString QQmlTypeLoaderQmldirContent::preferredPath() const
-{
-    return m_parser.preferredPath();
-}
-
-bool QQmlTypeLoaderQmldirContent::designerSupported() const
-{
-    return m_parser.designerSupported();
 }
 
 QT_END_NAMESPACE
