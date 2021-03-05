@@ -962,11 +962,11 @@ QQmlAdaptorModel::~QQmlAdaptorModel()
     accessors->cleanup(*this);
 }
 
-void QQmlAdaptorModel::setModel(const QVariant &variant, QObject *parent, QQmlEngine *engine)
+void QQmlAdaptorModel::setModel(const QVariant &variant, QObject *parent)
 {
     accessors->cleanup(*this);
 
-    list.setList(variant, engine);
+    list.setList(variant);
 
     if (QObject *object = qvariant_cast<QObject *>(list.list())) {
         setObject(object, parent);
@@ -1042,7 +1042,7 @@ void QQmlAdaptorModel::useImportVersion(QTypeRevision revision)
 
 void QQmlAdaptorModel::objectDestroyed(QObject *)
 {
-    setModel(QVariant(), nullptr, nullptr);
+    setModel(QVariant(), nullptr);
 }
 
 QQmlAdaptorModelEngineData::QQmlAdaptorModelEngineData(QV4::ExecutionEngine *v4)

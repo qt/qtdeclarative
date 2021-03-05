@@ -431,7 +431,7 @@ void QQmlDelegateModel::setModel(const QVariant &model)
         _q_itemsRemoved(0, d->m_count);
 
     d->disconnectFromAbstractItemModel();
-    d->m_adaptorModel.setModel(model, this, d->m_context->engine());
+    d->m_adaptorModel.setModel(model, this);
     d->connectToAbstractItemModel();
 
     d->m_adaptorModel.replaceWatchedRoles(QList<QByteArray>(), d->m_watchedRoles);
@@ -538,7 +538,7 @@ void QQmlDelegateModel::setRootIndex(const QVariant &root)
         if (!d->m_adaptorModel.isValid() && d->m_adaptorModel.aim()) {
             // The previous root index was invalidated, so we need to reconnect the model.
             d->disconnectFromAbstractItemModel();
-            d->m_adaptorModel.setModel(d->m_adaptorModel.list.list(), this, d->m_context->engine());
+            d->m_adaptorModel.setModel(d->m_adaptorModel.list.list(), this);
             d->connectToAbstractItemModel();
         }
         if (d->m_adaptorModel.canFetchMore())

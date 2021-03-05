@@ -63,7 +63,7 @@ QVariant QQmlListAccessor::list() const
     return d;
 }
 
-void QQmlListAccessor::setList(const QVariant &v, QQmlEngine *engine)
+void QQmlListAccessor::setList(const QVariant &v)
 {
     d = v;
 
@@ -71,9 +71,6 @@ void QQmlListAccessor::setList(const QVariant &v, QQmlEngine *engine)
     // convert it first with toVariant().
     if (d.userType() == qMetaTypeId<QJSValue>())
         d = d.value<QJSValue>().toVariant();
-
-    QQmlEnginePrivate *enginePrivate = engine?QQmlEnginePrivate::get(engine):nullptr;
-
     if (!d.isValid()) {
         m_type = Invalid;
     } else if (d.userType() == QMetaType::QStringList) {
@@ -103,8 +100,7 @@ void QQmlListAccessor::setList(const QVariant &v, QQmlEngine *engine)
         } else {
             m_type = Integer;
         }
-    } else if ((!enginePrivate && QQmlMetaType::isQObject(d.userType())) ||
-               (enginePrivate && enginePrivate->isQObject(d.userType()))) {
+    } else if (d.metaType().flags().testFlag(QMetaType::PointerToQObject)) {
         QObject *data = QQmlMetaType::toQObject(d);
         d = QVariant::fromValue(data);
         m_type = Instance;

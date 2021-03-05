@@ -235,7 +235,6 @@ public:
     using QJSEnginePrivate::cache;
 
     // These methods may be called from the loader thread
-    bool isQObject(int);
     QQmlMetaObject rawMetaObjectForType(int) const;
     QQmlMetaObject metaObjectForType(int) const;
     QQmlPropertyCache *propertyCacheForType(int);

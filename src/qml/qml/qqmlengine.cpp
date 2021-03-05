@@ -2047,12 +2047,6 @@ QString QQmlEnginePrivate::offlineStorageDatabaseDirectory() const
     return q->offlineStoragePath() + QDir::separator() + QLatin1String("Databases") + QDir::separator();
 }
 
-bool QQmlEnginePrivate::isQObject(int t)
-{
-    Locker locker(this);
-    return m_compositeTypes.contains(t) || QQmlMetaType::isQObject(t);
-}
-
 static QQmlPropertyCache *propertyCacheForPotentialInlineComponentType(int t, const QHash<int, QV4::ExecutableCompilationUnit *>::const_iterator &iter) {
     if (t != (*iter)->typeIds.id.id()) {
         // this is an inline component, and what we have in the iterator is currently the parent compilation unit
