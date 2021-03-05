@@ -450,15 +450,14 @@ void QQuickWindow::physicalDpiChanged()
 void QQuickWindow::handleScreenChanged(QScreen *screen)
 {
     Q_D(QQuickWindow);
+    disconnect(d->physicalDpiChangedConnection);
     if (screen) {
         physicalDpiChanged();
         // When physical DPI changes on the same screen, either the resolution or the device pixel
         // ratio changed. We must check what it is. Device pixel ratio does not have its own
         // ...Changed() signal.
-        d->physicalDpiChangedConnection = connect(screen, SIGNAL(physicalDotsPerInchChanged(qreal)),
-                                                  this, SLOT(physicalDpiChanged()));
-    } else {
-        disconnect(d->physicalDpiChangedConnection);
+        d->physicalDpiChangedConnection = connect(screen, &QScreen::physicalDotsPerInchChanged,
+                                                  this, &QQuickWindow::physicalDpiChanged);
     }
 
     d->forcePolish();
