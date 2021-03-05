@@ -126,7 +126,7 @@ static OptionalReturnedValue searchContextProperties(
         QQmlListProperty<QObject> prop(context->asQQmlContext(), (void*) qintptr(propertyIdx),
                                        QQmlContextPrivate::context_count,
                                        QQmlContextPrivate::context_at);
-        return OptionalReturnedValue(QmlListWrapper::create(v4, prop, qMetaTypeId<QQmlListProperty<QObject> >()));
+        return OptionalReturnedValue(QmlListWrapper::create(v4, prop, QMetaType::fromType<QQmlListProperty<QObject> >()));
     }
     return OptionalReturnedValue(v4->fromVariant(cp->propertyValue(propertyIdx)));
 }

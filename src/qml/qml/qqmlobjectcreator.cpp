@@ -1106,12 +1106,12 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
 
             void *itemToAdd = createdSubObject;
 
-            const char *iid = nullptr;
-            int listItemType = QQmlMetaType::listType(bindingProperty->propType().id());
-            if (listItemType != -1)
-                iid = QQmlMetaType::interfaceIId(listItemType);
-            if (iid)
-                itemToAdd = createdSubObject->qt_metacast(iid);
+            QMetaType listItemType = QQmlMetaType::listType(bindingProperty->propType());
+            if (listItemType.isValid()) {
+                const char *iid = QQmlMetaType::interfaceIId(listItemType.id());
+                if (iid)
+                    itemToAdd = createdSubObject->qt_metacast(iid);
+            }
 
             if (_currentList.append)
                 _currentList.append(&_currentList, itemToAdd);

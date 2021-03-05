@@ -1102,7 +1102,7 @@ QVariant QQmlPropertyPrivate::readValueProperty()
 
         QQmlListProperty<QObject> prop;
         core.readProperty(object, &prop);
-        return QVariant::fromValue(QQmlListReferencePrivate::init(prop, core.propType().id(), engine));
+        return QVariant::fromValue(QQmlListReferencePrivate::init(prop, core.propType(), engine));
 
     } else if (core.isQObject()) {
 
@@ -1352,9 +1352,9 @@ bool QQmlPropertyPrivate::write(
         QQmlMetaObject listType;
 
         if (enginePriv) {
-            listType = enginePriv->rawMetaObjectForType(QQmlMetaType::listType(propertyType));
+            listType = enginePriv->rawMetaObjectForType(QQmlMetaType::listType(propertyMetaType).id());
         } else {
-            QQmlType type = QQmlMetaType::qmlType(QQmlMetaType::listType(propertyType));
+            QQmlType type = QQmlMetaType::qmlType(QQmlMetaType::listType(propertyMetaType).id());
             if (!type.isValid())
                 return false;
             listType = type.baseMetaObject();

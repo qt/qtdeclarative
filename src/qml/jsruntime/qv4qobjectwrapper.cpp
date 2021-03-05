@@ -151,7 +151,7 @@ static QV4::ReturnedValue loadProperty(QV4::ExecutionEngine *v4, QObject *object
         return ret;
 
     } else if (property.isQList()) {
-        return QmlListWrapper::create(v4, object, property.coreIndex(), property.propType().id());
+        return QmlListWrapper::create(v4, object, property.coreIndex(), property.propType());
     } else if (propType == QMetaType::QReal) {
         qreal v = 0;
         property.readProperty(object, &v);

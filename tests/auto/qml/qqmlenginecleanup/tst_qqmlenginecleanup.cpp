@@ -45,7 +45,6 @@ private slots:
     void test_qmlClearTypeRegistrations();
     void test_valueTypeProviderModule(); // QTBUG-43004
     void test_customModuleCleanup();
-    void test_qmlListCleared();
 };
 
 // A wrapper around QQmlComponent to ensure the temporary reference counts
@@ -194,18 +193,6 @@ void tst_qqmlenginecleanup::test_customModuleCleanup()
         QScopedPointer<QObject> object(component.create());
         QVERIFY2(!object.isNull(), msgModuleCleanupFail(i, component).constData());
     }
-}
-
-void tst_qqmlenginecleanup::test_qmlListCleared()
-{
-    {
-        QQmlEngine engine;
-        auto url = testFileUrl("MyItem.qml");
-        QQmlComponent comp(&engine, url);
-        QScopedPointer<QObject> item {comp.create()};
-        QCOMPARE(QQmlMetaType::qmlRegisteredListTypeCount(), 1);
-    }
-    QCOMPARE(QQmlMetaType::qmlRegisteredListTypeCount(), 0);
 }
 
 QTEST_MAIN(tst_qqmlenginecleanup)

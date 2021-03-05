@@ -74,7 +74,8 @@ struct QmlListWrapper : Object {
         return *reinterpret_cast<QQmlListProperty<QObject>*>(propertyData);
     }
 
-    int propertyType;
+    // interface instead of QMetaType to keep class a POD
+    const QtPrivate::QMetaTypeInterface *propertyType;
 
 private:
     void *propertyData[sizeof(QQmlListProperty<QObject>)/sizeof(void*)];
@@ -88,8 +89,8 @@ struct Q_QML_EXPORT QmlListWrapper : Object
     V4_NEEDS_DESTROY
     V4_PROTOTYPE(propertyListPrototype)
 
-    static ReturnedValue create(ExecutionEngine *engine, QObject *object, int propId, int propType);
-    static ReturnedValue create(ExecutionEngine *engine, const QQmlListProperty<QObject> &prop, int propType);
+    static ReturnedValue create(ExecutionEngine *engine, QObject *object, int propId, QMetaType propType);
+    static ReturnedValue create(ExecutionEngine *engine, const QQmlListProperty<QObject> &prop, QMetaType propType);
 
     QVariant toVariant() const;
 

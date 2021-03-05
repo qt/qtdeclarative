@@ -131,8 +131,6 @@ struct QQmlMetaTypeData
     QList<QQmlPrivate::AutoParentFunction> parentFunctions;
     QVector<QQmlPrivate::QmlUnitCacheLookupFunction> lookupCachedQmlUnit;
 
-    QHash<int, int> qmlLists;
-
     QHash<const QMetaObject *, QQmlPropertyCache *> propertyCaches;
 
     QQmlPropertyCache *propertyCacheForVersion(int index, QTypeRevision version) const;

@@ -125,7 +125,7 @@ static void allSubObjects(QObject *object, QObjectList &objectList)
 
         // search recursive in property object lists
         if (metaProperty.isReadable()
-                && QQmlMetaType::isList(metaProperty.userType())) {
+                && QQmlMetaType::isList(metaProperty.metaType())) {
             QQmlListReference list(object, metaProperty.name());
             if (list.canCount() && list.canAt()) {
                 for (qsizetype i = 0; i < list.count(); i++) {

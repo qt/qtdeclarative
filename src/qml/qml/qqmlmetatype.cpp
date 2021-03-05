@@ -325,17 +325,6 @@ bool QQmlMetaType::qmlRegisterModuleTypes(const QString &uri)
     return data->registerModuleTypes(uri);
 }
 
-/*!
-   \internal
-    Method is only used to in tst_qqmlenginecleanup.cpp to test whether all
-    types have been removed from qmlLists after shutdown of QQmlEngine
- */
-int QQmlMetaType::qmlRegisteredListTypeCount()
-{
-    QQmlMetaTypeDataPtr data;
-    return data->qmlLists.count();
-}
-
 void QQmlMetaType::clearTypeRegistrations()
 {
     //Only cleans global static, assumed no running engine
@@ -583,51 +572,13 @@ QQmlType QQmlMetaType::registerCompositeType(const QQmlPrivate::RegisterComposit
     return QQmlType(priv);
 }
 
-
-
-struct QQmlMetaTypeInterface : QtPrivate::QMetaTypeInterface
-{
-    const QByteArray name;
-    template <typename T>
-    QQmlMetaTypeInterface(const QByteArray &name, T *)
-        : QMetaTypeInterface {
-            /*.revision=*/ 0,
-            /*.alignment=*/ alignof(T),
-            /*.size=*/ sizeof(T),
-            /*.flags=*/ QtPrivate::QMetaTypeTypeFlags<T>::Flags,
-            /*.typeId=*/ 0,
-            /*.metaObject=*/ nullptr,//QtPrivate::MetaObjectForType<T>::value(),
-            /*.name=*/ name.constData(),
-            /*.defaultCtr=*/ [](const QMetaTypeInterface *, void *addr) { new (addr) T(); },
-            /*.copyCtr=*/ [](const QMetaTypeInterface *, void *addr, const void *other) {
-                    new (addr) T(*reinterpret_cast<const T *>(other));
-                },
-            /*.moveCtr=*/ [](const QMetaTypeInterface *, void *addr, void *other) {
-                    new (addr) T(std::move(*reinterpret_cast<T *>(other)));
-                },
-            /*.dtor=*/ [](const QMetaTypeInterface *, void *addr) {
-                reinterpret_cast<T *>(addr)->~T();
-            },
-            /*.equals*/ nullptr,
-            /*.lessThan*/ nullptr,
-            /*.debugStream=*/ nullptr,
-            /*.dataStreamOut=*/ nullptr,
-            /*.dataStreamIn=*/ nullptr,
-            /*.legacyRegisterOp=*/ nullptr
-        }
-        , name(name) { }
-};
-
 CompositeMetaTypeIds QQmlMetaType::registerInternalCompositeType(const QByteArray &className)
 {
     QByteArray ptr = className + '*';
     QByteArray lst = "QQmlListProperty<" + className + '>';
 
     QMetaType ptr_type(new QQmlMetaTypeInterface(ptr, (QObject **)nullptr));
-    QMetaType lst_type(new QQmlMetaTypeInterface(lst, (QQmlListProperty<QObject> *)nullptr));
-
-    QQmlMetaTypeDataPtr data;
-    data->qmlLists.insert(lst_type.id(), ptr_type.id());
+    QMetaType lst_type(new QQmlListMetaTypeInterface(lst, (QQmlListProperty<QObject> *)nullptr, ptr_type.iface()));
 
     return {ptr_type, lst_type};
 }
@@ -644,11 +595,10 @@ void QQmlMetaType::unregisterInternalCompositeType(const CompositeMetaTypeIds &t
     if (QQmlValueType *vt = data->metaTypeToValueType.take(listMetaType.id()))
         delete vt;
 
-    data->qmlLists.remove(listMetaType.id());
     QMetaType::unregisterMetaType(metaType);
     QMetaType::unregisterMetaType(listMetaType);
     delete static_cast<const QQmlMetaTypeInterface *>(metaType.iface());
-    delete static_cast<const QQmlMetaTypeInterface *>(listMetaType.iface());
+    delete static_cast<const QQmlListMetaTypeInterface *>(listMetaType.iface());
 }
 
 int QQmlMetaType::registerUnitCacheHook(
@@ -1102,17 +1052,20 @@ QObject *QQmlMetaType::toQObject(const QVariant &v, bool *ok)
 /*
     Returns the item type for a list of type \a id.
  */
-int QQmlMetaType::listType(int id)
+QMetaType QQmlMetaType::listType(QMetaType metaType)
 {
+    if (!isList(metaType))
+        return QMetaType {};
+    const auto iface = metaType.iface();
+    if (iface->metaObjectFn == &dynamicQmlListMarker)
+        return QMetaType(static_cast<const QQmlListMetaTypeInterface *>(iface)->valueType);
+    auto id = metaType.id();
     QQmlMetaTypeDataPtr data;
-    QHash<int, int>::ConstIterator iter = data->qmlLists.constFind(id);
-    if (iter != data->qmlLists.cend())
-        return *iter;
     QQmlTypePrivate *type = data->idToType.value(id);
     if (type && type->listId.id() == id)
-        return type->typeId.id();
+        return type->typeId;
     else
-        return 0;
+        return QMetaType {};
 }
 
 QQmlAttachedPropertiesFunc QQmlMetaType::attachedPropertiesFunc(QQmlEnginePrivate *engine,
@@ -1201,15 +1154,12 @@ const char *QQmlMetaType::interfaceIId(int userType)
         return nullptr;
 }
 
-bool QQmlMetaType::isList(int userType)
+bool QQmlMetaType::isList(QMetaType type)
 {
-    QMetaType type(userType);
     if (type.flags().testFlag(QMetaType::IsQmlList))
         return true;
-    QQmlMetaTypeDataPtr data;
-    if (data->qmlLists.contains(userType))
-        return true;
-    return false;
+    else
+        return false;
 }
 
 /*!

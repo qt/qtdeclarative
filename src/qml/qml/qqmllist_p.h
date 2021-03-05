@@ -63,11 +63,11 @@ class QQmlListReferencePrivate
 public:
     QQmlListReferencePrivate();
 
-    static QQmlListReference init(const QQmlListProperty<QObject> &, int, QQmlEngine *);
+    static QQmlListReference init(const QQmlListProperty<QObject> &, QMetaType, QQmlEngine *);
 
     QPointer<QObject> object;
     QQmlListProperty<QObject> property;
-    int propertyType;
+    QMetaType propertyType;
 
     void addref();
     void release();
@@ -85,7 +85,7 @@ public:
     const QMetaObject *elementType()
     {
         if (m_elementTypeOrEngine.isT2()) {
-            const int listType = QQmlMetaType::listType(propertyType);
+            const int listType = QQmlMetaType::listType(propertyType).id();
             const QQmlEngine *engine = m_elementTypeOrEngine.asT2();
             const QQmlEnginePrivate *p = engine ? QQmlEnginePrivate::get(engine) : nullptr;
             m_elementTypeOrEngine = p ? p->rawMetaObjectForType(listType).metaObject()

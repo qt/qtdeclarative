@@ -66,7 +66,7 @@ void Heap::QmlListWrapper::destroy()
     Object::destroy();
 }
 
-ReturnedValue QmlListWrapper::create(ExecutionEngine *engine, QObject *object, int propId, int propType)
+ReturnedValue QmlListWrapper::create(ExecutionEngine *engine, QObject *object, int propId, QMetaType propType)
 {
     if (!object || propId == -1)
         return Encode::null();
@@ -75,20 +75,20 @@ ReturnedValue QmlListWrapper::create(ExecutionEngine *engine, QObject *object, i
 
     Scoped<QmlListWrapper> r(scope, engine->memoryManager->allocate<QmlListWrapper>());
     r->d()->object = object;
-    r->d()->propertyType = propType;
+    r->d()->propertyType = propType.iface();
     void *args[] = { &r->d()->property(), nullptr };
     QMetaObject::metacall(object, QMetaObject::ReadProperty, propId, args);
     return r.asReturnedValue();
 }
 
-ReturnedValue QmlListWrapper::create(ExecutionEngine *engine, const QQmlListProperty<QObject> &prop, int propType)
+ReturnedValue QmlListWrapper::create(ExecutionEngine *engine, const QQmlListProperty<QObject> &prop, QMetaType propType)
 {
     Scope scope(engine);
 
     Scoped<QmlListWrapper> r(scope, engine->memoryManager->allocate<QmlListWrapper>());
     r->d()->object = prop.object;
     r->d()->property() = prop;
-    r->d()->propertyType = propType;
+    r->d()->propertyType = propType.iface();
     return r.asReturnedValue();
 }
 
@@ -97,7 +97,7 @@ QVariant QmlListWrapper::toVariant() const
     if (!d()->object)
         return QVariant();
 
-    return QVariant::fromValue(QQmlListReferencePrivate::init(d()->property(), d()->propertyType, engine()->qmlEngine()));
+    return QVariant::fromValue(QQmlListReferencePrivate::init(d()->property(), QMetaType(d()->propertyType), engine()->qmlEngine()));
 }
 
 

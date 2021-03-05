@@ -257,9 +257,9 @@ void tst_qqmlmetatype::prettyTypeName()
 
 void tst_qqmlmetatype::isList()
 {
-    QCOMPARE(QQmlMetaType::isList(QMetaType::UnknownType), false);
-    QCOMPARE(QQmlMetaType::isList(QMetaType::Int), false);
-    QCOMPARE(QQmlMetaType::isList(qMetaTypeId<QQmlListProperty<TestType> >()), true);
+    QCOMPARE(QQmlMetaType::isList(QMetaType {}), false);
+    QCOMPARE(QQmlMetaType::isList(QMetaType::fromType<int>()), false);
+    QCOMPARE(QQmlMetaType::isList(QMetaType::fromType<QQmlListProperty<TestType> >()), true);
 }
 
 void tst_qqmlmetatype::defaultObject()
