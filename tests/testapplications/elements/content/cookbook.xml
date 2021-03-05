@@ -2,35 +2,18 @@
 <cookbook>
     <recipe id="MushroomSoup">
         <title>Quick and Easy Mushroom Soup</title>
-        <ingredient name="Fresh mushrooms"
-                    quantity="7"
-                    unit="pieces"/>
-        <ingredient name="Garlic"
-                    quantity="1"
-                    unit="cloves"/>
-        <ingredient name="Olive oil"
-                    quantity="2"
-                    unit="tablespoons"/>
-        <ingredient name="Milk"
-                    quantity="200"
-                    unit="milliliters"/>
-        <ingredient name="Water"
-                    quantity="200"
-                    unit="milliliters"/>
-        <ingredient name="Cream"
-                    quantity="100"
-                    unit="milliliters"/>
-        <ingredient name="Vegetable soup cube"
-                    quantity="1/2"
-                    unit="cubes"/>
-        <ingredient name="Ground black pepper"
-                    quantity="1/2"
-                    unit="teaspoons"/>
-        <ingredient name="Dried parsley"
-                    quantity="1"
-                    unit="teaspoons"/>
-        <time quantity="20"
-              unit="minutes"/>
+        <ingredients>
+            <ingredient>1. 7 pieces of Fresh mushrooms</ingredient>
+            <ingredient>2. 1 cloves of Garlic</ingredient>
+            <ingredient>3. 2 tablespoons of Olive oil</ingredient>
+            <ingredient>4. 200 milliliters of Milk</ingredient>
+            <ingredient>5. 200 milliliters of Water</ingredient>
+            <ingredient>6. 200 milliliters of Cream</ingredient>
+            <ingredient>7. 1/2 cubes of Vegetable soup cube</ingredient>
+            <ingredient>8. 1/2 teaspoons of Ground black pepper</ingredient>
+            <ingredient>9. 1 teaspoon of Dried parsley</ingredient>
+        </ingredients>
+        <time quantity="20" unit="minutes"/>
         <method>
             <step>1. Slice mushrooms and garlic.</step>
             <step>2. Fry mushroom slices and garlic with olive oil.</step>
@@ -43,14 +26,11 @@
     </recipe>
     <recipe id="CheeseOnToast">
         <title>Cheese on Toast</title>
-        <ingredient name="Bread"
-                    quantity="2"
-                    unit="slices"/>
-        <ingredient name="Cheese"
-                    quantity="2"
-                    unit="slices"/>
-        <time quantity="3"
-              unit="minutes"/>
+        <ingredients>
+            <ingredient>1. 2 slices of Bread</ingredient>
+            <ingredient>2. 2 slices of Cheese</ingredient>
+        </ingredients>
+        <time quantity="3" unit="minutes"/>
         <method>
             <step>1. Slice the bread and cheese.</step>
             <step>2. Grill one side of each slice of bread.</step>
