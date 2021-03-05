@@ -236,26 +236,25 @@ To visualize data, bind the view's \c model property to a model and the
     Even if subsequent roles are added, only the first two will be handled by views
     using the model. To reset the roles available in the model, call ListModel::clear().
 
-\omit //! XmlListModel
     \section2 XML Model
 
     XmlListModel allows construction of a model from an XML data source. The roles
-    are specified via the \l [QML]{XmlRole} type. The type needs to be imported.
+    are specified via the \l [QML]{XmlListModelRole} type. The type needs to be imported.
 
     \code
-    import QtQuick.XmlListModel 2.0
+    import QtQml.XmlListModel
     \endcode
 
 
-    The following model has three roles, \e title, \e link and \e description:
+    The following model has three roles, \e title, \e link and \e pubDate:
     \qml
     XmlListModel {
          id: feedModel
          source: "http://rss.news.yahoo.com/rss/oceania"
          query: "/rss/channel/item"
-         XmlRole { name: "title"; query: "title/string()" }
-         XmlRole { name: "link"; query: "link/string()" }
-         XmlRole { name: "description"; query: "description/string()" }
+         XmlListModelRole { name: "title"; elementName: "title" }
+         XmlListModelRole { name: "link"; elementName: "link" }
+         XmlListModelRole { name: "pubDate"; elementName: "pubDate" }
     }
     \endqml
 
@@ -264,7 +263,6 @@ To visualize data, bind the view's \c model property to a model and the
 
     The \l{Qt Quick Demo - RSS News}{RSS News demo} shows how XmlListModel can
     be used to display an RSS feed.
-\endomit
 
     \section2 Object Model
 
