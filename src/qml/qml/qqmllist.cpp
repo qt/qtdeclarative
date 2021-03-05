@@ -57,7 +57,7 @@ QQmlListReference QQmlListReferencePrivate::init(const QQmlListProperty<QObject>
 
     QQmlEnginePrivate *p = engine?QQmlEnginePrivate::get(engine):nullptr;
 
-    int listType = p?p->listType(propType):QQmlMetaType::listType(propType);
+    int listType = QQmlMetaType::listType(propType);
     if (listType == -1) return rv;
 
     rv.d = new QQmlListReferencePrivate;
@@ -139,7 +139,7 @@ QQmlListReference::QQmlListReference(const QVariant &variant, QQmlEngine *engine
         return;
 
     QQmlEnginePrivate *p = engine ? QQmlEnginePrivate::get(engine) : nullptr;
-    const int listType = p ? p->listType(t.id()) : QQmlMetaType::listType(t.id());
+    const int listType = QQmlMetaType::listType(t.id());
     if (listType == -1)
         return;
 
@@ -177,7 +177,7 @@ QQmlListReference::QQmlListReference(QObject *object, const char *property, QQml
 
     QQmlEnginePrivate *p = engine?QQmlEnginePrivate::get(engine):nullptr;
 
-    int listType = p?p->listType(data->propType().id()):QQmlMetaType::listType(data->propType().id());
+    int listType = QQmlMetaType::listType(data->propType().id());
     if (listType == -1) return;
 
     d = new QQmlListReferencePrivate;

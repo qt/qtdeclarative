@@ -1997,7 +1997,7 @@ bool CallArgument::fromValue(QMetaType metaType, QV4::ExecutionEngine *engine, c
         } else {
             QQmlMetaObject mo = ep ? ep->rawMetaObjectForType(callType) : QQmlMetaObject();
             if (!mo.isNull()) {
-                QObject *obj = ep->toQObject(v);
+                QObject *obj = QQmlMetaType::toQObject(v);
 
                 if (obj != nullptr && !QQmlMetaObject::canConvert(obj, mo)) {
                     *qvariantPtr = QVariant(metaType, nullptr);

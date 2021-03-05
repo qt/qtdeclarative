@@ -1107,7 +1107,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
             void *itemToAdd = createdSubObject;
 
             const char *iid = nullptr;
-            int listItemType = QQmlEnginePrivate::get(engine)->listType(bindingProperty->propType().id());
+            int listItemType = QQmlMetaType::listType(bindingProperty->propType().id());
             if (listItemType != -1)
                 iid = QQmlMetaType::interfaceIId(listItemType);
             if (iid)

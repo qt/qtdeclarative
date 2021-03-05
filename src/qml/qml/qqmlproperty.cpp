@@ -1261,7 +1261,7 @@ bool QQmlPropertyPrivate::write(
             double integral;
             double fractional = std::modf(value.toDouble(), &integral);
             if (qFuzzyIsNull(fractional))
-                v.convert(QMetaType(QMetaType::Int));
+                v.convert(QMetaType::fromType<qint32>());
         }
         return writeEnumProperty(prop, property.coreIndex(), object, v, flags);
     }
@@ -1352,7 +1352,7 @@ bool QQmlPropertyPrivate::write(
         QQmlMetaObject listType;
 
         if (enginePriv) {
-            listType = enginePriv->rawMetaObjectForType(enginePriv->listType(propertyType));
+            listType = enginePriv->rawMetaObjectForType(QQmlMetaType::listType(propertyType));
         } else {
             QQmlType type = QQmlMetaType::qmlType(QQmlMetaType::listType(propertyType));
             if (!type.isValid())
@@ -1389,7 +1389,7 @@ bool QQmlPropertyPrivate::write(
                 prop.append(&prop, o);
             }
         } else {
-            QObject *o = enginePriv?enginePriv->toQObject(value):QQmlMetaType::toQObject(value);
+            QObject *o = QQmlMetaType::toQObject(value);
             if (o && !QQmlMetaObject::canConvert(o, listType))
                 o = nullptr;
             prop.append(&prop, o);

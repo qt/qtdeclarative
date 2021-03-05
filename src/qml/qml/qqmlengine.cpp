@@ -2053,10 +2053,6 @@ bool QQmlEnginePrivate::isQObject(int t)
     return m_compositeTypes.contains(t) || QQmlMetaType::isQObject(t);
 }
 
-QObject *QQmlEnginePrivate::toQObject(const QVariant &v, bool *ok) const
-{
-    return QQmlMetaType::toQObject(v, ok);
-}
 
 QQmlMetaType::TypeCategory QQmlEnginePrivate::typeCategory(int t) const
 {
@@ -2064,16 +2060,6 @@ QQmlMetaType::TypeCategory QQmlEnginePrivate::typeCategory(int t) const
     if (m_compositeTypes.contains(t))
         return QQmlMetaType::Object;
     return QQmlMetaType::typeCategory(t);
-}
-
-bool QQmlEnginePrivate::isList(int t) const
-{
-    return QQmlMetaType::isList(t);
-}
-
-int QQmlEnginePrivate::listType(int t) const
-{
-    return QQmlMetaType::listType(t);
 }
 
 

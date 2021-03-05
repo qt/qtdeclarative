@@ -105,7 +105,7 @@ void QQmlListAccessor::setList(const QVariant &v, QQmlEngine *engine)
         }
     } else if ((!enginePrivate && QQmlMetaType::isQObject(d.userType())) ||
                (enginePrivate && enginePrivate->isQObject(d.userType()))) {
-        QObject *data = enginePrivate?enginePrivate->toQObject(d):QQmlMetaType::toQObject(d);
+        QObject *data = QQmlMetaType::toQObject(d);
         d = QVariant::fromValue(data);
         m_type = Instance;
     } else if (d.userType() == qMetaTypeId<QQmlListReference>()) {

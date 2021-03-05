@@ -236,10 +236,7 @@ public:
 
     // These methods may be called from the loader thread
     bool isQObject(int);
-    QObject *toQObject(const QVariant &, bool *ok = nullptr) const;
     QQmlMetaType::TypeCategory typeCategory(int) const;
-    bool isList(int) const;
-    int listType(int) const;
     QQmlMetaObject rawMetaObjectForType(int) const;
     QQmlMetaObject metaObjectForType(int) const;
     QQmlPropertyCache *propertyCacheForType(int);
