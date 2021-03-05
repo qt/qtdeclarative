@@ -7,6 +7,9 @@
 #### Libraries
 
 
+# special case begin
+qt_find_package(LTTngUST PROVIDED_TARGETS LTTng::UST MODULE_NAME qml QMAKE_LIB lttng-ust)
+# special case end
 
 #### Tests
 
