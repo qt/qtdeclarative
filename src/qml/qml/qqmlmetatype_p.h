@@ -193,10 +193,6 @@ public:
     static int listType(int);
     static QQmlAttachedPropertiesFunc attachedPropertiesFunc(QQmlEnginePrivate *,
                                                              const QMetaObject *);
-
-    enum TypeCategory { Unknown, Object, List };
-    static TypeCategory typeCategory(int);
-
     static bool isInterface(int);
     static const char *interfaceIId(int);
     static bool isList(int);

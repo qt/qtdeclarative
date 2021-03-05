@@ -2053,16 +2053,6 @@ bool QQmlEnginePrivate::isQObject(int t)
     return m_compositeTypes.contains(t) || QQmlMetaType::isQObject(t);
 }
 
-
-QQmlMetaType::TypeCategory QQmlEnginePrivate::typeCategory(int t) const
-{
-    Locker locker(this);
-    if (m_compositeTypes.contains(t))
-        return QQmlMetaType::Object;
-    return QQmlMetaType::typeCategory(t);
-}
-
-
 static QQmlPropertyCache *propertyCacheForPotentialInlineComponentType(int t, const QHash<int, QV4::ExecutableCompilationUnit *>::const_iterator &iter) {
     if (t != (*iter)->typeIds.id.id()) {
         // this is an inline component, and what we have in the iterator is currently the parent compilation unit

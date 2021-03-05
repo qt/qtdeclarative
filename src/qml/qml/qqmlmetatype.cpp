@@ -1184,26 +1184,6 @@ QMetaMethod QQmlMetaType::defaultMethod(QObject *obj)
     return defaultMethod(metaObject);
 }
 
-QQmlMetaType::TypeCategory QQmlMetaType::typeCategory(int userType)
-{
-    if (userType < 0)
-        return Unknown;
-    if (userType == QMetaType::QObjectStar)
-        return Object;
-
-    QMetaType type(userType);
-    if (type.flags().testFlag(QMetaType::PointerToQObject))
-        return Object;
-    else if (type.flags().testFlag(QMetaType::IsQmlList))
-        return List;
-
-    QQmlMetaTypeDataPtr data;
-    if (data->qmlLists.contains(userType))
-        return List;
-    else
-        return Unknown;
-}
-
 /*!
     See qmlRegisterInterface() for information about when this will return true.
 */

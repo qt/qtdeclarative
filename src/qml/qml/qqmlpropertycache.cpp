@@ -102,12 +102,6 @@ QQmlPropertyData::flagsForProperty(const QMetaProperty &p)
         flags.type = QQmlPropertyData::Flags::QJSValueType;
     } else if (metaType.flags() & QMetaType::IsQmlList) {
         flags.type = QQmlPropertyData::Flags::QListType;
-    } else {
-        QQmlMetaType::TypeCategory cat = QQmlMetaType::typeCategory(propType);
-        if (cat == QQmlMetaType::Object)
-            flags.type = QQmlPropertyData::Flags::QObjectDerivedType;
-        else if (cat == QQmlMetaType::List)
-            flags.type = QQmlPropertyData::Flags::QListType;
     }
 
     return flags;
