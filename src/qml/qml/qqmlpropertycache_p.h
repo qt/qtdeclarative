@@ -268,10 +268,8 @@ private:
     }
 
 private:
+    int propertyIndexCacheStart; // placed here to avoid gap between QQmlRefCount and _parent
     QQmlPropertyCache *_parent;
-    int propertyIndexCacheStart;
-    int methodIndexCacheStart;
-    int signalHandlerIndexCacheStart;
 
     IndexCache propertyIndexCache;
     IndexCache methodIndexCache;
@@ -280,15 +278,17 @@ private:
     AllowedRevisionCache allowedRevisionCache;
     QVector<QQmlEnumData> enumCache;
 
-    bool _hasPropertyOverrides : 1;
-    bool _ownMetaObject : 1;
     RefCountedMetaObject _metaObject;
     QByteArray _dynamicClassName;
     QByteArray _dynamicStringData;
     QString _defaultPropertyName;
     QQmlPropertyCacheMethodArguments *argumentsCache;
-    int _jsFactoryMethodIndex;
     QByteArray _checksum;
+    int methodIndexCacheStart;
+    int signalHandlerIndexCacheStart;
+    int _jsFactoryMethodIndex;
+    bool _hasPropertyOverrides;
+    bool _ownMetaObject;
 };
 
 // Returns this property cache's metaObject.  May be null if it hasn't been created yet.

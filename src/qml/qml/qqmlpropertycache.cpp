@@ -151,9 +151,9 @@ void QQmlPropertyData::load(const QMetaMethod &m)
 Creates a new empty QQmlPropertyCache.
 */
 QQmlPropertyCache::QQmlPropertyCache()
-    : _parent(nullptr), propertyIndexCacheStart(0), methodIndexCacheStart(0),
-      signalHandlerIndexCacheStart(0), _hasPropertyOverrides(false),
-      argumentsCache(nullptr), _jsFactoryMethodIndex(-1)
+    : propertyIndexCacheStart(0), _parent(nullptr),
+      argumentsCache(nullptr), methodIndexCacheStart(0), signalHandlerIndexCacheStart(0),
+      _jsFactoryMethodIndex(-1), _hasPropertyOverrides(false)
 {
 }
 
