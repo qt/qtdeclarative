@@ -603,7 +603,7 @@ bool QQuickDeliveryAgentPrivate::clearHover(ulong timestamp)
     bool accepted = false;
     for (QQuickItem* item : qAsConst(hoverItems)) {
         if (item)
-            accepted = sendHoverEvent(QEvent::HoverLeave, item, pos, pos, QGuiApplication::keyboardModifiers(), timestamp, true) || accepted;
+            accepted = sendHoverEvent(QEvent::HoverLeave, item, pos, pos, QGuiApplication::keyboardModifiers(), timestamp) || accepted;
     }
     hoverItems.clear();
     return accepted;
@@ -914,15 +914,14 @@ void QQuickDeliveryAgentPrivate::deliverToPassiveGrabbers(const QVector<QPointer
 
 bool QQuickDeliveryAgentPrivate::sendHoverEvent(QEvent::Type type, QQuickItem *item,
                                       const QPointF &scenePos, const QPointF &lastScenePos,
-                                      Qt::KeyboardModifiers modifiers, ulong timestamp,
-                                      bool accepted)
+                                      Qt::KeyboardModifiers modifiers, ulong timestamp)
 {
     const QTransform transform = QQuickItemPrivate::get(item)->windowToItemTransform();
 
     //create copy of event
     QHoverEvent hoverEvent(type, transform.map(scenePos), transform.map(lastScenePos), modifiers);
     hoverEvent.setTimestamp(timestamp);
-    hoverEvent.setAccepted(accepted);
+    hoverEvent.setAccepted(true);
 
     hasFiltered.clear();
     if (sendFilteredMouseEvent(&hoverEvent, item, item->parentItem()))
@@ -977,7 +976,7 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEvent(QQuickItem *item, const QPoin
     if (itemPrivate->hoverEnabled && item->contains(itemPos)) {
         if (!hoverItems.isEmpty() && hoverItems.at(0) == item) {
             //move
-            accepted = sendHoverEvent(QEvent::HoverMove, item, scenePos, lastScenePos, modifiers, timestamp, accepted);
+            accepted = sendHoverEvent(QEvent::HoverMove, item, scenePos, lastScenePos, modifiers, timestamp);
         } else {
             QList<QQuickItem *> itemsToHover;
             QQuickItem* parent = item;
@@ -989,12 +988,12 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEvent(QQuickItem *item, const QPoin
             while (!hoverItems.isEmpty() && !itemsToHover.contains(hoverItems.at(0))) {
                 QQuickItem *hoverLeaveItem = hoverItems.takeFirst();
                 if (hoverLeaveItem)
-                    sendHoverEvent(QEvent::HoverLeave, hoverLeaveItem, scenePos, lastScenePos, modifiers, timestamp, accepted);
+                    sendHoverEvent(QEvent::HoverLeave, hoverLeaveItem, scenePos, lastScenePos, modifiers, timestamp);
             }
 
             if (!hoverItems.isEmpty() && hoverItems.at(0) == item) {//Not entering a new Item
                 // ### Shouldn't we send moves for the parent items as well?
-                accepted = sendHoverEvent(QEvent::HoverMove, item, scenePos, lastScenePos, modifiers, timestamp, accepted);
+                accepted = sendHoverEvent(QEvent::HoverMove, item, scenePos, lastScenePos, modifiers, timestamp);
             } else {
                 // Enter items that are not entered yet.
                 int startIdx = -1;
@@ -1013,7 +1012,7 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEvent(QQuickItem *item, const QPoin
                     // itemToHoverPrivate->window here prevents that case.
                     if (itemToHoverPrivate->window == itemPrivate->window && itemToHoverPrivate->hoverEnabled) {
                         hoverItems.prepend(itemToHover);
-                        sendHoverEvent(QEvent::HoverEnter, itemToHover, scenePos, lastScenePos, modifiers, timestamp, accepted);
+                        sendHoverEvent(QEvent::HoverEnter, itemToHover, scenePos, lastScenePos, modifiers, timestamp);
                     }
                 }
             }

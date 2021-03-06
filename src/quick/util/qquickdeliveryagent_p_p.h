@@ -187,7 +187,7 @@ public:
     // hover delivery
     bool deliverHoverEvent(QQuickItem *, const QPointF &scenePos, const QPointF &lastScenePos, Qt::KeyboardModifiers modifiers, ulong timestamp, bool &accepted);
     bool sendHoverEvent(QEvent::Type, QQuickItem *, const QPointF &scenePos, const QPointF &lastScenePos,
-                        Qt::KeyboardModifiers modifiers, ulong timestamp, bool accepted);
+                        Qt::KeyboardModifiers modifiers, ulong timestamp);
     bool clearHover(ulong timestamp = 0);
 
 #if QT_CONFIG(quick_draganddrop)
