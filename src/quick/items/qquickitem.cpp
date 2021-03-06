@@ -4131,7 +4131,7 @@ void QQuickItem::touchEvent(QTouchEvent *event)
   */
 void QQuickItem::hoverEnterEvent(QHoverEvent *event)
 {
-    Q_UNUSED(event);
+    event->ignore();
 }
 
 /*!
@@ -4145,7 +4145,7 @@ void QQuickItem::hoverEnterEvent(QHoverEvent *event)
   */
 void QQuickItem::hoverMoveEvent(QHoverEvent *event)
 {
-    Q_UNUSED(event);
+    event->ignore();
 }
 
 /*!
@@ -4159,7 +4159,7 @@ void QQuickItem::hoverMoveEvent(QHoverEvent *event)
   */
 void QQuickItem::hoverLeaveEvent(QHoverEvent *event)
 {
-    Q_UNUSED(event);
+    event->ignore();
 }
 
 #if QT_CONFIG(quick_draganddrop)
