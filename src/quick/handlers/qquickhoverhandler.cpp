@@ -83,6 +83,22 @@ QQuickHoverHandler::~QQuickHoverHandler()
         QQuickItemPrivate::get(parent)->setHasHoverInChild(false);
 }
 
+bool QQuickHoverHandler::event(QEvent *event)
+{
+    switch (event->type())
+    {
+    case QEvent::HoverLeave:
+        setHovered(false);
+        setActive(false);
+        break;
+    default:
+        return QQuickSinglePointHandler::event(event);
+        break;
+    }
+
+    return true;
+}
+
 void QQuickHoverHandler::componentComplete()
 {
     parentItem()->setAcceptHoverEvents(true);

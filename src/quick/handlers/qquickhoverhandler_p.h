@@ -69,6 +69,8 @@ public:
     explicit QQuickHoverHandler(QQuickItem *parent = nullptr);
     ~QQuickHoverHandler();
 
+    bool event(QEvent *) override;
+
     bool isHovered() const { return m_hovered; }
 
 Q_SIGNALS:
