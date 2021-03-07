@@ -36,6 +36,7 @@
 #include <private/qqmlmetatype_p.h>
 #include <private/qqmlpropertyvalueinterceptor_p.h>
 #include <private/qqmlengine_p.h>
+#include <private/qqmlanybinding_p.h>
 #include "../../shared/util.h"
 
 class tst_qqmlmetatype : public QQmlDataTest
@@ -377,6 +378,20 @@ void tst_qqmlmetatype::interceptorAPI()
     auto interceptor = obj->property("i").value<ForwardAndLogInterceptor *>();
     QVERIFY(interceptor->interceptedBindable);
     QVERIFY(interceptor->interceptedWrite);
+
+    QQmlProperty objectName(obj.get(), "objectName");
+    QProperty<QString> hello(u"Hello, World!"_qs);
+    QQmlAnyBinding binding;
+    binding = Qt::makePropertyBinding(hello);
+    interceptor->interceptedBindable = false;
+    binding.installOn(objectName, QQmlAnyBinding::RespectInterceptors);
+    QVERIFY(interceptor->interceptedBindable);
+    binding = QQmlAnyBinding::takeFrom(objectName);
+    objectName.write("bar");
+    interceptor->interceptedBindable = false;
+    binding.installOn(objectName, QQmlAnyBinding::IgnoreInterceptors);
+    QVERIFY(!interceptor->interceptedBindable);
+    QCOMPARE(objectName.read().toString(), hello.value());
 }
 
 class Controller1 : public QObject

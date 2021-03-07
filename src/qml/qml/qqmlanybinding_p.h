@@ -230,8 +230,13 @@ public:
                 QQmlPropertyPrivate::setBinding(abstractBinding);
         } else {
             Q_ASSERT(target.isBindable());
-            // TODO: QMetaProperty::bindable needs a mode to work on the dynamic metaobject
-            QUntypedBindable bindable =  target.property().bindable(target.object());
+            QUntypedBindable bindable;
+            void *argv[] = {&bindable};
+            if (mode == IgnoreInterceptors) {
+                target.object()->qt_metacall(QMetaObject::BindableProperty, target.index(), argv);
+            } else {
+                QMetaObject::metacall(target.object(), QMetaObject::BindableProperty, target.index(), argv);
+            }
             bindable.setBinding(asUntypedPropertyBinding());
         }
     }
