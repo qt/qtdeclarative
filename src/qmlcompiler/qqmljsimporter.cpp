@@ -301,26 +301,42 @@ void QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
 {
 
     const QPair<QString, QTypeRevision> importId { module, version };
-    const auto it = m_seenImports.find(importId);
-    if (it != m_seenImports.end()) {
-        importDependencies(*it, types, prefix, version);
-        processImport(*it, types, prefix);
+    const auto it = m_seenImports.constFind(importId);
+    if (it != m_seenImports.constEnd()) {
+        if (it->isEmpty())
+            return; // TODO: warn here in the future
+        const auto import = m_seenQmldirFiles.constFind(*it);
+        Q_ASSERT(import != m_seenQmldirFiles.constEnd());
+        importDependencies(*import, types, prefix, version);
+        processImport(*import, types, prefix);
         return;
     }
 
-    const auto qmltypesPaths = qQmlResolveImportPaths(module, m_importPaths, version);
-    for (auto const &qmltypesPath : qmltypesPaths) {
-        const QFileInfo file(qmltypesPath + SlashQmldir);
+    const auto modulePaths = qQmlResolveImportPaths(module, m_importPaths, version);
+    for (auto const &modulePath : modulePaths) {
+        const QString qmldirPath = modulePath + SlashQmldir;
+        const auto it = m_seenQmldirFiles.constFind(qmldirPath);
+
+        if (it != m_seenQmldirFiles.constEnd()) {
+            m_seenImports.insert(importId, qmldirPath);
+            importDependencies(*it, types, prefix, version);
+            processImport(*it, types, prefix);
+            return;
+        }
+
+        const QFileInfo file(qmldirPath);
         if (file.exists()) {
             const auto import = readQmldir(file.canonicalPath());
-            m_seenImports.insert(importId, import);
+            m_seenQmldirFiles.insert(qmldirPath, import);
+            m_seenImports.insert(importId, qmldirPath);
             importDependencies(import, types, prefix, version);
             processImport(import, types, prefix);
             return;
         }
     }
 
-    m_seenImports.insert(importId, {});
+    // TODO: warn here in the future
+    m_seenImports.insert(importId, QString());
 }
 
 QQmlJSScope::Ptr QQmlJSImporter::localFile2ScopeTree(const QString &filePath)

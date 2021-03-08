@@ -1,0 +1,11 @@
+import QtQuick.tooling 1.2
+Module {
+    dependencies: []
+    Component {
+        name: "ItemDerived"
+        prototype: "QQuickItem"
+        exports: [
+            "DuplicateImport/ItemDerived 1.0"
+        ]
+    }
+}

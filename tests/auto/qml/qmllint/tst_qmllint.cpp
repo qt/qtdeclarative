@@ -431,6 +431,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("var") << QStringLiteral("var.qml");
     QTest::newRow("defaultProperty") << QStringLiteral("defaultProperty.qml");
     QTest::newRow("defaultPropertyList") << QStringLiteral("defaultPropertyList.qml");
+    QTest::newRow("duplicateQmldirImport") << QStringLiteral("qmldirImport/duplicate.qml");
 }
 
 void TestQmllint::cleanQmlCode()

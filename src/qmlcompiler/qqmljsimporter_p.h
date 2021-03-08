@@ -116,7 +116,10 @@ private:
     QQmlJSScope::Ptr localFile2ScopeTree(const QString &filePath);
 
     QStringList m_importPaths;
-    QHash<QPair<QString, QTypeRevision>, Import> m_seenImports;
+
+    QHash<QPair<QString, QTypeRevision>, QString> m_seenImports;
+    QHash<QString, Import> m_seenQmldirFiles;
+
     QHash<QString, QQmlJSScope::Ptr> m_importedFiles;
     QList<QQmlJS::DiagnosticMessage> m_warnings;
     AvailableTypes m_builtins;
