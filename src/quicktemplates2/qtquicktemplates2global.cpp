@@ -42,7 +42,7 @@
 QT_BEGIN_NAMESPACE
 
 #if QT_CONFIG(accessibility)
-QAccessibleInterface *qQuickAccessibleFactory(const QString &classname, QObject *object)
+static QAccessibleInterface *qQuickAccessibleFactory(const QString &classname, QObject *object)
 {
     if (classname == u"QQuickPage") {
         return new QAccessibleQuickPage(qobject_cast<QQuickPage *>(object));
