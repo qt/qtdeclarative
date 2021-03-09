@@ -657,6 +657,11 @@ function(qt6_target_qml_files target)
             get_filename_component(qml_file_typename ${qml_file} NAME_WLE)
         endif()
 
+        # Do not add qmldir entries for lowercase names. Those are not components.
+        if (NOT qml_file_typename MATCHES "^[A-Z]")
+            continue()
+        endif()
+
         foreach(qml_file_version IN LISTS qml_file_versions)
             if (qml_file_singleton)
                 string(APPEND file_contents "singleton ")
