@@ -101,8 +101,10 @@ bool QQuickHoverHandler::event(QEvent *event)
 
 void QQuickHoverHandler::componentComplete()
 {
-    parentItem()->setAcceptHoverEvents(true);
-    QQuickItemPrivate::get(parentItem())->setHasHoverInChild(true);
+    if (auto par = parentItem()) {
+        par->setAcceptHoverEvents(true);
+        QQuickItemPrivate::get(par)->setHasHoverInChild(true);
+    }
 }
 
 bool QQuickHoverHandler::wantsPointerEvent(QPointerEvent *event)

@@ -342,10 +342,13 @@ void QQuickTapHandler::onGrabChanged(QQuickPointerHandler *grabber, QPointingDev
 
 void QQuickTapHandler::connectPreRenderSignal(bool conn)
 {
+    auto par = parentItem();
+    if (!par)
+        return;
     if (conn)
-        connect(parentItem()->window(), &QQuickWindow::beforeSynchronizing, this, &QQuickTapHandler::updateTimeHeld);
+        connect(par->window(), &QQuickWindow::beforeSynchronizing, this, &QQuickTapHandler::updateTimeHeld);
     else
-        disconnect(parentItem()->window(), &QQuickWindow::beforeSynchronizing, this, &QQuickTapHandler::updateTimeHeld);
+        disconnect(par->window(), &QQuickWindow::beforeSynchronizing, this, &QQuickTapHandler::updateTimeHeld);
 }
 
 void QQuickTapHandler::updateTimeHeld()

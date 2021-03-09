@@ -104,7 +104,8 @@ bool QQuickMultiPointHandler::wantsPointerEvent(QPointerEvent *event)
         d->currentPoints.resize(c);
         for (int i = 0; i < c; ++i) {
             d->currentPoints[i].reset(event, candidatePoints[i]);
-            d->currentPoints[i].localize(parentItem());
+            if (auto par = parentItem())
+                d->currentPoints[i].localize(par);
         }
     } else {
         d->currentPoints.clear();

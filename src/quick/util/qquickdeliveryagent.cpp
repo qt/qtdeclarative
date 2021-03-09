@@ -916,12 +916,13 @@ void QQuickDeliveryAgentPrivate::deliverToPassiveGrabbers(const QVector<QPointer
                 // Yes, the event was already filtered to that parent, do not call it again but use
                 // the result of the previous call to determine if we should call the handler.
                 alreadyFiltered = it->second;
-            } else {
+            } else if (par) {
                 alreadyFiltered = sendFilteredPointerEvent(pointerEvent, par);
                 sendFilteredPointerEventResult << qMakePair(par, alreadyFiltered);
             }
             if (!alreadyFiltered) {
-                localizePointerEvent(pointerEvent, handler->parentItem());
+                if (par)
+                    localizePointerEvent(pointerEvent, par);
                 handler->handlePointerEvent(pointerEvent);
             }
         }
@@ -1113,8 +1114,14 @@ void QQuickDeliveryAgentPrivate::handleWindowDeactivate(QQuickWindow *win)
                     bool relevant = false;
                     if (QQuickItem *item = qmlobject_cast<QQuickItem *>(epd.exclusiveGrabber.data()))
                         relevant = (item->window() == win);
-                    else if (QQuickPointerHandler *handler = qmlobject_cast<QQuickPointerHandler *>(epd.exclusiveGrabber.data()))
-                        relevant = (handler->parentItem()->window() == win && epd.exclusiveGrabberContext.data() == q);
+                    else if (QQuickPointerHandler *handler = qmlobject_cast<QQuickPointerHandler *>(epd.exclusiveGrabber.data())) {
+                        if (handler->parentItem())
+                            relevant = (handler->parentItem()->window() == win && epd.exclusiveGrabberContext.data() == q);
+                        else
+                            // a handler with no Item parent probably has a 3D Model parent.
+                            // TODO actually check the window somehow
+                            relevant = true;
+                    }
                     if (relevant)
                         devPriv->setExclusiveGrabber(nullptr, epd.eventPoint, nullptr);
                 }
@@ -1391,6 +1398,8 @@ void QQuickDeliveryAgentPrivate::handleMouseEvent(QMouseEvent *event)
 void QQuickDeliveryAgentPrivate::flushFrameSynchronousEvents(QQuickWindow *win)
 {
     Q_Q(QQuickDeliveryAgent);
+    QQuickDeliveryAgent *deliveringAgent = QQuickDeliveryAgentPrivate::currentEventDeliveryAgent;
+    QQuickDeliveryAgentPrivate::currentEventDeliveryAgent = q;
 
     if (delayedTouch) {
         deliverDelayedTouchEvent();
@@ -1421,6 +1430,9 @@ void QQuickDeliveryAgentPrivate::flushFrameSynchronousEvents(QQuickWindow *win)
         qCDebug(lcHoverTrace) << q << "frame-sync hover delivery done";
     }
 #endif
+    if (Q_UNLIKELY(QQuickDeliveryAgentPrivate::currentEventDeliveryAgent != q))
+        qCWarning(lcPtr, "detected interleaved frame-sync and actual events");
+    QQuickDeliveryAgentPrivate::currentEventDeliveryAgent = deliveringAgent;
 }
 
 void QQuickDeliveryAgentPrivate::onGrabChanged(QObject *grabber, QPointingDevice::GrabTransition transition,
@@ -1434,17 +1446,22 @@ void QQuickDeliveryAgentPrivate::onGrabChanged(QObject *grabber, QPointingDevice
 
     // note: event can be null, if the signal was emitted from QPointingDevicePrivate::removeGrabber(grabber)
     if (auto *handler = qmlobject_cast<QQuickPointerHandler *>(grabber)) {
-        auto itemPriv = QQuickItemPrivate::get(handler->parentItem());
-        deliveryAgent = itemPriv->deliveryAgent();
-        if (deliveryAgent == q) {
+        if (handler->parentItem()) {
+            auto itemPriv = QQuickItemPrivate::get(handler->parentItem());
+            deliveryAgent = itemPriv->deliveryAgent();
+            if (deliveryAgent == q) {
+                handler->onGrabChanged(handler, transition, const_cast<QPointerEvent *>(event),
+                                       const_cast<QEventPoint &>(point));
+            }
+            if (grabGained) {
+                // An item that is NOT a subscene root needs to track whether it got a grab via a subscene delivery agent,
+                // whereas the subscene root item already knows it has its own DA.
+                if (isSubsceneAgent && (!itemPriv->extra.isAllocated() || !itemPriv->extra->subsceneDeliveryAgent))
+                    itemPriv->maybeHasSubsceneDeliveryAgent = true;
+            }
+        } else if (!isSubsceneAgent) {
             handler->onGrabChanged(handler, transition, const_cast<QPointerEvent *>(event),
                                    const_cast<QEventPoint &>(point));
-        }
-        if (grabGained) {
-            // An item that is NOT a subscene root needs to track whether it got a grab via a subscene delivery agent,
-            // whereas the subscene root item already knows it has its own DA.
-            if (isSubsceneAgent && (!itemPriv->extra.isAllocated() || !itemPriv->extra->subsceneDeliveryAgent))
-                itemPriv->maybeHasSubsceneDeliveryAgent = true;
         }
     } else {
         switch (transition) {
@@ -1681,10 +1698,14 @@ void QQuickDeliveryAgentPrivate::deliverUpdatedPoints(QPointerEvent *event)
             // The grabber is not an item? It's a handler then.  Let it have the event first.
             QQuickPointerHandler *handler = static_cast<QQuickPointerHandler *>(grabber);
             receiver = static_cast<QQuickPointerHandler *>(grabber)->parentItem();
-            hasFiltered.clear();
-            if (sendFilteredPointerEvent(event, receiver))
-                done = true;
-            localizePointerEvent(event, receiver);
+            // Filtering via QQuickItem::childMouseEventFilter() is only possible
+            // if the handler's parent is an Item.  It could be a QQ3D object.
+            if (receiver) {
+                hasFiltered.clear();
+                if (sendFilteredPointerEvent(event, receiver))
+                    done = true;
+                localizePointerEvent(event, receiver);
+            }
             handler->handlePointerEvent(event);
         }
         if (done)
@@ -1692,7 +1713,8 @@ void QQuickDeliveryAgentPrivate::deliverUpdatedPoints(QPointerEvent *event)
         // If the grabber is an item or the grabbing handler didn't handle it,
         // then deliver the event to the item (which may have multiple handlers).
         hasFiltered.clear();
-        deliverMatchingPointsToItem(receiver, true, event);
+        if (receiver)
+            deliverMatchingPointsToItem(receiver, true, event);
     }
 
     // Deliver to each eventpoint's passive grabbers (but don't visit any handler more than once)

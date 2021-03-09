@@ -360,7 +360,9 @@ bool QQuickPointerHandler::approveGrabTransition(QPointerEvent *event, const QEv
             } else if ((d->grabPermissions & CanTakeOverFromItems)) {
                 allowed = true;
                 QQuickItem * existingItemGrabber = qobject_cast<QQuickItem *>(event->exclusiveGrabber(point));
-                auto da = QQuickItemPrivate::get(parentItem())->deliveryAgentPrivate();
+                auto da = parentItem() ? QQuickItemPrivate::get(parentItem())->deliveryAgentPrivate()
+                                       : QQuickDeliveryAgentPrivate::currentEventDeliveryAgent ? static_cast<QQuickDeliveryAgentPrivate *>(
+                                            QQuickDeliveryAgentPrivate::get(QQuickDeliveryAgentPrivate::currentEventDeliveryAgent)) : nullptr;
                 if (existingItemGrabber &&
                         ((existingItemGrabber->keepMouseGrab() &&
                           (QQuickDeliveryAgentPrivate::isMouseEvent(event) || da->isDeliveringTouchAsMouse())) ||
@@ -546,6 +548,10 @@ bool QQuickPointerHandler::parentContains(const QPointF &scenePosition) const
         if (m > 0)
             return p.x() >= -m && p.y() >= -m && p.x() <= par->width() + m && p.y() <= par->height() + m;
         return par->contains(p);
+    } else if (parent() && parent()->inherits("QQuick3DModel")) {
+        // If the parent is from Qt Quick 3D, assume that
+        // bounds checking was already done, as part of picking.
+        return true;
     }
     return false;
 }
@@ -604,7 +610,7 @@ void QQuickPointerHandler::setTarget(QQuickItem *target)
 
 QQuickItem *QQuickPointerHandler::parentItem() const
 {
-    return static_cast<QQuickItem *>(QObject::parent());
+    return qmlobject_cast<QQuickItem *>(QObject::parent());
 }
 
 QQuickItem *QQuickPointerHandler::target() const
@@ -641,7 +647,7 @@ void QQuickPointerHandler::handlePointerEvent(QPointerEvent *event)
 {
     bool wants = wantsPointerEvent(event);
     qCDebug(lcPointerHandlerDispatch) << metaObject()->className() << objectName()
-                                      << "on" << parentItem()->metaObject()->className() << parentItem()->objectName()
+                                      << "on" << parent()->metaObject()->className() << parent()->objectName()
                                       << (wants ? "WANTS" : "DECLINES") << event;
     if (wants) {
         handlePointerEventImpl(event);
@@ -714,6 +720,9 @@ void QQuickPointerHandler::handlePointerEventImpl(QPointerEvent *event)
     pointer event is relevant if at least one of its event points occurs within
     the Item's interior.  Initially \l [QML] {target} {target()} is the same, but it
     can be reassigned.
+
+    \note When a handler is declared in a \l QtQuick3D.Model object, the parent
+    is not an Item, therefore this property is \c null.
 
     \sa {target}, QObject::parent()
 */

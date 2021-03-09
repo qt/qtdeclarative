@@ -99,8 +99,10 @@ QQuickDragHandler::QQuickDragHandler(QQuickItem *parent)
 QPointF QQuickDragHandler::targetCentroidPosition()
 {
     QPointF pos = centroid().position();
-    if (target() != parentItem())
-        pos = parentItem()->mapToItem(target(), pos);
+    if (auto par = parentItem()) {
+        if (target() != par)
+            pos = par->mapToItem(target(), pos);
+    }
     return pos;
 }
 
@@ -111,7 +113,7 @@ void QQuickDragHandler::onGrabChanged(QQuickPointerHandler *grabber, QPointingDe
         // In case the grab got handed over from another grabber, we might not get the Press.
 
         auto isDescendant = [](QQuickItem *parent, QQuickItem *target) {
-            return (target != parent) && !target->isAncestorOf(parent);
+            return parent && (target != parent) && !target->isAncestorOf(parent);
         };
         if (m_snapMode == SnapAlways
             || (m_snapMode == SnapIfPressedOutsideTarget && !m_pressedInsideTarget)
