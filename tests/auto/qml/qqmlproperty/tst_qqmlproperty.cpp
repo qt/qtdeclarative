@@ -197,6 +197,8 @@ private slots:
     void underscorePropertyChangeHandler();
 
     void signalExpressionWithoutObject();
+
+    void dontRemoveQPropertyBinding();
 private:
     QQmlEngine engine;
 };
@@ -2271,6 +2273,31 @@ void tst_qqmlproperty::signalExpressionWithoutObject()
     QQmlPropertyPrivate::setSignalExpression(invalid, nullptr);
     QQmlBoundSignalExpression *expr = QQmlPropertyPrivate::signalExpression(invalid);
     QVERIFY(!expr);
+}
+
+void tst_qqmlproperty::dontRemoveQPropertyBinding()
+{
+    QObject object;
+    QQmlProperty objectName(&object, "objectName");
+    QVERIFY(objectName.isBindable());
+    QProperty<QString> name("hello");
+    object.bindableObjectName().setBinding(Qt::makePropertyBinding(name));
+    QVERIFY(object.bindableObjectName().hasBinding());
+
+    // A write with DontRemoveBinding preserves the binding
+    QQmlPropertyPrivate::write(objectName, u"goodbye"_qs, QQmlPropertyData::DontRemoveBinding);
+    QVERIFY(object.bindableObjectName().hasBinding());
+    // but changes the value
+    QCOMPARE(object.objectName(), u"goodbye"_qs);
+    // subsequent binding evaluations change the value again
+    name = u"hello, again"_qs;
+    QCOMPARE(object.objectName(), name.value());
+
+    // The binding is only preserved by the write which had DontRemoveBinding set
+    // any further write will remove the binding
+    QQmlPropertyPrivate::write(objectName, u"goodbye"_qs, QQmlPropertyData::WriteFlags{});
+    QCOMPARE(object.objectName(), u"goodbye"_qs);
+    QVERIFY(!object.bindableObjectName().hasBinding());
 }
 
 QTEST_MAIN(tst_qqmlproperty)

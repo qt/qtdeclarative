@@ -64,6 +64,7 @@
 #include <QtCore/qdebug.h>
 #include <cmath>
 #include <QtQml/QQmlPropertyMap>
+#include <QtCore/private/qproperty_p.h>
 
 Q_DECLARE_METATYPE(QList<int>)
 Q_DECLARE_METATYPE(QList<qreal>)
@@ -1252,6 +1253,24 @@ bool QQmlPropertyPrivate::write(
     const QMetaType propertyMetaType = property.propType();
     const int propertyType = propertyMetaType.id();
     const int variantType = value.userType();
+
+    // we need to prevent new-style bindings from being  removed
+    QUntypedPropertyBinding untypedBinding;
+    if (property.isBindable() && (flags & QQmlPropertyData::DontRemoveBinding)) {
+        QUntypedBindable bindable;
+        void *argv[] = {&bindable};
+        QMetaObject::metacall(object, QMetaObject::BindableProperty, property.coreIndex(), argv);
+        untypedBinding = bindable.binding();
+        auto priv = QPropertyBindingPrivate::get(untypedBinding);
+        if (priv)
+          priv->setSticky(true);
+    }
+    auto bindingFixer = qScopeGuard([&](){
+        if (untypedBinding.isNull())
+            return;
+        auto priv = QPropertyBindingPrivate::get(untypedBinding);
+        priv->setSticky(false);
+    });
 
     if (property.isEnum()) {
         QMetaProperty prop = object->metaObject()->property(property.coreIndex());
