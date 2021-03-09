@@ -8,6 +8,7 @@
         "classname": "QtQuick2Plugin",
         "name": "QtQuick",
         "plugin": "qtquick2plugin",
+        "pluginIsOptional": true,
         "relativePath": "QtQuick",
         "type": "module"
     },
@@ -15,6 +16,7 @@
         "classname": "QtQmlPlugin",
         "name": "QtQml",
         "plugin": "qmlplugin",
+        "pluginIsOptional": true,
         "relativePath": "QtQml",
         "type": "module"
     },
@@ -22,6 +24,7 @@
         "classname": "QtQmlModelsPlugin",
         "name": "QtQml.Models",
         "plugin": "modelsplugin",
+        "pluginIsOptional": true,
         "relativePath": "QtQml/Models",
         "type": "module"
     },
@@ -29,8 +32,8 @@
         "classname": "QtQmlWorkerScriptPlugin",
         "name": "QtQml.WorkerScript",
         "plugin": "workerscriptplugin",
+        "pluginIsOptional": true,
         "relativePath": "QtQml/WorkerScript",
         "type": "module"
     }
 ]
-

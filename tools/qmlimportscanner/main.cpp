@@ -65,6 +65,7 @@ inline QString versionLiteral()      { return QStringLiteral("version"); }
 inline QString nameLiteral()         { return QStringLiteral("name"); }
 inline QString relativePathLiteral() { return QStringLiteral("relativePath"); }
 inline QString pluginsLiteral()      { return QStringLiteral("plugins"); }
+inline QString pluginIsOptionalLiteral() { return QStringLiteral("pluginIsOptional"); }
 inline QString pathLiteral()         { return QStringLiteral("path"); }
 inline QString classnamesLiteral()   { return QStringLiteral("classnames"); }
 inline QString dependenciesLiteral() { return QStringLiteral("dependencies"); }
@@ -177,10 +178,23 @@ QVariantMap pluginsForModulePath(const QString &modulePath, const QString &versi
     QVariantMap pluginInfo;
 
     QStringList pluginNameList;
+    bool isOptional = false;
     const auto plugins = parser.plugins();
-    for (const auto &plugin : plugins)
+    for (const auto &plugin : plugins) {
         pluginNameList.append(plugin.name);
+        isOptional = plugin.optional;
+    }
+
     pluginInfo[pluginsLiteral()] = pluginNameList.join(QLatin1Char(' '));
+
+    if (plugins.size() > 1) {
+        qWarning() << QStringLiteral("Warning: \"%1\" contains multiple plugin entries. This is discouraged and does not support marking plugins as optional.").arg(modulePath);
+        isOptional = false;
+    }
+
+    if (isOptional) {
+        pluginInfo[pluginIsOptionalLiteral()] = true;
+    }
 
     pluginInfo[classnamesLiteral()] = parser.classNames().join(QLatin1Char(' '));
 
@@ -300,9 +314,12 @@ QVariantList findPathsForModuleImports(const QVariantList &imports)
                 plugininfo = pluginsForModulePath(paths.first, version);
             }
             QString plugins = plugininfo.value(pluginsLiteral()).toString();
+            bool isOptional = plugininfo.value(pluginIsOptionalLiteral(), QVariant(false)).toBool();
             QString classnames = plugininfo.value(classnamesLiteral()).toString();
             if (!plugins.isEmpty())
                 import.insert(QStringLiteral("plugin"), plugins);
+            if (isOptional)
+                import.insert(pluginIsOptionalLiteral(), true);
             if (!classnames.isEmpty())
                 import.insert(QStringLiteral("classname"), classnames);
             if (plugininfo.contains(dependenciesLiteral())) {
