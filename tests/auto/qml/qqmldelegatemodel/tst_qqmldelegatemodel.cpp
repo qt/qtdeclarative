@@ -29,6 +29,8 @@
 #include <QtTest/qtest.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQmlModels/private/qqmldelegatemodel_p.h>
+#include <QtQuick/qquickview.h>
+#include <QtQuick/qquickitem.h>
 
 #include "../../shared/util.h"
 
@@ -42,6 +44,7 @@ public:
 private slots:
     void valueWithoutCallingObjectFirst_data();
     void valueWithoutCallingObjectFirst();
+    void filterOnGroup_removeWhenCompleted();
 };
 
 class AbstractItemModel : public QAbstractItemModel
@@ -132,6 +135,18 @@ void tst_QQmlDelegateModel::valueWithoutCallingObjectFirst()
     QQmlDelegateModel *model = qobject_cast<QQmlDelegateModel*>(root.data());
     QVERIFY(model);
     QCOMPARE(model->variantValue(index, role), expectedValue);
+}
+
+void tst_QQmlDelegateModel::filterOnGroup_removeWhenCompleted()
+{
+    QQuickView view(testFileUrl("removeFromGroup.qml"));
+    QCOMPARE(view.status(), QQuickView::Ready);
+    view.show();
+    QQuickItem *root = view.rootObject();
+    QVERIFY(root);
+    QQmlDelegateModel *model = root->findChild<QQmlDelegateModel*>();
+    QVERIFY(model);
+    QTest::qWaitFor([=]{ return model->count() == 2; } );
 }
 
 QTEST_MAIN(tst_QQmlDelegateModel)
