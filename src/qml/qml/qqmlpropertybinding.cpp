@@ -129,6 +129,8 @@ QUntypedPropertyBinding QQmlPropertyBinding::createFromBoundFunction(const QQmlP
 
 void QQmlPropertyBindingJS::expressionChanged()
 {
+    if (!asBinding()->propertyDataPtr)
+        return;
     const auto currentTag = m_error.tag();
     if (currentTag & InEvaluationLoop) {
         QQmlError err;

@@ -39,6 +39,7 @@ class tst_qqmlanybinding : public QQmlDataTest
 private slots:
     void basicActions_data();
     void basicActions();
+    void unboundQQmlPropertyBindingDoesNotCrash();
 };
 
 void tst_qqmlanybinding::basicActions_data()
@@ -110,6 +111,37 @@ void tst_qqmlanybinding::basicActions()
     // aliases are resolved correctly
     QQmlProperty a2(root.get(), "a2");
     QCOMPARE(QQmlAnyBinding::ofProperty(a2), binding);
+}
+
+void tst_qqmlanybinding::unboundQQmlPropertyBindingDoesNotCrash()
+{
+    QQmlEngine engine;
+    QQmlComponent comp(&engine, testFileUrl("unboundBinding.qml"));
+    QScopedPointer<QObject> root(comp.create());
+    QVERIFY2(root, qPrintable(comp.errorString()));
+
+    QQmlProperty prop(root.get(), "prop");
+    QQmlProperty trigger(root.get(), "trigger");
+
+    // Store a reference to the binding of prop.
+    auto binding = QQmlAnyBinding::ofProperty(prop);
+    QVERIFY(binding.isUntypedPropertyBinding());
+    QVERIFY(!binding.asUntypedPropertyBinding().isNull());
+
+    // If we break the binding,
+    prop.write(42);
+    QCOMPARE(prop.read(), 42);
+    {
+        auto noBinding = QQmlAnyBinding::ofProperty(prop);
+        QVERIFY(noBinding.asUntypedPropertyBinding().isNull());
+    }
+    // and trigger binding reevaluation
+    trigger.write(1);
+    // there is no crash.
+    // When we reinstall the binding,
+    binding.installOn(prop);
+    // the value is correctly updated.
+    QCOMPARE(prop.read(), 1);
 }
 
 QTEST_MAIN(tst_qqmlanybinding)
