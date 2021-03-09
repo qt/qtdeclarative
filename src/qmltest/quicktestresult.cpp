@@ -516,7 +516,7 @@ bool QuickTestResult::fuzzyCompare(const QVariant &actual, const QVariant &expec
             return false;
         act = var.value<QColor>();
 
-        QQml_colorProvider()->colorFromString(expected.toString(), &ok);
+        var = QQml_colorProvider()->colorFromString(expected.toString(), &ok);
         if (!ok)
             return false;
         exp = var.value<QColor>();
