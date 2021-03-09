@@ -22,6 +22,7 @@ qt_internal_add_test(tst_qqmldelegatemodel
         Qt::Qml
         Qt::QmlModelsPrivate
         Qt::QmlPrivate
+        Qt::Quick
     TESTDATA ${test_data}
 )
 
