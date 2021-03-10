@@ -167,6 +167,7 @@ public:
     QList<QObject *> exclusiveGrabbers(QPointerEvent *ev);
     static bool anyPointGrabbed(const QPointerEvent *ev);
     static bool isMouseEvent(const QPointerEvent *ev);
+    static bool isHoverEvent(const QPointerEvent *ev);
     static bool isTouchEvent(const QPointerEvent *ev);
     static bool isTabletEvent(const QPointerEvent *ev);
     static QQuickPointingDeviceExtra *deviceExtra(const QInputDevice *device);
