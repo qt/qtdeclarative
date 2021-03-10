@@ -911,7 +911,7 @@ QJSValue::QJSValue(QJSPrimitiveValue &&value)
         d = QV4::Encode(value.asDouble());
         return;
     case QJSPrimitiveValue::String:
-        QJSValuePrivate::setString(this, std::move(std::get<QString>(value.d)));
+        QJSValuePrivate::setString(this, value.asString());
         return;
     }
 
