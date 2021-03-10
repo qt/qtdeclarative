@@ -1179,8 +1179,8 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
     QTextLine firstLine = visibleCount == 1 && elideLayout
             ? elideLayout->lineAt(0)
             : layout.lineAt(0);
-    Q_ASSERT(firstLine.isValid());
-    *baseline = firstLine.y() + firstLine.ascent();
+    if (firstLine.isValid())
+        *baseline = firstLine.y() + firstLine.ascent();
 
     if (!customLayout)
         br.setHeight(height);
