@@ -144,7 +144,7 @@ class QJSPrimitiveValue
     };
 
 public:
-    enum Type {
+    enum Type : quint8 {
         Undefined,
         Null,
         Boolean,
@@ -153,16 +153,16 @@ public:
         String
     };
 
-    constexpr Type type() const { return Type(d.index()); }
+    constexpr Type type() const { return Type(d.type()); }
 
-    constexpr QJSPrimitiveValue() = default;
-    constexpr QJSPrimitiveValue(QJSPrimitiveUndefined undefined) : d(undefined) {}
-    constexpr QJSPrimitiveValue(QJSPrimitiveNull null) : d(null) {}
-    constexpr QJSPrimitiveValue(bool value) : d(value) {}
-    constexpr QJSPrimitiveValue(int value) : d(value) {}
-    constexpr QJSPrimitiveValue(double value) : d(value) {}
-    QJSPrimitiveValue(QString string) : d(std::move(string)) {}
-    QJSPrimitiveValue(const QVariant &variant)
+    Q_IMPLICIT constexpr QJSPrimitiveValue() noexcept = default;
+    Q_IMPLICIT constexpr QJSPrimitiveValue(QJSPrimitiveUndefined undefined) noexcept : d(undefined) {}
+    Q_IMPLICIT constexpr QJSPrimitiveValue(QJSPrimitiveNull null) noexcept : d(null) {}
+    Q_IMPLICIT constexpr QJSPrimitiveValue(bool value) noexcept : d(value) {}
+    Q_IMPLICIT constexpr QJSPrimitiveValue(int value) noexcept : d(value) {}
+    Q_IMPLICIT constexpr QJSPrimitiveValue(double value) noexcept : d(value) {}
+    Q_IMPLICIT QJSPrimitiveValue(QString string) noexcept : d(std::move(string)) {}
+    explicit QJSPrimitiveValue(const QVariant &variant) noexcept
     {
         switch (variant.typeId()) {
         case QMetaType::UnknownType:
@@ -194,13 +194,14 @@ public:
         switch (type()) {
         case Undefined: return false;
         case Null:      return false;
-        case Boolean:   return std::get<bool>(d);
-        case Integer:   return std::get<int>(d) != 0;
+        case Boolean:   return asBoolean();
+        case Integer:   return asInteger() != 0;
         case Double: {
-            const double v = std::get<double>(d);
+            const double v = asDouble();
             return !QJSNumberCoercion::equals(v, 0) && !std::isnan(v);
         }
-        case String:    return !std::get<QString>(d).isEmpty();
+        case String:    return !asString().isEmpty();
+        default:        Q_UNREACHABLE();
         }
 
         return false;
@@ -211,10 +212,11 @@ public:
         switch (type()) {
         case Undefined: return 0;
         case Null:      return 0;
-        case Boolean:   return std::get<bool>(d);
-        case Integer:   return std::get<int>(d);
-        case Double:    return QJSNumberCoercion::toInteger(std::get<double>(d));
-        case String:    return fromString(std::get<String>(d)).toInteger();
+        case Boolean:   return asBoolean();
+        case Integer:   return asInteger();
+        case Double:    return QJSNumberCoercion::toInteger(asDouble());
+        case String:    return fromString(asString()).toInteger();
+        default:        Q_UNREACHABLE();
         }
 
         return 0;
@@ -225,13 +227,14 @@ public:
         switch (type()) {
         case Undefined: return std::numeric_limits<double>::quiet_NaN();
         case Null:      return 0;
-        case Boolean:   return std::get<bool>(d);
-        case Integer:   return std::get<int>(d);
-        case Double:    return std::get<double>(d);
-        case String:    return fromString(std::get<String>(d)).toDouble();
+        case Boolean:   return asBoolean();
+        case Integer:   return asInteger();
+        case Double:    return asDouble();
+        case String:    return fromString(asString()).toDouble();
+        default:        Q_UNREACHABLE();
         }
 
-        return std::numeric_limits<double>::quiet_NaN();
+        return {};
     }
 
     QString toString() const
@@ -239,10 +242,10 @@ public:
         switch (type()) {
         case Undefined: return QStringLiteral("undefined");
         case Null:      return QStringLiteral("null");
-        case Boolean:   return std::get<bool>(d) ? QStringLiteral("true") : QStringLiteral("false");
-        case Integer:   return QString::number(std::get<int>(d));
+        case Boolean:   return asBoolean() ? QStringLiteral("true") : QStringLiteral("false");
+        case Integer:   return QString::number(asInteger());
         case Double: {
-            const double result = std::get<double>(d);
+            const double result = asDouble();
             if (std::isnan(result))
                 return QStringLiteral("NaN");
             if (std::isfinite(result))
@@ -251,7 +254,7 @@ public:
                 return QStringLiteral("Infinity");
             return QStringLiteral("-Infinity");
         }
-        case String: return std::get<QString>(d);
+        case String: return asString();
         }
 
         Q_UNREACHABLE();
@@ -512,10 +515,10 @@ private:
     friend class QJSManagedValue;
     friend class QJSValue;
 
-    constexpr bool asBoolean() const { return std::get<bool>(d); }
-    constexpr int asInteger() const { return std::get<int>(d); }
-    constexpr double asDouble() const { return std::get<double>(d); }
-    QString asString() const { return std::get<QString>(d); }
+    constexpr bool asBoolean() const { return d.getBool(); }
+    constexpr int asInteger() const { return d.getInt(); }
+    constexpr double asDouble() const { return d.getDouble(); }
+    QString asString() const { return d.getString(); }
 
     constexpr bool parsedEquals(const QJSPrimitiveValue &other) const
     {
@@ -548,8 +551,8 @@ private:
                                                const QJSPrimitiveValue &rhs)
     {
         int result;
-        if (Operators::opOverflow(std::get<Lhs>(lhs.d), std::get<Rhs>(rhs.d), &result))
-            return Operators::op(std::get<Lhs>(lhs.d), std::get<Rhs>(rhs.d));
+        if (Operators::opOverflow(lhs.d.get<Lhs>(), rhs.d.get<Rhs>(), &result))
+            return Operators::op(lhs.d.get<Lhs>(), rhs.d.get<Rhs>());
         return result;
     }
 
@@ -632,7 +635,145 @@ private:
         }
     }
 
-    std::variant<QJSPrimitiveUndefined, QJSPrimitiveNull, bool, int, double, QString> d;
+    struct QJSPrimitiveValuePrivate
+    {
+        // Can't be default because QString has a non-trivial ctor.
+        constexpr QJSPrimitiveValuePrivate() noexcept {}
+
+        Q_IMPLICIT constexpr QJSPrimitiveValuePrivate(QJSPrimitiveUndefined) noexcept  {}
+        Q_IMPLICIT constexpr QJSPrimitiveValuePrivate(QJSPrimitiveNull) noexcept
+            : m_type(Null) {}
+        Q_IMPLICIT constexpr QJSPrimitiveValuePrivate(bool b) noexcept
+            : m_bool(b), m_type(Boolean) {}
+        Q_IMPLICIT constexpr QJSPrimitiveValuePrivate(int i) noexcept
+            : m_int(i), m_type(Integer) {}
+        Q_IMPLICIT constexpr QJSPrimitiveValuePrivate(double d) noexcept
+            : m_double(d), m_type(Double) {}
+        Q_IMPLICIT QJSPrimitiveValuePrivate(QString s) noexcept
+            : m_string(std::move(s)), m_type(String) {}
+
+        constexpr QJSPrimitiveValuePrivate(const QJSPrimitiveValuePrivate &other) noexcept
+            : m_type(other.m_type)
+        {
+            // Not copy-and-swap since swap() would be much more complicated.
+            if (!assignSimple(other))
+                new (&m_string) QString(other.m_string);
+        }
+
+        constexpr QJSPrimitiveValuePrivate(QJSPrimitiveValuePrivate &&other) noexcept
+            : m_type(other.m_type)
+        {
+            // Not move-and-swap since swap() would be much more complicated.
+            if (!assignSimple(other))
+                new (&m_string) QString(std::move(other.m_string));
+        }
+
+        constexpr QJSPrimitiveValuePrivate &operator=(const QJSPrimitiveValuePrivate &other) noexcept
+        {
+            if (this == &other)
+                return *this;
+
+            if (m_type == String) {
+                if (other.m_type == String) {
+                    m_type = other.m_type;
+                    m_string = other.m_string;
+                    return *this;
+                }
+                m_string.~QString();
+            }
+
+            m_type = other.m_type;
+            if (!assignSimple(other))
+                new (&m_string) QString(other.m_string);
+            return *this;
+        }
+
+        constexpr QJSPrimitiveValuePrivate &operator=(QJSPrimitiveValuePrivate &&other) noexcept
+        {
+            if (this == &other)
+                return *this;
+
+            if (m_type == String) {
+                if (other.m_type == String) {
+                    m_type = other.m_type;
+                    m_string = std::move(other.m_string);
+                    return *this;
+                }
+                m_string.~QString();
+            }
+
+            m_type = other.m_type;
+            if (!assignSimple(other))
+                new (&m_string) QString(std::move(other.m_string));
+            return *this;
+        }
+
+        ~QJSPrimitiveValuePrivate()
+        {
+            if (m_type == String)
+                m_string.~QString();
+        }
+
+        constexpr Type type() const noexcept { return m_type; }
+        constexpr bool getBool() const noexcept { return m_bool; }
+        constexpr int getInt() const noexcept { return m_int; }
+        constexpr double getDouble() const noexcept { return m_double; }
+        QString getString() const noexcept { return m_string; }
+
+        template<typename T>
+        constexpr T get() const noexcept {
+            if constexpr (std::is_same_v<T, QJSPrimitiveUndefined>)
+                return QJSPrimitiveUndefined();
+            else if constexpr (std::is_same_v<T, QJSPrimitiveNull>)
+                return QJSPrimitiveNull();
+            else if constexpr (std::is_same_v<T, bool>)
+                return getBool();
+            else if constexpr (std::is_same_v<T, int>)
+                return getInt();
+            else if constexpr (std::is_same_v<T, double>)
+                return getDouble();
+            else if constexpr (std::is_same_v<T, QString>)
+                return getString();
+
+            Q_UNREACHABLE();
+            return T();
+        }
+
+    private:
+        constexpr bool assignSimple(const QJSPrimitiveValuePrivate &other) noexcept
+        {
+            switch (other.m_type) {
+            case Undefined:
+            case Null:
+                return true;
+            case Boolean:
+                m_bool = other.m_bool;
+                return true;
+            case Integer:
+                m_int = other.m_int;
+                return true;
+            case Double:
+                m_double = other.m_double;
+                return true;
+            case String:
+                return false;
+            default:
+                Q_UNREACHABLE();
+            }
+            return false;
+        }
+
+        union {
+            bool m_bool = false;
+            int m_int;
+            double m_double;
+            QString m_string;
+        };
+
+        Type m_type = Undefined;
+    };
+
+    QJSPrimitiveValuePrivate d;
 };
 
 QT_END_NAMESPACE
