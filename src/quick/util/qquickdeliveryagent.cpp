@@ -1167,6 +1167,18 @@ bool QQuickDeliveryAgentPrivate::isMouseEvent(const QPointerEvent *ev)
     }
 }
 
+bool QQuickDeliveryAgentPrivate::isHoverEvent(const QPointerEvent *ev)
+{
+    switch (ev->type()) {
+    case QEvent::HoverEnter:
+    case QEvent::HoverMove:
+    case QEvent::HoverLeave:
+        return true;
+    default:
+        return false;
+    }
+}
+
 bool QQuickDeliveryAgentPrivate::isTouchEvent(const QPointerEvent *ev)
 {
     switch (ev->type()) {
