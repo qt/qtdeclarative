@@ -642,6 +642,28 @@ int QQuickTableViewPrivate::nextVisibleEdgeIndex(Qt::Edge edge, int startIndex)
     return foundIndex;
 }
 
+bool QQuickTableViewPrivate::allColumnsLoaded()
+{
+    // Returns true if all the columns in the model (that are not
+    // hidden by the columnWidthProvider) are currently loaded and visible.
+    const bool firstColumnLoaded = nextVisibleEdgeIndexAroundLoadedTable(Qt::LeftEdge) == kEdgeIndexAtEnd;
+    if (!firstColumnLoaded)
+        return false;
+    bool lastColumnLoaded = nextVisibleEdgeIndexAroundLoadedTable(Qt::RightEdge) == kEdgeIndexAtEnd;
+    return lastColumnLoaded;
+}
+
+bool QQuickTableViewPrivate::allRowsLoaded()
+{
+    // Returns true if all the rows in the model (that are not hidden
+    // by the columnWidthProvider) are currently loaded and visible.
+    const bool firstColumnLoaded = nextVisibleEdgeIndexAroundLoadedTable(Qt::TopEdge) == kEdgeIndexAtEnd;
+    if (!firstColumnLoaded)
+        return false;
+    bool lastColumnLoaded = nextVisibleEdgeIndexAroundLoadedTable(Qt::BottomEdge) == kEdgeIndexAtEnd;
+    return lastColumnLoaded;
+}
+
 void QQuickTableViewPrivate::updateContentWidth()
 {
     // Note that we actually never really know what the content size / size of the full table will
@@ -1929,12 +1951,12 @@ void QQuickTableViewPrivate::layoutAfterLoadingInitialTable()
     relayoutTableItems();
     syncLoadedTableRectFromLoadedTable();
 
-    if (rebuildOptions.testFlag(RebuildOption::CalculateNewContentWidth)) {
+    if (rebuildOptions.testFlag(RebuildOption::CalculateNewContentWidth) || allColumnsLoaded()) {
         updateAverageColumnWidth();
         updateContentWidth();
     }
 
-    if (rebuildOptions.testFlag(RebuildOption::CalculateNewContentHeight)) {
+    if (rebuildOptions.testFlag(RebuildOption::CalculateNewContentHeight) || allRowsLoaded()) {
         updateAverageRowHeight();
         updateContentHeight();
     }

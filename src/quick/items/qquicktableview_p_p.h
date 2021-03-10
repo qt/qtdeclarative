@@ -368,6 +368,8 @@ public:
 
     int nextVisibleEdgeIndex(Qt::Edge edge, int startIndex);
     int nextVisibleEdgeIndexAroundLoadedTable(Qt::Edge edge);
+    bool allColumnsLoaded();
+    bool allRowsLoaded();
     inline int edgeToArrayIndex(Qt::Edge edge);
     void clearEdgeSizeCache();
 

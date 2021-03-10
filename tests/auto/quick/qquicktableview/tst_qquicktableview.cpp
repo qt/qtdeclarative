@@ -123,6 +123,7 @@ private slots:
     void checkForceLayoutDuringModelChange();
     void checkForceLayoutWhenAllItemsAreHidden();
     void checkContentWidthAndHeight();
+    void checkContentWidthAndHeightForSmallTables();
     void checkPageFlicking();
     void checkExplicitContentWidthAndHeight();
     void checkExtents_origin();
@@ -704,6 +705,30 @@ void tst_QQuickTableView::checkContentWidthAndHeight()
     // We should still have the same content width/height as when we started
     QCOMPARE(tableView->contentWidth(), expectedSizeInit);
     QCOMPARE(tableView->contentHeight(), expectedSizeInit);
+}
+
+void tst_QQuickTableView::checkContentWidthAndHeightForSmallTables()
+{
+    // For tables where all the columns in the model are loaded, we know
+    // the exact table width, and can therefore update the content width
+    // if e.g new rows are added or removed. The same is true for rows.
+    // This test will check that we do so.
+    LOAD_TABLEVIEW("sizefromdelegate.qml");
+
+    TestModel model(3, 3);
+    tableView->setModel(QVariant::fromValue(&model));
+    WAIT_UNTIL_POLISHED;
+
+    const qreal initialContentWidth = tableView->contentWidth();
+    const qreal initialContentHeight = tableView->contentHeight();
+    const QString longText = QStringLiteral("Adding a row with a very long text");
+    model.insertRow(0);
+    model.setModelData(QPoint(0, 0), QSize(1, 1), longText);
+
+    WAIT_UNTIL_POLISHED;
+
+    QVERIFY(tableView->contentWidth() > initialContentWidth);
+    QVERIFY(tableView->contentHeight() > initialContentHeight);
 }
 
 void tst_QQuickTableView::checkPageFlicking()
