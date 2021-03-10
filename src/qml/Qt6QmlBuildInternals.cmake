@@ -20,7 +20,18 @@ include_guard(GLOBAL)
 # supported keywords.
 function(qt_internal_add_qml_module target)
 
-    set(qml_module_optional_args
+    _qt_internal_get_add_plugin_keywords(
+        public_option_args
+        public_single_args
+        public_multi_args
+    )
+    qt_internal_get_internal_add_plugin_keywords(
+        internal_option_args
+        internal_single_args
+        internal_multi_args
+    )
+
+    set(qml_module_option_args
         GENERATE_QMLTYPES
         INSTALL_QMLTYPES
         DESIGNER_SUPPORTED
@@ -44,10 +55,28 @@ function(qt_internal_add_qml_module target)
         PAST_MAJOR_VERSIONS
     )
 
-    qt_parse_all_arguments(arg "qt_add_qml_module"
-        "${__qt_add_plugin_optional_args};${qml_module_optional_args}"
-        "${__qt_add_plugin_single_args};${qml_module_single_args}"
-        "${__qt_add_plugin_multi_args};${qml_module_multi_args}" ${ARGN})
+    set(option_args
+        ${public_option_args}
+        ${internal_option_args}
+        ${qml_module_option_args}
+    )
+    set(single_args
+        ${public_single_args}
+        ${internal_single_args}
+        ${qml_module_single_args}
+    )
+    set(multi_args
+        ${public_multi_args}
+        ${internal_multi_args}
+        ${qml_module_multi_args}
+    )
+
+    qt_parse_all_arguments(arg "qt_internal_add_qml_module"
+        "${option_args}"
+        "${single_args}"
+        "${multi_args}"
+        ${ARGN}
+    )
 
     if (NOT arg_TARGET_PATH)
         string(REPLACE "." "/" arg_TARGET_PATH ${arg_URI})
@@ -61,18 +90,15 @@ function(qt_internal_add_qml_module target)
 
     qt_remove_args(plugin_args
         ARGS_TO_REMOVE
-            ${qml_module_optional_args}
+            ${qml_module_option_args}
             ${qml_module_single_args}
             ${qml_module_multi_args}
             OUTPUT_DIRECTORY
             INSTALL_DIRECTORY
         ALL_ARGS
-            ${__qt_add_plugin_optional_args}
-            ${__qt_add_plugin_single_args}
-            ${__qt_add_plugin_multi_args}
-            ${qml_module_optional_args}
-            ${qml_module_single_args}
-            ${qml_module_multi_args}
+            ${option_args}
+            ${single_args}
+            ${multi_args}
         ARGS
             ${ARGN}
     )
@@ -91,14 +117,17 @@ function(qt_internal_add_qml_module target)
     set(add_qml_module_args DO_NOT_CREATE_TARGET)
 
     # Pass through options if given (these are present/absent, not true/false)
-    foreach(opt IN LISTS qml_module_optional_args)
+    foreach(opt IN LISTS qml_module_option_args)
         if(arg_${opt})
             list(APPEND add_qml_module_args ${opt})
         endif()
     endforeach()
 
-    # Pass through single and multi-value args as provided
-    foreach(arg IN LISTS qml_module_single_args qml_module_multi_args)
+    # Pass through single and multi-value args as provided. CLASSNAME is
+    # special because it can be passed to qt_internal_add_plugin() and
+    # qt6_add_qml_module().
+    foreach(arg IN LISTS qml_module_single_args qml_module_multi_args
+                   ITEMS CLASSNAME)
         if(DEFINED arg_${arg})
             list(APPEND add_qml_module_args ${arg} ${arg_${arg}})
         endif()
