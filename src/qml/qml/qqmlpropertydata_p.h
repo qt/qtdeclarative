@@ -327,9 +327,10 @@ public:
         m_metaObjectOffset = qint16(off);
     }
 
-    StaticMetaCallFunction staticMetaCallFunction() const { return m_staticMetaCallFunction; }
+    StaticMetaCallFunction staticMetaCallFunction() const { Q_ASSERT(!isFunction()); return m_staticMetaCallFunction; }
     void trySetStaticMetaCallFunction(StaticMetaCallFunction f, unsigned relativePropertyIndex)
     {
+        Q_ASSERT(!isFunction());
         if (relativePropertyIndex < (1 << Flags::BitsLeftInFlags) - 1) {
             m_flags.otherBits = relativePropertyIndex;
             m_staticMetaCallFunction = f;
@@ -411,14 +412,16 @@ private:
 
     QMetaType m_propType = {};
 
-    QQmlPropertyCacheMethodArguments *m_arguments = nullptr;
-    StaticMetaCallFunction m_staticMetaCallFunction = nullptr;
+    union {
+        QQmlPropertyCacheMethodArguments *m_arguments = nullptr;
+        StaticMetaCallFunction m_staticMetaCallFunction;
+    };
 };
 
 #if QT_POINTER_SIZE == 4
-    Q_STATIC_ASSERT(sizeof(QQmlPropertyData) == 28);
+    Q_STATIC_ASSERT(sizeof(QQmlPropertyData) == 24);
 #else // QT_POINTER_SIZE == 8
-    Q_STATIC_ASSERT(sizeof(QQmlPropertyData) == 40);
+    Q_STATIC_ASSERT(sizeof(QQmlPropertyData) == 32);
 #endif
 
 bool QQmlPropertyData::operator==(const QQmlPropertyData &other) const
