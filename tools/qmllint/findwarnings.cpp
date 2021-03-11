@@ -64,8 +64,6 @@ void FindWarningVisitor::checkInheritanceCycle(QQmlJSScope::ConstPtr scope)
                                     QtWarningMsg,
                                     originalScope->sourceLocation()
                 });
-
-                m_visitFailed = true;
             }
         }
 
@@ -88,7 +86,6 @@ void FindWarningVisitor::checkInheritanceCycle(QQmlJSScope::ConstPtr scope)
             }
 
             m_unknownImports.insert(scope->internalName());
-            m_visitFailed = true;
             break;
         }
 
@@ -106,7 +103,6 @@ void FindWarningVisitor::checkInheritanceCycle(QQmlJSScope::ConstPtr scope)
                                 QQmlJS::SourceLocation()
                             });
             m_unknownImports.insert(scope->baseTypeName());
-            m_visitFailed = true;
             break;
         }
     }
@@ -131,7 +127,6 @@ void FindWarningVisitor::checkGroupedAndAttachedScopes(QQmlJSScope::ConstPtr sco
                                     QtWarningMsg,
                                     childScope->sourceLocation()
                                 });
-                m_visitFailed = true;
             }
             children.append(childScope->childScopes());
         default:
@@ -172,7 +167,6 @@ void FindWarningVisitor::checkDefaultProperty(const QQmlJSScope::ConstPtr &scope
     if (defaultPropertyName.isEmpty()) {
         m_errors.append({ QStringLiteral("Cannot assign to non-existent default property"),
                           QtWarningMsg, scope->sourceLocation() });
-        m_visitFailed = true;
         return;
     }
 
@@ -188,7 +182,6 @@ void FindWarningVisitor::checkDefaultProperty(const QQmlJSScope::ConstPtr &scope
         m_errors.append(
                 { QStringLiteral("Cannot assign multiple objects to a default non-list property"),
                   QtWarningMsg, scope->sourceLocation() });
-        m_visitFailed = true;
     }
     m_scopeHasDefaultPropertyAssignment[scopeOfDefaultProperty] = true;
 
@@ -204,13 +197,11 @@ void FindWarningVisitor::checkDefaultProperty(const QQmlJSScope::ConstPtr &scope
 
     m_errors.append({ QStringLiteral("Cannot assign to default property of incompatible type"),
                       QtWarningMsg, scope->sourceLocation() });
-    m_visitFailed = true;
 }
 
 void FindWarningVisitor::throwRecursionDepthError()
 {
     QQmlJSImportVisitor::throwRecursionDepthError();
-    m_visitFailed = true;
 }
 
 bool FindWarningVisitor::visit(QQmlJS::AST::ExpressionStatement *ast)
@@ -310,7 +301,6 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
                                 QtWarningMsg,
                                 uisb->firstSourceLocation()
                             });
-            m_visitFailed = true;
             return true;
         }
 
@@ -323,8 +313,6 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
                                 QtWarningMsg,
                                 uisb->firstSourceLocation()
                             });
-            m_visitFailed = true;
-
         }
 
         return true;
@@ -338,7 +326,6 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
                             QtWarningMsg,
                             uisb->firstSourceLocation()
                         });
-        m_visitFailed = true;
         return true;
     }
 
@@ -372,7 +359,6 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
                                         QtWarningMsg,
                                         uisb->firstSourceLocation()
                                     });
-                    m_visitFailed = true;
                 }
 
                 const QStringView handlerParameter = formal->element->bindingIdentifier;
@@ -388,7 +374,6 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
                                     QtWarningMsg,
                                     uisb->firstSourceLocation()
                                 });
-                m_visitFailed = true;
             }
 
             return true;
@@ -509,7 +494,7 @@ bool FindWarningVisitor::check()
 
     CheckIdentifiers check(&m_colorOut, m_code, m_rootScopeImports, m_filePath);
     return check(m_scopesById, m_signalHandlers, m_memberAccessChains, m_globalScope, m_rootId)
-            && !m_visitFailed;
+            && m_errors.isEmpty();
 }
 
 bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)

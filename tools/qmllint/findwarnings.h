@@ -75,7 +75,6 @@ private:
     QString m_filePath;
     QSet<QString> m_unknownImports;
     ColorOutput m_colorOut;
-    bool m_visitFailed = false;
 
     bool m_warnUnqualified;
     bool m_warnWithStatement;

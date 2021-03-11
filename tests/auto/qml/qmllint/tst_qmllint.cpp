@@ -144,7 +144,7 @@ void TestQmllint::directoryPassedAsQmlTypesFile()
 
 void TestQmllint::oldQmltypes()
 {
-    const QString errors = runQmllint("oldQmltypes.qml", true);
+    const QString errors = runQmllint("oldQmltypes.qml", false);
     QVERIFY(errors.contains(QStringLiteral("Warning: typeinfo not declared in qmldir file")));
     QVERIFY(!errors.contains(QStringLiteral("Warning: QQuickItem was not found. Did you add all import paths?")));
     QVERIFY(errors.contains(QStringLiteral("Warning: Found deprecated dependency specifications")));
@@ -496,7 +496,7 @@ void TestQmllint::requiredProperty()
 {
     QVERIFY(runQmllint("requiredProperty.qml", true).isEmpty());
 
-    const QString errors = runQmllint("requiredMissingProperty.qml", true);
+    const QString errors = runQmllint("requiredMissingProperty.qml", false);
     QVERIFY(errors.contains(QStringLiteral("Property \"foo\" was marked as required but does not exist.")));
 }
 
