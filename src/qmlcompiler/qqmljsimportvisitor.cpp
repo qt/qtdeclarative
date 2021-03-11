@@ -71,22 +71,80 @@ void QQmlJSImportVisitor::resolveAliases()
     QQueue<QQmlJSScope::Ptr> objects;
     objects.enqueue(m_exportedRootScope);
 
+    qsizetype lastRequeueLength = std::numeric_limits<qsizetype>::max();
+    QQueue<QQmlJSScope::Ptr> requeue;
+
     while (!objects.isEmpty()) {
         const QQmlJSScope::Ptr object = objects.dequeue();
         const auto properties = object->ownProperties();
+
+        bool doRequeue = false;
         for (auto property : properties) {
-            if (!property.isAlias())
+            if (!property.isAlias() || !property.type().isNull())
                 continue;
-            const auto it = m_scopesById.find(property.typeName());
+
+            QStringList components = property.typeName().split(u'.');
+            QQmlJSScope::ConstPtr type;
+
+            // The first component has to be an ID. Find the object it refers to.
+            const auto it = m_scopesById.find(components.takeFirst());
             if (it != m_scopesById.end()) {
-                property.setType(QQmlJSScope::ConstPtr(*it));
-                object->addOwnProperty(property);
+                type = *it;
+
+                // Any further components are nested properties of that object.
+                // Technically we can only resolve a limited depth in the engine, but the rules
+                // on that are fuzzy and subject to change. Let's ignore it for now.
+                // If the target is itself an alias and has not been resolved, re-queue the object
+                // and try again later.
+                while (type && !components.isEmpty()) {
+                    const auto target = type->property(components.takeFirst());
+                    if (!target.type() && target.isAlias())
+                        doRequeue = true;
+                    type = target.type();
+                }
             }
+
+            if (type.isNull()) {
+                if (doRequeue)
+                    continue;
+                m_errors.append({
+                                    QStringLiteral("Cannot deduce type of alias \"%1\"")
+                                        .arg(property.propertyName()),
+                                    QtWarningMsg,
+                                    object->sourceLocation()
+                                });
+            }
+
+            property.setType(type);
+            object->addOwnProperty(property);
         }
 
         const auto childScopes = object->childScopes();
         for (const auto &childScope : childScopes)
             objects.enqueue(childScope);
+
+        if (doRequeue)
+            requeue.enqueue(object);
+
+        if (objects.isEmpty() && requeue.length() < lastRequeueLength) {
+            lastRequeueLength = requeue.length();
+            objects.swap(requeue);
+        }
+    }
+
+    while (!requeue.isEmpty()) {
+        const QQmlJSScope::Ptr object = requeue.dequeue();
+        const auto properties = object->ownProperties();
+        for (const auto &property : properties) {
+            if (!property.isAlias() || property.type())
+                continue;
+            m_errors.append({
+                                QStringLiteral("Alias \"%1\" is part of an alias cycle")
+                                    .arg(property.propertyName()),
+                                QtWarningMsg,
+                                object->sourceLocation()
+                            });
+        }
     }
 }
 
@@ -238,18 +296,35 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         break;
     }
     case UiPublicMember::Property: {
-        auto typeName = publicMember->memberType
-                ? publicMember->memberType->name
-                : QStringView();
+        QString typeName = publicMember->memberType
+                ? publicMember->memberType->name.toString()
+                : QString();
         const bool isAlias = (typeName == QLatin1String("alias"));
         if (isAlias) {
+            typeName.clear();
             const auto expression = cast<ExpressionStatement *>(publicMember->statement);
-            if (const auto idExpression = cast<IdentifierExpression *>(expression->expression))
-                typeName = idExpression->name;
+            auto node = expression->expression;
+            auto fex = cast<FieldMemberExpression *>(node);
+            while (fex) {
+                node = fex->base;
+                typeName.prepend(u'.' + fex->name);
+                fex = cast<FieldMemberExpression *>(node);
+            }
+
+            if (const auto idExpression = cast<IdentifierExpression *>(node)) {
+                typeName.prepend(idExpression->name.toString());
+            } else {
+                m_errors.append({
+                                    QStringLiteral("Invalid alias expression. Only IDs and field "
+                                                   "member expressions can be aliased."),
+                                    QtWarningMsg,
+                                    expression->firstSourceLocation()
+                                });
+            }
         }
         QQmlJSMetaProperty prop;
         prop.setPropertyName(publicMember->name.toString());
-        prop.setTypeName(typeName.toString());
+        prop.setTypeName(std::move(typeName));
         prop.setIsList(publicMember->typeModifier == QLatin1String("list"));
         prop.setIsWritable(!publicMember->isReadonlyMember);
         prop.setIsAlias(isAlias);

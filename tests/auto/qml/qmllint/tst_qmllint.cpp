@@ -222,13 +222,34 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("unknownJavascriptMethod.qml")
             << QString("Warning: Property \"foo2\" not found on type \"Methods\" at %1:5:25")
             << QString();
-    QTest::newRow("badAlias")
+    QTest::newRow("badAlias1")
+            << QStringLiteral("badAlias.qml")
+            << QString("Warning: 3:1: Cannot deduce type of alias \"wrong\"")
+            << QString();
+    QTest::newRow("badAlias2")
             << QStringLiteral("badAlias.qml")
             << QString("Warning: unqualified access at %1:4:27")
             << QString();
-    QTest::newRow("badAliasProperty")
+    QTest::newRow("badAliasProperty1")
+            << QStringLiteral("badAliasProperty.qml")
+            << QString("Warning: 3:1: Cannot deduce type of alias \"wrong\"")
+            << QString();
+    QTest::newRow("badAliasProperty2")
             << QStringLiteral("badAliasProperty.qml")
             << QString("Warning: Property \"nowhere\" not found on type \"QtObject\" at %1:5:32")
+            << QString();
+    QTest::newRow("badAliasExpression")
+            << QStringLiteral("badAliasExpression.qml")
+            << QString("Warning: 5:26: Invalid alias expression. Only IDs and field member "
+                       "expressions can be aliased")
+            << QString();
+    QTest::newRow("aliasCycle1")
+            << QStringLiteral("aliasCycle.qml")
+            << QString("Warning: 3:1: Alias \"b\" is part of an alias cycle")
+            << QString();
+    QTest::newRow("aliasCycle2")
+            << QStringLiteral("aliasCycle.qml")
+            << QString("Warning: 3:1: Alias \"a\" is part of an alias cycle")
             << QString();
     QTest::newRow("badParent")
             << QStringLiteral("badParent.qml")
