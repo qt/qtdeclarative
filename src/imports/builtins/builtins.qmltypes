@@ -140,4 +140,10 @@ Module {
         exportMetaObjectRevisions: [256]
         accessSemantics: "value"
     }
+
+    Component {
+        name: "QVariantList"
+        valueType: "QVariant"
+        accessSemantics: "sequence"
+    }
 }
