@@ -129,6 +129,9 @@ struct Q_QML_EXPORT CppStackFrame {
         jsFrame->thisObject = thisObject;
         jsFrame->newTarget = newTarget;
 
+        if (v4Function && v4Function->aotFunction)
+            return;
+
         uint argc = uint(originalArgumentsCount);
         if (argc > nFormals)
             argc = nFormals;
