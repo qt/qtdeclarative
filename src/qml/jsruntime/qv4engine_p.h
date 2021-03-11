@@ -561,7 +561,10 @@ public:
     void setProfiler(Profiling::Profiler *profiler);
 #endif // QT_CONFIG(qml_debug)
 
-    ExecutionContext *currentContext() const;
+    ExecutionContext *currentContext() const
+    {
+        return static_cast<ExecutionContext *>(&currentStackFrame->jsFrame->context);
+    }
 
     // ensure we always get odd prototype IDs. This helps make marking in QV4::Lookup fast
     quintptr newProtoId() { return (protoIdCount += 2); }

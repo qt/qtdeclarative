@@ -490,11 +490,12 @@ ReturnedValue VME::exec(CppStackFrame *frame, ExecutionEngine *engine)
         if (const qsizetype returnSize = returnType.sizeOf())
             Q_ALLOCA_ASSIGN(void, returnValue, returnSize);
 
-        Scope scope(engine);
-        Scoped<QmlContext> qmlContext(scope, engine->qmlContext());
         QQmlPrivate::AOTCompiledContext aotContext;
-        aotContext.qmlContext = qmlContext ? qmlContext->qmlContext()->asQQmlContext() : nullptr;
-        aotContext.qmlScopeObject = qmlContext ? qmlContext->qmlScope() : nullptr;
+        if (QV4::Heap::QmlContext *qmlContext = engine->qmlContext()) {
+            QV4::Heap::QQmlContextWrapper *wrapper = qmlContext->qml();
+            aotContext.qmlScopeObject = wrapper->scopeObject;
+            aotContext.qmlContext = wrapper->context->asQQmlContext();
+        }
         aotContext.engine = engine->jsEngine();
         aotContext.compilationUnit = function->executableCompilationUnit();
         function->aotFunction->functionPtr(&aotContext, returnValue, argumentPtrs);

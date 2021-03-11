@@ -902,11 +902,6 @@ ExecutionEngine::~ExecutionEngine()
 #endif
 }
 
-ExecutionContext *ExecutionEngine::currentContext() const
-{
-    return static_cast<ExecutionContext *>(&currentStackFrame->jsFrame->context);
-}
-
 #if QT_CONFIG(qml_debug)
 void ExecutionEngine::setDebugger(Debugging::Debugger *debugger)
 {
@@ -1214,12 +1209,15 @@ Heap::QmlContext *ExecutionEngine::qmlContext() const
     if (!currentStackFrame)
         return nullptr;
     Heap::ExecutionContext *ctx = currentContext()->d();
+    Heap::ExecutionContext *outer = ctx->outer;
 
-    if (ctx->type != Heap::ExecutionContext::Type_QmlContext && !ctx->outer)
+    if (ctx->type != Heap::ExecutionContext::Type_QmlContext && !outer)
         return nullptr;
 
-    while (ctx->outer && ctx->outer->type != Heap::ExecutionContext::Type_GlobalContext)
-        ctx = ctx->outer;
+    while (outer && outer->type != Heap::ExecutionContext::Type_GlobalContext) {
+        ctx = outer;
+        outer = ctx->outer;
+    }
 
     Q_ASSERT(ctx);
     if (ctx->type != Heap::ExecutionContext::Type_QmlContext)
