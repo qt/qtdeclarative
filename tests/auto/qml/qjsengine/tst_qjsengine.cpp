@@ -1635,10 +1635,8 @@ void tst_QJSEngine::valueConversion_QVariant()
         QJSValue val1 = eng.toScriptValue(tmp1);
         QJSValue val2 = eng.toScriptValue(tmp2);
         QVERIFY(val1.isUndefined());
-        QEXPECT_FAIL("", "Variant are unrwapped, maybe we should not...", Continue);
         QVERIFY(!val2.isUndefined());
         QVERIFY(!val1.isVariant());
-        QEXPECT_FAIL("", "Variant are unrwapped, maybe we should not...", Continue);
         QVERIFY(val2.isVariant());
     }
     {
@@ -1653,12 +1651,10 @@ void tst_QJSEngine::valueConversion_QVariant()
         QJSValue val2 = eng.toScriptValue(tmp3);
         QVERIFY(!val1.isUndefined());
         QVERIFY(!val2.isUndefined());
-        QEXPECT_FAIL("", "Variant are unrwapped, maybe we should not...", Continue);
         QVERIFY(val1.isVariant());
-        QEXPECT_FAIL("", "Variant are unrwapped, maybe we should not...", Continue);
         QVERIFY(val2.isVariant());
-        QCOMPARE(val1.toVariant().toInt(), 123);
-        QCOMPARE(eng.toScriptValue(val2.toVariant()).toVariant().toInt(), 123);
+        QCOMPARE(val1.toVariant(), tmp2);
+        QCOMPARE(val2.toVariant(), tmp3);
     }
     {
         QJSValue val = eng.toScriptValue(QVariant(true));

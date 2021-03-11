@@ -101,7 +101,7 @@ struct QQmlValueTypeWrapper : Object {
         return m_metaObject;
     }
 
-
+    void setData(const void *data) const;
     void setValue(const QVariant &value) const;
     QVariant toVariant() const;
 
@@ -123,6 +123,7 @@ public:
 
     static ReturnedValue create(ExecutionEngine *engine, QObject *, int, const QMetaObject *metaObject, QMetaType type);
     static ReturnedValue create(ExecutionEngine *engine, const QVariant &, const QMetaObject *metaObject, QMetaType type);
+    static ReturnedValue create(ExecutionEngine *engine, const void *, const QMetaObject *metaObject, QMetaType type);
 
     QVariant toVariant() const;
     bool toGadget(void *data) const;

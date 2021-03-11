@@ -80,7 +80,9 @@ struct Q_QML_PRIVATE_EXPORT SequencePrototype : public QV4::Object
     static ReturnedValue method_sort(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
 
     static ReturnedValue newSequence(QV4::ExecutionEngine *engine, int sequenceTypeId, QObject *object, int propertyIndex, bool readOnly, bool *succeeded);
-    static ReturnedValue fromVariant(QV4::ExecutionEngine *engine, const QVariant& v, bool *succeeded);
+    static ReturnedValue fromVariant(QV4::ExecutionEngine *engine, const QVariant &v, bool *succeeded);
+    static ReturnedValue fromData(QV4::ExecutionEngine *engine, const QMetaType &type, const void *data, bool *succeeded);
+
     static int metaTypeForSequence(const Object *object);
     static QVariant toVariant(Object *object);
     static QVariant toVariant(const Value &array, int typeHint, bool *succeeded);

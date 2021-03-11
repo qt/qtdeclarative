@@ -747,6 +747,9 @@ public:
                                 QQmlRefPointer<QQmlContextData> ctxtdata, int argc, void **args, QMetaType *types);
 
 private:
+    QV4::ReturnedValue fromData(
+            const QMetaType &type, const void *ptr, const QVariant *variant = nullptr);
+
 #if QT_CONFIG(qml_debug)
     QScopedPointer<QV4::Debugging::Debugger> m_debugger;
     QScopedPointer<QV4::Profiling::Profiler> m_profiler;

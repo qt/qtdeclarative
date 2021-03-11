@@ -107,14 +107,19 @@ void Heap::QQmlValueTypeWrapper::destroy()
     Object::destroy();
 }
 
-void Heap::QQmlValueTypeWrapper::setValue(const QVariant &value) const
+void Heap::QQmlValueTypeWrapper::setData(const void *data) const
 {
-    Q_ASSERT(valueType()->metaType.id() == value.userType());
     if (auto *gadget = gadgetPtr())
         valueType()->metaType.destruct(gadget);
     if (!gadgetPtr())
         setGadgetPtr(::operator new(valueType()->metaType.sizeOf()));
-    valueType()->metaType.construct(gadgetPtr(), value.constData());
+    valueType()->metaType.construct(gadgetPtr(), data);
+}
+
+void Heap::QQmlValueTypeWrapper::setValue(const QVariant &value) const
+{
+    Q_ASSERT(valueType()->metaType.id() == value.userType());
+    setData(value.constData());
 }
 
 QVariant Heap::QQmlValueTypeWrapper::toVariant() const
@@ -202,7 +207,16 @@ ReturnedValue QQmlValueTypeWrapper::create(ExecutionEngine *engine, QObject *obj
     return r->asReturnedValue();
 }
 
-ReturnedValue QQmlValueTypeWrapper::create(ExecutionEngine *engine, const QVariant &value,  const QMetaObject *metaObject, QMetaType type)
+ReturnedValue QQmlValueTypeWrapper::create(
+        ExecutionEngine *engine, const QVariant &value, const QMetaObject *metaObject,
+        QMetaType type)
+{
+    Q_ASSERT(value.metaType() == QQmlMetaType::valueType(type)->metaType);
+    return create(engine, value.constData(), metaObject, type);
+}
+
+ReturnedValue QQmlValueTypeWrapper::create(
+        ExecutionEngine *engine, const void *data, const QMetaObject *metaObject, QMetaType type)
 {
     Scope scope(engine);
     initProto(engine);
@@ -216,7 +230,7 @@ ReturnedValue QQmlValueTypeWrapper::create(ExecutionEngine *engine, const QVaria
     }
     r->d()->setValueType(valueType);
     r->d()->setGadgetPtr(nullptr);
-    r->d()->setValue(value);
+    r->d()->setData(data);
     return r->asReturnedValue();
 }
 

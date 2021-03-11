@@ -1722,12 +1722,18 @@ static QVariant objectToVariant(QV4::ExecutionEngine *e, const QV4::Object *o, V
     return result;
 }
 
-QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
-{
-    const QMetaType metaType = variant.metaType();
-    int type = metaType.id();
-    const void *ptr = variant.constData();
+/*!
+  \internal
 
+  Transform the given \a metaType and \a ptr into a JavaScript representation. You can pass an
+  optional \a variant in order to avoid the construction of a new QVariant in case the value
+  has to be stored as a variant object. In that case, the contents of \a variant have to be
+  exactly the same as \a metaType and \a ptr.
+ */
+QV4::ReturnedValue ExecutionEngine::fromData(
+        const QMetaType &metaType, const void *ptr, const QVariant *variant)
+{
+    const int type = metaType.id();
     if (type < QMetaType::User) {
         switch (QMetaType::Type(type)) {
             case QMetaType::UnknownType:
@@ -1783,7 +1789,8 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
                 {
                 bool succeeded = false;
                 QV4::Scope scope(this);
-                QV4::ScopedValue retn(scope, QV4::SequencePrototype::fromVariant(this, variant, &succeeded));
+                QV4::ScopedValue retn(
+                            scope, QV4::SequencePrototype::fromData(this, metaType, ptr, &succeeded));
                 if (succeeded)
                     return retn->asReturnedValue();
                 return QV4::Encode(newArrayObject(*reinterpret_cast<const QStringList *>(ptr)));
@@ -1806,13 +1813,13 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
             case QMetaType::QPixmap:
             case QMetaType::QImage:
                 // Scarce value types
-                return QV4::Encode(newVariantObject(variant));
+                return QV4::Encode(newVariantObject(variant ? *variant : QVariant(metaType, ptr)));
             default:
                 break;
         }
 
         if (const QMetaObject *vtmo = QQmlMetaType::metaObjectForMetaType(metaType))
-            return QV4::QQmlValueTypeWrapper::create(this, variant, vtmo, metaType);
+            return QV4::QQmlValueTypeWrapper::create(this, ptr, vtmo, metaType);
     } else {
         QV4::Scope scope(this);
         if (type == qMetaTypeId<QQmlListReference>()) {
@@ -1852,25 +1859,32 @@ QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
 
 #if QT_CONFIG(qml_sequence_object)
         bool succeeded = false;
-        QV4::ScopedValue retn(scope, QV4::SequencePrototype::fromVariant(this, variant, &succeeded));
+        QV4::ScopedValue retn(scope, QV4::SequencePrototype::fromData(this, metaType, ptr, &succeeded));
         if (succeeded)
             return retn->asReturnedValue();
 #endif
 
-        if (QMetaType::canConvert(variant.metaType(), QMetaType::fromType<QSequentialIterable>())) {
-            QSequentialIterable lst = variant.value<QSequentialIterable>();
+
+        if (QMetaType::canConvert(metaType, QMetaType::fromType<QSequentialIterable>())) {
+            QSequentialIterable lst;
+            QMetaType::convert(metaType, ptr, QMetaType::fromType<QSequentialIterable>(), &lst);
             return sequentialIterableToJS(this, lst);
         }
 
         if (const QMetaObject *vtmo = QQmlMetaType::metaObjectForMetaType(metaType))
-            return QV4::QQmlValueTypeWrapper::create(this, variant, vtmo, metaType);
+            return QV4::QQmlValueTypeWrapper::create(this, ptr, vtmo, metaType);
     }
 
     // XXX TODO: To be compatible, we still need to handle:
     //    + QObjectList
     //    + QList<int>
 
-    return QV4::Encode(newVariantObject(variant));
+    return QV4::Encode(newVariantObject(variant ? *variant : QVariant(metaType, ptr)));
+}
+
+QV4::ReturnedValue QV4::ExecutionEngine::fromVariant(const QVariant &variant)
+{
+    return fromData(variant.metaType(), variant.constData(), &variant);
 }
 
 QVariantMap ExecutionEngine::variantMapFromJS(const Object *o)
@@ -1940,13 +1954,13 @@ QV4::ReturnedValue ExecutionEngine::metaTypeToJS(QMetaType type, const void *dat
 {
     Q_ASSERT(data != nullptr);
 
-    QVariant variant(type, data);
-    if (QMetaType::Type(variant.userType()) == QMetaType::QVariant) {
+    if (type == QMetaType::fromType<QVariant>()) {
         // unwrap it: this is tested in QJSEngine, and makes the most sense for
         // end-user code too.
-        return variantToJS(this, *reinterpret_cast<const QVariant*>(data));
+        return fromVariant(*reinterpret_cast<const QVariant*>(data));
     }
-    return fromVariant(variant);
+
+    return fromData(type, data);
 }
 
 int ExecutionEngine::maxJSStackSize() const
