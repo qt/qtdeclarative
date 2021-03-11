@@ -43,6 +43,7 @@ Member {
     required property string type
     property bool isPointer: false
     property bool isReadonly: false
+    property bool isRequired: false
     property bool isList: false
     property int revision: 0
     property string bindable
