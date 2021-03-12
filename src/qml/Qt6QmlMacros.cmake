@@ -1292,6 +1292,7 @@ function(qt6_target_enable_qmllint target)
     get_target_property(import_path ${target} QT_QML_IMPORT_PATH)
     get_target_property(files ${target} QML_FILES)
 
+    set(import_args "")
     if(import_path)
         foreach(dir IN LISTS import_path)
             list(APPEND import_args "-I" "${dir}")
@@ -1300,7 +1301,7 @@ function(qt6_target_enable_qmllint target)
     endif()
 
     add_custom_target(${target}_qmllint
-        ${QT_CMAKE_EXPORT_NAMESPACE}::qmllint ${files} ${include_args}
+        ${QT_CMAKE_EXPORT_NAMESPACE}::qmllint ${files} ${import_args}
         WORKING_DIRECTORY ${target_source}
     )
 endfunction()
