@@ -2089,7 +2089,7 @@ ReturnedValue ExecutionEngine::callInContext(Function *function, QObject *self,
     QV4::JSCallData jsCall(scope, argc);
     QV4::populateJSCallArguments(this, jsCall, argc, args, types);
 
-    QV4::CallData *callData = jsCall->callData();
+    QV4::CallData *callData = jsCall->callData(scope);
     return function->call(selfValue, callData->argValues<QV4::Value>(), callData->argc(),
                           qmlContext);
 }

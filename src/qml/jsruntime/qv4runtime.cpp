@@ -802,7 +802,7 @@ ReturnedValue Runtime::GetIterator::call(ExecutionEngine *engine, const Value &i
         ScopedFunctionObject f(scope, o->get(engine->symbol_iterator()));
         if (!f)
             return engine->throwTypeError();
-        JSCallData cData(scope, 0, nullptr, o);
+        JSCallData cData(o, scope.alloc(0), 0);
         ScopedObject it(scope, f->call(cData));
         if (engine->hasException)
             return Encode::undefined();
@@ -825,7 +825,7 @@ ReturnedValue Runtime::IteratorNext::call(ExecutionEngine *engine, const Value &
         engine->throwTypeError();
         return Encode(true);
     }
-    JSCallData cData(scope, 0, nullptr, &iterator);
+    JSCallData cData(&iterator, scope.alloc(0), 0);
     ScopedObject o(scope, f->call(cData));
     if (scope.hasException())
         return Encode(true);

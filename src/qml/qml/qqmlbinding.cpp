@@ -211,9 +211,9 @@ QV4::ReturnedValue QQmlBinding::evaluate(bool *isUndefined)
         thisObject = &b->d()->boundThis;
     }
     QV4::Scope scope(v4);
-    QV4::JSCallData jsCall(scope, argc, argv, thisObject);
+    QV4::JSCallData jsCall(thisObject, argv, argc);
 
-    return QQmlJavaScriptExpression::evaluate(jsCall.callData(), isUndefined);
+    return QQmlJavaScriptExpression::evaluate(jsCall.callData(scope), isUndefined);
 }
 
 

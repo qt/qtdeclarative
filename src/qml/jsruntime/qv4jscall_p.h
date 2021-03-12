@@ -62,30 +62,27 @@ QT_BEGIN_NAMESPACE
 namespace QV4 {
 
 struct JSCallData {
-    JSCallData(const Scope &scope, int argc = 0, const Value *argv = nullptr, const Value *thisObject = nullptr)
-        : scope(scope), argc(argc)
+    JSCallData(const Value *thisObject, const Value *argv, int argc)
+        : argc(argc), args(const_cast<Value *>(argv)), thisObject(const_cast<Value *>(thisObject))
     {
-        if (thisObject)
-            this->thisObject = const_cast<Value *>(thisObject);
-        else
-            this->thisObject = scope.alloc();
-        if (argv)
-            this->args = const_cast<Value *>(argv);
-        else
-            this->args = scope.alloc(argc);
+    }
+
+    JSCallData(const Scope &scope, int argc = 0)
+        : argc(argc), args(scope.alloc(argc)), thisObject(scope.alloc())
+    {
     }
 
     JSCallData *operator->() {
         return this;
     }
 
-    CallData *callData(const FunctionObject *f = nullptr) const {
+    CallData *callData(const Scope &scope, const FunctionObject *f = nullptr) const {
         int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + argc;
         CallData *ptr = reinterpret_cast<CallData *>(scope.alloc<Scope::Uninitialized>(size));
         ptr->function = Encode::undefined();
         ptr->context = Encode::undefined();
         ptr->accumulator = Encode::undefined();
-        ptr->thisObject = thisObject->asReturnedValue();
+        ptr->thisObject = thisObject ? thisObject->asReturnedValue() : Encode::undefined();
         ptr->newTarget = Encode::undefined();
         ptr->setArgc(argc);
         if (argc)
@@ -94,7 +91,6 @@ struct JSCallData {
             ptr->function = f->asReturnedValue();
         return ptr;
     }
-    const Scope &scope;
     int argc;
     Value *args;
     Value *thisObject;

@@ -90,7 +90,7 @@ ReturnedValue ProxyObject::virtualGet(const Managed *m, PropertyKey id, const Va
     if (hasProperty)
         *hasProperty = true;
 
-    JSCallData cdata(scope, 3, nullptr, handler);
+    JSCallData cdata(handler, scope.alloc(3), 3);
     cdata.args[0] = target;
     cdata.args[1] = id.toStringOrSymbol(scope.engine);
     cdata.args[2] = *receiver;
@@ -131,7 +131,7 @@ bool ProxyObject::virtualPut(Managed *m, PropertyKey id, const Value &value, Val
     if (!trap->isFunctionObject())
         return scope.engine->throwTypeError();
 
-    JSCallData cdata(scope, 4, nullptr, handler);
+    JSCallData cdata(handler, scope.alloc(4), 4);
     cdata.args[0] = target;
     cdata.args[1] = id.toStringOrSymbol(scope.engine);
     cdata.args[2] = value;
@@ -172,7 +172,7 @@ bool ProxyObject::virtualDeleteProperty(Managed *m, PropertyKey id)
     if (!trap->isFunctionObject())
         return scope.engine->throwTypeError();
 
-    JSCallData cdata(scope, 3, nullptr, handler);
+    JSCallData cdata(handler, scope.alloc(3), 3);
     cdata.args[0] = target;
     cdata.args[1] = id.toStringOrSymbol(scope.engine);
     cdata.args[2] = o->d(); // ### fix receiver handling
@@ -208,7 +208,7 @@ bool ProxyObject::virtualHasProperty(const Managed *m, PropertyKey id)
     if (!trap->isFunctionObject())
         return scope.engine->throwTypeError();
 
-    JSCallData cdata(scope, 2, nullptr, handler);
+    JSCallData cdata(handler, scope.alloc(2), 2);
     cdata.args[0] = target;
     cdata.args[1] = id.isArrayIndex() ? Value::fromUInt32(id.asArrayIndex()).toString(scope.engine) : id.asStringOrSymbol();
 
@@ -250,7 +250,7 @@ PropertyAttributes ProxyObject::virtualGetOwnProperty(const Managed *m, Property
         return Attr_Invalid;
     }
 
-    JSCallData cdata(scope, 2, nullptr, handler);
+    JSCallData cdata(handler, scope.alloc(2), 2);
     cdata.args[0] = target;
     cdata.args[1] = id.isArrayIndex() ? Value::fromUInt32(id.asArrayIndex()).toString(scope.engine) : id.asStringOrSymbol();
 
@@ -325,7 +325,7 @@ bool ProxyObject::virtualDefineOwnProperty(Managed *m, PropertyKey id, const Pro
         return false;
     }
 
-    JSCallData cdata(scope, 3, nullptr, handler);
+    JSCallData cdata(handler, scope.alloc(3), 3);
     cdata.args[0] = target;
     cdata.args[1] = id.isArrayIndex() ? Value::fromUInt32(id.asArrayIndex()).toString(scope.engine) : id.asStringOrSymbol();
     cdata.args[2] = ObjectPrototype::fromPropertyDescriptor(scope.engine, p, attrs);
@@ -377,7 +377,7 @@ bool ProxyObject::virtualIsExtensible(const Managed *m)
     if (!trap->isFunctionObject())
         return scope.engine->throwTypeError();
 
-    JSCallData cdata(scope, 1, nullptr, handler);
+    JSCallData cdata(handler, scope.alloc(1), 1);
     cdata.args[0] = target;
 
     ScopedValue trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
@@ -410,7 +410,7 @@ bool ProxyObject::virtualPreventExtensions(Managed *m)
     if (!trap->isFunctionObject())
         return scope.engine->throwTypeError();
 
-    JSCallData cdata(scope, 1, nullptr, handler);
+    JSCallData cdata(handler, scope.alloc(1), 1);
     cdata.args[0] = target;
 
     ScopedValue trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
@@ -447,7 +447,7 @@ Heap::Object *ProxyObject::virtualGetPrototypeOf(const Managed *m)
         return nullptr;
     }
 
-    JSCallData cdata(scope, 1, nullptr, handler);
+    JSCallData cdata(handler, scope.alloc(1), 1);
     cdata.args[0] = target;
 
     ScopedValue trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
@@ -491,7 +491,7 @@ bool ProxyObject::virtualSetPrototypeOf(Managed *m, const Object *p)
         return false;
     }
 
-    JSCallData cdata(scope, 2, nullptr, handler);
+    JSCallData cdata(handler, scope.alloc(2), 2);
     cdata.args[0] = target;
     cdata.args[1] = p ? p->asReturnedValue() : Encode::null();
 
@@ -584,7 +584,7 @@ OwnPropertyKeyIterator *ProxyObject::virtualOwnPropertyKeys(const Object *m, Val
         return nullptr;
     }
 
-    JSCallData cdata(scope, 1, nullptr, handler);
+    JSCallData cdata(handler, scope.alloc(1), 1);
     cdata.args[0] = target;
     ScopedObject trapResult(scope, static_cast<const FunctionObject *>(trap.ptr)->call(cdata));
     if (scope.engine->hasException)

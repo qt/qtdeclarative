@@ -196,7 +196,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
     QV4::JSCallData jsCall(scope, argCount);
     populateJSCallArguments(v4, jsCall, argCount, a, storage.constData());
 
-    QQmlJavaScriptExpression::evaluate(jsCall.callData(), nullptr);
+    QQmlJavaScriptExpression::evaluate(jsCall.callData(scope), nullptr);
 
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
 }
@@ -219,7 +219,7 @@ void QQmlBoundSignalExpression::evaluate(const QList<QVariant> &args)
         jsCall->args[ii] = scope.engine->fromVariant(args[ii]);
     }
 
-    QQmlJavaScriptExpression::evaluate(jsCall.callData(), nullptr);
+    QQmlJavaScriptExpression::evaluate(jsCall.callData(scope), nullptr);
 
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
 }

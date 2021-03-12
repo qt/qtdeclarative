@@ -2205,8 +2205,8 @@ ReturnedValue QObjectMethod::callInternal(const Value *thisObject, const Value *
     }
 
     Scope scope(v4);
-    JSCallData cData(scope, argc, argv, thisObject);
-    CallData *callData = cData.callData();
+    JSCallData cData(thisObject, argv, argc);
+    CallData *callData = cData.callData(scope);
 
     auto method = d()->methods[0];
 
@@ -2307,8 +2307,8 @@ ReturnedValue QMetaObjectWrapper::constructInternal(const Value *argv, int argc)
 
     Scope scope(v4);
     Scoped<QObjectWrapper> object(scope);
-    JSCallData cData(scope, argc, argv);
-    CallData *callData = cData.callData();
+    JSCallData cData(scope.alloc(), argv, argc);
+    CallData *callData = cData.callData(scope);
 
     const QQmlObjectOrGadget objectOrGadget(mo);
 
