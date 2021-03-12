@@ -490,7 +490,7 @@ bool FindWarningVisitor::check()
     }
 
     if (!m_warnUnqualified)
-        return true;
+        return m_errors.isEmpty();
 
     CheckIdentifiers check(&m_colorOut, m_code, m_rootScopeImports, m_filePath);
     return check(m_scopesById, m_signalHandlers, m_memberAccessChains, m_globalScope, m_rootId)
