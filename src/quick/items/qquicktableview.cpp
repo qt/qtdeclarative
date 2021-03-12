@@ -1383,7 +1383,7 @@ Qt::Edge QQuickTableViewPrivate::nextEdgeToUnload(const QRectF rect)
     return Qt::Edge(0);
 }
 
-qreal QQuickTableViewPrivate::cellWidth(const QPoint& cell)
+qreal QQuickTableViewPrivate::cellWidth(const QPoint& cell) const
 {
     // Using an items width directly is not an option, since we change
     // it during layout (which would also cause problems when recycling items).
@@ -1391,7 +1391,7 @@ qreal QQuickTableViewPrivate::cellWidth(const QPoint& cell)
     return cellItem->implicitWidth();
 }
 
-qreal QQuickTableViewPrivate::cellHeight(const QPoint& cell)
+qreal QQuickTableViewPrivate::cellHeight(const QPoint& cell) const
 {
     // Using an items height directly is not an option, since we change
     // it during layout (which would also cause problems when recycling items).
@@ -1399,7 +1399,7 @@ qreal QQuickTableViewPrivate::cellHeight(const QPoint& cell)
     return cellItem->implicitHeight();
 }
 
-qreal QQuickTableViewPrivate::sizeHintForColumn(int column)
+qreal QQuickTableViewPrivate::sizeHintForColumn(int column) const
 {
     // Find the widest cell in the column, and return its width
     qreal columnWidth = 0;
@@ -1411,7 +1411,7 @@ qreal QQuickTableViewPrivate::sizeHintForColumn(int column)
     return columnWidth;
 }
 
-qreal QQuickTableViewPrivate::sizeHintForRow(int row)
+qreal QQuickTableViewPrivate::sizeHintForRow(int row) const
 {
     // Find the highest cell in the row, and return its height
     qreal rowHeight = 0;

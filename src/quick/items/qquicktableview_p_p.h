@@ -133,20 +133,20 @@ public:
         }
 
         inline void markAsDone() { m_active = false; }
-        inline bool isActive() { return m_active; }
+        inline bool isActive() const { return m_active; }
 
-        inline QPoint currentCell() { return cellAt(m_currentIndex); }
-        inline bool hasCurrentCell() { return m_currentIndex < m_visibleCellsInEdge.count(); }
+        inline QPoint currentCell() const { return cellAt(m_currentIndex); }
+        inline bool hasCurrentCell() const { return m_currentIndex < m_visibleCellsInEdge.count(); }
         inline void moveToNextCell() { ++m_currentIndex; }
 
-        inline Qt::Edge edge() { return m_edge; }
-        inline int row() { return cellAt(0).y(); }
-        inline int column() { return cellAt(0).x(); }
-        inline QQmlIncubator::IncubationMode incubationMode() { return m_mode; }
+        inline Qt::Edge edge() const { return m_edge; }
+        inline int row() const { return cellAt(0).y(); }
+        inline int column() const { return cellAt(0).x(); }
+        inline QQmlIncubator::IncubationMode incubationMode() const { return m_mode; }
 
-        inline QPointF startPosition() { return m_startPos; }
+        inline QPointF startPosition() const { return m_startPos; }
 
-        QString toString()
+        QString toString() const
         {
             QString str;
             QDebug dbg(&str);
@@ -177,7 +177,7 @@ public:
         QQmlIncubator::IncubationMode m_mode = QQmlIncubator::AsynchronousIfNested;
         QPointF m_startPos;
 
-        inline QPoint cellAt(int index) {
+        inline QPoint cellAt(int index) const {
             return !m_edge || (m_edge & (Qt::LeftEdge | Qt::RightEdge))
                     ? QPoint(m_edgeIndex, m_visibleCellsInEdge[index])
                     : QPoint(m_visibleCellsInEdge[index], m_edgeIndex);
@@ -340,8 +340,8 @@ public:
     int modelIndexAtCell(const QPoint &cell) const;
     QPoint cellAtModelIndex(int modelIndex) const;
 
-    qreal sizeHintForColumn(int column);
-    qreal sizeHintForRow(int row);
+    qreal sizeHintForColumn(int column) const;
+    qreal sizeHintForRow(int row) const;
     QSize calculateTableSize();
     void updateTableSize();
 
@@ -393,8 +393,8 @@ public:
     Qt::Edge nextEdgeToLoad(const QRectF rect);
     Qt::Edge nextEdgeToUnload(const QRectF rect);
 
-    qreal cellWidth(const QPoint &cell);
-    qreal cellHeight(const QPoint &cell);
+    qreal cellWidth(const QPoint &cell) const;
+    qreal cellHeight(const QPoint &cell) const;
 
     FxTableItem *loadedTableItem(const QPoint &cell) const;
     FxTableItem *createFxTableItem(const QPoint &cell, QQmlIncubator::IncubationMode incubationMode);
