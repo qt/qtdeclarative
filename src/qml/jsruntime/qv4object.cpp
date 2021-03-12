@@ -102,9 +102,9 @@ ReturnedValue Object::getValueAccessor(const Value *thisObject, const Value &v, 
         return Encode::undefined();
 
     Scope scope(f->engine());
-    JSCallData jsCallData(scope);
+    JSCallArguments jsCallData(scope);
     if (thisObject)
-        *jsCallData->thisObject = *thisObject;
+        *jsCallData.thisObject = *thisObject;
     return checkedResult(scope.engine, f->call(jsCallData));
 }
 
@@ -119,9 +119,9 @@ bool Object::putValue(uint memberIndex, PropertyAttributes attrs, const Value &v
         if (set) {
             Scope scope(ic->engine);
             ScopedFunctionObject setter(scope, set);
-            JSCallData jsCallData(scope, 1);
-            jsCallData->args[0] = value;
-            *jsCallData->thisObject = this;
+            JSCallArguments jsCallData(scope, 1);
+            jsCallData.args[0] = value;
+            *jsCallData.thisObject = this;
             setter->call(jsCallData);
             return !ic->engine->hasException;
         }
@@ -519,9 +519,9 @@ bool Object::internalPut(PropertyKey id, const Value &value, Value *receiver)
         ScopedFunctionObject setter(scope, p->setter());
         if (!setter)
             return false;
-        JSCallData jsCallData(scope, 1);
-        jsCallData->args[0] = value;
-        *jsCallData->thisObject = *receiver;
+        JSCallArguments jsCallData(scope, 1);
+        jsCallData.args[0] = value;
+        *jsCallData.thisObject = *receiver;
         setter->call(jsCallData);
         return !scope.engine->hasException;
     }

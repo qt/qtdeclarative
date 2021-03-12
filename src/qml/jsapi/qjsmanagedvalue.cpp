@@ -992,15 +992,15 @@ QJSValue QJSManagedValue::call(const QJSValueList &arguments) const
     QV4::ExecutionEngine *engine = f->engine();
 
     QV4::Scope scope(engine);
-    QV4::JSCallData jsCallData(scope, arguments.length());
-    *jsCallData->thisObject = engine->globalObject;
+    QV4::JSCallArguments jsCallData(scope, arguments.length());
+    *jsCallData.thisObject = engine->globalObject;
     int i = 0;
     for (const QJSValue &arg : arguments) {
         if (Q_UNLIKELY(!QJSValuePrivate::checkEngine(engine, arg))) {
             qWarning("QJSManagedValue::call() failed: Argument was created in different engine.");
             return QJSValue();
         }
-        jsCallData->args[i++] = QJSValuePrivate::convertToReturnedValue(engine, arg);
+        jsCallData.args[i++] = QJSValuePrivate::convertToReturnedValue(engine, arg);
     }
 
     return QJSValuePrivate::fromReturnedValue(f->call(jsCallData));
@@ -1031,8 +1031,8 @@ QJSValue QJSManagedValue::callWithInstance(const QJSValue &instance,
     }
 
     QV4::Scope scope(engine);
-    QV4::JSCallData jsCallData(scope, arguments.length());
-    *jsCallData->thisObject = QJSValuePrivate::convertToReturnedValue(engine, instance);
+    QV4::JSCallArguments jsCallData(scope, arguments.length());
+    *jsCallData.thisObject = QJSValuePrivate::convertToReturnedValue(engine, instance);
     int i = 0;
     for (const QJSValue &arg : arguments) {
         if (Q_UNLIKELY(!QJSValuePrivate::checkEngine(engine, arg))) {
@@ -1040,7 +1040,7 @@ QJSValue QJSManagedValue::callWithInstance(const QJSValue &instance,
                      "Argument was created in different engine.");
             return QJSValue();
         }
-        jsCallData->args[i++] = QJSValuePrivate::convertToReturnedValue(engine, arg);
+        jsCallData.args[i++] = QJSValuePrivate::convertToReturnedValue(engine, arg);
     }
 
     return QJSValuePrivate::fromReturnedValue(f->call(jsCallData));
@@ -1064,7 +1064,7 @@ QJSValue QJSManagedValue::callAsConstructor(const QJSValueList &arguments) const
     QV4::ExecutionEngine *engine = f->engine();
 
     QV4::Scope scope(engine);
-    QV4::JSCallData jsCallData(scope, arguments.length());
+    QV4::JSCallArguments jsCallData(scope, arguments.length());
     int i = 0;
     for (const QJSValue &arg : arguments) {
         if (Q_UNLIKELY(!QJSValuePrivate::checkEngine(engine, arg))) {
@@ -1072,7 +1072,7 @@ QJSValue QJSManagedValue::callAsConstructor(const QJSValueList &arguments) const
                      "Argument was created in different engine.");
             return QJSValue();
         }
-        jsCallData->args[i++] = QJSValuePrivate::convertToReturnedValue(engine, arg);
+        jsCallData.args[i++] = QJSValuePrivate::convertToReturnedValue(engine, arg);
     }
 
     return QJSValuePrivate::fromReturnedValue(f->callAsConstructor(jsCallData));

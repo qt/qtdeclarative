@@ -704,18 +704,18 @@ ReturnedValue RegExpPrototype::method_replace(const FunctionObject *f, const Val
 
         int n = 1;
         Scope innerScope(scope.engine);
-        JSCallData cData(scope, nCaptures + 3);
+        JSCallArguments cData(scope, nCaptures + 3);
         while (n <= nCaptures) {
             v = resultObject->get(PropertyKey::fromArrayIndex(n));
             if (!v->isUndefined())
-                cData->args[n] = v->toString(scope.engine);
+                cData.args[n] = v->toString(scope.engine);
             ++n;
         }
         QString replacement;
         if (functionalReplace) {
-            cData->args[0] = matchString;
-            cData->args[nCaptures + 1] = Encode(position);
-            cData->args[nCaptures + 2] = s;
+            cData.args[0] = matchString;
+            cData.args[nCaptures + 1] = Encode(position);
+            cData.args[nCaptures + 2] = s;
             ScopedValue replValue(scope, replaceFunction->call(cData));
             if (scope.hasException())
                 return Encode::undefined();

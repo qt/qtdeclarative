@@ -1376,10 +1376,10 @@ ReturnedValue UrlSearchParamsPrototype::method_forEach(const FunctionObject *b,
         Scoped<String> name(scope, o->nameAtRaw(i));
         Scoped<String> value(scope, o->valueAtRaw(i));
 
-        QV4::JSCallData calldata(scope, 2);
+        QV4::JSCallArguments calldata(scope, 2);
 
-        calldata->args[0] = value;
-        calldata->args[1] = name;
+        calldata.args[0] = value;
+        calldata.args[1] = name;
 
         func->call(calldata);
     }

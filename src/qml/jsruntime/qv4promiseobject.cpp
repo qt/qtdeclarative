@@ -227,17 +227,17 @@ public:
 void ReactionHandler::executeResolveThenable(ResolveThenableEvent *event)
 {
     Scope scope(event->then.engine());
-    JSCallData jsCallData(scope, 2);
+    JSCallArguments jsCallData(scope, 2);
     PromiseObject *promise = event->promise.as<PromiseObject>();
     ScopedFunctionObject resolve {scope, FunctionBuilder::makeResolveFunction(scope.engine, promise->d())};
     ScopedFunctionObject reject {scope, FunctionBuilder::makeRejectFunction(scope.engine, promise->d())};
-    jsCallData->args[0] = resolve;
+    jsCallData.args[0] = resolve;
     jsCallData.args[1] = reject;
-    jsCallData->thisObject = event->thenable.as<QV4::Object>();
+    jsCallData.thisObject = event->thenable.as<QV4::Object>();
     event->then.as<const FunctionObject>()->call(jsCallData);
     if (scope.engine->hasException) {
-        JSCallData rejectCallData(scope, 1);
-        rejectCallData->args[0] = scope.engine->catchException();
+        JSCallArguments rejectCallData(scope, 1);
+        rejectCallData.args[0] = scope.engine->catchException();
         Scoped<RejectWrapper> reject {scope, scope.engine->memoryManager->allocate<QV4::RejectWrapper>()};
         reject->call(rejectCallData);
     }
@@ -440,16 +440,16 @@ ReturnedValue PromiseCtor::virtualCallAsConstructor(const FunctionObject *f, con
     ScopedFunctionObject resolve(scope, FunctionBuilder::makeResolveFunction(scope.engine, a->d()));
     ScopedFunctionObject reject(scope, FunctionBuilder::makeRejectFunction(scope.engine, a->d()));
 
-    JSCallData jsCallData(scope, 2);
-    jsCallData->args[0] = resolve;
-    jsCallData->args[1] = reject;
-    //jsCallData->thisObject = a; VERIFY corretness, but this should be undefined (see below)
+    JSCallArguments jsCallData(scope, 2);
+    jsCallData.args[0] = resolve;
+    jsCallData.args[1] = reject;
+    //jsCallData.thisObject = a; VERIFY corretness, but this should be undefined (see below)
 
     executor->call(jsCallData); // 9. Let completion be Call(executor, undefined, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »).
 
     if (scope.engine->hasException) {
         ScopedValue exception {scope, scope.engine->catchException()};
-        JSCallData callData {scope, 1};
+        JSCallArguments callData {scope, 1};
         callData.args[0] = exception;
         reject->call(callData);
     }
@@ -649,10 +649,10 @@ ReturnedValue PromiseCtor::method_all(const FunctionObject *f, const Value *this
 
         ScopedFunctionObject resolveElement(scope, FunctionBuilder::makeResolveElementFunction(e, index, executionState->d()));
 
-        JSCallData jsCallData(scope, 2);
-        jsCallData->args[0] = resolveElement;
-        jsCallData->args[1] = reject;
-        jsCallData->thisObject = nextPromise;
+        JSCallArguments jsCallData(scope, 2);
+        jsCallData.args[0] = resolveElement;
+        jsCallData.args[1] = reject;
+        jsCallData.thisObject = nextPromise;
 
         then->call(jsCallData);
         if (scope.hasException()) {
@@ -793,10 +793,10 @@ ReturnedValue PromiseCtor::method_race(const FunctionObject *f, const Value *thi
 
         ScopedFunctionObject resolveOriginalPromise(scope, capability->d()->resolve);
 
-        JSCallData jsCallData(scope, 2);
-        jsCallData->args[0] = resolveOriginalPromise;
-        jsCallData->args[1] = reject;
-        jsCallData->thisObject = nextPromise;
+        JSCallArguments jsCallData(scope, 2);
+        jsCallData.args[0] = resolveOriginalPromise;
+        jsCallData.args[1] = reject;
+        jsCallData.thisObject = nextPromise;
 
         then->call(jsCallData);
         if (scope.hasException()) {
@@ -927,10 +927,10 @@ ReturnedValue PromisePrototype::method_catch(const FunctionObject *f, const Valu
         onRejected = argv[0];
     }
 
-    JSCallData jsCallData(scope, 2);
-    jsCallData->args[0] = Encode::undefined();
-    jsCallData->args[1] = onRejected;
-    jsCallData->thisObject = promise;
+    JSCallArguments jsCallData(scope, 2);
+    jsCallData.args[0] = Encode::undefined();
+    jsCallData.args[1] = onRejected;
+    jsCallData.thisObject = promise;
 
     ScopedString thenName(scope, scope.engine->newIdentifier(QStringLiteral("then")));
     ScopedFunctionObject then(scope, promise->get(thenName));
@@ -1084,10 +1084,10 @@ ReturnedValue RejectWrapper::virtualCall(const FunctionObject *f, const Value *t
         ScopedString thenName(scope, scope.engine->newIdentifier(QStringLiteral("catch")));
 
         ScopedFunctionObject then(scope, promise->get(thenName));
-        JSCallData jsCallData(scope, 2);
-        jsCallData->args[0] = *f;
-        jsCallData->args[1] = Encode::undefined();
-        jsCallData->thisObject = value;
+        JSCallArguments jsCallData(scope, 2);
+        jsCallData.args[0] = *f;
+        jsCallData.args[1] = Encode::undefined();
+        jsCallData.thisObject = value;
 
         then->call(jsCallData);
     }

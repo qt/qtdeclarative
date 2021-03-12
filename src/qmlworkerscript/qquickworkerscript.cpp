@@ -240,9 +240,9 @@ void QQuickWorkerScriptEnginePrivate::processMessage(int id, const QByteArray &d
 
     QV4::ScopedValue value(scope, QV4::Serialize::deserialize(data, engine));
 
-    QV4::JSCallData jsCallData(scope, 1);
-    *jsCallData->thisObject = engine->global();
-    jsCallData->args[0] = value;
+    QV4::JSCallArguments jsCallData(scope, 1);
+    *jsCallData.thisObject = engine->global();
+    jsCallData.args[0] = value;
     onmessage->call(jsCallData);
     if (scope.hasException()) {
         QQmlError error = scope.engine->catchExceptionAsQmlError();

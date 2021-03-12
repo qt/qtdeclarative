@@ -722,9 +722,9 @@ ReturnedValue BoundFunction::virtualCall(const FunctionObject *fo, const Value *
     Scope scope(v4);
     Scoped<MemberData> boundArgs(scope, f->boundArgs());
     ScopedFunctionObject target(scope, f->target());
-    JSCallData jsCallData(scope, (boundArgs ? boundArgs->size() : 0) + argc);
-    *jsCallData->thisObject = f->boundThis();
-    Value *argp = jsCallData->args;
+    JSCallArguments jsCallData(scope, (boundArgs ? boundArgs->size() : 0) + argc);
+    *jsCallData.thisObject = f->boundThis();
+    Value *argp = jsCallData.args;
     if (boundArgs) {
         memcpy(argp, boundArgs->data(), boundArgs->size()*sizeof(Value));
         argp += boundArgs->size();
@@ -743,8 +743,8 @@ ReturnedValue BoundFunction::virtualCallAsConstructor(const FunctionObject *fo, 
 
     Scoped<MemberData> boundArgs(scope, f->boundArgs());
     ScopedFunctionObject target(scope, f->target());
-    JSCallData jsCallData(scope, (boundArgs ? boundArgs->size() : 0) + argc);
-    Value *argp = jsCallData->args;
+    JSCallArguments jsCallData(scope, (boundArgs ? boundArgs->size() : 0) + argc);
+    Value *argp = jsCallData.args;
     if (boundArgs) {
         memcpy(argp, boundArgs->data(), boundArgs->size()*sizeof(Value));
         argp += boundArgs->size();

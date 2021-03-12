@@ -1000,11 +1000,11 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                 const unsigned int parameterCount = (arguments && arguments->names) ? arguments->names->count() : 0;
                 Q_ASSERT(parameterCount == function->formalParameterCount());
 
-                QV4::JSCallData jsCallData(scope, parameterCount);
-                *jsCallData->thisObject = v4->global();
+                QV4::JSCallArguments jsCallData(scope, parameterCount);
+                *jsCallData.thisObject = v4->global();
 
                 for (uint ii = 0; ii < parameterCount; ++ii) {
-                    jsCallData->args[ii] = scope.engine->metaTypeToJS(QMetaType(arguments->arguments[ii + 1]), a[ii + 1]);
+                    jsCallData.args[ii] = scope.engine->metaTypeToJS(QMetaType(arguments->arguments[ii + 1]), a[ii + 1]);
                 }
 
                 const QMetaType returnType = methodData->propType();

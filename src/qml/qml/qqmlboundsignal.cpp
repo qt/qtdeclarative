@@ -193,7 +193,7 @@ void QQmlBoundSignalExpression::evaluate(void **a)
     bool ok = QQmlMetaObject(m_target).methodParameterTypes(methodIndex, &storage, nullptr);
     const int argCount = ok ? storage.size() : 0;
 
-    QV4::JSCallData jsCall(scope, argCount);
+    QV4::JSCallArguments jsCall(scope, argCount);
     populateJSCallArguments(v4, jsCall, argCount, a, storage.constData());
 
     QQmlJavaScriptExpression::evaluate(jsCall.callData(scope), nullptr);
@@ -214,9 +214,9 @@ void QQmlBoundSignalExpression::evaluate(const QList<QVariant> &args)
 
     ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
 
-    QV4::JSCallData jsCall(scope, args.count());
+    QV4::JSCallArguments jsCall(scope, args.count());
     for (int ii = 0; ii < args.count(); ++ii) {
-        jsCall->args[ii] = scope.engine->fromVariant(args[ii]);
+        jsCall.args[ii] = scope.engine->fromVariant(args[ii]);
     }
 
     QQmlJavaScriptExpression::evaluate(jsCall.callData(scope), nullptr);

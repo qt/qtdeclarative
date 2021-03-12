@@ -412,9 +412,9 @@ static ReturnedValue qmlsqldatabase_changeVersion(const FunctionObject *b, const
         ok = false;
         db.transaction();
 
-        JSCallData jsCall(scope, 1);
-        *jsCall->thisObject = scope.engine->globalObject;
-        jsCall->args[0] = query;
+        JSCallArguments jsCall(scope, 1);
+        *jsCall.thisObject = scope.engine->globalObject;
+        jsCall.args[0] = query;
 
         TransactionRollback rollbackOnException(&db, &query->d()->inTransaction);
         callback->call(jsCall);
@@ -468,9 +468,9 @@ static ReturnedValue qmlsqldatabase_transaction_shared(const FunctionObject *b, 
 
     db.transaction();
     if (callback) {
-        JSCallData jsCall(scope, 1);
-        *jsCall->thisObject = scope.engine->globalObject;
-        jsCall->args[0] = w;
+        JSCallArguments jsCall(scope, 1);
+        *jsCall.thisObject = scope.engine->globalObject;
+        jsCall.args[0] = w;
         TransactionRollback rollbackOnException(&db, &w->d()->inTransaction);
         callback->call(jsCall);
         rollbackOnException.clear();
@@ -781,9 +781,9 @@ void QQmlLocalStorage::openDatabaseSync(QQmlV4Function *args)
     *db->d()->version = version;
 
     if (created && dbcreationCallback) {
-        JSCallData jsCall(scope, 1);
-        *jsCall->thisObject = scope.engine->globalObject;
-        jsCall->args[0] = db;
+        JSCallArguments jsCall(scope, 1);
+        *jsCall.thisObject = scope.engine->globalObject;
+        jsCall.args[0] = db;
         dbcreationCallback->call(jsCall);
     }
 

@@ -2086,10 +2086,10 @@ ReturnedValue ExecutionEngine::callInContext(Function *function, QObject *self,
         return Encode::undefined();
 
     // use JSCallData to pass arguments into the function call
-    QV4::JSCallData jsCall(scope, argc);
+    QV4::JSCallArguments jsCall(scope, argc);
     QV4::populateJSCallArguments(this, jsCall, argc, args, types);
 
-    QV4::CallData *callData = jsCall->callData(scope);
+    QV4::CallData *callData = jsCall.callData(scope);
     return function->call(selfValue, callData->argValues<QV4::Value>(), callData->argc(),
                           qmlContext);
 }

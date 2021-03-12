@@ -1591,7 +1591,7 @@ void QQmlXMLHttpRequest::dispatchCallbackNow(Object *thisObj, bool done, bool er
         if (!callback)
             return;
 
-        QV4::JSCallData jsCallData(scope);
+        QV4::JSCallArguments jsCallData(scope);
         callback->call(jsCallData);
 
         if (scope.engine->hasException) {

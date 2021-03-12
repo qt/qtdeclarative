@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
     Sets the arguments of JSCallData from type erased \a args based on type
     information provided by \a types
  */
-void QV4::populateJSCallArguments(ExecutionEngine *v4, JSCallData &jsCall,
+void QV4::populateJSCallArguments(ExecutionEngine *v4, JSCallArguments &jsCall,
                                   int argc, void **args, const QMetaType *types)
 {
     for (int ii = 0; ii < argc; ++ii) {

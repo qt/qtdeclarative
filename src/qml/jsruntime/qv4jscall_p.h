@@ -61,39 +61,61 @@ QT_BEGIN_NAMESPACE
 
 namespace QV4 {
 
-struct JSCallData {
-    JSCallData(const Value *thisObject, const Value *argv, int argc)
-        : argc(argc), args(const_cast<Value *>(argv)), thisObject(const_cast<Value *>(thisObject))
+template<typename Args>
+CallData *callDatafromJS(const Scope &scope, const Args *args, const FunctionObject *f = nullptr)
+{
+    int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + args->argc;
+    CallData *ptr = reinterpret_cast<CallData *>(scope.alloc<Scope::Uninitialized>(size));
+    ptr->function = Encode::undefined();
+    ptr->context = Encode::undefined();
+    ptr->accumulator = Encode::undefined();
+    ptr->thisObject = args->thisObject ? args->thisObject->asReturnedValue() : Encode::undefined();
+    ptr->newTarget = Encode::undefined();
+    ptr->setArgc(args->argc);
+    if (args->argc)
+        memcpy(ptr->args, args->args, args->argc*sizeof(Value));
+    if (f)
+        ptr->function = f->asReturnedValue();
+    return ptr;
+}
+
+struct JSCallArguments
+{
+    JSCallArguments(const Scope &scope, int argc = 0)
+        : thisObject(scope.alloc()), args(scope.alloc(argc)), argc(argc)
     {
     }
 
-    JSCallData(const Scope &scope, int argc = 0)
-        : argc(argc), args(scope.alloc(argc)), thisObject(scope.alloc())
+    CallData *callData(const Scope &scope, const FunctionObject *f = nullptr) const
     {
+        return callDatafromJS(scope, this, f);
     }
 
-    JSCallData *operator->() {
-        return this;
-    }
-
-    CallData *callData(const Scope &scope, const FunctionObject *f = nullptr) const {
-        int size = int(offsetof(QV4::CallData, args)/sizeof(QV4::Value)) + argc;
-        CallData *ptr = reinterpret_cast<CallData *>(scope.alloc<Scope::Uninitialized>(size));
-        ptr->function = Encode::undefined();
-        ptr->context = Encode::undefined();
-        ptr->accumulator = Encode::undefined();
-        ptr->thisObject = thisObject ? thisObject->asReturnedValue() : Encode::undefined();
-        ptr->newTarget = Encode::undefined();
-        ptr->setArgc(argc);
-        if (argc)
-            memcpy(ptr->args, args, argc*sizeof(Value));
-        if (f)
-            ptr->function = f->asReturnedValue();
-        return ptr;
-    }
-    int argc;
-    Value *args;
     Value *thisObject;
+    Value *args;
+    const int argc;
+};
+
+struct JSCallData
+{
+    JSCallData(const Value *thisObject, const Value *argv, int argc)
+        : thisObject(thisObject), args(argv), argc(argc)
+    {
+    }
+
+    Q_IMPLICIT JSCallData(const JSCallArguments &args)
+        : thisObject(args.thisObject), args(args.args), argc(args.argc)
+    {
+    }
+
+    CallData *callData(const Scope &scope, const FunctionObject *f = nullptr) const
+    {
+        return callDatafromJS(scope, this, f);
+    }
+
+    const Value *thisObject;
+    const Value *args;
+    const int argc;
 };
 
 inline
@@ -108,7 +130,7 @@ ReturnedValue FunctionObject::call(const JSCallData &data) const
     return call(data.thisObject, data.args, data.argc);
 }
 
-void populateJSCallArguments(ExecutionEngine *v4, JSCallData &jsCall, int argc,
+void populateJSCallArguments(ExecutionEngine *v4, JSCallArguments &jsCall, int argc,
                              void **args, const QMetaType *types);
 
 struct ScopedStackFrame {

@@ -1006,14 +1006,14 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
             QV4::Scope scope(v4);
             QV4::ScopedFunctionObject f(scope, This->function.value());
 
-            QV4::JSCallData jsCallData(scope, argCount);
-            *jsCallData->thisObject = This->thisObject.isUndefined() ? v4->globalObject->asReturnedValue() : This->thisObject.value();
+            QV4::JSCallArguments jsCallData(scope, argCount);
+            *jsCallData.thisObject = This->thisObject.isUndefined() ? v4->globalObject->asReturnedValue() : This->thisObject.value();
             for (int ii = 0; ii < argCount; ++ii) {
                 QMetaType type = storage[ii];
                 if (type == QMetaType::fromType<QVariant>()) {
-                    jsCallData->args[ii] = v4->fromVariant(*((QVariant *)metaArgs[ii + 1]));
+                    jsCallData.args[ii] = v4->fromVariant(*((QVariant *)metaArgs[ii + 1]));
                 } else {
-                    jsCallData->args[ii] = v4->fromVariant(QVariant(type, metaArgs[ii + 1]));
+                    jsCallData.args[ii] = v4->fromVariant(QVariant(type, metaArgs[ii + 1]));
                 }
             }
 
@@ -2307,7 +2307,7 @@ ReturnedValue QMetaObjectWrapper::constructInternal(const Value *argv, int argc)
 
     Scope scope(v4);
     Scoped<QObjectWrapper> object(scope);
-    JSCallData cData(scope.alloc(), argv, argc);
+    JSCallData cData(nullptr, argv, argc);
     CallData *callData = cData.callData(scope);
 
     const QQmlObjectOrGadget objectOrGadget(mo);
