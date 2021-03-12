@@ -429,7 +429,79 @@ static bool compareEqualInt(QV4::Value &accumulator, QV4::Value lhs, int rhs)
         } \
     } while (false)
 
-ReturnedValue VME::exec(CppStackFrame *frame, ExecutionEngine *engine)
+void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
+{
+    qt_v4ResolvePendingBreakpointsHook();
+    if (engine->checkStackLimits())
+        return;
+    ExecutionEngineCallDepthRecorder executionEngineCallDepthRecorder(engine);
+
+    Function *function = frame->v4Function;
+    Q_ASSERT(function->aotFunction);
+    Q_TRACE_SCOPE(QQmlV4_function_call, engine, function->name()->toQString(),
+                  function->executableCompilationUnit()->fileName(),
+                  function->compiledFunction->location.line,
+                  function->compiledFunction->location.column);
+    Profiling::FunctionCallProfiler profiler(engine, function); // start execution profiling
+
+    const qsizetype numFunctionArguments = function->aotFunction->argumentTypes.size();
+
+    Q_ALLOCA_DECLARE(void, *transformedArguments);
+    for (qsizetype i = 0; i < numFunctionArguments; ++i) {
+        const QMetaType argumentType = function->aotFunction->argumentTypes[i];
+        if (frame->argc() > i && argumentType == frame->argTypes()[i])
+            continue;
+
+        if (transformedArguments == nullptr) {
+            Q_ALLOCA_ASSIGN(void *, transformedArguments, numFunctionArguments * sizeof(void *));
+            memcpy(transformedArguments, frame->argv(), frame->argc() * sizeof(void *));
+        }
+
+        Q_ALLOCA_VAR(void, arg, argumentType.sizeOf());
+        argumentType.construct(arg);
+        if (frame->argc() > i)
+            QMetaType::convert(frame->argTypes()[i], frame->argv()[i], argumentType, arg);
+
+        transformedArguments[i] = arg;
+    }
+
+    const QMetaType returnType = function->aotFunction->returnType;
+    Q_ALLOCA_DECLARE(void, transformedResult);
+    if (frame->returnValue()) {
+        if (returnType == frame->returnType())
+            returnType.destruct(frame->returnValue());
+        else
+            Q_ALLOCA_ASSIGN(void, transformedResult, returnType.sizeOf());
+    }
+
+    QQmlPrivate::AOTCompiledContext aotContext;
+    if (QV4::Heap::QmlContext *qmlContext = engine->qmlContext()) {
+        QV4::Heap::QQmlContextWrapper *wrapper = qmlContext->qml();
+        aotContext.qmlScopeObject = wrapper->scopeObject;
+        aotContext.qmlContext = wrapper->context->asQQmlContext();
+    }
+
+    aotContext.engine = engine->jsEngine();
+    aotContext.compilationUnit = function->executableCompilationUnit();
+    function->aotFunction->functionPtr(
+                &aotContext, transformedResult ? transformedResult : frame->returnValue(),
+                transformedArguments ? transformedArguments : frame->argv());
+
+    if (transformedResult) {
+        QMetaType::convert(returnType, transformedResult,
+                           frame->returnType(), frame->returnValue());
+        returnType.destruct(transformedResult);
+    }
+
+    if (transformedArguments) {
+        for (int i = 0; i < numFunctionArguments; ++i) {
+            if (i >= frame->argc() || transformedArguments[i] != frame->argv()[i])
+                function->aotFunction->argumentTypes[i].destruct(transformedArguments[i]);
+        }
+    }
+}
+
+ReturnedValue VME::exec(JSTypesStackFrame *frame, ExecutionEngine *engine)
 {
     qt_v4ResolvePendingBreakpointsHook();
     CHECK_STACK_LIMITS(engine);
@@ -461,54 +533,9 @@ ReturnedValue VME::exec(CppStackFrame *frame, ExecutionEngine *engine)
         debugger->enteringFunction();
 
     ReturnedValue result;
+    Q_ASSERT(!function->aotFunction);
     if (function->jittedCode != nullptr && debugger == nullptr) {
         result = function->jittedCode(frame, engine);
-    } else if (function->aotFunction) {
-        const qsizetype numFunctionArguments = function->aotFunction->argumentTypes.size();
-        Q_ALLOCA_DECLARE(void *, argumentPtrs);
-
-        if (numFunctionArguments > 0) {
-            Q_ALLOCA_ASSIGN(void *, argumentPtrs, numFunctionArguments * sizeof(void *));
-            for (qsizetype i = 0; i < numFunctionArguments; ++i) {
-                const QMetaType argumentType = function->aotFunction->argumentTypes[i];
-                if (const qsizetype argumentSize = argumentType.sizeOf()) {
-                    Q_ALLOCA_VAR(void, argument, argumentSize);
-                    argumentType.construct(argument);
-                    if (i < frame->originalArgumentsCount) {
-                        engine->metaTypeFromJS(frame->originalArguments[i], argumentType.id(),
-                                               argument);
-                    }
-                    argumentPtrs[i] = argument;
-                } else {
-                    argumentPtrs[i] = nullptr;
-                }
-            }
-        }
-
-        Q_ALLOCA_DECLARE(void, returnValue);
-        const QMetaType returnType = function->aotFunction->returnType;
-        if (const qsizetype returnSize = returnType.sizeOf())
-            Q_ALLOCA_ASSIGN(void, returnValue, returnSize);
-
-        QQmlPrivate::AOTCompiledContext aotContext;
-        if (QV4::Heap::QmlContext *qmlContext = engine->qmlContext()) {
-            QV4::Heap::QQmlContextWrapper *wrapper = qmlContext->qml();
-            aotContext.qmlScopeObject = wrapper->scopeObject;
-            aotContext.qmlContext = wrapper->context->asQQmlContext();
-        }
-        aotContext.engine = engine->jsEngine();
-        aotContext.compilationUnit = function->executableCompilationUnit();
-        function->aotFunction->functionPtr(&aotContext, returnValue, argumentPtrs);
-
-        if (returnValue) {
-            result = engine->metaTypeToJS(returnType, returnValue);
-            returnType.destruct(returnValue);
-        } else {
-            result = Encode::undefined();
-        }
-
-        for (qsizetype i = 0; i < numFunctionArguments; ++i)
-            function->aotFunction->argumentTypes[i].destruct(argumentPtrs[i]);
     } else {
         // interpreter
         result = interpret(frame, engine, function->codeData);
@@ -520,7 +547,7 @@ ReturnedValue VME::exec(CppStackFrame *frame, ExecutionEngine *engine)
     return result;
 }
 
-QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine, const char *code)
+QV4::ReturnedValue VME::interpret(JSTypesStackFrame *frame, ExecutionEngine *engine, const char *code)
 {
     QV4::Function *function = frame->v4Function;
     QV4::Value &accumulator = frame->jsFrame->accumulator.asValue<Value>();
@@ -720,14 +747,14 @@ QV4::ReturnedValue VME::interpret(CppStackFrame *frame, ExecutionEngine *engine,
     MOTH_END_INSTR(StoreSuperProperty)
 
     MOTH_BEGIN_INSTR(Yield)
-        frame->yield = code;
-        frame->yieldIsIterator = false;
+        frame->setYield(code);
+        frame->setYieldIsIterator(false);
         return acc;
     MOTH_END_INSTR(Yield)
 
     MOTH_BEGIN_INSTR(YieldStar)
-        frame->yield = code;
-        frame->yieldIsIterator = true;
+        frame->setYield(code);
+        frame->setYieldIsIterator(true);
         return acc;
     MOTH_END_INSTR(YieldStar)
 

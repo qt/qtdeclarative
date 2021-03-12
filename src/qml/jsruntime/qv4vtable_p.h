@@ -84,6 +84,7 @@ struct VTable
     typedef ReturnedValue (*InstanceOf)(const Object *typeObject, const Value &var);
 
     typedef ReturnedValue (*Call)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
+    typedef void (*CallWithMetaTypes)(const FunctionObject *, const Value *, void **, const QMetaType *, int);
     typedef ReturnedValue (*CallAsConstructor)(const FunctionObject *, const Value *argv, int argc, const Value *newTarget);
 
     typedef ReturnedValue (*ResolveLookupGetter)(const Object *, ExecutionEngine *, Lookup *);
@@ -123,11 +124,63 @@ struct VTable
 
     Call call;
     CallAsConstructor callAsConstructor;
+    CallWithMetaTypes callWithMetaTypes;
 
     ResolveLookupGetter resolveLookupGetter;
     ResolveLookupSetter resolveLookupSetter;
 };
 
+template<VTable::CallWithMetaTypes call>
+struct VTableCallWithMetaTypesWrapper { constexpr static VTable::CallWithMetaTypes c = call; };
+
+template<VTable::Call call>
+struct VTableCallWrapper { constexpr static VTable::Call c = call; };
+
+template<class Class>
+constexpr VTable::CallWithMetaTypes vtableMetaTypesCallEntry()
+{
+    // If Class overrides virtualCallWithMetaTypes, return that.
+    // Otherwise, if it overrides virtualCall, return nullptr so that we convert calls.
+    // Otherwise, just return whatever the base class had.
+
+    // A simple != is not considered constexpr, so we have to jump through some hoops.
+    if constexpr (!std::is_same_v<
+            VTableCallWithMetaTypesWrapper<Class::virtualCallWithMetaTypes>,
+            VTableCallWithMetaTypesWrapper<Class::SuperClass::virtualCallWithMetaTypes>>) {
+        return Class::virtualCallWithMetaTypes;
+    }
+
+    if constexpr (!std::is_same_v<
+            VTableCallWrapper<Class::virtualCall>,
+            VTableCallWrapper<Class::SuperClass::virtualCall>>) {
+        return nullptr;
+    }
+
+    return Class::virtualCallWithMetaTypes;
+}
+
+template<class Class>
+constexpr VTable::Call vtableJsTypesCallEntry()
+{
+    // If Class overrides virtualCall, return that.
+    // Otherwise, if it overrides virtualCallWithMetaTypes, return nullptr so that we convert calls.
+    // Otherwise, just return whatever the base class had.
+
+    // A simple != is not considered constexpr, so we have to jump through some hoops.
+    if constexpr (!std::is_same_v<
+            VTableCallWrapper<Class::virtualCall>,
+            VTableCallWrapper<Class::SuperClass::virtualCall>>) {
+        return Class::virtualCall;
+    }
+
+    if constexpr (!std::is_same_v<
+            VTableCallWithMetaTypesWrapper<Class::virtualCallWithMetaTypes>,
+            VTableCallWithMetaTypesWrapper<Class::SuperClass::virtualCallWithMetaTypes>>) {
+        return nullptr;
+    }
+
+    return Class::virtualCall;
+}
 
 struct VTableBase {
 protected:
@@ -150,9 +203,16 @@ protected:
 
     static constexpr VTable::Call virtualCall = nullptr;
     static constexpr VTable::CallAsConstructor virtualCallAsConstructor = nullptr;
+    static constexpr VTable::CallWithMetaTypes virtualCallWithMetaTypes = nullptr;
 
     static constexpr VTable::ResolveLookupGetter virtualResolveLookupGetter = nullptr;
     static constexpr VTable::ResolveLookupSetter virtualResolveLookupSetter = nullptr;
+
+    template<class Class>
+    friend constexpr VTable::CallWithMetaTypes vtableMetaTypesCallEntry();
+
+    template<class Class>
+    friend constexpr VTable::Call vtableJsTypesCallEntry();
 };
 
 #define DEFINE_MANAGED_VTABLE_INT(classname, parentVTable) \
@@ -190,8 +250,9 @@ protected:
     classname::virtualOwnPropertyKeys,      \
     classname::virtualInstanceOf,           \
     \
-    classname::virtualCall,                 \
-    classname::virtualCallAsConstructor,    \
+    QV4::vtableJsTypesCallEntry<classname>(),   \
+    classname::virtualCallAsConstructor,        \
+    QV4::vtableMetaTypesCallEntry<classname>(), \
     \
     classname::virtualResolveLookupGetter,  \
     classname::virtualResolveLookupSetter   \

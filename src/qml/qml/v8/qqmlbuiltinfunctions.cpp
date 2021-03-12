@@ -1766,7 +1766,7 @@ ReturnedValue GlobalExtensions::method_qsTr(const FunctionObject *b, const Value
             }
             context = QFileInfo(context).baseName();
         }
-        frame = frame->parent;
+        frame = frame->parentFrame();
     }
 
     if (context.isEmpty()) {

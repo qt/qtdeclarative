@@ -230,7 +230,7 @@ void QV4Debugger::leavingFunction(const QV4::ReturnedValue &retVal)
     QMutexLocker locker(&m_lock);
 
     if (m_stepping != NotStepping && m_currentFrame == m_engine->currentStackFrame) {
-        m_currentFrame = m_currentFrame->parent;
+        m_currentFrame = m_currentFrame->parentFrame();
         m_stepping = StepOver;
         m_returnedValue.set(m_engine, retVal);
     }

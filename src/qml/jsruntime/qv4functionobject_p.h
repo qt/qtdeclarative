@@ -72,6 +72,7 @@ namespace Heap {
     Member(class, NoMark, Function *, function) \
     Member(class, NoMark, VTable::Call, jsCall) \
     Member(class, NoMark, VTable::CallAsConstructor, jsConstruct) \
+    Member(class, NoMark, VTable::CallWithMetaTypes, jsCallWithMetaTypes) \
     Member(class, NoMark, bool, canBeTailCalled)
 
 DECLARE_HEAP_OBJECT(FunctionObject, Object) {
@@ -86,7 +87,9 @@ DECLARE_HEAP_OBJECT(FunctionObject, Object) {
         return jsConstruct != nullptr;
     }
 
-    Q_QML_PRIVATE_EXPORT void init(QV4::ExecutionContext *scope, QV4::String *name, VTable::Call call);
+    Q_QML_PRIVATE_EXPORT void init(
+                QV4::ExecutionContext *scope, QV4::String *name,
+                VTable::Call call, VTable::CallWithMetaTypes callWithMetaTypes = nullptr);
     Q_QML_PRIVATE_EXPORT void init(QV4::ExecutionContext *scope, QV4::String *name = nullptr);
     Q_QML_PRIVATE_EXPORT void init(QV4::ExecutionContext *scope, QV4::Function *function, QV4::String *n = nullptr);
     Q_QML_PRIVATE_EXPORT void init(QV4::ExecutionContext *scope, const QString &name);
@@ -202,6 +205,9 @@ struct Q_QML_EXPORT FunctionObject: Object {
         return d()->jsCall(this, thisObject, argv, argc);
     }
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
+    void call(const Value *thisObject, void **a, const QMetaType *types, int argc);
+    static void virtualCallWithMetaTypes(const FunctionObject *f, const Value *thisObject,
+                                         void **a, const QMetaType *types, int argc);
 
     static Heap::FunctionObject *createScriptFunction(ExecutionContext *scope, Function *function);
     static Heap::FunctionObject *createConstructorFunction(ExecutionContext *scope, Function *function, Object *homeObject, bool isDerivedConstructor);
@@ -277,6 +283,8 @@ struct ArrowFunction : FunctionObject {
     V4_INTERNALCLASS(ArrowFunction)
     enum { NInlineProperties = 3 };
 
+    static void virtualCallWithMetaTypes(const FunctionObject *f, const Value *thisObject,
+                                         void **a, const QMetaType *types, int argc);
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };
 

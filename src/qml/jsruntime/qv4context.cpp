@@ -95,12 +95,12 @@ Heap::CallContext *ExecutionContext::cloneBlockContext(ExecutionEngine *engine,
     return c;
 }
 
-Heap::CallContext *ExecutionContext::newCallContext(CppStackFrame *frame)
+Heap::CallContext *ExecutionContext::newCallContext(JSTypesStackFrame *frame)
 {
     Function *function = frame->v4Function;
     Heap::ExecutionContext *outer = static_cast<Heap::ExecutionContext *>(frame->context()->m());
 
-    uint nFormals = qMax(static_cast<uint>(frame->originalArgumentsCount), function->nFormals);
+    uint nFormals = qMax(static_cast<uint>(frame->argc()), function->nFormals);
     uint localsAndFormals = function->compiledFunction->nLocals + nFormals;
     size_t requiredMemory = sizeof(CallContext::Data) - sizeof(Value) + sizeof(Value) * (localsAndFormals);
 
@@ -122,9 +122,9 @@ Heap::CallContext *ExecutionContext::newCallContext(CppStackFrame *frame)
     c->setupLocalTemporalDeadZone(compiledFunction);
 
     Value *args = c->locals.values + nLocals;
-    ::memcpy(args, frame->originalArguments, frame->originalArgumentsCount * sizeof(Value));
-    c->nArgs = frame->originalArgumentsCount;
-    for (uint i = frame->originalArgumentsCount; i < function->nFormals; ++i)
+    ::memcpy(args, frame->argv(), frame->argc() * sizeof(Value));
+    c->nArgs = frame->argc();
+    for (uint i = frame->argc(); i < function->nFormals; ++i)
         args[i] = Encode::undefined();
 
     return c;

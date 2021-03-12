@@ -51,26 +51,53 @@
 #include <assembler/MacroAssemblerCodeRef.h>
 #include <private/qv4vme_moth_p.h>
 #include <private/qqmlglobal_p.h>
+#include <private/qv4jscall_p.h>
 
 QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
-ReturnedValue Function::call(const Value *thisObject, const Value *argv, int argc, const ExecutionContext *context) {
+void Function::call(const Value *thisObject, void **a, const QMetaType *types, int argc,
+                    const ExecutionContext *context)
+{
+    if (!aotFunction) {
+        QV4::convertAndCall(context->engine(), thisObject, a, types, argc,
+                            [this, context](const Value *thisObject, const Value *argv, int argc) {
+            return call(thisObject, argv, argc, context);
+        });
+        return;
+    }
+
     ExecutionEngine *engine = context->engine();
-    CppStackFrame frame;
-    frame.init(engine, this, argv, argc);
+    MetaTypesStackFrame frame;
+    frame.init(this, a, types, argc);
     frame.setupJSFrame(engine->jsStackTop, Value::undefinedValue(), context->d(),
-                       thisObject ? *thisObject : Value::undefinedValue(),
-                       Value::undefinedValue());
-
-    frame.push();
+                       thisObject ? *thisObject : Value::undefinedValue());
+    frame.push(engine);
     engine->jsStackTop += frame.requiredJSStackFrameSize();
+    Moth::VME::exec(&frame, engine);
+    frame.pop(engine);
+}
 
+ReturnedValue Function::call(const Value *thisObject, const Value *argv, int argc, const ExecutionContext *context) {
+    if (aotFunction) {
+        return QV4::convertAndCall(
+                    context->engine(), aotFunction, thisObject, argv, argc,
+                    [this, context](const Value *thisObject,
+                                    void **a, const QMetaType *types, int argc) {
+            call(thisObject, a, types, argc, context);
+        });
+    }
+
+    ExecutionEngine *engine = context->engine();
+    JSTypesStackFrame frame;
+    frame.init(this, argv, argc);
+    frame.setupJSFrame(engine->jsStackTop, Value::undefinedValue(), context->d(),
+                       thisObject ? *thisObject : Value::undefinedValue());
+    engine->jsStackTop += frame.requiredJSStackFrameSize();
+    frame.push(engine);
     ReturnedValue result = Moth::VME::exec(&frame, engine);
-
-    frame.pop();
-
+    frame.pop(engine);
     return result;
 }
 

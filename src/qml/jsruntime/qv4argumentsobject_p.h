@@ -84,7 +84,7 @@ DECLARE_HEAP_OBJECT(StrictArgumentsObject, Object) {
         CalleePropertyIndex = 2,
         CalleeSetterPropertyIndex = 3
     };
-    void init(CppStackFrame *frame);
+    void init(JSTypesStackFrame *frame);
 };
 
 }

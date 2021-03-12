@@ -110,17 +110,17 @@ ReturnedValue GeneratorFunction::virtualCall(const FunctionObject *f, const Valu
     for (int i = 0; i < argc; i++)
         gp->values->arrayData->setArrayData(engine, i, argv[i]);
 
-    gp->cppFrame.init(engine, function, gp->values->arrayData->values.values, argc);
+    gp->cppFrame.init(function, gp->values->arrayData->values.values, argc);
     gp->cppFrame.setupJSFrame(gp->jsFrame->arrayData->values.values, *gf, gf->scope(),
                               thisObject ? *thisObject : Value::undefinedValue(),
                               Value::undefinedValue());
 
-    gp->cppFrame.push();
+    gp->cppFrame.push(engine);
 
     Moth::VME::interpret(&gp->cppFrame, engine, function->codeData);
     gp->state = GeneratorState::SuspendedStart;
 
-    gp->cppFrame.pop();
+    gp->cppFrame.pop(engine);
     return g->asReturnedValue();
 }
 
@@ -214,25 +214,25 @@ ReturnedValue GeneratorObject::resume(ExecutionEngine *engine, const Value &arg)
 {
     Heap::GeneratorObject *gp = d();
     gp->state = GeneratorState::Executing;
-    gp->cppFrame.parent = engine->currentStackFrame;
+    gp->cppFrame.setParentFrame(engine->currentStackFrame);
     engine->currentStackFrame = &gp->cppFrame;
 
-    Q_ASSERT(gp->cppFrame.yield != nullptr);
-    const char *code = gp->cppFrame.yield;
-    gp->cppFrame.yield = nullptr;
+    Q_ASSERT(gp->cppFrame.yield() != nullptr);
+    const char *code = gp->cppFrame.yield();
+    gp->cppFrame.setYield(nullptr);
     gp->cppFrame.jsFrame->accumulator = arg;
-    gp->cppFrame.yieldIsIterator = false;
+    gp->cppFrame.setYieldIsIterator(false);
 
     Scope scope(engine);
     ScopedValue result(scope, Moth::VME::interpret(&gp->cppFrame, engine, code));
 
-    engine->currentStackFrame = gp->cppFrame.parent;
+    engine->currentStackFrame = gp->cppFrame.parentFrame();
 
-    bool done = (gp->cppFrame.yield == nullptr);
+    bool done = (gp->cppFrame.yield() == nullptr);
     gp->state = done ? GeneratorState::Completed : GeneratorState::SuspendedYield;
     if (engine->hasException)
         return Encode::undefined();
-    if (gp->cppFrame.yieldIsIterator)
+    if (gp->cppFrame.yieldIsIterator())
         return result->asReturnedValue();
     return IteratorPrototype::createIterResultObject(engine, result, done);
 }

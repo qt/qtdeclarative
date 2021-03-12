@@ -125,7 +125,7 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     };
     struct Q_QML_PRIVATE_EXPORT TailCall : Method<Throws::Yes>
     {
-        static ReturnedValue call(CppStackFrame *, ExecutionEngine *);
+        static ReturnedValue call(JSTypesStackFrame *, ExecutionEngine *engine);
     };
 
     /* construct */
@@ -235,7 +235,7 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     };
     struct Q_QML_PRIVATE_EXPORT PushCallContext : Method<Throws::No, ChangesContext::Yes>
     {
-        static void call(CppStackFrame *);
+        static void call(JSTypesStackFrame *);
     };
     struct Q_QML_PRIVATE_EXPORT PushWithContext : Method<Throws::Yes, ChangesContext::Yes>
     {

@@ -70,7 +70,7 @@ void JavaScriptJob::run()
     QV4::CppStackFrame *frame = engine->currentStackFrame;
 
     for (int i = 0; frame && i < frameNr; ++i)
-        frame = frame->parent;
+        frame = frame->parentFrame();
     if (frameNr > 0 && frame)
         ctx = static_cast<QV4::ExecutionContext *>(&frame->jsFrame->context);
 

@@ -360,7 +360,7 @@ void NativeDebugger::handleBacktrace(QJsonObject *response, const QJsonObject &a
 
         frameArray.push_back(frame);
 
-        f = f->parent;
+        f = f->parentFrame();
     }
 
     response->insert(QStringLiteral("frames"), frameArray);
@@ -639,7 +639,7 @@ void NativeDebugger::leavingFunction(const QV4::ReturnedValue &retVal)
         return;
 
     if (m_stepping != NotStepping && m_currentFrame == m_engine->currentStackFrame) {
-        m_currentFrame = m_currentFrame->parent;
+        m_currentFrame = m_currentFrame->parentFrame();
         m_stepping = StepOver;
         m_returnedValue.set(m_engine, retVal);
     }

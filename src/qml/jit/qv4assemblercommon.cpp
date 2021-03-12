@@ -179,7 +179,7 @@ void PlatformAssemblerCommon::prepareCallWithArgCount(int argc)
 
 void PlatformAssemblerCommon::storeInstructionPointer(int instructionOffset)
 {
-    Address addr(CppStackFrameRegister, offsetof(QV4::CppStackFrame, instructionPointer));
+    Address addr(CppStackFrameRegister, offsetof(QV4::JSTypesStackFrame, instructionPointer));
     store32(TrustedImm32(instructionOffset), addr);
 }
 

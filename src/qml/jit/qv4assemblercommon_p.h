@@ -579,7 +579,7 @@ public:
 
     Address loadFunctionPtr(RegisterID target)
     {
-        Address addr(CppStackFrameRegister, offsetof(CppStackFrame, v4Function));
+        Address addr(CppStackFrameRegister, offsetof(JSTypesStackFrame, v4Function));
         loadPtr(addr, target);
         return Address(target);
     }
@@ -653,7 +653,8 @@ public:
     void generateFunctionEntry()
     {
         generatePlatformFunctionEntry();
-        loadPtr(Address(CppStackFrameRegister, offsetof(CppStackFrame, jsFrame)), JSStackFrameRegister);
+        loadPtr(Address(CppStackFrameRegister, offsetof(JSTypesStackFrame, jsFrame)),
+                JSStackFrameRegister);
         allocateStackSpace();
     }
 

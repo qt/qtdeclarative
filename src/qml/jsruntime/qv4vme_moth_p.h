@@ -66,8 +66,10 @@ public:
         QV4::Function *function;
         const QV4::ExecutionContext *scope;
     };
-    static QV4::ReturnedValue exec(CppStackFrame *frame, ExecutionEngine *engine);
-    static QV4::ReturnedValue interpret(CppStackFrame *frame, ExecutionEngine *engine, const char *codeEntry);
+
+    static void exec(MetaTypesStackFrame *frame, ExecutionEngine *engine);
+    static QV4::ReturnedValue exec(JSTypesStackFrame *frame, ExecutionEngine *engine);
+    static QV4::ReturnedValue interpret(JSTypesStackFrame *frame, ExecutionEngine *engine, const char *codeEntry);
 };
 
 } // namespace Moth

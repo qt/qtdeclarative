@@ -146,6 +146,8 @@ namespace Heap {
 }
 
 struct CppStackFrame;
+struct JSTypesStackFrame;
+struct MetaTypesStackFrame;
 class MemoryManager;
 class ExecutableAllocator;
 struct PropertyKey;

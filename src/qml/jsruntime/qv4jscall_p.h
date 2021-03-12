@@ -56,6 +56,7 @@
 #include "qv4context_p.h"
 #include "qv4scopedvalue_p.h"
 #include "qv4stackframe_p.h"
+#include <private/qv4alloca_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -140,18 +141,103 @@ struct ScopedStackFrame {
     ScopedStackFrame(Scope &scope, Heap::ExecutionContext *context)
         : scope(scope)
     {
-        frame.parent = scope.engine->currentStackFrame;
+        frame.setParentFrame(scope.engine->currentStackFrame);
         if (!context)
             return;
         frame.jsFrame = reinterpret_cast<CallData *>(scope.alloc(sizeof(CallData)/sizeof(Value)));
         frame.jsFrame->context = context;
-        frame.v4Function = frame.parent ? frame.parent->v4Function : nullptr;
+        if (auto *parent = frame.parentFrame())
+            frame.v4Function = parent->v4Function;
+        else
+            frame.v4Function = nullptr;
         scope.engine->currentStackFrame = &frame;
     }
     ~ScopedStackFrame() {
-        scope.engine->currentStackFrame = frame.parent;
+        scope.engine->currentStackFrame = frame.parentFrame();
     }
 };
+
+template<typename Callable>
+ReturnedValue convertAndCall(
+        ExecutionEngine *engine, const QQmlPrivate::AOTCompiledFunction *aotFunction,
+        const Value *thisObject, const Value *argv, int argc, Callable call)
+{
+    const qsizetype numFunctionArguments = aotFunction->argumentTypes.size();
+    Q_ALLOCA_VAR(void *, values, (numFunctionArguments + 1) * sizeof(void *));
+    Q_ALLOCA_VAR(QMetaType, types, (numFunctionArguments + 1) * sizeof(QMetaType));
+
+    for (qsizetype i = 0; i < numFunctionArguments; ++i) {
+        const QMetaType argumentType = aotFunction->argumentTypes[i];
+        types[i + 1] = argumentType;
+        if (const qsizetype argumentSize = argumentType.sizeOf()) {
+            Q_ALLOCA_VAR(void, argument, argumentSize);
+            argumentType.construct(argument);
+            if (i < argc)
+                engine->metaTypeFromJS(argv[i], argumentType.id(), argument);
+            values[i + 1] = argument;
+        } else {
+            values[i + 1] = nullptr;
+        }
+    }
+
+    Q_ALLOCA_DECLARE(void, returnValue);
+    types[0] = aotFunction->returnType;
+    if (const qsizetype returnSize = types[0].sizeOf()) {
+        Q_ALLOCA_ASSIGN(void, returnValue, returnSize);
+        types[0].construct(returnValue);
+        values[0] = returnValue;
+    } else {
+        values[0] = nullptr;
+    }
+
+    call(thisObject, values, types, argc);
+
+    ReturnedValue result;
+    if (values[0]) {
+        result = engine->metaTypeToJS(types[0], values[0]);
+        types[0].destruct(values[0]);
+    } else {
+        result = Encode::undefined();
+    }
+
+    for (qsizetype i = 1, end = numFunctionArguments + 1; i < end; ++i)
+        types[i].destruct(values[i]);
+
+    return result;
+}
+
+template<typename Callable>
+void convertAndCall(ExecutionEngine *engine, const Value *thisObject,
+                    void **a, const QMetaType *types, int argc, Callable call)
+{
+    Scope scope(engine);
+    QV4::JSCallArguments jsCallData(scope, argc);
+
+    for (int ii = 0; ii < argc; ++ii)
+        jsCallData.args[ii] = engine->metaTypeToJS(types[ii + 1], a[ii + 1]);
+
+    void *result = a[0];
+    if (!result) {
+        call(thisObject, jsCallData.args, argc);
+        return;
+    }
+
+    ScopedValue jsResult(scope, call(thisObject, jsCallData.args, argc));
+
+    const QMetaType resultType = types[0];
+    if (scope.hasException()) {
+        // Clear the return value
+        resultType.destruct(result);
+        resultType.construct(result, nullptr);
+    } else {
+        // When the return type is QVariant, JS objects are to be returned as
+        // QJSValue wrapped in QVariant. metaTypeFromJS unwraps them, unfortunately.
+        if (resultType == QMetaType::fromType<QVariant>())
+            *static_cast<QVariant *>(result) = scope.engine->toVariant(jsResult, 0);
+        else
+            scope.engine->metaTypeFromJS(jsResult, resultType.id(), result);
+    }
+}
 
 }
 

@@ -112,15 +112,15 @@ void Module::evaluate()
 
     ExecutionEngine *v4 = engine();
     Function *moduleFunction = unit->runtimeFunctions[unit->data->indexOfRootFunction];
-    CppStackFrame frame;
-    frame.init(v4, moduleFunction, nullptr, 0);
+    JSTypesStackFrame frame;
+    frame.init(moduleFunction, nullptr, 0);
     frame.setupJSFrame(v4->jsStackTop, Value::undefinedValue(), d()->scope,
                        Value::undefinedValue(), Value::undefinedValue());
 
-    frame.push();
+    frame.push(v4);
     v4->jsStackTop += frame.requiredJSStackFrameSize();
-    auto frameCleanup = qScopeGuard([&frame]() {
-        frame.pop();
+    auto frameCleanup = qScopeGuard([&frame, v4]() {
+        frame.pop(v4);
     });
     Moth::VME::exec(&frame, v4);
 }

@@ -445,7 +445,11 @@ void wrapCall(const QQmlPrivate::AOTCompiledContext *context, void *dataPtr, voi
        Q_UNUSED(dataPtr);
        binding(context, argumentsPtr);
     } else {
-       new (dataPtr) return_type(binding(context, argumentsPtr));
+        if (dataPtr) {
+           new (dataPtr) return_type(binding(context, argumentsPtr));
+        } else {
+           binding(context, argumentsPtr);
+        }
     }
 }
 )";

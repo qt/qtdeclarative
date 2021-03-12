@@ -1258,13 +1258,15 @@ StackTrace ExecutionEngine::stackTrace(int frameLimit) const
         frame.line = qAbs(f->lineNumber());
         frame.column = -1;
         stack.append(frame);
-        if (f->isTailCalling) {
-            QV4::StackFrame frame;
-            frame.function = QStringLiteral("[elided tail calls]");
-            stack.append(frame);
+        if (f->isJSTypesFrame()) {
+            if (static_cast<JSTypesStackFrame *>(f)->isTailCalling()) {
+                QV4::StackFrame frame;
+                frame.function = QStringLiteral("[elided tail calls]");
+                stack.append(frame);
+            }
         }
         --frameLimit;
-        f = f->parent;
+        f = f->parentFrame();
     }
 
     return stack;
@@ -1322,7 +1324,7 @@ QUrl ExecutionEngine::resolvedUrl(const QString &file)
             base = f->v4Function->finalUrl();
             break;
         }
-        f = f->parent;
+        f = f->parentFrame();
     }
 
     if (base.isEmpty() && globalCode)

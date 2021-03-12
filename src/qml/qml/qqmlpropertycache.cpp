@@ -257,7 +257,7 @@ void QQmlPropertyCache::appendProperty(const QString &name, QQmlPropertyData::Fl
 }
 
 void QQmlPropertyCache::appendSignal(const QString &name, QQmlPropertyData::Flags flags,
-                                     int coreIndex, const int *types,
+                                     int coreIndex, const QMetaType *types,
                                      const QList<QByteArray> &names)
 {
     QQmlPropertyData data;
@@ -270,10 +270,10 @@ void QQmlPropertyCache::appendSignal(const QString &name, QQmlPropertyData::Flag
     handler.m_flags.setIsSignalHandler(true);
 
     if (types) {
-        int argumentCount = *types;
+        const auto argumentCount = names.length();
         QQmlPropertyCacheMethodArguments *args = createArgumentsObject(argumentCount, names);
-        ::memcpy(args->arguments, types, (argumentCount + 1) * sizeof(int));
-        args->argumentsValid = true;
+        new (args->types) QMetaType; // Invalid return type
+        ::memcpy(args->types + 1, types, argumentCount * sizeof(QMetaType));
         data.setArguments(args);
     }
 
@@ -295,19 +295,20 @@ void QQmlPropertyCache::appendSignal(const QString &name, QQmlPropertyData::Flag
 }
 
 void QQmlPropertyCache::appendMethod(const QString &name, QQmlPropertyData::Flags flags,
-                                     int coreIndex, int returnType, const QList<QByteArray> &names,
-                                     const QVector<int> &parameterTypes)
+                                     int coreIndex, QMetaType returnType,
+                                     const QList<QByteArray> &names,
+                                     const QVector<QMetaType> &parameterTypes)
 {
     int argumentCount = names.count();
 
     QQmlPropertyData data;
-    data.setPropType(QMetaType(returnType));
+    data.setPropType(returnType);
     data.setCoreIndex(coreIndex);
 
     QQmlPropertyCacheMethodArguments *args = createArgumentsObject(argumentCount, names);
+    new (args->types) QMetaType(returnType);
     for (int ii = 0; ii < argumentCount; ++ii)
-        args->arguments[ii + 1] = parameterTypes.at(ii);
-    args->argumentsValid = true;
+        new (args->types + ii + 1) QMetaType(parameterTypes.at(ii));
     data.setArguments(args);
 
     data.setFlags(flags);
@@ -765,13 +766,11 @@ void QQmlPropertyData::markAsOverrideOf(QQmlPropertyData *predecessor)
     predecessor->m_flags.setIsOverridden(true);
 }
 
-QQmlPropertyCacheMethodArguments *QQmlPropertyCache::createArgumentsObject(int argc, const QList<QByteArray> &names)
+QQmlPropertyCacheMethodArguments *QQmlPropertyCache::createArgumentsObject(
+        int argc, const QList<QByteArray> &names)
 {
     typedef QQmlPropertyCacheMethodArguments A;
-    A *args = static_cast<A *>(malloc(sizeof(A) + (argc) * sizeof(int)));
-    args->arguments[0] = argc;
-    args->argumentsValid = false;
-    args->parameterError = false;
+    A *args = static_cast<A *>(malloc(sizeof(A) + argc * sizeof(QMetaType)));
     args->names = argc ? new QList<QByteArray>(names) : nullptr;
     args->next = argumentsCache;
     argumentsCache = args;
@@ -1066,11 +1065,12 @@ void QQmlPropertyCache::toMetaObjectBuilder(QMetaObjectBuilder &builder)
 
         QQmlPropertyCacheMethodArguments *arguments = nullptr;
         if (data->hasArguments()) {
-            arguments = (QQmlPropertyCacheMethodArguments *)data->arguments();
-            Q_ASSERT(arguments->argumentsValid);
-            for (int ii = 0; ii < arguments->arguments[0]; ++ii) {
-                if (ii != 0) signature.append(',');
-                signature.append(QMetaType(arguments->arguments[1 + ii]).name());
+            arguments = data->arguments();
+            for (int ii = 0, end = arguments->names ? arguments->names->length() : 0;
+                 ii < end; ++ii) {
+                if (ii != 0)
+                    signature.append(',');
+                signature.append(arguments->types[1 + ii].name());
             }
         }
 

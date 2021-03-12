@@ -53,6 +53,8 @@
 
 #include <QtCore/qlist.h>
 #include <QtCore/qbytearray.h>
+#include <QtCore/qtaggedpointer.h>
+#include <QtCore/qmetatype.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -61,14 +63,8 @@ class QQmlPropertyCacheMethodArguments
 {
 public:
     QQmlPropertyCacheMethodArguments *next;
-
-    //for signal handler rewrites
-    int parameterError:1;
-    int argumentsValid:1;
-
     QList<QByteArray> *names;
-
-    int arguments[1];
+    QMetaType types[1]; // First one is return type
 };
 
 QT_END_NAMESPACE

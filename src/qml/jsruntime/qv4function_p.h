@@ -100,6 +100,8 @@ public:
         return compilationUnit->runtimeStrings[i];
     }
 
+    void call(const Value *thisObject, void **a, const QMetaType *types, int argc,
+              const ExecutionContext *context);
     ReturnedValue call(const Value *thisObject, const Value *argv, int argc, const ExecutionContext *context);
 
     const char *codeData;

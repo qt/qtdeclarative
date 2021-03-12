@@ -70,9 +70,11 @@ using namespace QV4;
 
 DEFINE_OBJECT_VTABLE(FunctionObject);
 
-void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name, VTable::Call call)
+void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name,
+                                VTable::Call call, VTable::CallWithMetaTypes callWithMetaTypes)
 {
     jsCall = call;
+    jsCallWithMetaTypes = callWithMetaTypes;
     jsConstruct = nullptr;
 
     Object::init();
@@ -88,6 +90,7 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name)
     ExecutionEngine *e = scope->engine();
 
     jsCall = vtable()->call;
+    jsCallWithMetaTypes = vtable()->callWithMetaTypes;
     jsConstruct = vtable()->callAsConstructor;
 
     Object::init();
@@ -103,6 +106,7 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, QV4::String *name)
 void Heap::FunctionObject::init(QV4::ExecutionContext *scope, Function *function, QV4::String *n)
 {
     jsCall = vtable()->call;
+    jsCallWithMetaTypes = vtable()->callWithMetaTypes;
     jsConstruct = vtable()->callAsConstructor;
 
     Object::init();
@@ -125,6 +129,7 @@ void Heap::FunctionObject::init(QV4::ExecutionContext *scope, const QString &nam
 void Heap::FunctionObject::init()
 {
     jsCall = vtable()->call;
+    jsCallWithMetaTypes = vtable()->callWithMetaTypes;
     jsConstruct = vtable()->callAsConstructor;
 
     Object::init();
@@ -156,6 +161,19 @@ void FunctionObject::createDefaultPrototypeProperty(uint protoConstructorSlot)
     defineDefaultProperty(s.engine->id_prototype(), proto, Attr_NotEnumerable|Attr_NotConfigurable);
 }
 
+void FunctionObject::call(const Value *thisObject, void **a, const QMetaType *types, int argc)
+{
+    if (const auto callWithMetaTypes = d()->jsCallWithMetaTypes) {
+        callWithMetaTypes(this, thisObject, a, types, argc);
+        return;
+    }
+
+    QV4::convertAndCall(engine(), thisObject, a, types, argc,
+                        [this](const Value *thisObject, const Value *argv, int argc) {
+        return call(thisObject, argv, argc);
+    });
+}
+
 ReturnedValue FunctionObject::name() const
 {
     return get(scope()->internalClass->engine->id_name());
@@ -164,6 +182,11 @@ ReturnedValue FunctionObject::name() const
 ReturnedValue FunctionObject::virtualCall(const FunctionObject *, const Value *, const Value *, int)
 {
     return Encode::undefined();
+}
+
+void FunctionObject::virtualCallWithMetaTypes(
+        const FunctionObject *, const Value *, void **, const QMetaType *, int)
+{
 }
 
 Heap::FunctionObject *FunctionObject::createScriptFunction(ExecutionContext *scope, Function *function)
@@ -487,18 +510,18 @@ ReturnedValue ScriptFunction::virtualCallAsConstructor(const FunctionObject *fo,
     }
     ScopedValue thisObject(scope, v4->memoryManager->allocObject<Object>(ic));
 
-    CppStackFrame frame;
-    frame.init(v4, f->function(), argv, argc);
+    JSTypesStackFrame frame;
+    frame.init(f->function(), argv, argc);
     frame.setupJSFrame(v4->jsStackTop, *f, f->scope(),
                        thisObject,
                        newTarget ? *newTarget : Value::undefinedValue());
 
-    frame.push();
+    frame.push(v4);
     v4->jsStackTop += frame.requiredJSStackFrameSize();
 
     ReturnedValue result = Moth::VME::exec(&frame, v4);
 
-    frame.pop();
+    frame.pop(v4);
 
     if (Q_UNLIKELY(v4->hasException))
         return Encode::undefined();
@@ -509,27 +532,57 @@ ReturnedValue ScriptFunction::virtualCallAsConstructor(const FunctionObject *fo,
 
 DEFINE_OBJECT_VTABLE(ArrowFunction);
 
+void ArrowFunction::virtualCallWithMetaTypes(const FunctionObject *fo, const Value *thisObject,
+                                             void **a, const QMetaType *types, int argc)
+{
+    if (!fo->function()->aotFunction) {
+        QV4::convertAndCall(fo->engine(), thisObject, a, types, argc,
+                            [fo](const Value *thisObject, const Value *argv, int argc) {
+            return ArrowFunction::virtualCall(fo, thisObject, argv, argc);
+        });
+        return;
+    }
+
+    ExecutionEngine *engine = fo->engine();
+    MetaTypesStackFrame frame;
+    frame.init(fo->function(), a, types, argc);
+    frame.setupJSFrame(engine->jsStackTop, *fo, fo->scope(),
+                       thisObject ? *thisObject : Value::undefinedValue());
+
+    frame.push(engine);
+    engine->jsStackTop += frame.requiredJSStackFrameSize();
+    Moth::VME::exec(&frame, engine);
+    frame.pop(engine);
+}
+
 ReturnedValue ArrowFunction::virtualCall(const FunctionObject *fo, const Value *thisObject, const Value *argv, int argc)
 {
-    ExecutionEngine *engine = fo->engine();
-    CppStackFrame frame;
-    frame.init(engine, fo->function(), argv, argc, true);
-    frame.setupJSFrame(engine->jsStackTop, *fo, fo->scope(),
-                       thisObject ? *thisObject : Value::undefinedValue(),
-                       Value::undefinedValue());
+    if (const auto *aotFunction = fo->function()->aotFunction) {
+        return QV4::convertAndCall(
+                    fo->engine(), aotFunction, thisObject, argv, argc,
+                    [fo](const Value *thisObject, void **a, const QMetaType *types, int argc) {
+            ArrowFunction::virtualCallWithMetaTypes(fo, thisObject, a, types, argc);
+        });
+    }
 
-    frame.push();
+    ExecutionEngine *engine = fo->engine();
+    JSTypesStackFrame frame;
+    frame.init(fo->function(), argv, argc, true);
+    frame.setupJSFrame(engine->jsStackTop, *fo, fo->scope(),
+                       thisObject ? *thisObject : Value::undefinedValue());
+
+    frame.push(engine);
     engine->jsStackTop += frame.requiredJSStackFrameSize();
 
     ReturnedValue result;
 
     do {
-        frame.pendingTailCall = false;
+        frame.setPendingTailCall(false);
         result = Moth::VME::exec(&frame, engine);
-        frame.isTailCalling = true;
-    } while (frame.pendingTailCall);
+        frame.setTailCalling(true);
+    } while (frame.pendingTailCall());
 
-    frame.pop();
+    frame.pop(engine);
 
     return result;
 }
@@ -590,19 +643,19 @@ ReturnedValue ConstructorFunction::virtualCallAsConstructor(const FunctionObject
 
     ExecutionEngine *v4 = f->engine();
 
-    CppStackFrame frame;
-    frame.init(v4, f->function(), argv, argc);
+    JSTypesStackFrame frame;
+    frame.init(f->function(), argv, argc);
     frame.setupJSFrame(v4->jsStackTop, *f, f->scope(),
                        Value::emptyValue(),
                        newTarget ? *newTarget : Value::undefinedValue());
 
-    frame.push();
+    frame.push(v4);
     v4->jsStackTop += frame.requiredJSStackFrameSize();
 
     ReturnedValue result = Moth::VME::exec(&frame, v4);
     ReturnedValue thisObject = frame.jsFrame->thisObject.asReturnedValue();
 
-    frame.pop();
+    frame.pop(v4);
 
     if (Q_UNLIKELY(v4->hasException))
         return Encode::undefined();
@@ -644,20 +697,20 @@ ReturnedValue DefaultClassConstructorFunction::virtualCallAsConstructor(const Fu
     ScopedFunctionObject super(scope, f->getPrototypeOf());
     Q_ASSERT(super->isFunctionObject());
 
-    CppStackFrame frame;
-    frame.init(v4, nullptr, argv, argc);
+    JSTypesStackFrame frame;
+    frame.init(nullptr, argv, argc);
     frame.setupJSFrame(v4->jsStackTop, *f, f->scope(),
                        Value::undefinedValue(),
                        newTarget ? *newTarget : Value::undefinedValue(), argc, argc);
 
-    frame.push();
+    frame.push(v4);
     v4->jsStackTop += frame.requiredJSStackFrameSize(argc);
 
     // Do a super call
     ReturnedValue result = super->callAsConstructor(argv, argc, newTarget);
     ReturnedValue thisObject = frame.jsFrame->thisObject.asReturnedValue();
 
-    frame.pop();
+    frame.pop(v4);
 
     if (Q_UNLIKELY(v4->hasException))
         return Encode::undefined();

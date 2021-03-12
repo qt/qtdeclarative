@@ -1475,7 +1475,7 @@ void BaselineAssembler::loadAccumulatorFromFrame()
                                                        offsetof(CallData, accumulator)));
 }
 
-static ReturnedValue TheJitIs__Tail_Calling__ToTheRuntimeSoTheJitFrameIsMissing(CppStackFrame *frame, ExecutionEngine *engine)
+static ReturnedValue TheJitIs__Tail_Calling__ToTheRuntimeSoTheJitFrameIsMissing(JSTypesStackFrame *frame, ExecutionEngine *engine)
 {
     return Runtime::TailCall::call(frame, engine);
 }
@@ -1557,15 +1557,15 @@ void BaselineAssembler::clearUnwindHandler()
 void JIT::BaselineAssembler::unwindDispatch()
 {
     checkException();
-    pasm()->load32(Address(PlatformAssembler::CppStackFrameRegister, offsetof(CppStackFrame, unwindLevel)), PlatformAssembler::ScratchRegister);
+    pasm()->load32(Address(PlatformAssembler::CppStackFrameRegister, offsetof(JSTypesStackFrame, unwindLevel)), PlatformAssembler::ScratchRegister);
     auto noUnwind = pasm()->branch32(PlatformAssembler::Equal, PlatformAssembler::ScratchRegister, TrustedImm32(0));
     pasm()->sub32(TrustedImm32(1), PlatformAssembler::ScratchRegister);
-    pasm()->store32(PlatformAssembler::ScratchRegister, Address(PlatformAssembler::CppStackFrameRegister, offsetof(CppStackFrame, unwindLevel)));
+    pasm()->store32(PlatformAssembler::ScratchRegister, Address(PlatformAssembler::CppStackFrameRegister, offsetof(JSTypesStackFrame, unwindLevel)));
     auto jump = pasm()->branch32(PlatformAssembler::Equal, PlatformAssembler::ScratchRegister, TrustedImm32(0));
     gotoCatchException();
     jump.link(pasm());
 
-    pasm()->loadPtr(Address(PlatformAssembler::CppStackFrameRegister, offsetof(CppStackFrame, unwindLabel)), PlatformAssembler::ScratchRegister);
+    pasm()->loadPtr(Address(PlatformAssembler::CppStackFrameRegister, offsetof(JSTypesStackFrame, unwindLabel)), PlatformAssembler::ScratchRegister);
     pasm()->jump(PlatformAssembler::ScratchRegister);
 
     noUnwind.link(pasm());
@@ -1573,9 +1573,9 @@ void JIT::BaselineAssembler::unwindDispatch()
 
 int JIT::BaselineAssembler::unwindToLabel(int level, int offset)
 {
-    auto l = pasm()->storePtrWithPatch(TrustedImmPtr(nullptr), Address(PlatformAssembler::CppStackFrameRegister, offsetof(CppStackFrame, unwindLabel)));
+    auto l = pasm()->storePtrWithPatch(TrustedImmPtr(nullptr), Address(PlatformAssembler::CppStackFrameRegister, offsetof(JSTypesStackFrame, unwindLabel)));
     pasm()->addEHTarget(l, offset);
-    pasm()->store32(TrustedImm32(level), Address(PlatformAssembler::CppStackFrameRegister, offsetof(CppStackFrame, unwindLevel)));
+    pasm()->store32(TrustedImm32(level), Address(PlatformAssembler::CppStackFrameRegister, offsetof(JSTypesStackFrame, unwindLevel)));
     gotoCatchException();
     return offset;
 }

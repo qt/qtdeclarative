@@ -1572,7 +1572,7 @@ ReturnedValue Runtime::ConstructWithSpread::call(ExecutionEngine *engine, const 
     return static_cast<const FunctionObject &>(function).callAsConstructor(arguments.argv, arguments.argc, &newTarget);
 }
 
-ReturnedValue Runtime::TailCall::call(CppStackFrame *frame, ExecutionEngine *engine)
+ReturnedValue Runtime::TailCall::call(JSTypesStackFrame *frame, ExecutionEngine *engine)
 {
     // IMPORTANT! The JIT assumes that this method has the same amount (or less) arguments than
     // the jitted function, so it can safely do a tail call.
@@ -1588,18 +1588,19 @@ ReturnedValue Runtime::TailCall::call(CppStackFrame *frame, ExecutionEngine *eng
         return engine->throwTypeError();
 
     const FunctionObject &fo = static_cast<const FunctionObject &>(function);
-    if (!frame->callerCanHandleTailCall || !fo.canBeTailCalled() || engine->debugger()
+    if (!frame->callerCanHandleTailCall() || !fo.canBeTailCalled() || engine->debugger()
             || unsigned(argc) > fo.formalParameterCount()) {
         // Cannot tailcall, do a normal call:
         return checkedResult(engine, fo.call(&thisObject, argv, argc));
     }
 
     memcpy(frame->jsFrame->args, argv, argc * sizeof(Value));
-    frame->init(engine, fo.function(), frame->jsFrame->argValues<Value>(), argc,
-                frame->callerCanHandleTailCall);
-    frame->setupJSFrame(frame->savedStackTop, fo, fo.scope(), thisObject, Primitive::undefinedValue());
-    engine->jsStackTop = frame->savedStackTop + frame->requiredJSStackFrameSize();
-    frame->pendingTailCall = true;
+    frame->init(fo.function(), frame->jsFrame->argValues<Value>(), argc,
+                frame->callerCanHandleTailCall());
+    frame->setupJSFrame(frame->framePointer(), fo, fo.scope(), thisObject,
+                        Primitive::undefinedValue());
+    engine->jsStackTop = frame->framePointer() + frame->requiredJSStackFrameSize();
+    frame->setPendingTailCall(true);
     return Encode::undefined();
 }
 
@@ -1650,7 +1651,7 @@ QV4::ReturnedValue Runtime::TypeofName::call(ExecutionEngine *engine, int nameIn
     return TypeofValue::call(engine, prop);
 }
 
-void Runtime::PushCallContext::call(CppStackFrame *frame)
+void Runtime::PushCallContext::call(JSTypesStackFrame *frame)
 {
     frame->jsFrame->context = ExecutionContext::newCallContext(frame)->asReturnedValue();
 }
@@ -1930,14 +1931,18 @@ QV4::ReturnedValue Runtime::CreateMappedArgumentsObject::call(ExecutionEngine *e
 
 QV4::ReturnedValue Runtime::CreateUnmappedArgumentsObject::call(ExecutionEngine *engine)
 {
+    Q_ASSERT(engine->currentStackFrame->isJSTypesFrame());
     Heap::InternalClass *ic = engine->internalClasses(EngineBase::Class_StrictArgumentsObject);
-    return engine->memoryManager->allocObject<StrictArgumentsObject>(ic, engine->currentStackFrame)->asReturnedValue();
+    return engine->memoryManager->allocObject<StrictArgumentsObject>(
+                ic, static_cast<JSTypesStackFrame *>(engine->currentStackFrame))->asReturnedValue();
 }
 
 QV4::ReturnedValue Runtime::CreateRestParameter::call(ExecutionEngine *engine, int argIndex)
 {
-    const Value *values = engine->currentStackFrame->originalArguments + argIndex;
-    int nValues = engine->currentStackFrame->originalArgumentsCount - argIndex;
+    Q_ASSERT(engine->currentStackFrame->isJSTypesFrame());
+    JSTypesStackFrame *frame = static_cast<JSTypesStackFrame *>(engine->currentStackFrame);
+    const Value *values = frame->argv() + argIndex;
+    int nValues = frame->argc() - argIndex;
     if (nValues <= 0)
         return engine->newArrayObject(0)->asReturnedValue();
     return engine->newArrayObject(values, nValues)->asReturnedValue();

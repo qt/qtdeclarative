@@ -152,7 +152,7 @@ struct Q_QML_EXPORT ExecutionContext : public Managed
     static Heap::CallContext *newBlockContext(QV4::CppStackFrame *frame, int blockIndex);
     static Heap::CallContext *cloneBlockContext(ExecutionEngine *engine,
                                                 Heap::CallContext *callContext);
-    static Heap::CallContext *newCallContext(QV4::CppStackFrame *frame);
+    static Heap::CallContext *newCallContext(JSTypesStackFrame *frame);
     Heap::ExecutionContext *newWithContext(Heap::Object *with) const;
     static Heap::ExecutionContext *newCatchContext(CppStackFrame *frame, int blockIndex, Heap::String *exceptionVarName);
 

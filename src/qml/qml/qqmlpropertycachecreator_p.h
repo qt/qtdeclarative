@@ -461,10 +461,9 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int
 
         QList<QByteArray> names;
         names.reserve(paramCount);
-        QVarLengthArray<int, 10> paramTypes(paramCount?(paramCount + 1):0);
+        QVarLengthArray<QMetaType, 10> paramTypes(paramCount);
 
         if (paramCount) {
-            paramTypes[0] = paramCount;
 
             int i = 0;
             auto param = s->parametersBegin();
@@ -477,7 +476,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int
                 if (!type.isValid())
                     return qQmlCompileError(s->location, QQmlPropertyCacheCreatorBase::tr("Invalid signal parameter type: %1").arg(customTypeName));
 
-                paramTypes[i + 1] = type.id();
+                paramTypes[i] = type;
             }
         }
 
@@ -508,21 +507,21 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int
         // protect against overriding change signals or methods with properties.
 
         QList<QByteArray> parameterNames;
-        QVector<int> parameterTypes;
+        QVector<QMetaType> parameterTypes;
         auto formal = function->formalsBegin();
         auto end = function->formalsEnd();
         for ( ; formal != end; ++formal) {
             flags.setHasArguments(true);
             parameterNames << stringAt(formal->nameIndex).toUtf8();
-            int type = metaTypeForParameter(formal->type).id();
-            if (type == QMetaType::UnknownType)
-                type = QMetaType::QVariant;
+            QMetaType type = metaTypeForParameter(formal->type);
+            if (!type.isValid())
+                type = QMetaType::fromType<QVariant>();
             parameterTypes << type;
         }
 
-        int returnType = metaTypeForParameter(function->returnType).id();
-        if (returnType == QMetaType::UnknownType)
-            returnType = QMetaType::QVariant;
+        QMetaType returnType = metaTypeForParameter(function->returnType);
+        if (!returnType.isValid())
+            returnType = QMetaType::fromType<QVariant>();
 
         cache->appendMethod(slotName, flags, effectiveMethodIndex++, returnType, parameterNames, parameterTypes);
     }

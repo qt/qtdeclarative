@@ -51,7 +51,7 @@ using namespace QV4;
 DEFINE_OBJECT_VTABLE(ArgumentsObject);
 DEFINE_OBJECT_VTABLE(StrictArgumentsObject);
 
-void Heap::StrictArgumentsObject::init(QV4::CppStackFrame *frame)
+void Heap::StrictArgumentsObject::init(QV4::JSTypesStackFrame *frame)
 
 {
     Q_ASSERT(vtable() == QV4::StrictArgumentsObject::staticVTable());
@@ -68,11 +68,11 @@ void Heap::StrictArgumentsObject::init(QV4::CppStackFrame *frame)
 
     Scope scope(v4);
     Scoped<QV4::StrictArgumentsObject> args(scope, this);
-    args->arrayReserve(frame->originalArgumentsCount);
-    args->arrayPut(0, frame->originalArguments, frame->originalArgumentsCount);
+    args->arrayReserve(frame->argc());
+    args->arrayPut(0, frame->argv(), frame->argc());
 
     Q_ASSERT(args->internalClass()->verifyIndex(v4->id_length()->propertyKey(), LengthPropertyIndex));
-    setProperty(v4, LengthPropertyIndex, Value::fromInt32(frame->originalArgumentsCount));
+    setProperty(v4, LengthPropertyIndex, Value::fromInt32(frame->argc()));
 }
 
 void Heap::ArgumentsObject::init(QV4::CppStackFrame *frame)
@@ -93,7 +93,7 @@ void Heap::ArgumentsObject::init(QV4::CppStackFrame *frame)
     setProperty(v4, SymbolIteratorPropertyIndex, *v4->arrayProtoValues());
 
     fullyCreated = false;
-    argCount = frame->originalArgumentsCount;
+    argCount = frame->argc();
     uint nFormals = frame->v4Function->nFormals;
     mapped = nFormals > 63 ? std::numeric_limits<quint64>::max() : (1ull << nFormals) - 1;
 }

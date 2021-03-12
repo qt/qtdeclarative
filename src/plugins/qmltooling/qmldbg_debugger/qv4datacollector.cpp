@@ -61,7 +61,7 @@ QV4::CppStackFrame *QV4DataCollector::findFrame(int frame)
     QV4::CppStackFrame *f = engine()->currentStackFrame;
     while (f && frame) {
         --frame;
-        f = f->parent;
+        f = f->parentFrame();
     }
     return f;
 }
