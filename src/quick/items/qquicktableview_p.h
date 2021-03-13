@@ -144,6 +144,11 @@ public:
     Q_REVISION(6, 2) Q_INVOKABLE bool isColumnLoaded(int column) const;
     Q_REVISION(6, 2) Q_INVOKABLE bool isRowLoaded(int row) const;
 
+    Q_REVISION(6, 2) Q_INVOKABLE qreal columnWidth(int column) const;
+    Q_REVISION(6, 2) Q_INVOKABLE qreal rowHeight(int row) const;
+    Q_REVISION(6, 2) Q_INVOKABLE qreal implicitColumnWidth(int column) const;
+    Q_REVISION(6, 2) Q_INVOKABLE qreal implicitRowHeight(int row) const;
+
     static QQuickTableViewAttached *qmlAttachedProperties(QObject *);
 
 Q_SIGNALS:

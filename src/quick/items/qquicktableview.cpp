@@ -538,6 +538,76 @@
 */
 
 /*!
+    \qmlmethod real QtQuick::TableView::columnWidth(int column)
+    \since 6.2
+
+    Returns the width of the given \l column. If the column is not
+    loaded (and therefore not visible), the return value will be \c -1.
+
+    \note It's the applications responsibility to store what the
+    column widths are, by using a \l columnWidthProvider. Hence,
+    there is no setter function. This getter function is mostly
+    useful if the TableView doesn't have a columnWidthProvider set, since
+    otherwise you can call that function instead (which will work, even
+    for columns that are not currently visible.
+    If no columnWidthProvider is set, the height of a row will be
+    equal to its \l implicitColumnWidth().
+
+    \sa columnWidthProvider, implicitColumnWidth(), isColumnLoaded(), {Row heights and column widths}
+*/
+
+/*!
+    \qmlmethod real QtQuick::TableView::rowHeight(int row)
+    \since 6.2
+
+    Returns the height of the given \l row. If the row is not
+    loaded (and therefore not visible), the return value will be \c -1.
+
+    \note It's the applications responsibility to store what the
+    row heights are, by using a \l rowHeightProvider. Hence,
+    there is no setter function. This getter function is mostly
+    useful if the TableView doesn't have a rowHeightProvider set, since
+    otherwise you can call that function instead (which will work, even
+    for rows that are not currently visible.
+    If no rowHeightProvider is set, the height of a row will be
+    equal to its \l implicitRowHeight().
+
+    \sa rowHeightProvider, implicitRowHeight(), isRowLoaded(), {Row heights and column widths}
+*/
+
+/*!
+    \qmlmethod real QtQuick::TableView::implicitColumnWidth(int column)
+    \since 6.2
+
+    Returns the implicit width of the given \l column. If the
+    column is not loaded (and therefore not visible), the return value
+    will be \c -1.
+
+    The implicit width of a column is the largest implicitWidth
+    found among the currently loaded delegate items inside that column.
+    Widths returned by the \l columnWidthProvider will not be taken
+    into account.
+
+    \sa columnWidthProvider, columnWidth(), isColumnLoaded(), {Row heights and column widths}
+*/
+
+/*!
+    \qmlmethod real QtQuick::TableView::implicitRowHeight(int row)
+    \since 6.2
+
+    Returns the implicit height of the given \l row. If the
+    row is not loaded (and therefore not visible), the return value
+    will be \c -1.
+
+    The implicit height of a row is the largest implicitHeight
+    found among the currently loaded delegate items inside that row.
+    Heights returned by the \l rowHeightProvider will not be taken
+    into account.
+
+    \sa rowHeightProvider, rowHeight(), isRowLoaded(), {Row heights and column widths}
+*/
+
+/*!
     \qmlattachedproperty TableView QtQuick::TableView::view
 
     This attached property holds the view that manages the delegate instance.
@@ -3462,6 +3532,42 @@ bool QQuickTableView::isRowLoaded(int row) const
     }
 
     return true;
+}
+
+qreal QQuickTableView::columnWidth(int column) const
+{
+    Q_D(const QQuickTableView);
+    if (!isColumnLoaded(column))
+        return -1;
+
+    return d->getEffectiveColumnWidth(column);
+}
+
+qreal QQuickTableView::rowHeight(int row) const
+{
+    Q_D(const QQuickTableView);
+    if (!isRowLoaded(row))
+        return -1;
+
+    return d->getEffectiveRowHeight(row);
+}
+
+qreal QQuickTableView::implicitColumnWidth(int column) const
+{
+    Q_D(const QQuickTableView);
+    if (!isColumnLoaded(column))
+        return -1;
+
+    return d->sizeHintForColumn(column);
+}
+
+qreal QQuickTableView::implicitRowHeight(int row) const
+{
+    Q_D(const QQuickTableView);
+    if (!isRowLoaded(row))
+        return -1;
+
+    return d->sizeHintForRow(row);
 }
 
 void QQuickTableView::forceLayout()

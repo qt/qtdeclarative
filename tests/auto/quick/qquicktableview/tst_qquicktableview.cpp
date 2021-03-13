@@ -108,6 +108,7 @@ private slots:
     void checkZeroSizedDelegate();
     void checkImplicitSizeDelegate();
     void checkColumnWidthWithoutProvider();
+    void checkColumnWidthAndRowHeightFunctions();
     void checkDelegateWithAnchors();
     void checkColumnWidthProvider();
     void checkColumnWidthProviderInvalidReturnValues();
@@ -366,6 +367,33 @@ void tst_QQuickTableView::checkColumnWidthWithoutProvider()
             const auto item = tableViewPrivate->loadedTableItem(QPoint(column, row))->item;
             QCOMPARE(item->width(), expectedColumnWidth);
         }
+    }
+}
+
+void tst_QQuickTableView::checkColumnWidthAndRowHeightFunctions()
+{
+    // Checks that the column width and row height functions return
+    // the correct sizes. When we have row-, or columnWidthProviders
+    // the actual row and column sizes will normally differ from the
+    // minimum row and column sizes (which is the maximum implicit
+    // size found among the delegates).
+    LOAD_TABLEVIEW("userowcolumnprovider.qml");
+
+    const int count = 4;
+    auto model = TestModelAsVariant(count, count);
+
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    const qreal expectedimplicitSize = 20;
+
+    for (int i = 0; i < count; ++i) {
+        const qreal expectedSize = i + 10;
+        QCOMPARE(tableView->columnWidth(i), expectedSize);
+        QCOMPARE(tableView->rowHeight(i), expectedSize);
+        QCOMPARE(tableView->implicitColumnWidth(i), expectedimplicitSize);
+        QCOMPARE(tableView->implicitRowHeight(i), expectedimplicitSize);
     }
 }
 
