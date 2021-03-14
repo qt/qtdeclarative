@@ -43,6 +43,7 @@ private slots:
     void dontSweepAcrossBucketBoundaries();
     void sweepAcrossBucketBoundariesIfFirstBucketFull();
     void sweepBucketGap();
+    void insertNumericStringPopulatesIdentifier();
 };
 
 void tst_qv4identifiertable::sweepFirstEntryInBucket()
@@ -357,6 +358,17 @@ void tst_qv4identifiertable::sweepBucketGap()
     QCOMPARE(table.entriesByHash[1], entry3);
     QCOMPARE(table.entriesByHash[2], entry4);
     QCOMPARE(table.entriesByHash[3], nullptr);
+}
+
+void tst_qv4identifiertable::insertNumericStringPopulatesIdentifier()
+{
+    QV4::ExecutionEngine engine;
+    const QString numeric = QStringLiteral("1");
+    uint subtype;
+    const uint hash = QV4::String::createHashValue(numeric.constData(), numeric.length(), &subtype);
+    QCOMPARE(subtype, QV4::Heap::String::StringType_ArrayIndex);
+    QCOMPARE(engine.identifierTable->insertString(numeric)->identifier,
+             QV4::PropertyKey::fromArrayIndex(hash));
 }
 
 QTEST_MAIN(tst_qv4identifiertable)

@@ -109,6 +109,9 @@ public:
     void removeIdentifierHash(IdentifierHashData *h) {
         idHashes.remove(h);
     }
+
+private:
+    Heap::String *resolveStringEntry(const QString &s, uint hash, uint subtype);
 };
 
 }

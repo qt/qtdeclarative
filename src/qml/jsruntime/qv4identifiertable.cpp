@@ -141,8 +141,14 @@ Heap::String *IdentifierTable::insertString(const QString &s)
         Heap::String *str = engine->newString(s);
         str->stringHash = hash;
         str->subtype = subtype;
+        str->identifier = PropertyKey::fromArrayIndex(hash);
         return str;
     }
+    return resolveStringEntry(s, hash, subtype);
+}
+
+Heap::String *IdentifierTable::resolveStringEntry(const QString &s, uint hash, uint subtype)
+{
     uint idx = hash % alloc;
     while (Heap::StringOrSymbol *e = entriesByHash[idx]) {
         if (e->stringHash == hash && e->toQString() == s)
@@ -281,30 +287,20 @@ void IdentifierTable::sweep()
 
 PropertyKey IdentifierTable::asPropertyKey(const QString &s)
 {
-    return insertString(s)->identifier;
+    uint subtype;
+    const uint hash = String::createHashValue(s.constData(), s.length(), &subtype);
+    if (subtype == Heap::String::StringType_ArrayIndex)
+        return PropertyKey::fromArrayIndex(hash);
+    return resolveStringEntry(s, hash, subtype)->identifier;
 }
 
 PropertyKey IdentifierTable::asPropertyKey(const char *s, int len)
 {
     uint subtype;
     uint hash = String::createHashValue(s, len, &subtype);
-    if (hash == UINT_MAX)
-        return asPropertyKey(QString::fromUtf8(s, len));
-
-    QLatin1String latin(s, len);
-    uint idx = hash % alloc;
-    while (Heap::StringOrSymbol *e = entriesByHash[idx]) {
-        if (e->stringHash == hash && e->toQString() == latin)
-            return e->identifier;
-        ++idx;
-        idx %= alloc;
-    }
-
-    Heap::String *str = engine->newString(QString::fromLatin1(s, len));
-    str->stringHash = hash;
-    str->subtype = subtype;
-    addEntry(str);
-    return str->identifier;
+    if (subtype == Heap::String::StringType_ArrayIndex)
+        return PropertyKey::fromArrayIndex(hash);
+    return resolveStringEntry(QString::fromLatin1(s, len), hash, subtype)->identifier;
 }
 
 }
