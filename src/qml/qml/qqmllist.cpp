@@ -392,6 +392,12 @@ qsizetype QQmlListReference::count() const
 }
 
 /*!
+\fn qsizetype QQmlListReference::count() const
+\since 6.2
+Returns the number of objects in the list, or 0 if the operation failed.
+*/
+
+/*!
 Replaces the item at \a index in the list with \a object.
 Returns true if the operation succeeded, otherwise false.
 

@@ -222,6 +222,7 @@ public:
     QObject *at(qsizetype) const;
     bool clear() const;
     qsizetype count() const;
+    qsizetype size() const { return count(); }
     bool replace(qsizetype, QObject *) const;
     bool removeLast() const;
     bool operator==(const QQmlListReference &other) const {return d == other.d;}
