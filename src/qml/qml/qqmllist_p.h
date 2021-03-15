@@ -53,6 +53,8 @@
 
 #include "qqmllist.h"
 #include "qqmlmetaobject_p.h"
+#include "qqmlmetatype_p.h"
+#include "qqmlengine_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -64,7 +66,6 @@ public:
     static QQmlListReference init(const QQmlListProperty<QObject> &, int, QQmlEngine *);
 
     QPointer<QObject> object;
-    QQmlMetaObject elementType;
     QQmlListProperty<QObject> property;
     int propertyType;
 
@@ -75,6 +76,27 @@ public:
     static inline QQmlListReferencePrivate *get(QQmlListReference *ref) {
         return ref->d;
     }
+
+    void setEngine(QQmlEngine *engine)
+    {
+        m_elementTypeOrEngine = engine;
+    }
+
+    const QMetaObject *elementType()
+    {
+        if (m_elementTypeOrEngine.isT2()) {
+            const int listType = QQmlMetaType::listType(propertyType);
+            const QQmlEngine *engine = m_elementTypeOrEngine.asT2();
+            const QQmlEnginePrivate *p = engine ? QQmlEnginePrivate::get(engine) : nullptr;
+            m_elementTypeOrEngine = p ? p->rawMetaObjectForType(listType).metaObject()
+                                      : QQmlMetaType::qmlType(listType).baseMetaObject();
+        }
+
+        return m_elementTypeOrEngine.asT1();
+    }
+
+private:
+    QBiPointer<const QMetaObject, QQmlEngine> m_elementTypeOrEngine;
 };
 
 

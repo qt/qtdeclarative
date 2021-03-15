@@ -44,6 +44,16 @@
 
 QT_BEGIN_NAMESPACE
 
+static bool isObjectCompatible(QObject *object, QQmlListReferencePrivate *d)
+{
+    if (object) {
+        const QQmlMetaObject elementType = d->elementType();
+        if (elementType.isNull() || !QQmlMetaObject::canConvert(object, elementType))
+            return false;
+    }
+    return true;
+}
+
 QQmlListReferencePrivate::QQmlListReferencePrivate()
 : propertyType(-1), refCount(1)
 {
@@ -55,14 +65,9 @@ QQmlListReference QQmlListReferencePrivate::init(const QQmlListProperty<QObject>
 
     if (!prop.object) return rv;
 
-    QQmlEnginePrivate *p = engine?QQmlEnginePrivate::get(engine):nullptr;
-
-    int listType = QQmlMetaType::listType(propType);
-    if (listType == -1) return rv;
-
     rv.d = new QQmlListReferencePrivate;
     rv.d->object = prop.object;
-    rv.d->elementType = QQmlPropertyPrivate::rawMetaObjectForType(p, listType);
+    rv.d->setEngine(engine);
     rv.d->property = prop;
     rv.d->propertyType = propType;
 
@@ -129,7 +134,8 @@ become invalid.  That is, it is safe to hold QQmlListReference instances even af
 deleted.
 
 The \a engine is required to look up the element type, which may be a dynamically created QML type.
-If it's omitted, only pre-registered types are available.
+If it's omitted, only pre-registered types are available. The element type is needed when inserting
+values into the list and when the value meta type is explicitly retrieved.
 */
 QQmlListReference::QQmlListReference(const QVariant &variant, QQmlEngine *engine)
     : d(nullptr)
@@ -138,16 +144,9 @@ QQmlListReference::QQmlListReference(const QVariant &variant, QQmlEngine *engine
     if (!(t.flags() & QMetaType::IsQmlList))
         return;
 
-    QQmlEnginePrivate *p = engine ? QQmlEnginePrivate::get(engine) : nullptr;
-    const int listType = QQmlMetaType::listType(t.id());
-    if (listType == -1)
-        return;
-
     d = new QQmlListReferencePrivate;
     d->propertyType = t.id();
-    d->elementType = p
-            ? p->rawMetaObjectForType(listType)
-            : QQmlMetaType::qmlType(listType).baseMetaObject();
+    d->setEngine(engine);
 
     d->property.~QQmlListProperty();
     t.construct(&d->property, variant.constData());
@@ -161,8 +160,9 @@ property, an invalid QQmlListReference is created.  If \a object is destroyed af
 the reference is constructed, it will automatically become invalid.  That is, it is safe to hold
 QQmlListReference instances even after \a object is deleted.
 
-Passing \a engine is required to access some QML created list properties.  If in doubt, and an engine
-is available, pass it.
+The \a engine is required to look up the element type, which may be a dynamically created QML type.
+If it's omitted, only pre-registered types are available. The element type is needed when inserting
+values into the list and when the value meta type is explicitly retrieved.
 */
 QQmlListReference::QQmlListReference(QObject *object, const char *property, QQmlEngine *engine)
 : d(nullptr)
@@ -175,15 +175,10 @@ QQmlListReference::QQmlListReference(QObject *object, const char *property, QQml
 
     if (!data || !data->isQList()) return;
 
-    QQmlEnginePrivate *p = engine?QQmlEnginePrivate::get(engine):nullptr;
-
-    int listType = QQmlMetaType::listType(data->propType().id());
-    if (listType == -1) return;
-
     d = new QQmlListReferencePrivate;
     d->object = object;
-    d->elementType = p ? p->rawMetaObjectForType(listType) : QQmlMetaType::qmlType(listType).baseMetaObject();
     d->propertyType = data->propType().id();
+    d->setEngine(engine);
 
     void *args[] = { &d->property, nullptr };
     QMetaObject::metacall(object, QMetaObject::ReadProperty, data->coreIndex(), args);
@@ -233,12 +228,11 @@ Returns the QMetaObject for the elements stored in the list property,
 or \nullptr if the reference is invalid.
 
 The QMetaObject can be used ahead of time to determine whether a given instance can be added
-to a list.
+to a list. If you didn't pass an engine on construction this may return nullptr.
 */
 const QMetaObject *QQmlListReference::listElementType() const
 {
-    if (isValid()) return d->elementType.metaObject();
-    else return nullptr;
+    return isValid() ? d->elementType() : nullptr;
 }
 
 /*!
@@ -347,7 +341,7 @@ bool QQmlListReference::append(QObject *object) const
 {
     if (!canAppend()) return false;
 
-    if (object && !QQmlMetaObject::canConvert(object, d->elementType))
+    if (!isObjectCompatible(object, d))
         return false;
 
     d->property.append(&d->property, object);
@@ -408,7 +402,7 @@ bool QQmlListReference::replace(qsizetype index, QObject *object) const
     if (!canReplace())
         return false;
 
-    if (object && !QQmlMetaObject::canConvert(object, d->elementType))
+    if (!isObjectCompatible(object, d))
         return false;
 
     d->property.replace(&d->property, index, object);

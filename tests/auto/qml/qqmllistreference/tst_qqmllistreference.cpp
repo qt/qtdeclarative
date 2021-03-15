@@ -77,6 +77,7 @@ private slots:
     void engineTypes();
     void variantToList();
     void listProperty();
+    void compositeListProperty();
 };
 
 class TestType : public QObject
@@ -865,6 +866,33 @@ void tst_qqmllistreference::listProperty()
     QCOMPARE( state2->name(), QStringLiteral("MyState2") );
 }
 
+void tst_qqmllistreference::compositeListProperty()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("compositeListProp.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QQmlComponent item(&engine, testFileUrl("AListItem.qml"));
+    QScopedPointer<QObject> i1(item.create());
+    QScopedPointer<QObject> i2(item.create());
+    QVERIFY(!i1.isNull());
+    QVERIFY(!i2.isNull());
+
+    // Without engine
+    QQmlListReference list1(object.data(), "items");
+    QCOMPARE(list1.listElementType(), nullptr);
+
+    // Doesn't work because element type is unknown.
+    QVERIFY(!list1.append(i1.data()));
+    QVERIFY(!list1.replace(0, i2.data()));
+
+    // With engine
+    QQmlListReference list2(object.data(), "items", &engine);
+    QVERIFY(list2.listElementType() != nullptr);
+    QVERIFY(list2.append(i1.data()));
+    QVERIFY(list2.replace(0, i2.data()));
+}
 
 QTEST_MAIN(tst_qqmllistreference)
 
