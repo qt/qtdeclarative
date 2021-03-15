@@ -3,7 +3,7 @@
 ** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
-** This file is part of the Qt Labs Platform module of the Qt Toolkit.
+** This file is part of the QtQuick Dialogs module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL3$
 ** Commercial License Usage
@@ -34,51 +34,53 @@
 **
 ****************************************************************************/
 
-#include "qquickdialogimplfactory_p.h"
+#ifndef QQUICKPLATFORMFONTDIALOG_P_H
+#define QQUICKPLATFORMFONTDIALOG_P_H
 
-#include <QtCore/qloggingcategory.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-#include "qquickplatformfiledialog_p.h"
-#include "qquickplatformfontdialog_p.h"
+#include <QtGui/qpa/qplatformdialoghelper.h>
+
+#include "qtquickdialogs2quickimplglobal_p.h"
 
 QT_BEGIN_NAMESPACE
 
-/*!
-    \internal
+class QQuickFontDialogImpl;
+class QWindow;
 
-    Creates concrete QML-based dialogs.
-*/
-
-Q_LOGGING_CATEGORY(lcQuickDialogImplFactory, "qt.quick.dialogs.quickdialogimplfactory")
-
-QPlatformDialogHelper *QQuickDialogImplFactory::createPlatformDialogHelper(
-    QPlatformTheme::DialogType type, QObject *parent)
+class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickPlatformFontDialog
+    : public QPlatformFontDialogHelper
 {
-    switch (type) {
-    case QPlatformTheme::FileDialog: {
-        auto dialog = new QQuickPlatformFileDialog(parent);
-        // If the QML file failed to load, we need to handle it gracefully.
-        if (!dialog->isValid()) {
-            delete dialog;
-            return nullptr;
-        }
+    Q_OBJECT
 
-        return dialog;
-    }
-    case QPlatformTheme::FontDialog: {
-        auto dialog = new QQuickPlatformFontDialog(parent);
+public:
+    explicit QQuickPlatformFontDialog(QObject *parent);
+    ~QQuickPlatformFontDialog() = default;
 
-        if (!dialog->isValid()) {
-            delete dialog;
-            return nullptr;
-        }
-        return dialog;
-    }
-    default:
-        break;
-    }
+    bool isValid() const;
 
-    return nullptr;
-}
+    virtual void setCurrentFont(const QFont &font) override;
+    virtual QFont currentFont() const override;
+
+    void exec() override;
+    bool show(Qt::WindowFlags flags, Qt::WindowModality modality, QWindow *parent) override;
+    void hide() override;
+
+    QQuickFontDialogImpl *dialog() const;
+
+private:
+    QQuickFontDialogImpl *m_dialog = nullptr;
+};
 
 QT_END_NAMESPACE
+
+#endif // QQUICKPLATFORMFONTDIALOG_P_H

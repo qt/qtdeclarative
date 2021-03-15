@@ -16,8 +16,13 @@ qt_internal_add_module(QuickDialogs2QuickImpl
         qquickfolderbreadcrumbbar_p_p.h
         qquickplatformfiledialog.cpp
         qquickplatformfiledialog_p.h
+        qquickplatformfontdialog_p.h
+        qquickplatformfontdialog.cpp
         qtquickdialogs2quickimplforeign_p.h
         qtquickdialogs2quickimplglobal_p.h
+        qquickfontdialogimpl_p.h
+        qquickfontdialogimpl_p_p.h
+        qquickfontdialogimpl.cpp
     DEFINES
         QT_BUILD_QUICKDIALOGS2QUICKIMPL_LIB
         QT_NO_CAST_FROM_ASCII
@@ -99,18 +104,24 @@ set(qtquickdialogs2quickimpl_resource_files
     "qml/FileDialogDelegate.qml"
     "qml/FileDialogDelegateLabel.qml"
     "qml/FolderBreadcrumbBar.qml"
+    "qml/FontDialog.qml"
+    "qml/FontDialogContent.qml"
     "qml/+Fusion/FileDialog.qml"
     "qml/+Fusion/FileDialogDelegate.qml"
     "qml/+Fusion/FolderBreadcrumbBar.qml"
+    "qml/+Fusion/FontDialog.qml"
     "qml/+Imagine/FileDialog.qml"
     "qml/+Imagine/FileDialogDelegate.qml"
     "qml/+Imagine/FolderBreadcrumbBar.qml"
+    "qml/+Imagine/FontDialog.qml"
     "qml/+Material/FileDialog.qml"
     "qml/+Material/FileDialogDelegate.qml"
     "qml/+Material/FolderBreadcrumbBar.qml"
+    "qml/+Material/FontDialog.qml"
     "qml/+Universal/FileDialog.qml"
     "qml/+Universal/FileDialogDelegate.qml"
     "qml/+Universal/FolderBreadcrumbBar.qml"
+    "qml/+Universal/FontDialog.qml"
 )
 
 qt_internal_add_resource(QuickDialogs2QuickImpl "QuickDialogs2QuickImpl"
