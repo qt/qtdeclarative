@@ -4,6 +4,12 @@
 ## pointer Binary:
 #####################################################################
 
+# special case begin
+if(NOT TARGET Qt::Svg OR NOT TARGET Qt::Quick OR NOT TARGET Qt::Qml)
+    return()
+endif()
+# special case end
+
 qt_internal_add_manual_test(pointer
     GUI
     SOURCES
