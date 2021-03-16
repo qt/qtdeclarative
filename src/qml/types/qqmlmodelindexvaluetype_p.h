@@ -69,6 +69,7 @@ struct QQmlModelIndexValueType
     Q_PROPERTY(quint64 internalId READ internalId CONSTANT FINAL)
     Q_GADGET
     QML_ANONYMOUS
+    QML_EXTENDED(QQmlModelIndexValueType)
     QML_FOREIGN(QModelIndex)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -102,6 +103,7 @@ struct QQmlPersistentModelIndexValueType
     Q_PROPERTY(quint64 internalId READ internalId FINAL)
     Q_GADGET
     QML_ANONYMOUS
+    QML_EXTENDED(QQmlPersistentModelIndexValueType)
     QML_FOREIGN(QPersistentModelIndex)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -135,6 +137,7 @@ struct QQmlItemSelectionRangeValueType
     Q_PROPERTY(QAbstractItemModel *model READ model FINAL)
     Q_GADGET
     QML_ANONYMOUS
+    QML_EXTENDED(QQmlItemSelectionRangeValueType)
     QML_FOREIGN(QItemSelectionRange)
     QML_ADDED_IN_VERSION(2, 0)
 
