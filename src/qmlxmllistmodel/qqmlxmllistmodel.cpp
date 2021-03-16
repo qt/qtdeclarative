@@ -971,7 +971,8 @@ void QQmlXmlListModelQueryRunnable::readSubTree(const QString &prefix, QXmlStrea
                         }
                     } else if (!elementNames.at(index).isEmpty()) {
                         if (!elementTextRead) {
-                            elementText = reader.readElementText();
+                            elementText =
+                                    reader.readElementText(QXmlStreamReader::IncludeChildElements);
                             elementTextRead = true;
                         }
                         roleResult = elementText;

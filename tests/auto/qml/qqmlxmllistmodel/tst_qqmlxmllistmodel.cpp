@@ -667,7 +667,8 @@ void tst_QQmlXmlListModel::malformedData_data()
                        ":3:1: QML XmlListModel: Query error: \"Opening and ending tag mismatch.\"");
     QTest::addRow("missing tag nested level")
             << testFileUrl("malformedTagNestedLevel.xml")
-            << QStringLiteral(":3:1: QML XmlListModel: Query error: \"Expected character data.\"");
+            << QStringLiteral(
+                       ":3:1: QML XmlListModel: Query error: \"Opening and ending tag mismatch.\"");
     QTest::addRow("invalid attribute name")
             << testFileUrl("malformedAttribute.xml")
             << QStringLiteral(":3:1: QML XmlListModel: Query error: \"Expected '>' or '/', but got "
