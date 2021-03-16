@@ -92,7 +92,7 @@ void TextBalloon::paint(QPainter *painter)
 }
 //! [1]
 
-bool TextBalloon::isRightAligned()
+bool TextBalloon::isRightAligned() const
 {
     return this->rightAligned;
 }

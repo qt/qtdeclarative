@@ -83,7 +83,7 @@ Q_SIGNALS:
 
     void strengthChanged(qreal arg);
 
-    void noiseSourceChanged(QUrl arg);
+    void noiseSourceChanged(const QUrl &arg);
 
 public Q_SLOTS:
 
@@ -95,7 +95,7 @@ public Q_SLOTS:
         }
     }
 
-    void setNoiseSource(QUrl arg)
+    void setNoiseSource(const QUrl &arg)
     {
         if (m_noiseSource != arg) {
             m_noiseSource = arg;
