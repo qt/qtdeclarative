@@ -93,8 +93,7 @@ void tst_qmltyperegistrar::accessSemantics()
 
 void tst_qmltyperegistrar::isBindable()
 {
-    // TODO: readonly?
-    QVERIFY(qmltypesData.contains(R"(Property { name: "someProperty"; bindable: "bindableSomeProperty"; type: "int"; isReadonly: true)"));
+    QVERIFY(qmltypesData.contains(R"(Property { name: "someProperty"; bindable: "bindableSomeProperty"; type: "int" })"));
 }
 
 void tst_qmltyperegistrar::restrictToImportVersion()

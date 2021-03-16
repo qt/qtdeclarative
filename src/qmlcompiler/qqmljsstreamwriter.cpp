@@ -69,7 +69,7 @@ void QQmlJSStreamWriter::writeStartObject(const QString &component)
 
 void QQmlJSStreamWriter::writeEndObject()
 {
-    if (m_maybeOneline && !m_pendingLines.isEmpty()) {
+    if (m_maybeOneline) {
         --m_indentDepth;
         for (int i = 0; i < m_pendingLines.size(); ++i) {
             m_stream->write(" ");
@@ -77,7 +77,12 @@ void QQmlJSStreamWriter::writeEndObject()
             if (i != m_pendingLines.size() - 1)
                 m_stream->write(";");
         }
-        m_stream->write(" }\n");
+
+        if (!m_pendingLines.isEmpty())
+            m_stream->write(" }\n");
+        else
+            m_stream->write("}\n");
+
         m_pendingLines.clear();
         m_pendingLineLength = 0;
         m_maybeOneline = false;

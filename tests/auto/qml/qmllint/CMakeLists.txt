@@ -33,3 +33,10 @@ qt_internal_extend_target(tst_qmllint CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )
+
+if (TARGET qmljsrootgen)
+    qt_internal_extend_target(tst_qmllint
+        DEFINES
+            QT_QMLJSROOTGEN_PRESENT
+    )
+endif()

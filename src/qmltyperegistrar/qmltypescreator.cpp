@@ -177,7 +177,7 @@ void QmlTypesCreator::writeProperties(const QJsonArray &properties, QSet<QString
         const auto bindable = obj.constFind(QLatin1String("bindable"));
         if (bindable != obj.constEnd())
             m_qml.writeScriptBinding(QLatin1String("bindable"), enquote(bindable->toString()));
-        writeType(obj, QLatin1String("type"), !obj.contains(QLatin1String("write")), true);
+        writeType(obj, QLatin1String("type"), !obj.contains(QLatin1String("write")) && !obj.contains(QLatin1String("member")), true);
         const auto read = obj.constFind(QLatin1String("read"));
         if (read != obj.constEnd())
              m_qml.writeScriptBinding(QLatin1String("read"), enquote(read->toString()));
@@ -212,6 +212,9 @@ void QmlTypesCreator::writeMethods(const QJsonArray &methods, const QString &typ
         if (revision != obj.end())
             m_qml.writeScriptBinding(QLatin1String("revision"), QString::number(revision.value().toInt()));
         writeType(obj, QLatin1String("returnType"), false, false);
+        const auto isConstructor = obj.find(QLatin1String("isConstructor"));
+        if (isConstructor != obj.constEnd() && isConstructor->toBool())
+            m_qml.writeScriptBinding(QLatin1String("isConstructor"), QLatin1String("true"));
         for (const QJsonValue &argument : arguments) {
             const QJsonObject obj = argument.toObject();
             m_qml.writeStartObject(QLatin1String("Parameter"));

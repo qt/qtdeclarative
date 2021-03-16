@@ -56,6 +56,10 @@ private Q_SLOTS:
     void qmltypes_data();
     void qmltypes();
 
+#ifdef QT_QMLJSROOTGEN_PRESENT
+    void verifyJsRoot();
+#endif
+
     void autoqmltypes();
     void resources();
 
@@ -69,19 +73,36 @@ private:
                        const QStringList &extraArgs = QStringList());
 
     QString m_qmllintPath;
+    QString m_qmljsrootgenPath;
+    QString m_qmltyperegistrarPath;
 };
 
 void TestQmllint::initTestCase()
 {
     QQmlDataTest::initTestCase();
     m_qmllintPath = QLibraryInfo::path(QLibraryInfo::BinariesPath) + QLatin1String("/qmllint");
+    m_qmljsrootgenPath = QLibraryInfo::path(QLibraryInfo::BinariesPath) + QLatin1String("/qmljsrootgen");
+    m_qmltyperegistrarPath = QLibraryInfo::path(QLibraryInfo::BinariesPath) + QLatin1String("/qmltyperegistrar");
 #ifdef Q_OS_WIN
     m_qmllintPath += QLatin1String(".exe");
+    m_qmljsrootgenPath += QLatin1String(".exe");
+    m_qmltyperegistrarPath += QLatin1String(".exe");
 #endif
     if (!QFileInfo(m_qmllintPath).exists()) {
         QString message = QStringLiteral("qmllint executable not found (looked for %0)").arg(m_qmllintPath);
         QFAIL(qPrintable(message));
     }
+
+#ifdef QT_QMLJSROOTGEN_PRESENT
+    if (!QFileInfo(m_qmljsrootgenPath).exists()) {
+        QString message = QStringLiteral("qmljsrootgen executable not found (looked for %0)").arg(m_qmljsrootgenPath);
+        QFAIL(qPrintable(message));
+    }
+    if (!QFileInfo(m_qmltyperegistrarPath).exists()) {
+        QString message = QStringLiteral("qmltypesregistrar executable not found (looked for %0)").arg(m_qmltyperegistrarPath);
+        QFAIL(qPrintable(message));
+    }
+#endif
 }
 
 void TestQmllint::testUnqualified()
@@ -170,6 +191,67 @@ void TestQmllint::qmltypes()
     QFETCH(QString, file);
     runQmllint(file, true);
 }
+
+#ifdef QT_QMLJSROOTGEN_PRESENT
+void TestQmllint::verifyJsRoot()
+{
+    QProcess process;
+
+    const QString importsPath = QLibraryInfo::path(QLibraryInfo::QmlImportsPath);
+    QDirIterator it(importsPath, { "jsroot.qmltypes" },
+                    QDir::Files, QDirIterator::Subdirectories);
+
+    QVERIFY(it.hasNext());
+
+    QString currentJsRootPath = it.next();
+
+    QTemporaryDir dir;
+
+    QProcess jsrootProcess;
+    jsrootProcess.setWorkingDirectory(dir.path());
+    jsrootProcess.start(m_qmljsrootgenPath, {"jsroot.json"});
+
+    jsrootProcess.waitForFinished();
+
+    QCOMPARE(jsrootProcess.exitStatus(), QProcess::NormalExit);
+    QCOMPARE(jsrootProcess.exitCode(), 0);
+
+
+    QProcess typeregistrarProcess;
+    typeregistrarProcess.setWorkingDirectory(dir.path());
+    typeregistrarProcess.start(m_qmltyperegistrarPath, {"jsroot.json", "--generate-qmltypes", "jsroot.qmltypes", "--import-name", "QJSEngine", "--major-version", "1", "--minor-version", "0"});
+
+    typeregistrarProcess.waitForFinished();
+
+    QCOMPARE(typeregistrarProcess.exitStatus(), QProcess::NormalExit);
+    QCOMPARE(typeregistrarProcess.exitCode(), 0);
+
+    QString currentJsRootContent, generatedJsRootContent;
+
+    QFile currentJsRoot(currentJsRootPath);
+    QVERIFY(currentJsRoot.open(QFile::ReadOnly));
+    currentJsRootContent = QString::fromUtf8(currentJsRoot.readAll());
+    currentJsRoot.close();
+
+    QFile generatedJsRoot(dir.path() + QDir::separator() + "jsroot.qmltypes");
+    QVERIFY(generatedJsRoot.open(QFile::ReadOnly));
+    generatedJsRootContent = QString::fromUtf8(generatedJsRoot.readAll());
+    generatedJsRoot.close();
+
+    // If any of the following asserts fail you need to update jsroot.qmltypes using the following commands:
+    //
+    // qmljsrootgen jsroot.json
+    // qmltyperegistrar jsroot.json --generate-qmltypes src/imports/builtins/jsroot.qmltypes --import-name QJSEngine --major-version 1 --minor-version 0
+    QStringList currentLines = currentJsRootContent.split(QLatin1Char('\n'));
+    QStringList generatedLines = generatedJsRootContent.split(QLatin1Char('\n'));
+
+    QCOMPARE(currentLines.count(), generatedLines.count());
+
+    for (qsizetype i = 0; i < currentLines.count(); i++) {
+        QCOMPARE(currentLines[i], generatedLines[i]);
+    }
+}
+#endif
 
 void TestQmllint::autoqmltypes()
 {

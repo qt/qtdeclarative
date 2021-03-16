@@ -300,9 +300,11 @@ void QQmlJSTypeDescriptionReader::readSignalOrMethod(UiObjectDefinition *ast, bo
                 metaMethod.setReturnTypeName(readStringBinding(script));
             } else if (name == QLatin1String("revision")) {
                 metaMethod.setRevision(readIntBinding(script));
+            } else if (name == QLatin1String("isConstructor")) {
+                metaMethod.setIsConstructor(true);
             } else {
                 addWarning(script->firstSourceLocation(),
-                           tr("Expected only name and type script bindings."));
+                           tr("Expected only name type, revision and isConstructor script bindings."));
             }
         } else {
             addWarning(member->firstSourceLocation(),
@@ -360,9 +362,9 @@ void QQmlJSTypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQ
         }
     }
 
-    if (property.propertyName().isEmpty() || property.typeName().isEmpty()) {
+    if (property.propertyName().isEmpty()) {
         addError(ast->firstSourceLocation(),
-                 tr("Property object is missing a name or type script binding."));
+                 tr("Property object is missing a name script binding."));
         return;
     }
 

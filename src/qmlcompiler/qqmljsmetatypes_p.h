@@ -182,6 +182,9 @@ public:
     int revision() const { return m_revision; }
     void setRevision(int r) { m_revision = r; }
 
+    bool isConstructor() const { return m_isConstructor; }
+    void setIsConstructor(bool isConstructor) { m_isConstructor = isConstructor; }
+
     bool isValid() const { return !m_name.isEmpty(); }
 
     friend bool operator==(const QQmlJSMetaMethod &a, const QQmlJSMetaMethod &b)
@@ -232,6 +235,7 @@ private:
     Type m_methodType = Signal;
     Access m_methodAccess = Private;
     int m_revision = 0;
+    bool m_isConstructor = false;
 };
 
 class QQmlJSMetaProperty
