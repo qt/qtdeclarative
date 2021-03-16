@@ -441,6 +441,9 @@ int main(int argc, char *argv[])
     QCommandLineOption glSoftwareOption(QStringLiteral("software"),
         QCoreApplication::translate("main", "Force use of software rendering (AA_UseSoftwareOpenGL)."));
     parser.addOption(glSoftwareOption); // Just for the help text... we've already handled this argument above
+    QCommandLineOption glCoreProfile(QStringLiteral("core-profile"),
+        QCoreApplication::translate("main", "Force use of OpenGL Core Profile."));
+    parser.addOption(glCoreProfile);
 #endif // QT_GUI_LIB
     // Debugging and verbosity options
     QCommandLineOption quietOption(QStringLiteral("quiet"),
@@ -511,7 +514,7 @@ int main(int argc, char *argv[])
         e.setExtraFileSelectors(customSelectors);
 
 #if defined(QT_GUI_LIB)
-    if (qEnvironmentVariableIsSet("QSG_CORE_PROFILE") || qEnvironmentVariableIsSet("QML_CORE_PROFILE")) {
+    if (qEnvironmentVariableIsSet("QSG_CORE_PROFILE") || qEnvironmentVariableIsSet("QML_CORE_PROFILE") || parser.isSet(glCoreProfile)) {
         QSurfaceFormat surfaceFormat;
         surfaceFormat.setStencilBufferSize(8);
         surfaceFormat.setDepthBufferSize(24);
