@@ -2124,7 +2124,7 @@ void tst_qquickflickable::nestedSliderUsingTouch()
         QTest::touchEvent(window, touchDevice).move(0, p0, window);
         QQuickTouchUtils::flush(window);
     }
-    QCOMPARE(tda->active(), keepMouseGrab | keepTouchGrab);
+    QCOMPARE(tda->active(), keepMouseGrab || keepTouchGrab);
     QTest::touchEvent(window, touchDevice).release(0, p0, window);
     QQuickTouchUtils::flush(window);
     QTRY_COMPARE(tda->touchPointStates.first(), QEventPoint::State::Pressed);
