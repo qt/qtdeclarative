@@ -1600,7 +1600,7 @@ void tst_qquickitem::hoverEvent()
     QQuickWindow *window = new QQuickWindow();
     window->resize(200, 200);
     window->show();
-    QTest::qWaitForWindowExposed(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
 #if QT_CONFIG(cursor) // Get the cursor out of the way.
     QCursor::setPos(window->geometry().topRight() + QPoint(100, 100));
 #endif
@@ -1645,7 +1645,7 @@ void tst_qquickitem::hoverEventInParent()
     QQuickWindow window;
     window.resize(200, 200);
     window.show();
-    QTest::qWaitForWindowExposed(&window);
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
 #if QT_CONFIG(cursor) // Get the cursor out of the way.
     QCursor::setPos(window.geometry().topRight() + QPoint(100, 100));
 #endif
