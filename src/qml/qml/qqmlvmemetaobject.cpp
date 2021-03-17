@@ -692,6 +692,8 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
             id -= propOffset();
 
             if (id < propertyCount) {
+                // if we reach this point, propertyCount must have been > 0, and thus compiledObject != nullptr
+                Q_ASSERT(compiledObject);
                 const QV4::CompiledData::Property &property = compiledObject->propertyTable()[id];
                 const QV4::CompiledData::BuiltinType t = property.builtinType();
 
