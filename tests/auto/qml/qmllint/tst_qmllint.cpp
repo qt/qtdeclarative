@@ -311,11 +311,9 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("brokenNamespace.qml")
             << QString("Warning: type not found in namespace at %1:4:17")
             << QString();
-    // TODO: This fails but currently for the wrong reasons, make sure to add a warning message requirement
-    // once it does fail properly in order to avoid regressions.
     QTest::newRow("segFault (bad)")
             << QStringLiteral("SegFault.bad.qml")
-            << QString()
+            << QStringLiteral("Property \"foobar\" not found on type \"QQuickScreenAttached\"")
             << QString();
     QTest::newRow("VariableUsedBeforeDeclaration")
             << QStringLiteral("useBeforeDeclaration.qml")
@@ -459,7 +457,6 @@ void TestQmllint::cleanQmlCode()
 {
     QFETCH(QString, filename);
     const QString warnings = runQmllint(filename, true);
-    QEXPECT_FAIL("segFault", "This property exists and should not produce a warning", Abort);
     QVERIFY2(warnings.isEmpty(), qPrintable(warnings));
 }
 
@@ -505,7 +502,6 @@ QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed, c
         QVERIFY(process.waitForFinished());
         QCOMPARE(process.exitStatus(), QProcess::NormalExit);
 
-        QEXPECT_FAIL("segFault", "This property exists and should not produce a warning", Abort);
         if (shouldSucceed)
             QCOMPARE(process.exitCode(), 0);
         else

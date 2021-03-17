@@ -123,7 +123,9 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
     }
 
     QQmlJSScope::ConstPtr scope = outerScope;
-    for (const FieldMember &access : members) {
+    for (qsizetype i = 0; i < members.size(); i++) {
+        const FieldMember &access = members.at(i);
+
         if (scope.isNull()) {
             m_colorOut->writePrefixedMessage(
                         QString::fromLatin1("Type \"%1\" of base \"%2\" not found when accessing member \"%3\" at %4:%5:%6.\n")
@@ -254,7 +256,19 @@ bool CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
 
         if (access.m_name.front().isUpper() && scope->scopeType() == QQmlJSScope::QMLScope) {
             // may be an attached type
-            const auto it = m_types.find(access.m_name);
+
+            auto it = m_types.find(access.m_name);
+
+            // Something was found but it wasn't the attached type we were looking for, it could be a prefix
+            if (it != m_types.end() && !(*it) && i+1 < members.length()) {
+                // See whether this is due to us getting the prefixed property in two accesses (i.e. "T" and "Item")
+                // by checking again with a fixed name.
+                it = m_types.find(access.m_name + QLatin1Char('.') + members[++i].m_name);
+
+                if (it == m_types.end() || !(*it) || (*it)->attachedTypeName().isEmpty())
+                    --i;
+            }
+
             if (it != m_types.end() && *it && !(*it)->attachedTypeName().isEmpty()) {
                 if (const auto attached = (*it)->attachedType()) {
                     scope = attached;
