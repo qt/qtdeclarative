@@ -77,6 +77,10 @@ static const int FlickThreshold = 15;
 // will ensure the Flickable retains the grab on consecutive flicks.
 static const int RetainGrabVelocity = 100;
 
+// ReportedVelocitySmoothing determines how reported velocity is
+// smoothed to avoid erratic output.
+static const int ReportedVelocitySmoothing = 100;
+
 // Currently std::round can't be used on Android when using ndk g++, so
 // use C version instead. We could just define two versions of Round, one
 // for float and one for double, but then only one of them would be used
@@ -269,7 +273,7 @@ QQuickFlickablePrivate::QQuickFlickablePrivate()
     , lastPosTime(-1)
     , lastPressTime(0)
     , deceleration(QML_FLICK_DEFAULTDECELERATION)
-    , maxVelocity(QML_FLICK_DEFAULTMAXVELOCITY), reportedVelocitySmoothing(100)
+    , maxVelocity(QML_FLICK_DEFAULTMAXVELOCITY)
     , delayedPressEvent(nullptr), pressDelay(0), fixupDuration(400)
     , flickBoost(1.0), fixupMode(Normal), vTime(0), visibleArea(nullptr)
     , flickableDirection(QQuickFlickable::AutoFlickDirection)
@@ -1941,8 +1945,8 @@ void QQuickFlickablePrivate::viewportAxisMoved(AxisData &data, qreal minExtent, 
                 if (calcVelocity)
                     velocityTimeline.set(data.smoothVelocity, velocity);
                 else
-                    velocityTimeline.move(data.smoothVelocity, velocity, reportedVelocitySmoothing);
-                velocityTimeline.move(data.smoothVelocity, 0, reportedVelocitySmoothing);
+                    velocityTimeline.move(data.smoothVelocity, velocity, ReportedVelocitySmoothing);
+                velocityTimeline.move(data.smoothVelocity, 0, ReportedVelocitySmoothing);
                 qCDebug(lcVel) << "touchpad scroll phase: velocity" << velocity;
             }
         }

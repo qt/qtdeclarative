@@ -234,7 +234,6 @@ public:
     QVector2D accumulatedWheelPixelDelta;
     qreal deceleration;
     qreal maxVelocity;
-    qreal reportedVelocitySmoothing;
     QPointerEvent *delayedPressEvent;
     QBasicTimer delayedPressTimer;
     int pressDelay;
