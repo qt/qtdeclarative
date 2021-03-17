@@ -58,7 +58,6 @@ class QJSPrimitiveValue;
 typedef QList<QJSValue> QJSValueList;
 namespace QV4 {
     struct ExecutionEngine;
-    struct Value;
 }
 
 class QJSPrimitiveValue;
