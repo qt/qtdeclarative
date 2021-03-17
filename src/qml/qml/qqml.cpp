@@ -57,6 +57,19 @@ QT_BEGIN_NAMESPACE
 
 /*!
    \internal
+
+   This method completes the setup of all deferred properties of \a object.
+   Deferred properties are declared with
+   Q_CLASSINFO("DeferredPropertyNames", "comma,separated,property,list");
+
+   Any binding to a deferred property is not executed when the object is instantiated,
+   but only when completion is requested with qmlExecuteDeferred, or by manually
+   calling QQmlComponentPrivate::beginDeferred and completeDeferred.
+
+   \sa QV4::CompiledData::Binding::IsDeferredBinding,
+       QV4::CompiledData::Object::HasDeferredBindings,
+       QQmlData::deferData,
+       QQmlObjectCreator::setupBindings
 */
 void qmlExecuteDeferred(QObject *object)
 {
