@@ -177,7 +177,7 @@ protected:
 };
 
 
-class QQuickLayoutAttached : public QObject
+class Q_QUICKLAYOUT_PRIVATE_EXPORT QQuickLayoutAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(qreal minimumWidth READ minimumWidth WRITE setMinimumWidth NOTIFY minimumWidthChanged)

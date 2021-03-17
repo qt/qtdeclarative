@@ -205,7 +205,7 @@ protected:
     qreal maxXExtent() const override;
 };
 
-class QQuickListViewAttached : public QQuickItemViewAttached
+class Q_QUICK_PRIVATE_EXPORT QQuickListViewAttached : public QQuickItemViewAttached
 {
     Q_OBJECT
 
