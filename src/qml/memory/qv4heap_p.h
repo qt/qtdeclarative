@@ -50,12 +50,11 @@
 // We mean it.
 //
 
-#include <QtCore/QString>
 #include <private/qv4global_p.h>
 #include <private/qv4mmdefs_p.h>
 #include <private/qv4writebarrier_p.h>
 #include <private/qv4vtable_p.h>
-#include <QSharedPointer>
+#include <QtCore/QSharedPointer>
 
 // To check if Heap::Base::init is called (meaning, all subclasses did their init and called their
 // parent's init all up the inheritance chain), define QML_CHECK_INIT_DESTROY_CALLS below.

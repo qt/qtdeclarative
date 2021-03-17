@@ -54,7 +54,6 @@
 #include <private/qv4runtimeapi_p.h>
 #include <QtCore/qalgorithms.h>
 #include <QtCore/qmath.h>
-#include <qdebug.h>
 
 QT_BEGIN_NAMESPACE
 

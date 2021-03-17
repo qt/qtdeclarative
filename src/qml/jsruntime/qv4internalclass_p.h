@@ -53,6 +53,7 @@
 #include "qv4global_p.h"
 
 #include <QHash>
+#include <climits> // for UINT_MAX
 #include <private/qv4propertykey_p.h>
 #include <private/qv4heap_p.h>
 

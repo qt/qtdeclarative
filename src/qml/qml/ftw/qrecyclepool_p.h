@@ -51,6 +51,8 @@
 // We mean it.
 //
 
+#include <QtCore/qglobal.h>
+
 QT_BEGIN_NAMESPACE
 
 #define QRECYCLEPOOLCOOKIE 0x33218ADF
