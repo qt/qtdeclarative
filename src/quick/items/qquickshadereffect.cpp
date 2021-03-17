@@ -281,7 +281,8 @@ QT_BEGIN_NAMESPACE
               id: layerRoot
               layer.enabled: true
               layer.effect: ShaderEffect {
-              fragmentShader: "effect.frag.qsb"
+                 fragmentShader: "effect.frag.qsb"
+              }
           }
           \endqml
 
