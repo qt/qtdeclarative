@@ -327,6 +327,43 @@ public:
         return std::fmod(lhs.toDouble(), rhs.toDouble());
     }
 
+    QJSPrimitiveValue &operator++()
+    {
+        // ++a is modeled as a -= (-1) to avoid the potential string concatenation
+        return (*this = operate<SubOperators>(*this, -1));
+    }
+
+    QJSPrimitiveValue operator++(int)
+    {
+        // a++ is modeled as a -= (-1) to avoid the potential string concatenation
+        QJSPrimitiveValue other = operate<SubOperators>(*this, -1);
+        std::swap(other, *this);
+        return +other; // We still need to coerce the original value.
+    }
+
+    QJSPrimitiveValue &operator--()
+    {
+        return (*this = operate<SubOperators>(*this, 1));
+    }
+
+    QJSPrimitiveValue operator--(int)
+    {
+        QJSPrimitiveValue other = operate<SubOperators>(*this, 1);
+        std::swap(other, *this);
+        return +other; // We still need to coerce the original value.
+    }
+
+    QJSPrimitiveValue operator+()
+    {
+        // +a is modeled as a -= 0. That should force it to number.
+        return (*this = operate<SubOperators>(*this, 0));
+    }
+
+    QJSPrimitiveValue operator-()
+    {
+        return (*this = operate<MulOperators>(*this, -1));
+    }
+
     constexpr bool strictlyEquals(const QJSPrimitiveValue &other) const
     {
         const Type myType = type();
