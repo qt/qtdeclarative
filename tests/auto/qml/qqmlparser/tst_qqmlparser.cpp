@@ -113,14 +113,14 @@ public:
         }
     }
 
-    virtual bool preVisit(AST::Node *node)
+    bool preVisit(AST::Node *node) override
     {
         checkNode(node);
         nodeStack.append(node);
         return true;
     }
 
-    virtual void postVisit(AST::Node *)
+    void postVisit(AST::Node *) override
     {
         nodeStack.removeLast();
     }
@@ -162,7 +162,7 @@ struct ExpressionStatementObserver: public AST::Visitor
         AST::Node::accept(node, this);
     }
 
-    virtual bool visit(AST::ExpressionStatement *statement)
+    bool visit(AST::ExpressionStatement *statement) override
     {
         ++expressionsSeen;
         endsWithSemicolon = endsWithSemicolon
@@ -184,7 +184,7 @@ public:
         m_code = code.split('\u000A');
     }
 
-    void checkNode(AST::Node *node)
+    void checkNode(AST::Node *node) override
     {
         SourceLocation first = node->firstSourceLocation();
         SourceLocation last = node->lastSourceLocation();
