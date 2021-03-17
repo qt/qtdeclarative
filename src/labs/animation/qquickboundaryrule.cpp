@@ -483,7 +483,6 @@ void QQuickBoundaryRule::write(const QVariant &value)
         return;
     }
 
-    qmlExecuteDeferred(this);
     d->targetValue = d->easedOvershoot(rValue);
     QQmlPropertyPrivate::write(d->property, d->targetValue,
                                QQmlPropertyData::BypassInterceptor | QQmlPropertyData::DontRemoveBinding);
