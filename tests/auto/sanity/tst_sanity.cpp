@@ -200,7 +200,7 @@ void tst_Sanity::jsFiles()
 class FunctionValidator : public BaseValidator
 {
 protected:
-    virtual bool visit(QQmlJS::AST::FunctionDeclaration *node)
+    bool visit(QQmlJS::AST::FunctionDeclaration *node) override
     {
         addError("function declarations are not allowed", node);
         return true;
@@ -235,7 +235,7 @@ protected:
         return name.length() > 2 && name.startsWith(QLatin1String("on")) && name.at(2).isUpper();
     }
 
-    virtual bool visit(QQmlJS::AST::UiScriptBinding *node)
+    bool visit(QQmlJS::AST::UiScriptBinding *node) override
     {
         QQmlJS::AST::UiQualifiedId* id = node->qualifiedId;
         if ((id && isSignalHandler(id->name)) || (id && id->next && isSignalHandler(id->next->name)))
@@ -267,7 +267,7 @@ void tst_Sanity::signalHandlers_data()
 class AnchorValidator : public BaseValidator
 {
 protected:
-    virtual bool visit(QQmlJS::AST::UiScriptBinding *node)
+    bool visit(QQmlJS::AST::UiScriptBinding *node) override
     {
         QQmlJS::AST::UiQualifiedId* id = node->qualifiedId;
         if (id && id->name ==  QStringLiteral("anchors"))
