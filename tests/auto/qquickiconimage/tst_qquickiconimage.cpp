@@ -53,7 +53,7 @@ public:
     tst_qquickiconimage();
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void defaults();
     void nameBindingSourceSize();
     void nameBindingSourceSizeWidthHeight();
@@ -496,7 +496,7 @@ class TestImageProvider : public QQuickImageProvider
 public:
     TestImageProvider() : QQuickImageProvider(QQuickImageProvider::Pixmap) { }
 
-    QPixmap requestPixmap(const QString &id, QSize *size, const QSize &requestedSize)
+    QPixmap requestPixmap(const QString &id, QSize *size, const QSize &requestedSize) override
     {
         QSize defaultSize(32, 32);
         if (size)

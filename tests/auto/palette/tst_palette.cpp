@@ -63,7 +63,7 @@ class tst_palette : public QQmlDataTest
     Q_OBJECT
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
 
     void palette_data();
     void palette();

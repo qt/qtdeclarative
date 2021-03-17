@@ -62,7 +62,7 @@ class tst_QQuickPopup : public QQmlDataTest
     Q_OBJECT
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void visible_data();
     void visible();
     void state();

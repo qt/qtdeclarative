@@ -113,7 +113,7 @@ class tst_customization : public QQmlDataTest
     Q_OBJECT
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void cleanupTestCase();
 
     void init();

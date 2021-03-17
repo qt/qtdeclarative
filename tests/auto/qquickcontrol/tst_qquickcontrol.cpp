@@ -49,7 +49,7 @@ class tst_QQuickControl : public QQmlDataTest
     Q_OBJECT
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
     void flickable();
 
 private:

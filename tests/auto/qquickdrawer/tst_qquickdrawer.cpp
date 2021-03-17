@@ -60,7 +60,7 @@ class tst_QQuickDrawer : public QQmlDataTest
     Q_OBJECT
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
 
     void defaults();
     void invalidEdge();

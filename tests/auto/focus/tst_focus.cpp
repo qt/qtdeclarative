@@ -55,7 +55,7 @@ class tst_focus : public QQmlDataTest
     Q_OBJECT
 
 private slots:
-    void initTestCase();
+    void initTestCase() override;
 
     void navigation_data();
     void navigation();
