@@ -37,47 +37,44 @@
 
 #include "commentastvisitor.h"
 
-using namespace QQmlJS::AST;
-using namespace QQmlJS;
-
-class DumpAstVisitor : protected Visitor
+class DumpAstVisitor : protected QQmlJS::AST::Visitor
 {
 public:
     enum Indentation { Tabs, Spaces };
 
-    DumpAstVisitor(QQmlJS::Engine *engine, Node *rootNode, CommentAstVisitor *comment,
+    DumpAstVisitor(QQmlJS::Engine *engine, QQmlJS::AST::Node *rootNode, CommentAstVisitor *comment,
                    int indentWidth, Indentation indentation);
 
     QString toString() const { return m_result; }
 
-    bool preVisit(Node *) override;
+    bool preVisit(QQmlJS::AST::Node *) override;
 
-    bool visit(UiScriptBinding *node) override;
+    bool visit(QQmlJS::AST::UiScriptBinding *node) override;
 
-    bool visit(UiArrayBinding *node) override;
-    void endVisit(UiArrayBinding *node) override;
+    bool visit(QQmlJS::AST::UiArrayBinding *node) override;
+    void endVisit(QQmlJS::AST::UiArrayBinding *node) override;
 
-    bool visit(UiObjectBinding *node) override;
-    void endVisit(UiObjectBinding *node) override;
+    bool visit(QQmlJS::AST::UiObjectBinding *node) override;
+    void endVisit(QQmlJS::AST::UiObjectBinding *node) override;
 
-    bool visit(FunctionDeclaration *node) override;
-    void endVisit(FunctionDeclaration *node) override;
+    bool visit(QQmlJS::AST::FunctionDeclaration *node) override;
+    void endVisit(QQmlJS::AST::FunctionDeclaration *node) override;
 
-    bool visit(UiInlineComponent *node) override;
+    bool visit(QQmlJS::AST::UiInlineComponent *node) override;
 
-    bool visit(UiObjectDefinition *node) override;
-    void endVisit(UiObjectDefinition *node) override;
+    bool visit(QQmlJS::AST::UiObjectDefinition *node) override;
+    void endVisit(QQmlJS::AST::UiObjectDefinition *node) override;
 
-    bool visit(UiEnumDeclaration *node) override;
-    void endVisit(UiEnumDeclaration *node) override;
+    bool visit(QQmlJS::AST::UiEnumDeclaration *node) override;
+    void endVisit(QQmlJS::AST::UiEnumDeclaration *node) override;
 
-    bool visit(UiEnumMemberList *node) override;
-    bool visit(UiPublicMember *node) override;
-    bool visit(UiImport *node) override;
-    bool visit(UiPragma *node) override;
+    bool visit(QQmlJS::AST::UiEnumMemberList *node) override;
+    bool visit(QQmlJS::AST::UiPublicMember *node) override;
+    bool visit(QQmlJS::AST::UiImport *node) override;
+    bool visit(QQmlJS::AST::UiPragma *node) override;
 
-    bool visit(UiAnnotation *node) override;
-    void endVisit(UiAnnotation *node) override;
+    bool visit(QQmlJS::AST::UiAnnotation *node) override;
+    void endVisit(QQmlJS::AST::UiAnnotation *node) override;
 
     void throwRecursionDepthError() override {}
 
@@ -93,8 +90,8 @@ private:
         bool m_inArrayBinding = false;
         bool m_pendingBinding = false;
 
-        UiObjectMember* m_lastInArrayBinding = nullptr;
-        QHash<QString, UiObjectMember*> m_bindings;
+        QQmlJS::AST::UiObjectMember* m_lastInArrayBinding = nullptr;
+        QHash<QString, QQmlJS::AST::UiObjectMember*> m_bindings;
     };
 
     QString generateIndent(int indentLevel) const;
@@ -103,43 +100,43 @@ private:
 
     QString formatComment(const Comment &comment) const;
 
-    QString getComment(Node *node, Comment::Location location) const;
-    QString getListItemComment(SourceLocation srcLocation, Comment::Location location) const;
+    QString getComment(QQmlJS::AST::Node *node, Comment::Location location) const;
+    QString getListItemComment(QQmlJS::SourceLocation srcLocation, Comment::Location location) const;
 
     void addNewLine(bool always = false);
     void addLine(QString line);
 
-    QString getOrphanedComments(Node *node) const;
+    QString getOrphanedComments(QQmlJS::AST::Node *node) const;
 
-    QString parseStatement(Statement *statement, bool blockHasNext = false,
+    QString parseStatement(QQmlJS::AST::Statement *statement, bool blockHasNext = false,
                            bool blockAllowBraceless = false);
-    QString parseStatementList(StatementList *list);
+    QString parseStatementList(QQmlJS::AST::StatementList *list);
 
-    QString parseExpression(ExpressionNode *expression);
+    QString parseExpression(QQmlJS::AST::ExpressionNode *expression);
 
-    QString parsePatternElement(PatternElement *element, bool scope = true);
-    QString parsePatternElementList(PatternElementList *element);
+    QString parsePatternElement(QQmlJS::AST::PatternElement *element, bool scope = true);
+    QString parsePatternElementList(QQmlJS::AST::PatternElementList *element);
 
-    QString parsePatternProperty(PatternProperty *property);
-    QString parsePatternPropertyList(PatternPropertyList *list);
+    QString parsePatternProperty(QQmlJS::AST::PatternProperty *property);
+    QString parsePatternPropertyList(QQmlJS::AST::PatternPropertyList *list);
 
-    QString parseArgumentList(ArgumentList *list);
+    QString parseArgumentList(QQmlJS::AST::ArgumentList *list);
 
-    QString parseUiParameterList(UiParameterList *list);
+    QString parseUiParameterList(QQmlJS::AST::UiParameterList *list);
 
-    QString parseVariableDeclarationList(VariableDeclarationList *list);
+    QString parseVariableDeclarationList(QQmlJS::AST::VariableDeclarationList *list);
 
-    QString parseCaseBlock(CaseBlock *block);
-    QString parseBlock(Block *block, bool hasNext, bool allowBraceless);
+    QString parseCaseBlock(QQmlJS::AST::CaseBlock *block);
+    QString parseBlock(QQmlJS::AST::Block *block, bool hasNext, bool allowBraceless);
 
-    QString parseExportsList(ExportsList *list);
-    QString parseExportSpecifier(ExportSpecifier *specifier);
+    QString parseExportsList(QQmlJS::AST::ExportsList *list);
+    QString parseExportSpecifier(QQmlJS::AST::ExportSpecifier *specifier);
 
-    QString parseFormalParameterList(FormalParameterList *list);
+    QString parseFormalParameterList(QQmlJS::AST::FormalParameterList *list);
 
-    QString parseType(Type *type);
+    QString parseType(QQmlJS::AST::Type *type);
 
-    QString parseFunctionExpression(FunctionExpression *expression, bool omitFunction = false);
+    QString parseFunctionExpression(QQmlJS::AST::FunctionExpression *expression, bool omitFunction = false);
 
     ScopeProperties& scope() { return m_scope_properties.top(); }
 

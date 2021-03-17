@@ -30,6 +30,8 @@
 
 #include <QList>
 
+using namespace QQmlJS::AST;
+
 RestructureAstVisitor::RestructureAstVisitor(Node *rootNode)
 {
     rootNode->accept(this);

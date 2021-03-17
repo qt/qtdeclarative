@@ -28,6 +28,9 @@
 
 #include "commentastvisitor.h"
 
+using namespace QQmlJS;
+using namespace QQmlJS::AST;
+
 CommentAstVisitor::CommentAstVisitor(QQmlJS::Engine *engine, Node *rootNode) : m_engine(engine)
 {
     rootNode->accept(this);

@@ -27,8 +27,9 @@
 ****************************************************************************/
 
 #include "dumpastvisitor.h"
-
 #include <QtQml/private/qqmljslexer_p.h>
+
+using namespace QQmlJS::AST;
 
 DumpAstVisitor::DumpAstVisitor(QQmlJS::Engine *engine, Node *rootNode, CommentAstVisitor *comment,
                                int indentWidth, DumpAstVisitor::Indentation indentation)
@@ -160,7 +161,7 @@ QString DumpAstVisitor::getComment(Node *node, Comment::Location location) const
     return formatComment(comment);
 }
 
-QString DumpAstVisitor::getListItemComment(SourceLocation srcLocation,
+QString DumpAstVisitor::getListItemComment(QQmlJS::SourceLocation srcLocation,
                                            Comment::Location location) const {
     const auto& comments = m_comment->listComments();
 

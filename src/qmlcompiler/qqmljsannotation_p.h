@@ -45,8 +45,6 @@
 
 QT_BEGIN_NAMESPACE
 
-using namespace QQmlJS::AST;
-
 struct QQQmlJSDeprecation
 {
     QString reason;

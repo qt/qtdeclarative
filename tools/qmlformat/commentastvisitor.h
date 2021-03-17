@@ -37,9 +37,6 @@
 #include <QString>
 #include <QVector>
 
-using namespace QQmlJS::AST;
-using namespace QQmlJS;
-
 struct Comment
 {
     enum Location : int
@@ -53,7 +50,7 @@ struct Comment
     } m_location = Front;
 
     Comment() = default;
-    Comment(const QQmlJS::Engine *engine, Location location, QList<SourceLocation> srcLocations)
+    Comment(const QQmlJS::Engine *engine, Location location, QList<QQmlJS::SourceLocation> srcLocations)
         : m_location(location), m_srcLocations(srcLocations) {
         for (const auto& srcLoc : srcLocations) {
             m_text += engine->code().mid(static_cast<int>(srcLoc.begin()),
@@ -63,15 +60,15 @@ struct Comment
         m_text.chop(1);
     }
 
-    QList<SourceLocation> m_srcLocations;
+    QList<QQmlJS::SourceLocation> m_srcLocations;
 
     bool hasSheBang() const { return !m_srcLocations.isEmpty() && m_srcLocations.first().begin() == 0; }
     bool isValid() const { return !m_srcLocations.isEmpty(); }
     bool isMultiline() const { return m_text.contains("\n"); }
     bool isSyntheticMultiline() const { return m_srcLocations.size() > 1; }
 
-    bool contains(const SourceLocation& location) const {
-        for (const SourceLocation& srcLoc : m_srcLocations) {
+    bool contains(const QQmlJS::SourceLocation& location) const {
+        for (const QQmlJS::SourceLocation& srcLoc : m_srcLocations) {
             if (srcLoc.begin() == location.begin() && srcLoc.end() == location.end())
                 return true;
         }
@@ -90,54 +87,55 @@ struct Comment
     QString m_text;
 };
 
-class CommentAstVisitor : protected Visitor
+namespace AST = QQmlJS::AST;
+class CommentAstVisitor : protected QQmlJS::AST::Visitor
 {
 public:
-    CommentAstVisitor(QQmlJS::Engine *engine, Node *rootNode);
+    CommentAstVisitor(QQmlJS::Engine *engine, AST::Node *rootNode);
 
     void throwRecursionDepthError() override {}
 
-    const QHash<Node *, Comment> attachedComments() const { return m_attachedComments; }
+    const QHash<AST::Node *, Comment> attachedComments() const { return m_attachedComments; }
     const QHash<quint32, Comment> listComments() const { return m_listItemComments; }
-    const QHash<Node *, QVector<Comment>> orphanComments() const { return m_orphanComments; }
+    const QHash<AST::Node *, QVector<Comment>> orphanComments() const { return m_orphanComments; }
 
-    bool visit(UiScriptBinding *node) override;
-    bool visit(UiObjectBinding *node) override;
+    bool visit(AST::UiScriptBinding *node) override;
+    bool visit(AST::UiObjectBinding *node) override;
 
-    bool visit(UiArrayBinding *node) override;
-    void endVisit(UiArrayBinding *node) override;
+    bool visit(AST::UiArrayBinding *node) override;
+    void endVisit(AST::UiArrayBinding *node) override;
 
-    bool visit(UiObjectDefinition *node) override;
-    void endVisit(UiObjectDefinition *) override;
+    bool visit(AST::UiObjectDefinition *node) override;
+    void endVisit(AST::UiObjectDefinition *) override;
 
-    bool visit(UiEnumDeclaration *node) override;
-    void endVisit(UiEnumDeclaration *node) override;
+    bool visit(AST::UiEnumDeclaration *node) override;
+    void endVisit(AST::UiEnumDeclaration *node) override;
 
-    bool visit(UiEnumMemberList *node) override;
+    bool visit(AST::UiEnumMemberList *node) override;
 
-    bool visit(StatementList *node) override;
-    void endVisit(StatementList *node) override;
+    bool visit(AST::StatementList *node) override;
+    void endVisit(AST::StatementList *node) override;
 
-    bool visit(UiImport *node) override;
-    bool visit(UiPragma *node) override;
-    bool visit(UiPublicMember *node) override;
-    bool visit(FunctionDeclaration *node) override;
+    bool visit(AST::UiImport *node) override;
+    bool visit(AST::UiPragma *node) override;
+    bool visit(AST::UiPublicMember *node) override;
+    bool visit(AST::FunctionDeclaration *node) override;
 private:
-    bool isCommentAttached(const SourceLocation& location) const;
+    bool isCommentAttached(const QQmlJS::SourceLocation& location) const;
 
-    QList<SourceLocation> findCommentsInLine(quint32 line, bool includePrevious = false) const;
+    QList<QQmlJS::SourceLocation> findCommentsInLine(quint32 line, bool includePrevious = false) const;
 
-    Comment findComment(SourceLocation first, SourceLocation last,
+    Comment findComment(QQmlJS::SourceLocation first, QQmlJS::SourceLocation last,
                         int locations = Comment::DefaultLocations) const;
 
-    Comment findComment(Node *node, int locations = Comment::DefaultLocations) const;
-    QVector<Comment> findOrphanComments(Node *node) const;
-    void attachComment(Node *node, int locations = Comment::DefaultLocations);
+    Comment findComment(AST::Node *node, int locations = Comment::DefaultLocations) const;
+    QVector<Comment> findOrphanComments(AST::Node *node) const;
+    void attachComment(AST::Node *node, int locations = Comment::DefaultLocations);
 
     QQmlJS::Engine *m_engine;
-    QHash<Node *, Comment> m_attachedComments;
+    QHash<AST::Node *, Comment> m_attachedComments;
     QHash<quint32, Comment> m_listItemComments;
-    QHash<Node *, QVector<Comment>> m_orphanComments;
+    QHash<AST::Node *, QVector<Comment>> m_orphanComments;
 };
 
 #endif // COMMENTASTVISITOR_H

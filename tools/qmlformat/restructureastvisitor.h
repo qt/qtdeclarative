@@ -32,16 +32,14 @@
 #include <QtQml/private/qqmljsastvisitor_p.h>
 #include <QtQml/private/qqmljsast_p.h>
 
-using namespace QQmlJS::AST;
-
-class RestructureAstVisitor : protected Visitor
+class RestructureAstVisitor : protected QQmlJS::AST::Visitor
 {
 public:
-    RestructureAstVisitor(Node *rootNode);
+    RestructureAstVisitor(QQmlJS::AST::Node *rootNode);
 
     void throwRecursionDepthError() override {}
 
-    void endVisit(UiObjectMemberList *node) override;
+    void endVisit(QQmlJS::AST::UiObjectMemberList *node) override;
 };
 
 #endif // RESTRUCTUREASTVISITOR_H
