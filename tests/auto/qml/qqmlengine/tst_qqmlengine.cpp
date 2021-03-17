@@ -44,6 +44,7 @@
 #include <QTemporaryDir>
 #include <private/qqmlengine_p.h>
 #include <private/qqmltypedata_p.h>
+#include <private/qqmlcomponentattached_p.h>
 #include <QQmlAbstractUrlInterceptor>
 
 class tst_qqmlengine : public QQmlDataTest
@@ -87,6 +88,8 @@ private slots:
     void uiLanguage();
     void executeRuntimeFunction();
     void captureQProperty();
+    void listWrapperAsListReference();
+    void attachedObjectAsObject();
 
 public slots:
     QObject *createAQObjectForOwnershipTest ()
@@ -1340,6 +1343,32 @@ void tst_qqmlengine::captureQProperty()
     QCOMPARE(o->property("x").toInt(), 12);
     static_cast<WithoutQProperty *>(o.data())->triggerBinding(13);
     QCOMPARE(o->property("x").toInt(), 13);
+}
+
+void tst_qqmlengine::listWrapperAsListReference()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+    c.setData("import QtQml\nQtObject {\nproperty list<QtObject> c: [ QtObject {} ]\n}", QUrl());
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QJSManagedValue m = engine.toManagedValue(o.data());
+    QJSValue prop = m.property("c");
+    const QQmlListReference ref = qjsvalue_cast<QQmlListReference>(prop);
+    QCOMPARE(ref.size(), 1);
+}
+
+void tst_qqmlengine::attachedObjectAsObject()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+    c.setData("import QtQml\nQtObject { property var a: Component }", QUrl());
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QJSManagedValue m = engine.toManagedValue(o.data());
+    QJSValue prop = m.property("a");
+    const QQmlComponentAttached *attached = qjsvalue_cast<QQmlComponentAttached *>(prop);
+    QCOMPARE(attached, qmlAttachedPropertiesObject<QQmlComponent>(o.data()));
 }
 
 QTEST_MAIN(tst_qqmlengine)

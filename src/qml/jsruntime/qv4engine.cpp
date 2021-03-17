@@ -2388,6 +2388,13 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, int type, void *data)
             *reinterpret_cast<int *>(data) = value.toInt32();
             return true;
         }
+
+        if (metaType == QMetaType::fromType<QQmlListReference>()) {
+            if (const QV4::QmlListWrapper *wrapper = value.as<QV4::QmlListWrapper>()) {
+                *reinterpret_cast<QQmlListReference *>(data) = wrapper->toListReference();
+                return true;
+            }
+        }
     }
 
     {
@@ -2514,9 +2521,14 @@ static QObject *qtObjectFromJS(const QV4::Value &value)
             return *reinterpret_cast<QObject* const *>(variant.constData());
     }
     QV4::Scoped<QV4::QObjectWrapper> wrapper(scope, value);
-    if (!wrapper)
-        return nullptr;
-    return wrapper->object();
+    if (wrapper)
+        return wrapper->object();
+
+    QV4::Scoped<QV4::QQmlTypeWrapper> typeWrapper(scope, value);
+    if (typeWrapper)
+        return typeWrapper->object();
+
+    return nullptr;
 }
 
 struct QV4EngineRegistrationData

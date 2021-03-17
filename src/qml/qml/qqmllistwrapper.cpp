@@ -97,7 +97,14 @@ QVariant QmlListWrapper::toVariant() const
     if (!d()->object)
         return QVariant();
 
-    return QVariant::fromValue(QQmlListReferencePrivate::init(d()->property(), QMetaType(d()->propertyType), engine()->qmlEngine()));
+    return QVariant::fromValue(toListReference());
+}
+
+QQmlListReference QmlListWrapper::toListReference() const
+{
+    Heap::QmlListWrapper *wrapper = d();
+    return QQmlListReferencePrivate::init(
+                wrapper->property(), QMetaType(wrapper->propertyType), engine()->qmlEngine());
 }
 
 

@@ -93,6 +93,7 @@ struct Q_QML_EXPORT QmlListWrapper : Object
     static ReturnedValue create(ExecutionEngine *engine, const QQmlListProperty<QObject> &prop, QMetaType propType);
 
     QVariant toVariant() const;
+    QQmlListReference toListReference() const;
 
     static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
     static bool virtualPut(Managed *m, PropertyKey id, const Value &value, Value *receiver);

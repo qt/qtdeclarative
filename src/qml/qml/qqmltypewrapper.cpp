@@ -85,6 +85,21 @@ bool QQmlTypeWrapper::isSingleton() const
     return d()->type().isSingleton();
 }
 
+QObject *QQmlTypeWrapper::object() const
+{
+    const QQmlType type = d()->type();
+    if (!type.isValid())
+        return nullptr;
+
+    QQmlEngine *qmlEngine = engine()->qmlEngine();
+    if (type.isSingleton())
+        return QQmlEnginePrivate::get(qmlEngine)->singletonInstance<QObject *>(type);
+
+    return qmlAttachedPropertiesObject(
+            d()->object,
+            type.attachedPropertiesFunction(QQmlEnginePrivate::get(qmlEngine)));
+}
+
 QObject* QQmlTypeWrapper::singletonObject() const
 {
     if (!isSingleton())

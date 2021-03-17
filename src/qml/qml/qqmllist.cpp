@@ -55,7 +55,7 @@ static bool isObjectCompatible(QObject *object, QQmlListReferencePrivate *d)
 }
 
 QQmlListReferencePrivate::QQmlListReferencePrivate()
-: propertyType(-1), refCount(1)
+: refCount(1)
 {
 }
 
