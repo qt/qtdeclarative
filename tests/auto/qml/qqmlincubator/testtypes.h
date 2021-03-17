@@ -99,8 +99,8 @@ class CompletionRegisteringType : public QObject, public QQmlParserStatus
 public:
     CompletionRegisteringType();
 
-    virtual void classBegin();
-    virtual void componentComplete();
+    void classBegin() override;
+    void componentComplete() override;
 
     static CompletionRegisteringType *me();
     static void clearMe();
@@ -116,8 +116,8 @@ class CompletionCallbackType : public QObject, public QQmlParserStatus
 public:
     CompletionCallbackType();
 
-    virtual void classBegin();
-    virtual void componentComplete();
+    void classBegin() override;
+    void componentComplete() override;
 
     typedef void (*callback)(CompletionCallbackType *, void *);
     static void clearCallback();
