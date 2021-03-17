@@ -230,8 +230,8 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
 {
     Q_D(QQuickParentAnimation);
 
-    QQuickParentAnimationData *data = new QQuickParentAnimationData;
-    QQuickParentAnimationData *viaData = new QQuickParentAnimationData;
+    std::unique_ptr<QQuickParentAnimationData> data(new QQuickParentAnimationData);
+    std::unique_ptr<QQuickParentAnimationData> viaData(new QQuickParentAnimationData);
 
     bool hasExplicit = false;
     if (d->target && d->newParent) {
@@ -377,8 +377,8 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
         QParallelAnimationGroupJob *ag = new QParallelAnimationGroupJob;
 
         if (d->via)
-            viaAction->setAnimAction(viaData);
-        targetAction->setAnimAction(data);
+            viaAction->setAnimAction(viaData.release());
+        targetAction->setAnimAction(data.release());
 
         //take care of any child animations
         bool valid = d->defaultProperty.isValid();
@@ -405,9 +405,6 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
             topLevelGroup->appendAnimation(d->via ? viaAction : targetAction);
         }
         return initInstance(topLevelGroup);
-    } else {
-        delete data;
-        delete viaData;
     }
     return nullptr;
 }
