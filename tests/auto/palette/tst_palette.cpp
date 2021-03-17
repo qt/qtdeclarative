@@ -304,7 +304,7 @@ void tst_palette::defaultPalette()
 
     // The call to setData() above causes QQuickBasicTheme to be set as the current theme,
     // so we must make sure we only set our theme afterwards.
-    std::unique_ptr<QQuickTheme> oldTheme(QQuickThemePrivate::instance.take());
+    std::unique_ptr<QQuickTheme> oldTheme(QQuickThemePrivate::instance.release());
     QQuickThemePrivate::instance.reset(new TestTheme);
 
     QScopedPointer<QObject> object(component.create());

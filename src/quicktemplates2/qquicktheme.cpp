@@ -42,7 +42,7 @@
 
 QT_BEGIN_NAMESPACE
 
-QScopedPointer<QQuickTheme> QQuickThemePrivate::instance;
+std::unique_ptr<QQuickTheme> QQuickThemePrivate::instance;
 
 static void cleanup_instance()
 {
@@ -117,7 +117,7 @@ QQuickTheme::~QQuickTheme()
 
 QQuickTheme *QQuickTheme::instance()
 {
-    return QQuickThemePrivate::instance.data();
+    return QQuickThemePrivate::instance.get();
 }
 
 QFont QQuickTheme::font(Scope scope)

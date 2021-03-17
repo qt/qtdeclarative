@@ -60,7 +60,7 @@ public:
         return theme->d_func();
     }
 
-    static QScopedPointer<QQuickTheme> instance;
+    static std::unique_ptr<QQuickTheme> instance;
 
     static const int NScopes = QQuickTheme::Tumbler + 1;
 
