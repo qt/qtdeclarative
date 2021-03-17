@@ -256,7 +256,7 @@ void QQuickTextNodeEngine::processCurrentLine()
     QVarLengthArray<TextDecoration> pendingOverlines;
     QVarLengthArray<TextDecoration> pendingStrikeOuts;
     if (!sortedIndexes.isEmpty()) {
-        QQuickDefaultClipNode *currentClipNode = m_hasSelection ? new QQuickDefaultClipNode(QRectF()) : nullptr;
+        std::unique_ptr<QQuickDefaultClipNode> currentClipNode(m_hasSelection ? new QQuickDefaultClipNode(QRectF()) : nullptr);
         bool currentClipNodeUsed = false;
         for (int i=0; i<=sortedIndexes.size(); ++i) {
             BinaryTreeNode *node = nullptr;
@@ -304,7 +304,7 @@ void QQuickTextNodeEngine::processCurrentLine()
 
                 if (currentClipNode != nullptr) {
                     if (!currentClipNodeUsed) {
-                        delete currentClipNode;
+                        currentClipNode.reset();
                     } else {
                         currentClipNode->setIsRectangular(true);
                         currentClipNode->setRect(currentRect);
@@ -313,9 +313,9 @@ void QQuickTextNodeEngine::processCurrentLine()
                 }
 
                 if (node != nullptr && m_hasSelection)
-                    currentClipNode = new QQuickDefaultClipNode(QRectF());
+                    currentClipNode.reset(new QQuickDefaultClipNode(QRectF()));
                 else
-                    currentClipNode = nullptr;
+                    currentClipNode.reset(nullptr);
                 currentClipNodeUsed = false;
 
                 if (node != nullptr) {
@@ -335,7 +335,7 @@ void QQuickTextNodeEngine::processCurrentLine()
 
             if (node != nullptr) {
                 if (node->selectionState == Selected) {
-                    node->clipNode = currentClipNode;
+                    node->clipNode = currentClipNode.release();
                     currentClipNodeUsed = true;
                 }
 
