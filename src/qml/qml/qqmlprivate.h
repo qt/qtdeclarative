@@ -83,9 +83,9 @@ using QQmlAttachedPropertiesFunc = A *(*)(QObject *);
 
 namespace QV4 {
 struct ExecutionEngine;
+class ExecutableCompilationUnit;
 namespace CompiledData {
 struct Unit;
-struct CompilationUnit;
 }
 }
 namespace QmlIR {
@@ -606,10 +606,19 @@ namespace QQmlPrivate
         QQmlContext *qmlContext;
         QObject *qmlScopeObject;
         QJSEngine *engine;
-        QV4::CompiledData::CompilationUnit *compilationUnit;
+        QV4::ExecutableCompilationUnit *compilationUnit;
 
         QJSValue jsMetaType(int index) const;
         void setInstructionPointer(int offset) const;
+
+        QJSValue loadQmlContextPropertyLookup(uint index) const;
+        QJSValue callQmlContextPropertyLookup(uint index, const QJSValueList &args) const;
+        QJSValue getLookup(uint index, const QJSValue &object) const;
+        void setLookup(uint index, const QJSValue &object, const QJSValue &value) const;
+        QJSValue callPropertyLookup(uint index, const QJSValue &object,
+                                    const QJSValueList &args) const;
+        QJSValue callGlobalLookup(uint index, const QJSValueList &args) const;
+        QJSValue loadGlobalLookup(uint index) const;
     };
 
     struct AOTCompiledFunction {

@@ -125,6 +125,8 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT JSUnitGenerator {
     int registerSetterLookup(int nameIndex);
     int registerGlobalGetterLookup(int nameIndex);
     int registerQmlContextPropertyGetterLookup(int nameIndex);
+    int lookupNameIndex(int index) const { return lookups[index].nameIndex; }
+    QString lookupName(int index) const { return stringForIndex(lookupNameIndex(index)); }
 
     int registerRegExp(QQmlJS::AST::RegExpLiteral *regexp);
 

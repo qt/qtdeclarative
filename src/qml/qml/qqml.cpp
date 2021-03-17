@@ -49,6 +49,7 @@
 #include <private/qqmltypemodule_p.h>
 #include <private/qqmltypenotavailable_p.h>
 #include <private/qqmlcomponent_p.h>
+#include <private/qv4lookup_p.h>
 
 #include <QtCore/qmutex.h>
 
@@ -694,6 +695,109 @@ void QQmlPrivate::AOTCompiledContext::setInstructionPointer(int offset) const
 {
     if (auto *frame = engine->handle()->currentStackFrame)
         frame->instructionPointer = offset;
+}
+
+QJSValue QQmlPrivate::AOTCompiledContext::loadQmlContextPropertyLookup(uint index) const
+{
+    QV4::Lookup *l = compilationUnit->runtimeLookups + index;
+    return QJSValuePrivate::fromReturnedValue(l->qmlContextPropertyGetter(
+                                                  l, engine->handle(), nullptr));
+}
+
+QJSValue QQmlPrivate::AOTCompiledContext::callQmlContextPropertyLookup(
+        uint index, const QJSValueList &args) const
+{
+    QV4::Scope scope(engine->handle());
+    const int argc = args.length();
+    QV4::Value *argv = scope.alloc(args.length());
+    for (int i = 0; i < argc; ++i)
+        argv[i] = QJSValuePrivate::convertToReturnedValue(scope.engine, args.at(i));
+    return QJSValuePrivate::fromReturnedValue(QV4::Runtime::CallQmlContextPropertyLookup::call(
+                                                  engine->handle(), index, argv, argc));
+}
+
+QJSValue QQmlPrivate::AOTCompiledContext::getLookup(uint index, const QJSValue &object) const
+{
+    QV4::Lookup *l = compilationUnit->runtimeLookups + index;
+
+    if (object.isNull() || object.isUndefined()) {
+        QString message = QStringLiteral("Cannot read property '%1' of %2")
+                .arg(compilationUnit->runtimeStrings[l->nameIndex]->toQString(), object.toString());
+        return QJSValuePrivate::fromReturnedValue(engine->handle()->throwTypeError(message));
+    }
+
+    return QJSValuePrivate::fromReturnedValue(
+                l->getter(l, engine->handle(),
+                          QJSValuePrivate::convertToReturnedValue(engine->handle(), object)));
+}
+
+void QQmlPrivate::AOTCompiledContext::setLookup(
+        uint index, const QJSValue &object, const QJSValue &value) const
+{
+    QV4::Lookup *l = compilationUnit->runtimeLookups + index;
+    QV4::Scope scope(engine->handle());
+    QV4::ScopedValue o(scope, QJSValuePrivate::convertToReturnedValue(scope.engine, object));
+    if (!l->setter(l, engine->handle(), *o,
+                   QJSValuePrivate::convertToReturnedValue(engine->handle(), value))) {
+        engine->handle()->throwTypeError();
+    }
+}
+
+QJSValue QQmlPrivate::AOTCompiledContext::callPropertyLookup(
+        uint index, const QJSValue &object, const QJSValueList &args) const
+{
+    QV4::Lookup *l = compilationUnit->runtimeLookups + index;
+    QV4::Scope scope(engine->handle());
+    QV4::ScopedValue o(scope, QJSValuePrivate::convertToReturnedValue(scope.engine, object));
+
+    // ok to have the value on the stack here
+    QV4::Value f = QV4::Value::fromReturnedValue(l->getter(l, engine->handle(), o));
+
+    if (Q_UNLIKELY(!f.isFunctionObject())) {
+        QString message = QStringLiteral("Property '%1' of object %2 is not a function")
+                .arg(compilationUnit->runtimeStrings[l->nameIndex]->toQString(),
+                     object.toString());
+        engine->handle()->throwTypeError(message);
+        return QJSValue();
+    }
+
+    const int argc = args.length();
+    QV4::Value *argv = scope.alloc(args.length());
+    for (int i = 0; i < argc; ++i)
+        argv[i] = QJSValuePrivate::convertToReturnedValue(scope.engine, args.at(i));
+
+    return QJSValuePrivate::fromReturnedValue(
+                static_cast<QV4::FunctionObject &>(f).call(o, argv, argc));
+}
+
+QJSValue QQmlPrivate::AOTCompiledContext::callGlobalLookup(
+        uint index, const QJSValueList &args) const
+{
+    QV4::Scope scope(engine->handle());
+    QV4::Lookup *l = compilationUnit->runtimeLookups + index;
+    QV4::Value function = QV4::Value::fromReturnedValue(l->globalGetter(l, scope.engine));
+    if (!function.isFunctionObject()) {
+        const QString msg = QStringLiteral("Property '%1' of object [null] is not a function")
+                            .arg(compilationUnit->runtimeStrings[l->nameIndex]->toQString());
+        return QJSValuePrivate::fromReturnedValue(scope.engine->throwTypeError(msg));
+    }
+
+    const int argc = args.length();
+    QV4::Value *argv = scope.alloc(args.length());
+    for (int i = 0; i < argc; ++i)
+        argv[i] = QJSValuePrivate::convertToReturnedValue(scope.engine, args.at(i));
+
+    QV4::Value thisObject = QV4::Value::undefinedValue();
+    QV4::ReturnedValue result = static_cast<QV4::FunctionObject &>(function).call(
+                &thisObject, argv, argc);
+
+    return scope.engine->hasException ? QJSValue() : QJSValuePrivate::fromReturnedValue(result);
+}
+
+QJSValue QQmlPrivate::AOTCompiledContext::loadGlobalLookup(uint index) const
+{
+    QV4::Lookup *l = compilationUnit->runtimeLookups + index;
+    return QJSValuePrivate::fromReturnedValue(l->globalGetter(l, engine->handle()));
 }
 
 QT_END_NAMESPACE
