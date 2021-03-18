@@ -93,18 +93,11 @@ static bool beginDeferred(QQmlEnginePrivate *enginePriv, const QQmlProperty &pro
 
         std::deque<const QV4::CompiledData::Binding *> reversedBindings;
         std::copy(range.first, range.second, std::front_inserter(reversedBindings));
-#if Q_QML_PRIVATE_API_VERSION < 7
-        for (const QV4::CompiledData::Binding *binding : reversedBindings) {
-            if (!state->creator->populateDeferredBinding(property, deferData, binding))
-                state->errors << state->creator->errors;
-        }
-#else
         state->creator->beginPopulateDeferred(deferData->context);
         for (const QV4::CompiledData::Binding *binding : reversedBindings)
             state->creator->populateDeferredBinding(property, deferData->deferredIdx, binding);
         state->creator->finalizePopulateDeferred();
         state->errors << state->creator->errors;
-#endif
 
         deferredState->constructionStates += state;
 
