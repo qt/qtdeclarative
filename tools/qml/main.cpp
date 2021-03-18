@@ -99,6 +99,7 @@ static const QString iconResourcePath(QStringLiteral(":/qt-project.org/QmlRuntim
 static const QString confResourcePath(QStringLiteral(":/qt-project.org/QmlRuntime/conf/"));
 static bool verboseMode = false;
 static bool quietMode = false;
+static bool glShareContexts = true;
 
 static void loadConf(const QString &override, bool quiet) // Terminates app on failure
 {
@@ -330,6 +331,8 @@ static void getAppFlags(int argc, char **argv)
             QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
         } else if (!strcmp(argv[i], "-software") || !strcmp(argv[i], "--software")) {
             QCoreApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
+        } else if (!strcmp(argv[i], "-disable-context-sharing") || !strcmp(argv[i], "--disable-context-sharing")) {
+            glShareContexts = false;
         }
     }
 #else
@@ -365,6 +368,10 @@ static void loadDummyDataFiles(QQmlEngine &engine, const QString& directory)
 int main(int argc, char *argv[])
 {
     getAppFlags(argc, argv);
+
+    if (glShareContexts)
+        QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
+
     std::unique_ptr<QCoreApplication> app;
     switch (applicationType) {
 #ifdef QT_GUI_LIB
@@ -444,6 +451,9 @@ int main(int argc, char *argv[])
     QCommandLineOption glCoreProfile(QStringLiteral("core-profile"),
         QCoreApplication::translate("main", "Force use of OpenGL Core Profile."));
     parser.addOption(glCoreProfile);
+    QCommandLineOption glContextSharing(QStringLiteral("disable-context-sharing"),
+        QCoreApplication::translate("main", "Disable the use of a shared GL context for QtQuick Windows"));
+    parser.addOption(glContextSharing); // Just for the help text... we've already handled this argument above
 #endif // QT_GUI_LIB
     // Debugging and verbosity options
     QCommandLineOption quietOption(QStringLiteral("quiet"),
