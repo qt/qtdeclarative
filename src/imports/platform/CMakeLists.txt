@@ -8,7 +8,8 @@ qt_internal_add_qml_module(qtlabsplatformplugin
     URI "Qt.labs.platform"
     VERSION "1.1"
     CLASSNAME QtLabsPlatformPlugin
-    SKIP_TYPE_REGISTRATION
+    GENERATE_QMLTYPES
+    INSTALL_QMLTYPES
     SOURCES
         qquickplatformcolordialog.cpp qquickplatformcolordialog_p.h
         qquickplatformdialog.cpp qquickplatformdialog_p.h

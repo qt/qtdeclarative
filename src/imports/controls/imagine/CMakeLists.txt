@@ -11,6 +11,7 @@ qt_internal_add_qml_module(qtquickcontrols2imaginestyleplugin
     IMPORTS
         QtQuick.Controls.Basic/auto
     GENERATE_QMLTYPES
+    INSTALL_QMLTYPES
     SOURCES
         qquickimaginestyle.cpp qquickimaginestyle_p.h
         qquickimaginetheme.cpp qquickimaginetheme_p.h

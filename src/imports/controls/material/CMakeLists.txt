@@ -11,6 +11,7 @@ qt_internal_add_qml_module(qtquickcontrols2materialstyleplugin
     IMPORTS
         QtQuick.Controls.Basic/auto
     GENERATE_QMLTYPES
+    INSTALL_QMLTYPES
     SOURCES
         qquickmaterialstyle.cpp qquickmaterialstyle_p.h
         qquickmaterialtheme.cpp qquickmaterialtheme_p.h

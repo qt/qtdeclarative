@@ -9,6 +9,7 @@ qt_internal_add_qml_module(qtquickcontrols2basicstyleplugin
     VERSION "${CMAKE_PROJECT_VERSION}"
     CLASSNAME QtQuickControls2BasicStylePlugin
     GENERATE_QMLTYPES
+    INSTALL_QMLTYPES
     SOURCES
         qquickbasicstyle.cpp qquickbasicstyle_p.h
         qquickbasictheme.cpp qquickbasictheme_p.h

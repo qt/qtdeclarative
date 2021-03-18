@@ -11,6 +11,7 @@ qt_internal_add_qml_module(qtquickcontrols2universalstyleplugin
     IMPORTS
         QtQuick.Controls.Basic/auto
     GENERATE_QMLTYPES
+    INSTALL_QMLTYPES
     SOURCES
         qquickuniversalstyle.cpp qquickuniversalstyle_p.h
         qquickuniversaltheme.cpp qquickuniversaltheme_p.h

@@ -11,6 +11,7 @@ qt_internal_add_qml_module(qtquickcontrols2fusionstyleplugin
     IMPORTS
         QtQuick.Controls.Basic/auto
     GENERATE_QMLTYPES
+    INSTALL_QMLTYPES
     SOURCES
         qquickfusionstyle.cpp qquickfusionstyle_p.h
         qquickfusiontheme.cpp qquickfusiontheme_p.h
