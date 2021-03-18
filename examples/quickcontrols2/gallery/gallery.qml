@@ -73,9 +73,11 @@ ApplicationWindow {
         Qt.openUrlExternally(url)
     }
 
+    required property var builtInStyles
+
     Settings {
         id: settings
-        property string style: "Basic"
+        property string style
     }
 
     Shortcut {
@@ -285,7 +287,7 @@ ApplicationWindow {
                 ComboBox {
                     id: styleBox
                     property int styleIndex: -1
-                    model: builtInStyles
+                    model: window.builtInStyles
                     Component.onCompleted: {
                         styleIndex = find(settings.style, Qt.MatchFixedString)
                         if (styleIndex !== -1)

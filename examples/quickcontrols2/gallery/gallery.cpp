@@ -65,8 +65,15 @@ int main(int argc, char *argv[])
     QIcon::setThemeName("gallery");
 
     QSettings settings;
-    if (qgetenv("QT_QUICK_CONTROLS_STYLE").isEmpty())
+    if (qEnvironmentVariableIsEmpty("QT_QUICK_CONTROLS_STYLE"))
         QQuickStyle::setStyle(settings.value("style").toString());
+
+    // If this is the first time we're running the application,
+    // we need to set a style in the settings so that the QML
+    // can find it in the list of built-in styles.
+    const QString styleInSettings = settings.value("style").toString();
+    if (styleInSettings.isEmpty())
+        settings.setValue(QLatin1String("style"), QQuickStyle::name());
 
     QQmlApplicationEngine engine;
 
@@ -77,8 +84,8 @@ int main(int argc, char *argv[])
 #elif defined(Q_OS_WINDOWS)
     builtInStyles << QLatin1String("Windows");
 #endif
-    engine.rootContext()->setContextProperty("builtInStyles", builtInStyles);
 
+    engine.setInitialProperties({{ "builtInStyles", builtInStyles }});
     engine.load(QUrl("qrc:/gallery.qml"));
     if (engine.rootObjects().isEmpty())
         return -1;
