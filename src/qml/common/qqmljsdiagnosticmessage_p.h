@@ -56,7 +56,6 @@
 
 // Include the API version here, to avoid complications when querying it for the
 // QQmlSourceLocation -> line/column change.
-#include <private/qqmlapiversion_p.h>
 
 #include "qqmljssourcelocation_p.h"
 

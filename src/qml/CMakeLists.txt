@@ -86,7 +86,6 @@ qt_internal_add_module(Qml
         ../3rdparty/masm/yarr/YarrSyntaxChecker.cpp ../3rdparty/masm/yarr/YarrSyntaxChecker.h
         ../3rdparty/masm/yarr/YarrUnicodeProperties.h
         common/qjsnumbercoercion.cpp common/qjsnumbercoercion.h
-        common/qqmlapiversion_p.h
         common/qqmljsdiagnosticmessage_p.h
         common/qqmljsfixedpoolarray_p.h
         common/qqmljsmemorypool_p.h

@@ -56,7 +56,6 @@
 #ifndef QT_QML_BOOTSTRAPPED
 #  include <QtQml/private/qtqml-config_p.h>
 #endif
-#include <private/qqmlapiversion_p.h>
 
 #define Q_QML_PRIVATE_EXPORT Q_QML_EXPORT
 

@@ -9,7 +9,6 @@ qt_internal_add_module(QmlDevTools
     INTERNAL_MODULE
     NO_SYNC_QT
     SOURCES
-        ../qml/common/qqmlapiversion_p.h
         ../qml/common/qqmljsdiagnosticmessage_p.h
         ../qml/common/qqmljsfixedpoolarray_p.h
         ../qml/common/qqmljsmemorypool_p.h
