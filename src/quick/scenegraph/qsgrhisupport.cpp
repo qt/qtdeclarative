@@ -252,12 +252,6 @@ void QSGRhiSupport::adjustToPlatformQuirks()
 #endif
 }
 
-QSGRhiSupport *QSGRhiSupport::staticInst()
-{
-    static QSGRhiSupport inst;
-    return &inst;
-}
-
 void QSGRhiSupport::checkEnvQSgInfo()
 {
     // For compatibility with 5.3 and earlier's QSG_INFO environment variables
@@ -269,21 +263,25 @@ void QSGRhiSupport::configure(QSGRendererInterface::GraphicsApi api)
 {
     if (api == QSGRendererInterface::Unknown) {
         // behave as if nothing was explicitly requested
-        QSGRhiSupport *inst = staticInst();
-        inst->m_requested.valid = false;
-        inst->applySettings();
+        m_requested.valid = false;
+        applySettings();
     } else {
         Q_ASSERT(QSGRendererInterface::isApiRhiBased(api));
-        QSGRhiSupport *inst = staticInst();
-        inst->m_requested.valid = true;
-        inst->m_requested.api = api;
-        inst->applySettings();
+        m_requested.valid = true;
+        m_requested.api = api;
+        applySettings();
     }
+}
+
+QSGRhiSupport *QSGRhiSupport::instance_internal()
+{
+    static QSGRhiSupport inst;
+    return &inst;
 }
 
 QSGRhiSupport *QSGRhiSupport::instance()
 {
-    QSGRhiSupport *inst = staticInst();
+    QSGRhiSupport *inst = instance_internal();
     if (!inst->m_settingsApplied)
         inst->applySettings();
     return inst;
