@@ -232,7 +232,7 @@ bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
         QmlIR::JSCodeGen v4CodeGen(&irDocument, *illegalNames());
 
         if (aotCompiler)
-            aotCompiler->setDocument(&irDocument);
+            aotCompiler->setDocument(&v4CodeGen, &irDocument);
 
         QHash<QmlIR::Object *, QmlIR::Object *> effectiveScopes;
         for (QmlIR::Object *object: qAsConst(irDocument.objects)) {
@@ -276,6 +276,7 @@ bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
             std::for_each(bindingsAndFunctions.begin(), bindingsAndFunctions.end(),
                           [&](const BindingOrFunction &bindingOrFunction) {
                 std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage> result;
+                auto *module = v4CodeGen.module();
                 if (const auto *binding = bindingOrFunction.binding()) {
                     switch (binding->type) {
                     case QmlIR::Binding::Type_AttachedProperty:
@@ -287,18 +288,33 @@ bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
                     case QmlIR::Binding::Type_Number:
                     case QmlIR::Binding::Type_String:
                     case QmlIR::Binding::Type_Null:
+                    case QmlIR::Binding::Type_Object:
                         return;
                     default:
                         break;
                     }
 
+                    Q_ASSERT(functionsToCompile.length() > binding->value.compiledScriptIndex);
+                    auto *node = functionsToCompile[binding->value.compiledScriptIndex].parentNode;
+                    Q_ASSERT(node);
+                    Q_ASSERT(module->contextMap.contains(node));
+                    QV4::Compiler::Context *context = module->contextMap[node];
+                    Q_ASSERT(context);
+
                     qCDebug(lcAotCompiler) << "Compiling binding for property"
                                            << irDocument.stringAt(binding->propertyNameIndex);
-                    result = aotCompiler->compileBinding(*binding);
+                    result = aotCompiler->compileBinding(context, *binding);
                 } else if (const auto *function = bindingOrFunction.function()) {
+                    Q_ASSERT(functionsToCompile.length() > function->index);
+                    auto *node = functionsToCompile[function->index].node;
+                    Q_ASSERT(node);
+                    Q_ASSERT(module->contextMap.contains(node));
+                    QV4::Compiler::Context *context = module->contextMap[node];
+                    Q_ASSERT(context);
+
                     qCDebug(lcAotCompiler) << "Compiling function"
                                            << irDocument.stringAt(function->nameIndex);
-                    result = aotCompiler->compileFunction(*function);
+                    result = aotCompiler->compileFunction(context, *function);
                 } else {
                     Q_UNREACHABLE();
                 }

@@ -74,11 +74,13 @@ class QQmlJSAotCompiler
 public:
     virtual ~QQmlJSAotCompiler() = default;
 
-    virtual void setDocument(QmlIR::Document *document) = 0;
+    virtual void setDocument(QmlIR::JSCodeGen *codegen, QmlIR::Document *document) = 0;
     virtual void setScope(const QmlIR::Object *object, const QmlIR::Object *scope) = 0;
     virtual std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage> compileBinding(
+            const QV4::Compiler::Context *context,
             const QmlIR::Binding &binding) = 0;
     virtual std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage> compileFunction(
+            const QV4::Compiler::Context *context,
             const QmlIR::Function &function) = 0;
 
     virtual QQmlJSAotFunction globalCode() const = 0;
