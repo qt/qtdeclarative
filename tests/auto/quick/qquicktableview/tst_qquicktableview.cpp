@@ -121,6 +121,7 @@ private slots:
     void checkForceLayoutFunction();
     void checkForceLayoutEndUpDoingALayout();
     void checkForceLayoutDuringModelChange();
+    void checkForceLayoutWhenAllItemsAreHidden();
     void checkContentWidthAndHeight();
     void checkPageFlicking();
     void checkExplicitContentWidthAndHeight();
@@ -623,6 +624,38 @@ void tst_QQuickTableView::checkForceLayoutDuringModelChange()
     QCOMPARE(tableView->rows(), initialRowCount);
     model.addRow(0);
     QCOMPARE(tableView->rows(), initialRowCount + 1);
+}
+
+void tst_QQuickTableView::checkForceLayoutWhenAllItemsAreHidden()
+{
+    // Check that you can have a TableView where all columns are
+    // initially hidden, and then show some columns and call
+    // forceLayout(). This should make the columns become visible.
+    LOAD_TABLEVIEW("forcelayout.qml");
+
+    // Tell all columns to be hidden
+    const char *propertyName = "columnWidths";
+    view->rootObject()->setProperty(propertyName, 0);
+
+    const int rows = 3;
+    const int columns = 3;
+    auto model = TestModelAsVariant(rows, columns);
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    // Check that the we have no items loaded
+    QCOMPARE(tableViewPrivate->loadedColumns.count(), 0);
+    QCOMPARE(tableViewPrivate->loadedRows.count(), 0);
+    QCOMPARE(tableViewPrivate->loadedItems.count(), 0);
+
+    // Tell all columns to be visible
+    view->rootObject()->setProperty(propertyName, 10);
+    tableView->forceLayout();
+
+    QCOMPARE(tableViewPrivate->loadedRows.count(), rows);
+    QCOMPARE(tableViewPrivate->loadedColumns.count(), columns);
+    QCOMPARE(tableViewPrivate->loadedItems.count(), rows * columns);
 }
 
 void tst_QQuickTableView::checkContentWidthAndHeight()
