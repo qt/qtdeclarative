@@ -102,10 +102,15 @@ class QOffscreenSurface;
 class Q_QUICK_PRIVATE_EXPORT QSGRhiSupport
 {
 public:
-    static void configure(QSGRendererInterface::GraphicsApi api);
+    static QSGRhiSupport *instance_internal();
     static QSGRhiSupport *instance();
     static QVulkanInstance *defaultVulkanInstance();
     static void cleanupDefaultVulkanInstance();
+    static int chooseSampleCountForWindowWithRhi(QWindow *window, QRhi *rhi);
+    static QImage grabAndBlockInCurrentFrame(QRhi *rhi, QRhiCommandBuffer *cb, QRhiTexture *src = nullptr);
+    static void checkEnvQSgInfo();
+
+    void configure(QSGRendererInterface::GraphicsApi api);
 
     bool isRhiEnabled() const { return m_enableRhi; }
     QRhi::Implementation rhiBackend() const { return m_rhiBackend; }
@@ -123,24 +128,17 @@ public:
                             const QSGDefaultRenderContext *rc,
                             const QQuickWindow *w);
 
-    int chooseSampleCountForWindowWithRhi(QWindow *window, QRhi *rhi);
-
     QOffscreenSurface *maybeCreateOffscreenSurface(QWindow *window);
     QRhi *createRhi(QQuickWindow *window, QOffscreenSurface *offscreenSurface);
     void destroyRhi(QRhi *rhi);
     void prepareWindowForRhi(QQuickWindow *window);
 
-    QImage grabAndBlockInCurrentFrame(QRhi *rhi, QRhiCommandBuffer *cb, QRhiTexture *src = nullptr);
-
     QImage grabOffscreen(QQuickWindow *window);
-
-    static void checkEnvQSgInfo();
 
 private:
     QSGRhiSupport();
     void applySettings();
     void adjustToPlatformQuirks();
-    static QSGRhiSupport *staticInst();
     struct {
         bool valid = false;
         QSGRendererInterface::GraphicsApi api;

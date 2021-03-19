@@ -3665,7 +3665,7 @@ void QQuickWindow::setGraphicsApi(QSGRendererInterface::GraphicsApi api)
     // Standard case: tell the QRhi-based default adaptation what graphics api
     // (QRhi backend) to use.
     if (QSGRendererInterface::isApiRhiBased(api) || api == QSGRendererInterface::Unknown)
-        QSGRhiSupport::configure(api);
+        QSGRhiSupport::instance_internal()->configure(api);
 }
 
 /*!
