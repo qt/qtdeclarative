@@ -59,14 +59,15 @@ public:
     QQmlJSResourceFileMapper *resourceFileMapper() { return m_mapper; }
 
     ImportedTypes importBuiltins();
-    ImportedTypes importQmltypes(const QStringList &qmltypesFiles);
+    void importQmltypes(const QStringList &qmltypesFiles);
 
     QQmlJSScope::Ptr importFile(const QString &file);
     ImportedTypes importDirectory(const QString &directory, const QString &prefix = QString());
 
     ImportedTypes importModule(
             const QString &module, const QString &prefix = QString(),
-            QTypeRevision version = QTypeRevision());
+            QTypeRevision version = QTypeRevision(),
+            QQmlJS::SourceLocation location = QQmlJS::SourceLocation());
 
     ImportedTypes builtinInternalNames();
 
@@ -101,7 +102,7 @@ private:
     };
 
     AvailableTypes builtinImportHelper();
-    void importHelper(const QString &module, AvailableTypes *types,
+    bool importHelper(const QString &module, AvailableTypes *types,
                       const QString &prefix = QString(),
                       QTypeRevision version = QTypeRevision());
     void processImport(const Import &import, AvailableTypes *types,

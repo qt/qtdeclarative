@@ -269,25 +269,40 @@ QQmlJSImporter::AvailableTypes QQmlJSImporter::builtinImportHelper()
 /*!
  * Imports types from the specified \a qmltypesFiles.
  */
-QQmlJSImporter::ImportedTypes QQmlJSImporter::importQmltypes(const QStringList &qmltypesFiles)
+void QQmlJSImporter::importQmltypes(const QStringList &qmltypesFiles)
 {
     AvailableTypes types(builtinImportHelper().cppNames);
-    Import result;
 
-    for (const auto &qmltypeFile : qmltypesFiles)
+    for (const auto &qmltypeFile : qmltypesFiles) {
+        Import result;
         readQmltypes(qmltypeFile, &result.objects, &result.dependencies);
 
-    importDependencies(result, &types);
-    processImport(result, &types);
+        // Append _FAKE_QMLDIR to our made up qmldir name so that if it ever gets used somewhere else except for cache lookups,
+        // it will blow up due to a missing file instead of producing weird results.
+        const QString qmldirName = qmltypeFile + QStringLiteral("_FAKE_QMLDIR");
+        m_seenQmldirFiles.insert(qmldirName, result);
 
-    return types.qmlNames;
+        for (const auto &object : result.objects.values()) {
+            for (const auto &ex : object->exports()) {
+                m_seenImports.insert({ex.package(), ex.version()}, qmldirName);
+                // We also have to handle the case that no version is provided
+                m_seenImports.insert({ex.package(), QTypeRevision()}, qmldirName);
+            }
+        }
+    }
 }
 
 QQmlJSImporter::ImportedTypes QQmlJSImporter::importModule(
-        const QString &module, const QString &prefix, QTypeRevision version)
+        const QString &module, const QString &prefix, QTypeRevision version, QQmlJS::SourceLocation location)
 {
     AvailableTypes result(builtinImportHelper().cppNames);
-    importHelper(module, &result, prefix, version);
+    if (!importHelper(module, &result, prefix, version)) {
+        m_warnings.append({
+                              QStringLiteral("Failed to import %1. Are your include paths set up properly?").arg(module),
+                              QtWarningMsg,
+                              location
+                          });
+    }
     return result.qmlNames;
 }
 
@@ -296,20 +311,22 @@ QQmlJSImporter::ImportedTypes QQmlJSImporter::builtinInternalNames()
     return builtinImportHelper().cppNames;
 }
 
-void QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
+bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
                                                 const QString &prefix, QTypeRevision version)
 {
 
     const QPair<QString, QTypeRevision> importId { module, version };
     const auto it = m_seenImports.constFind(importId);
+
     if (it != m_seenImports.constEnd()) {
         if (it->isEmpty())
-            return; // TODO: warn here in the future
+            return false;
+
         const auto import = m_seenQmldirFiles.constFind(*it);
         Q_ASSERT(import != m_seenQmldirFiles.constEnd());
         importDependencies(*import, types, prefix, version);
         processImport(*import, types, prefix);
-        return;
+        return true;
     }
 
     const auto modulePaths = qQmlResolveImportPaths(module, m_importPaths, version);
@@ -321,7 +338,7 @@ void QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
             m_seenImports.insert(importId, qmldirPath);
             importDependencies(*it, types, prefix, version);
             processImport(*it, types, prefix);
-            return;
+            return true;
         }
 
         const QFileInfo file(qmldirPath);
@@ -331,12 +348,13 @@ void QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
             m_seenImports.insert(importId, qmldirPath);
             importDependencies(import, types, prefix, version);
             processImport(import, types, prefix);
-            return;
+            return true;
         }
     }
 
-    // TODO: warn here in the future
     m_seenImports.insert(importId, QString());
+
+    return false;
 }
 
 QQmlJSScope::Ptr QQmlJSImporter::localFile2ScopeTree(const QString &filePath)

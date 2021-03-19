@@ -379,6 +379,10 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("defaultPropertyWithWrongType2.qml")
             << QStringLiteral("Cannot assign to default property of incompatible type")
             << QStringLiteral("Cannot assign to non-existent default property");
+    QTest::newRow("InvalidImport")
+            << QStringLiteral("invalidImport.qml")
+            << QStringLiteral("Failed to import FooBar. Are your include paths set up properly?")
+            << QString();
 }
 
 void TestQmllint::dirtyQmlCode()

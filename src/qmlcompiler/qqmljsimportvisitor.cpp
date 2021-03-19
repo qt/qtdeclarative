@@ -176,7 +176,7 @@ void QQmlJSImportVisitor::importBaseModules()
     m_rootScopeImports = m_importer->importBuiltins();
 
     if (!m_qmltypesFiles.isEmpty())
-        m_rootScopeImports.insert(m_importer->importQmltypes(m_qmltypesFiles));
+        m_importer->importQmltypes(m_qmltypesFiles);
 
     m_rootScopeImports.insert(m_importer->importDirectory(m_implicitImportDirectory));
     m_errors.append(m_importer->takeWarnings());
@@ -538,7 +538,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
     path.chop(1);
 
     const auto imported = m_importer->importModule(
-                path, prefix, import->version ? import->version->version : QTypeRevision());
+                path, prefix, import->version ? import->version->version : QTypeRevision(), import->firstSourceLocation());
 
     m_rootScopeImports.insert(imported);
 
