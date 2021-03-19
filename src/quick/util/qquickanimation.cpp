@@ -1382,7 +1382,7 @@ void QQuickNumberAnimation::init()
             // ...
         ]
 
-        transition: Transition {
+        transitions: Transition {
             NumberAnimation { properties: "x"; from: 100; duration: 200 }
         }
     }
@@ -1612,7 +1612,7 @@ QQuickRotationAnimation::~QQuickRotationAnimation()
             // ...
         ]
 
-        transition: Transition {
+        transitions: Transition {
             RotationAnimation { properties: "angle"; from: 100; duration: 2000 }
         }
     }
