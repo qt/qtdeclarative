@@ -1074,6 +1074,15 @@ void QQuickTableViewPrivate::shiftLoadedTableRect(const QPointF newPosition)
 
 QQuickTableViewPrivate::RebuildOptions QQuickTableViewPrivate::checkForVisibilityChanges()
 {
+    // This function will check if there are any visibility changes among
+    // the _already loaded_ rows and columns. Note that there can be rows
+    // and columns to the bottom or right that was not loaded, but should
+    // now become visible (in case there is free space around the table).
+    if (loadedItems.isEmpty()) {
+        // Report no changes
+        return RebuildOption::None;
+    }
+
     // Go through all columns from first to last, find the columns that used
     // to be hidden and not loaded, and check if they should become visible
     // (and vice versa). If there is a change, we need to rebuild.
@@ -1118,9 +1127,6 @@ QQuickTableViewPrivate::RebuildOptions QQuickTableViewPrivate::checkForVisibilit
 
 void QQuickTableViewPrivate::forceLayout()
 {
-    if (loadedItems.isEmpty())
-        return;
-
     clearEdgeSizeCache();
     RebuildOptions rebuildOptions = RebuildOption::None;
 
