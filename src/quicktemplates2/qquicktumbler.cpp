@@ -995,7 +995,7 @@ QQuickTumblerAttached::QQuickTumblerAttached(QObject *parent)
         QQuickTumblerPrivate *tumblerPrivate = QQuickTumblerPrivate::get(d->tumbler);
         tumblerPrivate->setupViewData(tumblerPrivate->contentItem);
 
-        if (delegateItem->parentItem() == tumblerPrivate->viewContentItem) {
+        if (delegateItem && delegateItem->parentItem() == tumblerPrivate->viewContentItem) {
             // This item belongs to the "new" view, meaning that the tumbler's contentItem
             // was probably assigned declaratively. If they're not equal, calling
             // calculateDisplacement() would use the old contentItem data, which is bad.
