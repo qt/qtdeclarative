@@ -189,13 +189,6 @@ public:
     static QQmlPropertyData *property(QJSEngine *, QObject *, const QV4::String *,
                                       const QQmlRefPointer<QQmlContextData> &, QQmlPropertyData *);
 
-    static QQmlPropertyData *property(QJSEngine *engine, QObject *obj, const QString &name,
-                                      const QQmlRefPointer<QQmlContextData> &context,
-                                      QQmlPropertyData *local)
-    {
-        return property(engine, obj, QStringView(name), context, local);
-    }
-
     //see QMetaObjectPrivate::originalClone
     int originalClone(int index);
     static int originalClone(const QObject *, int index);
