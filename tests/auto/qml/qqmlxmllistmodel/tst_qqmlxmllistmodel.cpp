@@ -179,8 +179,8 @@ protected:
         if (m_factory) {
             QVariantMap map;
             const auto rawHeaderList = req.rawHeaderList();
-            for (const QString &header : rawHeaderList)
-                map[header] = req.rawHeader(header.toUtf8());
+            for (const QByteArray &header : rawHeaderList)
+                map[header] = req.rawHeader(header);
             m_factory->lastSentHeaders = map;
         }
         return QNetworkAccessManager::createRequest(op, req, outgoingData);
