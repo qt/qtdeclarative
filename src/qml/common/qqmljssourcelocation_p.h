@@ -71,6 +71,36 @@ public:
     quint32 begin() const { return offset; }
     quint32 end() const { return offset + length; }
 
+    // Returns a zero length location at the start of the current one.
+    SourceLocation startZeroLengthLocation() const
+    {
+        return SourceLocation(offset, 0, startLine, startColumn);
+    }
+    // Returns a zero length location at the end of the current one.
+    SourceLocation endZeroLengthLocation(QStringView text) const
+    {
+        quint32 i = offset;
+        quint32 endLine = startLine;
+        quint32 endColumn = startColumn;
+        while (i < end()) {
+            QChar c = text.at(i);
+            switch (c.unicode()) {
+            case '\n':
+                if (i + 1 < end() && text.at(i + 1) == QLatin1Char('\r'))
+                    ++i;
+                Q_FALLTHROUGH();
+            case '\r':
+                ++endLine;
+                endColumn = 1;
+                break;
+            default:
+                ++endColumn;
+            }
+            ++i;
+        }
+        return SourceLocation(offset + length, 0, endLine, endColumn);
+    }
+
 // attributes
     // ### encode
     quint32 offset;

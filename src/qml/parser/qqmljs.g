@@ -4043,14 +4043,14 @@ ArrowFunction_In: ArrowParameters T_ARROW ConciseBodyLookahead AssignmentExpress
 /.
     case $rule_number: {
         AST::ReturnStatement *ret = new (pool) AST::ReturnStatement(sym(4).Expression);
-        ret->returnToken = sym(4).Node->firstSourceLocation();
-        ret->semicolonToken = sym(4).Node->lastSourceLocation();
+        ret->returnToken = sym(4).Node->firstSourceLocation().startZeroLengthLocation();
+        ret->semicolonToken = sym(4).Node->lastSourceLocation().endZeroLengthLocation(driver->code());
         AST::StatementList *statements = (new (pool) AST::StatementList(ret))->finish();
         AST::FunctionExpression *f = new (pool) AST::FunctionExpression(QStringView(), sym(1).FormalParameterList, statements);
         f->isArrowFunction = true;
-        f->functionToken = sym(1).Node ? sym(1).Node->firstSourceLocation() : loc(1);
-        f->lbraceToken = sym(4).Node->firstSourceLocation();
-        f->rbraceToken = sym(4).Node->lastSourceLocation();
+        f->functionToken = sym(1).Node ? sym(1).Node->firstSourceLocation().startZeroLengthLocation() : loc(1).startZeroLengthLocation();
+        f->lbraceToken = sym(4).Node->firstSourceLocation().startZeroLengthLocation();
+        f->rbraceToken = sym(4).Node->lastSourceLocation().endZeroLengthLocation(driver->code());
         sym(1).Node = f;
     } break;
 ./
@@ -4062,7 +4062,7 @@ ArrowFunction_In: ArrowParameters T_ARROW ConciseBodyLookahead T_FORCE_BLOCK Fun
     case $rule_number: {
         AST::FunctionExpression *f = new (pool) AST::FunctionExpression(QStringView(), sym(1).FormalParameterList, sym(6).StatementList);
         f->isArrowFunction = true;
-        f->functionToken = sym(1).Node ? sym(1).Node->firstSourceLocation() : loc(1);
+        f->functionToken = sym(1).Node ? sym(1).Node->firstSourceLocation().startZeroLengthLocation() : loc(1).startZeroLengthLocation();
         f->lbraceToken = loc(6);
         f->rbraceToken = loc(7);
         sym(1).Node = f;

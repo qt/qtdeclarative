@@ -181,6 +181,7 @@ class CheckLocations : public Check
 public:
     CheckLocations(const QString &code)
     {
+        m_codeStr = code;
         m_code = code.split('\u000A');
     }
 
@@ -215,8 +216,24 @@ public:
             ++startLine;
         }
         QCOMPARE(expected, found);
+        SourceLocation combined(first.offset, last.end() - first.begin(),
+                                first.startLine, first.startColumn);
+        SourceLocation cStart = combined.startZeroLengthLocation();
+        SourceLocation cEnd = combined.endZeroLengthLocation(m_codeStr);
+        QCOMPARE(cStart.begin(), first.begin());
+        QCOMPARE(cStart.end(), first.begin());
+        QCOMPARE(cStart.startLine, first.startLine);
+        QCOMPARE(cStart.startColumn, first.startColumn);
+        QCOMPARE(cEnd.begin(), last.end());
+        QCOMPARE(cEnd.end(), last.end());
+        QCOMPARE(cEnd.startLine, startLine);
+        int lastNewline = found.lastIndexOf(QLatin1Char('\n'));
+        if (lastNewline < 0)
+            lastNewline = - combined.startColumn;
+        QCOMPARE(cEnd.startColumn, found.length() - lastNewline);
     }
 private:
+    QString m_codeStr;
     QStringList m_code;
 };
 
