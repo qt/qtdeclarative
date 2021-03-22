@@ -38,6 +38,7 @@
 #include "qqmldomerrormessage_p.h"
 #include "qqmldomitem_p.h"
 #include "qqmldomstringdumper_p.h"
+#include "qqmldomattachedinfo_p.h"
 
 #include <QtCore/QCborMap>
 #include <QtCore/QMutex>
@@ -244,26 +245,6 @@ ErrorMessage ErrorGroups::info(Dumper message) const
     return ErrorMessage(dumperToString(message), *this, ErrorLevel::Info);
 }
 
-ErrorMessage ErrorGroups::hint(QString message) const
-{
-    return ErrorMessage(message, *this, ErrorLevel::Hint);
-}
-
-ErrorMessage ErrorGroups::hint(Dumper message) const
-{
-    return ErrorMessage(dumperToString(message), *this, ErrorLevel::Hint);
-}
-
-ErrorMessage ErrorGroups::maybeWarning(QString message) const
-{
-    return ErrorMessage(message, *this, ErrorLevel::MaybeWarning);
-}
-
-ErrorMessage ErrorGroups::maybeWarning(Dumper message) const
-{
-    return ErrorMessage(dumperToString(message), *this, ErrorLevel::MaybeWarning);
-}
-
 ErrorMessage ErrorGroups::warning(QString message) const
 {
     return ErrorMessage(message, *this, ErrorLevel::Warning);
@@ -272,16 +253,6 @@ ErrorMessage ErrorGroups::warning(QString message) const
 ErrorMessage ErrorGroups::warning(Dumper message) const
 {
     return ErrorMessage(dumperToString(message), *this, ErrorLevel::Warning);
-}
-
-ErrorMessage ErrorGroups::maybeError(QString message) const
-{
-    return ErrorMessage(message, *this, ErrorLevel::MaybeError);
-}
-
-ErrorMessage ErrorGroups::maybeError(Dumper message) const
-{
-    return ErrorMessage(dumperToString(message), *this, ErrorLevel::MaybeError);
 }
 
 ErrorMessage ErrorGroups::error(QString message) const
@@ -381,7 +352,7 @@ QLatin1String ErrorMessage::msg(QLatin1String errorId, ErrorMessage err)
     return errorId;
 }
 
-void ErrorMessage::visitRegisteredMessages(std::function<bool (ErrorMessage)> visitor)
+void ErrorMessage::visitRegisteredMessages(function_ref<bool (ErrorMessage)> visitor)
 {
     QHash<QLatin1String, StorableMsg> r;
     {
@@ -449,8 +420,11 @@ ErrorMessage &ErrorMessage::withItem(DomItem el)
         path = el.canonicalPath();
     if (file.isEmpty())
         file = el.canonicalFilePath();
-    if (!location.isValid())
-        location = el.location();
+    if (!location.isValid()) {
+        if (const FileLocations *fLocPtr = FileLocations::fileLocationsPtr(el)) {
+            location = fLocPtr->regions.value(QString(), fLocPtr->fullRegion);
+        }
+    }
     return *this;
 }
 

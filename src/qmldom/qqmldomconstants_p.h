@@ -156,6 +156,7 @@ enum class DomType {
     MethodParameter,
     MethodInfo,
     Version, // wrapped
+    FileLocations,
 
     // generic objects, mainly for debug support
     GenericObject,
@@ -168,6 +169,7 @@ enum class DomType {
     // supporting objects
     LoadInfo, // owning
     ErrorMessage, // wrapped
+    AttachedInfo, // owning
 
     // Dom top level
     DomEnvironment,
@@ -195,16 +197,20 @@ enum class EscapeOptions{
 Q_ENUM_NS(EscapeOptions)
 
 enum class ErrorLevel{
-    Debug,
-    Info,
-    Hint,         // cosmetic or convention
-    MaybeWarning, // possibly a warning, insufficient information
-    Warning,
-    MaybeError,
-    Error,
-    Fatal
+    Debug = QtMsgType::QtDebugMsg,
+    Info = QtMsgType::QtInfoMsg,
+    Warning = QtMsgType::QtWarningMsg,
+    Error = QtMsgType::QtCriticalMsg,
+    Fatal = QtMsgType::QtFatalMsg
 };
 Q_ENUM_NS(ErrorLevel)
+
+enum class GoTo {
+    Strict, // never go to an non uniquely defined result
+    MostLikely // if needed go up to the most likely location between multiple options
+};
+Q_ENUM_NS(GoTo)
+
 
 } // end namespace Dom
 } // end namespace QQmlJS

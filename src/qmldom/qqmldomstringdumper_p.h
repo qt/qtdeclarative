@@ -51,6 +51,7 @@
 
 #include "qqmldom_global.h"
 #include "qqmldomconstants_p.h"
+#include "qqmldomfunctionref_p.h"
 
 #include <QtCore/QString>
 #include <QtCore/QStringView>
@@ -63,7 +64,8 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace Dom {
 
-using Sink = std::function<void(QStringView)>;
+using Sink = function_ref<void(QStringView)>;
+using SinkF = std::function<void(QStringView)>;
 using DumperFunction = std::function<void(Sink)>;
 
 class Dumper{
@@ -73,7 +75,7 @@ private:
     // We want to avoid the limit of one user conversion:
     // after doing (* -> QStringView) we cannot have QStringView -> Dumper, as it
     // would be the second user defined conversion.
-    // For a similar reason we have a template to accept function<void(Sink)> .
+    // For a similar reason we have a template to accept function_ref<void(Sink)> .
     // The end result is that void f(Dumper) can be called nicely, and avoid overloads:
     // f(u"bla"), f(QLatin1String("bla")), f(QString()), f([](Sink s){...}),...
     template <typename T>

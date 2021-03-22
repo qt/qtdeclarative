@@ -101,8 +101,6 @@ The current contexts are:
 \li \l{@module} The current module instantiation.
 \li \l{@ids} The ids in the current component.
 \li \l{@types} All the types in the current component (reachable through imports, respecting renames)
-\li \l{@instantiation} The current instantiation, either component instantiation or module
-       instantiation
 \li \l{@lookupStrict} The strict lookup inside the current object: localJS, ids, properties, proto
        properties, component, its properties, global context, oterwise error
 \li \l{@lookupDynamic} The default lookup inside the current object: localJS, ids, properties, proto
@@ -137,10 +135,6 @@ enum class ParserState{
     IndexOrKey,
     End
 };
-
-} // namespace PathEls
-
-using namespace PathEls;
 
 PathComponent::~PathComponent(){
 }
@@ -203,7 +197,9 @@ int PathComponent::cmp(const PathComponent &p1, const PathComponent &p2)
     return 0;
 }
 
-PathComponent Path::component(int i) const
+} // namespace PathEls
+
+PathEls::PathComponent Path::component(int i) const
 {
     if (i < 0)
         i += m_length;
@@ -233,10 +229,20 @@ QQmlJS::Dom::Path::operator bool() const
     return length() != 0;
 }
 
+PathIterator Path::begin() const
+{
+    return PathIterator{*this};
+}
+
+PathIterator Path::end() const
+{
+    return PathIterator();
+}
+
 PathRoot Path::headRoot() const
 {
     auto comp = component(0);
-    if (Root const * r = comp.base()->asRoot())
+    if (PathEls::Root const * r = comp.base()->asRoot())
         return r->contextKind;
     return PathRoot::Other;
 }
@@ -244,13 +250,15 @@ PathRoot Path::headRoot() const
 PathCurrent Path::headCurrent() const
 {
     auto comp = component(0);
-    if (Current const * c = comp.base()->asCurrent())
+    if (PathEls::Current const * c = comp.base()->asCurrent())
         return c->contextKind;
     return PathCurrent::Other;
 }
 
 Path::Kind Path::headKind() const
 {
+    if (m_length == 0)
+        return Path::Kind::Empty;
     return component(0).kind();
 }
 
@@ -272,7 +280,7 @@ index_type Path::headIndex(index_type defaultValue) const
 function<bool (DomItem)> Path::headFilter() const
 {
     auto comp = component(0);
-    if (Filter const * f = comp.base()->asFilter()) {
+    if (PathEls::Filter const * f = comp.base()->asFilter()) {
         return f->filterFunction;
     }
     return {};
@@ -339,7 +347,7 @@ Path Path::fromString(QStringView s, ErrorHandler errorHandler)
     components.reserve(len);
     int i = 0;
     int i0 = 0;
-    ParserState state = ParserState::Start;
+    PathEls::ParserState state = PathEls::ParserState::Start;
     QStringList strVals;
     while (i < s.length()) {
         // skip space
@@ -349,31 +357,31 @@ Path Path::fromString(QStringView s, ErrorHandler errorHandler)
             break;
         QChar c = s.at(i++);
         switch (state) {
-        case ParserState::Start:
+        case PathEls::ParserState::Start:
             if (c == dollar) {
                 i0 = i;
                 while (i < s.length() && s.at(i).isLetterOrNumber()){
                     ++i;
                 }
-                components.append(Component(Root(s.mid(i0,i-i0))));
-                state = ParserState::End;
+                components.append(Component(PathEls::Root(s.mid(i0,i-i0))));
+                state = PathEls::ParserState::End;
             } else if (c == at) {
                 i0 = i;
                 while (i < s.length() && s.at(i).isLetterOrNumber()){
                     ++i;
                 }
-                components.append(Component(Current(s.mid(i0,i-i0))));
-                state = ParserState::End;
+                components.append(Component(PathEls::Current(s.mid(i0,i-i0))));
+                state = PathEls::ParserState::End;
             } else if (c.isLetter()) {
                 myErrors().warning(tr("Field expressions should start with a dot, even when at the start of the path %1.")
                                  .arg(s)).handle(errorHandler);
                 return Path();
             } else {
                 --i;
-                state = ParserState::End;
+                state = PathEls::ParserState::End;
             }
             break;
-        case ParserState::IndexOrKey:
+        case PathEls::ParserState::IndexOrKey:
             if (c.isDigit()) {
                 i0 = i-1;
                 while (i < s.length() && s.at(i).isDigit())
@@ -390,7 +398,7 @@ Path Path::fromString(QStringView s, ErrorHandler errorHandler)
                 i0 = i-1;
                 while (i < s.length() && (s.at(i).isLetterOrNumber() || s.at(i) == underscore || s.at(i) == tilda))
                     ++i;
-                components.append(Component(Key(s.mid(i0, i-i0))));
+                components.append(Component(PathEls::Key(s.mid(i0, i-i0))));
             } else if (c == quote) {
                 i0 = i;
                 QString strVal;
@@ -432,9 +440,9 @@ Path Path::fromString(QStringView s, ErrorHandler errorHandler)
                                      .arg(QString::number(i - 1))).handle(errorHandler);
                     return Path();
                 }
-                components.append(Key(key));
+                components.append(PathEls::Key(key));
             } else if (c == QChar::fromLatin1('*')) {
-                components.append(Component(Any()));
+                components.append(Component(PathEls::Any()));
             } else if (c == QChar::fromLatin1('?')) {
                 while (i < s.length() && s.at(i).isSpace())
                     ++i;
@@ -467,21 +475,21 @@ Path Path::fromString(QStringView s, ErrorHandler errorHandler)
             } else {
                 ++i;
             }
-            state = ParserState::End;
+            state = PathEls::ParserState::End;
             break;
-        case ParserState::End:
+        case PathEls::ParserState::End:
             if (c == dot) {
                 while (i < s.length() && s.at(i).isSpace()) ++i;
                 if (i == s.length()) {
                     components.append(Component());
-                    state = ParserState::End;
+                    state = PathEls::ParserState::End;
                 } else if (s.at(i).isLetter() || s.at(i) == underscore || s.at(i) == tilda) {
                     i0 = i;
                     while (i < s.length() && (s.at(i).isLetterOrNumber() || s.at(i) == underscore || s.at(i) == tilda)) {
                         ++i;
                     }
-                    components.append(Component(Field(s.mid(i0,i-i0))));
-                    state = ParserState::End;
+                    components.append(Component(PathEls::Field(s.mid(i0,i-i0))));
+                    state = PathEls::ParserState::End;
                 } else if (s.at(i).isDigit()) {
                     i0 = i;
                     while (i < s.length() && s.at(i).isDigit()){
@@ -495,27 +503,27 @@ Path Path::fromString(QStringView s, ErrorHandler errorHandler)
                                            .arg(QString::number(i0))).handle(errorHandler);
                         return Path();
                     } else {
-                        myErrors().hint(tr("Index should use square brackets and not a dot (at char %1).")
+                        myErrors().info(tr("Index shound use square brackets and not a dot (at char %1).")
                                            .arg(QString::number(i0))).handle(errorHandler);
                     }
-                    state = ParserState::End;
+                    state = PathEls::ParserState::End;
                 } else if (s.at(i) == dot || s.at(i) == lsBrace) {
                     components.append(Component());
-                    state = ParserState::End;
+                    state = PathEls::ParserState::End;
                 } else if (s.at(i) == at) {
                     i0 = ++i;
                     while (i < s.length() && s.at(i).isLetterOrNumber()){
                         ++i;
                     }
-                    components.append(Component(Current(s.mid(i0,i-i0))));
-                    state = ParserState::End;
+                    components.append(Component(PathEls::Current(s.mid(i0,i-i0))));
+                    state = PathEls::ParserState::End;
                 } else if (s.at(i) == dollar) {
                     i0 = ++i;
                     while (i < s.length() && s.at(i).isLetterOrNumber()){
                         ++i;
                     }
-                    components.append(Component(Root(s.mid(i0,i-i0))));
-                    state = ParserState::End;
+                    components.append(Component(PathEls::Root(s.mid(i0,i-i0))));
+                    state = PathEls::ParserState::End;
                 } else {
                     c=s.at(i);
                     myErrors().error(tr("Unexpected character '%1' after dot (at char %2).")
@@ -524,7 +532,7 @@ Path Path::fromString(QStringView s, ErrorHandler errorHandler)
                     return Path();
                 }
             } else if (c == lsBrace) {
-                state = ParserState::IndexOrKey;
+                state = PathEls::ParserState::IndexOrKey;
             } else {
                 myErrors().error(tr("Unexpected character '%1' after end of component (char %2).")
                                  .arg(QStringView(&c,1))
@@ -535,163 +543,183 @@ Path Path::fromString(QStringView s, ErrorHandler errorHandler)
         }
     }
     switch (state) {
-    case ParserState::Start:
+    case PathEls::ParserState::Start:
         return Path();
-    case ParserState::IndexOrKey:
+    case PathEls::ParserState::IndexOrKey:
         errorHandler(myErrors().error(tr("unclosed square brace at end.")));
 
         return Path();
-    case ParserState::End:
-        return Path(0, components.length(), std::make_shared<PathData>(strVals, components));
+    case PathEls::ParserState::End:
+        return Path(0, components.length(), std::shared_ptr<PathEls::PathData>(
+                        new PathEls::PathData(strVals, components)));
     }
     Q_ASSERT(false && "Unexpected state in Path::fromString");
     return Path();
 }
 
-Path Path::root(PathRoot s)
+Path Path::Root(PathRoot s)
 {
-    return Path(0,1,std::make_shared<PathData>(QStringList(), QVector<Component>(1,Component(Root(s)))));
+    return Path(0,1,std::shared_ptr<PathEls::PathData>(
+                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component(PathEls::Root(s))))));
 }
 
-Path Path::root(QString s)
+Path Path::Root(QString s)
 {
-    return Path(0,1,std::make_shared<PathData>(QStringList(s), QVector<Component>(1,Component(Root(s)))));
+    return Path(0,1,std::shared_ptr<PathEls::PathData>(
+                    new PathEls::PathData(QStringList(s), QVector<Component>(1,Component(PathEls::Root(s))))));
 }
 
-Path Path::index(index_type i)
+Path Path::Index(index_type i)
 {
-    return Path(0,1,std::make_shared<PathData>(QStringList(), QVector<Component>(1,Component(Index(i)))));
+    return Path(0,1,std::shared_ptr<PathEls::PathData>(
+                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component(PathEls::Index(i))))));
 }
 
-Path Path::root(QStringView s)
+Path Path::Root(QStringView s)
 {
-    return Path(0,1,std::make_shared<PathData>(QStringList(), QVector<Component>(1,Component(Root(s)))));
+    return Path(0,1,std::shared_ptr<PathEls::PathData>(
+                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component(PathEls::Root(s))))));
 }
 
 
-Path Path::field(QStringView s)
+Path Path::Field(QStringView s)
 {
-    return Path(0,1,std::make_shared<PathData>(QStringList(), QVector<Component>(1,Component(Field(s)))));
+    return Path(0,1,std::shared_ptr<PathEls::PathData>(
+                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component(PathEls::Field(s))))));
 }
 
-Path Path::field(QString s)
+Path Path::Field(QString s)
 {
-    return Path(0,1,std::make_shared<PathData>(QStringList(s), QVector<Component>(1,Component(Field(s)))));
+    return Path(0,1,std::shared_ptr<PathEls::PathData>(
+                    new PathEls::PathData(QStringList(s), QVector<Component>(1,Component(PathEls::Field(s))))));
 }
 
-Path Path::key(QStringView s)
+Path Path::Key(QStringView s)
 {
-    return Path(0,1,std::make_shared<PathData>(QStringList(), QVector<Component>(1,Component(Key(s)))));
+    return Path(0,1,std::shared_ptr<PathEls::PathData>(
+                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component(PathEls::Key(s))))));
 }
 
-Path Path::key(QString s)
+Path Path::Key(QString s)
 {
-    return Path(0,1,std::make_shared<PathData>(QStringList(s), QVector<Component>(1,Component(Key(s)))));
+    return Path(0,1,std::shared_ptr<PathEls::PathData>(
+                    new PathEls::PathData(QStringList(s), QVector<Component>(1,Component(PathEls::Key(s))))));
 }
 
-Path Path::current(PathCurrent s)
+Path Path::Current(PathCurrent s)
 {
-    return Path(0,1,std::make_shared<PathData>(QStringList(), QVector<Component>(1,Component(Current(s)))));
+    return Path(0,1,std::shared_ptr<PathEls::PathData>(
+                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component(PathEls::Current(s))))));
 }
 
-Path Path::current(QString s)
+Path Path::Current(QString s)
 {
-    return Path(0,1,std::make_shared<PathData>(QStringList(s), QVector<Component>(1,Component(Current(s)))));
+    return Path(0,1,std::shared_ptr<PathEls::PathData>(
+                    new PathEls::PathData(QStringList(s), QVector<Component>(1,Component(PathEls::Current(s))))));
 }
 
-Path Path::current(QStringView s)
+Path Path::Current(QStringView s)
 {
-    return Path(0,1,std::make_shared<PathData>(QStringList(), QVector<Component>(1,Component(Current(s)))));
+    return Path(0,1,std::shared_ptr<PathEls::PathData>(
+                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component(PathEls::Current(s))))));
 }
 
-Path Path::empty()
+Path Path::Empty()
 {
     return Path();
 }
 
-Path Path::subEmpty() const
+Path Path::empty() const
 {
     if (m_endOffset != 0)
-        return noEndOffset().subEmpty();
-    return Path(0,m_length+1,std::make_shared<PathData>(QStringList(), QVector<Component>(1,Component()), m_data));
+        return noEndOffset().empty();
+    return Path(0,m_length+1,std::shared_ptr<PathEls::PathData>(
+                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component()), m_data)));
 }
 
-Path Path::subField(QString name) const
+Path Path::field(QString name) const
 {
-    auto res = subField(QStringView(name));
+    auto res = field(QStringView(name));
     res.m_data->strData.append(name);
     return res;
 }
 
-Path Path::subField(QStringView name) const
+Path Path::field(QStringView name) const
 {
     if (m_endOffset != 0)
-        return noEndOffset().subField(name);
-    return Path(0,m_length+1,std::make_shared<PathData>(QStringList(), QVector<Component>(1,Component(Field(name))), m_data));
+        return noEndOffset().field(name);
+    return Path(0,m_length+1,std::shared_ptr<PathEls::PathData>(
+                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component(PathEls::Field(name))), m_data)));
 }
 
-Path Path::subKey(QString name) const
+Path Path::key(QString name) const
 {
-    auto res = subKey(QStringView(name));
+    auto res = key(QStringView(name));
     res.m_data->strData.append(name);
     return res;
 }
 
-Path Path::subKey(QStringView name) const
+Path Path::key(QStringView name) const
 {
     if (m_endOffset != 0)
-        return noEndOffset().subKey(name);
-    return Path(0,m_length+1,std::make_shared<PathData>(QStringList(), QVector<Component>(1,Component(Key(name))), m_data));
+        return noEndOffset().key(name);
+    return Path(0,m_length+1,std::shared_ptr<PathEls::PathData>(
+                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component(PathEls::Key(name))), m_data)));
 }
 
-Path Path::subIndex(index_type i) const
+Path Path::index(index_type i) const
 {
     if (m_endOffset != 0)
-        return noEndOffset().subIndex(i);
-    return Path(0,m_length+1,std::make_shared<PathData>(QStringList(), QVector<Component>(1,Component(i)), m_data));
+        return noEndOffset().index(i);
+    return Path(0,m_length+1,std::shared_ptr<PathEls::PathData>(
+                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component(i)), m_data)));
 }
 
-Path Path::subAny() const
+Path Path::any() const
 {
     if (m_endOffset != 0)
-        return noEndOffset().subAny();
-    return Path(0,m_length+1,std::make_shared<PathData>(QStringList(), QVector<Component>(1,Component(Any())), m_data));
+        return noEndOffset().any();
+    return Path(0,m_length+1,std::shared_ptr<PathEls::PathData>(
+                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component(PathEls::Any())), m_data)));
 }
 
-Path Path::subFilter(function<bool (DomItem)> filter, QString desc) const
+Path Path::filter(function<bool (DomItem)> filterF, QString desc) const
 {
-    auto res = subFilter(filter, QStringView(desc));
+    auto res = filter(filterF, QStringView(desc));
     res.m_data->strData.append(desc);
     return res;
 }
 
-Path Path::subFilter(function<bool (DomItem)> filter, QStringView desc) const
+Path Path::filter(function<bool (DomItem)> filter, QStringView desc) const
 {
     if (m_endOffset != 0)
-        return noEndOffset().subFilter(filter, desc);
-    return Path(0,m_length+1,std::make_shared<PathData>(QStringList(), QVector<Component>(1,Component(Filter(filter, desc))), m_data));
+        return noEndOffset().filter(filter, desc);
+    return Path(0,m_length+1,std::shared_ptr<PathEls::PathData>(
+                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component(PathEls::Filter(filter, desc))), m_data)));
 }
 
-Path Path::subCurrent(PathCurrent s) const
+Path Path::current(PathCurrent s) const
 {
-    return Path(0,m_length+1,std::make_shared<PathData>(QStringList(), QVector<Component>(1,Component(Current(s))), m_data));
+    return Path(0,m_length+1,std::shared_ptr<PathEls::PathData>(
+                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component(PathEls::Current(s))), m_data)));
 }
 
-Path Path::subCurrent(QString s) const
+Path Path::current(QString s) const
 {
-    auto res = subCurrent(QStringView(s));
+    auto res = current(QStringView(s));
     res.m_data->strData.append(s);
     return res;
 }
 
-Path Path::subCurrent(QStringView s) const
+Path Path::current(QStringView s) const
 {
     if (m_endOffset != 0)
-        return noEndOffset().subCurrent(s);
-    return Path(0,m_length+1,std::make_shared<PathData>(QStringList(), QVector<Component>(1,Component(Current(s))), m_data));
+        return noEndOffset().current(s);
+    return Path(0,m_length+1,std::shared_ptr<PathEls::PathData>(
+                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component(PathEls::Current(s))), m_data)));
 }
 
-Path Path::subPath(Path toAdd, bool avoidToAddAsBase) const
+Path Path::path(Path toAdd, bool avoidToAddAsBase) const
 {
     if (toAdd.length() == 0)
         return *this;
@@ -705,7 +733,7 @@ Path Path::subPath(Path toAdd, bool avoidToAddAsBase) const
             if (resLength == thisExtended.length())
                 return thisExtended;
             else
-                return thisExtended.subPath(toAdd.mid(added.length(), resLength - thisExtended.length()));
+                return thisExtended.path(toAdd.mid(added.length(), resLength - thisExtended.length()));
         }
     }
     if (!avoidToAddAsBase) {
@@ -761,8 +789,8 @@ Path Path::subPath(Path toAdd, bool avoidToAddAsBase) const
             }
         }
     }
-    return Path(0, m_length + toAdd.length(),
-                std::make_shared<PathData>(toAddStrs, components, ((m_endOffset == 0) ? m_data : noEndOffset().m_data)));
+    return Path(0, m_length + toAdd.length(), std::shared_ptr<PathEls::PathData>(
+                    new PathEls::PathData(toAddStrs, components, ((m_endOffset == 0) ? m_data : noEndOffset().m_data))));
 }
 
 Path Path::expandFront() const
@@ -817,7 +845,7 @@ int Path::cmp(const Path &p1, const Path &p2)
     return 0;
 }
 
-Path::Path(quint16 endOffset, quint16 length, std::shared_ptr<PathData> data)
+Path::Path(quint16 endOffset, quint16 length, std::shared_ptr<PathEls::PathData> data)
     :m_endOffset(endOffset), m_length(length), m_data(data)
 {
 }
@@ -830,14 +858,15 @@ Path Path::noEndOffset() const
         return *this;
     // peel back
     qint16 endOffset = m_endOffset;
-    std::shared_ptr<PathData> lastData = m_data;
+    std::shared_ptr<PathEls::PathData> lastData = m_data;
     while (lastData && endOffset >= lastData->components.length()) {
         endOffset -= lastData->components.length();
         lastData = lastData->parent;
     }
     if (endOffset > 0) {
         Q_ASSERT(lastData && "Internal problem, reference to non existing PathData");
-        return Path(0, m_length, std::make_shared<PathData>(lastData->strData, lastData->components.mid(0, lastData->components.length() - endOffset), lastData->parent));
+        return Path(0, m_length, std::shared_ptr<PathEls::PathData>(
+                        new PathEls::PathData(lastData->strData, lastData->components.mid(0, lastData->components.length() - endOffset), lastData->parent)));
     }
     return Path(0, m_length, lastData);
 }
@@ -871,17 +900,17 @@ QString Path::toString() const
     return res;
 }
 
-Path Path::dropFront() const
+Path Path::dropFront(int n) const
 {
-    if (m_length > 0)
-        return Path(m_endOffset, m_length - 1, m_data);
+    if (m_length > n && n >= 0)
+        return Path(m_endOffset, m_length - n, m_data);
     return Path();
 }
 
-Path Path::dropTail() const
+Path Path::dropTail(int n) const
 {
-    if (m_length > 0)
-        return Path(m_endOffset + 1, m_length - 1, m_data);
+    if (m_length > n && n >= 0)
+        return Path(m_endOffset + n, m_length - n, m_data);
     return Path();
 }
 

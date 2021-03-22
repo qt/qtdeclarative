@@ -11,9 +11,11 @@ qt_internal_add_module(QmlDom
     SOURCES
         qqmldom_fwd_p.h
         qqmldom_global.h
+        qqmldomattachedinfo.cpp qqmldomattachedinfo_p.h
         qqmldomconstants_p.h
         qqmldomerrormessage.cpp qqmldomerrormessage_p.h
         qqmldomexternalitems.cpp qqmldomexternalitems_p.h
+        qqmldomfunctionref_p.h
         qqmldomitem.cpp qqmldomitem_p.h
         qqmldompath.cpp qqmldompath_p.h
         qqmldomstringdumper.cpp qqmldomstringdumper_p.h

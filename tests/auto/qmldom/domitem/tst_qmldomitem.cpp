@@ -73,9 +73,9 @@ private slots:
         QCOMPARE(&(l3[0]), &(l3[0]));
         // QCOMPARE(&(l3[0]), &(l4[0])); // shallow copy actually copies els (QVector behavior)...
         DomItem list1 = env.subList(
-                    List::fromQListRef<int>(Path::field(u"list"), l, &wrapInt)).item;
+                    List::fromQListRef<int>(Path::Field(u"list"), l, &wrapInt)).item;
         DomItem list2 = env.subList(
-                    List::fromQListRef<int>(Path::field(u"reverseList"), l, &wrapInt, ListOptions::Reverse)).item;
+                    List::fromQListRef<int>(Path::Field(u"reverseList"), l, &wrapInt, ListOptions::Reverse)).item;
         QCOMPARE(list1.domKind(), DomKind::List);
         QCOMPARE(list1.indexes(), 4);
         QCOMPARE(list1[0].value().toInteger(), 1);
@@ -107,7 +107,7 @@ private slots:
         //QCOMPARE(&(*it3), &(*it5));
         DomItem map1 = env.subMap(
                     Map::fromMapRef<int>(
-                        Path::field(u"map"), map,
+                        Path::Field(u"map"), map,
                         &wrapInt)).item;
         QCOMPARE(map1.domKind(), DomKind::Map);
         QCOMPARE(map1[u"a"].value().toInteger(), 1);
@@ -137,7 +137,7 @@ private slots:
         //QCOMPARE(&(*it4), &(*it6));
         DomItem map1 = env.subMap(
                     Map::fromMultiMapRef<int>(
-                        Path::field(u"mmap"), mmap,
+                        Path::Field(u"mmap"), mmap,
                         &wrapInt)).item;
         QCOMPARE(map1[u"b"].index(0).value().toInteger(), 2);
         QVERIFY(!map1[u"b"].index(2));
@@ -148,7 +148,7 @@ private slots:
         QCOMPARE(map1.container(), env);
     }
     void testReference() {
-        Path p = Path::root(u"env");
+        Path p = Path::Root(u"env");
         DomItem ref = env.subReferenceField(u"ref",p).item;
         QCOMPARE(ref.field(u"referredObjectPath").value().toString(), p.toString());
         QCOMPARE(ref.fields(), QList<QString>({QStringLiteral(u"referredObjectPath"), QStringLiteral(u"get")}));
@@ -159,7 +159,7 @@ private slots:
         QCOMPARE(env.pathFromOwner(), Path());
         QCOMPARE(env.containingObject().internalKind(), DomType::Empty);
         QCOMPARE(env.container().internalKind(), DomType::Empty);
-        QCOMPARE(env.canonicalPath(), Path::root(u"env"));
+        QCOMPARE(env.canonicalPath(), Path::Root(u"env"));
         QCOMPARE(env.path(u"$env").internalKind(), DomType::DomEnvironment);
         QCOMPARE(env.top().internalKind(), DomType::DomEnvironment);
         QCOMPARE(env.environment().internalKind(), DomType::DomEnvironment);

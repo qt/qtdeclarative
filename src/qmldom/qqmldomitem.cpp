@@ -84,7 +84,7 @@ The minimal overload set to be usable is:
     Kind kind() const override {  return kindValue; } // returns the kind of the current element
     Path pathFromOwner(const DomItem &self) const override; // returns the path from the owner to the current element
     Path canonicalPath(const DomItem &self) const override; // returns the path from
-    virtual bool iterateDirectSubpaths(const DomItem &self, std::function<bool(Path, DomItem)>) const = 0; // iterates the *direct* subpaths, returns false if a quick end was requested
+    virtual bool iterateDirectSubpaths(const DomItem &self, function_ref<bool(Path, DomItem)>) const = 0; // iterates the *direct* subpaths, returns false if a quick end was requested
 \endcode
 But you probably want to subclass either DomElement of OwningItem for your element.
 DomElement stores its pathFromOwner, and computes the canonicalPath from it and its owner.
@@ -129,6 +129,7 @@ bool domTypeIsObjWrap(DomType k)
     case DomType::EnumItem:
     case DomType::Binding:
     case DomType::RequiredProperty:
+    case DomType::FileLocations:
         return true;
     default:
         return false;
@@ -172,6 +173,7 @@ bool domTypeIsOwningItem(DomType k)
     case DomType::GlobalScope:
 
     case DomType::LoadInfo:
+    case DomType::AttachedInfo:
 
     case DomType::DomEnvironment:
     case DomType::DomUniverse:
@@ -233,12 +235,25 @@ bool domTypeCanBeInline(DomType k)
     }
 };
 
+QCborValue locationToData(SourceLocation loc, QStringView strValue)
+{
+    QCborMap res({
+        {"offset", loc.offset},
+        {"length", loc.length},
+        {"startLine", loc.startLine},
+        {"startColumn", loc.startColumn}
+    });
+    if (!strValue.isEmpty())
+        res.insert(QStringLiteral(u"strValue"), QCborValue(strValue));
+    return res;
+}
+
 DomKind DomBase::domKind() const
 {
     return kind2domKind(kind());
 }
 
-bool DomBase::iterateDirectSubpathsConst(const DomItem &self, std::function<bool (Path, const DomItem &)>visitor) const
+bool DomBase::iterateDirectSubpathsConst(const DomItem &self, function_ref<bool (Path, const DomItem &)>visitor) const
 {
     return const_cast<DomBase *>(this)->iterateDirectSubpaths(
                 *const_cast<DomItem *>(&self),
@@ -364,7 +379,7 @@ ConstantData::ConstantData(Path pathFromOwner, QCborValue value, Options options
     DomElement(pathFromOwner, loc), m_value(value), m_options(options)
 {}
 
-bool ConstantData::iterateDirectSubpaths(DomItem &self, function<bool (Path, DomItem &)> visitor)
+bool ConstantData::iterateDirectSubpaths(DomItem &self, function_ref<bool (Path, DomItem &)> visitor)
 {
     if (m_value.isMap()) {
         QCborMap map = m_value.toMap();
@@ -375,10 +390,10 @@ bool ConstantData::iterateDirectSubpaths(DomItem &self, function<bool (Path, Dom
             Path path;
             switch (m_options) {
             case ConstantData::Options::MapIsMap:
-                path = Path::key(key);
+                path = Path::Key(key);
                 break;
             case ConstantData::Options::FirstMapIsFields:
-                path = Path::field(key);
+                path = Path::Field(key);
                 break;
             }
             if (!self.subDataPath(path, it.value()).visit(visitor))
@@ -392,7 +407,7 @@ bool ConstantData::iterateDirectSubpaths(DomItem &self, function<bool (Path, Dom
         auto end = array.cend();
         index_type i = 0;
         while (it != end) {
-            if (!self.subDataPath(Path::index(i++), *it++).visit(visitor))
+            if (!self.subDataPath(Path::Index(i++), *it++).visit(visitor))
                 return false;
         }
         return true;
@@ -422,7 +437,7 @@ DomKind ConstantData::domKind() const
 }
 
 SimpleObjectWrap::SimpleObjectWrap(Path pathFromOwner, QVariant value,
-                                   std::function<bool(DomItem &, QVariant, std::function<bool(Path, DomItem &)>)> directSubpathsIterate,
+                                   std::function<bool(DomItem &, QVariant, function_ref<bool(Path, DomItem &)>)> directSubpathsIterate,
                                    DomType kind,
                                    DomKind domKind,
                                    QString typeName,
@@ -431,7 +446,7 @@ SimpleObjectWrap::SimpleObjectWrap(Path pathFromOwner, QVariant value,
     m_directSubpathsIterate(directSubpathsIterate)
 {}
 
-bool SimpleObjectWrap::iterateDirectSubpaths(DomItem &self, function<bool (Path, DomItem &)> visitor)
+bool SimpleObjectWrap::iterateDirectSubpaths(DomItem &self, function_ref<bool (Path, DomItem &)> visitor)
 {
     return m_directSubpathsIterate(self, m_value, visitor);
 }
@@ -505,6 +520,26 @@ DomItem DomItem::containingObject() const
     return base()->containingObject(*this);
 }
 
+DomItem DomItem::fileObject(GoTo options) const
+{
+    DomItem res = *this;
+    DomType k = res.internalKind();
+    if (k == DomType::List || k == DomType::Map) {
+        res = res.containingObject();
+        k = res.internalKind();
+    }
+    if (k == DomType::ExternalItemInfo || (options == GoTo::MostLikely && k == DomType::ExternalItemPair))
+        return field(Fields::currentItem);
+    while (res) {
+        if (k == DomType::QmlFile || k == DomType::QmldirFile || k == DomType::QmltypesFile
+            || k == DomType::JsFile)
+            break;
+        res = res.containingObject();
+        k = res.internalKind();
+    }
+    return res;
+}
+
 DomItem DomItem::container() const
 {
     Path path = pathFromOwner();
@@ -517,12 +552,12 @@ DomItem DomItem::container() const
 }
 
 DomItem DomItem::owner() const {
-    return DomItem(m_top, m_owner, m_owner.get());
+    return DomItem(m_top, m_owner, m_ownerPath, m_owner.get());
 }
 
 DomItem DomItem::top() const
 {
-    return DomItem(m_top, m_top, m_top.get());
+    return DomItem(m_top, m_top, m_ownerPath, m_top.get());
 }
 
 DomItem DomItem::environment() const
@@ -878,7 +913,7 @@ bool DomItem::visitChildren(
     {
         Path pNow;
         if (!(options & VisitOption::NoPath))
-            pNow = basePath.subPath(p);
+            pNow = basePath.path(p);
         if (item.containingObject() != *this) {
             if (!(options & VisitOption::VisitAdopted))
                 return true;
@@ -1010,7 +1045,7 @@ void DomItem::clearErrors(ErrorGroups groups, bool iterate) const
     }
 }
 
-bool DomItem::iterateErrors(function<bool (DomItem, ErrorMessage)> visitor, bool iterate,
+bool DomItem::iterateErrors(function_ref<bool (DomItem, ErrorMessage)> visitor, bool iterate,
                             Path inPath) const
 {
     if (m_owner) {
@@ -1024,7 +1059,7 @@ bool DomItem::iterateErrors(function<bool (DomItem, ErrorMessage)> visitor, bool
     return true;
 }
 
-bool DomItem::iterateSubOwners(function<bool (DomItem)> visitor) const
+bool DomItem::iterateSubOwners(function_ref<bool (DomItem)> visitor) const
 {
     if (m_owner)
         return m_owner->iterateSubOwners(owner(), visitor);
@@ -1041,44 +1076,44 @@ shared_ptr<OwningItem> DomItem::owningItemPtr() const
     return m_owner;
 }
 
-DomItem DomItem::copy(shared_ptr<OwningItem> owner, DomBase *base) const
+DomItem DomItem::copy(shared_ptr<OwningItem> owner, Path ownerPath, DomBase *base) const
 {
-    return DomItem(m_top, owner, base);
+    return DomItem(m_top, owner, ownerPath, base);
 }
 
-DomItem DomItem::copy(shared_ptr<OwningItem> owner) const
+DomItem DomItem::copy(shared_ptr<OwningItem> owner, Path ownerPath) const
 {
-    return DomItem(m_top, owner, owner.get());
+    return DomItem(m_top, owner, ownerPath, owner.get());
 }
 
 DomItem DomItem::copy(DomBase *base) const
 {
-    return DomItem(m_top, m_owner, base);
+    return DomItem(m_top, m_owner, m_ownerPath, base);
 }
 
 Subpath DomItem::subDataField(QStringView fieldName, QCborValue value, ConstantData::Options options, const SourceLocation & loc) const
 {
-    return subDataPath(Path::field(fieldName), value, options, loc);
+    return subDataPath(Path::Field(fieldName), value, options, loc);
 }
 
 Subpath DomItem::subDataField(QString fieldName, QCborValue value, ConstantData::Options options, const SourceLocation & loc) const
 {
-    return subDataPath(Path::field(fieldName), value, options, loc);
+    return subDataPath(Path::Field(fieldName), value, options, loc);
 }
 
 Subpath DomItem::subDataIndex(index_type i, QCborValue value, ConstantData::Options options, const SourceLocation & loc) const
 {
-    return subDataPath(Path::index(i), value, options, loc);
+    return subDataPath(Path::Index(i), value, options, loc);
 }
 
 Subpath DomItem::subDataKey(QStringView keyName, QCborValue value, ConstantData::Options options, const SourceLocation & loc) const
 {
-    return subDataPath(Path::key(keyName), value, options, loc);
+    return subDataPath(Path::Key(keyName), value, options, loc);
 }
 
 Subpath DomItem::subDataKey(QString keyName, QCborValue value, ConstantData::Options options, const SourceLocation & loc) const
 {
-    return subDataPath(Path::key(keyName), value, options, loc);
+    return subDataPath(Path::Key(keyName), value, options, loc);
 }
 
 Subpath DomItem::subDataPath(Path path, QCborValue value, ConstantData::Options options, const SourceLocation & loc) const
@@ -1088,33 +1123,33 @@ Subpath DomItem::subDataPath(Path path, QCborValue value, ConstantData::Options 
                                      ConstantData(path, value, options, loc))};
     else
         return Subpath{path, DomItem(m_top, m_owner,
-                                     ConstantData(pathFromOwner().subPath(path), value, options, loc))};
+                                     ConstantData(pathFromOwner().path(path), value, options, loc))};
 }
 
 Subpath DomItem::subReferenceField(QStringView fieldName, Path referencedObject,
                                    const SourceLocation & loc) const
 {
-    return subReferencePath(Path::field(fieldName), referencedObject, loc);
+    return subReferencePath(Path::Field(fieldName), referencedObject, loc);
 }
 
 Subpath DomItem::subReferenceField(QString fieldName, Path referencedObject, const SourceLocation & loc) const
 {
-    return subReferencePath(Path::field(fieldName), referencedObject, loc);
+    return subReferencePath(Path::Field(fieldName), referencedObject, loc);
 }
 
 Subpath DomItem::subReferenceKey(QStringView keyName, Path referencedObject, const SourceLocation & loc) const
 {
-    return subReferencePath(Path::key(keyName), referencedObject,loc);
+    return subReferencePath(Path::Key(keyName), referencedObject,loc);
 }
 
 Subpath DomItem::subReferenceKey(QString keyName, Path referencedObject, const SourceLocation & loc) const
 {
-    return subReferencePath(Path::key(keyName), referencedObject, loc);
+    return subReferencePath(Path::Key(keyName), referencedObject, loc);
 }
 
 Subpath DomItem::subReferenceIndex(index_type i, Path referencedObject, const SourceLocation & loc) const
 {
-    return subReferencePath(Path::index(i), referencedObject, loc);
+    return subReferencePath(Path::Index(i), referencedObject, loc);
 }
 
 Subpath DomItem::subReferencePath(Path path, Path referencedObject, const SourceLocation & loc) const
@@ -1124,32 +1159,32 @@ Subpath DomItem::subReferencePath(Path path, Path referencedObject, const Source
                                      Reference(referencedObject, path, loc))};
     else
         return Subpath{path, DomItem(m_top, m_owner,
-                                     Reference(referencedObject, pathFromOwner().subPath(path), loc))};
+                                     Reference(referencedObject, pathFromOwner().path(path), loc))};
 }
 
 Subpath DomItem::toSubField(QStringView fieldName) const
 {
-    return Subpath{Path::field(fieldName), *this};
+    return Subpath{Path::Field(fieldName), *this};
 }
 
 Subpath DomItem::toSubField(QString fieldName) const
 {
-    return Subpath{Path::field(fieldName), *this};
+    return Subpath{Path::Field(fieldName), *this};
 }
 
 Subpath DomItem::toSubKey(QStringView keyName) const
 {
-    return Subpath{Path::key(keyName), *this};
+    return Subpath{Path::Key(keyName), *this};
 }
 
 Subpath DomItem::toSubKey(QString keyName) const
 {
-    return Subpath{Path::key(keyName), *this};
+    return Subpath{Path::Key(keyName), *this};
 }
 
 Subpath DomItem::toSubIndex(index_type i) const
 {
-    return Subpath{Path::index(i), *this};
+    return Subpath{Path::Index(i), *this};
 }
 
 Subpath DomItem::toSubPath(Path subPath) const
@@ -1173,20 +1208,20 @@ Subpath DomItem::subObjectWrap(const SimpleObjectWrap &obj) const
 }
 
 DomItem::DomItem():
-    DomItem(shared_ptr<DomTop>(), shared_ptr<OwningItem>(), nullptr)
+    DomItem(shared_ptr<DomTop>(), shared_ptr<OwningItem>(), Path(), nullptr)
 {
 }
 
 DomItem::DomItem(std::shared_ptr<DomEnvironment> envPtr):
-    DomItem(envPtr, envPtr, envPtr.get())
+    DomItem(envPtr, envPtr, Path(), envPtr.get())
 {}
 
 DomItem::DomItem(std::shared_ptr<DomUniverse> universePtr):
-    DomItem(universePtr, universePtr, universePtr.get())
+    DomItem(universePtr, universePtr, Path(), universePtr.get())
 {}
 
-DomItem::DomItem(std::shared_ptr<DomTop> top, std::shared_ptr<OwningItem> owner, DomBase *base):
-    m_top(top), m_owner(owner), m_base(base)
+DomItem::DomItem(std::shared_ptr<DomTop> top, std::shared_ptr<OwningItem> owner, Path ownerPath, DomBase *base):
+    m_top(top), m_owner(owner), m_ownerPath(ownerPath), m_base(base)
 {
     if (m_base == nullptr || m_base->kind() == DomType::Empty) { // avoid null ptr, and allow only a single kind of Empty
         m_top.reset();
@@ -1231,7 +1266,7 @@ Path Empty::canonicalPath(const DomItem &) const
     return Path();
 }
 
-bool Empty::iterateDirectSubpaths(DomItem &, function<bool (Path, DomItem &)>)
+bool Empty::iterateDirectSubpaths(DomItem &, function_ref<bool (Path, DomItem &)>)
 {
     return true;
 }
@@ -1255,11 +1290,11 @@ quintptr Map::id() const
     return quintptr(0);
 }
 
-bool Map::iterateDirectSubpaths(DomItem &self, function<bool (Path, DomItem &)>visitor)
+bool Map::iterateDirectSubpaths(DomItem &self, function_ref<bool (Path, DomItem &)>visitor)
 {
     for (QString k:keys(self)) {
         DomItem el = key(self, k);
-        if (!visitor(Path::key(k), el))
+        if (!visitor(Path::Key(k), el))
             return false;
     }
     return true;
@@ -1408,17 +1443,17 @@ void List::dump(const DomItem &self, Sink sink, int indent) const
     sink(u"]");
 }
 
-bool List::iterateDirectSubpaths(DomItem &self, function<bool (Path, DomItem &)>visitor)
+bool List::iterateDirectSubpaths(DomItem &self, function_ref<bool (Path, DomItem &)>visitor)
 {
     if (m_iterator) {
         return m_iterator(self, [visitor](index_type i, DomItem &item){
-            return visitor(Path::empty().subIndex(i), item);
+            return visitor(Path::Index(i), item);
         });
     }
     index_type len = indexes(self);
     for (index_type i = 0; i < len; ++i) {
         DomItem idx = index(self, i);
-        if (!visitor(Path::empty().subIndex(i), idx))
+        if (!visitor(Path::Index(i), idx))
             return false;
     }
     return true;
@@ -1448,7 +1483,7 @@ Path DomElement::pathFromOwner(const DomItem &) const
 Path DomElement::canonicalPath(const DomItem &self) const
 {
     Q_ASSERT(m_pathFromOwner && "uninitialized DomElement");
-    return self.owner().canonicalPath().subPath(m_pathFromOwner);
+    return self.owner().canonicalPath().path(m_pathFromOwner);
 }
 
 DomItem DomElement::containingObject(const DomItem &self) const
@@ -1479,12 +1514,12 @@ quintptr Reference::id() const
 }
 
 
-bool Reference::iterateDirectSubpaths(DomItem &self, function<bool (Path, DomItem &)> visitor)
+bool Reference::iterateDirectSubpaths(DomItem &self, function_ref<bool (Path, DomItem &)> visitor)
 {
     if (!self.subDataField(Fields::referredObjectPath, referredObjectPath.toString()).visit(visitor))
         return false;
     DomItem res = get(self);
-    if (!visitor(Path::field(Fields::get), res))
+    if (!visitor(Path::Field(Fields::get), res))
         return false;
     return true;
 }
@@ -1568,13 +1603,13 @@ int OwningItem::nextRevision()
     return ++nextRev;
 }
 
-bool OwningItem::iterateDirectSubpaths(DomItem &self, std::function<bool (Path, DomItem &)> visitor)
+bool OwningItem::iterateDirectSubpaths(DomItem &self, function_ref<bool (Path, DomItem &)> visitor)
 {
     bool cont = true;
     QMultiMap<Path, ErrorMessage> myErrors = localErrors();
     cont = cont && self.subMap(
                 Map(
-                    self.pathFromOwner().subField(Fields::errors),
+                    self.pathFromOwner().field(Fields::errors),
                     [myErrors](const DomItem &map, QString key) {
         auto it = myErrors.find(Path::fromString(key));
         if (it != myErrors.end())
@@ -1685,7 +1720,7 @@ void OwningItem::clearErrors(ErrorGroups groups)
     }
 }
 
-bool OwningItem::iterateErrors(const DomItem &self, function<bool (DomItem, ErrorMessage)> visitor,
+bool OwningItem::iterateErrors(const DomItem &self, function_ref<bool (DomItem, ErrorMessage)> visitor,
                                Path inPath)
 {
     QMultiMap<Path, ErrorMessage> myErrors;
@@ -1702,7 +1737,7 @@ bool OwningItem::iterateErrors(const DomItem &self, function<bool (DomItem, Erro
     return true;
 }
 
-bool OwningItem::iterateSubOwners(const DomItem &self, function<bool (const DomItem &)>visitor)
+bool OwningItem::iterateSubOwners(const DomItem &self, function_ref<bool (const DomItem &)>visitor)
 {
     return iterateDirectSubpathsConst(self,[self, visitor](Path, const DomItem &i) {
         if (i.owningItemPtr() != self.owningItemPtr() && i.container().id() == self.id())
@@ -1729,7 +1764,7 @@ std::pair<QString, GenericObject> GenericObject::asStringPair() const
     return std::make_pair(pathFromOwner().last().headName(), *this);
 }
 
-bool GenericObject::iterateDirectSubpaths(DomItem &self, std::function<bool (Path, DomItem &)> visitor)
+bool GenericObject::iterateDirectSubpaths(DomItem &self, function_ref<bool (Path, DomItem &)> visitor)
 {
     bool cont = true;
     auto itV = subValues.begin();
@@ -1747,7 +1782,7 @@ bool GenericObject::iterateDirectSubpaths(DomItem &self, std::function<bool (Pat
     return cont;
 }
 
-std::shared_ptr<OwningItem> GenericOwner::doCopy(const DomItem &)
+std::shared_ptr<OwningItem> GenericOwner::doCopy(const DomItem &) const
 {
     return std::make_shared<GenericOwner>(*this);
 }
@@ -1775,7 +1810,7 @@ Path GenericOwner::canonicalPath(const DomItem &) const
     return pathFromTop;
 }
 
-bool GenericOwner::iterateDirectSubpaths(DomItem &self, std::function<bool (Path, DomItem &)> visitor)
+bool GenericOwner::iterateDirectSubpaths(DomItem &self, function_ref<bool (Path, DomItem &)> visitor)
 {
     bool cont = true;
     auto itV = subValues.begin();

@@ -83,7 +83,7 @@ public:
     QString canonicalFilePath() const;
     Path canonicalPath(const DomItem &) const override;
     Path canonicalPath() const;
-    bool iterateDirectSubpaths(DomItem &self, std::function<bool (Path, DomItem &)> visitor) override {
+    bool iterateDirectSubpaths(DomItem &self, function_ref<bool (Path, DomItem &)> visitor) override {
         bool cont = OwningItem::iterateDirectSubpaths(self, visitor);
         cont = cont && self.subDataField(Fields::canonicalFilePath, canonicalFilePath()).visit(visitor);
         cont = cont && self.subDataField(Fields::isValid, isValid()).visit(visitor);

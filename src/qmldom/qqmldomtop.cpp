@@ -90,7 +90,7 @@ DomItem DomTop::containingObject(const DomItem &) const
     return DomItem();
 }
 
-bool DomTop::iterateDirectSubpaths(DomItem &self, function<bool (Path, DomItem &)> visitor)
+bool DomTop::iterateDirectSubpaths(DomItem &self, function_ref<bool (Path, DomItem &)> visitor)
 {
     bool cont = true;
     auto objs = m_extraOwningItems;
@@ -151,10 +151,10 @@ DomUniverse::DomUniverse(QString universeName, Options options):
 
 Path DomUniverse::canonicalPath() const
 {
-    return Path::root(u"universe");
+    return Path::Root(u"universe");
 }
 
-bool DomUniverse::iterateDirectSubpaths(DomItem &self, function<bool (Path, DomItem &)> visitor)
+bool DomUniverse::iterateDirectSubpaths(DomItem &self, function_ref<bool (Path, DomItem &)> visitor)
 {
     bool cont = true;
     cont = cont && DomTop::iterateDirectSubpaths(self, visitor);
@@ -162,7 +162,7 @@ bool DomUniverse::iterateDirectSubpaths(DomItem &self, function<bool (Path, DomI
     cont = cont && self.subDataField(Fields::options, int(options())).visit(visitor);
     QQueue<ParsingTask> q = queue();
     cont = cont && self.subList(
-                List(Path::field(Fields::queue),
+                List(Path::Field(Fields::queue),
                      [q](const DomItem &list, index_type i){
         if (i >= 0 && i < q.length())
             return list.subDataIndex(i, q.at(i).toCbor(), ConstantData::Options::FirstMapIsFields).item;
@@ -176,7 +176,7 @@ bool DomUniverse::iterateDirectSubpaths(DomItem &self, function<bool (Path, DomI
     return cont;
 }
 
-std::shared_ptr<OwningItem> DomUniverse::doCopy(const DomItem &)
+std::shared_ptr<OwningItem> DomUniverse::doCopy(const DomItem &) const
 {
     QRegularExpression r(QRegularExpression::anchoredPattern(QLatin1String(R"(.*Copy([0-9]*)$)")));
     auto m = r.match(m_name);
@@ -304,20 +304,20 @@ ErrorGroups DomEnvironment::myErrors() {
 
 Path DomEnvironment::canonicalPath() const
 {
-    return Path::root(u"env");
+    return Path::Root(u"env");
 }
 
-bool DomEnvironment::iterateDirectSubpaths(DomItem &self, function<bool (Path, DomItem &)> visitor)
+bool DomEnvironment::iterateDirectSubpaths(DomItem &self, function_ref<bool (Path, DomItem &)> visitor)
 {
     bool cont = true;
     cont = cont && DomTop::iterateDirectSubpaths(self, visitor);
     DomItem univ = universe();
-    cont = cont && visitor(Path::field(Fields::universe), univ);
+    cont = cont && visitor(Path::Field(Fields::universe), univ);
     cont = cont && self.subDataField(Fields::options, int(options())).visit(visitor);
     DomItem baseItem = base();
-    cont = cont && visitor(Path::field(Fields::base), baseItem);
+    cont = cont && visitor(Path::Field(Fields::base), baseItem);
     cont = cont && self.subList(List::fromQList<QString>(
-                                    Path::field(Fields::loadPaths), loadPaths(),
+                                    Path::Field(Fields::loadPaths), loadPaths(),
                                     [](const DomItem &i, Path p, const QString &el){
         return i.subDataPath(p, el).item;
     })).visit(visitor);
@@ -331,7 +331,7 @@ bool DomEnvironment::iterateDirectSubpaths(DomItem &self, function<bool (Path, D
         nAllLoadedCallbacks = m_allLoadedCallback.length();
     }
     cont = cont && self.subList(
-                List(Path::field(Fields::loadsWithWork),
+                List(Path::Field(Fields::loadsWithWork),
                      [loadsWithWork](const DomItem &list, index_type i){
         if (i >= 0 && i < loadsWithWork.length())
             return list.subDataIndex(i, loadsWithWork.at(i).toString()).item;
@@ -345,7 +345,7 @@ bool DomEnvironment::iterateDirectSubpaths(DomItem &self, function<bool (Path, D
     return cont;
 }
 
-std::shared_ptr<OwningItem> DomEnvironment::doCopy(const DomItem &)
+std::shared_ptr<OwningItem> DomEnvironment::doCopy(const DomItem &) const
 {
     shared_ptr<DomEnvironment> res;
     if (m_base)
@@ -375,22 +375,22 @@ DomEnvironment::DomEnvironment(shared_ptr<DomEnvironment> parent, QStringList lo
 Path ExternalItemInfoBase::canonicalPath(const DomItem &self) const
 {
     shared_ptr<ExternalOwningItem> current = currentItem();
-    return current->canonicalPath(self.copy(current, current.get())).dropTail();
+    return current->canonicalPath(self.copy(current, Path(),  current.get())).dropTail();
 }
 
 QString ExternalItemInfoBase::canonicalFilePath(const DomItem &self) const
 {
     shared_ptr<ExternalOwningItem> current = currentItem();
-    return current->canonicalFilePath(self.copy(current, current.get()));
+    return current->canonicalFilePath(self.copy(current, Path(), current.get()));
 }
 
 Path ExternalItemInfoBase::pathFromOwner(const DomItem &self) const
 {
     shared_ptr<ExternalOwningItem> current = currentItem();
-    return current->pathFromOwner(self.copy(current, current.get())).dropTail();
+    return current->pathFromOwner(self.copy(current, Path(), current.get())).dropTail();
 }
 
-bool ExternalItemInfoBase::iterateDirectSubpaths(DomItem &self, function<bool (Path, DomItem &)> visitor)
+bool ExternalItemInfoBase::iterateDirectSubpaths(DomItem &self, function_ref<bool (Path, DomItem &)> visitor)
 {
     if (!self.subDataField(Fields::currentRevision, currentRevision(self)).visit(visitor))
         return false;
@@ -398,8 +398,8 @@ bool ExternalItemInfoBase::iterateDirectSubpaths(DomItem &self, function<bool (P
         return false;
     if (!self.subDataField(Fields::lastValidRevision, QCborValue(lastValidRevision(self))).visit(visitor))
         return false;
-    DomItem cItem = self.copy(currentItem(), currentItem().get());
-    if (!visitor(Path::field(Fields::currentItem), cItem))
+    DomItem cItem = self.copy(currentItem(), Path(), currentItem().get());
+    if (!visitor(Path::Field(Fields::currentItem), cItem))
         return false;
     if (!self.subDataField(Fields::currentExposedAt, QCborValue(currentExposedAt())).visit(visitor))
         return false;
@@ -428,13 +428,13 @@ int ExternalItemInfoBase::lastValidRevision(const DomItem &self) const
 QString ExternalItemPairBase::canonicalFilePath(const DomItem &self) const
 {
     shared_ptr<ExternalOwningItem> current = currentItem();
-    return current->canonicalFilePath(self.copy(current, current.get()));
+    return current->canonicalFilePath(self.copy(current, Path(), current.get()));
 }
 
 Path ExternalItemPairBase::pathFromOwner(const DomItem &self) const
 {
     shared_ptr<ExternalOwningItem> current = currentItem();
-    return current->pathFromOwner(self.copy(current, current.get())).dropTail();
+    return current->pathFromOwner(self.copy(current, Path(), current.get())).dropTail();
 }
 
 Path ExternalItemPairBase::canonicalPath(const DomItem &) const
@@ -443,15 +443,15 @@ Path ExternalItemPairBase::canonicalPath(const DomItem &) const
     return current->canonicalPath().dropTail();
 }
 
-bool ExternalItemPairBase::iterateDirectSubpaths(DomItem &self, function<bool (Path, DomItem &)> visitor)
+bool ExternalItemPairBase::iterateDirectSubpaths(DomItem &self, function_ref<bool (Path, DomItem &)> visitor)
 {
     if (!self.subDataField(Fields::currentIsValid, currentIsValid()).visit(visitor))
         return false;
-    DomItem vItem = self.copy(validItem(), validItem().get());
-    if (!visitor(Path::field(Fields::validItem), vItem))
+    DomItem vItem = self.copy(validItem(), Path(), validItem().get());
+    if (!visitor(Path::Field(Fields::validItem), vItem))
         return false;
-    DomItem cItem = self.copy(currentItem(), currentItem().get());
-    if (!visitor(Path::field(Fields::currentItem), cItem))
+    DomItem cItem = self.copy(currentItem(), Path(), currentItem().get());
+    if (!visitor(Path::Field(Fields::currentItem), cItem))
         return false;
     if (!self.subDataField(Fields::validExposedAt, QCborValue(validExposedAt)).visit(visitor))
         return false;

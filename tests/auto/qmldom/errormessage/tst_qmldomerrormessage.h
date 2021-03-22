@@ -35,6 +35,20 @@
 **
 ** $QT_END_LICENSE$
 **/
-#include "tst_qmldompath.h"
+#include <QtQmlDom/qqmldom_global.h>
+#include <QtTest/QtTest>
 
-QTEST_MAIN(QQmlJS::Dom::PathEls::TestPaths)
+QT_BEGIN_NAMESPACE
+namespace QQmlJS {
+namespace Dom {
+
+class QMLDOM_EXPORT TestErrorMessage: public QObject
+{
+    Q_OBJECT
+private slots:
+  void testError();
+};
+
+} // Dom
+} // QQmlJS
+QT_END_NAMESPACE

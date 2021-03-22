@@ -68,7 +68,7 @@ namespace Dom {
  * \brief Helper class to accept eithe a string or a dumper (a function that writes to a sink)
  *
  * Using a Dumper as input parameter one always obtains a dumper (i.e. a
- * std::function<void(std::function<void(QStringView)>)> , but can pass in any
+ * function_ref<void(function_ref<void(QStringView)>)> , but can pass in any
  * object accepted by QStringView, and it is automatically converted to a dumper.
  */
 
@@ -138,17 +138,8 @@ void dumpErrorLevel(Sink s, ErrorLevel level)
     case ErrorLevel::Info:
         s(u"Info");
         break;
-    case ErrorLevel::Hint:
-        s(u"Hint");
-        break;
-    case ErrorLevel::MaybeWarning:
-        s(u"MaybeWarn");
-        break;
     case ErrorLevel::Warning:
         s(u"Warning");
-        break;
-    case ErrorLevel::MaybeError:
-        s(u"MaybeErr");
         break;
     case ErrorLevel::Error:
         s(u"Error");
@@ -181,14 +172,11 @@ void dumperToQDebug(Dumper dumper, ErrorLevel level)
     case ErrorLevel::Debug:
         break;
     case ErrorLevel::Info:
-    case ErrorLevel::Hint:
         d = qInfo().noquote().nospace();
         break;
-    case ErrorLevel::MaybeWarning:
     case ErrorLevel::Warning:
         d = qWarning().noquote().nospace();
         break;
-    case ErrorLevel::MaybeError:
     case ErrorLevel::Error:
     case ErrorLevel::Fatal: // should be handled differently (avoid allocations...), we try to catch them before ending up here
         d = qCritical().noquote().nospace();

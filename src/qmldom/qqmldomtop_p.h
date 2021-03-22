@@ -112,7 +112,7 @@ public:
     QString canonicalFilePath(const DomItem &) const override;
     Path pathFromOwner(const DomItem &self) const override;
     Path canonicalPath(const DomItem &self) const override;
-    bool iterateDirectSubpaths(DomItem &self, function<bool(Path, DomItem &)>) override;
+    bool iterateDirectSubpaths(DomItem &self, function_ref<bool(Path, DomItem &)>) override;
 
     bool currentIsValid() const;
 
@@ -141,7 +141,7 @@ public:
 template<class T>
 class QMLDOM_EXPORT ExternalItemPair: public ExternalItemPairBase { // all access should have the lock of the DomUniverse containing this
 protected:
-    std::shared_ptr<OwningItem> doCopy(const DomItem &) override {
+    std::shared_ptr<OwningItem> doCopy(const DomItem &) const override {
         return std::make_shared<ExternalItemPair>(*this);
     }
 
@@ -190,7 +190,7 @@ public:
     Path pathFromOwner(const DomItem &) const override;
     Path canonicalPath(const DomItem &) const override;
     DomItem containingObject(const DomItem&) const override;
-    bool iterateDirectSubpaths(DomItem &self, function<bool(Path, DomItem &)>) override;
+    bool iterateDirectSubpaths(DomItem &self, function_ref<bool(Path, DomItem &)>) override;
 
     void setExtraOwningItem(QString fieldName, std::shared_ptr<OwningItem> item);
     void clearExtraOwningItems();
@@ -202,7 +202,7 @@ private:
 class QMLDOM_EXPORT DomUniverse: public DomTop {
     Q_DECLARE_TR_FUNCTIONS(DomUniverse);
 protected:
-    std::shared_ptr<OwningItem> doCopy(const DomItem &self) override;
+    std::shared_ptr<OwningItem> doCopy(const DomItem &self) const override;
 public:
     enum class Option{
         Default,
@@ -218,7 +218,7 @@ public:
     DomUniverse(const DomUniverse &) = delete;
 
     Path canonicalPath() const override;
-    bool iterateDirectSubpaths(DomItem &self, function<bool(Path, DomItem &)>) override;
+    bool iterateDirectSubpaths(DomItem &self, function_ref<bool(Path, DomItem &)>) override;
     std::shared_ptr<DomUniverse> makeCopy(const DomItem &self) {
         return std::static_pointer_cast<DomUniverse>(doCopy(self));
     }
@@ -267,7 +267,7 @@ public:
     QString canonicalFilePath(const DomItem &) const override;
     Path canonicalPath(const DomItem &) const override;
     Path pathFromOwner(const DomItem &self) const override;
-    bool iterateDirectSubpaths(DomItem &self, function<bool(Path, DomItem &)>) override;
+    bool iterateDirectSubpaths(DomItem &self, function_ref<bool(Path, DomItem &)>) override;
 
     int currentRevision(const DomItem &self) const;
     int lastRevision(const DomItem &self) const;
@@ -320,7 +320,7 @@ public:
 template <typename T>
 class ExternalItemInfo: public ExternalItemInfoBase {
 protected:
-    std::shared_ptr<OwningItem> doCopy(const DomItem &) override {
+    std::shared_ptr<OwningItem> doCopy(const DomItem &) const override {
         return std::make_shared<ExternalItemInfo>(*this);
     }
 public:
@@ -357,7 +357,7 @@ class QMLDOM_EXPORT DomEnvironment: public DomTop
 {
     Q_DECLARE_TR_FUNCTIONS(DomEnvironment);
 protected:
-    std::shared_ptr<OwningItem> doCopy(const DomItem &self) override;
+    std::shared_ptr<OwningItem> doCopy(const DomItem &self) const override;
 public:
     enum class Option {
         Default = 0x0,
@@ -375,7 +375,7 @@ public:
     DomType kind() const override {  return kindValue; }
 
     Path canonicalPath() const override;
-    bool iterateDirectSubpaths(DomItem &self, function<bool(Path, DomItem &)>) override;
+    bool iterateDirectSubpaths(DomItem &self, function_ref<bool(Path, DomItem &)>) override;
     std::shared_ptr<DomEnvironment> makeCopy(const DomItem &self) {
         return std::static_pointer_cast<DomEnvironment>(doCopy(self));
     }

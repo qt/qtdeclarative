@@ -107,14 +107,8 @@ public:
     [[nodiscard]] ErrorMessage debug(Dumper message) const;
     [[nodiscard]] ErrorMessage info(QString message) const;
     [[nodiscard]] ErrorMessage info(Dumper message) const;
-    [[nodiscard]] ErrorMessage hint(QString message) const;
-    [[nodiscard]] ErrorMessage hint(Dumper message) const;
-    [[nodiscard]] ErrorMessage maybeWarning(QString message) const;
-    [[nodiscard]] ErrorMessage maybeWarning(Dumper message) const;
     [[nodiscard]] ErrorMessage warning(QString message) const;
     [[nodiscard]] ErrorMessage warning(Dumper message) const;
-    [[nodiscard]] ErrorMessage maybeError(QString message) const;
-    [[nodiscard]] ErrorMessage maybeError(Dumper message) const;
     [[nodiscard]] ErrorMessage error(QString message) const;
     [[nodiscard]] ErrorMessage error(Dumper message) const;
 
@@ -138,7 +132,7 @@ public:
     // error registry (usage is optional)
     static QLatin1String msg(const char *errorId, ErrorMessage err);
     static QLatin1String msg(QLatin1String errorId, ErrorMessage err);
-    static void visitRegisteredMessages(std::function<bool(ErrorMessage)> visitor);
+    static void visitRegisteredMessages(function_ref<bool(ErrorMessage)> visitor);
     [[nodiscard]] static ErrorMessage load(QLatin1String errorId);
     [[nodiscard]] static ErrorMessage load(const char *errorId);
     template<typename... T>

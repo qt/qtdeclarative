@@ -455,149 +455,193 @@ public:
 
 } // namespace PathEls
 
-#define QMLDOM_USTRING(name) constexpr const auto name = u#name
+#define QMLDOM_USTRING(s) u##s
+#define QMLDOM_FIELD(name) inline constexpr const auto name = QMLDOM_USTRING(#name)
 // namespace, so it cam be reopened to add more entries
 namespace Fields{
-constexpr const auto access = u"access";
-constexpr const auto annotations = u"annotations";
-constexpr const auto attachedType = u"attachedType";
-constexpr const auto attachedTypeName = u"attachedTypeName";
-constexpr const auto autoExport = u"autoExport";
-constexpr const auto base = u"base";
-constexpr const auto bindingType = u"bindingType";
-constexpr const auto bindings = u"bindings";
-constexpr const auto body = u"body";
-constexpr const auto canonicalFilePath = u"canonicalFilePath";
-constexpr const auto canonicalPath = u"canonicalPath";
-constexpr const auto children = u"children";
-constexpr const auto classNames = u"classNames";
-constexpr const auto code = u"code";
-constexpr const auto components = u"components";
-constexpr const auto contents = u"contents";
-constexpr const auto contentsDate = u"contentsDate";
-constexpr const auto currentExposedAt = u"currentExposedAt";
-constexpr const auto currentIsValid = u"currentIsValid";
-constexpr const auto currentItem = u"currentItem";
-constexpr const auto currentRevision = u"currentRevision";
-constexpr const auto defaultPropertyName = u"defaultPropertyName";
-constexpr const auto designerSupported = u"designerSupported";
-constexpr const auto elementCanonicalPath = u"elementCanonicalPath";
-constexpr const auto enumerations = u"enumerations";
-constexpr const auto errors = u"errors";
-constexpr const auto exportSource = u"exportSource";
-constexpr const auto exports = u"exports";
-constexpr const auto extraRequired = u"extraRequired";
-constexpr const auto fileName = u"fileName";
-constexpr const auto get = u"get";
-constexpr const auto globalScopeName = u"globalScopeName";
-constexpr const auto globalScopeWithName = u"globalScopeWithName";
-constexpr const auto hasCallback = u"hasCallback";
-constexpr const auto idStr = u"idStr";
-constexpr const auto ids = u"ids";
-constexpr const auto import = u"import";
-constexpr const auto importId = u"importId";
-constexpr const auto imports = u"imports";
-constexpr const auto inheritVersion = u"inheritVersion";
-constexpr const auto inProgress = u"inProgress";
-constexpr const auto isAlias = u"isAlias";
-constexpr const auto isComposite = u"isComposite";
-constexpr const auto isCreatable = u"isCreatable";
-constexpr const auto isDefaultMember = u"isDefaultMember";
-constexpr const auto isInternal = u"isInternal";
-constexpr const auto isLatest = u"isLatest";
-constexpr const auto isList = u"isList";
-constexpr const auto isPointer = u"isPointer";
-constexpr const auto isRequired = u"isRequired";
-constexpr const auto isSingleton = u"isSingleton";
-constexpr const auto isValid = u"isValid";
-constexpr const auto isWritable = u"isWritable";
-constexpr const auto jsFileWithPath = u"jsFileWithPath";
-constexpr const auto kind = u"kind";
-constexpr const auto lastRevision = u"lastRevision";
-constexpr const auto lastValidRevision = u"lastValidRevision";
-constexpr const auto loadInfo = u"loadInfo";
-constexpr const auto loadOptions = u"loadOptions";
-constexpr const auto loadPaths = u"loadPaths";
-constexpr const auto loadsWithWork = u"loadsWithWork";
-constexpr const auto location = u"location";
-constexpr const auto logicalPath = u"logicalPath";
-constexpr const auto majorVersion = u"majorVersion";
-constexpr const auto metaRevisions = u"metaRevisions";
-constexpr const auto methodType = u"methodType";
-constexpr const auto methods = u"methods";
-constexpr const auto minorVersion = u"minorVersion";
-constexpr const auto moduleIndex = u"moduleIndex";
-constexpr const auto moduleIndexWithUri = u"moduleIndexWithUri";
-constexpr const auto moduleScope = u"moduleScope";
-constexpr const auto nAllLoadedCallbacks = u"nAllLoadedCallbacks";
-constexpr const auto nCallbacks = u"nCallbacks";
-constexpr const auto nLoaded = u"nLoaded";
-constexpr const auto nNotdone = u"nNotdone";
-constexpr const auto name = u"name";
-constexpr const auto nextScope = u"nextScope";
-constexpr const auto objects = u"objects";
-constexpr const auto onAttachedObject = u"onAttachedObject";
-constexpr const auto options = u"options";
-constexpr const auto parameters = u"parameters";
-constexpr const auto parentObject = u"parentObject";
-constexpr const auto path = u"path";
-constexpr const auto plugins = u"plugins";
-constexpr const auto pragma = u"pragma";
-constexpr const auto pragmas = u"pragmas";
-constexpr const auto propertyDef = u"propertyDef";
-constexpr const auto propertyDefRef = u"propertyDefRef";
-constexpr const auto propertyDefs = u"propertyDefs";
-constexpr const auto propertyName = u"propertyName";
-constexpr const auto prototype = u"prototype";
-constexpr const auto qmlDirectoryWithPath = u"qmlDirectoryWithPath";
-constexpr const auto qmlFileWithPath = u"qmlFileWithPath";
-constexpr const auto qmldirFileWithPath = u"qmldirFileWithPath";
-constexpr const auto qmltypesFileWithPath = u"qmltypesFileWithPath";
-constexpr const auto qmltypesFiles = u"qmltypesFiles";
-constexpr const auto queue = u"queue";
-constexpr const auto referredObject = u"referredObject";
-constexpr const auto referredObjectPath = u"referredObjectPath";
-constexpr const auto requestedAt = u"requestedAt";
-constexpr const auto requestingUniverse = u"requestingUniverse";
-constexpr const auto returnType = u"returnType";
-constexpr const auto returnTypeName = u"returnTypeName";
-constexpr const auto rootComponent = u"rootComponent";
-constexpr const auto sources = u"sources";
-constexpr const auto status = u"status";
-constexpr const auto stringValue = u"stringValue";
-constexpr const auto symbols = u"symbols";
-constexpr const auto target = u"target";
-constexpr const auto targetPropertyName = u"targetPropertyName";
-constexpr const auto type = u"type";
-constexpr const auto typeName = u"typeName";
-constexpr const auto types = u"types";
-constexpr const auto universe = u"universe";
-constexpr const auto uri = u"uri";
-constexpr const auto uris = u"uris";
-constexpr const auto validExposedAt = u"validExposedAt";
-constexpr const auto validItem = u"validItem";
-constexpr const auto value = u"value";
-constexpr const auto values = u"values";
-constexpr const auto version = u"version";
-constexpr const auto when = u"when";
+QMLDOM_FIELD(access);
+QMLDOM_FIELD(annotations);
+QMLDOM_FIELD(astComments);
+QMLDOM_FIELD(astRelocatableDump);
+QMLDOM_FIELD(attachedType);
+QMLDOM_FIELD(attachedTypeName);
+QMLDOM_FIELD(autoExport);
+QMLDOM_FIELD(base);
+QMLDOM_FIELD(bindingType);
+QMLDOM_FIELD(bindings);
+QMLDOM_FIELD(body);
+QMLDOM_FIELD(canonicalFilePath);
+QMLDOM_FIELD(canonicalPath);
+QMLDOM_FIELD(children);
+QMLDOM_FIELD(classNames);
+QMLDOM_FIELD(code);
+QMLDOM_FIELD(commentedElements);
+QMLDOM_FIELD(comments);
+QMLDOM_FIELD(components);
+QMLDOM_FIELD(contents);
+QMLDOM_FIELD(contentsDate);
+QMLDOM_FIELD(cppType);
+QMLDOM_FIELD(currentExposedAt);
+QMLDOM_FIELD(currentIsValid);
+QMLDOM_FIELD(currentItem);
+QMLDOM_FIELD(currentRevision);
+QMLDOM_FIELD(defaultPropertyName);
+QMLDOM_FIELD(defaultValue);
+QMLDOM_FIELD(designerSupported);
+QMLDOM_FIELD(elementCanonicalPath);
+QMLDOM_FIELD(elLocation);
+QMLDOM_FIELD(enumerations);
+QMLDOM_FIELD(errors);
+QMLDOM_FIELD(exportSource);
+QMLDOM_FIELD(exports);
+QMLDOM_FIELD(expr);
+QMLDOM_FIELD(fileLocationsTree);
+QMLDOM_FIELD(fileName);
+QMLDOM_FIELD(fullRegion);
+QMLDOM_FIELD(get);
+QMLDOM_FIELD(globalScopeName);
+QMLDOM_FIELD(globalScopeWithName);
+QMLDOM_FIELD(hasCallback);
+QMLDOM_FIELD(idStr);
+QMLDOM_FIELD(ids);
+QMLDOM_FIELD(implicit);
+QMLDOM_FIELD(import);
+QMLDOM_FIELD(importId);
+QMLDOM_FIELD(importScope);
+QMLDOM_FIELD(importSources);
+QMLDOM_FIELD(imported);
+QMLDOM_FIELD(imports);
+QMLDOM_FIELD(inProgress);
+QMLDOM_FIELD(infoItem);
+QMLDOM_FIELD(inheritVersion);
+QMLDOM_FIELD(isAlias);
+QMLDOM_FIELD(isComposite);
+QMLDOM_FIELD(isCreatable);
+QMLDOM_FIELD(isDefaultMember);
+QMLDOM_FIELD(isInternal);
+QMLDOM_FIELD(isLatest);
+QMLDOM_FIELD(isList);
+QMLDOM_FIELD(isPointer);
+QMLDOM_FIELD(isReadonly);
+QMLDOM_FIELD(isRequired);
+QMLDOM_FIELD(isSignalHandler);
+QMLDOM_FIELD(isSingleton);
+QMLDOM_FIELD(isValid);
+QMLDOM_FIELD(jsFileWithPath);
+QMLDOM_FIELD(kind);
+QMLDOM_FIELD(lastRevision);
+QMLDOM_FIELD(lastValidRevision);
+QMLDOM_FIELD(loadInfo);
+QMLDOM_FIELD(loadOptions);
+QMLDOM_FIELD(loadPaths);
+QMLDOM_FIELD(loadsWithWork);
+QMLDOM_FIELD(localOffset);
+QMLDOM_FIELD(location);
+QMLDOM_FIELD(logicalPath);
+QMLDOM_FIELD(majorVersion);
+QMLDOM_FIELD(metaRevisions);
+QMLDOM_FIELD(methodType);
+QMLDOM_FIELD(methods);
+QMLDOM_FIELD(minorVersion);
+QMLDOM_FIELD(moduleIndex);
+QMLDOM_FIELD(moduleIndexWithUri);
+QMLDOM_FIELD(moduleScope);
+QMLDOM_FIELD(nAllLoadedCallbacks);
+QMLDOM_FIELD(nCallbacks);
+QMLDOM_FIELD(nLoaded);
+QMLDOM_FIELD(nNotdone);
+QMLDOM_FIELD(name);
+QMLDOM_FIELD(nextComponent);
+QMLDOM_FIELD(nextScope);
+QMLDOM_FIELD(newlinesBefore);
+QMLDOM_FIELD(objects);
+QMLDOM_FIELD(onAttachedObject);
+QMLDOM_FIELD(options);
+QMLDOM_FIELD(parameters);
+QMLDOM_FIELD(parent);
+QMLDOM_FIELD(parentObject);
+QMLDOM_FIELD(path);
+QMLDOM_FIELD(plugins);
+QMLDOM_FIELD(postCode);
+QMLDOM_FIELD(postComments);
+QMLDOM_FIELD(postCommentLocations);
+QMLDOM_FIELD(pragma);
+QMLDOM_FIELD(pragmas);
+QMLDOM_FIELD(preCode);
+QMLDOM_FIELD(preComments);
+QMLDOM_FIELD(preCommentLocations);
+QMLDOM_FIELD(propertyDef);
+QMLDOM_FIELD(propertyDefRef);
+QMLDOM_FIELD(propertyDefs);
+QMLDOM_FIELD(propertyInfos);
+QMLDOM_FIELD(propertyName);
+QMLDOM_FIELD(prototypes);
+QMLDOM_FIELD(qmlDirectoryWithPath);
+QMLDOM_FIELD(qmlFileWithPath);
+QMLDOM_FIELD(qmlFiles);
+QMLDOM_FIELD(qmldirFileWithPath);
+QMLDOM_FIELD(qmldirWithPath);
+QMLDOM_FIELD(qmltypesFileWithPath);
+QMLDOM_FIELD(qmltypesFiles);
+QMLDOM_FIELD(qualifiedImports);
+QMLDOM_FIELD(queue);
+QMLDOM_FIELD(rawComment);
+QMLDOM_FIELD(referredObject);
+QMLDOM_FIELD(referredObjectPath);
+QMLDOM_FIELD(regionComments);
+QMLDOM_FIELD(regions);
+QMLDOM_FIELD(requestedAt);
+QMLDOM_FIELD(requestingUniverse);
+QMLDOM_FIELD(returnType);
+QMLDOM_FIELD(returnTypeName);
+QMLDOM_FIELD(rootComponent);
+QMLDOM_FIELD(sources);
+QMLDOM_FIELD(status);
+QMLDOM_FIELD(stringValue);
+QMLDOM_FIELD(subComponents);
+QMLDOM_FIELD(subImports);
+QMLDOM_FIELD(subItems);
+QMLDOM_FIELD(symbol);
+QMLDOM_FIELD(symbols);
+QMLDOM_FIELD(target);
+QMLDOM_FIELD(targetPropertyName);
+QMLDOM_FIELD(text);
+QMLDOM_FIELD(type);
+QMLDOM_FIELD(typeName);
+QMLDOM_FIELD(types);
+QMLDOM_FIELD(universe);
+QMLDOM_FIELD(updatedScriptExpressions);
+QMLDOM_FIELD(uri);
+QMLDOM_FIELD(uris);
+QMLDOM_FIELD(validExposedAt);
+QMLDOM_FIELD(validItem);
+QMLDOM_FIELD(value);
+QMLDOM_FIELD(values);
+QMLDOM_FIELD(version);
+QMLDOM_FIELD(when);
 }
 
 class Source;
 size_t qHash(const Path &, size_t);
-
+class PathIterator;
 // Define a iterator for it?
 // begin() can basically be itself, end() the empty path (zero length), iteration though dropFront()
 class QMLDOM_EXPORT Path{
+    Q_GADGET
     Q_DECLARE_TR_FUNCTIONS(ErrorGroup);
 public:
     using Kind = PathEls::Kind;
     using Component = PathEls::PathComponent;
     static ErrorGroups myErrors(); // use static consts and central registration instead?
 
-    Path(){}
+    Path() = default;
+
     int length() const { return m_length; }
     Path operator[](int i) const;
     operator bool() const;
+
+    PathIterator begin() const;
+    PathIterator end() const;
 
     PathRoot headRoot() const;
     PathCurrent headCurrent() const;
@@ -612,40 +656,40 @@ public:
 
     void dump(Sink sink) const;
     QString toString() const;
-    Path dropFront() const;
-    Path dropTail() const;
+    Path dropFront(int n = 1) const;
+    Path dropTail(int n = 1) const;
     Path mid(int offset, int length) const;
     Path mid(int offset) const;
 
     // # Path construction
     static Path fromString(QString s, ErrorHandler errorHandler=nullptr);
     static Path fromString(QStringView s, ErrorHandler errorHandler=nullptr);
-    static Path root(PathRoot r);
-    static Path root(QStringView s=u"");
-    static Path root(QString s);
-    static Path index(index_type i);
-    static Path field(QStringView s=u"");
-    static Path field(QString s);
-    static Path key(QStringView s=u"");
-    static Path key(QString s);
-    static Path current(PathCurrent c);
-    static Path current(QStringView s=u"");
-    static Path current(QString s);
-    static Path empty();
+    static Path Root(PathRoot r);
+    static Path Root(QStringView s=u"");
+    static Path Root(QString s);
+    static Path Index(index_type i);
+    static Path Field(QStringView s=u"");
+    static Path Field(QString s);
+    static Path Key(QStringView s=u"");
+    static Path Key(QString s);
+    static Path Current(PathCurrent c);
+    static Path Current(QStringView s=u"");
+    static Path Current(QString s);
+    static Path Empty();
     // add
-    Path subEmpty() const;
-    Path subField(QString name) const;
-    Path subField(QStringView name) const;
-    Path subKey(QString name) const;
-    Path subKey(QStringView name) const;
-    Path subIndex(index_type i) const;
-    Path subAny() const;
-    Path subFilter(std::function<bool(DomItem)>, QString) const;
-    Path subFilter(std::function<bool(DomItem)>, QStringView desc=u"<native code filter>") const;
-    Path subCurrent(PathCurrent s) const;
-    Path subCurrent(QString s) const;
-    Path subCurrent(QStringView s=u"") const;
-    Path subPath(Path toAdd, bool avoidToAddAsBase = false) const;
+    Path empty() const;
+    Path field(QString name) const;
+    Path field(QStringView name) const;
+    Path key(QString name) const;
+    Path key(QStringView name) const;
+    Path index(index_type i) const;
+    Path any() const;
+    Path filter(std::function<bool(DomItem)>, QString) const;
+    Path filter(std::function<bool(DomItem)>, QStringView desc=u"<native code filter>") const;
+    Path current(PathCurrent s) const;
+    Path current(QString s) const;
+    Path current(QStringView s=u"") const;
+    Path path(Path toAdd, bool avoidToAddAsBase = false) const;
 
     Path expandFront() const;
     Path expandBack() const;
@@ -671,7 +715,17 @@ private:
 
     quint16 m_endOffset = 0;
     quint16 m_length = 0;
-    std::shared_ptr<PathEls::PathData> m_data;
+    std::shared_ptr<PathEls::PathData> m_data = {};
+};
+
+class PathIterator {
+public:
+    Path currentEl;
+    Path operator *() const { return currentEl.head(); }
+    PathIterator operator ++() { currentEl = currentEl.dropFront(); return *this; }
+    PathIterator operator ++(int) { PathIterator res{currentEl}; currentEl = currentEl.dropFront(); return res; }
+    bool operator ==(const PathIterator &o) { return currentEl == o.currentEl; }
+    bool operator !=(const PathIterator &o) { return currentEl != o.currentEl; }
 };
 
 inline bool operator==(const Path& lhs, const Path& rhs){ return lhs.length() == rhs.length() && Path::cmp(lhs,rhs) == 0; }
@@ -715,6 +769,18 @@ inline QDebug operator<<(QDebug debug, const Path &p)
 
 } // end namespace Dom
 } // end namespace QQmlJS
+
+namespace QTypeTraits {
+// workaround for QTBUG-89456 : supporting an object that contains itself in Qt6 with windows
+// otherwise the compiler complains with errors like
+// type_traits(61): error C2039: 'value': is not a member of 'QTypeTraits::detail::expand_operator_equal_container<T,true>'
+//        with
+//        [
+//            T=QQmlJS::Dom::Path
+//        ]
+template <> struct has_operator_equal<QQmlJS::Dom::Path> : std::true_type { };
+template <> struct has_operator_less_than<QQmlJS::Dom::Path> : std::true_type { };
+}
 
 QT_END_NAMESPACE
 

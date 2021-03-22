@@ -121,6 +121,19 @@ public:
     }
 
     friend bool operator!=(const SourceLocation &a, const SourceLocation &b) { return !(a == b); }
+
+    // Returns a source location starting at the beginning of l1, l2 and ending at the end of them.
+    // Ignores invalid source locations.
+    friend SourceLocation combine(const SourceLocation &l1, const SourceLocation &l2) {
+        quint32 e = qMax(l1.end(), l2.end());
+        SourceLocation res;
+        if (l1.offset <= l2.offset)
+            res = (l1.isValid() ? l1 : l2);
+        else
+            res = (l2.isValid() ? l2 : l1);
+        res.length = e - res.offset;
+        return res;
+    }
 };
 
 } // namespace QQmlJS
