@@ -173,7 +173,7 @@ ReturnedValue convertAndCall(
             Q_ALLOCA_VAR(void, argument, argumentSize);
             argumentType.construct(argument);
             if (i < argc)
-                engine->metaTypeFromJS(argv[i], argumentType.id(), argument);
+                engine->metaTypeFromJS(argv[i], argumentType, argument);
             values[i + 1] = argument;
         } else {
             values[i + 1] = nullptr;
@@ -235,7 +235,7 @@ void convertAndCall(ExecutionEngine *engine, const Value *thisObject,
         if (resultType == QMetaType::fromType<QVariant>())
             *static_cast<QVariant *>(result) = scope.engine->toVariant(jsResult, 0);
         else
-            scope.engine->metaTypeFromJS(jsResult, resultType.id(), result);
+            scope.engine->metaTypeFromJS(jsResult, resultType, result);
     }
 }
 

@@ -748,32 +748,42 @@ QJSValue QJSEngine::create(QMetaType type, const void *ptr)
 
 bool QJSEngine::convertManaged(const QJSManagedValue &value, int type, void *ptr)
 {
+    return convertManaged(value, QMetaType(type), ptr);
+}
+
+bool QJSEngine::convertManaged(const QJSManagedValue &value, QMetaType type, void *ptr)
+{
     return QV4::ExecutionEngine::metaTypeFromJS(*value.d, type, ptr);
+}
+
+bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
+{
+    return convertV2(value, QMetaType(type), ptr);
 }
 
 /*!
     \internal
     convert \a value to \a type, store the result in \a ptr
 */
-bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
+bool QJSEngine::convertV2(const QJSValue &value, QMetaType metaType, void *ptr)
 {
     if (const QString *string = QJSValuePrivate::asQString(&value)) {
         // have a string based value without engine. Do conversion manually
-        if (type == QMetaType::Bool) {
+        if (metaType == QMetaType::fromType<bool>()) {
             *reinterpret_cast<bool*>(ptr) = string->length() != 0;
             return true;
         }
-        if (type == QMetaType::QString) {
+        if (metaType == QMetaType::fromType<QString>()) {
             *reinterpret_cast<QString*>(ptr) = *string;
             return true;
         }
-        if (type == QMetaType::QUrl) {
+        if (metaType == QMetaType::fromType<QUrl>()) {
             *reinterpret_cast<QUrl *>(ptr) = QUrl(*string);
             return true;
         }
 
         double d = QV4::RuntimeHelpers::stringToNumber(*string);
-        switch (type) {
+        switch (metaType.id()) {
         case QMetaType::Int:
             *reinterpret_cast<int*>(ptr) = QV4::Value::toInt32(d);
             return true;
@@ -815,7 +825,7 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
         }
     }
 
-    return QV4::ExecutionEngine::metaTypeFromJS(QJSValuePrivate::asReturnedValue(&value), type, ptr);
+    return QV4::ExecutionEngine::metaTypeFromJS(QJSValuePrivate::asReturnedValue(&value), metaType, ptr);
 }
 
 /*! \fn template <typename T> QJSValue QJSEngine::toScriptValue(const T &value)

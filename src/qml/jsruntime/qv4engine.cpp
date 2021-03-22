@@ -2231,10 +2231,10 @@ void ExecutionEngine::setExtensionData(int index, Deletable *data)
 // Converts a JS value to a meta-type.
 // data must point to a place that can store a value of the given type.
 // Returns true if conversion succeeded, false otherwise.
-bool ExecutionEngine::metaTypeFromJS(const Value &value, int type, void *data)
+bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, void *data)
 {
     // check if it's one of the types we know
-    switch (QMetaType::Type(type)) {
+    switch (metaType.id()) {
     case QMetaType::Bool:
         *reinterpret_cast<bool*>(data) = value.toBoolean();
         return true;
@@ -2382,7 +2382,6 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, int type, void *data)
     ;
     }
 
-    const QMetaType metaType(type);
     {
         if (metaType.flags() & QMetaType::IsEnumeration) {
             *reinterpret_cast<int *>(data) = value.toInt32();
@@ -2399,9 +2398,8 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, int type, void *data)
 
     {
         const QQmlValueTypeWrapper *vtw = value.as<QQmlValueTypeWrapper>();
-        if (vtw && vtw->typeId() == type) {
+        if (vtw && vtw->type() == metaType)
             return vtw->toGadget(data);
-        }
     }
 
 #if 0
@@ -2445,8 +2443,7 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, int type, void *data)
                 bool canCast = false;
                 if (QV4::VariantObject *vo = proto->as<QV4::VariantObject>()) {
                     const QVariant &v = vo->d()->data();
-                    canCast = (type == v.userType())
-                            || (valueType.isValid() && (valueType == v.metaType()));
+                    canCast = (metaType == v.metaType());
                 }
                 else if (proto->as<QV4::QObjectWrapper>()) {
                     QV4::ScopedObject p(scope, proto.getPointer());
@@ -2471,7 +2468,7 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, int type, void *data)
     } else if (value.isNull() && isPointer) {
         *reinterpret_cast<void* *>(data) = nullptr;
         return true;
-    } else if (type == qMetaTypeId<QJSValue>()) {
+    } else if (metaType == QMetaType::fromType<QJSValue>()) {
         QJSValuePrivate::setValue(reinterpret_cast<QJSValue*>(data), value.asReturnedValue());
         return true;
     }

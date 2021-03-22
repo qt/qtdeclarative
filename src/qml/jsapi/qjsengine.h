@@ -149,7 +149,9 @@ private:
     QJSValue create(QMetaType type, const void *ptr);
 
     static bool convertManaged(const QJSManagedValue &value, int type, void *ptr);
+    static bool convertManaged(const QJSManagedValue &value, QMetaType type, void *ptr);
     static bool convertV2(const QJSValue &value, int type, void *ptr);
+    static bool convertV2(const QJSValue &value, QMetaType metaType, void *ptr);
 
     template<typename T>
     friend inline T qjsvalue_cast(const QJSValue &);
@@ -172,9 +174,7 @@ template<typename T>
 T qjsvalue_cast(const QJSValue &value)
 {
     T t;
-    const int id = qMetaTypeId<T>();
-
-    if (QJSEngine::convertV2(value, id, &t))
+    if (QJSEngine::convertV2(value, QMetaType::fromType<T>(), &t))
         return t;
     else if (value.isVariant())
         return qvariant_cast<T>(value.toVariant());
@@ -187,7 +187,7 @@ T qjsvalue_cast(const QJSManagedValue &value)
 {
     {
         T t;
-        if (QJSEngine::convertManaged(value, qMetaTypeId<T>(), &t))
+        if (QJSEngine::convertManaged(value, QMetaType::fromType<T>(), &t))
             return t;
     }
 
