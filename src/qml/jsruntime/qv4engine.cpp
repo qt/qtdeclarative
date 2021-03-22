@@ -1822,7 +1822,7 @@ QV4::ReturnedValue ExecutionEngine::fromData(
             return QV4::QQmlValueTypeWrapper::create(this, ptr, vtmo, metaType);
     } else {
         QV4::Scope scope(this);
-        if (type == qMetaTypeId<QQmlListReference>()) {
+        if (metaType == QMetaType::fromType<QQmlListReference>()) {
             typedef QQmlListReferencePrivate QDLRP;
             QDLRP *p = QDLRP::get((QQmlListReference*)const_cast<void *>(ptr));
             if (p->object) {
@@ -1830,10 +1830,10 @@ QV4::ReturnedValue ExecutionEngine::fromData(
             } else {
                 return QV4::Encode::null();
             }
-        } else if (type == qMetaTypeId<QJSValue>()) {
+        } else if (metaType == QMetaType::fromType<QJSValue>()) {
             return QJSValuePrivate::convertToReturnedValue(
                         this, *reinterpret_cast<const QJSValue *>(ptr));
-        } else if (type == qMetaTypeId<QList<QObject *> >()) {
+        } else if (metaType == QMetaType::fromType<QList<QObject *> >()) {
             // XXX Can this be made more by using Array as a prototype and implementing
             // directly against QList<QObject*>?
             const QList<QObject *> &list = *(const QList<QObject *>*)ptr;
