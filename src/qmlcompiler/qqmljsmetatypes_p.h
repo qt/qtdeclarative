@@ -242,6 +242,8 @@ class QQmlJSMetaProperty
 {
     QString m_propertyName;
     QString m_typeName;
+    QString m_read;
+    QString m_write;
     QString m_bindable;
     QWeakPointer<const QQmlJSScope> m_type;
     QVector<QQmlJSAnnotation> m_annotations;
@@ -259,6 +261,12 @@ public:
 
     void setTypeName(const QString &typeName) { m_typeName = typeName; }
     QString typeName() const { return m_typeName; }
+
+    void setRead(const QString &read) { m_read = read; }
+    QString read() const { return m_read; }
+
+    void setWrite(const QString &write) { m_write = write; }
+    QString write() const { return m_write; }
 
     void setBindable(const QString &bindable) { m_bindable = bindable; }
     QString bindable() const { return m_bindable; }

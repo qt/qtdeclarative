@@ -352,13 +352,14 @@ void QQmlJSTypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQ
             property.setRevision(readIntBinding(script));
         } else if (id == QLatin1String("bindable")) {
             property.setBindable(readStringBinding(script));
-        } else if (id == QLatin1String("read") || id == QLatin1String("write")) {
-            // QQmlJSMetaProperty currently does not make use of the getter and setter name
-            continue;
+        } else if (id == QLatin1String("read")) {
+            property.setRead(readStringBinding(script));
+        } else if (id == QLatin1String("write")) {
+            property.setWrite(readStringBinding(script));
         } else {
             addWarning(script->firstSourceLocation(),
-                       tr("Expected only type, name, revision, isPointer, isReadonly, isRequired, bindable, and"
-                          " isList script bindings."));
+                       tr("Expected only type, name, revision, isPointer, isReadonly, isRequired, "
+                          "bindable, read, write, and isList script bindings."));
         }
     }
 
