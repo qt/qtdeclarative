@@ -205,6 +205,17 @@ enum class ErrorLevel{
 };
 Q_ENUM_NS(ErrorLevel)
 
+enum class AstDumperOption {
+    None=0,
+    NoLocations=0x1,
+    NoAnnotations=0x2,
+    DumpNode=0x4,
+    SloppyCompare=0x8
+};
+Q_ENUM_NS(AstDumperOption)
+Q_DECLARE_FLAGS(AstDumperOptions, AstDumperOption)
+Q_DECLARE_OPERATORS_FOR_FLAGS(AstDumperOptions)
+
 enum class GoTo {
     Strict, // never go to an non uniquely defined result
     MostLikely // if needed go up to the most likely location between multiple options
