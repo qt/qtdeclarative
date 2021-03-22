@@ -49,7 +49,9 @@
 #include <private/qqmltypemodule_p.h>
 #include <private/qqmltypenotavailable_p.h>
 #include <private/qqmlcomponent_p.h>
+#include <private/qqmltypewrapper_p.h>
 #include <private/qv4lookup_p.h>
+#include <private/qv4qobjectwrapper_p.h>
 
 #include <QtCore/qmutex.h>
 
@@ -704,6 +706,30 @@ QJSValue QQmlPrivate::AOTCompiledContext::loadQmlContextPropertyLookup(uint inde
                                                   l, engine->handle(), nullptr));
 }
 
+bool QQmlPrivate::AOTCompiledContext::captureQmlContextPropertyLookup(uint index) const
+{
+    QV4::Lookup *l = compilationUnit->runtimeLookups + index;
+    if (l->qmlContextPropertyGetter != QV4::QQmlContextWrapper::lookupScopeObjectProperty
+            && l->qmlContextPropertyGetter != QV4::QQmlContextWrapper::lookupContextObjectProperty) {
+        return false;
+    }
+
+    const auto *property = l->qobjectLookup.propertyData;
+    Q_ASSERT(property);
+    if (property->isConstant())
+        return true;
+
+    if (QQmlEngine *engine = qmlContext->engine()) {
+        QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
+        if (!ep->propertyCapture)
+            return true;
+        ep->propertyCapture->captureProperty(qmlScopeObject, property->coreIndex(),
+                                             property->notifyIndex());
+    }
+
+    return true;
+}
+
 QJSValue QQmlPrivate::AOTCompiledContext::callQmlContextPropertyLookup(
         uint index, const QJSValueList &args) const
 {
@@ -729,6 +755,31 @@ QJSValue QQmlPrivate::AOTCompiledContext::getLookup(uint index, const QJSValue &
     return QJSValuePrivate::fromReturnedValue(
                 l->getter(l, engine->handle(),
                           QJSValuePrivate::convertToReturnedValue(engine->handle(), object)));
+}
+
+bool QQmlPrivate::AOTCompiledContext::captureLookup(uint index, QObject *object) const
+{
+    QV4::Lookup *l = compilationUnit->runtimeLookups + index;
+    if (l->getter != QV4::QQmlTypeWrapper::lookupSingletonProperty
+            && l->getter != QV4::QObjectWrapper::lookupGetter) {
+        return false;
+    }
+
+    const auto *property = l->qobjectLookup.propertyData;
+    Q_ASSERT(property);
+    if (property->isConstant())
+        return true;
+
+    if (QQmlEngine *engine = qmlContext->engine()) {
+        QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
+        if (!ep->propertyCapture)
+            return true;
+        ep->propertyCapture->captureProperty(object, property->coreIndex(),
+                                             property->notifyIndex());
+        return true;
+    }
+
+    return false;
 }
 
 void QQmlPrivate::AOTCompiledContext::setLookup(

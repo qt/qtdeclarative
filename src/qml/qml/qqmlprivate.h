@@ -619,6 +619,10 @@ namespace QQmlPrivate
                                     const QJSValueList &args) const;
         QJSValue callGlobalLookup(uint index, const QJSValueList &args) const;
         QJSValue loadGlobalLookup(uint index) const;
+
+        // Run QQmlPropertyCapture::captureProperty() without retrieving the value.
+        bool captureLookup(uint index, QObject *object) const;
+        bool captureQmlContextPropertyLookup(uint index) const;
     };
 
     struct AOTCompiledFunction {
