@@ -441,6 +441,9 @@ QUrl QQmlContext::baseUrl() const
     return d->m_data->baseUrl();
 }
 
+/*!
+ * \internal
+ */
 QJSValue QQmlContext::importedScript(const QString &name) const
 {
     Q_D(const QQmlContext);
