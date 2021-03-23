@@ -91,6 +91,8 @@ Q_LOGGING_CATEGORY(lcPinchHandler, "qt.quick.handler.pinch")
 QQuickPinchHandler::QQuickPinchHandler(QQuickItem *parent)
     : QQuickMultiPointHandler(parent, 2)
 {
+    // Tell QQuickPointerDeviceHandler::wantsPointerEvent() to ignore button state
+    d_func()->acceptedButtons = Qt::NoButton;
 }
 
 /*!
@@ -235,7 +237,7 @@ void QQuickPinchHandler::onActiveChanged()
             m_startRotation = t->rotation();
             m_startPos = t->position();
         } else {
-            m_startScale = m_accumulatedScale;
+            m_startScale = 1;
             m_startRotation = 0;
         }
         qCDebug(lcPinchHandler) << "activated with starting scale" << m_startScale << "rotation" << m_startRotation;
@@ -448,7 +450,7 @@ void QQuickPinchHandler::handlePointerEventImpl(QPointerEvent *event)
 
     qCDebug(lcPinchHandler) << "centroid" << centroid().scenePressPosition() << "->"  << centroid().scenePosition()
                             << ", distance" << m_startDistance << "->" << dist
-                            << ", startScale" << m_startScale << "->" << m_accumulatedScale
+                            << ", scale" << m_startScale << "->" << m_accumulatedScale
                             << ", activeRotation" << m_activeRotation
                             << ", rotation" << rotation
                             << " from " << event->device()->type();

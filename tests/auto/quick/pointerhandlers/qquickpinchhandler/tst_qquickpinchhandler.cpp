@@ -50,6 +50,7 @@ private slots:
     void pinchProperties();
     void scale();
     void scaleThreeFingers();
+    void scaleNativeGesture();
     void pan();
     void dragAxesEnabled_data();
     void dragAxesEnabled();
@@ -351,6 +352,79 @@ void tst_QQuickPinchHandler::scaleThreeFingers()
         QQuickTouchUtils::flush(window);
     }
     QCOMPARE(pinchHandler->active(), false);
+}
+
+void tst_QQuickPinchHandler::scaleNativeGesture()
+{
+    QQuickView *window = createView();
+    QScopedPointer<QQuickView> scope(window);
+    window->setSource(testFileUrl("pinchproperties.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+    QVERIFY(window->rootObject() != nullptr);
+    qApp->processEvents();
+
+    QQuickPinchHandler *pinchHandler = window->rootObject()->findChild<QQuickPinchHandler*>("pinchHandler");
+    QVERIFY(pinchHandler != nullptr);
+    QQuickItem *root = qobject_cast<QQuickItem*>(window->rootObject());
+    QVERIFY(root != nullptr);
+    QQuickItem *target = window->rootObject()->findChild<QQuickItem*>("blackrect");
+    QVERIFY(target != nullptr);
+
+    QPointF targetPos = target->position();
+    ulong ts = 1;
+
+    // first pinch: scale it up
+    const qreal expectedScale = 1.1;
+    QPointF pinchPos(75, 75);
+    QPointF pinchLocalPos = target->mapFromScene(pinchPos);
+    // target position is adjusted in QQuickItemPrivate::adjustedPosForTransform()
+    // so as to compensate for the change in size, to hold the centroid in place
+    const QPointF expectedPos = targetPos + QPointF( (pinchPos.x() - target->x()) * (expectedScale - 1),
+                                                     (pinchPos.y() - target->y()) * (expectedScale - 1) );
+    QWindowSystemInterface::handleGestureEvent(window, ts++, QPointingDevice::primaryPointingDevice(),
+                                               Qt::BeginNativeGesture, pinchPos, pinchPos);
+    QWindowSystemInterface::handleGestureEventWithRealValue(window, ts++, QPointingDevice::primaryPointingDevice(),
+                                                            Qt::ZoomNativeGesture, expectedScale - 1, pinchPos, pinchPos);
+    QTRY_COMPARE(target->scale(), expectedScale);
+    QCOMPARE(pinchHandler->active(), true);
+    QCOMPARE(pinchHandler->centroid().position(), pinchLocalPos);
+    QCOMPARE(pinchHandler->centroid().scenePosition(), pinchPos);
+    QVERIFY(qAbs(target->position().x() - expectedPos.x()) < 0.001);
+    QVERIFY(qAbs(target->position().y() - expectedPos.y()) < 0.001);
+    QCOMPARE(pinchHandler->scale(), expectedScale);
+    QCOMPARE(pinchHandler->activeScale(), expectedScale);
+    QCOMPARE(pinchHandler->translation(), QVector2D());
+    QCOMPARE(pinchHandler->rotation(), 0);
+    QWindowSystemInterface::handleGestureEvent(window, ts++, QPointingDevice::primaryPointingDevice(),
+                                               Qt::EndNativeGesture, pinchPos, pinchPos);
+    QTRY_COMPARE(pinchHandler->active(), false);
+    QCOMPARE(target->scale(), expectedScale);
+    QCOMPARE(pinchHandler->scale(), expectedScale);
+    QCOMPARE(pinchHandler->activeScale(), 1);
+    QCOMPARE(pinchHandler->translation(), QVector2D());
+    QCOMPARE(pinchHandler->rotation(), 0);
+
+    // second pinch at a different position: scale it down to original size again
+    const qreal reverseScale = (1 / expectedScale);
+    pinchPos = QPointF(125, 125);
+    pinchLocalPos = target->mapFromScene(pinchPos);
+    QWindowSystemInterface::handleGestureEvent(window, ts++, QPointingDevice::primaryPointingDevice(),
+                                               Qt::BeginNativeGesture, pinchPos, pinchPos);
+    QWindowSystemInterface::handleGestureEventWithRealValue(window, ts++, QPointingDevice::primaryPointingDevice(),
+                                                            Qt::ZoomNativeGesture, reverseScale - 1, pinchPos, pinchPos);
+    QTRY_COMPARE(target->scale(), 1);
+    QCOMPARE(pinchHandler->active(), true);
+    QCOMPARE(pinchHandler->centroid().position(), pinchLocalPos);
+    QCOMPARE(pinchHandler->centroid().scenePosition(), pinchPos);
+    QCOMPARE(pinchHandler->scale(), 1);
+    QCOMPARE(pinchHandler->activeScale(), reverseScale);
+    QWindowSystemInterface::handleGestureEvent(window, ts++, QPointingDevice::primaryPointingDevice(),
+                                               Qt::EndNativeGesture, pinchPos, pinchPos);
+    QTRY_COMPARE(pinchHandler->active(), false);
+    QCOMPARE(target->scale(), 1);
+    QCOMPARE(pinchHandler->scale(), 1);
+    QCOMPARE(pinchHandler->activeScale(), 1);
 }
 
 void tst_QQuickPinchHandler::pan()
