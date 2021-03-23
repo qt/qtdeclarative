@@ -307,7 +307,7 @@ void QQuickButtonGroup::setCheckedButton(QQuickAbstractButton *checkedButton)
 
 /*!
     \qmlproperty list<AbstractButton> QtQuick.Controls::ButtonGroup::buttons
-    \default
+    \qmldefault
 
     This property holds the list of buttons.
 

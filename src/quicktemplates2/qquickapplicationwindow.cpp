@@ -515,7 +515,7 @@ void QQuickApplicationWindow::setFooter(QQuickItem *footer)
 
 /*!
     \qmlproperty list<Object> QtQuick.Controls::ApplicationWindow::contentData
-    \default
+    \qmldefault
 
     This default property holds the list of all objects declared as children of
     the window.

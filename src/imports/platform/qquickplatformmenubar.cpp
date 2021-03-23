@@ -129,7 +129,7 @@ QPlatformMenuBar *QQuickPlatformMenuBar::handle() const
 }
 
 /*!
-    \default
+    \qmldefault
     \qmlproperty list<Object> Qt.labs.platform::MenuBar::data
 
     This default property holds the list of all objects declared as children of

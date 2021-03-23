@@ -272,7 +272,7 @@ void QQuickActionGroup::setCheckedAction(QQuickAction *checkedAction)
 
 /*!
     \qmlproperty list<Action> QtQuick.Controls::ActionGroup::actions
-    \default
+    \qmldefault
 
     This property holds the list of actions in the group.
 

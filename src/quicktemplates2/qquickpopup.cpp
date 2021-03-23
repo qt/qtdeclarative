@@ -1699,7 +1699,7 @@ void QQuickPopup::setContentItem(QQuickItem *item)
 
 /*!
     \qmlproperty list<Object> QtQuick.Controls::Popup::contentData
-    \default
+    \qmldefault
 
     This property holds the list of content data.
 

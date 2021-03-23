@@ -1066,7 +1066,7 @@ QVariant QQuickMenu::contentModel() const
 
 /*!
     \qmlproperty list<Object> QtQuick.Controls::Menu::contentData
-    \default
+    \qmldefault
 
     This property holds the list of content data.
 
