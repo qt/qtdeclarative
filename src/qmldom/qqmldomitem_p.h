@@ -56,6 +56,7 @@
 #include "qqmldompath_p.h"
 #include "qqmldomerrormessage_p.h"
 #include "qqmldomfunctionref_p.h"
+#include "qqmldomfilewriter_p.h"
 
 #include <QtCore/QMap>
 #include <QtCore/QMultiMap>
@@ -891,6 +892,10 @@ public:
     void dump(Sink, int indent = 0,
               function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &)> filter =
                       noFilter);
+    FileWriter::Status
+    dump(QString path,
+         function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &)> filter = noFilter,
+         int nBackups = 2, int indent = 0, FileWriter *fw = nullptr);
     QString toString();
     QString toString() const
     {
@@ -1441,6 +1446,13 @@ public:
          function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &)> filter = noFilter)
     {
         item().dump(s, indent, filter);
+    }
+    FileWriter::Status
+    dump(QString path,
+         function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &)> filter = noFilter,
+         int nBackups = 2, int indent = 0, FileWriter *fw = nullptr)
+    {
+        return item().dump(path, filter, nBackups, indent, fw);
     }
 
     MutableDomItem fileLocations() { return MutableDomItem(item().fileLocations()); }

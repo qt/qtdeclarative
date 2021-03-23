@@ -41,6 +41,9 @@
 #include "qqmldomexternalitems_p.h"
 #include "qqmldommock_p.h"
 #include "qqmldomastdumper_p.h"
+#include "qqmldomfilewriter_p.h"
+#include "qqmldomfieldfilter_p.h"
+#include "qqmldomcompare_p.h"
 
 #include <QtQml/private/qqmljslexer_p.h>
 #include <QtQml/private/qqmljsparser_p.h>
@@ -1921,6 +1924,32 @@ void DomItem::dump(Sink s, int indent,
                    function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &)> filter)
 {
     visitEl([this, s, indent, filter](auto &&e) { e->dump(*this, s, indent, filter); });
+}
+
+FileWriter::Status
+DomItem::dump(QString path,
+              function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &)> filter,
+              int nBackups, int indent, FileWriter *fw)
+{
+    FileWriter localFw;
+    if (!fw)
+        fw = &localFw;
+    switch (fw->write(
+            path,
+            [this, indent, filter](QTextStream &ts) {
+                this->dump([&ts](QStringView s) { ts << s; }, indent, filter);
+                return true;
+            },
+            nBackups)) {
+    case FileWriter::Status::ShouldWrite:
+    case FileWriter::Status::SkippedDueToFailure:
+        qWarning() << "Failure dumping " << canonicalPath() << " to " << path;
+        break;
+    case FileWriter::Status::DidWrite:
+    case FileWriter::Status::SkippedEqual:
+        break;
+    }
+    return fw->status;
 }
 
 QString DomItem::toString()

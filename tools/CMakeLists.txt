@@ -8,6 +8,7 @@ qt_exclude_tool_directories_from_default_target(
 )
 
 if(QT_FEATURE_qml_devtools)
+    add_subdirectory(qmldom)
     add_subdirectory(qmllint)
     add_subdirectory(qmlimportscanner)
     add_subdirectory(qmlformat)

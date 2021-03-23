@@ -15,10 +15,13 @@ qt_internal_add_module(QmlDom
         qqmldomastdumper.cpp qqmldomastdumper_p.h
         qqmldomattachedinfo.cpp qqmldomattachedinfo_p.h
         qqmldomcomments.cpp qqmldomcomments_p.h
+        qqmldomcompare.cpp qqmldomcompare_p.h
         qqmldomconstants_p.h
         qqmldomelements.cpp qqmldomelements_p.h
         qqmldomerrormessage.cpp qqmldomerrormessage_p.h
         qqmldomexternalitems.cpp qqmldomexternalitems_p.h
+        qqmldomfieldfilter.cpp qqmldomfieldfilter_p.h
+        qqmldomfilewriter.cpp qqmldomfilewriter_p.h
         qqmldomfunctionref_p.h
         qqmldomitem.cpp qqmldomitem_p.h
         qqmldommock.cpp qqmldommock_p.h

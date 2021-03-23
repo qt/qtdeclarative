@@ -1,25 +1,18 @@
+# Generated from domitem.pro.
+
 #####################################################################
-## tst_dom_all Binary executing all tests together
-## (simpler to verify coverage)
+## tst_qmldomitem Binary:
 #####################################################################
 # Collect test data
 file(GLOB_RECURSE test_data_glob
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/..
-    domdata/*)
+    domdata/dommerging)
 list(APPEND test_data ${test_data_glob})
 
-qt_internal_add_test(tst_dom_all
+qt_internal_add_test(tst_dommerging
     SOURCES
-        tst_dom_all.cpp
-        ../stringdumper/tst_qmldomstringdumper.h
-        ../errormessage/tst_qmldomerrormessage.cpp ../errormessage/tst_qmldomerrormessage.h
-        ../path/tst_qmldompath.h
-        ../domitem/tst_qmldomitem.h
-        ../merging/tst_dommerging.h
-    INCLUDE_DIRECTORIES
-        ..
+        tst_dommerging.cpp tst_dommerging.h
     DEFINES
-        NO_QTEST_MAIN
         QT_DEPRECATED_WARNINGS
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../domdata\\\"
     PUBLIC_LIBRARIES
@@ -30,7 +23,7 @@ qt_internal_add_test(tst_dom_all
     TESTDATA ${test_data}
 )
 
-qt_internal_extend_target(tst_dom_all CONDITION ANDROID OR IOS
+qt_internal_extend_target(tst_qmldomitem CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/domdata\\\"
 )
