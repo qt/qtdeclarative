@@ -27,6 +27,8 @@
 ****************************************************************************/
 
 #include "qqmldomcomments_p.h"
+#include "qqmldomoutwriter_p.h"
+#include "qqmldomlinewriter_p.h"
 #include "qqmldomelements_p.h"
 #include "qqmldomexternalitems_p.h"
 #include "qqmldomastdumper_p.h"
@@ -222,6 +224,23 @@ bool Comment::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
     return cont;
 }
 
+void Comment::write(OutWriter &lw, SourceLocation *commentLocation) const
+{
+    if (newlinesBefore())
+        lw.ensureNewline(newlinesBefore());
+    CommentInfo cInfo = info();
+    lw.ensureSpace(cInfo.preWhitespace());
+    QStringView cBody = cInfo.comment();
+    PendingSourceLocationId cLoc = lw.lineWriter.startSourceLocation(commentLocation);
+    lw.write(cBody.mid(0, 1));
+    bool indentOn = lw.indentNextlines;
+    lw.indentNextlines = false;
+    lw.write(cBody.mid(1));
+    lw.indentNextlines = indentOn;
+    lw.lineWriter.endSourceLocation(cLoc);
+    lw.write(cInfo.postWhitespace());
+}
+
 /*!
 \class QQmlJS::Dom::CommentedElement
 \brief Keeps the comment associated with an element
@@ -248,6 +267,24 @@ bool CommentedElement::iterateDirectSubpaths(DomItem &self, DirectVisitor visito
     cont = cont && self.dvWrapField(visitor, Fields::preComments, preComments);
     cont = cont && self.dvWrapField(visitor, Fields::postComments, postComments);
     return cont;
+}
+
+void CommentedElement::writePre(OutWriter &lw, QList<SourceLocation> *locs) const
+{
+    if (locs)
+        locs->resize(preComments.size());
+    int i = 0;
+    for (const Comment &c : preComments)
+        c.write(lw, (locs ? &((*locs)[i++]) : nullptr));
+}
+
+void CommentedElement::writePost(OutWriter &lw, QList<SourceLocation> *locs) const
+{
+    if (locs)
+        locs->resize(postComments.size());
+    int i = 0;
+    for (const Comment &c : postComments)
+        c.write(lw, (locs ? &((*locs)[i++]) : nullptr));
 }
 
 /*!

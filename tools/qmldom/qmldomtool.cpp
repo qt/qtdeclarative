@@ -36,6 +36,7 @@
 
 #include <QtQmlDom/private/qqmldomtop_p.h>
 #include <QtQmlDom/private/qqmldomfilewriter_p.h>
+#include <QtQmlDom/private/qqmldomoutwriter_p.h>
 #include <QtQmlDom/private/qqmldomelements_p.h>
 #include <QtQmlDom/private/qqmldomfieldfilter_p.h>
 
@@ -75,6 +76,10 @@ int main(int argc, char *argv[])
                                                 << "dump",
                                   QLatin1String("Dumps the code model"));
     parser.addOption(dumpOption);
+    QCommandLineOption reformatOption(QStringList() << "r"
+                                                    << "reformat",
+                                      QLatin1String("reformats the files explicitly passed in"));
+    parser.addOption(reformatOption);
 
     QCommandLineOption filterOption(
             QStringList() << "f"
@@ -105,6 +110,14 @@ int main(int argc, char *argv[])
             QLatin1String("adds a path to dump (by default the root path is dumped)"),
             QLatin1String("pathToDump"));
     parser.addOption(pathToDumpOption);
+
+    QCommandLineOption reformatDirOption(
+            QStringList() << "reformat-dir",
+            QLatin1String(
+                    "Target directory for the reformatted files, "
+                    "if not given the files are reformatted in place (but backup files are kept)"),
+            QLatin1String("reformatDir"));
+    parser.addOption(reformatDirOption);
 
     QCommandLineOption nBackupsOption(
             QStringList() << "backups",
@@ -195,7 +208,43 @@ int main(int argc, char *argv[])
         env.loadFile(s, QString(), nullptr, LoadOption::DefaultLoad);
     }
     envPtr->loadPendingDependencies(env);
-    {
+    if (parser.isSet(reformatOption)) {
+        for (auto s : positionalArguments) {
+            DomItem qmlFile = env.path(Paths::qmldirFilePath(s));
+            if (qmlFile) {
+                qDebug() << "reformatting" << s;
+                FileWriter fw;
+                QString target = s;
+                QString rDir = parser.value(reformatDirOption);
+                if (!rDir.isEmpty()) {
+                    QFileInfo f(s);
+                    QDir d(rDir);
+                    target = d.filePath(f.fileName());
+                }
+                switch (fw.write(
+                        target,
+                        [&qmlFile, target](QTextStream &ts) {
+                            LineWriter lw([&ts](QStringView s) { ts << s; }, target);
+                            OutWriter ow(lw);
+                            qmlFile.writeOut(ow);
+                            ow.eof();
+                            return true;
+                        },
+                        nBackups)) {
+                case FileWriter::Status::ShouldWrite:
+                case FileWriter::Status::SkippedDueToFailure:
+                    qWarning() << "failure reformatting " << s;
+                    break;
+                case FileWriter::Status::DidWrite:
+                    qDebug() << "success";
+                    break;
+                case FileWriter::Status::SkippedEqual:
+                    qDebug() << "no change";
+                }
+            }
+        }
+    }
+    if (parser.isSet(dumpOption) || !parser.isSet(reformatOption)) {
         qDebug() << "will dump\n";
         QTextStream ts(stdout);
         auto sink = [&ts](QStringView v) {

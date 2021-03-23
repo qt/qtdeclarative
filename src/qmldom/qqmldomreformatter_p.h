@@ -35,39 +35,38 @@
 **
 ** $QT_END_LICENSE$
 **/
-#include "stringdumper/tst_qmldomstringdumper.h"
-#include "errormessage/tst_qmldomerrormessage.h"
-#include "domitem/tst_qmldomitem.h"
-#include "merging/tst_dommerging.h"
-#include "path/tst_qmldompath.h"
-#include "reformatter/tst_reformatter.h"
+#ifndef QQMLDOMREFORMATTER_P
+#define QQMLDOMREFORMATTER_P
 
-int main(int argc, char *argv[])
-{
-    int status = 0;
-    {
-        QQmlJS::Dom::TestStringDumper test;
-        status |= QTest::qExec(&test, argc, argv);
-    }
-    {
-        QQmlJS::Dom::PathEls::TestPaths test;
-        status |= QTest::qExec(&test, argc, argv);
-    }
-    {
-        QQmlJS::Dom::TestErrorMessage test;
-        status |= QTest::qExec(&test, argc, argv);
-    }
-    {
-        QQmlJS::Dom::TestDomItem test;
-        status |= QTest::qExec(&test, argc, argv);
-    }
-    {
-        QQmlJS::Dom::TestDomMerging test;
-        status |= QTest::qExec(&test, argc, argv);
-    }
-    {
-        QQmlJS::Dom::TestReformatter test;
-        status |= QTest::qExec(&test, argc, argv);
-    }
-    return status;
-}
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include "qqmldom_global.h"
+
+#include "qqmldomoutwriter_p.h"
+#include "qqmldom_fwd_p.h"
+#include "qqmldomcomments_p.h"
+
+#include <QtQml/private/qqmljsast_p.h>
+
+QT_BEGIN_NAMESPACE
+namespace QQmlJS {
+namespace Dom {
+
+QMLDOM_EXPORT void reformatAst(OutWriter &lw, std::shared_ptr<AstComments> comments,
+                               const std::function<QStringView(SourceLocation)> loc2Str,
+                               AST::Node *n);
+
+} // namespace Dom
+} // namespace QQmlJS
+QT_END_NAMESPACE
+
+#endif // QQMLDOMREFORMATTER_P

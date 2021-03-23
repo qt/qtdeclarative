@@ -36,6 +36,8 @@
 ** $QT_END_LICENSE$
 **/
 #include "qqmldomattachedinfo_p.h"
+#include "qqmldomlinewriter_p.h"
+#include "qqmldomelements_p.h"
 
 QT_BEGIN_NAMESPACE
 namespace QQmlJS {
@@ -318,6 +320,50 @@ AttachedInfo::findAttachedInfo(DomItem &item, QStringView fieldName,
         res.foundTreePath = foundTreePath;
     }
     return res;
+}
+
+bool UpdatedScriptExpression::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
+{
+    bool cont = true;
+    cont = cont && self.dvWrapField(visitor, Fields::expr, expr);
+    return cont;
+}
+
+UpdatedScriptExpression::Tree UpdatedScriptExpression::createTree(Path basePath)
+{
+    return AttachedInfoT<UpdatedScriptExpression>::createTree(basePath);
+}
+
+UpdatedScriptExpression::Tree UpdatedScriptExpression::ensure(UpdatedScriptExpression::Tree base,
+                                                              Path basePath,
+                                                              AttachedInfo::PathType pType)
+{
+    return AttachedInfoT<UpdatedScriptExpression>::ensure(base, basePath, pType);
+}
+
+AttachedInfoLookupResult<UpdatedScriptExpression::Tree>
+UpdatedScriptExpression::findAttachedInfo(DomItem &item, AttachedInfo::FindOptions options)
+{
+    return AttachedInfoT<UpdatedScriptExpression>::findAttachedInfo(
+            item, Fields::updatedScriptExpressions, options);
+}
+
+UpdatedScriptExpression::Tree UpdatedScriptExpression::treePtr(DomItem &item)
+{
+    return AttachedInfoT<UpdatedScriptExpression>::treePtr(item, Fields::updatedScriptExpressions);
+}
+
+const UpdatedScriptExpression *UpdatedScriptExpression::exprPtr(DomItem &item)
+{
+    if (UpdatedScriptExpression::Tree t = treePtr(item))
+        return &(t->info());
+    return nullptr;
+}
+
+bool UpdatedScriptExpression::visitTree(Tree base, function_ref<bool(Path, Tree)> visitor,
+                                        Path basePath)
+{
+    return AttachedInfoT<UpdatedScriptExpression>::visitTree(base, visitor, basePath);
 }
 
 } // namespace Dom

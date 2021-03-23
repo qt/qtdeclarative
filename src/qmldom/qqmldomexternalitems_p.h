@@ -306,6 +306,8 @@ public:
                                                 component, option, cPtr);
     }
 
+    void writeOut(DomItem &self, OutWriter &lw) const override;
+
     AST::UiProgram *ast() const
     {
         return m_ast; // avoid making it public? would make moving away from it easier

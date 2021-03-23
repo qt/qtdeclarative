@@ -41,9 +41,12 @@
 #include "qqmldomexternalitems_p.h"
 #include "qqmldommock_p.h"
 #include "qqmldomastdumper_p.h"
+#include "qqmldomoutwriter_p.h"
 #include "qqmldomfilewriter_p.h"
 #include "qqmldomfieldfilter_p.h"
 #include "qqmldomcompare_p.h"
+#include "qqmldomastdumper_p.h"
+#include "qqmldomlinewriter_p.h"
 
 #include <QtQml/private/qqmljslexer_p.h>
 #include <QtQml/private/qqmljsparser_p.h>
@@ -52,6 +55,7 @@
 #include <QtQml/private/qqmljsast_p.h>
 
 #include <QtCore/QDebug>
+#include <QtCore/QDir>
 #include <QtCore/QFile>
 #include <QtCore/QFileInfo>
 #include <QtCore/QPair>
@@ -70,6 +74,7 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace Dom {
 
+Q_LOGGING_CATEGORY(writeOutLog, "qt.qmldom.writeOut", QtWarningMsg);
 static Q_LOGGING_CATEGORY(refLog, "qt.qmldom.ref", QtWarningMsg);
 
 using std::shared_ptr;
@@ -222,6 +227,12 @@ QString DomBase::canonicalFilePath(DomItem &self) const
     return QString();
 }
 
+void DomBase::writeOut(DomItem &self, OutWriter &) const
+{
+    qCWarning(writeOutLog) << "Ignoring unsupported writeOut for " << domTypeToString(kind()) << ":"
+                           << self.canonicalPath();
+}
+
 ConstantData::ConstantData(Path pathFromOwner, QCborValue value, Options options)
     : DomElement(pathFromOwner), m_value(value), m_options(options)
 {}
@@ -291,7 +302,6 @@ DomKind ConstantData::domKind() const
         return DomKind::List;
     return DomKind::Value;
 }
-
 /*!
 \internal
 \class QQmlJS::Dom::DomItem
@@ -1054,12 +1064,187 @@ QList<DomItem> DomItem::values()
     return res;
 }
 
+void DomItem::writeOutPre(OutWriter &ow)
+{
+    if (hasAnnotations()) {
+        DomItem anns = field(Fields::annotations);
+        for (auto ann : anns.values()) {
+            if (ann.annotations().indexes() == 0) {
+                ow.ensureNewline();
+                ann.writeOut(ow);
+                ow.ensureNewline();
+            } else {
+                DomItem annAnn = ann.annotations();
+                Q_ASSERT_X(annAnn.indexes() == 1 && annAnn.index(0).name() == u"duplicate",
+                           "DomItem::writeOutPre", "Unexpected annotation of annotation");
+            }
+        }
+    }
+    ow.itemStart(*this);
+}
+
+void DomItem::writeOut(OutWriter &ow)
+{
+    writeOutPre(ow);
+    visitEl([this, &ow](auto &&el) { el->writeOut(*this, ow); });
+    writeOutPost(ow);
+}
+
+void DomItem::writeOutPost(OutWriter &ow)
+{
+    ow.itemEnd(*this);
+}
+
+DomItem DomItem::writeOutForFile(OutWriter &ow, WriteOutChecks extraChecks)
+{
+    ow.indentNextlines = true;
+    writeOut(ow);
+    ow.eof();
+    DomItem fObj = fileObject();
+    DomItem copy = ow.updatedFile(fObj);
+    if (extraChecks & WriteOutCheck::All) {
+        QStringList dumped;
+        auto maybeDump = [&ow, extraChecks, &dumped](DomItem &obj, QStringView objName) {
+            QString objDumpPath;
+            if (extraChecks & WriteOutCheck::DumpOnFailure) {
+                objDumpPath = QDir(QDir::tempPath())
+                                      .filePath(objName.toString()
+                                                + QFileInfo(ow.lineWriter.fileName()).baseName()
+                                                + QLatin1String(".dump.json"));
+                obj.dump(objDumpPath);
+                dumped.append(objDumpPath);
+            }
+            return objDumpPath;
+        };
+        auto dumpedDumper = [&dumped](Sink s) {
+            if (dumped.isEmpty())
+                return;
+            s(u"\ndump: ");
+            for (auto dumpPath : dumped) {
+                s(u" ");
+                sinkEscaped(s, dumpPath);
+            }
+        };
+        auto compare = [&maybeDump, &dumpedDumper, this](DomItem &obj1, QStringView obj1Name,
+                                                         DomItem &obj2, QStringView obj2Name,
+                                                         const FieldFilter &filter) {
+            if (!domCompareStrList(obj1, obj2, filter).isEmpty()) {
+                maybeDump(obj1, obj1Name);
+                maybeDump(obj2, obj2Name);
+                qCWarning(writeOutLog).noquote().nospace()
+                        << obj2Name << " writeOut of " << this->canonicalFilePath()
+                        << " has changes:\n"
+                        << domCompareStrList(obj1, obj2, filter, DomCompareStrList::AllDiffs)
+                                   .join(QString())
+                        << dumpedDumper;
+                return false;
+            }
+            return true;
+        };
+        auto checkStability = [&maybeDump, &dumpedDumper, &dumped, &ow,
+                               this](QString expected, DomItem &obj, QStringView objName) {
+            LineWriter lw2([](QStringView) {}, ow.lineWriter.fileName(), ow.lineWriter.options());
+            OutWriter ow2(lw2);
+            ow2.indentNextlines = true;
+            obj.writeOut(ow2);
+            ow2.eof();
+            if (ow2.writtenStr != expected) {
+                DomItem fObj = this->fileObject();
+                maybeDump(fObj, u"initial");
+                maybeDump(obj, objName);
+                qCWarning(writeOutLog).noquote().nospace()
+                        << objName << " non stable writeOut of " << this->canonicalFilePath() << ":"
+                        << lineDiff(ow2.writtenStr, expected, 2) << dumpedDumper;
+                dumped.clear();
+                return false;
+            }
+            return true;
+        };
+        if ((extraChecks & WriteOutCheck::UpdatedDomCompare)
+            && !compare(fObj, u"initial", copy, u"reformatted", FieldFilter::noLocationFilter()))
+            return DomItem();
+        if (extraChecks & WriteOutCheck::UpdatedDomStable)
+            checkStability(ow.writtenStr, copy, u"reformatted");
+        if (extraChecks
+            & (WriteOutCheck::Reparse | WriteOutCheck::ReparseCompare
+               | WriteOutCheck::ReparseStable)) {
+            DomItem newEnv = environment().makeCopy().item();
+            if (std::shared_ptr<DomEnvironment> newEnvPtr = newEnv.ownerAs<DomEnvironment>()) {
+                std::shared_ptr<QmlFile> newFilePtr(
+                        new QmlFile(canonicalFilePath(), ow.writtenStr));
+                newEnvPtr->addQmlFile(newFilePtr, AddOption::Overwrite);
+                DomItem newFile = newEnv.copy(newFilePtr, Path());
+                if (newFilePtr->isValid()) {
+                    if (extraChecks
+                        & (WriteOutCheck::ReparseCompare | WriteOutCheck::ReparseStable)) {
+                        MutableDomItem newFileMutable(newFile);
+                        createDom(newFileMutable);
+                        if ((extraChecks & WriteOutCheck::ReparseCompare)
+                            && !compare(copy, u"reformatted", newFile, u"reparsed",
+                                        FieldFilter::compareNoCommentsFilter()))
+                            return DomItem();
+                        if ((extraChecks & WriteOutCheck::ReparseStable))
+                            checkStability(ow.writtenStr, newFile, u"reparsed");
+                    }
+                } else {
+                    qCWarning(writeOutLog).noquote().nospace()
+                            << "writeOut of " << canonicalFilePath()
+                            << " created invalid code:\n----------\n"
+                            << ow.writtenStr << "\n----------" << [&newFile](Sink s) {
+                                   newFile.iterateErrors(
+                                           [s](DomItem, ErrorMessage msg) {
+                                               s(u"\n  ");
+                                               msg.dump(s);
+                                               return true;
+                                           },
+                                           true);
+                                   s(u"\n"); // extra empty line at the end...
+                               };
+                    return DomItem();
+                }
+            }
+        }
+    }
+    return copy;
+}
+
+DomItem DomItem::writeOut(QString path, int nBackups, const LineWriterOptions &options,
+                          FileWriter *fw, WriteOutChecks extraChecks)
+{
+    DomItem res = *this;
+    DomItem copy;
+    FileWriter localFw;
+    if (!fw)
+        fw = &localFw;
+    switch (fw->write(
+            path,
+            [this, path, &copy, &options, extraChecks](QTextStream &ts) {
+                LineWriter lw([&ts](QStringView s) { ts << s; }, path, options);
+                OutWriter ow(lw);
+                copy = writeOutForFile(ow, extraChecks);
+                return bool(copy);
+            },
+            nBackups)) {
+    case FileWriter::Status::ShouldWrite:
+    case FileWriter::Status::SkippedDueToFailure:
+        qCWarning(writeOutLog) << "failure reformatting " << path;
+        break;
+    case FileWriter::Status::DidWrite:
+    case FileWriter::Status::SkippedEqual:
+        res = copy;
+        break;
+    }
+    return res;
+}
+
 bool DomItem::isCanonicalChild(DomItem &item)
 {
     if (item.isOwningItem()) {
         return canonicalPath() == item.canonicalPath().dropTail();
     } else {
-        return item.owner() == owner() && item.pathFromOwner().dropTail() == pathFromOwner();
+        DomItem itemOw = item.owner();
+        DomItem selfOw = owner();
+        return itemOw == selfOw && item.pathFromOwner().dropTail() == pathFromOwner();
     }
 }
 
@@ -2410,6 +2595,30 @@ DomItem List::index(DomItem &self, index_type index) const
     return m_lookup(self, index);
 }
 
+void List::writeOut(DomItem &self, OutWriter &ow, bool compact) const
+{
+    ow.writeRegion(u"leftSquareBrace", u"[");
+    int baseIndent = ow.increaseIndent(1);
+    bool first = true;
+    const_cast<List *>(this)->iterateDirectSubpaths(
+            self,
+            [&ow, &first, compact](const PathEls::PathComponent &, function_ref<DomItem()> elF) {
+                if (first)
+                    first = false;
+                else
+                    ow.write(u", ", LineWriter::TextAddType::Extra);
+                if (!compact)
+                    ow.ensureNewline(1);
+                DomItem el = elF();
+                el.writeOut(ow);
+                return true;
+            });
+    if (!compact && !first)
+        ow.newline();
+    ow.decreaseIndent(1, baseIndent);
+    ow.writeRegion(u"rightSquareBrace", u"]");
+}
+
 DomElement::DomElement(Path pathFromOwner) : m_pathFromOwner(pathFromOwner) { }
 
 Path DomElement::pathFromOwner(DomItem &) const
@@ -3131,6 +3340,28 @@ bool ListPBase::iterateDirectSubpaths(DomItem &self, DirectVisitor v)
             return false;
     }
     return true;
+}
+
+void ListPBase::writeOut(DomItem &self, OutWriter &ow, bool compact) const
+{
+    ow.writeRegion(u"leftSquareBrace", u"[");
+    int baseIndent = ow.increaseIndent(1);
+    bool first = true;
+    index_type len = index_type(m_pList.size());
+    for (index_type i = 0; i < len; ++i) {
+        if (first)
+            first = false;
+        else
+            ow.write(u", ", LineWriter::TextAddType::Extra);
+        if (!compact)
+            ow.ensureNewline(1);
+        DomItem el = index(self, i);
+        el.writeOut(ow);
+    }
+    if (!compact && !first)
+        ow.newline();
+    ow.decreaseIndent(1, baseIndent);
+    ow.writeRegion(u"rightSquareBrace", u"]");
 }
 
 } // end namespace Dom

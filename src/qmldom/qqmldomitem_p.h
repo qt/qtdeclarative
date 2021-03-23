@@ -57,6 +57,7 @@
 #include "qqmldomerrormessage_p.h"
 #include "qqmldomfunctionref_p.h"
 #include "qqmldomfilewriter_p.h"
+#include "qqmldomlinewriter_p.h"
 
 #include <QtCore/QMap>
 #include <QtCore/QMultiMap>
@@ -84,6 +85,8 @@ namespace QQmlJS {
 namespace Dom {
 
 class Path;
+
+Q_DECLARE_LOGGING_CATEGORY(writeOutLog);
 
 constexpr bool domTypeIsObjWrap(DomType k);
 constexpr bool domTypeIsValueWrap(DomType k);
@@ -257,6 +260,8 @@ public:
 
     virtual QString canonicalFilePath(DomItem &self) const;
 
+    virtual void writeOut(DomItem &self, OutWriter &lw) const;
+
     virtual QCborValue value() const {
         return QCborValue();
     }
@@ -385,6 +390,8 @@ public:
     fromQListRef(Path pathFromOwner, QList<T> &list,
                  std::function<DomItem(DomItem &, const PathEls::PathComponent &, T &)> elWrapper,
                  ListOptions options = ListOptions::Normal);
+    void writeOut(DomItem &self, OutWriter &ow, bool compact) const;
+    void writeOut(DomItem &self, OutWriter &ow) const override { writeOut(self, ow, true); }
 
 private:
     LookupFunction m_lookup;
@@ -408,6 +415,8 @@ public:
     virtual void moveTo(ListPBase *) const { Q_ASSERT(false); };
     quintptr id() const override { return quintptr(0); }
     index_type indexes(DomItem &) const override { return index_type(m_pList.size()); }
+    void writeOut(DomItem &self, OutWriter &ow, bool compact) const;
+    void writeOut(DomItem &self, OutWriter &ow) const override { writeOut(self, ow, true); }
 
 protected:
     QList<void *> m_pList;
@@ -527,7 +536,6 @@ public:
             return m_value.value<T *>();
         }
     }
-
     SimpleObjectWrapBase() = delete;
     virtual void copyTo(SimpleObjectWrapBase *) const { Q_ASSERT(false); }
     virtual void moveTo(SimpleObjectWrapBase *) const { Q_ASSERT(false); }
@@ -568,6 +576,8 @@ public:
     {
         return mutableAsT()->iterateDirectSubpaths(self, visitor);
     }
+
+    void writeOut(DomItem &self, OutWriter &lw) const override;
 
     T const *asT() const
     {
@@ -840,6 +850,13 @@ public:
     bool visitKeys(function_ref<bool(QString, DomItem &)> visitor);
 
     QList<DomItem> values();
+    void writeOutPre(OutWriter &lw);
+    void writeOut(OutWriter &lw);
+    void writeOutPost(OutWriter &lw);
+    DomItem writeOutForFile(OutWriter &ow, WriteOutChecks extraChecks);
+    DomItem writeOut(QString path, int nBackups = 2,
+                     const LineWriterOptions &opt = LineWriterOptions(), FileWriter *fw = nullptr,
+                     WriteOutChecks extraChecks = WriteOutCheck::Default);
 
     bool visitTree(Path basePath, ChildrenVisitor visitor,
                    VisitOptions options = VisitOption::Default,
@@ -1356,6 +1373,41 @@ std::shared_ptr<T> DomItem::ownerAs()
     return std::shared_ptr<T> {};
 }
 
+template<int I>
+struct rank : rank<I - 1>
+{
+    static_assert(I > 0, "");
+};
+template<>
+struct rank<0>
+{
+};
+
+template<typename T>
+auto writeOutWrap(const T &t, DomItem &self, OutWriter &lw, rank<1>)
+        -> decltype(t.writeOut(self, lw))
+{
+    t.writeOut(self, lw);
+}
+
+template<typename T>
+auto writeOutWrap(const T &, DomItem &, OutWriter &, rank<0>) -> void
+{
+    qCWarning(writeOutLog) << "Ignoring writeout to wrapped object not supporting it ("
+                           << typeid(T).name();
+}
+template<typename T>
+auto writeOutWrap(const T &t, DomItem &self, OutWriter &lw) -> void
+{
+    writeOutWrap(t, self, lw, rank<1>());
+}
+
+template<typename T>
+void SimpleObjectWrapT<T>::writeOut(DomItem &self, OutWriter &lw) const
+{
+    writeOutWrap<T>(*asT(), self, lw);
+}
+
 QDebug operator<<(QDebug debug, const DomItem &c);
 
 class MutableDomItem {
@@ -1453,6 +1505,13 @@ public:
          int nBackups = 2, int indent = 0, FileWriter *fw = nullptr)
     {
         return item().dump(path, filter, nBackups, indent, fw);
+    }
+    void writeOut(OutWriter &lw) { return item().writeOut(lw); }
+    MutableDomItem writeOut(QString path, int nBackups = 2,
+                            const LineWriterOptions &opt = LineWriterOptions(),
+                            FileWriter *fw = nullptr)
+    {
+        return MutableDomItem(item().writeOut(path, nBackups, opt, fw));
     }
 
     MutableDomItem fileLocations() { return MutableDomItem(item().fileLocations()); }

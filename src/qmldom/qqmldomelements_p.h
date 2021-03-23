@@ -52,6 +52,7 @@
 #include "qqmldomitem_p.h"
 #include "qqmldomconstants_p.h"
 #include "qqmldomcomments_p.h"
+#include "qqmldomlinewriter_p.h"
 
 #include <QtQml/private/qqmljsast_p.h>
 #include <QtQml/private/qqmljsengine_p.h>
@@ -165,41 +166,6 @@ inline Path loadInfoPath(Path el)
     return Path::Root(PathRoot::Env).field(Fields::loadInfo).key(el.toString());
 }
 } // end namespace Paths
-
-class IndentInfo
-{
-public:
-    QStringView string;
-    QStringView trailingString;
-    int nNewlines = 0;
-    int column = 0;
-
-    IndentInfo(QStringView line, int tabSize, int initialColumn = 0)
-    {
-        string = line;
-        int fixup = 0;
-        if (initialColumn < 0) // we do not want % of negative numbers
-            fixup = (-initialColumn + tabSize - 1) / tabSize * tabSize;
-        column = initialColumn + fixup;
-        const QChar tab = QLatin1Char('\t');
-        int iStart = 0;
-        int len = line.length();
-        for (int i = 0; i < len; i++) {
-            if (line[i] == tab)
-                column = ((column / tabSize) + 1) * tabSize;
-            else if (line[i] == QLatin1Char('\n')
-                     || (line[i] == QLatin1Char('\r')
-                         && (i + 1 == len || line[i + 1] != QLatin1Char('\n')))) {
-                iStart = i + 1;
-                ++nNewlines;
-                column = 0;
-            } else if (!line[i].isLowSurrogate())
-                column++;
-        }
-        column -= fixup;
-        trailingString = line.mid(iStart);
-    }
-};
 
 class QMLDOM_EXPORT CommentableDomElement : public DomElement
 {
@@ -338,6 +304,8 @@ public:
     }
     friend bool operator!=(const Import &i1, const Import &i2) { return !(i1 == i2); }
 
+    void writeOut(DomItem &self, OutWriter &ow) const;
+
     static QRegularExpression importRe();
 
     QString uri;
@@ -386,6 +354,8 @@ public:
         cont = cont && self.dvWrapField(visitor, Fields::comments, comments);
         return cont;
     }
+
+    void writeOut(DomItem &self, OutWriter &ow) const;
 
     QString name;
     RegionComments comments;
@@ -494,6 +464,7 @@ public:
         return m_engine;
     }
     std::shared_ptr<AstComments> astComments() const { return m_astComments; }
+    void writeOut(DomItem &self, OutWriter &lw) const override;
     SourceLocation globalLocation(DomItem &self) const;
     SourceLocation localOffset() const { return m_localOffset; }
     QStringView preCode() const { return m_preCode; }
@@ -583,6 +554,8 @@ public:
     const RegionComments &comments() const { return m_comments; }
     RegionComments &comments() { return m_comments; }
     void updatePathFromOwner(Path newPath);
+    void writeOut(DomItem &self, OutWriter &lw) const;
+    void writeOutValue(DomItem &self, OutWriter &lw) const;
     bool isSignalHandler() const
     {
         QString baseName = m_name.split(QLatin1Char('.')).last();
@@ -649,6 +622,8 @@ public:
         return res;
     }
 
+    void writeOut(DomItem &self, OutWriter &lw) const;
+
     bool isPointer = false;
     bool isAlias = false;
     bool isDefaultMember = false;
@@ -672,6 +647,9 @@ public:
     constexpr static DomType kindValue = DomType::MethodParameter;
 
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor);
+
+    void writeOut(DomItem &self, OutWriter &ow) const;
+    void writeOutSignal(DomItem &self, OutWriter &ow) const;
 
     QString name;
     QString typeName;
@@ -700,6 +678,8 @@ public:
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor);
     QString preCode(DomItem &) const;
     QString postCode(DomItem &) const;
+    void writePre(DomItem &self, OutWriter &ow) const;
+    void writeOut(DomItem &self, OutWriter &ow) const;
     void setCode(QString code)
     {
         body = std::shared_ptr<ScriptExpression>(
@@ -727,6 +707,7 @@ public:
     double value() const { return m_value; }
     RegionComments &comments() { return m_comments; }
     const RegionComments &comments() const { return m_comments; }
+    void writeOut(DomItem &self, OutWriter &lw) const;
 
 private:
     QString m_name;
@@ -767,6 +748,7 @@ public:
     QList<QmlObject> annotations() const;
     void setAnnotations(QList<QmlObject> annotations);
     Path addAnnotation(const QmlObject &child, QmlObject **cPtr = nullptr);
+    void writeOut(DomItem &self, OutWriter &lw) const override;
 
 private:
     QString m_name;
@@ -878,6 +860,8 @@ public:
         return appendUpdatableElementInQList(pathFromOwner().field(Fields::annotations),
                                              m_annotations, annotation, aPtr);
     }
+    void writeOut(DomItem &self, OutWriter &ow, QString onTarget) const;
+    void writeOut(DomItem &self, OutWriter &lw) const override { writeOut(self, lw, QString()); }
 
 private:
     friend class QmlDomAstCreator;
@@ -1047,6 +1031,7 @@ public:
         return insertUpdatableElementInMultiMap(pathFromOwner().field(Fields::ids), m_ids, id.name,
                                                 id, option, idPtr);
     }
+    void writeOut(DomItem &self, OutWriter &) const override;
     QList<QString> subComponentsNames(DomItem &self) const;
     QList<DomItem> subComponents(DomItem &self) const;
 

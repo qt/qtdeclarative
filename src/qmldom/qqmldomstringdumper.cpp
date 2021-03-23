@@ -220,6 +220,13 @@ void sinkNewline(Sink s, int indent)
  * \brief A sink that ignores whatever it receives
  */
 
+QDebug operator<<(QDebug d, Dumper dumper)
+{
+    QDebug dd = d.noquote().nospace();
+    dumper([&dd](QStringView s) { dd << s; });
+    return d;
+}
+
 } // end namespace Dom
 } // end namespace QQmlJS
 

@@ -147,6 +147,8 @@ QMLDOM_EXPORT void dumperToQDebug(Dumper dumper, QDebug debug);
 
 QMLDOM_EXPORT void dumperToQDebug(Dumper dumper, ErrorLevel level = ErrorLevel::Debug);
 
+QMLDOM_EXPORT QDebug operator<<(QDebug d, Dumper dumper);
+
 } // end namespace Dom
 } // end namespace QQmlJS
 QT_END_NAMESPACE

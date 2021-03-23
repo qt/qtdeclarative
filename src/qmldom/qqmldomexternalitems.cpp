@@ -38,6 +38,7 @@
 #include "qqmldomexternalitems_p.h"
 
 #include "qqmldomtop_p.h"
+#include "qqmldomoutwriter_p.h"
 #include "qqmldomcomments_p.h"
 #include "qqmldommock_p.h"
 #include "qqmldomelements_p.h"
@@ -357,6 +358,19 @@ DomItem QmlFile::field(DomItem &self, QStringView name)
 void QmlFile::addError(DomItem &self, ErrorMessage msg)
 {
     self.containingObject().addError(msg);
+}
+
+void QmlFile::writeOut(DomItem &self, OutWriter &ow) const
+{
+    for (DomItem &p : self.field(Fields::pragmas).values()) {
+        p.writeOut(ow);
+    }
+    for (auto i : self.field(Fields::imports).values()) {
+        i.writeOut(ow);
+    }
+    ow.ensureNewline(2);
+    DomItem mainC = self.field(Fields::components).key(QString()).index(0);
+    mainC.writeOut(ow);
 }
 
 std::shared_ptr<OwningItem> GlobalScope::doCopy(DomItem &self) const
