@@ -289,6 +289,8 @@ bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
                     case QmlIR::Binding::Type_String:
                     case QmlIR::Binding::Type_Null:
                     case QmlIR::Binding::Type_Object:
+                    case QmlIR::Binding::Type_Translation:
+                    case QmlIR::Binding::Type_TranslationById:
                         return;
                     default:
                         break;
