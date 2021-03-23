@@ -86,6 +86,10 @@ enum class PathCurrent {
     Lookup
 };
 Q_ENUM_NS(PathCurrent)
+
+enum class Language { QmlQuick1, QmlQuick2, QmlQuick3, QmlCompiled, QmlAnnotation, Qbs };
+Q_ENUM_NS(Language)
+
 enum class ResolveOption{
     None=0,
     TraceVisit=0x1 // call the function along all elements of the path, not just for the target (the function might be called even if the target is never reached)
@@ -94,15 +98,41 @@ Q_ENUM_NS(ResolveOption)
 Q_DECLARE_FLAGS(ResolveOptions, ResolveOption)
 Q_DECLARE_OPERATORS_FOR_FLAGS(ResolveOptions)
 
-enum class VisitOption{
-    None=0,
-    VisitAdopted=0x1, // Visit adopted types (but never recurses)
-    Recurse=0x2, // recurse non adopted types
-    NoPath=0x4 // does not generate path consistent with visit
+enum class VisitOption {
+    None = 0,
+    VisitSelf = 0x1, // Visit the start item
+    VisitAdopted = 0x2, // Visit adopted types (but never recurses them)
+    Recurse = 0x4, // recurse non adopted types
+    NoPath = 0x8, // does not generate path consistent with visit
+    Default = VisitOption::VisitSelf | VisitOption::VisitAdopted | VisitOption::Recurse
 };
 Q_ENUM_NS(VisitOption)
 Q_DECLARE_FLAGS(VisitOptions, VisitOption)
 Q_DECLARE_OPERATORS_FOR_FLAGS(VisitOptions)
+
+enum class LookupOption {
+    Normal = 0,
+    Strict = 0x1,
+    VisitTopClassType = 0x2, // static lookup of class (singleton) or attached type, the default is
+                             // visiting instance methods
+    SkipFirstScope = 0x4
+};
+Q_ENUM_NS(LookupOption)
+Q_DECLARE_FLAGS(LookupOptions, LookupOption)
+Q_DECLARE_OPERATORS_FOR_FLAGS(LookupOptions)
+
+enum class LookupType { PropertyDef, Binding, Property, Method, Type, CppType, Symbol };
+Q_ENUM_NS(LookupType)
+
+enum class VisitPrototypesOption {
+    Normal = 0,
+    SkipFirst = 0x1,
+    RevisitWarn = 0x2,
+    ManualProceedToScope = 0x4
+};
+Q_ENUM_NS(VisitPrototypesOption)
+Q_DECLARE_FLAGS(VisitPrototypesOptions, VisitPrototypesOption)
+Q_DECLARE_OPERATORS_FOR_FLAGS(VisitPrototypesOptions)
 
 enum class DomKind {
     Empty,
@@ -137,6 +167,7 @@ enum class DomType {
     ModuleAutoExport, // dependent imports to automatically load when a module is imported
     ModuleIndex, // index for all the imports of a major version
     ModuleScope, // a specific import with full version
+    ImportScope, // the scope including the types coming from one or more imports
     Export, // An exported type
 
     // header stuff
@@ -150,21 +181,29 @@ enum class DomType {
     SimpleObjectWrap,
     ScriptExpression,
     Reference,
-    Binding,
     PropertyDefinition,
-    RequiredProperty,
+    Binding,
     MethodParameter,
     MethodInfo,
     Version, // wrapped
+    Comment,
+    CommentedElement,
+    RegionComments,
+    AstComments,
     FileLocations,
+    UpdatedScriptExpression,
 
-    // generic objects, mainly for debug support
-    GenericObject,
-    GenericOwner,
+    // convenience collecting types
+    PropertyInfo,
+
+    // Moc objects, mainly for testing
+    MockObject,
+    MockOwner,
 
     // containers
     Map,
     List,
+    ListP,
 
     // supporting objects
     LoadInfo, // owning
@@ -177,6 +216,17 @@ enum class DomType {
 };
 Q_ENUM_NS(DomType)
 
+enum class SimpleWrapOption { None = 0, ValueType = 1 };
+Q_ENUM_NS(SimpleWrapOption)
+Q_DECLARE_FLAGS(SimpleWrapOptions, SimpleWrapOption)
+Q_DECLARE_OPERATORS_FOR_FLAGS(SimpleWrapOptions)
+
+enum class BindingValueKind { Object, ScriptExpression, Array, Empty };
+Q_ENUM_NS(BindingValueKind)
+
+enum class BindingType { Normal, OnBinding };
+Q_ENUM_NS(BindingType)
+
 enum class ListOptions {
     Normal,
     Reverse
@@ -188,7 +238,8 @@ enum class LoadOption {
     ForceLoad = 0x1,
 };
 Q_ENUM_NS(LoadOption)
-Q_DECLARE_FLAGS(LoadOptions, LoadOption);
+Q_DECLARE_FLAGS(LoadOptions, LoadOption)
+Q_DECLARE_OPERATORS_FOR_FLAGS(LoadOptions)
 
 enum class EscapeOptions{
     OuterQuotes,
@@ -222,6 +273,11 @@ enum class GoTo {
 };
 Q_ENUM_NS(GoTo)
 
+enum class AddOption { KeepExisting, Overwrite };
+Q_ENUM_NS(AddOption)
+
+enum class FilterUpOptions { ReturnOuter, ReturnOuterNoSelf, ReturnInner };
+Q_ENUM_NS(FilterUpOptions)
 
 } // end namespace Dom
 } // end namespace QQmlJS

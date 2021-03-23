@@ -338,7 +338,6 @@ public:
     PathComponent(const Current &o): data(o) {}
     PathComponent(const Any &o): data(o) {}
     PathComponent(const Filter &o): data(o) {}
-
 private:
     friend class QQmlJS::Dom::Path;
     friend class QQmlJS::Dom::PathEls::TestPaths;
@@ -467,12 +466,13 @@ public:
 // namespace, so it cam be reopened to add more entries
 namespace Fields{
 QMLDOM_FIELD(access);
+QMLDOM_FIELD(allSources);
 QMLDOM_FIELD(annotations);
 QMLDOM_FIELD(astComments);
 QMLDOM_FIELD(astRelocatableDump);
 QMLDOM_FIELD(attachedType);
 QMLDOM_FIELD(attachedTypeName);
-QMLDOM_FIELD(autoExport);
+QMLDOM_FIELD(autoExports);
 QMLDOM_FIELD(base);
 QMLDOM_FIELD(bindingType);
 QMLDOM_FIELD(bindings);
@@ -502,6 +502,7 @@ QMLDOM_FIELD(errors);
 QMLDOM_FIELD(exportSource);
 QMLDOM_FIELD(exports);
 QMLDOM_FIELD(expr);
+QMLDOM_FIELD(expressionType);
 QMLDOM_FIELD(fileLocationsTree);
 QMLDOM_FIELD(fileName);
 QMLDOM_FIELD(fullRegion);
@@ -718,7 +719,6 @@ public:
 
     static int cmp(const Path &p1, const Path &p2);
     Component component(int i) const;
-
 private:
     explicit Path(quint16 endOffset, quint16 length, std::shared_ptr<PathEls::PathData> data);
     friend class QQmlJS::Dom::PathEls::TestPaths;

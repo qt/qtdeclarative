@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -35,6 +35,30 @@
 **
 ** $QT_END_LICENSE$
 **/
-#include "tst_qmldomitem.h"
+#include "stringdumper/tst_qmldomstringdumper.h"
+#include "errormessage/tst_qmldomerrormessage.h"
+#include "domitem/tst_qmldomitem.h"
+#include "path/tst_qmldompath.h"
 
-QTEST_MAIN(QQmlJS::Dom::TestDomItem)
+int main(int argc, char *argv[])
+{
+    int status = 0;
+
+    {
+        QQmlJS::Dom::TestStringDumper test;
+        status |= QTest::qExec(&test, argc, argv);
+    }
+    {
+        QQmlJS::Dom::PathEls::TestPaths test;
+        status |= QTest::qExec(&test, argc, argv);
+    }
+    {
+        QQmlJS::Dom::TestErrorMessage test;
+        status |= QTest::qExec(&test, argc, argv);
+    }
+    {
+        QQmlJS::Dom::TestDomItem test;
+        status |= QTest::qExec(&test, argc, argv);
+    }
+    return status;
+}

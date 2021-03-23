@@ -60,39 +60,60 @@ Attributes:
 
 \sa QQmlJs::Dom::AttachedInfo
 */
-bool FileLocations::iterateDirectSubpaths(DomItem &self, function_ref<bool(Path, DomItem &)> visitor)
+bool FileLocations::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
 {
     bool cont = true;
+#ifdef QmlDomAddCodeStr
+    bool hasCode = false;
     QString codeStr = self.fileObject().field(Fields::code).value().toString();
-    auto loc2str = [codeStr](SourceLocation loc) {
-        return QStringView(codeStr).mid(loc.offset, loc.length);
+    auto loc2str = [&self, &codeStr](SourceLocation loc) {
+        if (loc.offset < codeStr.length() && loc.end() <= codeStr.length())
+            return QStringView(codeStr).mid(loc.offset, loc.length);
+        return QStringView();
     };
-    cont = cont && self.subDataField(Fields::fullRegion, locationToData(fullRegion)).visit(visitor);
-    cont = cont && self.subMap(
-        Map::fromMapRef<SourceLocation>(
-            self.pathFromOwner().field(Fields::regions), regions, [&loc2str](const DomItem &map, Path key, SourceLocation &el){
-                return map.subDataPath(key, locationToData(el, loc2str(el))).item;
-            })).visit(visitor);
-    cont = cont && self.subMap(
-        Map::fromMapRef<QList<SourceLocation>>(
-            self.pathFromOwner().field(Fields::preCommentLocations), preCommentLocations,
-            [&loc2str](const DomItem &map, Path key, QList<SourceLocation> &el){
-                return map.subList(List::fromQListRef<SourceLocation>(
-                                       map.pathFromOwner().path(key), el,
-                                       [&loc2str](const DomItem &list, Path idx, SourceLocation &el){
-                                           return list.subDataPath(idx, locationToData(el, loc2str(el))).item;
-                                       })).item;
-            })).visit(visitor);
-    cont = cont && self.subMap(
-        Map::fromMapRef<QList<SourceLocation>>(
-            self.pathFromOwner().field(Fields::postCommentLocations), postCommentLocations,
-            [&loc2str](const DomItem &map, Path key, QList<SourceLocation> &el){
-                return map.subList(List::fromQListRef<SourceLocation>(
-                                map.pathFromOwner().path(key), el,
-                                [&loc2str](const DomItem &list, Path idx, SourceLocation &el){
-                                    return list.subDataPath(idx, locationToData(el, loc2str(el))).item;
-                                })).item;
-            })).visit(visitor);
+#else
+    auto loc2str = [](SourceLocation) { return QStringView(); };
+#endif
+    cont = cont && self.dvValueLazyField(visitor, Fields::fullRegion, [this]() {
+        return locationToData(fullRegion);
+    });
+    cont = cont && self.dvItemField(visitor, Fields::regions, [this, &self, &loc2str]() {
+        return self.subMapItem(Map::fromMapRef<SourceLocation>(
+                self.pathFromOwner().field(Fields::regions), regions,
+                [&loc2str](DomItem &map, const PathEls::PathComponent &key, SourceLocation &el) {
+                    return map.subLocationItem(key, el, loc2str(el));
+                }));
+    });
+    cont = cont
+            && self.dvItemField(visitor, Fields::preCommentLocations, [this, &self, &loc2str]() {
+                   return self.subMapItem(Map::fromMapRef<QList<SourceLocation>>(
+                           self.pathFromOwner().field(Fields::preCommentLocations),
+                           preCommentLocations,
+                           [&loc2str](DomItem &map, const PathEls::PathComponent &key,
+                                      QList<SourceLocation> &el) {
+                               return map.subListItem(List::fromQListRef<SourceLocation>(
+                                       map.pathFromOwner().appendComponent(key), el,
+                                       [&loc2str](DomItem &list, const PathEls::PathComponent &idx,
+                                                  SourceLocation &el) {
+                                           return list.subLocationItem(idx, el, loc2str(el));
+                                       }));
+                           }));
+               });
+    cont = cont
+            && self.dvItemField(visitor, Fields::postCommentLocations, [this, &self, &loc2str]() {
+                   return self.subMapItem(Map::fromMapRef<QList<SourceLocation>>(
+                           self.pathFromOwner().field(Fields::postCommentLocations),
+                           postCommentLocations,
+                           [&loc2str](DomItem &map, const PathEls::PathComponent &key,
+                                      QList<SourceLocation> &el) {
+                               return map.subListItem(List::fromQListRef<SourceLocation>(
+                                       map.pathFromOwner().appendComponent(key), el,
+                                       [&loc2str](DomItem &list, const PathEls::PathComponent &idx,
+                                                  SourceLocation &el) {
+                                           return list.subLocationItem(idx, el, loc2str(el));
+                                       }));
+                           }));
+               });
     return cont;
 }
 
@@ -113,17 +134,17 @@ FileLocations::Tree FileLocations::ensure(FileLocations::Tree base, Path basePat
 }
 
 AttachedInfoLookupResult<FileLocations::Tree>
-FileLocations::findAttachedInfo(const DomItem &item, AttachedInfo::FindOptions options)
+FileLocations::findAttachedInfo(DomItem &item, AttachedInfo::FindOptions options)
 {
     return AttachedInfoT<FileLocations>::findAttachedInfo(item, Fields::fileLocationsTree, options);
 }
 
-FileLocations::Tree FileLocations::treePtr(const DomItem &item)
+FileLocations::Tree FileLocations::treePtr(DomItem &item)
 {
     return AttachedInfoT<FileLocations>::treePtr(item, Fields::fileLocationsTree);
 }
 
-const FileLocations *FileLocations::fileLocationsPtr(const DomItem &item)
+const FileLocations *FileLocations::fileLocationsPtr(DomItem &item)
 {
     if (FileLocations::Tree t = treePtr(item))
         return &(t->info());
@@ -173,24 +194,33 @@ Attributes:
 \sa QQmlJs::Dom::AttachedInfo
 */
 
-bool AttachedInfo::iterateDirectSubpaths(DomItem &self, function_ref<bool(Path, DomItem &)> visitor)
+bool AttachedInfo::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
 {
     bool cont = true;
     if (Ptr p = parent())
-        cont = cont && Subpath{Path::Field(Fields::parent), DomItem(self.m_top, p, self.m_ownerPath.dropTail(2), p.get())}.visit(visitor);
-    cont = cont && self.subDataField(Fields::path, path().toString()).visit(visitor);
-    cont = cont && self.subMap(
-                Map(Path::Field(Fields::subItems),
-                    [this](const DomItem &map, QString key){
-        Path p = Path::fromString(key);
-        return map.copy(m_subItems.value(p), map.canonicalPath().key(key));
-    },[this](const DomItem &) {
-        QSet<QString> res;
-        for (auto p : m_subItems.keys())
-            res.insert(p.toString());
-        return res;
-    }, QLatin1String("AttachedInfo"))).visit(visitor);
-    cont = cont && Subpath{Path::Field(Fields::infoItem), infoItem(self)}.visit(visitor);
+        cont = cont && self.dvItemField(visitor, Fields::parent, [&self, p]() {
+            return self.copy(p, self.m_ownerPath.dropTail(2), p.get());
+        });
+    cont = cont
+            && self.dvValueLazyField(visitor, Fields::path, [this]() { return path().toString(); });
+    cont = cont && self.dvItemField(visitor, Fields::subItems, [this, &self]() {
+        return self.subMapItem(Map(
+                Path::Field(Fields::subItems),
+                [this](DomItem &map, QString key) {
+                    Path p = Path::fromString(key);
+                    return map.copy(m_subItems.value(p), map.canonicalPath().key(key));
+                },
+                [this](DomItem &) {
+                    QSet<QString> res;
+                    for (auto p : m_subItems.keys())
+                        res.insert(p.toString());
+                    return res;
+                },
+                QLatin1String("AttachedInfo")));
+    });
+    cont = cont && self.dvItemField(visitor, Fields::infoItem, [&self, this]() {
+        return infoItem(self);
+    });
     return cont;
 }
 
@@ -252,7 +282,7 @@ AttachedInfo::Ptr AttachedInfo::find(AttachedInfo::Ptr self, Path p, AttachedInf
 }
 
 AttachedInfoLookupResult<AttachedInfo::Ptr>
-AttachedInfo::findAttachedInfo(const DomItem &item, QStringView fieldName,
+AttachedInfo::findAttachedInfo(DomItem &item, QStringView fieldName,
                                AttachedInfo::FindOptions options)
 {
     Path p;
@@ -262,7 +292,7 @@ AttachedInfo::findAttachedInfo(const DomItem &item, QStringView fieldName,
         // canonical path, and PathType::Canonical instead...
         DomItem o = item.owner();
         p = item.pathFromOwner();
-        DomItem fLoc = o.field(fieldName);
+        fLoc = o.field(fieldName);
         while (!fLoc && o) {
             DomItem c = o.container();
             p = c.pathFromOwner().path(o.canonicalPath().last()).path(p);
@@ -276,8 +306,17 @@ AttachedInfo::findAttachedInfo(const DomItem &item, QStringView fieldName,
         if (AttachedInfo::Ptr foundTree =
                     AttachedInfo::find(fLocPtr, p, AttachedInfo::PathType::Relative))
             res.foundTree = foundTree;
-    if (options & FindOption::SetRootTreePath)
+    if (options & (FindOption::SetRootTreePath | FindOption::SetFoundTreePath))
         res.rootTreePath = fLoc.canonicalPath();
+    if (options & FindOption::SetFoundTreePath) {
+        Path foundTreePath = res.rootTreePath.value();
+        if (res.lookupPath) {
+            foundTreePath = foundTreePath.key(res.lookupPath.head().toString());
+            for (Path pEl : res.lookupPath.mid(1))
+                foundTreePath = foundTreePath.field(Fields::subItems).key(pEl.toString());
+        }
+        res.foundTreePath = foundTreePath;
+    }
     return res;
 }
 

@@ -58,12 +58,15 @@
 #include <QtCore/QString>
 #include <QtCore/QCborArray>
 #include <QtCore/QCborMap>
+#include <QtCore/QLoggingCategory>
 #include <QtQml/private/qqmljsdiagnosticmessage_p.h>
 
 QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
 namespace Dom {
+
+Q_DECLARE_LOGGING_CATEGORY(domLog);
 
 QMLDOM_EXPORT ErrorLevel errorLevelFromQtMsgType(QtMsgType msgType);
 

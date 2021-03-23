@@ -49,6 +49,8 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace Dom {
 
+Q_LOGGING_CATEGORY(domLog, "qt.qmldom", QtWarningMsg);
+
 enum {
     FatalMsgMaxLen=511
 };
@@ -182,7 +184,8 @@ ErrorMessage ErrorGroups::errorMessage(Dumper msg, ErrorLevel level, Path elemen
 ErrorMessage ErrorGroups::errorMessage(const DiagnosticMessage &msg, Path element, QString canonicalFilePath) const
 {
     ErrorMessage res(*this, msg, element, canonicalFilePath);
-    if (!res.location.isValid() && (res.location.startLine != 0 || res.location.startColumn != 0)) {
+    if (res.location == SourceLocation()
+        && (res.location.startLine != 0 || res.location.startColumn != 0)) {
         res.location.offset = -1;
         res.location.length = 1;
     }
@@ -420,7 +423,7 @@ ErrorMessage &ErrorMessage::withItem(DomItem el)
         path = el.canonicalPath();
     if (file.isEmpty())
         file = el.canonicalFilePath();
-    if (!location.isValid()) {
+    if (location == SourceLocation()) {
         if (const FileLocations *fLocPtr = FileLocations::fileLocationsPtr(el)) {
             location = fLocPtr->regions.value(QString(), fLocPtr->fullRegion);
         }
@@ -460,7 +463,10 @@ void ErrorMessage::dump(Sink sink) const
     sink(message);
     if (path.length()>0) {
         sink(u" for ");
-        path.dump(sink);
+        if (!file.isEmpty() && path.length() > 3 && path.headKind() == Path::Kind::Root)
+            path.mid(3).dump(sink);
+        else
+            path.dump(sink);
     }
 }
 
