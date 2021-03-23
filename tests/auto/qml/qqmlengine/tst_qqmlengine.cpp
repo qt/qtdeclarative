@@ -90,6 +90,7 @@ private slots:
     void captureQProperty();
     void listWrapperAsListReference();
     void attachedObjectAsObject();
+    void listPropertyAsQJSValue();
 
 public slots:
     QObject *createAQObjectForOwnershipTest ()
@@ -1369,6 +1370,40 @@ void tst_qqmlengine::attachedObjectAsObject()
     QJSValue prop = m.property("a");
     const QQmlComponentAttached *attached = qjsvalue_cast<QQmlComponentAttached *>(prop);
     QCOMPARE(attached, qmlAttachedPropertiesObject<QQmlComponent>(o.data()));
+}
+
+class WithListProperty : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QQmlListProperty<QQmlComponent> components READ components CONSTANT)
+    QML_ELEMENT
+public:
+
+    QQmlListProperty<QQmlComponent> components()
+    {
+        return QQmlListProperty<QQmlComponent>(this, &m_components);
+    }
+
+private:
+    QList<QQmlComponent *> m_components;
+};
+
+void tst_qqmlengine::listPropertyAsQJSValue()
+{
+    qmlRegisterTypesAndRevisions<WithListProperty>("Foo", 1);
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+    c.setData("import Foo\nWithListProperty {}", QUrl());
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    WithListProperty *parent = qobject_cast<WithListProperty *>(o.data());
+    QVERIFY(parent);
+    QQmlListProperty<QQmlComponent> prop = parent->components();
+    QJSValue val = engine.toScriptValue(prop);
+    QQmlListReference ref = engine.fromScriptValue<QQmlListReference>(val);
+    ref.append(&c);
+    QCOMPARE(prop.count(&prop), 1);
+    QCOMPARE(prop.at(&prop, 0), &c);
 }
 
 QTEST_MAIN(tst_qqmlengine)

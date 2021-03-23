@@ -1810,11 +1810,18 @@ QV4::ReturnedValue ExecutionEngine::fromData(
         if (metaType == QMetaType::fromType<QQmlListReference>()) {
             typedef QQmlListReferencePrivate QDLRP;
             QDLRP *p = QDLRP::get((QQmlListReference*)const_cast<void *>(ptr));
-            if (p->object) {
+            if (p->object)
                 return QV4::QmlListWrapper::create(scope.engine, p->property, p->propertyType);
-            } else {
+            else
                 return QV4::Encode::null();
-            }
+        } else if (auto flags = metaType.flags(); flags & QMetaType::IsQmlList) {
+            // casting to QQmlListProperty<QObject> is slightly nasty, but it's the
+            // same QQmlListReference does.
+            const auto *p = static_cast<const QQmlListProperty<QObject> *>(ptr);
+            if (p->object)
+                return QV4::QmlListWrapper::create(scope.engine, *p, metaType);
+            else
+                return QV4::Encode::null();
         } else if (metaType == QMetaType::fromType<QJSValue>()) {
             return QJSValuePrivate::convertToReturnedValue(
                         this, *reinterpret_cast<const QJSValue *>(ptr));
