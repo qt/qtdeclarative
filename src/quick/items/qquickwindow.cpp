@@ -1601,7 +1601,7 @@ QPair<QQuickItem*, QQuickPointerHandler*> QQuickWindowPrivate::findCursorItemAnd
 
 /*!
     \qmlproperty list<Object> Window::data
-    \default
+    \qmldefault
 
     The data property allows you to freely mix visual children, resources
     and other Windows in a Window.

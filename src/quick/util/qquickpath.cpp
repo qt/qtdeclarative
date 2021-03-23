@@ -246,7 +246,7 @@ bool QQuickPath::isClosed() const
     \qmlproperty list<PathElement> QtQuick::Path::pathElements
     This property holds the objects composing the path.
 
-    \default
+    \qmldefault
 
     A path can contain the following path objects:
     \list

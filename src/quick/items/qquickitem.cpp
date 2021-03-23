@@ -3282,7 +3282,7 @@ void QQuickItemPrivate::data_append(QQmlListProperty<QObject> *prop, QObject *o)
 
 /*!
     \qmlproperty list<Object> QtQuick::Item::data
-    \default
+    \qmldefault
 
     The data property allows you to freely mix visual children and resources
     in an item.  If you assign a visual item to the data list it becomes

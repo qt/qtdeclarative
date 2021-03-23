@@ -892,7 +892,7 @@ static void vpe_clear(QQmlListProperty<QObject> *property)
     Shape. It can also contain any other type of objects, since Shape, like
     Item, allows adding any visual or non-visual objects as children.
 
-    \default
+    \qmldefault
  */
 
 QQmlListProperty<QObject> QQuickShape::data()

@@ -231,7 +231,7 @@ void QQmlDelegateChooser::setRole(const QString &role)
 
 /*!
     \qmlproperty list<DelegateChoice> QtQml.Models::DelegateChooser::choices
-    \default
+    \qmldefault
 
     The list of DelegateChoices for the chooser.
 

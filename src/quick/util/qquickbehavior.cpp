@@ -114,7 +114,7 @@ QQuickBehavior::~QQuickBehavior()
 
 /*!
     \qmlproperty Animation QtQuick::Behavior::animation
-    \default
+    \qmldefault
 
     This property holds the animation to run when the behavior is triggered.
 */

@@ -238,7 +238,7 @@ void QQuickGradientStop::updateGradient()
 
 /*!
     \qmlproperty list<GradientStop> QtQuick::Gradient::stops
-    \default
+    \qmldefault
 
     This property holds the gradient stops describing the gradient.
 

@@ -443,7 +443,7 @@ bool QQuickTransition::running() const
 
 /*!
     \qmlproperty list<Animation> QtQuick::Transition::animations
-    \default
+    \qmldefault
 
     This property holds a list of the animations to be run for this transition.
 

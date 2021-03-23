@@ -328,7 +328,7 @@ int QQmlInstantiator::count() const
 
 /*!
     \qmlproperty QtQml::Component QtQml::Instantiator::delegate
-    \default
+    \qmldefault
 
     The component used to create all objects.
 

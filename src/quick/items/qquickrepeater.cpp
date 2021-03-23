@@ -245,7 +245,7 @@ void QQuickRepeater::setModel(const QVariant &m)
 
 /*!
     \qmlproperty Component QtQuick::Repeater::delegate
-    \default
+    \qmldefault
 
     The delegate provides a template defining each item instantiated by the repeater.
 

@@ -258,7 +258,7 @@ void QQuickState::setExtends(const QString &extends)
 /*!
     \qmlproperty list<Change> QtQuick::State::changes
     This property holds the changes to apply for this state
-    \default
+    \qmldefault
 
     By default these changes are applied against the default state. If the state
     extends another state, then the changes are applied against the state being
