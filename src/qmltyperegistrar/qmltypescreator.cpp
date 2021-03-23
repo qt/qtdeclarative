@@ -174,19 +174,26 @@ void QmlTypesCreator::writeProperties(const QJsonArray &properties, QSet<QString
         const auto it = obj.find(QLatin1String("revision"));
         if (it != obj.end())
             m_qml.writeScriptBinding(QLatin1String("revision"), QString::number(it.value().toInt()));
-        const auto bindable = obj.constFind(QLatin1String("bindable"));
-        if (bindable != obj.constEnd())
-            m_qml.writeScriptBinding(QLatin1String("bindable"), enquote(bindable->toString()));
-        writeType(obj, QLatin1String("type"), !obj.contains(QLatin1String("write")) && !obj.contains(QLatin1String("member")), true);
-        const auto read = obj.constFind(QLatin1String("read"));
-        if (read != obj.constEnd())
-             m_qml.writeScriptBinding(QLatin1String("read"), enquote(read->toString()));
-        const auto write = obj.constFind(QLatin1String("write"));
-        if (write != obj.constEnd())
-             m_qml.writeScriptBinding(QLatin1String("write"), enquote(write->toString()));
+
+        writeType(obj, QLatin1String("type"), !obj.contains(QLatin1String("write"))
+                  && !obj.contains(QLatin1String("member")), true);
+
+        if (!obj.contains(QStringLiteral("privateClass"))) {
+            const auto bindable = obj.constFind(QLatin1String("bindable"));
+            if (bindable != obj.constEnd())
+                m_qml.writeScriptBinding(QLatin1String("bindable"), enquote(bindable->toString()));
+            const auto read = obj.constFind(QLatin1String("read"));
+            if (read != obj.constEnd())
+                 m_qml.writeScriptBinding(QLatin1String("read"), enquote(read->toString()));
+            const auto write = obj.constFind(QLatin1String("write"));
+            if (write != obj.constEnd())
+                 m_qml.writeScriptBinding(QLatin1String("write"), enquote(write->toString()));
+        }
+
         const auto required = obj.constFind(QLatin1String("required"));
         if (required != obj.constEnd() && required->toBool())
             m_qml.writeScriptBinding(QLatin1String("isRequired"), QLatin1String("true"));
+
         m_qml.writeEndObject();
 
         const QString notify = obj[QLatin1String("notify")].toString();

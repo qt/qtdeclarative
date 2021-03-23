@@ -258,6 +258,20 @@ public:
     int e() const { return 'e'; }
 };
 
+class HiddenAccessorsPrivate
+{
+public:
+    QString hiddenRead() const { return QStringLiteral("bar"); }
+};
+
+class HiddenAccessors : public QObject
+{
+    Q_OBJECT
+    Q_PRIVATE_PROPERTY(HiddenAccessors::d_func(), QString hiddenRead READ hiddenRead CONSTANT)
+    QML_ELEMENT
+    Q_DECLARE_PRIVATE(HiddenAccessors)
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -281,6 +295,7 @@ private slots:
     void multiExtensions();
     void localDefault();
     void requiredProperty();
+    void hiddenAccessor();
 
 private:
     QByteArray qmltypesData;

@@ -93,7 +93,7 @@ void tst_qmltyperegistrar::accessSemantics()
 
 void tst_qmltyperegistrar::isBindable()
 {
-    QVERIFY(qmltypesData.contains(R"(Property { name: "someProperty"; bindable: "bindableSomeProperty"; type: "int" })"));
+    QVERIFY(qmltypesData.contains(R"(Property { name: "someProperty"; type: "int"; bindable: "bindableSomeProperty" })"));
 }
 
 void tst_qmltyperegistrar::restrictToImportVersion()
@@ -202,6 +202,13 @@ void tst_qmltyperegistrar::requiredProperty()
 {
     QCOMPARE(qmltypesData.count("name: \"RequiredProperty\""), 1);
     QCOMPARE(qmltypesData.count("isRequired: true"), 1);
+}
+
+void tst_qmltyperegistrar::hiddenAccessor()
+{
+    // No read accessor
+    QVERIFY(qmltypesData.contains(
+                "Property { name: \"hiddenRead\"; type: \"QString\"; isReadonly: true }"));
 }
 
 QTEST_MAIN(tst_qmltyperegistrar)
