@@ -457,6 +457,7 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
             memcpy(transformedArguments, frame->argv(), frame->argc() * sizeof(void *));
         }
 
+        Q_ASSERT(argumentType.sizeOf() > 0);
         Q_ALLOCA_VAR(void, arg, argumentType.sizeOf());
         argumentType.construct(arg);
         if (frame->argc() > i)
@@ -468,10 +469,12 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
     const QMetaType returnType = function->aotFunction->returnType;
     Q_ALLOCA_DECLARE(void, transformedResult);
     if (frame->returnValue()) {
-        if (returnType == frame->returnType())
+        if (returnType == frame->returnType()) {
             returnType.destruct(frame->returnValue());
-        else
+        } else {
+            Q_ASSERT(returnType.sizeOf() > 0);
             Q_ALLOCA_ASSIGN(void, transformedResult, returnType.sizeOf());
+        }
     }
 
     QQmlPrivate::AOTCompiledContext aotContext;
