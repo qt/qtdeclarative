@@ -556,7 +556,7 @@ void QuickTestResult::stringify(QQmlV4Function *args)
     if (value->isObject()
         && !value->as<QV4::FunctionObject>()
         && !value->as<QV4::ArrayObject>()) {
-        QVariant v = scope.engine->toVariant(value, QMetaType::UnknownType);
+        QVariant v = scope.engine->toVariant(value, QMetaType {});
         if (v.isValid()) {
             switch (v.userType()) {
             case QMetaType::QVector3D:

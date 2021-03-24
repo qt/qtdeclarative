@@ -1433,7 +1433,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_fillStyle(const QV4::FunctionOb
     QV4::ScopedValue value(scope, argc ? argv[0] : QV4::Value::undefinedValue());
 
    if (value->as<Object>()) {
-       QColor color = scope.engine->toVariant(value, qMetaTypeId<QColor>()).value<QColor>();
+       QColor color = scope.engine->toVariant(value, QMetaType::fromType<QColor>()).value<QColor>();
        if (color.isValid()) {
            r->d()->context()->state.fillStyle = color;
            r->d()->context()->buffer()->setFillStyle(color);
@@ -1542,7 +1542,7 @@ QV4::ReturnedValue QQuickJSContext2D::method_set_strokeStyle(const QV4::Function
     QV4::ScopedValue value(scope, argc ? argv[0] : QV4::Value::undefinedValue());
 
     if (value->as<Object>()) {
-        QColor color = scope.engine->toVariant(value, qMetaTypeId<QColor>()).value<QColor>();
+        QColor color = scope.engine->toVariant(value, QMetaType::fromType<QColor>()).value<QColor>();
         if (color.isValid()) {
             r->d()->context()->state.strokeStyle = color;
             r->d()->context()->buffer()->setStrokeStyle(color);
@@ -1774,7 +1774,7 @@ QV4::ReturnedValue QQuickJSContext2DPrototype::method_createPattern(const QV4::F
     if (argc >= 2) {
         QV4::Scoped<QQuickContext2DStyle> pattern(scope, scope.engine->memoryManager->allocate<QQuickContext2DStyle>());
 
-        QColor color = scope.engine->toVariant(argv[0], qMetaTypeId<QColor>()).value<QColor>();
+        QColor color = scope.engine->toVariant(argv[0], QMetaType::fromType<QColor>()).value<QColor>();
         if (color.isValid()) {
             int patternMode = argv[1].toInt32();
             Qt::BrushStyle style = Qt::SolidPattern;
@@ -3588,7 +3588,7 @@ QV4::ReturnedValue QQuickContext2DStyle::gradient_proto_addColorStop(const QV4::
         QColor color;
 
         if (argv[1].as<Object>()) {
-            color = scope.engine->toVariant(argv[1], qMetaTypeId<QColor>()).value<QColor>();
+            color = scope.engine->toVariant(argv[1], QMetaType::fromType<QColor>()).value<QColor>();
         } else {
             color = qt_color_from_string(argv[1]);
         }

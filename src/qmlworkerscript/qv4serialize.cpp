@@ -264,7 +264,7 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, ExecutionEngine
             return;
         }
 #endif
-        const QVariant variant = engine->toVariant(v, QMetaType::QUrl, false);
+        const QVariant variant = engine->toVariant(v, QMetaType::fromType<QUrl>(), false);
         if (variant.userType() == QMetaType::QUrl) {
             serializeString(data, variant.value<QUrl>().toString(), WorkerUrl);
             return;

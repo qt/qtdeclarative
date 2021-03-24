@@ -265,7 +265,7 @@ static QVariant toSqlVariant(QV4::ExecutionEngine *engine, const QV4::ScopedValu
     // expects a null variant. (this is because of QTBUG-40880)
     if (value->isNull())
         return QVariant();
-    return engine->toVariant(value, /*typehint*/-1);
+    return engine->toVariant(value, /*typehint*/ QMetaType {});
 }
 
 static ReturnedValue qmlsqldatabase_executeSql(const FunctionObject *b, const Value *thisObject, const Value *argv, int argc)

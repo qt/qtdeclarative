@@ -253,7 +253,7 @@ public:
 
         qsizetype count = size();
         const QMetaType valueMetaType = meta(d())->valueMetaType();
-        const QVariant element = engine()->toVariant(value, valueMetaType.id(), false);
+        const QVariant element = engine()->toVariant(value, valueMetaType, false);
 
         if (index == count) {
             append(element);
@@ -680,7 +680,7 @@ QVariant SequencePrototype::toVariant(const QV4::Value &array, int typeHint, boo
         QV4::ScopedValue v(scope);
         for (quint32 i = 0; i < length; ++i) {
             const QMetaType valueMetaType = meta->valueMetaType();
-            QVariant variant = scope.engine->toVariant(a->get(i), valueMetaType.id(), false);
+            QVariant variant = scope.engine->toVariant(a->get(i), valueMetaType, false);
             if (variant.metaType() != valueMetaType && !variant.convert(valueMetaType))
                 variant = QVariant(valueMetaType);
             meta->addValueAtEnd(result.data(), variant.constData());

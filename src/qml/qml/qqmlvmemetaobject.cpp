@@ -1062,7 +1062,7 @@ QVariant QQmlVMEMetaObject::readPropertyAsVariant(int id) const
         const QV4::VariantObject *v = (md->data() + id)->as<QV4::VariantObject>();
         if (v)
             return v->d()->data();
-        return engine->toVariant(*(md->data() + id), -1);
+        return engine->toVariant(*(md->data() + id), QMetaType {});
     }
     return QVariant();
 }

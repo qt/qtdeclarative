@@ -413,7 +413,8 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
     QQmlEngine *qmlEngine = engine();
     QV4::ExecutionEngine *v4engine = qmlEngine->handle();
 
-    const int type = valueTypeData.isValid() ? valueTypeData.propType().id() : core.propType().id();
+    const QMetaType metaType = valueTypeData.isValid() ? valueTypeData.propType() : core.propType();
+    const int type = metaType.id();
 
     QQmlJavaScriptExpression::DeleteWatcher watcher(this);
 
@@ -422,13 +423,13 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
 
     if (isUndefined) {
     } else if (core.isQList()) {
-        value = v4engine->toVariant(result, qMetaTypeId<QList<QObject *> >());
+        value = v4engine->toVariant(result, QMetaType::fromType<QList<QObject *> >());
     } else if (result.isNull() && core.isQObject()) {
         value = QVariant::fromValue((QObject *)nullptr);
     } else if (core.propType().id() == qMetaTypeId<QList<QUrl> >()) {
-        value = QQmlPropertyPrivate::urlSequence(v4engine->toVariant(result, qMetaTypeId<QList<QUrl>>()));
-    } else if (!isVarProperty && type != qMetaTypeId<QJSValue>()) {
-        value = v4engine->toVariant(result, type);
+        value = QQmlPropertyPrivate::urlSequence(v4engine->toVariant(result, QMetaType::fromType<QList<QUrl>>()));
+    } else if (!isVarProperty && metaType != QMetaType::fromType<QJSValue>()) {
+        value = v4engine->toVariant(result, metaType);
     }
 
     if (hasError()) {
@@ -448,9 +449,9 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
     } else if (isUndefined && core.isResettable()) {
         void *args[] = { nullptr };
         QMetaObject::metacall(m_target.data(), QMetaObject::ResetProperty, core.coreIndex(), args);
-    } else if (isUndefined && type == qMetaTypeId<QVariant>()) {
+    } else if (isUndefined && type == QMetaType::QVariant) {
         QQmlPropertyPrivate::writeValueProperty(m_target.data(), core, valueTypeData, QVariant(), context(), flags);
-    } else if (type == qMetaTypeId<QJSValue>()) {
+    } else if (metaType == QMetaType::fromType<QJSValue>()) {
         const QV4::FunctionObject *f = result.as<QV4::FunctionObject>();
         if (f && f->isBinding()) {
             delayedError()->setErrorDescription(QLatin1String("Invalid use of Qt.binding() in a binding declaration."));
@@ -526,7 +527,7 @@ QVariant QQmlBinding::evaluate()
 
     ep->dereferenceScarceResources();
 
-    return scope.engine->toVariant(result, qMetaTypeId<QList<QObject*> >());
+    return scope.engine->toVariant(result, QMetaType::fromType<QList<QObject*> >());
 }
 
 void QQmlBinding::expressionChanged()

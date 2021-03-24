@@ -627,7 +627,7 @@ void ListModel::set(int elementIndex, QV4::Object *object, QVector<int> *roles)
                 const ListLayout::Role &role = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::QObject);
                 if (role.type == ListLayout::Role::QObject)
                     roleIndex = e->setQObjectProperty(role, o);
-            } else if (QVariant maybeUrl = o->engine()->toVariant(o->asReturnedValue(), QMetaType::QUrl, true);
+            } else if (QVariant maybeUrl = o->engine()->toVariant(o->asReturnedValue(), QMetaType::fromType<QUrl>(), true);
                        maybeUrl.metaType() == QMetaType::fromType<QUrl>()) {
                 const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Url);
                 QUrl qurl = maybeUrl.toUrl();
@@ -719,7 +719,7 @@ void ListModel::set(int elementIndex, QV4::Object *object, ListModel::SetElement
                 if (r.type == ListLayout::Role::QObject)
                     e->setQObjectPropertyFast(r, o);
             } else {
-                QVariant maybeUrl = o->engine()->toVariant(o->asReturnedValue(), QMetaType::QUrl, true);
+                QVariant maybeUrl = o->engine()->toVariant(o->asReturnedValue(), QMetaType::fromType<QUrl>(), true);
                 if (maybeUrl.metaType() == QMetaType::fromType<QUrl>()) {
                     const QUrl qurl = maybeUrl.toUrl();
                     const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Url);
@@ -1554,7 +1554,7 @@ int ListElement::setJsProperty(const ListLayout::Role &role, const QV4::Value &d
         } else if (role.type == ListLayout::Role::VariantMap) {
             roleIndex = setVariantMapProperty(role, o);
         } else if (role.type == ListLayout::Role::Url) {
-            QVariant maybeUrl = o->engine()->toVariant(o.asReturnedValue(), QMetaType::QUrl, true);
+            QVariant maybeUrl = o->engine()->toVariant(o.asReturnedValue(), QMetaType::fromType<QUrl>(), true);
             if (maybeUrl.metaType() == QMetaType::fromType<QUrl>()) {
                 roleIndex = setUrlProperty(role, maybeUrl.toUrl());
             }
