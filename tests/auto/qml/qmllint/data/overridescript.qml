@@ -1,5 +1,4 @@
 import QtQml
-import QtTest
 import "testlogger.js" as TestLogger
 
 QtObject {

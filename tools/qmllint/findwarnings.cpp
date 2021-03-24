@@ -390,8 +390,13 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
 
 bool FindWarningVisitor::visit(QQmlJS::AST::IdentifierExpression *idexp)
 {
+    const QString name = idexp->name.toString();
+    if (name.front().isUpper() && m_importTypeLocationMap.contains(name)) {
+        m_usedTypes.insert(name);
+    }
+
     m_memberAccessChains[m_currentScope].append(
-                {{idexp->name.toString(), QString(), idexp->firstSourceLocation()}});
+                {{name, QString(), idexp->firstSourceLocation()}});
     m_fieldMemberBase = idexp;
     return true;
 }
@@ -487,6 +492,25 @@ bool FindWarningVisitor::check()
         }
         QScopedValueRollback<QQmlJSScope::Ptr> rollback(m_currentScope, outstandingConnection.scope);
         outstandingConnection.uiod->initializer->accept(this);
+    }
+
+    auto unusedImports = m_importLocations;
+    for (const QString &type : m_usedTypes) {
+        for (const auto &importLocation : m_importTypeLocationMap.values(type))
+            unusedImports.remove(importLocation);
+
+        // If there are no more unused imports left we can abort early
+        if (unusedImports.isEmpty())
+            break;
+    }
+
+    for (const auto &import : unusedImports) {
+        m_colorOut.writePrefixedMessage(
+                    QString::fromLatin1("Unused import at %1:%2:%3\n")
+                       .arg(m_filePath)
+                       .arg(import.startLine).arg(import.startColumn),
+                       Info);
+        CheckIdentifiers::printContext(m_code, &m_colorOut, import);
     }
 
     if (!m_warnUnqualified)
@@ -617,6 +641,7 @@ void FindWarningVisitor::endVisit(QQmlJS::AST::FieldMemberExpression *fieldMembe
 {
     using namespace QQmlJS::AST;
     ExpressionNode *base = fieldMember->base;
+
     while (auto *nested = cast<NestedExpression *>(base))
         base = nested->expression;
 
@@ -631,9 +656,17 @@ void FindWarningVisitor::endVisit(QQmlJS::AST::FieldMemberExpression *fieldMembe
 
 
         auto &chain = m_memberAccessChains[m_currentScope];
+
         Q_ASSERT(!chain.last().isEmpty());
+
+        const QString name = fieldMember->name.toString();
+        if (m_importTypeLocationMap.contains(name)) {
+            if (auto it = m_rootScopeImports.find(name); it != m_rootScopeImports.end() && !*(it))
+                m_usedTypes.insert(name);
+        }
+
         chain.last().append(FieldMember {
-                                fieldMember->name.toString(), type, fieldMember->identifierToken
+                                name, type, fieldMember->identifierToken
                             });
         m_fieldMemberBase = fieldMember;
     } else {

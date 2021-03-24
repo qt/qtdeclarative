@@ -38,7 +38,10 @@ class IssueLocationWithContext
 public:
     IssueLocationWithContext(const QString &code, const QQmlJS::SourceLocation &location) {
         int before = qMax(0,code.lastIndexOf(QLatin1Char('\n'), location.offset));
-        m_beforeText = QStringView{code}.mid(before + 1, int(location.offset - (before + 1)));
+
+        if (before != 0) before++;
+
+        m_beforeText = QStringView{code}.mid(before, int(location.offset - before));
         m_issueText = QStringView{code}.mid(location.offset, location.length);
         int after = code.indexOf(QLatin1Char('\n'), int(location.offset + location.length));
         m_afterText = QStringView{code}.mid(int(location.offset + location.length),
@@ -68,9 +71,11 @@ void CheckIdentifiers::printContext(
         const QString &code, ColorOutput *output, const QQmlJS::SourceLocation &location)
 {
     IssueLocationWithContext issueLocationWithContext { code, location };
-    output->write(issueLocationWithContext.beforeText().toString(), Normal);
+    if (const QString beforeText = issueLocationWithContext.beforeText().toString(); !beforeText.isEmpty())
+        output->write(beforeText, Normal);
     output->write(issueLocationWithContext.issueText().toString(), Error);
-    output->write(issueLocationWithContext.afterText().toString() + QLatin1Char('\n'), Normal);
+    if (const QString afterText = issueLocationWithContext.afterText().toString(); !afterText.isEmpty())
+        output->write(afterText + QLatin1Char('\n'), Normal);
     int tabCount = issueLocationWithContext.beforeText().count(QLatin1Char('\t'));
     output->write(QString::fromLatin1(" ").repeated(
                        issueLocationWithContext.beforeText().length() - tabCount)

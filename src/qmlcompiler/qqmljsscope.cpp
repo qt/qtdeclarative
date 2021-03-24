@@ -191,20 +191,29 @@ QQmlJSScope::findJSIdentifier(const QString &id) const
 }
 
 void QQmlJSScope::resolveTypes(const QQmlJSScope::Ptr &self,
-                               const QHash<QString, QQmlJSScope::ConstPtr> &contextualTypes)
+                               const QHash<QString, QQmlJSScope::ConstPtr> &contextualTypes,
+                               QSet<QString> *usedTypes)
 {
     auto findType = [&](const QString &name) -> QQmlJSScope::ConstPtr {
         auto type = contextualTypes.constFind(name);
-        if (type != contextualTypes.constEnd())
+
+        if (type != contextualTypes.constEnd()) {
+            if (usedTypes != nullptr)
+                usedTypes->insert(name);
             return *type;
+        }
 
         const auto colonColon = name.indexOf(QStringLiteral("::"));
         if (colonColon > 0) {
-            const auto outerType = contextualTypes.constFind(name.left(colonColon));
+            const QString outerTypeName = name.left(colonColon);
+            const auto outerType = contextualTypes.constFind(outerTypeName);
             if (outerType != contextualTypes.constEnd()) {
                 for (const auto &innerType : qAsConst((*outerType)->m_childScopes)) {
-                    if (innerType->m_internalName == name)
+                    if (innerType->m_internalName == name) {
+                        if (usedTypes != nullptr)
+                            usedTypes->insert(name);
                         return innerType;
+                    }
                 }
             }
         }
@@ -296,7 +305,7 @@ void QQmlJSScope::resolveTypes(const QQmlJSScope::Ptr &self,
         default:
             break;
         }
-        resolveTypes(childScope, contextualTypes);
+        resolveTypes(childScope, contextualTypes, usedTypes);
     }
 }
 

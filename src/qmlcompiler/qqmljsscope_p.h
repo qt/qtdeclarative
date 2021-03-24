@@ -270,7 +270,8 @@ public:
     }
 
     static void resolveTypes(const QQmlJSScope::Ptr &self,
-                             const QHash<QString, ConstPtr> &contextualTypes);
+                             const QHash<QString, ConstPtr> &contextualTypes,
+                             QSet<QString> *usedTypes = nullptr);
 
     void setSourceLocation(const QQmlJS::SourceLocation &sourceLocation)
     {

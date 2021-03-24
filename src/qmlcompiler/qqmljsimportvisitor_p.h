@@ -119,6 +119,14 @@ protected:
     QQmlJSScope::ConstPtr m_globalScope;
     QHash<QString, QQmlJSScope::ConstPtr> m_scopesById;
     QHash<QString, QQmlJSScope::ConstPtr> m_rootScopeImports;
+
+    // Maps all qmlNames to the source location of their import
+    QMultiHash<QString, QQmlJS::SourceLocation> m_importTypeLocationMap;
+    // Contains all import source locations (could be extracted from above but that is expensive)
+    QSet<QQmlJS::SourceLocation> m_importLocations;
+    // A set of all types that have been used during type resolution
+    QSet<QString> m_usedTypes;
+
     QQmlJSImporter *m_importer;
 
     QList<QQmlJS::DiagnosticMessage> m_errors;

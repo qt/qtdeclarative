@@ -270,13 +270,13 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
 
     m_currentScope->setAnnotations(parseAnnotations(definition->annotations));
 
-    QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports);
+    QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports, &m_usedTypes);
     return true;
 }
 
 void QQmlJSImportVisitor::endVisit(UiObjectDefinition *)
 {
-    QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports);
+    QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports, &m_usedTypes);
     leaveEnvironment();
 }
 
@@ -488,6 +488,14 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiEnumDeclaration *uied)
 
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
 {
+    auto addImportLocation = [this, import](const QString &name) {
+        if (m_importTypeLocationMap.contains(name)
+                && m_importTypeLocationMap.values(name).contains(import->firstSourceLocation()))
+            return;
+
+        m_importTypeLocationMap.insert(name, import->firstSourceLocation());
+        m_importLocations.insert(import->firstSourceLocation());
+    };
     // construct path
     QString prefix = QLatin1String("");
     if (import->asToken.isValid()) {
@@ -506,13 +514,17 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
                     const auto entry = m_importer->resourceFileMapper()->entry(
                                 QQmlJSResourceFileMapper::resourceFileFilter(absolute.mid(1)));
                     const auto scope = m_importer->importFile(entry.filePath);
-                    m_rootScopeImports.insert(
-                                prefix.isEmpty()
-                                    ? QFileInfo(entry.resourcePath).baseName()
-                                    : prefix,
-                                scope);
+                    const QString actualPrefix = prefix.isEmpty()
+                            ? QFileInfo(entry.resourcePath).baseName()
+                            : prefix;
+                    m_rootScopeImports.insert(actualPrefix, scope);
+
+                    addImportLocation(actualPrefix);
                 } else {
-                    m_rootScopeImports.insert(m_importer->importDirectory(absolute, prefix));
+                    const auto scopes = m_importer->importDirectory(absolute, prefix);
+                    m_rootScopeImports.insert(scopes);
+                    for (const QString &key : scopes.keys())
+                        addImportLocation(key);
                 }
             }
             return true;
@@ -520,10 +532,15 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
 
         QFileInfo path(absolute);
         if (path.isDir()) {
-            m_rootScopeImports.insert(m_importer->importDirectory(path.canonicalFilePath(), prefix));
+            const auto scopes = m_importer->importDirectory(path.canonicalFilePath(), prefix);
+            m_rootScopeImports.insert(scopes);
+            for (const QString &key : scopes.keys())
+                addImportLocation(key);
         } else if (path.isFile()) {
             const auto scope = m_importer->importFile(path.canonicalFilePath());
-            m_rootScopeImports.insert(prefix.isEmpty() ? scope->internalName() : prefix, scope);
+            const QString actualPrefix = prefix.isEmpty() ? scope->internalName() : prefix;
+            m_rootScopeImports.insert(actualPrefix, scope);
+            addImportLocation(actualPrefix);
         }
         return true;
     }
@@ -541,6 +558,8 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
                 path, prefix, import->version ? import->version->version : QTypeRevision(), import->firstSourceLocation());
 
     m_rootScopeImports.insert(imported);
+    for (const QString &key : imported.keys())
+        addImportLocation(key);
 
     m_errors.append(m_importer->takeWarnings());
     return true;
@@ -696,13 +715,13 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
 
     enterEnvironment(QQmlJSScope::QMLScope, name,
                      uiob->qualifiedTypeNameId->identifierToken);
-    QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports);
+    QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports, &m_usedTypes);
     return true;
 }
 
 void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
 {
-    QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports);
+    QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports, &m_usedTypes);
     const QQmlJSScope::ConstPtr childScope = m_currentScope;
     leaveEnvironment();
 
@@ -743,7 +762,7 @@ bool QQmlJSImportVisitor::visit(ESModule *module)
 
 void QQmlJSImportVisitor::endVisit(ESModule *)
 {
-    QQmlJSScope::resolveTypes(m_exportedRootScope, m_rootScopeImports);
+    QQmlJSScope::resolveTypes(m_exportedRootScope, m_rootScopeImports, &m_usedTypes);
 }
 
 bool QQmlJSImportVisitor::visit(Program *)
@@ -758,7 +777,7 @@ bool QQmlJSImportVisitor::visit(Program *)
 
 void QQmlJSImportVisitor::endVisit(Program *)
 {
-    QQmlJSScope::resolveTypes(m_exportedRootScope, m_rootScopeImports);
+    QQmlJSScope::resolveTypes(m_exportedRootScope, m_rootScopeImports, &m_usedTypes);
 }
 
 QT_END_NAMESPACE

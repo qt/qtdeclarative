@@ -1,4 +1,3 @@
-import QtQuick 2.12
 import Things 1.0
 
 Frame {

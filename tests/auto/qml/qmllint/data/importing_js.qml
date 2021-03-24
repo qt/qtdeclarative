@@ -3,4 +3,6 @@ import QtQuick
 
 Item {
     id: root
+
+    property var foo: JSTest.foo("Test")
 }
