@@ -184,7 +184,6 @@ ReturnedValue convertAndCall(
     types[0] = aotFunction->returnType;
     if (const qsizetype returnSize = types[0].sizeOf()) {
         Q_ALLOCA_ASSIGN(void, returnValue, returnSize);
-        types[0].construct(returnValue);
         values[0] = returnValue;
     } else {
         values[0] = nullptr;
@@ -227,15 +226,16 @@ void convertAndCall(ExecutionEngine *engine, const Value *thisObject,
     const QMetaType resultType = types[0];
     if (scope.hasException()) {
         // Clear the return value
-        resultType.destruct(result);
-        resultType.construct(result, nullptr);
+        resultType.construct(result);
     } else {
         // When the return type is QVariant, JS objects are to be returned as
         // QJSValue wrapped in QVariant. metaTypeFromJS unwraps them, unfortunately.
-        if (resultType == QMetaType::fromType<QVariant>())
-            *static_cast<QVariant *>(result) = scope.engine->toVariant(jsResult, QMetaType {});
-        else
+        if (resultType == QMetaType::fromType<QVariant>()) {
+            new (result) QVariant(scope.engine->toVariant(jsResult, QMetaType {}));
+        } else {
+            resultType.construct(result);
             scope.engine->metaTypeFromJS(jsResult, resultType, result);
+        }
     }
 }
 

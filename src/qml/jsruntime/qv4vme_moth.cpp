@@ -468,13 +468,9 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
 
     const QMetaType returnType = function->aotFunction->returnType;
     Q_ALLOCA_DECLARE(void, transformedResult);
-    if (frame->returnValue()) {
-        if (returnType == frame->returnType()) {
-            returnType.destruct(frame->returnValue());
-        } else {
-            Q_ASSERT(returnType.sizeOf() > 0);
-            Q_ALLOCA_ASSIGN(void, transformedResult, returnType.sizeOf());
-        }
+    if (frame->returnValue() && returnType != frame->returnType()) {
+        Q_ASSERT(returnType.sizeOf() > 0);
+        Q_ALLOCA_ASSIGN(void, transformedResult, returnType.sizeOf());
     }
 
     QQmlPrivate::AOTCompiledContext aotContext;
@@ -491,6 +487,8 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
                 transformedArguments ? transformedArguments : frame->argv());
 
     if (transformedResult) {
+        // Convert needs a pre-constructed target.
+        frame->returnType().construct(frame->returnValue());
         QMetaType::convert(returnType, transformedResult,
                            frame->returnType(), frame->returnValue());
         returnType.destruct(transformedResult);

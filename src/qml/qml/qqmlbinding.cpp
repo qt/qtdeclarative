@@ -255,7 +255,6 @@ protected:
             const auto size = returnType.sizeOf();
             if (Q_LIKELY(size > 0)) {
                 Q_ALLOCA_VAR(void, result, size);
-                returnType.construct(result);
                 const bool isUndefined = !evaluate(result, returnType);
                 if (canWrite())
                     error = !write(result, returnType, isUndefined, flags);
