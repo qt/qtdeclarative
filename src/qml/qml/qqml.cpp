@@ -730,6 +730,73 @@ bool QQmlPrivate::AOTCompiledContext::captureQmlContextPropertyLookup(uint index
     return true;
 }
 
+QObject *QQmlPrivate::AOTCompiledContext::loadQmlContextPropertyIdLookup(uint index) const
+{
+    QV4::Lookup *l = compilationUnit->runtimeLookups + index;
+    if (l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupIdObject) {
+        // Shortcut this to avoid the wrapping when returning from lookupIdObject().
+        if (!qmlContext)
+            return nullptr;
+
+        const auto context = QQmlContextData::get(qmlContext);
+        QQmlEnginePrivate *qmlEngine = QQmlEnginePrivate::get(context->engine());
+        const int objectId = l->qmlContextIdObjectLookup.objectId;
+
+        if (qmlEngine->propertyCapture)
+            qmlEngine->propertyCapture->captureProperty(context->idValueBindings(objectId));
+        return context->idValue(objectId);
+    }
+
+    QV4::Scope scope(engine->handle());
+    QV4::Scoped<QV4::QObjectWrapper> o(
+                scope, l->qmlContextPropertyGetter(l, scope.engine, nullptr));
+    return o ? o->object() : nullptr;
+}
+
+bool QQmlPrivate::AOTCompiledContext::getObjectLookup(
+        uint index, QObject *object, void *target, QMetaType type) const
+{
+    QV4::Lookup *l = compilationUnit->runtimeLookups + index;
+
+    if (!object) {
+        QString message = QStringLiteral("Cannot read property '%1' of null")
+                .arg(compilationUnit->runtimeStrings[l->nameIndex]->toQString());
+        engine->handle()->throwTypeError(message);
+        return false;
+    }
+
+    if (l->getter == QV4::QObjectWrapper::lookupGetter
+            && !QQmlData::wasDeleted(object)
+            && QQmlData::get(object)->propertyCache == l->qobjectLookup.propertyCache) {
+        QQmlPropertyData *property = l->qobjectLookup.propertyData;
+        if (property->propType() == type) {
+            // We can directly read the property into the target, without conversion.
+            if (!property->isConstant()) {
+                if (QQmlEngine *engine = qmlContext->engine()) {
+                    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
+                    if (ep->propertyCapture) {
+                        ep->propertyCapture->captureProperty(object, property->coreIndex(),
+                                                             property->notifyIndex());
+                    }
+                }
+            }
+            property->readProperty(object, target);
+            return true;
+        }
+    }
+
+    QV4::Scope scope(engine->handle());
+    QV4::ScopedValue o(scope, QV4::QObjectWrapper::wrap(scope.engine, object));
+    QV4::ScopedValue result(scope, l->getter(l, scope.engine, o));
+    if (type == QMetaType::fromType<QVariant>()) {
+        // Special case QVariant in order to retain JS objects.
+        // We don't want to convert JS arrays into QVariantList, for example.
+        *static_cast<QVariant *>(target) = scope.engine->toVariant(result, QMetaType {});
+        return true;
+    }
+    return scope.engine->metaTypeFromJS(result, type, target);
+}
+
 QJSValue QQmlPrivate::AOTCompiledContext::callQmlContextPropertyLookup(
         uint index, const QJSValueList &args) const
 {

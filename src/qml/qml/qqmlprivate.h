@@ -623,6 +623,12 @@ namespace QQmlPrivate
         // Run QQmlPropertyCapture::captureProperty() without retrieving the value.
         bool captureLookup(uint index, QObject *object) const;
         bool captureQmlContextPropertyLookup(uint index) const;
+
+        // Look up a context property of which we know it's a QObject
+        QObject *loadQmlContextPropertyIdLookup(uint index) const;
+
+        // Look up a property of which we know it belongs to a QObject, and write to target.
+        bool getObjectLookup(uint index, QObject *object, void *target, QMetaType type) const;
     };
 
     struct AOTCompiledFunction {
