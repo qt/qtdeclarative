@@ -388,7 +388,7 @@ QVariant QQmlSettingsPrivate::readProperty(const QMetaProperty &property) const
 {
     Q_Q(const QQmlSettings);
     QVariant var = property.read(q);
-    if (var.userType() == qMetaTypeId<QJSValue>())
+    if (var.metaType() == QMetaType::fromType<QJSValue>())
         var = var.value<QJSValue>().toVariant();
     return var;
 }
