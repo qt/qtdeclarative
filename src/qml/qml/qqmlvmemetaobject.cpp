@@ -650,7 +650,7 @@ QVector<QQmlGuard<QObject>> *QQmlVMEMetaObject::readPropertyAsList(int id) const
 
     QV4::Scope scope(engine);
     QV4::Scoped<QV4::VariantObject> v(scope, *(md->data() + id));
-    if (!v || (int)v->d()->data().userType() != qMetaTypeId<QVector<QQmlGuard<QObject>> >()) {
+    if (!v || v->d()->data().metaType() != QMetaType::fromType<QVector<QQmlGuard<QObject>>>()) {
         QVariant variant(QVariant::fromValue(QVector<QQmlGuard<QObject>>()));
         v = engine->newVariantObject(variant);
         md->set(engine, id, v);
