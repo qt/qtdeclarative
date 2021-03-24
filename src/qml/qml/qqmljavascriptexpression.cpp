@@ -172,11 +172,6 @@ void QQmlJavaScriptExpression::setContext(const QQmlRefPointer<QQmlContextData> 
         context->addExpression(this);
 }
 
-QV4::Function *QQmlJavaScriptExpression::function() const
-{
-    return m_v4Function;
-}
-
 void QQmlJavaScriptExpression::refresh()
 {
 }
@@ -190,6 +185,75 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(bool *isUndefined)
     return evaluate(jsCall.callData(scope), isUndefined);
 }
 
+class QQmlJavaScriptExpressionCapture
+{
+    Q_DISABLE_COPY_MOVE(QQmlJavaScriptExpressionCapture)
+public:
+    QQmlJavaScriptExpressionCapture(QQmlJavaScriptExpression *expression, QQmlEngine *engine)
+        : watcher(expression)
+        , capture(engine, expression, &watcher)
+        , ep(QQmlEnginePrivate::get(engine))
+    {
+        Q_ASSERT(expression->notifyOnValueChanged() || expression->activeGuards.isEmpty());
+
+        lastPropertyCapture = ep->propertyCapture;
+        ep->propertyCapture = expression->notifyOnValueChanged() ? &capture : nullptr;
+
+        if (expression->notifyOnValueChanged())
+            capture.guards.copyAndClearPrepend(expression->activeGuards);
+    }
+
+    ~QQmlJavaScriptExpressionCapture()
+    {
+        if (capture.errorString) {
+            for (int ii = 0; ii < capture.errorString->count(); ++ii)
+                qWarning("%s", qPrintable(capture.errorString->at(ii)));
+            delete capture.errorString;
+            capture.errorString = nullptr;
+        }
+
+        while (QQmlJavaScriptExpressionGuard *g = capture.guards.takeFirst())
+            g->Delete();
+
+        if (!watcher.wasDeleted())
+            capture.expression->setTranslationsCaptured(capture.translationCaptured);
+
+        ep->propertyCapture = lastPropertyCapture;
+    }
+
+    bool catchException(const QV4::Scope &scope) const
+    {
+        if (scope.hasException()) {
+            if (watcher.wasDeleted())
+                scope.engine->catchException(); // ignore exception
+            else
+                capture.expression->delayedError()->catchJavaScriptException(scope.engine);
+            return true;
+        }
+
+        if (!watcher.wasDeleted() && capture.expression->hasDelayedError())
+            capture.expression->delayedError()->clearError();
+        return false;
+    }
+
+private:
+    QQmlJavaScriptExpression::DeleteWatcher watcher;
+    QQmlPropertyCapture capture;
+    QQmlEnginePrivate *ep;
+    QQmlPropertyCapture *lastPropertyCapture;
+};
+
+static inline QV4::ReturnedValue thisObject(QObject *scopeObject, QV4::ExecutionEngine *v4)
+{
+    if (scopeObject) {
+        // The result of wrap() can only be null, undefined, or an object.
+        const QV4::ReturnedValue scope = QV4::QObjectWrapper::wrap(v4, scopeObject);
+        if (QV4::Value::fromReturnedValue(scope).isManaged())
+            return scope;
+    }
+    return v4->globalObject->asReturnedValue();
+}
+
 QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, bool *isUndefined)
 {
     Q_ASSERT(m_context && m_context->engine());
@@ -201,69 +265,48 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, b
         return QV4::Encode::undefined();
     }
 
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(m_context->engine());
+    // All code that follows must check with watcher before it accesses data members
+    // incase we have been deleted.
+    QQmlEngine *qmlEngine = m_context->engine();
+    QQmlJavaScriptExpressionCapture capture(this, qmlEngine);
+
+    QV4::Scope scope(qmlEngine->handle());
+    callData->thisObject = thisObject(scopeObject(), scope.engine);
+
+    Q_ASSERT(m_qmlScope.valueRef());
+    QV4::ScopedValue result(scope, v4Function->call(
+            &(callData->thisObject.asValue<QV4::Value>()),
+            callData->argValues<QV4::Value>(), callData->argc(),
+            static_cast<QV4::ExecutionContext *>(m_qmlScope.valueRef())));
+
+    if (capture.catchException(scope)) {
+        if (isUndefined)
+            *isUndefined = true;
+    } else if (isUndefined) {
+        *isUndefined = result->isUndefined();
+    }
+
+    return result->asReturnedValue();
+}
+
+bool QQmlJavaScriptExpression::evaluate(void **a, QMetaType *types, int argc)
+{
+    Q_ASSERT(m_context && m_context->engine());
 
     // All code that follows must check with watcher before it accesses data members
     // incase we have been deleted.
-    DeleteWatcher watcher(this);
+    QQmlEngine *qmlEngine = m_context->engine();
+    QQmlJavaScriptExpressionCapture capture(this, qmlEngine);
 
-    Q_ASSERT(notifyOnValueChanged() || activeGuards.isEmpty());
-    QQmlPropertyCapture capture(m_context->engine(), this, &watcher);
-
-    QQmlPropertyCapture *lastPropertyCapture = ep->propertyCapture;
-    ep->propertyCapture = notifyOnValueChanged() ? &capture : nullptr;
-
-
-    if (notifyOnValueChanged())
-        capture.guards.copyAndClearPrepend(activeGuards);
-
-    QV4::ExecutionEngine *v4 = m_context->engine()->handle();
-    callData->thisObject = v4->globalObject;
-    if (scopeObject()) {
-         QV4::ReturnedValue scope = QV4::QObjectWrapper::wrap(v4, scopeObject());
-        if (QV4::Value::fromReturnedValue(scope).isObject())
-            callData->thisObject = scope;
-    }
+    QV4::Scope scope(qmlEngine->handle());
+    QV4::ScopedValue self(scope, thisObject(scopeObject(), scope.engine));
 
     Q_ASSERT(m_qmlScope.valueRef());
-    QV4::ReturnedValue res = v4Function->call(
-            &(callData->thisObject.asValue<QV4::Value>()),
-            callData->argValues<QV4::Value>(), callData->argc(),
-            static_cast<QV4::ExecutionContext *>(m_qmlScope.valueRef()));
-    QV4::Scope scope(v4);
-    QV4::ScopedValue result(scope, res);
+    Q_ASSERT(function());
+    function()->call(self, a, types, argc,
+                     static_cast<QV4::ExecutionContext *>(m_qmlScope.valueRef()));
 
-    if (scope.hasException()) {
-        if (watcher.wasDeleted())
-            scope.engine->catchException(); // ignore exception
-        else
-            delayedError()->catchJavaScriptException(scope.engine);
-        if (isUndefined)
-            *isUndefined = true;
-    } else {
-        if (isUndefined)
-            *isUndefined = result->isUndefined();
-
-        if (!watcher.wasDeleted() && hasDelayedError())
-            delayedError()->clearError();
-    }
-
-    if (capture.errorString) {
-        for (int ii = 0; ii < capture.errorString->count(); ++ii)
-            qWarning("%s", qPrintable(capture.errorString->at(ii)));
-        delete capture.errorString;
-        capture.errorString = nullptr;
-    }
-
-    while (QQmlJavaScriptExpressionGuard *g = capture.guards.takeFirst())
-        g->Delete();
-
-    if (!watcher.wasDeleted())
-        setTranslationsCaptured(capture.translationCaptured);
-
-    ep->propertyCapture = lastPropertyCapture;
-
-    return result->asReturnedValue();
+    return !capture.catchException(scope);
 }
 
 void QQmlPropertyCapture::captureProperty(QQmlNotifier *n)

@@ -116,6 +116,7 @@ public:
     void setBoundFunction(QV4::BoundFunction *boundFunction) {
         m_boundFunction.set(boundFunction->engine(), *boundFunction);
     }
+    bool hasBoundFunction() const { return m_boundFunction.valueRef(); }
 
     /**
      * This method returns a snapshot of the currently tracked dependencies of
@@ -138,6 +139,10 @@ protected:
                    const QV4::Value &result, bool isUndefined, QQmlPropertyData::WriteFlags flags);
 
     QV4::ReturnedValue evaluate(bool *isUndefined);
+    bool evaluate(void *result, QMetaType type)
+    {
+        return QQmlJavaScriptExpression::evaluate(&result, &type, 0);
+    }
 
 private:
     inline bool updatingFlag() const;

@@ -108,6 +108,7 @@ public:
 
     QV4::ReturnedValue evaluate(bool *isUndefined);
     QV4::ReturnedValue evaluate(QV4::CallData *callData, bool *isUndefined);
+    bool evaluate(void **a, QMetaType *types, int argc);
 
     inline bool notifyOnValueChanged() const;
 
@@ -135,7 +136,7 @@ public:
         *listHead = this;
     }
 
-    QV4::Function *function() const;
+    QV4::Function *function() const { return m_v4Function; }
 
     virtual void refresh();
 
@@ -207,6 +208,7 @@ private:
     friend class QQmlPropertyCapture;
     friend void QQmlJavaScriptExpressionGuard_callback(QQmlNotifierEndpoint *, void **);
     friend class QQmlTranslationBinding;
+    friend class QQmlJavaScriptExpressionCapture;
 
     // Not refcounted as the context will clear the expressions when destructed.
     QQmlContextData *m_context;
