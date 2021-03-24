@@ -142,8 +142,17 @@ public:
 
     // My containing QQmlContext.  If isInternal is true this owns publicContext.
     // If internal is false publicContext owns this.
-    QQmlContext *asQQmlContext();
-    QQmlContextPrivate *asQQmlContextPrivate();
+    QQmlContext *asQQmlContext()
+    {
+        if (!m_publicContext)
+            m_publicContext = new QQmlContext(*new QQmlContextPrivate(this));
+        return m_publicContext;
+    }
+
+    QQmlContextPrivate *asQQmlContextPrivate()
+    {
+        return QQmlContextPrivate::get(asQQmlContext());
+    }
 
     QObject *contextObject() const { return m_contextObject; }
     void setContextObject(QObject *contextObject) { m_contextObject = contextObject; }

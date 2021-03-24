@@ -1206,24 +1206,9 @@ Heap::Object *ExecutionEngine::newArrayIteratorObject(Object *o)
 
 Heap::QmlContext *ExecutionEngine::qmlContext() const
 {
-    if (!currentStackFrame)
-        return nullptr;
-    Heap::ExecutionContext *ctx = currentContext()->d();
-    Heap::ExecutionContext *outer = ctx->outer;
-
-    if (ctx->type != Heap::ExecutionContext::Type_QmlContext && !outer)
-        return nullptr;
-
-    while (outer && outer->type != Heap::ExecutionContext::Type_GlobalContext) {
-        ctx = outer;
-        outer = ctx->outer;
-    }
-
-    Q_ASSERT(ctx);
-    if (ctx->type != Heap::ExecutionContext::Type_QmlContext)
-        return nullptr;
-
-    return static_cast<Heap::QmlContext *>(ctx);
+    return currentStackFrame
+            ? static_cast<Heap::QmlContext *>(qmlContext(currentContext()->d()))
+            : nullptr;
 }
 
 QObject *ExecutionEngine::qmlScopeObject() const

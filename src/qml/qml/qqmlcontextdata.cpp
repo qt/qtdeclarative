@@ -302,18 +302,6 @@ QString QQmlContextData::findObjectId(const QObject *obj) const
     return QString();
 }
 
-QQmlContext *QQmlContextData::asQQmlContext()
-{
-    if (!m_publicContext)
-        m_publicContext = new QQmlContext(*new QQmlContextPrivate(this));
-    return m_publicContext;
-}
-
-QQmlContextPrivate *QQmlContextData::asQQmlContextPrivate()
-{
-    return QQmlContextPrivate::get(asQQmlContext());
-}
-
 void QQmlContextData::initFromTypeCompilationUnit(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit, int subComponentIndex)
 {
     m_typeCompilationUnit = unit;

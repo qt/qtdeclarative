@@ -478,8 +478,8 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
     }
 
     QQmlPrivate::AOTCompiledContext aotContext;
-    if (QV4::Heap::QmlContext *qmlContext = engine->qmlContext()) {
-        QV4::Heap::QQmlContextWrapper *wrapper = qmlContext->qml();
+    if (auto context = QV4::ExecutionEngine::qmlContext(frame->context()->d())) {
+        QV4::Heap::QQmlContextWrapper *wrapper = static_cast<Heap::QmlContext *>(context)->qml();
         aotContext.qmlScopeObject = wrapper->scopeObject;
         aotContext.qmlContext = wrapper->context->asQQmlContext();
     }

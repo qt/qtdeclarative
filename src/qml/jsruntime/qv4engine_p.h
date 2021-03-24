@@ -626,6 +626,25 @@ public:
     Heap::Object *newMapIteratorObject(Object *o);
     Heap::Object *newArrayIteratorObject(Object *o);
 
+    static Heap::ExecutionContext *qmlContext(Heap::ExecutionContext *ctx)
+    {
+        Heap::ExecutionContext *outer = ctx->outer;
+
+        if (ctx->type != Heap::ExecutionContext::Type_QmlContext && !outer)
+            return nullptr;
+
+        while (outer && outer->type != Heap::ExecutionContext::Type_GlobalContext) {
+            ctx = outer;
+            outer = ctx->outer;
+        }
+
+        Q_ASSERT(ctx);
+        if (ctx->type != Heap::ExecutionContext::Type_QmlContext)
+            return nullptr;
+
+        return ctx;
+    }
+
     Heap::QmlContext *qmlContext() const;
     QObject *qmlScopeObject() const;
     QQmlRefPointer<QQmlContextData> callingQmlContext() const;
