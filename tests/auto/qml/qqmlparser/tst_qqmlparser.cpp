@@ -140,7 +140,7 @@ struct TypeAnnotationObserver: public AST::Visitor
         AST::Node::accept(node, this);
     }
 
-    virtual bool visit(AST::TypeAnnotation *)
+    bool visit(AST::TypeAnnotation *) override
     {
         typeAnnotationSeen = true;
         return true;

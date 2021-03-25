@@ -39,32 +39,32 @@ public:
     {
     }
 
-    virtual void showInputPanel()
+    void showInputPanel() override
     {
         m_visible = true;
         m_showInputPanelCallCount++;
     }
-    virtual void hideInputPanel()
+    void hideInputPanel() override
     {
         m_visible = false;
         m_hideInputPanelCallCount++;
     }
-    virtual bool isInputPanelVisible() const
+    bool isInputPanelVisible() const override
     {
         return m_visible;
     }
-    virtual void invokeAction(QInputMethod::Action action, int cursorPosition)
+    void invokeAction(QInputMethod::Action action, int cursorPosition) override
     {
         m_invokeActionCallCount++;
         m_action = action;
         m_cursorPosition = cursorPosition;
     }
-    virtual void update(Qt::InputMethodQueries)
+    void update(Qt::InputMethodQueries) override
     {
         m_updateCallCount++;
     }
 
-    virtual QLocale locale() const
+    QLocale locale() const override
     {
         if (m_direction == Qt::RightToLeft)
             return QLocale(QLocale::Arabic);
@@ -72,7 +72,7 @@ public:
             return QLocale(QLocale::English);
     }
 
-    virtual Qt::LayoutDirection inputDirection() const
+    Qt::LayoutDirection inputDirection() const override
     {
         return m_direction;
     }

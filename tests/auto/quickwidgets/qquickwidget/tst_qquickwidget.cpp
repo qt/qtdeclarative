@@ -687,7 +687,7 @@ public:
     }
 
 private:
-    virtual void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &/*oldGeometry*/) override
+    void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &/*oldGeometry*/) override
     {
         auto window = QQuickItemPrivate::get(this)->window;
         if (!window)

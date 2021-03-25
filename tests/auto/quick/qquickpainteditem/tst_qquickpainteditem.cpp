@@ -68,13 +68,13 @@ public:
     {
     }
 
-    void paint(QPainter *painter)
+    void paint(QPainter *painter) override
     {
         ++paintRequests;
         clipRect = painter->clipBoundingRect();
     }
 #if QT_CONFIG(opengl)
-    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data)
+    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *data) override
     {
         paintNode = static_cast<QSGDefaultPainterNode *>(QQuickPaintedItem::updatePaintNode(oldNode, data));
         return paintNode;

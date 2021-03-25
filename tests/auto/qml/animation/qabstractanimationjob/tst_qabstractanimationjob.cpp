@@ -54,10 +54,10 @@ class TestableQAbstractAnimation : public QAbstractAnimationJob
 {
 public:
     TestableQAbstractAnimation() {}
-    virtual ~TestableQAbstractAnimation() {};
+    ~TestableQAbstractAnimation() override {};
 
-    int duration() const { return m_duration; }
-    virtual void updateCurrentTime(int) {}
+    int duration() const override { return m_duration; }
+    void updateCurrentTime(int) override {}
 
     void setDuration(int duration) { m_duration = duration; }
 private:
@@ -67,8 +67,8 @@ private:
 class DummyQAnimationGroup : public QAnimationGroupJob
 {
 public:
-    int duration() const { return 10; }
-    virtual void updateCurrentTime(int) {}
+    int duration() const override { return 10; }
+    void updateCurrentTime(int) override {}
 };
 
 void tst_QAbstractAnimationJob::construction()

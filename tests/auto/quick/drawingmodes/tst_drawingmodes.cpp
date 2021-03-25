@@ -92,7 +92,7 @@ protected:
     QSGGeometry second;
     QSGFlatColorMaterial material;
 
-    virtual QSGNode *updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
+     QSGNode *updatePaintNode(QSGNode *node, UpdatePaintNodeData *) override
     {
         if (!node) {
             QRect bounds(0, 0, 200, 200);

@@ -3672,7 +3672,7 @@ public:
     {
         nbPaint = 0;
     }
-    virtual QSGNode *updatePaintNode(QSGNode *node, UpdatePaintNodeData *data)
+    QSGNode *updatePaintNode(QSGNode *node, UpdatePaintNodeData *data) override
     {
        nbPaint++;
        return QQuickTextInput::updatePaintNode(node, data);
@@ -6713,8 +6713,8 @@ class TestValidator : public QValidator
 public:
     TestValidator(QObject *parent = nullptr) : QValidator(parent) { }
 
-    State validate(QString &input, int &) const { return input == QStringLiteral("ok") ? Acceptable : Intermediate; }
-    void fixup(QString &input) const { input = QStringLiteral("ok"); }
+    State validate(QString &input, int &) const override { return input == QStringLiteral("ok") ? Acceptable : Intermediate; }
+    void fixup(QString &input) const override { input = QStringLiteral("ok"); }
 };
 
 void tst_qquicktextinput::fixup()

@@ -71,7 +71,7 @@ public:
 
     QColor color() const { return m_color; }
 
-    QSGNode *updatePaintNode(QSGNode *node, UpdatePaintNodeData *)
+    QSGNode *updatePaintNode(QSGNode *node, UpdatePaintNodeData *) override
     {
         delete node;
         node = new QSGNode;

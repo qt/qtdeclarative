@@ -804,8 +804,8 @@ public:
         endResetModel();
     }
 
-    QVariant data(const QModelIndex &, int) const { return QVariant(); }
-    int rowCount(const QModelIndex &) const { return 0; }
+    QVariant data(const QModelIndex &, int) const override { return QVariant(); }
+    int rowCount(const QModelIndex &) const override { return 0; }
 };
 
 

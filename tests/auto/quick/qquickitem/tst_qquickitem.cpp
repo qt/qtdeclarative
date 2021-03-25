@@ -142,7 +142,7 @@ public:
     int repolishLoopCount = 0;
 
 protected:
-    virtual void updatePolish() {
+    void updatePolish() override {
         wasPolished = true;
         if (repolishLoopCount > 0) {
             --repolishLoopCount;
@@ -164,8 +164,8 @@ public:
 
     bool focused;
 protected:
-    virtual void focusInEvent(QFocusEvent *) { Q_ASSERT(!focused); focused = true; }
-    virtual void focusOutEvent(QFocusEvent *) { Q_ASSERT(focused); focused = false; }
+    void focusInEvent(QFocusEvent *) override { Q_ASSERT(!focused); focused = true; }
+    void focusOutEvent(QFocusEvent *) override { Q_ASSERT(focused); focused = false; }
 };
 
 class tst_qquickitem : public QQmlDataTest
@@ -1560,15 +1560,15 @@ public:
     int hoverMoveCount;
     int hoverLeaveCount;
 protected:
-    virtual void hoverEnterEvent(QHoverEvent *event) {
+    void hoverEnterEvent(QHoverEvent *event) override {
         event->accept();
         ++hoverEnterCount;
     }
-    virtual void hoverMoveEvent(QHoverEvent *event) {
+    void hoverMoveEvent(QHoverEvent *event) override {
         event->accept();
         ++hoverMoveCount;
     }
-    virtual void hoverLeaveEvent(QHoverEvent *event) {
+    void hoverLeaveEvent(QHoverEvent *event) override {
         event->accept();
         ++hoverLeaveCount;
     }

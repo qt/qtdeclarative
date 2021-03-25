@@ -202,7 +202,7 @@ public:
     KeyTestItem(QQuickItem *parent=nullptr) : QQuickItem(parent), mKey(0) {}
 
 protected:
-    void keyPressEvent(QKeyEvent *e) {
+    void keyPressEvent(QKeyEvent *e) override {
         mKey = e->key();
 
         if (e->key() == Qt::Key_A)
@@ -211,7 +211,7 @@ protected:
             e->ignore();
     }
 
-    void keyReleaseEvent(QKeyEvent *e) {
+    void keyReleaseEvent(QKeyEvent *e) override {
         if (e->key() == Qt::Key_B)
             e->accept();
         else
@@ -225,7 +225,7 @@ public:
 class FocusEventFilter : public QObject
 {
 protected:
-    bool eventFilter(QObject *watched, QEvent *event) {
+    bool eventFilter(QObject *watched, QEvent *event) override {
         if ((event->type() == QEvent::FocusIn) ||  (event->type() == QEvent::FocusOut)) {
             QFocusEvent *focusEvent = static_cast<QFocusEvent *>(event);
             lastFocusReason = focusEvent->reason();
@@ -266,7 +266,7 @@ public:
     qreal holeRadius() const { return m_holeRadius; }
     void setHoleRadius(qreal radius) { m_holeRadius = radius; }
 
-    bool contains(const QPointF &point) const {
+    bool contains(const QPointF &point) const override {
         const qreal w = width();
         const qreal h = height();
         const qreal r = m_holeRadius;
@@ -288,10 +288,10 @@ public:
     }
 
 protected:
-    void hoverEnterEvent(QHoverEvent *) { m_isHovered = true; }
-    void hoverLeaveEvent(QHoverEvent *) { m_isHovered = false; }
-    void mousePressEvent(QMouseEvent *) { m_isPressed = true; }
-    void mouseReleaseEvent(QMouseEvent *) { m_isPressed = false; }
+    void hoverEnterEvent(QHoverEvent *) override { m_isHovered = true; }
+    void hoverLeaveEvent(QHoverEvent *) override { m_isHovered = false; }
+    void mousePressEvent(QMouseEvent *) override { m_isPressed = true; }
+    void mouseReleaseEvent(QMouseEvent *) override { m_isPressed = false; }
 
 private:
     bool m_isPressed;

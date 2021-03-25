@@ -92,7 +92,7 @@ public:
             *deleteWatch = true;
     }
 
-    QImage requestImage(const QString &id, QSize *size, const QSize& requestedSize)
+    QImage requestImage(const QString &id, QSize *size, const QSize& requestedSize) override
     {
         lastImageId = id;
 
@@ -129,7 +129,7 @@ public:
             *deleteWatch = true;
     }
 
-    QPixmap requestPixmap(const QString &id, QSize *size, const QSize& requestedSize)
+    QPixmap requestPixmap(const QString &id, QSize *size, const QSize& requestedSize) override
     {
         lastImageId = id;
 
@@ -401,7 +401,7 @@ class TestThreadProvider : public QQuickImageProvider
 
         ~TestThreadProvider() {}
 
-        QImage requestImage(const QString &id, QSize *size, const QSize& requestedSize)
+        QImage requestImage(const QString &id, QSize *size, const QSize& requestedSize) override
         {
             mutex.lock();
             if (!ok)
@@ -470,7 +470,7 @@ public:
     Q_SIGNAL void finished(QQuickTextureFactory *texture);
     TestImageResponseRunner(QMutex *lock, QWaitCondition *condition, bool *ok, const QString &id, const QSize &requestedSize)
         : m_lock(lock), m_condition(condition), m_ok(ok), m_id(id), m_requestedSize(requestedSize) {}
-    void run()
+    void run() override
     {
         m_lock->lock();
         if (!(*m_ok)) {
@@ -503,7 +503,7 @@ class TestImageResponse : public QQuickImageResponse
             pool->start(runnable);
         }
 
-        QQuickTextureFactory *textureFactory() const
+        QQuickTextureFactory *textureFactory() const override
         {
             return m_texture;
         }
@@ -531,7 +531,7 @@ class TestAsyncProvider : public QQuickAsyncImageProvider
 
         ~TestAsyncProvider() {}
 
-        QQuickImageResponse *requestImageResponse(const QString &id, const QSize &requestedSize)
+        QQuickImageResponse *requestImageResponse(const QString &id, const QSize &requestedSize) override
         {
             TestImageResponse *response = new TestImageResponse(&lock, &condition, &ok, id, requestedSize, &pool);
             return response;
@@ -594,7 +594,7 @@ class InstantAsyncImageResponse : public QQuickImageResponse
             emit finished();
         }
 
-        QQuickTextureFactory *textureFactory() const
+        QQuickTextureFactory *textureFactory() const override
         {
             return m_texture;
         }
@@ -611,7 +611,7 @@ class InstancAsyncProvider : public QQuickAsyncImageProvider
 
         ~InstancAsyncProvider() {}
 
-        QQuickImageResponse *requestImageResponse(const QString &id, const QSize &requestedSize)
+        QQuickImageResponse *requestImageResponse(const QString &id, const QSize &requestedSize) override
         {
             return new InstantAsyncImageResponse(id, requestedSize);
         }
@@ -696,7 +696,7 @@ public:
 
     ~WaitingAsyncProvider() {}
 
-    QQuickImageResponse *requestImageResponse(const QString & /* id */, const QSize & /* requestedSize */)
+    QQuickImageResponse *requestImageResponse(const QString & /* id */, const QSize & /* requestedSize */) override
     {
         auto response = new WaitingAsyncImageResponse(m_providerRemovedMutex, m_providerRemovedCond, m_providerRemoved, m_imageRequestedMutex, m_imageRequestedCondition, m_imageRequested);
         pool.start(response);

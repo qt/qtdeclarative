@@ -1800,8 +1800,8 @@ class Klazz : public QWidget,
     Q_OBJECT
 public:
     Klazz(QWidget *parent = nullptr) : QWidget(parent) { }
-    virtual QRectF boundingRect() const { return QRectF(); }
-    virtual void paint(QPainter*, const QStyleOptionGraphicsItem*, QWidget*) { }
+    QRectF boundingRect() const override { return QRectF(); }
+    void paint(QPainter*, const QStyleOptionGraphicsItem*, QWidget*) override { }
 };
 
 Q_DECLARE_METATYPE(Klazz*)
@@ -3476,7 +3476,7 @@ public:
 
     ThreadedTestEngine() {}
 
-    void run() {
+    void run() override {
         QJSEngine firstEngine;
         QJSEngine secondEngine;
         QJSValue value = firstEngine.evaluate("1");

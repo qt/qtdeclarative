@@ -211,7 +211,8 @@ public:
     QPointF lastMousePos;
     QInputDevice::Capabilities lastMouseCapabilityFlags;
 
-    void touchEvent(QTouchEvent *event) {
+    void touchEvent(QTouchEvent *event)  override
+    {
         if (!acceptTouchEvents) {
             event->ignore();
             return;
@@ -229,7 +230,8 @@ public:
         }
     }
 
-    void mousePressEvent(QMouseEvent *e) {
+    void mousePressEvent(QMouseEvent *e) override
+    {
         if (!acceptMouseEvents) {
             e->ignore();
             return;
@@ -239,7 +241,8 @@ public:
         lastMouseCapabilityFlags = e->device()->capabilities();
     }
 
-    void mouseMoveEvent(QMouseEvent *e) {
+    void mouseMoveEvent(QMouseEvent *e) override
+    {
         if (!acceptMouseEvents) {
             e->ignore();
             return;
@@ -250,7 +253,8 @@ public:
         lastMousePos = e->position().toPoint();
     }
 
-    void mouseReleaseEvent(QMouseEvent *e) {
+    void mouseReleaseEvent(QMouseEvent *e) override
+    {
         if (!acceptMouseEvents) {
             e->ignore();
             return;
@@ -260,12 +264,14 @@ public:
         lastMouseCapabilityFlags = e->device()->capabilities();
     }
 
-    void mouseUngrabEvent() {
+    void mouseUngrabEvent() override
+    {
         qCDebug(lcTests) << objectName();
         ++mouseUngrabEventCount;
     }
 
-    bool childMouseEventFilter(QQuickItem *item, QEvent *e) {
+    bool childMouseEventFilter(QQuickItem *item, QEvent *e) override
+    {
         qCDebug(lcTests) << objectName() << "filtering" << e << "ahead of delivery to" << item->metaObject()->className() << item->objectName();
         switch (e->type()) {
         case QEvent::MouseButtonPress:
@@ -295,7 +301,8 @@ int TestTouchItem::mouseReleaseNum = 0;
 class EventFilter : public QObject
 {
 public:
-    bool eventFilter(QObject *watched, QEvent *event) {
+    bool eventFilter(QObject *watched, QEvent *event) override
+    {
         Q_UNUSED(watched);
         events.append(event->type());
         return false;
@@ -312,7 +319,8 @@ public:
 
     int iterations;
 protected:
-    QSGNode* updatePaintNode(QSGNode *, UpdatePaintNodeData *){
+    QSGNode* updatePaintNode(QSGNode *, UpdatePaintNodeData *) override
+    {
         iterations++;
         update();
         return nullptr;
@@ -2513,7 +2521,8 @@ public:
     ~RenderJob() { ++deleted; }
     QQuickWindow::RenderStage stage;
     QList<QQuickWindow::RenderStage> *list;
-    void run() {
+    void run() override
+    {
         list->append(stage);
     }
     static int deleted;
@@ -2697,9 +2706,12 @@ public:
         setAcceptHoverEvents(true);
     }
 
-    void hoverEnterEvent(QHoverEvent *event) { hoverTimestamps << event->timestamp(); }
-    void hoverLeaveEvent(QHoverEvent *event) { hoverTimestamps << event->timestamp(); }
-    void hoverMoveEvent(QHoverEvent *event) { hoverTimestamps << event->timestamp(); }
+    void hoverEnterEvent(QHoverEvent *event) override
+    { hoverTimestamps << event->timestamp(); }
+    void hoverLeaveEvent(QHoverEvent *event) override
+    { hoverTimestamps << event->timestamp(); }
+    void hoverMoveEvent(QHoverEvent *event) override
+    { hoverTimestamps << event->timestamp(); }
 
     QList<ulong> hoverTimestamps;
 };
@@ -2892,19 +2904,19 @@ public:
         dropAccept = true;
     }
 
-    void dragEnterEvent(QDragEnterEvent *event)
+    void dragEnterEvent(QDragEnterEvent *event) override
     {
         event->setAccepted(enterAccept);
         event->setDropAction(enterDropAction);
     }
 
-    void dragMoveEvent(QDragMoveEvent *event)
+    void dragMoveEvent(QDragMoveEvent *event) override
     {
         event->setAccepted(moveAccept);
         event->setDropAction(moveDropAction);
     }
 
-    void dropEvent(QDropEvent *event)
+    void dropEvent(QDropEvent *event) override
     {
         event->setAccepted(dropAccept);
         event->setDropAction(dropDropAction);

@@ -105,7 +105,7 @@ public:
     }
     ~SingleRoleModel() {}
 
-    QHash<int,QByteArray> roleNames() const
+    QHash<int,QByteArray> roleNames() const override
     {
         QHash<int,QByteArray> roles;
         roles.insert(Qt::DisplayRole, m_role);
@@ -130,7 +130,7 @@ public:
         }
     }
 
-    QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const {
+    QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override {
         if (row < 0 || column != 0)
             return QModelIndex();
         Branch * const branch = branchForIndex(parent);
@@ -139,24 +139,24 @@ public:
                 : QModelIndex();
     }
 
-    QModelIndex parent(const QModelIndex &child) const {
+    QModelIndex parent(const QModelIndex &child) const override {
         Branch * const branch = static_cast<Branch *>(child.internalPointer());
         return branch->parent
                 ? createIndex(branch->parent->indexOf(branch), 0, branch->parent)
                 : QModelIndex();
     }
 
-    int rowCount(const QModelIndex &parent) const {
+    int rowCount(const QModelIndex &parent) const override {
         Branch * const branch = branchForIndex(parent);
         return branch ? branch->children.count() : 0;
     }
 
-    int columnCount(const QModelIndex &parent) const {
+    int columnCount(const QModelIndex &parent) const override {
         Branch * const branch = branchForIndex(parent);
         return branch ? 1 : 0;
     }
 
-    QVariant data(const QModelIndex &index, int role) const {
+    QVariant data(const QModelIndex &index, int role) const override {
         return index.isValid() && role == Qt::DisplayRole
                 ? static_cast<Branch *>(index.internalPointer())->children.at(index.row()).display
                 : QVariant();

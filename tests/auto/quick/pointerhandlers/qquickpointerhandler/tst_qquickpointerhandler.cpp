@@ -103,45 +103,45 @@ public:
         return (accept && (state != QEventPoint::State::Released)) ? (int)QPointingDevice::GrabExclusive : (int)NoGrab;
     }
 
-    void touchEvent(QTouchEvent *event)
+    void touchEvent(QTouchEvent *event) override
     {
         qCDebug(lcPointerTests) << event << "will accept?" << acceptTouch;
         for (auto &tp : event->points())
             eventList.append(Event(Event::TouchDestination, event->type(), tp.state(), grabTransition(acceptTouch, tp.state()), tp.position(), tp.scenePosition()));
         event->setAccepted(acceptTouch);
     }
-    void mousePressEvent(QMouseEvent *event)
+    void mousePressEvent(QMouseEvent *event) override
     {
         qCDebug(lcPointerTests) << event << "will accept?" << acceptMouse;
         eventList.append(Event(Event::MouseDestination, event->type(), QEventPoint::State::Pressed, grabTransition(acceptMouse, QEventPoint::State::Pressed), event->position().toPoint(), event->scenePosition()));
         event->setAccepted(acceptMouse);
     }
-    void mouseMoveEvent(QMouseEvent *event)
+    void mouseMoveEvent(QMouseEvent *event) override
     {
         qCDebug(lcPointerTests) << event << "will accept?" << acceptMouse;
         eventList.append(Event(Event::MouseDestination, event->type(), QEventPoint::State::Updated, grabTransition(acceptMouse, QEventPoint::State::Updated), event->position().toPoint(), event->scenePosition()));
         event->setAccepted(acceptMouse);
     }
-    void mouseReleaseEvent(QMouseEvent *event)
+    void mouseReleaseEvent(QMouseEvent *event) override
     {
         qCDebug(lcPointerTests) << event << "will accept?" << acceptMouse;
         eventList.append(Event(Event::MouseDestination, event->type(), QEventPoint::State::Released, grabTransition(acceptMouse, QEventPoint::State::Released), event->position().toPoint(), event->scenePosition()));
         event->setAccepted(acceptMouse);
     }
-    void mouseDoubleClickEvent(QMouseEvent *event)
+    void mouseDoubleClickEvent(QMouseEvent *event) override
     {
         qCDebug(lcPointerTests) << event << "will accept?" << acceptMouse;
         eventList.append(Event(Event::MouseDestination, event->type(), QEventPoint::State::Pressed, grabTransition(acceptMouse, QEventPoint::State::Pressed), event->position().toPoint(), event->scenePosition()));
         event->setAccepted(acceptMouse);
     }
 
-    void mouseUngrabEvent()
+    void mouseUngrabEvent() override
     {
         qCDebug(lcPointerTests);
         eventList.append(Event(Event::MouseDestination, QEvent::UngrabMouse, QEventPoint::State::Released, QPointingDevice::UngrabExclusive, QPoint(0,0), QPoint(0,0)));
     }
 
-    bool event(QEvent *event)
+    bool event(QEvent *event) override
     {
         qCDebug(lcPointerTests) << event;
         return QQuickItem::event(event);
@@ -154,7 +154,7 @@ public:
     bool acceptTouch;
     bool filterTouch; // when used as event filter
 
-    bool eventFilter(QObject *o, QEvent *event)
+    bool eventFilter(QObject *o, QEvent *event) override
     {
         qCDebug(lcPointerTests) << event << o;
         if (event->type() == QEvent::TouchBegin ||
@@ -249,7 +249,7 @@ private slots:
     void dynamicCreationInWindow();
 
 protected:
-    bool eventFilter(QObject *, QEvent *event)
+    bool eventFilter(QObject *, QEvent *event) override
     {
         QEventPoint::State tpState;
         switch (event->type()) {

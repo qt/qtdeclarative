@@ -51,7 +51,7 @@ class MyIC : public QObject, public QQmlIncubationController
 public:
     MyIC() { startTimer(5); }
 protected:
-    virtual void timerEvent(QTimerEvent*) {
+    void timerEvent(QTimerEvent*) override {
         incubateFor(5);
     }
 };

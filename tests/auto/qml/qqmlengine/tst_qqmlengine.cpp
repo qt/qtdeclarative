@@ -159,10 +159,10 @@ public:
     ImmediateReply() {
         setFinished(true);
     }
-    virtual qint64 readData(char* , qint64 ) {
+    qint64 readData(char* , qint64 ) override {
         return 0;
     }
-    virtual void abort() { }
+    void abort() override { }
 };
 
 class ImmediateManager : public QNetworkAccessManager {
@@ -433,7 +433,7 @@ public:
     }
 
 private:
-    virtual void timerEvent(QTimerEvent *)
+    void timerEvent(QTimerEvent *) override
     {
         incubateFor(1000);
     }
@@ -768,7 +768,7 @@ class CustomSelector : public QQmlAbstractUrlInterceptor
 {
 public:
     CustomSelector(const QUrl &base):m_base(base){}
-    virtual QUrl intercept(const QUrl &url, QQmlAbstractUrlInterceptor::DataType d)
+    QUrl intercept(const QUrl &url, QQmlAbstractUrlInterceptor::DataType d) override
     {
         if ((url.scheme() != QStringLiteral("file") && url.scheme() != QStringLiteral("qrc"))
             || url.path().contains("QtQml"))

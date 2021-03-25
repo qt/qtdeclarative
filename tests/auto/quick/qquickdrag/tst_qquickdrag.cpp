@@ -74,7 +74,7 @@ public:
         supportedActions = Qt::IgnoreAction;
     }
 
-    void dragEnterEvent(QDragEnterEvent *event)
+    void dragEnterEvent(QDragEnterEvent *event) override
     {
         ++enterEvents;
         position = event->position().toPoint();
@@ -84,7 +84,7 @@ public:
         event->setAccepted(accept);
     }
 
-    void dragMoveEvent(QDragMoveEvent *event)
+    void dragMoveEvent(QDragMoveEvent *event) override
     {
         ++moveEvents;
         position = event->position().toPoint();
@@ -94,13 +94,13 @@ public:
         event->setAccepted(accept);
     }
 
-    void dragLeaveEvent(QDragLeaveEvent *event)
+    void dragLeaveEvent(QDragLeaveEvent *event) override
     {
         ++leaveEvents;
         event->setAccepted(accept);
     }
 
-    void dropEvent(QDropEvent *event)
+    void dropEvent(QDropEvent *event) override
     {
         ++dropEvents;
         position = event->position().toPoint();
@@ -1044,28 +1044,28 @@ public:
     void setItem(QQuickItem *i) { item = i; }
 
 protected:
-    void dragEnterEvent(QDragEnterEvent *event)
+    void dragEnterEvent(QDragEnterEvent *event) override
     {
         TestDropTarget::dragEnterEvent(event);
         if (type == QEvent::DragEnter && enterEvents < 2)
             evaluate<void>(item, script);
     }
 
-    void dragMoveEvent(QDragMoveEvent *event)
+    void dragMoveEvent(QDragMoveEvent *event) override
     {
         TestDropTarget::dragMoveEvent(event);
         if (type == QEvent::DragMove && moveEvents < 2)
             evaluate<void>(item, script);
     }
 
-    void dragLeaveEvent(QDragLeaveEvent *event)
+    void dragLeaveEvent(QDragLeaveEvent *event) override
     {
         TestDropTarget::dragLeaveEvent(event);
         if (type == QEvent::DragLeave && leaveEvents < 2)
             evaluate<void>(item, script);
     }
 
-    void dropEvent(QDropEvent *event)
+    void dropEvent(QDropEvent *event) override
     {
         TestDropTarget::dropEvent(event);
         if (type == QEvent::Drop && dropEvents < 2)

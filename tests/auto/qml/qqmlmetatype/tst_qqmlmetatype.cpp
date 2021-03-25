@@ -128,7 +128,7 @@ class ValueSourceTestType : public QObject, public QQmlPropertyValueSource
     Q_OBJECT
     Q_INTERFACES(QQmlPropertyValueSource)
 public:
-    virtual void setTarget(const QQmlProperty &) {}
+    void setTarget(const QQmlProperty &) override {}
 };
 QML_DECLARE_TYPE(ValueSourceTestType);
 
@@ -137,8 +137,8 @@ class ValueInterceptorTestType : public QObject, public QQmlPropertyValueInterce
     Q_OBJECT
     Q_INTERFACES(QQmlPropertyValueInterceptor)
 public:
-    virtual void setTarget(const QQmlProperty &) {}
-    virtual void write(const QVariant &) {}
+    void setTarget(const QQmlProperty &) override {}
+    void write(const QVariant &) override {}
 };
 QML_DECLARE_TYPE(ValueInterceptorTestType);
 

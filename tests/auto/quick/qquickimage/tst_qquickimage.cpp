@@ -1018,7 +1018,7 @@ class TestQImageProvider : public QQuickImageProvider
 public:
     TestQImageProvider() : QQuickImageProvider(Image) {}
 
-    QImage requestImage(const QString &id, QSize *size, const QSize& requestedSize)
+    QImage requestImage(const QString &id, QSize *size, const QSize& requestedSize) override
     {
         Q_UNUSED(requestedSize);
         if (id == QLatin1String("first-image.png")) {
@@ -1186,7 +1186,7 @@ class MyInterceptor : public QQmlAbstractUrlInterceptor
 {
 public:
     MyInterceptor(QUrl url) : QQmlAbstractUrlInterceptor(), m_url(url) {}
-    QUrl intercept(const QUrl &url, QQmlAbstractUrlInterceptor::DataType)
+    QUrl intercept(const QUrl &url, QQmlAbstractUrlInterceptor::DataType) override
     {
         if (url.scheme() == "interceptthis")
             return m_url;

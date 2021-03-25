@@ -103,7 +103,7 @@ public:
     }
 
 protected:
-    virtual QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
+    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override
     {
         ClearNode *node = static_cast<ClearNode *>(oldNode);
         if (!node)
@@ -172,7 +172,7 @@ public:
     }
 
 protected:
-    virtual QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
+    QSGNode *updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *) override
     {
         MessUpNode *node = static_cast<MessUpNode *>(oldNode);
         if (!node)

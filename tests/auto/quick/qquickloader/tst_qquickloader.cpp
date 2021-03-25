@@ -63,11 +63,11 @@ public:
     bool incubated = false;
 
 protected:
-    virtual void timerEvent(QTimerEvent *) {
+    void timerEvent(QTimerEvent *) override {
         incubateFor(15);
     }
 
-    virtual void incubatingObjectCountChanged(int count) {
+    void incubatingObjectCountChanged(int count) override {
         if (count)
             incubated = true;
     }

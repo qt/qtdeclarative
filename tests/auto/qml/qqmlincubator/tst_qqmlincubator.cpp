@@ -368,7 +368,7 @@ void tst_qqmlincubator::setInitialState()
         MyIncubator(QQmlIncubator::IncubationMode mode)
         : QQmlIncubator(mode) {}
 
-        virtual void setInitialState(QObject *o) {
+        void setInitialState(QObject *o) override {
             QQmlProperty::write(o, "test2", 19);
             QQmlProperty::write(o, "testData1", 201);
         }
@@ -442,7 +442,7 @@ void tst_qqmlincubator::objectDeletionAfterInit()
         MyIncubator(QQmlIncubator::IncubationMode mode)
         : QQmlIncubator(mode), obj(nullptr) {}
 
-        virtual void setInitialState(QObject *o) {
+        void setInitialState(QObject *o) override {
             obj = o;
         }
 
@@ -487,7 +487,7 @@ public:
         MyIncubator(QQmlIncubator::IncubationMode mode, QObject *s)
         : QQmlIncubator(mode), switcher(s) {}
 
-        virtual void setInitialState(QObject *o) {
+        void setInitialState(QObject *o) override {
             if (o->objectName() == "switchMe")
                 connect(o, SIGNAL(switchMe()), switcher, SLOT(switchIt()));
         }
@@ -531,8 +531,8 @@ void tst_qqmlincubator::statusChanged()
 
         QList<int> statuses;
     protected:
-        virtual void statusChanged(Status s) { statuses << s; }
-        virtual void setInitialState(QObject *) { statuses << -1; }
+        void statusChanged(Status s) override { statuses << s; }
+        void setInitialState(QObject *) override { statuses << -1; }
     };
 
     {
@@ -762,7 +762,7 @@ void tst_qqmlincubator::chainedAsynchronousIfNested()
         : QQmlIncubator(AsynchronousIfNested), next(next), component(component), ctxt(ctxt) {}
 
     protected:
-        virtual void statusChanged(Status s) {
+        void statusChanged(Status s) override {
             if (s == Ready && next)
                 component->create(*next, nullptr, ctxt);
         }
@@ -836,7 +836,7 @@ void tst_qqmlincubator::chainedAsynchronousIfNestedOnCompleted()
         : QQmlIncubator(AsynchronousIfNested), next(next), component(component), ctxt(ctxt) {}
 
     protected:
-        virtual void statusChanged(Status s) {
+        void statusChanged(Status s) override {
             if (s == Ready && next) {
                 component->create(*next, nullptr, ctxt);
             }
@@ -969,7 +969,7 @@ void tst_qqmlincubator::chainedAsynchronousClear()
         : QQmlIncubator(AsynchronousIfNested), next(next), component(component), ctxt(ctxt) {}
 
     protected:
-        virtual void statusChanged(Status s) {
+        void statusChanged(Status s) override {
             if (s == Ready && next) {
                 component->create(*next, nullptr, ctxt);
             }
@@ -1079,7 +1079,7 @@ void tst_qqmlincubator::selfDelete()
         : QQmlIncubator(mode), done(done), status(status) {}
 
     protected:
-        virtual void statusChanged(Status s) {
+        void statusChanged(Status s) override {
             if (s == status) {
                 *done = true;
                 if (s == Ready) delete object();

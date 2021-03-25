@@ -77,8 +77,8 @@ public:
         : QQmlPropertyMap(this, /*parent*/nullptr)
     {}
 
-    virtual void classBegin() {}
-    virtual void componentComplete() {
+    void classBegin() override {}
+    void componentComplete() override {
         insert(QStringLiteral("lateProperty"), QStringLiteral("lateValue"));
     }
 
@@ -308,7 +308,7 @@ class MyPropertyMap : public QQmlPropertyMap
 {
     Q_OBJECT
 protected:
-    virtual QVariant updateValue(const QString &key, const QVariant &src)
+    QVariant updateValue(const QString &key, const QVariant &src) override
     {
         if (key == QLatin1String("key1")) {
             // 'key1' must be all uppercase
