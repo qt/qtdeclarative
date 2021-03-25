@@ -236,7 +236,7 @@ ColorOutput::~ColorOutput() = default;
 
  \a message will be printed as is. For instance, no line endings will be inserted.
  */
-void ColorOutput::write(const QString &message, int colorID)
+void ColorOutput::write(QStringView message, int colorID)
 {
     if (!d->isSilent())
         d->write(colorify(message, colorID));
@@ -279,7 +279,7 @@ void ColorOutput::writeUncolored(const QString &message)
  This is useful when the colored string is inserted into a translated string(dividing
  the string into several small strings prevents proper translation).
  */
-QString ColorOutput::colorify(const QString &message, int colorID) const
+QString ColorOutput::colorify(QStringView message, int colorID) const
 {
     Q_ASSERT_X(colorID == -1 || d->containsColor(colorID), Q_FUNC_INFO,
                qPrintable(QString::fromLatin1("There is no color registered by id %1")
@@ -295,7 +295,7 @@ QString ColorOutput::colorify(const QString &message, int colorID) const
 
         /* If DefaultColor is set, we don't want to color it. */
         if (color & DefaultColor)
-            return message;
+            return message.toString();
 
         const int foregroundCode = (color & ForegroundMask) >> ForegroundShift;
         const int backgroundCode = (color & BackgroundMask) >> BackgroundShift;
@@ -324,7 +324,7 @@ QString ColorOutput::colorify(const QString &message, int colorID) const
         return finalMessage;
     }
 
-    return message;
+    return message.toString();
 }
 
 /*!

@@ -104,10 +104,12 @@ public:
     void insertMapping(int colorID, ColorCode colorCode);
 
     void writeUncolored(const QString &message);
-    void write(const QString &message, int color = -1);
+    void write(QStringView message, int color = -1);
+    // handle QStringBuilder case
+    Q_WEAK_OVERLOAD void write(const QString &message, int color = -1) { write(QStringView(message), color); }
     void writePrefixedMessage(const QString &message, MessageColors type,
                               const QString &prefix = QString());
-    QString colorify(const QString &message, int color = -1) const;
+    QString colorify(QStringView message, int color = -1) const;
 
 private:
     QScopedPointer<ColorOutputPrivate> d;

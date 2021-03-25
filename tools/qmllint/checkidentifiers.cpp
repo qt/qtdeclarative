@@ -33,23 +33,35 @@
 #include <QtCore/qsharedpointer.h>
 #include <stack>
 
+/*!
+    \internal
+    Used to print the the line containing the location of a certain error
+ */
 class IssueLocationWithContext
 {
 public:
-    IssueLocationWithContext(const QString &code, const QQmlJS::SourceLocation &location) {
+    /*!
+       \internal
+       \param code: The whole text of a translation unit
+       \param location: The location where an error occurred.
+     */
+    IssueLocationWithContext(QStringView code, const QQmlJS::SourceLocation &location) {
         int before = qMax(0,code.lastIndexOf(QLatin1Char('\n'), location.offset));
 
         if (before != 0) before++;
 
-        m_beforeText = QStringView{code}.mid(before, int(location.offset - before));
-        m_issueText = QStringView{code}.mid(location.offset, location.length);
-        int after = code.indexOf(QLatin1Char('\n'), int(location.offset + location.length));
-        m_afterText = QStringView{code}.mid(int(location.offset + location.length),
-                                  int(after - (location.offset+location.length)));
+        m_beforeText = code.mid(before, location.offset - before);
+        m_issueText = code.mid(location.offset, location.length);
+        int after = code.indexOf(QLatin1Char('\n'), location.offset + location.length);
+        m_afterText = code.mid(location.offset + location.length,
+                                  after - (location.offset+location.length));
     }
 
+    // returns start of the line till first character of location
     QStringView beforeText() const { return m_beforeText; }
+    // returns the text at location
     QStringView issueText() const { return m_issueText; }
+    // returns any text after location until the end of the line is reached
     QStringView afterText() const { return m_afterText; }
 
 private:
@@ -71,10 +83,10 @@ void CheckIdentifiers::printContext(
         const QString &code, ColorOutput *output, const QQmlJS::SourceLocation &location)
 {
     IssueLocationWithContext issueLocationWithContext { code, location };
-    if (const QString beforeText = issueLocationWithContext.beforeText().toString(); !beforeText.isEmpty())
+    if (const QStringView beforeText = issueLocationWithContext.beforeText(); !beforeText.isEmpty())
         output->write(beforeText, Normal);
-    output->write(issueLocationWithContext.issueText().toString(), Error);
-    if (const QString afterText = issueLocationWithContext.afterText().toString(); !afterText.isEmpty())
+    output->write(issueLocationWithContext.issueText(), Error);
+    if (const QStringView afterText = issueLocationWithContext.afterText(); !afterText.isEmpty())
         output->write(afterText + QLatin1Char('\n'), Normal);
     int tabCount = issueLocationWithContext.beforeText().count(QLatin1Char('\t'));
     output->write(QString::fromLatin1(" ").repeated(
@@ -465,9 +477,9 @@ bool CheckIdentifiers::operator()(
                                 Warning, QStringLiteral("Note"));
                 }
                 IssueLocationWithContext issueLocationWithContext {m_code, location};
-                m_colorOut->write(issueLocationWithContext.beforeText().toString(), Normal);
+                m_colorOut->write(issueLocationWithContext.beforeText(), Normal);
                 m_colorOut->write(rootId + QLatin1Char('.'), Hint);
-                m_colorOut->write(issueLocationWithContext.issueText().toString(), Normal);
+                m_colorOut->write(issueLocationWithContext.issueText(), Normal);
                 m_colorOut->write(issueLocationWithContext.afterText() + QLatin1Char('\n'), Normal);
             } else if (jsId.has_value()
                        && jsId->kind == QQmlJSScope::JavaScriptIdentifier::Injected) {
