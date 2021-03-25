@@ -1613,6 +1613,13 @@ void tst_qquickitem::hoverEvent()
     item->setVisible(visible);
     item->setAcceptHoverEvents(acceptHoverEvents);
 
+    // Ensure that we don't get extra hover events delivered on the
+    // side, since it can affect the number of hover move events we receive below.
+    QQuickWindowPrivate::get(window)->deliveryAgentPrivate()->frameSynchronousHoverEnabled = false;
+    // And flush out any mouse events that might be queued up
+    // in QPA, since QTest::mouseMove() calls processEvents.
+    qGuiApp->processEvents();
+
     const QPoint outside(150, 150);
     const QPoint inside(50, 50);
     const QPoint anotherInside(51, 51);

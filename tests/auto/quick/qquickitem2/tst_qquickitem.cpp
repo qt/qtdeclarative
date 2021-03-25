@@ -3530,18 +3530,15 @@ void tst_QQuickItem::contains()
     foreach (const QPoint &point, points) {
         // check mouse hover
         QTest::mouseMove(window, point);
-        QTest::qWait(10);
-        QCOMPARE(hollowItem->isHovered(), insideTarget);
+        QTRY_COMPARE(hollowItem->isHovered(), insideTarget);
 
         // check mouse press
         QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, point);
-        QTest::qWait(10);
-        QCOMPARE(hollowItem->isPressed(), insideTarget);
+        QTRY_COMPARE(hollowItem->isPressed(), insideTarget);
 
         // check mouse release
         QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, point);
-        QTest::qWait(10);
-        QCOMPARE(hollowItem->isPressed(), false);
+        QTRY_COMPARE(hollowItem->isPressed(), false);
     }
 
     delete window;

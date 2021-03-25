@@ -158,6 +158,13 @@ void tst_HoverHandler::mouseAreaAndUnderlyingHoverHandler()
     QQuickHoverHandler *topSidebarHH = topSidebar->findChild<QQuickHoverHandler *>("topSidebarHH");
     QVERIFY(topSidebarHH);
 
+    // Ensure that we don't get extra hover events delivered on the
+    // side, since it can affect the number of hover move events we receive below.
+    QQuickWindowPrivate::get(window)->deliveryAgentPrivate()->frameSynchronousHoverEnabled = false;
+    // And flush out any mouse events that might be queued up
+    // in QPA, since QTest::mouseMove() calls processEvents.
+    qGuiApp->processEvents();
+
     QPoint buttonCenter(buttonMA->mapToScene(QPointF(buttonMA->width() / 2, buttonMA->height() / 2)).toPoint());
     QPoint rightOfButton(buttonMA->mapToScene(QPointF(buttonMA->width() + 2, buttonMA->height() / 2)).toPoint());
     QPoint outOfSidebar(topSidebar->mapToScene(QPointF(topSidebar->width() + 2, topSidebar->height() / 2)).toPoint());
