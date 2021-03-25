@@ -271,7 +271,7 @@ void tst_SceneGraph::manyWindows()
 }
 
 struct Sample {
-    Sample(int xx, int yy, qreal rr, qreal gg, qreal bb, qreal errorMargin = 0.05)
+    constexpr Sample(int xx, int yy, qreal rr, qreal gg, qreal bb, qreal errorMargin = 0.05)
         : x(xx)
         , y(yy)
         , r(rr)
@@ -280,8 +280,18 @@ struct Sample {
         , tolerance(errorMargin)
     {
     }
-    Sample(const Sample &o) : x(o.x), y(o.y), r(o.r), g(o.g), b(o.b), tolerance(o.tolerance) { }
-    Sample() : x(0), y(0), r(0), g(0), b(0), tolerance(0) { }
+    constexpr Sample(const Sample &o) : x(o.x), y(o.y), r(o.r), g(o.g), b(o.b), tolerance(o.tolerance) { }
+    constexpr Sample() : x(0), y(0), r(0), g(0), b(0), tolerance(0) { }
+    constexpr Sample &operator=(const Sample &o)
+    {
+        x = o.x;
+        y = o.y;
+        r = o.r;
+        g = o.g;
+        b = o.b;
+        tolerance = o.tolerance;
+        return *this;
+    }
 
     QString toString(const QImage &image) const {
         QColor color(image.pixel(x,y));
