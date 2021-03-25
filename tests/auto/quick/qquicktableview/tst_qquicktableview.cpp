@@ -118,6 +118,7 @@ private slots:
     void checkRowHeightProviderInvalidReturnValues();
     void checkRowHeightProviderNegativeReturnValue();
     void checkRowHeightProviderNotCallable();
+    void isColumnLoadedAndIsRowLoaded();
     void checkForceLayoutFunction();
     void checkForceLayoutEndUpDoingALayout();
     void checkForceLayoutDuringModelChange();
@@ -551,6 +552,26 @@ void tst_QQuickTableView::checkRowHeightProviderNotCallable()
 
     for (auto fxItem : tableViewPrivate->loadedItems)
         QCOMPARE(fxItem->item->height(), kDefaultRowHeight);
+}
+
+void tst_QQuickTableView::isColumnLoadedAndIsRowLoaded()
+{
+    // Check that all the delegate items are loaded and available from
+    // the columnWidthProvider/rowHeightProvider when 'isColumnLoaded()'
+    // and 'isRowLoaded()' returns true.
+    LOAD_TABLEVIEW("iscolumnloaded.qml");
+
+    auto model = TestModelAsVariant(4, 5);
+
+    tableView->setModel(model);
+
+    WAIT_UNTIL_POLISHED;
+
+    const int itemsInColumnAfterLoaded = view->rootObject()->property("itemsInColumnAfterLoaded").toInt();
+    const int itemsInRowAfterLoaded = view->rootObject()->property("itemsInRowAfterLoaded").toInt();
+
+    QCOMPARE(itemsInColumnAfterLoaded, tableView->rows());
+    QCOMPARE(itemsInRowAfterLoaded, tableView->columns());
 }
 
 void tst_QQuickTableView::checkForceLayoutFunction()

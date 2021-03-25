@@ -243,7 +243,16 @@
     height for that row. If you return a negative number, TableView calculates
     the height based on the delegate items.
 
-    \sa columnWidthProvider, {Row heights and column widths}
+    \note The rowHeightProvider will usually be called two times when
+    a row is about to load (or when doing layout). First, to know if
+    the row is visible and should be loaded. And second, to determine
+    the height of the row after all items have been loaded.
+    If you need to calculate the row height based on the size of the delegate
+    items, you need to wait for the second call, when all the items have been loaded.
+    You can check for this by calling \l isRowLoaded(row),
+    and simply return -1 if that is not yet the case.
+
+    \sa rowHeightProvider, isRowLoaded(row), {Row heights and column widths}
 */
 
 /*!
@@ -258,7 +267,16 @@
     width for that column. If you return a negative number, TableView
     calculates the width based on the delegate items.
 
-    \sa rowHeightProvider, {Row heights and column widths}
+    \note The columnWidthProvider will usually be called two times when
+    a column is about to load (or when doing layout). First, to know if
+    the column is visible and should be loaded. And second, to determine
+    the width of the column after all items have been loaded.
+    If you need to calculate the column width based on the size of the delegate
+    items, you need to wait for the second call, when all the items have been loaded.
+    You can check for this by calling \l isColumnLoaded(column),
+    and simply return -1 if that is not yet the case.
+
+    \sa rowHeightProvider, isColumnLoaded(), {Row heights and column widths}
 */
 
 /*!
@@ -426,6 +444,36 @@
     \code
     Component.onCompleted: positionViewAtCell(Qt.point(columns - 1, rows - 1), Qt.AlignRight | Qt.AlignBottom)
     \endcode
+*/
+
+/*!
+    \qmlmethod Item QtQuick::TableView::isColumnLoaded(int column)
+    \since 6.2
+
+    Returns \c true if the given \a column is loaded.
+
+    A column is loaded when TableView has loaded the delegate items
+    needed to show the column inside the view. This also usually means
+    that the column is visible for the user, but not always.
+
+    This function can be used whenever you need to iterate over the
+    delegate items for a column, e.g from a \l columnWidthProvider, to
+    be sure that the delegate items are available for iteration.
+*/
+
+/*!
+    \qmlmethod Item QtQuick::TableView::isRowLoaded(int row)
+    \since 6.2
+
+    Returns \c true if the given \a row is loaded.
+
+    A row is loaded when TableView has loaded the delegate items
+    needed to show the row inside the view. This also usually means
+    that the row is visible for the user, but not always.
+
+    This function can be used whenever you need to iterate over the
+    delegate items for a row, e.g from a \l rowHeightProvider, to
+    be sure that the delegate items are available for iteration.
 */
 
 /*!
@@ -3382,6 +3430,38 @@ QPoint QQuickTableView::cellAtPos(const QPointF &position, bool includeSpacing) 
     }
 
     return QPoint(foundColumn, foundRow);
+}
+
+bool QQuickTableView::isColumnLoaded(int column) const
+{
+    Q_D(const QQuickTableView);
+    if (!d->loadedColumns.contains(column))
+        return false;
+
+    if (d->rebuildState != QQuickTableViewPrivate::RebuildState::Done) {
+        // TableView is rebuilding, and none of the rows and columns
+        // are completely loaded until we reach the layout phase.
+        if (d->rebuildState < QQuickTableViewPrivate::RebuildState::LayoutTable)
+            return false;
+    }
+
+    return true;
+}
+
+bool QQuickTableView::isRowLoaded(int row) const
+{
+    Q_D(const QQuickTableView);
+    if (!d->loadedRows.contains(row))
+        return false;
+
+    if (d->rebuildState != QQuickTableViewPrivate::RebuildState::Done) {
+        // TableView is rebuilding, and none of the rows and columns
+        // are completely loaded until we reach the layout phase.
+        if (d->rebuildState < QQuickTableViewPrivate::RebuildState::LayoutTable)
+            return false;
+    }
+
+    return true;
 }
 
 void QQuickTableView::forceLayout()

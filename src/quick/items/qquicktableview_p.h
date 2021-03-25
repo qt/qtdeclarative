@@ -141,6 +141,9 @@ public:
     Q_INVOKABLE QPoint cellAtPos(const QPointF &position, bool includeSpacing = false) const;
     Q_INVOKABLE QPoint cellAtPos(qreal x, qreal y, bool includeSpacing = false) const;
 
+    Q_REVISION(6, 2) Q_INVOKABLE bool isColumnLoaded(int column) const;
+    Q_REVISION(6, 2) Q_INVOKABLE bool isRowLoaded(int row) const;
+
     static QQuickTableViewAttached *qmlAttachedProperties(QObject *);
 
 Q_SIGNALS:
