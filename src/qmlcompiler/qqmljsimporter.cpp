@@ -152,8 +152,12 @@ QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &path)
         }
 
         auto mo = qmlComponents.find(it.key());
-        if (mo == qmlComponents.end())
-            mo = qmlComponents.insert(it.key(), localFile2ScopeTree(filePath));
+        if (mo == qmlComponents.end()) {
+            QQmlJSScope::Ptr imported = localFile2ScopeTree(filePath);
+            if (it->singleton)
+                imported->setIsSingleton(true);
+            mo = qmlComponents.insert(it.key(), imported);
+        }
 
         (*mo)->addExport(it.key(), reader.typeNamespace(), it->version);
     }

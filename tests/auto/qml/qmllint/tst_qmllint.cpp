@@ -520,6 +520,11 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("Unused import at %1:1:1")
             << QString()
             << true;
+    QTest::newRow("TypePropertAccess")
+            << QStringLiteral("typePropertyAccess.qml")
+            << QString()
+            << QString()
+            << false;
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -537,6 +542,7 @@ void TestQmllint::dirtyQmlCode()
         QCOMPARE(process.exitStatus(), QProcess::NormalExit);
         QEXPECT_FAIL("anchors3", "We don't see that QQuickItem cannot be assigned to QQuickAnchorLine", Abort);
         QEXPECT_FAIL("nanchors1", "Invalid grouped properties are not always detected", Abort);
+        QEXPECT_FAIL("TypePropertAccess", "We cannot discern between types and instances", Abort);
 
         if (exitsNormally)
             QVERIFY(process.exitCode() == 0);
@@ -600,6 +606,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("duplicateQmldirImport") << QStringLiteral("qmldirImport/duplicate.qml");
     QTest::newRow("Used imports") << QStringLiteral("used.qml");
     QTest::newRow("Unused imports (multi)") << QStringLiteral("unused_multi.qml");
+    QTest::newRow("compositeSingleton") << QStringLiteral("compositesingleton.qml");
 }
 
 void TestQmllint::cleanQmlCode()

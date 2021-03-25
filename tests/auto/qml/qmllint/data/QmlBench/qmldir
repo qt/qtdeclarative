@@ -1,0 +1,3 @@
+module QmlBench
+singleton Globals 1.0 Globals.qml
+Locals 1.0 Locals.qml
