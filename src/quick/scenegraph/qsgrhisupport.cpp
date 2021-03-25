@@ -600,6 +600,8 @@ QRhi *QSGRhiSupport::createRhi(QQuickWindow *window, QOffscreenSurface *offscree
     }
 #else
     Q_UNUSED(offscreenSurface);
+    if (backend == QRhi::OpenGLES2)
+        qWarning("OpenGL was requested for Qt Quick, but this build of Qt has no OpenGL support.");
 #endif
 #if QT_CONFIG(vulkan)
     if (backend == QRhi::Vulkan) {
@@ -631,6 +633,9 @@ QRhi *QSGRhiSupport::createRhi(QQuickWindow *window, QOffscreenSurface *offscree
             rhi = QRhi::create(backend, &rhiParams, flags);
         }
     }
+#else
+    if (backend == QRhi::Vulkan)
+        qWarning("Vulkan was requested for Qt Quick, but this build of Qt has no Vulkan support.");
 #endif
 #ifdef Q_OS_WIN
     if (backend == QRhi::D3D11) {
