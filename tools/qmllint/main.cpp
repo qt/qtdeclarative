@@ -148,6 +148,12 @@ int main(int argv, char *argc[])
             QLatin1String("directory"));
     parser.addOption(qmlImportPathsOption);
 
+    QCommandLineOption qmlImportNoDefault(
+                QStringList() << "bare",
+                QLatin1String("Do not include default import directories or the current directory. "
+                              "This may be used to run qmllint on a project using a different Qt version."));
+    parser.addOption(qmlImportNoDefault);
+
     QCommandLineOption qmltypesFilesOption(
             QStringList() << "i"
                           << "qmltypes",
@@ -173,14 +179,17 @@ int main(int argv, char *argc[])
     bool warnWithStatement = !parser.isSet(disableCheckWithStatement);
     bool warnInheritanceCycle = !parser.isSet(disableCheckInheritanceCycle);
 
-    // use host qml import path as a sane default if nothing else has been provided
-    QStringList qmlImportPaths = parser.isSet(qmlImportPathsOption)
-            ? parser.values(qmlImportPathsOption)
+    // use host qml import path as a sane default if not explicitly disabled
+    QStringList qmlImportPaths = parser.isSet(qmlImportNoDefault)
+            ? QStringList {}
 #   ifndef QT_BOOTSTRAPPED
             : QStringList { QLibraryInfo::path(QLibraryInfo::QmlImportsPath), QDir::currentPath() };
 #   else
             : QStringList { QDir::currentPath() };
 #   endif
+
+    if (parser.isSet(qmlImportPathsOption))
+        qmlImportPaths << parser.values(qmlImportPathsOption);
 
     QStringList qmltypesFiles;
     if (parser.isSet(qmltypesFilesOption)) {
