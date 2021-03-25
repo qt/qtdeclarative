@@ -72,6 +72,7 @@ public:
     enum class Type {
         Null,
         NativeTexture,
+        NativeRenderbuffer,
         RhiRenderTarget
     };
 
@@ -85,6 +86,7 @@ public:
     };
     union {
         NativeTexture nativeTexture;
+        quint64 nativeRenderbufferObject;
         QRhiRenderTarget *rhiRt;
     } u;
 };

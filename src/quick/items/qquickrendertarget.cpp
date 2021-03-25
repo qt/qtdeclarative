@@ -163,6 +163,55 @@ QQuickRenderTarget QQuickRenderTarget::fromOpenGLTexture(uint textureId, const Q
 
     return rt;
 }
+
+/*!
+    \return a new QQuickRenderTarget referencing an OpenGL renderbuffer object
+    specified by \a renderbufferId.
+
+    The renderbuffer will be used as the color attachment for the internal
+    framebuffer object. This function is provided to allow targeting
+    renderbuffers that are created by the application with some external buffer
+    underneath, such as an EGLImageKHR. Once the application has called
+    \l{https://www.khronos.org/registry/OpenGL/extensions/OES/OES_EGL_image.txt}{glEGLImageTargetRenderbufferStorageOES},
+    the renderbuffer can be passed to this function.
+
+    \a pixelSize specifies the size of the image, in pixels.
+
+    \a sampleCount specific the number of samples. 0 or 1 means no
+    multisampling, while a value like 4 or 8 states that the native object is a
+    multisample renderbuffer.
+
+    \note the resulting QQuickRenderTarget does not own any native resources,
+    it merely contains references and the associated metadata of the size and
+    sample count. It is the caller's responsibility to ensure that the native
+    resource exists as long as necessary.
+
+    \since 6.2
+
+    \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
+ */
+QQuickRenderTarget QQuickRenderTarget::fromOpenGLRenderBuffer(uint renderbufferId, const QSize &pixelSize, int sampleCount)
+{
+    QQuickRenderTarget rt;
+    QQuickRenderTargetPrivate *d = QQuickRenderTargetPrivate::get(&rt);
+
+    if (!renderbufferId) {
+        qWarning("QQuickRenderTarget: renderbufferId is invalid");
+        return rt;
+    }
+
+    if (pixelSize.isEmpty()) {
+        qWarning("QQuickRenderTarget: Cannot create with empty size");
+        return rt;
+    }
+
+    d->type = QQuickRenderTargetPrivate::Type::NativeRenderbuffer;
+    d->pixelSize = pixelSize;
+    d->sampleCount = qMax(1, sampleCount);
+    d->u.nativeRenderbufferObject = renderbufferId;
+
+    return rt;
+}
 #endif
 
 /*!
@@ -348,6 +397,10 @@ bool QQuickRenderTarget::isEqual(const QQuickRenderTarget &other) const noexcept
                 || d->u.nativeTexture.layout != other.d->u.nativeTexture.layout)
             return false;
         break;
+    case QQuickRenderTargetPrivate::Type::NativeRenderbuffer:
+        if (d->u.nativeRenderbufferObject != other.d->u.nativeRenderbufferObject)
+            return false;
+        break;
     case QQuickRenderTargetPrivate::Type::RhiRenderTarget:
         if (d->u.rhiRt != other.d->u.rhiRt)
             return false;
@@ -355,6 +408,37 @@ bool QQuickRenderTarget::isEqual(const QQuickRenderTarget &other) const noexcept
     default:
         break;
     }
+
+    return true;
+}
+
+static bool createRhiRenderTarget(const QRhiColorAttachment &colorAttachment,
+                                  const QSize &pixelSize,
+                                  int sampleCount,
+                                  QRhi *rhi,
+                                  QQuickWindowRenderTarget *dst)
+{
+    std::unique_ptr<QRhiRenderBuffer> depthStencil(rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, pixelSize, sampleCount));
+    if (!depthStencil->create()) {
+        qWarning("Failed to build depth-stencil buffer for QQuickRenderTarget");
+        return false;
+    }
+
+    QRhiTextureRenderTargetDescription rtDesc(colorAttachment);
+    rtDesc.setDepthStencilBuffer(depthStencil.get());
+    std::unique_ptr<QRhiTextureRenderTarget> rt(rhi->newTextureRenderTarget(rtDesc));
+    std::unique_ptr<QRhiRenderPassDescriptor> rp(rt->newCompatibleRenderPassDescriptor());
+    rt->setRenderPassDescriptor(rp.get());
+
+    if (!rt->create()) {
+        qWarning("Failed to build texture render target for QQuickRenderTarget");
+        return false;
+    }
+
+    dst->renderTarget = rt.release();
+    dst->rpDesc = rp.release();
+    dst->depthStencil = depthStencil.release();
+    dst->owns = true; // ownership of the native resource itself is not transferred but the QRhi objects are on us now
 
     return true;
 }
@@ -369,36 +453,29 @@ bool QQuickRenderTargetPrivate::resolve(QRhi *rhi, QQuickWindowRenderTarget *dst
 
     case Type::NativeTexture:
     {
-        QRhiTexture *texture = rhi->newTexture(QRhiTexture::RGBA8, pixelSize, sampleCount, QRhiTexture::RenderTarget);
+        std::unique_ptr<QRhiTexture> texture(rhi->newTexture(QRhiTexture::RGBA8, pixelSize, sampleCount, QRhiTexture::RenderTarget));
         if (!texture->createFrom({ u.nativeTexture.object, u.nativeTexture.layout })) {
-            qWarning("Failed to build texture for QQuickRenderTarget");
+            qWarning("Failed to build wrapper texture for QQuickRenderTarget");
             return false;
         }
-        QRhiRenderBuffer *depthStencil = rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, pixelSize, sampleCount);
-        if (!depthStencil->create()) {
-            qWarning("Failed to build depth-stencil buffer for QQuickRenderTarget");
-            delete texture;
+        QRhiColorAttachment att(texture.get());
+        if (!createRhiRenderTarget(att, pixelSize, sampleCount, rhi, dst))
             return false;
-        }
+        dst->texture = texture.release();
+    }
+        return true;
 
-        QRhiColorAttachment att(texture);
-        QRhiTextureRenderTargetDescription rtDesc(att);
-        rtDesc.setDepthStencilBuffer(depthStencil);
-        QRhiTextureRenderTarget *rt = rhi->newTextureRenderTarget(rtDesc);
-        QRhiRenderPassDescriptor *rp = rt->newCompatibleRenderPassDescriptor();
-        rt->setRenderPassDescriptor(rp);
-        if (!rt->create()) {
-            qWarning("Failed to build texture render target for QQuickRenderTarget");
-            delete rp;
-            delete depthStencil;
-            delete texture;
+    case Type::NativeRenderbuffer:
+    {
+        std::unique_ptr<QRhiRenderBuffer> renderbuffer(rhi->newRenderBuffer(QRhiRenderBuffer::Color, pixelSize, sampleCount));
+        if (!renderbuffer->createFrom({ u.nativeRenderbufferObject })) {
+            qWarning("Failed to build wrapper renderbuffer for QQuickRenderTarget");
             return false;
         }
-        dst->renderTarget = rt;
-        dst->rpDesc = rp;
-        dst->texture = texture;
-        dst->depthStencil = depthStencil;
-        dst->owns = true; // ownership of the native resource itself is not transferred but the QRhi objects are on us now
+        QRhiColorAttachment att(renderbuffer.get());
+        if (!createRhiRenderTarget(att, pixelSize, sampleCount, rhi, dst))
+            return false;
+        dst->renderBuffer = renderbuffer.release();
     }
         return true;
 

@@ -491,6 +491,7 @@ void QQuickWindowRenderTarget::reset(QRhi *rhi, QSGRenderer *renderer)
             delete renderTarget;
             delete rpDesc;
             delete texture;
+            delete renderBuffer;
             delete depthStencil;
         }
     }
@@ -498,6 +499,7 @@ void QQuickWindowRenderTarget::reset(QRhi *rhi, QSGRenderer *renderer)
     renderTarget = nullptr;
     rpDesc = nullptr;
     texture = nullptr;
+    renderBuffer = nullptr;
     depthStencil = nullptr;
     owns = false;
 }

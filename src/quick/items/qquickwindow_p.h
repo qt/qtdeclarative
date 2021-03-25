@@ -114,6 +114,7 @@ public:
     QRhiRenderTarget *renderTarget = nullptr;
     QRhiRenderPassDescriptor *rpDesc = nullptr;
     QRhiTexture *texture = nullptr;
+    QRhiRenderBuffer *renderBuffer = nullptr;
     QRhiRenderBuffer *depthStencil = nullptr;
     bool owns = false;
 };
