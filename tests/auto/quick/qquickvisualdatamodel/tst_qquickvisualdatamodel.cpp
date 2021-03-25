@@ -4235,7 +4235,7 @@ void tst_qquickvisualdatamodel::invalidContext()
     QVERIFY(item);
     visualModel->release(item);
 
-    delete context.take();
+    context.reset();
 
     model.insertItem(4, "new item", "");
 
