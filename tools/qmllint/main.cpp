@@ -90,8 +90,12 @@ static bool lint_file(const QString &filename, const bool silent, const bool war
     if (success && !isJavaScript) {
         const auto check = [&](QQmlJSResourceFileMapper *mapper) {
             QQmlJSImporter importer(qmlImportPaths, mapper);
-            FindWarningVisitor v { &importer, qmltypesFiles, code, filename, silent,
-                                   warnUnqualified, warnWithStatement, warnInheritanceCycle };
+            FindWarningVisitor v { &importer, qmltypesFiles, code, filename, silent };
+
+            v.logger().setCategorySilent(Log_WithStatement, !warnWithStatement);
+            v.logger().setCategorySilent(Log_InheritanceCycle, !warnInheritanceCycle);
+            v.logger().setCategorySilent(Log_UnqualifiedAccess, !warnUnqualified);
+
             parser.rootNode()->accept(&v);
             success = v.check();
         };

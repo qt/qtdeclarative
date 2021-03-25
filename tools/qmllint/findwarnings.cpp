@@ -59,11 +59,8 @@ void FindWarningVisitor::checkInheritanceCycle(QQmlJSScope::ConstPtr scope)
                 if (!deprecation.reason.isEmpty())
                     message.append(QStringLiteral(" (Reason: %1)").arg(deprecation.reason));
 
-                m_errors.append({
-                                    message,
-                                    QtWarningMsg,
-                                    originalScope->sourceLocation()
-                });
+                m_logger.log(message, Log_Deprecation,  originalScope->sourceLocation()
+                );
             }
         }
 
@@ -75,15 +72,9 @@ void FindWarningVisitor::checkInheritanceCycle(QQmlJSScope::ConstPtr scope)
                 inheritenceCycle.append(seen->baseTypeName());
             }
 
-            if (m_warnInheritanceCycle) {
-                m_errors.append({
-                                    QStringLiteral("%1 is part of an inheritance cycle: %2\n")
-                                       .arg(scope->internalName())
-                                       .arg(inheritenceCycle),
-                                    QtWarningMsg,
-                                    QQmlJS::SourceLocation()
-                                });
-            }
+            m_logger.log(QStringLiteral("%1 is part of an inheritance cycle: %2\n")
+                         .arg(scope->internalName())
+                         .arg(inheritenceCycle), Log_InheritanceCycle);
 
             m_unknownImports.insert(scope->internalName());
             break;
@@ -96,12 +87,9 @@ void FindWarningVisitor::checkInheritanceCycle(QQmlJSScope::ConstPtr scope)
         } else if (auto newScope = scope->baseType()) {
             scope = newScope;
         } else {
-            m_errors.append({
-                                scope->baseTypeName() + QStringLiteral(
+            m_logger.log(scope->baseTypeName() + QStringLiteral(
                                         " was not found. Did you add all import paths?\n"),
-                                QtWarningMsg,
-                                QQmlJS::SourceLocation()
-                            });
+                                Log_Import);
             m_unknownImports.insert(scope->baseTypeName());
             break;
         }
@@ -118,15 +106,15 @@ void FindWarningVisitor::checkGroupedAndAttachedScopes(QQmlJSScope::ConstPtr sco
         case QQmlJSScope::GroupedPropertyScope:
         case QQmlJSScope::AttachedPropertyScope:
             if (!childScope->baseType()) {
-                m_errors.append({
-                                    QStringLiteral("unknown %1 property scope %2.")
-                                            .arg(type == QQmlJSScope::GroupedPropertyScope
-                                                    ? QStringLiteral("grouped")
-                                                    : QStringLiteral("attached"),
-                                            childScope->internalName()),
-                                    QtWarningMsg,
-                                    childScope->sourceLocation()
-                                });
+                m_logger.log(
+                            QStringLiteral("unknown %1 property scope %2.")
+                            .arg(type == QQmlJSScope::GroupedPropertyScope
+                                 ? QStringLiteral("grouped")
+                                 : QStringLiteral("attached"),
+                                 childScope->internalName()),
+                            Log_UnqualifiedAccess,
+                            childScope->sourceLocation()
+                            );
             }
             children.append(childScope->childScopes());
         default:
@@ -165,8 +153,8 @@ void FindWarningVisitor::checkDefaultProperty(const QQmlJSScope::ConstPtr &scope
         }
     }
     if (defaultPropertyName.isEmpty()) {
-        m_errors.append({ QStringLiteral("Cannot assign to non-existent default property"),
-                          QtWarningMsg, scope->sourceLocation() });
+        m_logger.log(QStringLiteral("Cannot assign to non-existent default property"),
+                     Log_Property, scope->sourceLocation() );
         return;
     }
 
@@ -179,9 +167,8 @@ void FindWarningVisitor::checkDefaultProperty(const QQmlJSScope::ConstPtr &scope
     if (m_scopeHasDefaultPropertyAssignment[scopeOfDefaultProperty] && !defaultProp.isList()) {
         // already has some object assigned to a default property and
         // this default property is not a list property
-        m_errors.append(
-                { QStringLiteral("Cannot assign multiple objects to a default non-list property"),
-                  QtWarningMsg, scope->sourceLocation() });
+        m_logger.log(QStringLiteral("Cannot assign multiple objects to a default non-list property"),
+                     Log_Property, scope->sourceLocation());
     }
     m_scopeHasDefaultPropertyAssignment[scopeOfDefaultProperty] = true;
 
@@ -195,8 +182,8 @@ void FindWarningVisitor::checkDefaultProperty(const QQmlJSScope::ConstPtr &scope
             return;
     }
 
-    m_errors.append({ QStringLiteral("Cannot assign to default property of incompatible type"),
-                      QtWarningMsg, scope->sourceLocation() });
+    m_logger.log(QStringLiteral("Cannot assign to default property of incompatible type"),
+                 Log_Property, scope->sourceLocation());
 }
 
 void FindWarningVisitor::throwRecursionDepthError()
@@ -232,16 +219,12 @@ bool FindWarningVisitor::visit(QQmlJS::AST::Block *block)
 
 bool FindWarningVisitor::visit(QQmlJS::AST::WithStatement *withStatement)
 {
-    if (m_warnWithStatement) {
-        m_errors.append({
-                            QStringLiteral(
-                                "with statements are strongly discouraged in QML "
+    m_logger.log(QStringLiteral(
+                     "with statements are strongly discouraged in QML "
                                 "and might cause false positives when analysing unqualified "
                                 "identifiers\n"),
-                            QtWarningMsg,
-                            withStatement->firstSourceLocation()
-                        });
-    }
+                 Log_WithStatement,
+                 withStatement->firstSourceLocation());
 
     return QQmlJSImportVisitor::visit(withStatement);
 }
@@ -295,37 +278,38 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
         }
 
         if (!qmlScope->hasProperty(name.toString())) {
-            m_errors.append({
-                                QStringLiteral("Binding assigned to \"%1\", but no property \"%1\" "
+            // TODO: Can this be in a better suited category?
+            m_logger.log(
+                        QStringLiteral("Binding assigned to \"%1\", but no property \"%1\" "
                                                "exists in the current element.\n").arg(name),
-                                QtWarningMsg,
-                                uisb->firstSourceLocation()
-                            });
+                        Log_Type,
+                        uisb->firstSourceLocation()
+                        );
             return true;
         }
 
         const auto property = qmlScope->property(name.toString());
         if (!property.type()) {
-            m_errors.append({
-                                QStringLiteral("No type found for property \"%1\". This may be due "
+            m_logger.log(
+                        QStringLiteral("No type found for property \"%1\". This may be due "
                                                "to a missing import statement or incomplete "
                                                "qmltypes files.\n").arg(name),
-                                QtWarningMsg,
-                                uisb->firstSourceLocation()
-                            });
+                        Log_Type,
+                        uisb->firstSourceLocation()
+                        );
         }
 
         return true;
     }
 
 
-    if (!qmlScope->hasMethod(signal) && m_warnUnqualified) {
-        m_errors.append({
-                            QStringLiteral("no matching signal found for handler \"%1\"\n")
-                               .arg(name.toString()),
-                            QtWarningMsg,
-                            uisb->firstSourceLocation()
-                        });
+    if (!qmlScope->hasMethod(signal)) {
+        m_logger.log(
+                    QStringLiteral("no matching signal found for handler \"%1\"\n")
+                    .arg(name.toString()),
+                    Log_UnqualifiedAccess,
+                    uisb->firstSourceLocation()
+                    );
         return true;
     }
 
@@ -352,13 +336,13 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
             for (FormalParameterList *formal = func->formals;
                  formal; ++i, formal = formal->next) {
                 if (i == end) {
-                    m_errors.append({
-                                        QStringLiteral("Signal handler for \"%2\" has more formal"
+                    m_logger.log(
+                                QStringLiteral("Signal handler for \"%2\" has more formal"
                                                        " parameters than the signal it handles.")
-                                                .arg(name),
-                                        QtWarningMsg,
-                                        uisb->firstSourceLocation()
-                                    });
+                                .arg(name),
+                                Log_Signal,
+                                uisb->firstSourceLocation()
+                                );
                 }
 
                 const QStringView handlerParameter = formal->element->bindingIdentifier;
@@ -366,14 +350,14 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
                 if (j == i || j < 0)
                     continue;
 
-                m_errors.append({
-                                    QStringLiteral("Parameter %1 to signal handler for \"%2\""
+                m_logger.log(
+                            QStringLiteral("Parameter %1 to signal handler for \"%2\""
                                                    " is called \"%3\". The signal has a parameter"
                                                    " of the same name in position %4.\n")
-                                            .arg(i + 1).arg(name, handlerParameter).arg(j + 1),
-                                    QtWarningMsg,
-                                    uisb->firstSourceLocation()
-                                });
+                            .arg(i + 1).arg(name, handlerParameter).arg(j + 1),
+                            Log_Signal,
+                            uisb->firstSourceLocation()
+                            );
             }
 
             return true;
@@ -403,26 +387,16 @@ bool FindWarningVisitor::visit(QQmlJS::AST::IdentifierExpression *idexp)
 
 FindWarningVisitor::FindWarningVisitor(
         QQmlJSImporter *importer, QStringList qmltypesFiles, QString code, QString fileName,
-        bool silent, bool warnUnqualified, bool warnWithStatement, bool warnInheritanceCycle)
+        bool silent)
     : QQmlJSImportVisitor(importer,
                           implicitImportDirectory(fileName, importer->resourceFileMapper()),
-                          qmltypesFiles),
+                          qmltypesFiles, m_filePath, m_code, silent),
       m_code(std::move(code)),
       m_rootId(QLatin1String("<id>")),
-      m_filePath(std::move(fileName)),
-      m_colorOut(silent),
-      m_warnUnqualified(warnUnqualified),
-      m_warnWithStatement(warnWithStatement),
-      m_warnInheritanceCycle(warnInheritanceCycle)
+      m_filePath(std::move(fileName))
 {
     m_currentScope->setInternalName("global");
 
-    // setup color output
-    m_colorOut.insertMapping(Error, ColorOutput::RedForeground);
-    m_colorOut.insertMapping(Warning, ColorOutput::PurpleForeground);
-    m_colorOut.insertMapping(Info, ColorOutput::BlueForeground);
-    m_colorOut.insertMapping(Normal, ColorOutput::DefaultColor);
-    m_colorOut.insertMapping(Hint, ColorOutput::GreenForeground);
     QLatin1String jsGlobVars[] = {
         /* Not listed on the MDN page; browser and QML extensions: */
         // console/debug api
@@ -449,36 +423,8 @@ FindWarningVisitor::FindWarningVisitor(
         m_currentScope->insertJSIdentifier(jsGlobVar, globalJavaScript);
 }
 
-static MessageColors messageColor(QtMsgType type)
-{
-    switch (type) {
-    case QtDebugMsg:
-        return Normal;
-    case QtWarningMsg:
-        return Warning;
-    case QtCriticalMsg:
-    case QtFatalMsg:
-        return Error;
-    case QtInfoMsg:
-        return Info;
-    }
-
-    return Normal;
-}
-
 bool FindWarningVisitor::check()
 {
-    for (const auto &error : qAsConst(m_errors)) {
-        if (error.loc.isValid()) {
-            m_colorOut.writePrefixedMessage(
-                        QStringLiteral("%1:%2: %3")
-                            .arg(error.loc.startLine).arg(error.loc.startColumn).arg(error.message),
-                        messageColor(error.type));
-        } else {
-            m_colorOut.writePrefixedMessage(error.message, messageColor(error.type));
-        }
-    }
-
     // now that all ids are known, revisit any Connections whose target were perviously unknown
     for (auto const &outstandingConnection: m_outstandingConnections) {
         auto targetScope = m_scopesById[outstandingConnection.targetName];
@@ -505,20 +451,17 @@ bool FindWarningVisitor::check()
     }
 
     for (const auto &import : unusedImports) {
-        m_colorOut.writePrefixedMessage(
+        m_logger.log(
                     QString::fromLatin1("Unused import at %1:%2:%3\n")
-                       .arg(m_filePath)
-                       .arg(import.startLine).arg(import.startColumn),
-                       Info);
-        CheckIdentifiers::printContext(m_code, &m_colorOut, import);
+                    .arg(m_filePath)
+                    .arg(import.startLine).arg(import.startColumn),
+                    Log_UnusedImport, import);
     }
 
-    if (!m_warnUnqualified)
-        return m_errors.isEmpty();
+    CheckIdentifiers check(&m_logger, m_code, m_rootScopeImports, m_filePath);
+    check(m_scopesById, m_signalHandlers, m_memberAccessChains, m_globalScope, m_rootId);
 
-    CheckIdentifiers check(&m_colorOut, m_code, m_rootScopeImports, m_filePath);
-    return check(m_scopesById, m_signalHandlers, m_memberAccessChains, m_globalScope, m_rootId)
-            && m_errors.isEmpty();
+    return !m_logger.hasWarnings() && !m_logger.hasErrors();
 }
 
 bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
@@ -617,8 +560,7 @@ void FindWarningVisitor::endVisit(QQmlJS::AST::UiObjectDefinition *uiod)
     auto childScope = m_currentScope;
     QQmlJSImportVisitor::endVisit(uiod);
 
-    if (m_warnUnqualified)
-        checkGroupedAndAttachedScopes(childScope);
+    checkGroupedAndAttachedScopes(childScope);
 
     if (m_currentScope == m_globalScope
             || m_currentScope->baseTypeName() == QStringLiteral("Component")) {

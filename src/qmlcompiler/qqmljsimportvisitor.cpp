@@ -39,11 +39,12 @@ using namespace QQmlJS::AST;
 
 QQmlJSImportVisitor::QQmlJSImportVisitor(
         QQmlJSImporter *importer, const QString &implicitImportDirectory,
-        const QStringList &qmltypesFiles)
+        const QStringList &qmltypesFiles, const QString &fileName, const QString &code, bool silent)
     : m_implicitImportDirectory(implicitImportDirectory)
     , m_qmltypesFiles(qmltypesFiles)
     , m_currentScope(QQmlJSScope::create(QQmlJSScope::JSFunctionScope))
     , m_importer(importer)
+    , m_logger(fileName, code, silent)
 {
     m_globalScope = m_currentScope;
     m_currentScope->setIsComposite(true);
@@ -107,12 +108,8 @@ void QQmlJSImportVisitor::resolveAliases()
             if (type.isNull()) {
                 if (doRequeue)
                     continue;
-                m_errors.append({
-                                    QStringLiteral("Cannot deduce type of alias \"%1\"")
-                                        .arg(property.propertyName()),
-                                    QtWarningMsg,
-                                    object->sourceLocation()
-                                });
+                m_logger.log(QStringLiteral("Cannot deduce type of alias \"%1\"")
+                                        .arg(property.propertyName()), Log_Alias, object->sourceLocation());
             }
 
             property.setType(type);
@@ -138,12 +135,10 @@ void QQmlJSImportVisitor::resolveAliases()
         for (const auto &property : properties) {
             if (!property.isAlias() || property.type())
                 continue;
-            m_errors.append({
-                                QStringLiteral("Alias \"%1\" is part of an alias cycle")
+           m_logger.log(QStringLiteral("Alias \"%1\" is part of an alias cycle")
                                     .arg(property.propertyName()),
-                                QtWarningMsg,
-                                object->sourceLocation()
-                            });
+                                Log_Alias,
+                                object->sourceLocation());
         }
     }
 }
@@ -179,7 +174,7 @@ void QQmlJSImportVisitor::importBaseModules()
         m_importer->importQmltypes(m_qmltypesFiles);
 
     m_rootScopeImports.insert(m_importer->importDirectory(m_implicitImportDirectory));
-    m_errors.append(m_importer->takeWarnings());
+    m_logger.processMessages(m_importer->takeWarnings(), Log_Import);
 }
 
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiProgram *)
@@ -314,12 +309,10 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
             if (const auto idExpression = cast<IdentifierExpression *>(node)) {
                 typeName.prepend(idExpression->name.toString());
             } else {
-                m_errors.append({
-                                    QStringLiteral("Invalid alias expression. Only IDs and field "
+                m_logger.log(QStringLiteral("Invalid alias expression. Only IDs and field "
                                                    "member expressions can be aliased."),
-                                    QtWarningMsg,
-                                    expression->firstSourceLocation()
-                                });
+                                Log_Alias,
+                                expression->firstSourceLocation());
             }
         }
         QQmlJSMetaProperty prop;
@@ -347,11 +340,9 @@ bool QQmlJSImportVisitor::visit(UiRequired *required)
 
     // The required property must be defined in some scope
     if (!m_currentScope->hasProperty(name)) {
-        m_errors.append({
-                            QStringLiteral("Property \"%1\" was marked as required but does not exist.").arg(name),
-                            QtFatalMsg,
-                            required->firstSourceLocation()
-                        });
+        m_logger.log(QStringLiteral("Property \"%1\" was marked as required but does not exist.").arg(name),
+                     Log_Required,
+                     required->firstSourceLocation());
         return true;
     }
 
@@ -561,17 +552,14 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
     for (const QString &key : imported.keys())
         addImportLocation(key);
 
-    m_errors.append(m_importer->takeWarnings());
+    m_logger.processMessages(m_importer->takeWarnings(), Log_Import);
     return true;
 }
 
 void QQmlJSImportVisitor::throwRecursionDepthError()
 {
-    m_errors.append({
-                        QStringLiteral("Maximum statement or expression depth exceeded"),
-                        QtCriticalMsg,
-                        QQmlJS::SourceLocation()
-                    });
+    m_logger.log(QStringLiteral("Maximum statement or expression depth exceeded"),
+                        Log_RecursionDepthError);
 }
 
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::ClassDeclaration *ast)

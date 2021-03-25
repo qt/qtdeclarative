@@ -41,10 +41,12 @@
 
 #include "qqmljsscope_p.h"
 #include "qqmljsannotation_p.h"
+#include "qqmljslogger_p.h"
 
 #include <private/qqmljsast_p.h>
 #include <private/qqmljsdiagnosticmessage_p.h>
 #include <private/qqmljsimporter_p.h>
+
 
 QT_BEGIN_NAMESPACE
 
@@ -53,10 +55,15 @@ class QQmlJSImportVisitor : public QQmlJS::AST::Visitor
 {
 public:
     QQmlJSImportVisitor(QQmlJSImporter *importer, const QString &implicitImportDirectory,
-                        const QStringList &qmltypesFiles = QStringList());
+                        const QStringList &qmltypesFiles = QStringList(), const QString &fileName = QString(), const QString &code = QString(), bool silent = true);
 
     QQmlJSScope::Ptr result() const;
-    QList<QQmlJS::DiagnosticMessage> errors() const { return m_errors; }
+
+    // TODO: Should be superseded by accessing the logger instead
+    QList<QQmlJS::DiagnosticMessage> errors() const { return m_logger.warnings() + m_logger.errors(); }
+
+    QQmlJSLogger &logger() { return m_logger; }
+
     QHash<QString, QQmlJSScope::ConstPtr> imports() const { return m_rootScopeImports; }
     QHash<QString, QQmlJSScope::ConstPtr> addressableScopes() const { return m_scopesById; }
 
@@ -129,14 +136,13 @@ protected:
 
     QQmlJSImporter *m_importer;
 
-    QList<QQmlJS::DiagnosticMessage> m_errors;
-
     void enterEnvironment(QQmlJSScope::ScopeType type, const QString &name,
                           const QQmlJS::SourceLocation &location);
     void leaveEnvironment();
 
     QVector<QQmlJSAnnotation> parseAnnotations(QQmlJS::AST::UiAnnotationList *list);
 
+    QQmlJSLogger m_logger;
 private:
     void importBaseModules();
     void resolveAliases();

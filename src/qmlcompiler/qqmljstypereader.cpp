@@ -86,7 +86,7 @@ QQmlJSScope::Ptr QQmlJSTypeReader::operator()()
                 m_importer,
                 QQmlJSImportVisitor::implicitImportDirectory(
                     m_file, m_importer->resourceFileMapper()),
-                m_qmltypesFiles);
+                m_qmltypesFiles, m_file, code);
     rootNode->accept(&membersVisitor);
     auto result = membersVisitor.result();
     result->setInternalName(scopeName);

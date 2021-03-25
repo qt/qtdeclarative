@@ -43,18 +43,9 @@
 #include <QtCore/qscopedpointer.h>
 #include <QtCore/qstring.h>
 
-class ColorOutputPrivate;
+class QColorOutputPrivate;
 
-enum MessageColors
-{
-    Error,
-    Warning,
-    Info,
-    Normal,
-    Hint
-};
-
-class ColorOutput
+class QColorOutput
 {
     enum
     {
@@ -98,24 +89,24 @@ public:
     using ColorCode = QFlags<ColorCodeComponent>;
     using ColorMapping = QHash<int, ColorCode>;
 
-    ColorOutput(bool silent);
-    ~ColorOutput();
+    QColorOutput(bool silent);
+    ~QColorOutput();
 
     void insertMapping(int colorID, ColorCode colorCode);
 
     void writeUncolored(const QString &message);
-    void write(QStringView message, int color = -1);
+    void write(const QStringView message, int color = -1);
     // handle QStringBuilder case
     Q_WEAK_OVERLOAD void write(const QString &message, int color = -1) { write(QStringView(message), color); }
-    void writePrefixedMessage(const QString &message, MessageColors type,
+    void writePrefixedMessage(const QString &message, QtMsgType type,
                               const QString &prefix = QString());
     QString colorify(QStringView message, int color = -1) const;
 
 private:
-    QScopedPointer<ColorOutputPrivate> d;
-    Q_DISABLE_COPY_MOVE(ColorOutput)
+    QScopedPointer<QColorOutputPrivate> d;
+    Q_DISABLE_COPY_MOVE(QColorOutput)
 };
 
-Q_DECLARE_OPERATORS_FOR_FLAGS(ColorOutput::ColorCode)
+Q_DECLARE_OPERATORS_FOR_FLAGS(QColorOutput::ColorCode)
 
 #endif // QCOLOROUTPUT_H

@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 
-#include "qcoloroutput.h"
+#include "qcoloroutput_p.h"
 
 #include <QtCore/qfile.h>
 #include <QtCore/qhash.h>
@@ -35,10 +35,10 @@
 #include <unistd.h>
 #endif
 
-class ColorOutputPrivate
+class QColorOutputPrivate
 {
 public:
-    ColorOutputPrivate(bool silent) : m_currentColorID(-1), m_silent(silent)
+    QColorOutputPrivate(bool silent) : m_currentColorID(-1), m_silent(silent)
     {
         /* - QIODevice::Unbuffered because we want it to appear when the user actually calls,
          *   performance is considered of lower priority.
@@ -63,8 +63,8 @@ public:
         return result;
     }
 
-    void insertColor(int id, ColorOutput::ColorCode code) { m_colorMapping.insert(id, code); }
-    ColorOutput::ColorCode color(int id) const { return m_colorMapping.value(id); }
+    void insertColor(int id, QColorOutput::ColorCode code) { m_colorMapping.insert(id, code); }
+    QColorOutput::ColorCode color(int id) const { return m_colorMapping.value(id); }
     bool containsColor(int id) const { return m_colorMapping.contains(id); }
 
     bool isSilent() const { return m_silent; }
@@ -74,7 +74,7 @@ public:
 
 private:
     QFile                       m_out;
-    ColorOutput::ColorMapping   m_colorMapping;
+    QColorOutput::ColorMapping  m_colorMapping;
     int                         m_currentColorID;
     bool                        m_coloringEnabled;
     bool                        m_silent;
@@ -98,7 +98,7 @@ private:
     }
 };
 
-const char *const ColorOutputPrivate::foregrounds[] =
+const char *const QColorOutputPrivate::foregrounds[] =
 {
     "0;30",
     "0;34",
@@ -118,7 +118,7 @@ const char *const ColorOutputPrivate::foregrounds[] =
     "1;37"
 };
 
-const char *const ColorOutputPrivate::backgrounds[] =
+const char *const QColorOutputPrivate::backgrounds[] =
 {
     "0;40",
     "0;44",
@@ -219,10 +219,10 @@ const char *const ColorOutputPrivate::backgrounds[] =
 /*!
   Constructs a ColorOutput instance, ready for use.
  */
-ColorOutput::ColorOutput(bool silent) : d(new ColorOutputPrivate(silent)) {}
+QColorOutput::QColorOutput(bool silent) : d(new QColorOutputPrivate(silent)) {}
 
 // must be here so that QScopedPointer has access to the complete type
-ColorOutput::~ColorOutput() = default;
+QColorOutput::~QColorOutput() = default;
 
 /*!
  Sends \a message to \c stderr, using the color looked up in the color mapping using \a colorID.
@@ -236,24 +236,23 @@ ColorOutput::~ColorOutput() = default;
 
  \a message will be printed as is. For instance, no line endings will be inserted.
  */
-void ColorOutput::write(QStringView message, int colorID)
+void QColorOutput::write(QStringView message, int colorID)
 {
     if (!d->isSilent())
         d->write(colorify(message, colorID));
 }
 
-void ColorOutput::writePrefixedMessage(const QString &message, MessageColors type,
+void QColorOutput::writePrefixedMessage(const QString &message, QtMsgType type,
                                        const QString &prefix)
 {
-    static const QStringList prefixes = {
-        QStringLiteral("Error"),
-        QStringLiteral("Warning"),
-        QStringLiteral("Info"),
-        QStringLiteral("Normal"),
-        QStringLiteral("Hint"),
+    static const QHash<QtMsgType, QString> prefixes = {
+        {QtMsgType::QtCriticalMsg, QStringLiteral("Error")},
+        {QtMsgType::QtWarningMsg, QStringLiteral("Warning")},
+        {QtMsgType::QtInfoMsg, QStringLiteral("Info")},
+        {QtMsgType::QtDebugMsg, QStringLiteral("Hint")}
     };
 
-    Q_ASSERT(prefixes.length() > qsizetype(type));
+    Q_ASSERT(prefixes.contains(type));
     Q_ASSERT(prefix.isEmpty() || prefix.front().isUpper());
     write((prefix.isEmpty() ? prefixes[type] : prefix) + QStringLiteral(": "), type);
     writeUncolored(message);
@@ -265,7 +264,7 @@ void ColorOutput::writePrefixedMessage(const QString &message, MessageColors typ
 
  This function can be practical to use such that one can use ColorOutput for all forms of writing.
  */
-void ColorOutput::writeUncolored(const QString &message)
+void QColorOutput::writeUncolored(const QString &message)
 {
     if (!d->isSilent())
         d->write(message + QLatin1Char('\n'));
@@ -279,7 +278,7 @@ void ColorOutput::writeUncolored(const QString &message)
  This is useful when the colored string is inserted into a translated string(dividing
  the string into several small strings prevents proper translation).
  */
-QString ColorOutput::colorify(QStringView message, int colorID) const
+QString QColorOutput::colorify(const QStringView message, int colorID) const
 {
     Q_ASSERT_X(colorID == -1 || d->containsColor(colorID), Q_FUNC_INFO,
                qPrintable(QString::fromLatin1("There is no color registered by id %1")
@@ -304,22 +303,22 @@ QString ColorOutput::colorify(QStringView message, int colorID) const
 
         if (foregroundCode > 0) {
             finalMessage.append(
-                        ColorOutputPrivate::escapeCode(
-                            QLatin1String(ColorOutputPrivate::foregrounds[foregroundCode - 1])));
+                        QColorOutputPrivate::escapeCode(
+                            QLatin1String(QColorOutputPrivate::foregrounds[foregroundCode - 1])));
             closureNeeded = true;
         }
 
         if (backgroundCode > 0) {
             finalMessage.append(
-                        ColorOutputPrivate::escapeCode(
-                            QLatin1String(ColorOutputPrivate::backgrounds[backgroundCode - 1])));
+                        QColorOutputPrivate::escapeCode(
+                            QLatin1String(QColorOutputPrivate::backgrounds[backgroundCode - 1])));
             closureNeeded = true;
         }
 
         finalMessage.append(message);
 
         if (closureNeeded)
-            finalMessage.append(ColorOutputPrivate::escapeCode(QLatin1String("0")));
+            finalMessage.append(QColorOutputPrivate::escapeCode(QLatin1String("0")));
 
         return finalMessage;
     }
@@ -330,7 +329,7 @@ QString ColorOutput::colorify(QStringView message, int colorID) const
 /*!
   Adds a color mapping from \a colorID to \a colorCode, for this ColorOutput instance.
  */
-void ColorOutput::insertMapping(int colorID, const ColorCode colorCode)
+void QColorOutput::insertMapping(int colorID, const ColorCode colorCode)
 {
     d->insertColor(colorID, colorCode);
 }

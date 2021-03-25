@@ -39,9 +39,9 @@
 //
 // We mean it.
 
-#include "qcoloroutput.h"
 #include "checkidentifiers.h"
 
+#include <QtQmlCompiler/private/qcoloroutput_p.h>
 #include <QtQmlCompiler/private/qqmljstypedescriptionreader_p.h>
 #include <QtQmlCompiler/private/qqmljsscope_p.h>
 #include <QtQmlCompiler/private/qqmljsimporter_p.h>
@@ -59,7 +59,7 @@ class FindWarningVisitor : public QQmlJSImportVisitor
 public:
     explicit FindWarningVisitor(
             QQmlJSImporter *importer, QStringList qmltypesFiles, QString code, QString fileName,
-            bool silent, bool warnUnqualified, bool warnWithStatement, bool warnInheritanceCycle);
+            bool silent);
     ~FindWarningVisitor() override = default;
     bool check();
 
@@ -74,11 +74,6 @@ private:
     QString m_rootId;
     QString m_filePath;
     QSet<QString> m_unknownImports;
-    ColorOutput m_colorOut;
-
-    bool m_warnUnqualified;
-    bool m_warnWithStatement;
-    bool m_warnInheritanceCycle;
 
     struct OutstandingConnection
     {

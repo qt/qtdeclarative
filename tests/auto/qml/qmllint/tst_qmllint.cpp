@@ -113,7 +113,7 @@ void TestQmllint::testUnqualified()
     QFETCH(int, warningColumn);
 
     const QString output = runQmllint(filename, false);
-    QVERIFY(output.contains(QString::asprintf("Warning: unqualified access at %s:%d:%d", testFile(filename).toUtf8().constData(), warningLine, warningColumn)));
+    QVERIFY(output.contains(QStringLiteral("%1:%2:%3: Unqualified access").arg(testFile(filename)).arg(warningLine).arg(warningColumn)));
     QVERIFY(output.contains(warningMessage));
 }
 
@@ -151,14 +151,14 @@ void TestQmllint::testUnknownCausesFail()
 {
     const QString unknownNotFound = runQmllint("unknownElement.qml", false);
     QVERIFY(unknownNotFound.contains(
-                QStringLiteral("Warning: Unknown was not found. Did you add all import paths?")));
+                QStringLiteral("Warning: %1: Unknown was not found. Did you add all import paths?").arg(testFile("unknownElement.qml"))));
 }
 
 void TestQmllint::directoryPassedAsQmlTypesFile()
 {
     const QStringList iArg = QStringList() << QStringLiteral("-i") << dataDirectory();
     const QString errorMessages = runQmllint("unknownElement.qml", false, iArg);
-    const QString expectedError = QStringLiteral("Warning: QML types file cannot be a directory: ") + dataDirectory();
+    const QString expectedError = QStringLiteral("Warning: %1: QML types file cannot be a directory: ").arg(testFile("unknownElement.qml")) + dataDirectory();
     QVERIFY2(errorMessages.contains(expectedError), qPrintable(QString::fromLatin1(
         "Expected error to contain \"%1\", but it didn't: %2").arg(expectedError, errorMessages)));
 }
@@ -166,9 +166,9 @@ void TestQmllint::directoryPassedAsQmlTypesFile()
 void TestQmllint::oldQmltypes()
 {
     const QString errors = runQmllint("oldQmltypes.qml", false);
-    QVERIFY(errors.contains(QStringLiteral("Warning: typeinfo not declared in qmldir file")));
+    QVERIFY(errors.contains(QStringLiteral("Warning: %1: typeinfo not declared in qmldir file").arg(testFile("oldQmltypes.qml"))));
     QVERIFY(!errors.contains(QStringLiteral("Warning: QQuickItem was not found. Did you add all import paths?")));
-    QVERIFY(errors.contains(QStringLiteral("Warning: Found deprecated dependency specifications")));
+    QVERIFY(errors.contains(QStringLiteral("Warning: %1: Found deprecated dependency specifications").arg(testFile("oldQmltypes.qml"))));
 
     // Checking for both lines separately so that we don't have to mess with the line endings.b
     QVERIFY(errors.contains(QStringLiteral("Meta object revision and export version differ, ignoring the revision.")));
@@ -297,93 +297,93 @@ void TestQmllint::dirtyQmlCode_data()
             << false;
     QTest::newRow("AutomatchedSignalHandler")
             << QStringLiteral("AutomatchedSignalHandler.qml")
-            << QString("Warning: unqualified access at %1:12:36")
+            << QString("Warning: %1:12:36: Unqualified access")
             << QStringLiteral("no matching signal found")
             << false;
     QTest::newRow("MemberNotFound")
             << QStringLiteral("memberNotFound.qml")
-            << QString("Warning: Property \"foo\" not found on type \"QtObject\" at %1:6:31")
+            << QString("Warning: %1:6:31: Property \"foo\" not found on type \"QtObject\"")
             << QString()
             << false;
     QTest::newRow("UnknownJavascriptMethd")
             << QStringLiteral("unknownJavascriptMethod.qml")
-            << QString("Warning: Property \"foo2\" not found on type \"Methods\" at %1:5:25")
+            << QString("Warning: %1:5:25: Property \"foo2\" not found on type \"Methods\"")
             << QString()
             << false;
     QTest::newRow("badAlias1")
             << QStringLiteral("badAlias.qml")
-            << QString("Warning: 3:1: Cannot deduce type of alias \"wrong\"")
+            << QString("Warning: %1:3:1: Cannot deduce type of alias \"wrong\"")
             << QString()
             << false;
     QTest::newRow("badAlias2")
             << QStringLiteral("badAlias.qml")
-            << QString("Warning: unqualified access at %1:4:27")
+            << QString("Warning: %1:4:27: Unqualified access")
             << QString()
             << false;
     QTest::newRow("badAliasProperty1")
             << QStringLiteral("badAliasProperty.qml")
-            << QString("Warning: 3:1: Cannot deduce type of alias \"wrong\"")
+            << QString("Warning: %1:3:1: Cannot deduce type of alias \"wrong\"")
             << QString()
             << false;
     QTest::newRow("badAliasProperty2")
             << QStringLiteral("badAliasProperty.qml")
-            << QString("Warning: Property \"nowhere\" not found on type \"QtObject\" at %1:5:32")
+            << QString("Warning: %1:5:32: Property \"nowhere\" not found on type \"QtObject\"")
             << QString()
             << false;
     QTest::newRow("badAliasExpression")
             << QStringLiteral("badAliasExpression.qml")
-            << QString("Warning: 5:26: Invalid alias expression. Only IDs and field member "
+            << QString("Warning: %1:5:26: Invalid alias expression. Only IDs and field member "
                        "expressions can be aliased")
             << QString()
             << false;
     QTest::newRow("aliasCycle1")
             << QStringLiteral("aliasCycle.qml")
-            << QString("Warning: 3:1: Alias \"b\" is part of an alias cycle")
+            << QString("Warning: %1:3:1: Alias \"b\" is part of an alias cycle")
             << QString()
             << false;
     QTest::newRow("aliasCycle2")
             << QStringLiteral("aliasCycle.qml")
-            << QString("Warning: 3:1: Alias \"a\" is part of an alias cycle")
+            << QString("Warning: %1:3:1: Alias \"a\" is part of an alias cycle")
             << QString()
             << false;
     QTest::newRow("badParent")
             << QStringLiteral("badParent.qml")
-            << QString("Warning: Property \"rrr\" not found on type \"Item\" at %1:5:34")
+            << QString("Warning: %1:5:34: Property \"rrr\" not found on type \"Item\"")
             << QString()
             << false;
     QTest::newRow("parentIsComponent")
             << QStringLiteral("parentIsComponent.qml")
-            << QString("Warning: Property \"progress\" not found on type \"QQuickItem\" at %1:7:39")
+            << QString("Warning: %1:7:39: Property \"progress\" not found on type \"QQuickItem\"")
             << QString()
             << false;
     QTest::newRow("badTypeAssertion")
             << QStringLiteral("badTypeAssertion.qml")
-            << QString("Warning: Property \"rrr\" not found on type \"Item\" at %1:5:39")
+            << QString("Warning: %1:5:39: Property \"rrr\" not found on type \"Item\"")
             << QString()
             << false;
     QTest::newRow("incompleteQmltypes")
             << QStringLiteral("incompleteQmltypes.qml")
-            << QString("Warning: Type \"QPalette\" of base \"palette\" not found when accessing member \"weDontKnowIt\" at %1:5:34")
+            << QString("Warning: %1:5:34: Type \"QPalette\" of base \"palette\" not found when accessing member \"weDontKnowIt\"")
             << QString()
             << false;
     QTest::newRow("inheritanceCylce")
             << QStringLiteral("Cycle1.qml")
-            << QString("Warning: Cycle2 is part of an inheritance cycle: Cycle2 -> Cycle3 -> Cycle1 -> Cycle2")
+            << QString("Warning: %1: Cycle2 is part of an inheritance cycle: Cycle2 -> Cycle3 -> Cycle1 -> Cycle2")
             << QString()
             << false;
     QTest::newRow("badQmldirImportAndDepend")
             << QStringLiteral("qmldirImportAndDepend/bad.qml")
-            << QString("Warning: Item was not found. Did you add all import paths?")
+            << QString("Warning: %1: Item was not found. Did you add all import paths?")
             << QString()
             << false;
     QTest::newRow("javascriptMethodsInModule")
             << QStringLiteral("javascriptMethodsInModuleBad.qml")
-            << QString("Warning: Property \"unknownFunc\" not found on type \"Foo\"")
+            << QString("Warning: %1:5:21: Property \"unknownFunc\" not found on type \"Foo\"")
             << QString()
             << false;
     QTest::newRow("badEnumFromQtQml")
             << QStringLiteral("badEnumFromQtQml.qml")
-            << QString("Warning: Property \"Linear123\" not found on type \"QQmlEasingEnums\"")
+            << QString("Warning: %1:4:30: Property \"Linear123\" not found on type \"QQmlEasingEnums\"")
             << QString()
             << false;
     QTest::newRow("anchors3")
@@ -408,17 +408,17 @@ void TestQmllint::dirtyQmlCode_data()
             << false;
     QTest::newRow("badAliasObject")
             << QStringLiteral("badAliasObject.qml")
-            << QString("Warning: Property \"wrongwrongwrong\" not found on type \"QtObject\"")
+            << QString("Warning: %1:8:40: Property \"wrongwrongwrong\" not found on type \"QtObject\"")
             << QString()
             << false;
     QTest::newRow("badScript")
             << QStringLiteral("badScript.qml")
-            << QString("Warning: Property \"stuff\" not found on type \"Empty\"")
+            << QString("Warning: %1:5:21: Property \"stuff\" not found on type \"Empty\"")
             << QString()
             << false;
     QTest::newRow("brokenNamespace")
             << QStringLiteral("brokenNamespace.qml")
-            << QString("Warning: type not found in namespace at %1:4:17")
+            << QString("Warning: %1:4:17: Type not found in namespace")
             << QString()
             << false;
     QTest::newRow("segFault (bad)")
@@ -428,7 +428,7 @@ void TestQmllint::dirtyQmlCode_data()
             << false;
     QTest::newRow("VariableUsedBeforeDeclaration")
             << QStringLiteral("useBeforeDeclaration.qml")
-            << QStringLiteral("Variable \"argq\" is used before its declaration at 5:9. "
+            << QStringLiteral("%1:5:9: Variable \"argq\" is used here before its declaration. "
                               "The declaration is at 6:13.")
             << QString()
             << false;

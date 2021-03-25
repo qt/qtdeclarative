@@ -29,10 +29,11 @@
 #ifndef CHECKIDENTIFIERS_H
 #define CHECKIDENTIFIERS_H
 
+#include <QtQmlCompiler/private/qqmljslogger_p.h>
 #include <QtQmlCompiler/private/qqmljsscope_p.h>
 #include <QtQmlCompiler/private/qqmljsimporter_p.h>
 
-class ColorOutput;
+class QColorOutput;
 
 struct SignalHandler {
     QQmlJSMetaMethod signal;
@@ -51,25 +52,22 @@ using MemberAccessChains = QHash<QQmlJSScope::ConstPtr, QVector<QVector<FieldMem
 class CheckIdentifiers
 {
 public:
-    CheckIdentifiers(ColorOutput *colorOut, const QString &code,
+    CheckIdentifiers(QQmlJSLogger *logger, const QString &code,
                      const QQmlJSImporter::ImportedTypes &types, const QString &fileName) :
-        m_colorOut(colorOut), m_code(code), m_types(types), m_fileName(fileName)
+        m_logger(logger), m_code(code), m_types(types), m_fileName(fileName)
     {}
 
-    bool operator ()(const QHash<QString, QQmlJSScope::ConstPtr> &qmlIDs,
+    void operator ()(const QHash<QString, QQmlJSScope::ConstPtr> &qmlIDs,
                      const QHash<QQmlJS::SourceLocation, SignalHandler> &signalHandlers,
                      const MemberAccessChains &memberAccessChains,
                      const QQmlJSScope::ConstPtr &root, const QString &rootId) const;
 
-    static void printContext(const QString &code, ColorOutput *output,
-                             const QQmlJS::SourceLocation &location);
-
 private:
-    bool checkMemberAccess(const QVector<FieldMember> &members,
+    void checkMemberAccess(const QVector<FieldMember> &members,
                            const QQmlJSScope::ConstPtr &outerScope,
                            const QQmlJSMetaProperty *prop = nullptr) const;
 
-    ColorOutput *m_colorOut = nullptr;
+    QQmlJSLogger *m_logger = nullptr;
     QString m_code;
     QQmlJSImporter::ImportedTypes m_types;
     QString m_fileName;
