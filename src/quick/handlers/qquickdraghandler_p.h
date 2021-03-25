@@ -94,6 +94,7 @@ Q_SIGNALS:
     Q_REVISION(2, 14) void snapModeChanged();
 
 protected:
+    bool wantsPointerEvent(QPointerEvent *event) override;
     void onActiveChanged() override;
     void onGrabChanged(QQuickPointerHandler *grabber, QPointingDevice::GrabTransition transition, QPointerEvent *event, QEventPoint &point) override;
 

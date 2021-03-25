@@ -179,6 +179,19 @@ void QQuickDragHandler::onActiveChanged()
     }
 }
 
+bool QQuickDragHandler::wantsPointerEvent(QPointerEvent *event)
+{
+    if (!QQuickMultiPointHandler::wantsPointerEvent(event))
+        return false;
+
+#if QT_CONFIG(gestures)
+    if (event->type() == QEvent::NativeGesture)
+       return false;
+#endif
+
+    return true;
+}
+
 void QQuickDragHandler::handlePointerEventImpl(QPointerEvent *event)
 {
     QQuickMultiPointHandler::handlePointerEventImpl(event);
