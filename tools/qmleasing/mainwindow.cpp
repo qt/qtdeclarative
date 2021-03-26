@@ -77,7 +77,7 @@ MainWindow::MainWindow(QWidget *parent) :
     for (const QString &name : presetNames)
         ui_properties.comboBox->addItem(name);
 
-    connect(ui_properties.comboBox, SIGNAL(currentIndexChanged(QString)), splineEditor, SLOT(setPreset(QString)));
+    connect(ui_properties.comboBox, SIGNAL(currentTextChanged(QString)), splineEditor, SLOT(setPreset(QString)));
 
     splineEditor->setPreset(ui_properties.comboBox->currentText());
 
