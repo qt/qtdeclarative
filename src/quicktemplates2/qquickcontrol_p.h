@@ -51,6 +51,7 @@
 #include <QtCore/qlocale.h>
 #include <QtGui/qpalette.h>
 #include <QtQuick/qquickitem.h>
+#include <QtQuick/private/qquickpalette_p.h>
 #include <QtQuickTemplates2/private/qtquicktemplates2global_p.h>
 
 QT_BEGIN_NAMESPACE
