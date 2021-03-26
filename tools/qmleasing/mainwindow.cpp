@@ -69,7 +69,7 @@ MainWindow::MainWindow(QWidget *parent) :
     vboxLayout->addWidget(m_placeholder);
 
     ui_properties.plainTextEdit->setPlainText(splineEditor->generateCode());
-    connect(splineEditor, SIGNAL(easingCurveCodeChanged(QString)), ui_properties.plainTextEdit, SLOT(setPlainText(QString)));
+    connect(splineEditor, &SplineEditor::easingCurveCodeChanged, ui_properties.plainTextEdit, &QPlainTextEdit::setPlainText);
 
     quickView.rootContext()->setContextProperty(QLatin1String("spinBox"), ui_properties.spinBox);
 
@@ -77,7 +77,7 @@ MainWindow::MainWindow(QWidget *parent) :
     for (const QString &name : presetNames)
         ui_properties.comboBox->addItem(name);
 
-    connect(ui_properties.comboBox, SIGNAL(currentTextChanged(QString)), splineEditor, SLOT(setPreset(QString)));
+    connect(ui_properties.comboBox, &QComboBox::currentTextChanged, splineEditor, &SplineEditor::setPreset);
 
     splineEditor->setPreset(ui_properties.comboBox->currentText());
 
@@ -87,7 +87,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     groupBoxLayout->addWidget(splineEditor->pointListWidget());
     m_splineEditor = splineEditor;
-    connect(ui_properties.plainTextEdit, SIGNAL(textChanged()), this, SLOT(textEditTextChanged()));
+    connect(ui_properties.plainTextEdit, &QPlainTextEdit::textChanged, this, &MainWindow::textEditTextChanged);
 
     QDialog* importDialog = new QDialog(this);
     ui_import.setupUi(importDialog);
@@ -95,8 +95,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui_import.inSlopeEdit->setValidator(new QDoubleValidator(this));
     ui_import.outInfluenceEdit->setValidator(new QDoubleValidator(this));
     ui_import.outSlopeEdit->setValidator(new QDoubleValidator(this));
-    connect(ui_properties.importButton, SIGNAL(clicked()), importDialog, SLOT(show()));
-    connect(importDialog, SIGNAL(finished(int)), this, SLOT(importData(int)));
+    connect(ui_properties.importButton, &QPushButton::clicked, importDialog, &QDialog::show);
+    connect(importDialog, &QDialog::finished, this, &MainWindow::importData);
 
     initQml();
 }
