@@ -73,6 +73,9 @@
 %token T_GET "get"
 %token T_SET "set"
 
+-- token representing no token
+%token T_NONE
+
 %token T_ERROR
 
 -- states for line by line parsing

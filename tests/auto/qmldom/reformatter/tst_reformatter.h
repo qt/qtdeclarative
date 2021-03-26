@@ -4,6 +4,7 @@
 #ifndef TST_QMLDOMCODEFORMATTER_H
 #define TST_QMLDOMCODEFORMATTER_H
 #include <QtQmlDom/private/qqmldomlinewriter_p.h>
+#include <QtQmlDom/private/qqmldomindentinglinewriter_p.h>
 #include <QtQmlDom/private/qqmldomoutwriter_p.h>
 #include <QtQmlDom/private/qqmldomitem_p.h>
 #include <QtQmlDom/private/qqmldomtop_p.h>
@@ -24,6 +25,177 @@ class TestReformatter : public QObject
     Q_OBJECT
 public:
 private slots:
+    void reindent_data()
+    {
+        QTest::addColumn<QString>("inFile");
+        QTest::addColumn<QString>("outFile");
+
+        QTest::newRow("file1") << QStringLiteral(u"file1.qml") << QStringLiteral(u"file1.qml");
+        QTest::newRow("file1 unindented")
+                << QStringLiteral(u"file1Unindented.qml") << QStringLiteral(u"file1.qml");
+    }
+
+    void reindent()
+    {
+        QFETCH(QString, inFile);
+        QFETCH(QString, outFile);
+
+        QFile fIn(QLatin1String(QT_QMLTEST_DATADIR) + QLatin1String("/reformatter/") + inFile);
+        if (!fIn.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            qWarning() << "could not open file" << inFile;
+            return;
+        }
+        QFile fOut(QLatin1String(QT_QMLTEST_DATADIR) + QLatin1String("/reformatter/") + outFile);
+        if (!fOut.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            qWarning() << "could not open file" << outFile;
+            return;
+        }
+        QTextStream in(&fIn);
+        QTextStream out(&fOut);
+        QString resultStr;
+        QTextStream res(&resultStr);
+        QString line = in.readLine();
+        IndentingLineWriter lw([&res](QStringView s) { res << s; }, QLatin1String("*testStream*"));
+        QList<SourceLocation *> sourceLocations;
+        while (!line.isNull()) {
+            SourceLocation *loc = new SourceLocation;
+            sourceLocations.append(loc);
+            lw.write(line, loc);
+            lw.write(u"\n");
+            line = in.readLine();
+        }
+        lw.eof();
+        res.flush();
+        QString fullRes = resultStr;
+        res.seek(0);
+        line = out.readLine();
+        QString resLine = res.readLine();
+        int iLoc = 0;
+        int nextLoc = 0;
+        while (!line.isNull() && !resLine.isNull()) {
+            QCOMPARE(resLine, line);
+            if (iLoc == nextLoc && iLoc < sourceLocations.size()) {
+                QString l2 =
+                        fullRes.mid(sourceLocations[iLoc]->offset, sourceLocations[iLoc]->length);
+                if (!l2.contains(QLatin1Char('\n'))) {
+                    QCOMPARE(l2, line);
+                } else {
+                    qDebug() << "skip checks of multiline location (line was split)" << l2;
+                    iLoc -= l2.count(QLatin1Char('\n'));
+                }
+                ++nextLoc;
+            } else {
+                qDebug() << "skip multiline recover";
+            }
+            ++iLoc;
+            line = out.readLine();
+            resLine = res.readLine();
+        }
+        QCOMPARE(resLine.isNull(), line.isNull());
+        for (auto sLoc : sourceLocations)
+            delete sLoc;
+    }
+
+    void lineByLineReformatter_data()
+    {
+        QTest::addColumn<QString>("inFile");
+        QTest::addColumn<QString>("outFile");
+        QTest::addColumn<LineWriterOptions>("options");
+        LineWriterOptions defaultOptions;
+        LineWriterOptions noReorderOptions;
+        noReorderOptions.attributesSequence = LineWriterOptions::AttributesSequence::Preserve;
+
+        QTest::newRow("file1") << QStringLiteral(u"file1.qml")
+                               << QStringLiteral(u"file1Reformatted.qml") << defaultOptions;
+
+        QTest::newRow("file2") << QStringLiteral(u"file2.qml")
+                               << QStringLiteral(u"file2Reformatted.qml") << defaultOptions;
+
+        QTest::newRow("commentedFile")
+                << QStringLiteral(u"commentedFile.qml")
+                << QStringLiteral(u"commentedFileReformatted.qml") << defaultOptions;
+
+        QTest::newRow("required") << QStringLiteral(u"required.qml")
+                                  << QStringLiteral(u"requiredReformatted.qml") << defaultOptions;
+
+        QTest::newRow("inline") << QStringLiteral(u"inline.qml")
+                                << QStringLiteral(u"inlineReformatted.qml") << defaultOptions;
+
+        QTest::newRow("spread") << QStringLiteral(u"spread.qml")
+                                << QStringLiteral(u"spreadReformatted.qml") << defaultOptions;
+
+        QTest::newRow("template") << QStringLiteral(u"template.qml")
+                                  << QStringLiteral(u"templateReformatted.qml") << defaultOptions;
+
+        QTest::newRow("file1NoReorder")
+                << QStringLiteral(u"file1.qml") << QStringLiteral(u"file1Reformatted2.qml")
+                << noReorderOptions;
+    }
+
+    void lineByLineReformatter()
+    {
+        QFETCH(QString, inFile);
+        QFETCH(QString, outFile);
+        QFETCH(LineWriterOptions, options);
+
+        QString baseDir = QLatin1String(QT_QMLTEST_DATADIR) + QLatin1String("/reformatter");
+        QStringList qmltypeDirs =
+                QStringList({ baseDir, QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath) });
+        DomItem env = DomEnvironment::create(
+                qmltypeDirs,
+                QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
+                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
+        QString testFilePath = baseDir + QLatin1Char('/') + inFile;
+        DomItem tFile;
+        env.loadBuiltins();
+        env.loadFile(
+                testFilePath, QString(),
+                [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
+                LoadOption::DefaultLoad);
+        env.loadPendingDependencies();
+
+        MutableDomItem myFile = tFile.field(Fields::currentItem);
+
+        QString resultStr;
+        QTextStream res(&resultStr);
+        IndentingLineWriter lw([&res](QStringView s) { res << s; }, QLatin1String("*testStream*"),
+                               options);
+        OutWriter ow(lw);
+        DomItem qmlFile = tFile.field(Fields::currentItem);
+        qmlFile.writeOut(ow);
+        lw.eof();
+        res.flush();
+        QString fullRes = resultStr;
+        res.seek(0);
+        QFile fOut(baseDir + QLatin1Char('/') + outFile);
+        if (!fOut.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            qWarning() << "could not open file" << outFile;
+            return;
+        }
+        QTextStream out(&fOut);
+        QString line = out.readLine();
+        QString resLine = res.readLine();
+        int iLine = 0;
+        auto writeReformatted = [fullRes]() {
+            qDebug().noquote().nospace() << "Reformatted output:\n"
+                                         << "-----------------\n"
+                                         << fullRes << "-----------------\n";
+        };
+        while (!line.isNull() && !resLine.isNull()) {
+            ++iLine;
+            if (resLine != line)
+                writeReformatted();
+            QCOMPARE(resLine, line);
+            line = out.readLine();
+            resLine = res.readLine();
+        }
+        if (resLine.isNull() != line.isNull()) {
+            writeReformatted();
+            qDebug() << "reformatted at end" << resLine.isNull() << resLine
+                     << "reference at end:" << line.isNull() << line;
+        }
+        QCOMPARE(resLine.isNull(), line.isNull());
+    }
 
     void manualReformatter_data()
     {
