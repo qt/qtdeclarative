@@ -840,6 +840,113 @@ QImage QSGRhiSupport::grabOffscreen(QQuickWindow *window)
     return image;
 }
 
+#ifdef Q_OS_WEBOS
+QImage QSGRhiSupport::grabOffscreenForProtectedContent(QQuickWindow *window)
+{
+    // If a context is created for protected content, grabbing GPU
+    // resources are restricted. For the case, normal context
+    // and surface are needed to allow CPU access.
+    // So dummy offscreen window is used here
+    // This function is called in rendering thread.
+
+    QScopedPointer<QQuickWindow> offscreenWindow;
+    QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
+    // It is expected that window is not using QQuickRenderControl, i.e. it is
+    // a normal QQuickWindow that just happens to be not exposed.
+    Q_ASSERT(!wd->renderControl);
+
+    // If context and surface are created for protected content,
+    // CPU can't read the frame resources. So normal context and surface are needed.
+    if (window->requestedFormat().testOption(QSurfaceFormat::ProtectedContent)) {
+        QSurfaceFormat surfaceFormat = window->requestedFormat();
+        surfaceFormat.setOption(QSurfaceFormat::ProtectedContent, false);
+        offscreenWindow.reset(new QQuickWindow());
+        offscreenWindow->setFormat(surfaceFormat);
+    }
+
+    QScopedPointer<QOffscreenSurface> offscreenSurface(maybeCreateOffscreenSurface(window));
+    QScopedPointer<QRhi> rhi(createRhi(offscreenWindow.data() ? offscreenWindow.data() : window, offscreenSurface.data()));
+    if (!rhi) {
+        qWarning("Failed to initialize QRhi for offscreen readback");
+        return QImage();
+    }
+
+    const QSize pixelSize = window->size() * window->devicePixelRatio();
+    QScopedPointer<QRhiTexture> texture(rhi->newTexture(QRhiTexture::RGBA8, pixelSize, 1,
+                                                        QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource));
+    if (!texture->create()) {
+        qWarning("Failed to build texture for offscreen readback");
+        return QImage();
+    }
+    QScopedPointer<QRhiRenderBuffer> depthStencil(rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, pixelSize, 1));
+    if (!depthStencil->create()) {
+        qWarning("Failed to create depth/stencil buffer for offscreen readback");
+        return QImage();
+    }
+    QRhiTextureRenderTargetDescription rtDesc(texture.data());
+    rtDesc.setDepthStencilBuffer(depthStencil.data());
+    QScopedPointer<QRhiTextureRenderTarget> rt(rhi->newTextureRenderTarget(rtDesc));
+    QScopedPointer<QRhiRenderPassDescriptor> rpDesc(rt->newCompatibleRenderPassDescriptor());
+    rt->setRenderPassDescriptor(rpDesc.data());
+    if (!rt->create()) {
+        qWarning("Failed to build render target for offscreen readback");
+        return QImage();
+    }
+
+    // Backup the original Rhi
+    QRhi *currentRhi = wd->rhi;
+    wd->rhi = rhi.data();
+
+    QSGDefaultRenderContext::InitParams params;
+    params.rhi = rhi.data();
+    params.sampleCount = 1;
+    params.initialSurfacePixelSize = pixelSize;
+    params.maybeSurface = window;
+    wd->context->initialize(&params);
+
+    // Backup the original RenderTarget
+    QQuickRenderTarget currentRenderTarget = window->renderTarget();
+    // There was no rendercontrol which means a custom render target
+    // should not be set either. Set our own, temporarily.
+    window->setRenderTarget(QQuickRenderTarget::fromRhiRenderTarget(rt.data()));
+
+    QRhiCommandBuffer *cb = nullptr;
+    if (rhi->beginOffscreenFrame(&cb) != QRhi::FrameOpSuccess) {
+        qWarning("Failed to start recording the frame for offscreen readback");
+        return QImage();
+    }
+
+    wd->setCustomCommandBuffer(cb);
+    wd->polishItems();
+    wd->syncSceneGraph();
+    wd->renderSceneGraph(window->size());
+    wd->setCustomCommandBuffer(nullptr);
+
+    QImage image = grabAndBlockInCurrentFrame(rhi.data(), cb, texture.data());
+    rhi->endOffscreenFrame();
+
+    image.setDevicePixelRatio(window->devicePixelRatio());
+
+    // Called from gui/main thread on no onscreen rendering initialized
+    if (!currentRhi) {
+        wd->cleanupNodesOnShutdown();
+        wd->context->invalidate();
+
+        window->setRenderTarget(QQuickRenderTarget());
+        wd->rhi = nullptr;
+    } else {
+        // Called from rendering thread for protected content
+        // Restore to original Rhi, RenderTarget and Context
+        window->setRenderTarget(currentRenderTarget);
+        wd->rhi = currentRhi;
+        params.rhi = currentRhi;
+        wd->context->initialize(&params);
+    }
+
+    return image;
+}
+#endif
+
 QSGRhiProfileConnection *QSGRhiProfileConnection::instance()
 {
     static QSGRhiProfileConnection inst;

@@ -134,6 +134,9 @@ public:
     void prepareWindowForRhi(QQuickWindow *window);
 
     QImage grabOffscreen(QQuickWindow *window);
+#ifdef Q_OS_WEBOS
+    QImage grabOffscreenForProtectedContent(QQuickWindow *window);
+#endif
 
 private:
     QSGRhiSupport();
