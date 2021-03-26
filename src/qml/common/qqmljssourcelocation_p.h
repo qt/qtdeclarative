@@ -66,7 +66,7 @@ public:
           startLine(line), startColumn(column)
     { }
 
-    bool isValid() const { return length != 0; }
+    bool isValid() const { return *this != SourceLocation(); }
 
     quint32 begin() const { return offset; }
     quint32 end() const { return offset + length; }
@@ -89,6 +89,8 @@ public:
         return a.offset == b.offset && a.length == b.length
                 && a.startLine == b.startLine && a.startColumn == b.startColumn;
     }
+
+    friend bool operator!=(const SourceLocation &a, const SourceLocation &b) { return !(a == b); }
 };
 
 } // namespace QQmlJS
