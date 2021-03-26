@@ -183,7 +183,7 @@ QQuickStackElement *QQuickStackViewPrivate::createElement(const QV4::Value &valu
         return QQuickStackElement::fromString(resolvedUrl(u->href(), context), q, error);
 
     if (const QV4::Object *v = value.as<QV4::Object>()) {
-        const QVariant data = v->engine()->toVariant(value, QMetaType::QUrl);
+        const QVariant data = v->engine()->toVariant(value, QMetaType::fromType<QUrl>());
         if (data.typeId() == QMetaType::QUrl) {
             return QQuickStackElement::fromString(resolvedUrl(data.toUrl(), context).toString(), q,
                                                   error);

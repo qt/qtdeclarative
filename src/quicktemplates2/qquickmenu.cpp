@@ -1371,7 +1371,7 @@ void QQuickMenu::popup(QQmlV4Function *args)
     if (pos.isNull && (len >= 2 || (!parentItem && len >= 1))) {
         // point pos
         QV4::ScopedValue posArg(scope, (*args)[parentItem ? 1 : 0]);
-        const QVariant var = v4->toVariant(posArg, -1);
+        const QVariant var = v4->toVariant(posArg, QMetaType {});
         if (var.userType() == QMetaType::QPointF)
             pos = var.toPointF();
     }
