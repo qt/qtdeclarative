@@ -148,7 +148,7 @@ public:
     // but any subscene root can have a QQuickItemPrivate::ExtraData::subsceneDeliveryAgent
     QQuickDeliveryAgent *deliveryAgent = nullptr;
     QQuickDeliveryAgentPrivate *deliveryAgentPrivate() const
-    { return static_cast<QQuickDeliveryAgentPrivate *>(QQuickDeliveryAgentPrivate::get(deliveryAgent)); }
+    { return deliveryAgent ? static_cast<QQuickDeliveryAgentPrivate *>(QQuickDeliveryAgentPrivate::get(deliveryAgent)) : nullptr; }
 
     // TODO remove this: it was moved to QQuickDeliveryAgentPrivate
     void flushFrameSynchronousEvents();
