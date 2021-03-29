@@ -8,3 +8,6 @@ windows gcc developer-build
 # QTBUG-74517
 [touchButtonOnFlickable]
 windows gcc developer-build
+
+[hoverEnabled]
+* # QTBUG-86729
