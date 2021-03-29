@@ -72,8 +72,10 @@ QQuickGraphicsInfo::QQuickGraphicsInfo(QQuickItem *item)
     , m_profile(OpenGLNoProfile)
     , m_renderableType(SurfaceFormatUnspecified)
 {
-    connect(item, SIGNAL(windowChanged(QQuickWindow*)), this, SLOT(setWindow(QQuickWindow*)));
-    setWindow(item->window());
+    if (Q_LIKELY(item)) {
+        connect(item, &QQuickItem::windowChanged, this, &QQuickGraphicsInfo::setWindow);
+        setWindow(item->window());
+    }
 }
 
 QQuickGraphicsInfo *QQuickGraphicsInfo::qmlAttachedProperties(QObject *object)
