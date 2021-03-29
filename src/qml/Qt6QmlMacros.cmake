@@ -773,14 +773,6 @@ function(qt6_qml_type_registration target)
     set(foreign_types_file "${target_binary_dir}/qmltypes/foreign_types.txt")
     set(type_registration_cpp_file "${target_binary_dir}/${type_registration_cpp_file_name}")
 
-    set(dependency_file_cpp "${target_binary_dir}/qmltypes/${type_registration_cpp_file_name}.d")
-    file(RELATIVE_PATH cpp_file_name "${${CMAKE_PROJECT_NAME}_BINARY_DIR}" "${type_registration_cpp_file}")
-
-    set (use_dep_files FALSE)
-    if (CMAKE_GENERATOR STREQUAL "Ninja" OR CMAKE_GENERATOR STREQUAL "Ninja Multi-Config")
-        set(use_dep_files TRUE)
-    endif()
-
     # Enable evaluation of metatypes.json source interfaces
     set_target_properties(${target} PROPERTIES QT_CONSUMES_METATYPES TRUE)
     set(genex_list "$<REMOVE_DUPLICATES:$<FILTER:$<TARGET_PROPERTY:${target},SOURCES>,INCLUDE,metatypes.json$>>")
@@ -802,9 +794,22 @@ function(qt6_qml_type_registration target)
         message(FATAL_ERROR "Need target metatypes.json file")
     endif()
 
+    cmake_policy(PUSH)
+
     set(registration_cpp_file_dep_args)
-    if (use_dep_files)
+    if (CMAKE_GENERATOR MATCHES "Ninja")  # TODO: Makefiles supported too since CMake 3.20
+        if(POLICY CMP0116)
+            # Without explicitly setting this policy to NEW, we get a warning
+            # even though we ensure there's actually no problem here.
+            # See https://gitlab.kitware.com/cmake/cmake/-/issues/21959
+            cmake_policy(SET CMP0116 NEW)
+            set(relative_to_dir ${CMAKE_CURRENT_BINARY_DIR})
+        else()
+            set(relative_to_dir ${CMAKE_BINARY_DIR})
+        endif()
+        set(dependency_file_cpp "${target_binary_dir}/qmltypes/${type_registration_cpp_file_name}.d")
         set(registration_cpp_file_dep_args DEPFILE ${dependency_file_cpp})
+        file(RELATIVE_PATH cpp_file_name "${relative_to_dir}" "${type_registration_cpp_file}")
         file(GENERATE OUTPUT "${dependency_file_cpp}"
             CONTENT "${cpp_file_name}: $<IF:$<BOOL:${genex_list}>,\\\n$<JOIN:${genex_list}, \\\n>, \\\n>"
         )
@@ -834,6 +839,8 @@ function(qt6_qml_type_registration target)
         ${registration_cpp_file_dep_args}
         COMMENT "Automatic QML type registration for target ${target}"
     )
+
+    cmake_policy(POP)
 
     target_sources(${target} PRIVATE ${type_registration_cpp_file})
 
