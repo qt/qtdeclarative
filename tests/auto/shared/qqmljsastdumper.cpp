@@ -1030,7 +1030,7 @@ void AstDumper::endVisit(AST::ExportClause *) { stop("ExportClause"); }
 
 bool AstDumper::visit(AST::ExportDeclaration *el) {
     start(QLatin1String("ExportDeclaration exportToken=%1 exportAll=%2 exportDefault=%3")
-          .arg(loc(el->exportToken), boolStr(el->exportAll), boolStr(el->exportDefault)));
+          .arg(loc(el->exportToken), boolStr(el->exportsAll()), boolStr(el->exportDefault)));
     return true;
 }
 void AstDumper::endVisit(AST::ExportDeclaration *) { stop("ExportDeclaration"); }

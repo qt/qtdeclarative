@@ -2957,7 +2957,6 @@ public:
     ExportDeclaration(FromClause *fromClause)
         : fromClause(fromClause)
     {
-        exportAll = true;
         kind = K;
     }
 
@@ -2980,6 +2979,11 @@ public:
         kind = K;
     }
 
+    bool exportsAll() const
+    {
+        return fromClause && !exportClause;
+    }
+
     void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
@@ -2989,7 +2993,6 @@ public:
 
 // attributes
     SourceLocation exportToken;
-    bool exportAll = false;
     ExportClause *exportClause = nullptr;
     FromClause *fromClause = nullptr;
     Node *variableStatementOrDeclaration = nullptr;

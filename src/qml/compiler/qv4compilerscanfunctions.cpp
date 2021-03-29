@@ -181,7 +181,9 @@ bool ScanFunctions::visit(ExportDeclaration *declaration)
 
     QString localNameForDefaultExport = QStringLiteral("*default*");
 
-    if (declaration->exportAll) {
+    if (declaration->exportsAll()) {
+        Q_ASSERT_X(declaration->fromClause, "ScanFunctions",
+                   "ExportDeclaration with exportAll always have a fromClause");
         Compiler::ExportEntry entry;
         entry.moduleRequest = declaration->fromClause->moduleSpecifier.toString();
         entry.importName = QStringLiteral("*");
