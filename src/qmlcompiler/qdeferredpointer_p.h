@@ -96,6 +96,7 @@ public:
     bool operator !() const noexcept { return isNull(); }
 
     T *data() const { return QSharedPointer<T>(*this).data(); }
+    T *get() const { return data(); }
 
     friend size_t qHash(const QDeferredSharedPointer &ptr, size_t seed = 0)
     {
