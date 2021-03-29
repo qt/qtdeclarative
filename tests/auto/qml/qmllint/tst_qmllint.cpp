@@ -476,6 +476,16 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("Property \"deprecated\" is deprecated")
             << QString()
             << false;
+    QTest::newRow("Deprecation (Property binding, with reason)")
+            << QStringLiteral("deprecatedPropertyBindingReason.qml")
+            << QStringLiteral("Binding on deprecated property \"deprecatedReason\" (Reason: Test)")
+            << QString()
+            << false;
+    QTest::newRow("Deprecation (Property binding, no reason)")
+            << QStringLiteral("deprecatedPropertyBinding.qml")
+            << QStringLiteral("Binding on deprecated property \"deprecated\"")
+            << QString()
+            << false;
     QTest::newRow("Deprecation (Type, with reason)")
             << QStringLiteral("deprecatedTypeReason.qml")
             << QStringLiteral("Type \"TypeDeprecatedReason\" is deprecated (Reason: Test)")

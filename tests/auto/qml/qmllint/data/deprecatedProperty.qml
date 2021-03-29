@@ -1,5 +1,3 @@
-import QtQml
-
 QtObject {
    @Deprecated {}
    property int deprecated: 10

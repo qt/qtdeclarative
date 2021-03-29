@@ -299,6 +299,23 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
                         );
         }
 
+        const auto &annotations = property.annotations();
+
+        const auto deprecationAnn = std::find_if(annotations.cbegin(), annotations.cend(), [](const QQmlJSAnnotation &ann) { return ann.isDeprecation(); });
+
+        if (deprecationAnn != annotations.cend()) {
+            const auto deprecation = deprecationAnn->deprecation();
+
+            QString message = QStringLiteral("Binding on deprecated property \"%1\"")
+                    .arg(property.propertyName());
+
+            if (!deprecation.reason.isEmpty())
+                message.append(QStringLiteral(" (Reason: %1)").arg(deprecation.reason));
+
+            m_logger.log(message, Log_Deprecation, uisb->firstSourceLocation());
+        }
+
+
         return true;
     }
 
