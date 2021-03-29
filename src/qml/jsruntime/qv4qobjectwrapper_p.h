@@ -336,6 +336,8 @@ public:
     typedef QHash<QObject*, QV4::WeakValue>::ConstIterator ConstIterator;
     typedef QHash<QObject*, QV4::WeakValue>::Iterator Iterator;
 
+    using value_type = QHash<QObject*, QV4::WeakValue>::value_type;
+
     ConstIterator begin() const { return QHash<QObject*, QV4::WeakValue>::constBegin(); }
     Iterator begin() { return QHash<QObject*, QV4::WeakValue>::begin(); }
     ConstIterator end() const { return QHash<QObject*, QV4::WeakValue>::constEnd(); }
