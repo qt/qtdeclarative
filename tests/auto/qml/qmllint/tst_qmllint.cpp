@@ -158,7 +158,7 @@ void TestQmllint::directoryPassedAsQmlTypesFile()
 {
     const QStringList iArg = QStringList() << QStringLiteral("-i") << dataDirectory();
     const QString errorMessages = runQmllint("unknownElement.qml", false, iArg);
-    const QString expectedError = QStringLiteral("Warning: %1: QML types file cannot be a directory: ").arg(testFile("unknownElement.qml")) + dataDirectory();
+    const QString expectedError = QStringLiteral("Warning: QML types file cannot be a directory: ") + dataDirectory();
     QVERIFY2(errorMessages.contains(expectedError), qPrintable(QString::fromLatin1(
         "Expected error to contain \"%1\", but it didn't: %2").arg(expectedError, errorMessages)));
 }
@@ -166,9 +166,9 @@ void TestQmllint::directoryPassedAsQmlTypesFile()
 void TestQmllint::oldQmltypes()
 {
     const QString errors = runQmllint("oldQmltypes.qml", false);
-    QVERIFY(errors.contains(QStringLiteral("Warning: %1: typeinfo not declared in qmldir file").arg(testFile("oldQmltypes.qml"))));
+    QVERIFY(errors.contains(QStringLiteral("Warning: typeinfo not declared in qmldir file")));
     QVERIFY(!errors.contains(QStringLiteral("Warning: QQuickItem was not found. Did you add all import paths?")));
-    QVERIFY(errors.contains(QStringLiteral("Warning: %1: Found deprecated dependency specifications").arg(testFile("oldQmltypes.qml"))));
+    QVERIFY(errors.contains(QStringLiteral("Warning: Found deprecated dependency specifications")));
 
     // Checking for both lines separately so that we don't have to mess with the line endings.b
     QVERIFY(errors.contains(QStringLiteral("Meta object revision and export version differ, ignoring the revision.")));

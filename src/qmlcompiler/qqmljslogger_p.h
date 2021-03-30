@@ -113,7 +113,8 @@ public:
 
 
     void log(const QString &message, QQmlJSLoggerCategory category,
-             const QQmlJS::SourceLocation& = QQmlJS::SourceLocation(), bool showContext = true);
+             const QQmlJS::SourceLocation& = QQmlJS::SourceLocation(), bool showContext = true, bool showFileName = true);
+
     void processMessages(const QList<QQmlJS::DiagnosticMessage> &messages, QQmlJSLoggerCategory category);
 
     QColorOutput &colorOutput() { return m_output; }

@@ -66,8 +66,7 @@ public:
 
     ImportedTypes importModule(
             const QString &module, const QString &prefix = QString(),
-            QTypeRevision version = QTypeRevision(),
-            QQmlJS::SourceLocation location = QQmlJS::SourceLocation());
+            QTypeRevision version = QTypeRevision());
 
     ImportedTypes builtinInternalNames();
 

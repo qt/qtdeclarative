@@ -297,14 +297,14 @@ void QQmlJSImporter::importQmltypes(const QStringList &qmltypesFiles)
 }
 
 QQmlJSImporter::ImportedTypes QQmlJSImporter::importModule(
-        const QString &module, const QString &prefix, QTypeRevision version, QQmlJS::SourceLocation location)
+        const QString &module, const QString &prefix, QTypeRevision version)
 {
     AvailableTypes result(builtinImportHelper().cppNames);
     if (!importHelper(module, &result, prefix, version)) {
         m_warnings.append({
                               QStringLiteral("Failed to import %1. Are your include paths set up properly?").arg(module),
                               QtWarningMsg,
-                              location
+                              QQmlJS::SourceLocation()
                           });
     }
     return result.qmlNames;

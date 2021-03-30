@@ -147,6 +147,7 @@ private:
     void importBaseModules();
     void resolveAliases();
     void visitFunctionExpressionHelper(QQmlJS::AST::FunctionExpression *fexpr);
+    void processImportWarnings(const QString &what, const QQmlJS::SourceLocation &srcLocation = QQmlJS::SourceLocation());
 };
 
 QT_END_NAMESPACE

@@ -165,6 +165,17 @@ QString QQmlJSImportVisitor::implicitImportDirectory(
     return QFileInfo(localFile).canonicalPath() + u'/';
 }
 
+void QQmlJSImportVisitor::processImportWarnings(const QString &what, const QQmlJS::SourceLocation &srcLocation)
+{
+    const auto warnings = m_importer->takeWarnings();
+
+    if (warnings.isEmpty())
+        return;
+
+    m_logger.log(QStringLiteral("Warnings occurred while importing %1:").arg(what), Log_Import, srcLocation);
+    m_logger.processMessages(warnings, Log_Import);
+}
+
 void QQmlJSImportVisitor::importBaseModules()
 {
     Q_ASSERT(m_rootScopeImports.isEmpty());
@@ -174,7 +185,7 @@ void QQmlJSImportVisitor::importBaseModules()
         m_importer->importQmltypes(m_qmltypesFiles);
 
     m_rootScopeImports.insert(m_importer->importDirectory(m_implicitImportDirectory));
-    m_logger.processMessages(m_importer->takeWarnings(), Log_Import);
+    processImportWarnings(QStringLiteral("base modules"));
 }
 
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiProgram *)
@@ -518,6 +529,8 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
                         addImportLocation(key);
                 }
             }
+
+            processImportWarnings(QStringLiteral("URL \"%1\"").arg(absolute), import->firstSourceLocation());
             return true;
         }
 
@@ -533,6 +546,8 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
             m_rootScopeImports.insert(actualPrefix, scope);
             addImportLocation(actualPrefix);
         }
+
+        processImportWarnings(QStringLiteral("path \"%1\"").arg(path.canonicalFilePath()), import->firstSourceLocation());
         return true;
     }
 
@@ -546,13 +561,13 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
     path.chop(1);
 
     const auto imported = m_importer->importModule(
-                path, prefix, import->version ? import->version->version : QTypeRevision(), import->firstSourceLocation());
+                path, prefix, import->version ? import->version->version : QTypeRevision());
 
     m_rootScopeImports.insert(imported);
     for (const QString &key : imported.keys())
         addImportLocation(key);
 
-    m_logger.processMessages(m_importer->takeWarnings(), Log_Import);
+    processImportWarnings(QStringLiteral("module \"%1\"").arg(path), import->firstSourceLocation());
     return true;
 }
 

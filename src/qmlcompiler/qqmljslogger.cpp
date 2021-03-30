@@ -51,7 +51,7 @@ QQmlJSLogger::QQmlJSLogger(const QString &fileName, const QString &code, bool si
     m_output.insertMapping(QtDebugMsg, QColorOutput::GreenForeground);
 }
 
-void QQmlJSLogger::log(const QString &message, QQmlJSLoggerCategory category, const QQmlJS::SourceLocation &srcLocation, bool showContext)
+void QQmlJSLogger::log(const QString &message, QQmlJSLoggerCategory category, const QQmlJS::SourceLocation &srcLocation, bool showContext, bool showFileName)
 {
     if (isCategorySilent(category))
         return;
@@ -60,7 +60,7 @@ void QQmlJSLogger::log(const QString &message, QQmlJSLoggerCategory category, co
 
     QString prefix;
 
-    if (!m_fileName.isEmpty())
+    if (!m_fileName.isEmpty() && showFileName)
         prefix = m_fileName + QStringLiteral(":");
 
     if (srcLocation.isValid())
@@ -89,8 +89,15 @@ void QQmlJSLogger::log(const QString &message, QQmlJSLoggerCategory category, co
 
 void QQmlJSLogger::processMessages(const QList<QQmlJS::DiagnosticMessage> &messages, QQmlJSLoggerCategory category)
 {
+    if (isCategorySilent(category) || messages.isEmpty())
+        return;
+
+    m_output.write(QStringLiteral("---\n"));
+
     for (const QQmlJS::DiagnosticMessage &message : messages)
-        log(message.message, category, message.loc);
+        log(message.message, category, QQmlJS::SourceLocation(), false, false);
+
+    m_output.write(QStringLiteral("---\n\n"));
 }
 
 void QQmlJSLogger::printContext(const QQmlJS::SourceLocation &location)
