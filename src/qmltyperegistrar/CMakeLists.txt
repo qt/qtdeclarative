@@ -8,6 +8,7 @@ qt_get_tool_target_name(target_name qmltyperegistrar)
 qt_internal_add_tool(${target_name}
     TARGET_DESCRIPTION "QML Types Registrar"
     TOOLS_TARGET Qml # special case
+    INSTALL_DIR "${INSTALL_LIBEXECDIR}"
     SOURCES
         ../qmlcompiler/qqmljsstreamwriter.cpp ../qmlcompiler/qqmljsstreamwriter_p.h
         metatypesjsonprocessor.cpp metatypesjsonprocessor.h

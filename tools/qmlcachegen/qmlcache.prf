@@ -3,7 +3,7 @@ static {
     return()
 }
 
-qtPrepareTool(QML_CACHEGEN, qmlcachegen, _ARCH_CHECK)
+qtPrepareLibExecTool(QML_CACHEGEN, qmlcachegen, _ARCH_CHECK)
 
 isEmpty(TARGETPATH): error("Must set TARGETPATH (QML import name) for ahead-of-time QML cache generation")
 

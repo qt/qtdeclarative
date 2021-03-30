@@ -82,8 +82,10 @@ void TestQmllint::initTestCase()
 {
     QQmlDataTest::initTestCase();
     m_qmllintPath = QLibraryInfo::path(QLibraryInfo::BinariesPath) + QLatin1String("/qmllint");
-    m_qmljsrootgenPath = QLibraryInfo::path(QLibraryInfo::BinariesPath) + QLatin1String("/qmljsrootgen");
-    m_qmltyperegistrarPath = QLibraryInfo::path(QLibraryInfo::BinariesPath) + QLatin1String("/qmltyperegistrar");
+    m_qmljsrootgenPath = QLibraryInfo::path(QLibraryInfo::LibraryExecutablesPath)
+            + QLatin1String("/qmljsrootgen");
+    m_qmltyperegistrarPath = QLibraryInfo::path(QLibraryInfo::LibraryExecutablesPath)
+            + QLatin1String("/qmltyperegistrar");
 #ifdef Q_OS_WIN
     m_qmllintPath += QLatin1String(".exe");
     m_qmljsrootgenPath += QLatin1String(".exe");

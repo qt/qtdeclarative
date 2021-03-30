@@ -1,6 +1,6 @@
 CONFIG += metatypes
 
-qtPrepareTool(QML_TYPEREGISTRAR, qmltyperegistrar)
+qtPrepareLibExecTool(QML_TYPEREGISTRAR, qmltyperegistrar)
 
 isEmpty(QML_IMPORT_VERSION): \
     QML_IMPORT_VERSION = $$IMPORT_VERSION

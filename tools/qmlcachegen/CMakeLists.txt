@@ -8,6 +8,7 @@ qt_get_tool_target_name(target_name qmlcachegen)
 qt_internal_add_tool(${target_name}
     TARGET_DESCRIPTION "QML Cache Generator"
     TOOLS_TARGET Qml # special case
+    INSTALL_DIR "${INSTALL_LIBEXECDIR}"
     SOURCES
         qmlcachegen.cpp
     DEFINES

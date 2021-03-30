@@ -8,6 +8,7 @@ qt_get_tool_target_name(target_name qmlimportscanner)
 qt_internal_add_tool(${target_name}
     TARGET_DESCRIPTION "QML Import Scanner"
     TOOLS_TARGET Qml # special case
+    INSTALL_DIR "${INSTALL_LIBEXECDIR}"
     SOURCES
         main.cpp
     DEFINES
