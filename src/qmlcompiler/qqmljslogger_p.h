@@ -93,9 +93,10 @@ enum QQmlJSLoggerCategory
 
 class QQmlJSLogger
 {
-    Q_DISABLE_MOVE(QQmlJSLogger)
+    Q_DISABLE_COPY_MOVE(QQmlJSLogger)
 public:
     QQmlJSLogger(const QString &fileName, const QString &code, bool silent = false);
+    ~QQmlJSLogger() = default;
 
     bool hasWarnings() const { return !m_warnings.isEmpty(); }
     bool hasErrors() const { return !m_errors.isEmpty(); }
