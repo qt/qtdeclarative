@@ -292,6 +292,8 @@ public:
     void setRevision(int revision) { m_revision = revision; }
     int revision() const { return m_revision; }
 
+    bool isValid() const { return !m_propertyName.isEmpty(); }
+
     friend bool operator==(const QQmlJSMetaProperty &a, const QQmlJSMetaProperty &b)
     {
         return a.m_propertyName == b.m_propertyName
