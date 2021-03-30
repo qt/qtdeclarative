@@ -1406,14 +1406,6 @@ bool QQmlPropertyPrivate::write(
             v = value;
             if (v.convert(propertyMetaType)) {
                 ok = true;
-            } else if (static_cast<uint>(propertyType) >= QMetaType::User &&
-                       variantType == QMetaType::QString) {
-                QQmlMetaType::StringConverter con = QQmlMetaType::customStringConverter(propertyType);
-                if (con) {
-                    v = con(value.toString());
-                    if (v.userType() == propertyType)
-                        ok = true;
-                }
             }
         }
         if (!ok) {

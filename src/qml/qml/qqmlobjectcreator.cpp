@@ -628,19 +628,11 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
             break;
         }
 
-        // otherwise, try a custom type assignment
+        // string converters are not exposed, so ending up here indicates an error
         QString stringValue = compilationUnit->bindingValueAsString(binding);
-        QQmlMetaType::StringConverter converter = QQmlMetaType::customStringConverter(property->propType().id());
-        Q_ASSERT(converter);
-        QVariant value = (*converter)(stringValue);
-
         QMetaProperty metaProperty = _qobject->metaObject()->property(property->coreIndex());
-        if (value.isNull() || metaProperty.metaType() != property->propType()) {
-            recordError(binding->location, tr("Cannot assign value %1 to property %2").arg(stringValue).arg(QString::fromUtf8(metaProperty.name())));
-            break;
-        }
-
-        property->writeProperty(_qobject, value.data(), propertyWriteFlags);
+        recordError(binding->location, tr("Cannot assign value %1 to property"
+" %2").arg(stringValue, QString::fromUtf8(metaProperty.name())));
     }
     break;
     }

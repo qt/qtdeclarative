@@ -141,7 +141,6 @@ private slots:
     void requiredPropertyFromCpp();
     void attachedProperties();
     void dynamicObjects();
-    void customVariantTypes();
     void valueTypes();
     void cppnamespace();
     void aliasProperties();
@@ -1818,16 +1817,6 @@ void tst_qqmllanguage::dynamicObjects()
     VERIFY_ERRORS(0);
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
-}
-
-// Tests the registration of custom variant string converters
-void tst_qqmllanguage::customVariantTypes()
-{
-    QQmlComponent component(&engine, testFileUrl("customVariantTypes.qml"));
-    VERIFY_ERRORS(0);
-    QScopedPointer<MyQmlObject> object(qobject_cast<MyQmlObject*>(component.create()));
-    QVERIFY(object != nullptr);
-    QCOMPARE(object->customType().a, 10);
 }
 
 void tst_qqmllanguage::valueTypes()
@@ -3733,8 +3722,6 @@ void tst_qqmllanguage::initTestCase()
 
 
     defaultImportPathList = engine.importPathList();
-
-    QQmlMetaType::registerCustomStringConverter(qMetaTypeId<MyCustomVariantType>(), myCustomVariantTypeConverter);
 
     registerTypes();
     // Registered here because it uses testFileUrl

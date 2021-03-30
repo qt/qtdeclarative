@@ -1984,10 +1984,6 @@ void QQuickPropertyAnimationPrivate::convertVariant(QVariant &variant, QMetaType
     default:
         if (QQmlMetaType::isValueType(type)) {
             variant.convert(QMetaType(type));
-        } else {
-            QQmlMetaType::StringConverter converter = QQmlMetaType::customStringConverter(type.id());
-            if (converter)
-                variant = converter(variant.toString());
         }
         break;
     }

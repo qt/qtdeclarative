@@ -1163,39 +1163,6 @@ bool QQmlMetaType::isList(QMetaType type)
 }
 
 /*!
-    A custom string convertor allows you to specify a function pointer that
-    returns a variant of \a type. For example, if you have written your own icon
-    class that you want to support as an object property assignable in QML:
-
-    \code
-    int type = qRegisterMetaType<SuperIcon>("SuperIcon");
-    QML::addCustomStringConvertor(type, &SuperIcon::pixmapFromString);
-    \endcode
-
-    The function pointer must be of the form:
-    \code
-    QVariant (*StringConverter)(const QString &);
-    \endcode
- */
-void QQmlMetaType::registerCustomStringConverter(int type, StringConverter converter)
-{
-    QQmlMetaTypeDataPtr data;
-    if (data->stringConverters.contains(type))
-        return;
-    data->stringConverters.insert(type, converter);
-}
-
-/*!
-    Return the custom string converter for \a type, previously installed through
-    registerCustomStringConverter()
- */
-QQmlMetaType::StringConverter QQmlMetaType::customStringConverter(int type)
-{
-    const QQmlMetaTypeDataPtr data;
-    return data->stringConverters.value(type);
-}
-
-/*!
     Returns the type (if any) of URI-qualified named \a qualifiedName and version specified
     by \a version_major and \a version_minor.
 */

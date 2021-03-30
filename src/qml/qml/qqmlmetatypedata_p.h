@@ -83,8 +83,6 @@ struct QQmlMetaTypeData
             // a module via QQmlPrivate::RegisterCompositeType
     typedef QMultiHash<const QMetaObject *, QQmlTypePrivate *> MetaObjects;
     MetaObjects metaObjectToType;
-    typedef QHash<int, QQmlMetaType::StringConverter> StringConverters;
-    StringConverters stringConverters;
     QVector<QHash<QTypeRevision, QQmlRefPointer<QQmlPropertyCache>>> typePropertyCaches;
     QHash<int, QQmlValueType *> metaTypeToValueType;
 

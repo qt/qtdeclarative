@@ -196,10 +196,6 @@ public:
     static const char *interfaceIId(int);
     static bool isList(QMetaType type);
 
-    typedef QVariant (*StringConverter)(const QString &);
-    static void registerCustomStringConverter(int, StringConverter);
-    static StringConverter customStringConverter(int);
-
     static QTypeRevision latestModuleVersion(const QString &uri);
     static bool isLockedModule(const QString &uri, QTypeRevision version);
     static QTypeRevision matchingModuleVersion(const QString &module, QTypeRevision version);
