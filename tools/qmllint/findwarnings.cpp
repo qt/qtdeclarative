@@ -407,10 +407,10 @@ FindWarningVisitor::FindWarningVisitor(
         bool silent)
     : QQmlJSImportVisitor(importer,
                           implicitImportDirectory(fileName, importer->resourceFileMapper()),
-                          qmltypesFiles, m_filePath, m_code, silent),
-      m_code(std::move(code)),
+                          qmltypesFiles, fileName, code, silent),
+      m_code(code),
       m_rootId(QLatin1String("<id>")),
-      m_filePath(std::move(fileName))
+      m_filePath(fileName)
 {
     m_currentScope->setInternalName("global");
 

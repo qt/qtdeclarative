@@ -122,9 +122,8 @@ public:
 private:
     void printContext(const QQmlJS::SourceLocation &location);
 
-
-    const QString &m_fileName;
-    const QString &m_code;
+    const QString m_fileName;
+    const QString m_code;
 
     QColorOutput m_output;
 
