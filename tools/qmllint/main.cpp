@@ -50,10 +50,9 @@
 #include <QtCore/qlibraryinfo.h>
 #endif
 
-static bool lint_file(const QString &filename, const bool silent, const bool warnUnqualified,
-                      const bool warnWithStatement, const bool warnInheritanceCycle,
+static bool lint_file(const QString &filename, const bool silent,
                       const QStringList &qmlImportPaths, const QStringList &qmltypesFiles,
-                      const QString &resourceFile)
+                      const QString &resourceFile, const QMap<QString, QQmlJSLogger::Option> &options)
 {
     QFile file(filename);
     if (!file.open(QFile::ReadOnly)) {
@@ -92,9 +91,10 @@ static bool lint_file(const QString &filename, const bool silent, const bool war
             QQmlJSImporter importer(qmlImportPaths, mapper);
             FindWarningVisitor v { &importer, qmltypesFiles, code, filename, silent };
 
-            v.logger().setCategorySilent(Log_WithStatement, !warnWithStatement);
-            v.logger().setCategorySilent(Log_InheritanceCycle, !warnInheritanceCycle);
-            v.logger().setCategorySilent(Log_UnqualifiedAccess, !warnUnqualified);
+            for (auto it = options.cbegin(); it != options.cend(); ++it) {
+                v.logger().setCategoryDisabled(it.value().m_category, it.value().m_disabled);
+                v.logger().setCategoryLevel(it.value().m_category, it.value().m_level);
+            }
 
             parser.rootNode()->accept(&v);
             success = v.check();
@@ -113,12 +113,20 @@ static bool lint_file(const QString &filename, const bool silent, const bool war
 
 int main(int argv, char *argc[])
 {
+    QMap<QString, QQmlJSLogger::Option> options = QQmlJSLogger::options();
+
     QCoreApplication app(argv, argc);
     QCoreApplication::setApplicationName("qmllint");
     QCoreApplication::setApplicationVersion("1.0");
 #if QT_CONFIG(commandlineparser)
     QCommandLineParser parser;
-    parser.setApplicationDescription(QLatin1String("QML syntax verifier"));
+    parser.setApplicationDescription(QLatin1String(R"(QML syntax verifier and analyzer
+
+All warnings can be set to three levels:
+    disabled - Fully disables the warning.
+    info - Displays the warning but does not influence the return code.
+    warning - Displays the warning and leads to a non-zero exit code if encountered.
+)"));
     parser.addHelpOption();
     parser.addVersionOption();
 
@@ -126,17 +134,22 @@ int main(int argv, char *argc[])
                                     QLatin1String("Don't output syntax errors"));
     parser.addOption(silentOption);
 
+    for (auto it = options.cbegin(); it != options.cend(); ++it) {
+        QCommandLineOption option(it.key(), it.value().m_description + QStringLiteral(" (default: %1)").arg(it.value().levelToString()) , QStringLiteral("level"));
+        parser.addOption(option);
+    }
+
+    // TODO: Remove after Qt 6.2
     QCommandLineOption disableCheckUnqualified(QStringList() << "no-unqualified-id",
-                                               QLatin1String("Don't warn about unqualified identifiers"));
+                                               QLatin1String("Don't warn about unqualified identifiers (deprecated, please use --unqualified disable instead)"));
     parser.addOption(disableCheckUnqualified);
 
     QCommandLineOption disableCheckWithStatement(QStringList() << "no-with-statement",
-                                                 QLatin1String("Don't warn about with statements"));
+                                                 QLatin1String("Don't warn about with statements (deprecated, please use --with-statements disable instead)"));
     parser.addOption(disableCheckWithStatement);
 
     QCommandLineOption disableCheckInheritanceCycle(QStringList() << "no-inheritance-cycle",
-                                                    QLatin1String("Don't warn about inheritance cycles"));
-
+                                                    QLatin1String("Don't warn about inheritance cycles (deprecated, please use --inheritance-cycle disable instead"));
     parser.addOption(disableCheckInheritanceCycle);
 
     QCommandLineOption resourceOption(
@@ -173,15 +186,44 @@ int main(int argv, char *argc[])
 
     parser.process(app);
 
+    for (auto it = options.begin(); it != options.end(); ++it) {
+        if (parser.isSet(it.key())) {
+            const QString value = parser.value(it.key());
+            auto &option = it.value();
+
+            if (!option.setLevel(value)) {
+                qWarning() << "Invalid logging level" << value << "provided for" << it.key() << "(allowed are: disable, info, warning)";
+                parser.showHelp(-1);
+            }
+        }
+    }
+
     const auto positionalArguments = parser.positionalArguments();
     if (positionalArguments.isEmpty()) {
         parser.showHelp(-1);
     }
 
     bool silent = parser.isSet(silentOption);
-    bool warnUnqualified = !parser.isSet(disableCheckUnqualified);
-    bool warnWithStatement = !parser.isSet(disableCheckWithStatement);
-    bool warnInheritanceCycle = !parser.isSet(disableCheckInheritanceCycle);
+
+    // TODO: Remove after Qt 6.2
+    bool NoWarnUnqualified = parser.isSet(disableCheckUnqualified);
+    bool NoWarnWithStatement = parser.isSet(disableCheckWithStatement);
+    bool NoWarnInheritanceCycle = parser.isSet(disableCheckInheritanceCycle);
+
+    if (NoWarnUnqualified) {
+        options[QStringLiteral("unqualified")].m_disabled = true;
+        qWarning() << "Warning: --no-unqualified-id is deprecated. See --help.";
+    }
+
+    if (NoWarnWithStatement) {
+        options[QStringLiteral("with")].m_disabled = true;
+        qWarning() << "Warning: --no-with-statement is deprecated. See --help.";
+    }
+
+    if (NoWarnInheritanceCycle) {
+        options[QStringLiteral("inheritance-cycle")].m_disabled = true;
+        qWarning() << "Warning: --no-inheritance-cycle is deprecated. See --help.";
+    }
 
     // use host qml import path as a sane default if not explicitly disabled
     QStringList qmlImportPaths = parser.isSet(qmlImportNoDefault)
@@ -224,8 +266,7 @@ int main(int argv, char *argc[])
     const auto arguments = app.arguments();
     for (const QString &filename : arguments)
 #endif
-        success &= lint_file(filename, silent, warnUnqualified, warnWithStatement,
-                             warnInheritanceCycle, qmlImportPaths, qmltypesFiles, resourceFile);
+        success &= lint_file(filename, silent, qmlImportPaths, qmltypesFiles, resourceFile, options);
 
     return success ? 0 : -1;
 }

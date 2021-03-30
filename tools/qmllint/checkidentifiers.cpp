@@ -371,7 +371,7 @@ void CheckIdentifiers::operator()(
 
             QColorOutput &colorOut = m_logger->colorOutput();
 
-            if (!m_logger->isCategorySilent(Log_UnqualifiedAccess) &&
+            if (!m_logger->isCategoryDisabled(Log_UnqualifiedAccess) &&
                     (firstElement->hasProperty(memberAccessBase.m_name)
                     || firstElement->hasMethod(memberAccessBase.m_name)
                     || firstElement->hasEnumeration(memberAccessBase.m_name))) {

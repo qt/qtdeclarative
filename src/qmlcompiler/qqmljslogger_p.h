@@ -34,6 +34,7 @@
 #include <private/qqmljsdiagnosticmessage_p.h>
 
 #include <QtCore/qhash.h>
+#include <QtCore/qmap.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qlist.h>
 
@@ -95,6 +96,48 @@ class QQmlJSLogger
 {
     Q_DISABLE_COPY_MOVE(QQmlJSLogger)
 public:
+    struct Option
+    {
+        Option() = default;
+        Option(QQmlJSLoggerCategory category, const QString& description, QtMsgType level, bool disabled = false) : m_category(category), m_description(description), m_level(level), m_disabled(disabled) {}
+        QQmlJSLoggerCategory m_category;
+        QString m_description;
+        QtMsgType m_level;
+        bool m_disabled;
+
+        QString levelToString() const {
+            if (m_disabled)
+                return QStringLiteral("silent");
+            switch (m_level) {
+            case QtInfoMsg:
+                return QStringLiteral("info");
+            case QtWarningMsg:
+                return QStringLiteral("warning");
+            case QtCriticalMsg:
+                return QStringLiteral("error");
+            default:
+                Q_UNREACHABLE();
+                break;
+            }
+        }
+
+        bool setLevel(const QString &level) {
+            if (level == QStringLiteral("silent")) {
+                m_disabled = true;
+            } else if (level == QStringLiteral("info")) {
+                m_level = QtInfoMsg;
+            } else if (level == QStringLiteral("warning")) {
+                m_level = QtWarningMsg;
+            } else {
+                return false;
+            }
+
+            return true;
+        }
+    };
+
+    static const QMap<QString, Option> &options();
+
     QQmlJSLogger(const QString &fileName, const QString &code, bool silent = false);
     ~QQmlJSLogger() = default;
 
@@ -108,8 +151,8 @@ public:
     QtMsgType categoryLevel(QQmlJSLoggerCategory category) const { return m_categoryLevels[category]; }
     void setCategoryLevel(QQmlJSLoggerCategory category, QtMsgType Level) { m_categoryLevels[category] = Level; }
 
-    bool isCategorySilent(QQmlJSLoggerCategory category) const { return m_categorySilent[category]; }
-    void setCategorySilent(QQmlJSLoggerCategory category, bool silent) { m_categorySilent[category] = silent; }
+    bool isCategoryDisabled(QQmlJSLoggerCategory category) const { return m_categoryDisabled[category]; }
+    void setCategoryDisabled(QQmlJSLoggerCategory category, bool disabled) { m_categoryDisabled[category] = disabled; }
 
 
     void log(const QString &message, QQmlJSLoggerCategory category,
@@ -128,7 +171,7 @@ private:
     QColorOutput m_output;
 
     QtMsgType m_categoryLevels[QQmlJSLoggerCategory_Last + 1] = {};
-    bool m_categorySilent[QQmlJSLoggerCategory_Last + 1] = {};
+    bool m_categoryDisabled[QQmlJSLoggerCategory_Last + 1] = {};
 
     QList<QQmlJS::DiagnosticMessage> m_infos;
     QList<QQmlJS::DiagnosticMessage> m_warnings;

@@ -28,21 +28,34 @@
 
 #include "qqmljslogger_p.h"
 
+const QMap<QString, QQmlJSLogger::Option> &QQmlJSLogger::options() {
+    static QMap<QString, QQmlJSLogger::Option> optionsMap = {
+            {QStringLiteral("required"), QQmlJSLogger::Option(Log_Required, QStringLiteral("Warn about required properties"), QtWarningMsg) },
+            {QStringLiteral("alias"), QQmlJSLogger::Option(Log_Alias, QStringLiteral("Warn about alias errors"), QtWarningMsg) },
+            {QStringLiteral("import"), QQmlJSLogger::Option(Log_Import, QStringLiteral("Warn about failing imports and deprecated qmltypes"), QtWarningMsg) },
+            {QStringLiteral("with"), QQmlJSLogger::Option(Log_WithStatement, QStringLiteral("Warn about with statements as they can cause false positives when checking for unqualified access"), QtWarningMsg) },
+            {QStringLiteral("inheritance-cycle"), QQmlJSLogger::Option(Log_InheritanceCycle, QStringLiteral("Warn about inheritance cycles"), QtWarningMsg) },
+            {QStringLiteral("deprecated"), QQmlJSLogger::Option(Log_Deprecation, QStringLiteral("Warn about deprecated properties and types"), QtWarningMsg) },
+            {QStringLiteral("signal"), QQmlJSLogger::Option(Log_Signal, QStringLiteral("Warn about bad signal handler parameters"), QtWarningMsg) },
+            {QStringLiteral("type"), QQmlJSLogger::Option(Log_Type, QStringLiteral("Warn about unresolvable types and type mismatches"), QtWarningMsg) },
+            {QStringLiteral("property"), QQmlJSLogger::Option(Log_Property, QStringLiteral("Warn about unknown properties"), QtWarningMsg) },
+            {QStringLiteral("unqualified"), QQmlJSLogger::Option(Log_UnqualifiedAccess, QStringLiteral("Warn about unqualified identifiers and how to fix them"), QtWarningMsg) },
+            {QStringLiteral("unused-imports"), QQmlJSLogger::Option(Log_UnusedImport, QStringLiteral("Warn about unused imports"), QtInfoMsg) }
+        };
+
+    return optionsMap;
+}
+
 QQmlJSLogger::QQmlJSLogger(const QString &fileName, const QString &code, bool silent) : m_fileName(fileName), m_code(code), m_output(silent)
 {
-    // Set up some sane default logging levels
-    m_categoryLevels[Log_Required] = QtWarningMsg;
-    m_categoryLevels[Log_Alias] = QtWarningMsg;
-    m_categoryLevels[Log_Import] = QtWarningMsg;
-    m_categoryLevels[Log_Deprecation] = QtWarningMsg;
+    const auto &opt = options();
+    for (auto it = opt.cbegin(); it != opt.cend(); ++it) {
+        m_categoryLevels[it.value().m_category] = it.value().m_level;
+        m_categoryDisabled[it.value().m_category] = it.value().m_disabled;
+    }
+
+    // This has to be set up manually since we don't expose it as an option
     m_categoryLevels[Log_RecursionDepthError] = QtCriticalMsg;
-    m_categoryLevels[Log_WithStatement] = QtWarningMsg;
-    m_categoryLevels[Log_InheritanceCycle] = QtWarningMsg;
-    m_categoryLevels[Log_Signal] = QtWarningMsg;
-    m_categoryLevels[Log_Type] = QtWarningMsg;
-    m_categoryLevels[Log_Property] = QtWarningMsg;
-    m_categoryLevels[Log_UnqualifiedAccess] = QtWarningMsg;
-    m_categoryLevels[Log_UnusedImport] = QtInfoMsg;
 
     // setup color output
     m_output.insertMapping(QtCriticalMsg, QColorOutput::RedForeground);
@@ -53,7 +66,7 @@ QQmlJSLogger::QQmlJSLogger(const QString &fileName, const QString &code, bool si
 
 void QQmlJSLogger::log(const QString &message, QQmlJSLoggerCategory category, const QQmlJS::SourceLocation &srcLocation, bool showContext, bool showFileName)
 {
-    if (isCategorySilent(category))
+    if (isCategoryDisabled(category))
         return;
 
     const QtMsgType msgType = m_categoryLevels[category];
@@ -89,7 +102,7 @@ void QQmlJSLogger::log(const QString &message, QQmlJSLoggerCategory category, co
 
 void QQmlJSLogger::processMessages(const QList<QQmlJS::DiagnosticMessage> &messages, QQmlJSLoggerCategory category)
 {
-    if (isCategorySilent(category) || messages.isEmpty())
+    if (isCategoryDisabled(category) || messages.isEmpty())
         return;
 
     m_output.write(QStringLiteral("---\n"));
