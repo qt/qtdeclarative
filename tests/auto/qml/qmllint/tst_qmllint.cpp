@@ -208,6 +208,9 @@ void TestQmllint::verifyJsRoot()
     QTemporaryDir dir;
 
     QProcess jsrootProcess;
+    connect(&jsrootProcess, &QProcess::errorOccurred, [&](QProcess::ProcessError error) {
+        qWarning() << error << jsrootProcess.errorString();
+    });
     jsrootProcess.setWorkingDirectory(dir.path());
     jsrootProcess.start(m_qmljsrootgenPath, {"jsroot.json"});
 
