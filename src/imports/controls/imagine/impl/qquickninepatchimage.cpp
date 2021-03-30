@@ -386,7 +386,12 @@ void QQuickNinePatchImage::pixmapChange()
 {
     Q_D(QQuickNinePatchImage);
     if (QFileInfo(d->url.fileName()).completeSuffix().toLower() == QLatin1String("9.png")) {
-        d->resetNode = d->ninePatch.isNull();
+        // Keep resetNode if it is already set, we do not want to miss an
+        // ImageNode->NinePatchNode change.  Without this there's a chance one gets
+        // an incorrect cast on oldNode every once in a while with source changes.
+        if (!d->resetNode)
+            d->resetNode = d->ninePatch.isNull();
+
         d->ninePatch = d->pix.image();
         if (d->ninePatch.depth() != 32)
             d->ninePatch = d->ninePatch.convertToFormat(QImage::Format_ARGB32);
