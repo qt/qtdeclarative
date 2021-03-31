@@ -289,7 +289,7 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, b
     return result->asReturnedValue();
 }
 
-bool QQmlJavaScriptExpression::evaluate(void **a, QMetaType *types, int argc)
+bool QQmlJavaScriptExpression::evaluate(void **a, const QMetaType *types, int argc)
 {
     Q_ASSERT(m_context && m_context->engine());
 

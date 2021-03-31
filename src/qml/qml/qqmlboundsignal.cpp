@@ -187,16 +187,32 @@ void QQmlBoundSignalExpression::evaluate(void **a)
 
     ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
 
-    QQmlMetaObject::ArgTypeStorage storage;
-    //TODO: lookup via signal index rather than method index as an optimization
-    int methodIndex = QMetaObjectPrivate::signal(m_target->metaObject(), m_index).methodIndex();
-    bool ok = QQmlMetaObject(m_target).methodParameterTypes(methodIndex, &storage, nullptr);
-    const int argCount = ok ? storage.size() : 0;
+    if (a) {
+        //TODO: lookup via signal index rather than method index as an optimization
+        const QMetaObject *targetMeta = m_target->metaObject();
+        const QMetaMethod metaMethod = targetMeta->method(
+                    QMetaObjectPrivate::signal(targetMeta, m_index).methodIndex());
 
-    QV4::JSCallArguments jsCall(scope, argCount);
-    populateJSCallArguments(v4, jsCall, argCount, a, storage.constData());
+        int argCount = metaMethod.parameterCount();
+        QQmlMetaObject::ArgTypeStorage storage;
+        storage.reserve(argCount + 1);
+        storage.append(QMetaType()); // We're not interested in the return value
+        for (int i = 0; i < argCount; ++i) {
+            const QMetaType type = metaMethod.parameterMetaType(i);
+            if (!type.isValid())
+                argCount = 0;
+            else if (type.flags().testFlag(QMetaType::IsEnumeration))
+                storage.append(QMetaType::fromType<int>());
+            else
+                storage.append(type);
+        }
 
-    QQmlJavaScriptExpression::evaluate(jsCall.callData(scope), nullptr);
+        QQmlJavaScriptExpression::evaluate(a, storage.constData(), argCount);
+    } else {
+        void *ignoredResult = nullptr;
+        QMetaType invalidType;
+        QQmlJavaScriptExpression::evaluate(&ignoredResult, &invalidType, 0);
+    }
 
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
 }

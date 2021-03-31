@@ -108,7 +108,7 @@ public:
 
     QV4::ReturnedValue evaluate(bool *isUndefined);
     QV4::ReturnedValue evaluate(QV4::CallData *callData, bool *isUndefined);
-    bool evaluate(void **a, QMetaType *types, int argc);
+    bool evaluate(void **a, const QMetaType *types, int argc);
 
     inline bool notifyOnValueChanged() const;
 
