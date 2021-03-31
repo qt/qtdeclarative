@@ -1599,8 +1599,6 @@ const QMetaObject *QQmlMetaType::metaObjectForMetaType(QMetaType metaType)
         if (metaType == QMetaType::fromType<QItemSelectionRange>())
             return &QQmlItemSelectionRangeValueType::staticMetaObject;
 #endif
-        if (metaType == QMetaType::fromType<QQmlProperty>())
-            return &QQmlPropertyValueType::staticMetaObject;
         break;
     }
 

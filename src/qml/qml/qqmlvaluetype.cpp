@@ -448,16 +448,6 @@ void QQmlEasingValueType::setBezierCurve(const QVariantList &customCurveVariant)
     v = newEasingCurve;
 }
 
-QObject *QQmlPropertyValueType::object() const
-{
-    return v.object();
-}
-
-QString QQmlPropertyValueType::name() const
-{
-    return v.name();
-}
-
 QVariantList QQmlEasingValueType::bezierCurve() const
 {
     QVariantList rv;
