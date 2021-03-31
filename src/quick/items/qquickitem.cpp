@@ -6177,7 +6177,8 @@ bool QQuickItemPrivate::setEffectiveVisibleRecur(bool newEffectiveVisible)
     if (parentItem)
         QQuickItemPrivate::get(parentItem)->dirty(ChildrenStackingChanged);
     if (window)
-        deliveryAgentPrivate()->removeGrabber(q, true, true, true);
+        if (auto agent = deliveryAgentPrivate(); agent)
+            agent->removeGrabber(q, true, true, true);
 
     bool childVisibilityChanged = false;
     for (int ii = 0; ii < childItems.count(); ++ii)
