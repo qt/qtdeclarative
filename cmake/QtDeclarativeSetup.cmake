@@ -15,13 +15,7 @@ function(qt_declarative_write_tag_header target_name)
             OUTPUT_STRIP_TRAILING_WHITESPACE)
     endif()
     string(LENGTH "${QML_COMPILE_HASH}" QML_COMPILE_HASH_LENGTH)
-    set(compile_hash_contents "// Generated file, DO NOT EDIT
-        #define QML_COMPILE_HASH \"${QML_COMPILE_HASH}\"
-        #define QML_COMPILE_HASH_LENGTH ${QML_COMPILE_HASH_LENGTH}"
-        )
-    set(compile_hash_output_path "${CMAKE_CURRENT_BINARY_DIR}/qml_compile_hash_p.h")
-    file(GENERATE OUTPUT "${compile_hash_output_path}"
-         CONTENT "${compile_hash_contents}")
+    configure_file("qml_compile_hash_p.h.in" "${CMAKE_CURRENT_BINARY_DIR}/qml_compile_hash_p.h")
 endfunction()
 
 find_package(PythonInterp REQUIRED)
