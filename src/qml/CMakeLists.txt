@@ -219,6 +219,7 @@ qt_internal_add_module(Qml
         qml/ftw/qrecursionwatcher_p.h
         qml/ftw/qrecyclepool_p.h
         qml/ftw/qstringhash_p.h
+        qml/qqmlregistration.h
         qml/qqml.cpp qml/qqml.h
         qml/qqmlabstractbinding.cpp qml/qqmlabstractbinding_p.h
         qml/qqmlabstracturlinterceptor.cpp qml/qqmlabstracturlinterceptor.h
