@@ -758,12 +758,8 @@ bool QQmlPrivate::AOTCompiledContext::getObjectLookup(
 {
     QV4::Lookup *l = compilationUnit->runtimeLookups + index;
 
-    if (!object) {
-        QString message = QStringLiteral("Cannot read property '%1' of null")
-                .arg(compilationUnit->runtimeStrings[l->nameIndex]->toQString());
-        engine->handle()->throwTypeError(message);
+    if (!object)
         return false;
-    }
 
     if (l->getter == QV4::QObjectWrapper::lookupGetter
             && !QQmlData::wasDeleted(object)
