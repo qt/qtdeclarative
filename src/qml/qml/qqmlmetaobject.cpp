@@ -184,7 +184,7 @@ int *QQmlMetaObject::constructorParameterTypes(int index, ArgTypeStorage *dummy,
 }
 
 int *QQmlMetaObject::methodParameterTypes(const QMetaMethod &m, ArgTypeStorage *argStorage,
-                                          QByteArray *unknownTypeError) const
+                                          QByteArray *unknownTypeError)
 {
     Q_ASSERT(argStorage);
 
@@ -203,7 +203,17 @@ int *QQmlMetaObject::methodParameterTypes(const QMetaMethod &m, ArgTypeStorage *
         } else {
             if (argTypeNames.isEmpty())
                 argTypeNames = m.parameterTypes();
-            if (isNamedEnumerator(_m, argTypeNames.at(ii))) {
+            // hack only needed in Qt 6.1 to access the metaobject of the metamethod
+            // In 6.2 this method has been refactored and does not need acccess to the metaobject
+            union HackyAccessor {
+                HackyAccessor(QMetaMethod method) : m(method) {}
+                QMetaMethod m;
+                struct {
+                    const QMetaObject *mobj = nullptr;
+                } accessor;
+            };
+            HackyAccessor hack { m };
+            if (isNamedEnumerator(hack.accessor.mobj, argTypeNames.at(ii))) {
                 type = QMetaType::Int;
             } else if (type == QMetaType::UnknownType) {
                 if (unknownTypeError)

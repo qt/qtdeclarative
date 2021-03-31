@@ -939,15 +939,15 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
 {
     QV4::PersistentValue function;
     QV4::PersistentValue thisObject;
-    int signalIndex;
+    QMetaMethod signal;
 
     QObjectSlotDispatcher()
         : QtPrivate::QSlotObjectBase(&impl)
-        , signalIndex(-1)
     {}
 
-    static void impl(int which, QSlotObjectBase *this_, QObject *r, void **metaArgs, bool *ret)
+    static void impl(int which, QSlotObjectBase *this_, QObject *receiver, void **metaArgs, bool *ret)
     {
+        Q_UNUSED(receiver);
         switch (which) {
         case Destroy: {
             delete static_cast<QObjectSlotDispatcher*>(this_);
@@ -963,7 +963,7 @@ struct QObjectSlotDispatcher : public QtPrivate::QSlotObjectBase
                 break;
 
             QQmlMetaObject::ArgTypeStorage storage;
-            int *argsTypes = QQmlMetaObject(r).methodParameterTypes(This->signalIndex, &storage, nullptr);
+            int *argsTypes = QQmlMetaObject::methodParameterTypes(This->signal, &storage, nullptr);
 
             int argCount = argsTypes ? argsTypes[0]:0;
 
@@ -1071,7 +1071,8 @@ ReturnedValue QObjectWrapper::method_connect(const FunctionObject *b, const Valu
     if (!signalObject)
         THROW_GENERIC_ERROR("Function.prototype.connect: cannot connect to deleted QObject");
 
-    if (signalObject->metaObject()->method(signalIndex).methodType() != QMetaMethod::Signal)
+    auto signalMetaMethod = signalObject->metaObject()->method(signalIndex);
+    if (signalMetaMethod.methodType() != QMetaMethod::Signal)
         THROW_GENERIC_ERROR("Function.prototype.connect: this object is not a signal");
 
     QV4::ScopedFunctionObject f(scope);
@@ -1091,7 +1092,7 @@ ReturnedValue QObjectWrapper::method_connect(const FunctionObject *b, const Valu
         THROW_GENERIC_ERROR("Function.prototype.connect: target this is not an object");
 
     QV4::QObjectSlotDispatcher *slot = new QV4::QObjectSlotDispatcher;
-    slot->signalIndex = signalIndex;
+    slot->signal = signalMetaMethod;
 
     slot->thisObject.set(scope.engine, object);
     slot->function.set(scope.engine, f);
