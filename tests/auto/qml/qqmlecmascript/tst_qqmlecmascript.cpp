@@ -3624,6 +3624,14 @@ void tst_qqmlecmascript::scriptConnect()
 
         delete object;
     }
+
+    {
+        QRegularExpression msg {".*scriptConnect.7.qml:9: Error: Insufficient arguments"};
+        QTest::ignoreMessage(QtMsgType::QtWarningMsg, msg);
+        QQmlComponent component(&engine, testFileUrl("scriptConnect.7.qml"));
+        QScopedPointer<QObject> root { component.create() };
+        QVERIFY2(root, qPrintable(component.errorString()));
+    }
 }
 
 void tst_qqmlecmascript::scriptDisconnect()

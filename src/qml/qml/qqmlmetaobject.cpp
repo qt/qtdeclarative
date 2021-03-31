@@ -131,7 +131,7 @@ bool QQmlMetaObject::constructorParameterTypes(int index, ArgTypeStorage *dummy,
 }
 
 bool QQmlMetaObject::methodParameterTypes(const QMetaMethod &m, ArgTypeStorage *argStorage,
-                                          QByteArray *unknownTypeError) const
+                                          QByteArray *unknownTypeError)
 {
     Q_ASSERT(argStorage);
 

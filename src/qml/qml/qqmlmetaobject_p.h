@@ -111,10 +111,10 @@ public:
     // we need a helper to find the correct meta object and property/method index.
     static void resolveGadgetMethodOrPropertyIndex(QMetaObject::Call type, const QMetaObject **metaObject, int *index);
 
+    static bool methodParameterTypes(const QMetaMethod &method, ArgTypeStorage *argStorage,
+                              QByteArray *unknownTypeError);
 protected:
     const QMetaObject *_m = nullptr;
-    bool methodParameterTypes(const QMetaMethod &method, ArgTypeStorage *argStorage,
-                              QByteArray *unknownTypeError) const;
 
 };
 

@@ -1824,6 +1824,20 @@ public:
     QProperty<int> complex;
 };
 
+struct Sender : QObject
+{
+    Q_OBJECT
+signals:
+    void sig1();
+};
+
+struct Receiver : QObject
+{
+    Q_OBJECT
+public slots:
+    int slot1(int i, int j, int k) {return i+j+k;}
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H

@@ -557,6 +557,9 @@ void registerTypes()
     qmlRegisterType<ClassWithQProperty>("Qt.test", 1, 0, "ClassWithQProperty");
     qmlRegisterType<ClassWithQObjectProperty>("Qt.test", 1, 0, "ClassWithQObjectProperty");
     qmlRegisterType<ClassWithQProperty2>("Qt.test", 1, 0, "ClassWithQProperty2");
+
+    qmlRegisterType<Receiver>("Qt.test", 1,0, "Receiver");
+    qmlRegisterType<Sender>("Qt.test", 1,0, "Sender");
 }
 
 #include "testtypes.moc"
