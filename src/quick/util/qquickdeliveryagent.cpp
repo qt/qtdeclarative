@@ -1521,10 +1521,12 @@ void QQuickDeliveryAgentPrivate::onGrabChanged(QObject *grabber, QPointingDevice
 
 void QQuickDeliveryAgentPrivate::ensureDeviceConnected(const QPointingDevice *dev)
 {
+    Q_Q(QQuickDeliveryAgent);
     if (knownPointingDevices.contains(dev))
         return;
     knownPointingDevices.append(dev);
     connect(dev, &QPointingDevice::grabChanged, this, &QQuickDeliveryAgentPrivate::onGrabChanged);
+    QObject::connect(dev, &QObject::destroyed, q, [this, dev] {this->knownPointingDevices.removeAll(dev);});
 }
 
 void QQuickDeliveryAgentPrivate::deliverPointerEvent(QPointerEvent *event)
