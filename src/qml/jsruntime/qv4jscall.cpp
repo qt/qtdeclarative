@@ -52,10 +52,8 @@ QT_BEGIN_NAMESPACE
 void QV4::populateJSCallArguments(ExecutionEngine *v4, JSCallArguments &jsCall,
                                   int argc, void **args, const QMetaType *types)
 {
-    for (int ii = 0; ii < argc; ++ii) {
-        auto type = QMetaType(types[ii]);
-        jsCall.args[ii] = v4->metaTypeToJS(type, args[ii + 1]);
-    }
+    for (int ii = 0; ii < argc; ++ii)
+        jsCall.args[ii] = v4->metaTypeToJS(types[ii], args[ii + 1]);
 }
 
 QT_END_NAMESPACE
