@@ -55,7 +55,7 @@
 #include <private/qv4function_p.h>
 #include <QHash>
 
-QT_REQUIRE_CONFIG(qml_jit);
+#if QT_CONFIG(qml_jit)
 
 QT_BEGIN_NAMESPACE
 
@@ -181,5 +181,7 @@ private:
 } // namespace QV4
 
 QT_END_NAMESPACE
+
+#endif // QT_CONFIG(qml_jit)
 
 #endif // QV4BASELINEASSEMBLER_P_H

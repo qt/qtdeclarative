@@ -51,6 +51,8 @@
 #include <assembler/LinkBuffer.h>
 #include <WTFStubs.h>
 
+#if QT_CONFIG(qml_jit)
+
 #undef ENABLE_ALL_ASSEMBLERS_FOR_REFACTORING_PURPOSES
 
 QT_BEGIN_NAMESPACE
@@ -370,3 +372,5 @@ void PlatformAssemblerCommon::storeInt32AsValue(int srcInt, Address destAddr)
 } // QV4 namepsace
 
 QT_END_NAMESPACE
+
+#endif // QT_CONFIG(qml_jit)
