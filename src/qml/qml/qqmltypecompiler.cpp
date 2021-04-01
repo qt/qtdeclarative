@@ -89,11 +89,6 @@ QQmlRefPointer<QV4::ExecutableCompilationUnit> QQmlTypeCompiler::compile()
         }
     }
 
-    {
-        QQmlDefaultPropertyMerger merger(this);
-        merger.mergeDefaultProperties();
-    }
-
 
     // Resolve component boundaries and aliases
 
@@ -104,6 +99,11 @@ QQmlRefPointer<QV4::ExecutableCompilationUnit> QQmlTypeCompiler::compile()
             return nullptr;
 
         pendingGroupPropertyBindings.resolveMissingPropertyCaches(engine, &m_propertyCaches);
+    }
+
+    {
+        QQmlDefaultPropertyMerger merger(this);
+        merger.mergeDefaultProperties();
     }
 
     {
