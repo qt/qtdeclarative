@@ -134,6 +134,30 @@ qt_feature("qml-jit" PRIVATE
     AUTODETECT NOT IOS AND NOT TVOS
     CONDITION ( ( ( TEST_architecture_arch STREQUAL i386 ) AND TEST_pointer_32bit AND QT_FEATURE_sse2 ) OR ( ( TEST_architecture_arch STREQUAL x86_64 ) AND TEST_pointer_64bit AND QT_FEATURE_sse2 ) OR ( ( TEST_architecture_arch STREQUAL arm ) AND TEST_pointer_32bit AND TEST_arm_fp AND TEST_arm_thumb AND ( LINUX OR IOS OR TVOS OR QNX ) ) OR ( ( TEST_architecture_arch STREQUAL arm64 ) AND TEST_pointer_64bit AND TEST_arm_fp AND ( LINUX OR IOS OR TVOS OR QNX OR INTEGRITY ) ) )
 )
+# special case begin
+# When doing macOS universal builds, JIT needs to be disabled for the ARM slice.
+# Because both arm and x86_64 slices are built in one clang frontend invocation
+# we need this hack to ensure each backend invocation sees the correct value
+# of the feature definition.
+qt_extra_definition("QT_QML_JIT_SUPPORTED_IMPL" "0
+// Unset dummy value
+#undef QT_QML_JIT_SUPPORTED_IMPL
+// Compute per-arch value and save in extra define
+#if QT_CONFIG(qml_jit) && !(defined(Q_OS_MACOS) && defined(Q_PROCESSOR_ARM))
+#define QT_QML_JIT_SUPPORTED_IMPL 1
+#else
+#define QT_QML_JIT_SUPPORTED_IMPL 0
+#endif
+// Unset original feature value
+#undef QT_FEATURE_qml_jit
+// Set new value based on previous computation
+#if QT_QML_JIT_SUPPORTED_IMPL
+#define QT_FEATURE_qml_jit 1
+#else
+#define QT_FEATURE_qml_jit -1
+#endif
+" PRIVATE)
+# special case end
 qt_feature("qml-debug" PUBLIC
     SECTION "QML"
     LABEL "QML debugging and profiling support"

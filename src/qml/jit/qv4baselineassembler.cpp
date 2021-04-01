@@ -55,6 +55,8 @@
 
 #undef ENABLE_ALL_ASSEMBLERS_FOR_REFACTORING_PURPOSES
 
+#if QT_CONFIG(qml_jit)
+
 QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace JIT {
@@ -1619,3 +1621,5 @@ void BaselineAssembler::ret()
 } // QV4 namepsace
 
 QT_END_NAMESPACE
+
+#endif // QT_CONFIG(qml_jit)

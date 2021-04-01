@@ -56,7 +56,7 @@
 #include <private/qv4instr_moth_p.h>
 #include <private/qv4bytecodehandler_p.h>
 
-QT_REQUIRE_CONFIG(qml_jit);
+#if QT_CONFIG(qml_jit)
 
 QT_BEGIN_NAMESPACE
 
@@ -219,5 +219,7 @@ private:
 } // namespace QV4
 
 QT_END_NAMESPACE
+
+#endif // QT_CONFIG(qml_jit)
 
 #endif // QV4JIT_P_H

@@ -42,6 +42,8 @@
 #include <private/qv4lookup_p.h>
 #include <private/qv4generatorobject_p.h>
 
+#if QT_CONFIG(qml_jit)
+
 QT_USE_NAMESPACE
 using namespace QV4;
 using namespace QV4::JIT;
@@ -931,3 +933,6 @@ void BaselineJIT::endInstruction(Instr::Type instr)
 {
     Q_UNUSED(instr);
 }
+
+#endif // QT_CONFIG(qml_jit)
+
