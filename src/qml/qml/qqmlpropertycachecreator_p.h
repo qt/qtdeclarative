@@ -106,13 +106,23 @@ public:
     static QByteArray createClassNameTypeByUrl(const QUrl &url);
 
     static QByteArray createClassNameForInlineComponent(const QUrl &baseUrl, int icId);
+
+    struct IncrementalResult {
+        // valid if and only if an error occurred
+        QQmlError error;
+        // true if there was no error and there are still components left to process
+        bool canResume = false;
+        // the object index of the last processed (inline) component root.
+        int processedRoot = 0;
+    };
 };
 
 template <typename ObjectContainer>
 class QQmlPropertyCacheCreator : public QQmlPropertyCacheCreatorBase
 {
 public:
-    typedef typename ObjectContainer::CompiledObject CompiledObject;
+    using CompiledObject = typename ObjectContainer::CompiledObject;
+    using InlineComponent = typename std::remove_reference<decltype (*(std::declval<CompiledObject>().inlineComponentsBegin()))>::type;
 
     QQmlPropertyCacheCreator(QQmlPropertyCacheVector *propertyCaches,
                              QQmlPendingGroupPropertyBindings *pendingGroupPropertyBindings,
@@ -120,6 +130,30 @@ public:
                              const ObjectContainer *objectContainer, const QQmlImports *imports,
                              const QByteArray &typeClassName);
 
+
+    /*!
+        \internal
+        Creates the property cache for the CompiledObjects of objectContainer,
+        one (inline) root component at a time.
+
+        \note Later compiler passes might modify those property caches. Therefore,
+        the actual metaobjects are not created yet.
+     */
+    IncrementalResult buildMetaObjectsIncrementally();
+
+    /*!
+        \internal
+        Returns a valid error if the inline components of the objectContainer
+        form a cycle. Otherwise an invalid error is returned
+     */
+    QQmlError verifyNoICCycle();
+
+    /*!
+        \internal
+        Fills the property caches for the CompiledObjects by
+        calling buildMetaObjectsIncrementally until it can no
+        longer resume.
+     */
     QQmlError buildMetaObjects();
 
     enum class VMEMetaObjectIsRequired {
@@ -142,6 +176,12 @@ protected:
     QQmlPendingGroupPropertyBindings *pendingGroupPropertyBindings;
     QByteArray typeClassName; // not const as we temporarily chang it for inline components
     unsigned int currentRoot; // set to objectID of inline component root when handling inline components
+
+    QQmlBindingInstantiationContext m_context;
+    std::vector<InlineComponent> allICs;
+    std::vector<icutils::Node> nodesSorted;
+    std::vector<icutils::Node>::reverse_iterator nodeIt = nodesSorted.rbegin();
+    bool hasCycle = false;
 };
 
 template <typename ObjectContainer>
@@ -159,17 +199,11 @@ inline QQmlPropertyCacheCreator<ObjectContainer>::QQmlPropertyCacheCreator(QQmlP
     , currentRoot(-1)
 {
     propertyCaches->resize(objectContainer->objectCount());
-}
 
-template <typename ObjectContainer>
-inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjects()
-{
     using namespace icutils;
-    QQmlBindingInstantiationContext context;
 
     // get a list of all inline components
-    using InlineComponent = typename std::remove_reference<decltype (*(std::declval<CompiledObject>().inlineComponentsBegin()))>::type;
-    std::vector<InlineComponent> allICs {};
+
     for (int i=0; i != objectContainer->objectCount(); ++i) {
         const CompiledObject *obj = objectContainer->objectAt(i);
         for (auto it = obj->inlineComponentsBegin(); it != obj->inlineComponentsEnd(); ++it) {
@@ -185,17 +219,30 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjects()
     adjacencyList.resize(nodes.size());
     fillAdjacencyListForInlineComponents(objectContainer, adjacencyList, nodes, allICs);
 
-    bool hasCycle = false;
-    auto nodesSorted = topoSort(nodes, adjacencyList, hasCycle);
+    nodesSorted = topoSort(nodes, adjacencyList, hasCycle);
+    nodeIt = nodesSorted.rbegin();
+}
 
+template <typename ObjectContainer>
+inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::verifyNoICCycle()
+{
     if (hasCycle) {
         QQmlError diag;
         diag.setDescription(QLatin1String("Inline components form a cycle!"));
         return diag;
     }
+    return {};
+}
+
+template <typename ObjectContainer>
+inline  QQmlPropertyCacheCreatorBase::IncrementalResult
+QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectsIncrementally()
+{
+    // needs to be checked with verifyNoICCycle before this function is called
+    Q_ASSERT(!hasCycle);
 
     // create meta objects for inline components before compiling actual root component
-    for (auto nodeIt = nodesSorted.rbegin(); nodeIt != nodesSorted.rend(); ++nodeIt) {
+    if (nodeIt != nodesSorted.rend()) {
         const auto &ic = allICs[nodeIt->index];
         QV4::ResolvedTypeReference *typeRef = objectContainer->resolvedType(ic.nameIndex);
         Q_ASSERT(propertyCaches->at(ic.objectIndex) == nullptr);
@@ -204,15 +251,32 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjects()
         QByteArray icTypeName { objectContainer->stringAt(ic.nameIndex).toUtf8() };
         QScopedValueRollback<QByteArray> nameChange {typeClassName, icTypeName};
         QScopedValueRollback<unsigned int> rootChange {currentRoot, ic.objectIndex};
-        QQmlError diag = buildMetaObjectRecursively(ic.objectIndex, context, VMEMetaObjectIsRequired::Always);
+        ++nodeIt;
+        QQmlError diag = buildMetaObjectRecursively(ic.objectIndex, m_context, VMEMetaObjectIsRequired::Always);
         if (diag.isValid()) {
-            return diag;
+            return {diag, false, 0};
         }
         typeRef->setTypePropertyCache(propertyCaches->at(ic.objectIndex));
         Q_ASSERT(!typeRef->typePropertyCache().isNull());
+        return { QQmlError(), true, int(ic.objectIndex) };
     }
 
-    return buildMetaObjectRecursively(/*root object*/0, context, VMEMetaObjectIsRequired::Maybe);
+    auto diag = buildMetaObjectRecursively(/*root object*/0, m_context, VMEMetaObjectIsRequired::Maybe);
+    return {diag, false, 0};
+}
+
+template <typename ObjectContainer>
+inline  QQmlError
+QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjects()
+{
+    QQmlError error = verifyNoICCycle();
+    if (error.isValid())
+        return error;
+    QQmlPropertyCacheCreatorBase::IncrementalResult result;
+    do {
+        result = buildMetaObjectsIncrementally();
+    } while (result.canResume);
+    return result.error;
 }
 
 template <typename ObjectContainer>

@@ -82,23 +82,28 @@ QQmlRefPointer<QV4::ExecutableCompilationUnit> QQmlTypeCompiler::compile()
     {
         QQmlPropertyCacheCreator<QQmlTypeCompiler> propertyCacheBuilder(&m_propertyCaches, &pendingGroupPropertyBindings,
                                                                         engine, this, imports(), typeData->typeClassName());
-        QQmlError error = propertyCacheBuilder.buildMetaObjects();
-        if (error.isValid()) {
-            recordError(error);
+        QQmlError cycleError = propertyCacheBuilder.verifyNoICCycle();
+        if (cycleError.isValid()) {
+            recordError(cycleError);
             return nullptr;
         }
-    }
+        QQmlPropertyCacheCreatorBase::IncrementalResult result;
+        do {
+            result = propertyCacheBuilder.buildMetaObjectsIncrementally();
+            const QQmlError &error = result.error;
+            if (error.isValid()) {
+                recordError(error);
+                return nullptr;
+            } else {
+                // Resolve component boundaries and aliases
 
-
-    // Resolve component boundaries and aliases
-
-    {
-        // Scan for components, determine their scopes and resolve aliases within the scope.
-        QQmlComponentAndAliasResolver resolver(this);
-        if (!resolver.resolve())
-            return nullptr;
-
-        pendingGroupPropertyBindings.resolveMissingPropertyCaches(engine, &m_propertyCaches);
+                QQmlComponentAndAliasResolver resolver(this);
+                if (!resolver.resolve(result.processedRoot))
+                    return nullptr;
+                pendingGroupPropertyBindings.resolveMissingPropertyCaches(engine, &m_propertyCaches);
+                pendingGroupPropertyBindings.clear(); // anything that can be processed is now processed
+            }
+        } while (result.canResume);
     }
 
     {
@@ -854,18 +859,26 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
     }
 }
 
-bool QQmlComponentAndAliasResolver::resolve()
+// resolve ignores everything relating to inline components
+bool QQmlComponentAndAliasResolver::resolve(int root)
 {
     // Detect real Component {} objects as well as implicitly defined components, such as
     //     someItemDelegate: Item {}
     // In the implicit case Item is surrounded by a synthetic Component {} because the property
     // on the left hand side is of QQmlComponent type.
     const int objCountWithoutSynthesizedComponents = qmlObjects->count();
-    for (int i = 0; i < objCountWithoutSynthesizedComponents; ++i) {
+    const int startObjectIndex = root == 0 ? root : root+1; // root+1, as ic root is handled at the end
+    for (int i = startObjectIndex; i < objCountWithoutSynthesizedComponents; ++i) {
         QmlIR::Object *obj = qmlObjects->at(i);
-        if (obj->isInlineComponent) {
-            componentRoots.append(i);
-            continue;
+        if (root == 0) {
+            // normal component root, skip over anything inline component related
+            if (obj->isInlineComponent || obj->flags & QV4::CompiledData::Object::InPartOfInlineComponent) {
+                continue;
+            }
+        } else {
+            if (!(obj->flags & QV4::CompiledData::Object::InPartOfInlineComponent) ||
+                    obj->flags & QV4::CompiledData::Object::IsInlineComponentRoot)
+                break; // left current inline component (potentially entered a new one)
         }
         QQmlPropertyCache *cache = propertyCaches.at(i);
         if (obj->inheritedTypeNameIndex == 0 && !cache)
@@ -922,7 +935,7 @@ bool QQmlComponentAndAliasResolver::resolve()
 
         _objectsWithAliases.clear();
 
-        if (!collectIdsAndAliases(component->isInlineComponent ? componentRoots.at(i) : rootBinding->value.objectIndex))
+        if (!collectIdsAndAliases(rootBinding->value.objectIndex))
             return false;
 
         component->namedObjectsInComponent.allocate(pool, _idToObjectIndex);
@@ -935,12 +948,12 @@ bool QQmlComponentAndAliasResolver::resolve()
     _idToObjectIndex.clear();
     _objectsWithAliases.clear();
 
-    collectIdsAndAliases(/*root object*/0);
+    collectIdsAndAliases(root);
 
-    QmlIR::Object *rootComponent = qmlObjects->at(/*root object*/0);
+    QmlIR::Object *rootComponent = qmlObjects->at(root);
     rootComponent->namedObjectsInComponent.allocate(pool, _idToObjectIndex);
 
-    if (!resolveAliases(/*root object*/0))
+    if (!resolveAliases(root))
         return false;
 
     // Implicit component insertion may have added objects and thus we also need

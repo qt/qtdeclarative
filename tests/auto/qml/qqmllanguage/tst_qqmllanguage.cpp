@@ -325,6 +325,7 @@ private slots:
     void nonExistingInlineComponent();
     void inlineComponentFoundBeforeOtherImports();
     void inlineComponentDuplicateNameError();
+    void inlineComponentWithAliasInstantiatedWithNewProperties();
 
     void selfReference();
     void selfReferencingSingleton();
@@ -5849,6 +5850,19 @@ void tst_qqmllanguage::inlineComponentDuplicateNameError()
     QVERIFY(root.isNull());
     QVERIFY(component.isError());
     QCOMPARE(component.errorString(), message);
+}
+
+void tst_qqmllanguage::inlineComponentWithAliasInstantiatedWithNewProperties()
+{
+    // this tests that metaobjects are resolved in the correct order
+    // so that inline components are fully resolved before they are used
+    // in their parent component
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("inlineComponentWithAliasInstantiated.qml"));
+    QScopedPointer<QObject> root {component.create()};
+    QVERIFY2(root, qPrintable(component.errorString()));
+    QCOMPARE(root->property("result").toString(), "Bar");
 }
 
 struct QJSValueConvertible {

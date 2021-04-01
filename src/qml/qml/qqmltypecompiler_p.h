@@ -267,7 +267,7 @@ class QQmlComponentAndAliasResolver : public QQmlCompilePass
 public:
     QQmlComponentAndAliasResolver(QQmlTypeCompiler *typeCompiler);
 
-    bool resolve();
+    bool resolve(int root = 0);
 
 protected:
     void findAndRegisterImplicitComponents(const QmlIR::Object *obj, QQmlPropertyCache *propertyCache);
