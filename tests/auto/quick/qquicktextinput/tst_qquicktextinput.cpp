@@ -231,6 +231,7 @@ private slots:
 
     void QTBUG_51115_readOnlyResetsSelection();
 
+    void checkCursorDelegateWhenPaddingChanged();
 private:
     void simulateKey(QWindow *, int key);
 
@@ -7001,6 +7002,35 @@ void tst_qquicktextinput::QTBUG_51115_readOnlyResetsSelection()
     QQuickTextInput *obj = qobject_cast<QQuickTextInput*>(view.rootObject());
 
     QCOMPARE(obj->selectedText(), QString());
+}
+
+void tst_qquicktextinput::checkCursorDelegateWhenPaddingChanged()
+{
+    QQuickView view;
+    view.setSource(testFileUrl("checkCursorDelegateWhenPaddingChanged.qml"));
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    QQuickTextInput *textInput = view.rootObject()->findChild<QQuickTextInput *>("textInput");
+    QVERIFY(textInput);
+
+    QQuickItem *cursorDelegate = textInput->findChild<QQuickItem *>("cursorDelegate");
+    QVERIFY(cursorDelegate);
+
+    QCOMPARE(cursorDelegate->x(), textInput->leftPadding());
+    QCOMPARE(cursorDelegate->y(), textInput->topPadding());
+
+    textInput->setPadding(5);
+    QCOMPARE(cursorDelegate->x(), textInput->leftPadding());
+    QCOMPARE(cursorDelegate->y(), textInput->topPadding());
+
+    textInput->setTopPadding(10);
+    QCOMPARE(cursorDelegate->x(), textInput->leftPadding());
+    QCOMPARE(cursorDelegate->y(), textInput->topPadding());
+
+    textInput->setLeftPadding(10);
+    QCOMPARE(cursorDelegate->x(), textInput->leftPadding());
+    QCOMPARE(cursorDelegate->y(), textInput->topPadding());
 }
 
 QTEST_MAIN(tst_qquicktextinput)
