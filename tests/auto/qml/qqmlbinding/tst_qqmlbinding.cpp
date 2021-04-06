@@ -59,6 +59,7 @@ private slots:
     void bindToQmlComponent();
     void bindingDoesNoWeirdConversion();
     void bindNaNToInt();
+    void intOverflow();
 
 private:
     QQmlEngine engine;
@@ -438,6 +439,17 @@ void tst_qqmlbinding::bindNaNToInt()
 
     QVERIFY(item != nullptr);
     QCOMPARE(item->property("val").toInt(), 0);
+}
+
+void tst_qqmlbinding::intOverflow()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("intOverflow.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> obj(c.create());
+    QVERIFY(!obj.isNull());
+    QCOMPARE(obj->property("b"), 5);
+    QCOMPARE(obj->property("a").toDouble(), 1.09951162778e+12);
 }
 QTEST_MAIN(tst_qqmlbinding)
 

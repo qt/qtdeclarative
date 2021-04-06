@@ -344,7 +344,7 @@ protected:
                 if (result.isInteger())
                     return doStore<int>(result.integerValue(), pd, flags);
                 else if (result.isNumber()) {
-                    return doStore<int>(QV4::StaticValue::toInteger(result.doubleValue()), pd, flags);
+                    return doStore<int>(result.toInt32(), pd, flags);
                 }
                 break;
             case QMetaType::Double:
