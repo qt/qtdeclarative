@@ -687,6 +687,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("groupedPropertyAssignments") << QStringLiteral("groupedPropertyAssignments.qml");
     QTest::newRow("goodAttachedProperty") << QStringLiteral("goodAttachedProperty.qml");
     QTest::newRow("objectBindingOnVarProperty") << QStringLiteral("objectBoundToVar.qml");
+    QTest::newRow("Unversioned change signal without arguments") << QStringLiteral("unversionChangedSignalSansArguments.qml");
 }
 
 void TestQmllint::cleanQmlCode()

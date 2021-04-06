@@ -164,7 +164,7 @@ void QmlTypesCreator::writeType(const QJsonObject &property, const QString &key,
         m_qml.writeScriptBinding(QLatin1String("isPointer"), trueString);
 }
 
-void QmlTypesCreator::writeProperties(const QJsonArray &properties, QSet<QString> &notifySignals)
+void QmlTypesCreator::writeProperties(const QJsonArray &properties)
 {
     for (const QJsonValue &property : properties) {
         const QJsonObject obj = property.toObject();
@@ -197,13 +197,10 @@ void QmlTypesCreator::writeProperties(const QJsonArray &properties, QSet<QString
         m_qml.writeEndObject();
 
         const QString notify = obj[QLatin1String("notify")].toString();
-        if (notify == name + QLatin1String("Changed"))
-            notifySignals.insert(notify);
     }
 }
 
-void QmlTypesCreator::writeMethods(const QJsonArray &methods, const QString &type,
-                                   const QSet<QString> &notifySignals)
+void QmlTypesCreator::writeMethods(const QJsonArray &methods, const QString &type)
 {
     for (const QJsonValue &method : methods) {
         const QJsonObject obj = method.toObject();
@@ -212,8 +209,6 @@ void QmlTypesCreator::writeMethods(const QJsonArray &methods, const QString &typ
             continue;
         const QJsonArray arguments = method[QLatin1String("arguments")].toArray();
         const auto revision = obj.find(QLatin1String("revision"));
-        if (notifySignals.contains(name) && arguments.isEmpty() && revision == obj.end())
-            continue;
         m_qml.writeStartObject(type);
         m_qml.writeScriptBinding(QLatin1String("name"), enquote(name));
         if (revision != obj.end())
@@ -312,7 +307,7 @@ void QmlTypesCreator::writeComponents()
     const QLatin1String intType("int");
     const QLatin1String stringType("string");
 
-    auto writeRootClass = [&](const QJsonObject *classDef, const QSet<QString> &notifySignals) {
+    auto writeRootClass = [&](const QJsonObject *classDef) {
         // Hide destroyed() signals
         QJsonArray componentSignals = members(classDef, signalsKey, m_version);
         for (auto it = componentSignals.begin(); it != componentSignals.end();) {
@@ -321,7 +316,7 @@ void QmlTypesCreator::writeComponents()
             else
                 ++it;
         }
-        writeMethods(componentSignals, signalElement, notifySignals);
+        writeMethods(componentSignals, signalElement);
 
         // Hide deleteLater() methods
         QJsonArray componentMethods = members(classDef, methodsKey, m_version);
@@ -375,14 +370,12 @@ void QmlTypesCreator::writeComponents()
         if (const QJsonObject *classDef = collector.resolvedClass) {
             writeEnums(members(classDef, enumsKey, m_version));
 
-            QSet<QString> notifySignals;
-            writeProperties(members(classDef, propertiesKey, m_version), notifySignals);
+            writeProperties(members(classDef, propertiesKey, m_version));
 
             if (collector.isRootClass) {
-                writeRootClass(classDef, notifySignals);
+                writeRootClass(classDef);
             } else {
-                writeMethods(members(classDef, signalsKey, m_version), signalElement,
-                             notifySignals);
+                writeMethods(members(classDef, signalsKey, m_version), signalElement);
                 writeMethods(members(classDef, slotsKey, m_version), methodElement);
                 writeMethods(members(classDef, methodsKey, m_version), methodElement);
             }
@@ -406,11 +399,9 @@ void QmlTypesCreator::writeComponents()
             writeClassProperties(collector);
             writeEnums(members(&component, enumsKey, m_version));
 
-            QSet<QString> notifySignals;
-            writeProperties(members(&component, propertiesKey, m_version), notifySignals);
+            writeProperties(members(&component, propertiesKey, m_version));
 
-            writeMethods(members(&component, signalsKey, m_version), signalElement,
-                         notifySignals);
+            writeMethods(members(&component, signalsKey, m_version), signalElement);
             writeMethods(members(&component, slotsKey, m_version), methodElement);
             writeMethods(members(&component, methodsKey, m_version), methodElement);
 
