@@ -411,7 +411,7 @@ void QQuickDeliveryAgentPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *
 #ifdef Q_OS_WEBOS
         // Allow focused if there is only one window in the screen where it belongs.
         // Temporary fix for webOS until multi-seat is implemented see QTBUG-85272
-                || singleWindowOnScreen(q)
+                || singleWindowOnScreen(rootItem->window())
 #endif
                 ) {
             itemPrivate->focus = true;
