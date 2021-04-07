@@ -385,6 +385,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("externalEnumProperty") << QStringLiteral("externalEnumProperty.qml");
     QTest::newRow("shapes") << QStringLiteral("shapes.qml");
     QTest::newRow("var") << QStringLiteral("var.qml");
+    QTest::newRow("stringLength") << QStringLiteral("stringLength.qml");
 }
 
 void TestQmllint::cleanQmlCode()
