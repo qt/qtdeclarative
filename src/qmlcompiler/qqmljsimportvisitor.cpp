@@ -78,6 +78,10 @@ void QQmlJSImportVisitor::resolveAliases()
             const auto it = m_scopesById.find(property.typeName());
             if (it != m_scopesById.end()) {
                 property.setType(QQmlJSScope::ConstPtr(*it));
+                if (!it->isNull()) {
+                    if (const QString internalName = (*it)->internalName(); !internalName.isEmpty())
+                        property.setTypeName(internalName);
+                }
                 object->addOwnProperty(property);
             }
         }
@@ -161,11 +165,17 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         }
         QQmlJSMetaProperty prop;
         prop.setPropertyName(publicMember->name.toString());
-        prop.setTypeName(typeName.toString());
         prop.setIsList(publicMember->typeModifier == QLatin1String("list"));
         prop.setIsWritable(!publicMember->isReadonlyMember);
         prop.setIsAlias(isAlias);
-        prop.setType(m_rootScopeImports.value(prop.typeName()));
+        const QString typeNameString = typeName.toString();
+        if (const auto type = m_rootScopeImports.value(typeNameString)) {
+            prop.setType(type);
+            const QString internalName = type->internalName();
+            prop.setTypeName(internalName.isEmpty() ? typeNameString : internalName);
+        } else {
+            prop.setTypeName(typeNameString);
+        }
         m_currentScope->insertPropertyIdentifier(prop);
         break;
     }

@@ -61,7 +61,7 @@ static const QStringList unknownBuiltins = {
     QStringLiteral("QRectF"),   // TODO: should be added to builtins.qmltypes
     QStringLiteral("QFont"),    // TODO: should be added to builtins.qmltypes
     QStringLiteral("QJSValue"), // We cannot say anything intelligent about untyped JS values.
-    QStringLiteral("variant"),  // Same for generic variants
+    QStringLiteral("QVariant"), // Same for generic variants
 };
 
 void CheckIdentifiers::printContext(
