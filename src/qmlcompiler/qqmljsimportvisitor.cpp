@@ -110,9 +110,12 @@ void QQmlJSImportVisitor::resolveAliases()
                     continue;
                 m_logger.log(QStringLiteral("Cannot deduce type of alias \"%1\"")
                                         .arg(property.propertyName()), Log_Alias, object->sourceLocation());
+            } else {
+                property.setType(type);
+                if (const QString internalName = type->internalName(); !internalName.isEmpty())
+                    property.setTypeName(internalName);
             }
 
-            property.setType(type);
             object->addOwnProperty(property);
         }
 
@@ -328,11 +331,16 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         }
         QQmlJSMetaProperty prop;
         prop.setPropertyName(publicMember->name.toString());
-        prop.setTypeName(std::move(typeName));
         prop.setIsList(publicMember->typeModifier == QLatin1String("list"));
         prop.setIsWritable(!publicMember->isReadonlyMember);
         prop.setIsAlias(isAlias);
-        prop.setType(m_rootScopeImports.value(prop.typeName()));
+        if (const auto type = m_rootScopeImports.value(typeName)) {
+            prop.setType(type);
+            const QString internalName = type->internalName();
+            prop.setTypeName(internalName.isEmpty() ? typeName : internalName);
+        } else {
+            prop.setTypeName(typeName);
+        }
         prop.setAnnotations(parseAnnotations(publicMember->annotations));
         if (publicMember->isDefaultMember)
             m_currentScope->setDefaultPropertyName(prop.propertyName());

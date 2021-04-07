@@ -37,10 +37,7 @@
 static const QStringList unknownBuiltins = {
     QStringLiteral("alias"),    // TODO: we cannot properly resolve aliases, yet
     QStringLiteral("QJSValue"), // We cannot say anything intelligent about untyped JS values.
-
-    // Same for generic variants
-    QStringLiteral("variant"),
-    QStringLiteral("var")
+    QStringLiteral("QVariant")  // Same for generic variants
 };
 
 template<typename Visitor>
