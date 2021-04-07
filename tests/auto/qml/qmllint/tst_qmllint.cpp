@@ -386,6 +386,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("shapes") << QStringLiteral("shapes.qml");
     QTest::newRow("var") << QStringLiteral("var.qml");
     QTest::newRow("stringLength") << QStringLiteral("stringLength.qml");
+    QTest::newRow("stringLength2") << QStringLiteral("stringLength2.qml");
 }
 
 void TestQmllint::cleanQmlCode()
