@@ -314,6 +314,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("optionalImport") << QStringLiteral("optionalImport.qml");
     QTest::newRow("goodAliasObject") << QStringLiteral("goodAliasObject.qml");
     QTest::newRow("segFault") << QStringLiteral("SegFault.qml");
+    QTest::newRow("stringLength") << QStringLiteral("stringLength.qml");
 }
 
 void TestQmllint::cleanQmlCode()
