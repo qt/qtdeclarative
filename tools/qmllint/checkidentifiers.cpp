@@ -124,7 +124,7 @@ void CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
                 continue;
             }
 
-            if (typeName == QLatin1String("string")) {
+            if (typeName == QLatin1String("QString")) {
                 detectedRestrictiveKind = typeName;
                 detectedRestrictiveName = access.m_name;
                 expectedNext.append(QLatin1String("length"));

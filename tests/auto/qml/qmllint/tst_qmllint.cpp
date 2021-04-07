@@ -620,6 +620,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("Used imports") << QStringLiteral("used.qml");
     QTest::newRow("Unused imports (multi)") << QStringLiteral("unused_multi.qml");
     QTest::newRow("compositeSingleton") << QStringLiteral("compositesingleton.qml");
+    QTest::newRow("stringLength") << QStringLiteral("stringLength.qml");
 }
 
 void TestQmllint::cleanQmlCode()
