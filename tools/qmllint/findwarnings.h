@@ -111,6 +111,7 @@ private:
     bool visit(QQmlJS::AST::UiObjectDefinition *uiod) override;
     void endVisit(QQmlJS::AST::UiObjectDefinition *) override;
     bool visit(QQmlJS::AST::UiScriptBinding *uisb) override;
+    bool visit(QQmlJS::AST::UiPublicMember *uipb) override;
 
     // expression handling
     bool visit(QQmlJS::AST::IdentifierExpression *idexp) override;

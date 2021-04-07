@@ -645,3 +645,20 @@ void FindWarningVisitor::endVisit(QQmlJS::AST::BinaryExpression *binExp)
     else
         m_fieldMemberBase = nullptr;
 }
+
+bool FindWarningVisitor::visit(QQmlJS::AST::UiPublicMember *uipb)
+{
+    QQmlJSImportVisitor::visit(uipb);
+    if (uipb->type == QQmlJS::AST::UiPublicMember::Property && uipb->memberType != nullptr
+        && !uipb->memberType->name.isEmpty() && uipb->memberType->name != QLatin1String("alias")) {
+        const auto name = uipb->memberType->name.toString();
+        if (m_importTypeLocationMap.contains(name)) {
+            m_usedTypes.insert(name);
+        } else {
+            m_logger.log(name + QStringLiteral(" was not found. Did you add all import paths?\n"),
+                         Log_Import);
+        }
+    }
+
+    return true;
+}

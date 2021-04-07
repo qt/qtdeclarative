@@ -184,6 +184,11 @@ void QQmlJSImportVisitor::importBaseModules()
     Q_ASSERT(m_rootScopeImports.isEmpty());
     m_rootScopeImports = m_importer->importBuiltins();
 
+    const QQmlJS::SourceLocation invalidLoc;
+    for (const QString &name : m_rootScopeImports.keys()) {
+        addImportWithLocation(name, invalidLoc);
+    }
+
     if (!m_qmltypesFiles.isEmpty())
         m_importer->importQmltypes(m_qmltypesFiles);
 
@@ -496,15 +501,21 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiEnumDeclaration *uied)
     return true;
 }
 
+void QQmlJSImportVisitor::addImportWithLocation(const QString &name,
+                                                const QQmlJS::SourceLocation &loc)
+{
+    if (m_importTypeLocationMap.contains(name)
+        && m_importTypeLocationMap.values(name).contains(loc))
+        return;
+
+    m_importTypeLocationMap.insert(name, loc);
+    m_importLocations.insert(loc);
+}
+
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
 {
     auto addImportLocation = [this, import](const QString &name) {
-        if (m_importTypeLocationMap.contains(name)
-                && m_importTypeLocationMap.values(name).contains(import->firstSourceLocation()))
-            return;
-
-        m_importTypeLocationMap.insert(name, import->firstSourceLocation());
-        m_importLocations.insert(import->firstSourceLocation());
+        addImportWithLocation(name, import->firstSourceLocation());
     };
     // construct path
     QString prefix = QLatin1String("");

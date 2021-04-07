@@ -149,9 +149,13 @@ void TestQmllint::testUnqualified_data()
 
 void TestQmllint::testUnknownCausesFail()
 {
-    const QString unknownNotFound = runQmllint("unknownElement.qml", false);
+    QString unknownNotFound = runQmllint("unknownElement.qml", false);
     QVERIFY(unknownNotFound.contains(
                 QStringLiteral("Warning: %1: Unknown was not found. Did you add all import paths?").arg(testFile("unknownElement.qml"))));
+    unknownNotFound = runQmllint("TypeWithUnknownPropertyType.qml", false);
+    QVERIFY(unknownNotFound.contains(
+            QStringLiteral("Warning: %1: Something was not found. Did you add all import paths?")
+                    .arg(testFile("TypeWithUnknownPropertyType.qml"))));
 }
 
 void TestQmllint::directoryPassedAsQmlTypesFile()
