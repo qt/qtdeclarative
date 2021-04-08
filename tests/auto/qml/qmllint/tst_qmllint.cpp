@@ -622,6 +622,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("compositeSingleton") << QStringLiteral("compositesingleton.qml");
     QTest::newRow("stringLength") << QStringLiteral("stringLength.qml");
     QTest::newRow("stringLength2") << QStringLiteral("stringLength2.qml");
+    QTest::newRow("stringLength3") << QStringLiteral("stringLength3.qml");
 }
 
 void TestQmllint::cleanQmlCode()
