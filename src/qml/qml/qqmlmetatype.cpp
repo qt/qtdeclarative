@@ -1405,6 +1405,16 @@ void QQmlMetaType::unregisterType(int typeIndex)
     }
 }
 
+static bool hasActiveInlineComponents(const QQmlTypePrivate *d)
+{
+    for (const QQmlType &ic : qAsConst(d->objectIdToICType)) {
+        const QQmlTypePrivate *icPriv = ic.priv();
+        if (icPriv && icPriv->count() > 1)
+            return true;
+    }
+    return false;
+}
+
 void QQmlMetaType::freeUnusedTypesAndCaches()
 {
     QQmlMetaTypeDataPtr data;
@@ -1419,7 +1429,7 @@ void QQmlMetaType::freeUnusedTypesAndCaches()
         QList<QQmlType>::Iterator it = data->types.begin();
         while (it != data->types.end()) {
             const QQmlTypePrivate *d = (*it).priv();
-            if (d && d->count() == 1) {
+            if (d && d->count() == 1 && !hasActiveInlineComponents(d)) {
                 deletedAtLeastOneType = true;
 
                 removeQQmlTypePrivate(data->idToType, d);
