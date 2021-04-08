@@ -440,26 +440,26 @@ bool qCompileJSFile(const QString &inputFileName, const QString &inputFileUrl, Q
 
 static const char *wrapCallCode = R"(
 template <typename Binding>
-void wrapCall(const QQmlPrivate::AOTCompiledContext *context, void *dataPtr, void **argumentsPtr, Binding &&binding)
+void wrapCall(const QQmlPrivate::AOTCompiledContext *aotContext, void *dataPtr, void **argumentsPtr, Binding &&binding)
 {
     using return_type = std::invoke_result_t<Binding, const QQmlPrivate::AOTCompiledContext *, void **>;
     if constexpr (std::is_same_v<return_type, void>) {
        Q_UNUSED(dataPtr);
-       binding(context, argumentsPtr);
+       binding(aotContext, argumentsPtr);
     } else {
         if (dataPtr) {
-           new (dataPtr) return_type(binding(context, argumentsPtr));
+           new (dataPtr) return_type(binding(aotContext, argumentsPtr));
         } else {
-           binding(context, argumentsPtr);
+           binding(aotContext, argumentsPtr);
         }
     }
 }
 )";
 
 static const char *funcHeaderCode = R"(
-    [](const QQmlPrivate::AOTCompiledContext *context, void *dataPtr, void **argumentsPtr) {
-        wrapCall(context, dataPtr, argumentsPtr, [](const QQmlPrivate::AOTCompiledContext *context, void **argumentsPtr) {
-Q_UNUSED(context);
+    [](const QQmlPrivate::AOTCompiledContext *aotContext, void *dataPtr, void **argumentsPtr) {
+        wrapCall(aotContext, dataPtr, argumentsPtr, [](const QQmlPrivate::AOTCompiledContext *aotContext, void **argumentsPtr) {
+Q_UNUSED(aotContext);
 Q_UNUSED(argumentsPtr);
 )";
 
