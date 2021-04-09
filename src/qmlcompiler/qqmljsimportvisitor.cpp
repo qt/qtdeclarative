@@ -445,8 +445,8 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
     const auto id = scriptBinding->qualifiedId;
     const auto *statement = cast<ExpressionStatement *>(scriptBinding->statement);
     if (!id->next && id->name == QLatin1String("id")) {
-        const auto *idExprension = cast<IdentifierExpression *>(statement->expression);
-        m_scopesById.insert(idExprension->name.toString(), m_currentScope);
+        const auto *idExpression = cast<IdentifierExpression *>(statement->expression);
+        m_scopesById.insert(idExpression->name.toString(), m_currentScope);
     } else {
         for (auto group = id; group->next; group = group->next) {
             const QString name = group->name.toString();
