@@ -631,8 +631,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         // otherwise, try a custom type assignment
         QString stringValue = compilationUnit->bindingValueAsString(binding);
         QQmlMetaType::StringConverter converter = QQmlMetaType::customStringConverter(property->propType().id());
-        Q_ASSERT(converter);
-        QVariant value = (*converter)(stringValue);
+        QVariant value = converter ? (*converter)(stringValue) : QVariant();
 
         QMetaProperty metaProperty = _qobject->metaObject()->property(property->coreIndex());
         if (value.isNull() || metaProperty.metaType() != property->propType()) {
