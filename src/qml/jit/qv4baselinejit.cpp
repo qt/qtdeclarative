@@ -283,6 +283,13 @@ void BaselineJIT::generate_LoadProperty(int name)
     BASELINEJIT_GENERATE_RUNTIME_CALL(LoadProperty, CallResultDestination::InAccumulator);
 }
 
+void BaselineJIT::generate_LoadOptionalProperty(int name, int offset)
+{
+    labels.insert(as->jumpEqNull(absoluteOffset(offset)));
+
+    generate_LoadProperty(name);
+}
+
 void BaselineJIT::generate_GetLookup(int index)
 {
     STORE_IP();
@@ -293,6 +300,13 @@ void BaselineJIT::generate_GetLookup(int index)
     as->passFunctionAsArg(1);
     as->passEngineAsArg(0);
     BASELINEJIT_GENERATE_RUNTIME_CALL(GetLookup, CallResultDestination::InAccumulator);
+}
+
+void BaselineJIT::generate_GetOptionalLookup(int index, int offset)
+{
+    labels.insert(as->jumpEqNull(absoluteOffset(offset)));
+
+    generate_GetLookup(index);
 }
 
 void BaselineJIT::generate_StoreProperty(int name, int base)

@@ -89,7 +89,9 @@ QT_BEGIN_NAMESPACE
 #define INSTR_StoreNameSloppy(op) INSTRUCTION(op, StoreNameSloppy, 1, name)
 #define INSTR_StoreNameStrict(op) INSTRUCTION(op, StoreNameStrict, 1, name)
 #define INSTR_LoadProperty(op) INSTRUCTION(op, LoadProperty, 1, name)
+#define INSTR_LoadOptionalProperty(op) INSTRUCTION(op, LoadOptionalProperty, 2, name, offset)
 #define INSTR_GetLookup(op) INSTRUCTION(op, GetLookup, 1, index)
+#define INSTR_GetOptionalLookup(op) INSTRUCTION(op, GetOptionalLookup, 2, index, offset)
 #define INSTR_LoadIdObject(op) INSTRUCTION(op, LoadIdObject, 2, index, base)
 #define INSTR_Yield(op) INSTRUCTION(op, Yield, 0)
 #define INSTR_YieldStar(op) INSTRUCTION(op, YieldStar, 0)
@@ -229,7 +231,9 @@ QT_BEGIN_NAMESPACE
     F(LoadElement) \
     F(StoreElement) \
     F(LoadProperty) \
+    F(LoadOptionalProperty) \
     F(GetLookup) \
+    F(GetOptionalLookup) \
     F(StoreProperty) \
     F(SetLookup) \
     F(LoadSuperProperty) \

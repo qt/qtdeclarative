@@ -137,6 +137,7 @@ public:
     Q_REQUIRED_RESULT int jumpFalse(int offset);
     Q_REQUIRED_RESULT int jumpNoException(int offset);
     Q_REQUIRED_RESULT int jumpNotUndefined(int offset);
+    Q_REQUIRED_RESULT int jumpEqNull(int offset);
 
     // stuff for runtime calls
     void prepareCallWithArgCount(int argc);

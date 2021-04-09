@@ -410,6 +410,9 @@ private slots:
     void frozenQObject();
     void constPointer();
 
+    void optionalChainEval();
+    void optionalChainDelete();
+    void optionalChainNull();
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
     static void verifyContextLifetime(const QQmlRefPointer<QQmlContextData> &ctxt);
@@ -9859,6 +9862,90 @@ void tst_qqmlecmascript::constPointer()
     QScopedPointer<QObject> root(component.create());
     QVERIFY(root->property("invokableOk").toBool());
     QVERIFY(root->property("propertyOk").toBool());
+}
+
+void tst_qqmlecmascript::optionalChainEval()
+{
+    QQmlEngine qmlengine;
+
+    QObject *o = new QObject(&qmlengine);
+
+    QV4::ExecutionEngine *engine = qmlengine.handle();
+    QV4::Scope scope(engine);
+
+    QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(engine, o));
+
+    EVALUATE("this.optional = { fnc: function(x) { this.counter++; return x; }, counter: 0};");
+    EVALUATE("this.slow = { counter: 0, thing: function(x) { this.counter++; return x; }};");
+
+    QVERIFY(EVALUATE_VALUE("eval('this.optional?.fnc?.(this.slow.thing([1,2,3]))?.[2]');", QV4::Primitive::fromInt32(3)));
+    QVERIFY(EVALUATE_VALUE("optional.counter", QV4::Primitive::fromInt32(1)));
+    QVERIFY(EVALUATE_VALUE("slow.counter", QV4::Primitive::fromInt32(1)));
+
+    EVALUATE("this.optional.fnc = undefined;");
+    QVERIFY(EVALUATE_VALUE("eval('this.optional?.fnc?.(this.slow.thing([1,2,3]))?.[2]');", QV4::Primitive::undefinedValue()));
+    QVERIFY(EVALUATE_VALUE("optional.counter", QV4::Primitive::fromInt32(1)));
+    QVERIFY(EVALUATE_VALUE("slow.counter", QV4::Primitive::fromInt32(1)));
+
+    EVALUATE("this.optional = undefined;");
+    QVERIFY(EVALUATE_VALUE("eval('this.optional?.fnc?.(this.slow.thing([1,2,3]))?.[2]');", QV4::Primitive::undefinedValue()));
+    QVERIFY(EVALUATE_VALUE("slow.counter", QV4::Primitive::fromInt32(1)));
+}
+
+void tst_qqmlecmascript::optionalChainDelete()
+{
+    QQmlEngine qmlengine;
+
+    QObject *o = new QObject(&qmlengine);
+
+    QV4::ExecutionEngine *engine = qmlengine.handle();
+    QV4::Scope scope(engine);
+
+    QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(engine, o));
+    EVALUATE("this.object = { a: { b: {c: 6}}, x: Object.freeze({y: {z: 3}})};");
+    EVALUATE("this.slow = { counter: 0, thing: function(x) { this.counter++; return x; }};");
+
+    QVERIFY(EVALUATE_VALUE("'use strict'; delete object.a.b?.c", QV4::Primitive::fromBoolean(true)));
+    QVERIFY(EVALUATE_VALUE("'use strict'; delete object?.x?.y?.z", QV4::Primitive::fromBoolean(true)));
+    QVERIFY(EVALUATE_VALUE("'use strict'; delete object?.x?.y", QV4::Primitive::fromBoolean(false)));
+    QVERIFY(EVALUATE_VALUE("'use strict'; delete object?.x?.[slow.thing('y')]", QV4::Primitive::fromBoolean(false)));
+    QVERIFY(EVALUATE_VALUE("slow.counter", QV4::Primitive::fromInt32(1)));
+
+    QVERIFY(EVALUATE("this.object = {a: {}};"));
+    QVERIFY(EVALUATE("object.x = {};"));
+
+    QVERIFY(EVALUATE_VALUE("'use strict'; delete object.a.b?.c", QV4::Primitive::fromBoolean(true)));
+    QVERIFY(EVALUATE_VALUE("'use strict'; delete object?.x?.y?.z", QV4::Primitive::fromBoolean(true)));
+    QVERIFY(EVALUATE_VALUE("'use strict'; delete object?.x?.y", QV4::Primitive::fromBoolean(true)));
+    QVERIFY(EVALUATE_VALUE("'use strict'; delete object?.x?.[slow.thing('y')]", QV4::Primitive::fromBoolean(true)));
+    QVERIFY(EVALUATE_VALUE("slow.counter", QV4::Primitive::fromInt32(1)));
+}
+
+void tst_qqmlecmascript::optionalChainNull()
+{
+    QQmlEngine qmlengine;
+
+    QObject *o = new QObject(&qmlengine);
+
+    QV4::ExecutionEngine *engine = qmlengine.handle();
+    QV4::Scope scope(engine);
+
+    QV4::ScopedValue object(scope, QV4::QObjectWrapper::wrap(engine, o));
+    EVALUATE("this.object = { a: { b: {c: 6}}, x: {y: {z: 3}}};");
+    EVALUATE("this.slow = { counter: 0, thing: function(x) { this.counter++; return x; }};");
+
+    QVERIFY(EVALUATE_VALUE("this.object.a.b?.c", QV4::Primitive::fromInt32(6)));
+    QVERIFY(EVALUATE_VALUE("this.object?.x?.y?.z", QV4::Primitive::fromInt32(3)));
+    QVERIFY(EVALUATE_VALUE("this.object?.x?.[slow.thing('y')]?.z", QV4::Primitive::fromInt32(3)));
+    QVERIFY(EVALUATE_VALUE("this.slow.counter", QV4::Primitive::fromInt32(1)));
+
+    QVERIFY(EVALUATE("this.object.a.b = null;"));
+    QVERIFY(EVALUATE("this.object.x.y = null;"));
+
+    QVERIFY(EVALUATE_VALUE("this.object.a.b?.c", QV4::Primitive::undefinedValue()));
+    QVERIFY(EVALUATE_VALUE("this.object?.x?.y?.z", QV4::Primitive::undefinedValue()));
+    QVERIFY(EVALUATE_VALUE("this.object?.x?.y?.[slow.thing('z')]", QV4::Primitive::undefinedValue()));
+    QVERIFY(EVALUATE_VALUE("this.slow.counter", QV4::Primitive::fromInt32(1)));
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

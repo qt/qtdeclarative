@@ -60,6 +60,8 @@
 #include <private/qv4bytecodegenerator_p.h>
 #include <private/qv4calldata_p.h>
 
+#include <QtCore/qsharedpointer.h>
+
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
@@ -277,11 +279,15 @@ public:
             r.name = name;
             return r;
         }
-        static Reference fromMember(const Reference &baseRef, const QString &name) {
+        static Reference fromMember(const Reference &baseRef, const QString &name,
+                                    Moth::BytecodeGenerator::Label jumpLabel = Moth::BytecodeGenerator::Label(),
+                                    Moth::BytecodeGenerator::Label targetLabel = Moth::BytecodeGenerator::Label()) {
             Reference r(baseRef.codegen, Member);
             r.propertyBase = baseRef.asRValue();
             r.propertyNameIndex = r.codegen->registerString(name);
             r.requiresTDZCheck = baseRef.requiresTDZCheck;
+            r.optionalChainJumpLabel.reset(new Moth::BytecodeGenerator::Label(jumpLabel));
+            r.optionalChainTargetLabel.reset(new Moth::BytecodeGenerator::Label(targetLabel));
             return r;
         }
         static Reference fromSuperProperty(const Reference &property) {
@@ -291,13 +297,14 @@ public:
             r.subscriptRequiresTDZCheck = property.requiresTDZCheck;
             return r;
         }
-        static Reference fromSubscript(const Reference &baseRef, const Reference &subscript) {
+        static Reference fromSubscript(const Reference &baseRef, const Reference &subscript, Moth::BytecodeGenerator::Label targetLabel = Moth::BytecodeGenerator::Label()) {
             Q_ASSERT(baseRef.isStackSlot());
             Reference r(baseRef.codegen, Subscript);
             r.elementBase = baseRef.stackSlot();
             r.elementSubscript = subscript.asRValue();
             r.requiresTDZCheck = baseRef.requiresTDZCheck;
             r.subscriptRequiresTDZCheck = subscript.requiresTDZCheck;
+            r.optionalChainTargetLabel.reset(new Moth::BytecodeGenerator::Label(targetLabel));
             return r;
         }
         static Reference fromConst(Codegen *cg, QV4::ReturnedValue constant) {
@@ -374,6 +381,8 @@ public:
         quint32 isVolatile:1;
         quint32 global:1;
         quint32 qmlGlobal:1;
+        QSharedPointer<Moth::BytecodeGenerator::Label> optionalChainJumpLabel;
+        QSharedPointer<Moth::BytecodeGenerator::Label> optionalChainTargetLabel;
 
     private:
         void storeAccumulator() const;
@@ -598,11 +607,14 @@ protected:
     bool visit(QQmlJS::AST::ArrayMemberExpression *ast) override;
     bool visit(QQmlJS::AST::BinaryExpression *ast) override;
     bool visit(QQmlJS::AST::CallExpression *ast) override;
+    void endVisit(QQmlJS::AST::CallExpression *ast) override;
     bool visit(QQmlJS::AST::ConditionalExpression *ast) override;
     bool visit(QQmlJS::AST::DeleteExpression *ast) override;
+    void endVisit(QQmlJS::AST::DeleteExpression *ast) override;
     bool visit(QQmlJS::AST::FalseLiteral *ast) override;
     bool visit(QQmlJS::AST::SuperLiteral *ast) override;
     bool visit(QQmlJS::AST::FieldMemberExpression *ast) override;
+    void endVisit(QQmlJS::AST::FieldMemberExpression *ast) override;
     bool visit(QQmlJS::AST::TaggedTemplate *ast) override;
     bool visit(QQmlJS::AST::FunctionExpression *ast) override;
     bool visit(QQmlJS::AST::IdentifierExpression *ast) override;
@@ -686,7 +698,7 @@ public:
     Reference jumpBinop(QSOperator::Op oper, Reference &left, Reference &right);
     struct Arguments { int argc; int argv; bool hasSpread; };
     Arguments pushArgs(QQmlJS::AST::ArgumentList *args);
-    void handleCall(Reference &base, Arguments calldata, int slotForFunction, int slotForThisObject);
+    void handleCall(Reference &base, Arguments calldata, int slotForFunction, int slotForThisObject, bool optional = false);
 
     Arguments pushTemplateArgs(QQmlJS::AST::TemplateLiteral *args);
     bool handleTaggedTemplate(Reference base, QQmlJS::AST::TaggedTemplate *ast);
@@ -776,6 +788,8 @@ protected:
     bool functionEndsWithReturn = false;
     bool _tailCallsAreAllowed = true;
     QSet<QString> m_globalNames;
+    QSet<QQmlJS::AST::Node*> m_seenOptionalChainNodes;
+    QHash<QQmlJS::AST::Node*, Moth::BytecodeGenerator::Label> m_optionalChainLabels;
 
     ControlFlow *controlFlow = nullptr;
 
@@ -812,6 +826,7 @@ private:
     void handleConstruct(const Reference &base, QQmlJS::AST::ArgumentList *args);
     void throwError(ErrorType errorType, const QQmlJS::SourceLocation &loc,
                     const QString &detail);
+    std::optional<Moth::BytecodeGenerator::Label> traverseOptionalChain(QQmlJS::AST::Node *node);
 };
 
 }

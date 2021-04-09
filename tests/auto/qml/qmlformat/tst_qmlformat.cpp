@@ -101,6 +101,7 @@ void TestQmlformat::initTestCase()
     m_invalidFiles << "tests/auto/qml/qqmllanguage/data/invalidRoot.1.qml";
     m_invalidFiles << "tests/auto/qml/qqmllanguage/data/invalidQmlEnumValue.1.qml";
     m_invalidFiles << "tests/auto/qml/qqmllanguage/data/invalidQmlEnumValue.2.qml";
+    m_invalidFiles << "tests/auto/qml/qqmllanguage/data/questionDotEOF.qml";
     m_invalidFiles << "tests/auto/qml/qquickfolderlistmodel/data/dummy.qml";
     m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/stringParsing_error.1.qml";
     m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/stringParsing_error.2.qml";

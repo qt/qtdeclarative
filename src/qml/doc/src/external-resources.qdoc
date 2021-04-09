@@ -80,3 +80,7 @@
     \externalpage https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing_operator
     \title Nullish Coalescing
 */
+/*!
+    \externalpage https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining
+    \title Optional Chaining
+*/

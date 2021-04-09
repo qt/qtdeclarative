@@ -280,9 +280,17 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
             d << "acc[" << name << "]";
         MOTH_END_INSTR(LoadProperty)
 
+        MOTH_BEGIN_INSTR(LoadOptionalProperty)
+            d << "acc[" << name << "], jump(" << ABSOLUTE_OFFSET() << ")";
+        MOTH_END_INSTR(LoadOptionalProperty)
+
         MOTH_BEGIN_INSTR(GetLookup)
             d << "acc(" << index << ")";
         MOTH_END_INSTR(GetLookup)
+
+        MOTH_BEGIN_INSTR(GetOptionalLookup)
+            d << "acc(" << index << "), jump(" << ABSOLUTE_OFFSET() << ")";
+        MOTH_END_INSTR(GetOptionalLookup)
 
         MOTH_BEGIN_INSTR(StoreProperty)
             d << dumpRegister(base, nFormals) << "[" << name<< "]";

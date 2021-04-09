@@ -460,6 +460,7 @@ public:
     ExpressionNode() {}
 
     ExpressionNode *expressionCast() override;
+    bool containsOptionalChain() const;
 
     AST::FormalParameterList *reparseAsFormalParameterList(MemoryPool *pool);
 
@@ -1198,6 +1199,7 @@ public:
     ExpressionNode *expression;
     SourceLocation lbracketToken;
     SourceLocation rbracketToken;
+    bool isOptional = false;
 };
 
 class QML_PARSER_EXPORT FieldMemberExpression: public LeftHandSideExpression
@@ -1222,6 +1224,7 @@ public:
     QStringView name;
     SourceLocation dotToken;
     SourceLocation identifierToken;
+    bool isOptional = false;
 };
 
 class QML_PARSER_EXPORT TaggedTemplate : public LeftHandSideExpression
@@ -1314,6 +1317,7 @@ public:
     ArgumentList *arguments;
     SourceLocation lparenToken;
     SourceLocation rparenToken;
+    bool isOptional = false;
 };
 
 class QML_PARSER_EXPORT ArgumentList: public Node

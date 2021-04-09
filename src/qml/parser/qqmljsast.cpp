@@ -118,6 +118,44 @@ ExpressionNode *ExpressionNode::expressionCast()
     return this;
 }
 
+bool ExpressionNode::containsOptionalChain() const
+{
+    for (const Node *node = this;;) {
+        switch (node->kind) {
+        case Kind_FieldMemberExpression: {
+            const auto *fme = AST::cast<const FieldMemberExpression*>(node);
+            if (fme->isOptional)
+                return true;
+            node = fme->base;
+            break;
+        }
+        case Kind_ArrayMemberExpression: {
+            const auto *ame = AST::cast<const ArrayMemberExpression*>(node);
+            if (ame->isOptional)
+                return true;
+            node = ame->base;
+            break;
+        }
+        case Kind_CallExpression: {
+            const auto *ce = AST::cast<const CallExpression*>(node);
+            if (ce->isOptional)
+                return true;
+            node = ce->base;
+            break;
+        }
+        case Kind_NestedExpression: {
+            const auto *ne = AST::cast<const NestedExpression*>(node);
+            node = ne->expression;
+            break;
+        }
+        default:
+            // These unhandled nodes lead to invalid lvalues anyway, so they do not need to be handled here.
+            return false;
+        }
+    }
+    return false;
+}
+
 FormalParameterList *ExpressionNode::reparseAsFormalParameterList(MemoryPool *pool)
 {
     AST::ExpressionNode *expr = this;

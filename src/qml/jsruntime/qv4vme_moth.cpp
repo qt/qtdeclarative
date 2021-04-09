@@ -700,6 +700,18 @@ QV4::ReturnedValue VME::interpret(JSTypesStackFrame *frame, ExecutionEngine *eng
         CHECK_EXCEPTION;
     MOTH_END_INSTR(LoadProperty)
 
+    MOTH_BEGIN_INSTR(LoadOptionalProperty)
+        STORE_IP();
+        STORE_ACC();
+        if (accumulator.isNullOrUndefined()) {
+            acc = Encode::undefined();
+            code += offset;
+        } else {
+            acc = Runtime::LoadProperty::call(engine, accumulator, name);
+        }
+        CHECK_EXCEPTION;
+    MOTH_END_INSTR(LoadOptionalProperty)
+
     MOTH_BEGIN_INSTR(GetLookup)
         STORE_IP();
         STORE_ACC();
@@ -717,6 +729,21 @@ QV4::ReturnedValue VME::interpret(JSTypesStackFrame *frame, ExecutionEngine *eng
         acc = l->getter(l, engine, accumulator);
         CHECK_EXCEPTION;
     MOTH_END_INSTR(GetLookup)
+
+    MOTH_BEGIN_INSTR(GetOptionalLookup)
+        STORE_IP();
+        STORE_ACC();
+
+        QV4::Lookup *l = function->executableCompilationUnit()->runtimeLookups + index;
+
+        if (accumulator.isNullOrUndefined()) {
+            acc = Encode::undefined();
+            code += offset;
+        } else {
+            acc = l->getter(l, engine, accumulator);
+        }
+    CHECK_EXCEPTION;
+    MOTH_END_INSTR(GetOptionalLookup)
 
     MOTH_BEGIN_INSTR(StoreProperty)
         STORE_IP();

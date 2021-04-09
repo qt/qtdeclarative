@@ -81,6 +81,7 @@
 %token T_COMPATIBILITY_SEMICOLON
 %token T_ARROW "=>"
 %token T_QUESTION_QUESTION "??"
+%token T_QUESTION_DOT "?."
 %token T_ENUM "enum"
 %token T_ELLIPSIS "..."
 %token T_YIELD "yield"
@@ -2301,7 +2302,16 @@ MemberExpression: MemberExpression T_LBRACKET Expression_In T_RBRACKET;
         sym(1).Node = node;
     } break;
 ./
-
+MemberExpression: MemberExpression T_QUESTION_DOT T_LBRACKET Expression_In T_RBRACKET;
+/.
+    case $rule_number: {
+        AST::ArrayMemberExpression *node = new (pool) AST::ArrayMemberExpression(sym(1).Expression, sym(4).Expression);
+        node->lbracketToken = loc(3);
+        node->rbracketToken = loc(5);
+        node->isOptional = true;
+        sym(1).Node = node;
+    } break;
+./
 
 -- the identifier has to be "target", catched at codegen time
 NewTarget: T_NEW T_DOT T_IDENTIFIER;
@@ -2320,6 +2330,17 @@ MemberExpression: MemberExpression T_DOT IdentifierName;
         AST::FieldMemberExpression *node = new (pool) AST::FieldMemberExpression(sym(1).Expression, stringRef(3));
         node->dotToken = loc(2);
         node->identifierToken = loc(3);
+        sym(1).Node = node;
+    } break;
+./
+
+MemberExpression: MemberExpression T_QUESTION_DOT IdentifierName;
+/.
+    case $rule_number: {
+        AST::FieldMemberExpression *node = new (pool) AST::FieldMemberExpression(sym(1).Expression, stringRef(3));
+        node->dotToken = loc(2);
+        node->identifierToken = loc(3);
+        node->isOptional = true;
         sym(1).Node = node;
     } break;
 ./
@@ -2372,6 +2393,17 @@ CallExpression: MemberExpression T_LPAREN Arguments T_RPAREN;
     } break;
 ./
 
+CallExpression: MemberExpression T_QUESTION_DOT T_LPAREN Arguments T_RPAREN;
+/.
+    case $rule_number: {
+        AST::CallExpression *node = new (pool) AST::CallExpression(sym(1).Expression, sym(4).ArgumentList);
+        node->lparenToken = loc(3);
+        node->rparenToken = loc(5);
+        node->isOptional = true;
+        sym(1).Node = node;
+    } break;
+./
+
 CallExpression: Super T_LPAREN Arguments T_RPAREN;
 /.  case $rule_number: Q_FALLTHROUGH(); ./
 CallExpression: CallExpression T_LPAREN Arguments T_RPAREN;
@@ -2384,6 +2416,18 @@ CallExpression: CallExpression T_LPAREN Arguments T_RPAREN;
     } break;
 ./
 
+CallExpression: CallExpression T_QUESTION_DOT T_LPAREN Arguments T_RPAREN;
+/.
+    case $rule_number: {
+        AST::CallExpression *node = new (pool) AST::CallExpression(sym(1).Expression, sym(4).ArgumentList);
+        node->lparenToken = loc(3);
+        node->rparenToken = loc(5);
+        node->isOptional = true;
+        sym(1).Node = node;
+    } break;
+./
+
+
 CallExpression: CallExpression T_LBRACKET Expression_In T_RBRACKET;
 /.
     case $rule_number: {
@@ -2394,12 +2438,34 @@ CallExpression: CallExpression T_LBRACKET Expression_In T_RBRACKET;
     } break;
 ./
 
+CallExpression: CallExpression T_QUESTION_DOT T_LBRACKET Expression_In T_RBRACKET;
+/.
+    case $rule_number: {
+        AST::ArrayMemberExpression *node = new (pool) AST::ArrayMemberExpression(sym(1).Expression, sym(4).Expression);
+        node->lbracketToken = loc(3);
+        node->rbracketToken = loc(5);
+        node->isOptional = true;
+        sym(1).Node = node;
+    } break;
+./
+
 CallExpression: CallExpression T_DOT IdentifierName;
 /.
     case $rule_number: {
         AST::FieldMemberExpression *node = new (pool) AST::FieldMemberExpression(sym(1).Expression, stringRef(3));
         node->dotToken = loc(2);
         node->identifierToken = loc(3);
+        sym(1).Node = node;
+    } break;
+./
+
+CallExpression: CallExpression T_QUESTION_DOT IdentifierName;
+/.
+    case $rule_number: {
+        AST::FieldMemberExpression *node = new (pool) AST::FieldMemberExpression(sym(1).Expression, stringRef(3));
+        node->dotToken = loc(2);
+        node->identifierToken = loc(3);
+        node->isOptional = true;
         sym(1).Node = node;
     } break;
 ./
@@ -2897,6 +2963,9 @@ AssignmentExpression: LeftHandSideExpression T_EQ AssignmentExpression;
 AssignmentExpression_In: LeftHandSideExpression T_EQ AssignmentExpression_In;
 /.
     case $rule_number: {
+        if (sym(1).Expression->containsOptionalChain()) {
+            syntaxError(loc(1), QStringLiteral("Optional chains are not permitted on the left-hand-side in assignments"));
+        }
         // need to convert the LHS to an AssignmentPattern if it was an Array/ObjectLiteral
         if (AST::Pattern *p = sym(1).Expression->patternCast()) {
             SourceLocation errorLoc;
@@ -2927,6 +2996,9 @@ AssignmentExpression: LeftHandSideExpression AssignmentOperator AssignmentExpres
 AssignmentExpression_In: LeftHandSideExpression AssignmentOperator AssignmentExpression_In;
 /.
     case $rule_number: {
+        if (sym(1).Expression->containsOptionalChain()) {
+            syntaxError(loc(1), QStringLiteral("Optional chains are not permitted on the left-hand-side in assignments"));
+        }
         AST::BinaryExpression *node = new (pool) AST::BinaryExpression(sym(1).Expression, sym(2).ival, sym(3).Expression);
         node->operatorToken = loc(2);
         sym(1).Node = node;

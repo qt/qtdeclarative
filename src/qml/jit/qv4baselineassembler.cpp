@@ -1415,6 +1415,23 @@ int BaselineAssembler::jumpNotUndefined(int offset)
     return offset;
 }
 
+int BaselineAssembler::jumpEqNull(int offset)
+{
+    saveAccumulatorInFrame();
+    cmpeqNull();
+
+    pasm()->toBoolean([this, offset](PlatformAssembler::RegisterID resultReg) {
+        auto isFalse = pasm()->branch32(PlatformAssembler::Equal, TrustedImm32(0), resultReg);
+        loadValue(Encode::undefined());
+        pasm()->addJumpToOffset(pasm()->jump(), offset);
+        isFalse.link(pasm());
+        loadAccumulatorFromFrame();
+    });
+
+    return offset;
+}
+
+
 void BaselineAssembler::prepareCallWithArgCount(int argc)
 {
     pasm()->prepareCallWithArgCount(argc);

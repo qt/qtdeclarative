@@ -405,14 +405,14 @@ QString DumpAstVisitor::parseExpression(ExpressionNode *expression)
         if (fieldMemberExpr->base->kind == Node::Kind_NumericLiteral)
             result = "(" + result + ")";
 
-        result += "." + fieldMemberExpr->name.toString();
+        result += (fieldMemberExpr->isOptional ? "?." : ".") + fieldMemberExpr->name.toString();
 
         return result;
     }
     case Node::Kind_ArrayMemberExpression: {
         auto *arrayMemberExpr = cast<ArrayMemberExpression *>(expression);
         return parseExpression(arrayMemberExpr->base)
-                + "[" + parseExpression(arrayMemberExpr->expression) + "]";
+                + (arrayMemberExpr->isOptional ? "?." : "") + "[" + parseExpression(arrayMemberExpr->expression) + "]";
     }
     case Node::Kind_NestedExpression:
         return "("+parseExpression(cast<NestedExpression *>(expression)->expression)+")";
@@ -458,7 +458,7 @@ QString DumpAstVisitor::parseExpression(ExpressionNode *expression)
     case Node::Kind_CallExpression: {
         auto *callExpr = cast<CallExpression *>(expression);
 
-        return parseExpression(callExpr->base) + "(" + parseArgumentList(callExpr->arguments) + ")";
+        return parseExpression(callExpr->base) + (callExpr->isOptional ? "?." : "") + "(" + parseArgumentList(callExpr->arguments) + ")";
     }
     case Node::Kind_NewExpression:
         return "new "+parseExpression(cast<NewExpression *>(expression)->expression);

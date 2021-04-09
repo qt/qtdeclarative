@@ -196,6 +196,20 @@ QT_WARNING_POP
         return addJumpInstruction(data);
     }
 
+    Q_REQUIRED_RESULT Jump jumpOptionalLookup(int index)
+    {
+        Instruction::GetOptionalLookup data{};
+        data.index = index;
+        return addJumpInstruction(data);
+    }
+
+    Q_REQUIRED_RESULT Jump jumpOptionalProperty(int name)
+    {
+        Instruction::LoadOptionalProperty data{};
+        data.name = name;
+        return addJumpInstruction(data);
+    }
+
     void jumpStrictEqual(const StackSlot &lhs, const Label &target)
     {
         Instruction::CmpStrictEqual cmp;

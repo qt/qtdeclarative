@@ -528,6 +528,10 @@ void tst_qqmllanguage::errors_data()
     QTest::newRow("nullishCoalescing_RHS_Or") << "nullishCoalescing_RHS_Or.qml" << "nullishCoalescing_RHS_Or.errors.txt" << false;
     QTest::newRow("nullishCoalescing_RHS_And") << "nullishCoalescing_RHS_And.qml" << "nullishCoalescing_RHS_And.errors.txt" << false;
 
+    QTest::newRow("questionDotEOF") << "questionDotEOF.qml" << "questionDotEOF.errors.txt" << false;
+    QTest::newRow("optionalChaining.LHS") << "optionalChaining.LHS.qml" << "optionalChaining.LHS.errors.txt" << false;
+
+
     QTest::newRow("invalidGroupedProperty.1") << "invalidGroupedProperty.1.qml" << "invalidGroupedProperty.1.errors.txt" << false;
     QTest::newRow("invalidGroupedProperty.2") << "invalidGroupedProperty.2.qml" << "invalidGroupedProperty.2.errors.txt" << false;
     QTest::newRow("invalidGroupedProperty.3") << "invalidGroupedProperty.3.qml" << "invalidGroupedProperty.3.errors.txt" << false;

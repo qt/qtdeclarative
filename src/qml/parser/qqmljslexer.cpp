@@ -591,6 +591,10 @@ again:
             scanChar();
             return T_QUESTION_QUESTION;
         }
+        if (_char == u'.' && !peekChar().isDigit()) {
+            scanChar();
+            return T_QUESTION_DOT;
+        }
 
         return T_QUESTION;
     }
