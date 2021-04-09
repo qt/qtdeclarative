@@ -184,6 +184,14 @@ void Lexer::scanChar()
     }
 }
 
+QChar Lexer::peekChar()
+{
+    auto peekPtr = _codePtr;
+    if (peekPtr < _endPtr)
+        return *peekPtr;
+    return QChar();
+}
+
 namespace {
 inline bool isBinop(int tok)
 {

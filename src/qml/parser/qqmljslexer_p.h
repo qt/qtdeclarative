@@ -191,6 +191,7 @@ protected:
 
 private:
     inline void scanChar();
+    inline QChar peekChar();
     int scanToken();
     int scanNumber(QChar ch);
     int scanVersionNumber(QChar ch);
