@@ -227,7 +227,7 @@ void TestQmllint::verifyJsRoot()
 
     QProcess typeregistrarProcess;
     typeregistrarProcess.setWorkingDirectory(dir.path());
-    typeregistrarProcess.start(m_qmltyperegistrarPath, {"jsroot.json", "--generate-qmltypes", "jsroot.qmltypes", "--import-name", "QJSEngine", "--major-version", "1", "--minor-version", "0"});
+    typeregistrarProcess.start(m_qmltyperegistrarPath, {"jsroot.json", "--generate-qmltypes", "jsroot.qmltypes"});
 
     typeregistrarProcess.waitForFinished();
 
@@ -249,7 +249,7 @@ void TestQmllint::verifyJsRoot()
     // If any of the following asserts fail you need to update jsroot.qmltypes using the following commands:
     //
     // qmljsrootgen jsroot.json
-    // qmltyperegistrar jsroot.json --generate-qmltypes src/imports/builtins/jsroot.qmltypes --import-name QJSEngine --major-version 1 --minor-version 0
+    // qmltyperegistrar jsroot.json --generate-qmltypes src/imports/builtins/jsroot.qmltypes
     QStringList currentLines = currentJsRootContent.split(QLatin1Char('\n'));
     QStringList generatedLines = generatedJsRootContent.split(QLatin1Char('\n'));
 

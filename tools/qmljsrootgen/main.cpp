@@ -31,6 +31,7 @@
 #include <QtQml/private/qv4global_p.h>
 #include <QtQml/private/qv4functionobject_p.h>
 #include <QtQml/qjsengine.h>
+#include <QtQml/qjsmanagedvalue.h>
 
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qfile.h>
@@ -42,149 +43,159 @@
 struct PropertyInfo
 {
     QString name;
-    QV4::PropertyAttributes attr;
-    bool fromConstructor;
+    bool writable;
 };
 
-QList<PropertyInfo> getPropertyInfos(QJSValue *value, bool extractConstructor = false) {
-    if (!value->isObject())
+static QV4::ReturnedValue asManaged(const QJSManagedValue &value)
+{
+    const QJSValue jsVal = value.toJSValue();
+    const QV4::Managed *managed = QJSValuePrivate::asManagedType<QV4::Managed>(&jsVal);
+    return managed ? managed->asReturnedValue() : QV4::Encode::undefined();
+}
+
+static QJSManagedValue checkedProperty(const QJSManagedValue &value, const QString &name)
+{
+    return value.hasProperty(name) ? QJSManagedValue(value.property(name), value.engine())
+                                   : QJSManagedValue(QJSPrimitiveUndefined(), value.engine());
+}
+
+QList<PropertyInfo> getPropertyInfos(const QJSManagedValue &value)
+{
+    QV4::Scope scope(value.engine()->handle());
+    QV4::ScopedObject scoped(scope, asManaged(value));
+    if (!scoped)
         return {};
 
-    auto *object = QJSValuePrivate::asManagedType<QV4::Object>(value);
-    auto *propertyTable = &object->internalClass()->propertyTable;
-
     QList<PropertyInfo> infos;
-    for (int i = 0; i < propertyTable->d->alloc; i++) {
-        auto &propKey = propertyTable->d->entries[i].identifier;
 
-        if (!propKey.isValid())
+    QScopedPointer<QV4::OwnPropertyKeyIterator> iterator(scoped->ownPropertyKeys(scoped));
+    QV4::Scoped<QV4::InternalClass> internalClass(scope, scoped->internalClass());
+
+    for (auto key = iterator->next(scoped); key.isValid(); key = iterator->next(scoped)) {
+        if (key.isSymbol())
             continue;
 
-        PropertyInfo propInfo  {propKey.toQString(), object->internalClass()->propertyData.at(propertyTable->d->entries[i].index), false};
-        infos << propInfo;
-    }
-
-
-    if (!extractConstructor || !value->hasProperty(QStringLiteral("constructor"))) {
-        std::sort(infos.begin(), infos.end(), [](PropertyInfo& a, PropertyInfo& b) { return a.name < b.name; });
-        return infos;
-    }
-
-    QJSValue constructor = value->property("constructor");
-    auto *objectCtor = QJSValuePrivate::asManagedType<QV4::Object>(&constructor);
-    auto *propertyTableCtor = &objectCtor->internalClass()->propertyTable;
-
-    for (int i = 0; i < propertyTableCtor->d->alloc; i++) {
-        auto &propKey = propertyTableCtor->d->entries[i].identifier;
-
-        if (!propKey.isValid())
-            continue;
-
-        PropertyInfo propInfo {propKey.toQString(), objectCtor->internalClass()->propertyData.at(propertyTableCtor->d->entries[i].index), true};
-        infos << propInfo;
-    }
-
-
-    std::sort(infos.begin(), infos.end(), [](PropertyInfo& a, PropertyInfo& b) { return a.name < b.name; });
+        const auto *entry = internalClass->d()->propertyTable.lookup(key);
+        infos.append({
+            key.toQString(),
+            !entry || internalClass->d()->propertyData.at(entry->index).isWritable()
+        });
+    };
 
     return infos;
 }
 
-void buildBaseType(QString className, QJsonArray *classes)
-{
-    QJsonObject classObject {
-        {QStringLiteral("className"), className},
-        {QStringLiteral("qualifiedClassName"), className},
-        {QStringLiteral("object"), true},
-        {QStringLiteral("classInfos"),
-                    QJsonArray({
-                                   QJsonObject({
-                                       { QStringLiteral("name"), QStringLiteral("QML.Element") },
-                                       { QStringLiteral("value"), QStringLiteral("anonymous") }
-                                   })
-                               })
-        }
-    };
-
-    classes->append(classObject);
-}
-
-enum class SeenType {
-    Normal,
-    Constructed
+struct State {
+    QMap<QString, QJSValue> constructors;
+    QMap<QString, QJSValue> prototypes;
+    QSet<QString> primitives;
 };
 
-void buildClass(QJSValue value, QJsonArray *classes, bool globalObject, QMap<QString, SeenType> &seen, SeenType seenType = SeenType::Normal) {
+static QString buildConstructor(const QJSManagedValue &constructor, QJsonArray *classes,
+                                State *seen, const QString &name);
+
+static QString findClassName(const QJSManagedValue &value)
+{
+    if (value.isUndefined())
+        return QStringLiteral("undefined");
+    if (value.isBoolean())
+        return QStringLiteral("boolean");
+    if (value.isNumber())
+        return QStringLiteral("number");
+    if (value.isString())
+        return QStringLiteral("string");
+    if (value.isSymbol())
+        return QStringLiteral("symbol");
+
+    QV4::Scope scope(value.engine()->handle());
+    if (QV4::ScopedValue scoped(scope, asManaged(value)); scoped->isManaged())
+        return scoped->managed()->vtable()->className;
+
+    Q_UNREACHABLE();
+    return QString();
+}
+
+static QString buildClass(const QJSManagedValue &value, QJsonArray *classes,
+                          State *seen, const QString &name)
+{
+    if (value.isNull())
+        return QString();
+
+    if (seen->primitives.contains(name))
+        return name;
+    else if (name.at(0).isLower())
+        seen->primitives.insert(name);
+
     QJsonObject classObject;
+    QV4::Scope scope(value.engine()->handle());
 
-    auto *object = QJSValuePrivate::asManagedType<QV4::Object>(&value);
-
-    QString className = globalObject ? QStringLiteral("GlobalObject") : QString::fromUtf8(object->vtable()->className);
-
-    // Make sure we're not building the same class twice if it has been fully seen
-    if (seen.contains(className) && (seen[className] != SeenType::Constructed || seenType == SeenType::Constructed))
-        return;
-
-    seen.insert(className, seenType);
-
-    // See if there is a lesser duplicate that needs to be removed.
-    for (auto it = classes->begin(); it != classes->end(); ++it) {
-        if (it->toObject()[QStringLiteral("className")] == className) {
-           it = classes->erase(it);
-           break;
-        }
-    }
-
-    classObject[QStringLiteral("className")] = className;
-    classObject[QStringLiteral("qualifiedClassName")] = className;
+    classObject[QStringLiteral("className")] = name;
+    classObject[QStringLiteral("qualifiedClassName")] = name;
 
     classObject[QStringLiteral("classInfos")] = QJsonArray({
                                                           QJsonObject({
                                                               { QStringLiteral("name"), QStringLiteral("QML.Element") },
-                                                              { QStringLiteral("value"), globalObject ? QStringLiteral("auto") : QStringLiteral("anonymous") }
+                                                              { QStringLiteral("value"), QStringLiteral("anonymous") }
                                                           })
                                                       });
 
-    classObject[QStringLiteral("object")] = true;
+    if (value.isObject() || value.isFunction())
+        classObject[QStringLiteral("object")] = true;
+    else
+        classObject[QStringLiteral("gadget")] = true;
 
-    QV4::Scope scope(object);
+    const QJSManagedValue prototype = value.prototype();
 
-    QJSValue prototype = value.prototype();
+    if (!prototype.isNull()) {
+        QString protoName;
+        for (auto it = seen->prototypes.begin(), end = seen->prototypes.end(); it != end; ++it) {
+            if (prototype.strictlyEquals(QJSManagedValue(*it, value.engine()))) {
+                protoName = it.key();
+                break;
+            }
+        }
 
-    // Try to see whether calling the prototype constructor or the prototype's prototype constructor uncovers any types.
-    // (It usually doesn't)
-    if (prototype.property("constructor").isCallable()) {
-        buildClass(prototype.property("constructor").callAsConstructor(), classes, false, seen, SeenType::Constructed);
+        if (protoName.isEmpty()) {
+            if (name.endsWith(QStringLiteral("ErrorPrototype"))
+                    && name != QStringLiteral("ErrorPrototype")) {
+                protoName = QStringLiteral("ErrorPrototype");
+            } else if (name.endsWith(QStringLiteral("Prototype"))) {
+                protoName = findClassName(prototype);
+                if (!protoName.endsWith(QStringLiteral("Prototype")))
+                    protoName += QStringLiteral("Prototype");
+            } else {
+                protoName = name.at(0).toUpper() + name.mid(1) + QStringLiteral("Prototype");
+            }
+
+            auto it = seen->prototypes.find(protoName);
+            if (it == seen->prototypes.end()) {
+                seen->prototypes.insert(protoName, prototype.toJSValue());
+                buildClass(prototype, classes, seen, protoName);
+            } else if (!it->strictlyEquals(prototype.toJSValue())) {
+                qWarning() << "Cannot find a distinct name for the prototype of" << name;
+                qWarning() << protoName << "is already in use.";
+            }
+        }
+
+        classObject[QStringLiteral("superClasses")] = QJsonArray {
+                QJsonObject ({
+                                 { QStringLiteral("access"), QStringLiteral("public") },
+                                 { QStringLiteral("name"), protoName }
+                             })};
     }
-
-    if (prototype.prototype().property("constructor").isCallable()) {
-        buildClass(prototype.prototype().property("constructor").callAsConstructor(), classes, false, seen, SeenType::Constructed);
-    }
-
-    classObject[QStringLiteral("superClasses")] = QJsonArray {
-            QJsonObject ({
-                             { QStringLiteral("access"), QStringLiteral("public") },
-                             { QStringLiteral("name"), className == QStringLiteral("Object") ? QStringLiteral("QJSValue") : QStringLiteral("Object") }
-                         })};
 
     QJsonArray properties, methods;
 
-    for (const PropertyInfo &info : getPropertyInfos(&value, className == QStringLiteral("Object"))) {
-        QJSValue prop;
-
-        if (info.fromConstructor)
-            prop = value.property("constructor").property(info.name);
-        else
-            prop = value.property(info.name);
-
-        // This appears in many property tables despite not being real properties
-        if (info.name.startsWith(QStringLiteral("@Symbol.")))
-            continue;
-
+    for (const PropertyInfo &info : getPropertyInfos(value)) {
+        QJSManagedValue prop = checkedProperty(value, info.name);
+        if (prop.engine()->hasError()) {
+            qWarning() << "Cannot retrieve property " << info.name << "of" << name;
+            qWarning().noquote() << "    " << prop.engine()->catchError().toString();
+        }
 
         // Method or constructor
-        if (prop.isCallable()) {
-            const QV4::FunctionObject *propFunction = QJSValuePrivate::asManagedType<QV4::FunctionObject>(&prop);
+        if (prop.isFunction()) {
+            QV4::Scoped<QV4::FunctionObject> propFunction(scope, asManaged(prop));
 
             QJsonObject methodObject;
 
@@ -194,26 +205,31 @@ void buildClass(QJSValue value, QJsonArray *classes, bool globalObject, QMap<QSt
             if (propFunction->isConstructor()) {
                 methodObject.insert(QStringLiteral("isConstructor"), true);
 
+                QString ctorName;
+                if (info.name.at(0).isUpper()) {
+                    ctorName = info.name;
+                } else if (info.name == QStringLiteral("constructor")) {
+                    if (name.endsWith(QStringLiteral("Prototype")))
+                        ctorName = name.chopped(strlen("Prototype"));
+                    else if (name.endsWith(QStringLiteral("PrototypeMember")))
+                        ctorName = name.chopped(strlen("PrototypeMember"));
+                    else
+                        ctorName = name;
 
-                QJSValue constructed = prop.callAsConstructor();
-                if (constructed.isObject()) {
-                    auto *constructedObject = QJSValuePrivate::asManagedType<QV4::Object>(&constructed);
-                    QString classObjectType = constructedObject->vtable()->className;
-
-                    buildClass(constructed, classes, false, seen, SeenType::Constructed);
-
-                    methodObject.insert(QStringLiteral("returnType"), classObjectType);
-                } else {
-                    qWarning() << "Warning: Calling constructor" << info.name << "failed";
+                    if (!ctorName.endsWith(QStringLiteral("Constructor")))
+                        ctorName += QStringLiteral("Constructor");
                 }
+
+                methodObject.insert(
+                            QStringLiteral("returnType"),
+                            buildConstructor(prop, classes, seen, ctorName));
             }
 
             const int formalParams = propFunction->getLength();
 
             QJsonArray arguments;
-            for (int i = 0; i < formalParams; i++) {
+            for (int i = 0; i < formalParams; i++)
                 arguments.append(QJsonObject {});
-            }
 
             methodObject.insert(QStringLiteral("arguments"), arguments);
 
@@ -228,52 +244,91 @@ void buildClass(QJSValue value, QJsonArray *classes, bool globalObject, QMap<QSt
         propertyObject.insert(QStringLiteral("name"), info.name);
 
         // Insert faux member entry if we're allowed to write to this
-        if (info.attr.isWritable())
+        if (info.writable)
             propertyObject.insert(QStringLiteral("member"), QStringLiteral("fakeMember"));
 
-        // Writing out the types is kind of hard in this case because we often have no corresponding QObject type
-        if (prop.isQObject()) {
-            propertyObject.insert(QStringLiteral("type"), prop.toQObject()->metaObject()->className());
-        } else {
-            QString type;
+        if (!prop.isUndefined() && !prop.isNull()) {
+            QString propClassName = findClassName(prop);
+            if (!propClassName.at(0).isLower() && info.name != QStringLiteral("prototype")) {
+                propClassName = (name == QStringLiteral("GlobalObject"))
+                        ? QString()
+                        : name.at(0).toUpper() + name.mid(1);
 
-            if (prop.isString()) {
-                type = QStringLiteral("string");
-            } else if (prop.isBool()){
-                type = QStringLiteral("bool");
-            } else if (prop.isNumber()) {
-                type = QStringLiteral("number");
-            } else if (prop.isUndefined()) {
-                type = QStringLiteral("undefined");
-            } else if (prop.isArray() || prop.isNull() || prop.isObject()) {
-                type = QStringLiteral("object");
+                propClassName += info.name.at(0).toUpper() + info.name.mid(1);
+                propertyObject.insert(QStringLiteral("type"),
+                                      buildClass(prop, classes, seen, propClassName));
             } else {
-                qWarning() << "Warning: Failed to resolve type of property" << info.name;
-                type = QStringLiteral("undefined");
+                // If it's the "prototype" property we just refer to generic "Object",
+                // and if it's a value type, we handle it separately.
+                propertyObject.insert(QStringLiteral("type"), propClassName);
             }
-
-            if (seenType != SeenType::Constructed || !prop.isUndefined())
-                propertyObject.insert(QStringLiteral("type"), type);
         }
-
-        if (prop.isObject() && !prop.isQObject()) {
-            buildClass(prop, classes, false, seen);
-
-            auto *object = QJSValuePrivate::asManagedType<QV4::Object>(&prop);
-
-            propertyObject.insert(QStringLiteral("type"), object->vtable()->className);
-        }
-
         properties.append(propertyObject);
     }
 
     classObject[QStringLiteral("properties")] = properties;
     classObject[QStringLiteral("methods")] = methods;
 
-    // Make sure that in the unlikely accident that some subclass has already provided a normal replacement for this constructed type
-    // there are no duplicate entries.
-    if (seenType != SeenType::Constructed || seen[className] != SeenType::Normal)
-        classes->append(classObject);
+    classes->append(classObject);
+
+    return name;
+}
+
+static QString buildConstructor(const QJSManagedValue &constructor, QJsonArray *classes,
+                                State *seen, const QString &name)
+{
+    QJSEngine *engine = constructor.engine();
+
+    // If the constructor appears in the global object, use the name from there.
+    const QJSManagedValue globalObject(engine->globalObject(), engine);
+    const auto infos = getPropertyInfos(globalObject);
+    for (const auto &info : infos) {
+        const QJSManagedValue member(globalObject.property(info.name), engine);
+        if (member.strictlyEquals(constructor) && info.name != name)
+            return buildConstructor(constructor, classes, seen, info.name);
+    }
+
+    QJSManagedValue constructed;
+    if (name == QStringLiteral("Symbol"))
+        return QStringLiteral("undefined"); // Cannot construct symbols with "new";
+
+    if (name == QStringLiteral("URL")) {
+        constructed = QJSManagedValue(
+                    constructor.callAsConstructor({ QJSValue(QStringLiteral("http://a.bc")) }),
+                    engine);
+    } else if (name == QStringLiteral("Promise")) {
+        constructed = QJSManagedValue(
+                    constructor.callAsConstructor(
+                        { engine->evaluate(QStringLiteral("(function() {})")) }),
+                        engine);
+    } else if (name == QStringLiteral("DataView")) {
+        constructed = QJSManagedValue(
+                    constructor.callAsConstructor(
+                        { engine->evaluate(QStringLiteral("new ArrayBuffer()")) }),
+                        engine);
+    } else if (name == QStringLiteral("Proxy")) {
+        constructed = QJSManagedValue(constructor.callAsConstructor(
+                                          { engine->newObject(), engine->newObject() }), engine);
+    } else {
+        constructed = QJSManagedValue(constructor.callAsConstructor(), engine);
+    }
+
+    if (engine->hasError()) {
+        qWarning() << "Calling constructor" << name << "failed";
+        qWarning().noquote() << "    " << engine->catchError().toString();
+        return QString();
+    } else if (name.isEmpty()) {
+        Q_UNREACHABLE();
+    }
+
+    auto it = seen->constructors.find(name);
+    if (it == seen->constructors.end()) {
+        seen->constructors.insert(name, constructor.toJSValue());
+        return buildClass(constructed, classes, seen, name);
+    } else if (!constructor.strictlyEquals(QJSManagedValue(*it, constructor.engine()))) {
+        qWarning() << "Two constructors of the same name seen:" << name;
+    }
+    return name;
 }
 
 int main(int argc, char *argv[])
@@ -294,16 +349,42 @@ int main(int argc, char *argv[])
     engine.installExtensions(QJSEngine::AllExtensions);
 
     QJsonArray classesArray;
+    State seen;
 
-    // Add JS types so they can be referenced by other classes
-    for (const QString &name : { QStringLiteral("string"), QStringLiteral("undefined"), QStringLiteral("number"),
-                                 QStringLiteral("object"), QStringLiteral("bool"), QStringLiteral("symbol"), QStringLiteral("function")}) {
-        buildBaseType(name, &classesArray);
-    }
+    // object. Do this first to claim the "Object" name for the prototype.
+    buildClass(QJSManagedValue(engine.newObject(), &engine), &classesArray, &seen,
+               QStringLiteral("object"));
 
-    QMap<QString, SeenType> seen {};
 
-    buildClass(engine.globalObject(), &classesArray, true, seen);
+    buildClass(QJSManagedValue(engine.globalObject(), &engine), &classesArray, &seen,
+               QStringLiteral("GlobalObject"));
+
+    // Add JS types, in case they aren't used anywhere.
+
+
+    // function
+    buildClass(QJSManagedValue(engine.evaluate(QStringLiteral("(function() {})")), &engine),
+               &classesArray, &seen, QStringLiteral("function"));
+
+    // string
+    buildClass(QJSManagedValue(QStringLiteral("s"), &engine), &classesArray, &seen,
+               QStringLiteral("string"));
+
+    // undefined
+    buildClass(QJSManagedValue(QJSPrimitiveUndefined(), &engine), &classesArray, &seen,
+               QStringLiteral("undefined"));
+
+    // number
+    buildClass(QJSManagedValue(QJSPrimitiveValue(1.1), &engine), &classesArray, &seen,
+               QStringLiteral("number"));
+
+    // boolean
+    buildClass(QJSManagedValue(QJSPrimitiveValue(true), &engine), &classesArray, &seen,
+               QStringLiteral("boolean"));
+
+    // symbol
+    buildClass(QJSManagedValue(engine.newSymbol(QStringLiteral("s")), &engine),
+               &classesArray, &seen, QStringLiteral("symbol"));
 
     // Generate the fake metatypes json structure
     QJsonDocument metatypesJson = QJsonDocument(

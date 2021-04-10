@@ -73,6 +73,7 @@ public:
     QJSValue importModule(const QString &fileName);
 
     QJSValue newObject();
+    QJSValue newSymbol(const QString &name);
     QJSValue newArray(uint length = 0);
 
     QJSValue newQObject(QObject *object);

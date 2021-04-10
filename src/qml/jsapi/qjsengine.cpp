@@ -53,6 +53,7 @@
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qv4stackframe_p.h>
 #include <private/qv4module_p.h>
+#include <private/qv4symbol_p.h>
 
 #include <QtCore/qdatetime.h>
 #include <QtCore/qmetaobject.h>
@@ -587,6 +588,22 @@ QJSValue QJSEngine::newObject()
 {
     QV4::Scope scope(m_v4Engine);
     QV4::ScopedValue v(scope, m_v4Engine->newObject());
+    return QJSValuePrivate::fromReturnedValue(v->asReturnedValue());
+}
+
+/*!
+  \since 6.2
+
+  Creates a JavaScript object of class Symbol, with value \a name.
+
+  The prototype of the created object will be the Symbol prototype object.
+
+  \sa newString()
+*/
+QJSValue QJSEngine::newSymbol(const QString &name)
+{
+    QV4::Scope scope(m_v4Engine);
+    QV4::ScopedValue v(scope, QV4::Symbol::create(m_v4Engine, u'@' + name));
     return QJSValuePrivate::fromReturnedValue(v->asReturnedValue());
 }
 

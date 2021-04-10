@@ -7,25 +7,145 @@ import QtQuick.tooling 1.2
 
 Module {
     Component {
-        name: "ArrayBuffer"
+        name: "Array"
         accessSemantics: "reference"
-        prototype: "Object"
-        Property { name: "index" }
-        Property { name: "input" }
-        Property { name: "length" }
+        prototype: "ArrayPrototype"
+        Property { name: "length"; type: "number" }
     }
     Component {
-        name: "ArrayObject"
+        name: "ArrayBuffer"
         accessSemantics: "reference"
-        prototype: "Object"
-        Property { name: "index" }
-        Property { name: "input" }
+        prototype: "ArrayBufferPrototype"
+    }
+    Component {
+        name: "ArrayBufferPrototype"
+        accessSemantics: "reference"
+        prototype: "ObjectPrototype"
+        Property { name: "byteLength" }
+        Method {
+            name: "constructor"
+            type: "ArrayBuffer"
+            isConstructor: true
+            Parameter {}
+        }
+        Method {
+            name: "slice"
+            Parameter {}
+            Parameter {}
+        }
+        Method { name: "toString" }
+    }
+    Component {
+        name: "ArrayPrototype"
+        accessSemantics: "reference"
+        prototype: "ObjectPrototype"
         Property { name: "length"; type: "number" }
+        Method {
+            name: "constructor"
+            type: "Array"
+            isConstructor: true
+            Parameter {}
+        }
+        Method { name: "toString" }
+        Method { name: "toLocaleString" }
+        Method {
+            name: "concat"
+            Parameter {}
+        }
+        Method {
+            name: "copyWithin"
+            Parameter {}
+            Parameter {}
+        }
+        Method { name: "entries" }
+        Method {
+            name: "fill"
+            Parameter {}
+        }
+        Method {
+            name: "find"
+            Parameter {}
+        }
+        Method {
+            name: "findIndex"
+            Parameter {}
+        }
+        Method {
+            name: "includes"
+            Parameter {}
+        }
+        Method {
+            name: "join"
+            Parameter {}
+        }
+        Method { name: "keys" }
+        Method { name: "pop" }
+        Method {
+            name: "push"
+            Parameter {}
+        }
+        Method { name: "reverse" }
+        Method { name: "shift" }
+        Method {
+            name: "slice"
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "sort"
+            Parameter {}
+        }
+        Method {
+            name: "splice"
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "unshift"
+            Parameter {}
+        }
+        Method {
+            name: "indexOf"
+            Parameter {}
+        }
+        Method {
+            name: "lastIndexOf"
+            Parameter {}
+        }
+        Method {
+            name: "every"
+            Parameter {}
+        }
+        Method {
+            name: "some"
+            Parameter {}
+        }
+        Method {
+            name: "forEach"
+            Parameter {}
+        }
+        Method {
+            name: "map"
+            Parameter {}
+        }
+        Method {
+            name: "filter"
+            Parameter {}
+        }
+        Method {
+            name: "reduce"
+            Parameter {}
+        }
+        Method {
+            name: "reduceRight"
+            Parameter {}
+        }
+        Method { name: "values" }
     }
     Component {
         name: "Atomics"
         accessSemantics: "reference"
-        prototype: "Object"
+        prototype: "ObjectPrototype"
         Method {
             name: "add"
             Parameter {}
@@ -98,68 +218,525 @@ Module {
             Parameter {}
         }
     }
+    Component { name: "Boolean"; accessSemantics: "reference"; prototype: "BooleanPrototype" }
     Component {
-        name: "BooleanObject"
+        name: "BooleanPrototype"
         accessSemantics: "reference"
-        prototype: "Object"
-        Property { name: "index" }
-        Property { name: "input" }
-        Property { name: "length" }
+        prototype: "ObjectPrototype"
+        Method {
+            name: "constructor"
+            type: "Boolean"
+            isConstructor: true
+            Parameter {}
+        }
+        Method { name: "toString" }
+        Method { name: "valueOf" }
     }
     Component {
-        name: "ConsoleObject"
+        name: "Console"
         accessSemantics: "reference"
-        prototype: "Object"
+        prototype: "ObjectPrototype"
+        Method { name: "debug" }
+        Method { name: "log" }
+        Method { name: "info" }
+        Method { name: "warn" }
+        Method { name: "error" }
         Method { name: "assert" }
         Method { name: "count" }
-        Method { name: "debug" }
-        Method { name: "error" }
-        Method { name: "exception" }
-        Method { name: "info" }
-        Method { name: "log" }
         Method { name: "profile" }
         Method { name: "profileEnd" }
         Method { name: "time" }
         Method { name: "timeEnd" }
         Method { name: "trace" }
-        Method { name: "warn" }
+        Method { name: "exception" }
+    }
+    Component { name: "DataView"; accessSemantics: "reference"; prototype: "DataViewPrototype" }
+    Component {
+        name: "DataViewPrototype"
+        accessSemantics: "reference"
+        prototype: "ObjectPrototype"
+        Property { name: "buffer" }
+        Property { name: "byteLength" }
+        Property { name: "byteOffset" }
+        Method {
+            name: "constructor"
+            type: "DataView"
+            isConstructor: true
+            Parameter {}
+        }
+        Method {
+            name: "getInt8"
+            Parameter {}
+        }
+        Method {
+            name: "getUint8"
+            Parameter {}
+        }
+        Method {
+            name: "getInt16"
+            Parameter {}
+        }
+        Method {
+            name: "getUint16"
+            Parameter {}
+        }
+        Method {
+            name: "getInt32"
+            Parameter {}
+        }
+        Method {
+            name: "getUint32"
+            Parameter {}
+        }
+        Method {
+            name: "getFloat32"
+            Parameter {}
+        }
+        Method {
+            name: "getFloat64"
+            Parameter {}
+        }
+        Method {
+            name: "setInt8"
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "setUint8"
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "setInt16"
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "setUint16"
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "setInt32"
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "setUint32"
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "setFloat32"
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "setFloat64"
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "getUInt8"
+            Parameter {}
+        }
+        Method {
+            name: "getUInt16"
+            Parameter {}
+        }
+        Method {
+            name: "getUInt32"
+            Parameter {}
+        }
+        Method {
+            name: "setUInt8"
+            Parameter {}
+        }
+        Method {
+            name: "setUInt16"
+            Parameter {}
+        }
+        Method {
+            name: "setUInt32"
+            Parameter {}
+        }
+    }
+    Component { name: "Date"; accessSemantics: "reference"; prototype: "DatePrototype" }
+    Component {
+        name: "DatePrototype"
+        accessSemantics: "reference"
+        prototype: "ObjectPrototype"
+        Method {
+            name: "constructor"
+            type: "Date"
+            isConstructor: true
+            Parameter {}
+            Parameter {}
+            Parameter {}
+            Parameter {}
+            Parameter {}
+            Parameter {}
+            Parameter {}
+        }
+        Method { name: "toString" }
+        Method { name: "toDateString" }
+        Method { name: "toTimeString" }
+        Method { name: "toLocaleString" }
+        Method { name: "toLocaleDateString" }
+        Method { name: "toLocaleTimeString" }
+        Method { name: "valueOf" }
+        Method { name: "getTime" }
+        Method { name: "getYear" }
+        Method { name: "getFullYear" }
+        Method { name: "getUTCFullYear" }
+        Method { name: "getMonth" }
+        Method { name: "getUTCMonth" }
+        Method { name: "getDate" }
+        Method { name: "getUTCDate" }
+        Method { name: "getDay" }
+        Method { name: "getUTCDay" }
+        Method { name: "getHours" }
+        Method { name: "getUTCHours" }
+        Method { name: "getMinutes" }
+        Method { name: "getUTCMinutes" }
+        Method { name: "getSeconds" }
+        Method { name: "getUTCSeconds" }
+        Method { name: "getMilliseconds" }
+        Method { name: "getUTCMilliseconds" }
+        Method { name: "getTimezoneOffset" }
+        Method {
+            name: "setTime"
+            Parameter {}
+        }
+        Method {
+            name: "setMilliseconds"
+            Parameter {}
+        }
+        Method {
+            name: "setUTCMilliseconds"
+            Parameter {}
+        }
+        Method {
+            name: "setSeconds"
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "setUTCSeconds"
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "setMinutes"
+            Parameter {}
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "setUTCMinutes"
+            Parameter {}
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "setHours"
+            Parameter {}
+            Parameter {}
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "setUTCHours"
+            Parameter {}
+            Parameter {}
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "setDate"
+            Parameter {}
+        }
+        Method {
+            name: "setUTCDate"
+            Parameter {}
+        }
+        Method {
+            name: "setMonth"
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "setUTCMonth"
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "setYear"
+            Parameter {}
+        }
+        Method {
+            name: "setFullYear"
+            Parameter {}
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "setUTCFullYear"
+            Parameter {}
+            Parameter {}
+            Parameter {}
+        }
+        Method { name: "toUTCString" }
+        Method { name: "toGMTString" }
+        Method { name: "toISOString" }
+        Method {
+            name: "toJSON"
+            Parameter {}
+        }
     }
     Component {
-        name: "DateObject"
+        name: "Error"
         accessSemantics: "reference"
-        prototype: "Object"
-        Property { name: "index" }
-        Property { name: "input" }
-        Property { name: "length" }
-    }
-    Component {
-        name: "ErrorObject"
-        accessSemantics: "reference"
-        prototype: "Object"
+        prototype: "ErrorPrototype"
+        Property { name: "stack"; type: "string" }
         Property { name: "fileName" }
         Property { name: "lineNumber" }
+    }
+    Component {
+        name: "ErrorPrototype"
+        accessSemantics: "reference"
+        prototype: "ObjectPrototype"
         Property { name: "message"; type: "string" }
+        Property { name: "name"; type: "string" }
+        Method {
+            name: "constructor"
+            type: "Error"
+            isConstructor: true
+            Parameter {}
+        }
+        Method { name: "toString" }
+    }
+    Component {
+        name: "EvalError"
+        accessSemantics: "reference"
+        prototype: "EvalErrorPrototype"
         Property { name: "stack"; type: "string" }
-        Property { name: "stack"; type: "string" }
+        Property { name: "fileName" }
+        Property { name: "lineNumber" }
+    }
+    Component {
+        name: "EvalErrorPrototype"
+        accessSemantics: "reference"
+        prototype: "ErrorPrototype"
+        Property { name: "message"; type: "string" }
+        Property { name: "name"; type: "string" }
+        Method {
+            name: "constructor"
+            type: "EvalError"
+            isConstructor: true
+            Parameter {}
+        }
+        Method { name: "toString" }
+    }
+    Component {
+        name: "Float32Array"
+        accessSemantics: "reference"
+        prototype: "Float32ArrayPrototype"
+    }
+    Component {
+        name: "Float32ArrayPrototype"
+        accessSemantics: "reference"
+        prototype: "IntrinsicTypedArrayPrototype"
+        Property { name: "BYTES_PER_ELEMENT"; type: "number"; isReadonly: true }
+        Method {
+            name: "constructor"
+            type: "Float32Array"
+            isConstructor: true
+            Parameter {}
+            Parameter {}
+            Parameter {}
+        }
+    }
+    Component {
+        name: "Float64Array"
+        accessSemantics: "reference"
+        prototype: "Float64ArrayPrototype"
+    }
+    Component {
+        name: "Float64ArrayPrototype"
+        accessSemantics: "reference"
+        prototype: "IntrinsicTypedArrayPrototype"
+        Property { name: "BYTES_PER_ELEMENT"; type: "number"; isReadonly: true }
+        Method {
+            name: "constructor"
+            type: "Float64Array"
+            isConstructor: true
+            Parameter {}
+            Parameter {}
+            Parameter {}
+        }
+    }
+    Component {
+        name: "Function"
+        accessSemantics: "reference"
+        prototype: "FunctionPrototype"
+        Property { name: "prototype"; type: "Object" }
+        Property { name: "name"; type: "string"; isReadonly: true }
+        Property { name: "length"; type: "number"; isReadonly: true }
+    }
+    Component {
+        name: "FunctionPrototype"
+        accessSemantics: "reference"
+        prototype: "ObjectPrototype"
+        Property { name: "name"; type: "string"; isReadonly: true }
+        Property { name: "length"; type: "number"; isReadonly: true }
+        Property { name: "caller" }
+        Property { name: "arguments" }
+        Method {
+            name: "constructor"
+            type: "Function"
+            isConstructor: true
+            Parameter {}
+        }
+        Method { name: "toString" }
+        Method {
+            name: "apply"
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "call"
+            Parameter {}
+        }
+        Method {
+            name: "bind"
+            Parameter {}
+        }
+        Method { name: "connect" }
+        Method { name: "disconnect" }
     }
     Component {
         name: "GlobalObject"
         accessSemantics: "reference"
-        prototype: "Object"
-        exports: ["QJSEngine/GlobalObject 1.0"]
-        exportMetaObjectRevisions: [256]
+        prototype: "ObjectPrototype"
         Property { name: "Atomics"; type: "Atomics" }
-        Property { name: "Infinity"; type: "number"; isReadonly: true }
-        Property { name: "JSON"; type: "JsonObject" }
-        Property { name: "Math"; type: "MathObject" }
-        Property { name: "NaN"; type: "number"; isReadonly: true }
-        Property { name: "Qt"; type: "QtObject" }
+        Property { name: "Math"; type: "Math" }
+        Property { name: "JSON"; type: "JSON" }
         Property { name: "Reflect"; type: "Reflect" }
-        Property { name: "console"; type: "ConsoleObject" }
-        Property { name: "undefined"; type: "undefined"; isReadonly: true }
+        Property { name: "undefined" }
+        Property { name: "NaN"; type: "number"; isReadonly: true }
+        Property { name: "Infinity"; type: "number"; isReadonly: true }
+        Property { name: "Qt"; type: "Qt" }
+        Property { name: "console"; type: "Console" }
+        Method {
+            name: "Object"
+            type: "Object"
+            isConstructor: true
+            Parameter {}
+        }
+        Method {
+            name: "String"
+            type: "String"
+            isConstructor: true
+            Parameter {}
+        }
+        Method { name: "Symbol"; type: "undefined"; isConstructor: true }
+        Method {
+            name: "Number"
+            type: "Number"
+            isConstructor: true
+            Parameter {}
+        }
+        Method {
+            name: "Boolean"
+            type: "Boolean"
+            isConstructor: true
+            Parameter {}
+        }
         Method {
             name: "Array"
-            type: "ArrayObject"
+            type: "Array"
+            isConstructor: true
+            Parameter {}
+        }
+        Method {
+            name: "Function"
+            type: "Function"
+            isConstructor: true
+            Parameter {}
+        }
+        Method {
+            name: "Date"
+            type: "Date"
+            isConstructor: true
+            Parameter {}
+            Parameter {}
+            Parameter {}
+            Parameter {}
+            Parameter {}
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "RegExp"
+            type: "RegExp"
+            isConstructor: true
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "Error"
+            type: "Error"
+            isConstructor: true
+            Parameter {}
+        }
+        Method {
+            name: "EvalError"
+            type: "EvalError"
+            isConstructor: true
+            Parameter {}
+        }
+        Method {
+            name: "RangeError"
+            type: "RangeError"
+            isConstructor: true
+            Parameter {}
+        }
+        Method {
+            name: "ReferenceError"
+            type: "ReferenceError"
+            isConstructor: true
+            Parameter {}
+        }
+        Method {
+            name: "SyntaxError"
+            type: "SyntaxError"
+            isConstructor: true
+            Parameter {}
+        }
+        Method {
+            name: "TypeError"
+            type: "TypeError"
+            isConstructor: true
+            Parameter {}
+        }
+        Method {
+            name: "URIError"
+            type: "URIError"
+            isConstructor: true
+            Parameter {}
+        }
+        Method {
+            name: "Promise"
+            type: "Promise"
+            isConstructor: true
+            Parameter {}
+        }
+        Method { name: "URL"; type: "URL"; isConstructor: true }
+        Method { name: "URLSearchParams"; type: "URLSearchParams"; isConstructor: true }
+        Method {
+            name: "SharedArrayBuffer"
+            type: "SharedArrayBuffer"
             isConstructor: true
             Parameter {}
         }
@@ -170,180 +747,18 @@ Module {
             Parameter {}
         }
         Method {
-            name: "Boolean"
-            type: "BooleanObject"
-            isConstructor: true
-            Parameter {}
-        }
-        Method {
             name: "DataView"
-            type: "ErrorObject"
+            type: "DataView"
             isConstructor: true
             Parameter {}
         }
-        Method {
-            name: "Date"
-            type: "DateObject"
-            isConstructor: true
-            Parameter {}
-            Parameter {}
-            Parameter {}
-            Parameter {}
-            Parameter {}
-            Parameter {}
-            Parameter {}
-        }
-        Method {
-            name: "Error"
-            type: "ErrorObject"
-            isConstructor: true
-            Parameter {}
-        }
-        Method {
-            name: "EvalError"
-            type: "ErrorObject"
-            isConstructor: true
-            Parameter {}
-        }
-        Method {
-            name: "Float32Array"
-            type: "TypedArray"
-            isConstructor: true
-            Parameter {}
-            Parameter {}
-            Parameter {}
-        }
-        Method {
-            name: "Float64Array"
-            type: "TypedArray"
-            isConstructor: true
-            Parameter {}
-            Parameter {}
-            Parameter {}
-        }
-        Method {
-            name: "Function"
-            type: "ScriptFunction"
-            isConstructor: true
-            Parameter {}
-        }
-        Method {
-            name: "Int16Array"
-            type: "TypedArray"
-            isConstructor: true
-            Parameter {}
-            Parameter {}
-            Parameter {}
-        }
-        Method {
-            name: "Int32Array"
-            type: "TypedArray"
-            isConstructor: true
-            Parameter {}
-            Parameter {}
-            Parameter {}
-        }
+        Method { name: "WeakSet"; type: "WeakSet"; isConstructor: true }
+        Method { name: "Set"; type: "Set"; isConstructor: true }
+        Method { name: "WeakMap"; type: "WeakMap"; isConstructor: true }
+        Method { name: "Map"; type: "Map"; isConstructor: true }
         Method {
             name: "Int8Array"
-            type: "TypedArray"
-            isConstructor: true
-            Parameter {}
-            Parameter {}
-            Parameter {}
-        }
-        Method { name: "Map"; type: "MapObject"; isConstructor: true }
-        Method {
-            name: "Number"
-            type: "NumberObject"
-            isConstructor: true
-            Parameter {}
-        }
-        Method {
-            name: "Object"
-            type: "Object"
-            isConstructor: true
-            Parameter {}
-        }
-        Method {
-            name: "Promise"
-            type: "ErrorObject"
-            isConstructor: true
-            Parameter {}
-        }
-        Method {
-            name: "Proxy"
-            type: "ErrorObject"
-            isConstructor: true
-            Parameter {}
-            Parameter {}
-        }
-        Method { name: "QT_TRANSLATE_NOOP" }
-        Method { name: "QT_TRID_NOOP" }
-        Method { name: "QT_TR_NOOP" }
-        Method {
-            name: "RangeError"
-            type: "ErrorObject"
-            isConstructor: true
-            Parameter {}
-        }
-        Method {
-            name: "ReferenceError"
-            type: "ErrorObject"
-            isConstructor: true
-            Parameter {}
-        }
-        Method {
-            name: "RegExp"
-            type: "RegExpObject"
-            isConstructor: true
-            Parameter {}
-            Parameter {}
-        }
-        Method { name: "Set"; type: "SetObject"; isConstructor: true }
-        Method {
-            name: "SharedArrayBuffer"
-            type: "SharedArrayBuffer"
-            isConstructor: true
-            Parameter {}
-        }
-        Method {
-            name: "String"
-            type: "StringObject"
-            isConstructor: true
-            Parameter {}
-        }
-        Method { name: "Symbol"; type: "ErrorObject"; isConstructor: true }
-        Method {
-            name: "SyntaxError"
-            type: "ErrorObject"
-            isConstructor: true
-            Parameter {}
-        }
-        Method {
-            name: "TypeError"
-            type: "ErrorObject"
-            isConstructor: true
-            Parameter {}
-        }
-        Method {
-            name: "URIError"
-            type: "ErrorObject"
-            isConstructor: true
-            Parameter {}
-        }
-        Method { name: "URL"; type: "ErrorObject"; isConstructor: true }
-        Method { name: "URLSearchParams"; type: "UrlSearchParamsObject"; isConstructor: true }
-        Method {
-            name: "Uint16Array"
-            type: "TypedArray"
-            isConstructor: true
-            Parameter {}
-            Parameter {}
-            Parameter {}
-        }
-        Method {
-            name: "Uint32Array"
-            type: "TypedArray"
+            type: "Int8Array"
             isConstructor: true
             Parameter {}
             Parameter {}
@@ -351,7 +766,39 @@ Module {
         }
         Method {
             name: "Uint8Array"
-            type: "TypedArray"
+            type: "Uint8Array"
+            isConstructor: true
+            Parameter {}
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "Int16Array"
+            type: "Int16Array"
+            isConstructor: true
+            Parameter {}
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "Uint16Array"
+            type: "Uint16Array"
+            isConstructor: true
+            Parameter {}
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "Int32Array"
+            type: "Int32Array"
+            isConstructor: true
+            Parameter {}
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "Uint32Array"
+            type: "Uint32Array"
             isConstructor: true
             Parameter {}
             Parameter {}
@@ -359,14 +806,56 @@ Module {
         }
         Method {
             name: "Uint8ClampedArray"
-            type: "TypedArray"
+            type: "Uint8ClampedArray"
             isConstructor: true
             Parameter {}
             Parameter {}
             Parameter {}
         }
-        Method { name: "WeakMap"; type: "MapObject"; isConstructor: true }
-        Method { name: "WeakSet"; type: "SetObject"; isConstructor: true }
+        Method {
+            name: "Float32Array"
+            type: "Float32Array"
+            isConstructor: true
+            Parameter {}
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "Float64Array"
+            type: "Float64Array"
+            isConstructor: true
+            Parameter {}
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "Proxy"
+            type: "Proxy"
+            isConstructor: true
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "eval"
+            Parameter {}
+        }
+        Method {
+            name: "parseInt"
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "parseFloat"
+            Parameter {}
+        }
+        Method {
+            name: "isNaN"
+            Parameter {}
+        }
+        Method {
+            name: "isFinite"
+            Parameter {}
+        }
         Method {
             name: "decodeURI"
             Parameter {}
@@ -388,40 +877,157 @@ Module {
             Parameter {}
         }
         Method {
-            name: "eval"
-            Parameter {}
-        }
-        Method { name: "gc" }
-        Method {
-            name: "isFinite"
-            Parameter {}
-        }
-        Method {
-            name: "isNaN"
-            Parameter {}
-        }
-        Method {
-            name: "parseFloat"
-            Parameter {}
-        }
-        Method {
-            name: "parseInt"
-            Parameter {}
-            Parameter {}
-        }
-        Method { name: "print" }
-        Method { name: "qsTr" }
-        Method { name: "qsTrId" }
-        Method { name: "qsTranslate" }
-        Method {
             name: "unescape"
+            Parameter {}
+        }
+        Method { name: "qsTranslate" }
+        Method { name: "QT_TRANSLATE_NOOP" }
+        Method { name: "qsTr" }
+        Method { name: "QT_TR_NOOP" }
+        Method { name: "qsTrId" }
+        Method { name: "QT_TRID_NOOP" }
+        Method { name: "print" }
+        Method { name: "gc" }
+    }
+    Component { name: "Int16Array"; accessSemantics: "reference"; prototype: "Int16ArrayPrototype" }
+    Component {
+        name: "Int16ArrayPrototype"
+        accessSemantics: "reference"
+        prototype: "IntrinsicTypedArrayPrototype"
+        Property { name: "BYTES_PER_ELEMENT"; type: "number"; isReadonly: true }
+        Method {
+            name: "constructor"
+            type: "Int16Array"
+            isConstructor: true
+            Parameter {}
+            Parameter {}
+            Parameter {}
+        }
+    }
+    Component { name: "Int32Array"; accessSemantics: "reference"; prototype: "Int32ArrayPrototype" }
+    Component {
+        name: "Int32ArrayPrototype"
+        accessSemantics: "reference"
+        prototype: "IntrinsicTypedArrayPrototype"
+        Property { name: "BYTES_PER_ELEMENT"; type: "number"; isReadonly: true }
+        Method {
+            name: "constructor"
+            type: "Int32Array"
+            isConstructor: true
+            Parameter {}
+            Parameter {}
+            Parameter {}
+        }
+    }
+    Component { name: "Int8Array"; accessSemantics: "reference"; prototype: "Int8ArrayPrototype" }
+    Component {
+        name: "Int8ArrayPrototype"
+        accessSemantics: "reference"
+        prototype: "IntrinsicTypedArrayPrototype"
+        Property { name: "BYTES_PER_ELEMENT"; type: "number"; isReadonly: true }
+        Method {
+            name: "constructor"
+            type: "Int8Array"
+            isConstructor: true
+            Parameter {}
+            Parameter {}
             Parameter {}
         }
     }
     Component {
-        name: "JsonObject"
+        name: "IntrinsicTypedArrayPrototype"
         accessSemantics: "reference"
-        prototype: "Object"
+        prototype: "ObjectPrototype"
+        Property { name: "buffer" }
+        Property { name: "byteLength" }
+        Property { name: "byteOffset" }
+        Property { name: "length" }
+        Method {
+            name: "copyWithin"
+            Parameter {}
+            Parameter {}
+        }
+        Method { name: "entries" }
+        Method {
+            name: "every"
+            Parameter {}
+        }
+        Method {
+            name: "fill"
+            Parameter {}
+        }
+        Method {
+            name: "filter"
+            Parameter {}
+        }
+        Method {
+            name: "find"
+            Parameter {}
+        }
+        Method {
+            name: "findIndex"
+            Parameter {}
+        }
+        Method {
+            name: "forEach"
+            Parameter {}
+        }
+        Method {
+            name: "includes"
+            Parameter {}
+        }
+        Method {
+            name: "indexOf"
+            Parameter {}
+        }
+        Method {
+            name: "join"
+            Parameter {}
+        }
+        Method { name: "keys" }
+        Method {
+            name: "lastIndexOf"
+            Parameter {}
+        }
+        Method {
+            name: "map"
+            Parameter {}
+        }
+        Method {
+            name: "reduce"
+            Parameter {}
+        }
+        Method {
+            name: "reduceRight"
+            Parameter {}
+        }
+        Method { name: "reverse" }
+        Method {
+            name: "some"
+            Parameter {}
+        }
+        Method {
+            name: "set"
+            Parameter {}
+        }
+        Method {
+            name: "slice"
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "subarray"
+            Parameter {}
+            Parameter {}
+        }
+        Method { name: "toLocaleString" }
+        Method { name: "toString" }
+        Method { name: "values" }
+    }
+    Component {
+        name: "JSON"
+        accessSemantics: "reference"
+        prototype: "ObjectPrototype"
         Method {
             name: "parse"
             Parameter {}
@@ -434,23 +1040,48 @@ Module {
             Parameter {}
         }
     }
+    Component { name: "Map"; accessSemantics: "reference"; prototype: "MapPrototype" }
     Component {
-        name: "MapObject"
+        name: "MapPrototype"
         accessSemantics: "reference"
-        prototype: "Object"
-        Property { name: "index" }
-        Property { name: "input" }
-        Property { name: "length" }
+        prototype: "ObjectPrototype"
+        Property { name: "size" }
+        Method { name: "constructor"; type: "Map"; isConstructor: true }
+        Method { name: "clear" }
+        Method {
+            name: "delete"
+            Parameter {}
+        }
+        Method {
+            name: "forEach"
+            Parameter {}
+        }
+        Method {
+            name: "get"
+            Parameter {}
+        }
+        Method {
+            name: "has"
+            Parameter {}
+        }
+        Method { name: "keys" }
+        Method {
+            name: "set"
+            Parameter {}
+            Parameter {}
+        }
+        Method { name: "values" }
+        Method { name: "entries" }
     }
     Component {
-        name: "MathObject"
+        name: "Math"
         accessSemantics: "reference"
-        prototype: "Object"
+        prototype: "ObjectPrototype"
         Property { name: "E"; type: "number"; isReadonly: true }
-        Property { name: "LN10"; type: "number"; isReadonly: true }
         Property { name: "LN2"; type: "number"; isReadonly: true }
-        Property { name: "LOG10E"; type: "number"; isReadonly: true }
+        Property { name: "LN10"; type: "number"; isReadonly: true }
         Property { name: "LOG2E"; type: "number"; isReadonly: true }
+        Property { name: "LOG10E"; type: "number"; isReadonly: true }
         Property { name: "PI"; type: "number"; isReadonly: true }
         Property { name: "SQRT1_2"; type: "number"; isReadonly: true }
         Property { name: "SQRT2"; type: "number"; isReadonly: true }
@@ -479,12 +1110,12 @@ Module {
             Parameter {}
         }
         Method {
-            name: "atan2"
-            Parameter {}
+            name: "atanh"
             Parameter {}
         }
         Method {
-            name: "atanh"
+            name: "atan2"
+            Parameter {}
             Parameter {}
         }
         Method {
@@ -598,22 +1229,62 @@ Module {
             Parameter {}
         }
     }
+    Component { name: "Number"; accessSemantics: "reference"; prototype: "NumberPrototype" }
     Component {
-        name: "NumberObject"
+        name: "NumberPrototype"
         accessSemantics: "reference"
-        prototype: "Object"
-        Property { name: "index" }
-        Property { name: "input" }
-        Property { name: "length" }
+        prototype: "ObjectPrototype"
+        Method {
+            name: "constructor"
+            type: "Number"
+            isConstructor: true
+            Parameter {}
+        }
+        Method {
+            name: "toString"
+            Parameter {}
+        }
+        Method { name: "toLocaleString" }
+        Method { name: "valueOf" }
+        Method {
+            name: "toFixed"
+            Parameter {}
+        }
+        Method {
+            name: "toExponential"
+            Parameter {}
+        }
+        Method {
+            name: "toPrecision"
+            Parameter {}
+        }
     }
+    Component { name: "Object"; accessSemantics: "reference"; prototype: "ObjectPrototype" }
     Component {
-        name: "Object"
+        name: "ObjectPrototype"
         accessSemantics: "reference"
-        Property { name: "__proto__"; type: "undefined" }
-        Property { name: "__proto__"; type: "undefined" }
-        Property { name: "length"; type: "number"; isReadonly: true }
-        Property { name: "name"; type: "string"; isReadonly: true }
-        Property { name: "prototype"; type: "Object"; isReadonly: true }
+        Property { name: "__proto__" }
+        Method {
+            name: "constructor"
+            type: "Object"
+            isConstructor: true
+            Parameter {}
+        }
+        Method { name: "toString" }
+        Method { name: "toLocaleString" }
+        Method { name: "valueOf" }
+        Method {
+            name: "hasOwnProperty"
+            Parameter {}
+        }
+        Method {
+            name: "isPrototypeOf"
+            Parameter {}
+        }
+        Method {
+            name: "propertyIsEnumerable"
+            Parameter {}
+        }
         Method {
             name: "__defineGetter__"
             Parameter {}
@@ -624,120 +1295,180 @@ Module {
             Parameter {}
             Parameter {}
         }
-        Method {
-            name: "assign"
-            Parameter {}
-            Parameter {}
-        }
+    }
+    Component { name: "Promise"; accessSemantics: "reference"; prototype: "PromisePrototype" }
+    Component {
+        name: "PromisePrototype"
+        accessSemantics: "reference"
+        prototype: "ObjectPrototype"
         Method {
             name: "constructor"
-            type: "Object"
+            type: "Promise"
             isConstructor: true
             Parameter {}
         }
         Method {
-            name: "create"
+            name: "then"
             Parameter {}
             Parameter {}
         }
         Method {
-            name: "defineProperties"
-            Parameter {}
+            name: "catch"
             Parameter {}
         }
+    }
+    Component { name: "Proxy"; accessSemantics: "reference"; prototype: "ObjectPrototype" }
+    Component {
+        name: "Qt"
+        accessSemantics: "reference"
+        prototype: "ObjectPrototype"
+        Property { name: "objectName"; type: "string" }
+        Property { name: "application"; type: "QtApplication" }
+        Property { name: "platform"; type: "QtPlatform" }
+        Property { name: "inputMethod"; type: "QtInputMethod" }
+        Property { name: "styleHints"; type: "QtStyleHints" }
+        Property { name: "uiLanguage"; type: "string" }
         Method {
-            name: "defineProperty"
-            Parameter {}
-            Parameter {}
+            name: "callLater"
             Parameter {}
         }
+        Method { name: "objectNameChanged" }
+        Method { name: "include" }
+        Method { name: "isQtObject" }
+        Method { name: "color" }
+        Method { name: "rgba" }
+        Method { name: "hsla" }
+        Method { name: "hsva" }
+        Method { name: "colorEqual" }
+        Method { name: "rect" }
+        Method { name: "point" }
+        Method { name: "size" }
+        Method { name: "vector2d" }
+        Method { name: "vector3d" }
+        Method { name: "vector4d" }
+        Method { name: "quaternion" }
+        Method { name: "matrix4x4" }
+        Method { name: "lighter" }
+        Method { name: "darker" }
+        Method { name: "alpha" }
+        Method { name: "tint" }
+        Method { name: "formatDate" }
+        Method { name: "formatTime" }
+        Method { name: "formatDateTime" }
+        Method { name: "locale" }
+        Method { name: "resolvedUrl" }
+        Method { name: "openUrlExternally" }
+        Method { name: "font" }
+        Method { name: "fontFamilies" }
+        Method { name: "md5" }
+        Method { name: "btoa" }
+        Method { name: "atob" }
+        Method { name: "quit" }
+        Method { name: "exit" }
+        Method { name: "createQmlObject" }
+        Method { name: "createComponent" }
+        Method { name: "binding" }
+    }
+    Component {
+        name: "QtApplication"
+        accessSemantics: "reference"
+        prototype: "ObjectPrototype"
+        Property { name: "objectName"; type: "string" }
+        Property { name: "arguments"; type: "QtApplicationArguments" }
+        Property { name: "name"; type: "string" }
+        Property { name: "version"; type: "string" }
+        Property { name: "organization"; type: "string" }
+        Property { name: "domain"; type: "string" }
+        Method { name: "objectNameChanged" }
+        Method { name: "aboutToQuit" }
+        Method { name: "nameChanged" }
+        Method { name: "versionChanged" }
+        Method { name: "organizationChanged" }
+        Method { name: "domainChanged" }
+        Method { name: "setName" }
+        Method { name: "setVersion" }
+        Method { name: "setOrganization" }
+        Method { name: "setDomain" }
+    }
+    Component {
+        name: "QtApplicationArguments"
+        accessSemantics: "reference"
+        prototype: "ArrayPrototype"
+        Property { name: "0"; type: "string" }
+        Property { name: "1"; type: "string" }
+        Property { name: "length"; type: "number" }
+    }
+    Component {
+        name: "QtInputMethod"
+        accessSemantics: "reference"
+        prototype: "ObjectPrototype"
+        Property { name: "objectName"; type: "string" }
+        Method { name: "objectNameChanged" }
+    }
+    Component {
+        name: "QtPlatform"
+        accessSemantics: "reference"
+        prototype: "ObjectPrototype"
+        Property { name: "objectName"; type: "string" }
+        Property { name: "os"; type: "string" }
+        Property { name: "pluginName"; type: "string" }
+        Method { name: "objectNameChanged" }
+    }
+    Component {
+        name: "QtStyleHints"
+        accessSemantics: "reference"
+        prototype: "ObjectPrototype"
+        Property { name: "objectName"; type: "string" }
+        Method { name: "objectNameChanged" }
+    }
+    Component {
+        name: "RangeError"
+        accessSemantics: "reference"
+        prototype: "RangeErrorPrototype"
+        Property { name: "stack"; type: "string" }
+        Property { name: "fileName" }
+        Property { name: "lineNumber" }
+    }
+    Component {
+        name: "RangeErrorPrototype"
+        accessSemantics: "reference"
+        prototype: "ErrorPrototype"
+        Property { name: "message"; type: "string" }
+        Property { name: "name"; type: "string" }
         Method {
-            name: "entries"
+            name: "constructor"
+            type: "RangeError"
+            isConstructor: true
             Parameter {}
         }
-        Method {
-            name: "freeze"
-            Parameter {}
-        }
-        Method {
-            name: "getOwnPropertyDescriptor"
-            Parameter {}
-            Parameter {}
-        }
-        Method {
-            name: "getOwnPropertyDescriptors"
-            Parameter {}
-        }
-        Method {
-            name: "getOwnPropertyNames"
-            Parameter {}
-        }
-        Method {
-            name: "getOwnPropertySymbols"
-            Parameter {}
-        }
-        Method {
-            name: "getPrototypeOf"
-            Parameter {}
-        }
-        Method {
-            name: "hasOwnProperty"
-            Parameter {}
-        }
-        Method {
-            name: "is"
-            Parameter {}
-            Parameter {}
-        }
-        Method {
-            name: "isExtensible"
-            Parameter {}
-        }
-        Method {
-            name: "isFrozen"
-            Parameter {}
-        }
-        Method {
-            name: "isPrototypeOf"
-            Parameter {}
-        }
-        Method {
-            name: "isSealed"
-            Parameter {}
-        }
-        Method {
-            name: "keys"
-            Parameter {}
-        }
-        Method {
-            name: "preventExtensions"
-            Parameter {}
-        }
-        Method {
-            name: "propertyIsEnumerable"
-            Parameter {}
-        }
-        Method {
-            name: "seal"
-            Parameter {}
-        }
-        Method {
-            name: "setPrototypeOf"
-            Parameter {}
-            Parameter {}
-        }
-        Method { name: "toLocaleString" }
         Method { name: "toString" }
-        Method { name: "valueOf" }
+    }
+    Component {
+        name: "ReferenceError"
+        accessSemantics: "reference"
+        prototype: "ReferenceErrorPrototype"
+        Property { name: "stack"; type: "string" }
+        Property { name: "fileName" }
+        Property { name: "lineNumber" }
+    }
+    Component {
+        name: "ReferenceErrorPrototype"
+        accessSemantics: "reference"
+        prototype: "ErrorPrototype"
+        Property { name: "message"; type: "string" }
+        Property { name: "name"; type: "string" }
         Method {
-            name: "values"
+            name: "constructor"
+            type: "ReferenceError"
+            isConstructor: true
             Parameter {}
         }
+        Method { name: "toString" }
     }
     Component {
         name: "Reflect"
         accessSemantics: "reference"
-        prototype: "Object"
+        prototype: "ObjectPrototype"
         Method {
             name: "apply"
             Parameter {}
@@ -804,40 +1535,113 @@ Module {
         }
     }
     Component {
-        name: "RegExpObject"
+        name: "RegExp"
         accessSemantics: "reference"
-        prototype: "Object"
+        prototype: "RegExpPrototype"
         Property { name: "lastIndex"; type: "number" }
     }
     Component {
-        name: "ScriptFunction"
+        name: "RegExpPrototype"
         accessSemantics: "reference"
-        prototype: "Object"
-        Property { name: "length"; type: "number"; isReadonly: true }
-        Property { name: "name"; type: "string"; isReadonly: true }
-        Property { name: "prototype"; type: "Object" }
+        prototype: "ObjectPrototype"
+        Property { name: "flags"; type: "string" }
+        Property { name: "global" }
+        Property { name: "ignoreCase" }
+        Property { name: "multiline" }
+        Property { name: "source"; type: "string" }
+        Property { name: "sticky" }
+        Property { name: "unicode" }
+        Method {
+            name: "constructor"
+            type: "RegExp"
+            isConstructor: true
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "exec"
+            Parameter {}
+        }
+        Method {
+            name: "test"
+            Parameter {}
+        }
+        Method { name: "toString" }
+        Method {
+            name: "compile"
+            Parameter {}
+            Parameter {}
+        }
     }
+    Component { name: "Set"; accessSemantics: "reference"; prototype: "SetPrototype" }
     Component {
-        name: "SetObject"
+        name: "SetPrototype"
         accessSemantics: "reference"
-        prototype: "Object"
-        Property { name: "index" }
-        Property { name: "input" }
-        Property { name: "length" }
+        prototype: "ObjectPrototype"
+        Property { name: "size" }
+        Method { name: "constructor"; type: "Set"; isConstructor: true }
+        Method {
+            name: "add"
+            Parameter {}
+        }
+        Method { name: "clear" }
+        Method {
+            name: "delete"
+            Parameter {}
+        }
+        Method { name: "entries" }
+        Method {
+            name: "forEach"
+            Parameter {}
+        }
+        Method {
+            name: "has"
+            Parameter {}
+        }
+        Method { name: "keys" }
+        Method { name: "values" }
     }
     Component {
         name: "SharedArrayBuffer"
         accessSemantics: "reference"
-        prototype: "Object"
-        Property { name: "index" }
-        Property { name: "input" }
-        Property { name: "length" }
+        prototype: "SharedArrayBufferPrototype"
     }
     Component {
-        name: "StringObject"
+        name: "SharedArrayBufferPrototype"
         accessSemantics: "reference"
-        prototype: "Object"
+        prototype: "ObjectPrototype"
+        Property { name: "byteLength" }
+        Method {
+            name: "constructor"
+            type: "SharedArrayBuffer"
+            isConstructor: true
+            Parameter {}
+        }
+        Method {
+            name: "slice"
+            Parameter {}
+            Parameter {}
+        }
+    }
+    Component {
+        name: "String"
+        accessSemantics: "reference"
+        prototype: "StringPrototype"
         Property { name: "length"; type: "number"; isReadonly: true }
+    }
+    Component {
+        name: "StringPrototype"
+        accessSemantics: "reference"
+        prototype: "ObjectPrototype"
+        Property { name: "length"; type: "number"; isReadonly: true }
+        Method {
+            name: "constructor"
+            type: "String"
+            isConstructor: true
+            Parameter {}
+        }
+        Method { name: "toString" }
+        Method { name: "valueOf" }
         Method {
             name: "charAt"
             Parameter {}
@@ -847,35 +1651,333 @@ Module {
             Parameter {}
         }
         Method {
-            name: "constructor"
-            type: "StringObject"
-            isConstructor: true
+            name: "codePointAt"
             Parameter {}
         }
+        Method {
+            name: "concat"
+            Parameter {}
+        }
+        Method {
+            name: "endsWith"
+            Parameter {}
+        }
+        Method {
+            name: "indexOf"
+            Parameter {}
+        }
+        Method {
+            name: "includes"
+            Parameter {}
+        }
+        Method {
+            name: "lastIndexOf"
+            Parameter {}
+        }
+        Method {
+            name: "localeCompare"
+            Parameter {}
+        }
+        Method {
+            name: "match"
+            Parameter {}
+        }
+        Method { name: "normalize" }
+        Method {
+            name: "padEnd"
+            Parameter {}
+        }
+        Method {
+            name: "padStart"
+            Parameter {}
+        }
+        Method {
+            name: "repeat"
+            Parameter {}
+        }
+        Method {
+            name: "replace"
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "search"
+            Parameter {}
+        }
+        Method {
+            name: "slice"
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "split"
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "startsWith"
+            Parameter {}
+        }
+        Method {
+            name: "substr"
+            Parameter {}
+            Parameter {}
+        }
+        Method {
+            name: "substring"
+            Parameter {}
+            Parameter {}
+        }
+        Method { name: "toLowerCase" }
+        Method { name: "toLocaleLowerCase" }
+        Method { name: "toUpperCase" }
+        Method { name: "toLocaleUpperCase" }
+        Method { name: "trim" }
+        Method { name: "arg" }
+    }
+    Component {
+        name: "SymbolPrototype"
+        accessSemantics: "reference"
+        prototype: "ObjectPrototype"
+        Method { name: "constructor"; type: "undefined"; isConstructor: true }
         Method { name: "toString" }
         Method { name: "valueOf" }
     }
     Component {
-        name: "TypedArray"
+        name: "SyntaxError"
         accessSemantics: "reference"
-        prototype: "Object"
-        Property { name: "index" }
-        Property { name: "input" }
-        Property { name: "length"; type: "number" }
+        prototype: "SyntaxErrorPrototype"
+        Property { name: "stack"; type: "string" }
+        Property { name: "fileName" }
+        Property { name: "lineNumber" }
     }
     Component {
-        name: "UrlSearchParamsObject"
+        name: "SyntaxErrorPrototype"
         accessSemantics: "reference"
-        prototype: "Object"
-        Property { name: "index" }
-        Property { name: "input" }
-        Property { name: "length" }
+        prototype: "ErrorPrototype"
+        Property { name: "message"; type: "string" }
+        Property { name: "name"; type: "string" }
+        Method {
+            name: "constructor"
+            type: "SyntaxError"
+            isConstructor: true
+            Parameter {}
+        }
+        Method { name: "toString" }
     }
-    Component { name: "bool"; accessSemantics: "reference" }
-    Component { name: "function"; accessSemantics: "reference" }
-    Component { name: "number"; accessSemantics: "reference" }
-    Component { name: "object"; accessSemantics: "reference" }
-    Component { name: "string"; accessSemantics: "reference" }
-    Component { name: "symbol"; accessSemantics: "reference" }
-    Component { name: "undefined"; accessSemantics: "reference" }
+    Component {
+        name: "TypeError"
+        accessSemantics: "reference"
+        prototype: "TypeErrorPrototype"
+        Property { name: "stack"; type: "string" }
+        Property { name: "fileName" }
+        Property { name: "lineNumber" }
+    }
+    Component {
+        name: "TypeErrorPrototype"
+        accessSemantics: "reference"
+        prototype: "ErrorPrototype"
+        Property { name: "message"; type: "string" }
+        Property { name: "name"; type: "string" }
+        Method {
+            name: "constructor"
+            type: "TypeError"
+            isConstructor: true
+            Parameter {}
+        }
+        Method { name: "toString" }
+    }
+    Component {
+        name: "URIError"
+        accessSemantics: "reference"
+        prototype: "URIErrorPrototype"
+        Property { name: "stack"; type: "string" }
+        Property { name: "fileName" }
+        Property { name: "lineNumber" }
+    }
+    Component {
+        name: "URIErrorPrototype"
+        accessSemantics: "reference"
+        prototype: "ErrorPrototype"
+        Property { name: "message"; type: "string" }
+        Property { name: "name"; type: "string" }
+        Method {
+            name: "constructor"
+            type: "URIError"
+            isConstructor: true
+            Parameter {}
+        }
+        Method { name: "toString" }
+    }
+    Component { name: "URL"; accessSemantics: "reference"; prototype: "URLPrototype" }
+    Component {
+        name: "URLPrototype"
+        accessSemantics: "reference"
+        prototype: "ObjectPrototype"
+        Property { name: "hash" }
+        Property { name: "host" }
+        Property { name: "hostname" }
+        Property { name: "href" }
+        Property { name: "origin" }
+        Property { name: "password" }
+        Property { name: "pathname" }
+        Property { name: "port" }
+        Property { name: "protocol" }
+        Property { name: "search" }
+        Property { name: "searchParams" }
+        Property { name: "username" }
+        Method { name: "toString" }
+        Method { name: "toJSON" }
+    }
+    Component {
+        name: "URLSearchParams"
+        accessSemantics: "reference"
+        prototype: "URLSearchParamsPrototype"
+    }
+    Component {
+        name: "URLSearchParamsPrototype"
+        accessSemantics: "reference"
+        prototype: "ObjectPrototype"
+        Method { name: "toString" }
+        Method { name: "sort" }
+        Method { name: "append" }
+        Method { name: "delete" }
+        Method { name: "has" }
+        Method { name: "set" }
+        Method { name: "get" }
+        Method { name: "getAll" }
+        Method { name: "forEach" }
+        Method { name: "entries" }
+        Method { name: "keys" }
+        Method { name: "values" }
+    }
+    Component {
+        name: "Uint16Array"
+        accessSemantics: "reference"
+        prototype: "Uint16ArrayPrototype"
+    }
+    Component {
+        name: "Uint16ArrayPrototype"
+        accessSemantics: "reference"
+        prototype: "IntrinsicTypedArrayPrototype"
+        Property { name: "BYTES_PER_ELEMENT"; type: "number"; isReadonly: true }
+        Method {
+            name: "constructor"
+            type: "Uint16Array"
+            isConstructor: true
+            Parameter {}
+            Parameter {}
+            Parameter {}
+        }
+    }
+    Component {
+        name: "Uint32Array"
+        accessSemantics: "reference"
+        prototype: "Uint32ArrayPrototype"
+    }
+    Component {
+        name: "Uint32ArrayPrototype"
+        accessSemantics: "reference"
+        prototype: "IntrinsicTypedArrayPrototype"
+        Property { name: "BYTES_PER_ELEMENT"; type: "number"; isReadonly: true }
+        Method {
+            name: "constructor"
+            type: "Uint32Array"
+            isConstructor: true
+            Parameter {}
+            Parameter {}
+            Parameter {}
+        }
+    }
+    Component { name: "Uint8Array"; accessSemantics: "reference"; prototype: "Uint8ArrayPrototype" }
+    Component {
+        name: "Uint8ArrayPrototype"
+        accessSemantics: "reference"
+        prototype: "IntrinsicTypedArrayPrototype"
+        Property { name: "BYTES_PER_ELEMENT"; type: "number"; isReadonly: true }
+        Method {
+            name: "constructor"
+            type: "Uint8Array"
+            isConstructor: true
+            Parameter {}
+            Parameter {}
+            Parameter {}
+        }
+    }
+    Component {
+        name: "Uint8ClampedArray"
+        accessSemantics: "reference"
+        prototype: "Uint8ClampedArrayPrototype"
+    }
+    Component {
+        name: "Uint8ClampedArrayPrototype"
+        accessSemantics: "reference"
+        prototype: "IntrinsicTypedArrayPrototype"
+        Property { name: "BYTES_PER_ELEMENT"; type: "number"; isReadonly: true }
+        Method {
+            name: "constructor"
+            type: "Uint8ClampedArray"
+            isConstructor: true
+            Parameter {}
+            Parameter {}
+            Parameter {}
+        }
+    }
+    Component { name: "WeakMap"; accessSemantics: "reference"; prototype: "WeakMapPrototype" }
+    Component {
+        name: "WeakMapPrototype"
+        accessSemantics: "reference"
+        prototype: "ObjectPrototype"
+        Method { name: "constructor"; type: "WeakMap"; isConstructor: true }
+        Method {
+            name: "delete"
+            Parameter {}
+        }
+        Method {
+            name: "get"
+            Parameter {}
+        }
+        Method {
+            name: "has"
+            Parameter {}
+        }
+        Method {
+            name: "set"
+            Parameter {}
+            Parameter {}
+        }
+    }
+    Component { name: "WeakSet"; accessSemantics: "reference"; prototype: "WeakSetPrototype" }
+    Component {
+        name: "WeakSetPrototype"
+        accessSemantics: "reference"
+        prototype: "ObjectPrototype"
+        Method { name: "constructor"; type: "WeakSet"; isConstructor: true }
+        Method {
+            name: "add"
+            Parameter {}
+        }
+        Method {
+            name: "delete"
+            Parameter {}
+        }
+        Method {
+            name: "has"
+            Parameter {}
+        }
+    }
+    Component { name: "boolean"; accessSemantics: "value"; prototype: "BooleanPrototype" }
+    Component {
+        name: "function"
+        accessSemantics: "reference"
+        prototype: "FunctionPrototype"
+        Property { name: "prototype"; type: "Object" }
+        Property { name: "name"; type: "string"; isReadonly: true }
+        Property { name: "length"; type: "number"; isReadonly: true }
+    }
+    Component { name: "number"; accessSemantics: "value"; prototype: "NumberPrototype" }
+    Component { name: "object"; accessSemantics: "reference"; prototype: "ObjectPrototype" }
+    Component { name: "string"; accessSemantics: "value"; prototype: "StringPrototype" }
+    Component { name: "symbol"; accessSemantics: "value"; prototype: "SymbolPrototype" }
+    Component { name: "undefined"; accessSemantics: "value" }
 }
