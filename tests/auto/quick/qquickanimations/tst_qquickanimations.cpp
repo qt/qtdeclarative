@@ -217,7 +217,7 @@ void tst_qquickanimations::simpleColor()
     QVERIFY(animation.isPaused());
     animation.setCurrentTime(125);
     QCOMPARE(animation.currentTime(), 125);
-    QCOMPARE(rect.color(), QColor::fromRgbF(0.498039, 0, 0.498039, 1));
+    QCOMPARE(rect.color(), QColor::fromRgbF(0.498039f, 0, 0.498039f, 1));
 
     rect.setColor(QColor("green"));
     animation.setFrom(QColor("blue"));
@@ -228,7 +228,7 @@ void tst_qquickanimations::simpleColor()
     QCOMPARE(rect.color(), QColor("blue"));
     QVERIFY(animation.isRunning());
     animation.setCurrentTime(125);
-    QCOMPARE(rect.color(), QColor::fromRgbF(0.498039, 0, 0.498039, 1));
+    QCOMPARE(rect.color(), QColor::fromRgbF(0.498039f, 0, 0.498039f, 1));
 }
 
 void tst_qquickanimations::simpleRotation()

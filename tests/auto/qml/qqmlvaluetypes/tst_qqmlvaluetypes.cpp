@@ -905,10 +905,10 @@ void tst_qqmlvaluetypes::color()
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != nullptr);
 
-        QCOMPARE((float)object->property("v_r").toDouble(), (float)0.2);
-        QCOMPARE((float)object->property("v_g").toDouble(), (float)0.88);
-        QCOMPARE((float)object->property("v_b").toDouble(), (float)0.6);
-        QCOMPARE((float)object->property("v_a").toDouble(), (float)0.34);
+        QCOMPARE(float(object->property("v_r").toDouble()), 0.2f);
+        QCOMPARE(float(object->property("v_g").toDouble()), 0.88f);
+        QCOMPARE(float(object->property("v_b").toDouble()), 0.6f);
+        QCOMPARE(float(object->property("v_a").toDouble()), 0.34f);
 
         QCOMPARE(qRound(object->property("hsv_h").toDouble() * 100), 43);
         QCOMPARE(qRound(object->property("hsv_s").toDouble() * 100), 77);
@@ -924,10 +924,10 @@ void tst_qqmlvaluetypes::color()
         QVERIFY(!object->property("invalid").toBool());
 
         QColor comparison;
-        comparison.setRedF(0.2);
-        comparison.setGreenF(0.88);
-        comparison.setBlueF(0.6);
-        comparison.setAlphaF(0.34);
+        comparison.setRedF(0.2f);
+        comparison.setGreenF(0.88f);
+        comparison.setBlueF(0.6f);
+        comparison.setAlphaF(0.34f);
         QCOMPARE(object->property("copy"), QVariant(comparison));
 
         delete object;
@@ -939,10 +939,10 @@ void tst_qqmlvaluetypes::color()
         QVERIFY(object != nullptr);
 
         QColor newColor;
-        newColor.setRedF(0.5);
-        newColor.setGreenF(0.38);
-        newColor.setBlueF(0.3);
-        newColor.setAlphaF(0.7);
+        newColor.setRedF(0.5f);
+        newColor.setGreenF(0.38f);
+        newColor.setBlueF(0.3f);
+        newColor.setAlphaF(0.7f);
         QCOMPARE(object->color(), newColor);
 
         delete object;
@@ -954,7 +954,7 @@ void tst_qqmlvaluetypes::color()
         QVERIFY(object != nullptr);
 
         QColor newColor;
-        newColor.setHsvF(0.43, 0.77, 0.88, 0.7);
+        newColor.setHsvF(0.43f, 0.77f, 0.88f, 0.7f);
         QCOMPARE(object->color(), newColor);
 
         delete object;
@@ -966,7 +966,7 @@ void tst_qqmlvaluetypes::color()
         QVERIFY(object != nullptr);
 
         QColor newColor;
-        newColor.setHslF(0.43, 0.74, 0.54, 0.7);
+        newColor.setHslF(0.43f, 0.74f, 0.54f, 0.7f);
         QCOMPARE(object->color(), newColor);
 
         delete object;
@@ -977,10 +977,10 @@ void tst_qqmlvaluetypes::color()
         MyTypeObject *object = qobject_cast<MyTypeObject *>(component.create());
         QVERIFY(object != nullptr);
         QColor comparison;
-        comparison.setRedF(0.2);
-        comparison.setGreenF(0.88);
-        comparison.setBlueF(0.6);
-        comparison.setAlphaF(0.34);
+        comparison.setRedF(0.2f);
+        comparison.setGreenF(0.88f);
+        comparison.setBlueF(0.6f);
+        comparison.setAlphaF(0.34f);
         QString colorString = comparison.name(QColor::HexArgb);
         QCOMPARE(object->property("colorToString").toString(), colorString);
         QCOMPARE(object->property("colorEqualsIdenticalRgba").toBool(), true);
