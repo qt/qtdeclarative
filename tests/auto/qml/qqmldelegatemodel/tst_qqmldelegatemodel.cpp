@@ -162,7 +162,7 @@ void tst_QQmlDelegateModel::filterOnGroup_removeWhenCompleted()
     QVERIFY(root);
     QQmlDelegateModel *model = root->findChild<QQmlDelegateModel*>();
     QVERIFY(model);
-    QTest::qWaitFor([=]{ return model->count() == 2; } );
+    QVERIFY(QTest::qWaitFor([=]{ return model->count() == 2; }));
 }
 
 QTEST_MAIN(tst_QQmlDelegateModel)
