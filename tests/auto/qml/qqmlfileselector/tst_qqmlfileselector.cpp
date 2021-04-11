@@ -86,7 +86,10 @@ void tst_qqmlfileselector::basicTestCached()
 void tst_qqmlfileselector::applicationEngineTest()
 {
     QQmlApplicationEngine engine;
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_DEPRECATED
     QQmlFileSelector* selector = QQmlFileSelector::get(&engine);
+QT_WARNING_POP
     QVERIFY(selector != nullptr);
     selector->setExtraSelectors(QStringList() << "basic");
 
