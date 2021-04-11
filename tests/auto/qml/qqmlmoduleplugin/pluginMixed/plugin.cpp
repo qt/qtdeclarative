@@ -50,7 +50,7 @@ public:
     {
     }
 
-    void registerTypes(const char *uri)
+    void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == "org.qtproject.AutoTestQmlMixedPluginType");
         qmlRegisterType<BarPluginType>(uri, 1, 0, "Bar");

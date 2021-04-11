@@ -39,7 +39,7 @@ class MyPlugin : public QQmlExtensionPlugin
 public:
     MyPlugin() {}
 
-    void registerTypes(const char *uri)
+    void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == "org.qtproject.ModuleWithQmlSingleton");
         qmlRegisterSingletonType(baseUrl().resolved(QUrl("ModuleWithQmlSingleton/MySingleton.qml")), uri, 1, 0, "MySingleton");

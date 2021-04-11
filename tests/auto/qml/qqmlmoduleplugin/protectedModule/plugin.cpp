@@ -45,7 +45,7 @@ class MyPlugin : public QQmlExtensionPlugin
 public:
     MyPlugin() {}
 
-    void registerTypes(const char *uri)
+    void registerTypes(const char *uri) override
     {
         // The module is protected. The plugin can still be loaded, but it cannot register
         // any types.

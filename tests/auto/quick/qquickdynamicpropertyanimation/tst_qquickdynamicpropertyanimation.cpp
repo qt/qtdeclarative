@@ -64,7 +64,7 @@ private:
     }
 
 private slots:
-    void initTestCase()
+    void initTestCase() override
     {
         QQmlEngine engine;  // ensure types are registered
         QQmlDataTest::initTestCase();

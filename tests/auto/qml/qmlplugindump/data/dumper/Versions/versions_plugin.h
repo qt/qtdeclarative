@@ -37,7 +37,7 @@ class VersionsPlugin : public QQmlExtensionPlugin
     Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 
 public:
-    void registerTypes(const char *uri);
+    void registerTypes(const char *uri) override;
 };
 
 #endif // VERSIONS_PLUGIN_H

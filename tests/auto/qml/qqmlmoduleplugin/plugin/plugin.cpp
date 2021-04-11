@@ -60,7 +60,7 @@ public:
         qWarning("plugin created");
     }
 
-    void registerTypes(const char *uri)
+    void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == "org.qtproject.AutoTestQmlPluginType");
         qmlRegisterType<MyPluginType>(uri, 1, 0, "MyPluginType");

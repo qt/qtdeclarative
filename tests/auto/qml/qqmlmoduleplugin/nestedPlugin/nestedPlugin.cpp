@@ -61,7 +61,7 @@ class MyPlugin : public QQmlExtensionPlugin
 public:
     MyPlugin() {}
 
-    void registerTypes(const char *uri)
+    void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == "org.qtproject.AutoTestQmlNestedPluginType");
         qmlRegisterType<MyPluginType>(uri, 1, 0, "MyPluginType");

@@ -119,7 +119,7 @@ class NetworkAccessManagerFactory : public QQmlNetworkAccessManagerFactory
 public:
     NetworkAccessManagerFactory() : manager(nullptr) {}
 
-    QNetworkAccessManager *create(QObject *parent) {
+    QNetworkAccessManager *create(QObject *parent) override {
         manager = new QNetworkAccessManager(parent);
         return manager;
     }
@@ -168,7 +168,8 @@ public:
     ImmediateManager(QObject *parent = nullptr) : QNetworkAccessManager(parent) {
     }
 
-    QNetworkReply *createRequest(Operation, const QNetworkRequest & , QIODevice * outgoingData = nullptr) {
+    QNetworkReply *createRequest(Operation, const QNetworkRequest & , QIODevice * outgoingData = nullptr) override
+    {
         Q_UNUSED(outgoingData);
         return new ImmediateReply;
     }
@@ -177,9 +178,8 @@ public:
 class ImmediateFactory : public QQmlNetworkAccessManagerFactory {
 
 public:
-    QNetworkAccessManager *create(QObject *) {
-        return new ImmediateManager;
-    }
+    QNetworkAccessManager *create(QObject *) override
+    { return new ImmediateManager; }
 };
 
 void tst_qqmlengine::synchronousNetworkAccessManager()

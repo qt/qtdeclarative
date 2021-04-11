@@ -46,7 +46,7 @@ class MyPlugin : public QQmlExtensionPlugin
 public:
     MyPlugin() {}
 
-    void registerTypes(const char *uri)
+    void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == "org.qtproject.PreemptedStrictModule");
         qmlRegisterType<MyPluginType>(uri, 1, 0, "MyPluginType");

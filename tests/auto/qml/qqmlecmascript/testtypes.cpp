@@ -76,7 +76,7 @@ class ImplementedExtensionObject : public AbstractExtensionObject
     Q_PROPERTY(int implementedProperty READ implementedProperty WRITE setImplementedProperty NOTIFY implementedPropertyChanged)
 public:
     ImplementedExtensionObject(QObject *parent = nullptr) : AbstractExtensionObject(parent), m_implementedProperty(883) {}
-    void shouldBeImplemented() {}
+    void shouldBeImplemented() override {}
 
     void setImplementedProperty(int implementedProperty) { m_implementedProperty = implementedProperty; emit implementedPropertyChanged(); }
     int implementedProperty() const { return m_implementedProperty; }
@@ -238,7 +238,7 @@ class MyWorkerObjectThread : public QThread
 public:
     MyWorkerObjectThread(MyWorkerObject *o) : QThread(o), o(o) { start(); }
 
-    virtual void run() {
+    void run() override {
         emit o->done(QLatin1String("good"));
     }
 
