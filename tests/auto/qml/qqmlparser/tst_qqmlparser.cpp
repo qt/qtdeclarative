@@ -226,7 +226,7 @@ public:
         QCOMPARE(cStart.startColumn, first.startColumn);
         QCOMPARE(cEnd.begin(), last.end());
         QCOMPARE(cEnd.end(), last.end());
-        QCOMPARE(cEnd.startLine, startLine);
+        QCOMPARE(cEnd.startLine, uint(startLine));
         int lastNewline = found.lastIndexOf(QLatin1Char('\n'));
         if (lastNewline < 0)
             lastNewline = - combined.startColumn;
