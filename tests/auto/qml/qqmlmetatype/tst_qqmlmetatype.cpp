@@ -116,8 +116,8 @@ QObject *testTypeProvider(QQmlEngine *engine, QJSEngine *scriptEngine)
 class ParserStatusTestType : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
-    void classBegin(){}
-    void componentComplete(){}
+    void classBegin() override {}
+    void componentComplete() override {}
     Q_CLASSINFO("DefaultProperty", "foo") // Missing default property
     Q_INTERFACES(QQmlParserStatus)
 };

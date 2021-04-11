@@ -101,7 +101,7 @@ public:
     ExceptionCollectJob(QV4DataCollector *collector) :
         CollectJob(collector), exception(-1) {}
 
-    void run() {
+    void run() override {
         QV4::Scope scope(collector->engine());
         QV4::ScopedValue v(scope, *collector->engine()->exceptionValue);
         exception = collector->addValueRef(v);

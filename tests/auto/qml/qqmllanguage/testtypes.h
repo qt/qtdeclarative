@@ -177,7 +177,7 @@ signals:
     void somethingUnknownChanged();
 
 protected:
-    virtual bool event(QEvent *event);
+    bool event(QEvent *event) override;
 
 private:
     friend class tst_qqmllanguage;
@@ -675,7 +675,7 @@ public:
         : QQmlPropertyValueSource() {}
 
     QQmlProperty prop;
-    virtual void setTarget(const QQmlProperty &p)
+    void setTarget(const QQmlProperty &p) override
     {
         prop = p;
     }
@@ -835,15 +835,15 @@ class MyCustomParserType : public QObject
 class MyCustomParserTypeParser : public QQmlCustomParser
 {
 public:
-    virtual void verifyBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &) {}
-    virtual void applyBindings(QObject *, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &) {}
+    void verifyBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &) override {}
+    void applyBindings(QObject *, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &) override {}
 };
 
 class EnumSupportingCustomParser : public QQmlCustomParser
 {
 public:
-    virtual void verifyBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &);
-    virtual void applyBindings(QObject *, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &) {}
+    void verifyBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &) override;
+    void applyBindings(QObject *, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &) override {}
 };
 
 class MyParserStatus : public QObject, public QQmlParserStatus
@@ -856,8 +856,8 @@ public:
     int classBeginCount() const { return m_cbc; }
     int componentCompleteCount() const { return m_ccc; }
 
-    virtual void classBegin() { m_cbc++; }
-    virtual void componentComplete() { m_ccc++; }
+    void classBegin() override { m_cbc++; }
+    void componentComplete() override { m_ccc++; }
 private:
     int m_cbc;
     int m_ccc;
@@ -1322,8 +1322,8 @@ class CustomBinding : public QObject, public QQmlParserStatus
     Q_PROPERTY(QObject* target READ target WRITE setTarget)
 public:
 
-    virtual void classBegin() {}
-    virtual void componentComplete();
+    void classBegin() override {}
+    void componentComplete() override;
 
     QObject *target() const { return m_target; }
     void setTarget(QObject *newTarget) { m_target = newTarget; }
@@ -1336,8 +1336,8 @@ public:
 
 class CustomBindingParser : public QQmlCustomParser
 {
-    virtual void verifyBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &) {}
-    virtual void applyBindings(QObject *, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &);
+    void verifyBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &) override {}
+    void applyBindings(QObject *, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &) override;
 };
 
 class SimpleObjectWithCustomParser : public QObject
@@ -1382,8 +1382,8 @@ private:
 
 class SimpleObjectCustomParser : public QQmlCustomParser
 {
-    virtual void verifyBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &) {}
-    virtual void applyBindings(QObject *, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &);
+    void verifyBindings(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &) override {}
+    void applyBindings(QObject *, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &, const QList<const QV4::CompiledData::Binding *> &) override;
 };
 
 class RootObjectInCreationTester : public QObject

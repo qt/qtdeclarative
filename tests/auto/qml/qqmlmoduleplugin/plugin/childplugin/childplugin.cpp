@@ -60,7 +60,7 @@ public:
         qWarning("child plugin created");
     }
 
-    void registerTypes(const char *uri)
+    void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == "org.qtproject.AutoTestQmlPluginType.ChildPlugin");
         qmlRegisterType<MyChildPluginType>(uri, 1, 0, "MyChildPluginType");
