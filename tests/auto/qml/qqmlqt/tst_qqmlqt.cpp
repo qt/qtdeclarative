@@ -189,8 +189,8 @@ void tst_qqmlqt::rgba()
     QVERIFY(object != nullptr);
 
 
-    QCOMPARE(qvariant_cast<QColor>(object->property("test1")), QColor::fromRgbF(1, 0, 0, 0.8));
-    QCOMPARE(qvariant_cast<QColor>(object->property("test2")), QColor::fromRgbF(1, 0.5, 0.3, 1));
+    QCOMPARE(qvariant_cast<QColor>(object->property("test1")), QColor::fromRgbF(1, 0, 0, 0.8f));
+    QCOMPARE(qvariant_cast<QColor>(object->property("test2")), QColor::fromRgbF(1, 0.5f, 0.3f, 1));
     QCOMPARE(qvariant_cast<QColor>(object->property("test3")), QColor());
     QCOMPARE(qvariant_cast<QColor>(object->property("test4")), QColor());
     QCOMPARE(qvariant_cast<QColor>(object->property("test5")), QColor::fromRgbF(1, 1, 1, 1));
@@ -209,8 +209,8 @@ void tst_qqmlqt::hsla()
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
 
-    QCOMPARE(qvariant_cast<QColor>(object->property("test1")), QColor::fromHslF(1, 0, 0, 0.8));
-    QCOMPARE(qvariant_cast<QColor>(object->property("test2")), QColor::fromHslF(1, 0.5, 0.3, 1));
+    QCOMPARE(qvariant_cast<QColor>(object->property("test1")), QColor::fromHslF(1, 0, 0, 0.8f));
+    QCOMPARE(qvariant_cast<QColor>(object->property("test2")), QColor::fromHslF(1, 0.5f, 0.3f, 1));
     QCOMPARE(qvariant_cast<QColor>(object->property("test3")), QColor());
     QCOMPARE(qvariant_cast<QColor>(object->property("test4")), QColor());
     QCOMPARE(qvariant_cast<QColor>(object->property("test5")), QColor::fromHslF(1, 1, 1, 1));
@@ -229,8 +229,8 @@ void tst_qqmlqt::hsva()
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
 
-    QCOMPARE(qvariant_cast<QColor>(object->property("test1")), QColor::fromHsvF(1, 0, 0, 0.8));
-    QCOMPARE(qvariant_cast<QColor>(object->property("test2")), QColor::fromHsvF(1, 0.5, 0.3, 1));
+    QCOMPARE(qvariant_cast<QColor>(object->property("test1")), QColor::fromHsvF(1, 0, 0, 0.8f));
+    QCOMPARE(qvariant_cast<QColor>(object->property("test2")), QColor::fromHsvF(1, 0.5f, 0.3f, 1));
     QCOMPARE(qvariant_cast<QColor>(object->property("test3")), QColor());
     QCOMPARE(qvariant_cast<QColor>(object->property("test4")), QColor());
     QCOMPARE(qvariant_cast<QColor>(object->property("test5")), QColor::fromHsvF(1, 1, 1, 1));
@@ -503,13 +503,13 @@ void tst_qqmlqt::lighter()
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
 
-    QCOMPARE(qvariant_cast<QColor>(object->property("test1")), QColor::fromRgbF(1, 0.8, 0.3).lighter());
+    QCOMPARE(qvariant_cast<QColor>(object->property("test1")), QColor::fromRgbF(1, 0.8f, 0.3f).lighter());
     QCOMPARE(qvariant_cast<QColor>(object->property("testColor1")),
-             QColor::fromRgbF(1, 0.8, 0.3).lighter());
+             QColor::fromRgbF(1, 0.8f, 0.3f).lighter());
     QCOMPARE(qvariant_cast<QColor>(object->property("test2")), QColor());
-    QCOMPARE(qvariant_cast<QColor>(object->property("test3")), QColor::fromRgbF(1, 0.8, 0.3).lighter(180));
+    QCOMPARE(qvariant_cast<QColor>(object->property("test3")), QColor::fromRgbF(1, 0.8f, 0.3f).lighter(180));
     QCOMPARE(qvariant_cast<QColor>(object->property("testColor3")),
-             QColor::fromRgbF(1, 0.8, 0.3).lighter(180));
+             QColor::fromRgbF(1, 0.8f, 0.3f).lighter(180));
     QCOMPARE(qvariant_cast<QColor>(object->property("test4")), QColor("red").lighter());
     QCOMPARE(qvariant_cast<QColor>(object->property("testColor4")), QColor("red").lighter());
     QCOMPARE(qvariant_cast<QColor>(object->property("test5")), QColor());
@@ -528,13 +528,13 @@ void tst_qqmlqt::darker()
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
 
-    QCOMPARE(qvariant_cast<QColor>(object->property("test1")), QColor::fromRgbF(1, 0.8, 0.3).darker());
+    QCOMPARE(qvariant_cast<QColor>(object->property("test1")), QColor::fromRgbF(1, 0.8f, 0.3f).darker());
     QCOMPARE(qvariant_cast<QColor>(object->property("testColor1")),
-             QColor::fromRgbF(1, 0.8, 0.3).darker());
+             QColor::fromRgbF(1, 0.8f, 0.3f).darker());
     QCOMPARE(qvariant_cast<QColor>(object->property("test2")), QColor());
-    QCOMPARE(qvariant_cast<QColor>(object->property("test3")), QColor::fromRgbF(1, 0.8, 0.3).darker(280));
+    QCOMPARE(qvariant_cast<QColor>(object->property("test3")), QColor::fromRgbF(1, 0.8f, 0.3f).darker(280));
     QCOMPARE(qvariant_cast<QColor>(object->property("testColor3")),
-             QColor::fromRgbF(1, 0.8, 0.3).darker(280));
+             QColor::fromRgbF(1, 0.8f, 0.3f).darker(280));
     QCOMPARE(qvariant_cast<QColor>(object->property("test4")), QColor("red").darker());
     QCOMPARE(qvariant_cast<QColor>(object->property("testColor4")), QColor("red").darker());
     QCOMPARE(qvariant_cast<QColor>(object->property("test5")), QColor());
@@ -554,17 +554,17 @@ void tst_qqmlqt::alpha()
     QVERIFY(object != nullptr);
 
     QCOMPARE(qvariant_cast<QColor>(object->property("test1")),
-             QColor::fromRgbF(1.0, 0.8, 0.3, 0.5));
+             QColor::fromRgbF(1.0f, 0.8f, 0.3f, 0.5f));
     QCOMPARE(qvariant_cast<QColor>(object->property("testColor1")),
-             QColor::fromRgbF(1, 0.8, 0.3, 0.5));
+             QColor::fromRgbF(1, 0.8f, 0.3f, 0.5));
     QCOMPARE(qvariant_cast<QColor>(object->property("test2")), QColor());
     QCOMPARE(qvariant_cast<QColor>(object->property("test3")),
-             QColor::fromRgbF(1.0, 0.8, 0.3, 0.7));
+             QColor::fromRgbF(1.0f, 0.8f, 0.3f, 0.7f));
     QCOMPARE(qvariant_cast<QColor>(object->property("testColor3")),
-             QColor::fromRgbF(1, 0.8, 0.3, 0.7));
+             QColor::fromRgbF(1, 0.8f, 0.3f, 0.7f));
 
     QColor alphaRed = QColor("red");
-    alphaRed.setAlphaF(0.5);
+    alphaRed.setAlphaF(0.5f);
 
     QCOMPARE(qvariant_cast<QColor>(object->property("test4")), alphaRed);
     QCOMPARE(qvariant_cast<QColor>(object->property("testColor4")), alphaRed);

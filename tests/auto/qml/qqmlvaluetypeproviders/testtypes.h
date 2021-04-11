@@ -95,10 +95,10 @@ public:
         m_font.setCapitalization(QFont::AllLowercase);
         m_font.setLetterSpacing(QFont::AbsoluteSpacing, 10.2);
         m_font.setWordSpacing(19.7);
-        m_color.setRedF(0.2);
-        m_color.setGreenF(0.88);
-        m_color.setBlueF(0.6);
-        m_color.setAlphaF(0.34);
+        m_color.setRedF(0.2f);
+        m_color.setGreenF(0.88f);
+        m_color.setBlueF(0.6f);
+        m_color.setAlphaF(0.34f);
     }
 
     QPoint m_point;
