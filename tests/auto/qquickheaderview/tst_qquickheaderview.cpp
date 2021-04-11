@@ -34,7 +34,6 @@
 **
 ****************************************************************************/
 
-#include "../shared/qtest_quickcontrols.h"
 #include "../shared/util.h"
 #include <QtTest/qsignalspy.h>
 #include <QtTest/qtest.h>
