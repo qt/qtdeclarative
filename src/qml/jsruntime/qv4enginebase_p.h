@@ -60,10 +60,6 @@ namespace QV4 {
 struct CppStackFrame;
 
 // Base class for the execution engine
-
-#if defined(Q_CC_MSVC) || defined(Q_CC_GNU)
-#pragma pack(push, 1)
-#endif
 struct Q_QML_EXPORT EngineBase {
 
     CppStackFrame *currentStackFrame = nullptr;
@@ -139,9 +135,6 @@ struct Q_QML_EXPORT EngineBase {
     Heap::InternalClass *classes[NClasses];
     Heap::InternalClass *internalClasses(InternalClassType icType) { return classes[icType]; }
 };
-#if defined(Q_CC_MSVC) || defined(Q_CC_GNU)
-#pragma pack(pop)
-#endif
 
 Q_STATIC_ASSERT(std::is_standard_layout<EngineBase>::value);
 Q_STATIC_ASSERT(offsetof(EngineBase, currentStackFrame) == 0);
