@@ -52,6 +52,38 @@ inline void setScopeName(QQmlJSScope::Ptr &scope, QQmlJSScope::ScopeType type, c
         scope->setBaseTypeName(name);
 }
 
+/*!
+  \internal
+  Returns the name of \a scope based on \a type.
+*/
+inline QString getScopeName(const QQmlJSScope::ConstPtr &scope, QQmlJSScope::ScopeType type)
+{
+    Q_ASSERT(scope);
+    if (type == QQmlJSScope::GroupedPropertyScope || type == QQmlJSScope::AttachedPropertyScope)
+        return scope->internalName();
+
+    return scope->baseTypeName();
+}
+
+/*!
+  \internal
+  Checks whether \a derived type can be assigned to \a base type. Returns \c
+  true if the type hierarchy of \a derived contains a type equal to \a base.
+
+  \note Assigning \a derived to "QVariant" or "QJSValue" is always possible and
+  the function returns \c true in this case.
+*/
+static bool canAssign(const QQmlJSScope *derived, const QQmlJSScope *base)
+{
+    if (!base)
+        return false;
+    for (; derived; derived = derived->baseType().get()) {
+        if (derived == base)
+            return true;
+    }
+    return base->internalName() == u"QVariant"_qs || base->internalName() == u"QJSValue"_qs;
+}
+
 QQmlJSImportVisitor::QQmlJSImportVisitor(
         QQmlJSImporter *importer, const QString &implicitImportDirectory,
         const QStringList &qmltypesFiles, const QString &fileName, const QString &code, bool silent)
@@ -753,7 +785,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::FormalParameterList *fpl)
 
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
 {
-    // property QtObject __styleData: QtObject {...}
+    // ... __styleData: QtObject {...}
 
     Q_ASSERT(uiob->qualifiedTypeNameId);
     QString name;
@@ -762,16 +794,27 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
 
     name.chop(1);
 
-    if (!uiob->hasOnToken) {
-        QQmlJSMetaProperty prop;
-        prop.setPropertyName(uiob->qualifiedId->name.toString());
-        prop.setTypeName(name);
-        prop.setIsWritable(true);
-        prop.setIsPointer(true);
-        prop.setIsAlias(name == QLatin1String("alias"));
-        prop.setType(m_rootScopeImports.value(uiob->qualifiedTypeNameId->name.toString()));
-        m_currentScope->addOwnProperty(prop);
+    bool needsResolution = false;
+    for (auto group = uiob->qualifiedId; group->next; group = group->next) {
+        const QString idName = group->name.toString();
+
+        if (idName.isEmpty())
+            break;
+
+        const auto scopeKind = idName.front().isUpper() ? QQmlJSScope::AttachedPropertyScope
+                                                        : QQmlJSScope::GroupedPropertyScope;
+        bool exists = enterEnvironmentNonUnique(scopeKind, idName, group->firstSourceLocation());
+        needsResolution = needsResolution || !exists;
     }
+
+    while (m_currentScope->scopeType() == QQmlJSScope::GroupedPropertyScope
+           || m_currentScope->scopeType() == QQmlJSScope::AttachedPropertyScope) {
+        leaveEnvironment();
+    }
+
+    // recursively resolve types for current scope if new scopes are found
+    if (needsResolution)
+        QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports, &m_usedTypes);
 
     enterEnvironment(QQmlJSScope::QMLScope, name,
                      uiob->qualifiedTypeNameId->identifierToken);
@@ -785,10 +828,44 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
     const QQmlJSScope::ConstPtr childScope = m_currentScope;
     leaveEnvironment();
 
-    if (!uiob->hasOnToken) {
-        QQmlJSMetaProperty property = m_currentScope->property(uiob->qualifiedId->name.toString());
+    auto group = uiob->qualifiedId;
+    for (; group->next; group = group->next) {
+        const QString idName = group->name.toString();
+
+        if (idName.isEmpty())
+            break;
+
+        const auto scopeKind = idName.front().isUpper() ? QQmlJSScope::AttachedPropertyScope
+                                                        : QQmlJSScope::GroupedPropertyScope;
+        // definitely exists
+        enterEnvironmentNonUnique(scopeKind, idName, group->firstSourceLocation());
+    }
+
+    // on ending the visit to UiObjectBinding, set the property type to the
+    // just-visited one if the property exists and this type is valid
+    QQmlJSMetaProperty property = m_currentScope->property(group->name.toString());
+    if (property.isValid() && canAssign(childScope.get(), property.type().get())) {
         property.setType(childScope);
+        property.setTypeName(getScopeName(childScope, QQmlJSScope::QMLScope));
         m_currentScope->addOwnProperty(property);
+    } else if (!property.isValid()) {
+        m_logger.log(QStringLiteral("Property \"%1\" is invalid or does not exist")
+                             .arg(group->name.toString()),
+                     Log_Property, group->firstSourceLocation());
+    } else {
+        // the type is incompatible
+        m_logger.log(
+                QStringLiteral(
+                        "Property \"%1\" of type \"%2\" is assigned an incompatible type \"%3\"")
+                        .arg(group->name.toString())
+                        .arg(property.typeName())
+                        .arg(getScopeName(childScope, QQmlJSScope::QMLScope)),
+                Log_Property, group->firstSourceLocation());
+    }
+
+    while (m_currentScope->scopeType() == QQmlJSScope::GroupedPropertyScope
+           || m_currentScope->scopeType() == QQmlJSScope::AttachedPropertyScope) {
+        leaveEnvironment();
     }
 }
 

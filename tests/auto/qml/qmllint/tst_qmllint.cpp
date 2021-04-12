@@ -1,9 +1,10 @@
 /****************************************************************************
 **
 ** Copyright (C) 2016 Klaralvdalens Datakonsult AB, a KDAB Group company, info@kdab.com, author Sergio Martins <sergio.martins@kdab.com>
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the plugins of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:GPL-EXCEPT$
 ** Commercial License Usage
@@ -542,6 +543,40 @@ void TestQmllint::dirtyQmlCode_data()
             << QString()
             << QString()
             << false;
+    QTest::newRow("badAttachedProperty")
+            << QStringLiteral("badAttachedProperty.qml")
+            << QString("Property \"progress\" not found on type \"TestType\"")
+            << QString()
+            << false;
+    QTest::newRow("badAttachedPropertyNested")
+            << QStringLiteral("badAttachedPropertyNested.qml")
+            << QString("12:41: Property \"progress\" not found on type \"QObject\"")
+            << QString("6:37: Property \"progress\" not found on type \"QObject\"")
+            << false;
+    QTest::newRow("badAttachedPropertyTypeString")
+            << QStringLiteral("badAttachedPropertyTypeString.qml")
+            << QString("Property \"count\" of type \"int\" is assigned an incompatible type "
+                       "\"QString\"")
+            << QString()
+            << false;
+    QTest::newRow("badAttachedPropertyTypeQtObject")
+            << QStringLiteral("badAttachedPropertyTypeQtObject.qml")
+            << QString("Property \"count\" of type \"int\" is assigned an incompatible type "
+                       "\"QtObject\"")
+            << QString()
+            << false;
+    // should succeed, but it does not:
+    QTest::newRow("attachedPropertyAccess")
+            << QStringLiteral("goodAttachedPropertyAccess.qml")
+            << QString()
+            << QString()
+            << true;
+    // should succeed, but it does not:
+    QTest::newRow("attachedPropertyNested")
+            << QStringLiteral("goodAttachedPropertyNested.qml")
+            << QString()
+            << QString()
+            << true;
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -560,6 +595,12 @@ void TestQmllint::dirtyQmlCode()
         QEXPECT_FAIL("anchors3", "We don't see that QQuickItem cannot be assigned to QQuickAnchorLine", Abort);
         QEXPECT_FAIL("nanchors1", "Invalid grouped properties are not always detected", Abort);
         QEXPECT_FAIL("TypePropertAccess", "We cannot discern between types and instances", Abort);
+        QEXPECT_FAIL("badAttachedPropertyTypeString",
+                     "Script bindings do not perform property type matching", Abort);
+        QEXPECT_FAIL("attachedPropertyAccess", "We cannot discern between types and instances",
+                     Abort);
+        QEXPECT_FAIL("attachedPropertyNested", "We cannot discern between types and instances",
+                     Abort);
 
         if (exitsNormally)
             QVERIFY(process.exitCode() == 0);
@@ -567,9 +608,21 @@ void TestQmllint::dirtyQmlCode()
             QVERIFY(process.exitCode() != 0);
     });
 
-    QVERIFY(output.contains(warningMessage));
+    const auto toDescription = [](const QString &output, const QString &substring) {
+        // Note: this actually produces a very poorly formatted multi-line
+        // description, but this is how we also do it in cleanQmlCode test case,
+        // so this should suffice. in any case this mainly aids the debugging
+        // and CI stays (or should stay) clean.
+        return QStringLiteral("qmllint output '%1' must contain '%2'").arg(output, substring);
+    };
+
+    QEXPECT_FAIL("badAttachedPropertyTypeString",
+                 "Script bindings do not perform property type matching", Abort);
+    QVERIFY2(output.contains(warningMessage), qPrintable(toDescription(output, warningMessage)));
+    QEXPECT_FAIL("badAttachedPropertyNested", "We cannot discern between types and instances",
+                 Abort);
     if (!notContained.isEmpty())
-        QVERIFY(!output.contains(notContained));
+        QVERIFY2(!output.contains(notContained), qPrintable(toDescription(output, notContained)));
 }
 
 void TestQmllint::cleanQmlCode_data()
@@ -631,6 +684,8 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("attachedPropertyAssignments")
             << QStringLiteral("attachedPropertyAssignments.qml");
     QTest::newRow("groupedPropertyAssignments") << QStringLiteral("groupedPropertyAssignments.qml");
+    QTest::newRow("goodAttachedProperty") << QStringLiteral("goodAttachedProperty.qml");
+    QTest::newRow("objectBindingOnVarProperty") << QStringLiteral("objectBoundToVar.qml");
 }
 
 void TestQmllint::cleanQmlCode()
