@@ -761,7 +761,7 @@ QSGTexture *QSGOpenGLTexture::fromNative(GLuint textureId,
 }
 
 /*!
-    Creates a new QSGTexture wrapping an existing OpenGL texture object for
+    Creates a new QSGTexture wrapping an existing OpenGL ES texture object for
     \a window.
 
     The native object specified in \a textureId is wrapped, but not owned, by
@@ -770,7 +770,8 @@ QSGTexture *QSGOpenGLTexture::fromNative(GLuint textureId,
     native object.
 
     This function is suitable only for textures that are meant to be
-    used with the \c{GL_TEXTURE_EXTERNAL_OES} target.
+    used with the \c{GL_TEXTURE_EXTERNAL_OES} target: usually textures
+    to which another device (such as a camera) writes data.
 
     \warning This function will return null if the scenegraph has not yet been
     initialized.
