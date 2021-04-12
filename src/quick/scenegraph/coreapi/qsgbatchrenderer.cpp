@@ -4444,6 +4444,9 @@ void Renderer::renderRenderNode(Batch *batch) // legacy (GL-only)
         opacity = opacity->parent();
     }
 
+    // having DepthAwareRendering leaves depth test on in the alpha pass
+    const bool depthTestWasEnabled = m_useDepthBuffer;
+
     glDisable(GL_STENCIL_TEST);
     glDisable(GL_SCISSOR_TEST);
     glDisable(GL_DEPTH_TEST);
@@ -4478,7 +4481,9 @@ void Renderer::renderRenderNode(Batch *batch) // legacy (GL-only)
         m_currentClipType = ClipState::NoClip;
     }
 
-    if (changes & QSGRenderNode::DepthState)
+    if (depthTestWasEnabled)
+        glEnable(GL_DEPTH_TEST);
+    else if (changes & QSGRenderNode::DepthState)
         glDisable(GL_DEPTH_TEST);
 
     if (changes & QSGRenderNode::ColorState)
