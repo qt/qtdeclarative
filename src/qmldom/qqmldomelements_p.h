@@ -62,7 +62,11 @@
 #include <QtCore/QMutexLocker>
 #include <QtCore/QPair>
 
-#include <private/qqmljsscope_p.h>
+#ifdef QMLDOM_STANDALONE
+#    include "qmlcompiler/qqmljsscope_p.h"
+#else
+#    include <private/qqmljsscope_p.h>
+#endif
 
 #include <functional>
 #include <limits>

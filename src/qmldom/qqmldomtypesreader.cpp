@@ -34,9 +34,11 @@
 #include <QtQml/private/qqmljsparser_p.h>
 #include <QtQml/private/qqmljslexer_p.h>
 #include <QtQml/private/qqmljsengine_p.h>
-#include <QtQmlCompiler/private/qqmljsscope_p.h>
-#include <QtQmlCompiler/private/qqmljstypedescriptionreader_p.h>
-#include <private/qqmljstypedescriptionreader_p.h>
+#ifdef QMLDOM_STANDALONE
+#    include "qmlcompiler/qqmljstypedescriptionreader_p.h"
+#else
+#    include <private/qqmljstypedescriptionreader_p.h>
+#endif
 
 #include <QtCore/qdir.h>
 
