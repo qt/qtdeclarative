@@ -37,6 +37,19 @@ QT_BEGIN_NAMESPACE
 
 using namespace QQmlJS::AST;
 
+/*!
+  \internal
+  Sets the name of \a scope to \a name based on \a type.
+*/
+inline void setScopeName(QQmlJSScope::Ptr &scope, QQmlJSScope::ScopeType type, const QString &name)
+{
+    Q_ASSERT(scope);
+    if (type == QQmlJSScope::GroupedPropertyScope || type == QQmlJSScope::AttachedPropertyScope)
+        scope->setInternalName(name);
+    else
+        scope->setBaseTypeName(name);
+}
+
 QQmlJSImportVisitor::QQmlJSImportVisitor(
         QQmlJSImporter *importer, const QString &implicitImportDirectory,
         const QStringList &qmltypesFiles, const QString &fileName, const QString &code, bool silent)
@@ -54,10 +67,7 @@ void QQmlJSImportVisitor::enterEnvironment(QQmlJSScope::ScopeType type, const QS
                                            const QQmlJS::SourceLocation &location)
 {
     m_currentScope = QQmlJSScope::create(type, m_currentScope);
-    if (type == QQmlJSScope::GroupedPropertyScope || type == QQmlJSScope::AttachedPropertyScope)
-        m_currentScope->setInternalName(name);
-    else
-        m_currentScope->setBaseTypeName(name);
+    setScopeName(m_currentScope, type, name);
     m_currentScope->setIsComposite(true);
     m_currentScope->setSourceLocation(location);
 }
