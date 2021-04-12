@@ -33,6 +33,8 @@
 #include <QtCore/qdir.h>
 #include <QtCore/qqueue.h>
 
+#include <algorithm>
+
 QT_BEGIN_NAMESPACE
 
 using namespace QQmlJS::AST;
@@ -70,6 +72,32 @@ void QQmlJSImportVisitor::enterEnvironment(QQmlJSScope::ScopeType type, const QS
     setScopeName(m_currentScope, type, name);
     m_currentScope->setIsComposite(true);
     m_currentScope->setSourceLocation(location);
+}
+
+bool QQmlJSImportVisitor::enterEnvironmentNonUnique(QQmlJSScope::ScopeType type,
+                                                    const QString &name,
+                                                    const QQmlJS::SourceLocation &location)
+{
+    Q_ASSERT(type == QQmlJSScope::GroupedPropertyScope
+             || type == QQmlJSScope::AttachedPropertyScope);
+
+    const auto pred = [&](const QQmlJSScope::ConstPtr &s) {
+        // it's either attached or group property, so use internalName()
+        // directly. see setScopeName() for details
+        return s->internalName() == name;
+    };
+    const auto scopes = m_currentScope->childScopes();
+    // TODO: linear search. might want to make childScopes() a set/hash-set and
+    // use faster algorithm here
+    auto it = std::find_if(scopes.begin(), scopes.end(), pred);
+    if (it == scopes.end()) {
+        // create and enter new scope
+        enterEnvironment(type, name, location);
+        return false;
+    }
+    // enter found scope
+    m_currentScope = *it;
+    return true;
 }
 
 void QQmlJSImportVisitor::leaveEnvironment()
@@ -469,9 +497,9 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
             if (name.isEmpty())
                 break;
 
-            enterEnvironment(name.front().isUpper() ? QQmlJSScope::AttachedPropertyScope
-                                                    : QQmlJSScope::GroupedPropertyScope,
-                             name, group->firstSourceLocation());
+            enterEnvironmentNonUnique(name.front().isUpper() ? QQmlJSScope::AttachedPropertyScope
+                                                             : QQmlJSScope::GroupedPropertyScope,
+                                      name, group->firstSourceLocation());
         }
 
         // TODO: remember the actual binding, once we can process it.

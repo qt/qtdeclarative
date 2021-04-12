@@ -1,0 +1,21 @@
+import QtQuick.tooling 1.2
+Module {
+    Component {
+        file: "attachedtype.h"
+        name: "TestType"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        exports: ["QmlLintTestLib/TestType 1.0"]
+        exportMetaObjectRevisions: [256]
+        attachedType: "TestTypeAttached"
+    }
+    Component {
+        file: "attachedtype.h"
+        name: "TestTypeAttached"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        Property { name: "count"; type: "int"; read: "getCount"; write: "setCount" }
+        Property { name: "str"; type: "string"; read: "getStr"; write: "setStr" }
+        Property { name: "object"; type: "QObject"; isPointer: true; read: "getObject"; write: "setObject" }
+    }
+}

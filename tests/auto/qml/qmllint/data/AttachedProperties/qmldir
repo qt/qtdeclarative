@@ -1,0 +1,3 @@
+module AttachedProperties
+typeinfo attachedProperty.qmltypes
+import QtQml

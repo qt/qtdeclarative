@@ -138,6 +138,10 @@ protected:
 
     void enterEnvironment(QQmlJSScope::ScopeType type, const QString &name,
                           const QQmlJS::SourceLocation &location);
+    // Finds an existing scope before attempting to create a new one. Returns \c
+    // true if the scope already exists and \c false if the new scope is created
+    bool enterEnvironmentNonUnique(QQmlJSScope::ScopeType type, const QString &name,
+                                   const QQmlJS::SourceLocation &location);
     void leaveEnvironment();
 
     QVector<QQmlJSAnnotation> parseAnnotations(QQmlJS::AST::UiAnnotationList *list);

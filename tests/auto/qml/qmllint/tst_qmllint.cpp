@@ -627,6 +627,9 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("stringLength") << QStringLiteral("stringLength.qml");
     QTest::newRow("stringLength2") << QStringLiteral("stringLength2.qml");
     QTest::newRow("stringLength3") << QStringLiteral("stringLength3.qml");
+    QTest::newRow("attachedPropertyAssignments")
+            << QStringLiteral("attachedPropertyAssignments.qml");
+    QTest::newRow("groupedPropertyAssignments") << QStringLiteral("groupedPropertyAssignments.qml");
 }
 
 void TestQmllint::cleanQmlCode()
