@@ -88,7 +88,9 @@ struct Q_QML_EXPORT EngineBase {
     MemoryManager *memoryManager = nullptr;
 
     qint32 callDepth = 0;
-    quint8 padding2[QT_POINTER_SIZE - sizeof(quint32)];
+#if QT_POINTER_SIZE == 8
+    quint32 padding2;
+#endif
     Object *globalObject = nullptr;
     Value *jsStackLimit = nullptr;
     Value *jsStackBase = nullptr;
