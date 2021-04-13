@@ -537,8 +537,7 @@ void QQuickShapePath::resetFillGradient()
     \since 5.10
 
     Renders a path either by generating geometry via QPainterPath and manual
-    triangulation or by using a GPU vendor extension like
-    \c{GL_NV_path_rendering}.
+    triangulation or by using a GPU vendor extension.
 
     This approach is different from rendering shapes via QQuickPaintedItem or
     the 2D Canvas because the path never gets rasterized in software.
@@ -594,13 +593,9 @@ void QQuickShapePath::resetFillGradient()
 
     \list
 
-    \li When running with the OpenGL backend of Qt Quick, both the generic,
-    triangulation-based and the NVIDIA-specific \c{GL_NV_path_rendering}
-    methods are available. By default only the generic approach is used.
-    Setting Shape.vendorExtensionsEnabled property to \c true leads to using
-    NV_path_rendering on NVIDIA systems when running directly on OpenGL, and
-    the generic method on others. When OpenGL is not used directly by the scene
-    graph, for example because it is using the graphics abstraction layer
+    \li When running with the OpenGL backend of Qt Quick, only the generic,
+    triangulation-based approach is available. When OpenGL is not used directly
+    by the scene graph, for example because it is using the graphics abstraction layer
     (QRhi), only the generic shape renderer is available.
 
     \li The \c software backend is fully supported. The path is rendered via
@@ -630,16 +625,10 @@ void QQuickShapePath::resetFillGradient()
     a frequently changing property can still result in a lower overall system
     load than with imperative painting approaches (for example, QPainter).
 
-    \li If animating properties other than stroke and fill colors is a must,
-    it is recommended to target systems providing \c{GL_NV_path_rendering}
-    where the cost of property changes is smaller.
-
     \li At the same time, attention must be paid to the number of Shape
-    elements in the scene, in particular when using this special accelerated
-    approach for \c{GL_NV_path_rendering}. The way such a Shape item is
-    represented in the scene graph is different from an ordinary
-    geometry-based item, and incurs a certain cost when it comes to OpenGL
-    state changes.
+    elements in the scene. The way such a Shape item is represented in
+    the scene graph is different from an ordinary geometry-based item,
+    and incurs a certain cost when it comes to OpenGL state changes.
 
     \li As a general rule, scenes should avoid using separate Shape items when
     it is not absolutely necessary. Prefer using one Shape item with multiple
@@ -697,8 +686,8 @@ QQuickShape::~QQuickShape()
     \value Shape.GeometryRenderer
            The generic, driver independent solution for OpenGL. Uses the same
            CPU-based triangulation approach as QPainter's OpenGL 2 paint
-           engine. This is the default on non-NVIDIA hardware when the default,
-           OpenGL Qt Quick scenegraph backend is in use.
+           engine. This is the default when the OpenGL Qt Quick scenegraph
+           backend is in use.
 
     \value Shape.SoftwareRenderer
            Pure QPainter drawing using the raster paint engine. This is the
@@ -748,14 +737,9 @@ void QQuickShape::setAsynchronous(bool async)
 /*!
     \qmlproperty bool QtQuick.Shapes::Shape::vendorExtensionsEnabled
 
-    This property controls the usage of non-standard OpenGL extensions like
-    \c GL_NV_path_rendering.
+    This property controls the usage of non-standard OpenGL extensions.
 
     The default value is \c false.
-
-    As of Qt 5.12 Shape.NvprRenderer is disabled by default and a uniform
-    behavior, based on triangulating the path and generating QSGGeometryNode
-    instances, is used regardless of the graphics card and drivers.
 
     As of Qt 6.0 there are no vendor-specific rendering paths implemented.
  */
