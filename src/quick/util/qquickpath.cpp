@@ -89,17 +89,14 @@ QT_BEGIN_NAMESPACE
         \li Element
         \li PathView
         \li Shape
-        \li Shape, GL_NV_path_rendering
         \li Shape, software
     \row
         \li PathMove
         \li N/A
         \li Yes
         \li Yes
-        \li Yes
     \row
         \li PathLine
-        \li Yes
         \li Yes
         \li Yes
         \li Yes
@@ -108,9 +105,8 @@ QT_BEGIN_NAMESPACE
         \li Yes
         \li Yes
         \li Yes
-        \li Yes
+    \row
     \li PathMultiLine
-        \li Yes
         \li Yes
         \li Yes
         \li Yes
@@ -119,10 +115,8 @@ QT_BEGIN_NAMESPACE
         \li Yes
         \li Yes
         \li Yes
-        \li Yes
     \row
         \li PathCubic
-        \li Yes
         \li Yes
         \li Yes
         \li Yes
@@ -131,10 +125,8 @@ QT_BEGIN_NAMESPACE
         \li Yes
         \li Yes
         \li Yes
-        \li Yes
     \row
         \li PathAngleArc
-        \li Yes
         \li Yes
         \li Yes
         \li Yes
@@ -143,11 +135,9 @@ QT_BEGIN_NAMESPACE
         \li Yes
         \li Yes
         \li Yes
-        \li Yes
     \row
         \li PathAttribute
         \li Yes
-        \li N/A
         \li N/A
         \li N/A
     \row
@@ -155,11 +145,9 @@ QT_BEGIN_NAMESPACE
         \li Yes
         \li N/A
         \li N/A
-        \li N/A
     \row
         \li PathCurve
         \li Yes
-        \li No
         \li No
         \li No
     \endtable
@@ -2235,11 +2223,6 @@ void QQuickPathAngleArc::addToPath(QPainterPath &path, const QQuickPathData &)
     }
     \endqml
     \endtable
-
-    \note Mixing PathSvg with other type of elements is not always supported.
-    For example, when \l Shape is backed by \c{GL_NV_path_rendering}, a
-    ShapePath can contain one or more PathSvg elements, or one or more other
-    type of elements, but not both.
 
     \sa Path, PathLine, PathQuad, PathCubic, PathArc, PathAngleArc, PathCurve
 */
