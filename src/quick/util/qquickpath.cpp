@@ -107,12 +107,13 @@ QT_BEGIN_NAMESPACE
         \li PathPolyline
         \li Yes
         \li Yes
+        \li No
+        \li Yes
+    \row
+        \li PathMultiLine
         \li Yes
         \li Yes
-    \li PathMultiLine
-        \li Yes
-        \li Yes
-        \li Yes
+        \li No
         \li Yes
     \row
         \li PathQuad
