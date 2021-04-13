@@ -224,17 +224,19 @@ Options buildCommandLineOptions(const QCoreApplication &app)
     }
 
     QStringList files;
-    QFile file(parser.value("files"));
-    file.open(QIODevice::Text | QIODevice::ReadOnly);
-    if (file.isOpen()) {
-        QTextStream in(&file);
-        while (!in.atEnd()) {
-            QString file = in.readLine();
+    if (parser.isSet("files")) {
+        QFile file(parser.value("files"));
+        file.open(QIODevice::Text | QIODevice::ReadOnly);
+        if (file.isOpen()) {
+            QTextStream in(&file);
+            while (!in.atEnd()) {
+                QString file = in.readLine();
 
-            if (file.isEmpty())
-                continue;
+                if (file.isEmpty())
+                    continue;
 
-            files.push_back(file);
+                files.push_back(file);
+            }
         }
     }
 
