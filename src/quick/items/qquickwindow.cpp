@@ -1367,6 +1367,8 @@ bool QQuickWindow::event(QEvent *e)
                 if (!ptda)
                     ptda = da;
                 if (ptda) {
+                    if (pt.state() == QEventPoint::Pressed)
+                        pe->clearPassiveGrabbers(pt);
                     auto danpit = deliveryAgentsNeedingPoints.find(ptda);
                     if (danpit == deliveryAgentsNeedingPoints.end()) {
                         deliveryAgentsNeedingPoints.insert(ptda, QList<QEventPoint>() << pt);
@@ -1398,10 +1400,17 @@ bool QQuickWindow::event(QEvent *e)
             }
             if (ret)
                 return true;
-        } else if (pe->pointCount() && !pe->isBeginEvent()) {
+        } else if (pe->pointCount()) {
             // single-point event
-            if (auto *ptda = QQuickDeliveryAgent::grabberAgent(pe, pe->points().first()))
-                da = ptda;
+            const auto &pt = pe->points().first();
+            if (pt.state() == QEventPoint::Pressed)
+                pe->clearPassiveGrabbers(pt);
+            // it would be nice to just use "else" here, but
+            // isBeginEvent() is not quite the same check as pt.state() != Pressed
+            if (!pe->isBeginEvent()) {
+                if (auto *ptda = QQuickDeliveryAgent::grabberAgent(pe, pe->points().first()))
+                    da = ptda;
+            }
         }
         // else if it has no points, it's probably a TouchCancel, and DeliveryAgent needs to handle it.
         // TODO should we deliver to all DAs at once then, since we don't know which one should get it?

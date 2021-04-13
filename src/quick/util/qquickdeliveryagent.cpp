@@ -1735,8 +1735,6 @@ bool QQuickDeliveryAgentPrivate::deliverPressOrReleaseEvent(QPointerEvent *event
     }
     for (int i = 0; i < event->pointCount(); ++i) {
         auto &point = event->point(i);
-        if (point.state() == QEventPoint::Pressed)
-            event->clearPassiveGrabbers(point);
         QVector<QQuickItem *> targetItemsForPoint = pointerTargets(rootItem, event, point, !isTouch, isTouch);
         if (targetItems.count()) {
             targetItems = mergePointerTargets(targetItems, targetItemsForPoint);
