@@ -214,12 +214,11 @@ qt_feature("qml-itemmodel" PRIVATE
     PURPOSE "Provides the item model for item views in QML"
     CONDITION QT_FEATURE_itemmodel
 )
-
 qt_feature("qml-xmllistmodel" PRIVATE
     SECTION "QML"
     LABEL "QML XmlListModel"
     PURPOSE "Enable XmlListModel in QML"
-    CONDITION QT_FEATURE_future
+    CONDITION QT_FEATURE_qml_itemmodel AND QT_FEATURE_future
 )
 
 # special case begin

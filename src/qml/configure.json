@@ -191,6 +191,13 @@
             "condition": "features.itemmodel",
             "output": [ "privateFeature" ]
         },
+        "qml-xmllistmodel": {
+            "label": "QML XmlListModel",
+            "purpose": "Enable XmlListModel in QML",
+            "section": "QML",
+            "condition": "features.qml-itemmodel && features.future",
+            "output": [ "privateFeature" ]
+        },
         "qml-python": {
             "label": "python",
             "condition": "tests.qml-python",

@@ -14,12 +14,10 @@
 qt_config_compile_test(cxx14_make_unique
     LABEL "C++14 make_unique()"
     CODE
-"
-#include <memory>
+"#include <memory>
 
-int main(int argc, char **argv)
+int main(void)
 {
-    (void)argc; (void)argv;
     /* BEGIN TEST: */
 std::unique_ptr<int> ptr = std::make_unique<int>();
     /* END TEST: */
@@ -31,12 +29,8 @@ std::unique_ptr<int> ptr = std::make_unique<int>();
 qt_config_compile_test(pointer_32bit
     LABEL "32bit pointers"
     CODE
-"
-
-
-int main(int argc, char **argv)
+"int main(void)
 {
-    (void)argc; (void)argv;
     /* BEGIN TEST: */
 static_assert(sizeof(void *) == 4, \"fail\");
     /* END TEST: */
@@ -48,12 +42,8 @@ static_assert(sizeof(void *) == 4, \"fail\");
 qt_config_compile_test(pointer_64bit
     LABEL "64bit pointers"
     CODE
-"
-
-
-int main(int argc, char **argv)
+"int main(void)
 {
-    (void)argc; (void)argv;
     /* BEGIN TEST: */
 static_assert(sizeof(void *) == 8, \"fail\");
     /* END TEST: */
@@ -65,12 +55,8 @@ static_assert(sizeof(void *) == 8, \"fail\");
 qt_config_compile_test(arm_thumb
     LABEL "THUMB mode on ARM"
     CODE
-"
-
-
-int main(int argc, char **argv)
+"int main(void)
 {
-    (void)argc; (void)argv;
     /* BEGIN TEST: */
 #if defined(thumb2) || defined(__thumb2__)
 #    define THUMB_OK
@@ -91,12 +77,8 @@ int main(int argc, char **argv)
 qt_config_compile_test(arm_fp
     LABEL "Sufficiently recent FPU on ARM"
     CODE
-"
-
-
-int main(int argc, char **argv)
+"int main(void)
 {
-    (void)argc; (void)argv;
     /* BEGIN TEST: */
 // if !defined(__ARM_FP) we might be on MSVC or we might have a device
 // without an FPU.
@@ -186,6 +168,12 @@ qt_feature("qml-itemmodel" PRIVATE
     LABEL "QML Item Model"
     PURPOSE "Provides the item model for item views in QML"
     CONDITION QT_FEATURE_itemmodel
+)
+qt_feature("qml-xmllistmodel" PRIVATE
+    SECTION "QML"
+    LABEL "QML XmlListModel"
+    PURPOSE "Enable XmlListModel in QML"
+    CONDITION QT_FEATURE_qml_itemmodel AND QT_FEATURE_future
 )
 qt_feature("qml-python" PRIVATE
     LABEL "python"
