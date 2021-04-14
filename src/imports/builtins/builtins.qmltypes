@@ -108,7 +108,7 @@ Module {
     Component {
         name: "double"
         prototype: "number"
-        exports: ["QML/real 1.0"]
+        exports: ["QML/real 1.0", "QML/double 1.0"]
         exportMetaObjectRevisions: [256]
         accessSemantics: "value"
     }

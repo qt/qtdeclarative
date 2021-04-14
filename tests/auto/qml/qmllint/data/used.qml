@@ -13,4 +13,5 @@ Item {
     required property Something moo
     property bool boolVar: false
     property real realVar: 17.17
+    property double doubleVar: 18.18
 }
