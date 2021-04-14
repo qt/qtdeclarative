@@ -451,6 +451,12 @@ void QQmlJSImportVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExp
     if (!name.isEmpty()) {
         QQmlJSMetaMethod method(name);
         method.setMethodType(QQmlJSMetaMethod::Method);
+
+        if (!m_pendingMethodAnnotations.isEmpty()) {
+            method.setAnnotations(m_pendingMethodAnnotations);
+            m_pendingMethodAnnotations.clear();
+        }
+
         if (const auto *formals = fexpr->formals) {
             const auto parameters = formals->formals();
             for (const auto &parameter : parameters) {
@@ -487,6 +493,12 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::FunctionExpression *fexpr)
 void QQmlJSImportVisitor::endVisit(QQmlJS::AST::FunctionExpression *)
 {
     leaveEnvironment();
+}
+
+bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiSourceElement *srcElement)
+{
+    m_pendingMethodAnnotations = parseAnnotations(srcElement->annotations);
+    return true;
 }
 
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::FunctionDeclaration *fdecl)

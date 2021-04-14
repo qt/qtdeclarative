@@ -82,6 +82,7 @@ protected:
     bool visit(QQmlJS::AST::UiEnumDeclaration *uied) override;
     bool visit(QQmlJS::AST::FunctionExpression *fexpr) override;
     void endVisit(QQmlJS::AST::FunctionExpression *) override;
+    bool visit(QQmlJS::AST::UiSourceElement *) override;
     bool visit(QQmlJS::AST::FunctionDeclaration *fdecl) override;
     void endVisit(QQmlJS::AST::FunctionDeclaration *) override;
     bool visit(QQmlJS::AST::ClassExpression *ast) override;
@@ -147,6 +148,9 @@ protected:
     QVector<QQmlJSAnnotation> parseAnnotations(QQmlJS::AST::UiAnnotationList *list);
 
     QQmlJSLogger m_logger;
+
+    // Used to temporarily store annotations for functions and generators wrapped in UiSourceElements
+    QVector<QQmlJSAnnotation> m_pendingMethodAnnotations;
 private:
     void importBaseModules();
     void resolveAliases();

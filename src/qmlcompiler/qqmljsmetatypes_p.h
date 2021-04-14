@@ -187,6 +187,9 @@ public:
 
     bool isValid() const { return !m_name.isEmpty(); }
 
+    const QVector<QQmlJSAnnotation>& annotations() const { return m_annotations; }
+    void setAnnotations(QVector<QQmlJSAnnotation> annotations) { m_annotations = annotations; }
+
     friend bool operator==(const QQmlJSMetaMethod &a, const QQmlJSMetaMethod &b)
     {
         return a.m_name == b.m_name
@@ -195,6 +198,7 @@ public:
                 && a.m_paramNames == b.m_paramNames
                 && a.m_paramTypeNames == b.m_paramTypeNames
                 && a.m_paramTypes == b.m_paramTypes
+                && a.m_annotations == b.m_annotations
                 && a.m_methodType == b.m_methodType
                 && a.m_methodAccess == b.m_methodAccess
                 && a.m_revision == b.m_revision
@@ -215,6 +219,7 @@ public:
         seed = combine(seed, method.m_returnType.toStrongRef().data());
         seed = combine(seed, method.m_paramNames);
         seed = combine(seed, method.m_paramTypeNames);
+        seed = combine(seed, method.m_annotations);
         seed = combine(seed, method.m_methodType);
         seed = combine(seed, method.m_methodAccess);
         seed = combine(seed, method.m_revision);
@@ -234,6 +239,7 @@ private:
     QStringList m_paramNames;
     QStringList m_paramTypeNames;
     QList<QWeakPointer<const QQmlJSScope>> m_paramTypes;
+    QList<QQmlJSAnnotation> m_annotations;
 
     Type m_methodType = Signal;
     Access m_methodAccess = Private;

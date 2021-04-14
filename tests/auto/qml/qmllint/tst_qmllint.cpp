@@ -577,6 +577,16 @@ void TestQmllint::dirtyQmlCode_data()
             << QString()
             << QString()
             << true;
+    QTest::newRow("deprecatedFunction")
+            << QStringLiteral("deprecatedFunction.qml")
+            << QStringLiteral("Method \"deprecated(foobar)\" is deprecated (Reason: No particular reason.)")
+            << QString()
+            << false;
+    QTest::newRow("deprecatedFunctionInherited")
+            << QStringLiteral("deprecatedFunctionInherited.qml")
+            << QStringLiteral("Method \"deprecatedInherited(c, d)\" is deprecated (Reason: This deprecation should be visible!)")
+            << QString()
+            << false;
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -688,6 +698,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("goodAttachedProperty") << QStringLiteral("goodAttachedProperty.qml");
     QTest::newRow("objectBindingOnVarProperty") << QStringLiteral("objectBoundToVar.qml");
     QTest::newRow("Unversioned change signal without arguments") << QStringLiteral("unversionChangedSignalSansArguments.qml");
+    QTest::newRow("deprecatedFunctionOverride") << QStringLiteral("deprecatedFunctionOverride.qml");
 }
 
 void TestQmllint::cleanQmlCode()
