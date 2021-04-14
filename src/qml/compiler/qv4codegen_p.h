@@ -282,6 +282,7 @@ public:
         static Reference fromMember(const Reference &baseRef, const QString &name,
                                     Moth::BytecodeGenerator::Label jumpLabel = Moth::BytecodeGenerator::Label(),
                                     Moth::BytecodeGenerator::Label targetLabel = Moth::BytecodeGenerator::Label()) {
+            Q_ASSERT(baseRef.isValid());
             Reference r(baseRef.codegen, Member);
             r.propertyBase = baseRef.asRValue();
             r.propertyNameIndex = r.codegen->registerString(name);
