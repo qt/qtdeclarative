@@ -273,6 +273,7 @@ private slots:
     void dataViewCtor();
 
     void uiLanguage();
+    void urlObject();
 
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
@@ -5264,6 +5265,69 @@ void tst_QJSEngine::uiLanguage()
         qmlEngine.setUiLanguage("Blah");
         QCOMPARE(qmlEngine.globalObject().property("Qt").property("uiLanguage").toString(), "Blah");
     }
+}
+
+void tst_QJSEngine::urlObject()
+{
+    QJSEngine engine;
+
+    const QString href = QStringLiteral(
+                "http://uuu:ppp@example.com:777/foo/bar?search=stuff&other=where#hhh");
+    const QUrl url(href);
+
+    QJSManagedValue v(engine.evaluate(QStringLiteral("new URL('%1')").arg(href)), &engine);
+    QVERIFY(v.isObject());
+    QJSManagedValue proto(v.prototype());
+
+    auto check = [&](const QString &prop, const QString &expected) {
+        QCOMPARE(v.property(prop).toString(), expected);
+        QVERIFY(proto.property(prop).isUndefined());
+        QVERIFY(engine.hasError());
+        QCOMPARE(engine.catchError().toString(),
+                 QStringLiteral("TypeError: Value of \"this\" must be of type URL"));
+    };
+
+    check(QStringLiteral("href"), url.toString());
+    check(QStringLiteral("origin"), QStringLiteral("http://example.com:777"));
+    check(QStringLiteral("protocol"), url.scheme());
+    check(QStringLiteral("username"), url.userName());
+    check(QStringLiteral("password"), url.password());
+    check(QStringLiteral("host"), url.host() + u':' + QString::number(url.port()));
+    check(QStringLiteral("hostname"), url.host());
+    check(QStringLiteral("port"), QString::number(url.port()));
+    check(QStringLiteral("pathname"), url.path());
+    check(QStringLiteral("search"), QStringLiteral("?search=stuff&other=where"));
+    check(QStringLiteral("hash"), u'#' + url.fragment());
+
+    QJSManagedValue s(v.property("searchParams"), &engine);
+    QVERIFY(s.isObject());
+
+    const QStringList searchParamsMethods = {
+        QStringLiteral("append"),
+        QStringLiteral("delete"),
+        QStringLiteral("get"),
+        QStringLiteral("getAll"),
+        QStringLiteral("has"),
+        QStringLiteral("set"),
+        QStringLiteral("sort"),
+        QStringLiteral("entries"),
+        QStringLiteral("forEach"),
+        QStringLiteral("keys"),
+        QStringLiteral("values"),
+        QStringLiteral("toString")
+    };
+
+    for (const QString &method : searchParamsMethods) {
+        QJSManagedValue get(s.property(method), &engine);
+
+        // Shoudn't crash.
+        // We get different error messages depending on parameters, though.
+        QJSValue undef = get.call({});
+        QVERIFY(undef.isUndefined());
+        QVERIFY(engine.hasError());
+        engine.catchError();
+    }
+
 }
 
 QTEST_MAIN(tst_QJSEngine)

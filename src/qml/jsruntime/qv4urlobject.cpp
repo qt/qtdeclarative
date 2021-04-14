@@ -309,13 +309,24 @@ void UrlObject::updateHost()
     d()->host.set(engine(), engine()->newString(host));
 }
 
+static bool checkUrlObjectType(ExecutionEngine *v4, const Scoped<UrlObject> &r)
+{
+    if (r)
+        return true;
+
+    v4->throwTypeError(QStringLiteral("Value of \"this\" must be of type URL"));
+    return false;
+}
+
 ReturnedValue UrlPrototype::method_getHash(const FunctionObject *b, const Value *thisObject,
                                            const Value *, int)
 {
     ExecutionEngine *v4 = b->engine();
     Scope scope(v4);
 
-    Scoped<UrlObject> r(scope, thisObject->as<UrlObject>());
+    Scoped<UrlObject> r(scope, thisObject);
+    if (!checkUrlObjectType(v4, r))
+        return Encode::undefined();
 
     return Encode(v4->newString(r->hash()));
 }
@@ -332,7 +343,9 @@ ReturnedValue UrlPrototype::method_setHash(const FunctionObject *b, const Value 
     if (stringValue == nullptr)
         return v4->throwTypeError(QLatin1String("Invalid parameter provided"));
 
-    Scoped<UrlObject> r(scope, thisObject->as<UrlObject>());
+    Scoped<UrlObject> r(scope, thisObject);
+    if (!checkUrlObjectType(v4, r))
+        return Encode::undefined();
 
     r->setHash(stringValue->toQString());
 
@@ -345,7 +358,9 @@ ReturnedValue UrlPrototype::method_getHost(const FunctionObject *b, const Value 
     ExecutionEngine *v4 = b->engine();
     Scope scope(v4);
 
-    Scoped<UrlObject> r(scope, thisObject->as<UrlObject>());
+    Scoped<UrlObject> r(scope, thisObject);
+    if (!checkUrlObjectType(v4, r))
+        return Encode::undefined();
 
     return Encode(v4->newString(r->host()));
 }
@@ -362,7 +377,9 @@ ReturnedValue UrlPrototype::method_setHost(const FunctionObject *b, const Value 
     if (stringValue == nullptr)
         return v4->throwTypeError(QLatin1String("Invalid parameter provided"));
 
-    Scoped<UrlObject> r(scope, thisObject->as<UrlObject>());
+    Scoped<UrlObject> r(scope, thisObject);
+    if (!checkUrlObjectType(v4, r))
+        return Encode::undefined();
 
     QString host = stringValue->toQString();
     if (!r->setHost(host))
@@ -377,7 +394,9 @@ ReturnedValue UrlPrototype::method_getHostname(const FunctionObject *b, const Va
     ExecutionEngine *v4 = b->engine();
     Scope scope(v4);
 
-    Scoped<UrlObject> r(scope, thisObject->as<UrlObject>());
+    Scoped<UrlObject> r(scope, thisObject);
+    if (!checkUrlObjectType(v4, r))
+        return Encode::undefined();
 
     return Encode(v4->newString(r->hostname()));
 }
@@ -394,7 +413,9 @@ ReturnedValue UrlPrototype::method_setHostname(const FunctionObject *b, const Va
     if (stringValue == nullptr)
         return v4->throwTypeError(QLatin1String("Invalid parameter provided"));
 
-    Scoped<UrlObject> r(scope, thisObject->as<UrlObject>());
+    Scoped<UrlObject> r(scope, thisObject);
+    if (!checkUrlObjectType(v4, r))
+        return Encode::undefined();
 
     QString hostname = stringValue->toQString();
     if (!r->setHostname(hostname))
@@ -409,7 +430,9 @@ ReturnedValue UrlPrototype::method_getHref(const FunctionObject *b, const Value 
     ExecutionEngine *v4 = b->engine();
     Scope scope(v4);
 
-    Scoped<UrlObject> r(scope, thisObject->as<UrlObject>());
+    Scoped<UrlObject> r(scope, thisObject);
+    if (!checkUrlObjectType(v4, r))
+        return Encode::undefined();
 
     return Encode(v4->newString(r->href()));
 }
@@ -426,7 +449,9 @@ ReturnedValue UrlPrototype::method_setHref(const FunctionObject *b, const Value 
     if (stringValue == nullptr)
         return v4->throwTypeError(QLatin1String("Invalid parameter provided"));
 
-    Scoped<UrlObject> r(scope, thisObject->as<UrlObject>());
+    Scoped<UrlObject> r(scope, thisObject);
+    if (!checkUrlObjectType(v4, r))
+        return Encode::undefined();
 
     QString href = stringValue->toQString();
     if (!r->setHref(href))
@@ -441,7 +466,9 @@ ReturnedValue UrlPrototype::method_getOrigin(const FunctionObject *b, const Valu
     ExecutionEngine *v4 = b->engine();
     Scope scope(v4);
 
-    Scoped<UrlObject> r(scope, thisObject->as<UrlObject>());
+    Scoped<UrlObject> r(scope, thisObject);
+    if (!checkUrlObjectType(v4, r))
+        return Encode::undefined();
 
     return Encode(v4->newString(r->origin()));
 }
@@ -452,7 +479,9 @@ ReturnedValue UrlPrototype::method_getPassword(const FunctionObject *b, const Va
     ExecutionEngine *v4 = b->engine();
     Scope scope(v4);
 
-    Scoped<UrlObject> r(scope, thisObject->as<UrlObject>());
+    Scoped<UrlObject> r(scope, thisObject);
+    if (!checkUrlObjectType(v4, r))
+        return Encode::undefined();
 
     return Encode(v4->newString(r->password()));
 }
@@ -469,7 +498,9 @@ ReturnedValue UrlPrototype::method_setPassword(const FunctionObject *b, const Va
     if (stringValue == nullptr)
         return v4->throwTypeError(QLatin1String("Invalid parameter provided"));
 
-    Scoped<UrlObject> r(scope, thisObject->as<UrlObject>());
+    Scoped<UrlObject> r(scope, thisObject);
+    if (!checkUrlObjectType(v4, r))
+        return Encode::undefined();
 
     r->setPassword(stringValue->toQString());
 
@@ -482,7 +513,9 @@ ReturnedValue UrlPrototype::method_getPathname(const FunctionObject *b, const Va
     ExecutionEngine *v4 = b->engine();
     Scope scope(v4);
 
-    Scoped<UrlObject> r(scope, thisObject->as<UrlObject>());
+    Scoped<UrlObject> r(scope, thisObject);
+    if (!checkUrlObjectType(v4, r))
+        return Encode::undefined();
 
     return Encode(v4->newString(r->pathname()));
 }
@@ -499,7 +532,9 @@ ReturnedValue UrlPrototype::method_setPathname(const FunctionObject *b, const Va
     if (stringValue == nullptr)
         return v4->throwTypeError(QLatin1String("Invalid parameter provided"));
 
-    Scoped<UrlObject> r(scope, thisObject->as<UrlObject>());
+    Scoped<UrlObject> r(scope, thisObject);
+    if (!checkUrlObjectType(v4, r))
+        return Encode::undefined();
 
     r->setPathname(stringValue->toQString());
 
@@ -512,7 +547,9 @@ ReturnedValue UrlPrototype::method_getPort(const FunctionObject *b, const Value 
     ExecutionEngine *v4 = b->engine();
     Scope scope(v4);
 
-    Scoped<UrlObject> r(scope, thisObject->as<UrlObject>());
+    Scoped<UrlObject> r(scope, thisObject);
+    if (!checkUrlObjectType(v4, r))
+        return Encode::undefined();
 
     return Encode(v4->newString(r->port()));
 }
@@ -535,7 +572,9 @@ ReturnedValue UrlPrototype::method_setPort(const FunctionObject *b, const Value 
     else
         return v4->throwTypeError(QLatin1String("Invalid parameter provided"));
 
-    Scoped<UrlObject> r(scope, thisObject->as<UrlObject>());
+    Scoped<UrlObject> r(scope, thisObject);
+    if (!checkUrlObjectType(v4, r))
+        return Encode::undefined();
 
     if (!r->setPort(port))
         return v4->throwTypeError(QLatin1String("Invalid port: %1").arg(port));
@@ -549,7 +588,9 @@ ReturnedValue UrlPrototype::method_getProtocol(const FunctionObject *b, const Va
     ExecutionEngine *v4 = b->engine();
     Scope scope(v4);
 
-    Scoped<UrlObject> r(scope, thisObject->as<UrlObject>());
+    Scoped<UrlObject> r(scope, thisObject);
+    if (!checkUrlObjectType(v4, r))
+        return Encode::undefined();
 
     return Encode(v4->newString(r->protocol()));
 }
@@ -566,7 +607,9 @@ ReturnedValue UrlPrototype::method_setProtocol(const FunctionObject *b, const Va
     if (stringValue == nullptr)
         return v4->throwTypeError(QLatin1String("Invalid parameter provided"));
 
-    Scoped<UrlObject> r(scope, thisObject->as<UrlObject>());
+    Scoped<UrlObject> r(scope, thisObject);
+    if (!checkUrlObjectType(v4, r))
+        return Encode::undefined();
 
     r->setProtocol(stringValue->toQString());
 
@@ -579,7 +622,9 @@ ReturnedValue UrlPrototype::method_getSearch(const FunctionObject *b, const Valu
     ExecutionEngine *v4 = b->engine();
     Scope scope(v4);
 
-    Scoped<UrlObject> r(scope, thisObject->as<UrlObject>());
+    Scoped<UrlObject> r(scope, thisObject);
+    if (!checkUrlObjectType(v4, r))
+        return Encode::undefined();
 
     return Encode(v4->newString(r->search()));
 }
@@ -596,7 +641,9 @@ ReturnedValue UrlPrototype::method_setSearch(const FunctionObject *b, const Valu
     if (stringValue == nullptr)
         return v4->throwTypeError(QLatin1String("Invalid parameter provided"));
 
-    Scoped<UrlObject> r(scope, thisObject->as<UrlObject>());
+    Scoped<UrlObject> r(scope, thisObject);
+    if (!checkUrlObjectType(v4, r))
+        return Encode::undefined();
 
     r->setSearch(stringValue->toQString());
 
@@ -609,7 +656,9 @@ ReturnedValue UrlPrototype::method_getUsername(const FunctionObject *b, const Va
     ExecutionEngine *v4 = b->engine();
     Scope scope(v4);
 
-    Scoped<UrlObject> r(scope, thisObject->as<UrlObject>());
+    Scoped<UrlObject> r(scope, thisObject);
+    if (!checkUrlObjectType(v4, r))
+        return Encode::undefined();
 
     return Encode(v4->newString(r->username()));
 }
@@ -626,7 +675,9 @@ ReturnedValue UrlPrototype::method_setUsername(const FunctionObject *b, const Va
     if (stringValue == nullptr)
         return v4->throwTypeError(QLatin1String("Invalid parameter provided"));
 
-    Scoped<UrlObject> r(scope, thisObject->as<UrlObject>());
+    Scoped<UrlObject> r(scope, thisObject);
+    if (!checkUrlObjectType(v4, r))
+        return Encode::undefined();
 
     r->setUsername(stringValue->toQString());
 
@@ -639,7 +690,9 @@ ReturnedValue UrlPrototype::method_getSearchParams(const FunctionObject *b, cons
     ExecutionEngine *v4 = b->engine();
     Scope scope(v4);
 
-    Scoped<UrlObject> r(scope, thisObject->as<UrlObject>());
+    Scoped<UrlObject> r(scope, thisObject);
+    if (!checkUrlObjectType(v4, r))
+        return Encode::undefined();
 
     Scoped<UrlSearchParamsObject> usp(scope, v4->newUrlSearchParamsObject());
 
@@ -1122,13 +1175,24 @@ PropertyAttributes UrlSearchParamsObject::virtualGetOwnProperty(const Managed *m
     return Object::virtualGetOwnProperty(m, id, p);
 }
 
-ReturnedValue UrlSearchParamsPrototype::method_toString(const FunctionObject *b, const Value *thisObject,
-                                            const Value *, int)
+static bool checkSearchParamsType(ExecutionEngine *v4, const Scoped<UrlSearchParamsObject> &o)
+{
+    if (o)
+        return true;
+
+    v4->throwTypeError(QStringLiteral("Value of \"this\" must be of type URLSearchParams"));
+    return false;
+}
+
+ReturnedValue UrlSearchParamsPrototype::method_toString(
+        const FunctionObject *b, const Value *thisObject, const Value *, int)
 {
     ExecutionEngine *v4 = b->engine();
     Scope scope(v4);
 
-    Scoped<UrlSearchParamsObject> o(scope, thisObject->as<UrlSearchParamsObject>());
+    Scoped<UrlSearchParamsObject> o(scope, thisObject);
+    if (!checkSearchParamsType(v4, o))
+        return Encode::undefined();
 
     auto params = o->params();
 
@@ -1149,7 +1213,9 @@ ReturnedValue UrlSearchParamsPrototype::method_sort(const FunctionObject *b, con
     ExecutionEngine *v4 = b->engine();
     Scope scope(v4);
 
-    Scoped<UrlSearchParamsObject> o(scope, thisObject->as<UrlSearchParamsObject>());
+    Scoped<UrlSearchParamsObject> o(scope, thisObject);
+    if (!checkSearchParamsType(v4, o))
+        return Encode::undefined();
 
     QList<QStringList> params = o->params();
     std::stable_sort(params.begin(), params.end(), [](QStringList a, QStringList b) { return a[0] < b[0]; });
@@ -1179,9 +1245,9 @@ ReturnedValue UrlSearchParamsPrototype::method_append(const FunctionObject *b, c
     ScopedString name(scope, argName->as<String>());
     ScopedString value(scope, argValue->toString(v4));
 
-
-
-    Scoped<UrlSearchParamsObject> o(scope, thisObject->as<UrlSearchParamsObject>());
+    Scoped<UrlSearchParamsObject> o(scope, thisObject);
+    if (!checkSearchParamsType(v4, o))
+        return Encode::undefined();
 
     o->append(name->d(), value->d());
 
@@ -1206,7 +1272,9 @@ ReturnedValue UrlSearchParamsPrototype::method_delete(const FunctionObject *b, c
 
     QString name = argNameString->toQString();
 
-    Scoped<UrlSearchParamsObject> o(scope, thisObject->as<UrlSearchParamsObject>());
+    Scoped<UrlSearchParamsObject> o(scope, thisObject);
+    if (!checkSearchParamsType(v4, o))
+        return Encode::undefined();
 
     QList<QStringList> params = o->params();
 
@@ -1237,7 +1305,9 @@ ReturnedValue UrlSearchParamsPrototype::method_has(const FunctionObject *b, cons
     if (argNameString == nullptr)
         return v4->throwTypeError(QLatin1String("Invalid argument provided"));
 
-    Scoped<UrlSearchParamsObject> o(scope, thisObject->as<UrlSearchParamsObject>());
+    Scoped<UrlSearchParamsObject> o(scope, thisObject);
+    if (!checkSearchParamsType(v4, o))
+        return Encode::undefined();
 
     QString name = argNameString->toQString();
 
@@ -1261,7 +1331,9 @@ ReturnedValue UrlSearchParamsPrototype::method_set(const FunctionObject *b, cons
     if (argNameString == nullptr)
         return v4->throwTypeError(QLatin1String("Invalid argument provided"));
 
-    Scoped<UrlSearchParamsObject> o(scope, thisObject->as<UrlSearchParamsObject>());
+    Scoped<UrlSearchParamsObject> o(scope, thisObject);
+    if (!checkSearchParamsType(v4, o))
+        return Encode::undefined();
 
     QString name = argNameString->toQString();
     QString value = argValue->toQString();
@@ -1308,7 +1380,9 @@ ReturnedValue UrlSearchParamsPrototype::method_get(const FunctionObject *b, cons
     if (argNameString == nullptr)
         return v4->throwTypeError(QLatin1String("Invalid argument provided"));
 
-    Scoped<UrlSearchParamsObject> o(scope, thisObject->as<UrlSearchParamsObject>());
+    Scoped<UrlSearchParamsObject> o(scope, thisObject);
+    if (!checkSearchParamsType(v4, o))
+        return Encode::undefined();
 
     QString name = argNameString->toQString();
 
@@ -1337,7 +1411,9 @@ ReturnedValue UrlSearchParamsPrototype::method_getAll(const FunctionObject *b,
     if (argNameString == nullptr)
         return v4->throwTypeError(QLatin1String("Invalid argument provided"));
 
-    Scoped<UrlSearchParamsObject> o(scope, thisObject->as<UrlSearchParamsObject>());
+    Scoped<UrlSearchParamsObject> o(scope, thisObject);
+    if (!checkSearchParamsType(v4, o))
+        return Encode::undefined();
 
     QString name = argNameString->toQString();
 
@@ -1370,7 +1446,9 @@ ReturnedValue UrlSearchParamsPrototype::method_forEach(const FunctionObject *b,
     if (func == nullptr)
         return v4->throwTypeError(QLatin1String("Invalid argument: must be a function"));
 
-    Scoped<UrlSearchParamsObject> o(scope, thisObject->as<UrlSearchParamsObject>());
+    Scoped<UrlSearchParamsObject> o(scope, thisObject);
+    if (!checkSearchParamsType(v4, o))
+        return Encode::undefined();
 
     for (int i = 0; i < o->length(); i++) {
         Scoped<String> name(scope, o->nameAtRaw(i));
@@ -1397,7 +1475,9 @@ ReturnedValue UrlSearchParamsPrototype::method_entries(const FunctionObject *b,
     if (argc != 0)
         return v4->throwError(QLatin1String("Bad amount of arguments"));
 
-    Scoped<UrlSearchParamsObject> o(scope, thisObject->as<UrlSearchParamsObject>());
+    Scoped<UrlSearchParamsObject> o(scope, thisObject);
+    if (!checkSearchParamsType(v4, o))
+        return Encode::undefined();
 
     ScopedObject params(scope, o->d()->params.get());
 
@@ -1416,7 +1496,9 @@ ReturnedValue UrlSearchParamsPrototype::method_keys(const FunctionObject *b,
     if (argc != 0)
         return v4->throwError(QLatin1String("Bad amount of arguments"));
 
-    Scoped<UrlSearchParamsObject> o(scope, thisObject->as<UrlSearchParamsObject>());
+    Scoped<UrlSearchParamsObject> o(scope, thisObject);
+    if (!checkSearchParamsType(v4, o))
+        return Encode::undefined();
 
     ScopedObject keys(scope, o->d()->keys.get());
 
@@ -1435,7 +1517,9 @@ ReturnedValue UrlSearchParamsPrototype::method_values(const FunctionObject *b,
     if (argc != 0)
         return v4->throwError(QLatin1String("Bad amount of arguments"));
 
-    Scoped<UrlSearchParamsObject> o(scope, thisObject->as<UrlSearchParamsObject>());
+    Scoped<UrlSearchParamsObject> o(scope, thisObject);
+    if (!checkSearchParamsType(v4, o))
+        return Encode::undefined();
 
     ScopedObject values(scope, o->d()->values.get());
 
