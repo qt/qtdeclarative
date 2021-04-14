@@ -176,6 +176,10 @@ void FindWarningVisitor::checkDefaultProperty(const QQmlJSScope::ConstPtr &scope
     if (!propType) // should be an error somewhere else
         return;
 
+    // Assigning any element to a QQmlComponent property implicitly wraps it into a Component
+    if (defaultProp.typeName() == QStringLiteral("QQmlComponent"))
+        return;
+
     // scope's type hierarchy has to have property type
     for (const QQmlJSScope *type = scope.data(); type; type = type->baseType().data()) {
         if (type == propType)
