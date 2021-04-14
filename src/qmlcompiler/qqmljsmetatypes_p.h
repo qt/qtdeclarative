@@ -197,7 +197,8 @@ public:
                 && a.m_paramTypes == b.m_paramTypes
                 && a.m_methodType == b.m_methodType
                 && a.m_methodAccess == b.m_methodAccess
-                && a.m_revision == b.m_revision;
+                && a.m_revision == b.m_revision
+                && a.m_isConstructor == b.m_isConstructor;
     }
 
     friend bool operator!=(const QQmlJSMetaMethod &a, const QQmlJSMetaMethod &b)
@@ -213,9 +214,11 @@ public:
         seed = combine(seed, method.m_returnTypeName);
         seed = combine(seed, method.m_returnType.toStrongRef().data());
         seed = combine(seed, method.m_paramNames);
+        seed = combine(seed, method.m_paramTypeNames);
         seed = combine(seed, method.m_methodType);
         seed = combine(seed, method.m_methodAccess);
         seed = combine(seed, method.m_revision);
+        seed = combine(seed, method.m_isConstructor);
 
         for (const auto &type : method.m_paramTypes)
             seed = combine(seed, type.toStrongRef().data());
