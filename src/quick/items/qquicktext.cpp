@@ -1728,9 +1728,11 @@ void QQuickText::setText(const QString &n)
     if (isComponentComplete()) {
         if (d->richText) {
             d->ensureDoc();
+#if QT_CONFIG(textmarkdownreader)
             if (d->markdownText)
                 d->extra->doc->setMarkdownText(n);
             else
+#endif
                 d->extra->doc->setText(n);
             d->rightToLeftText = d->extra->doc->toPlainText().isRightToLeft();
         } else {
@@ -2760,9 +2762,11 @@ void QQuickText::componentComplete()
     if (d->updateOnComponentComplete) {
         if (d->richText) {
             d->ensureDoc();
+#if QT_CONFIG(textmarkdownreader)
             if (d->markdownText)
                 d->extra->doc->setMarkdownText(d->text);
             else
+#endif
                 d->extra->doc->setText(d->text);
             d->rightToLeftText = d->extra->doc->toPlainText().isRightToLeft();
         } else {

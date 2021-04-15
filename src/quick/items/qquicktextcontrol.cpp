@@ -323,9 +323,11 @@ void QQuickTextControlPrivate::setContent(Qt::TextFormat format, const QString &
             formatCursor.select(QTextCursor::Document);
             formatCursor.setCharFormat(charFormatForInsertion);
             formatCursor.endEditBlock();
+#if QT_CONFIG(textmarkdownreader)
         } else if (format == Qt::MarkdownText) {
             doc->setBaseUrl(doc->baseUrl().adjusted(QUrl::RemoveFilename));
             doc->setMarkdown(text);
+#endif
         } else {
 #if QT_CONFIG(texthtmlparser)
             doc->setHtml(text);
