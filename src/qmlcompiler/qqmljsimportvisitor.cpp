@@ -277,12 +277,12 @@ void QQmlJSImportVisitor::endVisit(UiProgram *)
     resolveAliases();
 }
 
-static QVariant bindingToVariant(QQmlJS::AST::Statement *statement)
+static QQmlJSAnnotation::Value bindingToVariant(QQmlJS::AST::Statement *statement)
 {
     ExpressionStatement *expr = cast<ExpressionStatement *>(statement);
 
     if (!statement || !expr->expression)
-        return QVariant();
+        return {};
 
     switch (expr->expression->kind) {
     case Node::Kind_StringLiteral:
@@ -290,7 +290,7 @@ static QVariant bindingToVariant(QQmlJS::AST::Statement *statement)
     case Node::Kind_NumericLiteral:
         return cast<NumericLiteral *>(expr->expression)->value;
     default:
-        return QVariant();
+        return {};
     }
 }
 

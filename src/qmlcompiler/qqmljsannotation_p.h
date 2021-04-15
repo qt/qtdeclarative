@@ -39,8 +39,9 @@
 //
 // We mean it.
 
+#include <variant>
+
 #include <private/qqmljsast_p.h>
-#include <qvariant.h>
 #include <qglobal.h>
 
 QT_BEGIN_NAMESPACE
@@ -52,11 +53,48 @@ struct QQQmlJSDeprecation
 
 struct QQmlJSAnnotation
 {
+    using Value = std::variant<QString, double>;
+
     QString name;
-    QHash<QString, QVariant> bindings;
+    QHash<QString, Value> bindings;
 
     bool isDeprecation() const;
     QQQmlJSDeprecation deprecation() const;
+
+    friend bool operator==(const QQmlJSAnnotation &a, const QQmlJSAnnotation &b) {
+        return a.name == b.name &&
+               a.bindings == b.bindings;
+    }
+
+    friend bool operator!=(const QQmlJSAnnotation &a, const QQmlJSAnnotation &b) {
+        return !(a == b);
+    }
+
+    friend size_t qHash(const QQmlJSAnnotation &annotation, size_t seed = 0)
+    {
+        QtPrivate::QHashCombine combine;
+        seed = combine(seed, annotation.name);
+
+        for (auto it = annotation.bindings.constBegin(); it != annotation.bindings.constEnd(); ++it) {
+            QtPrivate::QHashCombine combine;
+            size_t h = combine(seed, it.key());
+            // use + to keep the result independent of the ordering of the keys
+
+            const auto &var = it.value();
+
+            if (var.index() == std::variant_npos)
+                continue;
+
+            if (std::holds_alternative<double>(var))
+                seed += combine(h, std::get<double>(var));
+            else if (std::holds_alternative<QString>(var))
+                seed += combine(h, std::get<QString>(var));
+            else
+                Q_UNREACHABLE();
+        }
+
+        return seed;
+    }
 };
 
 QT_END_NAMESPACE

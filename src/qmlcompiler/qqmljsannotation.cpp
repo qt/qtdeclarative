@@ -37,8 +37,8 @@ QQQmlJSDeprecation QQmlJSAnnotation::deprecation() const {
 
         auto reason = bindings[QStringLiteral("reason")];
 
-        if (reason.typeId() == QMetaType::QString) {
-            deprecation.reason = reason.toString();
+        if (std::holds_alternative<QString>(reason)) {
+            deprecation.reason = std::get<QString>(reason);
         }
     }
 
