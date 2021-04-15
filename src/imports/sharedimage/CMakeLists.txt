@@ -6,7 +6,7 @@
 
 qt_internal_add_qml_module(sharedimageplugin
     URI "Qt.labs.sharedimage"
-    VERSION "${CMAKE_PROJECT_VERSION}"
+    VERSION "${PROJECT_VERSION}"
     CLASSNAME QtQuickSharedImagePlugin
     SKIP_TYPE_REGISTRATION
     GENERATE_QMLTYPES

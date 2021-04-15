@@ -2,7 +2,7 @@
 
 qt_internal_add_qml_module(quickwindow
     URI "QtQuick.Window"
-    VERSION "${CMAKE_PROJECT_VERSION}"
+    VERSION "${PROJECT_VERSION}"
     IMPORTS
         QtQuick/auto
     PAST_MAJOR_VERSIONS 2

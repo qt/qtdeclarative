@@ -6,7 +6,7 @@
 
 qt_internal_add_qml_module(qquicklayoutsplugin
     URI "QtQuick.Layouts"
-    VERSION "${CMAKE_PROJECT_VERSION}"
+    VERSION "${PROJECT_VERSION}"
     DESIGNER_SUPPORTED
     CLASSNAME QtQuickLayoutsPlugin
     SKIP_TYPE_REGISTRATION
