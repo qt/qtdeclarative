@@ -88,11 +88,7 @@ static OptionalReturnedValue searchContextProperties(
         bool *hasProperty, Value *base, QV4::Lookup *lookup, QV4::Lookup *originalLookup,
         QQmlEnginePrivate *ep)
 {
-    const QV4::IdentifierHash &properties = context->propertyNames();
-    if (properties.count() == 0)
-        return OptionalReturnedValue();
-
-    const int propertyIdx = properties.value(name);
+    const int propertyIdx = context->propertyIndex(name);
 
     if (propertyIdx == -1)
         return OptionalReturnedValue();
@@ -429,17 +425,13 @@ bool QQmlContextWrapper::virtualPut(Managed *m, PropertyKey id, const Value &val
     ScopedString name(scope, id.asStringOrSymbol());
 
     while (context) {
-        const QV4::IdentifierHash &properties = context->propertyNames();
         // Search context properties
-        if (properties.count()) {
-            const int propertyIndex = properties.value(name);
-            if (propertyIndex != -1) {
-                if (propertyIndex < context->numIdValues()) {
-                    v4->throwError(QLatin1String("left-hand side of assignment operator is not an lvalue"));
-                    return false;
-                }
+        if (const int propertyIndex = context->propertyIndex(name); propertyIndex != -1) {
+            if (propertyIndex < context->numIdValues()) {
+                v4->throwError(QLatin1String("left-hand side of assignment operator is not an lvalue"));
                 return false;
             }
+            return false;
         }
 
         // Search scope object

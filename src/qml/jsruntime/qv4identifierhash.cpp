@@ -50,6 +50,7 @@ namespace QV4 {
 IdentifierHash::IdentifierHash(ExecutionEngine *engine)
 {
     d = new IdentifierHashData(engine->identifierTable, 3);
+    Q_ASSERT(!isEmpty());
 }
 
 void IdentifierHash::detach()

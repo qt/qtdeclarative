@@ -281,20 +281,16 @@ void QQmlContextData::setIdValue(int idx, QObject *obj)
 
 QString QQmlContextData::findObjectId(const QObject *obj) const
 {
-    const QV4::IdentifierHash &properties = propertyNames();
-    if (m_propertyNameCache.isEmpty())
-        return QString();
-
     for (int ii = 0; ii < m_idValueCount; ii++) {
         if (m_idValues[ii] == obj)
-            return properties.findId(ii);
+            return propertyName(ii);
     }
 
     if (m_publicContext) {
         QQmlContextPrivate *p = QQmlContextPrivate::get(m_publicContext);
         for (int ii = 0; ii < p->numPropertyValues(); ++ii)
             if (p->propertyValue(ii) == QVariant::fromValue(const_cast<QObject *>(obj)))
-                return properties.findId(ii);
+                return propertyName(ii);
     }
 
     if (m_linkedContext)
@@ -322,22 +318,13 @@ void QQmlContextData::addExpression(QQmlJavaScriptExpression *expression)
     expression->insertIntoList(&m_expressions);
 }
 
-QV4::IdentifierHash QQmlContextData::propertyNames() const
+void QQmlContextData::initPropertyNames() const
 {
-    if (m_propertyNameCache.isEmpty()) {
-        if (m_typeCompilationUnit)
-            m_propertyNameCache = m_typeCompilationUnit->namedObjectsPerComponent(m_componentObjectIndex);
-        else
-            m_propertyNameCache = QV4::IdentifierHash(m_engine->handle());
-    }
-    return m_propertyNameCache;
-}
-
-QV4::IdentifierHash *QQmlContextData::detachedPropertyNames()
-{
-    propertyNames();
-    m_propertyNameCache.detach();
-    return &m_propertyNameCache;
+    if (m_typeCompilationUnit)
+        m_propertyNameCache = m_typeCompilationUnit->namedObjectsPerComponent(m_componentObjectIndex);
+    else
+        m_propertyNameCache = QV4::IdentifierHash(m_engine->handle());
+    Q_ASSERT(!m_propertyNameCache.isEmpty());
 }
 
 QUrl QQmlContextData::url() const

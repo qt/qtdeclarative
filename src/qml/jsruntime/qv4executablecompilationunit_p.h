@@ -319,6 +319,7 @@ IdentifierHash ExecutableCompilationUnit::namedObjectsPerComponent(int component
     auto it = namedObjectsPerComponentCache.find(componentObjectIndex);
     if (Q_UNLIKELY(it == namedObjectsPerComponentCache.end()))
         return createNamedObjectsPerComponent(componentObjectIndex);
+    Q_ASSERT(!it->isEmpty());
     return *it;
 }
 

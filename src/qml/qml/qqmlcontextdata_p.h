@@ -173,8 +173,29 @@ public:
         }
     }
 
-    QV4::IdentifierHash propertyNames() const;
-    QV4::IdentifierHash *detachedPropertyNames();
+    int propertyIndex(const QString &name) const
+    {
+        ensurePropertyNames();
+        return m_propertyNameCache.value(name);
+    }
+
+    int propertyIndex(QV4::String *name) const
+    {
+        ensurePropertyNames();
+        return m_propertyNameCache.value(name);
+    }
+
+    QString propertyName(int index) const
+    {
+        ensurePropertyNames();
+        return m_propertyNameCache.findId(index);
+    }
+
+    void addPropertyNameAndIndex(const QString &name, int index)
+    {
+        Q_ASSERT(!m_propertyNameCache.isEmpty());
+        m_propertyNameCache.add(name, index);
+    }
 
     void setExpressions(QQmlJavaScriptExpression *expressions) { m_expressions = expressions; }
     QQmlJavaScriptExpression *takeExpressions()
@@ -343,6 +364,14 @@ private:
 
     void refreshExpressionsRecursive(bool isGlobal);
     void refreshExpressionsRecursive(QQmlJavaScriptExpression *);
+    void initPropertyNames() const;
+
+    void ensurePropertyNames() const
+    {
+        if (m_propertyNameCache.isEmpty())
+            initPropertyNames();
+        Q_ASSERT(!m_propertyNameCache.isEmpty());
+    }
 
     // My parent context and engine
     QQmlContextData *m_parent = nullptr;

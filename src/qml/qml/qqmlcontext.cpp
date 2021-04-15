@@ -287,10 +287,9 @@ void QQmlContext::setContextProperty(const QString &name, const QVariant &value)
         return;
     }
 
-    QV4::IdentifierHash *properties = data->detachedPropertyNames();
-    int idx = properties->value(name);
+    int idx = data->propertyIndex(name);
     if (idx == -1) {
-        properties->add(name, data->numIdValues() + d->numPropertyValues());
+        data->addPropertyNameAndIndex(name, data->numIdValues() + d->numPropertyValues());
         d->appendPropertyValue(value);
         data->refreshExpressions();
     } else {
@@ -362,14 +361,10 @@ QVariant QQmlContext::contextProperty(const QString &name) const
 {
     Q_D(const QQmlContext);
     QVariant value;
-    int idx = -1;
 
     QQmlRefPointer<QQmlContextData> data = d->m_data;
 
-    const QV4::IdentifierHash properties = data->propertyNames();
-    if (properties.count())
-        idx = properties.value(name);
-
+    const int idx = data->propertyIndex(name);
     if (idx == -1) {
         if (QObject *obj = data->contextObject()) {
             QQmlPropertyData local;
@@ -484,7 +479,7 @@ void QQmlContextPrivate::dropDestroyedQObject(const QString &name, QObject *dest
     if (!m_data->isValid())
         return;
 
-    const int idx = m_data->propertyNames().value(name);
+    const int idx = m_data->propertyIndex(name);
     Q_ASSERT(idx >= 0);
     if (qvariant_cast<QObject *>(propertyValue(idx)) != destroyed)
         return;
