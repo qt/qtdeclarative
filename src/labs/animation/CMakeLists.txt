@@ -12,7 +12,7 @@ qt_internal_add_module(LabsAnimation
 
 set_target_properties(LabsAnimation PROPERTIES
     QT_QML_MODULE_INSTALL_QMLTYPES TRUE
-    QT_QML_MODULE_VERSION ${CMAKE_PROJECT_VERSION}
+    QT_QML_MODULE_VERSION ${PROJECT_VERSION}
     QT_QML_MODULE_URI Qt.labs.animation
     QT_QMLTYPES_FILENAME plugins.qmltypes
     QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/Qt/labs/animation"

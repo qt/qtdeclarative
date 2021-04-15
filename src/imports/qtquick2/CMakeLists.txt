@@ -6,7 +6,7 @@
 
 qt_internal_add_qml_module(qtquick2plugin
     URI "QtQuick"
-    VERSION "${CMAKE_PROJECT_VERSION}"
+    VERSION "${PROJECT_VERSION}"
     DESIGNER_SUPPORTED
     CLASS_NAME QtQuick2Plugin
     SKIP_TYPE_REGISTRATION

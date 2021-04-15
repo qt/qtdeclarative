@@ -6,7 +6,7 @@
 
 qt_internal_add_qml_module(labsmodelsplugin
     URI "Qt.labs.qmlmodels"
-    VERSION "${CMAKE_PROJECT_VERSION}"
+    VERSION "${PROJECT_VERSION}"
     CLASS_NAME QtQmlLabsModelsPlugin
     SKIP_TYPE_REGISTRATION
     PLUGIN_OPTIONAL

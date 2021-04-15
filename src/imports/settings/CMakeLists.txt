@@ -6,7 +6,7 @@
 
 qt_internal_add_qml_module(qmlsettingsplugin
     URI "Qt.labs.settings"
-    VERSION "${CMAKE_PROJECT_VERSION}"
+    VERSION "${PROJECT_VERSION}"
     CLASS_NAME QmlSettingsPlugin
     SKIP_TYPE_REGISTRATION
     PLUGIN_OPTIONAL
