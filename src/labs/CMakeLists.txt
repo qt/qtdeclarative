@@ -1,4 +1,7 @@
-add_subdirectory(settings)
+if(QT_FEATURE_settings)
+    add_subdirectory(settings)
+endif()
+
 add_subdirectory(models)
 
 if(QT_FEATURE_qml_itemmodel)
