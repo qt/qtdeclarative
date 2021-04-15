@@ -56,7 +56,7 @@ private slots:
     void destruction();
     void idAsContextProperty();
     void readOnlyContexts();
-    void nameForObject();
+    void objectsAndNames();
 
     void refreshExpressions();
     void refreshExpressionsCrash();
@@ -520,35 +520,98 @@ void tst_qqmlcontext::readOnlyContexts()
     delete obj;
 }
 
-void tst_qqmlcontext::nameForObject()
+void tst_qqmlcontext::objectsAndNames()
 {
     QObject o1;
     QObject o2;
     QObject o3;
 
     QQmlEngine engine;
+    QQmlContext *rootContext = engine.rootContext();
 
     // As a context property
-    engine.rootContext()->setContextProperty("o1", &o1);
-    engine.rootContext()->setContextProperty("o2", &o2);
-    engine.rootContext()->setContextProperty("o1_2", &o1);
+    rootContext->setContextProperty(QStringLiteral("o1"), &o1);
+    rootContext->setContextProperty(QStringLiteral("o2"), &o2);
+    rootContext->setContextProperty(QStringLiteral("o1_2"), &o1);
 
-    QCOMPARE(engine.rootContext()->nameForObject(&o1), QString("o1"));
-    QCOMPARE(engine.rootContext()->nameForObject(&o2), QString("o2"));
-    QCOMPARE(engine.rootContext()->nameForObject(&o3), QString());
+    QCOMPARE(rootContext->nameForObject(&o1), QStringLiteral("o1"));
+    QCOMPARE(rootContext->nameForObject(&o2), QStringLiteral("o2"));
+    QCOMPARE(rootContext->nameForObject(&o3), QString());
+
+    QCOMPARE(rootContext->objectForName(QStringLiteral("o1")), &o1);
+    QCOMPARE(rootContext->objectForName(QStringLiteral("o2")), &o2);
+    QCOMPARE(rootContext->objectForName(QStringLiteral("o1_2")), &o1);
+    QCOMPARE(rootContext->objectForName(QString()), nullptr);
 
     // As an id
     QQmlComponent component(&engine);
-    component.setData("import QtQuick 2.0; QtObject { id: root; property QtObject o: QtObject { id: nested } }", QUrl());
+    component.setData("import QtQml\n"
+                      "QtObject {\n"
+                      "    id: root\n"
+                      "    property QtObject o: QtObject { id: nested }\n"
+                      "}", QUrl());
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
 
-    QObject *o = component.create();
-    QVERIFY(o != nullptr);
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
 
-    QCOMPARE(qmlContext(o)->nameForObject(o), QString("root"));
-    QCOMPARE(qmlContext(o)->nameForObject(qvariant_cast<QObject*>(o->property("o"))), QString("nested"));
-    QCOMPARE(qmlContext(o)->nameForObject(&o1), QString());
+    QQmlContext *context = qmlContext(o.data());
+    QCOMPARE(context->nameForObject(o.data()), QStringLiteral("root"));
+    QCOMPARE(context->nameForObject(qvariant_cast<QObject*>(o->property("o"))),
+             QStringLiteral("nested"));
+    QCOMPARE(context->nameForObject(&o1), QString());
 
-    delete o;
+    QCOMPARE(context->objectForName(QStringLiteral("root")), o.data());
+    QCOMPARE(context->objectForName(QStringLiteral("nested")),
+             qvariant_cast<QObject*>(o->property("o")));
+    QCOMPARE(context->objectForName(QString()), nullptr);
+
+    // From context object
+    QQmlComponent ctxtComponent(&engine);
+    ctxtComponent.setData("import QtQuick 6.1\n"
+                      "Image {\n"
+                      "    property QtObject aa: QtObject { objectName: 'foo' }\n"
+                      "    property QtObject bb: QtObject { objectName: 'bar' }\n"
+                      "    property QtObject cc: QtObject { objectName: 'baz' }\n"
+                      "    containmentMask: Rectangle {\n"
+                      "        objectName: 'ddd'\n"
+                      "        width: 10\n"
+                      "        height: 20\n"
+                      "    }\n"
+                      "}", QUrl());
+    QVERIFY2(ctxtComponent.isReady(), qPrintable(ctxtComponent.errorString()));
+
+    QScopedPointer<QObject> ctxtObj(ctxtComponent.create());
+    QVERIFY(!ctxtObj.isNull());
+    QScopedPointer<QQmlContext> extraContext(new QQmlContext(context));
+    extraContext->setContextObject(ctxtObj.data());
+
+    QObject *aa = qvariant_cast<QObject *>(ctxtObj->property("aa"));
+    QCOMPARE(aa->objectName(), QStringLiteral("foo"));
+    QObject *bb = qvariant_cast<QObject *>(ctxtObj->property("bb"));
+    QCOMPARE(bb->objectName(), QStringLiteral("bar"));
+    QObject *cc = qvariant_cast<QObject *>(ctxtObj->property("cc"));
+    QCOMPARE(cc->objectName(), QStringLiteral("baz"));
+    QObject *containmentMask = qvariant_cast<QObject *>(ctxtObj->property("containmentMask"));
+    QCOMPARE(containmentMask->objectName(), QStringLiteral("ddd"));
+
+    QCOMPARE(extraContext->objectForName(QStringLiteral("aa")), aa);
+    QCOMPARE(extraContext->objectForName(QStringLiteral("bb")), bb);
+    QCOMPARE(extraContext->objectForName(QStringLiteral("cc")), cc);
+    QCOMPARE(extraContext->objectForName(QStringLiteral("containmentMask")), containmentMask);
+    QCOMPARE(extraContext->contextProperty(QStringLiteral("aa")), QVariant::fromValue(aa));
+    QCOMPARE(extraContext->contextProperty(QStringLiteral("bb")), QVariant::fromValue(bb));
+    QCOMPARE(extraContext->contextProperty(QStringLiteral("cc")), QVariant::fromValue(cc));
+    QCOMPARE(extraContext->contextProperty(QStringLiteral("containmentMask")),
+             QVariant::fromValue(containmentMask));
+
+    // Context properties travel the context hierarchy
+    QCOMPARE(extraContext->contextProperty(QStringLiteral("root")), QVariant::fromValue(o.data()));
+    QCOMPARE(extraContext->contextProperty(QStringLiteral("nested")), o->property("o"));
+
+    // objectForName and nameForObject deliberately don't
+    QCOMPARE(extraContext->objectForName(QStringLiteral("root")), nullptr);
+    QCOMPARE(extraContext->objectForName(QStringLiteral("nested")), nullptr);
 }
 
 class DeleteCommand : public QObject

@@ -84,6 +84,7 @@ public:
     void setContextProperties(const QList<PropertyPair> &properties);
 
     QString nameForObject(const QObject *) const;
+    QObject *objectForName(const QString &) const;
 
     QUrl resolvedUrl(const QUrl &) const;
 

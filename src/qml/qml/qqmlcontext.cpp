@@ -353,6 +353,19 @@ void QQmlContext::setContextProperties(const QList<PropertyPair> &properties)
     \sa QQmlContext::setContextProperties()
 */
 
+static bool readObjectProperty(
+        const QQmlRefPointer<QQmlContextData> &data, QObject *object, const QString &name,
+        QVariant *target)
+{
+    QQmlPropertyData local;
+    if (QQmlPropertyData *property =
+        QQmlPropertyCache::property(data->engine(), object, name, data, &local)) {
+        *target = object->metaObject()->property(property->coreIndex()).read(object);
+        return true;
+    }
+    return false;
+}
+
 /*!
   Returns the value of the \a name property for this context
   as a QVariant.
@@ -367,14 +380,12 @@ QVariant QQmlContext::contextProperty(const QString &name) const
     const int idx = data->propertyIndex(name);
     if (idx == -1) {
         if (QObject *obj = data->contextObject()) {
-            QQmlPropertyData local;
-            QQmlPropertyData *property =
-                QQmlPropertyCache::property(data->engine(), obj, name, data, &local);
-
-            if (property) value = obj->metaObject()->property(property->coreIndex()).read(obj);
+            if (readObjectProperty(data, obj, name, &value))
+                return value;
         }
-        if (!value.isValid() && parentContext())
-            value = parentContext()->contextProperty(name);
+
+        if (parentContext())
+            return parentContext()->contextProperty(name);
     } else {
         if (idx >= d->numPropertyValues())
             value = QVariant::fromValue(data->idValue(idx - d->numPropertyValues()));
@@ -397,6 +408,40 @@ QString QQmlContext::nameForObject(const QObject *object) const
     Q_D(const QQmlContext);
 
     return d->m_data->findObjectId(object);
+}
+
+/*!
+  \since 6.2
+
+  Returns the object for a given \a name in this context. Returns nullptr if
+  \a name is not available in the context or if the value associated with
+  \a name is not a QObject. Objects are named by \l setContextProperty(),
+  or as properties of a context object, or by ids in the case of QML created
+  contexts. In contrast to \l contextProperty(), this method does not traverse
+  the context hierarchy. If the name is not found in the current context,
+  nullptr is returned.
+
+  \sa contextProperty(), nameForObject()
+*/
+QObject *QQmlContext::objectForName(const QString &name) const
+{
+    Q_D(const QQmlContext);
+
+    QQmlRefPointer<QQmlContextData> data = d->m_data;
+    if (const int propertyIndex = data->propertyIndex(name); propertyIndex >= 0) {
+        const int numPropertyValues = d->numPropertyValues();
+        if (propertyIndex < numPropertyValues)
+            return qvariant_cast<QObject *>(d->propertyValue(propertyIndex));
+        return data->idValue(propertyIndex - numPropertyValues);
+    }
+
+    if (QObject *obj = data->contextObject()) {
+        QVariant result;
+        if (readObjectProperty(data, obj, name, &result))
+            return qvariant_cast<QObject *>(result);
+    }
+
+    return nullptr;
 }
 
 /*!

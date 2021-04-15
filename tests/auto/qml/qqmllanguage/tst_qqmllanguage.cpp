@@ -1338,6 +1338,7 @@ void tst_qqmllanguage::rootItemIsComponent()
     QQmlContext *context = qmlContext(other.data());
     QVERIFY(context);
     QCOMPARE(context->nameForObject(other.data()), QStringLiteral("blah"));
+    QCOMPARE(context->objectForName(QStringLiteral("blah")), other.data());
 }
 
 // Tests that components can be specified inline
@@ -1382,7 +1383,8 @@ void tst_qqmllanguage::idProperty()
         QVERIFY(!root.isNull());
         QQmlContext *ctx = qmlContext(root.data());
         QVERIFY(ctx);
-        QCOMPARE(ctx->nameForObject(root.data()), QString("root"));
+        QCOMPARE(ctx->nameForObject(root.data()), QStringLiteral("root"));
+        QCOMPARE(ctx->objectForName(QStringLiteral("root")), root.data());
     }
 }
 
