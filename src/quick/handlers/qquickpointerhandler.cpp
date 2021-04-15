@@ -625,7 +625,9 @@ void QQuickPointerHandler::handlePointerEvent(QPointerEvent *event)
     if (wants) {
         handlePointerEventImpl(event);
     } else {
+#if QT_CONFIG(gestures)
         if (event->type() != QEvent::NativeGesture)
+#endif
             setActive(false);
         for (int i = 0; i < event->pointCount(); ++i) {
             auto &pt = event->point(i);
