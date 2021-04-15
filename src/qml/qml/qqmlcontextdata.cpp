@@ -286,15 +286,29 @@ QString QQmlContextData::findObjectId(const QObject *obj) const
             return propertyName(ii);
     }
 
+    const QVariant objVariant = QVariant::fromValue(obj);
     if (m_publicContext) {
         QQmlContextPrivate *p = QQmlContextPrivate::get(m_publicContext);
         for (int ii = 0; ii < p->numPropertyValues(); ++ii)
-            if (p->propertyValue(ii) == QVariant::fromValue(const_cast<QObject *>(obj)))
+            if (p->propertyValue(ii) == objVariant)
                 return propertyName(ii);
     }
 
-    if (m_linkedContext)
-        return m_linkedContext->findObjectId(obj);
+    if (m_contextObject) {
+        // This is expensive, but nameForObject should really mirror contextProperty()
+        for (const QMetaObject *metaObject = m_contextObject->metaObject();
+             metaObject; metaObject = metaObject->superClass()) {
+            for (int i = metaObject->propertyOffset(), end = metaObject->propertyCount();
+                 i != end; ++i) {
+                const QMetaProperty prop = metaObject->property(i);
+                if (prop.metaType().flags() & QMetaType::PointerToQObject
+                        && prop.read(m_contextObject) == objVariant) {
+                    return QString::fromUtf8(prop.name());
+                }
+            }
+        }
+    }
+
     return QString();
 }
 

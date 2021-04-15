@@ -595,6 +595,10 @@ void tst_qqmlcontext::objectsAndNames()
     QObject *containmentMask = qvariant_cast<QObject *>(ctxtObj->property("containmentMask"));
     QCOMPARE(containmentMask->objectName(), QStringLiteral("ddd"));
 
+    QCOMPARE(extraContext->nameForObject(aa), QStringLiteral("aa"));
+    QCOMPARE(extraContext->nameForObject(bb), QStringLiteral("bb"));
+    QCOMPARE(extraContext->nameForObject(cc), QStringLiteral("cc"));
+    QCOMPARE(extraContext->nameForObject(containmentMask), QStringLiteral("containmentMask"));
     QCOMPARE(extraContext->objectForName(QStringLiteral("aa")), aa);
     QCOMPARE(extraContext->objectForName(QStringLiteral("bb")), bb);
     QCOMPARE(extraContext->objectForName(QStringLiteral("cc")), cc);
@@ -612,6 +616,8 @@ void tst_qqmlcontext::objectsAndNames()
     // objectForName and nameForObject deliberately don't
     QCOMPARE(extraContext->objectForName(QStringLiteral("root")), nullptr);
     QCOMPARE(extraContext->objectForName(QStringLiteral("nested")), nullptr);
+    QCOMPARE(extraContext->nameForObject(o.data()), QString());
+    QCOMPARE(extraContext->nameForObject(qvariant_cast<QObject*>(o->property("o"))), QString());
 }
 
 class DeleteCommand : public QObject

@@ -367,19 +367,26 @@ static bool readObjectProperty(
 }
 
 /*!
-  Returns the value of the \a name property for this context
-  as a QVariant.
+  Returns the value of the \a name property for this context as a QVariant.
+  If you know that the property you're looking for is a QObject assigned using
+  a QML id in the current context, \l objectForName() is more convenient and
+  faster. In contrast to \l objectForName() and \l nameForObject(), this method
+  does traverse the context hierarchy and searches in parent contexts if the
+  \a name is not found in the current one. It also considers any
+  \l contextObject() you may have set.
+
+  \sa objectForName(), nameForObject(), contextObject()
  */
 QVariant QQmlContext::contextProperty(const QString &name) const
 {
     Q_D(const QQmlContext);
-    QVariant value;
 
-    QQmlRefPointer<QQmlContextData> data = d->m_data;
+    const QQmlRefPointer<QQmlContextData> data = d->m_data;
 
     const int idx = data->propertyIndex(name);
     if (idx == -1) {
         if (QObject *obj = data->contextObject()) {
+            QVariant value;
             if (readObjectProperty(data, obj, name, &value))
                 return value;
         }
@@ -388,20 +395,27 @@ QVariant QQmlContext::contextProperty(const QString &name) const
             return parentContext()->contextProperty(name);
     } else {
         if (idx >= d->numPropertyValues())
-            value = QVariant::fromValue(data->idValue(idx - d->numPropertyValues()));
+            return QVariant::fromValue(data->idValue(idx - d->numPropertyValues()));
         else
-            value = d->propertyValue(idx);
+            return d->propertyValue(idx);
     }
 
-    return value;
+    return QVariant();
 }
 
 /*!
-Returns the name of \a object in this context, or an empty string if \a object
-is not named in the context.  Objects are named by setContextProperty(), or by ids in
-the case of QML created contexts.
+  Returns the name of \a object in this context, or an empty string if \a object
+  is not named in the context. Objects are named by \l setContextProperty(), or
+  as properties of a context object, or by ids in the case of QML created
+  contexts.
 
-If the object has multiple names, the first is returned.
+  If the object has multiple names, the first is returned.
+
+  In contrast to \l contextProperty(), this method does not traverse the
+  context hierarchy. If the name is not found in the current context, an empty
+  String is returned.
+
+  \sa contextProperty(), objectForName()
 */
 QString QQmlContext::nameForObject(const QObject *object) const
 {
