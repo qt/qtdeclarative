@@ -674,6 +674,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("defaultProperty") << QStringLiteral("defaultProperty.qml");
     QTest::newRow("defaultPropertyList") << QStringLiteral("defaultPropertyList.qml");
     QTest::newRow("defaultPropertyComponent") << QStringLiteral("defaultPropertyComponent.qml");
+    QTest::newRow("defaultPropertyComponent2") << QStringLiteral("defaultPropertyComponent.2.qml");
     QTest::newRow("duplicateQmldirImport") << QStringLiteral("qmldirImport/duplicate.qml");
     QTest::newRow("Used imports") << QStringLiteral("used.qml");
     QTest::newRow("Unused imports (multi)") << QStringLiteral("unused_multi.qml");

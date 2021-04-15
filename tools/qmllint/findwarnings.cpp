@@ -151,6 +151,10 @@ void FindWarningVisitor::checkDefaultProperty(const QQmlJSScope::ConstPtr &scope
             scopeOfDefaultProperty = s.data();
             break;
         }
+
+        // If the parent scope is based on Component it can have any child element
+        if (s->internalName() == QStringLiteral("QQmlComponent"))
+            return;
     }
     if (defaultPropertyName.isEmpty()) {
         m_logger.log(QStringLiteral("Cannot assign to non-existent default property"),
