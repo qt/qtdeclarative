@@ -55,6 +55,7 @@
 
 #include <QtCore/qtimer.h>
 #include <QtCore/private/qflatmap_p.h>
+#include <QtCore/qitemselectionmodel.h>
 #include <QtQmlModels/private/qqmltableinstancemodel_p.h>
 #include <QtQml/private/qqmlincubator_p.h>
 #include <QtQmlModels/private/qqmlchangeset_p.h>
@@ -314,6 +315,8 @@ public:
     QList<QPointer<QQuickTableView> > syncChildren;
     Qt::Orientations assignedSyncDirection = Qt::Horizontal | Qt::Vertical;
 
+    QPointer<QItemSelectionModel> selectionModel;
+
     int assignedPositionViewAtRow = 0;
     int assignedPositionViewAtColumn = 0;
     int positionViewAtRow = 0;
@@ -339,6 +342,7 @@ public:
 
     int modelIndexAtCell(const QPoint &cell) const;
     QPoint cellAtModelIndex(int modelIndex) const;
+    int modelIndexToCellIndex(const QModelIndex &modelIndex) const;
 
     qreal sizeHintForColumn(int column) const;
     qreal sizeHintForRow(int row) const;
@@ -458,6 +462,12 @@ public:
     void setLocalViewportY(qreal contentY);
     void syncViewportRect();
     void syncViewportPosRecursive();
+
+    bool selectedInSelectionModel(const QPoint &cell) const;
+    void selectionChangedInSelectionModel(const QItemSelection &selected, const QItemSelection &deselected) const;
+    void updateSelectedOnAllDelegateItems() const;
+    void setSelectedOnDelegateItem(const QModelIndex &modelIndex, bool select) const;
+    void setSelectedOnDelegateItem(QQuickItem *delegateItem, bool select) const;
 
     void fetchMoreData();
 

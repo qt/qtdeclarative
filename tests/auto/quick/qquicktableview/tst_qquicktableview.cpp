@@ -198,6 +198,10 @@ private slots:
     void leftRightTopBottomProperties();
     void checkContentSize_data();
     void checkContentSize();
+    void checkSelectionModelWithRequiredSelectedProperty_data();
+    void checkSelectionModelWithRequiredSelectedProperty();
+    void checkSelectionModelWithUnrequiredSelectedProperty();
+    void removeAndAddSelectionModel();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -3449,6 +3453,117 @@ void tst_QQuickTableView::checkContentSize()
     WAIT_UNTIL_POLISHED;
     QCOMPARE(tableView->contentWidth(), rowCount == 0 ? 0 : (colCount * (delegateWidth + colSpacing)) - colSpacing);
     QCOMPARE(tableView->contentHeight(), rowCount == 0 ? 0 : (rowCount * (delegateHeight + rowSpacing)) - rowSpacing);
+}
+
+void tst_QQuickTableView::checkSelectionModelWithRequiredSelectedProperty_data()
+{
+    QTest::addColumn<QVector<QPoint>>("selected");
+    QTest::addColumn<QPoint>("toggle");
+
+    QTest::newRow("nothing selected") << QVector<QPoint>() << QPoint(0,0);
+    QTest::newRow("one item selected") << (QVector<QPoint>() << QPoint(0, 0)) << QPoint(1, 1);
+    QTest::newRow("two items selected") << (QVector<QPoint>() << QPoint(1, 1) << QPoint(2, 2)) << QPoint(1, 1);
+}
+
+void tst_QQuickTableView::checkSelectionModelWithRequiredSelectedProperty()
+{
+    // Check that if you add a "required property selected" to the delegate,
+    // TableView will give it a value upon creation that matches the state
+    // in the selection model.
+    QFETCH(QVector<QPoint>, selected);
+    QFETCH(QPoint, toggle);
+
+    LOAD_TABLEVIEW("tableviewwithselected1.qml");
+
+    TestModel model(10, 10);
+    QItemSelectionModel selectionModel(&model);
+
+    // Set initially selected cells
+    for (auto it = selected.constBegin(); it != selected.constEnd(); ++it) {
+        const QPoint &cell = *it;
+        selectionModel.select(model.index(cell.y(), cell.x()), QItemSelectionModel::Select);
+    }
+
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setSelectionModel(&selectionModel);
+
+    WAIT_UNTIL_POLISHED;
+
+    // Check that all delegates have "selected" set with the initial value
+    for (auto fxItem : tableViewPrivate->loadedItems) {
+        const auto context = qmlContext(fxItem->item.data());
+        const int row = context->contextProperty("row").toInt();
+        const int column = context->contextProperty("column").toInt();
+        const bool selected = fxItem->item->property("selected").toBool();
+        const auto modelIndex = model.index(row, column);
+        QCOMPARE(selected, selectionModel.isSelected(modelIndex));
+    }
+
+    // Toggle selected on one of the model indices, and check
+    // that the "selected" property got updated as well
+    const QModelIndex toggleIndex = model.index(toggle.y(), toggle.x());
+    const bool wasSelected = selectionModel.isSelected(toggleIndex);
+    selectionModel.select(toggleIndex, QItemSelectionModel::Toggle);
+    const auto fxItem = tableViewPrivate->loadedTableItem(toggle);
+    const bool isSelected = fxItem->item->property("selected").toBool();
+    QCOMPARE(isSelected, !wasSelected);
+}
+
+void tst_QQuickTableView::checkSelectionModelWithUnrequiredSelectedProperty()
+{
+    // Check that if there is a property "selected" in the delegate, but it's
+    // not required, then TableView will not touch it. This is for legacy reasons, to
+    // not break applications written before Qt 6.2 that has such a property
+    // added for application logic.
+    LOAD_TABLEVIEW("tableviewwithselected2.qml");
+
+    TestModel model(10, 10);
+    tableView->setModel(QVariant::fromValue(&model));
+    QItemSelectionModel *selectionModel = tableView->selectionModel();
+    QVERIFY(selectionModel);
+
+    // Select a cell
+    selectionModel->select(model.index(1, 1), QItemSelectionModel::Select);
+
+    WAIT_UNTIL_POLISHED;
+
+    const auto fxItem = tableViewPrivate->loadedTableItem(QPoint(1, 1));
+    const bool selected = fxItem->item->property("selected").toBool();
+    QCOMPARE(selected, false);
+}
+
+void tst_QQuickTableView::removeAndAddSelectionModel()
+{
+    // Check that if we remove the selection model from TableView, all delegates
+    // will be unselected. And opposite, if we add the selection model back, the
+    // delegates will be updated.
+    LOAD_TABLEVIEW("tableviewwithselected1.qml");
+
+    TestModel model(10, 10);
+    QItemSelectionModel selectionModel(&model);
+
+    // Select a cell in the selection model
+    selectionModel.select(model.index(1, 1), QItemSelectionModel::Select);
+
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setSelectionModel(&selectionModel);
+
+    WAIT_UNTIL_POLISHED;
+
+    // Check that the delegate item is selected
+    const auto fxItem = tableViewPrivate->loadedTableItem(QPoint(1, 1));
+    bool selected = fxItem->item->property("selected").toBool();
+    QCOMPARE(selected, true);
+
+    // Remove the selection model, and check that the delegate item is now unselected
+    tableView->setSelectionModel(nullptr);
+    selected = fxItem->item->property("selected").toBool();
+    QCOMPARE(selected, false);
+
+    // Add the selection model back, and check that the delegate item is selected again
+    tableView->setSelectionModel(&selectionModel);
+    selected = fxItem->item->property("selected").toBool();
+    QCOMPARE(selected, true);
 }
 
 QTEST_MAIN(tst_QQuickTableView)

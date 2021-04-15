@@ -187,6 +187,26 @@
     moves together with the table as you flick:
 
     \snippet qml/tableview/tableviewwithheader.qml 0
+
+    \section1 Selecting items
+
+    You can add selection support to TableView by assigning a QSelectionModel to
+    the \l selectionModel property. It will then use this model to control which
+    delegate items should be shown as selected. For a delegate item to be shown as
+    selected, it needs to contain the following property:
+    \code
+    required property bool selected
+    \endcode
+
+    \note It's important for the \c selected property to be defined as \c required.
+    This will inform TableView that it should take responsibility for the property's
+    value. If it's not defined as required, it will simply be ignored.
+    See also \l {Required Properties}.
+
+    The following snippet shows how an application can render the delegate differently
+    depending on the \c selected property:
+
+    \snippet qml/tableview/selectionmodel.qml 0
 */
 
 /*!
@@ -402,6 +422,17 @@
     This property holds the bottom-most row that is currently visible inside the view.
 
     \sa leftColumn, rightColumn, topRow
+*/
+
+/*!
+    \qmlproperty QSelectionModel QtQuick::TableView::selectionModel
+
+    This property can be set to control which delegate items should be shown as
+    selected. If the delegate has a \c {required property bool selected}
+    defined, TableView will keep it in sync with the selection state of the
+    corresponding model item in the selection model.
+
+    \sa {Selecting items}
 */
 
 /*!
@@ -656,6 +687,8 @@ static const Qt::Edge allTableEdges[] = { Qt::LeftEdge, Qt::RightEdge, Qt::TopEd
 static const int kEdgeIndexNotSet = -2;
 static const int kEdgeIndexAtEnd = -3;
 
+static const char* kRequiredProperty = "_qt_isrequiredpropery_selected";
+
 const QPoint QQuickTableViewPrivate::kLeft = QPoint(-1, 0);
 const QPoint QQuickTableViewPrivate::kRight = QPoint(1, 0);
 const QPoint QQuickTableViewPrivate::kUp = QPoint(0, -1);
@@ -781,6 +814,17 @@ QPoint QQuickTableViewPrivate::cellAtModelIndex(int modelIndex) const
         int row = modelIndex % availableRows;
         return QPoint(column, row);
     }
+}
+
+int QQuickTableViewPrivate::modelIndexToCellIndex(const QModelIndex &modelIndex) const
+{
+    // Convert QModelIndex to cell index. A cell index is just an
+    // integer representation of a cell instead of using a QPoint.
+    if (modelIndex.parent().isValid()) {
+        // TableView only uses the root items of the model
+        return -1;
+    }
+    return modelIndexAtCell(QPoint(modelIndex.column(), modelIndex.row()));
 }
 
 int QQuickTableViewPrivate::edgeToArrayIndex(Qt::Edge edge)
@@ -2670,6 +2714,65 @@ void QQuickTableViewPrivate::createWrapperModel()
     model = tableModel;
 }
 
+bool QQuickTableViewPrivate::selectedInSelectionModel(const QPoint &cell) const
+{
+    if (!selectionModel)
+        return false;
+
+    QAbstractItemModel *model = selectionModel->model();
+    if (!model)
+        return false;
+
+    const QModelIndex modelIndex = model->index(cell.y(), cell.x());
+    return selectionModel->isSelected(modelIndex);
+}
+
+void QQuickTableViewPrivate::selectionChangedInSelectionModel(const QItemSelection &selected, const QItemSelection &deselected) const
+{
+    const auto &selectedIndexes = selected.indexes();
+    const auto &deselectedIndexes = deselected.indexes();
+    for (int i = 0; i < selectedIndexes.count(); ++i)
+        setSelectedOnDelegateItem(selectedIndexes.at(i), true);
+    for (int i = 0; i < deselectedIndexes.count(); ++i)
+        setSelectedOnDelegateItem(deselectedIndexes.at(i), false);
+}
+
+void QQuickTableViewPrivate::updateSelectedOnAllDelegateItems() const
+{
+    for (auto it = loadedItems.keyBegin(), end = loadedItems.keyEnd(); it != end; ++it) {
+        const QPoint cell = cellAtModelIndex(*it);
+        const bool selected = selectedInSelectionModel(cell);
+        setSelectedOnDelegateItem(loadedTableItem(cell)->item, selected);
+    }
+}
+
+void QQuickTableViewPrivate::setSelectedOnDelegateItem(const QModelIndex &modelIndex, bool select) const
+{
+    const int cellIndex = modelIndexToCellIndex(modelIndex);
+    if (!loadedItems.contains(cellIndex))
+        return;
+    const QPoint cell = cellAtModelIndex(cellIndex);
+    setSelectedOnDelegateItem(loadedTableItem(cell)->item, select);
+}
+
+void QQuickTableViewPrivate::setSelectedOnDelegateItem(QQuickItem *delegateItem, bool select) const
+{
+    if (!delegateItem->property(kRequiredProperty).toBool()) {
+        // We only assign to "selected" if it's a required property. Otherwise
+        // we assume (for backwards compatibility) that the property is used
+        // by the delegate for something else.
+        // Note: kRequiredProperty is a work-around until QMetaProperty::isRequired() works.
+        return;
+    }
+
+    // Note that several delegates might be in use (in case of a DelegateChooser), and
+    // the delegate can also change. So we cannot cache the propertyIndex.
+    const auto metaObject = delegateItem->metaObject();
+    const int propertyIndex = metaObject->indexOfProperty("selected");
+    const auto metaProperty = metaObject->property(propertyIndex);
+    metaProperty.write(delegateItem, QVariant::fromValue(select));
+}
+
 void QQuickTableViewPrivate::itemCreatedCallback(int modelIndex, QObject*)
 {
     if (blockItemCreatedCallback)
@@ -2689,12 +2792,22 @@ void QQuickTableViewPrivate::itemCreatedCallback(int modelIndex, QObject*)
 
 void QQuickTableViewPrivate::initItemCallback(int modelIndex, QObject *object)
 {
-    Q_UNUSED(modelIndex);
     Q_Q(QQuickTableView);
 
-    if (auto item = qmlobject_cast<QQuickItem*>(object)) {
-        item->setParentItem(q->contentItem());
-        item->setZ(1);
+    auto item = static_cast<QQuickItem*>(object);
+
+    item->setParentItem(q->contentItem());
+    item->setZ(1);
+
+    const QPoint cell = cellAtModelIndex(modelIndex);
+    const bool selected = selectedInSelectionModel(cell);
+
+    if (qobject_cast<QQmlTableInstanceModel *>(model)) {
+        const bool wasRequired = model->setRequiredProperty(modelIndex, QStringLiteral("selected"), selected);
+        if (wasRequired) {
+            // Work-around until QMetaProperty::isRequired() works
+            item->setProperty(kRequiredProperty, true);
+        }
     }
 
     if (auto attached = getAttachedObject(object))
@@ -2711,7 +2824,10 @@ void QQuickTableViewPrivate::itemPooledCallback(int modelIndex, QObject *object)
 
 void QQuickTableViewPrivate::itemReusedCallback(int modelIndex, QObject *object)
 {
-    Q_UNUSED(modelIndex);
+    auto item = static_cast<QQuickItem*>(object);
+    const QPoint cell = cellAtModelIndex(modelIndex);
+    const bool selected = selectedInSelectionModel(cell);
+    setSelectedOnDelegateItem(item, selected);
 
     if (auto attached = getAttachedObject(object))
         emit attached->reused();
@@ -3371,6 +3487,38 @@ void QQuickTableView::setSyncDirection(Qt::Orientations direction)
         d->scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::ViewportOnly);
 
     emit syncDirectionChanged();
+}
+
+QItemSelectionModel *QQuickTableView::selectionModel() const
+{
+    return d_func()->selectionModel;
+}
+
+void QQuickTableView::setSelectionModel(QItemSelectionModel *selectionModel)
+{
+    Q_D(QQuickTableView);
+    if (d->selectionModel == selectionModel)
+        return;
+
+    // Note: There is no need to rebuild the table when the selection model
+    // changes, since selections only affect the internals of the delegate
+    // items, and not the layout of the TableView.
+
+    if (d->selectionModel) {
+        QQuickTableViewPrivate::disconnect(d->selectionModel, &QItemSelectionModel::selectionChanged,
+                                        d, &QQuickTableViewPrivate::selectionChangedInSelectionModel);
+    }
+
+    d->selectionModel = selectionModel;
+
+    if (d->selectionModel) {
+        QQuickTableViewPrivate::connect(d->selectionModel, &QItemSelectionModel::selectionChanged,
+                                        d, &QQuickTableViewPrivate::selectionChangedInSelectionModel);
+    }
+
+    d->updateSelectedOnAllDelegateItems();
+
+    emit selectionModelChanged();
 }
 
 int QQuickTableView::leftColumn() const
