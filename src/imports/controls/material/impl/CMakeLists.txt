@@ -6,7 +6,7 @@
 
 qt_internal_add_qml_module(qtquickcontrols2materialstyleimplplugin
     URI "QtQuick.Controls.Material.impl"
-    VERSION "${CMAKE_PROJECT_VERSION}"
+    VERSION "${PROJECT_VERSION}"
     CLASSNAME QtQuickControls2MaterialStyleImplPlugin
     GENERATE_QMLTYPES
     INSTALL_QMLTYPES

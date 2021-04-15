@@ -6,7 +6,7 @@
 
 qt_internal_add_qml_module(qtquickcontrols2nativestyleplugin
     URI "QtQuick.NativeStyle"
-    VERSION "${CMAKE_PROJECT_VERSION}"
+    VERSION "${PROJECT_VERSION}"
     CLASSNAME QtQuickControls2NativeStylePlugin
     DEPENDENCIES
         QtQuick.Controls/auto

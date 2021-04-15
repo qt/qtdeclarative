@@ -6,7 +6,7 @@
 
 qt_internal_add_qml_module(qtquickcontrols2materialstyleplugin
     URI "QtQuick.Controls.Material"
-    VERSION "${CMAKE_PROJECT_VERSION}"
+    VERSION "${PROJECT_VERSION}"
     CLASSNAME QtQuickControls2MaterialStylePlugin
     IMPORTS
         QtQuick.Controls.Basic/auto

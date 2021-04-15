@@ -6,7 +6,7 @@
 
 qt_internal_add_qml_module(qtquickcontrols2macosstyleplugin
     URI "QtQuick.Controls.macOS"
-    VERSION "${CMAKE_PROJECT_VERSION}"
+    VERSION "${PROJECT_VERSION}"
     CLASSNAME QtQuickControls2MacOSStylePlugin
     IMPORTS
         QtQuick.Controls.Fusion/auto

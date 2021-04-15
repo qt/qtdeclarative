@@ -6,7 +6,7 @@
 
 qt_internal_add_qml_module(qtquickcontrols2fusionstyleplugin
     URI "QtQuick.Controls.Fusion"
-    VERSION "${CMAKE_PROJECT_VERSION}"
+    VERSION "${PROJECT_VERSION}"
     CLASSNAME QtQuickControls2FusionStylePlugin
     IMPORTS
         QtQuick.Controls.Basic/auto

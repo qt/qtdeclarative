@@ -55,7 +55,7 @@ qt_internal_extend_target(QuickControls2Impl CONDITION QT_FEATURE_quick_listview
 
 set_target_properties(QuickControls2Impl PROPERTIES
     QT_QML_MODULE_INSTALL_QMLTYPES TRUE
-    QT_QML_MODULE_VERSION ${CMAKE_PROJECT_VERSION}
+    QT_QML_MODULE_VERSION ${PROJECT_VERSION}
     QT_QML_MODULE_URI QtQuick.Controls.impl
     QT_QMLTYPES_FILENAME plugins.qmltypes
     QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQuick/Controls/impl"

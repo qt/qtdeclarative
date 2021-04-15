@@ -6,7 +6,7 @@
 
 qt_internal_add_qml_module(qtquickcontrols2imaginestyleplugin
     URI "QtQuick.Controls.Imagine"
-    VERSION "${CMAKE_PROJECT_VERSION}"
+    VERSION "${PROJECT_VERSION}"
     CLASSNAME QtQuickControls2ImagineStylePlugin
     IMPORTS
         QtQuick.Controls.Basic/auto

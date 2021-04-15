@@ -6,7 +6,7 @@
 
 qt_internal_add_qml_module(qtquickcontrols2universalstyleplugin
     URI "QtQuick.Controls.Universal"
-    VERSION "${CMAKE_PROJECT_VERSION}"
+    VERSION "${PROJECT_VERSION}"
     CLASSNAME QtQuickControls2UniversalStylePlugin
     IMPORTS
         QtQuick.Controls.Basic/auto

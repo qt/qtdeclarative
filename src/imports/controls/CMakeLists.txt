@@ -6,7 +6,7 @@
 
 qt_internal_add_qml_module(qtquickcontrols2plugin
     URI "QtQuick.Controls"
-    VERSION "${CMAKE_PROJECT_VERSION}"
+    VERSION "${PROJECT_VERSION}"
     DESIGNER_SUPPORTED
     CLASSNAME QtQuickControls2Plugin
     SKIP_TYPE_REGISTRATION

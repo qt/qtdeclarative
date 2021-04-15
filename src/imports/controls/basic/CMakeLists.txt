@@ -6,7 +6,7 @@
 
 qt_internal_add_qml_module(qtquickcontrols2basicstyleplugin
     URI "QtQuick.Controls.Basic"
-    VERSION "${CMAKE_PROJECT_VERSION}"
+    VERSION "${PROJECT_VERSION}"
     CLASSNAME QtQuickControls2BasicStylePlugin
     GENERATE_QMLTYPES
     INSTALL_QMLTYPES

@@ -35,7 +35,7 @@ qt_internal_add_module(QuickControls2
 
 set_target_properties(QuickControls2 PROPERTIES
     QT_QML_MODULE_INSTALL_QMLTYPES TRUE
-    QT_QML_MODULE_VERSION ${CMAKE_PROJECT_VERSION}
+    QT_QML_MODULE_VERSION ${PROJECT_VERSION}
     QT_QML_MODULE_URI QtQuick.Controls
     QT_QMLTYPES_FILENAME plugins.qmltypes
     QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQuick/Controls"

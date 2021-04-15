@@ -6,7 +6,7 @@
 
 qt_internal_add_qml_module(qtquicktemplates2plugin
     URI "QtQuick.Templates"
-    VERSION "${CMAKE_PROJECT_VERSION}"
+    VERSION "${PROJECT_VERSION}"
     CLASSNAME QtQuickTemplates2Plugin
     DEPENDENCIES
         QtQuick/auto
