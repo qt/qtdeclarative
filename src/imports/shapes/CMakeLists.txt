@@ -6,7 +6,7 @@
 
 qt_internal_add_qml_module(qmlshapesplugin
     URI "QtQuick.Shapes"
-    VERSION "${CMAKE_PROJECT_VERSION}"
+    VERSION "${PROJECT_VERSION}"
     CLASSNAME QmlShapesPlugin
     SKIP_TYPE_REGISTRATION
     DEPENDENCIES

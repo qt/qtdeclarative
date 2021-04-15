@@ -6,7 +6,7 @@
 
 qt_internal_add_qml_module(particlesplugin
     URI "QtQuick.Particles"
-    VERSION "${CMAKE_PROJECT_VERSION}"
+    VERSION "${PROJECT_VERSION}"
     CLASSNAME QtQuick2ParticlesPlugin
     SKIP_TYPE_REGISTRATION
     SOURCES

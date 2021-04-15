@@ -14,7 +14,7 @@ set(qml_files
 
 qt_internal_add_qml_module(quicktooling
     URI "QtQuick.tooling"
-    VERSION "${CMAKE_PROJECT_VERSION}"
+    VERSION "${PROJECT_VERSION}"
     GENERATE_QMLTYPES
     INSTALL_QMLTYPES
     PAST_MAJOR_VERSIONS 1

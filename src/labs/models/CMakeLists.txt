@@ -22,7 +22,7 @@ qt_internal_extend_target(LabsQmlModels CONDITION QT_FEATURE_qml_delegate_model
 
 set_target_properties(LabsQmlModels PROPERTIES
     QT_QML_MODULE_INSTALL_QMLTYPES TRUE
-    QT_QML_MODULE_VERSION ${CMAKE_PROJECT_VERSION}
+    QT_QML_MODULE_VERSION ${PROJECT_VERSION}
     QT_QML_MODULE_URI Qt.labs.qmlmodels
     QT_QMLTYPES_FILENAME plugins.qmltypes
     QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/Qt/labs/qmlmodels"
