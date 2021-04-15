@@ -212,6 +212,8 @@ int main(int argc, char **argv)
                 qPrintable(module), qPrintable(majorVersion));
     }
 
+    auto moduleVersion = QTypeRevision::fromVersion(majorVersion.toInt(), minorVersion.toInt());
+
     const QVector<QJsonObject> types = processor.types();
     for (const QJsonObject &classDef : types) {
         const QString className = classDef[QLatin1String("qualifiedClassName")].toString();
@@ -248,6 +250,31 @@ int main(int argc, char **argv)
             }
         } else {
             if (seenQmlElement) {
+                auto checkRevisions = [&](const QJsonArray &array, const QString &type) {
+                    for (auto it = array.constBegin(); it != array.constEnd(); ++it) {
+                        auto object = it->toObject();
+                        if (!object.contains(QLatin1String("revision")))
+                            continue;
+
+                        QTypeRevision revision = QTypeRevision::fromEncodedVersion(object[QLatin1String("revision")].toInt());
+                        if (moduleVersion < revision) {
+                            qWarning().noquote()
+                                    << "Warning:" << className << "is trying to register" << type
+                                    << object[QStringLiteral("name")].toString()
+                                    << "with future version" << revision
+                                    << "when module version is only" << moduleVersion;
+                        }
+                    }
+                };
+
+                const QJsonArray methods = classDef[QLatin1String("methods")].toArray();
+                const QJsonArray properties = classDef[QLatin1String("properties")].toArray();
+
+                if (moduleVersion.isValid()) {
+                    checkRevisions(properties, QLatin1String("property"));
+                    checkRevisions(methods, QLatin1String("method"));
+                }
+
                 fprintf(output, "\n    qmlRegisterTypesAndRevisions<%s>(\"%s\", %s);",
                         qPrintable(className), qPrintable(module), qPrintable(majorVersion));
             } else {
