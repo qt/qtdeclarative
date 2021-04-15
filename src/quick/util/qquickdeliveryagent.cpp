@@ -1519,9 +1519,12 @@ void QQuickDeliveryAgentPrivate::deliverPointerEvent(QPointerEvent *event)
     // updates get delivered here pretty directly, bypassing picking; but we need to
     // be able to map the 2D viewport coordinate to a 2D coordinate within
     // d->rootItem, a 2D scene that has been arbitrarily mapped onto a 3D object.
+    QVarLengthArray<QPointF, 16> originalScenePositions;
     if (sceneTransform) {
+        originalScenePositions.resize(event->pointCount());
         for (int i = 0; i < event->pointCount(); ++i) {
             auto &mut = QMutableEventPoint::from(event->point(i));
+            originalScenePositions[i] = mut.scenePosition();
             mut.setScenePosition(sceneTransform->map(mut.scenePosition()));
             qCDebug(lcPtrLoc) << q << event->type() << mut.id() << "transformed scene pos" << mut.scenePosition();
         }
@@ -1571,6 +1574,10 @@ void QQuickDeliveryAgentPrivate::deliverPointerEvent(QPointerEvent *event)
     }
 
     eventsInDelivery.pop();
+    if (sceneTransform) {
+        for (int i = 0; i < event->pointCount(); ++i)
+            QMutableEventPoint::from(event->point(i)).setScenePosition(originalScenePositions.at(i));
+    }
     --pointerEventRecursionGuard;
     lastUngrabbed = nullptr;
 }
