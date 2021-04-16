@@ -386,7 +386,7 @@ qsizetype QQmlListReference::count() const
 }
 
 /*!
-\fn qsizetype QQmlListReference::count() const
+\fn qsizetype QQmlListReference::size() const
 \since 6.2
 Returns the number of objects in the list, or 0 if the operation failed.
 */
