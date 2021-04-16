@@ -183,13 +183,13 @@ QQuickItemGrabResult::QQuickItemGrabResult(QObject *parent)
  * if successful; otherwise returns \c false.
  */
 
+// ### Qt 7: remove and keep only QUrl overload
 /*!
  * Saves the grab result as an image to \a fileName. Returns \c true
  * if successful; otherwise returns \c false.
  *
  * \note In Qt versions prior to 5.9, this function is marked as non-\c{const}.
  */
-// ### Qt 7: remove and keep only QUrl overload
 bool QQuickItemGrabResult::saveToFile(const QString &fileName) const
 {
     Q_D(const QQuickItemGrabResult);
