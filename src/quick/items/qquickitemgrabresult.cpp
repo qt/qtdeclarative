@@ -183,6 +183,7 @@ QQuickItemGrabResult::QQuickItemGrabResult(QObject *parent)
  * if successful; otherwise returns false.
  */
 
+// ### Qt 7: remove and keep only QUrl overload
 /*!
  * Saves the grab result as an image to \a fileName. Returns true
  * if successful; otherwise returns false.
