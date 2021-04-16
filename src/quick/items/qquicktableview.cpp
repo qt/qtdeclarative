@@ -249,10 +249,10 @@
     the height of the row after all items have been loaded.
     If you need to calculate the row height based on the size of the delegate
     items, you need to wait for the second call, when all the items have been loaded.
-    You can check for this by calling \l isRowLoaded(row),
+    You can check for this by calling \l {isRowLoaded()}{isRowLoaded(row)},
     and simply return -1 if that is not yet the case.
 
-    \sa rowHeightProvider, isRowLoaded(row), {Row heights and column widths}
+    \sa rowHeightProvider, isRowLoaded(), {Row heights and column widths}
 */
 
 /*!
@@ -273,7 +273,7 @@
     the width of the column after all items have been loaded.
     If you need to calculate the column width based on the size of the delegate
     items, you need to wait for the second call, when all the items have been loaded.
-    You can check for this by calling \l isColumnLoaded(column),
+    You can check for this by calling \l {isColumnLoaded}{isColumnLoaded(column)},
     and simply return -1 if that is not yet the case.
 
     \sa rowHeightProvider, isColumnLoaded(), {Row heights and column widths}
@@ -541,7 +541,7 @@
     \qmlmethod real QtQuick::TableView::columnWidth(int column)
     \since 6.2
 
-    Returns the width of the given \l column. If the column is not
+    Returns the width of the given \a column. If the column is not
     loaded (and therefore not visible), the return value will be \c -1.
 
     \note It's the applications responsibility to store what the
@@ -560,7 +560,7 @@
     \qmlmethod real QtQuick::TableView::rowHeight(int row)
     \since 6.2
 
-    Returns the height of the given \l row. If the row is not
+    Returns the height of the given \a row. If the row is not
     loaded (and therefore not visible), the return value will be \c -1.
 
     \note It's the applications responsibility to store what the
@@ -579,7 +579,7 @@
     \qmlmethod real QtQuick::TableView::implicitColumnWidth(int column)
     \since 6.2
 
-    Returns the implicit width of the given \l column. If the
+    Returns the implicit width of the given \a column. If the
     column is not loaded (and therefore not visible), the return value
     will be \c -1.
 
@@ -595,7 +595,7 @@
     \qmlmethod real QtQuick::TableView::implicitRowHeight(int row)
     \since 6.2
 
-    Returns the implicit height of the given \l row. If the
+    Returns the implicit height of the given \a row. If the
     row is not loaded (and therefore not visible), the return value
     will be \c -1.
 
