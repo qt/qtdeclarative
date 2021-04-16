@@ -1,0 +1,38 @@
+include($QT_INSTALL_DOCS/global/qt-module-defaults.qdocconf)
+
+project = QtQmlCore
+description = Qt QML Core Reference Documentation
+version = $QT_VERSION
+
+qhp.projects = QtQmlCore
+
+qhp.QtQmlCore.file = qtqmlcore.qhp
+qhp.QtQmlCore.namespace = org.qt-project.qtqmlcore.$QT_VERSION_TAG
+qhp.QtQmlCore.virtualFolder = qtqmlcore
+qhp.QtQmlCore.indexTitle = Qt QML Core
+qhp.QtQmlCore.indexRoot =
+
+qhp.QtQmlCore.filterAttributes = qtqmlcore $QT_VERSION qtrefdoc
+qhp.QtQmlCore.customFilters.Qt.name = QtQmlCore $QT_VERSION
+qhp.QtQmlCore.customFilters.Qt.filterAttributes = qtqmlcore $QT_VERSION
+
+qhp.QtQmlCore.subprojects = qmltypes
+qhp.QtQmlCore.subprojects.qmltypes.title = QML Types
+qhp.QtQmlCore.subprojects.qmltypes.indexTitle = Qt QML Core QML Types
+qhp.QtQmlCore.subprojects.qmltypes.selectors = qmlclass
+qhp.QtQmlCore.subprojects.qmltypes.sortPages = true
+
+depends = qtcore qtdoc qtqml
+
+# This module has no documented C++ types, clear the module header
+moduleheader =
+
+headerdirs += ../
+sourcedirs += ../
+
+imagedirs += images
+
+navigation.landingpage = "Qt QML Core"
+navigation.qmltypespage = "Qt QML Core QML Types"
+
+tagfile = qtqmlcore.tags

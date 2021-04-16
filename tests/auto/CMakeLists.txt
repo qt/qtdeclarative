@@ -5,6 +5,7 @@ if(TARGET Qt::Quick)
     add_subdirectory(quick)
     add_subdirectory(quicktest)
 endif()
+add_subdirectory(core)
 add_subdirectory(qmldevtools)
 # special case begin
 # add_subdirectory(cmake)

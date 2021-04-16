@@ -2,6 +2,7 @@
 
 add_subdirectory(builtins)
 add_subdirectory(qtqml)
+add_subdirectory(core)
 add_subdirectory(models)
 add_subdirectory(tooling)
 if (QT_FEATURE_qml_xmllistmodel)

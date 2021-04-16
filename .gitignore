@@ -30,7 +30,6 @@ wrapper.bat
 *_resource.rc
 .#*
 *.*#
-core
 .qmake.cache
 .qmake.stash
 .qmake.vars
