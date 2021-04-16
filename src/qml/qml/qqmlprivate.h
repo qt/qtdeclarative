@@ -73,7 +73,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlPropertyValueInterceptor;
-class QQmlContext;
+class QQmlContextData;
 
 namespace QQmlPrivate {
 struct CachedQmlUnit;
@@ -603,10 +603,12 @@ namespace QQmlPrivate
     };
 
     struct Q_QML_EXPORT AOTCompiledContext {
-        QQmlContext *qmlContext;
+        QQmlContextData *qmlContext;
         QObject *qmlScopeObject;
         QJSEngine *engine;
         QV4::ExecutableCompilationUnit *compilationUnit;
+
+        QQmlEngine *qmlEngine() const;
 
         QJSValue jsMetaType(int index) const;
         void setInstructionPointer(int offset) const;

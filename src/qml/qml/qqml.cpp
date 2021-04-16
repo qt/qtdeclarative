@@ -687,6 +687,11 @@ namespace QQmlPrivate {
     }
 }
 
+QQmlEngine *QQmlPrivate::AOTCompiledContext::qmlEngine() const
+{
+    return qmlContext ? qmlContext->engine() : nullptr;
+}
+
 QJSValue QQmlPrivate::AOTCompiledContext::jsMetaType(int index) const
 {
     return QJSValuePrivate::fromReturnedValue(
@@ -738,13 +743,12 @@ QObject *QQmlPrivate::AOTCompiledContext::loadQmlContextPropertyIdLookup(uint in
         if (!qmlContext)
             return nullptr;
 
-        const auto context = QQmlContextData::get(qmlContext);
-        QQmlEnginePrivate *qmlEngine = QQmlEnginePrivate::get(context->engine());
+        QQmlEnginePrivate *qmlEngine = QQmlEnginePrivate::get(qmlContext->engine());
         const int objectId = l->qmlContextIdObjectLookup.objectId;
 
         if (qmlEngine->propertyCapture)
-            qmlEngine->propertyCapture->captureProperty(context->idValueBindings(objectId));
-        return context->idValue(objectId);
+            qmlEngine->propertyCapture->captureProperty(qmlContext->idValueBindings(objectId));
+        return qmlContext->idValue(objectId);
     }
 
     QV4::Scope scope(engine->handle());

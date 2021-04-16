@@ -477,7 +477,7 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
     if (auto context = QV4::ExecutionEngine::qmlContext(frame->context()->d())) {
         QV4::Heap::QQmlContextWrapper *wrapper = static_cast<Heap::QmlContext *>(context)->qml();
         aotContext.qmlScopeObject = wrapper->scopeObject;
-        aotContext.qmlContext = wrapper->context->asQQmlContext();
+        aotContext.qmlContext = wrapper->context;
     }
 
     aotContext.engine = engine->jsEngine();

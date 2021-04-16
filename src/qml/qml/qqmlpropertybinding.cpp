@@ -79,7 +79,7 @@ QUntypedPropertyBinding QQmlPropertyBinding::create(const QQmlPropertyData *pd, 
                 QV4::ExecutionEngine *engine = scope->engine();
 
                 QQmlPrivate::AOTCompiledContext aotContext;
-                aotContext.qmlContext = context->asQQmlContext();
+                aotContext.qmlContext = context.data();
                 aotContext.qmlScopeObject = scopeObject.data();
                 aotContext.engine = engine->jsEngine();
                 aotContext.compilationUnit = unit.data();
