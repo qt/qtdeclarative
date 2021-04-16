@@ -76,6 +76,7 @@ public:
     public:
         QString screenName;
         QPoint nativePosition;
+        QSize size;
     };
     enum InitializeState {
         InitializePosition,
