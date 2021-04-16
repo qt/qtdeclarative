@@ -4798,13 +4798,25 @@ void QQuickItem::forceActiveFocus()
 
 void QQuickItem::forceActiveFocus(Qt::FocusReason reason)
 {
+    Q_D(QQuickItem);
     setFocus(true, reason);
     QQuickItem *parent = parentItem();
+    QQuickItem *scope = nullptr;
     while (parent) {
         if (parent->flags() & QQuickItem::ItemIsFocusScope) {
             parent->setFocus(true, reason);
+            if (!scope)
+                scope = parent;
         }
         parent = parent->parentItem();
+    }
+    // In certain reparenting scenarios, d->focus might be true and the scope
+    // might also have focus, so that setFocus() returns early without actually
+    // acquiring active focus, because it thinks it already has it. In that
+    // case, try to set the DeliveryAgent's active focus. (QTBUG-89736).
+    if (scope && !d->activeFocus) {
+        if (auto da = d->deliveryAgentPrivate())
+            da->setFocusInScope(scope, this, Qt::OtherFocusReason);
     }
 }
 
