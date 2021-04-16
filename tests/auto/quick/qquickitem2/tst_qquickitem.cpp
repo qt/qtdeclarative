@@ -33,6 +33,7 @@
 #include <QtQuick/qquickitemgrabresult.h>
 #include <QtQuick/qquickview.h>
 #include <QtGui/private/qinputmethod_p.h>
+#include <QtQuick/private/qquickloader_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/private/qquicktextinput_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
@@ -75,6 +76,7 @@ private slots:
     void qtbug_50516();
     void qtbug_50516_2_data();
     void qtbug_50516_2();
+    void focusableItemReparentedToLoadedComponent();
 
     void keys();
 #if QT_CONFIG(shortcut)
@@ -1310,6 +1312,35 @@ void tst_QQuickItem::qtbug_50516_2()
     QCOMPARE(next->objectName(), item2);
 
     delete window;
+}
+
+void tst_QQuickItem::focusableItemReparentedToLoadedComponent() // QTBUG-89736
+{
+    QQuickView window;
+    window.setSource(testFileUrl("focusableItemReparentedToLoadedComponent.qml"));
+    window.show();
+    QVERIFY(QTest::qWaitForWindowActive(&window));
+    QCOMPARE(QGuiApplication::focusWindow(), &window);
+    QQuickLoader *loader = window.rootObject()->findChild<QQuickLoader *>();
+    QVERIFY(loader);
+    QTRY_VERIFY(loader->status() == QQuickLoader::Ready);
+    QQuickTextInput *textInput = window.rootObject()->findChild<QQuickTextInput *>();
+    QVERIFY(textInput);
+
+    // click to focus
+    QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, {10, 10});
+    QTRY_VERIFY(textInput->hasActiveFocus());
+
+    // unload and reload
+    auto component = loader->sourceComponent();
+    loader->resetSourceComponent();
+    QTRY_VERIFY(loader->status() == QQuickLoader::Null);
+    loader->setSourceComponent(component);
+    QTRY_VERIFY(loader->status() == QQuickLoader::Ready);
+
+    // click to focus again
+    QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, {10, 10});
+    QTRY_VERIFY(textInput->hasActiveFocus());
 }
 
 void tst_QQuickItem::keys()
