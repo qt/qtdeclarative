@@ -1,10 +1,12 @@
 #!/she-bang
 // extra comment
+
 Item {
     Component.onCompleted: {
         if (3 < 2)
             console.log("Foo");
-        else
+        else {
             console.log("Bar");
+        }
     }
 }

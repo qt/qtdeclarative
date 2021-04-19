@@ -40,7 +40,7 @@ Item {
     property bool some_bool : false
 	// This comment is related to the property animation
 	PropertyAnimation on x {
-		id: foo; x: 3; y: x + 3		
+        id: foo2; x: 3; y: x + 3
 	}
 
 	// Orphan comment

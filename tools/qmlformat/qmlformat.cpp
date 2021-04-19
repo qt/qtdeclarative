@@ -35,14 +35,16 @@
 #include <QtQml/private/qqmljsengine_p.h>
 #include <QtQml/private/qqmljsastvisitor_p.h>
 #include <QtQml/private/qqmljsast_p.h>
+#include <QtQmlDom/private/qqmldomitem_p.h>
+#include <QtQmlDom/private/qqmldomexternalitems_p.h>
+#include <QtQmlDom/private/qqmldomtop_p.h>
+#include <QtQmlDom/private/qqmldomoutwriter_p.h>
 
 #if QT_CONFIG(commandlineparser)
-#include <QCommandLineParser>
+#    include <QCommandLineParser>
 #endif
 
-#include "commentastvisitor.h"
-#include "dumpastvisitor.h"
-#include "restructureastvisitor.h"
+using namespace QQmlJS::Dom;
 
 struct Options
 {
@@ -51,6 +53,7 @@ struct Options
     bool force = false;
     bool tabs = false;
     bool valid = false;
+    bool normalize = false;
 
     int indentWidth = 4;
     bool indentWidthSet = false;
@@ -63,121 +66,94 @@ struct Options
 
 bool parseFile(const QString &filename, const Options &options)
 {
-    QFile file(filename);
-
-    if (!file.open(QIODevice::Text | QIODevice::ReadOnly)) {
-        qWarning().noquote() << "Failed to open" << filename << "for reading.";
-        return false;
-    }
-
-    QString code = QString::fromUtf8(file.readAll());
-    file.close();
-
-    QQmlJS::Engine engine;
-    QQmlJS::Lexer lexer(&engine);
-
-    lexer.setCode(code, 1, true);
-    QQmlJS::Parser parser(&engine);
-
-    bool success = parser.parse();
-
-    if (!success) {
-        const auto diagnosticMessages = parser.diagnosticMessages();
-        for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
-            qWarning().noquote() << QString::fromLatin1("%1:%2 : %3")
-                                    .arg(filename).arg(m.loc.startLine).arg(m.message);
-        }
-
+    DomItem env =
+            DomEnvironment::create(QStringList(),
+                                   QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
+                                           | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
+    DomItem tFile; // place where to store the loaded file
+    env.loadFile(
+            filename, QString(),
+            [&tFile](Path, const DomItem &, const DomItem &newIt) {
+                tFile = newIt; // callback called when everything is loaded that receives the loaded
+                               // external file pair (path, oldValue, newValue)
+            },
+            LoadOption::DefaultLoad);
+    env.loadPendingDependencies();
+    DomItem qmlFile = tFile.fileObject();
+    std::shared_ptr<QmlFile> qmlFilePtr = qmlFile.ownerAs<QmlFile>();
+    if (!qmlFilePtr || !qmlFilePtr->isValid()) {
+        qmlFile.iterateErrors(
+                [](DomItem, ErrorMessage msg) {
+                    errorToQDebug(msg);
+                    return true;
+                },
+                true);
         qWarning().noquote() << "Failed to parse" << filename;
         return false;
     }
-
-    // Try to attach comments to AST nodes
-    CommentAstVisitor comment(&engine, parser.rootNode());
-
-    if (options.verbose)
-        qWarning().noquote() << comment.attachedComments().size() << "comment(s) attached.";
-
-    if (options.verbose) {
-        int orphaned = 0;
-
-        for (const auto& orphanList : comment.orphanComments().values())
-            orphaned += orphanList.size();
-
-        qWarning().noquote() << orphaned << "comments are orphans.";
-    }
-
-    // Do the actual restructuring
-    RestructureAstVisitor restructure(parser.rootNode());
 
     // Turn AST back into source code
     if (options.verbose)
         qWarning().noquote() << "Dumping" << filename;
 
-    DumpAstVisitor dump(
-            &engine, parser.rootNode(), &comment, options.tabs ? 1 : options.indentWidth,
-            options.tabs ? DumpAstVisitor::Indentation::Tabs : DumpAstVisitor::Indentation::Spaces);
+    LineWriterOptions lwOptions;
+    lwOptions.formatOptions.indentSize = options.indentWidth;
+    lwOptions.formatOptions.useTabs = options.tabs;
+    lwOptions.updateOptions = LineWriterOptions::Update::None;
+    if (options.newline == "native") {
+        // find out current line endings...
+        QStringView code = qmlFilePtr->code();
+        int newlineIndex = code.indexOf(QChar(u'\n'));
+        int crIndex = code.indexOf(QChar(u'\r'));
+        if (newlineIndex >= 0) {
+            if (crIndex >= 0) {
+                if (crIndex + 1 == newlineIndex)
+                    lwOptions.lineEndings = LineWriterOptions::LineEndings::Windows;
+                else
+                    qWarning().noquote() << "Invalid line ending in file, using default";
 
-    QString dumpCode = dump.toString();
-
-    lexer.setCode(dumpCode, 1, true);
-
-    bool dumpSuccess = parser.parse();
-
-    if (!dumpSuccess) {
-        if (options.verbose) {
-            const auto diagnosticMessages = parser.diagnosticMessages();
-            for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
-              qWarning().noquote() << QString::fromLatin1("<formatted>:%2 : %3")
-                                      .arg(m.loc.startLine).arg(m.message);
+            } else {
+                lwOptions.lineEndings = LineWriterOptions::LineEndings::Unix;
             }
+        } else if (crIndex >= 0) {
+            lwOptions.lineEndings = LineWriterOptions::LineEndings::OldMacOs;
+        } else {
+            qWarning().noquote() << "Unknown line ending in file, using default";
         }
-
-        qWarning().noquote() << "Failed to parse formatted code.";
+    } else if (options.newline == "macos") {
+        lwOptions.lineEndings = LineWriterOptions::LineEndings::OldMacOs;
+    } else if (options.newline == "windows") {
+        lwOptions.lineEndings = LineWriterOptions::LineEndings::Windows;
+    } else if (options.newline == "unix") {
+        lwOptions.lineEndings = LineWriterOptions::LineEndings::Unix;
+    } else {
+        qWarning().noquote() << "Unknown line ending type" << options.newline;
+        return false;
     }
 
-    if (dump.error() || !dumpSuccess) {
-        if (options.force) {
-            qWarning().noquote() << "An error has occurred. The output may not be reliable.";
-        } else {
-            qWarning().noquote() << "An error has occurred. Aborting.";
-            return false;
-        }
-   }
+    if (options.normalize)
+        lwOptions.attributesSequence = LineWriterOptions::AttributesSequence::Normalize;
+    else
+        lwOptions.attributesSequence = LineWriterOptions::AttributesSequence::Preserve;
+    WriteOutChecks checks = WriteOutCheck::Default;
+    if (options.force || qmlFilePtr->code().size() > 32000)
+        checks = WriteOutCheck::None;
 
-   const bool native = options.newline == "native";
-
-   if (!native) {
-       if (options.newline == "macos") {
-           dumpCode = dumpCode.replace("\n", "\r");
-       } else if (options.newline == "windows") {
-           dumpCode = dumpCode.replace("\n", "\r\n");
-       } else if (options.newline == "unix") {
-           // Nothing needs to be done for unix line-endings
-       } else {
-           qWarning().noquote() << "Unknown line ending type" << options.newline;
-           return false;
-       }
-   }
-
-   if (options.inplace) {
-       if (options.verbose)
-           qWarning().noquote() << "Writing to file" << filename;
-
-       if (!file.open(native ? QIODevice::WriteOnly | QIODevice::Text : QIODevice::WriteOnly)) {
-           qWarning().noquote() << "Failed to open" << filename << "for writing";
-           return false;
-       }
-
-       file.write(dumpCode.toUtf8());
-       file.close();
-   } else {
-       QFile out;
-       out.open(stdout, QIODevice::WriteOnly);
-       out.write(dumpCode.toUtf8());
-   }
-
-    return true;
+    MutableDomItem res;
+    if (options.inplace) {
+        if (options.verbose)
+            qWarning().noquote() << "Writing to file" << filename;
+        FileWriter fw;
+        res = qmlFile.writeOut(filename, 2, lwOptions, &fw, checks);
+    } else {
+        QFile out;
+        out.open(stdout, QIODevice::WriteOnly);
+        LineWriter lw([&out](QStringView s) { out.write(s.toUtf8()); }, filename, lwOptions);
+        OutWriter ow(lw);
+        res = qmlFile.writeOutForFile(ow, checks);
+        ow.flush();
+    }
+    return bool(res);
 }
 
 Options buildCommandLineOptions(const QCoreApplication &app)
@@ -188,14 +164,16 @@ Options buildCommandLineOptions(const QCoreApplication &app)
     parser.addHelpOption();
     parser.addVersionOption();
 
-    parser.addOption(QCommandLineOption({"V", "verbose"},
-                     QStringLiteral("Verbose mode. Outputs more detailed information.")));
+    parser.addOption(
+            QCommandLineOption({ "V", "verbose" },
+                               QStringLiteral("Verbose mode. Outputs more detailed information.")));
 
-    parser.addOption(QCommandLineOption({"i", "inplace"},
-                     QStringLiteral("Edit file in-place instead of outputting to stdout.")));
+    parser.addOption(QCommandLineOption(
+            { "i", "inplace" },
+            QStringLiteral("Edit file in-place instead of outputting to stdout.")));
 
-    parser.addOption(QCommandLineOption({"f", "force"},
-                     QStringLiteral("Continue even if an error has occurred.")));
+    parser.addOption(QCommandLineOption({ "f", "force" },
+                                        QStringLiteral("Continue even if an error has occurred.")));
 
     parser.addOption(
             QCommandLineOption({ "t", "tabs" }, QStringLiteral("Use tabs instead of spaces.")));
@@ -204,12 +182,17 @@ Options buildCommandLineOptions(const QCoreApplication &app)
                                         QStringLiteral("How many spaces are used when indenting."),
                                         "width", "4"));
 
+    parser.addOption(QCommandLineOption({ "n", "normalize" },
+                                        QStringLiteral("Reorders the attributes of the objects "
+                                                       "according to the QML Coding Guidelines.")));
+
     parser.addOption(QCommandLineOption(
             { "F", "files" }, QStringLiteral("Format all files listed in file, in-place"), "file"));
 
-    parser.addOption(QCommandLineOption({"l", "newline"},
-                     QStringLiteral("Override the new line format to use (native macos unix windows)."),
-                     "newline", "native"));
+    parser.addOption(QCommandLineOption(
+            { "l", "newline" },
+            QStringLiteral("Override the new line format to use (native macos unix windows)."),
+            "newline", "native"));
 
     parser.addPositionalArgument("filenames", "files to be processed by qmlformat");
 
@@ -224,7 +207,7 @@ Options buildCommandLineOptions(const QCoreApplication &app)
     }
 
     QStringList files;
-    if (parser.isSet("files")) {
+    if (!parser.value("files").isEmpty()) {
         QFile file(parser.value("files"));
         file.open(QIODevice::Text | QIODevice::ReadOnly);
         if (file.isOpen()) {
@@ -245,6 +228,7 @@ Options buildCommandLineOptions(const QCoreApplication &app)
     options.inplace = parser.isSet("inplace");
     options.force = parser.isSet("force");
     options.tabs = parser.isSet("tabs");
+    options.normalize = parser.isSet("normalize");
     options.valid = true;
 
     options.indentWidth = indentWidth;

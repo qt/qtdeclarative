@@ -3,5 +3,4 @@ Item {
         color: "red"
         text: "Test Text"
     }
-
 }

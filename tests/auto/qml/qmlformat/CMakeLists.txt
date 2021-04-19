@@ -20,6 +20,7 @@ qt_internal_add_test(tst_qmlformat
         ../../shared
     PUBLIC_LIBRARIES
         Qt::Gui
+        Qt::TestPrivate
     TESTDATA ${test_data}
 )
 

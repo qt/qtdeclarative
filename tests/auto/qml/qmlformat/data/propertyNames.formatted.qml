@@ -10,5 +10,4 @@ Item {
             "copiedItem": copiedItem
         };
     }
-
 }

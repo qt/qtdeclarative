@@ -1,10 +1,5 @@
 QtObject {
     id: foo
-
-    // This needs to be *before* states and transitions after formatting
-    Item {
-    }
-
     states: [
         State {
         }
@@ -13,4 +8,8 @@ QtObject {
         Transition {
         }
     ]
+
+    // This needs to be *before* states and transitions after formatting
+    Item {
+    }
 }

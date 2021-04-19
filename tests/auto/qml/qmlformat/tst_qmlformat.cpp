@@ -32,6 +32,7 @@
 #include <QProcess>
 #include <QString>
 #include <QTemporaryDir>
+#include <QtTest/private/qemulationdetector_p.h>
 
 #include <util.h>
 
@@ -258,6 +259,8 @@ void TestQmlformat::testFormat()
 #if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
 void TestQmlformat::testExample_data()
 {
+    if (QTestPrivate::isRunningArmOnX86())
+        QSKIP("Crashes in QEMU. (timeout)");
     QTest::addColumn<QString>("file");
 
     QString examples = QLatin1String(SRCDIR) + "/../../../../examples/";

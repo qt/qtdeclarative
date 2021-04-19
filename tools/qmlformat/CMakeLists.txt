@@ -9,12 +9,11 @@ qt_internal_add_tool(${target_name}
     TARGET_DESCRIPTION "QML Formatter"
     TOOLS_TARGET Qml # special case
     SOURCES
-        commentastvisitor.cpp commentastvisitor.h
-        dumpastvisitor.cpp dumpastvisitor.h
-        main.cpp
-        restructureastvisitor.cpp restructureastvisitor.h
+        qmlformat.cpp
     PUBLIC_LIBRARIES
+        Qt::Core
         Qt::QmlDevToolsPrivate
+        Qt::QmlDomPrivate
 )
 
 #### Keys ignored in scope 1:.:.:qmlformat.pro:<TRUE>:
