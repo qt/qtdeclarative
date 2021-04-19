@@ -349,6 +349,8 @@ private slots:
 
     void invalidInlineComponent();
 
+    void hangOnWarning();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -6152,6 +6154,16 @@ void tst_qqmllanguage::bareInlineComponent()
         }
     }
     QVERIFY(tab1Found);
+}
+
+void tst_qqmllanguage::hangOnWarning()
+{
+    QTest::ignoreMessage(QtWarningMsg,
+                         qPrintable(QStringLiteral("%1:3 : Ignored annotation")
+                                            .arg(testFileUrl("hangOnWarning.qml").toString())));
+    QQmlComponent component(&engine, testFileUrl("hangOnWarning.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object != nullptr);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
